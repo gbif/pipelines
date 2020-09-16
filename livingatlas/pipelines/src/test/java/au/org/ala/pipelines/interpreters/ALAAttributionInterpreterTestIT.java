@@ -9,13 +9,29 @@ import au.org.ala.util.TestUtils;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import okhttp3.mockwebserver.MockWebServer;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.io.avro.ALAAttributionRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 public class ALAAttributionInterpreterTestIT {
+
+  MockWebServer server;
+
+  @Before
+  public void setup() throws Exception {
+    server = TestUtils.createMockCollectory();
+    server.start(TestUtils.getCollectoryPort());
+  }
+
+  @After
+  public void teardown() throws Exception {
+    server.shutdown();
+  }
 
   @Test
   public void testCollectionLookup() throws Exception {

@@ -3,6 +3,7 @@ package au.org.ala.pipelines.beam;
 import au.com.bytecode.opencsv.CSVReader;
 import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
+import au.org.ala.utils.ValidationUtils;
 import java.io.*;
 import java.util.Collection;
 import java.util.HashMap;
@@ -29,10 +30,12 @@ import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
+import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.LocationFeatureRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.transforms.specific.LocationFeatureTransform;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.MDC;
 
 /** Pipeline that adds a sampling AVRO extension to the stored interpretation. */
 @Slf4j
@@ -43,11 +46,19 @@ public class ALASamplingToAvroPipeline {
     String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "sample-avro");
     InterpretationPipelineOptions options =
         PipelinesOptionsFactory.createInterpretation(combinedArgs);
+    options.setMetaFileName(ValidationUtils.SAMPLING_METRICS);
+    MDC.put("datasetId", options.getDatasetId());
+    MDC.put("attempt", options.getAttempt().toString());
+    MDC.put("step", "SAMPLING_AVRO");
+
     PipelinesOptionsFactory.registerHdfs(options);
     run(options);
   }
 
   public static void run(InterpretationPipelineOptions options) {
+
+    // delete metrics if it exists
+    MetricsHandler.deleteMetricsFile(options);
 
     log.info("Creating a pipeline from options");
     Pipeline p = Pipeline.create(options);
@@ -72,11 +83,13 @@ public class ALASamplingToAvroPipeline {
 
     // Location transform output
     String alaRecordDirectoryPath =
-        options.getTargetPath()
-            + "/"
-            + options.getDatasetId().trim()
-            + "/1/interpreted/"
-            + PipelinesVariables.Pipeline.Interpretation.RecordType.LOCATION.name().toLowerCase();
+        String.join(
+            "/",
+            options.getTargetPath(),
+            options.getDatasetId().trim(),
+            options.getAttempt().toString(),
+            "interpreted",
+            PipelinesVariables.Pipeline.Interpretation.RecordType.LOCATION.name().toLowerCase());
 
     // Filter records without lat/long, create map LatLng -> ExtendedRecord.getId()
     PCollection<KV<String, String>> latLngID =
@@ -169,6 +182,8 @@ public class ALASamplingToAvroPipeline {
     log.info("Running the pipeline");
     PipelineResult result = p.run();
     result.waitUntilFinish();
+
+    MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
 
     log.info("Pipeline has been finished");
   }

@@ -9,11 +9,28 @@ import au.org.ala.kvs.client.ALACollectionMatch;
 import au.org.ala.kvs.client.ALACollectoryMetadata;
 import au.org.ala.kvs.client.ConnectionParameters;
 import au.org.ala.util.TestUtils;
+import okhttp3.mockwebserver.MockWebServer;
 import org.gbif.kvs.KeyValueStore;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 /** Unit tests for Attribution KV store */
 public class AttributionKVStoreTestIT {
+
+  MockWebServer server;
+
+  @Before
+  public void setup() throws Exception {
+    // clear up previous test runs
+    server = TestUtils.createMockCollectory();
+    server.start(3939);
+  }
+
+  @After
+  public void teardown() throws Exception {
+    server.shutdown();
+  }
 
   @Test
   public void testAttributionLookup() throws Exception {
@@ -34,6 +51,20 @@ public class AttributionKVStoreTestIT {
     assertNotNull(m.getTaxonomyCoverageHints());
     assertTrue(m.getTaxonomyCoverageHints().size() == 0);
 
+    kvs.close();
+  }
+
+  @Test
+  public void testAttributionLookupMultiUrl() throws Exception {
+
+    KeyValueStore<String, ALACollectoryMetadata> kvs =
+        ALAAttributionKVStoreFactory.create(TestUtils.getConfig());
+    ALACollectoryMetadata m = kvs.get("dr807");
+    ConnectionParameters connParams = m.getConnectionParameters();
+
+    assertNotNull(m.getName());
+    assertNotNull(connParams);
+    assertNotNull(connParams.getUrl());
     kvs.close();
   }
 

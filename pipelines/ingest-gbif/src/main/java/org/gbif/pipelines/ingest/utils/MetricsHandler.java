@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Optional;
 import java.util.function.Function;
 
+import org.apache.hadoop.fs.Path;
 import org.gbif.pipelines.ingest.options.BasePipelineOptions;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 
@@ -85,6 +86,33 @@ public class MetricsHandler {
     saveCountersToFile(options, results, false);
   }
 
+  public static boolean deleteMetricsFile(BasePipelineOptions options){
+    FileSystem fs = getFileSystemForOptions(options);
+    String metadataPath = FsUtils.buildDatasetAttemptPath(options, options.getMetaFileName(), false);
+    Path path = new Path(metadataPath);
+    try {
+      return fs.exists(path) && fs.delete(path, true);
+    } catch (IOException e) {
+      log.error("Can't delete {} directory, cause - {}", metadataPath, e.getCause());
+      return false;
+    }
+  }
+
+  private static FileSystem getFileSystemForOptions(BasePipelineOptions options) {
+    String hdfsSiteConfig = "";
+    String coreSiteConfig = "";
+    // FIXME InterpretationPipelineOptions should be refactored
+    // splitting out the HDFS part into a separate interface
+    // which InterpretationPipelineOptions can extend
+    if (options instanceof InterpretationPipelineOptions) {
+      InterpretationPipelineOptions o = (InterpretationPipelineOptions) options;
+      hdfsSiteConfig = o.getHdfsSiteConfig();
+      coreSiteConfig = o.getCoreSiteConfig();
+    }
+
+    return FsUtils.getFileSystem(hdfsSiteConfig, coreSiteConfig, options.getInputPath());
+  }
+
   /**
    * Method works with Apache Beam metrics, gets metrics from {@link MetricResults} and converts to
    * a yaml file and save it
@@ -100,6 +128,9 @@ public class MetricsHandler {
               }
               String hdfsSiteConfig = "";
               String coreSiteConfig = "";
+              // FIXME InterpretationPipelineOptions should be refactored
+              // splitting out the HDFS part into a separate interface
+              // which InterpretationPipelineOptions can extend
               if (options instanceof InterpretationPipelineOptions) {
                 InterpretationPipelineOptions o = (InterpretationPipelineOptions) options;
                 hdfsSiteConfig = o.getHdfsSiteConfig();

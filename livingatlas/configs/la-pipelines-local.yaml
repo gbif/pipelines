@@ -1,9 +1,4 @@
-# Here we can override some config from la-pipelines.yml instead of modifying it.
-# This is useful during upgrades via debian packaging so we can maintain 
-# la-pipelines.yml without modifications and updated as a configuration reference
-# while doing local modifications here (manually or via ansible).
+# Deployment specific configuration for locql machine using a locally installed HDFS.
+# This file should be copied over `la-pipelines-local.yaml` when deployed
+# so that it is used by the scripts.
 #
-# For instance:
-
-# general:
-#  targetPath: /some-other-moint-point/pipelines-data

@@ -216,7 +216,7 @@
             </image>
             <image>
               <alias>ala-nameservice</alias>
-              <name>djtfmartin/ala-namematching-service:v20200214-4</name>
+              <name>charvolant/ala-namematching-service:v20200214-5</name>
               <run>
                 <ports>
                   <port>${alanm.admin.port}:9180</port>
@@ -242,6 +242,9 @@
     <!-- Common variables -->
     <surefireArgLine>-Xmx1024m</surefireArgLine>
 
+    <!-- GBIF libraries -->
+    <gbif-common.version>0.48</gbif-common.version>
+
     <!-- ALA libraries -->
     <ala-namematching-service.version>1.0-SNAPSHOT</ala-namematching-service.version>
 
@@ -253,7 +256,7 @@
     <solr8.http.port>8973</solr8.http.port>
     <solr8.zk.host>localhost</solr8.zk.host>
     <solr8.http.host>localhost</solr8.http.host>
-    <collectory.url>https://collections.ala.org.au</collectory.url>
+    <collectory.url>http://localhost:3939</collectory.url>
 
     <!-- Tools-->
     <geotools.version>20.5</geotools.version>
@@ -279,6 +282,10 @@
 
     <download-maven-plugin.version>1.6.0</download-maven-plugin.version>
     <jcabi-log.version>0.18.1</jcabi-log.version>
+
+    <!-- use same version as okhttp -->
+    <!-- avoids this issue https://stackoverflow.com/questions/56854548/mockwebserver-java-lang-nosuchmethoderror -->
+    <mockwebserver.version>4.2.2</mockwebserver.version>
   </properties>
 
   <scm>
@@ -452,6 +459,7 @@
     <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>gbif-common</artifactId>
+      <version>${gbif-common.version}</version>
     </dependency>
     <dependency>
       <groupId>org.gbif.kvs</groupId>

@@ -9,8 +9,11 @@ import au.org.ala.pipelines.transforms.ALASolrDocumentTransform;
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
 import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
+import au.org.ala.utils.ValidationResult;
+import au.org.ala.utils.ValidationUtils;
 import java.io.FileNotFoundException;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -116,7 +119,15 @@ public class ALAInterpretedToSolrIndexPipeline {
     MDC.put("attempt", options.getAttempt().toString());
     MDC.put("step", StepType.INTERPRETED_TO_INDEX.name());
 
-    log.info("Options");
+    options.setMetaFileName(ValidationUtils.INDEXING_METRICS);
+
+    ValidationResult validResult = ValidationUtils.checkReadyForIndexing(options);
+    if (!validResult.getValid()) {
+      log.error(
+          "The dataset can not be indexed. See logs for more details: {}",
+          validResult.getMessage());
+      return;
+    }
 
     UnaryOperator<String> pathFn =
         t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
@@ -324,7 +335,8 @@ public class ALAInterpretedToSolrIndexPipeline {
     Map<String, ALAUUIDRecord> aurMap = alaUuidMapFeature.get();
     Map<String, ALATaxonRecord> alaTaxonMap = alaTaxonMapFeature.get();
     Map<String, ALAAttributionRecord> alaAttributionMap = alaAttributionMapFeature.get();
-    Map<String, LocationFeatureRecord> australiaSpatialMap = australiaSpatialMapFeature.get();
+    Map<String, LocationFeatureRecord> australiaSpatialMap =
+        options.getIncludeSampling() ? australiaSpatialMapFeature.get() : Collections.emptyMap();
 
     Map<String, MultimediaRecord> multimediaMap = multimediaMapFeature.get();
     Map<String, ImageRecord> imageMap = imageMapFeature.get();

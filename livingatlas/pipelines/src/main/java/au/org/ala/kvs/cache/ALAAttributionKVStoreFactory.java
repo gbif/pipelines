@@ -52,7 +52,9 @@ public class ALAAttributionKVStoreFactory {
                 config.getCollectory().getTimeoutSec()) // Geocode service connection time-out
             .build();
 
-    ALACollectoryServiceClient wsClient = new ALACollectoryServiceClient(clientConfiguration);
+    ALACollectoryServiceClient wsClient =
+        new ALACollectoryServiceClient(
+            clientConfiguration, config.getCollectory().getHttpHeaders());
     Command closeHandler =
         () -> {
           try {
@@ -76,9 +78,9 @@ public class ALAAttributionKVStoreFactory {
             try {
               return service.lookupDataResource(key);
             } catch (org.gbif.rest.client.retrofit.RestClientException ex) {
-              throw logAndThrow(ex, "Unable to connect to service");
+              throw logAndThrow(ex, "Unable to connect to rest service");
             } catch (retrofit2.HttpException ex2) {
-              throw logAndThrow(ex2, "Unable to connect to service");
+              throw logAndThrow(ex2, "Unable to connect to http service");
             } catch (Exception ex) {
               throw logAndThrow(
                   ex,

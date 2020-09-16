@@ -1,5 +1,1436 @@
-la-pipelines (2.5.5-SNAPSHOT-1) unstable; urgency=medium
+la-pipelines (2.5.5-SNAPSHOT) bionic; urgency=medium
 
-  * Initial release
+  ** SNAPSHOT build @8ea717e82905ea9dc475c0df0ce1e6a74aeb71af **
 
- -- Vicente J. Ruiz Jurado <vjrj@gbif.es>  Fri, 24 Jul 2020 09:38:29 +0200
+  [ Federico Mendez ]
+  * Initial commit
+  * re-arranging elements and adding missing elements: name and description
+  * ExportHBase: adding the capability to export into HDFS
+  * ExportHBase: adding the capability to export into HDFS
+  * adding missing flag
+  * adding missing flag
+  * changing map conversion function to avoid duplicating maps and consume memory
+  * adding Beam elements and pipeline to create the HDFS records for the consolidated hdfs table used for big downloads
+  * adding test cases for multimedia and extended record converters
+  * adding test cases for multimedia and extended record converters
+  * adding taxonKey comparison
+  * changing path where files are copied
+  * adding paths to handle attempts path and the definitive path
+  * converting string to path
+  * getting the gbifId from the basicRecord
+  * using simpleName/class name
+  * adding logging to debug
+  * using simpleName/class name
+  * removing a creating target dir
+  * removing unnecessary directory removal
+  * adding missing javadoc
+  * adding files using the datasetkey as pattern
+  * adding exception propagation
+  * adding a lock to avoid concurrent data deletion and loading while building
+  * moving lock prefixes to constants
+  * removing datasetKey from the output path removing unsed imports
+  * simplifying in-lock executions
+  * fixing target paths
+  * missing / in path
+  * changing read lock by a write lock instead
+  * using a barrier instead of a lock
+  * propagating barrier error
+  * adding logging to barrier locking
+  * curator was not started
+  * adding lombok cleanup
+  * adding lombok cleanup
+  * moving files are done only when the HDFS daily build barrier is not set
+  * using a full lock/barrier for data copying
+  * handling multimedia records and copying multimedia records into the HDFS view path
+  * setting delete source to false
+  * serializing multimedia records in the ext_multimedia field
+  * adding mixing to ignore the schema field
+  * removing multimedia hanlding since now it is copied into the HDFS table
+  * merging hive table pipeline branch
+  * using latets kv-store to match beam versions and provide a better handling of null responses
+
+  [ Nikolay Volik ]
+  * Added git ignore file
+  * Changed project structure Added Pipeline :: Tools :: Maven plugin sources Added Pipeline :: Sdks :: Models sources
+  * Changed pipelines-maven-plugin goals executions
+  * Moved core sources
+  * Fixed spelling
+  * Fixed tests
+  * Moved Transforms.java
+  * Moved ES-indexing sources
+  * Moved gbif-pipeline sources
+  * Changed es-indexing hierarchy
+  * Added comments
+  * Added FileBasedSink
+  * Added maven wrapper
+  * Removed Objects.isNull and etc.
+  * Changed Interpretation.java Added comments
+  * Changed avro name from InterpretedExtendedRecord to BasicRecord
+  * Changed name from es-indexing to es-tools
+  * Added comments
+  * Changed unit tests names
+  * Extracted parsers to the independent module
+  * Changed DwCA name to Dwca
+  * Changed package name
+  * build tools moved to buildSrc directory
+  * Refactored some methods and names
+  * Refactored some methods and names
+  * Removed redundant test resources
+  * Added new transforms Renamed packages
+  * Added new transforms
+  * Changed InterpretationPipeline.java
+  * Changed WsConfig init place
+  * Added transformation unit tests
+  * Added indexing transformations and other
+  * Changed pipeline options
+  * Added mini-pipelines
+  * Added archives-converters
+  * Changed packages names
+  * Changed class names
+  * Changed WsConfig
+  * Added reading pipeline options from properties file
+  * Simplified
+  * Added shade-plugin sections
+  * Fixed pipelines issues
+  * Fixed Spark serialization problem
+  * Fixed Spark indexing issue
+  * Fixed Spark indexing issue
+  * Added documentation
+  * Added documentation
+  * Added documentation
+  * Added documentation
+  * Added documentation
+  * Added documentation
+  * Added documentation
+  * Added documentation
+  * Added documentation
+  * Added documentation
+  * Added examples
+  * Added examples
+  * Added comments
+  * Added comments
+  * Added comments
+  * Added comments
+  * Added comments
+  * Added comments
+  * Added comments
+  * Added comments
+  * Added comments
+  * Changed examples
+  * Changed examples
+  * Added new method
+  * Added new method
+  * Added docs
+  * Added docs
+  * Added docs
+  * Added docs
+  * Changed logger
+  * Changed docs
+  * Changed docs
+  * Changed docs
+  * Changed docs
+  * Changed docs
+  * Added .travis.yml
+  * Test building
+  * Added release plugin
+  * Fixed building
+  * Added maven-javadoc-plugin
+  * Added gitignore parameters
+  * Changed project structure
+  * Changed project structure
+  * Changed project structure
+  * Changed project structure
+  * Doc fixes
+  * Doc fixes
+  * Doc fixes
+  * Doc fixes
+  * Doc fixes
+  * Doc fixes
+  * Changed project structure
+  * Changed project structure
+  * Changed project structure
+  * Changed project structure
+  * Changed project structure
+  * Changed artery name to pipelines Updated project major version
+  * Changed versions to SNAPSHOT
+  * Changed tag
+  * Changed pipeline names
+  * Changed comments
+  * Updated project version
+  * Removed @link
+  * Removed FileBasedSink.java
+  * Fix standalone pom
+  * Returned FileBasedSink.java
+  * Changed standalone pipeline enum names
+  * Added new standalone pipeline
+  * Fixed DwcaIO and Example module
+  * Fixed standalone project
+  * Updated docs
+  * Added appender
+  * Changed relocation part Added missed dependencies
+  * Added provided scope
+  * Added Spark Slf4jSink.java and configurations
+  * Changed -cp to -jar
+  * Added a new example project for sending Beam Spark runner metrics to ELK
+  * Changed README.md
+  * Changed README.md
+  * Changed README.md
+  * Changed README.md
+  * Changed README.md
+  * Changed README.md
+  * Added MDC informations
+  * Fixed file and gelf logginig
+  * Updated README.md
+  * Updated README.md
+  * Updated README.md
+  * Updated README.md
+  * Updated README.md
+  * Updated README.md
+  * Updated README.md
+  * Updated README.md
+  * Fixed Spark guave issues
+  * Updated README.md
+  * Updated README.md
+  * Updated README.md
+  * Updated README.md
+  * Updated Apache Beam version
+  * Updated README.md
+  * Updated Apache Beam version
+  * Updated README.md
+  * Updated README.md
+  * Updated README.md
+  * Updated README.md
+  * Updated README.md
+  * Fixed imports
+  * Removed redundant version
+  * Fixed hdfs bug with standalone pipelines
+  * Changed ES index schema
+  * Moved to another package
+  * Changed Beam version
+  * Updated index schema, added "copy_to"
+  * Updated index schema, added "copy_to"
+  * Added inverted issues field - "notIssue"
+  * Added multialias swap
+  * Added metric counters
+  * Updated commons-compress.version
+  * Fixed issue with json
+  * Fixed issue with json
+  * Fixed issue with json
+  * Changed from methods to classes for better metrics naming
+  * Added log4j-http-appender module
+  * Updated spark.embedded.version
+  * Fixed spark metrics
+  * Improved interpretation final path
+  * Updated Beam version Deleted redundant classes
+  * Removed unused module
+  * Updated retrofit.version
+  * Fixed shutdown hook call
+  * Fixed reader unclosed connection
+  * Updated dwca-io.version
+  * Changed batch size to ES recommended
+  * Fixed REST client creation
+  * Optimazed imports
+  * Changed index and alias creation methods
+  * Added metadata pipelines output file creation
+  * Added pipelines.common module
+  * Changed metadata option
+  * Changed metadata option saving
+  * Fixed metrics file writing
+  * Added ES delete records by query
+  * Added workaround for a bug with stuck job
+  * Added new PipelinesVariables
+  * Imports optimized
+  * Moved RecordType.java into PipelinesVariables.java
+  * Updated jackson.version
+  * Fixes #146 Changed key name
+  * Fixes #146 Changed key name
+  * Fixed indexing issue with an invalid JSON as a verbatim field value
+  * Fixed indexing issue with CoGroup
+  * Changed UniqueIdTransform metric names
+  * Fixed - compare all duplicate records, maybe they are identical
+  * Fixed tests - compare all duplicate records, maybe they are identical
+  * Updated README.ms files
+  * Updated README.ms files
+  * Fixed - compare all duplicate records, maybe they are identical
+  * Fixed - ES records duplication
+  * Fixed - ES records duplication
+  * Added new interpretation step - save unique verbatim files Added archives converters feature - hash of id
+  * Fixed user permission problem
+  * Added MultimediaInterpreter2.java unit test
+  * Update README.md
+  * Update README.md
+  * Update README.md
+  * Sonar fixes
+  * Sonar fixes
+  * Ignore empty extensions
+  * Added parser for type
+  * Moved Gbif json doFn to the independent transform class
+  * Removed Australia spatial interpretation
+  * Changed java constructor to Lombok NoArgsConstructor
+  * Changed variable name
+  * Simplification
+  * Changed code formatting
+  * Moved interpretTypifiedName to BasicInterpreter.java
+  * Changed yoda.time to java.time
+  * Removed redundant dependencies
+  * Added JavaDoc
+  * Added OccurrenceExtensionConverter.java
+  * Updated OccurrenceExtensionConverter.java
+  * Added HashIdTransform
+  * Improved comments
+  * Added OccurrenceExtensionTransform.java
+  * Improved comments
+  * Added new variables
+  * Improved unit tests
+  * Added OccurrenceExtensionTransform and HashIdTransform transforms
+  * Added create from ParDo
+  * Added Ignore
+  * Improved unit tests
+  * Improved memory usage
+  * Added hash for id
+  * Mowed hashing Id to pipelines
+  * Fixed pipelines issues in cluster
+  * Fixed time zone
+  * Added isPresent check
+  * Update README.md
+  * Update README.md
+  * Update README.md
+  * Added codestyle
+  * Improved data parser
+  * Sonar fixes
+  * Sonar fixes
+  * Sonar fixes
+  * Sonar fixes
+  * Added dwca validation results from crawler
+  * Added dwca validation results from crawler
+  * Removed HashId transforms
+  * Changed Term.name -> Term.qulifiedName Changed Extension.name -> Extension.rowType
+  * Improved temporal parser Closes #169
+  * Changed timeout from 20 to 2 sec
+  * Fixed HDFS move
+  * Fixed version
+  * Fixed bug with year ranges
+  * Changed vTaxonrank to Taxonrank
+  * Fixed tests
+  * Extended common timeout to 5 min
+  * Added avro datum writers in try-with
+  * Added unit tests Write invalid avro
+  * Fixed NPE, cause beam doesn't return null as a value Added comments
+  * Optimized imports
+  * Fixed failed tests
+  * Added ExtendedRecordReaderTest.java Fixed duplicates issue
+  * Changed SYNC_THRESHOLD 100 -> 1_000
+  * Added builder methods into Transforms
+  * Use only ALL types
+  * Fixed Beam serialization isssue
+  * Decoupled from GBIF services as gbif id generation and etc.
+  * Fixed serialization issue
+  * Removed async ES bulk push
+  * Fix guava classpath issue in test
+  * Use kvs release version
+  * CDH 5.12.0 release
+  * Back to CDH 5.16.2
+  * Update README.md
+  * Renamed to factory
+  * Added GeocodeService abstraction for geolookup kv service and bitmap cache
+  * Revert "Try to reuse all connections"
+  * Use factory for GeocodeBitmapCache.java
+  * Revert "Use factory for GeocodeBitmapCache.java"
+  * Fixed fragmenter pom parent
+  * Rearranged
+  * Added main fragmenter class
+  * Added test with wrong values
+  * Extracted lambda
+  * Changed module name Added initial classes
+  * Use LinkedBlockingQueue insted of Queue
+  * Initial class stucture for DWCA fratments uploader
+  * Added back pressure setting
+  * Added back pressure logging
+  * Added back pressure counter
+  * Added README.md info
+  * Added comments
+  * Simplified
+  * Use Phaser instead of CompletableFuture collection
+  * Added new comments
+  * Renamed
+  * #251 Use list of strings for hdfs avro
+  * #251 Renamed User to Agent*
+  * Use 1500 records per batch
+  * Use 8mb or 1500 records per batch
+  * Use dwc-io snapshot
+  * Renamed reordedbyids to agentid
+  * #251 Use schema generated by gbif/occurrence
+  * #251 Use release versions
+  * Added missed interpretation
+  * Fixed code smels
+  * Updated version
+  * #251 Use release versions
+  * #251 Use release versions
+  * Use latest version
+  * #251 Removed agentId as a term
+  * Use latest release versions
+  * Use latest release versions
+  * Renamed module to fragmenter Changed version to 2.4.0
+  * CR fixes
+  * Moved crawler-cli from crawler project
+  * Removed extra dependencies
+  * Use single thread pool
+  * Added jackson-guava
+  * Fixed condtion issue
+  * Fixed classpath issues
+  * Cleaned
+  * Fixed broken test cases
+  * Refactored
+  * Changed packages naming
+  * Added fragmenter classes
+  * Renamed
+  * Refactored
+  * Removed NonNull
+  * Fixed cli class cating exception
+  * Fixed sonar issues
+  * Removed extra info
+  * Use single thread executor in UT
+  * Added Framgmenter message
+  * Fixed typo
+  * Improved conficuration structure
+  * Renamed variable
+  * Added initial "runnable" implementation
+  * Use FEATURE_SECURE_PROCESSING for xml parser
+  * Fixed sonar vulnerabilities
+  * Use StepConfiguration for BalancerConfiguration
+  * Revert "Use StepConfiguration for BalancerConfiguration"
+  * Removed redundant property
+  * Removed guava
+  * Use proper class name
+  * Removed redundant property
+  * Added FragmenterCallbackTest.java
+  * Added FRAGMENTER step name
+  * Added new variables
+  * Refactored
+  * Added crawler-integration-tests module for CLI
+  * Renamed
+  * Cleaned up
+  * Added working DWCA
+  * Added working XML/ABCD
+  * Catch RuntimeException in case of an error during key generation
+  * Added table creation
+  * Create meta file with info
+  * Added validation result to use in Keygen
+  * Use getValidationReport() getter
+  * Use debug instead of warn, it produces too much log info
+  * Added extra logging
+  * Changed comment info
+  * Improved README.md
+  * Removed extra column README.md
+  * Fixed class README.md
+  * Fixed method name README.md
+  * Improved README.md
+  * Use latest gbif-api release
+  * Use latest gbif versions
+  * Update number of splits
+  * Update number of splits
+  * Use Google code style for new code
+  * Fixed NPE
+  * Use api release version
+  * Fix compile zk issue
+  * Specified curator version explicitly to prevent classpath issues
+  * Use latest beam version - 2.20.0
+  * Use latest beam for ES 6.5.2
+  * Added exta logging for gbifID
+  * Use occurrence to get current number of records
+  * Use release version of parsers
+  * gbif/pipelines#269 Use --conf spark.yarn.am.waitTime=360s
+  * Rearranged transforms and interpreters
+  * Fix gbif/pipelines#273
+  * gbif/pipelines#271
+  * gbif/pipelines#271
+  * Use datasetKey MDC insted of datasetId
+  * gbif/pipelines#271 Set zk crawler statuses
+  * tdwg/attribution#16 Fix wikidata formatting
+  * gbif/pipelines#292
+  * Closes gbif/pipelines#294
+  * Closes gbif/pipelines#295
+  * gbif/pipelines#271 Set zk status only if node exists
+  * gbif/pipelines#281
+  * #275 #276 #278
+  * gbif/pipelines#267
+  * Set default time zone
+  * [maven-release-plugin] prepare release pipelines-parent-2.4.7
+  * [maven-release-plugin] prepare for next development iteration
+  * Use @SuppressWarnings("ConstantConditions") for Beam classes
+  * #275 #276 #278
+  * Use diff es dir for tests
+  * Removed unused pipelines
+  * #275 #276 #278
+  * #275 #276 #278
+  * #275 #276 #278 Added logging
+  * #275 #276 #278 Use builder for TaggedValuesTransform
+  * #275 #276 #278 Use builder for BasicTransform
+  * #275 #276 #278 Use builder for AmplificationTransform.java
+  * #275 #276 #278 Use builder for AustraliaSpatialTransform.java
+  * #280 Remaned AustraliaSpatial to LocationFeature
+  * #277 Use YAML for configuration
+  * #277 Fix test
+  * #277 Use top level ZK path
+  * Fix fragmenter config reader
+  * #277 Fix wrong value
+  * #277 Fix failing fragmenter
+  * Reduce logging info
+  * Fix abcda crawler
+  * Bump project version
+  * Fix abcda deletion
+  * gbif/pipelines#302 Added empty module for ALA
+  * gbif/pipelines#302 Added missed modelVersion
+  * Use COORDINATE_PRECISION_UPPER_BOUND = 1
+  * Use no argument constructor
+  * gbif/pipelines#291
+  * gbif/pipelines#291
+  * Gbif dev (#310)
+  * Use generic object for properties reader
+  * Added extra log
+  * gbif/pipelines#311 Use more threads and memory
+  * Use InterpretationPipelineOptions insted of BasePipelineOptions
+  * Remove hardcoded hdfs prefix (#323)
+  * gbif/pipelines#325 Fix some CPF bugs
+  * Removed unused configs
+  * Use only one index prefix for small datasets
+  * Use guava 20 as main version and 23 for cli only
+  * Use release versions
+  * Use master latest version
+  * Added spotless check
+
+  [ gbif-jenkins ]
+  * [maven-release-plugin] prepare release artery-parent-0.1
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release artery-parent-0.2
+  * [maven-release-plugin] prepare release pipelines-parent-2.0.0
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.0.0
+  * [maven-release-plugin] prepare release pipelines-parent-2.0.1
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.0.2
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.0.3
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.0.4
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.0.5
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.0.6
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.0.7
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.0.8
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.0.9
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.0.10
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.0.11
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.0.12
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.0.13
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.0.14
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.0.15
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.0.15
+  * [maven-release-plugin] prepare release pipelines-parent-2.0.16
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.0.17
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.0.18
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.0.19
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.0.20
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.0.21
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.0.22
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.0.23
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.0.24
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.1.1
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.1.2
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.1.3
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.1.4
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.2.0
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.2.1
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.2.2
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.2.3
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.2.4
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.2.5
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.2.6
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.2.7
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.2.8
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.2.9
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.2.10
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.2.11
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.2.11
+  * [maven-release-plugin] prepare release pipelines-parent-2.2.12
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.2.13
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.2.14
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.2.15
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.2.16
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.2.17
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.2.18
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.2.19
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.2.20
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.2.21
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.2.22
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.2.23
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.2.24
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.2.25
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.2.26
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.2.27
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.2.28
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.2.29
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.2.30
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.2.31
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.2.32
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.3.0
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.3.0-CDH5.12.0
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.3.1
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.3.2
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.3.3
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.3.4
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.3.5.1
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.3.6
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.3.7
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.3.8
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.3.9
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.4.0
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.4.1
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.4.2
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.4.3
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.4.4
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.4.5
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.4.6
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.4.8
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.5.0
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.5.1
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.5.2
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.5.3
+  * [maven-release-plugin] prepare for next development iteration
+  * [maven-release-plugin] prepare release pipelines-parent-2.5.4
+  * [maven-release-plugin] prepare for next development iteration
+
+  [ timrobertson100 ]
+  * Typos, grammar and relative links in markdown
+  * [BEAM-5036] Backporting more progress on HDFS rename
+  * Adds HBase lookup table salting [issue #156]
+  * Creates a file per dataset for the HBase export (issue #158)
+  * Fixup: group by datasetKey and not by record, remove unnecessary sharding
+  * Creates verbatim files in a directory per dataset
+  * Null safe datasetKey handling
+  * Only salt counter table keys in HBase #160
+  * HBase export for single file and with documented known working config for production use
+  * Improvements for cleaning and runtime information
+  * WIP: Cleanup of livingatlas to build
+  * #331 Adds spotless maven plugin
+  * Spotless everywhere and enforced
+
+  [ fmendezh ]
+  * upgrading to latest of some core dependencies, MapDB changed a method response
+  * refactoring parser to make code easier to follow
+  * refactoring DwCA readers to make its usage more intuitive, internally it was refactored to avoid using string flags
+  * changing tests to advance to next record before reading the current value
+  * refactoring Json handling to avoid doing too many small expensive computations that can affect performance ExtendedRecord: it was simplified by avoiding the creation of empty temporary lists for extensions
+  * fixing ExtendedRecordConverter: builder.setCoreTerms was missing adding minor improvements and fixing some spelling mistakes
+  * supported multimedia must be sorted by priority
+  * changing pom file to use include logback and logstash appender, all log4j dependencies were removed in ingestion pipelines metrics/logback.xml contains a sample logback file that be used to collect logs and metrics in the std out
+  * removing logback and log4j config files
+  * matching slf4j to spark/hadoop versions
+  * Fixing minor typos and alignments
+  * Adding simple Memoizer/Cache based on Google Guava for the Geocode service
+  * applying client Guava cache to species match
+  * fixing typos in example pipeline
+  * fixing typos and removing hadoop transitive dependencies, hadoop dependencies are passed during runtime
+  * upgrading to kvs 1.1-SNAPSHOT that allows pure rest client kv stores
+  * kv stores factories changes to support Rest client only KV stores
+  * list of networks and publishingCountry were missing in metadata record
+  * adding the specific taxon key at the rank level to facilitate aggregations
+  * moving all the taxonomic classification to a nested element called gbifClassification
+  * supporting v1 filters: repatriated, hasCoordinate, hasGeospatialIssues
+  * Transforming Avro ARRAY types and simplifying null arrays classificationPath holds the higher taxa keys
+  * using usage instead of acceptedUsage to create the classification path
+  * adding missing fields of API V1, mostly for the taxonomic interpretation
+  * adding rank names
+  * adding rank names
+  * renaming startDate to eventDateSingle and adding a geo_shape field
+  * adding timestamps of when records were created and indexing it in elasticsearch
+  * getting lastCrawled from the machine tags adding auto-suggest fields to the schema mapping
+  * indexing mediaType and multimediaRecords
+  * changing multimediaItems to media
+  * Interpreting endPointType and using the metadata record as a side input
+  * Propagating EndPointType
+  * removing unnecessary retrieval of installation data interpreting publishing country at the record and dataset level, taking into consideration eBird
+  * fixing test cases
+  * adding taxonKey, with all the taxonomic keys
+  * concatenating all verbatim values into the all field adding decimalLatitude and decimalLongitude
+  * setting the "all" as indexed but not stored
+  * removing d
+  * applying changes to accommodate latest changes on the kv-store library
+  * moving the ws creation to the KvStore factory
+  * adding tearDown handler
+  * adding a module to export the GBIF HBase table into a ExtendedRecord/Avro files.
+  * Adding an HBase Snapshot export pipeline
+  * fixing jackson classpath issues and fixing wrong grouping
+  * adding a flag to reuse IDs of extended records
+  * processing array nodes of simple types, this was preventing the networkKeys to be indexed
+  * adding a write re-entrant lock to stop concurrent writes and stop reads in the ElasticSearch index, this is done mostly for small downloads running while the index is being modified
+  * changing option names to make them less confusing with other settings
+  * fixing wrong getter usage
+  * RankedName was using name instead of ScientificName for INCERTAE_SEDIS
+  * draft code to traverse hdfs directory
+  * using a list to keep the order of results
+  * avro table definition
+  * adding hdfs record
+  * adding all converters of occurence hdfs records and removing unnecessary elements
+  * renaming class to keep consistency with names used in crawler project
+  * format was tested twice
+  * validating that records have a valid GBIF Id
+  * changing error message
+  * missing NOT !
+  * adding logging statement
+  * filtering out records with invalid GBIF ids
+  * merging output files of HDFS/Hive build
+  * using latest schema created from the occurrence-hdfs-table project
+  * the order records to be transformed is important otherwise interpreted values can be overwritten
+  * changing analyzer from simple to standard, simple remove terms composed by number only
+  * Accepted usage has to be copied in the list of taxon keys https://github.com/gbif/pipelines/issues/218
+  * repatriated field must be calculated from the publishing country otherwise the aggregator country is used
+  * making interpretation of some numeric fields "null" aware https://github.com/gbif/pipelines/issues/224
+  * Mapping License.UNSPECIFIED to null https://github.com/gbif/pipelines/issues/226 ModelUtils: trimming possible null values before comparing them to 'null'
+  * Simplifying Media license interpretation https://github.com/gbif/pipelines/issues/227 ModelUtils simplifying null handling and fixing LocationIntepreterTest to use real data, previously test cases were not evaluating anything
+  * Handling null values of License, UNSPECIFIED licenses are mapped to Null
+  * The order of records parameter has changed since are processed in order, the ExtendedRecord mapper ignore values that have been set previously
+  * adding fault tolerance when using external services and updating to latest key-value-store which uses the same fault tolerance library resilience4j
+  * making config serializable
+  * remove use of HiveColumn utility for verbatim columns, "order" verbatim column has been ignored
+  * https://github.com/gbif/pipelines/issues/230 Verbatim fields as set as interpreted only for non-source interpreted fields Formatting "created" date to string using ISO date formatter
+  * created date was wrongly set lastParsed and lastInterpreted use the max created date of all records
+  * extending test cases to cover lastInterpreted and lastParsed fields
+  * removing duplicate line
+  * extending metata-record.avsc to store machineTags and implementing a default value interpreter and transform
+  * coding defensively in case when the ID has no value in the extension record
+  * lazy evaluation of a file walker was causing some unexpected IO errors
+  * adding programme and project identifiers to ElasticSearch and HDFS records
+  * renaming program to programme
+  * upgrading to CDH5.16.2, relocating guava 12.0.1 which is used by HBase
+  * adding processing of MachineTags to be included in data processing
+  * adding TaggedValues transformations, interpretation  and changes to ES and HDFS indexing
+  * pipelines were using the toKv instead of write function to produce output
+  * adding TaggedValueRecord transform to standalone pipelines
+  * not all the projects have an identifier
+  * not all the projects have an identifier
+  * adding TaggedValue records transformation
+  * adding missing parameter metadata record
+  * using future dates to flag invalid dates
+  * adding verbatim taxonomic fields in the extended record converter
+  * adding the classification node only when it contains data
+  * adding log to track re projection errors
+
+  [ Marcos Lopez Gonzalez ]
+  * ES6 support backported + deprecated methods removed
+  * added interpretation of elevation, elevationAccuracy, depth and depthAccuracy
+  * elevation and depth interpretation
+  * chnaged gbifClassification ES type from nested to object
+  * removed issues that are not being thrown in the current interpretation
+  * import fixed
+  * changen ES mappings for multimediaItems
+  * added fields to the species match request
+  * changes to match interpretations with current system + fixes
+  * fixed tests
+  * location matcher changes to use a list of countries from the WS
+  * imports
+  * changed ES mapping of multimedia record
+  * chnaged mappings of fields that can be faceted to make them keywords
+  * np checks in multimedia type
+  * added missing fields in XML parser
+  * multimedia json converter changed to do it manually in order to avoid the skipKeys
+  * fixed multimedia type interpretation
+  * changed usage name to keyword in ES schema
+  * added Incertidae sedis to the usage too when there is no taxon match
+  * Updates of ES records when the dataset changes from one index to another
+  * Deleteing all ES indexes related to dataset when swapping to avoid race conditions
+  * cleanup
+  * NPE checks
+  * check index to swap since some can be optional
+  * comment
+  * checking that the aliases exist before querying them to find dataset indexes
+  * ES query cleanup
+  * #162 swapping indexes for all aliases in a single operation
+  * relaxed condition to check the ES index name pattern
+  * removed ES normalizer from enums
+  * #187 fix bug in coordinates parsing
+  * added test for presumed swapped coords in location interpretation
+  * elevation and depth mapped as double in ES
+  * removed normalizer from issues
+  * #193 removed normalizer from issues
+  * modified delete by query to wait for the task to finish before returning
+  * bugfix delete by query
+  * checking indexes to delete by query are not empty
+  * #207 using settings from pipelineOptions after swapping + removed unnecessary methods
+  * Refactored ES tools and Utils to reduce the ES connections
+  * delete by query after indexing + IT for indexing pipeline
+  * added more ES tests
+  * ES delete by query done again before running the pipeline
+  * fixed es version in IT
+  * removed redundant test
+  * excluding integrationt tests from standard builds
+  * Updated readme with tests conventions to follow
+  * clean tests
+  * Custom kryo registrator to override the Beam one
+  * using same schema ID function in kryo registrator as in SparkConf
+  * refactor kryo registrator
+  * added pipelines step in logs
+  * added ES index max result window setting
+  * added mapping to ES field networkKeys
+  * #229 updated geotools version to match our current interpretation system
+  * added scientificName to the HDFS view converter
+  * added scientificName to the HDFS view converter
+  * added locality to interpretation and ES mappings
+  * added locality to HDFS view converter
+  * added more date formats in HDFS converter
+  * format
+  * #243 handling dates with year 0000
+  * fix tests
+  * changed log to be more meaningful
+
+  [ nvolik ]
+  * Changed getEsMaxBatchSize setting
+  * Updated pom version
+  * Updated javadoc
+  * Fixed abcda issue
+  * Updated parsers lib
+  * Updated gbif-parsers version to avoid NPE
+  * Fixed null id issue
+  * Remove unnecessary files
+  * Fix spelling, added JavaDoc
+  * Fix spelling, added new Transforms api methods
+  * Added AustraliaSpatial record, interpreter and transformations
+  * Added AustraliaSpatial record, interpreter and transformations
+  * Added AustraliaSpatial record, interpreter and transformations
+  * Added table name for KV
+  * Added AustraliaSpatial record, interpreter and transformations
+  * Updated README.md
+  * Updated docs
+  * Updated docs
+  * Updated docs
+  * Updated docs
+  * Updated docs
+  * Updated docs
+  * Added read and write functions
+  * Added Amplification pipelines
+  * Added Blast client
+  * Added Amplifications into DwcaPipeline.java
+  * Updated GbifJsonConverter for partial update
+  * Added GbifJsonConverter.java unit tests
+  * Refactored JsonConverter.java and GbifJsonConverter.java
+  * Removed extra unboxing
+  * Added Sonar exclusion
+  * Added Sonar exclusion
+  * Added Sonar exclusion
+  * Added extensions data into verbatim node
+  * Improved amplificationRecord extension json converter
+  * Improved amplificationRecord extension json converter
+  * Closes #149 Improved avro to json conversion, used primitive types instead of strings when it is possible
+  * Added Sonar exclusion
+  * Added parsed fields
+  * Added json parser for MeasurementOrFactRecord
+  * Added keygen module
+  * Added json parser for MeasurementOrFactRecord
+  * Added static fields for id and issues
+  * Moved Keygen codebase from occurrence project
+  * Added GBIF id keygen base classes in BasicInterpreter.java
+  * Improved id doc
+  * Added interpretGbifId implementation
+  * Added keygen unit tests
+  * Fixed package name misspelling
+  * Fixed configuration reading
+  * Removed unnecessary variables
+  * Improved HBase connection Changed wsProperties to properties Improved GbifJsonConverter.java
+  * Improved README.md
+  * Fixed KV withClass_
+  * Sonar fixes
+  * Added Jococo
+  * Sonar fixes
+  * Sonar fixes
+  * Changed gbifId from int to long
+  * Skip sonar
+  * Added XmlIO.java
+  * Added XML archives pipelines: XML->ExtendedRecord XML->Interpreted XML->ES Index
+  * Improved JavaDocs
+  * Simplification
+  * Removed useless variables
+  * Refactored configuration
+  * Added XML counter metric
+  * Renamed variables
+  * Added XML validator
+  * Removed XML validator
+  * Fixed xml loading order
+  * Wrong logs
+  * Refactored
+  * Removed dead code
+  * Improved tests
+  * Improved temporal parser
+  * Improved es schema
+  * Changed  KV version
+  * Added gbifID into es-schema
+  * Fix temporal parser
+  * Fix temporal parser
+  * Improved license field -> enum name
+  * Improved license field -> enum name
+  * Improved EndpointType lookup
+  * Improved imports
+  * Changed es id -> es gbifId
+  * Added missed gbifIds filter
+  * Updated dwca-io version
+  * Fixed multimedia type issue
+  * Moved function to BasicInterpreter.java
+  * Removed custom issues Closes #165
+  * Check connection before close
+  * Added useExtendedRecordId parameter
+  * Added crawlId interpretation Closes #171
+  * Improved issue mapping and unit tests
+  * Improved multimedia license
+  * Improved multimedia license
+  * Improved image location interpretation
+  * Improved image location interpretation, fix tests
+  * Changed ParsedFiled issue list to set
+  * Location added new tests, code simplified
+  * Updated CoordinateParseUtils.java from parsers project Closes #172
+  * Changed locking configuration creation
+  * Changed multimedia license parser
+  * Updated lib versions
+  * Fixed NPE
+  * Fixed illegal date parsing issue
+  * Fixed wrong path
+  * Fixed ES utf16 character issue
+  * Pass records even if core terms are empty, to match production records
+  * Fixed multimedia media type issue
+  * Changed common variable name
+  * Added MULTIMEDIA_URI_INVALID flag
+  * Improved license parser
+  * Fixed wrong interpretation call sequence order
+  * Fixed associatedMedia interpretation
+  * Fixed multimedia converter order
+  * Improved audubon license parsing priority
+  * Added unit test for ExtensionInterpretation.java
+  * Changed module code formatting
+  * Simplification
+  * Removed locks for "delete by query"
+  * Misspelling
+  * Updated embedded.elasticsearch.version
+  * Misspelling
+  * Changed version to RELEASE
+  * Added Elasticsearch schema lowercase_normalizer
+  * Improved one step only interpretation, especially for METADATA
+  * Added common for all transformations class -> Transform.java
+  * Updated lombok version
+  * Improved transformation API
+  * Improved multimedia
+  * Updated libs versions
+  * Updated default ES settings
+  * Improved audubon and multimedia type parses
+  * Extended timeout for ES
+  * Closes #197
+  * Added variable for HDFS table process
+  * Added comments
+  * Bug -> IllegalArgumentException
+  * Added endPointType check if is NULL
+  * Removed endPointType check if is NULL
+  * Add alias for default index after creation
+  * Closes #202 Added timeout settings for delete_by_query
+  * Updated Beam version to 2.14.0 Removed System.exit(0) workaround
+  * Closes #214
+  * Closes #148
+  * Updated Beam version to 2.15.0
+  * Changed properties reader to read file from HDFS
+  * Added logging to properties reader
+  * Removed @Cleanup
+  * Renamed variable
+  * Changed name from HIVE to HDFS Changed path structure to use inputPath and targetPath
+  * Fixed path
+  * Fixed path issue
+  * Fixed hdfs config issue
+  * Skips a failed record rather than dataset in the case on inconsistent key
+  * Fixed startDayOfYear and endDayOfYear interpretation
+  * Changed code formatting
+  * Fixed copy path issue
+  * Added number of file shards setting
+  * Fixed NPE
+  * If number of shards is NULL
+  * Fixed logging issue with standalone
+  * Updated GBIF libs versions
+  * Removed IORuntimeException.java
+  * HIVE -> HDFS
+  * Added INTERPRETED_TO_HDFS step
+  * Updated readme
+  * Optimized imports
+  * Updated readme
+  * Updated readmes
+  * Updated build.sh
+  * Updated es-occurrence-schema.json
+  * Updated plugin versions
+  * Closes #219
+  * Removed the import
+  * #191 Added array for media licenses
+  * #191 Fixed tests
+  * Added usage key into taxonKey array
+  * #220 added timestamp to eventDateSingle
+  * Fixed basisOfRecords when value is null
+  * Fixed timezone parsing
+  * Fixed timezone parsing
+  * Fixed timezone parsing, changed format order
+  * Fixed timezone parsing, added pattern without seconds
+  * Fixed timezone parsing, added pattern without seconds
+  * Added missed taxonomy rank and status
+  * Removed mistaken value: couNTRy != couNTy
+  * Fixed identifier
+  * Fixed identifier, added import/xml case
+  * Removed offset cause - https://github.com/gbif/gbif-api/issues/3
+  * Fixes #225
+  * Temporal interpreter from occurrence project is used now instead of custom
+  * Fixed unit tests
+  * Add identifier as a triplet if it non generated
+  * Fixed "null" for numerical
+  * Updated data type
+  * Return null in case of an exception
+  * Improved eventDate mapper
+  * Changed to release
+  * Added ingest-gbif-java module
+  * Updated commons-compress version
+  * Modified transforms to be used as java methods
+  * Implemented VerbatimToInterpretedPipeline
+  * Added sync method for avro writer
+  * Added shade plugin
+  * Fixed NPE
+  * Added HADOOP
+  * Fixed empty avro files
+  * Fixed serialization exception
+  * Added serialVersionUID
+  * Changed package name
+  * Added Finally section
+  * Changed executor type
+  * Added logging libs
+  * Throw the exception if metadata is null
+  * Formatting
+  * Improved DefaultValuesTransform.java
+  * Simplification
+  * Fixed tests after simplification
+  * Changed ws initialization, cause @Setup doesn't work here PTransform
+  * Fixed serialization issue
+  * Moved DefaultValuesTransform to the proper place
+  * Updated gbif-api.version to release
+  * Added DefaultValuesTransform.java
+  * Specified the type
+  * Refactored SyncDataFileWriter.java
+  * Use Map instead og HashMap
+  * Used name in lower case
+  * Added logic for filtering duplicated GBIF Ids during interpretation
+  * Changed to private
+  * Added GBIF id filter
+  * Moved GBIF id filter for BasicRecord to separate class
+  * Added sync variant for small datasets
+  * Added test cases
+  * Fixed logging issue
+  * Added metrics implementation Added setSyncThreshold and sync/async code variation
+  * Removed redundant method
+  * Added comment
+  * Added tests IngestMetrics.java and IngestMetricsBuilder.java
+  * Changed "new Double" to "Double.valueOf"
+  * Adds the new Record interface to classes with "String getId()"
+  * Refactored ExtendedRecordReader.java to common Record based reader
+  * Added partial implementation of InterpretedToEsIndexPipeline.java
+  * Added indexing part
+  * Added partial implementation of InterpretedToHdfsViewPipeline.java
+  * Edited comment
+  * Added writing part
+  * Added executor
+  * Added AVRO_EXTENSION
+  * Moved
+  * Added all furutes to wait
+  * Added wildcard parsing
+  * Fixed wrong multimedia path
+  * Fixed ES client creation issue
+  * Fixed wrong paths
+  * Increment counter only if records are exist
+  * Fix after merge with master
+  * Fix after merge with master
+  * Fix empty metadata
+  * Fix empty metadata
+  * Fixed test
+  * Used async way with EsMaxBatchSize and EsMaxBatchSizeBytes
+  * Added comments
+  * Use String[] as variable
+  * Added external ExecutorService parameter
+  * Added crc
+  * Updated beam version
+  * Updated jackson version
+  * Updated http client versions
+  * Removed unnecessary chars
+  * Revert "upgrading to CDH5.16.2, relocating guava 12.0.1 which is used by HBase"
+  * updated gbif-parsers.version
+  * Added missed ES client
+  * Use hdfs FS wrapper for Avro reader
+  * Updated version
+  * Updated version
+  * Fix for #237
+  * Removed relocation
+  * Don't push data if actions in BulkRequest are 0
+  * Added OccurrenceExtensionTransform.java
+  * Added comment
+  * Added simple test for the function
+  * Changed interface to Closable
+  * Added FileSystemFactory to reuse hdfs connection
+  * Added FileSystemFactory to reuse hdfs connection
+  * Moved ES write code to the class ElasticsearchWriter.java
+  * Fixed getHdfsFs() to return hdfsFs
+  * Read properties as a singleton object
+  * Wait 30 seconds before swap if someone use the index
+  * Added snapshot version
+  * [maven-release-plugin] prepare release pipelines-parent-2.2.33
+  * [maven-release-plugin] prepare for next development iteration
+  * Removed json object parsing
+  * Fixes #246
+  * Throw RuntimeException in case of error
+  * #244 - Indexing organismQuantity, organismQuantityType, sampleSizeUnit, sampleSizeValue
+  * #244 - Added organismQuantity, organismQuantityType, sampleSizeUnit, sampleSizeValue, relativeOrganismQuantity into hdfs view
+  * Use lower case for hdfs table schema
+  * Updated beam version
+  * Changed sampleSizeValue and organismQuantity type to double
+  * Changed sampleSizeValue and organismQuantity type to double
+  * #248 converted RecordType to interface
+  * Added Coverage badge
+  * Added singleton for content service
+  * Close content service in case of Beam pipeline
+  * Optimmize imports
+  * Changed HbaseConnectionFactory to use singlton instance
+  * Changed HbaseConnectionFactory in case if connection was closed
+  * Added HbaseConnection to use with Beam pipeline
+  * Experemental feature -> added SupplierFactory for singltones
+  * Use normal singltone for Geocode kv and NameUsageMatch kv, to improve performance for non-Spark version
+  * Added comments
+  * Use release version of KVS
+  * Release resources on JVM exit
+  * Fixed sonar singleton issues
+  * Revert "Fixed sonar singleton issues"
+  * Configs classes splited into factories and models
+  * ContentfulConfigFactoryTest.java - added unit test
+  * Fixed sonar issue
+  * Fixed sonar issue - changed to IntPredicate
+  * Refactored
+  * Changed comment
+  * Added unit tests
+  * Repeat unit test 3 times
+  * Added unit tests
+  * Changed exception type
+  * Added wildcard unit tests
+  * Added lombok config, to add Genereted annotation
+  * Excluded footprintWKT (can have a very big size) term from copy to all
+  * Added kvStore getter and setter
+  * Added kvConfig getter
+  * Updated dwc-api to release
+  * Updated dwc-api to release
+  * #250 Added GeocodeBitmapCache realization
+  * #250 Changed variable to static string
+  * #250 Read image as a resource file
+  * #250 Fixed seriallization issue
+  * Try to reuse all connections
+  * Added getters and setters
+  * Skip machineTags in ES json
+  * Increase ES time for swapping
+  * Increase number of attempts and timeout when delete a dataset
+  * gbif/portal-feedback#2423 Preserve record-level licences over dataset-level ones
+  * Refactored, removed module, moved classes
+  * Upadated dwca-io version
+  * Removed redundant library
+  * Fix IT tests
+  * Code simplification
+  * Code simplification
+  * Added ingest-fragmenter module
+  * Rearranged classes
+  * Added ElasticsearchWriter unit tests
+  * Added name
+  * Use generic type instead of BasicRecord Fixed issue with size Added tests
+  * Changed JaCoCo config
+  * Added maven-failsafe-plugin.version
+  * #254 Return NONE, if response is FUZZY and higher taxa is null or empty
+  * Added default values
+  * Added initial implementation
+  * Added some unit tests
+  * Added some hbase mini-cluster for unit tests
+  * Added keygen service
+  * Added hbase put list
+  * Added convert function Updated unit tests
+  * Removed redundant class
+  * Improved unit tests
+  * Improved unit tests
+  * Changed public to private type
+  * Use StarRecord instead of ExtendedRecord
+  * Added tests with occurrence as an extanstion and dwca with regular extanstion Fixed issue where StarRecord iteratior changed the object, created wrapper StarRecordCopy.java
+  * Added README.md
+  * Added resources
+  * Changed jacoc report path
+  * Added 3 new fields Added key salt
+  * Updated lombok version
+  * Use batch size for XML
+  * Refactored
+  * Added dwca extension test
+  * Improved unit tests
+  * re-interrupt exception
+  * Added xml file with wrong ext
+  * #251 Added model and intepreter for user identifiers (ORCID, WIKIDATA, OTHER)
+  * Jacoco changed path
+  * #251 Added extended es json converter Added new fields into es schema
+  * #251 Extended HDFS converter Added new fields into HDFS avro schema
+  * #251 Added verbatim identifiedByID and recordedByID fields
+
+  [ nikolay.volik ]
+  * Moved from Crawler project
+  * Added geolookup
+  * Added new config variables Fixed geo test cases
+  * Added geo properties prefix
+  * Changed taxonomy ws to kv store
+  * Changed taxonomy ws to kv store
+  * Changed taxonomy ws to kv store
+  * Changed ZOOKEEPER_PROP
+  * Changed ZOOKEEPER_PROP
+  * Changed CACHE_SIZE_PROP
+  * Added WsConfigFactory metadata and taxonimy prefixes
+  * Updated beam and es versions
+  * Added condition method to Interpretation.java, to avoid empty objects in *.avro
+  * Added ExtensionInterpretation.java
+  * Added MultimediaInterpreter2.java
+  * Added image extension
+  * Updatet image extension
+  * Updatet image extension
+  * Updatet extensions
+  * Fixed example project
+  * Fixed example project
+  * Removed old multimedia interpreter Added Image extension classes
+  * Added 3 draft extionsions: AUDUBON, MEASUREMEN_OR_FACT, AMPLIFICATION
+  * Moved transformations to new packages and classes
+  * Moved transformations to new packages and classes
+  * Added MeasurementOrFact
+  * Added MeasurementOrFact
+  * Fixed unit test
+  * Added list size > 0 for extensions
+  * Updated dwc-api.version
+  * Improved javadocs
+  * Added audubon and amplification avro schemas and mappers
+  * Added audubon and image extensions into main pipelines
+  * Added MultimediaConverter.java
+  * added withCacheCapacity setting
+  * Fixed NPE
+  * Fixed NPE
+  * Added MultimediaConverterTest.java
+  * Updated README.md
+  * Removed dependencies
+  * Improved javaDocs
+  * removed runner
+  * Added Lombok
+  * Used Lombok features
+  * Created directories for avro schemes
+  * Added JavaDocs
+  * Changed kvs.version to release
+  * Changed es test start timeout to 120s
+
+  [ Dave Martin ]
+  * javadoc fix
+  * directory rename
+  * Fix for #306
+  * Allow HDFS location to be configurable
+  * Update FileSystemFactory.java
+  * initial import
+  * renamed directory ala -> livingatlas
+  * Update README.md
+  * WIP moved AVRO models into shared GBIF sdk/models
+  * commented out livingatlas/pipelines for now to allow the build to work - albeit separate builds
+  * commented out livingatlas/pipelines for now to allow the build to work - albeit separate builds
+  * Temporarily removed reference to GBIF parent POM - this is causing all end to end tests in livingatlas module to fail with an OOM. Switched to using the DirectRunner for end to end test with bug fix to DwcaIO Removed use of org.codehaus.plexus.util.FileUtils this work is for the issue tracked here: https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/93
+  * changes to mirror the dependencies with the GBIF parent pom to rule out dependency difference with and without GBIF parent pom
+  * starting docker containers from maven using fabric8 plugin. this is for https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/93
+  * starting docker containers from maven using fabric8 plugin. this is for https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/93
+  * fix for parent pom issue
+  * Test cleanup based on error prone feedback - mainly swapped expected vs actual params. Removal of the need for external vocab files for tests to aid CI. This is for https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/93
+  * POM clean up for https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/93
+  * Renaming of integration tests to follow the GBIF/failsafe/surefire convention. All integration tests have a suffix of "IT". All junit tests are ran with `mvn package` and integration tests are ran with `mvn verify`. This is for https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/93
+  * README fix
+  * maven integration for downloading supporting shapefiles. This is for https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/93
+  * changed to use same version as parent - 2.5.4-SNAPSHOT and removed version references where possible
+  * added github issue ref
+  * removed jjj
+  * reverted change that used the inherited jackson version to fix integration tests
+  * application of spotless
+  * enable gbif-dev and ala-dev builds
+  * removal of spotless - testing to see if this fixes gbif jenkins build
+  * integration tests need docker
+  * removed commented spotless block
+  * minor version jackson-module-scala_2.11.version bump
+  * force updates to try and fix build
+  * removed version range in attempt to fix travis build
+  * fixes and closes https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/95 - hadoop "No FileSystem for scheme: hdfs" error added a "local-hdfs" YAML config file for reference. updated set-env.sh JAR version
+  * Fix for DumpDatasetSize to ignore parameters not defined as JCommander main args.
+  * Fix for #337 allow parameterised builds with configurable ports for SOLR and the ala name service. Removed the use of docker-compose with fabric8, instead just adding the definition of services into the POM.
+  * moved to property
+  * Fix for https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/96 - making the initialisation of the centre points objects and vocab more thread safe by initialisation in the transform.
+  * Fix for https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/96 - making the initialisation of the centre points objects and vocab more thread safe by initialisation in the transform.
+  * changed text for clarity
+  * inputPath for `sample`
+  * fixes for https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/107
+  * partial fix for https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/106
+  * more temp workarounds https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/105
+  * Changes responding to SonarQube feedback. This work is intended to assist the merge.
+  * updated the travis link
+  * Update README.md
+  * Update README.md
+  * Update README.md
+  * fixes https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/113 - multiple URLs in collectory metadata config for single dataset
+  * Update sparkql.md
+  * Update sparkql.md
+  * Update README.md
+
+  [ mike-podolskiy90 ]
+  * Update pom.xml
+
+  [ Matthew Blissett ]
+  * Minor changes to grammar etc.
+  * New parallel ES and SOLR-based deployments.
+  * Using parsers with updated continent dictionary to avoid many issues.
+  * Remove unused dependency.
+  * Update parsers version
+  * Update parsers version.
+  * Update parsers version
+  * Use KVS with "name" for Locations.
+  * Revert "Use KVS with "name" for Locations." (Wrong branch.)
+  * Swallow exception when SOLR test is run for the first time.
+  * WIP for #337, to use a Docker port from Maven properties.
+
+  [ Tim Robertson ]
+  * Update README.md
+  * Update README.md
+  * Update AmplificationTransform.java
+  * Update Organization.java
+  * Update pom.xml
+
+  [ Mikhail Podolskiy ]
+  * Retry configuration improvements
+
+  [ Qifeng ]
+  * add geoReferencedDate to LocationRecord
+  * External resource file loading and Interprate uncertainty #79 #94
+  * correct expected/actual
+  * add country centre tests and other fix
+  * junit version to 5
+
+  [ pal155 ]
+  * Remove reference to sun xerces parser to work with corretto Add nameType to ALA taxonomy record Use ala-namematching-service library to connect to service Include default values from collectory when matching Add test cases for interpreter
+  * Add nameType to solr schema
+  * Keep spotless quiet
+  * Delete library-ised classes.
+  * Allow snapshot libraries from ALA nexus server
+  * Allow name matching requests to use taxonomic hints from the data resource
+  * Classification before- and after- checks for issues. Translate name matching issues into pipeline issues.
+  * Fix vocabulary. Stop spotless from wingeing
+
+  [ vjrj ]
+  * Add colorized log appender dep
+  * Added colorized logs
+  * Starting with la-pipelines script
+  * Added better bash logging
+  * More work for AtlasOfLivingAustralia/la-pipelines#88: Added bash logging, yq params and dwca-avro
+  * dwca-avro all, AtlasOfLivingAustralia/la-pipelines#88
+  * Included almost all shells in la-pipelines cli. AtlasOfLivingAustralia/la-pipelines#88
+  * Minor logging improvements. AtlasOfLivingAustralia/la-pipelines#88
+  * Multi dr arguments. AtlasOfLivingAustralia/la-pipelines#88
+  * Improved --help and -v, for AtlasOfLivingAustralia/la-pipelines#88
+  * Fix for local/embeded/cluster args. Externalize interpret args. AtlasOfLivingAustralia/la-pipelines#88
+  * Externalize all args. Added --dry-run. AtlasOfLivingAustralia/la-pipelines#88
+  * Reorder options
+  * Improved help
+  * Improved yaml documentation
+  * Error and Ctrl-C trap
+  * Improved a bit start/end logs
+  * Fix typo
+  * First works with bash autocompletion
+  * Remove previous modification to DumpDatasetSize options after Dave fix
+  * Update test yaml to new version. Add fsPath arg. AtlasOfLivingAustralia/la-pipelines#88
+  * More work for AtlasOfLivingAustralia/la-pipelines#88.
+  * Fix typo
+  * Comment cursor movement in bash completion
+  * Adjustment for debian package execution
+  * Debian package for la-pipelines
+  * Starting to cleanup old shell scripts and configs
+  * More configs and scripts cleanup for AtlasOfLivingAustralia/la-pipelines#88
+  * Removed unused pipelines.yaml
+  * CombinedYamlConfiguration refactor
+  * Fixes by David Martin running la-pipelines on spark
+
+ -- Support GBIF.es <support@gbif.es>  Wed, 05 Aug 2020 15:31:46 +0200

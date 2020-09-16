@@ -1,9 +1,9 @@
 # https://www.debian.org/doc/manuals/maint-guide/dother.en.html#install
-pipelines/target/la-pipelines.jar usr/share/la-pipelines/
-scripts/la-pipelines usr/bin
-scripts/logging_lib.sh usr/share/la-pipelines/
-pipelines/target/la-pipelines etc/bash_completion.d/
-pipelines/src/main/resources/log4j-colorized.properties data/la-pipelines/config
-pipelines/src/main/resources/log4j.properties data/la-pipelines/config
-configs/la-pipelines.yaml data/la-pipelines/config
-configs/la-pipelines-local.yaml usr/share/doc/la-pipelines
+livingatlas/pipelines/target/la-pipelines.jar usr/share/la-pipelines/
+livingatlas/scripts/la-pipelines usr/bin
+livingatlas/scripts/logging_lib.sh usr/share/la-pipelines/
+livingatlas/pipelines/target/la-pipelines usr/share/bash-completion/completions/
+livingatlas/pipelines/src/main/resources/log4j-colorized.properties data/la-pipelines/config
+livingatlas/pipelines/src/main/resources/log4j.properties data/la-pipelines/config
+livingatlas/configs/la-pipelines.yaml data/la-pipelines/config
+livingatlas/pipelines/target/la-pipelines-local.yaml.sample data/la-pipelines/config

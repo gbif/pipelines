@@ -4,10 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import lombok.Builder;
 import lombok.ToString;
 import lombok.Value;
@@ -38,11 +35,14 @@ public class ALACollectoryMetadata {
   /**
    * Build a map of hints suitable for a name search.
    *
-   * @return null for no hints or a map of hints.
+   * @return a map of hints.
    */
   @JsonIgnore
   public Map<String, List<String>> getHintMap() {
-    if (this.taxonomyCoverageHints == null || this.taxonomyCoverageHints.isEmpty()) return null;
+    if (this.taxonomyCoverageHints == null || this.taxonomyCoverageHints.isEmpty()) {
+      return Collections.emptyMap();
+    }
+
     Map<String, List<String>> hints = new HashMap<>();
     for (Map<String, String> element : this.taxonomyCoverageHints) {
       for (Map.Entry<String, String> entry : element.entrySet()) {
@@ -51,7 +51,7 @@ public class ALACollectoryMetadata {
             .add(entry.getValue().trim().toLowerCase());
       }
     }
-    return hints.isEmpty() ? null : hints;
+    return hints;
   }
 
   @JsonPOJOBuilder(withPrefix = "")

@@ -13,3 +13,12 @@ log
 temp
 tmp
 minicluster
+
+# la-pipelines debian package
+livingatlas/debian/*.debhelper
+livingatlas/debian/*.debhelper.log
+livingatlas/debian/*.buildinfo
+livingatlas/debian/*.substvars
+livingatlas/debian/files
+livingatlas/debian/la-pipelines
+livingatlas/debian/maven-repo-local/

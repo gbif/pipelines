@@ -7,6 +7,7 @@ import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.kvs.ALAPipelinesConfigFactory;
 import au.org.ala.kvs.cache.ALAAttributionKVStoreFactory;
 import au.org.ala.kvs.cache.ALACollectionKVStoreFactory;
+import au.org.ala.kvs.cache.ALANameCheckKVStoreFactory;
 import au.org.ala.kvs.cache.ALANameMatchKVStoreFactory;
 import au.org.ala.kvs.cache.GeocodeKvStoreFactory;
 import au.org.ala.pipelines.transforms.ALAAttributionTransform;
@@ -14,6 +15,7 @@ import au.org.ala.pipelines.transforms.ALADefaultValuesTransform;
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
 import au.org.ala.pipelines.transforms.LocationTransform;
 import au.org.ala.utils.CombinedYamlConfiguration;
+import au.org.ala.utils.ValidationUtils;
 import java.io.FileNotFoundException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -110,6 +112,7 @@ public class ALAVerbatimToInterpretedPipeline {
   public static void run(String[] args) {
     InterpretationPipelineOptions options =
         PipelinesOptionsFactory.create(InterpretationPipelineOptions.class, args);
+    options.setMetaFileName(ValidationUtils.INTERPRETATION_METRICS);
     run(options);
   }
 
@@ -207,6 +210,8 @@ public class ALAVerbatimToInterpretedPipeline {
         ALATaxonomyTransform.builder()
             .datasetId(datasetId)
             .nameMatchStoreSupplier(ALANameMatchKVStoreFactory.getInstanceSupplier(config))
+            .kingdomCheckStoreSupplier(
+                ALANameCheckKVStoreFactory.getInstanceSupplier("kingdom", config))
             .dataResourceStoreSupplier(ALAAttributionKVStoreFactory.getInstanceSupplier(config))
             .create();
     alaTaxonomyTransform.setup();
