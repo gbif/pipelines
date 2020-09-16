@@ -6,10 +6,11 @@ import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareValue;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.util.function.BiConsumer;
+
+import com.google.common.base.Strings;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.elasticsearch.common.Strings;
 import org.gbif.api.model.collections.lookup.Match.MatchType;
 import org.gbif.api.model.collections.lookup.Match.Status;
 import org.gbif.api.vocabulary.OccurrenceIssue;
