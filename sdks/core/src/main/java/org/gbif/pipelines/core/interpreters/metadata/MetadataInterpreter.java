@@ -21,6 +21,7 @@ import org.gbif.api.vocabulary.TagName;
 import org.gbif.common.parsers.LicenseParser;
 import org.gbif.pipelines.core.ws.metadata.MetadataServiceClient;
 import org.gbif.pipelines.core.ws.metadata.response.Dataset;
+import org.gbif.pipelines.core.ws.metadata.response.Installation;
 import org.gbif.pipelines.core.ws.metadata.response.Network;
 import org.gbif.pipelines.core.ws.metadata.response.Organization;
 import org.gbif.pipelines.io.avro.MetadataRecord;
@@ -63,6 +64,10 @@ public class MetadataInterpreter {
             mdr.setProgrammeAcronym(dataset.getProject().getProgramme().getAcronym());
           }
         }
+
+        Installation installation = client.getInstallation(dataset.getInstallationKey());
+        mdr.setHostingOrganizationKey(installation.getOrganizationKey());
+
         copyMachineTags(dataset.getMachineTags(), mdr);
       }
     };

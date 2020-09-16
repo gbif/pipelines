@@ -231,6 +231,7 @@ public class OccurrenceHdfsRecordConverter {
       hr.setLastcrawled(mr.getLastCrawled());
       hr.setProjectid(mr.getProjectId());
       hr.setProgrammeacronym(mr.getProgrammeAcronym());
+      hr.setHostingOrganizationKey(mr.getHostingOrganizationKey());
 
       if (hr.getLicense() == null) {
         hr.setLicense(mr.getLicense());

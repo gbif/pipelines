@@ -25,6 +25,7 @@
       "crawlId": {"type": "integer"},
       "datasetTitle": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
       "installationKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
+      "hostingOrganizationKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
       "endorsingNodeKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
       "publisherTitle": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
       "license": {"type": "keyword", "copy_to": "all"},
