@@ -14,9 +14,16 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.interpreters.core.TemporalInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.junit.Before;
 import org.junit.Test;
 
 public class AlaTemporalInterpreterTest {
+
+  @Before
+  public void set() {
+    // Set a temporal parser to support D/M/Y
+    ALATemporalInterpreter.init();
+  }
 
   @Test
   public void testQualityAssertion() {
