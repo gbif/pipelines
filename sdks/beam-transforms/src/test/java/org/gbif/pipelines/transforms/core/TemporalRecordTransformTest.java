@@ -1,14 +1,9 @@
 package org.gbif.pipelines.transforms.core;
 
-import java.time.LocalDateTime;
-import java.time.Month;
-import java.time.Year;
-import java.time.YearMonth;
+import java.time.*;
 import java.time.temporal.Temporal;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
@@ -58,14 +53,16 @@ public class TemporalRecordTransformTest {
 
     // Expected
     // First
-    final LocalDateTime fromOne = LocalDateTime.of(1999, 2, 2, 12, 26);
-    final ParsedTemporal periodOne = ParsedTemporal.create();
-    periodOne.setFromDate(fromOne);
-    periodOne.setYear(Year.of(1999));
-    periodOne.setMonth(Month.of(2));
-    periodOne.setDay(2);
+    final ParsedTemporal parsedTemporal = ParsedTemporal.create();
+    parsedTemporal.setFromDate(LocalDate.of(1999, 2, 2));
+    parsedTemporal.setYear(Year.of(1999));
+    parsedTemporal.setMonth(Month.of(2));
+    parsedTemporal.setDay(2);
 
-    final List<TemporalRecord> dataExpected = createTemporalRecordList(periodOne);
+    final ParsedTemporal other = ParsedTemporal.create();
+    other.setFromDate(LocalDateTime.of(1999, 2, 2, 12, 26));
+
+    final List<TemporalRecord> dataExpected = createTemporalRecordList(parsedTemporal, other);
 
     // When
     PCollection<TemporalRecord> dataStream =
@@ -91,13 +88,15 @@ public class TemporalRecordTransformTest {
 
     // Expected
     // First
-    final YearMonth fromOne = YearMonth.of(1999, 2);
     final ParsedTemporal periodOne = ParsedTemporal.create();
-    periodOne.setFromDate(fromOne);
+    periodOne.setFromDate(YearMonth.of(1999, 2));
     periodOne.setYear(Year.of(1999));
     periodOne.setMonth(Month.of(2));
 
-    final List<TemporalRecord> dataExpected = createTemporalRecordList(periodOne);
+    final ParsedTemporal other = ParsedTemporal.create();
+    other.setFromDate(YearMonth.of(1999, 2));
+
+    final List<TemporalRecord> dataExpected = createTemporalRecordList(periodOne, other);
 
     // When
     PCollection<TemporalRecord> dataStream =
@@ -127,23 +126,21 @@ public class TemporalRecordTransformTest {
     p.run();
   }
 
-  private List<TemporalRecord> createTemporalRecordList(ParsedTemporal... dates) {
-    return Arrays.stream(dates)
-        .map(
-            x -> {
-              String from = x.getFromOpt().map(Temporal::toString).orElse(null);
-              String to = x.getToOpt().map(Temporal::toString).orElse(null);
-              return TemporalRecord.newBuilder()
-                  .setId("0")
-                  .setYear(x.getYearOpt().map(Year::getValue).orElse(null))
-                  .setMonth(x.getMonthOpt().map(Month::getValue).orElse(null))
-                  .setDay(x.getDayOpt().orElse(null))
-                  .setEventDate(EventDate.newBuilder().setGte(from).setLte(to).build())
-                  .setDateIdentified(x.getFromOpt().map(Temporal::toString).orElse(null))
-                  .setModified(x.getFromOpt().map(Temporal::toString).orElse(null))
-                  .setCreated(0L)
-                  .build();
-            })
-        .collect(Collectors.toList());
+  private List<TemporalRecord> createTemporalRecordList(
+      ParsedTemporal eventDate, ParsedTemporal other) {
+
+    String from = eventDate.getFromOpt().map(Temporal::toString).orElse(null);
+    String to = eventDate.getToOpt().map(Temporal::toString).orElse(null);
+    return Collections.singletonList(
+        TemporalRecord.newBuilder()
+            .setId("0")
+            .setYear(eventDate.getYearOpt().map(Year::getValue).orElse(null))
+            .setMonth(eventDate.getMonthOpt().map(Month::getValue).orElse(null))
+            .setDay(eventDate.getDayOpt().orElse(null))
+            .setEventDate(EventDate.newBuilder().setGte(from).setLte(to).build())
+            .setDateIdentified(other.getFromOpt().map(Temporal::toString).orElse(null))
+            .setModified(other.getFromOpt().map(Temporal::toString).orElse(null))
+            .setCreated(0L)
+            .build());
   }
 }

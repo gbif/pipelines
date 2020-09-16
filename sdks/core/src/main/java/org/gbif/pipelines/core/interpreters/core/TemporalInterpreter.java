@@ -44,13 +44,23 @@ public class TemporalInterpreter {
   public static void interpretTemporal(ExtendedRecord er, TemporalRecord tr) {
     OccurrenceParseResult<TemporalAccessor> eventResult = interpretRecordedDate(er);
     if (eventResult.isSuccessful()) {
-      TemporalAccessor temporalAccessor = eventResult.getPayload();
+      Optional<TemporalAccessor> temporalAccessor = Optional.ofNullable(eventResult.getPayload());
 
-      Optional.ofNullable(temporalAccessor)
+      Optional<TemporalAccessor> localDate =
+          temporalAccessor
+              .filter(ta -> ta.isSupported(ChronoField.HOUR_OF_DAY))
+              .map(ta -> ta.query(TemporalQueries.localDate()));
+
+      if (localDate.isPresent()) {
+        temporalAccessor = localDate;
+      }
+
+      temporalAccessor
           .map(TemporalAccessor::toString)
           .ifPresent(x -> tr.setEventDate(new EventDate(x, null)));
 
-      Optional.ofNullable(AtomizedLocalDate.fromTemporalAccessor(temporalAccessor))
+      temporalAccessor
+          .map(AtomizedLocalDate::fromTemporalAccessor)
           .ifPresent(
               ald -> {
                 tr.setYear(ald.getYear());

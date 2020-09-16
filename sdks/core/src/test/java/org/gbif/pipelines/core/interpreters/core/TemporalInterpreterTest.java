@@ -98,7 +98,7 @@ public class TemporalInterpreterTest {
 
     assertDate("2014-01-11", tr.getModified());
     assertDate("2012-01-11", tr.getDateIdentified());
-    assertDate("1999-11-11T12:22", tr.getEventDate().getGte());
+    assertDate("1999-11-11", tr.getEventDate().getGte());
     assertEquals(1999, tr.getYear().intValue());
     assertEquals(11, tr.getMonth().intValue());
     assertEquals(11, tr.getDay().intValue());
