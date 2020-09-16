@@ -32,6 +32,7 @@ import org.apache.avro.specific.SpecificRecordBase;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.GbifInternalTerm;
 import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.TermFactory;
@@ -47,9 +48,11 @@ import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.Multimedia;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.RankedName;
-import org.gbif.pipelines.io.avro.TaggedValueRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.grscicoll.Collection;
+import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
+import org.gbif.pipelines.io.avro.grscicoll.Institution;
 
 /**
  * Converter for objects to GBIF elasticsearch schema. You can pass any {@link SpecificRecordBase}
@@ -99,8 +102,8 @@ public class GbifJsonConverter {
           .converter(AmplificationRecord.class, getAmplificationRecordConverter())
           .converter(MeasurementOrFactRecord.class, getMeasurementOrFactRecordConverter())
           .converter(MultimediaRecord.class, getMultimediaConverter())
-          .converter(TaggedValueRecord.class, getTaggedValueConverter())
-          .converter(BasicRecord.class, getBasicRecordConverter());
+          .converter(BasicRecord.class, getBasicRecordConverter())
+          .converter(GrscicollRecord.class, getGrscicollRecordConverter());
 
   @Builder.Default private boolean skipIssues = false;
 
@@ -751,35 +754,6 @@ public class GbifJsonConverter {
   }
 
   /**
-   * String converter for {@link TaggedValueRecord}, convert an object to specific string view.
-   * Copies all the value at the root node level.
-   *
-   * <pre>{@code
-   * Result example:
-   *
-   * "verbatim": {
-   *    ...
-   * },
-   * "institutionKey": "7ddf754f-d193-4cc9-b351-99906754a03b",
-   * "collectionKey": "7ddf754f-d193-4cc9-b351-99906754a07b",
-   *  //.....more fields
-   *
-   * }</pre>
-   */
-  private BiConsumer<JsonConverter, SpecificRecordBase> getTaggedValueConverter() {
-    return (jc, record) -> {
-      TaggedValueRecord tvr = (TaggedValueRecord) record;
-      if (Objects.nonNull(tvr.getTaggedValues())) {
-        tvr.getTaggedValues()
-            .forEach(
-                (k, v) ->
-                    Optional.ofNullable(TERM_FACTORY.findTerm(k))
-                        .ifPresent(term -> jc.addJsonTextFieldNoCheck(term.simpleName(), v)));
-      }
-    };
-  }
-
-  /**
    * String converter for {@link BasicRecord}, convert an object to specific string view. Copies all
    * the value at the root node level.
    *
@@ -802,6 +776,43 @@ public class GbifJsonConverter {
 
       // Add other fields
       jc.addCommonFields(br);
+    };
+  }
+
+  /**
+   * String converter for {@link GrscicollRecord}, convert an object to specific string view
+   *
+   * <pre>{@code
+   * Result example:
+   *
+   * "institutionKey": "04ec1770-6216-4c66-b9ea-c8087b8f563f",
+   * "collectionKey": "02d1e772-54ee-4767-b4b8-c35f0c7270ba",
+   *
+   * }</pre>
+   */
+  private BiConsumer<JsonConverter, SpecificRecordBase> getGrscicollRecordConverter() {
+    return (jc, record) -> {
+      GrscicollRecord gr = (GrscicollRecord) record;
+
+      if (!skipId) {
+        jc.addJsonTextFieldNoCheck(ID, gr.getId());
+      }
+
+      if (gr.getInstitutionMatch() != null) {
+        Institution institution = gr.getInstitutionMatch().getInstitution();
+        if (institution != null) {
+          jc.addJsonTextFieldNoCheck(
+              GbifInternalTerm.institutionKey.simpleName(), institution.getKey());
+        }
+      }
+
+      if (gr.getCollectionMatch() != null) {
+        Collection collection = gr.getCollectionMatch().getCollection();
+        if (collection != null) {
+          jc.addJsonTextFieldNoCheck(
+              GbifInternalTerm.collectionKey.simpleName(), collection.getKey());
+        }
+      }
     };
   }
 }

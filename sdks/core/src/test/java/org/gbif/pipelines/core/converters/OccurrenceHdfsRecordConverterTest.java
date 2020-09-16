@@ -30,7 +30,6 @@ import org.gbif.api.vocabulary.Sex;
 import org.gbif.api.vocabulary.TypeStatus;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwc.terms.GbifInternalTerm;
 import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.pipelines.core.utils.MediaSerDeserUtils;
 import org.gbif.pipelines.io.avro.AgentIdentifier;
@@ -52,7 +51,6 @@ import org.gbif.pipelines.io.avro.ParsedName;
 import org.gbif.pipelines.io.avro.Rank;
 import org.gbif.pipelines.io.avro.RankedName;
 import org.gbif.pipelines.io.avro.State;
-import org.gbif.pipelines.io.avro.TaggedValueRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.junit.Assert;
@@ -130,24 +128,10 @@ public class OccurrenceHdfsRecordConverterTest {
             .setModified("2019-04-15T17:17")
             .build();
 
-    TaggedValueRecord taggedValueRecord =
-        TaggedValueRecord.newBuilder()
-            .setId("1")
-            .setTaggedValues(
-                Collections.singletonMap(
-                    GbifInternalTerm.collectionKey.qualifiedName(),
-                    "7ddf754f-d193-4cc9-b351-99906754a03b"))
-            .build();
-
     // When
     OccurrenceHdfsRecord hdfsRecord =
         toOccurrenceHdfsRecord(
-            basicRecord,
-            metadataRecord,
-            taxonRecord,
-            temporalRecord,
-            extendedRecord,
-            taggedValueRecord);
+            basicRecord, metadataRecord, taxonRecord, temporalRecord, extendedRecord);
 
     // Should
     // Test common fields
@@ -194,7 +178,6 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals("adultss", hdfsRecord.getVLifestage());
     Assert.assertEquals(taxonRecord.getCreated(), hdfsRecord.getLastparsed());
     Assert.assertEquals(taxonRecord.getCreated(), hdfsRecord.getLastinterpreted());
-    Assert.assertEquals("7ddf754f-d193-4cc9-b351-99906754a03b", hdfsRecord.getCollectionkey());
     Assert.assertEquals(License.CC0_1_0.name(), hdfsRecord.getLicense());
     Assert.assertEquals(Collections.singletonList("13123"), hdfsRecord.getRecordedbyid());
     Assert.assertEquals(Collections.singletonList("13123"), hdfsRecord.getIdentifiedbyid());

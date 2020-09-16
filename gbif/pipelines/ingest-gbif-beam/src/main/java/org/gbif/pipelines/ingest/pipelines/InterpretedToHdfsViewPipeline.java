@@ -37,7 +37,6 @@ import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
-import org.gbif.pipelines.transforms.metadata.TaggedValuesTransform;
 import org.slf4j.MDC;
 
 /**
@@ -118,7 +117,6 @@ public class InterpretedToHdfsViewPipeline {
     TemporalTransform temporalTransform = TemporalTransform.create();
     TaxonomyTransform taxonomyTransform = TaxonomyTransform.builder().create();
     LocationTransform locationTransform = LocationTransform.builder().create();
-    TaggedValuesTransform taggedValuesTransform = TaggedValuesTransform.builder().create();
     // Extension
     MeasurementOrFactTransform measurementOrFactTransform = MeasurementOrFactTransform.create();
     MultimediaTransform multimediaTransform = MultimediaTransform.create();
@@ -133,12 +131,6 @@ public class InterpretedToHdfsViewPipeline {
     PCollection<KV<String, ExtendedRecord>> verbatimCollection =
         p.apply("Read Verbatim", verbatimTransform.read(interpretPathFn))
             .apply("Map Verbatim to KV", verbatimTransform.toKv());
-
-    PCollection<KV<String, TaggedValueRecord>> taggedValuesCollection =
-        p.apply(
-                "Interpret TaggedValueRecords/MachinesTags interpretation",
-                taggedValuesTransform.read(interpretPathFn))
-            .apply("Map TaggedValueRecord to KV", taggedValuesTransform.toKv());
 
     PCollection<KV<String, BasicRecord>> basicCollection =
         p.apply("Read Basic", basicTransform.read(interpretPathFn))
@@ -184,7 +176,6 @@ public class InterpretedToHdfsViewPipeline {
             .imageRecordTag(imageTransform.getTag())
             .audubonRecordTag(audubonTransform.getTag())
             .measurementOrFactRecordTag(measurementOrFactTransform.getTag())
-            .taggedValueRecordTag(taggedValuesTransform.getTag())
             .metadataView(metadataView)
             .build()
             .converter();
@@ -195,7 +186,6 @@ public class InterpretedToHdfsViewPipeline {
         .and(temporalTransform.getTag(), temporalCollection)
         .and(locationTransform.getTag(), locationCollection)
         .and(taxonomyTransform.getTag(), taxonCollection)
-        .and(taggedValuesTransform.getTag(), taggedValuesCollection)
         // Extension
         .and(multimediaTransform.getTag(), multimediaCollection)
         .and(imageTransform.getTag(), imageCollection)

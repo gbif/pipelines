@@ -1,6 +1,7 @@
 package org.gbif.pipelines.core.converters;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -12,6 +13,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.gbif.api.model.collections.lookup.Match.MatchType;
 import org.gbif.api.vocabulary.AgentIdentifierType;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.License;
@@ -19,7 +21,6 @@ import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.api.vocabulary.OccurrenceStatus;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwc.terms.GbifInternalTerm;
 import org.gbif.pipelines.io.avro.AgentIdentifier;
 import org.gbif.pipelines.io.avro.Amplification;
 import org.gbif.pipelines.io.avro.AmplificationRecord;
@@ -42,9 +43,14 @@ import org.gbif.pipelines.io.avro.Multimedia;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.Rank;
 import org.gbif.pipelines.io.avro.RankedName;
-import org.gbif.pipelines.io.avro.TaggedValueRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.grscicoll.Collection;
+import org.gbif.pipelines.io.avro.grscicoll.CollectionMatch;
+import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
+import org.gbif.pipelines.io.avro.grscicoll.Institution;
+import org.gbif.pipelines.io.avro.grscicoll.InstitutionMatch;
+import org.junit.Assert;
 import org.junit.Test;
 
 public class GbifJsonConverterTest {
@@ -152,22 +158,26 @@ public class GbifJsonConverterTest {
             .setUsage(synonym)
             .build();
 
-    TaggedValueRecord tvr =
-        TaggedValueRecord.newBuilder()
-            .setId("123")
-            .setTaggedValues(
-                new ImmutableMap.Builder<String, String>()
-                    .put(
-                        GbifInternalTerm.collectionKey.qualifiedName(),
-                        "75956ee6-1a2b-4fa3-b3e8-ccda64ce6c2d")
-                    .put(
-                        GbifInternalTerm.institutionKey.qualifiedName(),
-                        "6ac3f774-d9fb-4796-b3e9-92bf6c81c084")
-                    .build())
+    // grscicoll
+    Institution institution =
+        Institution.newBuilder()
+            .setCode("I1")
+            .setKey("cb0098db-6ff6-4a5d-ad29-51348d114e41")
+            .setName("Institution1")
             .build();
 
+    InstitutionMatch institutionMatch =
+        InstitutionMatch.newBuilder()
+            .setInstitution(institution)
+            .setMatchType(MatchType.FUZZY.name())
+            .build();
+
+    GrscicollRecord gr =
+        GrscicollRecord.newBuilder().setId("1").setInstitutionMatch(institutionMatch).build();
+    gr.getIssues().getIssueList().add(OccurrenceIssue.INSTITUTION_MATCH_FUZZY.name());
+
     // When
-    ObjectNode result = GbifJsonConverter.toJson(mr, er, tmr, lr, tr, br, tvr);
+    ObjectNode result = GbifJsonConverter.toJson(mr, er, tmr, lr, tr, br, gr);
 
     // Should
     assertTrue(JsonValidationUtils.isValid(result.toString()));
@@ -238,10 +248,12 @@ public class GbifJsonConverterTest {
     assertEquals(
         "[{\"type\":\"OTHER\",\"value\":\"someId\"}]", result.path("recordedByIds").toString());
     assertEquals("PRESENT", result.path("occurrenceStatus").asText());
-    assertEquals("75956ee6-1a2b-4fa3-b3e8-ccda64ce6c2d", result.path("collectionKey").asText());
-    assertEquals("6ac3f774-d9fb-4796-b3e9-92bf6c81c084", result.path("institutionKey").asText());
 
-    String expectedIssues = "[\"BASIS_OF_RECORD_INVALID\",\"ZERO_COORDINATE\"]";
+    assertEquals(institution.getKey(), result.path("institutionKey").asText());
+    assertFalse(result.has("collectionKey"));
+
+    String expectedIssues =
+        "[\"BASIS_OF_RECORD_INVALID\",\"INSTITUTION_MATCH_FUZZY\",\"ZERO_COORDINATE\"]";
     assertEquals(expectedIssues, result.path("issues").toString());
     assertEquals(
         OccurrenceIssue.values().length - expectedIssues.split(",").length,
@@ -858,5 +870,53 @@ public class GbifJsonConverterTest {
     assertEquals(0, result.path("verbatim").path("core").size());
     assertEquals(0, result.path("verbatim").path("extensions").size());
     assertEquals(OccurrenceIssue.values().length, result.path("notIssues").size());
+  }
+
+  @Test
+  public void grscicollRecordTest() {
+    // Expected
+    String expected =
+        "{\"id\":\"1\","
+            + "\"institutionKey\":\"cb0098db-6ff6-4a5d-ad29-51348d114e41\","
+            + "\"collectionKey\":\"5c692584-d517-48e8-93a8-a916ba131d9b\""
+            + "}";
+
+    // State
+    Institution institution =
+        Institution.newBuilder()
+            .setCode("I1")
+            .setKey("cb0098db-6ff6-4a5d-ad29-51348d114e41")
+            .setName("Institution1")
+            .build();
+
+    InstitutionMatch institutionMatch =
+        InstitutionMatch.newBuilder()
+            .setInstitution(institution)
+            .setMatchType(MatchType.EXACT.name())
+            .build();
+
+    Collection collection =
+        Collection.newBuilder()
+            .setKey("5c692584-d517-48e8-93a8-a916ba131d9b")
+            .setCode("C1")
+            .setName("Collection1")
+            .setInstitutionKey("cb0098db-6ff6-4a5d-ad29-51348d114e41")
+            .build();
+
+    CollectionMatch collectionMatch =
+        CollectionMatch.newBuilder().setCollection(collection).setMatchType("FUZZY").build();
+
+    GrscicollRecord record =
+        GrscicollRecord.newBuilder()
+            .setId("1")
+            .setInstitutionMatch(institutionMatch)
+            .setCollectionMatch(collectionMatch)
+            .build();
+
+    // When
+    String result = GbifJsonConverter.toStringPartialJson(record);
+
+    // Should
+    Assert.assertEquals(expected, result);
   }
 }

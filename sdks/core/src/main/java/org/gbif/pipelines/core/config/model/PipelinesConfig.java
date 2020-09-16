@@ -20,6 +20,8 @@ public class PipelinesConfig implements Serializable {
 
   private KvConfig nameUsageMatch;
 
+  private KvConfig grscicollLookup;
+
   private KvConfig geocode;
 
   private KvConfig locationFeature;
