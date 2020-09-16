@@ -1,0 +1,87 @@
+[
+  {
+    "name" : "Identifier",
+     "namespace" : "org.gbif.pipelines.io.avro.grscicoll",
+     "type" : "record",
+     "fields" : [
+       {"name" : "type", "type" : ["null", "string"], "default" : null},
+       {"name" : "identifier", "type" : ["null", "string"], "default" : null}
+     ]
+  },
+  {
+    "name" : "Address",
+     "namespace" : "org.gbif.pipelines.io.avro.grscicoll",
+     "type" : "record",
+     "fields" : [
+       {"name" : "address", "type" : ["null", "string"], "default" : null},
+       {"name" : "city", "type" : ["null", "string"], "default" : null},
+       {"name" : "province", "type" : ["null", "string"], "default" : null},
+       {"name" : "postalCode", "type" : ["null", "string"], "default" : null},
+       {"name" : "country", "type" : ["null", "string"], "default" : null}
+     ]
+  },
+  {
+    "name" : "Institution",
+    "namespace" : "org.gbif.pipelines.io.avro.grscicoll",
+    "type" : "record",
+    "fields" : [
+      {"name" : "key", "type" : ["null", "string"], "default" : null},
+      {"name" : "code", "type" : ["null", "string"], "default" : null},
+      {"name" : "name", "type" : ["null", "string"], "default" : null},
+      {"name" : "alternativeCodes", "type" : [ "null", { "type" : "map", "default": {}, "values": ["null", "string"]}], "default": null },
+      {"name" : "identifiers", "type" : [ "null", { "type" : "array", "items" : "Identifier"} ], "default" : null},
+      {"name" : "mailingAddress", "type" : ["null", "Address"], "default" : null},
+      {"name" : "address", "type" : ["null", "Address"], "default" : null}
+    ]
+  },
+    {
+      "name" : "Collection",
+      "namespace" : "org.gbif.pipelines.io.avro.grscicoll",
+      "type" : "record",
+      "fields" : [
+        {"name" : "key", "type" : ["null", "string"], "default" : null},
+        {"name" : "code", "type" : ["null", "string"], "default" : null},
+        {"name" : "name", "type" : ["null", "string"], "default" : null},
+        {"name" : "institutionKey", "type" : ["null", "string"], "default" : null},
+        {"name" : "alternativeCodes", "type" : [ "null", { "type" : "map", "default": {}, "values": ["null", "string"]}], "default": null },
+        {"name" : "identifiers", "type" : [ "null", { "type" : "array", "items" : "Identifier"} ], "default" : null},
+        {"name" : "mailingAddress", "type" : ["null", "Address"], "default" : null},
+        {"name" : "address", "type" : ["null", "Address"], "default" : null}
+      ]
+    },
+   {
+      "name" : "InstitutionMatch",
+      "namespace" : "org.gbif.pipelines.io.avro.grscicoll",
+      "type" : "record",
+      "fields" : [
+        {"name" : "matchType", "type" : ["null", "string"], "default" : null},
+        {"name" : "status", "type" : ["null", "string"], "default" : null},
+        {"name" : "reasons", "type" : ["null", { "type" : "array", "items" : "string"} ], "default" : null},
+        {"name" : "institution", "type" : ["null", "Institution"], "default" : null}
+      ]
+    },
+   {
+      "name" : "CollectionMatch",
+      "namespace" : "org.gbif.pipelines.io.avro.grscicoll",
+      "type" : "record",
+      "fields" : [
+        {"name" : "matchType", "type" : ["null", "string"], "default" : null},
+        {"name" : "status", "type" : ["null", "string"], "default" : null},
+        {"name" : "reasons", "type" : ["null", { "type" : "array", "items" : "string"} ], "default" : null},
+        {"name" : "collection", "type" : ["null", "Collection"], "default" : null}
+      ]
+    },
+  {
+    "name" : "GrscicollRecord",
+    "namespace" : "org.gbif.pipelines.io.avro.grscicoll",
+    "type" : "record",
+    "doc" : "Contains the match between an occurrence record and the GrSciColl data",
+    "fields" : [
+      {"name" : "id", "type" : ["null", "string"], "default" : null, "doc":"Pipelines identifier"},
+      {"name": "created", "type": ["null", "long"], "default" : null, "doc":"The timestamp the record was created"},
+      {"name" : "institutionMatch", "type" : ["null", "InstitutionMatch"], "default" : null},
+      {"name" : "collectionMatch", "type" : ["null", "CollectionMatch"], "default" : null},
+      {"name": "issues", "type": "org.gbif.pipelines.io.avro.IssueRecord", "default":{}}
+    ]
+  }
+]

@@ -2,10 +2,24 @@ package org.gbif.pipelines.core.converters;
 
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.base.Strings;
-import java.time.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.Year;
+import java.time.YearMonth;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.TimeZone;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -16,12 +30,29 @@ import org.apache.avro.Schema;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.gbif.api.vocabulary.License;
-import org.gbif.dwc.terms.*;
+import org.gbif.dwc.terms.DcTerm;
+import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.Term;
+import org.gbif.dwc.terms.TermFactory;
 import org.gbif.occurrence.common.TermUtils;
 import org.gbif.occurrence.download.hive.HiveColumns;
 import org.gbif.pipelines.core.utils.MediaSerDeserUtils;
 import org.gbif.pipelines.core.utils.TemporalUtils;
-import org.gbif.pipelines.io.avro.*;
+import org.gbif.pipelines.io.avro.AgentIdentifier;
+import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.Diagnostic;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.IssueRecord;
+import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.io.avro.Multimedia;
+import org.gbif.pipelines.io.avro.MultimediaRecord;
+import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
+import org.gbif.pipelines.io.avro.TaxonRecord;
+import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.grscicoll.Collection;
+import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
+import org.gbif.pipelines.io.avro.grscicoll.Institution;
 
 /** Utility class to convert interpreted and extended records into {@link OccurrenceHdfsRecord}. */
 @Slf4j
@@ -42,10 +73,10 @@ public class OccurrenceHdfsRecordConverter {
     converters.put(BasicRecord.class, basicRecordMapper());
     converters.put(LocationRecord.class, locationMapper());
     converters.put(TaxonRecord.class, taxonMapper());
+    converters.put(GrscicollRecord.class, grscicollMapper());
     converters.put(TemporalRecord.class, temporalMapper());
     converters.put(MetadataRecord.class, metadataMapper());
     converters.put(MultimediaRecord.class, multimediaMapper());
-    converters.put(TaggedValueRecord.class, taggedValueMapper());
   }
 
   // Converts a TemporalAccessor into Date
@@ -343,6 +374,27 @@ public class OccurrenceHdfsRecordConverter {
     };
   }
 
+  /** Copies the {@link GrscicollRecord} data into the {@link OccurrenceHdfsRecord}. */
+  private static BiConsumer<OccurrenceHdfsRecord, SpecificRecordBase> grscicollMapper() {
+    return (hr, sr) -> {
+      GrscicollRecord gr = (GrscicollRecord) sr;
+
+      if (gr.getInstitutionMatch() != null) {
+        Institution institution = gr.getInstitutionMatch().getInstitution();
+        if (institution != null) {
+          hr.setInstitutionkey(institution.getKey());
+        }
+      }
+
+      if (gr.getCollectionMatch() != null) {
+        Collection collection = gr.getCollectionMatch().getCollection();
+        if (collection != null) {
+          hr.setCollectionkey(collection.getKey());
+        }
+      }
+    };
+  }
+
   /** Copies the {@link BasicRecord} data into the {@link OccurrenceHdfsRecord}. */
   private static BiConsumer<OccurrenceHdfsRecord, SpecificRecordBase> basicRecordMapper() {
     return (hr, sr) -> {
@@ -559,26 +611,6 @@ public class OccurrenceHdfsRecordConverter {
 
       setCreatedIfGreater(hr, mr.getCreated());
       hr.setMediatype(mediaTypes);
-    };
-  }
-
-  /**
-   * Collects the {@link TaggedValueRecord} tagged values data into the {@link
-   * OccurrenceHdfsRecord}.
-   */
-  private static BiConsumer<OccurrenceHdfsRecord, SpecificRecordBase> taggedValueMapper() {
-    return (hr, sr) -> {
-      TaggedValueRecord tvr = (TaggedValueRecord) sr;
-      Optional.ofNullable(tvr.getTaggedValues().get(GbifInternalTerm.projectId.qualifiedName()))
-          .ifPresent(hr::setProjectid);
-      Optional.ofNullable(
-              tvr.getTaggedValues().get(GbifInternalTerm.programmeAcronym.qualifiedName()))
-          .ifPresent(hr::setProgrammeacronym);
-      Optional.ofNullable(tvr.getTaggedValues().get(GbifInternalTerm.collectionKey.qualifiedName()))
-          .ifPresent(hr::setCollectionkey);
-      Optional.ofNullable(
-              tvr.getTaggedValues().get(GbifInternalTerm.institutionKey.qualifiedName()))
-          .ifPresent(hr::setInstitutionkey);
     };
   }
 
