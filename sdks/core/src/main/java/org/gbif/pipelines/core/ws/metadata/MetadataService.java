@@ -2,6 +2,7 @@ package org.gbif.pipelines.core.ws.metadata;
 
 import java.util.List;
 import org.gbif.pipelines.core.ws.metadata.response.Dataset;
+import org.gbif.pipelines.core.ws.metadata.response.Installation;
 import org.gbif.pipelines.core.ws.metadata.response.Network;
 import org.gbif.pipelines.core.ws.metadata.response.Organization;
 import retrofit2.Call;
@@ -37,4 +38,13 @@ interface MetadataService {
    */
   @GET("/v1/organization/{organizationId}")
   Call<Organization> getOrganization(@Path("organizationId") String organizationId);
+
+  /**
+   * get installation info of provided installation uuid.
+   *
+   * @param installationKey installationKey
+   * @return JsonElement with installation info
+   */
+  @GET("/v1/installation/{installationKey}")
+  Call<Installation> getInstallation(@Path("installationKey") String installationKey);
 }

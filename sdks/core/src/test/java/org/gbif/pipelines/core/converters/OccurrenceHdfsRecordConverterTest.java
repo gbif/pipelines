@@ -95,7 +95,11 @@ public class OccurrenceHdfsRecordConverterTest {
         ExtendedRecord.newBuilder().setId("1").setCoreTerms(coreTerms).build();
 
     MetadataRecord metadataRecord =
-        MetadataRecord.newBuilder().setId("1").setLicense(License.CC_BY_4_0.name()).build();
+        MetadataRecord.newBuilder()
+            .setId("1")
+            .setLicense(License.CC_BY_4_0.name())
+            .setHostingOrganizationKey("hostOrgKey")
+            .build();
 
     List<AgentIdentifier> agentIds =
         Collections.singletonList(
@@ -189,6 +193,8 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals(Collections.singletonList("13123"), hdfsRecord.getIdentifiedbyid());
     Assert.assertEquals(OccurrenceStatus.ABSENT.name(), hdfsRecord.getOccurrencestatus());
     Assert.assertEquals(Integer.valueOf(0), hdfsRecord.getIndividualcount());
+    Assert.assertEquals(
+        metadataRecord.getHostingOrganizationKey(), hdfsRecord.getHostingOrganizationKey());
   }
 
   @Test

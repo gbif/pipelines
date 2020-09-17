@@ -71,6 +71,7 @@ public class GbifJsonConverterTest {
             .setCrawlId(1)
             .setDatasetKey("datatesKey")
             .setLicense(License.CC0_1_0.name())
+            .setHostingOrganizationKey("hostOrgKey")
             .setMachineTags(
                 Collections.singletonList(
                     MachineTag.newBuilder()
@@ -185,6 +186,7 @@ public class GbifJsonConverterTest {
     assertEquals(mr.getDatasetKey(), result.path("datasetKey").asText());
     assertEquals(mr.getCrawlId(), (Integer) result.path("crawlId").asInt());
     assertEquals("CC_BY_NC_4_0", result.path("license").asText());
+    assertEquals(mr.getHostingOrganizationKey(), result.path("hostingOrganizationKey").asText());
     assertEquals(mr.getId(), result.path("id").asText());
     assertEquals("Jeremia garde ,à elfutsone", result.path("recordedBy").asText());
     assertEquals("D2 R2", result.path("identifiedBy").asText());
