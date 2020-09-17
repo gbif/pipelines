@@ -1,13 +1,10 @@
 package org.gbif.pipelines.common;
 
 import java.io.Serializable;
-
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
-/**
- * Simple class with constants, general idea to have clean jar with constant only
- */
+/** Simple class with constants, general idea to have clean jar with constant only */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class PipelinesVariables {
 
@@ -26,7 +23,6 @@ public class PipelinesVariables {
     public static class Conversion {
 
       public static final String FILE_NAME = "verbatim";
-
     }
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -68,7 +64,6 @@ public class PipelinesVariables {
           return ALL.name();
         }
       }
-
     }
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -78,13 +73,11 @@ public class PipelinesVariables {
       public static final String GBIF_ID = "gbifId";
     }
 
-
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static class HdfsView {
 
       public static final String VIEW_OCCURRENCE = "view_occurrence";
     }
-
   }
 
   @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -127,5 +120,4 @@ public class PipelinesVariables {
     // Specific
     public static final String LOCATION_FEATURE_RECORDS_COUNT = "locationFeatureRecordsCount";
   }
-
 }

@@ -1,5 +1,20 @@
 package org.gbif.pipelines.crawler.xml;
 
+import static org.gbif.api.model.pipelines.StepType.XML_TO_VERBATIM;
+import static org.gbif.crawler.constants.PipelinesNodePaths.Fn;
+import static org.gbif.crawler.constants.PipelinesNodePaths.getPipelinesInfoPath;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Collections;
+import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.RetryOneTime;
@@ -17,22 +32,6 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
-import static org.gbif.api.model.pipelines.StepType.XML_TO_VERBATIM;
-import static org.gbif.crawler.constants.PipelinesNodePaths.Fn;
-import static org.gbif.crawler.constants.PipelinesNodePaths.getPipelinesInfoPath;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 public class XmlToAvroCallbackIT {
 
@@ -53,11 +52,12 @@ public class XmlToAvroCallbackIT {
   public static void setUp() throws Exception {
 
     server = new TestingServer();
-    curator = CuratorFrameworkFactory.builder()
-        .connectString(server.getConnectString())
-        .namespace("crawler")
-        .retryPolicy(new RetryOneTime(1))
-        .build();
+    curator =
+        CuratorFrameworkFactory.builder()
+            .connectString(server.getConnectString())
+            .namespace("crawler")
+            .retryPolicy(new RetryOneTime(1))
+            .build();
     curator.start();
 
     executor = Executors.newSingleThreadExecutor();
@@ -99,8 +99,7 @@ public class XmlToAvroCallbackIT {
             Collections.emptySet(),
             EndpointType.BIOCASE_XML_ARCHIVE,
             Platform.PIPELINES,
-            EXECUTION_ID
-        );
+            EXECUTION_ID);
     String crawlId = DATASET_UUID.toString();
 
     // When
@@ -139,8 +138,7 @@ public class XmlToAvroCallbackIT {
             Collections.emptySet(),
             EndpointType.BIOCASE_XML_ARCHIVE,
             Platform.PIPELINES,
-            EXECUTION_ID
-        );
+            EXECUTION_ID);
     String crawlId = DATASET_UUID.toString();
 
     // When
@@ -179,8 +177,7 @@ public class XmlToAvroCallbackIT {
             Collections.emptySet(),
             EndpointType.BIOCASE_XML_ARCHIVE,
             Platform.PIPELINES,
-            EXECUTION_ID
-        );
+            EXECUTION_ID);
     String crawlId = DATASET_UUID.toString();
 
     // When
@@ -200,5 +197,4 @@ public class XmlToAvroCallbackIT {
   private boolean checkExists(CuratorFramework curator, String id, String path) {
     return ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(id, path));
   }
-
 }

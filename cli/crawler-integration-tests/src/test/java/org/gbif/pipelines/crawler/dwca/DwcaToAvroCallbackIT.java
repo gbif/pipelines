@@ -1,5 +1,11 @@
 package org.gbif.pipelines.crawler.dwca;
 
+import static org.gbif.api.model.pipelines.StepType.DWCA_TO_VERBATIM;
+import static org.gbif.crawler.constants.PipelinesNodePaths.getPipelinesInfoPath;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
@@ -7,7 +13,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.UUID;
-
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.retry.RetryOneTime;
+import org.apache.curator.test.TestingServer;
 import org.gbif.api.model.crawler.DwcaValidationReport;
 import org.gbif.api.model.crawler.OccurrenceValidationReport;
 import org.gbif.api.model.pipelines.StepType;
@@ -20,26 +29,13 @@ import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.common.utils.ZookeeperUtils;
 import org.gbif.pipelines.crawler.MessagePublisherStub;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
-
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.CuratorFrameworkFactory;
-import org.apache.curator.retry.RetryOneTime;
-import org.apache.curator.test.TestingServer;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import static org.gbif.api.model.pipelines.StepType.DWCA_TO_VERBATIM;
-import static org.gbif.crawler.constants.PipelinesNodePaths.getPipelinesInfoPath;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
-/**
- * Test archive-to-avro commands message handling command on hdfs
- */
+/** Test archive-to-avro commands message handling command on hdfs */
 public class DwcaToAvroCallbackIT {
 
   private static final String DWCA_LABEL = StepType.DWCA_TO_VERBATIM.getLabel();
@@ -56,11 +52,12 @@ public class DwcaToAvroCallbackIT {
   public static void setUp() throws Exception {
 
     server = new TestingServer();
-    curator = CuratorFrameworkFactory.builder()
-        .connectString(server.getConnectString())
-        .namespace("crawler")
-        .retryPolicy(new RetryOneTime(1))
-        .build();
+    curator =
+        CuratorFrameworkFactory.builder()
+            .connectString(server.getConnectString())
+            .namespace("crawler")
+            .retryPolicy(new RetryOneTime(1))
+            .build();
     curator.start();
 
     publisher = MessagePublisherStub.create();
@@ -87,7 +84,8 @@ public class DwcaToAvroCallbackIT {
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
 
-    DwcaToAvroCallback callback = new DwcaToAvroCallback(config, publisher, curator, historyWsClient);
+    DwcaToAvroCallback callback =
+        new DwcaToAvroCallback(config, publisher, curator, historyWsClient);
 
     UUID uuid = UUID.fromString(DATASET_UUID);
     int attempt = 2;
@@ -105,8 +103,7 @@ public class DwcaToAvroCallbackIT {
             Collections.emptySet(),
             EndpointType.DWC_ARCHIVE,
             Platform.PIPELINES,
-            null
-        );
+            null);
 
     // When
     callback.handleMessage(message);
@@ -133,7 +130,8 @@ public class DwcaToAvroCallbackIT {
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
 
-    DwcaToAvroCallback callback = new DwcaToAvroCallback(config, publisher, curator, historyWsClient);
+    DwcaToAvroCallback callback =
+        new DwcaToAvroCallback(config, publisher, curator, historyWsClient);
 
     UUID uuid = UUID.fromString(DATASET_UUID);
     int attempt = 2;
@@ -151,8 +149,7 @@ public class DwcaToAvroCallbackIT {
             Collections.singleton(DWCA_TO_VERBATIM.name()),
             EndpointType.DWC_ARCHIVE,
             Platform.PIPELINES,
-            EXECUTION_ID
-        );
+            EXECUTION_ID);
 
     // When
     callback.handleMessage(message);
@@ -178,7 +175,8 @@ public class DwcaToAvroCallbackIT {
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile() + "/1";
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
 
-    DwcaToAvroCallback callback = new DwcaToAvroCallback(config, publisher, curator, historyWsClient);
+    DwcaToAvroCallback callback =
+        new DwcaToAvroCallback(config, publisher, curator, historyWsClient);
 
     UUID uuid = UUID.fromString(DATASET_UUID);
     int attempt = 2;
@@ -196,8 +194,7 @@ public class DwcaToAvroCallbackIT {
             Collections.emptySet(),
             EndpointType.DWC_ARCHIVE,
             Platform.PIPELINES,
-            EXECUTION_ID
-        );
+            EXECUTION_ID);
 
     // When
     callback.handleMessage(message);
@@ -222,7 +219,8 @@ public class DwcaToAvroCallbackIT {
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
 
-    DwcaToAvroCallback callback = new DwcaToAvroCallback(config, publisher, curator, historyWsClient);
+    DwcaToAvroCallback callback =
+        new DwcaToAvroCallback(config, publisher, curator, historyWsClient);
 
     UUID uuid = UUID.fromString(DATASET_UUID);
     int attempt = 2;
@@ -240,8 +238,7 @@ public class DwcaToAvroCallbackIT {
             Collections.singleton(DWCA_TO_VERBATIM.name()),
             EndpointType.DWC_ARCHIVE,
             Platform.PIPELINES,
-            EXECUTION_ID
-        );
+            EXECUTION_ID);
 
     // When
     callback.handleMessage(message);
@@ -259,5 +256,4 @@ public class DwcaToAvroCallbackIT {
   private boolean checkExists(CuratorFramework curator, String id, String path) {
     return ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(id, path));
   }
-
 }

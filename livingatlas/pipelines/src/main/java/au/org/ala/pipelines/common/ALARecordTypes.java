@@ -8,7 +8,8 @@ public enum ALARecordTypes
   ALL,
   ALA_UUID,
   ALA_TAXONOMY,
-  ALA_ATTRIBUTION;
+  ALA_ATTRIBUTION,
+  ALA_SENSITIVE_DATA;
 
   ALARecordTypes() {}
 

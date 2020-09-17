@@ -1,5 +1,11 @@
 package org.gbif.pipelines.crawler.fragmenter;
 
+import static org.gbif.crawler.constants.PipelinesNodePaths.getPipelinesInfoPath;
+import static org.gbif.pipelines.fragmenter.common.TableAssert.assertTable;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -7,7 +13,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Executors;
-
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.retry.RetryOneTime;
+import org.apache.curator.test.TestingServer;
+import org.apache.hadoop.fs.FileSystem;
 import org.gbif.api.model.pipelines.PipelineStep.MetricInfo;
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
@@ -21,12 +31,6 @@ import org.gbif.pipelines.common.utils.ZookeeperUtils;
 import org.gbif.pipelines.crawler.MessagePublisherStub;
 import org.gbif.pipelines.fragmenter.common.HbaseServer;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
-
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.CuratorFrameworkFactory;
-import org.apache.curator.retry.RetryOneTime;
-import org.apache.curator.test.TestingServer;
-import org.apache.hadoop.fs.FileSystem;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -34,36 +38,31 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import static org.gbif.crawler.constants.PipelinesNodePaths.getPipelinesInfoPath;
-import static org.gbif.pipelines.fragmenter.common.TableAssert.assertTable;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 public class FragmenterCallbackIT {
 
   private static final String DWCA_DATASET_UUID = "9bed66b3-4caa-42bb-9c93-71d7ba109dad";
   private static final String DWCA_INPUT_DATASET_DIR = "/dataset/dwca";
   private static final String REPO_PATH = "/dataset/";
   private static final String FRAGMENTER_LABEL = StepType.FRAGMENTER.getLabel();
-  private static final ValidationResult VALIDATION_RESULT = new ValidationResult(true, true, false, 0L);
+  private static final ValidationResult VALIDATION_RESULT =
+      new ValidationResult(true, true, false, 0L);
   private static CuratorFramework curator;
   private static TestingServer server;
   private static MessagePublisherStub publisher;
   private static PipelinesHistoryWsClient client;
 
-  @ClassRule
-  public static final HbaseServer HBASE_SERVER = new HbaseServer();
+  @ClassRule public static final HbaseServer HBASE_SERVER = new HbaseServer();
 
   @BeforeClass
   public static void setUp() throws Exception {
 
     server = new TestingServer();
-    curator = CuratorFrameworkFactory.builder()
-        .connectString(server.getConnectString())
-        .namespace("crawler")
-        .retryPolicy(new RetryOneTime(1))
-        .build();
+    curator =
+        CuratorFrameworkFactory.builder()
+            .connectString(server.getConnectString())
+            .namespace("crawler")
+            .retryPolicy(new RetryOneTime(1))
+            .build();
     curator.start();
 
     publisher = MessagePublisherStub.create();
@@ -99,28 +98,29 @@ public class FragmenterCallbackIT {
     int expSize = 1534;
     EndpointType endpointType = EndpointType.DWC_ARCHIVE;
 
-    PipelinesInterpretedMessage message = new PipelinesInterpretedMessage(
-        uuid,
-        attempt,
-        new HashSet<>(Arrays.asList(StepType.HDFS_VIEW.name(), StepType.FRAGMENTER.name())),
-        (long) expSize,
-        StepRunner.STANDALONE.name(),
-        true,
-        null,
-        null,
-        null,
-        endpointType,
-        VALIDATION_RESULT
-    );
+    PipelinesInterpretedMessage message =
+        new PipelinesInterpretedMessage(
+            uuid,
+            attempt,
+            new HashSet<>(Arrays.asList(StepType.HDFS_VIEW.name(), StepType.FRAGMENTER.name())),
+            (long) expSize,
+            StepRunner.STANDALONE.name(),
+            true,
+            null,
+            null,
+            null,
+            endpointType,
+            VALIDATION_RESULT);
 
-    FragmenterCallback callback = new FragmenterCallback(
-        config,
-        publisher,
-        curator,
-        client,
-        Executors.newSingleThreadExecutor(),
-        HBASE_SERVER.getConnection(),
-        HbaseServer.CFG);
+    FragmenterCallback callback =
+        new FragmenterCallback(
+            config,
+            publisher,
+            curator,
+            client,
+            Executors.newSingleThreadExecutor(),
+            HBASE_SERVER.getConnection(),
+            HbaseServer.CFG);
 
     // When
     callback.handleMessage(message);
@@ -135,7 +135,10 @@ public class FragmenterCallbackIT {
     assertMetaFile(config, uuid, attempt, expSize);
 
     // Clean
-    curator.delete().deletingChildrenIfNeeded().forPath(getPipelinesInfoPath(crawlId, FRAGMENTER_LABEL));
+    curator
+        .delete()
+        .deletingChildrenIfNeeded()
+        .forPath(getPipelinesInfoPath(crawlId, FRAGMENTER_LABEL));
   }
 
   @Test
@@ -153,28 +156,29 @@ public class FragmenterCallbackIT {
     int expSize = 20;
     EndpointType endpointType = EndpointType.TAPIR;
 
-    PipelinesInterpretedMessage message = new PipelinesInterpretedMessage(
-        uuid,
-        attempt,
-        new HashSet<>(Arrays.asList(StepType.HDFS_VIEW.name(), StepType.FRAGMENTER.name())),
-        (long) expSize,
-        StepRunner.DISTRIBUTED.name(),
-        true,
-        null,
-        null,
-        null,
-        endpointType,
-        VALIDATION_RESULT
-    );
+    PipelinesInterpretedMessage message =
+        new PipelinesInterpretedMessage(
+            uuid,
+            attempt,
+            new HashSet<>(Arrays.asList(StepType.HDFS_VIEW.name(), StepType.FRAGMENTER.name())),
+            (long) expSize,
+            StepRunner.DISTRIBUTED.name(),
+            true,
+            null,
+            null,
+            null,
+            endpointType,
+            VALIDATION_RESULT);
 
-    FragmenterCallback callback = new FragmenterCallback(
-        config,
-        publisher,
-        curator,
-        client,
-        Executors.newSingleThreadExecutor(),
-        HBASE_SERVER.getConnection(),
-        HbaseServer.CFG);
+    FragmenterCallback callback =
+        new FragmenterCallback(
+            config,
+            publisher,
+            curator,
+            client,
+            Executors.newSingleThreadExecutor(),
+            HBASE_SERVER.getConnection(),
+            HbaseServer.CFG);
 
     // When
     callback.handleMessage(message);
@@ -189,7 +193,10 @@ public class FragmenterCallbackIT {
     assertMetaFile(config, uuid, attempt, expSize);
 
     // Clean
-    curator.delete().deletingChildrenIfNeeded().forPath(getPipelinesInfoPath(crawlId, FRAGMENTER_LABEL));
+    curator
+        .delete()
+        .deletingChildrenIfNeeded()
+        .forPath(getPipelinesInfoPath(crawlId, FRAGMENTER_LABEL));
   }
 
   @Test
@@ -207,28 +214,29 @@ public class FragmenterCallbackIT {
     int expSize = 20;
     EndpointType endpointType = EndpointType.BIOCASE;
 
-    PipelinesInterpretedMessage message = new PipelinesInterpretedMessage(
-        uuid,
-        attempt,
-        new HashSet<>(Arrays.asList(StepType.HDFS_VIEW.name(), StepType.FRAGMENTER.name())),
-        (long) expSize,
-        StepRunner.STANDALONE.name(),
-        true,
-        null,
-        null,
-        null,
-        endpointType,
-        VALIDATION_RESULT
-    );
+    PipelinesInterpretedMessage message =
+        new PipelinesInterpretedMessage(
+            uuid,
+            attempt,
+            new HashSet<>(Arrays.asList(StepType.HDFS_VIEW.name(), StepType.FRAGMENTER.name())),
+            (long) expSize,
+            StepRunner.STANDALONE.name(),
+            true,
+            null,
+            null,
+            null,
+            endpointType,
+            VALIDATION_RESULT);
 
-    FragmenterCallback callback = new FragmenterCallback(
-        config,
-        publisher,
-        curator,
-        client,
-        Executors.newSingleThreadExecutor(),
-        HBASE_SERVER.getConnection(),
-        HbaseServer.CFG);
+    FragmenterCallback callback =
+        new FragmenterCallback(
+            config,
+            publisher,
+            curator,
+            client,
+            Executors.newSingleThreadExecutor(),
+            HBASE_SERVER.getConnection(),
+            HbaseServer.CFG);
 
     // When
     callback.handleMessage(message);
@@ -243,7 +251,10 @@ public class FragmenterCallbackIT {
     assertMetaFile(config, uuid, attempt, expSize);
 
     // Clean
-    curator.delete().deletingChildrenIfNeeded().forPath(getPipelinesInfoPath(crawlId, FRAGMENTER_LABEL));
+    curator
+        .delete()
+        .deletingChildrenIfNeeded()
+        .forPath(getPipelinesInfoPath(crawlId, FRAGMENTER_LABEL));
   }
 
   @Test
@@ -260,28 +271,29 @@ public class FragmenterCallbackIT {
     int expSize = 1534;
     EndpointType endpointType = EndpointType.DWC_ARCHIVE;
 
-    PipelinesInterpretedMessage message = new PipelinesInterpretedMessage(
-        uuid,
-        attempt,
-        Collections.singleton(StepType.HDFS_VIEW.name()),
-        (long) expSize,
-        StepRunner.STANDALONE.name(),
-        true,
-        null,
-        StepType.FRAGMENTER.name(),
-        null,
-        endpointType,
-        VALIDATION_RESULT
-    );
+    PipelinesInterpretedMessage message =
+        new PipelinesInterpretedMessage(
+            uuid,
+            attempt,
+            Collections.singleton(StepType.HDFS_VIEW.name()),
+            (long) expSize,
+            StepRunner.STANDALONE.name(),
+            true,
+            null,
+            StepType.FRAGMENTER.name(),
+            null,
+            endpointType,
+            VALIDATION_RESULT);
 
-    FragmenterCallback callback = new FragmenterCallback(
-        config,
-        publisher,
-        curator,
-        client,
-        Executors.newSingleThreadExecutor(),
-        HBASE_SERVER.getConnection(),
-        HbaseServer.CFG);
+    FragmenterCallback callback =
+        new FragmenterCallback(
+            config,
+            publisher,
+            curator,
+            client,
+            Executors.newSingleThreadExecutor(),
+            HBASE_SERVER.getConnection(),
+            HbaseServer.CFG);
 
     // When
     callback.handleMessage(message);
@@ -308,28 +320,29 @@ public class FragmenterCallbackIT {
     int expSize = 1534;
     EndpointType endpointType = EndpointType.DWC_ARCHIVE;
 
-    PipelinesInterpretedMessage message = new PipelinesInterpretedMessage(
-        uuid,
-        attempt,
-        Collections.singleton(StepType.HDFS_VIEW.name()),
-        (long) expSize,
-        StepRunner.STANDALONE.name(),
-        true,
-        null,
-        StepType.HDFS_VIEW.name(),
-        null,
-        endpointType,
-        VALIDATION_RESULT
-    );
+    PipelinesInterpretedMessage message =
+        new PipelinesInterpretedMessage(
+            uuid,
+            attempt,
+            Collections.singleton(StepType.HDFS_VIEW.name()),
+            (long) expSize,
+            StepRunner.STANDALONE.name(),
+            true,
+            null,
+            StepType.HDFS_VIEW.name(),
+            null,
+            endpointType,
+            VALIDATION_RESULT);
 
-    FragmenterCallback callback = new FragmenterCallback(
-        config,
-        publisher,
-        curator,
-        client,
-        Executors.newSingleThreadExecutor(),
-        HBASE_SERVER.getConnection(),
-        HbaseServer.CFG);
+    FragmenterCallback callback =
+        new FragmenterCallback(
+            config,
+            publisher,
+            curator,
+            client,
+            Executors.newSingleThreadExecutor(),
+            HBASE_SERVER.getConnection(),
+            HbaseServer.CFG);
 
     // When
     callback.handleMessage(message);
@@ -346,22 +359,22 @@ public class FragmenterCallbackIT {
     return ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(id, path));
   }
 
-  private void assertMetaFile(FragmenterConfiguration config, UUID datasetId, int attempt, int expSize)
-      throws IOException {
+  private void assertMetaFile(
+      FragmenterConfiguration config, UUID datasetId, int attempt, int expSize) throws IOException {
     org.apache.hadoop.fs.Path path =
         HdfsUtils.buildOutputPath(
             config.stepConfig.repositoryPath,
             datasetId.toString(),
             String.valueOf(attempt),
-            config.metaFileName
-        );
+            config.metaFileName);
     FileSystem fs =
-        FileSystemFactory.getInstance(config.getHdfsSiteConfig(), config.getCoreSiteConfig()).getFs(path.toString());
+        FileSystemFactory.getInstance(config.getHdfsSiteConfig(), config.getCoreSiteConfig())
+            .getFs(path.toString());
     List<MetricInfo> metricInfos =
-        HdfsUtils.readMetricsFromMetaFile(config.getHdfsSiteConfig(), config.getCoreSiteConfig(), path.toString());
+        HdfsUtils.readMetricsFromMetaFile(
+            config.getHdfsSiteConfig(), config.getCoreSiteConfig(), path.toString());
     assertTrue(fs.exists(path));
     assertEquals(1, metricInfos.size());
     assertEquals(String.valueOf(expSize), metricInfos.get(0).getValue());
   }
-
 }

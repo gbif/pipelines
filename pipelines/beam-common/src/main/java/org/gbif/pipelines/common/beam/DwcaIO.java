@@ -1,13 +1,13 @@
 package org.gbif.pipelines.common.beam;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.ARCHIVE_TO_ER_COUNT;
+
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-
-import org.apache.logging.log4j.util.Strings;
-import org.gbif.pipelines.core.io.DwcaReader;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import org.apache.beam.sdk.coders.AvroCoder;
 import org.apache.beam.sdk.coders.Coder;
 import org.apache.beam.sdk.io.BoundedSource;
@@ -18,12 +18,9 @@ import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.display.DisplayData;
 import org.apache.beam.sdk.values.PBegin;
 import org.apache.beam.sdk.values.PCollection;
-
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-
-import static org.gbif.pipelines.common.PipelinesVariables.Metrics.ARCHIVE_TO_ER_COUNT;
+import org.apache.logging.log4j.util.Strings;
+import org.gbif.pipelines.core.io.DwcaReader;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 /**
  * IO operations for DwC-A formats.
@@ -99,7 +96,7 @@ public class DwcaIO {
     @Override
     public void populateDisplayData(DisplayData.Builder builder) {
       super.populateDisplayData(builder);
-      //path is null in the case of uncompressed archives
+      // path is null in the case of uncompressed archives
       if (Strings.isNotEmpty(path)) {
         builder.add(DisplayData.item("DwC-A Path", path));
       }
@@ -119,7 +116,8 @@ public class DwcaIO {
 
     /** Will always return a single entry list of just ourselves. This is not splittable. */
     @Override
-    public List<? extends BoundedSource<ExtendedRecord>> split(long desiredBundleSizeBytes, PipelineOptions options) {
+    public List<? extends BoundedSource<ExtendedRecord>> split(
+        long desiredBundleSizeBytes, PipelineOptions options) {
       return Collections.singletonList(this);
     }
 

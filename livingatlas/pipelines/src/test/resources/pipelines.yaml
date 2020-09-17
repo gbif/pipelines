@@ -31,6 +31,9 @@ alaNameMatch:
 collectory:
   wsUrl: https://collections.ala.org.au
   timeoutSec: 70
+sds:
+  wsUrl: http://localhost:9189
+  timeoutSec: 70
 geocodeConfig:
   country:
     path: /data/pipelines-shp/political

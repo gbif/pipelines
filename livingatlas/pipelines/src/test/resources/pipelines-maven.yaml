@@ -6,6 +6,10 @@ collectory:
   wsUrl: ${collectory.url}
   timeoutSec: 70
 
+sds:
+  wsUrl: http://${sds.host}:${sds.port}
+  timeoutSec: 70
+
 geocodeConfig:
   country:
     path: "/tmp/pipelines-shp/political"
