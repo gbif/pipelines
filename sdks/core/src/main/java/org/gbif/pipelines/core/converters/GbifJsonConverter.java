@@ -41,6 +41,7 @@ import org.gbif.pipelines.io.avro.AmplificationRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.BlastResult;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.GadmFeatures;
 import org.gbif.pipelines.io.avro.Issues;
 import org.gbif.pipelines.io.avro.LocationFeatureRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
@@ -375,8 +376,24 @@ public class GbifJsonConverter {
             "scoordinates",
             "POINT (" + lr.getDecimalLongitude() + " " + lr.getDecimalLatitude() + ")");
       }
+
       // Fields as a common view - "key": "value"
       jc.addCommonFields(record);
+
+      // All GADM GIDs as an array, for searching at multiple levels.
+      if (lr.getGadm() != null) {
+        GadmFeatures gadmFeatures = lr.getGadm();
+        ArrayNode arrayGadmGidNode = JsonConverter.createArrayNode();
+        Optional.ofNullable(gadmFeatures.getLevel0Gid()).ifPresent(arrayGadmGidNode::add);
+        Optional.ofNullable(gadmFeatures.getLevel1Gid()).ifPresent(arrayGadmGidNode::add);
+        Optional.ofNullable(gadmFeatures.getLevel2Gid()).ifPresent(arrayGadmGidNode::add);
+        Optional.ofNullable(gadmFeatures.getLevel3Gid()).ifPresent(arrayGadmGidNode::add);
+        ObjectNode gadmNode =
+            jc.getMainNode().has("gadm")
+                ? (ObjectNode) jc.getMainNode().get("gadm")
+                : JsonConverter.createObjectNode();
+        gadmNode.set("gids", arrayGadmGidNode);
+      }
     };
   }
 

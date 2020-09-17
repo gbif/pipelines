@@ -13,6 +13,7 @@ import org.gbif.pipelines.core.factory.RetryFactory;
 import org.gbif.pipelines.core.ws.metadata.contentful.ContentService;
 import org.gbif.pipelines.core.ws.metadata.contentful.ContentServiceFactory;
 import org.gbif.pipelines.core.ws.metadata.response.Dataset;
+import org.gbif.pipelines.core.ws.metadata.response.Installation;
 import org.gbif.pipelines.core.ws.metadata.response.Network;
 import org.gbif.pipelines.core.ws.metadata.response.Organization;
 import org.gbif.pipelines.core.ws.metadata.response.Project;
@@ -79,6 +80,12 @@ public class MetadataServiceClient {
   public Organization getOrganization(String organizationId) {
     Objects.requireNonNull(organizationId);
     Call<Organization> call = rest.getService().getOrganization(organizationId);
+    return performCall(call);
+  }
+
+  public Installation getInstallation(String installationKey) {
+    Objects.requireNonNull(installationKey);
+    Call<Installation> call = rest.getService().getInstallation(installationKey);
     return performCall(call);
   }
 

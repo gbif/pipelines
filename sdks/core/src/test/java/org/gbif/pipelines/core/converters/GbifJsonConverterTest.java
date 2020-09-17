@@ -71,6 +71,7 @@ public class GbifJsonConverterTest {
             .setCrawlId(1)
             .setDatasetKey("datatesKey")
             .setLicense(License.CC0_1_0.name())
+            .setHostingOrganizationKey("hostOrgKey")
             .setMachineTags(
                 Collections.singletonList(
                     MachineTag.newBuilder()
@@ -132,6 +133,10 @@ public class GbifJsonConverterTest {
             .setLocality("[68]")
             .setGadm(
                 GadmFeatures.newBuilder()
+                    .setLevel0Gid("XAA_1")
+                    .setLevel0Name("Countryland")
+                    .setLevel1Gid("XAA.1_1")
+                    .setLevel1Name("Countyshire")
                     .setLevel2Gid("XAA.1.2_1")
                     .setLevel2Name("Muni Cipality")
                     .build())
@@ -185,6 +190,7 @@ public class GbifJsonConverterTest {
     assertEquals(mr.getDatasetKey(), result.path("datasetKey").asText());
     assertEquals(mr.getCrawlId(), (Integer) result.path("crawlId").asInt());
     assertEquals("CC_BY_NC_4_0", result.path("license").asText());
+    assertEquals(mr.getHostingOrganizationKey(), result.path("hostingOrganizationKey").asText());
     assertEquals(mr.getId(), result.path("id").asText());
     assertEquals("Jeremia garde ,à elfutsone", result.path("recordedBy").asText());
     assertEquals("D2 R2", result.path("identifiedBy").asText());
@@ -202,9 +208,14 @@ public class GbifJsonConverterTest {
     assertEquals("Country", result.path("country").asText());
     assertEquals("Code 1'2\"", result.path("countryCode").asText());
     assertEquals("[68]", result.path("locality").asText());
-    assertEquals(
-        "{\"level2Gid\":\"XAA.1.2_1\",\"level2Name\":\"Muni Cipality\"}",
-        result.path("gadm").toString());
+
+    String expectedGadm =
+        "{"
+            + "\"level0Gid\":\"XAA_1\",\"level1Gid\":\"XAA.1_1\",\"level2Gid\":\"XAA.1.2_1\","
+            + "\"level0Name\":\"Countryland\",\"level1Name\":\"Countyshire\",\"level2Name\":\"Muni Cipality\","
+            + "\"gids\":[\"XAA_1\",\"XAA.1_1\",\"XAA.1.2_1\"]"
+            + "}";
+    assertEquals(expectedGadm, result.path("gadm").toString());
 
     String expectedAll =
         "[\"Jeremia garde ,à elfutsone\",\"{\\\"something\\\":1}{\\\"something\\\":1}\",\"D2 R2\",\"something:{something}\"]";

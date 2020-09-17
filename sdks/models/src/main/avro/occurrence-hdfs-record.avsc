@@ -693,6 +693,9 @@
     "name" : "programmeacronym",
     "type" : [ "string", "null" ]
   }, {
+    "name" : "hostingOrganizationKey",
+    "type" : [ "string", "null" ]
+  }, {
     "name" : "collectionkey",
     "type" : [ "string", "null" ]
   }, {
