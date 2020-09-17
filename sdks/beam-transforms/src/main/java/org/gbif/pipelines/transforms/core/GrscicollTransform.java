@@ -38,7 +38,7 @@ public class GrscicollTransform extends Transform<ExtendedRecord, GrscicollRecor
   @Setter private PCollectionView<MetadataRecord> metadataView;
 
   @Builder(buildMethodName = "create")
-  public GrscicollTransform(
+  private GrscicollTransform(
       SerializableSupplier<KeyValueStore<GrscicollLookupRequest, GrscicollLookupResponse>>
           kvStoreSupplier,
       PCollectionView<MetadataRecord> metadataView) {
