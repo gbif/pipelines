@@ -16,6 +16,26 @@
   <description>Main module contains API like classes, such as data interpretations, converters, DwCA reader and etc.
   </description>
 
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+      </plugin>
+    </plugins>
+    <resources>
+      <resource>
+        <directory>src/test/resources</directory>
+        <targetPath>../test-classes/</targetPath>
+        <filtering>true</filtering>
+      </resource>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+      </resource>
+    </resources>
+  </build>
+
   <dependencies>
 
     <!-- Tools -->
