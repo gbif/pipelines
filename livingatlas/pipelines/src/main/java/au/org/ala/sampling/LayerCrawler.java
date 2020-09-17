@@ -1,5 +1,6 @@
 package au.org.ala.sampling;
 
+import au.org.ala.pipelines.options.SamplingPipelineOptions;
 import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -21,7 +22,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
-import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.slf4j.MDC;
@@ -42,40 +42,30 @@ import retrofit2.http.Path;
 @Slf4j
 public class LayerCrawler {
 
-  // TODO: make this configurable
-  private static final String BASE_URL = "https://sampling.ala.org.au/";
-  // TODO: make this configurable
-  public static final int BATCH_SIZE = 25000;
-  // TODO: make this configurable
-  public static final int BATCH_STATUS_SLEEP_TIME = 1000;
-  // TODO: make this configurable
-  public static final int DOWNLOAD_RETRIES = 5;
   public static final String UNKNOWN_STATUS = "unknown";
   public static final String FINISHED_STATUS = "finished";
   public static final String ERROR_STATUS = "error";
 
-  SamplingService service;
+  private final int batchSize;
+  private final int batchSleepTime;
+  private final int downloadRetries;
 
-  private static final Retrofit retrofit =
-      new Retrofit.Builder()
-          .baseUrl(BASE_URL)
-          .addConverterFactory(JacksonConverterFactory.create())
-          .validateEagerly(true)
-          .build();
+  private SamplingService service;
 
   public static void main(String[] args) throws Exception {
     String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "sample");
-    InterpretationPipelineOptions options =
-        PipelinesOptionsFactory.createInterpretation(combinedArgs);
+    SamplingPipelineOptions options =
+        PipelinesOptionsFactory.create(SamplingPipelineOptions.class, combinedArgs);
     MDC.put("datasetId", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
     MDC.put("step", "SAMPLING");
+    PipelinesOptionsFactory.registerHdfs(options);
     run(options);
     // FIXME: Issue logged here: https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/105
     System.exit(0);
   }
 
-  public static void run(InterpretationPipelineOptions options) throws Exception {
+  public static void run(SamplingPipelineOptions options) throws Exception {
 
     String baseDir = options.getInputPath();
 
@@ -90,18 +80,27 @@ public class LayerCrawler {
       Instant batchStart = Instant.now();
 
       // list file in directory
-      LayerCrawler lc = new LayerCrawler();
+      LayerCrawler lc =
+          new LayerCrawler(
+              options.getSamplingServiceUrl(),
+              options.getBatchSize(),
+              options.getBatchSleepTimeInMillis(),
+              options.getDownloadRetries());
 
       // delete existing sampling output
-      String samplingDir = baseDir + "/" + dataSetID + "/" + options.getAttempt() + "/sampling";
+      String samplingDir =
+          String.join("/", baseDir, dataSetID, options.getAttempt().toString(), "sampling");
       FsUtils.deleteIfExist(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), samplingDir);
 
       // (re)create sampling output directories
       String sampleDownloadPath =
-          baseDir + "/" + dataSetID + "/" + options.getAttempt() + "/sampling/downloads";
+          String.join(
+              "/", baseDir, dataSetID, options.getAttempt().toString(), "sampling/downloads");
 
       // check the lat lng export directory has been created
-      String latLngExportPath = baseDir + "/" + dataSetID + "/" + options.getAttempt() + "/latlng";
+      String latLngExportPath =
+          String.join("/", baseDir, dataSetID, options.getAttempt().toString(), "latlng");
+
       if (!ALAFsUtils.exists(fs, latLngExportPath)) {
         log.error(
             "LatLng export unavailable. Has LatLng export pipeline been ran ? Not available at path {}",
@@ -150,7 +149,19 @@ public class LayerCrawler {
     }
   }
 
-  public LayerCrawler() {
+  public LayerCrawler(String baseURL, int batchSize, int batchSleepTime, int downloadRetries) {
+
+    this.batchSize = batchSize;
+    this.batchSleepTime = batchSleepTime;
+    this.downloadRetries = downloadRetries;
+
+    final Retrofit retrofit =
+        new Retrofit.Builder()
+            .baseUrl(baseURL)
+            .addConverterFactory(JacksonConverterFactory.create())
+            .validateEagerly(true)
+            .build();
+
     log.info("Initialising crawler....");
     this.service = retrofit.create(SamplingService.class);
     log.info("Initialised.");
@@ -178,7 +189,7 @@ public class LayerCrawler {
 
     InputStream inputStream = ALAFsUtils.openInputStream(fs, inputFilePath);
     BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-    Collection<List<String>> partitioned = partition(reader.lines(), BATCH_SIZE);
+    Collection<List<String>> partitioned = partition(reader.lines(), batchSize);
 
     for (List<String> partition : partitioned) {
 
@@ -207,7 +218,7 @@ public class LayerCrawler {
             Duration.between(batchStart, batchCurrentTime).getSeconds());
 
         if (!state.equals(FINISHED_STATUS)) {
-          Thread.sleep(BATCH_STATUS_SLEEP_TIME);
+          Thread.sleep(batchSleepTime);
         } else {
           log.info("Downloading sampling batch {}", batchId);
 
@@ -262,7 +273,7 @@ public class LayerCrawler {
       SamplingService.BatchStatus batchStatus)
       throws IOException {
 
-    for (int i = 0; i < DOWNLOAD_RETRIES; i++) {
+    for (int i = 0; i < downloadRetries; i++) {
 
       try {
         try (ReadableByteChannel inputChannel =

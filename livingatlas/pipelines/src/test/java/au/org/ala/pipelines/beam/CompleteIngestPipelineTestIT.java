@@ -3,6 +3,7 @@ package au.org.ala.pipelines.beam;
 import static org.junit.Assert.*;
 
 import au.org.ala.pipelines.options.ALASolrPipelineOptions;
+import au.org.ala.pipelines.options.SamplingPipelineOptions;
 import au.org.ala.pipelines.options.UUIDPipelineOptions;
 import au.org.ala.sampling.LayerCrawler;
 import au.org.ala.util.SolrUtils;
@@ -173,7 +174,19 @@ public class CompleteIngestPipelineTestIT {
     ALAInterpretedToLatLongCSVPipeline.run(latLngOptions);
 
     // sample
-    LayerCrawler.run(latLngOptions);
+    SamplingPipelineOptions samplingOptions =
+        PipelinesOptionsFactory.create(
+            SamplingPipelineOptions.class,
+            new String[] {
+              "--datasetId=" + datasetID,
+              "--attempt=1",
+              "--samplingServiceUrl=https://sampling.ala.org.au",
+              "--runner=DirectRunner",
+              "--targetPath=/tmp/la-pipelines-test/complete-pipeline",
+              "--inputPath=/tmp/la-pipelines-test/complete-pipeline",
+              "--properties=" + TestUtils.getPipelinesConfigFile()
+            });
+    LayerCrawler.run(samplingOptions);
 
     // sample -> avro
     InterpretationPipelineOptions samplingAvroOptions =

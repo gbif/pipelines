@@ -114,6 +114,10 @@ export-latlng:
 sample:
   inputPath: '{fsPath}/pipelines-data'
   appName: Sample for {datasetId}
+  samplingServiceUrl: 'https://sampling.ala.org.au'
+
+image:
+  tempLocation: /tmp/
 
 # class: au.org.ala.pipelines.beam.ALASamplingToAvroPipeline
 sample-avro:
