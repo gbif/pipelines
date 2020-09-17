@@ -158,7 +158,7 @@
         }
       },
       "occurrenceStatus": {"type": "keyword", "copy_to": "all"},
-  
+
       "organismQuantity": {"type": "double"},
       "organismQuantityType": {"type": "keyword", "copy_to": "all"},
       "sampleSizeUnit": {"type": "keyword", "copy_to": "all"},
@@ -204,6 +204,7 @@
       "gadm": {
         "type": "object",
         "properties": {
+          "gids": {"type": "keyword"},
           "level0Gid": {"type": "keyword"},
           "level1Gid": {"type": "keyword"},
           "level2Gid": {"type": "keyword"},
