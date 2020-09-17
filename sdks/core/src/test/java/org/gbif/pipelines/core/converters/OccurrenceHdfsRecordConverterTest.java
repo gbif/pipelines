@@ -194,7 +194,7 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals(OccurrenceStatus.ABSENT.name(), hdfsRecord.getOccurrencestatus());
     Assert.assertEquals(Integer.valueOf(0), hdfsRecord.getIndividualcount());
     Assert.assertEquals(
-        metadataRecord.getHostingOrganizationKey(), hdfsRecord.getHostingOrganizationKey());
+        metadataRecord.getHostingOrganizationKey(), hdfsRecord.getHostingorganizationkey());
   }
 
   @Test
