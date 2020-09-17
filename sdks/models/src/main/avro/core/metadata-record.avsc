@@ -34,6 +34,7 @@
       {"name": "protocol","type":["null","string"],"default":null},
       {"name": "license","type":["null","string"],"default":null},
       {"name": "datasetPublishingCountry","type":["null","string"],"default":null},
+      {"name": "hostingOrganizationKey","type":["null","string"],"default":null},
       {"name": "networkKeys", "type" : {"type" : "array", "items" : "string"}, "default": []},
       {"name": "machineTags", "type" : {"type" : "array", "items" : "MachineTag"}, "default": []},
       {"name": "issues", "type": "IssueRecord", "default":{}}
