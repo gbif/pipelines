@@ -56,7 +56,7 @@ public class TemporalRecordTransformTest {
     // Expected
     // First
     final ParsedTemporal parsedTemporal = ParsedTemporal.create();
-    parsedTemporal.setFromDate(LocalDate.of(1999, 2, 2));
+    parsedTemporal.setFromDate(LocalDateTime.of(1999, 2, 2, 12, 26));
     parsedTemporal.setYear(Year.of(1999));
     parsedTemporal.setMonth(Month.of(2));
     parsedTemporal.setDay(2);
@@ -91,7 +91,7 @@ public class TemporalRecordTransformTest {
     // Expected
     // First
     final ParsedTemporal periodOne = ParsedTemporal.create();
-    periodOne.setFromDate(YearMonth.of(1999, 2));
+    periodOne.setFromDate(LocalDateTime.of(1999, 2, 1, 0, 0));
     periodOne.setYear(Year.of(1999));
     periodOne.setMonth(Month.of(2));
 
@@ -142,7 +142,7 @@ public class TemporalRecordTransformTest {
     TemporalRecord expected1 =
         TemporalRecord.newBuilder()
             .setId("0")
-            .setEventDate(EventDate.newBuilder().setGte("1999-02-01").build())
+            .setEventDate(EventDate.newBuilder().setGte("1999-02-01T12:26").build())
             .setYear(1999)
             .setMonth(2)
             .setDay(1)

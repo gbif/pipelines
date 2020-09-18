@@ -4,6 +4,7 @@ import static org.gbif.common.parsers.core.ParseResult.CONFIDENCE.DEFINITE;
 import static org.gbif.common.parsers.core.ParseResult.CONFIDENCE.PROBABLE;
 import static org.gbif.common.parsers.date.DateComponentOrdering.DMY_FORMATS;
 import static org.gbif.common.parsers.date.DateComponentOrdering.MDY_FORMATS;
+import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
 import static org.gbif.pipelines.core.utils.ModelUtils.addIssueSet;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.hasValue;
@@ -12,6 +13,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.collect.Range;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.time.temporal.TemporalQueries;
@@ -33,6 +35,7 @@ import org.gbif.common.parsers.date.TemporalParser;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.core.parsers.temporal.utils.DelimiterUtils;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
@@ -55,7 +58,7 @@ public class TemporalInterpreter {
    *
    * @param config
    */
-  public static void config(PipelinesConfig config) {
+  public static void setTemporalParser(PipelinesConfig config) {
     if (Strings.isNullOrEmpty(config.getDefaultDateFormat())) {
       temporalParser = DateParsers.defaultTemporalParser();
     } else {
@@ -69,34 +72,52 @@ public class TemporalInterpreter {
     }
   }
 
-  public static void interpretTemporal(ExtendedRecord er, TemporalRecord tr) {
-    OccurrenceParseResult<TemporalAccessor> eventResult = interpretRecordedDate(er);
-    if (eventResult.isSuccessful()) {
-      Optional<TemporalAccessor> temporalAccessor = Optional.ofNullable(eventResult.getPayload());
-
-      Optional<TemporalAccessor> localDate =
-          temporalAccessor
-              .filter(ta -> ta.isSupported(ChronoField.HOUR_OF_DAY))
-              .map(ta -> ta.query(TemporalQueries.localDate()));
-
-      if (localDate.isPresent()) {
-        temporalAccessor = localDate;
-      }
-
-      temporalAccessor
-          .map(TemporalAccessor::toString)
-          .ifPresent(x -> tr.setEventDate(new EventDate(x, null)));
-
-      temporalAccessor
-          .map(AtomizedLocalDate::fromTemporalAccessor)
-          .ifPresent(
-              ald -> {
-                tr.setYear(ald.getYear());
-                tr.setMonth(ald.getMonth());
-                tr.setDay(ald.getDay());
-              });
+  /**
+   * Preprocess for converting some none ISO standards to ISO standards
+   *
+   * @param dateString
+   * @return
+   */
+  private static String normalizeDateString(String dateString) {
+    // Convert 2004-2-1 to 3-2 , 2004-2-1 & 3-2  to 2004-2-1/3-2
+    if (StringUtils.isNotEmpty(dateString)) {
+      dateString = dateString.replace(" to ", "/");
+      dateString = dateString.replace(" & ", "/");
     }
-    addIssueSet(tr, eventResult.getIssues());
+
+    return dateString;
+  }
+
+  public static void interpretTemporal(ExtendedRecord er, TemporalRecord tr) {
+    interpretEventDate(er, tr);
+    //    OccurrenceParseResult<TemporalAccessor> eventResult = interpretRecordedDate(er);
+    //    if (eventResult.isSuccessful()) {
+    //      Optional<TemporalAccessor> temporalAccessor =
+    // Optional.ofNullable(eventResult.getPayload());
+    //
+    //      Optional<TemporalAccessor> localDate =
+    //          temporalAccessor
+    //              .filter(ta -> ta.isSupported(ChronoField.HOUR_OF_DAY))
+    //              .map(ta -> ta.query(TemporalQueries.localDate()));
+    //
+    //      if (localDate.isPresent()) {
+    //        temporalAccessor = localDate;
+    //      }
+    //
+    //      temporalAccessor
+    //          .map(TemporalAccessor::toString)
+    //          .ifPresent(x -> tr.setEventDate(new EventDate(x, null)));
+    //
+    //      temporalAccessor
+    //          .map(AtomizedLocalDate::fromTemporalAccessor)
+    //          .ifPresent(
+    //              ald -> {
+    //                tr.setYear(ald.getYear());
+    //                tr.setMonth(ald.getMonth());
+    //                tr.setDay(ald.getDay());
+    //              });
+    //    }
+    //    addIssueSet(tr, eventResult.getIssues());
   }
 
   public static void interpretModified(ExtendedRecord er, TemporalRecord tr) {
@@ -134,6 +155,150 @@ public class TemporalInterpreter {
       }
 
       addIssueSet(tr, parsed.getIssues());
+    }
+  }
+
+  private static void interpretEventDate(ExtendedRecord er, TemporalRecord tr) {
+    Set<OccurrenceIssue> issues = EnumSet.noneOf(OccurrenceIssue.class);
+    // Reset
+    tr.setEventDate(null);
+
+    final String year = extractValue(er, DwcTerm.year);
+    final String month = extractValue(er, DwcTerm.month);
+    final String day = extractValue(er, DwcTerm.day);
+    String eventDateString = extractValue(er, DwcTerm.eventDate);
+
+    boolean atomizedDateProvided =
+        StringUtils.isNotBlank(year)
+            || StringUtils.isNotBlank(month)
+            || StringUtils.isNotBlank(day);
+    boolean dateStringProvided = StringUtils.isNotBlank(eventDateString);
+
+    if (atomizedDateProvided || dateStringProvided) {
+      TemporalAccessor parsedStartTemporalAccessor;
+      ParseResult.CONFIDENCE confidence;
+      // parsed from YMD
+      ParseResult<TemporalAccessor> parsedYMDResult =
+          atomizedDateProvided ? temporalParser.parse(year, month, day) : ParseResult.fail();
+      TemporalAccessor parsedYmdTa = parsedYMDResult.getPayload();
+      // parse from string / possible date range
+      ParseResult<TemporalAccessor> startParseResult = null;
+      ParseResult<TemporalAccessor> endParseResult = null;
+      TemporalAccessor from = null;
+      TemporalAccessor to = null;
+
+      eventDateString = normalizeDateString(eventDateString);
+      String[] rawPeriod = DelimiterUtils.splitPeriod(eventDateString);
+      // Even a single date will be split to two
+      if (rawPeriod.length == 2) {
+        String rawFrom = rawPeriod[0];
+        String rawTo = rawPeriod[1];
+
+        if (!Strings.isNullOrEmpty(rawFrom)) {
+          startParseResult = temporalParser.parse(rawPeriod[0]);
+          if (startParseResult.isSuccessful()) {
+            from = startParseResult.getPayload();
+          } else {
+            log.debug("Event start date is invalid: {} ", rawFrom);
+            addIssue(tr, OccurrenceIssue.RECORDED_DATE_INVALID);
+            return;
+          }
+        }
+
+        if (!Strings.isNullOrEmpty(rawTo)) {
+          endParseResult = temporalParser.parse(rawPeriod[1]);
+          if (endParseResult.isSuccessful()) {
+            to = endParseResult.getPayload();
+          } else {
+            log.debug("Event end date is invalid: {} ", rawTo);
+            addIssue(tr, OccurrenceIssue.RECORDED_DATE_INVALID);
+            return;
+          }
+        }
+
+        // Solve conflicts of dates from YMD and dateString
+        if (atomizedDateProvided
+            && dateStringProvided
+            && !TemporalAccessorUtils.sameOrContained(parsedYMDResult.getPayload(), from)) {
+          // eventDate could be ambiguous (5/4/2014), but disambiguated by year-month-day.
+          boolean ambiguityResolved = false;
+          if (startParseResult.getAlternativePayloads() != null) {
+            for (TemporalAccessor possibleTa : startParseResult.getAlternativePayloads()) {
+              if (TemporalAccessorUtils.sameOrContained(parsedYmdTa, possibleTa)) {
+                from = possibleTa;
+                ambiguityResolved = true;
+                log.debug(
+                    "Ambiguous date {} matches year-month-day date {}-{}-{} for {}",
+                    rawFrom,
+                    year,
+                    month,
+                    day,
+                    from);
+              }
+            }
+          }
+
+          // still a conflict
+          if (!ambiguityResolved) {
+            log.debug("Date mismatch: [{} vs {}].", parsedYmdTa, from);
+            addIssue(tr, OccurrenceIssue.RECORDED_DATE_MISMATCH);
+            return;
+          }
+
+          // choose the one with better resolution
+          Optional<TemporalAccessor> bestResolution =
+              TemporalAccessorUtils.bestResolution(parsedYmdTa, from);
+          if (bestResolution.isPresent()) {
+            parsedStartTemporalAccessor = bestResolution.get();
+          } else {
+            // faild
+            addIssue(tr, OccurrenceIssue.RECORDED_DATE_UNLIKELY);
+            return;
+          }
+        } else {
+          // they match, or we only have one anyway, choose the one with better resolution.
+          parsedStartTemporalAccessor =
+              TemporalAccessorUtils.bestResolution(parsedYmdTa, from).orElse(null);
+        }
+        // If invalid, return directly
+        if (!isValidDate(parsedStartTemporalAccessor, true)) {
+          if (parsedStartTemporalAccessor == null) {
+            issues.add(OccurrenceIssue.RECORDED_DATE_INVALID);
+          } else {
+            issues.add(OccurrenceIssue.RECORDED_DATE_UNLIKELY);
+          }
+          log.debug("Invalid date: [{}]].", parsedStartTemporalAccessor);
+          addIssueSet(tr, issues);
+          return;
+        }
+
+        // extra works on it
+        // Get eventDate as java.util.Date and ignore the offset (timezone) if provided
+        // Note for debug: be careful if you inspect the content of 'eventDate' it will contain your
+        // machine timezone.
+        LocalDateTime eventStartDate =
+            TemporalAccessorUtils.toEarliestLocalDateTime(parsedStartTemporalAccessor, true);
+        AtomizedLocalDate atomizedLocalDate =
+            AtomizedLocalDate.fromTemporalAccessor(parsedStartTemporalAccessor);
+
+        LocalDateTime eventEndDate = TemporalAccessorUtils.toLatestLocalDateTime(to, true);
+
+        tr.setYear(atomizedLocalDate.getYear());
+        tr.setMonth(atomizedLocalDate.getMonth());
+        tr.setDay(atomizedLocalDate.getDay());
+
+        EventDate eventDate = new EventDate();
+        Optional.ofNullable(eventStartDate)
+            .map(LocalDateTime::toString)
+            .ifPresent(x -> eventDate.setGte(x));
+        Optional.ofNullable(eventEndDate)
+            .map(LocalDateTime::toString)
+            .ifPresent(x -> eventDate.setLte(x));
+
+        tr.setEventDate(eventDate);
+
+        addIssueSet(tr, issues);
+      }
     }
   }
 

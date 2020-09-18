@@ -33,7 +33,7 @@ public class TemporalInterpreterTest {
 
     TemporalInterpreter.interpretTemporal(er, tr);
 
-    assertDate("1879-10", tr.getEventDate().getGte());
+    assertDate("1879-10-01T00:00", tr.getEventDate().getGte());
     assertEquals(1879, tr.getYear().intValue());
     assertEquals(10, tr.getMonth().intValue());
     assertNull(tr.getDay());
@@ -51,7 +51,7 @@ public class TemporalInterpreterTest {
 
     TemporalInterpreter.interpretTemporal(er, tr);
 
-    assertDate("1879", tr.getEventDate().getGte());
+    assertDate("1879-01-01T00:00", tr.getEventDate().getGte());
     assertEquals(1879, tr.getYear().intValue());
     assertNull(tr.getMonth());
     assertNull(tr.getDay());
@@ -77,7 +77,7 @@ public class TemporalInterpreterTest {
 
     assertDate("2014-01-11", tr.getModified());
     assertDate("2012-01-11", tr.getDateIdentified());
-    assertDate("1879-11-01", tr.getEventDate().getGte());
+    assertDate("1879-11-01T00:00", tr.getEventDate().getGte());
     assertEquals(1879, tr.getYear().intValue());
     assertEquals(11, tr.getMonth().intValue());
     assertEquals(1, tr.getDay().intValue());
@@ -100,7 +100,7 @@ public class TemporalInterpreterTest {
 
     assertDate("2014-01-11", tr.getModified());
     assertDate("2012-01-11", tr.getDateIdentified());
-    assertDate("1999-11-11", tr.getEventDate().getGte());
+    assertDate("1999-11-11T12:22", tr.getEventDate().getGte());
     assertEquals(1999, tr.getYear().intValue());
     assertEquals(11, tr.getMonth().intValue());
     assertEquals(11, tr.getDay().intValue());
@@ -508,14 +508,14 @@ public class TemporalInterpreterTest {
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
     TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
 
-    TemporalInterpreter.config(config);
+    TemporalInterpreter.setTemporalParser(config);
     TemporalInterpreter.interpretTemporal(er, tr);
     TemporalInterpreter.interpretModified(er, tr);
     TemporalInterpreter.interpretDateIdentified(er, tr);
 
     assertDate("1940-02-23", tr.getModified());
     assertDate("1920-02-20", tr.getDateIdentified());
-    assertDate("1879-11-01", tr.getEventDate().getGte());
+    assertDate("1879-11-01T00:00", tr.getEventDate().getGte());
     assertEquals(1879, tr.getYear().intValue());
     assertEquals(11, tr.getMonth().intValue());
     assertEquals(1, tr.getDay().intValue());
@@ -533,20 +533,20 @@ public class TemporalInterpreterTest {
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
     TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
 
-    TemporalInterpreter.config(config);
+    TemporalInterpreter.setTemporalParser(config);
     TemporalInterpreter.interpretTemporal(er, tr);
     TemporalInterpreter.interpretModified(er, tr);
     TemporalInterpreter.interpretDateIdentified(er, tr);
 
     assertDate("1940-02-23", tr.getModified());
     assertDate("1920-02-20", tr.getDateIdentified());
-    assertDate("1879-01-11", tr.getEventDate().getGte());
+    assertDate("1879-01-11T00:00", tr.getEventDate().getGte());
   }
 
   /** TemporalInterpreter is a static instance in TemporalInterpreter Need to reset every test */
   @After
   public void reset() {
-    TemporalInterpreter.config(new PipelinesConfig());
+    TemporalInterpreter.setTemporalParser(new PipelinesConfig());
   }
 
   /** @param expected expected date in ISO yyyy-MM-dd format */

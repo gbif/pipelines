@@ -43,7 +43,7 @@ public class TemporalTransform extends Transform<ExtendedRecord, TemporalRecord>
    * @return
    */
   public static TemporalTransform create(PipelinesConfig config) {
-    TemporalInterpreter.config(config);
+    TemporalInterpreter.setTemporalParser(config);
     return new TemporalTransform();
   }
 
