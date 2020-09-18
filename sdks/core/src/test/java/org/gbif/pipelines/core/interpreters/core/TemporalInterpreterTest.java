@@ -1,19 +1,8 @@
 package org.gbif.pipelines.core.interpreters.core;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.Year;
-import java.time.YearMonth;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
@@ -35,6 +24,42 @@ import org.junit.Test;
 public class TemporalInterpreterTest {
 
   @Test
+  public void testYearMonth() {
+    Map<String, String> map = new HashMap<>();
+    map.put(DwcTerm.eventDate.qualifiedName(), "1879-10");
+
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
+    TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
+
+    TemporalInterpreter.interpretTemporal(er, tr);
+
+    assertDate("1879-10", tr.getEventDate().getGte());
+    assertEquals(1879, tr.getYear().intValue());
+    assertEquals(10, tr.getMonth().intValue());
+    assertNull(tr.getDay());
+
+    assertEquals(0, tr.getIssues().getIssueList().size());
+  }
+
+  @Test
+  public void testYear() {
+    Map<String, String> map = new HashMap<>();
+    map.put(DwcTerm.eventDate.qualifiedName(), "1879");
+
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
+    TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
+
+    TemporalInterpreter.interpretTemporal(er, tr);
+
+    assertDate("1879", tr.getEventDate().getGte());
+    assertEquals(1879, tr.getYear().intValue());
+    assertNull(tr.getMonth());
+    assertNull(tr.getDay());
+
+    assertEquals(0, tr.getIssues().getIssueList().size());
+  }
+
+  @Test
   public void testAllDates() {
     Map<String, String> map = new HashMap<>();
     map.put(DwcTerm.year.qualifiedName(), "1879");
@@ -47,6 +72,8 @@ public class TemporalInterpreterTest {
     TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
 
     TemporalInterpreter.interpretTemporal(er, tr);
+    TemporalInterpreter.interpretModified(er, tr);
+    TemporalInterpreter.interpretDateIdentified(er, tr);
 
     assertDate("2014-01-11", tr.getModified());
     assertDate("2012-01-11", tr.getDateIdentified());
@@ -54,6 +81,29 @@ public class TemporalInterpreterTest {
     assertEquals(1879, tr.getYear().intValue());
     assertEquals(11, tr.getMonth().intValue());
     assertEquals(1, tr.getDay().intValue());
+
+    assertEquals(0, tr.getIssues().getIssueList().size());
+  }
+
+  @Test
+  public void testEventDateTimeDates() {
+    Map<String, String> map = new HashMap<>();
+    map.put(DwcTerm.eventDate.qualifiedName(), "1999-11-11T12:22");
+    map.put(DwcTerm.dateIdentified.qualifiedName(), "2012-01-11");
+    map.put(DcTerm.modified.qualifiedName(), "2014-01-11");
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
+    TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
+
+    TemporalInterpreter.interpretTemporal(er, tr);
+    TemporalInterpreter.interpretModified(er, tr);
+    TemporalInterpreter.interpretDateIdentified(er, tr);
+
+    assertDate("2014-01-11", tr.getModified());
+    assertDate("2012-01-11", tr.getDateIdentified());
+    assertDate("1999-11-11", tr.getEventDate().getGte());
+    assertEquals(1999, tr.getYear().intValue());
+    assertEquals(11, tr.getMonth().intValue());
+    assertEquals(11, tr.getDay().intValue());
 
     assertEquals(0, tr.getIssues().getIssueList().size());
   }
@@ -110,32 +160,32 @@ public class TemporalInterpreterTest {
     TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
 
     er.getCoreTerms().put(DwcTerm.dateIdentified.qualifiedName(), "1987-01-31");
-    TemporalInterpreter.interpretTemporal(er, tr);
+    TemporalInterpreter.interpretDateIdentified(er, tr);
     assertEquals(0, tr.getIssues().getIssueList().size());
 
     er.getCoreTerms().put(DwcTerm.dateIdentified.qualifiedName(), "1787-03-27");
-    TemporalInterpreter.interpretTemporal(er, tr);
+    TemporalInterpreter.interpretDateIdentified(er, tr);
     assertEquals(0, tr.getIssues().getIssueList().size());
 
     er.getCoreTerms().put(DwcTerm.dateIdentified.qualifiedName(), "2014-01-11");
-    TemporalInterpreter.interpretTemporal(er, tr);
+    TemporalInterpreter.interpretDateIdentified(er, tr);
     assertEquals(0, tr.getIssues().getIssueList().size());
 
     er.getCoreTerms().put(DwcTerm.dateIdentified.qualifiedName(), "1997");
-    TemporalInterpreter.interpretTemporal(er, tr);
+    TemporalInterpreter.interpretDateIdentified(er, tr);
     assertEquals(0, tr.getIssues().getIssueList().size());
 
     Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
     er.getCoreTerms()
         .put(DwcTerm.dateIdentified.qualifiedName(), (cal.get(Calendar.YEAR) + 1) + "-01-11");
-    TemporalInterpreter.interpretTemporal(er, tr);
+    TemporalInterpreter.interpretDateIdentified(er, tr);
     assertEquals(1, tr.getIssues().getIssueList().size());
     assertEquals(
         OccurrenceIssue.IDENTIFIED_DATE_UNLIKELY.name(),
         tr.getIssues().getIssueList().iterator().next());
 
     er.getCoreTerms().put(DwcTerm.dateIdentified.qualifiedName(), "1599-01-11");
-    TemporalInterpreter.interpretTemporal(er, tr);
+    TemporalInterpreter.interpretDateIdentified(er, tr);
     assertEquals(1, tr.getIssues().getIssueList().size());
     assertEquals(
         OccurrenceIssue.IDENTIFIED_DATE_UNLIKELY.name(),
@@ -154,13 +204,13 @@ public class TemporalInterpreterTest {
 
     TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
     er.getCoreTerms().put(DcTerm.modified.qualifiedName(), "2014-01-11");
-    TemporalInterpreter.interpretTemporal(er, tr);
+    TemporalInterpreter.interpretModified(er, tr);
     assertEquals(0, tr.getIssues().getIssueList().size());
 
     tr = TemporalRecord.newBuilder().setId("1").build();
     Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
     er.getCoreTerms().put(DcTerm.modified.qualifiedName(), (cal.get(Calendar.YEAR) + 1) + "-01-11");
-    TemporalInterpreter.interpretTemporal(er, tr);
+    TemporalInterpreter.interpretModified(er, tr);
     assertEquals(1, tr.getIssues().getIssueList().size());
     assertEquals(
         OccurrenceIssue.MODIFIED_DATE_UNLIKELY.name(),
@@ -168,7 +218,7 @@ public class TemporalInterpreterTest {
 
     tr = TemporalRecord.newBuilder().setId("1").build();
     er.getCoreTerms().put(DcTerm.modified.qualifiedName(), "1969-12-31");
-    TemporalInterpreter.interpretTemporal(er, tr);
+    TemporalInterpreter.interpretModified(er, tr);
     assertEquals(1, tr.getIssues().getIssueList().size());
     assertEquals(
         OccurrenceIssue.MODIFIED_DATE_UNLIKELY.name(),
@@ -176,9 +226,9 @@ public class TemporalInterpreterTest {
 
     tr = TemporalRecord.newBuilder().setId("1").build();
     er.getCoreTerms().put(DcTerm.modified.qualifiedName(), "2018-10-15 16:21:48");
-    TemporalInterpreter.interpretTemporal(er, tr);
+    TemporalInterpreter.interpretModified(er, tr);
     assertEquals(0, tr.getIssues().getIssueList().size());
-    assertDate("2018-10-15", tr.getModified());
+    assertDate("2018-10-15T16:21:48", tr.getModified());
   }
 
   @Test
@@ -445,6 +495,11 @@ public class TemporalInterpreterTest {
         interpretEventDate("2004-12-30T00:00:00+0000/2005-03-13T24:00:00+0000"));
   }
 
+  /**
+   * @param expected expected date in ISO: yyyy-MM-dd'T'HH:mm:ss.SSSZ, yyyy-MM-dd'T'HH:mm:ssZ,
+   *     yyyy-MM-dd'T'HH:mmZ, yyyy-MM-dd'T'HH:mm:ss.SSS, yyyy-MM-dd'T'HH:mm:ss, yyyy-MM-dd'T'HH:mm,
+   *     yyyy-MM-dd, yyyy-MM, yyyy formats
+   */
   @Test
   public void test_DMY_Date() {
     PipelinesConfig config = new PipelinesConfig();
@@ -500,7 +555,7 @@ public class TemporalInterpreterTest {
       assertNull(result);
     } else {
       assertNotNull("Missing date", result);
-      assertEquals(expected, LocalDateTime.parse(result).toLocalDate().toString());
+      assertEquals(expected, result);
     }
   }
 

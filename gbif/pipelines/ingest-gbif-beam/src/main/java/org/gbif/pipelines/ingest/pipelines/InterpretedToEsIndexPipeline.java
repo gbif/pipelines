@@ -24,6 +24,7 @@ import org.gbif.pipelines.common.beam.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.io.avro.*;
+import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.transforms.converters.GbifJsonTransform;
 import org.gbif.pipelines.transforms.core.*;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
@@ -31,7 +32,6 @@ import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
-import org.gbif.pipelines.transforms.metadata.TaggedValuesTransform;
 import org.slf4j.MDC;
 
 /**
@@ -47,6 +47,7 @@ import org.slf4j.MDC;
  *      {@link org.gbif.pipelines.io.avro.AudubonRecord},
  *      {@link org.gbif.pipelines.io.avro.MeasurementOrFactRecord},
  *      {@link org.gbif.pipelines.io.avro.TaxonRecord},
+ *      {@link org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord},
  *      {@link org.gbif.pipelines.io.avro.LocationRecord}
  *    2) Joins avro files
  *    3) Converts to json model (resources/elasticsearch/es-occurrence-schema.json)
@@ -106,8 +107,8 @@ public class InterpretedToEsIndexPipeline {
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.create();
     TaxonomyTransform taxonomyTransform = TaxonomyTransform.builder().create();
+    GrscicollTransform grscicollTransform = GrscicollTransform.builder().create();
     LocationTransform locationTransform = LocationTransform.builder().create();
-    TaggedValuesTransform taggedValuesTransform = TaggedValuesTransform.builder().create();
 
     // Extension
     MeasurementOrFactTransform measurementOrFactTransform = MeasurementOrFactTransform.create();
@@ -124,12 +125,6 @@ public class InterpretedToEsIndexPipeline {
         p.apply("Read Verbatim", verbatimTransform.read(pathFn))
             .apply("Map Verbatim to KV", verbatimTransform.toKv());
 
-    PCollection<KV<String, TaggedValueRecord>> taggedValuesCollection =
-        p.apply(
-                "Interpret TaggedValueRecords/MachinesTags interpretation",
-                taggedValuesTransform.read(pathFn))
-            .apply("Map TaggedValueRecord to KV", taggedValuesTransform.toKv());
-
     PCollection<KV<String, BasicRecord>> basicCollection =
         p.apply("Read Basic", basicTransform.read(pathFn))
             .apply("Map Basic to KV", basicTransform.toKv());
@@ -145,6 +140,10 @@ public class InterpretedToEsIndexPipeline {
     PCollection<KV<String, TaxonRecord>> taxonCollection =
         p.apply("Read Taxon", taxonomyTransform.read(pathFn))
             .apply("Map Taxon to KV", taxonomyTransform.toKv());
+
+    PCollection<KV<String, GrscicollRecord>> grscicollCollection =
+        p.apply("Read Grscicoll", grscicollTransform.read(pathFn))
+            .apply("Map Grscicoll to KV", grscicollTransform.toKv());
 
     PCollection<KV<String, MultimediaRecord>> multimediaCollection =
         p.apply("Read Multimedia", multimediaTransform.read(pathFn))
@@ -170,11 +169,11 @@ public class InterpretedToEsIndexPipeline {
             .temporalRecordTag(temporalTransform.getTag())
             .locationRecordTag(locationTransform.getTag())
             .taxonRecordTag(taxonomyTransform.getTag())
+            .grscicollRecordTag(grscicollTransform.getTag())
             .multimediaRecordTag(multimediaTransform.getTag())
             .imageRecordTag(imageTransform.getTag())
             .audubonRecordTag(audubonTransform.getTag())
             .measurementOrFactRecordTag(measurementOrFactTransform.getTag())
-            .taggedValueRecordTag(taggedValuesTransform.getTag())
             .metadataView(metadataView)
             .build()
             .converter();
@@ -186,7 +185,7 @@ public class InterpretedToEsIndexPipeline {
             .and(temporalTransform.getTag(), temporalCollection)
             .and(locationTransform.getTag(), locationCollection)
             .and(taxonomyTransform.getTag(), taxonCollection)
-            .and(taggedValuesTransform.getTag(), taggedValuesCollection)
+            .and(grscicollTransform.getTag(), grscicollCollection)
             // Extension
             .and(multimediaTransform.getTag(), multimediaCollection)
             .and(imageTransform.getTag(), imageCollection)

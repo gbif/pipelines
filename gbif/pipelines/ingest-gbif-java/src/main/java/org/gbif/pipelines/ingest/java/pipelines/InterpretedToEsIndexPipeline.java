@@ -38,10 +38,11 @@ import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.TaggedValueRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.transforms.core.BasicTransform;
+import org.gbif.pipelines.transforms.core.GrscicollTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.TaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
@@ -51,7 +52,6 @@ import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
-import org.gbif.pipelines.transforms.metadata.TaggedValuesTransform;
 import org.slf4j.MDC;
 
 /**
@@ -67,6 +67,7 @@ import org.slf4j.MDC;
  *      {@link org.gbif.pipelines.io.avro.AudubonRecord},
  *      {@link org.gbif.pipelines.io.avro.MeasurementOrFactRecord},
  *      {@link org.gbif.pipelines.io.avro.TaxonRecord},
+ *      {@link org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord},
  *      {@link org.gbif.pipelines.io.avro.LocationRecord}
  *    2) Joins avro files
  *    3) Converts to json model (resources/elasticsearch/es-occurrence-schema.json)
@@ -143,8 +144,8 @@ public class InterpretedToEsIndexPipeline {
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.create();
     TaxonomyTransform taxonomyTransform = TaxonomyTransform.builder().create();
+    GrscicollTransform grscicollTransform = GrscicollTransform.builder().create();
     LocationTransform locationTransform = LocationTransform.builder().create();
-    TaggedValuesTransform taggedValuesTransform = TaggedValuesTransform.builder().create();
 
     // Extension
     MeasurementOrFactTransform measurementTransform = MeasurementOrFactTransform.create();
@@ -176,16 +177,6 @@ public class InterpretedToEsIndexPipeline {
                     coreSiteConfig,
                     ExtendedRecord.class,
                     pathFn.apply(verbatimTransform.getBaseName())),
-            executor);
-
-    CompletableFuture<Map<String, TaggedValueRecord>> taggedValuesMapFeature =
-        CompletableFuture.supplyAsync(
-            () ->
-                AvroReader.readRecords(
-                    hdfsSiteConfig,
-                    coreSiteConfig,
-                    TaggedValueRecord.class,
-                    pathFn.apply(taggedValuesTransform.getBaseName())),
             executor);
 
     CompletableFuture<Map<String, BasicRecord>> basicMapFeature =
@@ -226,6 +217,16 @@ public class InterpretedToEsIndexPipeline {
                     coreSiteConfig,
                     TaxonRecord.class,
                     pathFn.apply(taxonomyTransform.getBaseName())),
+            executor);
+
+    CompletableFuture<Map<String, GrscicollRecord>> grscicollMapFeature =
+        CompletableFuture.supplyAsync(
+            () ->
+                AvroReader.readRecords(
+                    hdfsSiteConfig,
+                    coreSiteConfig,
+                    GrscicollRecord.class,
+                    pathFn.apply(grscicollTransform.getBaseName())),
             executor);
 
     CompletableFuture<Map<String, MultimediaRecord>> multimediaMapFeature =
@@ -275,6 +276,7 @@ public class InterpretedToEsIndexPipeline {
         temporalMapFeature,
         locationMapFeature,
         taxonMapFeature,
+        grscicollMapFeature,
         multimediaMapFeature,
         imageMapFeature,
         audubonMapFeature,
@@ -283,10 +285,10 @@ public class InterpretedToEsIndexPipeline {
     MetadataRecord metadata = metadataMapFeature.get().values().iterator().next();
     Map<String, BasicRecord> basicMap = basicMapFeature.get();
     Map<String, ExtendedRecord> verbatimMap = verbatimMapFeature.get();
-    Map<String, TaggedValueRecord> taggedValueRecordMap = taggedValuesMapFeature.get();
     Map<String, TemporalRecord> temporalMap = temporalMapFeature.get();
     Map<String, LocationRecord> locationMap = locationMapFeature.get();
     Map<String, TaxonRecord> taxonMap = taxonMapFeature.get();
+    Map<String, GrscicollRecord> grscicollMap = grscicollMapFeature.get();
     Map<String, MultimediaRecord> multimediaMap = multimediaMapFeature.get();
     Map<String, ImageRecord> imageMap = imageMapFeature.get();
     Map<String, AudubonRecord> audubonMap = audubonMapFeature.get();
@@ -300,13 +302,13 @@ public class InterpretedToEsIndexPipeline {
           // Core
           ExtendedRecord er =
               verbatimMap.getOrDefault(k, ExtendedRecord.newBuilder().setId(k).build());
-          TaggedValueRecord tvr =
-              taggedValueRecordMap.getOrDefault(k, TaggedValueRecord.newBuilder().setId(k).build());
           TemporalRecord tr =
               temporalMap.getOrDefault(k, TemporalRecord.newBuilder().setId(k).build());
           LocationRecord lr =
               locationMap.getOrDefault(k, LocationRecord.newBuilder().setId(k).build());
           TaxonRecord txr = taxonMap.getOrDefault(k, TaxonRecord.newBuilder().setId(k).build());
+          GrscicollRecord gr =
+              grscicollMap.getOrDefault(k, GrscicollRecord.newBuilder().setId(k).build());
           // Extension
           MultimediaRecord mr =
               multimediaMap.getOrDefault(k, MultimediaRecord.newBuilder().setId(k).build());
@@ -317,7 +319,7 @@ public class InterpretedToEsIndexPipeline {
               measurementMap.getOrDefault(k, MeasurementOrFactRecord.newBuilder().setId(k).build());
 
           MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
-          ObjectNode json = GbifJsonConverter.toJson(metadata, br, tr, lr, txr, mmr, mfr, tvr, er);
+          ObjectNode json = GbifJsonConverter.toJson(metadata, br, tr, lr, txr, gr, mmr, mfr, er);
 
           metrics.incMetric(AVRO_TO_JSON_COUNT);
 

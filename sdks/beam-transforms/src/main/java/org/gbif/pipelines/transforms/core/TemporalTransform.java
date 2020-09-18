@@ -70,6 +70,8 @@ public class TemporalTransform extends Transform<ExtendedRecord, TemporalRecord>
         .to(tr)
         .when(er -> !er.getCoreTerms().isEmpty())
         .via(TemporalInterpreter::interpretTemporal)
+        .via(TemporalInterpreter::interpretModified)
+        .via(TemporalInterpreter::interpretDateIdentified)
         .getOfNullable();
   }
 }

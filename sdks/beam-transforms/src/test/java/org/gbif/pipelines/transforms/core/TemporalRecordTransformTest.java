@@ -1,12 +1,9 @@
 package org.gbif.pipelines.transforms.core;
 
-import java.time.LocalDateTime;
-import java.time.Month;
-import java.time.Year;
+import java.time.*;
 import java.time.temporal.Temporal;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
@@ -45,20 +42,61 @@ public class TemporalRecordTransformTest {
   @Test
   public void transformationTest() {
     // State
-    final List<ExtendedRecord> input = createExtendedRecordList("1999-01-01T12:26Z");
+    ExtendedRecord record = ExtendedRecord.newBuilder().setId("0").build();
+    record.getCoreTerms().put(DwcTerm.year.qualifiedName(), "1999");
+    record.getCoreTerms().put(DwcTerm.month.qualifiedName(), "2");
+    record.getCoreTerms().put(DwcTerm.day.qualifiedName(), "2");
+    record.getCoreTerms().put(DwcTerm.eventDate.qualifiedName(), "1999-02-02T12:26");
+    record.getCoreTerms().put(DwcTerm.dateIdentified.qualifiedName(), "1999-02-02T12:26");
+    record.getCoreTerms().put(DcTerm.modified.qualifiedName(), "1999-02-02T12:26");
+    final List<ExtendedRecord> input = Collections.singletonList(record);
 
     // Expected
     // First
-    final LocalDateTime fromOne = LocalDateTime.of(1999, 1, 1, 12, 26);
-    final ParsedTemporal periodOne = ParsedTemporal.create();
-    periodOne.setFromDate(fromOne);
-    periodOne.setYear(Year.of(1999));
-    periodOne.setMonth(Month.of(1));
-    periodOne.setDay(1);
-    periodOne.setDay(1);
-    periodOne.setDay(1);
+    final ParsedTemporal parsedTemporal = ParsedTemporal.create();
+    parsedTemporal.setFromDate(LocalDate.of(1999, 2, 2));
+    parsedTemporal.setYear(Year.of(1999));
+    parsedTemporal.setMonth(Month.of(2));
+    parsedTemporal.setDay(2);
 
-    final List<TemporalRecord> dataExpected = createTemporalRecordList(periodOne);
+    final ParsedTemporal other = ParsedTemporal.create();
+    other.setFromDate(LocalDateTime.of(1999, 2, 2, 12, 26));
+
+    final List<TemporalRecord> dataExpected = createTemporalRecordList(parsedTemporal, other);
+
+    // When
+    PCollection<TemporalRecord> dataStream =
+        p.apply(Create.of(input))
+            .apply(TemporalTransform.create().interpret())
+            .apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
+
+    // Should
+    PAssert.that(dataStream).containsInAnyOrder(dataExpected);
+    p.run();
+  }
+
+  @Test
+  public void transformationDateMonthTest() {
+    // State
+    ExtendedRecord record = ExtendedRecord.newBuilder().setId("0").build();
+    record.getCoreTerms().put(DwcTerm.year.qualifiedName(), "1999");
+    record.getCoreTerms().put(DwcTerm.month.qualifiedName(), "2");
+    record.getCoreTerms().put(DwcTerm.eventDate.qualifiedName(), "1999-02");
+    record.getCoreTerms().put(DwcTerm.dateIdentified.qualifiedName(), "1999-02");
+    record.getCoreTerms().put(DcTerm.modified.qualifiedName(), "1999-02");
+    final List<ExtendedRecord> input = Collections.singletonList(record);
+
+    // Expected
+    // First
+    final ParsedTemporal periodOne = ParsedTemporal.create();
+    periodOne.setFromDate(YearMonth.of(1999, 2));
+    periodOne.setYear(Year.of(1999));
+    periodOne.setMonth(Month.of(2));
+
+    final ParsedTemporal other = ParsedTemporal.create();
+    other.setFromDate(YearMonth.of(1999, 2));
+
+    final List<TemporalRecord> dataExpected = createTemporalRecordList(periodOne, other);
 
     // When
     PCollection<TemporalRecord> dataStream =
@@ -88,39 +126,21 @@ public class TemporalRecordTransformTest {
     p.run();
   }
 
-  private List<ExtendedRecord> createExtendedRecordList(String... events) {
-    return Arrays.stream(events)
-        .map(
-            x -> {
-              ExtendedRecord record = ExtendedRecord.newBuilder().setId("0").build();
-              record.getCoreTerms().put(DwcTerm.year.qualifiedName(), "1999");
-              record.getCoreTerms().put(DwcTerm.month.qualifiedName(), "1");
-              record.getCoreTerms().put(DwcTerm.day.qualifiedName(), "1");
-              record.getCoreTerms().put(DwcTerm.eventDate.qualifiedName(), x);
-              record.getCoreTerms().put(DwcTerm.dateIdentified.qualifiedName(), x);
-              record.getCoreTerms().put(DcTerm.modified.qualifiedName(), x);
-              return record;
-            })
-        .collect(Collectors.toList());
-  }
+  private List<TemporalRecord> createTemporalRecordList(
+      ParsedTemporal eventDate, ParsedTemporal other) {
 
-  private List<TemporalRecord> createTemporalRecordList(ParsedTemporal... dates) {
-    return Arrays.stream(dates)
-        .map(
-            x -> {
-              String from = x.getFromOpt().map(Temporal::toString).orElse(null);
-              String to = x.getToOpt().map(Temporal::toString).orElse(null);
-              return TemporalRecord.newBuilder()
-                  .setId("0")
-                  .setYear(x.getYearOpt().map(Year::getValue).orElse(null))
-                  .setMonth(x.getMonthOpt().map(Month::getValue).orElse(null))
-                  .setDay(x.getDayOpt().orElse(null))
-                  .setEventDate(EventDate.newBuilder().setGte(from).setLte(to).build())
-                  .setDateIdentified(x.getFromOpt().map(Temporal::toString).orElse(null))
-                  .setModified(x.getFromOpt().map(Temporal::toString).orElse(null))
-                  .setCreated(0L)
-                  .build();
-            })
-        .collect(Collectors.toList());
+    String from = eventDate.getFromOpt().map(Temporal::toString).orElse(null);
+    String to = eventDate.getToOpt().map(Temporal::toString).orElse(null);
+    return Collections.singletonList(
+        TemporalRecord.newBuilder()
+            .setId("0")
+            .setYear(eventDate.getYearOpt().map(Year::getValue).orElse(null))
+            .setMonth(eventDate.getMonthOpt().map(Month::getValue).orElse(null))
+            .setDay(eventDate.getDayOpt().orElse(null))
+            .setEventDate(EventDate.newBuilder().setGte(from).setLte(to).build())
+            .setDateIdentified(other.getFromOpt().map(Temporal::toString).orElse(null))
+            .setModified(other.getFromOpt().map(Temporal::toString).orElse(null))
+            .setCreated(0L)
+            .build());
   }
 }

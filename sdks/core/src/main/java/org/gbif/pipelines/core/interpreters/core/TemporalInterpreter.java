@@ -8,10 +8,10 @@ import static org.gbif.pipelines.core.utils.ModelUtils.addIssueSet;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.hasValue;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.collect.Range;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.time.temporal.TemporalQueries;
@@ -72,28 +72,36 @@ public class TemporalInterpreter {
   public static void interpretTemporal(ExtendedRecord er, TemporalRecord tr) {
     OccurrenceParseResult<TemporalAccessor> eventResult = interpretRecordedDate(er);
     if (eventResult.isSuccessful()) {
-      TemporalAccessor temporalAccessor = eventResult.getPayload();
+      Optional<TemporalAccessor> temporalAccessor = Optional.ofNullable(eventResult.getPayload());
 
-      // Get eventDate as java.util.Date and ignore the offset (timezone) if provided
-      // Note for debug: be careful if you inspect the content of 'eventDate' it will contain your
-      // machine timezone.
-      LocalDateTime eventDate =
-          TemporalAccessorUtils.toEarliestLocalDateTime(temporalAccessor, true);
-      AtomizedLocalDate atomizedLocalDate =
-          AtomizedLocalDate.fromTemporalAccessor(temporalAccessor);
+      Optional<TemporalAccessor> localDate =
+          temporalAccessor
+              .filter(ta -> ta.isSupported(ChronoField.HOUR_OF_DAY))
+              .map(ta -> ta.query(TemporalQueries.localDate()));
 
-      Optional.ofNullable(eventDate)
-          .map(LocalDateTime::toString)
+      if (localDate.isPresent()) {
+        temporalAccessor = localDate;
+      }
+
+      temporalAccessor
+          .map(TemporalAccessor::toString)
           .ifPresent(x -> tr.setEventDate(new EventDate(x, null)));
 
-      tr.setYear(atomizedLocalDate.getYear());
-      tr.setMonth(atomizedLocalDate.getMonth());
-      tr.setDay(atomizedLocalDate.getDay());
+      temporalAccessor
+          .map(AtomizedLocalDate::fromTemporalAccessor)
+          .ifPresent(
+              ald -> {
+                tr.setYear(ald.getYear());
+                tr.setMonth(ald.getMonth());
+                tr.setDay(ald.getDay());
+              });
     }
     addIssueSet(tr, eventResult.getIssues());
+  }
 
-    LocalDate upperBound = LocalDate.now().plusDays(1);
+  public static void interpretModified(ExtendedRecord er, TemporalRecord tr) {
     if (hasValue(er, DcTerm.modified)) {
+      LocalDate upperBound = LocalDate.now().plusDays(1);
       Range<LocalDate> validModifiedDateRange = Range.closed(MIN_EPOCH_LOCAL_DATE, upperBound);
       OccurrenceParseResult<TemporalAccessor> parsed =
           interpretLocalDate(
@@ -101,16 +109,18 @@ public class TemporalInterpreter {
               validModifiedDateRange,
               OccurrenceIssue.MODIFIED_DATE_UNLIKELY);
       if (parsed.isSuccessful()) {
-        Optional.ofNullable(
-                TemporalAccessorUtils.toEarliestLocalDateTime(parsed.getPayload(), false))
-            .map(LocalDateTime::toString)
+        Optional.ofNullable(parsed.getPayload())
+            .map(TemporalAccessor::toString)
             .ifPresent(tr::setModified);
       }
 
       addIssueSet(tr, parsed.getIssues());
     }
+  }
 
+  public static void interpretDateIdentified(ExtendedRecord er, TemporalRecord tr) {
     if (hasValue(er, DwcTerm.dateIdentified)) {
+      LocalDate upperBound = LocalDate.now().plusDays(1);
       Range<LocalDate> validRecordedDateRange = Range.closed(MIN_LOCAL_DATE, upperBound);
       OccurrenceParseResult<TemporalAccessor> parsed =
           interpretLocalDate(
@@ -118,11 +128,11 @@ public class TemporalInterpreter {
               validRecordedDateRange,
               OccurrenceIssue.IDENTIFIED_DATE_UNLIKELY);
       if (parsed.isSuccessful()) {
-        Optional.ofNullable(
-                TemporalAccessorUtils.toEarliestLocalDateTime(parsed.getPayload(), false))
-            .map(LocalDateTime::toString)
+        Optional.ofNullable(parsed.getPayload())
+            .map(TemporalAccessor::toString)
             .ifPresent(tr::setDateIdentified);
       }
+
       addIssueSet(tr, parsed.getIssues());
     }
   }
@@ -134,13 +144,15 @@ public class TemporalInterpreter {
    * @param er the VerbatimOccurrence containing a recordedDate
    * @return the interpretation result which is never null
    */
-  public static OccurrenceParseResult<TemporalAccessor> interpretRecordedDate(ExtendedRecord er) {
+  @VisibleForTesting
+  protected static OccurrenceParseResult<TemporalAccessor> interpretRecordedDate(
+      ExtendedRecord er) {
     final String year = extractValue(er, DwcTerm.year);
     final String month = extractValue(er, DwcTerm.month);
     final String day = extractValue(er, DwcTerm.day);
-    final String dateString = extractValue(er, DwcTerm.eventDate);
+    final String eventDate = extractValue(er, DwcTerm.eventDate);
 
-    return interpretRecordedDate(year, month, day, dateString);
+    return interpretRecordedDate(year, month, day, eventDate);
   }
 
   /**
@@ -153,7 +165,8 @@ public class TemporalInterpreter {
    *
    * @return interpretation result, never null
    */
-  public static OccurrenceParseResult<TemporalAccessor> interpretRecordedDate(
+  @VisibleForTesting
+  protected static OccurrenceParseResult<TemporalAccessor> interpretRecordedDate(
       String year, String month, String day, String dateString) {
 
     boolean atomizedDateProvided =
@@ -250,14 +263,16 @@ public class TemporalInterpreter {
    *
    * @return valid or not according to the predefined range.
    */
-  public static boolean isValidDate(TemporalAccessor temporalAccessor, boolean acceptPartialDate) {
+  @VisibleForTesting
+  protected static boolean isValidDate(
+      TemporalAccessor temporalAccessor, boolean acceptPartialDate) {
     LocalDate upperBound = LocalDate.now().plusDays(1);
     return isValidDate(
         temporalAccessor, acceptPartialDate, Range.closed(MIN_LOCAL_DATE, upperBound));
   }
 
   /** Check if a date express as TemporalAccessor falls between the provided range. */
-  public static boolean isValidDate(
+  private static boolean isValidDate(
       TemporalAccessor temporalAccessor, boolean acceptPartialDate, Range<LocalDate> likelyRange) {
 
     if (temporalAccessor == null) {
@@ -294,7 +309,7 @@ public class TemporalInterpreter {
   }
 
   /** @return TemporalAccessor that represents a LocalDate or LocalDateTime */
-  public static OccurrenceParseResult<TemporalAccessor> interpretLocalDate(
+  private static OccurrenceParseResult<TemporalAccessor> interpretLocalDate(
       String dateString, Range<LocalDate> likelyRange, OccurrenceIssue unlikelyIssue) {
     if (!Strings.isNullOrEmpty(dateString)) {
       OccurrenceParseResult<TemporalAccessor> result =

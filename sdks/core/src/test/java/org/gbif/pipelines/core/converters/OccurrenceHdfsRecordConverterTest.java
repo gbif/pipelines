@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.UUID;
+import org.gbif.api.model.collections.lookup.Match.MatchType;
 import org.gbif.api.vocabulary.AgentIdentifierType;
 import org.gbif.api.vocabulary.BasisOfRecord;
 import org.gbif.api.vocabulary.Continent;
@@ -30,7 +31,6 @@ import org.gbif.api.vocabulary.Sex;
 import org.gbif.api.vocabulary.TypeStatus;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwc.terms.GbifInternalTerm;
 import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.pipelines.core.utils.MediaSerDeserUtils;
 import org.gbif.pipelines.io.avro.AgentIdentifier;
@@ -52,9 +52,13 @@ import org.gbif.pipelines.io.avro.ParsedName;
 import org.gbif.pipelines.io.avro.Rank;
 import org.gbif.pipelines.io.avro.RankedName;
 import org.gbif.pipelines.io.avro.State;
-import org.gbif.pipelines.io.avro.TaggedValueRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.grscicoll.Collection;
+import org.gbif.pipelines.io.avro.grscicoll.CollectionMatch;
+import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
+import org.gbif.pipelines.io.avro.grscicoll.Institution;
+import org.gbif.pipelines.io.avro.grscicoll.InstitutionMatch;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -91,7 +95,11 @@ public class OccurrenceHdfsRecordConverterTest {
         ExtendedRecord.newBuilder().setId("1").setCoreTerms(coreTerms).build();
 
     MetadataRecord metadataRecord =
-        MetadataRecord.newBuilder().setId("1").setLicense(License.CC_BY_4_0.name()).build();
+        MetadataRecord.newBuilder()
+            .setId("1")
+            .setLicense(License.CC_BY_4_0.name())
+            .setHostingOrganizationKey("hostOrgKey")
+            .build();
 
     List<AgentIdentifier> agentIds =
         Collections.singletonList(
@@ -130,24 +138,10 @@ public class OccurrenceHdfsRecordConverterTest {
             .setModified("2019-04-15T17:17")
             .build();
 
-    TaggedValueRecord taggedValueRecord =
-        TaggedValueRecord.newBuilder()
-            .setId("1")
-            .setTaggedValues(
-                Collections.singletonMap(
-                    GbifInternalTerm.collectionKey.qualifiedName(),
-                    "7ddf754f-d193-4cc9-b351-99906754a03b"))
-            .build();
-
     // When
     OccurrenceHdfsRecord hdfsRecord =
         toOccurrenceHdfsRecord(
-            basicRecord,
-            metadataRecord,
-            taxonRecord,
-            temporalRecord,
-            extendedRecord,
-            taggedValueRecord);
+            basicRecord, metadataRecord, taxonRecord, temporalRecord, extendedRecord);
 
     // Should
     // Test common fields
@@ -194,12 +188,13 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals("adultss", hdfsRecord.getVLifestage());
     Assert.assertEquals(taxonRecord.getCreated(), hdfsRecord.getLastparsed());
     Assert.assertEquals(taxonRecord.getCreated(), hdfsRecord.getLastinterpreted());
-    Assert.assertEquals("7ddf754f-d193-4cc9-b351-99906754a03b", hdfsRecord.getCollectionkey());
     Assert.assertEquals(License.CC0_1_0.name(), hdfsRecord.getLicense());
     Assert.assertEquals(Collections.singletonList("13123"), hdfsRecord.getRecordedbyid());
     Assert.assertEquals(Collections.singletonList("13123"), hdfsRecord.getIdentifiedbyid());
     Assert.assertEquals(OccurrenceStatus.ABSENT.name(), hdfsRecord.getOccurrencestatus());
     Assert.assertEquals(Integer.valueOf(0), hdfsRecord.getIndividualcount());
+    Assert.assertEquals(
+        metadataRecord.getHostingOrganizationKey(), hdfsRecord.getHostingOrganizationKey());
   }
 
   @Test
@@ -595,5 +590,47 @@ public class OccurrenceHdfsRecordConverterTest {
     assertEquals(1, cal.get(Calendar.YEAR));
     assertEquals(0, cal.get(Calendar.MONTH));
     assertEquals(1, cal.get(Calendar.DAY_OF_MONTH));
+  }
+
+  @Test
+  public void grscicollMapperTest() {
+    // State
+    Institution institution =
+        Institution.newBuilder()
+            .setCode("I1")
+            .setKey("cb0098db-6ff6-4a5d-ad29-51348d114e41")
+            .build();
+
+    InstitutionMatch institutionMatch =
+        InstitutionMatch.newBuilder()
+            .setInstitution(institution)
+            .setMatchType(MatchType.EXACT.name())
+            .build();
+
+    Collection collection =
+        Collection.newBuilder()
+            .setKey("5c692584-d517-48e8-93a8-a916ba131d9b")
+            .setCode("C1")
+            .build();
+
+    CollectionMatch collectionMatch =
+        CollectionMatch.newBuilder()
+            .setCollection(collection)
+            .setMatchType(MatchType.FUZZY.name())
+            .build();
+
+    GrscicollRecord record =
+        GrscicollRecord.newBuilder()
+            .setId("1")
+            .setInstitutionMatch(institutionMatch)
+            .setCollectionMatch(collectionMatch)
+            .build();
+
+    // When
+    OccurrenceHdfsRecord hdfsRecord = toOccurrenceHdfsRecord(record);
+
+    // Should
+    Assert.assertEquals(institution.getKey(), hdfsRecord.getInstitutionkey());
+    Assert.assertEquals(collection.getKey(), hdfsRecord.getCollectionkey());
   }
 }

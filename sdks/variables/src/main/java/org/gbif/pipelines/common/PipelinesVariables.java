@@ -44,11 +44,11 @@ public class PipelinesVariables {
         VERBATIM,
         // Core types
         METADATA,
-        TAGGED_VALUES,
         BASIC,
         TEMPORAL,
         LOCATION,
         TAXONOMY,
+        GRSCICOLL,
         // Extension types
         IMAGE,
         MULTIMEDIA,
@@ -102,12 +102,12 @@ public class PipelinesVariables {
     public static final String INVALID_GBIF_ID_COUNT = "invalidGbifIdCount";
     // Core types
     public static final String METADATA_RECORDS_COUNT = "metadataRecordsCount";
-    public static final String TAGGED_VALUES_RECORDS_COUNT = "taggedValuesRecordsCount";
     public static final String DEFAULT_VALUES_RECORDS_COUNT = "defaultValuesRecordsCount";
     public static final String BASIC_RECORDS_COUNT = "basicRecordsCount";
     public static final String TEMPORAL_RECORDS_COUNT = "temporalRecordsCount";
     public static final String LOCATION_RECORDS_COUNT = "locationRecordsCount";
     public static final String TAXON_RECORDS_COUNT = "taxonRecordsCount";
+    public static final String GRSCICOLL_RECORDS_COUNT = "grscicollRecordsCount";
     public static final String VERBATIM_RECORDS_COUNT = "verbatimRecordsCount";
     // Extension types
     public static final String MULTIMEDIA_RECORDS_COUNT = "multimediaRecordsCount";

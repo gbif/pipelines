@@ -17,6 +17,7 @@ import org.apache.beam.sdk.values.TupleTag;
 import org.gbif.pipelines.core.converters.GbifJsonConverter;
 import org.gbif.pipelines.core.converters.MultimediaConverter;
 import org.gbif.pipelines.io.avro.*;
+import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 
 /**
  * Beam level transformation for the ES output json. The transformation consumes objects, which
@@ -83,12 +84,12 @@ public class GbifJsonTransform implements Serializable {
   @NonNull private final TupleTag<TemporalRecord> temporalRecordTag;
   @NonNull private final TupleTag<LocationRecord> locationRecordTag;
   @NonNull private final TupleTag<TaxonRecord> taxonRecordTag;
+  @NonNull private final TupleTag<GrscicollRecord> grscicollRecordTag;
   // Extension
   @NonNull private final TupleTag<MultimediaRecord> multimediaRecordTag;
   @NonNull private final TupleTag<ImageRecord> imageRecordTag;
   @NonNull private final TupleTag<AudubonRecord> audubonRecordTag;
   @NonNull private final TupleTag<MeasurementOrFactRecord> measurementOrFactRecordTag;
-  @NonNull private final TupleTag<TaggedValueRecord> taggedValueRecordTag;
 
   @NonNull private final PCollectionView<MetadataRecord> metadataView;
 
@@ -115,8 +116,8 @@ public class GbifJsonTransform implements Serializable {
             LocationRecord lr =
                 v.getOnly(locationRecordTag, LocationRecord.newBuilder().setId(k).build());
             TaxonRecord txr = v.getOnly(taxonRecordTag, TaxonRecord.newBuilder().setId(k).build());
-            TaggedValueRecord tvr =
-                v.getOnly(taggedValueRecordTag, TaggedValueRecord.newBuilder().setId(k).build());
+            GrscicollRecord gr =
+                v.getOnly(grscicollRecordTag, GrscicollRecord.newBuilder().setId(k).build());
 
             // Extension
             MultimediaRecord mr =
@@ -130,7 +131,7 @@ public class GbifJsonTransform implements Serializable {
                     MeasurementOrFactRecord.newBuilder().setId(k).build());
 
             MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
-            String json = GbifJsonConverter.toStringJson(mdr, br, tr, lr, txr, mmr, mfr, tvr, er);
+            String json = GbifJsonConverter.toStringJson(mdr, br, tr, lr, txr, gr, mmr, mfr, er);
 
             c.output(json);
 

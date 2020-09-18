@@ -16,7 +16,18 @@ import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
 import org.gbif.pipelines.core.converters.MultimediaConverter;
 import org.gbif.pipelines.core.converters.OccurrenceHdfsRecordConverter;
-import org.gbif.pipelines.io.avro.*;
+import org.gbif.pipelines.io.avro.AudubonRecord;
+import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.ImageRecord;
+import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
+import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.io.avro.MultimediaRecord;
+import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
+import org.gbif.pipelines.io.avro.TaxonRecord;
+import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 
 /**
  * Beam level transformation for Occurrence HDFS Downloads Table. The transformation consumes
@@ -32,6 +43,7 @@ import org.gbif.pipelines.io.avro.*;
  * final TupleTag<TemporalRecord> trTag = new TupleTag<TemporalRecord>() {};
  * final TupleTag<LocationRecord> lrTag = new TupleTag<LocationRecord>() {};
  * final TupleTag<TaxonRecord> txrTag = new TupleTag<TaxonRecord>() {};
+ * final TupleTag<GrscicollRecord> txrTag = new TupleTag<GrscicollRecord>() {};
  * final TupleTag<MultimediaRecord> mrTag = new TupleTag<MultimediaRecord>() {};
  * final TupleTag<ImageRecord> irTag = new TupleTag<ImageRecord>() {};
  * final TupleTag<AudubonRecord> arTag = new TupleTag<AudubonRecord>() {};
@@ -65,12 +77,12 @@ public class OccurrenceHdfsRecordConverterTransform implements Serializable {
   @NonNull private final TupleTag<TemporalRecord> temporalRecordTag;
   @NonNull private final TupleTag<LocationRecord> locationRecordTag;
   @NonNull private final TupleTag<TaxonRecord> taxonRecordTag;
+  @NonNull private final TupleTag<GrscicollRecord> grscicollRecordTag;
   // Extension
   @NonNull private final TupleTag<MultimediaRecord> multimediaRecordTag;
   @NonNull private final TupleTag<ImageRecord> imageRecordTag;
   @NonNull private final TupleTag<AudubonRecord> audubonRecordTag;
   @NonNull private final TupleTag<MeasurementOrFactRecord> measurementOrFactRecordTag;
-  @NonNull private final TupleTag<TaggedValueRecord> taggedValueRecordTag;
 
   @NonNull private final PCollectionView<MetadataRecord> metadataView;
 
@@ -97,8 +109,8 @@ public class OccurrenceHdfsRecordConverterTransform implements Serializable {
             LocationRecord lr =
                 v.getOnly(locationRecordTag, LocationRecord.newBuilder().setId(k).build());
             TaxonRecord txr = v.getOnly(taxonRecordTag, TaxonRecord.newBuilder().setId(k).build());
-            TaggedValueRecord tvr =
-                v.getOnly(taggedValueRecordTag, TaggedValueRecord.newBuilder().setId(k).build());
+            GrscicollRecord gr =
+                v.getOnly(grscicollRecordTag, GrscicollRecord.newBuilder().setId(k).build());
             // Extension
             MultimediaRecord mr =
                 v.getOnly(multimediaRecordTag, MultimediaRecord.newBuilder().setId(k).build());
@@ -113,7 +125,7 @@ public class OccurrenceHdfsRecordConverterTransform implements Serializable {
             MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
             OccurrenceHdfsRecord record =
                 OccurrenceHdfsRecordConverter.toOccurrenceHdfsRecord(
-                    br, mdr, tr, lr, txr, mmr, mfr, tvr, er);
+                    br, mdr, tr, lr, txr, gr, mmr, mfr, er);
 
             c.output(record);
 
