@@ -446,9 +446,9 @@ public class TemporalInterpreterTest {
   }
 
   @Test
-  public void test_DMY_Date(){
+  public void test_DMY_Date() {
     PipelinesConfig config = new PipelinesConfig();
-    config.setDefaultDateFormat("DMY"); //Set EU dd/MM/yyyy format as default
+    config.setDefaultDateFormat("DMY"); // Set EU dd/MM/yyyy format as default
 
     Map<String, String> map = new HashMap<>();
     map.put(DwcTerm.eventDate.qualifiedName(), "1/11/1879");
@@ -469,9 +469,9 @@ public class TemporalInterpreterTest {
   }
 
   @Test
-  public void test_MDY_Date(){
+  public void test_MDY_Date() {
     PipelinesConfig config = new PipelinesConfig();
-    config.setDefaultDateFormat("MDY"); //Set EU dd/MM/yyyy format as default
+    config.setDefaultDateFormat("MDY"); // Set EU dd/MM/yyyy format as default
 
     Map<String, String> map = new HashMap<>();
     map.put(DwcTerm.eventDate.qualifiedName(), "1/11/1879");
@@ -488,13 +488,9 @@ public class TemporalInterpreterTest {
     assertDate("1879-01-11", tr.getEventDate().getGte());
   }
 
-
-  /**
-   * TemporalInterpreter is a static instance in TemporalInterpreter
-   * Need to reset every test
-   */
+  /** TemporalInterpreter is a static instance in TemporalInterpreter Need to reset every test */
   @After
-  public void reset(){
+  public void reset() {
     TemporalInterpreter.config(new PipelinesConfig());
   }
 

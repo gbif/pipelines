@@ -50,19 +50,20 @@ public class TemporalInterpreter {
   /**
    * Interpreter works on an independent VM, changing a static TemporalParser should be safe.
    *
-   * Set a temporal parser based on config.
-   * Support D/M/Y EU/AU  or M/D/Y us formats for ambiguous dates, like 01/02/2001
+   * <p>Set a temporal parser based on config. Support D/M/Y EU/AU or M/D/Y us formats for ambiguous
+   * dates, like 01/02/2001
+   *
    * @param config
    */
-  public static void config(PipelinesConfig config){
-    if (Strings.isNullOrEmpty(config.getDefaultDateFormat())){
+  public static void config(PipelinesConfig config) {
+    if (Strings.isNullOrEmpty(config.getDefaultDateFormat())) {
       temporalParser = DateParsers.defaultTemporalParser();
-    }else{
+    } else {
       if (config.getDefaultDateFormat().equalsIgnoreCase("DMY")) {
         temporalParser = CustomizedTextDateParser.getInstance(DMY_FORMATS);
       } else if (config.getDefaultDateFormat().equalsIgnoreCase("MDY")) {
         temporalParser = CustomizedTextDateParser.getInstance(MDY_FORMATS);
-      } else{
+      } else {
         temporalParser = DateParsers.defaultTemporalParser();
       }
     }
