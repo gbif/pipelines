@@ -26,8 +26,10 @@ import org.gbif.common.parsers.core.OccurrenceParseResult;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.junit.After;
 import org.junit.Test;
 
 public class TemporalInterpreterTest {
@@ -441,6 +443,59 @@ public class TemporalInterpreterTest {
     assertResult(
         ZonedDateTime.of(LocalDateTime.of(2004, 12, 30, 00, 00, 00, 00), ZoneOffset.UTC),
         interpretEventDate("2004-12-30T00:00:00+0000/2005-03-13T24:00:00+0000"));
+  }
+
+  @Test
+  public void test_DMY_Date(){
+    PipelinesConfig config = new PipelinesConfig();
+    config.setDefaultDateFormat("DMY"); //Set EU dd/MM/yyyy format as default
+
+    Map<String, String> map = new HashMap<>();
+    map.put(DwcTerm.eventDate.qualifiedName(), "1/11/1879");
+    map.put(DwcTerm.dateIdentified.qualifiedName(), "02/20/1920");
+    map.put(DcTerm.modified.qualifiedName(), "23/2/1940");
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
+    TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
+
+    TemporalInterpreter.config(config);
+    TemporalInterpreter.interpretTemporal(er, tr);
+
+    assertDate("1940-02-23", tr.getModified());
+    assertDate("1920-02-20", tr.getDateIdentified());
+    assertDate("1879-11-01", tr.getEventDate().getGte());
+    assertEquals(1879, tr.getYear().intValue());
+    assertEquals(11, tr.getMonth().intValue());
+    assertEquals(1, tr.getDay().intValue());
+  }
+
+  @Test
+  public void test_MDY_Date(){
+    PipelinesConfig config = new PipelinesConfig();
+    config.setDefaultDateFormat("MDY"); //Set EU dd/MM/yyyy format as default
+
+    Map<String, String> map = new HashMap<>();
+    map.put(DwcTerm.eventDate.qualifiedName(), "1/11/1879");
+    map.put(DwcTerm.dateIdentified.qualifiedName(), "02/20/1920");
+    map.put(DcTerm.modified.qualifiedName(), "23/2/1940");
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
+    TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
+
+    TemporalInterpreter.config(config);
+    TemporalInterpreter.interpretTemporal(er, tr);
+
+    assertDate("1940-02-23", tr.getModified());
+    assertDate("1920-02-20", tr.getDateIdentified());
+    assertDate("1879-01-11", tr.getEventDate().getGte());
+  }
+
+
+  /**
+   * TemporalInterpreter is a static instance in TemporalInterpreter
+   * Need to reset every test
+   */
+  @After
+  public void reset(){
+    TemporalInterpreter.config(new PipelinesConfig());
   }
 
   /** @param expected expected date in ISO yyyy-MM-dd format */

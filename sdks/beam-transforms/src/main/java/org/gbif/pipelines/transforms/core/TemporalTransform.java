@@ -8,6 +8,7 @@ import java.util.Optional;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
+import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.TemporalInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -32,6 +33,17 @@ public class TemporalTransform extends Transform<ExtendedRecord, TemporalRecord>
   }
 
   public static TemporalTransform create() {
+    return new TemporalTransform();
+  }
+
+  /**
+   * Reset a default temporal parser based on config.
+   *
+   * @param config
+   * @return
+   */
+  public static TemporalTransform create(PipelinesConfig config) {
+    TemporalInterpreter.config(config);
     return new TemporalTransform();
   }
 

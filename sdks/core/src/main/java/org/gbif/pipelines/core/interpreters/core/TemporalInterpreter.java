@@ -2,6 +2,8 @@ package org.gbif.pipelines.core.interpreters.core;
 
 import static org.gbif.common.parsers.core.ParseResult.CONFIDENCE.DEFINITE;
 import static org.gbif.common.parsers.core.ParseResult.CONFIDENCE.PROBABLE;
+import static org.gbif.common.parsers.date.DateComponentOrdering.DMY_FORMATS;
+import static org.gbif.common.parsers.date.DateComponentOrdering.MDY_FORMATS;
 import static org.gbif.pipelines.core.utils.ModelUtils.addIssueSet;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.hasValue;
@@ -24,11 +26,13 @@ import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.core.OccurrenceParseResult;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.common.parsers.date.AtomizedLocalDate;
+import org.gbif.common.parsers.date.CustomizedTextDateParser;
 import org.gbif.common.parsers.date.DateParsers;
 import org.gbif.common.parsers.date.TemporalAccessorUtils;
 import org.gbif.common.parsers.date.TemporalParser;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
@@ -41,7 +45,28 @@ public class TemporalInterpreter {
   private static final LocalDate MIN_LOCAL_DATE = LocalDate.of(1600, 1, 1);
   private static final LocalDate MIN_EPOCH_LOCAL_DATE = LocalDate.ofEpochDay(0);
 
-  private static final TemporalParser TEXTDATE_PARSER = DateParsers.defaultTemporalParser();
+  private static TemporalParser temporalParser = DateParsers.defaultTemporalParser();
+
+  /**
+   * Interpreter works on an independent VM, changing a static TemporalParser should be safe.
+   *
+   * Set a temporal parser based on config.
+   * Support D/M/Y EU/AU  or M/D/Y us formats for ambiguous dates, like 01/02/2001
+   * @param config
+   */
+  public static void config(PipelinesConfig config){
+    if (Strings.isNullOrEmpty(config.getDefaultDateFormat())){
+      temporalParser = DateParsers.defaultTemporalParser();
+    }else{
+      if (config.getDefaultDateFormat().equalsIgnoreCase("DMY")) {
+        temporalParser = CustomizedTextDateParser.getInstance(DMY_FORMATS);
+      } else if (config.getDefaultDateFormat().equalsIgnoreCase("MDY")) {
+        temporalParser = CustomizedTextDateParser.getInstance(MDY_FORMATS);
+      } else{
+        temporalParser = DateParsers.defaultTemporalParser();
+      }
+    }
+  }
 
   public static void interpretTemporal(ExtendedRecord er, TemporalRecord tr) {
     OccurrenceParseResult<TemporalAccessor> eventResult = interpretRecordedDate(er);
@@ -151,9 +176,9 @@ public class TemporalInterpreter {
     ParseResult.CONFIDENCE confidence;
 
     ParseResult<TemporalAccessor> parsedYMDResult =
-        atomizedDateProvided ? TEXTDATE_PARSER.parse(year, month, day) : ParseResult.fail();
+        atomizedDateProvided ? temporalParser.parse(year, month, day) : ParseResult.fail();
     ParseResult<TemporalAccessor> parsedDateResult =
-        dateStringProvided ? TEXTDATE_PARSER.parse(dateString) : ParseResult.fail();
+        dateStringProvided ? temporalParser.parse(dateString) : ParseResult.fail();
     TemporalAccessor parsedYmdTa = parsedYMDResult.getPayload();
     TemporalAccessor parsedDateTa = parsedDateResult.getPayload();
 
@@ -272,7 +297,7 @@ public class TemporalInterpreter {
       String dateString, Range<LocalDate> likelyRange, OccurrenceIssue unlikelyIssue) {
     if (!Strings.isNullOrEmpty(dateString)) {
       OccurrenceParseResult<TemporalAccessor> result =
-          new OccurrenceParseResult<>(TEXTDATE_PARSER.parse(dateString));
+          new OccurrenceParseResult<>(temporalParser.parse(dateString));
       // check year makes sense
       if (result.isSuccessful() && !isValidDate(result.getPayload(), true, likelyRange)) {
         log.debug("Unlikely date parsed, ignore [{}].", dateString);
