@@ -128,7 +128,6 @@ public class TemporalRecordTransformTest {
     p.run();
   }
 
-
   @Test
   public void DMY_transformationTest() {
     // State

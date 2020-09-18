@@ -495,9 +495,7 @@ public class TemporalInterpreterTest {
         interpretEventDate("2004-12-30T00:00:00+0000/2005-03-13T24:00:00+0000"));
   }
 
-  /**
-   * Parsing ambigous date like 01/02/1999 with D/M/Y format
-   */
+  /** Parsing ambigous date like 01/02/1999 with D/M/Y format */
   @Test
   public void test_DMY_Date() {
     PipelinesConfig config = new PipelinesConfig();
