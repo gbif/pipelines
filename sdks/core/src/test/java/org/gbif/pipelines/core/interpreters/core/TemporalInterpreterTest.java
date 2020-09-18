@@ -496,9 +496,7 @@ public class TemporalInterpreterTest {
   }
 
   /**
-   * @param expected expected date in ISO: yyyy-MM-dd'T'HH:mm:ss.SSSZ, yyyy-MM-dd'T'HH:mm:ssZ,
-   *     yyyy-MM-dd'T'HH:mmZ, yyyy-MM-dd'T'HH:mm:ss.SSS, yyyy-MM-dd'T'HH:mm:ss, yyyy-MM-dd'T'HH:mm,
-   *     yyyy-MM-dd, yyyy-MM, yyyy formats
+   * Parsing ambigous date like 01/02/1999 with D/M/Y format
    */
   @Test
   public void test_DMY_Date() {
@@ -514,6 +512,8 @@ public class TemporalInterpreterTest {
 
     TemporalInterpreter.config(config);
     TemporalInterpreter.interpretTemporal(er, tr);
+    TemporalInterpreter.interpretModified(er, tr);
+    TemporalInterpreter.interpretDateIdentified(er, tr);
 
     assertDate("1940-02-23", tr.getModified());
     assertDate("1920-02-20", tr.getDateIdentified());
@@ -537,6 +537,8 @@ public class TemporalInterpreterTest {
 
     TemporalInterpreter.config(config);
     TemporalInterpreter.interpretTemporal(er, tr);
+    TemporalInterpreter.interpretModified(er, tr);
+    TemporalInterpreter.interpretDateIdentified(er, tr);
 
     assertDate("1940-02-23", tr.getModified());
     assertDate("1920-02-20", tr.getDateIdentified());

@@ -2,6 +2,7 @@ package org.gbif.pipelines.transforms.core;
 
 import java.time.*;
 import java.time.temporal.Temporal;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.apache.beam.sdk.testing.NeedsRunner;
@@ -13,6 +14,7 @@ import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.parsers.temporal.ParsedTemporal;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -123,6 +125,48 @@ public class TemporalRecordTransformTest {
 
     // Should
     PAssert.that(dataStream).empty();
+    p.run();
+  }
+
+
+  @Test
+  public void DMY_transformationTest() {
+    // State
+    final List<ExtendedRecord> input = new ArrayList<>();
+
+    ExtendedRecord record = ExtendedRecord.newBuilder().setId("0").build();
+    record.getCoreTerms().put(DwcTerm.eventDate.qualifiedName(), "01/02/1999T12:26Z");
+    record.getCoreTerms().put(DwcTerm.dateIdentified.qualifiedName(), "01/04/1999");
+    record.getCoreTerms().put(DcTerm.modified.qualifiedName(), "01/03/1999T12:26");
+    input.add(record);
+    // Expected
+    TemporalRecord expected1 =
+        TemporalRecord.newBuilder()
+            .setId("0")
+            .setEventDate(EventDate.newBuilder().setGte("1999-02-01").build())
+            .setYear(1999)
+            .setMonth(2)
+            .setDay(1)
+            .setDateIdentified("1999-04-01")
+            .setModified("1999-03-01T12:26")
+            .setCreated(0L)
+            .build();
+
+    final List<TemporalRecord> dataExpected = new ArrayList<>();
+
+    dataExpected.add(expected1);
+
+    // When
+    PipelinesConfig config = new PipelinesConfig();
+    config.setDefaultDateFormat("DMY");
+
+    PCollection<TemporalRecord> dataStream =
+        p.apply(Create.of(input))
+            .apply(TemporalTransform.create(config).interpret())
+            .apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
+
+    // Should
+    PAssert.that(dataStream).containsInAnyOrder(dataExpected);
     p.run();
   }
 
