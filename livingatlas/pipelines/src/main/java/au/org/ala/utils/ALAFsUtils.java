@@ -64,6 +64,13 @@ public class ALAFsUtils {
         .toString();
   }
 
+  public static String buildPathImageServiceUsingTargetPath(
+      BasePipelineOptions options, String name, String uniqueId) {
+    return FsUtils.buildPath(
+            FsUtils.buildDatasetAttemptPath(options, "images", false), name + "-" + uniqueId)
+        .toString();
+  }
+
   /**
    * Build a path to sampling output.
    *

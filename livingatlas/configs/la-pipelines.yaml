@@ -116,8 +116,10 @@ sample:
   appName: Sample for {datasetId}
   samplingServiceUrl: 'https://sampling.ala.org.au'
 
-image:
-  tempLocation: /tmp/
+images:
+  runner: SparkRunner
+  inputPath: '{fsPath}/pipelines-data'
+  tempLocation: /tmp
 
 # class: au.org.ala.pipelines.beam.ALASamplingToAvroPipeline
 sample-avro:
@@ -134,6 +136,7 @@ index:
   inputPath: '{fsPath}/pipelines-data'
   solrCollection: biocache
   includeSampling: true
+  includeImages: true
   runner: SparkRunner
   zkHost: localhost:9983
   ## For spark-cluster:

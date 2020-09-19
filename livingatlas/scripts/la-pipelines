@@ -66,6 +66,7 @@ Usage:
   $CMD [options] interpret     (<dr>...|all) $WHEREL
   $CMD [options] validate      (<dr>...|all)         $WHERE
   $CMD [options] uuid          (<dr>...|all)         $WHERE
+  $CMD [options] image-sync    (<dr>...|all)         $WHERE
   $CMD [options] export-latlng (<dr>...|all)         $WHERE
   $CMD [options] sample        (<dr>...|all)
   $CMD [options] sample-avro   (<dr>...|all)         $WHERE
@@ -451,6 +452,43 @@ function uuid () {
     logStepEnd "UUID" $dr $ltype $SECONDS
 }
 
+function image-sync () {
+    dr=$1
+    ltype=$2
+    CLASS=au.org.ala.pipelines.beam.ImageServicePipeline
+
+    logStepStart "Image sync" $dr
+    SECONDS=0
+
+    PRE=image-sync-sh-args.spark-embedded
+    if [[ $ltype = "spark-embedded" || $ltype = "local" ]] ; then
+        $_D java $EXTRA_JVM_CLI_ARGS \
+            $(getConf $PRE.jvm)  \
+            -cp $PIPELINES_JAR $CLASS \
+            --datasetId=$dr \
+            --config=$config $ARGS
+    fi
+
+    PRE=exportimage-sync-sh-args.spark-cluster
+    if [[ $ltype = "spark-cluster" ]] ; then
+        $_D /data/spark/bin/spark-submit \
+            --name "Export $dr" \
+            $(toArg $PRE num-executors) \
+            $(toArg $PRE executor-cores) \
+            $(toArg $PRE executor-memory) \
+            $(toArg $PRE driver-memory) \
+            --class $CLASS \
+            --master $SPARK_MASTER \
+            --driver-java-options "-Dlog4j.configuration=file:$CONFIG_DIR/log4j.properties" \
+            $PIPELINES_JAR \
+            --datasetId=$dr \
+            --config=$config $ARGS
+            # TODO set here an optional colorized log4j properties
+    fi
+
+    logStepEnd "Image sync" $dr $ltype $SECONDS
+}
+
 function export-latlng () {
     dr=$1
     ltype=$2
@@ -682,6 +720,28 @@ if ($uuid || $do_all); then
             fi
         done < /tmp/dataset-counts.csv
     fi
+fi
+
+if ($image_sync || $do_all); then
+  if [[ $drs != "all" ]] ; then
+      for d in "${drs[@]}"; do
+          image-sync $d $TYPE
+      done
+  else
+      while IFS=, read -r datasetID recordCount
+      do
+          log.info "Dataset = $datasetID and count = $recordCount"
+          if [ "$recordCount" -gt "50000" ]; then
+              if [ $USE_CLUSTER = true ]; then
+                  image-sync $datasetID spark-cluster
+              else
+                  image-sync $datasetID spark-embedded
+              fi
+          else
+              image-sync $datasetID spark-embedded
+          fi
+      done < /tmp/dataset-counts.csv
+  fi
 fi
 
 if ($export_latlng || $do_all); then

@@ -1,12 +1,15 @@
 package au.org.ala.pipelines.beam;
 
+// import static org.apache.beam.sdk.extensions.joinlibrary.Join.innerJoin;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
 import au.org.ala.pipelines.options.ImageServicePipelineOptions;
 import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationUtils;
+import com.google.common.collect.ImmutableList;
 import java.io.*;
+import java.util.List;
 import java.util.function.UnaryOperator;
 import java.util.zip.GZIPInputStream;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +20,9 @@ import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.transforms.*;
+import org.apache.beam.sdk.transforms.join.CoGbkResult;
+import org.apache.beam.sdk.transforms.join.CoGroupByKey;
+import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -25,6 +31,7 @@ import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FileSystemFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.io.avro.ImageServiceRecord;
+import org.gbif.pipelines.io.avro.Multimedia;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.rest.client.retrofit.SyncCall;
@@ -66,24 +73,32 @@ public class ImageServicePipeline {
    */
   public static void run(ImageServicePipelineOptions options) throws Exception {
 
-      FileSystem fs =
-              FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
-                      .getFs(options.getInputPath());
+    FileSystem fs =
+        FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
+            .getFs(options.getInputPath());
 
-      String outputs =
-              String.join(
-                      "/",
-                      options.getInputPath(),
-                      options.getDatasetId(),
-                      options.getAttempt().toString(),
-                      "images");
+    String outputs =
+        String.join(
+            "/",
+            options.getInputPath(),
+            options.getDatasetId(),
+            options.getAttempt().toString(),
+            "images");
 
-      ALAFsUtils.deleteIfExist(fs, outputs);
+    ALAFsUtils.deleteIfExist(fs, outputs);
+    run(options, downloadImageMapping(options));
+  }
 
-
-    final String imageUrl = options.getImageServiceUrl();
-
-    String imageMappingPath = downloadImageMapping(options);
+  /**
+   * Includes the following steps:
+   *
+   * <p>1. Download CSV export from https://images-dev.ala.org.au/ws/exportDatasetMapping/dr123 2.
+   * Extract CSV 3. Load into HDFS 4. Generate ImageServiceRecord AVRO
+   *
+   * @param options
+   * @throws Exception
+   */
+  public static void run(ImageServicePipelineOptions options, String imageMappingPath) {
 
     // now lets start the pipelines
     log.info("Creating a pipeline from options");
@@ -102,7 +117,8 @@ public class ImageServicePipeline {
                           @Element String imageMapping, OutputReceiver<KV<String, String>> out) {
                         String[] parts = imageMapping.split(",");
                         if (parts.length == 2) {
-                          // URL, imageID
+                          // CSV is imageID, URL
+                          // Swap so we key on URL for later grouping
                           out.output(KV.of(parts[1], parts[0]));
                         } else {
                           log.error("Problem with line: " + imageMapping);
@@ -119,14 +135,15 @@ public class ImageServicePipeline {
     log.info("Reading multimedia for this dataset");
     PCollection<KV<String, String>> multimediaItems =
         p.apply("Read Multimedia", multimediaTransform.read(pathFn))
-            .apply(ParDo.of(new MultimediaRecordFcn()));
+            .apply("Extract URL -> RecordID map", ParDo.of(new MultimediaRecordFcn()));
 
     // For image service URLs, just convert to <recordID, imageID>
-    PCollection<KV<String, String>> imageServiceUrls =
+    PCollection<KV<String, String>> imageServiceUrlsCollection =
         multimediaItems
             .apply(
                 Filter.by(
                     new SerializableFunction<KV<String, String>, Boolean>() {
+                      @Override
                       public Boolean apply(KV<String, String> input) {
                         return input.getKey().startsWith("https://images.ala.org.au");
                       }
@@ -140,63 +157,56 @@ public class ImageServicePipeline {
                                 kv.getValue(),
                                 kv.getKey().substring(kv.getKey().lastIndexOf("=") + 1))));
 
-    String hdfsPath1 =
-        String.join(
-            "/",
-            options.getInputPath(),
-            options.getDatasetId(),
-            options.getAttempt().toString(),
-            "images",
-            "debug",
-            "imageServiceUrls.csv");
-    imageServiceUrls
-        .apply(
-            MapElements.into(TypeDescriptors.strings())
-                .via(kv -> kv.getKey() + "," + kv.getValue()))
-        .apply(TextIO.write().to(hdfsPath1).withoutSharding());
-
     // these are NOT image service URLs
     PCollection<KV<String, String>> nonImageServiceUrls =
         multimediaItems.apply(
             Filter.by(
                 new SerializableFunction<KV<String, String>, Boolean>() {
+                  @Override
                   public Boolean apply(KV<String, String> input) {
                     return !input.getKey().startsWith("https://images.ala.org.au");
                   }
                 }));
 
-    String hdfsPath2 =
-        String.join(
-            "/",
-            options.getInputPath(),
-            options.getDatasetId(),
-            options.getAttempt().toString(),
-            "images",
-            "debug",
-            "nonImageServiceUrls.csv");
-    nonImageServiceUrls
-        .apply(
-            MapElements.into(TypeDescriptors.strings())
-                .via(kv -> kv.getKey() + "," + kv.getValue()))
-        .apply(TextIO.write().to(hdfsPath2).withoutSharding());
-
     log.info("Create join collection");
-    PCollection<KV<String, String>> joinedPcollection =
-        org.apache.beam.sdk.extensions.joinlibrary.Join.innerJoin(
-                imageServiceExportMapping, nonImageServiceUrls)
-            .apply(Values.<KV<String, String>>create());
+    final TupleTag<String> imageServiceExportMappingTag = new TupleTag<String>();
+    final TupleTag<String> nonImageServiceUrlsTag = new TupleTag<String>();
 
-    String hdfsPath =
-        String.join(
-            "/",
-            options.getInputPath(),
-            options.getDatasetId(),
-            options.getAttempt().toString(),
-            "images",
-            "debug",
-            "mapped.csv");
+    // Merge collection values into a CoGbkResult collection.
+    PCollection<KV<String, CoGbkResult>> joinedCollection =
+        KeyedPCollectionTuple.of(
+                imageServiceExportMappingTag,
+                imageServiceExportMapping) // images extracted from image-service
+            .and(nonImageServiceUrlsTag, nonImageServiceUrls) // image
+            .apply(CoGroupByKey.<String>create());
 
-    System.out.println("HDFS output path: " + hdfsPath);
+    PCollection<KV<String, String>> nonImageServiceUrlCollection =
+        joinedCollection.apply(
+            ParDo.of(
+                new DoFn<KV<String, CoGbkResult>, KV<String, String>>() {
+                  @ProcessElement
+                  public void processElement(ProcessContext c) {
+                    KV<String, CoGbkResult> e = c.element();
+                    Iterable<String> recordIDs = e.getValue().getAll(imageServiceExportMappingTag);
+                    Iterable<String> imageIDs = e.getValue().getAll(nonImageServiceUrlsTag);
+                    if (recordIDs.iterator().hasNext()) {
+                      String recordID = recordIDs.iterator().next();
+                      if (imageIDs.iterator().hasNext()) {
+                        c.output(KV.of(recordID, imageIDs.iterator().next()));
+                      }
+                    }
+                  }
+                }));
+
+    // Union of image service URL and non image service & run groupby recordID
+    PCollection<KV<String, String>> combinedNotGrouped =
+        PCollectionList.of(imageServiceUrlsCollection)
+            .and(nonImageServiceUrlCollection)
+            .apply("Flatten the non and image service", Flatten.<KV<String, String>>pCollections());
+
+    // grouped by RecordID
+    PCollection<KV<String, Iterable<String>>> combined =
+        combinedNotGrouped.apply("Group by RecordID", GroupByKey.create());
 
     String avroPath =
         String.join(
@@ -207,14 +217,8 @@ public class ImageServicePipeline {
             "images",
             "image-service-record");
 
-    // Union of image service URL and non image service
-    PCollectionList.of(imageServiceUrls)
-        .and(joinedPcollection)
-        .apply(Flatten.<KV<String, String>>pCollections())
-        //        .apply(
-        //            MapElements.into(TypeDescriptors.strings())
-        //                .via(kv -> kv.getKey() + "," + kv.getValue()))
-        //        .apply(TextIO.write().to(hdfsPath).withoutSharding());
+    // write to AVRO
+    combined
         .apply(ParDo.of(new ImageServiceRecordFcn()))
         .apply(
             AvroIO.write(ImageServiceRecord.class)
@@ -225,37 +229,42 @@ public class ImageServicePipeline {
     PipelineResult result = p.run();
     result.waitUntilFinish();
 
-    System.out.println("Finished");
+    log.info("Finished");
   }
 
-  /** Function to create ALAUUIDRecords. */
+  /** Function to create KV<ImageURL,RecordID> from MultimediaRecord. */
   static class MultimediaRecordFcn extends DoFn<MultimediaRecord, KV<String, String>> {
 
     @ProcessElement
     public void processElement(
         @Element MultimediaRecord multimediaRecord, OutputReceiver<KV<String, String>> out) {
       try {
-        multimediaRecord
-            .getMultimediaItems()
-            .forEach(
-                multimedia ->
-                    out.output(KV.of(multimedia.getIdentifier(), multimediaRecord.getId())));
+
+        List<Multimedia> list = multimediaRecord.getMultimediaItems();
+        for (Multimedia multimedia : list) {
+          if (multimedia.getIdentifier() != null) {
+            out.output(KV.of(multimedia.getIdentifier(), multimediaRecord.getId()));
+          }
+        }
       } catch (Exception e) {
-        throw new RuntimeException(e.getMessage());
+        log.error("Problem with record " + multimediaRecord.getId());
+        //        throw new RuntimeException(e.getMessage());
       }
     }
   }
 
-  static class ImageServiceRecordFcn extends DoFn<KV<String, String>, ImageServiceRecord> {
+  static class ImageServiceRecordFcn
+      extends DoFn<KV<String, Iterable<String>>, ImageServiceRecord> {
 
     @ProcessElement
     public void processElement(
-        @Element KV<String, String> recordIDImageID, OutputReceiver<ImageServiceRecord> out) {
+        @Element KV<String, Iterable<String>> recordIDImageID,
+        OutputReceiver<ImageServiceRecord> out) {
       try {
         out.output(
             ImageServiceRecord.newBuilder()
                 .setId(recordIDImageID.getKey())
-                .setImageID(recordIDImageID.getValue())
+                .setImageIDs(ImmutableList.copyOf(recordIDImageID.getValue()))
                 .build());
       } catch (Exception e) {
         throw new RuntimeException(e.getMessage());
@@ -274,6 +283,9 @@ public class ImageServicePipeline {
    * @throws Exception
    */
   private static String downloadImageMapping(ImageServicePipelineOptions options) throws Exception {
+
+    String tmpDir = options.getTempLocation() != null ? options.getTempLocation() : "/tmp";
+
     final Retrofit retrofit =
         new Retrofit.Builder()
             .baseUrl(options.getImageServiceUrl())
@@ -281,8 +293,8 @@ public class ImageServicePipeline {
             .validateEagerly(true)
             .build();
 
-    String filePath = options.getTempLocation() + "/" + options.getDatasetId() + ".csv.gz";
-    System.out.println("Output to path " + filePath);
+    String filePath = tmpDir + "/" + options.getDatasetId() + ".csv.gz";
+    log.info("Output to path " + filePath);
     ImageService service = retrofit.create(ImageService.class);
     Call<ResponseBody> call = service.downloadMappingFile(options.getDatasetId());
 
@@ -301,6 +313,7 @@ public class ImageServicePipeline {
             options.getDatasetId(),
             options.getAttempt().toString(),
             "images",
+            "image-service-export",
             "export.csv");
     FileSystem fs =
         FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())

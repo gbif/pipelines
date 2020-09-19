@@ -17,15 +17,15 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
+import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.io.solr.SolrIO;
+import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.transforms.join.CoGroupByKey;
 import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
-import org.apache.beam.sdk.values.KV;
-import org.apache.beam.sdk.values.PCollection;
-import org.apache.beam.sdk.values.PCollectionView;
+import org.apache.beam.sdk.values.*;
 import org.apache.solr.common.SolrInputDocument;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
@@ -159,12 +159,30 @@ public class ALAInterpretedToSolrIndexPipeline {
         p.apply("Read attribution", alaAttributionTransform.read(pathFn))
             .apply("Map attribution to KV", alaAttributionTransform.toKv());
 
+    PCollection<KV<String, ImageServiceRecord>> alaImageServiceRecords =
+        p.apply(
+                AvroIO.read(ImageServiceRecord.class)
+                    .from(
+                        String.join(
+                            "/",
+                            options.getTargetPath(),
+                            options.getDatasetId().trim(),
+                            options.getAttempt().toString(),
+                            "images",
+                            "*.avro")))
+            .apply(
+                MapElements.into(new TypeDescriptor<KV<String, ImageServiceRecord>>() {})
+                    .via((ImageServiceRecord tr) -> KV.of(tr.getId(), tr)));
+
     PCollection<KV<String, LocationFeatureRecord>> locationFeatureCollection = null;
     if (options.getIncludeSampling()) {
       locationFeatureCollection =
           p.apply("Read Sampling", locationFeatureTransform.read(samplingPathFn))
               .apply("Map Sampling to KV", locationFeatureTransform.toKv());
     }
+
+    final TupleTag<ImageServiceRecord> imageServiceRecordTupleTag =
+        new TupleTag<ImageServiceRecord>() {};
 
     ALASolrDocumentTransform solrDocumentTransform =
         ALASolrDocumentTransform.create(
@@ -181,6 +199,7 @@ public class ALAInterpretedToSolrIndexPipeline {
             options.getIncludeSampling() ? locationFeatureTransform.getTag() : null,
             alaAttributionTransform.getTag(),
             alaUuidTransform.getTag(),
+            options.getIncludeImages() ? imageServiceRecordTupleTag : null,
             metadataView,
             options.getDatasetId());
 
@@ -204,7 +223,8 @@ public class ALAInterpretedToSolrIndexPipeline {
             // ALA Specific
             .and(alaUuidTransform.getTag(), alaUUidCollection)
             .and(alaTaxonomyTransform.getTag(), alaTaxonCollection)
-            .and(alaAttributionTransform.getTag(), alaAttributionCollection);
+            .and(alaAttributionTransform.getTag(), alaAttributionCollection)
+            .and(imageServiceRecordTupleTag, alaImageServiceRecords);
 
     if (options.getIncludeSampling()) {
       kpct = kpct.and(locationFeatureTransform.getTag(), locationFeatureCollection);
