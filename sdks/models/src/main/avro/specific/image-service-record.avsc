@@ -5,6 +5,6 @@
   "doc":"Image Service mapping",
   "fields":[
     {"name": "id", "type": ["null", "string"]},
-    {"name": "imageID", "type": ["null", "string"], "default" : null }
+    {"name": "imageIDs", "type": {"type" : "array", "items" : "string"}, "default" : {}}
   ]
 }
