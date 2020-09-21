@@ -2,8 +2,6 @@ package org.gbif.pipelines.core.interpreters.core;
 
 import static org.gbif.common.parsers.core.ParseResult.CONFIDENCE.DEFINITE;
 import static org.gbif.common.parsers.core.ParseResult.CONFIDENCE.PROBABLE;
-import static org.gbif.common.parsers.date.DateComponentOrdering.DMY_FORMATS;
-import static org.gbif.common.parsers.date.DateComponentOrdering.MDY_FORMATS;
 import static org.gbif.pipelines.core.utils.ModelUtils.addIssueSet;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.hasValue;
@@ -11,6 +9,7 @@ import static org.gbif.pipelines.core.utils.ModelUtils.hasValue;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.collect.Range;
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
@@ -18,8 +17,7 @@ import java.time.temporal.TemporalQueries;
 import java.util.EnumSet;
 import java.util.Optional;
 import java.util.Set;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.vocabulary.OccurrenceIssue;
@@ -27,49 +25,55 @@ import org.gbif.common.parsers.core.OccurrenceParseResult;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.common.parsers.date.AtomizedLocalDate;
 import org.gbif.common.parsers.date.CustomizedTextDateParser;
+import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.common.parsers.date.DateParsers;
 import org.gbif.common.parsers.date.TemporalAccessorUtils;
 import org.gbif.common.parsers.date.TemporalParser;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 
 /** Interprets date representations into a Date to support API v1 */
 @Slf4j
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class TemporalInterpreter {
+public class TemporalInterpreter implements Serializable {
 
   private static final LocalDate MIN_LOCAL_DATE = LocalDate.of(1600, 1, 1);
   private static final LocalDate MIN_EPOCH_LOCAL_DATE = LocalDate.ofEpochDay(0);
 
-  private static TemporalParser temporalParser = DateParsers.defaultTemporalParser();
+  private TemporalParser temporalParser;
 
-  /**
-   * Interpreter works on an independent VM, changing a static TemporalParser should be safe.
-   *
-   * <p>Set a temporal parser based on config. Support D/M/Y EU/AU or M/D/Y us formats for ambiguous
-   * dates, like 01/02/2001
-   *
-   * @param config
-   */
-  public static void config(PipelinesConfig config) {
-    if (Strings.isNullOrEmpty(config.getDefaultDateFormat())) {
-      temporalParser = DateParsers.defaultTemporalParser();
-    } else {
-      if (config.getDefaultDateFormat().equalsIgnoreCase("DMY")) {
-        temporalParser = CustomizedTextDateParser.getInstance(DMY_FORMATS);
-      } else if (config.getDefaultDateFormat().equalsIgnoreCase("MDY")) {
-        temporalParser = CustomizedTextDateParser.getInstance(MDY_FORMATS);
-      } else {
-        temporalParser = DateParsers.defaultTemporalParser();
-      }
-    }
+  private TemporalInterpreter() {
+    temporalParser = DateParsers.defaultTemporalParser();
   }
 
-  public static void interpretTemporal(ExtendedRecord er, TemporalRecord tr) {
+  private TemporalInterpreter(DateComponentOrdering[] orderings) {
+    temporalParser = CustomizedTextDateParser.getInstance(orderings);
+  }
+
+  /**
+   * Uses default ISO date parser
+   *
+   * @return
+   */
+  @Builder
+  public static TemporalInterpreter getInstance() {
+    return new TemporalInterpreter();
+  }
+
+  /**
+   * Specify an extra set of DatetimeFormatters
+   *
+   * @param orderings
+   * @return
+   */
+  @Builder
+  public static TemporalInterpreter getInstance(DateComponentOrdering[] orderings) {
+    return new TemporalInterpreter(orderings);
+  }
+
+  public void interpretTemporal(ExtendedRecord er, TemporalRecord tr) {
     OccurrenceParseResult<TemporalAccessor> eventResult = interpretRecordedDate(er);
     if (eventResult.isSuccessful()) {
       Optional<TemporalAccessor> temporalAccessor = Optional.ofNullable(eventResult.getPayload());
@@ -99,7 +103,7 @@ public class TemporalInterpreter {
     addIssueSet(tr, eventResult.getIssues());
   }
 
-  public static void interpretModified(ExtendedRecord er, TemporalRecord tr) {
+  public void interpretModified(ExtendedRecord er, TemporalRecord tr) {
     if (hasValue(er, DcTerm.modified)) {
       LocalDate upperBound = LocalDate.now().plusDays(1);
       Range<LocalDate> validModifiedDateRange = Range.closed(MIN_EPOCH_LOCAL_DATE, upperBound);
@@ -118,7 +122,7 @@ public class TemporalInterpreter {
     }
   }
 
-  public static void interpretDateIdentified(ExtendedRecord er, TemporalRecord tr) {
+  public void interpretDateIdentified(ExtendedRecord er, TemporalRecord tr) {
     if (hasValue(er, DwcTerm.dateIdentified)) {
       LocalDate upperBound = LocalDate.now().plusDays(1);
       Range<LocalDate> validRecordedDateRange = Range.closed(MIN_LOCAL_DATE, upperBound);
@@ -145,8 +149,7 @@ public class TemporalInterpreter {
    * @return the interpretation result which is never null
    */
   @VisibleForTesting
-  protected static OccurrenceParseResult<TemporalAccessor> interpretRecordedDate(
-      ExtendedRecord er) {
+  protected OccurrenceParseResult<TemporalAccessor> interpretRecordedDate(ExtendedRecord er) {
     final String year = extractValue(er, DwcTerm.year);
     final String month = extractValue(er, DwcTerm.month);
     final String day = extractValue(er, DwcTerm.day);
@@ -166,7 +169,7 @@ public class TemporalInterpreter {
    * @return interpretation result, never null
    */
   @VisibleForTesting
-  protected static OccurrenceParseResult<TemporalAccessor> interpretRecordedDate(
+  protected OccurrenceParseResult<TemporalAccessor> interpretRecordedDate(
       String year, String month, String day, String dateString) {
 
     boolean atomizedDateProvided =
@@ -309,7 +312,7 @@ public class TemporalInterpreter {
   }
 
   /** @return TemporalAccessor that represents a LocalDate or LocalDateTime */
-  private static OccurrenceParseResult<TemporalAccessor> interpretLocalDate(
+  private OccurrenceParseResult<TemporalAccessor> interpretLocalDate(
       String dateString, Range<LocalDate> likelyRange, OccurrenceIssue unlikelyIssue) {
     if (!Strings.isNullOrEmpty(dateString)) {
       OccurrenceParseResult<TemporalAccessor> result =
