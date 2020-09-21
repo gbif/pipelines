@@ -1,5 +1,7 @@
 package org.gbif.pipelines.transforms.core;
 
+import static org.gbif.common.parsers.date.DateComponentOrdering.DMY_FORMATS;
+
 import java.time.*;
 import java.time.temporal.Temporal;
 import java.util.ArrayList;
@@ -161,7 +163,7 @@ public class TemporalRecordTransformTest {
 
     PCollection<TemporalRecord> dataStream =
         p.apply(Create.of(input))
-            .apply(TemporalTransform.create(config).interpret())
+            .apply(TemporalTransform.create(DMY_FORMATS).interpret())
             .apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
 
     // Should

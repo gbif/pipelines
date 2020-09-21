@@ -8,7 +8,7 @@ import java.util.Optional;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
-import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.TemporalInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -27,24 +27,33 @@ import org.gbif.pipelines.transforms.Transform;
  */
 public class TemporalTransform extends Transform<ExtendedRecord, TemporalRecord> {
 
+  private TemporalInterpreter temporalInterpreter;
+
   private TemporalTransform() {
     super(
         TemporalRecord.class, TEMPORAL, TemporalTransform.class.getName(), TEMPORAL_RECORDS_COUNT);
   }
 
   public static TemporalTransform create() {
-    return new TemporalTransform();
+    TemporalTransform tr = new TemporalTransform();
+    tr.temporalInterpreter = TemporalInterpreter.getInstance();
+    return tr;
   }
 
   /**
-   * Reset a default temporal parser based on config.
+   * Support extra date formats
    *
-   * @param config
+   * @param dateComponentOrdering
    * @return
    */
-  public static TemporalTransform create(PipelinesConfig config) {
-    TemporalInterpreter.setTemporalParser(config);
-    return new TemporalTransform();
+  public static TemporalTransform create(DateComponentOrdering[] dateComponentOrdering) {
+    TemporalTransform tr = new TemporalTransform();
+    if (dateComponentOrdering != null) {
+      tr.temporalInterpreter = TemporalInterpreter.getInstance(dateComponentOrdering);
+    } else {
+      tr.temporalInterpreter = TemporalInterpreter.getInstance();
+    }
+    return tr;
   }
 
   /** Maps {@link TemporalRecord} to key value, where key is {@link TemporalRecord#getId} */
@@ -69,9 +78,9 @@ public class TemporalTransform extends Transform<ExtendedRecord, TemporalRecord>
     return Interpretation.from(source)
         .to(tr)
         .when(er -> !er.getCoreTerms().isEmpty())
-        .via(TemporalInterpreter::interpretTemporal)
-        .via(TemporalInterpreter::interpretModified)
-        .via(TemporalInterpreter::interpretDateIdentified)
+        .via(temporalInterpreter::interpretTemporal)
+        .via(temporalInterpreter::interpretModified)
+        .via(temporalInterpreter::interpretDateIdentified)
         .getOfNullable();
   }
 }

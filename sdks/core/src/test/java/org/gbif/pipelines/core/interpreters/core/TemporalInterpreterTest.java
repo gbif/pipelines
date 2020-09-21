@@ -1,5 +1,7 @@
 package org.gbif.pipelines.core.interpreters.core;
 
+import static org.gbif.common.parsers.date.DateComponentOrdering.DMY_FORMATS;
+import static org.gbif.common.parsers.date.DateComponentOrdering.MDY_FORMATS;
 import static org.junit.Assert.*;
 
 import java.time.*;
@@ -15,13 +17,16 @@ import org.gbif.common.parsers.core.OccurrenceParseResult;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 public class TemporalInterpreterTest {
+  TemporalInterpreter temporalInterpreter = TemporalInterpreter.getInstance();
+
+  @Before
+  public void init() {}
 
   @Test
   public void testYearMonth() {
@@ -31,7 +36,7 @@ public class TemporalInterpreterTest {
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
     TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
 
-    TemporalInterpreter.interpretTemporal(er, tr);
+    temporalInterpreter.interpretTemporal(er, tr);
 
     assertDate("1879-10-01T00:00", tr.getEventDate().getGte());
     assertEquals(1879, tr.getYear().intValue());
@@ -49,7 +54,7 @@ public class TemporalInterpreterTest {
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
     TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
 
-    TemporalInterpreter.interpretTemporal(er, tr);
+    temporalInterpreter.interpretTemporal(er, tr);
 
     assertDate("1879-01-01T00:00", tr.getEventDate().getGte());
     assertEquals(1879, tr.getYear().intValue());
@@ -71,9 +76,9 @@ public class TemporalInterpreterTest {
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
     TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
 
-    TemporalInterpreter.interpretTemporal(er, tr);
-    TemporalInterpreter.interpretModified(er, tr);
-    TemporalInterpreter.interpretDateIdentified(er, tr);
+    temporalInterpreter.interpretTemporal(er, tr);
+    temporalInterpreter.interpretModified(er, tr);
+    temporalInterpreter.interpretDateIdentified(er, tr);
 
     assertDate("2014-01-11", tr.getModified());
     assertDate("2012-01-11", tr.getDateIdentified());
@@ -94,9 +99,9 @@ public class TemporalInterpreterTest {
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
     TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
 
-    TemporalInterpreter.interpretTemporal(er, tr);
-    TemporalInterpreter.interpretModified(er, tr);
-    TemporalInterpreter.interpretDateIdentified(er, tr);
+    temporalInterpreter.interpretTemporal(er, tr);
+    temporalInterpreter.interpretModified(er, tr);
+    temporalInterpreter.interpretDateIdentified(er, tr);
 
     assertDate("2014-01-11", tr.getModified());
     assertDate("2012-01-11", tr.getDateIdentified());
@@ -129,20 +134,20 @@ public class TemporalInterpreterTest {
   public void testInterpretRecordedDate() {
     OccurrenceParseResult<TemporalAccessor> result;
 
-    result = TemporalInterpreter.interpretRecordedDate("2005", "1", "", "2005-01-01");
+    result = temporalInterpreter.interpretRecordedDate("2005", "1", "", "2005-01-01");
     assertEquals(LocalDate.of(2005, 1, 1), result.getPayload());
     assertEquals(0, result.getIssues().size());
 
     // ensure that eventDate with more precision will not record an issue and the one with most
     // precision
     // will be returned
-    result = TemporalInterpreter.interpretRecordedDate("1996", "1", "26", "1996-01-26T01:00Z");
+    result = temporalInterpreter.interpretRecordedDate("1996", "1", "26", "1996-01-26T01:00Z");
     assertEquals(
         ZonedDateTime.of(LocalDateTime.of(1996, 1, 26, 1, 0), ZoneId.of("Z")), result.getPayload());
     assertEquals(0, result.getIssues().size());
 
     // if dates contradict, do not return a date and flag it
-    result = TemporalInterpreter.interpretRecordedDate("2005", "1", "2", "2005-01-05");
+    result = temporalInterpreter.interpretRecordedDate("2005", "1", "2", "2005-01-05");
     assertNull(result.getPayload());
     assertEquals(1, result.getIssues().size());
     assertEquals(OccurrenceIssue.RECORDED_DATE_MISMATCH, result.getIssues().iterator().next());
@@ -160,32 +165,32 @@ public class TemporalInterpreterTest {
     TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
 
     er.getCoreTerms().put(DwcTerm.dateIdentified.qualifiedName(), "1987-01-31");
-    TemporalInterpreter.interpretDateIdentified(er, tr);
+    temporalInterpreter.interpretDateIdentified(er, tr);
     assertEquals(0, tr.getIssues().getIssueList().size());
 
     er.getCoreTerms().put(DwcTerm.dateIdentified.qualifiedName(), "1787-03-27");
-    TemporalInterpreter.interpretDateIdentified(er, tr);
+    temporalInterpreter.interpretDateIdentified(er, tr);
     assertEquals(0, tr.getIssues().getIssueList().size());
 
     er.getCoreTerms().put(DwcTerm.dateIdentified.qualifiedName(), "2014-01-11");
-    TemporalInterpreter.interpretDateIdentified(er, tr);
+    temporalInterpreter.interpretDateIdentified(er, tr);
     assertEquals(0, tr.getIssues().getIssueList().size());
 
     er.getCoreTerms().put(DwcTerm.dateIdentified.qualifiedName(), "1997");
-    TemporalInterpreter.interpretDateIdentified(er, tr);
+    temporalInterpreter.interpretDateIdentified(er, tr);
     assertEquals(0, tr.getIssues().getIssueList().size());
 
     Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
     er.getCoreTerms()
         .put(DwcTerm.dateIdentified.qualifiedName(), (cal.get(Calendar.YEAR) + 1) + "-01-11");
-    TemporalInterpreter.interpretDateIdentified(er, tr);
+    temporalInterpreter.interpretDateIdentified(er, tr);
     assertEquals(1, tr.getIssues().getIssueList().size());
     assertEquals(
         OccurrenceIssue.IDENTIFIED_DATE_UNLIKELY.name(),
         tr.getIssues().getIssueList().iterator().next());
 
     er.getCoreTerms().put(DwcTerm.dateIdentified.qualifiedName(), "1599-01-11");
-    TemporalInterpreter.interpretDateIdentified(er, tr);
+    temporalInterpreter.interpretDateIdentified(er, tr);
     assertEquals(1, tr.getIssues().getIssueList().size());
     assertEquals(
         OccurrenceIssue.IDENTIFIED_DATE_UNLIKELY.name(),
@@ -204,13 +209,13 @@ public class TemporalInterpreterTest {
 
     TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
     er.getCoreTerms().put(DcTerm.modified.qualifiedName(), "2014-01-11");
-    TemporalInterpreter.interpretModified(er, tr);
+    temporalInterpreter.interpretModified(er, tr);
     assertEquals(0, tr.getIssues().getIssueList().size());
 
     tr = TemporalRecord.newBuilder().setId("1").build();
     Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
     er.getCoreTerms().put(DcTerm.modified.qualifiedName(), (cal.get(Calendar.YEAR) + 1) + "-01-11");
-    TemporalInterpreter.interpretModified(er, tr);
+    temporalInterpreter.interpretModified(er, tr);
     assertEquals(1, tr.getIssues().getIssueList().size());
     assertEquals(
         OccurrenceIssue.MODIFIED_DATE_UNLIKELY.name(),
@@ -218,7 +223,7 @@ public class TemporalInterpreterTest {
 
     tr = TemporalRecord.newBuilder().setId("1").build();
     er.getCoreTerms().put(DcTerm.modified.qualifiedName(), "1969-12-31");
-    TemporalInterpreter.interpretModified(er, tr);
+    temporalInterpreter.interpretModified(er, tr);
     assertEquals(1, tr.getIssues().getIssueList().size());
     assertEquals(
         OccurrenceIssue.MODIFIED_DATE_UNLIKELY.name(),
@@ -226,7 +231,7 @@ public class TemporalInterpreterTest {
 
     tr = TemporalRecord.newBuilder().setId("1").build();
     er.getCoreTerms().put(DcTerm.modified.qualifiedName(), "2018-10-15 16:21:48");
-    TemporalInterpreter.interpretModified(er, tr);
+    temporalInterpreter.interpretModified(er, tr);
     assertEquals(0, tr.getIssues().getIssueList().size());
     assertDate("2018-10-15T16:21:48", tr.getModified());
   }
@@ -239,7 +244,7 @@ public class TemporalInterpreterTest {
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
 
     TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
-    TemporalInterpreter.interpretTemporal(er, tr);
+    temporalInterpreter.interpretTemporal(er, tr);
 
     assertEquals(1, tr.getIssues().getIssueList().size());
     assertEquals(
@@ -498,8 +503,7 @@ public class TemporalInterpreterTest {
   /** Parsing ambigous date like 01/02/1999 with D/M/Y format */
   @Test
   public void test_DMY_Date() {
-    PipelinesConfig config = new PipelinesConfig();
-    config.setDefaultDateFormat("DMY"); // Set EU dd/MM/yyyy format as default
+    TemporalInterpreter ti = TemporalInterpreter.getInstance(DMY_FORMATS);
 
     Map<String, String> map = new HashMap<>();
     map.put(DwcTerm.eventDate.qualifiedName(), "1/11/1879");
@@ -508,10 +512,9 @@ public class TemporalInterpreterTest {
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
     TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
 
-    TemporalInterpreter.setTemporalParser(config);
-    TemporalInterpreter.interpretTemporal(er, tr);
-    TemporalInterpreter.interpretModified(er, tr);
-    TemporalInterpreter.interpretDateIdentified(er, tr);
+    ti.interpretTemporal(er, tr);
+    ti.interpretModified(er, tr);
+    ti.interpretDateIdentified(er, tr);
 
     assertDate("1940-02-23", tr.getModified());
     assertDate("1920-02-20", tr.getDateIdentified());
@@ -523,9 +526,7 @@ public class TemporalInterpreterTest {
 
   @Test
   public void test_MDY_Date() {
-    PipelinesConfig config = new PipelinesConfig();
-    config.setDefaultDateFormat("MDY"); // Set EU dd/MM/yyyy format as default
-
+    TemporalInterpreter ti = TemporalInterpreter.getInstance(MDY_FORMATS);
     Map<String, String> map = new HashMap<>();
     map.put(DwcTerm.eventDate.qualifiedName(), "1/11/1879");
     map.put(DwcTerm.dateIdentified.qualifiedName(), "02/20/1920");
@@ -533,20 +534,13 @@ public class TemporalInterpreterTest {
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
     TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
 
-    TemporalInterpreter.setTemporalParser(config);
-    TemporalInterpreter.interpretTemporal(er, tr);
-    TemporalInterpreter.interpretModified(er, tr);
-    TemporalInterpreter.interpretDateIdentified(er, tr);
+    ti.interpretTemporal(er, tr);
+    ti.interpretModified(er, tr);
+    ti.interpretDateIdentified(er, tr);
 
     assertDate("1940-02-23", tr.getModified());
     assertDate("1920-02-20", tr.getDateIdentified());
     assertDate("1879-01-11T00:00", tr.getEventDate().getGte());
-  }
-
-  /** TemporalInterpreter is a static instance in TemporalInterpreter Need to reset every test */
-  @After
-  public void reset() {
-    TemporalInterpreter.setTemporalParser(new PipelinesConfig());
   }
 
   /** @param expected expected date in ISO yyyy-MM-dd format */
@@ -632,7 +626,7 @@ public class TemporalInterpreterTest {
     map.put(DwcTerm.eventDate.qualifiedName(), date);
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
 
-    return TemporalInterpreter.interpretRecordedDate(er);
+    return temporalInterpreter.interpretRecordedDate(er);
   }
 
   private ParseResult<TemporalAccessor> interpretEventDate(String date) {
@@ -640,6 +634,6 @@ public class TemporalInterpreterTest {
     map.put(DwcTerm.eventDate.qualifiedName(), date);
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
 
-    return TemporalInterpreter.interpretRecordedDate(er);
+    return temporalInterpreter.interpretRecordedDate(er);
   }
 }
