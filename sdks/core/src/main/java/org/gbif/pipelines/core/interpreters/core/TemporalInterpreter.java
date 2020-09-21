@@ -2,8 +2,6 @@ package org.gbif.pipelines.core.interpreters.core;
 
 import static org.gbif.common.parsers.core.ParseResult.CONFIDENCE.DEFINITE;
 import static org.gbif.common.parsers.core.ParseResult.CONFIDENCE.PROBABLE;
-import static org.gbif.common.parsers.date.DateComponentOrdering.DMY_FORMATS;
-import static org.gbif.common.parsers.date.DateComponentOrdering.MDY_FORMATS;
 import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
 import static org.gbif.pipelines.core.utils.ModelUtils.addIssueSet;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
@@ -13,12 +11,15 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.collect.Range;
 import java.io.Serializable;
+import java.text.ParseException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoField;
+import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAccessor;
 import java.time.temporal.TemporalQueries;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import lombok.Builder;
@@ -35,7 +36,6 @@ import org.gbif.common.parsers.date.TemporalAccessorUtils;
 import org.gbif.common.parsers.date.TemporalParser;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.parsers.temporal.utils.DelimiterUtils;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -95,36 +95,8 @@ public class TemporalInterpreter implements Serializable {
     return dateString;
   }
 
-  public static void interpretTemporal(ExtendedRecord er, TemporalRecord tr) {
+  public void interpretTemporal(ExtendedRecord er, TemporalRecord tr) {
     interpretEventDate(er, tr);
-    //    OccurrenceParseResult<TemporalAccessor> eventResult = interpretRecordedDate(er);
-    //    if (eventResult.isSuccessful()) {
-    //      Optional<TemporalAccessor> temporalAccessor =
-    // Optional.ofNullable(eventResult.getPayload());
-    //
-    //      Optional<TemporalAccessor> localDate =
-    //          temporalAccessor
-    //              .filter(ta -> ta.isSupported(ChronoField.HOUR_OF_DAY))
-    //              .map(ta -> ta.query(TemporalQueries.localDate()));
-    //
-    //      if (localDate.isPresent()) {
-    //        temporalAccessor = localDate;
-    //      }
-    //
-    //      temporalAccessor
-    //          .map(TemporalAccessor::toString)
-    //          .ifPresent(x -> tr.setEventDate(new EventDate(x, null)));
-    //
-    //      temporalAccessor
-    //          .map(AtomizedLocalDate::fromTemporalAccessor)
-    //          .ifPresent(
-    //              ald -> {
-    //                tr.setYear(ald.getYear());
-    //                tr.setMonth(ald.getMonth());
-    //                tr.setDay(ald.getDay());
-    //              });
-    //    }
-    //    addIssueSet(tr, eventResult.getIssues());
   }
 
   public void interpretModified(ExtendedRecord er, TemporalRecord tr) {
@@ -165,7 +137,7 @@ public class TemporalInterpreter implements Serializable {
     }
   }
 
-  private static void interpretEventDate(ExtendedRecord er, TemporalRecord tr) {
+  private void interpretEventDate(ExtendedRecord er, TemporalRecord tr) {
     Set<OccurrenceIssue> issues = EnumSet.noneOf(OccurrenceIssue.class);
     // Reset
     tr.setEventDate(null);
@@ -182,6 +154,8 @@ public class TemporalInterpreter implements Serializable {
     boolean dateStringProvided = StringUtils.isNotBlank(eventDateString);
 
     if (atomizedDateProvided || dateStringProvided) {
+
+
       TemporalAccessor parsedStartTemporalAccessor;
       ParseResult.CONFIDENCE confidence;
       // parsed from YMD
@@ -317,8 +291,7 @@ public class TemporalInterpreter implements Serializable {
    * @return the interpretation result which is never null
    */
   @VisibleForTesting
-  protected static OccurrenceParseResult<TemporalAccessor> interpretRecordedDate(
-      ExtendedRecord er) {
+  protected OccurrenceParseResult<TemporalAccessor> interpretRecordedDate(ExtendedRecord er) {
     final String year = extractValue(er, DwcTerm.year);
     final String month = extractValue(er, DwcTerm.month);
     final String day = extractValue(er, DwcTerm.day);
@@ -496,3 +469,4 @@ public class TemporalInterpreter implements Serializable {
     return OccurrenceParseResult.fail();
   }
 }
+

@@ -23,10 +23,12 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class TemporalInterpreterTest {
-  TemporalInterpreter temporalInterpreter = TemporalInterpreter.getInstance();
+  TemporalInterpreter temporalInterpreter;
 
   @Before
-  public void init() {}
+  public void init() {
+    temporalInterpreter = TemporalInterpreter.getInstance();
+  }
 
   @Test
   public void testYearMonth() {

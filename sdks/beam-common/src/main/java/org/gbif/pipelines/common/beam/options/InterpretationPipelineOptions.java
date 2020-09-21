@@ -90,11 +90,11 @@ public interface InterpretationPipelineOptions
    * invalid, only accepts standard ISO date format. Parsing 2/3/2008 will fail . <code>DMY</code>
    * will parse 2/3/2008 as 2 Mar 2008 <code>MDY</code> will parse 2/3/2008 as 3 Feb 2008
    */
-  //  @Description("Recommended date formats for ambiguous dates, e.g. 2/3/2008")
-  //  @Default.String("ISO")
-  //  String getDefaultDateFormat();
-  //
-  //  void setDefaultDateForamt(String  defaultDateFormat);
+    @Description("Recommended date formats for ambiguous dates, e.g. 2/3/2008")
+    @Default.String("ISO")
+    String getDefaultDateFormat();
+
+    void setDefaultDateFormat(String  defaultDateFormat);
 
   /** A {@link DefaultValueFactory} which locates a default directory. */
   class TempDirectoryFactory implements DefaultValueFactory<String> {
