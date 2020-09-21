@@ -24,8 +24,8 @@ import org.gbif.pipelines.core.interpreters.ExtensionInterpretation.Result;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation.TargetHandler;
 import org.gbif.pipelines.core.parsers.common.ParsedField;
 import org.gbif.pipelines.core.parsers.location.parser.CoordinateParseUtils;
+import org.gbif.pipelines.core.parsers.temporal.DeprecatedTemporalParser;
 import org.gbif.pipelines.core.parsers.temporal.ParsedTemporal;
-import org.gbif.pipelines.core.parsers.temporal.TemporalParser;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.Image;
 import org.gbif.pipelines.io.avro.ImageRecord;
@@ -106,7 +106,7 @@ public class ImageInterpreter {
 
   /** Parser for "http://purl.org/dc/terms/created" term value */
   private static String parseAndSetCreated(Image i, String v) {
-    ParsedTemporal parsed = TemporalParser.parse(v);
+    ParsedTemporal parsed = DeprecatedTemporalParser.parse(v);
     parsed.getFromOpt().map(Temporal::toString).ifPresent(i::setCreated);
 
     return parsed.getIssues().isEmpty() ? "" : MULTIMEDIA_DATE_INVALID.name();

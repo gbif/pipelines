@@ -25,8 +25,8 @@ import org.gbif.dwc.terms.XmpTerm;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation.Result;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation.TargetHandler;
+import org.gbif.pipelines.core.parsers.temporal.DeprecatedTemporalParser;
 import org.gbif.pipelines.core.parsers.temporal.ParsedTemporal;
-import org.gbif.pipelines.core.parsers.temporal.TemporalParser;
 import org.gbif.pipelines.io.avro.Audubon;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -211,7 +211,7 @@ public class AudubonInterpreter {
 
   /** Parser for "http://ns.adobe.com/xap/1.0/CreateDate" term value */
   private static String parseAndSetCreatedDate(Audubon a, String v) {
-    ParsedTemporal parsed = TemporalParser.parse(v);
+    ParsedTemporal parsed = DeprecatedTemporalParser.parse(v);
     parsed.getFromOpt().map(Temporal::toString).ifPresent(a::setCreateDate);
 
     return parsed.getIssues().isEmpty() ? "" : MULTIMEDIA_DATE_INVALID.name();

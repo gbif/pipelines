@@ -24,8 +24,8 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation.Result;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation.TargetHandler;
+import org.gbif.pipelines.core.parsers.temporal.DeprecatedTemporalParser;
 import org.gbif.pipelines.core.parsers.temporal.ParsedTemporal;
-import org.gbif.pipelines.core.parsers.temporal.TemporalParser;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MediaType;
 import org.gbif.pipelines.io.avro.Multimedia;
@@ -151,7 +151,7 @@ public class MultimediaInterpreter {
 
   /** Parser for "http://purl.org/dc/terms/created" term value */
   private static String parseAndSetCreated(Multimedia m, String v) {
-    ParsedTemporal parsed = TemporalParser.parse(v);
+    ParsedTemporal parsed = DeprecatedTemporalParser.parse(v);
     parsed.getFromOpt().map(Temporal::toString).ifPresent(m::setCreated);
 
     return parsed.getIssues().isEmpty() ? "" : MULTIMEDIA_DATE_INVALID.name();

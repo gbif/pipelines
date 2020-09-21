@@ -19,9 +19,9 @@ import org.gbif.pipelines.core.interpreters.ExtensionInterpretation;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation.Result;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation.TargetHandler;
 import org.gbif.pipelines.core.parsers.SimpleTypeParser;
+import org.gbif.pipelines.core.parsers.temporal.DeprecatedTemporalParser;
 import org.gbif.pipelines.core.parsers.temporal.ParsedTemporal;
 import org.gbif.pipelines.core.parsers.temporal.ParsedTemporalIssue;
-import org.gbif.pipelines.core.parsers.temporal.TemporalParser;
 import org.gbif.pipelines.io.avro.DeterminedDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MeasurementOrFact;
@@ -76,7 +76,7 @@ public class MeasurementOrFactInterpreter {
   /** Parser for "http://rs.tdwg.org/dwc/terms/measurementDeterminedDate" term value */
   private static List<String> parseAndSetDeterminedDate(MeasurementOrFact mf, String v) {
 
-    ParsedTemporal parsed = TemporalParser.parse(v);
+    ParsedTemporal parsed = DeprecatedTemporalParser.parse(v);
 
     DeterminedDate determinedDate = new DeterminedDate();
 
