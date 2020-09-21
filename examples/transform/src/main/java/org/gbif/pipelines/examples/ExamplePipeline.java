@@ -49,7 +49,7 @@ public class ExamplePipeline {
     p.apply("Read DwCA zip archive", DwcaIO.Read.fromCompressed(inputPath, tmpDir))
         // Interprets and transforms from ExtendedRecord to TemporalRecord using GBIF
         // TemporalInterpreter
-        .apply("Interpret TemporalRecord", TemporalTransform.create().interpret())
+        .apply("Interpret TemporalRecord", TemporalTransform.builder().create().interpret())
         // Interprets and Transforms from ExtendedRecord to ExampleRecord using ExampleInterpreter
         .apply("Interpret ExampleRecord", ExampleTransform.exampleOne())
         // Write ExampleRecords as Avro files using AvroIO.Write

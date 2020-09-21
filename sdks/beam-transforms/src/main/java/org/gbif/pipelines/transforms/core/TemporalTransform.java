@@ -5,6 +5,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 
 import java.time.Instant;
 import java.util.Optional;
+import lombok.Builder;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
@@ -27,33 +28,13 @@ import org.gbif.pipelines.transforms.Transform;
  */
 public class TemporalTransform extends Transform<ExtendedRecord, TemporalRecord> {
 
-  private TemporalInterpreter temporalInterpreter;
+  private final TemporalInterpreter temporalInterpreter;
 
-  private TemporalTransform() {
+  @Builder(buildMethodName = "create")
+  private TemporalTransform(DateComponentOrdering dateComponentOrdering) {
     super(
         TemporalRecord.class, TEMPORAL, TemporalTransform.class.getName(), TEMPORAL_RECORDS_COUNT);
-  }
-
-  public static TemporalTransform create() {
-    TemporalTransform tr = new TemporalTransform();
-    tr.temporalInterpreter = TemporalInterpreter.getInstance();
-    return tr;
-  }
-
-  /**
-   * Support extra date formats
-   *
-   * @param dateComponentOrdering
-   * @return
-   */
-  public static TemporalTransform create(DateComponentOrdering[] dateComponentOrdering) {
-    TemporalTransform tr = new TemporalTransform();
-    if (dateComponentOrdering != null) {
-      tr.temporalInterpreter = TemporalInterpreter.getInstance(dateComponentOrdering);
-    } else {
-      tr.temporalInterpreter = TemporalInterpreter.getInstance();
-    }
-    return tr;
+    this.temporalInterpreter = TemporalInterpreter.create(dateComponentOrdering);
   }
 
   /** Maps {@link TemporalRecord} to key value, where key is {@link TemporalRecord#getId} */

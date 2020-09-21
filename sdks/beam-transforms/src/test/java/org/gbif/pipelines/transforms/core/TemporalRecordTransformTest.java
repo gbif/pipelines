@@ -1,6 +1,6 @@
 package org.gbif.pipelines.transforms.core;
 
-import static org.gbif.common.parsers.date.DateComponentOrdering.DMY_FORMATS;
+import static org.gbif.common.parsers.date.DateComponentOrdering.DMY;
 
 import java.time.*;
 import java.time.temporal.Temporal;
@@ -16,7 +16,6 @@ import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.parsers.temporal.ParsedTemporal;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -71,7 +70,7 @@ public class TemporalRecordTransformTest {
     // When
     PCollection<TemporalRecord> dataStream =
         p.apply(Create.of(input))
-            .apply(TemporalTransform.create().interpret())
+            .apply(TemporalTransform.builder().create().interpret())
             .apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
 
     // Should
@@ -105,7 +104,7 @@ public class TemporalRecordTransformTest {
     // When
     PCollection<TemporalRecord> dataStream =
         p.apply(Create.of(input))
-            .apply(TemporalTransform.create().interpret())
+            .apply(TemporalTransform.builder().create().interpret())
             .apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
 
     // Should
@@ -122,7 +121,7 @@ public class TemporalRecordTransformTest {
     // When
     PCollection<TemporalRecord> dataStream =
         p.apply(Create.of(er))
-            .apply(TemporalTransform.create().interpret())
+            .apply(TemporalTransform.builder().create().interpret())
             .apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
 
     // Should
@@ -131,7 +130,7 @@ public class TemporalRecordTransformTest {
   }
 
   @Test
-  public void DMY_transformationTest() {
+  public void dmyTransformationTest() {
     // State
     final List<ExtendedRecord> input = new ArrayList<>();
 
@@ -158,12 +157,9 @@ public class TemporalRecordTransformTest {
     dataExpected.add(expected1);
 
     // When
-    PipelinesConfig config = new PipelinesConfig();
-    config.setDefaultDateFormat("DMY");
-
     PCollection<TemporalRecord> dataStream =
         p.apply(Create.of(input))
-            .apply(TemporalTransform.create(DMY_FORMATS).interpret())
+            .apply(TemporalTransform.builder().dateComponentOrdering(DMY).create().interpret())
             .apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
 
     // Should

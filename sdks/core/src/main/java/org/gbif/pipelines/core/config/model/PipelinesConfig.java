@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.io.Serializable;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.gbif.common.parsers.date.DateComponentOrdering;
 
 @Data
 @NoArgsConstructor
@@ -40,5 +41,5 @@ public class PipelinesConfig implements Serializable {
    * invalid, only accepts standard ISO date format. Parsing 2/3/2008 will fail . <code>DMY</code>
    * will parse 2/3/2008 as 2 Mar 2008 <code>MDY</code> will parse 2/3/2008 as 3 Feb 2008
    */
-  private String defaultDateFormat;
+  private DateComponentOrdering defaultDateFormat = DateComponentOrdering.ISO_ETC;
 }
