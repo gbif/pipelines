@@ -2,7 +2,9 @@ package org.gbif.pipelines.transforms.core;
 
 import static org.gbif.common.parsers.date.DateComponentOrdering.DMY;
 
-import java.time.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -16,7 +18,6 @@ import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.core.parsers.temporal.ParsedTemporal;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
@@ -55,17 +56,9 @@ public class TemporalRecordTransformTest {
     final List<ExtendedRecord> input = Collections.singletonList(record);
 
     // Expected
-    // First
-    final ParsedTemporal parsedTemporal = ParsedTemporal.create();
-    parsedTemporal.setFromDate(LocalDate.of(1999, 2, 2));
-    parsedTemporal.setYear(Year.of(1999));
-    parsedTemporal.setMonth(Month.of(2));
-    parsedTemporal.setDay(2);
-
-    final ParsedTemporal other = ParsedTemporal.create();
-    other.setFromDate(LocalDateTime.of(1999, 2, 2, 12, 26));
-
-    final List<TemporalRecord> dataExpected = createTemporalRecordList(parsedTemporal, other);
+    final List<TemporalRecord> dataExpected =
+        createTemporalRecordList(
+            1999, 2, 2, LocalDate.of(1999, 2, 2), LocalDateTime.of(1999, 2, 2, 12, 26));
 
     // When
     PCollection<TemporalRecord> dataStream =
@@ -90,16 +83,8 @@ public class TemporalRecordTransformTest {
     final List<ExtendedRecord> input = Collections.singletonList(record);
 
     // Expected
-    // First
-    final ParsedTemporal periodOne = ParsedTemporal.create();
-    periodOne.setFromDate(YearMonth.of(1999, 2));
-    periodOne.setYear(Year.of(1999));
-    periodOne.setMonth(Month.of(2));
-
-    final ParsedTemporal other = ParsedTemporal.create();
-    other.setFromDate(YearMonth.of(1999, 2));
-
-    final List<TemporalRecord> dataExpected = createTemporalRecordList(periodOne, other);
+    final List<TemporalRecord> dataExpected =
+        createTemporalRecordList(1999, 2, null, YearMonth.of(1999, 2), YearMonth.of(1999, 2));
 
     // When
     PCollection<TemporalRecord> dataStream =
@@ -168,19 +153,16 @@ public class TemporalRecordTransformTest {
   }
 
   private List<TemporalRecord> createTemporalRecordList(
-      ParsedTemporal eventDate, ParsedTemporal other) {
-
-    String from = eventDate.getFromOpt().map(Temporal::toString).orElse(null);
-    String to = eventDate.getToOpt().map(Temporal::toString).orElse(null);
+      Integer year, Integer month, Integer day, Temporal eventDate, Temporal other) {
     return Collections.singletonList(
         TemporalRecord.newBuilder()
             .setId("0")
-            .setYear(eventDate.getYearOpt().map(Year::getValue).orElse(null))
-            .setMonth(eventDate.getMonthOpt().map(Month::getValue).orElse(null))
-            .setDay(eventDate.getDayOpt().orElse(null))
-            .setEventDate(EventDate.newBuilder().setGte(from).setLte(to).build())
-            .setDateIdentified(other.getFromOpt().map(Temporal::toString).orElse(null))
-            .setModified(other.getFromOpt().map(Temporal::toString).orElse(null))
+            .setYear(year)
+            .setMonth(month)
+            .setDay(day)
+            .setEventDate(EventDate.newBuilder().setGte(eventDate.toString()).build())
+            .setDateIdentified(other.toString())
+            .setModified(other.toString())
             .setCreated(0L)
             .build());
   }
