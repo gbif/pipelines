@@ -24,6 +24,7 @@ import org.apache.avro.Schema;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
@@ -31,6 +32,7 @@ import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.factory.ConfigFactory;
+import org.gbif.pipelines.core.functions.SerializableConsumer;
 import org.gbif.pipelines.core.io.AvroReader;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
 import org.gbif.pipelines.core.io.SyncDataFileWriterBuilder;
@@ -39,7 +41,6 @@ import org.gbif.pipelines.factory.*;
 import org.gbif.pipelines.ingest.java.metrics.IngestMetricsBuilder;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
-import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
 import org.gbif.pipelines.transforms.core.*;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
@@ -137,6 +138,11 @@ public class VerbatimToInterpretedPipeline {
                 hdfsSiteConfig, coreSiteConfig, options.getProperties(), PipelinesConfig.class)
             .get();
 
+    DateComponentOrdering dateComponentOrdering =
+        options.getDefaultDateFormat() == null
+            ? config.getDefaultDateFormat()
+            : options.getDefaultDateFormat();
+
     FsUtils.deleteInterpretIfExist(
         hdfsSiteConfig, coreSiteConfig, targetPath, datasetId, attempt, types);
 
@@ -192,22 +198,34 @@ public class VerbatimToInterpretedPipeline {
 
     TemporalTransform temporalTransform =
         TemporalTransform.builder()
-            .dateComponentOrdering(
-                options.getDefaultDateFormat() == null
-                    ? config.getDefaultDateFormat()
-                    : options.getDefaultDateFormat())
+            .dateComponentOrdering(dateComponentOrdering)
             .create()
             .counterFn(incMetricFn);
 
     // Extension
     MeasurementOrFactTransform measurementTransform =
-        MeasurementOrFactTransform.create().counterFn(incMetricFn);
+        MeasurementOrFactTransform.builder()
+            .dateComponentOrdering(dateComponentOrdering)
+            .create()
+            .counterFn(incMetricFn);
 
-    MultimediaTransform multimediaTransform = MultimediaTransform.create().counterFn(incMetricFn);
+    MultimediaTransform multimediaTransform =
+        MultimediaTransform.builder()
+            .dateComponentOrdering(dateComponentOrdering)
+            .create()
+            .counterFn(incMetricFn);
 
-    AudubonTransform audubonTransform = AudubonTransform.create().counterFn(incMetricFn);
+    AudubonTransform audubonTransform =
+        AudubonTransform.builder()
+            .dateComponentOrdering(dateComponentOrdering)
+            .create()
+            .counterFn(incMetricFn);
 
-    ImageTransform imageTransform = ImageTransform.create().counterFn(incMetricFn);
+    ImageTransform imageTransform =
+        ImageTransform.builder()
+            .dateComponentOrdering(dateComponentOrdering)
+            .create()
+            .counterFn(incMetricFn);
     // Extra
     OccurrenceExtensionTransform occExtensionTransform =
         OccurrenceExtensionTransform.create().counterFn(incMetricFn);

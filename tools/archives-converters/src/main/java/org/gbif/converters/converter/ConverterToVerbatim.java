@@ -1,6 +1,7 @@
 package org.gbif.converters.converter;
 
-import static org.gbif.converters.converter.FsUtils.*;
+import static org.gbif.converters.converter.FsUtils.createFile;
+import static org.gbif.converters.converter.FsUtils.deleteAvroFileIfEmpty;
 import static org.gbif.pipelines.core.utils.FsUtils.createParentDirectories;
 
 import java.io.BufferedOutputStream;

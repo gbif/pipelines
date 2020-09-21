@@ -5,15 +5,17 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 
 import java.time.Instant;
 import java.util.Optional;
+import lombok.Builder;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.api.vocabulary.Extension;
+import org.gbif.common.parsers.date.DateComponentOrdering;
+import org.gbif.pipelines.core.functions.SerializableConsumer;
 import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.core.interpreters.extension.ImageInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
-import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
 
 /**
@@ -27,12 +29,21 @@ import org.gbif.pipelines.transforms.Transform;
  */
 public class ImageTransform extends Transform<ExtendedRecord, ImageRecord> {
 
-  private ImageTransform() {
+  private final DateComponentOrdering dateComponentOrdering;
+  private ImageInterpreter imageInterpreter;
+
+  @Builder(buildMethodName = "create")
+  private ImageTransform(DateComponentOrdering dateComponentOrdering) {
     super(ImageRecord.class, IMAGE, ImageTransform.class.getName(), IMAGE_RECORDS_COUNT);
+    this.dateComponentOrdering = dateComponentOrdering;
   }
 
-  public static ImageTransform create() {
-    return new ImageTransform();
+  /** Beam @Setup initializes resources */
+  @Setup
+  public void setup() {
+    if (imageInterpreter == null) {
+      imageInterpreter = ImageInterpreter.create(dateComponentOrdering);
+    }
   }
 
   /** Maps {@link ImageRecord} to key value, where key is {@link ImageRecord#getId} */
@@ -60,7 +71,7 @@ public class ImageTransform extends Transform<ExtendedRecord, ImageRecord> {
                 Optional.ofNullable(er.getExtensions().get(Extension.IMAGE.getRowType()))
                     .filter(l -> !l.isEmpty())
                     .isPresent())
-        .via(ImageInterpreter::interpret)
+        .via(imageInterpreter::interpret)
         .getOfNullable();
   }
 }

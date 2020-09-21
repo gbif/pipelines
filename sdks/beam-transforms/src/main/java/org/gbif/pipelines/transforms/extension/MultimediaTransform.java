@@ -5,17 +5,19 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 
 import java.time.Instant;
 import java.util.Optional;
+import lombok.Builder;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.api.vocabulary.Extension;
+import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.core.functions.SerializableConsumer;
 import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.core.interpreters.extension.MultimediaInterpreter;
 import org.gbif.pipelines.core.utils.ModelUtils;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
 
 /**
@@ -29,16 +31,25 @@ import org.gbif.pipelines.transforms.Transform;
  */
 public class MultimediaTransform extends Transform<ExtendedRecord, MultimediaRecord> {
 
-  public MultimediaTransform() {
+  private final DateComponentOrdering dateComponentOrdering;
+  private MultimediaInterpreter multimediaInterpreter;
+
+  @Builder(buildMethodName = "create")
+  private MultimediaTransform(DateComponentOrdering dateComponentOrdering) {
     super(
         MultimediaRecord.class,
         MULTIMEDIA,
         MultimediaTransform.class.getName(),
         MULTIMEDIA_RECORDS_COUNT);
+    this.dateComponentOrdering = dateComponentOrdering;
   }
 
-  public static MultimediaTransform create() {
-    return new MultimediaTransform();
+  /** Beam @Setup initializes resources */
+  @Setup
+  public void setup() {
+    if (multimediaInterpreter == null) {
+      multimediaInterpreter = MultimediaInterpreter.create(dateComponentOrdering);
+    }
   }
 
   /** Maps {@link MultimediaRecord} to key value, where key is {@link MultimediaRecord#getId} */
@@ -67,7 +78,7 @@ public class MultimediaTransform extends Transform<ExtendedRecord, MultimediaRec
                         .filter(l -> !l.isEmpty())
                         .isPresent()
                     || ModelUtils.extractOptValue(er, DwcTerm.associatedMedia).isPresent())
-        .via(MultimediaInterpreter::interpret)
+        .via(multimediaInterpreter::interpret)
         .via(MultimediaInterpreter::interpretAssociatedMedia)
         .getOfNullable();
   }

@@ -148,10 +148,10 @@ public class InterpretedToEsIndexPipeline {
     LocationTransform locationTransform = LocationTransform.builder().create();
 
     // Extension
-    MeasurementOrFactTransform measurementTransform = MeasurementOrFactTransform.create();
-    MultimediaTransform multimediaTransform = MultimediaTransform.create();
-    AudubonTransform audubonTransform = AudubonTransform.create();
-    ImageTransform imageTransform = ImageTransform.create();
+    MeasurementOrFactTransform measurementTransform = MeasurementOrFactTransform.builder().create();
+    MultimediaTransform multimediaTransform = MultimediaTransform.builder().create();
+    AudubonTransform audubonTransform = AudubonTransform.builder().create();
+    ImageTransform imageTransform = ImageTransform.builder().create();
 
     log.info("Init metrics");
     IngestMetrics metrics = IngestMetricsBuilder.createInterpretedToEsIndexMetrics();

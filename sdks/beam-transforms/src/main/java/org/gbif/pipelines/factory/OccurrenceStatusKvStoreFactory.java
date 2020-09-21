@@ -7,7 +7,7 @@ import org.gbif.common.parsers.OccurrenceStatusParser;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
-import org.gbif.pipelines.transforms.SerializableSupplier;
+import org.gbif.pipelines.core.functions.SerializableSupplier;
 
 /** Factory to get singleton instance of occurrence status {@link KeyValueStore} */
 public class OccurrenceStatusKvStoreFactory {

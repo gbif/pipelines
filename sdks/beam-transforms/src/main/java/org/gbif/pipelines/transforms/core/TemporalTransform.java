@@ -10,11 +10,11 @@ import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.common.parsers.date.DateComponentOrdering;
+import org.gbif.pipelines.core.functions.SerializableConsumer;
 import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.TemporalInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
 
 /**
@@ -28,13 +28,22 @@ import org.gbif.pipelines.transforms.Transform;
  */
 public class TemporalTransform extends Transform<ExtendedRecord, TemporalRecord> {
 
-  private final TemporalInterpreter temporalInterpreter;
+  private final DateComponentOrdering dateComponentOrdering;
+  private TemporalInterpreter temporalInterpreter;
 
   @Builder(buildMethodName = "create")
   private TemporalTransform(DateComponentOrdering dateComponentOrdering) {
     super(
         TemporalRecord.class, TEMPORAL, TemporalTransform.class.getName(), TEMPORAL_RECORDS_COUNT);
-    this.temporalInterpreter = TemporalInterpreter.create(dateComponentOrdering);
+    this.dateComponentOrdering = dateComponentOrdering;
+  }
+
+  /** Beam @Setup initializes resources */
+  @Setup
+  public void setup() {
+    if (temporalInterpreter == null) {
+      temporalInterpreter = TemporalInterpreter.create(dateComponentOrdering);
+    }
   }
 
   /** Maps {@link TemporalRecord} to key value, where key is {@link TemporalRecord#getId} */

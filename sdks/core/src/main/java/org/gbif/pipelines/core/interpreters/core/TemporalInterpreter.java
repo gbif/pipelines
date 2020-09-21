@@ -25,6 +25,8 @@ import org.gbif.pipelines.io.avro.TemporalRecord;
 @Slf4j
 public class TemporalInterpreter implements Serializable {
 
+  private static final long serialVersionUID = 410232939831224196L;
+
   private static final LocalDate MIN_EPOCH_LOCAL_DATE = LocalDate.ofEpochDay(0);
   private static final LocalDate MIN_LOCAL_DATE = LocalDate.of(1600, 1, 1);
 

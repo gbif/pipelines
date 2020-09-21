@@ -20,6 +20,7 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
@@ -98,9 +99,15 @@ public class VerbatimToInterpretedPipeline {
     String targetPath = options.getTargetPath();
     String hdfsSiteConfig = options.getHdfsSiteConfig();
     String coreSiteConfig = options.getCoreSiteConfig();
+
     PipelinesConfig config =
         FsUtils.readConfigFile(
             hdfsSiteConfig, coreSiteConfig, options.getProperties(), PipelinesConfig.class);
+
+    DateComponentOrdering dateComponentOrdering =
+        options.getDefaultDateFormat() == null
+            ? config.getDefaultDateFormat()
+            : options.getDefaultDateFormat();
 
     FsUtils.deleteInterpretIfExist(
         hdfsSiteConfig, coreSiteConfig, targetPath, datasetId, attempt, types);
@@ -138,12 +145,7 @@ public class VerbatimToInterpretedPipeline {
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
 
     TemporalTransform temporalTransform =
-        TemporalTransform.builder()
-            .dateComponentOrdering(
-                options.getDefaultDateFormat() == null
-                    ? config.getDefaultDateFormat()
-                    : options.getDefaultDateFormat())
-            .create();
+        TemporalTransform.builder().dateComponentOrdering(dateComponentOrdering).create();
 
     TaxonomyTransform taxonomyTransform =
         TaxonomyTransform.builder()
@@ -161,13 +163,17 @@ public class VerbatimToInterpretedPipeline {
             .create();
 
     // Extension
-    MeasurementOrFactTransform measurementOrFactTransform = MeasurementOrFactTransform.create();
+    MeasurementOrFactTransform measurementOrFactTransform =
+        MeasurementOrFactTransform.builder().dateComponentOrdering(dateComponentOrdering).create();
 
-    MultimediaTransform multimediaTransform = MultimediaTransform.create();
+    MultimediaTransform multimediaTransform =
+        MultimediaTransform.builder().dateComponentOrdering(dateComponentOrdering).create();
 
-    AudubonTransform audubonTransform = AudubonTransform.create();
+    AudubonTransform audubonTransform =
+        AudubonTransform.builder().dateComponentOrdering(dateComponentOrdering).create();
 
-    ImageTransform imageTransform = ImageTransform.create();
+    ImageTransform imageTransform =
+        ImageTransform.builder().dateComponentOrdering(dateComponentOrdering).create();
 
     // Extra
     UniqueGbifIdTransform gbifIdTransform =

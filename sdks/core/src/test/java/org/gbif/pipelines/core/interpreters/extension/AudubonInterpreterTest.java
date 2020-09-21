@@ -78,7 +78,7 @@ public class AudubonInterpreterTest {
     AudubonRecord ar = AudubonRecord.newBuilder().setId("id").build();
 
     // When
-    AudubonInterpreter.interpret(er, ar);
+    AudubonInterpreter.create().interpret(er, ar);
 
     // Should
     Assert.assertEquals(expected, ar.toString());
@@ -138,7 +138,7 @@ public class AudubonInterpreterTest {
     AudubonRecord ar = AudubonRecord.newBuilder().setId("id").build();
 
     // When
-    AudubonInterpreter.interpret(er, ar);
+    AudubonInterpreter.create().interpret(er, ar);
 
     // Should
     Assert.assertEquals(expected, ar.toString());
@@ -185,7 +185,7 @@ public class AudubonInterpreterTest {
     AudubonRecord ar = AudubonRecord.newBuilder().setId("id").build();
 
     // When
-    AudubonInterpreter.interpret(er, ar);
+    AudubonInterpreter.create().interpret(er, ar);
 
     // Should
     Assert.assertEquals(expected, ar.toString());
@@ -286,7 +286,7 @@ public class AudubonInterpreterTest {
     AudubonRecord ar = AudubonRecord.newBuilder().setId("id").build();
 
     // When
-    AudubonInterpreter.interpret(er, ar);
+    AudubonInterpreter.create().interpret(er, ar);
 
     // Should
     Assert.assertEquals(expected, ar.toString());
@@ -323,7 +323,7 @@ public class AudubonInterpreterTest {
             .build();
 
     // When
-    AudubonInterpreter.interpret(er, ar);
+    AudubonInterpreter.create().interpret(er, ar);
 
     // Should
     Assert.assertEquals(expected, ar);
@@ -357,7 +357,7 @@ public class AudubonInterpreterTest {
             .build();
 
     // When
-    AudubonInterpreter.interpret(er, ar);
+    AudubonInterpreter.create().interpret(er, ar);
 
     // Should
     Assert.assertEquals(expected, ar);
@@ -391,7 +391,7 @@ public class AudubonInterpreterTest {
             .build();
 
     // When
-    AudubonInterpreter.interpret(er, ar);
+    AudubonInterpreter.create().interpret(er, ar);
 
     // Should
     Assert.assertEquals(expected, ar);
@@ -439,7 +439,7 @@ public class AudubonInterpreterTest {
             .build();
 
     // When
-    AudubonInterpreter.interpret(er, ar);
+    AudubonInterpreter.create().interpret(er, ar);
 
     // Should
     Assert.assertEquals(expected, ar);

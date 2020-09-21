@@ -160,6 +160,10 @@ public class TemporalParser implements Serializable {
     return OccurrenceParseResult.success(confidence, parsedTemporalAccessor, issues);
   }
 
+  public OccurrenceParseResult<TemporalAccessor> parseRecordedDate(String dateString) {
+    return parseRecordedDate(null, null, null, dateString);
+  }
+
   /** @return TemporalAccessor that represents a LocalDate or LocalDateTime */
   public OccurrenceParseResult<TemporalAccessor> parseLocalDate(
       String dateString, Range<LocalDate> likelyRange, OccurrenceIssue unlikelyIssue) {
