@@ -243,6 +243,11 @@ public class VerbatimToInterpretedPipeline {
     grscicollTransform.setup();
     metadataTransform.setup();
     defaultValuesTransform.setup();
+    temporalTransform.setup();
+    multimediaTransform.setup();
+    audubonTransform.setup();
+    imageTransform.setup();
+    measurementTransform.setup();
 
     try (SyncDataFileWriter<ExtendedRecord> verbatimWriter =
             createWriter(options, ExtendedRecord.getClassSchema(), verbatimTransform, id);
