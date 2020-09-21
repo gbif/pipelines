@@ -1,3 +1,4 @@
 package org.gbif.pipelines;
 
-public interface Dummy {}
+public interface Dummy {
+}
