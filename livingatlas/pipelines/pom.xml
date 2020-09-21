@@ -260,9 +260,11 @@
     <!-- Common variables -->
     <surefireArgLine>-Xmx1024m</surefireArgLine>
 
+    <!-- GBIF libraries -->
+    <gbif-common.version>0.48</gbif-common.version>
+
     <!-- ALA libraries -->
     <ala-namematching-service.version>1.0-SNAPSHOT</ala-namematching-service.version>
-    <ala-sensitive-data-service.version>1.0-SNAPSHOT</ala-sensitive-data-service.version>
 
     <!-- Default port for ALA Name Matcher Docker container -->
     <alanm.port>9279</alanm.port>
@@ -272,7 +274,7 @@
     <solr8.http.port>8973</solr8.http.port>
     <solr8.zk.host>localhost</solr8.zk.host>
     <solr8.http.host>localhost</solr8.http.host>
-    <collectory.url>https://collections.ala.org.au</collectory.url>
+    <collectory.url>http://localhost:3939</collectory.url>
     <sds.port>9289</sds.port>
     <sds.admin.port>9290</sds.admin.port>
     <sds.host>localhost</sds.host>
@@ -301,6 +303,10 @@
 
     <download-maven-plugin.version>1.6.0</download-maven-plugin.version>
     <jcabi-log.version>0.18.1</jcabi-log.version>
+
+    <!-- use same version as okhttp -->
+    <!-- avoids this issue https://stackoverflow.com/questions/56854548/mockwebserver-java-lang-nosuchmethoderror -->
+    <mockwebserver.version>4.2.2</mockwebserver.version>
   </properties>
 
   <scm>
@@ -479,6 +485,7 @@
     <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>gbif-common</artifactId>
+      <version>${gbif-common.version}</version>
     </dependency>
     <dependency>
       <groupId>org.gbif.kvs</groupId>

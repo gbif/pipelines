@@ -1,9 +1,11 @@
 package au.org.ala.pipelines.beam;
 
 import au.org.ala.util.TestUtils;
+import au.org.ala.utils.ValidationUtils;
 import java.io.File;
 import java.io.Serializable;
 import java.util.function.Function;
+import okhttp3.mockwebserver.MockWebServer;
 import org.apache.commons.io.FileUtils;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.ingest.options.DwcaPipelineOptions;
@@ -11,10 +13,25 @@ import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.pipelines.DwcaToVerbatimPipeline;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 /** End to end default values test. */
 public class DefaultValuesTestIT {
+
+  MockWebServer server;
+
+  @Before
+  public void setup() throws Exception {
+    server = TestUtils.createMockCollectory();
+    server.start(TestUtils.getCollectoryPort());
+  }
+
+  @After
+  public void teardown() throws Exception {
+    server.shutdown();
+  }
 
   @Test
   public void testDwCaPipeline() throws Exception {
@@ -32,7 +49,7 @@ public class DefaultValuesTestIT {
               "--datasetId=dr893",
               "--attempt=1",
               "--runner=DirectRunner",
-              "--metaFileName=dwca-metrics.yml",
+              "--metaFileName=" + ValidationUtils.VERBATIM_METRICS,
               "--targetPath=/tmp/la-pipelines-test/default-values",
               "--inputPath=" + absolutePath + "/default-values/dr893"
             });
@@ -46,7 +63,6 @@ public class DefaultValuesTestIT {
               "--datasetId=dr893",
               "--attempt=1",
               "--runner=DirectRunner",
-              "--metaFileName=uuid-metrics.yml",
               "--targetPath=/tmp/la-pipelines-test/default-values",
               "--inputPath=/tmp/la-pipelines-test/default-values/dr893/1/verbatim.avro",
               "--properties=" + TestUtils.getPipelinesConfigFile(),
@@ -75,7 +91,7 @@ public class DefaultValuesTestIT {
               "--attempt=1",
               "--runner=DirectRunner",
               "--interpretationTypes=ALL",
-              "--metaFileName=interpretation-metrics.yml",
+              "--metaFileName=" + ValidationUtils.INTERPRETATION_METRICS,
               "--targetPath=/tmp/la-pipelines-test/default-values",
               "--inputPath=/tmp/la-pipelines-test/default-values/dr893/1/verbatim.avro",
               "--properties=" + TestUtils.getPipelinesConfigFile(),

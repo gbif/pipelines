@@ -29,7 +29,7 @@ alaNameMatch:
   wsUrl: http://localhost:9179
   timeoutSec: 70
 collectory:
-  wsUrl: https://collections.ala.org.au
+  wsUrl: http://localhost:3939
   timeoutSec: 70
 sds:
   wsUrl: http://localhost:9189

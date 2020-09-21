@@ -30,7 +30,6 @@ public class ALATemporalTransform extends Transform<ExtendedRecord, TemporalReco
 
   @Override
   public Optional<TemporalRecord> convert(ExtendedRecord source) {
-
     TemporalRecord tr = TemporalRecord.newBuilder().setId(source.getId()).build();
     Interpretation.from(source)
         .to(tr)

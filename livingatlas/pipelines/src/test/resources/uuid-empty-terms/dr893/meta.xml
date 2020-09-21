@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<archive metadata="eml.xml" xmlns="http://rs.tdwg.org/dwc/text/">
+      <core encoding="UTF-8" linesTerminatedBy="
+" fieldsTerminatedBy="," fieldsEnclosedBy="&quot;" ignoreHeaderLines="0" rowType="http://rs.tdwg.org/dwc/terms/Occurrence">
+        <files>
+          <location>occurrence.csv</location>
+        </files>
+        <id index="0"/>
+        <field index="0" term="http://rs.tdwg.org/dwc/terms/occurrenceID"/>
+        <field index="1" term="http://rs.tdwg.org/dwc/terms/catalogNumber"/>
+        <field index="2" term="http://rs.tdwg.org/dwc/terms/collectionCode"/>
+        <field index="3" term="http://rs.tdwg.org/dwc/terms/institutionCode"/>
+        <field index="4" term="http://rs.tdwg.org/dwc/terms/recordNumber"/>
+        <field index="5" term="http://rs.tdwg.org/dwc/terms/basisOfRecord"/>
+        <field index="6" term="http://rs.tdwg.org/dwc/terms/recordedBy"/>
+        <field index="7" term="http://rs.tdwg.org/dwc/terms/occurrenceStatus"/>
+        <field index="8" term="http://rs.tdwg.org/dwc/terms/individualCount"/>
+        <field index="9" term="http://rs.tdwg.org/dwc/terms/scientificName"/>
+        <field index="10" term="http://rs.tdwg.org/dwc/terms/taxonConceptID"/>
+        <field index="11" term="http://rs.tdwg.org/dwc/terms/taxonRank"/>
+        <field index="12" term="http://rs.tdwg.org/dwc/terms/kingdom"/>
+        <field index="13" term="http://rs.tdwg.org/dwc/terms/phylum"/>
+        <field index="14" term="http://rs.tdwg.org/dwc/terms/class"/>
+        <field index="15" term="http://rs.tdwg.org/dwc/terms/order"/>
+        <field index="16" term="http://rs.tdwg.org/dwc/terms/family"/>
+        <field index="17" term="http://rs.tdwg.org/dwc/terms/genus"/>
+        <field index="18" term="http://rs.tdwg.org/dwc/terms/vernacularName"/>
+        <field index="19" term="http://rs.tdwg.org/dwc/terms/decimalLatitude"/>
+        <field index="20" term="http://rs.tdwg.org/dwc/terms/decimalLongitude"/>
+        <field index="21" term="http://rs.tdwg.org/dwc/terms/geodeticDatum"/>
+        <field index="22" term="http://rs.tdwg.org/dwc/terms/coordinateUncertaintyInMeters"/>
+        <field index="23" term="http://rs.tdwg.org/dwc/terms/maximumElevationInMeters"/>
+        <field index="24" term="http://rs.tdwg.org/dwc/terms/minimumElevationInMeters"/>
+        <field index="25" term="http://rs.tdwg.org/dwc/terms/minimumDepthInMeters"/>
+        <field index="26" term="http://rs.tdwg.org/dwc/terms/maximumDepthInMeters"/>
+        <field index="27" term="http://rs.tdwg.org/dwc/terms/country"/>
+        <field index="28" term="http://rs.tdwg.org/dwc/terms/stateProvince"/>
+        <field index="29" term="http://rs.tdwg.org/dwc/terms/locality"/>
+        <field index="30" term="http://rs.tdwg.org/dwc/terms/locationRemarks"/>
+        <field index="31" term="http://rs.tdwg.org/dwc/terms/year"/>
+        <field index="32" term="http://rs.tdwg.org/dwc/terms/month"/>
+        <field index="33" term="http://rs.tdwg.org/dwc/terms/day"/>
+        <field index="34" term="http://rs.tdwg.org/dwc/terms/eventDate"/>
+        <field index="35" term="http://rs.tdwg.org/dwc/terms/eventID"/>
+        <field index="36" term="http://rs.tdwg.org/dwc/terms/identifiedBy"/>
+        <field index="37" term="http://rs.tdwg.org/dwc/terms/occurrenceRemarks"/>
+        <field index="38" term="http://rs.tdwg.org/dwc/terms/dataGeneralizations"/>
+        <field index="39" term="http://rs.tdwg.org/dwc/terms/otherCatalogNumbers"/>
+        <field index="40" term="http://purl.org/dc/terms/references"/>
+      </core>
+    </archive>

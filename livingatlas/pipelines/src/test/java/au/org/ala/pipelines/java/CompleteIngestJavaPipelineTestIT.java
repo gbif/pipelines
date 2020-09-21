@@ -7,16 +7,21 @@ import au.org.ala.pipelines.beam.ALAInterpretedToLatLongCSVPipeline;
 import au.org.ala.pipelines.beam.ALASamplingToAvroPipeline;
 import au.org.ala.pipelines.beam.ALAUUIDMintingPipeline;
 import au.org.ala.pipelines.options.ALASolrPipelineOptions;
+import au.org.ala.pipelines.options.UUIDPipelineOptions;
 import au.org.ala.sampling.LayerCrawler;
 import au.org.ala.util.SolrUtils;
 import au.org.ala.util.TestUtils;
+import au.org.ala.utils.ValidationUtils;
 import java.io.File;
 import java.util.UUID;
+import okhttp3.mockwebserver.MockWebServer;
 import org.apache.commons.io.FileUtils;
 import org.gbif.pipelines.ingest.options.DwcaPipelineOptions;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.pipelines.DwcaToVerbatimPipeline;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -27,6 +32,20 @@ import org.junit.Test;
  */
 public class CompleteIngestJavaPipelineTestIT {
 
+  MockWebServer server;
+
+  @Before
+  public void setup() throws Exception {
+    // clear up previous test runs
+    server = TestUtils.createMockCollectory();
+    server.start(TestUtils.getCollectoryPort());
+  }
+
+  @After
+  public void teardown() throws Exception {
+    server.shutdown();
+  }
+
   /**
    * Tests for SOLR index creation.
    *
@@ -36,7 +55,7 @@ public class CompleteIngestJavaPipelineTestIT {
   public void testIngestPipeline() throws Exception {
 
     // clear up previous test runs
-    FileUtils.deleteQuietly(new File("/tmp/la-pipelines-test/complete-pipeline"));
+    FileUtils.deleteQuietly(new File("/tmp/la-pipelines-test/complete-pipeline-java"));
 
     // clear SOLR index
     SolrUtils.setupIndex();
@@ -44,7 +63,7 @@ public class CompleteIngestJavaPipelineTestIT {
     String absolutePath = new File("src/test/resources").getAbsolutePath();
 
     // Step 1: load a dataset and verify all records have a UUID associated
-    loadTestDataset("dr893", absolutePath + "/complete-pipeline/dr893");
+    loadTestDataset("dr893", absolutePath + "/complete-pipeline-java/dr893");
 
     // reload
     SolrUtils.reloadSolrIndex();
@@ -80,8 +99,8 @@ public class CompleteIngestJavaPipelineTestIT {
               "--appName=DWCA",
               "--attempt=1",
               "--runner=DirectRunner",
-              "--metaFileName=dwca-metrics.yml",
-              "--targetPath=/tmp/la-pipelines-test/complete-pipeline",
+              "--metaFileName=" + ValidationUtils.VERBATIM_METRICS,
+              "--targetPath=/tmp/la-pipelines-test/complete-pipeline-java",
               "--inputPath=" + inputPath
             });
     DwcaToVerbatimPipeline.run(dwcaOptions);
@@ -94,24 +113,24 @@ public class CompleteIngestJavaPipelineTestIT {
               "--attempt=1",
               "--runner=DirectRunner",
               "--interpretationTypes=ALL",
-              "--metaFileName=interpretation-metrics.yml",
-              "--targetPath=/tmp/la-pipelines-test/complete-pipeline",
-              "--inputPath=/tmp/la-pipelines-test/complete-pipeline/dr893/1/verbatim.avro",
+              "--metaFileName=" + ValidationUtils.INTERPRETATION_METRICS,
+              "--targetPath=/tmp/la-pipelines-test/complete-pipeline-java",
+              "--inputPath=/tmp/la-pipelines-test/complete-pipeline-java/dr893/1/verbatim.avro",
               "--properties=" + TestUtils.getPipelinesConfigFile(),
               "--useExtendedRecordId=true"
             });
     au.org.ala.pipelines.java.ALAVerbatimToInterpretedPipeline.run(interpretationOptions);
 
-    InterpretationPipelineOptions uuidOptions =
+    UUIDPipelineOptions uuidOptions =
         PipelinesOptionsFactory.create(
-            InterpretationPipelineOptions.class,
+            UUIDPipelineOptions.class,
             new String[] {
               "--datasetId=" + datasetID,
               "--attempt=1",
               "--runner=DirectRunner",
-              "--metaFileName=uuid-metrics.yml",
-              "--targetPath=/tmp/la-pipelines-test/complete-pipeline",
-              "--inputPath=/tmp/la-pipelines-test/complete-pipeline/dr893/1/verbatim.avro",
+              "--metaFileName=" + ValidationUtils.UUID_METRICS,
+              "--targetPath=/tmp/la-pipelines-test/complete-pipeline-java",
+              "--inputPath=/tmp/la-pipelines-test/complete-pipeline-java",
               "--properties=" + TestUtils.getPipelinesConfigFile(),
               "--useExtendedRecordId=true"
             });
@@ -125,8 +144,8 @@ public class CompleteIngestJavaPipelineTestIT {
               "--datasetId=" + datasetID,
               "--attempt=1",
               "--runner=DirectRunner",
-              "--targetPath=/tmp/la-pipelines-test/complete-pipeline",
-              "--inputPath=/tmp/la-pipelines-test/complete-pipeline",
+              "--targetPath=/tmp/la-pipelines-test/complete-pipeline-java",
+              "--inputPath=/tmp/la-pipelines-test/complete-pipeline-java",
               "--properties=" + TestUtils.getPipelinesConfigFile()
             });
     ALAInterpretedToLatLongCSVPipeline.run(latLngOptions);
@@ -135,7 +154,19 @@ public class CompleteIngestJavaPipelineTestIT {
     LayerCrawler.run(latLngOptions);
 
     // sample -> avro
-    ALASamplingToAvroPipeline.run(latLngOptions);
+    InterpretationPipelineOptions samplingAvroOptions =
+        PipelinesOptionsFactory.create(
+            InterpretationPipelineOptions.class,
+            new String[] {
+              "--datasetId=" + datasetID,
+              "--attempt=1",
+              "--runner=DirectRunner",
+              "--targetPath=/tmp/la-pipelines-test/complete-pipeline-java",
+              "--inputPath=/tmp/la-pipelines-test/complete-pipeline-java",
+              "--metaFileName=" + ValidationUtils.SAMPLING_METRICS,
+              "--properties=" + TestUtils.getPipelinesConfigFile()
+            });
+    ALASamplingToAvroPipeline.run(samplingAvroOptions);
 
     // solr
     ALASolrPipelineOptions solrOptions =
@@ -145,9 +176,9 @@ public class CompleteIngestJavaPipelineTestIT {
               "--datasetId=" + datasetID,
               "--attempt=1",
               "--runner=DirectRunner",
-              "--metaFileName=uuid-metrics.yml",
-              "--targetPath=/tmp/la-pipelines-test/complete-pipeline",
-              "--inputPath=/tmp/la-pipelines-test/complete-pipeline/dr893/1/verbatim.avro",
+              "--metaFileName=" + ValidationUtils.INDEXING_METRICS,
+              "--targetPath=/tmp/la-pipelines-test/complete-pipeline-java",
+              "--inputPath=/tmp/la-pipelines-test/complete-pipeline-java",
               "--properties=" + TestUtils.getPipelinesConfigFile(),
               "--zkHost=" + SolrUtils.getZkHost(),
               "--solrCollection=" + SolrUtils.BIOCACHE_TEST_SOLR_COLLECTION,
