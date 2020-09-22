@@ -16,7 +16,7 @@ import org.junit.Test;
 public class TemporalParserTest {
 
   @Test
-  public void testTemporalInterpreter() {
+  public void testIsValidDate() {
     assertTrue(TemporalParser.isValidDate(Year.of(2005)));
     assertTrue(TemporalParser.isValidDate(YearMonth.of(2005, 1)));
     assertTrue(TemporalParser.isValidDate(LocalDate.of(2005, 1, 1)));
@@ -32,7 +32,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testInterpretRecordedDate() {
+  public void testParseRecordedDate() {
     TemporalParser temporalParser = TemporalParser.create();
     OccurrenceParseResult<TemporalAccessor> result;
 
@@ -71,10 +71,9 @@ public class TemporalParserTest {
 
   /** 0 month now fails. */
   @Test
-  public void test0Month() {
+  public void testZeroMonth() {
     ParseResult<TemporalAccessor> result =
         TemporalParser.create().parseRecordedDate("1984", "0", "22", null);
-    // assertResult(1984, null, 22, null, result);
     assertFalse(result.isSuccessful());
   }
 
