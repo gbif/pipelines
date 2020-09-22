@@ -80,40 +80,6 @@ public class TemporalRecordTransformTest {
   }
 
   @Test
-  public void transformationDateMonthTest() {
-    // State
-    ExtendedRecord record = ExtendedRecord.newBuilder().setId("0").build();
-    record.getCoreTerms().put(DwcTerm.year.qualifiedName(), "1999");
-    record.getCoreTerms().put(DwcTerm.month.qualifiedName(), "2");
-    record.getCoreTerms().put(DwcTerm.eventDate.qualifiedName(), "1999-02");
-    record.getCoreTerms().put(DwcTerm.dateIdentified.qualifiedName(), "1999-02");
-    record.getCoreTerms().put(DcTerm.modified.qualifiedName(), "1999-02");
-    final List<ExtendedRecord> input = Collections.singletonList(record);
-
-    // Expected
-    // First
-    final ParsedTemporal periodOne = ParsedTemporal.create();
-    periodOne.setFromDate(LocalDateTime.of(1999, 2, 1, 0, 0));
-    periodOne.setYear(Year.of(1999));
-    periodOne.setMonth(Month.of(2));
-
-    final ParsedTemporal other = ParsedTemporal.create();
-    other.setFromDate(YearMonth.of(1999, 2));
-
-    final List<TemporalRecord> dataExpected = createTemporalRecordList(periodOne, other);
-
-    // When
-    PCollection<TemporalRecord> dataStream =
-        p.apply(Create.of(input))
-            .apply(TemporalTransform.create().interpret())
-            .apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
-
-    // Should
-    PAssert.that(dataStream).containsInAnyOrder(dataExpected);
-    p.run();
-  }
-
-  @Test
   public void emptyErTest() {
 
     // State
@@ -144,7 +110,7 @@ public class TemporalRecordTransformTest {
     TemporalRecord expected1 =
         TemporalRecord.newBuilder()
             .setId("0")
-            .setEventDate(EventDate.newBuilder().setGte("1999-02-01T12:26").build())
+            .setEventDate(EventDate.newBuilder().setGte("1999-02-01T12:26Z").build())
             .setYear(1999)
             .setMonth(2)
             .setDay(1)

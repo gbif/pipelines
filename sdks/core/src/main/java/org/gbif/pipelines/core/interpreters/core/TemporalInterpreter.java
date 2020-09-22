@@ -13,13 +13,10 @@ import com.google.common.collect.Range;
 import java.io.Serializable;
 import java.text.ParseException;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.temporal.ChronoField;
-import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAccessor;
 import java.time.temporal.TemporalQueries;
 import java.util.EnumSet;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import lombok.Builder;
@@ -28,7 +25,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.core.OccurrenceParseResult;
 import org.gbif.common.parsers.core.ParseResult;
-import org.gbif.common.parsers.date.AtomizedLocalDate;
 import org.gbif.common.parsers.date.CustomizedTextDateParser;
 import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.common.parsers.date.DateParsers;
@@ -36,7 +32,7 @@ import org.gbif.common.parsers.date.TemporalAccessorUtils;
 import org.gbif.common.parsers.date.TemporalParser;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.core.parsers.temporal.utils.DelimiterUtils;
+import org.gbif.pipelines.core.parsers.temporal.TemporalRangeParser;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
@@ -77,22 +73,6 @@ public class TemporalInterpreter implements Serializable {
   @Builder
   public static TemporalInterpreter getInstance(DateComponentOrdering[] orderings) {
     return new TemporalInterpreter(orderings);
-  }
-
-  /**
-   * Preprocess for converting some none ISO standards to ISO standards
-   *
-   * @param dateString
-   * @return
-   */
-  private static String normalizeDateString(String dateString) {
-    // Convert 2004-2-1 to 3-2 , 2004-2-1 & 3-2  to 2004-2-1/3-2
-    if (StringUtils.isNotEmpty(dateString)) {
-      dateString = dateString.replace(" to ", "/");
-      dateString = dateString.replace(" & ", "/");
-    }
-
-    return dateString;
   }
 
   public void interpretTemporal(ExtendedRecord er, TemporalRecord tr) {
@@ -139,6 +119,7 @@ public class TemporalInterpreter implements Serializable {
 
   private void interpretEventDate(ExtendedRecord er, TemporalRecord tr) {
     Set<OccurrenceIssue> issues = EnumSet.noneOf(OccurrenceIssue.class);
+    TemporalRangeParser trp = TemporalRangeParser.builder().temporalParser(temporalParser).build();
     // Reset
     tr.setEventDate(null);
 
@@ -147,140 +128,44 @@ public class TemporalInterpreter implements Serializable {
     final String day = extractValue(er, DwcTerm.day);
     String eventDateString = extractValue(er, DwcTerm.eventDate);
 
-    boolean atomizedDateProvided =
-        StringUtils.isNotBlank(year)
-            || StringUtils.isNotBlank(month)
-            || StringUtils.isNotBlank(day);
-    boolean dateStringProvided = StringUtils.isNotBlank(eventDateString);
+    try {
+      TemporalAccessor[] period = trp.parse(year, month, day, eventDateString);
 
-    if (atomizedDateProvided || dateStringProvided) {
+      TemporalAccessor originalFrom = period[2];
 
+      if (originalFrom.isSupported(ChronoField.YEAR)) {
+        tr.setYear(originalFrom.get(ChronoField.YEAR));
+      }
+      if (originalFrom.isSupported(ChronoField.MONTH_OF_YEAR)) {
+        tr.setMonth(originalFrom.get(ChronoField.MONTH_OF_YEAR));
+      }
+      if (originalFrom.isSupported(ChronoField.DAY_OF_MONTH)) {
+        tr.setDay(originalFrom.get(ChronoField.DAY_OF_MONTH));
+      }
 
-      TemporalAccessor parsedStartTemporalAccessor;
-      ParseResult.CONFIDENCE confidence;
-      // parsed from YMD
-      ParseResult<TemporalAccessor> parsedYMDResult =
-          atomizedDateProvided ? temporalParser.parse(year, month, day) : ParseResult.fail();
-      TemporalAccessor parsedYmdTa = parsedYMDResult.getPayload();
-      // parse from string / possible date range
-      ParseResult<TemporalAccessor> startParseResult = null;
-      ParseResult<TemporalAccessor> endParseResult = null;
-      TemporalAccessor from = null;
-      TemporalAccessor to = null;
+      EventDate eventDate = new EventDate();
+      Optional.ofNullable(period[0])
+          .map(TemporalAccessor::toString)
+          .ifPresent(x -> eventDate.setGte(x));
+      Optional.ofNullable(period[1])
+          .map(TemporalAccessor::toString)
+          .ifPresent(x -> eventDate.setLte(x));
 
-      eventDateString = normalizeDateString(eventDateString);
-      String[] rawPeriod = DelimiterUtils.splitPeriod(eventDateString);
-      // Even a single date will be split to two
-      if (rawPeriod.length == 2) {
-        String rawFrom = rawPeriod[0];
-        String rawTo = rawPeriod[1];
+      tr.setEventDate(eventDate);
 
-        if (!Strings.isNullOrEmpty(rawFrom)) {
-          startParseResult = temporalParser.parse(rawPeriod[0]);
-          if (startParseResult.isSuccessful()) {
-            from = startParseResult.getPayload();
-          } else {
-            log.debug("Event start date is invalid: {} ", rawFrom);
-            addIssue(tr, OccurrenceIssue.RECORDED_DATE_INVALID);
-            return;
-          }
-        }
-
-        if (!Strings.isNullOrEmpty(rawTo)) {
-          endParseResult = temporalParser.parse(rawPeriod[1]);
-          if (endParseResult.isSuccessful()) {
-            to = endParseResult.getPayload();
-          } else {
-            log.debug("Event end date is invalid: {} ", rawTo);
-            addIssue(tr, OccurrenceIssue.RECORDED_DATE_INVALID);
-            return;
-          }
-        }
-
-        // Solve conflicts of dates from YMD and dateString
-        if (atomizedDateProvided
-            && dateStringProvided
-            && !TemporalAccessorUtils.sameOrContained(parsedYMDResult.getPayload(), from)) {
-          // eventDate could be ambiguous (5/4/2014), but disambiguated by year-month-day.
-          boolean ambiguityResolved = false;
-          if (startParseResult.getAlternativePayloads() != null) {
-            for (TemporalAccessor possibleTa : startParseResult.getAlternativePayloads()) {
-              if (TemporalAccessorUtils.sameOrContained(parsedYmdTa, possibleTa)) {
-                from = possibleTa;
-                ambiguityResolved = true;
-                log.debug(
-                    "Ambiguous date {} matches year-month-day date {}-{}-{} for {}",
-                    rawFrom,
-                    year,
-                    month,
-                    day,
-                    from);
-              }
-            }
-          }
-
-          // still a conflict
-          if (!ambiguityResolved) {
-            log.debug("Date mismatch: [{} vs {}].", parsedYmdTa, from);
-            addIssue(tr, OccurrenceIssue.RECORDED_DATE_MISMATCH);
-            return;
-          }
-
-          // choose the one with better resolution
-          Optional<TemporalAccessor> bestResolution =
-              TemporalAccessorUtils.bestResolution(parsedYmdTa, from);
-          if (bestResolution.isPresent()) {
-            parsedStartTemporalAccessor = bestResolution.get();
-          } else {
-            // faild
-            addIssue(tr, OccurrenceIssue.RECORDED_DATE_UNLIKELY);
-            return;
-          }
-        } else {
-          // they match, or we only have one anyway, choose the one with better resolution.
-          parsedStartTemporalAccessor =
-              TemporalAccessorUtils.bestResolution(parsedYmdTa, from).orElse(null);
-        }
-        // If invalid, return directly
-        if (!isValidDate(parsedStartTemporalAccessor, true)) {
-          if (parsedStartTemporalAccessor == null) {
-            issues.add(OccurrenceIssue.RECORDED_DATE_INVALID);
-          } else {
-            issues.add(OccurrenceIssue.RECORDED_DATE_UNLIKELY);
-          }
-          log.debug("Invalid date: [{}]].", parsedStartTemporalAccessor);
-          addIssueSet(tr, issues);
-          return;
-        }
-
-        // extra works on it
-        // Get eventDate as java.util.Date and ignore the offset (timezone) if provided
-        // Note for debug: be careful if you inspect the content of 'eventDate' it will contain your
-        // machine timezone.
-        LocalDateTime eventStartDate =
-            TemporalAccessorUtils.toEarliestLocalDateTime(parsedStartTemporalAccessor, true);
-        AtomizedLocalDate atomizedLocalDate =
-            AtomizedLocalDate.fromTemporalAccessor(parsedStartTemporalAccessor);
-
-        LocalDateTime eventEndDate = TemporalAccessorUtils.toLatestLocalDateTime(to, true);
-
-        tr.setYear(atomizedLocalDate.getYear());
-        tr.setMonth(atomizedLocalDate.getMonth());
-        tr.setDay(atomizedLocalDate.getDay());
-
-        EventDate eventDate = new EventDate();
-        Optional.ofNullable(eventStartDate)
-            .map(LocalDateTime::toString)
-            .ifPresent(x -> eventDate.setGte(x));
-        Optional.ofNullable(eventEndDate)
-            .map(LocalDateTime::toString)
-            .ifPresent(x -> eventDate.setLte(x));
-
-        tr.setEventDate(eventDate);
-
-        addIssueSet(tr, issues);
+    } catch (ParseException e) {
+      if ("Invalid".equalsIgnoreCase(e.getMessage())) {
+        addIssue(tr, OccurrenceIssue.RECORDED_DATE_INVALID);
+      } else if ("Unlikely".equalsIgnoreCase(e.getMessage())) {
+        addIssue(tr, OccurrenceIssue.RECORDED_DATE_UNLIKELY);
       }
     }
+  }
+
+  private static Optional<TemporalAccessor> betterResolution(
+      TemporalAccessor ta1, TemporalAccessor ta2) {
+    Optional<TemporalAccessor> bestResolution = TemporalAccessorUtils.bestResolution(ta1, ta2);
+    return bestResolution;
   }
 
   /**
@@ -469,4 +354,3 @@ public class TemporalInterpreter implements Serializable {
     return OccurrenceParseResult.fail();
   }
 }
-

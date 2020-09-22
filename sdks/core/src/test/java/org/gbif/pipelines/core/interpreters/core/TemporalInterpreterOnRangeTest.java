@@ -21,6 +21,28 @@ public class TemporalInterpreterOnRangeTest {
   }
 
   @Test
+  public void testYear() {
+    Map<String, String> map = new HashMap<>();
+    map.put(DwcTerm.eventDate.qualifiedName(), "2004");
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
+    TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
+    temporalInterpreter.interpretTemporal(er, tr);
+    assertEquals(LocalDateTime.of(2004, 1, 1, 0, 0).toString(), tr.getEventDate().getGte());
+    assertEquals(LocalDateTime.of(2004, 12, 31, 23, 59, 59).toString(), tr.getEventDate().getLte());
+  }
+
+  @Test
+  public void testYM() {
+    Map<String, String> map = new HashMap<>();
+    map.put(DwcTerm.eventDate.qualifiedName(), "2004-01");
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
+    TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
+    temporalInterpreter.interpretTemporal(er, tr);
+    assertEquals(LocalDateTime.of(2004, 1, 1, 0, 0).toString(), tr.getEventDate().getGte());
+    assertEquals(LocalDateTime.of(2004, 1, 31, 23, 59, 59).toString(), tr.getEventDate().getLte());
+  }
+
+  @Test
   public void testYearRange() {
     Map<String, String> map = new HashMap<>();
     map.put(DwcTerm.eventDate.qualifiedName(), "2004/2005");

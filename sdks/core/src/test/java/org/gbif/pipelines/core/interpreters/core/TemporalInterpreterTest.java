@@ -59,6 +59,7 @@ public class TemporalInterpreterTest {
     temporalInterpreter.interpretTemporal(er, tr);
 
     assertDate("1879-01-01T00:00", tr.getEventDate().getGte());
+    assertDate("1879-12-31T23:59:59", tr.getEventDate().getLte());
     assertEquals(1879, tr.getYear().intValue());
     assertNull(tr.getMonth());
     assertNull(tr.getDay());
@@ -84,7 +85,7 @@ public class TemporalInterpreterTest {
 
     assertDate("2014-01-11", tr.getModified());
     assertDate("2012-01-11", tr.getDateIdentified());
-    assertDate("1879-11-01T00:00", tr.getEventDate().getGte());
+    assertDate("1879-11-01", tr.getEventDate().getGte());
     assertEquals(1879, tr.getYear().intValue());
     assertEquals(11, tr.getMonth().intValue());
     assertEquals(1, tr.getDay().intValue());
@@ -520,7 +521,7 @@ public class TemporalInterpreterTest {
 
     assertDate("1940-02-23", tr.getModified());
     assertDate("1920-02-20", tr.getDateIdentified());
-    assertDate("1879-11-01T00:00", tr.getEventDate().getGte());
+    assertDate("1879-11-01", tr.getEventDate().getGte());
     assertEquals(1879, tr.getYear().intValue());
     assertEquals(11, tr.getMonth().intValue());
     assertEquals(1, tr.getDay().intValue());
@@ -542,7 +543,7 @@ public class TemporalInterpreterTest {
 
     assertDate("1940-02-23", tr.getModified());
     assertDate("1920-02-20", tr.getDateIdentified());
-    assertDate("1879-01-11T00:00", tr.getEventDate().getGte());
+    assertDate("1879-01-11", tr.getEventDate().getGte());
   }
 
   /** @param expected expected date in ISO yyyy-MM-dd format */
