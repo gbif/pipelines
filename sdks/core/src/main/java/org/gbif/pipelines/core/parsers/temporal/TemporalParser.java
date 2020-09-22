@@ -4,7 +4,6 @@ import static org.gbif.common.parsers.core.ParseResult.CONFIDENCE.DEFINITE;
 import static org.gbif.common.parsers.core.ParseResult.CONFIDENCE.PROBABLE;
 import static org.gbif.common.parsers.date.DateComponentOrdering.*;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.collect.Range;
 import java.io.Serializable;
@@ -186,7 +185,6 @@ public class TemporalParser implements Serializable {
    *
    * @return valid or not according to the predefined range.
    */
-  @VisibleForTesting
   protected static boolean isValidDate(TemporalAccessor temporalAccessor) {
     LocalDate upperBound = LocalDate.now().plusDays(1);
     return isValidDate(temporalAccessor, Range.closed(MIN_LOCAL_DATE, upperBound));

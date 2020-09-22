@@ -5,10 +5,10 @@ import static org.gbif.pipelines.core.utils.ModelUtils.*;
 import com.google.common.collect.Range;
 import java.io.Serializable;
 import java.time.LocalDate;
-import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
-import java.time.temporal.TemporalQueries;
+import java.util.Map;
 import java.util.Optional;
+import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.core.OccurrenceParseResult;
@@ -16,7 +16,9 @@ import org.gbif.common.parsers.date.AtomizedLocalDate;
 import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.core.parsers.temporal.EventRange;
 import org.gbif.pipelines.core.parsers.temporal.TemporalParser;
+import org.gbif.pipelines.core.parsers.temporal.TemporalRangeParser;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
@@ -30,18 +32,18 @@ public class TemporalInterpreter implements Serializable {
   private static final LocalDate MIN_EPOCH_LOCAL_DATE = LocalDate.ofEpochDay(0);
   private static final LocalDate MIN_LOCAL_DATE = LocalDate.of(1600, 1, 1);
 
+  private final TemporalRangeParser temporalRangeParser;
   private final TemporalParser temporalParser;
 
-  private TemporalInterpreter(DateComponentOrdering dateComponentOrdering) {
+  @Builder(buildMethodName = "create")
+  private TemporalInterpreter(
+      DateComponentOrdering dateComponentOrdering, Map<String, String> normalizeMap) {
+    this.temporalRangeParser =
+        TemporalRangeParser.builder()
+            .dateComponentOrdering(dateComponentOrdering)
+            .normalizeMap(normalizeMap)
+            .create();
     this.temporalParser = TemporalParser.create(dateComponentOrdering);
-  }
-
-  public static TemporalInterpreter create(DateComponentOrdering dateComponentOrdering) {
-    return new TemporalInterpreter(dateComponentOrdering);
-  }
-
-  public static TemporalInterpreter create() {
-    return create(null);
   }
 
   public void interpretTemporal(ExtendedRecord er, TemporalRecord tr) {
@@ -55,19 +57,6 @@ public class TemporalInterpreter implements Serializable {
     if (eventResult.isSuccessful()) {
       Optional<TemporalAccessor> temporalAccessor = Optional.ofNullable(eventResult.getPayload());
 
-      Optional<TemporalAccessor> localDate =
-          temporalAccessor
-              .filter(ta -> ta.isSupported(ChronoField.HOUR_OF_DAY))
-              .map(ta -> ta.query(TemporalQueries.localDate()));
-
-      if (localDate.isPresent()) {
-        temporalAccessor = localDate;
-      }
-
-      temporalAccessor
-          .map(TemporalAccessor::toString)
-          .ifPresent(x -> tr.setEventDate(new EventDate(x, null)));
-
       temporalAccessor
           .map(AtomizedLocalDate::fromTemporalAccessor)
           .ifPresent(
@@ -78,6 +67,19 @@ public class TemporalInterpreter implements Serializable {
               });
     }
     addIssueSet(tr, eventResult.getIssues());
+  }
+
+  public void interpretTemporalRange(ExtendedRecord er, TemporalRecord tr) {
+    String year = extractValue(er, DwcTerm.year);
+    String month = extractValue(er, DwcTerm.month);
+    String day = extractValue(er, DwcTerm.day);
+    String eventDate = extractValue(er, DwcTerm.eventDate);
+
+    EventRange eventRange = temporalRangeParser.parse(year, month, day, eventDate);
+    EventDate ed = new EventDate();
+    eventRange.getFrom().map(TemporalAccessor::toString).ifPresent(ed::setGte);
+    eventRange.getTo().map(TemporalAccessor::toString).ifPresent(ed::setLte);
+    tr.setEventDate(ed);
   }
 
   public void interpretModified(ExtendedRecord er, TemporalRecord tr) {
