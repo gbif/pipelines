@@ -6,14 +6,15 @@ import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.kvs.ALAPipelinesConfigFactory;
 import au.org.ala.kvs.cache.ALAAttributionKVStoreFactory;
 import au.org.ala.kvs.cache.SDSCheckKVStoreFactory;
+import au.org.ala.kvs.client.SDSConservationServiceFactory;
 import au.org.ala.pipelines.transforms.ALASensitiveDataTransform;
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
 import au.org.ala.pipelines.transforms.ALAUUIDTransform;
-import au.org.ala.sds.ws.client.ALASDSServiceClient;
 import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
-import au.org.ala.utils.WsUtils;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.function.UnaryOperator;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -24,7 +25,6 @@ import org.apache.beam.sdk.transforms.join.CoGroupByKey;
 import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
@@ -46,7 +46,7 @@ import org.slf4j.MDC;
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ALAInterpretedToSensitivePipeline {
-  public static final String GENERALISED_NAME = "generalised";
+  public static final boolean USE_GBIF_TAXONOMY = false;
 
   public static void main(String[] args) throws IOException {
     String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "sensitive");
@@ -60,8 +60,8 @@ public class ALAInterpretedToSensitivePipeline {
         ALAPipelinesConfigFactory.getInstance(
                 options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getProperties())
             .get();
-    ALASDSServiceClient sdsClient =
-        new ALASDSServiceClient(WsUtils.createConfiguration(config.getSds(), config));
+
+    String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
     MDC.put("datasetId", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
@@ -72,12 +72,7 @@ public class ALAInterpretedToSensitivePipeline {
         t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
     //    * "{targetPath}/{datasetId}/{attempt}/generalised/{name}/interpret-{uniqueId}"
     UnaryOperator<String> outputPathFn =
-        t ->
-            FsUtils.buildPath(
-                    FsUtils.buildDatasetAttemptPath(options, GENERALISED_NAME, false),
-                    t,
-                    Interpretation.FILE_NAME + "*" + AVRO_EXTENSION)
-                .toString();
+        t -> ALAFsUtils.buildPathGeneralisedUsingTargetPath(options, t, id);
     UnaryOperator<String> identifiersPathFn =
         t -> ALAFsUtils.buildPathIdentifiersUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
 
@@ -98,11 +93,11 @@ public class ALAInterpretedToSensitivePipeline {
             .datasetId(options.getDatasetId())
             .speciesStoreSupplier(SDSCheckKVStoreFactory.getInstanceSupplier(config))
             .dataResourceStoreSupplier(ALAAttributionKVStoreFactory.getInstanceSupplier(config))
-            .conservationService(sdsClient)
+            .conservationServiceSupplier(SDSConservationServiceFactory.getInstanceSupplier(config))
             .erTag(verbatimTransform.getTag())
             .trTag(temporalTransform.getTag())
             .lrTag(locationTransform.getTag())
-            .txrTag(taxonomyTransform.getTag())
+            .txrTag(USE_GBIF_TAXONOMY ? taxonomyTransform.getTag() : null)
             .atxrTag(alaTaxonomyTransform.getTag())
             .create();
 
@@ -119,9 +114,12 @@ public class ALAInterpretedToSensitivePipeline {
         p.apply("Read Location", locationTransform.read(inputPathFn))
             .apply("Map Location to KV", locationTransform.toKv());
 
-    PCollection<KV<String, TaxonRecord>> inputTaxonCollection =
-        p.apply("Read Location", taxonomyTransform.read(inputPathFn))
-            .apply("Map Location to KV", taxonomyTransform.toKv());
+    PCollection<KV<String, TaxonRecord>> inputTaxonCollection = null;
+    if (USE_GBIF_TAXONOMY) {
+      inputTaxonCollection =
+          p.apply("Read Location", taxonomyTransform.read(inputPathFn))
+              .apply("Map Location to KV", taxonomyTransform.toKv());
+    }
 
     // ALA Specific
     PCollection<KV<String, ALAUUIDRecord>> inputAlaUUidCollection =
@@ -138,13 +136,13 @@ public class ALAInterpretedToSensitivePipeline {
             .of(verbatimTransform.getTag(), inputVerbatimCollection)
             .and(temporalTransform.getTag(), inputTemporalCollection)
             .and(locationTransform.getTag(), inputLocationCollection)
-            .and(taxonomyTransform.getTag(), inputTaxonCollection)
             // ALA Specific
             .and(alaUuidTransform.getTag(), inputAlaUUidCollection)
             .and(alaTaxonomyTransform.getTag(), inputAlaTaxonCollection);
+    if (USE_GBIF_TAXONOMY)
+      inputTuples = inputTuples.and(taxonomyTransform.getTag(), inputTaxonCollection);
 
     log.info("Creating sensitivity records");
-
     PCollection<ALASensitivityRecord> sensitivityRecords =
         inputTuples
             .apply("Grouping objects", CoGroupByKey.create())
@@ -161,7 +159,7 @@ public class ALAInterpretedToSensitivePipeline {
         .and(alaSensitiveDataTransform.getTag(), sensitivityCollection)
         .apply(CoGroupByKey.create())
         .apply(alaSensitiveDataTransform.rewriter(ExtendedRecord.class, verbatimTransform.getTag()))
-        .apply(verbatimTransform.write(outputPathFn));
+        .apply(verbatimTransform.write(outputPathFn).withoutSharding());
 
     KeyedPCollectionTuple.of(temporalTransform.getTag(), inputTemporalCollection)
         .and(alaSensitiveDataTransform.getTag(), sensitivityCollection)
@@ -175,11 +173,13 @@ public class ALAInterpretedToSensitivePipeline {
         .apply(alaSensitiveDataTransform.rewriter(LocationRecord.class, locationTransform.getTag()))
         .apply(locationTransform.write(outputPathFn));
 
-    KeyedPCollectionTuple.of(taxonomyTransform.getTag(), inputTaxonCollection)
-        .and(alaSensitiveDataTransform.getTag(), sensitivityCollection)
-        .apply(CoGroupByKey.create())
-        .apply(alaSensitiveDataTransform.rewriter(TaxonRecord.class, taxonomyTransform.getTag()))
-        .apply(taxonomyTransform.write(outputPathFn));
+    if (USE_GBIF_TAXONOMY) {
+      KeyedPCollectionTuple.of(taxonomyTransform.getTag(), inputTaxonCollection)
+          .and(alaSensitiveDataTransform.getTag(), sensitivityCollection)
+          .apply(CoGroupByKey.create())
+          .apply(alaSensitiveDataTransform.rewriter(TaxonRecord.class, taxonomyTransform.getTag()))
+          .apply(taxonomyTransform.write(outputPathFn));
+    }
 
     KeyedPCollectionTuple.of(alaTaxonomyTransform.getTag(), inputAlaTaxonCollection)
         .and(alaSensitiveDataTransform.getTag(), sensitivityCollection)

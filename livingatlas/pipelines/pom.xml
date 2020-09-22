@@ -242,11 +242,11 @@
                 </ports>
                 <wait>
                   <http>
-                    <url>http://${alanm.host}:${alanm.port}/api/search?q=Acacia</url>
+                    <url>http://${sds.host}:${sds.port}/api/sensitiveDataFields</url>
                     <method>GET</method>
                     <status>200</status>
                   </http>
-                  <time>20000</time>
+                  <time>60000</time>
                 </wait>
               </run>
             </image>
@@ -265,6 +265,7 @@
 
     <!-- ALA libraries -->
     <ala-namematching-service.version>1.0-SNAPSHOT</ala-namematching-service.version>
+    <ala-sensitive-data-service.version>1.0-SNAPSHOT</ala-sensitive-data-service.version>
 
     <!-- Default port for ALA Name Matcher Docker container -->
     <alanm.port>9279</alanm.port>

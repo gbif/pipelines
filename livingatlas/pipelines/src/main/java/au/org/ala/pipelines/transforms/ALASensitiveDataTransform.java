@@ -13,6 +13,7 @@ import java.util.Set;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.DoFn;
@@ -56,7 +57,8 @@ public class ALASensitiveDataTransform
   private KeyValueStore<String, ALACollectoryMetadata> dataResourceStore;
   private final SerializableSupplier<KeyValueStore<String, ALACollectoryMetadata>>
       dataResourceStoreSupplier;
-  private final ConservationApi conservationService;
+  private ConservationApi conservationService;
+  private final SerializableSupplier<ConservationApi> conservationServiceSupplier;
   private Set<String> sensitiveFields;
   @NonNull private final TupleTag<ExtendedRecord> erTag;
   @NonNull private final TupleTag<TemporalRecord> trTag;
@@ -72,6 +74,7 @@ public class ALASensitiveDataTransform
       KeyValueStore<String, ALACollectoryMetadata> dataResourceStore,
       SerializableSupplier<KeyValueStore<String, ALACollectoryMetadata>> dataResourceStoreSupplier,
       ConservationApi conservationService,
+      SerializableSupplier<ConservationApi> conservationServiceSupplier,
       TupleTag<ExtendedRecord> erTag,
       TupleTag<TemporalRecord> trTag,
       TupleTag<LocationRecord> lrTag,
@@ -88,12 +91,12 @@ public class ALASensitiveDataTransform
     this.dataResourceStore = dataResourceStore;
     this.dataResourceStoreSupplier = dataResourceStoreSupplier;
     this.conservationService = conservationService;
+    this.conservationServiceSupplier = conservationServiceSupplier;
     this.erTag = erTag;
     this.trTag = trTag;
     this.lrTag = lrTag;
     this.txrTag = txrTag;
     this.atxrTag = atxrTag;
-    this.setup();
   }
 
   /**
@@ -115,6 +118,7 @@ public class ALASensitiveDataTransform
   }
 
   /** Beam @Setup initializes resources */
+  @Setup
   public void setup() {
     if (this.speciesStore == null && this.speciesStoreSupplier != null) {
       log.info("Initialize SensitiveSpeciesKvStore");
@@ -124,10 +128,15 @@ public class ALASensitiveDataTransform
       log.info("Initialize CollectoryKvStore");
       this.dataResourceStore = this.dataResourceStoreSupplier.get();
     }
+    if (this.conservationService == null && this.conservationServiceSupplier != null) {
+      log.info("Initialize Conservation API");
+      this.conservationService = this.conservationServiceSupplier.get();
+    }
     this.sensitiveFields = this.conservationService.getSensitiveDataFields();
   }
 
   /** Beam @Teardown closes initialized resources */
+  @Teardown
   public void tearDown() {
     // This section if uncommented cause CacheClosedExceptions
     // to be thrown by the transform due to its use
@@ -149,13 +158,14 @@ public class ALASensitiveDataTransform
 
     if (v == null) return Optional.empty();
 
-    ExtendedRecord ier = this.erTag == null ? null : v.getOnly(this.erTag);
-    TemporalRecord itr = this.trTag == null ? null : v.getOnly(this.trTag);
-    TaxonRecord itxr = this.erTag == null ? null : v.getOnly(this.txrTag);
-    ALATaxonRecord iatxr = this.atxrTag == null ? null : v.getOnly(this.atxrTag);
-    LocationRecord ilr = this.lrTag == null ? null : v.getOnly(lrTag);
+    ExtendedRecord ier = this.erTag == null ? null : v.getOnly(this.erTag, null);
+    TemporalRecord itr = this.trTag == null ? null : v.getOnly(this.trTag, null);
+    TaxonRecord itxr = this.txrTag == null ? null : v.getOnly(this.txrTag, null);
+    ALATaxonRecord iatxr = this.atxrTag == null ? null : v.getOnly(this.atxrTag, null);
+    LocationRecord ilr = this.lrTag == null ? null : v.getOnly(lrTag, null);
     ALASensitivityRecord sr = ALASensitivityRecord.newBuilder().setId(id).build();
-    ALACollectoryMetadata dataResource = dataResourceStore.get(datasetId);
+    ALACollectoryMetadata dataResource =
+        dataResourceStore == null ? null : dataResourceStore.get(datasetId);
 
     Map<String, String> properties = new HashMap<>(this.sensitiveFields.size());
     properties.put(
@@ -170,7 +180,7 @@ public class ALASensitiveDataTransform
     SensitiveDataInterpreter.constructFields(sensitiveFields, properties, ilr);
     SensitiveDataInterpreter.constructFields(sensitiveFields, properties, ier);
 
-    if (!SensitiveDataInterpreter.sourceQualityChecks(properties, sr, dataResource)) {
+    if (SensitiveDataInterpreter.sourceQualityChecks(properties, sr, dataResource)) {
       SensitiveDataInterpreter.sensitiveDataInterpreter(
           dataResource, speciesStore, conservationService, properties, sr);
     }
@@ -185,7 +195,7 @@ public class ALASensitiveDataTransform
    * @param <T> The type of record being re-written
    * @return A Singleton ParDo for the rewriter
    */
-  public <T> ParDo.SingleOutput<KV<String, CoGbkResult>, T> rewriter(
+  public <T extends SpecificRecordBase> ParDo.SingleOutput<KV<String, CoGbkResult>, T> rewriter(
       Class<T> clazz, TupleTag<T> ctag) {
     DoFn<KV<String, CoGbkResult>, T> fn =
         new DoFn<KV<String, CoGbkResult>, T>() {
@@ -199,11 +209,11 @@ public class ALASensitiveDataTransform
             CoGbkResult v = c.element().getValue();
             String k = c.element().getKey();
 
-            T record = v.getOnly(ctag);
+            T record = v.getOnly(ctag, null);
             T generalised = null;
             if (record == null) return;
-            ALASensitivityRecord sr = v.getOnly(ALASensitiveDataTransform.this.getTag());
-            if (sr == null || !sr.getSensitive()) {
+            ALASensitivityRecord sr = v.getOnly(ALASensitiveDataTransform.this.getTag(), null);
+            if (sr == null || sr.getSensitive() == null || !sr.getSensitive()) {
               generalised = record;
             } else {
               if (record instanceof ExtendedRecord) {

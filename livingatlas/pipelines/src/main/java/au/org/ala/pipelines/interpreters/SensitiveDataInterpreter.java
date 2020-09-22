@@ -6,13 +6,7 @@ import au.org.ala.sds.api.ConservationApi;
 import au.org.ala.sds.api.SensitivityQuery;
 import au.org.ala.sds.api.SensitivityReport;
 import au.org.ala.sds.api.SpeciesCheck;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -23,26 +17,26 @@ import org.gbif.api.vocabulary.InterpretationRemark;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.kvs.KeyValueStore;
-import org.gbif.pipelines.io.avro.ALASensitivityRecord;
-import org.gbif.pipelines.io.avro.ALATaxonRecord;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
-import org.gbif.pipelines.io.avro.TaxonRecord;
+import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.parsers.utils.ModelUtils;
 
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class SensitiveDataInterpreter {
-  private static String ORIGINAL_VALUES = "originalSensitiveValues";
-  private static String DATA_GENERALIZATIONS = "dataGeneralizations";
-  private static String GENERALISATION_TO_APPLY_IN_METRES = "generalisationToApplyInMetres";
-  private static String GENERALISATION_IN_METRES = "generalisationInMetres";
+  protected static String ORIGINAL_VALUES = "originalSensitiveValues";
+  protected static String DATA_GENERALIZATIONS = "dataGeneralizations";
+  protected static String GENERALISATION_TO_APPLY_IN_METRES = "generalisationToApplyInMetres";
+  protected static String GENERALISATION_IN_METRES = "generalisationInMetres";
 
   private static Set<String> TAXON_ROWS =
       new HashSet<String>(
           Arrays.asList(
               ALATaxonRecord.getClassSchema().getName(),
               OccurrenceHdfsRecord.getClassSchema().getName()));
+
+  /** Bits to skip when generically updating the temporal record */
+  private static Set<String> SKIP_TEMPORAL_UPDATE =
+      Collections.singleton(DwcTerm.eventDate.simpleName());
 
   /**
    * Construct information from the extended record.
@@ -52,52 +46,171 @@ public class SensitiveDataInterpreter {
    *
    * <p>If a field is already set, the current value is ignored.
    *
-   * @param sensitiveFields The list of sensitive fields
-   * @param fields The field map that we are constructing
+   * @param sensitive The list of sensitive properties
+   * @param properties The field map that we are constructing
    * @param er The extended record
    */
   public static void constructFields(
-      Set<String> sensitiveFields, Map<String, String> fields, ExtendedRecord er) {
+      Set<String> sensitive, Map<String, String> properties, ExtendedRecord er) {
     if (er == null) return;
     er.getExtensions()
         .values()
-        .forEach(el -> el.forEach(ext -> constructFields(sensitiveFields, fields, ext)));
-    constructFields(sensitiveFields, fields, er.getCoreTerms());
+        .forEach(el -> el.forEach(ext -> constructFields(sensitive, properties, ext)));
+    constructFields(sensitive, properties, er.getCoreTerms());
   }
 
   /**
-   * Construct information from an AVRO record
+   * Construct information from a taxon record.
    *
-   * <p>If a field is already set, the current value is ignored.
+   * <p>There needs to be a certain amount of decoding to translate to strict DwC
    *
-   * @param sensitiveFields The list of sensitive fields
-   * @param fields The field map that we are constructing
+   * <p>If a property is already set, the current value is ignored.
+   *
+   * @param sensitive The list of sensitive properties
+   * @param properties The field map that we are constructing
    * @param record A record
    */
   public static void constructFields(
-      Set<String> sensitiveFields, Map<String, String> fields, IndexedRecord record) {
-    int i = 0;
+      Set<String> sensitive, Map<String, String> properties, TaxonRecord record) {
+
+    if (record == null) return;
+    String scientificName = DwcTerm.scientificName.simpleName();
+    if (sensitive.contains(scientificName) && !properties.containsKey(scientificName)) {
+      if (record.getAcceptedUsage() != null)
+        properties.put(scientificName, record.getAcceptedUsage().getName());
+    }
+    String taxonConceptID = DwcTerm.taxonConceptID.simpleName();
+    if (sensitive.contains(taxonConceptID) && !properties.containsKey(taxonConceptID)) {
+      if (record.getAcceptedUsage() != null)
+        properties.put(taxonConceptID, record.getAcceptedUsage().getKey().toString());
+    }
+    String taxonRank = DwcTerm.taxonRank.simpleName();
+    if (sensitive.contains(taxonRank) && !properties.containsKey(taxonRank)) {
+      if (record.getAcceptedUsage() != null)
+        properties.put(taxonRank, record.getAcceptedUsage().getRank().name());
+    }
+    if (record.getClassification() != null) {
+      for (RankedName r : record.getClassification()) {
+        String rank = r.getRank().name().toLowerCase();
+        if (sensitive.contains(rank) && !properties.containsKey(rank)) {
+          properties.put(rank, r.getName());
+        }
+      }
+    }
+    constructFields(sensitive, properties, (IndexedRecord) record);
+  }
+
+  /**
+   * Construct information from a temporal record.
+   *
+   * <p>There needs to be a certain amount of decoding to translate to strict DwC
+   *
+   * <p>If a property is already set, the current value is ignored.
+   *
+   * @param sensitive The list of sensitive properties
+   * @param properties The field map that we are constructing
+   * @param record A record
+   */
+  public static void constructFields(
+      Set<String> sensitive, Map<String, String> properties, TemporalRecord record) {
+
+    if (record == null) return;
+    String eventDate = DwcTerm.eventDate.simpleName();
+    if (sensitive.contains(eventDate) && !properties.containsKey(eventDate)) {
+      if (record.getEventDate() != null) properties.put(eventDate, record.getEventDate().getGte());
+    }
+    constructFields(sensitive, properties, (IndexedRecord) record);
+  }
+
+  /**
+   * Construct information from a generic AVRO record
+   *
+   * <p>If a field is already set, the current value is ignored.
+   *
+   * @param sensitive The list of sensitive properties
+   * @param properties The field map that we are constructing
+   * @param record A record
+   */
+  public static void constructFields(
+      Set<String> sensitive, Map<String, String> properties, IndexedRecord record) {
 
     if (record == null) return;
     for (Schema.Field f : record.getSchema().getFields()) {
       String name = f.name();
-      if (sensitiveFields.contains(name) && !fields.containsKey(name)) {
-        Object value = record.get(i);
-        fields.put(name, value == null ? null : value.toString());
+      if (sensitive.contains(name) && !properties.containsKey(name)) {
+        Object value = record.get(f.pos());
+        properties.put(name, value == null ? null : value.toString());
       }
-      i++;
     }
   }
 
   protected static void constructFields(
-      Set<String> sensitiveFields, Map<String, String> fields, Map<String, String> values) {
+      Set<String> sensitive, Map<String, String> properties, Map<String, String> values) {
     values
         .entrySet()
         .forEach(
             e -> {
-              if (sensitiveFields.contains(e.getKey()) && !fields.containsKey(e.getKey()))
-                fields.put(e.getKey(), e.getValue());
+              if (sensitive.contains(e.getKey()) && !properties.containsKey(e.getKey()))
+                properties.put(e.getKey(), e.getValue());
             });
+  }
+
+  /**
+   * Apply sensitive data changes to a generic AVRO record.
+   *
+   * @param sr The sensitivity recoord
+   * @param record The record to apply this to
+   */
+  public static void applySensitivity(ALASensitivityRecord sr, IndexedRecord record) {
+    applySensitivity(sr, record, Collections.emptySet());
+  }
+
+  /**
+   * Apply sensitive data changes to a temporal record.
+   *
+   * @param sr The sensitivity record
+   * @param record The record to apply this to
+   */
+  public static void applySensitivity(ALASensitivityRecord sr, TemporalRecord record) {
+    Map<String, String> altered = sr.getAltered();
+    String eventDate = DwcTerm.eventDate.simpleName();
+    if (altered.containsKey(eventDate)) {
+      String newDate = altered.get(eventDate);
+      record.setEventDate(EventDate.newBuilder().setGte(newDate).setLte(newDate).build());
+    }
+    applySensitivity(sr, record, SKIP_TEMPORAL_UPDATE);
+  }
+
+  /**
+   * Apply sensitive data changes to a taxon record.
+   *
+   * <p>If there is an update to scientific name/rank then a new accepted usage is given and other
+   * elements (classification, usage, synonym, etc. are set to null)
+   *
+   * @param sr The sensitivity record
+   * @param record The record to apply this to
+   */
+  public static void applySensitivity(ALASensitivityRecord sr, TaxonRecord record) {
+    Map<String, String> altered = sr.getAltered();
+    String scientificName = DwcTerm.scientificName.simpleName();
+    String taxonRank = DwcTerm.taxonRank.simpleName();
+    if (altered.containsKey(scientificName) || altered.containsKey(taxonRank)) {
+      Optional<RankedName> name = Optional.ofNullable(record.getAcceptedUsage());
+      String newScientificName =
+          altered.getOrDefault(scientificName, name.map(RankedName::getName).orElse(null));
+      String newTaxonRank =
+          altered.getOrDefault(
+              taxonRank,
+              name.map(RankedName::getRank).map(Rank::name).orElse(Rank.UNRANKED.name()));
+      record.setAcceptedUsage(
+          RankedName.newBuilder()
+              .setName(newScientificName)
+              .setRank(Rank.valueOf(newTaxonRank.toUpperCase()))
+              .build());
+      record.setClassification(null);
+      record.setSynonym(null);
+      record.setUsage(null);
+    }
   }
 
   /**
@@ -105,18 +218,63 @@ public class SensitiveDataInterpreter {
    *
    * @param sr The sensitivity record
    * @param record A record
+   * @param ignore Any fields to ignore (because they have already been dealt with)
    */
-  public static void applySensitivity(ALASensitivityRecord sr, IndexedRecord record) {
+  // TODO: This interprets the incoming value against the schema.
+  // There has to be a better way
+  protected static void applySensitivity(
+      ALASensitivityRecord sr, IndexedRecord record, Set<String> ignore) {
     Map<String, String> altered = sr.getAltered();
-    int i = 0;
 
     if (altered == null || altered.isEmpty()) return;
     for (Schema.Field f : record.getSchema().getFields()) {
       String name = f.name();
-      if (altered.containsKey(name)) {
-        record.put(i, altered.get(name));
+      if (altered.containsKey(name) && !ignore.contains(name)) {
+        String s = altered.get(name);
+        Schema schema = f.schema();
+        Object v = null;
+        if (s != null) {
+          for (Schema type : schema.getTypes()) {
+            try {
+              Schema.Type st = type.getType();
+              switch (type.getType()) {
+                case NULL:
+                  break;
+                case STRING:
+                  v = s;
+                  break;
+                case INT:
+                  v = Integer.parseInt(s);
+                  break;
+                case LONG:
+                  v = Long.parseLong(s);
+                  break;
+                case FLOAT:
+                  v = Float.parseFloat(s);
+                  break;
+                case DOUBLE:
+                  v = Double.parseDouble(s);
+                  break;
+                default:
+                  throw new IllegalStateException(
+                      "Unable to parse value of type "
+                          + st
+                          + " for field "
+                          + name
+                          + " in schema "
+                          + schema);
+              }
+              if (v != null) break;
+            } catch (NumberFormatException ex) {
+              // Silently ignore in the hope that something comes along later
+            }
+          }
+          if (v == null)
+            throw new IllegalArgumentException(
+                "Unable to parse " + s + " for field " + name + " from schema " + schema);
+        }
+        record.put(f.pos(), v);
       }
-      i++;
     }
   }
 
@@ -135,7 +293,7 @@ public class SensitiveDataInterpreter {
     Map<String, String> altered = sr.getAltered();
     values.forEach(
         (k, v) -> {
-          if (values.containsKey(k)) values.put(k, altered.get(k));
+          if (altered.containsKey(k) && values.containsKey(k)) values.put(k, altered.get(k));
         });
   }
 
