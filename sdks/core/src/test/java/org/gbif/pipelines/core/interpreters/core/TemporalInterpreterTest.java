@@ -14,11 +14,20 @@ import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.junit.Before;
 import org.junit.Test;
 
 public class TemporalInterpreterTest {
 
-  TemporalInterpreter temporalInterpreter = TemporalInterpreter.builder().create();
+  private TemporalInterpreter temporalInterpreter;
+
+  @Before
+  public void init() {
+    Map<String, String> normalizerMap = new HashMap<>(2);
+    normalizerMap.put(" & ", "/");
+    normalizerMap.put(" to ", "/");
+    temporalInterpreter = TemporalInterpreter.builder().normalizeMap(normalizerMap).create();
+  }
 
   @Test
   public void testYearMonth() {
