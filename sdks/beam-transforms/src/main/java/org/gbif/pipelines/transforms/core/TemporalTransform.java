@@ -1,11 +1,5 @@
 package org.gbif.pipelines.transforms.core;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Metrics.TEMPORAL_RECORDS_COUNT;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.TEMPORAL;
-
-import java.time.Instant;
-import java.util.Map;
-import java.util.Optional;
 import lombok.Builder;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
@@ -18,6 +12,13 @@ import org.gbif.pipelines.core.interpreters.core.TemporalInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.transforms.Transform;
+
+import java.time.Instant;
+import java.util.Map;
+import java.util.Optional;
+
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.TEMPORAL_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.TEMPORAL;
 
 /**
  * Beam level transformations for the DWC Event, reads an avro, writes an avro, maps from value to
@@ -48,11 +49,10 @@ public class TemporalTransform extends Transform<ExtendedRecord, TemporalRecord>
   @Setup
   public void setup() {
     if (temporalInterpreter == null) {
-      temporalInterpreter =
-          TemporalInterpreter.builder()
-              .dateComponentOrdering(dateComponentOrdering)
-              .normalizeMap(mapSupplier.get())
-              .create();
+      TemporalInterpreter.TemporalInterpreterBuilder b =
+          TemporalInterpreter.builder().dateComponentOrdering(dateComponentOrdering);
+      Optional.ofNullable(mapSupplier).ifPresent(s -> b.normalizeMap(s.get()));
+      temporalInterpreter = b.create();
     }
   }
 

@@ -128,7 +128,7 @@ public class TemporalRecordTransformTest {
     TemporalRecord expected1 =
         TemporalRecord.newBuilder()
             .setId("0")
-            .setEventDate(EventDate.newBuilder().setGte("1999-02-01").build())
+            .setEventDate(EventDate.newBuilder().setGte("1999-02-01T12:26Z").build())
             .setYear(1999)
             .setMonth(2)
             .setDay(1)

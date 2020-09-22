@@ -4,6 +4,7 @@ import static org.gbif.common.parsers.date.DateComponentOrdering.*;
 import static org.gbif.pipelines.core.parsers.temporal.TemporalParser.isValidDate;
 
 import com.google.common.base.Strings;
+import java.io.Serializable;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.util.Collections;
@@ -20,7 +21,7 @@ import org.gbif.common.parsers.date.DateParsers;
 import org.gbif.common.parsers.date.TemporalAccessorUtils;
 
 @Slf4j
-public class TemporalRangeParser {
+public class TemporalRangeParser implements Serializable {
 
   private final org.gbif.common.parsers.date.TemporalParser temporalParser;
   @Builder.Default private Map<String, String> normalizeMap = Collections.emptyMap();
