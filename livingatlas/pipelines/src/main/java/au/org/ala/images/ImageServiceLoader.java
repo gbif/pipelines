@@ -82,7 +82,7 @@ public class ImageServiceLoader {
       log.info("Polling image service until complete...");
       if (!batchUploadResponse.getStatus().equals("COMPLETE")) {
         log.info(" Status " + batchUploadResponse.getStatus() + " sleeping....");
-        Thread.sleep(5000);
+        Thread.sleep(options.getSleepTimeInMillis());
       }
     }
 

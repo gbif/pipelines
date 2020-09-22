@@ -52,6 +52,8 @@ dwca-avro --> interpret --> uuid -->                │
 -  'interpret' reads a Dwc-A, interprets it and write the interpreted data and the issues in Avro files;
 -  'uuid' minting on new records and rematching existing UUIDs to records that have been previously loaded;
 -  'export-latlng' exports a unique set of coordinates for a dataset into CSV;
+-  'image-load' pushing an export of multimedia to the image service;
+-  'image-sync' retrieve details of images stored in image service for indexing purposes;
 -  'sample' crawl the LA layers. Requires an input csv containing lat, lng (no header) and output directory.
 -  'sample-avro' adds a sampling AVRO extension to the stored interpretation
 -  'index' reads a Dwc-A, interprets it and index the interpeted data creating a SOLR index.
@@ -66,6 +68,7 @@ Usage:
   $CMD [options] interpret     (<dr>...|all) $WHEREL
   $CMD [options] validate      (<dr>...|all)         $WHERE
   $CMD [options] uuid          (<dr>...|all)         $WHERE
+  $CMD [options] image-load    (<dr>...|all)
   $CMD [options] image-sync    (<dr>...|all)         $WHERE
   $CMD [options] export-latlng (<dr>...|all)         $WHERE
   $CMD [options] sample        (<dr>...|all)
@@ -452,6 +455,23 @@ function uuid () {
     logStepEnd "UUID" $dr $ltype $SECONDS
 }
 
+function image-load () {
+    dr=$1
+    CLASS=au.org.ala.images.ImageServiceLoader
+
+    logStepStart "Image load" $dr
+    SECONDS=0
+
+    PRE=image-load-sh-args.local
+    $_D java $EXTRA_JVM_CLI_ARGS \
+        $(getConf $PRE.jvm)  \
+        -cp $PIPELINES_JAR $CLASS \
+        --datasetId=$dr \
+        --config=$config $ARGS
+
+    logStepEnd "Image load" $dr local $SECONDS
+}
+
 function image-sync () {
     dr=$1
     ltype=$2
@@ -472,7 +492,7 @@ function image-sync () {
     PRE=exportimage-sync-sh-args.spark-cluster
     if [[ $ltype = "spark-cluster" ]] ; then
         $_D /data/spark/bin/spark-submit \
-            --name "Export $dr" \
+            --name "Image-sync $dr" \
             $(toArg $PRE num-executors) \
             $(toArg $PRE executor-cores) \
             $(toArg $PRE executor-memory) \
@@ -764,6 +784,28 @@ if ($export_latlng || $do_all); then
           fi
       done < /tmp/dataset-counts.csv
   fi
+fi
+
+if ($image_load || $do_all); then
+    if [[ $drs != "all" ]] ; then
+        image-load $drs
+    else
+        while IFS=, read -r datasetID recordCount
+        do
+            image-load $datasetID
+        done < /tmp/dataset-counts.csv
+    fi
+fi
+
+if ($image_sync || $do_all); then
+    if [[ $drs != "all" ]] ; then
+        image-sync $drs
+    else
+        while IFS=, read -r datasetID recordCount
+        do
+            image-sync $datasetID
+        done < /tmp/dataset-counts.csv
+    fi
 fi
 
 if ($sample || $do_all); then
