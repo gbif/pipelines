@@ -44,6 +44,12 @@ public class ALAFsUtils {
         .toString();
   }
 
+  public static String buildPathMultimediaUsingTargetPath(BasePipelineOptions options) {
+    return FsUtils.buildPath(
+            FsUtils.buildDatasetAttemptPath(options, "interpreted", false), "multimedia")
+        .toString();
+  }
+
   /**
    * Constructs the path for reading / writing sampling. This is written outside of /interpreted
    * directory.

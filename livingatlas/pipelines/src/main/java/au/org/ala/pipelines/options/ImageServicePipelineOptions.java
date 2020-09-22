@@ -7,8 +7,19 @@ import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 public interface ImageServicePipelineOptions extends InterpretationPipelineOptions {
 
   @Description("Image Service Url")
-  @Default.String("https://images-dev.ala.org.au")
   String getImageServiceUrl();
 
   void setImageServiceUrl(String imageServiceUrl);
+
+  @Description("Image Service sleep time between polling")
+  @Default.Integer(5000)
+  Integer getSleepTimeInMillis();
+
+  void setSleepTimeInMillis(Integer sleepTime);
+
+  @Description("Use async uploads")
+  @Default.Boolean(false)
+  boolean isAsyncUpload();
+
+  void setAsyncUpload(boolean asyncUpload);
 }
