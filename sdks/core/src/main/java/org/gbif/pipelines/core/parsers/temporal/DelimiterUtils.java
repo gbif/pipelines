@@ -1,9 +1,8 @@
 package org.gbif.pipelines.core.parsers.temporal;
 
+import java.util.regex.Pattern;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-
-import java.util.regex.Pattern;
 
 /**
  * Contains methods which can delimit raw string into raw array, example: "10-10-2010" to {"10",

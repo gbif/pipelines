@@ -3,10 +3,6 @@ package org.gbif.pipelines.core.parsers.temporal;
 import static org.gbif.common.parsers.date.DateComponentOrdering.DMY;
 import static org.junit.Assert.*;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.YearMonth;
-import java.time.temporal.TemporalAccessor;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.junit.Test;
 
