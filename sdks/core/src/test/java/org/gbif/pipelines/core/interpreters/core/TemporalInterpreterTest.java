@@ -2,13 +2,10 @@ package org.gbif.pipelines.core.interpreters.core;
 
 import static org.gbif.common.parsers.date.DateComponentOrdering.DMY;
 import static org.gbif.common.parsers.date.DateComponentOrdering.MDY;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
-import java.time.LocalDateTime;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.TimeZone;
+import java.util.*;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
@@ -38,14 +35,12 @@ public class TemporalInterpreterTest {
     TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
 
     temporalInterpreter.interpretTemporal(er, tr);
-    temporalInterpreter.interpretTemporalRange(er, tr);
 
-    assertDate("1879-10-01T00:00", tr.getEventDate().getGte());
-    assertDate("1879-10-31T23:59:59", tr.getEventDate().getLte());
+    assertEquals("1879-10", tr.getEventDate().getGte());
+    assertNull(tr.getEventDate().getLte());
     assertEquals(1879, tr.getYear().intValue());
     assertEquals(10, tr.getMonth().intValue());
     assertNull(tr.getDay());
-
     assertEquals(0, tr.getIssues().getIssueList().size());
   }
 
@@ -58,10 +53,9 @@ public class TemporalInterpreterTest {
     TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
 
     temporalInterpreter.interpretTemporal(er, tr);
-    temporalInterpreter.interpretTemporalRange(er, tr);
 
-    assertDate("1879-01-01T00:00", tr.getEventDate().getGte());
-    assertDate("1879-12-31T23:59:59", tr.getEventDate().getLte());
+    assertEquals("1879", tr.getEventDate().getGte());
+    assertNull(tr.getEventDate().getLte());
     assertEquals(1879, tr.getYear().intValue());
     assertNull(tr.getMonth());
     assertNull(tr.getDay());
@@ -80,14 +74,13 @@ public class TemporalInterpreterTest {
     TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
 
     temporalInterpreter.interpretTemporal(er, tr);
-    temporalInterpreter.interpretTemporalRange(er, tr);
     temporalInterpreter.interpretModified(er, tr);
     temporalInterpreter.interpretDateIdentified(er, tr);
 
-    assertDate("2014", tr.getModified());
-    assertDate("2012", tr.getDateIdentified());
-    assertDate("1879-01-01T00:00", tr.getEventDate().getGte());
-    assertDate("1879-12-31T23:59:59", tr.getEventDate().getLte());
+    assertEquals("2014", tr.getModified());
+    assertEquals("2012", tr.getDateIdentified());
+    assertEquals("1879", tr.getEventDate().getGte());
+    assertNull(tr.getEventDate().getLte());
     assertEquals(1879, tr.getYear().intValue());
     assertNull(tr.getMonth());
     assertNull(tr.getDay());
@@ -108,13 +101,13 @@ public class TemporalInterpreterTest {
     TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
 
     temporalInterpreter.interpretTemporal(er, tr);
-    temporalInterpreter.interpretTemporalRange(er, tr);
     temporalInterpreter.interpretModified(er, tr);
     temporalInterpreter.interpretDateIdentified(er, tr);
 
-    assertDate("2014-01-11", tr.getModified());
-    assertDate("2012-01-11", tr.getDateIdentified());
-    assertDate("1879-11-01", tr.getEventDate().getGte());
+    assertEquals("2014-01-11", tr.getModified());
+    assertEquals("2012-01-11", tr.getDateIdentified());
+    assertEquals("1879-11-01", tr.getEventDate().getGte());
+    assertNull(tr.getEventDate().getLte());
     assertEquals(1879, tr.getYear().intValue());
     assertEquals(11, tr.getMonth().intValue());
     assertEquals(1, tr.getDay().intValue());
@@ -132,13 +125,12 @@ public class TemporalInterpreterTest {
     TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
 
     temporalInterpreter.interpretTemporal(er, tr);
-    temporalInterpreter.interpretTemporalRange(er, tr);
     temporalInterpreter.interpretModified(er, tr);
     temporalInterpreter.interpretDateIdentified(er, tr);
 
-    assertDate("2014-01-11", tr.getModified());
-    assertDate("2012-01-11", tr.getDateIdentified());
-    assertDate("1999-11-11T12:22", tr.getEventDate().getGte());
+    assertEquals("2014-01-11", tr.getModified());
+    assertEquals("2012-01-11", tr.getDateIdentified());
+    assertEquals("1999-11-11T12:22", tr.getEventDate().getGte());
     assertNull(tr.getEventDate().getLte());
     assertEquals(1999, tr.getYear().intValue());
     assertEquals(11, tr.getMonth().intValue());
@@ -227,7 +219,7 @@ public class TemporalInterpreterTest {
     er.getCoreTerms().put(DcTerm.modified.qualifiedName(), "2018-10-15 16:21:48");
     temporalInterpreter.interpretModified(er, tr);
     assertEquals(0, tr.getIssues().getIssueList().size());
-    assertDate("2018-10-15T16:21:48", tr.getModified());
+    assertEquals("2018-10-15T16:21:48", tr.getModified());
   }
 
   @Test
@@ -249,7 +241,8 @@ public class TemporalInterpreterTest {
   /** Parsing ambigous date like 01/02/1999 with D/M/Y format */
   @Test
   public void testDmyDate() {
-    TemporalInterpreter ti = TemporalInterpreter.builder().dateComponentOrdering(DMY).create();
+    TemporalInterpreter ti =
+        TemporalInterpreter.builder().orderings(Collections.singletonList(DMY)).create();
 
     Map<String, String> map = new HashMap<>();
     map.put(DwcTerm.eventDate.qualifiedName(), "1/11/1879");
@@ -259,14 +252,13 @@ public class TemporalInterpreterTest {
     TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
 
     ti.interpretTemporal(er, tr);
-    ti.interpretTemporalRange(er, tr);
     ti.interpretModified(er, tr);
     ti.interpretDateIdentified(er, tr);
 
-    assertDate("1940-02-23", tr.getModified());
-    assertDate("1920-02-20", tr.getDateIdentified());
-    assertDate("1879-11-01T00:00", tr.getEventDate().getGte());
-    assertDate("1879-11-01T23:59:59", tr.getEventDate().getLte());
+    assertEquals("1940-02-23", tr.getModified());
+    assertEquals("1920-02-20", tr.getDateIdentified());
+    assertEquals("1879-11-01", tr.getEventDate().getGte());
+    assertNull(tr.getEventDate().getLte());
     assertEquals(1879, tr.getYear().intValue());
     assertEquals(11, tr.getMonth().intValue());
     assertEquals(1, tr.getDay().intValue());
@@ -274,7 +266,8 @@ public class TemporalInterpreterTest {
 
   @Test
   public void testMdyDate() {
-    TemporalInterpreter ti = TemporalInterpreter.builder().dateComponentOrdering(MDY).create();
+    TemporalInterpreter ti =
+        TemporalInterpreter.builder().orderings(Collections.singletonList(MDY)).create();
 
     Map<String, String> map = new HashMap<>();
     map.put(DwcTerm.eventDate.qualifiedName(), "1/11/1879");
@@ -284,14 +277,13 @@ public class TemporalInterpreterTest {
     TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
 
     ti.interpretTemporal(er, tr);
-    ti.interpretTemporalRange(er, tr);
     ti.interpretModified(er, tr);
     ti.interpretDateIdentified(er, tr);
 
-    assertDate("1940-02-23", tr.getModified());
-    assertDate("1920-02-20", tr.getDateIdentified());
-    assertDate("1879-01-11T00:00", tr.getEventDate().getGte());
-    assertDate("1879-01-11T23:59:59", tr.getEventDate().getLte());
+    assertEquals("1940-02-23", tr.getModified());
+    assertEquals("1920-02-20", tr.getDateIdentified());
+    assertEquals("1879-01-11", tr.getEventDate().getGte());
+    assertNull(tr.getEventDate().getLte());
   }
 
   @Test
@@ -304,13 +296,12 @@ public class TemporalInterpreterTest {
 
     // When
     temporalInterpreter.interpretTemporal(er, tr);
-    temporalInterpreter.interpretTemporalRange(er, tr);
 
     // Should
     assertEquals(2004, tr.getYear().intValue());
     assertEquals(11, tr.getMonth().intValue());
-    assertEquals(LocalDateTime.of(2004, 11, 1, 0, 0).toString(), tr.getEventDate().getGte());
-    assertEquals(LocalDateTime.of(2005, 2, 28, 23, 59, 59).toString(), tr.getEventDate().getLte());
+    assertEquals("2004-11", tr.getEventDate().getGte());
+    assertEquals("2005-02", tr.getEventDate().getLte());
   }
 
   @Test
@@ -323,13 +314,12 @@ public class TemporalInterpreterTest {
 
     // When
     temporalInterpreter.interpretTemporal(er, tr);
-    temporalInterpreter.interpretTemporalRange(er, tr);
 
     // Should
     assertEquals(2004, tr.getYear().intValue());
     assertEquals(2, tr.getMonth().intValue());
-    assertEquals(LocalDateTime.of(2004, 2, 1, 0, 0).toString(), tr.getEventDate().getGte());
-    assertEquals(LocalDateTime.of(2004, 12, 31, 23, 59, 59).toString(), tr.getEventDate().getLte());
+    assertEquals("2004-02", tr.getEventDate().getGte());
+    assertEquals("2004-12", tr.getEventDate().getLte());
   }
 
   @Test
@@ -342,13 +332,13 @@ public class TemporalInterpreterTest {
 
     // When
     temporalInterpreter.interpretTemporal(er, tr);
-    temporalInterpreter.interpretTemporalRange(er, tr);
 
     // Should
     assertEquals(2004, tr.getYear().intValue());
     assertEquals(2, tr.getMonth().intValue());
-    assertEquals(LocalDateTime.of(2004, 2, 1, 0, 0).toString(), tr.getEventDate().getGte());
-    assertEquals(LocalDateTime.of(2004, 3, 31, 23, 59, 59).toString(), tr.getEventDate().getLte());
+    assertNull(tr.getDay());
+    assertEquals("2004-02", tr.getEventDate().getGte());
+    assertEquals("2004-03", tr.getEventDate().getLte());
   }
 
   @Test
@@ -360,30 +350,20 @@ public class TemporalInterpreterTest {
     TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
 
     // When
-    temporalInterpreter.interpretTemporalRange(er, tr);
+    temporalInterpreter.interpretTemporal(er, tr);
 
     // Should
-    assertEquals(LocalDateTime.of(2004, 2, 1, 0, 0).toString(), tr.getEventDate().getGte());
-    assertEquals(LocalDateTime.of(2004, 3, 2, 23, 59, 59).toString(), tr.getEventDate().getLte());
+    assertEquals("2004-02-01", tr.getEventDate().getGte());
+    assertEquals("2004-03-02", tr.getEventDate().getLte());
 
     // State
     map.put(DwcTerm.eventDate.qualifiedName(), "2004-2-1 & 3-2");
 
     // When
-    temporalInterpreter.interpretTemporalRange(er, tr);
+    temporalInterpreter.interpretTemporal(er, tr);
 
     // Should
-    assertEquals(LocalDateTime.of(2004, 2, 1, 0, 0).toString(), tr.getEventDate().getGte());
-    assertEquals(LocalDateTime.of(2004, 3, 2, 23, 59, 59).toString(), tr.getEventDate().getLte());
-  }
-
-  /** @param expected expected date in ISO yyyy-MM-dd format */
-  private void assertDate(String expected, String result) {
-    if (expected == null) {
-      assertNull(result);
-    } else {
-      assertNotNull("Missing date", result);
-      assertEquals(expected, result);
-    }
+    assertEquals("2004-02-01", tr.getEventDate().getGte());
+    assertEquals("2004-03-02", tr.getEventDate().getLte());
   }
 }

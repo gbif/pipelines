@@ -10,9 +10,7 @@ import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
-import java.util.EnumSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.vocabulary.OccurrenceIssue;
@@ -32,30 +30,21 @@ public class TemporalParser implements Serializable {
 
   private final org.gbif.common.parsers.date.TemporalParser temporalParser;
 
-  private TemporalParser(DateComponentOrdering dateComponentOrdering) {
-    if (dateComponentOrdering != null) {
-
-      DateComponentOrdering[] orderings;
-      if (dateComponentOrdering.name().equalsIgnoreCase("DMY")) {
-        orderings = DMY_FORMATS;
-      } else if (dateComponentOrdering.name().equalsIgnoreCase("MDY")) {
-        orderings = MDY_FORMATS;
-      } else {
-        orderings = ISO_FORMATS;
-      }
-
-      temporalParser = CustomizedTextDateParser.getInstance(orderings);
+  private TemporalParser(List<DateComponentOrdering> orderings) {
+    if (orderings != null && !orderings.isEmpty()) {
+      DateComponentOrdering[] array = orderings.toArray(new DateComponentOrdering[0]);
+      temporalParser = CustomizedTextDateParser.getInstance(array);
     } else {
       temporalParser = DateParsers.defaultTemporalParser();
     }
   }
 
-  public static TemporalParser create(DateComponentOrdering dateComponentOrdering) {
-    return new TemporalParser(dateComponentOrdering);
+  public static TemporalParser create(List<DateComponentOrdering> orderings) {
+    return new TemporalParser(orderings);
   }
 
   public static TemporalParser create() {
-    return create(null);
+    return create(Collections.emptyList());
   }
 
   /**

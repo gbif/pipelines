@@ -5,6 +5,8 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.MULTIMEDIA_DATE_INVALID;
 import com.google.common.base.Strings;
 import java.net.URI;
 import java.time.temporal.TemporalAccessor;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiPredicate;
@@ -143,16 +145,16 @@ public class AudubonInterpreter {
 
   private final TemporalParser temporalParser;
 
-  private AudubonInterpreter(DateComponentOrdering dateComponentOrdering) {
-    this.temporalParser = TemporalParser.create(dateComponentOrdering);
+  private AudubonInterpreter(List<DateComponentOrdering> orderings) {
+    this.temporalParser = TemporalParser.create(orderings);
   }
 
-  public static AudubonInterpreter create(DateComponentOrdering dateComponentOrdering) {
-    return new AudubonInterpreter(dateComponentOrdering);
+  public static AudubonInterpreter create(List<DateComponentOrdering> orderings) {
+    return new AudubonInterpreter(orderings);
   }
 
   public static AudubonInterpreter create() {
-    return create(null);
+    return create(Collections.emptyList());
   }
 
   /**

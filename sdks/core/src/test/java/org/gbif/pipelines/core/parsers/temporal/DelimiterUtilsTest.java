@@ -11,11 +11,6 @@ public class DelimiterUtilsTest {
 
   @Test
   public void testISORange() {
-    // todo
-    // assertArrayEquals(new String[] {"1998-9-30", "1998-10-7"},
-    // DelimiterUtils.splitPeriod("1998-9-30 & 10-7"));
-    // assertArrayEquals(new String[]{"1999-01-20",
-    // "1999-01-31"},DelimiterUtils.splitISODateRange("19990120/31"));
     assertArrayEquals(
         new String[] {"1999-01-20", "1999-01-31"},
         DelimiterUtils.splitISODateRange("1999-01-20/31"));

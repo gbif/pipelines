@@ -8,6 +8,8 @@ import com.google.common.base.Strings;
 import java.io.Serializable;
 import java.net.URI;
 import java.time.temporal.TemporalAccessor;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiPredicate;
@@ -67,16 +69,16 @@ public class MultimediaInterpreter implements Serializable {
 
   private final TemporalParser temporalParser;
 
-  private MultimediaInterpreter(DateComponentOrdering dateComponentOrdering) {
-    this.temporalParser = TemporalParser.create(dateComponentOrdering);
+  private MultimediaInterpreter(List<DateComponentOrdering> ordering) {
+    this.temporalParser = TemporalParser.create(ordering);
   }
 
-  public static MultimediaInterpreter create(DateComponentOrdering dateComponentOrdering) {
-    return new MultimediaInterpreter(dateComponentOrdering);
+  public static MultimediaInterpreter create(List<DateComponentOrdering> ordering) {
+    return new MultimediaInterpreter(ordering);
   }
 
   public static MultimediaInterpreter create() {
-    return create(null);
+    return create(Collections.emptyList());
   }
 
   /**

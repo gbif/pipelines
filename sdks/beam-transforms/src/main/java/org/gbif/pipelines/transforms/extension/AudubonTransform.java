@@ -4,6 +4,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AUDUBON_RECOR
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.AUDUBON;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import lombok.Builder;
 import org.apache.beam.sdk.transforms.MapElements;
@@ -29,20 +30,20 @@ import org.gbif.pipelines.transforms.Transform;
  */
 public class AudubonTransform extends Transform<ExtendedRecord, AudubonRecord> {
 
-  private final DateComponentOrdering dateComponentOrdering;
+  private final List<DateComponentOrdering> orderings;
   private AudubonInterpreter audubonInterpreter;
 
   @Builder(buildMethodName = "create")
-  private AudubonTransform(DateComponentOrdering dateComponentOrdering) {
+  private AudubonTransform(List<DateComponentOrdering> orderings) {
     super(AudubonRecord.class, AUDUBON, AudubonTransform.class.getName(), AUDUBON_RECORDS_COUNT);
-    this.dateComponentOrdering = dateComponentOrdering;
+    this.orderings = orderings;
   }
 
   /** Beam @Setup initializes resources */
   @Setup
   public void setup() {
     if (audubonInterpreter == null) {
-      audubonInterpreter = AudubonInterpreter.create(dateComponentOrdering);
+      audubonInterpreter = AudubonInterpreter.create(orderings);
     }
   }
 

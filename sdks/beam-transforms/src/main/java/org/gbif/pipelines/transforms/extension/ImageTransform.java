@@ -4,6 +4,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.IMAGE_RECORDS
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.IMAGE;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import lombok.Builder;
 import org.apache.beam.sdk.transforms.MapElements;
@@ -29,20 +30,20 @@ import org.gbif.pipelines.transforms.Transform;
  */
 public class ImageTransform extends Transform<ExtendedRecord, ImageRecord> {
 
-  private final DateComponentOrdering dateComponentOrdering;
+  private final List<DateComponentOrdering> orderings;
   private ImageInterpreter imageInterpreter;
 
   @Builder(buildMethodName = "create")
-  private ImageTransform(DateComponentOrdering dateComponentOrdering) {
+  private ImageTransform(List<DateComponentOrdering> orderings) {
     super(ImageRecord.class, IMAGE, ImageTransform.class.getName(), IMAGE_RECORDS_COUNT);
-    this.dateComponentOrdering = dateComponentOrdering;
+    this.orderings = orderings;
   }
 
   /** Beam @Setup initializes resources */
   @Setup
   public void setup() {
     if (imageInterpreter == null) {
-      imageInterpreter = ImageInterpreter.create(dateComponentOrdering);
+      imageInterpreter = ImageInterpreter.create(orderings);
     }
   }
 

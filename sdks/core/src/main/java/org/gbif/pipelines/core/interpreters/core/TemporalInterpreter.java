@@ -6,6 +6,7 @@ import com.google.common.collect.Range;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAccessor;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import lombok.Builder;
@@ -37,13 +38,13 @@ public class TemporalInterpreter implements Serializable {
 
   @Builder(buildMethodName = "create")
   private TemporalInterpreter(
-      DateComponentOrdering dateComponentOrdering, Map<String, String> normalizeMap) {
+      List<DateComponentOrdering> orderings, Map<String, String> normalizeMap) {
+    this.temporalParser = TemporalParser.create(orderings);
     this.temporalRangeParser =
         TemporalRangeParser.builder()
-            .dateComponentOrdering(dateComponentOrdering)
+            .temporalParser(temporalParser)
             .normalizeMap(normalizeMap)
             .create();
-    this.temporalParser = TemporalParser.create(dateComponentOrdering);
   }
 
   public void interpretTemporal(ExtendedRecord er, TemporalRecord tr) {
@@ -52,34 +53,24 @@ public class TemporalInterpreter implements Serializable {
     String day = extractValue(er, DwcTerm.day);
     String eventDate = extractValue(er, DwcTerm.eventDate);
 
-    OccurrenceParseResult<TemporalAccessor> eventResult =
-        temporalParser.parseRecordedDate(year, month, day, eventDate);
-    if (eventResult.isSuccessful()) {
-      Optional<TemporalAccessor> temporalAccessor = Optional.ofNullable(eventResult.getPayload());
-
-      temporalAccessor
-          .map(AtomizedLocalDate::fromTemporalAccessor)
-          .ifPresent(
-              ald -> {
-                tr.setYear(ald.getYear());
-                tr.setMonth(ald.getMonth());
-                tr.setDay(ald.getDay());
-              });
-    }
-    addIssueSet(tr, eventResult.getIssues());
-  }
-
-  public void interpretTemporalRange(ExtendedRecord er, TemporalRecord tr) {
-    String year = extractValue(er, DwcTerm.year);
-    String month = extractValue(er, DwcTerm.month);
-    String day = extractValue(er, DwcTerm.day);
-    String eventDate = extractValue(er, DwcTerm.eventDate);
-
     EventRange eventRange = temporalRangeParser.parse(year, month, day, eventDate);
+
+    eventRange
+        .getFrom()
+        .map(AtomizedLocalDate::fromTemporalAccessor)
+        .ifPresent(
+            ald -> {
+              tr.setYear(ald.getYear());
+              tr.setMonth(ald.getMonth());
+              tr.setDay(ald.getDay());
+            });
+
     EventDate ed = new EventDate();
     eventRange.getFrom().map(TemporalAccessor::toString).ifPresent(ed::setGte);
     eventRange.getTo().map(TemporalAccessor::toString).ifPresent(ed::setLte);
     tr.setEventDate(ed);
+
+    addIssueSet(tr, eventRange.getIssues());
   }
 
   public void interpretModified(ExtendedRecord er, TemporalRecord tr) {

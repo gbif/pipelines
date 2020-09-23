@@ -1,22 +1,22 @@
 package org.gbif.pipelines.core.interpreters.extension;
 
 import java.time.temporal.TemporalAccessor;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import org.gbif.api.vocabulary.Extension;
-import org.gbif.common.parsers.core.OccurrenceParseResult;
 import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation.Result;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation.TargetHandler;
 import org.gbif.pipelines.core.parsers.SimpleTypeParser;
+import org.gbif.pipelines.core.parsers.temporal.EventRange;
 import org.gbif.pipelines.core.parsers.temporal.TemporalParser;
-import org.gbif.pipelines.io.avro.DeterminedDate;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.MeasurementOrFact;
-import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
+import org.gbif.pipelines.core.parsers.temporal.TemporalRangeParser;
+import org.gbif.pipelines.io.avro.*;
 
 /**
  * Interpreter for the MeasurementsOrFacts extension, Interprets form {@link ExtendedRecord} to
@@ -39,18 +39,19 @@ public class MeasurementOrFactInterpreter {
           .map(DwcTerm.measurementValue, MeasurementOrFactInterpreter::parseAndSetValue)
           .map(DwcTerm.measurementDeterminedDate, this::parseAndSetDeterminedDate);
 
-  private final TemporalParser temporalParser;
+  private final TemporalRangeParser temporalParser;
 
-  private MeasurementOrFactInterpreter(DateComponentOrdering dateComponentOrdering) {
-    this.temporalParser = TemporalParser.create(dateComponentOrdering);
+  private MeasurementOrFactInterpreter(List<DateComponentOrdering> orderings) {
+    this.temporalParser =
+        TemporalRangeParser.builder().temporalParser(TemporalParser.create(orderings)).create();
   }
 
-  public static MeasurementOrFactInterpreter create(DateComponentOrdering dateComponentOrdering) {
-    return new MeasurementOrFactInterpreter(dateComponentOrdering);
+  public static MeasurementOrFactInterpreter create(List<DateComponentOrdering> orderings) {
+    return new MeasurementOrFactInterpreter(orderings);
   }
 
   public static MeasurementOrFactInterpreter create() {
-    return create(null);
+    return create(Collections.emptyList());
   }
 
   /**
@@ -86,12 +87,12 @@ public class MeasurementOrFactInterpreter {
 
   /** Parser for "http://rs.tdwg.org/dwc/terms/measurementDeterminedDate" term value */
   private void parseAndSetDeterminedDate(MeasurementOrFact mf, String v) {
-    DeterminedDate determinedDate = new DeterminedDate();
 
-    OccurrenceParseResult<TemporalAccessor> result = temporalParser.parseRecordedDate(v);
-    if (result.isSuccessful()) {
-      determinedDate.setGte(result.getPayload().toString());
-    }
+    EventRange eventRange = temporalParser.parse(v);
+
+    DeterminedDate determinedDate = new DeterminedDate();
+    eventRange.getFrom().map(TemporalAccessor::toString).ifPresent(determinedDate::setGte);
+    eventRange.getTo().map(TemporalAccessor::toString).ifPresent(determinedDate::setLte);
 
     mf.setDeterminedDateParsed(determinedDate);
     mf.setDeterminedDate(v);

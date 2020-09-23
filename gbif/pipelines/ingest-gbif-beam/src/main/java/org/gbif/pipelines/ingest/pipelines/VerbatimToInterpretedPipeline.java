@@ -2,6 +2,7 @@ package org.gbif.pipelines.ingest.pipelines;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.Set;
 import java.util.function.UnaryOperator;
 import lombok.AccessLevel;
@@ -104,7 +105,7 @@ public class VerbatimToInterpretedPipeline {
         FsUtils.readConfigFile(
             hdfsSiteConfig, coreSiteConfig, options.getProperties(), PipelinesConfig.class);
 
-    DateComponentOrdering dateComponentOrdering =
+    List<DateComponentOrdering> dateComponentOrdering =
         options.getDefaultDateFormat() == null
             ? config.getDefaultDateFormat()
             : options.getDefaultDateFormat();
@@ -145,7 +146,7 @@ public class VerbatimToInterpretedPipeline {
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
 
     TemporalTransform temporalTransform =
-        TemporalTransform.builder().dateComponentOrdering(dateComponentOrdering).create();
+        TemporalTransform.builder().orderings(dateComponentOrdering).create();
 
     TaxonomyTransform taxonomyTransform =
         TaxonomyTransform.builder()
@@ -164,16 +165,16 @@ public class VerbatimToInterpretedPipeline {
 
     // Extension
     MeasurementOrFactTransform measurementOrFactTransform =
-        MeasurementOrFactTransform.builder().dateComponentOrdering(dateComponentOrdering).create();
+        MeasurementOrFactTransform.builder().orderings(dateComponentOrdering).create();
 
     MultimediaTransform multimediaTransform =
-        MultimediaTransform.builder().dateComponentOrdering(dateComponentOrdering).create();
+        MultimediaTransform.builder().orderings(dateComponentOrdering).create();
 
     AudubonTransform audubonTransform =
-        AudubonTransform.builder().dateComponentOrdering(dateComponentOrdering).create();
+        AudubonTransform.builder().orderings(dateComponentOrdering).create();
 
     ImageTransform imageTransform =
-        ImageTransform.builder().dateComponentOrdering(dateComponentOrdering).create();
+        ImageTransform.builder().orderings(dateComponentOrdering).create();
 
     // Extra
     UniqueGbifIdTransform gbifIdTransform =

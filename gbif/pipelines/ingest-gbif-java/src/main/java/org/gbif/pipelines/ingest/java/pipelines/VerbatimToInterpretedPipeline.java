@@ -6,10 +6,7 @@ import static org.gbif.pipelines.core.utils.FsUtils.createParentDirectories;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -138,7 +135,7 @@ public class VerbatimToInterpretedPipeline {
                 hdfsSiteConfig, coreSiteConfig, options.getProperties(), PipelinesConfig.class)
             .get();
 
-    DateComponentOrdering dateComponentOrdering =
+    List<DateComponentOrdering> dateComponentOrdering =
         options.getDefaultDateFormat() == null
             ? config.getDefaultDateFormat()
             : options.getDefaultDateFormat();
@@ -198,34 +195,28 @@ public class VerbatimToInterpretedPipeline {
 
     TemporalTransform temporalTransform =
         TemporalTransform.builder()
-            .dateComponentOrdering(dateComponentOrdering)
+            .orderings(dateComponentOrdering)
             .create()
             .counterFn(incMetricFn);
 
     // Extension
     MeasurementOrFactTransform measurementTransform =
         MeasurementOrFactTransform.builder()
-            .dateComponentOrdering(dateComponentOrdering)
+            .orderings(dateComponentOrdering)
             .create()
             .counterFn(incMetricFn);
 
     MultimediaTransform multimediaTransform =
         MultimediaTransform.builder()
-            .dateComponentOrdering(dateComponentOrdering)
+            .orderings(dateComponentOrdering)
             .create()
             .counterFn(incMetricFn);
 
     AudubonTransform audubonTransform =
-        AudubonTransform.builder()
-            .dateComponentOrdering(dateComponentOrdering)
-            .create()
-            .counterFn(incMetricFn);
+        AudubonTransform.builder().orderings(dateComponentOrdering).create().counterFn(incMetricFn);
 
     ImageTransform imageTransform =
-        ImageTransform.builder()
-            .dateComponentOrdering(dateComponentOrdering)
-            .create()
-            .counterFn(incMetricFn);
+        ImageTransform.builder().orderings(dateComponentOrdering).create().counterFn(incMetricFn);
     // Extra
     OccurrenceExtensionTransform occExtensionTransform =
         OccurrenceExtensionTransform.create().counterFn(incMetricFn);

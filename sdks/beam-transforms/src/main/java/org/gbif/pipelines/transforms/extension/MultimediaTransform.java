@@ -4,6 +4,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MULTIMEDIA_RE
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.MULTIMEDIA;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import lombok.Builder;
 import org.apache.beam.sdk.transforms.MapElements;
@@ -31,24 +32,24 @@ import org.gbif.pipelines.transforms.Transform;
  */
 public class MultimediaTransform extends Transform<ExtendedRecord, MultimediaRecord> {
 
-  private final DateComponentOrdering dateComponentOrdering;
+  private final List<DateComponentOrdering> orderings;
   private MultimediaInterpreter multimediaInterpreter;
 
   @Builder(buildMethodName = "create")
-  private MultimediaTransform(DateComponentOrdering dateComponentOrdering) {
+  private MultimediaTransform(List<DateComponentOrdering> orderings) {
     super(
         MultimediaRecord.class,
         MULTIMEDIA,
         MultimediaTransform.class.getName(),
         MULTIMEDIA_RECORDS_COUNT);
-    this.dateComponentOrdering = dateComponentOrdering;
+    this.orderings = orderings;
   }
 
   /** Beam @Setup initializes resources */
   @Setup
   public void setup() {
     if (multimediaInterpreter == null) {
-      multimediaInterpreter = MultimediaInterpreter.create(dateComponentOrdering);
+      multimediaInterpreter = MultimediaInterpreter.create(orderings);
     }
   }
 

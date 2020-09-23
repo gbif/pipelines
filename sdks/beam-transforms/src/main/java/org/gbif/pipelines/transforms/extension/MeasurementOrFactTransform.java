@@ -4,6 +4,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMENT_O
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.MEASUREMENT_OR_FACT;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import lombok.Builder;
 import org.apache.beam.sdk.transforms.MapElements;
@@ -30,24 +31,24 @@ import org.gbif.pipelines.transforms.Transform;
  */
 public class MeasurementOrFactTransform extends Transform<ExtendedRecord, MeasurementOrFactRecord> {
 
-  private final DateComponentOrdering dateComponentOrdering;
+  private final List<DateComponentOrdering> orderings;
   private MeasurementOrFactInterpreter measurementOrFactInterpreter;
 
   @Builder(buildMethodName = "create")
-  private MeasurementOrFactTransform(DateComponentOrdering dateComponentOrdering) {
+  private MeasurementOrFactTransform(List<DateComponentOrdering> orderings) {
     super(
         MeasurementOrFactRecord.class,
         MEASUREMENT_OR_FACT,
         MeasurementOrFactTransform.class.getName(),
         MEASUREMENT_OR_FACT_RECORDS_COUNT);
-    this.dateComponentOrdering = dateComponentOrdering;
+    this.orderings = orderings;
   }
 
   /** Beam @Setup initializes resources */
   @Setup
   public void setup() {
     if (measurementOrFactInterpreter == null) {
-      measurementOrFactInterpreter = MeasurementOrFactInterpreter.create(dateComponentOrdering);
+      measurementOrFactInterpreter = MeasurementOrFactInterpreter.create(orderings);
     }
   }
 

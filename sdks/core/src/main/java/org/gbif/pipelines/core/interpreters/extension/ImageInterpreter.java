@@ -6,6 +6,8 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.MULTIMEDIA_URI_INVALID;
 import com.google.common.base.Strings;
 import java.net.URI;
 import java.time.temporal.TemporalAccessor;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import org.gbif.api.vocabulary.Extension;
@@ -67,16 +69,16 @@ public class ImageInterpreter {
 
   private final TemporalParser temporalParser;
 
-  private ImageInterpreter(DateComponentOrdering dateComponentOrdering) {
-    this.temporalParser = TemporalParser.create(dateComponentOrdering);
+  private ImageInterpreter(List<DateComponentOrdering> orderings) {
+    this.temporalParser = TemporalParser.create(orderings);
   }
 
-  public static ImageInterpreter create(DateComponentOrdering dateComponentOrdering) {
-    return new ImageInterpreter(dateComponentOrdering);
+  public static ImageInterpreter create(List<DateComponentOrdering> orderings) {
+    return new ImageInterpreter(orderings);
   }
 
   public static ImageInterpreter create() {
-    return create(null);
+    return create(Collections.emptyList());
   }
 
   /**

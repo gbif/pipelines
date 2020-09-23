@@ -15,7 +15,6 @@ import org.gbif.api.vocabulary.OccurrenceIssue;
 @NoArgsConstructor
 public class EventRange {
 
-  private TemporalAccessor original;
   private TemporalAccessor from;
   private TemporalAccessor to;
 
@@ -27,10 +26,6 @@ public class EventRange {
 
   public Optional<TemporalAccessor> getTo() {
     return Optional.ofNullable(to);
-  }
-
-  public Optional<TemporalAccessor> getOriginal() {
-    return Optional.ofNullable(original);
   }
 
   public Set<OccurrenceIssue> getIssues() {

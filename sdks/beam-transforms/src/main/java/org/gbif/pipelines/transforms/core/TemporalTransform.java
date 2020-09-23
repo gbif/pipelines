@@ -4,6 +4,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.TEMPORAL_RECO
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.TEMPORAL;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import lombok.Builder;
@@ -31,16 +32,16 @@ import org.gbif.pipelines.transforms.Transform;
 public class TemporalTransform extends Transform<ExtendedRecord, TemporalRecord> {
 
   private final SerializableSupplier<Map<String, String>> mapSupplier;
-  private final DateComponentOrdering dateComponentOrdering;
+  private final List<DateComponentOrdering> orderings;
   private TemporalInterpreter temporalInterpreter;
 
   @Builder(buildMethodName = "create")
   private TemporalTransform(
-      DateComponentOrdering dateComponentOrdering,
+      List<DateComponentOrdering> orderings,
       SerializableSupplier<Map<String, String>> mapSupplier) {
     super(
         TemporalRecord.class, TEMPORAL, TemporalTransform.class.getName(), TEMPORAL_RECORDS_COUNT);
-    this.dateComponentOrdering = dateComponentOrdering;
+    this.orderings = orderings;
     this.mapSupplier = mapSupplier;
   }
 
@@ -49,7 +50,7 @@ public class TemporalTransform extends Transform<ExtendedRecord, TemporalRecord>
   public void setup() {
     if (temporalInterpreter == null) {
       TemporalInterpreter.TemporalInterpreterBuilder b =
-          TemporalInterpreter.builder().dateComponentOrdering(dateComponentOrdering);
+          TemporalInterpreter.builder().orderings(orderings);
       Optional.ofNullable(mapSupplier).ifPresent(s -> b.normalizeMap(s.get()));
       temporalInterpreter = b.create();
     }
@@ -78,7 +79,6 @@ public class TemporalTransform extends Transform<ExtendedRecord, TemporalRecord>
         .to(tr)
         .when(er -> !er.getCoreTerms().isEmpty())
         .via(temporalInterpreter::interpretTemporal)
-        .via(temporalInterpreter::interpretTemporalRange)
         .via(temporalInterpreter::interpretModified)
         .via(temporalInterpreter::interpretDateIdentified)
         .getOfNullable();

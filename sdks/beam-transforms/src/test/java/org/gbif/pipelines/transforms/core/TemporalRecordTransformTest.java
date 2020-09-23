@@ -1,12 +1,13 @@
 package org.gbif.pipelines.transforms.core;
 
-import static org.gbif.common.parsers.date.DateComponentOrdering.DMY;
+import static org.gbif.common.parsers.date.DateComponentOrdering.DMY_FORMATS;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.temporal.Temporal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import org.apache.beam.sdk.testing.NeedsRunner;
@@ -50,7 +51,7 @@ public class TemporalRecordTransformTest {
     record.getCoreTerms().put(DwcTerm.year.qualifiedName(), "1999");
     record.getCoreTerms().put(DwcTerm.month.qualifiedName(), "2");
     record.getCoreTerms().put(DwcTerm.day.qualifiedName(), "2");
-    record.getCoreTerms().put(DwcTerm.eventDate.qualifiedName(), "1999-02-02T12:26");
+    record.getCoreTerms().put(DwcTerm.eventDate.qualifiedName(), "1999-02-02");
     record.getCoreTerms().put(DwcTerm.dateIdentified.qualifiedName(), "1999-02-02T12:26");
     record.getCoreTerms().put(DcTerm.modified.qualifiedName(), "1999-02-02T12:26");
     final List<ExtendedRecord> input = Collections.singletonList(record);
@@ -125,7 +126,7 @@ public class TemporalRecordTransformTest {
     record.getCoreTerms().put(DcTerm.modified.qualifiedName(), "01/03/1999T12:26");
     input.add(record);
     // Expected
-    TemporalRecord expected1 =
+    TemporalRecord expected =
         TemporalRecord.newBuilder()
             .setId("0")
             .setEventDate(EventDate.newBuilder().setGte("1999-02-01T12:26Z").build())
@@ -137,18 +138,18 @@ public class TemporalRecordTransformTest {
             .setCreated(0L)
             .build();
 
-    final List<TemporalRecord> dataExpected = new ArrayList<>();
-
-    dataExpected.add(expected1);
-
     // When
     PCollection<TemporalRecord> dataStream =
         p.apply(Create.of(input))
-            .apply(TemporalTransform.builder().dateComponentOrdering(DMY).create().interpret())
+            .apply(
+                TemporalTransform.builder()
+                    .orderings(Arrays.asList(DMY_FORMATS))
+                    .create()
+                    .interpret())
             .apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
 
     // Should
-    PAssert.that(dataStream).containsInAnyOrder(dataExpected);
+    PAssert.that(dataStream).containsInAnyOrder(Collections.singletonList(expected));
     p.run();
   }
 
