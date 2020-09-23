@@ -1,6 +1,7 @@
 package org.gbif.pipelines.core.parsers.temporal;
 
 import static org.gbif.common.parsers.date.DateComponentOrdering.DMY;
+import static org.gbif.common.parsers.date.DateComponentOrdering.DMYT;
 import static org.gbif.common.parsers.date.DateComponentOrdering.DMY_FORMATS;
 import static org.junit.Assert.*;
 
@@ -101,4 +102,26 @@ public class TemporalRangeParserTest {
     assertEquals("1999-01-02", range.getFrom().get().toString());
     assertFalse(range.getTo().isPresent());
   }
+
+  @Test
+  public void teatYMDT(){
+    TemporalRangeParser trp =
+        TemporalRangeParser.builder()
+            .temporalParser(TemporalParser.create(Collections.singletonList(DMY)))
+            .create();
+    //Should fail
+    EventRange range = trp.parse("01/03/1930T12:01");
+    assertFalse(range.getFrom().isPresent());
+
+    trp =
+        TemporalRangeParser.builder()
+            .temporalParser(TemporalParser.create( Arrays.asList(DMY,DMYT)))
+            .create();
+     range = trp.parse("01/03/1930T12:01");
+
+    assertEquals("1930-03-01T12:01", range.getFrom().get().toString());
+
+
+  }
+
 }
