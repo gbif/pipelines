@@ -1,8 +1,10 @@
 package org.gbif.pipelines.core.parsers.temporal;
 
 import static org.gbif.common.parsers.date.DateComponentOrdering.DMY;
+import static org.gbif.common.parsers.date.DateComponentOrdering.DMY_FORMATS;
 import static org.junit.Assert.*;
 
+import java.util.Arrays;
 import java.util.Collections;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.junit.Test;
@@ -63,6 +65,27 @@ public class TemporalRangeParserTest {
     assertTrue(range.hasIssues());
     assertEquals(1, range.getIssues().size());
     assertTrue(range.getIssues().contains(OccurrenceIssue.RECORDED_DATE_INVALID));
+
+    range = trp.parse("1999-01-02");
+    assertFalse(range.hasIssues());
+    assertEquals("1999-01-02", range.getFrom().get().toString());
+    assertFalse(range.getTo().isPresent());
+
+    // Use a DMY_FORMATS parser
+    trp =
+        TemporalRangeParser.builder()
+            .temporalParser(TemporalParser.create(Arrays.asList(DMY_FORMATS)))
+            .create();
+
+    range = trp.parse("01/02/1999");
+    assertFalse(range.hasIssues());
+    assertEquals("1999-02-01", range.getFrom().get().toString());
+    assertFalse(range.getTo().isPresent());
+
+    range = trp.parse("1999-01-02");
+    assertFalse(range.hasIssues());
+    assertEquals("1999-01-02", range.getFrom().get().toString());
+    assertFalse(range.getTo().isPresent());
   }
 
   // https://github.com/gbif/parsers/issues/6
