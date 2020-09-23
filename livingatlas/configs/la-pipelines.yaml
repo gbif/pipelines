@@ -18,7 +18,6 @@ run:
     dwcaTmp: /data/dwca-tmp
     dwcaImportDir: /data/biocache-load
     jar: /efs-mount-point/pipelines.jar
-    dwcaImportDir: ''
     sparkTmp: /data/spark-tmp
     sparkMaster: spark://localhost:7077
 
@@ -120,6 +119,7 @@ images:
   runner: SparkRunner
   inputPath: '{fsPath}/pipelines-data'
   tempLocation: /tmp
+  imageServiceUrl: https://images-dev.ala.org.au
 
 # class: au.org.ala.pipelines.beam.ALASamplingToAvroPipeline
 sample-avro:
