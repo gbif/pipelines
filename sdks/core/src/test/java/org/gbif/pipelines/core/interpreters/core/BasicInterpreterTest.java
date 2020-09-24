@@ -415,7 +415,7 @@ public class BasicInterpreterTest {
   }
 
   @Test
-  public void interpretBasisOfRecordsNoramlTest() {
+  public void interpretBasisOfRecordsTest() {
 
     // State
     Map<String, String> coreMap = new HashMap<>();
