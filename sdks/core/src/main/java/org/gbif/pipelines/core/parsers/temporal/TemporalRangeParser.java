@@ -7,23 +7,18 @@ import java.time.temporal.ChronoUnit;
 import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAccessor;
 import java.time.temporal.TemporalUnit;
-import java.util.Collections;
-import java.util.Map;
 import java.util.Optional;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.gbif.common.parsers.core.OccurrenceParseResult;
 
 @Slf4j
 public class TemporalRangeParser implements Serializable {
 
   private final TemporalParser temporalParser;
-  @Builder.Default private Map<String, String> normalizeMap = Collections.emptyMap();
 
   @Builder(buildMethodName = "create")
-  private TemporalRangeParser(TemporalParser temporalParser, Map<String, String> normalizeMap) {
-    this.normalizeMap = normalizeMap;
+  private TemporalRangeParser(TemporalParser temporalParser) {
     if (temporalParser != null) {
       this.temporalParser = temporalParser;
     } else {
@@ -36,9 +31,8 @@ public class TemporalRangeParser implements Serializable {
   }
 
   public EventRange parse(String year, String month, String day, String dateRange) {
-    String normalizedString = normalizeDateString(dateRange);
     // Even a single date will be split to two
-    String[] rawPeriod = DelimiterUtils.splitPeriod(normalizedString);
+    String[] rawPeriod = DelimiterUtils.splitPeriod(dateRange);
 
     EventRange eventRange = new EventRange();
     parseAndSetFrom(eventRange, year, month, day, rawPeriod[0]);
@@ -92,16 +86,5 @@ public class TemporalRangeParser implements Serializable {
       unit = ChronoUnit.SECONDS;
     }
     return from.until(to, unit) > 0;
-  }
-
-  /** Preprocess for converting some none ISO standards to ISO standards */
-  private String normalizeDateString(String dateString) {
-    // Convert 2004-2-1 to 3-2 , 2004-2-1 & 3-2  to 2004-2-1/3-2
-    if (StringUtils.isNotEmpty(dateString) && normalizeMap != null) {
-      for (Map.Entry<String, String> en : normalizeMap.entrySet()) {
-        dateString = dateString.replace(en.getKey(), en.getValue());
-      }
-    }
-    return dateString;
   }
 }

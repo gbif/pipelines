@@ -5,7 +5,6 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import lombok.Builder;
 import org.apache.beam.sdk.transforms.MapElements;
@@ -13,7 +12,7 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.pipelines.core.functions.SerializableConsumer;
-import org.gbif.pipelines.core.functions.SerializableSupplier;
+import org.gbif.pipelines.core.functions.SerializableFunction;
 import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.TemporalInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -31,28 +30,29 @@ import org.gbif.pipelines.transforms.Transform;
  */
 public class TemporalTransform extends Transform<ExtendedRecord, TemporalRecord> {
 
-  private final SerializableSupplier<Map<String, String>> mapSupplier;
+  private final SerializableFunction<String, String> normalizationFunction;
   private final List<DateComponentOrdering> orderings;
   private TemporalInterpreter temporalInterpreter;
 
   @Builder(buildMethodName = "create")
   private TemporalTransform(
       List<DateComponentOrdering> orderings,
-      SerializableSupplier<Map<String, String>> mapSupplier) {
+      SerializableFunction<String, String> normalizationFunction) {
     super(
         TemporalRecord.class, TEMPORAL, TemporalTransform.class.getName(), TEMPORAL_RECORDS_COUNT);
     this.orderings = orderings;
-    this.mapSupplier = mapSupplier;
+    this.normalizationFunction = normalizationFunction;
   }
 
   /** Beam @Setup initializes resources */
   @Setup
   public void setup() {
     if (temporalInterpreter == null) {
-      TemporalInterpreter.TemporalInterpreterBuilder b =
-          TemporalInterpreter.builder().orderings(orderings);
-      Optional.ofNullable(mapSupplier).ifPresent(s -> b.normalizeMap(s.get()));
-      temporalInterpreter = b.create();
+      temporalInterpreter =
+          TemporalInterpreter.builder()
+              .orderings(orderings)
+              .normalizationFunction(normalizationFunction)
+              .create();
     }
   }
 

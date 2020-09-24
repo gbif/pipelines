@@ -6,9 +6,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 import java.util.*;
+import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.core.functions.SerializableFunction;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.junit.Before;
@@ -20,10 +22,15 @@ public class TemporalInterpreterTest {
 
   @Before
   public void init() {
-    Map<String, String> normalizerMap = new HashMap<>(2);
-    normalizerMap.put(" & ", "/");
-    normalizerMap.put(" to ", "/");
-    temporalInterpreter = TemporalInterpreter.builder().normalizeMap(normalizerMap).create();
+    SerializableFunction<String, String> fn =
+        v -> {
+          // Convert 2004-2-1 to 3-2 , 2004-2-1 & 3-2  to 2004-2-1/3-2
+          if (StringUtils.isNotEmpty(v)) {
+            return v.replaceAll(" & ", "/").replaceAll(" to ", "/");
+          }
+          return v;
+        };
+    temporalInterpreter = TemporalInterpreter.builder().normalizationFunction(fn).create();
   }
 
   @Test

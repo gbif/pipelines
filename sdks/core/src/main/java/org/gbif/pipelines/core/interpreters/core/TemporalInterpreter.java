@@ -7,7 +7,6 @@ import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAccessor;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +16,7 @@ import org.gbif.common.parsers.date.AtomizedLocalDate;
 import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.core.functions.SerializableFunction;
 import org.gbif.pipelines.core.parsers.temporal.EventRange;
 import org.gbif.pipelines.core.parsers.temporal.TemporalParser;
 import org.gbif.pipelines.core.parsers.temporal.TemporalRangeParser;
@@ -35,16 +35,16 @@ public class TemporalInterpreter implements Serializable {
 
   private final TemporalRangeParser temporalRangeParser;
   private final TemporalParser temporalParser;
+  private final SerializableFunction<String, String> normalizationFunction;
 
   @Builder(buildMethodName = "create")
   private TemporalInterpreter(
-      List<DateComponentOrdering> orderings, Map<String, String> normalizeMap) {
+      List<DateComponentOrdering> orderings,
+      SerializableFunction<String, String> normalizationFunction) {
+    this.normalizationFunction = normalizationFunction;
     this.temporalParser = TemporalParser.create(orderings);
     this.temporalRangeParser =
-        TemporalRangeParser.builder()
-            .temporalParser(temporalParser)
-            .normalizeMap(normalizeMap)
-            .create();
+        TemporalRangeParser.builder().temporalParser(temporalParser).create();
   }
 
   public void interpretTemporal(ExtendedRecord er, TemporalRecord tr) {
@@ -53,7 +53,10 @@ public class TemporalInterpreter implements Serializable {
     String day = extractValue(er, DwcTerm.day);
     String eventDate = extractValue(er, DwcTerm.eventDate);
 
-    EventRange eventRange = temporalRangeParser.parse(year, month, day, eventDate);
+    String normalizedEventDate =
+        Optional.ofNullable(normalizationFunction).map(x -> x.apply(eventDate)).orElse(eventDate);
+
+    EventRange eventRange = temporalRangeParser.parse(year, month, day, normalizedEventDate);
 
     eventRange
         .getFrom()
@@ -75,13 +78,15 @@ public class TemporalInterpreter implements Serializable {
 
   public void interpretModified(ExtendedRecord er, TemporalRecord tr) {
     if (hasValue(er, DcTerm.modified)) {
+      String value = extractValue(er, DcTerm.modified);
+      String normalizedValue =
+          Optional.ofNullable(normalizationFunction).map(x -> x.apply(value)).orElse(value);
+
       LocalDate upperBound = LocalDate.now().plusDays(1);
       Range<LocalDate> validModifiedDateRange = Range.closed(MIN_EPOCH_LOCAL_DATE, upperBound);
       OccurrenceParseResult<TemporalAccessor> parsed =
           temporalParser.parseLocalDate(
-              extractValue(er, DcTerm.modified),
-              validModifiedDateRange,
-              OccurrenceIssue.MODIFIED_DATE_UNLIKELY);
+              normalizedValue, validModifiedDateRange, OccurrenceIssue.MODIFIED_DATE_UNLIKELY);
       if (parsed.isSuccessful()) {
         Optional.ofNullable(parsed.getPayload())
             .map(TemporalAccessor::toString)
@@ -94,13 +99,15 @@ public class TemporalInterpreter implements Serializable {
 
   public void interpretDateIdentified(ExtendedRecord er, TemporalRecord tr) {
     if (hasValue(er, DwcTerm.dateIdentified)) {
+      String value = extractValue(er, DwcTerm.dateIdentified);
+      String normalizedValue =
+          Optional.ofNullable(normalizationFunction).map(x -> x.apply(value)).orElse(value);
+
       LocalDate upperBound = LocalDate.now().plusDays(1);
       Range<LocalDate> validRecordedDateRange = Range.closed(MIN_LOCAL_DATE, upperBound);
       OccurrenceParseResult<TemporalAccessor> parsed =
           temporalParser.parseLocalDate(
-              extractValue(er, DwcTerm.dateIdentified),
-              validRecordedDateRange,
-              OccurrenceIssue.IDENTIFIED_DATE_UNLIKELY);
+              normalizedValue, validRecordedDateRange, OccurrenceIssue.IDENTIFIED_DATE_UNLIKELY);
       if (parsed.isSuccessful()) {
         Optional.ofNullable(parsed.getPayload())
             .map(TemporalAccessor::toString)
