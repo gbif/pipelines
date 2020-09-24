@@ -104,24 +104,21 @@ public class TemporalRangeParserTest {
   }
 
   @Test
-  public void teatYMDT(){
+  public void teatYMDT() {
     TemporalRangeParser trp =
         TemporalRangeParser.builder()
             .temporalParser(TemporalParser.create(Collections.singletonList(DMY)))
             .create();
-    //Should fail
+    // Should fail
     EventRange range = trp.parse("01/03/1930T12:01");
     assertFalse(range.getFrom().isPresent());
 
     trp =
         TemporalRangeParser.builder()
-            .temporalParser(TemporalParser.create( Arrays.asList(DMY,DMYT)))
+            .temporalParser(TemporalParser.create(Arrays.asList(DMY, DMYT)))
             .create();
-     range = trp.parse("01/03/1930T12:01");
+    range = trp.parse("01/03/1930T12:01");
 
     assertEquals("1930-03-01T12:01", range.getFrom().get().toString());
-
-
   }
-
 }
