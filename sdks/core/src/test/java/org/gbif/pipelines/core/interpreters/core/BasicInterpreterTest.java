@@ -415,7 +415,7 @@ public class BasicInterpreterTest {
   }
 
   @Test
-  public void interpretBasisOfRecordsTest() {
+  public void interpretBasisOfRecordTest() {
 
     // State
     Map<String, String> coreMap = new HashMap<>();
@@ -432,7 +432,7 @@ public class BasicInterpreterTest {
   }
 
   @Test
-  public void interpretBasisOfRecordsNullTest() {
+  public void interpretBasisOfRecordNullTest() {
 
     // State
     Map<String, String> coreMap = new HashMap<>();
