@@ -13,6 +13,7 @@ import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.pipelines.core.functions.SerializableConsumer;
+import org.gbif.pipelines.core.functions.SerializableFunction;
 import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.core.interpreters.extension.ImageInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -30,20 +31,28 @@ import org.gbif.pipelines.transforms.Transform;
  */
 public class ImageTransform extends Transform<ExtendedRecord, ImageRecord> {
 
+  private final SerializableFunction<String, String> preprocessDateFn;
   private final List<DateComponentOrdering> orderings;
   private ImageInterpreter imageInterpreter;
 
   @Builder(buildMethodName = "create")
-  private ImageTransform(List<DateComponentOrdering> orderings) {
+  private ImageTransform(
+      List<DateComponentOrdering> orderings,
+      SerializableFunction<String, String> preprocessDateFn) {
     super(ImageRecord.class, IMAGE, ImageTransform.class.getName(), IMAGE_RECORDS_COUNT);
     this.orderings = orderings;
+    this.preprocessDateFn = preprocessDateFn;
   }
 
   /** Beam @Setup initializes resources */
   @Setup
   public void setup() {
     if (imageInterpreter == null) {
-      imageInterpreter = ImageInterpreter.create(orderings);
+      imageInterpreter =
+          ImageInterpreter.builder()
+              .orderings(orderings)
+              .preprocessDateFn(preprocessDateFn)
+              .create();
     }
   }
 

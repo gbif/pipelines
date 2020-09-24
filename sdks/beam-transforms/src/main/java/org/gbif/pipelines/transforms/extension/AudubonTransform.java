@@ -13,6 +13,7 @@ import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.pipelines.core.functions.SerializableConsumer;
+import org.gbif.pipelines.core.functions.SerializableFunction;
 import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.core.interpreters.extension.AudubonInterpreter;
 import org.gbif.pipelines.io.avro.AudubonRecord;
@@ -30,20 +31,28 @@ import org.gbif.pipelines.transforms.Transform;
  */
 public class AudubonTransform extends Transform<ExtendedRecord, AudubonRecord> {
 
+  private final SerializableFunction<String, String> preprocessDateFn;
   private final List<DateComponentOrdering> orderings;
   private AudubonInterpreter audubonInterpreter;
 
   @Builder(buildMethodName = "create")
-  private AudubonTransform(List<DateComponentOrdering> orderings) {
+  private AudubonTransform(
+      List<DateComponentOrdering> orderings,
+      SerializableFunction<String, String> preprocessDateFn) {
     super(AudubonRecord.class, AUDUBON, AudubonTransform.class.getName(), AUDUBON_RECORDS_COUNT);
     this.orderings = orderings;
+    this.preprocessDateFn = preprocessDateFn;
   }
 
   /** Beam @Setup initializes resources */
   @Setup
   public void setup() {
     if (audubonInterpreter == null) {
-      audubonInterpreter = AudubonInterpreter.create(orderings);
+      audubonInterpreter =
+          AudubonInterpreter.builder()
+              .orderings(orderings)
+              .preprocessDateFn(preprocessDateFn)
+              .create();
     }
   }
 

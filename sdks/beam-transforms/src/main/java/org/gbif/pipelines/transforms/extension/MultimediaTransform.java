@@ -14,6 +14,7 @@ import org.gbif.api.vocabulary.Extension;
 import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.functions.SerializableConsumer;
+import org.gbif.pipelines.core.functions.SerializableFunction;
 import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.core.interpreters.extension.MultimediaInterpreter;
 import org.gbif.pipelines.core.utils.ModelUtils;
@@ -32,24 +33,32 @@ import org.gbif.pipelines.transforms.Transform;
  */
 public class MultimediaTransform extends Transform<ExtendedRecord, MultimediaRecord> {
 
+  private final SerializableFunction<String, String> preprocessDateFn;
   private final List<DateComponentOrdering> orderings;
   private MultimediaInterpreter multimediaInterpreter;
 
   @Builder(buildMethodName = "create")
-  private MultimediaTransform(List<DateComponentOrdering> orderings) {
+  private MultimediaTransform(
+      List<DateComponentOrdering> orderings,
+      SerializableFunction<String, String> preprocessDateFn) {
     super(
         MultimediaRecord.class,
         MULTIMEDIA,
         MultimediaTransform.class.getName(),
         MULTIMEDIA_RECORDS_COUNT);
     this.orderings = orderings;
+    this.preprocessDateFn = preprocessDateFn;
   }
 
   /** Beam @Setup initializes resources */
   @Setup
   public void setup() {
     if (multimediaInterpreter == null) {
-      multimediaInterpreter = MultimediaInterpreter.create(orderings);
+      multimediaInterpreter =
+          MultimediaInterpreter.builder()
+              .ordering(orderings)
+              .preprocessDateFn(preprocessDateFn)
+              .create();
     }
   }
 

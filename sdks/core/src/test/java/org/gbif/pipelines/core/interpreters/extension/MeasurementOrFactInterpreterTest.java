@@ -65,7 +65,7 @@ public class MeasurementOrFactInterpreterTest {
         MeasurementOrFactRecord.newBuilder().setId(record.getId()).setCreated(0L).build();
 
     // When
-    MeasurementOrFactInterpreter.create().interpret(record, mfr);
+    MeasurementOrFactInterpreter.builder().create().interpret(record, mfr);
 
     // Should
     Assert.assertEquals(expected, mfr.toString());

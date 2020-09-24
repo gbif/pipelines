@@ -35,13 +35,13 @@ public class TemporalInterpreter implements Serializable {
 
   private final TemporalRangeParser temporalRangeParser;
   private final TemporalParser temporalParser;
-  private final SerializableFunction<String, String> normalizationFunction;
+  private final SerializableFunction<String, String> preprocessDateFn;
 
   @Builder(buildMethodName = "create")
   private TemporalInterpreter(
       List<DateComponentOrdering> orderings,
-      SerializableFunction<String, String> normalizationFunction) {
-    this.normalizationFunction = normalizationFunction;
+      SerializableFunction<String, String> preprocessDateFn) {
+    this.preprocessDateFn = preprocessDateFn;
     this.temporalParser = TemporalParser.create(orderings);
     this.temporalRangeParser =
         TemporalRangeParser.builder().temporalParser(temporalParser).create();
@@ -54,7 +54,7 @@ public class TemporalInterpreter implements Serializable {
     String eventDate = extractValue(er, DwcTerm.eventDate);
 
     String normalizedEventDate =
-        Optional.ofNullable(normalizationFunction).map(x -> x.apply(eventDate)).orElse(eventDate);
+        Optional.ofNullable(preprocessDateFn).map(x -> x.apply(eventDate)).orElse(eventDate);
 
     EventRange eventRange = temporalRangeParser.parse(year, month, day, normalizedEventDate);
 
@@ -80,7 +80,7 @@ public class TemporalInterpreter implements Serializable {
     if (hasValue(er, DcTerm.modified)) {
       String value = extractValue(er, DcTerm.modified);
       String normalizedValue =
-          Optional.ofNullable(normalizationFunction).map(x -> x.apply(value)).orElse(value);
+          Optional.ofNullable(preprocessDateFn).map(x -> x.apply(value)).orElse(value);
 
       LocalDate upperBound = LocalDate.now().plusDays(1);
       Range<LocalDate> validModifiedDateRange = Range.closed(MIN_EPOCH_LOCAL_DATE, upperBound);
@@ -101,7 +101,7 @@ public class TemporalInterpreter implements Serializable {
     if (hasValue(er, DwcTerm.dateIdentified)) {
       String value = extractValue(er, DwcTerm.dateIdentified);
       String normalizedValue =
-          Optional.ofNullable(normalizationFunction).map(x -> x.apply(value)).orElse(value);
+          Optional.ofNullable(preprocessDateFn).map(x -> x.apply(value)).orElse(value);
 
       LocalDate upperBound = LocalDate.now().plusDays(1);
       Range<LocalDate> validRecordedDateRange = Range.closed(MIN_LOCAL_DATE, upperBound);

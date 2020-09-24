@@ -6,10 +6,10 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.MULTIMEDIA_URI_INVALID;
 import com.google.common.base.Strings;
 import java.net.URI;
 import java.time.temporal.TemporalAccessor;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import lombok.Builder;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.LicenseUriParser;
@@ -21,6 +21,7 @@ import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.geocode.LatLng;
+import org.gbif.pipelines.core.functions.SerializableFunction;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation.Result;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation.TargetHandler;
@@ -68,17 +69,14 @@ public class ImageInterpreter {
           .skipIf(ImageInterpreter::checkLinks);
 
   private final TemporalParser temporalParser;
+  private final SerializableFunction<String, String> preprocessDateFn;
 
-  private ImageInterpreter(List<DateComponentOrdering> orderings) {
+  @Builder(buildMethodName = "create")
+  private ImageInterpreter(
+      List<DateComponentOrdering> orderings,
+      SerializableFunction<String, String> preprocessDateFn) {
     this.temporalParser = TemporalParser.create(orderings);
-  }
-
-  public static ImageInterpreter create(List<DateComponentOrdering> orderings) {
-    return new ImageInterpreter(orderings);
-  }
-
-  public static ImageInterpreter create() {
-    return create(Collections.emptyList());
+    this.preprocessDateFn = preprocessDateFn;
   }
 
   /**
@@ -167,7 +165,9 @@ public class ImageInterpreter {
 
   /** Parser for "http://purl.org/dc/terms/created" term value */
   private String parseAndSetCreated(Image i, String v) {
-    OccurrenceParseResult<TemporalAccessor> result = temporalParser.parseRecordedDate(v);
+    String normalizedDate = Optional.ofNullable(preprocessDateFn).map(x -> x.apply(v)).orElse(v);
+    OccurrenceParseResult<TemporalAccessor> result =
+        temporalParser.parseRecordedDate(normalizedDate);
     if (result.isSuccessful()) {
       i.setCreated(result.getPayload().toString());
       return "";

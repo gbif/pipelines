@@ -30,18 +30,18 @@ import org.gbif.pipelines.transforms.Transform;
  */
 public class TemporalTransform extends Transform<ExtendedRecord, TemporalRecord> {
 
-  private final SerializableFunction<String, String> normalizationFunction;
+  private final SerializableFunction<String, String> preprocessDateFn;
   private final List<DateComponentOrdering> orderings;
   private TemporalInterpreter temporalInterpreter;
 
   @Builder(buildMethodName = "create")
   private TemporalTransform(
       List<DateComponentOrdering> orderings,
-      SerializableFunction<String, String> normalizationFunction) {
+      SerializableFunction<String, String> preprocessDateFn) {
     super(
         TemporalRecord.class, TEMPORAL, TemporalTransform.class.getName(), TEMPORAL_RECORDS_COUNT);
     this.orderings = orderings;
-    this.normalizationFunction = normalizationFunction;
+    this.preprocessDateFn = preprocessDateFn;
   }
 
   /** Beam @Setup initializes resources */
@@ -51,7 +51,7 @@ public class TemporalTransform extends Transform<ExtendedRecord, TemporalRecord>
       temporalInterpreter =
           TemporalInterpreter.builder()
               .orderings(orderings)
-              .normalizationFunction(normalizationFunction)
+              .preprocessDateFn(preprocessDateFn)
               .create();
     }
   }

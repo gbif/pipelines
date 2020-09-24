@@ -30,7 +30,7 @@ public class TemporalInterpreterTest {
           }
           return v;
         };
-    temporalInterpreter = TemporalInterpreter.builder().normalizationFunction(fn).create();
+    temporalInterpreter = TemporalInterpreter.builder().preprocessDateFn(fn).create();
   }
 
   @Test

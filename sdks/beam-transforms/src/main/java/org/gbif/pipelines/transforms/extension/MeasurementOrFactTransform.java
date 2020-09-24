@@ -13,6 +13,7 @@ import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.pipelines.core.functions.SerializableConsumer;
+import org.gbif.pipelines.core.functions.SerializableFunction;
 import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.core.interpreters.extension.MeasurementOrFactInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -31,24 +32,32 @@ import org.gbif.pipelines.transforms.Transform;
  */
 public class MeasurementOrFactTransform extends Transform<ExtendedRecord, MeasurementOrFactRecord> {
 
+  private final SerializableFunction<String, String> preprocessDateFn;
   private final List<DateComponentOrdering> orderings;
   private MeasurementOrFactInterpreter measurementOrFactInterpreter;
 
   @Builder(buildMethodName = "create")
-  private MeasurementOrFactTransform(List<DateComponentOrdering> orderings) {
+  private MeasurementOrFactTransform(
+      List<DateComponentOrdering> orderings,
+      SerializableFunction<String, String> preprocessDateFn) {
     super(
         MeasurementOrFactRecord.class,
         MEASUREMENT_OR_FACT,
         MeasurementOrFactTransform.class.getName(),
         MEASUREMENT_OR_FACT_RECORDS_COUNT);
     this.orderings = orderings;
+    this.preprocessDateFn = preprocessDateFn;
   }
 
   /** Beam @Setup initializes resources */
   @Setup
   public void setup() {
     if (measurementOrFactInterpreter == null) {
-      measurementOrFactInterpreter = MeasurementOrFactInterpreter.create(orderings);
+      measurementOrFactInterpreter =
+          MeasurementOrFactInterpreter.builder()
+              .orderings(orderings)
+              .preprocessDateFn(preprocessDateFn)
+              .create();
     }
   }
 

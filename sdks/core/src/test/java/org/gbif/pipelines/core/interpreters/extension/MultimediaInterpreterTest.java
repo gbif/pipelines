@@ -95,7 +95,7 @@ public class MultimediaInterpreterTest {
         MultimediaRecord.newBuilder().setId(record.getId()).setCreated(0L).build();
 
     // When
-    MultimediaInterpreter.create().interpret(record, mr);
+    MultimediaInterpreter.builder().create().interpret(record, mr);
     MultimediaInterpreter.interpretAssociatedMedia(record, mr);
 
     // Should

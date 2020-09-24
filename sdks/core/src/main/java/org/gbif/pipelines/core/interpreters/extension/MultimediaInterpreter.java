@@ -8,12 +8,12 @@ import com.google.common.base.Strings;
 import java.io.Serializable;
 import java.net.URI;
 import java.time.temporal.TemporalAccessor;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
+import lombok.Builder;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.LicenseUriParser;
@@ -24,6 +24,7 @@ import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.core.functions.SerializableFunction;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation.Result;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation.TargetHandler;
@@ -68,17 +69,13 @@ public class MultimediaInterpreter implements Serializable {
           .skipIf(MultimediaInterpreter::checkLinks);
 
   private final TemporalParser temporalParser;
+  private final SerializableFunction<String, String> preprocessDateFn;
 
-  private MultimediaInterpreter(List<DateComponentOrdering> ordering) {
+  @Builder(buildMethodName = "create")
+  private MultimediaInterpreter(
+      List<DateComponentOrdering> ordering, SerializableFunction<String, String> preprocessDateFn) {
     this.temporalParser = TemporalParser.create(ordering);
-  }
-
-  public static MultimediaInterpreter create(List<DateComponentOrdering> ordering) {
-    return new MultimediaInterpreter(ordering);
-  }
-
-  public static MultimediaInterpreter create() {
-    return create(Collections.emptyList());
+    this.preprocessDateFn = preprocessDateFn;
   }
 
   /**
@@ -214,7 +211,9 @@ public class MultimediaInterpreter implements Serializable {
 
   /** Parser for "http://purl.org/dc/terms/created" term value */
   private String parseAndSetCreated(Multimedia m, String v) {
-    OccurrenceParseResult<TemporalAccessor> result = temporalParser.parseRecordedDate(v);
+    String normalizedDate = Optional.ofNullable(preprocessDateFn).map(x -> x.apply(v)).orElse(v);
+    OccurrenceParseResult<TemporalAccessor> result =
+        temporalParser.parseRecordedDate(normalizedDate);
     if (result.isSuccessful()) {
       m.setCreated(result.getPayload().toString());
       return "";

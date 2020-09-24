@@ -1,14 +1,15 @@
 package org.gbif.pipelines.core.interpreters.extension;
 
 import java.time.temporal.TemporalAccessor;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
+import lombok.Builder;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.core.functions.SerializableFunction;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation.Result;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation.TargetHandler;
@@ -40,18 +41,15 @@ public class MeasurementOrFactInterpreter {
           .map(DwcTerm.measurementDeterminedDate, this::parseAndSetDeterminedDate);
 
   private final TemporalRangeParser temporalParser;
+  private final SerializableFunction<String, String> preprocessDateFn;
 
-  private MeasurementOrFactInterpreter(List<DateComponentOrdering> orderings) {
+  @Builder(buildMethodName = "create")
+  private MeasurementOrFactInterpreter(
+      List<DateComponentOrdering> orderings,
+      SerializableFunction<String, String> preprocessDateFn) {
     this.temporalParser =
         TemporalRangeParser.builder().temporalParser(TemporalParser.create(orderings)).create();
-  }
-
-  public static MeasurementOrFactInterpreter create(List<DateComponentOrdering> orderings) {
-    return new MeasurementOrFactInterpreter(orderings);
-  }
-
-  public static MeasurementOrFactInterpreter create() {
-    return create(Collections.emptyList());
+    this.preprocessDateFn = preprocessDateFn;
   }
 
   /**
@@ -87,8 +85,8 @@ public class MeasurementOrFactInterpreter {
 
   /** Parser for "http://rs.tdwg.org/dwc/terms/measurementDeterminedDate" term value */
   private void parseAndSetDeterminedDate(MeasurementOrFact mf, String v) {
-
-    EventRange eventRange = temporalParser.parse(v);
+    String normalizedDate = Optional.ofNullable(preprocessDateFn).map(x -> x.apply(v)).orElse(v);
+    EventRange eventRange = temporalParser.parse(normalizedDate);
 
     DeterminedDate determinedDate = new DeterminedDate();
     eventRange.getFrom().map(TemporalAccessor::toString).ifPresent(determinedDate::setGte);

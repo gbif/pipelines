@@ -5,11 +5,11 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.MULTIMEDIA_DATE_INVALID;
 import com.google.common.base.Strings;
 import java.net.URI;
 import java.time.temporal.TemporalAccessor;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiPredicate;
+import lombok.Builder;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.LicenseUriParser;
@@ -19,6 +19,7 @@ import org.gbif.common.parsers.core.OccurrenceParseResult;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.dwc.terms.*;
+import org.gbif.pipelines.core.functions.SerializableFunction;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation.Result;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation.TargetHandler;
@@ -144,17 +145,14 @@ public class AudubonInterpreter {
           .postMap(AudubonInterpreter::parseAndSetTypeFromAccessUri);
 
   private final TemporalParser temporalParser;
+  private final SerializableFunction<String, String> preprocessDateFn;
 
-  private AudubonInterpreter(List<DateComponentOrdering> orderings) {
+  @Builder(buildMethodName = "create")
+  private AudubonInterpreter(
+      List<DateComponentOrdering> orderings,
+      SerializableFunction<String, String> preprocessDateFn) {
     this.temporalParser = TemporalParser.create(orderings);
-  }
-
-  public static AudubonInterpreter create(List<DateComponentOrdering> orderings) {
-    return new AudubonInterpreter(orderings);
-  }
-
-  public static AudubonInterpreter create() {
-    return create(Collections.emptyList());
+    this.preprocessDateFn = preprocessDateFn;
   }
 
   /**
@@ -264,7 +262,9 @@ public class AudubonInterpreter {
 
   /** Parser for "http://ns.adobe.com/xap/1.0/CreateDate" term value */
   private String parseAndSetCreatedDate(Audubon a, String v) {
-    OccurrenceParseResult<TemporalAccessor> result = temporalParser.parseRecordedDate(v);
+    String normalizedDate = Optional.ofNullable(preprocessDateFn).map(x -> x.apply(v)).orElse(v);
+    OccurrenceParseResult<TemporalAccessor> result =
+        temporalParser.parseRecordedDate(normalizedDate);
     if (result.isSuccessful()) {
       a.setCreateDate(result.getPayload().toString());
       return "";
