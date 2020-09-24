@@ -34,5 +34,6 @@ public class DelimiterUtilsTest {
         new String[] {"1999-01", "1999-02"}, DelimiterUtils.splitPeriod("1999-01/02"));
     assertArrayEquals(
         new String[] {"1998-9-30", "1998-10-7"}, DelimiterUtils.splitPeriod("1998-9-30/10-7"));
+    assertArrayEquals(new String[0], DelimiterUtils.splitPeriod(null));
   }
 }
