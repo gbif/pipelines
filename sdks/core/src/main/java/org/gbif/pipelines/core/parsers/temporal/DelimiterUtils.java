@@ -33,7 +33,7 @@ public class DelimiterUtils {
    */
   public static String[] splitPeriod(String rawPeriod) {
     if (rawPeriod == null || rawPeriod.isEmpty()) {
-      return new String[0];
+      return new String[] {"", ""};
     }
     // todo can be improved by adding more date patterns
     String[] isoRange = splitISODateRange(rawPeriod);
