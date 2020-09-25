@@ -10,6 +10,7 @@ import java.time.temporal.TemporalUnit;
 import java.util.Optional;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
+import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.core.OccurrenceParseResult;
 
 @Slf4j
@@ -63,6 +64,8 @@ public class TemporalRangeParser implements Serializable {
           TemporalAccessor to = payload.get();
           if (from.getClass() == to.getClass() && isValidRange((Temporal) from, (Temporal) to)) {
             range.setTo(to);
+          } else {
+            range.addIssue(OccurrenceIssue.RECORDED_DATE_UNLIKELY);
           }
         }
       }
