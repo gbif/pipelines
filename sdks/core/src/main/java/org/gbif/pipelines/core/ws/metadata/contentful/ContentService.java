@@ -21,7 +21,7 @@ import org.gbif.pipelines.core.ws.metadata.response.Project;
 /** Client service to Elastisarch/Contentful CMS service. */
 public class ContentService {
 
-  private RestHighLevelClient restHighLevelClient;
+  private final RestHighLevelClient restHighLevelClient;
   private static final String DEFAULT_LOCALE = "en-GB";
 
   private static RestHighLevelClient buildClient(String... hostsAddresses) {
@@ -38,7 +38,9 @@ public class ContentService {
                   }
                 })
             .toArray(HttpHost[]::new);
-    RestClientBuilder builder = RestClient.builder(hosts).setMaxRetryTimeoutMillis(180_000);
+    RestClientBuilder builder =
+        RestClient.builder(hosts)
+            .setRequestConfigCallback(b -> b.setConnectTimeout(180_000).setSocketTimeout(180_000));
     return new RestHighLevelClient(builder);
   }
 
@@ -67,7 +69,7 @@ public class ContentService {
         new SearchRequest().indices("project").source(searchSourceBuilder);
 
     SearchResponse response = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
-    if (response.getHits().getTotalHits() > 0) {
+    if (response.getHits().getTotalHits().value > 0) {
       Map<String, Object> sourceFields = response.getHits().getHits()[0].getSourceAsMap();
       return new Project(
           getFieldValue(sourceFields, "title", DEFAULT_LOCALE),
@@ -89,7 +91,7 @@ public class ContentService {
       SearchRequest searchRequest =
           new SearchRequest().indices("programme").source(searchSourceBuilder);
       SearchResponse response = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
-      if (response.getHits().getTotalHits() > 0) {
+      if (response.getHits().getTotalHits().value > 0) {
         Map<String, Object> sourceFields = response.getHits().getHits()[0].getSourceAsMap();
         return new Programme(
             getFieldValue(sourceFields, "id"),
