@@ -18,7 +18,6 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.gbif.api.model.pipelines.StepType;
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
@@ -200,7 +199,7 @@ public class InterpretedToEsIndexPipeline {
     log.info("Adding step 4: Elasticsearch indexing");
     ElasticsearchIO.ConnectionConfiguration esConfig =
         ElasticsearchIO.ConnectionConfiguration.create(
-            options.getEsHosts(), options.getEsIndexName(), Indexing.INDEX_TYPE);
+            options.getEsHosts(), options.getEsIndexName(), "_doc");
 
     jsonCollection.apply(
         ElasticsearchIO.write()
