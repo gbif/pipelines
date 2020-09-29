@@ -4,7 +4,6 @@ import static org.elasticsearch.common.xcontent.XContentType.JSON;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing.GBIF_ID;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing.INDEX_TYPE;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.time.LocalDateTime;
@@ -328,8 +327,7 @@ public class InterpretedToEsIndexPipeline {
                   ? br.getGbifId().toString()
                   : json.get(esDocumentId).asText();
 
-          return new IndexRequest(options.getEsIndexName(), INDEX_TYPE, docId)
-              .source(json.toString(), JSON);
+          return new IndexRequest(options.getEsIndexName()).id(docId).source(json.toString(), JSON);
         };
 
     boolean useSyncMode = options.getSyncThreshold() > basicMap.size();
