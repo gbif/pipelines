@@ -10,6 +10,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import org.apache.avro.Schema;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.Term;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.io.avro.*;
 import org.junit.After;
@@ -23,7 +24,7 @@ public class SensitiveDataInterpreterTest {
   private Map<SpeciesCheck, Boolean> sensitivityMap;
   private KeyValueStore<SpeciesCheck, Boolean> sensitivityLookup;
   private ConservationApi conservationApi;
-  private Set<String> sensitiveFields;
+  private Map<String, Term> sensitiveFields;
 
   @Before
   public void setUp() throws Exception {
@@ -41,20 +42,21 @@ public class SensitiveDataInterpreterTest {
             .taxonomyCoverageHints(hints)
             .build();
     this.sensitiveFields =
-        Arrays.asList(
-                DwcTerm.scientificName,
-                DwcTerm.taxonConceptID,
-                DwcTerm.eventDate,
-                DwcTerm.decimalLatitude,
-                DwcTerm.decimalLongitude,
-                DwcTerm.locality,
-                DwcTerm.municipality,
-                DwcTerm.verbatimCoordinates,
-                DwcTerm.verbatimLatitude,
-                DwcTerm.verbatimLongitude)
-            .stream()
-            .map(DwcTerm::simpleName)
-            .collect(Collectors.toSet());
+        SensitiveDataInterpreter.buildSensitivityMap(
+            Arrays.asList(
+                    DwcTerm.scientificName,
+                    DwcTerm.taxonConceptID,
+                    DwcTerm.eventDate,
+                    DwcTerm.decimalLatitude,
+                    DwcTerm.decimalLongitude,
+                    DwcTerm.locality,
+                    DwcTerm.municipality,
+                    DwcTerm.verbatimCoordinates,
+                    DwcTerm.verbatimLatitude,
+                    DwcTerm.verbatimLongitude)
+                .stream()
+                .map(DwcTerm::simpleName)
+                .collect(Collectors.toSet()));
     this.sensitivityLookup =
         new KeyValueStore<SpeciesCheck, Boolean>() {
           @Override
@@ -78,7 +80,7 @@ public class SensitiveDataInterpreterTest {
         new ConservationApi() {
           @Override
           public Set<String> getSensitiveDataFields() {
-            return SensitiveDataInterpreterTest.this.sensitiveFields;
+            return SensitiveDataInterpreterTest.this.sensitiveFields.keySet();
           }
 
           @Override
@@ -130,22 +132,23 @@ public class SensitiveDataInterpreterTest {
   @Test
   public void testConstructFields1() throws Exception {
     Map<String, String> map = new HashMap<>();
-    map.put(DwcTerm.scientificName.simpleName(), "Acacia dealbata");
-    map.put(DwcTerm.eventDate.simpleName(), "2020-01-01");
+    map.put(DwcTerm.scientificName.qualifiedName(), "Acacia dealbata");
+    map.put(DwcTerm.eventDate.qualifiedName(), "2020-01-01");
     map.put(
-        DwcTerm.taxonConceptID.simpleName(), "https://id.biodiversity.org.au/taxon/apni/51286863");
-    map.put(DwcTerm.decimalLatitude.simpleName(), "-39.78");
-    map.put(DwcTerm.decimalLongitude.simpleName(), "149.55");
+        DwcTerm.taxonConceptID.qualifiedName(),
+        "https://id.biodiversity.org.au/taxon/apni/51286863");
+    map.put(DwcTerm.decimalLatitude.qualifiedName(), "-39.78");
+    map.put(DwcTerm.decimalLongitude.qualifiedName(), "149.55");
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
     Map<String, String> properties = new HashMap<>();
     SensitiveDataInterpreter.constructFields(this.sensitiveFields, properties, er);
     assertFalse(properties.isEmpty());
-    for (String field : this.sensitiveFields) {
-      String val = map.get(field);
-      assertEquals("Fields " + field + " don't match", val, properties.get(field));
+    for (Term term : this.sensitiveFields.values()) {
+      String val = map.get(term.qualifiedName());
+      assertEquals("Fields " + term + " don't match", val, properties.get(term.simpleName()));
     }
     for (String field : map.keySet()) {
-      if (!this.sensitiveFields.contains(field))
+      if (!this.sensitiveFields.containsKey(field))
         assertNull("Fields " + field + " should be absent", properties.get(field));
     }
   }
@@ -164,7 +167,7 @@ public class SensitiveDataInterpreterTest {
     Map<String, String> properties = new HashMap<>();
     SensitiveDataInterpreter.constructFields(this.sensitiveFields, properties, lr);
     assertFalse(properties.isEmpty());
-    for (String field : this.sensitiveFields) {
+    for (String field : this.sensitiveFields.keySet()) {
       if (lr.getSchema().getField(field) != null) {
         Object val = lr.get(field);
         assertEquals(
@@ -174,7 +177,7 @@ public class SensitiveDataInterpreterTest {
       }
     }
     for (Schema.Field field : lr.getSchema().getFields()) {
-      if (!this.sensitiveFields.contains(field.name()))
+      if (!this.sensitiveFields.containsKey(field.name()))
         assertNull("Fields " + field + " should be absent", properties.get(field.name()));
     }
   }
@@ -237,7 +240,7 @@ public class SensitiveDataInterpreterTest {
     Map<String, String> properties = new HashMap<>();
     SensitiveDataInterpreter.constructFields(this.sensitiveFields, properties, tr);
     assertFalse(properties.isEmpty());
-    for (String field : this.sensitiveFields) {
+    for (String field : this.sensitiveFields.keySet()) {
       if (tr.getSchema().getField(field) != null) {
         Object val = tr.get(field);
         assertEquals(
@@ -247,7 +250,7 @@ public class SensitiveDataInterpreterTest {
       }
     }
     for (Schema.Field field : tr.getSchema().getFields()) {
-      if (!this.sensitiveFields.contains(field.name()))
+      if (!this.sensitiveFields.containsKey(field.name()))
         assertNull("Fields " + field + " should be absent", properties.get(field.name()));
     }
   }
@@ -255,23 +258,24 @@ public class SensitiveDataInterpreterTest {
   @Test
   public void testApplySensitivity1() throws Exception {
     Map<String, String> map = new HashMap<>();
-    map.put(DwcTerm.scientificName.simpleName(), "Acacia dealbata");
-    map.put(DwcTerm.eventDate.simpleName(), "2020-01-01");
+    map.put(DwcTerm.scientificName.qualifiedName(), "Acacia dealbata");
+    map.put(DwcTerm.eventDate.qualifiedName(), "2020-01-01");
     map.put(
-        DwcTerm.taxonConceptID.simpleName(), "https://id.biodiversity.org.au/taxon/apni/51286863");
-    map.put(DwcTerm.decimalLatitude.simpleName(), "-39.78");
-    map.put(DwcTerm.decimalLongitude.simpleName(), "149.55");
+        DwcTerm.taxonConceptID.qualifiedName(),
+        "https://id.biodiversity.org.au/taxon/apni/51286863");
+    map.put(DwcTerm.decimalLatitude.qualifiedName(), "-39.78");
+    map.put(DwcTerm.decimalLongitude.qualifiedName(), "149.55");
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
     Map<String, String> properties = new HashMap<>();
     properties.put(DwcTerm.decimalLatitude.simpleName(), "-39.8");
     properties.put(DwcTerm.decimalLongitude.simpleName(), "149.6");
     ALASensitivityRecord sr =
         ALASensitivityRecord.newBuilder().setId("1").setAltered(properties).build();
-    SensitiveDataInterpreter.applySensitivity(sr, er);
-    assertEquals("Acacia dealbata", er.getCoreTerms().get(DwcTerm.scientificName.simpleName()));
-    assertEquals("2020-01-01", er.getCoreTerms().get(DwcTerm.eventDate.simpleName()));
-    assertEquals("-39.8", er.getCoreTerms().get(DwcTerm.decimalLatitude.simpleName()));
-    assertEquals("149.6", er.getCoreTerms().get(DwcTerm.decimalLongitude.simpleName()));
+    SensitiveDataInterpreter.applySensitivity(this.sensitiveFields, sr, er);
+    assertEquals("Acacia dealbata", er.getCoreTerms().get(DwcTerm.scientificName.qualifiedName()));
+    assertEquals("2020-01-01", er.getCoreTerms().get(DwcTerm.eventDate.qualifiedName()));
+    assertEquals("-39.8", er.getCoreTerms().get(DwcTerm.decimalLatitude.qualifiedName()));
+    assertEquals("149.6", er.getCoreTerms().get(DwcTerm.decimalLongitude.qualifiedName()));
   }
 
   @Test
@@ -291,7 +295,7 @@ public class SensitiveDataInterpreterTest {
     properties.put(DwcTerm.locality.simpleName(), null);
     ALASensitivityRecord sr =
         ALASensitivityRecord.newBuilder().setId("1").setAltered(properties).build();
-    SensitiveDataInterpreter.applySensitivity(sr, lr);
+    SensitiveDataInterpreter.applySensitivity(this.sensitiveFields, sr, lr);
     assertEquals(-39.8, lr.getDecimalLatitude(), 0.0001);
     assertEquals(149.6, lr.getDecimalLongitude(), 0.0001);
     assertNull(lr.getLocality());
@@ -321,7 +325,7 @@ public class SensitiveDataInterpreterTest {
     properties.put(DwcTerm.decimalLongitude.simpleName(), "149.6");
     ALASensitivityRecord sr =
         ALASensitivityRecord.newBuilder().setId("1").setAltered(properties).build();
-    SensitiveDataInterpreter.applySensitivity(sr, tr);
+    SensitiveDataInterpreter.applySensitivity(this.sensitiveFields, sr, tr);
     assertEquals("Acacia", tr.getAcceptedUsage().getName());
   }
 
@@ -344,7 +348,7 @@ public class SensitiveDataInterpreterTest {
     properties.put(DwcTerm.day.simpleName(), null);
     ALASensitivityRecord sr =
         ALASensitivityRecord.newBuilder().setId("1").setAltered(properties).build();
-    SensitiveDataInterpreter.applySensitivity(sr, tr);
+    SensitiveDataInterpreter.applySensitivity(this.sensitiveFields, sr, tr);
     assertEquals("2020", tr.getEventDate().getGte());
     assertEquals("2020", tr.getEventDate().getLte());
     assertEquals(2020, tr.getYear().intValue());
@@ -369,7 +373,7 @@ public class SensitiveDataInterpreterTest {
     properties.put(DwcTerm.decimalLongitude.simpleName(), "149.6");
     ALASensitivityRecord sr =
         ALASensitivityRecord.newBuilder().setId("1").setAltered(properties).build();
-    SensitiveDataInterpreter.applySensitivity(sr, tr);
+    SensitiveDataInterpreter.applySensitivity(this.sensitiveFields, sr, tr);
     assertEquals("Acacia", tr.getScientificName());
     assertEquals("species", tr.getRank());
   }
@@ -378,12 +382,13 @@ public class SensitiveDataInterpreterTest {
   public void testSourceQualityChecks1() throws Exception {
     ALASensitivityRecord sr = ALASensitivityRecord.newBuilder().setId("1").build();
     Map<String, String> map = new HashMap<>();
-    map.put(DwcTerm.scientificName.simpleName(), "Acacia dealbata");
-    map.put(DwcTerm.eventDate.simpleName(), "2020-01-01");
+    map.put(DwcTerm.scientificName.qualifiedName(), "Acacia dealbata");
+    map.put(DwcTerm.eventDate.qualifiedName(), "2020-01-01");
     map.put(
-        DwcTerm.taxonConceptID.simpleName(), "https://id.biodiversity.org.au/taxon/apni/51286863");
-    map.put(DwcTerm.decimalLatitude.simpleName(), "-39.78");
-    map.put(DwcTerm.decimalLongitude.simpleName(), "149.55");
+        DwcTerm.taxonConceptID.qualifiedName(),
+        "https://id.biodiversity.org.au/taxon/apni/51286863");
+    map.put(DwcTerm.decimalLatitude.qualifiedName(), "-39.78");
+    map.put(DwcTerm.decimalLongitude.qualifiedName(), "149.55");
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
     Map<String, String> properties = new HashMap<>();
     SensitiveDataInterpreter.constructFields(this.sensitiveFields, properties, er);
@@ -413,12 +418,13 @@ public class SensitiveDataInterpreterTest {
   public void testSensitiveDataInterpreter1() throws Exception {
     ALASensitivityRecord sr = ALASensitivityRecord.newBuilder().setId("1").build();
     Map<String, String> map = new HashMap<>();
-    map.put(DwcTerm.scientificName.simpleName(), "Acacia dealbata");
-    map.put(DwcTerm.eventDate.simpleName(), "2020-01-01");
+    map.put(DwcTerm.scientificName.qualifiedName(), "Acacia dealbata");
+    map.put(DwcTerm.eventDate.qualifiedName(), "2020-01-01");
     map.put(
-        DwcTerm.taxonConceptID.simpleName(), "https://id.biodiversity.org.au/taxon/apni/51286863");
-    map.put(DwcTerm.decimalLatitude.simpleName(), "-39.78");
-    map.put(DwcTerm.decimalLongitude.simpleName(), "149.55");
+        DwcTerm.taxonConceptID.qualifiedName(),
+        "https://id.biodiversity.org.au/taxon/apni/51286863");
+    map.put(DwcTerm.decimalLatitude.qualifiedName(), "-39.78");
+    map.put(DwcTerm.decimalLongitude.qualifiedName(), "149.55");
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
     Map<String, String> properties = new HashMap<>();
     SensitiveDataInterpreter.constructFields(this.sensitiveFields, properties, er);

@@ -16,6 +16,7 @@ import org.apache.avro.generic.IndexedRecord;
 import org.gbif.api.vocabulary.InterpretationRemark;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
+import org.gbif.dwc.terms.TermFactory;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.parsers.utils.ModelUtils;
@@ -51,7 +52,7 @@ public class SensitiveDataInterpreter {
    * @param er The extended record
    */
   public static void constructFields(
-      Set<String> sensitive, Map<String, String> properties, ExtendedRecord er) {
+      Map<String, Term> sensitive, Map<String, String> properties, ExtendedRecord er) {
     if (er == null) return;
     er.getExtensions()
         .values()
@@ -71,28 +72,28 @@ public class SensitiveDataInterpreter {
    * @param record A record
    */
   public static void constructFields(
-      Set<String> sensitive, Map<String, String> properties, TaxonRecord record) {
+      Map<String, Term> sensitive, Map<String, String> properties, TaxonRecord record) {
 
     if (record == null) return;
     String scientificName = DwcTerm.scientificName.simpleName();
-    if (sensitive.contains(scientificName) && !properties.containsKey(scientificName)) {
+    if (sensitive.containsKey(scientificName) && !properties.containsKey(scientificName)) {
       if (record.getAcceptedUsage() != null)
         properties.put(scientificName, record.getAcceptedUsage().getName());
     }
     String taxonConceptID = DwcTerm.taxonConceptID.simpleName();
-    if (sensitive.contains(taxonConceptID) && !properties.containsKey(taxonConceptID)) {
+    if (sensitive.containsKey(taxonConceptID) && !properties.containsKey(taxonConceptID)) {
       if (record.getAcceptedUsage() != null)
         properties.put(taxonConceptID, record.getAcceptedUsage().getKey().toString());
     }
     String taxonRank = DwcTerm.taxonRank.simpleName();
-    if (sensitive.contains(taxonRank) && !properties.containsKey(taxonRank)) {
+    if (sensitive.containsKey(taxonRank) && !properties.containsKey(taxonRank)) {
       if (record.getAcceptedUsage() != null)
         properties.put(taxonRank, record.getAcceptedUsage().getRank().name());
     }
     if (record.getClassification() != null) {
       for (RankedName r : record.getClassification()) {
         String rank = r.getRank().name().toLowerCase();
-        if (sensitive.contains(rank) && !properties.containsKey(rank)) {
+        if (sensitive.containsKey(rank) && !properties.containsKey(rank)) {
           properties.put(rank, r.getName());
         }
       }
@@ -112,11 +113,11 @@ public class SensitiveDataInterpreter {
    * @param record A record
    */
   public static void constructFields(
-      Set<String> sensitive, Map<String, String> properties, TemporalRecord record) {
+      Map<String, Term> sensitive, Map<String, String> properties, TemporalRecord record) {
 
     if (record == null) return;
     String eventDate = DwcTerm.eventDate.simpleName();
-    if (sensitive.contains(eventDate) && !properties.containsKey(eventDate)) {
+    if (sensitive.containsKey(eventDate) && !properties.containsKey(eventDate)) {
       if (record.getEventDate() != null) properties.put(eventDate, record.getEventDate().getGte());
     }
     constructFields(sensitive, properties, (IndexedRecord) record);
@@ -132,12 +133,12 @@ public class SensitiveDataInterpreter {
    * @param record A record
    */
   public static void constructFields(
-      Set<String> sensitive, Map<String, String> properties, IndexedRecord record) {
+      Map<String, Term> sensitive, Map<String, String> properties, IndexedRecord record) {
 
     if (record == null) return;
     for (Schema.Field f : record.getSchema().getFields()) {
       String name = f.name();
-      if (sensitive.contains(name) && !properties.containsKey(name)) {
+      if (sensitive.containsKey(name) && !properties.containsKey(name)) {
         Object value = record.get(f.pos());
         properties.put(name, value == null ? null : value.toString());
       }
@@ -145,13 +146,14 @@ public class SensitiveDataInterpreter {
   }
 
   protected static void constructFields(
-      Set<String> sensitive, Map<String, String> properties, Map<String, String> values) {
+      Map<String, Term> sensitive, Map<String, String> properties, Map<String, String> values) {
     values
         .entrySet()
         .forEach(
             e -> {
-              if (sensitive.contains(e.getKey()) && !properties.containsKey(e.getKey()))
-                properties.put(e.getKey(), e.getValue());
+              Term term = sensitive.get(e.getKey());
+              String sn = term == null ? null : term.simpleName();
+              if (sn != null && !properties.containsKey(sn)) properties.put(sn, e.getValue());
             });
   }
 
@@ -161,8 +163,9 @@ public class SensitiveDataInterpreter {
    * @param sr The sensitivity recoord
    * @param record The record to apply this to
    */
-  public static void applySensitivity(ALASensitivityRecord sr, IndexedRecord record) {
-    applySensitivity(sr, record, Collections.emptySet());
+  public static void applySensitivity(
+      Map<String, Term> sensitive, ALASensitivityRecord sr, IndexedRecord record) {
+    applySensitivity(sensitive, sr, record, Collections.emptySet());
   }
 
   /**
@@ -171,14 +174,15 @@ public class SensitiveDataInterpreter {
    * @param sr The sensitivity record
    * @param record The record to apply this to
    */
-  public static void applySensitivity(ALASensitivityRecord sr, TemporalRecord record) {
+  public static void applySensitivity(
+      Map<String, Term> sensitive, ALASensitivityRecord sr, TemporalRecord record) {
     Map<String, String> altered = sr.getAltered();
     String eventDate = DwcTerm.eventDate.simpleName();
     if (altered.containsKey(eventDate)) {
       String newDate = altered.get(eventDate);
       record.setEventDate(EventDate.newBuilder().setGte(newDate).setLte(newDate).build());
     }
-    applySensitivity(sr, record, SKIP_TEMPORAL_UPDATE);
+    applySensitivity(sensitive, sr, record, SKIP_TEMPORAL_UPDATE);
   }
 
   /**
@@ -190,7 +194,8 @@ public class SensitiveDataInterpreter {
    * @param sr The sensitivity record
    * @param record The record to apply this to
    */
-  public static void applySensitivity(ALASensitivityRecord sr, TaxonRecord record) {
+  public static void applySensitivity(
+      Map<String, Term> sensitive, ALASensitivityRecord sr, TaxonRecord record) {
     Map<String, String> altered = sr.getAltered();
     String scientificName = DwcTerm.scientificName.simpleName();
     String taxonRank = DwcTerm.taxonRank.simpleName();
@@ -223,7 +228,10 @@ public class SensitiveDataInterpreter {
   // TODO: This interprets the incoming value against the schema.
   // There has to be a better way
   protected static void applySensitivity(
-      ALASensitivityRecord sr, IndexedRecord record, Set<String> ignore) {
+      Map<String, Term> sensitive,
+      ALASensitivityRecord sr,
+      IndexedRecord record,
+      Set<String> ignore) {
     Map<String, String> altered = sr.getAltered();
 
     if (altered == null || altered.isEmpty()) return;
@@ -284,17 +292,23 @@ public class SensitiveDataInterpreter {
    * @param sr The sensitivity record
    * @param record A record
    */
-  public static void applySensitivity(ALASensitivityRecord sr, ExtendedRecord record) {
-    record.getExtensions().forEach((k, el) -> el.forEach(ext -> applySensitivity(sr, ext)));
-    applySensitivity(sr, record.getCoreTerms());
+  public static void applySensitivity(
+      Map<String, Term> sensitive, ALASensitivityRecord sr, ExtendedRecord record) {
+    record
+        .getExtensions()
+        .forEach((k, el) -> el.forEach(ext -> applySensitivity(sensitive, sr, ext)));
+    applySensitivity(sensitive, sr, record.getCoreTerms());
   }
 
-  protected static void applySensitivity(ALASensitivityRecord sr, Map<String, String> values) {
-    Map<String, String> altered = sr.getAltered();
-    values.forEach(
-        (k, v) -> {
-          if (altered.containsKey(k) && values.containsKey(k)) values.put(k, altered.get(k));
-        });
+  protected static void applySensitivity(
+      Map<String, Term> sensitive, ALASensitivityRecord sr, Map<String, String> values) {
+    sr.getAltered()
+        .forEach(
+            (k, v) -> {
+              Term term = sensitive.get(k);
+              String qn = term == null ? null : term.qualifiedName();
+              if (qn != null && values.containsKey(qn)) values.put(qn, v);
+            });
   }
 
   /**
@@ -309,7 +323,9 @@ public class SensitiveDataInterpreter {
       final Map<String, String> properties,
       final ALASensitivityRecord sr,
       final ALACollectoryMetadata dataResource) {
-    boolean hasName = properties.get(DwcTerm.scientificName.simpleName()) != null;
+    boolean hasName =
+        properties.get(DwcTerm.scientificName.simpleName()) != null
+            || properties.get(DwcTerm.scientificName.qualifiedName()) != null;
     if (!hasName) addIssue(sr, ALAOccurrenceIssue.NAME_NOT_SUPPLIED);
     return hasName;
   }
@@ -378,26 +394,6 @@ public class SensitiveDataInterpreter {
     ModelUtils.addIssue(sr, issue.getId());
   }
 
-  protected static String getValue(ExtendedRecord record, Term term, Set<String> recordTypes) {
-    String field = term.simpleName();
-    for (Map.Entry<String, List<Map<String, String>>> ext : record.getExtensions().entrySet()) {
-      if (recordTypes == null || recordTypes.isEmpty() || recordTypes.contains(ext.getKey())) {
-        Optional<String> value =
-            ext.getValue().stream()
-                .filter(m -> m.containsKey(field))
-                .map(m -> m.get(field))
-                .findFirst();
-        if (value.isPresent()) return value.get();
-      }
-    }
-    if (recordTypes == null
-        || recordTypes.isEmpty()
-        || recordTypes.contains(record.getCoreRowType())) {
-      return record.getCoreTerms().get(field);
-    }
-    return null;
-  }
-
   /**
    * Try and get a scientific name from one of the inputs.
    *
@@ -439,5 +435,24 @@ public class SensitiveDataInterpreter {
       if ((taxonId = ModelUtils.extractValue(er, DwcTerm.taxonID)) != null) return taxonId;
     }
     return null;
+  }
+
+  /**
+   * Build a map of names onto terms
+   *
+   * @param fields The field names
+   * @return A map of bare name/URI onto terms
+   */
+  public static Map<String, Term> buildSensitivityMap(Collection<String> fields) {
+    TermFactory termFactory = TermFactory.instance();
+    Map<String, Term> sensitvityMap = new HashMap<>();
+
+    for (String field : fields) {
+      Term term = termFactory.findTerm(field);
+      sensitvityMap.put(field, term);
+      sensitvityMap.put(term.simpleName(), term);
+      sensitvityMap.put(term.qualifiedName(), term);
+    }
+    return sensitvityMap;
   }
 }
