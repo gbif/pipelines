@@ -194,14 +194,13 @@ public class EsService {
    *
    * @param esClient client to call ES. It is required.
    * @param idxName index where the document has to be indexed to.
-   * @param type type of the document.
    * @param id id of the document.
    * @param document document to index.
    */
   @SneakyThrows
   public static void indexDocument(
-      @NonNull EsClient esClient, String idxName, String type, long id, String document) {
-    String endpoint = buildEndpoint(idxName, type, id);
+      @NonNull EsClient esClient, String idxName, long id, String document) {
+    String endpoint = buildEndpoint(idxName, "_doc", id);
     HttpEntity body = createBodyFromString(document);
     esClient.performPutRequest(endpoint, Collections.emptyMap(), body);
   }
@@ -211,13 +210,11 @@ public class EsService {
    *
    * @param esClient client to call ES. It is required.
    * @param idxName index to remove the document from.
-   * @param type type of the document.
    * @param id id of the document to be removed.
    */
   @SneakyThrows
-  public static void deleteDocument(
-      @NonNull EsClient esClient, String idxName, String type, long id) {
-    String endpoint = buildEndpoint(idxName, type, id);
+  public static void deleteDocument(@NonNull EsClient esClient, String idxName, long id) {
+    String endpoint = buildEndpoint(idxName, "_doc", id);
     esClient.performDeleteRequest(endpoint);
   }
 

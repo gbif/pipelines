@@ -69,7 +69,7 @@ public class EsIndexIT extends EsApiIntegration {
 
     // assert mappings
     JsonNode mappings = getMappingsFromIndex(idxCreated).path(idxCreated).path(Field.MAPPINGS);
-    assertTrue(mappings.has("doc"));
+    assertTrue(mappings.path("properties").has("test"));
   }
 
   @Test
@@ -180,10 +180,9 @@ public class EsIndexIT extends EsApiIntegration {
 
     // index some documents
     long n = 3;
-    final String type = "doc";
     String document = "{\"test\" : \"test value\"}";
     for (int i = 1; i <= n; i++) {
-      EsService.indexDocument(ES_SERVER.getEsClient(), idx, type, i, document);
+      EsService.indexDocument(ES_SERVER.getEsClient(), idx, i, document);
     }
 
     // swap index in alias
@@ -222,7 +221,7 @@ public class EsIndexIT extends EsApiIntegration {
 
     // index some documents
     String document = "{\"datasetKey\" : \"" + datasetKey + "\"}";
-    EsService.indexDocument(ES_SERVER.getEsClient(), idx1, "doc", 1, document);
+    EsService.indexDocument(ES_SERVER.getEsClient(), idx1, 1, document);
     EsService.refreshIndex(ES_SERVER.getEsClient(), idx1);
 
     // add index to alias
@@ -250,7 +249,7 @@ public class EsIndexIT extends EsApiIntegration {
 
     // index some documents
     String document = "{\"datasetKey\" : \"" + datasetKey + "\"}";
-    EsService.indexDocument(ES_SERVER.getEsClient(), idx1, "doc", 1, document);
+    EsService.indexDocument(ES_SERVER.getEsClient(), idx1, 1, document);
     EsService.refreshIndex(ES_SERVER.getEsClient(), idx1);
 
     // add index to aliases
