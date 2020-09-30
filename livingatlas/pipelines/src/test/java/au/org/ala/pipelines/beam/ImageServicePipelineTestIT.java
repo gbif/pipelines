@@ -93,6 +93,6 @@ public class ImageServicePipelineTestIT {
     String imageServiceExportPath =
         absolutePath + "/" + testDir + "/" + datasetID + "/image-service-export.csv";
 
-    ImageServicePipeline.run(imageOptions, imageServiceExportPath);
+    ImageServiceSyncPipeline.run(imageOptions, imageServiceExportPath);
   }
 }

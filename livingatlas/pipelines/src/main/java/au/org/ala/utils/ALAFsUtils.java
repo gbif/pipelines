@@ -50,6 +50,12 @@ public class ALAFsUtils {
         .toString();
   }
 
+  public static String buildPathMultimediaDeltaUsingTargetPath(BasePipelineOptions options) {
+    return FsUtils.buildPath(
+            FsUtils.buildDatasetAttemptPath(options, "multimedia-delta", false), "multimedia-delta")
+        .toString();
+  }
+
   /**
    * Constructs the path for reading / writing sampling. This is written outside of /interpreted
    * directory.

@@ -22,4 +22,10 @@ public interface ImageServicePipelineOptions extends InterpretationPipelineOptio
   boolean isAsyncUpload();
 
   void setAsyncUpload(boolean asyncUpload);
+
+  @Description("The number of days to synchronise from")
+  @Default.Long(-1)
+  Long getModifiedWindowTimeInDays();
+
+  void setModifiedWindowTimeInDays(Long modifiedWindowTimeInDays);
 }

@@ -43,7 +43,7 @@ import retrofit2.http.GET;
 import retrofit2.http.Path;
 
 @Slf4j
-public class ImageServicePipeline {
+public class ImageServiceSyncPipeline {
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
 
@@ -55,7 +55,7 @@ public class ImageServicePipeline {
 
     MDC.put("datasetId", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
-    MDC.put("step", "IMAGE_SERVICE");
+    MDC.put("step", "IMAGE_SYNC");
 
     PipelinesOptionsFactory.registerHdfs(options);
     run(options);
