@@ -76,7 +76,7 @@ public class ImageInterpreterTest {
     ImageRecord ir = ImageRecord.newBuilder().setId(record.getId()).setCreated(0L).build();
 
     // When
-    ImageInterpreter.interpret(record, ir);
+    ImageInterpreter.builder().create().interpret(record, ir);
 
     // Should
     Assert.assertEquals(result, ir.toString());

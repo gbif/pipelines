@@ -4,18 +4,22 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MULTIMEDIA_RE
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.MULTIMEDIA;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
+import lombok.Builder;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.api.vocabulary.Extension;
+import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.core.functions.SerializableConsumer;
+import org.gbif.pipelines.core.functions.SerializableFunction;
 import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.core.interpreters.extension.MultimediaInterpreter;
 import org.gbif.pipelines.core.utils.ModelUtils;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
 
 /**
@@ -29,16 +33,33 @@ import org.gbif.pipelines.transforms.Transform;
  */
 public class MultimediaTransform extends Transform<ExtendedRecord, MultimediaRecord> {
 
-  public MultimediaTransform() {
+  private final SerializableFunction<String, String> preprocessDateFn;
+  private final List<DateComponentOrdering> orderings;
+  private MultimediaInterpreter multimediaInterpreter;
+
+  @Builder(buildMethodName = "create")
+  private MultimediaTransform(
+      List<DateComponentOrdering> orderings,
+      SerializableFunction<String, String> preprocessDateFn) {
     super(
         MultimediaRecord.class,
         MULTIMEDIA,
         MultimediaTransform.class.getName(),
         MULTIMEDIA_RECORDS_COUNT);
+    this.orderings = orderings;
+    this.preprocessDateFn = preprocessDateFn;
   }
 
-  public static MultimediaTransform create() {
-    return new MultimediaTransform();
+  /** Beam @Setup initializes resources */
+  @Setup
+  public void setup() {
+    if (multimediaInterpreter == null) {
+      multimediaInterpreter =
+          MultimediaInterpreter.builder()
+              .ordering(orderings)
+              .preprocessDateFn(preprocessDateFn)
+              .create();
+    }
   }
 
   /** Maps {@link MultimediaRecord} to key value, where key is {@link MultimediaRecord#getId} */
@@ -67,7 +88,7 @@ public class MultimediaTransform extends Transform<ExtendedRecord, MultimediaRec
                         .filter(l -> !l.isEmpty())
                         .isPresent()
                     || ModelUtils.extractOptValue(er, DwcTerm.associatedMedia).isPresent())
-        .via(MultimediaInterpreter::interpret)
+        .via(multimediaInterpreter::interpret)
         .via(MultimediaInterpreter::interpretAssociatedMedia)
         .getOfNullable();
   }

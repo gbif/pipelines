@@ -1,12 +1,15 @@
 package org.gbif.pipelines.transforms.core;
 
+import static org.gbif.common.parsers.date.DateComponentOrdering.DMY_FORMATS;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.Month;
-import java.time.Year;
+import java.time.YearMonth;
 import java.time.temporal.Temporal;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
@@ -16,7 +19,6 @@ import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.core.parsers.temporal.ParsedTemporal;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
@@ -45,25 +47,50 @@ public class TemporalRecordTransformTest {
   @Test
   public void transformationTest() {
     // State
-    final List<ExtendedRecord> input = createExtendedRecordList("1999-01-01T12:26Z");
+    ExtendedRecord record = ExtendedRecord.newBuilder().setId("0").build();
+    record.getCoreTerms().put(DwcTerm.year.qualifiedName(), "1999");
+    record.getCoreTerms().put(DwcTerm.month.qualifiedName(), "2");
+    record.getCoreTerms().put(DwcTerm.day.qualifiedName(), "2");
+    record.getCoreTerms().put(DwcTerm.eventDate.qualifiedName(), "1999-02-02");
+    record.getCoreTerms().put(DwcTerm.dateIdentified.qualifiedName(), "1999-02-02T12:26");
+    record.getCoreTerms().put(DcTerm.modified.qualifiedName(), "1999-02-02T12:26");
+    final List<ExtendedRecord> input = Collections.singletonList(record);
 
     // Expected
-    // First
-    final LocalDateTime fromOne = LocalDateTime.of(1999, 1, 1, 12, 26);
-    final ParsedTemporal periodOne = ParsedTemporal.create();
-    periodOne.setFromDate(fromOne);
-    periodOne.setYear(Year.of(1999));
-    periodOne.setMonth(Month.of(1));
-    periodOne.setDay(1);
-    periodOne.setDay(1);
-    periodOne.setDay(1);
-
-    final List<TemporalRecord> dataExpected = createTemporalRecordList(periodOne);
+    final List<TemporalRecord> dataExpected =
+        createTemporalRecordList(
+            1999, 2, 2, LocalDate.of(1999, 2, 2), LocalDateTime.of(1999, 2, 2, 12, 26));
 
     // When
     PCollection<TemporalRecord> dataStream =
         p.apply(Create.of(input))
-            .apply(TemporalTransform.create().interpret())
+            .apply(TemporalTransform.builder().create().interpret())
+            .apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
+
+    // Should
+    PAssert.that(dataStream).containsInAnyOrder(dataExpected);
+    p.run();
+  }
+
+  @Test
+  public void transformationDateMonthTest() {
+    // State
+    ExtendedRecord record = ExtendedRecord.newBuilder().setId("0").build();
+    record.getCoreTerms().put(DwcTerm.year.qualifiedName(), "1999");
+    record.getCoreTerms().put(DwcTerm.month.qualifiedName(), "2");
+    record.getCoreTerms().put(DwcTerm.eventDate.qualifiedName(), "1999-02");
+    record.getCoreTerms().put(DwcTerm.dateIdentified.qualifiedName(), "1999-02");
+    record.getCoreTerms().put(DcTerm.modified.qualifiedName(), "1999-02");
+    final List<ExtendedRecord> input = Collections.singletonList(record);
+
+    // Expected
+    final List<TemporalRecord> dataExpected =
+        createTemporalRecordList(1999, 2, null, YearMonth.of(1999, 2), YearMonth.of(1999, 2));
+
+    // When
+    PCollection<TemporalRecord> dataStream =
+        p.apply(Create.of(input))
+            .apply(TemporalTransform.builder().create().interpret())
             .apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
 
     // Should
@@ -80,7 +107,7 @@ public class TemporalRecordTransformTest {
     // When
     PCollection<TemporalRecord> dataStream =
         p.apply(Create.of(er))
-            .apply(TemporalTransform.create().interpret())
+            .apply(TemporalTransform.builder().create().interpret())
             .apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
 
     // Should
@@ -88,39 +115,56 @@ public class TemporalRecordTransformTest {
     p.run();
   }
 
-  private List<ExtendedRecord> createExtendedRecordList(String... events) {
-    return Arrays.stream(events)
-        .map(
-            x -> {
-              ExtendedRecord record = ExtendedRecord.newBuilder().setId("0").build();
-              record.getCoreTerms().put(DwcTerm.year.qualifiedName(), "1999");
-              record.getCoreTerms().put(DwcTerm.month.qualifiedName(), "1");
-              record.getCoreTerms().put(DwcTerm.day.qualifiedName(), "1");
-              record.getCoreTerms().put(DwcTerm.eventDate.qualifiedName(), x);
-              record.getCoreTerms().put(DwcTerm.dateIdentified.qualifiedName(), x);
-              record.getCoreTerms().put(DcTerm.modified.qualifiedName(), x);
-              return record;
-            })
-        .collect(Collectors.toList());
+  @Test
+  public void dmyTransformationTest() {
+    // State
+    final List<ExtendedRecord> input = new ArrayList<>();
+
+    ExtendedRecord record = ExtendedRecord.newBuilder().setId("0").build();
+    record.getCoreTerms().put(DwcTerm.eventDate.qualifiedName(), "01/02/1999T12:26Z");
+    record.getCoreTerms().put(DwcTerm.dateIdentified.qualifiedName(), "01/04/1999");
+    record.getCoreTerms().put(DcTerm.modified.qualifiedName(), "01/03/1999T12:26");
+    input.add(record);
+    // Expected
+    TemporalRecord expected =
+        TemporalRecord.newBuilder()
+            .setId("0")
+            .setEventDate(EventDate.newBuilder().setGte("1999-02-01T12:26Z").build())
+            .setYear(1999)
+            .setMonth(2)
+            .setDay(1)
+            .setDateIdentified("1999-04-01")
+            .setModified("1999-03-01T12:26")
+            .setCreated(0L)
+            .build();
+
+    // When
+    PCollection<TemporalRecord> dataStream =
+        p.apply(Create.of(input))
+            .apply(
+                TemporalTransform.builder()
+                    .orderings(Arrays.asList(DMY_FORMATS))
+                    .create()
+                    .interpret())
+            .apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
+
+    // Should
+    PAssert.that(dataStream).containsInAnyOrder(Collections.singletonList(expected));
+    p.run();
   }
 
-  private List<TemporalRecord> createTemporalRecordList(ParsedTemporal... dates) {
-    return Arrays.stream(dates)
-        .map(
-            x -> {
-              String from = x.getFromOpt().map(Temporal::toString).orElse(null);
-              String to = x.getToOpt().map(Temporal::toString).orElse(null);
-              return TemporalRecord.newBuilder()
-                  .setId("0")
-                  .setYear(x.getYearOpt().map(Year::getValue).orElse(null))
-                  .setMonth(x.getMonthOpt().map(Month::getValue).orElse(null))
-                  .setDay(x.getDayOpt().orElse(null))
-                  .setEventDate(EventDate.newBuilder().setGte(from).setLte(to).build())
-                  .setDateIdentified(x.getFromOpt().map(Temporal::toString).orElse(null))
-                  .setModified(x.getFromOpt().map(Temporal::toString).orElse(null))
-                  .setCreated(0L)
-                  .build();
-            })
-        .collect(Collectors.toList());
+  private List<TemporalRecord> createTemporalRecordList(
+      Integer year, Integer month, Integer day, Temporal eventDate, Temporal other) {
+    return Collections.singletonList(
+        TemporalRecord.newBuilder()
+            .setId("0")
+            .setYear(year)
+            .setMonth(month)
+            .setDay(day)
+            .setEventDate(EventDate.newBuilder().setGte(eventDate.toString()).build())
+            .setDateIdentified(other.toString())
+            .setModified(other.toString())
+            .setCreated(0L)
+            .build());
   }
 }

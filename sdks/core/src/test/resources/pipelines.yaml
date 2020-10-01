@@ -45,3 +45,6 @@ hdfsLock:
   lockName: hdfsview
   sleepTimeMs: 99
   maxRetries: 4
+defaultDateFormat:
+  - DMYT
+  - DMY

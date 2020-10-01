@@ -7,7 +7,7 @@ import org.gbif.kvs.hbase.HBaseKVStoreConfiguration;
 import org.gbif.kvs.species.NameUsageMatchKVStoreFactory;
 import org.gbif.kvs.species.SpeciesMatchRequest;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
-import org.gbif.pipelines.transforms.SerializableSupplier;
+import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.rest.client.configuration.ClientConfiguration;
 import org.gbif.rest.client.species.NameUsageMatch;
 

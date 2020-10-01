@@ -5,26 +5,28 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.MULTIMEDIA_URI_INVALID;
 
 import com.google.common.base.Strings;
 import java.net.URI;
-import java.time.temporal.Temporal;
+import java.time.temporal.TemporalAccessor;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+import lombok.Builder;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.LicenseUriParser;
 import org.gbif.common.parsers.NumberParser;
 import org.gbif.common.parsers.UrlParser;
+import org.gbif.common.parsers.core.OccurrenceParseResult;
 import org.gbif.common.parsers.core.ParseResult;
+import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.geocode.LatLng;
+import org.gbif.pipelines.core.functions.SerializableFunction;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation.Result;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation.TargetHandler;
 import org.gbif.pipelines.core.parsers.common.ParsedField;
 import org.gbif.pipelines.core.parsers.location.parser.CoordinateParseUtils;
-import org.gbif.pipelines.core.parsers.temporal.ParsedTemporal;
 import org.gbif.pipelines.core.parsers.temporal.TemporalParser;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.Image;
@@ -36,17 +38,16 @@ import org.gbif.pipelines.io.avro.ImageRecord;
  *
  * @see <a href="http://rs.gbif.org/extension/gbif/1.0/images.xml</a>
  */
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ImageInterpreter {
 
   private static final LicenseUriParser LICENSE_URI_PARSER = LicenseUriParser.getInstance();
 
-  private static final TargetHandler<Image> HANDLER =
+  private final TargetHandler<Image> handler =
       ExtensionInterpretation.extension(Extension.IMAGE)
           .to(Image::new)
           .mapOne(DcTerm.identifier, ImageInterpreter::parseAndSetIdentifier)
           .map(DcTerm.references, ImageInterpreter::parseAndSetReferences)
-          .mapOne(DcTerm.created, ImageInterpreter::parseAndSetCreated)
+          .mapOne(DcTerm.created, this::parseAndSetCreated)
           .map(DcTerm.license, ImageInterpreter::parseAndSetLicense)
           .map(DcTerm.title, Image::setTitle)
           .map(DcTerm.description, Image::setDescription)
@@ -67,15 +68,26 @@ public class ImageInterpreter {
           .postMap(ImageInterpreter::parseAndSetLatLng)
           .skipIf(ImageInterpreter::checkLinks);
 
+  private final TemporalParser temporalParser;
+  private final SerializableFunction<String, String> preprocessDateFn;
+
+  @Builder(buildMethodName = "create")
+  private ImageInterpreter(
+      List<DateComponentOrdering> orderings,
+      SerializableFunction<String, String> preprocessDateFn) {
+    this.temporalParser = TemporalParser.create(orderings);
+    this.preprocessDateFn = preprocessDateFn;
+  }
+
   /**
    * Interprets images of a {@link ExtendedRecord} and populates a {@link ImageRecord} with the
    * interpreted values.
    */
-  public static void interpret(ExtendedRecord er, ImageRecord mr) {
+  public void interpret(ExtendedRecord er, ImageRecord mr) {
     Objects.requireNonNull(er);
     Objects.requireNonNull(mr);
 
-    Result<Image> result = HANDLER.convert(er);
+    Result<Image> result = handler.convert(er);
 
     mr.setImageItems(result.getList());
     mr.getIssues().setIssueList(result.getIssuesAsList());
@@ -102,14 +114,6 @@ public class ImageInterpreter {
       return OccurrenceIssue.MULTIMEDIA_URI_INVALID.name();
     }
     return "";
-  }
-
-  /** Parser for "http://purl.org/dc/terms/created" term value */
-  private static String parseAndSetCreated(Image i, String v) {
-    ParsedTemporal parsed = TemporalParser.parse(v);
-    parsed.getFromOpt().map(Temporal::toString).ifPresent(i::setCreated);
-
-    return parsed.getIssues().isEmpty() ? "" : MULTIMEDIA_DATE_INVALID.name();
   }
 
   /** Parser for "http://www.w3.org/2003/01/geo/wgs84_pos#longitude" term value */
@@ -157,5 +161,18 @@ public class ImageInterpreter {
       return Optional.of(MULTIMEDIA_URI_INVALID.name());
     }
     return Optional.empty();
+  }
+
+  /** Parser for "http://purl.org/dc/terms/created" term value */
+  private String parseAndSetCreated(Image i, String v) {
+    String normalizedDate = Optional.ofNullable(preprocessDateFn).map(x -> x.apply(v)).orElse(v);
+    OccurrenceParseResult<TemporalAccessor> result =
+        temporalParser.parseRecordedDate(normalizedDate);
+    if (result.isSuccessful()) {
+      i.setCreated(result.getPayload().toString());
+      return "";
+    } else {
+      return MULTIMEDIA_DATE_INVALID.name();
+    }
   }
 }

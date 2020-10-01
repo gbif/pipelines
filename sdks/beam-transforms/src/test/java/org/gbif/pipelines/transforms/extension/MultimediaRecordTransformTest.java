@@ -75,7 +75,7 @@ public class MultimediaRecordTransformTest {
     // When
     PCollection<MultimediaRecord> dataStream =
         p.apply(Create.of(extendedRecord))
-            .apply(MultimediaTransform.create().interpret())
+            .apply(MultimediaTransform.builder().create().interpret())
             .apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
 
     // Should
