@@ -169,13 +169,13 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
    * config.sparkParallelismMax Remember YARN will create the same number of files
    */
   private int computeSparkParallelism(int executorNumbers) {
-    int count = executorNumbers * config.sparkExecutorCores * 2;
+    int count = executorNumbers * config.sparkConfig.executorCores * 2;
 
-    if (count < config.sparkParallelismMin) {
-      return config.sparkParallelismMin;
+    if (count < config.sparkConfig.parallelismMin) {
+      return config.sparkConfig.parallelismMin;
     }
-    if (count > config.sparkParallelismMax) {
-      return config.sparkParallelismMax;
+    if (count > config.sparkConfig.parallelismMax) {
+      return config.sparkConfig.parallelismMax;
     }
     return count;
   }
@@ -186,30 +186,30 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
    */
   private String computeSparkExecutorMemory(int sparkExecutorNumbers) {
 
-    if (sparkExecutorNumbers < config.sparkExecutorMemoryGbMin) {
-      return config.sparkExecutorMemoryGbMin + "G";
+    if (sparkExecutorNumbers < config.sparkConfig.executorMemoryGbMin) {
+      return config.sparkConfig.executorMemoryGbMin + "G";
     }
-    if (sparkExecutorNumbers > config.sparkExecutorMemoryGbMax) {
-      return config.sparkExecutorMemoryGbMax + "G";
+    if (sparkExecutorNumbers > config.sparkConfig.executorMemoryGbMax) {
+      return config.sparkConfig.executorMemoryGbMax + "G";
     }
     return sparkExecutorNumbers + "G";
   }
 
   /**
-   * Computes the numbers of executors, where min is config.sparkExecutorNumbersMin and max is
-   * config.sparkExecutorNumbersMax
+   * Computes the numbers of executors, where min is config.sparkConfig.executorNumbersMin and max
+   * is config.sparkConfig.executorNumbersMax
    */
   private int computeSparkExecutorNumbers(long recordsNumber) {
     int sparkExecutorNumbers =
         (int)
             Math.ceil(
                 (double) recordsNumber
-                    / (config.sparkExecutorCores * config.sparkRecordsPerThread));
-    if (sparkExecutorNumbers < config.sparkExecutorNumbersMin) {
-      return config.sparkExecutorNumbersMin;
+                    / (config.sparkConfig.executorCores * config.sparkConfig.recordsPerThread));
+    if (sparkExecutorNumbers < config.sparkConfig.executorNumbersMin) {
+      return config.sparkConfig.executorNumbersMin;
     }
-    if (sparkExecutorNumbers > config.sparkExecutorNumbersMax) {
-      return config.sparkExecutorNumbersMax;
+    if (sparkExecutorNumbers > config.sparkConfig.executorNumbersMax) {
+      return config.sparkConfig.executorNumbersMax;
     }
     return sparkExecutorNumbers;
   }

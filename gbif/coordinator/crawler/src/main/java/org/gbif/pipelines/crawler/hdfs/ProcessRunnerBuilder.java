@@ -1,13 +1,9 @@
 package org.gbif.pipelines.crawler.hdfs;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.StringJoiner;
-import java.util.function.BiFunction;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -44,13 +40,14 @@ final class ProcessRunnerBuilder {
   private ProcessBuilder buildSpark() {
     StringJoiner joiner = new StringJoiner(DELIMITER).add("spark2-submit");
 
-    Optional.ofNullable(config.metricsPropertiesPath)
+    Optional.ofNullable(config.distributedConfig.metricsPropertiesPath)
         .ifPresent(x -> joiner.add("--conf spark.metrics.conf=" + x));
-    Optional.ofNullable(config.extraClassPath)
+    Optional.ofNullable(config.distributedConfig.extraClassPath)
         .ifPresent(x -> joiner.add("--conf \"spark.driver.extraClassPath=" + x + "\""));
-    Optional.ofNullable(config.driverJavaOptions)
+    Optional.ofNullable(config.distributedConfig.driverJavaOptions)
         .ifPresent(x -> joiner.add("--driver-java-options \"" + x + "\""));
-    Optional.ofNullable(config.yarnQueue).ifPresent(x -> joiner.add("--queue " + x));
+    Optional.ofNullable(config.distributedConfig.yarnQueue)
+        .ifPresent(x -> joiner.add("--queue " + x));
 
     if (sparkParallelism < 1) {
       throw new IllegalArgumentException("sparkParallelism can't be 0");
@@ -58,16 +55,16 @@ final class ProcessRunnerBuilder {
 
     joiner
         .add("--conf spark.default.parallelism=" + sparkParallelism)
-        .add("--conf spark.executor.memoryOverhead=" + config.sparkMemoryOverhead)
+        .add("--conf spark.executor.memoryOverhead=" + config.sparkConfig.memoryOverhead)
         .add("--conf spark.dynamicAllocation.enabled=false")
-        .add("--class " + Objects.requireNonNull(config.distributedMainClass))
+        .add("--class " + Objects.requireNonNull(config.distributedConfig.mainClass))
         .add("--master yarn")
-        .add("--deploy-mode " + Objects.requireNonNull(config.deployMode))
+        .add("--deploy-mode " + Objects.requireNonNull(config.distributedConfig.deployMode))
         .add("--executor-memory " + Objects.requireNonNull(sparkExecutorMemory))
-        .add("--executor-cores " + config.sparkExecutorCores)
+        .add("--executor-cores " + config.sparkConfig.executorCores)
         .add("--num-executors " + sparkExecutorNumbers)
-        .add("--driver-memory " + config.sparkDriverMemory)
-        .add(Objects.requireNonNull(config.distributedJarPath));
+        .add("--driver-memory " + config.sparkConfig.driverMemory)
+        .add(Objects.requireNonNull(config.distributedConfig.jarPath));
 
     return buildCommon(joiner);
   }
@@ -103,7 +100,8 @@ final class ProcessRunnerBuilder {
 
     // Adds user name to run a command if it is necessary
     StringJoiner joiner = new StringJoiner(DELIMITER);
-    Optional.ofNullable(config.otherUser).ifPresent(x -> joiner.add("sudo -u " + x));
+    Optional.ofNullable(config.distributedConfig.otherUser)
+        .ifPresent(x -> joiner.add("sudo -u " + x));
     joiner.merge(command);
 
     // The result
@@ -112,38 +110,8 @@ final class ProcessRunnerBuilder {
 
     ProcessBuilder builder = new ProcessBuilder("/bin/bash", "-c", result);
 
-    BiFunction<String, String, File> createDirFn =
-        (String type, String path) -> {
-          try {
-            Files.createDirectories(Paths.get(path));
-            File file =
-                new File(
-                    path
-                        + message.getDatasetUuid()
-                        + "_"
-                        + message.getAttempt()
-                        + "_idx_"
-                        + type
-                        + ".log");
-            log.info("{} file - {}", type, file);
-            return file;
-          } catch (IOException ex) {
-            throw new IllegalStateException(ex);
-          }
-        };
-
-    // The command side outputs
-    if (config.processErrorDirectory != null) {
-      builder.redirectError(createDirFn.apply("err", config.processErrorDirectory));
-    } else {
-      builder.redirectError(new File("/dev/null"));
-    }
-
-    if (config.processOutputDirectory != null) {
-      builder.redirectOutput(createDirFn.apply("out", config.processOutputDirectory));
-    } else {
-      builder.redirectOutput(new File("/dev/null"));
-    }
+    builder.redirectError(new File("/dev/null"));
+    builder.redirectOutput(new File("/dev/null"));
 
     return builder;
   }
