@@ -32,8 +32,10 @@ public class GbifJsonConverterTest {
             + "{\"gte\":\"01-01-2011\",\"lte\":\"01-01-2018\"},\"startDayOfYear\":1,\"coordinates\":"
             + "{\"lon\":2.0,\"lat\":1.0},\"decimalLatitude\":1.0,\"decimalLongitude\":2.0,\"scoordinates\":"
             + "\"POINT (2.0 1.0)\",\"continent\":\"something{something}\",\"country\":\"Country\","
-            + "\"countryCode\":\"Code 1'2\\\"\",\"locality\":\"[68]\",\"gadm\":{\"level2Gid\":\"XAA.1.2_1\","
-            + "\"level2Name\":\"Muni Cipality\"},\"gbifClassification\":{\"usage\":{\"key\":10,\"name\":"
+            + "\"countryCode\":\"Code 1'2\\\"\",\"locality\":\"[68]\",\"gadm\":{\"level0Gid\":\"XAA_1\",\"level1Gid\":"
+            + "\"XAA.1_1\",\"level2Gid\":\"XAA.1.2_1\",\"level0Name\":\"Countryland\",\"level1Name\":\"Countyshire\","
+            + "\"level2Name\":\"Muni Cipality\",\"gids\":[\"XAA_1\",\"XAA.1_1\",\"XAA.1.2_1\"]},"
+            + "\"gbifClassification\":{\"usage\":{\"key\":10,\"name\":"
             + "\"synonym\",\"rank\":\"SPECIES\"},\"classification\":[{\"key\":1,\"name\":\"Name\",\"rank\":"
             + "\"CHEMOFORM\"},{\"key\":2,\"name\":\"Name2\",\"rank\":\"ABERRATION\"}],\"acceptedUsage\""
             + ":{\"key\":11,\"name\":\"accepted usage\",\"rank\":\"SPECIES\"},\"chemoformKey\":1,\"chemoform\""
@@ -141,6 +143,10 @@ public class GbifJsonConverterTest {
             .setLocality("[68]")
             .setGadm(
                 GadmFeatures.newBuilder()
+                    .setLevel0Gid("XAA_1")
+                    .setLevel0Name("Countryland")
+                    .setLevel1Gid("XAA.1_1")
+                    .setLevel1Name("Countyshire")
                     .setLevel2Gid("XAA.1.2_1")
                     .setLevel2Name("Muni Cipality")
                     .build())

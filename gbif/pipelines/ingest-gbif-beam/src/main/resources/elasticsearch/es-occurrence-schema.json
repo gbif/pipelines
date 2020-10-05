@@ -203,6 +203,7 @@
       "gadm": {
         "type": "object",
         "properties": {
+          "gids": {"type": "keyword"},
           "level0Gid": {"type": "keyword"},
           "level1Gid": {"type": "keyword"},
           "level2Gid": {"type": "keyword"},
