@@ -213,10 +213,10 @@ public class InterpretOccurrenceStatusTest {
     Map<String, String> coreTerms = new HashMap<>(3);
     coreTerms.put(DwcTerm.individualCount.qualifiedName(), "0");
     coreTerms.put(DwcTerm.occurrenceStatus.qualifiedName(), null);
-    coreTerms.put(DwcTerm.basisOfRecord.qualifiedName(), "PRESERVED_SPECIMEN");
 
     ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreTerms).build();
-    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
+    BasicRecord br =
+        BasicRecord.newBuilder().setId(ID).setBasisOfRecord("PRESERVED_SPECIMEN").build();
 
     BasicInterpreter.interpretIndividualCount(er, br);
 
@@ -235,10 +235,9 @@ public class InterpretOccurrenceStatusTest {
     Map<String, String> coreTerms = new HashMap<>(3);
     coreTerms.put(DwcTerm.individualCount.qualifiedName(), "0");
     coreTerms.put(DwcTerm.occurrenceStatus.qualifiedName(), null);
-    coreTerms.put(DwcTerm.basisOfRecord.qualifiedName(), "FOSSIL_SPECIMEN");
 
     ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreTerms).build();
-    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
+    BasicRecord br = BasicRecord.newBuilder().setId(ID).setBasisOfRecord("FOSSIL_SPECIMEN").build();
 
     BasicInterpreter.interpretIndividualCount(er, br);
 
@@ -257,10 +256,9 @@ public class InterpretOccurrenceStatusTest {
     Map<String, String> coreTerms = new HashMap<>(3);
     coreTerms.put(DwcTerm.individualCount.qualifiedName(), "0");
     coreTerms.put(DwcTerm.occurrenceStatus.qualifiedName(), null);
-    coreTerms.put(DwcTerm.basisOfRecord.qualifiedName(), "LIVING_SPECIMEN");
 
     ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreTerms).build();
-    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
+    BasicRecord br = BasicRecord.newBuilder().setId(ID).setBasisOfRecord("LIVING_SPECIMEN").build();
 
     BasicInterpreter.interpretIndividualCount(er, br);
 
