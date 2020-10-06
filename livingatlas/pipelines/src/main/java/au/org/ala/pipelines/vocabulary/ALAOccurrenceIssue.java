@@ -93,7 +93,14 @@ public enum ALAOccurrenceIssue implements InterpretationRemark {
   /** The ocurrence record was matched to a default value supplied by higher-order elements */
   TAXON_DEFAULT_MATCH(InterpretationRemarkSeverity.WARNING, TermsGroup.TAXONOMY_TERMS),
   /** The name is either unparsable or some type of placeholder or informal name */
-  INVALID_SCIENTIFIC_NAME(InterpretationRemarkSeverity.WARNING, TermsGroup.TAXONOMY_TERMS);
+  INVALID_SCIENTIFIC_NAME(InterpretationRemarkSeverity.WARNING, TermsGroup.TAXONOMY_TERMS),
+
+  // Sensitive data related
+  /** There is something wrong consturcting the sensitivity report */
+  SENSITIVITY_REPORT_INVALID(InterpretationRemarkSeverity.ERROR, TermsGroup.SENSITIVE_DATA_TERMS),
+  /** The sensitivity report cannot be applied to the record */
+  SENSITIVITY_REPORT_NOT_LOADABLE(
+      InterpretationRemarkSeverity.ERROR, TermsGroup.SENSITIVE_DATA_TERMS);
 
   private final Set<Term> relatedTerms;
   private final InterpretationRemarkSeverity severity;
@@ -136,6 +143,7 @@ public enum ALAOccurrenceIssue implements InterpretationRemark {
     static final Term[] RECORDED_DATE_TERMS;
     static final Term[] TAXONOMY_TERMS;
     static final Term[] GEOREFERENCE_TERMS;
+    static final Term[] SENSITIVE_DATA_TERMS;
 
     private TermsGroup() {}
 
@@ -197,6 +205,14 @@ public enum ALAOccurrenceIssue implements InterpretationRemark {
             DwcTerm.infraspecificEpithet,
             DwcTerm.taxonRank,
             DwcTerm.vernacularName
+          };
+      SENSITIVE_DATA_TERMS =
+          new Term[] {
+            DwcTerm.scientificName,
+            DwcTerm.taxonConceptID,
+            DwcTerm.decimalLatitude,
+            DwcTerm.decimalLongitude,
+            DwcTerm.eventDate
           };
     }
   }

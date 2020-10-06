@@ -17,6 +17,7 @@ public class ALAPipelinesConfig implements Serializable {
   // ALA specific
   private WsConfig collectory;
   private WsConfig alaNameMatch;
+  private WsConfig sds;
   private WsConfig lists;
 
   public ALAPipelinesConfig() {
