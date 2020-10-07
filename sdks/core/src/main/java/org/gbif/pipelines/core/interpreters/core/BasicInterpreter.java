@@ -8,7 +8,6 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.OCCURRENCE_STATUS_INFERRED
 import static org.gbif.api.vocabulary.OccurrenceIssue.OCCURRENCE_STATUS_UNPARSABLE;
 import static org.gbif.api.vocabulary.OccurrenceIssue.REFERENCES_URI_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.TYPE_STATUS_INVALID;
-import static org.gbif.dwc.terms.DwcTerm.basisOfRecord;
 import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
@@ -362,7 +361,7 @@ public class BasicInterpreter {
 
       // https://github.com/gbif/pipelines/issues/392
       boolean isSpecimen =
-          extractOptValue(er, basisOfRecord)
+          Optional.ofNullable(br.getBasisOfRecord())
               .map(BasisOfRecord::valueOf)
               .map(
                   x ->
