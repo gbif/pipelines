@@ -10,6 +10,7 @@ import org.apache.hadoop.hbase.client.Connection;
 import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
+import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.factory.ConfigFactory;
@@ -51,7 +52,9 @@ public class FragmenterService extends AbstractIdleService {
     FragmenterCallback callback =
         new FragmenterCallback(
             config, publisher, curator, client, executor, hbaseConnection, keygenConfig);
-    listener.listen(c.queueName, c.poolSize, callback);
+
+    String routingKey = PipelinesInterpretedMessage.ROUTING_KEY + ".*";
+    listener.listen(c.queueName, routingKey, c.poolSize, callback);
   }
 
   @Override
