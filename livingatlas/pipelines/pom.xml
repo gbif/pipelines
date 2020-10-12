@@ -306,6 +306,7 @@
     <ingest-hdfs-table.version>2.2.34</ingest-hdfs-table.version>
     <snakeyaml.version>1.25</snakeyaml.version>
     <streamex.version>0.7.2</streamex.version>
+    <batik.version>1.13</batik.version>
     <!-- This is overriding GBIF mother pom which is using a 2.11.0.rc1  -->
     <jackson.version>2.11.1</jackson.version>
     <jackson-module-scala_2.11.version>2.11.1</jackson-module-scala_2.11.version>
@@ -410,6 +411,12 @@
     </dependency>
 
     <!-- This project -->
+    <dependency>
+      <groupId>org.apache.xmlgraphics</groupId>
+      <artifactId>batik-all</artifactId>
+      <version>${batik.version}</version>
+      <type>pom</type>
+    </dependency>
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
       <artifactId>models</artifactId>

@@ -1,8 +1,17 @@
 package au.org.ala.utils;
 
+import static org.apache.batik.transcoder.image.ImageTranscoder.KEY_BACKGROUND_COLOR;
+
 import java.awt.Color;
+import java.awt.image.BufferedImage;
 import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -11,16 +20,17 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
+import javax.imageio.ImageIO;
+import org.apache.batik.transcoder.TranscoderInput;
+import org.apache.batik.transcoder.TranscoderOutput;
+import org.apache.batik.transcoder.image.PNGTranscoder;
 
 /**
  * It is a simple workaround to generate coloured SVG for a SHP file.
  *
  * <p>SHP files need to loaded to Postgres first.
  *
- * <p>A dockerised postgres needs to setup first.
- * database: eez;
- * user: eez);
- * password: eez);
+ * <p>A dockerised postgres needs to setup first. database: eez; user: eez); password: eez);
  */
 public class BitMapGenerator {
 
@@ -55,15 +65,16 @@ public class BitMapGenerator {
 
   private static final String SVG_FOOTER = "</svg>\n";
 
-
   /**
    * BitMapGenerator cw_state_poly feature /Users/Shared/Relocated Items/Security/data/sds-shp/
+   *
    * @param args
    */
   public static void main(String[] args) {
-    if(args.length != 3){
-      System.out.println("Error: args are incorrect!" );
-      System.out.println("Example: BitMapGenerator cw_state_poly feature /Users/Shared/Relocated Items/Security/data/sds-shp/" );
+    if (args.length != 3) {
+      System.out.println("Error: args are incorrect!");
+      System.out.println(
+          "Example: BitMapGenerator cw_state_poly feature /Users/Shared/Relocated Items/Security/data/sds-shp/");
     }
     try {
       String layer = args[0];
@@ -86,7 +97,7 @@ public class BitMapGenerator {
       Statement stmt = conn.createStatement();
 
       String idSQL = String.format("SELECT DISTINCT %s as id FROM %s;", idName, layer);
-      ResultSet idRs =  stmt.executeQuery(idSQL);
+      ResultSet idRs = stmt.executeQuery(idSQL);
 
       while (idRs.next()) {
         String id = idRs.getString("id");
@@ -99,10 +110,12 @@ public class BitMapGenerator {
       }
       idRs.close();
 
-      String svgSQL = String.format("SELECT %s as id, ST_AsSVG(geom, 0, 4) as svg FROM %s order by feature;", idName,layer);
+      String svgSQL =
+          String.format(
+              "SELECT %s as id, ST_AsSVG(geom, 0, 4) as svg FROM %s order by feature;",
+              idName, layer);
 
-      ResultSet rs =
-          stmt.executeQuery(svgSQL);
+      ResultSet rs = stmt.executeQuery(svgSQL);
 
       while (rs.next()) {
         String id = rs.getString("id");
@@ -114,20 +127,57 @@ public class BitMapGenerator {
       svg += SVG_FOOTER;
 
       rs.close();
-
       stmt.close();
-
       conn.close();
 
-      BufferedWriter writer = new BufferedWriter(new FileWriter(outputFolder + layer + ".svg"));
+      String svgFile = outputFolder + layer + ".svg";
+      BufferedWriter writer = new BufferedWriter(new FileWriter(svgFile));
       writer.write(svg);
       System.out.println("Successfully generated.");
       writer.close();
+
+      System.out.println(svgFile + " is generated.");
+      System.out.println("Converting SVG to PNG");
+
+      String pngFile = outputFolder + layer + ".png";
+      Files.deleteIfExists(Paths.get(pngFile));
+      Path filledPngFile = Files.createFile(Paths.get(pngFile));
+      try (OutputStream pngOut = new FileOutputStream(filledPngFile.toFile())) {
+        TranscoderInput svgImage = new TranscoderInput(svgFile);
+        TranscoderOutput pngImage = new TranscoderOutput(pngOut);
+        PNGTranscoder pngTranscoder = new PNGTranscoder();
+        pngTranscoder.addTranscodingHint(KEY_BACKGROUND_COLOR, Color.white);
+        pngTranscoder.transcode(svgImage, pngImage);
+      }
+      System.out.println(pngFile + " is generated.");
+      BufferedImage filled = ImageIO.read(filledPngFile.toFile());
+
+      int height = filled.getHeight();
+      int width = filled.getWidth();
+
 
       // String url = "jdbc:postgresql://localhost/test?user=fred&password=secret&ssl=true";
       // Connection conn = DriverManager.getConnection(url);
     } catch (Exception e) {
       e.printStackTrace();
     }
+  }
+
+  /**
+   * The circumference of a parallel (line of longitude at a particular latitude) in kilometres.
+   *
+   * <p>Earth approximated as a sphere, which is sufficient for these bitmaps.
+   */
+  private static double lengthParallelKm(double latitude) {
+    return 2d * Math.PI * 6378.137 /* Earth radius */ * Math.cos(Math.toRadians(latitude));
+  }
+
+  /** Length of N kilometres in pixels, on a 7200×3600 pixel map. */
+  private static double kmToPx(double latitude, double n_km) {
+    return n_km / (lengthParallelKm(latitude) / 7200d);
+  }
+
+  private static double kmToPx(double n_km) {
+    return n_km / (lengthParallelKm(0) / 7200d);
   }
 }

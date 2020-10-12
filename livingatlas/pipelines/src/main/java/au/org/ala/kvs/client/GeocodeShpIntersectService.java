@@ -167,7 +167,6 @@ public class GeocodeShpIntersectService {
       l.setType(STATE_PROVINCE_LOCATION_TYPE);
       l.setSource(config.getStateProvince().getSource());
       l.setName(state);
-      l.setCountryName(state);
       locations.add(l);
     }
     return locations;

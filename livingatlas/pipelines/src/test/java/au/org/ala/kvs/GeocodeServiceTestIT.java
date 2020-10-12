@@ -3,22 +3,18 @@ package au.org.ala.kvs;
 import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 
-import au.org.ala.kvs.cache.CountryKeyValueStore;
 import au.org.ala.kvs.cache.GeocodeKvStoreFactory;
 import au.org.ala.kvs.cache.StateProvinceKeyValueStore;
 import au.org.ala.kvs.client.GeocodeShpIntersectService;
 import au.org.ala.util.TestUtils;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.Optional;
-import java.util.function.Function;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.cache.KeyValueCache;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.factory.BufferedImageFactory;
 import org.gbif.pipelines.parsers.parsers.location.GeocodeKvStore;
-import org.gbif.pipelines.parsers.parsers.location.cache.GeocodeBitmapCache;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.gbif.rest.client.geocode.Location;
 import org.junit.Test;
@@ -86,35 +82,37 @@ public class GeocodeServiceTestIT {
 
   @Test
   public void testBitMap() throws Exception {
-
-//    BufferedImage image =
-//        BufferedImageFactory.getInstance("/Users/bai187/src/gbif-pipeline/pipelines/ingest-gbif/src/main/resources/bitmap/bitmap.png");
     ALAPipelinesConfig config = new ALAPipelinesConfig();
-    GeocodeShpConfig shpConfig = new GeocodeShpConfig(new ShapeFile("/data/pipelines-shp/political","ISO_A2",""),
-        new ShapeFile("/data/pipelines-shp/political","ISO2",""),
-        new ShapeFile("/data/pipelines-shp/cw_state_poly","FEATURE",""));
+    GeocodeShpConfig shpConfig =
+        new GeocodeShpConfig(
+            new ShapeFile("/data/pipelines-shp/political", "ISO_A2", ""),
+            new ShapeFile("/data/pipelines-shp/eez", "ISO2", ""),
+            new ShapeFile("/data/pipelines-shp/cw_state_poly", "FEATURE", ""));
     config.setGeocodeConfig(shpConfig);
-    BufferedImage image =
-        BufferedImageFactory.getInstance("/data/sds-shp/cw_state_poly-min.png");
+    BufferedImage image = BufferedImageFactory.getInstance("/data/sds-shp/cw_state_poly.png");
+    //Create a KV store (From SHP file or others)
     KeyValueStore<LatLng, GeocodeResponse> stateProvinceStore =
         StateProvinceKeyValueStore.create(config.getGeocodeConfig());
-
-    KeyValueStore<LatLng, GeocodeResponse> stateProvinceKvStore = GeocodeKvStore.create(stateProvinceStore, image);
+    //Bind bitmap to provide bitmap cache
+    KeyValueStore<LatLng, GeocodeResponse> stateProvinceKvStore =
+        GeocodeKvStore.create(stateProvinceStore, image);
 
     GeocodeResponse resp =
         stateProvinceKvStore.get(LatLng.builder().withLongitude(146.2).withLatitude(-27.9).build());
-    //Check if search from BitMap
+    // Check if search from BitMap
     resp =
         stateProvinceKvStore.get(LatLng.builder().withLongitude(146.3).withLatitude(-27.9).build());
     assertEquals(1, resp.getLocations().size());
     assertEquals("Queensland", resp.getLocations().iterator().next().getName());
 
     resp =
-        stateProvinceKvStore.get(LatLng.builder().withLongitude(146.921).withLatitude(-31.25).build());
+        stateProvinceKvStore.get(
+            LatLng.builder().withLongitude(146.921).withLatitude(-31.25).build());
     assertEquals(1, resp.getLocations().size());
 
     resp =
-        stateProvinceKvStore.get(LatLng.builder().withLongitude(146.923).withLatitude(-31.2).build());
+        stateProvinceKvStore.get(
+            LatLng.builder().withLongitude(146.923).withLatitude(-31.2).build());
     assertEquals(1, resp.getLocations().size());
     assertEquals("New South Wales", resp.getLocations().iterator().next().getName());
   }
