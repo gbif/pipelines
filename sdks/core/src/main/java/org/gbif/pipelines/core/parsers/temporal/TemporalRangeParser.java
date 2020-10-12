@@ -44,7 +44,7 @@ public class TemporalRangeParser implements Serializable {
 
   private void parseAndSetFrom(
       EventRange range, String year, String month, String day, String rawDate) {
-    if (!Strings.isNullOrEmpty(rawDate)) {
+    if (!Strings.isNullOrEmpty(rawDate) || !Strings.isNullOrEmpty(year)) {
       OccurrenceParseResult<TemporalAccessor> result =
           temporalParser.parseRecordedDate(year, month, day, rawDate);
       if (result.isSuccessful()) {

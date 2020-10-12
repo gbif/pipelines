@@ -17,6 +17,25 @@ import org.junit.Test;
 public class TemporalInterpreterTest {
 
   @Test
+  public void testYearTerm() {
+    Map<String, String> map = new HashMap<>();
+    map.put(DwcTerm.year.qualifiedName(), "1879");
+
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
+    TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
+
+    TemporalInterpreter interpreter = TemporalInterpreter.builder().create();
+    interpreter.interpretTemporal(er, tr);
+
+    assertEquals("1879", tr.getEventDate().getGte());
+    assertEquals(1879, tr.getYear().intValue());
+    assertNull(tr.getEventDate().getLte());
+    assertNull(tr.getMonth());
+    assertNull(tr.getDay());
+    assertEquals(0, tr.getIssues().getIssueList().size());
+  }
+
+  @Test
   public void testYearMonth() {
     Map<String, String> map = new HashMap<>();
     map.put(DwcTerm.eventDate.qualifiedName(), "1879-10");
