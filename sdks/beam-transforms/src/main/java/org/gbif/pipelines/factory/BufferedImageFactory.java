@@ -1,6 +1,7 @@
 package org.gbif.pipelines.factory;
 
 import java.awt.image.BufferedImage;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.nio.file.Path;
@@ -45,7 +46,16 @@ public class BufferedImageFactory {
         }
         return ImageIO.read(is);
       }
+    }else{
+      try (InputStream is = new FileInputStream(filePath)){
+        if (is != null) {
+          return ImageIO.read(is);
+        }else{
+          throw new FileNotFoundException("The image file doesn't exist - " + filePath);
+        }
+
+      }
     }
-    throw new FileNotFoundException("The image file doesn't exist - " + filePath);
+    //
   }
 }
