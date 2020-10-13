@@ -3,9 +3,7 @@ package au.org.ala.utils;
 import static org.apache.batik.transcoder.image.ImageTranscoder.KEY_BACKGROUND_COLOR;
 
 import java.awt.Color;
-import java.awt.image.BufferedImage;
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.OutputStream;
@@ -20,7 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
-import javax.imageio.ImageIO;
+import lombok.NoArgsConstructor;
 import org.apache.batik.transcoder.TranscoderInput;
 import org.apache.batik.transcoder.TranscoderOutput;
 import org.apache.batik.transcoder.image.PNGTranscoder;
@@ -32,6 +30,7 @@ import org.apache.batik.transcoder.image.PNGTranscoder;
  *
  * <p>A dockerised postgres needs to setup first. database: eez; user: eez); password: eez);
  */
+@NoArgsConstructor
 public class BitMapGenerator {
 
   // It does not seem worth using a templating engine for a single "template".  Welcome to 1995!
@@ -65,6 +64,82 @@ public class BitMapGenerator {
 
   private static final String SVG_FOOTER = "</svg>\n";
 
+  public String generateSVG(String layer, String idName) throws Exception {
+    String url = "jdbc:postgresql://127.0.0.1/eez";
+    Properties props = new Properties();
+    props.setProperty("user", "eez");
+    props.setProperty("password", "eez");
+    props.setProperty("ssl", "false");
+    Connection conn = DriverManager.getConnection(url, props);
+    System.out.println("Successfully Connected.");
+
+    String svg = "";
+    svg += SVG_HEADER;
+
+    Map<String, String> colourKey = new HashMap<>();
+
+    Statement stmt = conn.createStatement();
+
+    String idSQL = String.format("SELECT DISTINCT %s as id FROM %s;", idName, layer);
+    ResultSet idRs = stmt.executeQuery(idSQL);
+
+    while (idRs.next()) {
+      String id = idRs.getString("id");
+      Random random = new Random();
+      // create a big random number - maximum is ffffff (hex) = 16777215 (dez)
+      int nextInt = random.nextInt(0xffffff + 1);
+      // format it as hexadecimal string (with hashtag and leading zeros)
+      String colorCode = String.format("#%06x", nextInt);
+      colourKey.put(id, colorCode);
+    }
+    idRs.close();
+
+    String svgSQL =
+        String.format(
+            "SELECT %s as id, ST_AsSVG(geom, 0, 4) as svg FROM %s order by feature;",
+            idName, layer);
+
+    ResultSet rs = stmt.executeQuery(svgSQL);
+
+    while (rs.next()) {
+      String id = rs.getString("id");
+      String svgString = rs.getString("svg");
+      String svgOutout = String.format(FILLED_PATH_FORMAT, id, colourKey.get(id), svgString);
+      svg += svgOutout;
+    }
+
+    svg += SVG_FOOTER;
+
+    rs.close();
+    stmt.close();
+    conn.close();
+
+    return svg;
+  }
+
+  public void writeBitmap(String content, String outputFolder, String fileName) throws Exception {
+    String svgFile = outputFolder + fileName + ".svg";
+    BufferedWriter writer = new BufferedWriter(new FileWriter(svgFile));
+    writer.write(content);
+    System.out.println("Successfully generated.");
+    writer.close();
+
+    System.out.println(svgFile + " is generated.");
+    System.out.println("Converting SVG to PNG");
+
+    String pngFile = outputFolder + fileName + ".png";
+    Files.deleteIfExists(Paths.get(pngFile));
+    Path filledPngFile = Files.createFile(Paths.get(pngFile));
+    try (OutputStream pngOut = new FileOutputStream(filledPngFile.toFile())) {
+      TranscoderInput svgImage = new TranscoderInput(svgFile);
+      TranscoderOutput pngImage = new TranscoderOutput(pngOut);
+      PNGTranscoder pngTranscoder = new PNGTranscoder();
+      pngTranscoder.addTranscodingHint(KEY_BACKGROUND_COLOR, Color.white);
+      pngTranscoder.transcode(svgImage, pngImage);
+    }
+    System.out.println(pngFile + " is generated.");
+  }
+
   /**
    * BitMapGenerator cw_state_poly feature /Users/Shared/Relocated Items/Security/data/sds-shp/
    *
@@ -81,83 +156,11 @@ public class BitMapGenerator {
       String idName = args[1];
       String outputFolder = args[2];
 
-      String url = "jdbc:postgresql://127.0.0.1/eez";
-      Properties props = new Properties();
-      props.setProperty("user", "eez");
-      props.setProperty("password", "eez");
-      props.setProperty("ssl", "false");
-      Connection conn = DriverManager.getConnection(url, props);
-      System.out.println("Successfully Connected.");
+      BitMapGenerator bmg = new BitMapGenerator();
+      String svg = bmg.generateSVG(layer, idName);
+      // Use layer name as default file name.
+      bmg.writeBitmap(svg, outputFolder, layer);
 
-      String svg = "";
-      svg += SVG_HEADER;
-
-      Map<String, String> colourKey = new HashMap<>();
-
-      Statement stmt = conn.createStatement();
-
-      String idSQL = String.format("SELECT DISTINCT %s as id FROM %s;", idName, layer);
-      ResultSet idRs = stmt.executeQuery(idSQL);
-
-      while (idRs.next()) {
-        String id = idRs.getString("id");
-        Random random = new Random();
-        // create a big random number - maximum is ffffff (hex) = 16777215 (dez)
-        int nextInt = random.nextInt(0xffffff + 1);
-        // format it as hexadecimal string (with hashtag and leading zeros)
-        String colorCode = String.format("#%06x", nextInt);
-        colourKey.put(id, colorCode);
-      }
-      idRs.close();
-
-      String svgSQL =
-          String.format(
-              "SELECT %s as id, ST_AsSVG(geom, 0, 4) as svg FROM %s order by feature;",
-              idName, layer);
-
-      ResultSet rs = stmt.executeQuery(svgSQL);
-
-      while (rs.next()) {
-        String id = rs.getString("id");
-        String svgString = rs.getString("svg");
-        String svgOutout = String.format(FILLED_PATH_FORMAT, id, colourKey.get(id), svgString);
-        svg += svgOutout;
-      }
-
-      svg += SVG_FOOTER;
-
-      rs.close();
-      stmt.close();
-      conn.close();
-
-      String svgFile = outputFolder + layer + ".svg";
-      BufferedWriter writer = new BufferedWriter(new FileWriter(svgFile));
-      writer.write(svg);
-      System.out.println("Successfully generated.");
-      writer.close();
-
-      System.out.println(svgFile + " is generated.");
-      System.out.println("Converting SVG to PNG");
-
-      String pngFile = outputFolder + layer + ".png";
-      Files.deleteIfExists(Paths.get(pngFile));
-      Path filledPngFile = Files.createFile(Paths.get(pngFile));
-      try (OutputStream pngOut = new FileOutputStream(filledPngFile.toFile())) {
-        TranscoderInput svgImage = new TranscoderInput(svgFile);
-        TranscoderOutput pngImage = new TranscoderOutput(pngOut);
-        PNGTranscoder pngTranscoder = new PNGTranscoder();
-        pngTranscoder.addTranscodingHint(KEY_BACKGROUND_COLOR, Color.white);
-        pngTranscoder.transcode(svgImage, pngImage);
-      }
-      System.out.println(pngFile + " is generated.");
-      BufferedImage filled = ImageIO.read(filledPngFile.toFile());
-
-      int height = filled.getHeight();
-      int width = filled.getWidth();
-
-
-      // String url = "jdbc:postgresql://localhost/test?user=fred&password=secret&ssl=true";
-      // Connection conn = DriverManager.getConnection(url);
     } catch (Exception e) {
       e.printStackTrace();
     }

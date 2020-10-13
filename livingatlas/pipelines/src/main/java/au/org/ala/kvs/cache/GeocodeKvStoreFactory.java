@@ -2,7 +2,6 @@ package au.org.ala.kvs.cache;
 
 import au.org.ala.kvs.ALAPipelinesConfig;
 import java.awt.image.BufferedImage;
-import java.nio.file.Paths;
 import lombok.SneakyThrows;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
@@ -30,9 +29,10 @@ public class GeocodeKvStoreFactory {
 
     KeyValueStore<LatLng, GeocodeResponse> stateProvinceStore =
         StateProvinceKeyValueStore.create(config.getGeocodeConfig());
-    //Try to load from image file which has the same name of the SHP file
+    // Try to load from image file which has the same name of the SHP file
     BufferedImage StateCacheImage =
-        BufferedImageFactory.loadImageFile(config.getGeocodeConfig().getStateProvince().getPath() + bitmapExt);
+        BufferedImageFactory.loadImageFile(
+            config.getGeocodeConfig().getStateProvince().getPath() + bitmapExt);
     stateProvinceKvStore = GeocodeKvStore.create(stateProvinceStore, StateCacheImage);
   }
 

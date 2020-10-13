@@ -81,31 +81,28 @@ public class GeocodeServiceTestIT {
     assertTrue(stateProvince.isPresent());
     assertEquals("Queensland", stateProvince.get().getName());
 
-    resp =
-        geoService.get(
-            LatLng.builder().withLongitude(146.923).withLatitude(-31.2).build());
+    resp = geoService.get(LatLng.builder().withLongitude(146.923).withLatitude(-31.2).build());
     assertEquals(1, resp.getLocations().size());
     assertEquals("New South Wales", resp.getLocations().iterator().next().getName());
-    //Manually Check if the result is from bitmap
-    resp =
-        geoService.get(LatLng.builder().withLongitude(146.3).withLatitude(-27.8).build());
+    // Manually Check if the result is from bitmap
+    resp = geoService.get(LatLng.builder().withLongitude(146.3).withLatitude(-27.8).build());
     assertEquals("Queensland", stateProvince.get().getName());
   }
 
+  /**
+   * This test demonstrates how to create a kvstore supporting bitmap cache
+   *
+   * @throws Exception
+   */
   @Test
   public void testBitMap() throws Exception {
-    ALAPipelinesConfig config = new ALAPipelinesConfig();
-    GeocodeShpConfig shpConfig =
-        new GeocodeShpConfig(
-            new ShapeFile("/data/pipelines-shp/political", "ISO_A2", ""),
-            new ShapeFile("/data/pipelines-shp/eez", "ISO2", ""),
-            new ShapeFile("/data/pipelines-shp/cw_state_poly", "FEATURE", ""));
-    config.setGeocodeConfig(shpConfig);
-    BufferedImage image = BufferedImageFactory.getInstance("/data/sds-shp/cw_state_poly.png");
-    //Create a KV store (From SHP file or others)
+
+    BufferedImage image =
+        BufferedImageFactory.loadImageFile("/tmp/pipelines-shp/cw_state_poly.png");
+    // Create a KV store (From SHP file or others)
     KeyValueStore<LatLng, GeocodeResponse> stateProvinceStore =
-        StateProvinceKeyValueStore.create(config.getGeocodeConfig());
-    //Bind bitmap to provide bitmap cache
+        StateProvinceKeyValueStore.create(TestUtils.getConfig().getGeocodeConfig());
+    // Bind bitmap to provide bitmap cache
     KeyValueStore<LatLng, GeocodeResponse> stateProvinceKvStore =
         GeocodeKvStore.create(stateProvinceStore, image);
 
