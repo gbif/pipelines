@@ -10,6 +10,7 @@ import au.org.ala.util.TestUtils;
 import java.awt.image.BufferedImage;
 import java.util.Collection;
 import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.cache.KeyValueCache;
 import org.gbif.kvs.geocode.LatLng;
@@ -19,6 +20,7 @@ import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.gbif.rest.client.geocode.Location;
 import org.junit.Test;
 
+@Slf4j
 public class GeocodeServiceTestIT {
 
   /**
@@ -77,6 +79,16 @@ public class GeocodeServiceTestIT {
                 l -> l.getType().equals(GeocodeShpIntersectService.STATE_PROVINCE_LOCATION_TYPE))
             .findFirst();
     assertTrue(stateProvince.isPresent());
+    assertEquals("Queensland", stateProvince.get().getName());
+
+    resp =
+        geoService.get(
+            LatLng.builder().withLongitude(146.923).withLatitude(-31.2).build());
+    assertEquals(1, resp.getLocations().size());
+    assertEquals("New South Wales", resp.getLocations().iterator().next().getName());
+    //Manually Check if the result is from bitmap
+    resp =
+        geoService.get(LatLng.builder().withLongitude(146.3).withLatitude(-27.8).build());
     assertEquals("Queensland", stateProvince.get().getName());
   }
 

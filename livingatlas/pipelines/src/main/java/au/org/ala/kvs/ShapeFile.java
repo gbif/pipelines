@@ -3,6 +3,7 @@ package au.org.ala.kvs;
 import java.io.Serializable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Generated;
 
 /** DTO for a shape file. This is mapped to configuration in pipelines.yaml. */
 @AllArgsConstructor
