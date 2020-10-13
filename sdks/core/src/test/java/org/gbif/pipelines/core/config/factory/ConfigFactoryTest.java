@@ -1,8 +1,11 @@
 package org.gbif.pipelines.core.config.factory;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.nio.file.Paths;
+import java.util.List;
+import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.pipelines.core.config.model.ContentConfig;
 import org.gbif.pipelines.core.config.model.KeygenConfig;
 import org.gbif.pipelines.core.config.model.KvConfig;
@@ -98,5 +101,10 @@ public class ConfigFactoryTest {
     assertEquals(
         "test15.gbif-test.org,test2.gbif-test.org,test3.gbif-test.org",
         hdfsLock.getZkConnectionString());
+
+    List<DateComponentOrdering> dateFormat = config.getDefaultDateFormat();
+    assertEquals(2, dateFormat.size());
+    assertTrue(dateFormat.contains(DateComponentOrdering.DMYT));
+    assertTrue(dateFormat.contains(DateComponentOrdering.DMY));
   }
 }

@@ -55,7 +55,7 @@ public class GbifJsonConverterTest {
   @Test
   public void jsonFromSpecificRecordBaseTest() {
     // State
-    Map<String, String> erMap = new HashMap<>(2);
+    Map<String, String> erMap = new HashMap<>(5);
     erMap.put("http://rs.tdwg.org/dwc/terms/locality", "something:{something}");
     erMap.put("http://purl.org/dc/terms/remark", "{\"something\":1}{\"something\":1}");
     erMap.put(DwcTerm.recordedBy.qualifiedName(), "Jeremia garde \u001Eà elfutsone");
@@ -110,7 +110,7 @@ public class GbifJsonConverterTest {
         TemporalRecord.newBuilder()
             .setId("777")
             .setCreated(0L)
-            .setEventDate(EventDate.newBuilder().setLte("01-01-2018").setGte("01-01-2011").build())
+            .setEventDate(EventDate.newBuilder().setGte("2011-01").setLte("2018-01").build())
             .setDay(1)
             .setMonth(1)
             .setYear(2011)
@@ -184,12 +184,11 @@ public class GbifJsonConverterTest {
     assertEquals(mr.getId(), result.path("id").asText());
     assertEquals("Jeremia garde ,à elfutsone", result.path("recordedBy").asText());
     assertEquals("D2 R2", result.path("identifiedBy").asText());
-    assertEquals("01-01-2011", result.path("eventDateSingle").asText());
+    assertEquals("2011-01-01T00:00", result.path("eventDateSingle").asText());
     assertEquals("2011", result.path("year").asText());
     assertEquals("1", result.path("month").asText());
     assertEquals("1", result.path("day").asText());
-    assertEquals(
-        "{\"gte\":\"01-01-2011\",\"lte\":\"01-01-2018\"}", result.path("eventDate").toString());
+    assertEquals("{\"gte\":\"2011-01\",\"lte\":\"2018-01\"}", result.path("eventDate").toString());
     assertEquals("1", result.path("startDayOfYear").asText());
     assertEquals("{\"lon\":2.0,\"lat\":1.0}", result.path("coordinates").toString());
     assertEquals("1.0", result.path("decimalLatitude").asText());
@@ -270,7 +269,7 @@ public class GbifJsonConverterTest {
     erMap.put("http://rs.tdwg.org/dwc/terms/remark", "{\"something\":1}{\"something\":1}");
 
     // State
-    Map<String, String> ext1 = new HashMap<>();
+    Map<String, String> ext1 = new HashMap<>(16);
     ext1.put(DcTerm.identifier.qualifiedName(), "http://www.gbif.org/tmp.jpg");
     ext1.put(DcTerm.references.qualifiedName(), "http://www.gbif.org/tmp.jpg");
     ext1.put(DcTerm.created.qualifiedName(), "2010");
@@ -310,7 +309,7 @@ public class GbifJsonConverterTest {
     TemporalRecord tmr =
         TemporalRecord.newBuilder()
             .setId("777")
-            .setEventDate(EventDate.newBuilder().setLte("01-01-2018").setGte("01-01-2011").build())
+            .setEventDate(EventDate.newBuilder().setGte("2011-01-01").setLte("2018-01-01").build())
             .setDay(1)
             .setMonth(1)
             .setYear(2011)
@@ -376,12 +375,12 @@ public class GbifJsonConverterTest {
     // Should
     assertTrue(JsonValidationUtils.isValid(result.toString()));
     assertEquals(er.getId(), result.path("id").asText());
-    assertEquals("01-01-2011", result.path("eventDateSingle").asText());
+    assertEquals("2011-01-01T00:00", result.path("eventDateSingle").asText());
     assertEquals("2011", result.path("year").asText());
     assertEquals("1", result.path("month").asText());
     assertEquals("1", result.path("day").asText());
     assertEquals(
-        "{\"gte\":\"01-01-2011\",\"lte\":\"01-01-2018\"}", result.path("eventDate").toString());
+        "{\"gte\":\"2011-01-01\",\"lte\":\"2018-01-01\"}", result.path("eventDate").toString());
     assertEquals("1", result.path("startDayOfYear").asText());
     assertEquals("{\"lon\":2.0,\"lat\":1.0}", result.path("coordinates").toString());
     assertEquals("1.0", result.path("decimalLatitude").asText());
@@ -907,5 +906,30 @@ public class GbifJsonConverterTest {
 
     // Should
     Assert.assertEquals(expected, result);
+  }
+
+  @Test
+  public void jsonTemporalRecordTest() {
+    // State
+    TemporalRecord tmr =
+        TemporalRecord.newBuilder()
+            .setId("777")
+            .setCreated(0L)
+            .setEventDate(EventDate.newBuilder().setGte("2018").setLte("2020").build())
+            .setYear(2018)
+            .setStartDayOfYear(1)
+            .build();
+
+    // When
+    ObjectNode result = GbifJsonConverter.toJson(tmr);
+
+    // Should
+    assertTrue(JsonValidationUtils.isValid(result.toString()));
+    assertEquals("2018-01-01T00:00", result.path("eventDateSingle").asText());
+    assertEquals("2018", result.path("year").asText());
+    assertEquals("2018", result.path("eventDate").path("gte").asText());
+    assertEquals("2020", result.path("eventDate").path("lte").asText());
+    assertFalse(result.has("month"));
+    assertFalse(result.has("day"));
   }
 }

@@ -4,8 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 import lombok.NoArgsConstructor;
+import org.gbif.pipelines.core.functions.SerializableConsumer;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.transforms.SerializableConsumer;
 
 /**
  * Java level transformation for sampling event where occurrence records stored in extensions

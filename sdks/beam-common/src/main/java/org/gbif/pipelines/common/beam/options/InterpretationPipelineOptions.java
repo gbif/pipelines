@@ -2,6 +2,7 @@ package org.gbif.pipelines.common.beam.options;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.io.File;
+import java.util.List;
 import java.util.Set;
 import org.apache.beam.runners.spark.SparkPipelineOptions;
 import org.apache.beam.sdk.io.hdfs.HadoopFileSystemOptions;
@@ -9,6 +10,7 @@ import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.DefaultValueFactory;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
+import org.gbif.common.parsers.date.DateComponentOrdering;
 
 /**
  * Pipeline options (configuration) for GBIF based data interpretation pipelines. Optionally can use
@@ -84,6 +86,16 @@ public interface InterpretationPipelineOptions
   Integer getNumberOfShards();
 
   void setNumberOfShards(Integer numberOfShards);
+
+  /**
+   * Provide recommended formats to parse ambiguous dates, e.g. 2/3/2008. If the field is empty or
+   * invalid, only accepts standard ISO date format. Parsing 2/3/2008 will fail . <code>DMY</code>
+   * will parse 2/3/2008 as 2 Mar 2008 <code>MDY</code> will parse 2/3/2008 as 3 Feb 2008
+   */
+  @Description("Recommended date formats for ambiguous dates, e.g. 2/3/2008")
+  List<DateComponentOrdering> getDefaultDateFormat();
+
+  void setDefaultDateFormat(List<DateComponentOrdering> defaultDateFormat);
 
   /** A {@link DefaultValueFactory} which locates a default directory. */
   class TempDirectoryFactory implements DefaultValueFactory<String> {

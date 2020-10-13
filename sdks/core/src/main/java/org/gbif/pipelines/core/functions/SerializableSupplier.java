@@ -1,4 +1,4 @@
-package org.gbif.pipelines.transforms;
+package org.gbif.pipelines.core.functions;
 
 import java.io.Serializable;
 import java.util.function.Supplier;

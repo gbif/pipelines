@@ -9,13 +9,13 @@ import lombok.Builder;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
+import org.gbif.pipelines.core.functions.SerializableConsumer;
+import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.core.interpreters.extension.AmplificationInterpreter;
 import org.gbif.pipelines.core.ws.blast.BlastServiceClient;
 import org.gbif.pipelines.io.avro.AmplificationRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.transforms.SerializableConsumer;
-import org.gbif.pipelines.transforms.SerializableSupplier;
 import org.gbif.pipelines.transforms.Transform;
 
 /**

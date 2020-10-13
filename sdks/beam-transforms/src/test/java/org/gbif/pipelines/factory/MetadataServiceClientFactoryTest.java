@@ -2,8 +2,8 @@ package org.gbif.pipelines.factory;
 
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.config.model.WsConfig;
+import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.core.ws.metadata.MetadataServiceClient;
-import org.gbif.pipelines.transforms.SerializableSupplier;
 import org.junit.Assert;
 import org.junit.Test;
 

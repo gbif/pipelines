@@ -5,10 +5,10 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.apache.hadoop.hbase.client.Connection;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.keygen.common.HbaseConnection;
 import org.gbif.pipelines.keygen.common.HbaseConnectionFactory;
-import org.gbif.pipelines.transforms.SerializableSupplier;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class KeygenServiceFactory {

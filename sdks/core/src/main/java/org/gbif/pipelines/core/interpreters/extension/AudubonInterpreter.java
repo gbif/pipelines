@@ -4,28 +4,25 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.MULTIMEDIA_DATE_INVALID;
 
 import com.google.common.base.Strings;
 import java.net.URI;
-import java.time.temporal.Temporal;
+import java.time.temporal.TemporalAccessor;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiPredicate;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+import lombok.Builder;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.LicenseUriParser;
 import org.gbif.common.parsers.MediaParser;
 import org.gbif.common.parsers.UrlParser;
+import org.gbif.common.parsers.core.OccurrenceParseResult;
 import org.gbif.common.parsers.core.ParseResult;
-import org.gbif.dwc.terms.AcTerm;
-import org.gbif.dwc.terms.DcElement;
-import org.gbif.dwc.terms.DcTerm;
-import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwc.terms.XmpRightsTerm;
-import org.gbif.dwc.terms.XmpTerm;
+import org.gbif.common.parsers.date.DateComponentOrdering;
+import org.gbif.dwc.terms.*;
+import org.gbif.pipelines.core.functions.SerializableFunction;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation.Result;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation.TargetHandler;
-import org.gbif.pipelines.core.parsers.temporal.ParsedTemporal;
 import org.gbif.pipelines.core.parsers.temporal.TemporalParser;
 import org.gbif.pipelines.io.avro.Audubon;
 import org.gbif.pipelines.io.avro.AudubonRecord;
@@ -38,7 +35,6 @@ import org.gbif.pipelines.io.avro.MediaType;
  *
  * @see <a href="http://rs.gbif.org/extension/ac/audubon.xml</a>
  */
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class AudubonInterpreter {
 
   private static final MediaParser MEDIA_PARSER = MediaParser.getInstance();
@@ -46,7 +42,7 @@ public class AudubonInterpreter {
 
   private static final String IPTC = "http://iptc.org/std/Iptc4xmpExt/2008-02-29/";
 
-  private static final TargetHandler<Audubon> HANDLER =
+  private final TargetHandler<Audubon> handler =
       ExtensionInterpretation.extension(Extension.AUDUBON)
           .to(Audubon::new)
           .map(DcElement.creator, Audubon::setCreator)
@@ -142,21 +138,32 @@ public class AudubonInterpreter {
           .map(AcTerm.furtherInformationURL, AudubonInterpreter::parseAndSetFurtherInformationUrl)
           .map(AcTerm.attributionLinkURL, AudubonInterpreter::parseAndSetAttributionLinkUrl)
           .mapOne(AcTerm.accessURI, AudubonInterpreter::parseAndSetAccessUri)
-          .mapOne(XmpTerm.CreateDate, AudubonInterpreter::parseAndSetCreatedDate)
+          .mapOne(XmpTerm.CreateDate, this::parseAndSetCreatedDate)
           .map(DcTerm.type, AudubonInterpreter::parseAndSetTypeUri)
           .map(DcElement.type, AudubonInterpreter::parseAndSetType)
           .postMap(AudubonInterpreter::parseAndSetRightsAndRightsUri)
           .postMap(AudubonInterpreter::parseAndSetTypeFromAccessUri);
 
+  private final TemporalParser temporalParser;
+  private final SerializableFunction<String, String> preprocessDateFn;
+
+  @Builder(buildMethodName = "create")
+  private AudubonInterpreter(
+      List<DateComponentOrdering> orderings,
+      SerializableFunction<String, String> preprocessDateFn) {
+    this.temporalParser = TemporalParser.create(orderings);
+    this.preprocessDateFn = preprocessDateFn;
+  }
+
   /**
    * Interprets audubon of a {@link ExtendedRecord} and populates a {@link AudubonRecord} with the
    * interpreted values.
    */
-  public static void interpret(ExtendedRecord er, AudubonRecord ar) {
+  public void interpret(ExtendedRecord er, AudubonRecord ar) {
     Objects.requireNonNull(er);
     Objects.requireNonNull(ar);
 
-    Result<Audubon> result = HANDLER.convert(er);
+    Result<Audubon> result = handler.convert(er);
 
     ar.setAudubonItems(result.getList());
     ar.getIssues().setIssueList(result.getIssuesAsList());
@@ -209,14 +216,6 @@ public class AudubonInterpreter {
     a.setFormat(mimeType);
   }
 
-  /** Parser for "http://ns.adobe.com/xap/1.0/CreateDate" term value */
-  private static String parseAndSetCreatedDate(Audubon a, String v) {
-    ParsedTemporal parsed = TemporalParser.parse(v);
-    parsed.getFromOpt().map(Temporal::toString).ifPresent(a::setCreateDate);
-
-    return parsed.getIssues().isEmpty() ? "" : MULTIMEDIA_DATE_INVALID.name();
-  }
-
   /** Parser for "http://purl.org/dc/elements/1.1/type" term value */
   private static void parseAndSetType(Audubon a, String v) {
     String v1 = Optional.ofNullable(v).orElse("");
@@ -258,6 +257,19 @@ public class AudubonInterpreter {
       String value = a.getAccessUri() != null ? a.getAccessUri() : a.getIdentifier();
       parseAndSetFormat(a, value);
       parseAndSetType(a, a.getFormat());
+    }
+  }
+
+  /** Parser for "http://ns.adobe.com/xap/1.0/CreateDate" term value */
+  private String parseAndSetCreatedDate(Audubon a, String v) {
+    String normalizedDate = Optional.ofNullable(preprocessDateFn).map(x -> x.apply(v)).orElse(v);
+    OccurrenceParseResult<TemporalAccessor> result =
+        temporalParser.parseRecordedDate(normalizedDate);
+    if (result.isSuccessful()) {
+      a.setCreateDate(result.getPayload().toString());
+      return "";
+    } else {
+      return MULTIMEDIA_DATE_INVALID.name();
     }
   }
 }

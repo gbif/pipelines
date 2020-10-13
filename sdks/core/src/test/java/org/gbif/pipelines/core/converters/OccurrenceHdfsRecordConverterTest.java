@@ -1,6 +1,5 @@
 package org.gbif.pipelines.core.converters;
 
-import static org.gbif.pipelines.core.converters.OccurrenceHdfsRecordConverter.STRING_TO_DATE;
 import static org.gbif.pipelines.core.converters.OccurrenceHdfsRecordConverter.toOccurrenceHdfsRecord;
 import static org.junit.Assert.assertEquals;
 
@@ -32,6 +31,7 @@ import org.gbif.api.vocabulary.TypeStatus;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
+import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
 import org.gbif.pipelines.core.utils.MediaSerDeserUtils;
 import org.gbif.pipelines.io.avro.AgentIdentifier;
 import org.gbif.pipelines.io.avro.Authorship;
@@ -87,6 +87,7 @@ public class OccurrenceHdfsRecordConverterTest {
     coreTerms.put(GbifTerm.recordedByID.simpleName(), "53453|5785");
     coreTerms.put(DwcTerm.occurrenceStatus.simpleName(), OccurrenceStatus.ABSENT.name());
     coreTerms.put(DwcTerm.individualCount.simpleName(), "0");
+    coreTerms.put(DwcTerm.eventDate.simpleName(), "2000/2010");
 
     ExtendedRecord extendedRecord =
         ExtendedRecord.newBuilder().setId("1").setCoreTerms(coreTerms).build();
@@ -133,6 +134,7 @@ public class OccurrenceHdfsRecordConverterTest {
             .setId("1")
             .setDateIdentified("2019-11-12T13:24:56.963591")
             .setModified("2019-04-15T17:17")
+            .setEventDate(EventDate.newBuilder().setGte("2000").setLte("2010").build())
             .build();
 
     // When
@@ -161,6 +163,7 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals("53453|5785", hdfsRecord.getVRecordedbyid());
     Assert.assertEquals(OccurrenceStatus.ABSENT.name(), hdfsRecord.getVOccurrencestatus());
     Assert.assertEquals("0", hdfsRecord.getVIndividualcount());
+    Assert.assertEquals("2000/2010", hdfsRecord.getVEventdate());
 
     // Test fields names with reserved words
     Assert.assertEquals("CLASS", hdfsRecord.getClass$());
@@ -177,6 +180,7 @@ public class OccurrenceHdfsRecordConverterTest {
     // Test temporal fields
     Assert.assertNotNull(hdfsRecord.getDateidentified());
     Assert.assertNotNull(hdfsRecord.getModified());
+    Assert.assertNotNull(hdfsRecord.getEventdate());
 
     Assert.assertEquals(BasisOfRecord.HUMAN_OBSERVATION.name(), hdfsRecord.getBasisofrecord());
     Assert.assertEquals(
@@ -190,6 +194,9 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals(Collections.singletonList("13123"), hdfsRecord.getIdentifiedbyid());
     Assert.assertEquals(OccurrenceStatus.ABSENT.name(), hdfsRecord.getOccurrencestatus());
     Assert.assertEquals(Integer.valueOf(0), hdfsRecord.getIndividualcount());
+    Assert.assertEquals(
+        LocalDate.of(2000, 1, 1).atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli(),
+        hdfsRecord.getEventdate().longValue());
     Assert.assertEquals(
         metadataRecord.getHostingOrganizationKey(), hdfsRecord.getHostingorganizationkey());
   }
@@ -358,7 +365,7 @@ public class OccurrenceHdfsRecordConverterTest {
 
   @Test
   public void temporalMapperTest() {
-    String rawEventDate = "2019-01-01";
+    String rawEventDate = "2019-01";
 
     Long eventDate =
         LocalDate.of(2019, 1, 1).atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli();
@@ -499,44 +506,44 @@ public class OccurrenceHdfsRecordConverterTest {
 
   @Test
   public void dateParserTest() {
-    Date date = STRING_TO_DATE.apply("2019");
+    Date date = StringToDateFunctions.getStringToDateFn().apply("2019");
     Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
     cal.setTime(date);
     assertEquals(2019, cal.get(Calendar.YEAR));
     assertEquals(0, cal.get(Calendar.MONTH));
     assertEquals(1, cal.get(Calendar.DAY_OF_MONTH));
 
-    date = STRING_TO_DATE.apply("2019-04");
+    date = StringToDateFunctions.getStringToDateFn().apply("2019-04");
     cal.setTime(date);
     assertEquals(2019, cal.get(Calendar.YEAR));
     assertEquals(3, cal.get(Calendar.MONTH));
     assertEquals(1, cal.get(Calendar.DAY_OF_MONTH));
 
-    date = STRING_TO_DATE.apply("2019-04-02");
+    date = StringToDateFunctions.getStringToDateFn().apply("2019-04-02");
     cal.setTime(date);
     assertEquals(2019, cal.get(Calendar.YEAR));
     assertEquals(3, cal.get(Calendar.MONTH));
     assertEquals(2, cal.get(Calendar.DAY_OF_MONTH));
 
-    date = STRING_TO_DATE.apply("2019-04-15T17:17:48.191 +02:00");
+    date = StringToDateFunctions.getStringToDateFn().apply("2019-04-15T17:17:48.191 +02:00");
     cal.setTime(date);
     assertEquals(2019, cal.get(Calendar.YEAR));
     assertEquals(3, cal.get(Calendar.MONTH));
     assertEquals(15, cal.get(Calendar.DAY_OF_MONTH));
 
-    date = STRING_TO_DATE.apply("2019-04-15T17:17:48.191");
+    date = StringToDateFunctions.getStringToDateFn().apply("2019-04-15T17:17:48.191");
     cal.setTime(date);
     assertEquals(2019, cal.get(Calendar.YEAR));
     assertEquals(3, cal.get(Calendar.MONTH));
     assertEquals(15, cal.get(Calendar.DAY_OF_MONTH));
 
-    date = STRING_TO_DATE.apply("2019-04-15T17:17:48.023+02:00");
+    date = StringToDateFunctions.getStringToDateFn().apply("2019-04-15T17:17:48.023+02:00");
     cal.setTime(date);
     assertEquals(2019, cal.get(Calendar.YEAR));
     assertEquals(3, cal.get(Calendar.MONTH));
     assertEquals(15, cal.get(Calendar.DAY_OF_MONTH));
 
-    date = STRING_TO_DATE.apply("2019-11-12T13:24:56.963591");
+    date = StringToDateFunctions.getStringToDateFn().apply("2019-11-12T13:24:56.963591");
     cal.setTime(date);
     assertEquals(2019, cal.get(Calendar.YEAR));
     assertEquals(10, cal.get(Calendar.MONTH));
@@ -545,44 +552,44 @@ public class OccurrenceHdfsRecordConverterTest {
 
   @Test
   public void dateWithYearZeroTest() {
-    Date date = STRING_TO_DATE.apply("0000");
+    Date date = StringToDateFunctions.getStringToDateFn().apply("0000");
     Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
     cal.setTime(date);
     assertEquals(1, cal.get(Calendar.YEAR));
     assertEquals(0, cal.get(Calendar.MONTH));
     assertEquals(1, cal.get(Calendar.DAY_OF_MONTH));
 
-    date = STRING_TO_DATE.apply("0000-01");
+    date = StringToDateFunctions.getStringToDateFn().apply("0000-01");
     cal.setTime(date);
     assertEquals(1, cal.get(Calendar.YEAR));
     assertEquals(0, cal.get(Calendar.MONTH));
     assertEquals(1, cal.get(Calendar.DAY_OF_MONTH));
 
-    date = STRING_TO_DATE.apply("0000-01-01");
+    date = StringToDateFunctions.getStringToDateFn().apply("0000-01-01");
     cal.setTime(date);
     assertEquals(1, cal.get(Calendar.YEAR));
     assertEquals(0, cal.get(Calendar.MONTH));
     assertEquals(1, cal.get(Calendar.DAY_OF_MONTH));
 
-    date = STRING_TO_DATE.apply("0000-01-01T00:00:01.100");
+    date = StringToDateFunctions.getStringToDateFn().apply("0000-01-01T00:00:01.100");
     cal.setTime(date);
     assertEquals(1, cal.get(Calendar.YEAR));
     assertEquals(0, cal.get(Calendar.MONTH));
     assertEquals(1, cal.get(Calendar.DAY_OF_MONTH));
 
-    date = STRING_TO_DATE.apply("0000-01-01T17:17:48.191 +02:00");
+    date = StringToDateFunctions.getStringToDateFn().apply("0000-01-01T17:17:48.191 +02:00");
     cal.setTime(date);
     assertEquals(1, cal.get(Calendar.YEAR));
     assertEquals(0, cal.get(Calendar.MONTH));
     assertEquals(1, cal.get(Calendar.DAY_OF_MONTH));
 
-    date = STRING_TO_DATE.apply("0000-01-01T13:24:56.963591");
+    date = StringToDateFunctions.getStringToDateFn().apply("0000-01-01T13:24:56.963591");
     cal.setTime(date);
     assertEquals(1, cal.get(Calendar.YEAR));
     assertEquals(0, cal.get(Calendar.MONTH));
     assertEquals(1, cal.get(Calendar.DAY_OF_MONTH));
 
-    date = STRING_TO_DATE.apply("0000-01-01T17:17:48.023+02:00");
+    date = StringToDateFunctions.getStringToDateFn().apply("0000-01-01T17:17:48.023+02:00");
     cal.setTime(date);
     assertEquals(1, cal.get(Calendar.YEAR));
     assertEquals(0, cal.get(Calendar.MONTH));

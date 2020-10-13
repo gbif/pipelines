@@ -208,6 +208,70 @@ public class InterpretOccurrenceStatusTest {
   }
 
   @Test
+  public void When_CountIsZeroAndStatusIsNullAndPreservedSpecimen_Expect_Present() {
+    // State
+    Map<String, String> coreTerms = new HashMap<>(3);
+    coreTerms.put(DwcTerm.individualCount.qualifiedName(), "0");
+    coreTerms.put(DwcTerm.occurrenceStatus.qualifiedName(), null);
+
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreTerms).build();
+    BasicRecord br =
+        BasicRecord.newBuilder().setId(ID).setBasisOfRecord("PRESERVED_SPECIMEN").build();
+
+    BasicInterpreter.interpretIndividualCount(er, br);
+
+    // When
+    BasicInterpreter.interpretOccurrenceStatus(OCCURRENCE_STATUS_VOCABULARY_STUB).accept(er, br);
+
+    // Should
+    assertEquals(OccurrenceStatus.PRESENT.name(), br.getOccurrenceStatus());
+    assertIssueSize(br, 1);
+    assertIssue(OccurrenceIssue.OCCURRENCE_STATUS_INFERRED_FROM_BASIS_OF_RECORD, br);
+  }
+
+  @Test
+  public void When_CountIsZeroAndStatusIsNullAndFossilSpecimen_Expect_Present() {
+    // State
+    Map<String, String> coreTerms = new HashMap<>(3);
+    coreTerms.put(DwcTerm.individualCount.qualifiedName(), "0");
+    coreTerms.put(DwcTerm.occurrenceStatus.qualifiedName(), null);
+
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreTerms).build();
+    BasicRecord br = BasicRecord.newBuilder().setId(ID).setBasisOfRecord("FOSSIL_SPECIMEN").build();
+
+    BasicInterpreter.interpretIndividualCount(er, br);
+
+    // When
+    BasicInterpreter.interpretOccurrenceStatus(OCCURRENCE_STATUS_VOCABULARY_STUB).accept(er, br);
+
+    // Should
+    assertEquals(OccurrenceStatus.PRESENT.name(), br.getOccurrenceStatus());
+    assertIssueSize(br, 1);
+    assertIssue(OccurrenceIssue.OCCURRENCE_STATUS_INFERRED_FROM_BASIS_OF_RECORD, br);
+  }
+
+  @Test
+  public void When_CountIsZeroAndStatusIsNullAndLivingSpecimen_Expect_Present() {
+    // State
+    Map<String, String> coreTerms = new HashMap<>(3);
+    coreTerms.put(DwcTerm.individualCount.qualifiedName(), "0");
+    coreTerms.put(DwcTerm.occurrenceStatus.qualifiedName(), null);
+
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreTerms).build();
+    BasicRecord br = BasicRecord.newBuilder().setId(ID).setBasisOfRecord("LIVING_SPECIMEN").build();
+
+    BasicInterpreter.interpretIndividualCount(er, br);
+
+    // When
+    BasicInterpreter.interpretOccurrenceStatus(OCCURRENCE_STATUS_VOCABULARY_STUB).accept(er, br);
+
+    // Should
+    assertEquals(OccurrenceStatus.PRESENT.name(), br.getOccurrenceStatus());
+    assertIssueSize(br, 1);
+    assertIssue(OccurrenceIssue.OCCURRENCE_STATUS_INFERRED_FROM_BASIS_OF_RECORD, br);
+  }
+
+  @Test
   public void When_CountIsZeroAndStatusIsPresent_Expect_Present() {
     // State
     Map<String, String> coreTerms = new HashMap<>(2);

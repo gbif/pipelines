@@ -4,16 +4,20 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AUDUBON_RECOR
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.AUDUBON;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
+import lombok.Builder;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.api.vocabulary.Extension;
+import org.gbif.common.parsers.date.DateComponentOrdering;
+import org.gbif.pipelines.core.functions.SerializableConsumer;
+import org.gbif.pipelines.core.functions.SerializableFunction;
 import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.core.interpreters.extension.AudubonInterpreter;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
 
 /**
@@ -27,12 +31,29 @@ import org.gbif.pipelines.transforms.Transform;
  */
 public class AudubonTransform extends Transform<ExtendedRecord, AudubonRecord> {
 
-  private AudubonTransform() {
+  private final SerializableFunction<String, String> preprocessDateFn;
+  private final List<DateComponentOrdering> orderings;
+  private AudubonInterpreter audubonInterpreter;
+
+  @Builder(buildMethodName = "create")
+  private AudubonTransform(
+      List<DateComponentOrdering> orderings,
+      SerializableFunction<String, String> preprocessDateFn) {
     super(AudubonRecord.class, AUDUBON, AudubonTransform.class.getName(), AUDUBON_RECORDS_COUNT);
+    this.orderings = orderings;
+    this.preprocessDateFn = preprocessDateFn;
   }
 
-  public static AudubonTransform create() {
-    return new AudubonTransform();
+  /** Beam @Setup initializes resources */
+  @Setup
+  public void setup() {
+    if (audubonInterpreter == null) {
+      audubonInterpreter =
+          AudubonInterpreter.builder()
+              .orderings(orderings)
+              .preprocessDateFn(preprocessDateFn)
+              .create();
+    }
   }
 
   /** Maps {@link AudubonRecord} to key value, where key is {@link AudubonRecord#getId} */
@@ -60,7 +81,7 @@ public class AudubonTransform extends Transform<ExtendedRecord, AudubonRecord> {
                 Optional.ofNullable(er.getExtensions().get(Extension.AUDUBON.getRowType()))
                     .filter(l -> !l.isEmpty())
                     .isPresent())
-        .via(AudubonInterpreter::interpret)
+        .via(audubonInterpreter::interpret)
         .getOfNullable();
   }
 }

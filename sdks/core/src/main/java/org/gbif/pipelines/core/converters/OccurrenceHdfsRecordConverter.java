@@ -2,26 +2,14 @@ package org.gbif.pipelines.core.converters;
 
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.base.Strings;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.Year;
-import java.time.YearMonth;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.TimeZone;
 import java.util.function.BiConsumer;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -36,6 +24,7 @@ import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.TermFactory;
 import org.gbif.occurrence.common.TermUtils;
 import org.gbif.occurrence.download.hive.HiveColumns;
+import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
 import org.gbif.pipelines.core.utils.MediaSerDeserUtils;
 import org.gbif.pipelines.core.utils.TemporalUtils;
 import org.gbif.pipelines.io.avro.AgentIdentifier;
@@ -58,91 +47,24 @@ import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 public class OccurrenceHdfsRecordConverter {
 
   // Registered converters
-  private static Map<
+  private static final Map<
           Class<? extends SpecificRecordBase>, BiConsumer<OccurrenceHdfsRecord, SpecificRecordBase>>
-      converters;
+      CONVERTERS;
 
   private static final TermFactory TERM_FACTORY = TermFactory.instance();
 
   // Converters
   static {
-    converters = new HashMap<>();
-    converters.put(ExtendedRecord.class, extendedRecordMapper());
-    converters.put(BasicRecord.class, basicRecordMapper());
-    converters.put(LocationRecord.class, locationMapper());
-    converters.put(TaxonRecord.class, taxonMapper());
-    converters.put(GrscicollRecord.class, grscicollMapper());
-    converters.put(TemporalRecord.class, temporalMapper());
-    converters.put(MetadataRecord.class, metadataMapper());
-    converters.put(MultimediaRecord.class, multimediaMapper());
+    CONVERTERS = new HashMap<>();
+    CONVERTERS.put(ExtendedRecord.class, extendedRecordMapper());
+    CONVERTERS.put(BasicRecord.class, basicRecordMapper());
+    CONVERTERS.put(LocationRecord.class, locationMapper());
+    CONVERTERS.put(TaxonRecord.class, taxonMapper());
+    CONVERTERS.put(GrscicollRecord.class, grscicollMapper());
+    CONVERTERS.put(TemporalRecord.class, temporalMapper());
+    CONVERTERS.put(MetadataRecord.class, metadataMapper());
+    CONVERTERS.put(MultimediaRecord.class, multimediaMapper());
   }
-
-  // Converts a TemporalAccessor into Date
-  private static final Function<TemporalAccessor, Date> TEMPORAL_TO_DATE =
-      temporalAccessor -> {
-        if (temporalAccessor instanceof ZonedDateTime) {
-          return Date.from(((ZonedDateTime) temporalAccessor).toInstant());
-        } else if (temporalAccessor instanceof LocalDateTime) {
-          return Date.from(((LocalDateTime) temporalAccessor).toInstant(ZoneOffset.UTC));
-        } else if (temporalAccessor instanceof LocalDate) {
-          return Date.from(((LocalDate) temporalAccessor).atStartOfDay().toInstant(ZoneOffset.UTC));
-        } else if (temporalAccessor instanceof YearMonth) {
-          return Date.from(
-              ((YearMonth) temporalAccessor).atDay(1).atStartOfDay().toInstant(ZoneOffset.UTC));
-        } else if (temporalAccessor instanceof Year) {
-          return Date.from(
-              ((Year) temporalAccessor).atDay(1).atStartOfDay().toInstant(ZoneOffset.UTC));
-        } else {
-          return null;
-        }
-      };
-
-  // Supported Date formats
-  private static final DateTimeFormatter FORMATTER =
-      DateTimeFormatter.ofPattern(
-          "[yyyy-MM-dd'T'HH:mm:ssXXX][yyyy-MM-dd'T'HH:mmXXX][yyyy-MM-dd'T'HH:mm:ss.SSS XXX][yyyy-MM-dd'T'HH:mm:ss.SSSXXX]"
-              + "[yyyy-MM-dd'T'HH:mm:ss.SSSSSS][yyyy-MM-dd'T'HH:mm:ss.SSSSS][yyyy-MM-dd'T'HH:mm:ss.SSSS][yyyy-MM-dd'T'HH:mm:ss.SSS]"
-              + "[yyyy-MM-dd'T'HH:mm:ss][yyyy-MM-dd'T'HH:mm:ss XXX][yyyy-MM-dd'T'HH:mm:ssXXX][yyyy-MM-dd'T'HH:mm:ss]"
-              + "[yyyy-MM-dd'T'HH:mm][yyyy-MM-dd][yyyy-MM][yyyy]");
-
-  // Converts a String into Date
-  static final Function<String, Date> STRING_TO_DATE =
-      dateAsString -> {
-        if (Strings.isNullOrEmpty(dateAsString)) {
-          return null;
-        }
-
-        boolean firstYear = false;
-        if (dateAsString.startsWith("0000")) {
-          firstYear = true;
-          dateAsString = dateAsString.replaceFirst("0000", "1970");
-        }
-
-        try {
-          // parse string
-          TemporalAccessor temporalAccessor =
-              FORMATTER.parseBest(
-                  dateAsString,
-                  ZonedDateTime::from,
-                  LocalDateTime::from,
-                  LocalDate::from,
-                  YearMonth::from,
-                  Year::from);
-
-          Date date = TEMPORAL_TO_DATE.apply(temporalAccessor);
-
-          if (date != null && firstYear) {
-            Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-            cal.setTime(date);
-            cal.set(Calendar.YEAR, 1);
-            return cal.getTime();
-          }
-
-          return date;
-        } catch (Exception ex) {
-          return null;
-        }
-      };
 
   /**
    * Sets the lastInterpreted and lastParsed dates if the new value is greater that the existing one
@@ -249,10 +171,10 @@ public class OccurrenceHdfsRecordConverter {
     return (hr, sr) -> {
       TemporalRecord tr = (TemporalRecord) sr;
       Optional.ofNullable(tr.getDateIdentified())
-          .map(STRING_TO_DATE)
+          .map(StringToDateFunctions.getStringToDateFn())
           .ifPresent(date -> hr.setDateidentified(date.getTime()));
       Optional.ofNullable(tr.getModified())
-          .map(STRING_TO_DATE)
+          .map(StringToDateFunctions.getStringToDateFn())
           .ifPresent(date -> hr.setModified(date.getTime()));
       hr.setDay(tr.getDay());
       hr.setMonth(tr.getMonth());
@@ -272,11 +194,11 @@ public class OccurrenceHdfsRecordConverter {
 
       if (tr.getEventDate() != null && tr.getEventDate().getGte() != null) {
         Optional.ofNullable(tr.getEventDate().getGte())
-            .map(STRING_TO_DATE)
+            .map(StringToDateFunctions.getStringToDateFn(true))
             .ifPresent(eventDate -> hr.setEventdate(eventDate.getTime()));
       } else {
         TemporalUtils.getTemporal(tr.getYear(), tr.getMonth(), tr.getDay())
-            .map(TEMPORAL_TO_DATE)
+            .map(StringToDateFunctions.getTemporalToDateFn())
             .ifPresent(eventDate -> hr.setEventdate(eventDate.getTime()));
       }
 
@@ -571,7 +493,7 @@ public class OccurrenceHdfsRecordConverter {
     OccurrenceHdfsRecord occurrenceHdfsRecord = new OccurrenceHdfsRecord();
     occurrenceHdfsRecord.setIssue(new ArrayList<>());
     for (SpecificRecordBase record : records) {
-      Optional.ofNullable(converters.get(record.getClass()))
+      Optional.ofNullable(CONVERTERS.get(record.getClass()))
           .ifPresent(consumer -> consumer.accept(occurrenceHdfsRecord, record));
     }
 

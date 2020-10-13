@@ -5,26 +5,29 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.MULTIMEDIA_URI_INVALID;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 
 import com.google.common.base.Strings;
+import java.io.Serializable;
 import java.net.URI;
-import java.time.temporal.Temporal;
+import java.time.temporal.TemporalAccessor;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+import lombok.Builder;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.LicenseUriParser;
 import org.gbif.common.parsers.MediaParser;
 import org.gbif.common.parsers.UrlParser;
+import org.gbif.common.parsers.core.OccurrenceParseResult;
 import org.gbif.common.parsers.core.ParseResult;
+import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.core.functions.SerializableFunction;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation.Result;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation.TargetHandler;
-import org.gbif.pipelines.core.parsers.temporal.ParsedTemporal;
 import org.gbif.pipelines.core.parsers.temporal.TemporalParser;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MediaType;
@@ -37,18 +40,19 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
  *
  * @see <a href="http://rs.gbif.org/extension/gbif/1.0/multimedia.xml</a>
  */
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class MultimediaInterpreter {
+public class MultimediaInterpreter implements Serializable {
+
+  private static final long serialVersionUID = -6696875894874557048L;
 
   private static final MediaParser MEDIA_PARSER = MediaParser.getInstance();
   private static final LicenseUriParser LICENSE_URI_PARSER = LicenseUriParser.getInstance();
 
-  private static final TargetHandler<Multimedia> HANDLER =
+  private final TargetHandler<Multimedia> handler =
       ExtensionInterpretation.extension(Extension.MULTIMEDIA)
           .to(Multimedia::new)
           .map(DcTerm.references, MultimediaInterpreter::parseAndSetReferences)
           .mapOne(DcTerm.identifier, MultimediaInterpreter::parseAndSetIdentifier)
-          .mapOne(DcTerm.created, MultimediaInterpreter::parseAndSetCreated)
+          .mapOne(DcTerm.created, this::parseAndSetCreated)
           .map(DcTerm.license, MultimediaInterpreter::parseAndSetLicense)
           .map(DcTerm.rights, MultimediaInterpreter::parseAndSetLicense)
           .map(DcTerm.format, MultimediaInterpreter::parseAndSetFormatAndType)
@@ -64,15 +68,25 @@ public class MultimediaInterpreter {
           .postMap(MultimediaInterpreter::parseAndSetTypeFromReferences)
           .skipIf(MultimediaInterpreter::checkLinks);
 
+  private final TemporalParser temporalParser;
+  private final SerializableFunction<String, String> preprocessDateFn;
+
+  @Builder(buildMethodName = "create")
+  private MultimediaInterpreter(
+      List<DateComponentOrdering> ordering, SerializableFunction<String, String> preprocessDateFn) {
+    this.temporalParser = TemporalParser.create(ordering);
+    this.preprocessDateFn = preprocessDateFn;
+  }
+
   /**
    * Interprets the multimedia of a {@link ExtendedRecord} and populates a {@link MultimediaRecord}
    * with the interpreted values.
    */
-  public static void interpret(ExtendedRecord er, MultimediaRecord mr) {
+  public void interpret(ExtendedRecord er, MultimediaRecord mr) {
     Objects.requireNonNull(er);
     Objects.requireNonNull(mr);
 
-    Result<Multimedia> result = HANDLER.convert(er);
+    Result<Multimedia> result = handler.convert(er);
 
     mr.setMultimediaItems(result.getList());
     mr.getIssues().setIssueList(result.getIssuesAsList());
@@ -149,14 +163,6 @@ public class MultimediaInterpreter {
     }
   }
 
-  /** Parser for "http://purl.org/dc/terms/created" term value */
-  private static String parseAndSetCreated(Multimedia m, String v) {
-    ParsedTemporal parsed = TemporalParser.parse(v);
-    parsed.getFromOpt().map(Temporal::toString).ifPresent(m::setCreated);
-
-    return parsed.getIssues().isEmpty() ? "" : MULTIMEDIA_DATE_INVALID.name();
-  }
-
   /** Parser for "http://purl.org/dc/terms/format" term value */
   private static void parseAndSetFormatAndType(Multimedia m, String v) {
     String mimeType = MEDIA_PARSER.parseMimeType(v);
@@ -200,6 +206,19 @@ public class MultimediaInterpreter {
     if (m.getType() == null && (m.getReferences() != null || m.getIdentifier() != null)) {
       String value = m.getReferences() != null ? m.getReferences() : m.getIdentifier();
       parseAndSetFormatAndType(m, value);
+    }
+  }
+
+  /** Parser for "http://purl.org/dc/terms/created" term value */
+  private String parseAndSetCreated(Multimedia m, String v) {
+    String normalizedDate = Optional.ofNullable(preprocessDateFn).map(x -> x.apply(v)).orElse(v);
+    OccurrenceParseResult<TemporalAccessor> result =
+        temporalParser.parseRecordedDate(normalizedDate);
+    if (result.isSuccessful()) {
+      m.setCreated(result.getPayload().toString());
+      return "";
+    } else {
+      return MULTIMEDIA_DATE_INVALID.name();
     }
   }
 }

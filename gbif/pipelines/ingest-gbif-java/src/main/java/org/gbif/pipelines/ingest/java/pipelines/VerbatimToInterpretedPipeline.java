@@ -6,10 +6,7 @@ import static org.gbif.pipelines.core.utils.FsUtils.createParentDirectories;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -24,6 +21,7 @@ import org.apache.avro.Schema;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
@@ -31,36 +29,17 @@ import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.factory.ConfigFactory;
+import org.gbif.pipelines.core.functions.SerializableConsumer;
 import org.gbif.pipelines.core.io.AvroReader;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
 import org.gbif.pipelines.core.io.SyncDataFileWriterBuilder;
 import org.gbif.pipelines.core.utils.FsUtils;
-import org.gbif.pipelines.factory.GeocodeKvStoreFactory;
-import org.gbif.pipelines.factory.GrscicollLookupKvStoreFactory;
-import org.gbif.pipelines.factory.KeygenServiceFactory;
-import org.gbif.pipelines.factory.MetadataServiceClientFactory;
-import org.gbif.pipelines.factory.NameUsageMatchStoreFactory;
-import org.gbif.pipelines.factory.OccurrenceStatusKvStoreFactory;
+import org.gbif.pipelines.factory.*;
 import org.gbif.pipelines.ingest.java.metrics.IngestMetricsBuilder;
-import org.gbif.pipelines.io.avro.AudubonRecord;
-import org.gbif.pipelines.io.avro.BasicRecord;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.ImageRecord;
-import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
-import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
-import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
-import org.gbif.pipelines.transforms.core.BasicTransform;
-import org.gbif.pipelines.transforms.core.GrscicollTransform;
-import org.gbif.pipelines.transforms.core.LocationTransform;
-import org.gbif.pipelines.transforms.core.TaxonomyTransform;
-import org.gbif.pipelines.transforms.core.TemporalTransform;
-import org.gbif.pipelines.transforms.core.VerbatimTransform;
+import org.gbif.pipelines.transforms.core.*;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
@@ -156,6 +135,11 @@ public class VerbatimToInterpretedPipeline {
                 hdfsSiteConfig, coreSiteConfig, options.getProperties(), PipelinesConfig.class)
             .get();
 
+    List<DateComponentOrdering> dateComponentOrdering =
+        options.getDefaultDateFormat() == null
+            ? config.getDefaultDateFormat()
+            : options.getDefaultDateFormat();
+
     FsUtils.deleteInterpretIfExist(
         hdfsSiteConfig, coreSiteConfig, targetPath, datasetId, attempt, types);
 
@@ -209,17 +193,30 @@ public class VerbatimToInterpretedPipeline {
 
     VerbatimTransform verbatimTransform = VerbatimTransform.create().counterFn(incMetricFn);
 
-    TemporalTransform temporalTransform = TemporalTransform.create().counterFn(incMetricFn);
+    TemporalTransform temporalTransform =
+        TemporalTransform.builder()
+            .orderings(dateComponentOrdering)
+            .create()
+            .counterFn(incMetricFn);
 
     // Extension
     MeasurementOrFactTransform measurementTransform =
-        MeasurementOrFactTransform.create().counterFn(incMetricFn);
+        MeasurementOrFactTransform.builder()
+            .orderings(dateComponentOrdering)
+            .create()
+            .counterFn(incMetricFn);
 
-    MultimediaTransform multimediaTransform = MultimediaTransform.create().counterFn(incMetricFn);
+    MultimediaTransform multimediaTransform =
+        MultimediaTransform.builder()
+            .orderings(dateComponentOrdering)
+            .create()
+            .counterFn(incMetricFn);
 
-    AudubonTransform audubonTransform = AudubonTransform.create().counterFn(incMetricFn);
+    AudubonTransform audubonTransform =
+        AudubonTransform.builder().orderings(dateComponentOrdering).create().counterFn(incMetricFn);
 
-    ImageTransform imageTransform = ImageTransform.create().counterFn(incMetricFn);
+    ImageTransform imageTransform =
+        ImageTransform.builder().orderings(dateComponentOrdering).create().counterFn(incMetricFn);
     // Extra
     OccurrenceExtensionTransform occExtensionTransform =
         OccurrenceExtensionTransform.create().counterFn(incMetricFn);
@@ -237,6 +234,11 @@ public class VerbatimToInterpretedPipeline {
     grscicollTransform.setup();
     metadataTransform.setup();
     defaultValuesTransform.setup();
+    temporalTransform.setup();
+    multimediaTransform.setup();
+    audubonTransform.setup();
+    imageTransform.setup();
+    measurementTransform.setup();
 
     try (SyncDataFileWriter<ExtendedRecord> verbatimWriter =
             createWriter(options, ExtendedRecord.getClassSchema(), verbatimTransform, id);

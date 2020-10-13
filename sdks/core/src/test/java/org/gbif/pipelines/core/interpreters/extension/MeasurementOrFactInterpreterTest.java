@@ -27,7 +27,7 @@ public class MeasurementOrFactInterpreterTest {
             + "\"lte\": null}, \"valueParsed\": null}, {\"id\": null, \"type\": null, \"value\": \"1\", \"accuracy\": null, "
             + "\"unit\": null, \"determinedDate\": \"not a date\", \"determinedBy\": null, \"method\": null, \"remarks\": null, "
             + "\"determinedDateParsed\": {\"gte\": null, \"lte\": null}, \"valueParsed\": 1.0}], \"issues\": {\"issueList\": "
-            + "[\"MEASUREMENT_OR_FACT_DATE_INVALID\"]}}";
+            + "[]}}";
 
     // State
     Map<String, String> ext1 = new HashMap<>();
@@ -65,7 +65,7 @@ public class MeasurementOrFactInterpreterTest {
         MeasurementOrFactRecord.newBuilder().setId(record.getId()).setCreated(0L).build();
 
     // When
-    MeasurementOrFactInterpreter.interpret(record, mfr);
+    MeasurementOrFactInterpreter.builder().create().interpret(record, mfr);
 
     // Should
     Assert.assertEquals(expected, mfr.toString());

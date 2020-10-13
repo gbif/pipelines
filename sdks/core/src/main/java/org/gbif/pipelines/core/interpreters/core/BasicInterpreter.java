@@ -3,6 +3,7 @@ package org.gbif.pipelines.core.interpreters.core;
 import static org.gbif.api.vocabulary.OccurrenceIssue.BASIS_OF_RECORD_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.INDIVIDUAL_COUNT_CONFLICTS_WITH_OCCURRENCE_STATUS;
 import static org.gbif.api.vocabulary.OccurrenceIssue.INDIVIDUAL_COUNT_INVALID;
+import static org.gbif.api.vocabulary.OccurrenceIssue.OCCURRENCE_STATUS_INFERRED_FROM_BASIS_OF_RECORD;
 import static org.gbif.api.vocabulary.OccurrenceIssue.OCCURRENCE_STATUS_INFERRED_FROM_INDIVIDUAL_COUNT;
 import static org.gbif.api.vocabulary.OccurrenceIssue.OCCURRENCE_STATUS_UNPARSABLE;
 import static org.gbif.api.vocabulary.OccurrenceIssue.REFERENCES_URI_INVALID;
@@ -358,6 +359,17 @@ public class BasicInterpreter {
       boolean isOccAbsent = parsedOccStatus == OccurrenceStatus.ABSENT;
       boolean isOccRubbish = parsedOccStatus == null;
 
+      // https://github.com/gbif/pipelines/issues/392
+      boolean isSpecimen =
+          Optional.ofNullable(br.getBasisOfRecord())
+              .map(BasisOfRecord::valueOf)
+              .map(
+                  x ->
+                      x == BasisOfRecord.PRESERVED_SPECIMEN
+                          || x == BasisOfRecord.FOSSIL_SPECIMEN
+                          || x == BasisOfRecord.LIVING_SPECIMEN)
+              .orElse(false);
+
       // rawCount === null
       if (isCountNull) {
         if (isOccNull || isOccPresent) {
@@ -379,7 +391,10 @@ public class BasicInterpreter {
         }
         addIssue(br, INDIVIDUAL_COUNT_INVALID);
       } else if (isCountZero) {
-        if (isOccNull) {
+        if (isOccNull && isSpecimen) {
+          br.setOccurrenceStatus(OccurrenceStatus.PRESENT.name());
+          addIssue(br, OCCURRENCE_STATUS_INFERRED_FROM_BASIS_OF_RECORD);
+        } else if (isOccNull) {
           br.setOccurrenceStatus(OccurrenceStatus.ABSENT.name());
           addIssue(br, OCCURRENCE_STATUS_INFERRED_FROM_INDIVIDUAL_COUNT);
         } else if (isOccPresent) {
