@@ -196,7 +196,7 @@ public class OccurrenceHdfsRecordConverter {
 
       if (tr.getEventDate() != null && tr.getEventDate().getGte() != null) {
         Optional.ofNullable(tr.getEventDate().getGte())
-            .map(StringToDateFunctions.getStringToDateFn())
+            .map(StringToDateFunctions.getStringToDateFn(true))
             .ifPresent(eventDate -> hr.setEventdate(eventDate.getTime()));
       } else {
         TemporalUtils.getTemporal(tr.getYear(), tr.getMonth(), tr.getDay())

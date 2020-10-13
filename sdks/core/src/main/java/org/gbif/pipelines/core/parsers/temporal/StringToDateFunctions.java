@@ -69,6 +69,10 @@ public class StringToDateFunctions {
   }
 
   public static Function<String, Date> getStringToDateFn() {
+    return getStringToDateFn(false);
+  }
+
+  public static Function<String, Date> getStringToDateFn(boolean ignoreOffset) {
     return dateAsString -> {
       if (Strings.isNullOrEmpty(dateAsString)) {
         return null;
@@ -90,6 +94,10 @@ public class StringToDateFunctions {
                 LocalDate::from,
                 YearMonth::from,
                 Year::from);
+
+        if (ignoreOffset && temporalAccessor instanceof ZonedDateTime) {
+          temporalAccessor = ((ZonedDateTime) temporalAccessor).toLocalDateTime();
+        }
 
         Date date = getTemporalToDateFn().apply(temporalAccessor);
 

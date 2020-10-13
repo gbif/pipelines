@@ -397,7 +397,7 @@ public class GbifJsonConverter {
       } else {
         tao = TemporalUtils.getTemporal(tr.getYear(), tr.getMonth(), tr.getDay());
       }
-      tao.map(ta -> TemporalAccessorUtils.toEarliestLocalDateTime(ta, false))
+      tao.map(ta -> TemporalAccessorUtils.toEarliestLocalDateTime(ta, true))
           .ifPresent(d -> jc.addJsonTextFieldNoCheck("eventDateSingle", d.toString()));
 
       // Fields as a common view - "key": "value"
