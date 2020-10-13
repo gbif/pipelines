@@ -21,8 +21,6 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.rest.client.grscicoll.GrscicollLookupResponse;
-import org.gbif.rest.client.grscicoll.GrscicollLookupResponse.CollectionResponse;
-import org.gbif.rest.client.grscicoll.GrscicollLookupResponse.InstitutionResponse;
 import org.gbif.rest.client.grscicoll.GrscicollLookupResponse.Match;
 
 @Slf4j
@@ -71,12 +69,11 @@ public class GrscicollInterpreter {
       }
 
       // institution match
-      Match<InstitutionResponse> institutionMatchResponse = lookupResponse.getInstitutionMatch();
+      Match institutionMatchResponse = lookupResponse.getInstitutionMatch();
       if (institutionMatchResponse.getMatchType() == MatchType.NONE) {
         addIssue(gr, getInstitutionMatchNoneIssue(institutionMatchResponse.getStatus()));
       } else {
-        gr.setInstitutionMatch(
-            GrscicollRecordConverter.convertInstitutionMatch(institutionMatchResponse));
+        gr.setInstitutionMatch(GrscicollRecordConverter.convertMatch(institutionMatchResponse));
 
         if (institutionMatchResponse.getMatchType() == MatchType.FUZZY) {
           addIssue(gr, OccurrenceIssue.INSTITUTION_MATCH_FUZZY);
@@ -84,12 +81,11 @@ public class GrscicollInterpreter {
       }
 
       // collection match
-      Match<CollectionResponse> collectionMatchResponse = lookupResponse.getCollectionMatch();
+      Match collectionMatchResponse = lookupResponse.getCollectionMatch();
       if (collectionMatchResponse.getMatchType() == MatchType.NONE) {
         addIssue(gr, getCollectionMatchNoneIssue(collectionMatchResponse.getStatus()));
       } else {
-        gr.setCollectionMatch(
-            GrscicollRecordConverter.convertCollectionMatch(collectionMatchResponse));
+        gr.setCollectionMatch(GrscicollRecordConverter.convertMatch(collectionMatchResponse));
 
         if (collectionMatchResponse.getMatchType() == MatchType.FUZZY) {
           addIssue(gr, OccurrenceIssue.COLLECTION_MATCH_FUZZY);
