@@ -194,7 +194,7 @@ public class GbifJsonConverterTest {
     assertEquals(mr.getId(), result.path("id").asText());
     assertEquals("Jeremia garde ,à elfutsone", result.path("recordedBy").asText());
     assertEquals("D2 R2", result.path("identifiedBy").asText());
-    assertEquals("2011-01-01", result.path("eventDateSingle").asText());
+    assertEquals("2011-01-01T00:00", result.path("eventDateSingle").asText());
     assertEquals("2011", result.path("year").asText());
     assertEquals("1", result.path("month").asText());
     assertEquals("1", result.path("day").asText());
@@ -385,7 +385,7 @@ public class GbifJsonConverterTest {
     // Should
     assertTrue(JsonValidationUtils.isValid(result.toString()));
     assertEquals(er.getId(), result.path("id").asText());
-    assertEquals("2011-01-01", result.path("eventDateSingle").asText());
+    assertEquals("2011-01-01T00:00", result.path("eventDateSingle").asText());
     assertEquals("2011", result.path("year").asText());
     assertEquals("1", result.path("month").asText());
     assertEquals("1", result.path("day").asText());
@@ -947,7 +947,7 @@ public class GbifJsonConverterTest {
 
     // Should
     assertTrue(JsonValidationUtils.isValid(result.toString()));
-    assertEquals("2018-01-01", result.path("eventDateSingle").asText());
+    assertEquals("2018-01-01T00:00", result.path("eventDateSingle").asText());
     assertEquals("2018", result.path("year").asText());
     assertEquals("2018", result.path("eventDate").path("gte").asText());
     assertEquals("2020", result.path("eventDate").path("lte").asText());
