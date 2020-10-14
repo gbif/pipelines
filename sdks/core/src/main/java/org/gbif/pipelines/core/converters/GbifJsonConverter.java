@@ -3,13 +3,26 @@ package org.gbif.pipelines.core.converters;
 import static org.gbif.pipelines.core.converters.JsonConverter.getEscapedTextNode;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.*;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.IntNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.POJONode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.base.Strings;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.TemporalAccessor;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.StringJoiner;
 import java.util.function.BiConsumer;
 import java.util.function.LongFunction;
 import java.util.stream.Collectors;
@@ -20,13 +33,28 @@ import org.apache.avro.specific.SpecificRecordBase;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.date.TemporalAccessorUtils;
-import org.gbif.dwc.terms.*;
+import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.GbifInternalTerm;
+import org.gbif.dwc.terms.GbifTerm;
+import org.gbif.dwc.terms.Term;
+import org.gbif.dwc.terms.TermFactory;
 import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
 import org.gbif.pipelines.core.utils.TemporalUtils;
-import org.gbif.pipelines.io.avro.*;
-import org.gbif.pipelines.io.avro.grscicoll.Collection;
+import org.gbif.pipelines.io.avro.AmplificationRecord;
+import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.BlastResult;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.GadmFeatures;
+import org.gbif.pipelines.io.avro.Issues;
+import org.gbif.pipelines.io.avro.LocationFeatureRecord;
+import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
+import org.gbif.pipelines.io.avro.Multimedia;
+import org.gbif.pipelines.io.avro.MultimediaRecord;
+import org.gbif.pipelines.io.avro.RankedName;
+import org.gbif.pipelines.io.avro.TaxonRecord;
+import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
-import org.gbif.pipelines.io.avro.grscicoll.Institution;
 
 /**
  * Converter for objects to GBIF elasticsearch schema. You can pass any {@link SpecificRecordBase}
@@ -793,18 +821,16 @@ public class GbifJsonConverter {
       }
 
       if (gr.getInstitutionMatch() != null) {
-        Institution institution = gr.getInstitutionMatch().getInstitution();
-        if (institution != null) {
-          jc.addJsonTextFieldNoCheck(
-              GbifInternalTerm.institutionKey.simpleName(), institution.getKey());
+        String institutionKey = gr.getInstitutionMatch().getKey();
+        if (institutionKey != null) {
+          jc.addJsonTextFieldNoCheck(GbifInternalTerm.institutionKey.simpleName(), institutionKey);
         }
       }
 
       if (gr.getCollectionMatch() != null) {
-        Collection collection = gr.getCollectionMatch().getCollection();
-        if (collection != null) {
-          jc.addJsonTextFieldNoCheck(
-              GbifInternalTerm.collectionKey.simpleName(), collection.getKey());
+        String collectionKey = gr.getCollectionMatch().getKey();
+        if (collectionKey != null) {
+          jc.addJsonTextFieldNoCheck(GbifInternalTerm.collectionKey.simpleName(), collectionKey);
         }
       }
     };
