@@ -96,7 +96,7 @@ public class BitMapGenerator {
 
     String svgSQL =
         String.format(
-            "SELECT %s as id, ST_AsSVG(geom, 0, 4) as svg FROM %s order by feature;",
+            "SELECT %s as id, ST_AsSVG(geom, 0, 4) as svg FROM %s order by id;",
             idName, layer);
 
     ResultSet rs = stmt.executeQuery(svgSQL);
@@ -149,7 +149,7 @@ public class BitMapGenerator {
     if (args.length != 3) {
       System.out.println("Error: args are incorrect!");
       System.out.println(
-          "Example: BitMapGenerator cw_state_poly feature /Users/Shared/Relocated Items/Security/data/sds-shp/");
+          "Example: BitMapGenerator cw_state_poly feature /data/sds-shp/");
     }
     try {
       String layer = args[0];
