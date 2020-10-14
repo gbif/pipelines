@@ -49,7 +49,7 @@ public class GrscicollInterpreter {
 
       if (isEmptyRequest(lookupRequest)) {
         // skip the call
-        log.info(
+        log.debug(
             "Skipped GrSciColl Lookup for record {} due to missing collections fields", er.getId());
         return;
       }
