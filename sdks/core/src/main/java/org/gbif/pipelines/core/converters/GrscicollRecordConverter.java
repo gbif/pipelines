@@ -18,7 +18,7 @@ public class GrscicollRecordConverter {
     builder.setMatchType(matchResponse.getMatchType().name());
     builder.setStatus(convertStatus(matchResponse.getStatus()));
     builder.setReasons(convertReasons(matchResponse.getReasons()));
-    builder.setKey(matchResponse.getKey().toString());
+    builder.setKey(matchResponse.getEntityMatched().getKey().toString());
 
     return builder.build();
   }
