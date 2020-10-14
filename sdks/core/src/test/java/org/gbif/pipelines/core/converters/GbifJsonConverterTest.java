@@ -45,11 +45,8 @@ import org.gbif.pipelines.io.avro.Rank;
 import org.gbif.pipelines.io.avro.RankedName;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.io.avro.grscicoll.Collection;
-import org.gbif.pipelines.io.avro.grscicoll.CollectionMatch;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
-import org.gbif.pipelines.io.avro.grscicoll.Institution;
-import org.gbif.pipelines.io.avro.grscicoll.InstitutionMatch;
+import org.gbif.pipelines.io.avro.grscicoll.Match;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -164,16 +161,9 @@ public class GbifJsonConverterTest {
             .build();
 
     // grscicoll
-    Institution institution =
-        Institution.newBuilder()
-            .setCode("I1")
+    Match institutionMatch =
+        Match.newBuilder()
             .setKey("cb0098db-6ff6-4a5d-ad29-51348d114e41")
-            .setName("Institution1")
-            .build();
-
-    InstitutionMatch institutionMatch =
-        InstitutionMatch.newBuilder()
-            .setInstitution(institution)
             .setMatchType(MatchType.FUZZY.name())
             .build();
 
@@ -259,7 +249,7 @@ public class GbifJsonConverterTest {
         "[{\"type\":\"OTHER\",\"value\":\"someId\"}]", result.path("recordedByIds").toString());
     assertEquals("PRESENT", result.path("occurrenceStatus").asText());
 
-    assertEquals(institution.getKey(), result.path("institutionKey").asText());
+    assertEquals(institutionMatch.getKey(), result.path("institutionKey").asText());
     assertFalse(result.has("collectionKey"));
 
     String expectedIssues =
@@ -892,29 +882,17 @@ public class GbifJsonConverterTest {
             + "}";
 
     // State
-    Institution institution =
-        Institution.newBuilder()
-            .setCode("I1")
+    Match institutionMatch =
+        Match.newBuilder()
             .setKey("cb0098db-6ff6-4a5d-ad29-51348d114e41")
-            .setName("Institution1")
-            .build();
-
-    InstitutionMatch institutionMatch =
-        InstitutionMatch.newBuilder()
-            .setInstitution(institution)
             .setMatchType(MatchType.EXACT.name())
             .build();
 
-    Collection collection =
-        Collection.newBuilder()
+    Match collectionMatch =
+        Match.newBuilder()
             .setKey("5c692584-d517-48e8-93a8-a916ba131d9b")
-            .setCode("C1")
-            .setName("Collection1")
-            .setInstitutionKey("cb0098db-6ff6-4a5d-ad29-51348d114e41")
+            .setMatchType("FUZZY")
             .build();
-
-    CollectionMatch collectionMatch =
-        CollectionMatch.newBuilder().setCollection(collection).setMatchType("FUZZY").build();
 
     GrscicollRecord record =
         GrscicollRecord.newBuilder()

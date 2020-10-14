@@ -54,11 +54,8 @@ import org.gbif.pipelines.io.avro.RankedName;
 import org.gbif.pipelines.io.avro.State;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.io.avro.grscicoll.Collection;
-import org.gbif.pipelines.io.avro.grscicoll.CollectionMatch;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
-import org.gbif.pipelines.io.avro.grscicoll.Institution;
-import org.gbif.pipelines.io.avro.grscicoll.InstitutionMatch;
+import org.gbif.pipelines.io.avro.grscicoll.Match;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -602,27 +599,15 @@ public class OccurrenceHdfsRecordConverterTest {
   @Test
   public void grscicollMapperTest() {
     // State
-    Institution institution =
-        Institution.newBuilder()
-            .setCode("I1")
+    Match institutionMatch =
+        Match.newBuilder()
             .setKey("cb0098db-6ff6-4a5d-ad29-51348d114e41")
-            .build();
-
-    InstitutionMatch institutionMatch =
-        InstitutionMatch.newBuilder()
-            .setInstitution(institution)
             .setMatchType(MatchType.EXACT.name())
             .build();
 
-    Collection collection =
-        Collection.newBuilder()
+    Match collectionMatch =
+        Match.newBuilder()
             .setKey("5c692584-d517-48e8-93a8-a916ba131d9b")
-            .setCode("C1")
-            .build();
-
-    CollectionMatch collectionMatch =
-        CollectionMatch.newBuilder()
-            .setCollection(collection)
             .setMatchType(MatchType.FUZZY.name())
             .build();
 
@@ -637,7 +622,7 @@ public class OccurrenceHdfsRecordConverterTest {
     OccurrenceHdfsRecord hdfsRecord = toOccurrenceHdfsRecord(record);
 
     // Should
-    Assert.assertEquals(institution.getKey(), hdfsRecord.getInstitutionkey());
-    Assert.assertEquals(collection.getKey(), hdfsRecord.getCollectionkey());
+    Assert.assertEquals(institutionMatch.getKey(), hdfsRecord.getInstitutionkey());
+    Assert.assertEquals(collectionMatch.getKey(), hdfsRecord.getCollectionkey());
   }
 }
