@@ -2,6 +2,7 @@ package au.org.ala.utils;
 
 import static org.apache.batik.transcoder.image.ImageTranscoder.KEY_BACKGROUND_COLOR;
 
+import com.google.common.base.Strings;
 import java.awt.Color;
 import java.io.BufferedWriter;
 import java.io.FileOutputStream;
@@ -18,10 +19,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
-import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 import org.apache.batik.transcoder.TranscoderInput;
 import org.apache.batik.transcoder.TranscoderOutput;
 import org.apache.batik.transcoder.image.PNGTranscoder;
+import java.net.URI;
 
 /**
  * It is a simple workaround to generate coloured SVG for a SHP file.
@@ -30,7 +32,7 @@ import org.apache.batik.transcoder.image.PNGTranscoder;
  *
  * <p>A dockerised postgres needs to setup first. database: eez; user: eez); password: eez);
  */
-@NoArgsConstructor
+@AllArgsConstructor
 public class BitMapGenerator {
 
   // It does not seem worth using a templating engine for a single "template".  Welcome to 1995!
@@ -59,27 +61,29 @@ public class BitMapGenerator {
           + "  </style>\n";
 
   private static final String HOLLOW_PATH_FORMAT = "  <path id='%s' d='%s'/>\n";
-
   private static final String FILLED_PATH_FORMAT = "  <path id='%s' style='fill: %s' d='%s'/>\n";
-
   private static final String SVG_FOOTER = "</svg>\n";
 
+  private String url="";
+  private String db="";
+  private String password="";
+  private String user="";
+
   public String generateSVG(String layer, String idName) throws Exception {
-    String url = "jdbc:postgresql://127.0.0.1/eez";
+    URI uri = new URI(url + "/" + db);
+
     Properties props = new Properties();
-    props.setProperty("user", "eez");
-    props.setProperty("password", "eez");
+    props.setProperty("user", user);
+    props.setProperty("password", password);
     props.setProperty("ssl", "false");
-    Connection conn = DriverManager.getConnection(url, props);
+    Connection conn = DriverManager.getConnection(uri.toString(), props);
     System.out.println("Successfully Connected.");
 
     String svg = "";
     svg += SVG_HEADER;
 
     Map<String, String> colourKey = new HashMap<>();
-
     Statement stmt = conn.createStatement();
-
     String idSQL = String.format("SELECT DISTINCT %s as id FROM %s;", idName, layer);
     ResultSet idRs = stmt.executeQuery(idSQL);
 
@@ -146,17 +150,32 @@ public class BitMapGenerator {
    * @param args
    */
   public static void main(String[] args) {
+
+    String url =
+        Strings.isNullOrEmpty(System.getProperty("url"))
+            ? "127.0.0.1"
+            : System.getProperty("url");
+    String db = Strings.isNullOrEmpty(System.getProperty("db"))? "eez" :System.getProperty("db");
+    String user = Strings.isNullOrEmpty(System.getProperty("user"))? "eez" :System.getProperty("user");
+    String password = Strings.isNullOrEmpty(System.getProperty("password"))? "eez" :System.getProperty("password");
+
     if (args.length != 3) {
       System.out.println("Error: args are incorrect!");
       System.out.println(
+          "Minimum three arguments required: layerName, AttrName, outputFolder");
+      System.out.println(
           "Example: BitMapGenerator cw_state_poly feature /data/sds-shp/");
+      System.out.println(
+          "It will generate a bitmap from cw_state_poly layer/table, and use attribute: feature to colourise polygons");
+      System.out.println(
+          "Complete arguments could be: java -Durl=jdbc:postgresql://127.0.0.1 -Ddb=sds -Duser=sds -Dpassword=sds -jar BitmapGenerator.jar au.org.ala.utils.BitMapGenerator cw_state_poly feature /data/sds-shp/" );
     }
     try {
       String layer = args[0];
       String idName = args[1];
       String outputFolder = args[2];
 
-      BitMapGenerator bmg = new BitMapGenerator();
+      BitMapGenerator bmg = new BitMapGenerator(url, db, user, password);
       String svg = bmg.generateSVG(layer, idName);
       // Use layer name as default file name.
       bmg.writeBitmap(svg, outputFolder, layer);
@@ -164,23 +183,5 @@ public class BitMapGenerator {
     } catch (Exception e) {
       e.printStackTrace();
     }
-  }
-
-  /**
-   * The circumference of a parallel (line of longitude at a particular latitude) in kilometres.
-   *
-   * <p>Earth approximated as a sphere, which is sufficient for these bitmaps.
-   */
-  private static double lengthParallelKm(double latitude) {
-    return 2d * Math.PI * 6378.137 /* Earth radius */ * Math.cos(Math.toRadians(latitude));
-  }
-
-  /** Length of N kilometres in pixels, on a 7200×3600 pixel map. */
-  private static double kmToPx(double latitude, double n_km) {
-    return n_km / (lengthParallelKm(latitude) / 7200d);
-  }
-
-  private static double kmToPx(double n_km) {
-    return n_km / (lengthParallelKm(0) / 7200d);
   }
 }
