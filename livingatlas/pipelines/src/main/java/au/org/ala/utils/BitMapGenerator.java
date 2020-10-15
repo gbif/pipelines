@@ -8,6 +8,7 @@ import java.io.BufferedWriter;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.OutputStream;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -23,7 +24,6 @@ import lombok.AllArgsConstructor;
 import org.apache.batik.transcoder.TranscoderInput;
 import org.apache.batik.transcoder.TranscoderOutput;
 import org.apache.batik.transcoder.image.PNGTranscoder;
-import java.net.URI;
 
 /**
  * It is a simple workaround to generate coloured SVG for a SHP file.
@@ -64,10 +64,10 @@ public class BitMapGenerator {
   private static final String FILLED_PATH_FORMAT = "  <path id='%s' style='fill: %s' d='%s'/>\n";
   private static final String SVG_FOOTER = "</svg>\n";
 
-  private String url="";
-  private String db="";
-  private String password="";
-  private String user="";
+  private String url = "";
+  private String db = "";
+  private String password = "";
+  private String user = "";
 
   public String generateSVG(String layer, String idName) throws Exception {
     URI uri = new URI(url + "/" + db);
@@ -100,8 +100,7 @@ public class BitMapGenerator {
 
     String svgSQL =
         String.format(
-            "SELECT %s as id, ST_AsSVG(geom, 0, 4) as svg FROM %s order by id;",
-            idName, layer);
+            "SELECT %s as id, ST_AsSVG(geom, 0, 4) as svg FROM %s order by id;", idName, layer);
 
     ResultSet rs = stmt.executeQuery(svgSQL);
 
@@ -152,23 +151,23 @@ public class BitMapGenerator {
   public static void main(String[] args) {
 
     String url =
-        Strings.isNullOrEmpty(System.getProperty("url"))
-            ? "127.0.0.1"
-            : System.getProperty("url");
-    String db = Strings.isNullOrEmpty(System.getProperty("db"))? "eez" :System.getProperty("db");
-    String user = Strings.isNullOrEmpty(System.getProperty("user"))? "eez" :System.getProperty("user");
-    String password = Strings.isNullOrEmpty(System.getProperty("password"))? "eez" :System.getProperty("password");
+        Strings.isNullOrEmpty(System.getProperty("url")) ? "127.0.0.1" : System.getProperty("url");
+    String db = Strings.isNullOrEmpty(System.getProperty("db")) ? "eez" : System.getProperty("db");
+    String user =
+        Strings.isNullOrEmpty(System.getProperty("user")) ? "eez" : System.getProperty("user");
+    String password =
+        Strings.isNullOrEmpty(System.getProperty("password"))
+            ? "eez"
+            : System.getProperty("password");
 
     if (args.length != 3) {
       System.out.println("Error: args are incorrect!");
-      System.out.println(
-          "Minimum three arguments required: layerName, AttrName, outputFolder");
-      System.out.println(
-          "Example: BitMapGenerator cw_state_poly feature /data/sds-shp/");
+      System.out.println("Minimum three arguments required: layerName, AttrName, outputFolder");
+      System.out.println("Example: BitMapGenerator cw_state_poly feature /data/sds-shp/");
       System.out.println(
           "It will generate a bitmap from cw_state_poly layer/table, and use attribute: feature to colourise polygons");
       System.out.println(
-          "Complete arguments could be: java -Durl=jdbc:postgresql://127.0.0.1 -Ddb=sds -Duser=sds -Dpassword=sds -jar BitmapGenerator.jar au.org.ala.utils.BitMapGenerator cw_state_poly feature /data/sds-shp/" );
+          "Complete command could be: java -Durl=jdbc:postgresql://127.0.0.1 -Ddb=sds -Duser=sds -Dpassword=sds -jar target/pipelines-BUILD_VERSION-shaded.jar au.org.ala.utils.BitMapGenerator cw_state_poly feature /data/sds-shp/");
     }
     try {
       String layer = args[0];
