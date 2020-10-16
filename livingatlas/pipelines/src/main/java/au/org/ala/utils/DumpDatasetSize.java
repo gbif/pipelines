@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.*;
-import org.gbif.pipelines.ingest.utils.FileSystemFactory;
+import org.gbif.pipelines.core.factory.FileSystemFactory;
 
 @Parameters(separators = "=")
 @Slf4j

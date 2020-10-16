@@ -4,9 +4,9 @@ import au.org.ala.pipelines.interpreters.ALATemporalInterpreter;
 import java.util.Optional;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.core.Interpretation;
+import org.gbif.pipelines.core.functions.SerializableConsumer;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
 
 public class ALATemporalTransform extends Transform<ExtendedRecord, TemporalRecord> {

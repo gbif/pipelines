@@ -17,6 +17,8 @@ import java.time.temporal.TemporalAccessor;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.function.BiConsumer;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.core.OccurrenceParseResult;
@@ -26,14 +28,15 @@ import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.core.interpreters.core.LocationInterpreter;
 import org.gbif.pipelines.core.interpreters.core.TemporalInterpreter;
+import org.gbif.pipelines.core.parsers.common.ParsedField;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.core.parsers.common.ParsedField;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.gbif.rest.client.geocode.Location;
 
 /** Extensions to GBIF's {@link LocationInterpreter} */
 @Slf4j
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ALALocationInterpreter {
 
   /**

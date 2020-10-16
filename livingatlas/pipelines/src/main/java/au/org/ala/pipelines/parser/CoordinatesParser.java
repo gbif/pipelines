@@ -1,6 +1,6 @@
 package au.org.ala.pipelines.parser;
 
-import static org.gbif.pipelines.parsers.utils.ModelUtils.extractValue;
+import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
 
 import au.org.ala.pipelines.vocabulary.ALAOccurrenceIssue;
 import com.google.common.base.Strings;
@@ -13,10 +13,10 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.geocode.LatLng;
+import org.gbif.pipelines.core.parsers.common.ParsedField;
+import org.gbif.pipelines.core.parsers.location.parser.CoordinateParseUtils;
+import org.gbif.pipelines.core.parsers.location.parser.Wgs84Projection;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.parsers.parsers.common.ParsedField;
-import org.gbif.pipelines.parsers.parsers.location.parser.CoordinateParseUtils;
-import org.gbif.pipelines.parsers.parsers.location.parser.Wgs84Projection;
 
 /**
  * Copy from org.gbif.pipelines.parsers.parsers.location.parser.CoordinateParser - - cannot be used
@@ -28,7 +28,7 @@ import org.gbif.pipelines.parsers.parsers.location.parser.Wgs84Projection;
  *
  * <p>Parser for the Dwc Terms related to the coordinates.
  */
-@NoArgsConstructor(access = AccessLevel.PUBLIC)
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class CoordinatesParser {
 
   // parses decimal latitude and longitude fields

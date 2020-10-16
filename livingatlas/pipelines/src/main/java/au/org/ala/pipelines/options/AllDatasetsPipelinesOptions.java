@@ -12,7 +12,7 @@ public interface AllDatasetsPipelinesOptions extends PipelineOptions {
   @Description("Target path where the outputs of the pipeline will be written to. Required.")
   @Validation.Required
   @Default.InstanceFactory(
-      org.gbif.pipelines.ingest.options.BasePipelineOptions.DefaultDirectoryFactory.class)
+      org.gbif.pipelines.common.beam.options.BasePipelineOptions.DefaultDirectoryFactory.class)
   String getTargetPath();
 
   void setTargetPath(String var1);

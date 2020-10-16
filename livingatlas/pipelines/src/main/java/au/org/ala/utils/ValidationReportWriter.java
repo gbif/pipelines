@@ -18,7 +18,7 @@ import org.apache.solr.client.solrj.impl.CloudSolrClient;
 import org.apache.solr.client.solrj.response.FacetField;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.params.MapSolrParams;
-import org.gbif.pipelines.ingest.utils.FileSystemFactory;
+import org.gbif.pipelines.core.factory.FileSystemFactory;
 
 /**
  * Generates 2 CSV reports based on the data within system:

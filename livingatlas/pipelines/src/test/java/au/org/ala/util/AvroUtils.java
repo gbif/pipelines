@@ -3,7 +3,7 @@ package au.org.ala.util;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
-import org.gbif.pipelines.ingest.java.io.AvroReader;
+import org.gbif.pipelines.core.io.AvroReader;
 import org.gbif.pipelines.io.avro.ALAUUIDRecord;
 
 /** Utilities for querying AVRO outputs */

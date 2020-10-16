@@ -3,7 +3,7 @@ package au.org.ala.pipelines.options;
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
-import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
+import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 
 /** Main pipeline options necessary for SOLR index for Living atlases */
 public interface ALASolrPipelineOptions extends PipelineOptions, InterpretationPipelineOptions {

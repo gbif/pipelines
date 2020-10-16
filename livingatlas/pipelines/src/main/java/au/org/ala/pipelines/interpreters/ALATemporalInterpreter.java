@@ -5,6 +5,8 @@ import static org.gbif.pipelines.core.utils.ModelUtils.*;
 import au.org.ala.pipelines.vocabulary.ALAOccurrenceIssue;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAccessor;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.common.parsers.date.DateParsers;
@@ -15,6 +17,7 @@ import org.gbif.pipelines.core.interpreters.core.TemporalInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ALATemporalInterpreter {
 
   protected static final LocalDate MIN_LOCAL_DATE = LocalDate.of(1600, 1, 1);

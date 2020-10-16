@@ -21,12 +21,12 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.kvs.KeyValueStore;
+import org.gbif.pipelines.core.utils.ModelUtils;
 import org.gbif.pipelines.io.avro.ALAMatchIssueType;
 import org.gbif.pipelines.io.avro.ALAMatchType;
 import org.gbif.pipelines.io.avro.ALATaxonRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.NameType;
-import org.gbif.pipelines.core.utils.ModelUtils;
 
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)

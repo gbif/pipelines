@@ -7,8 +7,8 @@ import au.org.ala.util.TestUtils;
 import java.io.File;
 import java.util.Map;
 import org.apache.commons.io.FileUtils;
-import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
-import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
+import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.junit.Test;
 
 public class MigrationPipelineTestIT {
