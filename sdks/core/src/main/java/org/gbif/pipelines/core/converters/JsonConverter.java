@@ -1,8 +1,15 @@
 package org.gbif.pipelines.core.converters;
 
+import static org.apache.avro.Schema.Type.UNION;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
+import com.google.common.primitives.Primitives;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,22 +19,12 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.regex.Pattern;
-
-import org.apache.avro.Schema;
-import org.apache.avro.Schema.Type;
-import org.apache.avro.specific.SpecificRecordBase;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.TextNode;
-import com.google.common.primitives.Primitives;
 import lombok.Builder;
 import lombok.Singular;
 import lombok.extern.slf4j.Slf4j;
-
-import static org.apache.avro.Schema.Type.UNION;
+import org.apache.avro.Schema;
+import org.apache.avro.Schema.Type;
+import org.apache.avro.specific.SpecificRecordBase;
 
 /**
  * Common converter, to convert any {@link SpecificRecordBase} object to json string
@@ -59,6 +56,7 @@ public class JsonConverter {
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
   private static final Map<Character, Character> CHAR_MAP = new HashMap<>();
+
   static {
     CHAR_MAP.put('\u001E', ',');
     CHAR_MAP.put('\u001f', ' ');
@@ -67,16 +65,14 @@ public class JsonConverter {
   private final ObjectNode mainNode = MAPPER.createObjectNode();
 
   @Singular
-  private Map<Class<? extends SpecificRecordBase>, BiConsumer<JsonConverter, SpecificRecordBase>> converters;
+  private Map<Class<? extends SpecificRecordBase>, BiConsumer<JsonConverter, SpecificRecordBase>>
+      converters;
 
-  @Singular
-  private List<SpecificRecordBase> records;
+  @Singular private List<SpecificRecordBase> records;
 
-  @Singular
-  private Set<String> skipKeys;
+  @Singular private Set<String> skipKeys;
 
-  @Singular
-  private List<Pattern> replaceKeys;
+  @Singular private List<Pattern> replaceKeys;
 
   public ObjectNode toJson() {
     for (SpecificRecordBase record : records) {
@@ -97,68 +93,77 @@ public class JsonConverter {
 
   private void addArrayNode(ObjectNode node, Schema.Field field, Collection<?> objects) {
     ArrayNode arrayNode = node.putArray(field.name());
-    objects.forEach(value -> {
-      if (value instanceof SpecificRecordBase) {
-        ObjectNode element = createObjectNode();
-        addCommonFields((SpecificRecordBase) value, element);
-        arrayNode.add(element);
-      } else if (value instanceof String || value.getClass().isPrimitive() || Primitives.isWrapperType(
-          value.getClass()) || UUID.class.isAssignableFrom(value.getClass())) {
-        arrayNode.add(value.toString());
-      }
-    });
+    objects.forEach(
+        value -> {
+          if (value instanceof SpecificRecordBase) {
+            ObjectNode element = createObjectNode();
+            addCommonFields((SpecificRecordBase) value, element);
+            arrayNode.add(element);
+          } else if (value instanceof String
+              || value.getClass().isPrimitive()
+              || Primitives.isWrapperType(value.getClass())
+              || UUID.class.isAssignableFrom(value.getClass())) {
+            arrayNode.add(value.toString());
+          }
+        });
   }
 
   /**
-   * Common way how to convert {@link SpecificRecordBase} to json string
-   * Converts {@link SpecificRecordBase} by fields type and adds into {@link ObjectNode}
+   * Common way how to convert {@link SpecificRecordBase} to json string Converts {@link
+   * SpecificRecordBase} by fields type and adds into {@link ObjectNode}
    */
   void addCommonFields(SpecificRecordBase record, ObjectNode node) {
     record.getSchema().getFields().stream()
         .filter(n -> !skipKeys.contains(n.name()))
         .forEach(
-            f -> Optional.ofNullable(record.get(f.pos())).ifPresent(r -> {
+            f ->
+                Optional.ofNullable(record.get(f.pos()))
+                    .ifPresent(
+                        r -> {
+                          Schema schema = f.schema();
+                          Optional<Type> type =
+                              schema.getType() == UNION
+                                  ? schema.getTypes().stream()
+                                      .filter(t -> t.getType() != Type.NULL)
+                                      .findFirst()
+                                      .map(Schema::getType)
+                                  : Optional.of(schema.getType());
 
-              Schema schema = f.schema();
-              Optional<Type> type = schema.getType() == UNION
-                  ? schema.getTypes().stream().filter(t -> t.getType() != Type.NULL).findFirst().map(Schema::getType)
-                  : Optional.of(schema.getType());
-
-              type.ifPresent(t -> {
-                switch (t) {
-                  case BOOLEAN:
-                    node.put(f.name(), (Boolean) r);
-                    break;
-                  case FLOAT:
-                  case DOUBLE:
-                    node.put(f.name(), (Double) r);
-                    break;
-                  case INT:
-                    node.put(f.name(), (Integer) r);
-                    break;
-                  case LONG:
-                    node.put(f.name(), (Long) r);
-                    break;
-                  case RECORD:
-                    if (r instanceof SpecificRecordBase) {
-                      ObjectNode recordNode = createObjectNode();
-                      addCommonFields((SpecificRecordBase) r, recordNode);
-                      node.set(f.name(), recordNode);
-                    }
-                    break;
-                  case ARRAY:
-                    Collection values = (Collection) r;
-                    if (!values.isEmpty()) {
-                      addArrayNode(node, f, (Collection) r);
-                    }
-                    break;
-                  default:
-                    addJsonRawFieldNoCheck(node, f.name(), r.toString());
-                    break;
-                }
-              });
-            })
-        );
+                          type.ifPresent(
+                              t -> {
+                                switch (t) {
+                                  case BOOLEAN:
+                                    node.put(f.name(), (Boolean) r);
+                                    break;
+                                  case FLOAT:
+                                  case DOUBLE:
+                                    node.put(f.name(), (Double) r);
+                                    break;
+                                  case INT:
+                                    node.put(f.name(), (Integer) r);
+                                    break;
+                                  case LONG:
+                                    node.put(f.name(), (Long) r);
+                                    break;
+                                  case RECORD:
+                                    if (r instanceof SpecificRecordBase) {
+                                      ObjectNode recordNode = createObjectNode();
+                                      addCommonFields((SpecificRecordBase) r, recordNode);
+                                      node.set(f.name(), recordNode);
+                                    }
+                                    break;
+                                  case ARRAY:
+                                    Collection values = (Collection) r;
+                                    if (!values.isEmpty()) {
+                                      addArrayNode(node, f, (Collection) r);
+                                    }
+                                    break;
+                                  default:
+                                    addJsonRawFieldNoCheck(node, f.name(), r.toString());
+                                    break;
+                                }
+                              });
+                        }));
   }
 
   /** Common way how to convert {@link SpecificRecordBase} to json string */

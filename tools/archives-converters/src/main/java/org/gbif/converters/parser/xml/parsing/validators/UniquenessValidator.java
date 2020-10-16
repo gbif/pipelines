@@ -3,7 +3,6 @@ package org.gbif.converters.parser.xml.parsing.validators;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Objects;
-
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 import org.mapdb.HTreeMap;

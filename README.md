@@ -10,7 +10,7 @@
     - [**Indexing**](#indexing)
 - [**Structure**](#structure)
 - [**How to build the project**](#how-to-build-the-project)
-- [**Codestyle and tools recommendations**](#codestyle-and-tools-recommendations)
+- [**Contributions**](#contributions)
 
 # About the project
 
@@ -76,19 +76,20 @@ The project is structured as:
 - [**examples**](./examples) - Examples of using project API and base classes
     - [**transform**](./examples/transform) - Transform example demonstrates how to create Apache Beam pipeline, create the new transformation and use it together with GBIF transforms and core classes
     - [**metrics**](./examples/metrics) - The example demonstrates how to create and send Apache Beam SparkRunner metrics to ELK and use the result for Kibana dashboards
-- [**pipelines**](./pipelines) - Main pipelines module
-    - [**beam-common**](./pipelines/beam-common) - Classes and API for using with Apache Beam
-    - [**common**](./pipelines/common) - Only static string variables
-    - [**export-gbif-hbase**](./pipelines/export-gbif-hbase) - The pipeline to export the verbatim data from the GBIF HBase tables and save as `ExtendedRecord` avro files
-    - [**ingest-gbif**](./pipelines/ingest-gbif) - Main GBIF pipelines for ingestion of biodiversity data
-    - [**ingest-gbif-standalone**](./pipelines/ingest-gbif-standalone) - Independent GBIF pipelines for ingestion of biodiversity data
-    - [**ingest-hdfs-table**](./pipelines/ingest-hdfs-table) - Pipeline classes for conversion from interpreted formats into one common for HDFS view creation
-    - [**ingest-transforms**](./pipelines/ingest-transforms) - Transformations for ingestion of biodiversity data
+- [**gbif**](./gbif) - GBIF module
+    - [**coordinator**](./gbif/coordinator) - The main module which controls the interpretation process, through RabbitMQ
+    - [**keygen**](./gbif/keygen) - The library to generate GBIF identifiers, to support backward compatibility the codebase (with minimum changes) was copied from the occurrence/occurrence-persistence project
+    - [**pipelines**](./gbif/pipelines) - Main pipelines module
+        - [**export-gbif-hbase**](./gbif/pipelines/export-gbif-hbase) - The pipeline to export the verbatim data from the GBIF HBase tables and save as `ExtendedRecord` avro files
+        - [**ingest-gbif-beam**](./gbif/pipelines/ingest-gbif-beam) - Main GBIF pipelines for ingestion of biodiversity data
+        - [**ingest-gbif-fragmenter**](./gbif/pipelines/ingest-gbif-fragmenter) - Writes raw archive's data to HBase store
+        - [**ingest-gbif-java**](./gbif/pipelines/ingest-gbif-java) - Main GBIF pipelines for ingestion of biodiversity data, Java version
 - [**sdks**](./sdks) - Main module contains common classes, such as data models, data format interpretations, parsers, web services clients etc.
+    - [**beam-common**](./sdks/beam-common) - Classes and API for using with Apache Beam
+    - [**beam-transforms**](./sdks/beam-transforms) - Transformations for ingestion of biodiversity data
     - [**core**](./sdks/core) - Main API classes, such as data interpretations, converters, [DwCA](https://www.tdwg.org/standards/dwc/) reader etc.
     - [**models**](./sdks/models) - Data models represented in Avro binary format, generated from [Avro](https://avro.apache.org/docs/current/) schemas
-    - [**parsers**](./sdks/parsers) - Data parsers and converters, mainly for internal usage inside of interpretations
-    - [**keygen**](./sdks/keygen) - The library to generate GBIF identifiers, to support backward compatibility the codebase (with minimum changes) was copied from the occurrence/occurrence-persistence project
+    - [**variables**](./sdks/variables) - Only static string variables
 - [**tools**](./tools) - Module for different independent tools
     - [**archives-converters**](./tools/archives-converters) - Converters from [DwCA/DWC 1.0/DWC 1.4](https://www.tdwg.org/standards/dwc/)/ABCD 1.2/ABCD 2.06 to *.[avro](https://avro.apache.org/docs/current/) format
     - [**elasticsearch-tools**](./tools/elasticsearch-tools) - Tool for creating/deleting/swapping Elasticsearch indexes
@@ -96,23 +97,14 @@ The project is structured as:
 
 # How to build the project
 
-The project uses [Apache Maven](https://maven.apache.org/) tool for building. Project contains maven wrapper and script for Linux and MacOS systems, you just can run **build.sh** script:
+The project uses [Apache Maven](https://maven.apache.org/) for building. The project contains a Maven wrapper script for Linux and MacOS systems, you just can run the **`build.sh`** script:
 
 ```shell
 ./build.sh
 ```
-or
-```shell
-source build.sh
-```
 
-Please read [Apache Maven how-to](https://maven.apache.org/run.html).
+Please read the [Apache Maven how-to](https://maven.apache.org/run.html).
 
-# Codestyle and tools recommendations
+# Contributions
 
-- Use [Intellij IDEA Community](https://www.jetbrains.com/idea/download/) (or better)
-- Use [Google Java Format](https://plugins.jetbrains.com/plugin/8527-google-java-format) (Please, do not reformat old codebase, only new)
-- The project uses [Project Lombok](https://projectlombok.org/), please install [Lombok plugin for Intellij IDEA](https://plugins.jetbrains.com/plugin/6317-lombok-plugin).
-- Because the project uses [Error-prone](https://code.google.com/p/error-prone) you may have issues during the build process from IDEA.  To avoid these issues please install the [Error-prone compiler integration plugin](https://plugins.jetbrains.com/plugin/7349-error-prone-compiler-integration) and build the project using the [`error-prone java compiler`](https://code.google.com/p/error-prone) to catch common Java mistakes at compile-time. To use the compiler, go to _File_ → _Settings_ → _Compiler_ → _Java Compiler_ and select `Javac with error-prone` in the `Use compiler` box.
-- Add a custom parameter to avoid a debugging problem.  To use the compiler, go to _File_ → _Settings_ → _Compiler_ → _Java Compiler_ → _Additional command line parameters_ and add `-Xep:ParameterName:OFF`
-- Tests: please follow the conventions of the Maven surefire plugin for [unit tests](https://maven.apache.org/surefire/maven-surefire-plugin/examples/inclusion-exclusion.html) and the ones of the Maven failsafe plugin for [integration tests](https://maven.apache.org/surefire/maven-failsafe-plugin/examples/inclusion-exclusion.html). To run the integration tests just run the verify phase, e.g.: `mvn clean verify`
+We welcome contributions! Please see [the guide](./CONTRIBUTING.md) to see how you can best do this.

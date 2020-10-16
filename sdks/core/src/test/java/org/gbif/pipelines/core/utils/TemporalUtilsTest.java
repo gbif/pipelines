@@ -1,16 +1,15 @@
 package org.gbif.pipelines.core.utils;
 
-import java.time.LocalDate;
-import java.time.Year;
-import java.time.YearMonth;
-import java.time.temporal.Temporal;
-import java.util.Optional;
-
-import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+
+import java.time.LocalDate;
+import java.time.Year;
+import java.time.YearMonth;
+import java.time.temporal.TemporalAccessor;
+import java.util.Optional;
+import org.junit.Test;
 
 public class TemporalUtilsTest {
 
@@ -22,7 +21,7 @@ public class TemporalUtilsTest {
     Integer day = null;
 
     // When
-    Optional<Temporal> temporal = TemporalUtils.getTemporal(year, month, day);
+    Optional<TemporalAccessor> temporal = TemporalUtils.getTemporal(year, month, day);
 
     // Should
     assertFalse(temporal.isPresent());
@@ -36,7 +35,7 @@ public class TemporalUtilsTest {
     Integer day = 1;
 
     // When
-    Optional<Temporal> temporal = TemporalUtils.getTemporal(year, month, day);
+    Optional<TemporalAccessor> temporal = TemporalUtils.getTemporal(year, month, day);
 
     // Should
     assertFalse(temporal.isPresent());
@@ -50,7 +49,7 @@ public class TemporalUtilsTest {
     Integer day = 1;
 
     // When
-    Optional<Temporal> temporal = TemporalUtils.getTemporal(year, month, day);
+    Optional<TemporalAccessor> temporal = TemporalUtils.getTemporal(year, month, day);
 
     // Should
     assertFalse(temporal.isPresent());
@@ -68,7 +67,7 @@ public class TemporalUtilsTest {
     Year expected = Year.of(year);
 
     // When
-    Optional<Temporal> temporal = TemporalUtils.getTemporal(year, month, day);
+    Optional<TemporalAccessor> temporal = TemporalUtils.getTemporal(year, month, day);
 
     // Should
     assertTrue(temporal.isPresent());
@@ -87,7 +86,7 @@ public class TemporalUtilsTest {
     YearMonth expected = YearMonth.of(year, month);
 
     // When
-    Optional<Temporal> temporal = TemporalUtils.getTemporal(year, month, day);
+    Optional<TemporalAccessor> temporal = TemporalUtils.getTemporal(year, month, day);
 
     // Should
     assertTrue(temporal.isPresent());
@@ -106,7 +105,7 @@ public class TemporalUtilsTest {
     LocalDate expected = LocalDate.of(year, month, day);
 
     // When
-    Optional<Temporal> temporal = TemporalUtils.getTemporal(year, month, day);
+    Optional<TemporalAccessor> temporal = TemporalUtils.getTemporal(year, month, day);
 
     // Should
     assertTrue(temporal.isPresent());
@@ -125,7 +124,7 @@ public class TemporalUtilsTest {
     Year expected = Year.of(year);
 
     // When
-    Optional<Temporal> temporal = TemporalUtils.getTemporal(year, month, day);
+    Optional<TemporalAccessor> temporal = TemporalUtils.getTemporal(year, month, day);
 
     // Should
     assertTrue(temporal.isPresent());
@@ -140,10 +139,9 @@ public class TemporalUtilsTest {
     Integer month = 11;
     Integer day = 31;
     // When
-    Optional<Temporal> temporal = TemporalUtils.getTemporal(year, month, day);
+    Optional<TemporalAccessor> temporal = TemporalUtils.getTemporal(year, month, day);
 
     // Should
     assertFalse(temporal.isPresent());
   }
-
 }

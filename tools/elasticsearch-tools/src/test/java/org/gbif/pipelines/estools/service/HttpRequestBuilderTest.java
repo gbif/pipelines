@@ -1,5 +1,12 @@
 package org.gbif.pipelines.estools.service;
 
+import static org.gbif.pipelines.estools.service.HttpRequestBuilder.loadFile;
+import static org.gbif.pipelines.estools.service.JsonHandler.readTree;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -9,26 +16,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
+import org.apache.http.HttpEntity;
 import org.gbif.pipelines.estools.common.SettingsType;
 import org.gbif.pipelines.estools.service.EsConstants.Action;
 import org.gbif.pipelines.estools.service.EsConstants.Constant;
 import org.gbif.pipelines.estools.service.EsConstants.Field;
 import org.gbif.pipelines.estools.service.EsConstants.Indexing;
 import org.gbif.pipelines.estools.service.EsConstants.Searching;
-
-import org.apache.http.HttpEntity;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.google.common.collect.Sets;
-
-import static org.gbif.pipelines.estools.service.HttpRequestBuilder.loadFile;
-import static org.gbif.pipelines.estools.service.JsonHandler.readTree;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /** Tests the {@link HttpRequestBuilder}. */
 public class HttpRequestBuilderTest {
@@ -36,8 +33,7 @@ public class HttpRequestBuilderTest {
   private static final String TEST_MAPPINGS_PATH = "mappings/simple-mapping.json";
 
   /** {@link Rule} requires this field to be public. */
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void bodyIndexingTest() {
@@ -128,21 +124,18 @@ public class HttpRequestBuilderTest {
     // add actions
     List<JsonNode> addActions = actions.findValues(Action.ADD);
     Set<String> indexesAdded =
-        addActions
-            .stream()
+        addActions.stream()
             .map(jsonNode -> jsonNode.get(Field.INDEX).asText())
             .collect(Collectors.toSet());
     Set<String> aliasesModified =
-        addActions
-            .stream()
+        addActions.stream()
             .map(jsonNode -> jsonNode.get(Field.ALIAS).asText())
             .collect(Collectors.toSet());
 
     // remove index actions
     List<JsonNode> removeActions = actions.findValues(Action.REMOVE_INDEX);
     Set<String> indexesRemoved =
-        removeActions
-            .stream()
+        removeActions.stream()
             .map(jsonNode -> jsonNode.get(Field.INDEX).asText())
             .collect(Collectors.toSet());
 

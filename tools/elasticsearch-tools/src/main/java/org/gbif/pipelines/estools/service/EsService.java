@@ -1,31 +1,28 @@
 package org.gbif.pipelines.estools.service;
 
+import static org.gbif.pipelines.estools.service.HttpRequestBuilder.createBodyFromString;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.concurrent.TimeUnit;
-
-import org.gbif.pipelines.estools.client.EsClient;
-import org.gbif.pipelines.estools.model.DeleteByQueryTask;
-import org.gbif.pipelines.estools.model.IndexParams;
-
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpStatus;
-import org.elasticsearch.client.Response;
-import org.elasticsearch.client.ResponseException;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-
-import static org.gbif.pipelines.estools.service.HttpRequestBuilder.createBodyFromString;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpStatus;
+import org.elasticsearch.client.Response;
+import org.elasticsearch.client.ResponseException;
+import org.gbif.pipelines.estools.client.EsClient;
+import org.gbif.pipelines.estools.model.DeleteByQueryTask;
+import org.gbif.pipelines.estools.model.IndexParams;
 
 /**
  * Service to perform ES operations.
@@ -70,7 +67,8 @@ public class EsService {
    * @param settings settings that will be set to the index.
    */
   @SneakyThrows
-  public static void updateIndexSettings(@NonNull EsClient esClient, String idxName, Map<String, String> settings) {
+  public static void updateIndexSettings(
+      @NonNull EsClient esClient, String idxName, Map<String, String> settings) {
 
     // create entity body with settings
     HttpEntity body = HttpRequestBuilder.newInstance().withSettingsMap(settings).build();
@@ -85,11 +83,11 @@ public class EsService {
    *
    * @param esClient client to call ES. It is required.
    * @param idxPattern index to pattern. It can be the exact name of an index to do the query for a
-   * single index, or a pattern using wildcards. For example, "idx*" matches with all the
-   * indexes whose name starts with "idx".
+   *     single index, or a pattern using wildcards. For example, "idx*" matches with all the
+   *     indexes whose name starts with "idx".
    * @param aliases aliases that has to be associated to the indexes retrieved.
    * @return {@link Set} with all the indexes that are in the alias specified and match with the
-   * pattern received.
+   *     pattern received.
    */
   public static Set<String> getIndexesByAliasAndIndexPattern(
       @NonNull EsClient esClient, String idxPattern, Set<String> aliases) {
@@ -102,12 +100,12 @@ public class EsService {
    *
    * @param esClient client to call ES. It is required.
    * @param idxPattern index to pattern. It can be the exact name of an index to do the query for a
-   * single index, or a pattern using wildcards. For example, "idx*" matches with all the
-   * indexes whose name starts with "idx".
-   * @param alias alias that has to be associated to the indexes retrieved. To pass more than one alias they have to be
-   * separated by commas. E.g.: alias1,alias2.
+   *     single index, or a pattern using wildcards. For example, "idx*" matches with all the
+   *     indexes whose name starts with "idx".
+   * @param alias alias that has to be associated to the indexes retrieved. To pass more than one
+   *     alias they have to be separated by commas. E.g.: alias1,alias2.
    * @return {@link Set} with all the indexes that are in the alias specified and match with the
-   * pattern received.
+   *     pattern received.
    */
   public static Set<String> getIndexesByAliasAndIndexPattern(
       @NonNull EsClient esClient, String idxPattern, String alias) {
@@ -136,13 +134,20 @@ public class EsService {
    */
   @SneakyThrows
   public static void swapIndexes(
-      @NonNull EsClient esClient, Set<String> aliases, Set<String> idxToAdd, Set<String> idxToRemove) {
-    if ((idxToAdd == null || idxToAdd.isEmpty()) && (idxToRemove == null || idxToRemove.isEmpty())) {
+      @NonNull EsClient esClient,
+      Set<String> aliases,
+      Set<String> idxToAdd,
+      Set<String> idxToRemove) {
+    if ((idxToAdd == null || idxToAdd.isEmpty())
+        && (idxToRemove == null || idxToRemove.isEmpty())) {
       // nothing to swap
       return;
     }
 
-    HttpEntity body = HttpRequestBuilder.newInstance().withIndexAliasAction(aliases, idxToAdd, idxToRemove).build();
+    HttpEntity body =
+        HttpRequestBuilder.newInstance()
+            .withIndexAliasAction(aliases, idxToAdd, idxToRemove)
+            .build();
     String aliasEndpoint = buildEndpoint("_aliases");
 
     if (idxToRemove.size() == 1) {
@@ -152,9 +157,14 @@ public class EsService {
       long attempts = 60_000L / sleepTime; // timeout 1 min
       while (attempts > 0L) {
         Response response = esClient.performGetRequest(idxStatEndpoint);
-        long queryCurrent = JsonHandler.readTree(response.getEntity())
-            .get("indices").get(indexName).get("primaries").get("search").get("query_current")
-            .asLong();
+        long queryCurrent =
+            JsonHandler.readTree(response.getEntity())
+                .get("indices")
+                .get(indexName)
+                .get("primaries")
+                .get("search")
+                .get("query_current")
+                .asLong();
         if (queryCurrent == 0) {
           break;
         }
@@ -189,7 +199,8 @@ public class EsService {
    * @param document document to index.
    */
   @SneakyThrows
-  public static void indexDocument(@NonNull EsClient esClient, String idxName, String type, long id, String document) {
+  public static void indexDocument(
+      @NonNull EsClient esClient, String idxName, String type, long id, String document) {
     String endpoint = buildEndpoint(idxName, type, id);
     HttpEntity body = createBodyFromString(document);
     esClient.performPutRequest(endpoint, Collections.emptyMap(), body);
@@ -204,7 +215,8 @@ public class EsService {
    * @param id id of the document to be removed.
    */
   @SneakyThrows
-  public static void deleteDocument(@NonNull EsClient esClient, String idxName, String type, long id) {
+  public static void deleteDocument(
+      @NonNull EsClient esClient, String idxName, String type, long id) {
     String endpoint = buildEndpoint(idxName, type, id);
     esClient.performDeleteRequest(endpoint);
   }
@@ -253,7 +265,8 @@ public class EsService {
   }
 
   /**
-   * Deletes records in an index by some ES DSL query and returns the ID of the task which is doing the deletion.
+   * Deletes records in an index by some ES DSL query and returns the ID of the task which is doing
+   * the deletion.
    *
    * @param esClient client to call ES. It is required.
    * @param idxName name of the index to delete records.
@@ -261,9 +274,12 @@ public class EsService {
    * @return the task ID
    */
   @SneakyThrows
-  public static String deleteRecordsByQuery(@NonNull EsClient esClient, String idxName, String query) {
+  public static String deleteRecordsByQuery(
+      @NonNull EsClient esClient, String idxName, String query) {
     String endpoint =
-        buildEndpoint(idxName, "_delete_by_query?conflicts=proceed&scroll_size=5000&wait_for_completion=false");
+        buildEndpoint(
+            idxName,
+            "_delete_by_query?conflicts=proceed&scroll_size=5000&wait_for_completion=false");
     HttpEntity body = createBodyFromString(query);
     return HttpResponseParser.parseDeleteByQueryResponse(
         esClient.performPostRequest(endpoint, Collections.emptyMap(), body).getEntity());
@@ -271,7 +287,8 @@ public class EsService {
 
   @SneakyThrows
   public static DeleteByQueryTask getDeletedByQueryTask(@NonNull EsClient esClient, String taskId) {
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(taskId), "DeleteByQueryTask ID cannot be null or empty");
+    Preconditions.checkArgument(
+        !Strings.isNullOrEmpty(taskId), "DeleteByQueryTask ID cannot be null or empty");
 
     return HttpResponseParser.parseDeleteByQueryTask(
         esClient.performGetRequest(buildEndpoint("_tasks", taskId)).getEntity());
@@ -283,9 +300,11 @@ public class EsService {
    * @param esClient client to call ES. It is required.
    * @param alias name of the alias to search in.
    */
-  public static Set<String> findDatasetIndexesInAlias(@NonNull EsClient esClient, String alias, String datasetKey) {
+  public static Set<String> findDatasetIndexesInAlias(
+      @NonNull EsClient esClient, String alias, String datasetKey) {
     Response response =
-        EsService.executeQuery(esClient, alias, String.format(EsQueries.FIND_DATASET_INDEXES_QUERY, datasetKey));
+        EsService.executeQuery(
+            esClient, alias, String.format(EsQueries.FIND_DATASET_INDEXES_QUERY, datasetKey));
     return HttpResponseParser.parseFindDatasetIndexesInAliasResponse(response.getEntity());
   }
 

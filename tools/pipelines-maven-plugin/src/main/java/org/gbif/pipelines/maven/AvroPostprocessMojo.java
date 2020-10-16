@@ -1,5 +1,7 @@
 package org.gbif.pipelines.maven;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -8,14 +10,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * Mojo class adds new annotations and Issue interface to avro generated classes
@@ -153,8 +152,7 @@ public class AvroPostprocessMojo extends AbstractMojo {
     int idIdx = idxs.get(3);
     if (interIdx != -1 && ovrdIdx != -1 && idIdx != -1) {
       String replace =
-          INTER_BASE + ", " + defaultPackage + ".Issues, "
-              + defaultPackage + ".Record {";
+          INTER_BASE + ", " + defaultPackage + ".Issues, " + defaultPackage + ".Record {";
       replace = lines.get(interIdx).replace(INTER, replace);
       lines.set(interIdx, replace);
     }

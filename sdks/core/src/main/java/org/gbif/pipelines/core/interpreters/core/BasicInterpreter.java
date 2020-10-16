@@ -1,5 +1,18 @@
 package org.gbif.pipelines.core.interpreters.core;
 
+import static org.gbif.api.vocabulary.OccurrenceIssue.BASIS_OF_RECORD_INVALID;
+import static org.gbif.api.vocabulary.OccurrenceIssue.INDIVIDUAL_COUNT_CONFLICTS_WITH_OCCURRENCE_STATUS;
+import static org.gbif.api.vocabulary.OccurrenceIssue.INDIVIDUAL_COUNT_INVALID;
+import static org.gbif.api.vocabulary.OccurrenceIssue.OCCURRENCE_STATUS_INFERRED_FROM_BASIS_OF_RECORD;
+import static org.gbif.api.vocabulary.OccurrenceIssue.OCCURRENCE_STATUS_INFERRED_FROM_INDIVIDUAL_COUNT;
+import static org.gbif.api.vocabulary.OccurrenceIssue.OCCURRENCE_STATUS_UNPARSABLE;
+import static org.gbif.api.vocabulary.OccurrenceIssue.REFERENCES_URI_INVALID;
+import static org.gbif.api.vocabulary.OccurrenceIssue.TYPE_STATUS_INVALID;
+import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
+import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
+import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
+
+import com.google.common.base.Strings;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -8,11 +21,15 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
-
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.vocabulary.BasisOfRecord;
 import org.gbif.api.vocabulary.EstablishmentMeans;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.LifeStage;
+import org.gbif.api.vocabulary.OccurrenceStatus;
 import org.gbif.api.vocabulary.Sex;
 import org.gbif.api.vocabulary.TypeStatus;
 import org.gbif.common.parsers.LicenseParser;
@@ -23,29 +40,16 @@ import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
+import org.gbif.kvs.KeyValueStore;
+import org.gbif.pipelines.core.parsers.SimpleTypeParser;
+import org.gbif.pipelines.core.parsers.VocabularyParser;
+import org.gbif.pipelines.core.parsers.identifier.AgentIdentifierParser;
+import org.gbif.pipelines.core.utils.ModelUtils;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.keygen.api.KeyLookupResult;
 import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
-import org.gbif.pipelines.parsers.parsers.SimpleTypeParser;
-import org.gbif.pipelines.parsers.parsers.VocabularyParser;
-import org.gbif.pipelines.parsers.parsers.identifier.AgentIdentifierParser;
-
-import org.apache.commons.lang3.StringUtils;
-
-import com.google.common.base.Strings;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
-import static org.gbif.api.vocabulary.OccurrenceIssue.BASIS_OF_RECORD_INVALID;
-import static org.gbif.api.vocabulary.OccurrenceIssue.INDIVIDUAL_COUNT_INVALID;
-import static org.gbif.api.vocabulary.OccurrenceIssue.REFERENCES_URI_INVALID;
-import static org.gbif.api.vocabulary.OccurrenceIssue.TYPE_STATUS_INVALID;
-import static org.gbif.pipelines.parsers.utils.ModelUtils.addIssue;
-import static org.gbif.pipelines.parsers.utils.ModelUtils.extractOptValue;
-import static org.gbif.pipelines.parsers.utils.ModelUtils.extractValue;
 
 /**
  * Interpreting function that receives a ExtendedRecord instance and applies an interpretation to
@@ -57,7 +61,8 @@ public class BasicInterpreter {
 
   public static final String GBIF_ID_INVALID = "GBIF_ID_INVALID";
 
-  private static final Parsable<String> TYPE_NAME_PARSER = org.gbif.common.parsers.TypifiedNameParser.getInstance();
+  private static final Parsable<String> TYPE_NAME_PARSER =
+      org.gbif.common.parsers.TypifiedNameParser.getInstance();
 
   /** Copies GBIF id from ExtendedRecord id or generates/gets existing GBIF id */
   public static BiConsumer<ExtendedRecord, BasicRecord> interpretGbifId(
@@ -65,15 +70,16 @@ public class BasicInterpreter {
       boolean isTripletValid,
       boolean isOccurrenceIdValid,
       boolean useExtendedRecordId,
-      BiConsumer<ExtendedRecord, BasicRecord> gbifIdFn
-  ) {
+      BiConsumer<ExtendedRecord, BasicRecord> gbifIdFn) {
     gbifIdFn = gbifIdFn == null ? interpretCopyGbifId() : gbifIdFn;
-    return useExtendedRecordId ? gbifIdFn : interpretGbifId(keygenService, isTripletValid, isOccurrenceIdValid);
+    return useExtendedRecordId
+        ? gbifIdFn
+        : interpretGbifId(keygenService, isTripletValid, isOccurrenceIdValid);
   }
 
   /** Generates or gets existing GBIF id */
-  public static BiConsumer<ExtendedRecord, BasicRecord> interpretGbifId(HBaseLockingKeyService keygenService,
-      boolean isTripletValid, boolean isOccurrenceIdValid) {
+  public static BiConsumer<ExtendedRecord, BasicRecord> interpretGbifId(
+      HBaseLockingKeyService keygenService, boolean isTripletValid, boolean isOccurrenceIdValid) {
     return (er, br) -> {
       if (keygenService == null) {
         return;
@@ -99,8 +105,9 @@ public class BasicInterpreter {
 
       if (!uniqueStrings.isEmpty()) {
         try {
-          KeyLookupResult key = Optional.ofNullable(keygenService.findKey(uniqueStrings))
-              .orElse(keygenService.generateKey(uniqueStrings));
+          KeyLookupResult key =
+              Optional.ofNullable(keygenService.findKey(uniqueStrings))
+                  .orElse(keygenService.generateKey(uniqueStrings));
 
           br.setGbifId(key.getKey());
         } catch (IllegalStateException ex) {
@@ -215,7 +222,6 @@ public class BasicInterpreter {
       br.setBasisOfRecord(BasisOfRecord.UNKNOWN.name());
       addIssue(br, BASIS_OF_RECORD_INVALID);
     }
-
   }
 
   /** {@link DcTerm#references} interpretation. */
@@ -238,13 +244,15 @@ public class BasicInterpreter {
       br.setTypifiedName(typifiedName.get());
     } else {
       Optional.ofNullable(er.getCoreTerms().get(DwcTerm.typeStatus.qualifiedName()))
-          .ifPresent(typeStatusValue -> {
-            ParseResult<String> result =
-                TYPE_NAME_PARSER.parse(er.getCoreTerms().get(DwcTerm.typeStatus.qualifiedName()));
-            if (result.isSuccessful()) {
-              br.setTypifiedName(result.getPayload());
-            }
-          });
+          .ifPresent(
+              typeStatusValue -> {
+                ParseResult<String> result =
+                    TYPE_NAME_PARSER.parse(
+                        er.getCoreTerms().get(DwcTerm.typeStatus.qualifiedName()));
+                if (result.isSuccessful()) {
+                  br.setTypifiedName(result.getPayload());
+                }
+              });
     }
   }
 
@@ -259,9 +267,7 @@ public class BasicInterpreter {
 
   /** {@link DwcTerm#sampleSizeUnit} interpretation. */
   public static void interpretSampleSizeUnit(ExtendedRecord er, BasicRecord br) {
-    extractOptValue(er, DwcTerm.sampleSizeUnit)
-        .map(String::trim)
-        .ifPresent(br::setSampleSizeUnit);
+    extractOptValue(er, DwcTerm.sampleSizeUnit).map(String::trim).ifPresent(br::setSampleSizeUnit);
   }
 
   /** {@link DwcTerm#organismQuantity} interpretation. */
@@ -280,7 +286,10 @@ public class BasicInterpreter {
         .ifPresent(br::setOrganismQuantityType);
   }
 
-  /** If the organism and sample have the same measure type, we can calculate relative organism quantity */
+  /**
+   * If the organism and sample have the same measure type, we can calculate relative organism
+   * quantity
+   */
   public static void interpretRelativeOrganismQuantity(BasicRecord br) {
     if (!Strings.isNullOrEmpty(br.getOrganismQuantityType())
         && !Strings.isNullOrEmpty(br.getSampleSizeUnit())
@@ -298,10 +307,11 @@ public class BasicInterpreter {
 
   /** {@link DcTerm#license} interpretation. */
   public static void interpretLicense(ExtendedRecord er, BasicRecord br) {
-    String license = extractOptValue(er, DcTerm.license)
-        .map(BasicInterpreter::getLicense)
-        .map(License::name)
-        .orElse(License.UNSPECIFIED.name());
+    String license =
+        extractOptValue(er, DcTerm.license)
+            .map(BasicInterpreter::getLicense)
+            .map(License::name)
+            .orElse(License.UNSPECIFIED.name());
 
     br.setLicense(license);
   }
@@ -324,17 +334,112 @@ public class BasicInterpreter {
         .ifPresent(br::setRecordedByIds);
   }
 
+  /** {@link DwcTerm#occurrenceStatus} interpretation. */
+  public static BiConsumer<ExtendedRecord, BasicRecord> interpretOccurrenceStatus(
+      KeyValueStore<String, OccurrenceStatus> occStatusKvStore) {
+    return (er, br) -> {
+      if (occStatusKvStore == null) {
+        return;
+      }
+
+      String rawCount = ModelUtils.extractNullAwareValue(er, DwcTerm.individualCount);
+      Integer parsedCount = SimpleTypeParser.parsePositiveIntOpt(rawCount).orElse(null);
+
+      String rawOccStatus = ModelUtils.extractNullAwareValue(er, DwcTerm.occurrenceStatus);
+      OccurrenceStatus parsedOccStatus =
+          rawOccStatus != null ? occStatusKvStore.get(rawOccStatus) : null;
+
+      boolean isCountNull = rawCount == null;
+      boolean isCountRubbish = rawCount != null && parsedCount == null;
+      boolean isCountZero = parsedCount != null && parsedCount == 0;
+      boolean isCountGreaterZero = parsedCount != null && parsedCount > 0;
+
+      boolean isOccNull = rawOccStatus == null;
+      boolean isOccPresent = parsedOccStatus == OccurrenceStatus.PRESENT;
+      boolean isOccAbsent = parsedOccStatus == OccurrenceStatus.ABSENT;
+      boolean isOccRubbish = parsedOccStatus == null;
+
+      // https://github.com/gbif/pipelines/issues/392
+      boolean isSpecimen =
+          Optional.ofNullable(br.getBasisOfRecord())
+              .map(BasisOfRecord::valueOf)
+              .map(
+                  x ->
+                      x == BasisOfRecord.PRESERVED_SPECIMEN
+                          || x == BasisOfRecord.FOSSIL_SPECIMEN
+                          || x == BasisOfRecord.LIVING_SPECIMEN)
+              .orElse(false);
+
+      // rawCount === null
+      if (isCountNull) {
+        if (isOccNull || isOccPresent) {
+          br.setOccurrenceStatus(OccurrenceStatus.PRESENT.name());
+        } else if (isOccAbsent) {
+          br.setOccurrenceStatus(OccurrenceStatus.ABSENT.name());
+        } else if (isOccRubbish) {
+          br.setOccurrenceStatus(OccurrenceStatus.PRESENT.name());
+          addIssue(br, OCCURRENCE_STATUS_UNPARSABLE);
+        }
+      } else if (isCountRubbish) {
+        if (isOccNull || isOccPresent) {
+          br.setOccurrenceStatus(OccurrenceStatus.PRESENT.name());
+        } else if (isOccAbsent) {
+          br.setOccurrenceStatus(OccurrenceStatus.ABSENT.name());
+        } else if (isOccRubbish) {
+          br.setOccurrenceStatus(OccurrenceStatus.PRESENT.name());
+          addIssue(br, OCCURRENCE_STATUS_UNPARSABLE);
+        }
+        addIssue(br, INDIVIDUAL_COUNT_INVALID);
+      } else if (isCountZero) {
+        if (isOccNull && isSpecimen) {
+          br.setOccurrenceStatus(OccurrenceStatus.PRESENT.name());
+          addIssue(br, OCCURRENCE_STATUS_INFERRED_FROM_BASIS_OF_RECORD);
+        } else if (isOccNull) {
+          br.setOccurrenceStatus(OccurrenceStatus.ABSENT.name());
+          addIssue(br, OCCURRENCE_STATUS_INFERRED_FROM_INDIVIDUAL_COUNT);
+        } else if (isOccPresent) {
+          br.setOccurrenceStatus(OccurrenceStatus.PRESENT.name());
+          addIssue(br, INDIVIDUAL_COUNT_CONFLICTS_WITH_OCCURRENCE_STATUS);
+        } else if (isOccAbsent) {
+          br.setOccurrenceStatus(OccurrenceStatus.ABSENT.name());
+        } else if (isOccRubbish) {
+          br.setOccurrenceStatus(OccurrenceStatus.ABSENT.name());
+          addIssue(br, OCCURRENCE_STATUS_UNPARSABLE);
+          addIssue(br, OCCURRENCE_STATUS_INFERRED_FROM_INDIVIDUAL_COUNT);
+        }
+      } else if (isCountGreaterZero) {
+        if (isOccNull) {
+          br.setOccurrenceStatus(OccurrenceStatus.PRESENT.name());
+          addIssue(br, OCCURRENCE_STATUS_INFERRED_FROM_INDIVIDUAL_COUNT);
+        } else if (isOccPresent) {
+          br.setOccurrenceStatus(OccurrenceStatus.PRESENT.name());
+        } else if (isOccAbsent) {
+          br.setOccurrenceStatus(OccurrenceStatus.ABSENT.name());
+          addIssue(br, INDIVIDUAL_COUNT_CONFLICTS_WITH_OCCURRENCE_STATUS);
+        } else if (isOccRubbish) {
+          br.setOccurrenceStatus(OccurrenceStatus.PRESENT.name());
+          addIssue(br, OCCURRENCE_STATUS_UNPARSABLE);
+          addIssue(br, OCCURRENCE_STATUS_INFERRED_FROM_INDIVIDUAL_COUNT);
+        }
+      }
+    };
+  }
+
   /** Returns ENUM instead of url string */
   private static License getLicense(String url) {
-    URI uri = Optional.ofNullable(url).map(x -> {
-      try {
-        return URI.create(x);
-      } catch (IllegalArgumentException ex) {
-        return null;
-      }
-    }).orElse(null);
+    URI uri =
+        Optional.ofNullable(url)
+            .map(
+                x -> {
+                  try {
+                    return URI.create(x);
+                  } catch (IllegalArgumentException ex) {
+                    return null;
+                  }
+                })
+            .orElse(null);
     License license = LicenseParser.getInstance().parseUriThenTitle(uri, null);
-    //UNSPECIFIED must be mapped to null
+    // UNSPECIFIED must be mapped to null
     return License.UNSPECIFIED == license ? null : license;
   }
 }

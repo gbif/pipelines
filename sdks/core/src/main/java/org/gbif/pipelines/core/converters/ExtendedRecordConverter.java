@@ -4,15 +4,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import org.gbif.dwc.record.Record;
 import org.gbif.dwc.record.StarRecord;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
 
 /** Converters from *.class to {@link ExtendedRecord} */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -20,11 +18,10 @@ public class ExtendedRecordConverter {
 
   private static final String RECORD_ID_ERROR = "RECORD_ID_ERROR";
 
-  //Function that removes all the empty elements of a record
+  // Function that removes all the empty elements of a record
   private static final Function<Record, Map<String, String>> REMOVE_EMPTY_CONTENT =
       record ->
-          record.terms()
-              .stream()
+          record.terms().stream()
               .filter(term -> term.qualifiedName() != null && record.value(term) != null)
               .collect(Collectors.toMap(Term::qualifiedName, record::value, (a, b) -> b));
 
@@ -34,9 +31,15 @@ public class ExtendedRecordConverter {
     ExtendedRecord.Builder builder = ExtendedRecord.newBuilder();
     Optional.ofNullable(core.rowType()).ifPresent(x -> builder.setCoreRowType(x.qualifiedName()));
     builder.setCoreTerms(REMOVE_EMPTY_CONTENT.apply(core));
-    builder.setExtensions(record.extensions().entrySet().stream().collect(Collectors.toMap(
-        entry -> entry.getKey().qualifiedName(),
-        entry -> entry.getValue().stream().map(REMOVE_EMPTY_CONTENT).collect(Collectors.toList()))));
+    builder.setExtensions(
+        record.extensions().entrySet().stream()
+            .collect(
+                Collectors.toMap(
+                    entry -> entry.getKey().qualifiedName(),
+                    entry ->
+                        entry.getValue().stream()
+                            .map(REMOVE_EMPTY_CONTENT)
+                            .collect(Collectors.toList()))));
 
     builder.setId(getId(core, builder));
     return builder.build();

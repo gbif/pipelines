@@ -3,12 +3,10 @@ package org.gbif.converters;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.specific.SpecificDatumReader;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -32,7 +30,8 @@ public class DwcaToAvroConverterTest {
 
     // Deserialize ExtendedRecord from disk
     DatumReader<ExtendedRecord> datumReader = new SpecificDatumReader<>(ExtendedRecord.class);
-    try (DataFileReader<ExtendedRecord> dataFileReader = new DataFileReader<>(verbatim, datumReader)) {
+    try (DataFileReader<ExtendedRecord> dataFileReader =
+        new DataFileReader<>(verbatim, datumReader)) {
       while (dataFileReader.hasNext()) {
         ExtendedRecord record = dataFileReader.next();
         Assert.assertNotNull(record);
@@ -41,7 +40,5 @@ public class DwcaToAvroConverterTest {
     }
 
     Files.deleteIfExists(verbatim.toPath());
-
   }
-
 }

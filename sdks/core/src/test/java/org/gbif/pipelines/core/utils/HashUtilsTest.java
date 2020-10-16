@@ -31,5 +31,4 @@ public class HashUtilsTest {
     // Should
     Assert.assertEquals(expected, result);
   }
-
 }

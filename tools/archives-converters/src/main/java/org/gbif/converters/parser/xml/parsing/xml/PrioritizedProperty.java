@@ -15,12 +15,11 @@
  */
 package org.gbif.converters.parser.xml.parsing.xml;
 
-import org.gbif.converters.parser.xml.constants.PrioritizedPropertyNameEnum;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.gbif.converters.parser.xml.constants.PrioritizedPropertyNameEnum;
 
 @Getter
 @Setter

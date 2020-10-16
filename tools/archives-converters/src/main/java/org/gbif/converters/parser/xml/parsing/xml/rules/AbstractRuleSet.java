@@ -1,14 +1,11 @@
 package org.gbif.converters.parser.xml.parsing.xml.rules;
 
 import java.util.Properties;
-
-import org.gbif.converters.parser.xml.constants.PrioritizedPropertyNameEnum;
-import org.gbif.converters.parser.xml.parsing.xml.PrioritizedProperty;
-
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.digester.Digester;
 import org.apache.commons.digester.RuleSet;
-
-import lombok.extern.slf4j.Slf4j;
+import org.gbif.converters.parser.xml.constants.PrioritizedPropertyNameEnum;
+import org.gbif.converters.parser.xml.parsing.xml.PrioritizedProperty;
 
 @Slf4j
 public abstract class AbstractRuleSet implements RuleSet {
