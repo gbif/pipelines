@@ -11,6 +11,7 @@ import org.apache.beam.sdk.metrics.MetricResult;
 import org.apache.beam.sdk.metrics.MetricResults;
 import org.apache.beam.sdk.metrics.MetricsFilter;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.gbif.pipelines.common.beam.options.BasePipelineOptions;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
@@ -89,9 +90,10 @@ public class MetricsHandler {
     saveCountersToFile(options, results, false);
   }
 
-  public static boolean deleteMetricsFile(BasePipelineOptions options){
+  public static boolean deleteMetricsFile(BasePipelineOptions options) {
     FileSystem fs = getFileSystemForOptions(options);
-    String metadataPath = FsUtils.buildDatasetAttemptPath(options, options.getMetaFileName(), false);
+    String metadataPath =
+        PathBuilder.buildDatasetAttemptPath(options, options.getMetaFileName(), false);
     Path path = new Path(metadataPath);
     try {
       return fs.exists(path) && fs.delete(path, true);

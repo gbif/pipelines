@@ -30,7 +30,7 @@ public class SensitiveDataInterpreter {
   protected static String GENERALISATION_IN_METRES = "generalisationInMetres";
 
   private static Set<String> TAXON_ROWS =
-      new HashSet<String>(
+      new HashSet<>(
           Arrays.asList(
               ALATaxonRecord.getClassSchema().getName(),
               OccurrenceHdfsRecord.getClassSchema().getName()));

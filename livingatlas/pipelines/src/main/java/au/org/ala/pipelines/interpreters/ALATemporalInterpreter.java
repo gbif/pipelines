@@ -1,6 +1,6 @@
 package au.org.ala.pipelines.interpreters;
 
-import static org.gbif.pipelines.parsers.utils.ModelUtils.*;
+import static org.gbif.pipelines.core.utils.ModelUtils.*;
 
 import au.org.ala.pipelines.vocabulary.ALAOccurrenceIssue;
 import java.time.LocalDate;

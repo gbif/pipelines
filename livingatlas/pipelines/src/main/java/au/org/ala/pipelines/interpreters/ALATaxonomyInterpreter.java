@@ -26,7 +26,7 @@ import org.gbif.pipelines.io.avro.ALAMatchType;
 import org.gbif.pipelines.io.avro.ALATaxonRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.NameType;
-import org.gbif.pipelines.parsers.utils.ModelUtils;
+import org.gbif.pipelines.core.utils.ModelUtils;
 
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)

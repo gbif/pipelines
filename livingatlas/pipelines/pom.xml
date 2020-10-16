@@ -5,7 +5,7 @@
   <parent>
     <groupId>au.org.ala</groupId>
     <artifactId>livingatlas</artifactId>
-    <version>2.5.5-SNAPSHOT</version>
+    <version>2.6.12-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -14,17 +14,6 @@
 
   <name>Living Atlas Pipelines</name>
   <description>Extensions to GBIF pipelines to support ALA and the Living Atlas community</description>
-
-  <repositories>
-    <repository>
-      <id>ALA</id>
-      <url>https://nexus.ala.org.au/content/repositories/releases</url>
-    </repository>
-    <repository>
-      <id>ALA-snapshots</id>
-      <url>https://nexus.ala.org.au/content/repositories/snapshots</url>
-    </repository>
-  </repositories>
 
   <build>
     <testResources>
@@ -392,33 +381,15 @@
     </dependency>
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
-      <artifactId>parsers</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif.pipelines</groupId>
       <artifactId>core</artifactId>
     </dependency>
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
-      <artifactId>ingest-transforms</artifactId>
+      <artifactId>beam-transforms</artifactId>
     </dependency>
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
-      <artifactId>ingest-gbif-java</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif.pipelines</groupId>
-      <artifactId>ingest-gbif</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>ch.qos.logback</groupId>
-          <artifactId>logback-classic</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif.pipelines</groupId>
-      <artifactId>common</artifactId>
+      <artifactId>variables</artifactId>
     </dependency>
     <dependency>
       <groupId>org.gbif.pipelines</groupId>

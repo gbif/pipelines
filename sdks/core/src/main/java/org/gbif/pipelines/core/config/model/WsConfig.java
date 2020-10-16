@@ -2,6 +2,8 @@ package org.gbif.pipelines.core.config.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.io.Serializable;
+import java.util.Collections;
+import java.util.Map;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
