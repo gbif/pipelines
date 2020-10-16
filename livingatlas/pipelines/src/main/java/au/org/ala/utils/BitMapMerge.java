@@ -8,8 +8,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -18,8 +16,8 @@ import java.util.concurrent.TimeUnit;
 import javax.imageio.ImageIO;
 
 /**
- * Merge multiple bitmaps
- * If there are overlapped zones, this part of colour will be replaced with another unique colour
+ * Merge multiple bitmaps If there are overlapped zones, this part of colour will be replaced with
+ * another unique colour
  */
 public class BitMapMerge {
 
@@ -30,11 +28,9 @@ public class BitMapMerge {
   private int height = 3600;
   private int width = 7200;
 
-  /**
-   * Combines the bitmaps for every layer into a single bitmap, for use as a client cache.
-   */
+  /** Combines the bitmaps for every layer into a single bitmap, for use as a client cache. */
   public void combineAllBitmaps(String target, String... bitmaps) throws Exception {
-    //Path pngFile = Paths.get(target);
+    // Path pngFile = Paths.get(target);
 
     System.out.println("Generating combined layer bitmap.");
     Stopwatch sw = Stopwatch.createStarted();
@@ -44,8 +40,7 @@ public class BitMapMerge {
     BufferedImage[] images = new BufferedImage[bitmaps.length];
     for (int i = 0; i < bitmaps.length; i++) {
       System.out.println("Loading " + bitmaps[i]);
-      images[i] = ImageIO
-          .read(new FileInputStream(bitmaps[i]));
+      images[i] = ImageIO.read(new FileInputStream(bitmaps[i]));
       assert (height == combined.getHeight());
       assert (width == combined.getWidth());
     }
@@ -71,24 +66,28 @@ public class BitMapMerge {
     System.out.println("Writing to " + target);
     File pngFile = new File(target);
     pngFile.createNewFile();
-    OutputStream pngOut = new FileOutputStream(pngFile,false);
+    OutputStream pngOut = new FileOutputStream(pngFile, false);
     ImageIO.write(combined, "PNG", pngOut);
 
-    System.out.println("Combined bitmap with "+usedColours.size()+" colours completed in "+sw.elapsed(
-        TimeUnit.SECONDS)+"s");
+    System.out.println(
+        "Combined bitmap with "
+            + usedColours.size()
+            + " colours completed in "
+            + sw.elapsed(TimeUnit.SECONDS)
+            + "s");
   }
-
 
   private synchronized int getColour(String key) {
     if (inc == 0) {
       usedColours.add(0x000000);
       usedColours.add(0xFFFFFF);
       // Parameter will need changing if the number of polygons increases significantly.
-      // (The idea is to go through the FFFFFF colours ~three times, so nearby polygons aren't such close colours.)
+      // (The idea is to go through the FFFFFF colours ~three times, so nearby polygons aren't such
+      // close colours.)
       for (inc = 2400; inc < 20000; inc++) {
         if (0xFFFFFF % inc == 3) break;
       }
-      System.out.println("Colour increment is "+inc);
+      System.out.println("Colour increment is " + inc);
     }
 
     if (key.matches("^W+$")) {
@@ -101,7 +100,7 @@ public class BitMapMerge {
 
     if (!colourKey.containsKey(key)) {
       lastColour = (lastColour + inc) % 0xFFFFFF;
-  //    System.out.println("Colour "+key+" is now "+String.format("#%06x", lastColour));
+      //    System.out.println("Colour "+key+" is now "+String.format("#%06x", lastColour));
       assert !usedColours.contains(lastColour);
       colourKey.put(key, lastColour);
       usedColours.add(lastColour);
@@ -109,12 +108,14 @@ public class BitMapMerge {
     return colourKey.get(key);
   }
 
-
-  public static void main(String[] args){
-    try{
+  public static void main(String[] args) {
+    try {
       BitMapMerge bm = new BitMapMerge();
-      bm.combineAllBitmaps( "/data/sds-shp/combined.png","/Users/Shared/Relocated Items/Security/data/sds-shp/ffez.png", "/Users/Shared/Relocated Items/Security/data/sds-shp/quarantine_zone.png" );
-      }catch (Exception e){
+      bm.combineAllBitmaps(
+          "/data/sds-shp/combined.png",
+          "/Users/Shared/Relocated Items/Security/data/sds-shp/ffez.png",
+          "/Users/Shared/Relocated Items/Security/data/sds-shp/quarantine_zone.png");
+    } catch (Exception e) {
       e.printStackTrace();
     }
   }

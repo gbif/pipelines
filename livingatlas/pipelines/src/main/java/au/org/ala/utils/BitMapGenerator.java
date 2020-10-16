@@ -26,8 +26,9 @@ import org.apache.batik.transcoder.TranscoderOutput;
 import org.apache.batik.transcoder.image.PNGTranscoder;
 
 /**
- * It is a simple workaround to generate coloured SVG for a SHP file.
- * NOTE: There are no overlapped zones in this SHP file
+ * It is a simple workaround to generate coloured SVG for a SHP file. NOTE: There are no overlapped
+ * zones in this SHP file
+ *
  * <p>SHP files need to loaded to Postgres first.
  *
  * <p>A dockerised postgres needs to setup first. database: eez; user: eez); password: eez);
@@ -112,7 +113,7 @@ public class BitMapGenerator {
   }
 
   public void writeBitmap(String content, String outputFolder, String fileName) throws Exception {
-    String svgFile = Paths.get(outputFolder , fileName+".svg").toString();
+    String svgFile = Paths.get(outputFolder, fileName + ".svg").toString();
     BufferedWriter writer = new BufferedWriter(new FileWriter(svgFile));
     writer.write(content);
     System.out.println("Successfully generated.");
@@ -121,7 +122,7 @@ public class BitMapGenerator {
     System.out.println(svgFile + " is generated.");
     System.out.println("Converting SVG to PNG");
 
-    String pngFile = Paths.get(outputFolder , fileName+".png").toString();
+    String pngFile = Paths.get(outputFolder, fileName + ".png").toString();
     Files.deleteIfExists(Paths.get(pngFile));
     Path filledPngFile = Files.createFile(Paths.get(pngFile));
     try (OutputStream pngOut = new FileOutputStream(filledPngFile.toFile())) {
@@ -142,7 +143,9 @@ public class BitMapGenerator {
   public static void main(String[] args) {
 
     String url =
-        Strings.isNullOrEmpty(System.getProperty("url")) ? "jdbc:postgresql://127.0.0.1" : System.getProperty("url");
+        Strings.isNullOrEmpty(System.getProperty("url"))
+            ? "jdbc:postgresql://127.0.0.1"
+            : System.getProperty("url");
     String db = Strings.isNullOrEmpty(System.getProperty("db")) ? "eez" : System.getProperty("db");
     String user =
         Strings.isNullOrEmpty(System.getProperty("user")) ? "eez" : System.getProperty("user");
