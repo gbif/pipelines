@@ -27,7 +27,7 @@ import org.apache.batik.transcoder.image.PNGTranscoder;
 
 /**
  * It is a simple workaround to generate coloured SVG for a SHP file.
- *
+ * NOTE: There are no overlapped zones in this SHP file
  * <p>SHP files need to loaded to Postgres first.
  *
  * <p>A dockerised postgres needs to setup first. database: eez; user: eez); password: eez);
@@ -49,15 +49,6 @@ public class BitMapGenerator {
           "height=\"3600\" width=\"7200\" viewBox=\"-180 -90 360 180\" xmlns=\"http://www.w3.org/2000/svg\">\n"
           + "\n"
           + "  <style type=\"text/css\">\n"
-          + "    path {\n"
-          + "      stroke: #000000;\n"
-          +
-          // Very thin outlines are used (this is 0.01°), and increased as required later.
-          "      stroke-width: 0.01px;\n"
-          + "      stroke-linecap: round;\n"
-          + "      stroke-linejoin: round;\n"
-          + "      fill: none;\n"
-          + "    }\n"
           + "  </style>\n";
 
   private static final String HOLLOW_PATH_FORMAT = "  <path id='%s' d='%s'/>\n";
@@ -121,7 +112,7 @@ public class BitMapGenerator {
   }
 
   public void writeBitmap(String content, String outputFolder, String fileName) throws Exception {
-    String svgFile = outputFolder + fileName + ".svg";
+    String svgFile = Paths.get(outputFolder , fileName+".svg").toString();
     BufferedWriter writer = new BufferedWriter(new FileWriter(svgFile));
     writer.write(content);
     System.out.println("Successfully generated.");
@@ -130,7 +121,7 @@ public class BitMapGenerator {
     System.out.println(svgFile + " is generated.");
     System.out.println("Converting SVG to PNG");
 
-    String pngFile = outputFolder + fileName + ".png";
+    String pngFile = Paths.get(outputFolder , fileName+".png").toString();
     Files.deleteIfExists(Paths.get(pngFile));
     Path filledPngFile = Files.createFile(Paths.get(pngFile));
     try (OutputStream pngOut = new FileOutputStream(filledPngFile.toFile())) {
@@ -151,7 +142,7 @@ public class BitMapGenerator {
   public static void main(String[] args) {
 
     String url =
-        Strings.isNullOrEmpty(System.getProperty("url")) ? "127.0.0.1" : System.getProperty("url");
+        Strings.isNullOrEmpty(System.getProperty("url")) ? "jdbc:postgresql://127.0.0.1" : System.getProperty("url");
     String db = Strings.isNullOrEmpty(System.getProperty("db")) ? "eez" : System.getProperty("db");
     String user =
         Strings.isNullOrEmpty(System.getProperty("user")) ? "eez" : System.getProperty("user");
