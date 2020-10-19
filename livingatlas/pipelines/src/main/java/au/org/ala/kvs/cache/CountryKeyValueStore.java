@@ -2,7 +2,6 @@ package au.org.ala.kvs.cache;
 
 import au.org.ala.kvs.GeocodeShpConfig;
 import au.org.ala.kvs.client.GeocodeShpIntersectService;
-import java.io.IOException;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.rest.client.geocode.GeocodeResponse;
@@ -20,7 +19,9 @@ public class CountryKeyValueStore implements KeyValueStore<LatLng, GeocodeRespon
   }
 
   @Override
-  public void close() throws IOException {}
+  public void close() {
+    // NOP
+  }
 
   @Override
   public GeocodeResponse get(LatLng latLng) {

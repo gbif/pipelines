@@ -14,7 +14,7 @@ import org.junit.Test;
 public class MigrationPipelineTestIT {
 
   @Test
-  public void testMigration() throws Exception {
+  public void testMigration() {
 
     FileUtils.deleteQuietly(new File("/tmp/la-pipelines-test/uuid-migration"));
 

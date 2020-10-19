@@ -7,7 +7,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.testing.PAssert;
-import org.apache.beam.sdk.transforms.*;
+import org.apache.beam.sdk.transforms.Count;
+import org.apache.beam.sdk.transforms.Filter;
+import org.apache.beam.sdk.transforms.SerializableFunction;
 import org.apache.beam.sdk.values.PCollection;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -21,8 +23,7 @@ public class AvroCheckPipeline {
   public static void assertExtendedCountRecords(
       InterpretationPipelineOptions options,
       Long assertedCount,
-      final Function<ExtendedRecord, Boolean> testFcn)
-      throws Exception {
+      final Function<ExtendedRecord, Boolean> testFcn) {
 
     log.info("Creating a pipeline from options - loading data from " + options.getInputPath());
     // Initialise pipeline
@@ -32,14 +33,7 @@ public class AvroCheckPipeline {
     PCollection<Long> extendedRecordsCount =
         // filter for records without
         p.apply("Read ExtendedRecords", verbatimTransform.read(options.getInputPath()))
-            .apply(
-                Filter.by(
-                    new SerializableFunction<ExtendedRecord, Boolean>() {
-                      @Override
-                      public Boolean apply(ExtendedRecord er) {
-                        return testFcn.apply(er);
-                      }
-                    }))
+            .apply(Filter.by((SerializableFunction<ExtendedRecord, Boolean>) testFcn::apply))
             .apply(Count.globally());
     PAssert.that(extendedRecordsCount).containsInAnyOrder(assertedCount);
     PipelineResult result = p.run();

@@ -31,7 +31,7 @@ public class StateProvinceVocabTest {
 
   /** Missing external resources files */
   @Test
-  public void testNoneExistsExternalResource() throws IOException {
+  public void testNoneExistsExternalResource() {
     ALAPipelinesConfig alaConfig = new ALAPipelinesConfig();
     alaConfig.setLocationInfoConfig(
         new LocationInfoConfig("none_exists.txt", "none_exists.txt", "none_exists.txt"));

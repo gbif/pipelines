@@ -3,7 +3,6 @@ package au.org.ala.kvs.cache;
 import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.kvs.client.*;
 import au.org.ala.kvs.client.retrofit.ALACollectoryServiceClient;
-import java.io.IOException;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.kvs.KeyValueStore;
@@ -37,12 +36,7 @@ public class ALAAttributionKVStoreFactory {
     return instance.kvStore;
   }
 
-  /**
-   * Retrieve KV Store for Collectory Metadata.
-   *
-   * @return
-   * @throws IOException
-   */
+  /** Retrieve KV Store for Collectory Metadata. */
   public static KeyValueStore<String, ALACollectoryMetadata> create(ALAPipelinesConfig config) {
 
     ClientConfiguration clientConfiguration =
@@ -71,7 +65,7 @@ public class ALAAttributionKVStoreFactory {
   private static KeyValueStore<String, ALACollectoryMetadata> cache2kBackedKVStore(
       ALACollectoryService service, Command closeHandler, ALAPipelinesConfig config) {
 
-    KeyValueStore kvs =
+    KeyValueStore<String, ALACollectoryMetadata> kvs =
         new KeyValueStore<String, ALACollectoryMetadata>() {
           @Override
           public ALACollectoryMetadata get(String key) {
@@ -90,7 +84,7 @@ public class ALAAttributionKVStoreFactory {
           }
 
           @Override
-          public void close() throws IOException {
+          public void close() {
             closeHandler.execute();
           }
         };

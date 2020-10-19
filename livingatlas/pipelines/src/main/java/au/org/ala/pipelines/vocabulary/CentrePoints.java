@@ -126,7 +126,7 @@ public class CentrePoints {
   }
 
   /** @return keys */
-  public Set keys() {
+  public Set<String> keys() {
     return centres.keySet();
   }
 

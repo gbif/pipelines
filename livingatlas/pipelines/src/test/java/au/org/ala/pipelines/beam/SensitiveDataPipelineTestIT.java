@@ -41,11 +41,7 @@ public class SensitiveDataPipelineTestIT {
     server.shutdown();
   }
 
-  /**
-   * Tests for SOLR index creation.
-   *
-   * @throws Exception
-   */
+  /** Tests for SOLR index creation. */
   @Test
   public void testSensitivePipeline() throws Exception {
 

@@ -8,10 +8,9 @@ import java.util.function.Function;
 import okhttp3.mockwebserver.MockWebServer;
 import org.apache.commons.io.FileUtils;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.common.beam.options.DwcaPipelineOptions;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
-import org.gbif.pipelines.ingest.options.DwcaPipelineOptions;
-import org.gbif.pipelines.ingest.pipelines.DwcaToVerbatimPipeline;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.junit.After;
 import org.junit.Before;
@@ -34,7 +33,7 @@ public class DefaultValuesTestIT {
   }
 
   @Test
-  public void testDwCaPipeline() throws Exception {
+  public void testDwCaPipeline() {
 
     // clear up previous test runs
     FileUtils.deleteQuietly(new File("/tmp/la-pipelines-test/default-values"));

@@ -4,7 +4,6 @@ import au.org.ala.kvs.GeocodeShpConfig;
 import au.org.ala.layers.intersect.SimpleShapeFile;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import joptsimple.internal.Strings;
 import lombok.extern.slf4j.Slf4j;
@@ -42,15 +41,11 @@ public class GeocodeShpIntersectService {
     }
   }
 
-  /**
-   * Validate resource file paths are avialable.
-   *
-   * @param config
-   */
+  /** Validate resource file paths are avialable. */
   private void checkResourceFiles(GeocodeShpConfig config) {
     String error = "";
     if (config == null) {
-      error = String.format("FATAL: No SHP file configuration found. Please add to YAML.");
+      error = "FATAL: No SHP file configuration found. Please add to YAML.";
     } else {
       if (config.getCountry() == null
           || !new File(config.getCountry().getPath() + ".dbf").exists()) {
@@ -140,8 +135,8 @@ public class GeocodeShpIntersectService {
     return instance;
   }
 
-  public Collection<Location> lookupCountry(Double latitude, Double longitude) {
-    List<Location> locations = new ArrayList<Location>();
+  public List<Location> lookupCountry(Double latitude, Double longitude) {
+    List<Location> locations = new ArrayList<>();
     String value = countries.intersect(longitude, latitude);
     if (value != null) {
       Location l = new Location();
@@ -166,8 +161,8 @@ public class GeocodeShpIntersectService {
     return locations;
   }
 
-  public Collection<Location> lookupStateProvince(Double latitude, Double longitude) {
-    List<Location> locations = new ArrayList<Location>();
+  public List<Location> lookupStateProvince(Double latitude, Double longitude) {
+    List<Location> locations = new ArrayList<>();
     String state = states.intersect(longitude, latitude);
     if (state != null) {
       Location l = new Location();

@@ -14,7 +14,7 @@ public class AvroUtils {
 
     Map<String, ALAUUIDRecord> records =
         AvroReader.readRecords(null, null, ALAUUIDRecord.class, path);
-    Map<String, String> uniqueKeyToUuid = new HashMap<String, String>();
+    Map<String, String> uniqueKeyToUuid = new HashMap<>();
     for (Map.Entry<String, ALAUUIDRecord> record : records.entrySet()) {
       log.debug(record.getValue().getUniqueKey() + " -> " + record.getValue().getUuid());
       uniqueKeyToUuid.put(record.getValue().getUniqueKey(), record.getValue().getUuid());

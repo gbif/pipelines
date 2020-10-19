@@ -5,12 +5,11 @@ import au.org.ala.sds.api.ConservationApi;
 import au.org.ala.sds.ws.client.ALASDSServiceClient;
 import au.org.ala.utils.WsUtils;
 import au.org.ala.ws.ClientConfiguration;
+import java.io.IOException;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.pipelines.core.config.model.WsConfig;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
-
-import java.io.IOException;
 
 @Slf4j
 public class SDSConservationServiceFactory {

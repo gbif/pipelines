@@ -4,7 +4,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.ToString;
 import lombok.Value;
@@ -43,15 +46,13 @@ public class ALACollectoryMetadata {
       return Collections.emptyMap();
     }
 
-    Map<String, List<String>> hints = new HashMap<>();
-    for (Map<String, String> element : this.taxonomyCoverageHints) {
-      for (Map.Entry<String, String> entry : element.entrySet()) {
-        hints
-            .computeIfAbsent(entry.getKey().toLowerCase(), k -> new ArrayList<>())
-            .add(entry.getValue().trim().toLowerCase());
-      }
-    }
-    return hints;
+    return this.taxonomyCoverageHints.stream()
+        .flatMap(element -> element.entrySet().stream())
+        .collect(
+            Collectors.groupingBy(
+                entry -> entry.getKey().toLowerCase(),
+                Collectors.mapping(
+                    entry -> entry.getValue().trim().toLowerCase(), Collectors.toList())));
   }
 
   @JsonPOJOBuilder(withPrefix = "")

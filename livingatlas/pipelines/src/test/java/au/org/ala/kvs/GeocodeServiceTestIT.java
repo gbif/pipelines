@@ -44,7 +44,7 @@ public class GeocodeServiceTestIT {
    * HashMap.
    */
   @Test
-  public void testInsideEEZ() throws Exception {
+  public void testInsideEEZ() {
     KeyValueStore<LatLng, GeocodeResponse> geoService =
         GeocodeKvStoreFactory.createCountrySupplier(TestUtils.getConfig()).get();
     GeocodeResponse resp =
@@ -58,7 +58,7 @@ public class GeocodeServiceTestIT {
    * HashMap.
    */
   @Test
-  public void testInsideStateProvince() throws Exception {
+  public void testInsideStateProvince() {
     KeyValueStore<LatLng, GeocodeResponse> geoService =
         GeocodeKvStoreFactory.createStateProvinceSupplier(TestUtils.getConfig()).get();
     GeocodeResponse resp =

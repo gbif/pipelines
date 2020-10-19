@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import org.jetbrains.annotations.NotNull;
 import org.junit.BeforeClass;
@@ -77,7 +78,7 @@ public class CombinedYamlConfigurationTest {
   @Test
   public void weCanJoinSeveralConfigsAndConvertToArgsWithParams() {
     String[] args = testConf.toArgs("general", "interpret");
-    LinkedHashMap<String, Object> argsInMap = argsToMap(args);
+    Map<String, Object> argsInMap = argsToMap(args);
     assertThat(argsInMap.get("name"), equalTo("interpret dr893"));
     assertThat(argsInMap.get("appName"), equalTo("Interpretation for dr893"));
     assertThat(argsInMap.get("inputPath"), equalTo("/data/pipelines-data/dr893/1/verbatim.avro"));
@@ -87,14 +88,14 @@ public class CombinedYamlConfigurationTest {
   @Test
   public void weSubstituteYamlValuesWithArgs() {
     String[] args = testConf.toArgs("general", "export-latlng");
-    LinkedHashMap<String, Object> argsInMap = argsToMap(args);
+    Map<String, Object> argsInMap = argsToMap(args);
     assertThat(argsInMap.get("appName"), equalTo("Lat Long export for dr893"));
     assertThat(argsInMap.get("inputPath"), equalTo("/data/pipelines-data"));
   }
 
   @Test
   public void weCanJoinSeveralConfigs() {
-    LinkedHashMap<String, Object> embedConf = testConf.subSet("general", "interpret");
+    Map<String, Object> embedConf = testConf.subSet("general", "interpret");
     assertThat(embedConf.get("interpretationTypes"), equalTo("ALL"));
     assertThat(embedConf.get("runner"), equalTo("other")); // as main args has preference
     assertThat(embedConf.get("attempt"), equalTo(1));
@@ -124,7 +125,7 @@ public class CombinedYamlConfigurationTest {
   }
 
   @Test
-  public void expectExceptionWhenMissingConf() throws FileNotFoundException {
+  public void expectExceptionWhenMissingConf() {
     assertThat(
         exceptionOf(
             () ->
@@ -134,7 +135,7 @@ public class CombinedYamlConfigurationTest {
   }
 
   @Test
-  public void expectExceptionWhenMissingConfigArgument() throws FileNotFoundException {
+  public void expectExceptionWhenMissingConfigArgument() {
     assertThat(
         exceptionOf(() -> new CombinedYamlConfiguration(new String[] {})),
         instanceOf(RuntimeException.class));
@@ -150,12 +151,8 @@ public class CombinedYamlConfigurationTest {
     assertThat(yamlStr.contains("{datasetId}"), equalTo(false));
 
     Yaml yaml = new Yaml();
-    LinkedHashMap<String, Object> map = yaml.load(yamlStr);
-    assertThat(
-        (String) ((LinkedHashMap<String, Object>) map.get("alaNameMatch")).get("wsUrl"),
-        equalTo("http://localhost:9179"));
-    assertThat(
-        (String) (map.get("unicode-test")),
-        equalTo("Лорем ипсум долор сит амет, дуо еа прима семпер"));
+    Map<String, Map<String, String>> map = yaml.loadAs(yamlStr, Map.class);
+    assertThat(map.get("alaNameMatch").get("wsUrl"), equalTo("http://localhost:9179"));
+    assertThat(map.get("unicode-test"), equalTo("Лорем ипсум долор сит амет, дуо еа прима семпер"));
   }
 }
