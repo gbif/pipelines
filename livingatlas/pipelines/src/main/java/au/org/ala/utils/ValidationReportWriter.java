@@ -7,6 +7,7 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -70,7 +71,7 @@ public class ValidationReportWriter {
   @Parameter(names = "--solrCollection", description = "SOLR collection")
   private String solrCollection;
 
-  public static final String[] csvHeaders =
+  protected static final String[] CSV_HEADERS =
       new String[] {
         "datasetID",
         "records",
@@ -107,151 +108,154 @@ public class ValidationReportWriter {
     m.run();
   }
 
-  public void run() throws Exception {
+  public void run() throws IOException {
 
     FileSystem fs = FileSystemFactory.getInstance(hdfsSiteConfig, coreSiteConfig).getFs(inputPath);
 
-    final Map<String, Long> readyToIndexCounts = new HashMap<String, Long>();
+    final Map<String, Long> readyToIndexCounts = new HashMap<>();
 
-    final FileWriter reportWriter = new FileWriter(fullReportPath);
+    int count;
+    List<Map.Entry<String, Long>> list;
+    try (FileWriter reportWriter = new FileWriter(fullReportPath)) {
 
-    // write CSV header
-    reportWriter.write(String.join(",", csvHeaders) + "\n");
-    int count = 0;
+      // write CSV header
+      reportWriter.write(String.join(",", CSV_HEADERS) + "\n");
+      count = 0;
 
-    // retrieve indexed counts
-    log.info("Checking SOLR: {}, Checking Sampling: {}", checkSolr, checkSampling);
-    Map<String, Long> datasetIndexCounts =
-        checkSolr ? indexCounts(zkHost, solrCollection) : Collections.emptyMap();
+      // retrieve indexed counts
+      log.info("Checking SOLR: {}, Checking Sampling: {}", checkSolr, checkSampling);
+      Map<String, Long> datasetIndexCounts =
+          checkSolr ? indexCounts(zkHost, solrCollection) : Collections.emptyMap();
 
-    // iterate through directory listing
-    FileStatus[] fileStatuses = fs.listStatus(new Path(inputPath));
-    for (FileStatus fileStatus : fileStatuses) {
-      if (fileStatus.isDirectory()) {
-        String datasetID =
-            fileStatus
-                .getPath()
-                .toString()
-                .substring(fileStatus.getPath().toString().lastIndexOf("/") + 1);
+      // iterate through directory listing
+      FileStatus[] fileStatuses = fs.listStatus(new Path(inputPath));
+      for (FileStatus fileStatus : fileStatuses) {
+        if (fileStatus.isDirectory()) {
+          String datasetID =
+              fileStatus
+                  .getPath()
+                  .toString()
+                  .substring(fileStatus.getPath().toString().lastIndexOf("/") + 1);
 
-        // dataset found
-        boolean verbatimLoaded = false;
-        boolean uuidLoaded = false;
-        boolean validationLoaded = false;
-        boolean interpretationRan = false;
-        boolean metadataAvailable = false;
-        boolean indexingRan = false;
-        boolean samplingRan = false;
-        boolean uniqueTermsSpecified = false;
-        Long recordCount = 0l;
-        Long emptyKeyRecords = 0l;
-        Long duplicateKeyCount = 0l;
-        Long duplicateRecordKeyCount = 0l;
-        count++;
+          // dataset found
+          boolean verbatimLoaded;
+          boolean uuidLoaded;
+          boolean validationLoaded;
+          boolean interpretationRan;
+          boolean indexingRan;
+          boolean samplingRan;
+          boolean metadataAvailable = false;
+          boolean uniqueTermsSpecified = false;
+          long recordCount;
+          long emptyKeyRecords = 0L;
+          long duplicateKeyCount = 0L;
+          long duplicateRecordKeyCount = 0L;
+          count++;
 
-        // check record count
-        verbatimLoaded =
-            ValidationUtils.metricsExists(
-                fs, inputPath, datasetID, attempt, ValidationUtils.VERBATIM_METRICS);
-        recordCount = ValidationUtils.readVerbatimCount(fs, inputPath, datasetID, attempt);
+          // check record count
+          verbatimLoaded =
+              ValidationUtils.metricsExists(
+                  fs, inputPath, datasetID, attempt, ValidationUtils.VERBATIM_METRICS);
+          recordCount = ValidationUtils.readVerbatimCount(fs, inputPath, datasetID, attempt);
 
-        // check UUIDs are generated
-        uuidLoaded =
-            ValidationUtils.metricsExists(
-                fs, inputPath, datasetID, attempt, ValidationUtils.UUID_METRICS);
-        interpretationRan =
-            ValidationUtils.metricsExists(
-                fs, inputPath, datasetID, attempt, ValidationUtils.INTERPRETATION_METRICS);
-        samplingRan =
-            ValidationUtils.metricsExists(
-                fs, inputPath, datasetID, attempt, ValidationUtils.SAMPLING_METRICS);
-        indexingRan =
-            ValidationUtils.metricsExists(
-                fs, inputPath, datasetID, attempt, ValidationUtils.INDEXING_METRICS);
+          // check UUIDs are generated
+          uuidLoaded =
+              ValidationUtils.metricsExists(
+                  fs, inputPath, datasetID, attempt, ValidationUtils.UUID_METRICS);
+          interpretationRan =
+              ValidationUtils.metricsExists(
+                  fs, inputPath, datasetID, attempt, ValidationUtils.INTERPRETATION_METRICS);
+          samplingRan =
+              ValidationUtils.metricsExists(
+                  fs, inputPath, datasetID, attempt, ValidationUtils.SAMPLING_METRICS);
+          indexingRan =
+              ValidationUtils.metricsExists(
+                  fs, inputPath, datasetID, attempt, ValidationUtils.INDEXING_METRICS);
 
-        // check UUIDs are generated
-        validationLoaded =
-            ValidationUtils.metricsExists(
-                fs, inputPath, datasetID, attempt, VALIDATION_REPORT_FILE);
+          // check UUIDs are generated
+          validationLoaded =
+              ValidationUtils.metricsExists(
+                  fs, inputPath, datasetID, attempt, VALIDATION_REPORT_FILE);
 
-        if (validationLoaded) {
+          if (validationLoaded) {
 
-          Map<String, Object> validationMetrics =
-              ValidationUtils.readValidation(fs, inputPath, datasetID, attempt);
+            Map<String, Object> validationMetrics =
+                ValidationUtils.readValidation(fs, inputPath, datasetID, attempt);
 
-          metadataAvailable =
-              Boolean.parseBoolean(
-                  validationMetrics
-                      .getOrDefault(ValidationUtils.METADATA_AVAILABLE, false)
-                      .toString());
-          uniqueTermsSpecified =
-              Boolean.parseBoolean(
-                  validationMetrics
-                      .getOrDefault(ValidationUtils.UNIQUE_TERMS_SPECIFIED, false)
-                      .toString());
-          emptyKeyRecords =
-              Long.parseLong(
-                  validationMetrics
-                      .getOrDefault(ValidationUtils.EMPTY_KEY_RECORDS, -1L)
-                      .toString());
-          duplicateKeyCount =
-              Long.parseLong(
-                  validationMetrics
-                      .getOrDefault(ValidationUtils.DUPLICATE_KEY_COUNT, -1L)
-                      .toString());
-          duplicateRecordKeyCount =
-              Long.parseLong(
-                  validationMetrics
-                      .getOrDefault(ValidationUtils.DUPLICATE_RECORD_KEY_COUNT, -1L)
-                      .toString());
-        }
+            metadataAvailable =
+                Boolean.parseBoolean(
+                    validationMetrics
+                        .getOrDefault(ValidationUtils.METADATA_AVAILABLE, false)
+                        .toString());
+            uniqueTermsSpecified =
+                Boolean.parseBoolean(
+                    validationMetrics
+                        .getOrDefault(ValidationUtils.UNIQUE_TERMS_SPECIFIED, false)
+                        .toString());
+            emptyKeyRecords =
+                Long.parseLong(
+                    validationMetrics
+                        .getOrDefault(ValidationUtils.EMPTY_KEY_RECORDS, -1L)
+                        .toString());
+            duplicateKeyCount =
+                Long.parseLong(
+                    validationMetrics
+                        .getOrDefault(ValidationUtils.DUPLICATE_KEY_COUNT, -1L)
+                        .toString());
+            duplicateRecordKeyCount =
+                Long.parseLong(
+                    validationMetrics
+                        .getOrDefault(ValidationUtils.DUPLICATE_RECORD_KEY_COUNT, -1L)
+                        .toString());
+          }
 
-        ValidationResult validationResult =
-            ValidationUtils.checkReadyForIndexing(fs, inputPath, datasetID, attempt, checkSampling);
+          ValidationResult validationResult =
+              ValidationUtils.checkReadyForIndexing(
+                  fs, inputPath, datasetID, attempt, checkSampling);
 
-        // write CSV
-        reportWriter.write(
-            String.join(
-                    ", ",
-                    datasetID,
-                    recordCount.toString(),
-                    datasetIndexCounts.getOrDefault(datasetID, -1l) >= 0
-                        ? datasetIndexCounts.getOrDefault(datasetID, -1l).toString()
-                        : "",
-                    validationResult.getMessage(),
-                    metadataAvailable ? "OK" : ValidationUtils.METADATA_NOT_AVAILABLE,
-                    uniqueTermsSpecified ? "OK" : ValidationUtils.UNIQUE_TERMS_NOT_SPECIFIED,
-                    verbatimLoaded ? "OK" : ValidationUtils.NO_VERBATIM,
-                    interpretationRan ? "OK" : ValidationUtils.NOT_INTERPRET,
-                    validationLoaded ? "OK" : ValidationUtils.NOT_VALIDATED,
-                    uuidLoaded ? "OK" : ValidationUtils.UUID_REQUIRED,
-                    samplingRan ? "OK" : ValidationUtils.NOT_SAMPLED,
-                    indexingRan ? "OK" : ValidationUtils.NOT_INDEXED,
-                    emptyKeyRecords == 0 ? "OK" : ValidationUtils.HAS_EMPTY_KEYS,
-                    duplicateKeyCount == 0 ? "OK" : ValidationUtils.HAS_DUPLICATES,
-                    emptyKeyRecords > 0 ? emptyKeyRecords.toString() : "",
-                    duplicateKeyCount > 0 ? duplicateKeyCount.toString() : "",
-                    duplicateRecordKeyCount > 0 ? duplicateRecordKeyCount.toString() : "")
-                + "\n");
-        if (recordCount > 0 && verbatimLoaded && uuidLoaded) {
-          readyToIndexCounts.put(datasetID, recordCount);
+          // write CSV
+          reportWriter.write(
+              String.join(
+                      ", ",
+                      datasetID,
+                      String.valueOf(recordCount),
+                      datasetIndexCounts.getOrDefault(datasetID, -1L) >= 0
+                          ? datasetIndexCounts.getOrDefault(datasetID, -1L).toString()
+                          : "",
+                      validationResult.getMessage(),
+                      metadataAvailable ? "OK" : ValidationUtils.METADATA_NOT_AVAILABLE,
+                      uniqueTermsSpecified ? "OK" : ValidationUtils.UNIQUE_TERMS_NOT_SPECIFIED,
+                      verbatimLoaded ? "OK" : ValidationUtils.NO_VERBATIM,
+                      interpretationRan ? "OK" : ValidationUtils.NOT_INTERPRET,
+                      validationLoaded ? "OK" : ValidationUtils.NOT_VALIDATED,
+                      uuidLoaded ? "OK" : ValidationUtils.UUID_REQUIRED,
+                      samplingRan ? "OK" : ValidationUtils.NOT_SAMPLED,
+                      indexingRan ? "OK" : ValidationUtils.NOT_INDEXED,
+                      emptyKeyRecords == 0 ? "OK" : ValidationUtils.HAS_EMPTY_KEYS,
+                      duplicateKeyCount == 0 ? "OK" : ValidationUtils.HAS_DUPLICATES,
+                      emptyKeyRecords > 0 ? Long.toString(emptyKeyRecords) : "",
+                      duplicateKeyCount > 0 ? Long.toString(duplicateKeyCount) : "",
+                      duplicateRecordKeyCount > 0 ? Long.toString(duplicateRecordKeyCount) : "")
+                  + "\n");
+          if (recordCount > 0 && verbatimLoaded && uuidLoaded) {
+            readyToIndexCounts.put(datasetID, recordCount);
+          }
         }
       }
+
+      // order by size descending
+      list = new ArrayList<>(readyToIndexCounts.entrySet());
+      list.sort(reverseOrder(Map.Entry.comparingByValue()));
+
+      try (FileWriter fw = new FileWriter(targetPath)) {
+        for (Map.Entry<String, Long> entry : list) {
+          fw.write(entry.getKey() + "," + entry.getValue() + "\n");
+        }
+        fw.flush();
+      }
+
+      reportWriter.flush();
     }
-
-    // order by size descending
-    List<Map.Entry<String, Long>> list = new ArrayList<>(readyToIndexCounts.entrySet());
-    list.sort(reverseOrder(Map.Entry.comparingByValue()));
-
-    FileWriter fw = new FileWriter(targetPath);
-    for (Map.Entry<String, Long> entry : list) {
-      fw.write(entry.getKey() + "," + entry.getValue() + "\n");
-    }
-    fw.flush();
-    fw.close();
-
-    reportWriter.flush();
-    reportWriter.close();
 
     log.info("Total number of datasets: {}", count);
     log.info("Total number of valid dataset: {}", list.size());
@@ -259,19 +263,11 @@ public class ValidationReportWriter {
     log.info("A list of all datasets and validation results was written to: {}", fullReportPath);
   }
 
-  /**
-   * Retrieve index counts for all datasets.
-   *
-   * @param zkHost
-   * @param solrCollection
-   * @return
-   * @throws Exception
-   */
-  public Map<String, Long> indexCounts(String zkHost, String solrCollection) throws Exception {
+  /** Retrieve index counts for all datasets. */
+  public Map<String, Long> indexCounts(String zkHost, String solrCollection) {
 
-    try {
-      final SolrClient cloudSolrClient = new CloudSolrClient(zkHost);
-      final Map<String, String> queryParamMap = new HashMap<String, String>();
+    try (SolrClient cloudSolrClient = new CloudSolrClient(zkHost)) {
+      final Map<String, String> queryParamMap = new HashMap<>();
       queryParamMap.put("q", "*:*");
       queryParamMap.put("facet", "on");
       queryParamMap.put("rows", "0");
@@ -281,7 +277,6 @@ public class ValidationReportWriter {
       MapSolrParams queryParams = new MapSolrParams(queryParamMap);
 
       QueryResponse queryResponse = cloudSolrClient.query(solrCollection, queryParams);
-      cloudSolrClient.close();
 
       FacetField ff = queryResponse.getFacetField("dataResourceUid");
 

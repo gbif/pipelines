@@ -1,34 +1,35 @@
 package au.org.ala.pipelines.interpreters;
 
 import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_UNCERTAINTY_METERS_INVALID;
-import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
-import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareValue;
-import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
-import static org.gbif.pipelines.core.utils.ModelUtils.hasValue;
+import static org.gbif.pipelines.core.utils.ModelUtils.*;
 
 import au.org.ala.pipelines.parser.CoordinatesParser;
 import au.org.ala.pipelines.parser.DistanceParser;
-import au.org.ala.pipelines.vocabulary.*;
+import au.org.ala.pipelines.vocabulary.ALAOccurrenceIssue;
+import au.org.ala.pipelines.vocabulary.CentrePoints;
+import au.org.ala.pipelines.vocabulary.Vocab;
 import com.google.common.base.Strings;
 import com.google.common.collect.Range;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.TemporalAccessor;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.core.OccurrenceParseResult;
+import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.common.parsers.date.TemporalAccessorUtils;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
+import org.gbif.pipelines.core.functions.SerializableFunction;
 import org.gbif.pipelines.core.interpreters.core.LocationInterpreter;
-import org.gbif.pipelines.core.interpreters.core.TemporalInterpreter;
 import org.gbif.pipelines.core.parsers.common.ParsedField;
+import org.gbif.pipelines.core.parsers.temporal.TemporalParser;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.rest.client.geocode.GeocodeResponse;
@@ -36,8 +37,18 @@ import org.gbif.rest.client.geocode.Location;
 
 /** Extensions to GBIF's {@link LocationInterpreter} */
 @Slf4j
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ALALocationInterpreter {
+
+  private final TemporalParser temporalParser;
+  private final SerializableFunction<String, String> preprocessDateFn;
+
+  @Builder(buildMethodName = "create")
+  private ALALocationInterpreter(
+      List<DateComponentOrdering> orderings,
+      SerializableFunction<String, String> preprocessDateFn) {
+    this.preprocessDateFn = preprocessDateFn;
+    this.temporalParser = TemporalParser.create(orderings);
+  }
 
   /**
    * Interpret stateProvince values, performing a coordinate lookup and comparing with supplied
@@ -91,11 +102,7 @@ public class ALALocationInterpreter {
     };
   }
 
-  /**
-   * Verify country and state info,
-   *
-   * @return
-   */
+  /** Verify country and state info, */
   public static BiConsumer<ExtendedRecord, LocationRecord> verifyLocationInfo(
       CentrePoints countryCentrePoints,
       CentrePoints stateProvinceCentrePoints,
@@ -103,19 +110,16 @@ public class ALALocationInterpreter {
 
     return (er, lr) -> {
       if (lr.getDecimalLongitude() != null && lr.getDecimalLatitude() != null) {
-        if (!Strings.isNullOrEmpty(lr.getCountryCode())) {
-          if (countryCentrePoints.coordinatesMatchCentre(
-              lr.getCountry(), lr.getDecimalLatitude(), lr.getDecimalLongitude())) {
-            addIssue(lr, ALAOccurrenceIssue.COORDINATES_CENTRE_OF_COUNTRY.name());
-          }
+        if (!Strings.isNullOrEmpty(lr.getCountryCode())
+            && countryCentrePoints.coordinatesMatchCentre(
+                lr.getCountry(), lr.getDecimalLatitude(), lr.getDecimalLongitude())) {
+          addIssue(lr, ALAOccurrenceIssue.COORDINATES_CENTRE_OF_COUNTRY.name());
         }
 
         if (!Strings.isNullOrEmpty(lr.getStateProvince())) {
           // Formalize state name
           Optional<String> formalStateName = stateProvinceVocab.matchTerm(lr.getStateProvince());
-          if (formalStateName.isPresent()) {
-            lr.setStateProvince(formalStateName.get());
-          }
+          formalStateName.ifPresent(lr::setStateProvince);
 
           String suppliedStateProvince = extractNullAwareValue(er, DwcTerm.stateProvince);
           if (!Strings.isNullOrEmpty(suppliedStateProvince)) {
@@ -146,40 +150,6 @@ public class ALALocationInterpreter {
         }
       }
     };
-  }
-
-  /**
-   * Parsing of georeferenceDate darwin terms.
-   *
-   * @param er
-   * @param lr
-   */
-  public static void interpretGeoreferencedDate(ExtendedRecord er, LocationRecord lr) {
-    if (hasValue(er, DwcTerm.georeferencedDate)) {
-      LocalDate upperBound = LocalDate.now().plusDays(1);
-      Range<LocalDate> validRecordedDateRange =
-          Range.closed(ALATemporalInterpreter.MIN_LOCAL_DATE, upperBound);
-
-      // GBIF TemporalInterpreter only accepts OccurrenceIssue
-      // Convert GBIF IDENTIFIED_DATE_UNLIKELY to ALA GEOREFERENCED_DATE_UNLIKELY
-      OccurrenceParseResult<TemporalAccessor> parsed =
-          TemporalInterpreter.interpretLocalDate(
-              extractValue(er, DwcTerm.georeferencedDate),
-              validRecordedDateRange,
-              OccurrenceIssue.IDENTIFIED_DATE_UNLIKELY);
-      if (parsed.isSuccessful()) {
-        Optional.ofNullable(
-                TemporalAccessorUtils.toEarliestLocalDateTime(parsed.getPayload(), false))
-            .map(LocalDateTime::toString)
-            .ifPresent(lr::setGeoreferencedDate);
-      }
-
-      if (parsed.getIssues().contains(OccurrenceIssue.IDENTIFIED_DATE_UNLIKELY)) {
-        addIssue(lr, ALAOccurrenceIssue.GEOREFERENCED_DATE_UNLIKELY.name());
-      }
-    } else {
-      addIssue(lr, ALAOccurrenceIssue.MISSING_GEOREFERENCE_DATE.name());
-    }
   }
 
   /**
@@ -254,6 +224,37 @@ public class ALALocationInterpreter {
     } else {
       lr.setCoordinateUncertaintyInMeters(null); // Safely remove value
       addIssue(lr, COORDINATE_UNCERTAINTY_METERS_INVALID);
+    }
+  }
+
+  /** Parsing of georeferenceDate darwin terms. */
+  public void interpretGeoreferencedDate(ExtendedRecord er, LocationRecord lr) {
+    if (hasValue(er, DwcTerm.georeferencedDate)) {
+      LocalDate upperBound = LocalDate.now().plusDays(1);
+      Range<LocalDate> validRecordedDateRange =
+          Range.closed(ALATemporalInterpreter.MIN_LOCAL_DATE, upperBound);
+
+      String value = extractValue(er, DwcTerm.georeferencedDate);
+      String normalizedValue =
+          Optional.ofNullable(preprocessDateFn).map(x -> x.apply(value)).orElse(value);
+
+      // GBIF TemporalInterpreter only accepts OccurrenceIssue
+      // Convert GBIF IDENTIFIED_DATE_UNLIKELY to ALA GEOREFERENCED_DATE_UNLIKELY
+      OccurrenceParseResult<TemporalAccessor> parsed =
+          temporalParser.parseLocalDate(
+              normalizedValue, validRecordedDateRange, OccurrenceIssue.IDENTIFIED_DATE_UNLIKELY);
+      if (parsed.isSuccessful()) {
+        Optional.ofNullable(
+                TemporalAccessorUtils.toEarliestLocalDateTime(parsed.getPayload(), false))
+            .map(LocalDateTime::toString)
+            .ifPresent(lr::setGeoreferencedDate);
+      }
+
+      if (parsed.getIssues().contains(OccurrenceIssue.IDENTIFIED_DATE_UNLIKELY)) {
+        addIssue(lr, ALAOccurrenceIssue.GEOREFERENCED_DATE_UNLIKELY.name());
+      }
+    } else {
+      addIssue(lr, ALAOccurrenceIssue.MISSING_GEOREFERENCE_DATE.name());
     }
   }
 }

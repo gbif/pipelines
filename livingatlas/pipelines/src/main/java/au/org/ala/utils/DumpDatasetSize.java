@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.*;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
@@ -34,7 +35,8 @@ public class DumpDatasetSize {
       description = "The absolute path to a core-site.xml with default.FS configuration")
   private String coreSiteConfig;
 
-  public static void main(String[] args) throws Exception {
+  @SneakyThrows
+  public static void main(String[] args) {
 
     String[] combinedArgs =
         new CombinedYamlConfiguration(args).toArgs("general", "dataset-count-dump");
@@ -50,10 +52,11 @@ public class DumpDatasetSize {
     m.run();
   }
 
-  public void run() throws Exception {
+  @SneakyThrows
+  public void run() {
 
     FileSystem fs = FileSystemFactory.getInstance(hdfsSiteConfig, coreSiteConfig).getFs(inputPath);
-    Map<String, Long> counts = new HashMap<String, Long>();
+    Map<String, Long> counts = new HashMap<>();
 
     FileStatus[] fileStatuses = fs.listStatus(new Path(inputPath));
     for (FileStatus fileStatus : fileStatuses) {
@@ -72,11 +75,11 @@ public class DumpDatasetSize {
     List<Map.Entry<String, Long>> list = new ArrayList<>(counts.entrySet());
     list.sort(reverseOrder(Map.Entry.comparingByValue()));
 
-    FileWriter fw = new FileWriter(targetPath);
-    for (Map.Entry<String, Long> entry : list) {
-      fw.write(entry.getKey() + "," + entry.getValue() + "\n");
+    try (FileWriter fw = new FileWriter(targetPath)) {
+      for (Map.Entry<String, Long> entry : list) {
+        fw.write(entry.getKey() + "," + entry.getValue() + "\n");
+      }
+      fw.flush();
     }
-    fw.flush();
-    fw.close();
   }
 }

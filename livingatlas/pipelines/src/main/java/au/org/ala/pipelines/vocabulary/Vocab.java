@@ -17,11 +17,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class Vocab {
 
-  private final Set<String> canonicals = new HashSet<String>();
+  private final Set<String> canonicals = new HashSet<>();
   // variant -> canonical
-  private final HashMap<String, String> variants = new HashMap<String, String>();
+  private final HashMap<String, String> variants = new HashMap<>();
   // stemmed variant -> canonical
-  private final HashMap<String, String> stemmedVariants = new HashMap<String, String>();
+  private final HashMap<String, String> stemmedVariants = new HashMap<>();
 
   private Vocab() {}
 
@@ -39,7 +39,7 @@ public class Vocab {
 
     new BufferedReader(new InputStreamReader(is))
         .lines()
-        .map(s -> s.trim())
+        .map(String::trim)
         .forEach(
             l -> {
               String[] ss = l.split("\t");
@@ -47,9 +47,9 @@ public class Vocab {
               String canonical = ss[0];
               vocab.canonicals.add(canonical);
 
-              for (int i = 0; i < ss.length; i++) {
-                vocab.variants.put(ss[i].toLowerCase(), canonical);
-                vocab.stemmedVariants.put(stemmer.stem(ss[i].toLowerCase()), canonical);
+              for (String s : ss) {
+                vocab.variants.put(s.toLowerCase(), canonical);
+                vocab.stemmedVariants.put(stemmer.stem(s.toLowerCase()), canonical);
               }
             });
 
@@ -70,8 +70,6 @@ public class Vocab {
 
     String searchTermLowerCase = searchTerm.toLowerCase();
     String stemmedSearchTerm = stemmer.stem(searchTerm.toLowerCase());
-
-    String[] result = null;
 
     // match by key
     if (canonicals.contains(searchTerm)) {

@@ -8,9 +8,11 @@ import au.org.ala.pipelines.interpreters.ALALocationInterpreter;
 import au.org.ala.pipelines.vocabulary.*;
 import java.io.IOException;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import lombok.Builder;
 import lombok.Setter;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -18,14 +20,16 @@ import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TypeDescriptor;
+import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
-import org.gbif.pipelines.core.Interpretation;
+import org.gbif.pipelines.core.functions.SerializableFunction;
+import org.gbif.pipelines.core.functions.SerializableSupplier;
+import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.LocationInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.transforms.SerializableSupplier;
 import org.gbif.pipelines.transforms.Transform;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 
@@ -36,9 +40,12 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
   private final SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> countryKvStoreSupplier;
   private final SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>>
       stateProvinceKvStoreSupplier;
+  private final List<DateComponentOrdering> orderings;
+  private final SerializableFunction<String, String> preprocessDateFn;
+
   private KeyValueStore<LatLng, GeocodeResponse> countryKvStore;
   private KeyValueStore<LatLng, GeocodeResponse> stateProvinceKvStore;
-
+  private ALALocationInterpreter alaLocationInterpreter;
   private CentrePoints countryCentrePoints;
   private CentrePoints stateProvinceCentrePoints;
   private Vocab stateProvinceVocab;
@@ -50,7 +57,9 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
       ALAPipelinesConfig alaConfig,
       SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> countryKvStoreSupplier,
       SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> stateProvinceKvStoreSupplier,
-      PCollectionView<MetadataRecord> metadataView) {
+      PCollectionView<MetadataRecord> metadataView,
+      List<DateComponentOrdering> orderings,
+      SerializableFunction<String, String> preprocessDateFn) {
 
     super(
         LocationRecord.class,
@@ -61,6 +70,8 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
     this.countryKvStoreSupplier = countryKvStoreSupplier;
     this.stateProvinceKvStoreSupplier = stateProvinceKvStoreSupplier;
     this.metadataView = metadataView;
+    this.orderings = orderings;
+    this.preprocessDateFn = preprocessDateFn;
   }
 
   /** Maps {@link LocationRecord} to key value, where key is {@link LocationRecord#getId} */
@@ -75,6 +86,7 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
   }
 
   /** Beam @Setup initializes resources */
+  @SneakyThrows
   @Setup
   public void setup() {
     if (countryKvStore == null && countryKvStoreSupplier != null) {
@@ -86,15 +98,18 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
       stateProvinceKvStore = stateProvinceKvStoreSupplier.get();
     }
 
-    try {
-      countryCentrePoints = CountryCentrePoints.getInstance(alaConfig.getLocationInfoConfig());
-      stateProvinceCentrePoints =
-          StateProvinceCentrePoints.getInstance(alaConfig.getLocationInfoConfig());
-      stateProvinceVocab =
-          StateProvince.getInstance(alaConfig.getLocationInfoConfig().getStateProvinceNamesFile());
-    } catch (Exception e) {
-      log.error(e.getMessage(), e);
-      throw new RuntimeException(e.getMessage());
+    countryCentrePoints = CountryCentrePoints.getInstance(alaConfig.getLocationInfoConfig());
+    stateProvinceCentrePoints =
+        StateProvinceCentrePoints.getInstance(alaConfig.getLocationInfoConfig());
+    stateProvinceVocab =
+        StateProvince.getInstance(alaConfig.getLocationInfoConfig().getStateProvinceNamesFile());
+
+    if (alaLocationInterpreter == null) {
+      alaLocationInterpreter =
+          ALALocationInterpreter.builder()
+              .orderings(orderings)
+              .preprocessDateFn(preprocessDateFn)
+              .create();
     }
   }
 
@@ -139,7 +154,6 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
             .to(lr)
             .when(er -> !er.getCoreTerms().isEmpty())
             .via(LocationInterpreter.interpretCountryAndCoordinates(countryKvStore, mdr))
-            //            .via(ALALocationInterpreter.interpretStateProvince(stateProvinceKvStore))
             .via(LocationInterpreter::interpretContinent)
             .via(LocationInterpreter::interpretWaterBody)
             .via(LocationInterpreter::interpretMinimumElevationInMeters)
@@ -152,7 +166,7 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
             .via(LocationInterpreter::interpretMaximumDistanceAboveSurfaceInMeters)
             .via(LocationInterpreter::interpretCoordinatePrecision)
             .via(ALALocationInterpreter::interpretCoordinateUncertaintyInMeters)
-            .via(ALALocationInterpreter::interpretGeoreferencedDate)
+            .via(alaLocationInterpreter::interpretGeoreferencedDate)
             .via(ALALocationInterpreter::interpretGeoreferenceTerms)
             .via(
                 ALALocationInterpreter.verifyLocationInfo(

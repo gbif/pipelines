@@ -15,8 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.cache.KeyValueCache;
 import org.gbif.kvs.hbase.Command;
-import org.gbif.pipelines.parsers.config.model.WsConfig;
-import org.gbif.pipelines.transforms.SerializableSupplier;
+import org.gbif.pipelines.core.config.model.WsConfig;
+import org.gbif.pipelines.core.functions.SerializableSupplier;
 
 /**
  * Check for names.

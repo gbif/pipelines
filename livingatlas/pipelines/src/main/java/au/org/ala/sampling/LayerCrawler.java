@@ -23,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
-import org.gbif.pipelines.ingest.utils.FsUtils;
+import org.gbif.pipelines.core.utils.FsUtils;
 import org.slf4j.MDC;
 import retrofit2.Call;
 import retrofit2.Response;

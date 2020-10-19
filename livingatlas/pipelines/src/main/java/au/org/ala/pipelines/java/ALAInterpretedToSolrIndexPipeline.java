@@ -29,16 +29,11 @@ import org.gbif.api.model.pipelines.StepType;
 import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.converters.MultimediaConverter;
 import org.gbif.pipelines.core.io.AvroReader;
-import org.gbif.pipelines.ingest.java.metrics.IngestMetricsBuilder;
-import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.io.avro.*;
-import org.gbif.pipelines.transforms.core.BasicTransform;
-import org.gbif.pipelines.transforms.core.LocationTransform;
-import org.gbif.pipelines.transforms.core.TaxonomyTransform;
-import org.gbif.pipelines.transforms.core.TemporalTransform;
-import org.gbif.pipelines.transforms.core.VerbatimTransform;
+import org.gbif.pipelines.transforms.core.*;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
@@ -130,7 +125,7 @@ public class ALAInterpretedToSolrIndexPipeline {
     }
 
     UnaryOperator<String> pathFn =
-        t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
+        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
     UnaryOperator<String> identifiersPathFn =
         t -> ALAFsUtils.buildPathIdentifiersUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
     UnaryOperator<String> samplingPathFn =
@@ -144,15 +139,14 @@ public class ALAInterpretedToSolrIndexPipeline {
     BasicTransform basicTransform = BasicTransform.builder().create();
     MetadataTransform metadataTransform = MetadataTransform.builder().create();
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
-    TemporalTransform temporalTransform = TemporalTransform.create();
+    TemporalTransform temporalTransform = TemporalTransform.builder().create();
     TaxonomyTransform taxonomyTransform = TaxonomyTransform.builder().create();
-    //        TaggedValuesTransform taggedValuesTransform = TaggedValuesTransform.create();
 
     // Extension
-    MeasurementOrFactTransform measurementTransform = MeasurementOrFactTransform.create();
-    MultimediaTransform multimediaTransform = MultimediaTransform.create();
-    AudubonTransform audubonTransform = AudubonTransform.create();
-    ImageTransform imageTransform = ImageTransform.create();
+    MeasurementOrFactTransform measurementTransform = MeasurementOrFactTransform.builder().create();
+    MultimediaTransform multimediaTransform = MultimediaTransform.builder().create();
+    AudubonTransform audubonTransform = AudubonTransform.builder().create();
+    ImageTransform imageTransform = ImageTransform.builder().create();
 
     // ALA Specific transforms
     ALATaxonomyTransform alaTaxonomyTransform = ALATaxonomyTransform.builder().create();
@@ -184,12 +178,6 @@ public class ALAInterpretedToSolrIndexPipeline {
                     ExtendedRecord.class,
                     pathFn.apply(verbatimTransform.getBaseName())),
             executor);
-
-    //        CompletableFuture<Map<String, TaggedValueRecord>> taggedValuesMapFeature =
-    // CompletableFuture.supplyAsync(
-    //                () -> AvroReader.readRecords(hdfsSiteConfig, TaggedValueRecord.class,
-    // pathFn.apply(taggedValuesTransform.getBaseName())),
-    //                executor);
 
     CompletableFuture<Map<String, BasicRecord>> basicMapFeature =
         CompletableFuture.supplyAsync(
@@ -283,7 +271,8 @@ public class ALAInterpretedToSolrIndexPipeline {
         multimediaMapFeature,
         imageMapFeature,
         audubonMapFeature,
-        measurementMapFeature);
+        measurementMapFeature,
+        taxonMapFeature);
 
     // ALA Specific
     CompletableFuture<Map<String, ALAUUIDRecord>> alaUuidMapFeature =

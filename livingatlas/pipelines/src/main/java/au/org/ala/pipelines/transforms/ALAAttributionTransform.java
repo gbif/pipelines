@@ -2,7 +2,9 @@ package au.org.ala.pipelines.transforms;
 
 import static au.org.ala.pipelines.common.ALARecordTypes.ALA_ATTRIBUTION;
 
-import au.org.ala.kvs.client.*;
+import au.org.ala.kvs.client.ALACollectionLookup;
+import au.org.ala.kvs.client.ALACollectionMatch;
+import au.org.ala.kvs.client.ALACollectoryMetadata;
 import au.org.ala.pipelines.interpreters.ALAAttributionInterpreter;
 import java.util.Optional;
 import lombok.Builder;
@@ -13,10 +15,10 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.kvs.KeyValueStore;
-import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.functions.SerializableConsumer;
+import org.gbif.pipelines.core.functions.SerializableSupplier;
+import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.io.avro.*;
-import org.gbif.pipelines.transforms.SerializableSupplier;
 import org.gbif.pipelines.transforms.Transform;
 
 /**
@@ -90,10 +92,6 @@ public class ALAAttributionTransform extends Transform<ExtendedRecord, ALAAttrib
     }
   }
 
-  /** Beam @Teardown closes initialized resources */
-  @Teardown
-  public void tearDown() {}
-
   public ParDo.SingleOutput<ExtendedRecord, ALAAttributionRecord> interpret(
       PCollectionView<MetadataRecord> metadataView) {
     this.metadataView = metadataView;
@@ -113,13 +111,10 @@ public class ALAAttributionTransform extends Transform<ExtendedRecord, ALAAttrib
 
   public Optional<ALAAttributionRecord> processElement(ExtendedRecord source, MetadataRecord mdr) {
 
-    ALAAttributionRecord tr = ALAAttributionRecord.newBuilder().setId(source.getId()).build();
-    Interpretation.from(source)
-        .to(tr)
+    return Interpretation.from(source)
+        .to(ALAAttributionRecord.newBuilder().setId(source.getId()).build())
         .via(ALAAttributionInterpreter.interpretDatasetKey(mdr, dataResourceKvStore))
-        .via(ALAAttributionInterpreter.interpretCodes(collectionKvStore));
-    // the id is null when there is an error in the interpretation. In these
-    // cases we do not write the taxonRecord because it is totally empty.
-    return Optional.of(tr);
+        .via(ALAAttributionInterpreter.interpretCodes(collectionKvStore))
+        .getOfNullable();
   }
 }

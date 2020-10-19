@@ -1,6 +1,9 @@
 package au.org.ala.utils;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -16,9 +19,8 @@ import org.yaml.snakeyaml.Yaml;
 
 public class CombinedYamlConfiguration {
 
-  private final LinkedHashMap<String, String> mainArgs = new LinkedHashMap<String, String>();
-  private final String[][] mainArgsAsList;
-  private LinkedHashMap<String, Object> combined = new LinkedHashMap<String, Object>();
+  private final Map<String, String> mainArgs = new LinkedHashMap<>();
+  private final Map<String, Object> combined;
 
   public CombinedYamlConfiguration(String[] mainArgs) throws FileNotFoundException {
     // First: copy main args to map
@@ -39,14 +41,14 @@ public class CombinedYamlConfiguration {
     this.mainArgs.remove("config");
 
     // Convert the main args to a two-dimensional Array
-    mainArgsAsList =
+    String[][] mainArgsAsList =
         new String[][] {
           this.mainArgs.keySet().toArray(new String[0]),
           this.mainArgs.values().toArray(new String[0])
         };
 
     // Load each yaml, and combine the values
-    LinkedHashMap<String, Object> merged = new LinkedHashMap<String, Object>();
+    Map<String, Object> merged = new LinkedHashMap<>();
     for (String path : yamlConfigPaths) {
       InputStream input = new FileInputStream(new File(path));
       Yaml yaml = new Yaml();
@@ -99,8 +101,7 @@ public class CombinedYamlConfiguration {
    * @param map2 the map 2
    * @return the merged hash map
    */
-  private LinkedHashMap<String, Object> combineMap(
-      Map<String, Object> map1, Map<String, Object> map2) {
+  private Map<String, Object> combineMap(Map<String, Object> map1, Map<String, Object> map2) {
     Map<String, Object> map3 =
         EntryStream.of(map1)
             .append(EntryStream.of(map2))
@@ -121,19 +122,19 @@ public class CombinedYamlConfiguration {
    * @param keys the keys you want to restrict
    * @return the subset map of the configuration
    */
-  public LinkedHashMap<String, Object> subSet(@NotNull String... keys) {
-    LinkedHashMap<String, Object> partial = new LinkedHashMap<String, Object>();
+  public Map<String, Object> subSet(@NotNull String... keys) {
+    Map<String, Object> partial = new LinkedHashMap<>();
     if (keys.length == 0) {
       return combined;
     }
     for (String key : keys) {
-      LinkedHashMap<String, Object> subList = toList(key, combined.get(key));
+      Map<String, Object> subList = toList(key, combined.get(key));
       if (subList.size() > 0) {
         partial.putAll(subList);
       } else {
         // Try to find in the tree if is a var.with.dots
         if (key.contains(".")) {
-          LinkedHashMap<String, Object> current = traverse(key);
+          Map<String, Object> current = traverse(key);
           partial.putAll(current);
         }
       }
@@ -143,20 +144,20 @@ public class CombinedYamlConfiguration {
   }
 
   /** We split dot.composed.keys looking for some value in the yaml */
-  private LinkedHashMap<String, Object> traverse(@NotNull String key) {
+  private Map<String, Object> traverse(@NotNull String key) {
     String[] keySplitted = key.split("\\.");
-    LinkedHashMap<String, Object> current = combined;
+    Map<String, Object> current = combined;
     for (String keyS : keySplitted) {
       if (current.size() > 0) current = toList(keyS, current.get(keyS));
     }
     return current;
   }
 
-  private LinkedHashMap<String, Object> toList(@NotNull String key, Object obj) {
+  private Map<String, Object> toList(@NotNull String key, Object obj) {
     if (obj instanceof LinkedHashMap) {
       return (LinkedHashMap<String, Object>) obj;
     }
-    LinkedHashMap<String, Object> list = new LinkedHashMap<String, Object>();
+    Map<String, Object> list = new LinkedHashMap<>();
     if (obj != null) {
       list.put(key, obj);
     }
@@ -171,30 +172,18 @@ public class CombinedYamlConfiguration {
    * @return a list of --args=values
    */
   public String[] toArgs(@NotNull String... keys) {
-    List<String> argList = new ArrayList<String>();
+    List<String> argList = new ArrayList<>();
     for (Entry<String, Object> conf : subSet(keys).entrySet()) {
-      argList.add(
-          new StringBuffer()
-              .append("--")
-              .append(conf.getKey())
-              .append("=")
-              .append(conf.getValue())
-              .toString());
+      argList.add("--" + conf.getKey() + "=" + conf.getValue());
     }
     // This adds all combined yaml in the arg --properties
-    argList.add(new StringBuffer().append("--properties=").append(toYamlFile()).toString());
+    argList.add("--properties=" + toYamlFile());
     return argList.toArray(new String[0]);
   }
 
-  /**
-   * Replace {args} with their values, for instance {datasetId} with some value, like dr893
-   *
-   * @param value
-   * @param params
-   * @return
-   */
+  /** Replace {args} with their values, for instance {datasetId} with some value, like dr893 */
   private String substituteVars(String value, String[][] params) {
-    String formatted = (String) value;
+    String formatted = value;
     for (int i = 0; i < params[0].length; i++) {
       formatted = formatted.replace("{" + params[0][i] + "}", params[1][i]);
     }
@@ -205,7 +194,7 @@ public class CombinedYamlConfiguration {
     Object value = combined.get(key);
     if (value == null && key.contains(".")) {
       // we try to traverse the tree looking for that var
-      LinkedHashMap<String, Object> traversed = traverse(key);
+      Map<String, Object> traversed = traverse(key);
       // If is an object, return the value, if not, the list of values
       return traversed.size() == 1 ? traversed.values().toArray()[0] : traversed;
     }

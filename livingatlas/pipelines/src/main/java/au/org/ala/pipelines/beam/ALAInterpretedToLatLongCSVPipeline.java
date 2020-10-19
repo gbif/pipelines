@@ -23,8 +23,9 @@ import org.apache.hadoop.fs.FileSystem;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
-import org.gbif.pipelines.ingest.utils.FsUtils;
+import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.slf4j.MDC;
@@ -55,7 +56,7 @@ public class ALAInterpretedToLatLongCSVPipeline {
 
     log.info("Adding step 1: Options");
     UnaryOperator<String> pathFn =
-        t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
+        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
 
     // Initialise pipeline
     Pipeline p = Pipeline.create(options);
@@ -78,7 +79,7 @@ public class ALAInterpretedToLatLongCSVPipeline {
             .apply("Grouping objects", CoGroupByKey.create())
             .apply("Merging to CSV doc", alaCSVrDoFn);
 
-    String outputPath = FsUtils.buildDatasetAttemptPath(options, "latlng", true);
+    String outputPath = PathBuilder.buildDatasetAttemptPath(options, "latlng", true);
 
     // delete previous runs
     FsUtils.deleteIfExist(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), outputPath);
