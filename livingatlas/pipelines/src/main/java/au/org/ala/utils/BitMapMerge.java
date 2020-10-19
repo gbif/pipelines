@@ -71,7 +71,7 @@ public class BitMapMerge {
 
     System.out.println(
         "Combined bitmap with "
-            + usedColours.size()
+            + colourKey.size()
             + " colours completed in "
             + sw.elapsed(TimeUnit.SECONDS)
             + "s");
@@ -87,7 +87,7 @@ public class BitMapMerge {
       for (inc = 2400; inc < 20000; inc++) {
         if (0xFFFFFF % inc == 3) break;
       }
-      System.out.println("Colour increment is " + inc);
+      //   System.out.println("Colour increment is " + inc);
     }
 
     if (key.matches("^W+$")) {
@@ -108,13 +108,19 @@ public class BitMapMerge {
     return colourKey.get(key);
   }
 
+  /**
+   * "/data/sds-shp/combined.png", "/data/sds-shp/ffez.png", "/data/sds-shp/quarantine_zone.png"
+   * Merge the rest pngs to the first.
+   *
+   * @param args
+   */
   public static void main(String[] args) {
     try {
       BitMapMerge bm = new BitMapMerge();
       bm.combineAllBitmaps(
           "/data/sds-shp/combined.png",
-          "/Users/Shared/Relocated Items/Security/data/sds-shp/ffez.png",
-          "/Users/Shared/Relocated Items/Security/data/sds-shp/quarantine_zone.png");
+          "/data/sds-shp/ffez.png",
+          "/data/sds-shp/quarantine_zone.png");
     } catch (Exception e) {
       e.printStackTrace();
     }
