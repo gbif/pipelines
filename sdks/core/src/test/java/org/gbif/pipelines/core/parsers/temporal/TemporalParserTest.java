@@ -132,7 +132,7 @@ public class TemporalParserTest {
         TemporalParser.create().parseRecordedDate("16", "6", "1990", "16-6-1990");
     assertResult(1990, 6, 16, result);
     assertEquals(ParseResult.CONFIDENCE.PROBABLE, result.getConfidence());
-    assertEquals(OccurrenceIssue.RECORDED_DATE_MISMATCH, result.getIssues().iterator().next());
+    assertEquals(OccurrenceIssue.RECORDED_DATE_INVALID, result.getIssues().iterator().next());
   }
 
   @Test
@@ -140,7 +140,7 @@ public class TemporalParserTest {
     OccurrenceParseResult<TemporalAccessor> result =
         TemporalParser.create().parseRecordedDate("1984", "3", null, "22-17-1984");
     assertResult(1984, 3, result);
-    assertEquals(OccurrenceIssue.RECORDED_DATE_MISMATCH, result.getIssues().iterator().next());
+    assertEquals(OccurrenceIssue.RECORDED_DATE_INVALID, result.getIssues().iterator().next());
   }
 
   // these two tests demonstrate the problem from POR-2120
@@ -164,7 +164,7 @@ public class TemporalParserTest {
         TemporalParser.create().parseRecordedDate("1984", "0", "0", "1984");
     assertResult(1984, result);
     assertEquals(ParseResult.CONFIDENCE.PROBABLE, result.getConfidence());
-    assertEquals(OccurrenceIssue.RECORDED_DATE_MISMATCH, result.getIssues().iterator().next());
+    assertEquals(OccurrenceIssue.RECORDED_DATE_INVALID, result.getIssues().iterator().next());
 
     result = TemporalParser.create().parseRecordedDate(null, null, null, "1984");
     assertEquals(ParseResult.CONFIDENCE.DEFINITE, result.getConfidence());

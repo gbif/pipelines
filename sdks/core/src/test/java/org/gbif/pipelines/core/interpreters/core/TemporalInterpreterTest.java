@@ -7,6 +7,7 @@ import static org.junit.Assert.assertNull;
 import java.util.*;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.vocabulary.OccurrenceIssue;
+import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.functions.SerializableFunction;
@@ -52,6 +53,31 @@ public class TemporalInterpreterTest {
     assertEquals(10, tr.getMonth().intValue());
     assertNull(tr.getDay());
     assertEquals(0, tr.getIssues().getIssueList().size());
+  }
+
+  @Test
+  public void testUsDateFormat() {
+    Map<String, String> map = new HashMap<>();
+    map.put(DwcTerm.eventDate.qualifiedName(), "2/4/2002");
+    map.put(DwcTerm.year.qualifiedName(), "2002");
+
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
+    TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
+
+    TemporalInterpreter interpreter =
+        TemporalInterpreter.builder()
+            .orderings(Arrays.asList(DateComponentOrdering.ISO_FORMATS))
+            .create();
+    interpreter.interpretTemporal(er, tr);
+
+    assertEquals("2002", tr.getEventDate().getGte());
+    assertNull(tr.getEventDate().getLte());
+    assertEquals(2002, tr.getYear().intValue());
+    assertNull(tr.getMonth());
+    assertNull(tr.getDay());
+    assertEquals(1, tr.getIssues().getIssueList().size());
+    assertEquals(
+        OccurrenceIssue.RECORDED_DATE_INVALID.name(), tr.getIssues().getIssueList().get(0));
   }
 
   @Test
