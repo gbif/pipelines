@@ -2,7 +2,6 @@ package org.gbif.pipelines.core.parsers.temporal;
 
 import static org.gbif.common.parsers.core.ParseResult.CONFIDENCE.DEFINITE;
 import static org.gbif.common.parsers.core.ParseResult.CONFIDENCE.PROBABLE;
-import static org.gbif.common.parsers.date.DateComponentOrdering.*;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Range;
@@ -112,8 +111,11 @@ public class TemporalParser implements Serializable {
 
       // still a conflict
       if (!ambiguityResolved) {
-        issues.add(OccurrenceIssue.RECORDED_DATE_MISMATCH);
-        log.debug("Date mismatch: [{} vs {}].", parsedYmdTa, parsedDateTa);
+        if (parsedYmdTa == null || parsedDateTa == null) {
+          issues.add(OccurrenceIssue.RECORDED_DATE_INVALID);
+        } else {
+          issues.add(OccurrenceIssue.RECORDED_DATE_MISMATCH);
+        }
       }
 
       // choose the one with better resolution
