@@ -201,13 +201,16 @@ public class ALAVerbatimToInterpretedPipeline {
             .orderings(dateComponentOrdering)
             .create()
             .counterFn(incMetricFn);
+
     MultimediaTransform multimediaTransform =
         MultimediaTransform.builder()
             .orderings(dateComponentOrdering)
             .create()
             .counterFn(incMetricFn);
+
     AudubonTransform audubonTransform =
         AudubonTransform.builder().orderings(dateComponentOrdering).create().counterFn(incMetricFn);
+
     ImageTransform imageTransform =
         ImageTransform.builder().orderings(dateComponentOrdering).create().counterFn(incMetricFn);
 
@@ -221,7 +224,6 @@ public class ALAVerbatimToInterpretedPipeline {
             .dataResourceKvStoreSupplier(ALAAttributionKVStoreFactory.getInstanceSupplier(config))
             .collectionKvStoreSupplier(ALACollectionKVStoreFactory.getInstanceSupplier(config))
             .create();
-    alaAttributionTransform.setup();
 
     // ALA specific - Taxonomy
     // ALA specific - Taxonomy
@@ -233,7 +235,6 @@ public class ALAVerbatimToInterpretedPipeline {
                 ALANameCheckKVStoreFactory.getInstanceSupplier("kingdom", config))
             .dataResourceStoreSupplier(ALAAttributionKVStoreFactory.getInstanceSupplier(config))
             .create();
-    alaTaxonomyTransform.setup();
 
     // ALA specific - Location
     LocationTransform locationTransform =
@@ -242,7 +243,6 @@ public class ALAVerbatimToInterpretedPipeline {
             .countryKvStoreSupplier(GeocodeKvStoreFactory.createCountrySupplier(config))
             .stateProvinceKvStoreSupplier(GeocodeKvStoreFactory.createStateProvinceSupplier(config))
             .create();
-    locationTransform.setup();
 
     // ALA specific - Default values
     ALADefaultValuesTransform alaDefaultValuesTransform =
@@ -250,6 +250,15 @@ public class ALAVerbatimToInterpretedPipeline {
             .datasetId(datasetId)
             .dataResourceKvStoreSupplier(ALAAttributionKVStoreFactory.getInstanceSupplier(config))
             .create();
+
+    temporalTransform.setup();
+    locationTransform.setup();
+    alaTaxonomyTransform.setup();
+    alaAttributionTransform.setup();
+    imageTransform.setup();
+    audubonTransform.setup();
+    multimediaTransform.setup();
+    measurementTransform.setup();
 
     log.info("Creating writers");
     try (SyncDataFileWriter<ExtendedRecord> verbatimWriter =

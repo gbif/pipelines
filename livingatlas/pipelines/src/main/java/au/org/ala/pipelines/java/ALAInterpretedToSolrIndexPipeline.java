@@ -209,7 +209,8 @@ public class ALAInterpretedToSolrIndexPipeline {
                     pathFn.apply(locationTransform.getBaseName())),
             executor);
 
-    CompletableFuture<Map<String, TaxonRecord>> taxonMapFeature = null;
+    CompletableFuture<Map<String, TaxonRecord>> taxonMapFeature =
+        CompletableFuture.completedFuture(Collections.emptyMap());
     if (options.getIncludeGbifTaxonomy()) {
       taxonMapFeature =
           CompletableFuture.supplyAsync(
