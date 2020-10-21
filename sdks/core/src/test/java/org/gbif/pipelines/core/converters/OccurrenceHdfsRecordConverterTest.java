@@ -23,7 +23,6 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.api.vocabulary.EstablishmentMeans;
 import org.gbif.api.vocabulary.License;
-import org.gbif.api.vocabulary.LifeStage;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.api.vocabulary.OccurrenceStatus;
 import org.gbif.api.vocabulary.Sex;
@@ -227,7 +226,7 @@ public class OccurrenceHdfsRecordConverterTest {
     basicRecord.setBasisOfRecord(BasisOfRecord.HUMAN_OBSERVATION.name());
     basicRecord.setSex(Sex.HERMAPHRODITE.name());
     basicRecord.setIndividualCount(99);
-    basicRecord.setLifeStage(LifeStage.GAMETE.name());
+    basicRecord.setLifeStage("Larva");
     basicRecord.setTypeStatus(TypeStatus.ALLOTYPE.name());
     basicRecord.setTypifiedName("noName");
     basicRecord.setEstablishmentMeans(EstablishmentMeans.INVASIVE.name());
@@ -247,7 +246,7 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals(BasisOfRecord.HUMAN_OBSERVATION.name(), hdfsRecord.getBasisofrecord());
     Assert.assertEquals(Sex.HERMAPHRODITE.name(), hdfsRecord.getSex());
     Assert.assertEquals(Integer.valueOf(99), hdfsRecord.getIndividualcount());
-    Assert.assertEquals(LifeStage.GAMETE.name(), hdfsRecord.getLifestage());
+    Assert.assertEquals("Larva", hdfsRecord.getLifestage());
     Assert.assertEquals(TypeStatus.ALLOTYPE.name(), hdfsRecord.getTypestatus());
     Assert.assertEquals("noName", hdfsRecord.getTypifiedname());
     Assert.assertEquals(EstablishmentMeans.INVASIVE.name(), hdfsRecord.getEstablishmentmeans());

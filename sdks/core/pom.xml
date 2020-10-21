@@ -91,6 +91,11 @@
       <groupId>org.gbif.data</groupId>
       <artifactId>data-repo-api</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.gbif.vocabulary</groupId>
+      <artifactId>vocabulary-lookup</artifactId>
+      <classifier>shaded</classifier>
+    </dependency>
 
     <!-- Geotools -->
     <dependency>

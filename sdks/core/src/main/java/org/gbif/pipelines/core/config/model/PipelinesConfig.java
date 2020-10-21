@@ -38,6 +38,9 @@ public class PipelinesConfig implements Serializable {
   private LockConfig indexLock;
 
   private LockConfig hdfsLock;
+
+  private VocabularyConfig vocabularyConfig;
+
   /**
    * Provide recommended formats to parse ambiguous dates, e.g. 2/3/2008. If the field is empty or
    * invalid, only accepts standard ISO date format. Parsing 2/3/2008 will fail . <code>DMY</code>
