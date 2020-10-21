@@ -115,7 +115,7 @@ public class BitMapGenerator {
     ResultSet rs = stmt.executeQuery(svgSQL);
 
     while (rs.next()) {
-      String id = rs.getString("id");
+      String id = rs.getString("id").replace("\'"," ").replace("\""," ");
       String svgString = rs.getString("svg");
       String svgFilledOutout = String.format(FILLED_PATH_FORMAT, id, colourKey.get(id), svgString);
       String svgHollowOutout = String.format(HOLLOW_PATH_FORMAT, id, svgString);
