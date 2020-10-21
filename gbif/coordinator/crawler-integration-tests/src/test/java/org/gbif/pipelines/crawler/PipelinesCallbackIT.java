@@ -89,14 +89,13 @@ public class PipelinesCallbackIT {
                 StepType.INTERPRETED_TO_INDEX.name(),
                 StepType.HDFS_VIEW.name()));
     PipelineBasedMessage incomingMessage = createMessage(datasetKey, attempt, pipelineSteps);
-    MessagePublisher publisher = null;
 
     // When
     PipelinesCallback.builder()
         .message(incomingMessage)
         .curator(curator)
         .stepType(nextStepName)
-        .publisher(publisher)
+        .publisher(null)
         .client(historyClient)
         .handler(TestHandler.create())
         .config(TestConfig.create())
@@ -111,7 +110,7 @@ public class PipelinesCallbackIT {
         .message(incomingMessage)
         .curator(curator)
         .stepType(nextStepName)
-        .publisher(publisher)
+        .publisher(null)
         .client(historyClient)
         .handler(TestHandler.create())
         .config(TestConfig.create())

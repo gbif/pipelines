@@ -97,11 +97,12 @@ public class ExtensionInterpretation {
 
     private final Supplier<T> supplier;
 
-    private Map<String, BiFunction<T, String, List<String>>> mapperMap = new LinkedHashMap<>();
+    private final Map<String, BiFunction<T, String, List<String>>> mapperMap =
+        new LinkedHashMap<>();
 
-    private Set<Function<T, List<String>>> postMapperSet = new LinkedHashSet<>();
+    private final Set<Function<T, List<String>>> postMapperSet = new LinkedHashSet<>();
 
-    private Set<Function<T, Optional<String>>> validatorSet = new LinkedHashSet<>();
+    private final Set<Function<T, Optional<String>>> validatorSet = new LinkedHashSet<>();
 
     /** @param supplier of a target object, as example - Image::new */
     private TargetHandler(Supplier<T> supplier) {

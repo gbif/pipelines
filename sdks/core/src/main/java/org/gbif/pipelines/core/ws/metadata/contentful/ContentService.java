@@ -21,8 +21,8 @@ import org.gbif.pipelines.core.ws.metadata.response.Project;
 /** Client service to Elastisarch/Contentful CMS service. */
 public class ContentService {
 
-  private RestHighLevelClient restHighLevelClient;
   private static final String DEFAULT_LOCALE = "en-GB";
+  private final RestHighLevelClient restHighLevelClient;
 
   private static RestHighLevelClient buildClient(String... hostsAddresses) {
     HttpHost[] hosts =

@@ -56,7 +56,7 @@ public class ExtendedRecordConverter {
       Function<File, ConverterTask> taskFn = f -> new ConverterTask(f, writer, validator, counter);
 
       // Run async process - read a file, convert to ExtendedRecord and write to Avro
-      CompletableFuture[] futures =
+      CompletableFuture<?>[] futures =
           files.stream()
               .map(file -> CompletableFuture.runAsync(taskFn.apply(file), executor))
               .toArray(CompletableFuture[]::new);

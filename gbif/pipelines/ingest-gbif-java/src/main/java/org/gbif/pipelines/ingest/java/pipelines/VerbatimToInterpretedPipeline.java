@@ -341,7 +341,7 @@ public class VerbatimToInterpretedPipeline {
       }
 
       // Wait for all features
-      CompletableFuture[] futures =
+      CompletableFuture<?>[] futures =
           Stream.concat(streamBr, streamAll).toArray(CompletableFuture[]::new);
       CompletableFuture.allOf(futures).get();
 
@@ -349,13 +349,7 @@ public class VerbatimToInterpretedPipeline {
       log.error("Failed performing conversion on {}", e.getMessage());
       throw new IllegalStateException("Failed performing conversion on ", e);
     } finally {
-      Shutdown.doOnExit(
-          metadataTransform,
-          basicTransform,
-          locationTransform,
-          taxonomyTransform,
-          grscicollTransform,
-          defaultValuesTransform);
+      Shutdown.doOnExit(basicTransform, locationTransform, taxonomyTransform, grscicollTransform);
     }
 
     MetricsHandler.saveCountersToTargetPathFile(options, metrics.getMetricsResult());
@@ -398,37 +392,25 @@ public class VerbatimToInterpretedPipeline {
 
     @SneakyThrows
     private Shutdown(
-        MetadataTransform mdTr,
-        BasicTransform bTr,
-        LocationTransform lTr,
-        TaxonomyTransform tTr,
-        GrscicollTransform gTr,
-        DefaultValuesTransform dTr) {
+        BasicTransform bTr, LocationTransform lTr, TaxonomyTransform tTr, GrscicollTransform gTr) {
       Runnable shudownHook =
           () -> {
             log.info("Closing all resources");
-            mdTr.tearDown();
             bTr.tearDown();
             lTr.tearDown();
             tTr.tearDown();
             gTr.tearDown();
-            dTr.tearDown();
             log.info("The resources were closed");
           };
       Runtime.getRuntime().addShutdownHook(new Thread(shudownHook));
     }
 
     public static void doOnExit(
-        MetadataTransform mdTr,
-        BasicTransform bTr,
-        LocationTransform lTr,
-        TaxonomyTransform tTr,
-        GrscicollTransform gTr,
-        DefaultValuesTransform dTr) {
+        BasicTransform bTr, LocationTransform lTr, TaxonomyTransform tTr, GrscicollTransform gTr) {
       if (instance == null) {
         synchronized (MUTEX) {
           if (instance == null) {
-            instance = new Shutdown(mdTr, bTr, lTr, tTr, gTr, dTr);
+            instance = new Shutdown(bTr, lTr, tTr, gTr);
           }
         }
       }

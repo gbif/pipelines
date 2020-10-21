@@ -13,6 +13,7 @@ import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.junit.Assert;
 import org.junit.Test;
 
+@SuppressWarnings("all")
 public class UniqueGbifIdTransformTest {
 
   private static final String KEY = "KEY";

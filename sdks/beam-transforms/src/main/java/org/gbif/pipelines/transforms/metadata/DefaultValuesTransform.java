@@ -67,12 +67,6 @@ public class DefaultValuesTransform extends Transform<ExtendedRecord, ExtendedRe
     }
   }
 
-  /** Beam @Teardown closes initialized resources */
-  @Teardown
-  public void tearDown() {
-    // NOP
-  }
-
   @Override
   public Optional<ExtendedRecord> convert(ExtendedRecord source) {
     if (tags.isEmpty()) {

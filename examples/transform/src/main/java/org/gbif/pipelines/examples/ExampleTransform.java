@@ -13,6 +13,7 @@ import org.gbif.pipelines.io.avro.TemporalRecord;
  *
  * <p>See source code - {@link org.gbif.pipelines.transforms}
  */
+@SuppressWarnings("all")
 class ExampleTransform {
 
   private ExampleTransform() {}

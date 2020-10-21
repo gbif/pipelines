@@ -68,6 +68,7 @@ public class ExtendedRecordCustomBuilder {
     }
   }
 
+  @SuppressWarnings("all")
   @Builder
   public static class MultimediaExtensionBuilder {
 
