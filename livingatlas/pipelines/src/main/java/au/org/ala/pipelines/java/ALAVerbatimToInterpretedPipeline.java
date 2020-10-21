@@ -5,6 +5,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 
 import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.kvs.ALAPipelinesConfigFactory;
+import au.org.ala.kvs.VersionInfo;
 import au.org.ala.kvs.cache.ALAAttributionKVStoreFactory;
 import au.org.ala.kvs.cache.ALACollectionKVStoreFactory;
 import au.org.ala.kvs.cache.ALANameCheckKVStoreFactory;
@@ -103,6 +104,7 @@ import org.slf4j.MDC;
 public class ALAVerbatimToInterpretedPipeline {
 
   public static void main(String[] args) throws FileNotFoundException {
+    VersionInfo.print();
     String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "interpret");
     run(combinedArgs);
     // FIXME: Issue logged here: https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/105
@@ -143,6 +145,7 @@ public class ALAVerbatimToInterpretedPipeline {
     String targetPath = options.getTargetPath();
     String endPointType = options.getEndPointType();
 
+    VersionInfo.print();
     ALAPipelinesConfig config =
         ALAPipelinesConfigFactory.getInstance(
                 options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getProperties())
