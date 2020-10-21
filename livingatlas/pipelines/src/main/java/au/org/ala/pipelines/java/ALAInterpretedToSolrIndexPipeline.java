@@ -2,6 +2,7 @@ package au.org.ala.pipelines.java;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
+import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.pipelines.common.ALARecordTypes;
 import au.org.ala.pipelines.options.ALASolrPipelineOptions;
 import au.org.ala.pipelines.transforms.ALAAttributionTransform;
@@ -92,6 +93,7 @@ import org.slf4j.MDC;
 public class ALAInterpretedToSolrIndexPipeline {
 
   public static void main(String[] args) throws FileNotFoundException {
+    VersionInfo.print();
     String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "index");
     run(combinedArgs);
   }

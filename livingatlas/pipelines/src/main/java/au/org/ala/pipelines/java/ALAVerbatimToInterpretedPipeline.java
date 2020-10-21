@@ -5,7 +5,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 
 import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.kvs.ALAPipelinesConfigFactory;
-import au.org.ala.kvs.VersionInfo;
+import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.kvs.cache.ALAAttributionKVStoreFactory;
 import au.org.ala.kvs.cache.ALACollectionKVStoreFactory;
 import au.org.ala.kvs.cache.ALANameCheckKVStoreFactory;

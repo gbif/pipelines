@@ -4,6 +4,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSI
 
 import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.kvs.ALAPipelinesConfigFactory;
+import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.kvs.cache.ALAAttributionKVStoreFactory;
 import au.org.ala.kvs.cache.SDSCheckKVStoreFactory;
 import au.org.ala.kvs.client.SDSConservationServiceFactory;
@@ -49,6 +50,7 @@ public class ALAInterpretedToSensitivePipeline {
   public static final boolean USE_GBIF_TAXONOMY = false;
 
   public static void main(String[] args) throws IOException {
+    VersionInfo.print();
     String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "sensitive");
     InterpretationPipelineOptions options =
         PipelinesOptionsFactory.createInterpretation(combinedArgs);

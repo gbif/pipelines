@@ -2,6 +2,7 @@ package au.org.ala.pipelines.beam;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
+import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.pipelines.options.AllDatasetsPipelinesOptions;
 import au.org.ala.pipelines.transforms.ALACSVDocumentTransform;
 import java.io.File;
@@ -35,6 +36,7 @@ import org.gbif.pipelines.transforms.core.LocationTransform;
 public class ExportAllLatLongCSVPipeline {
 
   public static void main(String[] args) throws Exception {
+    VersionInfo.print();
     AllDatasetsPipelinesOptions options =
         PipelinesOptionsFactory.create(AllDatasetsPipelinesOptions.class, args);
     run(options);

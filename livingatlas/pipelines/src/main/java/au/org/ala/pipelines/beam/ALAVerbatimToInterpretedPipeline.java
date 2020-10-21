@@ -2,6 +2,7 @@ package au.org.ala.pipelines.beam;
 
 import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.kvs.ALAPipelinesConfigFactory;
+import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.kvs.cache.ALAAttributionKVStoreFactory;
 import au.org.ala.kvs.cache.ALACollectionKVStoreFactory;
 import au.org.ala.kvs.cache.ALANameCheckKVStoreFactory;
@@ -90,6 +91,7 @@ import org.slf4j.MDC;
 public class ALAVerbatimToInterpretedPipeline {
 
   public static void main(String[] args) throws FileNotFoundException {
+    VersionInfo.print();
     String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "interpret");
     InterpretationPipelineOptions options =
         PipelinesOptionsFactory.createInterpretation(combinedArgs);

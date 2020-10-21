@@ -2,6 +2,7 @@ package au.org.ala.pipelines.beam;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
+import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.pipelines.options.ALASolrPipelineOptions;
 import au.org.ala.pipelines.transforms.ALAAttributionTransform;
 import au.org.ala.pipelines.transforms.ALASolrDocumentTransform;
@@ -50,6 +51,7 @@ import org.slf4j.MDC;
 public class ALAInterpretedToSolrIndexPipeline {
 
   public static void main(String[] args) throws Exception {
+    VersionInfo.print();
     String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "index");
     ALASolrPipelineOptions options =
         PipelinesOptionsFactory.create(ALASolrPipelineOptions.class, combinedArgs);
