@@ -4,13 +4,13 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSI
 
 import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.kvs.ALAPipelinesConfigFactory;
-import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.kvs.cache.ALAAttributionKVStoreFactory;
 import au.org.ala.kvs.cache.SDSCheckKVStoreFactory;
 import au.org.ala.kvs.client.SDSConservationServiceFactory;
 import au.org.ala.pipelines.transforms.ALASensitiveDataTransform;
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
 import au.org.ala.pipelines.transforms.ALAUUIDTransform;
+import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import java.io.IOException;

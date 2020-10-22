@@ -3,8 +3,8 @@ package au.org.ala.pipelines.beam;
 import static org.apache.beam.sdk.io.FileIO.Write.defaultNaming;
 
 import au.com.bytecode.opencsv.CSVReader;
-import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.pipelines.common.ALARecordTypes;
+import au.org.ala.pipelines.util.VersionInfo;
 import java.io.StringReader;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;

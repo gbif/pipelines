@@ -2,8 +2,8 @@ package au.org.ala.pipelines.beam;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
-import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.pipelines.transforms.ALACSVDocumentTransform;
+import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import java.util.function.UnaryOperator;

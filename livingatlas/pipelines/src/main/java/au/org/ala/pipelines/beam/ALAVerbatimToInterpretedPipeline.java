@@ -2,7 +2,6 @@ package au.org.ala.pipelines.beam;
 
 import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.kvs.ALAPipelinesConfigFactory;
-import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.kvs.cache.ALAAttributionKVStoreFactory;
 import au.org.ala.kvs.cache.ALACollectionKVStoreFactory;
 import au.org.ala.kvs.cache.ALANameCheckKVStoreFactory;
@@ -12,6 +11,7 @@ import au.org.ala.pipelines.transforms.ALAAttributionTransform;
 import au.org.ala.pipelines.transforms.ALADefaultValuesTransform;
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
 import au.org.ala.pipelines.transforms.LocationTransform;
+import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationUtils;
 import java.io.FileNotFoundException;

@@ -1,7 +1,7 @@
 package au.org.ala.pipelines.beam;
 
-import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.pipelines.options.DwcaToVerbatimPipelineOptions;
+import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationUtils;
