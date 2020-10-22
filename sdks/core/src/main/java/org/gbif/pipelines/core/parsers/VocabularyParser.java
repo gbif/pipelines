@@ -12,7 +12,6 @@ import org.gbif.api.vocabulary.BasisOfRecord;
 import org.gbif.api.vocabulary.Continent;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.EstablishmentMeans;
-import org.gbif.api.vocabulary.LifeStage;
 import org.gbif.api.vocabulary.Rank;
 import org.gbif.api.vocabulary.Sex;
 import org.gbif.api.vocabulary.TypeStatus;
@@ -20,7 +19,6 @@ import org.gbif.common.parsers.BasisOfRecordParser;
 import org.gbif.common.parsers.ContinentParser;
 import org.gbif.common.parsers.CountryParser;
 import org.gbif.common.parsers.EstablishmentMeansParser;
-import org.gbif.common.parsers.LifeStageParser;
 import org.gbif.common.parsers.RankParser;
 import org.gbif.common.parsers.SexParser;
 import org.gbif.common.parsers.TypeStatusParser;
@@ -37,7 +35,6 @@ public class VocabularyParser<T extends Enum<T>> {
   private static final BasisOfRecordParser BOR_PARSER = BasisOfRecordParser.getInstance();
   private static final SexParser SEX_PARSER = SexParser.getInstance();
   private static final EstablishmentMeansParser EST_PARSER = EstablishmentMeansParser.getInstance();
-  private static final LifeStageParser LST_PARSER = LifeStageParser.getInstance();
   private static final CountryParser COUNTRY_PARSER = CountryParser.getInstance();
   private static final ContinentParser CONTINENT_PARSER = ContinentParser.getInstance();
   private static final RankParser RANK_PARSER = RankParser.getInstance();
@@ -56,12 +53,6 @@ public class VocabularyParser<T extends Enum<T>> {
   /** @return a sex parser. */
   public static VocabularyParser<Sex> sexParser() {
     return new VocabularyParser<>(SEX_PARSER, DwcTerm.sex);
-  }
-
-  /** @return a life stage parser. */
-  @Deprecated
-  public static VocabularyParser<LifeStage> lifeStageParser() {
-    return new VocabularyParser<>(LST_PARSER, DwcTerm.lifeStage);
   }
 
   /** @return a establishmentMeans parser. */
