@@ -1,5 +1,7 @@
 package org.gbif.pipelines.core.converters;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -22,17 +24,26 @@ public class ExtendedRecordConverter {
   private static final Function<Record, Map<String, String>> REMOVE_EMPTY_CONTENT =
       record ->
           record.terms().stream()
-              .filter(term -> term.qualifiedName() != null && record.value(term) != null)
-              .collect(Collectors.toMap(Term::qualifiedName, record::value, (a, b) -> b));
+              .collect(
+                  HashMap::new,
+                  (map, term) -> {
+                    String qn = term.qualifiedName();
+                    if (qn != null) {
+                      String value = record.value(term);
+                      if (value != null) {
+                        map.put(qn, value);
+                      }
+                    }
+                  },
+                  HashMap::putAll);
 
   /** Converts {@link StarRecord} to {@link ExtendedRecord} */
-  public static ExtendedRecord from(StarRecord record) {
-    Record core = record.core();
+  public static ExtendedRecord from(Record core, Map<Term, List<Record>> extensions) {
     ExtendedRecord.Builder builder = ExtendedRecord.newBuilder();
     Optional.ofNullable(core.rowType()).ifPresent(x -> builder.setCoreRowType(x.qualifiedName()));
     builder.setCoreTerms(REMOVE_EMPTY_CONTENT.apply(core));
     builder.setExtensions(
-        record.extensions().entrySet().stream()
+        extensions.entrySet().stream()
             .collect(
                 Collectors.toMap(
                     entry -> entry.getKey().qualifiedName(),
@@ -40,7 +51,6 @@ public class ExtendedRecordConverter {
                         entry.getValue().stream()
                             .map(REMOVE_EMPTY_CONTENT)
                             .collect(Collectors.toList()))));
-
     builder.setId(getId(core, builder));
     return builder.build();
   }
