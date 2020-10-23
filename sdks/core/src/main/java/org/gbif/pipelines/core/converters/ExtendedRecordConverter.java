@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -21,27 +20,25 @@ public class ExtendedRecordConverter {
   private static final String RECORD_ID_ERROR = "RECORD_ID_ERROR";
 
   // Function that removes all the empty elements of a record
-  private static final Function<Record, Map<String, String>> REMOVE_EMPTY_CONTENT =
-      record ->
-          record.terms().stream()
-              .collect(
-                  HashMap::new,
-                  (map, term) -> {
-                    String qn = term.qualifiedName();
-                    if (qn != null) {
-                      String value = record.value(term);
-                      if (value != null) {
-                        map.put(qn, value);
-                      }
-                    }
-                  },
-                  HashMap::putAll);
+  private static Map<String, String> convertToMap(Record record) {
+    Map<String, String> map = new HashMap<>(record.terms().size() / 2);
+    for (Term term : record.terms()) {
+      String qn = term.qualifiedName();
+      if (qn != null) {
+        String value = record.value(term);
+        if (value != null) {
+          map.put(qn, value);
+        }
+      }
+    }
+    return map;
+  }
 
   /** Converts {@link StarRecord} to {@link ExtendedRecord} */
   public static ExtendedRecord from(Record core, Map<Term, List<Record>> extensions) {
     ExtendedRecord.Builder builder = ExtendedRecord.newBuilder();
     Optional.ofNullable(core.rowType()).ifPresent(x -> builder.setCoreRowType(x.qualifiedName()));
-    builder.setCoreTerms(REMOVE_EMPTY_CONTENT.apply(core));
+    builder.setCoreTerms(convertToMap(core));
     builder.setExtensions(
         extensions.entrySet().stream()
             .collect(
@@ -49,7 +46,7 @@ public class ExtendedRecordConverter {
                     entry -> entry.getKey().qualifiedName(),
                     entry ->
                         entry.getValue().stream()
-                            .map(REMOVE_EMPTY_CONTENT)
+                            .map(ExtendedRecordConverter::convertToMap)
                             .collect(Collectors.toList()))));
     builder.setId(getId(core, builder));
     return builder.build();
