@@ -77,7 +77,7 @@
     <gbif-wrangler.version>0.3</gbif-wrangler.version>
     <gbif-occurrence.version>0.140</gbif-occurrence.version>
     <data-repo-api.version>1.2</data-repo-api.version>
-    <vocabulary-lookup.version>0.30-SNAPSHOT</vocabulary-lookup.version>
+    <vocabulary-lookup.version>0.30</vocabulary-lookup.version>
 
     <!-- Common libraries -->
     <avro.version>1.8.2</avro.version>
