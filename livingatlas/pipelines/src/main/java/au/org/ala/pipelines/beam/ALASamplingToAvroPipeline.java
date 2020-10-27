@@ -1,6 +1,7 @@
 package au.org.ala.pipelines.beam;
 
 import au.com.bytecode.opencsv.CSVReader;
+import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationUtils;
@@ -43,6 +44,7 @@ import org.slf4j.MDC;
 public class ALASamplingToAvroPipeline {
 
   public static void main(String[] args) throws FileNotFoundException {
+    VersionInfo.print();
     String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "sample-avro");
     InterpretationPipelineOptions options =
         PipelinesOptionsFactory.createInterpretation(combinedArgs);

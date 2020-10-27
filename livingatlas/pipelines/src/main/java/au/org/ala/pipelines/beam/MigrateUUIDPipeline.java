@@ -4,6 +4,7 @@ import static org.apache.beam.sdk.io.FileIO.Write.defaultNaming;
 
 import au.com.bytecode.opencsv.CSVReader;
 import au.org.ala.pipelines.common.ALARecordTypes;
+import au.org.ala.pipelines.util.VersionInfo;
 import java.io.StringReader;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -41,6 +42,7 @@ public class MigrateUUIDPipeline {
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
 
   public static void main(String[] args) throws Exception {
+    VersionInfo.print();
     BasePipelineOptions options = PipelinesOptionsFactory.create(BasePipelineOptions.class, args);
     run(options);
   }

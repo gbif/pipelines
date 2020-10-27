@@ -3,6 +3,7 @@ package au.org.ala.pipelines.beam;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
 import au.org.ala.pipelines.transforms.ALACSVDocumentTransform;
+import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import java.util.function.UnaryOperator;
@@ -39,6 +40,7 @@ import org.slf4j.MDC;
 public class ALAInterpretedToLatLongCSVPipeline {
 
   public static void main(String[] args) throws Exception {
+    VersionInfo.print();
     String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "export-latlng");
     InterpretationPipelineOptions options =
         PipelinesOptionsFactory.createInterpretation(combinedArgs);

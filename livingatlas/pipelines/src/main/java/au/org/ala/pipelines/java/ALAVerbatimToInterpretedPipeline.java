@@ -14,6 +14,7 @@ import au.org.ala.pipelines.transforms.ALAAttributionTransform;
 import au.org.ala.pipelines.transforms.ALADefaultValuesTransform;
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
 import au.org.ala.pipelines.transforms.LocationTransform;
+import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationUtils;
 import java.io.FileNotFoundException;
@@ -103,6 +104,7 @@ import org.slf4j.MDC;
 public class ALAVerbatimToInterpretedPipeline {
 
   public static void main(String[] args) throws FileNotFoundException {
+    VersionInfo.print();
     String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "interpret");
     run(combinedArgs);
     // FIXME: Issue logged here: https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/105
@@ -143,6 +145,7 @@ public class ALAVerbatimToInterpretedPipeline {
     String targetPath = options.getTargetPath();
     String endPointType = options.getEndPointType();
 
+    VersionInfo.print();
     ALAPipelinesConfig config =
         ALAPipelinesConfigFactory.getInstance(
                 options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getProperties())

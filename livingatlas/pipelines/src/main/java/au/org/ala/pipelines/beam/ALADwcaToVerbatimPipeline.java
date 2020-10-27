@@ -1,6 +1,7 @@
 package au.org.ala.pipelines.beam;
 
 import au.org.ala.pipelines.options.DwcaToVerbatimPipelineOptions;
+import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationUtils;
@@ -28,7 +29,7 @@ import org.slf4j.MDC;
 public class ALADwcaToVerbatimPipeline {
 
   public static void main(String[] args) throws IOException {
-
+    VersionInfo.print();
     String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "dwca-avro");
     DwcaToVerbatimPipelineOptions options =
         PipelinesOptionsFactory.create(DwcaToVerbatimPipelineOptions.class, combinedArgs);
