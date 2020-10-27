@@ -23,6 +23,17 @@ run:
         sparkTmp: /data/spark-tmp
         sparkMaster: spark://localhost:7077
 
+collectory:
+    wsUrl: https://collections.ala.org.au
+    timeoutSec: 70
+    httpHeaders:
+        Authorization: << ADD ME >>
+
+imageService:
+    wsUrl: https://images-dev.ala.org.au
+    httpHeaders:
+        apiKey: << ADD ME >>
+
 general:
     attempt: 1
     hdfsSiteConfig: /usr/local/Cellar/hadoop/3.2.1_1/libexec/etc/hadoop/hdfs-site.xml
@@ -40,6 +51,9 @@ dataset-count-dump:
     inputPath: hdfs://localhost:8020/pipelines-data
 dataset-archive-list:
     inputPath: hdfs://localhost:8020/dwca-exports/
+images:
+    inputPath: hdfs://localhost:8020/pipelines-data
+    targetPath: hdfs://localhost:8020/pipelines-data
 export-latlng:
     inputPath: hdfs://localhost:8020/pipelines-data
 uuid:
