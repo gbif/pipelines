@@ -11,6 +11,7 @@ import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 
 /** Class to build an instance of ProcessBuilder for direct or spark command */
+@SuppressWarnings("all")
 @Slf4j
 @Builder
 final class ProcessRunnerBuilder {

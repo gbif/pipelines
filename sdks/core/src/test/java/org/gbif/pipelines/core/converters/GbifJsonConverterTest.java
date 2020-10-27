@@ -6,7 +6,6 @@ import static org.junit.Assert.assertTrue;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -829,7 +828,7 @@ public class GbifJsonConverterTest {
   }
 
   @Test
-  public void emptyAvroWithIdTest() throws IOException {
+  public void emptyAvroWithIdTest() {
     // State
     String k = "777";
     MetadataRecord mdr =

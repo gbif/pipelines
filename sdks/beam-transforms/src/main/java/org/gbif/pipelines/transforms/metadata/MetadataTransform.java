@@ -63,12 +63,6 @@ public class MetadataTransform extends Transform<String, MetadataRecord> {
     }
   }
 
-  /** Beam @Teardown closes initialized resources */
-  @Teardown
-  public void tearDown() {
-    // NOP
-  }
-
   @Override
   public Optional<MetadataRecord> convert(String source) {
     return Interpretation.from(source)

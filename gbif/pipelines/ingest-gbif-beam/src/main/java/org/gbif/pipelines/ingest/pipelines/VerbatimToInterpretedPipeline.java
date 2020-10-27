@@ -27,8 +27,15 @@ import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.core.factory.FileVocabularyFactory;
+import org.gbif.pipelines.core.factory.FileVocabularyFactory.VocabularyBackedTerm;
 import org.gbif.pipelines.core.utils.FsUtils;
-import org.gbif.pipelines.factory.*;
+import org.gbif.pipelines.factory.GeocodeKvStoreFactory;
+import org.gbif.pipelines.factory.GrscicollLookupKvStoreFactory;
+import org.gbif.pipelines.factory.KeygenServiceFactory;
+import org.gbif.pipelines.factory.MetadataServiceClientFactory;
+import org.gbif.pipelines.factory.NameUsageMatchStoreFactory;
+import org.gbif.pipelines.factory.OccurrenceStatusKvStoreFactory;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
@@ -36,7 +43,12 @@ import org.gbif.pipelines.transforms.common.FilterExtendedRecordTransform;
 import org.gbif.pipelines.transforms.common.UniqueGbifIdTransform;
 import org.gbif.pipelines.transforms.common.UniqueIdTransform;
 import org.gbif.pipelines.transforms.converters.OccurrenceExtensionTransform;
-import org.gbif.pipelines.transforms.core.*;
+import org.gbif.pipelines.transforms.core.BasicTransform;
+import org.gbif.pipelines.transforms.core.GrscicollTransform;
+import org.gbif.pipelines.transforms.core.LocationTransform;
+import org.gbif.pipelines.transforms.core.TaxonomyTransform;
+import org.gbif.pipelines.transforms.core.TemporalTransform;
+import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
@@ -137,6 +149,9 @@ public class VerbatimToInterpretedPipeline {
     BasicTransform basicTransform =
         BasicTransform.builder()
             .keygenServiceSupplier(KeygenServiceFactory.createSupplier(config, datasetId))
+            .lifeStageLookupSupplier(
+                FileVocabularyFactory.getInstanceSupplier(
+                    config, hdfsSiteConfig, coreSiteConfig, VocabularyBackedTerm.LIFE_STAGE))
             .occStatusKvStoreSupplier(OccurrenceStatusKvStoreFactory.createSupplier(config))
             .isTripletValid(options.isTripletValid())
             .isOccurrenceIdValid(options.isOccurrenceIdValid())

@@ -6,7 +6,11 @@ import static org.gbif.pipelines.core.utils.FsUtils.createParentDirectories;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -29,17 +33,38 @@ import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.factory.ConfigFactory;
+import org.gbif.pipelines.core.factory.FileVocabularyFactory;
+import org.gbif.pipelines.core.factory.FileVocabularyFactory.VocabularyBackedTerm;
 import org.gbif.pipelines.core.functions.SerializableConsumer;
 import org.gbif.pipelines.core.io.AvroReader;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
 import org.gbif.pipelines.core.io.SyncDataFileWriterBuilder;
 import org.gbif.pipelines.core.utils.FsUtils;
-import org.gbif.pipelines.factory.*;
+import org.gbif.pipelines.factory.GeocodeKvStoreFactory;
+import org.gbif.pipelines.factory.GrscicollLookupKvStoreFactory;
+import org.gbif.pipelines.factory.KeygenServiceFactory;
+import org.gbif.pipelines.factory.MetadataServiceClientFactory;
+import org.gbif.pipelines.factory.NameUsageMatchStoreFactory;
+import org.gbif.pipelines.factory.OccurrenceStatusKvStoreFactory;
 import org.gbif.pipelines.ingest.java.metrics.IngestMetricsBuilder;
-import org.gbif.pipelines.io.avro.*;
+import org.gbif.pipelines.io.avro.AudubonRecord;
+import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.ImageRecord;
+import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
+import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.io.avro.MultimediaRecord;
+import org.gbif.pipelines.io.avro.TaxonRecord;
+import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.transforms.Transform;
-import org.gbif.pipelines.transforms.core.*;
+import org.gbif.pipelines.transforms.core.BasicTransform;
+import org.gbif.pipelines.transforms.core.GrscicollTransform;
+import org.gbif.pipelines.transforms.core.LocationTransform;
+import org.gbif.pipelines.transforms.core.TaxonomyTransform;
+import org.gbif.pipelines.transforms.core.TemporalTransform;
+import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
@@ -166,6 +191,9 @@ public class VerbatimToInterpretedPipeline {
     BasicTransform basicTransform =
         BasicTransform.builder()
             .keygenServiceSupplier(KeygenServiceFactory.getInstanceSupplier(config, datasetId))
+            .lifeStageLookupSupplier(
+                FileVocabularyFactory.getInstanceSupplier(
+                    config, hdfsSiteConfig, coreSiteConfig, VocabularyBackedTerm.LIFE_STAGE))
             .occStatusKvStoreSupplier(OccurrenceStatusKvStoreFactory.getInstanceSupplier(config))
             .isTripletValid(tripletValid)
             .isOccurrenceIdValid(occIdValid)
@@ -341,7 +369,7 @@ public class VerbatimToInterpretedPipeline {
       }
 
       // Wait for all features
-      CompletableFuture[] futures =
+      CompletableFuture<?>[] futures =
           Stream.concat(streamBr, streamAll).toArray(CompletableFuture[]::new);
       CompletableFuture.allOf(futures).get();
 
@@ -349,13 +377,7 @@ public class VerbatimToInterpretedPipeline {
       log.error("Failed performing conversion on {}", e.getMessage());
       throw new IllegalStateException("Failed performing conversion on ", e);
     } finally {
-      Shutdown.doOnExit(
-          metadataTransform,
-          basicTransform,
-          locationTransform,
-          taxonomyTransform,
-          grscicollTransform,
-          defaultValuesTransform);
+      Shutdown.doOnExit(basicTransform, locationTransform, taxonomyTransform, grscicollTransform);
     }
 
     MetricsHandler.saveCountersToTargetPathFile(options, metrics.getMetricsResult());
@@ -398,37 +420,25 @@ public class VerbatimToInterpretedPipeline {
 
     @SneakyThrows
     private Shutdown(
-        MetadataTransform mdTr,
-        BasicTransform bTr,
-        LocationTransform lTr,
-        TaxonomyTransform tTr,
-        GrscicollTransform gTr,
-        DefaultValuesTransform dTr) {
+        BasicTransform bTr, LocationTransform lTr, TaxonomyTransform tTr, GrscicollTransform gTr) {
       Runnable shudownHook =
           () -> {
             log.info("Closing all resources");
-            mdTr.tearDown();
             bTr.tearDown();
             lTr.tearDown();
             tTr.tearDown();
             gTr.tearDown();
-            dTr.tearDown();
             log.info("The resources were closed");
           };
       Runtime.getRuntime().addShutdownHook(new Thread(shudownHook));
     }
 
     public static void doOnExit(
-        MetadataTransform mdTr,
-        BasicTransform bTr,
-        LocationTransform lTr,
-        TaxonomyTransform tTr,
-        GrscicollTransform gTr,
-        DefaultValuesTransform dTr) {
+        BasicTransform bTr, LocationTransform lTr, TaxonomyTransform tTr, GrscicollTransform gTr) {
       if (instance == null) {
         synchronized (MUTEX) {
           if (instance == null) {
-            instance = new Shutdown(mdTr, bTr, lTr, tTr, gTr, dTr);
+            instance = new Shutdown(bTr, lTr, tTr, gTr);
           }
         }
       }

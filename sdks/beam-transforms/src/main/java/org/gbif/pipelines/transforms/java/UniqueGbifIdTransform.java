@@ -49,7 +49,7 @@ public class UniqueGbifIdTransform {
     Consumer<ExtendedRecord> interpretBrFn = filterByGbifId();
 
     // Run async
-    CompletableFuture[] brFutures =
+    CompletableFuture<?>[] brFutures =
         erMap.values().stream()
             .map(v -> CompletableFuture.runAsync(() -> interpretBrFn.accept(v), executor))
             .toArray(CompletableFuture[]::new);

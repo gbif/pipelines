@@ -325,7 +325,7 @@ public class InterpretedToHdfsViewPipeline {
       if (useSyncMode) {
         basicMap.values().stream().map(occurrenceHdfsRecordFn).forEach(writer::append);
       } else {
-        CompletableFuture[] futures =
+        CompletableFuture<?>[] futures =
             basicMap.values().stream()
                 .map(
                     br ->

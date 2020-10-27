@@ -21,8 +21,8 @@ import org.gbif.pipelines.core.ws.metadata.response.Project;
 /** Client service to Elastisarch/Contentful CMS service. */
 public class ContentService {
 
-  private RestHighLevelClient restHighLevelClient;
   private static final String DEFAULT_LOCALE = "en-GB";
+  private final RestHighLevelClient restHighLevelClient;
 
   private static RestHighLevelClient buildClient(String... hostsAddresses) {
     HttpHost[] hosts =
@@ -67,7 +67,8 @@ public class ContentService {
         new SearchRequest().indices("project").source(searchSourceBuilder);
 
     SearchResponse response = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
-    if (response.getHits().getTotalHits() > 0) {
+    // Temporary change to make this client version work against ES7
+    if (response.getHits().getHits() != null && response.getHits().getHits().length > 0) {
       Map<String, Object> sourceFields = response.getHits().getHits()[0].getSourceAsMap();
       return new Project(
           getFieldValue(sourceFields, "title", DEFAULT_LOCALE),
@@ -89,7 +90,8 @@ public class ContentService {
       SearchRequest searchRequest =
           new SearchRequest().indices("programme").source(searchSourceBuilder);
       SearchResponse response = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
-      if (response.getHits().getTotalHits() > 0) {
+      // Temporary change to make this client version work against ES7
+      if (response.getHits().getHits() != null && response.getHits().getHits().length > 0) {
         Map<String, Object> sourceFields = response.getHits().getHits()[0].getSourceAsMap();
         return new Programme(
             getFieldValue(sourceFields, "id"),

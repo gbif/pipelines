@@ -28,7 +28,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.vocabulary.BasisOfRecord;
 import org.gbif.api.vocabulary.EstablishmentMeans;
 import org.gbif.api.vocabulary.License;
-import org.gbif.api.vocabulary.LifeStage;
 import org.gbif.api.vocabulary.OccurrenceStatus;
 import org.gbif.api.vocabulary.Sex;
 import org.gbif.api.vocabulary.TypeStatus;
@@ -50,6 +49,8 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.keygen.api.KeyLookupResult;
 import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
+import org.gbif.vocabulary.lookup.VocabularyLookup;
+import org.gbif.vocabulary.model.Concept;
 
 /**
  * Interpreting function that receives a ExtendedRecord instance and applies an interpretation to
@@ -161,17 +162,18 @@ public class BasicInterpreter {
   }
 
   /** {@link DwcTerm#lifeStage} interpretation. */
-  public static void interpretLifeStage(ExtendedRecord er, BasicRecord br) {
+  public static BiConsumer<ExtendedRecord, BasicRecord> interpretLifeStage(
+      VocabularyLookup vocabularyLookup) {
+    return (er, br) -> {
+      if (vocabularyLookup == null) {
+        return;
+      }
 
-    Function<ParseResult<LifeStage>, BasicRecord> fn =
-        parseResult -> {
-          if (parseResult.isSuccessful()) {
-            br.setLifeStage(parseResult.getPayload().name());
-          }
-          return br;
-        };
-
-    VocabularyParser.lifeStageParser().map(er, fn);
+      String value = extractValue(er, DwcTerm.lifeStage);
+      if (!Strings.isNullOrEmpty(value)) {
+        vocabularyLookup.lookup(value).map(Concept::getName).ifPresent(br::setLifeStage);
+      }
+    };
   }
 
   /** {@link DwcTerm#establishmentMeans} interpretation. */
