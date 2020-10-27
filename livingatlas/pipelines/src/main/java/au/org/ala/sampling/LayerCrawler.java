@@ -42,34 +42,37 @@ import retrofit2.http.Path;
 @Slf4j
 public class LayerCrawler {
 
-  // TODO: make this configurable
-  private static final String BASE_URL = "https://sampling.ala.org.au/";
-  // TODO: make this configurable
-  public static final int BATCH_SIZE = 25000;
-  // TODO: make this configurable
-  public static final int BATCH_STATUS_SLEEP_TIME = 1000;
-  // TODO: make this configurable
-  public static final int DOWNLOAD_RETRIES = 5;
+  private static Integer batchSize;
+  private static Integer batchStatusSleepTime;
+  private static Integer downloadRetries;
   public static final String UNKNOWN_STATUS = "unknown";
   public static final String FINISHED_STATUS = "finished";
   public static final String ERROR_STATUS = "error";
 
   SamplingService service;
 
-  private static final Retrofit retrofit =
-      new Retrofit.Builder()
-          .baseUrl(BASE_URL)
-          .addConverterFactory(JacksonConverterFactory.create())
-          .validateEagerly(true)
-          .build();
+  private static Retrofit retrofit;
 
   public static void main(String[] args) throws Exception {
-    String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "sample");
+    CombinedYamlConfiguration conf = new CombinedYamlConfiguration(args);
+    String[] combinedArgs = conf.toArgs("general", "sample");
     InterpretationPipelineOptions options =
         PipelinesOptionsFactory.createInterpretation(combinedArgs);
     MDC.put("datasetId", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
     MDC.put("step", "SAMPLING");
+
+    String baseUrl = (String) conf.get("layerCrawler.baseUrl");
+    batchSize = (Integer) conf.get("layerCrawler.batchSize");
+    batchStatusSleepTime = (Integer) conf.get("layerCrawler.batchStatusSleepTime");
+    downloadRetries = (Integer) conf.get("layerCrawler.downloadRetries");
+    log.info("Using {} service", baseUrl);
+    retrofit =
+        new Retrofit.Builder()
+            .baseUrl(baseUrl)
+            .addConverterFactory(JacksonConverterFactory.create())
+            .validateEagerly(true)
+            .build();
     run(options);
     // FIXME: Issue logged here: https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/105
     System.exit(0);
@@ -178,7 +181,7 @@ public class LayerCrawler {
 
     InputStream inputStream = ALAFsUtils.openInputStream(fs, inputFilePath);
     BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-    Collection<List<String>> partitioned = partition(reader.lines(), BATCH_SIZE);
+    Collection<List<String>> partitioned = partition(reader.lines(), batchSize);
 
     for (List<String> partition : partitioned) {
 
@@ -207,7 +210,7 @@ public class LayerCrawler {
             Duration.between(batchStart, batchCurrentTime).getSeconds());
 
         if (!state.equals(FINISHED_STATUS)) {
-          Thread.sleep(BATCH_STATUS_SLEEP_TIME);
+          Thread.sleep(batchStatusSleepTime);
         } else {
           log.info("Downloading sampling batch {}", batchId);
 
@@ -262,7 +265,7 @@ public class LayerCrawler {
       SamplingService.BatchStatus batchStatus)
       throws IOException {
 
-    for (int i = 0; i < DOWNLOAD_RETRIES; i++) {
+    for (int i = 0; i < downloadRetries; i++) {
 
       try {
         try (ReadableByteChannel inputChannel =
@@ -289,11 +292,11 @@ public class LayerCrawler {
   private interface SamplingService {
 
     /** Return an inventory of layers in the ALA spatial portal */
-    @GET("sampling-service/fields")
+    @GET("fields")
     Call<List<Layer>> getLayers();
 
     /** Return an inventory of layers in the ALA spatial portal */
-    @GET("sampling-service/intersect/batch/{id}")
+    @GET("intersect/batch/{id}")
     Call<BatchStatus> getBatchStatus(@Path("id") String id);
 
     /**
@@ -304,7 +307,7 @@ public class LayerCrawler {
      * @return The batch submited
      */
     @FormUrlEncoded
-    @POST("sampling-service/intersect/batch")
+    @POST("intersect/batch")
     Call<Batch> submitIntersectBatch(
         @Field("fids") String layerIds, @Field("points") String coordinatePairs);
 
