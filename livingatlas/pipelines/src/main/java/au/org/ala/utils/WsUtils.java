@@ -1,11 +1,15 @@
 package au.org.ala.utils;
 
+import au.org.ala.kvs.ALAPipelinesConfig;
+import au.org.ala.ws.ClientConfiguration;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.util.concurrent.TimeUnit;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Cache;
 import okhttp3.OkHttpClient;
@@ -15,6 +19,27 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 
 @Slf4j
 public class WsUtils {
+
+  /**
+   * Construct an OkHTTP client configuration from a pipeline web-service configuration.
+   *
+   * <p>The pipelinesConfig is not used at present but is available for global defaults such as
+   * cache directories, if these ever become a thing. </[>
+   *
+   * @param wsConfig The specific web service configuration
+   * @param pipelinesConfig The full pipelines configuration, null to use defaults.
+   * @return A corresponding client configuration
+   * @throws IOException if unable to create the configuration
+   */
+  public static ClientConfiguration createConfiguration(
+      @NonNull WsConfig wsConfig, ALAPipelinesConfig pipelinesConfig) throws IOException {
+    return ClientConfiguration.builder()
+        .baseUrl(new URL(wsConfig.getWsUrl()))
+        .cache(wsConfig.getCacheSizeMb() > 0)
+        .cacheSize(wsConfig.getCacheSizeMb() * 1024 * 1024)
+        .timeOut(wsConfig.getTimeoutSec() * 1000)
+        .build();
+  }
 
   public static <T> T createClient(WsConfig wsConfig, Class<T> theClass) {
 

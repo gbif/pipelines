@@ -45,6 +45,7 @@ public class SDSCheckKVStoreFactory {
    */
   public static KeyValueStore<SpeciesCheck, Boolean> create(ALAPipelinesConfig config)
       throws IOException {
+
     WsConfig ws = config.getSds();
     ClientConfiguration clientConfiguration = WsUtils.createConfiguration(ws, config);
 
