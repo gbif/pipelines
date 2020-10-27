@@ -18,6 +18,7 @@ public class ALAPipelinesConfig implements Serializable {
   private WsConfig collectory;
   private WsConfig alaNameMatch;
   private WsConfig lists;
+  private WsConfig imageService;
 
   public ALAPipelinesConfig() {
     gbifConfig = new PipelinesConfig();
@@ -25,5 +26,6 @@ public class ALAPipelinesConfig implements Serializable {
     collectory = new WsConfig();
     alaNameMatch = new WsConfig();
     lists = new WsConfig();
+    imageService = new WsConfig();
   }
 }

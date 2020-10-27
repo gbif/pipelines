@@ -37,6 +37,11 @@ collectory:
   timeoutSec: 70
   httpHeaders:
     Authorization: add-a-api-key-here
+imageService:
+  wsUrl: https://images.ala.org.au
+  timeoutSec: 70
+  httpHeaders:
+    apiKey: add-a-api-key-here
 geocodeConfig:
   country:
     path: /data/pipelines-shp/political
@@ -119,7 +124,8 @@ images:
   runner: SparkRunner
   inputPath: '{fsPath}/pipelines-data'
   tempLocation: /tmp
-  imageServiceUrl: https://images-dev.ala.org.au
+  # pipe separated list (note: YAML list not coming through correctly)
+  recognisedPaths: "https://images.ala.org.au"
 
 # class: au.org.ala.pipelines.beam.ALASamplingToAvroPipeline
 sample-avro:

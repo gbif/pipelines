@@ -3,9 +3,13 @@ package au.org.ala.pipelines.beam;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
 import au.org.ala.images.BatchUploadResponse;
+import au.org.ala.images.ImageService;
+import au.org.ala.kvs.ALAPipelinesConfig;
+import au.org.ala.kvs.ALAPipelinesConfigFactory;
 import au.org.ala.pipelines.options.ImageServicePipelineOptions;
 import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
+import au.org.ala.utils.WsUtils;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.time.LocalDate;
@@ -48,11 +52,17 @@ import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.rest.client.retrofit.SyncCall;
 import org.slf4j.MDC;
 import retrofit2.Call;
-import retrofit2.Retrofit;
-import retrofit2.converter.jackson.JacksonConverterFactory;
-import retrofit2.http.*;
 
-/** Pushes an AVRO export to the image service. */
+/**
+ * This pipeline is used to push images and metadata updates to the image-service.
+ *
+ * <p>It has several modes of operation:
+ *
+ * <p>1) Delta updates using dublin core `modified` field. 2) Export CSV from image-service for a
+ * dataResourceUid
+ *
+ * <p>Pushes an AVRO export to the image service.
+ */
 @Slf4j
 public class ImageServiceLoadPipeline {
 
@@ -73,14 +83,13 @@ public class ImageServiceLoadPipeline {
 
   public static void run(ImageServicePipelineOptions options) throws Exception {
 
-    final Retrofit retrofit =
-        new Retrofit.Builder()
-            .baseUrl(options.getImageServiceUrl())
-            .addConverterFactory(JacksonConverterFactory.create())
-            .validateEagerly(true)
-            .build();
+    ALAPipelinesConfig config =
+        ALAPipelinesConfigFactory.getInstance(
+                options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getProperties())
+            .get();
 
-    ImageBatchUploadService service = retrofit.create(ImageBatchUploadService.class);
+    // create the image service
+    ImageService service = WsUtils.createClient(config.getImageService(), ImageService.class);
 
     FileSystem fs =
         FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
@@ -134,7 +143,7 @@ public class ImageServiceLoadPipeline {
   /**
    * Create a delta of multimedia records using the <code>
    * ImageServicePipelineOptions.modifiedWindowTimeInDays</code> to determine the length to of the
-   * delta.
+   * delta. Note: this is reliant on a `modified` field being supplied in the data.
    *
    * @param options
    * @return directory
@@ -225,7 +234,9 @@ public class ImageServiceLoadPipeline {
     RemoteIterator<LocatedFileStatus> iter =
         fs.listFiles(new org.apache.hadoop.fs.Path(directoryPath), false);
 
-    File newArchive = new File(tempDir + "/multimedia-" + datasetID + ".zip");
+    String uploadFilePath = tempDir + "/multimedia-" + datasetID + ".zip";
+    log.info("Creating zip for upload at path: " + uploadFilePath);
+    File newArchive = new File(uploadFilePath);
 
     FileOutputStream fos = new FileOutputStream(newArchive);
     ZipOutputStream zipOut = new ZipOutputStream(fos);
@@ -245,12 +256,5 @@ public class ImageServiceLoadPipeline {
     fos.close();
 
     return newArchive;
-  }
-
-  public interface ImageBatchUploadService {
-    @Multipart
-    @POST("/batch/upload")
-    Call<BatchUploadResponse> upload(
-        @Part("dataResourceUid") RequestBody dataResourceUid, @Part MultipartBody.Part file);
   }
 }

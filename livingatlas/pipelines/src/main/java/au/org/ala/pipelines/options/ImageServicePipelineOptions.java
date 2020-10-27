@@ -28,4 +28,10 @@ public interface ImageServicePipelineOptions extends InterpretationPipelineOptio
   Long getModifiedWindowTimeInDays();
 
   void setModifiedWindowTimeInDays(Long modifiedWindowTimeInDays);
+
+  @Description("Recognised image service Url paths. Used to translate URLs to imageIDs")
+  @Default.String("https://images.ala.org.au")
+  String getRecognisedPaths();
+
+  void setRecognisedPaths(String recognisedPaths);
 }

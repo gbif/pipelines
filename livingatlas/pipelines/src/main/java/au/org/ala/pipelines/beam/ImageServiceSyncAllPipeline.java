@@ -3,13 +3,10 @@ package au.org.ala.pipelines.beam;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
 import au.org.ala.images.ImageService;
-import au.org.ala.kvs.ALAPipelinesConfig;
-import au.org.ala.kvs.ALAPipelinesConfigFactory;
 import au.org.ala.pipelines.options.ImageServicePipelineOptions;
 import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationUtils;
-import au.org.ala.utils.WsUtils;
 import com.google.common.collect.ImmutableList;
 import java.io.*;
 import java.util.List;
@@ -40,18 +37,11 @@ import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.rest.client.retrofit.SyncCall;
 import org.slf4j.MDC;
 import retrofit2.Call;
+import retrofit2.Retrofit;
+import retrofit2.converter.jackson.JacksonConverterFactory;
 
-/**
- * Pipeline that takes an export from the image-service (https://images.ala.org.au) and joins this
- * with the Multimedia extension so we can associate records in AVRO files with images stored in the
- * image-service.
- *
- * <p>This pipeline contains some knowledge of image-service URLs and should join image service URLs
- * contained in the Multimedia extension to existing images or with use the original source URL to
- * join to the image-service stored artefact.
- */
 @Slf4j
-public class ImageServiceSyncPipeline {
+public class ImageServiceSyncAllPipeline {
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
 
@@ -85,7 +75,6 @@ public class ImageServiceSyncPipeline {
         FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
             .getFs(options.getInputPath());
 
-    // construct output directory path
     String outputs =
         String.join(
             "/",
@@ -94,14 +83,8 @@ public class ImageServiceSyncPipeline {
             options.getAttempt().toString(),
             "images");
 
-    // delete previous runs
     ALAFsUtils.deleteIfExist(fs, outputs);
-
-    // download the mapping from the image service
-    String outputDir = downloadImageMapping(options);
-
-    // run sync pipeline
-    run(options, outputDir);
+    run(options, downloadImageMapping(options));
   }
 
   /**
@@ -118,11 +101,10 @@ public class ImageServiceSyncPipeline {
     // now lets start the pipelines
     log.info("Creating a pipeline from options");
 
+    // read the file in
     Pipeline p = Pipeline.create(options);
 
-    // Read the export file from image-service download. This is a 2 column CSV file [imageID,
-    // imageURL]
-    // Convert to KV of URL -> imageID
+    // URL -> imageID, exported from image-service
     PCollection<KV<String, String>> imageServiceExportMapping =
         p.apply(TextIO.read().from(imageMappingPath))
             .apply(
@@ -142,7 +124,7 @@ public class ImageServiceSyncPipeline {
                       }
                     }));
 
-    // Read multimedia AVRO generated in previous interpretation step
+    // Read multimedia AVRO
     MultimediaTransform multimediaTransform = MultimediaTransform.create();
     UnaryOperator<String> pathFn =
         t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
@@ -153,12 +135,7 @@ public class ImageServiceSyncPipeline {
         p.apply("Read Multimedia", multimediaTransform.read(pathFn))
             .apply("Extract URL -> RecordID map", ParDo.of(new MultimediaRecordFcn()));
 
-    final String[] recognisedPaths = options.getRecognisedPaths().split("|");
-
-    // For image service URLs, just convert to <recordID, imageID> but
-    // Taking URLs of the form
-    // https://images.ala.org.au/image/proxyImageThumbnailLarge?imageId=<UUID>
-    // and substring-ing to UUID
+    // For image service URLs, just convert to <recordID, imageID>
     PCollection<KV<String, String>> imageServiceUrlsCollection =
         multimediaItems
             .apply(
@@ -166,12 +143,7 @@ public class ImageServiceSyncPipeline {
                     new SerializableFunction<KV<String, String>, Boolean>() {
                       @Override
                       public Boolean apply(KV<String, String> input) {
-                        for (String path : recognisedPaths) {
-                          if (input.getKey().startsWith(path)) {
-                            return true;
-                          }
-                        }
-                        return false;
+                        return input.getKey().startsWith("https://images.ala.org.au");
                       }
                     }))
             .apply(
@@ -183,20 +155,14 @@ public class ImageServiceSyncPipeline {
                                 kv.getValue(),
                                 kv.getKey().substring(kv.getKey().lastIndexOf("=") + 1))));
 
-    // These are NOT image service URLs i.e. they should be URLs as provided
-    // by the data publisher
+    // these are NOT image service URLs
     PCollection<KV<String, String>> nonImageServiceUrls =
         multimediaItems.apply(
             Filter.by(
                 new SerializableFunction<KV<String, String>, Boolean>() {
                   @Override
                   public Boolean apply(KV<String, String> input) {
-                    for (String path : recognisedPaths) {
-                      if (input.getKey().startsWith(path)) {
-                        return false;
-                      }
-                    }
-                    return true;
+                    return !input.getKey().startsWith("https://images.ala.org.au");
                   }
                 }));
 
@@ -319,16 +285,16 @@ public class ImageServiceSyncPipeline {
 
     String tmpDir = options.getTempLocation() != null ? options.getTempLocation() : "/tmp";
 
-    ALAPipelinesConfig config =
-        ALAPipelinesConfigFactory.getInstance(
-                options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getProperties())
-            .get();
-
-    // create the image service
-    ImageService service = WsUtils.createClient(config.getImageService(), ImageService.class);
+    final Retrofit retrofit =
+        new Retrofit.Builder()
+            .baseUrl(options.getImageServiceUrl())
+            .addConverterFactory(JacksonConverterFactory.create())
+            .validateEagerly(true)
+            .build();
 
     String filePath = tmpDir + "/" + options.getDatasetId() + ".csv.gz";
     log.info("Output to path " + filePath);
+    ImageService service = retrofit.create(ImageService.class);
     Call<ResponseBody> call = service.downloadMappingFile(options.getDatasetId());
 
     ResponseBody responseBody = SyncCall.syncCall(call);
