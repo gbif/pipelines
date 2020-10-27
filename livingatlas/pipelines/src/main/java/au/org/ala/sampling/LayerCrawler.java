@@ -1,6 +1,5 @@
 package au.org.ala.sampling;
 
-import au.org.ala.pipelines.options.SamplingPipelineOptions;
 import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -22,6 +21,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
+import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.slf4j.MDC;
@@ -42,30 +42,43 @@ import retrofit2.http.Path;
 @Slf4j
 public class LayerCrawler {
 
+  private static Integer batchSize;
+  private static Integer batchStatusSleepTime;
+  private static Integer downloadRetries;
   public static final String UNKNOWN_STATUS = "unknown";
   public static final String FINISHED_STATUS = "finished";
   public static final String ERROR_STATUS = "error";
 
-  private final int batchSize;
-  private final int batchSleepTime;
-  private final int downloadRetries;
+  SamplingService service;
 
-  private SamplingService service;
+  private static Retrofit retrofit;
 
   public static void main(String[] args) throws Exception {
-    String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "sample");
-    SamplingPipelineOptions options =
-        PipelinesOptionsFactory.create(SamplingPipelineOptions.class, combinedArgs);
+    CombinedYamlConfiguration conf = new CombinedYamlConfiguration(args);
+    String[] combinedArgs = conf.toArgs("general", "sample");
+    InterpretationPipelineOptions options =
+        PipelinesOptionsFactory.createInterpretation(combinedArgs);
     MDC.put("datasetId", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
     MDC.put("step", "SAMPLING");
-    PipelinesOptionsFactory.registerHdfs(options);
+
+    String baseUrl = (String) conf.get("layerCrawler.baseUrl");
+    batchSize = (Integer) conf.get("layerCrawler.batchSize");
+    batchStatusSleepTime = (Integer) conf.get("layerCrawler.batchStatusSleepTime");
+    downloadRetries = (Integer) conf.get("layerCrawler.downloadRetries");
+    log.info("Using {} service", baseUrl);
+    retrofit =
+        new Retrofit.Builder()
+            .baseUrl(baseUrl)
+            .addConverterFactory(JacksonConverterFactory.create())
+            .validateEagerly(true)
+            .build();
     run(options);
     // FIXME: Issue logged here: https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/105
     System.exit(0);
   }
 
-  public static void run(SamplingPipelineOptions options) throws Exception {
+  public static void run(InterpretationPipelineOptions options) throws Exception {
 
     String baseDir = options.getInputPath();
 
@@ -80,27 +93,18 @@ public class LayerCrawler {
       Instant batchStart = Instant.now();
 
       // list file in directory
-      LayerCrawler lc =
-          new LayerCrawler(
-              options.getSamplingServiceUrl(),
-              options.getBatchSize(),
-              options.getBatchSleepTimeInMillis(),
-              options.getDownloadRetries());
+      LayerCrawler lc = new LayerCrawler();
 
       // delete existing sampling output
-      String samplingDir =
-          String.join("/", baseDir, dataSetID, options.getAttempt().toString(), "sampling");
+      String samplingDir = baseDir + "/" + dataSetID + "/" + options.getAttempt() + "/sampling";
       FsUtils.deleteIfExist(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), samplingDir);
 
       // (re)create sampling output directories
       String sampleDownloadPath =
-          String.join(
-              "/", baseDir, dataSetID, options.getAttempt().toString(), "sampling/downloads");
+          baseDir + "/" + dataSetID + "/" + options.getAttempt() + "/sampling/downloads";
 
       // check the lat lng export directory has been created
-      String latLngExportPath =
-          String.join("/", baseDir, dataSetID, options.getAttempt().toString(), "latlng");
-
+      String latLngExportPath = baseDir + "/" + dataSetID + "/" + options.getAttempt() + "/latlng";
       if (!ALAFsUtils.exists(fs, latLngExportPath)) {
         log.error(
             "LatLng export unavailable. Has LatLng export pipeline been ran ? Not available at path {}",
@@ -149,19 +153,7 @@ public class LayerCrawler {
     }
   }
 
-  public LayerCrawler(String baseURL, int batchSize, int batchSleepTime, int downloadRetries) {
-
-    this.batchSize = batchSize;
-    this.batchSleepTime = batchSleepTime;
-    this.downloadRetries = downloadRetries;
-
-    final Retrofit retrofit =
-        new Retrofit.Builder()
-            .baseUrl(baseURL)
-            .addConverterFactory(JacksonConverterFactory.create())
-            .validateEagerly(true)
-            .build();
-
+  public LayerCrawler() {
     log.info("Initialising crawler....");
     this.service = retrofit.create(SamplingService.class);
     log.info("Initialised.");
@@ -218,7 +210,7 @@ public class LayerCrawler {
             Duration.between(batchStart, batchCurrentTime).getSeconds());
 
         if (!state.equals(FINISHED_STATUS)) {
-          Thread.sleep(batchSleepTime);
+          Thread.sleep(batchStatusSleepTime);
         } else {
           log.info("Downloading sampling batch {}", batchId);
 
@@ -300,11 +292,11 @@ public class LayerCrawler {
   private interface SamplingService {
 
     /** Return an inventory of layers in the ALA spatial portal */
-    @GET("sampling-service/fields")
+    @GET("fields")
     Call<List<Layer>> getLayers();
 
     /** Return an inventory of layers in the ALA spatial portal */
-    @GET("sampling-service/intersect/batch/{id}")
+    @GET("intersect/batch/{id}")
     Call<BatchStatus> getBatchStatus(@Path("id") String id);
 
     /**
@@ -315,7 +307,7 @@ public class LayerCrawler {
      * @return The batch submited
      */
     @FormUrlEncoded
-    @POST("sampling-service/intersect/batch")
+    @POST("intersect/batch")
     Call<Batch> submitIntersectBatch(
         @Field("fids") String layerIds, @Field("points") String coordinatePairs);
 

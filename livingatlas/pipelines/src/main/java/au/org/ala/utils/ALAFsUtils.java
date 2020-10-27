@@ -57,6 +57,27 @@ public class ALAFsUtils {
   }
 
   /**
+   * Constructs the path for reading / writing generalised data. This is written outside of
+   * /interpreted directory.
+   *
+   * <p>Example /data/pipelines-data/dr893/1/generalised/ala_sensitive_taxon where name =
+   * 'ala_sensitive_taxon'
+   *
+   * @param options
+   * @param name
+   * @param uniqueId
+   * @return
+   */
+  public static String buildPathGeneralisedUsingTargetPath(
+      BasePipelineOptions options, String name, String uniqueId) {
+    return FsUtils.buildPath(
+            FsUtils.buildDatasetAttemptPath(options, "generalised", false),
+            name,
+            "generalise-" + uniqueId)
+        .toString();
+  }
+
+  /**
    * Constructs the path for reading / writing sampling. This is written outside of /interpreted
    * directory.
    *

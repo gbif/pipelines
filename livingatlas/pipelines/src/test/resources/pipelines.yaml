@@ -31,6 +31,9 @@ alaNameMatch:
 collectory:
   wsUrl: http://localhost:3939
   timeoutSec: 70
+sds:
+  wsUrl: http://localhost:9289
+  timeoutSec: 70
 geocodeConfig:
   country:
     path: /data/pipelines-shp/political

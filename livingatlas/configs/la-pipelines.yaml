@@ -127,6 +127,14 @@ images:
   # pipe separated list (note: YAML list not coming through correctly)
   recognisedPaths: "https://images.ala.org.au"
 
+# LayerCrawler specific configuration
+layerCrawler:
+  # baseUrl: https://spatial.your-l-a.site/ws/
+  baseUrl: https://sampling.ala.org.au/sampling-service/
+  batchSize: 25000
+  batchStatusSleepTime: 1000
+  downloadRetries: 5
+
 # class: au.org.ala.pipelines.beam.ALASamplingToAvroPipeline
 sample-avro:
   inputPath: '{fsPath}/pipelines-data'

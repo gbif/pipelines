@@ -1,10 +1,8 @@
 package au.org.ala.kvs.cache;
 
 import au.org.ala.kvs.ALAPipelinesConfig;
-import au.org.ala.names.ws.api.NameMatchService;
-import au.org.ala.names.ws.api.NameSearch;
-import au.org.ala.names.ws.api.NameUsageMatch;
-import au.org.ala.names.ws.client.ALANameUsageMatchServiceClient;
+import au.org.ala.sds.api.SpeciesCheck;
+import au.org.ala.sds.ws.client.ALASDSServiceClient;
 import au.org.ala.utils.WsUtils;
 import au.org.ala.ws.ClientConfiguration;
 import java.io.IOException;
@@ -17,22 +15,22 @@ import org.gbif.pipelines.parsers.config.model.WsConfig;
 import org.gbif.pipelines.transforms.SerializableSupplier;
 
 @Slf4j
-public class ALANameMatchKVStoreFactory {
+public class SDSCheckKVStoreFactory {
 
-  private final KeyValueStore<NameSearch, NameUsageMatch> kvStore;
-  private static volatile ALANameMatchKVStoreFactory instance;
+  private final KeyValueStore<SpeciesCheck, Boolean> kvStore;
+  private static volatile SDSCheckKVStoreFactory instance;
   private static final Object MUTEX = new Object();
 
   @SneakyThrows
-  private ALANameMatchKVStoreFactory(ALAPipelinesConfig config) {
+  private SDSCheckKVStoreFactory(ALAPipelinesConfig config) {
     this.kvStore = create(config);
   }
 
-  public static KeyValueStore<NameSearch, NameUsageMatch> getInstance(ALAPipelinesConfig config) {
+  public static KeyValueStore<SpeciesCheck, Boolean> getInstance(ALAPipelinesConfig config) {
     if (instance == null) {
       synchronized (MUTEX) {
         if (instance == null) {
-          instance = new ALANameMatchKVStoreFactory(config);
+          instance = new SDSCheckKVStoreFactory(config);
         }
       }
     }
@@ -42,16 +40,15 @@ public class ALANameMatchKVStoreFactory {
   /**
    * Returns ala name matching key value store.
    *
-   * @return A key value store backed by a {@link ALANameUsageMatchServiceClient}
+   * @return A key value store backed by a {@link ALASDSServiceClient}
    * @throws IOException if unable to build the client
    */
-  public static KeyValueStore<NameSearch, NameUsageMatch> create(ALAPipelinesConfig config)
+  public static KeyValueStore<SpeciesCheck, Boolean> create(ALAPipelinesConfig config)
       throws IOException {
-    WsConfig ws = config.getAlaNameMatch();
+    WsConfig ws = config.getSds();
     ClientConfiguration clientConfiguration = WsUtils.createConfiguration(ws, config);
 
-    ALANameUsageMatchServiceClient wsClient =
-        new ALANameUsageMatchServiceClient(clientConfiguration);
+    ALASDSServiceClient wsClient = new ALASDSServiceClient(clientConfiguration);
     Command closeHandler =
         () -> {
           try {
@@ -65,17 +62,17 @@ public class ALANameMatchKVStoreFactory {
   }
 
   /** Builds a KV Store backed by the rest client. */
-  private static KeyValueStore<NameSearch, NameUsageMatch> cache2kBackedKVStore(
-      NameMatchService nameMatchService, Command closeHandler, ALAPipelinesConfig config) {
+  private static KeyValueStore<SpeciesCheck, Boolean> cache2kBackedKVStore(
+      ALASDSServiceClient sdsService, Command closeHandler, ALAPipelinesConfig config) {
 
     KeyValueStore kvs =
-        new KeyValueStore<NameSearch, NameUsageMatch>() {
+        new KeyValueStore<SpeciesCheck, Boolean>() {
           @Override
-          public NameUsageMatch get(NameSearch key) {
+          public Boolean get(SpeciesCheck key) {
             try {
-              return nameMatchService.match(key);
+              return sdsService.isSensitive(key);
             } catch (Exception ex) {
-              throw logAndThrow(ex, "Error contacting the species match service");
+              throw logAndThrow(ex, "Error contacting the sensitive data service");
             }
           }
 
@@ -85,12 +82,12 @@ public class ALANameMatchKVStoreFactory {
           }
         };
     return KeyValueCache.cache(
-        kvs, config.getAlaNameMatch().getCacheSizeMb(), NameSearch.class, NameUsageMatch.class);
+        kvs, config.getAlaNameMatch().getCacheSizeMb(), SpeciesCheck.class, Boolean.class);
   }
 
-  public static SerializableSupplier<KeyValueStore<NameSearch, NameUsageMatch>> getInstanceSupplier(
+  public static SerializableSupplier<KeyValueStore<SpeciesCheck, Boolean>> getInstanceSupplier(
       ALAPipelinesConfig config) {
-    return () -> ALANameMatchKVStoreFactory.getInstance(config);
+    return () -> SDSCheckKVStoreFactory.getInstance(config);
   }
 
   /**

@@ -232,6 +232,24 @@
                 </wait>
               </run>
             </image>
+            <image>
+              <alias>ala-sensitive-service</alias>
+              <name>charvolant/ala-sensitive-data-service:v20200214-1</name>
+              <run>
+                <ports>
+                  <port>${sds.admin.port}:9190</port>
+                  <port>${sds.port}:9189</port>
+                </ports>
+                <wait>
+                  <http>
+                    <url>http://${sds.host}:${sds.port}/api/sensitiveDataFields</url>
+                    <method>GET</method>
+                    <status>200</status>
+                  </http>
+                  <time>60000</time>
+                </wait>
+              </run>
+            </image>
           </images>
         </configuration>
       </plugin>
@@ -247,6 +265,7 @@
 
     <!-- ALA libraries -->
     <ala-namematching-service.version>1.0-SNAPSHOT</ala-namematching-service.version>
+    <ala-sensitive-data-service.version>1.0-SNAPSHOT</ala-sensitive-data-service.version>
 
     <!-- Default port for ALA Name Matcher Docker container -->
     <alanm.port>9279</alanm.port>
@@ -257,6 +276,9 @@
     <solr8.zk.host>localhost</solr8.zk.host>
     <solr8.http.host>localhost</solr8.http.host>
     <collectory.url>http://localhost:3939</collectory.url>
+    <sds.port>9289</sds.port>
+    <sds.admin.port>9290</sds.admin.port>
+    <sds.host>localhost</sds.host>
 
     <!-- Tools-->
     <geotools.version>20.5</geotools.version>
@@ -301,6 +323,11 @@
       <groupId>au.org.ala.names</groupId>
       <artifactId>ala-namematching-client</artifactId>
       <version>${ala-namematching-service.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>au.org.ala.sds</groupId>
+      <artifactId>ala-sensitive-data-client</artifactId>
+      <version>${ala-sensitive-data-service.version}</version>
     </dependency>
 
     <dependency>
