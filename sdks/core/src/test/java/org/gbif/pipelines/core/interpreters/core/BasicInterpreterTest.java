@@ -1,5 +1,8 @@
 package org.gbif.pipelines.core.interpreters.core;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -409,5 +412,68 @@ public class BasicInterpreterTest {
         expectedIdentified, br.getIdentifiedByIds().stream().sorted().collect(Collectors.toList()));
     Assert.assertEquals(
         expectedRecorded, br.getRecordedByIds().stream().sorted().collect(Collectors.toList()));
+  }
+
+  @Test
+  public void interpretBasisOfRecordTest() {
+
+    // State
+    Map<String, String> coreMap = new HashMap<>();
+    coreMap.put(DwcTerm.basisOfRecord.qualifiedName(), "LIVING_SPECIMEN");
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+
+    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
+
+    // When
+    BasicInterpreter.interpretBasisOfRecord(er, br);
+
+    // Should
+    Assert.assertEquals("LIVING_SPECIMEN", br.getBasisOfRecord());
+  }
+
+  @Test
+  public void interpretBasisOfRecordNullTest() {
+
+    // State
+    Map<String, String> coreMap = new HashMap<>();
+    coreMap.put(DwcTerm.basisOfRecord.qualifiedName(), null);
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+
+    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
+
+    // When
+    BasicInterpreter.interpretBasisOfRecord(er, br);
+
+    // Should
+    Assert.assertEquals("UNKNOWN", br.getBasisOfRecord());
+    assertIssueSize(br, 1);
+    assertIssue(OccurrenceIssue.BASIS_OF_RECORD_INVALID, br);
+  }
+
+  @Test
+  public void interpretBasisOfRecordRubbishTest() {
+
+    // State
+    Map<String, String> coreMap = new HashMap<>();
+    coreMap.put(DwcTerm.basisOfRecord.qualifiedName(), "adwadaw");
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+
+    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
+
+    // When
+    BasicInterpreter.interpretBasisOfRecord(er, br);
+
+    // Should
+    Assert.assertEquals("UNKNOWN", br.getBasisOfRecord());
+    assertIssueSize(br, 1);
+    assertIssue(OccurrenceIssue.BASIS_OF_RECORD_INVALID, br);
+  }
+
+  private void assertIssueSize(BasicRecord br, int expectedSize) {
+    assertEquals(expectedSize, br.getIssues().getIssueList().size());
+  }
+
+  private void assertIssue(OccurrenceIssue expectedIssue, BasicRecord br) {
+    assertTrue(br.getIssues().getIssueList().contains(expectedIssue.name()));
   }
 }

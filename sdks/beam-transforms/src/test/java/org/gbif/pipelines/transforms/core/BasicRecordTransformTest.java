@@ -47,10 +47,10 @@ public class BasicRecordTransformTest {
 
     // State
     final String[] one = {
-      "0", "OBSERVATION", "MALE", "INTRODUCED", "SPOROPHYTE", "HOLOTYPE", "2", "http://refs.com"
+      "0", "OBSERVATION", "MALE", "INTRODUCED", "HOLOTYPE", "2", "http://refs.com"
     };
     final String[] two = {
-      "1", "UNKNOWN", "HERMAPHRODITE", "INTRODUCED", "GAMETE", "HAPANTOTYPE", "1", "http://refs.com"
+      "1", "UNKNOWN", "HERMAPHRODITE", "INTRODUCED", "HAPANTOTYPE", "1", "http://refs.com"
     };
     final List<ExtendedRecord> records = createExtendedRecordList(one, two);
 
@@ -124,10 +124,9 @@ public class BasicRecordTransformTest {
               record.getCoreTerms().put(DwcTerm.basisOfRecord.qualifiedName(), x[1]);
               record.getCoreTerms().put(DwcTerm.sex.qualifiedName(), x[2]);
               record.getCoreTerms().put(DwcTerm.establishmentMeans.qualifiedName(), x[3]);
-              record.getCoreTerms().put(DwcTerm.lifeStage.qualifiedName(), x[4]);
-              record.getCoreTerms().put(DwcTerm.typeStatus.qualifiedName(), x[5]);
-              record.getCoreTerms().put(DwcTerm.individualCount.qualifiedName(), x[6]);
-              record.getCoreTerms().put(DcTerm.references.qualifiedName(), x[7]);
+              record.getCoreTerms().put(DwcTerm.typeStatus.qualifiedName(), x[4]);
+              record.getCoreTerms().put(DwcTerm.individualCount.qualifiedName(), x[5]);
+              record.getCoreTerms().put(DcTerm.references.qualifiedName(), x[6]);
               return record;
             })
         .collect(Collectors.toList());
@@ -143,10 +142,9 @@ public class BasicRecordTransformTest {
                     .setBasisOfRecord(x[1])
                     .setSex(x[2])
                     .setEstablishmentMeans(x[3])
-                    .setLifeStage(x[4])
-                    .setTypeStatus(x[5])
-                    .setIndividualCount(Integer.valueOf(x[6]))
-                    .setReferences(x[7])
+                    .setTypeStatus(x[4])
+                    .setIndividualCount(Integer.valueOf(x[5]))
+                    .setReferences(x[6])
                     .setLicense(License.UNSPECIFIED.name())
                     .build())
         .collect(Collectors.toList());

@@ -10,7 +10,7 @@ import org.gbif.kvs.geocode.LatLng;
 import org.gbif.kvs.hbase.HBaseKVStoreConfiguration;
 import org.gbif.kvs.hbase.ReadOnlyHBaseStore;
 import org.gbif.pipelines.core.config.model.KvConfig;
-import org.gbif.pipelines.transforms.SerializableSupplier;
+import org.gbif.pipelines.core.functions.SerializableSupplier;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class LocationFeatureKvStoreFactory {

@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -24,6 +25,7 @@ import org.apache.avro.Schema;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
@@ -31,6 +33,9 @@ import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.factory.ConfigFactory;
+import org.gbif.pipelines.core.factory.FileVocabularyFactory;
+import org.gbif.pipelines.core.factory.FileVocabularyFactory.VocabularyBackedTerm;
+import org.gbif.pipelines.core.functions.SerializableConsumer;
 import org.gbif.pipelines.core.io.AvroReader;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
 import org.gbif.pipelines.core.io.SyncDataFileWriterBuilder;
@@ -53,7 +58,6 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
-import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.GrscicollTransform;
@@ -156,6 +160,11 @@ public class VerbatimToInterpretedPipeline {
                 hdfsSiteConfig, coreSiteConfig, options.getProperties(), PipelinesConfig.class)
             .get();
 
+    List<DateComponentOrdering> dateComponentOrdering =
+        options.getDefaultDateFormat() == null
+            ? config.getDefaultDateFormat()
+            : options.getDefaultDateFormat();
+
     FsUtils.deleteInterpretIfExist(
         hdfsSiteConfig, coreSiteConfig, targetPath, datasetId, attempt, types);
 
@@ -182,6 +191,9 @@ public class VerbatimToInterpretedPipeline {
     BasicTransform basicTransform =
         BasicTransform.builder()
             .keygenServiceSupplier(KeygenServiceFactory.getInstanceSupplier(config, datasetId))
+            .lifeStageLookupSupplier(
+                FileVocabularyFactory.getInstanceSupplier(
+                    config, hdfsSiteConfig, coreSiteConfig, VocabularyBackedTerm.LIFE_STAGE))
             .occStatusKvStoreSupplier(OccurrenceStatusKvStoreFactory.getInstanceSupplier(config))
             .isTripletValid(tripletValid)
             .isOccurrenceIdValid(occIdValid)
@@ -209,17 +221,30 @@ public class VerbatimToInterpretedPipeline {
 
     VerbatimTransform verbatimTransform = VerbatimTransform.create().counterFn(incMetricFn);
 
-    TemporalTransform temporalTransform = TemporalTransform.create().counterFn(incMetricFn);
+    TemporalTransform temporalTransform =
+        TemporalTransform.builder()
+            .orderings(dateComponentOrdering)
+            .create()
+            .counterFn(incMetricFn);
 
     // Extension
     MeasurementOrFactTransform measurementTransform =
-        MeasurementOrFactTransform.create().counterFn(incMetricFn);
+        MeasurementOrFactTransform.builder()
+            .orderings(dateComponentOrdering)
+            .create()
+            .counterFn(incMetricFn);
 
-    MultimediaTransform multimediaTransform = MultimediaTransform.create().counterFn(incMetricFn);
+    MultimediaTransform multimediaTransform =
+        MultimediaTransform.builder()
+            .orderings(dateComponentOrdering)
+            .create()
+            .counterFn(incMetricFn);
 
-    AudubonTransform audubonTransform = AudubonTransform.create().counterFn(incMetricFn);
+    AudubonTransform audubonTransform =
+        AudubonTransform.builder().orderings(dateComponentOrdering).create().counterFn(incMetricFn);
 
-    ImageTransform imageTransform = ImageTransform.create().counterFn(incMetricFn);
+    ImageTransform imageTransform =
+        ImageTransform.builder().orderings(dateComponentOrdering).create().counterFn(incMetricFn);
     // Extra
     OccurrenceExtensionTransform occExtensionTransform =
         OccurrenceExtensionTransform.create().counterFn(incMetricFn);
@@ -237,6 +262,11 @@ public class VerbatimToInterpretedPipeline {
     grscicollTransform.setup();
     metadataTransform.setup();
     defaultValuesTransform.setup();
+    temporalTransform.setup();
+    multimediaTransform.setup();
+    audubonTransform.setup();
+    imageTransform.setup();
+    measurementTransform.setup();
 
     try (SyncDataFileWriter<ExtendedRecord> verbatimWriter =
             createWriter(options, ExtendedRecord.getClassSchema(), verbatimTransform, id);
@@ -339,7 +369,7 @@ public class VerbatimToInterpretedPipeline {
       }
 
       // Wait for all features
-      CompletableFuture[] futures =
+      CompletableFuture<?>[] futures =
           Stream.concat(streamBr, streamAll).toArray(CompletableFuture[]::new);
       CompletableFuture.allOf(futures).get();
 
@@ -347,13 +377,7 @@ public class VerbatimToInterpretedPipeline {
       log.error("Failed performing conversion on {}", e.getMessage());
       throw new IllegalStateException("Failed performing conversion on ", e);
     } finally {
-      Shutdown.doOnExit(
-          metadataTransform,
-          basicTransform,
-          locationTransform,
-          taxonomyTransform,
-          grscicollTransform,
-          defaultValuesTransform);
+      Shutdown.doOnExit(basicTransform, locationTransform, taxonomyTransform, grscicollTransform);
     }
 
     MetricsHandler.saveCountersToTargetPathFile(options, metrics.getMetricsResult());
@@ -396,37 +420,25 @@ public class VerbatimToInterpretedPipeline {
 
     @SneakyThrows
     private Shutdown(
-        MetadataTransform mdTr,
-        BasicTransform bTr,
-        LocationTransform lTr,
-        TaxonomyTransform tTr,
-        GrscicollTransform gTr,
-        DefaultValuesTransform dTr) {
+        BasicTransform bTr, LocationTransform lTr, TaxonomyTransform tTr, GrscicollTransform gTr) {
       Runnable shudownHook =
           () -> {
             log.info("Closing all resources");
-            mdTr.tearDown();
             bTr.tearDown();
             lTr.tearDown();
             tTr.tearDown();
             gTr.tearDown();
-            dTr.tearDown();
             log.info("The resources were closed");
           };
       Runtime.getRuntime().addShutdownHook(new Thread(shudownHook));
     }
 
     public static void doOnExit(
-        MetadataTransform mdTr,
-        BasicTransform bTr,
-        LocationTransform lTr,
-        TaxonomyTransform tTr,
-        GrscicollTransform gTr,
-        DefaultValuesTransform dTr) {
+        BasicTransform bTr, LocationTransform lTr, TaxonomyTransform tTr, GrscicollTransform gTr) {
       if (instance == null) {
         synchronized (MUTEX) {
           if (instance == null) {
-            instance = new Shutdown(mdTr, bTr, lTr, tTr, gTr, dTr);
+            instance = new Shutdown(bTr, lTr, tTr, gTr);
           }
         }
       }

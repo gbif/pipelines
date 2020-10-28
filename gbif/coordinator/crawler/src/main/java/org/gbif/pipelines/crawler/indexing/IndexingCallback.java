@@ -110,7 +110,7 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
                 .config(config)
                 .message(message)
                 .esIndexName(indexName)
-                .esAlias(config.indexAlias)
+                .esAlias(config.indexConfig.occurrenceAlias)
                 .esShardsNumber(numberOfShards);
 
         Predicate<StepRunner> runnerPr = sr -> config.processRunner.equalsIgnoreCase(sr.name());
@@ -176,39 +176,39 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
         HdfsUtils.getFileCount(
             config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig, basicPath);
     count *= 4;
-    if (count < config.sparkParallelismMin) {
-      return config.sparkParallelismMin;
+    if (count < config.sparkConfig.parallelismMin) {
+      return config.sparkConfig.parallelismMin;
     }
-    if (count > config.sparkParallelismMax) {
-      return config.sparkParallelismMax;
+    if (count > config.sparkConfig.parallelismMax) {
+      return config.sparkConfig.parallelismMax;
     }
     return count;
   }
 
   /**
-   * Computes the memory for executor in Gb, where min is config.sparkExecutorMemoryGbMin and max is
-   * config.sparkExecutorMemoryGbMax
+   * Computes the memory for executor in Gb, where min is config.sparkConfig.executorMemoryGbMin and
+   * max is config.sparkConfig.executorMemoryGbMax
    */
   private String computeSparkExecutorMemory(int sparkExecutorNumbers, long recordsNumber) {
     int size =
         (int)
             Math.ceil(
                 (double) recordsNumber
-                    / (sparkExecutorNumbers * config.sparkRecordsPerThread)
+                    / (sparkExecutorNumbers * config.sparkConfig.recordsPerThread)
                     * 1.6);
 
-    if (size < config.sparkExecutorMemoryGbMin) {
-      return config.sparkExecutorMemoryGbMin + "G";
+    if (size < config.sparkConfig.executorMemoryGbMin) {
+      return config.sparkConfig.executorMemoryGbMin + "G";
     }
-    if (size > config.sparkExecutorMemoryGbMax) {
-      return config.sparkExecutorMemoryGbMax + "G";
+    if (size > config.sparkConfig.executorMemoryGbMax) {
+      return config.sparkConfig.executorMemoryGbMax + "G";
     }
     return size + "G";
   }
 
   /**
-   * Computes the numbers of executors, where min is config.sparkExecutorNumbersMin and max is
-   * config.sparkExecutorNumbersMax
+   * Computes the numbers of executors, where min is config.sparkConfig.executorNumbersMin and max
+   * is config.sparkConfig.executorNumbersMax
    *
    * <p>500_000d is records per executor
    */
@@ -217,12 +217,12 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
         (int)
             Math.ceil(
                 (double) recordsNumber
-                    / (config.sparkExecutorCores * config.sparkRecordsPerThread));
-    if (sparkExecutorNumbers < config.sparkExecutorNumbersMin) {
-      return config.sparkExecutorNumbersMin;
+                    / (config.sparkConfig.executorCores * config.sparkConfig.recordsPerThread));
+    if (sparkExecutorNumbers < config.sparkConfig.executorNumbersMin) {
+      return config.sparkConfig.executorNumbersMin;
     }
-    if (sparkExecutorNumbers > config.sparkExecutorNumbersMax) {
-      return config.sparkExecutorNumbersMax;
+    if (sparkExecutorNumbers > config.sparkConfig.executorNumbersMax) {
+      return config.sparkConfig.executorNumbersMax;
     }
     return sparkExecutorNumbers;
   }
@@ -241,15 +241,15 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
     // Independent index for datasets where number of records more than config.indexIndepRecord
     String idxName;
 
-    if (recordsNumber >= config.indexIndepRecord) {
-      idxName = datasetId + "_" + message.getAttempt() + "_" + config.indexVersion;
+    if (recordsNumber >= config.indexConfig.bigIndexIfRecordsMoreThan) {
+      idxName = datasetId + "_" + message.getAttempt() + "_" + config.indexConfig.occurrenceVersion;
       idxName = idxName + "_" + Instant.now().toEpochMilli();
       log.info("ES Index name - {}, recordsNumber - {}", idxName, recordsNumber);
       return idxName;
     }
 
     // Default index name for all other datasets
-    String esPr = config.indexDefaultPrefixName + "_" + config.indexVersion;
+    String esPr = config.indexConfig.defaultPrefixName + "_" + config.indexConfig.occurrenceVersion;
     idxName = getIndexName(esPr).orElse(esPr + "_" + Instant.now().toEpochMilli());
     log.info("ES Index name - {}", idxName);
     return idxName;
@@ -261,12 +261,14 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
    * config.indexRecordsPerShard
    */
   private int computeNumberOfShards(String indexName, long recordsNumber) {
-    if (indexName.startsWith(config.indexDefaultPrefixName)) {
+    if (indexName.startsWith(config.indexConfig.defaultPrefixName)) {
       return (int)
-          Math.ceil((double) config.indexDefaultSize / (double) config.indexRecordsPerShard);
+          Math.ceil(
+              (double) config.indexConfig.defaultSize
+                  / (double) config.indexConfig.recordsPerShard);
     }
 
-    double shards = (double) recordsNumber / (double) config.indexRecordsPerShard;
+    double shards = (double) recordsNumber / (double) config.indexConfig.recordsPerShard;
     shards = Math.max(shards, 1d);
     boolean isCeil = (shards - Math.floor(shards)) > 0.25d;
     return isCeil ? (int) Math.ceil(shards) : (int) Math.floor(shards);
@@ -309,7 +311,7 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
 
   /** Returns index name by index prefix where number of records is less than configured */
   private Optional<String> getIndexName(String prefix) throws IOException {
-    String url = String.format(config.esIndexCatUrl, prefix);
+    String url = String.format(config.indexConfig.defaultSmallestIndexCatUrl, prefix);
     HttpUriRequest httpGet = new HttpGet(url);
     HttpResponse response = httpClient.execute(httpGet);
     if (response.getStatusLine().getStatusCode() != 200) {
@@ -318,7 +320,7 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
     List<EsCatIndex> indices =
         MAPPER.readValue(
             response.getEntity().getContent(), new TypeReference<List<EsCatIndex>>() {});
-    if (!indices.isEmpty() && indices.get(0).getCount() <= config.indexDefaultNewIfSize) {
+    if (!indices.isEmpty() && indices.get(0).getCount() <= config.indexConfig.defaultNewIfSize) {
       return Optional.of(indices.get(0).getName());
     }
     return Optional.empty();

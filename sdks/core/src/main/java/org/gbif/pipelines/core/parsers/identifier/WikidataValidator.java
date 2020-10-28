@@ -9,8 +9,7 @@ import org.gbif.datarepo.api.validation.identifierschemes.IdentifierSchemeValida
 public class WikidataValidator implements IdentifierSchemeValidator {
 
   private static final Pattern WIKIDATA_PATTERN =
-      Pattern.compile(
-          "^(?<scheme>(http(?:s)?:\\/\\/)?(www\\.))?(wikidata\\.org\\/\\w+\\/\\w+(?:\\:\\w+)?)$");
+      Pattern.compile("^(?<scheme>(http(?:s)?://)?(www\\.))?(wikidata\\.org/\\w+/\\w+(?::\\w+)?)$");
 
   @Override
   public boolean isValid(String value) {

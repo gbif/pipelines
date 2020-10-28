@@ -6,7 +6,6 @@ import static org.junit.Assert.assertTrue;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -45,11 +44,8 @@ import org.gbif.pipelines.io.avro.Rank;
 import org.gbif.pipelines.io.avro.RankedName;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.io.avro.grscicoll.Collection;
-import org.gbif.pipelines.io.avro.grscicoll.CollectionMatch;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
-import org.gbif.pipelines.io.avro.grscicoll.Institution;
-import org.gbif.pipelines.io.avro.grscicoll.InstitutionMatch;
+import org.gbif.pipelines.io.avro.grscicoll.Match;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -58,7 +54,7 @@ public class GbifJsonConverterTest {
   @Test
   public void jsonFromSpecificRecordBaseTest() {
     // State
-    Map<String, String> erMap = new HashMap<>(2);
+    Map<String, String> erMap = new HashMap<>(5);
     erMap.put("http://rs.tdwg.org/dwc/terms/locality", "something:{something}");
     erMap.put("http://purl.org/dc/terms/remark", "{\"something\":1}{\"something\":1}");
     erMap.put(DwcTerm.recordedBy.qualifiedName(), "Jeremia garde \u001Eà elfutsone");
@@ -113,7 +109,7 @@ public class GbifJsonConverterTest {
         TemporalRecord.newBuilder()
             .setId("777")
             .setCreated(0L)
-            .setEventDate(EventDate.newBuilder().setLte("01-01-2018").setGte("01-01-2011").build())
+            .setEventDate(EventDate.newBuilder().setGte("2011-01").setLte("2018-01").build())
             .setDay(1)
             .setMonth(1)
             .setYear(2011)
@@ -164,16 +160,9 @@ public class GbifJsonConverterTest {
             .build();
 
     // grscicoll
-    Institution institution =
-        Institution.newBuilder()
-            .setCode("I1")
+    Match institutionMatch =
+        Match.newBuilder()
             .setKey("cb0098db-6ff6-4a5d-ad29-51348d114e41")
-            .setName("Institution1")
-            .build();
-
-    InstitutionMatch institutionMatch =
-        InstitutionMatch.newBuilder()
-            .setInstitution(institution)
             .setMatchType(MatchType.FUZZY.name())
             .build();
 
@@ -194,12 +183,11 @@ public class GbifJsonConverterTest {
     assertEquals(mr.getId(), result.path("id").asText());
     assertEquals("Jeremia garde ,à elfutsone", result.path("recordedBy").asText());
     assertEquals("D2 R2", result.path("identifiedBy").asText());
-    assertEquals("01-01-2011", result.path("eventDateSingle").asText());
+    assertEquals("2011-01-01T00:00", result.path("eventDateSingle").asText());
     assertEquals("2011", result.path("year").asText());
     assertEquals("1", result.path("month").asText());
     assertEquals("1", result.path("day").asText());
-    assertEquals(
-        "{\"gte\":\"01-01-2011\",\"lte\":\"01-01-2018\"}", result.path("eventDate").toString());
+    assertEquals("{\"gte\":\"2011-01\",\"lte\":\"2018-01\"}", result.path("eventDate").toString());
     assertEquals("1", result.path("startDayOfYear").asText());
     assertEquals("{\"lon\":2.0,\"lat\":1.0}", result.path("coordinates").toString());
     assertEquals("1.0", result.path("decimalLatitude").asText());
@@ -260,7 +248,7 @@ public class GbifJsonConverterTest {
         "[{\"type\":\"OTHER\",\"value\":\"someId\"}]", result.path("recordedByIds").toString());
     assertEquals("PRESENT", result.path("occurrenceStatus").asText());
 
-    assertEquals(institution.getKey(), result.path("institutionKey").asText());
+    assertEquals(institutionMatch.getKey(), result.path("institutionKey").asText());
     assertFalse(result.has("collectionKey"));
 
     String expectedIssues =
@@ -280,7 +268,7 @@ public class GbifJsonConverterTest {
     erMap.put("http://rs.tdwg.org/dwc/terms/remark", "{\"something\":1}{\"something\":1}");
 
     // State
-    Map<String, String> ext1 = new HashMap<>();
+    Map<String, String> ext1 = new HashMap<>(16);
     ext1.put(DcTerm.identifier.qualifiedName(), "http://www.gbif.org/tmp.jpg");
     ext1.put(DcTerm.references.qualifiedName(), "http://www.gbif.org/tmp.jpg");
     ext1.put(DcTerm.created.qualifiedName(), "2010");
@@ -320,7 +308,7 @@ public class GbifJsonConverterTest {
     TemporalRecord tmr =
         TemporalRecord.newBuilder()
             .setId("777")
-            .setEventDate(EventDate.newBuilder().setLte("01-01-2018").setGte("01-01-2011").build())
+            .setEventDate(EventDate.newBuilder().setGte("2011-01-01").setLte("2018-01-01").build())
             .setDay(1)
             .setMonth(1)
             .setYear(2011)
@@ -386,12 +374,12 @@ public class GbifJsonConverterTest {
     // Should
     assertTrue(JsonValidationUtils.isValid(result.toString()));
     assertEquals(er.getId(), result.path("id").asText());
-    assertEquals("01-01-2011", result.path("eventDateSingle").asText());
+    assertEquals("2011-01-01T00:00", result.path("eventDateSingle").asText());
     assertEquals("2011", result.path("year").asText());
     assertEquals("1", result.path("month").asText());
     assertEquals("1", result.path("day").asText());
     assertEquals(
-        "{\"gte\":\"01-01-2011\",\"lte\":\"01-01-2018\"}", result.path("eventDate").toString());
+        "{\"gte\":\"2011-01-01\",\"lte\":\"2018-01-01\"}", result.path("eventDate").toString());
     assertEquals("1", result.path("startDayOfYear").asText());
     assertEquals("{\"lon\":2.0,\"lat\":1.0}", result.path("coordinates").toString());
     assertEquals("1.0", result.path("decimalLatitude").asText());
@@ -840,7 +828,7 @@ public class GbifJsonConverterTest {
   }
 
   @Test
-  public void emptyAvroWithIdTest() throws IOException {
+  public void emptyAvroWithIdTest() {
     // State
     String k = "777";
     MetadataRecord mdr =
@@ -893,29 +881,17 @@ public class GbifJsonConverterTest {
             + "}";
 
     // State
-    Institution institution =
-        Institution.newBuilder()
-            .setCode("I1")
+    Match institutionMatch =
+        Match.newBuilder()
             .setKey("cb0098db-6ff6-4a5d-ad29-51348d114e41")
-            .setName("Institution1")
-            .build();
-
-    InstitutionMatch institutionMatch =
-        InstitutionMatch.newBuilder()
-            .setInstitution(institution)
             .setMatchType(MatchType.EXACT.name())
             .build();
 
-    Collection collection =
-        Collection.newBuilder()
+    Match collectionMatch =
+        Match.newBuilder()
             .setKey("5c692584-d517-48e8-93a8-a916ba131d9b")
-            .setCode("C1")
-            .setName("Collection1")
-            .setInstitutionKey("cb0098db-6ff6-4a5d-ad29-51348d114e41")
+            .setMatchType("FUZZY")
             .build();
-
-    CollectionMatch collectionMatch =
-        CollectionMatch.newBuilder().setCollection(collection).setMatchType("FUZZY").build();
 
     GrscicollRecord record =
         GrscicollRecord.newBuilder()
@@ -929,5 +905,30 @@ public class GbifJsonConverterTest {
 
     // Should
     Assert.assertEquals(expected, result);
+  }
+
+  @Test
+  public void jsonTemporalRecordTest() {
+    // State
+    TemporalRecord tmr =
+        TemporalRecord.newBuilder()
+            .setId("777")
+            .setCreated(0L)
+            .setEventDate(EventDate.newBuilder().setGte("2018").setLte("2020").build())
+            .setYear(2018)
+            .setStartDayOfYear(1)
+            .build();
+
+    // When
+    ObjectNode result = GbifJsonConverter.toJson(tmr);
+
+    // Should
+    assertTrue(JsonValidationUtils.isValid(result.toString()));
+    assertEquals("2018-01-01T00:00", result.path("eventDateSingle").asText());
+    assertEquals("2018", result.path("year").asText());
+    assertEquals("2018", result.path("eventDate").path("gte").asText());
+    assertEquals("2020", result.path("eventDate").path("lte").asText());
+    assertFalse(result.has("month"));
+    assertFalse(result.has("day"));
   }
 }

@@ -137,16 +137,16 @@ public class InterpretedToHdfsViewPipeline {
     BasicTransform basicTransform = BasicTransform.builder().create();
     MetadataTransform metadataTransform = MetadataTransform.builder().create();
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
-    TemporalTransform temporalTransform = TemporalTransform.create();
+    TemporalTransform temporalTransform = TemporalTransform.builder().create();
     TaxonomyTransform taxonomyTransform = TaxonomyTransform.builder().create();
     GrscicollTransform grscicollTransform = GrscicollTransform.builder().create();
     LocationTransform locationTransform = LocationTransform.builder().create();
 
     // Extension
-    MeasurementOrFactTransform measurementTransform = MeasurementOrFactTransform.create();
-    MultimediaTransform multimediaTransform = MultimediaTransform.create();
-    AudubonTransform audubonTransform = AudubonTransform.create();
-    ImageTransform imageTransform = ImageTransform.create();
+    MeasurementOrFactTransform measurementTransform = MeasurementOrFactTransform.builder().create();
+    MultimediaTransform multimediaTransform = MultimediaTransform.builder().create();
+    AudubonTransform audubonTransform = AudubonTransform.builder().create();
+    ImageTransform imageTransform = ImageTransform.builder().create();
 
     log.info("Init metrics");
     IngestMetrics metrics = IngestMetricsBuilder.createInterpretedToHdfsViewMetrics();
@@ -325,7 +325,7 @@ public class InterpretedToHdfsViewPipeline {
       if (useSyncMode) {
         basicMap.values().stream().map(occurrenceHdfsRecordFn).forEach(writer::append);
       } else {
-        CompletableFuture[] futures =
+        CompletableFuture<?>[] futures =
             basicMap.values().stream()
                 .map(
                     br ->

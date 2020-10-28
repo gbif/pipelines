@@ -33,25 +33,25 @@ public class ProcessRunnerBuilderTest {
     String expected =
         "spark2-submit --conf spark.default.parallelism=1 --conf spark.executor.memoryOverhead=1 "
             + "--conf spark.dynamicAllocation.enabled=false "
-            + "--class org.gbif.Test --master yarn --deploy-mode cluster "
+            + "--conf spark.yarn.am.waitTime=360s --class org.gbif.Test --master yarn --deploy-mode cluster "
             + "--executor-memory 1G --executor-cores 1 --num-executors 1 --driver-memory 4G java.jar "
             + "--datasetId=de7ffb5e-c07b-42dc-8a88-f67a4465fe3d --attempt=1 --runner=SparkRunner --inputPath=tmp "
             + "--targetPath=tmp --metaFileName=interpreted-to-index.yml --hdfsSiteConfig=hdfs.xml "
             + "--coreSiteConfig=core.xml --esHosts=http://host.com:9300 --properties=/path/ws.config --esIndexName=occurrence";
 
     IndexingConfiguration config = new IndexingConfiguration();
-    config.distributedJarPath = "java.jar";
-    config.distributedMainClass = "org.gbif.Test";
-    config.sparkExecutorMemoryGbMax = 10;
-    config.sparkExecutorMemoryGbMin = 1;
-    config.sparkExecutorCores = 1;
-    config.sparkExecutorNumbersMin = 1;
-    config.sparkExecutorNumbersMax = 2;
-    config.sparkMemoryOverhead = 1;
-    config.sparkDriverMemory = "4G";
-    config.deployMode = "cluster";
+    config.distributedConfig.jarPath = "java.jar";
+    config.distributedConfig.mainClass = "org.gbif.Test";
+    config.sparkConfig.executorMemoryGbMax = 10;
+    config.sparkConfig.executorMemoryGbMin = 1;
+    config.sparkConfig.executorCores = 1;
+    config.sparkConfig.executorNumbersMin = 1;
+    config.sparkConfig.executorNumbersMax = 2;
+    config.sparkConfig.memoryOverhead = 1;
+    config.sparkConfig.driverMemory = "4G";
+    config.distributedConfig.deployMode = "cluster";
     config.processRunner = StepRunner.DISTRIBUTED.name();
-    config.esHosts = new String[] {"http://host.com:9300"};
+    config.esConfig.hosts = new String[] {"http://host.com:9300"};
     config.pipelinesConfig = "/path/ws.config";
     config.stepConfig.coreSiteConfig = "core.xml";
     config.stepConfig.repositoryPath = "tmp";
@@ -93,29 +93,29 @@ public class ProcessRunnerBuilderTest {
             + "--conf \"spark.driver.extraClassPath=logstash-gelf.jar\" "
             + "--driver-java-options \"-Dlog4j.configuration=file:log4j.properties\" --queue pipelines --conf spark.default.parallelism=1 "
             + "--conf spark.executor.memoryOverhead=1 --conf spark.dynamicAllocation.enabled=false "
-            + "--class org.gbif.Test --master yarn "
+            + "--conf spark.yarn.am.waitTime=360s --class org.gbif.Test --master yarn "
             + "--deploy-mode cluster --executor-memory 1G --executor-cores 1 --num-executors 1 --driver-memory 4G java.jar "
             + "--datasetId=de7ffb5e-c07b-42dc-8a88-f67a4465fe3d --attempt=1 --runner=SparkRunner --inputPath=tmp --targetPath=tmp "
             + "--metaFileName=interpreted-to-index.yml --hdfsSiteConfig=hdfs.xml --coreSiteConfig=core.xml "
             + "--esHosts=http://host.com:9300 --properties=/path/ws.config --esIndexName=occurrence";
 
     IndexingConfiguration config = new IndexingConfiguration();
-    config.distributedJarPath = "java.jar";
-    config.distributedMainClass = "org.gbif.Test";
-    config.sparkExecutorMemoryGbMax = 10;
-    config.sparkExecutorMemoryGbMin = 1;
-    config.sparkExecutorCores = 1;
-    config.sparkExecutorNumbersMin = 1;
-    config.sparkExecutorNumbersMax = 2;
-    config.sparkMemoryOverhead = 1;
-    config.sparkDriverMemory = "4G";
-    config.metricsPropertiesPath = "metrics.properties";
-    config.extraClassPath = "logstash-gelf.jar";
-    config.driverJavaOptions = "-Dlog4j.configuration=file:log4j.properties";
-    config.deployMode = "cluster";
+    config.distributedConfig.jarPath = "java.jar";
+    config.distributedConfig.mainClass = "org.gbif.Test";
+    config.sparkConfig.executorMemoryGbMax = 10;
+    config.sparkConfig.executorMemoryGbMin = 1;
+    config.sparkConfig.executorCores = 1;
+    config.sparkConfig.executorNumbersMin = 1;
+    config.sparkConfig.executorNumbersMax = 2;
+    config.sparkConfig.memoryOverhead = 1;
+    config.sparkConfig.driverMemory = "4G";
+    config.distributedConfig.metricsPropertiesPath = "metrics.properties";
+    config.distributedConfig.extraClassPath = "logstash-gelf.jar";
+    config.distributedConfig.driverJavaOptions = "-Dlog4j.configuration=file:log4j.properties";
+    config.distributedConfig.deployMode = "cluster";
     config.processRunner = StepRunner.DISTRIBUTED.name();
-    config.esHosts = new String[] {"http://host.com:9300"};
-    config.yarnQueue = "pipelines";
+    config.esConfig.hosts = new String[] {"http://host.com:9300"};
+    config.distributedConfig.yarnQueue = "pipelines";
     config.pipelinesConfig = "/path/ws.config";
     config.stepConfig.hdfsSiteConfig = "hdfs.xml";
     config.stepConfig.repositoryPath = "tmp";

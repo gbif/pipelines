@@ -11,6 +11,21 @@ import org.junit.Test;
 public class DwcaReaderTest {
 
   @Test
+  public void uncompressedReaderExtensionTest() throws IOException {
+    // State
+    String fileName = getClass().getResource("/dwca/plants_dwca_ext").getFile();
+
+    // When
+    try (DwcaReader dwCAReader = DwcaReader.fromLocation(fileName)) {
+      dwCAReader.advance();
+      ExtendedRecord current = dwCAReader.getCurrent();
+      // Should
+      assertNotNull(current);
+      assertNotNull(current.getId());
+    }
+  }
+
+  @Test
   public void uncompressedReaderTest() throws IOException {
     // State
     String fileName = getClass().getResource("/dwca/plants_dwca").getFile();

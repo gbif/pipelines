@@ -1,375 +1,212 @@
 package org.gbif.pipelines.core.parsers.temporal;
 
-import static com.google.common.base.Strings.isNullOrEmpty;
-import static org.gbif.pipelines.core.parsers.temporal.ParsedTemporalIssue.DATE_INVALID;
-import static org.gbif.pipelines.core.parsers.temporal.ParsedTemporalIssue.DATE_MISMATCH;
-import static org.gbif.pipelines.core.parsers.temporal.ParsedTemporalIssue.DATE_UNLIKELY;
+import static org.gbif.common.parsers.core.ParseResult.CONFIDENCE.DEFINITE;
+import static org.gbif.common.parsers.core.ParseResult.CONFIDENCE.PROBABLE;
 
+import com.google.common.base.Strings;
+import com.google.common.collect.Range;
+import java.io.Serializable;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.Month;
-import java.time.MonthDay;
-import java.time.OffsetDateTime;
-import java.time.OffsetTime;
-import java.time.Year;
-import java.time.YearMonth;
-import java.time.ZoneOffset;
 import java.time.temporal.ChronoField;
-import java.time.temporal.ChronoUnit;
-import java.time.temporal.Temporal;
-import java.time.temporal.TemporalUnit;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.BiFunction;
-import java.util.function.Predicate;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import org.gbif.pipelines.core.parsers.temporal.accumulator.ChronoAccumulator;
-import org.gbif.pipelines.core.parsers.temporal.accumulator.ChronoAccumulatorConverter;
-import org.gbif.pipelines.core.parsers.temporal.parser.ParserRawDateTime;
-import org.gbif.pipelines.core.parsers.temporal.utils.DelimiterUtils;
+import java.time.temporal.TemporalAccessor;
+import java.util.*;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.gbif.api.vocabulary.OccurrenceIssue;
+import org.gbif.common.parsers.core.OccurrenceParseResult;
+import org.gbif.common.parsers.core.ParseResult;
+import org.gbif.common.parsers.date.CustomizedTextDateParser;
+import org.gbif.common.parsers.date.DateComponentOrdering;
+import org.gbif.common.parsers.date.DateParsers;
+import org.gbif.common.parsers.date.TemporalAccessorUtils;
 
-/**
- * Main interpreter class. Interpreter for raw temporal period. The main method interpret two dates,
- * from and to
- */
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class TemporalParser {
+@Slf4j
+public class TemporalParser implements Serializable {
 
-  private static final int ISSUE_SIZE = ParsedTemporalIssue.values().length;
+  private static final long serialVersionUID = -8845127337324812802L;
 
-  private static final BiFunction<ChronoAccumulator, Set<ParsedTemporalIssue>, Temporal>
-      TEMPORAL_FUNC = (ca, deq) -> ChronoAccumulatorConverter.toTemporal(ca, deq).orElse(null);
+  private static final LocalDate MIN_LOCAL_DATE = LocalDate.of(1600, 1, 1);
 
-  private static final Predicate<Temporal> HAS_DAY_FN =
-      t -> t instanceof LocalDate || t instanceof LocalDateTime || t instanceof OffsetDateTime;
-  private static final Predicate<Temporal> HAS_MONTH_FN =
-      t -> HAS_DAY_FN.test(t) || t instanceof YearMonth;
-  private static final Predicate<Temporal> HAS_YEAR_FN =
-      t -> HAS_MONTH_FN.test(t) || t instanceof Year;
+  private final org.gbif.common.parsers.date.TemporalParser temporalParser;
 
-  public static ParsedTemporal parse(String rawDate) {
-    return parse("", "", "", rawDate);
-  }
-
-  public static ParsedTemporal parse(
-      String rawYear, String rawMonth, String rawDay, String rawDate) {
-    // If year and rawDate are absent, return ParsedTemporalDates with NULL values inside
-    if (isNullOrEmpty(rawYear) && isNullOrEmpty(rawDate)) {
-      if (isNullOrEmpty(rawMonth) && isNullOrEmpty(rawDay)) {
-        return ParsedTemporal.create();
-      }
-      return ParsedTemporal.create(DATE_INVALID);
-    }
-
-    // Parse year, month and day
-    ParsedTemporal yearMonthDayParsed = parseYearMonthDayParsed(rawYear, rawMonth, rawDay);
-    if (isNullOrEmpty(rawDate)) {
-      return yearMonthDayParsed;
-    }
-
-    // Parse event date
-    ParsedTemporal eventDateParsed = parseEventDate(rawDate);
-
-    return mergeParsedTemporal(yearMonthDayParsed, eventDateParsed);
-  }
-
-  private static ParsedTemporal parseYearMonthDayParsed(
-      String rawYear, String rawMonth, String rawDay) {
-    Set<ParsedTemporalIssue> issues = new HashSet<>(ISSUE_SIZE);
-    ChronoAccumulator accum = ChronoAccumulator.from(rawYear, rawMonth, rawDay);
-    // Convert year, month and day parsed values
-    Temporal temporal = TEMPORAL_FUNC.apply(accum, issues);
-    Year year = HAS_YEAR_FN.test(temporal) ? Year.from(temporal) : null;
-    Month month = HAS_MONTH_FN.test(temporal) ? Month.from(temporal) : null;
-    Integer day = HAS_DAY_FN.test(temporal) ? MonthDay.from(temporal).getDayOfMonth() : null;
-
-    boolean hasIssue = issues.contains(DATE_INVALID) || issues.contains(DATE_UNLIKELY);
-
-    return hasIssue
-        ? ParsedTemporal.create(issues)
-        : ParsedTemporal.create(year, month, day, temporal, issues);
-  }
-
-  private static ParsedTemporal parseEventDate(String rawDate) {
-    // Parse period
-    String[] rawPeriod = DelimiterUtils.splitPeriod(rawDate);
-    String rawFrom = rawPeriod[0];
-    String rawTo = rawPeriod[1];
-
-    ChronoAccumulator fromAccum = ParserRawDateTime.parse(rawFrom, null);
-
-    ChronoField lastChronoField = fromAccum.getLastParsed().orElse(null);
-    ChronoAccumulator toAccum = ParserRawDateTime.parse(rawTo, lastChronoField);
-
-    // If toAccum doesn't contain last parsed value, raw date will consist of one date only
-    if (toAccum.getLastParsed().isPresent()) {
-      // Use toAccum value toAccum improve fromAccum parsed date
-      toAccum.mergeAbsent(fromAccum);
-    }
-
-    Set<ParsedTemporalIssue> issues = new HashSet<>(ISSUE_SIZE);
-    Temporal fromTemporal = TEMPORAL_FUNC.apply(fromAccum, issues);
-    Temporal toTemporal = TEMPORAL_FUNC.apply(toAccum, issues);
-
-    if (!fromAccum.getLastParsed().isPresent() && !isNullOrEmpty(rawFrom)) {
-      issues.add(DATE_INVALID);
-    }
-
-    if (!isValidDateType(fromTemporal, toTemporal)) {
-      toTemporal = null;
-    }
-
-    if (!isValidRange(fromTemporal, toTemporal)) {
-      Temporal tmp = fromTemporal;
-      fromTemporal = toTemporal;
-      toTemporal = tmp;
-    }
-
-    return ParsedTemporal.create(fromTemporal, toTemporal, issues);
-  }
-
-  private static ParsedTemporal mergeParsedTemporal(
-      ParsedTemporal yearMonthDayParsed, ParsedTemporal eventDateParsed) {
-
-    if (!eventDateParsed.getFromOpt().isPresent() && !yearMonthDayParsed.getFromOpt().isPresent()) {
-      return eventDateParsed.getIssues().isEmpty() ? yearMonthDayParsed : eventDateParsed;
-    }
-
-    if (!eventDateParsed.getFromOpt().isPresent()) {
-      return yearMonthDayParsed;
-    }
-
-    if (eventDateParsed.getToOpt().isPresent()) {
-      return mergeYmd(yearMonthDayParsed, eventDateParsed);
-    }
-
-    return mergeFromAndYmd(yearMonthDayParsed, eventDateParsed);
-  }
-
-  /** Merge from date from event and date from yaer-month-day */
-  private static ParsedTemporal mergeFromAndYmd(
-      ParsedTemporal yearMonthDayParsed, ParsedTemporal eventDateParsed) {
-
-    Temporal fromTemporal = eventDateParsed.getFromOpt().orElse(null);
-
-    if (yearMonthDayParsed.getFromOpt().isPresent()
-        && yearMonthDayParsed.getFromDate().equals(fromTemporal)) {
-      return yearMonthDayParsed;
-    }
-
-    if (fromTemporal == null) {
-      return yearMonthDayParsed;
-    }
-
-    Year fromYear = HAS_YEAR_FN.test(fromTemporal) ? Year.from(fromTemporal) : null;
-    Year year = yearMonthDayParsed.getYear();
-    boolean isYearMatch = fromYear == null || year == null || fromYear.equals(year);
-    Year yearNotNull = fromYear == null ? year : fromYear;
-    Year resultYear = isYearMatch ? yearNotNull : year;
-
-    Month fromMonth = HAS_MONTH_FN.test(fromTemporal) ? Month.from(fromTemporal) : null;
-    Month month = yearMonthDayParsed.getMonth();
-    boolean isMonthMatch = fromMonth == null || month == null || fromMonth.equals(month);
-    Month monthNotNull = fromMonth == null ? month : fromMonth;
-    Month resultMonth = isMonthMatch ? monthNotNull : month;
-
-    Integer fromDay =
-        HAS_DAY_FN.test(fromTemporal) ? MonthDay.from(fromTemporal).getDayOfMonth() : null;
-    Integer day = yearMonthDayParsed.getDay();
-    boolean isDayMatch = fromDay == null || day == null || fromDay.equals(day);
-    Integer dayNotNull = fromDay == null ? day : fromDay;
-    Integer resultDay = isDayMatch ? dayNotNull : day;
-
-    // To support US format
-    if (isYearMatch
-        && !isMonthMatch
-        && !isDayMatch
-        && month.getValue() == fromDay
-        && fromMonth.getValue() == day) {
-      isMonthMatch = true;
-      isDayMatch = true;
-    }
-
-    boolean hasTime =
-        fromTemporal instanceof LocalDateTime || fromTemporal instanceof OffsetDateTime;
-    LocalTime resultTime = hasTime ? LocalTime.from(fromTemporal) : null;
-
-    ZoneOffset resultOffset =
-        fromTemporal instanceof OffsetDateTime ? OffsetTime.from(fromTemporal).getOffset() : null;
-
-    if (!isYearMatch || !isMonthMatch || !isDayMatch) {
-      yearMonthDayParsed.setFromDate(fromTemporal);
-      yearMonthDayParsed.setIssues(Collections.singleton(DATE_MISMATCH));
+  private TemporalParser(List<DateComponentOrdering> orderings) {
+    if (orderings != null && !orderings.isEmpty()) {
+      DateComponentOrdering[] array = orderings.toArray(new DateComponentOrdering[0]);
+      temporalParser = CustomizedTextDateParser.getInstance(array);
     } else {
-      yearMonthDayParsed.setFromDate(resultYear, resultMonth, resultDay, resultTime, resultOffset);
+      temporalParser = DateParsers.defaultTemporalParser();
     }
-
-    yearMonthDayParsed.setYear(resultYear);
-    yearMonthDayParsed.setMonth(resultMonth);
-    yearMonthDayParsed.setDay(resultDay);
-
-    return yearMonthDayParsed;
   }
 
-  /** Merge from date from/to event and date from year-month-day */
-  private static ParsedTemporal mergeYmd(
-      ParsedTemporal yearMonthDayParsed, ParsedTemporal eventDateParsed) {
-    // To support US format
-    swapForUsFormat(yearMonthDayParsed, eventDateParsed);
-
-    Temporal fromTemporal = eventDateParsed.getFromDate();
-    Temporal toTemporal = eventDateParsed.getToDate();
-
-    yearMonthDayParsed.setFromDate(fromTemporal);
-    yearMonthDayParsed.setToDate(toTemporal);
-
-    Year fromYear = Year.from(fromTemporal);
-    if (!yearMonthDayParsed.getYearOpt().isPresent()) {
-      yearMonthDayParsed.setYear(fromYear);
-    } else if (!yearMonthDayParsed.getYear().equals(fromYear)) {
-      yearMonthDayParsed.setIssues(Collections.singleton(DATE_MISMATCH));
-      return yearMonthDayParsed;
-    }
-
-    Optional<Year> year = yearMonthDayParsed.getYearOpt();
-    Month fromMonth = HAS_MONTH_FN.test(fromTemporal) ? Month.from(fromTemporal) : null;
-    if (!yearMonthDayParsed.getMonthOpt().isPresent() && year.isPresent()) {
-      yearMonthDayParsed.setMonth(fromMonth);
-    } else if (!yearMonthDayParsed.getMonth().equals(fromMonth)) {
-      yearMonthDayParsed.setIssues(Collections.singleton(DATE_MISMATCH));
-      return yearMonthDayParsed;
-    }
-
-    Optional<Month> month = yearMonthDayParsed.getMonthOpt();
-    Integer fromDay =
-        HAS_DAY_FN.test(fromTemporal) ? MonthDay.from(fromTemporal).getDayOfMonth() : null;
-    if (!yearMonthDayParsed.getDayOpt().isPresent() && month.isPresent()) {
-      yearMonthDayParsed.setDay(fromDay);
-    } else if (yearMonthDayParsed.getDayOpt().isPresent()
-        && month.isPresent()
-        && !yearMonthDayParsed.getDay().equals(fromDay)) {
-      yearMonthDayParsed.setIssues(Collections.singleton(DATE_MISMATCH));
-      return yearMonthDayParsed;
-    }
-
-    return yearMonthDayParsed;
+  public static TemporalParser create(List<DateComponentOrdering> orderings) {
+    return new TemporalParser(orderings);
   }
 
-  /** Swap date and month if format is US */
-  private static void swapForUsFormat(
-      ParsedTemporal yearMonthDayParsed, ParsedTemporal eventDateParsed) {
-    Temporal fromDate = eventDateParsed.getFromDate();
-    Temporal toDate = eventDateParsed.getToDate();
+  public static TemporalParser create() {
+    return create(Collections.emptyList());
+  }
 
-    boolean containsDateMonthFrom =
-        fromDate instanceof LocalDateTime
-            || fromDate instanceof LocalDate
-            || fromDate instanceof OffsetDateTime;
+  /**
+   * Given possibly both of year, month, day and a dateString, produces a single date. When year,
+   * month and day are all populated and parseable they are given priority, but if any field is
+   * missing or illegal and dateString is parseable dateString is preferred. Partially valid dates
+   * are not supported and null will be returned instead. The only exception is the year alone which
+   * will be used as the last resort if nothing else works. Years are verified to be before or next
+   * year and after 1600. x
+   *
+   * @return interpretation result, never null
+   */
+  public OccurrenceParseResult<TemporalAccessor> parseRecordedDate(
+      String year, String month, String day, String dateString) {
 
-    boolean containsDateMonthTo =
-        toDate instanceof LocalDateTime
-            || toDate instanceof LocalDate
-            || toDate instanceof OffsetDateTime;
+    boolean atomizedDateProvided =
+        StringUtils.isNotBlank(year)
+            || StringUtils.isNotBlank(month)
+            || StringUtils.isNotBlank(day);
+    boolean dateStringProvided = StringUtils.isNotBlank(dateString);
 
-    boolean containsDateMonthSimple =
-        yearMonthDayParsed.getYearOpt().isPresent()
-            && yearMonthDayParsed.getMonthOpt().isPresent()
-            && yearMonthDayParsed.getDayOpt().isPresent();
+    if (!atomizedDateProvided && !dateStringProvided) {
+      return OccurrenceParseResult.fail();
+    }
 
-    if (containsDateMonthFrom && containsDateMonthTo && containsDateMonthSimple) {
-      if (!Month.from(fromDate).equals(yearMonthDayParsed.getMonth())
-          && MonthDay.from(fromDate).getDayOfMonth() != yearMonthDayParsed.getDay()
-          && Month.from(fromDate).getValue() == yearMonthDayParsed.getDay()
-          && MonthDay.from(fromDate).getDayOfMonth() == yearMonthDayParsed.getMonth().getValue()) {
+    Set<OccurrenceIssue> issues = EnumSet.noneOf(OccurrenceIssue.class);
 
-        Temporal fromTemporal = fromDate;
-        Temporal toTemporal = toDate;
-        if (fromDate instanceof OffsetDateTime && toDate instanceof OffsetDateTime) {
-          OffsetDateTime ldtf = (OffsetDateTime) fromDate;
-          OffsetDateTime ldtt = (OffsetDateTime) toDate;
-          fromTemporal =
-              OffsetDateTime.of(
-                  LocalDateTime.of(
-                      ldtf.getYear(),
-                      ldtf.getDayOfMonth(),
-                      ldtf.getMonth().getValue(),
-                      ldtf.getHour(),
-                      ldtf.getMinute(),
-                      ldtf.getSecond()),
-                  ldtf.getOffset());
-          toTemporal =
-              OffsetDateTime.of(
-                  LocalDateTime.of(
-                      ldtt.getYear(),
-                      ldtt.getDayOfMonth(),
-                      ldtt.getMonth().getValue(),
-                      ldtt.getHour(),
-                      ldtt.getMinute(),
-                      ldtt.getSecond()),
-                  ldtt.getOffset());
-        } else if (fromDate instanceof LocalDateTime && toDate instanceof LocalDateTime) {
-          LocalDateTime ldtf = (LocalDateTime) fromDate;
-          LocalDateTime ldtt = (LocalDateTime) toDate;
-          fromTemporal =
-              LocalDateTime.of(
-                  ldtf.getYear(),
-                  ldtf.getDayOfMonth(),
-                  ldtf.getMonth().getValue(),
-                  ldtf.getHour(),
-                  ldtf.getMinute(),
-                  ldtf.getSecond());
-          toTemporal =
-              LocalDateTime.of(
-                  ldtt.getYear(),
-                  ldtt.getDayOfMonth(),
-                  ldtt.getMonth().getValue(),
-                  ldtt.getHour(),
-                  ldtt.getMinute(),
-                  ldtt.getSecond());
-        } else if (fromDate instanceof LocalDate && toDate instanceof LocalDate) {
-          LocalDate ldtf = (LocalDate) fromDate;
-          LocalDate ldtt = (LocalDate) toDate;
-          fromTemporal =
-              LocalDate.of(ldtf.getYear(), ldtf.getDayOfMonth(), ldtf.getMonth().getValue());
-          toTemporal =
-              LocalDate.of(ldtt.getYear(), ldtt.getDayOfMonth(), ldtt.getMonth().getValue());
+    // First, attempt year, month, day parsing
+    // If the parse result is SUCCESS it means that a whole date could be extracted (with year,
+    // month and day). If it is a failure but the normalizer returned a meaningful result (e.g. it
+    // could extract just
+    // a year) we're going to return a result with all the fields set that we could parse.
+    TemporalAccessor parsedTemporalAccessor;
+    ParseResult.CONFIDENCE confidence;
+
+    ParseResult<TemporalAccessor> parsedYMDResult =
+        atomizedDateProvided ? temporalParser.parse(year, month, day) : ParseResult.fail();
+    ParseResult<TemporalAccessor> parsedDateResult =
+        dateStringProvided ? temporalParser.parse(dateString) : ParseResult.fail();
+    TemporalAccessor parsedYmdTa = parsedYMDResult.getPayload();
+    TemporalAccessor parsedDateTa = parsedDateResult.getPayload();
+
+    // If both inputs exist handle the case when they don't match
+    if (atomizedDateProvided
+        && dateStringProvided
+        && !TemporalAccessorUtils.sameOrContained(parsedYmdTa, parsedDateTa)) {
+
+      // eventDate could be ambiguous (5/4/2014), but disambiguated by year-month-day.
+      boolean ambiguityResolved = false;
+      if (parsedDateResult.getAlternativePayloads() != null) {
+        for (TemporalAccessor possibleTa : parsedDateResult.getAlternativePayloads()) {
+          if (TemporalAccessorUtils.sameOrContained(parsedYmdTa, possibleTa)) {
+            parsedDateTa = possibleTa;
+            ambiguityResolved = true;
+            log.debug(
+                "Ambiguous date {} matches year-month-day date {}-{}-{} for {}",
+                dateString,
+                year,
+                month,
+                day,
+                parsedDateTa);
+          }
         }
-        eventDateParsed.setFromDate(fromTemporal);
-        eventDateParsed.setToDate(toTemporal);
       }
+
+      // still a conflict
+      if (!ambiguityResolved) {
+        if (parsedYmdTa == null || parsedDateTa == null) {
+          issues.add(OccurrenceIssue.RECORDED_DATE_INVALID);
+        } else {
+          issues.add(OccurrenceIssue.RECORDED_DATE_MISMATCH);
+        }
+      }
+
+      // choose the one with better resolution
+      Optional<TemporalAccessor> bestResolution =
+          TemporalAccessorUtils.bestResolution(parsedYmdTa, parsedDateTa);
+      if (bestResolution.isPresent()) {
+        parsedTemporalAccessor = bestResolution.get();
+        // if one of the two results is null we can not set the confidence to DEFINITE
+        confidence = (parsedYmdTa == null || parsedDateTa == null) ? PROBABLE : DEFINITE;
+      } else {
+        return OccurrenceParseResult.fail(issues);
+      }
+    } else {
+      // they match, or we only have one anyway, choose the one with better resolution.
+      parsedTemporalAccessor =
+          TemporalAccessorUtils.bestResolution(parsedYmdTa, parsedDateTa).orElse(null);
+      confidence =
+          parsedDateTa != null ? parsedDateResult.getConfidence() : parsedYMDResult.getConfidence();
     }
+
+    if (!isValidDate(parsedTemporalAccessor)) {
+      if (parsedTemporalAccessor == null) {
+        issues.add(OccurrenceIssue.RECORDED_DATE_INVALID);
+      } else {
+        issues.add(OccurrenceIssue.RECORDED_DATE_UNLIKELY);
+      }
+
+      log.debug("Invalid date: [{}]].", parsedTemporalAccessor);
+      return OccurrenceParseResult.fail(issues);
+    }
+
+    return OccurrenceParseResult.success(confidence, parsedTemporalAccessor, issues);
   }
 
-  /** Compare dates, FROM cannot be greater than TO */
-  private static boolean isValidRange(Temporal from, Temporal to) {
-    if (from == null || to == null) {
-      return true;
-    }
-    TemporalUnit unit = null;
-    if (from instanceof Year) {
-      unit = ChronoUnit.YEARS;
-    } else if (from instanceof YearMonth) {
-      unit = ChronoUnit.MONTHS;
-    } else if (from instanceof LocalDate) {
-      unit = ChronoUnit.DAYS;
-    } else if (from instanceof LocalDateTime || from instanceof OffsetDateTime) {
-      unit = ChronoUnit.SECONDS;
-    }
-    return from.until(to, unit) >= 0;
+  public OccurrenceParseResult<TemporalAccessor> parseRecordedDate(String dateString) {
+    return parseRecordedDate(null, null, null, dateString);
   }
 
-  /** Compare date types */
-  private static boolean isValidDateType(Temporal from, Temporal to) {
-    if (from == null) {
+  /** @return TemporalAccessor that represents a LocalDate or LocalDateTime */
+  public OccurrenceParseResult<TemporalAccessor> parseLocalDate(
+      String dateString, Range<LocalDate> likelyRange, OccurrenceIssue unlikelyIssue) {
+    if (!Strings.isNullOrEmpty(dateString)) {
+      OccurrenceParseResult<TemporalAccessor> result =
+          new OccurrenceParseResult<>(temporalParser.parse(dateString));
+      // check year makes sense
+      if (result.isSuccessful() && !isValidDate(result.getPayload(), likelyRange)) {
+        log.debug("Unlikely date parsed, ignore [{}].", dateString);
+        result.addIssue(unlikelyIssue);
+      }
+      return result;
+    }
+    return OccurrenceParseResult.fail();
+  }
+
+  /**
+   * Check if a date express as TemporalAccessor falls between the predefined range. Lower bound
+   * defined by {@link #MIN_LOCAL_DATE} and upper bound by current date + 1 day
+   *
+   * @return valid or not according to the predefined range.
+   */
+  protected static boolean isValidDate(TemporalAccessor temporalAccessor) {
+    LocalDate upperBound = LocalDate.now().plusDays(1);
+    return isValidDate(temporalAccessor, Range.closed(MIN_LOCAL_DATE, upperBound));
+  }
+
+  /** Check if a date express as TemporalAccessor falls between the provided range. */
+  protected static boolean isValidDate(
+      TemporalAccessor temporalAccessor, Range<LocalDate> likelyRange) {
+
+    if (temporalAccessor == null) {
       return false;
     }
-    if (to == null) {
-      return true;
+
+    // if partial dates should be considered valid
+    int year;
+    int month = 1;
+    int day = 1;
+    if (temporalAccessor.isSupported(ChronoField.YEAR)) {
+      year = temporalAccessor.get(ChronoField.YEAR);
+    } else {
+      return false;
     }
-    return from.getClass().equals(to.getClass());
+
+    if (temporalAccessor.isSupported(ChronoField.MONTH_OF_YEAR)) {
+      month = temporalAccessor.get(ChronoField.MONTH_OF_YEAR);
+    }
+
+    if (temporalAccessor.isSupported(ChronoField.DAY_OF_MONTH)) {
+      day = temporalAccessor.get(ChronoField.DAY_OF_MONTH);
+    }
+
+    return likelyRange.contains(LocalDate.of(year, month, day));
   }
 }

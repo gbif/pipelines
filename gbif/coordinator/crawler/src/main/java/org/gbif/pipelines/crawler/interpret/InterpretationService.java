@@ -8,6 +8,7 @@ import org.apache.curator.framework.CuratorFramework;
 import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
+import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 
@@ -45,7 +46,10 @@ public class InterpretationService extends AbstractIdleService {
 
     InterpretationCallback callback =
         new InterpretationCallback(config, publisher, curator, client, executor);
-    listener.listen(c.queueName, c.poolSize, callback);
+
+    String routingKey =
+        PipelinesVerbatimMessage.ROUTING_KEY + "." + config.processRunner.toLowerCase();
+    listener.listen(c.queueName, routingKey, c.poolSize, callback);
   }
 
   @Override

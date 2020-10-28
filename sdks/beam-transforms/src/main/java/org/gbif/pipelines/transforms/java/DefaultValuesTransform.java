@@ -2,9 +2,9 @@ package org.gbif.pipelines.transforms.java;
 
 import java.util.Map;
 import lombok.Builder;
+import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.core.ws.metadata.MetadataServiceClient;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.transforms.SerializableSupplier;
 
 /**
  * Java transformations to use verbatim default term values defined as MachineTags in an
@@ -26,10 +26,6 @@ public class DefaultValuesTransform {
 
   public void setup() {
     transform.setup();
-  }
-
-  public void tearDown() {
-    transform.tearDown();
   }
 
   public void replaceDefaultValues(Map<String, ExtendedRecord> source) {

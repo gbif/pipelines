@@ -3,6 +3,7 @@ package org.gbif.pipelines.core.interpreters.core;
 import static org.gbif.api.vocabulary.OccurrenceIssue.BASIS_OF_RECORD_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.INDIVIDUAL_COUNT_CONFLICTS_WITH_OCCURRENCE_STATUS;
 import static org.gbif.api.vocabulary.OccurrenceIssue.INDIVIDUAL_COUNT_INVALID;
+import static org.gbif.api.vocabulary.OccurrenceIssue.OCCURRENCE_STATUS_INFERRED_FROM_BASIS_OF_RECORD;
 import static org.gbif.api.vocabulary.OccurrenceIssue.OCCURRENCE_STATUS_INFERRED_FROM_INDIVIDUAL_COUNT;
 import static org.gbif.api.vocabulary.OccurrenceIssue.OCCURRENCE_STATUS_UNPARSABLE;
 import static org.gbif.api.vocabulary.OccurrenceIssue.REFERENCES_URI_INVALID;
@@ -27,7 +28,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.vocabulary.BasisOfRecord;
 import org.gbif.api.vocabulary.EstablishmentMeans;
 import org.gbif.api.vocabulary.License;
-import org.gbif.api.vocabulary.LifeStage;
 import org.gbif.api.vocabulary.OccurrenceStatus;
 import org.gbif.api.vocabulary.Sex;
 import org.gbif.api.vocabulary.TypeStatus;
@@ -49,6 +49,8 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.keygen.api.KeyLookupResult;
 import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
+import org.gbif.vocabulary.lookup.VocabularyLookup;
+import org.gbif.vocabulary.model.Concept;
 
 /**
  * Interpreting function that receives a ExtendedRecord instance and applies an interpretation to
@@ -160,17 +162,18 @@ public class BasicInterpreter {
   }
 
   /** {@link DwcTerm#lifeStage} interpretation. */
-  public static void interpretLifeStage(ExtendedRecord er, BasicRecord br) {
+  public static BiConsumer<ExtendedRecord, BasicRecord> interpretLifeStage(
+      VocabularyLookup vocabularyLookup) {
+    return (er, br) -> {
+      if (vocabularyLookup == null) {
+        return;
+      }
 
-    Function<ParseResult<LifeStage>, BasicRecord> fn =
-        parseResult -> {
-          if (parseResult.isSuccessful()) {
-            br.setLifeStage(parseResult.getPayload().name());
-          }
-          return br;
-        };
-
-    VocabularyParser.lifeStageParser().map(er, fn);
+      String value = extractValue(er, DwcTerm.lifeStage);
+      if (!Strings.isNullOrEmpty(value)) {
+        vocabularyLookup.lookup(value).map(Concept::getName).ifPresent(br::setLifeStage);
+      }
+    };
   }
 
   /** {@link DwcTerm#establishmentMeans} interpretation. */
@@ -358,6 +361,17 @@ public class BasicInterpreter {
       boolean isOccAbsent = parsedOccStatus == OccurrenceStatus.ABSENT;
       boolean isOccRubbish = parsedOccStatus == null;
 
+      // https://github.com/gbif/pipelines/issues/392
+      boolean isSpecimen =
+          Optional.ofNullable(br.getBasisOfRecord())
+              .map(BasisOfRecord::valueOf)
+              .map(
+                  x ->
+                      x == BasisOfRecord.PRESERVED_SPECIMEN
+                          || x == BasisOfRecord.FOSSIL_SPECIMEN
+                          || x == BasisOfRecord.LIVING_SPECIMEN)
+              .orElse(false);
+
       // rawCount === null
       if (isCountNull) {
         if (isOccNull || isOccPresent) {
@@ -379,7 +393,10 @@ public class BasicInterpreter {
         }
         addIssue(br, INDIVIDUAL_COUNT_INVALID);
       } else if (isCountZero) {
-        if (isOccNull) {
+        if (isOccNull && isSpecimen) {
+          br.setOccurrenceStatus(OccurrenceStatus.PRESENT.name());
+          addIssue(br, OCCURRENCE_STATUS_INFERRED_FROM_BASIS_OF_RECORD);
+        } else if (isOccNull) {
           br.setOccurrenceStatus(OccurrenceStatus.ABSENT.name());
           addIssue(br, OCCURRENCE_STATUS_INFERRED_FROM_INDIVIDUAL_COUNT);
         } else if (isOccPresent) {

@@ -57,6 +57,7 @@ import org.gbif.pipelines.keygen.config.KeygenConfig;
  *      .upload();
  * }</pre>
  */
+@SuppressWarnings("all")
 @Slf4j
 @Builder
 public class FragmentPersister {

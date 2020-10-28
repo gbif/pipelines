@@ -4,15 +4,19 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.TEMPORAL_RECO
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.TEMPORAL;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
+import lombok.Builder;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
+import org.gbif.common.parsers.date.DateComponentOrdering;
+import org.gbif.pipelines.core.functions.SerializableConsumer;
+import org.gbif.pipelines.core.functions.SerializableFunction;
 import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.TemporalInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
 
 /**
@@ -26,13 +30,30 @@ import org.gbif.pipelines.transforms.Transform;
  */
 public class TemporalTransform extends Transform<ExtendedRecord, TemporalRecord> {
 
-  private TemporalTransform() {
+  private final SerializableFunction<String, String> preprocessDateFn;
+  private final List<DateComponentOrdering> orderings;
+  private TemporalInterpreter temporalInterpreter;
+
+  @Builder(buildMethodName = "create")
+  private TemporalTransform(
+      List<DateComponentOrdering> orderings,
+      SerializableFunction<String, String> preprocessDateFn) {
     super(
         TemporalRecord.class, TEMPORAL, TemporalTransform.class.getName(), TEMPORAL_RECORDS_COUNT);
+    this.orderings = orderings;
+    this.preprocessDateFn = preprocessDateFn;
   }
 
-  public static TemporalTransform create() {
-    return new TemporalTransform();
+  /** Beam @Setup initializes resources */
+  @Setup
+  public void setup() {
+    if (temporalInterpreter == null) {
+      temporalInterpreter =
+          TemporalInterpreter.builder()
+              .orderings(orderings)
+              .preprocessDateFn(preprocessDateFn)
+              .create();
+    }
   }
 
   /** Maps {@link TemporalRecord} to key value, where key is {@link TemporalRecord#getId} */
@@ -57,7 +78,9 @@ public class TemporalTransform extends Transform<ExtendedRecord, TemporalRecord>
     return Interpretation.from(source)
         .to(tr)
         .when(er -> !er.getCoreTerms().isEmpty())
-        .via(TemporalInterpreter::interpretTemporal)
+        .via(temporalInterpreter::interpretTemporal)
+        .via(temporalInterpreter::interpretModified)
+        .via(temporalInterpreter::interpretDateIdentified)
         .getOfNullable();
   }
 }

@@ -4,16 +4,20 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.IMAGE_RECORDS
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.IMAGE;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
+import lombok.Builder;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.api.vocabulary.Extension;
+import org.gbif.common.parsers.date.DateComponentOrdering;
+import org.gbif.pipelines.core.functions.SerializableConsumer;
+import org.gbif.pipelines.core.functions.SerializableFunction;
 import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.core.interpreters.extension.ImageInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
-import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
 
 /**
@@ -27,12 +31,29 @@ import org.gbif.pipelines.transforms.Transform;
  */
 public class ImageTransform extends Transform<ExtendedRecord, ImageRecord> {
 
-  private ImageTransform() {
+  private final SerializableFunction<String, String> preprocessDateFn;
+  private final List<DateComponentOrdering> orderings;
+  private ImageInterpreter imageInterpreter;
+
+  @Builder(buildMethodName = "create")
+  private ImageTransform(
+      List<DateComponentOrdering> orderings,
+      SerializableFunction<String, String> preprocessDateFn) {
     super(ImageRecord.class, IMAGE, ImageTransform.class.getName(), IMAGE_RECORDS_COUNT);
+    this.orderings = orderings;
+    this.preprocessDateFn = preprocessDateFn;
   }
 
-  public static ImageTransform create() {
-    return new ImageTransform();
+  /** Beam @Setup initializes resources */
+  @Setup
+  public void setup() {
+    if (imageInterpreter == null) {
+      imageInterpreter =
+          ImageInterpreter.builder()
+              .orderings(orderings)
+              .preprocessDateFn(preprocessDateFn)
+              .create();
+    }
   }
 
   /** Maps {@link ImageRecord} to key value, where key is {@link ImageRecord#getId} */
@@ -60,7 +81,7 @@ public class ImageTransform extends Transform<ExtendedRecord, ImageRecord> {
                 Optional.ofNullable(er.getExtensions().get(Extension.IMAGE.getRowType()))
                     .filter(l -> !l.isEmpty())
                     .isPresent())
-        .via(ImageInterpreter::interpret)
+        .via(imageInterpreter::interpret)
         .getOfNullable();
   }
 }

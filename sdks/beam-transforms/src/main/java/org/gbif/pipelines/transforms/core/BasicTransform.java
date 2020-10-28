@@ -14,14 +14,15 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.api.vocabulary.OccurrenceStatus;
 import org.gbif.kvs.KeyValueStore;
+import org.gbif.pipelines.core.functions.SerializableConsumer;
+import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.BasicInterpreter;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
-import org.gbif.pipelines.transforms.SerializableConsumer;
-import org.gbif.pipelines.transforms.SerializableSupplier;
 import org.gbif.pipelines.transforms.Transform;
+import org.gbif.vocabulary.lookup.VocabularyLookup;
 
 /**
  * Beam level transformations for the DWC Occurrence, reads an avro, writs an avro, maps from value
@@ -36,11 +37,13 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
   private final boolean useExtendedRecordId;
   private final BiConsumer<ExtendedRecord, BasicRecord> gbifIdFn;
   private final SerializableSupplier<HBaseLockingKeyService> keygenServiceSupplier;
+  private final SerializableSupplier<VocabularyLookup> lifeStageLookupSupplier;
   private final SerializableSupplier<KeyValueStore<String, OccurrenceStatus>>
       occStatusKvStoreSupplier;
 
   private KeyValueStore<String, OccurrenceStatus> occStatusKvStore;
   private HBaseLockingKeyService keygenService;
+  private VocabularyLookup lifeStageLookup;
 
   @Builder(buildMethodName = "create")
   private BasicTransform(
@@ -49,6 +52,7 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
       boolean useExtendedRecordId,
       BiConsumer<ExtendedRecord, BasicRecord> gbifIdFn,
       SerializableSupplier<HBaseLockingKeyService> keygenServiceSupplier,
+      SerializableSupplier<VocabularyLookup> lifeStageLookupSupplier,
       SerializableSupplier<KeyValueStore<String, OccurrenceStatus>> occStatusKvStoreSupplier) {
     super(BasicRecord.class, BASIC, BasicTransform.class.getName(), BASIC_RECORDS_COUNT);
     this.isTripletValid = isTripletValid;
@@ -57,6 +61,7 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
     this.gbifIdFn = gbifIdFn;
     this.keygenServiceSupplier = keygenServiceSupplier;
     this.occStatusKvStoreSupplier = occStatusKvStoreSupplier;
+    this.lifeStageLookupSupplier = lifeStageLookupSupplier;
   }
 
   /** Maps {@link BasicRecord} to key value, where key is {@link BasicRecord#getId} */
@@ -90,6 +95,9 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
     if (occStatusKvStore == null && occStatusKvStoreSupplier != null) {
       occStatusKvStore = occStatusKvStoreSupplier.get();
     }
+    if (lifeStageLookupSupplier != null) {
+      lifeStageLookup = lifeStageLookupSupplier.get();
+    }
   }
 
   /** Beam @Teardown closes initialized resources */
@@ -97,6 +105,9 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
   public void tearDown() {
     if (keygenService != null) {
       keygenService.close();
+    }
+    if (lifeStageLookup != null) {
+      lifeStageLookup.close();
     }
   }
 
@@ -127,7 +138,7 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
         .via(BasicInterpreter::interpretTypifiedName)
         .via(BasicInterpreter::interpretSex)
         .via(BasicInterpreter::interpretEstablishmentMeans)
-        .via(BasicInterpreter::interpretLifeStage)
+        .via(BasicInterpreter.interpretLifeStage(lifeStageLookup))
         .via(BasicInterpreter::interpretTypeStatus)
         .via(BasicInterpreter::interpretIndividualCount)
         .via(BasicInterpreter::interpretReferences)

@@ -1,6 +1,5 @@
 package org.gbif.pipelines.core.converters;
 
-import static org.gbif.pipelines.core.converters.OccurrenceHdfsRecordConverter.STRING_TO_DATE;
 import static org.gbif.pipelines.core.converters.OccurrenceHdfsRecordConverter.toOccurrenceHdfsRecord;
 import static org.junit.Assert.assertEquals;
 
@@ -24,7 +23,6 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.api.vocabulary.EstablishmentMeans;
 import org.gbif.api.vocabulary.License;
-import org.gbif.api.vocabulary.LifeStage;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.api.vocabulary.OccurrenceStatus;
 import org.gbif.api.vocabulary.Sex;
@@ -32,6 +30,7 @@ import org.gbif.api.vocabulary.TypeStatus;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
+import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
 import org.gbif.pipelines.core.utils.MediaSerDeserUtils;
 import org.gbif.pipelines.io.avro.AgentIdentifier;
 import org.gbif.pipelines.io.avro.Authorship;
@@ -54,11 +53,8 @@ import org.gbif.pipelines.io.avro.RankedName;
 import org.gbif.pipelines.io.avro.State;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.io.avro.grscicoll.Collection;
-import org.gbif.pipelines.io.avro.grscicoll.CollectionMatch;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
-import org.gbif.pipelines.io.avro.grscicoll.Institution;
-import org.gbif.pipelines.io.avro.grscicoll.InstitutionMatch;
+import org.gbif.pipelines.io.avro.grscicoll.Match;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -90,6 +86,7 @@ public class OccurrenceHdfsRecordConverterTest {
     coreTerms.put(GbifTerm.recordedByID.simpleName(), "53453|5785");
     coreTerms.put(DwcTerm.occurrenceStatus.simpleName(), OccurrenceStatus.ABSENT.name());
     coreTerms.put(DwcTerm.individualCount.simpleName(), "0");
+    coreTerms.put(DwcTerm.eventDate.simpleName(), "2000/2010");
 
     ExtendedRecord extendedRecord =
         ExtendedRecord.newBuilder().setId("1").setCoreTerms(coreTerms).build();
@@ -136,6 +133,7 @@ public class OccurrenceHdfsRecordConverterTest {
             .setId("1")
             .setDateIdentified("2019-11-12T13:24:56.963591")
             .setModified("2019-04-15T17:17")
+            .setEventDate(EventDate.newBuilder().setGte("2000").setLte("2010").build())
             .build();
 
     // When
@@ -164,6 +162,7 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals("53453|5785", hdfsRecord.getVRecordedbyid());
     Assert.assertEquals(OccurrenceStatus.ABSENT.name(), hdfsRecord.getVOccurrencestatus());
     Assert.assertEquals("0", hdfsRecord.getVIndividualcount());
+    Assert.assertEquals("2000/2010", hdfsRecord.getVEventdate());
 
     // Test fields names with reserved words
     Assert.assertEquals("CLASS", hdfsRecord.getClass$());
@@ -180,6 +179,7 @@ public class OccurrenceHdfsRecordConverterTest {
     // Test temporal fields
     Assert.assertNotNull(hdfsRecord.getDateidentified());
     Assert.assertNotNull(hdfsRecord.getModified());
+    Assert.assertNotNull(hdfsRecord.getEventdate());
 
     Assert.assertEquals(BasisOfRecord.HUMAN_OBSERVATION.name(), hdfsRecord.getBasisofrecord());
     Assert.assertEquals(
@@ -193,6 +193,9 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals(Collections.singletonList("13123"), hdfsRecord.getIdentifiedbyid());
     Assert.assertEquals(OccurrenceStatus.ABSENT.name(), hdfsRecord.getOccurrencestatus());
     Assert.assertEquals(Integer.valueOf(0), hdfsRecord.getIndividualcount());
+    Assert.assertEquals(
+        LocalDate.of(2000, 1, 1).atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli(),
+        hdfsRecord.getEventdate().longValue());
     Assert.assertEquals(
         metadataRecord.getHostingOrganizationKey(), hdfsRecord.getHostingorganizationkey());
   }
@@ -223,7 +226,7 @@ public class OccurrenceHdfsRecordConverterTest {
     basicRecord.setBasisOfRecord(BasisOfRecord.HUMAN_OBSERVATION.name());
     basicRecord.setSex(Sex.HERMAPHRODITE.name());
     basicRecord.setIndividualCount(99);
-    basicRecord.setLifeStage(LifeStage.GAMETE.name());
+    basicRecord.setLifeStage("Larva");
     basicRecord.setTypeStatus(TypeStatus.ALLOTYPE.name());
     basicRecord.setTypifiedName("noName");
     basicRecord.setEstablishmentMeans(EstablishmentMeans.INVASIVE.name());
@@ -243,7 +246,7 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals(BasisOfRecord.HUMAN_OBSERVATION.name(), hdfsRecord.getBasisofrecord());
     Assert.assertEquals(Sex.HERMAPHRODITE.name(), hdfsRecord.getSex());
     Assert.assertEquals(Integer.valueOf(99), hdfsRecord.getIndividualcount());
-    Assert.assertEquals(LifeStage.GAMETE.name(), hdfsRecord.getLifestage());
+    Assert.assertEquals("Larva", hdfsRecord.getLifestage());
     Assert.assertEquals(TypeStatus.ALLOTYPE.name(), hdfsRecord.getTypestatus());
     Assert.assertEquals("noName", hdfsRecord.getTypifiedname());
     Assert.assertEquals(EstablishmentMeans.INVASIVE.name(), hdfsRecord.getEstablishmentmeans());
@@ -361,7 +364,7 @@ public class OccurrenceHdfsRecordConverterTest {
 
   @Test
   public void temporalMapperTest() {
-    String rawEventDate = "2019-01-01";
+    String rawEventDate = "2019-01";
 
     Long eventDate =
         LocalDate.of(2019, 1, 1).atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli();
@@ -502,44 +505,44 @@ public class OccurrenceHdfsRecordConverterTest {
 
   @Test
   public void dateParserTest() {
-    Date date = STRING_TO_DATE.apply("2019");
+    Date date = StringToDateFunctions.getStringToDateFn().apply("2019");
     Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
     cal.setTime(date);
     assertEquals(2019, cal.get(Calendar.YEAR));
     assertEquals(0, cal.get(Calendar.MONTH));
     assertEquals(1, cal.get(Calendar.DAY_OF_MONTH));
 
-    date = STRING_TO_DATE.apply("2019-04");
+    date = StringToDateFunctions.getStringToDateFn().apply("2019-04");
     cal.setTime(date);
     assertEquals(2019, cal.get(Calendar.YEAR));
     assertEquals(3, cal.get(Calendar.MONTH));
     assertEquals(1, cal.get(Calendar.DAY_OF_MONTH));
 
-    date = STRING_TO_DATE.apply("2019-04-02");
+    date = StringToDateFunctions.getStringToDateFn().apply("2019-04-02");
     cal.setTime(date);
     assertEquals(2019, cal.get(Calendar.YEAR));
     assertEquals(3, cal.get(Calendar.MONTH));
     assertEquals(2, cal.get(Calendar.DAY_OF_MONTH));
 
-    date = STRING_TO_DATE.apply("2019-04-15T17:17:48.191 +02:00");
+    date = StringToDateFunctions.getStringToDateFn().apply("2019-04-15T17:17:48.191 +02:00");
     cal.setTime(date);
     assertEquals(2019, cal.get(Calendar.YEAR));
     assertEquals(3, cal.get(Calendar.MONTH));
     assertEquals(15, cal.get(Calendar.DAY_OF_MONTH));
 
-    date = STRING_TO_DATE.apply("2019-04-15T17:17:48.191");
+    date = StringToDateFunctions.getStringToDateFn().apply("2019-04-15T17:17:48.191");
     cal.setTime(date);
     assertEquals(2019, cal.get(Calendar.YEAR));
     assertEquals(3, cal.get(Calendar.MONTH));
     assertEquals(15, cal.get(Calendar.DAY_OF_MONTH));
 
-    date = STRING_TO_DATE.apply("2019-04-15T17:17:48.023+02:00");
+    date = StringToDateFunctions.getStringToDateFn().apply("2019-04-15T17:17:48.023+02:00");
     cal.setTime(date);
     assertEquals(2019, cal.get(Calendar.YEAR));
     assertEquals(3, cal.get(Calendar.MONTH));
     assertEquals(15, cal.get(Calendar.DAY_OF_MONTH));
 
-    date = STRING_TO_DATE.apply("2019-11-12T13:24:56.963591");
+    date = StringToDateFunctions.getStringToDateFn().apply("2019-11-12T13:24:56.963591");
     cal.setTime(date);
     assertEquals(2019, cal.get(Calendar.YEAR));
     assertEquals(10, cal.get(Calendar.MONTH));
@@ -548,44 +551,44 @@ public class OccurrenceHdfsRecordConverterTest {
 
   @Test
   public void dateWithYearZeroTest() {
-    Date date = STRING_TO_DATE.apply("0000");
+    Date date = StringToDateFunctions.getStringToDateFn().apply("0000");
     Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
     cal.setTime(date);
     assertEquals(1, cal.get(Calendar.YEAR));
     assertEquals(0, cal.get(Calendar.MONTH));
     assertEquals(1, cal.get(Calendar.DAY_OF_MONTH));
 
-    date = STRING_TO_DATE.apply("0000-01");
+    date = StringToDateFunctions.getStringToDateFn().apply("0000-01");
     cal.setTime(date);
     assertEquals(1, cal.get(Calendar.YEAR));
     assertEquals(0, cal.get(Calendar.MONTH));
     assertEquals(1, cal.get(Calendar.DAY_OF_MONTH));
 
-    date = STRING_TO_DATE.apply("0000-01-01");
+    date = StringToDateFunctions.getStringToDateFn().apply("0000-01-01");
     cal.setTime(date);
     assertEquals(1, cal.get(Calendar.YEAR));
     assertEquals(0, cal.get(Calendar.MONTH));
     assertEquals(1, cal.get(Calendar.DAY_OF_MONTH));
 
-    date = STRING_TO_DATE.apply("0000-01-01T00:00:01.100");
+    date = StringToDateFunctions.getStringToDateFn().apply("0000-01-01T00:00:01.100");
     cal.setTime(date);
     assertEquals(1, cal.get(Calendar.YEAR));
     assertEquals(0, cal.get(Calendar.MONTH));
     assertEquals(1, cal.get(Calendar.DAY_OF_MONTH));
 
-    date = STRING_TO_DATE.apply("0000-01-01T17:17:48.191 +02:00");
+    date = StringToDateFunctions.getStringToDateFn().apply("0000-01-01T17:17:48.191 +02:00");
     cal.setTime(date);
     assertEquals(1, cal.get(Calendar.YEAR));
     assertEquals(0, cal.get(Calendar.MONTH));
     assertEquals(1, cal.get(Calendar.DAY_OF_MONTH));
 
-    date = STRING_TO_DATE.apply("0000-01-01T13:24:56.963591");
+    date = StringToDateFunctions.getStringToDateFn().apply("0000-01-01T13:24:56.963591");
     cal.setTime(date);
     assertEquals(1, cal.get(Calendar.YEAR));
     assertEquals(0, cal.get(Calendar.MONTH));
     assertEquals(1, cal.get(Calendar.DAY_OF_MONTH));
 
-    date = STRING_TO_DATE.apply("0000-01-01T17:17:48.023+02:00");
+    date = StringToDateFunctions.getStringToDateFn().apply("0000-01-01T17:17:48.023+02:00");
     cal.setTime(date);
     assertEquals(1, cal.get(Calendar.YEAR));
     assertEquals(0, cal.get(Calendar.MONTH));
@@ -595,27 +598,15 @@ public class OccurrenceHdfsRecordConverterTest {
   @Test
   public void grscicollMapperTest() {
     // State
-    Institution institution =
-        Institution.newBuilder()
-            .setCode("I1")
+    Match institutionMatch =
+        Match.newBuilder()
             .setKey("cb0098db-6ff6-4a5d-ad29-51348d114e41")
-            .build();
-
-    InstitutionMatch institutionMatch =
-        InstitutionMatch.newBuilder()
-            .setInstitution(institution)
             .setMatchType(MatchType.EXACT.name())
             .build();
 
-    Collection collection =
-        Collection.newBuilder()
+    Match collectionMatch =
+        Match.newBuilder()
             .setKey("5c692584-d517-48e8-93a8-a916ba131d9b")
-            .setCode("C1")
-            .build();
-
-    CollectionMatch collectionMatch =
-        CollectionMatch.newBuilder()
-            .setCollection(collection)
             .setMatchType(MatchType.FUZZY.name())
             .build();
 
@@ -630,7 +621,7 @@ public class OccurrenceHdfsRecordConverterTest {
     OccurrenceHdfsRecord hdfsRecord = toOccurrenceHdfsRecord(record);
 
     // Should
-    Assert.assertEquals(institution.getKey(), hdfsRecord.getInstitutionkey());
-    Assert.assertEquals(collection.getKey(), hdfsRecord.getCollectionkey());
+    Assert.assertEquals(institutionMatch.getKey(), hdfsRecord.getInstitutionkey());
+    Assert.assertEquals(collectionMatch.getKey(), hdfsRecord.getCollectionkey());
   }
 }

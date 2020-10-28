@@ -4,16 +4,20 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMENT_O
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.MEASUREMENT_OR_FACT;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
+import lombok.Builder;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.api.vocabulary.Extension;
+import org.gbif.common.parsers.date.DateComponentOrdering;
+import org.gbif.pipelines.core.functions.SerializableConsumer;
+import org.gbif.pipelines.core.functions.SerializableFunction;
 import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.core.interpreters.extension.MeasurementOrFactInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
-import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
 
 /**
@@ -28,16 +32,33 @@ import org.gbif.pipelines.transforms.Transform;
  */
 public class MeasurementOrFactTransform extends Transform<ExtendedRecord, MeasurementOrFactRecord> {
 
-  public MeasurementOrFactTransform() {
+  private final SerializableFunction<String, String> preprocessDateFn;
+  private final List<DateComponentOrdering> orderings;
+  private MeasurementOrFactInterpreter measurementOrFactInterpreter;
+
+  @Builder(buildMethodName = "create")
+  private MeasurementOrFactTransform(
+      List<DateComponentOrdering> orderings,
+      SerializableFunction<String, String> preprocessDateFn) {
     super(
         MeasurementOrFactRecord.class,
         MEASUREMENT_OR_FACT,
         MeasurementOrFactTransform.class.getName(),
         MEASUREMENT_OR_FACT_RECORDS_COUNT);
+    this.orderings = orderings;
+    this.preprocessDateFn = preprocessDateFn;
   }
 
-  public static MeasurementOrFactTransform create() {
-    return new MeasurementOrFactTransform();
+  /** Beam @Setup initializes resources */
+  @Setup
+  public void setup() {
+    if (measurementOrFactInterpreter == null) {
+      measurementOrFactInterpreter =
+          MeasurementOrFactInterpreter.builder()
+              .orderings(orderings)
+              .preprocessDateFn(preprocessDateFn)
+              .create();
+    }
   }
 
   /**
@@ -69,7 +90,7 @@ public class MeasurementOrFactTransform extends Transform<ExtendedRecord, Measur
                         er.getExtensions().get(Extension.MEASUREMENT_OR_FACT.getRowType()))
                     .filter(l -> !l.isEmpty())
                     .isPresent())
-        .via(MeasurementOrFactInterpreter::interpret)
+        .via(measurementOrFactInterpreter::interpret)
         .getOfNullable();
   }
 }

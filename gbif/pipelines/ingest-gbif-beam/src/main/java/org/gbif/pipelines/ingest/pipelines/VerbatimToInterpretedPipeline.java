@@ -2,6 +2,7 @@ package org.gbif.pipelines.ingest.pipelines;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.Set;
 import java.util.function.UnaryOperator;
 import lombok.AccessLevel;
@@ -20,11 +21,14 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.core.factory.FileVocabularyFactory;
+import org.gbif.pipelines.core.factory.FileVocabularyFactory.VocabularyBackedTerm;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.factory.GeocodeKvStoreFactory;
 import org.gbif.pipelines.factory.GrscicollLookupKvStoreFactory;
@@ -108,9 +112,15 @@ public class VerbatimToInterpretedPipeline {
     String targetPath = options.getTargetPath();
     String hdfsSiteConfig = options.getHdfsSiteConfig();
     String coreSiteConfig = options.getCoreSiteConfig();
+
     PipelinesConfig config =
         FsUtils.readConfigFile(
             hdfsSiteConfig, coreSiteConfig, options.getProperties(), PipelinesConfig.class);
+
+    List<DateComponentOrdering> dateComponentOrdering =
+        options.getDefaultDateFormat() == null
+            ? config.getDefaultDateFormat()
+            : options.getDefaultDateFormat();
 
     FsUtils.deleteInterpretIfExist(
         hdfsSiteConfig, coreSiteConfig, targetPath, datasetId, attempt, types);
@@ -139,6 +149,9 @@ public class VerbatimToInterpretedPipeline {
     BasicTransform basicTransform =
         BasicTransform.builder()
             .keygenServiceSupplier(KeygenServiceFactory.createSupplier(config, datasetId))
+            .lifeStageLookupSupplier(
+                FileVocabularyFactory.getInstanceSupplier(
+                    config, hdfsSiteConfig, coreSiteConfig, VocabularyBackedTerm.LIFE_STAGE))
             .occStatusKvStoreSupplier(OccurrenceStatusKvStoreFactory.createSupplier(config))
             .isTripletValid(options.isTripletValid())
             .isOccurrenceIdValid(options.isOccurrenceIdValid())
@@ -147,7 +160,8 @@ public class VerbatimToInterpretedPipeline {
 
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
 
-    TemporalTransform temporalTransform = TemporalTransform.create();
+    TemporalTransform temporalTransform =
+        TemporalTransform.builder().orderings(dateComponentOrdering).create();
 
     TaxonomyTransform taxonomyTransform =
         TaxonomyTransform.builder()
@@ -165,13 +179,17 @@ public class VerbatimToInterpretedPipeline {
             .create();
 
     // Extension
-    MeasurementOrFactTransform measurementOrFactTransform = MeasurementOrFactTransform.create();
+    MeasurementOrFactTransform measurementOrFactTransform =
+        MeasurementOrFactTransform.builder().orderings(dateComponentOrdering).create();
 
-    MultimediaTransform multimediaTransform = MultimediaTransform.create();
+    MultimediaTransform multimediaTransform =
+        MultimediaTransform.builder().orderings(dateComponentOrdering).create();
 
-    AudubonTransform audubonTransform = AudubonTransform.create();
+    AudubonTransform audubonTransform =
+        AudubonTransform.builder().orderings(dateComponentOrdering).create();
 
-    ImageTransform imageTransform = ImageTransform.create();
+    ImageTransform imageTransform =
+        ImageTransform.builder().orderings(dateComponentOrdering).create();
 
     // Extra
     UniqueGbifIdTransform gbifIdTransform =
