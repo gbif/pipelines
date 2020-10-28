@@ -131,6 +131,7 @@
     <embedded.elasticsearch.version>2.10.0</embedded.elasticsearch.version>
     <log4j-over-slf4j.version>1.7.16</log4j-over-slf4j.version>
     <zookeeper-version>3.4.5</zookeeper-version>
+    <testcontainers.elasticsearch.version>1.15.0-rc2</testcontainers.elasticsearch.version>
 
     <!-- Maven plugin -->
     <maven-plugin-api.version>3.5.4</maven-plugin-api.version>
@@ -946,12 +947,6 @@
         <scope>test</scope>
       </dependency>
       <dependency>
-        <groupId>pl.allegro.tech</groupId>
-        <artifactId>embedded-elasticsearch</artifactId>
-        <version>${embedded.elasticsearch.version}</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
         <groupId>org.apache.hadoop</groupId>
         <artifactId>hadoop-minicluster</artifactId>
         <version>${hadoop.version}</version>
@@ -1001,6 +996,12 @@
         <groupId>org.apache.zookeeper</groupId>
         <artifactId>zookeeper</artifactId>
         <version>${zookeeper-version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.testcontainers</groupId>
+        <artifactId>elasticsearch</artifactId>
+        <version>${testcontainers.elasticsearch.version}</version>
         <scope>test</scope>
       </dependency>
 
