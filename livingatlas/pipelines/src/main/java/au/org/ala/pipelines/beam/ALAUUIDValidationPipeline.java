@@ -7,6 +7,7 @@ import au.org.ala.kvs.ALAPipelinesConfigFactory;
 import au.org.ala.kvs.cache.ALAAttributionKVStoreFactory;
 import au.org.ala.kvs.client.ALACollectoryMetadata;
 import au.org.ala.pipelines.options.UUIDPipelineOptions;
+import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationUtils;
 import java.util.ArrayList;
@@ -49,6 +50,7 @@ import org.slf4j.MDC;
 public class ALAUUIDValidationPipeline {
 
   public static void main(String[] args) throws Exception {
+    VersionInfo.print();
     String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "uuid");
     UUIDPipelineOptions options =
         PipelinesOptionsFactory.create(UUIDPipelineOptions.class, combinedArgs);

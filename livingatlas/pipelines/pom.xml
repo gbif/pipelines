@@ -242,6 +242,32 @@
           </images>
         </configuration>
       </plugin>
+      <plugin>
+      <groupId>pl.project13.maven</groupId>
+      <artifactId>git-commit-id-plugin</artifactId>
+      <version>2.2.4</version>
+      <executions>
+        <execution>
+          <id>get-the-git-infos</id>
+          <goals>
+            <goal>revision</goal>
+          </goals>
+        </execution>
+      </executions>
+      <configuration>
+        <dotGitDirectory>${project.basedir}/.git</dotGitDirectory>
+        <prefix>git</prefix>
+        <verbose>false</verbose>
+        <generateGitPropertiesFile>true</generateGitPropertiesFile>
+        <generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties</generateGitPropertiesFilename>
+        <format>json</format>
+        <gitDescribe>
+          <skip>false</skip>
+          <always>false</always>
+          <dirty>-dirty</dirty>
+        </gitDescribe>
+      </configuration>
+      </plugin>
     </plugins>
   </build>
 
@@ -283,6 +309,7 @@
     <jcommander.version>1.78</jcommander.version>
     <layers-store.version>2.0.3</layers-store.version>
     <junit.version>5.6.2</junit.version>
+    <json-simple.version>1.1.1</json-simple.version>
 
     <!-- GBIF parent currently using 2.4.0 -->
     <spark.embedded.version>2.4.5</spark.embedded.version>
@@ -307,6 +334,11 @@
   </scm>
 
   <dependencies>
+    <dependency>
+      <groupId>com.googlecode.json-simple</groupId>
+      <artifactId>json-simple</artifactId>
+      <version>${json-simple.version}</version>
+    </dependency>
     <!-- ALA libraries -->
     <dependency>
       <groupId>au.org.ala.names</groupId>

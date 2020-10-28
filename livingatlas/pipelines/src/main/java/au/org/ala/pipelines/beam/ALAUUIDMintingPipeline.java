@@ -6,6 +6,7 @@ import au.org.ala.kvs.cache.ALAAttributionKVStoreFactory;
 import au.org.ala.kvs.client.ALACollectoryMetadata;
 import au.org.ala.pipelines.common.ALARecordTypes;
 import au.org.ala.pipelines.options.UUIDPipelineOptions;
+import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationResult;
 import au.org.ala.utils.ValidationUtils;
@@ -73,6 +74,7 @@ public class ALAUUIDMintingPipeline {
   public static final String UNIQUE_COMPOSITE_KEY_JOIN_CHAR = "|";
 
   public static void main(String[] args) throws Exception {
+    VersionInfo.print();
     String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "uuid");
     UUIDPipelineOptions options =
         PipelinesOptionsFactory.create(UUIDPipelineOptions.class, combinedArgs);
