@@ -22,7 +22,7 @@ public class GeocodeServiceTestIT {
    * HashMap.
    */
   @Test
-  public void testInsideCountry() throws Exception {
+  public void testInsideCountry() {
     KeyValueStore<LatLng, GeocodeResponse> geoService =
         GeocodeKvStoreFactory.createCountrySupplier(TestUtils.getConfig()).get();
     GeocodeResponse resp =
@@ -36,7 +36,7 @@ public class GeocodeServiceTestIT {
             .filter(l -> l.getType().equals(GeocodeShpIntersectService.POLITICAL_LOCATION_TYPE))
             .findFirst();
     assertTrue(country.isPresent());
-    assertEquals("AU", country.get().getCountryName());
+    assertEquals("AU", country.get().getIsoCountryCode2Digit());
   }
 
   /**
@@ -50,7 +50,7 @@ public class GeocodeServiceTestIT {
     GeocodeResponse resp =
         geoService.get(LatLng.builder().withLongitude(151.329751).withLatitude(-36.407357).build());
     assertFalse(resp.getLocations().isEmpty());
-    assertEquals("AU", resp.getLocations().iterator().next().getCountryName());
+    assertEquals("AU", resp.getLocations().iterator().next().getIsoCountryCode2Digit());
   }
 
   /**
