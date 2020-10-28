@@ -12,7 +12,7 @@
   <artifactId>pipelines</artifactId>
   <packaging>jar</packaging>
 
-  <name>Living Atlas Pipelines</name>
+  <name>Pipelines :: Living Atlas :: Pipelines</name>
   <description>Extensions to GBIF pipelines to support ALA and the Living Atlas community</description>
 
   <build>

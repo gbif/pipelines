@@ -12,13 +12,15 @@ import java.nio.channels.WritableByteChannel;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
@@ -117,8 +119,7 @@ public class LayerCrawler {
       Collection<String> latLngFiles = ALAFsUtils.listPaths(fs, latLngExportPath);
       String layerList = lc.getRequiredLayers();
 
-      for (Iterator<String> i = latLngFiles.iterator(); i.hasNext(); ) {
-        String inputFile = i.next();
+      for (String inputFile : latLngFiles) {
         lc.crawl(fs, layerList, inputFile, sampleDownloadPath);
       }
       Instant batchFinish = Instant.now();
@@ -127,29 +128,6 @@ public class LayerCrawler {
           "Finished sampling for {}. Time taken {} minutes",
           dataSetID,
           Duration.between(batchStart, batchFinish).toMinutes());
-    } else {
-
-      //            Instant batchStart = Instant.now();
-      //            //list file in directory
-      //            LayerCrawler lc = new LayerCrawler();
-      //
-      //            File samples = new File(options.getTargetPath() + "/sampling/downloads");
-      //            FileUtils.forceMkdir(samples);
-      //
-      //            Stream<File> latLngFiles = Stream.of(
-      //                    new File(options.getTargetPath() + "/latlng/").listFiles()
-      //            );
-      //
-      //            String layerList = lc.getRequiredLayers();
-      //
-      //            for (Iterator<File> i = latLngFiles.iterator(); i.hasNext(); ) {
-      //                File inputFile = i.next();
-      ////                lc.crawl(fs, layerList, inputFile, samples);
-      //            }
-      //            Instant batchFinish = Instant.now();
-      //
-      //            log.info("Finished sampling for complete lat lng export. Time taken {} minutes",
-      // Duration.between(batchStart, batchFinish).toMinutes());
     }
   }
 
@@ -159,12 +137,12 @@ public class LayerCrawler {
     log.info("Initialised.");
   }
 
-  public String getRequiredLayers() throws Exception {
+  public String getRequiredLayers() throws IOException {
 
     log.info("Retrieving layer list from sampling service");
     String layers =
-        service.getLayers().execute().body().stream()
-            .filter(l -> l.getEnabled())
+        Objects.requireNonNull(service.getLayers().execute().body()).stream()
+            .filter(SamplingService.Layer::getEnabled)
             .map(l -> String.valueOf(l.getId()))
             .collect(Collectors.joining(","));
 
@@ -180,8 +158,10 @@ public class LayerCrawler {
     log.info("Partitioning coordinates from file {}", inputFilePath);
 
     InputStream inputStream = ALAFsUtils.openInputStream(fs, inputFilePath);
-    BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-    Collection<List<String>> partitioned = partition(reader.lines(), batchSize);
+    Collection<List<String>> partitioned;
+    try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+      partitioned = partition(reader.lines(), batchSize);
+    }
 
     for (List<String> partition : partitioned) {
 
@@ -250,20 +230,12 @@ public class LayerCrawler {
     }
   }
 
-  /**
-   * Download the batch file with a retries mechanism.
-   *
-   * @param batchId
-   * @param batchStatus
-   * @return
-   * @throws IOException
-   */
+  /** Download the batch file with a retries mechanism. */
   private boolean downloadFile(
       FileSystem fs,
       String outputDirectoryPath,
       String batchId,
-      SamplingService.BatchStatus batchStatus)
-      throws IOException {
+      SamplingService.BatchStatus batchStatus) {
 
     for (int i = 0; i < downloadRetries; i++) {
 
@@ -311,62 +283,28 @@ public class LayerCrawler {
     Call<Batch> submitIntersectBatch(
         @Field("fids") String layerIds, @Field("points") String coordinatePairs);
 
+    @Getter
+    @Setter
     @JsonIgnoreProperties(ignoreUnknown = true)
     class Layer {
 
       private String id;
       private Boolean enabled;
-
-      public String getId() {
-        return id;
-      }
-
-      public void setId(String id) {
-        this.id = id;
-      }
-
-      public Boolean getEnabled() {
-        return enabled;
-      }
-
-      public void setEnabled(Boolean enabled) {
-        this.enabled = enabled;
-      }
     }
 
+    @Getter
+    @Setter
     @JsonIgnoreProperties(ignoreUnknown = true)
     class Batch {
       private String batchId;
-
-      public String getBatchId() {
-        return batchId;
-      }
-
-      public void setBatchId(String batchId) {
-        this.batchId = batchId;
-      }
     }
 
+    @Getter
+    @Setter
     @JsonIgnoreProperties(ignoreUnknown = true)
     class BatchStatus {
       private String status;
       private String downloadUrl;
-
-      public String getStatus() {
-        return status;
-      }
-
-      public void setStatus(String status) {
-        this.status = status;
-      }
-
-      public String getDownloadUrl() {
-        return downloadUrl;
-      }
-
-      public void setDownloadUrl(String downloadUrl) {
-        this.downloadUrl = downloadUrl;
-      }
     }
   }
 
@@ -386,7 +324,7 @@ public class LayerCrawler {
     try (BufferedOutputStream bos =
         new BufferedOutputStream(ALAFsUtils.openOutputStream(fs, unzippedFilePath))) {
       byte[] bytesIn = new byte[1024];
-      int read = 0;
+      int read;
       while ((read = zipInputStream.read(bytesIn)) != -1) {
         bos.write(bytesIn, 0, read);
       }

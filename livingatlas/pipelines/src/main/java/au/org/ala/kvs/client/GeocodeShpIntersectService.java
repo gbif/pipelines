@@ -142,7 +142,6 @@ public class GeocodeShpIntersectService {
       Location l = new Location();
       l.setType(POLITICAL_LOCATION_TYPE);
       l.setSource(config.getCountry().getSource());
-      l.setCountryName(value);
       l.setName(value);
       l.setIsoCountryCode2Digit(value);
       locations.add(l);
@@ -152,7 +151,6 @@ public class GeocodeShpIntersectService {
         Location l = new Location();
         l.setType(EEZ_LOCATION_TYPE);
         l.setSource(config.getEez().getSource());
-        l.setCountryName(eezValue);
         l.setName(eezValue);
         l.setIsoCountryCode2Digit(eezValue);
         locations.add(l);

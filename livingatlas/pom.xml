@@ -12,7 +12,7 @@
   <groupId>au.org.ala</groupId>
   <artifactId>livingatlas</artifactId>
   <packaging>pom</packaging>
-  <name>Living Atlas Pipelines Parent POM</name>
+  <name>Pipelines :: Living Atlas</name>
 
   <modules>
     <module>pipelines</module>

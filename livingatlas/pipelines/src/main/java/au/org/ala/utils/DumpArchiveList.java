@@ -4,7 +4,6 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.util.Map;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -47,7 +46,7 @@ public class DumpArchiveList {
   }
 
   @SneakyThrows
-  public void run() throws IOException {
+  public void run() {
 
     // load all datasets - return a map of <datasetId -> datasetInputPath>
     Map<String, String> datasets =

@@ -77,11 +77,7 @@ public class ValidationUtils {
         options.getIncludeSampling());
   }
 
-  /**
-   * Checks a dataset can be indexed.
-   *
-   * @return
-   */
+  /** Checks a dataset can be indexed. */
   public static ValidationResult checkReadyForIndexing(
       FileSystem fs, String filePath, String datasetId, Integer attempt, boolean includeSampling) {
 
@@ -131,9 +127,6 @@ public class ValidationUtils {
   /**
    * Checks the content of the validate file, returning true if the UUID content has been checked
    * and is thought to be valid.
-   *
-   * @param options
-   * @return
    */
   public static ValidationResult checkValidationFile(InterpretationPipelineOptions options) {
 

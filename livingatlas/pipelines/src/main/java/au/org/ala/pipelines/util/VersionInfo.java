@@ -3,6 +3,7 @@ package au.org.ala.pipelines.util;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import lombok.extern.slf4j.Slf4j;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -12,7 +13,8 @@ public class VersionInfo {
   public static void print() {
     try {
       InputStream is = VersionInfo.class.getResourceAsStream("/git.properties");
-      BufferedReader streamReader = new BufferedReader(new InputStreamReader(is, "UTF-8"));
+      BufferedReader streamReader =
+          new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
       JSONParser parser = new JSONParser();
       JSONObject info = (JSONObject) parser.parse(streamReader);
       log.info("You are running build version: " + info.get("git.build.version"));

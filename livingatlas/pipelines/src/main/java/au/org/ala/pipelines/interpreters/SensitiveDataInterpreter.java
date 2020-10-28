@@ -24,19 +24,13 @@ import org.gbif.pipelines.io.avro.*;
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class SensitiveDataInterpreter {
-  protected static String ORIGINAL_VALUES = "originalSensitiveValues";
-  protected static String DATA_GENERALIZATIONS = "dataGeneralizations";
-  protected static String GENERALISATION_TO_APPLY_IN_METRES = "generalisationToApplyInMetres";
-  protected static String GENERALISATION_IN_METRES = "generalisationInMetres";
-
-  private static Set<String> TAXON_ROWS =
-      new HashSet<>(
-          Arrays.asList(
-              ALATaxonRecord.getClassSchema().getName(),
-              OccurrenceHdfsRecord.getClassSchema().getName()));
+  protected static final String ORIGINAL_VALUES = "originalSensitiveValues";
+  protected static final String DATA_GENERALIZATIONS = "dataGeneralizations";
+  protected static final String GENERALISATION_TO_APPLY_IN_METRES = "generalisationToApplyInMetres";
+  protected static final String GENERALISATION_IN_METRES = "generalisationInMetres";
 
   /** Bits to skip when generically updating the temporal record */
-  private static Set<String> SKIP_TEMPORAL_UPDATE =
+  private static final Set<String> SKIP_TEMPORAL_UPDATE =
       Collections.singleton(DwcTerm.eventDate.simpleName());
 
   /**
@@ -377,10 +371,8 @@ public class SensitiveDataInterpreter {
       }
       sr.setAltered(
           result.entrySet().stream()
-              .collect(
-                  Collectors.toMap(
-                      e -> e.getKey(),
-                      e -> e.getValue() == null ? null : e.getValue().toString())));
+              .filter(e -> e.getValue() != null)
+              .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().toString())));
     }
   }
 

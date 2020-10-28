@@ -71,7 +71,7 @@ public class ALAUUIDValidationPipeline {
     deletePreviousValidation(options);
 
     // validation results
-    PCollectionList<String> results = PCollectionList.<String>empty(p);
+    PCollectionList<String> results = PCollectionList.empty(p);
 
     ALAPipelinesConfig config =
         ALAPipelinesConfigFactory.getInstance(
@@ -188,7 +188,7 @@ public class ALAUUIDValidationPipeline {
                                   datasetID, source, uniqueDwcTerms));
                         }
                       }))
-              .apply(Count.<String>perElement());
+              .apply(Count.perElement());
 
       // filter keys that are used more than once
       PCollection<KV<String, Long>> duplicateKeyCounts =
@@ -249,7 +249,7 @@ public class ALAUUIDValidationPipeline {
 
     // write out all results to YAML file
     results
-        .apply(Flatten.<String>pCollections())
+        .apply(Flatten.pCollections())
         .setCoder(StringUtf8Coder.of())
         .apply(
             TextIO.write()

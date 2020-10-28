@@ -10,7 +10,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>migration</artifactId>
-    <name>Living Atlas Migration tools</name>
+    <name>Pipelines :: Living Atlas :: Migration tools</name>
     <description>Tools for migration of data from legacy systems to pipelines.</description>
     <properties>
         <!-- ALA are using spark 2.4.5, GBIF current reference 2.4.0 -->
