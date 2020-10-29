@@ -142,7 +142,7 @@ public class CombinedYamlConfigurationTest {
         instanceOf(RuntimeException.class));
   }
 
-  @Ignore("FAILS")
+  @Ignore("Works locally, but fails on Jenkins")
   @Test
   public void testYamlDump() throws IOException {
     String yamlPath = testConf.toYamlFile();
