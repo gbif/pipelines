@@ -44,7 +44,7 @@ import org.gbif.vocabulary.model.Concept;
  * it.
  */
 @Slf4j
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class BasicInterpreter {
 
   public static final String GBIF_ID_INVALID = "GBIF_ID_INVALID";
