@@ -18,6 +18,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.Locale;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
 
@@ -56,6 +57,12 @@ public class TemporalParser {
   }
 
   public static ParsedTemporal parse(String rawYear, String rawMonth, String rawDay, String rawDate) {
+    Locale locale = new Locale("en");
+    return parse(rawYear, rawMonth, rawDay, rawDate, locale);
+  }
+
+  public static ParsedTemporal parse(String rawYear, String rawMonth, String rawDay, String rawDate, Locale locale) {
+    Locale.setDefault(locale);
     // If year and rawDate are absent, return ParsedTemporalDates with NULL values inside
     if (isNullOrEmpty(rawYear) && isNullOrEmpty(rawDate)) {
       if (isNullOrEmpty(rawMonth) && isNullOrEmpty(rawDay)) {
