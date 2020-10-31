@@ -62,6 +62,13 @@ public class LayerCrawler {
     MDC.put("attempt", options.getAttempt().toString());
     MDC.put("step", "SAMPLING");
 
+    init(conf);
+    run(options);
+    // FIXME: Issue logged here: https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/105
+    System.exit(0);
+  }
+
+  public static void init(CombinedYamlConfiguration conf) {
     String baseUrl = (String) conf.get("layerCrawler.baseUrl");
     batchSize = (Integer) conf.get("layerCrawler.batchSize");
     batchStatusSleepTime = (Integer) conf.get("layerCrawler.batchStatusSleepTime");
@@ -73,9 +80,6 @@ public class LayerCrawler {
             .addConverterFactory(JacksonConverterFactory.create())
             .validateEagerly(true)
             .build();
-    run(options);
-    // FIXME: Issue logged here: https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/105
-    System.exit(0);
   }
 
   public static void run(InterpretationPipelineOptions options) throws Exception {

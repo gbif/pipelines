@@ -11,6 +11,7 @@ import au.org.ala.pipelines.options.UUIDPipelineOptions;
 import au.org.ala.sampling.LayerCrawler;
 import au.org.ala.util.SolrUtils;
 import au.org.ala.util.TestUtils;
+import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationUtils;
 import java.io.File;
 import java.util.UUID;
@@ -151,6 +152,16 @@ public class CompleteIngestJavaPipelineTestIT {
     ALAInterpretedToLatLongCSVPipeline.run(latLngOptions);
 
     // sample
+    LayerCrawler.init(
+        (new CombinedYamlConfiguration(
+            new String[] {
+              "--datasetId=" + datasetID,
+              "--attempt=1",
+              "--runner=DirectRunner",
+              "--targetPath=/tmp/la-pipelines-test/complete-pipeline-java",
+              "--inputPath=/tmp/la-pipelines-test/complete-pipeline-java",
+              "--config=" + TestUtils.getPipelinesConfigFile()
+            })));
     LayerCrawler.run(latLngOptions);
 
     // sample -> avro
