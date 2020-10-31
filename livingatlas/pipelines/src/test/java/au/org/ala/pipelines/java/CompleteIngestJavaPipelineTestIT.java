@@ -13,6 +13,7 @@ import au.org.ala.pipelines.options.UUIDPipelineOptions;
 import au.org.ala.sampling.LayerCrawler;
 import au.org.ala.util.SolrUtils;
 import au.org.ala.util.TestUtils;
+import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationUtils;
 import java.io.File;
 import java.util.UUID;
@@ -148,6 +149,7 @@ public class CompleteIngestJavaPipelineTestIT {
     ALAInterpretedToLatLongCSVPipeline.run(latLngOptions);
 
     // sample
+<<<<<<< HEAD
     SamplingPipelineOptions samplingOptions =
         PipelinesOptionsFactory.create(
             SamplingPipelineOptions.class,
@@ -161,6 +163,19 @@ public class CompleteIngestJavaPipelineTestIT {
               "--properties=" + TestUtils.getPipelinesConfigFile()
             });
     LayerCrawler.run(samplingOptions);
+=======
+    LayerCrawler.init(
+        (new CombinedYamlConfiguration(
+            new String[] {
+              "--datasetId=" + datasetID,
+              "--attempt=1",
+              "--runner=DirectRunner",
+              "--targetPath=/tmp/la-pipelines-test/complete-pipeline-java",
+              "--inputPath=/tmp/la-pipelines-test/complete-pipeline-java",
+              "--config=" + TestUtils.getPipelinesConfigFile()
+            })));
+    LayerCrawler.run(latLngOptions);
+>>>>>>> 529092a8... Fix LayerCrawler tests
 
     // sample -> avro
     InterpretationPipelineOptions samplingAvroOptions =
