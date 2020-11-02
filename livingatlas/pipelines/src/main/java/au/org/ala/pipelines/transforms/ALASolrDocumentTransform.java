@@ -366,8 +366,10 @@ public class ALASolrDocumentTransform implements Serializable {
             ALAAttributionRecord aar =
                 v.getOnly(aarTag, ALAAttributionRecord.newBuilder().setId(k).build());
 
-            ImageServiceRecord isr =
-                v.getOnly(isTag, ImageServiceRecord.newBuilder().setId(k).build());
+            ImageServiceRecord isr = null;
+            if (isTag != null) {
+              isr = v.getOnly(isTag, ImageServiceRecord.newBuilder().setId(k).build());
+            }
 
             // Sampling
             LocationFeatureRecord asr = null;
