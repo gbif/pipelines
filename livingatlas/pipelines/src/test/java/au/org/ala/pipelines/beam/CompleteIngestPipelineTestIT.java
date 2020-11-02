@@ -3,11 +3,11 @@ package au.org.ala.pipelines.beam;
 import static org.junit.Assert.*;
 
 import au.org.ala.pipelines.options.ALASolrPipelineOptions;
-import au.org.ala.pipelines.options.SamplingPipelineOptions;
 import au.org.ala.pipelines.options.UUIDPipelineOptions;
 import au.org.ala.sampling.LayerCrawler;
 import au.org.ala.util.SolrUtils;
 import au.org.ala.util.TestUtils;
+import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationUtils;
 import java.io.File;
 import java.util.UUID;
@@ -169,19 +169,17 @@ public class CompleteIngestPipelineTestIT {
     ALAInterpretedToLatLongCSVPipeline.run(latLngOptions);
 
     // sample
-    SamplingPipelineOptions samplingOptions =
-        PipelinesOptionsFactory.create(
-            SamplingPipelineOptions.class,
+    LayerCrawler.init(
+        (new CombinedYamlConfiguration(
             new String[] {
               "--datasetId=" + datasetID,
               "--attempt=1",
-              "--samplingServiceUrl=https://sampling.ala.org.au",
               "--runner=DirectRunner",
-              "--targetPath=/tmp/la-pipelines-test/complete-pipeline",
-              "--inputPath=/tmp/la-pipelines-test/complete-pipeline",
-              "--properties=" + TestUtils.getPipelinesConfigFile()
-            });
-    LayerCrawler.run(samplingOptions);
+              "--targetPath=/tmp/la-pipelines-test/complete-pipeline-java",
+              "--inputPath=/tmp/la-pipelines-test/complete-pipeline-java",
+              "--config=" + TestUtils.getPipelinesConfigFile()
+            })));
+    LayerCrawler.run(latLngOptions);
 
     // sample -> avro
     InterpretationPipelineOptions samplingAvroOptions =

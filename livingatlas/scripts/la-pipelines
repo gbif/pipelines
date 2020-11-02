@@ -256,18 +256,14 @@ EXTRA_JVM_CLI_ARGS="$EXTRA_JVM_CLI_ARGS -Dlog4j.configuration=file://$logConfig 
 log.debug EXTRA_JVM_CLI_ARGS: $EXTRA_JVM_CLI_ARGS
 
 function logStepStart() {
-    name=$1
-    dr=$2
+    local name="$1" dr="$2"
     STEP="$1 $2"
     log.info $(date)
     log.info "START ${colpur}$name${colrst} of $dr"
 }
 
 function logStepEnd() {
-    name=$1
-    dr=$2
-    type=$3
-    duration=$4
+    local name="$1" dr="$2" type="$3" duration=$4
     log.info $(date)
     log.info "END ${colpur}$name${colrst} of $dr in [$type], took $(($duration / 60)) minutes and $(($duration % 60)) seconds."
 }
@@ -295,6 +291,7 @@ function dataset-list() {
 
 function dwca-avro () {
     dr=$1
+    CLASS=au.org.ala.pipelines.beam.ALADwcaToVerbatimPipeline
 
     dwca_dir="$DWCA_IMPORT/$dr/$dr.zip"
 
@@ -305,7 +302,7 @@ function dwca-avro () {
     if [[ $dr != "all" ]] ; then
       logStepStart "DWCA-AVRO conversion" $dr
       $_D java $EXTRA_JVM_CLI_ARGS -Dspark.local.dir=$SPARK_TMP \
-          -cp $LOCAL_PIPELINES_JAR au.org.ala.pipelines.beam.ALADwcaToVerbatimPipeline \
+          -cp $LOCAL_PIPELINES_JAR $CLASS \
           --datasetId=$dr \
           --deleteLockFileOnExit=true \
           --config=$config $ARGS
@@ -320,7 +317,7 @@ function dwca-avro () {
       do
           log.info "Dataset = $dr and Input file = $inputPath"
           $_D java $EXTRA_JVM_CLI_ARGS -Dspark.local.dir=$SPARK_TMP \
-              -cp $LOCAL_PIPELINES_JAR au.org.ala.pipelines.beam.ALADwcaToVerbatimPipeline \
+              -cp $LOCAL_PIPELINES_JAR $CLASS \
               --datasetId=$dr \
               --inputPath=$inputPath \
               --deleteLockFileOnExit=false \
@@ -330,128 +327,114 @@ function dwca-avro () {
     fi
 }
 
-function interpret () {
-    dr=$1
-    ltype=$2
-    CLASS=au.org.ala.pipelines.beam.ALAVerbatimToInterpretedPipeline
+function common-pipeline() {
+    local SH_ARGS="$1" CLASS="$2" dr="$3"
 
-    SECONDS=0
-    logStepStart "Interpretation" $dr
+    log.info $(date)
 
-    PRE=interpret-sh-args.local
+    $_D java $EXTRA_JVM_CLI_ARGS \
+        $(getConf $SH_ARGS.jvm) \
+        -cp $PIPELINES_JAR $CLASS \
+        --datasetId=$dr \
+        --config=$config $ARGS
+}
+
+function java-pipeline() {
+    local ltype="$1" SH_ARGS="$2" CLASS="$3" dr="$4"
+
     if [[ $ltype = "local" ]] ; then
-        CLASS=au.org.ala.pipelines.java.ALAVerbatimToInterpretedPipeline
-        $_D java $EXTRA_JVM_CLI_ARGS \
-            $(getConf $PRE.jvm) \
-            -cp $PIPELINES_JAR $CLASS \
-            --datasetId=$dr \
-            --config=$config $ARGS
+        common-pipeline $SH_ARGS $CLASS $dr
     fi
+}
 
-    PRE=interpret-sh-args.spark-embedded
+function spark-embed-pipeline() {
+    local ltype="$1" SH_ARGS="$2" CLASS="$3" dr="$4"
+
     if [[ $ltype = "spark-embedded" ]] ; then
-        log.info $(date)
-        SECONDS=0
-        $_D java $EXTRA_JVM_CLI_ARGS \
-            $(getConf $PRE.jvm) \
-            -cp $PIPELINES_JAR $CLASS \
-            --datasetId=$dr \
-            --config=$config $ARGS
+        common-pipeline $SH_ARGS $CLASS $dr
     fi
+}
 
-    PRE=interpret-sh-args.spark-cluster
+function spark-cluster-pipeline() {
+    local ltype="$1" SH_ARGS="$2" CLASS="$3" dr="$4" NAME="$5"
+    local CONF
+
+    CONF=$(toArg $SH_ARGS conf)
+    # Remove empty confs
+    if [[ $CONF = "--conf" ]] ; then CONF=""; fi
+
     if [[ $ltype = "spark-cluster" ]] ; then
         $_D /data/spark/bin/spark-submit \
-            --name "interpret $dr" \
-            $(toArg $PRE conf) \
-            $(toArg $PRE num-executors) \
-            $(toArg $PRE executor-cores) \
-            $(toArg $PRE executor-memory) \
-            $(toArg $PRE driver-memory) \
+            --name $NAME \
+            $CONF \
+            $(toArg $SH_ARGS num-executors) \
+            $(toArg $SH_ARGS executor-cores) \
+            $(toArg $SH_ARGS executor-memory) \
+            $(toArg $SH_ARGS driver-memory) \
             --class $CLASS \
             --master $SPARK_MASTER \
             --driver-java-options "-Dlog4j.configuration=file:$CONFIG_DIR/log4j.properties" \
             $PIPELINES_JAR \
             --datasetId=$dr \
             --config=$config $ARGS
-            # TODO set here an optional colorized log4j properties
+        # TODO set here an optional colorized log4j properties
     fi
+}
+
+function interpret () {
+    local dr="$1" ltype="$2"
+
+    SECONDS=0
+    logStepStart "Interpretation" $dr
+
+    SH_ARGS=interpret-sh-args.local
+    CLASS=au.org.ala.pipelines.java.ALAVerbatimToInterpretedPipeline
+    java-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=interpret-sh-args.spark-embedded
+    CLASS=au.org.ala.pipelines.beam.ALAVerbatimToInterpretedPipeline
+    spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=interpret-sh-args.spark-cluster
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "interpret $dr"
 
     logStepEnd "Interpretation" $dr $ltype $SECONDS
 }
 
 function validate () {
-    dr=$1
-    ltype=$2
+    local dr="$1" ltype="$2"
     CLASS=au.org.ala.pipelines.beam.ALAUUIDValidationPipeline
 
     logStepStart "Validation pipeline" $dr
     SECONDS=0
 
-    PRE=uuid-sh-args.spark-embedded
-    if [[ $ltype = "spark-embedded" || $ltype = "local" ]] ; then
-        # TODO: we can put this in a function? Same code that interpret
-        $_D java $EXTRA_JVM_CLI_ARGS \
-            $(getConf $PRE.jvm)  \
-            -cp $PIPELINES_JAR $CLASS \
-            --datasetId=$dr\
-            --config=$config $ARGS
-    fi
+    SH_ARGS=uuid-sh-args.local
+    java-pipeline $ltype $SH_ARGS $CLASS $dr
 
-    PRE=uuid-sh-args.spark-cluster
-    if [[ $ltype = "spark-cluster" ]] ; then
-        $_D /data/spark/bin/spark-submit \
-            --name "validate-uuid $dr" \
-            $(toArg $PRE num-executors) \
-            $(toArg $PRE executor-cores) \
-            $(toArg $PRE executor-memory) \
-            $(toArg $PRE driver-memory) \
-            --class $CLASS \
-            --master $SPARK_MASTER \
-            --driver-java-options "-Dlog4j.configuration=file:$CONFIG_DIR/log4j.properties" \
-            $PIPELINES_JAR \
-            --datasetId=$dr \
-            --config=$config $ARGS
-            # TODO set here an optional colorized log4j properties
-    fi
+    SH_ARGS=uuid-sh-args.spark-embedded
+    spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=uuid-sh-args.spark-cluster
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "validate-uuid $dr"
 
     logStepEnd "Validation" $dr $ltype $SECONDS
 }
 
 function uuid () {
-    dr=$1
-    ltype=$2
+    local dr="$1" ltype="$2"
     CLASS=au.org.ala.pipelines.beam.ALAUUIDMintingPipeline
 
     logStepStart "UUID pipeline" $dr
     SECONDS=0
 
-    PRE=uuid-sh-args.spark-embedded
-    if [[ $ltype = "spark-embedded" || $ltype = "local" ]] ; then
-        # TODO: we can put this in a function? Same code that interpret
-        $_D java $EXTRA_JVM_CLI_ARGS \
-            $(getConf $PRE.jvm)  \
-            -cp $PIPELINES_JAR $CLASS \
-            --datasetId=$dr\
-            --config=$config $ARGS
-    fi
+    SH_ARGS=uuid-sh-args.local
+    java-pipeline $ltype $SH_ARGS $CLASS $dr
 
-    PRE=uuid-sh-args.spark-cluster
-    if [[ $ltype = "spark-cluster" ]] ; then
-        $_D /data/spark/bin/spark-submit \
-            --name "uuid-minting $dr" \
-            $(toArg $PRE num-executors) \
-            $(toArg $PRE executor-cores) \
-            $(toArg $PRE executor-memory) \
-            $(toArg $PRE driver-memory) \
-            --class $CLASS \
-            --master $SPARK_MASTER \
-            --driver-java-options "-Dlog4j.configuration=file:$CONFIG_DIR/log4j.properties" \
-            $PIPELINES_JAR \
-            --datasetId=$dr \
-            --config=$config $ARGS
-            # TODO set here an optional colorized log4j properties
-    fi
+    SH_ARGS=uuid-sh-args.spark-embedded
+    spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=uuid-sh-args.spark-cluster
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "uuid-minting $dr"
 
     logStepEnd "UUID" $dr $ltype $SECONDS
 }
@@ -532,142 +515,74 @@ function image-sync () {
 }
 
 function export-latlng () {
-    dr=$1
-    ltype=$2
+    local dr="$1" ltype="$2"
     CLASS=au.org.ala.pipelines.beam.ALAInterpretedToLatLongCSVPipeline
 
     logStepStart "Export latlng" $dr
     SECONDS=0
 
-    PRE=export-latlng-sh-args.spark-embedded
-    if [[ $ltype = "spark-embedded" || $ltype = "local" ]] ; then
-        $_D java $EXTRA_JVM_CLI_ARGS \
-            $(getConf $PRE.jvm)  \
-            -cp $PIPELINES_JAR $CLASS \
-            --datasetId=$dr \
-            --config=$config $ARGS
-    fi
+    SH_ARGS=export-latlng-sh-args.local
+    java-pipeline $ltype $SH_ARGS $CLASS $dr
 
-    PRE=export-latlng-sh-args.spark-cluster
-    if [[ $ltype = "spark-cluster" ]] ; then
-        $_D /data/spark/bin/spark-submit \
-            --name "Export $dr" \
-            $(toArg $PRE num-executors) \
-            $(toArg $PRE executor-cores) \
-            $(toArg $PRE executor-memory) \
-            $(toArg $PRE driver-memory) \
-            --class $CLASS \
-            --master $SPARK_MASTER \
-            --driver-java-options "-Dlog4j.configuration=file:$CONFIG_DIR/log4j.properties" \
-            $PIPELINES_JAR \
-            --datasetId=$dr \
-            --config=$config $ARGS
-            # TODO set here an optional colorized log4j properties
-    fi
+    SH_ARGS=export-latlng-sh-args.spark-embedded
+    spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=export-latlng-sh-args.spark-cluster
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "Export $dr"
 
     logStepEnd "Export latlng" $dr $ltype $SECONDS
 }
 
 function sample () {
-    dr=$1
+    local dr="$1"
+    ltype="local"
     CLASS=au.org.ala.sampling.LayerCrawler
 
     logStepStart "Sampling" $dr
     SECONDS=0
 
-    PRE=sample-sh-args.local
-    $_D java $EXTRA_JVM_CLI_ARGS \
-        $(getConf $PRE.jvm)  \
-        -cp $LOCAL_PIPELINES_JAR $CLASS \
-        --datasetId=$dr \
-        --config=$config $ARGS
+    SH_ARGS=sample-sh-args.local
+    java-pipeline $ltype $SH_ARGS $CLASS $dr
 
     logStepEnd "Sampling" $dr local $SECONDS
 }
 
 function sample-avro () {
-    dr=$1
-    ltype=$2
+    local dr="$1" ltype="$2"
     CLASS=au.org.ala.pipelines.beam.ALASamplingToAvroPipeline
 
     logStepStart "Sample-avro" $dr
     SECONDS=0
 
-    PRE=sample-avro-sh-args.spark-embedded
-    if [[ $ltype = "spark-embedded" || $ltype = "local" ]] ; then
-        $_D java $EXTRA_JVM_CLI_ARGS \
-            $(getConf $PRE.jvm)  \
-            -cp $PIPELINES_JAR $CLASS \
-            --datasetId=$dr \
-            --config=$config $ARGS
-    fi
+    SH_ARGS=sample-avro-sh-args.local
+    java-pipeline $ltype $SH_ARGS $CLASS $dr
 
-    PRE=sample-avro-sh-args.spark-cluster
-    if [[ $ltype = "spark-cluster" ]] ; then
-        $_D /data/spark/bin/spark-submit \
-            --name "add-sampling $dr" \
-            $(toArg $PRE conf) \
-            $(toArg $PRE num-executors) \
-            $(toArg $PRE executor-cores) \
-            $(toArg $PRE executor-memory) \
-            $(toArg $PRE driver-memory) \
-            --class $CLASS \
-            --master $SPARK_MASTER \
-            --driver-java-options "-Dlog4j.configuration=file:$CONFIG_DIR/log4j.properties" \
-            $PIPELINES_JAR \
-            --datasetId=$dr \
-            --config=$config $ARGS
-            # TODO set here an optional colorized log4j properties
-    fi
+    SH_ARGS=sample-avro-sh-args.spark-embedded
+    spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=sample-avro-sh-args.spark-cluster
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "add-sampling $dr"
 
     logStepEnd "Sample-avro" $dr $ltype $SECONDS
 }
 
 function index () {
-    dr=$1
-    ltype=$2
-    CLASS=au.org.ala.pipelines.java.ALAInterpretedToSolrIndexPipeline
+    local dr="$1" ltype="$2"
 
     logStepStart "Indexing" $dr
     SECONDS=0
 
-    PRE=index-sh-args.local
-    if [[ $ltype = "local" ]] ; then
-        $_D java $EXTRA_JVM_CLI_ARGS \
-            $(getConf $PRE.jvm)  \
-            -cp $PIPELINES_JAR $CLASS \
-            --datasetId=$dr \
-            --config=$config $ARGS
-    fi
+    SH_ARGS=index-sh-args.local
+    CLASS=au.org.ala.pipelines.java.ALAInterpretedToSolrIndexPipeline
+    java-pipeline $ltype $SH_ARGS $CLASS $dr
 
-    PRE=index-sh-args.spark-embedded
-    if [[ $ltype = "spark-embedded" ]] ; then
-        CLASS=au.org.ala.pipelines.beam.ALAInterpretedToSolrIndexPipeline
-        $_D java $EXTRA_JVM_CLI_ARGS \
-            $(getConf $PRE.jvm)  \
-            -cp $PIPELINES_JAR $CLASS \
-            --datasetId=$dr \
-            --config=$config $ARGS
-    fi
+    SH_ARGS=index-sh-args.spark-embedded
+    CLASS=au.org.ala.pipelines.beam.ALAInterpretedToSolrIndexPipeline
+    spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
 
-    PRE=index-sh-args.spark-cluster
-    if [[ $ltype = "spark-cluster" ]] ; then
-        CLASS=au.org.ala.pipelines.beam.ALAInterpretedToSolrIndexPipeline
-        $_D /data/spark/bin/spark-submit \
-            --name "SOLR indexing for $dr" \
-            $(toArg $PRE conf) \
-            $(toArg $PRE num-executors) \
-            $(toArg $PRE executor-cores) \
-            $(toArg $PRE executor-memory) \
-            $(toArg $PRE driver-memory) \
-            --class $CLASS  \
-            --master $SPARK_MASTER \
-            --driver-java-options "-Dlog4j.configuration=file:$CONFIG_DIR/log4j.properties" \
-            $PIPELINES_JAR \
-            --datasetId=$dr \
-            --config=$config $ARGS
-            # TODO set here an optional colorized log4j properties
-    fi
+    SH_ARGS=index-sh-args.spark-cluster
+    CLASS=au.org.ala.pipelines.beam.ALAInterpretedToSolrIndexPipeline
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "SOLR indexing for $dr"
 
     logStepEnd "Indexing" $dr $ltype $SECONDS
 }
@@ -698,10 +613,12 @@ if [[ $dr = "all" ]] ; then
     dataset-list
 fi # This should create /tmp/dataset-counts.csv
 
-if ($interpret || $do_all); then
+
+function do_step() {
+    local step=$1
     if [[ $drs != "all" ]] ; then
         for d in "${drs[@]}"; do
-            interpret $d $TYPE
+            $step $d $TYPE
         done
     else
         while IFS=, read -r datasetID recordCount
@@ -709,59 +626,27 @@ if ($interpret || $do_all); then
             log.info "Dataset = $datasetID and count = $recordCount"
             if [ "$recordCount" -gt "50000" ]; then
                 if [ $USE_CLUSTER = true ]; then
-                    interpret $datasetID spark-cluster
+                    $step $datasetID spark-cluster
                 else
-                    interpret $datasetID spark-embedded
+                    $step $datasetID spark-embedded
                 fi
             else
-                interpret $datasetID local
+                $step $datasetID local
             fi
         done < /tmp/dataset-counts.csv
     fi
+}
+
+if ($interpret || $do_all); then
+    do_step interpret
 fi
 
 if ($validate || $do_all); then
-    if [[ $drs != "all" ]] ; then
-        for d in "${drs[@]}"; do
-            validate $d $TYPE
-        done
-    else
-        while IFS=, read -r datasetID recordCount
-        do
-            log.info "Dataset = $datasetID and count = $recordCount"
-            if [ "$recordCount" -gt "50000" ]; then
-                if [ $USE_CLUSTER = true ]; then
-                    $validate $datasetID spark-cluster
-                else
-                    $validate $datasetID spark-embedded
-                fi
-            else
-                $validate $datasetID spark-embedded
-            fi
-        done < /tmp/dataset-counts.csv
-    fi
+    do_step validate
 fi
 
 if ($uuid || $do_all); then
-    if [[ $drs != "all" ]] ; then
-        for d in "${drs[@]}"; do
-            uuid $d $TYPE
-        done
-    else
-        while IFS=, read -r datasetID recordCount
-        do
-            log.info "Dataset = $datasetID and count = $recordCount"
-            if [ "$recordCount" -gt "50000" ]; then
-                if [ $USE_CLUSTER = true ]; then
-                    uuid $datasetID spark-cluster
-                else
-                    uuid $datasetID spark-embedded
-                fi
-            else
-                uuid $datasetID spark-embedded
-            fi
-        done < /tmp/dataset-counts.csv
-    fi
+    do_step uuid
 fi
 
 if ($image_sync || $do_all); then
@@ -787,25 +672,8 @@ if ($image_sync || $do_all); then
 fi
 
 if ($export_latlng || $do_all); then
-  if [[ $drs != "all" ]] ; then
-      for d in "${drs[@]}"; do
-          export-latlng $d $TYPE
-      done
-  else
-      while IFS=, read -r datasetID recordCount
-      do
-          log.info "Dataset = $datasetID and count = $recordCount"
-          if [ "$recordCount" -gt "50000" ]; then
-              if [ $USE_CLUSTER = true ]; then
-                  export-latlng $datasetID spark-cluster
-              else
-                  export-latlng $datasetID spark-embedded
-              fi
-          else
-              export-latlng $datasetID spark-embedded
-          fi
-      done < /tmp/dataset-counts.csv
-  fi
+    do_step export-latlng
+    # WARN: Previosly here 'local' was not executed, always 'cluster' or 'embeded' it's this correct?
 fi
 
 if ($image_load || $do_all); then
@@ -842,47 +710,12 @@ if ($sample || $do_all); then
 fi
 
 if ($sample_avro || $do_all); then
-    if [[ $drs != "all" ]] ; then
-        for d in "${drs[@]}"; do
-            sample-avro $d $TYPE
-        done
-    else
-        while IFS=, read -r datasetID recordCount
-        do
-            log.info "Dataset = $datasetID and count = $recordCount"
-            if [ "$recordCount" -gt "50000" ]; then
-                if [ $USE_CLUSTER = true ]; then
-                    sample-avro $datasetID spark-cluster
-                else
-                    sample-avro $datasetID spark-embedded
-            fi
-        else
-            sample-avro $datasetID spark-embedded
-        fi
-        done < /tmp/dataset-counts.csv
-    fi
+    do_step sample-avro
+    # WARN: Previosly here 'local' was not executed, always 'cluster' or 'embeded' it's this correct?
 fi
 
 if ($index || $do_all); then
-    if [[ $drs != "all" ]] ; then
-        for d in "${drs[@]}"; do
-            index $d $TYPE
-        done
-    else
-        while IFS=, read -r datasetID recordCount
-        do
-            log.info "Dataset = $datasetID and count = $recordCount"
-            if [ "$recordCount" -gt "50000" ]; then
-                if [ $USE_CLUSTER = true ]; then
-                    index $datasetID spark-cluster
-                else
-                    index $datasetID spark-embedded
-                fi
-            else
-                index $datasetID java
-            fi
-        done < /tmp/dataset-counts.csv
-    fi
+    do_step index
 fi
 
 # All ended correctly, so untrap EXIT catch

@@ -116,6 +116,14 @@ sample:
   runner: SparkRunner
   # TODO improve/move this
 
+# LayerCrawler specific configuration
+layerCrawler:
+  # baseUrl: https://spatial.your-l-a.site/ws/
+  baseUrl: https://sampling.ala.org.au/sampling-service/
+  batchSize: 25000
+  batchStatusSleepTime: 1000
+  downloadRetries: 5
+
 # class: au.org.ala.pipelines.beam.ALASamplingToAvroPipeline
 sample-avro:
   inputPath: '{fsPath}/pipelines-data'
