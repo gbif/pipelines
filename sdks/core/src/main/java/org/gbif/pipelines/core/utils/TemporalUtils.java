@@ -3,9 +3,8 @@ package org.gbif.pipelines.core.utils;
 import java.time.LocalDate;
 import java.time.Year;
 import java.time.YearMonth;
-import java.time.temporal.Temporal;
+import java.time.temporal.TemporalAccessor;
 import java.util.Optional;
-
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class TemporalUtils {
 
-  public static Optional<Temporal> getTemporal(Integer year, Integer month, Integer day) {
+  public static Optional<TemporalAccessor> getTemporal(Integer year, Integer month, Integer day) {
     try {
       if (year != null && month != null && day != null) {
         return Optional.of(LocalDate.of(year, month, day));
@@ -30,5 +29,4 @@ public class TemporalUtils {
     }
     return Optional.empty();
   }
-
 }

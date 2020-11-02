@@ -1,11 +1,6 @@
 package au.org.ala.pipelines.vocabulary;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -131,7 +126,7 @@ public class CentrePoints {
   }
 
   /** @return keys */
-  public Set keys() {
+  public Set<String> keys() {
     return centres.keySet();
   }
 
@@ -166,81 +161,81 @@ public class CentrePoints {
       return numberString.substring(decimalPointLoc + 1).length();
     }
   }
-}
 
-class BBox {
+  static class BBox {
 
-  private double xmin;
-  private double xmax;
-  private double ymin;
-  private double ymax;
+    private double xmin;
+    private double xmax;
+    private double ymin;
+    private double ymax;
 
-  public BBox(double a_x, double a_y, double b_x, double b_y) {
-    xmin = Math.min(a_x, b_x);
-    xmax = Math.max(a_x, b_x);
-    ymin = Math.min(a_y, b_y);
-    ymax = Math.max(a_y, b_y);
-    sanity();
-  }
-
-  private void sanity() {
-    if (xmin < -180.0) {
-      xmin = -180.0;
+    public BBox(double a_x, double a_y, double b_x, double b_y) {
+      xmin = Math.min(a_x, b_x);
+      xmax = Math.max(a_x, b_x);
+      ymin = Math.min(a_y, b_y);
+      ymax = Math.max(a_y, b_y);
+      sanity();
     }
-    if (xmax > 180.0) {
-      xmax = 180.0;
+
+    private void sanity() {
+      if (xmin < -180.0) {
+        xmin = -180.0;
+      }
+      if (xmax > 180.0) {
+        xmax = 180.0;
+      }
+      if (ymin < -90.0) {
+        ymin = -90.0;
+      }
+      if (ymax > 90.0) {
+        ymax = 90.0;
+      }
     }
-    if (ymin < -90.0) {
-      ymin = -90.0;
+
+    public void add(LatLng c) {
+      add(c.getLongitude(), c.getLatitude());
     }
-    if (ymax > 90.0) {
-      ymax = 90.0;
+
+    /** Extends this bbox to include the point (x, y) */
+    public void add(double x, double y) {
+      xmin = Math.min(xmin, x);
+      xmax = Math.max(xmax, x);
+      ymin = Math.min(ymin, y);
+      ymax = Math.max(ymax, y);
+      sanity();
     }
-  }
 
-  public void add(LatLng c) {
-    add(c.getLongitude(), c.getLatitude());
-  }
-
-  /** Extends this bbox to include the point (x, y) */
-  public void add(double x, double y) {
-    xmin = Math.min(xmin, x);
-    xmax = Math.max(xmax, x);
-    ymin = Math.min(ymin, y);
-    ymax = Math.max(ymax, y);
-    sanity();
-  }
-
-  public void add(BBox box) {
-    add(box.getTopLeft());
-    add(box.getBottomRight());
-  }
-
-  public LatLng getTopLeft() {
-    return new LatLng(ymax, xmin);
-  }
-
-  public LatLng getBottomRight() {
-    return new LatLng(ymin, xmax);
-  }
-
-  @Override
-  public int hashCode() {
-    return (int) (ymin * xmin);
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (o instanceof BBox) {
-      BBox b = (BBox) o;
-      return b.xmax == xmax && b.ymax == ymax && b.xmin == xmin && b.ymin == ymin;
-    } else {
-      return false;
+    public void add(BBox box) {
+      add(box.getTopLeft());
+      add(box.getBottomRight());
     }
-  }
 
-  @Override
-  public String toString() {
-    return "[ x: " + xmin + " -> " + xmax + ", y: " + ymin + " -> " + ymax + " ]";
+    public LatLng getTopLeft() {
+      return new LatLng(ymax, xmin);
+    }
+
+    public LatLng getBottomRight() {
+      return new LatLng(ymin, xmax);
+    }
+
+    @Override
+    public int hashCode() {
+      return (int) (ymin * xmin);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (o instanceof BBox) {
+        BBox b = (BBox) o;
+        return b.xmax == xmax && b.ymax == ymax && b.xmin == xmin && b.ymin == ymin;
+      } else {
+        return false;
+      }
+    }
+
+    @Override
+    public String toString() {
+      return "[ x: " + xmin + " -> " + xmax + ", y: " + ymin + " -> " + ymax + " ]";
+    }
   }
 }

@@ -1,11 +1,15 @@
 package org.gbif.converters.parser.xml.parsing.xml;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import com.google.common.io.Resources;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-
 import org.gbif.api.vocabulary.OccurrenceSchemaType;
 import org.gbif.converters.parser.xml.identifier.OccurrenceKeyHelper;
 import org.gbif.converters.parser.xml.identifier.PublisherProvidedUniqueIdentifier;
@@ -13,14 +17,7 @@ import org.gbif.converters.parser.xml.identifier.Triplet;
 import org.gbif.converters.parser.xml.identifier.UniqueIdentifier;
 import org.gbif.converters.parser.xml.model.RawOccurrenceRecord;
 import org.gbif.converters.parser.xml.parsing.RawXmlOccurrence;
-
 import org.junit.Test;
-
-import com.google.common.io.Resources;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 public class XmlFragmentParserTest {
 

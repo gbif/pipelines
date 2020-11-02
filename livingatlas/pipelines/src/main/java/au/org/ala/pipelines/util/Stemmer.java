@@ -144,7 +144,7 @@ public class Stemmer {
       case 'u':
         return false;
       case 'y':
-        return (i == 0) ? true : !cons(i - 1);
+        return (i == 0) || !cons(i - 1);
       default:
         return true;
     }
@@ -238,11 +238,8 @@ public class Stemmer {
     }
     {
       int ch = b[i];
-      if (ch == 'w' || ch == 'x' || ch == 'y') {
-        return false;
-      }
+      return ch != 'w' && ch != 'x' && ch != 'y';
     }
-    return true;
   }
 
   private boolean ends(String s) {

@@ -5,9 +5,9 @@ import java.awt.image.BufferedImage;
 import lombok.SneakyThrows;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
+import org.gbif.pipelines.core.functions.SerializableSupplier;
+import org.gbif.pipelines.core.parsers.location.GeocodeKvStore;
 import org.gbif.pipelines.factory.BufferedImageFactory;
-import org.gbif.pipelines.parsers.parsers.location.GeocodeKvStore;
-import org.gbif.pipelines.transforms.SerializableSupplier;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 
 /** Factory to get singleton instance of {@link GeocodeKvStore} */

@@ -32,9 +32,9 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.UnknownTerm;
 import org.gbif.kvs.KeyValueStore;
-import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
-import org.gbif.pipelines.ingest.utils.FsUtils;
-import org.gbif.pipelines.ingest.utils.MetricsHandler;
+import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
+import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.*;
 import org.slf4j.MDC;
 
@@ -271,10 +271,10 @@ public class ALAUUIDMintingPipeline {
       String uniqueKey = uniqueKeyMap.getKey();
 
       // if UUID == NO_ID_MARKER, we have a new record so we need a new UUID.
-      if (uuid.equals(NO_ID_MARKER)) {
+      if (Objects.equals(uuid, NO_ID_MARKER)) {
         newUuids.inc();
         uuid = UUID.randomUUID().toString();
-      } else if (id.equals(NO_ID_MARKER)) {
+      } else if (Objects.equals(id, NO_ID_MARKER)) {
         id = REMOVED_PREFIX_MARKER + UUID.randomUUID().toString();
         orphanedUniqueKeys.inc();
       } else {
@@ -299,9 +299,6 @@ public class ALAUUIDMintingPipeline {
   /**
    * Match the darwin core term which has been supplied in simple camel case format e.g.
    * catalogNumber.
-   *
-   * @param name
-   * @return
    */
   static Optional<DwcTerm> getDwcTerm(String name) {
     try {

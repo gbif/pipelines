@@ -7,12 +7,10 @@ import static org.junit.Assert.assertNull;
 import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.kvs.LocationInfoConfig;
 import au.org.ala.pipelines.vocabulary.*;
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.OccurrenceIssue;
@@ -32,7 +30,6 @@ import org.junit.Test;
 public class AlaLocationInterpreterTest {
 
   private static final String ID = "777";
-  private ALAPipelinesConfig alaConfig;
 
   private CentrePoints countryCentrePoints;
   private CentrePoints stateProvinceCentrePoints;
@@ -40,7 +37,7 @@ public class AlaLocationInterpreterTest {
 
   @Before
   public void set() {
-    alaConfig = new ALAPipelinesConfig();
+    ALAPipelinesConfig alaConfig = new ALAPipelinesConfig();
     alaConfig.setLocationInfoConfig(new LocationInfoConfig(null, null, null));
     try {
       countryCentrePoints = CountryCentrePoints.getInstance(alaConfig.getLocationInfoConfig());
@@ -94,9 +91,7 @@ public class AlaLocationInterpreterTest {
     LocationInterpreter.interpretCoordinatePrecision(er, lr);
     LocationInterpreter.interpretCoordinateUncertaintyInMeters(er, lr);
 
-    LocationInterpreter.interpretElevation(er, lr);
-
-    ALALocationInterpreter.interpretGeoreferencedDate(er, lr);
+    ALALocationInterpreter.builder().create().interpretGeoreferencedDate(er, lr);
     ALALocationInterpreter.interpretGeoreferenceTerms(er, lr);
     assertEquals("1979-01-01T00:00", lr.getGeoreferencedDate());
     assertEquals(4, lr.getIssues().getIssueList().size(), 1);
@@ -339,7 +334,7 @@ public class AlaLocationInterpreterTest {
 
   @Test
   public void assertCountryCentre() {
-    KeyValueTestStoreStub store = new KeyValueTestStoreStub();
+    KeyValueTestStoreStub<LatLng, GeocodeResponse> store = new KeyValueTestStoreStub<>();
     store.put(new LatLng(-29.532804, 145.491477), createCountryResponse(Country.AUSTRALIA));
 
     MetadataRecord mdr = MetadataRecord.newBuilder().setId(ID).build();
@@ -363,24 +358,6 @@ public class AlaLocationInterpreterTest {
         },
         lr.getIssues().getIssueList().toArray());
     assertEquals(Country.AUSTRALIA.getTitle(), lr.getCountry());
-  }
-
-  /**
-   * List countries not in coutrycentrefile
-   *
-   * @throws IOException
-   */
-  @Test
-  public void countryNameMatch() throws IOException {
-    Set<String> countryInFile = countryCentrePoints.keys();
-
-    for (Country country : Country.values()) {
-      String name = country.getTitle().toUpperCase();
-      String countryCode = country.getIso2LetterCode().toUpperCase();
-      if (!countryInFile.contains(name)) {
-        log.info(countryCode + " : " + country.getTitle());
-      }
-    }
   }
 
   /** Only works for country */

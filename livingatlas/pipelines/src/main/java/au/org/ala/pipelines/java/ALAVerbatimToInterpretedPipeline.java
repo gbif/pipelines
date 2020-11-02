@@ -35,20 +35,19 @@ import org.apache.avro.Schema;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.gbif.api.model.pipelines.StepType;
-import org.gbif.converters.converter.SyncDataFileWriter;
-import org.gbif.converters.converter.SyncDataFileWriterBuilder;
-import org.gbif.pipelines.ingest.java.io.AvroReader;
-import org.gbif.pipelines.ingest.java.metrics.IngestMetrics;
-import org.gbif.pipelines.ingest.java.metrics.IngestMetricsBuilder;
-import org.gbif.pipelines.ingest.java.transforms.OccurrenceExtensionTransform;
-import org.gbif.pipelines.ingest.java.transforms.UniqueGbifIdTransform;
-import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
-import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
-import org.gbif.pipelines.ingest.utils.FileSystemFactory;
-import org.gbif.pipelines.ingest.utils.FsUtils;
-import org.gbif.pipelines.ingest.utils.MetricsHandler;
+import org.gbif.common.parsers.date.DateComponentOrdering;
+import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
+import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
+import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
+import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.common.beam.utils.PathBuilder;
+import org.gbif.pipelines.core.factory.FileSystemFactory;
+import org.gbif.pipelines.core.functions.SerializableConsumer;
+import org.gbif.pipelines.core.io.AvroReader;
+import org.gbif.pipelines.core.io.SyncDataFileWriter;
+import org.gbif.pipelines.core.io.SyncDataFileWriterBuilder;
+import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.*;
-import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
@@ -57,6 +56,8 @@ import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
+import org.gbif.pipelines.transforms.java.OccurrenceExtensionTransform;
+import org.gbif.pipelines.transforms.java.UniqueGbifIdTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.slf4j.MDC;
 
@@ -151,6 +152,11 @@ public class ALAVerbatimToInterpretedPipeline {
                 options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getProperties())
             .get();
 
+    List<DateComponentOrdering> dateComponentOrdering =
+        options.getDefaultDateFormat() == null
+            ? config.getGbifConfig().getDefaultDateFormat()
+            : options.getDefaultDateFormat();
+
     FsUtils.deleteInterpretIfExist(
         options.getHdfsSiteConfig(),
         options.getCoreSiteConfig(),
@@ -186,14 +192,30 @@ public class ALAVerbatimToInterpretedPipeline {
             .create()
             .counterFn(incMetricFn);
     VerbatimTransform verbatimTransform = VerbatimTransform.create().counterFn(incMetricFn);
-    TemporalTransform temporalTransform = TemporalTransform.create().counterFn(incMetricFn);
+    TemporalTransform temporalTransform =
+        TemporalTransform.builder()
+            .orderings(dateComponentOrdering)
+            .create()
+            .counterFn(incMetricFn);
 
     // Extension
     MeasurementOrFactTransform measurementTransform =
-        MeasurementOrFactTransform.create().counterFn(incMetricFn);
-    MultimediaTransform multimediaTransform = MultimediaTransform.create().counterFn(incMetricFn);
-    AudubonTransform audubonTransform = AudubonTransform.create().counterFn(incMetricFn);
-    ImageTransform imageTransform = ImageTransform.create().counterFn(incMetricFn);
+        MeasurementOrFactTransform.builder()
+            .orderings(dateComponentOrdering)
+            .create()
+            .counterFn(incMetricFn);
+
+    MultimediaTransform multimediaTransform =
+        MultimediaTransform.builder()
+            .orderings(dateComponentOrdering)
+            .create()
+            .counterFn(incMetricFn);
+
+    AudubonTransform audubonTransform =
+        AudubonTransform.builder().orderings(dateComponentOrdering).create().counterFn(incMetricFn);
+
+    ImageTransform imageTransform =
+        ImageTransform.builder().orderings(dateComponentOrdering).create().counterFn(incMetricFn);
 
     // Extra
     OccurrenceExtensionTransform occExtensionTransform =
@@ -205,7 +227,6 @@ public class ALAVerbatimToInterpretedPipeline {
             .dataResourceKvStoreSupplier(ALAAttributionKVStoreFactory.getInstanceSupplier(config))
             .collectionKvStoreSupplier(ALACollectionKVStoreFactory.getInstanceSupplier(config))
             .create();
-    alaAttributionTransform.setup();
 
     // ALA specific - Taxonomy
     // ALA specific - Taxonomy
@@ -217,7 +238,6 @@ public class ALAVerbatimToInterpretedPipeline {
                 ALANameCheckKVStoreFactory.getInstanceSupplier("kingdom", config))
             .dataResourceStoreSupplier(ALAAttributionKVStoreFactory.getInstanceSupplier(config))
             .create();
-    alaTaxonomyTransform.setup();
 
     // ALA specific - Location
     LocationTransform locationTransform =
@@ -226,7 +246,6 @@ public class ALAVerbatimToInterpretedPipeline {
             .countryKvStoreSupplier(GeocodeKvStoreFactory.createCountrySupplier(config))
             .stateProvinceKvStoreSupplier(GeocodeKvStoreFactory.createStateProvinceSupplier(config))
             .create();
-    locationTransform.setup();
 
     // ALA specific - Default values
     ALADefaultValuesTransform alaDefaultValuesTransform =
@@ -234,6 +253,15 @@ public class ALAVerbatimToInterpretedPipeline {
             .datasetId(datasetId)
             .dataResourceKvStoreSupplier(ALAAttributionKVStoreFactory.getInstanceSupplier(config))
             .create();
+
+    temporalTransform.setup();
+    locationTransform.setup();
+    alaTaxonomyTransform.setup();
+    alaAttributionTransform.setup();
+    imageTransform.setup();
+    audubonTransform.setup();
+    multimediaTransform.setup();
+    measurementTransform.setup();
 
     log.info("Creating writers");
     try (SyncDataFileWriter<ExtendedRecord> verbatimWriter =
@@ -383,7 +411,7 @@ public class ALAVerbatimToInterpretedPipeline {
       String id,
       boolean useInvalidName) {
     UnaryOperator<String> pathFn =
-        t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, id + AVRO_EXTENSION);
+        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, id + AVRO_EXTENSION);
     String baseName = useInvalidName ? transform.getBaseInvalidName() : transform.getBaseName();
     Path path = new Path(pathFn.apply(baseName));
     FileSystem fs =

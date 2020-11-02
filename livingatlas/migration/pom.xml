@@ -5,12 +5,12 @@
     <parent>
         <groupId>au.org.ala</groupId>
         <artifactId>livingatlas</artifactId>
-        <version>2.5.5-SNAPSHOT</version>
+        <version>2.7.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>migration</artifactId>
-    <name>Living Atlas Migration tools</name>
+    <name>Pipelines :: Living Atlas :: Migration tools</name>
     <description>Tools for migration of data from legacy systems to pipelines.</description>
     <properties>
         <!-- ALA are using spark 2.4.5, GBIF current reference 2.4.0 -->

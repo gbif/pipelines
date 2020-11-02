@@ -20,8 +20,8 @@ import org.apache.beam.sdk.transforms.*;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.gbif.pipelines.common.PipelinesVariables;
-import org.gbif.pipelines.ingest.options.BasePipelineOptions;
-import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.common.beam.options.BasePipelineOptions;
+import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.io.avro.ALAUUIDRecord;
 
 /**
@@ -41,7 +41,7 @@ public class MigrateUUIDPipeline {
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
 
-  public static void main(String[] args) throws Exception {
+  public static void main(String[] args) {
     VersionInfo.print();
     BasePipelineOptions options = PipelinesOptionsFactory.create(BasePipelineOptions.class, args);
     run(options);

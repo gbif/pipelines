@@ -18,14 +18,12 @@ package org.gbif.converters.parser.xml.model;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
-import org.gbif.converters.parser.xml.constants.PrioritizedPropertyNameEnum;
-import org.gbif.converters.parser.xml.parsing.xml.HigherTaxonParser;
-import org.gbif.converters.parser.xml.parsing.xml.PrioritizedProperty;
-
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.gbif.converters.parser.xml.constants.PrioritizedPropertyNameEnum;
+import org.gbif.converters.parser.xml.parsing.xml.HigherTaxonParser;
+import org.gbif.converters.parser.xml.parsing.xml.PrioritizedProperty;
 
 /**
  * This class represents one of possibly many "identifications" in ABCD records. There are two
@@ -56,7 +54,8 @@ public class Identification extends PropertyPrioritizer {
    */
   @Override
   public void resolvePriorities() {
-    for (Map.Entry<PrioritizedPropertyNameEnum, Set<PrioritizedProperty>> entry : prioritizedProps.entrySet()) {
+    for (Map.Entry<PrioritizedPropertyNameEnum, Set<PrioritizedProperty>> entry :
+        prioritizedProps.entrySet()) {
       PrioritizedPropertyNameEnum name = entry.getKey();
       String result = findHighestPriority(entry.getValue());
       switch (entry.getKey()) {

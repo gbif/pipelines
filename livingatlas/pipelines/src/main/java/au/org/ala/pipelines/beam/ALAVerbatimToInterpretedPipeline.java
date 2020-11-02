@@ -17,6 +17,7 @@ import au.org.ala.utils.ValidationUtils;
 import java.io.FileNotFoundException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.Set;
 import java.util.function.UnaryOperator;
 import lombok.AccessLevel;
@@ -29,10 +30,12 @@ import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.gbif.api.model.pipelines.StepType;
-import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
-import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
-import org.gbif.pipelines.ingest.utils.FsUtils;
-import org.gbif.pipelines.ingest.utils.MetricsHandler;
+import org.gbif.common.parsers.date.DateComponentOrdering;
+import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
+import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
+import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.common.beam.utils.PathBuilder;
+import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
@@ -132,9 +135,15 @@ public class ALAVerbatimToInterpretedPipeline {
                 options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getProperties())
             .get();
 
+    List<DateComponentOrdering> dateComponentOrdering =
+        options.getDefaultDateFormat() == null
+            ? config.getGbifConfig().getDefaultDateFormat()
+            : options.getDefaultDateFormat();
+
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
-    UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, id);
+    UnaryOperator<String> pathFn =
+        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, id);
 
     log.info("Creating a pipeline from options");
 
@@ -150,13 +159,18 @@ public class ALAVerbatimToInterpretedPipeline {
             .useExtendedRecordId(useExtendedRecordId)
             .create();
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
-    TemporalTransform temporalTransform = TemporalTransform.create();
+    TemporalTransform temporalTransform =
+        TemporalTransform.builder().orderings(dateComponentOrdering).create();
 
     // Extension
-    MeasurementOrFactTransform measurementOrFactTransform = MeasurementOrFactTransform.create();
-    MultimediaTransform multimediaTransform = MultimediaTransform.create();
-    AudubonTransform audubonTransform = AudubonTransform.create();
-    ImageTransform imageTransform = ImageTransform.create();
+    MeasurementOrFactTransform measurementOrFactTransform =
+        MeasurementOrFactTransform.builder().orderings(dateComponentOrdering).create();
+    MultimediaTransform multimediaTransform =
+        MultimediaTransform.builder().orderings(dateComponentOrdering).create();
+    AudubonTransform audubonTransform =
+        AudubonTransform.builder().orderings(dateComponentOrdering).create();
+    ImageTransform imageTransform =
+        ImageTransform.builder().orderings(dateComponentOrdering).create();
 
     // ALA specific - Attribution
     ALAAttributionTransform alaAttributionTransform =

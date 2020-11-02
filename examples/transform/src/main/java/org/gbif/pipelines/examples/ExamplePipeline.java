@@ -1,18 +1,17 @@
 package org.gbif.pipelines.examples;
 
-import org.gbif.example.io.avro.ExampleRecord;
-import org.gbif.pipelines.common.beam.DwcaIO;
-import org.gbif.pipelines.ingest.options.BasePipelineOptions;
-import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
-import org.gbif.pipelines.ingest.utils.FsUtils;
-import org.gbif.pipelines.transforms.core.TemporalTransform;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.AvroIO;
+import org.gbif.example.io.avro.ExampleRecord;
+import org.gbif.pipelines.common.beam.DwcaIO;
+import org.gbif.pipelines.common.beam.options.BasePipelineOptions;
+import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.common.beam.utils.PathBuilder;
+import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
 /**
  * Example of using @see <a href="https://beam.apache.org/contribute/runner-guide/">Apache Beam</a>
@@ -40,7 +39,7 @@ public class ExamplePipeline {
 
     // Pipeline properties
     String inputPath = options.getInputPath(); // Path to DwCA zip archive
-    String tmpDir = FsUtils.getTempDir(options); // Path to temporal directory or creates new
+    String tmpDir = PathBuilder.getTempDir(options); // Path to temporal directory or creates new
     String outPath = options.getTargetPath(); // Path to output *.avro files
 
     // Creates pipeline from options
@@ -48,12 +47,15 @@ public class ExamplePipeline {
 
     // Reads DwCA archive and convert to ExtendedRecord
     p.apply("Read DwCA zip archive", DwcaIO.Read.fromCompressed(inputPath, tmpDir))
-        // Interprets and transforms from ExtendedRecord to TemporalRecord using GBIF TemporalInterpreter
-        .apply("Interpret TemporalRecord", TemporalTransform.create().interpret())
+        // Interprets and transforms from ExtendedRecord to TemporalRecord using GBIF
+        // TemporalInterpreter
+        .apply("Interpret TemporalRecord", TemporalTransform.builder().create().interpret())
         // Interprets and Transforms from ExtendedRecord to ExampleRecord using ExampleInterpreter
         .apply("Interpret ExampleRecord", ExampleTransform.exampleOne())
         // Write ExampleRecords as Avro files using AvroIO.Write
-        .apply("Write as Avro files", AvroIO.write(ExampleRecord.class).to(outPath).withSuffix(AVRO_EXTENSION));
+        .apply(
+            "Write as Avro files",
+            AvroIO.write(ExampleRecord.class).to(outPath).withSuffix(AVRO_EXTENSION));
 
     LOG.info("Running the pipeline");
     p.run().waitUntilFinish();

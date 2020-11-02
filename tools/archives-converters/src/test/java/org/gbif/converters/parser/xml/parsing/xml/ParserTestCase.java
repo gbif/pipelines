@@ -17,11 +17,9 @@ package org.gbif.converters.parser.xml.parsing.xml;
 
 import java.io.File;
 import java.util.List;
-
 import org.gbif.converters.parser.xml.OccurrenceParser;
 import org.gbif.converters.parser.xml.model.RawOccurrenceRecord;
 import org.gbif.converters.parser.xml.parsing.RawXmlOccurrence;
-
 import org.junit.Before;
 
 public abstract class ParserTestCase {

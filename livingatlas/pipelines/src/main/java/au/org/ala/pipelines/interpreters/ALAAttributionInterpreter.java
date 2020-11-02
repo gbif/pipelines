@@ -18,21 +18,19 @@ public class ALAAttributionInterpreter {
   public static BiConsumer<ExtendedRecord, ALAAttributionRecord> interpretDatasetKey(
       MetadataRecord mr, KeyValueStore<String, ALACollectoryMetadata> dataResourceKvStore) {
     return (key, aar) -> {
-      if (dataResourceKvStore != null) {
-        if (mr.getId() != null) {
-          ALACollectoryMetadata m = dataResourceKvStore.get(mr.getId());
-          if (m != null) {
-            aar.setDataResourceUid(m.getUid());
-            if (m.getProvider() != null) {
-              aar.setDataProviderUid(m.getProvider().getUid());
-            }
-            aar.setDataResourceName(m.getName());
-            aar.setLicenseType(m.getLicenseType());
-            aar.setLicenseVersion(m.getLicenseVersion());
-          } else {
-            throw new RuntimeException(
-                "Unable to retrieve connection parameters for dataset: " + mr.getId());
+      if (dataResourceKvStore != null && mr.getId() != null) {
+        ALACollectoryMetadata m = dataResourceKvStore.get(mr.getId());
+        if (m != null) {
+          aar.setDataResourceUid(m.getUid());
+          if (m.getProvider() != null) {
+            aar.setDataProviderUid(m.getProvider().getUid());
           }
+          aar.setDataResourceName(m.getName());
+          aar.setLicenseType(m.getLicenseType());
+          aar.setLicenseVersion(m.getLicenseVersion());
+        } else {
+          throw new RuntimeException(
+              "Unable to retrieve connection parameters for dataset: " + mr.getId());
         }
       }
     };

@@ -13,8 +13,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.cache.KeyValueCache;
 import org.gbif.kvs.hbase.Command;
-import org.gbif.pipelines.parsers.config.model.WsConfig;
-import org.gbif.pipelines.transforms.SerializableSupplier;
+import org.gbif.pipelines.core.config.model.WsConfig;
+import org.gbif.pipelines.core.functions.SerializableSupplier;
 
 @Slf4j
 public class ALANameMatchKVStoreFactory {
@@ -48,7 +48,7 @@ public class ALANameMatchKVStoreFactory {
   public static KeyValueStore<NameSearch, NameUsageMatch> create(ALAPipelinesConfig config)
       throws IOException {
     WsConfig ws = config.getAlaNameMatch();
-    ClientConfiguration clientConfiguration = WsUtils.createConfiguration(ws, config);
+    ClientConfiguration clientConfiguration = WsUtils.createConfiguration(ws);
 
     ALANameUsageMatchServiceClient wsClient =
         new ALANameUsageMatchServiceClient(clientConfiguration);
@@ -57,7 +57,8 @@ public class ALANameMatchKVStoreFactory {
           try {
             wsClient.close();
           } catch (Exception e) {
-            logAndThrow(e, "Unable to close");
+            log.error("Unable to close", e);
+            throw new RuntimeException(e);
           }
         };
 
@@ -68,19 +69,20 @@ public class ALANameMatchKVStoreFactory {
   private static KeyValueStore<NameSearch, NameUsageMatch> cache2kBackedKVStore(
       NameMatchService nameMatchService, Command closeHandler, ALAPipelinesConfig config) {
 
-    KeyValueStore kvs =
+    KeyValueStore<NameSearch, NameUsageMatch> kvs =
         new KeyValueStore<NameSearch, NameUsageMatch>() {
           @Override
           public NameUsageMatch get(NameSearch key) {
             try {
               return nameMatchService.match(key);
             } catch (Exception ex) {
-              throw logAndThrow(ex, "Error contacting the species match service");
+              log.error("Error contacting the species match service", ex);
+              throw new RuntimeException(ex);
             }
           }
 
           @Override
-          public void close() throws IOException {
+          public void close() {
             closeHandler.execute();
           }
         };
@@ -91,17 +93,5 @@ public class ALANameMatchKVStoreFactory {
   public static SerializableSupplier<KeyValueStore<NameSearch, NameUsageMatch>> getInstanceSupplier(
       ALAPipelinesConfig config) {
     return () -> ALANameMatchKVStoreFactory.getInstance(config);
-  }
-
-  /**
-   * Wraps an exception into a {@link RuntimeException}.
-   *
-   * @param throwable to propagate
-   * @param message to log and use for the exception wrapper
-   * @return a new {@link RuntimeException}
-   */
-  private static RuntimeException logAndThrow(Throwable throwable, String message) {
-    log.error(message, throwable);
-    return new RuntimeException(throwable);
   }
 }

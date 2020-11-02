@@ -28,7 +28,9 @@ public class ALACSVDocumentTransform implements Serializable {
             String k = c.element().getKey();
             // Core
             LocationRecord lr = v.getOnly(lrTag, LocationRecord.newBuilder().setId(k).build());
-            c.output(lr.getDecimalLatitude() + "," + lr.getDecimalLongitude());
+            if (lr != null) {
+              c.output(lr.getDecimalLatitude() + "," + lr.getDecimalLongitude());
+            }
           }
         };
 

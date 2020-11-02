@@ -33,10 +33,10 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.UnknownTerm;
 import org.gbif.kvs.KeyValueStore;
-import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
-import org.gbif.pipelines.ingest.utils.FsUtils;
+import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.core.utils.FsUtils;
+import org.gbif.pipelines.core.utils.ModelUtils;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.parsers.utils.ModelUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.MDC;
 
@@ -71,7 +71,7 @@ public class ALAUUIDValidationPipeline {
     deletePreviousValidation(options);
 
     // validation results
-    PCollectionList<String> results = PCollectionList.<String>empty(p);
+    PCollectionList<String> results = PCollectionList.empty(p);
 
     ALAPipelinesConfig config =
         ALAPipelinesConfigFactory.getInstance(
@@ -188,7 +188,7 @@ public class ALAUUIDValidationPipeline {
                                   datasetID, source, uniqueDwcTerms));
                         }
                       }))
-              .apply(Count.<String>perElement());
+              .apply(Count.perElement());
 
       // filter keys that are used more than once
       PCollection<KV<String, Long>> duplicateKeyCounts =
@@ -249,7 +249,7 @@ public class ALAUUIDValidationPipeline {
 
     // write out all results to YAML file
     results
-        .apply(Flatten.<String>pCollections())
+        .apply(Flatten.pCollections())
         .setCoder(StringUtf8Coder.of())
         .apply(
             TextIO.write()

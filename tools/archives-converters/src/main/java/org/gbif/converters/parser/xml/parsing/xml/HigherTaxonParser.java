@@ -15,15 +15,13 @@
  */
 package org.gbif.converters.parser.xml.parsing.xml;
 
+import com.google.common.base.Strings;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
-
+import lombok.extern.slf4j.Slf4j;
 import org.gbif.converters.parser.xml.constants.TaxonRankEnum;
 import org.gbif.converters.parser.xml.model.Taxon;
-
-import com.google.common.base.Strings;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class HigherTaxonParser {

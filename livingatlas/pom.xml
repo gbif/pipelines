@@ -1,44 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>org.gbif.pipelines</groupId>
-        <artifactId>pipelines-parent</artifactId>
-        <relativePath>../pom.xml</relativePath>
-        <version>2.5.5-SNAPSHOT</version>
-    </parent>
+  <parent>
+    <groupId>org.gbif.pipelines</groupId>
+    <artifactId>pipelines-parent</artifactId>
+    <version>2.7.1-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
 
-    <groupId>au.org.ala</groupId>
-    <artifactId>livingatlas</artifactId>
-    <packaging>pom</packaging>
-    <name>Living Atlas Pipelines Parent POM</name>
-    <description>
-    </description>
-    <modules>
-        <module>pipelines</module>
-        <module>migration</module>
-    </modules>
+  <groupId>au.org.ala</groupId>
+  <artifactId>livingatlas</artifactId>
+  <packaging>pom</packaging>
+  <name>Pipelines :: Living Atlas</name>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>com.diffplug.spotless</groupId>
-                <artifactId>spotless-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <!-- Runs in compile phase to fail fast in case of formatting issues.-->
-                        <id>spotless-check</id>
-                        <phase>compile</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
+  <modules>
+    <module>pipelines</module>
+    <module>migration</module>
+  </modules>
 
 </project>

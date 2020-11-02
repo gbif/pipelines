@@ -4,12 +4,10 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
-
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -29,7 +27,7 @@ public class MeasurementOrFactInterpreterTest {
             + "\"lte\": null}, \"valueParsed\": null}, {\"id\": null, \"type\": null, \"value\": \"1\", \"accuracy\": null, "
             + "\"unit\": null, \"determinedDate\": \"not a date\", \"determinedBy\": null, \"method\": null, \"remarks\": null, "
             + "\"determinedDateParsed\": {\"gte\": null, \"lte\": null}, \"valueParsed\": 1.0}], \"issues\": {\"issueList\": "
-            + "[\"MEASUREMENT_OR_FACT_DATE_INVALID\"]}}";
+            + "[]}}";
 
     // State
     Map<String, String> ext1 = new HashMap<>();
@@ -61,18 +59,15 @@ public class MeasurementOrFactInterpreterTest {
     Map<String, List<Map<String, String>>> ext = new HashMap<>();
     ext.put(Extension.MEASUREMENT_OR_FACT.getRowType(), Arrays.asList(ext1, ext2, ext3));
 
-    ExtendedRecord record = ExtendedRecord.newBuilder()
-        .setId("id")
-        .setExtensions(ext)
-        .build();
+    ExtendedRecord record = ExtendedRecord.newBuilder().setId("id").setExtensions(ext).build();
 
-    MeasurementOrFactRecord mfr = MeasurementOrFactRecord.newBuilder().setId(record.getId()).setCreated(0L).build();
+    MeasurementOrFactRecord mfr =
+        MeasurementOrFactRecord.newBuilder().setId(record.getId()).setCreated(0L).build();
 
     // When
-    MeasurementOrFactInterpreter.interpret(record, mfr);
+    MeasurementOrFactInterpreter.builder().create().interpret(record, mfr);
 
-    //Should
+    // Should
     Assert.assertEquals(expected, mfr.toString());
   }
-
 }

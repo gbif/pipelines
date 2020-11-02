@@ -17,10 +17,10 @@ import org.codehaus.plexus.util.FileUtils;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.common.beam.DwcaIO;
-import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
-import org.gbif.pipelines.ingest.utils.FileSystemFactory;
-import org.gbif.pipelines.ingest.utils.FsUtils;
-import org.gbif.pipelines.ingest.utils.MetricsHandler;
+import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
+import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.common.beam.utils.PathBuilder;
+import org.gbif.pipelines.core.factory.FileSystemFactory;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.slf4j.MDC;
 
@@ -41,9 +41,6 @@ public class ALADwcaToVerbatimPipeline {
   /**
    * Run a load for the supplied dataset, creating a lock to prevent other load process loading the
    * same archive.
-   *
-   * @param options
-   * @throws IOException
    */
   private static void runWithLocking(DwcaToVerbatimPipelineOptions options) throws IOException {
     // check for a lock file - if there isn't one, create one.
@@ -107,9 +104,9 @@ public class ALADwcaToVerbatimPipeline {
     }
 
     String targetPath =
-        FsUtils.buildDatasetAttemptPath(
+        PathBuilder.buildDatasetAttemptPath(
             options, PipelinesVariables.Pipeline.Conversion.FILE_NAME, false);
-    String tmpPath = FsUtils.getTempDir(options);
+    String tmpPath = PathBuilder.getTempDir(options);
 
     log.info("Input path: {}", inputPath);
     boolean isDir = Paths.get(inputPath).toFile().isDirectory();

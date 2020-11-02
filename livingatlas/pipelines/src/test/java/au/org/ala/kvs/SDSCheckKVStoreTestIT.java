@@ -31,7 +31,7 @@ public class SDSCheckKVStoreTestIT {
    * HashMap.
    */
   @Test
-  public void getCacheTest1() throws Exception {
+  public void getCacheTest1() {
     SpeciesCheck lookup = SpeciesCheck.builder().scientificName("Amanita walpolei").build();
     Boolean result = this.kvs.get(lookup);
     assertNotNull(result);
@@ -40,7 +40,7 @@ public class SDSCheckKVStoreTestIT {
 
   /** Test for an invalid response */
   @Test
-  public void getCacheTest2() throws Exception {
+  public void getCacheTest2() {
     SpeciesCheck lookup = SpeciesCheck.builder().scientificName("Osphranter rufus").build();
     Boolean result = this.kvs.get(lookup);
     assertNotNull(result);

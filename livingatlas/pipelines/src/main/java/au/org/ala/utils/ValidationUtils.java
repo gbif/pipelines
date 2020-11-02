@@ -11,19 +11,23 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.gbif.dwc.terms.Term;
-import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
-import org.gbif.pipelines.ingest.utils.FileSystemFactory;
+import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
+import org.gbif.pipelines.core.factory.FileSystemFactory;
+import org.gbif.pipelines.core.utils.ModelUtils;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.parsers.utils.ModelUtils;
 import org.jetbrains.annotations.NotNull;
 import org.yaml.snakeyaml.Yaml;
 
 @Slf4j
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ValidationUtils {
 
   public static final String METADATA_NOT_AVAILABLE = "NOT_AVAILABLE";
@@ -53,14 +57,8 @@ public class ValidationUtils {
   public static final String UNIQUE_TERMS_SPECIFIED = "uniqueTermsSpecified";
   public static final String METADATA_AVAILABLE = "metadataAvailable";
 
-  /**
-   * Checks a dataset can be indexed.
-   *
-   * @param options
-   * @return
-   */
-  public static ValidationResult checkReadyForIndexing(ALASolrPipelineOptions options)
-      throws Exception {
+  /** Checks a dataset can be indexed. */
+  public static ValidationResult checkReadyForIndexing(ALASolrPipelineOptions options) {
 
     ValidationResult isValid = checkValidationFile(options);
     if (!isValid.getValid()) {
@@ -79,14 +77,9 @@ public class ValidationUtils {
         options.getIncludeSampling());
   }
 
-  /**
-   * Checks a dataset can be indexed.
-   *
-   * @return
-   */
+  /** Checks a dataset can be indexed. */
   public static ValidationResult checkReadyForIndexing(
-      FileSystem fs, String filePath, String datasetId, Integer attempt, boolean includeSampling)
-      throws Exception {
+      FileSystem fs, String filePath, String datasetId, Integer attempt, boolean includeSampling) {
 
     ValidationResult isValid = checkValidationFile(fs, filePath, datasetId, attempt);
 
@@ -134,12 +127,8 @@ public class ValidationUtils {
   /**
    * Checks the content of the validate file, returning true if the UUID content has been checked
    * and is thought to be valid.
-   *
-   * @param options
-   * @return
    */
-  public static ValidationResult checkValidationFile(InterpretationPipelineOptions options)
-      throws Exception {
+  public static ValidationResult checkValidationFile(InterpretationPipelineOptions options) {
 
     FileSystem fs =
         FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
@@ -149,8 +138,9 @@ public class ValidationUtils {
         fs, options.getInputPath(), options.getDatasetId(), options.getAttempt());
   }
 
+  @SneakyThrows
   public static ValidationResult checkValidationFile(
-      FileSystem fs, String inputPath, String datasetId, Integer attempt) throws Exception {
+      FileSystem fs, String inputPath, String datasetId, Integer attempt) {
 
     String validateFilePath = getValidationFilePath(inputPath, datasetId, attempt);
     Path metrics = new Path(validateFilePath);
@@ -177,7 +167,7 @@ public class ValidationUtils {
       }
 
       // check invalid record count
-      Long emptyKeyRecords =
+      long emptyKeyRecords =
           Long.parseLong(yamlObject.getOrDefault(EMPTY_KEY_RECORDS, -1L).toString());
 
       if (emptyKeyRecords > 0) {
@@ -190,9 +180,9 @@ public class ValidationUtils {
       }
 
       // check duplicate record count
-      Long duplicateKeyCount =
+      long duplicateKeyCount =
           Long.parseLong(yamlObject.getOrDefault(DUPLICATE_KEY_COUNT, -1L).toString());
-      Long duplicateRecordKeyCount =
+      long duplicateRecordKeyCount =
           Long.parseLong(yamlObject.getOrDefault(DUPLICATE_RECORD_KEY_COUNT, -1L).toString());
 
       if (duplicateKeyCount > 0) {
@@ -215,9 +205,6 @@ public class ValidationUtils {
   /**
    * Checks the content of the validate file, returning true if the UUID content has been checked
    * and is thought to be valid.
-   *
-   * @param options
-   * @return
    */
   public static Long getDuplicateKeyCount(UUIDPipelineOptions options) throws Exception {
     FileSystem fs =
@@ -242,11 +229,9 @@ public class ValidationUtils {
   /**
    * Checks the content of the validate file, returning true if the UUID content has been checked
    * and is thought to be valid.
-   *
-   * @param options
-   * @return
    */
-  public static Long getInvalidRecordCount(UUIDPipelineOptions options) throws Exception {
+  @SneakyThrows
+  public static Long getInvalidRecordCount(UUIDPipelineOptions options) {
 
     FileSystem fs =
         FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
@@ -270,14 +255,8 @@ public class ValidationUtils {
 
   @NotNull
   public static String getValidationFilePath(InterpretationPipelineOptions options) {
-    String validateFilePath =
-        String.join(
-            "/",
-            options.getInputPath(),
-            options.getDatasetId().trim(),
-            "1",
-            VALIDATION_REPORT_FILE);
-    return validateFilePath;
+    return String.join(
+        "/", options.getInputPath(), options.getDatasetId().trim(), "1", VALIDATION_REPORT_FILE);
   }
 
   @NotNull
@@ -286,31 +265,32 @@ public class ValidationUtils {
   }
 
   public static Path getMetrics(
-      FileSystem fs, String filePath, String datasetId, Integer attempt, String metricsFile)
-      throws Exception {
+      String filePath, String datasetId, Integer attempt, String metricsFile) {
     return new Path(String.join("/", filePath, datasetId, attempt.toString(), metricsFile));
   }
 
+  @SneakyThrows
   public static Map<String, Object> readValidation(
-      FileSystem fs, String filePath, String datasetID, Integer attempt) throws Exception {
+      FileSystem fs, String filePath, String datasetID, Integer attempt) {
 
     // read YAML
     Yaml yaml = new Yaml();
-    Path validationMetrics = getMetrics(fs, filePath, datasetID, attempt, VALIDATION_REPORT_FILE);
+    Path validationMetrics = getMetrics(filePath, datasetID, attempt, VALIDATION_REPORT_FILE);
 
     // the YAML files created by metrics are UTF-16 encoded
     return yaml.load(new InputStreamReader(fs.open(validationMetrics), StandardCharsets.UTF_8));
   }
 
+  @SneakyThrows
   public static Long readVerbatimCount(
-      FileSystem fs, String filePath, String datasetID, Integer attempt) throws Exception {
+      FileSystem fs, String filePath, String datasetID, Integer attempt) {
 
     // read YAML
     Yaml yaml = new Yaml();
-    Path validationMetrics = getMetrics(fs, filePath, datasetID, attempt, VERBATIM_METRICS);
+    Path validationMetrics = getMetrics(filePath, datasetID, attempt, VERBATIM_METRICS);
 
     if (!fs.exists(validationMetrics)) {
-      return -1l;
+      return -1L;
     }
 
     // the YAML files created by metrics are UTF-16 encoded
@@ -324,16 +304,11 @@ public class ValidationUtils {
    * Generate a unique key based on the darwin core fields. This works the same was unique keys
    * where generated in the biocache-store. This is repeated to maintain backwards compatibility
    * with existing data holdings.
-   *
-   * @param source
-   * @param uniqueTerms
-   * @return
-   * @throws RuntimeException
    */
   public static String generateUniqueKey(
-      String datasetID, ExtendedRecord source, List<Term> uniqueTerms) throws RuntimeException {
+      String datasetID, ExtendedRecord source, List<Term> uniqueTerms) {
 
-    List<String> uniqueValues = new ArrayList<String>();
+    List<String> uniqueValues = new ArrayList<>();
     boolean allUniqueValuesAreEmpty = true;
     for (Term term : uniqueTerms) {
       String value = ModelUtils.extractNullAwareValue(source, term);
@@ -346,8 +321,7 @@ public class ValidationUtils {
 
     if (allUniqueValuesAreEmpty) {
 
-      String termList =
-          uniqueTerms.stream().map(t -> t.simpleName()).collect(Collectors.joining(","));
+      String termList = uniqueTerms.stream().map(Term::simpleName).collect(Collectors.joining(","));
       String errorMessage =
           String.format(
               "Unable to load dataset %s, All supplied unique terms (%s) where empty record with ID %s",
@@ -368,16 +342,11 @@ public class ValidationUtils {
    * Generate a unique key based on the darwin core fields. This works the same was unique keys
    * where generated in the biocache-store. This is repeated to maintain backwards compatibility
    * with existing data holdings.
-   *
-   * @param source
-   * @param uniqueTerms
-   * @return
-   * @throws RuntimeException
    */
   public static String generateUniqueKeyForValidation(
-      String datasetID, ExtendedRecord source, List<Term> uniqueTerms) throws RuntimeException {
+      String datasetID, ExtendedRecord source, List<Term> uniqueTerms) {
 
-    final List<String> uniqueValues = new ArrayList<String>();
+    final List<String> uniqueValues = new ArrayList<>();
     boolean allUniqueValuesAreEmpty = true;
     for (Term term : uniqueTerms) {
       String value = ModelUtils.extractNullAwareValue(source, term);
@@ -399,16 +368,16 @@ public class ValidationUtils {
     return String.join(UNIQUE_COMPOSITE_KEY_JOIN_CHAR, uniqueValues);
   }
 
+  @SneakyThrows
   public static boolean metricsExists(
-      FileSystem fs, String filePath, String datasetId, Integer attempt, String metricsFile)
-      throws Exception {
+      FileSystem fs, String filePath, String datasetId, Integer attempt, String metricsFile) {
     Path metrics = new Path(String.join("/", filePath, datasetId, attempt.toString(), metricsFile));
     return fs.exists(metrics);
   }
 
+  @SneakyThrows
   public static long metricsModificationTime(
-      FileSystem fs, String filePath, String datasetId, Integer attempt, String metricsFile)
-      throws Exception {
+      FileSystem fs, String filePath, String datasetId, Integer attempt, String metricsFile) {
     String path = String.join("/", filePath, datasetId, attempt.toString(), metricsFile);
     Path metrics = new Path(path);
     if (fs.exists(metrics)) {

@@ -14,8 +14,8 @@ import org.gbif.api.vocabulary.TagNamespace;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.TermFactory;
 import org.gbif.kvs.KeyValueStore;
+import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.transforms.SerializableSupplier;
 import org.gbif.pipelines.transforms.metadata.DefaultValuesTransform;
 
 /**
@@ -70,7 +70,7 @@ public class ALADefaultValuesTransform
 
   public List<MachineTag> getMachineTags() {
     try {
-      List<MachineTag> tags = new ArrayList<MachineTag>();
+      List<MachineTag> tags = new ArrayList<>();
       ALACollectoryMetadata metadata = dataResourceKvStoreSupplier.get().get(datasetId);
       if (metadata != null
           && metadata.getDefaultDarwinCoreValues() != null

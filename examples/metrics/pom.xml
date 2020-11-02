@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.gbif.pipelines</groupId>
     <artifactId>examples</artifactId>
-    <version>2.5.5-SNAPSHOT</version>
+    <version>2.7.1-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -78,7 +78,7 @@
     <!-- Dependency to custom Beam Options -->
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
-      <artifactId>ingest-gbif</artifactId>
+      <artifactId>ingest-gbif-beam</artifactId>
       <exclusions>
         <!-- Excluded to avoid problem with Spark standalone mode and Log4j logger -->
         <exclusion>
