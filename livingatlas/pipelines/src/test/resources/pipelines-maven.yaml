@@ -63,6 +63,14 @@ sample:
     inputPath: /data/pipelines-data
     metaFileName: indexing-metrics.yml
 
+# LayerCrawler specific configuration
+layerCrawler:
+  # baseUrl: https://spatial.your-l-a.site/ws/
+  baseUrl: https://sampling.ala.org.au/sampling-service/
+  batchSize: 25000
+  batchStatusSleepTime: 1000
+  downloadRetries: 5
+
 migrate-uuids:
   default:
     runner: SparkRunner
