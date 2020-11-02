@@ -56,6 +56,8 @@ public class ALASolrDocumentTransform implements Serializable {
 
   @NonNull private TupleTag<ImageServiceRecord> isTag;
 
+  @NonNull private TupleTag<TaxonProfile> tpTag;
+
   @NonNull private PCollectionView<MetadataRecord> metadataView;
 
   String datasetID;
@@ -75,6 +77,7 @@ public class ALASolrDocumentTransform implements Serializable {
       TupleTag<ALAAttributionRecord> aarTag,
       TupleTag<ALAUUIDRecord> urTag,
       TupleTag<ImageServiceRecord> isTag,
+      TupleTag<TaxonProfile> tpTag,
       PCollectionView<MetadataRecord> metadataView,
       String datasetID) {
     ALASolrDocumentTransform t = new ALASolrDocumentTransform();
@@ -92,6 +95,7 @@ public class ALASolrDocumentTransform implements Serializable {
     t.aarTag = aarTag;
     t.urTag = urTag;
     t.isTag = isTag;
+    t.tpTag = tpTag;
     t.metadataView = metadataView;
     t.datasetID = datasetID;
     return t;
@@ -123,7 +127,8 @@ public class ALASolrDocumentTransform implements Serializable {
       ALAAttributionRecord aar,
       LocationFeatureRecord asr,
       ALAUUIDRecord ur,
-      ImageServiceRecord isr) {
+      ImageServiceRecord isr,
+      TaxonProfile tpr) {
 
     Set<String> skipKeys = new HashSet<String>();
     skipKeys.add("id");
@@ -307,6 +312,30 @@ public class ALASolrDocumentTransform implements Serializable {
       doc.setField("multimedia", "Image");
     }
 
+    if (tpr != null && tpr.getSpeciesListID() != null && !tpr.getSpeciesListID().isEmpty()) {
+
+      for (String speciesListID : tpr.getSpeciesListID()) {
+        doc.setField("species_list_uid", speciesListID);
+      }
+
+      // CONSERVATION STATUS
+      String stateProvince = lr.getStateProvince();
+      String country = lr.getCountry();
+
+      List<ConservationStatus> conservationStatuses = tpr.getConservationStatuses();
+      for (ConservationStatus conservationStatus : conservationStatuses) {
+        if (conservationStatus.getRegion() != null) {
+          if (conservationStatus.getRegion().equalsIgnoreCase(stateProvince)) {
+            doc.setField("raw_state_conservation", conservationStatus.getSourceStatus());
+            doc.setField("state_conservation", conservationStatus.getStatus());
+          }
+          if (conservationStatus.getRegion().equalsIgnoreCase(country)) {
+            doc.setField("country_conservation", conservationStatus.getStatus());
+          }
+        }
+      }
+    }
+
     IssueRecord geospatialIssues = lr.getIssues();
     for (String issue : geospatialIssues.getIssueList()) {
       doc.setField("assertions", issue);
@@ -366,8 +395,15 @@ public class ALASolrDocumentTransform implements Serializable {
             ALAAttributionRecord aar =
                 v.getOnly(aarTag, ALAAttributionRecord.newBuilder().setId(k).build());
 
-            ImageServiceRecord isr =
-                v.getOnly(isTag, ImageServiceRecord.newBuilder().setId(k).build());
+            ImageServiceRecord isr = null;
+            if (isTag != null) {
+              isr = v.getOnly(isTag, ImageServiceRecord.newBuilder().setId(k).build());
+            }
+
+            TaxonProfile tpr = null;
+            if (tpTag != null) {
+              tpr = v.getOnly(tpTag, TaxonProfile.newBuilder().setId(k).build());
+            }
 
             // Sampling
             LocationFeatureRecord asr = null;
@@ -378,7 +414,7 @@ public class ALASolrDocumentTransform implements Serializable {
             MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
 
             SolrInputDocument doc =
-                createSolrDocument(mdr, br, tr, lr, txr, atxr, er, aar, asr, ur, isr);
+                createSolrDocument(mdr, br, tr, lr, txr, atxr, er, aar, asr, ur, isr, tpr);
 
             c.output(doc);
             counter.inc();

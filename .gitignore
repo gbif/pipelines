@@ -23,3 +23,4 @@ livingatlas/debian/*.substvars
 livingatlas/debian/files
 livingatlas/debian/la-pipelines
 livingatlas/debian/maven-repo-local/
+/livingatlas/pipelines/src/test/resources/image-service-non/dr893/image.csv-sorted

@@ -18,7 +18,7 @@ public class ALAPipelinesConfig implements Serializable {
   private WsConfig collectory;
   private WsConfig alaNameMatch;
   private WsConfig sds;
-  private WsConfig lists;
+  private WsConfig speciesListService;
   private WsConfig imageService;
 
   public ALAPipelinesConfig() {
@@ -26,7 +26,7 @@ public class ALAPipelinesConfig implements Serializable {
     locationInfoConfig = new LocationInfoConfig();
     collectory = new WsConfig();
     alaNameMatch = new WsConfig();
-    lists = new WsConfig();
+    speciesListService = new WsConfig();
     imageService = new WsConfig();
   }
 }

@@ -162,20 +162,41 @@ public class ALAInterpretedToSolrIndexPipeline {
         p.apply("Read attribution", alaAttributionTransform.read(pathFn))
             .apply("Map attribution to KV", alaAttributionTransform.toKv());
 
-    PCollection<KV<String, ImageServiceRecord>> alaImageServiceRecords =
-        p.apply(
-                AvroIO.read(ImageServiceRecord.class)
-                    .from(
-                        String.join(
-                            "/",
-                            options.getTargetPath(),
-                            options.getDatasetId().trim(),
-                            options.getAttempt().toString(),
-                            "images",
-                            "*.avro")))
-            .apply(
-                MapElements.into(new TypeDescriptor<KV<String, ImageServiceRecord>>() {})
-                    .via((ImageServiceRecord tr) -> KV.of(tr.getId(), tr)));
+    PCollection<KV<String, ImageServiceRecord>> alaImageServiceRecords = null;
+    if (options.getIncludeImages()) {
+      alaImageServiceRecords =
+          p.apply(
+                  AvroIO.read(ImageServiceRecord.class)
+                      .from(
+                          String.join(
+                              "/",
+                              options.getTargetPath(),
+                              options.getDatasetId().trim(),
+                              options.getAttempt().toString(),
+                              "images",
+                              "*.avro")))
+              .apply(
+                  MapElements.into(new TypeDescriptor<KV<String, ImageServiceRecord>>() {})
+                      .via((ImageServiceRecord tr) -> KV.of(tr.getId(), tr)));
+    }
+
+    PCollection<KV<String, TaxonProfile>> alaTaxonProfileRecords = null;
+    if (options.getIncludeSpeciesLists()) {
+      alaTaxonProfileRecords =
+          p.apply(
+                  AvroIO.read(TaxonProfile.class)
+                      .from(
+                          String.join(
+                              "/",
+                              options.getTargetPath(),
+                              options.getDatasetId().trim(),
+                              options.getAttempt().toString(),
+                              "taxonprofiles",
+                              "*.avro")))
+              .apply(
+                  MapElements.into(new TypeDescriptor<KV<String, TaxonProfile>>() {})
+                      .via((TaxonProfile tr) -> KV.of(tr.getId(), tr)));
+    }
 
     PCollection<KV<String, LocationFeatureRecord>> locationFeatureCollection = null;
     if (options.getIncludeSampling()) {
@@ -186,6 +207,8 @@ public class ALAInterpretedToSolrIndexPipeline {
 
     final TupleTag<ImageServiceRecord> imageServiceRecordTupleTag =
         new TupleTag<ImageServiceRecord>() {};
+
+    final TupleTag<TaxonProfile> speciesListsRecordTupleTag = new TupleTag<TaxonProfile>() {};
 
     ALASolrDocumentTransform solrDocumentTransform =
         ALASolrDocumentTransform.create(
@@ -203,6 +226,7 @@ public class ALAInterpretedToSolrIndexPipeline {
             alaAttributionTransform.getTag(),
             alaUuidTransform.getTag(),
             options.getIncludeImages() ? imageServiceRecordTupleTag : null,
+            options.getIncludeSpeciesLists() ? speciesListsRecordTupleTag : null,
             metadataView,
             options.getDatasetId());
 
@@ -226,8 +250,11 @@ public class ALAInterpretedToSolrIndexPipeline {
             // ALA Specific
             .and(alaUuidTransform.getTag(), alaUUidCollection)
             .and(alaTaxonomyTransform.getTag(), alaTaxonCollection)
-            .and(alaAttributionTransform.getTag(), alaAttributionCollection)
-            .and(imageServiceRecordTupleTag, alaImageServiceRecords);
+            .and(alaAttributionTransform.getTag(), alaAttributionCollection);
+
+    if (options.getIncludeImages()) {
+      kpct = kpct.and(imageServiceRecordTupleTag, alaImageServiceRecords);
+    }
 
     if (options.getIncludeSampling()) {
       kpct = kpct.and(locationFeatureTransform.getTag(), locationFeatureCollection);

@@ -17,10 +17,10 @@ public class VersionInfo {
           new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
       JSONParser parser = new JSONParser();
       JSONObject info = (JSONObject) parser.parse(streamReader);
-      log.info("You are running build version: " + info.get("git.build.version"));
-      log.info("Build time: " + info.get("git.build.time"));
-      log.info("Commit version: " + info.get("git.commit.id"));
-      log.info("Commit message: " + info.get("git.commit.message.full"));
+      log.info("Commit URL: https://github.com/gbif/pipelines/commit/" + info.get("git.commit.id"));
+      for (Object entry : info.entrySet()) {
+        log.info(entry.toString());
+      }
       log.debug("Details: " + info.toJSONString());
     } catch (Exception e) {
       log.warn("Cannot load git version information!");

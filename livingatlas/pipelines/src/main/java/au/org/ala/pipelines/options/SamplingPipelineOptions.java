@@ -6,11 +6,6 @@ import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 
 public interface SamplingPipelineOptions extends InterpretationPipelineOptions {
 
-  @Description("Sampling Service Url")
-  String getSamplingServiceUrl();
-
-  void setSamplingServiceUrl(String var1);
-
   @Description("Sampling Service batch size")
   @Default.Integer(25000)
   Integer getBatchSize();
