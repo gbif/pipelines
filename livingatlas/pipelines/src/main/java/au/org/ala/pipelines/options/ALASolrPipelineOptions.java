@@ -31,6 +31,12 @@ public interface ALASolrPipelineOptions extends PipelineOptions, InterpretationP
 
   void setIncludeImages(Boolean includeImages);
 
+  @Description("Include references to species list objects")
+  @Default.Boolean(false)
+  Boolean getIncludeSpeciesLists();
+
+  void setIncludeSpeciesLists(Boolean includeSpeciesLists);
+
   @Description("Include gbif taxonomy")
   @Default.Boolean(false)
   Boolean getIncludeGbifTaxonomy();

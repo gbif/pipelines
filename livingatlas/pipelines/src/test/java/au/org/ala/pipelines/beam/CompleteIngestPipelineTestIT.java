@@ -147,7 +147,8 @@ public class CompleteIngestPipelineTestIT {
               "--properties=" + TestUtils.getPipelinesConfigFile(),
               "--zkHost=" + SolrUtils.getZkHost(),
               "--solrCollection=" + SolrUtils.BIOCACHE_TEST_SOLR_COLLECTION,
-              "--includeSampling=true"
+              "--includeSampling=true",
+              "--includeImages=false"
             });
 
     // check ready for index - should be false as includeSampling=true and sampling not generated

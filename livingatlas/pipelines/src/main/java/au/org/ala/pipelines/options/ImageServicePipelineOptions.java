@@ -6,11 +6,6 @@ import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 
 public interface ImageServicePipelineOptions extends InterpretationPipelineOptions {
 
-  @Description("Image Service Url")
-  String getImageServiceUrl();
-
-  void setImageServiceUrl(String imageServiceUrl);
-
   @Description("Image Service sleep time between polling")
   @Default.Integer(5000)
   Integer getSleepTimeInMillis();
