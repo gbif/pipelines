@@ -1,6 +1,5 @@
 package au.org.ala.utils;
 
-import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.ws.ClientConfiguration;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,7 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import okhttp3.Cache;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
-import org.gbif.pipelines.parsers.config.model.WsConfig;
+import org.gbif.pipelines.core.config.model.WsConfig;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
 @Slf4j
@@ -27,12 +26,11 @@ public class WsUtils {
    * cache directories, if these ever become a thing. </[>
    *
    * @param wsConfig The specific web service configuration
-   * @param pipelinesConfig The full pipelines configuration, null to use defaults.
    * @return A corresponding client configuration
    * @throws IOException if unable to create the configuration
    */
-  public static ClientConfiguration createConfiguration(
-      @NonNull WsConfig wsConfig, ALAPipelinesConfig pipelinesConfig) throws IOException {
+  public static ClientConfiguration createConfiguration(@NonNull WsConfig wsConfig)
+      throws IOException {
     return ClientConfiguration.builder()
         .baseUrl(new URL(wsConfig.getWsUrl()))
         .cache(wsConfig.getCacheSizeMb() > 0)

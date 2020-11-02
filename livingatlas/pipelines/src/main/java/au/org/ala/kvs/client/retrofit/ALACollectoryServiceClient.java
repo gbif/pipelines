@@ -13,7 +13,7 @@ import java.util.Objects;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
-import org.gbif.pipelines.parsers.config.model.WsConfig;
+import org.gbif.pipelines.core.config.model.WsConfig;
 
 @Slf4j
 /** Collectory service client implementation. */

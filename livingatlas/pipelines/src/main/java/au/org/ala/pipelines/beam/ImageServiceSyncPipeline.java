@@ -30,9 +30,9 @@ import org.apache.beam.sdk.values.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.FileSystem;
-import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
-import org.gbif.pipelines.ingest.utils.FileSystemFactory;
-import org.gbif.pipelines.ingest.utils.FsUtils;
+import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.common.beam.utils.PathBuilder;
+import org.gbif.pipelines.core.factory.FileSystemFactory;
 import org.gbif.pipelines.io.avro.ImageServiceRecord;
 import org.gbif.pipelines.io.avro.Multimedia;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
@@ -143,9 +143,9 @@ public class ImageServiceSyncPipeline {
                     }));
 
     // Read multimedia AVRO generated in previous interpretation step
-    MultimediaTransform multimediaTransform = MultimediaTransform.create();
+    MultimediaTransform multimediaTransform = MultimediaTransform.builder().create();
     UnaryOperator<String> pathFn =
-        t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
+        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
 
     // URL -> recordID
     log.info("Reading multimedia for this dataset");

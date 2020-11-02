@@ -42,9 +42,9 @@ import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.common.parsers.date.DateParsers;
 import org.gbif.common.parsers.date.TemporalAccessorUtils;
 import org.gbif.common.parsers.date.TemporalParser;
-import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
-import org.gbif.pipelines.ingest.utils.FileSystemFactory;
-import org.gbif.pipelines.ingest.utils.FsUtils;
+import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.common.beam.utils.PathBuilder;
+import org.gbif.pipelines.core.factory.FileSystemFactory;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
@@ -154,11 +154,11 @@ public class ImageServiceLoadPipeline {
     Pipeline p = Pipeline.create(options);
 
     // Read multimedia AVRO
-    MultimediaTransform multimediaTransform = MultimediaTransform.create();
-    TemporalTransform temporalTransform = TemporalTransform.create();
+    MultimediaTransform multimediaTransform = MultimediaTransform.builder().create();
+    TemporalTransform temporalTransform = TemporalTransform.builder().create();
 
     UnaryOperator<String> pathFn =
-        t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
+        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
 
     log.info("Reading multimedia for this dataset");
     PCollection<KV<String, MultimediaRecord>> pt1 =
@@ -212,7 +212,7 @@ public class ImageServiceLoadPipeline {
                   }
                 }));
 
-    String deltaPath = FsUtils.buildDatasetAttemptPath(options, "multimedia-delta", false);
+    String deltaPath = PathBuilder.buildDatasetAttemptPath(options, "multimedia-delta", false);
     ALAFsUtils.deleteIfExist(fs, deltaPath);
 
     log.info("Writing delta to {}", deltaPath);

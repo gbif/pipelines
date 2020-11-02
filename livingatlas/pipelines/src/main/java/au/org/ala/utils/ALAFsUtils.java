@@ -44,14 +44,15 @@ public class ALAFsUtils {
   }
 
   public static String buildPathMultimediaUsingTargetPath(BasePipelineOptions options) {
-    return FsUtils.buildPath(
-            FsUtils.buildDatasetAttemptPath(options, "interpreted", false), "multimedia")
+    return PathBuilder.buildPath(
+            PathBuilder.buildDatasetAttemptPath(options, "interpreted", false), "multimedia")
         .toString();
   }
 
   public static String buildPathMultimediaDeltaUsingTargetPath(BasePipelineOptions options) {
-    return FsUtils.buildPath(
-            FsUtils.buildDatasetAttemptPath(options, "multimedia-delta", false), "multimedia-delta")
+    return PathBuilder.buildPath(
+            PathBuilder.buildDatasetAttemptPath(options, "multimedia-delta", false),
+            "multimedia-delta")
         .toString();
   }
 
@@ -88,8 +89,8 @@ public class ALAFsUtils {
 
   public static String buildPathImageServiceUsingTargetPath(
       BasePipelineOptions options, String name, String uniqueId) {
-    return FsUtils.buildPath(
-            FsUtils.buildDatasetAttemptPath(options, "images", false), name + "-" + uniqueId)
+    return PathBuilder.buildPath(
+            PathBuilder.buildDatasetAttemptPath(options, "images", false), name + "-" + uniqueId)
         .toString();
   }
 
