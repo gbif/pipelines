@@ -654,10 +654,10 @@
     "name" : "v_taxonremarks",
     "type" : [ "string", "null" ]
   }, {
-    "name" : "v_identifiedbyid",
+    "name" : "v_recordedbyid",
     "type" : [ "string", "null" ]
   }, {
-    "name" : "v_recordedbyid",
+    "name" : "v_identifiedbyid",
     "type" : [ "string", "null" ]
   }, {
     "name" : "identifiercount",
@@ -691,6 +691,9 @@
     "type" : [ "string", "null" ]
   }, {
     "name" : "programmeacronym",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "hostingorganizationkey",
     "type" : [ "string", "null" ]
   }, {
     "name" : "collectionkey",
@@ -1427,6 +1430,30 @@
       "type" : "array",
       "items" : [ "string", "null" ]
     }, "null" ]
+  }, {
+    "name" : "level0gid",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "level0name",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "level1gid",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "level1name",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "level2gid",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "level2name",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "level3gid",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "level3name",
+    "type" : [ "string", "null" ]
   }, {
     "name" : "ext_multimedia",
     "type" : [ "string", "null" ]

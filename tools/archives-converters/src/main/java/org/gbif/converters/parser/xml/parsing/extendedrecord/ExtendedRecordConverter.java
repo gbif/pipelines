@@ -6,7 +6,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
-
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.converters.parser.xml.model.IdentifierRecord;
 import org.gbif.converters.parser.xml.model.ImageRecord;
@@ -17,9 +18,6 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ExtendedRecordConverter {
@@ -82,7 +80,8 @@ public class ExtendedRecordConverter {
           .ifPresent(id -> setter.accept(DwcTerm.occurrenceID, id));
     }
 
-    if (rawRecord.getTypificationRecords() != null && !rawRecord.getTypificationRecords().isEmpty()) {
+    if (rawRecord.getTypificationRecords() != null
+        && !rawRecord.getTypificationRecords().isEmpty()) {
       // just use first one - any more makes no sense
       TypificationRecord typificationRecord = rawRecord.getTypificationRecords().get(0);
       setter.accept(GbifTerm.typifiedName, typificationRecord.getScientificName());

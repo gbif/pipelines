@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNotNull;
 import au.org.ala.pipelines.beam.ALAInterpretedToLatLongCSVPipeline;
 import au.org.ala.pipelines.beam.ALASamplingToAvroPipeline;
 import au.org.ala.pipelines.beam.ALAUUIDMintingPipeline;
+import au.org.ala.pipelines.beam.DwcaToVerbatimPipeline;
 import au.org.ala.pipelines.options.ALASolrPipelineOptions;
 import au.org.ala.pipelines.options.SamplingPipelineOptions;
 import au.org.ala.pipelines.options.UUIDPipelineOptions;
@@ -17,10 +18,9 @@ import java.io.File;
 import java.util.UUID;
 import okhttp3.mockwebserver.MockWebServer;
 import org.apache.commons.io.FileUtils;
-import org.gbif.pipelines.ingest.options.DwcaPipelineOptions;
-import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
-import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
-import org.gbif.pipelines.ingest.pipelines.DwcaToVerbatimPipeline;
+import org.gbif.pipelines.common.beam.options.DwcaPipelineOptions;
+import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
+import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -47,11 +47,7 @@ public class CompleteIngestJavaPipelineTestIT {
     server.shutdown();
   }
 
-  /**
-   * Tests for SOLR index creation.
-   *
-   * @throws Exception
-   */
+  /** Tests for SOLR index creation. */
   @Test
   public void testIngestPipeline() throws Exception {
 

@@ -49,7 +49,7 @@ public class AttributionKVStoreTestIT {
     assertFalse(m.getDefaultDarwinCoreValues().isEmpty());
     assertNotNull(m.getProvenance());
     assertNotNull(m.getTaxonomyCoverageHints());
-    assertTrue(m.getTaxonomyCoverageHints().size() == 0);
+    assertEquals(0, m.getTaxonomyCoverageHints().size());
 
     kvs.close();
   }
@@ -82,7 +82,7 @@ public class AttributionKVStoreTestIT {
   }
 
   @Test
-  public void testAttributionLookupFail() throws Exception {
+  public void testAttributionLookupFail() {
 
     KeyValueStore<String, ALACollectoryMetadata> kvs =
         ALAAttributionKVStoreFactory.create(TestUtils.getConfig());
@@ -95,7 +95,7 @@ public class AttributionKVStoreTestIT {
   }
 
   @Test
-  public void testCollectionLookup() throws Exception {
+  public void testCollectionLookup() {
 
     KeyValueStore<ALACollectionLookup, ALACollectionMatch> kvs =
         ALACollectionKVStoreFactory.create(TestUtils.getConfig());

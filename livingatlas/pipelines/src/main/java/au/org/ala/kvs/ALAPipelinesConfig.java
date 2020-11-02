@@ -3,8 +3,8 @@ package au.org.ala.kvs;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.io.Serializable;
 import lombok.Data;
-import org.gbif.pipelines.parsers.config.model.PipelinesConfig;
-import org.gbif.pipelines.parsers.config.model.WsConfig;
+import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.core.config.model.WsConfig;
 
 /** Living Atlas configuration extensions */
 @Data

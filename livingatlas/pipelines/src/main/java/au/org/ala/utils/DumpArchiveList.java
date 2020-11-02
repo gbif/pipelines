@@ -5,6 +5,7 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import java.io.FileWriter;
 import java.util.Map;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 @Parameters(separators = "=")
@@ -27,7 +28,8 @@ public class DumpArchiveList {
       description = "The absolute path to a core-site.xml with default.FS configuration")
   private String coreSiteConfig;
 
-  public static void main(String[] args) throws Exception {
+  @SneakyThrows
+  public static void main(String[] args) {
 
     String[] combinedArgs =
         new CombinedYamlConfiguration(args).toArgs("general", "dataset-archive-list");
@@ -43,19 +45,20 @@ public class DumpArchiveList {
     m.run();
   }
 
-  public void run() throws Exception {
+  @SneakyThrows
+  public void run() {
 
     // load all datasets - return a map of <datasetId -> datasetInputPath>
     Map<String, String> datasets =
         ALAFsUtils.listAllDatasets(hdfsSiteConfig, coreSiteConfig, inputPath);
 
     // dump to file
-    FileWriter fw = new FileWriter(targetPath);
-    for (Map.Entry<String, String> entry : datasets.entrySet()) {
-      fw.write(entry.getKey() + "," + entry.getValue() + "\n");
+    try (FileWriter fw = new FileWriter(targetPath)) {
+      for (Map.Entry<String, String> entry : datasets.entrySet()) {
+        fw.write(entry.getKey() + "," + entry.getValue() + "\n");
+      }
+      fw.flush();
     }
-    fw.flush();
-    fw.close();
     log.info("Datasets listed: {}", datasets.size());
     log.info("List written to: {}", targetPath);
   }

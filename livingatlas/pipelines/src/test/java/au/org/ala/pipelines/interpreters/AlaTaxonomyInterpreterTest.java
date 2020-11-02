@@ -6,7 +6,6 @@ import au.org.ala.kvs.client.ALACollectoryMetadata;
 import au.org.ala.names.ws.api.NameSearch;
 import au.org.ala.names.ws.api.NameUsageMatch;
 import au.org.ala.pipelines.vocabulary.ALAOccurrenceIssue;
-import java.io.IOException;
 import java.util.*;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
@@ -29,7 +28,7 @@ public class AlaTaxonomyInterpreterTest {
   private KeyValueStore<String, Boolean> kingdomLookup;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     Map<String, String> defaults = new HashMap<>();
     defaults.put("kingdom", "Plantae");
     List<Map<String, String>> hints = new ArrayList<>();
@@ -95,7 +94,7 @@ public class AlaTaxonomyInterpreterTest {
             .rank("KINGDOM")
             .matchType("exactMatch")
             .nameType("SCIENTIFIC")
-            .issues(Arrays.asList("noIssue"))
+            .issues(Collections.singletonList("noIssue"))
             .build();
     this.nameMap.put(search, match);
 
@@ -146,7 +145,7 @@ public class AlaTaxonomyInterpreterTest {
     this.lookup =
         new KeyValueStore<NameSearch, NameUsageMatch>() {
           @Override
-          public void close() throws IOException {}
+          public void close() {}
 
           @Override
           public NameUsageMatch get(NameSearch o) {
@@ -159,7 +158,7 @@ public class AlaTaxonomyInterpreterTest {
     this.kingdomLookup =
         new KeyValueStore<String, Boolean>() {
           @Override
-          public void close() throws IOException {}
+          public void close() {}
 
           @Override
           public Boolean get(String o) {
@@ -175,7 +174,7 @@ public class AlaTaxonomyInterpreterTest {
 
   // Test with default value
   @Test
-  public void testMatch1() throws Exception {
+  public void testMatch1() {
     Map<String, String> map = new HashMap<>();
     map.put(DwcTerm.scientificName.qualifiedName(), "Acacia dealbata");
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
@@ -192,7 +191,7 @@ public class AlaTaxonomyInterpreterTest {
 
   // Test with explicit value
   @Test
-  public void testMatch2() throws Exception {
+  public void testMatch2() {
     Map<String, String> map = new HashMap<>();
     map.put(DwcTerm.scientificName.qualifiedName(), "Acacia dealbata");
     map.put(DwcTerm.kingdom.qualifiedName(), "Plantae");
@@ -209,7 +208,7 @@ public class AlaTaxonomyInterpreterTest {
   }
 
   @Test
-  public void testMatch3() throws Exception {
+  public void testMatch3() {
     Map<String, String> map = new HashMap<>();
     map.put(DwcTerm.scientificName.qualifiedName(), "Macropus rufus");
     map.put(DwcTerm.kingdom.qualifiedName(), "ANIMALIA");
@@ -264,7 +263,7 @@ public class AlaTaxonomyInterpreterTest {
   }
 
   @Test
-  public void testMatch4() throws Exception {
+  public void testMatch4() {
     Map<String, String> map = new HashMap<>();
     map.put(DwcTerm.kingdom.qualifiedName(), "Plantae");
     map.put(DwcTerm.phylum.qualifiedName(), "Charophyta");
@@ -292,7 +291,7 @@ public class AlaTaxonomyInterpreterTest {
   }
 
   @Test
-  public void testNoMatch1() throws Exception {
+  public void testNoMatch1() {
     Map<String, String> map = new HashMap<>();
     map.put(DwcTerm.scientificName.qualifiedName(), "Vombatus ursinus");
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
@@ -305,7 +304,7 @@ public class AlaTaxonomyInterpreterTest {
   }
 
   @Test
-  public void testNoMatch2() throws Exception {
+  public void testNoMatch2() {
     Map<String, String> map = new HashMap<>();
     map.put(DwcTerm.scientificName.qualifiedName(), "Acacia dealbata");
     map.put(DwcTerm.kingdom.qualifiedName(), "Animalia");
@@ -319,7 +318,7 @@ public class AlaTaxonomyInterpreterTest {
   }
 
   @Test
-  public void testSourceCheck1() throws Exception {
+  public void testSourceCheck1() {
     Map<String, String> map = new HashMap<>();
     map.put(DwcTerm.scientificName.qualifiedName(), "Acacia dealbata");
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
@@ -327,11 +326,12 @@ public class AlaTaxonomyInterpreterTest {
     ALATaxonomyInterpreter.alaSourceQualityChecks(this.dataResource, this.kingdomLookup)
         .accept(er, atr);
     assertEquals(
-        Arrays.asList(ALAOccurrenceIssue.MISSING_TAXONRANK.name()), atr.getIssues().getIssueList());
+        Collections.singletonList(ALAOccurrenceIssue.MISSING_TAXONRANK.name()),
+        atr.getIssues().getIssueList());
   }
 
   @Test
-  public void testSourceCheck2() throws Exception {
+  public void testSourceCheck2() {
     Map<String, String> map = new HashMap<>();
     map.put(DwcTerm.scientificName.qualifiedName(), "Ospranter rufus");
     map.put(DwcTerm.taxonRank.qualifiedName(), "species");
@@ -344,7 +344,7 @@ public class AlaTaxonomyInterpreterTest {
   }
 
   @Test
-  public void testSourceCheck3() throws Exception {
+  public void testSourceCheck3() {
     Map<String, String> map = new HashMap<>();
     map.put(DwcTerm.scientificName.qualifiedName(), "Ospranter rufus");
     map.put(DwcTerm.kingdom.qualifiedName(), "Gronk");
@@ -359,7 +359,7 @@ public class AlaTaxonomyInterpreterTest {
   }
 
   @Test
-  public void testSourceCheck4() throws Exception {
+  public void testSourceCheck4() {
     Map<String, String> map = new HashMap<>();
     map.put(DwcTerm.kingdom.qualifiedName(), "Animalia");
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
@@ -392,7 +392,7 @@ public class AlaTaxonomyInterpreterTest {
     ALATaxonomyInterpreter.alaTaxonomyInterpreter(this.dataResource, this.lookup).accept(er, atr);
     ALATaxonomyInterpreter.alaResultQualityChecks(this.dataResource).accept(er, atr);
     assertEquals(
-        Arrays.asList(ALAOccurrenceIssue.TAXON_DEFAULT_MATCH.name()),
+        Collections.singletonList(ALAOccurrenceIssue.TAXON_DEFAULT_MATCH.name()),
         atr.getIssues().getIssueList());
   }
 
@@ -411,7 +411,7 @@ public class AlaTaxonomyInterpreterTest {
             .build();
     ALATaxonomyInterpreter.alaResultQualityChecks(this.dataResource).accept(er, atr);
     assertEquals(
-        Arrays.asList(OccurrenceIssue.TAXON_MATCH_HIGHERRANK.name()),
+        Collections.singletonList(OccurrenceIssue.TAXON_MATCH_HIGHERRANK.name()),
         atr.getIssues().getIssueList());
   }
 
@@ -430,7 +430,8 @@ public class AlaTaxonomyInterpreterTest {
             .build();
     ALATaxonomyInterpreter.alaResultQualityChecks(this.dataResource).accept(er, atr);
     assertEquals(
-        Arrays.asList(OccurrenceIssue.TAXON_MATCH_FUZZY.name()), atr.getIssues().getIssueList());
+        Collections.singletonList(OccurrenceIssue.TAXON_MATCH_FUZZY.name()),
+        atr.getIssues().getIssueList());
   }
 
   @Test
@@ -448,7 +449,7 @@ public class AlaTaxonomyInterpreterTest {
             .build();
     ALATaxonomyInterpreter.alaResultQualityChecks(this.dataResource).accept(er, atr);
     assertEquals(
-        Arrays.asList(ALAOccurrenceIssue.INVALID_SCIENTIFIC_NAME.name()),
+        Collections.singletonList(ALAOccurrenceIssue.INVALID_SCIENTIFIC_NAME.name()),
         atr.getIssues().getIssueList());
   }
 }

@@ -1,15 +1,16 @@
 package au.org.ala.kvs.cache;
 
 import au.org.ala.kvs.ALAPipelinesConfig;
-import au.org.ala.kvs.client.*;
+import au.org.ala.kvs.client.ALACollectionLookup;
+import au.org.ala.kvs.client.ALACollectionMatch;
+import au.org.ala.kvs.client.ALACollectoryService;
 import au.org.ala.kvs.client.retrofit.ALACollectoryServiceClient;
-import java.io.IOException;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.cache.KeyValueCache;
 import org.gbif.kvs.hbase.Command;
-import org.gbif.pipelines.transforms.SerializableSupplier;
+import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.rest.client.configuration.ClientConfiguration;
 
 @Slf4j
@@ -52,7 +53,8 @@ public class ALACollectionKVStoreFactory {
           try {
             wsClient.close();
           } catch (Exception e) {
-            logAndThrow(e, "Unable to close");
+            log.error("Unable to close", e);
+            throw new RuntimeException(e);
           }
         };
 
@@ -63,7 +65,7 @@ public class ALACollectionKVStoreFactory {
   private static KeyValueStore<ALACollectionLookup, ALACollectionMatch> cache2kBackedKVStore(
       ALACollectoryService service, Command closeHandler, ALAPipelinesConfig config) {
 
-    KeyValueStore kvs =
+    KeyValueStore<ALACollectionLookup, ALACollectionMatch> kvs =
         new KeyValueStore<ALACollectionLookup, ALACollectionMatch>() {
           @Override
           public ALACollectionMatch get(ALACollectionLookup key) {
@@ -84,7 +86,7 @@ public class ALACollectionKVStoreFactory {
           }
 
           @Override
-          public void close() throws IOException {
+          public void close() {
             closeHandler.execute();
           }
         };
@@ -98,17 +100,5 @@ public class ALACollectionKVStoreFactory {
   public static SerializableSupplier<KeyValueStore<ALACollectionLookup, ALACollectionMatch>>
       getInstanceSupplier(ALAPipelinesConfig config) {
     return () -> ALACollectionKVStoreFactory.getInstance(config);
-  }
-
-  /**
-   * Wraps an exception into a {@link RuntimeException}.
-   *
-   * @param throwable to propagate
-   * @param message to log and use for the exception wrapper
-   * @return a new {@link RuntimeException}
-   */
-  private static RuntimeException logAndThrow(Throwable throwable, String message) {
-    log.error(message, throwable);
-    return new RuntimeException(throwable);
   }
 }

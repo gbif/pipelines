@@ -16,7 +16,7 @@ import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.params.ModifiableSolrParams;
 import org.apache.solr.common.util.NamedList;
 
-/** A SolrWriter based on {@link org.gbif.pipelines.ingest.java.io.ElasticsearchWriter} */
+/** A SolrWriter based on {@link org.gbif.pipelines.core.io.ElasticsearchWriter} */
 @Slf4j
 @Builder
 public class SolrWriter<T> {
@@ -52,9 +52,7 @@ public class SolrWriter<T> {
           updateRequest -> {
             try {
               NamedList<Object> updateResponse = client.request(updateRequest);
-              Iterator<Map.Entry<String, Object>> iter = updateResponse.iterator();
-              while (iter.hasNext()) {
-                Map.Entry<String, Object> entry = iter.next();
+              for (Map.Entry<String, Object> entry : updateResponse) {
                 if (entry.getKey().equals("status") && entry.getValue().toString().equals("0")) {
                   // status "0" is equivalent to HTTP 200
                   log.warn("SOLR returned status: " + entry.getValue());
@@ -69,7 +67,7 @@ public class SolrWriter<T> {
       Runnable pushIntoSolrFn =
           () ->
               Optional.ofNullable(requests.poll())
-                  .filter(req -> req.getDocuments() != null && req.getDocuments().size() > 0)
+                  .filter(req -> req.getDocuments() != null && !req.getDocuments().isEmpty())
                   .ifPresent(
                       req -> {
                         if (useSyncMode) {

@@ -20,11 +20,9 @@ import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
+import lombok.extern.slf4j.Slf4j;
 import org.gbif.converters.parser.xml.constants.PrioritizedPropertyNameEnum;
 import org.gbif.converters.parser.xml.parsing.xml.PrioritizedProperty;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * In schemas that have multiple representations of the same field (eg decimal latitude vs text
@@ -55,7 +53,9 @@ public abstract class PropertyPrioritizer {
   /** Highest priority is 1. */
   protected static String findHighestPriority(Set<PrioritizedProperty> props) {
     return props.stream()
-        .min(Comparator.comparing(PrioritizedProperty::getPriority).thenComparing(PrioritizedProperty::getProperty))
+        .min(
+            Comparator.comparing(PrioritizedProperty::getPriority)
+                .thenComparing(PrioritizedProperty::getProperty))
         .map(PrioritizedProperty::getProperty)
         .orElse(null);
   }

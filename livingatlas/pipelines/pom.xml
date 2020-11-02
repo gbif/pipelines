@@ -5,26 +5,15 @@
   <parent>
     <groupId>au.org.ala</groupId>
     <artifactId>livingatlas</artifactId>
-    <version>2.5.5-SNAPSHOT</version>
+    <version>2.7.1-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>pipelines</artifactId>
   <packaging>jar</packaging>
 
-  <name>Living Atlas Pipelines</name>
+  <name>Pipelines :: Living Atlas :: Pipelines</name>
   <description>Extensions to GBIF pipelines to support ALA and the Living Atlas community</description>
-
-  <repositories>
-    <repository>
-      <id>ALA</id>
-      <url>https://nexus.ala.org.au/content/repositories/releases</url>
-    </repository>
-    <repository>
-      <id>ALA-snapshots</id>
-      <url>https://nexus.ala.org.au/content/repositories/snapshots</url>
-    </repository>
-  </repositories>
 
   <build>
     <testResources>
@@ -253,6 +242,32 @@
           </images>
         </configuration>
       </plugin>
+      <plugin>
+      <groupId>pl.project13.maven</groupId>
+      <artifactId>git-commit-id-plugin</artifactId>
+      <version>2.2.4</version>
+      <executions>
+        <execution>
+          <id>get-the-git-infos</id>
+          <goals>
+            <goal>revision</goal>
+          </goals>
+        </execution>
+      </executions>
+      <configuration>
+        <dotGitDirectory>${project.basedir}/.git</dotGitDirectory>
+        <prefix>git</prefix>
+        <verbose>false</verbose>
+        <generateGitPropertiesFile>true</generateGitPropertiesFile>
+        <generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties</generateGitPropertiesFilename>
+        <format>json</format>
+        <gitDescribe>
+          <skip>false</skip>
+          <always>false</always>
+          <dirty>-dirty</dirty>
+        </gitDescribe>
+      </configuration>
+      </plugin>
     </plugins>
   </build>
 
@@ -294,6 +309,7 @@
     <jcommander.version>1.78</jcommander.version>
     <layers-store.version>2.0.3</layers-store.version>
     <junit.version>5.6.2</junit.version>
+    <json-simple.version>1.1.1</json-simple.version>
 
     <!-- GBIF parent currently using 2.4.0 -->
     <spark.embedded.version>2.4.5</spark.embedded.version>
@@ -318,6 +334,11 @@
   </scm>
 
   <dependencies>
+    <dependency>
+      <groupId>com.googlecode.json-simple</groupId>
+      <artifactId>json-simple</artifactId>
+      <version>${json-simple.version}</version>
+    </dependency>
     <!-- ALA libraries -->
     <dependency>
       <groupId>au.org.ala.names</groupId>
@@ -392,33 +413,15 @@
     </dependency>
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
-      <artifactId>parsers</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif.pipelines</groupId>
       <artifactId>core</artifactId>
     </dependency>
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
-      <artifactId>ingest-transforms</artifactId>
+      <artifactId>beam-transforms</artifactId>
     </dependency>
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
-      <artifactId>ingest-gbif-java</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif.pipelines</groupId>
-      <artifactId>ingest-gbif</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>ch.qos.logback</groupId>
-          <artifactId>logback-classic</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif.pipelines</groupId>
-      <artifactId>common</artifactId>
+      <artifactId>variables</artifactId>
     </dependency>
     <dependency>
       <groupId>org.gbif.pipelines</groupId>

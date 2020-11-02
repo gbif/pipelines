@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.common.Strings;
 
@@ -12,6 +14,7 @@ import org.elasticsearch.common.Strings;
  * Northern Territory (including Coastal Waters)
  */
 @Slf4j
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class StateProvince {
   private static Vocab stateProvinceVocab;
 

@@ -15,10 +15,12 @@
  */
 package org.gbif.converters.parser.xml.parsing.xml;
 
+import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
+import lombok.extern.slf4j.Slf4j;
 import org.gbif.converters.parser.xml.constants.PrioritizedPropertyNameEnum;
 import org.gbif.converters.parser.xml.model.Identification;
 import org.gbif.converters.parser.xml.model.IdentifierRecord;
@@ -27,10 +29,6 @@ import org.gbif.converters.parser.xml.model.LinkRecord;
 import org.gbif.converters.parser.xml.model.PropertyPrioritizer;
 import org.gbif.converters.parser.xml.model.RawOccurrenceRecord;
 import org.gbif.converters.parser.xml.model.TypificationRecord;
-
-import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * This object is the one that gets populated by Digester when parsing raw xml records into
@@ -229,7 +227,8 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
     this.identifications.add(ident);
   }
 
-  public void addTypification(String scientificName, String publication, String typeStatus, String notes) {
+  public void addTypification(
+      String scientificName, String publication, String typeStatus, String notes) {
     log.debug(">> addTypification");
 
     TypificationRecord typRec =

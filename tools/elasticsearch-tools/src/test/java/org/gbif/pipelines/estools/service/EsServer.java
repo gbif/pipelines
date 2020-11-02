@@ -1,21 +1,15 @@
 package org.gbif.pipelines.estools.service;
 
 import java.io.IOException;
-import java.net.ServerSocket;
-import java.nio.file.Files;
 import java.util.Properties;
-import java.util.concurrent.TimeUnit;
-
-import org.gbif.pipelines.estools.client.EsClient;
-import org.gbif.pipelines.estools.client.EsConfig;
-
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
+import org.gbif.pipelines.estools.client.EsClient;
+import org.gbif.pipelines.estools.client.EsConfig;
 import org.junit.rules.ExternalResource;
-
-import lombok.extern.slf4j.Slf4j;
-import pl.allegro.tech.embeddedelasticsearch.EmbeddedElastic;
-import pl.allegro.tech.embeddedelasticsearch.PopularProperties;
+import org.testcontainers.elasticsearch.ElasticsearchContainer;
 
 /**
  * ES server used for testing purposes.
@@ -23,30 +17,19 @@ import pl.allegro.tech.embeddedelasticsearch.PopularProperties;
  * <p>This class is intended to be used as a {@link org.junit.ClassRule}.
  */
 @Slf4j
+@Getter
 public class EsServer extends ExternalResource {
 
-  private static final String CLUSTER_NAME = "EsClusterPipelinesIT";
-
-  private EmbeddedElastic embeddedElastic;
+  private ElasticsearchContainer embeddedElastic;
   private EsConfig esConfig;
-  // needed to assert results against ES server directly
   private RestClient restClient;
-  // I create both clients not to expose the restClient in EsClient
   private EsClient esClient;
 
   @Override
   protected void before() throws Throwable {
     embeddedElastic =
-        EmbeddedElastic.builder()
-            .withElasticVersion(getEsVersion())
-            .withEsJavaOpts("-Xms128m -Xmx512m")
-            .withInstallationDirectory(Files.createTempDirectory("pipelines-elasticsearch").toFile())
-            .withCleanInstallationDirectoryOnStop(true)
-            .withSetting(PopularProperties.HTTP_PORT, getAvailablePort())
-            .withSetting(PopularProperties.TRANSPORT_TCP_PORT, getAvailablePort())
-            .withSetting(PopularProperties.CLUSTER_NAME, CLUSTER_NAME)
-            .withStartTimeout(120, TimeUnit.SECONDS)
-            .build();
+        new ElasticsearchContainer(
+            "docker.elastic.co/elasticsearch/elasticsearch:" + getEsVersion());
 
     embeddedElastic.start();
 
@@ -66,38 +49,18 @@ public class EsServer extends ExternalResource {
     }
   }
 
-  private static int getAvailablePort() throws IOException {
-    ServerSocket serverSocket = new ServerSocket(0);
-    int port = serverSocket.getLocalPort();
-    serverSocket.close();
-
-    return port;
-  }
-
-  private String getServerAddress() {
-    return "http://localhost:" + embeddedElastic.getHttpPort();
-  }
-
   private RestClient buildRestClient() {
-    HttpHost host = new HttpHost("localhost", embeddedElastic.getHttpPort());
+    HttpHost host = new HttpHost("localhost", embeddedElastic.getMappedPort(9200));
     return RestClient.builder(host).build();
+  }
+
+  public String getServerAddress() {
+    return "http://localhost:" + embeddedElastic.getMappedPort(9200);
   }
 
   private String getEsVersion() throws IOException {
     Properties properties = new Properties();
     properties.load(this.getClass().getClassLoader().getResourceAsStream("maven.properties"));
     return properties.getProperty("elasticsearch.version");
-  }
-
-  EsConfig getEsConfig() {
-    return esConfig;
-  }
-
-  RestClient getRestClient() {
-    return restClient;
-  }
-
-  EsClient getEsClient() {
-    return esClient;
   }
 }

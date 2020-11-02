@@ -15,6 +15,9 @@
  */
 package org.gbif.converters.parser.xml.parsing.xml;
 
+import com.google.common.base.Strings;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.StringReader;
@@ -24,7 +27,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.digester.Digester;
+import org.apache.commons.digester.RuleSet;
 import org.gbif.api.vocabulary.OccurrenceSchemaType;
 import org.gbif.converters.parser.xml.identifier.OccurrenceKeyHelper;
 import org.gbif.converters.parser.xml.identifier.PublisherProvidedUniqueIdentifier;
@@ -39,16 +44,8 @@ import org.gbif.converters.parser.xml.parsing.xml.rules.Dwc10RuleSet;
 import org.gbif.converters.parser.xml.parsing.xml.rules.Dwc14RuleSet;
 import org.gbif.converters.parser.xml.parsing.xml.rules.Dwc2009RuleSet;
 import org.gbif.converters.parser.xml.parsing.xml.rules.DwcManisRuleSet;
-
-import org.apache.commons.digester.Digester;
-import org.apache.commons.digester.RuleSet;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
-
-import com.google.common.base.Strings;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Methods for parsing {@link RawXmlOccurrence}s and {@link UniqueIdentifier}s from xml fragments.
@@ -135,7 +132,8 @@ public class XmlFragmentParser {
     } else if (records.size() == 1) {
       result = records.get(0);
     } else if (unitQualifier == null) {
-      log.warn("Got multiple records from given xml, but no unitQualifier set - returning first record as a guess.");
+      log.warn(
+          "Got multiple records from given xml, but no unitQualifier set - returning first record as a guess.");
       result = records.get(0);
     } else {
       for (RawOccurrenceRecord record : records) {
@@ -166,7 +164,7 @@ public class XmlFragmentParser {
    * @param xml snippet of xml representing one (or more, in ABCD) occurrence
    * @param schemaType the protocol that produced this xml (e.g. DWC, ABCD)
    * @param useOccurrenceId @return a set of 0 or more IdentifierExtractionResults containing
-   * UniqueIdentifiers as found in the xml
+   *     UniqueIdentifiers as found in the xml
    * @see UniqueIdentifier
    */
   public static Set<IdentifierExtractionResult> extractIdentifiers(

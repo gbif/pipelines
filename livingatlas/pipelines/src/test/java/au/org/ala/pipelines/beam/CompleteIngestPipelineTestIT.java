@@ -13,10 +13,9 @@ import java.io.File;
 import java.util.UUID;
 import okhttp3.mockwebserver.MockWebServer;
 import org.apache.commons.io.FileUtils;
-import org.gbif.pipelines.ingest.options.DwcaPipelineOptions;
-import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
-import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
-import org.gbif.pipelines.ingest.pipelines.DwcaToVerbatimPipeline;
+import org.gbif.pipelines.common.beam.options.DwcaPipelineOptions;
+import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
+import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,11 +39,7 @@ public class CompleteIngestPipelineTestIT {
     server.shutdown();
   }
 
-  /**
-   * Tests for SOLR index creation.
-   *
-   * @throws Exception
-   */
+  /** Tests for SOLR index creation. */
   @Test
   public void testIngestPipeline() throws Exception {
 

@@ -2,35 +2,26 @@ package au.org.ala.pipelines.vocabulary;
 
 import au.org.ala.pipelines.util.Stemmer;
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /** A trait for a vocabulary. A vocabulary consists of a set of Terms, each with string variants. */
 @Slf4j
+@NoArgsConstructor(access = AccessLevel.PACKAGE)
 public class Vocab {
 
-  private final Set<String> canonicals = new HashSet<String>();
+  private final Set<String> canonicals = new HashSet<>();
   // variant -> canonical
-  private final HashMap<String, String> variants = new HashMap<String, String>();
+  private final HashMap<String, String> variants = new HashMap<>();
   // stemmed variant -> canonical
-  private final HashMap<String, String> stemmedVariants = new HashMap<String, String>();
-
-  private Vocab() {}
-
-  public static Vocab loadVocabFromFile(String vocabfile) throws FileNotFoundException {
-    InputStream is;
-    File externalFile = new File(vocabfile);
-    is = new FileInputStream(externalFile);
-    return Vocab.loadVocabFromStream(is);
-  }
+  private final HashMap<String, String> stemmedVariants = new HashMap<>();
 
   public static Vocab loadVocabFromStream(InputStream is) {
 
@@ -39,7 +30,7 @@ public class Vocab {
 
     new BufferedReader(new InputStreamReader(is))
         .lines()
-        .map(s -> s.trim())
+        .map(String::trim)
         .forEach(
             l -> {
               String[] ss = l.split("\t");
@@ -47,9 +38,9 @@ public class Vocab {
               String canonical = ss[0];
               vocab.canonicals.add(canonical);
 
-              for (int i = 0; i < ss.length; i++) {
-                vocab.variants.put(ss[i].toLowerCase(), canonical);
-                vocab.stemmedVariants.put(stemmer.stem(ss[i].toLowerCase()), canonical);
+              for (String s : ss) {
+                vocab.variants.put(s.toLowerCase(), canonical);
+                vocab.stemmedVariants.put(stemmer.stem(s.toLowerCase()), canonical);
               }
             });
 
@@ -59,19 +50,12 @@ public class Vocab {
     return vocab;
   }
 
-  /**
-   * Match a vocab term.
-   *
-   * @param searchTerm
-   * @return
-   */
+  /** Match a vocab term. */
   public Optional<String> matchTerm(String searchTerm) {
     Stemmer stemmer = new Stemmer();
 
     String searchTermLowerCase = searchTerm.toLowerCase();
     String stemmedSearchTerm = stemmer.stem(searchTerm.toLowerCase());
-
-    String[] result = null;
 
     // match by key
     if (canonicals.contains(searchTerm)) {

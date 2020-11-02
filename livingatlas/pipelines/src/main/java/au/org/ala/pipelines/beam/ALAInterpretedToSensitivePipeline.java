@@ -10,6 +10,7 @@ import au.org.ala.kvs.client.SDSConservationServiceFactory;
 import au.org.ala.pipelines.transforms.ALASensitiveDataTransform;
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
 import au.org.ala.pipelines.transforms.ALAUUIDTransform;
+import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import java.io.IOException;
@@ -25,10 +26,10 @@ import org.apache.beam.sdk.transforms.join.CoGroupByKey;
 import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
-import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
-import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
-import org.gbif.pipelines.ingest.utils.FsUtils;
-import org.gbif.pipelines.ingest.utils.MetricsHandler;
+import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
+import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
+import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.io.avro.ALASensitivityRecord;
 import org.gbif.pipelines.io.avro.ALATaxonRecord;
 import org.gbif.pipelines.io.avro.ALAUUIDRecord;
@@ -49,13 +50,14 @@ public class ALAInterpretedToSensitivePipeline {
   public static final boolean USE_GBIF_TAXONOMY = false;
 
   public static void main(String[] args) throws IOException {
+    VersionInfo.print();
     String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "sensitive");
     InterpretationPipelineOptions options =
         PipelinesOptionsFactory.createInterpretation(combinedArgs);
     run(options);
   }
 
-  public static void run(InterpretationPipelineOptions options) throws IOException {
+  public static void run(InterpretationPipelineOptions options) {
     ALAPipelinesConfig config =
         ALAPipelinesConfigFactory.getInstance(
                 options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getProperties())
@@ -69,8 +71,7 @@ public class ALAInterpretedToSensitivePipeline {
 
     log.info("Adding step 1: Options");
     UnaryOperator<String> inputPathFn =
-        t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
-    //    * "{targetPath}/{datasetId}/{attempt}/generalised/{name}/interpret-{uniqueId}"
+        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
     UnaryOperator<String> outputPathFn =
         t -> ALAFsUtils.buildPathGeneralisedUsingTargetPath(options, t, id);
     UnaryOperator<String> identifiersPathFn =
@@ -81,7 +82,7 @@ public class ALAInterpretedToSensitivePipeline {
     log.info("Adding step 2: Creating transformations");
     // Core
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
-    TemporalTransform temporalTransform = TemporalTransform.create();
+    TemporalTransform temporalTransform = TemporalTransform.builder().create();
     LocationTransform locationTransform = LocationTransform.builder().create();
     TaxonomyTransform taxonomyTransform = TaxonomyTransform.builder().create();
 

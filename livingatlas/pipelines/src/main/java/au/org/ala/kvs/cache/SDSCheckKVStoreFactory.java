@@ -11,8 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.cache.KeyValueCache;
 import org.gbif.kvs.hbase.Command;
-import org.gbif.pipelines.parsers.config.model.WsConfig;
-import org.gbif.pipelines.transforms.SerializableSupplier;
+import org.gbif.pipelines.core.config.model.WsConfig;
+import org.gbif.pipelines.core.functions.SerializableSupplier;
 
 @Slf4j
 public class SDSCheckKVStoreFactory {
@@ -47,7 +47,7 @@ public class SDSCheckKVStoreFactory {
       throws IOException {
 
     WsConfig ws = config.getSds();
-    ClientConfiguration clientConfiguration = WsUtils.createConfiguration(ws, config);
+    ClientConfiguration clientConfiguration = WsUtils.createConfiguration(ws);
 
     ALASDSServiceClient wsClient = new ALASDSServiceClient(clientConfiguration);
     Command closeHandler =
@@ -55,7 +55,8 @@ public class SDSCheckKVStoreFactory {
           try {
             wsClient.close();
           } catch (Exception e) {
-            logAndThrow(e, "Unable to close");
+            log.error("Unable to close", e);
+            throw new RuntimeException(e);
           }
         };
 
@@ -66,19 +67,20 @@ public class SDSCheckKVStoreFactory {
   private static KeyValueStore<SpeciesCheck, Boolean> cache2kBackedKVStore(
       ALASDSServiceClient sdsService, Command closeHandler, ALAPipelinesConfig config) {
 
-    KeyValueStore kvs =
+    KeyValueStore<SpeciesCheck, Boolean> kvs =
         new KeyValueStore<SpeciesCheck, Boolean>() {
           @Override
           public Boolean get(SpeciesCheck key) {
             try {
               return sdsService.isSensitive(key);
             } catch (Exception ex) {
-              throw logAndThrow(ex, "Error contacting the sensitive data service");
+              log.error("Error contacting the sensitive data service", ex);
+              throw new RuntimeException(ex);
             }
           }
 
           @Override
-          public void close() throws IOException {
+          public void close() {
             closeHandler.execute();
           }
         };
@@ -89,17 +91,5 @@ public class SDSCheckKVStoreFactory {
   public static SerializableSupplier<KeyValueStore<SpeciesCheck, Boolean>> getInstanceSupplier(
       ALAPipelinesConfig config) {
     return () -> SDSCheckKVStoreFactory.getInstance(config);
-  }
-
-  /**
-   * Wraps an exception into a {@link RuntimeException}.
-   *
-   * @param throwable to propagate
-   * @param message to log and use for the exception wrapper
-   * @return a new {@link RuntimeException}
-   */
-  private static RuntimeException logAndThrow(Throwable throwable, String message) {
-    log.error(message, throwable);
-    return new RuntimeException(throwable);
   }
 }
