@@ -1,1 +1,39 @@
-tar-ignore = ".gitDISABLED"
+# Default ignore patterns contains .git. We need to define our own
+# patterns to get it included because it's need by git-commit-id-plugin
+# mvn plugin during the build
+# The default regex it's in /usr/share/perl5/Dpkg/Source/Package.pm
+--tar-ignore=*.a
+--tar-ignore=*.la
+--tar-ignore=*.o
+--tar-ignore=*.so
+--tar-ignore=.*.sw?
+--tar-ignore=*/*~
+--tar-ignore=,,*
+--tar-ignore=.[#~]*
+--tar-ignore=.arch-ids
+--tar-ignore=.arch-inventory
+--tar-ignore=.be
+--tar-ignore=.bzr
+--tar-ignore=.bzr.backup
+--tar-ignore=.bzr.tags
+--tar-ignore=.bzrignore
+--tar-ignore=.cvsignore
+--tar-ignore=.deps
+# --tar-ignore=.git
+--tar-ignore=.gitattributes
+--tar-ignore=.gitignore
+--tar-ignore=.gitmodules
+--tar-ignore=.gitreview
+--tar-ignore=.hg
+--tar-ignore=.hgignore
+--tar-ignore=.hgsigs
+--tar-ignore=.hgtags
+--tar-ignore=.mailmap
+--tar-ignore=.mtn-ignore
+--tar-ignore=.shelf
+--tar-ignore=.svn
+--tar-ignore=CVS
+--tar-ignore=DEADJOE
+--tar-ignore=RCS
+--tar-ignore=_MTN
+--tar-ignore=_darcs
