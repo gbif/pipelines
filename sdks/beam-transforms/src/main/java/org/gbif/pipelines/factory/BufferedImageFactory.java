@@ -2,14 +2,12 @@ package org.gbif.pipelines.factory;
 
 import java.awt.image.BufferedImage;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import javax.imageio.ImageIO;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import sun.reflect.annotation.ExceptionProxy;
 
 @Slf4j
 public class BufferedImageFactory {
@@ -25,10 +23,11 @@ public class BufferedImageFactory {
     this.image = loadImageFile(imageCachePath);
   }
 
-  //Warning: Cannot load multiple images in a same class
-  //Singleton has been applied on BufferedImageFactory.
-  //If BufferedImageFactory.getInstance() has loaded 'bitmap.png', then it won't load another png.
-  //If you need to load mulitple images in a same parent class, you need to use static method loadImageFile
+  // Warning: Cannot load multiple images in a same class
+  // Singleton has been applied on BufferedImageFactory.
+  // If BufferedImageFactory.getInstance() has loaded 'bitmap.png', then it won't load another png.
+  // If you need to load mulitple images in a same parent class, you need to use static method
+  // loadImageFile
   public static BufferedImage getInstance(String imageCachePath) {
     if (instance == null) {
       synchronized (MUTEX) {
@@ -52,10 +51,10 @@ public class BufferedImageFactory {
         }
         return ImageIO.read(is);
       }
-    }else{
-      try (InputStream is = new FileInputStream(filePath)){
-          return ImageIO.read(is);
-      }catch(Exception e){
+    } else {
+      try (InputStream is = new FileInputStream(filePath)) {
+        return ImageIO.read(is);
+      } catch (Exception e) {
         log.warn("The cache image file doesn't exist - " + filePath);
         return null;
       }
