@@ -233,9 +233,7 @@ public class HttpRequestBuilderTest {
     assertTrue(mappingsNode.has(Field.MAPPINGS));
 
     JsonNode mappings = mappingsNode.path(Field.MAPPINGS);
-    assertTrue(mappings.has("doc"));
-    assertTrue(mappings.path("doc").has("properties"));
-    assertTrue(mappings.path("doc").path("properties").has("test"));
-    assertEquals("text", mappings.path("doc").path("properties").path("test").get("type").asText());
+    assertTrue(mappings.path("properties").has("test"));
+    assertEquals("text", mappings.path("properties").path("test").get("type").asText());
   }
 }
