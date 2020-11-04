@@ -1,5 +1,4 @@
 {
-  "record" : {
     "dynamic_templates": [
       {
         "verbatim": {
@@ -338,5 +337,4 @@
 
       "verbatim": {"type": "object", "enabled": false}
     }
-  }
 }

@@ -1,9 +1,7 @@
 {
-  "doc": {
-    "properties": {
-      "datasetKey": {
-        "type": "keyword"
-      }
+  "properties": {
+    "datasetKey": {
+      "type": "keyword"
     }
   }
 }

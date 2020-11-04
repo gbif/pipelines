@@ -59,7 +59,6 @@ public class EsTestUtils {
   public static Runnable indexingPipeline(
       EsServer server, EsIndexingPipelineOptions options, long numRecordsToIndex, String msg) {
     return () -> {
-      String type = "doc";
       String document =
           "{\"datasetKey\" : \""
               + options.getDatasetId()
@@ -73,7 +72,6 @@ public class EsTestUtils {
                   EsService.indexDocument(
                       server.getEsClient(),
                       options.getEsIndexName(),
-                      type,
                       i + options.getDatasetId().hashCode(),
                       String.format(document, msg + " " + i)));
       EsService.refreshIndex(server.getEsClient(), options.getEsIndexName());
@@ -83,7 +81,12 @@ public class EsTestUtils {
   public static long countDocumentsFromQuery(EsServer server, String idxName, String query) {
     Response response = EsService.executeQuery(server.getEsClient(), idxName, query);
     try {
-      return READER.readTree(response.getEntity().getContent()).get("hits").get("total").asLong();
+      return READER
+          .readTree(response.getEntity().getContent())
+          .get("hits")
+          .get("total")
+          .get("value")
+          .asLong();
     } catch (IOException e) {
       throw new IllegalStateException(e);
     }

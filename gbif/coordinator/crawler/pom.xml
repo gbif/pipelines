@@ -74,7 +74,7 @@
   </build>
 
   <properties>
-    <pipelines.lucene.version>7.5.0</pipelines.lucene.version>
+    <pipelines.lucene.version>8.3.0</pipelines.lucene.version>
     <amqp-client.version>4.8.0</amqp-client.version>
     <curator.version>4.0.1</curator.version>
 
