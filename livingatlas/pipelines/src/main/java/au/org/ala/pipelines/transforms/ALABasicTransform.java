@@ -6,34 +6,32 @@ import au.org.ala.pipelines.interpreters.ALABasicInterpreter;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.function.BiConsumer;
-import org.gbif.pipelines.core.Interpretation;
+import org.gbif.api.vocabulary.OccurrenceStatus;
+import org.gbif.kvs.KeyValueStore;
+import org.gbif.pipelines.core.functions.SerializableSupplier;
+import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.BasicInterpreter;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
-import org.gbif.pipelines.transforms.SerializableSupplier;
 import org.gbif.pipelines.transforms.core.BasicTransform;
+import org.gbif.vocabulary.lookup.VocabularyLookup;
+
 
 public class ALABasicTransform extends BasicTransform {
-  public ALABasicTransform(
-      boolean isTripletValid,
-      boolean isOccurrenceIdValid,
+
+  protected ALABasicTransform(boolean isTripletValid, boolean isOccurrenceIdValid,
       boolean useExtendedRecordId,
       BiConsumer<ExtendedRecord, BasicRecord> gbifIdFn,
       SerializableSupplier<HBaseLockingKeyService> keygenServiceSupplier,
-      HBaseLockingKeyService keygenService) {
-    super(
-        isTripletValid,
-        isOccurrenceIdValid,
-        useExtendedRecordId,
-        gbifIdFn,
-        keygenServiceSupplier,
-        keygenService);
+      SerializableSupplier<VocabularyLookup> lifeStageLookupSupplier,
+      SerializableSupplier<KeyValueStore<String, OccurrenceStatus>> occStatusKvStoreSupplier) {
+    super(isTripletValid, isOccurrenceIdValid, useExtendedRecordId, gbifIdFn, keygenServiceSupplier,
+        lifeStageLookupSupplier, occStatusKvStoreSupplier);
   }
 
   @Override
   public Optional<BasicRecord> convert(ExtendedRecord source) {
-
     BasicRecord br =
         BasicRecord.newBuilder()
             .setId(source.getId())
@@ -58,7 +56,7 @@ public class ALABasicTransform extends BasicTransform {
         .via(BasicInterpreter::interpretTypifiedName)
         .via(BasicInterpreter::interpretSex)
         .via(BasicInterpreter::interpretEstablishmentMeans)
-        .via(BasicInterpreter::interpretLifeStage)
+        .via(BasicInterpreter.interpretLifeStage(lifeStageLookup))
         .via(BasicInterpreter::interpretTypeStatus)
         .via(BasicInterpreter::interpretIndividualCount)
         .via(BasicInterpreter::interpretReferences)
@@ -67,10 +65,10 @@ public class ALABasicTransform extends BasicTransform {
         .via(BasicInterpreter::interpretSampleSizeUnit)
         .via(BasicInterpreter::interpretSampleSizeValue)
         .via(BasicInterpreter::interpretRelativeOrganismQuantity)
+        .via(BasicInterpreter::interpretLicense)
         .via(BasicInterpreter::interpretIdentifiedByIds)
         .via(BasicInterpreter::interpretRecordedByIds)
-        .via(ALABasicInterpreter::interpretLicense)
-        .via(ALABasicInterpreter::interpretRecordedBy)
-        .get();
+        .via(BasicInterpreter.interpretOccurrenceStatus(occStatusKvStore))
+        .getOfNullable();
   }
 }

@@ -1,6 +1,6 @@
 package au.org.ala.pipelines.interpreters;
 
-import static org.gbif.pipelines.parsers.utils.ModelUtils.extractOptValue;
+import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 
 import au.org.ala.pipelines.parser.CollectorNameParser;
 import au.org.ala.pipelines.parser.LicenseParser;
