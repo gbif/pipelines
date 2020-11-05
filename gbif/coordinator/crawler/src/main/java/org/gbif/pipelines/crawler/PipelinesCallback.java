@@ -120,9 +120,14 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
         return;
       }
 
+      // Check start date If CLI was restarted it will be empty
+      String startDateZkPath = Fn.START_DATE.apply(stepType.getLabel());
+      String fullPath = getPipelinesInfoPath(message.getDatasetUuid().toString(), startDateZkPath);
+      Optional<String> stardDate = ZookeeperUtils.getAsString(curator, fullPath);
+
       log.info("Message has been received {}", message);
-      if (ZookeeperUtils.checkExists(
-          curator, getPipelinesInfoPath(datasetKey, stepType.getLabel()))) {
+      if (ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(datasetKey, stepType.getLabel()))
+          && stardDate.isPresent()) {
         log.error(
             "Dataset is in the queue, please check the pipeline-ingestion monitoring tool - {}",
             datasetKey);
@@ -145,7 +150,6 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
       ZookeeperUtils.updateMonitoring(
           curator, datasetKey, mqClassNameZkPath, message.getClass().getCanonicalName());
 
-      String startDateZkPath = Fn.START_DATE.apply(stepType.getLabel());
       ZookeeperUtils.updateMonitoringDate(curator, datasetKey, startDateZkPath);
 
       String runnerZkPath = Fn.RUNNER.apply(stepType.getLabel());

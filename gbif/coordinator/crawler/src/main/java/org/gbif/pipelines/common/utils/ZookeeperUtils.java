@@ -87,6 +87,18 @@ public class ZookeeperUtils {
     return Optional.empty();
   }
 
+  /** Read value from Zookeeper as a {@link String} */
+  public static Optional<String> getAsString(CuratorFramework curator, String path)
+      throws Exception {
+    if (checkExists(curator, path)) {
+      byte[] responseData = curator.getData().forPath(path);
+      if (responseData != null && responseData.length > 0) {
+        return Optional.of(new String(responseData, StandardCharsets.UTF_8));
+      }
+    }
+    return Optional.empty();
+  }
+
   /**
    * Creates or updates a String value for a Zookeeper monitoring node
    *
