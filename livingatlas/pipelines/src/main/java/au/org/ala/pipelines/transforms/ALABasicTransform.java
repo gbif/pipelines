@@ -2,7 +2,6 @@ package au.org.ala.pipelines.transforms;
 
 import static org.gbif.pipelines.core.interpreters.core.BasicInterpreter.interpretCopyGbifId;
 
-import au.org.ala.pipelines.interpreters.ALABasicInterpreter;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.function.BiConsumer;
@@ -17,17 +16,24 @@ import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.vocabulary.lookup.VocabularyLookup;
 
-
 public class ALABasicTransform extends BasicTransform {
 
-  protected ALABasicTransform(boolean isTripletValid, boolean isOccurrenceIdValid,
+  protected ALABasicTransform(
+      boolean isTripletValid,
+      boolean isOccurrenceIdValid,
       boolean useExtendedRecordId,
       BiConsumer<ExtendedRecord, BasicRecord> gbifIdFn,
       SerializableSupplier<HBaseLockingKeyService> keygenServiceSupplier,
       SerializableSupplier<VocabularyLookup> lifeStageLookupSupplier,
       SerializableSupplier<KeyValueStore<String, OccurrenceStatus>> occStatusKvStoreSupplier) {
-    super(isTripletValid, isOccurrenceIdValid, useExtendedRecordId, gbifIdFn, keygenServiceSupplier,
-        lifeStageLookupSupplier, occStatusKvStoreSupplier);
+    super(
+        isTripletValid,
+        isOccurrenceIdValid,
+        useExtendedRecordId,
+        gbifIdFn,
+        keygenServiceSupplier,
+        lifeStageLookupSupplier,
+        occStatusKvStoreSupplier);
   }
 
   @Override
