@@ -148,7 +148,6 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
       ZookeeperUtils.updateMonitoring(
           curator, datasetKey, mqClassNameZkPath, message.getClass().getCanonicalName());
 
-      String startDateZkPath = Fn.START_DATE.apply(stepType.getLabel());
       ZookeeperUtils.updateMonitoringDate(curator, datasetKey, startDateZkPath);
 
       String runnerZkPath = Fn.RUNNER.apply(stepType.getLabel());
