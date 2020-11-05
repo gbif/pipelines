@@ -11,6 +11,7 @@ import java.io.InputStreamReader;
 import java.util.Map;
 
 public class LicenseParser {
+  private static LicenseParser parser;
   // Licence 1..* regex (s)
   private final LinkedListMultimap<String, String> licences = LinkedListMultimap.create();
 
@@ -21,8 +22,11 @@ public class LicenseParser {
    */
   public static LicenseParser getInstance() {
     String sourceClasspathFile = "/license.txt";
-    InputStream is = LicenseParser.class.getResourceAsStream(sourceClasspathFile);
-    return LicenseParser.getInstance(is);
+    if (parser == null) {
+      InputStream is = LicenseParser.class.getResourceAsStream(sourceClasspathFile);
+      parser = LicenseParser.getInstance(is);
+    }
+    return parser;
   }
 
   /**
@@ -33,10 +37,13 @@ public class LicenseParser {
    * @throws FileNotFoundException
    */
   public static LicenseParser getInstance(String licenseFile) throws FileNotFoundException {
-    InputStream is;
-    File externalFile = new File(licenseFile);
-    is = new FileInputStream(externalFile);
-    return LicenseParser.getInstance(is);
+    if (parser == null) {
+      InputStream is;
+      File externalFile = new File(licenseFile);
+      is = new FileInputStream(externalFile);
+      parser = LicenseParser.getInstance(is);
+    }
+    return parser;
   }
 
   private static LicenseParser getInstance(InputStream is) {
@@ -57,6 +64,14 @@ public class LicenseParser {
     return lp;
   }
 
+  /**
+   * Get the license title via regex match.
+   *
+   * <p>This method does not check if input is null
+   *
+   * @param input
+   * @return
+   */
   public String matchLicense(String input) {
     for (Map.Entry<String, String> licence : licences.entries()) {
       String name = licence.getKey();
