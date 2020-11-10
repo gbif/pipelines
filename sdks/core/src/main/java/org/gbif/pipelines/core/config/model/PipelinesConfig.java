@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.gbif.common.parsers.date.DateComponentOrdering;
@@ -48,4 +49,6 @@ public class PipelinesConfig implements Serializable {
    */
   private List<DateComponentOrdering> defaultDateFormat =
       Arrays.asList(DateComponentOrdering.ISO_FORMATS);
+
+  private Set<String> allowExtensionsSet;
 }

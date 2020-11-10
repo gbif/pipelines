@@ -59,6 +59,7 @@ import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.transforms.Transform;
+import org.gbif.pipelines.transforms.common.ExtensionFilterTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.GrscicollTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
@@ -245,9 +246,13 @@ public class VerbatimToInterpretedPipeline {
 
     ImageTransform imageTransform =
         ImageTransform.builder().orderings(dateComponentOrdering).create().counterFn(incMetricFn);
+
     // Extra
     OccurrenceExtensionTransform occExtensionTransform =
         OccurrenceExtensionTransform.create().counterFn(incMetricFn);
+
+    ExtensionFilterTransform extensionFilterTransform =
+        ExtensionFilterTransform.create(config.getAllowExtensionsSet());
 
     DefaultValuesTransform defaultValuesTransform =
         DefaultValuesTransform.builder()
@@ -306,6 +311,7 @@ public class VerbatimToInterpretedPipeline {
           AvroReader.readUniqueRecords(
               hdfsSiteConfig, coreSiteConfig, ExtendedRecord.class, options.getInputPath());
       Map<String, ExtendedRecord> erExtMap = occExtensionTransform.transform(erMap);
+      erExtMap = extensionFilterTransform.transform(erExtMap);
       defaultValuesTransform.replaceDefaultValues(erExtMap);
 
       boolean useSyncMode = options.getSyncThreshold() > erExtMap.size();

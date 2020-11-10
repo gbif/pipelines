@@ -39,6 +39,7 @@ import org.gbif.pipelines.factory.OccurrenceStatusKvStoreFactory;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.transforms.common.ExtensionFilterTransform;
 import org.gbif.pipelines.transforms.common.FilterExtendedRecordTransform;
 import org.gbif.pipelines.transforms.common.UniqueGbifIdTransform;
 import org.gbif.pipelines.transforms.common.UniqueIdTransform;
@@ -218,6 +219,9 @@ public class VerbatimToInterpretedPipeline {
             : p.apply("Read ExtendedRecords", verbatimTransform.read(options.getInputPath()))
                 .apply("Read occurrences from extension", OccurrenceExtensionTransform.create())
                 .apply("Filter duplicates", UniqueIdTransform.create())
+                .apply(
+                    "Filter extension",
+                    ExtensionFilterTransform.create(config.getAllowExtensionsSet()))
                 .apply(
                     "Set default values",
                     DefaultValuesTransform.builder()
