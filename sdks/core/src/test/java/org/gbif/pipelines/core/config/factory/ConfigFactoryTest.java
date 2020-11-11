@@ -108,10 +108,11 @@ public class ConfigFactoryTest {
     assertTrue(dateFormat.contains(DateComponentOrdering.DMYT));
     assertTrue(dateFormat.contains(DateComponentOrdering.DMY));
 
-    Set<String> allowedExtensionsSet = config.getAllowedExtensionsSet();
-    assertEquals(2, allowedExtensionsSet.size());
-    assertTrue(allowedExtensionsSet.contains("http://rs.tdwg.org/ac/terms/Multimedia"));
+    Set<String> extensionsAllowedForVerbatimSet = config.getExtensionsAllowedForVerbatimSet();
+    assertEquals(2, extensionsAllowedForVerbatimSet.size());
+    assertTrue(extensionsAllowedForVerbatimSet.contains("http://rs.tdwg.org/ac/terms/Multimedia"));
     assertTrue(
-        allowedExtensionsSet.contains("http://data.ggbn.org/schemas/ggbn/terms/Amplification"));
+        extensionsAllowedForVerbatimSet.contains(
+            "http://data.ggbn.org/schemas/ggbn/terms/Amplification"));
   }
 }

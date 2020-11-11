@@ -50,5 +50,5 @@ public class PipelinesConfig implements Serializable {
   private List<DateComponentOrdering> defaultDateFormat =
       Arrays.asList(DateComponentOrdering.ISO_FORMATS);
 
-  private Set<String> allowedExtensionsSet;
+  private Set<String> extensionsAllowedForVerbatimSet;
 }
