@@ -252,7 +252,7 @@ public class VerbatimToInterpretedPipeline {
         OccurrenceExtensionTransform.create().counterFn(incMetricFn);
 
     ExtensionFilterTransform extensionFilterTransform =
-        ExtensionFilterTransform.create(config.getAllowExtensionsSet());
+        ExtensionFilterTransform.create(config.getAllowedExtensionsSet());
 
     DefaultValuesTransform defaultValuesTransform =
         DefaultValuesTransform.builder()

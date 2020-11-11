@@ -221,7 +221,7 @@ public class VerbatimToInterpretedPipeline {
                 .apply("Filter duplicates", UniqueIdTransform.create())
                 .apply(
                     "Filter extension",
-                    ExtensionFilterTransform.create(config.getAllowExtensionsSet()))
+                    ExtensionFilterTransform.create(config.getAllowedExtensionsSet()))
                 .apply(
                     "Set default values",
                     DefaultValuesTransform.builder()
