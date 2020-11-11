@@ -3,20 +3,3 @@
 # so that it is used by the scripts.
 #
 
-
-index:
-  inputPath: '{fsPath}/pipelines-data'
-  solrCollection: biocache
-  includeSampling: false
-  includeImages: false
-  includeSpeciesLists: true
-  runner: SparkRunner
-  zkHost: localhost:9983
-
-
-speciesLists:
-  runner: SparkRunner
-  inputPath: '/data/pipelines-data'
-  targetPath: '/data/pipelines-data'
-  speciesAggregatesPath: '/data/pipelines-species'
-  tempLocation: /tmp
