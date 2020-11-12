@@ -1,0 +1,598 @@
+#!/usr/bin/env bash
+
+CMD=$(basename $0)
+
+# Where this is executing (to detect if we are in production)
+SCRIPTPATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+FIND_DOCOPTS=$(which docopts)
+FIND_YQ=$(which yq)
+
+if [[ -z $FIND_DOCOPTS ]]
+then
+    echo "ERROR: Please install docopts https://github.com/docopt/docopts an copy it in your PATH"
+    exit 1
+fi
+
+if [[ -z $FIND_YQ ]]
+then
+    echo "ERROR: Please install yq debian/ubuntu package (not the snap package), see https://github.com/mikefarah/yq"
+    exit 1
+fi
+
+set -e # Stop on any failure
+
+# Detect if we are in production or not
+if [[ $SCRIPTPATH == "/usr/bin" ]] ; then PROD=true ; else PROD=false ; fi
+
+if [[ $PROD = false ]]; then
+  # grep with -P option doesnt work on Mac OSX - perl regex arent supported,
+  VER=$(grep version ../pom.xml | grep -v '<?xml'| head -1 | sed 's/[[:space:]]//g' | sed -E 's/<[/]{0,1}version>//g')
+else
+  VER=$(dpkg-query --show -f '${Version}' la-pipelines)
+fi
+
+WHEREL="[--local|--embedded|--cluster]"
+WHERE="[--embedded|--cluster]"
+
+eval "$(docopts -V - -h - : "$@" <<EOF
+
+LA-Pipelines data ingress utility.
+
+The $CMD can be executed to run all the ingress steps or only a few of them:
+
+Pipeline ingress steps:
+
+    ┌───── do-all ──────────────────────────────────┐
+    │                                               │
+dwca-avro --> interpret --> uuid -->                │
+     export-latlng --> sample --> sample-avro --> index
+
+-  'dwca-avro' reads a Dwc-A and converts it to an Avro file;
+-  'interpret' reads a Dwc-A, interprets it and write the interpreted data and the issues in Avro files;
+-  'uuid' minting on new records and rematching existing UUIDs to records that have been previously loaded;
+-  'export-latlng' exports a unique set of coordinates for a dataset into CSV;
+-  'sample' crawl the LA layers. Requires an input csv containing lat, lng (no header) and output directory.
+-  'sample-avro' adds a sampling AVRO extension to the stored interpretation
+-  'index' reads a Dwc-A, interprets it and index the interpeted data creating a SOLR index.
+-  'archive-list' dumps out a list of archives that can be ingested to '/tmp/dataset-archive-list.csv'
+-  'dataset-list' dumps out a list of datasets that have been ingested to '/tmp/dataset-counts.csv'
+-  'validation-report' dumps out a CSV list of datasets ready to be indexed to '/tmp/validation-report.csv'
+
+All the steps generate an output. If only the final output is desired, the intermediate outputs can be ignored.
+
+Usage:
+  $CMD [options] dwca-avro     (<dr>...|all)
+  $CMD [options] interpret     (<dr>...|all) $WHEREL
+  $CMD [options] validate      (<dr>...|all)         $WHERE
+  $CMD [options] uuid          (<dr>...|all)         $WHERE
+  $CMD [options] export-latlng (<dr>...|all)         $WHERE
+  $CMD [options] sample        (<dr>...|all)
+  $CMD [options] sample-avro   (<dr>...|all)         $WHERE
+  $CMD [options] index         (<dr>...|all) $WHEREL
+  $CMD [options] archive-list
+  $CMD [options] dataset-list
+  $CMD [options] validation-report
+  $CMD [options] do-all        (<dr>...|all) $WHEREL
+  $CMD -h | --help
+  $CMD -v | --version
+
+Options:
+  --config=<files>     Comma separated list of alternative la-pipeline yaml configurations (the last file has the highest precedence).
+  --extra-args=<args>  Additional "arg1=values,arg2=value" to pass to pipeline options (highest precedence than yml values).
+  --no-colors          No colorize logs output.
+  --dry-run            Print the commands without actually running them.
+  --debug              Debug $CMD.
+  -h --help            Show this help.
+  -v --version         Show version.
+----
+$CMD $VER
+License Apache-2.0
+EOF
+)"
+
+# Enable logging
+if ($debug) ; then verbosity=6; else verbosity=5; fi
+if [[ $PROD = true ]] ; then LIB_DIR=/usr/share/la-pipelines ; else LIB_DIR=. ; fi
+source $LIB_DIR/logging_lib.sh $verbosity $no_colors $dr
+
+STEP=Initial
+
+trap ctrlc_catch SIGINT
+ctrlc_catch() {
+    log.warn "$CMD canceled in $STEP step"
+    # Cancel error catch
+    trap - EXIT
+}
+
+# Error trap based in
+# https://medium.com/@dirk.avery/the-bash-trap-trap-ce6083f36700
+trap 'error_catch $? $LINENO' EXIT
+error_catch() {
+    log.error "Unexpected error during $STEP step"
+    if [ "$1" != "0" ]; then
+        log.error "Error $1 occurred on $2"
+    fi
+}
+
+log.info "Starting $CMD"
+log.debug "Production: $PROD"
+
+if [[ $PROD = true ]] ; then CONFIG_DIR=/data/la-pipelines/config ; else CONFIG_DIR=../configs; fi
+
+if ($dry_run); then _D=echo; else _D=; fi
+# Set default config locations for Production and Development
+if [[ -z $config ]]; then config=$CONFIG_DIR/la-pipelines.yaml,$CONFIG_DIR/la-pipelines-local.yaml; fi
+
+if [[ $PROD = false && $no_colors = false ]]; then logConfig=$PWD/../pipelines/src/main/resources/log4j-colorized.properties; fi
+if [[ $PROD = false && $no_colors = true ]];  then logConfig=$PWD/../pipelines/src/main/resources/log4j.properties; fi
+if [[ $PROD = true &&  $no_colors = false ]]; then logConfig=$CONFIG_DIR/log4j-colorized.properties; fi
+if [[ $PROD = true &&  $no_colors = true ]];  then logConfig=$CONFIG_DIR/log4j.properties; fi
+
+# Let's reasing dr variable in order to allow multiple drs
+drs=("${dr[@]}")
+
+if ($debug); then
+    for dr in "${drs[@]}"; do
+        log.debug "Processing $dr"
+    done
+fi
+
+for dr in "${drs[@]}"; do
+    if [[ -n $dr && $dr != all && $dr != dr* ]]; then >&2 log.error "Wrong dataResource '$dr'. It should start with 'dr', like 'dr893'"; exit 1 ; fi
+done
+
+if [[ -n $extra_args ]] ; then
+    # Convert arg1=val1,arg2=val2 into --arg1=val1 --arg2=val2
+    ARGS=${extra_args//,/ \-\-}
+    ARGS=--${ARGS}
+else
+    ARGS=
+fi
+
+log.info Config: $config
+log.info Extra arguments: $ARGS
+log.debug Logs without colors: $no_colors
+log.debug log4j config: $logConfig
+
+# Convert config to a list of files space separated
+configList=${config//,/ }
+log.debug Config list: $configList
+
+for f in $configList $logConfig
+do
+    if [[ ! -f $f ]] ; then log.error File $f doesn\'t exits ; exit 1; fi
+done
+
+# Validate yaml of configs
+for f in $configList
+do
+    YML_V=$(yq v $f; echo $?)
+    if [[ $YML_V != 0 ]] ; then log.error Config $f is not valid ; exit 1; fi
+done
+
+# Gets a config value from yaml configList files
+function getConf() {
+    val=
+    for i in $configList
+    do
+        valTmp=$(yq r $i $1)
+        if [[ -n $valTmp ]] ; then val=$valTmp; fi
+    done
+    echo $val
+}
+
+function toArg() {
+  PREFIX=$1
+  KEY=$2
+  echo --$KEY $(getConf $PREFIX.$KEY)
+}
+
+## Process run options
+
+# Where to run, --local/etc options has precedence over yaml run.platform
+if ($local || $dwca_avro || $sample)  ; then TYPE=local;
+elif ($embedded) ; then TYPE=spark-embedded;
+elif ($cluster) ; then TYPE=spark-cluster;
+else TYPE=$(getConf run.platform);
+fi
+
+if [[ $TYPE = "spark-cluster" ]]; then USE_CLUSTER=true; else USE_CLUSTER=false; fi
+
+log.info "Running in: $TYPE"
+log.debug "Is cluster: $USE_CLUSTER"
+
+if [[ $PROD = true ]]; then PIPELINES_JAR=$LIB_DIR/la-pipelines.jar
+else
+    PIPELINES_JAR=../pipelines/target/pipelines-$VER-shaded.jar
+fi
+
+# dwca-avro, sample and dump-datasize uses local_jar
+LOCAL_PIPELINES_JAR=$PIPELINES_JAR
+
+if [[ $USE_CLUSTER = true ]]; then PIPELINES_JAR=$(getConf run.spark-cluster.jar); fi
+
+for JAR in $LOCAL_PIPELINES_JAR; do
+    if [[ ! -f $JAR ]]
+    then
+        log.error "Cannot find $JAR."
+        exit 1
+    fi
+done
+
+FS_PATH=$(getConf fs.$(getConf fs.platform).fsPath)
+if [[ ! -d $FS_PATH ]]
+then
+    log.error "Cannot find $FS_PATH."
+    exit 1
+fi
+
+SPARK_TMP=$(getConf run.$TYPE.sparkTmp)
+
+SPARK_MASTER=$(getConf run.$TYPE.sparkMaster)
+
+DWCA_IMPORT=$(getConf run.$TYPE.dwcaImportDir)
+
+DWCA_TMP=$(getConf run.$TYPE.dwcaTmp)
+
+log.debug Target $(getConf general.targetPath)
+log.debug Jar: $PIPELINES_JAR
+log.debug Spark tmp: $SPARK_TMP
+
+FS_PATH_ARG="--fsPath=$FS_PATH"
+
+ARGS="$ARGS $FS_PATH_ARG"
+
+# Uncomment this to debug log4j
+# if ( $debug) ; then EXTRA_JVM_CLI_ARGS="-Dlog4j.debug"; fi
+
+# Set log4j configuration for v1 and v2
+EXTRA_JVM_CLI_ARGS="$EXTRA_JVM_CLI_ARGS -Dlog4j.configuration=file://$logConfig -Dlog4j.configurationFile=file://$logConfig"
+log.debug EXTRA_JVM_CLI_ARGS: $EXTRA_JVM_CLI_ARGS
+
+function logStepStart() {
+    local name="$1" dr="$2"
+    STEP="$1 $2"
+    log.info $(date)
+    log.info "START ${colpur}$name${colrst} of $dr"
+}
+
+function logStepEnd() {
+    local name="$1" dr="$2" type="$3" duration=$4
+    log.info $(date)
+    log.info "END ${colpur}$name${colrst} of $dr in [$type], took $(($duration / 60)) minutes and $(($duration % 60)) seconds."
+}
+
+function archive-list() {
+    # dump out archive list
+    log.info "Dumping archive list"
+    java $EXTRA_JVM_CLI_ARGS -cp $LOCAL_PIPELINES_JAR au.org.ala.utils.DumpArchiveList \
+       --config=$config $ARGS
+}
+
+function validation-report() {
+    # dump out archive list
+    log.info "Creating validation report"
+    java $EXTRA_JVM_CLI_ARGS -cp $LOCAL_PIPELINES_JAR au.org.ala.utils.ValidationReportWriter \
+       --config=$config $ARGS
+}
+
+function dataset-list() {
+    # dump out archive list
+    log.info "Dumping dataset list"
+    java $EXTRA_JVM_CLI_ARGS -cp $LOCAL_PIPELINES_JAR au.org.ala.utils.DumpDatasetSize \
+         --config=$config $ARGS
+}
+
+function dwca-avro () {
+    dr=$1
+    CLASS=au.org.ala.pipelines.beam.ALADwcaToVerbatimPipeline
+
+    dwca_dir="$DWCA_IMPORT/$dr/$dr.zip"
+
+    export TMPDIR=$DWCA_TMP
+
+    SECONDS=0
+
+    if [[ $dr != "all" ]] ; then
+      logStepStart "DWCA-AVRO conversion" $dr
+      $_D java $EXTRA_JVM_CLI_ARGS -Dspark.local.dir=$SPARK_TMP \
+          -cp $LOCAL_PIPELINES_JAR $CLASS \
+          --datasetId=$dr \
+          --deleteLockFileOnExit=true \
+          --config=$config $ARGS
+      logStepEnd "DWCA-AVRO conversion" $dr local $SECONDS
+    else
+
+      # dump out archive list
+      archive-list
+
+      # read
+      while IFS=, read -r dr inputPath
+      do
+          log.info "Dataset = $dr and Input file = $inputPath"
+          $_D java $EXTRA_JVM_CLI_ARGS -Dspark.local.dir=$SPARK_TMP \
+              -cp $LOCAL_PIPELINES_JAR $CLASS \
+              --datasetId=$dr \
+              --inputPath=$inputPath \
+              --deleteLockFileOnExit=false \
+              --config=$config $ARGS
+
+      done < /tmp/dataset-archive-list.csv
+    fi
+}
+
+function common-pipeline() {
+    local SH_ARGS="$1" CLASS="$2" dr="$3"
+
+    log.info $(date)
+
+    $_D java $EXTRA_JVM_CLI_ARGS \
+        $(getConf $SH_ARGS.jvm) \
+        -cp $PIPELINES_JAR $CLASS \
+        --datasetId=$dr \
+        --config=$config $ARGS
+}
+
+function java-pipeline() {
+    local ltype="$1" SH_ARGS="$2" CLASS="$3" dr="$4"
+
+    if [[ $ltype = "local" ]] ; then
+        common-pipeline $SH_ARGS $CLASS $dr
+    fi
+}
+
+function spark-embed-pipeline() {
+    local ltype="$1" SH_ARGS="$2" CLASS="$3" dr="$4"
+
+    if [[ $ltype = "spark-embedded" ]] ; then
+        common-pipeline $SH_ARGS $CLASS $dr
+    fi
+}
+
+function spark-cluster-pipeline() {
+    local ltype="$1" SH_ARGS="$2" CLASS="$3" dr="$4" NAME="$5"
+    local CONF
+
+    CONF=$(toArg $SH_ARGS conf)
+    # Remove empty confs
+    if [[ $CONF = "--conf" ]] ; then CONF=""; fi
+
+    if [[ $ltype = "spark-cluster" ]] ; then
+        $_D /data/spark/bin/spark-submit \
+            --name $NAME \
+            $CONF \
+            $(toArg $SH_ARGS num-executors) \
+            $(toArg $SH_ARGS executor-cores) \
+            $(toArg $SH_ARGS executor-memory) \
+            $(toArg $SH_ARGS driver-memory) \
+            --class $CLASS \
+            --master $SPARK_MASTER \
+            --driver-java-options "-Dlog4j.configuration=file:$CONFIG_DIR/log4j.properties" \
+            $PIPELINES_JAR \
+            --datasetId=$dr \
+            --config=$config $ARGS
+        # TODO set here an optional colorized log4j properties
+    fi
+}
+
+function interpret () {
+    local dr="$1" ltype="$2"
+
+    SECONDS=0
+    logStepStart "Interpretation" $dr
+
+    SH_ARGS=interpret-sh-args.local
+    CLASS=au.org.ala.pipelines.java.ALAVerbatimToInterpretedPipeline
+    java-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=interpret-sh-args.spark-embedded
+    CLASS=au.org.ala.pipelines.beam.ALAVerbatimToInterpretedPipeline
+    spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=interpret-sh-args.spark-cluster
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "interpret $dr"
+
+    logStepEnd "Interpretation" $dr $ltype $SECONDS
+}
+
+function validate () {
+    local dr="$1" ltype="$2"
+    CLASS=au.org.ala.pipelines.beam.ALAUUIDValidationPipeline
+
+    logStepStart "Validation pipeline" $dr
+    SECONDS=0
+
+    SH_ARGS=uuid-sh-args.local
+    java-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=uuid-sh-args.spark-embedded
+    spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=uuid-sh-args.spark-cluster
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "validate-uuid $dr"
+
+    logStepEnd "Validation" $dr $ltype $SECONDS
+}
+
+function uuid () {
+    local dr="$1" ltype="$2"
+    CLASS=au.org.ala.pipelines.beam.ALAUUIDMintingPipeline
+
+    logStepStart "UUID pipeline" $dr
+    SECONDS=0
+
+    SH_ARGS=uuid-sh-args.local
+    java-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=uuid-sh-args.spark-embedded
+    spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=uuid-sh-args.spark-cluster
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "uuid-minting $dr"
+
+    logStepEnd "UUID" $dr $ltype $SECONDS
+}
+
+function export-latlng () {
+    local dr="$1" ltype="$2"
+    CLASS=au.org.ala.pipelines.beam.ALAInterpretedToLatLongCSVPipeline
+
+    logStepStart "Export latlng" $dr
+    SECONDS=0
+
+    SH_ARGS=export-latlng-sh-args.local
+    java-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=export-latlng-sh-args.spark-embedded
+    spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=export-latlng-sh-args.spark-cluster
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "Export $dr"
+
+    logStepEnd "Export latlng" $dr $ltype $SECONDS
+}
+
+function sample () {
+    local dr="$1"
+    ltype="local"
+    CLASS=au.org.ala.sampling.LayerCrawler
+
+    logStepStart "Sampling" $dr
+    SECONDS=0
+
+    SH_ARGS=sample-sh-args.local
+    java-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    logStepEnd "Sampling" $dr local $SECONDS
+}
+
+function sample-avro () {
+    local dr="$1" ltype="$2"
+    CLASS=au.org.ala.pipelines.beam.ALASamplingToAvroPipeline
+
+    logStepStart "Sample-avro" $dr
+    SECONDS=0
+
+    SH_ARGS=sample-avro-sh-args.local
+    java-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=sample-avro-sh-args.spark-embedded
+    spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=sample-avro-sh-args.spark-cluster
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "add-sampling $dr"
+
+    logStepEnd "Sample-avro" $dr $ltype $SECONDS
+}
+
+function index () {
+    local dr="$1" ltype="$2"
+
+    logStepStart "Indexing" $dr
+    SECONDS=0
+
+    SH_ARGS=index-sh-args.local
+    CLASS=au.org.ala.pipelines.java.ALAInterpretedToSolrIndexPipeline
+    java-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=index-sh-args.spark-embedded
+    CLASS=au.org.ala.pipelines.beam.ALAInterpretedToSolrIndexPipeline
+    spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=index-sh-args.spark-cluster
+    CLASS=au.org.ala.pipelines.beam.ALAInterpretedToSolrIndexPipeline
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "SOLR indexing for $dr"
+
+    logStepEnd "Indexing" $dr $ltype $SECONDS
+}
+
+if ($archive_list) ; then
+    archive-list
+fi
+
+if ($dataset_list) ; then
+    dataset-list
+fi
+
+if ($validation_report) ; then
+    validation-report
+fi
+
+if ($do_all || $dwca_avro) ; then
+    if [[ $drs != "all" ]] ; then
+        for d in "${drs[@]}"; do
+            dwca-avro $d
+        done
+    else
+        dwca-avro "all"
+    fi
+fi
+
+if [[ $dr = "all" ]] ; then
+    dataset-list
+fi # This should create /tmp/dataset-counts.csv
+
+
+function do_step() {
+    local step=$1
+    if [[ $drs != "all" ]] ; then
+        for d in "${drs[@]}"; do
+            $step $d $TYPE
+        done
+    else
+        while IFS=, read -r datasetID recordCount
+        do
+            log.info "Dataset = $datasetID and count = $recordCount"
+            if [ "$recordCount" -gt "50000" ]; then
+                if [ $USE_CLUSTER = true ]; then
+                    $step $datasetID spark-cluster
+                else
+                    $step $datasetID spark-embedded
+                fi
+            else
+                $step $datasetID local
+            fi
+        done < /tmp/dataset-counts.csv
+    fi
+}
+
+if ($interpret || $do_all); then
+    do_step interpret
+fi
+
+if ($validate || $do_all); then
+    do_step validate
+fi
+
+if ($uuid || $do_all); then
+    do_step uuid
+fi
+
+if ($export_latlng || $do_all); then
+    do_step export-latlng
+    # WARN: Previosly here 'local' was not executed, always 'cluster' or 'embeded' it's this correct?
+fi
+
+if ($sample || $do_all); then
+    if [[ $drs != "all" ]] ; then
+        sample $drs
+    else
+        while IFS=, read -r datasetID recordCount
+        do
+            sample $datasetID
+        done < /tmp/dataset-counts.csv
+    fi
+fi
+
+if ($sample_avro || $do_all); then
+    do_step sample-avro
+    # WARN: Previosly here 'local' was not executed, always 'cluster' or 'embeded' it's this correct?
+fi
+
+if ($index || $do_all); then
+    do_step index
+fi
+
+# All ended correctly, so untrap EXIT catch
+trap - EXIT

@@ -1,0 +1,227 @@
+### run options:
+
+run:
+  # where to run: local, spark-embedded or spark-cluster
+  platform: local
+  local:
+    # jar: we get the jar from our dev or production environment
+    sparkTmp: /data/spark-tmp
+    sparkMaster: ""
+  spark-embedded:
+    # jar: we get the jar from our dev or production environment
+    sparkTmp: /data/spark-tmp
+    sparkMaster: ""
+  spark-cluster:
+    jar: /efs-mount-point/pipelines.jar
+    sparkTmp: /data/spark-tmp
+    sparkMaster: spark://aws-spark-quoll-1.ala:7077
+
+# which filesystem to use: local or hdfs
+fs:
+  platform: local
+  local:
+    fsPath: /data
+  hdfs:
+    fsPath: hdfs://localhost:8020
+  # fsPath: hdfs://aws-spark-quoll-1.ala:9000/
+
+alaNameMatch:
+  wsUrl: http://localhost:9179
+  timeoutSec: 70
+collectory:
+  wsUrl: http://localhost:3939
+  timeoutSec: 70
+sds:
+  wsUrl: http://localhost:9289
+  timeoutSec: 70
+geocodeConfig:
+  country:
+    path: /data/pipelines-shp/political
+    field: ISO_A2
+  eez:
+    path: /data/pipelines-shp/eez
+    field: ISO2
+  stateProvince:
+    path: /data/pipelines-shp/cw_state_poly
+    field: FEATURE
+#locationInfoConfig:
+#    countryNamesFile : /data/pipelines-data/resources/countries.txt
+#    countryCentrePointsFile : /data/pipelines-data/resources/countryCentrePoints.txt
+#    stateProvinceCentrePointsFile : /data/pipelines-data/resources/stateProvinceCentrePoints.txt
+#    stateProvinceNamesFile : /data/pipelines-data/resources/stateProvinces.txt
+
+### pipelines options: should match each GBIF PipelineOptions class options, that is, not extra options should be added
+### on each yml category
+
+# As PipelineOptions does not admits extra arguments, we use this comma separated list of --args to remove it after
+# use it. In the case of fsPath be substitute '{fsPath}/pipelines-data' with fs.hdfs.fsPath if hdfs is selected in
+# fs.platform or '/data' if 'local' is selected.
+pipelineExcludeArgs: fsPath
+
+# Common PipelineOptions
+general:
+  # Target path where the outputs of the pipeline will be written to
+  targetPath: '{fsPath}/pipelines-data'
+  # Attempt of the dataset used to name the target file in file system
+  attempt: 1
+  # The absolute path to a hdfs-site.xml with default.FS configuration
+  hdfsSiteConfig: ""
+  # Path to core-site-config.xml
+  coreSiteConfig: ""
+
+# class: au.org.ala.pipelines.beam.ALADwcaToVerbatimPipeline
+dwca-avro:
+  runner: SparkRunner
+  metaFileName: dwca-metrics.yml
+  # Path of the input file
+  inputPath: /data/biocache-load/{datasetId}/{datasetId}.zip
+  tempLocation: /data/biocache-load/{datasetId}/tmp/
+
+# class: au.org.ala.pipelines.beam.ALAVerbatimToInterpretedPipeline
+interpret:
+  appName: Interpretation for {datasetId}
+  interpretationTypes: ALL
+  inputPath: '{fsPath}/pipelines-data/{datasetId}/1/verbatim.avro'
+  metaFileName: interpretation-metrics.yml
+  # Skips GBIF id generation and copies ids from ExtendedRecord ids
+  useExtendedRecordId: true
+  runner: SparkRunner
+  ## For spark-cluster:
+  name: interpret {datasetId}
+  #  appName: Interpretation for {datasetId}
+  ## For spark-embedded:
+  #  appName: Interpretation for {datasetId}
+
+# class: au.org.ala.pipelines.beam.ALAUUIDMintingPipeline
+uuid:
+  appName: UUID minting for {datasetId}
+  runner: SparkRunner
+  inputPath: '{fsPath}/pipelines-data'
+  metaFileName: uuid-metrics.yml
+  ## For spark-cluster:
+  # interpretationTypes: ALL
+  # useExtendedRecordId: true
+
+# class: au.org.ala.pipelines.beam.ALAInterpretedToLatLongCSVPipeline
+export-latlng:
+  inputPath: '{fsPath}/pipelines-data'
+  runner: SparkRunner
+  appName: Lat Long export for {datasetId}
+
+# class: au.org.ala.sampling.LayerCrawler
+sample:
+  inputPath: '{fsPath}/pipelines-data'
+  appName: Sample for {datasetId}
+  metaFileName: indexing-metrics.yml
+  runner: SparkRunner
+  # TODO improve/move this
+
+# LayerCrawler specific configuration
+layerCrawler:
+  # baseUrl: https://spatial.your-l-a.site/ws/
+  baseUrl: https://sampling.ala.org.au/sampling-service/
+  batchSize: 25000
+  batchStatusSleepTime: 1000
+  downloadRetries: 5
+
+# class: au.org.ala.pipelines.beam.ALASamplingToAvroPipeline
+sample-avro:
+  inputPath: '{fsPath}/pipelines-data'
+  runner: SparkRunner
+  metaFileName: indexing-metrics.yml
+  ## For spark-cluster:
+  # appName: Add Sampling for {datasetId}
+  # useExtendedRecordId: true
+  ## For spark-embedded:
+  # appName: SamplingToAvro indexing for {datasetId}
+
+# class: au.org.ala.pipelines.java.ALAInterpretedToSolrIndexPipeline
+index:
+  inputPath: '{fsPath}/pipelines-data'
+  metaFileName: indexing-metrics.yml
+  solrCollection: biocache
+  includeSampling: true
+  runner: SparkRunner
+  zkHost: localhost:9983
+  ## For spark-cluster:
+  # appName: SOLR indexing for {datasetId}
+  # runner: SparkRunner
+  ## For spark-embedded:
+  # appName: SOLR indexing for {datasetId}
+  # runner: SparkRunner
+
+# class: au.org.ala.utils.DumpDatasetSize
+dataset-count-dump:
+  inputPath: '{fsPath}/pipelines-data'
+  targetPath: /tmp/dataset-counts.csv
+
+migrate-uuids:
+  inputPath: '{fsPath}/pipelines-data/occ_uuid.csv'
+  targetPath: '{fsPath}/pipelines-data'
+  hdfsSiteConfig: ""
+  # FIXME: MigrateUUIDPipeline should use this also?
+
+### la-pipelines cli additional arguments, like JVM or spark command line arguments
+
+interpret-sh-args:
+  local:
+    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
+  spark-embedded:
+    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
+  spark-cluster:
+    conf: spark.default.parallelism=144
+    num-executors: 16
+    executor-cores: 8
+    executor-memory: 7G
+    driver-memory: 1G
+
+uuid-sh-args:
+  spark-embedded:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-cluster:
+    num-executors: 24
+    executor-cores: 8
+    executor-memory: 7G
+    driver-memory: 1G
+
+export-latlng-sh-args:
+  spark-embedded:
+    jvm:
+  spark-cluster:
+    num-executors: 8
+    executor-cores: 8
+    executor-memory: 16G
+    driver-memory: 4G
+
+sample-sh-args:
+  local:
+    jvm: -Xmx8g -XX:+UseG1GC
+
+sample-avro-sh-args:
+  spark-embedded:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-cluster:
+    conf: spark.default.parallelism=192
+    num-executors: 24
+    executor-cores: 8
+    executor-memory: 7G
+    driver-memory: 1G
+
+index-sh-args:
+  local:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-embedded:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-cluster:
+    conf: spark.default.parallelism=192
+    num-executors: 24
+    executor-cores: 8
+    executor-memory: 7G
+    driver-memory: 4G
+test:
+  zkHost: localhost:9983
+  solrAdminHost: localhost:8983
+
+root-test: 1
+
+unicode-test: Лорем ипсум долор сит амет, дуо еа прима семпер

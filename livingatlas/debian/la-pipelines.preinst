@@ -1,0 +1,11 @@
+#!/bin/sh
+
+#######################################################
+#
+# Add here the commands to be excuted before the package
+# has been installed
+#
+
+#DEBHELPER#
+
+echo Installing la-pipelines

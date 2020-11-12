@@ -9,11 +9,14 @@
     <relativePath>../pom.xml</relativePath>
   </parent>
 
+  <groupId>au.org.ala</groupId>
   <artifactId>livingatlas</artifactId>
   <packaging>pom</packaging>
-
   <name>Pipelines :: Living Atlas</name>
-  <description>Living Atlas</description>
 
+  <modules>
+    <module>pipelines</module>
+    <module>migration</module>
+  </modules>
 
 </project>

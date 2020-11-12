@@ -1,0 +1,8 @@
+Australian Capital Territory	AustCapitalTerritory	AustCapitalTerrit	AusCap	AusCapTerrit	ACT	Jervis Bay Territory	Australian Captial Territory
+New South Wales	nswales	nsw	New South Wales (including Coastal Waters)
+Northern Territory	nterritory	nterrit	nt	Northern Territory (including Coastal Waters)
+Queensland	qland	qld	Queensland (including Coastal Waters)
+South Australia	sthaustralia	saustralia	saust	sa	South Australia (including Coastal Waters)
+Tasmania	tassie	tas	Tasmania (including Coastal Waters)
+Victoria	vic	vict	Victoria (including Coastal Waters)
+Western Australia	waustralia	westaustralia	westaust	wa	Western Australia (including Coastal Waters)

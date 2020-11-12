@@ -1,0 +1,29 @@
+#!/bin/sh
+
+#######################################################
+#
+# Add here the commands to be excuted after the package
+# has been installed
+#
+
+#Example: create some symbolic links
+#
+#chown -R ${user}:${group} /opt/${appName}-${appVersion}
+#ln -s /opt/${appName}-${appVersion} /opt/${appName}
+
+set -e
+
+. /usr/share/debconf/confmodule
+
+#DEBHELPER#
+
+case "$1" in
+    configure)
+        # create la-pipelines-local.yaml only if doesn't exist
+        if [ ! -f /data/la-pipelines/config/la-pipelines-local.yaml ]  ; then
+            cp /data/la-pipelines/config/la-pipelines-local.yaml.sample /data/la-pipelines/config/la-pipelines-local.yaml
+        fi
+    ;;
+esac
+
+echo la-pipelines installed
