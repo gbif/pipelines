@@ -1,23 +1,27 @@
 package org.gbif.converters.converter;
 
+import static org.gbif.converters.converter.FsUtils.createFile;
+import static org.gbif.converters.converter.FsUtils.deleteAvroFileIfEmpty;
+import static org.gbif.pipelines.core.utils.FsUtils.createParentDirectories;
+
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Objects;
-
-import org.gbif.pipelines.common.PipelinesVariables.Metrics;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-
+import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.file.CodecFactory;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-
-import lombok.extern.slf4j.Slf4j;
+import org.gbif.pipelines.common.PipelinesVariables.Metrics;
+import org.gbif.pipelines.core.io.SyncDataFileWriter;
+import org.gbif.pipelines.core.io.SyncDataFileWriterBuilder;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 @Slf4j
 public abstract class ConverterToVerbatim {
 
   private String hdfsSiteConfig;
+  private String coreSiteConfig;
   private int syncInterval = 2 * 1024 * 1024;
   private CodecFactory codecFactory = CodecFactory.snappyCodec();
 
@@ -27,6 +31,11 @@ public abstract class ConverterToVerbatim {
 
   public ConverterToVerbatim hdfsSiteConfig(String hdfsSiteConfig) {
     this.hdfsSiteConfig = hdfsSiteConfig;
+    return this;
+  }
+
+  public ConverterToVerbatim coreSiteConfig(String coreSiteConfig) {
+    this.coreSiteConfig = coreSiteConfig;
     return this;
   }
 
@@ -82,7 +91,7 @@ public abstract class ConverterToVerbatim {
     // same connection. So, when using multiple consumers, one consumer would close the connection
     // that is being used
     // by another consumer.
-    FileSystem fs = FsUtils.createParentDirectories(outputPath, hdfsSiteConfig);
+    FileSystem fs = createParentDirectories(hdfsSiteConfig, coreSiteConfig, outputPath);
     try (BufferedOutputStream outputStream = new BufferedOutputStream(fs.create(outputPath));
         SyncDataFileWriter<ExtendedRecord> dataFileWriter =
             SyncDataFileWriterBuilder.builder()
@@ -101,19 +110,21 @@ public abstract class ConverterToVerbatim {
       log.error("Failed performing conversion on {}", inputPath, e);
       throw new IllegalStateException("Failed performing conversion on " + inputPath, e);
     } finally {
-      isConverted = FsUtils.deleteAvroFileIfEmpty(fs, outputPath);
+      isConverted = deleteAvroFileIfEmpty(fs, outputPath);
     }
 
     return !isConverted;
   }
 
-  private void createMetafile(FileSystem fs, Path metaPath, long numberOfRecords) throws IOException {
+  private void createMetafile(FileSystem fs, Path metaPath, long numberOfRecords)
+      throws IOException {
     if (metaPath != null) {
       String info = Metrics.ARCHIVE_TO_ER_COUNT + ": " + numberOfRecords + "\n";
-      FsUtils.createFile(fs, metaPath, info);
+      createFile(fs, metaPath, info);
     }
   }
 
-  protected abstract long convert(java.nio.file.Path inputPath, SyncDataFileWriter<ExtendedRecord> dataFileWriter)
+  protected abstract long convert(
+      java.nio.file.Path inputPath, SyncDataFileWriter<ExtendedRecord> dataFileWriter)
       throws IOException;
 }

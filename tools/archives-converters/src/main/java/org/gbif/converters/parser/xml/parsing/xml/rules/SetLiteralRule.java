@@ -1,10 +1,9 @@
 package org.gbif.converters.parser.xml.parsing.xml.rules;
 
+import lombok.ToString;
 import org.apache.commons.beanutils.MethodUtils;
 import org.apache.commons.digester.Rule;
 import org.xml.sax.SAXException;
-
-import lombok.ToString;
 
 @ToString
 public class SetLiteralRule extends Rule {

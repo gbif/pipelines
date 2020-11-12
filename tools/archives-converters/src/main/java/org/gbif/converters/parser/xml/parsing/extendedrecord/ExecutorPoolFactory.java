@@ -2,7 +2,6 @@ package org.gbif.converters.parser.xml.parsing.extendedrecord;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 

@@ -1,33 +1,30 @@
 package org.gbif.pipelines.estools.service;
 
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.nio.file.Path;
-import java.util.Map;
-import java.util.Set;
-
-import org.gbif.pipelines.estools.common.SettingsType;
-import org.gbif.pipelines.estools.model.IndexParams;
-
-import org.apache.http.HttpEntity;
-import org.apache.http.nio.entity.NStringEntity;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
-import lombok.SneakyThrows;
-
 import static org.gbif.pipelines.estools.service.EsConstants.Action;
 import static org.gbif.pipelines.estools.service.EsConstants.Field;
 import static org.gbif.pipelines.estools.service.EsConstants.Indexing;
 import static org.gbif.pipelines.estools.service.EsConstants.Searching;
 import static org.gbif.pipelines.estools.service.JsonHandler.createArrayNode;
 import static org.gbif.pipelines.estools.service.JsonHandler.createObjectNode;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.nio.file.Path;
+import java.util.Map;
+import java.util.Set;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import lombok.SneakyThrows;
+import org.apache.http.HttpEntity;
+import org.apache.http.nio.entity.NStringEntity;
+import org.gbif.pipelines.estools.common.SettingsType;
+import org.gbif.pipelines.estools.model.IndexParams;
 
 /** Class that builds {@link HttpEntity} instances with JSON content. */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -71,9 +68,10 @@ class HttpRequestBuilder {
 
   /** Adds a {@link SettingsType} to the body. */
   HttpRequestBuilder withSettingsType(@NonNull SettingsType settingsType) {
-    this.settings = (settingsType == SettingsType.INDEXING)
-        ? JsonHandler.convertToJsonNode(Indexing.getDefaultIndexingSettings())
-        : JsonHandler.convertToJsonNode(Searching.getDefaultSearchSettings());
+    this.settings =
+        (settingsType == SettingsType.INDEXING)
+            ? JsonHandler.convertToJsonNode(Indexing.getDefaultIndexingSettings())
+            : JsonHandler.convertToJsonNode(Searching.getDefaultSearchSettings());
     return this;
   }
 
@@ -85,7 +83,8 @@ class HttpRequestBuilder {
 
   /** Adds ES mappings in JSON format to the body. */
   HttpRequestBuilder withMappings(String mappings) {
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(mappings), "Mappings cannot be null or empty");
+    Preconditions.checkArgument(
+        !Strings.isNullOrEmpty(mappings), "Mappings cannot be null or empty");
     this.mappings = JsonHandler.readTree(mappings);
     return this;
   }
@@ -97,15 +96,16 @@ class HttpRequestBuilder {
   }
 
   /**
-   * Adds actions to add and remove index from the aliases. Note that the indexes to be removed will be
-   * removed completely from the ES instance.
+   * Adds actions to add and remove index from the aliases. Note that the indexes to be removed will
+   * be removed completely from the ES instance.
    *
    * @param aliases aliases that wil be modify. This parameter is required.
    * @param idxToAdd indexes to add to the aliases.
-   * @param idxToRemove indexes to remove. Note that these indexes will be completely removed
-   * form the ES instance.
+   * @param idxToRemove indexes to remove. Note that these indexes will be completely removed form
+   *     the ES instance.
    */
-  HttpRequestBuilder withIndexAliasAction(Set<String> aliases, Set<String> idxToAdd, Set<String> idxToRemove) {
+  HttpRequestBuilder withIndexAliasAction(
+      Set<String> aliases, Set<String> idxToAdd, Set<String> idxToRemove) {
     this.indexAliasAction = new IndexAliasAction(aliases, idxToAdd, idxToRemove);
     return this;
   }
@@ -137,7 +137,8 @@ class HttpRequestBuilder {
    * alias.
    */
   private ArrayNode createIndexAliasActions(IndexAliasAction indexAliasAction) {
-    Preconditions.checkArgument(indexAliasAction.aliases != null && !indexAliasAction.aliases.isEmpty());
+    Preconditions.checkArgument(
+        indexAliasAction.aliases != null && !indexAliasAction.aliases.isEmpty());
 
     ArrayNode actions = createArrayNode();
 
@@ -166,17 +167,18 @@ class HttpRequestBuilder {
   }
 
   private static void addIndexToAliasAction(Set<String> aliases, String idx, ArrayNode actions) {
-    aliases.forEach(alias -> {
-      // create swap node
-      ObjectNode swapNode = createObjectNode();
-      swapNode.put(Field.INDEX, idx);
-      swapNode.put(Field.ALIAS, alias);
+    aliases.forEach(
+        alias -> {
+          // create swap node
+          ObjectNode swapNode = createObjectNode();
+          swapNode.put(Field.INDEX, idx);
+          swapNode.put(Field.ALIAS, alias);
 
-      // add the node to the action
-      ObjectNode action = createObjectNode();
-      action.set(Action.ADD, swapNode);
-      actions.add(action);
-    });
+          // add the node to the action
+          ObjectNode action = createObjectNode();
+          action.set(Action.ADD, swapNode);
+          actions.add(action);
+        });
   }
 
   private static HttpEntity createEntity(ObjectNode entityNode) {

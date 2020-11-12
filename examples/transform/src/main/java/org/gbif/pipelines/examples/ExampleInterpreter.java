@@ -2,7 +2,6 @@ package org.gbif.pipelines.examples;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-
 import org.gbif.example.io.avro.ExampleRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 

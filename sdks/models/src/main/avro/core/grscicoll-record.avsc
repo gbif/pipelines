@@ -1,0 +1,26 @@
+[
+   {
+      "name" : "Match",
+      "namespace" : "org.gbif.pipelines.io.avro.grscicoll",
+      "type" : "record",
+      "fields" : [
+        {"name" : "matchType", "type" : ["null", "string"], "default" : null},
+        {"name" : "status", "type" : ["null", "string"], "default" : null},
+        {"name" : "reasons", "type" : ["null", { "type" : "array", "items" : "string"} ], "default" : null},
+        {"name" : "key", "type" : ["null", "string"], "default" : null}
+      ]
+    },
+  {
+    "name" : "GrscicollRecord",
+    "namespace" : "org.gbif.pipelines.io.avro.grscicoll",
+    "type" : "record",
+    "doc" : "Contains the match between an occurrence record and the GrSciColl data",
+    "fields" : [
+      {"name" : "id", "type" : ["null", "string"], "default" : null, "doc":"Pipelines identifier"},
+      {"name": "created", "type": ["null", "long"], "default" : null, "doc":"The timestamp the record was created"},
+      {"name" : "institutionMatch", "type" : ["null", "Match"], "default" : null},
+      {"name" : "collectionMatch", "type" : ["null", "Match"], "default" : null},
+      {"name": "issues", "type": "org.gbif.pipelines.io.avro.IssueRecord", "default":{}}
+    ]
+  }
+]

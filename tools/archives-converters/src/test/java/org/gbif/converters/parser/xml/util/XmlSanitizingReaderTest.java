@@ -15,6 +15,8 @@
  */
 package org.gbif.converters.parser.xml.util;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -23,10 +25,7 @@ import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.util.zip.GZIPInputStream;
-
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
 
 public class XmlSanitizingReaderTest {
 
