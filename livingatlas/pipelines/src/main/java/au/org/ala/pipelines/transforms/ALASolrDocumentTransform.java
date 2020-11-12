@@ -21,9 +21,9 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.util.Strings;
 import org.apache.solr.common.SolrInputDocument;
 import org.gbif.pipelines.core.converters.MultimediaConverter;
-import org.gbif.pipelines.core.utils.TemporalUtils;
 import org.gbif.pipelines.io.avro.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -162,13 +162,10 @@ public class ALASolrDocumentTransform implements Serializable {
 
     // add event date
     try {
-      if (tr.getEventDate() != null && tr.getEventDate().getGte() != null) {
+      if (tr.getEventDate().getGte() != null && tr.getEventDate().getGte().length() == 10) {
         doc.setField(
             "eventDateSingle",
-            new SimpleDateFormat("yyyy-MM-dd'T'HH:mm").parse(tr.getEventDate().getGte()));
-      } else {
-        TemporalUtils.getTemporal(tr.getYear(), tr.getMonth(), tr.getDay())
-            .ifPresent(x -> doc.setField("eventDateSingle", x));
+            new SimpleDateFormat("yyyy-MM-dd").parse(tr.getEventDate().getGte()));
       }
     } catch (ParseException e) {
       log.error(
@@ -322,15 +319,36 @@ public class ALASolrDocumentTransform implements Serializable {
       String stateProvince = lr.getStateProvince();
       String country = lr.getCountry();
 
+      // index conservation status
       List<ConservationStatus> conservationStatuses = tpr.getConservationStatuses();
       for (ConservationStatus conservationStatus : conservationStatuses) {
         if (conservationStatus.getRegion() != null) {
           if (conservationStatus.getRegion().equalsIgnoreCase(stateProvince)) {
-            doc.setField("raw_state_conservation", conservationStatus.getSourceStatus());
-            doc.setField("state_conservation", conservationStatus.getStatus());
+
+            if (Strings.isNotBlank(conservationStatus.getSourceStatus())) {
+              doc.setField("raw_state_conservation", conservationStatus.getSourceStatus());
+            }
+            if (Strings.isNotBlank(conservationStatus.getStatus())) {
+              doc.setField("state_conservation", conservationStatus.getStatus());
+            }
           }
           if (conservationStatus.getRegion().equalsIgnoreCase(country)) {
-            doc.setField("country_conservation", conservationStatus.getStatus());
+            if (Strings.isNotBlank(conservationStatus.getStatus())) {
+              doc.setField("country_conservation", conservationStatus.getStatus());
+            }
+          }
+        }
+      }
+
+      // index invasive status
+      List<InvasiveStatus> invasiveStatuses = tpr.getInvasiveStatuses();
+      for (InvasiveStatus invasiveStatus : invasiveStatuses) {
+        if (invasiveStatus.getRegion() != null) {
+          if (invasiveStatus.getRegion().equalsIgnoreCase(stateProvince)) {
+            doc.setField("state_invasive", "invasive");
+          }
+          if (invasiveStatus.getRegion().equalsIgnoreCase(country)) {
+            doc.setField("country_invasive", "invasive");
           }
         }
       }

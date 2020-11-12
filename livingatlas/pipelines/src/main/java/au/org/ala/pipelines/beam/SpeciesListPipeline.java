@@ -2,9 +2,13 @@ package au.org.ala.pipelines.beam;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
+import au.org.ala.kvs.ALAPipelinesConfig;
+import au.org.ala.kvs.ALAPipelinesConfigFactory;
 import au.org.ala.pipelines.options.SpeciesLevelPipelineOptions;
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
 import au.org.ala.pipelines.util.VersionInfo;
+import au.org.ala.pipelines.vocabulary.StateProvince;
+import au.org.ala.pipelines.vocabulary.Vocab;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import com.google.common.base.Strings;
 import java.util.ArrayList;
@@ -24,6 +28,7 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TupleTag;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
+import org.gbif.pipelines.core.parsers.location.parser.CountryMaps;
 import org.gbif.pipelines.io.avro.*;
 
 @Slf4j
@@ -41,6 +46,12 @@ public class SpeciesListPipeline {
   }
 
   public static void run(SpeciesLevelPipelineOptions options) throws Exception {
+
+    // read config
+    ALAPipelinesConfig config =
+            ALAPipelinesConfigFactory.getInstance(
+                    options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getProperties())
+                    .get();
 
     log.info("Running species list pipeline for dataset {}", options.getDatasetId());
     UnaryOperator<String> pathFn =
@@ -94,6 +105,8 @@ public class SpeciesListPipeline {
             .and(t2, taxonID2Lists)
             .apply(CoGroupByKey.create());
 
+    final Vocab stateProvinceVocab = StateProvince.getInstance(config.getLocationInfoConfig().getStateProvinceNamesFile());
+
     // join collections
     PCollection<KV<String, TaxonProfile>> taxonProfilesCollection =
         result.apply(
@@ -101,8 +114,10 @@ public class SpeciesListPipeline {
                 new DoFn<KV<String, CoGbkResult>, KV<String, TaxonProfile>>() {
                   @ProcessElement
                   public void processElement(ProcessContext c) {
+
                     KV<String, CoGbkResult> e = c.element();
                     CoGbkResult result = e.getValue();
+
                     // Retrieve all integers associated with this key from pt1
                     Iterable<String> occurrenceIDs = result.getAll(t1);
                     Iterable<SpeciesListRecord> speciesLists = result.getOnly(t2, null);
@@ -112,29 +127,42 @@ public class SpeciesListPipeline {
                       List<String> speciesListIDs = new ArrayList<String>();
                       List<ConservationStatus> conservationStatusList =
                           new ArrayList<ConservationStatus>();
+                      List<InvasiveStatus> invasiveStatusList = new ArrayList<InvasiveStatus>();
 
                       while (iter.hasNext()) {
+
                         SpeciesListRecord speciesListRecord = iter.next();
                         speciesListIDs.add(speciesListRecord.getSpeciesListID());
+
+
                         if (speciesListRecord.getIsThreatened()
-                            && !Strings.isNullOrEmpty(speciesListRecord.getSourceStatus())) {
+                            && (
+                                    !Strings.isNullOrEmpty(speciesListRecord.getSourceStatus())
+                                || !Strings.isNullOrEmpty(speciesListRecord.getStatus()))
+                        ) {
                           conservationStatusList.add(
                               ConservationStatus.newBuilder()
                                   .setSpeciesListID(speciesListRecord.getSpeciesListID())
                                   .setRegion(speciesListRecord.getRegion())
                                   .setSourceStatus(speciesListRecord.getSourceStatus())
-                                  .setStatus(speciesListRecord.getSourceStatus())
+                                  .setStatus(speciesListRecord.getStatus())
+                                  .build());
+                        } else if (speciesListRecord.getIsInvasive()) {
+                          invasiveStatusList.add(
+                              InvasiveStatus.newBuilder()
+                                  .setSpeciesListID(speciesListRecord.getSpeciesListID())
+                                  .setRegion(speciesListRecord.getRegion())
                                   .build());
                         }
                       }
 
+                      // output a link to each occurrence record we've matched by taxonID
                       for (String occurrenceID : occurrenceIDs) {
                         TaxonProfile.Builder builder = TaxonProfile.newBuilder();
                         builder.setId(occurrenceID);
                         builder.setSpeciesListID(speciesListIDs);
-                        if (!conservationStatusList.isEmpty()) {
-                          builder.setConservationStatuses(conservationStatusList);
-                        }
+                        builder.setConservationStatuses(conservationStatusList);
+                        builder.setInvasiveStatuses(invasiveStatusList);
                         c.output(KV.of(occurrenceID, builder.build()));
                       }
                     }

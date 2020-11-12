@@ -161,6 +161,10 @@
   <field name="state_conservation"     type="string"  docValues="true" multiValued="false"  indexed="true" />
   <field name="country_conservation"   type="string"  docValues="true" multiValued="false"  indexed="true" />
 
+  <!-- Additional invasive fields -->
+  <field name="state_invasive"         type="string"  docValues="true" multiValued="false"  indexed="true" />
+  <field name="country_invasive"       type="string"  docValues="true" multiValued="false"  indexed="true" />
+
   <!-- All DWC fields -->
   <field name="acceptedNameUsage" type="string" docValues="true" indexed="true"/>
   <field name="acceptedNameUsageID" type="string" docValues="true" indexed="true"/>

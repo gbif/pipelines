@@ -1,5 +1,15 @@
 [
     {
+      "name":"InvasiveStatus",
+      "namespace":"org.gbif.pipelines.io.avro",
+      "type":"record",
+      "doc":"InvasiveStatus",
+      "fields":[
+        {"name": "speciesListID", "type": ["null", "string"]},
+        {"name": "region", "type": ["null", "string"]}
+      ]
+    },
+    {
       "name":"ConservationStatus",
       "namespace":"org.gbif.pipelines.io.avro",
       "type":"record",
@@ -19,7 +29,8 @@
       "fields":[
         {"name": "id", "type": ["null", "string"]},
         {"name": "speciesListID", "type": {"type" : "array", "items" : "string"}, "default" : []},
-        {"name": "conservationStatuses", "type": {"type" : "array", "items" : "ConservationStatus"}, "default" : []}
+        {"name": "conservationStatuses", "type": {"type" : "array", "items" : "ConservationStatus"}, "default" : []},
+        {"name": "invasiveStatuses", "type": {"type" : "array", "items" : "InvasiveStatus"}, "default" : []}
       ]
     }
 ]

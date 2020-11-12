@@ -4,11 +4,15 @@ import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.kvs.ALAPipelinesConfigFactory;
 import au.org.ala.pipelines.options.SpeciesLevelPipelineOptions;
 import au.org.ala.pipelines.util.VersionInfo;
+import au.org.ala.pipelines.vocabulary.StateProvince;
+import au.org.ala.pipelines.vocabulary.Vocab;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.WsUtils;
 import java.io.*;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
+
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.ResponseBody;
 import org.apache.avro.file.DataFileWriter;
@@ -16,6 +20,9 @@ import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.DatumWriter;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.gbif.api.vocabulary.Country;
+import org.gbif.common.parsers.CountryParser;
+import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.SpeciesListRecord;
@@ -44,6 +51,8 @@ public class SpeciesListDownloader {
         ALAPipelinesConfigFactory.getInstance(
                 options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getProperties())
             .get();
+
+    final Vocab stateProvinceVocab = StateProvince.getInstance(config.getLocationInfoConfig().getStateProvinceNamesFile());
 
     // get filesystem
     FileSystem fs =
@@ -95,6 +104,25 @@ public class SpeciesListDownloader {
       int statusIdx = columnHeaders.indexOf("status");
       int sourceStatusIdx = columnHeaders.indexOf("sourceStatus");
 
+      String region = null;
+
+      if (list.getRegion() != null) {
+        // match states
+        Optional<String> match = stateProvinceVocab.matchTerm(list.getRegion());
+
+        if (match.isPresent()){
+          region = match.get();
+        } else {
+          // match country
+          ParseResult<Country> pr = CountryParser.getInstance().parse(list.getRegion());
+          if (pr.isSuccessful()) {
+            region = pr.getPayload().name();
+          } else {
+            region = list.getRegion();
+          }
+        }
+      }
+
       if (guidIdx > 0) {
         String[] currentLine = csvReader.next();
 
@@ -103,14 +131,16 @@ public class SpeciesListDownloader {
           String taxonID = currentLine[guidIdx];
 
           if (taxonID.length() > 0) {
+
             String status = statusIdx > 0 ? currentLine[statusIdx] : null;
             String sourceStatus = sourceStatusIdx > 0 ? currentLine[sourceStatusIdx] : null;
+
             SpeciesListRecord speciesListRecord =
                 SpeciesListRecord.newBuilder()
                     .setTaxonID(taxonID)
                     .setSpeciesListID(list.getDataResourceUid())
                     .setStatus(status)
-                    .setRegion(list.getRegion())
+                    .setRegion(region)
                     .setIsInvasive(list.isInvasive())
                     .setIsThreatened(list.isThreatened())
                     .setSourceStatus(sourceStatus)
@@ -121,7 +151,7 @@ public class SpeciesListDownloader {
         }
       } else {
         log.warn(
-            "List {} - {} does not supply a GUID column",
+            "List {} - {} does not supply a GUID column - hence this list will not be used",
             list.getDataResourceUid(),
             list.getListName());
       }

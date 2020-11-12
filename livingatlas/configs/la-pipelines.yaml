@@ -44,10 +44,7 @@ imageService:
     apiKey: add-a-api-key-here
 speciesListService:
   wsUrl: https://lists.ala.org.au
-  timeoutSec: 70
-  httpHeaders:
-    apiKey: add-a-api-key-here
-geocodeConfig:
+  timeoutSec: 70geocodeConfig:
   country:
     path: /data/pipelines-shp/political
     field: ISO_A2
