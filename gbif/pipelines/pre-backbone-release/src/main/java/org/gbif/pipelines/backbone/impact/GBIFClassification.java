@@ -1,5 +1,6 @@
 package org.gbif.pipelines.backbone.impact;
 
+import java.util.Objects;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.hive.hcatalog.common.HCatException;
@@ -7,13 +8,12 @@ import org.apache.hive.hcatalog.data.HCatRecord;
 import org.apache.hive.hcatalog.data.schema.HCatSchema;
 import org.gbif.api.service.checklistbank.NameParser;
 import org.gbif.nameparser.NameParserGbifV1;
-import org.gbif.nameparser.api.Rank;
 import org.gbif.rest.client.species.NameUsageMatch;
-import java.util.Objects;
 
 /**
- * A classification container intended for use when classifications are to be compared for equality; specifically
- * to compare existing classifications seen on occurrence records to the classification proposed by a lookup service.
+ * A classification container intended for use when classifications are to be compared for equality;
+ * specifically to compare existing classifications seen on occurrence records to the classification
+ * proposed by a lookup service.
  */
 @Getter
 @Setter
@@ -39,9 +39,7 @@ class GBIFClassification {
   private Integer taxonKey;
   private Integer acceptedTaxonKey;
 
-  /**
-   * @return A new classification representing unknown.
-   */
+  /** @return A new classification representing unknown. */
   static GBIFClassification newIncertaeSedis() {
     GBIFClassification c = new GBIFClassification();
     c.scientificName = "incertae sedis";
@@ -50,9 +48,11 @@ class GBIFClassification {
   }
 
   /**
-   * Builder for content represented in Hive sourced data using GBIF occurrence_hdfs naming convention.
+   * Builder for content represented in Hive sourced data using GBIF occurrence_hdfs naming
+   * convention.
    */
-  static GBIFClassification buildFromHive(HCatRecord source, HCatSchema schema) throws HCatException {
+  static GBIFClassification buildFromHive(HCatRecord source, HCatSchema schema)
+      throws HCatException {
     GBIFClassification c = new GBIFClassification();
     c.kingdom = source.getString("kingdom", schema);
     c.phylum = source.getString("phylum", schema);
@@ -77,48 +77,49 @@ class GBIFClassification {
     return c;
   }
 
-  /**
-   * Builder from a lookup web service response.
-   */
+  /** Builder from a lookup web service response. */
   static GBIFClassification buildFromNameUsageMatch(NameUsageMatch usageMatch) {
     GBIFClassification c = new GBIFClassification();
     if (Objects.nonNull(usageMatch.getClassification())) {
-      usageMatch.getClassification().forEach(rankedName -> {
-        switch (rankedName.getRank()) {
-          case KINGDOM:
-            c.kingdom = rankedName.getName();
-            c.kingdomKey = rankedName.getKey();
-            break;
-          case PHYLUM:
-            c.phylum = rankedName.getName();
-            c.phylumKey = rankedName.getKey();
-            break;
-          case CLASS:
-            c.klass = rankedName.getName();
-            c.classKey = rankedName.getKey();
-            break;
-          case ORDER:
-            c.order = rankedName.getName();
-            c.orderKey = rankedName.getKey();
-            break;
-          case FAMILY:
-            c.family = rankedName.getName();
-            c.familyKey = rankedName.getKey();
-            break;
-          case GENUS:
-            c.genus = rankedName.getName();
-            c.genusKey = rankedName.getKey();
-            break;
-          case SUBGENUS:
-            c.subGenus = rankedName.getName();
-            c.subGenusKey = rankedName.getKey();
-            break;
-          case SPECIES:
-            c.species = rankedName.getName();
-            c.speciesKey = rankedName.getKey();
-            break;
-        }
-      });
+      usageMatch
+          .getClassification()
+          .forEach(
+              rankedName -> {
+                switch (rankedName.getRank()) {
+                  case KINGDOM:
+                    c.kingdom = rankedName.getName();
+                    c.kingdomKey = rankedName.getKey();
+                    break;
+                  case PHYLUM:
+                    c.phylum = rankedName.getName();
+                    c.phylumKey = rankedName.getKey();
+                    break;
+                  case CLASS:
+                    c.klass = rankedName.getName();
+                    c.classKey = rankedName.getKey();
+                    break;
+                  case ORDER:
+                    c.order = rankedName.getName();
+                    c.orderKey = rankedName.getKey();
+                    break;
+                  case FAMILY:
+                    c.family = rankedName.getName();
+                    c.familyKey = rankedName.getKey();
+                    break;
+                  case GENUS:
+                    c.genus = rankedName.getName();
+                    c.genusKey = rankedName.getKey();
+                    break;
+                  case SUBGENUS:
+                    c.subGenus = rankedName.getName();
+                    c.subGenusKey = rankedName.getKey();
+                    break;
+                  case SPECIES:
+                    c.species = rankedName.getName();
+                    c.speciesKey = rankedName.getKey();
+                    break;
+                }
+              });
 
       if (usageMatch.getUsage() != null) {
         c.scientificName = usageMatch.getUsage().getName();
@@ -133,17 +134,16 @@ class GBIFClassification {
         c.acceptedScientificName = usageMatch.getUsage().getName();
         c.acceptedTaxonKey = usageMatch.getUsage().getKey();
       }
-
     }
 
     return c;
   }
 
-  /**
-   * @return order in tab delimited format
-   */
-  @Override public String toString() {
-    return String.join("\t",
+  /** @return order in tab delimited format */
+  @Override
+  public String toString() {
+    return String.join(
+        "\t",
         kingdom,
         phylum,
         klass,
@@ -171,36 +171,54 @@ class GBIFClassification {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     GBIFClassification that = (GBIFClassification) o;
-    return Objects.equals(kingdom, that.kingdom) &&
-        Objects.equals(phylum, that.phylum) &&
-        Objects.equals(klass, that.klass) &&
-        Objects.equals(order, that.order) &&
-        Objects.equals(family, that.family) &&
-        Objects.equals(genus, that.genus) &&
-        Objects.equals(subGenus, that.subGenus) &&
-        Objects.equals(species, that.species) &&
-        Objects.equals(scientificName, that.scientificName) &&
-        Objects.equals(acceptedScientificName, that.acceptedScientificName) &&
-        Objects.equals(kingdomKey, that.kingdomKey) &&
-        Objects.equals(phylumKey, that.phylumKey) &&
-        Objects.equals(classKey, that.classKey) &&
-        Objects.equals(orderKey, that.orderKey) &&
-        Objects.equals(familyKey, that.familyKey) &&
-        Objects.equals(genusKey, that.genusKey) &&
-        Objects.equals(subGenusKey, that.subGenusKey) &&
-        Objects.equals(speciesKey, that.speciesKey) &&
-        Objects.equals(taxonKey, that.taxonKey) &&
-        Objects.equals(acceptedTaxonKey, that.acceptedTaxonKey);
+    return Objects.equals(kingdom, that.kingdom)
+        && Objects.equals(phylum, that.phylum)
+        && Objects.equals(klass, that.klass)
+        && Objects.equals(order, that.order)
+        && Objects.equals(family, that.family)
+        && Objects.equals(genus, that.genus)
+        && Objects.equals(subGenus, that.subGenus)
+        && Objects.equals(species, that.species)
+        && Objects.equals(scientificName, that.scientificName)
+        && Objects.equals(acceptedScientificName, that.acceptedScientificName)
+        && Objects.equals(kingdomKey, that.kingdomKey)
+        && Objects.equals(phylumKey, that.phylumKey)
+        && Objects.equals(classKey, that.classKey)
+        && Objects.equals(orderKey, that.orderKey)
+        && Objects.equals(familyKey, that.familyKey)
+        && Objects.equals(genusKey, that.genusKey)
+        && Objects.equals(subGenusKey, that.subGenusKey)
+        && Objects.equals(speciesKey, that.speciesKey)
+        && Objects.equals(taxonKey, that.taxonKey)
+        && Objects.equals(acceptedTaxonKey, that.acceptedTaxonKey);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(kingdom, phylum, klass, order, family, genus, subGenus, species, scientificName, acceptedScientificName, kingdomKey, phylumKey, classKey, orderKey, familyKey, genusKey, subGenusKey, speciesKey, taxonKey, acceptedTaxonKey);
+    return Objects.hash(
+        kingdom,
+        phylum,
+        klass,
+        order,
+        family,
+        genus,
+        subGenus,
+        species,
+        scientificName,
+        acceptedScientificName,
+        kingdomKey,
+        phylumKey,
+        classKey,
+        orderKey,
+        familyKey,
+        genusKey,
+        subGenusKey,
+        speciesKey,
+        taxonKey,
+        acceptedTaxonKey);
   }
 
-  /**
-   * Utility container for capturing the ranks at which difference occur in two classifications.
-   */
+  /** Utility container for capturing the ranks at which difference occur in two classifications. */
   @Getter
   @Setter
   @Deprecated // Currently moved into the visualisation layer, and could be removed
@@ -219,14 +237,19 @@ class GBIFClassification {
       RankOfDiff d = new RankOfDiff();
 
       // has the accepted name changed at all
-      d.acceptedScientificNameChanged = !Objects.equals(c1.acceptedScientificName, c2.acceptedScientificName);
-      d.acceptedCanonicalNameChanged = !Objects.equals(
-          PARSER.parseToCanonical(c1.acceptedScientificName),
-          PARSER.parseToCanonical(c2.acceptedScientificName));
+      d.acceptedScientificNameChanged =
+          !Objects.equals(c1.acceptedScientificName, c2.acceptedScientificName);
+      d.acceptedCanonicalNameChanged =
+          !Objects.equals(
+              PARSER.parseToCanonical(c1.acceptedScientificName),
+              PARSER.parseToCanonical(c2.acceptedScientificName));
       d.acceptedIdentifierChanged = !Objects.equals(c1.acceptedTaxonKey, c2.acceptedTaxonKey);
 
       // the highest rank we see changes in the scientific name
-      d.scientificName = Objects.equals(c1.scientificName, c2.scientificName) ? d.scientificName : "SCIENTIFIC_NAME";
+      d.scientificName =
+          Objects.equals(c1.scientificName, c2.scientificName)
+              ? d.scientificName
+              : "SCIENTIFIC_NAME";
       d.scientificName = Objects.equals(c1.species, c2.species) ? d.scientificName : "SPECIES";
       d.scientificName = Objects.equals(c1.subGenus, c2.subGenus) ? d.scientificName : "SUB_GENUS";
       d.scientificName = Objects.equals(c1.genus, c2.genus) ? d.scientificName : "GENUS";
@@ -237,15 +260,44 @@ class GBIFClassification {
       d.scientificName = Objects.equals(c1.kingdom, c2.kingdom) ? d.scientificName : "KINGDOM";
 
       // the highest rank we see changes in the canonical name
-      d.canonicalName = Objects.equals(PARSER.parseToCanonical(c1.scientificName), PARSER.parseToCanonical(c2.scientificName)) ? d.canonicalName : "SCIENTIFIC_NAME";
-      d.canonicalName = Objects.equals(PARSER.parseToCanonical(c1.species), PARSER.parseToCanonical(c2.species)) ? d.canonicalName : "SPECIES";
-      d.canonicalName = Objects.equals(PARSER.parseToCanonical(c1.subGenus), PARSER.parseToCanonical(c2.subGenus)) ? d.canonicalName : "SUB_GENUS";
-      d.canonicalName = Objects.equals(PARSER.parseToCanonical(c1.genus), PARSER.parseToCanonical(c2.genus)) ? d.canonicalName : "GENUS";
-      d.canonicalName = Objects.equals(PARSER.parseToCanonical(c1.family), PARSER.parseToCanonical(c2.family)) ? d.canonicalName : "FAMILY";
-      d.canonicalName = Objects.equals(PARSER.parseToCanonical(c1.order), PARSER.parseToCanonical(c2.order)) ? d.canonicalName : "ORDER";
-      d.canonicalName = Objects.equals(PARSER.parseToCanonical(c1.klass), PARSER.parseToCanonical(c2.klass)) ? d.canonicalName : "CLASS";
-      d.canonicalName = Objects.equals(PARSER.parseToCanonical(c1.phylum), PARSER.parseToCanonical(c2.phylum)) ? d.canonicalName : "PHYLUM";
-      d.canonicalName = Objects.equals(PARSER.parseToCanonical(c1.kingdom), PARSER.parseToCanonical(c2.kingdom)) ? d.canonicalName : "KINGDOM";
+      d.canonicalName =
+          Objects.equals(
+                  PARSER.parseToCanonical(c1.scientificName),
+                  PARSER.parseToCanonical(c2.scientificName))
+              ? d.canonicalName
+              : "SCIENTIFIC_NAME";
+      d.canonicalName =
+          Objects.equals(PARSER.parseToCanonical(c1.species), PARSER.parseToCanonical(c2.species))
+              ? d.canonicalName
+              : "SPECIES";
+      d.canonicalName =
+          Objects.equals(PARSER.parseToCanonical(c1.subGenus), PARSER.parseToCanonical(c2.subGenus))
+              ? d.canonicalName
+              : "SUB_GENUS";
+      d.canonicalName =
+          Objects.equals(PARSER.parseToCanonical(c1.genus), PARSER.parseToCanonical(c2.genus))
+              ? d.canonicalName
+              : "GENUS";
+      d.canonicalName =
+          Objects.equals(PARSER.parseToCanonical(c1.family), PARSER.parseToCanonical(c2.family))
+              ? d.canonicalName
+              : "FAMILY";
+      d.canonicalName =
+          Objects.equals(PARSER.parseToCanonical(c1.order), PARSER.parseToCanonical(c2.order))
+              ? d.canonicalName
+              : "ORDER";
+      d.canonicalName =
+          Objects.equals(PARSER.parseToCanonical(c1.klass), PARSER.parseToCanonical(c2.klass))
+              ? d.canonicalName
+              : "CLASS";
+      d.canonicalName =
+          Objects.equals(PARSER.parseToCanonical(c1.phylum), PARSER.parseToCanonical(c2.phylum))
+              ? d.canonicalName
+              : "PHYLUM";
+      d.canonicalName =
+          Objects.equals(PARSER.parseToCanonical(c1.kingdom), PARSER.parseToCanonical(c2.kingdom))
+              ? d.canonicalName
+              : "KINGDOM";
 
       // the highest rank we see changes in the identifiers
       d.identifier = Objects.equals(c1.taxonKey, c2.taxonKey) ? d.identifier : "SCIENTIFIC_NAME";
