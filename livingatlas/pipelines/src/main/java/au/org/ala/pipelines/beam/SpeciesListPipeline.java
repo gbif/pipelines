@@ -2,13 +2,10 @@ package au.org.ala.pipelines.beam;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
-import au.org.ala.kvs.ALAPipelinesConfig;
-import au.org.ala.kvs.ALAPipelinesConfigFactory;
 import au.org.ala.pipelines.options.SpeciesLevelPipelineOptions;
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
 import au.org.ala.pipelines.util.VersionInfo;
-import au.org.ala.pipelines.vocabulary.StateProvince;
-import au.org.ala.pipelines.vocabulary.Vocab;
+import au.org.ala.specieslists.SpeciesListDownloader;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import com.google.common.base.Strings;
 import java.util.ArrayList;
@@ -28,7 +25,6 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TupleTag;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
-import org.gbif.pipelines.core.parsers.location.parser.CountryMaps;
 import org.gbif.pipelines.io.avro.*;
 
 @Slf4j
@@ -47,20 +43,53 @@ public class SpeciesListPipeline {
 
   public static void run(SpeciesLevelPipelineOptions options) throws Exception {
 
-    // read config
-    ALAPipelinesConfig config =
-            ALAPipelinesConfigFactory.getInstance(
-                    options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getProperties())
-                    .get();
+    log.info("Creating a pipeline from options");
+    Pipeline p = Pipeline.create(options);
+    PCollection<KV<String, TaxonProfile>> taxonProfilesCollection =
+        generateTaxonProfileCollection(p, options);
+
+    // construct output path
+    String avroPath =
+        String.join(
+            "/",
+            options.getInputPath(),
+            options.getDatasetId(),
+            options.getAttempt().toString(),
+            "taxonprofiles",
+            "taxon-profile-record");
+
+    // write out the result to file
+    taxonProfilesCollection
+        .apply(Values.<TaxonProfile>create())
+        .apply(
+            AvroIO.write(TaxonProfile.class)
+                .to(avroPath)
+                .withSuffix(".avro")
+                .withCodec(BASE_CODEC));
+
+    // run pipeline
+    p.run().waitUntilFinish();
+
+    log.info("Completed species list pipeline for dataset {}", options.getDatasetId());
+  }
+
+  /**
+   * Generate a PCollection of taxon profiles.
+   *
+   * @param p
+   * @param options
+   * @return
+   */
+  public static PCollection<KV<String, TaxonProfile>> generateTaxonProfileCollection(
+      Pipeline p, SpeciesLevelPipelineOptions options) throws Exception {
+
+    SpeciesListDownloader.run(options);
 
     log.info("Running species list pipeline for dataset {}", options.getDatasetId());
     UnaryOperator<String> pathFn =
         t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
 
     // now lets start the pipelines
-    log.info("Creating a pipeline from options");
-
-    Pipeline p = Pipeline.create(options);
     PCollection<SpeciesListRecord> speciesLists =
         p.apply(
             AvroIO.read(SpeciesListRecord.class)
@@ -105,90 +134,63 @@ public class SpeciesListPipeline {
             .and(t2, taxonID2Lists)
             .apply(CoGroupByKey.create());
 
-    final Vocab stateProvinceVocab = StateProvince.getInstance(config.getLocationInfoConfig().getStateProvinceNamesFile());
-
     // join collections
-    PCollection<KV<String, TaxonProfile>> taxonProfilesCollection =
-        result.apply(
-            ParDo.of(
-                new DoFn<KV<String, CoGbkResult>, KV<String, TaxonProfile>>() {
-                  @ProcessElement
-                  public void processElement(ProcessContext c) {
+    return result.apply(
+        ParDo.of(
+            new DoFn<KV<String, CoGbkResult>, KV<String, TaxonProfile>>() {
+              @ProcessElement
+              public void processElement(ProcessContext c) {
 
-                    KV<String, CoGbkResult> e = c.element();
-                    CoGbkResult result = e.getValue();
+                KV<String, CoGbkResult> e = c.element();
+                CoGbkResult result = e.getValue();
 
-                    // Retrieve all integers associated with this key from pt1
-                    Iterable<String> occurrenceIDs = result.getAll(t1);
-                    Iterable<SpeciesListRecord> speciesLists = result.getOnly(t2, null);
-                    if (speciesLists != null) {
-                      Iterator<SpeciesListRecord> iter = speciesLists.iterator();
+                // Retrieve all integers associated with this key from pt1
+                Iterable<String> occurrenceIDs = result.getAll(t1);
+                Iterable<SpeciesListRecord> speciesLists = result.getOnly(t2, null);
 
-                      List<String> speciesListIDs = new ArrayList<String>();
-                      List<ConservationStatus> conservationStatusList =
-                          new ArrayList<ConservationStatus>();
-                      List<InvasiveStatus> invasiveStatusList = new ArrayList<InvasiveStatus>();
+                if (speciesLists != null) {
+                  Iterator<SpeciesListRecord> iter = speciesLists.iterator();
 
-                      while (iter.hasNext()) {
+                  List<String> speciesListIDs = new ArrayList<String>();
+                  List<ConservationStatus> conservationStatusList =
+                      new ArrayList<ConservationStatus>();
+                  List<InvasiveStatus> invasiveStatusList = new ArrayList<InvasiveStatus>();
 
-                        SpeciesListRecord speciesListRecord = iter.next();
-                        speciesListIDs.add(speciesListRecord.getSpeciesListID());
+                  while (iter.hasNext()) {
 
+                    SpeciesListRecord speciesListRecord = iter.next();
+                    speciesListIDs.add(speciesListRecord.getSpeciesListID());
 
-                        if (speciesListRecord.getIsThreatened()
-                            && (
-                                    !Strings.isNullOrEmpty(speciesListRecord.getSourceStatus())
-                                || !Strings.isNullOrEmpty(speciesListRecord.getStatus()))
-                        ) {
-                          conservationStatusList.add(
-                              ConservationStatus.newBuilder()
-                                  .setSpeciesListID(speciesListRecord.getSpeciesListID())
-                                  .setRegion(speciesListRecord.getRegion())
-                                  .setSourceStatus(speciesListRecord.getSourceStatus())
-                                  .setStatus(speciesListRecord.getStatus())
-                                  .build());
-                        } else if (speciesListRecord.getIsInvasive()) {
-                          invasiveStatusList.add(
-                              InvasiveStatus.newBuilder()
-                                  .setSpeciesListID(speciesListRecord.getSpeciesListID())
-                                  .setRegion(speciesListRecord.getRegion())
-                                  .build());
-                        }
-                      }
-
-                      // output a link to each occurrence record we've matched by taxonID
-                      for (String occurrenceID : occurrenceIDs) {
-                        TaxonProfile.Builder builder = TaxonProfile.newBuilder();
-                        builder.setId(occurrenceID);
-                        builder.setSpeciesListID(speciesListIDs);
-                        builder.setConservationStatuses(conservationStatusList);
-                        builder.setInvasiveStatuses(invasiveStatusList);
-                        c.output(KV.of(occurrenceID, builder.build()));
-                      }
+                    if (speciesListRecord.getIsThreatened()
+                        && (!Strings.isNullOrEmpty(speciesListRecord.getSourceStatus())
+                            || !Strings.isNullOrEmpty(speciesListRecord.getStatus()))) {
+                      conservationStatusList.add(
+                          ConservationStatus.newBuilder()
+                              .setSpeciesListID(speciesListRecord.getSpeciesListID())
+                              .setRegion(speciesListRecord.getRegion())
+                              .setSourceStatus(speciesListRecord.getSourceStatus())
+                              .setStatus(speciesListRecord.getStatus())
+                              .build());
+                    } else if (speciesListRecord.getIsInvasive()) {
+                      invasiveStatusList.add(
+                          InvasiveStatus.newBuilder()
+                              .setSpeciesListID(speciesListRecord.getSpeciesListID())
+                              .setRegion(speciesListRecord.getRegion())
+                              .build());
                     }
                   }
-                }));
 
-    String avroPath =
-        String.join(
-            "/",
-            options.getInputPath(),
-            options.getDatasetId(),
-            options.getAttempt().toString(),
-            "taxonprofiles",
-            "taxon-profile-record");
-
-    // write out the result to file
-    taxonProfilesCollection
-        .apply(Values.<TaxonProfile>create())
-        .apply(
-            AvroIO.write(TaxonProfile.class)
-                .to(avroPath)
-                .withSuffix(".avro")
-                .withCodec(BASE_CODEC));
-
-    p.run().waitUntilFinish();
-
-    log.info("Completed species list pipeline for dataset {}", options.getDatasetId());
+                  // output a link to each occurrence record we've matched by taxonID
+                  for (String occurrenceID : occurrenceIDs) {
+                    TaxonProfile.Builder builder = TaxonProfile.newBuilder();
+                    builder.setId(occurrenceID);
+                    builder.setSpeciesListID(speciesListIDs);
+                    builder.setConservationStatuses(conservationStatusList);
+                    builder.setInvasiveStatuses(invasiveStatusList);
+                    c.output(KV.of(occurrenceID, builder.build()));
+                  }
+                }
+              }
+            }));
   }
 }

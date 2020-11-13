@@ -89,7 +89,8 @@ public class ALAInterpretedToSolrIndexPipeline {
 
   public static void main(String[] args) throws FileNotFoundException {
     VersionInfo.print();
-    String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "index");
+    String[] combinedArgs =
+        new CombinedYamlConfiguration(args).toArgs("general", "index", "speciesLists");
     run(combinedArgs);
   }
 
@@ -334,13 +335,7 @@ public class ALAInterpretedToSolrIndexPipeline {
 
     CompletableFuture<Map<String, TaxonProfile>> taxonProfileMapFeature =
         CompletableFuture.supplyAsync(
-            () ->
-                AvroReader.readRecords(
-                    hdfsSiteConfig,
-                    coreSiteConfig,
-                    TaxonProfile.class,
-                    taxonProfilePathFn.apply("taxon-profile-record")),
-            executor);
+            () -> SpeciesListPipeline.generateTaxonProfileCollection(options), executor);
 
     MetadataRecord metadata = metadataMapFeature.get().values().iterator().next();
     Map<String, BasicRecord> basicMap = basicMapFeature.get();

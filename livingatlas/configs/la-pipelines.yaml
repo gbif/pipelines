@@ -44,7 +44,8 @@ imageService:
     apiKey: add-a-api-key-here
 speciesListService:
   wsUrl: https://lists.ala.org.au
-  timeoutSec: 70geocodeConfig:
+  timeoutSec: 70
+geocodeConfig:
   country:
     path: /data/pipelines-shp/political
     field: ISO_A2
@@ -135,6 +136,7 @@ speciesLists:
   targetPath: '{fsPath}/pipelines-data'
   speciesAggregatesPath: '{fsPath}/pipelines-species'
   tempLocation: /tmp
+  maxDownloadAgeInMinutes: 1440
 
 # LayerCrawler specific configuration
 layerCrawler:

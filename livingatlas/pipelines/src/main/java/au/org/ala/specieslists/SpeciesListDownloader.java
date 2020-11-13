@@ -9,15 +9,13 @@ import au.org.ala.pipelines.vocabulary.Vocab;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.WsUtils;
 import java.io.*;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-
+import java.util.*;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.ResponseBody;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.DatumWriter;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.gbif.api.vocabulary.Country;
@@ -31,6 +29,16 @@ import org.gbif.utils.file.csv.CSVReader;
 import org.slf4j.MDC;
 import retrofit2.Call;
 
+/**
+ * This class downloads details of species lists marked as "Authoritative" from a species list tool
+ * instance (see https://github.com/AtlasOfLivingAustralia/specieslist-webapp) and generates an AVRO
+ * file dump with the @{@link SpeciesListRecord}.
+ *
+ * <p>Includes support for a flag to avoid downloading and regenerating the AVRO export if the last
+ * modified date is within a time frame (default 1 day).
+ *
+ * @see @{@link SpeciesListRecord}
+ */
 @Slf4j
 public class SpeciesListDownloader {
 
@@ -52,27 +60,47 @@ public class SpeciesListDownloader {
                 options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getProperties())
             .get();
 
-    final Vocab stateProvinceVocab = StateProvince.getInstance(config.getLocationInfoConfig().getStateProvinceNamesFile());
+    final Vocab stateProvinceVocab =
+        StateProvince.getInstance(config.getLocationInfoConfig().getStateProvinceNamesFile());
 
     // get filesystem
     FileSystem fs =
         FsUtils.getFileSystem(
             options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getInputPath());
 
+    String outputPath = options.getSpeciesAggregatesPath() + "/species-lists/species-lists.avro";
+
+    // check timestamp
+    log.info("Checking output path {}", outputPath);
+    Path outputPathFs = new Path(outputPath);
+    if (fs.exists(outputPathFs)) {
+      FileStatus fileStatus = fs.getFileStatus(new Path(outputPath));
+      long modificationTime = fileStatus.getModificationTime();
+      long maxAgeInMillis = System.currentTimeMillis();
+      long ageInMinutes = (maxAgeInMillis - modificationTime) / 60000;
+      log.info(
+          "Age: {} hrs {} mins (or {} minutes)",
+          ageInMinutes / 60,
+          ageInMinutes % 60,
+          ageInMinutes);
+      if (ageInMinutes < options.getMaxDownloadAgeInMinutes()) {
+        log.info(
+            "The age of the download is less than the max age {}. Will skip download.",
+            options.getMaxDownloadAgeInMinutes());
+        return;
+      }
+    }
+
     SpeciesListService service =
         WsUtils.createClient(config.getSpeciesListService(), SpeciesListService.class);
 
     // get authoritative list of lists
-    // https://lists.ala.org.au/ws/speciesList?isAuthoritative=eq:true&max=1000
-
     Call<ListSearchResponse> call = service.getAuthoritativeLists();
     ListSearchResponse listsResponse = SyncCall.syncCall(call);
 
     // download individual lists
-    // https://lists.ala.org.au/speciesListItem/downloadList/dr650?fetch=%7BkvpValues%3Dselect%7
     log.info("Number of species lists {}", listsResponse.getLists().size());
 
-    String outputPath = options.getSpeciesAggregatesPath() + "/species-lists/species-lists.avro";
     log.info("Writing output to {}", outputPath);
 
     // create the output file
@@ -86,7 +114,6 @@ public class SpeciesListDownloader {
     for (SpeciesList list : listsResponse.getLists()) {
 
       counter++;
-
       log.info(
           "Downloading list {} of {} - {} -  {}",
           counter,
@@ -110,7 +137,7 @@ public class SpeciesListDownloader {
         // match states
         Optional<String> match = stateProvinceVocab.matchTerm(list.getRegion());
 
-        if (match.isPresent()){
+        if (match.isPresent()) {
           region = match.get();
         } else {
           // match country

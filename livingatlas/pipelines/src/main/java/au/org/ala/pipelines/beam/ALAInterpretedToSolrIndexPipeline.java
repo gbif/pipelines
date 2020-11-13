@@ -52,7 +52,8 @@ public class ALAInterpretedToSolrIndexPipeline {
 
   public static void main(String[] args) throws Exception {
     VersionInfo.print();
-    String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "index");
+    String[] combinedArgs =
+        new CombinedYamlConfiguration(args).toArgs("general", "index", "speciesLists");
     ALASolrPipelineOptions options =
         PipelinesOptionsFactory.create(ALASolrPipelineOptions.class, combinedArgs);
     options.setMetaFileName(ValidationUtils.INDEXING_METRICS);
@@ -164,38 +165,12 @@ public class ALAInterpretedToSolrIndexPipeline {
 
     PCollection<KV<String, ImageServiceRecord>> alaImageServiceRecords = null;
     if (options.getIncludeImages()) {
-      alaImageServiceRecords =
-          p.apply(
-                  AvroIO.read(ImageServiceRecord.class)
-                      .from(
-                          String.join(
-                              "/",
-                              options.getTargetPath(),
-                              options.getDatasetId().trim(),
-                              options.getAttempt().toString(),
-                              "images",
-                              "*.avro")))
-              .apply(
-                  MapElements.into(new TypeDescriptor<KV<String, ImageServiceRecord>>() {})
-                      .via((ImageServiceRecord tr) -> KV.of(tr.getId(), tr)));
+      alaImageServiceRecords = getLoadImageServiceRecords(options, p);
     }
 
     PCollection<KV<String, TaxonProfile>> alaTaxonProfileRecords = null;
     if (options.getIncludeSpeciesLists()) {
-      alaTaxonProfileRecords =
-          p.apply(
-                  AvroIO.read(TaxonProfile.class)
-                      .from(
-                          String.join(
-                              "/",
-                              options.getTargetPath(),
-                              options.getDatasetId().trim(),
-                              options.getAttempt().toString(),
-                              "taxonprofiles",
-                              "*.avro")))
-              .apply(
-                  MapElements.into(new TypeDescriptor<KV<String, TaxonProfile>>() {})
-                      .via((TaxonProfile tr) -> KV.of(tr.getId(), tr)));
+      alaTaxonProfileRecords = SpeciesListPipeline.generateTaxonProfileCollection(p, options);
     }
 
     PCollection<KV<String, LocationFeatureRecord>> locationFeatureCollection = null;
@@ -252,6 +227,10 @@ public class ALAInterpretedToSolrIndexPipeline {
             .and(alaTaxonomyTransform.getTag(), alaTaxonCollection)
             .and(alaAttributionTransform.getTag(), alaAttributionCollection);
 
+    if (options.getIncludeSpeciesLists()) {
+      kpct = kpct.and(speciesListsRecordTupleTag, alaTaxonProfileRecords);
+    }
+
     if (options.getIncludeImages()) {
       kpct = kpct.and(imageServiceRecordTupleTag, alaImageServiceRecords);
     }
@@ -285,5 +264,32 @@ public class ALAInterpretedToSolrIndexPipeline {
     MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
 
     log.info("Pipeline has been finished");
+  }
+
+  /**
+   * Load image service records.
+   *
+   * @param options
+   * @param p
+   * @return
+   */
+  private static PCollection<KV<String, ImageServiceRecord>> getLoadImageServiceRecords(
+      ALASolrPipelineOptions options, Pipeline p) {
+    PCollection<KV<String, ImageServiceRecord>> alaImageServiceRecords;
+    alaImageServiceRecords =
+        p.apply(
+                AvroIO.read(ImageServiceRecord.class)
+                    .from(
+                        String.join(
+                            "/",
+                            options.getTargetPath(),
+                            options.getDatasetId().trim(),
+                            options.getAttempt().toString(),
+                            "images",
+                            "*.avro")))
+            .apply(
+                MapElements.into(new TypeDescriptor<KV<String, ImageServiceRecord>>() {})
+                    .via((ImageServiceRecord tr) -> KV.of(tr.getId(), tr)));
+    return alaImageServiceRecords;
   }
 }
