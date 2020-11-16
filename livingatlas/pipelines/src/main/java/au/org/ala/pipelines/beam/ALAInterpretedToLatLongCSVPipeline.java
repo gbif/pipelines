@@ -2,6 +2,7 @@ package au.org.ala.pipelines.beam;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
+import au.org.ala.pipelines.options.AllDatasetsPipelinesOptions;
 import au.org.ala.pipelines.transforms.ALACSVDocumentTransform;
 import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.ALAFsUtils;
@@ -22,7 +23,6 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.hadoop.fs.FileSystem;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
-import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
@@ -43,8 +43,8 @@ public class ALAInterpretedToLatLongCSVPipeline {
   public static void main(String[] args) throws Exception {
     VersionInfo.print();
     String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "export-latlng");
-    InterpretationPipelineOptions options =
-        PipelinesOptionsFactory.createInterpretation(combinedArgs);
+    AllDatasetsPipelinesOptions options =
+        PipelinesOptionsFactory.create(AllDatasetsPipelinesOptions.class, combinedArgs);
     MDC.put("datasetId", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
     MDC.put("step", "LAT_LNG_EXPORT");
@@ -54,7 +54,7 @@ public class ALAInterpretedToLatLongCSVPipeline {
     System.exit(0);
   }
 
-  public static void run(InterpretationPipelineOptions options) throws Exception {
+  public static void run(AllDatasetsPipelinesOptions options) throws Exception {
 
     log.info("Adding step 1: Options");
     UnaryOperator<String> pathFn =
@@ -81,7 +81,7 @@ public class ALAInterpretedToLatLongCSVPipeline {
             .apply("Grouping objects", CoGroupByKey.create())
             .apply("Merging to CSV doc", alaCSVrDoFn);
 
-    String outputPath = PathBuilder.buildDatasetAttemptPath(options, "latlng", true);
+    String outputPath = PathBuilder.buildDatasetAttemptPath(options, "latlng", false);
 
     // delete previous runs
     FsUtils.deleteIfExist(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), outputPath);

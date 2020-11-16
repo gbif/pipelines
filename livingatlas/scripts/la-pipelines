@@ -396,7 +396,7 @@ function interpret () {
     spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
 
     SH_ARGS=interpret-sh-args.spark-cluster
-    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "interpret $dr"
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "interpret-$dr"
 
     logStepEnd "Interpretation" $dr $ltype $SECONDS
 }
@@ -415,7 +415,7 @@ function validate () {
     spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
 
     SH_ARGS=uuid-sh-args.spark-cluster
-    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "validate-uuid $dr"
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "validate-uuid-$dr"
 
     logStepEnd "Validation" $dr $ltype $SECONDS
 }
@@ -434,7 +434,7 @@ function uuid () {
     spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
 
     SH_ARGS=uuid-sh-args.spark-cluster
-    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "uuid-minting $dr"
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "uuid-minting-$dr"
 
     logStepEnd "UUID" $dr $ltype $SECONDS
 }
@@ -518,6 +518,10 @@ function export-latlng () {
     local dr="$1" ltype="$2"
     CLASS=au.org.ala.pipelines.beam.ALAInterpretedToLatLongCSVPipeline
 
+    if [[ $dr = "all" ]] ; then
+      CLASS=au.org.ala.pipelines.beam.ExportAllLatLongCSVPipeline
+    fi
+
     logStepStart "Export latlng" $dr
     SECONDS=0
 
@@ -528,7 +532,7 @@ function export-latlng () {
     spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
 
     SH_ARGS=export-latlng-sh-args.spark-cluster
-    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "Export $dr"
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "Export-lat-lng-$dr"
 
     logStepEnd "Export latlng" $dr $ltype $SECONDS
 }
@@ -561,7 +565,7 @@ function sample-avro () {
     spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
 
     SH_ARGS=sample-avro-sh-args.spark-cluster
-    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "add-sampling $dr"
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "add-sampling-$dr"
 
     logStepEnd "Sample-avro" $dr $ltype $SECONDS
 }
@@ -582,7 +586,7 @@ function index () {
 
     SH_ARGS=index-sh-args.spark-cluster
     CLASS=au.org.ala.pipelines.beam.ALAInterpretedToSolrIndexPipeline
-    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "SOLR indexing for $dr"
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "SOLR-indexing-for-$dr"
 
     logStepEnd "Indexing" $dr $ltype $SECONDS
 }
@@ -613,6 +617,13 @@ if [[ $dr = "all" ]] ; then
     dataset-list
 fi # This should create /tmp/dataset-counts.csv
 
+
+function do_step_simple() {
+    local step=$1
+    for d in "${drs[@]}"; do
+        $step $d $TYPE
+    done
+}
 
 function do_step() {
     local step=$1
@@ -672,8 +683,7 @@ if ($image_sync || $do_all); then
 fi
 
 if ($export_latlng || $do_all); then
-    do_step export-latlng
-    # WARN: Previosly here 'local' was not executed, always 'cluster' or 'embeded' it's this correct?
+  do_step_simple export-latlng
 fi
 
 if ($image_load || $do_all); then
@@ -699,19 +709,11 @@ if ($image_load || $do_all); then
 fi
 
 if ($sample || $do_all); then
-    if [[ $drs != "all" ]] ; then
-        sample $drs
-    else
-        while IFS=, read -r datasetID recordCount
-        do
-            sample $datasetID
-        done < /tmp/dataset-counts.csv
-    fi
+  do_step_simple sample
 fi
 
 if ($sample_avro || $do_all); then
-    do_step sample-avro
-    # WARN: Previosly here 'local' was not executed, always 'cluster' or 'embeded' it's this correct?
+  do_step_simple sample-avro
 fi
 
 if ($index || $do_all); then
