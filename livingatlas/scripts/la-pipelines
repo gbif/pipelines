@@ -43,25 +43,23 @@ The $CMD can be executed to run all the ingress steps or only a few of them:
 
 Pipeline ingress steps:
 
-    ┌───── do-all ──────────────────────────────────────────────────┐
-    │                                                               │
-dwca-avro --> interpret --> uuid -->                                │
-     export-latlng --> sample --> sample-avro --> sds --> index
+    ┌───── do-all ──────────────────────────────────┐
+    │                                               │
+dwca-avro --> interpret --> uuid -->                │
+     sample --> index --> solr
 
--  'dwca-avro' reads a Dwc-A and converts it to an Avro file;
--  'interpret' reads a Dwc-A, interprets it and write the interpreted data and the issues in Avro files;
--  'validate' validates the identifiers for a dataset;
--  'uuid' minting on new records and rematching existing UUIDs to records that have been previously loaded;
--  'export-latlng' exports a unique set of coordinates for a dataset into CSV;
--  'image-load' pushing an export of multimedia to the image service;
--  'image-sync' retrieve details of images stored in image service for indexing purposes;
--  'sample' crawl the LA layers. Requires an input csv containing lat, lng (no header) and output directory.
--  'sample-avro' adds a sampling AVRO extension to the stored interpretation
--  'index' reads a Dwc-A, interprets it and index the interpeted data creating a SOLR index.
--  'sds' reads a Dwc-A, interprets it and index the interpeted data creating a SOLR index.
--  'archive-list' dumps out a list of archives that can be ingested to '/tmp/dataset-archive-list.csv'
--  'dataset-list' dumps out a list of datasets that have been ingested to '/tmp/dataset-counts.csv'
--  'validation-report' dumps out a CSV list of datasets ready to be indexed to '/tmp/validation-report.csv'
+-  'dwca-avro' reads a Dwc-A and converts it to an verbatim.avro file;
+-  'interpret' reads verbatim.avro, interprets it and writes the interpreted data and the issues to Avro files;
+-  'validate' validates the identifiers for a dataset, checking for duplicate and empty keys;
+-  'uuid' mints UUID on new records and rematches to existing UUIDs for records loaded before;
+-  'image-load' pushes an export of multimedia AVRO files to the image service;
+-  'image-sync' retrieves details of images stored in image service for indexing purposes;
+-  'sample' use the sampling service to retrieve values for points for the layers in the spatial service;
+-  'index' generates a AVRO records ready to be index to SOLR;
+-  'solr' reads index records in AVRO and submits them to SOLR;
+-  'archive-list' dumps out a list of archives that can be ingested to '/tmp/dataset-archive-list.csv';
+-  'dataset-list' dumps out a list of datasets that have been ingested to '/tmp/dataset-counts.csv';
+-  'validation-report' dumps out a CSV list of datasets ready to be indexed to '/tmp/validation-report.csv';
 
 All the steps generate an output. If only the final output is desired, the intermediate outputs can be ignored.
 
@@ -69,20 +67,14 @@ Usage:
   $CMD [options] archive-list
   $CMD [options] dataset-list
   $CMD [options] dwca-avro     (<dr>...|all)
-  $CMD [options] interpret     (<dr>...|all) $WHEREL
+  $CMD [options] interpret     (<dr>...|all)         $WHEREL
   $CMD [options] validate      (<dr>...|all)         $WHERE
   $CMD [options] uuid          (<dr>...|all)         $WHERE
-  $CMD [options] export-latlng (<dr>...|all)         $WHERE
   $CMD [options] image-load    (<dr>...|all)         $WHERE
   $CMD [options] image-sync    (<dr>...|all)         $WHERE
-  $CMD [options] index         (<dr>...|all) $WHEREL
-  $CMD [options] interpret     (<dr>...|all) $WHEREL
-  $CMD [options] sample        (<dr>...|all)
-  $CMD [options] sample-avro   (<dr>...|all)         $WHERE
-  $CMD [options] sds           (<dr>...|all)         $WHERE
-  $CMD [options] index         (<dr>...|all) $WHEREL
-  $CMD [options] archive-list
-  $CMD [options] dataset-list
+  $CMD [options] index         (<dr>...|all)         $WHEREL
+  $CMD [options] sample        (<dr>...|all)         $WHERE
+  $CMD [options] solr          (<dr>...|all)         $WHERE
   $CMD [options] validation-report
   $CMD [options] do-all        (<dr>...|all) $WHEREL
   $CMD -h | --help
@@ -202,7 +194,7 @@ function toArg() {
 ## Process run options
 
 # Where to run, --local/etc options has precedence over yaml run.platform
-if ($local || $dwca_avro || $sample)  ; then TYPE=local;
+if ($local || $dwca_avro )  ; then TYPE=local;
 elif ($embedded) ; then TYPE=spark-embedded;
 elif ($cluster) ; then TYPE=spark-cluster;
 else TYPE=$(getConf run.platform);
@@ -371,7 +363,7 @@ function spark-cluster-pipeline() {
 
     if [[ $ltype = "spark-cluster" ]] ; then
         $_D /data/spark/bin/spark-submit \
-            --name "$NAME" \
+            --name $NAME \
             $CONF \
             $(toArg $SH_ARGS num-executors) \
             $(toArg $SH_ARGS executor-cores) \
@@ -402,7 +394,7 @@ function interpret () {
     spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
 
     SH_ARGS=interpret-sh-args.spark-cluster
-    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "interpret $dr"
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "interpret-$dr"
 
     logStepEnd "Interpretation" $dr $ltype $SECONDS
 }
@@ -421,7 +413,7 @@ function validate () {
     spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
 
     SH_ARGS=uuid-sh-args.spark-cluster
-    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "validate-uuid $dr"
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "validate-uuid-$dr"
 
     logStepEnd "Validation" $dr $ltype $SECONDS
 }
@@ -440,7 +432,7 @@ function uuid () {
     spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
 
     SH_ARGS=uuid-sh-args.spark-cluster
-    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "uuid-minting $dr"
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "uuid-minting-$dr"
 
     logStepEnd "UUID" $dr $ltype $SECONDS
 }
@@ -522,7 +514,7 @@ function image-sync () {
 
 function export-latlng () {
     local dr="$1" ltype="$2"
-    CLASS=au.org.ala.pipelines.beam.ALAInterpretedToLatLongCSVPipeline
+    CLASS=au.org.ala.pipelines.beam.LatLongPipeline
 
     logStepStart "Export latlng" $dr
     SECONDS=0
@@ -534,12 +526,15 @@ function export-latlng () {
     spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
 
     SH_ARGS=export-latlng-sh-args.spark-cluster
-    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "Export $dr"
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "Export-lat-lng-$dr"
 
     logStepEnd "Export latlng" $dr $ltype $SECONDS
 }
 
 function sample () {
+
+    do_step_simple export-latlng
+
     local dr="$1"
     ltype="local"
     CLASS=au.org.ala.sampling.LayerCrawler
@@ -553,65 +548,44 @@ function sample () {
     logStepEnd "Sampling" $dr local $SECONDS
 }
 
-function sample-avro () {
+function solr () {
     local dr="$1" ltype="$2"
-    CLASS=au.org.ala.pipelines.beam.ALASamplingToAvroPipeline
+    CLASS=au.org.ala.pipelines.beam.IndexRecordToSolrPipeline
 
-    logStepStart "Sample-avro" $dr
+    logStepStart "SOLR" $dr
     SECONDS=0
 
-    SH_ARGS=sample-avro-sh-args.local
+    SH_ARGS=solr-sh-args.local
     java-pipeline $ltype $SH_ARGS $CLASS $dr
 
-    SH_ARGS=sample-avro-sh-args.spark-embedded
+    SH_ARGS=solr-sh-args.spark-embedded
     spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
 
-    SH_ARGS=sample-avro-sh-args.spark-cluster
-    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "add-sampling $dr"
+    SH_ARGS=solr-sh-args.spark-cluster
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "SOLR"
 
-    logStepEnd "Sample-avro" $dr $ltype $SECONDS
-}
-
-function sds () {
-    local dr="$1" ltype="$2"
-
-    logStepStart "SDS" $dr
-    SECONDS=0
-
-    SH_ARGS=index-sh-args.local
-    CLASS=au.org.ala.pipelines.beam.ALAInterpretedToSensitivePipeline
-    java-pipeline $ltype $SH_ARGS $CLASS $dr
-
-    SH_ARGS=index-sh-args.spark-embedded
-    CLASS=au.org.ala.pipelines.beam.ALAInterpretedToSensitivePipeline
-    spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
-
-    SH_ARGS=index-sh-args.spark-cluster
-    CLASS=au.org.ala.pipelines.beam.ALAInterpretedToSensitivePipeline
-    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "SDS for $dr"
-
-    logStepEnd "SDS" $dr $ltype $SECONDS
+    logStepEnd "SOLR"  $dr $ltype $SECONDS
 }
 
 function index () {
     local dr="$1" ltype="$2"
 
-    logStepStart "Indexing" $dr
+    logStepStart "Index-Record" $dr
     SECONDS=0
 
     SH_ARGS=index-sh-args.local
-    CLASS=au.org.ala.pipelines.java.ALAInterpretedToSolrIndexPipeline
+    CLASS=au.org.ala.pipelines.java.IndexRecordPipeline
     java-pipeline $ltype $SH_ARGS $CLASS $dr
 
     SH_ARGS=index-sh-args.spark-embedded
-    CLASS=au.org.ala.pipelines.beam.ALAInterpretedToSolrIndexPipeline
+    CLASS=au.org.ala.pipelines.beam.IndexRecordPipeline
     spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
 
     SH_ARGS=index-sh-args.spark-cluster
-    CLASS=au.org.ala.pipelines.beam.ALAInterpretedToSolrIndexPipeline
-    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "SOLR indexing for $dr"
+    CLASS=au.org.ala.pipelines.beam.IndexRecordPipeline
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "Index-record-for-$dr"
 
-    logStepEnd "Indexing" $dr $ltype $SECONDS
+    logStepEnd "Index-Record" $dr $ltype $SECONDS
 }
 
 if ($archive_list) ; then
@@ -640,6 +614,12 @@ if [[ $dr = "all" ]] ; then
     dataset-list
 fi # This should create /tmp/dataset-counts.csv
 
+function do_step_simple() {
+    local step=$1
+    for d in "${drs[@]}"; do
+        $step $d $TYPE
+    done
+}
 
 function do_step() {
     local step=$1
@@ -698,11 +678,6 @@ if ($image_sync || $do_all); then
   fi
 fi
 
-if ($export_latlng || $do_all); then
-    do_step export-latlng
-    # WARN: Previosly here 'local' was not executed, always 'cluster' or 'embeded' it's this correct?
-fi
-
 if ($image_load || $do_all); then
     if [[ $drs != "all" ]] ; then
         for d in "${drs[@]}"; do
@@ -726,27 +701,15 @@ if ($image_load || $do_all); then
 fi
 
 if ($sample || $do_all); then
-    if [[ $drs != "all" ]] ; then
-        sample $drs
-    else
-        while IFS=, read -r datasetID recordCount
-        do
-            sample $datasetID
-        done < /tmp/dataset-counts.csv
-    fi
-fi
-
-if ($sample_avro || $do_all); then
-    do_step sample-avro
-    # WARN: Previosly here 'local' was not executed, always 'cluster' or 'embeded' it's this correct?
+  do_step_simple sample
 fi
 
 if ($index || $do_all); then
     do_step index
 fi
 
-if ($sds || $do_all); then
-    do_step sds
+if ($solr || $do_all); then
+  do_step_simple solr
 fi
 
 # All ended correctly, so untrap EXIT catch

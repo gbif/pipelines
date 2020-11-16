@@ -20,6 +20,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
+import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
 import org.gbif.pipelines.core.utils.ModelUtils;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -36,17 +37,14 @@ public class ValidationUtils {
   public static final String NOT_INTERPRET = "NOT_INTERPRET";
   public static final String NOT_VALIDATED = "NOT_VALIDATED";
   public static final String UUID_REQUIRED = "UUID_REQUIRED";
-  public static final String NOT_SAMPLED = "NOT_SAMPLED";
   public static final String NOT_INDEXED = "NOT_INDEXED";
   public static final String HAS_EMPTY_KEYS = "HAS_EMPTY_KEYS";
   public static final String HAS_DUPLICATES = "HAS_DUPLICATES";
-  public static final String RESAMPLING_REQUIRED = "RESAMPLING_REQUIRED";
 
   public static final String IMAGE_SERVICE_METRICS = "image-service-metrics.yml";
   public static final String UUID_METRICS = "uuid-metrics.yml";
   public static final String INTERPRETATION_METRICS = "interpretation-metrics.yml";
   public static final String VERBATIM_METRICS = "dwca-metrics.yml";
-  public static final String SAMPLING_METRICS = "sampling-metrics.yml";
   public static final String INDEXING_METRICS = "indexing-metrics.yml";
   public static final String SENSITIVE_METRICS = "sensitive-metrics.yml";
 
@@ -72,16 +70,12 @@ public class ValidationUtils {
             .getFs(options.getInputPath());
 
     return checkReadyForIndexing(
-        fs,
-        options.getInputPath(),
-        options.getDatasetId(),
-        options.getAttempt(),
-        options.getIncludeSampling());
+        fs, options.getInputPath(), options.getDatasetId(), options.getAttempt());
   }
 
   /** Checks a dataset can be indexed. */
   public static ValidationResult checkReadyForIndexing(
-      FileSystem fs, String filePath, String datasetId, Integer attempt, boolean includeSampling) {
+      FileSystem fs, String filePath, String datasetId, Integer attempt) {
 
     ValidationResult isValid = checkValidationFile(fs, filePath, datasetId, attempt);
 
@@ -105,22 +99,6 @@ public class ValidationUtils {
       log.warn(
           "The imported interpretation is newer than the uuid. Unable to index until UUID minting re-ran");
       return ValidationResult.builder().valid(false).message(UUID_REQUIRED).build();
-    }
-
-    // check date on UUID ?
-    if (includeSampling) {
-      // check sampling
-      boolean sampleRan = metricsExists(fs, filePath, datasetId, attempt, SAMPLING_METRICS);
-      if (!sampleRan) {
-        log.warn("Sampling has not been ran for this dataset. Unable to index dataset.");
-        return ValidationResult.builder().valid(false).message(NOT_SAMPLED).build();
-      }
-      long sampleTime = metricsModificationTime(fs, filePath, datasetId, attempt, SAMPLING_METRICS);
-      if (interpretationTime > sampleTime) {
-        log.warn(
-            "The sampling needs to be re-ran for this dataset as it pre-dates interpretation data.");
-        return ValidationResult.builder().valid(false).message(RESAMPLING_REQUIRED).build();
-      }
     }
 
     return ValidationResult.OK;
@@ -199,7 +177,10 @@ public class ValidationUtils {
       }
 
     } else {
-      log.info("Validation not completed  for {}, from inputPath {}", datasetId, validateFilePath);
+      log.info(
+          "Validation not completed for dataset {}, no validation report at inputPath {}",
+          datasetId,
+          validateFilePath);
       return ValidationResult.builder().valid(false).message(NOT_VALIDATED).build();
     }
   }
@@ -387,5 +368,47 @@ public class ValidationUtils {
     } else {
       throw new FileNotFoundException("Unable to read metrics file at: " + path);
     }
+  }
+
+  /**
+   * Checks that verbatim avro is present using the inputPath value of options.
+   *
+   * @param options
+   * @return true if verbatim avro is available
+   */
+  public static boolean isVerbatimAvroAvailable(InterpretationPipelineOptions options) {
+    boolean verbatimAvroAvailable = false;
+    try {
+      FileSystem fs =
+          FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
+              .getFs(options.getInputPath());
+      verbatimAvroAvailable = ALAFsUtils.exists(fs, options.getInputPath());
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+    }
+    return verbatimAvroAvailable;
+  }
+
+  /**
+   * Checks that verbatim avro is present using the inputPath value of options.
+   *
+   * @param options
+   * @return true if verbatim avro is available
+   */
+  public static boolean isInterpretedMultimediaAvroAvailable(
+      InterpretationPipelineOptions options) {
+    boolean multimediaAvroAvailable = false;
+    try {
+      FileSystem fs =
+          FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
+              .getFs(options.getInputPath());
+
+      String path = PathBuilder.buildDatasetAttemptPath(options, "multimedia", true);
+
+      multimediaAvroAvailable = ALAFsUtils.exists(fs, path);
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+    }
+    return multimediaAvroAvailable;
   }
 }
