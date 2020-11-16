@@ -98,7 +98,7 @@ public class GrscicollInterpreter {
 
   @VisibleForTesting
   static OccurrenceIssue getInstitutionMatchNoneIssue(Status status) {
-    if (status == Status.AMBIGUOUS || status == Status.AMBIGUOUS_MACHINE_TAGS) {
+    if (status == Status.AMBIGUOUS || status == Status.AMBIGUOUS_EXPLICIT_MAPPINGS) {
       return OccurrenceIssue.AMBIGUOUS_INSTITUTION;
     }
     if (status == Status.AMBIGUOUS_OWNER) {
@@ -110,7 +110,7 @@ public class GrscicollInterpreter {
 
   @VisibleForTesting
   static OccurrenceIssue getCollectionMatchNoneIssue(Status status) {
-    if (status == Status.AMBIGUOUS || status == Status.AMBIGUOUS_MACHINE_TAGS) {
+    if (status == Status.AMBIGUOUS || status == Status.AMBIGUOUS_EXPLICIT_MAPPINGS) {
       return OccurrenceIssue.AMBIGUOUS_COLLECTION;
     }
     if (status == Status.AMBIGUOUS_INSTITUTION_MISMATCH) {
