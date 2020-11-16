@@ -1,6 +1,7 @@
 package au.org.ala.utils;
 
 import au.org.ala.kvs.ALAPipelinesConfig;
+import au.org.ala.pipelines.options.AllDatasetsPipelinesOptions;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -101,10 +102,8 @@ public class ALAFsUtils {
   }
 
   /** Build a path to sampling output. */
-  public static String buildPathSamplingOutputUsingTargetPath(
-      InterpretationPipelineOptions options) {
+  public static String buildPathSamplingOutputUsingTargetPath() {
     return PathBuilder.buildPath(
-            PathBuilder.buildDatasetAttemptPath(options, "sampling", false),
             PipelinesVariables.Pipeline.Interpretation.RecordType.LOCATION_FEATURE
                 .toString()
                 .toLowerCase(),
@@ -116,7 +115,12 @@ public class ALAFsUtils {
 
   /** Build a path to sampling downloads. */
   public static String buildPathSamplingDownloadsUsingTargetPath(
-      InterpretationPipelineOptions options) {
+      AllDatasetsPipelinesOptions options) {
+
+    if (options.getDatasetId() == null || "all".equals(options.getDatasetId())) {
+      return String.join("/", options.getAllDatasetsInputPath(), "sampling", "downloads");
+    }
+
     return PathBuilder.buildPath(
             PathBuilder.buildDatasetAttemptPath(options, "sampling", false), "downloads")
         .toString();

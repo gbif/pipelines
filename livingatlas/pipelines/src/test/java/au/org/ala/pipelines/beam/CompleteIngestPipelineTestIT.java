@@ -3,6 +3,7 @@ package au.org.ala.pipelines.beam;
 import static org.junit.Assert.*;
 
 import au.org.ala.pipelines.options.ALASolrPipelineOptions;
+import au.org.ala.pipelines.options.AllDatasetsPipelinesOptions;
 import au.org.ala.pipelines.options.UUIDPipelineOptions;
 import au.org.ala.sampling.LayerCrawler;
 import au.org.ala.util.SolrUtils;
@@ -178,9 +179,9 @@ public class CompleteIngestPipelineTestIT {
     assertFalse(ValidationUtils.checkReadyForIndexing(solrOptions).getValid());
 
     // export lat lngs
-    InterpretationPipelineOptions latLngOptions =
+    AllDatasetsPipelinesOptions latLngOptions =
         PipelinesOptionsFactory.create(
-            InterpretationPipelineOptions.class,
+            AllDatasetsPipelinesOptions.class,
             new String[] {
               "--datasetId=" + datasetID,
               "--attempt=1",
@@ -205,9 +206,9 @@ public class CompleteIngestPipelineTestIT {
     LayerCrawler.run(latLngOptions);
 
     // sample -> avro
-    InterpretationPipelineOptions samplingAvroOptions =
+    AllDatasetsPipelinesOptions samplingAvroOptions =
         PipelinesOptionsFactory.create(
-            InterpretationPipelineOptions.class,
+            AllDatasetsPipelinesOptions.class,
             new String[] {
               "--datasetId=" + datasetID,
               "--attempt=1",

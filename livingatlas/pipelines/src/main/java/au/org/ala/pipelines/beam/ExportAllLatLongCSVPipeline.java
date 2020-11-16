@@ -3,9 +3,9 @@ package au.org.ala.pipelines.beam;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
 import au.org.ala.pipelines.options.AllDatasetsPipelinesOptions;
-import au.org.ala.pipelines.transforms.ALACSVDocumentTransform;
 import au.org.ala.pipelines.util.VersionInfo;
-import java.io.File;
+import au.org.ala.utils.ALAFsUtils;
+import au.org.ala.utils.CombinedYamlConfiguration;
 import java.util.function.UnaryOperator;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -13,23 +13,19 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.TextIO;
-import org.apache.beam.sdk.transforms.Distinct;
-import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.transforms.join.CoGbkResult;
-import org.apache.beam.sdk.transforms.join.CoGroupByKey;
-import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
+import org.apache.beam.sdk.transforms.*;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
-import org.apache.commons.io.FileUtils;
+import org.apache.hadoop.fs.FileSystem;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.core.factory.FileSystemFactory;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.transforms.core.LocationTransform;
+import org.slf4j.MDC;
 
 /**
- * Exports a unique set of coordinates for a data resource. This tool is dependent on globstars
- * being supported on the host OS.
- *
- * <p>This currently only works for non-HDFS.
+ * Exports a unique set of coordinates for all datasets. This tool is dependent on globstars being
+ * supported on the host OS.
  */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -37,49 +33,76 @@ public class ExportAllLatLongCSVPipeline {
 
   public static void main(String[] args) throws Exception {
     VersionInfo.print();
+    String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "export-latlng");
     AllDatasetsPipelinesOptions options =
-        PipelinesOptionsFactory.create(AllDatasetsPipelinesOptions.class, args);
+        PipelinesOptionsFactory.create(AllDatasetsPipelinesOptions.class, combinedArgs);
+    MDC.put("datasetId", "ALL_DATASETS");
+    MDC.put("attempt", options.getAttempt().toString());
+    MDC.put("step", "LAT_LNG_EXPORT_ALL");
+
+    PipelinesOptionsFactory.registerHdfs(options);
     run(options);
   }
 
   public static void run(AllDatasetsPipelinesOptions options) throws Exception {
 
-    FileUtils.forceMkdir(new File("/data/pipelines-sampling/latlng/"));
+    FileSystem fs =
+        FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
+            .getFs(options.getTargetPath());
+
+    // delete and re-create output directory
+    ALAFsUtils.deleteIfExist(fs, options.getAllDatasetsInputPath() + "/latlng/");
+    ALAFsUtils.createDirectory(fs, options.getAllDatasetsInputPath() + "/latlng/");
 
     log.info("Adding step 1: Options");
     UnaryOperator<String> pathFn =
-        t -> options.getInputPath() + "/**/1/interpreted/" + t + "/interpret-*" + AVRO_EXTENSION;
+        t ->
+            options.getInputPath()
+                + "/*/" // HDFS=* FS=**
+                + options.getAttempt()
+                + "/interpreted/"
+                + t
+                + "/*"
+                + AVRO_EXTENSION;
 
     Pipeline p = Pipeline.create(options);
-
     log.info("Adding step 2: Creating transformations");
 
-    // Core
+    // Load LocationTransform
     LocationTransform locationTransform = LocationTransform.builder().create();
 
     log.info("Adding step 3: Creating beam pipeline");
-    PCollection<KV<String, LocationRecord>> locationCollection =
+    PCollection<String> locationCollection =
         p.apply("Read Location", locationTransform.read(pathFn))
-            .apply("Map Location to KV", locationTransform.toKv());
+            .apply("Map Location to KV", locationTransform.toKv())
+            .apply(
+                Filter.by(
+                    lr ->
+                        lr.getValue().getDecimalLatitude() != null
+                            && lr.getValue().getDecimalLongitude() != null))
+            .apply(
+                MapElements.via(
+                    new SimpleFunction<KV<String, LocationRecord>, String>() {
+                      @Override
+                      public String apply(KV<String, LocationRecord> input) {
+                        return input.getValue().getDecimalLatitude()
+                            + ","
+                            + input.getValue().getDecimalLongitude();
+                      }
+                    }))
+            .apply(Distinct.create());
 
-    log.info("Adding step 3: Converting into a json object");
-    ParDo.SingleOutput<KV<String, CoGbkResult>, String> alaCSVrDoFn =
-        ALACSVDocumentTransform.create(locationTransform.getTag()).converter();
-
-    PCollection<String> csvCollection =
-        KeyedPCollectionTuple.of(locationTransform.getTag(), locationCollection)
-            .apply("Grouping objects", CoGroupByKey.create())
-            .apply("Merging to CSV doc", alaCSVrDoFn);
-
-    csvCollection
-        .apply(Distinct.create())
-        .apply(TextIO.write().to("/data/pipelines-sampling/latlng/latlong.csv"));
+    locationCollection.apply(
+        TextIO.write()
+            .to(options.getAllDatasetsInputPath() + "/latlng/latlong.csv")
+            .withoutSharding());
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();
     result.waitUntilFinish();
 
     log.info(
-        "Pipeline has been finished. Output written to /data/pipelines-sampling/latlng/latlng-export.csv");
+        "Pipeline has been finished. Output written to {}/latlng/latlng-export.csv",
+        options.getAllDatasetsInputPath());
   }
 }

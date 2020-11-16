@@ -6,6 +6,7 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -14,6 +15,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.*;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
+import org.jetbrains.annotations.NotNull;
 
 @Parameters(separators = "=")
 @Slf4j
@@ -56,8 +58,24 @@ public class DumpDatasetSize {
   public void run() {
 
     FileSystem fs = FileSystemFactory.getInstance(hdfsSiteConfig, coreSiteConfig).getFs(inputPath);
-    Map<String, Long> counts = new HashMap<>();
+    Map<String, Long> counts = readDatasetCounts(fs, inputPath);
 
+    // order by size descending
+    List<Map.Entry<String, Long>> list = new ArrayList<>(counts.entrySet());
+    list.sort(reverseOrder(Map.Entry.comparingByValue()));
+
+    try (FileWriter fw = new FileWriter(targetPath)) {
+      for (Map.Entry<String, Long> entry : list) {
+        fw.write(entry.getKey() + "," + entry.getValue() + "\n");
+      }
+      fw.flush();
+    }
+  }
+
+  @NotNull
+  public static Map<String, Long> readDatasetCounts(FileSystem fs, String inputPath)
+      throws IOException {
+    Map<String, Long> counts = new HashMap<>();
     FileStatus[] fileStatuses = fs.listStatus(new Path(inputPath));
     for (FileStatus fileStatus : fileStatuses) {
       if (fileStatus.isDirectory()) {
@@ -70,16 +88,6 @@ public class DumpDatasetSize {
         counts.put(datasetID, ValidationUtils.readVerbatimCount(fs, inputPath, datasetID, 1));
       }
     }
-
-    // order by size descending
-    List<Map.Entry<String, Long>> list = new ArrayList<>(counts.entrySet());
-    list.sort(reverseOrder(Map.Entry.comparingByValue()));
-
-    try (FileWriter fw = new FileWriter(targetPath)) {
-      for (Map.Entry<String, Long> entry : list) {
-        fw.write(entry.getKey() + "," + entry.getValue() + "\n");
-      }
-      fw.flush();
-    }
+    return counts;
   }
 }

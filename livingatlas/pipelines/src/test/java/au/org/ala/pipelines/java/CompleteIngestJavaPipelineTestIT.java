@@ -5,6 +5,7 @@ import static org.junit.Assert.assertNotNull;
 
 import au.org.ala.pipelines.beam.*;
 import au.org.ala.pipelines.options.ALASolrPipelineOptions;
+import au.org.ala.pipelines.options.AllDatasetsPipelinesOptions;
 import au.org.ala.pipelines.options.UUIDPipelineOptions;
 import au.org.ala.sampling.LayerCrawler;
 import au.org.ala.util.SolrUtils;
@@ -153,9 +154,9 @@ public class CompleteIngestJavaPipelineTestIT {
     ALAInterpretedToSensitivePipeline.run(sensitivityOptions);
 
     // export lat lngs
-    InterpretationPipelineOptions latLngOptions =
+    AllDatasetsPipelinesOptions latLngOptions =
         PipelinesOptionsFactory.create(
-            InterpretationPipelineOptions.class,
+            AllDatasetsPipelinesOptions.class,
             new String[] {
               "--datasetId=" + datasetID,
               "--attempt=1",
@@ -180,9 +181,9 @@ public class CompleteIngestJavaPipelineTestIT {
     LayerCrawler.run(latLngOptions);
 
     // sample -> avro
-    InterpretationPipelineOptions samplingAvroOptions =
+    AllDatasetsPipelinesOptions samplingAvroOptions =
         PipelinesOptionsFactory.create(
-            InterpretationPipelineOptions.class,
+            AllDatasetsPipelinesOptions.class,
             new String[] {
               "--datasetId=" + datasetID,
               "--attempt=1",

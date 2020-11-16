@@ -117,6 +117,7 @@ uuid:
 # class: au.org.ala.pipelines.beam.ALAInterpretedToLatLongCSVPipeline
 export-latlng:
   inputPath: '{fsPath}/pipelines-data'
+  allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
   runner: SparkRunner
   appName: Lat Long export for {datasetId}
 
@@ -124,7 +125,7 @@ export-latlng:
 sample:
   inputPath: '{fsPath}/pipelines-data'
   appName: Sample for {datasetId}
-  samplingServiceUrl: 'https://sampling.ala.org.au'
+  allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
 
 images:
   runner: SparkRunner
@@ -155,6 +156,7 @@ layerCrawler:
 sample-avro:
   inputPath: '{fsPath}/pipelines-data'
   runner: SparkRunner
+  allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
   ## For spark-cluster:
   # appName: Add Sampling for {datasetId}
   # useExtendedRecordId: true
@@ -257,11 +259,11 @@ uuid-sh-args:
 
 export-latlng-sh-args:
   local:
-    jvm:
+    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
   spark-embedded:
-    jvm:
+    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
   spark-cluster:
-    conf:
+    conf: spark.default.parallelism=144
     num-executors: 8
     executor-cores: 8
     executor-memory: 16G
@@ -283,11 +285,11 @@ sample-sh-args:
 
 sample-avro-sh-args:
   local:
-    jvm: -Xmx8g -XX:+UseG1GC
+    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
   spark-embedded:
-    jvm: -Xmx8g -XX:+UseG1GC
+    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
   spark-cluster:
-    conf: spark.default.parallelism=192
+    conf: spark.default.parallelism=144
     num-executors: 24
     executor-cores: 8
     executor-memory: 7G
