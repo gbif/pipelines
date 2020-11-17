@@ -1,6 +1,6 @@
 package org.gbif.pipelines.backbone.impact;
 
-import java.util.Objects;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.hive.hcatalog.common.HCatException;
@@ -10,6 +10,8 @@ import org.gbif.api.service.checklistbank.NameParser;
 import org.gbif.nameparser.NameParserGbifV1;
 import org.gbif.rest.client.species.NameUsageMatch;
 
+import java.util.Objects;
+
 /**
  * A classification container intended for use when classifications are to be compared for equality;
  * specifically to compare existing classifications seen on occurrence records to the classification
@@ -17,6 +19,7 @@ import org.gbif.rest.client.species.NameUsageMatch;
  */
 @Getter
 @Setter
+@EqualsAndHashCode
 class GBIFClassification {
   private String kingdom;
   private String phylum;
@@ -118,6 +121,8 @@ class GBIFClassification {
                     c.species = rankedName.getName();
                     c.speciesKey = rankedName.getKey();
                     break;
+                  default:
+                    break;
                 }
               });
 
@@ -164,58 +169,6 @@ class GBIFClassification {
         String.valueOf(speciesKey),
         String.valueOf(taxonKey),
         String.valueOf(acceptedTaxonKey));
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    GBIFClassification that = (GBIFClassification) o;
-    return Objects.equals(kingdom, that.kingdom)
-        && Objects.equals(phylum, that.phylum)
-        && Objects.equals(klass, that.klass)
-        && Objects.equals(order, that.order)
-        && Objects.equals(family, that.family)
-        && Objects.equals(genus, that.genus)
-        && Objects.equals(subGenus, that.subGenus)
-        && Objects.equals(species, that.species)
-        && Objects.equals(scientificName, that.scientificName)
-        && Objects.equals(acceptedScientificName, that.acceptedScientificName)
-        && Objects.equals(kingdomKey, that.kingdomKey)
-        && Objects.equals(phylumKey, that.phylumKey)
-        && Objects.equals(classKey, that.classKey)
-        && Objects.equals(orderKey, that.orderKey)
-        && Objects.equals(familyKey, that.familyKey)
-        && Objects.equals(genusKey, that.genusKey)
-        && Objects.equals(subGenusKey, that.subGenusKey)
-        && Objects.equals(speciesKey, that.speciesKey)
-        && Objects.equals(taxonKey, that.taxonKey)
-        && Objects.equals(acceptedTaxonKey, that.acceptedTaxonKey);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(
-        kingdom,
-        phylum,
-        klass,
-        order,
-        family,
-        genus,
-        subGenus,
-        species,
-        scientificName,
-        acceptedScientificName,
-        kingdomKey,
-        phylumKey,
-        classKey,
-        orderKey,
-        familyKey,
-        genusKey,
-        subGenusKey,
-        speciesKey,
-        taxonKey,
-        acceptedTaxonKey);
   }
 
   /** Utility container for capturing the ranks at which difference occur in two classifications. */

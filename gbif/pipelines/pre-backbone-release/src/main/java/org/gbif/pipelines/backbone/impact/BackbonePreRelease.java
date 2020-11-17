@@ -1,13 +1,8 @@
 package org.gbif.pipelines.backbone.impact;
 
-import java.io.IOException;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.runners.spark.SparkRunner;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.TextIO;
@@ -30,6 +25,10 @@ import org.gbif.kvs.species.SpeciesMatchRequest;
 import org.gbif.rest.client.configuration.ClientConfiguration;
 import org.gbif.rest.client.species.NameUsageMatch;
 
+import java.io.IOException;
+import java.util.*;
+
+@Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class BackbonePreRelease {
 
@@ -78,10 +77,10 @@ public class BackbonePreRelease {
 
   /** Performs the lookup. */
   static class MatchTransform extends DoFn<HCatRecord, String> {
-    private String baseAPIUrl;
-    private HCatSchema schema;
-    private Integer scope;
-    private int minCount;
+    private final String baseAPIUrl;
+    private final HCatSchema schema;
+    private final Integer scope;
+    private final int minCount;
     private KeyValueStore<SpeciesMatchRequest, NameUsageMatch> service;
 
     MatchTransform(String baseAPIUrl, HCatSchema schema, Integer scope, int minCount) {
@@ -92,13 +91,13 @@ public class BackbonePreRelease {
     }
 
     @Setup
-    public void setup() throws IOException {
+    public void setup() {
       service =
           NameUsageMatchKVStoreFactory.nameUsageMatchKVStore(
               ClientConfiguration.builder()
                   .withBaseApiUrl(baseAPIUrl)
-                  .withFileCacheMaxSizeMb(1l)
-                  .withTimeOut(120l)
+                  .withFileCacheMaxSizeMb(1L)
+                  .withTimeOut(120L)
                   .build());
     }
 
@@ -131,10 +130,9 @@ public class BackbonePreRelease {
         NameUsageMatch usageMatch = service.get(matchRequest);
 
         GBIFClassification existing = GBIFClassification.buildFromHive(source, schema);
-        GBIFClassification proposed = null;
+        GBIFClassification proposed;
         if (usageMatch == null || isEmpty(usageMatch)) {
           proposed = GBIFClassification.newIncertaeSedis();
-
         } else {
           proposed = GBIFClassification.buildFromNameUsageMatch(usageMatch);
         }
@@ -204,9 +202,7 @@ public class BackbonePreRelease {
         try {
           service.close();
         } catch (IOException ex) {
-          // TODO set up logging please
-          System.err.println("Error closing lookup service");
-          ex.printStackTrace();
+          log.error("Error closing lookup service", ex);
         }
       }
     }
