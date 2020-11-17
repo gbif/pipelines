@@ -1,5 +1,6 @@
 package org.gbif.pipelines.backbone.impact;
 
+import java.util.Objects;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -9,8 +10,6 @@ import org.apache.hive.hcatalog.data.schema.HCatSchema;
 import org.gbif.api.service.checklistbank.NameParser;
 import org.gbif.nameparser.NameParserGbifV1;
 import org.gbif.rest.client.species.NameUsageMatch;
-
-import java.util.Objects;
 
 /**
  * A classification container intended for use when classifications are to be compared for equality;
