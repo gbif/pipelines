@@ -46,7 +46,15 @@ public class GbifJsonConverterTest {
             .build();
 
     ExtendedRecord er =
-        ExtendedRecord.newBuilder().setId("777").setCoreRowType("core").setCoreTerms(erMap).build();
+        ExtendedRecord.newBuilder()
+            .setId("777")
+            .setCoreRowType("core")
+            .setCoreTerms(erMap)
+            .setExtensions(
+                Collections.singletonMap(
+                    "http://rs.tdwg.org/ac/terms/Multimedia",
+                    Collections.singletonList(Collections.singletonMap("k", "v"))))
+            .build();
 
     BasicRecord br =
         BasicRecord.newBuilder()
@@ -166,6 +174,7 @@ public class GbifJsonConverterTest {
     assertEquals("Code 1'2\"", result.path("countryCode").asText());
     assertEquals("[68]", result.path("locality").asText());
     assertTrue(result.path("isClustered").asBoolean());
+    assertEquals("AUDUBON", result.path("extensions").get(0).asText());
 
     String expectedGadm =
         "{"
@@ -176,7 +185,7 @@ public class GbifJsonConverterTest {
     assertEquals(expectedGadm, result.path("gadm").toString());
 
     String expectedAll =
-        "[\"Jeremia garde ,à elfutsone\",\"{\\\"something\\\":1}{\\\"something\\\":1}\",\"D2 R2\",\"something:{something}\"]";
+        "[\"Jeremia garde ,à elfutsone\",\"{\\\"something\\\":1}{\\\"something\\\":1}\",\"v\",\"D2 R2\",\"something:{something}\"]";
     assertEquals(expectedAll, result.path("all").toString());
 
     String expectedVerbatim =
@@ -186,7 +195,7 @@ public class GbifJsonConverterTest {
             + "\"http://purl.org/dc/terms/remark\":\"{\\\"something\\\":1}{\\\"something\\\":1}\","
             + "\"http://rs.tdwg.org/dwc/terms/recordedBy\":\"Jeremia garde ,à elfutsone\","
             + "\"http://rs.tdwg.org/dwc/terms/locality\":\"something:{something}\"},"
-            + "\"extensions\":{}}";
+            + "\"extensions\":{\"http://rs.tdwg.org/ac/terms/Multimedia\":[{\"k\":\"v\"}]}}";
     assertEquals(expectedVerbatim, result.path("verbatim").toString());
 
     String expectedGbifClassification =
@@ -471,6 +480,7 @@ public class GbifJsonConverterTest {
     String expected =
         "{"
             + "\"id\":\"777\","
+            + "\"extensions\":[],"
             + "\"all\":[\"T1\",\"Name\"],"
             + "\"verbatim\":{\"core\":{\"http://rs.tdwg.org/dwc/terms/taxonID\":\"T1\","
             + "\"http://rs.tdwg.org/dwc/terms/scientificName\":\"Name\"},"
@@ -540,11 +550,7 @@ public class GbifJsonConverterTest {
 
     // Expected
     String expected =
-        "{"
-            + "\"id\":\"777\","
-            + "\"all\":[],"
-            + "\"verbatim\":{\"core\":{},"
-            + "\"extensions\":{}}}";
+        "{\"id\":\"777\",\"extensions\":[],\"all\":[],\"verbatim\":{\"core\":{},\"extensions\":{}}}";
 
     // State
     ExtendedRecord record = ExtendedRecord.newBuilder().setId("777").build();

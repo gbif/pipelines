@@ -30,6 +30,7 @@ import lombok.Builder;
 import lombok.Singular;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificRecordBase;
+import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.date.TemporalAccessorUtils;
@@ -249,7 +250,6 @@ public class GbifJsonConverter {
       jc.addJsonTextFieldNoCheck(ID, er.getId());
 
       Map<String, String> core = er.getCoreTerms();
-      Map<String, List<Map<String, String>>> ext = er.getExtensions();
 
       BiConsumer<Term, String> fieldFn =
           (t, k) ->
@@ -275,6 +275,7 @@ public class GbifJsonConverter {
 
       // Extensions
       ObjectNode extNode = JsonConverter.createObjectNode();
+      Map<String, List<Map<String, String>>> ext = er.getExtensions();
       ext.forEach(
           (k, v) -> {
             if (v != null && !v.isEmpty()) {
@@ -292,6 +293,19 @@ public class GbifJsonConverter {
               extNode.set(k, extArrayNode);
             }
           });
+
+      // Has extensions
+      ArrayNode extNameNode = JsonConverter.createArrayNode();
+      ext.forEach(
+          (k, v) -> {
+            Extension extension = Extension.fromRowType(k);
+            if (extension != null) {
+              extNameNode.add(extension.name());
+            } else {
+              extNameNode.add(k);
+            }
+          });
+      jc.getMainNode().set("extensions", extNameNode);
 
       // Verbatim
       ObjectNode verbatimNode = JsonConverter.createObjectNode();
