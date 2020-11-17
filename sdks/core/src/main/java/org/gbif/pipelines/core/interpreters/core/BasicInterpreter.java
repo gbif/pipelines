@@ -112,7 +112,9 @@ public class BasicInterpreter {
     return br -> {
       if (clusteringService != null) {
         Long gbifId = br.getGbifId();
-        br.setIsClustered(clusteringService.isClustered(gbifId));
+        if (gbifId != null) {
+          br.setIsClustered(clusteringService.isClustered(gbifId));
+        }
       }
     };
   }
