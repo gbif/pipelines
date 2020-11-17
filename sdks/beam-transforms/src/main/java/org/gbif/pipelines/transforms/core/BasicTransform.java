@@ -9,6 +9,7 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import lombok.Builder;
+import lombok.SneakyThrows;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
@@ -18,6 +19,7 @@ import org.gbif.pipelines.core.functions.SerializableConsumer;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.BasicInterpreter;
+import org.gbif.pipelines.core.parsers.clustering.ClusteringService;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
@@ -40,10 +42,12 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
   private final SerializableSupplier<VocabularyLookup> lifeStageLookupSupplier;
   private final SerializableSupplier<KeyValueStore<String, OccurrenceStatus>>
       occStatusKvStoreSupplier;
+  private final SerializableSupplier<ClusteringService> clusteringServiceSupplier;
 
   private KeyValueStore<String, OccurrenceStatus> occStatusKvStore;
   private HBaseLockingKeyService keygenService;
   private VocabularyLookup lifeStageLookup;
+  private ClusteringService clusteringService;
 
   @Builder(buildMethodName = "create")
   private BasicTransform(
@@ -53,7 +57,8 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
       BiConsumer<ExtendedRecord, BasicRecord> gbifIdFn,
       SerializableSupplier<HBaseLockingKeyService> keygenServiceSupplier,
       SerializableSupplier<VocabularyLookup> lifeStageLookupSupplier,
-      SerializableSupplier<KeyValueStore<String, OccurrenceStatus>> occStatusKvStoreSupplier) {
+      SerializableSupplier<KeyValueStore<String, OccurrenceStatus>> occStatusKvStoreSupplier,
+      SerializableSupplier<ClusteringService> clusteringServiceSupplier) {
     super(BasicRecord.class, BASIC, BasicTransform.class.getName(), BASIC_RECORDS_COUNT);
     this.isTripletValid = isTripletValid;
     this.isOccurrenceIdValid = isOccurrenceIdValid;
@@ -62,6 +67,7 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
     this.keygenServiceSupplier = keygenServiceSupplier;
     this.occStatusKvStoreSupplier = occStatusKvStoreSupplier;
     this.lifeStageLookupSupplier = lifeStageLookupSupplier;
+    this.clusteringServiceSupplier = clusteringServiceSupplier;
   }
 
   /** Maps {@link BasicRecord} to key value, where key is {@link BasicRecord#getId} */
@@ -98,9 +104,13 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
     if (lifeStageLookupSupplier != null) {
       lifeStageLookup = lifeStageLookupSupplier.get();
     }
+    if (clusteringServiceSupplier != null) {
+      clusteringService = clusteringServiceSupplier.get();
+    }
   }
 
   /** Beam @Teardown closes initialized resources */
+  @SneakyThrows
   @Teardown
   public void tearDown() {
     if (keygenService != null) {
@@ -108,6 +118,9 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
     }
     if (lifeStageLookup != null) {
       lifeStageLookup.close();
+    }
+    if (clusteringService != null) {
+      clusteringService.close();
     }
   }
 
@@ -151,6 +164,7 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
         .via(BasicInterpreter::interpretIdentifiedByIds)
         .via(BasicInterpreter::interpretRecordedByIds)
         .via(BasicInterpreter.interpretOccurrenceStatus(occStatusKvStore))
+        .via(BasicInterpreter.interpretIsClustered(clusteringService))
         .getOfNullable();
   }
 }

@@ -1,49 +1,17 @@
 package org.gbif.pipelines.core.converters;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import org.gbif.api.model.collections.lookup.Match.MatchType;
-import org.gbif.api.vocabulary.AgentIdentifierType;
-import org.gbif.api.vocabulary.Extension;
-import org.gbif.api.vocabulary.License;
-import org.gbif.api.vocabulary.OccurrenceIssue;
-import org.gbif.api.vocabulary.OccurrenceStatus;
+import org.gbif.api.vocabulary.*;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.io.avro.AgentIdentifier;
-import org.gbif.pipelines.io.avro.Amplification;
-import org.gbif.pipelines.io.avro.AmplificationRecord;
-import org.gbif.pipelines.io.avro.AudubonRecord;
-import org.gbif.pipelines.io.avro.BasicRecord;
-import org.gbif.pipelines.io.avro.BlastResult;
-import org.gbif.pipelines.io.avro.DeterminedDate;
-import org.gbif.pipelines.io.avro.EventDate;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.GadmFeatures;
-import org.gbif.pipelines.io.avro.ImageRecord;
-import org.gbif.pipelines.io.avro.LocationFeatureRecord;
-import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MachineTag;
-import org.gbif.pipelines.io.avro.MeasurementOrFact;
-import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
+import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.MediaType;
-import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.io.avro.Multimedia;
-import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.Rank;
-import org.gbif.pipelines.io.avro.RankedName;
-import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.io.avro.grscicoll.Match;
 import org.junit.Assert;
@@ -91,6 +59,7 @@ public class GbifJsonConverterTest {
             .setRelativeOrganismQuantity(0.001d)
             .setLicense(License.CC_BY_NC_4_0.name())
             .setOccurrenceStatus(OccurrenceStatus.PRESENT.name())
+            .setIsClustered(true)
             .setRecordedByIds(
                 Collections.singletonList(
                     AgentIdentifier.newBuilder()
@@ -196,6 +165,7 @@ public class GbifJsonConverterTest {
     assertEquals("Country", result.path("country").asText());
     assertEquals("Code 1'2\"", result.path("countryCode").asText());
     assertEquals("[68]", result.path("locality").asText());
+    assertTrue(result.path("isClustered").asBoolean());
 
     String expectedGadm =
         "{"

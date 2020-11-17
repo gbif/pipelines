@@ -1,16 +1,7 @@
 package org.gbif.pipelines.core.interpreters.core;
 
-import static org.gbif.api.vocabulary.OccurrenceIssue.BASIS_OF_RECORD_INVALID;
-import static org.gbif.api.vocabulary.OccurrenceIssue.INDIVIDUAL_COUNT_CONFLICTS_WITH_OCCURRENCE_STATUS;
-import static org.gbif.api.vocabulary.OccurrenceIssue.INDIVIDUAL_COUNT_INVALID;
-import static org.gbif.api.vocabulary.OccurrenceIssue.OCCURRENCE_STATUS_INFERRED_FROM_BASIS_OF_RECORD;
-import static org.gbif.api.vocabulary.OccurrenceIssue.OCCURRENCE_STATUS_INFERRED_FROM_INDIVIDUAL_COUNT;
-import static org.gbif.api.vocabulary.OccurrenceIssue.OCCURRENCE_STATUS_UNPARSABLE;
-import static org.gbif.api.vocabulary.OccurrenceIssue.REFERENCES_URI_INVALID;
-import static org.gbif.api.vocabulary.OccurrenceIssue.TYPE_STATUS_INVALID;
-import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
-import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
-import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
+import static org.gbif.api.vocabulary.OccurrenceIssue.*;
+import static org.gbif.pipelines.core.utils.ModelUtils.*;
 
 import com.google.common.base.Strings;
 import java.net.URI;
@@ -25,12 +16,7 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.gbif.api.vocabulary.BasisOfRecord;
-import org.gbif.api.vocabulary.EstablishmentMeans;
-import org.gbif.api.vocabulary.License;
-import org.gbif.api.vocabulary.OccurrenceStatus;
-import org.gbif.api.vocabulary.Sex;
-import org.gbif.api.vocabulary.TypeStatus;
+import org.gbif.api.vocabulary.*;
 import org.gbif.common.parsers.LicenseParser;
 import org.gbif.common.parsers.NumberParser;
 import org.gbif.common.parsers.UrlParser;
@@ -42,6 +28,7 @@ import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.core.parsers.SimpleTypeParser;
 import org.gbif.pipelines.core.parsers.VocabularyParser;
+import org.gbif.pipelines.core.parsers.clustering.ClusteringService;
 import org.gbif.pipelines.core.parsers.identifier.AgentIdentifierParser;
 import org.gbif.pipelines.core.utils.ModelUtils;
 import org.gbif.pipelines.io.avro.BasicRecord;
@@ -117,6 +104,15 @@ public class BasicInterpreter {
         }
       } else {
         addIssue(br, GBIF_ID_INVALID);
+      }
+    };
+  }
+
+  public static Consumer<BasicRecord> interpretIsClustered(ClusteringService clusteringService) {
+    return br -> {
+      if (clusteringService != null) {
+        Long gbifId = br.getGbifId();
+        br.setIsClustered(clusteringService.isClustered(gbifId));
       }
     };
   }
