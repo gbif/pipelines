@@ -119,9 +119,6 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
     if (lifeStageLookup != null) {
       lifeStageLookup.close();
     }
-    if (clusteringService != null) {
-      clusteringService.close();
-    }
   }
 
   @Override
