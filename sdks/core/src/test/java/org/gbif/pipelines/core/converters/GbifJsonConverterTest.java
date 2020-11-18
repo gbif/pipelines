@@ -174,7 +174,8 @@ public class GbifJsonConverterTest {
     assertEquals("Code 1'2\"", result.path("countryCode").asText());
     assertEquals("[68]", result.path("locality").asText());
     assertTrue(result.path("isClustered").asBoolean());
-    assertEquals("AUDUBON", result.path("extensions").get(0).asText());
+    assertEquals(
+        "http://rs.tdwg.org/ac/terms/Multimedia", result.path("extensions").get(0).asText());
 
     String expectedGadm =
         "{"

@@ -30,7 +30,6 @@ import lombok.Builder;
 import lombok.Singular;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificRecordBase;
-import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.date.TemporalAccessorUtils;
@@ -298,15 +297,7 @@ public class GbifJsonConverter {
       ArrayNode extNameNode = JsonConverter.createArrayNode();
       ext.entrySet().stream()
           .filter(e -> e.getValue() != null && !e.getValue().isEmpty())
-          .forEach(
-              e -> {
-                Extension extension = Extension.fromRowType(e.getKey());
-                if (extension != null) {
-                  extNameNode.add(extension.name());
-                } else {
-                  extNameNode.add(e.getKey());
-                }
-              });
+          .forEach(x -> extNameNode.add(x.getKey()));
       jc.getMainNode().set("extensions", extNameNode);
 
       // Verbatim
