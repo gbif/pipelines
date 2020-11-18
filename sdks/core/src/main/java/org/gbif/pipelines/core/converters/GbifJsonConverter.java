@@ -296,15 +296,17 @@ public class GbifJsonConverter {
 
       // Has extensions
       ArrayNode extNameNode = JsonConverter.createArrayNode();
-      ext.forEach(
-          (k, v) -> {
-            Extension extension = Extension.fromRowType(k);
-            if (extension != null) {
-              extNameNode.add(extension.name());
-            } else {
-              extNameNode.add(k);
-            }
-          });
+      ext.entrySet().stream()
+          .filter(e -> e.getValue() != null && !e.getValue().isEmpty())
+          .forEach(
+              e -> {
+                Extension extension = Extension.fromRowType(e.getKey());
+                if (extension != null) {
+                  extNameNode.add(extension.name());
+                } else {
+                  extNameNode.add(e.getKey());
+                }
+              });
       jc.getMainNode().set("extensions", extNameNode);
 
       // Verbatim
