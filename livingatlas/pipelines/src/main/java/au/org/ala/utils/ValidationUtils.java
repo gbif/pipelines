@@ -198,7 +198,10 @@ public class ValidationUtils {
       }
 
     } else {
-      log.info("Validation not completed  for {}, from inputPath {}", datasetId, validateFilePath);
+      log.info(
+          "Validation not completed for dataset {}, no validation report at inputPath {}",
+          datasetId,
+          validateFilePath);
       return ValidationResult.builder().valid(false).message(NOT_VALIDATED).build();
     }
   }

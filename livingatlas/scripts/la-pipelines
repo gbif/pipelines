@@ -58,6 +58,7 @@ dwca-avro --> interpret --> uuid -->                │
 -  'sample' crawl the LA layers. Requires an input csv containing lat, lng (no header) and output directory;
 -  'sample-avro' adds a sampling AVRO extension to the stored interpretation;
 -  'index' reads a Dwc-A, interprets it and index the interpeted data creating a SOLR index;
+-  'index-avro' index AVRO records;
 -  'archive-list' dumps out a list of archives that can be ingested to '/tmp/dataset-archive-list.csv';
 -  'dataset-list' dumps out a list of datasets that have been ingested to '/tmp/dataset-counts.csv';
 -  'validation-report' dumps out a CSV list of datasets ready to be indexed to '/tmp/validation-report.csv';
@@ -72,6 +73,7 @@ Usage:
   $CMD [options] image-load    (<dr>...|all)         $WHERE
   $CMD [options] image-sync    (<dr>...|all)         $WHERE
   $CMD [options] index         (<dr>...|all) $WHEREL
+  $CMD [options] index-avro                          $WHERE
   $CMD [options] interpret     (<dr>...|all) $WHEREL
   $CMD [options] sample        (<dr>...|all)
   $CMD [options] sample-avro   (<dr>...|all)         $WHERE
@@ -558,9 +560,6 @@ function sample-avro () {
     logStepStart "Sample-avro" $dr
     SECONDS=0
 
-    SH_ARGS=sample-avro-sh-args.local
-    java-pipeline $ltype $SH_ARGS $CLASS $dr
-
     SH_ARGS=sample-avro-sh-args.spark-embedded
     spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
 
@@ -568,6 +567,23 @@ function sample-avro () {
     spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "add-sampling-$dr"
 
     logStepEnd "Sample-avro" $dr $ltype $SECONDS
+}
+
+function index-avro () {
+    local ltype="$1"
+
+    logStepStart "Indexing-all"
+    SECONDS=0
+
+    SH_ARGS=index-sh-args.spark-embedded
+    CLASS=au.org.ala.pipelines.beam.IndexRecordToSolrIndexPipeline
+    spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=index-sh-args.spark-cluster
+    CLASS=au.org.ala.pipelines.beam.IndexRecordToSolrIndexPipeline
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "SOLR-indexing-AVRO"
+
+    logStepEnd "Indexing-all" $ltype $SECONDS
 }
 
 function index () {
@@ -718,6 +734,10 @@ fi
 
 if ($index || $do_all); then
     do_step index
+fi
+
+if ($index_avro || $do_all); then
+    do_step index-avro
 fi
 
 # All ended correctly, so untrap EXIT catch

@@ -1,0 +1,23 @@
+{
+  "name":"IndexRecord",
+  "namespace":"org.gbif.pipelines.io.avro",
+  "type":"record",
+  "doc":"ALA Index Record",
+  "fields":[
+    {"name": "id", "doc":"The ALA UUID for the record", "type" : "string"},
+    {"name": "latLng", "doc":"The ALA UUID for the record", "type" : ["null", "string"]},
+    {"name": "taxonID", "doc":"The ALA UUID for the record", "type" : ["null", "string"]},
+    {"name": "stringProperties", "doc": "Non multi-value fields", "default": {}, "type": {"type": "map", "values": "string"}},
+    {"name": "booleanProperties", "doc": "Non multi-value fields", "default": {}, "type": {"type": "map", "values": "boolean"}},
+    {"name": "doubleProperties", "doc": "Non multi-value fields", "default": {}, "type": {"type": "map", "values": "double"}},
+    {"name": "floatProperties", "doc": "Non multi-value fields", "default": {}, "type": {"type": "map", "values": "float"}},
+    {"name": "longProperties", "doc": "Non multi-value fields", "default": {}, "type": {"type": "map", "values": "long"}},
+    {"name": "intProperties", "doc": "Non multi-value fields", "default": {}, "type": {"type": "map", "values": "int"}},
+    {"name": "multiValueProperties", "doc": "Non multi-value fields", "default": {}, "type":
+        {"type": "map", "values":
+            { "type": "array", "items":"string" }
+        }
+    }
+
+  ]
+}

@@ -16,6 +16,7 @@ import java.util.function.UnaryOperator;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.avro.file.CodecFactory;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.AvroIO;
@@ -50,15 +51,18 @@ import org.slf4j.MDC;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ALAInterpretedToSolrIndexPipeline {
 
+  private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
+
   public static void main(String[] args) throws Exception {
     VersionInfo.print();
     String[] combinedArgs =
-        new CombinedYamlConfiguration(args).toArgs("general", "index", "speciesLists");
+        new CombinedYamlConfiguration(args).toArgs("general", "speciesLists", "index");
     ALASolrPipelineOptions options =
         PipelinesOptionsFactory.create(ALASolrPipelineOptions.class, combinedArgs);
     options.setMetaFileName(ValidationUtils.INDEXING_METRICS);
     PipelinesOptionsFactory.registerHdfs(options);
     run(options);
+    System.exit(0);
   }
 
   public static void run(ALASolrPipelineOptions options) throws Exception {
@@ -250,15 +254,25 @@ public class ALAInterpretedToSolrIndexPipeline {
         kpct.apply("Grouping objects", CoGroupByKey.create())
             .apply("Merging to Solr doc", alaSolrDoFn);
 
-    log.info("Adding step 4: SOLR indexing");
-    SolrIO.ConnectionConfiguration conn =
-        SolrIO.ConnectionConfiguration.create(options.getZkHost());
-
-    solrInputDocumentPCollection.apply(
-        SolrIO.write()
-            .to(options.getSolrCollection())
-            .withConnectionConfiguration(conn)
-            .withMaxBatchSize(options.getSolrBatchSize()));
+    if (!options.getOutputToAvro()) {
+      log.info("Adding step 4: SOLR indexing");
+      SolrIO.ConnectionConfiguration conn =
+          SolrIO.ConnectionConfiguration.create(options.getZkHost());
+      solrInputDocumentPCollection.apply(
+          SolrIO.write()
+              .to(options.getSolrCollection())
+              .withConnectionConfiguration(conn)
+              .withMaxBatchSize(options.getSolrBatchSize()));
+    } else {
+      // write to AVRO file instead....
+      solrInputDocumentPCollection
+          .apply("", ParDo.of(new ALASolrDocumentTransform.SolrInputDocumentToIndexRecordFcn()))
+          .apply(
+              AvroIO.write(IndexRecord.class)
+                  .to(options.getAllDatasetsInputPath() + "/index-record/index-record")
+                  .withSuffix("-" + options.getDatasetId() + ".avro")
+                  .withCodec(BASE_CODEC));
+    }
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();

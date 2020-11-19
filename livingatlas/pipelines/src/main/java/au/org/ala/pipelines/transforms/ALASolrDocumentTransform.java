@@ -8,6 +8,7 @@ import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.Schema;
@@ -162,7 +163,9 @@ public class ALASolrDocumentTransform implements Serializable {
 
     // add event date
     try {
-      if (tr.getEventDate().getGte() != null && tr.getEventDate().getGte().length() == 10) {
+      if (tr.getEventDate() != null
+          && tr.getEventDate().getGte() != null
+          && tr.getEventDate().getGte().length() == 10) {
         doc.setField(
             "eventDateSingle",
             new SimpleDateFormat("yyyy-MM-dd").parse(tr.getEventDate().getGte()));
@@ -532,5 +535,84 @@ public class ALASolrDocumentTransform implements Serializable {
                                 }
                               });
                         }));
+  }
+
+  /** Transform to create a map of unique keys built from previous runs and UUID. */
+  public static class SolrInputDocumentToIndexRecordFcn
+      extends DoFn<SolrInputDocument, IndexRecord> {
+    @ProcessElement
+    public void processElement(
+        @Element SolrInputDocument solrInputDocument, OutputReceiver<IndexRecord> out) {
+      IndexRecord indexRecord = convertSolrDocToIndexRecord(solrInputDocument);
+      out.output(indexRecord);
+    }
+  }
+
+  public static SolrInputDocument convertIndexRecordToSolrDoc(IndexRecord indexRecord) {
+    SolrInputDocument doc = new SolrInputDocument();
+
+    // strings
+    for (Map.Entry<String, String> s : indexRecord.getStringProperties().entrySet()) {
+      doc.addField(s.getKey(), s.getValue());
+    }
+
+    // doubles
+    for (Map.Entry<String, Double> s : indexRecord.getDoubleProperties().entrySet()) {
+      doc.addField(s.getKey(), s.getValue());
+    }
+
+    // integers
+    for (Map.Entry<String, Integer> s : indexRecord.getIntProperties().entrySet()) {
+      doc.addField(s.getKey(), s.getValue());
+    }
+
+    // multi-value
+    for (Map.Entry<String, List<String>> s : indexRecord.getMultiValueProperties().entrySet()) {
+      for (String value : s.getValue()) {
+        doc.addField(s.getKey(), value);
+      }
+    }
+
+    return doc;
+  }
+
+  public static IndexRecord convertSolrDocToIndexRecord(SolrInputDocument solrInputDocument) {
+    IndexRecord.Builder builder =
+        IndexRecord.newBuilder().setId(solrInputDocument.getFieldValue("id").toString());
+    builder.setTaxonID((String) solrInputDocument.getFieldValue("lsid"));
+    builder.setLatLng((String) solrInputDocument.getFieldValue("lat_long"));
+    builder.setStringProperties(new HashMap<>());
+    builder.setIntProperties(new HashMap<>());
+    builder.setDoubleProperties(new HashMap<>());
+    builder.setMultiValueProperties(new HashMap<>());
+
+    solrInputDocument
+        .iterator()
+        .forEachRemaining(
+            solrInputField -> {
+              boolean isMultiValue = solrInputField.getValueCount() > 1;
+              String name = solrInputField.getName();
+              if (isMultiValue) {
+                List<String> values =
+                    solrInputField.getValues().stream()
+                        .map(value -> value.toString())
+                        .collect(Collectors.toList());
+                builder.getMultiValueProperties().put(name, values);
+              } else {
+                Object value = solrInputField.getValue();
+                if (value instanceof String) {
+                  builder.getStringProperties().put(name, (String) value);
+                } else if (value instanceof Integer) {
+                  builder.getIntProperties().put(name, (Integer) value);
+                } else if (value instanceof Double) {
+                  builder.getDoubleProperties().put(name, (Double) value);
+                } else if (value instanceof Date) {
+                  //              builder.getDateProperties().put(name, (String) value);
+                } else {
+                  builder.getStringProperties().put(name, (String) value.toString());
+                }
+              }
+            });
+    return builder.build();
   }
 }

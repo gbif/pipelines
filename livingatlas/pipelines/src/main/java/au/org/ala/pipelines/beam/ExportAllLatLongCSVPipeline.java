@@ -56,14 +56,15 @@ public class ExportAllLatLongCSVPipeline {
 
     log.info("Adding step 1: Options");
     UnaryOperator<String> pathFn =
-        t ->
-            options.getInputPath()
-                + "/*/" // HDFS=* FS=**
-                + options.getAttempt()
-                + "/interpreted/"
-                + t
-                + "/*"
-                + AVRO_EXTENSION;
+        transformOutputName ->
+            String.join(
+                "/",
+                options.getInputPath(),
+                "*",
+                options.getAttempt().toString(),
+                "interpreted",
+                transformOutputName,
+                "*" + AVRO_EXTENSION);
 
     Pipeline p = Pipeline.create(options);
     log.info("Adding step 2: Creating transformations");
@@ -102,7 +103,7 @@ public class ExportAllLatLongCSVPipeline {
     result.waitUntilFinish();
 
     log.info(
-        "Pipeline has been finished. Output written to {}/latlng/latlng-export.csv",
+        "Pipeline has been finished. Output written to {}/latlng/latlong.csv",
         options.getAllDatasetsInputPath());
   }
 }
