@@ -176,6 +176,7 @@ index:
   includeSpeciesLists: true
   runner: SparkRunner
   zkHost: localhost:9983
+  allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
   ## For spark-cluster:
   # appName: SOLR indexing for {datasetId}
   # runner: SparkRunner
