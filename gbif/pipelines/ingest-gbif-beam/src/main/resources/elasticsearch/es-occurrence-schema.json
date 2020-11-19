@@ -37,6 +37,7 @@
       "programmeAcronym": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
       "institutionKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
       "collectionKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
+      "isClustered": {"type": "boolean"},
 
       "basisOfRecord": {"type": "keyword"},
       "sex": {"type": "keyword", "copy_to": "all"},
@@ -227,6 +228,7 @@
 
       "issues": {"type": "keyword"},
       "notIssues": {"type": "keyword"},
+      "extensions": {"type": "keyword"},
 
       "gbifClassification": {
         "properties": {
