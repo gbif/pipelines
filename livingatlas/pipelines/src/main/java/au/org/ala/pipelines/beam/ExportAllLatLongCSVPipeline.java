@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
+import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.transforms.*;
 import org.apache.beam.sdk.values.KV;
@@ -19,6 +20,7 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.hadoop.fs.FileSystem;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
+import org.gbif.pipelines.io.avro.IndexRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.slf4j.MDC;
@@ -54,49 +56,70 @@ public class ExportAllLatLongCSVPipeline {
     ALAFsUtils.deleteIfExist(fs, options.getAllDatasetsInputPath() + "/latlng/");
     ALAFsUtils.createDirectory(fs, options.getAllDatasetsInputPath() + "/latlng/");
 
-    log.info("Adding step 1: Options");
-    UnaryOperator<String> pathFn =
-        transformOutputName ->
-            String.join(
-                "/",
-                options.getInputPath(),
-                "*",
-                options.getAttempt().toString(),
-                "interpreted",
-                transformOutputName,
-                "*" + AVRO_EXTENSION);
-
     Pipeline p = Pipeline.create(options);
-    log.info("Adding step 2: Creating transformations");
 
-    // Load LocationTransform
-    LocationTransform locationTransform = LocationTransform.builder().create();
+    if (true) {
 
-    log.info("Adding step 3: Creating beam pipeline");
-    PCollection<String> locationCollection =
-        p.apply("Read Location", locationTransform.read(pathFn))
-            .apply("Map Location to KV", locationTransform.toKv())
-            .apply(
-                Filter.by(
-                    lr ->
-                        lr.getValue().getDecimalLatitude() != null
-                            && lr.getValue().getDecimalLongitude() != null))
-            .apply(
-                MapElements.via(
-                    new SimpleFunction<KV<String, LocationRecord>, String>() {
-                      @Override
-                      public String apply(KV<String, LocationRecord> input) {
-                        return input.getValue().getDecimalLatitude()
-                            + ","
-                            + input.getValue().getDecimalLongitude();
-                      }
-                    }))
-            .apply(Distinct.create());
+      p.apply(
+              AvroIO.read(IndexRecord.class)
+                  .from(
+                      String.join(
+                          "/", options.getAllDatasetsInputPath(), "index-record", "*/*.avro")))
+          .apply(Filter.by(ir -> ir.getLatLng() != null))
+          .apply(
+              MapElements.via(
+                  new SimpleFunction<IndexRecord, String>() {
+                    @Override
+                    public String apply(IndexRecord input) {
+                      return input.getLatLng();
+                    }
+                  }))
+          .apply(Distinct.create())
+          .apply(
+              TextIO.write()
+                  .to(options.getAllDatasetsInputPath() + "/latlng/latlong.csv")
+                  .withoutSharding());
 
-    locationCollection.apply(
-        TextIO.write()
-            .to(options.getAllDatasetsInputPath() + "/latlng/latlong.csv")
-            .withoutSharding());
+    } else {
+      log.info("Adding step 1: Options");
+      UnaryOperator<String> pathFn =
+          transformOutputName ->
+              String.join(
+                  "/",
+                  options.getInputPath(),
+                  "*",
+                  options.getAttempt().toString(),
+                  "interpreted",
+                  transformOutputName,
+                  "*" + AVRO_EXTENSION);
+
+      log.info("Adding step 2: Creating transformations");
+
+      // Load LocationTransform
+      LocationTransform locationTransform = LocationTransform.builder().create();
+
+      log.info("Adding step 3: Creating beam pipeline");
+      PCollection<String> locationCollection =
+          p.apply("Read Location", locationTransform.read(pathFn))
+              .apply("Map Location to KV", locationTransform.toKv())
+              .apply(Filter.by(lr -> lr.getValue().getHasCoordinate()))
+              .apply(
+                  MapElements.via(
+                      new SimpleFunction<KV<String, LocationRecord>, String>() {
+                        @Override
+                        public String apply(KV<String, LocationRecord> input) {
+                          return input.getValue().getDecimalLatitude()
+                              + ","
+                              + input.getValue().getDecimalLongitude();
+                        }
+                      }))
+              .apply(Distinct.create());
+
+      locationCollection.apply(
+          TextIO.write()
+              .to(options.getAllDatasetsInputPath() + "/latlng/latlong.csv")
+              .withoutSharding());
+    }
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();

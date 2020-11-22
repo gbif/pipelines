@@ -199,7 +199,7 @@ public class ALASolrDocumentTransform implements Serializable {
       doc.setField("raw_" + key, entry.getValue());
     }
 
-    if (lr.getDecimalLatitude() != null && lr.getDecimalLongitude() != null) {
+    if (lr.getHasCoordinate()) {
       addGeo(doc, lr.getDecimalLatitude(), lr.getDecimalLongitude());
     }
 
@@ -552,22 +552,22 @@ public class ALASolrDocumentTransform implements Serializable {
     SolrInputDocument doc = new SolrInputDocument();
 
     // strings
-    for (Map.Entry<String, String> s : indexRecord.getStringProperties().entrySet()) {
+    for (Map.Entry<String, String> s : indexRecord.getStrings().entrySet()) {
       doc.addField(s.getKey(), s.getValue());
     }
 
     // doubles
-    for (Map.Entry<String, Double> s : indexRecord.getDoubleProperties().entrySet()) {
+    for (Map.Entry<String, Double> s : indexRecord.getDoubles().entrySet()) {
       doc.addField(s.getKey(), s.getValue());
     }
 
     // integers
-    for (Map.Entry<String, Integer> s : indexRecord.getIntProperties().entrySet()) {
+    for (Map.Entry<String, Integer> s : indexRecord.getInts().entrySet()) {
       doc.addField(s.getKey(), s.getValue());
     }
 
     // multi-value
-    for (Map.Entry<String, List<String>> s : indexRecord.getMultiValueProperties().entrySet()) {
+    for (Map.Entry<String, List<String>> s : indexRecord.getMultiValues().entrySet()) {
       for (String value : s.getValue()) {
         doc.addField(s.getKey(), value);
       }
@@ -577,14 +577,22 @@ public class ALASolrDocumentTransform implements Serializable {
   }
 
   public static IndexRecord convertSolrDocToIndexRecord(SolrInputDocument solrInputDocument) {
+
     IndexRecord.Builder builder =
         IndexRecord.newBuilder().setId(solrInputDocument.getFieldValue("id").toString());
-    builder.setTaxonID((String) solrInputDocument.getFieldValue("lsid"));
-    builder.setLatLng((String) solrInputDocument.getFieldValue("lat_long"));
-    builder.setStringProperties(new HashMap<>());
-    builder.setIntProperties(new HashMap<>());
-    builder.setDoubleProperties(new HashMap<>());
-    builder.setMultiValueProperties(new HashMap<>());
+
+    if (solrInputDocument.getFieldValue("lsid") != null) {
+      builder.setTaxonID((String) solrInputDocument.getFieldValue("lsid"));
+    }
+
+    if (solrInputDocument.getFieldValue("lat_long") != null) {
+      builder.setLatLng((String) solrInputDocument.getFieldValue("lat_long"));
+    }
+
+    builder.setStrings(new HashMap<>());
+    builder.setInts(new HashMap<>());
+    builder.setDoubles(new HashMap<>());
+    builder.setMultiValues(new HashMap<>());
 
     solrInputDocument
         .iterator()
@@ -596,23 +604,29 @@ public class ALASolrDocumentTransform implements Serializable {
                 List<String> values =
                     solrInputField.getValues().stream()
                         .map(value -> value.toString())
+                        .filter(value -> Strings.isNotBlank(value))
                         .collect(Collectors.toList());
-                builder.getMultiValueProperties().put(name, values);
+                builder.getMultiValues().put(name, values);
               } else {
                 Object value = solrInputField.getValue();
-                if (value instanceof String) {
-                  builder.getStringProperties().put(name, (String) value);
-                } else if (value instanceof Integer) {
-                  builder.getIntProperties().put(name, (Integer) value);
-                } else if (value instanceof Double) {
-                  builder.getDoubleProperties().put(name, (Double) value);
-                } else if (value instanceof Date) {
-                  //              builder.getDateProperties().put(name, (String) value);
-                } else {
-                  builder.getStringProperties().put(name, (String) value.toString());
+                if (value != null) {
+                  if (value instanceof String) {
+                    if (Strings.isNotBlank((String) value)) {
+                      builder.getStrings().put(name, (String) value);
+                    }
+                  } else if (value instanceof Integer) {
+                    builder.getInts().put(name, (Integer) value);
+                  } else if (value instanceof Double) {
+                    builder.getDoubles().put(name, (Double) value);
+                  } else if (value instanceof Date) {
+                    //              builder.getDateProperties().put(name, (String) value);
+                  } else {
+                    builder.getStrings().put(name, (String) value.toString());
+                  }
                 }
               }
-            });
+            }
+          );
     return builder.build();
   }
 }
