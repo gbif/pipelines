@@ -472,7 +472,9 @@ public class ALAInterpretedToSolrIndexPipeline {
           fs.create(
               new Path(
                   options.getAllDatasetsInputPath()
-                      + "/index-record/index-record-"
+                      + "/index-record/"
+                      + options.getDatasetId()
+                      + "/"
                       + options.getDatasetId()
                       + ".avro"));
 

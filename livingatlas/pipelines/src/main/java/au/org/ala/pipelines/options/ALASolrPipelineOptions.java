@@ -58,4 +58,16 @@ public interface ALASolrPipelineOptions
   Boolean getOutputToAvro();
 
   void setOutputToAvro(Boolean outputToAvro);
+
+  @Description("Include gbif taxonomy")
+  @Default.Boolean(false)
+  Boolean getDebugCountsOnly();
+
+  void setDebugCountsOnly(Boolean debugCountsOnly);
+
+  @Description("Include gbif taxonomy")
+  @Default.Integer(1)
+  Integer getStage();
+
+  void setStage(Integer stage);
 }

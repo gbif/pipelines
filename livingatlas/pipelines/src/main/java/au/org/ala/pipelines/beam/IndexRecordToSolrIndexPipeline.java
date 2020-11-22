@@ -1,8 +1,6 @@
 package au.org.ala.pipelines.beam;
 
-import au.com.bytecode.opencsv.CSVReader;
 import au.org.ala.pipelines.options.ALASolrPipelineOptions;
-import au.org.ala.pipelines.transforms.ALASolrDocumentTransform;
 import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
@@ -10,7 +8,6 @@ import au.org.ala.utils.ValidationUtils;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.StringReader;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,18 +16,14 @@ import org.apache.avro.file.CodecFactory;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.io.TextIO;
-import org.apache.beam.sdk.io.solr.SolrIO;
 import org.apache.beam.sdk.transforms.*;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.transforms.join.CoGroupByKey;
 import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
-import org.apache.beam.sdk.values.KV;
-import org.apache.beam.sdk.values.PCollection;
-import org.apache.beam.sdk.values.TupleTag;
+import org.apache.beam.sdk.values.*;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.logging.log4j.util.Strings;
-import org.apache.solr.common.SolrInputDocument;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.IndexRecord;
@@ -57,23 +50,18 @@ public class IndexRecordToSolrIndexPipeline {
   }
 
   public static boolean hasCoordinates(IndexRecord indexRecord) {
-    return StringUtils.isNotBlank(indexRecord.getLatLng());
+    return indexRecord.getLatLng() != null;
   }
 
   public static void run(ALASolrPipelineOptions options) {
 
+    log.info("options.getDebugCountsOnly - {}", options.getDebugCountsOnly());
+
     Pipeline pipeline = Pipeline.create(options);
-
-    // Load IndexRecords
-    PCollection<IndexRecord> indexRecordsCollection = loadIndexRecords(options, pipeline);
-
-    PCollection<IndexRecord> recordsWithCoordinates =
-        indexRecordsCollection.apply(Filter.by(indexRecord -> hasCoordinates(indexRecord)));
-    PCollection<IndexRecord> recordsWithoutCoordinates =
-        indexRecordsCollection.apply(Filter.by(indexRecord -> !hasCoordinates(indexRecord)));
 
     // join records with coordinates to sampling
     String samplingPath = options.getAllDatasetsInputPath() + "/sampling/downloads";
+
     // get filesystem
     FileSystem fs =
         FsUtils.getFileSystem(
@@ -83,7 +71,52 @@ public class IndexRecordToSolrIndexPipeline {
     PCollection<KV<String, Map<String, String>>> sampleCollection =
         loadSamplingIntoPCollection(pipeline, samplingPath, fs);
 
-    // convert to KV <LatLng, IndexRecord>
+    if (options.getDebugCountsOnly()) {
+      sampleCollection
+          .apply(
+              MapElements.via(
+                  new SimpleFunction<KV<String, Map<String, String>>, String>() {
+                    @Override
+                    public String apply(KV<String, Map<String, String>> input) {
+                      return input.getKey();
+                    }
+                  }))
+          .apply(
+              TextIO.write()
+                  .to(options.getAllDatasetsInputPath() + "/sampled-points-debug.txt")
+                  .withSuffix(".txt")
+                  .withoutSharding());
+    }
+
+    // Load IndexRecords
+    PCollection<IndexRecord> indexRecordsCollection = loadIndexRecords(options, pipeline);
+
+    // Filter records with coordinates - we will join these to samples
+    PCollection<IndexRecord> recordsWithCoordinates =
+        indexRecordsCollection.apply(Filter.by(indexRecord -> hasCoordinates(indexRecord)));
+
+    if (options.getDebugCountsOnly()) {
+      recordsWithCoordinates
+          .apply(
+              MapElements.via(
+                  new SimpleFunction<IndexRecord, String>() {
+                    @Override
+                    public String apply(IndexRecord input) {
+                      return input.getLatLng();
+                    }
+                  }))
+          .apply(Distinct.create())
+          .apply(
+              TextIO.write()
+                  .to(options.getAllDatasetsInputPath() + "/index-records-unique-points.txt")
+                  .withSuffix(".txt")
+                  .withoutSharding());
+    }
+
+    PCollection<IndexRecord> recordsWithoutCoordinates =
+        indexRecordsCollection.apply(Filter.by(indexRecord -> !hasCoordinates(indexRecord)));
+
+    // Convert to KV <LatLng, IndexRecord>
     PCollection<KV<String, IndexRecord>> recordsWithCoordinatesKeyedLatng =
         recordsWithCoordinates.apply(
             MapElements.via(
@@ -94,37 +127,38 @@ public class IndexRecordToSolrIndexPipeline {
                   }
                 }));
 
-    // Co group
+    // Co group IndexRecords with coordinates with Sample data
     final TupleTag<IndexRecord> indexRecordTag = new TupleTag<>();
     final TupleTag<Map<String, String>> samplingTag = new TupleTag<>();
 
-    // partition records with and without valid lat/lng
     // Join collections by LatLng string
     PCollection<KV<String, CoGbkResult>> results =
-        KeyedPCollectionTuple.of(indexRecordTag, recordsWithCoordinatesKeyedLatng)
-            .and(samplingTag, sampleCollection)
+        KeyedPCollectionTuple.of(samplingTag, sampleCollection)
+            .and(indexRecordTag, recordsWithCoordinatesKeyedLatng)
             .apply(CoGroupByKey.create());
 
-    // Create LocationFeatureRecord collection which contains samples
+    // Create  collection which contains samples
     PCollection<IndexRecord> indexRecordsWithSampling =
         results.apply(
             ParDo.of(
                 new DoFn<KV<String, CoGbkResult>, IndexRecord>() {
                   @ProcessElement
                   public void processElement(ProcessContext c) {
+
                     KV<String, CoGbkResult> e = c.element();
-                    Iterable<IndexRecord> idIter = e.getValue().getAll(indexRecordTag);
+
                     Map<String, String> sampling = e.getValue().getOnly(samplingTag);
+                    Iterable<IndexRecord> idIter = e.getValue().getAll(indexRecordTag);
 
                     idIter.forEach(
                         indexRecord -> {
                           for (Map.Entry<String, String> sample : sampling.entrySet()) {
 
                             if (sample.getKey().startsWith("el")) {
-                              Map<String, Double> props = indexRecord.getDoubleProperties();
+                              Map<String, Double> props = indexRecord.getDoubles();
                               if (props == null) {
                                 props = new HashMap<String, Double>();
-                                indexRecord.setDoubleProperties(props);
+                                indexRecord.setDoubles(props);
                               }
                               try {
                                 if (Strings.isNotBlank(sample.getValue())) {
@@ -134,10 +168,10 @@ public class IndexRecordToSolrIndexPipeline {
                                 // do something for bad sample data
                               }
                             } else {
-                              Map<String, String> props = indexRecord.getStringProperties();
+                              Map<String, String> props = indexRecord.getStrings();
                               if (props == null) {
                                 props = new HashMap<String, String>();
-                                indexRecord.setStringProperties(props);
+                                indexRecord.setStrings(props);
                               }
                               if (Strings.isNotBlank(sample.getValue()))
                                 props.put(sample.getKey(), sample.getValue());
@@ -148,42 +182,80 @@ public class IndexRecordToSolrIndexPipeline {
                   }
                 }));
 
-    // Convert to SOLR docs
-    log.info("Adding step 4: SOLR indexing");
-    SolrIO.ConnectionConfiguration conn =
-        SolrIO.ConnectionConfiguration.create(options.getZkHost());
+    if (!options.getDebugCountsOnly()) {
 
-    // Map to SolrInputDocuments and Submit to SOLR
-    indexRecordsWithSampling
-        .apply(
-            MapElements.via(
-                new SimpleFunction<IndexRecord, SolrInputDocument>() {
-                  @Override
-                  public SolrInputDocument apply(IndexRecord input) {
-                    return ALASolrDocumentTransform.convertIndexRecordToSolrDoc(input);
-                  }
-                }))
-        .apply(
-            SolrIO.write()
-                .to(options.getSolrCollection())
-                .withConnectionConfiguration(conn)
-                .withMaxBatchSize(options.getSolrBatchSize()));
+      // Convert to SOLR docs
+      //      log.info("Adding step 4: SOLR indexing");
+      //      SolrIO.ConnectionConfiguration conn =
+      //          SolrIO.ConnectionConfiguration.create(options.getZkHost());
 
-    // Index records without coordinates
-    recordsWithoutCoordinates
-        .apply(
-            MapElements.via(
-                new SimpleFunction<IndexRecord, SolrInputDocument>() {
-                  @Override
-                  public SolrInputDocument apply(IndexRecord input) {
-                    return ALASolrDocumentTransform.convertIndexRecordToSolrDoc(input);
-                  }
-                }))
-        .apply(
-            SolrIO.write()
-                .to(options.getSolrCollection())
-                .withConnectionConfiguration(conn)
-                .withMaxBatchSize(options.getSolrBatchSize()));
+      //      // Map to SolrInputDocuments and Submit to SOLR
+      //      indexRecordsWithSampling
+      //          .apply(
+      //              MapElements.via(
+      //                  new SimpleFunction<IndexRecord, SolrInputDocument>() {
+      //                    @Override
+      //                    public SolrInputDocument apply(IndexRecord input) {
+      //                      return ALASolrDocumentTransform.convertIndexRecordToSolrDoc(input);
+      //                    }
+      //                  }))
+      //          .apply(
+      //              SolrIO.write()
+      //                  .to(options.getSolrCollection())
+      //                  .withConnectionConfiguration(conn)
+      //                  .withMaxBatchSize(options.getSolrBatchSize()));
+
+      // Index records without coordinates
+      //      recordsWithoutCoordinates
+      //          .apply(
+      //              MapElements.via(
+      //                  new SimpleFunction<IndexRecord, SolrInputDocument>() {
+      //                    @Override
+      //                    public SolrInputDocument apply(IndexRecord input) {
+      //                      return ALASolrDocumentTransform.convertIndexRecordToSolrDoc(input);
+      //                    }
+      //                  }))
+      //          .apply(
+      //              SolrIO.write()
+      //                  .to(options.getSolrCollection())
+      //                  .withConnectionConfiguration(conn)
+      //                  .withMaxBatchSize(options.getSolrBatchSize()));
+    } else {
+
+      PCollection<Long> recordsWithoutCoordinatesCount =
+          recordsWithoutCoordinates.apply(Count.globally());
+
+      recordsWithoutCoordinatesCount
+          .apply(
+              MapElements.via(
+                  new SimpleFunction<Long, String>() {
+                    @Override
+                    public String apply(Long input) {
+                      return "recordsWithoutCoordinatesCount :" + input.toString();
+                    }
+                  }))
+          .apply(
+              TextIO.write()
+                  .to(options.getAllDatasetsInputPath() + "/recordsWithoutCoordinatesCount.txt")
+                  .withSuffix(".txt"));
+
+      PCollection<Long> recordsWithCoordinatesCount =
+          recordsWithCoordinates.apply(Count.globally());
+
+      recordsWithCoordinatesCount
+          .apply(
+              MapElements.via(
+                  new SimpleFunction<Long, String>() {
+                    @Override
+                    public String apply(Long input) {
+                      return "recordsWithCoordinatesCount :" + input.toString();
+                    }
+                  }))
+          .apply(
+              TextIO.write()
+                  .to(options.getAllDatasetsInputPath() + "/recordsWithCoordinatesCount.txt")
+                  .withSuffix(".txt"));
+    }
 
     pipeline.run(options).waitUntilFinish();
 
@@ -191,7 +263,7 @@ public class IndexRecordToSolrIndexPipeline {
   }
 
   /**
-   * Load image service records.
+   * Load index records from AVRO.
    *
    * @param options
    * @param p
@@ -201,17 +273,19 @@ public class IndexRecordToSolrIndexPipeline {
       ALASolrPipelineOptions options, Pipeline p) {
     return p.apply(
         AvroIO.read(IndexRecord.class)
-            .from(String.join("/", options.getAllDatasetsInputPath(), "index-record", "*.avro")));
+            .from(String.join("/", options.getAllDatasetsInputPath(), "index-record", "*/*.avro")));
   }
 
   private static PCollection<KV<String, Map<String, String>>> loadSamplingIntoPCollection(
       Pipeline pipeline, String samplingPath, FileSystem fs) {
 
+    // read the headers once
     final String[] columnHeaders = getColumnHeaders(fs, samplingPath);
 
-    // Read from download sampling CSV files
+    // Read from the downloaded sampling CSV files
     PCollection<String> lines = pipeline.apply(TextIO.read().from(samplingPath + "/*.csv"));
 
+    //    final CSVParser csvParser = new CSVParser();
     // Read in sampling from downloads CSV files, and key it on LatLng -> sampling
     return lines.apply(
         ParDo.of(
@@ -224,20 +298,20 @@ public class IndexRecordToSolrIndexPipeline {
                   // skip the header
                   if (!sampling.startsWith("latitude")) {
                     // need headers as a side input
-                    CSVReader csvReader = new CSVReader(new StringReader(sampling));
-                    String[] line = csvReader.readNext();
-                    // first two columns are latitude,longitude
-                    for (int i = 2; i < columnHeaders.length; i++) {
-                      if (StringUtils.trimToNull(line[i]) != null) {
-                        parsedSampling.put(columnHeaders[i], line[i]);
+                    String[] line = sampling.split(",");
+                    if (line.length == columnHeaders.length) {
+
+                      // first two columns are latitude,longitude
+                      for (int i = 2; i < columnHeaders.length; i++) {
+                        if (StringUtils.trimToNull(line[i]) != null) {
+                          parsedSampling.put(columnHeaders[i], line[i]);
+                        }
                       }
+
+                      String latLng = line[0] + "," + line[1];
+                      KV<String, Map<String, String>> aur = KV.of(latLng, parsedSampling);
+                      out.output(aur);
                     }
-
-                    String latLng = line[0] + "," + line[1];
-                    KV<String, Map<String, String>> aur = KV.of(latLng, parsedSampling);
-
-                    out.output(aur);
-                    csvReader.close();
                   }
                 } catch (Exception e) {
                   throw new RuntimeException(e.getMessage());

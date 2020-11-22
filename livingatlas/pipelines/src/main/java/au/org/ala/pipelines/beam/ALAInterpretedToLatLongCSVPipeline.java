@@ -3,7 +3,6 @@ package au.org.ala.pipelines.beam;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
 import au.org.ala.pipelines.options.AllDatasetsPipelinesOptions;
-import au.org.ala.pipelines.transforms.ALACSVDocumentTransform;
 import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
@@ -14,12 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.TextIO;
-import org.apache.beam.sdk.transforms.Distinct;
-import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.transforms.join.CoGbkResult;
-import org.apache.beam.sdk.transforms.join.CoGroupByKey;
-import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
-import org.apache.beam.sdk.values.KV;
+import org.apache.beam.sdk.transforms.*;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.hadoop.fs.FileSystem;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
@@ -68,18 +62,18 @@ public class ALAInterpretedToLatLongCSVPipeline {
     LocationTransform locationTransform = LocationTransform.builder().create();
 
     log.info("Adding step 3: Creating beam pipeline");
-    PCollection<KV<String, LocationRecord>> locationCollection =
+    PCollection<String> locationCollection =
         p.apply("Read Location", locationTransform.read(pathFn))
-            .apply("Map Location to KV", locationTransform.toKv());
-
-    log.info("Adding step 3: Converting into a CSV object");
-    ParDo.SingleOutput<KV<String, CoGbkResult>, String> alaCSVrDoFn =
-        ALACSVDocumentTransform.create(locationTransform.getTag()).converter();
-
-    PCollection<String> csvCollection =
-        KeyedPCollectionTuple.of(locationTransform.getTag(), locationCollection)
-            .apply("Grouping objects", CoGroupByKey.create())
-            .apply("Merging to CSV doc", alaCSVrDoFn);
+            .apply(Filter.by(lr -> lr.getHasCoordinate()))
+            .apply(
+                MapElements.via(
+                    new SimpleFunction<LocationRecord, String>() {
+                      @Override
+                      public String apply(LocationRecord input) {
+                        return input.getDecimalLatitude() + "," + input.getDecimalLongitude();
+                      }
+                    }))
+            .apply(Distinct.create());
 
     String outputPath = PathBuilder.buildDatasetAttemptPath(options, "latlng", false);
 
@@ -90,7 +84,7 @@ public class ALAInterpretedToLatLongCSVPipeline {
             .getFs(options.getTargetPath());
     ALAFsUtils.createDirectory(fs, outputPath);
 
-    csvCollection.apply(Distinct.create()).apply(TextIO.write().to(outputPath + "/latlong.csv"));
+    locationCollection.apply(TextIO.write().to(outputPath + "/latlong.csv"));
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();

@@ -275,8 +275,13 @@ public class ALAInterpretedToSolrIndexPipeline {
           .apply("", ParDo.of(new ALASolrDocumentTransform.SolrInputDocumentToIndexRecordFcn()))
           .apply(
               AvroIO.write(IndexRecord.class)
-                  .to(options.getAllDatasetsInputPath() + "/index-record/index-record")
-                  .withSuffix("-" + options.getDatasetId() + ".avro")
+                  .to(
+                      options.getAllDatasetsInputPath()
+                          + "/index-record/"
+                          + options.getDatasetId()
+                          + "/"
+                          + options.getDatasetId())
+                  .withSuffix(".avro")
                   .withCodec(BASE_CODEC));
     }
 
