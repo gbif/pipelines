@@ -22,6 +22,7 @@ import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.IndexRecord;
 import org.gbif.pipelines.io.avro.SampleRecord;
+import org.joda.time.Duration;
 import org.slf4j.MDC;
 
 @Slf4j
@@ -162,7 +163,9 @@ public class IndexRecordToSolrIndexPipeline {
               SolrIO.write()
                   .to(options.getSolrCollection())
                   .withConnectionConfiguration(conn)
-                  .withMaxBatchSize(options.getSolrBatchSize()));
+                  .withMaxBatchSize(options.getSolrBatchSize())
+                  .withRetryConfiguration(
+                      SolrIO.RetryConfiguration.create(10, Duration.standardMinutes(3))));
 
       recordsWithoutCoordinates
           .apply(
@@ -172,7 +175,9 @@ public class IndexRecordToSolrIndexPipeline {
               SolrIO.write()
                   .to(options.getSolrCollection())
                   .withConnectionConfiguration(conn)
-                  .withMaxBatchSize(options.getSolrBatchSize()));
+                  .withMaxBatchSize(options.getSolrBatchSize())
+                  .withRetryConfiguration(
+                      SolrIO.RetryConfiguration.create(10, Duration.standardMinutes(3))));
 
     } else {
       // write to AVRO file instead....
