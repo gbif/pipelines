@@ -43,11 +43,8 @@ public class SamplesToAvro {
     RemoteIterator<LocatedFileStatus> iter =
         fs.listFiles(new Path(options.getAllDatasetsInputPath() + "/sampling/downloads"), false);
 
-    int counter = 0;
-
     while (iter.hasNext()) {
 
-      counter++;
       LocatedFileStatus fileStatus = iter.next();
 
       if (fileStatus.getPath().getName().endsWith(".csv")) {
