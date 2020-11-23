@@ -548,6 +548,16 @@ public class ALASolrDocumentTransform implements Serializable {
     }
   }
 
+  public static class IndexRecordToSolrInputDocumentFcn
+      extends DoFn<IndexRecord, SolrInputDocument> {
+    @ProcessElement
+    public void processElement(
+        @Element IndexRecord indexRecord, OutputReceiver<SolrInputDocument> out) {
+      SolrInputDocument solrInputDocument = convertIndexRecordToSolrDoc(indexRecord);
+      out.output(solrInputDocument);
+    }
+  }
+
   public static SolrInputDocument convertIndexRecordToSolrDoc(IndexRecord indexRecord) {
     SolrInputDocument doc = new SolrInputDocument();
 
