@@ -625,8 +625,7 @@ public class ALASolrDocumentTransform implements Serializable {
                   }
                 }
               }
-            }
-          );
+            });
     return builder.build();
   }
 }
