@@ -20,10 +20,10 @@ import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.common.PipelinesVariables;
+import org.gbif.pipelines.core.functions.SerializableConsumer;
+import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.core.interpreters.core.TaxonomyInterpreter;
 import org.gbif.pipelines.io.avro.*;
-import org.gbif.pipelines.transforms.SerializableConsumer;
-import org.gbif.pipelines.transforms.SerializableSupplier;
 import org.gbif.pipelines.transforms.Transform;
 
 /**

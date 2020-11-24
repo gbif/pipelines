@@ -12,8 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.cache.KeyValueCache;
 import org.gbif.kvs.hbase.Command;
-import org.gbif.pipelines.parsers.config.model.WsConfig;
-import org.gbif.pipelines.transforms.SerializableSupplier;
+import org.gbif.pipelines.core.config.model.WsConfig;
+import org.gbif.pipelines.core.functions.SerializableSupplier;
 
 @Slf4j
 public class SDSReportKVStoreFactory {
@@ -48,7 +48,7 @@ public class SDSReportKVStoreFactory {
   public static KeyValueStore<SensitivityQuery, SensitivityReport> create(ALAPipelinesConfig config)
       throws IOException {
     WsConfig ws = config.getSds();
-    ClientConfiguration clientConfiguration = WsUtils.createConfiguration(ws, config);
+    ClientConfiguration clientConfiguration = WsUtils.createConfiguration(ws);
 
     ALASDSServiceClient wsClient = new ALASDSServiceClient(clientConfiguration);
     Command closeHandler =

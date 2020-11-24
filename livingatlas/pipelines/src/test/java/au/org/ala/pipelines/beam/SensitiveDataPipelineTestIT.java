@@ -2,7 +2,6 @@ package au.org.ala.pipelines.beam;
 
 import static org.junit.Assert.*;
 
-import au.org.ala.pipelines.options.ALASolrPipelineOptions;
 import au.org.ala.pipelines.options.UUIDPipelineOptions;
 import au.org.ala.util.TestUtils;
 import au.org.ala.utils.ValidationUtils;
@@ -169,7 +168,7 @@ public class SensitiveDataPipelineTestIT {
     // sensitive data
     InterpretationPipelineOptions sensitiveOptions =
         PipelinesOptionsFactory.create(
-            ALASolrPipelineOptions.class,
+            InterpretationPipelineOptions.class,
             new String[] {
               "--datasetId=" + datasetID,
               "--attempt=1",

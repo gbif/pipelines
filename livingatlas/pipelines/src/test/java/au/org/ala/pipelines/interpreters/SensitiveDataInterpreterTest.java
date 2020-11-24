@@ -9,7 +9,6 @@ import au.org.ala.sds.generalise.*;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import org.apache.avro.Schema;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;

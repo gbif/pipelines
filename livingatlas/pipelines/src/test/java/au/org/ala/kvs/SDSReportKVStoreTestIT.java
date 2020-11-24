@@ -3,6 +3,7 @@ package au.org.ala.kvs;
 import static org.junit.Assert.*;
 
 import au.org.ala.kvs.cache.SDSReportKVStoreFactory;
+import au.org.ala.sds.api.SensitivityInstance;
 import au.org.ala.sds.api.SensitivityQuery;
 import au.org.ala.sds.api.SensitivityReport;
 import au.org.ala.util.TestUtils;
@@ -34,12 +35,18 @@ public class SDSReportKVStoreTestIT {
     SensitivityQuery lookup =
         SensitivityQuery.builder()
             .scientificName("Amanita walpolei")
-            .stateProvince("New South Wales")
+            .stateProvince("Western Australia")
             .build();
     SensitivityReport result = this.kvs.get(lookup);
     assertNotNull(result);
     assertTrue(result.isSensitive());
-    assertEquals("", result.getReport().getCategory());
+    assertNull(result.getReport().getCategory());
+    assertNotNull(result.getReport().getTaxon());
+    assertNotNull(result.getReport().getTaxon().getInstances());
+    assertEquals(1, result.getReport().getTaxon().getInstances().size());
+    assertEquals(
+        SensitivityInstance.SensitivityType.CONSERVATION,
+        result.getReport().getTaxon().getInstances().get(0).getType());
   }
 
   /** Test for an invalid response */

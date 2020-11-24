@@ -27,8 +27,6 @@ import org.gbif.pipelines.core.functions.SerializableConsumer;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.core.interpreters.core.TaxonomyInterpreter;
 import org.gbif.pipelines.io.avro.*;
-import org.gbif.pipelines.transforms.SerializableConsumer;
-import org.gbif.pipelines.transforms.SerializableSupplier;
 import org.gbif.pipelines.transforms.Transform;
 
 /**

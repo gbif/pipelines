@@ -3,6 +3,7 @@ package org.gbif.pipelines.transforms;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.UnaryOperator;
+import lombok.Getter;
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.beam.sdk.io.AvroIO;
@@ -33,8 +34,7 @@ public abstract class Transform<R, T extends SpecificRecordBase> extends DoFn<R,
   private final InterpretationType recordType;
   private final String baseName;
   private final String baseInvalidName;
-  @Getter
-  private final Class<T> clazz;
+  @Getter private final Class<T> clazz;
   private final String counterName;
 
   private Counter counter;
