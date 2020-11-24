@@ -59,8 +59,9 @@ public class TemporalRangeParser implements Serializable {
       OccurrenceParseResult<TemporalAccessor> result = temporalParser.parseRecordedDate(rawDate);
       if (result.isSuccessful()) {
         Optional<TemporalAccessor> payload = Optional.ofNullable(result.getPayload());
-        if (payload.isPresent() && range.getFrom().isPresent()) {
-          TemporalAccessor from = range.getFrom().get();
+        Optional<TemporalAccessor> rangeFrom = range.getFrom();
+        if (payload.isPresent() && rangeFrom.isPresent()) {
+          TemporalAccessor from = rangeFrom.get();
           TemporalAccessor to = payload.get();
           if (from.getClass() == to.getClass() && isValidRange((Temporal) from, (Temporal) to)) {
             range.setTo(to);
