@@ -3,7 +3,6 @@ package org.gbif.converters.parser.xml.identifier;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.StringJoiner;
-
 import javax.annotation.Nullable;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -55,8 +54,11 @@ public class OccurrenceKeyHelper {
   }
 
   @Nullable
-  public static String buildUnscopedKey(@Nullable PublisherProvidedUniqueIdentifier pubProvidedUniqueId) {
-    return pubProvidedUniqueId == null ? null : pubProvidedUniqueId.getPublisherProvidedIdentifier();
+  public static String buildUnscopedKey(
+      @Nullable PublisherProvidedUniqueIdentifier pubProvidedUniqueId) {
+    return pubProvidedUniqueId == null
+        ? null
+        : pubProvidedUniqueId.getPublisherProvidedIdentifier();
   }
 
   @Nullable
@@ -97,7 +99,8 @@ public class OccurrenceKeyHelper {
 
   private static String join(String delim, String... values) {
     StringJoiner joiner = new StringJoiner(delim);
-    Arrays.stream(values).forEach(x -> Optional.ofNullable(x).filter(f -> !f.isEmpty()).ifPresent(joiner::add));
+    Arrays.stream(values)
+        .forEach(x -> Optional.ofNullable(x).filter(f -> !f.isEmpty()).ifPresent(joiner::add));
     return joiner.toString();
   }
 }

@@ -1,0 +1,66 @@
+package org.gbif.pipelines.ingest.pipelines.utils;
+
+import java.io.IOException;
+import java.util.Properties;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.http.HttpHost;
+import org.elasticsearch.client.RestClient;
+import org.gbif.pipelines.estools.client.EsClient;
+import org.gbif.pipelines.estools.client.EsConfig;
+import org.junit.rules.ExternalResource;
+import org.testcontainers.elasticsearch.ElasticsearchContainer;
+
+/**
+ * ES server used for testing purposes.
+ *
+ * <p>This class is intended to be used as a {@link org.junit.ClassRule}.
+ */
+@Slf4j
+@Getter
+public class EsServer extends ExternalResource {
+
+  private ElasticsearchContainer embeddedElastic;
+  private EsConfig esConfig;
+  private RestClient restClient;
+  private EsClient esClient;
+
+  @Override
+  protected void before() throws Throwable {
+    embeddedElastic =
+        new ElasticsearchContainer(
+            "docker.elastic.co/elasticsearch/elasticsearch:" + getEsVersion());
+
+    embeddedElastic.start();
+
+    esConfig = EsConfig.from(getServerAddress());
+    restClient = buildRestClient();
+    esClient = EsClient.from(esConfig);
+  }
+
+  @Override
+  protected void after() {
+    embeddedElastic.stop();
+    esClient.close();
+    try {
+      restClient.close();
+    } catch (IOException e) {
+      log.error("Could not close rest client for testing", e);
+    }
+  }
+
+  private RestClient buildRestClient() {
+    HttpHost host = new HttpHost("localhost", embeddedElastic.getMappedPort(9200));
+    return RestClient.builder(host).build();
+  }
+
+  public String getServerAddress() {
+    return "http://localhost:" + embeddedElastic.getMappedPort(9200);
+  }
+
+  private String getEsVersion() throws IOException {
+    Properties properties = new Properties();
+    properties.load(this.getClass().getClassLoader().getResourceAsStream("maven.properties"));
+    return properties.getProperty("elasticsearch.version");
+  }
+}

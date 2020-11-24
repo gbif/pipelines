@@ -13,6 +13,7 @@ import au.org.ala.pipelines.transforms.ALASensitiveDataApplicationTransform;
 import au.org.ala.pipelines.transforms.ALASensitiveDataRecordTransform;
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
 import au.org.ala.pipelines.transforms.ALAUUIDTransform;
+import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import java.io.IOException;
@@ -53,6 +54,7 @@ public class ALAInterpretedToSensitivePipeline {
   public static final boolean USE_GBIF_TAXONOMY = false;
 
   public static void main(String[] args) throws IOException {
+    VersionInfo.print();
     String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "sensitive");
     InterpretationPipelineOptions options =
         PipelinesOptionsFactory.createInterpretation(combinedArgs);
@@ -73,8 +75,7 @@ public class ALAInterpretedToSensitivePipeline {
 
     log.info("Adding step 1: Options");
     UnaryOperator<String> inputPathFn =
-        t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
-    //    * "{targetPath}/{datasetId}/{attempt}/generalised/{name}/interpret-{uniqueId}"
+        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
     UnaryOperator<String> outputPathFn =
         t -> ALAFsUtils.buildPathGeneralisedUsingTargetPath(options, t, id);
     UnaryOperator<String> identifiersPathFn =
@@ -85,7 +86,7 @@ public class ALAInterpretedToSensitivePipeline {
     log.info("Adding step 2: Creating transformations");
     // Core
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
-    TemporalTransform temporalTransform = TemporalTransform.create();
+    TemporalTransform temporalTransform = TemporalTransform.builder().create();
     LocationTransform locationTransform = LocationTransform.builder().create();
     TaxonomyTransform taxonomyTransform = TaxonomyTransform.builder().create();
 

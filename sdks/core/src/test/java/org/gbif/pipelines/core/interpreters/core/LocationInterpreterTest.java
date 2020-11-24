@@ -1,30 +1,5 @@
 package org.gbif.pipelines.core.interpreters.core;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import org.gbif.api.vocabulary.Country;
-import org.gbif.api.vocabulary.OccurrenceIssue;
-import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.kvs.KeyValueStore;
-import org.gbif.kvs.geocode.LatLng;
-import org.gbif.pipelines.core.Interpretation;
-import org.gbif.pipelines.core.interpreters.KeyValueTestStore;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.IssueRecord;
-import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.parsers.parsers.location.GeocodeKvStore;
-import org.gbif.rest.client.geocode.GeocodeResponse;
-import org.gbif.rest.client.geocode.Location;
-
-import org.junit.Test;
-
 import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_ROUNDED;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_DERIVED_FROM_COORDINATES;
@@ -37,6 +12,29 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.OccurrenceIssue;
+import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.kvs.KeyValueStore;
+import org.gbif.kvs.geocode.LatLng;
+import org.gbif.pipelines.core.interpreters.Interpretation;
+import org.gbif.pipelines.core.interpreters.KeyValueTestStore;
+import org.gbif.pipelines.core.parsers.location.GeocodeKvStore;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.IssueRecord;
+import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.rest.client.geocode.GeocodeResponse;
+import org.gbif.rest.client.geocode.Location;
+import org.junit.Test;
 
 public class LocationInterpreterTest {
 
@@ -62,8 +60,13 @@ public class LocationInterpreterTest {
     return new GeocodeResponse(Collections.singletonList(location));
   }
 
-  private static ExtendedRecord createEr(String country, String countryCode, String verbatimLatitude,
-      String verbatimLongitude, String decimalLatitude, String decimalLongitude) {
+  private static ExtendedRecord createEr(
+      String country,
+      String countryCode,
+      String verbatimLatitude,
+      String verbatimLongitude,
+      String decimalLatitude,
+      String decimalLongitude) {
 
     Map<String, String> coreMap = new HashMap<>();
     coreMap.put(DwcTerm.country.qualifiedName(), country);
@@ -75,24 +78,27 @@ public class LocationInterpreterTest {
     return ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
   }
 
-  private static LocationRecord createLr(Country country, Double decimalLatitude, Double decimalLongitude,
-      OccurrenceIssue... issues) {
+  private static LocationRecord createLr(
+      Country country, Double decimalLatitude, Double decimalLongitude, OccurrenceIssue... issues) {
 
     List<String> issueList =
-        issues.length > 0 ? Arrays.stream(issues).map(OccurrenceIssue::name).collect(Collectors.toList()) :
-            Collections.emptyList();
+        issues.length > 0
+            ? Arrays.stream(issues).map(OccurrenceIssue::name).collect(Collectors.toList())
+            : Collections.emptyList();
 
     boolean hasCoordinate = decimalLatitude != null && decimalLongitude != null;
 
-    LocationRecord record = LocationRecord.newBuilder()
-        .setId(ID)
-        .setCountry(Optional.ofNullable(country).map(Country::getTitle).orElse(null))
-        .setCountryCode(Optional.ofNullable(country).map(Country::getIso2LetterCode).orElse(null))
-        .setDecimalLatitude(decimalLatitude)
-        .setDecimalLongitude(decimalLongitude)
-        .setHasCoordinate(hasCoordinate)
-        .setIssues(IssueRecord.newBuilder().setIssueList(issueList).build())
-        .build();
+    LocationRecord record =
+        LocationRecord.newBuilder()
+            .setId(ID)
+            .setCountry(Optional.ofNullable(country).map(Country::getTitle).orElse(null))
+            .setCountryCode(
+                Optional.ofNullable(country).map(Country::getIso2LetterCode).orElse(null))
+            .setDecimalLatitude(decimalLatitude)
+            .setDecimalLongitude(decimalLongitude)
+            .setHasCoordinate(hasCoordinate)
+            .setIssues(IssueRecord.newBuilder().setIssueList(issueList).build())
+            .build();
 
     record.setHasGeospatialIssue(hasGeospatialIssues(record));
 
@@ -104,7 +110,8 @@ public class LocationInterpreterTest {
     return Interpretation.from(source)
         .to(er -> LocationRecord.newBuilder().setId(er.getId()).build())
         .via(LocationInterpreter.interpretCountryAndCoordinates(KEY_VALUE_STORE, mdr))
-        .get().orElse(null);
+        .getOfNullable()
+        .orElse(null);
   }
 
   @Test
@@ -113,70 +120,11 @@ public class LocationInterpreterTest {
     // State
     ExtendedRecord source = createEr("Brazil", null, null, null, "-2.7527778", "-58.653057");
     LocationRecord expected =
-        createLr(Country.BRAZIL, -2.752778d, -58.653057d, COORDINATE_ROUNDED, GEODETIC_DATUM_ASSUMED_WGS84);
-
-    // When
-    LocationRecord result = interpret(source);
-
-    // Should
-    assertEquals(expected, result);
-
-  }
-
-  @Test
-  public void issueDatumBrazilTest() {
-
-    // State
-    ExtendedRecord source = createEr("Brazil", null, null, null, "-6.623889", "-45.869164");
-    LocationRecord expected = createLr(Country.BRAZIL, -6.623889d, -45.869164d, GEODETIC_DATUM_ASSUMED_WGS84);
-
-    // When
-    LocationRecord result = interpret(source);
-
-    // Should
-    assertEquals(expected, result);
-
-  }
-
-  @Test
-  public void issueDatumUsTest() {
-
-    // State
-    ExtendedRecord source = createEr("United States", null, "34.695450000000001", "-94.658360000000002", null, null);
-    LocationRecord expected = createLr(Country.UNITED_STATES, 34.69545d, -94.65836d, GEODETIC_DATUM_ASSUMED_WGS84);
-
-    // When
-    LocationRecord result = interpret(source);
-
-    // Should
-    assertEquals(expected, result);
-
-  }
-
-  @Test
-  public void issueDatumAndNegatedUsTest() {
-
-    // State
-    ExtendedRecord source = createEr("United States", null, "35.8913528", "99.721924999999999", null, null);
-    LocationRecord expected =
-        createLr(Country.UNITED_STATES, 35.891353d, -99.721925d, COORDINATE_ROUNDED, GEODETIC_DATUM_ASSUMED_WGS84,
-            PRESUMED_NEGATED_LONGITUDE);
-
-    // When
-    LocationRecord result = interpret(source);
-
-    // Should
-    assertEquals(expected, result);
-
-  }
-
-  @Test
-  public void issueCountryFromCoordinateTest() {
-
-    // State
-    ExtendedRecord source = createEr(null, null, "15° 57' 30\" N", "85° 54' 30\" W", "15.9583333333", "-85.9083333333");
-    LocationRecord expected =
-        createLr(Country.HONDURAS, 15.958333d, -85.908333d, COORDINATE_ROUNDED, COUNTRY_DERIVED_FROM_COORDINATES,
+        createLr(
+            Country.BRAZIL,
+            -2.752778d,
+            -58.653057d,
+            COORDINATE_ROUNDED,
             GEODETIC_DATUM_ASSUMED_WGS84);
 
     // When
@@ -184,7 +132,81 @@ public class LocationInterpreterTest {
 
     // Should
     assertEquals(expected, result);
+  }
 
+  @Test
+  public void issueDatumBrazilTest() {
+
+    // State
+    ExtendedRecord source = createEr("Brazil", null, null, null, "-6.623889", "-45.869164");
+    LocationRecord expected =
+        createLr(Country.BRAZIL, -6.623889d, -45.869164d, GEODETIC_DATUM_ASSUMED_WGS84);
+
+    // When
+    LocationRecord result = interpret(source);
+
+    // Should
+    assertEquals(expected, result);
+  }
+
+  @Test
+  public void issueDatumUsTest() {
+
+    // State
+    ExtendedRecord source =
+        createEr("United States", null, "34.695450000000001", "-94.658360000000002", null, null);
+    LocationRecord expected =
+        createLr(Country.UNITED_STATES, 34.69545d, -94.65836d, GEODETIC_DATUM_ASSUMED_WGS84);
+
+    // When
+    LocationRecord result = interpret(source);
+
+    // Should
+    assertEquals(expected, result);
+  }
+
+  @Test
+  public void issueDatumAndNegatedUsTest() {
+
+    // State
+    ExtendedRecord source =
+        createEr("United States", null, "35.8913528", "99.721924999999999", null, null);
+    LocationRecord expected =
+        createLr(
+            Country.UNITED_STATES,
+            35.891353d,
+            -99.721925d,
+            COORDINATE_ROUNDED,
+            GEODETIC_DATUM_ASSUMED_WGS84,
+            PRESUMED_NEGATED_LONGITUDE);
+
+    // When
+    LocationRecord result = interpret(source);
+
+    // Should
+    assertEquals(expected, result);
+  }
+
+  @Test
+  public void issueCountryFromCoordinateTest() {
+
+    // State
+    ExtendedRecord source =
+        createEr(null, null, "15° 57' 30\" N", "85° 54' 30\" W", "15.9583333333", "-85.9083333333");
+    LocationRecord expected =
+        createLr(
+            Country.HONDURAS,
+            15.958333d,
+            -85.908333d,
+            COORDINATE_ROUNDED,
+            COUNTRY_DERIVED_FROM_COORDINATES,
+            GEODETIC_DATUM_ASSUMED_WGS84);
+
+    // When
+    LocationRecord result = interpret(source);
+
+    // Should
+    assertEquals(expected, result);
   }
 
   @Test
@@ -199,7 +221,6 @@ public class LocationInterpreterTest {
 
     // Should
     assertEquals(expected, result);
-
   }
 
   @Test
@@ -214,7 +235,6 @@ public class LocationInterpreterTest {
 
     // Should
     assertEquals(expected, result);
-
   }
 
   @Test
@@ -222,7 +242,8 @@ public class LocationInterpreterTest {
 
     // State
     ExtendedRecord source =
-        createEr(null, null, "15 7 3.677 N ; 15 6 37.801 N", "92 6 8.069 W ; 92 6 33.832 W", null, null);
+        createEr(
+            null, null, "15 7 3.677 N ; 15 6 37.801 N", "92 6 8.069 W ; 92 6 33.832 W", null, null);
     LocationRecord expected = createLr(null, null, null, COORDINATE_INVALID);
 
     // When
@@ -230,7 +251,6 @@ public class LocationInterpreterTest {
 
     // Should
     assertEquals(expected, result);
-
   }
 
   @Test
@@ -245,7 +265,6 @@ public class LocationInterpreterTest {
 
     // Should
     assertEquals(expected, result);
-
   }
 
   @Test
@@ -253,14 +272,14 @@ public class LocationInterpreterTest {
 
     // State
     ExtendedRecord source = createEr("Bolivia", null, "17 03  S", "066   W", null, null);
-    LocationRecord expected = createLr(Country.BOLIVIA, -17.05d, -66d, GEODETIC_DATUM_ASSUMED_WGS84);
+    LocationRecord expected =
+        createLr(Country.BOLIVIA, -17.05d, -66d, GEODETIC_DATUM_ASSUMED_WGS84);
 
     // When
     LocationRecord result = interpret(source);
 
     // Should
     assertEquals(expected, result);
-
   }
 
   @Test
@@ -268,23 +287,27 @@ public class LocationInterpreterTest {
 
     // State
     ExtendedRecord source = createEr("Indonesia", "ID", null, null, "110.279078", "-8.023319");
-    LocationRecord expected = createLr(Country.INDONESIA, -8.023319, 110.279078, GEODETIC_DATUM_ASSUMED_WGS84, PRESUMED_SWAPPED_COORDINATE);
+    LocationRecord expected =
+        createLr(
+            Country.INDONESIA,
+            -8.023319,
+            110.279078,
+            GEODETIC_DATUM_ASSUMED_WGS84,
+            PRESUMED_SWAPPED_COORDINATE);
 
     // When
     LocationRecord result = interpret(source);
 
     // Should
     assertEquals(expected, result);
-
   }
-
 
   @Test
   public void nullAwareValues() {
     // State
     ExtendedRecord er = new ExtendedRecord();
     er.setId(ID);
-    Map<String,String> coreTerms = new HashMap<>();
+    Map<String, String> coreTerms = new HashMap<>();
     coreTerms.put(DwcTerm.maximumDepthInMeters.qualifiedName(), "NuLL");
     coreTerms.put(DwcTerm.minimumDepthInMeters.qualifiedName(), "null");
     coreTerms.put(DwcTerm.minimumElevationInMeters.qualifiedName(), "10");
@@ -296,10 +319,9 @@ public class LocationInterpreterTest {
     LocationInterpreter.interpretDepth(er, lr);
     LocationInterpreter.interpretElevation(er, lr);
 
-    //Should
+    // Should
     assertNull(lr.getDepth());
     assertNotNull(lr.getElevation());
     assertTrue(lr.getIssues().getIssueList().isEmpty());
   }
-
 }

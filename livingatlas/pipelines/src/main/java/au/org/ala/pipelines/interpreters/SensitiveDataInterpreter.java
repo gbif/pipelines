@@ -20,8 +20,8 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.TermFactory;
 import org.gbif.kvs.KeyValueStore;
+import org.gbif.pipelines.core.utils.ModelUtils;
 import org.gbif.pipelines.io.avro.*;
-import org.gbif.pipelines.parsers.utils.ModelUtils;
 
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)

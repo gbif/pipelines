@@ -15,9 +15,8 @@
  */
 package org.gbif.converters.parser.xml.model;
 
-import java.io.Serializable;
-
 import com.google.common.base.Strings;
+import java.io.Serializable;
 import lombok.Getter;
 import lombok.Setter;
 

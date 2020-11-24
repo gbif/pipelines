@@ -18,8 +18,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
-import org.apache.spark.api.java.function.FilterFunction;
-import org.apache.spark.api.java.function.MapFunction;
 import org.apache.spark.sql.*;
 import scala.Tuple4;
 
@@ -33,7 +31,7 @@ import scala.Tuple4;
 @Parameters(separators = "=")
 public class MigrateUUIDPipeline implements Serializable {
 
-  @Parameter private final List<String> parameters = new ArrayList<String>();
+  @Parameter private final List<String> parameters = new ArrayList<>();
 
   @Parameter(
       names = "--inputPath",
@@ -86,25 +84,18 @@ public class MigrateUUIDPipeline implements Serializable {
     Dataset<Tuple4<String, String, String, String>> uuidRecords =
         dataset
             .filter(
-                new FilterFunction<Row>() {
-                  @Override
-                  public boolean call(Row row) throws Exception {
-                    return StringUtils.isNotEmpty(row.getString(0))
+                row ->
+                    StringUtils.isNotEmpty(row.getString(0))
                         && row.getString(0).contains("|")
-                        && row.getString(0).startsWith("dr");
-                  }
-                })
+                        && row.getString(0).startsWith("dr"))
             .map(
-                new MapFunction<Row, Tuple4<String, String, String, String>>() {
-                  @Override
-                  public Tuple4<String, String, String, String> call(Row row) throws Exception {
-                    String datasetID = row.getString(0).substring(0, row.getString(0).indexOf("|"));
-                    return Tuple4.apply(
-                        datasetID,
-                        "temp_" + datasetID + "_" + row.getString(1),
-                        row.getString(1),
-                        row.getString(0));
-                  }
+                row -> {
+                  String datasetID = row.getString(0).substring(0, row.getString(0).indexOf("|"));
+                  return Tuple4.apply(
+                      datasetID,
+                      "temp_" + datasetID + "_" + row.getString(1),
+                      row.getString(1),
+                      row.getString(0));
                 },
                 Encoders.tuple(
                     Encoders.STRING(), Encoders.STRING(), Encoders.STRING(), Encoders.STRING()));

@@ -1,8 +1,7 @@
 package org.gbif.converters.parser.xml.identifier;
 
-import java.util.UUID;
-
 import com.google.common.base.Preconditions;
+import java.util.UUID;
 import javax.annotation.Nullable;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -27,7 +26,8 @@ public class Triplet implements UniqueIdentifier {
   /**
    * Constructs the immutable triplet.
    *
-   * @throws IllegalArgumentException if institutionCode, collectionCode, or catalogNumber are null or empty
+   * @throws IllegalArgumentException if institutionCode, collectionCode, or catalogNumber are null
+   *     or empty
    * @throws NullPointerException if datasetKey is null
    */
   public Triplet(

@@ -1,11 +1,5 @@
 package org.gbif.pipelines.estools.service;
 
-import java.io.InputStream;
-import java.util.Map;
-import java.util.function.Predicate;
-
-import org.apache.http.HttpEntity;
-
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,11 +7,15 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.POJONode;
+import java.io.InputStream;
+import java.util.Map;
+import java.util.function.Predicate;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.HttpEntity;
 
 /**
  * Handler to work with JSON.
@@ -33,9 +31,12 @@ public final class JsonHandler {
   private static final ObjectReader READER = MAPPER.readerFor(Map.class);
 
   // Utility predicates to check if a node is a complex element
-  private static final Predicate<String> IS_OBJECT = value -> value.startsWith("{\"") && value.endsWith("}");
-  private static final Predicate<String> IS_ARRAY_ONE = value -> value.startsWith("[") && value.endsWith("]");
-  private static final Predicate<String> IS_ARRAY_TWO = value -> value.startsWith("[{") && value.endsWith("}]");
+  private static final Predicate<String> IS_OBJECT =
+      value -> value.startsWith("{\"") && value.endsWith("}");
+  private static final Predicate<String> IS_ARRAY_ONE =
+      value -> value.startsWith("[") && value.endsWith("]");
+  private static final Predicate<String> IS_ARRAY_TWO =
+      value -> value.startsWith("[{") && value.endsWith("}]");
   private static final Predicate<String> IS_VALID_JSON =
       value -> {
         try (JsonParser parser = MAPPER.getFactory().createParser(value)) {

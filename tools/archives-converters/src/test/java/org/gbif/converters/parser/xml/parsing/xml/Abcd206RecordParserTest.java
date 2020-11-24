@@ -1,15 +1,13 @@
 package org.gbif.converters.parser.xml.parsing.xml;
 
-import java.util.List;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
+import java.util.List;
 import org.gbif.converters.parser.xml.model.ImageRecord;
 import org.gbif.converters.parser.xml.model.RawOccurrenceRecord;
 import org.gbif.converters.parser.xml.model.TypificationRecord;
-
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 
 public class Abcd206RecordParserTest extends ParserTestCase {
 

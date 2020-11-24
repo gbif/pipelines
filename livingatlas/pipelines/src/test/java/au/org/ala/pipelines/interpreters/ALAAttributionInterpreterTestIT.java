@@ -34,14 +34,14 @@ public class ALAAttributionInterpreterTestIT {
   }
 
   @Test
-  public void testCollectionLookup() throws Exception {
+  public void testCollectionLookup() {
 
     KeyValueStore<ALACollectionLookup, ALACollectionMatch> kvs =
         ALACollectionKVStoreFactory.create(TestUtils.getConfig());
     BiConsumer<ExtendedRecord, ALAAttributionRecord> fcn =
         ALAAttributionInterpreter.interpretCodes(kvs);
 
-    Map<String, String> map = new HashMap<String, String>();
+    Map<String, String> map = new HashMap<>();
     map.put(DwcTerm.institutionCode.namespace() + DwcTerm.institutionCode.simpleName(), "CSIRO");
     map.put(DwcTerm.collectionCode.namespace() + DwcTerm.collectionCode.simpleName(), "ANIC");
 
@@ -53,14 +53,14 @@ public class ALAAttributionInterpreterTestIT {
   }
 
   @Test
-  public void testCollectionLookupBadValues() throws Exception {
+  public void testCollectionLookupBadValues() {
 
     KeyValueStore<ALACollectionLookup, ALACollectionMatch> kvs =
         ALACollectionKVStoreFactory.create(TestUtils.getConfig());
     BiConsumer<ExtendedRecord, ALAAttributionRecord> fcn =
         ALAAttributionInterpreter.interpretCodes(kvs);
 
-    Map<String, String> map = new HashMap<String, String>();
+    Map<String, String> map = new HashMap<>();
     map.put(DwcTerm.institutionCode.namespace() + DwcTerm.institutionCode.simpleName(), "ANIC");
     map.put(
         DwcTerm.collectionCode.namespace() + DwcTerm.collectionCode.simpleName(), "Insects$$%%%$$");

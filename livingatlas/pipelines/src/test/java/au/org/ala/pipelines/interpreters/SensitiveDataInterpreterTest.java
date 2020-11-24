@@ -9,13 +9,13 @@ import au.org.ala.sds.generalise.*;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.apache.avro.Schema;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.TermFactory;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.io.avro.*;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -60,7 +60,7 @@ public class SensitiveDataInterpreterTest {
           }
 
           @Override
-          public void close() throws IOException {}
+          public void close() {}
         };
     this.sensitivityMap = new HashMap<>();
     SpeciesCheck search =
@@ -202,11 +202,8 @@ public class SensitiveDataInterpreterTest {
         };
   }
 
-  @After
-  public void tearDown() throws Exception {}
-
   @Test
-  public void testConstructFields1() throws Exception {
+  public void testConstructFields1() {
     Map<String, String> map = new HashMap<>();
     map.put(DwcTerm.scientificName.qualifiedName(), "Acacia dealbata");
     map.put(DwcTerm.eventDate.qualifiedName(), "2020-01-01");
@@ -230,7 +227,7 @@ public class SensitiveDataInterpreterTest {
   }
 
   @Test
-  public void testConstructFields2() throws Exception {
+  public void testConstructFields2() {
     LocationRecord lr =
         LocationRecord.newBuilder()
             .setId("1")
@@ -259,7 +256,7 @@ public class SensitiveDataInterpreterTest {
   }
 
   @Test
-  public void testConstructFields3() throws Exception {
+  public void testConstructFields3() {
     Nomenclature nomenclature =
         Nomenclature.newBuilder()
             .setId("ICZN")
@@ -285,8 +282,7 @@ public class SensitiveDataInterpreterTest {
   }
 
   @Test
-  public void testConstructFields4() throws Exception {
-    String date = "2020-03-01";
+  public void testConstructFields4() {
     TemporalRecord tr =
         TemporalRecord.newBuilder()
             .setId("1")
@@ -303,7 +299,7 @@ public class SensitiveDataInterpreterTest {
   }
 
   @Test
-  public void testConstructFields5() throws Exception {
+  public void testConstructFields5() {
     ALATaxonRecord tr =
         ALATaxonRecord.newBuilder()
             .setId("1")
@@ -336,7 +332,7 @@ public class SensitiveDataInterpreterTest {
   }
 
   @Test
-  public void testApplySensitivity1() throws Exception {
+  public void testApplySensitivity1() {
     Map<String, String> map = new HashMap<>();
     map.put(DwcTerm.scientificName.qualifiedName(), "Acacia dealbata");
     map.put(DwcTerm.eventDate.qualifiedName(), "2020-01-01");
@@ -359,7 +355,7 @@ public class SensitiveDataInterpreterTest {
   }
 
   @Test
-  public void testApplySensitivity2() throws Exception {
+  public void testApplySensitivity2() {
     LocationRecord lr =
         LocationRecord.newBuilder()
             .setId("1")
@@ -386,7 +382,7 @@ public class SensitiveDataInterpreterTest {
   }
 
   @Test
-  public void testApplySensitivity3() throws Exception {
+  public void testApplySensitivity3() {
     Nomenclature nomenclature =
         Nomenclature.newBuilder()
             .setId("ICZN")
@@ -414,8 +410,7 @@ public class SensitiveDataInterpreterTest {
   }
 
   @Test
-  public void testApplySensitivity4() throws Exception {
-    String date = "2020-03-01";
+  public void testApplySensitivity4() {
     TemporalRecord tr =
         TemporalRecord.newBuilder()
             .setId("1")
@@ -441,7 +436,7 @@ public class SensitiveDataInterpreterTest {
   }
 
   @Test
-  public void testApplySensitivity5() throws Exception {
+  public void testApplySensitivity5() {
     ALATaxonRecord tr =
         ALATaxonRecord.newBuilder()
             .setId("1")
@@ -467,7 +462,7 @@ public class SensitiveDataInterpreterTest {
   }
 
   @Test
-  public void testSourceQualityChecks1() throws Exception {
+  public void testSourceQualityChecks1() {
     ALASensitivityRecord sr = ALASensitivityRecord.newBuilder().setId("1").build();
     Map<String, String> map = new HashMap<>();
     map.put(DwcTerm.scientificName.qualifiedName(), "Acacia dealbata");
@@ -485,7 +480,7 @@ public class SensitiveDataInterpreterTest {
   }
 
   @Test
-  public void testSourceQualityChecks2() throws Exception {
+  public void testSourceQualityChecks2() {
     ALASensitivityRecord sr = ALASensitivityRecord.newBuilder().setId("1").build();
     Map<String, String> map = new HashMap<>();
     map.put(DwcTerm.eventDate.simpleName(), "2020-01-01");
@@ -503,7 +498,7 @@ public class SensitiveDataInterpreterTest {
   }
 
   @Test
-  public void testSensitiveDataInterpreter1() throws Exception {
+  public void testSensitiveDataInterpreter1() {
     ALASensitivityRecord sr = ALASensitivityRecord.newBuilder().setId("1").build();
     Map<String, String> map = new HashMap<>();
     map.put(DwcTerm.scientificName.qualifiedName(), "Acacia dealbata");

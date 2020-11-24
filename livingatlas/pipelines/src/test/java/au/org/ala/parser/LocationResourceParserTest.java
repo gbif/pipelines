@@ -29,12 +29,12 @@ public class LocationResourceParserTest {
     boolean result =
         CountryCentrePoints.getInstance(alaConfig.getLocationInfoConfig())
             .coordinatesMatchCentre("AUSTRALIA", -25.733, 134.491);
-    Assert.assertEquals(false, result);
+    Assert.assertFalse(result);
 
     boolean result1 =
         CountryCentrePoints.getInstance(alaConfig.getLocationInfoConfig())
             .coordinatesMatchCentre("AUSTRALIA", -29.53, 145.4915);
-    Assert.assertEquals(true, result1);
+    Assert.assertTrue(result1);
   }
 
   @Test
@@ -53,12 +53,11 @@ public class LocationResourceParserTest {
   public void stateCentreMatchingTest() throws FileNotFoundException {
     CentrePoints centrePoints =
         StateProvinceCentrePoints.getInstance(alaConfig.getLocationInfoConfig());
-    Assert.assertEquals(false, centrePoints.coordinatesMatchCentre("UNSW", 10.1, 10.1));
-    Assert.assertEquals(
-        true, centrePoints.coordinatesMatchCentre("Northern Territory", -19.4914108, 132.5509603));
-    Assert.assertEquals(
-        true, centrePoints.coordinatesMatchCentre("Western Australia", -27.672817, 121.62831));
-    Assert.assertEquals(
-        true, centrePoints.coordinatesMatchCentre("Western Australia", -27.7, 121.6));
+    Assert.assertFalse(centrePoints.coordinatesMatchCentre("UNSW", 10.1, 10.1));
+    Assert.assertTrue(
+        centrePoints.coordinatesMatchCentre("Northern Territory", -19.4914108, 132.5509603));
+    Assert.assertTrue(
+        centrePoints.coordinatesMatchCentre("Western Australia", -27.672817, 121.62831));
+    Assert.assertTrue(centrePoints.coordinatesMatchCentre("Western Australia", -27.7, 121.6));
   }
 }

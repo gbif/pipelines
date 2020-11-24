@@ -3,76 +3,83 @@ package org.gbif.pipelines.core.io;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.NoSuchElementException;
-
+import java.util.function.Function;
+import lombok.extern.slf4j.Slf4j;
+import org.gbif.dwc.Archive;
 import org.gbif.dwc.DwcFiles;
+import org.gbif.dwc.record.Record;
 import org.gbif.dwc.record.StarRecord;
 import org.gbif.pipelines.core.converters.ExtendedRecordConverter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.utils.file.ClosableIterator;
 
-import lombok.extern.slf4j.Slf4j;
-
 /**
- * A utility class to simplify handling of DwC-A files using a local filesystem exposing data in Avro.
+ * A utility class to simplify handling of DwC-A files using a local filesystem exposing data in
+ * Avro.
  */
 @Slf4j
 public class DwcaReader implements Closeable {
 
-  private final ClosableIterator<StarRecord> starRecordsIt;
+  private final Function<Object, ExtendedRecord> convertFn;
+  private final ClosableIterator<?> iterator;
   private long recordsReturned;
   private ExtendedRecord current;
 
-  /**
-   * Creates a DwcaReader of a expanded archive.
-   */
+  /** Creates a DwcaReader of a expanded archive. */
   public static DwcaReader fromLocation(String path) throws IOException {
-    return new DwcaReader(DwcFiles.fromLocation(Paths.get(path)).iterator());
+    return new DwcaReader(DwcFiles.fromLocation(Paths.get(path)));
   }
 
   /**
    * Creates a DwcaReader for a compressed archive that it will be expanded in a working directory.
    */
   public static DwcaReader fromCompressed(String source, String workingDir) throws IOException {
-    return new DwcaReader(DwcFiles.fromCompressed(Paths.get(source), Paths.get(workingDir)).iterator());
+    return new DwcaReader(DwcFiles.fromCompressed(Paths.get(source), Paths.get(workingDir)));
   }
 
-  /**
-   * Creates and DwcaReader using a StarRecord iterator.
-   */
-  private DwcaReader(ClosableIterator<StarRecord> starRecordsIt) {
-    this.starRecordsIt = starRecordsIt;
+  /** Creates and DwcaReader using a StarRecord iterator. */
+  private DwcaReader(Archive archive) {
+    if (archive.getExtensions().isEmpty()) {
+      this.iterator = archive.getCore().iterator();
+      this.convertFn =
+          record -> ExtendedRecordConverter.from((Record) record, Collections.emptyMap());
+    } else {
+      this.iterator = archive.iterator();
+      this.convertFn =
+          record -> {
+            StarRecord starRecord = (StarRecord) record;
+            return ExtendedRecordConverter.from(starRecord.core(), starRecord.extensions());
+          };
+    }
   }
 
-  /**
-   * Has the archive more records?.
-   */
+  /** Has the archive more records?. */
   public boolean hasNext() {
-    return starRecordsIt.hasNext();
+    return iterator.hasNext();
   }
 
-  /**
-   * Read next element.
-   */
+  /** Read next element. */
   public boolean advance() {
-    if (!starRecordsIt.hasNext()) {
+    if (!iterator.hasNext()) {
       return false;
     }
-    StarRecord next = starRecordsIt.next();
     recordsReturned++;
     if (recordsReturned % 10_000 == 0) {
       log.info("Read [{}] records", recordsReturned);
     }
-    current = ExtendedRecordConverter.from(next);
+
+    current = convertFn.apply(iterator.next());
+
     return true;
   }
 
-  /**
-   * Gets the current extended record.
-   */
+  /** Gets the current extended record. */
   public ExtendedRecord getCurrent() {
     if (current == null) {
-      throw new NoSuchElementException( "No current record found (Hint: did you init() the reader?)");
+      throw new NoSuchElementException(
+          "No current record found (Hint: did you init() the reader?)");
     }
     return current;
   }
@@ -83,10 +90,10 @@ public class DwcaReader implements Closeable {
 
   @Override
   public void close() throws IOException {
-    if (starRecordsIt != null) {
+    if (iterator != null) {
       try {
         log.info("Closing DwC-A reader having read [{}] records", recordsReturned);
-        starRecordsIt.close();
+        iterator.close();
       } catch (Exception e) {
         throw new IOException(e);
       }

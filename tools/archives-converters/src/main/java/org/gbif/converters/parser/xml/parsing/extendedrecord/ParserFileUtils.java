@@ -3,13 +3,11 @@ package org.gbif.converters.parser.xml.parsing.extendedrecord;
 import java.io.File;
 import java.nio.file.Files;
 import java.util.function.BinaryOperator;
-
-import org.gbif.converters.parser.xml.ParsingException;
-
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.gbif.converters.parser.xml.ParsingException;
 
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -28,7 +26,8 @@ public class ParserFileUtils {
     // Check directory
     File inputFile = new File(inputPath);
     if (!inputFile.exists()) {
-      throw new ParsingException("Directory or file " + inputFile.getAbsolutePath() + " does not exist");
+      throw new ParsingException(
+          "Directory or file " + inputFile.getAbsolutePath() + " does not exist");
     }
 
     // Uncompress if it is a tar.xz

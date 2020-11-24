@@ -90,7 +90,7 @@ public class ALACollectoryServiceClient implements ALACollectoryService {
     clientBuilder.addInterceptor(
         chain -> {
           Request.Builder builder = chain.request().newBuilder();
-          headers.forEach((header, headerValue) -> builder.addHeader(header, headerValue));
+          headers.forEach(builder::addHeader);
           Request request = builder.build();
           return chain.proceed(request);
         });

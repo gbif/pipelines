@@ -11,11 +11,10 @@ import java.util.Map;
 import okhttp3.mockwebserver.MockWebServer;
 import org.apache.commons.io.FileUtils;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.ingest.java.io.AvroReader;
-import org.gbif.pipelines.ingest.options.DwcaPipelineOptions;
-import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
-import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
-import org.gbif.pipelines.ingest.pipelines.DwcaToVerbatimPipeline;
+import org.gbif.pipelines.common.beam.options.DwcaPipelineOptions;
+import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
+import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.core.io.AvroReader;
 import org.gbif.pipelines.io.avro.ALASensitivityRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
@@ -41,11 +40,7 @@ public class SensitiveDataPipelineTestIT {
     server.shutdown();
   }
 
-  /**
-   * Tests for SOLR index creation.
-   *
-   * @throws Exception
-   */
+  /** Tests for SOLR index creation. */
   @Test
   public void testSensitivePipeline() throws Exception {
 

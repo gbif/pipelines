@@ -19,13 +19,11 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
-import org.gbif.dwc.record.Record;
-import org.gbif.dwc.terms.DwcTerm;
-
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.gbif.dwc.record.Record;
+import org.gbif.dwc.terms.DwcTerm;
 
 /**
  * This is mostly cut and paste from synchronizer-gbif, intended as a place holder until this
@@ -108,9 +106,11 @@ public class RawOccurrenceRecord implements Serializable {
     this.county = dwcr.value(DwcTerm.county);
     this.dateIdentified = dwcr.value(DwcTerm.dateIdentified);
     this.latitude =
-        Optional.ofNullable(dwcr.value(DwcTerm.verbatimLatitude)).orElse(dwcr.value(DwcTerm.decimalLatitude));
+        Optional.ofNullable(dwcr.value(DwcTerm.verbatimLatitude))
+            .orElse(dwcr.value(DwcTerm.decimalLatitude));
     this.longitude =
-        Optional.ofNullable(dwcr.value(DwcTerm.verbatimLongitude)).orElse(dwcr.value(DwcTerm.decimalLongitude));
+        Optional.ofNullable(dwcr.value(DwcTerm.verbatimLongitude))
+            .orElse(dwcr.value(DwcTerm.decimalLongitude));
     this.geodeticDatum = dwcr.value(DwcTerm.geodeticDatum);
     this.family = dwcr.value(DwcTerm.family);
     this.scientificName = dwcr.value(DwcTerm.scientificName);
@@ -124,7 +124,8 @@ public class RawOccurrenceRecord implements Serializable {
     this.minAltitude = dwcr.value(DwcTerm.minimumElevationInMeters);
     this.order = dwcr.value(DwcTerm.order);
     this.phylum = dwcr.value(DwcTerm.phylum);
-    this.occurrenceDate = dwcr.value(DwcTerm.year) + '-' + dwcr.value(DwcTerm.month) + '-' + dwcr.value(DwcTerm.day);
+    this.occurrenceDate =
+        dwcr.value(DwcTerm.year) + '-' + dwcr.value(DwcTerm.month) + '-' + dwcr.value(DwcTerm.day);
     this.collectorsFieldNumber = dwcr.value(DwcTerm.recordNumber);
   }
 }

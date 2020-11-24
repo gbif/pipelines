@@ -3,11 +3,9 @@ package au.org.ala.pipelines.interpreters;
 import static org.junit.Assert.assertArrayEquals;
 
 import au.org.ala.pipelines.vocabulary.ALAOccurrenceIssue;
-import java.time.temporal.TemporalAccessor;
 import java.util.HashMap;
 import java.util.Map;
 import org.gbif.api.vocabulary.OccurrenceIssue;
-import org.gbif.common.parsers.core.OccurrenceParseResult;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.interpreters.core.TemporalInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -25,7 +23,15 @@ public class AlaTemporalInterpreterTest {
     map.put(DwcTerm.eventDate.qualifiedName(), "");
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
     TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
-    ALATemporalInterpreter.interpretTemporal(er, tr);
+
+    TemporalInterpreter temporalInterpreter = TemporalInterpreter.builder().create();
+    temporalInterpreter.interpretTemporal(er, tr);
+    temporalInterpreter.interpretDateIdentified(er, tr);
+    temporalInterpreter.interpretModified(er, tr);
+    ALATemporalInterpreter.checkRecordDateQuality(er, tr);
+    ALATemporalInterpreter.checkDateIdentified(er, tr);
+    ALATemporalInterpreter.checkGeoreferencedDate(er, tr);
+
     assertArrayEquals(
         tr.getIssues().getIssueList().toArray(),
         new String[] {ALAOccurrenceIssue.MISSING_COLLECTION_DATE.name()});
@@ -37,7 +43,13 @@ public class AlaTemporalInterpreterTest {
     er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
     tr = TemporalRecord.newBuilder().setId("1").build();
 
-    ALATemporalInterpreter.interpretTemporal(er, tr);
+    temporalInterpreter.interpretTemporal(er, tr);
+    temporalInterpreter.interpretDateIdentified(er, tr);
+    temporalInterpreter.interpretModified(er, tr);
+    ALATemporalInterpreter.checkRecordDateQuality(er, tr);
+    ALATemporalInterpreter.checkDateIdentified(er, tr);
+    ALATemporalInterpreter.checkGeoreferencedDate(er, tr);
+
     assertArrayEquals(
         new String[] {
           ALAOccurrenceIssue.FIRST_OF_MONTH.name(),
@@ -60,7 +72,13 @@ public class AlaTemporalInterpreterTest {
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
     TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
 
-    ALATemporalInterpreter.interpretTemporal(er, tr);
+    TemporalInterpreter temporalInterpreter = TemporalInterpreter.builder().create();
+    temporalInterpreter.interpretTemporal(er, tr);
+    temporalInterpreter.interpretDateIdentified(er, tr);
+    temporalInterpreter.interpretModified(er, tr);
+    ALATemporalInterpreter.checkRecordDateQuality(er, tr);
+    ALATemporalInterpreter.checkDateIdentified(er, tr);
+    ALATemporalInterpreter.checkGeoreferencedDate(er, tr);
 
     assertArrayEquals(
         new String[] {
@@ -83,7 +101,13 @@ public class AlaTemporalInterpreterTest {
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
     TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
 
-    ALATemporalInterpreter.interpretTemporal(er, tr);
+    TemporalInterpreter temporalInterpreter = TemporalInterpreter.builder().create();
+    temporalInterpreter.interpretTemporal(er, tr);
+    temporalInterpreter.interpretDateIdentified(er, tr);
+    temporalInterpreter.interpretModified(er, tr);
+    ALATemporalInterpreter.checkRecordDateQuality(er, tr);
+    ALATemporalInterpreter.checkDateIdentified(er, tr);
+    ALATemporalInterpreter.checkGeoreferencedDate(er, tr);
 
     assertArrayEquals(
         new String[] {
@@ -101,21 +125,16 @@ public class AlaTemporalInterpreterTest {
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
     TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
 
-    ALATemporalInterpreter.interpretTemporal(er, tr);
+    TemporalInterpreter temporalInterpreter = TemporalInterpreter.builder().create();
+    temporalInterpreter.interpretTemporal(er, tr);
+    temporalInterpreter.interpretDateIdentified(er, tr);
+    temporalInterpreter.interpretModified(er, tr);
+    ALATemporalInterpreter.checkRecordDateQuality(er, tr);
+    ALATemporalInterpreter.checkDateIdentified(er, tr);
+    ALATemporalInterpreter.checkGeoreferencedDate(er, tr);
 
     assertArrayEquals(
         new String[] {OccurrenceIssue.RECORDED_DATE_UNLIKELY.name()},
         tr.getIssues().getIssueList().toArray());
-  }
-
-  private OccurrenceParseResult<TemporalAccessor> interpretRecordedDate(
-      String y, String m, String d, String date) {
-    Map<String, String> map = new HashMap<>();
-    map.put(DwcTerm.year.qualifiedName(), y);
-    map.put(DwcTerm.month.qualifiedName(), m);
-    map.put(DwcTerm.day.qualifiedName(), d);
-    map.put(DwcTerm.eventDate.qualifiedName(), date);
-    ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
-    return TemporalInterpreter.interpretRecordedDate(er);
   }
 }

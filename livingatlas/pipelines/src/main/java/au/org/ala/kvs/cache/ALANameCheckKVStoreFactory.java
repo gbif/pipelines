@@ -2,8 +2,6 @@ package au.org.ala.kvs.cache;
 
 import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.names.ws.api.NameMatchService;
-import au.org.ala.names.ws.api.NameSearch;
-import au.org.ala.names.ws.api.NameUsageMatch;
 import au.org.ala.names.ws.client.ALANameUsageMatchServiceClient;
 import au.org.ala.ws.ClientConfiguration;
 import java.io.IOException;
@@ -15,8 +13,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.cache.KeyValueCache;
 import org.gbif.kvs.hbase.Command;
-import org.gbif.pipelines.parsers.config.model.WsConfig;
-import org.gbif.pipelines.transforms.SerializableSupplier;
+import org.gbif.pipelines.core.config.model.WsConfig;
+import org.gbif.pipelines.core.functions.SerializableSupplier;
 
 /**
  * Check for names.
@@ -28,9 +26,8 @@ import org.gbif.pipelines.transforms.SerializableSupplier;
 public class ALANameCheckKVStoreFactory {
 
   private final KeyValueStore<String, Boolean> kvStore;
-  private static volatile Map<String, ALANameCheckKVStoreFactory> instances =
+  private static final Map<String, ALANameCheckKVStoreFactory> INSTANCES =
       new ConcurrentHashMap<>();
-  private static final Object MUTEX = new Object();
 
   @SneakyThrows
   private ALANameCheckKVStoreFactory(String rank, ALAPipelinesConfig config) {
@@ -38,7 +35,7 @@ public class ALANameCheckKVStoreFactory {
   }
 
   public static KeyValueStore<String, Boolean> getInstance(String rank, ALAPipelinesConfig config) {
-    return instances.computeIfAbsent(rank, r -> new ALANameCheckKVStoreFactory(r, config)).kvStore;
+    return INSTANCES.computeIfAbsent(rank, r -> new ALANameCheckKVStoreFactory(r, config)).kvStore;
   }
 
   /**
@@ -64,7 +61,8 @@ public class ALANameCheckKVStoreFactory {
           try {
             wsClient.close();
           } catch (Exception e) {
-            logAndThrow(e, "Unable to close");
+            log.error("Unable to close", e);
+            throw new RuntimeException("Unable to close");
           }
         };
 
@@ -78,40 +76,30 @@ public class ALANameCheckKVStoreFactory {
       Command closeHandler,
       ALAPipelinesConfig config) {
 
-    KeyValueStore kvs =
+    KeyValueStore<String, Boolean> kvs =
         new KeyValueStore<String, Boolean>() {
           @Override
           public Boolean get(String key) {
             try {
               return nameMatchService.check(key, rank);
             } catch (Exception ex) {
-              throw logAndThrow(ex, "Error contacting the species match service");
+              log.error("Error contacting the species match service", ex);
+              throw new RuntimeException(ex);
             }
           }
 
           @Override
-          public void close() throws IOException {
+          public void close() {
             closeHandler.execute();
           }
         };
+
     return KeyValueCache.cache(
-        kvs, config.getAlaNameMatch().getCacheSizeMb(), NameSearch.class, NameUsageMatch.class);
+        kvs, config.getAlaNameMatch().getCacheSizeMb(), String.class, Boolean.class);
   }
 
   public static SerializableSupplier<KeyValueStore<String, Boolean>> getInstanceSupplier(
       String rank, ALAPipelinesConfig config) {
     return () -> ALANameCheckKVStoreFactory.getInstance(rank, config);
-  }
-
-  /**
-   * Wraps an exception into a {@link RuntimeException}.
-   *
-   * @param throwable to propagate
-   * @param message to log and use for the exception wrapper
-   * @return a new {@link RuntimeException}
-   */
-  private static RuntimeException logAndThrow(Throwable throwable, String message) {
-    log.error(message, throwable);
-    return new RuntimeException(throwable);
   }
 }

@@ -18,7 +18,6 @@ run:
     dwcaTmp: /data/dwca-tmp
     dwcaImportDir: /data/biocache-load
     jar: /efs-mount-point/pipelines.jar
-    dwcaImportDir: ''
     sparkTmp: /data/spark-tmp
     sparkMaster: spark://localhost:7077
 
@@ -115,6 +114,14 @@ sample:
   inputPath: '{fsPath}/pipelines-data'
   appName: Sample for {datasetId}
 
+# LayerCrawler specific configuration
+layerCrawler:
+  # baseUrl: https://spatial.your-l-a.site/ws/
+  baseUrl: https://sampling.ala.org.au/sampling-service/
+  batchSize: 25000
+  batchStatusSleepTime: 1000
+  downloadRetries: 5
+
 # class: au.org.ala.pipelines.beam.ALASamplingToAvroPipeline
 sample-avro:
   inputPath: '{fsPath}/pipelines-data'
@@ -178,18 +185,24 @@ interpret-sh-args:
     driver-memory: 1G
 
 uuid-sh-args:
+  local:
+    jvm: -Xmx8g -XX:+UseG1GC
   spark-embedded:
     jvm: -Xmx8g -XX:+UseG1GC
   spark-cluster:
+    conf:
     num-executors: 24
     executor-cores: 8
     executor-memory: 7G
     driver-memory: 1G
 
 export-latlng-sh-args:
+  local:
+    jvm:
   spark-embedded:
     jvm:
   spark-cluster:
+    conf:
     num-executors: 8
     executor-cores: 8
     executor-memory: 16G
@@ -200,6 +213,8 @@ sample-sh-args:
     jvm: -Xmx8g -XX:+UseG1GC
 
 sample-avro-sh-args:
+  local:
+    jvm: -Xmx8g -XX:+UseG1GC
   spark-embedded:
     jvm: -Xmx8g -XX:+UseG1GC
   spark-cluster:

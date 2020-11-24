@@ -1,16 +1,16 @@
 package org.gbif.pipelines.estools.service;
 
+import static org.gbif.pipelines.estools.service.EsService.buildEndpoint;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Set;
-
-import org.gbif.pipelines.estools.service.EsConstants.Constant;
-import org.gbif.pipelines.estools.service.EsConstants.Field;
-import org.gbif.pipelines.estools.service.EsConstants.Indexing;
-import org.gbif.pipelines.estools.service.EsConstants.Searching;
-
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -20,14 +20,11 @@ import org.elasticsearch.client.Request;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.RestClient;
+import org.gbif.pipelines.estools.service.EsConstants.Constant;
+import org.gbif.pipelines.estools.service.EsConstants.Field;
+import org.gbif.pipelines.estools.service.EsConstants.Indexing;
+import org.gbif.pipelines.estools.service.EsConstants.Searching;
 import org.junit.ClassRule;
-
-import com.fasterxml.jackson.databind.JsonNode;
-
-import static org.gbif.pipelines.estools.service.EsService.buildEndpoint;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Base class to write JUnit integration tests with an embedded ES instance.
@@ -37,8 +34,7 @@ import static org.junit.Assert.assertTrue;
 public abstract class EsApiIntegration {
 
   /** {@link ClassRule} requires this field to be public. */
-  @ClassRule
-  public static final EsServer ES_SERVER = new EsServer();
+  @ClassRule public static final EsServer ES_SERVER = new EsServer();
 
   // files for testing
   static final Path TEST_MAPPINGS_PATH = Paths.get("mappings/simple-mapping.json");
@@ -94,14 +90,16 @@ public abstract class EsApiIntegration {
   static void assertSwapResults(
       String idxAdded, String idxPattern, Set<String> aliases, Set<String> idxRemoved) {
 
-    aliases.forEach(alias -> {
-      // get indexes of the alias again.
-      Set<String> indexesFoundInAlias =
-          EsService.getIndexesByAliasAndIndexPattern(ES_SERVER.getEsClient(), idxPattern, alias);
-      // Only the last index should be returned.
-      assertEquals(1, indexesFoundInAlias.size());
-      assertTrue(indexesFoundInAlias.contains(idxAdded));
-    });
+    aliases.forEach(
+        alias -> {
+          // get indexes of the alias again.
+          Set<String> indexesFoundInAlias =
+              EsService.getIndexesByAliasAndIndexPattern(
+                  ES_SERVER.getEsClient(), idxPattern, alias);
+          // Only the last index should be returned.
+          assertEquals(1, indexesFoundInAlias.size());
+          assertTrue(indexesFoundInAlias.contains(idxAdded));
+        });
 
     // the other indexes shoudn't exist
     for (String removed : idxRemoved) {

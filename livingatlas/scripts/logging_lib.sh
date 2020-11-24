@@ -27,6 +27,7 @@ then
   colylw='\033[0;33m' # Yellow
   colpur='\033[0;35m' # Purpl
   colgre='\033[0;90m' # Grey
+  colblu='\033[0;34m' # Blue
   colrst='\033[0m'    # Text Reset
 fi
 
@@ -43,15 +44,15 @@ dbg_lvl=6
 function log.silent ()  { verb_lvl=$silent_lvl elog "$@" ;}
 function log.notify ()  { verb_lvl=$ntf_lvl elog "$@" ;}
 function log.ok ()      { verb_lvl=$ntf_lvl elog "SUCCESS - $@" ;}
-function log.warn ()    { verb_lvl=$wrn_lvl elog "[$dr] [${colylw}WARN${colrst}] $@" ;}
-function log.info ()    { verb_lvl=$inf_lvl elog "[$dr] [${colgrn}INFO${colrst}] $@" ;}
-function log.debug ()   { verb_lvl=$dbg_lvl elog "[$dr] [${colgre}DEBUG${colrst}] $@" ;}
-function log.error ()   { verb_lvl=$err_lvl elog "[$dr] [${colred}ERROR${colrst}] $@" ;}
-function log.crit ()    { verb_lvl=$crt_lvl elog "[$dr] [${colpur}FATAL${colrst}] $@" ;}
+function log.warn ()    { verb_lvl=$wrn_lvl elog "[${colblu}$dr${colrst}] [${colylw}WARN${colrst}] $@" ;}
+function log.info ()    { verb_lvl=$inf_lvl elog "[${colblu}$dr${colrst}] [${colgrn}INFO${colrst}] $@" ;}
+function log.debug ()   { verb_lvl=$dbg_lvl elog "[${colblu}$dr${colrst}] [${colgre}DEBUG${colrst}] $@" ;}
+function log.error ()   { verb_lvl=$err_lvl elog "[${colblu}$dr${colrst}] [${colred}ERROR${colrst}] $@" ;}
+function log.crit ()    { verb_lvl=$crt_lvl elog "[${colblu}$dr${colrst}] [${colpur}FATAL${colrst}] $@" ;}
 
 function elog() {
     if [ $verbosity -ge $verb_lvl ]; then
-        datestring=`date +"%y/%m/%d ${colgre}%H:%M:%S${colrst}"`
+        datestring=`date +"%d-%b ${colgre}%H:%M:%S${colrst} [${colpur}LA-PIPELINES${colrst}]"`
         echo -e "$datestring $@"
     fi
 }

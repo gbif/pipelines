@@ -1,0 +1,50 @@
+gbifApi:
+  wsUrl: http://test.test
+  timeoutSec: 60
+nameUsageMatch:
+  zkConnectionString: test11.gbif-test.org,test2.gbif-test.org,test3.gbif-test.org
+  wsTimeoutSec: 61
+  wsCacheSizeMb: 65
+  numOfKeyBuckets: 6
+  tableName: test_name_usage_kv
+geocode:
+  zkConnectionString: test12.gbif-test.org,test2.gbif-test.org,test3.gbif-test.org
+  wsTimeoutSec: 62
+  wsCacheSizeMb: 66
+  numOfKeyBuckets: 7
+  tableName: test_geocode_kv
+locationFeature:
+  zkConnectionString: test13.gbif-test.org,test2.gbif-test.org,test3.gbif-test.org
+  wsTimeoutSec: 63
+  wsCacheSizeMb: 67
+  numOfKeyBuckets: 8
+  tableName: test_location_feature_kv
+content:
+  wsTimeoutSec: 69
+  esHosts:
+    - http://content.test.org:9200/
+amplification:
+  wsUrl: http://amplification.test.test
+  timeoutSec: 70
+keygen:
+  zkConnectionString: test16.gbif-test.org,test2.gbif-test.org,test3.gbif-test.org
+  occurrenceTable: test_occurrence
+  counterTable: test_occurrence_counter
+  lookupTable: test_occurrence_lookup
+indexLock:
+  zkConnectionString: test14.gbif-test.org,test2.gbif-test.org,test3.gbif-test.org
+  namespace: dev_index_lock
+  lockingPath: /indices/
+  lockName: occurrence
+  sleepTimeMs: 101
+  maxRetries: 6
+hdfsLock:
+  zkConnectionString: test15.gbif-test.org,test2.gbif-test.org,test3.gbif-test.org
+  namespace: dev_index_lock
+  lockingPath: /hive/
+  lockName: hdfsview
+  sleepTimeMs: 99
+  maxRetries: 4
+defaultDateFormat:
+  - DMYT
+  - DMY

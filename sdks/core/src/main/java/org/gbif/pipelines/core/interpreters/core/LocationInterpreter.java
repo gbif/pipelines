@@ -1,14 +1,18 @@
 package org.gbif.pipelines.core.interpreters.core;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import static org.gbif.api.model.Constants.EBIRD_DATASET_KEY;
+import static org.gbif.api.vocabulary.OccurrenceIssue.*;
+import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
+import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareValue;
+
+import com.google.common.base.Strings;
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
-
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.vocabulary.Continent;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.common.parsers.CountryParser;
@@ -20,33 +24,16 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
+import org.gbif.pipelines.core.parsers.SimpleTypeParser;
+import org.gbif.pipelines.core.parsers.VocabularyParser;
+import org.gbif.pipelines.core.parsers.common.ParsedField;
+import org.gbif.pipelines.core.parsers.location.parser.GadmParser;
+import org.gbif.pipelines.core.parsers.location.parser.LocationParser;
+import org.gbif.pipelines.core.parsers.location.parser.ParsedLocation;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.parsers.parsers.SimpleTypeParser;
-import org.gbif.pipelines.parsers.parsers.VocabularyParser;
-import org.gbif.pipelines.parsers.parsers.common.ParsedField;
-import org.gbif.pipelines.parsers.parsers.location.GeocodeKvStore;
-import org.gbif.pipelines.parsers.parsers.location.parser.LocationParser;
-import org.gbif.pipelines.parsers.parsers.location.parser.ParsedLocation;
 import org.gbif.rest.client.geocode.GeocodeResponse;
-
-import org.apache.commons.lang3.StringUtils;
-
-import com.google.common.base.Strings;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-
-import static org.gbif.api.model.Constants.EBIRD_DATASET_KEY;
-import static org.gbif.api.vocabulary.OccurrenceIssue.CONTINENT_INVALID;
-import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_INVALID;
-import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_OUT_OF_RANGE;
-import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_PRECISION_INVALID;
-import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_UNCERTAINTY_METERS_INVALID;
-import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_COORDINATE_MISMATCH;
-import static org.gbif.api.vocabulary.OccurrenceIssue.ZERO_COORDINATE;
-import static org.gbif.pipelines.parsers.utils.ModelUtils.addIssue;
-import static org.gbif.pipelines.parsers.utils.ModelUtils.extractNullAwareValue;
 
 /** Interprets the location terms of a {@link ExtendedRecord}. */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -61,20 +48,18 @@ public class LocationInterpreter {
   // 45 close to 5000 km
   private static final double COORDINATE_PRECISION_UPPER_BOUND = 1d;
 
-  //List of Geospatial Issues
+  // List of Geospatial Issues
   private static final Set<String> SPATIAL_ISSUES =
-      new HashSet<>(Arrays.asList(
-          ZERO_COORDINATE.name(),
-          COORDINATE_INVALID.name(),
-          COORDINATE_OUT_OF_RANGE.name(),
-          COUNTRY_COORDINATE_MISMATCH.name()
-      ));
+      new HashSet<>(
+          Arrays.asList(
+              ZERO_COORDINATE.name(),
+              COORDINATE_INVALID.name(),
+              COORDINATE_OUT_OF_RANGE.name(),
+              COUNTRY_COORDINATE_MISMATCH.name()));
 
   private static final CountryParser COUNTRY_PARSER = CountryParser.getInstance();
 
-  /**
-   * Determines if the record contains geo-spatial issues.
-   */
+  /** Determines if the record contains geo-spatial issues. */
   static boolean hasGeospatialIssues(LocationRecord lr) {
     return Optional.ofNullable(lr.getIssues())
         .map(il -> il.getIssueList().stream().anyMatch(SPATIAL_ISSUES::contains))
@@ -132,8 +117,19 @@ public class LocationInterpreter {
   }
 
   /**
-   * Interprets the publishing country for eBird dataset.
+   * Uses the interpreted DwcTerm#decimalLatitude} and {@link DwcTerm#decimalLongitude} terms to
+   * populate GADM administrative area GIDs.
    */
+  public static BiConsumer<ExtendedRecord, LocationRecord> interpretGadm(
+      KeyValueStore<LatLng, GeocodeResponse> geocodeKvStore) {
+    return (er, lr) -> {
+      if (geocodeKvStore != null && lr.getHasCoordinate()) {
+        GadmParser.parseGadm(lr, geocodeKvStore).ifPresent(lr::setGadm);
+      }
+    };
+  }
+
+  /** Interprets the publishing country for eBird dataset. */
   private static Optional<String> interpretPublishingCountry(ExtendedRecord er, MetadataRecord mr) {
     // Special case for eBird, use the supplied publishing country.
     if (EBIRD_DATASET_KEY.toString().equals(mr.getDatasetKey())) {
@@ -202,9 +198,7 @@ public class LocationInterpreter {
     }
   }
 
-  /**
-   * {@link GbifTerm#elevation} and {@link GbifTerm#elevationAccuracy} interpretation.
-   */
+  /** {@link GbifTerm#elevation} and {@link GbifTerm#elevationAccuracy} interpretation. */
   public static void interpretElevation(ExtendedRecord er, LocationRecord lr) {
     String minElevation = extractNullAwareValue(er, DwcTerm.minimumElevationInMeters);
     String maxElevation = extractNullAwareValue(er, DwcTerm.maximumElevationInMeters);
@@ -246,7 +240,8 @@ public class LocationInterpreter {
   public static void interpretDepth(ExtendedRecord er, LocationRecord lr) {
     String minDepth = extractNullAwareValue(er, DwcTerm.minimumDepthInMeters);
     String maxDepth = extractNullAwareValue(er, DwcTerm.maximumDepthInMeters);
-    OccurrenceParseResult<DoubleAccuracy> occurrenceParseResult = MeterRangeParser.parseDepth(minDepth, maxDepth, null);
+    OccurrenceParseResult<DoubleAccuracy> occurrenceParseResult =
+        MeterRangeParser.parseDepth(minDepth, maxDepth, null);
     if (occurrenceParseResult.isSuccessful()) {
       lr.setDepth(occurrenceParseResult.getPayload().getValue());
       lr.setDepthAccuracy(occurrenceParseResult.getPayload().getAccuracy());
@@ -255,7 +250,8 @@ public class LocationInterpreter {
   }
 
   /** {@link DwcTerm#minimumDistanceAboveSurfaceInMeters} interpretation. */
-  public static void interpretMinimumDistanceAboveSurfaceInMeters(ExtendedRecord er, LocationRecord lr) {
+  public static void interpretMinimumDistanceAboveSurfaceInMeters(
+      ExtendedRecord er, LocationRecord lr) {
     String value = extractNullAwareValue(er, DwcTerm.minimumDistanceAboveSurfaceInMeters);
     if (!Strings.isNullOrEmpty(value)) {
       ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value);
@@ -266,7 +262,8 @@ public class LocationInterpreter {
   }
 
   /** {@link DwcTerm#maximumDistanceAboveSurfaceInMeters} interpretation. */
-  public static void interpretMaximumDistanceAboveSurfaceInMeters(ExtendedRecord er, LocationRecord lr) {
+  public static void interpretMaximumDistanceAboveSurfaceInMeters(
+      ExtendedRecord er, LocationRecord lr) {
     String value = extractNullAwareValue(er, DwcTerm.maximumDistanceAboveSurfaceInMeters);
     if (!Strings.isNullOrEmpty(value)) {
       ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value);
@@ -295,16 +292,17 @@ public class LocationInterpreter {
   /** {@link DwcTerm#coordinatePrecision} interpretation. */
   public static void interpretCoordinatePrecision(ExtendedRecord er, LocationRecord lr) {
 
-    Consumer<Optional<Double>> fn = parseResult -> {
-      Double result = parseResult.orElse(null);
-      if (result != null
-          && result >= COORDINATE_PRECISION_LOWER_BOUND
-          && result <= COORDINATE_PRECISION_UPPER_BOUND) {
-        lr.setCoordinatePrecision(result);
-      } else {
-        addIssue(lr, COORDINATE_PRECISION_INVALID);
-      }
-    };
+    Consumer<Optional<Double>> fn =
+        parseResult -> {
+          Double result = parseResult.orElse(null);
+          if (result != null
+              && result >= COORDINATE_PRECISION_LOWER_BOUND
+              && result <= COORDINATE_PRECISION_UPPER_BOUND) {
+            lr.setCoordinatePrecision(result);
+          } else {
+            addIssue(lr, COORDINATE_PRECISION_INVALID);
+          }
+        };
 
     SimpleTypeParser.parseDouble(er, DwcTerm.coordinatePrecision, fn);
   }

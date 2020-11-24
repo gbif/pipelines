@@ -10,18 +10,22 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.util.*;
 import java.util.stream.Collectors;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.*;
 import org.gbif.pipelines.common.PipelinesVariables;
-import org.gbif.pipelines.ingest.options.BasePipelineOptions;
-import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
-import org.gbif.pipelines.ingest.utils.FileSystemFactory;
-import org.gbif.pipelines.ingest.utils.FsUtils;
-import org.gbif.pipelines.parsers.config.model.PipelinesConfig;
+import org.gbif.pipelines.common.beam.options.BasePipelineOptions;
+import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
+import org.gbif.pipelines.common.beam.utils.PathBuilder;
+import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.core.factory.FileSystemFactory;
+import org.gbif.pipelines.core.utils.FsUtils;
 
 /** Extensions to FSUtils. See {@link FsUtils} */
 @Slf4j
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ALAFsUtils {
 
   /**
@@ -29,16 +33,11 @@ public class ALAFsUtils {
    * directory.
    *
    * <p>Example /data/pipelines-data/dr893/1/identifiers/ala_uuid where name = 'ala_uuid'
-   *
-   * @param options
-   * @param name
-   * @param uniqueId
-   * @return
    */
   public static String buildPathIdentifiersUsingTargetPath(
       BasePipelineOptions options, String name, String uniqueId) {
-    return FsUtils.buildPath(
-            FsUtils.buildDatasetAttemptPath(options, "identifiers", false),
+    return PathBuilder.buildPath(
+            PathBuilder.buildDatasetAttemptPath(options, "identifiers", false),
             name,
             "interpret-" + uniqueId)
         .toString();
@@ -50,16 +49,11 @@ public class ALAFsUtils {
    *
    * <p>Example /data/pipelines-data/dr893/1/generalised/ala_sensitive_taxon where name =
    * 'ala_sensitive_taxon'
-   *
-   * @param options
-   * @param name
-   * @param uniqueId
-   * @return
    */
   public static String buildPathGeneralisedUsingTargetPath(
       BasePipelineOptions options, String name, String uniqueId) {
-    return FsUtils.buildPath(
-            FsUtils.buildDatasetAttemptPath(options, "generalised", false),
+    return PathBuilder.buildPath(
+            PathBuilder.buildDatasetAttemptPath(options, "generalised", false),
             name,
             "generalise-" + uniqueId)
         .toString();
@@ -70,31 +64,21 @@ public class ALAFsUtils {
    * directory.
    *
    * <p>Example /data/pipelines-data/dr893/1/sampling/ala_uuid where name = 'ala_uuid'
-   *
-   * @param options
-   * @param name
-   * @param uniqueId
-   * @return
    */
   public static String buildPathSamplingUsingTargetPath(
       BasePipelineOptions options, String name, String uniqueId) {
-    return FsUtils.buildPath(
-            FsUtils.buildDatasetAttemptPath(options, "sampling", false),
+    return PathBuilder.buildPath(
+            PathBuilder.buildDatasetAttemptPath(options, "sampling", false),
             name,
             name + "-" + uniqueId)
         .toString();
   }
 
-  /**
-   * Build a path to sampling output.
-   *
-   * @param options
-   * @return
-   */
+  /** Build a path to sampling output. */
   public static String buildPathSamplingOutputUsingTargetPath(
       InterpretationPipelineOptions options) {
-    return FsUtils.buildPath(
-            FsUtils.buildDatasetAttemptPath(options, "sampling", false),
+    return PathBuilder.buildPath(
+            PathBuilder.buildDatasetAttemptPath(options, "sampling", false),
             PipelinesVariables.Pipeline.Interpretation.RecordType.LOCATION_FEATURE
                 .toString()
                 .toLowerCase(),
@@ -104,16 +88,11 @@ public class ALAFsUtils {
         .toString();
   }
 
-  /**
-   * Build a path to sampling downloads.
-   *
-   * @param options
-   * @return
-   */
+  /** Build a path to sampling downloads. */
   public static String buildPathSamplingDownloadsUsingTargetPath(
       InterpretationPipelineOptions options) {
-    return FsUtils.buildPath(
-            FsUtils.buildDatasetAttemptPath(options, "sampling", false), "downloads")
+    return PathBuilder.buildPath(
+            PathBuilder.buildDatasetAttemptPath(options, "sampling", false), "downloads")
         .toString();
   }
 
@@ -155,46 +134,24 @@ public class ALAFsUtils {
     return fs.open(new Path(path));
   }
 
-  /**
-   * Returns true if the supplied path exists.
-   *
-   * @param fs
-   * @param directoryPath
-   * @return
-   * @throws IOException
-   */
+  /** Returns true if the supplied path exists. */
   public static boolean exists(FileSystem fs, String directoryPath) throws IOException {
     Path path = new Path(directoryPath);
     return fs.exists(path);
   }
 
-  /**
-   * Returns true if the supplied path exists.
-   *
-   * @param fs
-   * @param directoryPath
-   * @return
-   * @throws IOException
-   */
+  /** Returns true if the supplied path exists. */
   public static boolean createDirectory(FileSystem fs, String directoryPath) throws IOException {
-    Path path = new Path(directoryPath);
     return fs.mkdirs(new Path(directoryPath));
   }
 
-  /**
-   * Retrieve a list of files in the supplied path.
-   *
-   * @param fs
-   * @param directoryPath
-   * @return
-   * @throws IOException
-   */
+  /** Retrieve a list of files in the supplied path. */
   public static Collection<String> listPaths(FileSystem fs, String directoryPath)
       throws IOException {
 
     Path path = new Path(directoryPath);
     RemoteIterator<LocatedFileStatus> iterator = fs.listFiles(path, false);
-    List<String> filePaths = new ArrayList<String>();
+    List<String> filePaths = new ArrayList<>();
     while (iterator.hasNext()) {
       LocatedFileStatus locatedFileStatus = iterator.next();
       Path filePath = locatedFileStatus.getPath();
@@ -205,7 +162,7 @@ public class ALAFsUtils {
 
   public static void deleteMetricsFile(InterpretationPipelineOptions options) {
     String metadataPath =
-        FsUtils.buildDatasetAttemptPath(options, options.getMetaFileName(), false);
+        PathBuilder.buildDatasetAttemptPath(options, options.getMetaFileName(), false);
     FileSystem fs =
         FsUtils.getFileSystem(
             options.getHdfsSiteConfig(), options.getCoreSiteConfig(), metadataPath);
@@ -274,9 +231,7 @@ public class ALAFsUtils {
    * Scans the supplied options.getInputPath() for zip files. Assumes zip files are in the name for
    * of <DATASET_ID>.zip
    *
-   * @param options
    * @return a Map of datasetId -> filePath, with zip files sorted by size, largest to smallest.
-   * @throws IOException
    */
   public static Map<String, String> listAllDatasets(
       String hdfsSiteConfig, String coreSiteConfig, String inputPath) throws IOException {

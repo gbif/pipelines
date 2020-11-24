@@ -1,9 +1,7 @@
 package org.gbif.pipelines.estools;
 
 import java.util.Collections;
-
 import org.gbif.pipelines.estools.client.EsConfig;
-
 import org.hamcrest.CoreMatchers;
 import org.junit.Rule;
 import org.junit.Test;
@@ -15,8 +13,7 @@ public class EsIndexTest {
   private static final String DUMMY_HOST = "http://dummy.com";
 
   /** {@link Rule} requires this field to be public. */
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test(expected = IllegalArgumentException.class)
   public void swapIndexInAliasNullAliasTest() {

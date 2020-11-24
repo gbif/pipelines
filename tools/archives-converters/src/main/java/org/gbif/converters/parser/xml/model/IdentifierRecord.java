@@ -16,7 +16,6 @@
 package org.gbif.converters.parser.xml.model;
 
 import java.io.Serializable;
-
 import lombok.Getter;
 import lombok.Setter;
 
@@ -35,5 +34,4 @@ public class IdentifierRecord implements Serializable {
   // TODO: change this to int backed enum
   private Integer identifierType;
   private String identifier;
-
 }
