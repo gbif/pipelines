@@ -5,12 +5,14 @@ import static org.junit.Assert.*;
 import au.org.ala.kvs.client.ALACollectoryMetadata;
 import au.org.ala.pipelines.vocabulary.ALAOccurrenceIssue;
 import au.org.ala.sds.api.*;
+import au.org.ala.sds.generalise.*;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 import org.apache.avro.Schema;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
+import org.gbif.dwc.terms.TermFactory;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.io.avro.*;
 import org.junit.After;
@@ -23,40 +25,33 @@ public class SensitiveDataInterpreterTest {
   private ALACollectoryMetadata dataResource;
   private Map<SpeciesCheck, Boolean> sensitivityMap;
   private KeyValueStore<SpeciesCheck, Boolean> sensitivityLookup;
+  private KeyValueStore<SensitivityQuery, SensitivityReport> sensitivityReportLookup;
   private ConservationApi conservationApi;
-  private Map<String, Term> sensitiveFields;
+  private List<Generalisation> generalisations;
+  private Set<Term> sensitive;
 
   @Before
   public void setUp() throws Exception {
-    Map<String, String> defaults = new HashMap<>();
-    defaults.put("kingdom", "Plantae");
-    List<Map<String, String>> hints = new ArrayList<>();
-    hints.add(Collections.singletonMap("phylum", "Charophyta"));
-    hints.add(Collections.singletonMap("phylum", "Bryophyta"));
-
     this.dataResource =
-        ALACollectoryMetadata.builder()
-            .name("Test data resource")
-            .uid(DATARESOURCE_UID)
-            .defaultDarwinCoreValues(defaults)
-            .taxonomyCoverageHints(hints)
-            .build();
-    this.sensitiveFields =
-        SensitiveDataInterpreter.buildSensitivityMap(
-            Arrays.asList(
-                    DwcTerm.scientificName,
-                    DwcTerm.taxonConceptID,
-                    DwcTerm.eventDate,
-                    DwcTerm.decimalLatitude,
-                    DwcTerm.decimalLongitude,
-                    DwcTerm.locality,
-                    DwcTerm.municipality,
-                    DwcTerm.verbatimCoordinates,
-                    DwcTerm.verbatimLatitude,
-                    DwcTerm.verbatimLongitude)
-                .stream()
-                .map(DwcTerm::simpleName)
-                .collect(Collectors.toSet()));
+        ALACollectoryMetadata.builder().name("Test data resource").uid(DATARESOURCE_UID).build();
+    this.generalisations =
+        Arrays.asList(
+            new RetainGeneralisation(DwcTerm.scientificName),
+            new RetainGeneralisation(DwcTerm.taxonConceptID),
+            new RetainGeneralisation(DwcTerm.stateProvince),
+            new ClearGeneralisation(DwcTerm.eventDate),
+            new LatLongGeneralisation(DwcTerm.decimalLatitude, DwcTerm.decimalLongitude),
+            new ClearGeneralisation(DwcTerm.locality),
+            new RetainGeneralisation(DwcTerm.municipality),
+            new ClearGeneralisation(DwcTerm.verbatimCoordinates),
+            new ClearGeneralisation(DwcTerm.verbatimLatitude),
+            new ClearGeneralisation(DwcTerm.verbatimLongitude),
+            new MessageGeneralisation(
+                DwcTerm.dataGeneralizations,
+                "Test generalisation",
+                true,
+                MessageGeneralisation.Trigger.ANY),
+            new AddingGeneralisation(DwcTerm.coordinateUncertaintyInMeters, true, true, 0));
     this.sensitivityLookup =
         new KeyValueStore<SpeciesCheck, Boolean>() {
           @Override
@@ -79,8 +74,17 @@ public class SensitiveDataInterpreterTest {
     this.conservationApi =
         new ConservationApi() {
           @Override
-          public Set<String> getSensitiveDataFields() {
-            return SensitiveDataInterpreterTest.this.sensitiveFields.keySet();
+          public List<String> getSensitiveDataFields() {
+            HashSet<String> fields = new HashSet<>();
+            for (Generalisation g : SensitiveDataInterpreterTest.this.generalisations)
+              for (FieldAccessor accessor : g.getFields())
+                fields.add(accessor.getField().qualifiedName());
+            return new ArrayList<>(fields);
+          }
+
+          @Override
+          public List<Generalisation> getGeneralisations() {
+            return SensitiveDataInterpreterTest.this.generalisations;
           }
 
           @Override
@@ -95,7 +99,57 @@ public class SensitiveDataInterpreterTest {
           }
 
           @Override
-          public SensitivityReport process(SensitivityQuery sensitivityQuery) {
+          public SensitivityReport report(SensitivityQuery sensitivityQuery) {
+            boolean sensitive =
+                this.isSensitive(
+                    sensitivityQuery.getScientificName(), sensitivityQuery.getTaxonId());
+            SensitivityReport.SensitivityReportBuilder builder = SensitivityReport.builder();
+            builder.sensitive(sensitive);
+            builder.accessControl(false);
+            builder.valid(true);
+            builder.loadable(true);
+            if (sensitive) {
+              SensitivityInstance instance =
+                  SensitivityInstance.builder()
+                      .generalisation(new GeneralisationRule("10km"))
+                      .authority("ALA")
+                      .zone(SensitivityZone.builder().id("NSW").name("New South Wales").build())
+                      .build();
+              SensitiveTaxon taxon =
+                  SensitiveTaxon.builder()
+                      .scientificName(sensitivityQuery.getScientificName())
+                      .taxonId(sensitivityQuery.getTaxonId())
+                      .instances(Arrays.asList(instance))
+                      .build();
+              ValidationReport vr =
+                  ValidationReport.builder().category("Sensitive").taxon(taxon).build();
+              builder.report(vr);
+            }
+            return builder.build();
+          }
+
+          @Override
+          public SensitivityReport report(
+              String scientificName,
+              String taxonId,
+              String dataResourceUid,
+              String stateProvince,
+              String country,
+              List<String> zones) {
+            SensitivityQuery query =
+                SensitivityQuery.builder()
+                    .scientificName(scientificName)
+                    .taxonId(taxonId)
+                    .dataResourceUid(dataResourceUid)
+                    .stateProvince(stateProvince)
+                    .country(country)
+                    .zones(zones)
+                    .build();
+            return this.report(query);
+          }
+
+          @Override
+          public SensitivityReport process(ProcessQuery sensitivityQuery) {
             boolean sensitive =
                 this.isSensitive(
                     sensitivityQuery.getScientificName(), sensitivityQuery.getTaxonId());
@@ -107,22 +161,44 @@ public class SensitiveDataInterpreterTest {
             if (sensitive) {
               String decimalLatitude = DwcTerm.decimalLatitude.simpleName();
               String decimalLongitude = DwcTerm.decimalLongitude.simpleName();
-              Map<String, String> original = new HashMap<>();
+              Map<String, Object> original = new HashMap<>();
               original.put(decimalLatitude, sensitivityQuery.getProperties().get(decimalLatitude));
               original.put(
                   decimalLongitude, sensitivityQuery.getProperties().get(decimalLongitude));
               Map<String, Object> results = new HashMap<>();
-              results.put(SensitiveDataInterpreter.DATA_GENERALIZATIONS, "Test generalisation");
-              results.put(SensitiveDataInterpreter.GENERALISATION_TO_APPLY_IN_METRES, "10000");
-              results.put(SensitiveDataInterpreter.GENERALISATION_IN_METRES, "10000");
-              results.put(SensitiveDataInterpreter.ORIGINAL_VALUES, original);
+              results.put(
+                  SensitiveDataInterpreter.DATA_GENERALIZATIONS.getField().qualifiedName(),
+                  "Test generalisation");
+              results.put(
+                  SensitiveDataInterpreter.GENERALISATION_TO_APPLY_IN_METRES
+                      .getField()
+                      .qualifiedName(),
+                  "10000");
+              results.put(
+                  SensitiveDataInterpreter.GENERALISATION_IN_METRES.getField().qualifiedName(),
+                  "10000");
               results.put(decimalLatitude, "-32.0");
               results.put(decimalLongitude, "150.0");
-              builder.result(results);
+              builder.original(original);
+              builder.updated(results);
               builder.report(ValidationReport.builder().category("Sensitive").build());
             }
             return builder.build();
           }
+        };
+    this.sensitive =
+        this.conservationApi.getSensitiveDataFields().stream()
+            .map(s -> TermFactory.instance().findTerm(s))
+            .collect(Collectors.toSet());
+    this.sensitivityReportLookup =
+        new KeyValueStore<SensitivityQuery, SensitivityReport>() {
+          @Override
+          public SensitivityReport get(SensitivityQuery query) {
+            return conservationApi.report(query);
+          }
+
+          @Override
+          public void close() throws IOException {}
         };
   }
 
@@ -141,14 +217,14 @@ public class SensitiveDataInterpreterTest {
     map.put(DwcTerm.decimalLongitude.qualifiedName(), "149.55");
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
     Map<String, String> properties = new HashMap<>();
-    SensitiveDataInterpreter.constructFields(this.sensitiveFields, properties, er);
+    SensitiveDataInterpreter.constructFields(this.sensitive, properties, er);
     assertFalse(properties.isEmpty());
-    for (Term term : this.sensitiveFields.values()) {
+    for (Term term : this.sensitive) {
       String val = map.get(term.qualifiedName());
-      assertEquals("Fields " + term + " don't match", val, properties.get(term.simpleName()));
+      assertEquals("Fields " + term + " don't match", val, properties.get(term.qualifiedName()));
     }
     for (String field : map.keySet()) {
-      if (!this.sensitiveFields.containsKey(field))
+      if (!this.sensitive.contains(TermFactory.instance().findTerm(field)))
         assertNull("Fields " + field + " should be absent", properties.get(field));
     }
   }
@@ -165,19 +241,19 @@ public class SensitiveDataInterpreterTest {
             .setDepth(10.0)
             .build();
     Map<String, String> properties = new HashMap<>();
-    SensitiveDataInterpreter.constructFields(this.sensitiveFields, properties, lr);
+    SensitiveDataInterpreter.constructFields(sensitive, properties, lr);
     assertFalse(properties.isEmpty());
-    for (String field : this.sensitiveFields.keySet()) {
-      if (lr.getSchema().getField(field) != null) {
-        Object val = lr.get(field);
+    for (Term field : this.sensitive) {
+      if (lr.getSchema().getField(field.simpleName()) != null) {
+        Object val = lr.get(field.simpleName());
         assertEquals(
             "Fields " + field + " don't match",
             val == null ? null : val.toString(),
-            properties.get(field));
+            properties.get(field.qualifiedName()));
       }
     }
     for (Schema.Field field : lr.getSchema().getFields()) {
-      if (!this.sensitiveFields.containsKey(field.name()))
+      if (!this.sensitive.contains(TermFactory.instance().findTerm(field.name())))
         assertNull("Fields " + field + " should be absent", properties.get(field.name()));
     }
   }
@@ -201,11 +277,11 @@ public class SensitiveDataInterpreterTest {
                     .build())
             .build();
     Map<String, String> properties = new HashMap<>();
-    SensitiveDataInterpreter.constructFields(this.sensitiveFields, properties, tr);
+    SensitiveDataInterpreter.constructFields(this.sensitive, properties, tr);
     assertFalse(properties.isEmpty());
     assertEquals(2, properties.size());
-    assertEquals("Acacia dealbata", properties.get(DwcTerm.scientificName.simpleName()));
-    assertEquals("26", properties.get(DwcTerm.taxonConceptID.simpleName()));
+    assertEquals("Acacia dealbata", properties.get(DwcTerm.scientificName.qualifiedName()));
+    assertEquals("26", properties.get(DwcTerm.taxonConceptID.qualifiedName()));
   }
 
   @Test
@@ -220,10 +296,10 @@ public class SensitiveDataInterpreterTest {
             .setYear(2020)
             .build();
     Map<String, String> properties = new HashMap<>();
-    SensitiveDataInterpreter.constructFields(this.sensitiveFields, properties, tr);
+    SensitiveDataInterpreter.constructFields(this.sensitive, properties, tr);
     assertFalse(properties.isEmpty());
     assertEquals(1, properties.size());
-    assertEquals("2020-03-01", properties.get(DwcTerm.eventDate.simpleName()));
+    assertEquals("2020-03-01", properties.get(DwcTerm.eventDate.qualifiedName()));
   }
 
   @Test
@@ -238,19 +314,23 @@ public class SensitiveDataInterpreterTest {
             .setRank("species")
             .build();
     Map<String, String> properties = new HashMap<>();
-    SensitiveDataInterpreter.constructFields(this.sensitiveFields, properties, tr);
+    Set<Term> sensitive =
+        this.conservationApi.getSensitiveDataFields().stream()
+            .map(s -> TermFactory.instance().findTerm(s))
+            .collect(Collectors.toSet());
+    SensitiveDataInterpreter.constructFields(this.sensitive, properties, tr);
     assertFalse(properties.isEmpty());
-    for (String field : this.sensitiveFields.keySet()) {
-      if (tr.getSchema().getField(field) != null) {
-        Object val = tr.get(field);
+    for (Term field : this.sensitive) {
+      if (tr.getSchema().getField(field.simpleName()) != null) {
+        Object val = tr.get(field.simpleName());
         assertEquals(
             "Fields " + field + " don't match",
             val == null ? null : val.toString(),
-            properties.get(field));
+            properties.get(field.qualifiedName()));
       }
     }
     for (Schema.Field field : tr.getSchema().getFields()) {
-      if (!this.sensitiveFields.containsKey(field.name()))
+      if (!this.sensitive.contains(TermFactory.instance().findTerm(field.name())))
         assertNull("Fields " + field + " should be absent", properties.get(field.name()));
     }
   }
@@ -271,7 +351,7 @@ public class SensitiveDataInterpreterTest {
     properties.put(DwcTerm.decimalLongitude.simpleName(), "149.6");
     ALASensitivityRecord sr =
         ALASensitivityRecord.newBuilder().setId("1").setAltered(properties).build();
-    SensitiveDataInterpreter.applySensitivity(this.sensitiveFields, sr, er);
+    SensitiveDataInterpreter.applySensitivity(this.sensitive, sr, er);
     assertEquals("Acacia dealbata", er.getCoreTerms().get(DwcTerm.scientificName.qualifiedName()));
     assertEquals("2020-01-01", er.getCoreTerms().get(DwcTerm.eventDate.qualifiedName()));
     assertEquals("-39.8", er.getCoreTerms().get(DwcTerm.decimalLatitude.qualifiedName()));
@@ -290,12 +370,16 @@ public class SensitiveDataInterpreterTest {
             .setDepth(10.0)
             .build();
     Map<String, String> properties = new HashMap<>();
-    properties.put(DwcTerm.decimalLatitude.simpleName(), "-39.8");
-    properties.put(DwcTerm.decimalLongitude.simpleName(), "149.6");
-    properties.put(DwcTerm.locality.simpleName(), null);
+    properties.put(DwcTerm.decimalLatitude.qualifiedName(), "-39.8");
+    properties.put(DwcTerm.decimalLongitude.qualifiedName(), "149.6");
+    properties.put(DwcTerm.locality.qualifiedName(), null);
     ALASensitivityRecord sr =
-        ALASensitivityRecord.newBuilder().setId("1").setAltered(properties).build();
-    SensitiveDataInterpreter.applySensitivity(this.sensitiveFields, sr, lr);
+        ALASensitivityRecord.newBuilder()
+            .setId("1")
+            .setSensitive(true)
+            .setAltered(properties)
+            .build();
+    SensitiveDataInterpreter.applySensitivity(this.sensitive, sr, lr);
     assertEquals(-39.8, lr.getDecimalLatitude(), 0.0001);
     assertEquals(149.6, lr.getDecimalLongitude(), 0.0001);
     assertNull(lr.getLocality());
@@ -325,7 +409,7 @@ public class SensitiveDataInterpreterTest {
     properties.put(DwcTerm.decimalLongitude.simpleName(), "149.6");
     ALASensitivityRecord sr =
         ALASensitivityRecord.newBuilder().setId("1").setAltered(properties).build();
-    SensitiveDataInterpreter.applySensitivity(this.sensitiveFields, sr, tr);
+    SensitiveDataInterpreter.applySensitivity(this.sensitive, sr, tr);
     assertEquals("Acacia", tr.getAcceptedUsage().getName());
   }
 
@@ -341,14 +425,14 @@ public class SensitiveDataInterpreterTest {
             .setYear(2020)
             .build();
     Map<String, String> properties = new HashMap<>();
-    properties.put(DwcTerm.scientificName.simpleName(), "Acacia");
-    properties.put(DwcTerm.eventDate.simpleName(), "2020");
-    properties.put(DwcTerm.year.simpleName(), "2020");
-    properties.put(DwcTerm.month.simpleName(), null);
-    properties.put(DwcTerm.day.simpleName(), null);
+    properties.put(DwcTerm.scientificName.qualifiedName(), "Acacia");
+    properties.put(DwcTerm.eventDate.qualifiedName(), "2020");
+    properties.put(DwcTerm.year.qualifiedName(), "2020");
+    properties.put(DwcTerm.month.qualifiedName(), null);
+    properties.put(DwcTerm.day.qualifiedName(), null);
     ALASensitivityRecord sr =
         ALASensitivityRecord.newBuilder().setId("1").setAltered(properties).build();
-    SensitiveDataInterpreter.applySensitivity(this.sensitiveFields, sr, tr);
+    SensitiveDataInterpreter.applySensitivity(this.sensitive, sr, tr);
     assertEquals("2020", tr.getEventDate().getGte());
     assertEquals("2020", tr.getEventDate().getLte());
     assertEquals(2020, tr.getYear().intValue());
@@ -368,12 +452,16 @@ public class SensitiveDataInterpreterTest {
             .setRank("species")
             .build();
     Map<String, String> properties = new HashMap<>();
-    properties.put(DwcTerm.scientificName.simpleName(), "Acacia");
-    properties.put(DwcTerm.decimalLatitude.simpleName(), "-39.8");
-    properties.put(DwcTerm.decimalLongitude.simpleName(), "149.6");
+    properties.put(DwcTerm.scientificName.qualifiedName(), "Acacia");
+    properties.put(DwcTerm.decimalLatitude.qualifiedName(), "-39.8");
+    properties.put(DwcTerm.decimalLongitude.qualifiedName(), "149.6");
     ALASensitivityRecord sr =
-        ALASensitivityRecord.newBuilder().setId("1").setAltered(properties).build();
-    SensitiveDataInterpreter.applySensitivity(this.sensitiveFields, sr, tr);
+        ALASensitivityRecord.newBuilder()
+            .setId("1")
+            .setSensitive(true)
+            .setAltered(properties)
+            .build();
+    SensitiveDataInterpreter.applySensitivity(this.sensitive, sr, tr);
     assertEquals("Acacia", tr.getScientificName());
     assertEquals("species", tr.getRank());
   }
@@ -391,7 +479,7 @@ public class SensitiveDataInterpreterTest {
     map.put(DwcTerm.decimalLongitude.qualifiedName(), "149.55");
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
     Map<String, String> properties = new HashMap<>();
-    SensitiveDataInterpreter.constructFields(this.sensitiveFields, properties, er);
+    SensitiveDataInterpreter.constructFields(this.sensitive, properties, er);
     SensitiveDataInterpreter.sourceQualityChecks(properties, sr, this.dataResource);
     assertTrue(sr.getIssues().getIssueList().isEmpty());
   }
@@ -407,7 +495,7 @@ public class SensitiveDataInterpreterTest {
     map.put(DwcTerm.decimalLongitude.simpleName(), "149.55");
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
     Map<String, String> properties = new HashMap<>();
-    SensitiveDataInterpreter.constructFields(this.sensitiveFields, properties, er);
+    SensitiveDataInterpreter.constructFields(this.sensitive, properties, er);
     SensitiveDataInterpreter.sourceQualityChecks(properties, sr, this.dataResource);
     assertFalse(sr.getIssues().getIssueList().isEmpty());
     assertTrue(
@@ -427,19 +515,23 @@ public class SensitiveDataInterpreterTest {
     map.put(DwcTerm.decimalLongitude.qualifiedName(), "149.55");
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
     Map<String, String> properties = new HashMap<>();
-    SensitiveDataInterpreter.constructFields(this.sensitiveFields, properties, er);
+    SensitiveDataInterpreter.constructFields(this.sensitive, properties, er);
     SensitiveDataInterpreter.sensitiveDataInterpreter(
-        dataResource, this.sensitivityLookup, this.conservationApi, properties, sr);
+        dataResource,
+        this.sensitivityLookup,
+        this.sensitivityReportLookup,
+        this.generalisations,
+        this.dataResource.getUid(),
+        properties,
+        sr);
     assertTrue(sr.getIssues().getIssueList().isEmpty());
     assertTrue(sr.getSensitive());
     assertEquals("Test generalisation", sr.getDataGeneralizations());
-    assertEquals("10000", sr.getGeneralisationInMetres());
-    assertEquals("10000", sr.getGeneralisationToApplyInMetres());
-    assertEquals(2, sr.getAltered().size());
-    assertEquals("-32.0", sr.getAltered().get(DwcTerm.decimalLatitude.simpleName()));
-    assertEquals("150.0", sr.getAltered().get(DwcTerm.decimalLongitude.simpleName()));
-    assertEquals(2, sr.getOriginal().size());
-    assertEquals("-39.78", sr.getOriginal().get(DwcTerm.decimalLatitude.simpleName()));
-    assertEquals("149.55", sr.getOriginal().get(DwcTerm.decimalLongitude.simpleName()));
+    assertEquals(5, sr.getAltered().size());
+    assertEquals("-39.8", sr.getAltered().get(DwcTerm.decimalLatitude.qualifiedName()));
+    assertEquals("149.5", sr.getAltered().get(DwcTerm.decimalLongitude.qualifiedName()));
+    assertEquals(5, sr.getOriginal().size());
+    assertEquals("-39.78", sr.getOriginal().get(DwcTerm.decimalLatitude.qualifiedName()));
+    assertEquals("149.55", sr.getOriginal().get(DwcTerm.decimalLongitude.qualifiedName()));
   }
 }

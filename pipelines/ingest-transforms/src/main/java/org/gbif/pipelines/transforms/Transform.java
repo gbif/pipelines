@@ -4,6 +4,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.UnaryOperator;
 
+import lombok.Getter;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.InterpretationType;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -35,6 +36,7 @@ public abstract class Transform<R, T extends SpecificRecordBase> extends DoFn<R,
   private final InterpretationType recordType;
   private final String baseName;
   private final String baseInvalidName;
+  @Getter
   private final Class<T> clazz;
   private final String counterName;
 
