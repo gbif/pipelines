@@ -51,7 +51,7 @@ public class LayerCrawler {
   public static final String FINISHED_STATUS = "finished";
   public static final String ERROR_STATUS = "error";
 
-  SamplingService service;
+  private final SamplingService service;
 
   private static Retrofit retrofit;
 

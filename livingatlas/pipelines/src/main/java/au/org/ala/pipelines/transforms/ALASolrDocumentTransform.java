@@ -93,20 +93,7 @@ public class ALASolrDocumentTransform implements Serializable {
     return t;
   }
 
-  /**
-   * Create a SOLR document using the supplied records.
-   *
-   * @param mdr
-   * @param er
-   * @param br
-   * @param tr
-   * @param lr
-   * @param txr
-   * @param atxr
-   * @param aar
-   * @param asr
-   * @return
-   */
+  /** Create a SOLR document using the supplied records. */
   @NotNull
   public static SolrInputDocument createSolrDocument(
       MetadataRecord mdr,
@@ -120,7 +107,7 @@ public class ALASolrDocumentTransform implements Serializable {
       LocationFeatureRecord asr,
       ALAUUIDRecord ur) {
 
-    Set<String> skipKeys = new HashSet<String>();
+    Set<String> skipKeys = new HashSet<>();
     skipKeys.add("id");
     skipKeys.add("created");
     skipKeys.add("text");
@@ -444,18 +431,10 @@ public class ALASolrDocumentTransform implements Serializable {
                               t -> {
                                 switch (t) {
                                   case BOOLEAN:
-                                    doc.setField(f.name(), r);
-                                    break;
-                                  case FLOAT:
-                                    doc.setField(f.name(), r);
-                                    break;
                                   case DOUBLE:
-                                    doc.setField(f.name(), r);
-                                    break;
                                   case INT:
-                                    doc.setField(f.name(), r);
-                                    break;
                                   case LONG:
+                                  case FLOAT:
                                     doc.setField(f.name(), r);
                                     break;
                                   default:

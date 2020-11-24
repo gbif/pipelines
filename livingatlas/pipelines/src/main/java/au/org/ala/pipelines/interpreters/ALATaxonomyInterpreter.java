@@ -182,25 +182,23 @@ public class ALATaxonomyInterpreter {
           atr.setVernacularName(usageMatch.getVernacularName());
           atr.setSpeciesGroup(
               usageMatch.getSpeciesGroup() == null
-                  ? new ArrayList<String>()
+                  ? new ArrayList<>()
                   : usageMatch.getSpeciesGroup());
           atr.setSpeciesSubgroup(
               usageMatch.getSpeciesSubgroup() == null
-                  ? new ArrayList<String>()
+                  ? new ArrayList<>()
                   : usageMatch.getSpeciesSubgroup());
           // Issues can happen for match/nomatch
         }
-        if (usageMatch != null) {
-          if (usageMatch.getIssues() != null) {
-            // Translate issues returned by the namematching service
-            for (String issue : usageMatch.getIssues()) {
-              ALAMatchIssueType type =
-                  Enums.getIfPresent(ALAMatchIssueType.class, issue)
-                      .or(ALAMatchIssueType.genericError);
-              InterpretationRemark oi = ISSUE_MAP.get(type);
-              if (oi != null) {
-                addIssue(atr, oi);
-              }
+        if (usageMatch != null && usageMatch.getIssues() != null) {
+          // Translate issues returned by the namematching service
+          for (String issue : usageMatch.getIssues()) {
+            ALAMatchIssueType type =
+                Enums.getIfPresent(ALAMatchIssueType.class, issue)
+                    .or(ALAMatchIssueType.genericError);
+            InterpretationRemark oi = ISSUE_MAP.get(type);
+            if (oi != null) {
+              addIssue(atr, oi);
             }
           }
         }
@@ -276,8 +274,9 @@ public class ALATaxonomyInterpreter {
    */
   protected static String extractValue(ExtendedRecord er, Term term, Map<String, String> defaults) {
     String value = ModelUtils.extractValue(er, term);
-    if (value == null && defaults != null && !defaults.isEmpty())
+    if (value == null && defaults != null && !defaults.isEmpty()) {
       value = defaults.get(term.simpleName());
+    }
     return value;
   }
 }

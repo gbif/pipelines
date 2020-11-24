@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -63,7 +62,7 @@ public class ALAUUIDValidationPipeline {
     System.exit(0);
   }
 
-  public static void run(UUIDPipelineOptions options) throws Exception {
+  public static void run(UUIDPipelineOptions options) {
 
     Pipeline p = Pipeline.create(options);
 
@@ -100,14 +99,15 @@ public class ALAUUIDValidationPipeline {
     // construct unique list of darwin core terms
     if (collectoryMetadata.getConnectionParameters() != null) {
       uniqueTerms = collectoryMetadata.getConnectionParameters().getTermsForUniqueKey();
-      boolean uniqueTermsSpecified = !(uniqueTerms == null || uniqueTerms.isEmpty());
+      if (uniqueTerms == null) {
+        uniqueTerms = Collections.emptyList();
+      }
 
-      if (!uniqueTermsSpecified) {
+      if (uniqueTerms.isEmpty()) {
         log.error(
             "Unable to proceed, No unique terms specified for dataset: " + options.getDatasetId());
       } else {
-        log.info(
-            "Unique terms specified: " + uniqueTerms.stream().collect(Collectors.joining(",")));
+        log.info("Unique terms specified: " + String.join(",", uniqueTerms));
       }
     }
 
@@ -122,7 +122,7 @@ public class ALAUUIDValidationPipeline {
     if (!uniqueTerms.isEmpty()) {
 
       // retrieve the unique term fields
-      final List<Term> uniqueDwcTerms = new ArrayList<Term>();
+      final List<Term> uniqueDwcTerms = new ArrayList<>(uniqueTerms.size());
       for (String uniqueTerm : uniqueTerms) {
         Optional<DwcTerm> dwcTerm = getDwcTerm(uniqueTerm);
         if (dwcTerm.isPresent()) {
@@ -160,10 +160,10 @@ public class ALAUUIDValidationPipeline {
                             @Element ExtendedRecord source,
                             OutputReceiver<Boolean> out,
                             ProcessContext c) {
-                          out.output(isValidRecord(datasetID, source, uniqueDwcTerms));
+                          out.output(isValidRecord(source, uniqueDwcTerms));
                         }
                       }))
-              .apply(Filter.by((SerializableFunction<Boolean, Boolean>) input -> !input))
+              .apply(Filter.by(input -> !input))
               .apply(Count.globally())
               .apply(
                   MapElements.into(TypeDescriptors.strings())
@@ -192,14 +192,7 @@ public class ALAUUIDValidationPipeline {
 
       // filter keys that are used more than once
       PCollection<KV<String, Long>> duplicateKeyCounts =
-          keyCounts.apply(
-              Filter.by(
-                  new SerializableFunction<KV<String, Long>, Boolean>() {
-                    @Override
-                    public Boolean apply(KV<String, Long> input) {
-                      return input.getValue() > 1;
-                    }
-                  }));
+          keyCounts.apply(Filter.by(input -> input.getValue() > 1));
 
       // retrieve a count of records with duplicate keys problems
       PCollection<String> duplicateKeyCount =
@@ -288,23 +281,15 @@ public class ALAUUIDValidationPipeline {
    * Generate a unique key based on the darwin core fields. This works the same was unique keys
    * where generated in the biocache-store. This is repeated to maintain backwards compatibility
    * with existing data holdings.
-   *
-   * @param source
-   * @param uniqueTerms
-   * @return
-   * @throws RuntimeException
    */
-  public static Boolean isValidRecord(
-      String datasetID, ExtendedRecord source, List<Term> uniqueTerms) throws RuntimeException {
+  public static Boolean isValidRecord(ExtendedRecord source, List<Term> uniqueTerms) {
 
-    List<String> uniqueValues = new ArrayList<String>();
     boolean allUniqueValuesAreEmpty = true;
     for (Term term : uniqueTerms) {
       String value = ModelUtils.extractNullAwareValue(source, term);
       if (value != null && StringUtils.trimToNull(value) != null) {
         // we have a term with a value
         allUniqueValuesAreEmpty = false;
-        uniqueValues.add(value.trim());
       }
     }
 
@@ -314,9 +299,6 @@ public class ALAUUIDValidationPipeline {
   /**
    * Match the darwin core term which has been supplied in simple camel case format e.g.
    * catalogNumber.
-   *
-   * @param name
-   * @return
    */
   static Optional<DwcTerm> getDwcTerm(String name) {
     try {

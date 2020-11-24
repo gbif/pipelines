@@ -147,7 +147,7 @@ public class ALAUUIDMintingPipeline {
       System.exit(1);
     }
 
-    final List<Term> uniqueDwcTerms = new ArrayList<Term>();
+    final List<Term> uniqueDwcTerms = new ArrayList<>();
     for (String uniqueTerm : uniqueTerms) {
       Optional<DwcTerm> dwcTerm = getDwcTerm(uniqueTerm);
       if (dwcTerm.isPresent()) {

@@ -249,7 +249,6 @@ public class GbifJsonConverter {
       jc.addJsonTextFieldNoCheck(ID, er.getId());
 
       Map<String, String> core = er.getCoreTerms();
-      Map<String, List<Map<String, String>>> ext = er.getExtensions();
 
       BiConsumer<Term, String> fieldFn =
           (t, k) ->
@@ -275,6 +274,7 @@ public class GbifJsonConverter {
 
       // Extensions
       ObjectNode extNode = JsonConverter.createObjectNode();
+      Map<String, List<Map<String, String>>> ext = er.getExtensions();
       ext.forEach(
           (k, v) -> {
             if (v != null && !v.isEmpty()) {
@@ -292,6 +292,13 @@ public class GbifJsonConverter {
               extNode.set(k, extArrayNode);
             }
           });
+
+      // Has extensions
+      ArrayNode extNameNode = JsonConverter.createArrayNode();
+      ext.entrySet().stream()
+          .filter(e -> e.getValue() != null && !e.getValue().isEmpty())
+          .forEach(x -> extNameNode.add(x.getKey()));
+      jc.getMainNode().set("extensions", extNameNode);
 
       // Verbatim
       ObjectNode verbatimNode = JsonConverter.createObjectNode();

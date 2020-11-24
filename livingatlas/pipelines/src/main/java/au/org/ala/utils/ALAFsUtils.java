@@ -219,7 +219,7 @@ public class ALAFsUtils {
     }
   }
 
-  public static void deleteLockFile(InterpretationPipelineOptions options) throws IOException {
+  public static void deleteLockFile(InterpretationPipelineOptions options) {
 
     String lockFilePath = options.getInputPath() + ".lockdir";
 

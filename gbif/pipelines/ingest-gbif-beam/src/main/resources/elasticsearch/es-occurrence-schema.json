@@ -37,6 +37,7 @@
       "programmeAcronym": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
       "institutionKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
       "collectionKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
+      "isClustered": {"type": "boolean"},
 
       "basisOfRecord": {"type": "keyword"},
       "sex": {"type": "keyword", "copy_to": "all"},
@@ -218,7 +219,7 @@
       "year": {"type": "short"},
       "month": {"type": "short"},
       "day": {"type": "short"},
-      "eventDate": {"type": "date_range", "format": "yyyy-MM-dd'T'HH:mm:ss.SSSZ||yyyy-MM-dd'T'HH:mm:ssZ||yyyy-MM-dd'T'HH:mmZ||yyyy-MM-dd'T'HH:mm:ss.SSS||yyyy-MM-dd'T'HH:mm:ss||yyyy-MM-dd'T'HH:mm||yyyy-MM-dd||yyyy-MM||yyyy"},
+      "eventDate": {"type": "date_range", "format": "yyyy-MM-dd'T'HH:mm:ss.SSSXXX||yyyy-MM-dd'T'HH:mm:ssXXX||yyyy-MM-dd'T'HH:mmXXX||yyyy-MM-dd'T'HH:mm:ss.SSS||yyyy-MM-dd'T'HH:mm:ss||yyyy-MM-dd'T'HH:mm||yyyy-MM-dd||yyyy-MM||yyyy"},
       "startDayOfYear": {"type": "short"},
       "endDayOfYear": {"type": "short"},
       "modified": {"type": "date"},
@@ -227,6 +228,7 @@
 
       "issues": {"type": "keyword"},
       "notIssues": {"type": "keyword"},
+      "extensions": {"type": "keyword"},
 
       "gbifClassification": {
         "properties": {

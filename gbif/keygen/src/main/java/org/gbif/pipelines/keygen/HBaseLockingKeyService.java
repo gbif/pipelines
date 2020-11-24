@@ -50,7 +50,8 @@ public class HBaseLockingKeyService implements Serializable {
 
   private static final long WAIT_BEFORE_RETRY_MS = 250; // wait when collision
   private static final int WAIT_SKEW = 100; // randomises wait to reduce races
-  private static final long STALE_LOCK_TIME = 60 * 1000; // time to wait for other party to complete
+  private static final long STALE_LOCK_TIME =
+      60 * 1000L; // time to wait for other party to complete
   private static final long COUNTER_ROW = 1; // row ID holding the counter
 
   @VisibleForTesting
@@ -481,7 +482,7 @@ public class HBaseLockingKeyService implements Serializable {
         .forEach(entry -> lookupTableStore.delete(entry.getKey(), Columns.LOOKUP_LOCK_COLUMN));
   }
 
-  private enum KeyStatus {
+  enum KeyStatus {
     ALLOCATING,
     ALLOCATED
   }
