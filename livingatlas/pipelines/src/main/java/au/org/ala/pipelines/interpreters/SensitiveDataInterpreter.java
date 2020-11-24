@@ -141,14 +141,12 @@ public class SensitiveDataInterpreter {
 
   protected static void constructFields(
       Map<String, Term> sensitive, Map<String, String> properties, Map<String, String> values) {
-    values
-        .entrySet()
-        .forEach(
-            e -> {
-              Term term = sensitive.get(e.getKey());
-              String sn = term == null ? null : term.simpleName();
-              if (sn != null && !properties.containsKey(sn)) properties.put(sn, e.getValue());
-            });
+    values.forEach(
+        (key, value) -> {
+          Term term = sensitive.get(key);
+          String sn = term == null ? null : term.simpleName();
+          if (sn != null && !properties.containsKey(sn)) properties.put(sn, value);
+        });
   }
 
   /**

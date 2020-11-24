@@ -120,7 +120,7 @@ public class ALASamplingToAvroPipeline {
                   public void processElement(
                       @Element String sampling,
                       OutputReceiver<KV<String, Map<String, String>>> out) {
-                    Map<String, String> parsedSampling = new HashMap<String, String>();
+                    Map<String, String> parsedSampling = new HashMap<>();
                     try {
                       // skip the header
                       if (!sampling.startsWith("latitude")) {
@@ -203,11 +203,11 @@ public class ALASamplingToAvroPipeline {
 
           // read the first line of the first sampling file
           String samplingFilePath = samplingFiles.iterator().next();
-          String columnHeaderString =
+          try (BufferedReader reader =
               new BufferedReader(
-                      new InputStreamReader(ALAFsUtils.openInputStream(fs, samplingFilePath)))
-                  .readLine();
-          return columnHeaderString.split(",");
+                  new InputStreamReader(ALAFsUtils.openInputStream(fs, samplingFilePath)))) {
+            return reader.readLine().split(",");
+          }
 
         } else {
           throw new RuntimeException(

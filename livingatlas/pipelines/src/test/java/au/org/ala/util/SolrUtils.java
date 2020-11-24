@@ -1,19 +1,15 @@
 package au.org.ala.util;
 
 import au.org.ala.utils.CombinedYamlConfiguration;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URI;
 import java.nio.file.*;
+import java.nio.file.FileSystem;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
-import okhttp3.internal.Util;
 import okio.BufferedSink;
 import okio.Okio;
 import okio.Source;
@@ -27,7 +23,6 @@ import org.apache.solr.client.solrj.response.CollectionAdminResponse;
 import org.apache.solr.client.solrj.response.ConfigSetAdminResponse;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocumentList;
-import org.apache.solr.common.util.NamedList;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -122,7 +117,9 @@ public class SolrUtils {
             .build();
 
     Response response = client.newCall(request).execute();
-    if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
+    if (!response.isSuccessful()) {
+      throw new IOException("Unexpected code " + response);
+    }
 
     log.info("POST", response.body().string());
   }
@@ -165,14 +162,13 @@ public class SolrUtils {
 
     final CollectionAdminRequest.List listRequest = new CollectionAdminRequest.List();
     CollectionAdminResponse response = listRequest.process(cloudSolrClient);
-    NamedList<NamedList<Object>> statuses = response.getCollectionStatus();
 
     List<String> collections = (List) response.getResponse().get("collections");
 
     if (collections != null && collections.contains(BIOCACHE_TEST_SOLR_COLLECTION)) {
       final CollectionAdminRequest.Delete adminRequest = new CollectionAdminRequest.Delete();
       adminRequest.setCollectionName(BIOCACHE_TEST_SOLR_COLLECTION);
-      CollectionAdminResponse adminResponse = adminRequest.process(cloudSolrClient);
+      adminRequest.process(cloudSolrClient);
     }
 
     cloudSolrClient.close();
@@ -234,12 +230,8 @@ public class SolrUtils {
 
       @Override
       public void writeTo(@NotNull BufferedSink sink) throws IOException {
-        Source source = null;
-        try {
-          source = Okio.source(inputStream);
+        try (Source source = Okio.source(inputStream)) {
           sink.writeAll(source);
-        } finally {
-          Util.closeQuietly(source);
         }
       }
     };

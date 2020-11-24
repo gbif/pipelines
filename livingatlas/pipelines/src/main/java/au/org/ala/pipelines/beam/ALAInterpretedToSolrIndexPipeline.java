@@ -60,7 +60,7 @@ public class ALAInterpretedToSolrIndexPipeline {
     run(options);
   }
 
-  public static void run(ALASolrPipelineOptions options) throws Exception {
+  public static void run(ALASolrPipelineOptions options) {
 
     MDC.put("datasetId", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());

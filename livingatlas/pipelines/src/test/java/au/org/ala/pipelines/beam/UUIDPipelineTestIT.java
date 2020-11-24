@@ -58,8 +58,6 @@ public class UUIDPipelineTestIT {
    *
    * <p>1) Loaded 2) Re-loaded 3) Re-loaded with records removed 4) Re-loaded with removed records
    * being added back & UUID being preserved.
-   *
-   * @throws Exception
    */
   @Test
   public void testUuidsPipeline() throws Exception {
@@ -85,7 +83,7 @@ public class UUIDPipelineTestIT {
             "/tmp/la-pipelines-test/uuid-management/dr893/1/identifiers/ala_uuid/interpret-*");
 
     // validate
-    assertTrue(keysAfterFirstRun.size() == keysAfterSecondRun.size());
+    assertEquals(keysAfterFirstRun.size(), keysAfterSecondRun.size());
     for (Map.Entry<String, String> key : keysAfterFirstRun.entrySet()) {
       assertTrue(keysAfterSecondRun.containsKey(key.getKey()));
       assertEquals(keysAfterSecondRun.get(key.getKey()), key.getValue());
