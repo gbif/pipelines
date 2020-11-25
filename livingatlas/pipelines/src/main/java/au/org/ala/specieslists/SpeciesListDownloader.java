@@ -68,7 +68,7 @@ public class SpeciesListDownloader {
         FsUtils.getFileSystem(
             options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getInputPath());
 
-    String outputPath = options.getSpeciesAggregatesPath() + "/species-lists/species-lists.avro";
+    String outputPath = options.getSpeciesAggregatesPath() + options.getSpeciesListCachePath();
 
     // check timestamp
     log.info("Checking output path {}", outputPath);
@@ -91,6 +91,7 @@ public class SpeciesListDownloader {
       }
     }
 
+    // Load species list service
     SpeciesListService service =
         WsUtils.createClient(config.getSpeciesListService(), SpeciesListService.class);
 

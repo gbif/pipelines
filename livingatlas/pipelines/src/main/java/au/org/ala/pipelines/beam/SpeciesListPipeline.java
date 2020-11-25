@@ -4,13 +4,10 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSI
 
 import au.org.ala.pipelines.options.SpeciesLevelPipelineOptions;
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
+import au.org.ala.pipelines.util.SpeciesListUtils;
 import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.specieslists.SpeciesListDownloader;
 import au.org.ala.utils.CombinedYamlConfiguration;
-import com.google.common.base.Strings;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 import java.util.function.UnaryOperator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.file.CodecFactory;
@@ -27,6 +24,22 @@ import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.io.avro.*;
 
+/**
+ * Beam based species list pipeline which will download the species list information and create a
+ * TaxonProfile extension for a dataset, which contains:
+ *
+ * <ul>
+ *   <li>Links to species lists for records
+ *   <li>stateProvince and country associated conservation status for the record
+ *   <li>stateProvince and country associated invasive status for the record
+ * </ul>
+ *
+ * This pipeline is left for debug purposes only. Species lists are joined to the records in the
+ * {@link ALAInterpretedToSolrIndexPipeline} so there is no need to run this pipeline separately.
+ *
+ * @see TaxonProfile
+ * @see SpeciesListDownloader
+ */
 @Slf4j
 public class SpeciesListPipeline {
 
@@ -55,7 +68,7 @@ public class SpeciesListPipeline {
             options.getInputPath(),
             options.getDatasetId(),
             options.getAttempt().toString(),
-            "taxonprofiles",
+            "taxon_profiles",
             "taxon-profile-record");
 
     // write out the result to file
@@ -93,7 +106,7 @@ public class SpeciesListPipeline {
     PCollection<SpeciesListRecord> speciesLists =
         p.apply(
             AvroIO.read(SpeciesListRecord.class)
-                .from(options.getSpeciesAggregatesPath() + "/species-lists/species-lists.avro"));
+                .from(options.getSpeciesAggregatesPath() + options.getSpeciesListCachePath()));
 
     // transform to taxonID -> List<SpeciesListRecord>
     PCollection<KV<String, Iterable<SpeciesListRecord>>> taxonID2Lists =
@@ -134,6 +147,9 @@ public class SpeciesListPipeline {
             .and(t2, taxonID2Lists)
             .apply(CoGroupByKey.create());
 
+    final boolean includeConservationStatus = options.getIncludeConservationStatus();
+    final boolean includeInvasiveStatus = options.getIncludeInvasiveStatus();
+
     // join collections
     return result.apply(
         ParDo.of(
@@ -149,44 +165,12 @@ public class SpeciesListPipeline {
                 Iterable<SpeciesListRecord> speciesLists = result.getOnly(t2, null);
 
                 if (speciesLists != null) {
-                  Iterator<SpeciesListRecord> iter = speciesLists.iterator();
-
-                  List<String> speciesListIDs = new ArrayList<String>();
-                  List<ConservationStatus> conservationStatusList =
-                      new ArrayList<ConservationStatus>();
-                  List<InvasiveStatus> invasiveStatusList = new ArrayList<InvasiveStatus>();
-
-                  while (iter.hasNext()) {
-
-                    SpeciesListRecord speciesListRecord = iter.next();
-                    speciesListIDs.add(speciesListRecord.getSpeciesListID());
-
-                    if (speciesListRecord.getIsThreatened()
-                        && (!Strings.isNullOrEmpty(speciesListRecord.getSourceStatus())
-                            || !Strings.isNullOrEmpty(speciesListRecord.getStatus()))) {
-                      conservationStatusList.add(
-                          ConservationStatus.newBuilder()
-                              .setSpeciesListID(speciesListRecord.getSpeciesListID())
-                              .setRegion(speciesListRecord.getRegion())
-                              .setSourceStatus(speciesListRecord.getSourceStatus())
-                              .setStatus(speciesListRecord.getStatus())
-                              .build());
-                    } else if (speciesListRecord.getIsInvasive()) {
-                      invasiveStatusList.add(
-                          InvasiveStatus.newBuilder()
-                              .setSpeciesListID(speciesListRecord.getSpeciesListID())
-                              .setRegion(speciesListRecord.getRegion())
-                              .build());
-                    }
-                  }
-
+                  TaxonProfile.Builder builder =
+                      SpeciesListUtils.createTaxonProfileBuilder(
+                          speciesLists, includeConservationStatus, includeInvasiveStatus);
                   // output a link to each occurrence record we've matched by taxonID
                   for (String occurrenceID : occurrenceIDs) {
-                    TaxonProfile.Builder builder = TaxonProfile.newBuilder();
                     builder.setId(occurrenceID);
-                    builder.setSpeciesListID(speciesListIDs);
-                    builder.setConservationStatuses(conservationStatusList);
-                    builder.setInvasiveStatuses(invasiveStatusList);
                     c.output(KV.of(occurrenceID, builder.build()));
                   }
                 }

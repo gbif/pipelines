@@ -11,9 +11,25 @@ public interface SpeciesLevelPipelineOptions extends InterpretationPipelineOptio
 
   void setSpeciesAggregatesPath(String speciesAggregatesPath);
 
+  @Description("Default directory where species list level information is stored to")
+  @Default.String("/species-lists/species-lists.avro")
+  String getSpeciesListCachePath();
+
+  void setSpeciesListCachePath(String speciesListCachePath);
+
   @Description("The max age in minutes of the species list download. Default is 1440 = 1 day")
   @Default.Long(1440l)
   long getMaxDownloadAgeInMinutes();
 
   void setMaxDownloadAgeInMinutes(long getMaxDownloadAgeInMinutes);
+
+  @Default.Boolean(true)
+  Boolean getIncludeConservationStatus();
+
+  void setIncludeConservationStatus(Boolean includeConservationStatus);
+
+  @Default.Boolean(true)
+  Boolean getIncludeInvasiveStatus();
+
+  void setIncludeInvasiveStatus(Boolean includeInvasiveStatus);
 }

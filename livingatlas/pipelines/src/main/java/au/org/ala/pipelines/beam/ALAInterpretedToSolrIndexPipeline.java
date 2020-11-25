@@ -44,7 +44,7 @@ import org.slf4j.MDC;
 
 /**
  * ALA Beam pipeline for creating a SOLR index. This pipeline uses the HTTP SOLR api to index
- * records..
+ * records.
  */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -163,16 +163,19 @@ public class ALAInterpretedToSolrIndexPipeline {
         p.apply("Read attribution", alaAttributionTransform.read(pathFn))
             .apply("Map attribution to KV", alaAttributionTransform.toKv());
 
+    // load images
     PCollection<KV<String, ImageServiceRecord>> alaImageServiceRecords = null;
     if (options.getIncludeImages()) {
       alaImageServiceRecords = getLoadImageServiceRecords(options, p);
     }
 
+    // load taxon profiles
     PCollection<KV<String, TaxonProfile>> alaTaxonProfileRecords = null;
     if (options.getIncludeSpeciesLists()) {
       alaTaxonProfileRecords = SpeciesListPipeline.generateTaxonProfileCollection(p, options);
     }
 
+    // load sampling
     PCollection<KV<String, LocationFeatureRecord>> locationFeatureCollection = null;
     if (options.getIncludeSampling()) {
       locationFeatureCollection =
@@ -267,7 +270,7 @@ public class ALAInterpretedToSolrIndexPipeline {
   }
 
   /**
-   * Load image service records.
+   * Load image service records for a dataset.
    *
    * @param options
    * @param p

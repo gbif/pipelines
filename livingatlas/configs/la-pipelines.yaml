@@ -137,6 +137,8 @@ speciesLists:
   speciesAggregatesPath: '{fsPath}/pipelines-species'
   tempLocation: /tmp
   maxDownloadAgeInMinutes: 1440
+  includeConservationStatus: true
+  includeInvasiveStatus: true
 
 # LayerCrawler specific configuration
 layerCrawler:

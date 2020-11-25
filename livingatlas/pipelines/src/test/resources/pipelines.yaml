@@ -31,6 +31,9 @@ alaNameMatch:
 collectory:
   wsUrl: http://localhost:3939
   timeoutSec: 70
+speciesListService:
+  wsUrl: http://localhost:3940
+  timeoutSec: 70
 sds:
   wsUrl: http://localhost:9289
   timeoutSec: 70
@@ -123,6 +126,14 @@ layerCrawler:
   batchSize: 25000
   batchStatusSleepTime: 1000
   downloadRetries: 5
+
+speciesLists:
+  runner: SparkRunner
+  speciesAggregatesPath: 'tmp./pipelines-species'
+  tempLocation: /tmp
+  maxDownloadAgeInMinutes: 1440
+  includeConservationStatus: true
+  includeInvasiveStatus: true
 
 # class: au.org.ala.pipelines.beam.ALASamplingToAvroPipeline
 sample-avro:
