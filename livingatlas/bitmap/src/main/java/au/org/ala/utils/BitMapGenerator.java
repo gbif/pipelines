@@ -35,9 +35,9 @@ import org.apache.http.annotation.Obsolete;
  * It is a simple workaround to generate coloured SVG for a SHP file. NOTE: There are no overlapped
  * zones in this SHP file
  *
- * SHP files need to loaded to Postgres first.
+ * <p>SHP files need to loaded to Postgres first.
  *
- * A dockerised postgres needs to setup first. database: eez; user: eez); password: eez);
+ * <p>A dockerised postgres needs to setup first. database: eez; user: eez); password: eez);
  */
 @AllArgsConstructor
 public class BitMapGenerator {
