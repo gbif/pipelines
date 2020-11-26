@@ -269,17 +269,18 @@ public class InterpretedToEsIndexPipeline {
             executor);
 
     CompletableFuture.allOf(
-        metadataMapFeature,
-        verbatimMapFeature,
-        basicMapFeature,
-        temporalMapFeature,
-        locationMapFeature,
-        taxonMapFeature,
-        grscicollMapFeature,
-        multimediaMapFeature,
-        imageMapFeature,
-        audubonMapFeature,
-        measurementMapFeature);
+            metadataMapFeature,
+            verbatimMapFeature,
+            basicMapFeature,
+            temporalMapFeature,
+            locationMapFeature,
+            taxonMapFeature,
+            grscicollMapFeature,
+            multimediaMapFeature,
+            imageMapFeature,
+            audubonMapFeature,
+            measurementMapFeature)
+        .get();
 
     MetadataRecord metadata = metadataMapFeature.get().values().iterator().next();
     Map<String, BasicRecord> basicMap = basicMapFeature.get();
