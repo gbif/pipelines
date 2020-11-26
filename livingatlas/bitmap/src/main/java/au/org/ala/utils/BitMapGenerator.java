@@ -1,7 +1,5 @@
 package au.org.ala.utils;
 
-import static org.apache.batik.transcoder.image.ImageTranscoder.KEY_BACKGROUND_COLOR;
-
 import com.google.common.base.Stopwatch;
 import com.google.common.base.Strings;
 import java.awt.Color;
@@ -29,6 +27,7 @@ import javax.imageio.ImageIO;
 import lombok.AllArgsConstructor;
 import org.apache.batik.transcoder.TranscoderInput;
 import org.apache.batik.transcoder.TranscoderOutput;
+import org.apache.batik.transcoder.image.ImageTranscoder;
 import org.apache.batik.transcoder.image.PNGTranscoder;
 import org.apache.http.annotation.Obsolete;
 
@@ -36,9 +35,9 @@ import org.apache.http.annotation.Obsolete;
  * It is a simple workaround to generate coloured SVG for a SHP file. NOTE: There are no overlapped
  * zones in this SHP file
  *
- * <p>SHP files need to loaded to Postgres first.
+ * SHP files need to loaded to Postgres first.
  *
- * <p>A dockerised postgres needs to setup first. database: eez; user: eez); password: eez);
+ * A dockerised postgres needs to setup first. database: eez; user: eez); password: eez);
  */
 @AllArgsConstructor
 public class BitMapGenerator {
@@ -159,7 +158,7 @@ public class BitMapGenerator {
       TranscoderInput svgImage = new TranscoderInput(hollowSvgFile.toString());
       TranscoderOutput pngImage = new TranscoderOutput(pngOut);
       PNGTranscoder pngTranscoder = new PNGTranscoder();
-      pngTranscoder.addTranscodingHint(KEY_BACKGROUND_COLOR, Color.white);
+      pngTranscoder.addTranscodingHint(ImageTranscoder.KEY_BACKGROUND_COLOR, Color.white);
       pngTranscoder.transcode(svgImage, pngImage);
     }
 
@@ -168,7 +167,7 @@ public class BitMapGenerator {
       TranscoderInput svgImage = new TranscoderInput(filledSvgFile.toString());
       TranscoderOutput pngImage = new TranscoderOutput(pngOut);
       PNGTranscoder pngTranscoder = new PNGTranscoder();
-      pngTranscoder.addTranscodingHint(KEY_BACKGROUND_COLOR, Color.white);
+      pngTranscoder.addTranscodingHint(ImageTranscoder.KEY_BACKGROUND_COLOR, Color.white);
       pngTranscoder.transcode(svgImage, pngImage);
     }
 
@@ -243,7 +242,7 @@ public class BitMapGenerator {
       TranscoderInput svgImage = new TranscoderInput(svgFile);
       TranscoderOutput pngImage = new TranscoderOutput(pngOut);
       PNGTranscoder pngTranscoder = new PNGTranscoder();
-      pngTranscoder.addTranscodingHint(KEY_BACKGROUND_COLOR, Color.white);
+      pngTranscoder.addTranscodingHint(ImageTranscoder.KEY_BACKGROUND_COLOR, Color.white);
       pngTranscoder.transcode(svgImage, pngImage);
     }
     System.out.println(pngFile + " is generated.");
