@@ -94,6 +94,14 @@ public class ALAFsUtils {
         .toString();
   }
 
+  public static String buildPathTaxonProfileUsingTargetPath(
+      BasePipelineOptions options, String name, String uniqueId) {
+    return PathBuilder.buildPath(
+            PathBuilder.buildDatasetAttemptPath(options, "taxonprofiles", false),
+            name + "-" + uniqueId)
+        .toString();
+  }
+
   /** Build a path to sampling output. */
   public static String buildPathSamplingOutputUsingTargetPath(
       InterpretationPipelineOptions options) {

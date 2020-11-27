@@ -291,6 +291,9 @@
     <solr8.zk.host>localhost</solr8.zk.host>
     <solr8.http.host>localhost</solr8.http.host>
     <collectory.url>http://localhost:3939</collectory.url>
+    <collectory.port>3939</collectory.port>
+    <speciesListService.host>localhost</speciesListService.host>
+    <speciesListService.port>3940</speciesListService.port>
     <sds.port>9289</sds.port>
     <sds.admin.port>9290</sds.admin.port>
     <sds.host>localhost</sds.host>

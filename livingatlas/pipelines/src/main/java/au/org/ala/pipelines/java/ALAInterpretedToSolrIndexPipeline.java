@@ -89,7 +89,8 @@ public class ALAInterpretedToSolrIndexPipeline {
 
   public static void main(String[] args) throws FileNotFoundException {
     VersionInfo.print();
-    String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "index");
+    String[] combinedArgs =
+        new CombinedYamlConfiguration(args).toArgs("general", "index", "speciesLists");
     run(combinedArgs);
   }
 
@@ -134,6 +135,8 @@ public class ALAInterpretedToSolrIndexPipeline {
         t -> ALAFsUtils.buildPathSamplingUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
     UnaryOperator<String> imageServicePathFn =
         t -> ALAFsUtils.buildPathImageServiceUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
+    UnaryOperator<String> taxonProfilePathFn =
+        t -> ALAFsUtils.buildPathTaxonProfileUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
 
     String hdfsSiteConfig = options.getHdfsSiteConfig();
     String coreSiteConfig = options.getCoreSiteConfig();
@@ -331,6 +334,10 @@ public class ALAInterpretedToSolrIndexPipeline {
                     imageServicePathFn.apply("image-service-record")),
             executor);
 
+    CompletableFuture<Map<String, TaxonProfile>> taxonProfileMapFeature =
+        CompletableFuture.supplyAsync(
+            () -> SpeciesListPipeline.generateTaxonProfileCollection(options), executor);
+
     MetadataRecord metadata = metadataMapFeature.get().values().iterator().next();
     Map<String, BasicRecord> basicMap = basicMapFeature.get();
     Map<String, ExtendedRecord> verbatimMap = verbatimMapFeature.get();
@@ -344,6 +351,9 @@ public class ALAInterpretedToSolrIndexPipeline {
         options.getIncludeSampling() ? australiaSpatialMapFeature.get() : Collections.emptyMap();
     Map<String, ImageServiceRecord> imageServiceMap =
         options.getIncludeImages() ? imageServiceMapFeature.get() : Collections.emptyMap();
+
+    Map<String, TaxonProfile> taxonProfileMap =
+        options.getIncludeSpeciesLists() ? taxonProfileMapFeature.get() : Collections.emptyMap();
 
     Map<String, MultimediaRecord> multimediaMap = multimediaMapFeature.get();
     Map<String, ImageRecord> imageMap = imageMapFeature.get();
@@ -381,6 +391,8 @@ public class ALAInterpretedToSolrIndexPipeline {
                   k, LocationFeatureRecord.newBuilder().setId(k).build());
           ImageServiceRecord isr =
               imageServiceMap.getOrDefault(k, ImageServiceRecord.newBuilder().setId(k).build());
+          TaxonProfile tpr =
+              taxonProfileMap.getOrDefault(k, TaxonProfile.newBuilder().setId(k).build());
 
           // Extension
           MultimediaRecord mr =
@@ -394,7 +406,7 @@ public class ALAInterpretedToSolrIndexPipeline {
           MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
 
           return ALASolrDocumentTransform.createSolrDocument(
-              metadata, br, tr, lr, txr, atxr, er, aar, asr, aur, isr);
+              metadata, br, tr, lr, txr, atxr, er, aar, asr, aur, isr, tpr);
         };
 
     boolean useSyncMode = options.getSyncThreshold() > basicMap.size();

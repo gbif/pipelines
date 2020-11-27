@@ -1,0 +1,36 @@
+[
+    {
+      "name":"InvasiveStatus",
+      "namespace":"org.gbif.pipelines.io.avro",
+      "type":"record",
+      "doc":"InvasiveStatus",
+      "fields":[
+        {"name": "speciesListID", "type": ["null", "string"]},
+        {"name": "region", "type": ["null", "string"]}
+      ]
+    },
+    {
+      "name":"ConservationStatus",
+      "namespace":"org.gbif.pipelines.io.avro",
+      "type":"record",
+      "doc":"ConservationStatus",
+      "fields":[
+        {"name": "speciesListID", "type": ["null", "string"]},
+        {"name": "region", "type": ["null", "string"]},
+        {"name": "status", "type": ["null", "string"]},
+        {"name": "sourceStatus", "type": ["null", "string"]}
+      ]
+    },
+    {
+      "name":"TaxonProfile",
+      "namespace":"org.gbif.pipelines.io.avro",
+      "type":"record",
+      "doc":"TaxonProfile",
+      "fields":[
+        {"name": "id", "type": ["null", "string"]},
+        {"name": "speciesListID", "type": {"type" : "array", "items" : "string"}, "default" : []},
+        {"name": "conservationStatuses", "type": {"type" : "array", "items" : "ConservationStatus"}, "default" : []},
+        {"name": "invasiveStatuses", "type": {"type" : "array", "items" : "InvasiveStatus"}, "default" : []}
+      ]
+    }
+]

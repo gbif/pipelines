@@ -41,7 +41,7 @@ public class GeocodeShpIntersectService {
     }
   }
 
-  /** Validate resource file paths are avialable. */
+  /** Validate resource file paths are available. */
   private void checkResourceFiles(GeocodeShpConfig config) {
     String error = "";
     if (config == null) {

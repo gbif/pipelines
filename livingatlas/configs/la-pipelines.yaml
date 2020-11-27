@@ -42,6 +42,9 @@ imageService:
   timeoutSec: 70
   httpHeaders:
     apiKey: add-a-api-key-here
+speciesListService:
+  wsUrl: https://lists.ala.org.au
+  timeoutSec: 70
 geocodeConfig:
   country:
     path: /data/pipelines-shp/political
@@ -127,6 +130,16 @@ images:
   # pipe separated list (note: YAML list not coming through correctly)
   recognisedPaths: "https://images.ala.org.au"
 
+speciesLists:
+  runner: SparkRunner
+  inputPath: '{fsPath}/pipelines-data'
+  targetPath: '{fsPath}/pipelines-data'
+  speciesAggregatesPath: '{fsPath}/pipelines-species'
+  tempLocation: /tmp
+  maxDownloadAgeInMinutes: 1440
+  includeConservationStatus: true
+  includeInvasiveStatus: true
+
 # LayerCrawler specific configuration
 layerCrawler:
   # baseUrl: https://spatial.your-l-a.site/ws/
@@ -151,6 +164,7 @@ index:
   solrCollection: biocache
   includeSampling: true
   includeImages: true
+  includeSpeciesLists: true
   runner: SparkRunner
   zkHost: localhost:9983
   ## For spark-cluster:
