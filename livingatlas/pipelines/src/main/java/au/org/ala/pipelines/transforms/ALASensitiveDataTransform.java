@@ -5,17 +5,19 @@ import static au.org.ala.pipelines.common.ALARecordTypes.ALA_SENSITIVE_DATA;
 import au.org.ala.kvs.client.ALACollectoryMetadata;
 import au.org.ala.pipelines.interpreters.SensitiveDataInterpreter;
 import au.org.ala.sds.api.ConservationApi;
-import au.org.ala.sds.api.SensitivityQuery;
-import au.org.ala.sds.api.SensitivityReport;
 import au.org.ala.sds.api.SpeciesCheck;
-import au.org.ala.sds.generalise.FieldAccessor;
-import au.org.ala.sds.generalise.Generalisation;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.avro.specific.SpecificRecordBase;
+import org.apache.beam.sdk.metrics.Counter;
+import org.apache.beam.sdk.metrics.Metrics;
+import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.MapElements;
+import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TupleTag;
@@ -26,7 +28,12 @@ import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.core.functions.SerializableConsumer;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.core.interpreters.core.TaxonomyInterpreter;
-import org.gbif.pipelines.io.avro.*;
+import org.gbif.pipelines.io.avro.ALASensitivityRecord;
+import org.gbif.pipelines.io.avro.ALATaxonRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.TaxonRecord;
+import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.transforms.Transform;
 
 /**
@@ -41,22 +48,18 @@ import org.gbif.pipelines.transforms.Transform;
  * @see <a href="https://dwc.tdwg.org/terms/#taxon</a>
  */
 @Slf4j
-public class ALASensitiveDataRecordTransform
+public class ALASensitiveDataTransform
     extends Transform<KV<String, CoGbkResult>, ALASensitivityRecord> {
 
   private final String datasetId;
   private KeyValueStore<SpeciesCheck, Boolean> speciesStore;
   private final SerializableSupplier<KeyValueStore<SpeciesCheck, Boolean>> speciesStoreSupplier;
-  private KeyValueStore<SensitivityQuery, SensitivityReport> reportStore;
-  private final SerializableSupplier<KeyValueStore<SensitivityQuery, SensitivityReport>>
-      reportStoreSupplier;
   private KeyValueStore<String, ALACollectoryMetadata> dataResourceStore;
   private final SerializableSupplier<KeyValueStore<String, ALACollectoryMetadata>>
       dataResourceStoreSupplier;
   private ConservationApi conservationService;
   private final SerializableSupplier<ConservationApi> conservationServiceSupplier;
-  private List<Generalisation> generalisations;
-  private Set<Term> sensitiveFields;
+  private Map<String, Term> sensitiveFields;
   @NonNull private final TupleTag<ExtendedRecord> erTag;
   @NonNull private final TupleTag<TemporalRecord> trTag;
   @NonNull private final TupleTag<TaxonRecord> txrTag;
@@ -64,12 +67,10 @@ public class ALASensitiveDataRecordTransform
   @NonNull private final TupleTag<LocationRecord> lrTag;
 
   @Builder(buildMethodName = "create")
-  private ALASensitiveDataRecordTransform(
+  private ALASensitiveDataTransform(
       String datasetId,
       KeyValueStore<SpeciesCheck, Boolean> speciesStore,
       SerializableSupplier<KeyValueStore<SpeciesCheck, Boolean>> speciesStoreSupplier,
-      KeyValueStore<SensitivityQuery, SensitivityReport> reportStore,
-      SerializableSupplier<KeyValueStore<SensitivityQuery, SensitivityReport>> reportStoreSupplier,
       KeyValueStore<String, ALACollectoryMetadata> dataResourceStore,
       SerializableSupplier<KeyValueStore<String, ALACollectoryMetadata>> dataResourceStoreSupplier,
       ConservationApi conservationService,
@@ -82,13 +83,11 @@ public class ALASensitiveDataRecordTransform
     super(
         ALASensitivityRecord.class,
         ALA_SENSITIVE_DATA,
-        ALASensitiveDataRecordTransform.class.getName(),
+        ALASensitiveDataTransform.class.getName(),
         "alaSensitiveDataRecordCount");
     this.datasetId = datasetId;
     this.speciesStore = speciesStore;
     this.speciesStoreSupplier = speciesStoreSupplier;
-    this.reportStore = reportStore;
-    this.reportStoreSupplier = reportStoreSupplier;
     this.dataResourceStore = dataResourceStore;
     this.dataResourceStoreSupplier = dataResourceStoreSupplier;
     this.conservationService = conservationService;
@@ -108,12 +107,12 @@ public class ALASensitiveDataRecordTransform
         .via((ALASensitivityRecord tr) -> KV.of(tr.getId(), tr));
   }
 
-  public ALASensitiveDataRecordTransform counterFn(SerializableConsumer<String> counterFn) {
+  public ALASensitiveDataTransform counterFn(SerializableConsumer<String> counterFn) {
     setCounterFn(counterFn);
     return this;
   }
 
-  public ALASensitiveDataRecordTransform init() {
+  public ALASensitiveDataTransform init() {
     setup();
     return this;
   }
@@ -122,12 +121,8 @@ public class ALASensitiveDataRecordTransform
   @Setup
   public void setup() {
     if (this.speciesStore == null && this.speciesStoreSupplier != null) {
-      log.info("Initialize Sensitive Species KvStore");
+      log.info("Initialize SensitiveSpeciesKvStore");
       this.speciesStore = this.speciesStoreSupplier.get();
-    }
-    if (this.reportStore == null && this.reportStoreSupplier != null) {
-      log.info("Initialize Sensitivity Report KvStore");
-      this.reportStore = this.reportStoreSupplier.get();
     }
     if (this.dataResourceStore == null && this.dataResourceStoreSupplier != null) {
       log.info("Initialize CollectoryKvStore");
@@ -137,18 +132,10 @@ public class ALASensitiveDataRecordTransform
       log.info("Initialize Conservation API");
       this.conservationService = this.conservationServiceSupplier.get();
     }
-    if (this.generalisations == null) {
-      log.info("Get generalisations to apply");
-      this.generalisations = this.conservationService.getGeneralisations();
-      this.sensitiveFields = null;
-    }
-    if (this.sensitiveFields == null) {
-      log.info("Building sensitive field list");
-      this.sensitiveFields = new HashSet<>(this.generalisations.size());
-      for (Generalisation g : this.generalisations) {
-        this.sensitiveFields.addAll(
-            g.getFields().stream().map(FieldAccessor::getField).collect(Collectors.toSet()));
-      }
+    if (this.sensitiveFields == null && conservationService != null) {
+      this.sensitiveFields =
+          SensitiveDataInterpreter.buildSensitivityMap(
+              this.conservationService.getSensitiveDataFields());
     }
   }
 
@@ -186,10 +173,10 @@ public class ALASensitiveDataRecordTransform
 
     Map<String, String> properties = new HashMap<>(this.sensitiveFields.size());
     properties.put(
-        DwcTerm.scientificName.qualifiedName(),
+        DwcTerm.scientificName.simpleName(),
         SensitiveDataInterpreter.extractScientificName(iatxr, itxr, ier));
     properties.put(
-        DwcTerm.taxonConceptID.qualifiedName(),
+        DwcTerm.taxonConceptID.simpleName(),
         SensitiveDataInterpreter.extractTaxonId(iatxr, itxr, ier));
     SensitiveDataInterpreter.constructFields(sensitiveFields, properties, iatxr);
     SensitiveDataInterpreter.constructFields(sensitiveFields, properties, itxr);
@@ -199,8 +186,70 @@ public class ALASensitiveDataRecordTransform
 
     if (SensitiveDataInterpreter.sourceQualityChecks(properties, sr, dataResource)) {
       SensitiveDataInterpreter.sensitiveDataInterpreter(
-          dataResource, speciesStore, reportStore, generalisations, datasetId, properties, sr);
+          dataResource, speciesStore, conservationService, properties, sr);
     }
     return Optional.of(sr);
+  }
+
+  /**
+   * Rewrite a record with sensitive generalisations.
+   *
+   * @param clazz The class of record being processed
+   * @param ctag The tuple tag to use for retrieval
+   * @param <T> The type of record being re-written
+   * @return A Singleton ParDo for the rewriter
+   */
+  public <T extends SpecificRecordBase> ParDo.SingleOutput<KV<String, CoGbkResult>, T> rewriter(
+      Class<T> clazz, TupleTag<T> ctag) {
+    DoFn<KV<String, CoGbkResult>, T> fn =
+        new DoFn<KV<String, CoGbkResult>, T>() {
+
+          private final Counter counter =
+              Metrics.counter(
+                  ALASensitiveDataTransform.class, "generalise" + clazz.getSimpleName() + "Count");
+
+          @ProcessElement
+          public void processElement(ProcessContext c) {
+            CoGbkResult v = c.element().getValue();
+
+            T record = v.getOnly(ctag, null);
+            T generalised = null;
+            if (record == null) return;
+            ALASensitiveDataTransform.this.setup(); // Required to ensure sensitive fields present
+            ALASensitivityRecord sr = v.getOnly(ALASensitiveDataTransform.this.getTag(), null);
+            if (sr == null || sr.getSensitive() == null || !sr.getSensitive()) {
+              generalised = record;
+            } else {
+              if (record instanceof ExtendedRecord) {
+                ExtendedRecord r = ExtendedRecord.newBuilder((ExtendedRecord) record).build();
+                SensitiveDataInterpreter.applySensitivity(sensitiveFields, sr, r);
+                generalised = (T) r;
+              } else if (record instanceof TemporalRecord) {
+                TemporalRecord r = TemporalRecord.newBuilder((TemporalRecord) record).build();
+                SensitiveDataInterpreter.applySensitivity(sensitiveFields, sr, r);
+                generalised = (T) r;
+              } else if (record instanceof LocationRecord) {
+                LocationRecord r = LocationRecord.newBuilder((LocationRecord) record).build();
+                SensitiveDataInterpreter.applySensitivity(sensitiveFields, sr, r);
+                generalised = (T) r;
+              } else if (record instanceof TaxonRecord) {
+                TaxonRecord r = TaxonRecord.newBuilder((TaxonRecord) record).build();
+                SensitiveDataInterpreter.applySensitivity(sensitiveFields, sr, r);
+                generalised = (T) r;
+              } else if (record instanceof ALATaxonRecord) {
+                ALATaxonRecord r = ALATaxonRecord.newBuilder((ALATaxonRecord) record).build();
+                SensitiveDataInterpreter.applySensitivity(sensitiveFields, sr, r);
+                generalised = (T) r;
+              } else {
+                log.error("Unable to process sensitive record of class " + record.getClass());
+              }
+            }
+            if (generalised != null) {
+              c.output(generalised);
+              counter.inc();
+            }
+          }
+        };
+    return ParDo.of(fn);
   }
 }
