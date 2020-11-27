@@ -10,6 +10,7 @@ import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.BasicInterpreter;
+import org.gbif.pipelines.core.parsers.clustering.ClusteringService;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
@@ -25,7 +26,8 @@ public class ALABasicTransform extends BasicTransform {
       BiConsumer<ExtendedRecord, BasicRecord> gbifIdFn,
       SerializableSupplier<HBaseLockingKeyService> keygenServiceSupplier,
       SerializableSupplier<VocabularyLookup> lifeStageLookupSupplier,
-      SerializableSupplier<KeyValueStore<String, OccurrenceStatus>> occStatusKvStoreSupplier) {
+      SerializableSupplier<KeyValueStore<String, OccurrenceStatus>> occStatusKvStoreSupplier,
+      SerializableSupplier<ClusteringService> clusteringServiceSupplier) {
     super(
         isTripletValid,
         isOccurrenceIdValid,
@@ -33,7 +35,8 @@ public class ALABasicTransform extends BasicTransform {
         gbifIdFn,
         keygenServiceSupplier,
         lifeStageLookupSupplier,
-        occStatusKvStoreSupplier);
+        occStatusKvStoreSupplier,
+        clusteringServiceSupplier);
   }
 
   @Override

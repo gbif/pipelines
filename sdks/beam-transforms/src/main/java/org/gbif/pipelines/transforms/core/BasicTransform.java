@@ -34,23 +34,23 @@ import org.gbif.vocabulary.lookup.VocabularyLookup;
  */
 public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
 
-  private final boolean isTripletValid;
-  private final boolean isOccurrenceIdValid;
-  private final boolean useExtendedRecordId;
-  private final BiConsumer<ExtendedRecord, BasicRecord> gbifIdFn;
-  private final SerializableSupplier<HBaseLockingKeyService> keygenServiceSupplier;
-  private final SerializableSupplier<VocabularyLookup> lifeStageLookupSupplier;
-  private final SerializableSupplier<KeyValueStore<String, OccurrenceStatus>>
+  protected final boolean isTripletValid;
+  protected final boolean isOccurrenceIdValid;
+  protected final boolean useExtendedRecordId;
+  protected final BiConsumer<ExtendedRecord, BasicRecord> gbifIdFn;
+  protected final SerializableSupplier<HBaseLockingKeyService> keygenServiceSupplier;
+  protected final SerializableSupplier<VocabularyLookup> lifeStageLookupSupplier;
+  protected final SerializableSupplier<KeyValueStore<String, OccurrenceStatus>>
       occStatusKvStoreSupplier;
-  private final SerializableSupplier<ClusteringService> clusteringServiceSupplier;
+  protected final SerializableSupplier<ClusteringService> clusteringServiceSupplier;
 
-  private KeyValueStore<String, OccurrenceStatus> occStatusKvStore;
-  private HBaseLockingKeyService keygenService;
-  private VocabularyLookup lifeStageLookup;
-  private ClusteringService clusteringService;
+  protected KeyValueStore<String, OccurrenceStatus> occStatusKvStore;
+  protected HBaseLockingKeyService keygenService;
+  protected VocabularyLookup lifeStageLookup;
+  protected ClusteringService clusteringService;
 
   @Builder(buildMethodName = "create")
-  private BasicTransform(
+  protected BasicTransform(
       boolean isTripletValid,
       boolean isOccurrenceIdValid,
       boolean useExtendedRecordId,

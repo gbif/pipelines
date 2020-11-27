@@ -38,7 +38,7 @@ public class TestUtils {
     return url.getPort();
   }
 
-  public static MockWebServer createMockSpeciesLists(){
+  public static MockWebServer createMockSpeciesLists() {
     MockWebServer server = new MockWebServer();
     final Dispatcher dispatcher =
         new Dispatcher() {
@@ -49,7 +49,8 @@ public class TestUtils {
               // authoritative lists
               if (request.getPath().startsWith("/ws/speciesList")) {
                 String responseBody =
-                    FileUtils.readFileToString(new File("src/test/resources/species-lists/list.json"), "UTF-8");
+                    FileUtils.readFileToString(
+                        new File("src/test/resources/species-lists/list.json"), "UTF-8");
                 return new MockResponse()
                     .setResponseCode(200)
                     .setHeader("Content-Type", "application/json")
@@ -59,16 +60,17 @@ public class TestUtils {
               // list download
               if (request.getPath().startsWith("/speciesListItem/downloadList")) {
 
-                Source source = Okio.source(new File("src/test/resources/species-lists/test-list.csv"));
+                Source source =
+                    Okio.source(new File("src/test/resources/species-lists/test-list.csv"));
                 Buffer buffer = new Buffer();
                 buffer.writeAll(source);
                 return new MockResponse()
-                        .setHeader("contentType", "text/csv")
-                        .setHeader("Content-Disposition", "attachment;filename=test-list.csv")
-                        .setResponseCode(200)
-                        .setBody(buffer);
+                    .setHeader("contentType", "text/csv")
+                    .setHeader("Content-Disposition", "attachment;filename=test-list.csv")
+                    .setResponseCode(200)
+                    .setBody(buffer);
               }
-            } catch (Exception e){
+            } catch (Exception e) {
               return new MockResponse().setResponseCode(500);
             }
             return new MockResponse().setResponseCode(400);
@@ -77,7 +79,6 @@ public class TestUtils {
     server.setDispatcher(dispatcher);
     return server;
   }
-
 
   public static MockWebServer createMockCollectory() {
     MockWebServer server = new MockWebServer();
