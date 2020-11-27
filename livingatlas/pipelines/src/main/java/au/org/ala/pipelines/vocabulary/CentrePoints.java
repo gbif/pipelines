@@ -33,11 +33,10 @@ import org.gbif.kvs.geocode.LatLng;
 @Slf4j
 public class CentrePoints {
 
-  private static CentrePoints cp;
-  private final Map<String, LatLng> centres = new HashMap();
-  private final Map<String, BBox> BBox = new HashMap();
+  private final Map<String, LatLng> centres = new HashMap<>();
+  private final Map<String, BBox> bBox = new HashMap<>();
   // Only for country, map country code to country name
-  private final Map<String, String> codes = new HashMap();
+  private final Map<String, String> codes = new HashMap<>();
 
   private CentrePoints() {}
 
@@ -47,14 +46,14 @@ public class CentrePoints {
   }
 
   public static CentrePoints getInstance(InputStream is) {
-    cp = new CentrePoints();
+    CentrePoints cp = new CentrePoints();
     // Use country as an example
     // 3 columns: country code, latitude, longitude,
     // 4 columns: country code, latitude, longitude,country name
     // 7 coluns: country code, latitude, longitude, bbox
     new BufferedReader(new InputStreamReader(is))
         .lines()
-        .map(s -> s.trim())
+        .map(String::trim)
         .filter(
             l ->
                 l.split("\t").length == 7
@@ -83,7 +82,7 @@ public class CentrePoints {
                         Double.parseDouble(ss[4]),
                         Double.parseDouble(ss[5]),
                         Double.parseDouble(ss[6]));
-                cp.BBox.put(name, bbox);
+                cp.bBox.put(name, bbox);
               }
               cp.centres.put(name, centre);
             });
@@ -169,11 +168,11 @@ public class CentrePoints {
     private double ymin;
     private double ymax;
 
-    public BBox(double a_x, double a_y, double b_x, double b_y) {
-      xmin = Math.min(a_x, b_x);
-      xmax = Math.max(a_x, b_x);
-      ymin = Math.min(a_y, b_y);
-      ymax = Math.max(a_y, b_y);
+    public BBox(double aX, double aY, double bX, double bY) {
+      xmin = Math.min(aX, bX);
+      xmax = Math.max(aX, bX);
+      ymin = Math.min(aY, bY);
+      ymax = Math.max(aY, bY);
       sanity();
     }
 

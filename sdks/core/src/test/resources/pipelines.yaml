@@ -48,3 +48,6 @@ hdfsLock:
 defaultDateFormat:
   - DMYT
   - DMY
+extensionsAllowedForVerbatimSet:
+  - http://rs.tdwg.org/ac/terms/Multimedia
+  - http://data.ggbn.org/schemas/ggbn/terms/Amplification

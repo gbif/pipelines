@@ -271,16 +271,17 @@ public class ALAInterpretedToSolrIndexPipeline {
             executor);
 
     CompletableFuture.allOf(
-        metadataMapFeature,
-        verbatimMapFeature,
-        basicMapFeature,
-        temporalMapFeature,
-        locationMapFeature,
-        multimediaMapFeature,
-        imageMapFeature,
-        audubonMapFeature,
-        measurementMapFeature,
-        taxonMapFeature);
+            metadataMapFeature,
+            verbatimMapFeature,
+            basicMapFeature,
+            temporalMapFeature,
+            locationMapFeature,
+            multimediaMapFeature,
+            imageMapFeature,
+            audubonMapFeature,
+            measurementMapFeature,
+            taxonMapFeature)
+        .get();
 
     // ALA Specific
     CompletableFuture<Map<String, ALAUUIDRecord>> alaUuidMapFeature =

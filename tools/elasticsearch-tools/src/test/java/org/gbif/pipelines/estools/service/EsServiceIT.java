@@ -82,9 +82,8 @@ public class EsServiceIT extends EsApiIntegration {
     // Should
     assertTrue(EsService.existsIndex(ES_SERVER.getEsClient(), idx));
     assertIndexingSettings(idx);
-    assertTrue(mappings.has("doc"));
-    assertTrue(mappings.path("doc").path("properties").has("test"));
-    assertEquals("text", mappings.path("doc").path("properties").path("test").get("type").asText());
+    assertTrue(mappings.path("properties").has("test"));
+    assertEquals("text", mappings.path("properties").path("test").get("type").asText());
   }
 
   @Test
@@ -333,10 +332,9 @@ public class EsServiceIT extends EsApiIntegration {
     // When
     // index some documents
     long n = 3;
-    final String type = "doc";
     String document = "{\"test\" : \"test value\"}";
     for (int i = 1; i <= n; i++) {
-      EsService.indexDocument(ES_SERVER.getEsClient(), idx, type, i, document);
+      EsService.indexDocument(ES_SERVER.getEsClient(), idx, i, document);
     }
 
     // Should
@@ -352,7 +350,7 @@ public class EsServiceIT extends EsApiIntegration {
 
     // When
     // delete last document
-    EsService.deleteDocument(ES_SERVER.getEsClient(), idx, type, n);
+    EsService.deleteDocument(ES_SERVER.getEsClient(), idx, n);
     EsService.refreshIndex(ES_SERVER.getEsClient(), idx);
 
     // Should
@@ -443,12 +441,11 @@ public class EsServiceIT extends EsApiIntegration {
             IndexParams.builder().indexName("idx3").settingsType(INDEXING).build());
 
     // index some documents
-    final String type = "doc";
     final String datasetKey = "82ceb6ba-f762-11e1-a439-00145eb45e9a";
     String document = "{\"datasetKey\" : \"" + datasetKey + "\"}";
 
     for (String index : indexes) {
-      EsService.indexDocument(ES_SERVER.getEsClient(), index, type, 1, document);
+      EsService.indexDocument(ES_SERVER.getEsClient(), index, 1, document);
       EsService.refreshIndex(ES_SERVER.getEsClient(), index);
     }
 
@@ -483,11 +480,10 @@ public class EsServiceIT extends EsApiIntegration {
             IndexParams.builder().indexName("idx").settingsType(SEARCH).build());
 
     // index some documents
-    final String type = "doc";
     final String datasetKey = "82ceb6ba-f762-11e1-a439-00145eb45e9a";
     String document = "{\"datasetKey\" : \"" + datasetKey + "\"}";
     IntStream.range(1, 4)
-        .forEach(i -> EsService.indexDocument(ES_SERVER.getEsClient(), idx1, type, i, document));
+        .forEach(i -> EsService.indexDocument(ES_SERVER.getEsClient(), idx1, i, document));
 
     // When
     String query = String.format(DELETE_BY_DATASET_QUERY, datasetKey);
@@ -507,11 +503,10 @@ public class EsServiceIT extends EsApiIntegration {
             IndexParams.builder().indexName("idx1").settingsType(SEARCH).build());
 
     // index some documents
-    final String type = "doc";
     final String datasetKey = "82ceb6ba-f762-11e1-a439-00145eb45e9a";
     String document = "{\"datasetKey\" : \"" + datasetKey + "\"}";
     IntStream.range(1, 6)
-        .forEach(i -> EsService.indexDocument(ES_SERVER.getEsClient(), idx1, type, i, document));
+        .forEach(i -> EsService.indexDocument(ES_SERVER.getEsClient(), idx1, i, document));
     EsService.refreshIndex(ES_SERVER.getEsClient(), idx1);
 
     // When

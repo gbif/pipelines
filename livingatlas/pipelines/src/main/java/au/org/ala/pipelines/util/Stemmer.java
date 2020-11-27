@@ -84,11 +84,9 @@ public class Stemmer {
    */
   public void add(char ch) {
     if (i == b.length) {
-      char[] new_b = new char[i + INC];
-      for (int c = 0; c < i; c++) {
-        new_b[c] = b[c];
-      }
-      b = new_b;
+      char[] newB = new char[i + INC];
+      System.arraycopy(b, 0, newB, 0, i);
+      b = newB;
     }
     b[i++] = ch;
   }
@@ -99,11 +97,11 @@ public class Stemmer {
    */
   public void add(char[] w, int wLen) {
     if (i + wLen >= b.length) {
-      char[] new_b = new char[i + wLen + INC];
-      for (int c = 0; c < i; c++) {
-        new_b[c] = b[c];
+      char[] newB = new char[i + wLen + INC];
+      if (i >= 0) {
+        System.arraycopy(b, 0, newB, 0, i);
       }
-      b = new_b;
+      b = newB;
     }
     for (int c = 0; c < wLen; c++) {
       b[i++] = w[c];

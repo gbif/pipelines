@@ -18,7 +18,7 @@ public class GrscicollInterpreterTest {
         GrscicollInterpreter.getInstitutionMatchNoneIssue(Status.AMBIGUOUS));
     assertEquals(
         OccurrenceIssue.AMBIGUOUS_INSTITUTION,
-        GrscicollInterpreter.getInstitutionMatchNoneIssue(Status.AMBIGUOUS_MACHINE_TAGS));
+        GrscicollInterpreter.getInstitutionMatchNoneIssue(Status.AMBIGUOUS_EXPLICIT_MAPPINGS));
     assertEquals(
         OccurrenceIssue.POSSIBLY_ON_LOAN,
         GrscicollInterpreter.getInstitutionMatchNoneIssue(Status.AMBIGUOUS_OWNER));
@@ -34,7 +34,7 @@ public class GrscicollInterpreterTest {
         GrscicollInterpreter.getCollectionMatchNoneIssue(Status.AMBIGUOUS));
     assertEquals(
         OccurrenceIssue.AMBIGUOUS_COLLECTION,
-        GrscicollInterpreter.getCollectionMatchNoneIssue(Status.AMBIGUOUS_MACHINE_TAGS));
+        GrscicollInterpreter.getCollectionMatchNoneIssue(Status.AMBIGUOUS_EXPLICIT_MAPPINGS));
     assertEquals(
         OccurrenceIssue.INSTITUTION_COLLECTION_MISMATCH,
         GrscicollInterpreter.getCollectionMatchNoneIssue(Status.AMBIGUOUS_INSTITUTION_MISMATCH));

@@ -1,7 +1,6 @@
 package org.gbif.pipelines.core.io;
 
 import static org.elasticsearch.common.xcontent.XContentType.JSON;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing.INDEX_TYPE;
 import static org.gbif.pipelines.estools.common.SettingsType.INDEXING;
 import static org.gbif.pipelines.estools.service.EsService.buildEndpoint;
 import static org.junit.Assert.assertEquals;
@@ -303,7 +302,7 @@ public class ElasticsearchWriterIT {
     return br -> {
       String k = br.getId();
       String dummyJson = "{\"test\": \"text\"}";
-      return new IndexRequest(idxName, INDEX_TYPE, k).source(dummyJson, JSON);
+      return new IndexRequest(idxName).id(k).source(dummyJson, JSON);
     };
   }
 

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.gbif.common.parsers.date.DateComponentOrdering;
@@ -41,6 +42,8 @@ public class PipelinesConfig implements Serializable {
 
   private VocabularyConfig vocabularyConfig;
 
+  private ClusteringRelationshipConfig clusteringRelationshipConfig;
+
   /**
    * Provide recommended formats to parse ambiguous dates, e.g. 2/3/2008. If the field is empty or
    * invalid, only accepts standard ISO date format. Parsing 2/3/2008 will fail . <code>DMY</code>
@@ -48,4 +51,6 @@ public class PipelinesConfig implements Serializable {
    */
   private List<DateComponentOrdering> defaultDateFormat =
       Arrays.asList(DateComponentOrdering.ISO_FORMATS);
+
+  private Set<String> extensionsAllowedForVerbatimSet;
 }

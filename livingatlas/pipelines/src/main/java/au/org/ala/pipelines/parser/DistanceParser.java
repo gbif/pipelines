@@ -41,17 +41,17 @@ public class DistanceParser extends MeterRangeParser {
       parseStr = normalised + "m";
     }
     // less or great
-    Matcher gl_matcher = Pattern.compile(greaterOrLessThan).matcher(normalised);
-    if (gl_matcher.find()) {
-      String numberStr = gl_matcher.group(2);
-      String uom = gl_matcher.group(3);
+    Matcher glMatcher = Pattern.compile(greaterOrLessThan).matcher(normalised);
+    if (glMatcher.find()) {
+      String numberStr = glMatcher.group(2);
+      String uom = glMatcher.group(3);
       parseStr = numberStr + uom;
     }
     // range check
-    Matcher range_matcher = Pattern.compile(range).matcher(normalised);
-    if (range_matcher.find()) {
-      String numberStr = range_matcher.group(3);
-      String uom = range_matcher.group(4);
+    Matcher rangeMatcher = Pattern.compile(range).matcher(normalised);
+    if (rangeMatcher.find()) {
+      String numberStr = rangeMatcher.group(3);
+      String uom = rangeMatcher.group(4);
       parseStr = numberStr + uom;
     }
 

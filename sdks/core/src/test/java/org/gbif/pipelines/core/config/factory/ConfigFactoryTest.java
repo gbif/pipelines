@@ -5,6 +5,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Set;
 import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.pipelines.core.config.model.ContentConfig;
 import org.gbif.pipelines.core.config.model.KeygenConfig;
@@ -106,5 +107,12 @@ public class ConfigFactoryTest {
     assertEquals(2, dateFormat.size());
     assertTrue(dateFormat.contains(DateComponentOrdering.DMYT));
     assertTrue(dateFormat.contains(DateComponentOrdering.DMY));
+
+    Set<String> extensionsAllowedForVerbatimSet = config.getExtensionsAllowedForVerbatimSet();
+    assertEquals(2, extensionsAllowedForVerbatimSet.size());
+    assertTrue(extensionsAllowedForVerbatimSet.contains("http://rs.tdwg.org/ac/terms/Multimedia"));
+    assertTrue(
+        extensionsAllowedForVerbatimSet.contains(
+            "http://data.ggbn.org/schemas/ggbn/terms/Amplification"));
   }
 }

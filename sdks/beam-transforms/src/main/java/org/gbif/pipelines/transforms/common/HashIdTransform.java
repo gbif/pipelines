@@ -11,12 +11,11 @@ import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
 import org.gbif.pipelines.core.utils.HashUtils;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.transforms.converters.GbifJsonTransform;
 
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class HashIdTransform extends DoFn<ExtendedRecord, ExtendedRecord> {
 
-  private final Counter counter = Metrics.counter(GbifJsonTransform.class, HASH_ID_COUNT);
+  private final Counter counter = Metrics.counter(HashIdTransform.class, HASH_ID_COUNT);
 
   // Id prefix
   private final String datasetId;

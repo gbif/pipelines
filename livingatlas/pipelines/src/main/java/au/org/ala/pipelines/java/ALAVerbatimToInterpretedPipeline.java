@@ -384,7 +384,7 @@ public class ALAVerbatimToInterpretedPipeline {
 
       // Wait for all features
       log.info("Wait for all features");
-      CompletableFuture[] futures =
+      CompletableFuture<?>[] futures =
           Stream.concat(streamBr, streamAll).toArray(CompletableFuture[]::new);
       CompletableFuture.allOf(futures).get();
 

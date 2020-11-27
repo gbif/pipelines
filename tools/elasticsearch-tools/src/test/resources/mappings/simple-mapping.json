@@ -1,9 +1,7 @@
 {
-  "doc": {
-    "properties": {
-      "test": {
-        "type": "text"
-      }
+  "properties": {
+    "test": {
+      "type": "text"
     }
   }
 }

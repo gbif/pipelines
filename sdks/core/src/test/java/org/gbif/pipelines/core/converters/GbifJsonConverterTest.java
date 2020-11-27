@@ -1,49 +1,17 @@
 package org.gbif.pipelines.core.converters;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import org.gbif.api.model.collections.lookup.Match.MatchType;
-import org.gbif.api.vocabulary.AgentIdentifierType;
-import org.gbif.api.vocabulary.Extension;
-import org.gbif.api.vocabulary.License;
-import org.gbif.api.vocabulary.OccurrenceIssue;
-import org.gbif.api.vocabulary.OccurrenceStatus;
+import org.gbif.api.vocabulary.*;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.io.avro.AgentIdentifier;
-import org.gbif.pipelines.io.avro.Amplification;
-import org.gbif.pipelines.io.avro.AmplificationRecord;
-import org.gbif.pipelines.io.avro.AudubonRecord;
-import org.gbif.pipelines.io.avro.BasicRecord;
-import org.gbif.pipelines.io.avro.BlastResult;
-import org.gbif.pipelines.io.avro.DeterminedDate;
-import org.gbif.pipelines.io.avro.EventDate;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.GadmFeatures;
-import org.gbif.pipelines.io.avro.ImageRecord;
-import org.gbif.pipelines.io.avro.LocationFeatureRecord;
-import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MachineTag;
-import org.gbif.pipelines.io.avro.MeasurementOrFact;
-import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
+import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.MediaType;
-import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.io.avro.Multimedia;
-import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.Rank;
-import org.gbif.pipelines.io.avro.RankedName;
-import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.io.avro.grscicoll.Match;
 import org.junit.Assert;
@@ -78,7 +46,15 @@ public class GbifJsonConverterTest {
             .build();
 
     ExtendedRecord er =
-        ExtendedRecord.newBuilder().setId("777").setCoreRowType("core").setCoreTerms(erMap).build();
+        ExtendedRecord.newBuilder()
+            .setId("777")
+            .setCoreRowType("core")
+            .setCoreTerms(erMap)
+            .setExtensions(
+                Collections.singletonMap(
+                    "http://rs.tdwg.org/ac/terms/Multimedia",
+                    Collections.singletonList(Collections.singletonMap("k", "v"))))
+            .build();
 
     BasicRecord br =
         BasicRecord.newBuilder()
@@ -91,6 +67,7 @@ public class GbifJsonConverterTest {
             .setRelativeOrganismQuantity(0.001d)
             .setLicense(License.CC_BY_NC_4_0.name())
             .setOccurrenceStatus(OccurrenceStatus.PRESENT.name())
+            .setIsClustered(true)
             .setRecordedByIds(
                 Collections.singletonList(
                     AgentIdentifier.newBuilder()
@@ -196,6 +173,9 @@ public class GbifJsonConverterTest {
     assertEquals("Country", result.path("country").asText());
     assertEquals("Code 1'2\"", result.path("countryCode").asText());
     assertEquals("[68]", result.path("locality").asText());
+    assertTrue(result.path("isClustered").asBoolean());
+    assertEquals(
+        "http://rs.tdwg.org/ac/terms/Multimedia", result.path("extensions").get(0).asText());
 
     String expectedGadm =
         "{"
@@ -206,7 +186,7 @@ public class GbifJsonConverterTest {
     assertEquals(expectedGadm, result.path("gadm").toString());
 
     String expectedAll =
-        "[\"Jeremia garde ,à elfutsone\",\"{\\\"something\\\":1}{\\\"something\\\":1}\",\"D2 R2\",\"something:{something}\"]";
+        "[\"Jeremia garde ,à elfutsone\",\"{\\\"something\\\":1}{\\\"something\\\":1}\",\"v\",\"D2 R2\",\"something:{something}\"]";
     assertEquals(expectedAll, result.path("all").toString());
 
     String expectedVerbatim =
@@ -216,7 +196,7 @@ public class GbifJsonConverterTest {
             + "\"http://purl.org/dc/terms/remark\":\"{\\\"something\\\":1}{\\\"something\\\":1}\","
             + "\"http://rs.tdwg.org/dwc/terms/recordedBy\":\"Jeremia garde ,à elfutsone\","
             + "\"http://rs.tdwg.org/dwc/terms/locality\":\"something:{something}\"},"
-            + "\"extensions\":{}}";
+            + "\"extensions\":{\"http://rs.tdwg.org/ac/terms/Multimedia\":[{\"k\":\"v\"}]}}";
     assertEquals(expectedVerbatim, result.path("verbatim").toString());
 
     String expectedGbifClassification =
@@ -501,6 +481,7 @@ public class GbifJsonConverterTest {
     String expected =
         "{"
             + "\"id\":\"777\","
+            + "\"extensions\":[],"
             + "\"all\":[\"T1\",\"Name\"],"
             + "\"verbatim\":{\"core\":{\"http://rs.tdwg.org/dwc/terms/taxonID\":\"T1\","
             + "\"http://rs.tdwg.org/dwc/terms/scientificName\":\"Name\"},"
@@ -570,11 +551,7 @@ public class GbifJsonConverterTest {
 
     // Expected
     String expected =
-        "{"
-            + "\"id\":\"777\","
-            + "\"all\":[],"
-            + "\"verbatim\":{\"core\":{},"
-            + "\"extensions\":{}}}";
+        "{\"id\":\"777\",\"extensions\":[],\"all\":[],\"verbatim\":{\"core\":{},\"extensions\":{}}}";
 
     // State
     ExtendedRecord record = ExtendedRecord.newBuilder().setId("777").build();

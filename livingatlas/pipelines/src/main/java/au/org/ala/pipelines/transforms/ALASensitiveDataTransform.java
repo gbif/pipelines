@@ -132,7 +132,7 @@ public class ALASensitiveDataTransform
       log.info("Initialize Conservation API");
       this.conservationService = this.conservationServiceSupplier.get();
     }
-    if (this.sensitiveFields == null) {
+    if (this.sensitiveFields == null && conservationService != null) {
       this.sensitiveFields =
           SensitiveDataInterpreter.buildSensitivityMap(
               this.conservationService.getSensitiveDataFields());
