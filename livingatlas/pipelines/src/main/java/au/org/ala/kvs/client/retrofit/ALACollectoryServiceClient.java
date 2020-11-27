@@ -3,21 +3,17 @@ package au.org.ala.kvs.client.retrofit;
 import static org.gbif.rest.client.retrofit.SyncCall.syncCall;
 
 import au.org.ala.kvs.client.*;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import au.org.ala.utils.WsUtils;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
-import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
-import org.gbif.rest.client.configuration.ClientConfiguration;
-import retrofit2.converter.jackson.JacksonConverterFactory;
+import org.gbif.pipelines.core.config.model.WsConfig;
 
 @Slf4j
 /** Collectory service client implementation. */
@@ -27,28 +23,11 @@ public class ALACollectoryServiceClient implements ALACollectoryService {
 
   private final OkHttpClient okHttpClient;
 
-  /**
-   * Creates an instance using the provided configuration settings.
-   *
-   * @param clientConfiguration Rest client configuration
-   */
-  public ALACollectoryServiceClient(
-      ClientConfiguration clientConfiguration, Map<String, String> headers) {
-
-    okHttpClient = createClient(clientConfiguration, headers);
-
-    // this is for https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/113
-    ObjectMapper om = new ObjectMapper();
-    om.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
-
+  /** Creates an instance using the provided configuration settings. */
+  public ALACollectoryServiceClient(WsConfig config) {
+    okHttpClient = WsUtils.createOKClient(config);
     alaCollectoryService =
-        (new retrofit2.Retrofit.Builder())
-            .client(okHttpClient)
-            .baseUrl(clientConfiguration.getBaseApiUrl())
-            .addConverterFactory(JacksonConverterFactory.create(om))
-            .validateEagerly(true)
-            .build()
-            .create(ALACollectoryRetrofitService.class);
+        WsUtils.createClient(okHttpClient, config, ALACollectoryRetrofitService.class);
   }
 
   /**
@@ -78,35 +57,6 @@ public class ALACollectoryServiceClient implements ALACollectoryService {
           files.forEach(File::delete);
         }
       }
-    }
-  }
-
-  public static OkHttpClient createClient(ClientConfiguration config, Map<String, String> headers) {
-    OkHttpClient.Builder clientBuilder =
-        (new OkHttpClient.Builder())
-            .connectTimeout(config.getTimeOut(), TimeUnit.SECONDS)
-            .readTimeout(config.getTimeOut(), TimeUnit.SECONDS);
-    clientBuilder.cache(createCache(config.getFileCacheMaxSizeMb()));
-    clientBuilder.addInterceptor(
-        chain -> {
-          Request.Builder builder = chain.request().newBuilder();
-          headers.forEach(builder::addHeader);
-          Request request = builder.build();
-          return chain.proceed(request);
-        });
-    return clientBuilder.build();
-  }
-
-  private static Cache createCache(long maxSize) {
-    try {
-      String cacheName = System.currentTimeMillis() + "-wsCache";
-      File httpCacheDirectory = Files.createTempDirectory(cacheName).toFile();
-      httpCacheDirectory.deleteOnExit();
-      log.info("Cache file created - {}", httpCacheDirectory.getAbsolutePath());
-      return new Cache(httpCacheDirectory, maxSize);
-    } catch (IOException var4) {
-      throw new IllegalStateException(
-          "Cannot run without the ability to create temporary cache directory", var4);
     }
   }
 }

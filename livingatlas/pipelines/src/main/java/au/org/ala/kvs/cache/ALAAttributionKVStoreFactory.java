@@ -46,9 +46,7 @@ public class ALAAttributionKVStoreFactory {
                 config.getCollectory().getTimeoutSec()) // Geocode service connection time-out
             .build();
 
-    ALACollectoryServiceClient wsClient =
-        new ALACollectoryServiceClient(
-            clientConfiguration, config.getCollectory().getHttpHeaders());
+    ALACollectoryServiceClient wsClient = new ALACollectoryServiceClient(config.getCollectory());
     Command closeHandler =
         () -> {
           try {

@@ -54,6 +54,8 @@ public class ALASolrDocumentTransform implements Serializable {
   private TupleTag<ALAAttributionRecord> aarTag;
   @NonNull private TupleTag<ALAUUIDRecord> urTag;
 
+  @NonNull private TupleTag<ImageServiceRecord> isTag;
+
   @NonNull private PCollectionView<MetadataRecord> metadataView;
 
   String datasetID;
@@ -72,6 +74,7 @@ public class ALASolrDocumentTransform implements Serializable {
       TupleTag<LocationFeatureRecord> asrTag,
       TupleTag<ALAAttributionRecord> aarTag,
       TupleTag<ALAUUIDRecord> urTag,
+      TupleTag<ImageServiceRecord> isTag,
       PCollectionView<MetadataRecord> metadataView,
       String datasetID) {
     ALASolrDocumentTransform t = new ALASolrDocumentTransform();
@@ -88,6 +91,7 @@ public class ALASolrDocumentTransform implements Serializable {
     t.asrTag = asrTag;
     t.aarTag = aarTag;
     t.urTag = urTag;
+    t.isTag = isTag;
     t.metadataView = metadataView;
     t.datasetID = datasetID;
     return t;
@@ -105,7 +109,8 @@ public class ALASolrDocumentTransform implements Serializable {
       ExtendedRecord er,
       ALAAttributionRecord aar,
       LocationFeatureRecord asr,
-      ALAUUIDRecord ur) {
+      ALAUUIDRecord ur,
+      ImageServiceRecord isr) {
 
     Set<String> skipKeys = new HashSet<>();
     skipKeys.add("id");
@@ -204,28 +209,24 @@ public class ALASolrDocumentTransform implements Serializable {
       // required for EYA
       doc.setField(
           "names_and_lsid",
-          atxr.getScientificName()
-              + "|"
-              + atxr.getTaxonConceptID()
-              + "|"
-              + atxr.getVernacularName()
-              + "|"
-              + atxr.getKingdom()
-              + "|"
-              + atxr.getFamily()); // is set to IGNORE in headerAttributes
+          String.join(
+              "|",
+              atxr.getScientificName(),
+              atxr.getTaxonConceptID(),
+              atxr.getVernacularName(),
+              atxr.getKingdom(),
+              atxr.getFamily())); // is set to IGNORE in headerAttributes
+
       doc.setField(
           "common_name_and_lsid",
-          atxr.getVernacularName()
-              + "|"
-              + atxr.getScientificName()
-              + "|"
-              + atxr.getTaxonConceptID()
-              + "|"
-              + atxr.getVernacularName()
-              + "|"
-              + atxr.getKingdom()
-              + "|"
-              + atxr.getFamily()); // is set to IGNORE in headerAttributes
+          String.join(
+              "|",
+              atxr.getVernacularName(),
+              atxr.getScientificName(),
+              atxr.getTaxonConceptID(),
+              atxr.getVernacularName(),
+              atxr.getKingdom(),
+              atxr.getFamily())); // is set to IGNORE in headerAttribute
 
       // legacy fields referenced in biocache-service code
       doc.setField("taxon_name", atxr.getScientificName());
@@ -282,6 +283,15 @@ public class ALASolrDocumentTransform implements Serializable {
       for (String issue : taxonomicIssues.getIssueList()) {
         doc.setField("assertions", issue);
       }
+    }
+
+    if (isr != null && isr.getImageIDs() != null && !isr.getImageIDs().isEmpty()) {
+      doc.setField("image_url", isr.getImageIDs().get(0));
+      for (String imageID : isr.getImageIDs()) {
+        doc.setField("all_image_url", imageID);
+      }
+      // FIX ME - do we need mime type.....
+      doc.setField("multimedia", "Image");
     }
 
     IssueRecord geospatialIssues = lr.getIssues();
@@ -343,6 +353,12 @@ public class ALASolrDocumentTransform implements Serializable {
             ALAAttributionRecord aar =
                 v.getOnly(aarTag, ALAAttributionRecord.newBuilder().setId(k).build());
 
+            ImageServiceRecord isr = null;
+            if (isTag != null) {
+              isr = v.getOnly(isTag, ImageServiceRecord.newBuilder().setId(k).build());
+            }
+
+            // Sampling
             LocationFeatureRecord asr = null;
             if (asrTag != null) {
               asr = v.getOnly(asrTag, LocationFeatureRecord.newBuilder().setId(k).build());
@@ -351,7 +367,7 @@ public class ALASolrDocumentTransform implements Serializable {
             MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
 
             SolrInputDocument doc =
-                createSolrDocument(mdr, br, tr, lr, txr, atxr, er, aar, asr, ur);
+                createSolrDocument(mdr, br, tr, lr, txr, atxr, er, aar, asr, ur, isr);
 
             c.output(doc);
             counter.inc();

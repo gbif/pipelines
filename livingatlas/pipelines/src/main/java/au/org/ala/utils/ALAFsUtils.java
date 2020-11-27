@@ -43,6 +43,19 @@ public class ALAFsUtils {
         .toString();
   }
 
+  public static String buildPathMultimediaUsingTargetPath(BasePipelineOptions options) {
+    return PathBuilder.buildPath(
+            PathBuilder.buildDatasetAttemptPath(options, "interpreted", false), "multimedia")
+        .toString();
+  }
+
+  public static String buildPathMultimediaDeltaUsingTargetPath(BasePipelineOptions options) {
+    return PathBuilder.buildPath(
+            PathBuilder.buildDatasetAttemptPath(options, "multimedia-delta", false),
+            "multimedia-delta")
+        .toString();
+  }
+
   /**
    * Constructs the path for reading / writing generalised data. This is written outside of
    * /interpreted directory.
@@ -71,6 +84,13 @@ public class ALAFsUtils {
             PathBuilder.buildDatasetAttemptPath(options, "sampling", false),
             name,
             name + "-" + uniqueId)
+        .toString();
+  }
+
+  public static String buildPathImageServiceUsingTargetPath(
+      BasePipelineOptions options, String name, String uniqueId) {
+    return PathBuilder.buildPath(
+            PathBuilder.buildDatasetAttemptPath(options, "images", false), name + "-" + uniqueId)
         .toString();
   }
 

@@ -50,28 +50,33 @@ dwca-avro --> interpret --> uuid -->                │
 
 -  'dwca-avro' reads a Dwc-A and converts it to an Avro file;
 -  'interpret' reads a Dwc-A, interprets it and write the interpreted data and the issues in Avro files;
+-  'validate' validates the identifiers for a dataset;
 -  'uuid' minting on new records and rematching existing UUIDs to records that have been previously loaded;
 -  'export-latlng' exports a unique set of coordinates for a dataset into CSV;
--  'sample' crawl the LA layers. Requires an input csv containing lat, lng (no header) and output directory.
--  'sample-avro' adds a sampling AVRO extension to the stored interpretation
--  'index' reads a Dwc-A, interprets it and index the interpeted data creating a SOLR index.
--  'archive-list' dumps out a list of archives that can be ingested to '/tmp/dataset-archive-list.csv'
--  'dataset-list' dumps out a list of datasets that have been ingested to '/tmp/dataset-counts.csv'
--  'validation-report' dumps out a CSV list of datasets ready to be indexed to '/tmp/validation-report.csv'
+-  'image-load' pushing an export of multimedia to the image service;
+-  'image-sync' retrieve details of images stored in image service for indexing purposes;
+-  'sample' crawl the LA layers. Requires an input csv containing lat, lng (no header) and output directory;
+-  'sample-avro' adds a sampling AVRO extension to the stored interpretation;
+-  'index' reads a Dwc-A, interprets it and index the interpeted data creating a SOLR index;
+-  'archive-list' dumps out a list of archives that can be ingested to '/tmp/dataset-archive-list.csv';
+-  'dataset-list' dumps out a list of datasets that have been ingested to '/tmp/dataset-counts.csv';
+-  'validation-report' dumps out a CSV list of datasets ready to be indexed to '/tmp/validation-report.csv';
 
 All the steps generate an output. If only the final output is desired, the intermediate outputs can be ignored.
 
 Usage:
-  $CMD [options] dwca-avro     (<dr>...|all)
-  $CMD [options] interpret     (<dr>...|all) $WHEREL
-  $CMD [options] validate      (<dr>...|all)         $WHERE
-  $CMD [options] uuid          (<dr>...|all)         $WHERE
-  $CMD [options] export-latlng (<dr>...|all)         $WHERE
-  $CMD [options] sample        (<dr>...|all)
-  $CMD [options] sample-avro   (<dr>...|all)         $WHERE
-  $CMD [options] index         (<dr>...|all) $WHEREL
   $CMD [options] archive-list
   $CMD [options] dataset-list
+  $CMD [options] dwca-avro     (<dr>...|all)
+  $CMD [options] export-latlng (<dr>...|all)         $WHERE
+  $CMD [options] image-load    (<dr>...|all)         $WHERE
+  $CMD [options] image-sync    (<dr>...|all)         $WHERE
+  $CMD [options] index         (<dr>...|all) $WHEREL
+  $CMD [options] interpret     (<dr>...|all) $WHEREL
+  $CMD [options] sample        (<dr>...|all)
+  $CMD [options] sample-avro   (<dr>...|all)         $WHERE
+  $CMD [options] uuid          (<dr>...|all)         $WHERE
+  $CMD [options] validate      (<dr>...|all)         $WHERE
   $CMD [options] validation-report
   $CMD [options] do-all        (<dr>...|all) $WHEREL
   $CMD -h | --help
@@ -434,6 +439,81 @@ function uuid () {
     logStepEnd "UUID" $dr $ltype $SECONDS
 }
 
+function image-load () {
+    dr=$1
+    ltype=$2
+    CLASS=au.org.ala.pipelines.beam.ImageServiceLoadPipeline
+
+    logStepStart "Image-load" $dr
+    SECONDS=0
+
+    PRE=image-load-sh-args.spark-embedded
+    if [[ $ltype = "spark-embedded" || $ltype = "local" ]] ; then
+        $_D java $EXTRA_JVM_CLI_ARGS \
+            $(getConf $PRE.jvm)  \
+            -cp $PIPELINES_JAR $CLASS \
+            --datasetId=$dr \
+            --config=$config $ARGS
+    fi
+
+    PRE=image-load-sh-args.spark-cluster
+    if [[ $ltype = "spark-cluster" ]] ; then
+        $_D /data/spark/bin/spark-submit \
+            --name "image-load $dr" \
+            $(toArg $PRE conf) \
+            $(toArg $PRE num-executors) \
+            $(toArg $PRE executor-cores) \
+            $(toArg $PRE executor-memory) \
+            $(toArg $PRE driver-memory) \
+            --class $CLASS \
+            --master $SPARK_MASTER \
+            --driver-java-options "-Dlog4j.configuration=file:$CONFIG_DIR/log4j.properties" \
+            $PIPELINES_JAR \
+            --datasetId=$dr \
+            --config=$config $ARGS
+            # TODO set here an optional colorized log4j properties
+    fi
+
+    logStepEnd "Image-load" $dr $ltype $SECONDS
+}
+
+function image-sync () {
+    dr=$1
+    ltype=$2
+    CLASS=au.org.ala.pipelines.beam.ImageServiceSyncPipeline
+
+    logStepStart "Image-sync" $dr
+    SECONDS=0
+
+    PRE=image-sync-sh-args.spark-embedded
+    if [[ $ltype = "spark-embedded" || $ltype = "local" ]] ; then
+        $_D java $EXTRA_JVM_CLI_ARGS \
+            $(getConf $PRE.jvm)  \
+            -cp $PIPELINES_JAR $CLASS \
+            --datasetId=$dr \
+            --config=$config $ARGS
+    fi
+
+    PRE=image-sync-sh-args.spark-cluster
+    if [[ $ltype = "spark-cluster" ]] ; then
+        $_D /data/spark/bin/spark-submit \
+            --name "Image-sync $dr" \
+            $(toArg $PRE num-executors) \
+            $(toArg $PRE executor-cores) \
+            $(toArg $PRE executor-memory) \
+            $(toArg $PRE driver-memory) \
+            --class $CLASS \
+            --master $SPARK_MASTER \
+            --driver-java-options "-Dlog4j.configuration=file:$CONFIG_DIR/log4j.properties" \
+            $PIPELINES_JAR \
+            --datasetId=$dr \
+            --config=$config $ARGS
+            # TODO set here an optional colorized log4j properties
+    fi
+
+    logStepEnd "Image-sync" $dr $ltype $SECONDS
+}
+
 function export-latlng () {
     local dr="$1" ltype="$2"
     CLASS=au.org.ala.pipelines.beam.ALAInterpretedToLatLongCSVPipeline
@@ -569,9 +649,53 @@ if ($uuid || $do_all); then
     do_step uuid
 fi
 
+if ($image_sync || $do_all); then
+  if [[ $drs != "all" ]] ; then
+      for d in "${drs[@]}"; do
+          image-sync $d $TYPE
+      done
+  else
+      while IFS=, read -r datasetID recordCount
+      do
+          log.info "Dataset = $datasetID and count = $recordCount"
+          if [ "$recordCount" -gt "50000" ]; then
+              if [ $USE_CLUSTER = true ]; then
+                  image-sync $datasetID spark-cluster
+              else
+                  image-sync $datasetID spark-embedded
+              fi
+          else
+              image-sync $datasetID spark-embedded
+          fi
+      done < /tmp/dataset-counts.csv
+  fi
+fi
+
 if ($export_latlng || $do_all); then
     do_step export-latlng
     # WARN: Previosly here 'local' was not executed, always 'cluster' or 'embeded' it's this correct?
+fi
+
+if ($image_load || $do_all); then
+    if [[ $drs != "all" ]] ; then
+        for d in "${drs[@]}"; do
+            image-load $d $TYPE
+        done
+    else
+        while IFS=, read -r datasetID recordCount
+        do
+            log.info "Dataset = $datasetID and count = $recordCount"
+            if [ "$recordCount" -gt "50000" ]; then
+                if [ $USE_CLUSTER = true ]; then
+                    image-load $datasetID spark-cluster
+                else
+                    image-load $datasetID spark-embedded
+            fi
+        else
+            image-load $datasetID spark-embedded
+        fi
+        done < /tmp/dataset-counts.csv
+    fi
 fi
 
 if ($sample || $do_all); then

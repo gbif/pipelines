@@ -132,6 +132,8 @@ public class ALAInterpretedToSolrIndexPipeline {
         t -> ALAFsUtils.buildPathIdentifiersUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
     UnaryOperator<String> samplingPathFn =
         t -> ALAFsUtils.buildPathSamplingUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
+    UnaryOperator<String> imageServicePathFn =
+        t -> ALAFsUtils.buildPathImageServiceUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
 
     String hdfsSiteConfig = options.getHdfsSiteConfig();
     String coreSiteConfig = options.getCoreSiteConfig();
@@ -319,6 +321,16 @@ public class ALAInterpretedToSolrIndexPipeline {
                     samplingPathFn.apply(spatialTransform.getBaseName())),
             executor);
 
+    CompletableFuture<Map<String, ImageServiceRecord>> imageServiceMapFeature =
+        CompletableFuture.supplyAsync(
+            () ->
+                AvroReader.readRecords(
+                    hdfsSiteConfig,
+                    coreSiteConfig,
+                    ImageServiceRecord.class,
+                    imageServicePathFn.apply("image-service-record")),
+            executor);
+
     MetadataRecord metadata = metadataMapFeature.get().values().iterator().next();
     Map<String, BasicRecord> basicMap = basicMapFeature.get();
     Map<String, ExtendedRecord> verbatimMap = verbatimMapFeature.get();
@@ -330,6 +342,8 @@ public class ALAInterpretedToSolrIndexPipeline {
     Map<String, ALAAttributionRecord> alaAttributionMap = alaAttributionMapFeature.get();
     Map<String, LocationFeatureRecord> australiaSpatialMap =
         options.getIncludeSampling() ? australiaSpatialMapFeature.get() : Collections.emptyMap();
+    Map<String, ImageServiceRecord> imageServiceMap =
+        options.getIncludeImages() ? imageServiceMapFeature.get() : Collections.emptyMap();
 
     Map<String, MultimediaRecord> multimediaMap = multimediaMapFeature.get();
     Map<String, ImageRecord> imageMap = imageMapFeature.get();
@@ -365,6 +379,8 @@ public class ALAInterpretedToSolrIndexPipeline {
           LocationFeatureRecord asr =
               australiaSpatialMap.getOrDefault(
                   k, LocationFeatureRecord.newBuilder().setId(k).build());
+          ImageServiceRecord isr =
+              imageServiceMap.getOrDefault(k, ImageServiceRecord.newBuilder().setId(k).build());
 
           // Extension
           MultimediaRecord mr =
@@ -378,7 +394,7 @@ public class ALAInterpretedToSolrIndexPipeline {
           MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
 
           return ALASolrDocumentTransform.createSolrDocument(
-              metadata, br, tr, lr, txr, atxr, er, aar, asr, aur);
+              metadata, br, tr, lr, txr, atxr, er, aar, asr, aur, isr);
         };
 
     boolean useSyncMode = options.getSyncThreshold() > basicMap.size();

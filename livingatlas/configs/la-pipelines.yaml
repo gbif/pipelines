@@ -37,6 +37,11 @@ collectory:
   timeoutSec: 70
   httpHeaders:
     Authorization: add-a-api-key-here
+imageService:
+  wsUrl: https://images.ala.org.au
+  timeoutSec: 70
+  httpHeaders:
+    apiKey: add-a-api-key-here
 geocodeConfig:
   country:
     path: /data/pipelines-shp/political
@@ -113,6 +118,14 @@ export-latlng:
 sample:
   inputPath: '{fsPath}/pipelines-data'
   appName: Sample for {datasetId}
+  samplingServiceUrl: 'https://sampling.ala.org.au'
+
+images:
+  runner: SparkRunner
+  inputPath: '{fsPath}/pipelines-data'
+  tempLocation: /tmp
+  # pipe separated list (note: YAML list not coming through correctly)
+  recognisedPaths: "https://images.ala.org.au"
 
 # LayerCrawler specific configuration
 layerCrawler:
@@ -137,6 +150,7 @@ index:
   inputPath: '{fsPath}/pipelines-data'
   solrCollection: biocache
   includeSampling: true
+  includeImages: true
   runner: SparkRunner
   zkHost: localhost:9983
   ## For spark-cluster:
@@ -173,6 +187,30 @@ migrate-uuids:
 ### la-pipelines cli additional arguments, like JVM or spark command line arguments
 
 interpret-sh-args:
+  local:
+    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
+  spark-embedded:
+    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
+  spark-cluster:
+    conf: spark.default.parallelism=144
+    num-executors: 16
+    executor-cores: 8
+    executor-memory: 7G
+    driver-memory: 1G
+
+image-sync-sh-args:
+  local:
+    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
+  spark-embedded:
+    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
+  spark-cluster:
+    conf: spark.default.parallelism=144
+    num-executors: 16
+    executor-cores: 8
+    executor-memory: 7G
+    driver-memory: 1G
+
+image-load-sh-args:
   local:
     jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
   spark-embedded:

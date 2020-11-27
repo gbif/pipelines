@@ -25,6 +25,12 @@ public interface ALASolrPipelineOptions extends PipelineOptions, InterpretationP
 
   void setIncludeSampling(Boolean includeSampling);
 
+  @Description("Include references to image service objects")
+  @Default.Boolean(false)
+  Boolean getIncludeImages();
+
+  void setIncludeImages(Boolean includeImages);
+
   @Description("Include gbif taxonomy")
   @Default.Boolean(false)
   Boolean getIncludeGbifTaxonomy();
