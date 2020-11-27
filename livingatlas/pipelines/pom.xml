@@ -49,7 +49,7 @@
               <goal>wget</goal>
             </goals>
             <configuration>
-              <url>https://biocache.ala.org.au/archives/layers/sds-layers.tgz</url>
+              <url>https://archives.ala.org.au/archives/layers/sds-layers_with_bitmaps.tgz</url>
               <unpack>true</unpack>
               <outputDirectory>/tmp/pipelines-shp</outputDirectory>
             </configuration>
