@@ -2,9 +2,7 @@ package au.org.ala.pipelines.beam;
 
 import static org.junit.Assert.*;
 
-import au.org.ala.pipelines.options.ALASolrPipelineOptions;
 import au.org.ala.pipelines.options.UUIDPipelineOptions;
-import au.org.ala.util.SolrUtils;
 import au.org.ala.util.TestUtils;
 import au.org.ala.utils.ValidationUtils;
 import java.io.File;
@@ -80,9 +78,9 @@ public class SensitiveDataPipelineTestIT {
     assertNotNull(sds1);
     assertTrue(sds1.getSensitive());
     assertEquals(
-        "Location in New South Wales, Australia generalised to 0.1 degrees. \nSensitive in NSW, Name: New South Wales, Zone: STATE [NSW Category 2 Conservation Protected, NSW OEH]",
+        "Record is Australia in Endangered. Generalised to 10km by Birds Australia.",
         sds1.getDataGeneralizations());
-    assertEquals("149.4", sds1.getAltered().get("decimalLongitude"));
+    assertEquals("149.4", sds1.getAltered().get("http://rs.tdwg.org/dwc/terms/decimalLongitude"));
     ALASensitivityRecord sds2 = sds.get("not-an-uuid-2");
     assertNotNull(sds2);
     assertFalse(sds2.getSensitive());
@@ -170,18 +168,15 @@ public class SensitiveDataPipelineTestIT {
     // sensitive data
     InterpretationPipelineOptions sensitiveOptions =
         PipelinesOptionsFactory.create(
-            ALASolrPipelineOptions.class,
+            InterpretationPipelineOptions.class,
             new String[] {
               "--datasetId=" + datasetID,
               "--attempt=1",
               "--runner=DirectRunner",
-              "--metaFileName=" + ValidationUtils.INDEXING_METRICS,
+              "--metaFileName=" + ValidationUtils.SENSITIVE_METRICS,
               "--targetPath=/tmp/la-pipelines-test/sensitive-pipeline",
               "--inputPath=/tmp/la-pipelines-test/sensitive-pipeline",
-              "--properties=" + TestUtils.getPipelinesConfigFile(),
-              "--zkHost=" + SolrUtils.getZkHost(),
-              "--solrCollection=" + SolrUtils.BIOCACHE_TEST_SOLR_COLLECTION,
-              "--includeSampling=true"
+              "--properties=" + TestUtils.getPipelinesConfigFile()
             });
     ALAInterpretedToSensitivePipeline.run(sensitiveOptions);
   }

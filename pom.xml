@@ -94,6 +94,7 @@
     <hadoop-core.version>2.6.0-mr1-cdh5.16.2</hadoop-core.version>
     <hbase.version>1.2.0-cdh5.16.2</hbase.version>
     <curator.version>2.9.0</curator.version>
+    <xerces.version>2.9.1</xerces.version>
 
     <geotools.version>20.5</geotools.version>
     <commons-lang3.version>3.4</commons-lang3.version>
@@ -707,6 +708,11 @@
         <groupId>commons-beanutils</groupId>
         <artifactId>commons-beanutils</artifactId>
         <version>${commons-beanutils.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>xerces</groupId>
+        <artifactId>xercesImpl</artifactId>
+        <version>${xerces.version}</version>
       </dependency>
 
       <!-- Logging -->
