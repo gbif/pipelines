@@ -52,25 +52,6 @@ public class AlaLocationInterpreterTest {
   }
 
   @Test
-  public void testGeocodeStae() {
-
-    LocationRecord lr = LocationRecord.newBuilder().setId(ID).build();
-
-    Map<String, String> coreMap = new HashMap<>();
-    coreMap.put(DwcTerm.decimalLatitude.qualifiedName(), "1979-1-1");
-    coreMap.put(DwcTerm.decimalLongitude.qualifiedName(), "1979-1-1");
-
-    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
-
-    LocationInterpreter.interpretStateProvince(er, lr);
-
-    ALALocationInterpreter.builder().create().interpretGeoreferencedDate(er, lr);
-    ALALocationInterpreter.interpretGeoreferenceTerms(er, lr);
-    assertEquals("1979-01-01T00:00", lr.getGeoreferencedDate());
-    assertEquals(4, lr.getIssues().getIssueList().size(), 1);
-  }
-
-  @Test
   public void gbifAlaTest() {
 
     LocationRecord lr = LocationRecord.newBuilder().setId(ID).build();
