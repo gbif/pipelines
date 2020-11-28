@@ -85,7 +85,9 @@ public class TemporalRangeParser implements Serializable {
       unit = ChronoUnit.MONTHS;
     } else if (from instanceof LocalDate) {
       unit = ChronoUnit.DAYS;
-    } else if (from instanceof LocalDateTime || from instanceof OffsetDateTime) {
+    } else if (from instanceof LocalDateTime
+        || from instanceof OffsetDateTime
+        || from instanceof ZonedDateTime) {
       unit = ChronoUnit.SECONDS;
     }
     return from.until(to, unit) > 0;
