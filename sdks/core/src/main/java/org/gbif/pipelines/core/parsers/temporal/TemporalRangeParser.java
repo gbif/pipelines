@@ -55,28 +55,35 @@ public class TemporalRangeParser implements Serializable {
   }
 
   private void parseAndSetTo(EventRange range, String rawDate) {
-    if (!Strings.isNullOrEmpty(rawDate)) {
-      OccurrenceParseResult<TemporalAccessor> result = temporalParser.parseRecordedDate(rawDate);
-      if (result.isSuccessful()) {
-        Optional<TemporalAccessor> payload = Optional.ofNullable(result.getPayload());
-        if (payload.isPresent() && range.getFrom().isPresent()) {
-          TemporalAccessor from = range.getFrom().get();
-          TemporalAccessor to = payload.get();
-          if (from.getClass() == to.getClass() && isValidRange((Temporal) from, (Temporal) to)) {
+    if (Strings.isNullOrEmpty(rawDate)) {
+      return;
+    }
+    OccurrenceParseResult<TemporalAccessor> result = temporalParser.parseRecordedDate(rawDate);
+    if (result.isSuccessful()) {
+      Optional<TemporalAccessor> payload = Optional.ofNullable(result.getPayload());
+      Optional<TemporalAccessor> fromOpt = range.getFrom();
+      if (payload.isPresent() && fromOpt.isPresent()) {
+        TemporalAccessor from = fromOpt.get();
+        TemporalAccessor to = payload.get();
+        if (from.getClass() == to.getClass()) {
+          long rangeDiff = getRangeDiff((Temporal) from, (Temporal) to);
+          if (rangeDiff > 0) {
             range.setTo(to);
-          } else {
+          } else if (rangeDiff < 0) {
             range.addIssue(OccurrenceIssue.RECORDED_DATE_UNLIKELY);
           }
+        } else {
+          range.addIssue(OccurrenceIssue.RECORDED_DATE_UNLIKELY);
         }
       }
-      range.addIssues(result.getIssues());
     }
+    range.addIssues(result.getIssues());
   }
 
-  /** Compare dates, FROM cannot be greater than TO */
-  private static boolean isValidRange(Temporal from, Temporal to) {
+  /** Compare dates and returns difference between FROM and TO dates in milis */
+  private static long getRangeDiff(Temporal from, Temporal to) {
     if (from == null || to == null) {
-      return true;
+      return 1L;
     }
     TemporalUnit unit = null;
     if (from instanceof Year) {
@@ -90,6 +97,6 @@ public class TemporalRangeParser implements Serializable {
         || from instanceof ZonedDateTime) {
       unit = ChronoUnit.SECONDS;
     }
-    return from.until(to, unit) > 0;
+    return from.until(to, unit);
   }
 }
