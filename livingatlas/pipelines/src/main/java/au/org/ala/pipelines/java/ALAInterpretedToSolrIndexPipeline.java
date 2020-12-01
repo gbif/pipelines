@@ -7,6 +7,7 @@ import au.org.ala.pipelines.options.ALASolrPipelineOptions;
 import au.org.ala.pipelines.transforms.ALAAttributionTransform;
 import au.org.ala.pipelines.transforms.ALASolrDocumentTransform;
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
+import au.org.ala.pipelines.transforms.JackKnifeOutlierTransform;
 import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
@@ -137,6 +138,8 @@ public class ALAInterpretedToSolrIndexPipeline {
         t -> ALAFsUtils.buildPathImageServiceUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
     UnaryOperator<String> taxonProfilePathFn =
         t -> ALAFsUtils.buildPathTaxonProfileUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
+    UnaryOperator<String> jackKnifePathFn =
+        t -> String.join(options.getJackKnifePath(), "outliers", "*" + AVRO_EXTENSION);
 
     String hdfsSiteConfig = options.getHdfsSiteConfig();
     String coreSiteConfig = options.getCoreSiteConfig();
@@ -160,6 +163,8 @@ public class ALAInterpretedToSolrIndexPipeline {
     ALAAttributionTransform alaAttributionTransform = ALAAttributionTransform.builder().create();
     LocationFeatureTransform spatialTransform = LocationFeatureTransform.builder().create();
     LocationTransform locationTransform = LocationTransform.builder().create();
+    JackKnifeOutlierTransform jackKnifeOutlierTransform =
+        JackKnifeOutlierTransform.builder().create();
 
     log.info("Init metrics");
     IngestMetrics metrics = IngestMetricsBuilder.createInterpretedToEsIndexMetrics();
@@ -338,6 +343,16 @@ public class ALAInterpretedToSolrIndexPipeline {
         CompletableFuture.supplyAsync(
             () -> SpeciesListPipeline.generateTaxonProfileCollection(options), executor);
 
+    CompletableFuture<Map<String, JackKnifeOutlierRecord>> jackKnifeOulierMapFeature =
+        CompletableFuture.supplyAsync(
+            () ->
+                AvroReader.readRecords(
+                    hdfsSiteConfig,
+                    coreSiteConfig,
+                    JackKnifeOutlierRecord.class,
+                    jackKnifePathFn.apply(jackKnifeOutlierTransform.getBaseName())),
+            executor);
+
     MetadataRecord metadata = metadataMapFeature.get().values().iterator().next();
     Map<String, BasicRecord> basicMap = basicMapFeature.get();
     Map<String, ExtendedRecord> verbatimMap = verbatimMapFeature.get();
@@ -354,6 +369,9 @@ public class ALAInterpretedToSolrIndexPipeline {
 
     Map<String, TaxonProfile> taxonProfileMap =
         options.getIncludeSpeciesLists() ? taxonProfileMapFeature.get() : Collections.emptyMap();
+
+    Map<String, JackKnifeOutlierRecord> jackKnifeOutlierMap =
+        options.getIncludeJackKnife() ? jackKnifeOulierMapFeature.get() : Collections.emptyMap();
 
     Map<String, MultimediaRecord> multimediaMap = multimediaMapFeature.get();
     Map<String, ImageRecord> imageMap = imageMapFeature.get();
@@ -393,7 +411,9 @@ public class ALAInterpretedToSolrIndexPipeline {
               imageServiceMap.getOrDefault(k, ImageServiceRecord.newBuilder().setId(k).build());
           TaxonProfile tpr =
               taxonProfileMap.getOrDefault(k, TaxonProfile.newBuilder().setId(k).build());
-
+          JackKnifeOutlierRecord jkor =
+              jackKnifeOutlierMap.getOrDefault(
+                  k, JackKnifeOutlierRecord.newBuilder().setId(k).build());
           // Extension
           MultimediaRecord mr =
               multimediaMap.getOrDefault(k, MultimediaRecord.newBuilder().setId(k).build());
@@ -406,7 +426,7 @@ public class ALAInterpretedToSolrIndexPipeline {
           MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
 
           return ALASolrDocumentTransform.createSolrDocument(
-              metadata, br, tr, lr, txr, atxr, er, aar, asr, aur, isr, tpr);
+              metadata, br, tr, lr, txr, atxr, er, aar, asr, aur, isr, tpr, jkor);
         };
 
     boolean useSyncMode = options.getSyncThreshold() > basicMap.size();

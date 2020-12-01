@@ -148,6 +148,12 @@ layerCrawler:
   batchStatusSleepTime: 1000
   downloadRetries: 5
 
+# JackKnife specific configuration
+jackKnife:
+  path: "{fsPath}/pipelines-jackknife"
+  layers: el882,el889,el887,el865,el894
+  minSampleThreshold: 80
+
 # class: au.org.ala.pipelines.beam.ALASamplingToAvroPipeline
 sample-avro:
   inputPath: '{fsPath}/pipelines-data'
@@ -165,6 +171,8 @@ index:
   includeSampling: true
   includeImages: true
   includeSpeciesLists: true
+  jackKnifePath: "{fsPath}/pipelines-jackknife"
+  includeJackKnife: true
   runner: SparkRunner
   zkHost: localhost:9983
   ## For spark-cluster:
@@ -271,6 +279,18 @@ sample-avro-sh-args:
     jvm: -Xmx8g -XX:+UseG1GC
   spark-cluster:
     conf: spark.default.parallelism=192
+    num-executors: 24
+    executor-cores: 8
+    executor-memory: 7G
+    driver-memory: 1G
+
+jackknife-sh-args:
+  local:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-embedded:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-cluster:
+    conf:
     num-executors: 24
     executor-cores: 8
     executor-memory: 7G

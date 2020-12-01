@@ -3,10 +3,7 @@ package au.org.ala.pipelines.beam;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
 import au.org.ala.pipelines.options.ALASolrPipelineOptions;
-import au.org.ala.pipelines.transforms.ALAAttributionTransform;
-import au.org.ala.pipelines.transforms.ALASolrDocumentTransform;
-import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
-import au.org.ala.pipelines.transforms.ALAUUIDTransform;
+import au.org.ala.pipelines.transforms.*;
 import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
@@ -34,6 +31,7 @@ import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.transforms.core.*;
+import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
@@ -81,6 +79,8 @@ public class ALAInterpretedToSolrIndexPipeline {
         t -> ALAFsUtils.buildPathIdentifiersUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
     UnaryOperator<String> samplingPathFn =
         t -> ALAFsUtils.buildPathSamplingUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
+    UnaryOperator<String> jackKnifePathFn =
+        t -> String.join(options.getJackKnifePath(), "outliers", "*" + AVRO_EXTENSION);
 
     Pipeline p = Pipeline.create(options);
 
@@ -105,6 +105,8 @@ public class ALAInterpretedToSolrIndexPipeline {
     LocationFeatureTransform locationFeatureTransform = LocationFeatureTransform.builder().create();
     LocationTransform locationTransform = LocationTransform.builder().create();
     ALAAttributionTransform alaAttributionTransform = ALAAttributionTransform.builder().create();
+    JackKnifeOutlierTransform jackKnifeOutlierTransform =
+        JackKnifeOutlierTransform.builder().create();
 
     log.info("Adding step 3: Creating beam pipeline");
     PCollectionView<MetadataRecord> metadataView =
@@ -183,6 +185,13 @@ public class ALAInterpretedToSolrIndexPipeline {
               .apply("Map Sampling to KV", locationFeatureTransform.toKv());
     }
 
+    PCollection<KV<String, JackKnifeOutlierRecord>> jackKnifeOutlierCollection = null;
+    if (options.getIncludeJackKnife()) {
+      jackKnifeOutlierCollection =
+          p.apply("Read JackKnifeOutliers", jackKnifeOutlierTransform.read(jackKnifePathFn))
+              .apply("Map Sampling to KV", jackKnifeOutlierTransform.toKv());
+    }
+
     final TupleTag<ImageServiceRecord> imageServiceRecordTupleTag =
         new TupleTag<ImageServiceRecord>() {};
 
@@ -205,6 +214,7 @@ public class ALAInterpretedToSolrIndexPipeline {
             alaUuidTransform.getTag(),
             options.getIncludeImages() ? imageServiceRecordTupleTag : null,
             options.getIncludeSpeciesLists() ? speciesListsRecordTupleTag : null,
+            options.getIncludeJackKnife() ? jackKnifeOutlierTransform.getTag() : null,
             metadataView,
             options.getDatasetId());
 
@@ -240,6 +250,10 @@ public class ALAInterpretedToSolrIndexPipeline {
 
     if (options.getIncludeSampling()) {
       kpct = kpct.and(locationFeatureTransform.getTag(), locationFeatureCollection);
+    }
+
+    if (options.getIncludeJackKnife()) {
+      kpct = kpct.and(jackKnifeOutlierTransform.getTag(), jackKnifeOutlierCollection);
     }
 
     if (options.getIncludeGbifTaxonomy()) {

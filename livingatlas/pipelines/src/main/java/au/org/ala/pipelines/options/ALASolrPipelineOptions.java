@@ -49,4 +49,16 @@ public interface ALASolrPipelineOptions
   Integer getSolrBatchSize();
 
   void setSolrBatchSize(Integer solrBatchSize);
+
+  @Description("JackKnife path")
+  @Default.String("")
+  String getJackKnifePath();
+
+  void setJackKnifePath(String jackKnifePath);
+
+  @Description("Include jackknife")
+  @Default.Boolean(false)
+  Boolean getIncludeJackKnife();
+
+  void setIncludeJackKnife(Boolean includeJackKnife);
 }

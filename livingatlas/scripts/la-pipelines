@@ -57,6 +57,7 @@ dwca-avro --> interpret --> uuid -->                │
 -  'image-sync' retrieve details of images stored in image service for indexing purposes;
 -  'sample' crawl the LA layers. Requires an input csv containing lat, lng (no header) and output directory;
 -  'sample-avro' adds a sampling AVRO extension to the stored interpretation;
+-  'jackknife' adds an aggregated jackknife AVRO for all datasets. Requires samping-avro. After running a full 'index' is required.
 -  'index' reads a Dwc-A, interprets it and index the interpeted data creating a SOLR index;
 -  'archive-list' dumps out a list of archives that can be ingested to '/tmp/dataset-archive-list.csv';
 -  'dataset-list' dumps out a list of datasets that have been ingested to '/tmp/dataset-counts.csv';
@@ -75,6 +76,7 @@ Usage:
   $CMD [options] interpret     (<dr>...|all) $WHEREL
   $CMD [options] sample        (<dr>...|all)
   $CMD [options] sample-avro   (<dr>...|all)         $WHERE
+  $CMD [options] jackknife     (all)                 $WHERE
   $CMD [options] uuid          (<dr>...|all)         $WHERE
   $CMD [options] validate      (<dr>...|all)         $WHERE
   $CMD [options] validation-report
@@ -566,6 +568,25 @@ function sample-avro () {
     logStepEnd "Sample-avro" $dr $ltype $SECONDS
 }
 
+function jackknife () {
+    local dr="*" ltype="$2"
+    CLASS=au.org.ala.pipelines.beam.ALAReverseJackKnifePipeline
+
+    logStepStart "Jackknife" $dr
+    SECONDS=0
+
+    SH_ARGS=jackknife-sh-args.local
+    java-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=jackknife-sh-args.spark-embedded
+    spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=jackknife-sh-args.spark-cluster
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "add-jackknife $dr"
+
+    logStepEnd "Jackknife" $dr $ltype $SECONDS
+}
+
 function index () {
     local dr="$1" ltype="$2"
 
@@ -712,6 +733,16 @@ fi
 if ($sample_avro || $do_all); then
     do_step sample-avro
     # WARN: Previosly here 'local' was not executed, always 'cluster' or 'embeded' it's this correct?
+fi
+
+# JackKnife executes across all datasets and requires 'index' of all datasets.
+if ($jackknife || $do_all); then
+  if [[ $dr == "all" ]] ; then
+    do_step jackknife
+  else
+    echo "WARN: 'jackknife' not run when 'dr' != 'all'"
+  fi
+  # WARN: Based on sample-avro (Previosly here 'local' was not executed, always 'cluster' or 'embeded' it's this correct?)
 fi
 
 if ($index || $do_all); then

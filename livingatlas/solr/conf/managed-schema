@@ -309,6 +309,8 @@
   <field name="originalNameUsage"  type="string" docValues="true" indexed="true"/>
   <field name="originalNameUsageID"  type="string" docValues="true" indexed="true"/>
   <field name="otherCatalogNumbers"  type="string" docValues="true" indexed="true"/>
+  <field name="outliers" type="string" docValues="true" indexed="true" multiValued="true"/>
+  <field name="outlier_count" type="tint" docValues="true" indexed="true" />
   <field name="ownerInstitutionCode"  type="string" docValues="true" indexed="true"/>
   <field name="parentEventID"  type="string" docValues="true" indexed="true"/>
   <field name="parentNameUsage"  type="string" docValues="true" indexed="true"/>

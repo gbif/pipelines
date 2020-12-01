@@ -58,6 +58,8 @@ public class ALASolrDocumentTransform implements Serializable {
 
   @NonNull private TupleTag<TaxonProfile> tpTag;
 
+  private TupleTag<JackKnifeOutlierRecord> jkoTag;
+
   @NonNull private PCollectionView<MetadataRecord> metadataView;
 
   String datasetID;
@@ -78,6 +80,7 @@ public class ALASolrDocumentTransform implements Serializable {
       TupleTag<ALAUUIDRecord> urTag,
       TupleTag<ImageServiceRecord> isTag,
       TupleTag<TaxonProfile> tpTag,
+      TupleTag<JackKnifeOutlierRecord> jkoTag,
       PCollectionView<MetadataRecord> metadataView,
       String datasetID) {
     ALASolrDocumentTransform t = new ALASolrDocumentTransform();
@@ -96,6 +99,7 @@ public class ALASolrDocumentTransform implements Serializable {
     t.urTag = urTag;
     t.isTag = isTag;
     t.tpTag = tpTag;
+    t.jkoTag = jkoTag;
     t.metadataView = metadataView;
     t.datasetID = datasetID;
     return t;
@@ -128,7 +132,8 @@ public class ALASolrDocumentTransform implements Serializable {
       LocationFeatureRecord asr,
       ALAUUIDRecord ur,
       ImageServiceRecord isr,
-      TaxonProfile tpr) {
+      TaxonProfile tpr,
+      JackKnifeOutlierRecord jkor) {
 
     Set<String> skipKeys = new HashSet<String>();
     skipKeys.add("id");
@@ -274,6 +279,20 @@ public class ALASolrDocumentTransform implements Serializable {
             doc.setField(sample.getKey(), sample.getValue());
           }
         }
+      }
+    }
+
+    if (jkor != null) {
+      List<String> jackKnifeOutliers = jkor.getItems();
+      int count = 0;
+      for (String jackKnifeOutlier : jackKnifeOutliers) {
+        if (!StringUtils.isEmpty(jackKnifeOutlier)) {
+          doc.setField("outliers", jackKnifeOutlier);
+          count++;
+        }
+      }
+      if (count > 0) {
+        doc.setField("outlier_count", count);
       }
     }
 
@@ -429,10 +448,15 @@ public class ALASolrDocumentTransform implements Serializable {
               asr = v.getOnly(asrTag, LocationFeatureRecord.newBuilder().setId(k).build());
             }
 
+            JackKnifeOutlierRecord jkor = null;
+            if (jkoTag != null) {
+              jkor = v.getOnly(jkoTag, JackKnifeOutlierRecord.newBuilder().setId(k).build());
+            }
+
             MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
 
             SolrInputDocument doc =
-                createSolrDocument(mdr, br, tr, lr, txr, atxr, er, aar, asr, ur, isr, tpr);
+                createSolrDocument(mdr, br, tr, lr, txr, atxr, er, aar, asr, ur, isr, tpr, jkor);
 
             c.output(doc);
             counter.inc();
