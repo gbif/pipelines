@@ -58,6 +58,8 @@ public class LocationTransformTest {
 
     if (country != null) {
       Location political = new Location();
+      political.setType("Political");
+      political.setDistance(0.0d);
       political.setIsoCountryCode2Digit(country.getIso2LetterCode());
       locations.add(political);
 
