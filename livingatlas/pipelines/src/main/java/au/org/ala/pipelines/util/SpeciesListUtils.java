@@ -21,9 +21,9 @@ public class SpeciesListUtils {
 
     Iterator<SpeciesListRecord> iter = speciesLists.iterator();
 
-    List<String> speciesListIDs = new ArrayList<String>();
-    List<ConservationStatus> conservationStatusList = new ArrayList<ConservationStatus>();
-    List<InvasiveStatus> invasiveStatusList = new ArrayList<InvasiveStatus>();
+    List<String> speciesListIDs = new ArrayList<>();
+    List<ConservationStatus> conservationStatusList = new ArrayList<>();
+    List<InvasiveStatus> invasiveStatusList = new ArrayList<>();
 
     while (iter.hasNext()) {
 

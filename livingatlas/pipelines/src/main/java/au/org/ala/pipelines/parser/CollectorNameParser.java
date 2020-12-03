@@ -257,17 +257,21 @@ public class CollectorNameParser {
         String initials2 = m.group(7);
         String prefix3 = m.group(8);
 
-        String final_prefix = "";
-        if (!Strings.isNullOrEmpty(prefix3)) final_prefix = prefix3;
-        else if (!Strings.isNullOrEmpty(prefix2)) final_prefix = prefix2;
-        else final_prefix = prefix;
+        String finalPrefix;
+        if (!Strings.isNullOrEmpty(prefix3)) {
+          finalPrefix = prefix3;
+        } else if (!Strings.isNullOrEmpty(prefix2)) {
+          finalPrefix = prefix2;
+        } else {
+          finalPrefix = prefix;
+        }
 
         return generateName(
             firstname,
             surname,
             Strings.isNullOrEmpty(initials) ? initials2 : initials,
             middlename,
-            final_prefix);
+            finalPrefix);
       }
     }
 
@@ -276,36 +280,39 @@ public class CollectorNameParser {
 
   public static String generateName(
       String firstName, String surname, String initials, String middlename, String surnamePrefix) {
-    String name = "";
+    StringBuilder name = new StringBuilder();
     if (!Strings.isNullOrEmpty(surnamePrefix)) {
-      name += surnamePrefix.trim() + " ";
+      name.append(surnamePrefix.trim()).append(" ");
     }
     if (!Strings.isNullOrEmpty(surname)) {
-      name += org.apache.commons.lang3.text.WordUtils.capitalize(surname.toLowerCase(), '-', '\'');
+      name.append(
+          org.apache.commons.lang3.text.WordUtils.capitalize(surname.toLowerCase(), '-', '\''));
     }
     if (!Strings.isNullOrEmpty(initials)) {
-      name += ", ";
+      name.append(", ");
       // R.J-P. will be converted to R.J.-.P.
       String newinit = initials.trim().replaceAll("[^\\p{Lu}\\p{Ll}-]", "");
       char[] inits = newinit.toCharArray();
       for (char init : inits) {
-        name += init + ".";
+        name.append(init).append(".");
       }
       // R.J.-.P. will be converted R.J-P.
-      name = name.replaceAll("\\.-\\.", "-");
+      name = new StringBuilder(name.toString().replaceAll("\\.-\\.", "-"));
     }
 
     if (!Strings.isNullOrEmpty(firstName)) {
       if (!Strings.isNullOrEmpty(initials)) {
-        name += " " + org.apache.commons.lang3.StringUtils.capitalize(firstName.toLowerCase());
+        name.append(" ")
+            .append(org.apache.commons.lang3.StringUtils.capitalize(firstName.toLowerCase()));
       } else {
-        name += ", " + org.apache.commons.lang3.StringUtils.capitalize(firstName.toLowerCase());
+        name.append(", ")
+            .append(org.apache.commons.lang3.StringUtils.capitalize(firstName.toLowerCase()));
       }
 
       if (!Strings.isNullOrEmpty(middlename)) {
-        name += " " + org.apache.commons.lang3.text.WordUtils.capitalize(middlename);
+        name.append(" ").append(org.apache.commons.lang3.text.WordUtils.capitalize(middlename));
       }
     }
-    return name.trim();
+    return name.toString().trim();
   }
 }

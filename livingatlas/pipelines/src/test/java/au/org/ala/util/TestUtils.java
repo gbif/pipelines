@@ -43,7 +43,7 @@ public class TestUtils {
     final Dispatcher dispatcher =
         new Dispatcher() {
           @Override
-          public MockResponse dispatch(RecordedRequest request) throws InterruptedException {
+          public MockResponse dispatch(RecordedRequest request) {
 
             try {
               // authoritative lists

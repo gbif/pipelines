@@ -10,6 +10,7 @@ import au.org.ala.pipelines.options.UUIDPipelineOptions;
 import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationUtils;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -62,7 +63,7 @@ public class ALAUUIDValidationPipeline {
     System.exit(0);
   }
 
-  public static void run(UUIDPipelineOptions options) {
+  public static void run(UUIDPipelineOptions options) throws IOException {
 
     Pipeline p = Pipeline.create(options);
 
@@ -78,11 +79,13 @@ public class ALAUUIDValidationPipeline {
             .get();
 
     // create key value store for data resource metadata
-    KeyValueStore<String, ALACollectoryMetadata> dataResourceKvStore =
-        ALAAttributionKVStoreFactory.create(config);
+    ALACollectoryMetadata collectoryMetadata;
+    try (KeyValueStore<String, ALACollectoryMetadata> dataResourceKvStore =
+        ALAAttributionKVStoreFactory.create(config)) {
 
-    // lookup collectory metadata for this data resource
-    ALACollectoryMetadata collectoryMetadata = dataResourceKvStore.get(options.getDatasetId());
+      // lookup collectory metadata for this data resource
+      collectoryMetadata = dataResourceKvStore.get(options.getDatasetId());
+    }
     boolean metadataAvailable = !collectoryMetadata.equals(ALACollectoryMetadata.EMPTY);
 
     if (!metadataAvailable) {

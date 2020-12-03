@@ -83,8 +83,9 @@ public class CoordinatesParser {
         // return the first successful result
         // Try to reproject, always returns lat/lng
         String geodeticDatum = extractValue(extendedRecord, DwcTerm.geodeticDatum);
-        if (Strings.isNullOrEmpty(geodeticDatum))
+        if (Strings.isNullOrEmpty(geodeticDatum)) {
           result.getIssues().add(ALAOccurrenceIssue.MISSING_GEODETICDATUM.name());
+        }
 
         ParsedField<LatLng> projectedLatLng =
             Wgs84Projection.reproject(

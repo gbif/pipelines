@@ -48,8 +48,8 @@ public class BitMapMerge {
     for (int x = 0; x < width; x++) {
       for (int y = 0; y < height; y++) {
         String key = "";
-        for (int i = 0; i < images.length; i++) {
-          int colour = images[i].getRGB(x, y) & 0x00FFFFFF;
+        for (BufferedImage image : images) {
+          int colour = image.getRGB(x, y) & 0x00FFFFFF;
           if (colour == 0x000000) {
             key = "BLACK";
             break;
@@ -111,8 +111,6 @@ public class BitMapMerge {
   /**
    * "/data/sds-shp/combined.png", "/data/sds-shp/ffez.png", "/data/sds-shp/quarantine_zone.png"
    * Merge the rest pngs to the first.
-   *
-   * @param args
    */
   public static void main(String[] args) {
     try {

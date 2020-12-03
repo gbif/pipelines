@@ -130,7 +130,7 @@ public class ALASolrDocumentTransform implements Serializable {
       ImageServiceRecord isr,
       TaxonProfile tpr) {
 
-    Set<String> skipKeys = new HashSet<String>();
+    Set<String> skipKeys = new HashSet<>();
     skipKeys.add("id");
     skipKeys.add("created");
     skipKeys.add("text");

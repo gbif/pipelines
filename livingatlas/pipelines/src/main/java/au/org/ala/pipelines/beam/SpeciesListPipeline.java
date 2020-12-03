@@ -73,7 +73,7 @@ public class SpeciesListPipeline {
 
     // write out the result to file
     taxonProfilesCollection
-        .apply(Values.<TaxonProfile>create())
+        .apply(Values.create())
         .apply(
             AvroIO.write(TaxonProfile.class)
                 .to(avroPath)
@@ -86,13 +86,7 @@ public class SpeciesListPipeline {
     log.info("Completed species list pipeline for dataset {}", options.getDatasetId());
   }
 
-  /**
-   * Generate a PCollection of taxon profiles.
-   *
-   * @param p
-   * @param options
-   * @return
-   */
+  /** Generate a PCollection of taxon profiles. */
   public static PCollection<KV<String, TaxonProfile>> generateTaxonProfileCollection(
       Pipeline p, SpeciesLevelPipelineOptions options) throws Exception {
 
@@ -139,8 +133,8 @@ public class SpeciesListPipeline {
                       }
                     }));
 
-    final TupleTag<String> t1 = new TupleTag<>();
-    final TupleTag<Iterable<SpeciesListRecord>> t2 = new TupleTag<>();
+    final TupleTag<String> t1 = new TupleTag<String>() {};
+    final TupleTag<Iterable<SpeciesListRecord>> t2 = new TupleTag<Iterable<SpeciesListRecord>>() {};
 
     PCollection<KV<String, CoGbkResult>> result =
         KeyedPCollectionTuple.of(t1, alaTaxonID)

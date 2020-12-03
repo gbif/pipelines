@@ -51,7 +51,7 @@ public class LicenseParser {
     new BufferedReader(new InputStreamReader(is))
         .lines()
         .filter(s -> !Strings.isNullOrEmpty(s))
-        .map(s -> s.trim())
+        .map(String::trim)
         .filter(s -> !s.startsWith("#"))
         .filter(s -> s.contains("\t"))
         .forEach(
