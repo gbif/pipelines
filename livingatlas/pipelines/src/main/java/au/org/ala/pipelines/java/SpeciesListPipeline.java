@@ -78,9 +78,9 @@ public class SpeciesListPipeline {
         FsUtils.getFileSystem(
             options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getInputPath());
 
-    OutputStream output = fs.create(new Path(avroPath));
     DatumWriter<TaxonProfile> datumWriter = new GenericDatumWriter<>(TaxonProfile.getClassSchema());
-    try (DataFileWriter<TaxonProfile> dataFileWriter = new DataFileWriter<>(datumWriter)) {
+    try (OutputStream output = fs.create(new Path(avroPath));
+        DataFileWriter<TaxonProfile> dataFileWriter = new DataFileWriter<>(datumWriter)) {
       dataFileWriter.create(TaxonProfile.getClassSchema(), output);
 
       Collection<TaxonProfile> profiles = taxonProfilesCollection.values();

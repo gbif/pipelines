@@ -114,7 +114,7 @@ public class SpeciesListPipeline {
                         return KV.of(record.getTaxonID(), record);
                       }
                     }))
-            .apply(GroupByKey.<String, SpeciesListRecord>create());
+            .apply(GroupByKey.create());
 
     // read taxonomy extension,
     ALATaxonomyTransform alaTaxonomyTransform = ALATaxonomyTransform.builder().create();
