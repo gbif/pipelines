@@ -1457,5 +1457,14 @@
   }, {
     "name" : "ext_multimedia",
     "type" : [ "string", "null" ]
+  }, {
+    "name" : "isclustered",
+    "type" : [ "boolean", "null" ]
+  }, {
+    "name" : "extensions",
+    "type" : [ {
+      "type" : "array",
+      "items" : [ "string", "null" ]
+    }, "null" ]
   } ]
 }
