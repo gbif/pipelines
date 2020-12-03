@@ -7,6 +7,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -29,7 +30,7 @@ public class BitMapMerge {
   private int width = 7200;
 
   /** Combines the bitmaps for every layer into a single bitmap, for use as a client cache. */
-  public void combineAllBitmaps(String target, String... bitmaps) throws Exception {
+  public void combineAllBitmaps(String target, String... bitmaps) throws IOException {
     // Path pngFile = Paths.get(target);
 
     System.out.println("Generating combined layer bitmap.");
@@ -112,15 +113,11 @@ public class BitMapMerge {
    * "/data/sds-shp/combined.png", "/data/sds-shp/ffez.png", "/data/sds-shp/quarantine_zone.png"
    * Merge the rest pngs to the first.
    */
-  public static void main(String[] args) {
-    try {
-      BitMapMerge bm = new BitMapMerge();
-      bm.combineAllBitmaps(
-          "/data/sds-shp/combined.png",
-          "/data/sds-shp/ffez.png",
-          "/data/sds-shp/quarantine_zone.png");
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
+  public static void main(String[] args) throws IOException {
+    BitMapMerge bm = new BitMapMerge();
+    bm.combineAllBitmaps(
+        "/data/sds-shp/combined.png",
+        "/data/sds-shp/ffez.png",
+        "/data/sds-shp/quarantine_zone.png");
   }
 }
