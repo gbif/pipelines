@@ -1,11 +1,13 @@
 package org.gbif.pipelines.transforms.java;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
@@ -14,7 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.gbif.pipelines.core.utils.HashUtils;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.transforms.core.BasicTransform;
 
 /**
  * Splits collection into two: 1 - normal collection with regular GBIF ids 2 - contains invalid
@@ -29,7 +30,7 @@ public class UniqueGbifIdTransform {
   private final Map<String, BasicRecord> brMap = new ConcurrentHashMap<>();
   private final Map<String, BasicRecord> brInvalidMap = new ConcurrentHashMap<>();
 
-  @NonNull private BasicTransform basicTransform;
+  @NonNull private Function<ExtendedRecord, Optional<BasicRecord>> basicTransformFn;
 
   @NonNull private Map<String, ExtendedRecord> erMap;
 
@@ -68,8 +69,8 @@ public class UniqueGbifIdTransform {
   /** Process GBIF id duplicates */
   private Consumer<ExtendedRecord> filterByGbifId() {
     return er ->
-        basicTransform
-            .processElement(er)
+        basicTransformFn
+            .apply(er)
             .ifPresent(
                 br -> {
                   if (skipTransform) {
