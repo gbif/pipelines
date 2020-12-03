@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiConsumer;
@@ -337,6 +338,7 @@ public class OccurrenceHdfsRecordConverter {
       hr.setSamplesizevalue(br.getSampleSizeValue());
       hr.setRelativeorganismquantity(br.getRelativeOrganismQuantity());
       hr.setOccurrencestatus(br.getOccurrenceStatus());
+      hr.setIsclustered(br.getIsClustered());
 
       Optional.ofNullable(br.getRecordedByIds())
           .ifPresent(
@@ -480,6 +482,13 @@ public class OccurrenceHdfsRecordConverter {
                                       });
                             }
                           }));
+
+      List<String> extensions =
+          er.getExtensions().entrySet().stream()
+              .filter(e -> e.getValue() != null && !e.getValue().isEmpty())
+              .map(Entry::getKey)
+              .collect(Collectors.toList());
+      hr.setExtensions(extensions);
     };
   }
 
