@@ -1458,7 +1458,7 @@
     "name" : "ext_multimedia",
     "type" : [ "string", "null" ]
   }, {
-    "name" : "isclustered",
+    "name" : "isincluster",
     "type" : [ "boolean", "null" ]
   }, {
     "name" : "extensions",
