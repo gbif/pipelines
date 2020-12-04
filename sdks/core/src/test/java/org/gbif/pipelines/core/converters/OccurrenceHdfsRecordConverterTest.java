@@ -278,7 +278,7 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals(Double.valueOf(2d), hdfsRecord.getSamplesizevalue());
     Assert.assertEquals(Double.valueOf(2d), hdfsRecord.getRelativeorganismquantity());
     Assert.assertNull(hdfsRecord.getLicense());
-    Assert.assertTrue(hdfsRecord.getIsincluster());
+    Assert.assertTrue(hdfsRecord.getIsclustered());
   }
 
   @Test
