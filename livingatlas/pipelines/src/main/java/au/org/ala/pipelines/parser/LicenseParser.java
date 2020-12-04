@@ -15,11 +15,7 @@ public class LicenseParser {
   // Licence 1..* regex (s)
   private final LinkedListMultimap<String, String> licences = LinkedListMultimap.create();
 
-  /**
-   * Create a ALA supported license parser
-   *
-   * @return
-   */
+  /** Create a ALA supported license parser */
   public static LicenseParser getInstance() {
     String sourceClasspathFile = "/license.txt";
     if (parser == null) {
@@ -33,8 +29,6 @@ public class LicenseParser {
    * Load customised license pattern file.
    *
    * @param licenseFile: //CC-BY-NC-SA 3.0 (Au) .*(cc|creativecommons).*by.*nc.*sa.*3\.0.*au.*
-   * @return
-   * @throws FileNotFoundException
    */
   public static LicenseParser getInstance(String licenseFile) throws FileNotFoundException {
     if (parser == null) {
@@ -68,9 +62,6 @@ public class LicenseParser {
    * Get the license title via regex match.
    *
    * <p>This method does not check if input is null
-   *
-   * @param input
-   * @return
    */
   public String matchLicense(String input) {
     for (Map.Entry<String, String> licence : licences.entries()) {
