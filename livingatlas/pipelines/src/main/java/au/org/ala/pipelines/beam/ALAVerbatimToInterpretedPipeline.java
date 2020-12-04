@@ -112,9 +112,6 @@ public class ALAVerbatimToInterpretedPipeline {
     MDC.put("attempt", attempt.toString());
     MDC.put("step", StepType.VERBATIM_TO_INTERPRETED.name());
 
-    boolean tripletValid = options.isTripletValid();
-    boolean occurrenceIdValid = options.isOccurrenceIdValid();
-    boolean useExtendedRecordId = options.isUseExtendedRecordId();
     String endPointType = options.getEndPointType();
 
     Set<String> types = options.getInterpretationTypes();
