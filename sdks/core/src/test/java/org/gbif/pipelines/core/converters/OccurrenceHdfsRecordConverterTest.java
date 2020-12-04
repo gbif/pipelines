@@ -88,8 +88,20 @@ public class OccurrenceHdfsRecordConverterTest {
     coreTerms.put(DwcTerm.individualCount.simpleName(), "0");
     coreTerms.put(DwcTerm.eventDate.simpleName(), "2000/2010");
 
+    Map<String, List<Map<String, String>>> extensions = new HashMap<>();
+    extensions.put(
+        "http://rs.tdwg.org/ac/terms/Multimedia",
+        Collections.singletonList(Collections.singletonMap("key", "value")));
+    extensions.put(
+        "http://data.ggbn.org/schemas/ggbn/terms/Amplification",
+        Collections.singletonList(Collections.singletonMap("key", "value")));
+
     ExtendedRecord extendedRecord =
-        ExtendedRecord.newBuilder().setId("1").setCoreTerms(coreTerms).build();
+        ExtendedRecord.newBuilder()
+            .setId("1")
+            .setCoreTerms(coreTerms)
+            .setExtensions(extensions)
+            .build();
 
     MetadataRecord metadataRecord =
         MetadataRecord.newBuilder()
@@ -198,6 +210,15 @@ public class OccurrenceHdfsRecordConverterTest {
         hdfsRecord.getEventdate().longValue());
     Assert.assertEquals(
         metadataRecord.getHostingOrganizationKey(), hdfsRecord.getHostingorganizationkey());
+
+    // extensions
+    Assert.assertEquals(2, hdfsRecord.getExtensions().size());
+    Assert.assertTrue(
+        hdfsRecord.getExtensions().contains("http://rs.tdwg.org/ac/terms/Multimedia"));
+    Assert.assertTrue(
+        hdfsRecord
+            .getExtensions()
+            .contains("http://data.ggbn.org/schemas/ggbn/terms/Amplification"));
   }
 
   @Test
@@ -238,6 +259,7 @@ public class OccurrenceHdfsRecordConverterTest {
     basicRecord.setSampleSizeValue(2d);
     basicRecord.setRelativeOrganismQuantity(2d);
     basicRecord.setLicense(License.UNSPECIFIED.name());
+    basicRecord.setIsClustered(true);
 
     // When
     OccurrenceHdfsRecord hdfsRecord = toOccurrenceHdfsRecord(basicRecord);
@@ -256,6 +278,7 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals(Double.valueOf(2d), hdfsRecord.getSamplesizevalue());
     Assert.assertEquals(Double.valueOf(2d), hdfsRecord.getRelativeorganismquantity());
     Assert.assertNull(hdfsRecord.getLicense());
+    Assert.assertTrue(hdfsRecord.getIsincluster());
   }
 
   @Test
