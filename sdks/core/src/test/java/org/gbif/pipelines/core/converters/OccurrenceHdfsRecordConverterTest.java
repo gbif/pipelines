@@ -212,12 +212,12 @@ public class OccurrenceHdfsRecordConverterTest {
         metadataRecord.getHostingOrganizationKey(), hdfsRecord.getHostingorganizationkey());
 
     // extensions
-    Assert.assertEquals(2, hdfsRecord.getExtensions().size());
+    Assert.assertEquals(2, hdfsRecord.getDwcaextension().size());
     Assert.assertTrue(
-        hdfsRecord.getExtensions().contains("http://rs.tdwg.org/ac/terms/Multimedia"));
+        hdfsRecord.getDwcaextension().contains("http://rs.tdwg.org/ac/terms/Multimedia"));
     Assert.assertTrue(
         hdfsRecord
-            .getExtensions()
+            .getDwcaextension()
             .contains("http://data.ggbn.org/schemas/ggbn/terms/Amplification"));
   }
 

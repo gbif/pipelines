@@ -488,7 +488,7 @@ public class OccurrenceHdfsRecordConverter {
               .filter(e -> e.getValue() != null && !e.getValue().isEmpty())
               .map(Entry::getKey)
               .collect(Collectors.toList());
-      hr.setExtensions(extensions);
+      hr.setDwcaextension(extensions);
     };
   }
 

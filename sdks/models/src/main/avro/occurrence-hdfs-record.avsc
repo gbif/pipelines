@@ -1461,7 +1461,7 @@
     "name" : "isincluster",
     "type" : [ "boolean", "null" ]
   }, {
-    "name" : "extensions",
+    "name" : "dwcaextension",
     "type" : [ {
       "type" : "array",
       "items" : [ "string", "null" ]
