@@ -43,13 +43,14 @@ The $CMD can be executed to run all the ingress steps or only a few of them:
 
 Pipeline ingress steps:
 
-    ┌───── do-all ──────────────────────────────────┐
-    │                                               │
-dwca-avro --> interpret --> uuid -->                │
-     export-latlng --> sample --> sample-avro --> index
+    ┌───── do-all ──────────────────────────────────────────────────┐
+    │                                                               │
+dwca-avro --> interpret --> uuid -->                                │
+     export-latlng --> sample --> sample-avro --> generalise --> index
 
 -  'dwca-avro' reads a Dwc-A and converts it to an Avro file;
 -  'interpret' reads a Dwc-A, interprets it and write the interpreted data and the issues in Avro files;
+-  'generalise' reads interpeted data, generalises it and write the generalised data and the issues in Avro files;
 -  'uuid' minting on new records and rematching existing UUIDs to records that have been previously loaded;
 -  'export-latlng' exports a unique set of coordinates for a dataset into CSV;
 -  'sample' crawl the LA layers. Requires an input csv containing lat, lng (no header) and output directory.
@@ -64,6 +65,7 @@ All the steps generate an output. If only the final output is desired, the inter
 Usage:
   $CMD [options] dwca-avro     (<dr>...|all)
   $CMD [options] interpret     (<dr>...|all) $WHEREL
+  $CMD [options] generalise     (<dr>...|all) $WHEREL
   $CMD [options] validate      (<dr>...|all)         $WHERE
   $CMD [options] uuid          (<dr>...|all)         $WHERE
   $CMD [options] export-latlng (<dr>...|all)         $WHERE
@@ -486,6 +488,25 @@ function sample-avro () {
     logStepEnd "Sample-avro" $dr $ltype $SECONDS
 }
 
+function generalise () {
+    local dr="$1" ltype="$2"
+    CLASS=au.org.ala.pipelines.beam.ALAInterpretedToSensitivePipeline
+
+    logStepStart "Generalising" $dr
+    SECONDS=0
+
+    SH_ARGS=generalise-sh-args.local
+    java-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=generalise-sh-args.spark-embedded
+    spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=generalise-sh-args.spark-cluster
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "Sensitivity generalisation $dr"
+
+    logStepEnd "Generalising" $dr $ltype $SECONDS
+}
+
 function index () {
     local dr="$1" ltype="$2"
 
@@ -589,6 +610,12 @@ if ($sample_avro || $do_all); then
     do_step sample-avro
     # WARN: Previosly here 'local' was not executed, always 'cluster' or 'embeded' it's this correct?
 fi
+
+
+if ($generalise || $do_all); then
+    do_step generalise
+fi
+
 
 if ($index || $do_all); then
     do_step index
