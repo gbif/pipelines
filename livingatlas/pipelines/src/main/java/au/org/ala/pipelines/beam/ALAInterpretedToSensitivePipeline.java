@@ -8,8 +8,6 @@ import au.org.ala.kvs.cache.ALAAttributionKVStoreFactory;
 import au.org.ala.kvs.cache.SDSCheckKVStoreFactory;
 import au.org.ala.kvs.cache.SDSReportKVStoreFactory;
 import au.org.ala.kvs.client.SDSConservationServiceFactory;
-import au.org.ala.pipelines.common.ALARecordTypes;
-import au.org.ala.pipelines.transforms.ALASensitiveDataApplicationTransform;
 import au.org.ala.pipelines.transforms.ALASensitiveDataRecordTransform;
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
 import au.org.ala.pipelines.transforms.ALAUUIDTransform;
@@ -29,7 +27,6 @@ import org.apache.beam.sdk.transforms.join.CoGroupByKey;
 import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
-import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
@@ -100,7 +97,6 @@ public class ALAInterpretedToSensitivePipeline {
             .txrTag(USE_GBIF_TAXONOMY ? taxonomyTransform.getTag() : null)
             .atxrTag(alaTaxonomyTransform.getTag())
             .create();
-
 
     log.info("Adding step 3: Creating beam pipeline");
     PCollection<KV<String, ExtendedRecord>> inputVerbatimCollection =

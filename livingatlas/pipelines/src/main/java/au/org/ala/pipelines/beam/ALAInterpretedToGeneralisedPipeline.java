@@ -1,5 +1,7 @@
 package au.org.ala.pipelines.beam;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
+
 import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.kvs.ALAPipelinesConfigFactory;
 import au.org.ala.kvs.cache.ALAAttributionKVStoreFactory;
@@ -14,6 +16,10 @@ import au.org.ala.pipelines.transforms.ALAUUIDTransform;
 import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.function.UnaryOperator;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,13 +40,6 @@ import org.gbif.pipelines.transforms.core.TaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.slf4j.MDC;
-
-import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.util.function.UnaryOperator;
-
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
 /** ALA Beam pipeline to process sensitive data. */
 @Slf4j
