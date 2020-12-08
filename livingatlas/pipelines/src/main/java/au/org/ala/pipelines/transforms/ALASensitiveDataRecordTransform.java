@@ -2,7 +2,6 @@ package au.org.ala.pipelines.transforms;
 
 import static au.org.ala.pipelines.common.ALARecordTypes.ALA_SENSITIVE_DATA;
 
-import au.org.ala.kvs.client.ALACollectoryMetadata;
 import au.org.ala.pipelines.interpreters.SensitiveDataInterpreter;
 import au.org.ala.sds.api.ConservationApi;
 import au.org.ala.sds.api.SensitivityQuery;
@@ -46,17 +45,16 @@ public class ALASensitiveDataRecordTransform
 
   private final String datasetId;
   private KeyValueStore<SpeciesCheck, Boolean> speciesStore;
-  private final SerializableSupplier<KeyValueStore<SpeciesCheck, Boolean>> speciesStoreSupplier;
   private KeyValueStore<SensitivityQuery, SensitivityReport> reportStore;
+  private ConservationApi conservationService;
+  private final SerializableSupplier<KeyValueStore<SpeciesCheck, Boolean>> speciesStoreSupplier;
   private final SerializableSupplier<KeyValueStore<SensitivityQuery, SensitivityReport>>
       reportStoreSupplier;
-  private KeyValueStore<String, ALACollectoryMetadata> dataResourceStore;
-  private final SerializableSupplier<KeyValueStore<String, ALACollectoryMetadata>>
-      dataResourceStoreSupplier;
-  private ConservationApi conservationService;
   private final SerializableSupplier<ConservationApi> conservationServiceSupplier;
+
   private List<Generalisation> generalisations;
   private Set<Term> sensitiveFields;
+
   @NonNull private final TupleTag<ExtendedRecord> erTag;
   @NonNull private final TupleTag<TemporalRecord> trTag;
   @NonNull private final TupleTag<TaxonRecord> txrTag;
@@ -70,8 +68,6 @@ public class ALASensitiveDataRecordTransform
       SerializableSupplier<KeyValueStore<SpeciesCheck, Boolean>> speciesStoreSupplier,
       KeyValueStore<SensitivityQuery, SensitivityReport> reportStore,
       SerializableSupplier<KeyValueStore<SensitivityQuery, SensitivityReport>> reportStoreSupplier,
-      KeyValueStore<String, ALACollectoryMetadata> dataResourceStore,
-      SerializableSupplier<KeyValueStore<String, ALACollectoryMetadata>> dataResourceStoreSupplier,
       ConservationApi conservationService,
       SerializableSupplier<ConservationApi> conservationServiceSupplier,
       TupleTag<ExtendedRecord> erTag,
@@ -84,15 +80,16 @@ public class ALASensitiveDataRecordTransform
         ALA_SENSITIVE_DATA,
         ALASensitiveDataRecordTransform.class.getName(),
         "alaSensitiveDataRecordCount");
+
     this.datasetId = datasetId;
     this.speciesStore = speciesStore;
-    this.speciesStoreSupplier = speciesStoreSupplier;
     this.reportStore = reportStore;
+
+    this.speciesStoreSupplier = speciesStoreSupplier;
     this.reportStoreSupplier = reportStoreSupplier;
-    this.dataResourceStore = dataResourceStore;
-    this.dataResourceStoreSupplier = dataResourceStoreSupplier;
     this.conservationService = conservationService;
     this.conservationServiceSupplier = conservationServiceSupplier;
+
     this.erTag = erTag;
     this.trTag = trTag;
     this.lrTag = lrTag;
@@ -122,28 +119,24 @@ public class ALASensitiveDataRecordTransform
   @Setup
   public void setup() {
     if (this.speciesStore == null && this.speciesStoreSupplier != null) {
-      log.info("Initialize Sensitive Species KvStore");
+      log.debug("Initialize Sensitive Species KvStore");
       this.speciesStore = this.speciesStoreSupplier.get();
     }
     if (this.reportStore == null && this.reportStoreSupplier != null) {
-      log.info("Initialize Sensitivity Report KvStore");
+      log.debug("Initialize Sensitivity Report KvStore");
       this.reportStore = this.reportStoreSupplier.get();
     }
-    if (this.dataResourceStore == null && this.dataResourceStoreSupplier != null) {
-      log.info("Initialize CollectoryKvStore");
-      this.dataResourceStore = this.dataResourceStoreSupplier.get();
-    }
     if (this.conservationService == null && this.conservationServiceSupplier != null) {
-      log.info("Initialize Conservation API");
+      log.debug("Initialize Conservation API");
       this.conservationService = this.conservationServiceSupplier.get();
     }
     if (this.generalisations == null) {
-      log.info("Get generalisations to apply");
+      log.debug("Get generalisations to apply");
       this.generalisations = this.conservationService.getGeneralisations();
       this.sensitiveFields = null;
     }
     if (this.sensitiveFields == null) {
-      log.info("Building sensitive field list");
+      log.debug("Building sensitive field list");
       this.sensitiveFields = new HashSet<>(this.generalisations.size());
       for (Generalisation g : this.generalisations) {
         this.sensitiveFields.addAll(
@@ -180,9 +173,8 @@ public class ALASensitiveDataRecordTransform
     TaxonRecord itxr = this.txrTag == null ? null : v.getOnly(this.txrTag, null);
     ALATaxonRecord iatxr = this.atxrTag == null ? null : v.getOnly(this.atxrTag, null);
     LocationRecord ilr = this.lrTag == null ? null : v.getOnly(lrTag, null);
+
     ALASensitivityRecord sr = ALASensitivityRecord.newBuilder().setId(id).build();
-    ALACollectoryMetadata dataResource =
-        dataResourceStore == null ? null : dataResourceStore.get(datasetId);
 
     Map<String, String> properties = new HashMap<>(this.sensitiveFields.size());
     properties.put(
@@ -191,15 +183,16 @@ public class ALASensitiveDataRecordTransform
     properties.put(
         DwcTerm.taxonConceptID.qualifiedName(),
         SensitiveDataInterpreter.extractTaxonId(iatxr, itxr, ier));
+
     SensitiveDataInterpreter.constructFields(sensitiveFields, properties, iatxr);
     SensitiveDataInterpreter.constructFields(sensitiveFields, properties, itxr);
     SensitiveDataInterpreter.constructFields(sensitiveFields, properties, itr);
     SensitiveDataInterpreter.constructFields(sensitiveFields, properties, ilr);
     SensitiveDataInterpreter.constructFields(sensitiveFields, properties, ier);
 
-    if (SensitiveDataInterpreter.sourceQualityChecks(properties, sr, dataResource)) {
+    if (SensitiveDataInterpreter.sourceQualityChecks(properties, sr)) {
       SensitiveDataInterpreter.sensitiveDataInterpreter(
-          dataResource, speciesStore, reportStore, generalisations, datasetId, properties, sr);
+          speciesStore, reportStore, generalisations, datasetId, properties, sr);
     }
     return Optional.of(sr);
   }

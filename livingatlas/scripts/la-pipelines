@@ -50,12 +50,12 @@ dwca-avro --> interpret --> uuid -->                                │
 
 -  'dwca-avro' reads a Dwc-A and converts it to an Avro file;
 -  'interpret' reads a Dwc-A, interprets it and write the interpreted data and the issues in Avro files;
--  'generalise' reads interpeted data, generalises it and write the generalised data and the issues in Avro files;
 -  'uuid' minting on new records and rematching existing UUIDs to records that have been previously loaded;
 -  'export-latlng' exports a unique set of coordinates for a dataset into CSV;
 -  'sample' crawl the LA layers. Requires an input csv containing lat, lng (no header) and output directory.
 -  'sample-avro' adds a sampling AVRO extension to the stored interpretation
 -  'index' reads a Dwc-A, interprets it and index the interpeted data creating a SOLR index.
+-  'sds' reads a Dwc-A, interprets it and index the interpeted data creating a SOLR index.
 -  'archive-list' dumps out a list of archives that can be ingested to '/tmp/dataset-archive-list.csv'
 -  'dataset-list' dumps out a list of datasets that have been ingested to '/tmp/dataset-counts.csv'
 -  'validation-report' dumps out a CSV list of datasets ready to be indexed to '/tmp/validation-report.csv'
@@ -71,6 +71,7 @@ Usage:
   $CMD [options] export-latlng (<dr>...|all)         $WHERE
   $CMD [options] sample        (<dr>...|all)
   $CMD [options] sample-avro   (<dr>...|all)         $WHERE
+  $CMD [options] sds           (<dr>...|all)         $WHERE
   $CMD [options] index         (<dr>...|all) $WHEREL
   $CMD [options] archive-list
   $CMD [options] dataset-list
@@ -488,23 +489,25 @@ function sample-avro () {
     logStepEnd "Sample-avro" $dr $ltype $SECONDS
 }
 
-function generalise () {
+function sds () {
     local dr="$1" ltype="$2"
-    CLASS=au.org.ala.pipelines.beam.ALAInterpretedToSensitivePipeline
 
-    logStepStart "Generalising" $dr
+    logStepStart "SDS" $dr
     SECONDS=0
 
-    SH_ARGS=generalise-sh-args.local
+    SH_ARGS=index-sh-args.local
+    CLASS=au.org.ala.pipelines.beam.ALAInterpretedToSensitivePipeline
     java-pipeline $ltype $SH_ARGS $CLASS $dr
 
-    SH_ARGS=generalise-sh-args.spark-embedded
+    SH_ARGS=index-sh-args.spark-embedded
+    CLASS=au.org.ala.pipelines.beam.ALAInterpretedToSensitivePipeline
     spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
 
-    SH_ARGS=generalise-sh-args.spark-cluster
-    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "Sensitivity generalisation $dr"
+    SH_ARGS=index-sh-args.spark-cluster
+    CLASS=au.org.ala.pipelines.beam.ALAInterpretedToSensitivePipeline
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "SDS for $dr"
 
-    logStepEnd "Generalising" $dr $ltype $SECONDS
+    logStepEnd "SDS" $dr $ltype $SECONDS
 }
 
 function index () {
@@ -611,14 +614,12 @@ if ($sample_avro || $do_all); then
     # WARN: Previosly here 'local' was not executed, always 'cluster' or 'embeded' it's this correct?
 fi
 
-
-if ($generalise || $do_all); then
-    do_step generalise
-fi
-
-
 if ($index || $do_all); then
     do_step index
+fi
+
+if ($sds || $do_all); then
+    do_step sds
 fi
 
 # All ended correctly, so untrap EXIT catch
