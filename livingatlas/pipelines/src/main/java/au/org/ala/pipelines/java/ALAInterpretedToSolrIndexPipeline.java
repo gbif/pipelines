@@ -5,8 +5,8 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSI
 import au.org.ala.pipelines.common.ALARecordTypes;
 import au.org.ala.pipelines.options.ALASolrPipelineOptions;
 import au.org.ala.pipelines.transforms.ALAAttributionTransform;
-import au.org.ala.pipelines.transforms.ALASolrDocumentTransform;
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
+import au.org.ala.pipelines.transforms.IndexRecordTransform;
 import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
@@ -34,7 +34,6 @@ import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.DatumWriter;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.solr.common.SolrInputDocument;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
@@ -375,7 +374,7 @@ public class ALAInterpretedToSolrIndexPipeline {
 
     log.info("Joining avro files...");
     // Join all records, convert into string json and IndexRequest for ES
-    Function<BasicRecord, SolrInputDocument> indexRequestFn =
+    Function<BasicRecord, IndexRecord> indexRequestFn =
         br -> {
           String k = br.getId();
 
@@ -418,60 +417,38 @@ public class ALAInterpretedToSolrIndexPipeline {
 
           MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
 
-          return ALASolrDocumentTransform.createSolrDocument(
+          return IndexRecordTransform.createIndexRecord(
               metadata, br, tr, lr, txr, atxr, er, aar, asr, aur, isr, tpr);
         };
 
-    boolean useSyncMode = options.getSyncThreshold() > basicMap.size();
+    List<IndexRecord> indexRecords =
+        basicMap.values().stream().map(br -> indexRequestFn.apply(br)).collect(Collectors.toList());
 
-    if (!options.getOutputToAvro()) {
-      log.info("Adding step 4: SOLR indexing");
-      log.info("Pushing data into SOLR");
-      SolrWriter.<BasicRecord>builder()
-          .executor(executor)
-          .zkHost(options.getZkHost())
-          .collection(options.getSolrCollection())
-          .solrMaxBatchSize(options.getSolrBatchSize())
-          .useSyncMode(useSyncMode)
-          .indexRequestFn(indexRequestFn)
-          .records(basicMap.values())
-          .build()
-          .write();
+    // get filesystem
+    FileSystem fs =
+        FsUtils.getFileSystem(
+            options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getInputPath());
 
-    } else {
+    //
+    OutputStream output =
+        fs.create(
+            new Path(
+                options.getAllDatasetsInputPath()
+                    + "/index-record/"
+                    + options.getDatasetId()
+                    + "/"
+                    + options.getDatasetId()
+                    + ".avro"));
 
-      List<IndexRecord> indexRecords =
-          basicMap.values().stream()
-              .map(br -> indexRequestFn.apply(br))
-              .map(doc -> ALASolrDocumentTransform.convertSolrDocToIndexRecord(doc))
-              .collect(Collectors.toList());
+    DatumWriter<IndexRecord> datumWriter = new GenericDatumWriter<>(IndexRecord.getClassSchema());
+    DataFileWriter dataFileWriter = new DataFileWriter<IndexRecord>(datumWriter);
+    dataFileWriter.setCodec(BASE_CODEC);
+    dataFileWriter.create(IndexRecord.getClassSchema(), output);
 
-      // get filesystem
-      FileSystem fs =
-          FsUtils.getFileSystem(
-              options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getInputPath());
-
-      //
-      OutputStream output =
-          fs.create(
-              new Path(
-                  options.getAllDatasetsInputPath()
-                      + "/index-record/"
-                      + options.getDatasetId()
-                      + "/"
-                      + options.getDatasetId()
-                      + ".avro"));
-
-      DatumWriter<IndexRecord> datumWriter = new GenericDatumWriter<>(IndexRecord.getClassSchema());
-      DataFileWriter dataFileWriter = new DataFileWriter<IndexRecord>(datumWriter);
-      dataFileWriter.setCodec(BASE_CODEC);
-      dataFileWriter.create(IndexRecord.getClassSchema(), output);
-
-      for (IndexRecord indexRecord : indexRecords) {
-        dataFileWriter.append(indexRecord);
-      }
-      dataFileWriter.close();
+    for (IndexRecord indexRecord : indexRecords) {
+      dataFileWriter.append(indexRecord);
     }
+    dataFileWriter.close();
 
     MetricsHandler.saveCountersToTargetPathFile(options, metrics.getMetricsResult());
     log.info("Pipeline has been finished - {}", LocalDateTime.now());

@@ -201,6 +201,6 @@ public class CompleteIngestPipelineTestIT {
     // check ready for index - should be true as includeSampling=true and sampling now generated
     assertTrue(ValidationUtils.checkReadyForIndexing(solrOptions).getValid());
 
-    ALAInterpretedToSolrIndexPipeline.run(solrOptions);
+    IndexRecordPipeline.run(solrOptions);
   }
 }

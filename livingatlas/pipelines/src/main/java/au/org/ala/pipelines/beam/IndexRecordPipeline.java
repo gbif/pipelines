@@ -4,9 +4,9 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSI
 
 import au.org.ala.pipelines.options.ALASolrPipelineOptions;
 import au.org.ala.pipelines.transforms.ALAAttributionTransform;
-import au.org.ala.pipelines.transforms.ALASolrDocumentTransform;
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
 import au.org.ala.pipelines.transforms.ALAUUIDTransform;
+import au.org.ala.pipelines.transforms.IndexRecordTransform;
 import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
@@ -20,7 +20,6 @@ import org.apache.avro.file.CodecFactory;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.AvroIO;
-import org.apache.beam.sdk.io.solr.SolrIO;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.View;
@@ -28,7 +27,6 @@ import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.transforms.join.CoGroupByKey;
 import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.*;
-import org.apache.solr.common.SolrInputDocument;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
@@ -44,12 +42,21 @@ import org.gbif.pipelines.transforms.specific.LocationFeatureTransform;
 import org.slf4j.MDC;
 
 /**
- * ALA Beam pipeline for creating a SOLR index. This pipeline uses the HTTP SOLR api to index
- * records.
+ * ALA Beam pipeline for creating an index of the records. This pipeline works 2 ways depending on
+ * configuration.
+ *
+ * <ul>
+ *   <li>Produces AVRO records ready to be index into SOLR in a separate pipeline see {@link
+ *       IndexRecordToSolrPipeline}</lu>
+ *   <li>Writes directly into SOLR
+ * </ul>
+ *
+ * This pipeline uses the HTTP SOLR api to index records. This is currently limited to using HTTP
+ * 1.1 due Apache Beam not yet using the HTTP2 api.
  */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class ALAInterpretedToSolrIndexPipeline {
+public class IndexRecordPipeline {
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
 
@@ -192,8 +199,8 @@ public class ALAInterpretedToSolrIndexPipeline {
 
     final TupleTag<TaxonProfile> speciesListsRecordTupleTag = new TupleTag<TaxonProfile>() {};
 
-    ALASolrDocumentTransform solrDocumentTransform =
-        ALASolrDocumentTransform.create(
+    IndexRecordTransform indexRecordTransform =
+        IndexRecordTransform.create(
             verbatimTransform.getTag(),
             basicTransform.getTag(),
             temporalTransform.getTag(),
@@ -213,8 +220,8 @@ public class ALAInterpretedToSolrIndexPipeline {
             options.getDatasetId());
 
     log.info("Adding step 3: Converting into a json object");
-    ParDo.SingleOutput<KV<String, CoGbkResult>, SolrInputDocument> alaSolrDoFn =
-        solrDocumentTransform.converter();
+    ParDo.SingleOutput<KV<String, CoGbkResult>, IndexRecord> alaSolrDoFn =
+        indexRecordTransform.converter();
 
     KeyedPCollectionTuple<String> kpct =
         KeyedPCollectionTuple
@@ -250,34 +257,21 @@ public class ALAInterpretedToSolrIndexPipeline {
       kpct = kpct.and(taxonomyTransform.getTag(), taxonCollection);
     }
 
-    PCollection<SolrInputDocument> solrInputDocumentPCollection =
+    PCollection<IndexRecord> indexRecordCollection =
         kpct.apply("Grouping objects", CoGroupByKey.create())
             .apply("Merging to Solr doc", alaSolrDoFn);
 
-    if (!options.getOutputToAvro()) {
-      log.info("Adding step 4: SOLR indexing");
-      SolrIO.ConnectionConfiguration conn =
-          SolrIO.ConnectionConfiguration.create(options.getZkHost());
-      solrInputDocumentPCollection.apply(
-          SolrIO.write()
-              .to(options.getSolrCollection())
-              .withConnectionConfiguration(conn)
-              .withMaxBatchSize(options.getSolrBatchSize()));
-    } else {
-      // write to AVRO file instead....
-      solrInputDocumentPCollection
-          .apply("", ParDo.of(new ALASolrDocumentTransform.SolrInputDocumentToIndexRecordFcn()))
-          .apply(
-              AvroIO.write(IndexRecord.class)
-                  .to(
-                      options.getAllDatasetsInputPath()
-                          + "/index-record/"
-                          + options.getDatasetId()
-                          + "/"
-                          + options.getDatasetId())
-                  .withSuffix(".avro")
-                  .withCodec(BASE_CODEC));
-    }
+    // write to AVRO file instead....
+    indexRecordCollection.apply(
+        AvroIO.write(IndexRecord.class)
+            .to(
+                options.getAllDatasetsInputPath()
+                    + "/index-record/"
+                    + options.getDatasetId()
+                    + "/"
+                    + options.getDatasetId())
+            .withSuffix(".avro")
+            .withCodec(BASE_CODEC));
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();

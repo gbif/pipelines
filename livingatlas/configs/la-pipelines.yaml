@@ -164,11 +164,12 @@ sample-avro:
 index:
   inputPath: '{fsPath}/pipelines-data'
   solrCollection: biocache
-  includeSampling: true
+  includeSampling: false
   includeImages: true
   includeSpeciesLists: true
   runner: SparkRunner
   zkHost: localhost:9983
+  outputToAvro: true
   allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
   ## For spark-cluster:
   # appName: SOLR indexing for {datasetId}
@@ -280,6 +281,18 @@ sample-avro-sh-args:
     driver-memory: 1G
 
 index-sh-args:
+  local:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-embedded:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-cluster:
+    conf: spark.default.parallelism=192
+    num-executors: 24
+    executor-cores: 8
+    executor-memory: 7G
+    driver-memory: 4G
+
+solr-sh-args:
   local:
     jvm: -Xmx8g -XX:+UseG1GC
   spark-embedded:

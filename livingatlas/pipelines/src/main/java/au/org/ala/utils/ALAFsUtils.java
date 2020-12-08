@@ -16,7 +16,6 @@ import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.*;
-import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.common.beam.options.BasePipelineOptions;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
@@ -103,18 +102,6 @@ public class ALAFsUtils {
         .toString();
   }
 
-  /** Build a path to sampling output. */
-  public static String buildPathSamplingOutputUsingTargetPath() {
-    return PathBuilder.buildPath(
-            PipelinesVariables.Pipeline.Interpretation.RecordType.LOCATION_FEATURE
-                .toString()
-                .toLowerCase(),
-            PipelinesVariables.Pipeline.Interpretation.RecordType.LOCATION_FEATURE
-                .toString()
-                .toLowerCase())
-        .toString();
-  }
-
   /** Build a path to sampling downloads. */
   public static String buildPathSamplingDownloadsUsingTargetPath(
       AllDatasetsPipelinesOptions options) {
@@ -126,6 +113,14 @@ public class ALAFsUtils {
     return PathBuilder.buildPath(
             PathBuilder.buildDatasetAttemptPath(options, "sampling", false), "downloads")
         .toString();
+  }
+
+  /** Build a path to sampling downloads. */
+  public static String buildPathSamplingUsingTargetPath(AllDatasetsPipelinesOptions options) {
+    if (options.getDatasetId() == null || "all".equals(options.getDatasetId())) {
+      return String.join("/", options.getAllDatasetsInputPath(), "sampling");
+    }
+    return PathBuilder.buildDatasetAttemptPath(options, "sampling", false);
   }
 
   /**

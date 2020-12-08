@@ -1,8 +1,9 @@
 package au.org.ala.pipelines.beam;
 
 import au.org.ala.pipelines.options.ALASolrPipelineOptions;
-import au.org.ala.pipelines.transforms.ALASolrDocumentTransform;
+import au.org.ala.pipelines.transforms.IndexRecordTransform;
 import au.org.ala.pipelines.util.VersionInfo;
+import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationUtils;
 import java.util.HashMap;
@@ -17,16 +18,22 @@ import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.transforms.join.CoGroupByKey;
 import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.*;
-import org.apache.hadoop.fs.FileSystem;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
-import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.IndexRecord;
 import org.gbif.pipelines.io.avro.SampleRecord;
 import org.joda.time.Duration;
 import org.slf4j.MDC;
 
+/**
+ * Pipeline that joins sample data and index records and either:
+ *
+ * <ul>
+ *   <li>Indexes to SOLR
+ *   <li>Writes complete index records to disk
+ * </ul>
+ */
 @Slf4j
-public class IndexRecordToSolrIndexPipeline {
+public class IndexRecordToSolrPipeline {
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
 
@@ -49,14 +56,9 @@ public class IndexRecordToSolrIndexPipeline {
 
   public static void run(ALASolrPipelineOptions options) {
 
-    log.info("options.getDebugCountsOnly - {}", options.getDebugCountsOnly());
+    log.info("options.getOutputJoinToAvro - {}", options.getOutputJoinToAvro());
 
     Pipeline pipeline = Pipeline.create(options);
-
-    // get filesystem
-    FileSystem fs =
-        FsUtils.getFileSystem(
-            options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getInputPath());
 
     // Load Samples
     PCollection<SampleRecord> sampleRecords = loadSampleRecords(options, pipeline);
@@ -83,6 +85,7 @@ public class IndexRecordToSolrIndexPipeline {
                   }
                 }));
 
+    // Convert to KV <LatLng, SampleRecord>
     PCollection<KV<String, SampleRecord>> sampleRecordsKeyedLatng =
         sampleRecords.apply(
             MapElements.via(
@@ -149,7 +152,7 @@ public class IndexRecordToSolrIndexPipeline {
                   }
                 }));
 
-    if (!options.getDebugCountsOnly()) {
+    if (!options.getOutputJoinToAvro()) {
 
       log.info("Adding step 4: SOLR indexing");
       SolrIO.ConnectionConfiguration conn =
@@ -158,7 +161,7 @@ public class IndexRecordToSolrIndexPipeline {
       indexRecordsWithSampling
           .apply(
               "SOLR_indexRecordsWithSampling",
-              ParDo.of(new ALASolrDocumentTransform.IndexRecordToSolrInputDocumentFcn()))
+              ParDo.of(new IndexRecordTransform.IndexRecordToSolrInputDocumentFcn()))
           .apply(
               SolrIO.write()
                   .to(options.getSolrCollection())
@@ -170,7 +173,7 @@ public class IndexRecordToSolrIndexPipeline {
       recordsWithoutCoordinates
           .apply(
               "SOLR_recordsWithoutCoordinates",
-              ParDo.of(new ALASolrDocumentTransform.IndexRecordToSolrInputDocumentFcn()))
+              ParDo.of(new IndexRecordTransform.IndexRecordToSolrInputDocumentFcn()))
           .apply(
               SolrIO.write()
                   .to(options.getSolrCollection())
@@ -183,7 +186,12 @@ public class IndexRecordToSolrIndexPipeline {
       // write to AVRO file instead....
       indexRecordsWithSampling.apply(
           AvroIO.write(IndexRecord.class)
-              .to(options.getAllDatasetsInputPath() + "/index-record-final/index-record")
+              .to(options.getAllDatasetsInputPath() + "/index-record-final/index-record-sampled")
+              .withSuffix(".avro")
+              .withCodec(BASE_CODEC));
+      recordsWithoutCoordinates.apply(
+          AvroIO.write(IndexRecord.class)
+              .to(options.getAllDatasetsInputPath() + "/index-record-final/index-record-no-coords")
               .withSuffix(".avro")
               .withCodec(BASE_CODEC));
     }
@@ -202,6 +210,17 @@ public class IndexRecordToSolrIndexPipeline {
    */
   private static PCollection<IndexRecord> loadIndexRecords(
       ALASolrPipelineOptions options, Pipeline p) {
+    if (options.getDatasetId() == null || "all".equalsIgnoreCase(options.getDatasetId())) {
+      return p.apply(
+          AvroIO.read(IndexRecord.class)
+              .from(
+                  String.join(
+                      "/",
+                      options.getAllDatasetsInputPath(),
+                      "index-record",
+                      options.getDatasetId() + "/*.avro")));
+    }
+
     return p.apply(
         AvroIO.read(IndexRecord.class)
             .from(String.join("/", options.getAllDatasetsInputPath(), "index-record", "*/*.avro")));
@@ -209,8 +228,10 @@ public class IndexRecordToSolrIndexPipeline {
 
   private static PCollection<SampleRecord> loadSampleRecords(
       ALASolrPipelineOptions options, Pipeline p) {
+
     return p.apply(
         AvroIO.read(SampleRecord.class)
-            .from(String.join("/", options.getAllDatasetsInputPath(), "sampling", "*.avro")));
+            .from(
+                String.join("/", ALAFsUtils.buildPathSamplingUsingTargetPath(options), "*.avro")));
   }
 }

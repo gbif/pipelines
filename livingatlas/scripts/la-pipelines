@@ -48,17 +48,15 @@ Pipeline ingress steps:
 dwca-avro --> interpret --> uuid -->                │
      export-latlng --> sample --> sample-avro --> index
 
--  'dwca-avro' reads a Dwc-A and converts it to an Avro file;
--  'interpret' reads a Dwc-A, interprets it and write the interpreted data and the issues in Avro files;
--  'validate' validates the identifiers for a dataset;
--  'uuid' minting on new records and rematching existing UUIDs to records that have been previously loaded;
--  'export-latlng' exports a unique set of coordinates for a dataset into CSV;
--  'image-load' pushing an export of multimedia to the image service;
+-  'dwca-avro' reads a Dwc-A and converts it to an verbatim.avro file;
+-  'interpret' reads verbatim.avro, interprets it and write the interpreted data and the issues in Avro files;
+-  'validate' validates the identifiers for a dataset, checking for duplicate keys;
+-  'uuid' mints UUID on new records and rematches to existing UUIDs for new records;
+-  'image-load' pushes an export of multimedia AVRO files to the image service;
 -  'image-sync' retrieve details of images stored in image service for indexing purposes;
--  'sample' crawl the LA layers. Requires an input csv containing lat, lng (no header) and output directory;
--  'sample-avro' adds a sampling AVRO extension to the stored interpretation;
--  'index' reads a Dwc-A, interprets it and index the interpeted data creating a SOLR index;
--  'index-avro' index AVRO records;
+-  'sample' crawl the LA layers;
+-  'index' generates a AVRO records ready to be index to SOLR;
+-  'solr' reads index records in AVRO and submits them to SOLR;
 -  'archive-list' dumps out a list of archives that can be ingested to '/tmp/dataset-archive-list.csv';
 -  'dataset-list' dumps out a list of datasets that have been ingested to '/tmp/dataset-counts.csv';
 -  'validation-report' dumps out a CSV list of datasets ready to be indexed to '/tmp/validation-report.csv';
@@ -69,16 +67,14 @@ Usage:
   $CMD [options] archive-list
   $CMD [options] dataset-list
   $CMD [options] dwca-avro     (<dr>...|all)
-  $CMD [options] export-latlng (<dr>...|all)         $WHERE
+  $CMD [options] interpret     (<dr>...|all)         $WHEREL
+  $CMD [options] validate      (<dr>...|all)         $WHERE
+  $CMD [options] uuid          (<dr>...|all)         $WHERE
   $CMD [options] image-load    (<dr>...|all)         $WHERE
   $CMD [options] image-sync    (<dr>...|all)         $WHERE
-  $CMD [options] index         (<dr>...|all) $WHEREL
-  $CMD [options] index-avro                          $WHERE
-  $CMD [options] interpret     (<dr>...|all) $WHEREL
-  $CMD [options] sample        (<dr>...|all)
-  $CMD [options] sample-avro   (<dr>...|all)         $WHERE
-  $CMD [options] uuid          (<dr>...|all)         $WHERE
-  $CMD [options] validate      (<dr>...|all)         $WHERE
+  $CMD [options] index         (<dr>...|all)         $WHEREL
+  $CMD [options] sample        (<dr>...|all)         $WHERE
+  $CMD [options] solr          (<dr>...|all)         $WHERE
   $CMD [options] validation-report
   $CMD [options] do-all        (<dr>...|all) $WHEREL
   $CMD -h | --help
@@ -540,6 +536,9 @@ function export-latlng () {
 }
 
 function sample () {
+
+    do_step_simple export-latlng
+
     local dr="$1"
     ltype="local"
     CLASS=au.org.ala.sampling.LayerCrawler
@@ -569,21 +568,23 @@ function sample-avro () {
     logStepEnd "Sample-avro" $dr $ltype $SECONDS
 }
 
-function index-avro () {
-    local ltype="$1"
+function solr () {
+    local dr="$1" ltype="$2"
+    CLASS=au.org.ala.pipelines.beam.IndexRecordToSolrIndexPipeline
 
-    logStepStart "Indexing-all"
+    logStepStart "SOLR" $dr
     SECONDS=0
 
-    SH_ARGS=index-sh-args.spark-embedded
-    CLASS=au.org.ala.pipelines.beam.IndexRecordToSolrIndexPipeline
+    SH_ARGS=solr-sh-args.local
+    java-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=solr-sh-args.spark-embedded
     spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
 
-    SH_ARGS=index-sh-args.spark-cluster
-    CLASS=au.org.ala.pipelines.beam.IndexRecordToSolrIndexPipeline
-    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "SOLR-indexing-AVRO"
+    SH_ARGS=solr-sh-args.spark-cluster
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "SOLR"
 
-    logStepEnd "Indexing-all" $ltype $SECONDS
+    logStepEnd "SOLR"  $dr $ltype $SECONDS
 }
 
 function index () {
@@ -632,7 +633,6 @@ fi
 if [[ $dr = "all" ]] ; then
     dataset-list
 fi # This should create /tmp/dataset-counts.csv
-
 
 function do_step_simple() {
     local step=$1
@@ -698,10 +698,6 @@ if ($image_sync || $do_all); then
   fi
 fi
 
-if ($export_latlng || $do_all); then
-  do_step_simple export-latlng
-fi
-
 if ($image_load || $do_all); then
     if [[ $drs != "all" ]] ; then
         for d in "${drs[@]}"; do
@@ -728,16 +724,12 @@ if ($sample || $do_all); then
   do_step_simple sample
 fi
 
-if ($sample_avro || $do_all); then
-  do_step_simple sample-avro
-fi
-
 if ($index || $do_all); then
     do_step index
 fi
 
-if ($index_avro || $do_all); then
-    do_step index-avro
+if ($solr || $do_all); then
+  do_step_simple solr
 fi
 
 # All ended correctly, so untrap EXIT catch

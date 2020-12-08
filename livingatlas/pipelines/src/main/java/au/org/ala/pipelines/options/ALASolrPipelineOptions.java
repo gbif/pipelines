@@ -53,21 +53,15 @@ public interface ALASolrPipelineOptions
 
   void setSolrBatchSize(Integer solrBatchSize);
 
-  @Description("Include gbif taxonomy")
+  @Description("Write output to avro")
   @Default.Boolean(false)
   Boolean getOutputToAvro();
 
   void setOutputToAvro(Boolean outputToAvro);
 
-  @Description("Include gbif taxonomy")
+  @Description("Write final index output to avro")
   @Default.Boolean(false)
-  Boolean getDebugCountsOnly();
+  Boolean getOutputJoinToAvro();
 
-  void setDebugCountsOnly(Boolean debugCountsOnly);
-
-  @Description("Include gbif taxonomy")
-  @Default.Integer(1)
-  Integer getStage();
-
-  void setStage(Integer stage);
+  void setOutputJoinToAvro(Boolean outputJoinToAvro);
 }

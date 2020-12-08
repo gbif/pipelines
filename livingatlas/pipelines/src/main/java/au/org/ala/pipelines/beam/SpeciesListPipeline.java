@@ -35,7 +35,7 @@ import org.gbif.pipelines.io.avro.*;
  * </ul>
  *
  * This pipeline is left for debug purposes only. Species lists are joined to the records in the
- * {@link ALAInterpretedToSolrIndexPipeline} so there is no need to run this pipeline separately.
+ * {@link IndexRecordPipeline} so there is no need to run this pipeline separately.
  *
  * @see TaxonProfile
  * @see SpeciesListDownloader
