@@ -474,7 +474,7 @@ public class SensitiveDataInterpreterTest {
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
     Map<String, String> properties = new HashMap<>();
     SensitiveDataInterpreter.constructFields(this.sensitive, properties, er);
-    SensitiveDataInterpreter.sourceQualityChecks(properties, sr, this.dataResource);
+    SensitiveDataInterpreter.sourceQualityChecks(properties, sr);
     assertTrue(sr.getIssues().getIssueList().isEmpty());
   }
 
@@ -490,7 +490,7 @@ public class SensitiveDataInterpreterTest {
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
     Map<String, String> properties = new HashMap<>();
     SensitiveDataInterpreter.constructFields(this.sensitive, properties, er);
-    SensitiveDataInterpreter.sourceQualityChecks(properties, sr, this.dataResource);
+    SensitiveDataInterpreter.sourceQualityChecks(properties, sr);
     assertFalse(sr.getIssues().getIssueList().isEmpty());
     assertTrue(
         sr.getIssues().getIssueList().contains(ALAOccurrenceIssue.NAME_NOT_SUPPLIED.getId()));
@@ -511,11 +511,10 @@ public class SensitiveDataInterpreterTest {
     Map<String, String> properties = new HashMap<>();
     SensitiveDataInterpreter.constructFields(this.sensitive, properties, er);
     SensitiveDataInterpreter.sensitiveDataInterpreter(
-        dataResource,
         this.sensitivityLookup,
         this.sensitivityReportLookup,
         this.generalisations,
-        this.dataResource.getUid(),
+        "dr1",
         properties,
         sr);
     assertTrue(sr.getIssues().getIssueList().isEmpty());

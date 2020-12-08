@@ -32,6 +32,9 @@ fs:
 alaNameMatch:
   wsUrl: http://localhost:9179
   timeoutSec: 70
+sds:
+  wsUrl: http://localhost:9189
+  timeoutSec: 70
 collectory:
   wsUrl: https://collections.ala.org.au
   timeoutSec: 70
@@ -132,6 +135,10 @@ sample-avro:
   ## For spark-embedded:
   # appName: SamplingToAvro indexing for {datasetId}
 
+sensitive:
+  inputPath: '{fsPath}/pipelines-data'
+  runner: SparkRunner
+
 # class: au.org.ala.pipelines.java.ALAInterpretedToSolrIndexPipeline
 index:
   inputPath: '{fsPath}/pipelines-data'
@@ -203,6 +210,16 @@ export-latlng-sh-args:
     jvm:
   spark-cluster:
     conf:
+    num-executors: 8
+    executor-cores: 8
+    executor-memory: 16G
+    driver-memory: 4G
+
+sensitive-sh-args:
+  spark-embedded:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-cluster:
+    jvm: -Xmx8g -XX:+UseG1GC
     num-executors: 8
     executor-cores: 8
     executor-memory: 16G
