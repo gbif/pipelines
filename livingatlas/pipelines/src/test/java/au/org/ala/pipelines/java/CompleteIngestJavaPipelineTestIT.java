@@ -3,7 +3,10 @@ package au.org.ala.pipelines.java;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import au.org.ala.pipelines.beam.*;
+import au.org.ala.pipelines.beam.ALAInterpretedToLatLongCSVPipeline;
+import au.org.ala.pipelines.beam.ALASamplingToAvroPipeline;
+import au.org.ala.pipelines.beam.ALAUUIDMintingPipeline;
+import au.org.ala.pipelines.beam.DwcaToVerbatimPipeline;
 import au.org.ala.pipelines.options.ALASolrPipelineOptions;
 import au.org.ala.pipelines.options.AllDatasetsPipelinesOptions;
 import au.org.ala.pipelines.options.UUIDPipelineOptions;
@@ -165,7 +168,7 @@ public class CompleteIngestJavaPipelineTestIT {
               "--inputPath=/tmp/la-pipelines-test/complete-pipeline-java",
               "--properties=" + TestUtils.getPipelinesConfigFile()
             });
-    ALAInterpretedToLatLongCSVPipeline.run(latLngOptions);
+    LatLongPipeline.run(latLngOptions);
 
     // sample
     LayerCrawler.init(
@@ -213,6 +216,6 @@ public class CompleteIngestJavaPipelineTestIT {
               "--includeImages=false"
             });
 
-    au.org.ala.pipelines.java.ALAInterpretedToSolrIndexPipeline.run(solrOptions);
+    IndexRecordPipeline.run(solrOptions);
   }
 }
