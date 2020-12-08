@@ -5,6 +5,7 @@ import au.org.ala.pipelines.options.AllDatasetsPipelinesOptions;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import java.io.*;
 import java.util.HashMap;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericDatumWriter;
@@ -16,6 +17,7 @@ import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.SampleRecord;
 import org.slf4j.MDC;
 
+@Slf4j
 public class SamplesToAvro {
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
@@ -40,24 +42,21 @@ public class SamplesToAvro {
             options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getInputPath());
 
     // Read CSV
-    RemoteIterator<LocatedFileStatus> iter =
-        fs.listFiles(new Path(options.getAllDatasetsInputPath() + "/sampling/downloads"), false);
+    String samplePath = LayerCrawler.getSampleDownloadPath(options);
+
+    RemoteIterator<LocatedFileStatus> iter = fs.listFiles(new Path(samplePath), false);
 
     while (iter.hasNext()) {
 
       LocatedFileStatus fileStatus = iter.next();
 
       if (fileStatus.getPath().getName().endsWith(".csv")) {
+        log.info("Reading {} and converting to avro", fileStatus.getPath().getName());
         InputStream inputStream = fs.open(fileStatus.getPath());
         CSVReader csvReader = new CSVReader(new InputStreamReader(inputStream));
 
-        OutputStream output =
-            fs.create(
-                new Path(
-                    options.getAllDatasetsInputPath()
-                        + "/sampling/sampling-"
-                        + System.currentTimeMillis()
-                        + ".avro"));
+        String outputPath = LayerCrawler.getSampleAvroPath(options);
+        OutputStream output = fs.create(new Path(outputPath));
         DatumWriter<SampleRecord> datumWriter =
             new GenericDatumWriter<>(SampleRecord.getClassSchema());
         DataFileWriter dataFileWriter = new DataFileWriter<SampleRecord>(datumWriter);
@@ -98,7 +97,9 @@ public class SamplesToAvro {
           }
         }
         dataFileWriter.close();
+        log.info("File written to {}", outputPath);
       }
     }
+    log.info("Conversion to avro complete.");
   }
 }

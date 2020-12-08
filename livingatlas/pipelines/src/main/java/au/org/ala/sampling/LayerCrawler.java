@@ -121,6 +121,9 @@ public class LayerCrawler {
     for (String inputFile : latLngFiles) {
       lc.crawl(fs, layerList, inputFile, sampleDownloadPath);
     }
+
+    SamplesToAvro.run(options);
+
     Instant batchFinish = Instant.now();
 
     log.info(
@@ -143,7 +146,7 @@ public class LayerCrawler {
   }
 
   @NotNull
-  private static String getSampleDownloadPath(AllDatasetsPipelinesOptions options) {
+  public static String getSampleDownloadPath(AllDatasetsPipelinesOptions options) {
     if (options.getDatasetId() == null || "all".equals(options.getDatasetId())) {
       return options.getAllDatasetsInputPath() + "/sampling/downloads";
     }
@@ -153,6 +156,25 @@ public class LayerCrawler {
         + "/"
         + options.getAttempt()
         + "/sampling/downloads";
+  }
+
+  @NotNull
+  public static String getSampleAvroPath(AllDatasetsPipelinesOptions options) {
+
+    if (options.getDatasetId() == null || "all".equals(options.getDatasetId())) {
+      return options.getAllDatasetsInputPath()
+          + "/sampling/sampling-"
+          + System.currentTimeMillis()
+          + ".avro";
+    }
+    return options.getInputPath()
+        + "/"
+        + options.getDatasetId()
+        + "/"
+        + options.getAttempt()
+        + "/sampling/sampling-"
+        + System.currentTimeMillis()
+        + ".avro";
   }
 
   @NotNull

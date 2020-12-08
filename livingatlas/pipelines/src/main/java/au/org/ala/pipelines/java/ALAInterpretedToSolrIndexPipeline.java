@@ -5,10 +5,8 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSI
 import au.org.ala.pipelines.common.ALARecordTypes;
 import au.org.ala.pipelines.options.ALASolrPipelineOptions;
 import au.org.ala.pipelines.transforms.ALAAttributionTransform;
-import au.org.ala.pipelines.transforms.ALABasicTransform;
-import au.org.ala.pipelines.transforms.ALASensitiveDataRecordTransform;
-import au.org.ala.pipelines.transforms.ALASolrDocumentTransform;
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
+import au.org.ala.pipelines.transforms.IndexRecordTransform;
 import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
@@ -36,7 +34,6 @@ import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.DatumWriter;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.solr.common.SolrInputDocument;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
@@ -158,7 +155,7 @@ public class ALAInterpretedToSolrIndexPipeline {
 
     log.info("Creating transformations");
     // Core
-    ALABasicTransform basicTransform = ALABasicTransform.builder().create();
+    BasicTransform basicTransform = BasicTransform.builder().create();
     MetadataTransform metadataTransform = MetadataTransform.builder().create();
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.builder().create();
@@ -175,8 +172,6 @@ public class ALAInterpretedToSolrIndexPipeline {
     ALAAttributionTransform alaAttributionTransform = ALAAttributionTransform.builder().create();
     LocationFeatureTransform spatialTransform = LocationFeatureTransform.builder().create();
     LocationTransform locationTransform = LocationTransform.builder().create();
-    ALASensitiveDataRecordTransform sensitiveTransform =
-        ALASensitiveDataRecordTransform.builder().create();
 
     log.info("Init metrics");
     IngestMetrics metrics = IngestMetricsBuilder.createInterpretedToEsIndexMetrics();
@@ -331,16 +326,6 @@ public class ALAInterpretedToSolrIndexPipeline {
                     pathFn.apply(alaAttributionTransform.getBaseName())),
             executor);
 
-    CompletableFuture<Map<String, ALASensitivityRecord>> alaSensitiveMapFeature =
-        CompletableFuture.supplyAsync(
-            () ->
-                AvroReader.readRecords(
-                    hdfsSiteConfig,
-                    coreSiteConfig,
-                    ALASensitivityRecord.class,
-                    pathFn.apply(sensitiveTransform.getBaseName())),
-            executor);
-
     CompletableFuture<Map<String, LocationFeatureRecord>> australiaSpatialMapFeature =
         CompletableFuture.supplyAsync(
             () ->
@@ -374,7 +359,6 @@ public class ALAInterpretedToSolrIndexPipeline {
     Map<String, ALAUUIDRecord> aurMap = alaUuidMapFeature.get();
     Map<String, ALATaxonRecord> alaTaxonMap = alaTaxonMapFeature.get();
     Map<String, ALAAttributionRecord> alaAttributionMap = alaAttributionMapFeature.get();
-    Map<String, ALASensitivityRecord> alaSensitivityMap = alaSensitiveMapFeature.get();
     Map<String, LocationFeatureRecord> australiaSpatialMap =
         options.getIncludeSampling() ? australiaSpatialMapFeature.get() : Collections.emptyMap();
     Map<String, ImageServiceRecord> imageServiceMap =
@@ -390,7 +374,7 @@ public class ALAInterpretedToSolrIndexPipeline {
 
     log.info("Joining avro files...");
     // Join all records, convert into string json and IndexRequest for ES
-    Function<BasicRecord, SolrInputDocument> indexRequestFn =
+    Function<BasicRecord, IndexRecord> indexRequestFn =
         br -> {
           String k = br.getId();
 
@@ -414,7 +398,6 @@ public class ALAInterpretedToSolrIndexPipeline {
               alaTaxonMap.getOrDefault(k, ALATaxonRecord.newBuilder().setId(k).build());
           ALAAttributionRecord aar =
               alaAttributionMap.getOrDefault(k, ALAAttributionRecord.newBuilder().setId(k).build());
-          ALASensitivityRecord sr = alaSensitivityMap.getOrDefault(k, null);
           LocationFeatureRecord asr =
               australiaSpatialMap.getOrDefault(
                   k, LocationFeatureRecord.newBuilder().setId(k).build());
@@ -434,60 +417,38 @@ public class ALAInterpretedToSolrIndexPipeline {
 
           MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
 
-          return ALASolrDocumentTransform.createSolrDocument(
-              metadata, br, tr, lr, txr, atxr, er, aar, asr, aur, isr, tpr, sr);
+          return IndexRecordTransform.createIndexRecord(
+              metadata, br, tr, lr, txr, atxr, er, aar, asr, aur, isr, tpr);
         };
 
-    boolean useSyncMode = options.getSyncThreshold() > basicMap.size();
+    List<IndexRecord> indexRecords =
+        basicMap.values().stream().map(br -> indexRequestFn.apply(br)).collect(Collectors.toList());
 
-    if (!options.getOutputToAvro()) {
-      log.info("Adding step 4: SOLR indexing");
-      log.info("Pushing data into SOLR");
-      SolrWriter.<BasicRecord>builder()
-          .executor(executor)
-          .zkHost(options.getZkHost())
-          .collection(options.getSolrCollection())
-          .solrMaxBatchSize(options.getSolrBatchSize())
-          .useSyncMode(useSyncMode)
-          .indexRequestFn(indexRequestFn)
-          .records(basicMap.values())
-          .build()
-          .write();
+    // get filesystem
+    FileSystem fs =
+        FsUtils.getFileSystem(
+            options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getInputPath());
 
-    } else {
+    //
+    OutputStream output =
+        fs.create(
+            new Path(
+                options.getAllDatasetsInputPath()
+                    + "/index-record/"
+                    + options.getDatasetId()
+                    + "/"
+                    + options.getDatasetId()
+                    + ".avro"));
 
-      List<IndexRecord> indexRecords =
-          basicMap.values().stream()
-              .map(br -> indexRequestFn.apply(br))
-              .map(doc -> ALASolrDocumentTransform.convertSolrDocToIndexRecord(doc))
-              .collect(Collectors.toList());
+    DatumWriter<IndexRecord> datumWriter = new GenericDatumWriter<>(IndexRecord.getClassSchema());
+    DataFileWriter dataFileWriter = new DataFileWriter<IndexRecord>(datumWriter);
+    dataFileWriter.setCodec(BASE_CODEC);
+    dataFileWriter.create(IndexRecord.getClassSchema(), output);
 
-      // get filesystem
-      FileSystem fs =
-          FsUtils.getFileSystem(
-              options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getInputPath());
-
-      //
-      OutputStream output =
-          fs.create(
-              new Path(
-                  options.getAllDatasetsInputPath()
-                      + "/index-record/"
-                      + options.getDatasetId()
-                      + "/"
-                      + options.getDatasetId()
-                      + ".avro"));
-
-      DatumWriter<IndexRecord> datumWriter = new GenericDatumWriter<>(IndexRecord.getClassSchema());
-      DataFileWriter dataFileWriter = new DataFileWriter<IndexRecord>(datumWriter);
-      dataFileWriter.setCodec(BASE_CODEC);
-      dataFileWriter.create(IndexRecord.getClassSchema(), output);
-
-      for (IndexRecord indexRecord : indexRecords) {
-        dataFileWriter.append(indexRecord);
-      }
-      dataFileWriter.close();
+    for (IndexRecord indexRecord : indexRecords) {
+      dataFileWriter.append(indexRecord);
     }
+    dataFileWriter.close();
 
     MetricsHandler.saveCountersToTargetPathFile(options, metrics.getMetricsResult());
     log.info("Pipeline has been finished - {}", LocalDateTime.now());

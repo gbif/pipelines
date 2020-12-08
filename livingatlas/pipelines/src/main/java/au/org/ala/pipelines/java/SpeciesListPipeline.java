@@ -3,7 +3,7 @@ package au.org.ala.pipelines.java;
 import static java.util.stream.Collectors.groupingBy;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
-import au.org.ala.pipelines.beam.ALAInterpretedToSolrIndexPipeline;
+import au.org.ala.pipelines.beam.IndexRecordPipeline;
 import au.org.ala.pipelines.options.SpeciesLevelPipelineOptions;
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
 import au.org.ala.pipelines.util.SpeciesListUtils;
@@ -41,7 +41,7 @@ import org.gbif.pipelines.io.avro.TaxonProfile;
  * </ul>
  *
  * This pipeline is left for debug purposes only. Species lists are joined to the records in the
- * {@link ALAInterpretedToSolrIndexPipeline} so there is no need to run this pipeline separately.
+ * {@link IndexRecordPipeline} so there is no need to run this pipeline separately.
  *
  * @see TaxonProfile
  * @see SpeciesListDownloader
