@@ -85,7 +85,7 @@ public class GeocodeBitmapCache {
     locations = loadFn.apply(LatLng.builder().withLatitude(lat).withLongitude(lng).build());
     // Don't store this if there aren't any locations.
     if (locations.getLocations().isEmpty()) {
-      log.error(
+      log.debug(
           "For colour {} (LL {},{}; pixel {},{}) the webservice gave zero locations.",
           hex,
           lat,
@@ -93,7 +93,7 @@ public class GeocodeBitmapCache {
           x,
           y);
     } else {
-      log.info(
+      log.debug(
           "New colour {} (LL {},{}; pixel {},{}); remembering as {}",
           hex,
           lat,

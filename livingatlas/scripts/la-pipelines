@@ -569,7 +569,7 @@ function sample-avro () {
 }
 
 function jackknife () {
-    local dr="*" ltype="$2"
+    local dr="*" ltype="$TYPE"
     CLASS=au.org.ala.pipelines.beam.ALAReverseJackKnifePipeline
 
     logStepStart "Jackknife" $dr

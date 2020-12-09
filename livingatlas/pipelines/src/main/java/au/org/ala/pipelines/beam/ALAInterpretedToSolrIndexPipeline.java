@@ -80,7 +80,9 @@ public class ALAInterpretedToSolrIndexPipeline {
     UnaryOperator<String> samplingPathFn =
         t -> ALAFsUtils.buildPathSamplingUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
     UnaryOperator<String> jackKnifePathFn =
-        t -> String.join(options.getJackKnifePath(), "outliers", "*" + AVRO_EXTENSION);
+        t ->
+            PathBuilder.buildPath(options.getJackKnifePath(), "outliers", "*" + AVRO_EXTENSION)
+                .toString();
 
     Pipeline p = Pipeline.create(options);
 
@@ -189,7 +191,7 @@ public class ALAInterpretedToSolrIndexPipeline {
     if (options.getIncludeJackKnife()) {
       jackKnifeOutlierCollection =
           p.apply("Read JackKnifeOutliers", jackKnifeOutlierTransform.read(jackKnifePathFn))
-              .apply("Map Sampling to KV", jackKnifeOutlierTransform.toKv());
+              .apply("Map Jackknife to KV", jackKnifeOutlierTransform.toKv());
     }
 
     final TupleTag<ImageServiceRecord> imageServiceRecordTupleTag =

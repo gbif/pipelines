@@ -34,6 +34,7 @@ import org.apache.commons.lang.StringUtils;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
+import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.ALATaxonRecord;
 import org.gbif.pipelines.io.avro.JackKnifeModelRecord;
 import org.gbif.pipelines.io.avro.JackKnifeOutlierRecord;
@@ -76,6 +77,7 @@ public class ALAReverseJackKnifePipeline {
     // JackKnife output locations
     String outliersPath = String.join("/", options.getPath(), "outliers");
     String modelsPath = String.join("/", options.getPath(), "models");
+    String metricsPath = String.join("/", options.getPath());
 
     // Path to LocationFeatureRecord
     // /data/pipelines-data/dr893/1/sampling/australia_spatial
@@ -84,6 +86,9 @@ public class ALAReverseJackKnifePipeline {
     UnaryOperator<String> inputPathFn =
         t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
     ALATaxonomyTransform alaTaxonomyTransform = ALATaxonomyTransform.builder().create();
+
+    log.info("1. Delete existing jackknife outliers, models and metrics.");
+    deletePreviousValidation(options, options.getPath());
 
     // Filter records without speciesID or with match issue, create map
     // ALATaxonRecord.getSpeciesID() -> ALATaxonRecord.getId().
@@ -305,12 +310,29 @@ public class ALAReverseJackKnifePipeline {
                 .to(modelsPath + "/models")
                 .withSuffix(".avro"));
 
-    log.info("Running the pipeline");
+    log.info("2. Run pipeline for jackknife.");
     PipelineResult result = p.run();
     result.waitUntilFinish();
 
-    MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
+    MetricsHandler.saveCountersToFile(
+        options.getHdfsSiteConfig(),
+        options.getCoreSiteConfig(),
+        metricsPath + "/metrics.yaml",
+        result.metrics());
 
-    log.info("Pipeline has been finished");
+    log.info("3. Pipeline has been finished");
+  }
+
+  public static void deletePreviousValidation(
+      JackKnifePipelineOptions options, String outliersPath) {
+    // delete output directories
+    FsUtils.deleteIfExist(
+        options.getHdfsSiteConfig(), options.getCoreSiteConfig(), outliersPath + "/outliers");
+    FsUtils.deleteIfExist(
+        options.getHdfsSiteConfig(), options.getCoreSiteConfig(), outliersPath + "/models");
+
+    // delete metrics
+    FsUtils.deleteIfExist(
+        options.getHdfsSiteConfig(), options.getCoreSiteConfig(), outliersPath + "/metrics.yaml");
   }
 }

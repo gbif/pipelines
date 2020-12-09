@@ -8,7 +8,6 @@
   "doc": "jackKnife model details",
   "fields": [
     {"name": "taxonId", "type": "string", "doc":"Species identifier"},
-    {"name": "created", "type": ["null", "long"], "default" : null, "doc":"The timestamp the record was created"},
     {"name": "feature", "type": "string", "doc":"Location feature name"},
     {"name": "min", "type": "double", "doc":"Minimum value that is not an outlier"},
     {"name": "max", "type": "double", "doc":"Maximum value that is not an outlier"}
