@@ -10,6 +10,8 @@ import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationResult;
 import au.org.ala.utils.ValidationUtils;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -68,10 +70,14 @@ public class ALAUUIDMintingPipeline {
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
 
-  public static final String NO_ID_MARKER = "NO_ID";
+  public static final String NO_ID_MARKER_STRING = "NO_ID";
+  public static final ALAUUIDRecord NO_ID_MARKER =
+      ALAUUIDRecord.newBuilder().setId(NO_ID_MARKER_STRING).build();
   public static final String REMOVED_PREFIX_MARKER = "REMOVED_";
   public static final String IDENTIFIERS_DIR = "identifiers";
   public static final String UNIQUE_COMPOSITE_KEY_JOIN_CHAR = "|";
+
+  private static final String NOW = ZonedDateTime.now().format(DateTimeFormatter.ISO_INSTANT);
 
   public static void main(String[] args) throws Exception {
     VersionInfo.print();
@@ -98,11 +104,11 @@ public class ALAUUIDMintingPipeline {
     ALAUUIDValidationPipeline.run(options);
 
     // check validation results
-    ValidationResult validatioResult = ValidationUtils.checkValidationFile(options);
+    ValidationResult validationResult = ValidationUtils.checkValidationFile(options);
 
-    log.info("Validation result: {} ", validatioResult.getMessage());
+    log.info("Validation result: {} ", validationResult.getMessage());
 
-    if (!validatioResult.getValid()) {
+    if (!validationResult.getValid()) {
       log.error(
           "Unable to run UUID pipeline. Please check validation file: "
               + ValidationUtils.getValidationFilePath(options));
@@ -128,13 +134,11 @@ public class ALAUUIDMintingPipeline {
     log.info("Output path {}", alaRecordDirectoryPath);
 
     // create key value store for data resource metadata
-    ALACollectoryMetadata collectoryMetadata;
-    try (KeyValueStore<String, ALACollectoryMetadata> dataResourceKvStore =
-        ALAAttributionKVStoreFactory.create(config)) {
+    KeyValueStore<String, ALACollectoryMetadata> dataResourceKvStore =
+        ALAAttributionKVStoreFactory.create(config);
 
-      // lookup collectory metadata for this data resource
-      collectoryMetadata = dataResourceKvStore.get(options.getDatasetId());
-    }
+    // lookup collectory metadata for this data resource
+    ALACollectoryMetadata collectoryMetadata = dataResourceKvStore.get(options.getDatasetId());
     if (collectoryMetadata.equals(ALACollectoryMetadata.EMPTY)) {
       log.error("Unable to retrieve dataset metadata for dataset: " + options.getDatasetId());
       System.exit(1);
@@ -192,7 +196,7 @@ public class ALAUUIDMintingPipeline {
                       }
                     }));
 
-    PCollection<KV<String, String>> alaUuids;
+    PCollection<KV<String, ALAUUIDRecord>> alaUuids;
 
     log.info("Transform 2: ALAUUIDRecord ur ->  <uniqueKey, uuid> (assume incomplete)");
     FileSystem fs =
@@ -200,13 +204,15 @@ public class ALAUUIDMintingPipeline {
             options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getInputPath());
     Path path = new Path(alaRecordDirectoryPath);
 
+    // load existing UUIDs if available
     if (fs.exists(path)) {
       alaUuids =
           p.apply(AvroIO.read(ALAUUIDRecord.class).from(alaRecordDirectoryPath + "/*.avro"))
               .apply(ParDo.of(new ALAUUIDRecordKVFcn()));
     } else {
 
-      TypeDescriptor<KV<String, String>> td = new TypeDescriptor<KV<String, String>>() {};
+      TypeDescriptor<KV<String, ALAUUIDRecord>> td =
+          new TypeDescriptor<KV<String, ALAUUIDRecord>>() {};
       log.warn(
           "Previous ALAUUIDRecord records where not found. This is expected for new datasets, but is a problem "
               + "for previously loaded datasets - will mint new ones......");
@@ -214,9 +220,9 @@ public class ALAUUIDMintingPipeline {
     }
 
     log.info("Create join collection");
-    PCollection<KV<String, KV<String, String>>> joinedPcollection =
+    PCollection<KV<String, KV<String, ALAUUIDRecord>>> joinedPcollection =
         org.apache.beam.sdk.extensions.joinlibrary.Join.fullOuterJoin(
-            extendedRecords, alaUuids, NO_ID_MARKER, NO_ID_MARKER);
+            extendedRecords, alaUuids, NO_ID_MARKER_STRING, NO_ID_MARKER);
 
     log.info("Create ALAUUIDRecords and write out to AVRO");
     joinedPcollection
@@ -250,7 +256,8 @@ public class ALAUUIDMintingPipeline {
   }
 
   /** Function to create ALAUUIDRecords. */
-  static class CreateALAUUIDRecordFcn extends DoFn<KV<String, KV<String, String>>, ALAUUIDRecord> {
+  static class CreateALAUUIDRecordFcn
+      extends DoFn<KV<String, KV<String, ALAUUIDRecord>>, ALAUUIDRecord> {
 
     // TODO this counts are inaccurate when using SparkRunner
     private final Counter orphanedUniqueKeys =
@@ -261,40 +268,65 @@ public class ALAUUIDMintingPipeline {
 
     @ProcessElement
     public void processElement(
-        @Element KV<String, KV<String, String>> uniqueKeyMap, OutputReceiver<ALAUUIDRecord> out) {
+        @Element KV<String, KV<String, ALAUUIDRecord>> uniqueKeyMap,
+        OutputReceiver<ALAUUIDRecord> out) {
 
       // get the matched ExtendedRecord.getId()
       String id = uniqueKeyMap.getValue().getKey();
 
       // get the UUID
-      String uuid = uniqueKeyMap.getValue().getValue();
+      ALAUUIDRecord uuidRecord = uniqueKeyMap.getValue().getValue();
+
+      ALAUUIDRecord uuidRecordToEmit;
 
       // get the constructed key
       String uniqueKey = uniqueKeyMap.getKey();
 
       // if UUID == NO_ID_MARKER, we have a new record so we need a new UUID.
-      if (Objects.equals(uuid, NO_ID_MARKER)) {
+      if (Objects.equals(uuidRecord.getId(), NO_ID_MARKER_STRING)) {
         newUuids.inc();
-        uuid = UUID.randomUUID().toString();
-      } else if (Objects.equals(id, NO_ID_MARKER)) {
-        id = REMOVED_PREFIX_MARKER + UUID.randomUUID().toString();
+
+        // reassign
+        uuidRecordToEmit =
+            ALAUUIDRecord.newBuilder()
+                .setFirstLoaded(ALAUUIDMintingPipeline.NOW)
+                .setUniqueKey(uniqueKey)
+                .setUuid(UUID.randomUUID().toString())
+                .setId(id)
+                .build();
+
+      } else if (Objects.equals(id, NO_ID_MARKER_STRING)) {
+        uuidRecordToEmit =
+            ALAUUIDRecord.newBuilder()
+                .setFirstLoaded(uuidRecord.getFirstLoaded())
+                .setUniqueKey(uuidRecord.getUniqueKey())
+                .setUuid(uuidRecord.getUuid())
+                .setId(REMOVED_PREFIX_MARKER + UUID.randomUUID().toString())
+                .build();
+
         orphanedUniqueKeys.inc();
       } else {
+        uuidRecordToEmit =
+            ALAUUIDRecord.newBuilder()
+                .setFirstLoaded(uuidRecord.getFirstLoaded())
+                .setUniqueKey(uuidRecord.getUniqueKey())
+                .setUuid(uuidRecord.getUuid())
+                .setId(id)
+                .build();
+
         preservedUuids.inc();
       }
 
-      ALAUUIDRecord aur =
-          ALAUUIDRecord.newBuilder().setUniqueKey(uniqueKey).setUuid(uuid).setId(id).build();
-      out.output(aur);
+      out.output(uuidRecordToEmit);
     }
   }
 
   /** Transform to create a map of unique keys built from previous runs and UUID. */
-  static class ALAUUIDRecordKVFcn extends DoFn<ALAUUIDRecord, KV<String, String>> {
+  static class ALAUUIDRecordKVFcn extends DoFn<ALAUUIDRecord, KV<String, ALAUUIDRecord>> {
     @ProcessElement
     public void processElement(
-        @Element ALAUUIDRecord alaUUIDRecord, OutputReceiver<KV<String, String>> out) {
-      out.output(KV.of(alaUUIDRecord.getUniqueKey(), alaUUIDRecord.getUuid()));
+        @Element ALAUUIDRecord alaUUIDRecord, OutputReceiver<KV<String, ALAUUIDRecord>> out) {
+      out.output(KV.of(alaUUIDRecord.getUniqueKey(), alaUUIDRecord));
     }
   }
 

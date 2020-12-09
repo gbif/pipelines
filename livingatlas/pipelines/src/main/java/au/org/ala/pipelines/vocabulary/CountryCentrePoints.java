@@ -31,7 +31,7 @@ public class CountryCentrePoints {
       } else {
         is = CentrePoints.class.getResourceAsStream(CLASSPATH_FILE);
       }
-      cp = CentrePoints.getInstance(is);
+      cp = CentrePoints.getInstance(is, "COUNTRY");
       log.info("We found {} country centres", cp.size());
     }
     return cp;
