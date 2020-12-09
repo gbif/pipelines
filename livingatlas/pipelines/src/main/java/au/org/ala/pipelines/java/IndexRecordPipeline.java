@@ -39,7 +39,6 @@ import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
-import org.gbif.pipelines.core.converters.MultimediaConverter;
 import org.gbif.pipelines.core.io.AvroReader;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.*;
@@ -94,7 +93,7 @@ import org.slf4j.MDC;
  */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class ALAInterpretedToSolrIndexPipeline {
+public class IndexRecordPipeline {
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
 
@@ -143,12 +142,8 @@ public class ALAInterpretedToSolrIndexPipeline {
         t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
     UnaryOperator<String> identifiersPathFn =
         t -> ALAFsUtils.buildPathIdentifiersUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
-    UnaryOperator<String> samplingPathFn =
-        t -> ALAFsUtils.buildPathSamplingUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
     UnaryOperator<String> imageServicePathFn =
         t -> ALAFsUtils.buildPathImageServiceUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
-    UnaryOperator<String> taxonProfilePathFn =
-        t -> ALAFsUtils.buildPathTaxonProfileUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
 
     String hdfsSiteConfig = options.getHdfsSiteConfig();
     String coreSiteConfig = options.getCoreSiteConfig();
@@ -326,16 +321,6 @@ public class ALAInterpretedToSolrIndexPipeline {
                     pathFn.apply(alaAttributionTransform.getBaseName())),
             executor);
 
-    CompletableFuture<Map<String, LocationFeatureRecord>> australiaSpatialMapFeature =
-        CompletableFuture.supplyAsync(
-            () ->
-                AvroReader.readRecords(
-                    hdfsSiteConfig,
-                    coreSiteConfig,
-                    LocationFeatureRecord.class,
-                    samplingPathFn.apply(spatialTransform.getBaseName())),
-            executor);
-
     CompletableFuture<Map<String, ImageServiceRecord>> imageServiceMapFeature =
         CompletableFuture.supplyAsync(
             () ->
@@ -359,8 +344,6 @@ public class ALAInterpretedToSolrIndexPipeline {
     Map<String, ALAUUIDRecord> aurMap = alaUuidMapFeature.get();
     Map<String, ALATaxonRecord> alaTaxonMap = alaTaxonMapFeature.get();
     Map<String, ALAAttributionRecord> alaAttributionMap = alaAttributionMapFeature.get();
-    Map<String, LocationFeatureRecord> australiaSpatialMap =
-        options.getIncludeSampling() ? australiaSpatialMapFeature.get() : Collections.emptyMap();
     Map<String, ImageServiceRecord> imageServiceMap =
         options.getIncludeImages() ? imageServiceMapFeature.get() : Collections.emptyMap();
 
@@ -398,9 +381,6 @@ public class ALAInterpretedToSolrIndexPipeline {
               alaTaxonMap.getOrDefault(k, ALATaxonRecord.newBuilder().setId(k).build());
           ALAAttributionRecord aar =
               alaAttributionMap.getOrDefault(k, ALAAttributionRecord.newBuilder().setId(k).build());
-          LocationFeatureRecord asr =
-              australiaSpatialMap.getOrDefault(
-                  k, LocationFeatureRecord.newBuilder().setId(k).build());
           ImageServiceRecord isr =
               imageServiceMap.getOrDefault(k, ImageServiceRecord.newBuilder().setId(k).build());
           TaxonProfile tpr =
@@ -415,10 +395,8 @@ public class ALAInterpretedToSolrIndexPipeline {
           MeasurementOrFactRecord mfr =
               measurementMap.getOrDefault(k, MeasurementOrFactRecord.newBuilder().setId(k).build());
 
-          MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
-
           return IndexRecordTransform.createIndexRecord(
-              metadata, br, tr, lr, txr, atxr, er, aar, asr, aur, isr, tpr);
+              metadata, br, tr, lr, txr, atxr, er, aar, aur, isr, tpr);
         };
 
     List<IndexRecord> indexRecords =

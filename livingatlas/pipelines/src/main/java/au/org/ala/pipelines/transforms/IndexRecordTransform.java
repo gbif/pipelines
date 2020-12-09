@@ -50,8 +50,6 @@ public class IndexRecordTransform implements Serializable {
   @NonNull private TupleTag<AudubonRecord> arTag;
   @NonNull private TupleTag<MeasurementOrFactRecord> mfrTag;
 
-  private TupleTag<LocationFeatureRecord> asrTag;
-
   private TupleTag<ALAAttributionRecord> aarTag;
   @NonNull private TupleTag<ALAUUIDRecord> urTag;
 
@@ -74,7 +72,6 @@ public class IndexRecordTransform implements Serializable {
       TupleTag<ImageRecord> irTag,
       TupleTag<AudubonRecord> arTag,
       TupleTag<MeasurementOrFactRecord> mfrTag,
-      TupleTag<LocationFeatureRecord> asrTag,
       TupleTag<ALAAttributionRecord> aarTag,
       TupleTag<ALAUUIDRecord> urTag,
       TupleTag<ImageServiceRecord> isTag,
@@ -92,7 +89,6 @@ public class IndexRecordTransform implements Serializable {
     t.irTag = irTag;
     t.arTag = arTag;
     t.mfrTag = mfrTag;
-    t.asrTag = asrTag;
     t.aarTag = aarTag;
     t.urTag = urTag;
     t.isTag = isTag;
@@ -113,7 +109,6 @@ public class IndexRecordTransform implements Serializable {
    * @param txr
    * @param atxr
    * @param aar
-   * @param asr
    * @return
    */
   @NotNull
@@ -126,7 +121,6 @@ public class IndexRecordTransform implements Serializable {
       ALATaxonRecord atxr,
       ExtendedRecord er,
       ALAAttributionRecord aar,
-      LocationFeatureRecord asr,
       ALAUUIDRecord ur,
       ImageServiceRecord isr,
       TaxonProfile tpr) {
@@ -152,6 +146,13 @@ public class IndexRecordTransform implements Serializable {
     skipKeys.add("machineTags"); // TODO review content
 
     IndexRecord.Builder indexRecord = IndexRecord.newBuilder().setId(ur.getUuid());
+    indexRecord.setBooleans(new HashMap<>());
+    indexRecord.setStrings(new HashMap<>());
+    indexRecord.setLongs(new HashMap<>());
+    indexRecord.setInts(new HashMap<>());
+    indexRecord.setDates(new HashMap<>());
+    indexRecord.setDoubles(new HashMap<>());
+    indexRecord.setMultiValues(new HashMap<>());
     List<String> assertions = new ArrayList<String>();
 
     addToIndexRecord(lr, indexRecord, skipKeys);
@@ -259,6 +260,7 @@ public class IndexRecordTransform implements Serializable {
       // legacy fields referenced in biocache-service code
       indexRecord.getStrings().put("taxon_name", atxr.getScientificName());
       indexRecord.getStrings().put("lsid", atxr.getTaxonConceptID());
+      indexRecord.setTaxonID(atxr.getTaxonConceptID());
       indexRecord.getStrings().put("rank", atxr.getRank());
       indexRecord.getInts().put("rank_id", atxr.getRankID());
 
@@ -411,16 +413,9 @@ public class IndexRecordTransform implements Serializable {
               tpr = v.getOnly(tpTag, TaxonProfile.newBuilder().setId(k).build());
             }
 
-            // Sampling
-            LocationFeatureRecord asr = null;
-            if (asrTag != null) {
-              asr = v.getOnly(asrTag, LocationFeatureRecord.newBuilder().setId(k).build());
-            }
-
             MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
 
-            IndexRecord doc =
-                createIndexRecord(mdr, br, tr, lr, txr, atxr, er, aar, asr, ur, isr, tpr);
+            IndexRecord doc = createIndexRecord(mdr, br, tr, lr, txr, atxr, er, aar, ur, isr, tpr);
 
             c.output(doc);
             counter.inc();
@@ -442,6 +437,7 @@ public class IndexRecordTransform implements Serializable {
     if (lat <= 90 && lat >= -90d && lon <= 180 && lon >= -180d) {
       // https://lucene.apache.org/solr/guide/7_0/spatial-search.html#indexing-points
       latlon = lat + "," + lon; // required format for indexing geodetic points in SOLR
+      doc.setLatLng(latlon);
     }
 
     doc.getStrings().put("lat_long", latlon); // is set to IGNORE in headerAttributes
@@ -503,31 +499,32 @@ public class IndexRecordTransform implements Serializable {
                                       .findFirst()
                                       .map(Schema::getType)
                                   : Optional.of(schema.getType());
-
-                          type.ifPresent(
-                              t -> {
-                                switch (t) {
-                                  case BOOLEAN:
-                                    //
-                                    // builder.set.setField(f.name(), r);
-                                    break;
-                                  case FLOAT:
-                                    builder.getDoubles().put(f.name(), (Double) r);
-                                    break;
-                                  case DOUBLE:
-                                    builder.getDoubles().put(f.name(), (Double) r);
-                                    break;
-                                  case INT:
-                                    builder.getInts().put(f.name(), (Integer) r);
-                                    break;
-                                  case LONG:
-                                    builder.getLongs().put(f.name(), (Long) r);
-                                    break;
-                                  default:
-                                    builder.getStrings().put(f.name(), r.toString());
-                                    break;
-                                }
-                              });
+                          if (r != null) {
+                            type.ifPresent(
+                                t -> {
+                                  switch (t) {
+                                    case BOOLEAN:
+                                      //
+                                      builder.getBooleans().put(f.name(), (Boolean) r);
+                                      break;
+                                    case FLOAT:
+                                      builder.getDoubles().put(f.name(), (Double) r);
+                                      break;
+                                    case DOUBLE:
+                                      builder.getDoubles().put(f.name(), (Double) r);
+                                      break;
+                                    case INT:
+                                      builder.getInts().put(f.name(), (Integer) r);
+                                      break;
+                                    case LONG:
+                                      builder.getLongs().put(f.name(), (Long) r);
+                                      break;
+                                    default:
+                                      builder.getStrings().put(f.name(), r.toString());
+                                      break;
+                                  }
+                                });
+                          }
                         }));
   }
 
@@ -554,6 +551,7 @@ public class IndexRecordTransform implements Serializable {
 
   public static SolrInputDocument convertIndexRecordToSolrDoc(IndexRecord indexRecord) {
     SolrInputDocument doc = new SolrInputDocument();
+    doc.setField("id", indexRecord.getId());
 
     // strings
     for (Map.Entry<String, String> s : indexRecord.getStrings().entrySet()) {

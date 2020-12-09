@@ -52,16 +52,4 @@ public interface ALASolrPipelineOptions
   Integer getSolrBatchSize();
 
   void setSolrBatchSize(Integer solrBatchSize);
-
-  @Description("Write output to avro")
-  @Default.Boolean(false)
-  Boolean getOutputToAvro();
-
-  void setOutputToAvro(Boolean outputToAvro);
-
-  @Description("Write final index output to avro")
-  @Default.Boolean(false)
-  Boolean getOutputJoinToAvro();
-
-  void setOutputJoinToAvro(Boolean outputJoinToAvro);
 }

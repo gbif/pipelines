@@ -9,7 +9,6 @@ import au.org.ala.utils.ValidationUtils;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.avro.file.CodecFactory;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.io.solr.SolrIO;
@@ -35,16 +34,15 @@ import org.slf4j.MDC;
 @Slf4j
 public class IndexRecordToSolrPipeline {
 
-  private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
-
   public static void main(String[] args) throws Exception {
     VersionInfo.print();
     MDC.put("step", "INDEX_RECORD_TO_SOLR");
-    MDC.put("datasetId", "ALL_RECORDS");
+
     String[] combinedArgs =
         new CombinedYamlConfiguration(args).toArgs("general", "speciesLists", "index");
     ALASolrPipelineOptions options =
         PipelinesOptionsFactory.create(ALASolrPipelineOptions.class, combinedArgs);
+    MDC.put("datasetId", options.getDatasetId() != null ? options.getDatasetId() : "ALL_RECORDS");
     options.setMetaFileName(ValidationUtils.INDEXING_METRICS);
     PipelinesOptionsFactory.registerHdfs(options);
     run(options);
@@ -55,8 +53,6 @@ public class IndexRecordToSolrPipeline {
   }
 
   public static void run(ALASolrPipelineOptions options) {
-
-    log.info("options.getOutputJoinToAvro - {}", options.getOutputJoinToAvro());
 
     Pipeline pipeline = Pipeline.create(options);
 
@@ -124,7 +120,7 @@ public class IndexRecordToSolrPipeline {
                     Iterable<IndexRecord> idIter = e.getValue().getAll(indexRecordTag);
 
                     if (sampleRecord.getStrings() == null && sampleRecord.getDoubles() == null) {
-                      log.error("###### Sampling was empty for point: {}", e.getKey());
+                      log.error("Sampling was empty for point: {}", e.getKey());
                     }
 
                     idIter.forEach(
@@ -152,49 +148,33 @@ public class IndexRecordToSolrPipeline {
                   }
                 }));
 
-    if (!options.getOutputJoinToAvro()) {
+    log.info("Adding step 4: SOLR indexing");
+    SolrIO.ConnectionConfiguration conn =
+        SolrIO.ConnectionConfiguration.create(options.getZkHost());
 
-      log.info("Adding step 4: SOLR indexing");
-      SolrIO.ConnectionConfiguration conn =
-          SolrIO.ConnectionConfiguration.create(options.getZkHost());
+    indexRecordsWithSampling
+        .apply(
+            "SOLR_indexRecordsWithSampling",
+            ParDo.of(new IndexRecordTransform.IndexRecordToSolrInputDocumentFcn()))
+        .apply(
+            SolrIO.write()
+                .to(options.getSolrCollection())
+                .withConnectionConfiguration(conn)
+                .withMaxBatchSize(options.getSolrBatchSize())
+                .withRetryConfiguration(
+                    SolrIO.RetryConfiguration.create(10, Duration.standardMinutes(3))));
 
-      indexRecordsWithSampling
-          .apply(
-              "SOLR_indexRecordsWithSampling",
-              ParDo.of(new IndexRecordTransform.IndexRecordToSolrInputDocumentFcn()))
-          .apply(
-              SolrIO.write()
-                  .to(options.getSolrCollection())
-                  .withConnectionConfiguration(conn)
-                  .withMaxBatchSize(options.getSolrBatchSize())
-                  .withRetryConfiguration(
-                      SolrIO.RetryConfiguration.create(10, Duration.standardMinutes(3))));
-
-      recordsWithoutCoordinates
-          .apply(
-              "SOLR_recordsWithoutCoordinates",
-              ParDo.of(new IndexRecordTransform.IndexRecordToSolrInputDocumentFcn()))
-          .apply(
-              SolrIO.write()
-                  .to(options.getSolrCollection())
-                  .withConnectionConfiguration(conn)
-                  .withMaxBatchSize(options.getSolrBatchSize())
-                  .withRetryConfiguration(
-                      SolrIO.RetryConfiguration.create(10, Duration.standardMinutes(3))));
-
-    } else {
-      // write to AVRO file instead....
-      indexRecordsWithSampling.apply(
-          AvroIO.write(IndexRecord.class)
-              .to(options.getAllDatasetsInputPath() + "/index-record-final/index-record-sampled")
-              .withSuffix(".avro")
-              .withCodec(BASE_CODEC));
-      recordsWithoutCoordinates.apply(
-          AvroIO.write(IndexRecord.class)
-              .to(options.getAllDatasetsInputPath() + "/index-record-final/index-record-no-coords")
-              .withSuffix(".avro")
-              .withCodec(BASE_CODEC));
-    }
+    recordsWithoutCoordinates
+        .apply(
+            "SOLR_recordsWithoutCoordinates",
+            ParDo.of(new IndexRecordTransform.IndexRecordToSolrInputDocumentFcn()))
+        .apply(
+            SolrIO.write()
+                .to(options.getSolrCollection())
+                .withConnectionConfiguration(conn)
+                .withMaxBatchSize(options.getSolrBatchSize())
+                .withRetryConfiguration(
+                    SolrIO.RetryConfiguration.create(10, Duration.standardMinutes(3))));
 
     pipeline.run(options).waitUntilFinish();
 
@@ -228,10 +208,9 @@ public class IndexRecordToSolrPipeline {
 
   private static PCollection<SampleRecord> loadSampleRecords(
       ALASolrPipelineOptions options, Pipeline p) {
-
-    return p.apply(
-        AvroIO.read(SampleRecord.class)
-            .from(
-                String.join("/", ALAFsUtils.buildPathSamplingUsingTargetPath(options), "*.avro")));
+    String samplingPath =
+        String.join("/", ALAFsUtils.buildPathSamplingUsingTargetPath(options), "*.avro");
+    log.info("Loading sampling from {}", samplingPath);
+    return p.apply(AvroIO.read(SampleRecord.class).from(samplingPath));
   }
 }

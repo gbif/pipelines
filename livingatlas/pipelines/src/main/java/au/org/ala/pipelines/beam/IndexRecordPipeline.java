@@ -38,7 +38,6 @@ import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
-import org.gbif.pipelines.transforms.specific.LocationFeatureTransform;
 import org.slf4j.MDC;
 
 /**
@@ -113,7 +112,6 @@ public class IndexRecordPipeline {
     // ALA specific
     ALAUUIDTransform alaUuidTransform = ALAUUIDTransform.create();
     ALATaxonomyTransform alaTaxonomyTransform = ALATaxonomyTransform.builder().create();
-    LocationFeatureTransform locationFeatureTransform = LocationFeatureTransform.builder().create();
     LocationTransform locationTransform = LocationTransform.builder().create();
     ALAAttributionTransform alaAttributionTransform = ALAAttributionTransform.builder().create();
 
@@ -186,14 +184,6 @@ public class IndexRecordPipeline {
       alaTaxonProfileRecords = SpeciesListPipeline.generateTaxonProfileCollection(p, options);
     }
 
-    // load sampling
-    PCollection<KV<String, LocationFeatureRecord>> locationFeatureCollection = null;
-    if (options.getIncludeSampling()) {
-      locationFeatureCollection =
-          p.apply("Read Sampling", locationFeatureTransform.read(samplingPathFn))
-              .apply("Map Sampling to KV", locationFeatureTransform.toKv());
-    }
-
     final TupleTag<ImageServiceRecord> imageServiceRecordTupleTag =
         new TupleTag<ImageServiceRecord>() {};
 
@@ -211,7 +201,6 @@ public class IndexRecordPipeline {
             imageTransform.getTag(),
             audubonTransform.getTag(),
             measurementOrFactTransform.getTag(),
-            options.getIncludeSampling() ? locationFeatureTransform.getTag() : null,
             alaAttributionTransform.getTag(),
             alaUuidTransform.getTag(),
             options.getIncludeImages() ? imageServiceRecordTupleTag : null,
@@ -247,10 +236,6 @@ public class IndexRecordPipeline {
 
     if (options.getIncludeImages()) {
       kpct = kpct.and(imageServiceRecordTupleTag, alaImageServiceRecords);
-    }
-
-    if (options.getIncludeSampling()) {
-      kpct = kpct.and(locationFeatureTransform.getTag(), locationFeatureCollection);
     }
 
     if (options.getIncludeGbifTaxonomy()) {

@@ -29,7 +29,9 @@ public class PathBuilder {
       BasePipelineOptions options, String name, boolean isInput) {
     return buildPath(
             isInput ? options.getInputPath() : options.getTargetPath(),
-            options.getDatasetId(),
+            options.getDatasetId() == null || "all".equalsIgnoreCase(options.getDatasetId())
+                ? "*"
+                : options.getDatasetId(),
             options.getAttempt().toString(),
             name.toLowerCase())
         .toString();
