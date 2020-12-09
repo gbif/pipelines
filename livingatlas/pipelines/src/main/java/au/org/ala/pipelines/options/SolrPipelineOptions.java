@@ -64,4 +64,10 @@ public interface SolrPipelineOptions extends IndexingPipelineOptions {
   String getClusteringPath();
 
   void setClusteringPath(String clusteringPath);
+
+  @Description("Number of partitions to use")
+  @Default.Integer(1)
+  Integer getNumOfPartitions();
+
+  void setNumOfPartitions(Integer numOfPartitions);
 }
