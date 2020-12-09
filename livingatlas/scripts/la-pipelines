@@ -46,7 +46,7 @@ Pipeline ingress steps:
     ┌───── do-all ──────────────────────────────────┐
     │                                               │
 dwca-avro --> interpret --> uuid -->                │
-     export-latlng --> sample --> sample-avro --> index
+     sample --> index --> solr
 
 -  'dwca-avro' reads a Dwc-A and converts it to an verbatim.avro file;
 -  'interpret' reads verbatim.avro, interprets it and write the interpreted data and the issues in Avro files;
@@ -54,7 +54,7 @@ dwca-avro --> interpret --> uuid -->                │
 -  'uuid' mints UUID on new records and rematches to existing UUIDs for new records;
 -  'image-load' pushes an export of multimedia AVRO files to the image service;
 -  'image-sync' retrieve details of images stored in image service for indexing purposes;
--  'sample' crawl the LA layers;
+-  'sample' use the sampling service to retrieve values for points for the layers in the spatial service;
 -  'index' generates a AVRO records ready to be index to SOLR;
 -  'solr' reads index records in AVRO and submits them to SOLR;
 -  'archive-list' dumps out a list of archives that can be ingested to '/tmp/dataset-archive-list.csv';
@@ -514,11 +514,7 @@ function image-sync () {
 
 function export-latlng () {
     local dr="$1" ltype="$2"
-    CLASS=au.org.ala.pipelines.beam.ALAInterpretedToLatLongCSVPipeline
-
-    if [[ $dr = "all" ]] ; then
-      CLASS=au.org.ala.pipelines.beam.ExportAllLatLongCSVPipeline
-    fi
+    CLASS=au.org.ala.pipelines.beam.LatLongPipeline
 
     logStepStart "Export latlng" $dr
     SECONDS=0
@@ -570,7 +566,7 @@ function sample-avro () {
 
 function solr () {
     local dr="$1" ltype="$2"
-    CLASS=au.org.ala.pipelines.beam.IndexRecordToSolrIndexPipeline
+    CLASS=au.org.ala.pipelines.beam.IndexRecordToSolrPipeline
 
     logStepStart "SOLR" $dr
     SECONDS=0
@@ -590,22 +586,22 @@ function solr () {
 function index () {
     local dr="$1" ltype="$2"
 
-    logStepStart "Indexing" $dr
+    logStepStart "Index-Record" $dr
     SECONDS=0
 
     SH_ARGS=index-sh-args.local
-    CLASS=au.org.ala.pipelines.java.ALAInterpretedToSolrIndexPipeline
+    CLASS=au.org.ala.pipelines.java.IndexRecordPipeline
     java-pipeline $ltype $SH_ARGS $CLASS $dr
 
     SH_ARGS=index-sh-args.spark-embedded
-    CLASS=au.org.ala.pipelines.beam.ALAInterpretedToSolrIndexPipeline
+    CLASS=au.org.ala.pipelines.beam.IndexRecordPipeline
     spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
 
     SH_ARGS=index-sh-args.spark-cluster
-    CLASS=au.org.ala.pipelines.beam.ALAInterpretedToSolrIndexPipeline
-    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "SOLR-indexing-for-$dr"
+    CLASS=au.org.ala.pipelines.beam.IndexRecordPipeline
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "Index-record-for-$dr"
 
-    logStepEnd "Indexing" $dr $ltype $SECONDS
+    logStepEnd "Index-Record" $dr $ltype $SECONDS
 }
 
 if ($archive_list) ; then

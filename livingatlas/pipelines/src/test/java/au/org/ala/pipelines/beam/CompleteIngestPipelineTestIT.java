@@ -190,7 +190,7 @@ public class CompleteIngestPipelineTestIT {
               "--inputPath=/tmp/la-pipelines-test/complete-pipeline",
               "--properties=" + TestUtils.getPipelinesConfigFile()
             });
-    ALAInterpretedToLatLongCSVPipeline.run(latLngOptions);
+    LatLongPipeline.run(latLngOptions);
 
     // sample
     LayerCrawler.init(

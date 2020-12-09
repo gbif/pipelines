@@ -32,7 +32,7 @@ import org.slf4j.MDC;
  */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class ALAInterpretedToLatLongCSVPipeline {
+public class LatLongPipeline {
 
   public static void main(String[] args) throws Exception {
     VersionInfo.print();
@@ -76,6 +76,9 @@ public class ALAInterpretedToLatLongCSVPipeline {
             .apply(Distinct.create());
 
     String outputPath = PathBuilder.buildDatasetAttemptPath(options, "latlng", false);
+    if (options.getDatasetId() == null || "all".equalsIgnoreCase(options.getDatasetId())) {
+      outputPath = PathBuilder.buildPath(options.getAllDatasetsInputPath(), "latlng").toString();
+    }
 
     // delete previous runs
     FsUtils.deleteIfExist(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), outputPath);
@@ -92,6 +95,6 @@ public class ALAInterpretedToLatLongCSVPipeline {
 
     MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
 
-    log.info("Pipeline has been finished. Output written to " + outputPath + "/latlong.csv");
+    log.info("Pipeline has been finished. Output written to " + outputPath + "/latlng.csv");
   }
 }
