@@ -142,9 +142,9 @@
   <field name="lft"               type="int"    docValues="true" indexed="true"/>
   <field name="rgt"               type="int"    docValues="true" indexed="true"/>
   <field name="geospatial_kosher" type="boolean" docValues="true" multiValued="false" indexed="true" />
-  <field name="first_loaded_date" type="date"   docValues="true" multiValued="false" indexed="true"/>
-  <field name="species_group"     type="string"  docValues="true" multiValued="true"  indexed="true"/>
-  <field name="species_subgroup"  type="string"  docValues="true" multiValued="true"  indexed="true" />
+  <field name="firstLoadedDate"   type="date"   docValues="true" multiValued="false" indexed="true"/>
+  <field name="speciesGroup"      type="string"  docValues="true" multiValued="true"  indexed="true"/>
+  <field name="speciesSubgroup"   type="string"  docValues="true" multiValued="true"  indexed="true" />
   <field name="species_list_uid"  type="string"  docValues="true" multiValued="true"  indexed="true" />
   <field name="image_url"         type="string"  docValues="true" multiValued="false" indexed="true" />
   <field name="all_image_url"     type="string"  docValues="true" multiValued="true"  indexed="true" />

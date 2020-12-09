@@ -26,18 +26,35 @@ public class GeocodeBitmapCache {
   private final int imgWidth;
   private final int imgHeight;
   private final Map<Integer, GeocodeResponse> colourKey = new ConcurrentHashMap<>();
+  public static final String DEFAULT_KV_STORE = "COUNTRY";
+  private String kvStoreType;
+  private boolean missEqualsFail = true;
 
   @SneakyThrows
-  private GeocodeBitmapCache(BufferedImage img, Function<LatLng, GeocodeResponse> loadFn) {
+  private GeocodeBitmapCache(
+      BufferedImage img,
+      Function<LatLng, GeocodeResponse> loadFn,
+      String kvStoreType,
+      boolean missEqualsFail) {
     this.loadFn = loadFn;
     this.img = img;
     this.imgHeight = img != null ? img.getHeight() : -1;
     this.imgWidth = img != null ? img.getWidth() : -1;
+    this.kvStoreType = kvStoreType;
+    this.missEqualsFail = missEqualsFail;
   }
 
   public static GeocodeBitmapCache create(
       @NonNull BufferedImage img, @NonNull Function<LatLng, GeocodeResponse> loadFn) {
-    return new GeocodeBitmapCache(img, loadFn);
+    return new GeocodeBitmapCache(img, loadFn, DEFAULT_KV_STORE, false);
+  }
+
+  public static GeocodeBitmapCache create(
+      @NonNull BufferedImage img,
+      @NonNull Function<LatLng, GeocodeResponse> loadFn,
+      String kvStoreType,
+      boolean missEqualsFail) {
+    return new GeocodeBitmapCache(img, loadFn, kvStoreType, missEqualsFail);
   }
 
   /**
@@ -58,7 +75,8 @@ public class GeocodeBitmapCache {
     int colour = img.getRGB(x, y) & 0x00FFFFFF; // Ignore possible transparency.
 
     String hex = String.format("#%06x", colour);
-    log.debug("LatLong {},{} has pixel {},{} with colour {}", lat, lng, x, y, hex);
+    log.debug(
+        "[{}] LatLong {},{} has pixel {},{} with colour {}", kvStoreType, lat, lng, x, y, hex);
 
     switch (colour) {
       case BORDER:
@@ -78,23 +96,37 @@ public class GeocodeBitmapCache {
     GeocodeResponse locations;
     if (colourKey.containsKey(colour)) {
       locations = colourKey.get(colour);
-      log.debug("Known colour {} (LL {},{}; pixel {},{})", hex, lat, lng, x, y);
+      log.debug("[{}] Known colour {} (LL {},{}; pixel {},{})", kvStoreType, hex, lat, lng, x, y);
       return locations;
     }
 
     locations = loadFn.apply(LatLng.builder().withLatitude(lat).withLongitude(lng).build());
     // Don't store this if there aren't any locations.
     if (locations.getLocations().isEmpty()) {
-      log.error(
-          "For colour {} (LL {},{}; pixel {},{}) the webservice gave zero locations.",
-          hex,
-          lat,
-          lng,
-          x,
-          y);
+      if (missEqualsFail) {
+        log.error(
+            "[{}] For colour {} (LL {},{}; pixel {},{}) the webservice gave zero locations.",
+            kvStoreType,
+            hex,
+            lat,
+            lng,
+            x,
+            y);
+      } else {
+        log.warn(
+            "[{}] For colour {} (LL {},{}; pixel {},{}) the webservice gave zero locations.",
+            kvStoreType,
+            hex,
+            lat,
+            lng,
+            x,
+            y);
+      }
+      colourKey.put(colour, locations);
     } else {
-      log.info(
-          "New colour {} (LL {},{}; pixel {},{}); remembering as {}",
+      log.debug(
+          "[{}] New colour {} (LL {},{}; pixel {},{}); remembering as {}",
+          kvStoreType,
           hex,
           lat,
           lng,
