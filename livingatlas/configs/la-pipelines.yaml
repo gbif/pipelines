@@ -152,17 +152,6 @@ layerCrawler:
   batchStatusSleepTime: 1000
   downloadRetries: 5
 
-# class: au.org.ala.pipelines.beam.ALASamplingToAvroPipeline
-sample-avro:
-  inputPath: '{fsPath}/pipelines-data'
-  runner: SparkRunner
-  allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
-  ## For spark-cluster:
-  # appName: Add Sampling for {datasetId}
-  # useExtendedRecordId: true
-  ## For spark-embedded:
-  # appName: SamplingToAvro indexing for {datasetId}
-
 sensitive:
   inputPath: '{fsPath}/pipelines-data'
   runner: SparkRunner
@@ -302,10 +291,10 @@ index-sh-args:
   spark-embedded:
     jvm: -Xmx8g -XX:+UseG1GC
   spark-cluster:
-    conf: spark.default.parallelism=500
-    num-executors: 6
+    conf: spark.default.parallelism=192
+    num-executors: 24
     executor-cores: 8
-    executor-memory: 24G
+    executor-memory: 7G
     driver-memory: 4G
 
 solr-sh-args:
@@ -314,8 +303,8 @@ solr-sh-args:
   spark-embedded:
     jvm: -Xmx8g -XX:+UseG1GC
   spark-cluster:
-    conf: spark.default.parallelism=192
-    num-executors: 24
+    conf: spark.default.parallelism=500
+    num-executors: 6
     executor-cores: 8
-    executor-memory: 7G
+    executor-memory: 24G
     driver-memory: 4G

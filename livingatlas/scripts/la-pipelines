@@ -194,7 +194,7 @@ function toArg() {
 ## Process run options
 
 # Where to run, --local/etc options has precedence over yaml run.platform
-if ($local || $dwca_avro || $sample)  ; then TYPE=local;
+if ($local || $dwca_avro )  ; then TYPE=local;
 elif ($embedded) ; then TYPE=spark-embedded;
 elif ($cluster) ; then TYPE=spark-cluster;
 else TYPE=$(getConf run.platform);
