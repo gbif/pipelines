@@ -1,7 +1,5 @@
 package au.org.ala.pipelines.spark;
 
-import static org.apache.spark.sql.functions.col;
-
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.google.common.base.Strings;
@@ -37,15 +35,13 @@ public class MigrateUUIDPipeline implements Serializable {
       names = "--occUuidExportPath",
       description =
           "The input path to a CSV export from occ_uuid in cassandra e.g /data/occ_uuid.csv or hdfs://localhost:8020/occ_uuid.csv")
-//  private String occUuidExportPath = "hdfs://localhost:8020/migration/occ_uuid.csv";
-  private String occUuidExportPath = "/Users/mar759/dev/pipelines/livingatlas/migration/src/test/resources/occ_uuid.csv";
+  private String occUuidExportPath = "hdfs://localhost:8020/migration/occ_uuid.csv";
 
   @Parameter(
       names = "--occFirstLoadedExportPath",
       description =
           "The input path to a CSV export from occ_uuid in cassandra e.g /data/occ_uuid.csv or hdfs://localhost:8020/occ_uuid.csv")
-//  private String occFirstLoadedExportPath = "hdfs://localhost:8020/migration/occ_first_loaded.csv";
-  private String occFirstLoadedExportPath = "/Users/mar759/dev/pipelines/livingatlas/migration/src/test/resources/occ_first_loaded.csv";
+  private String occFirstLoadedExportPath = "hdfs://localhost:8020/migration/occ_first_loaded.csv";
 
   @Parameter(
       names = "--targetPath",
@@ -87,18 +83,14 @@ public class MigrateUUIDPipeline implements Serializable {
         SparkSession.builder()
             .appName("Migration UUIDs")
             .config("spark.master", "local")
-//            .config("fs.defaultFS", "hdfs://localhost:8020")
+            //            .config("fs.defaultFS", "hdfs://localhost:8020")
             .getOrCreate();
 
     System.out.println("Load CSV");
     Dataset<Row> occUuidDataset = spark.read().csv(occUuidExportPath);
 
-    System.out.println("File count: " + occUuidDataset.count());
-
     System.out.println("Load CSV");
     Dataset<Row> occFirstLoadedDataset = spark.read().csv(occFirstLoadedExportPath);
-
-    System.out.println("File count: " + occFirstLoadedDataset.count());
 
     System.out.println("Load UUIDs");
     Dataset<Tuple4<String, String, String, String>> uuidRecords =
@@ -121,21 +113,19 @@ public class MigrateUUIDPipeline implements Serializable {
                     Encoders.STRING(), Encoders.STRING(), Encoders.STRING(), Encoders.STRING()));
 
     Dataset<Tuple2<String, String>> firstLoadedDataset =
-            occFirstLoadedDataset
-                .filter(row -> StringUtils.isNotEmpty(row.getString(1)))
-                .map(
-                    row -> {
-                      return Tuple2.apply(
-                          row.getString(0), // UUID
-                          row.getString(1)); // firstLoaded
-                    },
-                    Encoders.tuple(Encoders.STRING(), Encoders.STRING()));
+        occFirstLoadedDataset
+            .filter(row -> StringUtils.isNotEmpty(row.getString(1)))
+            .map(
+                row -> {
+                  return Tuple2.apply(
+                      row.getString(0), // UUID
+                      row.getString(1)); // firstLoaded
+                },
+                Encoders.tuple(Encoders.STRING(), Encoders.STRING()));
 
-    Dataset<Row> combined  = uuidRecords
-            .join(firstLoadedDataset,
-                    uuidRecords.col("_3").equalTo(firstLoadedDataset.col("_1")
-                  )
-            );
+    Dataset<Row> combined =
+        uuidRecords.join(
+            firstLoadedDataset, uuidRecords.col("_3").equalTo(firstLoadedDataset.col("_1")));
 
     combined
         .select(
@@ -143,8 +133,7 @@ public class MigrateUUIDPipeline implements Serializable {
             uuidRecords.col("_2").as("id"),
             uuidRecords.col("_3").as("uuid"),
             uuidRecords.col("_4").as("uniqueKey"),
-            firstLoadedDataset.col("_2").as("firstLoaded")
-        )
+            firstLoadedDataset.col("_2").as("firstLoaded"))
         .write()
         .partitionBy("datasetID")
         .format("avro")
