@@ -2,7 +2,6 @@ package au.org.ala.pipelines.spark;
 
 import static org.apache.spark.sql.functions.col;
 
-import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.google.common.base.Strings;
@@ -19,6 +18,7 @@ import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.spark.sql.*;
+import scala.Tuple2;
 import scala.Tuple4;
 
 /**
@@ -31,33 +31,41 @@ import scala.Tuple4;
 @Parameters(separators = "=")
 public class MigrateUUIDPipeline implements Serializable {
 
-  @Parameter private final List<String> parameters = new ArrayList<>();
+  @Parameter private List<String> parameters = new ArrayList<>();
 
   @Parameter(
-      names = "--inputPath",
+      names = "--occUuidExportPath",
       description =
           "The input path to a CSV export from occ_uuid in cassandra e.g /data/occ_uuid.csv or hdfs://localhost:8020/occ_uuid.csv")
-  private String inputPath;
+//  private String occUuidExportPath = "hdfs://localhost:8020/migration/occ_uuid.csv";
+  private String occUuidExportPath = "/Users/mar759/dev/pipelines/livingatlas/migration/src/test/resources/occ_uuid.csv";
+
+  @Parameter(
+      names = "--occFirstLoadedExportPath",
+      description =
+          "The input path to a CSV export from occ_uuid in cassandra e.g /data/occ_uuid.csv or hdfs://localhost:8020/occ_uuid.csv")
+//  private String occFirstLoadedExportPath = "hdfs://localhost:8020/migration/occ_first_loaded.csv";
+  private String occFirstLoadedExportPath = "/Users/mar759/dev/pipelines/livingatlas/migration/src/test/resources/occ_first_loaded.csv";
 
   @Parameter(
       names = "--targetPath",
       description = "The output path e.g /data or hdfs://localhost:8020")
-  private String targetPath;
+  private String targetPath = "hdfs://localhost:8020";
 
   @Parameter(
       names = "--hdfsSiteConfig",
       description = "The absolute path to a hdfs-site.xml with default.FS configuration")
-  private String hdfsSiteConfig;
+  private String hdfsSiteConfig = "/tmp/hdfs-site.xml";
 
   public static void main(String[] args) throws Exception {
     MigrateUUIDPipeline m = new MigrateUUIDPipeline();
-    JCommander jCommander = JCommander.newBuilder().addObject(m).build();
-    jCommander.parse(args);
-
-    if (m.inputPath == null || m.targetPath == null) {
-      jCommander.usage();
-      System.exit(1);
-    }
+    //    JCommander jCommander = JCommander.newBuilder().addObject(m).build();
+    //    jCommander.parse(args);
+    //
+    //    if (m.occUuidExportPath == null || m.targetPath == null) {
+    //      jCommander.usage();
+    //      System.exit(1);
+    //    }
     m.run();
   }
 
@@ -75,14 +83,26 @@ public class MigrateUUIDPipeline implements Serializable {
                     .getResourceAsStream("ala-uuid-record.avsc"));
 
     System.out.println("Starting spark session");
-    SparkSession spark = SparkSession.builder().appName("Migration UUIDs").getOrCreate();
+    SparkSession spark =
+        SparkSession.builder()
+            .appName("Migration UUIDs")
+            .config("spark.master", "local")
+//            .config("fs.defaultFS", "hdfs://localhost:8020")
+            .getOrCreate();
 
     System.out.println("Load CSV");
-    Dataset<Row> dataset = spark.read().csv(inputPath);
+    Dataset<Row> occUuidDataset = spark.read().csv(occUuidExportPath);
+
+    System.out.println("File count: " + occUuidDataset.count());
+
+    System.out.println("Load CSV");
+    Dataset<Row> occFirstLoadedDataset = spark.read().csv(occFirstLoadedExportPath);
+
+    System.out.println("File count: " + occFirstLoadedDataset.count());
 
     System.out.println("Load UUIDs");
     Dataset<Tuple4<String, String, String, String>> uuidRecords =
-        dataset
+        occUuidDataset
             .filter(
                 row ->
                     StringUtils.isNotEmpty(row.getString(0))
@@ -92,21 +112,39 @@ public class MigrateUUIDPipeline implements Serializable {
                 row -> {
                   String datasetID = row.getString(0).substring(0, row.getString(0).indexOf('|'));
                   return Tuple4.apply(
-                      datasetID,
+                      datasetID, // datasetID
                       "temp_" + datasetID + "_" + row.getString(1),
-                      row.getString(1),
-                      row.getString(0));
+                      row.getString(1), // UUID
+                      row.getString(0)); // UniqueKey - constructed from DwC (and non-DwC terms)
                 },
                 Encoders.tuple(
                     Encoders.STRING(), Encoders.STRING(), Encoders.STRING(), Encoders.STRING()));
 
-    System.out.println("Write AVRO");
-    uuidRecords
+    Dataset<Tuple2<String, String>> firstLoadedDataset =
+            occFirstLoadedDataset
+                .filter(row -> StringUtils.isNotEmpty(row.getString(1)))
+                .map(
+                    row -> {
+                      return Tuple2.apply(
+                          row.getString(0), // UUID
+                          row.getString(1)); // firstLoaded
+                    },
+                    Encoders.tuple(Encoders.STRING(), Encoders.STRING()));
+
+    Dataset<Row> combined  = uuidRecords
+            .join(firstLoadedDataset,
+                    uuidRecords.col("_3").equalTo(firstLoadedDataset.col("_1")
+                  )
+            );
+
+    combined
         .select(
-            col("_1").as("datasetID"),
-            col("_2").as("id"),
-            col("_3").as("uuid"),
-            col("_4").as("uniqueKey"))
+            uuidRecords.col("_1").as("datasetID"),
+            uuidRecords.col("_2").as("id"),
+            uuidRecords.col("_3").as("uuid"),
+            uuidRecords.col("_4").as("uniqueKey"),
+            firstLoadedDataset.col("_2").as("firstLoaded")
+        )
         .write()
         .partitionBy("datasetID")
         .format("avro")
