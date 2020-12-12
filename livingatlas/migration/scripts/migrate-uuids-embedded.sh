@@ -6,7 +6,7 @@ java -Xmx8g -Xmx8g  -XX:+UseG1GC \
   --occUuidExportPath=$FS_PATH/migration/occ_uuid.csv \
   --occFirstLoadedExportPath=$FS_PATH/migration/occ_first_loaded.csv \
   --targetPath=$FS_PATH/$DATA_PATH \
-  --hdfsSiteConfig=
+  --hdfsSiteConfig=$PWD/hdfs-site.xml
 
 
 
