@@ -7,6 +7,9 @@ import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 import lombok.NonNull;
@@ -175,7 +178,7 @@ public class IndexRecordTransform implements Serializable {
       }
     } catch (ParseException e) {
       log.error(
-          "Unparseable date produced by downstream interpretation " + tr.getEventDate().getGte());
+          "Unparsable date produced by downstream interpretation " + tr.getEventDate().getGte());
     }
 
     // GBIF taxonomy - add if available
@@ -279,7 +282,14 @@ public class IndexRecordTransform implements Serializable {
     indexRecord.getBooleans().put("geospatial_kosher", lr.getHasCoordinate());
 
     // FIXME  - see #162
-    indexRecord.getDates().put("first_loaded_date", new Date().getTime());
+    if (ur.getFirstLoaded() != null) {
+      indexRecord
+          .getDates()
+          .put(
+              "first_loaded_date",
+              LocalDateTime.parse(ur.getFirstLoaded(), DateTimeFormatter.ISO_DATE_TIME)
+                  .toEpochSecond(ZoneOffset.UTC));
+    }
 
     // Add legacy collectory fields
     if (aar != null) {

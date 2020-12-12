@@ -1,5 +1,6 @@
 package au.org.ala.pipelines.spark;
 
+import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.google.common.base.Strings;
@@ -35,33 +36,33 @@ public class MigrateUUIDPipeline implements Serializable {
       names = "--occUuidExportPath",
       description =
           "The input path to a CSV export from occ_uuid in cassandra e.g /data/occ_uuid.csv or hdfs://localhost:8020/occ_uuid.csv")
-  private String occUuidExportPath = "hdfs://localhost:8020/migration/occ_uuid.csv";
+  private String occUuidExportPath;
 
   @Parameter(
       names = "--occFirstLoadedExportPath",
       description =
           "The input path to a CSV export from occ_uuid in cassandra e.g /data/occ_uuid.csv or hdfs://localhost:8020/occ_uuid.csv")
-  private String occFirstLoadedExportPath = "hdfs://localhost:8020/migration/occ_first_loaded.csv";
+  private String occFirstLoadedExportPath;
 
   @Parameter(
       names = "--targetPath",
       description = "The output path e.g /data or hdfs://localhost:8020")
-  private String targetPath = "hdfs://localhost:8020";
+  private String targetPath;
 
   @Parameter(
       names = "--hdfsSiteConfig",
       description = "The absolute path to a hdfs-site.xml with default.FS configuration")
-  private String hdfsSiteConfig = "/tmp/hdfs-site.xml";
+  private String hdfsSiteConfig;
 
   public static void main(String[] args) throws Exception {
     MigrateUUIDPipeline m = new MigrateUUIDPipeline();
-    //    JCommander jCommander = JCommander.newBuilder().addObject(m).build();
-    //    jCommander.parse(args);
-    //
-    //    if (m.occUuidExportPath == null || m.targetPath == null) {
-    //      jCommander.usage();
-    //      System.exit(1);
-    //    }
+    JCommander jCommander = JCommander.newBuilder().addObject(m).build();
+    jCommander.parse(args);
+
+    if (m.occUuidExportPath == null || m.targetPath == null) {
+      jCommander.usage();
+      System.exit(1);
+    }
     m.run();
   }
 

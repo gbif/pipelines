@@ -40,13 +40,11 @@ public class ValidationUtils {
   public static final String NOT_INDEXED = "NOT_INDEXED";
   public static final String HAS_EMPTY_KEYS = "HAS_EMPTY_KEYS";
   public static final String HAS_DUPLICATES = "HAS_DUPLICATES";
-  public static final String RESAMPLING_REQUIRED = "RESAMPLING_REQUIRED";
 
   public static final String IMAGE_SERVICE_METRICS = "image-service-metrics.yml";
   public static final String UUID_METRICS = "uuid-metrics.yml";
   public static final String INTERPRETATION_METRICS = "interpretation-metrics.yml";
   public static final String VERBATIM_METRICS = "dwca-metrics.yml";
-  public static final String SAMPLING_METRICS = "sampling-metrics.yml";
   public static final String INDEXING_METRICS = "indexing-metrics.yml";
 
   public static final String DUPLICATE_KEY_COUNT = "duplicateKeyCount";
@@ -71,16 +69,12 @@ public class ValidationUtils {
             .getFs(options.getInputPath());
 
     return checkReadyForIndexing(
-        fs,
-        options.getInputPath(),
-        options.getDatasetId(),
-        options.getAttempt(),
-        options.getIncludeSampling());
+        fs, options.getInputPath(), options.getDatasetId(), options.getAttempt());
   }
 
   /** Checks a dataset can be indexed. */
   public static ValidationResult checkReadyForIndexing(
-      FileSystem fs, String filePath, String datasetId, Integer attempt, boolean includeSampling) {
+      FileSystem fs, String filePath, String datasetId, Integer attempt) {
 
     ValidationResult isValid = checkValidationFile(fs, filePath, datasetId, attempt);
 
@@ -104,22 +98,6 @@ public class ValidationUtils {
       log.warn(
           "The imported interpretation is newer than the uuid. Unable to index until UUID minting re-ran");
       return ValidationResult.builder().valid(false).message(UUID_REQUIRED).build();
-    }
-
-    // check date on UUID ?
-    if (includeSampling) {
-      // check sampling
-      boolean sampleRan = metricsExists(fs, filePath, datasetId, attempt, SAMPLING_METRICS);
-      if (!sampleRan) {
-        log.warn("Sampling has not been ran for this dataset. Unable to index dataset.");
-        return ValidationResult.builder().valid(false).message(NOT_SAMPLED).build();
-      }
-      long sampleTime = metricsModificationTime(fs, filePath, datasetId, attempt, SAMPLING_METRICS);
-      if (interpretationTime > sampleTime) {
-        log.warn(
-            "The sampling needs to be re-ran for this dataset as it pre-dates interpretation data.");
-        return ValidationResult.builder().valid(false).message(RESAMPLING_REQUIRED).build();
-      }
     }
 
     return ValidationResult.OK;
