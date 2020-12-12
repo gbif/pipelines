@@ -19,7 +19,6 @@ import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -43,7 +42,6 @@ public class CompleteIngestPipelineTestIT {
 
   /** Tests for SOLR index creation. */
   @Test
-  @Ignore
   public void testIngestPipeline() throws Exception {
 
     // clear up previous test runs
@@ -169,14 +167,16 @@ public class CompleteIngestPipelineTestIT {
 
     // sample
     LayerCrawler.init(
-        new CombinedYamlConfiguration(
-            "--datasetId=" + datasetID,
-            "--attempt=1",
-            "--runner=DirectRunner",
-            "--targetPath=/tmp/la-pipelines-test/complete-pipeline",
-            "--inputPath=/tmp/la-pipelines-test/complete-pipeline",
-            "--allDatasetsInputPath=/tmp/la-pipelines-test/complete-pipeline/all-datasets",
-            "--config=" + TestUtils.getPipelinesConfigFile()));
+        (new CombinedYamlConfiguration(
+            new String[] {
+              "--datasetId=" + datasetID,
+              "--attempt=1",
+              "--runner=DirectRunner",
+              "--targetPath=/tmp/la-pipelines-test/complete-pipeline",
+              "--inputPath=/tmp/la-pipelines-test/complete-pipeline",
+              "--allDatasetsInputPath=/tmp/la-pipelines-test/complete-pipeline/all-datasets",
+              "--config=" + TestUtils.getPipelinesConfigFile()
+            })));
     LayerCrawler.run(latLngOptions);
 
     // check ready for index - should be true as includeSampling=true and sampling now generated
