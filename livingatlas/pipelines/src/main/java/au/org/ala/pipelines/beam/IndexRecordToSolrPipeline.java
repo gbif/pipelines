@@ -9,7 +9,6 @@ import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationUtils;
 import avro.shaded.com.google.common.collect.ImmutableMap;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +32,14 @@ import org.gbif.pipelines.io.avro.SampleRecord;
 import org.joda.time.Duration;
 import org.slf4j.MDC;
 
-/** Pipeline that joins sample data and index records and indexes to SOLR. */
+/**
+ * Pipeline that joins sample data and index records and either:
+ *
+ * <ul>
+ *   <li>Indexes to SOLR
+ *   <li>Writes complete index records to disk
+ * </ul>
+ */
 @Slf4j
 public class IndexRecordToSolrPipeline {
 
