@@ -1,0 +1,27 @@
+{
+  "listCount": 1,
+  "sort": "listName",
+  "order": "asc",
+  "max": 1,
+  "offset": null,
+  "lists": [
+    {
+      "dataResourceUid": "dr1",
+      "listName": " Test List",
+      "listType": "CONSERVATION_LIST",
+      "dateCreated": "2019-11-22T05:45:28Z",
+      "lastUpdated": "2020-10-22T02:26:50Z",
+      "username": "test@test.com",
+      "fullName": null,
+      "itemCount": 1,
+      "region": null,
+      "category": null,
+      "generalisation": null,
+      "authority": null,
+      "sdsType": null,
+      "isAuthoritative": true,
+      "isInvasive": false,
+      "isThreatened": true
+    }
+  ]
+}

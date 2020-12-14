@@ -208,7 +208,8 @@ public class CompleteIngestJavaPipelineTestIT {
               "--properties=" + TestUtils.getPipelinesConfigFile(),
               "--zkHost=" + SolrUtils.getZkHost(),
               "--solrCollection=" + SolrUtils.BIOCACHE_TEST_SOLR_COLLECTION,
-              "--includeSampling=true"
+              "--includeSampling=true",
+              "--includeImages=false"
             });
 
     au.org.ala.pipelines.java.ALAInterpretedToSolrIndexPipeline.run(solrOptions);

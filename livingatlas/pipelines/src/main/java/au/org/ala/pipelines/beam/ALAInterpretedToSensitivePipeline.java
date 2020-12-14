@@ -5,7 +5,6 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSI
 import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.kvs.ALAPipelinesConfigFactory;
 import au.org.ala.kvs.cache.SDSCheckKVStoreFactory;
-import au.org.ala.kvs.cache.SDSReportKVStoreFactory;
 import au.org.ala.kvs.client.SDSConservationServiceFactory;
 import au.org.ala.pipelines.transforms.ALASensitiveDataRecordTransform;
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
@@ -28,7 +27,13 @@ import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
-import org.gbif.pipelines.io.avro.*;
+import org.gbif.pipelines.io.avro.ALASensitivityRecord;
+import org.gbif.pipelines.io.avro.ALATaxonRecord;
+import org.gbif.pipelines.io.avro.ALAUUIDRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.TaxonRecord;
+import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
@@ -75,8 +80,8 @@ public class ALAInterpretedToSensitivePipeline {
 
     // ALA specific
     ALATaxonomyTransform alaTaxonomyTransform = ALATaxonomyTransform.builder().create();
-    ALASensitiveDataRecordTransform alaSensitiveDataRecordTransform =
-        ALASensitiveDataRecordTransform.builder()
+    ALASensitiveDataTransform alaSensitiveDataTransform =
+        ALASensitiveDataTransform.builder()
             .datasetId(options.getDatasetId())
             .speciesStoreSupplier(SDSCheckKVStoreFactory.getInstanceSupplier(config))
             .reportStoreSupplier(SDSReportKVStoreFactory.getInstanceSupplier(config))

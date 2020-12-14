@@ -42,12 +42,12 @@ public class ValidationUtils {
   public static final String HAS_DUPLICATES = "HAS_DUPLICATES";
   public static final String RESAMPLING_REQUIRED = "RESAMPLING_REQUIRED";
 
+  public static final String IMAGE_SERVICE_METRICS = "image-service-metrics.yml";
   public static final String UUID_METRICS = "uuid-metrics.yml";
   public static final String INTERPRETATION_METRICS = "interpretation-metrics.yml";
   public static final String VERBATIM_METRICS = "dwca-metrics.yml";
   public static final String SAMPLING_METRICS = "sampling-metrics.yml";
   public static final String INDEXING_METRICS = "indexing-metrics.yml";
-  public static final String SENSITIVE_METRICS = "sensitive-metrics.yml";
 
   public static final String DUPLICATE_KEY_COUNT = "duplicateKeyCount";
   public static final String EMPTY_KEY_RECORDS = "emptyKeyRecords";

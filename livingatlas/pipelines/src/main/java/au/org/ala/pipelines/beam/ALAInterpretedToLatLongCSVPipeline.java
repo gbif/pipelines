@@ -6,6 +6,7 @@ import au.org.ala.pipelines.transforms.ALACSVDocumentTransform;
 import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
+import java.io.IOException;
 import java.util.function.UnaryOperator;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -54,7 +55,7 @@ public class ALAInterpretedToLatLongCSVPipeline {
     System.exit(0);
   }
 
-  public static void run(InterpretationPipelineOptions options) throws Exception {
+  public static void run(InterpretationPipelineOptions options) throws IOException {
 
     log.info("Adding step 1: Options");
     UnaryOperator<String> pathFn =

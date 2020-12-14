@@ -128,11 +128,13 @@ public class ALAUUIDMintingPipeline {
     log.info("Output path {}", alaRecordDirectoryPath);
 
     // create key value store for data resource metadata
-    KeyValueStore<String, ALACollectoryMetadata> dataResourceKvStore =
-        ALAAttributionKVStoreFactory.create(config);
+    ALACollectoryMetadata collectoryMetadata;
+    try (KeyValueStore<String, ALACollectoryMetadata> dataResourceKvStore =
+        ALAAttributionKVStoreFactory.create(config)) {
 
-    // lookup collectory metadata for this data resource
-    ALACollectoryMetadata collectoryMetadata = dataResourceKvStore.get(options.getDatasetId());
+      // lookup collectory metadata for this data resource
+      collectoryMetadata = dataResourceKvStore.get(options.getDatasetId());
+    }
     if (collectoryMetadata.equals(ALACollectoryMetadata.EMPTY)) {
       log.error("Unable to retrieve dataset metadata for dataset: " + options.getDatasetId());
       System.exit(1);

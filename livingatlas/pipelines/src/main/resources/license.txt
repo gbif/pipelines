@@ -1,0 +1,101 @@
+#Licence name and regex should be split with "TAB"
+#Sequence of regex matching may generate different results
+#For example: createcommons by nc sa 3.0 AU matches CC-BY-NC-SA 3.0 (Au) and CC-BY-NC-SA 3.0 (Int)
+
+CC-BY-NC-SA 3.0 (Au)	.*(cc|creativecommons).*by.*nc.*sa.*3\.0.*au.*
+CC-BY-NC-ND 3.0 (Au)	.*(cc|creativecommons).*by.*nc.*nd.*3\.0.*au.*
+CC-BY-NC-SA 2.5 (Au)	.*(cc|creativecommons).*by.*nc.*sa.*2\.5.*au.*
+CC-BY-NC-ND 2.5 (Au)	.*(cc|creativecommons).*by.*nc.*nd.*2\.5.*au.*
+CC-BY-NC-SA 2.0 (Au)	.*(cc|creativecommons).*by.*nc.*sa.*2\.0.*au.*
+CC-BY-NC-ND 2.0 (Au)	.*(cc|creativecommons).*by.*nc.*nd.*2\.0.*au.*
+CC-BY-NC-SA 1.0 (Au)	.*(cc|creativecommons).*by.*nc.*sa.*1\.0.*au.*
+CC-BY-ND-NC 1.0 (Au)	.*(cc|creativecommons).*by.*nd.*nc.*1\.0.*au.*
+CC-BY-NC-SA 4.0 (Au)	.*(cc|creativecommons).*by.*nc.*sa.*(4\.0)?.*au.*
+CC-BY-NC-ND 4.0 (Au)	.*(cc|creativecommons).*by.*nc.*nd.*(4\.0)?.*au.*
+CC-BY-SA 3.0 (Au)	.*(cc|creativecommons).*by.*sa.*3\.0.*au.*
+CC-BY-NC 3.0 (Au)	.*(cc|creativecommons).*by.*nc.*3\.0.*au.*
+CC-BY-ND 3.0 (Au)	.*(cc|creativecommons).*by.*nd.*3\.0.*au.*
+CC-BY-SA 2.5 (Au)	.*(cc|creativecommons).*by.*sa.*2\.5.*au.*
+CC-BY-NC 2.5 (Au)	.*(cc|creativecommons).*by.*nc.*2\.5.*au.*
+CC-BY-ND 2.5 (Au)	.*(cc|creativecommons).*by.*nd.*2\.5.*au.*
+CC-BY-SA 2.0 (Au)	.*(cc|creativecommons).*by.*sa.*2\.0.*au.*
+CC-BY-NC 2.0 (Au)	.*(cc|creativecommons).*by.*nc.*2\.0.*au.*
+CC-BY-ND 2.0 (Au)	.*(cc|creativecommons).*by.*nd.*2\.0.*au.*
+CC-BY-SA 1.0 (Au)	.*(cc|creativecommons).*by.*sa.*1\.0.*au.*
+CC-BY-NC 1.0 (Au)	.*(cc|creativecommons).*by.*nc.*1\.0.*au.*
+CC-BY-ND 1.0 (Au)	.*(cc|creativecommons).*by.*nd.*1\.0.*au.*
+CC-BY-SA 4.0 (Au)	.*(cc|creativecommons).*by.*sa.*(4\.0)?.*au.*
+CC-BY-NC 4.0 (Au)	.*(cc|creativecommons).*by.*nc.*(4\.0)?.*au.*
+CC-BY-ND 4.0 (Au)	.*(cc|creativecommons).*by.*nd.*(4\.0)?.*au.*
+CC-BY 3.0 (Au)	.*(cc|creativecommons).*by.*3\.0.*au.*
+CC-BY 2.5 (Au)	.*(cc|creativecommons).*by.*2\.5.*au.*
+CC-BY 2.0 (Au)	.*(cc|creativecommons).*by.*2\.0.*au.*
+CC-BY 1.0 (Au)	.*(cc|creativecommons).*by.*1\.0.*au.*
+CC-BY 4.0 (Au)	.*(cc|creativecommons).*by.*(4\.0)?.*au.*
+CC-BY-NC-SA 3.0 (Int)	.*(cc|creativecommons).*by.*nc.*sa.*3\.0.*(int)?.*
+CC-BY-NC-ND 3.0 (Int)	.*(cc|creativecommons).*by.*nc.*nd.*3\.0.*(int)?.*
+CC-BY-NC-SA 2.5 (Int)	.*(cc|creativecommons).*by.*nc.*sa.*2\.5.*(int)?.*
+CC-BY-NC-ND 2.5 (Int)	.*(cc|creativecommons).*by.*nc.*nd.*2\.5.*(int)?.*
+CC-BY-NC-SA 2.0 (Int)	.*(cc|creativecommons).*by.*nc.*sa.*2\.0.*(int)?.*
+CC-BY-NC-ND 2.0 (Int)	.*(cc|creativecommons).*by.*nc.*nd.*2\.0.*(int)?.*
+CC-BY-NC-SA 1.0 (Int)	.*(cc|creativecommons).*by.*nc.*sa.*1\.0.*(int)?.*
+CC-BY-ND-NC 1.0 (Int)	.*(cc|creativecommons).*by.*nd.*nc.*1\.0.*(int)?.*
+CC-BY-NC-SA 4.0 (Int)	.*(cc|creativecommons).*by.*nc.*sa.*(4\.0)?.*(int)?.*
+CC-BY-NC-ND 4.0 (Int)	.*(cc|creativecommons).*by.*nc.*nd.*(4\.0)?.*(int)?.*
+CC-BY-SA 3.0 (Int)	.*(cc|creativecommons).*by.*sa.*3\.0.*(int)?.*
+CC-BY-NC 3.0 (Int)	.*(cc|creativecommons).*by.*nc.*3\.0.*(int)?.*
+CC-BY-ND 3.0 (Int)	.*(cc|creativecommons).*by.*nd.*3\.0.*(int)?.*
+CC-BY-SA 2.5 (Int)	.*(cc|creativecommons).*by.*sa.*2\.5.*(int)?.*
+CC-BY-NC 2.5 (Int)	.*(cc|creativecommons).*by.*nc.*2\.5.*(int)?.*
+CC-BY-ND 2.5 (Int)	.*(cc|creativecommons).*by.*nd.*2\.5.*(int)?.*
+CC-BY-SA 2.0 (Int)	.*(cc|creativecommons).*by.*sa.*2\.0.*(int)?.*
+CC-BY-NC 2.0 (Int)	.*(cc|creativecommons).*by.*nc.*2\.0.*(int)?.*
+CC-BY-ND 2.0 (Int)	.*(cc|creativecommons).*by.*nd.*2\.0.*(int)?.*
+CC-BY-SA 1.0 (Int)	.*(cc|creativecommons).*by.*sa.*1\.0.*(int)?.*
+CC-BY-NC 1.0 (Int)	.*(cc|creativecommons).*by.*nc.*1\.0.*(int)?.*
+CC-BY-ND 1.0 (Int)	.*(cc|creativecommons).*by.*nd.*1\.0.*(int)?.*
+CC-BY-SA 4.0 (Int)	.*(cc|creativecommons).*by.*sa.*(4\.0)?.*(int)?.*
+CC-BY-NC 4.0 (Int)	.*(cc|creativecommons).*by.*nc.*(4\.0)?.*(int)?.*
+CC-BY-ND 4.0 (Int)	.*(cc|creativecommons).*by.*nd.*(4\.0)?.*(int)?.*
+CC-BY 3.0 (Int)	.*(cc|creativecommons).*by.*3\.0.*(int)?.*
+CC-BY 2.5 (Int)	.*(cc|creativecommons).*by.*2\.5.*(int)?.*
+CC-BY 2.0 (Int)	.*(cc|creativecommons).*by.*2\.0.*(int)?.*
+CC-BY 1.0 (Int)	.*(cc|creativecommons).*by.*1\.0.*(int)?.*
+CC-BY 4.0 (Int)	.*(cc|creativecommons).*by.*(4\.0)?.*(int)?.*
+CC-BY-NC-SA 3.0 (Au)	.*attribution.*(nc|non[ \-]?commercial).*(sa|share[ \-]?alike).*3\.0.*au.*
+CC-BY-NC-ND 3.0 (Au)	.*attribution.*(nc|non[ \-]?commercial).*(nd|no[ \-]?deriv).*3\.0.*au.*
+CC-BY-NC 3.0 (Au)	.*attribution.*(nc|non[ \-]?commercial).3\.0.*au.*
+CC-BY-ND 3.0 (Au)	.*attribution.*(nd|no[ \-]?deriv).*3\.0.*au.*
+CC-BY-SA 3.0 (Au)	.*attribution.*(sa|share[ \-]?alike).*3\.0.*au.*
+CC-BY-NC 3.0 (Au)	.*attribution.*(nc|non[ \-]?commercial).*3\.0.*au.*
+CC-BY-ND 3.0 (Au)	.*attribution.*(nd|no[ \-]?deriv).*3\.0.*au.*
+CC-BY 3.0 (Au)	.*attribution.*3\.0.*au.*
+CC-BY-NC-SA 3.0 (Au)	.*attribution.*(nc|non[ \-]?commercial).*(sa|share[ \-]?alike).*au.*3\.0.*
+CC-BY-NC-ND 3.0 (Au)	.*attribution.*(nc|non[ \-]?commercial).*(nd|no[ \-]?deriv).*au.*3\.0.*
+CC-BY-NC 3.0 (Au)	.*attribution.*(nc|non[ \-]?commercial).au.*3\.0.*
+CC-BY-ND 3.0 (Au)	.*attribution.*(nd|no[ \-]?deriv).*au.*3\.0.*
+CC-BY-SA 3.0 (Au)	.*attribution.*(sa|share[ \-]?alike).*au.*3\.0.*
+CC-BY-NC 3.0 (Au)	.*attribution.*(nc|non[ \-]?commercial).*au.*3\.0.*
+CC-BY-ND 3.0 (Au)	.*attribution.*(nd|no[ \-]?deriv).*au.*3\.0.*
+CC-BY 3.0 (Au)	.*attribution.*au.*3\.0.*
+CC-BY-NC-SA 4.0 (Au)	.*attribution.*(nc|non[ \-]?commercial).*(sa|share[ \-]?alike).*(4\.0)?.*au.*
+CC-BY-NC-ND 4.0 (Au)	.*attribution.*(nc|non[ \-]?commercial).*(nd|no[ \-]?deriv).*(4\.0)?.*au.*
+CC-BY-NC 4.0 (Au)	.*attribution.*(nc|non[ \-]?commercial).(4\.0)?.*au.*
+CC-BY-ND 4.0 (Au)	.*attribution.*(nd|no[ \-]?deriv).*(4\.0)?.*au.*
+CC-BY-SA 4.0 (Au)	.*attribution.*(sa|share[ \-]?alike).*(4\.0)?.*au.*
+CC-BY-NC 4.0 (Au)	.*attribution.*(nc|non[ \-]?commercial).*(4\.0)?.*au.*
+CC-BY-ND 4.0 (Au)	.*attribution.*(nd|no[ \-]?deriv).*(4\.0)?.*au.*
+CC-BY 4.0 (Au)	.*attribution.*(4\.0)?.*au.*
+CC-BY-NC-SA 4.0 (Int)	.*attribution.*(nc|non[ \-]?commercial).*(sa|share[ \-]?alike).*
+CC-BY-NC-ND 4.0 (Int)	.*attribution.*(nc|non[ \-]?commercial).*(nd|no[ \-]?deriv).*
+CC-BY-NC 4.0 (Int)	.*attribution.*(nc|non[ \-]?commercial).*
+CC-BY-ND 4.0 (Int)	.*attribution.*(nd|no[ \-]?deriv).*
+CC-BY-SA 4.0 (Int)	.*attribution.*(sa|share[ \-]?alike).*
+CC-BY-NC 4.0 (Int)	.*attribution.*(nc|non[ \-]?commercial).*
+CC-BY-ND 4.0 (Int)	.*attribution.*(nd|no[ \-]?deriv).*
+CC-BY 4.0 (Int)	.*attribution.*
+CC0	.*(cc|creativecommons).*zero.*
+CC0	.*(cc|creativecommons)(-)?0.*
+PDM	.*pdm.*
+PDM	.*public.*domain.*mark.*
+Custom	.*

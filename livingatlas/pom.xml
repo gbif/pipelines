@@ -17,6 +17,7 @@
   <modules>
     <module>pipelines</module>
     <module>migration</module>
+    <module>bitmap</module>
   </modules>
 
 </project>

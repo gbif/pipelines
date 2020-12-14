@@ -42,6 +42,8 @@ public class LocationParserTest {
 
   private static GeocodeResponse toGeocodeResponse(Country country) {
     Location location = new Location();
+    location.setType("Political");
+    location.setDistance(0.0d);
     location.setIsoCountryCode2Digit(country.getIso2LetterCode());
     return new GeocodeResponse(Collections.singletonList(location));
   }

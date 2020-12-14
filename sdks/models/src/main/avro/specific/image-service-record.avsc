@@ -1,0 +1,10 @@
+{
+  "name":"ImageServiceRecord",
+  "namespace":"org.gbif.pipelines.io.avro",
+  "type":"record",
+  "doc":"Image Service mapping",
+  "fields":[
+    {"name": "id", "type": ["null", "string"]},
+    {"name": "imageIDs", "type": {"type" : "array", "items" : "string"}, "default" : {}}
+  ]
+}

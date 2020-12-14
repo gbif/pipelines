@@ -49,7 +49,7 @@
               <goal>wget</goal>
             </goals>
             <configuration>
-              <url>https://biocache.ala.org.au/archives/layers/sds-layers.tgz</url>
+              <url>https://archives.ala.org.au/archives/layers/sds-layers_with_bitmaps.tgz</url>
               <unpack>true</unpack>
               <outputDirectory>/tmp/pipelines-shp</outputDirectory>
             </configuration>
@@ -223,7 +223,7 @@
             </image>
             <image>
               <alias>ala-sensitive-service</alias>
-              <name>charvolant/ala-sensitive-data-service:v20200214-2</name>
+              <name>charvolant/ala-sensitive-data-service:v20200214-1</name>
               <run>
                 <ports>
                   <port>${sds.admin.port}:9190</port>
@@ -280,7 +280,7 @@
 
     <!-- ALA libraries -->
     <ala-namematching-service.version>1.0-SNAPSHOT</ala-namematching-service.version>
-    <ala-sensitive-data-service.version>1.1-SNAPSHOT</ala-sensitive-data-service.version>
+    <ala-sensitive-data-service.version>1.0-SNAPSHOT</ala-sensitive-data-service.version>
 
     <!-- Default port for ALA Name Matcher Docker container -->
     <alanm.port>9279</alanm.port>
@@ -291,6 +291,9 @@
     <solr8.zk.host>localhost</solr8.zk.host>
     <solr8.http.host>localhost</solr8.http.host>
     <collectory.url>http://localhost:3939</collectory.url>
+    <collectory.port>3939</collectory.port>
+    <speciesListService.host>localhost</speciesListService.host>
+    <speciesListService.port>3940</speciesListService.port>
     <sds.port>9289</sds.port>
     <sds.admin.port>9290</sds.admin.port>
     <sds.host>localhost</sds.host>

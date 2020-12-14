@@ -138,7 +138,7 @@
   <field name="names_and_lsid"       type="string" docValues="true" indexed="true"/>
   <field name="common_name_and_lsid" type="string" docValues="true" indexed="true"/>
 
-  <!-- legacy fields referenced by biocache-service code - to be refactor out! -->
+  <!-- legacy fields referenced by biocache-service code - to be reviewed and refactored out if possible -->
   <field name="taxon_name"        type="string"  docValues="true" indexed="true"/>
   <field name="common_name"       type="string"  docValues="true" indexed="true"/>
   <field name="rank"              type="string"  docValues="true" indexed="true"/>
@@ -148,10 +148,22 @@
   <field name="rgt"               type="tint"    docValues="true" indexed="true"/>
   <field name="geospatial_kosher" type="boolean" docValues="true" multiValued="false" indexed="true" />
   <field name="first_loaded_date" type="tdate"   docValues="true" multiValued="false" indexed="true"/>
-  <field name="species_group"     type="string"  docValues="true" multiValued="true" indexed="true"/>
-  <field name="species_subgroup"  type="string"  docValues="true" multiValued="true" indexed="true" />
-  <field name="image_url"         type="string"  docValues="true" multiValued="true" indexed="true" />
-  <field name="assertions"        type="string"  docValues="true" multiValued="true" indexed="true" />
+  <field name="species_group"     type="string"  docValues="true" multiValued="true"  indexed="true"/>
+  <field name="species_subgroup"  type="string"  docValues="true" multiValued="true"  indexed="true" />
+  <field name="species_list_uid"  type="string"  docValues="true" multiValued="true"  indexed="true" />
+  <field name="image_url"         type="string"  docValues="true" multiValued="false" indexed="true" />
+  <field name="all_image_url"     type="string"  docValues="true" multiValued="true"  indexed="true" />
+  <field name="multimedia"        type="string"  docValues="true" multiValued="true"  indexed="true" />
+  <field name="assertions"        type="string"  docValues="true" multiValued="true"  indexed="true" />
+
+  <!-- Legacy conservation fields -->
+  <field name="raw_state_conservation" type="string"  docValues="true" multiValued="false"  indexed="true" />
+  <field name="state_conservation"     type="string"  docValues="true" multiValued="false"  indexed="true" />
+  <field name="country_conservation"   type="string"  docValues="true" multiValued="false"  indexed="true" />
+
+  <!-- Additional invasive fields -->
+  <field name="state_invasive"         type="string"  docValues="true" multiValued="false"  indexed="true" />
+  <field name="country_invasive"       type="string"  docValues="true" multiValued="false"  indexed="true" />
 
   <!-- All DWC fields -->
   <field name="acceptedNameUsage" type="string" docValues="true" indexed="true"/>
@@ -424,7 +436,6 @@
   <dynamicField name="*_b" type="boolean" docValues="true" indexed="true" stored="false"/>
   <dynamicField name="*_f" type="float" docValues="true" indexed="true" stored="false"/>
   <dynamicField name="*_d" type="double" docValues="true" indexed="true" stored="false"/>
-
 
   <copyField source="lat_long" dest="geohash"/>
   <copyField source="lat_long" dest="location"/>

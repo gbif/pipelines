@@ -15,15 +15,15 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
+import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.io.solr.SolrIO;
+import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.transforms.join.CoGroupByKey;
 import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
-import org.apache.beam.sdk.values.KV;
-import org.apache.beam.sdk.values.PCollection;
-import org.apache.beam.sdk.values.PCollectionView;
+import org.apache.beam.sdk.values.*;
 import org.apache.solr.common.SolrInputDocument;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
@@ -42,7 +42,7 @@ import org.slf4j.MDC;
 
 /**
  * ALA Beam pipeline for creating a SOLR index. This pipeline uses the HTTP SOLR api to index
- * records..
+ * records.
  */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -50,7 +50,8 @@ public class ALAInterpretedToSolrIndexPipeline {
 
   public static void main(String[] args) throws Exception {
     VersionInfo.print();
-    String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "index");
+    String[] combinedArgs =
+        new CombinedYamlConfiguration(args).toArgs("general", "index", "speciesLists");
     ALASolrPipelineOptions options =
         PipelinesOptionsFactory.create(ALASolrPipelineOptions.class, combinedArgs);
     options.setMetaFileName(ValidationUtils.INDEXING_METRICS);
@@ -58,7 +59,7 @@ public class ALAInterpretedToSolrIndexPipeline {
     run(options);
   }
 
-  public static void run(ALASolrPipelineOptions options) {
+  public static void run(ALASolrPipelineOptions options) throws Exception {
 
     MDC.put("datasetId", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
@@ -83,7 +84,7 @@ public class ALAInterpretedToSolrIndexPipeline {
 
     log.info("Adding step 2: Creating transformations");
     // Core
-    BasicTransform basicTransform = BasicTransform.builder().create();
+    ALABasicTransform basicTransform = ALABasicTransform.builder().create();
     MetadataTransform metadataTransform = MetadataTransform.builder().create();
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.builder().create();
@@ -162,6 +163,19 @@ public class ALAInterpretedToSolrIndexPipeline {
         p.apply("Read attribution", alaAttributionTransform.read(pathFn))
             .apply("Map attribution to KV", alaAttributionTransform.toKv());
 
+    // load images
+    PCollection<KV<String, ImageServiceRecord>> alaImageServiceRecords = null;
+    if (options.getIncludeImages()) {
+      alaImageServiceRecords = getLoadImageServiceRecords(options, p);
+    }
+
+    // load taxon profiles
+    PCollection<KV<String, TaxonProfile>> alaTaxonProfileRecords = null;
+    if (options.getIncludeSpeciesLists()) {
+      alaTaxonProfileRecords = SpeciesListPipeline.generateTaxonProfileCollection(p, options);
+    }
+
+    // load sampling
     PCollection<KV<String, LocationFeatureRecord>> locationFeatureCollection = null;
     if (options.getIncludeSampling()) {
       locationFeatureCollection =
@@ -172,6 +186,11 @@ public class ALAInterpretedToSolrIndexPipeline {
     PCollection<KV<String, ALASensitivityRecord>> alaSensitiveDataCollection =
         p.apply("Read sensitive data", alaSensitiveDataRecordTransform.read(pathFn))
             .apply("Map attribution to KV", alaSensitiveDataRecordTransform.toKv());
+
+    final TupleTag<ImageServiceRecord> imageServiceRecordTupleTag =
+        new TupleTag<ImageServiceRecord>() {};
+
+    final TupleTag<TaxonProfile> speciesListsRecordTupleTag = new TupleTag<TaxonProfile>() {};
 
     ALASolrDocumentTransform solrDocumentTransform =
         ALASolrDocumentTransform.create(
@@ -189,6 +208,8 @@ public class ALAInterpretedToSolrIndexPipeline {
             alaAttributionTransform.getTag(),
             alaUuidTransform.getTag(),
             alaSensitiveDataRecordTransform.getTag(),
+            options.getIncludeImages() ? imageServiceRecordTupleTag : null,
+            options.getIncludeSpeciesLists() ? speciesListsRecordTupleTag : null,
             metadataView,
             options.getDatasetId());
 
@@ -214,6 +235,14 @@ public class ALAInterpretedToSolrIndexPipeline {
             .and(alaTaxonomyTransform.getTag(), alaTaxonCollection)
             .and(alaAttributionTransform.getTag(), alaAttributionCollection)
             .and(alaSensitiveDataRecordTransform.getTag(), alaSensitiveDataCollection);
+
+    if (options.getIncludeSpeciesLists()) {
+      kpct = kpct.and(speciesListsRecordTupleTag, alaTaxonProfileRecords);
+    }
+
+    if (options.getIncludeImages()) {
+      kpct = kpct.and(imageServiceRecordTupleTag, alaImageServiceRecords);
+    }
 
     if (options.getIncludeSampling()) {
       kpct = kpct.and(locationFeatureTransform.getTag(), locationFeatureCollection);
@@ -244,5 +273,26 @@ public class ALAInterpretedToSolrIndexPipeline {
     MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
 
     log.info("Pipeline has been finished");
+  }
+
+  /** Load image service records for a dataset. */
+  private static PCollection<KV<String, ImageServiceRecord>> getLoadImageServiceRecords(
+      ALASolrPipelineOptions options, Pipeline p) {
+    PCollection<KV<String, ImageServiceRecord>> alaImageServiceRecords;
+    alaImageServiceRecords =
+        p.apply(
+                AvroIO.read(ImageServiceRecord.class)
+                    .from(
+                        String.join(
+                            "/",
+                            options.getTargetPath(),
+                            options.getDatasetId().trim(),
+                            options.getAttempt().toString(),
+                            "images",
+                            "*.avro")))
+            .apply(
+                MapElements.into(new TypeDescriptor<KV<String, ImageServiceRecord>>() {})
+                    .via((ImageServiceRecord tr) -> KV.of(tr.getId(), tr)));
+    return alaImageServiceRecords;
   }
 }

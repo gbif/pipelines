@@ -147,8 +147,8 @@ public class ALASamplingToAvroPipeline {
                 }));
 
     // Create tuple tags
-    final TupleTag<String> latLngIDTag = new TupleTag<>();
-    final TupleTag<Map<String, String>> alaSamplingTag = new TupleTag<>();
+    final TupleTag<String> latLngIDTag = new TupleTag<String>() {};
+    final TupleTag<Map<String, String>> alaSamplingTag = new TupleTag<Map<String, String>>() {};
 
     // Join collections by LatLng
     PCollection<KV<String, CoGbkResult>> results =
