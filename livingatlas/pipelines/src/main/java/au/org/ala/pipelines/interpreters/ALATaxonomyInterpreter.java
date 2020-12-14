@@ -100,12 +100,17 @@ public class ALATaxonomyInterpreter {
       String vernacularName = extractValue(er, DwcTerm.vernacularName, defaults);
       String kingdom = extractValue(er, DwcTerm.kingdom, defaults);
 
-      if (rank == null) addIssue(atr, ALAOccurrenceIssue.MISSING_TAXONRANK);
-      if (scientificName == null && vernacularName == null)
+      if (rank == null) {
+        addIssue(atr, ALAOccurrenceIssue.MISSING_TAXONRANK);
+      }
+      if (scientificName == null && vernacularName == null) {
         addIssue(atr, ALAOccurrenceIssue.NAME_NOT_SUPPLIED);
+      }
       if (kingdom != null && kingdomStore != null) {
         Boolean check = kingdomStore.get(kingdom);
-        if (check != null && !check) addIssue(atr, ALAOccurrenceIssue.UNKNOWN_KINGDOM);
+        if (check != null && !check) {
+          addIssue(atr, ALAOccurrenceIssue.UNKNOWN_KINGDOM);
+        }
       }
     };
   }
@@ -129,7 +134,9 @@ public class ALATaxonomyInterpreter {
 
       if (kvStore != null) {
         String genus = extractValue(er, DwcTerm.genus, defaults);
-        if (genus == null) genus = extractValue(er, GbifTerm.genericName, defaults);
+        if (genus == null) {
+          genus = extractValue(er, GbifTerm.genericName, defaults);
+        }
         NameSearch matchRequest =
             NameSearch.builder()
                 .kingdom(extractValue(er, DwcTerm.kingdom, defaults))

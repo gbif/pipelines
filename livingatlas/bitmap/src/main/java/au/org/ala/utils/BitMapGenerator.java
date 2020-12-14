@@ -1,30 +1,23 @@
 package au.org.ala.utils;
 
-import com.google.common.base.Stopwatch;
 import com.google.common.base.Strings;
-import java.awt.Color;
+import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.BufferedWriter;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
+import java.io.*;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
 import javax.imageio.ImageIO;
 import lombok.AllArgsConstructor;
+import org.apache.batik.transcoder.TranscoderException;
 import org.apache.batik.transcoder.TranscoderInput;
 import org.apache.batik.transcoder.TranscoderOutput;
 import org.apache.batik.transcoder.image.ImageTranscoder;
@@ -71,74 +64,72 @@ public class BitMapGenerator {
   private static final String FILLED_PATH_FORMAT = "  <path id='%s' style='fill: %s' d='%s'/>\n";
   private static final String SVG_FOOTER = "</svg>\n";
 
-  private String url = "";
-  private String db = "";
-  private String password = "";
-  private String user = "";
+  private final String url;
+  private final String db;
+  private final String password;
+  private final String user;
 
-  public String[] generateSVG(String layer, String idName) throws Exception {
+  public String[] generateSVG(String layer, String idName) throws SQLException, URISyntaxException {
     URI uri = new URI(url + "/" + db);
 
     Properties props = new Properties();
     props.setProperty("user", user);
     props.setProperty("password", password);
     props.setProperty("ssl", "false");
-    Connection conn = DriverManager.getConnection(uri.toString(), props);
-    System.out.println("Successfully Connected.");
+    StringBuilder filledSvg = new StringBuilder();
+    StringBuilder hollowSvg = new StringBuilder();
+    try (Connection conn = DriverManager.getConnection(uri.toString(), props);
+        Statement stmt = conn.createStatement()) {
+      System.out.println("Successfully Connected.");
 
-    String filled_svg = "";
-    String hollow_svg = "";
-    filled_svg += SVG_HEADER;
-    hollow_svg += SVG_HEADER;
+      filledSvg.append(SVG_HEADER);
+      hollowSvg.append(SVG_HEADER);
 
-    Map<String, String> colourKey = new HashMap<>();
-    Statement stmt = conn.createStatement();
-    String idSQL = String.format("SELECT DISTINCT %s as id FROM %s;", idName, layer);
-    ResultSet idRs = stmt.executeQuery(idSQL);
+      Map<String, String> colourKey = new HashMap<>();
 
-    while (idRs.next()) {
-      String id = idRs.getString("id");
-      Random random = new Random();
-      // create a big random number - maximum is ffffff (hex) = 16777215 (dez)
-      int nextInt = random.nextInt(0xffffff + 1);
-      // format it as hexadecimal string (with hashtag and leading zeros)
-      String colorCode = String.format("#%06x", nextInt);
-      colourKey.put(id, colorCode);
+      String idSQL = String.format("SELECT DISTINCT %s as id FROM %s;", idName, layer);
+      try (ResultSet idRs = stmt.executeQuery(idSQL)) {
+        while (idRs.next()) {
+          String id = idRs.getString("id");
+          Random random = new Random();
+          // create a big random number - maximum is ffffff (hex) = 16777215 (dez)
+          int nextInt = random.nextInt(0xffffff + 1);
+          // format it as hexadecimal string (with hashtag and leading zeros)
+          String colorCode = String.format("#%06x", nextInt);
+          colourKey.put(id, colorCode);
+        }
+      }
+
+      String svgSQL =
+          String.format(
+              "SELECT %s as id, ST_AsSVG(geom, 0, 4) as svg FROM %s order by id;", idName, layer);
+      try (ResultSet rs = stmt.executeQuery(svgSQL)) {
+
+        while (rs.next()) {
+          String id = rs.getString("id").replace("\'", " ").replace("\"", " ");
+          String svgString = rs.getString("svg");
+          String svgFilledOutout =
+              String.format(FILLED_PATH_FORMAT, id, colourKey.get(id), svgString);
+          String svgHollowOutout = String.format(HOLLOW_PATH_FORMAT, id, svgString);
+          filledSvg.append(svgFilledOutout);
+          hollowSvg.append(svgHollowOutout);
+        }
+
+        filledSvg.append(SVG_FOOTER);
+        hollowSvg.append(SVG_FOOTER);
+      }
     }
-    idRs.close();
 
-    String svgSQL =
-        String.format(
-            "SELECT %s as id, ST_AsSVG(geom, 0, 4) as svg FROM %s order by id;", idName, layer);
-
-    ResultSet rs = stmt.executeQuery(svgSQL);
-
-    while (rs.next()) {
-      String id = rs.getString("id").replace("\'", " ").replace("\"", " ");
-      String svgString = rs.getString("svg");
-      String svgFilledOutout = String.format(FILLED_PATH_FORMAT, id, colourKey.get(id), svgString);
-      String svgHollowOutout = String.format(HOLLOW_PATH_FORMAT, id, svgString);
-      filled_svg += svgFilledOutout;
-      hollow_svg += svgHollowOutout;
-    }
-
-    filled_svg += SVG_FOOTER;
-    hollow_svg += SVG_FOOTER;
-
-    rs.close();
-    stmt.close();
-    conn.close();
-
-    return new String[] {filled_svg, hollow_svg};
+    return new String[] {filledSvg.toString(), hollowSvg.toString()};
   }
 
   public void mergeTwoBitmaps(String[] twoSvgs, String outputFolder, String layerName)
-      throws Exception {
+      throws IOException, TranscoderException {
 
     Path filledPngFile = Files.createTempFile(layerName, "-filled.png");
     Path hollowPngFile = Files.createTempFile(layerName, "-hollow.png");
     System.out.println("Generating bitmap for " + layerName);
-    Stopwatch sw = Stopwatch.createStarted();
+
     Path filledSvgFile = Files.createTempFile(layerName, "-filled.svg");
     Path hollowSvgFile = Files.createTempFile(layerName, "-hollow.svg");
     System.out.println(
@@ -148,7 +139,7 @@ public class BitMapGenerator {
                 new FileOutputStream(filledSvgFile.toFile()), StandardCharsets.UTF_8);
         Writer hollowSvg =
             new OutputStreamWriter(
-                new FileOutputStream(hollowSvgFile.toFile()), StandardCharsets.UTF_8); ) {
+                new FileOutputStream(hollowSvgFile.toFile()), StandardCharsets.UTF_8)) {
       filledSvg.write(twoSvgs[0]);
       hollowSvg.write(twoSvgs[1]);
     }
@@ -178,32 +169,30 @@ public class BitMapGenerator {
       return;
     }
     System.out.println("→ Combining both PNGs for " + layerName + " as " + pngFile);
-    {
-      BufferedImage filled = ImageIO.read(filledPngFile.toFile());
-      BufferedImage hollow = ImageIO.read(hollowPngFile.toFile());
+    BufferedImage filled = ImageIO.read(filledPngFile.toFile());
+    BufferedImage hollow = ImageIO.read(hollowPngFile.toFile());
 
-      int height = filled.getHeight();
-      int width = filled.getWidth();
+    int height = filled.getHeight();
+    int width = filled.getWidth();
 
-      for (int y = 0; y < height; y++) {
-        double latitude = (1800d - y) / 1800d * 90d;
-        int xSpread = (int) Math.round(Math.ceil(kmToPx(latitude, 5)));
+    for (int y = 0; y < height; y++) {
+      double latitude = (1800d - y) / 1800d * 90d;
+      int xSpread = (int) Math.round(Math.ceil(kmToPx(latitude, 5)));
 
-        for (int x = 0; x < width; x++) {
-          int ySpread = (int) Math.round(Math.ceil(kmToPx(5)));
-          for (int ys = Math.max(0, y - ySpread); ys <= y + ySpread && ys < height; ys++) {
-            if ((hollow.getRGB(x, y) | 0xFF000000) < 0xFFFFFFFF) {
-              // Spread up, down, left and right.
-              for (int xs = Math.max(0, x - xSpread); xs <= x + xSpread && xs < width; xs++) {
-                filled.setRGB(xs, ys, 0xFF000000);
-              }
+      for (int x = 0; x < width; x++) {
+        int ySpread = (int) Math.round(Math.ceil(kmToPx(5)));
+        for (int ys = Math.max(0, y - ySpread); ys <= y + ySpread && ys < height; ys++) {
+          if ((hollow.getRGB(x, y) | 0xFF000000) < 0xFFFFFFFF) {
+            // Spread up, down, left and right.
+            for (int xs = Math.max(0, x - xSpread); xs <= x + xSpread && xs < width; xs++) {
+              filled.setRGB(xs, ys, 0xFF000000);
             }
           }
         }
       }
-
-      ImageIO.write(filled, "png", pngFile.toFile());
     }
+
+    ImageIO.write(filled, "png", pngFile.toFile());
   }
 
   /**
@@ -216,21 +205,21 @@ public class BitMapGenerator {
   }
 
   /** Length of N kilometres in pixels, on a 7200×3600 pixel map. */
-  private double kmToPx(double latitude, double n_km) {
-    return n_km / (lengthParallelKm(latitude) / 7200d);
+  private double kmToPx(double latitude, double nKm) {
+    return nKm / (lengthParallelKm(latitude) / 7200d);
   }
 
-  private double kmToPx(double n_km) {
-    return n_km / (lengthParallelKm(0) / 7200d);
+  private double kmToPx(double nKm) {
+    return nKm / (lengthParallelKm(0) / 7200d);
   }
 
   @Obsolete
   public void writeBitmap(String content, String outputFolder, String fileName) throws Exception {
     String svgFile = Paths.get(outputFolder, fileName + ".svg").toString();
-    BufferedWriter writer = new BufferedWriter(new FileWriter(svgFile));
-    writer.write(content);
-    System.out.println("Successfully generated.");
-    writer.close();
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter(svgFile))) {
+      writer.write(content);
+      System.out.println("Successfully generated.");
+    }
 
     System.out.println(svgFile + " is generated.");
     System.out.println("Converting SVG to PNG");
@@ -248,12 +237,8 @@ public class BitMapGenerator {
     System.out.println(pngFile + " is generated.");
   }
 
-  /**
-   * BitMapGenerator cw_state_poly feature /Users/Shared/Relocated Items/Security/data/sds-shp/
-   *
-   * @param args
-   */
-  public static void main(String[] args) {
+  /** BitMapGenerator cw_state_poly feature /Users/Shared/Relocated Items/Security/data/sds-shp/ */
+  public static void main(String[] args) throws Exception {
 
     String url =
         Strings.isNullOrEmpty(System.getProperty("url"))
@@ -276,19 +261,15 @@ public class BitMapGenerator {
       System.out.println(
           "Complete command could be: java -Durl=jdbc:postgresql://127.0.0.1 -Ddb=sds -Duser=sds -Dpassword=sds -jar target/pipelines-BUILD_VERSION-shaded.jar au.org.ala.utils.BitMapGenerator cw_state_poly feature /data/sds-shp/");
     }
-    try {
-      String layer = args[0];
-      String idName = args[1];
-      String outputFolder = args[2];
 
-      BitMapGenerator bmg = new BitMapGenerator(url, db, user, password);
-      String[] svgs = bmg.generateSVG(layer, idName);
-      // Use layer name as default file name.
-      // bmg.writeBitmap(svg, outputFolder, layer);
-      bmg.mergeTwoBitmaps(svgs, outputFolder, layer);
+    String layer = args[0];
+    String idName = args[1];
+    String outputFolder = args[2];
 
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
+    BitMapGenerator bmg = new BitMapGenerator(url, db, user, password);
+    String[] svgs = bmg.generateSVG(layer, idName);
+    // Use layer name as default file name.
+    // bmg.writeBitmap(svg, outputFolder, layer);
+    bmg.mergeTwoBitmaps(svgs, outputFolder, layer);
   }
 }

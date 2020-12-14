@@ -6,14 +6,16 @@ import au.org.ala.pipelines.parser.CollectorNameParser;
 import au.org.ala.pipelines.parser.LicenseParser;
 import java.util.Arrays;
 import java.util.Optional;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import org.gbif.api.vocabulary.License;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.core.interpreters.core.BasicInterpreter;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
-public class ALABasicInterpreter extends BasicInterpreter {
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+public class ALABasicInterpreter {
   public static void interpretRecordedBy(ExtendedRecord er, BasicRecord br) {
     extractOptValue(er, DwcTerm.recordedBy)
         .filter(x -> !x.isEmpty())

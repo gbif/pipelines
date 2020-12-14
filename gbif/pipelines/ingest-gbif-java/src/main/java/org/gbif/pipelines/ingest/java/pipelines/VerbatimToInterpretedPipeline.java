@@ -299,7 +299,7 @@ public class VerbatimToInterpretedPipeline {
           UniqueGbifIdTransform.builder()
               .executor(executor)
               .erMap(erExtMap)
-              .basicTransform(basicTransform)
+              .basicTransformFn(basicTransform::processElement)
               .useSyncMode(useSyncMode)
               .skipTransform(useErdId)
               .build()

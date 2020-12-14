@@ -79,19 +79,13 @@ public class ALALocationInterpreter {
             // use the retrieve value, this takes precidence over the stateProvince DwCTerm
             // which follows the GBIF implementation of setting DwCTerm country value
             lr.setStateProvince(stateProvince.get().getName());
-          } else {
-            if (log.isDebugEnabled()) {
-              log.debug(
-                  "Current stateProvince SHP file does not contain a state at {}",
-                  latlng.toString());
-            }
-          }
-        } else {
-          if (log.isDebugEnabled()) {
+          } else if (log.isDebugEnabled()) {
             log.debug(
-                "No recognised stateProvince  is found at : {}",
-                parsedLatLon.getResult().toString());
+                "Current stateProvince SHP file does not contain a state at {}", latlng.toString());
           }
+        } else if (log.isDebugEnabled()) {
+          log.debug(
+              "No recognised stateProvince  is found at : {}", parsedLatLon.getResult().toString());
         }
       }
 
@@ -138,14 +132,12 @@ public class ALALocationInterpreter {
           if (stateProvinceCentrePoints.coordinatesMatchCentre(
               lr.getStateProvince(), lr.getDecimalLatitude(), lr.getDecimalLongitude())) {
             addIssue(lr, ALAOccurrenceIssue.COORDINATES_CENTRE_OF_STATEPROVINCE.name());
-          } else {
-            if (log.isTraceEnabled()) {
-              log.trace(
-                  "{},{} is not at the centre of {}!",
-                  lr.getDecimalLatitude(),
-                  lr.getDecimalLongitude(),
-                  lr.getStateProvince());
-            }
+          } else if (log.isTraceEnabled()) {
+            log.trace(
+                "{},{} is not at the centre of {}!",
+                lr.getDecimalLatitude(),
+                lr.getDecimalLongitude(),
+                lr.getStateProvince());
           }
         }
       }

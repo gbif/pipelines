@@ -11,7 +11,9 @@ import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.specieslists.SpeciesListDownloader;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import java.io.OutputStream;
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +26,9 @@ import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.io.AvroReader;
 import org.gbif.pipelines.core.utils.FsUtils;
-import org.gbif.pipelines.io.avro.*;
+import org.gbif.pipelines.io.avro.ALATaxonRecord;
+import org.gbif.pipelines.io.avro.SpeciesListRecord;
+import org.gbif.pipelines.io.avro.TaxonProfile;
 
 /**
  * Java based species list pipeline which will download the species list information and create a
@@ -74,26 +78,20 @@ public class SpeciesListPipeline {
         FsUtils.getFileSystem(
             options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getInputPath());
 
-    OutputStream output = fs.create(new Path(avroPath));
     DatumWriter<TaxonProfile> datumWriter = new GenericDatumWriter<>(TaxonProfile.getClassSchema());
-    DataFileWriter dataFileWriter = new DataFileWriter<TaxonProfile>(datumWriter);
-    dataFileWriter.create(TaxonProfile.getClassSchema(), output);
+    try (OutputStream output = fs.create(new Path(avroPath));
+        DataFileWriter<TaxonProfile> dataFileWriter = new DataFileWriter<>(datumWriter)) {
+      dataFileWriter.create(TaxonProfile.getClassSchema(), output);
 
-    Collection<TaxonProfile> profiles = taxonProfilesCollection.values();
-    for (TaxonProfile profile : profiles) {
-      dataFileWriter.append(profile);
+      Collection<TaxonProfile> profiles = taxonProfilesCollection.values();
+      for (TaxonProfile profile : profiles) {
+        dataFileWriter.append(profile);
+      }
     }
-
-    dataFileWriter.close();
     log.info("Completed species list pipeline for dataset {}", options.getDatasetId());
   }
 
-  /**
-   * Generate a PCollection of taxon profiles.
-   *
-   * @param options
-   * @return
-   */
+  /** Generate a PCollection of taxon profiles. */
   public static Map<String, TaxonProfile> generateTaxonProfileCollection(
       SpeciesLevelPipelineOptions options) {
 

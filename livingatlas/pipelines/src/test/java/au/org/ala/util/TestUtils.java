@@ -43,7 +43,7 @@ public class TestUtils {
     final Dispatcher dispatcher =
         new Dispatcher() {
           @Override
-          public MockResponse dispatch(RecordedRequest request) throws InterruptedException {
+          public MockResponse dispatch(RecordedRequest request) {
 
             try {
               // authoritative lists
@@ -116,7 +116,7 @@ public class TestUtils {
                   .setHeader("Content-Type", "application/json")
                   .setBody(responseBody);
             } catch (Exception e) {
-              e.printStackTrace();
+              log.error(e.getMessage(), e);
               throw new InterruptedException(e.getMessage());
             }
           }
