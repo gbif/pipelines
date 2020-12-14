@@ -3,11 +3,17 @@ package au.org.ala.pipelines.transforms;
 import static org.apache.avro.Schema.Type.UNION;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
 
+import au.org.ala.pipelines.interpreters.SensitiveDataInterpreter;
+import java.io.PrintWriter;
 import java.io.Serializable;
+import java.io.StringWriter;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.temporal.ChronoField;
+import java.time.temporal.TemporalAccessor;
 import java.util.*;
+import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.Schema;
@@ -22,6 +28,9 @@ import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.solr.common.SolrInputDocument;
+import org.gbif.common.parsers.date.TemporalAccessorUtils;
+import org.gbif.dwc.terms.Term;
+import org.gbif.dwc.terms.TermFactory;
 import org.gbif.pipelines.core.converters.MultimediaConverter;
 import org.gbif.pipelines.core.utils.TemporalUtils;
 import org.gbif.pipelines.io.avro.*;
@@ -33,6 +42,30 @@ import org.jetbrains.annotations.NotNull;
  */
 @Slf4j
 public class ALASolrDocumentTransform implements Serializable {
+  private static final TermFactory TERM_FACTORY = TermFactory.instance();
+
+  // TODO review content
+  private static final Set<String> SKIP_KEYS =
+      new HashSet<>(
+          Arrays.asList(
+              "id",
+              "created",
+              "text",
+              "name",
+              "coreRowType",
+              "coreTerms",
+              "extensions",
+              "usage",
+              "classification",
+              "eventDate",
+              "hasCoordinate",
+              "hasGeospatialIssue",
+              "gbifId",
+              "crawlId",
+              "networkKeys",
+              "protocol",
+              "issues",
+              "machineTags"));
 
   private static final long serialVersionUID = 1279313931024806169L;
   // Core
@@ -54,6 +87,8 @@ public class ALASolrDocumentTransform implements Serializable {
   private TupleTag<ALAAttributionRecord> aarTag;
   @NonNull private TupleTag<ALAUUIDRecord> urTag;
 
+  private TupleTag<ALASensitivityRecord> srTag;
+
   @NonNull private PCollectionView<MetadataRecord> metadataView;
 
   String datasetID;
@@ -72,6 +107,7 @@ public class ALASolrDocumentTransform implements Serializable {
       TupleTag<LocationFeatureRecord> asrTag,
       TupleTag<ALAAttributionRecord> aarTag,
       TupleTag<ALAUUIDRecord> urTag,
+      TupleTag<ALASensitivityRecord> srTag,
       PCollectionView<MetadataRecord> metadataView,
       String datasetID) {
     ALASolrDocumentTransform t = new ALASolrDocumentTransform();
@@ -88,6 +124,7 @@ public class ALASolrDocumentTransform implements Serializable {
     t.asrTag = asrTag;
     t.aarTag = aarTag;
     t.urTag = urTag;
+    t.srTag = srTag;
     t.metadataView = metadataView;
     t.datasetID = datasetID;
     return t;
@@ -105,37 +142,61 @@ public class ALASolrDocumentTransform implements Serializable {
       ExtendedRecord er,
       ALAAttributionRecord aar,
       LocationFeatureRecord asr,
-      ALAUUIDRecord ur) {
+      ALAUUIDRecord ur,
+      ALASensitivityRecord sr) {
 
-    Set<String> skipKeys = new HashSet<>();
-    skipKeys.add("id");
-    skipKeys.add("created");
-    skipKeys.add("text");
-    skipKeys.add("name");
-    skipKeys.add("coreRowType");
-    skipKeys.add("coreTerms");
-    skipKeys.add("extensions");
-    skipKeys.add("usage");
-    skipKeys.add("classification");
-    skipKeys.add("eventDate");
-    skipKeys.add("hasCoordinate");
-    skipKeys.add("hasGeospatialIssue");
-    skipKeys.add("gbifId");
-    skipKeys.add("crawlId");
-    skipKeys.add("networkKeys");
-    skipKeys.add("protocol");
-    skipKeys.add("issues");
-    skipKeys.add("machineTags"); // TODO review content
+    // If a sensitive record, construct new versions of the data with adjustments
+    if (sr != null && sr.getSensitive()) {
+      Set<Term> sensitive =
+          sr.getAltered().keySet().stream()
+              .map(TERM_FACTORY::findTerm)
+              .collect(Collectors.toSet());
+      if (mdr != null) {
+        mdr = MetadataRecord.newBuilder(mdr).build();
+        SensitiveDataInterpreter.applySensitivity(sensitive, sr, mdr);
+      }
+      if (br != null) {
+        br = BasicRecord.newBuilder(br).build();
+        SensitiveDataInterpreter.applySensitivity(sensitive, sr, br);
+      }
+      if (tr != null) {
+        tr = TemporalRecord.newBuilder(tr).build();
+        SensitiveDataInterpreter.applySensitivity(sensitive, sr, tr);
+      }
+      if (lr != null) {
+        lr = LocationRecord.newBuilder(lr).build();
+        SensitiveDataInterpreter.applySensitivity(sensitive, sr, lr);
+      }
+      if (txr != null) {
+        txr = TaxonRecord.newBuilder(txr).build();
+        SensitiveDataInterpreter.applySensitivity(sensitive, sr, txr);
+      }
+      if (atxr != null) {
+        atxr = ALATaxonRecord.newBuilder(atxr).build();
+        SensitiveDataInterpreter.applySensitivity(sensitive, sr, atxr);
+      }
+      if (er != null) {
+        er = ExtendedRecord.newBuilder(er).build();
+        SensitiveDataInterpreter.applySensitivity(sensitive, sr, er);
+      }
+      if (aar != null) {
+        aar = ALAAttributionRecord.newBuilder(aar).build();
+        SensitiveDataInterpreter.applySensitivity(sensitive, sr, aar);
+      }
+      if (asr != null) {
+        asr = LocationFeatureRecord.newBuilder(asr).build();
+        SensitiveDataInterpreter.applySensitivity(sensitive, sr, asr);
+      }
+    }
 
     SolrInputDocument doc = new SolrInputDocument();
     doc.setField("id", ur.getUuid());
 
-    addToDoc(lr, doc, skipKeys);
-    addToDoc(tr, doc, skipKeys);
-    addToDoc(br, doc, skipKeys);
-    addToDoc(er, doc, skipKeys);
-    addToDoc(mdr, doc, skipKeys);
-    addToDoc(mdr, doc, skipKeys);
+    addToDoc(lr, doc, SKIP_KEYS);
+    addToDoc(tr, doc, SKIP_KEYS);
+    addToDoc(br, doc, SKIP_KEYS);
+    addToDoc(er, doc, SKIP_KEYS);
+    addToDoc(mdr, doc, SKIP_KEYS);
 
     // add event date
     try {
@@ -145,7 +206,7 @@ public class ALASolrDocumentTransform implements Serializable {
             new SimpleDateFormat("yyyy-MM-dd'T'HH:mm").parse(tr.getEventDate().getGte()));
       } else {
         TemporalUtils.getTemporal(tr.getYear(), tr.getMonth(), tr.getDay())
-            .ifPresent(x -> doc.setField("eventDateSingle", x));
+            .ifPresent(x -> doc.setField("eventDateSingle", TemporalAccessorUtils.toDate(x)));
       }
     } catch (ParseException e) {
       log.error(
@@ -176,6 +237,23 @@ public class ALASolrDocumentTransform implements Serializable {
       doc.setField("raw_" + key, entry.getValue());
     }
 
+    // Sensitive (Original) data
+    if (sr != null && sr.getSensitive()) {
+      doc.setField("sensitive", true);
+      if (sr.getDataGeneralizations() != null)
+        doc.setField("dataGeneralizations", sr.getDataGeneralizations());
+      if (sr.getInformationWithheld() != null)
+        doc.setField("informationWithheld", sr.getInformationWithheld());
+      if (sr.getGeneralisationInMetres() != null)
+        doc.setField("generalisationInMetres", sr.getGeneralisationInMetres());
+      if (sr.getGeneralisationInMetres() != null)
+        doc.setField("generalisationToApplyInMetres", sr.getGeneralisationInMetres());
+      for (Map.Entry<String, String> entry : sr.getOriginal().entrySet()) {
+        Term field = TERM_FACTORY.findTerm(entry.getKey());
+        doc.setField("original_" + field.simpleName(), entry.getValue());
+      }
+    }
+
     if (lr.getDecimalLatitude() != null && lr.getDecimalLongitude() != null) {
       addGeo(doc, lr.getDecimalLatitude(), lr.getDecimalLongitude());
     }
@@ -188,7 +266,7 @@ public class ALASolrDocumentTransform implements Serializable {
         if (value != null
             && !field.name().equals("speciesGroup")
             && !field.name().equals("speciesSubgroup")
-            && !skipKeys.contains(field.name())) {
+            && !SKIP_KEYS.contains(field.name())) {
           if (field.name().equalsIgnoreCase("issues")) {
             doc.setField("assertions", value);
           } else {
@@ -299,6 +377,13 @@ public class ALASolrDocumentTransform implements Serializable {
       doc.setField("assertions", issue);
     }
 
+    IssueRecord sensitivityIssues = sr == null ? null : sr.getIssues();
+    if (sensitivityIssues != null) {
+      for (String issue : sensitivityIssues.getIssueList()) {
+        doc.setField("assertions", issue);
+      }
+    }
+
     for (String issue : mdr.getIssues().getIssueList()) {
       doc.setField("assertions", issue);
     }
@@ -347,11 +432,15 @@ public class ALASolrDocumentTransform implements Serializable {
             if (asrTag != null) {
               asr = v.getOnly(asrTag, LocationFeatureRecord.newBuilder().setId(k).build());
             }
+            ALASensitivityRecord sr = null;
+            if (srTag != null) {
+              sr = v.getOnly(srTag, null);
+            }
 
             MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
 
             SolrInputDocument doc =
-                createSolrDocument(mdr, br, tr, lr, txr, atxr, er, aar, asr, ur);
+                createSolrDocument(mdr, br, tr, lr, txr, atxr, er, aar, asr, ur, sr);
 
             c.output(doc);
             counter.inc();
@@ -359,6 +448,22 @@ public class ALASolrDocumentTransform implements Serializable {
         };
 
     return ParDo.of(fn).withSideInputs(metadataView);
+  }
+
+  static String toISODate(TemporalAccessor accessor) {
+    StringWriter isoDate = new StringWriter(12);
+    PrintWriter writer = new PrintWriter(isoDate);
+
+    writer.printf("%04d", accessor.get(ChronoField.YEAR));
+    if (accessor.isSupported(ChronoField.MONTH_OF_YEAR)) {
+      writer.printf("-%02d", accessor.get(ChronoField.MONTH_OF_YEAR));
+      if (accessor.isSupported(ChronoField.DAY_OF_MONTH)) {
+        writer.printf("-%02d", accessor.get(ChronoField.DAY_OF_MONTH));
+      }
+    } else if (accessor.isSupported(ChronoField.DAY_OF_YEAR)) {
+      writer.printf("-%03d", accessor.get(ChronoField.DAY_OF_YEAR));
+    }
+    return isoDate.toString();
   }
 
   static void addIfNotEmpty(SolrInputDocument doc, String fieldName, String value) {

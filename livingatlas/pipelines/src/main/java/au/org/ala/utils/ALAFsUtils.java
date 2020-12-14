@@ -51,7 +51,7 @@ public class ALAFsUtils {
    * 'ala_sensitive_taxon'
    */
   public static String buildPathGeneralisedUsingTargetPath(
-      BasePipelineOptions options, String name) {
+      InterpretationPipelineOptions options, String name) {
     return PathBuilder.buildPath(
             PathBuilder.buildDatasetAttemptPath(options, "generalised", false), name, "generalise")
         .toString();

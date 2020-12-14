@@ -5,6 +5,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSI
 import au.org.ala.pipelines.common.ALARecordTypes;
 import au.org.ala.pipelines.options.ALASolrPipelineOptions;
 import au.org.ala.pipelines.transforms.ALAAttributionTransform;
+import au.org.ala.pipelines.transforms.ALASensitiveDataRecordTransform;
 import au.org.ala.pipelines.transforms.ALASolrDocumentTransform;
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
 import au.org.ala.pipelines.util.VersionInfo;
@@ -155,6 +156,8 @@ public class ALAInterpretedToSolrIndexPipeline {
     ALAAttributionTransform alaAttributionTransform = ALAAttributionTransform.builder().create();
     LocationFeatureTransform spatialTransform = LocationFeatureTransform.builder().create();
     LocationTransform locationTransform = LocationTransform.builder().create();
+    ALASensitiveDataRecordTransform sensitiveTransform =
+        ALASensitiveDataRecordTransform.builder().create();
 
     log.info("Init metrics");
     IngestMetrics metrics = IngestMetricsBuilder.createInterpretedToEsIndexMetrics();
@@ -308,6 +311,16 @@ public class ALAInterpretedToSolrIndexPipeline {
                     pathFn.apply(alaAttributionTransform.getBaseName())),
             executor);
 
+    CompletableFuture<Map<String, ALASensitivityRecord>> alaSensitiveMapFeature =
+        CompletableFuture.supplyAsync(
+            () ->
+                AvroReader.readRecords(
+                    hdfsSiteConfig,
+                    coreSiteConfig,
+                    ALASensitivityRecord.class,
+                    pathFn.apply(sensitiveTransform.getBaseName())),
+            executor);
+
     CompletableFuture<Map<String, LocationFeatureRecord>> australiaSpatialMapFeature =
         CompletableFuture.supplyAsync(
             () ->
@@ -327,6 +340,7 @@ public class ALAInterpretedToSolrIndexPipeline {
     Map<String, ALAUUIDRecord> aurMap = alaUuidMapFeature.get();
     Map<String, ALATaxonRecord> alaTaxonMap = alaTaxonMapFeature.get();
     Map<String, ALAAttributionRecord> alaAttributionMap = alaAttributionMapFeature.get();
+    Map<String, ALASensitivityRecord> alaSensitivityMap = alaSensitiveMapFeature.get();
     Map<String, LocationFeatureRecord> australiaSpatialMap =
         options.getIncludeSampling() ? australiaSpatialMapFeature.get() : Collections.emptyMap();
 
@@ -361,6 +375,7 @@ public class ALAInterpretedToSolrIndexPipeline {
               alaTaxonMap.getOrDefault(k, ALATaxonRecord.newBuilder().setId(k).build());
           ALAAttributionRecord aar =
               alaAttributionMap.getOrDefault(k, ALAAttributionRecord.newBuilder().setId(k).build());
+          ALASensitivityRecord sr = alaSensitivityMap.getOrDefault(k, null);
           LocationFeatureRecord asr =
               australiaSpatialMap.getOrDefault(
                   k, LocationFeatureRecord.newBuilder().setId(k).build());
@@ -377,7 +392,7 @@ public class ALAInterpretedToSolrIndexPipeline {
           MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
 
           return ALASolrDocumentTransform.createSolrDocument(
-              metadata, br, tr, lr, txr, atxr, er, aar, asr, aur);
+              metadata, br, tr, lr, txr, atxr, er, aar, asr, aur, sr);
         };
 
     boolean useSyncMode = options.getSyncThreshold() > basicMap.size();

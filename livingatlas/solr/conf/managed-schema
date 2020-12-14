@@ -375,6 +375,11 @@
   <field name="matchType"  type="string" docValues="true" indexed="true"/>
   <field name="nameType"  type="string" docValues="true" indexed="true"/>
 
+  <!-- ALA Sensitive data fields -->
+  <field name="sensitive"  type="boolean" docValues="true" indexed="true"/>
+  <field name="generalisationInMetres"  type="string" docValues="true" indexed="true"/>
+  <field name="generalisationToApplyInMetres"  type="string" docValues="true" indexed="true"/>
+
   <!-- ALA legacy attribution fields -->
   <field name="dataResourceUid" type="string" docValues="true" indexed="true" />
   <field name="dataProviderUid" type="string" docValues="true" indexed="true" />
@@ -404,6 +409,9 @@
 
   <!-- Contextual fields -->
   <dynamicField name="cl*"  type="string" docValues="true" indexed="true" />
+
+  <!-- Original data fields for generalised data -->
+  <dynamicField name="original_*" type="string" docValues="true" indexed="false"/>
 
   <!-- Adhoc fields -->
   <dynamicField name="_*"    type="string" docValues="true" indexed="true" stored="false"/>

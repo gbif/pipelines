@@ -10,9 +10,10 @@ import au.org.ala.kvs.client.SDSConservationServiceFactory;
 import au.org.ala.pipelines.transforms.ALASensitiveDataRecordTransform;
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
 import au.org.ala.pipelines.util.VersionInfo;
-import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.function.UnaryOperator;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -58,10 +59,11 @@ public class ALAInterpretedToSensitivePipeline {
     MDC.put("step", "INTERPRETED_TO_SENSITIVE");
 
     log.info("Adding step 1: Options");
+    String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
     UnaryOperator<String> inputPathFn =
         t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
     UnaryOperator<String> outputPathFn =
-        t -> ALAFsUtils.buildPathGeneralisedUsingTargetPath(options, t);
+        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, id);
 
     Pipeline p = Pipeline.create(options);
 

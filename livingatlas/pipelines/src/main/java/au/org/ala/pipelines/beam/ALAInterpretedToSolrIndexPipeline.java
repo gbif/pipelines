@@ -3,10 +3,7 @@ package au.org.ala.pipelines.beam;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
 import au.org.ala.pipelines.options.ALASolrPipelineOptions;
-import au.org.ala.pipelines.transforms.ALAAttributionTransform;
-import au.org.ala.pipelines.transforms.ALASolrDocumentTransform;
-import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
-import au.org.ala.pipelines.transforms.ALAUUIDTransform;
+import au.org.ala.pipelines.transforms.*;
 import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
@@ -34,6 +31,7 @@ import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.transforms.core.*;
+import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
@@ -104,6 +102,8 @@ public class ALAInterpretedToSolrIndexPipeline {
     LocationFeatureTransform locationFeatureTransform = LocationFeatureTransform.builder().create();
     LocationTransform locationTransform = LocationTransform.builder().create();
     ALAAttributionTransform alaAttributionTransform = ALAAttributionTransform.builder().create();
+    ALASensitiveDataRecordTransform alaSensitiveDataRecordTransform =
+        ALASensitiveDataRecordTransform.builder().create();
 
     log.info("Adding step 3: Creating beam pipeline");
     PCollectionView<MetadataRecord> metadataView =
@@ -169,6 +169,10 @@ public class ALAInterpretedToSolrIndexPipeline {
               .apply("Map Sampling to KV", locationFeatureTransform.toKv());
     }
 
+    PCollection<KV<String, ALASensitivityRecord>> alaSensitiveDataCollection =
+        p.apply("Read sensitive data", alaSensitiveDataRecordTransform.read(pathFn))
+            .apply("Map attribution to KV", alaSensitiveDataRecordTransform.toKv());
+
     ALASolrDocumentTransform solrDocumentTransform =
         ALASolrDocumentTransform.create(
             verbatimTransform.getTag(),
@@ -184,6 +188,7 @@ public class ALAInterpretedToSolrIndexPipeline {
             options.getIncludeSampling() ? locationFeatureTransform.getTag() : null,
             alaAttributionTransform.getTag(),
             alaUuidTransform.getTag(),
+            alaSensitiveDataRecordTransform.getTag(),
             metadataView,
             options.getDatasetId());
 
@@ -207,7 +212,8 @@ public class ALAInterpretedToSolrIndexPipeline {
             // ALA Specific
             .and(alaUuidTransform.getTag(), alaUUidCollection)
             .and(alaTaxonomyTransform.getTag(), alaTaxonCollection)
-            .and(alaAttributionTransform.getTag(), alaAttributionCollection);
+            .and(alaAttributionTransform.getTag(), alaAttributionCollection)
+            .and(alaSensitiveDataRecordTransform.getTag(), alaSensitiveDataCollection);
 
     if (options.getIncludeSampling()) {
       kpct = kpct.and(locationFeatureTransform.getTag(), locationFeatureCollection);
