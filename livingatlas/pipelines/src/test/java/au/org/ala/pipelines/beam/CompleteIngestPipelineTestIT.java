@@ -145,16 +145,11 @@ public class CompleteIngestPipelineTestIT {
               "--metaFileName=" + ValidationUtils.INDEXING_METRICS,
               "--targetPath=/tmp/la-pipelines-test/complete-pipeline",
               "--inputPath=/tmp/la-pipelines-test/complete-pipeline",
+              "--allDatasetsInputPath=/tmp/la-pipelines-test/complete-pipeline/all-datasets",
               "--properties=" + TestUtils.getPipelinesConfigFile(),
-              "--zkHost=" + SolrUtils.getZkHost(),
-              "--solrCollection=" + SolrUtils.BIOCACHE_TEST_SOLR_COLLECTION,
               "--includeSampling=true",
               "--includeImages=false"
             });
-
-    // check ready for index - should be false as includeSampling=true and sampling not generated
-    // yet
-    assertFalse(ValidationUtils.checkReadyForIndexing(solrOptions).getValid());
 
     // export lat lngs
     AllDatasetsPipelinesOptions latLngOptions =
@@ -177,30 +172,35 @@ public class CompleteIngestPipelineTestIT {
               "--datasetId=" + datasetID,
               "--attempt=1",
               "--runner=DirectRunner",
-              "--targetPath=/tmp/la-pipelines-test/complete-pipeline-java",
-              "--inputPath=/tmp/la-pipelines-test/complete-pipeline-java",
+              "--targetPath=/tmp/la-pipelines-test/complete-pipeline",
+              "--inputPath=/tmp/la-pipelines-test/complete-pipeline",
+              "--allDatasetsInputPath=/tmp/la-pipelines-test/complete-pipeline/all-datasets",
               "--config=" + TestUtils.getPipelinesConfigFile()
             })));
     LayerCrawler.run(latLngOptions);
-
-    // sample -> avro
-    AllDatasetsPipelinesOptions samplingAvroOptions =
-        PipelinesOptionsFactory.create(
-            AllDatasetsPipelinesOptions.class,
-            new String[] {
-              "--datasetId=" + datasetID,
-              "--attempt=1",
-              "--runner=DirectRunner",
-              "--targetPath=/tmp/la-pipelines-test/complete-pipeline",
-              "--inputPath=/tmp/la-pipelines-test/complete-pipeline",
-              "--metaFileName=" + ValidationUtils.SAMPLING_METRICS,
-              "--properties=" + TestUtils.getPipelinesConfigFile()
-            });
-    ALASamplingToAvroPipeline.run(samplingAvroOptions);
 
     // check ready for index - should be true as includeSampling=true and sampling now generated
     assertTrue(ValidationUtils.checkReadyForIndexing(solrOptions).getValid());
 
     IndexRecordPipeline.run(solrOptions);
+
+    ALASolrPipelineOptions solrOptions2 =
+        PipelinesOptionsFactory.create(
+            ALASolrPipelineOptions.class,
+            new String[] {
+              "--datasetId=" + datasetID,
+              "--attempt=1",
+              "--runner=DirectRunner",
+              "--metaFileName=" + ValidationUtils.INDEXING_METRICS,
+              "--targetPath=/tmp/la-pipelines-test/complete-pipeline",
+              "--inputPath=/tmp/la-pipelines-test/complete-pipeline",
+              "--allDatasetsInputPath=/tmp/la-pipelines-test/complete-pipeline/all-datasets",
+              "--properties=" + TestUtils.getPipelinesConfigFile(),
+              "--zkHost=" + SolrUtils.getZkHost(),
+              "--solrCollection=" + SolrUtils.BIOCACHE_TEST_SOLR_COLLECTION,
+              "--includeSampling=true",
+              "--includeImages=false"
+            });
+    IndexRecordToSolrPipeline.run(solrOptions2);
   }
 }
