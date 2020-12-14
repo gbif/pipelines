@@ -24,27 +24,6 @@
     </testResources>
 
     <plugins>
-<!--      <plugin>-->
-<!--        <artifactId>maven-compiler-plugin</artifactId>-->
-<!--        <configuration>-->
-<!--          <source>1.8</source>-->
-<!--          <target>1.8</target>-->
-<!--          <compilerArguments>-->
-<!--            <Xmaxerrs>10000</Xmaxerrs>-->
-<!--            <Xmaxwarns>10000</Xmaxwarns>-->
-<!--          </compilerArguments>-->
-<!--          <annotationProcessors>-->
-<!--            <annotationProcessor>-->
-<!--              org.checkerframework.checker.nullness.NullnessChecker-->
-<!--            </annotationProcessor>-->
-
-<!--          </annotationProcessors>-->
-<!--          <compilerArgs>-->
-<!--            <arg>-AprintErrorStack</arg>-->
-<!--            <arg>-Awarns</arg>-->
-<!--          </compilerArgs>-->
-<!--        </configuration>-->
-<!--      </plugin>-->
       <!-- Download supporting shapefiles -->
       <plugin>
         <groupId>com.googlecode.maven-download-plugin</groupId>
@@ -501,27 +480,6 @@
       <artifactId>gbif-parsers</artifactId>
       <version>0.53</version>
     </dependency>
-    <!-- https://mvnrepository.com/artifact/org.checkerframework/checker -->
-<!--    <dependency>-->
-<!--      <groupId>org.checkerframework</groupId>-->
-<!--      <artifactId>checker-qual</artifactId>-->
-<!--      <version>2.3.2</version>-->
-<!--    </dependency>-->
-<!--    <dependency>-->
-<!--      <groupId>org.checkerframework</groupId>-->
-<!--      <artifactId>checker</artifactId>-->
-<!--      <version>2.3.0</version>-->
-<!--    </dependency>-->
-<!--    <dependency>-->
-<!--      <groupId>org.checkerframework</groupId>-->
-<!--      <artifactId>jdk8</artifactId>-->
-<!--      <version>2.3.2</version>-->
-<!--    </dependency>-->
-<!--    <dependency>-->
-<!--      <groupId>org.checkerframework</groupId>-->
-<!--      <artifactId>checker</artifactId>-->
-<!--      <version>3.7.1</version>-->
-<!--    </dependency>-->
     <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>gbif-api</artifactId>
