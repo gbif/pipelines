@@ -207,9 +207,9 @@ public class ALAInterpretedToSolrIndexPipeline {
             options.getIncludeSampling() ? locationFeatureTransform.getTag() : null,
             alaAttributionTransform.getTag(),
             alaUuidTransform.getTag(),
-            alaSensitiveDataRecordTransform.getTag(),
             options.getIncludeImages() ? imageServiceRecordTupleTag : null,
             options.getIncludeSpeciesLists() ? speciesListsRecordTupleTag : null,
+            alaSensitiveDataRecordTransform.getTag(),
             metadataView,
             options.getDatasetId());
 

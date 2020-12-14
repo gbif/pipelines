@@ -4,14 +4,10 @@ import static org.apache.avro.Schema.Type.UNION;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
 
 import au.org.ala.pipelines.interpreters.SensitiveDataInterpreter;
-import java.io.PrintWriter;
 import java.io.Serializable;
-import java.io.StringWriter;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.temporal.ChronoField;
-import java.time.temporal.TemporalAccessor;
 import java.util.*;
 import java.util.stream.Collectors;
 import lombok.NonNull;
@@ -33,6 +29,7 @@ import org.gbif.common.parsers.date.TemporalAccessorUtils;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.TermFactory;
 import org.gbif.pipelines.core.converters.MultimediaConverter;
+import org.gbif.pipelines.core.utils.TemporalUtils;
 import org.gbif.pipelines.io.avro.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -171,9 +168,7 @@ public class ALASolrDocumentTransform implements Serializable {
     // If a sensitive record, construct new versions of the data with adjustments
     if (sr != null && sr.getSensitive()) {
       Set<Term> sensitive =
-          sr.getAltered().keySet().stream()
-              .map(TERM_FACTORY::findTerm)
-              .collect(Collectors.toSet());
+          sr.getAltered().keySet().stream().map(TERM_FACTORY::findTerm).collect(Collectors.toSet());
       if (mdr != null) {
         mdr = MetadataRecord.newBuilder(mdr).build();
         SensitiveDataInterpreter.applySensitivity(sensitive, sr, mdr);
