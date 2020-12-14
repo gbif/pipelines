@@ -50,6 +50,11 @@ public class MigrateUUIDPipeline implements Serializable {
   private String targetPath;
 
   @Parameter(
+      names = "--coreSiteConfig",
+      description = "The absolute path to a hdfs-site.xml with default.FS configuration")
+  private String coreSiteConfig;
+
+  @Parameter(
       names = "--hdfsSiteConfig",
       description = "The absolute path to a hdfs-site.xml with default.FS configuration")
   private String hdfsSiteConfig;
@@ -80,12 +85,7 @@ public class MigrateUUIDPipeline implements Serializable {
                     .getResourceAsStream("ala-uuid-record.avsc"));
 
     System.out.println("Starting spark session");
-    SparkSession spark =
-        SparkSession.builder()
-            .appName("Migration UUIDs")
-            .config("spark.master", "local")
-            //            .config("fs.defaultFS", "hdfs://localhost:8020")
-            .getOrCreate();
+    SparkSession spark = SparkSession.builder().appName("Migration UUIDs").getOrCreate();
 
     System.out.println("Load CSV");
     Dataset<Row> occUuidDataset = spark.read().csv(occUuidExportPath);
@@ -176,10 +176,17 @@ public class MigrateUUIDPipeline implements Serializable {
     // move to correct directory structure
     // check if the hdfs-site.xml is provided
     Configuration configuration = new Configuration();
-    if (!Strings.isNullOrEmpty(hdfsSiteConfig)) {
+    System.out.println("Using FS: " + hdfsSiteConfig + " and " + coreSiteConfig);
+    if (!Strings.isNullOrEmpty(hdfsSiteConfig) && !Strings.isNullOrEmpty(coreSiteConfig)) {
       File hdfsSite = new File(hdfsSiteConfig);
       if (hdfsSite.exists() && hdfsSite.isFile()) {
+        System.out.println("Setting up HDFS with: " + hdfsSiteConfig);
         configuration.addResource(hdfsSite.toURI().toURL());
+      }
+      File coreSite = new File(coreSiteConfig);
+      if (coreSite.exists() && coreSite.isFile()) {
+        System.out.println("Setting up HDFS with: " + coreSiteConfig);
+        configuration.addResource(coreSite.toURI().toURL());
       }
     }
 
