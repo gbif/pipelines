@@ -149,17 +149,6 @@ layerCrawler:
   batchStatusSleepTime: 1000
   downloadRetries: 5
 
-# class: au.org.ala.pipelines.beam.ALASamplingToAvroPipeline
-sample-avro:
-  inputPath: '{fsPath}/pipelines-data'
-  runner: SparkRunner
-  allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
-  ## For spark-cluster:
-  # appName: Add Sampling for {datasetId}
-  # useExtendedRecordId: true
-  ## For spark-embedded:
-  # appName: SamplingToAvro indexing for {datasetId}
-
 # class: au.org.ala.pipelines.java.ALAInterpretedToSolrIndexPipeline
 index:
   inputPath: '{fsPath}/pipelines-data'

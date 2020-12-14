@@ -42,7 +42,7 @@ public class LatLongPipeline {
     MDC.put("datasetId", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
     MDC.put("step", "LAT_LNG_EXPORT");
-
+    PipelinesOptionsFactory.registerHdfs(options);
     run(options);
     // FIXME: Issue logged here: https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/105
     System.exit(0);

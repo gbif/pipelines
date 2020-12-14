@@ -7,10 +7,7 @@ import au.org.ala.kvs.cache.ALACollectionKVStoreFactory;
 import au.org.ala.kvs.cache.ALANameCheckKVStoreFactory;
 import au.org.ala.kvs.cache.ALANameMatchKVStoreFactory;
 import au.org.ala.kvs.cache.GeocodeKvStoreFactory;
-import au.org.ala.pipelines.transforms.ALAAttributionTransform;
-import au.org.ala.pipelines.transforms.ALADefaultValuesTransform;
-import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
-import au.org.ala.pipelines.transforms.LocationTransform;
+import au.org.ala.pipelines.transforms.*;
 import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationUtils;
@@ -36,12 +33,14 @@ import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.utils.FsUtils;
+import org.gbif.pipelines.factory.OccurrenceStatusKvStoreFactory;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.transforms.common.UniqueIdTransform;
 import org.gbif.pipelines.transforms.converters.OccurrenceExtensionTransform;
-import org.gbif.pipelines.transforms.core.*;
+import org.gbif.pipelines.transforms.core.TemporalTransform;
+import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
@@ -113,9 +112,6 @@ public class ALAVerbatimToInterpretedPipeline {
     MDC.put("attempt", attempt.toString());
     MDC.put("step", StepType.VERBATIM_TO_INTERPRETED.name());
 
-    boolean tripletValid = options.isTripletValid();
-    boolean occurrenceIdValid = options.isOccurrenceIdValid();
-    boolean useExtendedRecordId = options.isUseExtendedRecordId();
     String endPointType = options.getEndPointType();
 
     Set<String> types = options.getInterpretationTypes();
@@ -152,11 +148,10 @@ public class ALAVerbatimToInterpretedPipeline {
     // Core
     MetadataTransform metadataTransform =
         MetadataTransform.builder().endpointType(endPointType).attempt(attempt).create();
-    BasicTransform basicTransform =
-        BasicTransform.builder()
-            .isTripletValid(tripletValid)
-            .isOccurrenceIdValid(occurrenceIdValid)
-            .useExtendedRecordId(useExtendedRecordId)
+    ALABasicTransform basicTransform =
+        ALABasicTransform.builder()
+            .occStatusKvStoreSupplier(
+                OccurrenceStatusKvStoreFactory.createSupplier(config.getGbifConfig()))
             .create();
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform =

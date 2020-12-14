@@ -194,7 +194,7 @@ function toArg() {
 ## Process run options
 
 # Where to run, --local/etc options has precedence over yaml run.platform
-if ($local || $dwca_avro || $sample)  ; then TYPE=local;
+if ($local || $dwca_avro )  ; then TYPE=local;
 elif ($embedded) ; then TYPE=spark-embedded;
 elif ($cluster) ; then TYPE=spark-cluster;
 else TYPE=$(getConf run.platform);
@@ -546,22 +546,6 @@ function sample () {
     java-pipeline $ltype $SH_ARGS $CLASS $dr
 
     logStepEnd "Sampling" $dr local $SECONDS
-}
-
-function sample-avro () {
-    local dr="$1" ltype="$2"
-    CLASS=au.org.ala.pipelines.beam.ALASamplingToAvroPipeline
-
-    logStepStart "Sample-avro" $dr
-    SECONDS=0
-
-    SH_ARGS=sample-avro-sh-args.spark-embedded
-    spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
-
-    SH_ARGS=sample-avro-sh-args.spark-cluster
-    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "add-sampling-$dr"
-
-    logStepEnd "Sample-avro" $dr $ltype $SECONDS
 }
 
 function solr () {

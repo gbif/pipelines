@@ -5,6 +5,7 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_DERIVED_FROM_COORD
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -117,6 +118,8 @@ public class LocationMatcher {
       if (geocodeResponse != null && !geocodeResponse.getLocations().isEmpty()) {
         return Optional.of(
             geocodeResponse.getLocations().stream()
+                .filter(l -> l.getType().equals("Political") || l.getType().equals("EEZ"))
+                .sorted(Comparator.comparingDouble(Location::getDistance))
                 .map(Location::getIsoCountryCode2Digit)
                 .map(Country::fromIsoCode)
                 .collect(Collectors.toList()));

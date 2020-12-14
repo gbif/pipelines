@@ -39,7 +39,7 @@ public class ImageServicePipelineTestIT {
     loadTestDataset("dr893", absolutePath + "/image-service/dr893", "image-service");
   }
 
-  public void loadTestDataset(String datasetID, String inputPath, String testDir) throws Exception {
+  public void loadTestDataset(String datasetID, String inputPath, String testDir) {
 
     DwcaPipelineOptions dwcaOptions =
         PipelinesOptionsFactory.create(

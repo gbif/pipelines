@@ -25,12 +25,7 @@ import org.joda.time.Duration;
 import org.slf4j.MDC;
 
 /**
- * Pipeline that joins sample data and index records and either:
- *
- * <ul>
- *   <li>Indexes to SOLR
- *   <li>Writes complete index records to disk
- * </ul>
+ * Pipeline that joins sample data and index records and indexes to SOLR.
  */
 @Slf4j
 public class IndexRecordToSolrPipeline {

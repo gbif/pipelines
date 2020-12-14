@@ -12,6 +12,7 @@ import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.WsUtils;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -81,7 +82,8 @@ public class ImageServiceLoadPipeline {
     System.exit(0);
   }
 
-  public static void run(ImageServicePipelineOptions options) throws Exception {
+  public static void run(ImageServicePipelineOptions options)
+      throws IOException, InterruptedException {
 
     ALAPipelinesConfig config =
         ALAPipelinesConfigFactory.getInstance(
@@ -97,9 +99,9 @@ public class ImageServiceLoadPipeline {
 
     // create a zip file of multimedia/*.avro
     log.info("Building zip file to submit to image service");
-    String multimediaPath = null;
+    String multimediaPath;
 
-    if (options.getModifiedWindowTimeInDays() > 0l) {
+    if (options.getModifiedWindowTimeInDays() > 0L) {
       log.info("Building delta of multimedia files");
       multimediaPath = createMultimediaDelta(options, fs);
     } else {
@@ -144,9 +146,6 @@ public class ImageServiceLoadPipeline {
    * Create a delta of multimedia records using the <code>
    * ImageServicePipelineOptions.modifiedWindowTimeInDays</code> to determine the length to of the
    * delta. Note: this is reliant on a `modified` field being supplied in the data.
-   *
-   * @param options
-   * @return directory
    */
   public static String createMultimediaDelta(ImageServicePipelineOptions options, FileSystem fs) {
 
@@ -198,9 +197,9 @@ public class ImageServiceLoadPipeline {
                         Optional<LocalDate> date =
                             Optional.ofNullable(
                                     TemporalAccessorUtils.toEarliestLocalDateTime(
-                                        (TemporalAccessor) parsed.getPayload(), false))
+                                        parsed.getPayload(), false))
                                 .map(LocalDateTime::toLocalDate);
-                        if (date.get().isAfter(earliestDate)) {
+                        if (date.isPresent() && date.get().isAfter(earliestDate)) {
                           // write it out
                           c.output(multimedia);
                         }
@@ -229,7 +228,7 @@ public class ImageServiceLoadPipeline {
   }
 
   public static java.io.File createMultimediaZip(
-      FileSystem fs, String directoryPath, String datasetID, String tempDir) throws Exception {
+      FileSystem fs, String directoryPath, String datasetID, String tempDir) throws IOException {
 
     RemoteIterator<LocatedFileStatus> iter =
         fs.listFiles(new org.apache.hadoop.fs.Path(directoryPath), false);
@@ -238,22 +237,21 @@ public class ImageServiceLoadPipeline {
     log.info("Creating zip for upload at path: " + uploadFilePath);
     File newArchive = new File(uploadFilePath);
 
-    FileOutputStream fos = new FileOutputStream(newArchive);
-    ZipOutputStream zipOut = new ZipOutputStream(fos);
-    while (iter.hasNext()) {
-      LocatedFileStatus locatedFileStatus = iter.next();
-      FSDataInputStream fis = fs.open(locatedFileStatus.getPath());
-      ZipEntry zipEntry = new ZipEntry(locatedFileStatus.getPath().getName());
-      zipOut.putNextEntry(zipEntry);
-      byte[] bytes = new byte[1024];
-      int length;
-      while ((length = fis.read(bytes)) >= 0) {
-        zipOut.write(bytes, 0, length);
+    try (FileOutputStream fos = new FileOutputStream(newArchive);
+        ZipOutputStream zipOut = new ZipOutputStream(fos)) {
+      while (iter.hasNext()) {
+        LocatedFileStatus locatedFileStatus = iter.next();
+        try (FSDataInputStream fis = fs.open(locatedFileStatus.getPath())) {
+          ZipEntry zipEntry = new ZipEntry(locatedFileStatus.getPath().getName());
+          zipOut.putNextEntry(zipEntry);
+          byte[] bytes = new byte[1024];
+          int length;
+          while ((length = fis.read(bytes)) >= 0) {
+            zipOut.write(bytes, 0, length);
+          }
+        }
       }
-      fis.close();
     }
-    zipOut.close();
-    fos.close();
 
     return newArchive;
   }

@@ -12,6 +12,7 @@ import au.org.ala.utils.ValidationUtils;
 import au.org.ala.utils.WsUtils;
 import com.google.common.collect.ImmutableList;
 import java.io.*;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.UnaryOperator;
 import java.util.zip.GZIPInputStream;
@@ -75,11 +76,8 @@ public class ImageServiceSyncPipeline {
    *
    * <p>1. Download CSV export from https://images-dev.ala.org.au/ws/exportDatasetMapping/dr123 2.
    * Extract CSV 3. Load into HDFS 4. Generate ImageServiceRecord AVRO
-   *
-   * @param options
-   * @throws Exception
    */
-  public static void run(ImageServicePipelineOptions options) throws Exception {
+  public static void run(ImageServicePipelineOptions options) throws IOException {
 
     FileSystem fs =
         FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
@@ -109,9 +107,6 @@ public class ImageServiceSyncPipeline {
    *
    * <p>1. Download CSV export from https://images-dev.ala.org.au/ws/exportDatasetMapping/dr123 2.
    * Extract CSV 3. Load into HDFS 4. Generate ImageServiceRecord AVRO
-   *
-   * @param options
-   * @throws Exception
    */
   public static void run(ImageServicePipelineOptions options, String imageMappingPath) {
 
@@ -163,17 +158,9 @@ public class ImageServiceSyncPipeline {
         multimediaItems
             .apply(
                 Filter.by(
-                    new SerializableFunction<KV<String, String>, Boolean>() {
-                      @Override
-                      public Boolean apply(KV<String, String> input) {
-                        for (String path : recognisedPaths) {
-                          if (input.getKey().startsWith(path)) {
-                            return true;
-                          }
-                        }
-                        return false;
-                      }
-                    }))
+                    input ->
+                        Arrays.stream(recognisedPaths)
+                            .anyMatch(path -> input.getKey().startsWith(path))))
             .apply(
                 MapElements.into(
                         TypeDescriptors.kvs(TypeDescriptors.strings(), TypeDescriptors.strings()))
@@ -188,21 +175,13 @@ public class ImageServiceSyncPipeline {
     PCollection<KV<String, String>> nonImageServiceUrls =
         multimediaItems.apply(
             Filter.by(
-                new SerializableFunction<KV<String, String>, Boolean>() {
-                  @Override
-                  public Boolean apply(KV<String, String> input) {
-                    for (String path : recognisedPaths) {
-                      if (input.getKey().startsWith(path)) {
-                        return false;
-                      }
-                    }
-                    return true;
-                  }
-                }));
+                input ->
+                    Arrays.stream(recognisedPaths)
+                        .noneMatch(path -> input.getKey().startsWith(path))));
 
     log.info("Create join collection");
-    final TupleTag<String> imageServiceExportMappingTag = new TupleTag<String>();
-    final TupleTag<String> nonImageServiceUrlsTag = new TupleTag<String>();
+    final TupleTag<String> imageServiceExportMappingTag = new TupleTag<String>() {};
+    final TupleTag<String> nonImageServiceUrlsTag = new TupleTag<String>() {};
 
     // Merge collection values into a CoGbkResult collection.
     PCollection<KV<String, CoGbkResult>> joinedCollection =
@@ -210,7 +189,7 @@ public class ImageServiceSyncPipeline {
                 imageServiceExportMappingTag,
                 imageServiceExportMapping) // images extracted from image-service
             .and(nonImageServiceUrlsTag, nonImageServiceUrls) // image
-            .apply(CoGroupByKey.<String>create());
+            .apply(CoGroupByKey.create());
 
     PCollection<KV<String, String>> nonImageServiceUrlCollection =
         joinedCollection.apply(
@@ -234,7 +213,7 @@ public class ImageServiceSyncPipeline {
     PCollection<KV<String, String>> combinedNotGrouped =
         PCollectionList.of(imageServiceUrlsCollection)
             .and(nonImageServiceUrlCollection)
-            .apply("Flatten the non and image service", Flatten.<KV<String, String>>pCollections());
+            .apply("Flatten the non and image service", Flatten.pCollections());
 
     // grouped by RecordID
     PCollection<KV<String, Iterable<String>>> combined =
@@ -281,7 +260,6 @@ public class ImageServiceSyncPipeline {
         }
       } catch (Exception e) {
         log.error("Problem with record " + multimediaRecord.getId());
-        //        throw new RuntimeException(e.getMessage());
       }
     }
   }
@@ -311,11 +289,9 @@ public class ImageServiceSyncPipeline {
    * <p>/PIPELINES_DIR/DATASET_ID/1/images/export.csv
    *
    * <p>for pipeline processing.
-   *
-   * @param options
-   * @throws Exception
    */
-  private static String downloadImageMapping(ImageServicePipelineOptions options) throws Exception {
+  private static String downloadImageMapping(ImageServicePipelineOptions options)
+      throws IOException {
 
     String tmpDir = options.getTempLocation() != null ? options.getTempLocation() : "/tmp";
 
@@ -360,27 +336,25 @@ public class ImageServiceSyncPipeline {
     return hdfsPath;
   }
 
-  public static void decompressToStream(File sourceFile, OutputStream fos) throws Exception {
+  public static void decompressToStream(File sourceFile, OutputStream fos) {
     try {
-      // Create a file input stream to read the source file.
-      FileInputStream fis = new FileInputStream(sourceFile);
-
       // Create a gzip input stream to decompress the source
       // file defined by the file input stream.
-      GZIPInputStream gzis = new GZIPInputStream(fis);
+      try (GZIPInputStream gzis = new GZIPInputStream(new FileInputStream(sourceFile))) {
 
-      // Create a buffer and temporary variable used during the
-      // file decompress process.
-      byte[] buffer = new byte[1024];
-      int length;
+        // Create a buffer and temporary variable used during the
+        // file decompress process.
+        byte[] buffer = new byte[1024];
+        int length;
 
-      // Read from the compressed source file and write the
-      // decompress file.
-      while ((length = gzis.read(buffer)) > 0) {
-        fos.write(buffer, 0, length);
+        // Read from the compressed source file and write the
+        // decompress file.
+        while ((length = gzis.read(buffer)) > 0) {
+          fos.write(buffer, 0, length);
+        }
       }
     } catch (IOException e) {
-      e.printStackTrace();
+      log.warn(e.getMessage(), e);
     }
   }
 }

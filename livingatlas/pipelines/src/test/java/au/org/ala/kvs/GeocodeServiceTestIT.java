@@ -1,7 +1,6 @@
 package au.org.ala.kvs;
 
 import static org.junit.Assert.*;
-import static org.junit.Assert.assertEquals;
 
 import au.org.ala.kvs.cache.GeocodeKvStoreFactory;
 import au.org.ala.kvs.cache.StateProvinceKeyValueStore;
@@ -89,13 +88,9 @@ public class GeocodeServiceTestIT {
     assertEquals("Queensland", stateProvince.get().getName());
   }
 
-  /**
-   * This test demonstrates how to create a kvstore supporting bitmap cache
-   *
-   * @throws Exception
-   */
+  /** This test demonstrates how to create a kvstore supporting bitmap cache */
   @Test
-  public void testBitMap() throws Exception {
+  public void testBitMap() {
 
     BufferedImage image =
         BufferedImageFactory.loadImageFile("/tmp/pipelines-shp/cw_state_poly.png");

@@ -86,9 +86,7 @@ public class WsUtils {
     clientBuilder.addInterceptor(
         chain -> {
           Request.Builder builder = chain.request().newBuilder();
-          config
-              .getHttpHeaders()
-              .forEach((header, headerValue) -> builder.addHeader(header, headerValue));
+          config.getHttpHeaders().forEach(builder::addHeader);
           Request request = builder.build();
           return chain.proceed(request);
         });
