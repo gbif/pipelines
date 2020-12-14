@@ -6,6 +6,7 @@ import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationUtils;
+import avro.shaded.com.google.common.collect.ImmutableMap;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -117,33 +118,50 @@ public class IndexRecordToSolrPipeline {
                             .getOnly(
                                 samplingTag,
                                 SampleRecord.newBuilder().setLatLng("NO_VALUE").build());
-                    Iterable<IndexRecord> idIter = e.getValue().getAll(indexRecordTag);
+                    Iterable<IndexRecord> indexRecordIterable = e.getValue().getAll(indexRecordTag);
 
                     if (sampleRecord.getStrings() == null && sampleRecord.getDoubles() == null) {
                       log.error("Sampling was empty for point: {}", e.getKey());
                     }
 
-                    idIter.forEach(
+                    indexRecordIterable.forEach(
                         indexRecord -> {
-                          if (sampleRecord.getDoubles() != null) {
-                            Map<String, Double> doubles = indexRecord.getDoubles();
-                            if (doubles == null) {
-                              doubles = new HashMap<String, Double>();
-                              indexRecord.setDoubles(doubles);
-                            }
+                          Map<String, String> strings =
+                              indexRecord.getStrings() != null
+                                  ? indexRecord.getStrings()
+                                  : new HashMap<String, String>();
+                          Map<String, Double> doubles =
+                              indexRecord.getDoubles() != null
+                                  ? indexRecord.getDoubles()
+                                  : new HashMap<String, Double>();
 
-                            doubles.putAll(sampleRecord.getDoubles());
-                          }
+                          Map<String, String> stringsToPersist =
+                              ImmutableMap.<String, String>builder()
+                                  .putAll(strings)
+                                  .putAll(sampleRecord.getStrings())
+                                  .build();
 
-                          if (sampleRecord.getStrings() != null) {
-                            Map<String, String> strings = indexRecord.getStrings();
-                            if (strings == null) {
-                              strings = new HashMap<String, String>();
-                              indexRecord.setStrings(strings);
-                            }
-                            strings.putAll(sampleRecord.getStrings());
-                          }
-                          c.output(indexRecord);
+                          Map<String, Double> doublesToPersist =
+                              ImmutableMap.<String, Double>builder()
+                                  .putAll(doubles)
+                                  .putAll(sampleRecord.getDoubles())
+                                  .build();
+
+                          IndexRecord ir =
+                              IndexRecord.newBuilder()
+                                  .setId(indexRecord.getId())
+                                  .setTaxonID(indexRecord.getTaxonID())
+                                  .setLatLng(indexRecord.getLatLng())
+                                  .setMultiValues(indexRecord.getMultiValues())
+                                  .setDates(indexRecord.getDates())
+                                  .setLongs(indexRecord.getLongs())
+                                  .setBooleans(indexRecord.getBooleans())
+                                  .setInts(indexRecord.getInts())
+                                  .setStrings(stringsToPersist)
+                                  .setDoubles(doublesToPersist)
+                                  .build();
+
+                          c.output(ir);
                         });
                   }
                 }));

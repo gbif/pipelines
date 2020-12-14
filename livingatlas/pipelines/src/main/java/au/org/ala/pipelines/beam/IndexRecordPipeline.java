@@ -27,10 +27,12 @@ import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.transforms.join.CoGroupByKey;
 import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.*;
+import org.apache.hadoop.fs.FileSystem;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
+import org.gbif.pipelines.core.factory.FileSystemFactory;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.transforms.core.*;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
@@ -246,17 +248,22 @@ public class IndexRecordPipeline {
         kpct.apply("Grouping objects", CoGroupByKey.create())
             .apply("Merging to Solr doc", alaSolrDoFn);
 
+    String outputPath =
+        options.getAllDatasetsInputPath()
+            + "/index-record/"
+            + options.getDatasetId()
+            + "/"
+            + options.getDatasetId();
+
+    // clean previous runs
+    FileSystem fs =
+        FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
+            .getFs(options.getInputPath());
+    ALAFsUtils.deleteIfExist(fs, outputPath);
+
     // write to AVRO file instead....
     indexRecordCollection.apply(
-        AvroIO.write(IndexRecord.class)
-            .to(
-                options.getAllDatasetsInputPath()
-                    + "/index-record/"
-                    + options.getDatasetId()
-                    + "/"
-                    + options.getDatasetId())
-            .withSuffix(".avro")
-            .withCodec(BASE_CODEC));
+        AvroIO.write(IndexRecord.class).to(outputPath).withSuffix(".avro").withCodec(BASE_CODEC));
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();

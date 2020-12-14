@@ -548,22 +548,6 @@ function sample () {
     logStepEnd "Sampling" $dr local $SECONDS
 }
 
-function sample-avro () {
-    local dr="$1" ltype="$2"
-    CLASS=au.org.ala.pipelines.beam.ALASamplingToAvroPipeline
-
-    logStepStart "Sample-avro" $dr
-    SECONDS=0
-
-    SH_ARGS=sample-avro-sh-args.spark-embedded
-    spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
-
-    SH_ARGS=sample-avro-sh-args.spark-cluster
-    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "add-sampling-$dr"
-
-    logStepEnd "Sample-avro" $dr $ltype $SECONDS
-}
-
 function solr () {
     local dr="$1" ltype="$2"
     CLASS=au.org.ala.pipelines.beam.IndexRecordToSolrPipeline

@@ -72,6 +72,7 @@ public class LayerCrawler {
   }
 
   public static void init(CombinedYamlConfiguration conf) {
+    MDC.put("step", "SAMPLING");
     String baseUrl = (String) conf.get("layerCrawler.baseUrl");
     batchSize = (Integer) conf.get("layerCrawler.batchSize");
     batchStatusSleepTime = (Integer) conf.get("layerCrawler.batchStatusSleepTime");
@@ -122,6 +123,7 @@ public class LayerCrawler {
       lc.crawl(fs, layerList, inputFile, sampleDownloadPath);
     }
 
+    log.info("Converting downloaded sampling CSV to AVRO");
     SamplesToAvro.run(options);
 
     Instant batchFinish = Instant.now();

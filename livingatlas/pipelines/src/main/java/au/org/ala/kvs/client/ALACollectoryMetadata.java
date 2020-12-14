@@ -30,6 +30,7 @@ public class ALACollectoryMetadata {
   String licenseType;
   String licenseVersion;
   String provenance;
+  String dateCreated;
 
   ConnectionParameters connectionParameters;
   Map<String, String> defaultDarwinCoreValues;
