@@ -7,7 +7,10 @@ import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 
 /** Main pipeline options necessary for SOLR index for Living atlases */
 public interface ALASolrPipelineOptions
-    extends PipelineOptions, InterpretationPipelineOptions, SpeciesLevelPipelineOptions {
+    extends PipelineOptions,
+        InterpretationPipelineOptions,
+        SpeciesLevelPipelineOptions,
+        AllDatasetsPipelinesOptions {
 
   @Description("SOLR collection to index into")
   @Default.String("biocache")

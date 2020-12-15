@@ -9,7 +9,6 @@ import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.cache.KeyValueCache;
 import org.gbif.kvs.hbase.Command;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
-import org.gbif.rest.client.configuration.ClientConfiguration;
 
 /** Key value store factory for Attribution */
 @Slf4j
@@ -38,21 +37,13 @@ public class ALAAttributionKVStoreFactory {
 
   /** Retrieve KV Store for Collectory Metadata. */
   public static KeyValueStore<String, ALACollectoryMetadata> create(ALAPipelinesConfig config) {
-
-    ClientConfiguration clientConfiguration =
-        ClientConfiguration.builder()
-            .withBaseApiUrl(config.getCollectory().getWsUrl()) // GBIF base API url
-            .withTimeOut(
-                config.getCollectory().getTimeoutSec()) // Geocode service connection time-out
-            .build();
-
     ALACollectoryServiceClient wsClient = new ALACollectoryServiceClient(config.getCollectory());
     Command closeHandler =
         () -> {
           try {
             wsClient.close();
           } catch (Exception e) {
-            logAndThrow(e, "Unable to close");
+            log.error("Unable to close", e);
           }
         };
 

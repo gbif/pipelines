@@ -18,7 +18,7 @@ public interface SpeciesLevelPipelineOptions extends InterpretationPipelineOptio
   void setSpeciesListCachePath(String speciesListCachePath);
 
   @Description("The max age in minutes of the species list download. Default is 1440 = 1 day")
-  @Default.Long(1440l)
+  @Default.Long(1440L)
   long getMaxDownloadAgeInMinutes();
 
   void setMaxDownloadAgeInMinutes(long getMaxDownloadAgeInMinutes);

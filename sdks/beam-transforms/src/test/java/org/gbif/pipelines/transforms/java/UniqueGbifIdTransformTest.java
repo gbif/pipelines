@@ -34,7 +34,7 @@ public class UniqueGbifIdTransformTest {
     UniqueGbifIdTransform gbifIdTransform =
         UniqueGbifIdTransform.builder()
             .erMap(input)
-            .basicTransform(basicTransform)
+            .basicTransformFn(basicTransform::processElement)
             .skipTransform(true)
             .build()
             .run();
@@ -57,7 +57,11 @@ public class UniqueGbifIdTransformTest {
 
     // When
     UniqueGbifIdTransform gbifIdTransform =
-        UniqueGbifIdTransform.builder().erMap(input).basicTransform(basicTransform).build().run();
+        UniqueGbifIdTransform.builder()
+            .erMap(input)
+            .basicTransformFn(basicTransform::processElement)
+            .build()
+            .run();
 
     Map<String, BasicRecord> brMap = gbifIdTransform.getBrMap();
     Map<String, BasicRecord> brInvalidMap = gbifIdTransform.getBrInvalidMap();
@@ -78,7 +82,11 @@ public class UniqueGbifIdTransformTest {
 
     // When
     UniqueGbifIdTransform gbifIdTransform =
-        UniqueGbifIdTransform.builder().erMap(input).basicTransform(basicTransform).build().run();
+        UniqueGbifIdTransform.builder()
+            .erMap(input)
+            .basicTransformFn(basicTransform::processElement)
+            .build()
+            .run();
 
     Map<String, BasicRecord> brMap = gbifIdTransform.getBrMap();
     Map<String, BasicRecord> brInvalidMap = gbifIdTransform.getBrInvalidMap();
@@ -98,7 +106,11 @@ public class UniqueGbifIdTransformTest {
 
     // When
     UniqueGbifIdTransform gbifIdTransform =
-        UniqueGbifIdTransform.builder().erMap(input).basicTransform(basicTransform).build().run();
+        UniqueGbifIdTransform.builder()
+            .erMap(input)
+            .basicTransformFn(basicTransform::processElement)
+            .build()
+            .run();
 
     Map<String, BasicRecord> brMap = gbifIdTransform.getBrMap();
     Map<String, BasicRecord> brInvalidMap = gbifIdTransform.getBrInvalidMap();
@@ -117,7 +129,11 @@ public class UniqueGbifIdTransformTest {
 
     // When
     UniqueGbifIdTransform gbifIdTransform =
-        UniqueGbifIdTransform.builder().erMap(input).basicTransform(basicTransform).build().run();
+        UniqueGbifIdTransform.builder()
+            .erMap(input)
+            .basicTransformFn(basicTransform::processElement)
+            .build()
+            .run();
 
     Map<String, BasicRecord> brMap = gbifIdTransform.getBrMap();
     Map<String, BasicRecord> brInvalidMap = gbifIdTransform.getBrInvalidMap();
@@ -136,7 +152,11 @@ public class UniqueGbifIdTransformTest {
 
     // When
     UniqueGbifIdTransform gbifIdTransform =
-        UniqueGbifIdTransform.builder().erMap(input).basicTransform(basicTransform).build().run();
+        UniqueGbifIdTransform.builder()
+            .erMap(input)
+            .basicTransformFn(basicTransform::processElement)
+            .build()
+            .run();
 
     Map<String, BasicRecord> brMap = gbifIdTransform.getBrMap();
     Map<String, BasicRecord> brInvalidMap = gbifIdTransform.getBrInvalidMap();
@@ -158,7 +178,7 @@ public class UniqueGbifIdTransformTest {
     UniqueGbifIdTransform gbifIdTransform =
         UniqueGbifIdTransform.builder()
             .erMap(input)
-            .basicTransform(basicTransform)
+            .basicTransformFn(basicTransform::processElement)
             .useSyncMode(true)
             .build()
             .run();
@@ -184,7 +204,7 @@ public class UniqueGbifIdTransformTest {
     UniqueGbifIdTransform gbifIdTransform =
         UniqueGbifIdTransform.builder()
             .erMap(input)
-            .basicTransform(basicTransform)
+            .basicTransformFn(basicTransform::processElement)
             .useSyncMode(false)
             .build()
             .run();

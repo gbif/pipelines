@@ -8,13 +8,15 @@ import au.org.ala.pipelines.vocabulary.StateProvince;
 import au.org.ala.pipelines.vocabulary.Vocab;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.WsUtils;
-import java.io.*;
-import java.util.*;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.ResponseBody;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericDatumWriter;
-import org.apache.avro.io.DatumWriter;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -37,7 +39,7 @@ import retrofit2.Call;
  * <p>Includes support for a flag to avoid downloading and regenerating the AVRO export if the last
  * modified date is within a time frame (default 1 day).
  *
- * @see @{@link SpeciesListRecord}
+ * @see {@link SpeciesListRecord}
  */
 @Slf4j
 public class SpeciesListDownloader {
@@ -52,7 +54,7 @@ public class SpeciesListDownloader {
     run(options);
   }
 
-  public static void run(SpeciesLevelPipelineOptions options) throws Exception {
+  public static void run(SpeciesLevelPipelineOptions options) throws IOException {
 
     // read config
     ALAPipelinesConfig config =
@@ -106,86 +108,85 @@ public class SpeciesListDownloader {
 
     // create the output file
     OutputStream output = fs.create(new Path(outputPath));
-    DatumWriter<SpeciesListRecord> datumWriter =
-        new GenericDatumWriter<SpeciesListRecord>(SpeciesListRecord.getClassSchema());
-    DataFileWriter dataFileWriter = new DataFileWriter<SpeciesListRecord>(datumWriter);
-    dataFileWriter.create(SpeciesListRecord.getClassSchema(), output);
+    try (DataFileWriter<SpeciesListRecord> dataFileWriter =
+        new DataFileWriter<>(new GenericDatumWriter<>(SpeciesListRecord.getClassSchema()))) {
+      dataFileWriter.create(SpeciesListRecord.getClassSchema(), output);
 
-    int counter = 0;
-    for (SpeciesList list : listsResponse.getLists()) {
+      int counter = 0;
+      for (SpeciesList list : listsResponse.getLists()) {
 
-      counter++;
-      log.info(
-          "Downloading list {} of {} - {} -  {}",
-          counter,
-          listsResponse.getLists().size(),
-          list.getDataResourceUid(),
-          list.getListName());
-      ResponseBody responseBody =
-          SyncCall.syncCall(service.downloadList(list.getDataResourceUid()));
-
-      // File source, String encoding, String delimiter, Character quotes, Integer headerRows
-      CSVReader csvReader = new CSVReader(responseBody.byteStream(), "UTF-8", ",", '"', 1);
-
-      List<String> columnHeaders = Arrays.asList(csvReader.getHeader());
-      int guidIdx = columnHeaders.indexOf("guid");
-      int statusIdx = columnHeaders.indexOf("status");
-      int sourceStatusIdx = columnHeaders.indexOf("sourceStatus");
-
-      String region = null;
-
-      if (list.getRegion() != null) {
-        // match states
-        Optional<String> match = stateProvinceVocab.matchTerm(list.getRegion());
-
-        if (match.isPresent()) {
-          region = match.get();
-        } else {
-          // match country
-          ParseResult<Country> pr = CountryParser.getInstance().parse(list.getRegion());
-          if (pr.isSuccessful()) {
-            region = pr.getPayload().name();
-          } else {
-            region = list.getRegion();
-          }
-        }
-      }
-
-      if (guidIdx > 0) {
-        String[] currentLine = csvReader.next();
-
-        // build up the map
-        while (currentLine != null && currentLine.length == columnHeaders.size()) {
-          String taxonID = currentLine[guidIdx];
-
-          if (taxonID.length() > 0) {
-
-            String status = statusIdx > 0 ? currentLine[statusIdx] : null;
-            String sourceStatus = sourceStatusIdx > 0 ? currentLine[sourceStatusIdx] : null;
-
-            SpeciesListRecord speciesListRecord =
-                SpeciesListRecord.newBuilder()
-                    .setTaxonID(taxonID)
-                    .setSpeciesListID(list.getDataResourceUid())
-                    .setStatus(status)
-                    .setRegion(region)
-                    .setIsInvasive(list.isInvasive())
-                    .setIsThreatened(list.isThreatened())
-                    .setSourceStatus(sourceStatus)
-                    .build();
-            dataFileWriter.append(speciesListRecord);
-          }
-          currentLine = csvReader.next();
-        }
-      } else {
-        log.warn(
-            "List {} - {} does not supply a GUID column - hence this list will not be used",
+        counter++;
+        log.info(
+            "Downloading list {} of {} - {} -  {}",
+            counter,
+            listsResponse.getLists().size(),
             list.getDataResourceUid(),
             list.getListName());
+        ResponseBody responseBody =
+            SyncCall.syncCall(service.downloadList(list.getDataResourceUid()));
+
+        // File source, String encoding, String delimiter, Character quotes, Integer headerRows
+        try (CSVReader csvReader = new CSVReader(responseBody.byteStream(), "UTF-8", ",", '"', 1)) {
+
+          List<String> columnHeaders = Arrays.asList(csvReader.getHeader());
+          int guidIdx = columnHeaders.indexOf("guid");
+          int statusIdx = columnHeaders.indexOf("status");
+          int sourceStatusIdx = columnHeaders.indexOf("sourceStatus");
+
+          String region = null;
+
+          if (list.getRegion() != null) {
+            // match states
+            Optional<String> match = stateProvinceVocab.matchTerm(list.getRegion());
+
+            if (match.isPresent()) {
+              region = match.get();
+            } else {
+              // match country
+              ParseResult<Country> pr = CountryParser.getInstance().parse(list.getRegion());
+              if (pr.isSuccessful()) {
+                region = pr.getPayload().name();
+              } else {
+                region = list.getRegion();
+              }
+            }
+          }
+
+          if (guidIdx > 0) {
+            String[] currentLine = csvReader.next();
+
+            // build up the map
+            while (currentLine != null && currentLine.length == columnHeaders.size()) {
+              String taxonID = currentLine[guidIdx];
+
+              if (taxonID.length() > 0) {
+
+                String status = statusIdx > 0 ? currentLine[statusIdx] : null;
+                String sourceStatus = sourceStatusIdx > 0 ? currentLine[sourceStatusIdx] : null;
+
+                SpeciesListRecord speciesListRecord =
+                    SpeciesListRecord.newBuilder()
+                        .setTaxonID(taxonID)
+                        .setSpeciesListID(list.getDataResourceUid())
+                        .setStatus(status)
+                        .setRegion(region)
+                        .setIsInvasive(list.isInvasive())
+                        .setIsThreatened(list.isThreatened())
+                        .setSourceStatus(sourceStatus)
+                        .build();
+                dataFileWriter.append(speciesListRecord);
+              }
+              currentLine = csvReader.next();
+            }
+          } else {
+            log.warn(
+                "List {} - {} does not supply a GUID column - hence this list will not be used",
+                list.getDataResourceUid(),
+                list.getListName());
+          }
+        }
       }
-      csvReader.close();
     }
-    dataFileWriter.close();
     log.info("Finished. Output written to {}", outputPath);
   }
 }

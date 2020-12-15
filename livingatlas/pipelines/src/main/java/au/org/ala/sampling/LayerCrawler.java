@@ -1,5 +1,6 @@
 package au.org.ala.sampling;
 
+import au.org.ala.pipelines.options.AllDatasetsPipelinesOptions;
 import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -23,9 +24,9 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
-import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.core.utils.FsUtils;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.MDC;
 import retrofit2.Call;
 import retrofit2.Response;
@@ -58,8 +59,8 @@ public class LayerCrawler {
   public static void main(String[] args) throws Exception {
     CombinedYamlConfiguration conf = new CombinedYamlConfiguration(args);
     String[] combinedArgs = conf.toArgs("general", "sample");
-    InterpretationPipelineOptions options =
-        PipelinesOptionsFactory.createInterpretation(combinedArgs);
+    AllDatasetsPipelinesOptions options =
+        PipelinesOptionsFactory.create(AllDatasetsPipelinesOptions.class, combinedArgs);
     MDC.put("datasetId", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
     MDC.put("step", "SAMPLING");
@@ -71,6 +72,7 @@ public class LayerCrawler {
   }
 
   public static void init(CombinedYamlConfiguration conf) {
+    MDC.put("step", "SAMPLING");
     String baseUrl = (String) conf.get("layerCrawler.baseUrl");
     batchSize = (Integer) conf.get("layerCrawler.batchSize");
     batchStatusSleepTime = (Integer) conf.get("layerCrawler.batchStatusSleepTime");
@@ -84,55 +86,110 @@ public class LayerCrawler {
             .build();
   }
 
-  public static void run(InterpretationPipelineOptions options) throws Exception {
-
-    String baseDir = options.getInputPath();
+  public static void run(AllDatasetsPipelinesOptions options) throws Exception {
 
     FileSystem fs =
         FsUtils.getFileSystem(
             options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getTargetPath());
 
-    if (options.getDatasetId() != null) {
+    Instant batchStart = Instant.now();
 
-      String dataSetID = options.getDatasetId();
+    // list file in directory
+    LayerCrawler lc = new LayerCrawler();
 
-      Instant batchStart = Instant.now();
+    // delete existing sampling output
+    String samplingDir = getSamplingDirectoryPath(options);
 
-      // list file in directory
-      LayerCrawler lc = new LayerCrawler();
+    FsUtils.deleteIfExist(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), samplingDir);
 
-      // delete existing sampling output
-      String samplingDir = baseDir + "/" + dataSetID + "/" + options.getAttempt() + "/sampling";
-      FsUtils.deleteIfExist(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), samplingDir);
+    // (re)create sampling output directories
+    String sampleDownloadPath = getSampleDownloadPath(options);
 
-      // (re)create sampling output directories
-      String sampleDownloadPath =
-          baseDir + "/" + dataSetID + "/" + options.getAttempt() + "/sampling/downloads";
-
-      // check the lat lng export directory has been created
-      String latLngExportPath = baseDir + "/" + dataSetID + "/" + options.getAttempt() + "/latlng";
-      if (!ALAFsUtils.exists(fs, latLngExportPath)) {
-        log.error(
-            "LatLng export unavailable. Has LatLng export pipeline been ran ? Not available at path {}",
-            latLngExportPath);
-        throw new RuntimeException(
-            "LatLng export unavailable. Has LatLng export pipeline been ran ? Not available:"
-                + latLngExportPath);
-      }
-
-      Collection<String> latLngFiles = ALAFsUtils.listPaths(fs, latLngExportPath);
-      String layerList = lc.getRequiredLayers();
-
-      for (String inputFile : latLngFiles) {
-        lc.crawl(fs, layerList, inputFile, sampleDownloadPath);
-      }
-      Instant batchFinish = Instant.now();
-
-      log.info(
-          "Finished sampling for {}. Time taken {} minutes",
-          dataSetID,
-          Duration.between(batchStart, batchFinish).toMinutes());
+    // check the lat lng export directory has been created
+    String latLngExportPath = getLatLngExportPath(options);
+    if (!ALAFsUtils.exists(fs, latLngExportPath)) {
+      log.error(
+          "LatLng export unavailable. Has LatLng export pipeline been ran ? Not available at path {}",
+          latLngExportPath);
+      throw new RuntimeException(
+          "LatLng export unavailable. Has LatLng export pipeline been ran ? Not available:"
+              + latLngExportPath);
     }
+
+    Collection<String> latLngFiles = ALAFsUtils.listPaths(fs, latLngExportPath);
+    String layerList = lc.getRequiredLayers();
+
+    for (String inputFile : latLngFiles) {
+      lc.crawl(fs, layerList, inputFile, sampleDownloadPath);
+    }
+
+    log.info("Converting downloaded sampling CSV to AVRO");
+    SamplesToAvro.run(options);
+
+    Instant batchFinish = Instant.now();
+
+    log.info(
+        "Finished sampling for {}. Time taken {} minutes",
+        options.getDatasetId() != null ? options.getDatasetId() : "all points",
+        Duration.between(batchStart, batchFinish).toMinutes());
+  }
+
+  @NotNull
+  private static String getLatLngExportPath(AllDatasetsPipelinesOptions options) {
+    if (options.getDatasetId() == null || "all".equals(options.getDatasetId())) {
+      return options.getAllDatasetsInputPath() + "/latlng";
+    }
+    return options.getInputPath()
+        + "/"
+        + options.getDatasetId()
+        + "/"
+        + options.getAttempt()
+        + "/latlng";
+  }
+
+  @NotNull
+  public static String getSampleDownloadPath(AllDatasetsPipelinesOptions options) {
+    if (options.getDatasetId() == null || "all".equals(options.getDatasetId())) {
+      return options.getAllDatasetsInputPath() + "/sampling/downloads";
+    }
+    return options.getInputPath()
+        + "/"
+        + options.getDatasetId()
+        + "/"
+        + options.getAttempt()
+        + "/sampling/downloads";
+  }
+
+  @NotNull
+  public static String getSampleAvroPath(AllDatasetsPipelinesOptions options) {
+
+    if (options.getDatasetId() == null || "all".equals(options.getDatasetId())) {
+      return options.getAllDatasetsInputPath()
+          + "/sampling/sampling-"
+          + System.currentTimeMillis()
+          + ".avro";
+    }
+    return options.getInputPath()
+        + "/"
+        + options.getDatasetId()
+        + "/"
+        + options.getAttempt()
+        + "/sampling/sampling-"
+        + System.currentTimeMillis()
+        + ".avro";
+  }
+
+  @NotNull
+  private static String getSamplingDirectoryPath(AllDatasetsPipelinesOptions options) {
+    if (options.getDatasetId() == null || "all".equals(options.getDatasetId())) {
+      return options.getAllDatasetsInputPath() + "/sampling";
+    }
+    return String.join(
+        "/",
+        options.getInputPath(),
+        options.getDatasetId(),
+        options.getAttempt().toString(),
+        "sampling");
   }
 
   public LayerCrawler() {

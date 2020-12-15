@@ -1,0 +1,11 @@
+{
+  "name":"SampleRecord",
+  "namespace":"org.gbif.pipelines.io.avro",
+  "type":"record",
+  "doc":"ALA Index Record",
+  "fields":[
+    {"name": "latLng", "doc": "The ALA UUID for the record", "type" : ["null", "string"]},
+    {"name": "strings", "doc": "The core record terms", "default": {}, "type": {"type": "map", "values": "string"}},
+    {"name": "doubles", "doc": "The core record terms", "default": {}, "type": {"type": "map", "values": "double"}}
+  ]
+}

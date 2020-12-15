@@ -1457,5 +1457,14 @@
   }, {
     "name" : "ext_multimedia",
     "type" : [ "string", "null" ]
+  }, {
+    "name" : "isincluster",
+    "type" : [ "boolean", "null" ]
+  }, {
+    "name" : "dwcaextension",
+    "type" : [ {
+      "type" : "array",
+      "items" : [ "string", "null" ]
+    }, "null" ]
   } ]
 }

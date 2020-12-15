@@ -1,6 +1,7 @@
 package au.org.ala.utils;
 
 import au.org.ala.kvs.ALAPipelinesConfig;
+import au.org.ala.pipelines.options.AllDatasetsPipelinesOptions;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -15,8 +16,6 @@ import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.*;
-import org.apache.hadoop.fs.FileSystem;
-import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.common.beam.options.BasePipelineOptions;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
@@ -103,26 +102,25 @@ public class ALAFsUtils {
         .toString();
   }
 
-  /** Build a path to sampling output. */
-  public static String buildPathSamplingOutputUsingTargetPath(
-      InterpretationPipelineOptions options) {
+  /** Build a path to sampling downloads. */
+  public static String buildPathSamplingDownloadsUsingTargetPath(
+      AllDatasetsPipelinesOptions options) {
+
+    if (options.getDatasetId() == null || "all".equals(options.getDatasetId())) {
+      return String.join("/", options.getAllDatasetsInputPath(), "sampling", "downloads");
+    }
+
     return PathBuilder.buildPath(
-            PathBuilder.buildDatasetAttemptPath(options, "sampling", false),
-            PipelinesVariables.Pipeline.Interpretation.RecordType.LOCATION_FEATURE
-                .toString()
-                .toLowerCase(),
-            PipelinesVariables.Pipeline.Interpretation.RecordType.LOCATION_FEATURE
-                .toString()
-                .toLowerCase())
+            PathBuilder.buildDatasetAttemptPath(options, "sampling", false), "downloads")
         .toString();
   }
 
   /** Build a path to sampling downloads. */
-  public static String buildPathSamplingDownloadsUsingTargetPath(
-      InterpretationPipelineOptions options) {
-    return PathBuilder.buildPath(
-            PathBuilder.buildDatasetAttemptPath(options, "sampling", false), "downloads")
-        .toString();
+  public static String buildPathSamplingUsingTargetPath(AllDatasetsPipelinesOptions options) {
+    if (options.getDatasetId() == null || "all".equals(options.getDatasetId())) {
+      return String.join("/", options.getAllDatasetsInputPath(), "sampling");
+    }
+    return PathBuilder.buildDatasetAttemptPath(options, "sampling", false);
   }
 
   /**

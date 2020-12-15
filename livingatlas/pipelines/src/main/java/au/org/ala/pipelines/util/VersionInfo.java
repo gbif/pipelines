@@ -7,11 +7,18 @@ import java.nio.charset.StandardCharsets;
 import lombok.extern.slf4j.Slf4j;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import org.slf4j.MDC;
 
 @Slf4j
 public class VersionInfo {
+
+  public static void main(String[] args) {
+    VersionInfo.print();
+  }
+
   public static void print() {
     try {
+      MDC.put("step", "VERSION_INFO");
       InputStream is = VersionInfo.class.getResourceAsStream("/git.properties");
       BufferedReader streamReader =
           new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));

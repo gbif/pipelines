@@ -121,7 +121,7 @@ public class SolrUtils {
       throw new IOException("Unexpected code " + response);
     }
 
-    log.info("POST", response.body().string());
+    log.info("POST {}", response.body().string());
   }
 
   public static void deleteSolrConfigSetIfExists(String configset) throws Exception {

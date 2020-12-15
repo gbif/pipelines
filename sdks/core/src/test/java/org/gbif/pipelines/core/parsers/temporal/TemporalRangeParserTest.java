@@ -7,6 +7,7 @@ import static org.junit.Assert.*;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Optional;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.junit.Test;
 
@@ -55,6 +56,10 @@ public class TemporalRangeParserTest {
     range = trp.parse("1930-01-02/15");
     assertEquals("1930-01-02", range.getFrom().get().toString());
     assertEquals("1930-01-15", range.getTo().get().toString());
+
+    range = trp.parse("1930-01-02/1930-01-02");
+    assertEquals("1930-01-02", range.getFrom().get().toString());
+    assertEquals(Optional.empty(), range.getTo());
   }
 
   @Test

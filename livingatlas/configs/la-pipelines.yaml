@@ -114,6 +114,7 @@ uuid:
 # class: au.org.ala.pipelines.beam.ALAInterpretedToLatLongCSVPipeline
 export-latlng:
   inputPath: '{fsPath}/pipelines-data'
+  allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
   runner: SparkRunner
   appName: Lat Long export for {datasetId}
 
@@ -121,7 +122,7 @@ export-latlng:
 sample:
   inputPath: '{fsPath}/pipelines-data'
   appName: Sample for {datasetId}
-  samplingServiceUrl: 'https://sampling.ala.org.au'
+  allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
 
 images:
   runner: SparkRunner
@@ -155,27 +156,18 @@ jackKnife:
   minSampleThreshold: 80
   runner: SparkRunner
 
-# class: au.org.ala.pipelines.beam.ALASamplingToAvroPipeline
-sample-avro:
-  inputPath: '{fsPath}/pipelines-data'
-  runner: SparkRunner
-  ## For spark-cluster:
-  # appName: Add Sampling for {datasetId}
-  # useExtendedRecordId: true
-  ## For spark-embedded:
-  # appName: SamplingToAvro indexing for {datasetId}
-
 # class: au.org.ala.pipelines.java.ALAInterpretedToSolrIndexPipeline
 index:
   inputPath: '{fsPath}/pipelines-data'
   solrCollection: biocache
-  includeSampling: true
+  includeSampling: false
   includeImages: true
   includeSpeciesLists: true
   jackKnifePath: "{fsPath}/pipelines-jackknife"
   includeJackKnife: true
   runner: SparkRunner
   zkHost: localhost:9983
+  allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
   ## For spark-cluster:
   # appName: SOLR indexing for {datasetId}
   # runner: SparkRunner
@@ -259,11 +251,11 @@ uuid-sh-args:
 
 export-latlng-sh-args:
   local:
-    jvm:
+    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
   spark-embedded:
-    jvm:
+    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
   spark-cluster:
-    conf:
+    conf: spark.default.parallelism=144
     num-executors: 8
     executor-cores: 8
     executor-memory: 16G
@@ -275,11 +267,11 @@ sample-sh-args:
 
 sample-avro-sh-args:
   local:
-    jvm: -Xmx8g -XX:+UseG1GC
+    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
   spark-embedded:
-    jvm: -Xmx8g -XX:+UseG1GC
+    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
   spark-cluster:
-    conf: spark.default.parallelism=192
+    conf: spark.default.parallelism=144
     num-executors: 24
     executor-cores: 8
     executor-memory: 7G
@@ -307,4 +299,16 @@ index-sh-args:
     num-executors: 24
     executor-cores: 8
     executor-memory: 7G
+    driver-memory: 4G
+
+solr-sh-args:
+  local:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-embedded:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-cluster:
+    conf: spark.default.parallelism=500
+    num-executors: 6
+    executor-cores: 8
+    executor-memory: 24G
     driver-memory: 4G

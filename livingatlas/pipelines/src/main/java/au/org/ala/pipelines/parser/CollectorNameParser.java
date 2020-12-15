@@ -5,27 +5,29 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class CollectorNameParser {
-  private static String NAME_LETTERS = "A-ZÃÃ‹Ã–ÃœÃ„Ã‰ÃˆÄŒÃÃ€Ã†Å’\\p{Lu}";
-  private static String name_letters = "a-zÃ¯Ã«Ã¶Ã¼Ã¤Ã¥Ã©Ã¨ÄÃ¡Ã Ã¦Å“\\p{Ll}";
-  private static String NA = "[nN]/[aA]|\\([\\x00-\\x7F\\s]*?\\)";
-  private static String TITLES =
+  private static final String NAME_LETTERS = "A-ZÃÃ‹Ã–ÃœÃ„Ã‰ÃˆÄŒÃÃ€Ã†Å’\\p{Lu}";
+  private static final String NA = "[nN]/[aA]|\\([\\x00-\\x7F\\s]*?\\)";
+  private static final String TITLES =
       "Dr|DR|dr|\\(Professor\\)|Mr|MR|mr|Mrs|mrs|MRS|Ms|ms|MS|Lieutenant";
-  private static String etAl = "[eE][tT][. ] ?[aA][Ll][. ]?";
-  private static String INITIALS_REG_EX = "((?:[A-Z][-. ]? ?){0,4})";
-  private static String ORGANISATION_WORDS =
+  private static final String ET_AL = "[eE][tT][. ] ?[aA][Ll][. ]?";
+  private static final String INITIALS_REG_EX = "((?:[A-Z][-. ]? ?){0,4})";
+  private static final String ORGANISATION_WORDS =
       "collection|Entomology|University|Oceanographic|Indonesia|Division|American|Photographic|SERVICE|Section|Arachnology|Northern|Institute|Ichthyology|AUSTRALIA|Malacology|Institution|Department|Survey|DFO|Society|FNS-\\(SA\\)|Association|Government|COMMISSION|Department|Conservation|Expedition|NPWS-\\(SA\\)|Study Group|DIVISION|Melbourne|ATLAS|summer parties|Macquarie Island|NSW|Australian|Museum|Herpetology|ORNITHOLOGICAL|ASSOCIATION|SURVEY|Fisheries|Queensland|Griffith Npws|NCS-\\(SA\\)|UNIVERSITY|SCIENTIFIC|Ornithologists|Bird Observation|CMAR|Kangaroo Management Program";
-  private static String[] surname_prefixes =
+  private static final String[] SURNAME_PREFIXES =
       new String[] {
         "ben", "da", "Da", "Dal", "de", "De", "del", "Del", "den", "der", "Di", "du", "e", "la",
         "La", "Le", "Mc", "San", "St", "Ste", "van", "Van", "Vander", "vel", "von", "Von"
       };
-  private static String SURNAME_PREFIX_REGEX =
-      "((?:(?:" + String.join("|", surname_prefixes) + ")(?:[. ]|$)){0,2})";
-  private static String INITIALS_SURNAME_PATTERN =
+  private static final String SURNAME_PREFIX_REGEX =
+      "((?:(?:" + String.join("|", SURNAME_PREFIXES) + ")(?:[. ]|$)){0,2})";
+  private static final String INITIALS_SURNAME_PATTERN =
       "(?:(?:"
           + TITLES
           + ")(?:[. ]|$))?"
@@ -33,11 +35,11 @@ public class CollectorNameParser {
           + "[. ]([\\p{Lu}\\p{Ll}'-]*) ?(?:(?:"
           + TITLES
           + ")(?:[. ]|$)?)?(?:"
-          + etAl
+          + ET_AL
           + ")?";
-  private static String SURNAME_FIRSTNAE_PATTERN =
+  private static final String SURNAME_FIRSTNAE_PATTERN =
       "\"?([\\p{Lu}'-]*) ((?:[A-Z][-. ] ?){0,4}) ?([\\p{Lu}\\p{Ll}']*)(?: " + NA + ")?\"?";
-  private static String SURNAME_PUNC_FIRSTNAME_PATTERN =
+  private static final String SURNAME_PUNC_FIRSTNAME_PATTERN =
       "\"?"
           + SURNAME_PREFIX_REGEX
           + "([\\p{Lu}\\p{Ll}'-]*) ?[,] ?(?:(?:"
@@ -49,14 +51,14 @@ public class CollectorNameParser {
           + "(?: "
           + NA
           + ")?\"?";
-  private static String SINGLE_NAME_PATTERN =
+  private static final String SINGLE_NAME_PATTERN =
       "(?:(?:" + TITLES + ")(?:[. ]|$))?([\\p{Lu}\\p{Ll}']*)";
-  private static String ORGANISATION_PATTERN = "((?:.*?)?(?:" + ORGANISATION_WORDS + ")(?:.*)?)";
-  private static String AND = "AND|and|And|&";
-  private static String COLLECTOR_DELIM = ";|\"\"|\\|| - ";
-  private static String COMMA_LIST = ",|&";
-  private static String suffixes = "jr|Jr|JR";
-  private static String AND_NAME_LIST_PATTERN =
+  private static final String ORGANISATION_PATTERN =
+      "((?:.*?)?(?:" + ORGANISATION_WORDS + ")(?:.*)?)";
+  private static final String AND = "AND|and|And|&";
+  private static final String COLLECTOR_DELIM = ";|\"\"|\\|| - ";
+  private static final String COMMA_LIST = ",|&";
+  private static final String AND_NAME_LIST_PATTERN =
       "((?:[A-Z][. ] ?){0,3})(["
           + NAME_LETTERS
           + "][\\p{Ll}-']*)? ?(["
@@ -69,13 +71,13 @@ public class CollectorNameParser {
           + "][\\p{Ll}'-]*)? ?(["
           + NAME_LETTERS
           + "][\\p{Ll}\\p{Lu}'-]*)?";
-  private static String FIRSTNAME_SURNAME_PATTERN =
+  private static final String FIRSTNAME_SURNAME_PATTERN =
       "(["
           + NAME_LETTERS
           + "][\\p{Ll}']*) ((?:[A-Z][. ] ?){0,4}) ?([\\p{Lu}\\p{Ll}'-]*)? ?(?:"
           + NA
           + ")?";
-  private static String[] unknown =
+  private static final String[] UNKNOWN =
       new String[] {
         "\"?ANON  N/A\"?",
         "\"NOT ENTERED[ ]*-[ ]*SEE ORIGINAL DATA[ ]*-[ ]*\"",
@@ -86,23 +88,25 @@ public class CollectorNameParser {
         "Anonymous",
         "\\?"
       };
-  private static String UNKNOWN_PATTERN = String.join("|", unknown);
-  private static String EMAIL_PATTERN =
+  private static final String UNKNOWN_PATTERN = String.join("|", UNKNOWN);
+  private static final String EMAIL_PATTERN =
       "(?:(?:\\r\\n)?[ \\t])*(?:(?:(?:[^()<>@,;:\\\\\".\\[\\] \\000-\\031]+(?:(?:(?:\\r\\n)?[ \\t])+|\\Z|(?=[\\[\"()<>@,;:\\\\\".\\[\\]]))|\"(?:[^\\\"\\r\\\\]|\\\\.|(?:(?:\\r\\n)?[ \\t]))*\"(?:(?:\\r\\n)?[ \\t])*)(?:\\.(?:(?:\\r\\n)?[ \\t])*(?:[^()<>@,;:\\\\\".\\[\\] \\000-\\031]+(?:(?:(?:\\r\\n)?[ \\t])+|\\Z|(?=[\\[\"()<>@,;:\\\\\".\\[\\]]))|\"(?:[^\\\"\\r\\\\]|\\\\.|(?:(?:\\r\\n)?[ \\t]))*\"(?:(?:\\r\\n)?[ \\t])*))*@(?:(?:\\r\\n)?[ \\t])*(?:[^()<>@,;:\\\\\".\\[\\] \\000-\\031]+(?:(?:(?:\\r\\n)?[ \\t])+|\\Z|(?=[\\[\"()<>@,;:\\\\\".\\[\\]]))|\\[([^\\[\\]\\r\\\\]|\\\\.)*\\](?:(?:\\r\\n)?[ \\t])*)(?:\\.(?:(?:\\r\\n)?[ \\t])*(?:[^()<>@,;:\\\\\".\\[\\] \\000-\\031]+(?:(?:(?:\\r\\n)?[ \\t])+|\\Z|(?=[\\[\"()<>@,;:\\\\\".\\[\\]]))|\\[([^\\[\\]\\r\\\\]|\\\\.)*\\](?:(?:\\r\\n)?[ \\t])*))*|(?:[^()<>@,;:\\\\\".\\[\\] \\000-\\031]+(?:(?:(?:\\r\\n)?[ \\t])+|\\Z|(?=[\\[\"()<>@,;:\\\\\".\\[\\]]))|\"(?:[^\\\"\\r\\\\]|\\\\.|(?:(?:\\r\\n)?[ \\t]))*\"(?:(?:\\r\\n)?[ \\t])*)*\\<(?:(?:\\r\\n)?[ \\t])*(?:@(?:[^()<>@,;:\\\\\".\\[\\] \\000-\\031]+(?:(?:(?:\\r\\n)?[ \\t])+|\\Z|(?=[\\[\"()<>@,;:\\\\\".\\[\\]]))|\\[([^\\[\\]\\r\\\\]|\\\\.)*\\](?:(?:\\r\\n)?[ \\t])*)(?:\\.(?:(?:\\r\\n)?[ \\t])*(?:[^()<>@,;:\\\\\".\\[\\] \\000-\\031]+(?:(?:(?:\\r\\n)?[ \\t])+|\\Z|(?=[\\[\"()<>@,;:\\\\\".\\[\\]]))|\\[([^\\[\\]\\r\\\\]|\\\\.)*\\](?:(?:\\r\\n)?[ \\t])*))*(?:,@(?:(?:\\r\\n)?[ \\t])*(?:[^()<>@,;:\\\\\".\\[\\] \\000-\\031]+(?:(?:(?:\\r\\n)?[ \\t])+|\\Z|(?=[\\[\"()<>@,;:\\\\\".\\[\\]]))|\\[([^\\[\\]\\r\\\\]|\\\\.)*\\](?:(?:\\r\\n)?[ \\t])*)(?:\\.(?:(?:\\r\\n)?[ \\t])*(?:[^()<>@,;:\\\\\".\\[\\] \\000-\\031]+(?:(?:(?:\\r\\n)?[ \\t])+|\\Z|(?=[\\[\"()<>@,;:\\\\\".\\[\\]]))|\\[([^\\[\\]\\r\\\\]|\\\\.)*\\](?:(?:\\r\\n)?[ \\t])*))*)*:(?:(?:\\r\\n)?[ \\t])*)?(?:[^()<>@,;:\\\\\".\\[\\] \\000-\\031]+(?:(?:(?:\\r\\n)?[ \\t])+|\\Z|(?=[\\[\"()<>@,;:\\\\\".\\[\\]]))|\"(?:[^\\\"\\r\\\\]|\\\\.|(?:(?:\\r\\n)?[ \\t]))*\"(?:(?:\\r\\n)?[ \\t])*)(?:\\.(?:(?:\\r\\n)?[ \\t])*(?:[^()<>@,;:\\\\\".\\[\\] \\000-\\031]+(?:(?:(?:\\r\\n)?[ \\t])+|\\Z|(?=[\\[\"()<>@,;:\\\\\".\\[\\]]))|\"(?:[^\\\"\\r\\\\]|\\\\.|(?:(?:\\r\\n)?[ \\t]))*\"(?:(?:\\r\\n)?[ \\t])*))*@(?:(?:\\r\\n)?[ \\t])*(?:[^()<>@,;:\\\\\".\\[\\] \\000-\\031]+(?:(?:(?:\\r\\n)?[ \\t])+|\\Z|(?=[\\[\"()<>@,;:\\\\\".\\[\\]]))|\\[([^\\[\\]\\r\\\\]|\\\\.)*\\](?:(?:\\r\\n)?[ \\t])*)(?:\\.(?:(?:\\r\\n)?[ \\t])*(?:[^()<>@,;:\\\\\".\\[\\] \\000-\\031]+(?:(?:(?:\\r\\n)?[ \\t])+|\\Z|(?=[\\[\"()<>@,;:\\\\\".\\[\\]]))|\\[([^\\[\\]\\r\\\\]|\\\\.)*\\](?:(?:\\r\\n)?[ \\t])*))*\\>(?:(?:\\r\\n)?[ \\t])*)|(?:[^()<>@,;:\\\\\".\\[\\] \\000-\\031]+(?:(?:(?:\\r\\n)?[ \\t])+|\\Z|(?=[\\[\"()<>@,;:\\\\\".\\[\\]]))|\"(?:[^\\\"\\r\\\\]|\\\\.|(?:(?:\\r\\n)?[ \\t]))*\"(?:(?:\\r\\n)?[ \\t])*)*:(?:(?:\\r\\n)?[ \\t])*(?:(?:(?:[^()<>@,;:\\\\\".\\[\\] \\000-\\031]+(?:(?:(?:\\r\\n)?[ \\t])+|\\Z|(?=[\\[\"()<>@,;:\\\\\".\\[\\]]))|\"(?:[^\\\"\\r\\\\]|\\\\.|(?:(?:\\r\\n)?[ \\t]))*\"(?:(?:\\r\\n)?[ \\t])*)(?:\\.(?:(?:\\r\\n)?[ \\t])*(?:[^()<>@,;:\\\\\".\\[\\] \\000-\\031]+(?:(?:(?:\\r\\n)?[ \\t])+|\\Z|(?=[\\[\"()<>@,;:\\\\\".\\[\\]]))|\"(?:[^\\\"\\r\\\\]|\\\\.|(?:(?:\\r\\n)?[ \\t]))*\"(?:(?:\\r\\n)?[ \\t])*))*@(?:(?:\\r\\n)?[ \\t])*(?:[^()<>@,;:\\\\\".\\[\\] \\000-\\031]+(?:(?:(?:\\r\\n)?[ \\t])+|\\Z|(?=[\\[\"()<>@,;:\\\\\".\\[\\]]))|\\[([^\\[\\]\\r\\\\]|\\\\.)*\\](?:(?:\\r\\n)?[ \\t])*)(?:\\.(?:(?:\\r\\n)?[ \\t])*(?:[^()<>@,;:\\\\\".\\[\\] \\000-\\031]+(?:(?:(?:\\r\\n)?[ \\t])+|\\Z|(?=[\\[\"()<>@,;:\\\\\".\\[\\]]))|\\[([^\\[\\]\\r\\\\]|\\\\.)*\\](?:(?:\\r\\n)?[ \\t])*))*|(?:[^()<>@,;:\\\\\".\\[\\] \\000-\\031]+(?:(?:(?:\\r\\n)?[ \\t])+|\\Z|(?=[\\[\"()<>@,;:\\\\\".\\[\\]]))|\"(?:[^\\\"\\r\\\\]|\\\\.|(?:(?:\\r\\n)?[ \\t]))*\"(?:(?:\\r\\n)?[ \\t])*)*\\<(?:(?:\\r\\n)?[ \\t])*(?:@(?:[^()<>@,;:\\\\\".\\[\\] \\000-\\031]+(?:(?:(?:\\r\\n)?[ \\t])+|\\Z|(?=[\\[\"()<>@,;:\\\\\".\\[\\]]))|\\[([^\\[\\]\\r\\\\]|\\\\.)*\\](?:(?:\\r\\n)?[ \\t])*)(?:\\.(?:(?:\\r\\n)?[ \\t])*(?:[^()<>@,;:\\\\\".\\[\\] \\000-\\031]+(?:(?:(?:\\r\\n)?[ \\t])+|\\Z|(?=[\\[\"()<>@,;:\\\\\".\\[\\]]))|\\[([^\\[\\]\\r\\\\]|\\\\.)*\\](?:(?:\\r\\n)?[ \\t])*))*(?:,@(?:(?:\\r\\n)?[ \\t])*(?:[^()<>@,;:\\\\\".\\[\\] \\000-\\031]+(?:(?:(?:\\r\\n)?[ \\t])+|\\Z|(?=[\\[\"()<>@,;:\\\\\".\\[\\]]))|\\[([^\\[\\]\\r\\\\]|\\\\.)*\\](?:(?:\\r\\n)?[ \\t])*)(?:\\.(?:(?:\\r\\n)?[ \\t])*(?:[^()<>@,;:\\\\\".\\[\\] \\000-\\031]+(?:(?:(?:\\r\\n)?[ \\t])+|\\Z|(?=[\\[\"()<>@,;:\\\\\".\\[\\]]))|\\[([^\\[\\]\\r\\\\]|\\\\.)*\\](?:(?:\\r\\n)?[ \\t])*))*)*:(?:(?:\\r\\n)?[ \\t])*)?(?:[^()<>@,;:\\\\\".\\[\\] \\000-\\031]+(?:(?:(?:\\r\\n)?[ \\t])+|\\Z|(?=[\\[\"()<>@,;:\\\\\".\\[\\]]))|\"(?:[^\\\"\\r\\\\]|\\\\.|(?:(?:\\r\\n)?[ \\t]))*\"(?:(?:\\r\\n)?[ \\t])*)(?:\\.(?:(?:\\r\\n)?[ \\t])*(?:[^()<>@,;:\\\\\".\\[\\] \\000-\\031]+(?:(?:(?:\\r\\n)?[ \\t])+|\\Z|(?=[\\[\"()<>@,;:\\\\\".\\[\\]]))|\"(?:[^\\\"\\r\\\\]|\\\\.|(?:(?:\\r\\n)?[ \\t]))*\"(?:(?:\\r\\n)?[ \\t])*))*@(?:(?:\\r\\n)?[ \\t])*(?:[^()<>@,;:\\\\\".\\[\\] \\000-\\031]+(?:(?:(?:\\r\\n)?[ \\t])+|\\Z|(?=[\\[\"()<>@,;:\\\\\".\\[\\]]))|\\[([^\\[\\]\\r\\\\]|\\\\.)*\\](?:(?:\\r\\n)?[ \\t])*)(?:\\.(?:(?:\\r\\n)?[ \\t])*(?:[^()<>@,;:\\\\\".\\[\\] \\000-\\031]+(?:(?:(?:\\r\\n)?[ \\t])+|\\Z|(?=[\\[\"()<>@,;:\\\\\".\\[\\]]))|\\[([^\\[\\]\\r\\\\]|\\\\.)*\\](?:(?:\\r\\n)?[ \\t])*))*\\>(?:(?:\\r\\n)?[ \\t])*)(?:,\\s*(?:(?:[^()<>@,;:\\\\\".\\[\\] \\000-\\031]+(?:(?:(?:\\r\\n)?[ \\t])+|\\Z|(?=[\\[\"()<>@,;:\\\\\".\\[\\]]))|\"(?:[^\\\"\\r\\\\]|\\\\.|(?:(?:\\r\\n)?[ \\t]))*\"(?:(?:\\r\\n)?[ \\t])*)(?:\\.(?:(?:\\r\\n)?[ \\t])*(?:[^()<>@,;:\\\\\".\\[\\] \\000-\\031]+(?:(?:(?:\\r\\n)?[ \\t])+|\\Z|(?=[\\[\"()<>@,;:\\\\\".\\[\\]]))|\"(?:[^\\\"\\r\\\\]|\\\\.|(?:(?:\\r\\n)?[ \\t]))*\"(?:(?:\\r\\n)?[ \\t])*))*@(?:(?:\\r\\n)?[ \\t])*(?:[^()<>@,;:\\\\\".\\[\\] \\000-\\031]+(?:(?:(?:\\r\\n)?[ \\t])+|\\Z|(?=[\\[\"()<>@,;:\\\\\".\\[\\]]))|\\[([^\\[\\]\\r\\\\]|\\\\.)*\\](?:(?:\\r\\n)?[ \\t])*)(?:\\.(?:(?:\\r\\n)?[ \\t])*(?:[^()<>@,;:\\\\\".\\[\\] \\000-\\031]+(?:(?:(?:\\r\\n)?[ \\t])+|\\Z|(?=[\\[\"()<>@,;:\\\\\".\\[\\]]))|\\[([^\\[\\]\\r\\\\]|\\\\.)*\\](?:(?:\\r\\n)?[ \\t])*))*|(?:[^()<>@,;:\\\\\".\\[\\] \\000-\\031]+(?:(?:(?:\\r\\n)?[ \\t])+|\\Z|(?=[\\[\"()<>@,;:\\\\\".\\[\\]]))|\"(?:[^\\\"\\r\\\\]|\\\\.|(?:(?:\\r\\n)?[ \\t]))*\"(?:(?:\\r\\n)?[ \\t])*)*\\<(?:(?:\\r\\n)?[ \\t])*(?:@(?:[^()<>@,;:\\\\\".\\[\\] \\000-\\031]+(?:(?:(?:\\r\\n)?[ \\t])+|\\Z|(?=[\\[\"()<>@,;:\\\\\".\\[\\]]))|\\[([^\\[\\]\\r\\\\]|\\\\.)*\\](?:(?:\\r\\n)?[ \\t])*)(?:\\.(?:(?:\\r\\n)?[ \\t])*(?:[^()<>@,;:\\\\\".\\[\\] \\000-\\031]+(?:(?:(?:\\r\\n)?[ \\t])+|\\Z|(?=[\\[\"()<>@,;:\\\\\".\\[\\]]))|\\[([^\\[\\]\\r\\\\]|\\\\.)*\\](?:(?:\\r\\n)?[ \\t])*))*(?:,@(?:(?:\\r\\n)?[ \\t])*(?:[^()<>@,;:\\\\\".\\[\\] \\000-\\031]+(?:(?:(?:\\r\\n)?[ \\t])+|\\Z|(?=[\\[\"()<>@,;:\\\\\".\\[\\]]))|\\[([^\\[\\]\\r\\\\]|\\\\.)*\\](?:(?:\\r\\n)?[ \\t])*)(?:\\.(?:(?:\\r\\n)?[ \\t])*(?:[^()<>@,;:\\\\\".\\[\\] \\000-\\031]+(?:(?:(?:\\r\\n)?[ \\t])+|\\Z|(?=[\\[\"()<>@,;:\\\\\".\\[\\]]))|\\[([^\\[\\]\\r\\\\]|\\\\.)*\\](?:(?:\\r\\n)?[ \\t])*))*)*:(?:(?:\\r\\n)?[ \\t])*)?(?:[^()<>@,;:\\\\\".\\[\\] \\000-\\031]+(?:(?:(?:\\r\\n)?[ \\t])+|\\Z|(?=[\\[\"()<>@,;:\\\\\".\\[\\]]))|\"(?:[^\\\"\\r\\\\]|\\\\.|(?:(?:\\r\\n)?[ \\t]))*\"(?:(?:\\r\\n)?[ \\t])*)(?:\\.(?:(?:\\r\\n)?[ \\t])*(?:[^()<>@,;:\\\\\".\\[\\] \\000-\\031]+(?:(?:(?:\\r\\n)?[ \\t])+|\\Z|(?=[\\[\"()<>@,;:\\\\\".\\[\\]]))|\"(?:[^\\\"\\r\\\\]|\\\\.|(?:(?:\\r\\n)?[ \\t]))*\"(?:(?:\\r\\n)?[ \\t])*))*@(?:(?:\\r\\n)?[ \\t])*(?:[^()<>@,;:\\\\\".\\[\\] \\000-\\031]+(?:(?:(?:\\r\\n)?[ \\t])+|\\Z|(?=[\\[\"()<>@,;:\\\\\".\\[\\]]))|\\[([^\\[\\]\\r\\\\]|\\\\.)*\\](?:(?:\\r\\n)?[ \\t])*)(?:\\.(?:(?:\\r\\n)?[ \\t])*(?:[^()<>@,;:\\\\\".\\[\\] \\000-\\031]+(?:(?:(?:\\r\\n)?[ \\t])+|\\Z|(?=[\\[\"()<>@,;:\\\\\".\\[\\]]))|\\[([^\\[\\]\\r\\\\]|\\\\.)*\\](?:(?:\\r\\n)?[ \\t])*))*\\>(?:(?:\\r\\n)?[ \\t])*))*)?;\\s*)";
 
-  private static Pattern init_surname_p = Pattern.compile(INITIALS_SURNAME_PATTERN);
-  private static Pattern org_p = Pattern.compile(ORGANISATION_PATTERN);
-  private static Pattern single_name_p = Pattern.compile(SINGLE_NAME_PATTERN);
-  private static Pattern surname_firstname_p = Pattern.compile(SURNAME_FIRSTNAE_PATTERN);
-  private static Pattern surname_punc_firstname_p = Pattern.compile(SURNAME_PUNC_FIRSTNAME_PATTERN);
-  private static Pattern firstname_surname_pattern_p = Pattern.compile(FIRSTNAME_SURNAME_PATTERN);
-  private static Pattern and_name_list_pattern_p = Pattern.compile(AND_NAME_LIST_PATTERN);
+  private static final Pattern INIT_SURNAME_P = Pattern.compile(INITIALS_SURNAME_PATTERN);
+  private static final Pattern ORG_P = Pattern.compile(ORGANISATION_PATTERN);
+  private static final Pattern SINGLE_NAME_P = Pattern.compile(SINGLE_NAME_PATTERN);
+  private static final Pattern SURNAME_FIRSTNAME_P = Pattern.compile(SURNAME_FIRSTNAE_PATTERN);
+  private static final Pattern SURNAME_PUNC_FIRSTNAME_P =
+      Pattern.compile(SURNAME_PUNC_FIRSTNAME_PATTERN);
+  private static final Pattern FIRSTNAME_SURNAME_PATTERN_P =
+      Pattern.compile(FIRSTNAME_SURNAME_PATTERN);
+  private static final Pattern AND_NAME_LIST_PATTERN_P = Pattern.compile(AND_NAME_LIST_PATTERN);
 
   public static String[] parseList(String source) {
     // pattern 1
     if (source.matches(AND_NAME_LIST_PATTERN)) {
       // initials1, firstName, secondName, initials2, thirdName, forthName
-      Matcher m = and_name_list_pattern_p.matcher(source);
+      Matcher m = AND_NAME_LIST_PATTERN_P.matcher(source);
       if (m.find() && m.groupCount() == 6) {
         String initials1 = m.group(1);
         String firstName = m.group(2);
@@ -191,7 +195,7 @@ public class CollectorNameParser {
     }
     if (source.matches(ORGANISATION_PATTERN)) {
       log.debug(source + ": ORGANISATION_PATTERN");
-      Matcher m = org_p.matcher(source);
+      Matcher m = ORG_P.matcher(source);
       if (m.find() && m.groupCount() == 1) {
         return m.group(1);
       }
@@ -204,7 +208,7 @@ public class CollectorNameParser {
 
     if (source.matches(SINGLE_NAME_PATTERN)) {
       log.debug(source + ": SINGLE_NAME_PATTERN");
-      Matcher m = single_name_p.matcher(source);
+      Matcher m = SINGLE_NAME_P.matcher(source);
       if (m.find() && m.groupCount() == 1) {
         String surname = m.group(1);
         return generateName(null, surname, null, null, null);
@@ -214,7 +218,7 @@ public class CollectorNameParser {
     // Dr NL Kirby
     if (source.matches(INITIALS_SURNAME_PATTERN)) {
       log.debug(source + ": INITIALS_SURNAME_PATTERN");
-      Matcher m = init_surname_p.matcher(source);
+      Matcher m = INIT_SURNAME_P.matcher(source);
       if (m.find() && m.groupCount() == 2) {
         String inits = m.group(1);
         String surname = m.group(2);
@@ -224,7 +228,7 @@ public class CollectorNameParser {
     // Simon Starr
     if (source.matches(FIRSTNAME_SURNAME_PATTERN)) {
       log.debug(source + ": FIRSTNAME_SURNAME_PATTERN");
-      Matcher m = firstname_surname_pattern_p.matcher(source);
+      Matcher m = FIRSTNAME_SURNAME_PATTERN_P.matcher(source);
       if (m.find() && m.groupCount() == 3) {
         String first = m.group(1);
         String inits = m.group(2);
@@ -235,7 +239,7 @@ public class CollectorNameParser {
 
     if (source.matches(SURNAME_FIRSTNAE_PATTERN)) {
       log.debug(source + ": SURNAME_FIRSTNAE_PATTERN");
-      Matcher m = surname_firstname_p.matcher(source);
+      Matcher m = SURNAME_FIRSTNAME_P.matcher(source);
       if (m.find() && m.groupCount() == 3) {
         String surname = m.group(1);
         String inits = m.group(2);
@@ -246,7 +250,7 @@ public class CollectorNameParser {
 
     if (source.matches(SURNAME_PUNC_FIRSTNAME_PATTERN)) {
       log.debug(source + ": SURNAME_PUNC_FIRSTNAME_PATTERN");
-      Matcher m = surname_punc_firstname_p.matcher(source);
+      Matcher m = SURNAME_PUNC_FIRSTNAME_P.matcher(source);
       if (m.find() && m.groupCount() == 8) {
         String prefix = m.group(1);
         String surname = m.group(2);
@@ -257,17 +261,21 @@ public class CollectorNameParser {
         String initials2 = m.group(7);
         String prefix3 = m.group(8);
 
-        String final_prefix = "";
-        if (!Strings.isNullOrEmpty(prefix3)) final_prefix = prefix3;
-        else if (!Strings.isNullOrEmpty(prefix2)) final_prefix = prefix2;
-        else final_prefix = prefix;
+        String finalPrefix;
+        if (!Strings.isNullOrEmpty(prefix3)) {
+          finalPrefix = prefix3;
+        } else if (!Strings.isNullOrEmpty(prefix2)) {
+          finalPrefix = prefix2;
+        } else {
+          finalPrefix = prefix;
+        }
 
         return generateName(
             firstname,
             surname,
             Strings.isNullOrEmpty(initials) ? initials2 : initials,
             middlename,
-            final_prefix);
+            finalPrefix);
       }
     }
 
@@ -276,36 +284,39 @@ public class CollectorNameParser {
 
   public static String generateName(
       String firstName, String surname, String initials, String middlename, String surnamePrefix) {
-    String name = "";
+    StringBuilder name = new StringBuilder();
     if (!Strings.isNullOrEmpty(surnamePrefix)) {
-      name += surnamePrefix.trim() + " ";
+      name.append(surnamePrefix.trim()).append(" ");
     }
     if (!Strings.isNullOrEmpty(surname)) {
-      name += org.apache.commons.lang3.text.WordUtils.capitalize(surname.toLowerCase(), '-', '\'');
+      name.append(
+          org.apache.commons.lang3.text.WordUtils.capitalize(surname.toLowerCase(), '-', '\''));
     }
     if (!Strings.isNullOrEmpty(initials)) {
-      name += ", ";
+      name.append(", ");
       // R.J-P. will be converted to R.J.-.P.
       String newinit = initials.trim().replaceAll("[^\\p{Lu}\\p{Ll}-]", "");
       char[] inits = newinit.toCharArray();
       for (char init : inits) {
-        name += init + ".";
+        name.append(init).append(".");
       }
       // R.J.-.P. will be converted R.J-P.
-      name = name.replaceAll("\\.-\\.", "-");
+      name = new StringBuilder(name.toString().replaceAll("\\.-\\.", "-"));
     }
 
     if (!Strings.isNullOrEmpty(firstName)) {
       if (!Strings.isNullOrEmpty(initials)) {
-        name += " " + org.apache.commons.lang3.StringUtils.capitalize(firstName.toLowerCase());
+        name.append(" ")
+            .append(org.apache.commons.lang3.StringUtils.capitalize(firstName.toLowerCase()));
       } else {
-        name += ", " + org.apache.commons.lang3.StringUtils.capitalize(firstName.toLowerCase());
+        name.append(", ")
+            .append(org.apache.commons.lang3.StringUtils.capitalize(firstName.toLowerCase()));
       }
 
       if (!Strings.isNullOrEmpty(middlename)) {
-        name += " " + org.apache.commons.lang3.text.WordUtils.capitalize(middlename);
+        name.append(" ").append(org.apache.commons.lang3.text.WordUtils.capitalize(middlename));
       }
     }
-    return name.trim();
+    return name.toString().trim();
   }
 }
