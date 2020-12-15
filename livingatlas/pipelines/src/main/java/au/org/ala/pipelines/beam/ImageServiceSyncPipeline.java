@@ -95,11 +95,26 @@ public class ImageServiceSyncPipeline {
     // delete previous runs
     ALAFsUtils.deleteIfExist(fs, outputs);
 
-    // download the mapping from the image service
-    String outputDir = downloadImageMapping(options);
+    String multimedia =
+        String.join(
+            "/",
+            options.getInputPath(),
+            options.getDatasetId(),
+            options.getAttempt().toString(),
+            "interpreted",
+            "multimedia");
 
-    // run sync pipeline
-    run(options, outputDir);
+    if (ALAFsUtils.exists(fs, multimedia)) {
+
+      // download the mapping from the image service
+      String outputDir = downloadImageMapping(options);
+
+      // run sync pipeline
+      run(options, outputDir);
+
+    } else {
+      log.info("Interpreted multimedia directory not available for {}", options.getDatasetId());
+    }
   }
 
   /**
