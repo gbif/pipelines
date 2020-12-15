@@ -308,7 +308,14 @@ public class ALAUUIDMintingPipeline {
 
         orphanedUniqueKeys.inc();
       } else {
-        uuidRecordToEmit = uuidRecord;
+        uuidRecordToEmit =
+            ALAUUIDRecord.newBuilder()
+                .setFirstLoaded(uuidRecord.getFirstLoaded())
+                .setUniqueKey(uuidRecord.getUniqueKey())
+                .setUuid(uuidRecord.getUuid())
+                .setId(id)
+                .build();
+
         preservedUuids.inc();
       }
 
