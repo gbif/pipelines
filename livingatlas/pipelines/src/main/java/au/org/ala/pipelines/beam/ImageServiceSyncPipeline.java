@@ -79,11 +79,6 @@ public class ImageServiceSyncPipeline {
    */
   public static void run(ImageServicePipelineOptions options) throws IOException {
 
-    if (ValidationUtils.isInterpretedMultimediaAvroAvailable(options)) {
-      log.warn("No interpreted multimedia output for {} available", options.getDatasetId());
-      return;
-    }
-
     FileSystem fs =
         FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
             .getFs(options.getInputPath());
@@ -188,7 +183,7 @@ public class ImageServiceSyncPipeline {
                         kv ->
                             KV.of(
                                 kv.getValue(),
-                                kv.getKey().substring(kv.getKey().lastIndexOf('=') + 1))));
+                                kv.getKey().substring(kv.getKey().lastIndexOf("=") + 1))));
 
     // These are NOT image service URLs i.e. they should be URLs as provided
     // by the data publisher
