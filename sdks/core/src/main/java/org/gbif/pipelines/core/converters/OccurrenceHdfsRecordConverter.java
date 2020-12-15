@@ -338,7 +338,7 @@ public class OccurrenceHdfsRecordConverter {
       hr.setSamplesizevalue(br.getSampleSizeValue());
       hr.setRelativeorganismquantity(br.getRelativeOrganismQuantity());
       hr.setOccurrencestatus(br.getOccurrenceStatus());
-      hr.setIsclustered(br.getIsClustered());
+      hr.setIsincluster(br.getIsClustered());
 
       Optional.ofNullable(br.getRecordedByIds())
           .ifPresent(
@@ -488,7 +488,7 @@ public class OccurrenceHdfsRecordConverter {
               .filter(e -> e.getValue() != null && !e.getValue().isEmpty())
               .map(Entry::getKey)
               .collect(Collectors.toList());
-      hr.setExtensions(extensions);
+      hr.setDwcaextension(extensions);
     };
   }
 
