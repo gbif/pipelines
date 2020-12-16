@@ -47,12 +47,6 @@ public interface ALASolrPipelineOptions
 
   void setIncludeGbifTaxonomy(Boolean includeGbifTaxonomy);
 
-  @Description("Include sensitive data checks")
-  @Default.Boolean(false)
-  Boolean getIncludeSensitiveData();
-
-  void setIncludeSensitiveData(Boolean includeSensitiveData);
-
   @Description("SOLR batch size")
   @Default.Integer(500)
   Integer getSolrBatchSize();
@@ -70,16 +64,4 @@ public interface ALASolrPipelineOptions
   Integer getSolrRetryDurationInMins();
 
   void setSolrRetryDurationInMins(Integer solrRetryDurationInMins);
-
-  @Description("JackKnife path")
-  @Default.String("")
-  String getJackKnifePath();
-
-  void setJackKnifePath(String jackKnifePath);
-
-  @Description("Include jackknife")
-  @Default.Boolean(false)
-  Boolean getIncludeJackKnife();
-
-  void setIncludeJackKnife(Boolean includeJackKnife);
 }
