@@ -163,7 +163,6 @@ public class IndexRecordTransform implements Serializable {
     addToIndexRecord(br, indexRecord, skipKeys);
     addToIndexRecord(er, indexRecord, skipKeys);
     addToIndexRecord(mdr, indexRecord, skipKeys);
-    addToIndexRecord(mdr, indexRecord, skipKeys);
 
     // add event date
     try {
@@ -194,7 +193,6 @@ public class IndexRecordTransform implements Serializable {
             .put("gbif_s_" + entry.getRank().toString().toLowerCase(), entry.getName());
       }
 
-      String rank = txr.getAcceptedUsage().getRank().toString();
       indexRecord.getStrings().put("gbif_s_rank", txr.getAcceptedUsage().getRank().toString());
       indexRecord.getStrings().put("gbif_s_scientificName", txr.getAcceptedUsage().getName());
     }
@@ -209,7 +207,7 @@ public class IndexRecordTransform implements Serializable {
       indexRecord.getStrings().put("raw_" + key, entry.getValue());
     }
 
-    if (lr.getHasCoordinate()) {
+    if (lr != null && lr.getHasCoordinate() != null && lr.getHasCoordinate()) {
       addGeo(indexRecord, lr.getDecimalLatitude(), lr.getDecimalLongitude());
     }
 
@@ -279,9 +277,12 @@ public class IndexRecordTransform implements Serializable {
       }
     }
 
-    indexRecord.getBooleans().put("geospatial_kosher", lr.getHasCoordinate());
+    // FIXME see #99
+    boolean geospatialKosher =
+        lr.getHasCoordinate() != null && lr.getHasCoordinate() ? true : false;
+    indexRecord.getBooleans().put("geospatial_kosher", geospatialKosher);
 
-    // FIXME  - see #162
+    // see #162
     if (ur.getFirstLoaded() != null) {
       indexRecord
           .getDates()
