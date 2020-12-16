@@ -35,6 +35,11 @@ public class ClusteringServiceFactory {
   public static SerializableSupplier<ClusteringService> getInstanceSupplier(
       PipelinesConfig config) {
     return () -> {
+      if (config.getClusteringRelationshipConfig() == null
+          || config.getClusteringRelationshipConfig().getRelationshipTableName() == null) {
+        return null;
+      }
+
       String zk = getZk(config);
       Connection c = HbaseConnectionFactory.getInstance(zk).getConnection();
       return getInstance(c, config.getClusteringRelationshipConfig());
@@ -43,6 +48,11 @@ public class ClusteringServiceFactory {
 
   public static SerializableSupplier<ClusteringService> createSupplier(PipelinesConfig config) {
     return () -> {
+      if (config.getClusteringRelationshipConfig() == null
+          || config.getClusteringRelationshipConfig().getRelationshipTableName() == null) {
+        return null;
+      }
+
       String zk = getZk(config);
 
       Connection c;
