@@ -24,9 +24,7 @@ import org.gbif.pipelines.io.avro.SampleRecord;
 import org.joda.time.Duration;
 import org.slf4j.MDC;
 
-/**
- * Pipeline that joins sample data and index records and indexes to SOLR.
- */
+/** Pipeline that joins sample data and index records and indexes to SOLR. */
 @Slf4j
 public class IndexRecordToSolrPipeline {
 
