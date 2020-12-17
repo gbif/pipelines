@@ -1,10 +1,14 @@
 package org.gbif.pipelines.crawler.interpret;
 
 import com.google.common.util.concurrent.AbstractIdleService;
+import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
@@ -23,6 +27,7 @@ public class InterpretationService extends AbstractIdleService {
   private MessageListener listener;
   private MessagePublisher publisher;
   private CuratorFramework curator;
+  private CloseableHttpClient httpClient;
   private ExecutorService executor;
 
   public InterpretationService(InterpreterConfiguration config) {
@@ -41,11 +46,18 @@ public class InterpretationService extends AbstractIdleService {
         config.standaloneNumberThreads == null
             ? null
             : Executors.newFixedThreadPool(config.standaloneNumberThreads);
-    PipelinesHistoryWsClient client =
+
+    PipelinesHistoryWsClient historyWsClient =
         c.registry.newRegistryInjector().getInstance(PipelinesHistoryWsClient.class);
+    httpClient =
+        HttpClients.custom()
+            .setDefaultRequestConfig(
+                RequestConfig.custom().setConnectTimeout(60_000).setSocketTimeout(60_000).build())
+            .build();
 
     InterpretationCallback callback =
-        new InterpretationCallback(config, publisher, curator, client, executor);
+        new InterpretationCallback(
+            config, publisher, curator, historyWsClient, httpClient, executor);
 
     String routingKey =
         PipelinesVerbatimMessage.ROUTING_KEY + "." + config.processRunner.toLowerCase();
@@ -58,6 +70,11 @@ public class InterpretationService extends AbstractIdleService {
     publisher.close();
     curator.close();
     executor.shutdown();
+    try {
+      httpClient.close();
+    } catch (IOException e) {
+      log.error("Can't close ES http client connection");
+    }
     log.info("Stopping pipelines-interpret-dataset service");
   }
 }

@@ -1,18 +1,30 @@
 package org.gbif.pipelines.crawler.interpret;
 
+import static org.gbif.common.parsers.date.DateComponentOrdering.*;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
+import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
@@ -30,29 +42,34 @@ import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 public class InterpretationCallback extends AbstractMessageCallback<PipelinesVerbatimMessage>
     implements StepHandler<PipelinesVerbatimMessage, PipelinesInterpretedMessage> {
 
+  private static final ObjectMapper MAPPER = new ObjectMapper();
+
   private final InterpreterConfiguration config;
   private final MessagePublisher publisher;
   private final CuratorFramework curator;
-  private final PipelinesHistoryWsClient client;
+  private final PipelinesHistoryWsClient historyWsClient;
+  private final CloseableHttpClient httpClient;
   private final ExecutorService executor;
 
   public InterpretationCallback(
       InterpreterConfiguration config,
       MessagePublisher publisher,
       CuratorFramework curator,
-      PipelinesHistoryWsClient client,
+      PipelinesHistoryWsClient historyWsClient,
+      CloseableHttpClient httpClient,
       ExecutorService executor) {
     this.config = config;
     this.publisher = publisher;
     this.curator = curator;
-    this.client = client;
+    this.historyWsClient = historyWsClient;
+    this.httpClient = httpClient;
     this.executor = executor;
   }
 
   @Override
   public void handleMessage(PipelinesVerbatimMessage message) {
     PipelinesCallback.<PipelinesVerbatimMessage, PipelinesInterpretedMessage>builder()
-        .client(client)
+        .client(historyWsClient)
         .config(config)
         .curator(curator)
         .stepType(StepType.VERBATIM_TO_INTERPRETED)
@@ -92,7 +109,11 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
               : String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, verbatim);
 
       ProcessRunnerBuilderBuilder builder =
-          ProcessRunnerBuilder.builder().config(config).message(message).inputPath(path);
+          ProcessRunnerBuilder.builder()
+              .config(config)
+              .message(message)
+              .inputPath(path)
+              .defaultDateFormat(getDefaultDateFormat(datasetId));
 
       Predicate<StepRunner> runnerPr = sr -> config.processRunner.equalsIgnoreCase(sr.name());
 
@@ -266,5 +287,42 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
 
     return HdfsUtils.exists(
         config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig, path);
+  }
+
+  // TODO: Integrate with latest Spring Registry
+  @SneakyThrows
+  private String getDefaultDateFormat(String datasetKey) {
+    String url = config.stepConfig.registry.wsUrl + "/dataset/" + datasetKey + "/machineTag";
+    HttpResponse response = httpClient.execute(new HttpGet(url));
+    if (response.getStatusLine().getStatusCode() != 200) {
+      throw new IOException("GBIF API exception " + response.getStatusLine().getReasonPhrase());
+    }
+
+    List<MachineTag> machineTags =
+        MAPPER.readValue(
+            response.getEntity().getContent(), new TypeReference<List<MachineTag>>() {});
+
+    Optional<String> defaultDateFormat =
+        machineTags.stream()
+            .filter(x -> x.getName().equals("default_date_format"))
+            .map(MachineTag::getValue)
+            .findFirst();
+
+    if (!defaultDateFormat.isPresent()) {
+      return null;
+    } else if (defaultDateFormat.get().equals("ISO")) {
+      return Arrays.stream(ISO_FORMATS)
+          .map(DateComponentOrdering::name)
+          .collect(Collectors.joining(","));
+    } else if (defaultDateFormat.get().equals("DMY")) {
+      return Arrays.stream(DMY_FORMATS)
+          .map(DateComponentOrdering::name)
+          .collect(Collectors.joining(","));
+    } else if (defaultDateFormat.get().equals("MDY")) {
+      return Arrays.stream(MDY_FORMATS)
+          .map(DateComponentOrdering::name)
+          .collect(Collectors.joining(","));
+    }
+    return null;
   }
 }
