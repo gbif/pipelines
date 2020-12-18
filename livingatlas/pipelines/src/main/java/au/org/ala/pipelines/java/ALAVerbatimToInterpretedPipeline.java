@@ -133,6 +133,11 @@ public class ALAVerbatimToInterpretedPipeline {
   public static void run(InterpretationPipelineOptions options, ExecutorService executor) {
 
     log.info("Pipeline has been started - {}", LocalDateTime.now());
+    boolean verbatimAvroAvailable = ValidationUtils.isVerbatimAvroAvailable(options);
+    if (!verbatimAvroAvailable) {
+      log.warn("Verbatim AVRO not available for {}", options.getDatasetId());
+      return;
+    }
 
     String datasetId = options.getDatasetId();
     Integer attempt = options.getAttempt();
@@ -221,7 +226,6 @@ public class ALAVerbatimToInterpretedPipeline {
             .collectionKvStoreSupplier(ALACollectionKVStoreFactory.getInstanceSupplier(config))
             .create();
 
-    // ALA specific - Taxonomy
     // ALA specific - Taxonomy
     ALATaxonomyTransform alaTaxonomyTransform =
         ALATaxonomyTransform.builder()
