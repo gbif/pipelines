@@ -19,8 +19,7 @@ import org.gbif.pipelines.crawler.balancer.BalancerConfiguration;
 public class PipelinesIndexedMessageHandler {
 
   /** Main handler, basically computes the runner type and sends to the same consumer */
-  public static void handle(
-      BalancerConfiguration config, MessagePublisher publisher, PipelinesBalancerMessage message)
+  public static void handle(MessagePublisher publisher, PipelinesBalancerMessage message)
       throws IOException {
 
     log.info("Process PipelinesIndexedMessage - {}", message);

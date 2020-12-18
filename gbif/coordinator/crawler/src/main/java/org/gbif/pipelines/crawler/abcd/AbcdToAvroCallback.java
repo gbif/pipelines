@@ -116,12 +116,12 @@ public class AbcdToAvroCallback extends AbstractMessageCallback<PipelinesAbcdMes
 
   @SneakyThrows
   private File[] uncompress(Path abcdaLocation, Path destination) {
-    if (!Files.exists(abcdaLocation)) {
+    if (!abcdaLocation.toFile().exists()) {
       throw new FileNotFoundException(
           "abcdaLocation does not exist: " + abcdaLocation.toAbsolutePath());
     }
 
-    if (Files.exists(destination)) {
+    if (destination.toFile().exists()) {
       // clean up any existing folder
       log.debug("Deleting existing archive folder [{}]", destination.toAbsolutePath());
       org.gbif.utils.file.FileUtils.deleteDirectoryRecursively(destination.toFile());
