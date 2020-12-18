@@ -229,7 +229,6 @@ public class ALAVerbatimToInterpretedPipeline {
             .init();
 
     // ALA specific - Taxonomy
-    // ALA specific - Taxonomy
     ALATaxonomyTransform alaTaxonomyTransform =
         ALATaxonomyTransform.builder()
             .datasetId(datasetId)
