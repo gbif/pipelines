@@ -8,7 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
 import org.gbif.common.messaging.api.messages.PipelinesHdfsViewBuiltMessage;
-import org.gbif.pipelines.crawler.balancer.BalancerConfiguration;
 
 /**
  * Populates and sends the {@link PipelinesHdfsViewBuiltMessage} message, the main method is {@link
