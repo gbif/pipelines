@@ -79,6 +79,11 @@ public class ImageServiceSyncPipeline {
    */
   public static void run(ImageServicePipelineOptions options) throws IOException {
 
+    if (ValidationUtils.isInterpretedMultimediaAvroAvailable(options)) {
+      log.warn("No interpreted multimedia output for {} available", options.getDatasetId());
+      return;
+    }
+
     FileSystem fs =
         FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
             .getFs(options.getInputPath());
