@@ -371,7 +371,7 @@ function spark-cluster-pipeline() {
 
     if [[ $ltype = "spark-cluster" ]] ; then
         $_D /data/spark/bin/spark-submit \
-            --name $NAME \
+            --name "$NAME" \
             $CONF \
             $(toArg $SH_ARGS num-executors) \
             $(toArg $SH_ARGS executor-cores) \
