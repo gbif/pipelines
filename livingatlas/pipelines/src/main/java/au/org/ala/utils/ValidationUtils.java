@@ -2,7 +2,7 @@ package au.org.ala.utils;
 
 import static au.org.ala.pipelines.beam.ALAUUIDMintingPipeline.UNIQUE_COMPOSITE_KEY_JOIN_CHAR;
 
-import au.org.ala.pipelines.options.IndexingPipelineOptions;
+import au.org.ala.pipelines.options.ALASolrPipelineOptions;
 import au.org.ala.pipelines.options.UUIDPipelineOptions;
 import java.io.FileNotFoundException;
 import java.io.InputStreamReader;
@@ -37,7 +37,6 @@ public class ValidationUtils {
   public static final String NOT_INTERPRET = "NOT_INTERPRET";
   public static final String NOT_VALIDATED = "NOT_VALIDATED";
   public static final String UUID_REQUIRED = "UUID_REQUIRED";
-  public static final String SDS_REQUIRED = "SDS_REQUIRED";
   public static final String NOT_INDEXED = "NOT_INDEXED";
   public static final String HAS_EMPTY_KEYS = "HAS_EMPTY_KEYS";
   public static final String HAS_DUPLICATES = "HAS_DUPLICATES";
@@ -45,12 +44,10 @@ public class ValidationUtils {
   public static final String IMAGE_SERVICE_METRICS = "image-service-metrics.yml";
   public static final String UUID_METRICS = "uuid-metrics.yml";
   public static final String INTERPRETATION_METRICS = "interpretation-metrics.yml";
-  public static final String SDS_METRICS = "sds-metrics.yml";
   public static final String VERBATIM_METRICS = "dwca-metrics.yml";
   public static final String INDEXING_METRICS = "indexing-metrics.yml";
   public static final String SENSITIVE_METRICS = "sensitive-metrics.yml";
   public static final String JACKKNIFE_METRICS = "jackknife-metrics.yml";
-  public static final String CLUSTERING_METRICS = "clustering-metrics.yml";
 
   public static final String DUPLICATE_KEY_COUNT = "duplicateKeyCount";
   public static final String EMPTY_KEY_RECORDS = "emptyKeyRecords";
@@ -62,7 +59,7 @@ public class ValidationUtils {
   public static final String METADATA_AVAILABLE = "metadataAvailable";
 
   /** Checks a dataset can be indexed. */
-  public static ValidationResult checkReadyForIndexing(IndexingPipelineOptions options) {
+  public static ValidationResult checkReadyForIndexing(ALASolrPipelineOptions options) {
 
     ValidationResult isValid = checkValidationFile(options);
     if (!isValid.getValid()) {
@@ -74,16 +71,12 @@ public class ValidationUtils {
             .getFs(options.getInputPath());
 
     return checkReadyForIndexing(
-        fs,
-        options.getInputPath(),
-        options.getDatasetId(),
-        options.getAttempt(),
-        options.getIncludeSensitiveData());
+        fs, options.getInputPath(), options.getDatasetId(), options.getAttempt());
   }
 
   /** Checks a dataset can be indexed. */
   public static ValidationResult checkReadyForIndexing(
-      FileSystem fs, String filePath, String datasetId, Integer attempt, boolean sdsRequired) {
+      FileSystem fs, String filePath, String datasetId, Integer attempt) {
 
     ValidationResult isValid = checkValidationFile(fs, filePath, datasetId, attempt);
 
@@ -93,11 +86,9 @@ public class ValidationUtils {
 
     // check date on DwCA?
     long verbatimTime = metricsModificationTime(fs, filePath, datasetId, attempt, VERBATIM_METRICS);
-
     // check date on Interpretation?
     long interpretationTime =
         metricsModificationTime(fs, filePath, datasetId, attempt, INTERPRETATION_METRICS);
-
     // check UUID date
     long uuidTime = metricsModificationTime(fs, filePath, datasetId, attempt, UUID_METRICS);
 
@@ -105,44 +96,15 @@ public class ValidationUtils {
       log.warn(
           "The imported verbatim is newer than the interpretation. Interpretation should be re-ran.");
     }
-    if (verbatimTime > uuidTime) {
+    if (interpretationTime > uuidTime) {
       log.warn(
-          "The imported verbatim AVRO is newer than the uuid. Unable to index until UUID minting re-ran");
+          "The imported interpretation is newer than the uuid. Unable to index until UUID minting re-ran");
       return ValidationResult.builder().valid(false).message(UUID_REQUIRED).build();
     }
 
-    if (sdsRequired) {
-      boolean sdsRan = metricsAvailable(fs, filePath, datasetId, attempt, SDS_METRICS);
-      if (!sdsRan) {
-        return ValidationResult.builder().valid(false).message(SDS_REQUIRED).build();
-      }
-
-      long sdsTime = metricsModificationTime(fs, filePath, datasetId, attempt, SDS_METRICS);
-      if (interpretationTime > sdsTime) {
-        log.warn(
-            "The imported interpretation is newer than the SDS. Unable to index until SDS re-ran");
-        return ValidationResult.builder().valid(false).message(SDS_REQUIRED).build();
-      }
-    }
+    // FIXME  check image sync-ed if indexWithImages =  true
 
     return ValidationResult.OK;
-  }
-
-  /** Checks a dataset can be indexed. */
-  public static boolean isInterpretationAvailable(InterpretationPipelineOptions options) {
-    FileSystem fs =
-        FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
-            .getFs(options.getInputPath());
-
-    return isInterpretationAvailable(
-        fs, options.getInputPath(), options.getDatasetId(), options.getAttempt());
-  }
-
-  /** Checks a dataset can be indexed. */
-  public static boolean isInterpretationAvailable(
-      FileSystem fs, String filePath, String datasetId, Integer attempt) {
-    // check date on DwCA?
-    return metricsAvailable(fs, filePath, datasetId, attempt, INTERPRETATION_METRICS);
   }
 
   /**
@@ -409,15 +371,6 @@ public class ValidationUtils {
     } else {
       throw new FileNotFoundException("Unable to read metrics file at: " + path);
     }
-  }
-
-  @SneakyThrows
-  public static boolean metricsAvailable(
-      FileSystem fs, String filePath, String datasetId, Integer attempt, String metricsFile) {
-    String path = String.join("/", filePath, datasetId, attempt.toString(), metricsFile);
-    Path metrics = new Path(path);
-    log.info("Checking path for metrics: {}", path);
-    return fs.exists(metrics);
   }
 
   /**
