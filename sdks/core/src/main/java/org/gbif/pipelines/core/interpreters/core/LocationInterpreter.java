@@ -41,8 +41,8 @@ public class LocationInterpreter {
 
   // COORDINATE_UNCERTAINTY_METERS bounds are exclusive bounds
   private static final double COORDINATE_UNCERTAINTY_METERS_LOWER_BOUND = 0d;
-  // 5000 km seems safe
-  private static final double COORDINATE_UNCERTAINTY_METERS_UPPER_BOUND = 5_000_000d;
+  // https://github.com/gbif/pipelines/issues/449
+  private static final double COORDINATE_UNCERTAINTY_METERS_UPPER_BOUND = 20_037_509d;
 
   private static final double COORDINATE_PRECISION_LOWER_BOUND = 0d;
   // 45 close to 5000 km
