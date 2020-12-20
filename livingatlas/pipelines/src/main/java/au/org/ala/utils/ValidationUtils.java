@@ -20,6 +20,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
+import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
 import org.gbif.pipelines.core.utils.ModelUtils;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -98,6 +99,8 @@ public class ValidationUtils {
           "The imported interpretation is newer than the uuid. Unable to index until UUID minting re-ran");
       return ValidationResult.builder().valid(false).message(UUID_REQUIRED).build();
     }
+
+    // FIXME  check image sync-ed if indexWithImages =  true
 
     return ValidationResult.OK;
   }
@@ -385,5 +388,28 @@ public class ValidationUtils {
       log.error(e.getMessage(), e);
     }
     return verbatimAvroAvailable;
+  }
+
+  /**
+   * Checks that verbatim avro is present using the inputPath value of options.
+   *
+   * @param options
+   * @return true if verbatim avro is available
+   */
+  public static boolean isInterpretedMultimediaAvroAvailable(
+      InterpretationPipelineOptions options) {
+    boolean multimediaAvroAvailable = false;
+    try {
+      FileSystem fs =
+          FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
+              .getFs(options.getInputPath());
+
+      String path = PathBuilder.buildDatasetAttemptPath(options, "multimedia", true);
+
+      multimediaAvroAvailable = ALAFsUtils.exists(fs, path);
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+    }
+    return multimediaAvroAvailable;
   }
 }
