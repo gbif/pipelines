@@ -102,6 +102,8 @@ public class ValidationUtils {
       return ValidationResult.builder().valid(false).message(UUID_REQUIRED).build();
     }
 
+    // FIXME  check image sync-ed if indexWithImages =  true
+
     return ValidationResult.OK;
   }
 
