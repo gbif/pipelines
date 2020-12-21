@@ -38,7 +38,7 @@ collectory:
   httpHeaders:
     Authorization: add-a-api-key-here
 imageService:
-  wsUrl: https://images.ala.org.au
+  wsUrl: https://aws-image-service-pipelines-test.ala.org.au/
   timeoutSec: 70
   httpHeaders:
     apiKey: add-a-api-key-here
@@ -152,8 +152,9 @@ layerCrawler:
 # class: au.org.ala.pipelines.java.ALAInterpretedToSolrIndexPipeline
 index:
   inputPath: '{fsPath}/pipelines-data'
+  targetPath: '{fsPath}/pipelines-data'
   solrCollection: biocache
-  includeSampling: false
+  includeSampling: true
   includeImages: true
   includeSpeciesLists: true
   runner: SparkRunner

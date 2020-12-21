@@ -20,6 +20,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
+import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
 import org.gbif.pipelines.core.utils.ModelUtils;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -36,7 +37,6 @@ public class ValidationUtils {
   public static final String NOT_INTERPRET = "NOT_INTERPRET";
   public static final String NOT_VALIDATED = "NOT_VALIDATED";
   public static final String UUID_REQUIRED = "UUID_REQUIRED";
-  public static final String NOT_SAMPLED = "NOT_SAMPLED";
   public static final String NOT_INDEXED = "NOT_INDEXED";
   public static final String HAS_EMPTY_KEYS = "HAS_EMPTY_KEYS";
   public static final String HAS_DUPLICATES = "HAS_DUPLICATES";
@@ -367,5 +367,47 @@ public class ValidationUtils {
     } else {
       throw new FileNotFoundException("Unable to read metrics file at: " + path);
     }
+  }
+
+  /**
+   * Checks that verbatim avro is present using the inputPath value of options.
+   *
+   * @param options
+   * @return true if verbatim avro is available
+   */
+  public static boolean isVerbatimAvroAvailable(InterpretationPipelineOptions options) {
+    boolean verbatimAvroAvailable = false;
+    try {
+      FileSystem fs =
+          FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
+              .getFs(options.getInputPath());
+      verbatimAvroAvailable = ALAFsUtils.exists(fs, options.getInputPath());
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+    }
+    return verbatimAvroAvailable;
+  }
+
+  /**
+   * Checks that verbatim avro is present using the inputPath value of options.
+   *
+   * @param options
+   * @return true if verbatim avro is available
+   */
+  public static boolean isInterpretedMultimediaAvroAvailable(
+      InterpretationPipelineOptions options) {
+    boolean multimediaAvroAvailable = false;
+    try {
+      FileSystem fs =
+          FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
+              .getFs(options.getInputPath());
+
+      String path = PathBuilder.buildDatasetAttemptPath(options, "multimedia", true);
+
+      multimediaAvroAvailable = ALAFsUtils.exists(fs, path);
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+    }
+    return multimediaAvroAvailable;
   }
 }
