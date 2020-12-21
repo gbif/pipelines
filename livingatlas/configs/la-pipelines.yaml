@@ -154,7 +154,7 @@ index:
   inputPath: '{fsPath}/pipelines-data'
   targetPath: '{fsPath}/pipelines-data'
   solrCollection: biocache
-  includeSampling: false
+  includeSampling: true
   includeImages: true
   includeSpeciesLists: true
   runner: SparkRunner
