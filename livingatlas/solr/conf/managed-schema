@@ -318,7 +318,7 @@
   <field name="preparations"  type="string" docValues="true" indexed="true"/>
   <field name="previousIdentifications"  type="string" docValues="true" indexed="true"/>
   <field name="recordNumber"  type="string" docValues="true" indexed="true"/>
-  <field name="recordedBy"  type="string" docValues="true" indexed="true"/>
+  <field name="recordedBy"  type="string" docValues="true" indexed="true" multiValued="true"/>
   <field name="references"  type="string" docValues="true" indexed="true"/>
   <field name="relatedResourceID"  type="string" docValues="true" indexed="true"/>
   <field name="relationshipAccordingTo"  type="string" docValues="true" indexed="true"/>
@@ -397,7 +397,7 @@
   <field name="institutionName" type="string" docValues="true" indexed="true" />
   <field name="collectionName" type="string" docValues="true" indexed="true" />
 
-  <field name="machineTags"  type="string" docValues="true" indexed="true"  multiValued="true" />
+  <field name="machineTags"  type="string" docValues="true" indexed="true" multiValued="true" />
 
   <!-- ALA specific fields -->
   <dynamicField name="gbif_s_*" type="string" docValues="true" indexed="true" />
