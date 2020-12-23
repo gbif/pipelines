@@ -4,8 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import au.org.ala.pipelines.beam.*;
-import au.org.ala.pipelines.beam.ALAInterpretedToLatLongCSVPipeline;
-import au.org.ala.pipelines.beam.ALASamplingToAvroPipeline;
 import au.org.ala.pipelines.beam.ALAUUIDMintingPipeline;
 import au.org.ala.pipelines.beam.DwcaToVerbatimPipeline;
 import au.org.ala.pipelines.options.ALASolrPipelineOptions;
@@ -145,6 +143,7 @@ public class CompleteIngestJavaPipelineTestIT {
             });
     ALAUUIDMintingPipeline.run(uuidOptions);
 
+    // run SDS checks
     InterpretationPipelineOptions sensitivityOptions =
         PipelinesOptionsFactory.create(
             InterpretationPipelineOptions.class,
@@ -159,33 +158,6 @@ public class CompleteIngestJavaPipelineTestIT {
               "--useExtendedRecordId=true"
             });
     ALAInterpretedToSensitivePipeline.run(sensitivityOptions);
-
-    // export lat lngs
-    AllDatasetsPipelinesOptions latLngOptions =
-        PipelinesOptionsFactory.create(
-            AllDatasetsPipelinesOptions.class,
-            new String[] {
-              "--datasetId=" + datasetID,
-              "--attempt=1",
-              "--runner=DirectRunner",
-              "--targetPath=/tmp/la-pipelines-test/complete-pipeline-java",
-              "--inputPath=/tmp/la-pipelines-test/complete-pipeline-java",
-              "--properties=" + TestUtils.getPipelinesConfigFile()
-            });
-    LatLongPipeline.run(latLngOptions);
-
-    // sample
-    LayerCrawler.init(
-        (new CombinedYamlConfiguration(
-            new String[] {
-              "--datasetId=" + datasetID,
-              "--attempt=1",
-              "--runner=DirectRunner",
-              "--targetPath=/tmp/la-pipelines-test/complete-pipeline-java",
-              "--inputPath=/tmp/la-pipelines-test/complete-pipeline-java",
-              "--config=" + TestUtils.getPipelinesConfigFile()
-            })));
-    LayerCrawler.run(latLngOptions);
 
     // index record generation
     ALASolrPipelineOptions solrOptions =
@@ -204,6 +176,34 @@ public class CompleteIngestJavaPipelineTestIT {
             });
     IndexRecordPipeline.run(solrOptions);
 
+    // export lat lngs
+    AllDatasetsPipelinesOptions latLngOptions =
+        PipelinesOptionsFactory.create(
+            AllDatasetsPipelinesOptions.class,
+            new String[] {
+              "--datasetId=" + datasetID,
+              "--attempt=1",
+              "--runner=DirectRunner",
+              "--targetPath=/tmp/la-pipelines-test/complete-pipeline-java",
+              "--inputPath=/tmp/la-pipelines-test/complete-pipeline-java",
+              "--allDatasetsInputPath=/tmp/la-pipelines-test/complete-pipeline-java/all-datasets",
+              "--properties=" + TestUtils.getPipelinesConfigFile()
+            });
+    LatLongPipeline.run(latLngOptions);
+
+    // sample
+    LayerCrawler.init(
+        (new CombinedYamlConfiguration(
+            new String[] {
+              "--datasetId=" + datasetID,
+              "--attempt=1",
+              "--runner=DirectRunner",
+              "--targetPath=/tmp/la-pipelines-test/complete-pipeline-java",
+              "--inputPath=/tmp/la-pipelines-test/complete-pipeline-java",
+              "--config=" + TestUtils.getPipelinesConfigFile()
+            })));
+    LayerCrawler.run(latLngOptions);
+
     // index into SOLR
     ALASolrPipelineOptions solrOptions2 =
         PipelinesOptionsFactory.create(
@@ -220,6 +220,7 @@ public class CompleteIngestJavaPipelineTestIT {
               "--zkHost=" + SolrUtils.getZkHost(),
               "--solrCollection=" + SolrUtils.BIOCACHE_TEST_SOLR_COLLECTION,
               "--includeSampling=true",
+              "--includeSensitiveData=true",
               "--includeImages=false"
             });
     IndexRecordToSolrPipeline.run(solrOptions2);

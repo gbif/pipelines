@@ -170,8 +170,14 @@ public class CompleteIngestPipelineTestIT {
               "--allDatasetsInputPath=/tmp/la-pipelines-test/complete-pipeline/all-datasets",
               "--properties=" + TestUtils.getPipelinesConfigFile(),
               "--includeSampling=true",
+              "--includeSensitiveData=true",
               "--includeImages=false"
             });
+
+    // check ready for index - should be true as includeSampling=true and sampling now generated
+    assertTrue(ValidationUtils.checkReadyForIndexing(solrOptions).getValid());
+
+    IndexRecordPipeline.run(solrOptions);
 
     // export lat lngs
     AllDatasetsPipelinesOptions latLngOptions =
@@ -183,6 +189,7 @@ public class CompleteIngestPipelineTestIT {
               "--runner=DirectRunner",
               "--targetPath=/tmp/la-pipelines-test/complete-pipeline",
               "--inputPath=/tmp/la-pipelines-test/complete-pipeline",
+              "--allDatasetsInputPath=/tmp/la-pipelines-test/complete-pipeline/all-datasets",
               "--properties=" + TestUtils.getPipelinesConfigFile()
             });
     LatLongPipeline.run(latLngOptions);
@@ -201,11 +208,6 @@ public class CompleteIngestPipelineTestIT {
             })));
     LayerCrawler.run(latLngOptions);
 
-    // check ready for index - should be true as includeSampling=true and sampling now generated
-    assertTrue(ValidationUtils.checkReadyForIndexing(solrOptions).getValid());
-
-    IndexRecordPipeline.run(solrOptions);
-
     ALASolrPipelineOptions solrOptions2 =
         PipelinesOptionsFactory.create(
             ALASolrPipelineOptions.class,
@@ -221,6 +223,7 @@ public class CompleteIngestPipelineTestIT {
               "--zkHost=" + SolrUtils.getZkHost(),
               "--solrCollection=" + SolrUtils.BIOCACHE_TEST_SOLR_COLLECTION,
               "--includeSampling=true",
+              "--includeSensitiveData=true",
               "--includeImages=false"
             });
     IndexRecordToSolrPipeline.run(solrOptions2);
