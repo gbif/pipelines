@@ -154,6 +154,7 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
             .to(lr)
             .when(er -> !er.getCoreTerms().isEmpty())
             .via(LocationInterpreter.interpretCountryAndCoordinates(countryKvStore, mdr))
+            .via(ALALocationInterpreter.interpretStateProvince(stateProvinceKvStore))
             .via(LocationInterpreter::interpretContinent)
             .via(LocationInterpreter::interpretWaterBody)
             .via(LocationInterpreter::interpretMinimumElevationInMeters)

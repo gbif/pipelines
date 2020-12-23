@@ -32,11 +32,22 @@ fs:
 alaNameMatch:
   wsUrl: http://localhost:9179
   timeoutSec: 70
+sds:
+  wsUrl: http://localhost:9189
+  timeoutSec: 70
 collectory:
   wsUrl: https://collections.ala.org.au
   timeoutSec: 70
   httpHeaders:
     Authorization: add-a-api-key-here
+imageService:
+  wsUrl: https://aws-image-service-pipelines-test.ala.org.au/
+  timeoutSec: 70
+  httpHeaders:
+    apiKey: add-a-api-key-here
+speciesListService:
+  wsUrl: https://lists.ala.org.au
+  timeoutSec: 70
 geocodeConfig:
   country:
     path: /data/pipelines-shp/political
@@ -106,6 +117,7 @@ uuid:
 # class: au.org.ala.pipelines.beam.ALAInterpretedToLatLongCSVPipeline
 export-latlng:
   inputPath: '{fsPath}/pipelines-data'
+  allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
   runner: SparkRunner
   appName: Lat Long export for {datasetId}
 
@@ -113,6 +125,24 @@ export-latlng:
 sample:
   inputPath: '{fsPath}/pipelines-data'
   appName: Sample for {datasetId}
+  allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
+
+images:
+  runner: SparkRunner
+  inputPath: '{fsPath}/pipelines-data'
+  tempLocation: /tmp
+  # pipe separated list (note: YAML list not coming through correctly)
+  recognisedPaths: "https://images.ala.org.au"
+
+speciesLists:
+  runner: SparkRunner
+  inputPath: '{fsPath}/pipelines-data'
+  targetPath: '{fsPath}/pipelines-data'
+  speciesAggregatesPath: '{fsPath}/pipelines-species'
+  tempLocation: /tmp
+  maxDownloadAgeInMinutes: 1440
+  includeConservationStatus: true
+  includeInvasiveStatus: true
 
 # LayerCrawler specific configuration
 layerCrawler:
@@ -122,23 +152,22 @@ layerCrawler:
   batchStatusSleepTime: 1000
   downloadRetries: 5
 
-# class: au.org.ala.pipelines.beam.ALASamplingToAvroPipeline
-sample-avro:
+sensitive:
   inputPath: '{fsPath}/pipelines-data'
   runner: SparkRunner
-  ## For spark-cluster:
-  # appName: Add Sampling for {datasetId}
-  # useExtendedRecordId: true
-  ## For spark-embedded:
-  # appName: SamplingToAvro indexing for {datasetId}
 
 # class: au.org.ala.pipelines.java.ALAInterpretedToSolrIndexPipeline
 index:
   inputPath: '{fsPath}/pipelines-data'
+  targetPath: '{fsPath}/pipelines-data'
   solrCollection: biocache
   includeSampling: true
+  includeImages: true
+  includeSpeciesLists: true
+  includeSensitiveData: false
   runner: SparkRunner
   zkHost: localhost:9983
+  allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
   ## For spark-cluster:
   # appName: SOLR indexing for {datasetId}
   # runner: SparkRunner
@@ -184,6 +213,30 @@ interpret-sh-args:
     executor-memory: 7G
     driver-memory: 1G
 
+image-sync-sh-args:
+  local:
+    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
+  spark-embedded:
+    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
+  spark-cluster:
+    conf: spark.default.parallelism=144
+    num-executors: 16
+    executor-cores: 8
+    executor-memory: 7G
+    driver-memory: 1G
+
+image-load-sh-args:
+  local:
+    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
+  spark-embedded:
+    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
+  spark-cluster:
+    conf: spark.default.parallelism=144
+    num-executors: 16
+    executor-cores: 8
+    executor-memory: 7G
+    driver-memory: 1G
+
 uuid-sh-args:
   local:
     jvm: -Xmx8g -XX:+UseG1GC
@@ -198,11 +251,21 @@ uuid-sh-args:
 
 export-latlng-sh-args:
   local:
-    jvm:
+    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
   spark-embedded:
-    jvm:
+    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
   spark-cluster:
-    conf:
+    conf: spark.default.parallelism=144
+    num-executors: 8
+    executor-cores: 8
+    executor-memory: 16G
+    driver-memory: 4G
+
+sensitive-sh-args:
+  spark-embedded:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-cluster:
+    jvm: -Xmx8g -XX:+UseG1GC
     num-executors: 8
     executor-cores: 8
     executor-memory: 16G
@@ -214,11 +277,11 @@ sample-sh-args:
 
 sample-avro-sh-args:
   local:
-    jvm: -Xmx8g -XX:+UseG1GC
+    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
   spark-embedded:
-    jvm: -Xmx8g -XX:+UseG1GC
+    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
   spark-cluster:
-    conf: spark.default.parallelism=192
+    conf: spark.default.parallelism=144
     num-executors: 24
     executor-cores: 8
     executor-memory: 7G
@@ -234,4 +297,16 @@ index-sh-args:
     num-executors: 24
     executor-cores: 8
     executor-memory: 7G
+    driver-memory: 4G
+
+solr-sh-args:
+  local:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-embedded:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-cluster:
+    conf: spark.default.parallelism=500
+    num-executors: 6
+    executor-cores: 8
+    executor-memory: 24G
     driver-memory: 4G

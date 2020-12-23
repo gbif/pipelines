@@ -11,6 +11,7 @@ import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.SeekableInput;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.specific.SpecificDatumReader;
+import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.hadoop.fs.*;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.Record;
@@ -49,6 +50,20 @@ public class AvroReader {
   }
 
   /**
+   * Read {@link Record#getId()} distinct records
+   *
+   * @param clazz instance of {@link Record}
+   * @param path sting path, a wildcard can be used in the file name, like /a/b/c*.avro to read
+   *     multiple files
+   */
+  public static <T extends SpecificRecordBase> List<T> readObjects(
+      String hdfsSiteConfig, String coreSiteConfig, Class<T> clazz, String path) {
+    FileSystem fs = FsUtils.getFileSystem(hdfsSiteConfig, coreSiteConfig, path);
+    List<Path> paths = parseWildcardPath(fs, path);
+    return readObjects(fs, clazz, paths);
+  }
+
+  /**
    * Read {@link Record#getId()} unique records
    *
    * @param clazz instance of {@link Record}
@@ -78,6 +93,34 @@ public class AvroReader {
             duplicateSet.add(next.getId());
             log.warn("occurrenceId = {}, duplicates were found", saved.getId());
           }
+        }
+      }
+    }
+
+    return map;
+  }
+
+  /**
+   * Read {@link Record#getId()} distinct records
+   *
+   * @param clazz instance of {@link Record}
+   * @param paths list of paths to the files
+   */
+  @SneakyThrows
+  private static <T extends SpecificRecordBase> List<T> readObjects(
+      FileSystem fs, Class<T> clazz, List<Path> paths) {
+
+    List<T> map = new ArrayList<>();
+
+    for (Path path : paths) {
+      // Deserialize ExtendedRecord from disk
+      DatumReader<T> reader = new SpecificDatumReader<>(clazz);
+      try (SeekableInput input =
+              new AvroFSInput(fs.open(path), fs.getContentSummary(path).getLength());
+          DataFileReader<T> dataFileReader = new DataFileReader<>(input, reader)) {
+        while (dataFileReader.hasNext()) {
+          T next = dataFileReader.next();
+          map.add(next);
         }
       }
     }

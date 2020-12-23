@@ -1,6 +1,7 @@
 package au.org.ala.utils;
 
 import au.org.ala.kvs.ALAPipelinesConfig;
+import au.org.ala.pipelines.options.AllDatasetsPipelinesOptions;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -15,7 +16,6 @@ import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.*;
-import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.common.beam.options.BasePipelineOptions;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
@@ -43,6 +43,19 @@ public class ALAFsUtils {
         .toString();
   }
 
+  public static String buildPathMultimediaUsingTargetPath(BasePipelineOptions options) {
+    return PathBuilder.buildPath(
+            PathBuilder.buildDatasetAttemptPath(options, "interpreted", false), "multimedia")
+        .toString();
+  }
+
+  public static String buildPathMultimediaDeltaUsingTargetPath(BasePipelineOptions options) {
+    return PathBuilder.buildPath(
+            PathBuilder.buildDatasetAttemptPath(options, "multimedia-delta", false),
+            "multimedia-delta")
+        .toString();
+  }
+
   /**
    * Constructs the path for reading / writing generalised data. This is written outside of
    * /interpreted directory.
@@ -51,11 +64,9 @@ public class ALAFsUtils {
    * 'ala_sensitive_taxon'
    */
   public static String buildPathGeneralisedUsingTargetPath(
-      BasePipelineOptions options, String name, String uniqueId) {
+      InterpretationPipelineOptions options, String name) {
     return PathBuilder.buildPath(
-            PathBuilder.buildDatasetAttemptPath(options, "generalised", false),
-            name,
-            "generalise-" + uniqueId)
+            PathBuilder.buildDatasetAttemptPath(options, "generalised", false), name, "generalise")
         .toString();
   }
 
@@ -74,26 +85,40 @@ public class ALAFsUtils {
         .toString();
   }
 
-  /** Build a path to sampling output. */
-  public static String buildPathSamplingOutputUsingTargetPath(
-      InterpretationPipelineOptions options) {
+  public static String buildPathImageServiceUsingTargetPath(
+      BasePipelineOptions options, String name, String uniqueId) {
     return PathBuilder.buildPath(
-            PathBuilder.buildDatasetAttemptPath(options, "sampling", false),
-            PipelinesVariables.Pipeline.Interpretation.RecordType.LOCATION_FEATURE
-                .toString()
-                .toLowerCase(),
-            PipelinesVariables.Pipeline.Interpretation.RecordType.LOCATION_FEATURE
-                .toString()
-                .toLowerCase())
+            PathBuilder.buildDatasetAttemptPath(options, "images", false), name + "-" + uniqueId)
+        .toString();
+  }
+
+  public static String buildPathTaxonProfileUsingTargetPath(
+      BasePipelineOptions options, String name, String uniqueId) {
+    return PathBuilder.buildPath(
+            PathBuilder.buildDatasetAttemptPath(options, "taxonprofiles", false),
+            name + "-" + uniqueId)
         .toString();
   }
 
   /** Build a path to sampling downloads. */
   public static String buildPathSamplingDownloadsUsingTargetPath(
-      InterpretationPipelineOptions options) {
+      AllDatasetsPipelinesOptions options) {
+
+    if (options.getDatasetId() == null || "all".equals(options.getDatasetId())) {
+      return String.join("/", options.getAllDatasetsInputPath(), "sampling", "downloads");
+    }
+
     return PathBuilder.buildPath(
             PathBuilder.buildDatasetAttemptPath(options, "sampling", false), "downloads")
         .toString();
+  }
+
+  /** Build a path to sampling downloads. */
+  public static String buildPathSamplingUsingTargetPath(AllDatasetsPipelinesOptions options) {
+    if (options.getDatasetId() == null || "all".equals(options.getDatasetId())) {
+      return String.join("/", options.getAllDatasetsInputPath(), "sampling");
+    }
+    return PathBuilder.buildDatasetAttemptPath(options, "sampling", false);
   }
 
   /**

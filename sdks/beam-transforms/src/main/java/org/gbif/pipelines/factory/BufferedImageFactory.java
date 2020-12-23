@@ -1,6 +1,7 @@
 package org.gbif.pipelines.factory;
 
 import java.awt.image.BufferedImage;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.nio.file.Path;
@@ -23,6 +24,11 @@ public class BufferedImageFactory {
     this.image = loadImageFile(imageCachePath);
   }
 
+  // Warning: Cannot load multiple images in a same class
+  // Singleton has been applied on BufferedImageFactory.
+  // If BufferedImageFactory.getInstance() has loaded 'bitmap.png', then it won't load another png.
+  // If you need to load multiple images in a same parent class, you need to use static method
+  // loadImageFile
   public static BufferedImage getInstance(String imageCachePath) {
     if (instance == null) {
       synchronized (MUTEX) {
@@ -35,7 +41,7 @@ public class BufferedImageFactory {
   }
 
   @SneakyThrows
-  public BufferedImage loadImageFile(String filePath) {
+  public static BufferedImage loadImageFile(String filePath) {
     Path path = Paths.get(filePath);
     if (!path.isAbsolute()) {
       try (InputStream is =
@@ -45,7 +51,14 @@ public class BufferedImageFactory {
         }
         return ImageIO.read(is);
       }
+    } else {
+      try (InputStream is = new FileInputStream(filePath)) {
+        return ImageIO.read(is);
+      } catch (Exception e) {
+        log.error(e.getMessage(), e);
+        throw new FileNotFoundException(
+            "Unable to load image from absolute filePath - " + filePath);
+      }
     }
-    throw new FileNotFoundException("The image file doesn't exist - " + filePath);
   }
 }

@@ -138,7 +138,7 @@
   <field name="names_and_lsid"       type="string" docValues="true" indexed="true"/>
   <field name="common_name_and_lsid" type="string" docValues="true" indexed="true"/>
 
-  <!-- legacy fields referenced by biocache-service code - to be refactor out! -->
+  <!-- legacy fields referenced by biocache-service code - to be reviewed and refactored out if possible -->
   <field name="taxon_name"        type="string"  docValues="true" indexed="true"/>
   <field name="common_name"       type="string"  docValues="true" indexed="true"/>
   <field name="rank"              type="string"  docValues="true" indexed="true"/>
@@ -148,10 +148,22 @@
   <field name="rgt"               type="tint"    docValues="true" indexed="true"/>
   <field name="geospatial_kosher" type="boolean" docValues="true" multiValued="false" indexed="true" />
   <field name="first_loaded_date" type="tdate"   docValues="true" multiValued="false" indexed="true"/>
-  <field name="species_group"     type="string"  docValues="true" multiValued="true" indexed="true"/>
-  <field name="species_subgroup"  type="string"  docValues="true" multiValued="true" indexed="true" />
-  <field name="image_url"         type="string"  docValues="true" multiValued="true" indexed="true" />
-  <field name="assertions"        type="string"  docValues="true" multiValued="true" indexed="true" />
+  <field name="species_group"     type="string"  docValues="true" multiValued="true"  indexed="true"/>
+  <field name="species_subgroup"  type="string"  docValues="true" multiValued="true"  indexed="true" />
+  <field name="species_list_uid"  type="string"  docValues="true" multiValued="true"  indexed="true" />
+  <field name="image_url"         type="string"  docValues="true" multiValued="false" indexed="true" />
+  <field name="all_image_url"     type="string"  docValues="true" multiValued="true"  indexed="true" />
+  <field name="multimedia"        type="string"  docValues="true" multiValued="true"  indexed="true" />
+  <field name="assertions"        type="string"  docValues="true" multiValued="true"  indexed="true" />
+
+  <!-- Legacy conservation fields -->
+  <field name="raw_state_conservation" type="string"  docValues="true" multiValued="false"  indexed="true" />
+  <field name="state_conservation"     type="string"  docValues="true" multiValued="false"  indexed="true" />
+  <field name="country_conservation"   type="string"  docValues="true" multiValued="false"  indexed="true" />
+
+  <!-- Additional invasive fields -->
+  <field name="state_invasive"         type="string"  docValues="true" multiValued="false"  indexed="true" />
+  <field name="country_invasive"       type="string"  docValues="true" multiValued="false"  indexed="true" />
 
   <!-- All DWC fields -->
   <field name="acceptedNameUsage" type="string" docValues="true" indexed="true"/>
@@ -306,7 +318,7 @@
   <field name="preparations"  type="string" docValues="true" indexed="true"/>
   <field name="previousIdentifications"  type="string" docValues="true" indexed="true"/>
   <field name="recordNumber"  type="string" docValues="true" indexed="true"/>
-  <field name="recordedBy"  type="string" docValues="true" indexed="true"/>
+  <field name="recordedBy"  type="string" docValues="true" indexed="true" multiValued="true"/>
   <field name="references"  type="string" docValues="true" indexed="true"/>
   <field name="relatedResourceID"  type="string" docValues="true" indexed="true"/>
   <field name="relationshipAccordingTo"  type="string" docValues="true" indexed="true"/>
@@ -375,6 +387,11 @@
   <field name="matchType"  type="string" docValues="true" indexed="true"/>
   <field name="nameType"  type="string" docValues="true" indexed="true"/>
 
+  <!-- ALA Sensitive data fields -->
+  <field name="sensitive"  type="boolean" docValues="true" indexed="true"/>
+  <field name="generalisationInMetres"  type="string" docValues="true" indexed="true"/>
+  <field name="generalisationToApplyInMetres"  type="string" docValues="true" indexed="true"/>
+
   <!-- ALA legacy attribution fields -->
   <field name="dataResourceUid" type="string" docValues="true" indexed="true" />
   <field name="dataProviderUid" type="string" docValues="true" indexed="true" />
@@ -385,7 +402,7 @@
   <field name="institutionName" type="string" docValues="true" indexed="true" />
   <field name="collectionName" type="string" docValues="true" indexed="true" />
 
-  <field name="machineTags"  type="string" docValues="true" indexed="true"  multiValued="true" />
+  <field name="machineTags"  type="string" docValues="true" indexed="true" multiValued="true" />
 
   <!-- ALA specific fields -->
   <dynamicField name="gbif_s_*" type="string" docValues="true" indexed="true" />
@@ -405,6 +422,9 @@
   <!-- Contextual fields -->
   <dynamicField name="cl*"  type="string" docValues="true" indexed="true" />
 
+  <!-- Original data fields for generalised data -->
+  <dynamicField name="original_*" type="string" docValues="true" indexed="false"/>
+
   <!-- Adhoc fields -->
   <dynamicField name="_*"    type="string" docValues="true" indexed="true" stored="false"/>
 
@@ -416,7 +436,6 @@
   <dynamicField name="*_b" type="boolean" docValues="true" indexed="true" stored="false"/>
   <dynamicField name="*_f" type="float" docValues="true" indexed="true" stored="false"/>
   <dynamicField name="*_d" type="double" docValues="true" indexed="true" stored="false"/>
-
 
   <copyField source="lat_long" dest="geohash"/>
   <copyField source="lat_long" dest="location"/>

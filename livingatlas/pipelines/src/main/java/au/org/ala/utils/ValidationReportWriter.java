@@ -83,7 +83,6 @@ public class ValidationReportWriter {
         "interpretation",
         "validation",
         "uuid",
-        "sampling",
         "indexing",
         "emptyRecordsKeys",
         "duplicateKeys",
@@ -143,7 +142,6 @@ public class ValidationReportWriter {
           boolean validationLoaded;
           boolean interpretationRan;
           boolean indexingRan;
-          boolean samplingRan;
           boolean metadataAvailable = false;
           boolean uniqueTermsSpecified = false;
           long recordCount;
@@ -165,9 +163,6 @@ public class ValidationReportWriter {
           interpretationRan =
               ValidationUtils.metricsExists(
                   fs, inputPath, datasetID, attempt, ValidationUtils.INTERPRETATION_METRICS);
-          samplingRan =
-              ValidationUtils.metricsExists(
-                  fs, inputPath, datasetID, attempt, ValidationUtils.SAMPLING_METRICS);
           indexingRan =
               ValidationUtils.metricsExists(
                   fs, inputPath, datasetID, attempt, ValidationUtils.INDEXING_METRICS);
@@ -210,8 +205,7 @@ public class ValidationReportWriter {
           }
 
           ValidationResult validationResult =
-              ValidationUtils.checkReadyForIndexing(
-                  fs, inputPath, datasetID, attempt, checkSampling);
+              ValidationUtils.checkReadyForIndexing(fs, inputPath, datasetID, attempt);
 
           // write CSV
           reportWriter.write(
@@ -229,7 +223,6 @@ public class ValidationReportWriter {
                       interpretationRan ? "OK" : ValidationUtils.NOT_INTERPRET,
                       validationLoaded ? "OK" : ValidationUtils.NOT_VALIDATED,
                       uuidLoaded ? "OK" : ValidationUtils.UUID_REQUIRED,
-                      samplingRan ? "OK" : ValidationUtils.NOT_SAMPLED,
                       indexingRan ? "OK" : ValidationUtils.NOT_INDEXED,
                       emptyKeyRecords == 0 ? "OK" : ValidationUtils.HAS_EMPTY_KEYS,
                       duplicateKeyCount == 0 ? "OK" : ValidationUtils.HAS_DUPLICATES,

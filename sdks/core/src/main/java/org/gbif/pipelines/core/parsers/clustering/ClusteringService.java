@@ -27,6 +27,7 @@ public class ClusteringService implements Serializable {
   public boolean isClustered(Long gbifId) {
     try (Table table = connection.getTable(TableName.valueOf(config.getRelationshipTableName()))) {
       Scan scan = new Scan();
+      scan.setBatch(1);
       scan.addFamily(Bytes.toBytes("o"));
       int salt = Math.abs(gbifId.toString().hashCode()) % config.getRelationshipTableSalt();
       scan.setRowPrefixFilter(Bytes.toBytes(salt + ":" + gbifId));

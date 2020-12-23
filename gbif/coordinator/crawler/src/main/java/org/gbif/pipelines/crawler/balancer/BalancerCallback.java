@@ -45,9 +45,9 @@ public class BalancerCallback extends AbstractMessageCallback<PipelinesBalancerM
       } else if (PipelinesInterpretedMessage.class.getSimpleName().equals(className)) {
         InterpretedMessageHandler.handle(config, publisher, message);
       } else if (PipelinesIndexedMessage.class.getSimpleName().equals(className)) {
-        PipelinesIndexedMessageHandler.handle(config, publisher, message);
+        PipelinesIndexedMessageHandler.handle(publisher, message);
       } else if (PipelinesHdfsViewBuiltMessage.class.getSimpleName().equals(className)) {
-        PipelinesHdfsViewBuiltMessageHandler.handle(config, publisher, message);
+        PipelinesHdfsViewBuiltMessageHandler.handle(publisher, message);
       } else {
         log.error("Handler for {} wasn't found!", className);
       }

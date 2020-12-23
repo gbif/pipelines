@@ -1,6 +1,5 @@
 package au.org.ala.pipelines.interpreters;
 
-import au.org.ala.kvs.client.ALACollectoryMetadata;
 import au.org.ala.pipelines.vocabulary.ALAOccurrenceIssue;
 import au.org.ala.sds.api.SensitivityQuery;
 import au.org.ala.sds.api.SensitivityReport;
@@ -8,7 +7,6 @@ import au.org.ala.sds.api.SpeciesCheck;
 import au.org.ala.sds.generalise.FieldAccessor;
 import au.org.ala.sds.generalise.Generalisation;
 import java.util.*;
-import java.util.function.BiConsumer;
 import java.util.function.Function;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -36,12 +34,6 @@ public class SensitiveDataInterpreter {
       new FieldAccessor(TERM_FACTORY.findTerm("generalisationToApplyInMetres"));
   protected static final FieldAccessor GENERALISATION_IN_METRES =
       new FieldAccessor(TERM_FACTORY.findTerm("generalisationInMetres"));
-
-  private static final Set<String> TAXON_ROWS =
-      new HashSet<String>(
-          Arrays.asList(
-              ALATaxonRecord.getClassSchema().getName(),
-              OccurrenceHdfsRecord.getClassSchema().getName()));
 
   /** Bits to skip when generically updating the temporal record */
   private static final Set<Term> SKIP_TEMPORAL_UPDATE = Collections.singleton(DwcTerm.eventDate);
@@ -337,62 +329,14 @@ public class SensitiveDataInterpreter {
   }
 
   /**
-   * General purpose getter of string values for a field.
-   *
-   * @param record The record to get the value from
-   * @param term The term to use
-   * @param fields The set of sensitive fields
-   * @param sr The sensitivty record
-   * @param setter A function that sets the appropriate value
-   * @param <R> The type of the record
-   */
-  protected static <R> void applySensitivity(
-      R record,
-      Term term,
-      Set<Term> fields,
-      ALASensitivityRecord sr,
-      BiConsumer<R, String> setter) {
-    if (!fields.contains(term)) return;
-    String name = term.qualifiedName();
-    if (sr.getAltered().containsKey(name)) return;
-    setter.accept(record, sr.getAltered().get(name));
-  }
-
-  /**
-   * General purpose getter of string values for a field.
-   *
-   * @param record The record to get the value from
-   * @param term The term to use
-   * @param fields The set of sensitive fields
-   * @param sr The sensitivty record
-   * @param setter A function that sets the appropriate value
-   * @param <R> The type of the record
-   */
-  protected static <R> void applyIntSensitivity(
-      R record,
-      Term term,
-      Set<Term> fields,
-      ALASensitivityRecord sr,
-      BiConsumer<R, Integer> setter) {
-    if (!fields.contains(term)) return;
-    String name = term.qualifiedName();
-    if (sr.getAltered().containsKey(name)) return;
-    String value = sr.getAltered().get(name);
-    setter.accept(record, value == null || value.isEmpty() ? null : Integer.parseInt(value));
-  }
-
-  /**
    * Perform quality checks on the incoming record.
    *
    * @param properties The potentially sensitive occurrence properties
    * @param sr The sensitivity record
-   * @param dataResource The associated data resource.
    * @return True if we have enough to be going on with
    */
   public static boolean sourceQualityChecks(
-      final Map<String, String> properties,
-      final ALASensitivityRecord sr,
-      final ALACollectoryMetadata dataResource) {
+      final Map<String, String> properties, final ALASensitivityRecord sr) {
     boolean hasName =
         properties.get(DwcTerm.scientificName.simpleName()) != null
             || properties.get(DwcTerm.scientificName.qualifiedName()) != null;
@@ -403,7 +347,6 @@ public class SensitiveDataInterpreter {
   /**
    * Interprets a utils from the taxonomic properties supplied from the various source records.
    *
-   * @param dataResource The associated data resource for the record, for defaults and hints
    * @param speciesStore The sensitive species lookup
    * @param reportStore The sensitive data report
    * @param generalisations The generalisations to apply
@@ -411,7 +354,6 @@ public class SensitiveDataInterpreter {
    * @param sr The sensitivity record
    */
   public static void sensitiveDataInterpreter(
-      final ALACollectoryMetadata dataResource,
       final KeyValueStore<SpeciesCheck, Boolean> speciesStore,
       final KeyValueStore<SensitivityQuery, SensitivityReport> reportStore,
       final List<Generalisation> generalisations,
@@ -421,10 +363,14 @@ public class SensitiveDataInterpreter {
 
     String scientificName = properties.get(DwcTerm.scientificName.qualifiedName());
     String taxonId = properties.get(DwcTerm.taxonConceptID.qualifiedName());
+
     SpeciesCheck speciesCheck =
         SpeciesCheck.builder().scientificName(scientificName).taxonId(taxonId).build();
     sr.setSensitive(speciesStore.get(speciesCheck));
-    if (sr.getSensitive() == null || !sr.getSensitive()) return;
+
+    if (sr.getSensitive() == null || !sr.getSensitive()) {
+      return;
+    }
     String stateProvince = properties.get(DwcTerm.stateProvince.qualifiedName());
     String country = properties.get(DwcTerm.country.qualifiedName());
     SensitivityQuery query =
@@ -512,25 +458,6 @@ public class SensitiveDataInterpreter {
       if ((taxonId = ModelUtils.extractValue(er, DwcTerm.taxonID)) != null) return taxonId;
     }
     return null;
-  }
-
-  /**
-   * Build a map of names onto terms
-   *
-   * @param fields The field names
-   * @return A map of bare name/URI onto terms
-   */
-  public static Map<String, Term> buildSensitivityMap(Collection<String> fields) {
-    TermFactory termFactory = TermFactory.instance();
-    Map<String, Term> sensitvityMap = new HashMap<>();
-
-    for (String field : fields) {
-      Term term = termFactory.findTerm(field);
-      sensitvityMap.put(field, term);
-      sensitvityMap.put(term.simpleName(), term);
-      sensitvityMap.put(term.qualifiedName(), term);
-    }
-    return sensitvityMap;
   }
 
   /**

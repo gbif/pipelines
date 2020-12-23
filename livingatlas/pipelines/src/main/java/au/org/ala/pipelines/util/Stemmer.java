@@ -37,8 +37,6 @@ package au.org.ala.pipelines.util;
 
 */
 
-import java.io.*;
-
 /**
  * Stemmer, implementing the Porter Stemming Algorithm
  *

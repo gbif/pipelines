@@ -7,8 +7,6 @@ import lombok.Setter;
 import org.apache.hive.hcatalog.common.HCatException;
 import org.apache.hive.hcatalog.data.HCatRecord;
 import org.apache.hive.hcatalog.data.schema.HCatSchema;
-import org.gbif.api.service.checklistbank.NameParser;
-import org.gbif.nameparser.NameParserGbifV1;
 import org.gbif.rest.client.species.NameUsageMatch;
 
 /**
@@ -20,6 +18,7 @@ import org.gbif.rest.client.species.NameUsageMatch;
 @Setter
 @EqualsAndHashCode
 class GBIFClassification {
+
   private String kingdom;
   private String phylum;
   private String klass;
@@ -168,101 +167,5 @@ class GBIFClassification {
         String.valueOf(speciesKey),
         String.valueOf(taxonKey),
         String.valueOf(acceptedTaxonKey));
-  }
-
-  /** Utility container for capturing the ranks at which difference occur in two classifications. */
-  @Getter
-  @Setter
-  @Deprecated // Currently moved into the visualisation layer, and could be removed
-  static class RankOfDiff {
-    private static final NameParser PARSER = new NameParserGbifV1();
-
-    private String scientificName;
-    private String canonicalName;
-    private String identifier;
-    private boolean acceptedScientificNameChanged;
-    private boolean acceptedCanonicalNameChanged;
-    private boolean acceptedIdentifierChanged;
-
-    // Not pretty but written to be simple to follow
-    static RankOfDiff difference(GBIFClassification c1, GBIFClassification c2) {
-      RankOfDiff d = new RankOfDiff();
-
-      // has the accepted name changed at all
-      d.acceptedScientificNameChanged =
-          !Objects.equals(c1.acceptedScientificName, c2.acceptedScientificName);
-      d.acceptedCanonicalNameChanged =
-          !Objects.equals(
-              PARSER.parseToCanonical(c1.acceptedScientificName),
-              PARSER.parseToCanonical(c2.acceptedScientificName));
-      d.acceptedIdentifierChanged = !Objects.equals(c1.acceptedTaxonKey, c2.acceptedTaxonKey);
-
-      // the highest rank we see changes in the scientific name
-      d.scientificName =
-          Objects.equals(c1.scientificName, c2.scientificName)
-              ? d.scientificName
-              : "SCIENTIFIC_NAME";
-      d.scientificName = Objects.equals(c1.species, c2.species) ? d.scientificName : "SPECIES";
-      d.scientificName = Objects.equals(c1.subGenus, c2.subGenus) ? d.scientificName : "SUB_GENUS";
-      d.scientificName = Objects.equals(c1.genus, c2.genus) ? d.scientificName : "GENUS";
-      d.scientificName = Objects.equals(c1.family, c2.family) ? d.scientificName : "FAMILY";
-      d.scientificName = Objects.equals(c1.order, c2.order) ? d.scientificName : "ORDER";
-      d.scientificName = Objects.equals(c1.klass, c2.klass) ? d.scientificName : "CLASS";
-      d.scientificName = Objects.equals(c1.phylum, c2.phylum) ? d.scientificName : "PHYLUM";
-      d.scientificName = Objects.equals(c1.kingdom, c2.kingdom) ? d.scientificName : "KINGDOM";
-
-      // the highest rank we see changes in the canonical name
-      d.canonicalName =
-          Objects.equals(
-                  PARSER.parseToCanonical(c1.scientificName),
-                  PARSER.parseToCanonical(c2.scientificName))
-              ? d.canonicalName
-              : "SCIENTIFIC_NAME";
-      d.canonicalName =
-          Objects.equals(PARSER.parseToCanonical(c1.species), PARSER.parseToCanonical(c2.species))
-              ? d.canonicalName
-              : "SPECIES";
-      d.canonicalName =
-          Objects.equals(PARSER.parseToCanonical(c1.subGenus), PARSER.parseToCanonical(c2.subGenus))
-              ? d.canonicalName
-              : "SUB_GENUS";
-      d.canonicalName =
-          Objects.equals(PARSER.parseToCanonical(c1.genus), PARSER.parseToCanonical(c2.genus))
-              ? d.canonicalName
-              : "GENUS";
-      d.canonicalName =
-          Objects.equals(PARSER.parseToCanonical(c1.family), PARSER.parseToCanonical(c2.family))
-              ? d.canonicalName
-              : "FAMILY";
-      d.canonicalName =
-          Objects.equals(PARSER.parseToCanonical(c1.order), PARSER.parseToCanonical(c2.order))
-              ? d.canonicalName
-              : "ORDER";
-      d.canonicalName =
-          Objects.equals(PARSER.parseToCanonical(c1.klass), PARSER.parseToCanonical(c2.klass))
-              ? d.canonicalName
-              : "CLASS";
-      d.canonicalName =
-          Objects.equals(PARSER.parseToCanonical(c1.phylum), PARSER.parseToCanonical(c2.phylum))
-              ? d.canonicalName
-              : "PHYLUM";
-      d.canonicalName =
-          Objects.equals(PARSER.parseToCanonical(c1.kingdom), PARSER.parseToCanonical(c2.kingdom))
-              ? d.canonicalName
-              : "KINGDOM";
-
-      // the highest rank we see changes in the identifiers
-      d.identifier = Objects.equals(c1.taxonKey, c2.taxonKey) ? d.identifier : "SCIENTIFIC_NAME";
-      d.identifier = Objects.equals(c1.speciesKey, c2.speciesKey) ? d.identifier : "SPECIES";
-      d.identifier = Objects.equals(c1.subGenusKey, c2.subGenusKey) ? d.identifier : "SUB_GENUS";
-      d.identifier = Objects.equals(c1.genusKey, c2.genusKey) ? d.identifier : "GENUS";
-      d.identifier = Objects.equals(c1.familyKey, c2.familyKey) ? d.identifier : "FAMILY";
-      d.identifier = Objects.equals(c1.orderKey, c2.orderKey) ? d.identifier : "ORDER";
-      d.identifier = Objects.equals(c1.classKey, c2.classKey) ? d.identifier : "CLASS";
-      d.identifier = Objects.equals(c1.phylumKey, c2.phylumKey) ? d.identifier : "PHYLUM";
-      d.identifier = Objects.equals(c1.kingdomKey, c2.kingdomKey) ? d.identifier : "KINGDOM";
-
-      return d;
-    }
   }
 }

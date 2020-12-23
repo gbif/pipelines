@@ -10,6 +10,10 @@ sds:
   wsUrl: http://${sds.host}:${sds.port}
   timeoutSec: 70
 
+speciesListService:
+  wsUrl: http://${speciesListService.host}:${speciesListService.port}
+  timeoutSec: 70
+
 geocodeConfig:
   country:
     path: "/tmp/pipelines-shp/political"
