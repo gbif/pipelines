@@ -164,6 +164,7 @@ index:
   includeSampling: true
   includeImages: true
   includeSpeciesLists: true
+  includeSensitiveData: false
   runner: SparkRunner
   zkHost: localhost:9983
   allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
