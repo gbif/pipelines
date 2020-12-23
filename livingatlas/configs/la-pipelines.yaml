@@ -154,6 +154,7 @@ jackKnife:
   path: "{fsPath}/pipelines-jackknife"
   layers: el882,el889,el887,el865,el894
   minSampleThreshold: 80
+  allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
   runner: SparkRunner
 
 # class: au.org.ala.pipelines.java.ALAInterpretedToSolrIndexPipeline

@@ -6,7 +6,8 @@ import org.apache.beam.sdk.options.PipelineOptions;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 
 /** Pipeline options necessary for JackKnife */
-public interface JackKnifePipelineOptions extends PipelineOptions, InterpretationPipelineOptions {
+public interface JackKnifePipelineOptions
+    extends PipelineOptions, InterpretationPipelineOptions, AllDatasetsPipelinesOptions {
 
   @Description("Minimum number of values required for a JackKnife model.")
   @Default.Integer(80)

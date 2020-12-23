@@ -65,7 +65,6 @@ public interface ALASolrPipelineOptions
 
   void setSolrRetryDurationInMins(Integer solrRetryDurationInMins);
 
-
   @Description("JackKnife path")
   @Default.String("")
   String getJackKnifePath();

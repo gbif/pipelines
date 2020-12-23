@@ -46,7 +46,7 @@ Pipeline ingress steps:
     ┌───── do-all ──────────────────────────────────┐
     │                                               │
 dwca-avro --> interpret --> uuid -->                │
-     sample --> index --> solr
+     sample --> index --> jackknife --> solr
 
 -  'dwca-avro' reads a Dwc-A and converts it to an verbatim.avro file;
 -  'interpret' reads verbatim.avro, interprets it and writes the interpreted data and the issues to Avro files;
@@ -56,11 +56,8 @@ dwca-avro --> interpret --> uuid -->                │
 -  'image-sync' retrieves details of images stored in image service for indexing purposes;
 -  'sample' use the sampling service to retrieve values for points for the layers in the spatial service;
 -  'index' generates a AVRO records ready to be index to SOLR;
--  'solr' reads index records in AVRO and submits them to SOLR;
--  'sample' crawl the LA layers. Requires an input csv containing lat, lng (no header) and output directory;
--  'sample-avro' adds a sampling AVRO extension to the stored interpretation;
 -  'jackknife' adds an aggregated jackknife AVRO for all datasets. Requires samping-avro. After running a full 'index' is required.
--  'index' reads a Dwc-A, interprets it and index the interpeted data creating a SOLR index;
+-  'solr' reads index records in AVRO and submits them to SOLR;
 -  'archive-list' dumps out a list of archives that can be ingested to '/tmp/dataset-archive-list.csv';
 -  'dataset-list' dumps out a list of datasets that have been ingested to '/tmp/dataset-counts.csv';
 -  'validation-report' dumps out a CSV list of datasets ready to be indexed to '/tmp/validation-report.csv';
@@ -229,7 +226,7 @@ for JAR in $LOCAL_PIPELINES_JAR; do
 done
 
 FS_PATH=$(getConf fs.$(getConf fs.platform).fsPath)
-if [[ ! -d $FS_PATH ]]
+if [[ ! -d $FS_PATH && $(getConf fs.platform) = "local" ]]
 then
     log.error "Cannot find $FS_PATH."
     exit 1
@@ -730,12 +727,11 @@ fi
 
 # JackKnife executes across all datasets and requires 'index' of all datasets.
 if ($jackknife || $do_all); then
-  if [[ $dr == "all" ]] ; then
+  if [[ $2 = "all" ]] ; then
     do_step jackknife
   else
     echo "WARN: 'jackknife' not run when 'dr' != 'all'"
   fi
-  # WARN: Based on sample-avro (Previosly here 'local' was not executed, always 'cluster' or 'embeded' it's this correct?)
 fi
 
 if ($index || $do_all); then

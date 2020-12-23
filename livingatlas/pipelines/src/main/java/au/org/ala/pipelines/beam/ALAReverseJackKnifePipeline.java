@@ -1,20 +1,12 @@
 package au.org.ala.pipelines.beam;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
-
 import au.org.ala.pipelines.jackknife.JackKnife;
 import au.org.ala.pipelines.options.JackKnifePipelineOptions;
-import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
 import au.org.ala.pipelines.transforms.JackKnifeOutlierTransform;
 import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationUtils;
-import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.function.UnaryOperator;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,14 +25,17 @@ import org.apache.beam.sdk.values.*;
 import org.apache.commons.lang.StringUtils;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
-import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.utils.FsUtils;
-import org.gbif.pipelines.io.avro.ALATaxonRecord;
+import org.gbif.pipelines.io.avro.IndexRecord;
 import org.gbif.pipelines.io.avro.JackKnifeModelRecord;
 import org.gbif.pipelines.io.avro.JackKnifeOutlierRecord;
-import org.gbif.pipelines.io.avro.LocationFeatureRecord;
-import org.gbif.pipelines.transforms.specific.LocationFeatureTransform;
+import org.gbif.pipelines.io.avro.SampleRecord;
 import org.slf4j.MDC;
+
+import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 /** Pipeline that adds a taxon jackknife values AVRO extension to the stored interpretation. */
 @Slf4j
@@ -72,48 +67,17 @@ public class ALAReverseJackKnifePipeline {
   public static void run(JackKnifePipelineOptions options) {
 
     log.info("Creating a pipeline from options");
-    Pipeline p = Pipeline.create(options);
+    Pipeline pipeline = Pipeline.create(options);
 
     // JackKnife output locations
     String outliersPath = String.join("/", options.getPath(), "outliers");
     String modelsPath = String.join("/", options.getPath(), "models");
-    String metricsPath = String.join("/", options.getPath());
-
-    // Path to LocationFeatureRecord
-    // /data/pipelines-data/dr893/1/sampling/australia_spatial
-    String locationPath = ALAFsUtils.buildPathSamplingOutputUsingTargetPath(options) + "*.avro";
-
-    UnaryOperator<String> inputPathFn =
-        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
-    ALATaxonomyTransform alaTaxonomyTransform = ALATaxonomyTransform.builder().create();
+    String jackknifePath = String.join("/", options.getPath());
 
     log.info("1. Delete existing jackknife outliers, models and metrics.");
     deletePreviousValidation(options, options.getPath());
 
-    // Filter records without speciesID or with match issue, create map
-    // ALATaxonRecord.getSpeciesID() -> ALATaxonRecord.getId().
-    PCollection<KV<String, String>> species =
-        p.apply("Read Taxon", alaTaxonomyTransform.read(inputPathFn))
-            .apply(
-                ParDo.of(
-                    new DoFn<ALATaxonRecord, KV<String, String>>() {
-                      @ProcessElement
-                      public void processElement(
-                          @Element ALATaxonRecord alaTaxonRecord,
-                          OutputReceiver<KV<String, String>> out) {
-                        // Only include occurrences that are identified at the SPECIES taxon rank
-                        // without an identification issue.
-                        if (StringUtils.isNotEmpty(alaTaxonRecord.getTaxonConceptID())
-                            && alaTaxonRecord.getRankID() == 7000) {
-                          KV<String, String> kv =
-                              KV.of(alaTaxonRecord.getId(), alaTaxonRecord.getTaxonConceptID());
-                          out.output(kv);
-                        }
-                      }
-                    }));
-
     String[] layers = options.getLayers().split(",");
-
     if (layers.length == 0 || StringUtils.isEmpty(layers[0])) {
       log.error("JackKnife cannot be run. No layer features provided.");
       return;
@@ -121,51 +85,64 @@ public class ALAReverseJackKnifePipeline {
 
     Integer minSampleThreshold = options.getMinSampleThreshold();
 
-    LocationFeatureTransform locationFeatureTransform = LocationFeatureTransform.builder().create();
+    // Load Samples
+    String samplingPath =
+        String.join("/", ALAFsUtils.buildPathSamplingUsingTargetPath(options), "*.avro");
+    log.info("Loading sampling from {}", samplingPath);
+    PCollection<SampleRecord> sampleRecords =
+        pipeline.apply(AvroIO.read(SampleRecord.class).from(samplingPath));
 
-    // Filter records without location features, create map EnvironmentalValues ->
-    // LocationFeatureRecord.getId()
-    PCollection<KV<String, Double[]>> values =
-        p.apply("read location features", locationFeatureTransform.read(locationPath))
-            .apply(
-                ParDo.of(
-                    new DoFn<LocationFeatureRecord, KV<String, Double[]>>() {
-                      @ProcessElement
-                      public void processElement(
-                          @Element LocationFeatureRecord locationFeatureRecord,
-                          OutputReceiver<KV<String, Double[]>> out) {
-                        Double[] values = new Double[layers.length];
+    // Load IndexRecords
+    PCollection<IndexRecord> indexRecordsCollection =
+        pipeline.apply(
+            AvroIO.read(IndexRecord.class)
+                .from(
+                    String.join(
+                        "/", options.getAllDatasetsInputPath(), "index-record", "*/*.avro")));
 
-                        int valid = 0;
-                        for (int i = 0; i < layers.length; i++) {
-                          String s = locationFeatureRecord.getItems().get(layers[i]);
-                          try {
-                            if (StringUtils.isNotEmpty(s)) {
-                              values[i] = Double.parseDouble(s);
-                              valid++;
-                            } else {
-                              values[i] = null;
-                            }
-                          } catch (Exception e) {
-                            values[i] = null;
-                          }
-                        }
+    // Convert to KV <LatLng, KV<ID, taxonID>>
+    PCollection<KV<String, KV<String, String>>> recordsWithCoordinatesKeyedLatng =
+        indexRecordsCollection.apply(
+            ParDo.of(
+                new DoFn<IndexRecord, KV<String, KV<String, String>>>() {
+                  @ProcessElement
+                  public void processElement(ProcessContext c) {
+                    IndexRecord e = c.element();
+                    String taxonID = e.getTaxonID();
+                    String latlng = e.getLatLng();
+                    if (latlng != null && taxonID != null) {
+                      c.output(KV.of(latlng, KV.of(e.getId(), taxonID)));
+                    }
+                  }
+                }));
 
-                        if (valid > 0) {
-                          KV<String, Double[]> kv = KV.of(locationFeatureRecord.getId(), values);
-                          out.output(kv);
-                        }
-                      }
-                    }));
+    // Convert to KV <LatLng, ArrayOfLayerValues>
+    PCollection<KV<String, Double[]>> sampleRecordsKeyedLatng =
+        sampleRecords.apply(
+            ParDo.of(
+                new DoFn<SampleRecord, KV<String, Double[]>>() {
+                  @ProcessElement
+                  public void processElement(ProcessContext c) {
+                    SampleRecord e = c.element();
+                    Double[] values = new Double[layers.length];
+                    for (int i = 0; i < layers.length; i++) {
+                      values[i] = e.getDoubles().getOrDefault(layers[i], Double.NaN);
+                    }
+                    String latlng = e.getLatLng();
+                    if (latlng != null) {
+                      c.output(KV.of(latlng, values));
+                    }
+                  }
+                }));
 
-    // Create tuple tags
-    final TupleTag<String> idTag = new TupleTag<>();
-    final TupleTag<Double[]> valuesTag = new TupleTag<>();
+    // Co group IndexRecords with coordinates with Sample data
+    final TupleTag<KV<String, String>> indexRecordTag = new TupleTag<>();
+    final TupleTag<Double[]> samplingTag = new TupleTag<>();
 
-    // Join collections by ID
+    // Join collections by LatLng string
     PCollection<KV<String, CoGbkResult>> results =
-        KeyedPCollectionTuple.of(idTag, species)
-            .and(valuesTag, values)
+        KeyedPCollectionTuple.of(samplingTag, sampleRecordsKeyedLatng)
+            .and(indexRecordTag, recordsWithCoordinatesKeyedLatng)
             .apply(CoGroupByKey.create());
 
     // Group by speciesID
@@ -178,10 +155,11 @@ public class ALAReverseJackKnifePipeline {
                       public void processElement(ProcessContext c) {
                         KV<String, CoGbkResult> e = c.element();
                         try {
-                          String speciesID = e.getValue().getOnly(idTag);
-                          Double[] sampling = e.getValue().getOnly(valuesTag);
+                          String recordID = e.getValue().getOnly(indexRecordTag).getKey();
+                          String speciesID = e.getValue().getOnly(indexRecordTag).getValue();
+                          Double[] sampling = e.getValue().getOnly(samplingTag);
 
-                          c.output(KV.of(speciesID, KV.of(e.getKey(), sampling)));
+                          c.output(KV.of(speciesID, KV.of(recordID, sampling)));
                         } catch (Exception ex) {
                         }
                       }
@@ -311,28 +289,28 @@ public class ALAReverseJackKnifePipeline {
                 .withSuffix(".avro"));
 
     log.info("2. Run pipeline for jackknife.");
-    PipelineResult result = p.run();
+    PipelineResult result = pipeline.run();
     result.waitUntilFinish();
 
     MetricsHandler.saveCountersToFile(
         options.getHdfsSiteConfig(),
         options.getCoreSiteConfig(),
-        metricsPath + "/metrics.yaml",
+        jackknifePath + "/metrics.yaml",
         result.metrics());
 
     log.info("3. Pipeline has been finished");
   }
 
   public static void deletePreviousValidation(
-      JackKnifePipelineOptions options, String outliersPath) {
+      JackKnifePipelineOptions options, String jackknifePath) {
     // delete output directories
     FsUtils.deleteIfExist(
-        options.getHdfsSiteConfig(), options.getCoreSiteConfig(), outliersPath + "/outliers");
+        options.getHdfsSiteConfig(), options.getCoreSiteConfig(), jackknifePath + "/outliers");
     FsUtils.deleteIfExist(
-        options.getHdfsSiteConfig(), options.getCoreSiteConfig(), outliersPath + "/models");
+        options.getHdfsSiteConfig(), options.getCoreSiteConfig(), jackknifePath + "/models");
 
     // delete metrics
     FsUtils.deleteIfExist(
-        options.getHdfsSiteConfig(), options.getCoreSiteConfig(), outliersPath + "/metrics.yaml");
+        options.getHdfsSiteConfig(), options.getCoreSiteConfig(), jackknifePath + "/metrics.yaml");
   }
 }
