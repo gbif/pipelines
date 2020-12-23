@@ -2,34 +2,27 @@ package au.org.ala.pipelines.beam;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
-import au.org.ala.pipelines.transforms.ALACSVDocumentTransform;
+import au.org.ala.pipelines.options.AllDatasetsPipelinesOptions;
 import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
-import java.io.IOException;
 import java.util.function.UnaryOperator;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
+import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.io.TextIO;
-import org.apache.beam.sdk.transforms.Distinct;
-import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.transforms.join.CoGbkResult;
-import org.apache.beam.sdk.transforms.join.CoGroupByKey;
-import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
-import org.apache.beam.sdk.values.KV;
+import org.apache.beam.sdk.transforms.*;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.hadoop.fs.FileSystem;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
-import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
 import org.gbif.pipelines.core.utils.FsUtils;
-import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.transforms.core.LocationTransform;
+import org.gbif.pipelines.io.avro.IndexRecord;
 import org.slf4j.MDC;
 
 /**
@@ -39,23 +32,23 @@ import org.slf4j.MDC;
  */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class ALAInterpretedToLatLongCSVPipeline {
+public class LatLongPipeline {
 
   public static void main(String[] args) throws Exception {
     VersionInfo.print();
     String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "export-latlng");
-    InterpretationPipelineOptions options =
-        PipelinesOptionsFactory.createInterpretation(combinedArgs);
+    AllDatasetsPipelinesOptions options =
+        PipelinesOptionsFactory.create(AllDatasetsPipelinesOptions.class, combinedArgs);
     MDC.put("datasetId", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
     MDC.put("step", "LAT_LNG_EXPORT");
-
+    PipelinesOptionsFactory.registerHdfs(options);
     run(options);
     // FIXME: Issue logged here: https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/105
     System.exit(0);
   }
 
-  public static void run(InterpretationPipelineOptions options) throws IOException {
+  public static void run(AllDatasetsPipelinesOptions options) throws Exception {
 
     log.info("Adding step 1: Options");
     UnaryOperator<String> pathFn =
@@ -64,25 +57,24 @@ public class ALAInterpretedToLatLongCSVPipeline {
     // Initialise pipeline
     Pipeline p = Pipeline.create(options);
 
-    // Use pre-processed coordinates from location transform outputs
-    log.info("Adding step 2: Initialise location transform");
-    LocationTransform locationTransform = LocationTransform.builder().create();
-
     log.info("Adding step 3: Creating beam pipeline");
-    PCollection<KV<String, LocationRecord>> locationCollection =
-        p.apply("Read Location", locationTransform.read(pathFn))
-            .apply("Map Location to KV", locationTransform.toKv());
+    PCollection<String> locationCollection =
+        loadIndexRecords(options, p)
+            .apply(Filter.by(ir -> ir.getLatLng() != null))
+            .apply(
+                MapElements.via(
+                    new SimpleFunction<IndexRecord, String>() {
+                      @Override
+                      public String apply(IndexRecord input) {
+                        return input.getLatLng();
+                      }
+                    }))
+            .apply(Distinct.create());
 
-    log.info("Adding step 3: Converting into a CSV object");
-    ParDo.SingleOutput<KV<String, CoGbkResult>, String> alaCSVrDoFn =
-        ALACSVDocumentTransform.create(locationTransform.getTag()).converter();
-
-    PCollection<String> csvCollection =
-        KeyedPCollectionTuple.of(locationTransform.getTag(), locationCollection)
-            .apply("Grouping objects", CoGroupByKey.create())
-            .apply("Merging to CSV doc", alaCSVrDoFn);
-
-    String outputPath = PathBuilder.buildDatasetAttemptPath(options, "latlng", true);
+    String outputPath = PathBuilder.buildDatasetAttemptPath(options, "latlng", false);
+    if (options.getDatasetId() == null || "all".equalsIgnoreCase(options.getDatasetId())) {
+      outputPath = PathBuilder.buildPath(options.getAllDatasetsInputPath(), "latlng").toString();
+    }
 
     // delete previous runs
     FsUtils.deleteIfExist(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), outputPath);
@@ -91,7 +83,7 @@ public class ALAInterpretedToLatLongCSVPipeline {
             .getFs(options.getTargetPath());
     ALAFsUtils.createDirectory(fs, outputPath);
 
-    csvCollection.apply(Distinct.create()).apply(TextIO.write().to(outputPath + "/latlong.csv"));
+    locationCollection.apply(TextIO.write().to(outputPath + "/latlng.csv").withoutSharding());
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();
@@ -99,6 +91,30 @@ public class ALAInterpretedToLatLongCSVPipeline {
 
     MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
 
-    log.info("Pipeline has been finished. Output written to " + outputPath + "/latlong.csv");
+    log.info("Pipeline has been finished. Output written to " + outputPath + "/latlng.csv");
+  }
+
+  /**
+   * Load index records from AVRO.
+   *
+   * @param options
+   * @param p
+   * @return
+   */
+  private static PCollection<IndexRecord> loadIndexRecords(
+      AllDatasetsPipelinesOptions options, Pipeline p) {
+    if (options.getDatasetId() != null && !"all".equalsIgnoreCase(options.getDatasetId())) {
+      return p.apply(
+          AvroIO.read(IndexRecord.class)
+              .from(
+                  String.join(
+                      "/",
+                      options.getAllDatasetsInputPath(),
+                      "index-record",
+                      options.getDatasetId() + "/*.avro")));
+    }
+    return p.apply(
+        AvroIO.read(IndexRecord.class)
+            .from(String.join("/", options.getAllDatasetsInputPath(), "index-record", "*/*.avro")));
   }
 }

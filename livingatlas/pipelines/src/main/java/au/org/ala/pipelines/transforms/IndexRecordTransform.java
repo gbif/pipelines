@@ -25,46 +25,20 @@ import org.apache.beam.sdk.values.TupleTag;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.util.Strings;
 import org.apache.solr.common.SolrInputDocument;
-import org.gbif.common.parsers.date.TemporalAccessorUtils;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.TermFactory;
-import org.gbif.pipelines.core.converters.MultimediaConverter;
-import org.gbif.pipelines.core.utils.TemporalUtils;
 import org.gbif.pipelines.io.avro.*;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * A SOLR transform that aims to provide a index that is backwards compatible with ALA's
- * biocache-service.
+ * A transform that creates IndexRecords which are used downstream to push data to a search index
+ * (SOLR or ElasticSearch)
  */
 @Slf4j
-public class ALASolrDocumentTransform implements Serializable {
-  private static final TermFactory TERM_FACTORY = TermFactory.instance();
-
-  // TODO review content
-  private static final Set<String> SKIP_KEYS =
-      new HashSet<>(
-          Arrays.asList(
-              "id",
-              "created",
-              "text",
-              "name",
-              "coreRowType",
-              "coreTerms",
-              "extensions",
-              "usage",
-              "classification",
-              "eventDate",
-              "hasCoordinate",
-              "hasGeospatialIssue",
-              "gbifId",
-              "crawlId",
-              "networkKeys",
-              "protocol",
-              "issues",
-              "machineTags"));
+public class IndexRecordTransform implements Serializable {
 
   private static final long serialVersionUID = 1279313931024806169L;
+  private static final TermFactory TERM_FACTORY = TermFactory.instance();
   // Core
   @NonNull private TupleTag<ExtendedRecord> erTag;
   @NonNull private TupleTag<BasicRecord> brTag;
@@ -79,22 +53,20 @@ public class ALASolrDocumentTransform implements Serializable {
   @NonNull private TupleTag<AudubonRecord> arTag;
   @NonNull private TupleTag<MeasurementOrFactRecord> mfrTag;
 
-  private TupleTag<LocationFeatureRecord> asrTag;
-
   private TupleTag<ALAAttributionRecord> aarTag;
   @NonNull private TupleTag<ALAUUIDRecord> urTag;
-
-  private TupleTag<ALASensitivityRecord> srTag;
 
   @NonNull private TupleTag<ImageServiceRecord> isTag;
 
   @NonNull private TupleTag<TaxonProfile> tpTag;
 
+  @NonNull private TupleTag<ALASensitivityRecord> srTag;
+
   @NonNull private PCollectionView<MetadataRecord> metadataView;
 
   String datasetID;
 
-  public static ALASolrDocumentTransform create(
+  public static IndexRecordTransform create(
       TupleTag<ExtendedRecord> erTag,
       TupleTag<BasicRecord> brTag,
       TupleTag<TemporalRecord> trTag,
@@ -105,7 +77,6 @@ public class ALASolrDocumentTransform implements Serializable {
       TupleTag<ImageRecord> irTag,
       TupleTag<AudubonRecord> arTag,
       TupleTag<MeasurementOrFactRecord> mfrTag,
-      TupleTag<LocationFeatureRecord> asrTag,
       TupleTag<ALAAttributionRecord> aarTag,
       TupleTag<ALAUUIDRecord> urTag,
       TupleTag<ImageServiceRecord> isTag,
@@ -113,7 +84,7 @@ public class ALASolrDocumentTransform implements Serializable {
       TupleTag<ALASensitivityRecord> srTag,
       PCollectionView<MetadataRecord> metadataView,
       String datasetID) {
-    ALASolrDocumentTransform t = new ALASolrDocumentTransform();
+    IndexRecordTransform t = new IndexRecordTransform();
     t.erTag = erTag;
     t.brTag = brTag;
     t.trTag = trTag;
@@ -124,33 +95,23 @@ public class ALASolrDocumentTransform implements Serializable {
     t.irTag = irTag;
     t.arTag = arTag;
     t.mfrTag = mfrTag;
-    t.asrTag = asrTag;
     t.aarTag = aarTag;
     t.urTag = urTag;
-    t.srTag = srTag;
     t.isTag = isTag;
     t.tpTag = tpTag;
+    t.srTag = srTag;
     t.metadataView = metadataView;
     t.datasetID = datasetID;
     return t;
   }
 
   /**
-   * Create a SOLR document using the supplied records.
+   * Create a IndexRecord using the supplied records.
    *
-   * @param mdr
-   * @param er
-   * @param br
-   * @param tr
-   * @param lr
-   * @param txr
-   * @param atxr
-   * @param aar
-   * @param asr
-   * @return
+   * @return IndexRecord
    */
   @NotNull
-  public static SolrInputDocument createSolrDocument(
+  public static IndexRecord createIndexRecord(
       MetadataRecord mdr,
       BasicRecord br,
       TemporalRecord tr,
@@ -159,11 +120,40 @@ public class ALASolrDocumentTransform implements Serializable {
       ALATaxonRecord atxr,
       ExtendedRecord er,
       ALAAttributionRecord aar,
-      LocationFeatureRecord asr,
       ALAUUIDRecord ur,
       ImageServiceRecord isr,
       TaxonProfile tpr,
       ALASensitivityRecord sr) {
+
+    Set<String> skipKeys = new HashSet<String>();
+    skipKeys.add("id");
+    skipKeys.add("created");
+    skipKeys.add("text");
+    skipKeys.add("name");
+    skipKeys.add("coreRowType");
+    skipKeys.add("coreTerms");
+    skipKeys.add("extensions");
+    skipKeys.add("usage");
+    skipKeys.add("classification");
+    skipKeys.add("eventDate");
+    skipKeys.add("hasCoordinate");
+    skipKeys.add("hasGeospatialIssue");
+    skipKeys.add("gbifId");
+    skipKeys.add("crawlId");
+    skipKeys.add("networkKeys");
+    skipKeys.add("protocol");
+    skipKeys.add("issues");
+    skipKeys.add("machineTags"); // TODO review content
+
+    IndexRecord.Builder indexRecord = IndexRecord.newBuilder().setId(ur.getUuid());
+    indexRecord.setBooleans(new HashMap<>());
+    indexRecord.setStrings(new HashMap<>());
+    indexRecord.setLongs(new HashMap<>());
+    indexRecord.setInts(new HashMap<>());
+    indexRecord.setDates(new HashMap<>());
+    indexRecord.setDoubles(new HashMap<>());
+    indexRecord.setMultiValues(new HashMap<>());
+    List<String> assertions = new ArrayList<String>();
 
     // If a sensitive record, construct new versions of the data with adjustments
     if (sr != null && sr.getSensitive()) {
@@ -201,34 +191,28 @@ public class ALASolrDocumentTransform implements Serializable {
         aar = ALAAttributionRecord.newBuilder(aar).build();
         SensitiveDataInterpreter.applySensitivity(sensitive, sr, aar);
       }
-      if (asr != null) {
-        asr = LocationFeatureRecord.newBuilder(asr).build();
-        SensitiveDataInterpreter.applySensitivity(sensitive, sr, asr);
-      }
     }
 
-    SolrInputDocument doc = new SolrInputDocument();
-    doc.setField("id", ur.getUuid());
-
-    addToDoc(lr, doc, SKIP_KEYS);
-    addToDoc(tr, doc, SKIP_KEYS);
-    addToDoc(br, doc, SKIP_KEYS);
-    addToDoc(er, doc, SKIP_KEYS);
-    addToDoc(mdr, doc, SKIP_KEYS);
+    addToIndexRecord(lr, indexRecord, skipKeys);
+    addToIndexRecord(tr, indexRecord, skipKeys);
+    addToIndexRecord(br, indexRecord, skipKeys);
+    addToIndexRecord(er, indexRecord, skipKeys);
+    addToIndexRecord(mdr, indexRecord, skipKeys);
 
     // add event date
     try {
-      if (tr.getEventDate().getGte() != null && tr.getEventDate().getGte().length() == 10) {
-        doc.setField(
-            "eventDateSingle",
-            new SimpleDateFormat("yyyy-MM-dd").parse(tr.getEventDate().getGte()));
-      } else {
-        TemporalUtils.getTemporal(tr.getYear(), tr.getMonth(), tr.getDay())
-            .ifPresent(x -> doc.setField("eventDateSingle", TemporalAccessorUtils.toDate(x)));
+      if (tr.getEventDate() != null
+          && tr.getEventDate().getGte() != null
+          && tr.getEventDate().getGte().length() == 10) {
+        indexRecord
+            .getDates()
+            .put(
+                "eventDateSingle",
+                new SimpleDateFormat("yyyy-MM-dd").parse(tr.getEventDate().getGte()).getTime());
       }
     } catch (ParseException e) {
       log.error(
-          "Unparseable date produced by downstream interpretation " + tr.getEventDate().getGte());
+          "Un-parsable date produced by downstream interpretation " + tr.getEventDate().getGte());
     }
 
     // GBIF taxonomy - add if available
@@ -236,13 +220,16 @@ public class ALASolrDocumentTransform implements Serializable {
       // add the classification
       List<RankedName> taxonomy = txr.getClassification();
       for (RankedName entry : taxonomy) {
-        doc.setField("gbif_s_" + entry.getRank().toString().toLowerCase() + "_id", entry.getKey());
-        doc.setField("gbif_s_" + entry.getRank().toString().toLowerCase(), entry.getName());
+        indexRecord
+            .getInts()
+            .put("gbif_s_" + entry.getRank().toString().toLowerCase() + "_id", entry.getKey());
+        indexRecord
+            .getStrings()
+            .put("gbif_s_" + entry.getRank().toString().toLowerCase(), entry.getName());
       }
 
-      String rank = txr.getAcceptedUsage().getRank().toString();
-      doc.setField("gbif_s_rank", txr.getAcceptedUsage().getRank().toString());
-      doc.setField("gbif_s_scientificName", txr.getAcceptedUsage().getName());
+      indexRecord.getStrings().put("gbif_s_rank", txr.getAcceptedUsage().getRank().toString());
+      indexRecord.getStrings().put("gbif_s_scientificName", txr.getAcceptedUsage().getName());
     }
 
     // Verbatim (Raw) data
@@ -252,28 +239,32 @@ public class ALASolrDocumentTransform implements Serializable {
       if (key.startsWith("http")) {
         key = key.substring(key.lastIndexOf("/") + 1);
       }
-      doc.setField("raw_" + key, entry.getValue());
+      indexRecord.getStrings().put("raw_" + key, entry.getValue());
     }
 
     // Sensitive (Original) data
     if (sr != null && sr.getSensitive()) {
-      doc.setField("sensitive", true);
+      indexRecord.getBooleans().put("sensitive", true);
       if (sr.getDataGeneralizations() != null)
-        doc.setField("dataGeneralizations", sr.getDataGeneralizations());
+        indexRecord.getStrings().put("dataGeneralizations", sr.getDataGeneralizations());
       if (sr.getInformationWithheld() != null)
-        doc.setField("informationWithheld", sr.getInformationWithheld());
+        indexRecord.getStrings().put("informationWithheld", sr.getInformationWithheld());
       if (sr.getGeneralisationInMetres() != null)
-        doc.setField("generalisationInMetres", sr.getGeneralisationInMetres());
+        indexRecord.getStrings().put("generalisationInMetres", sr.getGeneralisationInMetres());
       if (sr.getGeneralisationInMetres() != null)
-        doc.setField("generalisationToApplyInMetres", sr.getGeneralisationInMetres());
+        indexRecord
+            .getStrings()
+            .put("generalisationToApplyInMetres", sr.getGeneralisationInMetres());
       for (Map.Entry<String, String> entry : sr.getOriginal().entrySet()) {
         Term field = TERM_FACTORY.findTerm(entry.getKey());
-        doc.setField("original_" + field.simpleName(), entry.getValue());
+        if (entry.getValue() != null) {
+          indexRecord.getStrings().put("original_" + field.simpleName(), entry.getValue());
+        }
       }
     }
 
-    if (lr.getDecimalLatitude() != null && lr.getDecimalLongitude() != null) {
-      addGeo(doc, lr.getDecimalLatitude(), lr.getDecimalLongitude());
+    if (lr != null && lr.getHasCoordinate() != null && lr.getHasCoordinate()) {
+      addGeo(indexRecord, lr.getDecimalLatitude(), lr.getDecimalLongitude());
     }
 
     // ALA taxonomy & species groups - backwards compatible for EYA
@@ -284,112 +275,105 @@ public class ALASolrDocumentTransform implements Serializable {
         if (value != null
             && !field.name().equals("speciesGroup")
             && !field.name().equals("speciesSubgroup")
-            && !SKIP_KEYS.contains(field.name())) {
+            && !skipKeys.contains(field.name())) {
           if (field.name().equalsIgnoreCase("issues")) {
-            doc.setField("assertions", value);
+            assertions.add((String) value);
           } else {
             if (value instanceof Integer) {
-              doc.setField(field.name(), value);
+              indexRecord.getInts().put(field.name(), (Integer) value);
             } else {
-              doc.setField(field.name(), value.toString());
+              indexRecord.getStrings().put(field.name(), value.toString());
             }
           }
         }
       }
 
       // required for EYA
-      doc.setField(
-          "names_and_lsid",
-          String.join(
-              "|",
-              atxr.getScientificName(),
-              atxr.getTaxonConceptID(),
-              atxr.getVernacularName(),
-              atxr.getKingdom(),
-              atxr.getFamily())); // is set to IGNORE in headerAttributes
+      indexRecord
+          .getStrings()
+          .put(
+              "names_and_lsid",
+              String.join(
+                  "|",
+                  atxr.getScientificName(),
+                  atxr.getTaxonConceptID(),
+                  atxr.getVernacularName(),
+                  atxr.getKingdom(),
+                  atxr.getFamily())); // is set to IGNORE in headerAttributes
 
-      doc.setField(
-          "common_name_and_lsid",
-          String.join(
-              "|",
-              atxr.getVernacularName(),
-              atxr.getScientificName(),
-              atxr.getTaxonConceptID(),
-              atxr.getVernacularName(),
-              atxr.getKingdom(),
-              atxr.getFamily())); // is set to IGNORE in headerAttribute
+      indexRecord
+          .getStrings()
+          .put(
+              "common_name_and_lsid",
+              String.join(
+                  "|",
+                  atxr.getVernacularName(),
+                  atxr.getScientificName(),
+                  atxr.getTaxonConceptID(),
+                  atxr.getVernacularName(),
+                  atxr.getKingdom(),
+                  atxr.getFamily())); // is set to IGNORE in headerAttribute
 
       // legacy fields referenced in biocache-service code
-      doc.setField("taxon_name", atxr.getScientificName());
-      doc.setField("lsid", atxr.getTaxonConceptID());
-      doc.setField("rank", atxr.getRank());
-      doc.setField("rank_id", atxr.getRankID());
+      indexRecord.getStrings().put("taxon_name", atxr.getScientificName());
+      indexRecord.getStrings().put("lsid", atxr.getTaxonConceptID());
+      indexRecord.setTaxonID(atxr.getTaxonConceptID());
+      indexRecord.getStrings().put("rank", atxr.getRank());
+      indexRecord.getInts().put("rank_id", atxr.getRankID());
 
       if (atxr.getVernacularName() != null) {
-        doc.setField("common_name", atxr.getVernacularName());
+        indexRecord.getStrings().put("common_name", atxr.getVernacularName());
       }
 
       for (String s : atxr.getSpeciesGroup()) {
-        doc.setField("species_group", s);
+        indexRecord.getStrings().put("species_group", s);
       }
       for (String s : atxr.getSpeciesSubgroup()) {
-        doc.setField("species_subgroup", s);
+        indexRecord.getStrings().put("species_subgroup", s);
       }
     }
 
-    doc.setField("geospatial_kosher", lr.getHasCoordinate());
-    doc.setField("first_loaded_date", new Date());
+    // FIXME see #99
+    boolean geospatialKosher =
+        lr.getHasGeospatialIssue() != null && lr.getHasGeospatialIssue() ? true : false;
+    indexRecord.getBooleans().put("geospatial_kosher", geospatialKosher);
 
-    if (asr != null) {
-      Map<String, String> samples = asr.getItems();
-      for (Map.Entry<String, String> sample : samples.entrySet()) {
-        if (!StringUtils.isEmpty(sample.getValue())) {
-          if (sample.getKey().startsWith("el")) {
-            doc.setField(sample.getKey(), Double.valueOf(sample.getValue()));
-          } else {
-            doc.setField(sample.getKey(), sample.getValue());
-          }
-        }
-      }
-    }
+    // FIXME  - see #162
+    indexRecord.getDates().put("first_loaded_date", new Date().getTime());
 
     // Add legacy collectory fields
     if (aar != null) {
-      addIfNotEmpty(doc, "license", aar.getLicenseType());
+      addIfNotEmpty(indexRecord, "license", aar.getLicenseType());
       addIfNotEmpty(
-          doc, "raw_dataResourceUid", aar.getDataResourceUid()); // for backwards compatibility
-      addIfNotEmpty(doc, "dataResourceUid", aar.getDataResourceUid());
-      addIfNotEmpty(doc, "dataResourceName", aar.getDataResourceName());
-      addIfNotEmpty(doc, "dataProviderUid", aar.getDataProviderUid());
-      addIfNotEmpty(doc, "dataProviderName", aar.getDataProviderName());
-      addIfNotEmpty(doc, "institutionUid", aar.getInstitutionUid());
-      addIfNotEmpty(doc, "collectionUid", aar.getCollectionUid());
-      addIfNotEmpty(doc, "institutionName", aar.getInstitutionName());
-      addIfNotEmpty(doc, "collectionName", aar.getCollectionName());
+          indexRecord,
+          "raw_dataResourceUid",
+          aar.getDataResourceUid()); // for backwards compatibility
+      addIfNotEmpty(indexRecord, "dataResourceUid", aar.getDataResourceUid());
+      addIfNotEmpty(indexRecord, "dataResourceName", aar.getDataResourceName());
+      addIfNotEmpty(indexRecord, "dataProviderUid", aar.getDataProviderUid());
+      addIfNotEmpty(indexRecord, "dataProviderName", aar.getDataProviderName());
+      addIfNotEmpty(indexRecord, "institutionUid", aar.getInstitutionUid());
+      addIfNotEmpty(indexRecord, "collectionUid", aar.getCollectionUid());
+      addIfNotEmpty(indexRecord, "institutionName", aar.getInstitutionName());
+      addIfNotEmpty(indexRecord, "collectionName", aar.getCollectionName());
     }
 
     // legacy fields reference directly in biocache-service code
     if (txr != null) {
       IssueRecord taxonomicIssues = txr.getIssues();
-      for (String issue : taxonomicIssues.getIssueList()) {
-        doc.setField("assertions", issue);
-      }
+      assertions.addAll(taxonomicIssues.getIssueList());
     }
 
     if (isr != null && isr.getImageIDs() != null && !isr.getImageIDs().isEmpty()) {
-      doc.setField("image_url", isr.getImageIDs().get(0));
-      for (String imageID : isr.getImageIDs()) {
-        doc.setField("all_image_url", imageID);
-      }
+      indexRecord.getStrings().put("image_url", isr.getImageIDs().get(0));
+      indexRecord.getMultiValues().put("all_image_url", isr.getImageIDs());
       // FIX ME - do we need mime type.....
-      doc.setField("multimedia", "Image");
+      indexRecord.getStrings().put("multimedia", "Image");
     }
 
     if (tpr != null && tpr.getSpeciesListID() != null && !tpr.getSpeciesListID().isEmpty()) {
 
-      for (String speciesListID : tpr.getSpeciesListID()) {
-        doc.setField("species_list_uid", speciesListID);
-      }
+      indexRecord.getMultiValues().put("species_list_uid", tpr.getSpeciesListID());
 
       // CONSERVATION STATUS
       String stateProvince = lr.getStateProvince();
@@ -402,15 +386,17 @@ public class ALASolrDocumentTransform implements Serializable {
           if (conservationStatus.getRegion().equalsIgnoreCase(stateProvince)) {
 
             if (Strings.isNotBlank(conservationStatus.getSourceStatus())) {
-              doc.setField("raw_state_conservation", conservationStatus.getSourceStatus());
+              indexRecord
+                  .getStrings()
+                  .put("raw_state_conservation", conservationStatus.getSourceStatus());
             }
             if (Strings.isNotBlank(conservationStatus.getStatus())) {
-              doc.setField("state_conservation", conservationStatus.getStatus());
+              indexRecord.getStrings().put("state_conservation", conservationStatus.getStatus());
             }
           }
           if (conservationStatus.getRegion().equalsIgnoreCase(country)) {
             if (Strings.isNotBlank(conservationStatus.getStatus())) {
-              doc.setField("country_conservation", conservationStatus.getStatus());
+              indexRecord.getStrings().put("country_conservation", conservationStatus.getStatus());
             }
           }
         }
@@ -421,51 +407,35 @@ public class ALASolrDocumentTransform implements Serializable {
       for (InvasiveStatus invasiveStatus : invasiveStatuses) {
         if (invasiveStatus.getRegion() != null) {
           if (invasiveStatus.getRegion().equalsIgnoreCase(stateProvince)) {
-            doc.setField("state_invasive", "invasive");
+            indexRecord.getStrings().put("state_invasive", "invasive");
           }
           if (invasiveStatus.getRegion().equalsIgnoreCase(country)) {
-            doc.setField("country_invasive", "invasive");
+            indexRecord.getStrings().put("country_invasive", "invasive");
           }
         }
       }
     }
 
-    IssueRecord geospatialIssues = lr.getIssues();
-    for (String issue : geospatialIssues.getIssueList()) {
-      doc.setField("assertions", issue);
+    assertions.addAll(lr.getIssues().getIssueList());
+    assertions.addAll(tr.getIssues().getIssueList());
+    assertions.addAll(br.getIssues().getIssueList());
+    assertions.addAll(mdr.getIssues().getIssueList());
+    if (sr != null) {
+      assertions.addAll(sr.getIssues().getIssueList());
     }
 
-    IssueRecord temporalIssues = tr.getIssues();
-    for (String issue : temporalIssues.getIssueList()) {
-      doc.setField("assertions", issue);
-    }
+    indexRecord.getMultiValues().put("assertions", assertions);
 
-    IssueRecord basisOfRecordIssues = br.getIssues();
-    for (String issue : basisOfRecordIssues.getIssueList()) {
-      doc.setField("assertions", issue);
-    }
-
-    IssueRecord sensitivityIssues = sr == null ? null : sr.getIssues();
-    if (sensitivityIssues != null) {
-      for (String issue : sensitivityIssues.getIssueList()) {
-        doc.setField("assertions", issue);
-      }
-    }
-
-    for (String issue : mdr.getIssues().getIssueList()) {
-      doc.setField("assertions", issue);
-    }
-
-    return doc;
+    return indexRecord.build();
   }
 
-  public ParDo.SingleOutput<KV<String, CoGbkResult>, SolrInputDocument> converter() {
+  public ParDo.SingleOutput<KV<String, CoGbkResult>, IndexRecord> converter() {
 
-    DoFn<KV<String, CoGbkResult>, SolrInputDocument> fn =
-        new DoFn<KV<String, CoGbkResult>, SolrInputDocument>() {
+    DoFn<KV<String, CoGbkResult>, IndexRecord> fn =
+        new DoFn<KV<String, CoGbkResult>, IndexRecord>() {
 
           private final Counter counter =
-              Metrics.counter(ALASolrDocumentTransform.class, AVRO_TO_JSON_COUNT);
+              Metrics.counter(IndexRecordTransform.class, AVRO_TO_JSON_COUNT);
 
           @ProcessElement
           public void processElement(ProcessContext c) {
@@ -506,20 +476,13 @@ public class ALASolrDocumentTransform implements Serializable {
               tpr = v.getOnly(tpTag, TaxonProfile.newBuilder().setId(k).build());
             }
 
-            // Sampling
-            LocationFeatureRecord asr = null;
-            if (asrTag != null) {
-              asr = v.getOnly(asrTag, LocationFeatureRecord.newBuilder().setId(k).build());
-            }
             ALASensitivityRecord sr = null;
             if (srTag != null) {
               sr = v.getOnly(srTag, null);
             }
 
-            MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
-
-            SolrInputDocument doc =
-                createSolrDocument(mdr, br, tr, lr, txr, atxr, er, aar, asr, ur, isr, tpr, sr);
+            IndexRecord doc =
+                createIndexRecord(mdr, br, tr, lr, txr, atxr, er, aar, ur, isr, tpr, sr);
 
             c.output(doc);
             counter.inc();
@@ -529,35 +492,43 @@ public class ALASolrDocumentTransform implements Serializable {
     return ParDo.of(fn).withSideInputs(metadataView);
   }
 
-  static void addIfNotEmpty(SolrInputDocument doc, String fieldName, String value) {
+  static void addIfNotEmpty(IndexRecord.Builder doc, String fieldName, String value) {
     if (StringUtils.isNotEmpty(value)) {
-      doc.setField(fieldName, value);
+      doc.getStrings().put(fieldName, value);
     }
   }
 
-  static void addGeo(SolrInputDocument doc, double lat, double lon) {
+  static void addGeo(IndexRecord.Builder doc, double lat, double lon) {
     String latlon = "";
     // ensure that the lat longs are in the required range before
     if (lat <= 90 && lat >= -90d && lon <= 180 && lon >= -180d) {
       // https://lucene.apache.org/solr/guide/7_0/spatial-search.html#indexing-points
       latlon = lat + "," + lon; // required format for indexing geodetic points in SOLR
+      doc.setLatLng(latlon);
     }
 
-    doc.addField("lat_long", latlon); // is set to IGNORE in headerAttributes
-    doc.addField(
-        "point-1", getLatLongString(lat, lon, "#")); // is set to IGNORE in headerAttributes
-    doc.addField(
-        "point-0.1", getLatLongString(lat, lon, "#.#")); // is set to IGNORE in headerAttributes
-    doc.addField(
-        "point-0.01", getLatLongString(lat, lon, "#.##")); // is set to IGNORE in headerAttributes
-    doc.addField(
-        "point-0.02",
-        getLatLongStringStep(lat, lon, "#.##", 0.02)); // is set to IGNORE in headerAttributes
-    doc.addField(
-        "point-0.001", getLatLongString(lat, lon, "#.###")); // is set to IGNORE in headerAttributes
-    doc.addField(
-        "point-0.0001",
-        getLatLongString(lat, lon, "#.####")); // is set to IGNORE in headerAttributes
+    doc.getStrings().put("lat_long", latlon); // is set to IGNORE in headerAttributes
+    doc.getStrings()
+        .put("point-1", getLatLongString(lat, lon, "#")); // is set to IGNORE in headerAttributes
+    doc.getStrings()
+        .put(
+            "point-0.1", getLatLongString(lat, lon, "#.#")); // is set to IGNORE in headerAttributes
+    doc.getStrings()
+        .put(
+            "point-0.01",
+            getLatLongString(lat, lon, "#.##")); // is set to IGNORE in headerAttributes
+    doc.getStrings()
+        .put(
+            "point-0.02",
+            getLatLongStringStep(lat, lon, "#.##", 0.02)); // is set to IGNORE in headerAttributes
+    doc.getStrings()
+        .put(
+            "point-0.001",
+            getLatLongString(lat, lon, "#.###")); // is set to IGNORE in headerAttributes
+    doc.getStrings()
+        .put(
+            "point-0.0001",
+            getLatLongString(lat, lon, "#.####")); // is set to IGNORE in headerAttributes
   }
 
   static String getLatLongStringStep(Double lat, Double lon, String format, Double step) {
@@ -577,7 +548,8 @@ public class ALASolrDocumentTransform implements Serializable {
     return df.format(lat) + "," + df.format(lon);
   }
 
-  static void addToDoc(SpecificRecordBase record, SolrInputDocument doc, Set<String> skipKeys) {
+  static void addToIndexRecord(
+      SpecificRecordBase record, IndexRecord.Builder builder, Set<String> skipKeys) {
 
     record.getSchema().getFields().stream()
         .filter(n -> !skipKeys.contains(n.name()))
@@ -594,30 +566,89 @@ public class ALASolrDocumentTransform implements Serializable {
                                       .findFirst()
                                       .map(Schema::getType)
                                   : Optional.of(schema.getType());
-
-                          type.ifPresent(
-                              t -> {
-                                switch (t) {
-                                  case BOOLEAN:
-                                    doc.setField(f.name(), r);
-                                    break;
-                                  case FLOAT:
-                                    doc.setField(f.name(), r);
-                                    break;
-                                  case DOUBLE:
-                                    doc.setField(f.name(), r);
-                                    break;
-                                  case INT:
-                                    doc.setField(f.name(), r);
-                                    break;
-                                  case LONG:
-                                    doc.setField(f.name(), r);
-                                    break;
-                                  default:
-                                    doc.setField(f.name(), r.toString());
-                                    break;
-                                }
-                              });
+                          if (r != null) {
+                            type.ifPresent(
+                                t -> {
+                                  switch (t) {
+                                    case BOOLEAN:
+                                      //
+                                      builder.getBooleans().put(f.name(), (Boolean) r);
+                                      break;
+                                    case FLOAT:
+                                      builder.getDoubles().put(f.name(), (Double) r);
+                                      break;
+                                    case DOUBLE:
+                                      builder.getDoubles().put(f.name(), (Double) r);
+                                      break;
+                                    case INT:
+                                      builder.getInts().put(f.name(), (Integer) r);
+                                      break;
+                                    case LONG:
+                                      builder.getLongs().put(f.name(), (Long) r);
+                                      break;
+                                    case ARRAY:
+                                      builder.getMultiValues().put(f.name(), (java.util.List) r);
+                                      break;
+                                    default:
+                                      builder.getStrings().put(f.name(), r.toString());
+                                      break;
+                                  }
+                                });
+                          }
                         }));
+  }
+
+  public static class IndexRecordToSolrInputDocumentFcn
+      extends DoFn<IndexRecord, SolrInputDocument> {
+    @ProcessElement
+    public void processElement(
+        @Element IndexRecord indexRecord, OutputReceiver<SolrInputDocument> out) {
+      SolrInputDocument solrInputDocument = convertIndexRecordToSolrDoc(indexRecord);
+      out.output(solrInputDocument);
+    }
+  }
+
+  public static SolrInputDocument convertIndexRecordToSolrDoc(IndexRecord indexRecord) {
+    SolrInputDocument doc = new SolrInputDocument();
+    doc.setField("id", indexRecord.getId());
+
+    // strings
+    for (Map.Entry<String, String> s : indexRecord.getStrings().entrySet()) {
+      doc.addField(s.getKey(), s.getValue());
+    }
+
+    // doubles
+    for (Map.Entry<String, Double> s : indexRecord.getDoubles().entrySet()) {
+      doc.addField(s.getKey(), s.getValue());
+    }
+
+    // integers
+    for (Map.Entry<String, Integer> s : indexRecord.getInts().entrySet()) {
+      doc.addField(s.getKey(), s.getValue());
+    }
+
+    // longs
+    for (Map.Entry<String, Long> s : indexRecord.getLongs().entrySet()) {
+      doc.addField(s.getKey(), s.getValue());
+    }
+
+    // dates
+    for (Map.Entry<String, Long> s : indexRecord.getDates().entrySet()) {
+      doc.addField(s.getKey(), new Date(s.getValue()));
+    }
+
+    // booleans
+    for (Map.Entry<String, Boolean> s : indexRecord.getBooleans().entrySet()) {
+      doc.addField(s.getKey(), s.getValue());
+    }
+
+    // multi-value fields
+    for (Map.Entry<String, List<String>> s : indexRecord.getMultiValues().entrySet()) {
+      for (String value : s.getValue()) {
+        doc.addField(s.getKey(), value);
+      }
+    }
+
+    return doc;
   }
 }
