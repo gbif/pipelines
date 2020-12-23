@@ -12,9 +12,9 @@
   </fieldType>
   <fieldType name="binary" class="solr.BinaryField"/>
   <fieldType name="boolean" class="solr.BoolField" omitNorms="true" sortMissingLast="true"/>
-  <fieldType name="date" class="solr.TrieDateField" omitNorms="true" positionIncrementGap="0" precisionStep="0"/>
-  <fieldType name="double" class="solr.TrieDoubleField" omitNorms="true" positionIncrementGap="0" precisionStep="0"/>
-  <fieldType name="float" class="solr.TrieFloatField" omitNorms="true" positionIncrementGap="0" precisionStep="0"/>
+  <fieldType name="date" class="solr.DatePointField" omitNorms="true" />
+  <fieldType name="double" class="solr.DoublePointField" omitNorms="true" />
+  <fieldType name="float" class="solr.FloatPointField" omitNorms="true" />
   <fieldType name="geohash"
             class="solr.SpatialRecursivePrefixTreeFieldType"
             datelineRule="ccwRect"
@@ -28,8 +28,9 @@
             docValues="true"
   />
   <fieldType name="ignored" class="solr.StrField" indexed="false" stored="false" multiValued="true"/>
-  <fieldType name="int" class="solr.TrieIntField" omitNorms="true" positionIncrementGap="0" precisionStep="0"/>
-  <fieldType name="long" class="solr.TrieLongField" omitNorms="true" positionIncrementGap="0" precisionStep="0"/>
+  <fieldType name="int" class="solr.IntPointField" omitNorms="true"/>
+  <fieldType name="long" class="solr.LongPointField" omitNorms="true"/>
+
   <fieldType name="text" class="solr.TextField"/>
   <fieldType name="lowercase" class="solr.TextField" positionIncrementGap="100">
     <analyzer>
@@ -50,7 +51,6 @@
     </analyzer>
   </fieldType>
   <fieldType name="point" class="solr.PointType" subFieldSuffix="_d" dimension="2"/>
-  <fieldType name="quad" class="solr.SpatialTermQueryPrefixTreeFieldType" distanceUnits="degrees"/>
   <fieldType name="random" class="solr.RandomSortField" indexed="true"/>
   <fieldType name="string" class="solr.StrField" omitNorms="true" sortMissingLast="true"/>
   <fieldType name="string_lowercase" class="solr.TextField" positionIncrementGap="100">
@@ -63,8 +63,6 @@
       <filter class="solr.LowerCaseFilterFactory"/>
     </analyzer>
   </fieldType>
-  <fieldType name="tdate" class="solr.TrieDateField" omitNorms="true" positionIncrementGap="0" precisionStep="6"/>
-  <fieldType name="tdouble" class="solr.TrieDoubleField" omitNorms="true" positionIncrementGap="0" precisionStep="8"/>
   <fieldType name="textTight" class="solr.TextField" positionIncrementGap="100">
     <analyzer>
       <tokenizer class="solr.WhitespaceTokenizerFactory"/>
@@ -117,9 +115,6 @@
       <filter class="solr.LowerCaseFilterFactory"/>
     </analyzer>
   </fieldType>
-  <fieldType name="tfloat" class="solr.TrieFloatField" omitNorms="true" positionIncrementGap="0" precisionStep="8"/>
-  <fieldType name="tint" class="solr.TrieIntField" omitNorms="true" positionIncrementGap="0" precisionStep="8"/>
-  <fieldType name="tlong" class="solr.TrieLongField" omitNorms="true" positionIncrementGap="0" precisionStep="8"/>
 
   <field name="id" type="string" docValues="true" multiValued="false" indexed="true"/>
 
@@ -142,12 +137,12 @@
   <field name="taxon_name"        type="string"  docValues="true" indexed="true"/>
   <field name="common_name"       type="string"  docValues="true" indexed="true"/>
   <field name="rank"              type="string"  docValues="true" indexed="true"/>
-  <field name="rank_id"           type="tint"    docValues="true" indexed="true"/>
+  <field name="rank_id"           type="int"    docValues="true" indexed="true"/>
   <field name="lsid"              type="string"  docValues="true" indexed="true"/>
-  <field name="lft"               type="tint"    docValues="true" indexed="true"/>
-  <field name="rgt"               type="tint"    docValues="true" indexed="true"/>
+  <field name="lft"               type="int"    docValues="true" indexed="true"/>
+  <field name="rgt"               type="int"    docValues="true" indexed="true"/>
   <field name="geospatial_kosher" type="boolean" docValues="true" multiValued="false" indexed="true" />
-  <field name="first_loaded_date" type="tdate"   docValues="true" multiValued="false" indexed="true"/>
+  <field name="first_loaded_date" type="date"   docValues="true" multiValued="false" indexed="true"/>
   <field name="species_group"     type="string"  docValues="true" multiValued="true"  indexed="true"/>
   <field name="species_subgroup"  type="string"  docValues="true" multiValued="true"  indexed="true" />
   <field name="species_list_uid"  type="string"  docValues="true" multiValued="true"  indexed="true" />
@@ -184,8 +179,8 @@
   <field name="collectionCode" type="string" docValues="true" indexed="true"/>
   <field name="collectionID" type="string" docValues="true" indexed="true"/>
   <field name="continent" type="string" docValues="true" indexed="true"/>
-  <field name="coordinatePrecision" type="tdouble" docValues="true" indexed="true"/>
-  <field name="coordinateUncertaintyInMeters" type="tdouble" docValues="true" indexed="true"/>
+  <field name="coordinatePrecision" type="double" docValues="true" indexed="true"/>
+  <field name="coordinateUncertaintyInMeters" type="double" docValues="true" indexed="true"/>
   <field name="country" type="string" docValues="true" indexed="true"/>
   <field name="countryCode" type="string" docValues="true" indexed="true"/>
   <field name="county" type="string" docValues="true" indexed="true"/>
@@ -193,11 +188,11 @@
   <field name="datasetID" type="string" docValues="true" indexed="true"/>
   <field name="datasetName" type="string" docValues="true" indexed="true"/>
   <field name="dateIdentified" type="string" docValues="true" indexed="true"/>
-  <field name="day" type="tint" docValues="true" indexed="true"/>
-  <field name="decimalLatitude" type="tdouble" docValues="true" indexed="true"/>
-  <field name="decimalLongitude" type="tdouble" docValues="true" indexed="true"/>
-  <field name="depth" type="tdouble" docValues="true" indexed="true"/>
-  <field name="depthAccuracy" type="tdouble" docValues="true" indexed="true"/>
+  <field name="day" type="int" docValues="true" indexed="true"/>
+  <field name="decimalLatitude" type="double" docValues="true" indexed="true"/>
+  <field name="decimalLongitude" type="double" docValues="true" indexed="true"/>
+  <field name="depth" type="double" docValues="true" indexed="true"/>
+  <field name="depthAccuracy" type="double" docValues="true" indexed="true"/>
   <field name="disposition" type="string" docValues="true" indexed="true"/>
   <field name="dynamicProperties" type="string" docValues="true" indexed="true"/>
   <field name="earliestAgeOrLowestStage" type="string" docValues="true" indexed="true"/>
@@ -209,7 +204,7 @@
   <field name="endDayOfYear" type="string" docValues="true" indexed="true"/>
   <field name="establishmentMeans" type="string" docValues="true" indexed="true"/>
   <field name="eventDate" type="string" docValues="true" indexed="true"/>
-  <field name="eventDateSingle" type="tdate" docValues="true" indexed="true"/>
+  <field name="eventDateSingle" type="date" docValues="true" indexed="true"/>
   <field name="eventID" type="string" docValues="true" indexed="true"/>
   <field name="eventRemarks" type="string" docValues="true" indexed="true"/>
   <field name="eventTime" type="string" docValues="true" indexed="true"/>
@@ -287,7 +282,7 @@
   <field name="minimumDistanceAboveSurfaceInMeters"  type="string" docValues="true" indexed="true"/>
   <field name="minimumElevationInMeters"  type="string" docValues="true" indexed="true"/>
   <field name="modified"  type="string" docValues="true" indexed="true"/>
-  <field name="month"  type="tint" docValues="true" indexed="true"/>
+  <field name="month"  type="int" docValues="true" indexed="true"/>
   <field name="municipality"  type="string" docValues="true" indexed="true"/>
   <field name="nameAccordingTo"  type="string" docValues="true" indexed="true"/>
   <field name="nameAccordingToID"  type="string" docValues="true" indexed="true"/>
@@ -309,8 +304,8 @@
   <field name="originalNameUsage"  type="string" docValues="true" indexed="true"/>
   <field name="originalNameUsageID"  type="string" docValues="true" indexed="true"/>
   <field name="otherCatalogNumbers"  type="string" docValues="true" indexed="true"/>
-  <field name="outliers" type="string" docValues="true" indexed="true" multiValued="true"/>
-  <field name="outlier_count" type="tint" docValues="true" indexed="true" />
+  <field name="outlierLayer" type="string" docValues="true" indexed="true" multiValued="true"/>
+  <field name="outlierLayerCount" type="int" docValues="true" indexed="true" />
   <field name="ownerInstitutionCode"  type="string" docValues="true" indexed="true"/>
   <field name="parentEventID"  type="string" docValues="true" indexed="true"/>
   <field name="parentNameUsage"  type="string" docValues="true" indexed="true"/>
@@ -364,7 +359,7 @@
   <field name="verbatimTaxonRank"  type="string" docValues="true" indexed="true"/>
   <field name="vernacularName"  type="string" docValues="true" indexed="true"/>
   <field name="waterBody"  type="string" docValues="true" indexed="true"/>
-  <field name="year"  type="tint" docValues="true" indexed="true"/>
+  <field name="year"  type="int" docValues="true" indexed="true"/>
 
   <!-- Large text fields (not supported by doc values) -->
   <field name="raw_footprintWKT"  type="text" />
@@ -385,7 +380,7 @@
   <field name="classID"    type="string" docValues="true" indexed="true"/>
   <field name="phylumID"   type="string" docValues="true" indexed="true"/>
   <field name="kingdomID"  type="string" docValues="true" indexed="true"/>
-  <field name="rankID"     type="tint"   docValues="true" indexed="true"/>
+  <field name="rankID"     type="int"   docValues="true" indexed="true"/>
   <field name="matchType"  type="string" docValues="true" indexed="true"/>
   <field name="nameType"  type="string" docValues="true" indexed="true"/>
 
@@ -403,18 +398,18 @@
 
   <!-- ALA specific fields -->
   <dynamicField name="gbif_s_*" type="string" docValues="true" indexed="true" />
-  <dynamicField name="gbif_i_*" type="tint" docValues="true" indexed="true" />
-  <dynamicField name="gbif_l_*" type="tlong" docValues="true" indexed="true" />
-  <dynamicField name="gbif_d_*" type="tdouble" docValues="true" indexed="true" />
-  <dynamicField name="gbif_f_*" type="tfloat" docValues="true" indexed="true" />
+  <dynamicField name="gbif_i_*" type="int" docValues="true" indexed="true" />
+  <dynamicField name="gbif_l_*" type="long" docValues="true" indexed="true" />
+  <dynamicField name="gbif_d_*" type="double" docValues="true" indexed="true" />
+  <dynamicField name="gbif_f_*" type="float" docValues="true" indexed="true" />
   <dynamicField name="gbif_b_*" type="boolean" docValues="true" indexed="true" />
-  <dynamicField name="gbif_t_*" type="tdate" docValues="true" indexed="true" />
+  <dynamicField name="gbif_t_*" type="date" docValues="true" indexed="true" />
 
   <!-- Raw / Verbatim fields -->
   <dynamicField name="raw_*" type="string" docValues="true" indexed="true"/>
 
   <!-- Environmental fields -->
-  <dynamicField name="el*"  type="tfloat" docValues="true" indexed="true"/>
+  <dynamicField name="el*"  type="float" docValues="true" indexed="true"/>
 
   <!-- Contextual fields -->
   <dynamicField name="cl*"  type="string" docValues="true" indexed="true" />
@@ -433,5 +428,10 @@
 
   <copyField source="lat_long" dest="geohash"/>
   <copyField source="lat_long" dest="location"/>
+
+
+  <!-- Depricated ALA SOLR fields no longer in use will be mapped to this unused SOLR field so
+       as not to throw an error. No data will be added to this field.  -->
+  <field name="null" type="string" docValues="true" indexed="true" stored="true"/>
 
 </schema>
