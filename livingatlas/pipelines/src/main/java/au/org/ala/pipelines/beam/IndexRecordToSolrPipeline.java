@@ -21,7 +21,6 @@ import org.apache.beam.sdk.values.*;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.io.avro.IndexRecord;
 import org.gbif.pipelines.io.avro.SampleRecord;
-import org.jetbrains.annotations.NotNull;
 import org.joda.time.Duration;
 import org.slf4j.MDC;
 
@@ -160,7 +159,6 @@ public class IndexRecordToSolrPipeline {
     log.info("Solr indexing pipeline complete");
   }
 
-  @NotNull
   private static DoFn<KV<String, CoGbkResult>, IndexRecord> joinSampling(
       TupleTag<IndexRecord> indexRecordTag, TupleTag<SampleRecord> samplingTag) {
 

@@ -110,7 +110,7 @@ public class DwcaToAvroCallbackIT {
 
     // Should
     Path path = Paths.get(config.stepConfig.repositoryPath + DATASET_UUID + "/2/verbatim.avro");
-    assertTrue(Files.exists(path));
+    assertTrue(path.toFile().exists());
     assertTrue(Files.size(path) > 0L);
     assertTrue(checkExists(curator, crawlId, DWCA_LABEL));
     assertTrue(checkExists(curator, crawlId, Fn.SUCCESSFUL_MESSAGE.apply(DWCA_LABEL)));
@@ -156,7 +156,7 @@ public class DwcaToAvroCallbackIT {
 
     // Should
     Path path = Paths.get(config.stepConfig.repositoryPath + DATASET_UUID + "/2/verbatim.avro");
-    assertTrue(Files.exists(path));
+    assertTrue(path.toFile().exists());
     assertTrue(Files.size(path) > 0L);
     assertFalse(checkExists(curator, crawlId, DWCA_LABEL));
     assertFalse(checkExists(curator, crawlId, Fn.SUCCESSFUL_MESSAGE.apply(DWCA_LABEL)));
@@ -201,7 +201,7 @@ public class DwcaToAvroCallbackIT {
 
     // Should
     Path path = Paths.get(config.stepConfig.repositoryPath + DATASET_UUID + "/2/verbatim.avro");
-    assertFalse(Files.exists(path));
+    assertFalse(path.toFile().exists());
     assertTrue(checkExists(curator, crawlId, DWCA_LABEL));
     assertTrue(checkExists(curator, crawlId, Fn.ERROR_MESSAGE.apply(DWCA_LABEL)));
     assertTrue(checkExists(curator, crawlId, Fn.MQ_CLASS_NAME.apply(DWCA_LABEL)));
@@ -245,7 +245,7 @@ public class DwcaToAvroCallbackIT {
 
     // Should
     Path path = Paths.get(config.stepConfig.repositoryPath + DATASET_UUID + "/2/verbatim.avro");
-    assertFalse(Files.exists(path));
+    assertFalse(path.toFile().exists());
     assertFalse(checkExists(curator, crawlId, DWCA_LABEL));
     assertFalse(checkExists(curator, crawlId, Fn.SUCCESSFUL_MESSAGE.apply(DWCA_LABEL)));
     assertFalse(checkExists(curator, crawlId, Fn.MQ_CLASS_NAME.apply(DWCA_LABEL)));

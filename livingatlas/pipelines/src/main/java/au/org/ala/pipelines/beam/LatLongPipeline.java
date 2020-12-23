@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
+import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.transforms.*;
 import org.apache.beam.sdk.values.PCollection;
@@ -21,8 +22,7 @@ import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
 import org.gbif.pipelines.core.utils.FsUtils;
-import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.transforms.core.LocationTransform;
+import org.gbif.pipelines.io.avro.IndexRecord;
 import org.slf4j.MDC;
 
 /**
@@ -57,20 +57,16 @@ public class LatLongPipeline {
     // Initialise pipeline
     Pipeline p = Pipeline.create(options);
 
-    // Use pre-processed coordinates from location transform outputs
-    log.info("Adding step 2: Initialise location transform");
-    LocationTransform locationTransform = LocationTransform.builder().create();
-
     log.info("Adding step 3: Creating beam pipeline");
     PCollection<String> locationCollection =
-        p.apply("Read Location", locationTransform.read(pathFn))
-            .apply(Filter.by(lr -> lr.getHasCoordinate()))
+        loadIndexRecords(options, p)
+            .apply(Filter.by(ir -> ir.getLatLng() != null))
             .apply(
                 MapElements.via(
-                    new SimpleFunction<LocationRecord, String>() {
+                    new SimpleFunction<IndexRecord, String>() {
                       @Override
-                      public String apply(LocationRecord input) {
-                        return input.getDecimalLatitude() + "," + input.getDecimalLongitude();
+                      public String apply(IndexRecord input) {
+                        return input.getLatLng();
                       }
                     }))
             .apply(Distinct.create());
@@ -96,5 +92,29 @@ public class LatLongPipeline {
     MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
 
     log.info("Pipeline has been finished. Output written to " + outputPath + "/latlng.csv");
+  }
+
+  /**
+   * Load index records from AVRO.
+   *
+   * @param options
+   * @param p
+   * @return
+   */
+  private static PCollection<IndexRecord> loadIndexRecords(
+      AllDatasetsPipelinesOptions options, Pipeline p) {
+    if (options.getDatasetId() != null && !"all".equalsIgnoreCase(options.getDatasetId())) {
+      return p.apply(
+          AvroIO.read(IndexRecord.class)
+              .from(
+                  String.join(
+                      "/",
+                      options.getAllDatasetsInputPath(),
+                      "index-record",
+                      options.getDatasetId() + "/*.avro")));
+    }
+    return p.apply(
+        AvroIO.read(IndexRecord.class)
+            .from(String.join("/", options.getAllDatasetsInputPath(), "index-record", "*/*.avro")));
   }
 }

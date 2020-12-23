@@ -318,7 +318,7 @@
   <field name="preparations"  type="string" docValues="true" indexed="true"/>
   <field name="previousIdentifications"  type="string" docValues="true" indexed="true"/>
   <field name="recordNumber"  type="string" docValues="true" indexed="true"/>
-  <field name="recordedBy"  type="string" docValues="true" indexed="true"/>
+  <field name="recordedBy"  type="string" docValues="true" indexed="true" multiValued="true"/>
   <field name="references"  type="string" docValues="true" indexed="true"/>
   <field name="relatedResourceID"  type="string" docValues="true" indexed="true"/>
   <field name="relationshipAccordingTo"  type="string" docValues="true" indexed="true"/>
@@ -387,6 +387,11 @@
   <field name="matchType"  type="string" docValues="true" indexed="true"/>
   <field name="nameType"  type="string" docValues="true" indexed="true"/>
 
+  <!-- ALA Sensitive data fields -->
+  <field name="sensitive"  type="boolean" docValues="true" indexed="true"/>
+  <field name="generalisationInMetres"  type="string" docValues="true" indexed="true"/>
+  <field name="generalisationToApplyInMetres"  type="string" docValues="true" indexed="true"/>
+
   <!-- ALA legacy attribution fields -->
   <field name="dataResourceUid" type="string" docValues="true" indexed="true" />
   <field name="dataProviderUid" type="string" docValues="true" indexed="true" />
@@ -397,7 +402,7 @@
   <field name="institutionName" type="string" docValues="true" indexed="true" />
   <field name="collectionName" type="string" docValues="true" indexed="true" />
 
-  <field name="machineTags"  type="string" docValues="true" indexed="true"  multiValued="true" />
+  <field name="machineTags"  type="string" docValues="true" indexed="true" multiValued="true" />
 
   <!-- ALA specific fields -->
   <dynamicField name="gbif_s_*" type="string" docValues="true" indexed="true" />
@@ -416,6 +421,9 @@
 
   <!-- Contextual fields -->
   <dynamicField name="cl*"  type="string" docValues="true" indexed="true" />
+
+  <!-- Original data fields for generalised data -->
+  <dynamicField name="original_*" type="string" docValues="true" indexed="false"/>
 
   <!-- Adhoc fields -->
   <dynamicField name="_*"    type="string" docValues="true" indexed="true" stored="false"/>

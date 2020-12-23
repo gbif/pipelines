@@ -64,11 +64,9 @@ public class ALAFsUtils {
    * 'ala_sensitive_taxon'
    */
   public static String buildPathGeneralisedUsingTargetPath(
-      BasePipelineOptions options, String name, String uniqueId) {
+      InterpretationPipelineOptions options, String name) {
     return PathBuilder.buildPath(
-            PathBuilder.buildDatasetAttemptPath(options, "generalised", false),
-            name,
-            "generalise-" + uniqueId)
+            PathBuilder.buildDatasetAttemptPath(options, "generalised", false), name, "generalise")
         .toString();
   }
 

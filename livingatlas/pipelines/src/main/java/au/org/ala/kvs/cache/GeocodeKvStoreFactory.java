@@ -17,7 +17,7 @@ public class GeocodeKvStoreFactory {
   private final KeyValueStore<LatLng, GeocodeResponse> stateProvinceKvStore;
   private static volatile GeocodeKvStoreFactory instance;
   private static final Object MUTEX = new Object();
-  private final String bitmapExt = ".png";
+  private static final String BITMAP_EXT = ".png";
 
   @SneakyThrows
   private GeocodeKvStoreFactory(ALAPipelinesConfig config) {
@@ -30,10 +30,10 @@ public class GeocodeKvStoreFactory {
     KeyValueStore<LatLng, GeocodeResponse> stateProvinceStore =
         StateProvinceKeyValueStore.create(config.getGeocodeConfig());
     // Try to load from image file which has the same name of the SHP file
-    BufferedImage StateCacheImage =
+    BufferedImage stateCacheImage =
         BufferedImageFactory.loadImageFile(
-            config.getGeocodeConfig().getStateProvince().getPath() + bitmapExt);
-    stateProvinceKvStore = GeocodeKvStore.create(stateProvinceStore, StateCacheImage);
+            config.getGeocodeConfig().getStateProvince().getPath() + BITMAP_EXT);
+    stateProvinceKvStore = GeocodeKvStore.create(stateProvinceStore, stateCacheImage);
   }
 
   public static KeyValueStore<LatLng, GeocodeResponse> getInstance(ALAPipelinesConfig config) {

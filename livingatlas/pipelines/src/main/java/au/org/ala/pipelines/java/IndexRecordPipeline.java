@@ -5,6 +5,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSI
 import au.org.ala.pipelines.common.ALARecordTypes;
 import au.org.ala.pipelines.options.ALASolrPipelineOptions;
 import au.org.ala.pipelines.transforms.ALAAttributionTransform;
+import au.org.ala.pipelines.transforms.ALASensitiveDataRecordTransform;
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
 import au.org.ala.pipelines.transforms.IndexRecordTransform;
 import au.org.ala.pipelines.util.VersionInfo;
@@ -48,7 +49,6 @@ import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
-import org.gbif.pipelines.transforms.specific.LocationFeatureTransform;
 import org.slf4j.MDC;
 
 /**
@@ -66,30 +66,8 @@ import org.slf4j.MDC;
  *      {@link org.gbif.pipelines.io.avro.TaxonRecord},
  *      {@link org.gbif.pipelines.io.avro.LocationRecord}
  *    2) Joins avro files
- *    3) Converts to json model (resources/elasticsearch/es-occurrence-schema.json)
- *    4) Pushes data to Elasticsearch instance
+ *    3) Converts to IndexRecord
  * </pre>
- *
- * <p>How to run:
- *
- * <pre>{@code
- * java -cp target/ingest-gbif-java-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.java.pipelines.InterpretedToEsIndexExtendedPipeline some.properties
- *
- * or pass all parameters:
- *
- * java -cp target/ingest-gbif-java-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.java.pipelines.InterpretedToEsIndexExtendedPipeline \
- * --datasetId=9f747cff-839f-4485-83a1-f10317a92a82 \
- * --attempt=1 \
- * --inputPath=/path \
- * --targetPath=/path \
- * --esHosts=http://ADDRESS:9200,http://ADDRESS:9200,http://ADDRESS:9200 \
- * --properties=/path/pipelines.properties \
- * --esIndexName=index_name \
- * --esAlias=index_alias \
- * --indexNumberShards=1 \
- * --esDocumentId=id
- *
- * }</pre>
  */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -165,8 +143,9 @@ public class IndexRecordPipeline {
     // ALA Specific transforms
     ALATaxonomyTransform alaTaxonomyTransform = ALATaxonomyTransform.builder().create();
     ALAAttributionTransform alaAttributionTransform = ALAAttributionTransform.builder().create();
-    LocationFeatureTransform spatialTransform = LocationFeatureTransform.builder().create();
     LocationTransform locationTransform = LocationTransform.builder().create();
+    ALASensitiveDataRecordTransform sensitiveTransform =
+        ALASensitiveDataRecordTransform.builder().create();
 
     log.info("Init metrics");
     IngestMetrics metrics = IngestMetricsBuilder.createInterpretedToEsIndexMetrics();
@@ -321,6 +300,16 @@ public class IndexRecordPipeline {
                     pathFn.apply(alaAttributionTransform.getBaseName())),
             executor);
 
+    CompletableFuture<Map<String, ALASensitivityRecord>> alaSensitiveMapFeature =
+        CompletableFuture.supplyAsync(
+            () ->
+                AvroReader.readRecords(
+                    hdfsSiteConfig,
+                    coreSiteConfig,
+                    ALASensitivityRecord.class,
+                    pathFn.apply(sensitiveTransform.getBaseName())),
+            executor);
+
     CompletableFuture<Map<String, ImageServiceRecord>> imageServiceMapFeature =
         CompletableFuture.supplyAsync(
             () ->
@@ -344,6 +333,8 @@ public class IndexRecordPipeline {
     Map<String, ALAUUIDRecord> aurMap = alaUuidMapFeature.get();
     Map<String, ALATaxonRecord> alaTaxonMap = alaTaxonMapFeature.get();
     Map<String, ALAAttributionRecord> alaAttributionMap = alaAttributionMapFeature.get();
+    Map<String, ALASensitivityRecord> alaSensitivityMap =
+        options.getIncludeSensitiveData() ? alaSensitiveMapFeature.get() : Collections.emptyMap();
     Map<String, ImageServiceRecord> imageServiceMap =
         options.getIncludeImages() ? imageServiceMapFeature.get() : Collections.emptyMap();
 
@@ -370,17 +361,13 @@ public class IndexRecordPipeline {
               locationMap.getOrDefault(k, LocationRecord.newBuilder().setId(k).build());
           TaxonRecord txr = null;
 
-          //            if (options.getIncludeGbifTaxonomy()) {
-          //                txr = taxonMap.getOrDefault(k,
-          // TaxonRecord.newBuilder().setId(k).build());
-          //            }
-
           // ALA specific
           ALAUUIDRecord aur = aurMap.getOrDefault(k, ALAUUIDRecord.newBuilder().setId(k).build());
           ALATaxonRecord atxr =
               alaTaxonMap.getOrDefault(k, ALATaxonRecord.newBuilder().setId(k).build());
           ALAAttributionRecord aar =
               alaAttributionMap.getOrDefault(k, ALAAttributionRecord.newBuilder().setId(k).build());
+          ALASensitivityRecord sr = alaSensitivityMap.getOrDefault(k, null);
           ImageServiceRecord isr =
               imageServiceMap.getOrDefault(k, ImageServiceRecord.newBuilder().setId(k).build());
           TaxonProfile tpr =
@@ -396,7 +383,7 @@ public class IndexRecordPipeline {
               measurementMap.getOrDefault(k, MeasurementOrFactRecord.newBuilder().setId(k).build());
 
           return IndexRecordTransform.createIndexRecord(
-              metadata, br, tr, lr, txr, atxr, er, aar, aur, isr, tpr);
+              metadata, br, tr, lr, txr, atxr, er, aar, aur, isr, tpr, sr);
         };
 
     List<IndexRecord> indexRecords =
@@ -407,7 +394,6 @@ public class IndexRecordPipeline {
         FsUtils.getFileSystem(
             options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getInputPath());
 
-    //
     OutputStream output =
         fs.create(
             new Path(

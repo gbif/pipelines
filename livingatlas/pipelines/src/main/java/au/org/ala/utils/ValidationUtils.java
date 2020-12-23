@@ -46,6 +46,7 @@ public class ValidationUtils {
   public static final String INTERPRETATION_METRICS = "interpretation-metrics.yml";
   public static final String VERBATIM_METRICS = "dwca-metrics.yml";
   public static final String INDEXING_METRICS = "indexing-metrics.yml";
+  public static final String SENSITIVE_METRICS = "sensitive-metrics.yml";
 
   public static final String DUPLICATE_KEY_COUNT = "duplicateKeyCount";
   public static final String EMPTY_KEY_RECORDS = "emptyKeyRecords";
@@ -99,8 +100,6 @@ public class ValidationUtils {
           "The imported interpretation is newer than the uuid. Unable to index until UUID minting re-ran");
       return ValidationResult.builder().valid(false).message(UUID_REQUIRED).build();
     }
-
-    // FIXME  check image sync-ed if indexWithImages =  true
 
     return ValidationResult.OK;
   }

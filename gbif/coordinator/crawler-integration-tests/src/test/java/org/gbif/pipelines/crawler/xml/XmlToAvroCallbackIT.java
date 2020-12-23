@@ -107,7 +107,7 @@ public class XmlToAvroCallbackIT {
 
     // Should
     Path path = Paths.get(config.stepConfig.repositoryPath + STRING_UUID + "/" + attempt + AVRO);
-    assertTrue(Files.exists(path));
+    assertTrue(path.toFile().exists());
     assertTrue(Files.size(path) > 0L);
     assertTrue(checkExists(curator, crawlId, XML_LABEL));
     assertTrue(checkExists(curator, crawlId, Fn.SUCCESSFUL_MESSAGE.apply(XML_LABEL)));
@@ -146,8 +146,8 @@ public class XmlToAvroCallbackIT {
 
     // Should
     Path path = Paths.get(config.stepConfig.repositoryPath + STRING_UUID + "/" + attempt + AVRO);
-    assertFalse(Files.exists(path));
-    assertFalse(Files.exists(path.getParent()));
+    assertFalse(path.toFile().exists());
+    assertFalse(path.getParent().toFile().exists());
     assertTrue(checkExists(curator, crawlId, XML_LABEL));
     assertTrue(checkExists(curator, crawlId, Fn.ERROR_MESSAGE.apply(XML_LABEL)));
     assertTrue(publisher.getMessages().isEmpty());
@@ -185,7 +185,7 @@ public class XmlToAvroCallbackIT {
 
     // Should
     Path path = Paths.get(config.stepConfig.repositoryPath + STRING_UUID + "/" + attempt + AVRO);
-    assertFalse(Files.exists(path));
+    assertFalse(path.toFile().exists());
     assertFalse(checkExists(curator, crawlId, XML_LABEL));
     assertFalse(checkExists(curator, crawlId, Fn.SUCCESSFUL_MESSAGE.apply(XML_LABEL)));
     assertTrue(publisher.getMessages().isEmpty());

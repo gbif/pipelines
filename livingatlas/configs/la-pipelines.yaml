@@ -32,6 +32,9 @@ fs:
 alaNameMatch:
   wsUrl: http://localhost:9179
   timeoutSec: 70
+sds:
+  wsUrl: http://localhost:9189
+  timeoutSec: 70
 collectory:
   wsUrl: https://collections.ala.org.au
   timeoutSec: 70
@@ -149,6 +152,10 @@ layerCrawler:
   batchStatusSleepTime: 1000
   downloadRetries: 5
 
+sensitive:
+  inputPath: '{fsPath}/pipelines-data'
+  runner: SparkRunner
+
 # class: au.org.ala.pipelines.java.ALAInterpretedToSolrIndexPipeline
 index:
   inputPath: '{fsPath}/pipelines-data'
@@ -157,6 +164,7 @@ index:
   includeSampling: true
   includeImages: true
   includeSpeciesLists: true
+  includeSensitiveData: false
   runner: SparkRunner
   zkHost: localhost:9983
   allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
@@ -248,6 +256,16 @@ export-latlng-sh-args:
     jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
   spark-cluster:
     conf: spark.default.parallelism=144
+    num-executors: 8
+    executor-cores: 8
+    executor-memory: 16G
+    driver-memory: 4G
+
+sensitive-sh-args:
+  spark-embedded:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-cluster:
+    jvm: -Xmx8g -XX:+UseG1GC
     num-executors: 8
     executor-cores: 8
     executor-memory: 16G
