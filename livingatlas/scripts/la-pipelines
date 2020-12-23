@@ -49,11 +49,11 @@ dwca-avro --> interpret --> uuid -->                │
      sample --> index --> solr
 
 -  'dwca-avro' reads a Dwc-A and converts it to an verbatim.avro file;
--  'interpret' reads verbatim.avro, interprets it and write the interpreted data and the issues in Avro files;
--  'validate' validates the identifiers for a dataset, checking for duplicate keys;
--  'uuid' mints UUID on new records and rematches to existing UUIDs for new records;
+-  'interpret' reads verbatim.avro, interprets it and writes the interpreted data and the issues to Avro files;
+-  'validate' validates the identifiers for a dataset, checking for duplicate and empty keys;
+-  'uuid' mints UUID on new records and rematches to existing UUIDs for records loaded before;
 -  'image-load' pushes an export of multimedia AVRO files to the image service;
--  'image-sync' retrieve details of images stored in image service for indexing purposes;
+-  'image-sync' retrieves details of images stored in image service for indexing purposes;
 -  'sample' use the sampling service to retrieve values for points for the layers in the spatial service;
 -  'index' generates a AVRO records ready to be index to SOLR;
 -  'solr' reads index records in AVRO and submits them to SOLR;

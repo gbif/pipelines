@@ -8,7 +8,6 @@ import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.Schema;
@@ -29,8 +28,8 @@ import org.gbif.pipelines.io.avro.*;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * A SOLR transform that aims to provide a index that is backwards compatible with ALA's
- * biocache-service.
+ * A transform that creates IndexRecords which are used downstream to push data to a search index
+ * (SOLR or ElasticSearch)
  */
 @Slf4j
 public class IndexRecordTransform implements Serializable {
@@ -160,7 +159,6 @@ public class IndexRecordTransform implements Serializable {
     addToIndexRecord(br, indexRecord, skipKeys);
     addToIndexRecord(er, indexRecord, skipKeys);
     addToIndexRecord(mdr, indexRecord, skipKeys);
-    addToIndexRecord(mdr, indexRecord, skipKeys);
 
     // add event date
     try {
@@ -175,7 +173,7 @@ public class IndexRecordTransform implements Serializable {
       }
     } catch (ParseException e) {
       log.error(
-          "Unparseable date produced by downstream interpretation " + tr.getEventDate().getGte());
+          "Un-parsable date produced by downstream interpretation " + tr.getEventDate().getGte());
     }
 
     // GBIF taxonomy - add if available
@@ -191,7 +189,6 @@ public class IndexRecordTransform implements Serializable {
             .put("gbif_s_" + entry.getRank().toString().toLowerCase(), entry.getName());
       }
 
-      String rank = txr.getAcceptedUsage().getRank().toString();
       indexRecord.getStrings().put("gbif_s_rank", txr.getAcceptedUsage().getRank().toString());
       indexRecord.getStrings().put("gbif_s_scientificName", txr.getAcceptedUsage().getName());
     }
@@ -206,7 +203,7 @@ public class IndexRecordTransform implements Serializable {
       indexRecord.getStrings().put("raw_" + key, entry.getValue());
     }
 
-    if (lr.getHasCoordinate()) {
+    if (lr != null && lr.getHasCoordinate() != null && lr.getHasCoordinate()) {
       addGeo(indexRecord, lr.getDecimalLatitude(), lr.getDecimalLongitude());
     }
 
@@ -276,7 +273,10 @@ public class IndexRecordTransform implements Serializable {
       }
     }
 
-    indexRecord.getBooleans().put("geospatial_kosher", lr.getHasCoordinate());
+    // FIXME see #99
+    boolean geospatialKosher =
+        lr.getHasGeospatialIssue() != null && lr.getHasGeospatialIssue() ? true : false;
+    indexRecord.getBooleans().put("geospatial_kosher", geospatialKosher);
 
     // FIXME  - see #162
     indexRecord.getDates().put("first_loaded_date", new Date().getTime());
@@ -519,6 +519,9 @@ public class IndexRecordTransform implements Serializable {
                                     case LONG:
                                       builder.getLongs().put(f.name(), (Long) r);
                                       break;
+                                    case ARRAY:
+                                      builder.getMultiValues().put(f.name(), (java.util.List) r);
+                                      break;
                                     default:
                                       builder.getStrings().put(f.name(), r.toString());
                                       break;
@@ -526,17 +529,6 @@ public class IndexRecordTransform implements Serializable {
                                 });
                           }
                         }));
-  }
-
-  /** Transform to create a map of unique keys built from previous runs and UUID. */
-  public static class SolrInputDocumentToIndexRecordFcn
-      extends DoFn<SolrInputDocument, IndexRecord> {
-    @ProcessElement
-    public void processElement(
-        @Element SolrInputDocument solrInputDocument, OutputReceiver<IndexRecord> out) {
-      IndexRecord indexRecord = convertSolrDocToIndexRecord(solrInputDocument);
-      out.output(indexRecord);
-    }
   }
 
   public static class IndexRecordToSolrInputDocumentFcn
@@ -568,7 +560,22 @@ public class IndexRecordTransform implements Serializable {
       doc.addField(s.getKey(), s.getValue());
     }
 
-    // multi-value
+    // longs
+    for (Map.Entry<String, Long> s : indexRecord.getLongs().entrySet()) {
+      doc.addField(s.getKey(), s.getValue());
+    }
+
+    // dates
+    for (Map.Entry<String, Long> s : indexRecord.getDates().entrySet()) {
+      doc.addField(s.getKey(), new Date(s.getValue()));
+    }
+
+    // booleans
+    for (Map.Entry<String, Boolean> s : indexRecord.getBooleans().entrySet()) {
+      doc.addField(s.getKey(), s.getValue());
+    }
+
+    // multi-value fields
     for (Map.Entry<String, List<String>> s : indexRecord.getMultiValues().entrySet()) {
       for (String value : s.getValue()) {
         doc.addField(s.getKey(), value);
@@ -576,58 +583,5 @@ public class IndexRecordTransform implements Serializable {
     }
 
     return doc;
-  }
-
-  public static IndexRecord convertSolrDocToIndexRecord(SolrInputDocument solrInputDocument) {
-
-    IndexRecord.Builder builder =
-        IndexRecord.newBuilder().setId(solrInputDocument.getFieldValue("id").toString());
-
-    if (solrInputDocument.getFieldValue("lsid") != null) {
-      builder.setTaxonID((String) solrInputDocument.getFieldValue("lsid"));
-    }
-
-    if (solrInputDocument.getFieldValue("lat_long") != null) {
-      builder.setLatLng((String) solrInputDocument.getFieldValue("lat_long"));
-    }
-
-    builder.setStrings(new HashMap<>());
-    builder.setInts(new HashMap<>());
-    builder.setDoubles(new HashMap<>());
-    builder.setMultiValues(new HashMap<>());
-
-    solrInputDocument
-        .iterator()
-        .forEachRemaining(
-            solrInputField -> {
-              boolean isMultiValue = solrInputField.getValueCount() > 1;
-              String name = solrInputField.getName();
-              if (isMultiValue) {
-                List<String> values =
-                    solrInputField.getValues().stream()
-                        .map(value -> value.toString())
-                        .filter(value -> Strings.isNotBlank(value))
-                        .collect(Collectors.toList());
-                builder.getMultiValues().put(name, values);
-              } else {
-                Object value = solrInputField.getValue();
-                if (value != null) {
-                  if (value instanceof String) {
-                    if (Strings.isNotBlank((String) value)) {
-                      builder.getStrings().put(name, (String) value);
-                    }
-                  } else if (value instanceof Integer) {
-                    builder.getInts().put(name, (Integer) value);
-                  } else if (value instanceof Double) {
-                    builder.getDoubles().put(name, (Double) value);
-                  } else if (value instanceof Date) {
-                    //              builder.getDateProperties().put(name, (String) value);
-                  } else {
-                    builder.getStrings().put(name, (String) value.toString());
-                  }
-                }
-              }
-            });
-    return builder.build();
   }
 }

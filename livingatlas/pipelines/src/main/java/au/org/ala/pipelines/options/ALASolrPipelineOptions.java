@@ -53,6 +53,19 @@ public interface ALASolrPipelineOptions
 
   void setSolrBatchSize(Integer solrBatchSize);
 
+  @Description("SOLR max retry attempts")
+  @Default.Integer(10)
+  Integer getSolrRetryMaxAttempts();
+
+  void setSolrRetryMaxAttempts(Integer solrRetryMaxAttempts);
+
+  @Description("SOLR max retry attempts")
+  @Default.Integer(3)
+  Integer getSolrRetryDurationInMins();
+
+  void setSolrRetryDurationInMins(Integer solrRetryDurationInMins);
+
+
   @Description("JackKnife path")
   @Default.String("")
   String getJackKnifePath();
