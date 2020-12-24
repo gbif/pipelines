@@ -1,11 +1,5 @@
 package au.org.ala.pipelines.java;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-
-import au.org.ala.pipelines.beam.*;
-import au.org.ala.pipelines.beam.ALAUUIDMintingPipeline;
-import au.org.ala.pipelines.beam.DwcaToVerbatimPipeline;
 import au.org.ala.pipelines.beam.*;
 import au.org.ala.pipelines.options.ALASolrPipelineOptions;
 import au.org.ala.pipelines.options.AllDatasetsPipelinesOptions;
@@ -15,8 +9,6 @@ import au.org.ala.util.SolrUtils;
 import au.org.ala.util.TestUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationUtils;
-import java.io.File;
-import java.util.UUID;
 import okhttp3.mockwebserver.MockWebServer;
 import org.apache.commons.io.FileUtils;
 import org.apache.solr.common.SolrDocument;
@@ -26,6 +18,12 @@ import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.io.File;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * Complete pipeline tests that use the java variant of the pipeline where possible. Currently this
@@ -146,8 +144,6 @@ public class CompleteIngestJavaPipelineTestIT {
 
     // run SDS checks
     InterpretationPipelineOptions sensitivityOptions =
-    // export lat lngs
-    AllDatasetsPipelinesOptions latLngOptions =
         PipelinesOptionsFactory.create(
             InterpretationPipelineOptions.class,
             new String[] {
@@ -218,6 +214,7 @@ public class CompleteIngestJavaPipelineTestIT {
               "--metaFileName=" + ValidationUtils.INDEXING_METRICS,
               "--targetPath=/tmp/la-pipelines-test/complete-pipeline-java",
               "--inputPath=/tmp/la-pipelines-test/complete-pipeline-java",
+              "--allDatasetsInputPath=/tmp/la-pipelines-test/complete-pipeline-java/all-datasets",
               "--properties=" + TestUtils.getPipelinesConfigFile(),
               "--zkHost=" + SolrUtils.getZkHost(),
               "--solrCollection=" + SolrUtils.BIOCACHE_TEST_SOLR_COLLECTION,
