@@ -5,6 +5,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSI
 import au.org.ala.pipelines.common.ALARecordTypes;
 import au.org.ala.pipelines.options.ALASolrPipelineOptions;
 import au.org.ala.pipelines.transforms.ALAAttributionTransform;
+import au.org.ala.pipelines.transforms.ALASensitiveDataRecordTransform;
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
 import au.org.ala.pipelines.transforms.IndexRecordTransform;
 import au.org.ala.pipelines.util.VersionInfo;
@@ -143,6 +144,8 @@ public class IndexRecordPipeline {
     ALATaxonomyTransform alaTaxonomyTransform = ALATaxonomyTransform.builder().create();
     ALAAttributionTransform alaAttributionTransform = ALAAttributionTransform.builder().create();
     LocationTransform locationTransform = LocationTransform.builder().create();
+    ALASensitiveDataRecordTransform sensitiveTransform =
+        ALASensitiveDataRecordTransform.builder().create();
 
     log.info("Init metrics");
     IngestMetrics metrics = IngestMetricsBuilder.createInterpretedToEsIndexMetrics();
@@ -297,6 +300,16 @@ public class IndexRecordPipeline {
                     pathFn.apply(alaAttributionTransform.getBaseName())),
             executor);
 
+    CompletableFuture<Map<String, ALASensitivityRecord>> alaSensitiveMapFeature =
+        CompletableFuture.supplyAsync(
+            () ->
+                AvroReader.readRecords(
+                    hdfsSiteConfig,
+                    coreSiteConfig,
+                    ALASensitivityRecord.class,
+                    pathFn.apply(sensitiveTransform.getBaseName())),
+            executor);
+
     CompletableFuture<Map<String, ImageServiceRecord>> imageServiceMapFeature =
         CompletableFuture.supplyAsync(
             () ->
@@ -320,6 +333,8 @@ public class IndexRecordPipeline {
     Map<String, ALAUUIDRecord> aurMap = alaUuidMapFeature.get();
     Map<String, ALATaxonRecord> alaTaxonMap = alaTaxonMapFeature.get();
     Map<String, ALAAttributionRecord> alaAttributionMap = alaAttributionMapFeature.get();
+    Map<String, ALASensitivityRecord> alaSensitivityMap =
+        options.getIncludeSensitiveData() ? alaSensitiveMapFeature.get() : Collections.emptyMap();
     Map<String, ImageServiceRecord> imageServiceMap =
         options.getIncludeImages() ? imageServiceMapFeature.get() : Collections.emptyMap();
 
@@ -352,6 +367,7 @@ public class IndexRecordPipeline {
               alaTaxonMap.getOrDefault(k, ALATaxonRecord.newBuilder().setId(k).build());
           ALAAttributionRecord aar =
               alaAttributionMap.getOrDefault(k, ALAAttributionRecord.newBuilder().setId(k).build());
+          ALASensitivityRecord sr = alaSensitivityMap.getOrDefault(k, null);
           ImageServiceRecord isr =
               imageServiceMap.getOrDefault(k, ImageServiceRecord.newBuilder().setId(k).build());
           TaxonProfile tpr =
@@ -367,7 +383,7 @@ public class IndexRecordPipeline {
               measurementMap.getOrDefault(k, MeasurementOrFactRecord.newBuilder().setId(k).build());
 
           return IndexRecordTransform.createIndexRecord(
-              metadata, br, tr, lr, txr, atxr, er, aar, aur, isr, tpr);
+              metadata, br, tr, lr, txr, atxr, er, aar, aur, isr, tpr, sr);
         };
 
     List<IndexRecord> indexRecords =

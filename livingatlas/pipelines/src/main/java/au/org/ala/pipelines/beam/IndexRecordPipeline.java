@@ -112,6 +112,8 @@ public class IndexRecordPipeline {
     ALATaxonomyTransform alaTaxonomyTransform = ALATaxonomyTransform.builder().create();
     LocationTransform locationTransform = LocationTransform.builder().create();
     ALAAttributionTransform alaAttributionTransform = ALAAttributionTransform.builder().create();
+    ALASensitiveDataRecordTransform alaSensitiveDataRecordTransform =
+        ALASensitiveDataRecordTransform.builder().create();
 
     log.info("Adding step 3: Creating beam pipeline");
     PCollectionView<MetadataRecord> metadataView =
@@ -182,6 +184,13 @@ public class IndexRecordPipeline {
       alaTaxonProfileRecords = SpeciesListPipeline.generateTaxonProfileCollection(p, options);
     }
 
+    PCollection<KV<String, ALASensitivityRecord>> alaSensitiveDataCollection = null;
+    if (options.getIncludeSensitiveData()) {
+      alaSensitiveDataCollection =
+          p.apply("Read sensitive data", alaSensitiveDataRecordTransform.read(pathFn))
+              .apply("Map attribution to KV", alaSensitiveDataRecordTransform.toKv());
+    }
+
     final TupleTag<ImageServiceRecord> imageServiceRecordTupleTag =
         new TupleTag<ImageServiceRecord>() {};
 
@@ -203,6 +212,7 @@ public class IndexRecordPipeline {
             alaUuidTransform.getTag(),
             options.getIncludeImages() ? imageServiceRecordTupleTag : null,
             options.getIncludeSpeciesLists() ? speciesListsRecordTupleTag : null,
+            options.getIncludeSensitiveData() ? alaSensitiveDataRecordTransform.getTag() : null,
             metadataView,
             options.getDatasetId());
 
@@ -238,6 +248,10 @@ public class IndexRecordPipeline {
 
     if (options.getIncludeGbifTaxonomy()) {
       kpct = kpct.and(taxonomyTransform.getTag(), taxonCollection);
+    }
+
+    if (options.getIncludeSensitiveData()) {
+      kpct = kpct.and(alaSensitiveDataRecordTransform.getTag(), alaSensitiveDataCollection);
     }
 
     PCollection<IndexRecord> indexRecordCollection =

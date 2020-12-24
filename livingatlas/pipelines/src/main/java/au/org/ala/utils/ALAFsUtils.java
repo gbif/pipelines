@@ -5,6 +5,12 @@ import au.org.ala.pipelines.options.AllDatasetsPipelinesOptions;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import java.io.*;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
+import java.util.*;
+import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
@@ -17,13 +23,6 @@ import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
 import org.gbif.pipelines.core.utils.FsUtils;
-
-import java.io.*;
-import java.nio.channels.Channels;
-import java.nio.channels.ReadableByteChannel;
-import java.nio.channels.WritableByteChannel;
-import java.util.*;
-import java.util.stream.Collectors;
 
 /** Extensions to FSUtils. See {@link FsUtils} */
 @Slf4j
@@ -66,11 +65,9 @@ public class ALAFsUtils {
    * 'ala_sensitive_taxon'
    */
   public static String buildPathGeneralisedUsingTargetPath(
-      BasePipelineOptions options, String name, String uniqueId) {
+      InterpretationPipelineOptions options, String name) {
     return PathBuilder.buildPath(
-            PathBuilder.buildDatasetAttemptPath(options, "generalised", false),
-            name,
-            "generalise-" + uniqueId)
+            PathBuilder.buildDatasetAttemptPath(options, "generalised", false), name, "generalise")
         .toString();
   }
 

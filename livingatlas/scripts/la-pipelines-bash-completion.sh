@@ -23,7 +23,7 @@ _la-pipelines()
     elif [ $prev = "dataset-list" ] || [ $prev = "archive-list" ] || [ $prev = "validation-report" ] ; then
         suggestions=""
         COMPREPLY=( $( compgen -W "$suggestions" -- "$cur" ) )
-    elif [ $prev = "dwca-avro" ] || [ $prev = "interpret" ] || [ $prev = "uuid" ] || [ $prev = "validate" ] || [ $prev = "export-latlng" ] || [ $prev = "sample" ] || [ $prev = "sample-avro" ] || [ $prev = "sample-avro" ]; then
+    elif [ $prev = "dwca-avro" ] || [ $prev = "interpret" ] || [ $prev = "generalise" ] || [ $prev = "uuid" ] || [ $prev = "validate" ] || [ $prev = "export-latlng" ] || [ $prev = "sample" ] || [ $prev = "sample-avro" ] || [ $prev = "sample-avro" ]; then
         curcmd=$prev
         suggestions="all dr"
         COMPREPLY=( $( compgen -W "$suggestions" -- "$cur" ) )
