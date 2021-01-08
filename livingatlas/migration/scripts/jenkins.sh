@@ -25,9 +25,9 @@ then
 	export MIGRATION_JAR="/usr/share/la-pipelines/migration.jar"
 	export HDFS_SITE_CONF="/data/hadoop/etc/hadoop/hdfs-site.xml"
 	export CORE_SITE_CONF="/data/hadoop/etc/hadoop/core-site.xml"
-	export FS_PATH="hdfs://aws-spark-quoll-master.ala:9000"
+	export FS_PATH="hdfs://aws-spark-quoll-1b.ala:9000"
 	export DATA_PATH="pipelines-data"
-	export SPARK_MASTER="spark://aws-spark-quoll-master.ala:7077"
+	export SPARK_MASTER="spark://aws-spark-quoll-1b.ala:7077"
 
   echo 'Running spark job to generate UUID AVRO'
 	sudo -u spark /data/spark/bin/spark-submit \
