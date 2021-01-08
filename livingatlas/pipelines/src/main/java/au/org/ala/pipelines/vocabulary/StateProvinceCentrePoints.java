@@ -32,7 +32,7 @@ public class StateProvinceCentrePoints {
       } else {
         is = CentrePoints.class.getResourceAsStream(classpathFile);
       }
-      cp = CentrePoints.getInstance(is);
+      cp = CentrePoints.getInstance(is, "STATEPROVINCE");
       log.info("We found {} state centres", cp.size());
     }
     return cp;

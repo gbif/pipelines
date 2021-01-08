@@ -85,7 +85,7 @@ public class ALAUUIDValidationPipeline {
 
       // lookup collectory metadata for this data resource
       collectoryMetadata = dataResourceKvStore.get(options.getDatasetId());
-    } catch (Exception e) {
+    } catch (RuntimeException e) {
       log.error("Unable to retrieve metadata for " + options.getDatasetId(), e);
       collectoryMetadata = ALACollectoryMetadata.EMPTY;
     }

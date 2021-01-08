@@ -25,15 +25,21 @@ public class GeocodeKvStoreFactory {
         BufferedImageFactory.getInstance(config.getGbifConfig().getImageCachePath());
     KeyValueStore<LatLng, GeocodeResponse> countryStore =
         CountryKeyValueStore.create(config.getGeocodeConfig());
-    countryKvStore = GeocodeKvStore.create(countryStore, image);
+
+    // missEqualsFail=true because each point should be associated with a country or marine area
+    countryKvStore = GeocodeKvStore.create(countryStore, image, "COUNTRY", true);
 
     KeyValueStore<LatLng, GeocodeResponse> stateProvinceStore =
         StateProvinceKeyValueStore.create(config.getGeocodeConfig());
+
     // Try to load from image file which has the same name of the SHP file
     BufferedImage stateCacheImage =
         BufferedImageFactory.loadImageFile(
             config.getGeocodeConfig().getStateProvince().getPath() + BITMAP_EXT);
-    stateProvinceKvStore = GeocodeKvStore.create(stateProvinceStore, stateCacheImage);
+
+    // missEqualsFail=false because not every point will be in a stateProvince
+    stateProvinceKvStore =
+        GeocodeKvStore.create(stateProvinceStore, stateCacheImage, "STATEPROVINCE", false);
   }
 
   public static KeyValueStore<LatLng, GeocodeResponse> getInstance(ALAPipelinesConfig config) {
