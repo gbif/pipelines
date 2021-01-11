@@ -105,6 +105,23 @@ public class ValidationUtils {
     return ValidationResult.OK;
   }
 
+  /** Checks a dataset can be indexed. */
+  public static boolean isInterpretationAvailable(InterpretationPipelineOptions options) {
+    FileSystem fs =
+        FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
+            .getFs(options.getInputPath());
+
+    return isInterpretationAvailable(
+        fs, options.getInputPath(), options.getDatasetId(), options.getAttempt());
+  }
+
+  /** Checks a dataset can be indexed. */
+  public static boolean isInterpretationAvailable(
+      FileSystem fs, String filePath, String datasetId, Integer attempt) {
+    // check date on DwCA?
+    return metricsAvailable(fs, filePath, datasetId, attempt, INTERPRETATION_METRICS);
+  }
+
   /**
    * Checks the content of the validate file, returning true if the UUID content has been checked
    * and is thought to be valid.
@@ -369,6 +386,15 @@ public class ValidationUtils {
     } else {
       throw new FileNotFoundException("Unable to read metrics file at: " + path);
     }
+  }
+
+  @SneakyThrows
+  public static boolean metricsAvailable(
+      FileSystem fs, String filePath, String datasetId, Integer attempt, String metricsFile) {
+    String path = String.join("/", filePath, datasetId, attempt.toString(), metricsFile);
+    Path metrics = new Path(path);
+    log.info("Checking path for metrics: {}", path);
+    return fs.exists(metrics);
   }
 
   /**

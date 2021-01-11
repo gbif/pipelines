@@ -1,7 +1,6 @@
 package au.org.ala.pipelines.beam;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.DIRECTORY_NAME;
 
 import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.kvs.ALAPipelinesConfigFactory;
@@ -30,7 +29,6 @@ import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
-import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
@@ -47,7 +45,6 @@ public class ALAInterpretedToSensitivePipeline {
     String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "sensitive");
     InterpretationPipelineOptions options =
         PipelinesOptionsFactory.createInterpretation(combinedArgs);
-    options.setMetaFileName(ValidationUtils.SDS_METRICS);
     run(options);
   }
 
@@ -68,9 +65,6 @@ public class ALAInterpretedToSensitivePipeline {
           options.getDatasetId());
       return;
     }
-
-    log.info("1. Delete previous SDS processing.");
-    deletePreviousSDS(options);
 
     log.info("Adding step 1: Options");
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
@@ -141,20 +135,5 @@ public class ALAInterpretedToSensitivePipeline {
     MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
 
     log.info("Pipeline has been finished");
-  }
-
-  public static void deletePreviousSDS(InterpretationPipelineOptions options) {
-
-    String path =
-        String.join(
-            "/",
-            options.getInputPath(),
-            options.getDatasetId(),
-            options.getAttempt().toString(),
-            DIRECTORY_NAME,
-            "ala_sensitive_data");
-
-    // delete output directories
-    FsUtils.deleteIfExist(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), path);
   }
 }
