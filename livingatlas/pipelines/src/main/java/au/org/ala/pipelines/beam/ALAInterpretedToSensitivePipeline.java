@@ -11,6 +11,7 @@ import au.org.ala.pipelines.transforms.ALASensitiveDataRecordTransform;
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
 import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.CombinedYamlConfiguration;
+import au.org.ala.utils.ValidationUtils;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -57,6 +58,13 @@ public class ALAInterpretedToSensitivePipeline {
     MDC.put("datasetId", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
     MDC.put("step", "INTERPRETED_TO_SENSITIVE");
+
+    if (!ValidationUtils.isInterpretationAvailable(options)) {
+      log.warn(
+          "The dataset can not processed with SDS. Interpretation has not been ran for dataset: {}",
+          options.getDatasetId());
+      return;
+    }
 
     log.info("Adding step 1: Options");
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
