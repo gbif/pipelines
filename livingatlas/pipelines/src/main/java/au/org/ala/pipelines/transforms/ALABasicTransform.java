@@ -5,6 +5,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 
 import au.org.ala.pipelines.interpreters.ALABasicInterpreter;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import lombok.Builder;
 import lombok.SneakyThrows;
@@ -34,11 +35,17 @@ public class ALABasicTransform extends Transform<ExtendedRecord, BasicRecord> {
 
   private KeyValueStore<String, OccurrenceStatus> occStatusKvStore;
 
+  private final SerializableSupplier<KeyValueStore<String, List<String>>> recordedByKvStoreSupplier;
+
+  private KeyValueStore<String, List<String>> recordedByKvStore;
+
   @Builder(buildMethodName = "create")
   private ALABasicTransform(
-      SerializableSupplier<KeyValueStore<String, OccurrenceStatus>> occStatusKvStoreSupplier) {
+      SerializableSupplier<KeyValueStore<String, OccurrenceStatus>> occStatusKvStoreSupplier,
+      SerializableSupplier<KeyValueStore<String, List<String>>> recordedByKvStoreSupplier) {
     super(BasicRecord.class, BASIC, ALABasicTransform.class.getName(), BASIC_RECORDS_COUNT);
     this.occStatusKvStoreSupplier = occStatusKvStoreSupplier;
+    this.recordedByKvStoreSupplier = recordedByKvStoreSupplier;
   }
 
   /** Maps {@link BasicRecord} to key value, where key is {@link BasicRecord#getId} */
@@ -57,6 +64,9 @@ public class ALABasicTransform extends Transform<ExtendedRecord, BasicRecord> {
   public void setup() {
     if (occStatusKvStore == null && occStatusKvStoreSupplier != null) {
       occStatusKvStore = occStatusKvStoreSupplier.get();
+    }
+    if (recordedByKvStore == null && recordedByKvStoreSupplier != null) {
+      recordedByKvStore = recordedByKvStoreSupplier.get();
     }
   }
 
@@ -95,7 +105,7 @@ public class ALABasicTransform extends Transform<ExtendedRecord, BasicRecord> {
         .via(BasicInterpreter::interpretRecordedByIds)
         .via(BasicInterpreter.interpretOccurrenceStatus(occStatusKvStore))
         .via(ALABasicInterpreter::interpretLicense)
-        .via(ALABasicInterpreter::interpretRecordedBy)
+        .via(ALABasicInterpreter.interpretRecordedBy(recordedByKvStore))
         .getOfNullable();
   }
 }

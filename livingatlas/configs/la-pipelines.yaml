@@ -29,6 +29,8 @@ fs:
   hdfs:
     fsPath: hdfs://localhost:8020
 
+recordedByConfig:
+  cacheSizeMb: 64
 alaNameMatch:
   wsUrl: http://localhost:9179
   timeoutSec: 70
