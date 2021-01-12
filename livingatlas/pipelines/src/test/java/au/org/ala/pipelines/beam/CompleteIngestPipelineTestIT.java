@@ -2,8 +2,9 @@ package au.org.ala.pipelines.beam;
 
 import static org.junit.Assert.*;
 
-import au.org.ala.pipelines.options.ALASolrPipelineOptions;
 import au.org.ala.pipelines.options.AllDatasetsPipelinesOptions;
+import au.org.ala.pipelines.options.IndexingPipelineOptions;
+import au.org.ala.pipelines.options.SolrPipelineOptions;
 import au.org.ala.pipelines.options.UUIDPipelineOptions;
 import au.org.ala.sampling.LayerCrawler;
 import au.org.ala.util.SolrUtils;
@@ -14,6 +15,7 @@ import java.io.File;
 import java.util.UUID;
 import okhttp3.mockwebserver.MockWebServer;
 import org.apache.commons.io.FileUtils;
+import org.apache.solr.common.SolrDocument;
 import org.gbif.pipelines.common.beam.options.DwcaPipelineOptions;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
@@ -59,7 +61,7 @@ public class CompleteIngestPipelineTestIT {
     SolrUtils.reloadSolrIndex();
 
     // validate SOLR index
-    assertEquals(Long.valueOf(5), SolrUtils.getRecordCount("*:*"));
+    assertEquals(Long.valueOf(6), SolrUtils.getRecordCount("*:*"));
 
     // 1. includes UUIDs
     String documentId = (String) SolrUtils.getRecords("*:*").get(0).get("id");
@@ -75,8 +77,14 @@ public class CompleteIngestPipelineTestIT {
     assertNotNull(uuid);
 
     // 2. includes samples
-    assertEquals(Long.valueOf(5), SolrUtils.getRecordCount("cl620:*"));
-    assertEquals(Long.valueOf(5), SolrUtils.getRecordCount("cl927:*"));
+    assertEquals(Long.valueOf(6), SolrUtils.getRecordCount("cl620:*"));
+    assertEquals(Long.valueOf(6), SolrUtils.getRecordCount("cl927:*"));
+
+    // 3. has a sensitive record
+    assertEquals(Long.valueOf(1), SolrUtils.getRecordCount("sensitive:true"));
+    SolrDocument sensitive = SolrUtils.getRecords("sensitive:true").get(0);
+    assertEquals(-35.3, (double) sensitive.get("decimalLatitude"), 0.00001);
+    assertEquals("-35.260319", sensitive.get("original_decimalLatitude"));
   }
 
   public void loadTestDataset(String datasetID, String inputPath) throws Exception {
@@ -134,10 +142,25 @@ public class CompleteIngestPipelineTestIT {
     // check validation - should be true as UUIDs are validated and generated
     assertTrue(ValidationUtils.checkValidationFile(uuidOptions).getValid());
 
-    // solr
-    ALASolrPipelineOptions solrOptions =
+    InterpretationPipelineOptions sensitivityOptions =
         PipelinesOptionsFactory.create(
-            ALASolrPipelineOptions.class,
+            InterpretationPipelineOptions.class,
+            new String[] {
+              "--datasetId=" + datasetID,
+              "--attempt=1",
+              "--runner=DirectRunner",
+              "--metaFileName=" + ValidationUtils.SENSITIVE_METRICS,
+              "--targetPath=/tmp/la-pipelines-test/complete-pipeline",
+              "--inputPath=/tmp/la-pipelines-test/complete-pipeline",
+              "--properties=" + TestUtils.getPipelinesConfigFile(),
+              "--useExtendedRecordId=true"
+            });
+    ALAInterpretedToSensitivePipeline.run(sensitivityOptions);
+
+    // solr
+    IndexingPipelineOptions solrOptions =
+        PipelinesOptionsFactory.create(
+            IndexingPipelineOptions.class,
             new String[] {
               "--datasetId=" + datasetID,
               "--attempt=1",
@@ -148,8 +171,14 @@ public class CompleteIngestPipelineTestIT {
               "--allDatasetsInputPath=/tmp/la-pipelines-test/complete-pipeline/all-datasets",
               "--properties=" + TestUtils.getPipelinesConfigFile(),
               "--includeSampling=true",
+              "--includeSensitiveData=true",
               "--includeImages=false"
             });
+
+    // check ready for index - should be true as includeSampling=true and sampling now generated
+    assertTrue(ValidationUtils.checkReadyForIndexing(solrOptions).getValid());
+
+    IndexRecordPipeline.run(solrOptions);
 
     // export lat lngs
     AllDatasetsPipelinesOptions latLngOptions =
@@ -161,6 +190,7 @@ public class CompleteIngestPipelineTestIT {
               "--runner=DirectRunner",
               "--targetPath=/tmp/la-pipelines-test/complete-pipeline",
               "--inputPath=/tmp/la-pipelines-test/complete-pipeline",
+              "--allDatasetsInputPath=/tmp/la-pipelines-test/complete-pipeline/all-datasets",
               "--properties=" + TestUtils.getPipelinesConfigFile()
             });
     LatLongPipeline.run(latLngOptions);
@@ -179,14 +209,9 @@ public class CompleteIngestPipelineTestIT {
             })));
     LayerCrawler.run(latLngOptions);
 
-    // check ready for index - should be true as includeSampling=true and sampling now generated
-    assertTrue(ValidationUtils.checkReadyForIndexing(solrOptions).getValid());
-
-    IndexRecordPipeline.run(solrOptions);
-
-    ALASolrPipelineOptions solrOptions2 =
+    SolrPipelineOptions solrOptions2 =
         PipelinesOptionsFactory.create(
-            ALASolrPipelineOptions.class,
+            SolrPipelineOptions.class,
             new String[] {
               "--datasetId=" + datasetID,
               "--attempt=1",
@@ -199,6 +224,7 @@ public class CompleteIngestPipelineTestIT {
               "--zkHost=" + SolrUtils.getZkHost(),
               "--solrCollection=" + SolrUtils.BIOCACHE_TEST_SOLR_COLLECTION,
               "--includeSampling=true",
+              "--includeSensitiveData=true",
               "--includeImages=false"
             });
     IndexRecordToSolrPipeline.run(solrOptions2);

@@ -1,6 +1,7 @@
 package au.org.ala.pipelines.beam;
 
-import au.org.ala.pipelines.options.ALASolrPipelineOptions;
+import au.org.ala.pipelines.options.IndexingPipelineOptions;
+import au.org.ala.pipelines.options.SolrPipelineOptions;
 import au.org.ala.pipelines.transforms.IndexRecordTransform;
 import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.ALAFsUtils;
@@ -33,10 +34,9 @@ public class IndexRecordToSolrPipeline {
     VersionInfo.print();
     MDC.put("step", "INDEX_RECORD_TO_SOLR");
 
-    String[] combinedArgs =
-        new CombinedYamlConfiguration(args).toArgs("general", "speciesLists", "index");
-    ALASolrPipelineOptions options =
-        PipelinesOptionsFactory.create(ALASolrPipelineOptions.class, combinedArgs);
+    String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "solr");
+    SolrPipelineOptions options =
+        PipelinesOptionsFactory.create(SolrPipelineOptions.class, combinedArgs);
     MDC.put("datasetId", options.getDatasetId() != null ? options.getDatasetId() : "ALL_RECORDS");
     options.setMetaFileName(ValidationUtils.INDEXING_METRICS);
     PipelinesOptionsFactory.registerHdfs(options);
@@ -47,7 +47,7 @@ public class IndexRecordToSolrPipeline {
     return indexRecord.getLatLng() != null;
   }
 
-  public static void run(ALASolrPipelineOptions options) {
+  public static void run(SolrPipelineOptions options) {
 
     Pipeline pipeline = Pipeline.create(options);
 
@@ -230,7 +230,7 @@ public class IndexRecordToSolrPipeline {
    * @return
    */
   private static PCollection<IndexRecord> loadIndexRecords(
-      ALASolrPipelineOptions options, Pipeline p) {
+      IndexingPipelineOptions options, Pipeline p) {
     if (options.getDatasetId() != null && !"all".equalsIgnoreCase(options.getDatasetId())) {
       return p.apply(
           AvroIO.read(IndexRecord.class)
@@ -247,7 +247,7 @@ public class IndexRecordToSolrPipeline {
   }
 
   private static PCollection<SampleRecord> loadSampleRecords(
-      ALASolrPipelineOptions options, Pipeline p) {
+      IndexingPipelineOptions options, Pipeline p) {
     String samplingPath =
         String.join("/", ALAFsUtils.buildPathSamplingUsingTargetPath(options), "*.avro");
     log.info("Loading sampling from {}", samplingPath);
