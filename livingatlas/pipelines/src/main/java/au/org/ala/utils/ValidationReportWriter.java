@@ -62,8 +62,8 @@ public class ValidationReportWriter {
   @Parameter(names = "--checkSolr", description = "Check SOLR", arity = 1)
   private boolean checkSolr;
 
-  @Parameter(names = "--checkSampling", description = "Check sampling", arity = 1)
-  private boolean checkSampling;
+  @Parameter(names = "--checkSSDS", description = "Check SDS", arity = 1)
+  private boolean checkSDS = true;
 
   @Parameter(names = "--zkHost", description = "ZK host for SOLR")
   private String zkHost;
@@ -83,6 +83,7 @@ public class ValidationReportWriter {
         "interpretation",
         "validation",
         "uuid",
+        "sds",
         "indexing",
         "emptyRecordsKeys",
         "duplicateKeys",
@@ -122,7 +123,7 @@ public class ValidationReportWriter {
       count = 0;
 
       // retrieve indexed counts
-      log.info("Checking SOLR: {}, Checking Sampling: {}", checkSolr, checkSampling);
+      log.info("Checking SOLR: {}", checkSolr);
       Map<String, Long> datasetIndexCounts =
           checkSolr ? indexCounts(zkHost, solrCollection) : Collections.emptyMap();
 
@@ -141,6 +142,7 @@ public class ValidationReportWriter {
           boolean uuidLoaded;
           boolean validationLoaded;
           boolean interpretationRan;
+          boolean sdsRan;
           boolean indexingRan;
           boolean metadataAvailable = false;
           boolean uniqueTermsSpecified = false;
@@ -163,6 +165,9 @@ public class ValidationReportWriter {
           interpretationRan =
               ValidationUtils.metricsExists(
                   fs, inputPath, datasetID, attempt, ValidationUtils.INTERPRETATION_METRICS);
+          sdsRan =
+              ValidationUtils.metricsExists(
+                  fs, inputPath, datasetID, attempt, ValidationUtils.SDS_METRICS);
           indexingRan =
               ValidationUtils.metricsExists(
                   fs, inputPath, datasetID, attempt, ValidationUtils.INDEXING_METRICS);
@@ -205,7 +210,7 @@ public class ValidationReportWriter {
           }
 
           ValidationResult validationResult =
-              ValidationUtils.checkReadyForIndexing(fs, inputPath, datasetID, attempt);
+              ValidationUtils.checkReadyForIndexing(fs, inputPath, datasetID, attempt, checkSDS);
 
           // write CSV
           reportWriter.write(
@@ -223,6 +228,7 @@ public class ValidationReportWriter {
                       interpretationRan ? "OK" : ValidationUtils.NOT_INTERPRET,
                       validationLoaded ? "OK" : ValidationUtils.NOT_VALIDATED,
                       uuidLoaded ? "OK" : ValidationUtils.UUID_REQUIRED,
+                      sdsRan ? "OK" : ValidationUtils.SDS_REQUIRED,
                       indexingRan ? "OK" : ValidationUtils.NOT_INDEXED,
                       emptyKeyRecords == 0 ? "OK" : ValidationUtils.HAS_EMPTY_KEYS,
                       duplicateKeyCount == 0 ? "OK" : ValidationUtils.HAS_DUPLICATES,

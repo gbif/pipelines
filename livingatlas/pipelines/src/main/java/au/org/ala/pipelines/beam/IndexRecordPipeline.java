@@ -2,7 +2,7 @@ package au.org.ala.pipelines.beam;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
-import au.org.ala.pipelines.options.ALASolrPipelineOptions;
+import au.org.ala.pipelines.options.IndexingPipelineOptions;
 import au.org.ala.pipelines.transforms.*;
 import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.ALAFsUtils;
@@ -63,15 +63,15 @@ public class IndexRecordPipeline {
     VersionInfo.print();
     String[] combinedArgs =
         new CombinedYamlConfiguration(args).toArgs("general", "speciesLists", "index");
-    ALASolrPipelineOptions options =
-        PipelinesOptionsFactory.create(ALASolrPipelineOptions.class, combinedArgs);
+    IndexingPipelineOptions options =
+        PipelinesOptionsFactory.create(IndexingPipelineOptions.class, combinedArgs);
     options.setMetaFileName(ValidationUtils.INDEXING_METRICS);
     PipelinesOptionsFactory.registerHdfs(options);
     run(options);
     System.exit(0);
   }
 
-  public static void run(ALASolrPipelineOptions options) throws Exception {
+  public static void run(IndexingPipelineOptions options) throws Exception {
 
     MDC.put("datasetId", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
@@ -292,7 +292,7 @@ public class IndexRecordPipeline {
    * @return
    */
   private static PCollection<KV<String, ImageServiceRecord>> getLoadImageServiceRecords(
-      ALASolrPipelineOptions options, Pipeline p) {
+      IndexingPipelineOptions options, Pipeline p) {
     PCollection<KV<String, ImageServiceRecord>> alaImageServiceRecords;
     alaImageServiceRecords =
         p.apply(
