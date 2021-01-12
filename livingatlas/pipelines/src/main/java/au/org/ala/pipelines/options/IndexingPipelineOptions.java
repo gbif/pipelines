@@ -6,22 +6,11 @@ import org.apache.beam.sdk.options.PipelineOptions;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 
 /** Main pipeline options necessary for SOLR index for Living atlases */
-public interface ALASolrPipelineOptions
+public interface IndexingPipelineOptions
     extends PipelineOptions,
         InterpretationPipelineOptions,
         SpeciesLevelPipelineOptions,
         AllDatasetsPipelinesOptions {
-
-  @Description("SOLR collection to index into")
-  @Default.String("biocache")
-  String getSolrCollection();
-
-  void setSolrCollection(String solrCollection);
-
-  @Description("List of Zookeeper hosts.")
-  String getZkHost();
-
-  void setZkHost(String zkHosts);
 
   @Description("Include sampling")
   @Default.Boolean(false)
@@ -47,21 +36,9 @@ public interface ALASolrPipelineOptions
 
   void setIncludeGbifTaxonomy(Boolean includeGbifTaxonomy);
 
-  @Description("SOLR batch size")
-  @Default.Integer(500)
-  Integer getSolrBatchSize();
+  @Description("Include sensitive data checks")
+  @Default.Boolean(false)
+  Boolean getIncludeSensitiveData();
 
-  void setSolrBatchSize(Integer solrBatchSize);
-
-  @Description("SOLR max retry attempts")
-  @Default.Integer(10)
-  Integer getSolrRetryMaxAttempts();
-
-  void setSolrRetryMaxAttempts(Integer solrRetryMaxAttempts);
-
-  @Description("SOLR max retry attempts")
-  @Default.Integer(3)
-  Integer getSolrRetryDurationInMins();
-
-  void setSolrRetryDurationInMins(Integer solrRetryDurationInMins);
+  void setIncludeSensitiveData(Boolean includeSensitiveData);
 }
