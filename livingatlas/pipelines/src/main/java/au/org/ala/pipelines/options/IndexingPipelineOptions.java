@@ -12,6 +12,12 @@ public interface IndexingPipelineOptions
         SpeciesLevelPipelineOptions,
         AllDatasetsPipelinesOptions {
 
+  @Description("Include sampling")
+  @Default.Boolean(false)
+  Boolean getIncludeSampling();
+
+  void setIncludeSampling(Boolean includeSampling);
+
   @Description("Include references to image service objects")
   @Default.Boolean(false)
   Boolean getIncludeImages();
