@@ -5,11 +5,9 @@ import static org.gbif.pipelines.estools.service.HttpRequestBuilder.createBodyFr
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
-import java.util.StringJoiner;
 import java.util.concurrent.TimeUnit;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -200,7 +198,7 @@ public class EsService {
   @SneakyThrows
   public static void indexDocument(
       @NonNull EsClient esClient, String idxName, long id, String document) {
-    String endpoint = buildEndpoint(idxName, "_doc", id);
+    String endpoint = buildEndpoint(idxName, "_doc", String.valueOf(id));
     HttpEntity body = createBodyFromString(document);
     esClient.performPutRequest(endpoint, Collections.emptyMap(), body);
   }
@@ -214,7 +212,7 @@ public class EsService {
    */
   @SneakyThrows
   public static void deleteDocument(@NonNull EsClient esClient, String idxName, long id) {
-    String endpoint = buildEndpoint(idxName, "_doc", id);
+    String endpoint = buildEndpoint(idxName, "_doc", String.valueOf(id));
     esClient.performDeleteRequest(endpoint);
   }
 
@@ -321,9 +319,7 @@ public class EsService {
     return esClient.performPostRequest(endpoint, Collections.emptyMap(), body);
   }
 
-  public static String buildEndpoint(Object... strings) {
-    StringJoiner joiner = new StringJoiner("/");
-    Arrays.stream(strings).forEach(x -> joiner.add(x.toString()));
-    return "/" + joiner.toString();
+  public static String buildEndpoint(String... strings) {
+    return "/" + String.join("/", strings);
   }
 }

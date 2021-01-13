@@ -524,4 +524,9 @@ public class EsServiceIT extends EsApiIntegration {
     assertTrue(task.isCompleted());
     assertEquals(5, task.getRecordsDeleted());
   }
+
+  @Test
+  public void buildEndpointTest() {
+    assertEquals("/1/2/3", EsService.buildEndpoint("1", "2", "3"));
+  }
 }

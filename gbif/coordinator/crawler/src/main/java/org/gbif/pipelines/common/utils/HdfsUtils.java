@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.StringJoiner;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -159,15 +158,11 @@ public class HdfsUtils {
 
   /** Store an Avro file on HDFS in /data/ingest/<datasetUUID>/<attemptID>/verbatim.avro */
   public static Path buildOutputPath(String... values) {
-    StringJoiner joiner = new StringJoiner(org.apache.hadoop.fs.Path.SEPARATOR);
-    Arrays.stream(values).forEach(joiner::add);
-    return new org.apache.hadoop.fs.Path(joiner.toString());
+    return new org.apache.hadoop.fs.Path(buildOutputPathAsString(values));
   }
 
   public static String buildOutputPathAsString(String... values) {
-    StringJoiner joiner = new StringJoiner(org.apache.hadoop.fs.Path.SEPARATOR);
-    Arrays.stream(values).forEach(joiner::add);
-    return joiner.toString();
+    return String.join(org.apache.hadoop.fs.Path.SEPARATOR, values);
   }
 
   /** Delete HDFS directory */
