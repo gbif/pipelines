@@ -1,5 +1,7 @@
 package org.gbif.pipelines.common.utils;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.google.common.base.Strings;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -114,7 +116,7 @@ public class HdfsUtils {
     FileSystem fs = getFileSystem(hdfsSiteConfig, coreSiteConfig, filePath);
     Path fsPath = new Path(filePath);
     if (fs.exists(fsPath)) {
-      try (BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(fsPath)))) {
+      try (BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(fsPath), UTF_8))) {
         return br.lines()
             .map(x -> x.replace("\u0000", ""))
             .filter(y -> y.startsWith(key))
@@ -138,7 +140,8 @@ public class HdfsUtils {
     Path fsPath = new Path(filePath);
     try {
       if (fs.exists(fsPath)) {
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(fsPath)))) {
+        try (BufferedReader br =
+            new BufferedReader(new InputStreamReader(fs.open(fsPath), UTF_8))) {
           return br.lines()
               .map(x -> x.replace("\u0000", ""))
               .filter(s -> !Strings.isNullOrEmpty(s))

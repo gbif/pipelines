@@ -1,5 +1,6 @@
 package org.gbif.pipelines.fragmenter.common;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.gbif.pipelines.fragmenter.common.HbaseStore.getAttemptQualifier;
 import static org.gbif.pipelines.fragmenter.common.HbaseStore.getDatasetKeyQualifier;
 import static org.gbif.pipelines.fragmenter.common.HbaseStore.getDateCreatedQualifier;
@@ -72,10 +73,10 @@ public class TableAssert {
         ByteBuffer updatedValue =
             ByteBuffer.wrap(r.getValue(getFragmentFamily(), getDateUpdatedQualifier()));
 
-        String datasetString = new String(datasetValue);
+        String datasetString = new String(datasetValue, UTF_8);
         Integer attemptInt = attemptValue.getInt();
-        String protocolString = new String(protocolValue);
-        String recordString = new String(recordValue);
+        String protocolString = new String(protocolValue, UTF_8);
+        String recordString = new String(recordValue, UTF_8);
         long createdLong = createdValue.getLong();
         long updatedLong = updatedValue.getLong();
 

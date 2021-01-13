@@ -58,7 +58,7 @@ public class BitMapMerge {
           if (colour == 0xFFFFFF) {
             key += "W";
           } else {
-            key += (colour);
+            key += colour;
           }
         }
         combined.setRGB(x, y, getColour(key));
