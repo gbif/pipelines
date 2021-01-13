@@ -23,6 +23,7 @@
       {"name": "basisOfRecord", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/basisOfRecord"},
       {"name": "sex", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/sex"},
       {"name": "lifeStage", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/lifeStage"},
+      {"name": "lifeStageLineage", "type" : {"type" : "array", "items" : "string"}, "default": []},
       {"name": "establishmentMeans", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/establishmentMeans"},
       {"name": "individualCount", "type": ["null", "int"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/individualCount"},
       {"name": "typeStatus", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/typeStatus"},

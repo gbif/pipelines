@@ -328,6 +328,7 @@ public class OccurrenceHdfsRecordConverter {
       hr.setEstablishmentmeans(br.getEstablishmentMeans());
       hr.setIndividualcount(br.getIndividualCount());
       hr.setLifestage(br.getLifeStage());
+      hr.setLifestagelineage(br.getLifeStageLineage());
       hr.setReferences(br.getReferences());
       hr.setSex(br.getSex());
       hr.setTypestatus(br.getTypeStatus());
