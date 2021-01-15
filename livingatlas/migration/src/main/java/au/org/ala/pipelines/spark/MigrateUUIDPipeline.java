@@ -1,7 +1,5 @@
 package au.org.ala.pipelines.spark;
 
-import static org.apache.spark.sql.functions.col;
-
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -19,6 +17,7 @@ import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.spark.sql.*;
+import scala.Tuple2;
 import scala.Tuple4;
 
 /**
@@ -31,18 +30,29 @@ import scala.Tuple4;
 @Parameters(separators = "=")
 public class MigrateUUIDPipeline implements Serializable {
 
-  @Parameter private final List<String> parameters = new ArrayList<>();
+  @Parameter private List<String> parameters = new ArrayList<>();
 
   @Parameter(
-      names = "--inputPath",
+      names = "--occUuidExportPath",
       description =
           "The input path to a CSV export from occ_uuid in cassandra e.g /data/occ_uuid.csv or hdfs://localhost:8020/occ_uuid.csv")
-  private String inputPath;
+  private String occUuidExportPath;
+
+  @Parameter(
+      names = "--occFirstLoadedExportPath",
+      description =
+          "The input path to a CSV export from occ_uuid in cassandra e.g /data/occ_uuid.csv or hdfs://localhost:8020/occ_uuid.csv")
+  private String occFirstLoadedExportPath;
 
   @Parameter(
       names = "--targetPath",
       description = "The output path e.g /data or hdfs://localhost:8020")
   private String targetPath;
+
+  @Parameter(
+      names = "--coreSiteConfig",
+      description = "The absolute path to a hdfs-site.xml with default.FS configuration")
+  private String coreSiteConfig;
 
   @Parameter(
       names = "--hdfsSiteConfig",
@@ -54,7 +64,7 @@ public class MigrateUUIDPipeline implements Serializable {
     JCommander jCommander = JCommander.newBuilder().addObject(m).build();
     jCommander.parse(args);
 
-    if (m.inputPath == null || m.targetPath == null) {
+    if (m.occUuidExportPath == null || m.targetPath == null) {
       jCommander.usage();
       System.exit(1);
     }
@@ -78,11 +88,14 @@ public class MigrateUUIDPipeline implements Serializable {
     SparkSession spark = SparkSession.builder().appName("Migration UUIDs").getOrCreate();
 
     System.out.println("Load CSV");
-    Dataset<Row> dataset = spark.read().csv(inputPath);
+    Dataset<Row> occUuidDataset = spark.read().csv(occUuidExportPath);
+
+    System.out.println("Load CSV");
+    Dataset<Row> occFirstLoadedDataset = spark.read().csv(occFirstLoadedExportPath);
 
     System.out.println("Load UUIDs");
     Dataset<Tuple4<String, String, String, String>> uuidRecords =
-        dataset
+        occUuidDataset
             .filter(
                 row ->
                     StringUtils.isNotEmpty(row.getString(0))
@@ -92,21 +105,36 @@ public class MigrateUUIDPipeline implements Serializable {
                 row -> {
                   String datasetID = row.getString(0).substring(0, row.getString(0).indexOf("|"));
                   return Tuple4.apply(
-                      datasetID,
+                      datasetID, // datasetID
                       "temp_" + datasetID + "_" + row.getString(1),
-                      row.getString(1),
-                      row.getString(0));
+                      row.getString(1), // UUID
+                      row.getString(0)); // UniqueKey - constructed from DwC (and non-DwC terms)
                 },
                 Encoders.tuple(
                     Encoders.STRING(), Encoders.STRING(), Encoders.STRING(), Encoders.STRING()));
 
-    System.out.println("Write AVRO");
-    uuidRecords
+    Dataset<Tuple2<String, String>> firstLoadedDataset =
+        occFirstLoadedDataset
+            .filter(row -> StringUtils.isNotEmpty(row.getString(1)))
+            .map(
+                row -> {
+                  return Tuple2.apply(
+                      row.getString(0), // UUID
+                      row.getString(1)); // firstLoaded
+                },
+                Encoders.tuple(Encoders.STRING(), Encoders.STRING()));
+
+    Dataset<Row> combined =
+        uuidRecords.join(
+            firstLoadedDataset, uuidRecords.col("_3").equalTo(firstLoadedDataset.col("_1")));
+
+    combined
         .select(
-            col("_1").as("datasetID"),
-            col("_2").as("id"),
-            col("_3").as("uuid"),
-            col("_4").as("uniqueKey"))
+            uuidRecords.col("_1").as("datasetID"),
+            uuidRecords.col("_2").as("id"),
+            uuidRecords.col("_3").as("uuid"),
+            uuidRecords.col("_4").as("uniqueKey"),
+            firstLoadedDataset.col("_2").as("firstLoaded"))
         .write()
         .partitionBy("datasetID")
         .format("avro")
@@ -148,10 +176,17 @@ public class MigrateUUIDPipeline implements Serializable {
     // move to correct directory structure
     // check if the hdfs-site.xml is provided
     Configuration configuration = new Configuration();
-    if (!Strings.isNullOrEmpty(hdfsSiteConfig)) {
+    System.out.println("Using FS: " + hdfsSiteConfig + " and " + coreSiteConfig);
+    if (!Strings.isNullOrEmpty(hdfsSiteConfig) && !Strings.isNullOrEmpty(coreSiteConfig)) {
       File hdfsSite = new File(hdfsSiteConfig);
       if (hdfsSite.exists() && hdfsSite.isFile()) {
+        System.out.println("Setting up HDFS with: " + hdfsSiteConfig);
         configuration.addResource(hdfsSite.toURI().toURL());
+      }
+      File coreSite = new File(coreSiteConfig);
+      if (coreSite.exists() && coreSite.isFile()) {
+        System.out.println("Setting up HDFS with: " + coreSiteConfig);
+        configuration.addResource(coreSite.toURI().toURL());
       }
     }
 

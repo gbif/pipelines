@@ -2,11 +2,7 @@ package au.org.ala.pipelines.beam;
 
 import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.kvs.ALAPipelinesConfigFactory;
-import au.org.ala.kvs.cache.ALAAttributionKVStoreFactory;
-import au.org.ala.kvs.cache.ALACollectionKVStoreFactory;
-import au.org.ala.kvs.cache.ALANameCheckKVStoreFactory;
-import au.org.ala.kvs.cache.ALANameMatchKVStoreFactory;
-import au.org.ala.kvs.cache.GeocodeKvStoreFactory;
+import au.org.ala.kvs.cache.*;
 import au.org.ala.pipelines.transforms.*;
 import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.CombinedYamlConfiguration;
@@ -157,6 +153,7 @@ public class ALAVerbatimToInterpretedPipeline {
         MetadataTransform.builder().endpointType(endPointType).attempt(attempt).create();
     ALABasicTransform basicTransform =
         ALABasicTransform.builder()
+            .recordedByKvStoreSupplier(RecordedByKVStoreFactory.createSupplier(config))
             .occStatusKvStoreSupplier(
                 OccurrenceStatusKvStoreFactory.createSupplier(config.getGbifConfig()))
             .create();

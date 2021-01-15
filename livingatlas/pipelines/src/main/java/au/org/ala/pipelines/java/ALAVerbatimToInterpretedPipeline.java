@@ -5,11 +5,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 
 import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.kvs.ALAPipelinesConfigFactory;
-import au.org.ala.kvs.cache.ALAAttributionKVStoreFactory;
-import au.org.ala.kvs.cache.ALACollectionKVStoreFactory;
-import au.org.ala.kvs.cache.ALANameCheckKVStoreFactory;
-import au.org.ala.kvs.cache.ALANameMatchKVStoreFactory;
-import au.org.ala.kvs.cache.GeocodeKvStoreFactory;
+import au.org.ala.kvs.cache.*;
 import au.org.ala.pipelines.transforms.*;
 import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.CombinedYamlConfiguration;
@@ -185,6 +181,7 @@ public class ALAVerbatimToInterpretedPipeline {
             .counterFn(incMetricFn);
     ALABasicTransform basicTransform =
         ALABasicTransform.builder()
+            .recordedByKvStoreSupplier(RecordedByKVStoreFactory.getInstanceSupplier(config))
             .occStatusKvStoreSupplier(
                 OccurrenceStatusKvStoreFactory.getInstanceSupplier(config.getGbifConfig()))
             .create()
@@ -226,7 +223,6 @@ public class ALAVerbatimToInterpretedPipeline {
             .collectionKvStoreSupplier(ALACollectionKVStoreFactory.getInstanceSupplier(config))
             .create();
 
-    // ALA specific - Taxonomy
     // ALA specific - Taxonomy
     ALATaxonomyTransform alaTaxonomyTransform =
         ALATaxonomyTransform.builder()

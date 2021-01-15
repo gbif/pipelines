@@ -19,18 +19,37 @@ public class GeocodeKvStore implements KeyValueStore<LatLng, GeocodeResponse>, S
   private final GeocodeBitmapCache bitmapCache;
 
   private GeocodeKvStore(
-      @NonNull KeyValueStore<LatLng, GeocodeResponse> kvStore, BufferedImage image) {
+      @NonNull KeyValueStore<LatLng, GeocodeResponse> kvStore,
+      BufferedImage image,
+      String kvStoreType,
+      boolean missEqualsFail) {
     this.kvStore = kvStore;
-    this.bitmapCache = image == null ? null : GeocodeBitmapCache.create(image, kvStore::get);
+    this.bitmapCache =
+        image == null
+            ? null
+            : GeocodeBitmapCache.create(image, kvStore::get, kvStoreType, missEqualsFail);
   }
 
   public static GeocodeKvStore create(
       KeyValueStore<LatLng, GeocodeResponse> kvStore, BufferedImage image) {
-    return new GeocodeKvStore(kvStore, image);
+    return new GeocodeKvStore(kvStore, image, GeocodeBitmapCache.DEFAULT_KV_STORE, true);
   }
 
   public static GeocodeKvStore create(KeyValueStore<LatLng, GeocodeResponse> kvStore) {
-    return new GeocodeKvStore(kvStore, null);
+    return new GeocodeKvStore(kvStore, null, GeocodeBitmapCache.DEFAULT_KV_STORE, true);
+  }
+
+  public static GeocodeKvStore create(
+      KeyValueStore<LatLng, GeocodeResponse> kvStore,
+      BufferedImage image,
+      String kvStoreType,
+      boolean missEqualsFail) {
+    return new GeocodeKvStore(kvStore, image, kvStoreType, missEqualsFail);
+  }
+
+  public static GeocodeKvStore create(
+      KeyValueStore<LatLng, GeocodeResponse> kvStore, String kvStoreType, boolean missEqualsFail) {
+    return new GeocodeKvStore(kvStore, null, kvStoreType, missEqualsFail);
   }
 
   /** Simple get candidates by point. */

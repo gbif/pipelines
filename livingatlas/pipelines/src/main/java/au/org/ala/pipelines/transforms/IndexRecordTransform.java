@@ -8,6 +8,9 @@ import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 import lombok.NonNull;
@@ -340,8 +343,15 @@ public class IndexRecordTransform implements Serializable {
         lr.getHasGeospatialIssue() != null && lr.getHasGeospatialIssue() ? true : false;
     indexRecord.getBooleans().put("geospatial_kosher", geospatialKosher);
 
-    // FIXME  - see #162
-    indexRecord.getDates().put("first_loaded_date", new Date().getTime());
+    // see #162
+    if (ur.getFirstLoaded() != null) {
+      indexRecord
+          .getDates()
+          .put(
+              "first_loaded_date",
+              LocalDateTime.parse(ur.getFirstLoaded(), DateTimeFormatter.ISO_DATE_TIME)
+                  .toEpochSecond(ZoneOffset.UTC));
+    }
 
     // Add legacy collectory fields
     if (aar != null) {

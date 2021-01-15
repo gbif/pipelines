@@ -15,7 +15,7 @@ public class ALABasicInterpreterTest {
   private static final String ID = "777";
 
   @Test
-  public void interpretRecordedByEmtyOrNullTest() {
+  public void interpretRecordedByEmptyOrNullTest() {
     // State
     Map<String, String> coreMap = new HashMap<>();
     coreMap.put(
