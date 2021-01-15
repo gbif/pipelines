@@ -121,4 +121,18 @@ public class PipelinesVariables {
     // Specific
     public static final String LOCATION_FEATURE_RECORDS_COUNT = "locationFeatureRecordsCount";
   }
+
+  @NoArgsConstructor(access = AccessLevel.PRIVATE)
+  public static class DynamicProperties {
+
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
+    public static class Type {
+      public static final String BOOLEAN = Boolean.class.getSimpleName();
+    }
+
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
+    public static class Key {
+      public static final String HAS_TISSUE = "hasTissue";
+    }
+  }
 }
