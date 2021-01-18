@@ -269,7 +269,7 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals(BasisOfRecord.HUMAN_OBSERVATION.name(), hdfsRecord.getBasisofrecord());
     Assert.assertEquals(Sex.HERMAPHRODITE.name(), hdfsRecord.getSex());
     Assert.assertEquals(Integer.valueOf(99), hdfsRecord.getIndividualcount());
-    Assert.assertEquals("Larva", hdfsRecord.getLifestage());
+    Assert.assertEquals("Tadpole", hdfsRecord.getLifestage());
     Assert.assertEquals(Arrays.asList("Larva", "Tadpole"), hdfsRecord.getLifestagelineage());
     Assert.assertEquals(TypeStatus.ALLOTYPE.name(), hdfsRecord.getTypestatus());
     Assert.assertEquals("noName", hdfsRecord.getTypifiedname());
