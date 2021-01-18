@@ -265,7 +265,11 @@ public class IndexRecordTransform implements Serializable {
       }
     }
 
-    if (lr != null && lr.getHasCoordinate() != null && lr.getHasCoordinate()) {
+    if (lr != null
+        && lr.getHasCoordinate() != null
+        && lr.getHasCoordinate()
+        && lr.getDecimalLatitude() != null
+        && lr.getDecimalLongitude() != null) {
       addGeo(indexRecord, lr.getDecimalLatitude(), lr.getDecimalLongitude());
     }
 
@@ -500,7 +504,7 @@ public class IndexRecordTransform implements Serializable {
     }
   }
 
-  static void addGeo(IndexRecord.Builder doc, double lat, double lon) {
+  static void addGeo(IndexRecord.Builder doc, Double lat, Double lon) {
     String latlon = "";
     // ensure that the lat longs are in the required range before
     if (lat <= 90 && lat >= -90d && lon <= 180 && lon >= -180d) {
