@@ -34,7 +34,7 @@
     "fields": [
       {"name": "id", "type": "string", "doc":"Pipelines identifier"},
       {"name": "created", "type": ["null", "long"], "default" : null, "doc":"The timestamp the record was created"},
-      {"name": "imageItems", "type": {"type" : "array", "items" : "Image"}, "default" : {}},
+      {"name": "imageItems", "type": {"type" : "array", "items" : "Image"}, "default" : []},
       {"name": "issues", "type": "IssueRecord", "default":{}}
     ]
   }

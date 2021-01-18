@@ -6,7 +6,9 @@ import static org.gbif.pipelines.core.utils.ModelUtils.*;
 import com.google.common.base.Strings;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
@@ -37,7 +39,6 @@ import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.keygen.api.KeyLookupResult;
 import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
 import org.gbif.vocabulary.lookup.VocabularyLookup;
-import org.gbif.vocabulary.model.Concept;
 
 /**
  * Interpreting function that receives a ExtendedRecord instance and applies an interpretation to
@@ -169,7 +170,19 @@ public class BasicInterpreter {
 
       String value = extractValue(er, DwcTerm.lifeStage);
       if (!Strings.isNullOrEmpty(value)) {
-        vocabularyLookup.lookup(value).map(Concept::getName).ifPresent(br::setLifeStage);
+        vocabularyLookup
+            .lookup(value)
+            .ifPresent(
+                c -> {
+                  br.setLifeStage(c.getConcept().getName());
+
+                  // we sort the parents starting from the top as in taxonomy
+                  List<String> parents = c.getParents();
+                  Collections.reverse(parents);
+                  // add the concept itself
+                  parents.add(c.getConcept().getName());
+                  br.setLifeStageLineage(parents);
+                });
       }
     };
   }
