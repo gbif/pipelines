@@ -18,6 +18,8 @@ public class EventRange {
   private TemporalAccessor from;
   private TemporalAccessor to;
 
+  private boolean isReversed = false;
+
   private Set<OccurrenceIssue> issues = new HashSet<>();
 
   public Optional<TemporalAccessor> getFrom() {
@@ -42,5 +44,9 @@ public class EventRange {
 
   public boolean hasIssues() {
     return !issues.isEmpty();
+  }
+
+  public boolean isReversed() {
+    return isReversed;
   }
 }

@@ -1,10 +1,17 @@
 package org.gbif.pipelines.core.interpreters.core;
 
-import static org.gbif.common.parsers.date.DateComponentOrdering.*;
+import static org.gbif.common.parsers.date.DateComponentOrdering.DMY;
+import static org.gbif.common.parsers.date.DateComponentOrdering.DMY_FORMATS;
+import static org.gbif.common.parsers.date.DateComponentOrdering.MDY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.TimeZone;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.date.DateComponentOrdering;
@@ -332,6 +339,30 @@ public class TemporalInterpreterTest {
     assertEquals("1879-01-11", tr.getEventDate().getGte());
     assertNull(tr.getEventDate().getLte());
     assertEquals(1, tr.getIssues().getIssueList().size());
+  }
+
+  @Test
+  public void testRangeLastDateAsMain() {
+    // State
+    Map<String, String> map = new HashMap<>(4);
+    map.put(DwcTerm.year.qualifiedName(), "2005");
+    map.put(DwcTerm.month.qualifiedName(), "11 ");
+    map.put(DwcTerm.day.qualifiedName(), "15");
+    map.put(DwcTerm.eventDate.qualifiedName(), "2005-11-12/2005-11-15");
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
+    TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
+
+    // When
+    TemporalInterpreter interpreter = TemporalInterpreter.builder().create();
+    interpreter.interpretTemporal(er, tr);
+
+    // Should
+    assertEquals(2005, tr.getYear().intValue());
+    assertEquals(11, tr.getMonth().intValue());
+    assertEquals(15, tr.getDay().intValue());
+    assertEquals("2005-11-12", tr.getEventDate().getGte());
+    assertEquals("2005-11-15", tr.getEventDate().getLte());
+    assertEquals(0, tr.getIssues().getIssueList().size());
   }
 
   @Test
