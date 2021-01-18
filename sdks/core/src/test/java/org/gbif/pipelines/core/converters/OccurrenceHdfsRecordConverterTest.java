@@ -247,7 +247,8 @@ public class OccurrenceHdfsRecordConverterTest {
     basicRecord.setBasisOfRecord(BasisOfRecord.HUMAN_OBSERVATION.name());
     basicRecord.setSex(Sex.HERMAPHRODITE.name());
     basicRecord.setIndividualCount(99);
-    basicRecord.setLifeStage("Larva");
+    basicRecord.setLifeStage("Tadpole");
+    basicRecord.setLifeStageLineage(Arrays.asList("Larva", "Tadpole"));
     basicRecord.setTypeStatus(TypeStatus.ALLOTYPE.name());
     basicRecord.setTypifiedName("noName");
     basicRecord.setEstablishmentMeans(EstablishmentMeans.INVASIVE.name());
@@ -268,7 +269,8 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals(BasisOfRecord.HUMAN_OBSERVATION.name(), hdfsRecord.getBasisofrecord());
     Assert.assertEquals(Sex.HERMAPHRODITE.name(), hdfsRecord.getSex());
     Assert.assertEquals(Integer.valueOf(99), hdfsRecord.getIndividualcount());
-    Assert.assertEquals("Larva", hdfsRecord.getLifestage());
+    Assert.assertEquals("Tadpole", hdfsRecord.getLifestage());
+    Assert.assertEquals(Arrays.asList("Larva", "Tadpole"), hdfsRecord.getLifestagelineage());
     Assert.assertEquals(TypeStatus.ALLOTYPE.name(), hdfsRecord.getTypestatus());
     Assert.assertEquals("noName", hdfsRecord.getTypifiedname());
     Assert.assertEquals(EstablishmentMeans.INVASIVE.name(), hdfsRecord.getEstablishmentmeans());

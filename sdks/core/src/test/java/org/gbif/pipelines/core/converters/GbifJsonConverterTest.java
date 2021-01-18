@@ -67,6 +67,8 @@ public class GbifJsonConverterTest {
             .setRelativeOrganismQuantity(0.001d)
             .setLicense(License.CC_BY_NC_4_0.name())
             .setOccurrenceStatus(OccurrenceStatus.PRESENT.name())
+            .setLifeStage("Tadpole")
+            .setLifeStageLineage(Arrays.asList("Larva", "Tadpole"))
             .setIsClustered(true)
             .setRecordedByIds(
                 Collections.singletonList(
@@ -227,6 +229,9 @@ public class GbifJsonConverterTest {
     assertEquals(
         "[{\"type\":\"OTHER\",\"value\":\"someId\"}]", result.path("recordedByIds").toString());
     assertEquals("PRESENT", result.path("occurrenceStatus").asText());
+    assertEquals(br.getLifeStage(), result.path("lifeStage").asText());
+    String expectedLifeStageLineage = "[\"Larva\",\"Tadpole\"]";
+    assertEquals(expectedLifeStageLineage, result.path("lifeStageLineage").toString());
 
     assertEquals(institutionMatch.getKey(), result.path("institutionKey").asText());
     assertFalse(result.has("collectionKey"));
