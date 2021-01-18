@@ -1,0 +1,47 @@
+package au.org.ala.kvs.cache;
+
+import au.org.ala.kvs.ALAPipelinesConfig;
+import java.util.Collections;
+import java.util.List;
+import lombok.SneakyThrows;
+import org.gbif.kvs.KeyValueStore;
+import org.gbif.kvs.cache.KeyValueCache;
+import org.gbif.pipelines.core.functions.SerializableSupplier;
+
+public class RecordedByKVStoreFactory {
+
+  private final KeyValueStore<String, List<String>> kvStore;
+  private static volatile RecordedByKVStoreFactory instance;
+  private static final Object MUTEX = new Object();
+
+  @SneakyThrows
+  private RecordedByKVStoreFactory(ALAPipelinesConfig config) {
+    this.kvStore =
+        KeyValueCache.cache(
+            new RecordedByKVStore(),
+            config.getRecordedByConfig().getCacheSizeMb(),
+            String.class,
+            (Class<List<String>>) Collections.<String>emptyList().getClass());
+  }
+
+  public static KeyValueStore<String, List<String>> getInstance(ALAPipelinesConfig config) {
+    if (instance == null) {
+      synchronized (MUTEX) {
+        if (instance == null) {
+          instance = new RecordedByKVStoreFactory(config);
+        }
+      }
+    }
+    return instance.kvStore;
+  }
+
+  public static SerializableSupplier<KeyValueStore<String, List<String>>> createSupplier(
+      ALAPipelinesConfig config) {
+    return () -> new RecordedByKVStoreFactory(config).kvStore;
+  }
+
+  public static SerializableSupplier<KeyValueStore<String, List<String>>> getInstanceSupplier(
+      ALAPipelinesConfig config) {
+    return () -> RecordedByKVStoreFactory.getInstance(config);
+  }
+}
