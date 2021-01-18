@@ -1,7 +1,6 @@
 package au.org.ala.kvs.cache;
 
 import au.org.ala.kvs.ALAPipelinesConfig;
-import au.org.ala.kvs.RecordedByConfig;
 import java.util.Collections;
 import java.util.List;
 import lombok.SneakyThrows;
@@ -17,15 +16,10 @@ public class RecordedByKVStoreFactory {
 
   @SneakyThrows
   private RecordedByKVStoreFactory(ALAPipelinesConfig config) {
-
-    long cacheSize =
-        config.getRecordedByConfig() != null
-            ? config.getRecordedByConfig().getCacheSizeMb()
-            : RecordedByConfig.DEFAULT_CACHE_SIZE_MB;
     this.kvStore =
         KeyValueCache.cache(
             new RecordedByKVStore(),
-            cacheSize,
+            config.getRecordedByConfig().getCacheSizeMb(),
             String.class,
             (Class<List<String>>) Collections.<String>emptyList().getClass());
   }
@@ -43,7 +37,7 @@ public class RecordedByKVStoreFactory {
 
   public static SerializableSupplier<KeyValueStore<String, List<String>>> createSupplier(
       ALAPipelinesConfig config) {
-    return () -> getInstance(config);
+    return () -> new RecordedByKVStoreFactory(config).kvStore;
   }
 
   public static SerializableSupplier<KeyValueStore<String, List<String>>> getInstanceSupplier(
