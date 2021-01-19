@@ -1,0 +1,15 @@
+/**
+ * Additional structure for JackKnife model
+ */
+{
+  "name": "JackKnifeModelRecord",
+  "namespace": "org.gbif.pipelines.io.avro",
+  "type": "record",
+  "doc": "jackKnife model details",
+  "fields": [
+    {"name": "taxonId", "type": "string", "doc":"Species identifier"},
+    {"name": "feature", "type": "string", "doc":"Location feature name"},
+    {"name": "min", "type": "double", "doc":"Minimum value that is not an outlier"},
+    {"name": "max", "type": "double", "doc":"Maximum value that is not an outlier"}
+  ]
+}

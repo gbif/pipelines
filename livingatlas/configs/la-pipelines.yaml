@@ -175,6 +175,14 @@ index:
   # appName: SOLR indexing for {datasetId}
   # runner: SparkRunner
 
+# JackKnife specific configuration
+jackKnife:
+  path: "{fsPath}/pipelines-jackknife"
+  layers: el882,el889,el887,el865,el894
+  minSampleThreshold: 80
+  allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
+  runner: SparkRunner
+
 # class: au.org.ala.utils.DumpDatasetSize
 dataset-count-dump:
   inputPath: '{fsPath}/pipelines-data'
@@ -298,6 +306,18 @@ index-sh-args:
     executor-cores: 8
     executor-memory: 7G
     driver-memory: 4G
+
+jackknife-sh-args:
+  local:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-embedded:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-cluster:
+    conf:
+    num-executors: 24
+    executor-cores: 8
+    executor-memory: 7G
+    driver-memory: 1G
 
 solr-sh-args:
   local:

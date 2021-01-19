@@ -46,7 +46,7 @@ Pipeline ingress steps:
     ┌───── do-all ──────────────────────────────────┐
     │                                               │
 dwca-avro --> interpret --> uuid -->                │
-      index --> sample --> solr
+     sample --> index --> jackknife --> solr
 
 -  'dwca-avro' reads a Dwc-A and converts it to an verbatim.avro file;
 -  'interpret' reads verbatim.avro, interprets it and writes the interpreted data and the issues to Avro files;
@@ -57,6 +57,7 @@ dwca-avro --> interpret --> uuid -->                │
 -  'image-sync' retrieves details of images stored in image service for indexing purposes;
 -  'sample' use the sampling service to retrieve values for points for the layers in the spatial service;
 -  'index' generates a AVRO records ready to be index to SOLR;
+-  'jackknife' adds an aggregated jackknife AVRO for all datasets. Requires samping-avro. After running a full 'index' is required.
 -  'solr' reads index records in AVRO and submits them to SOLR;
 -  'archive-list' dumps out a list of archives that can be ingested to '/tmp/dataset-archive-list.csv';
 -  'dataset-list' dumps out a list of datasets that have been ingested to '/tmp/dataset-counts.csv';
@@ -76,6 +77,7 @@ Usage:
   $CMD [options] image-sync    (<dr>...|all)         $WHERE
   $CMD [options] index         (<dr>...|all)         $WHEREL
   $CMD [options] sample        (<dr>...|all)         $WHERE
+  $CMD [options] jackknife     (all)                 $WHERE
   $CMD [options] solr          (<dr>...|all)         $WHERE
   $CMD [options] validation-report
   $CMD [options] do-all        (<dr>...|all) $WHEREL
@@ -226,7 +228,7 @@ for JAR in $LOCAL_PIPELINES_JAR; do
 done
 
 FS_PATH=$(getConf fs.$(getConf fs.platform).fsPath)
-if [[ ! -d $FS_PATH ]]
+if [[ ! -d $FS_PATH && $(getConf fs.platform) = "local" ]]
 then
     log.error "Cannot find $FS_PATH."
     exit 1
@@ -571,6 +573,24 @@ function sds () {
     logStepEnd "SDS" $dr $ltype $SECONDS
 }
 
+function jackknife () {
+    local dr="*" ltype="$TYPE"
+    CLASS=au.org.ala.pipelines.beam.ALAReverseJackKnifePipeline
+
+    logStepStart "Jackknife" $dr
+    SECONDS=0
+
+    SH_ARGS=jackknife-sh-args.local
+    java-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=jackknife-sh-args.spark-embedded
+    spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=jackknife-sh-args.spark-cluster
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "add-jackknife $dr"
+
+    logStepEnd "Jackknife" $dr $ltype $SECONDS
+}
 
 function solr () {
     local dr="$1" ltype="$2"
@@ -734,6 +754,14 @@ fi
 
 if ($sample || $do_all); then
   do_step_simple sample
+fi
+
+if ($jackknife || $do_all); then
+  if [[ $2 = "all" ]] ; then
+    do_step jackknife
+  else
+    echo "WARN: 'jackknife' not run when 'dr' != 'all'"
+  fi
 fi
 
 if ($solr || $do_all); then

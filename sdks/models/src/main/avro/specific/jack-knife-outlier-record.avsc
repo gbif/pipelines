@@ -1,0 +1,13 @@
+/**
+ * Additional structure for JackKnife outliers
+ */
+{
+  "name": "JackKnifeOutlierRecord",
+  "namespace": "org.gbif.pipelines.io.avro",
+  "type": "record",
+  "doc": "jackKnife outlier mapping",
+  "fields": [
+    {"name": "id", "type": "string", "doc":"Pipelines identifier"},
+    {"name": "items", "doc": "JackKnife outlier layers", "default": [], "type": {"type": "array", "items": "string"}}
+  ]
+}
