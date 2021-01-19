@@ -1,16 +1,17 @@
 package org.gbif.pipelines.core.interpreters.core;
 
-import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareValue;
-
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables.DynamicProperties.Key;
 import org.gbif.pipelines.common.PipelinesVariables.DynamicProperties.Type;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.DynamicProperty;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
+import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareValue;
 
 public class DynamicPropertiesInterpreter {
 
@@ -55,5 +56,11 @@ public class DynamicPropertiesInterpreter {
       builder.setValue(Boolean.valueOf(any).toString());
     }
     br.getDynamicProperties().put(Key.HAS_TISSUE, builder.build());
+  }
+
+  public static void interpretSex(ExtendedRecord er, BasicRecord br) {
+    if (br.getSex() == null) {
+
+    }
   }
 }
