@@ -5,25 +5,24 @@ import au.org.ala.pipelines.options.AllDatasetsPipelinesOptions;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.*;
-import org.gbif.pipelines.common.beam.options.BasePipelineOptions;
-import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
-import org.gbif.pipelines.common.beam.utils.PathBuilder;
-import org.gbif.pipelines.core.config.model.PipelinesConfig;
-import org.gbif.pipelines.core.factory.FileSystemFactory;
-import org.gbif.pipelines.core.utils.FsUtils;
-
 import java.io.*;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.util.*;
 import java.util.stream.Collectors;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.hadoop.fs.*;
+import org.apache.hadoop.fs.FileSystem;
+import org.gbif.pipelines.common.beam.options.BasePipelineOptions;
+import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
+import org.gbif.pipelines.common.beam.utils.PathBuilder;
+import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.core.factory.FileSystemFactory;
+import org.gbif.pipelines.core.utils.FsUtils;
 
 /** Extensions to FSUtils. See {@link FsUtils} */
 @Slf4j

@@ -7,6 +7,10 @@ import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationUtils;
+import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,11 +35,6 @@ import org.gbif.pipelines.io.avro.JackKnifeModelRecord;
 import org.gbif.pipelines.io.avro.JackKnifeOutlierRecord;
 import org.gbif.pipelines.io.avro.SampleRecord;
 import org.slf4j.MDC;
-
-import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 /** Pipeline that adds a taxon jackknife values AVRO extension to the stored interpretation. */
 @Slf4j

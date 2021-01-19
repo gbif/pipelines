@@ -1,5 +1,7 @@
 package au.org.ala.pipelines.beam;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
+
 import au.org.ala.pipelines.options.ALASolrPipelineOptions;
 import au.org.ala.pipelines.transforms.IndexRecordTransform;
 import au.org.ala.pipelines.util.VersionInfo;
@@ -7,6 +9,10 @@ import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationUtils;
 import avro.shaded.com.google.common.collect.ImmutableMap;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.extensions.joinlibrary.Join;
@@ -26,13 +32,6 @@ import org.gbif.pipelines.io.avro.JackKnifeOutlierRecord;
 import org.gbif.pipelines.io.avro.SampleRecord;
 import org.joda.time.Duration;
 import org.slf4j.MDC;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
 /** Pipeline that joins sample data and index records and indexes to SOLR. */
 @Slf4j
