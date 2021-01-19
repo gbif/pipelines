@@ -59,7 +59,6 @@ public class DumpArchiveList {
       }
       fw.flush();
     }
-    log.info("Datasets listed: {}", datasets.size());
-    log.info("List written to: {}", targetPath);
+    log.info("Dataset list of size {} written to {}", datasets.size(), targetPath);
   }
 }
