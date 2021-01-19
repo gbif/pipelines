@@ -126,6 +126,7 @@ sample:
   allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
 
 images:
+  appName: Image syncing for {datasetId}
   runner: SparkRunner
   inputPath: '{fsPath}/pipelines-data'
   tempLocation: /tmp
@@ -152,15 +153,16 @@ layerCrawler:
 
 # class: au.org.ala.pipelines.beam.ALAInterpretedToSensitivePipeline
 sensitive:
+  appName: Sensitive Data Processing for {datasetId}
   inputPath: '{fsPath}/pipelines-data'
   runner: SparkRunner
 
 # class: au.org.ala.pipelines.java.IndexRecordPipeline
 # class: au.org.ala.pipelines.beam.IndexRecordPipeline
 index:
+  appName: IndexRecord generation for {datasetId}
   inputPath: '{fsPath}/pipelines-data'
   targetPath: '{fsPath}/pipelines-data'
-  includeSampling: true
   includeImages: true
   includeSpeciesLists: true
   includeSensitiveData: true
@@ -169,17 +171,21 @@ index:
 
 # class: au.org.ala.pipelines.beam.IndexRecordToSolrPipeline
 solr:
+  appName: SOLR indexing for {datasetId}
   inputPath: '{fsPath}/pipelines-data'
   targetPath: '{fsPath}/pipelines-data'
   allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
+  jackKnifePath: "{fsPath}/pipelines-jackknife"
   solrCollection: biocache
   includeSampling: true
+  includeJackKnife: false
   runner: SparkRunner
   zkHost: localhost:9983
 
 # JackKnife specific configuration
 jackKnife:
-  path: "{fsPath}/pipelines-jackknife"
+  appName: Jack knife outlier detection for {datasetId}
+  jackKnifePath: "{fsPath}/pipelines-jackknife"
   layers: el882,el889,el887,el865,el894
   minSampleThreshold: 80
   allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'

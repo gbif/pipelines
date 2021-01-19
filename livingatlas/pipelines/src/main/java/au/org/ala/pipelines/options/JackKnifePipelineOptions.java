@@ -23,7 +23,7 @@ public interface JackKnifePipelineOptions
 
   @Description("Path to JackKnife avro files")
   @Default.String("")
-  String getPath();
+  String getJackKnifePath();
 
-  void setPath(String path);
+  void setJackKnifePath(String jackKnifePath);
 }

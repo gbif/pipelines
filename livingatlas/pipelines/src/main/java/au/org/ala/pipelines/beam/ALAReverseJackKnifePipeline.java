@@ -69,12 +69,12 @@ public class ALAReverseJackKnifePipeline {
     Pipeline pipeline = Pipeline.create(options);
 
     // JackKnife output locations
-    String outliersPath = String.join("/", options.getPath(), "outliers");
-    String modelsPath = String.join("/", options.getPath(), "models");
-    String jackknifePath = String.join("/", options.getPath());
+    String outliersPath = String.join("/", options.getJackKnifePath(), "outliers");
+    String modelsPath = String.join("/", options.getJackKnifePath(), "models");
+    String jackknifePath = String.join("/", options.getJackKnifePath());
 
     log.info("1. Delete existing jackknife outliers, models and metrics.");
-    deletePreviousValidation(options, options.getPath());
+    deletePreviousValidation(options, options.getJackKnifePath());
 
     String[] layers = options.getLayers().split(",");
     if (layers.length == 0 || StringUtils.isEmpty(layers[0])) {
@@ -160,6 +160,7 @@ public class ALAReverseJackKnifePipeline {
 
                           c.output(KV.of(speciesID, KV.of(recordID, sampling)));
                         } catch (Exception ex) {
+
                         }
                       }
                     }))
