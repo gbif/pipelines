@@ -114,7 +114,7 @@
     "fields": [
       {"name": "id", "type": "string", "doc":"Pipelines identifier"},
       {"name": "created", "type": ["null", "long"], "default" : null, "doc":"The timestamp the record was created"},
-      {"name": "audubonItems", "type": {"type" : "array", "items" : "Audubon"}, "default" : {}},
+      {"name": "audubonItems", "type": {"type" : "array", "items" : "Audubon"}, "default" : []},
       {"name": "issues", "type": "IssueRecord", "default":{}}
     ]
   }

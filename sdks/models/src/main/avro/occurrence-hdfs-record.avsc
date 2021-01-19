@@ -927,6 +927,12 @@
     "name" : "lifestage",
     "type" : [ "string", "null" ]
   }, {
+    "name" : "lifestagelineage",
+    "type" : [ {
+      "type" : "array",
+      "items" : [ "string", "null" ]
+    }, "null" ]
+  }, {
     "name" : "reproductivecondition",
     "type" : [ "string", "null" ]
   }, {

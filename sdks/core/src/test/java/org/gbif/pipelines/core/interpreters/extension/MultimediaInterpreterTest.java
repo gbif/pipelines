@@ -75,21 +75,24 @@ public class MultimediaInterpreterTest {
 
     String result =
         "{\"id\": \"id\", \"created\": 0, \"multimediaItems\": [{\"type\": \"StillImage\", \"format\": \"image/scan\", "
-            + "\"identifier\": \"http://www.gbif.org/tmp.jpg\", \"references\": \"http://www.gbif.org/tmp.jpg\", \"title\": "
-            + "\"Title1\", \"description\": \"Desc1\", \"source\": \"Sr1\", \"audience\": \"Audi1\", \"created\": \"2000-11-21\", "
-            + "\"creator\": \"Cr1\", \"contributor\": \"Cont1\", \"publisher\": \"Publ1\", \"license\": "
-            + "\"http://creativecommons.org/licenses/by-nc-sa/4.0/\", \"rightsHolder\": \"Rh1\", \"datasetId\": \"1\"}, {\"type\": "
-            + "\"StillImage\", \"format\": \"image/jpeg\", \"identifier\": \"http://www.gbif.org/tmp.jpg\", \"references\": "
-            + "\"http://www.gbif.org/tmp.jpg\", \"title\": \"Title2\", \"description\": \"Desc2\", \"source\": \"Sr2\", "
-            + "\"audience\": \"Aud2\", \"created\": \"2010\", \"creator\": \"Cr2\", \"contributor\": \"Cont2\", \"publisher\": "
-            + "\"Pub2\", \"license\": \"http://creativecommons.org/publicdomain/zero/1.0/legalcode\", \"rightsHolder\": \"Rh2\", \"datasetId\": \"2\"}, {\"type\": \"StillImage\", "
-            + "\"format\": \"image/jpeg\", \"identifier\": \"https://quod.lib.umich.edu/cgi/i/image/api/image/herb00ic:1559372:MICH-V-1559372/full/res:0/0/native.jpg\", "
-            + "\"references\": null, \"title\": null, \"description\": null, \"source\": null, \"audience\": null, \"created\": null, "
-            + "\"creator\": null, \"contributor\": null, \"publisher\": null, \"license\": null, \"rightsHolder\": null, \"datasetId\": null}, "
-            + "{\"type\": \"StillImage\", \"format\": \"image/jpeg\", \"identifier\": \"http://www.gbif.org/tmp22.jpg\", \"references\": null, "
-            + "\"title\": null, \"description\": null, \"source\": null, \"audience\": null, \"created\": null, \"creator\": null, \"contributor\": null, "
-            + "\"publisher\": null, \"license\": null, \"rightsHolder\": null, \"datasetId\": null}], \"issues\": {\"issueList\": "
-            + "[\"MULTIMEDIA_DATE_INVALID\", \"MULTIMEDIA_URI_INVALID\"]}}";
+            + "\"identifier\": \"http://www.gbif.org/tmp.jpg\", \"references\": \"http://www.gbif.org/tmp.jpg\", "
+            + "\"title\": \"Title1\", \"description\": \"Desc1\", \"source\": \"Sr1\", \"audience\": \"Audi1\", "
+            + "\"created\": \"2000-11-21\", \"creator\": \"Cr1\", \"contributor\": \"Cont1\", \"publisher\": "
+            + "\"Publ1\", \"license\": \"http://creativecommons.org/licenses/by-nc-sa/4.0/\", \"rightsHolder\": "
+            + "\"Rh1\", \"datasetId\": \"1\"}, {\"type\": \"StillImage\", \"format\": \"image/jpeg\", \"identifier\": "
+            + "\"http://www.gbif.org/tmp.jpg\", \"references\": \"http://www.gbif.org/tmp.jpg\", \"title\": "
+            + "\"Title2\", \"description\": \"Desc2\", \"source\": \"Sr2\", \"audience\": \"Aud2\", \"created\": "
+            + "\"2010\", \"creator\": \"Cr2\", \"contributor\": \"Cont2\", \"publisher\": \"Pub2\", \"license\": "
+            + "\"http://creativecommons.org/publicdomain/zero/1.0/legalcode\", \"rightsHolder\": \"Rh2\", "
+            + "\"datasetId\": \"2\"}, {\"type\": \"StillImage\", \"format\": \"image/jpeg\", \"identifier\": "
+            + "\"https://quod.lib.umich.edu/cgi/i/image/api/image/herb00ic:1559372:MICH-V-1559372/full/res:0/0/native.jpg\", "
+            + "\"references\": null, \"title\": null, \"description\": null, \"source\": null, \"audience\": null, "
+            + "\"created\": \"2021-01-12T18:33:58Z\", \"creator\": null, \"contributor\": null, \"publisher\": null,"
+            + " \"license\": null, \"rightsHolder\": null, \"datasetId\": null}, {\"type\": \"StillImage\", "
+            + "\"format\": \"image/jpeg\", \"identifier\": \"http://www.gbif.org/tmp22.jpg\", \"references\": null, "
+            + "\"title\": null, \"description\": null, \"source\": null, \"audience\": null, \"created\": null, "
+            + "\"creator\": null, \"contributor\": null, \"publisher\": null, \"license\": null, \"rightsHolder\": null, "
+            + "\"datasetId\": null}], \"issues\": {\"issueList\": [\"MULTIMEDIA_URI_INVALID\"]}}";
 
     MultimediaRecord mr =
         MultimediaRecord.newBuilder().setId(record.getId()).setCreated(0L).build();
