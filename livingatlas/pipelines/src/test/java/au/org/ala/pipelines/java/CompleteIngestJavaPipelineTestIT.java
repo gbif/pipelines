@@ -6,8 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import au.org.ala.pipelines.beam.*;
 import au.org.ala.pipelines.beam.ALAUUIDMintingPipeline;
 import au.org.ala.pipelines.beam.DwcaToVerbatimPipeline;
-import au.org.ala.pipelines.options.ALASolrPipelineOptions;
 import au.org.ala.pipelines.options.AllDatasetsPipelinesOptions;
+import au.org.ala.pipelines.options.IndexingPipelineOptions;
+import au.org.ala.pipelines.options.SolrPipelineOptions;
 import au.org.ala.pipelines.options.UUIDPipelineOptions;
 import au.org.ala.sampling.LayerCrawler;
 import au.org.ala.util.SolrUtils;
@@ -160,9 +161,9 @@ public class CompleteIngestJavaPipelineTestIT {
     ALAInterpretedToSensitivePipeline.run(sensitivityOptions);
 
     // index record generation
-    ALASolrPipelineOptions solrOptions =
+    IndexingPipelineOptions solrOptions =
         PipelinesOptionsFactory.create(
-            ALASolrPipelineOptions.class,
+            IndexingPipelineOptions.class,
             new String[] {
               "--datasetId=" + datasetID,
               "--attempt=1",
@@ -205,9 +206,9 @@ public class CompleteIngestJavaPipelineTestIT {
     LayerCrawler.run(latLngOptions);
 
     // index into SOLR
-    ALASolrPipelineOptions solrOptions2 =
+    SolrPipelineOptions solrOptions2 =
         PipelinesOptionsFactory.create(
-            ALASolrPipelineOptions.class,
+            SolrPipelineOptions.class,
             new String[] {
               "--datasetId=" + datasetID,
               "--attempt=1",

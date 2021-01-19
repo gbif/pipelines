@@ -2,8 +2,9 @@ package au.org.ala.pipelines.beam;
 
 import static org.junit.Assert.*;
 
-import au.org.ala.pipelines.options.ALASolrPipelineOptions;
 import au.org.ala.pipelines.options.AllDatasetsPipelinesOptions;
+import au.org.ala.pipelines.options.IndexingPipelineOptions;
+import au.org.ala.pipelines.options.SolrPipelineOptions;
 import au.org.ala.pipelines.options.UUIDPipelineOptions;
 import au.org.ala.sampling.LayerCrawler;
 import au.org.ala.util.SolrUtils;
@@ -157,9 +158,9 @@ public class CompleteIngestPipelineTestIT {
     ALAInterpretedToSensitivePipeline.run(sensitivityOptions);
 
     // solr
-    ALASolrPipelineOptions solrOptions =
+    IndexingPipelineOptions solrOptions =
         PipelinesOptionsFactory.create(
-            ALASolrPipelineOptions.class,
+            IndexingPipelineOptions.class,
             new String[] {
               "--datasetId=" + datasetID,
               "--attempt=1",
@@ -208,9 +209,9 @@ public class CompleteIngestPipelineTestIT {
             })));
     LayerCrawler.run(latLngOptions);
 
-    ALASolrPipelineOptions solrOptions2 =
+    SolrPipelineOptions solrOptions2 =
         PipelinesOptionsFactory.create(
-            ALASolrPipelineOptions.class,
+            SolrPipelineOptions.class,
             new String[] {
               "--datasetId=" + datasetID,
               "--attempt=1",

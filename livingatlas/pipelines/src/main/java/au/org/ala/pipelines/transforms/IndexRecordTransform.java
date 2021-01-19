@@ -159,40 +159,41 @@ public class IndexRecordTransform implements Serializable {
     List<String> assertions = new ArrayList<String>();
 
     // If a sensitive record, construct new versions of the data with adjustments
-    if (sr != null && sr.getSensitive()) {
-      Set<Term> sensitive =
+    boolean sensitive = sr != null && sr.getSensitive() != null && sr.getSensitive();
+    if (sensitive) {
+      Set<Term> sensitiveTerms =
           sr.getAltered().keySet().stream().map(TERM_FACTORY::findTerm).collect(Collectors.toSet());
       if (mdr != null) {
         mdr = MetadataRecord.newBuilder(mdr).build();
-        SensitiveDataInterpreter.applySensitivity(sensitive, sr, mdr);
+        SensitiveDataInterpreter.applySensitivity(sensitiveTerms, sr, mdr);
       }
       if (br != null) {
         br = BasicRecord.newBuilder(br).build();
-        SensitiveDataInterpreter.applySensitivity(sensitive, sr, br);
+        SensitiveDataInterpreter.applySensitivity(sensitiveTerms, sr, br);
       }
       if (tr != null) {
         tr = TemporalRecord.newBuilder(tr).build();
-        SensitiveDataInterpreter.applySensitivity(sensitive, sr, tr);
+        SensitiveDataInterpreter.applySensitivity(sensitiveTerms, sr, tr);
       }
       if (lr != null) {
         lr = LocationRecord.newBuilder(lr).build();
-        SensitiveDataInterpreter.applySensitivity(sensitive, sr, lr);
+        SensitiveDataInterpreter.applySensitivity(sensitiveTerms, sr, lr);
       }
       if (txr != null) {
         txr = TaxonRecord.newBuilder(txr).build();
-        SensitiveDataInterpreter.applySensitivity(sensitive, sr, txr);
+        SensitiveDataInterpreter.applySensitivity(sensitiveTerms, sr, txr);
       }
       if (atxr != null) {
         atxr = ALATaxonRecord.newBuilder(atxr).build();
-        SensitiveDataInterpreter.applySensitivity(sensitive, sr, atxr);
+        SensitiveDataInterpreter.applySensitivity(sensitiveTerms, sr, atxr);
       }
       if (er != null) {
         er = ExtendedRecord.newBuilder(er).build();
-        SensitiveDataInterpreter.applySensitivity(sensitive, sr, er);
+        SensitiveDataInterpreter.applySensitivity(sensitiveTerms, sr, er);
       }
       if (aar != null) {
         aar = ALAAttributionRecord.newBuilder(aar).build();
-        SensitiveDataInterpreter.applySensitivity(sensitive, sr, aar);
+        SensitiveDataInterpreter.applySensitivity(sensitiveTerms, sr, aar);
       }
     }
 
@@ -245,9 +246,10 @@ public class IndexRecordTransform implements Serializable {
       indexRecord.getStrings().put("raw_" + key, entry.getValue());
     }
 
+    indexRecord.getBooleans().put("sensitive", sensitive);
+
     // Sensitive (Original) data
-    if (sr != null && sr.getSensitive()) {
-      indexRecord.getBooleans().put("sensitive", true);
+    if (sensitive) {
       if (sr.getDataGeneralizations() != null)
         indexRecord.getStrings().put("dataGeneralizations", sr.getDataGeneralizations());
       if (sr.getInformationWithheld() != null)
@@ -266,7 +268,11 @@ public class IndexRecordTransform implements Serializable {
       }
     }
 
-    if (lr != null && lr.getHasCoordinate() != null && lr.getHasCoordinate()) {
+    if (lr != null
+        && lr.getHasCoordinate() != null
+        && lr.getHasCoordinate()
+        && lr.getDecimalLatitude() != null
+        && lr.getDecimalLongitude() != null) {
       addGeo(indexRecord, lr.getDecimalLatitude(), lr.getDecimalLongitude());
     }
 
@@ -508,7 +514,7 @@ public class IndexRecordTransform implements Serializable {
     }
   }
 
-  static void addGeo(IndexRecord.Builder doc, double lat, double lon) {
+  static void addGeo(IndexRecord.Builder doc, Double lat, Double lon) {
     String latlon = "";
     // ensure that the lat longs are in the required range before
     if (lat <= 90 && lat >= -90d && lon <= 180 && lon >= -180d) {

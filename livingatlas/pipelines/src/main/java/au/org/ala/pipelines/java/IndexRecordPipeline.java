@@ -3,7 +3,7 @@ package au.org.ala.pipelines.java;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
 import au.org.ala.pipelines.common.ALARecordTypes;
-import au.org.ala.pipelines.options.ALASolrPipelineOptions;
+import au.org.ala.pipelines.options.IndexingPipelineOptions;
 import au.org.ala.pipelines.transforms.ALAAttributionTransform;
 import au.org.ala.pipelines.transforms.ALASensitiveDataRecordTransform;
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
@@ -84,13 +84,13 @@ public class IndexRecordPipeline {
   }
 
   public static void run(String[] args) {
-    ALASolrPipelineOptions options =
-        PipelinesOptionsFactory.create(ALASolrPipelineOptions.class, args);
+    IndexingPipelineOptions options =
+        PipelinesOptionsFactory.create(IndexingPipelineOptions.class, args);
     PipelinesOptionsFactory.registerHdfs(options);
     run(options);
   }
 
-  public static void run(ALASolrPipelineOptions options) {
+  public static void run(IndexingPipelineOptions options) {
     ExecutorService executor = Executors.newWorkStealingPool();
     try {
       run(options, executor);
@@ -100,7 +100,7 @@ public class IndexRecordPipeline {
   }
 
   @SneakyThrows
-  public static void run(ALASolrPipelineOptions options, ExecutorService executor) {
+  public static void run(IndexingPipelineOptions options, ExecutorService executor) {
 
     MDC.put("datasetId", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());

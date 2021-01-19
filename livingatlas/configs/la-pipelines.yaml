@@ -112,10 +112,6 @@ uuid:
   runner: SparkRunner
   inputPath: '{fsPath}/pipelines-data'
 
-  ## For spark-cluster:
-  # interpretationTypes: ALL
-  # useExtendedRecordId: true
-
 # class: au.org.ala.pipelines.beam.ALAInterpretedToLatLongCSVPipeline
 export-latlng:
   inputPath: '{fsPath}/pipelines-data'
@@ -154,28 +150,32 @@ layerCrawler:
   batchStatusSleepTime: 1000
   downloadRetries: 5
 
+# class: au.org.ala.pipelines.beam.ALAInterpretedToSensitivePipeline
 sensitive:
   inputPath: '{fsPath}/pipelines-data'
   runner: SparkRunner
 
-# class: au.org.ala.pipelines.java.ALAInterpretedToSolrIndexPipeline
+# class: au.org.ala.pipelines.java.IndexRecordPipeline
+# class: au.org.ala.pipelines.beam.IndexRecordPipeline
 index:
   inputPath: '{fsPath}/pipelines-data'
   targetPath: '{fsPath}/pipelines-data'
-  solrCollection: biocache
   includeSampling: true
   includeImages: true
   includeSpeciesLists: true
-  includeSensitiveData: false
+  includeSensitiveData: true
+  runner: SparkRunner
+  allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
+
+# class: au.org.ala.pipelines.beam.IndexRecordToSolrPipeline
+solr:
+  inputPath: '{fsPath}/pipelines-data'
+  targetPath: '{fsPath}/pipelines-data'
+  allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
+  solrCollection: biocache
+  includeSampling: true
   runner: SparkRunner
   zkHost: localhost:9983
-  allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
-  ## For spark-cluster:
-  # appName: SOLR indexing for {datasetId}
-  # runner: SparkRunner
-  ## For spark-embedded:
-  # appName: SOLR indexing for {datasetId}
-  # runner: SparkRunner
 
 # JackKnife specific configuration
 jackKnife:
@@ -203,14 +203,7 @@ dataset-archive-list:
   inputPath: '{fsPath}/pipelines-data'
   targetPath: /tmp/dataset-archive-list.csv
 
-migrate-uuids:
-  inputPath: '{fsPath}/pipelines-data/occ_uuid.csv'
-  targetPath: '{fsPath}/pipelines-data'
-  hdfsSiteConfig: ""
-  # FIXME: MigrateUUIDPipeline should use this also?
-
 ### la-pipelines cli additional arguments, like JVM or spark command line arguments
-
 interpret-sh-args:
   local:
     jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
