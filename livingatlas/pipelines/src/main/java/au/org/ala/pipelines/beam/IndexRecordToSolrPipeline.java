@@ -1,6 +1,7 @@
 package au.org.ala.pipelines.beam;
 
-import au.org.ala.pipelines.options.IndexingPipelineOptions;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
+
 import au.org.ala.pipelines.options.SolrPipelineOptions;
 import au.org.ala.pipelines.transforms.IndexRecordTransform;
 import au.org.ala.pipelines.util.VersionInfo;
@@ -8,10 +9,13 @@ import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationUtils;
 import avro.shaded.com.google.common.collect.ImmutableMap;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.extensions.joinlibrary.Join;
 import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.io.solr.SolrIO;
 import org.apache.beam.sdk.transforms.*;
@@ -20,15 +24,19 @@ import org.apache.beam.sdk.transforms.join.CoGroupByKey;
 import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.*;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.io.avro.IndexRecord;
+import org.gbif.pipelines.io.avro.JackKnifeOutlierRecord;
 import org.gbif.pipelines.io.avro.SampleRecord;
-import org.jetbrains.annotations.NotNull;
 import org.joda.time.Duration;
 import org.slf4j.MDC;
 
 /** Pipeline that joins sample data and index records and indexes to SOLR. */
 @Slf4j
 public class IndexRecordToSolrPipeline {
+
+  static final JackKnifeOutlierRecord nullJkor =
+      JackKnifeOutlierRecord.newBuilder().setId("").setItems(new ArrayList<>()).build();
 
   public static void main(String[] args) throws Exception {
     VersionInfo.print();
@@ -99,60 +107,65 @@ public class IndexRecordToSolrPipeline {
               .and(indexRecordTag, recordsWithCoordinatesKeyedLatng)
               .apply(CoGroupByKey.create());
 
-      // Create collection which contains samples
-      PCollection<IndexRecord> indexRecordsWithSampling =
+      // Create collection which contains samples keyed with indexRecord.id
+      PCollection<KV<String, IndexRecord>> indexRecordsWithSampling =
           results.apply(ParDo.of(joinSampling(indexRecordTag, samplingTag)));
 
-      log.info("Adding step 4: SOLR indexing");
+      PCollection<IndexRecord> recordsWithCoordsToBeIndexed = null;
+
+      // If configured to do so, include jack knife information
+      if (options.getIncludeJackKnife()) {
+
+        log.info("Adding jack knife information");
+
+        // Load Jackknife
+        PCollection<JackKnifeOutlierRecord> jackKnifeRecords =
+            loadJackKnifeRecords(options, pipeline);
+
+        // Convert to KV <recordID, JackKnifeOutlierRecord>
+        PCollection<KV<String, JackKnifeOutlierRecord>> jackKnifeRecordsKeyedRecordID =
+            jackKnifeRecords.apply(
+                MapElements.via(
+                    new SimpleFunction<
+                        JackKnifeOutlierRecord, KV<String, JackKnifeOutlierRecord>>() {
+                      @Override
+                      public KV<String, JackKnifeOutlierRecord> apply(
+                          JackKnifeOutlierRecord input) {
+                        return KV.of(input.getId(), input);
+                      }
+                    }));
+
+        // Join indexRecordsSampling and jackKnife
+        PCollection<KV<String, KV<IndexRecord, JackKnifeOutlierRecord>>>
+            indexRecordSamplingJoinJackKnife =
+                Join.leftOuterJoin(
+                    indexRecordsWithSampling, jackKnifeRecordsKeyedRecordID, nullJkor);
+
+        // Add Jackknife information
+        recordsWithCoordsToBeIndexed =
+            indexRecordSamplingJoinJackKnife.apply(ParDo.of(addJackknifeInfo(nullJkor)));
+
+      } else {
+        recordsWithCoordsToBeIndexed = indexRecordsWithSampling.apply(Values.create());
+      }
+
+      log.info("Adding step 4: Create SOLR connection");
       SolrIO.ConnectionConfiguration conn =
           SolrIO.ConnectionConfiguration.create(options.getZkHost());
 
-      indexRecordsWithSampling
-          .apply(
-              "SOLR_indexRecordsWithSampling",
-              ParDo.of(new IndexRecordTransform.IndexRecordToSolrInputDocumentFcn()))
-          .apply(
-              SolrIO.write()
-                  .to(options.getSolrCollection())
-                  .withConnectionConfiguration(conn)
-                  .withMaxBatchSize(options.getSolrBatchSize())
-                  .withRetryConfiguration(
-                      SolrIO.RetryConfiguration.create(
-                          options.getSolrRetryMaxAttempts(),
-                          Duration.standardMinutes(options.getSolrRetryDurationInMins()))));
+      log.info("Adding step 5: Write records with coordinates to SOLR");
+      writeToSolr(options, recordsWithCoordsToBeIndexed, conn);
 
-      recordsWithoutCoordinates
-          .apply(
-              "SOLR_recordsWithoutCoordinates",
-              ParDo.of(new IndexRecordTransform.IndexRecordToSolrInputDocumentFcn()))
-          .apply(
-              SolrIO.write()
-                  .to(options.getSolrCollection())
-                  .withConnectionConfiguration(conn)
-                  .withMaxBatchSize(options.getSolrBatchSize())
-                  .withRetryConfiguration(
-                      SolrIO.RetryConfiguration.create(
-                          options.getSolrRetryMaxAttempts(),
-                          Duration.standardMinutes(options.getSolrRetryDurationInMins()))));
+      log.info("Adding step 6: Write records without coordinates to SOLR");
+      writeToSolr(options, recordsWithoutCoordinates, conn);
+
     } else {
-
-      log.info("Adding step 4: SOLR indexing");
+      log.info("Adding step 4: Create SOLR connection");
       SolrIO.ConnectionConfiguration conn =
           SolrIO.ConnectionConfiguration.create(options.getZkHost());
 
-      indexRecordsCollection
-          .apply(
-              "SOLR_indexRecords",
-              ParDo.of(new IndexRecordTransform.IndexRecordToSolrInputDocumentFcn()))
-          .apply(
-              SolrIO.write()
-                  .to(options.getSolrCollection())
-                  .withConnectionConfiguration(conn)
-                  .withMaxBatchSize(options.getSolrBatchSize())
-                  .withRetryConfiguration(
-                      SolrIO.RetryConfiguration.create(
-                          options.getSolrRetryMaxAttempts(),
-                          Duration.standardMinutes(options.getSolrRetryDurationInMins()))));
+      log.info("Adding step 5: Write records without sampling & jackknife to SOLR");
+      writeToSolr(options, indexRecordsCollection, conn);
     }
 
     pipeline.run(options).waitUntilFinish();
@@ -160,11 +173,59 @@ public class IndexRecordToSolrPipeline {
     log.info("Solr indexing pipeline complete");
   }
 
-  @NotNull
-  private static DoFn<KV<String, CoGbkResult>, IndexRecord> joinSampling(
+  private static void writeToSolr(
+      SolrPipelineOptions options,
+      PCollection<IndexRecord> recordsWithoutCoordinates,
+      SolrIO.ConnectionConfiguration conn) {
+    recordsWithoutCoordinates
+        .apply("SOLR_doc", ParDo.of(new IndexRecordTransform.IndexRecordToSolrInputDocumentFcn()))
+        .apply(
+            SolrIO.write()
+                .to(options.getSolrCollection())
+                .withConnectionConfiguration(conn)
+                .withMaxBatchSize(options.getSolrBatchSize())
+                .withRetryConfiguration(
+                    SolrIO.RetryConfiguration.create(
+                        options.getSolrRetryMaxAttempts(),
+                        Duration.standardMinutes(options.getSolrRetryDurationInMins()))));
+  }
+
+  private static DoFn<KV<String, KV<IndexRecord, JackKnifeOutlierRecord>>, IndexRecord>
+      addJackknifeInfo(JackKnifeOutlierRecord nullJkor) {
+    return new DoFn<KV<String, KV<IndexRecord, JackKnifeOutlierRecord>>, IndexRecord>() {
+      @ProcessElement
+      public void processElement(ProcessContext c) {
+
+        KV<String, KV<IndexRecord, JackKnifeOutlierRecord>> e = c.element();
+        IndexRecord indexRecord = e.getValue().getKey();
+        JackKnifeOutlierRecord jkor = e.getValue().getValue();
+
+        if (jkor != nullJkor) {
+          Map<String, Integer> ints = indexRecord.getInts();
+          if (ints == null) {
+            ints = new HashMap<String, Integer>();
+            indexRecord.setInts(ints);
+          }
+          ints.put("outlierLayerCount", jkor.getItems().size());
+
+          Map<String, List<String>> stringsList = indexRecord.getMultiValues();
+          if (stringsList == null) {
+            stringsList = new HashMap();
+            indexRecord.setMultiValues(stringsList);
+          }
+
+          stringsList.put("outlierLayer", jkor.getItems());
+        }
+
+        c.output(indexRecord);
+      }
+    };
+  }
+
+  private static DoFn<KV<String, CoGbkResult>, KV<String, IndexRecord>> joinSampling(
       TupleTag<IndexRecord> indexRecordTag, TupleTag<SampleRecord> samplingTag) {
 
-    return new DoFn<KV<String, CoGbkResult>, IndexRecord>() {
+    return new DoFn<KV<String, CoGbkResult>, KV<String, IndexRecord>>() {
       @ProcessElement
       public void processElement(ProcessContext c) {
 
@@ -216,7 +277,7 @@ public class IndexRecordToSolrPipeline {
                       .setDoubles(doublesToPersist)
                       .build();
 
-              c.output(ir);
+              c.output(KV.of(indexRecord.getId(), ir));
             });
       }
     };
@@ -230,7 +291,7 @@ public class IndexRecordToSolrPipeline {
    * @return
    */
   private static PCollection<IndexRecord> loadIndexRecords(
-      IndexingPipelineOptions options, Pipeline p) {
+      SolrPipelineOptions options, Pipeline p) {
     if (options.getDatasetId() != null && !"all".equalsIgnoreCase(options.getDatasetId())) {
       return p.apply(
           AvroIO.read(IndexRecord.class)
@@ -241,16 +302,26 @@ public class IndexRecordToSolrPipeline {
                       "index-record",
                       options.getDatasetId() + "/*.avro")));
     }
+
     return p.apply(
         AvroIO.read(IndexRecord.class)
             .from(String.join("/", options.getAllDatasetsInputPath(), "index-record", "*/*.avro")));
   }
 
   private static PCollection<SampleRecord> loadSampleRecords(
-      IndexingPipelineOptions options, Pipeline p) {
+      SolrPipelineOptions options, Pipeline p) {
     String samplingPath =
         String.join("/", ALAFsUtils.buildPathSamplingUsingTargetPath(options), "*.avro");
     log.info("Loading sampling from {}", samplingPath);
     return p.apply(AvroIO.read(SampleRecord.class).from(samplingPath));
+  }
+
+  private static PCollection<JackKnifeOutlierRecord> loadJackKnifeRecords(
+      SolrPipelineOptions options, Pipeline p) {
+    String jackknifePath =
+        PathBuilder.buildPath(options.getJackKnifePath(), "outliers", "*" + AVRO_EXTENSION)
+            .toString();
+    log.info("Loading jackknife from {}", jackknifePath);
+    return p.apply(AvroIO.read(JackKnifeOutlierRecord.class).from(jackknifePath));
   }
 }
