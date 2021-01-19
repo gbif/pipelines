@@ -70,6 +70,7 @@ public class DumpDatasetSize {
       }
       fw.flush();
     }
+    log.info("Dataset list of size {} written to {}", list.size(), targetPath);
   }
 
   @NotNull
