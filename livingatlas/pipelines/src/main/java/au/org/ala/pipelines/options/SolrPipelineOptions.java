@@ -34,4 +34,22 @@ public interface SolrPipelineOptions extends IndexingPipelineOptions {
   Integer getSolrRetryDurationInMins();
 
   void setSolrRetryDurationInMins(Integer solrRetryDurationInMins);
+
+  @Description("Include sampling")
+  @Default.Boolean(false)
+  Boolean getIncludeSampling();
+
+  void setIncludeSampling(Boolean includeSampling);
+
+  @Description("JackKnife path")
+  @Default.String("")
+  String getJackKnifePath();
+
+  void setJackKnifePath(String jackKnifePath);
+
+  @Description("Include jackknife")
+  @Default.Boolean(false)
+  Boolean getIncludeJackKnife();
+
+  void setIncludeJackKnife(Boolean includeJackKnife);
 }
