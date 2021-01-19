@@ -325,7 +325,6 @@ public class IndexRecordTransform implements Serializable {
       indexRecord.getStrings().put("lsid", atxr.getTaxonConceptID());
       indexRecord.setTaxonID(atxr.getTaxonConceptID());
       indexRecord.getStrings().put("rank", atxr.getRank());
-      indexRecord.getInts().put("rank_id", atxr.getRankID());
 
       if (atxr.getVernacularName() != null) {
         indexRecord.getStrings().put("common_name", atxr.getVernacularName());
