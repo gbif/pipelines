@@ -307,7 +307,7 @@
     <snakeyaml.version>1.25</snakeyaml.version>
     <streamex.version>0.7.2</streamex.version>
     <!-- This is overriding GBIF mother pom which is using a 2.11.0.rc1  -->
-    <jackson.version>2.11.1</jackson.version>
+    <jackson.version>2.12.1</jackson.version>
     <jackson-module-scala_2.11.version>2.11.1</jackson-module-scala_2.11.version>
     <jcommander.version>1.78</jcommander.version>
     <layers-store.version>2.0.3</layers-store.version>

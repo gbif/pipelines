@@ -113,7 +113,7 @@
     <elasticsearch.version>7.5.0</elasticsearch.version>
     <apache.httpcomponents.version>4.4.5</apache.httpcomponents.version>
 
-    <jackson.version>2.9.10</jackson.version>
+    <jackson.version>2.12.1</jackson.version>
 
     <retrofit.version>2.6.2</retrofit.version>
     <okhttp.version>4.2.2</okhttp.version>
