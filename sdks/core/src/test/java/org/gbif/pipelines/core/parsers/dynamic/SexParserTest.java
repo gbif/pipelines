@@ -8,6 +8,19 @@ import java.util.Optional;
 public class SexParserTest {
 
   @Test
+  public void sexKeyValueDelimitedTest() {
+    // State
+    String value = "sex=female;age class=adult;total length=495 mm;tail length=210 mm;";
+
+    // When
+    Optional<String> result = SexParser.parseSex(value);
+
+    // Should
+    Assert.assertTrue(result.isPresent());
+    Assert.assertEquals("female", result.get());
+  }
+
+  @Test
   public void sexKeyValueDelimited1Test() {
     // State
     String value = "weight=81.00 g; sex=female ? ; age=u ad.";
@@ -43,7 +56,7 @@ public class SexParserTest {
 
     // Should
     Assert.assertTrue(result.isPresent());
-    Assert.assertEquals("F", result.get());
+    Assert.assertEquals("f", result.get());
   }
 
   @Test
@@ -55,8 +68,7 @@ public class SexParserTest {
     Optional<String> result = SexParser.parseSex(value);
 
     // Should
-    Assert.assertTrue(result.isPresent());
-    Assert.assertEquals("male/female", result.get());
+    Assert.assertFalse(result.isPresent());
   }
 
   @Test
@@ -75,18 +87,6 @@ public class SexParserTest {
   public void sexUnkeyed3Test() {
     // State
     String value = "";
-
-    // When
-    Optional<String> result = SexParser.parseSex(value);
-
-    // Should
-    Assert.assertFalse(result.isPresent());
-  }
-
-  @Test
-  public void excluded1Test() {
-    // State
-    String value = "Respective sex and msmt. in mm";
 
     // When
     Optional<String> result = SexParser.parseSex(value);
@@ -130,7 +130,31 @@ public class SexParserTest {
     Optional<String> result = SexParser.parseSex(value);
 
     // Should
+    Assert.assertFalse(result.isPresent());
+  }
+
+  @Test
+  public void preferredOrSearch4Test() {
+    // State
+    String value = "male or male";
+
+    // When
+    Optional<String> result = SexParser.parseSex(value);
+
+    // Should
     Assert.assertTrue(result.isPresent());
-    Assert.assertEquals("male,female", result.get());
+    Assert.assertEquals("male", result.get());
+  }
+
+  @Test
+  public void randomTextTest() {
+    // State
+    String value = "age class=adult;total length=495 mm;tail length=210 mm;";
+
+    // When
+    Optional<String> result = SexParser.parseSex(value);
+
+    // Should
+    Assert.assertFalse(result.isPresent());
   }
 }
