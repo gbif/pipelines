@@ -88,7 +88,7 @@ public class DynamicPropertiesInterpreterTest {
     DynamicPropertiesInterpreter.interpretSex(er, br);
 
     // Should
-    Assert.assertEquals("FEMALE", er.getCoreTerms().get(DwcTerm.sex.qualifiedName()));
+    Assert.assertEquals("FEMALE", br.getSex());
   }
 
   @Test
@@ -101,7 +101,7 @@ public class DynamicPropertiesInterpreterTest {
     DynamicPropertiesInterpreter.interpretSex(er, br);
 
     // Should
-    Assert.assertNull(er.getCoreTerms().get(DwcTerm.sex.qualifiedName()));
+    Assert.assertNull(br.getSex());
   }
 
   @Test
@@ -114,6 +114,6 @@ public class DynamicPropertiesInterpreterTest {
     DynamicPropertiesInterpreter.interpretSex(er, br);
 
     // Should
-    Assert.assertNull(er.getCoreTerms().get(DwcTerm.sex.qualifiedName()));
+    Assert.assertNull(br.getSex());
   }
 }
