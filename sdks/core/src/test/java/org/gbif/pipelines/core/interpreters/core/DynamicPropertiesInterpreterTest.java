@@ -1,8 +1,7 @@
 package org.gbif.pipelines.core.interpreters.core;
 
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.common.PipelinesVariables.DynamicProperties.Key;
-import org.gbif.pipelines.common.PipelinesVariables.DynamicProperties.Type;
+import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.DynamicProperty;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -41,8 +40,9 @@ public class DynamicPropertiesInterpreterTest {
     DynamicPropertiesInterpreter.interpretHasTissue(er, br);
 
     // Should
-    DynamicProperty property = br.getDynamicProperties().get(Key.HAS_TISSUE);
-    Assert.assertEquals(Type.BOOLEAN, property.getType());
+    DynamicProperty property =
+        br.getDynamicProperties().get(PipelinesVariables.DynamicProperties.Key.HAS_TISSUE);
+    Assert.assertEquals(PipelinesVariables.DynamicProperties.Type.BOOLEAN, property.getType());
     Assert.assertEquals("false", property.getValue());
   }
 
@@ -56,8 +56,9 @@ public class DynamicPropertiesInterpreterTest {
     DynamicPropertiesInterpreter.interpretHasTissue(er, br);
 
     // Should
-    DynamicProperty property = br.getDynamicProperties().get(Key.HAS_TISSUE);
-    Assert.assertEquals(Type.BOOLEAN, property.getType());
+    DynamicProperty property =
+        br.getDynamicProperties().get(PipelinesVariables.DynamicProperties.Key.HAS_TISSUE);
+    Assert.assertEquals(PipelinesVariables.DynamicProperties.Type.BOOLEAN, property.getType());
     Assert.assertEquals("false", property.getValue());
   }
 
@@ -71,67 +72,29 @@ public class DynamicPropertiesInterpreterTest {
     DynamicPropertiesInterpreter.interpretHasTissue(er, br);
 
     // Should
-    DynamicProperty property = br.getDynamicProperties().get(Key.HAS_TISSUE);
-    Assert.assertEquals(Type.BOOLEAN, property.getType());
+    DynamicProperty property =
+        br.getDynamicProperties().get(PipelinesVariables.DynamicProperties.Key.HAS_TISSUE);
+    Assert.assertEquals(PipelinesVariables.DynamicProperties.Type.BOOLEAN, property.getType());
     Assert.assertEquals("true", property.getValue());
   }
 
   @Test
-  public void sexKeyValueDelimited1Test() {
+  public void sexFemaleValueTest() {
     // State
-    ExtendedRecord er = erDynamicPropertiesFn.apply("weight=81.00 g; sex=female ? ; age=u ad.");
+    ExtendedRecord er = erDynamicPropertiesFn.apply("weight=81.00 g; sex=female; age=u ad.");
     BasicRecord br = brFn.get();
 
     // When
     DynamicPropertiesInterpreter.interpretSex(er, br);
 
     // Should
-    Assert.assertEquals("female ?", er.getCoreTerms().get(DwcTerm.sex.qualifiedName()));
+    Assert.assertEquals("FEMALE", er.getCoreTerms().get(DwcTerm.sex.qualifiedName()));
   }
 
   @Test
-  public void sexKeyValueDelimited2Test() {
+  public void sexRandomValueTest() {
     // State
     ExtendedRecord er = erDynamicPropertiesFn.apply("sex=unknown ; crown-rump length=8 mm");
-    BasicRecord br = brFn.get();
-
-    // When
-    DynamicPropertiesInterpreter.interpretSex(er, br);
-
-    // Should
-    Assert.assertEquals("unknown", er.getCoreTerms().get(DwcTerm.sex.qualifiedName()));
-  }
-
-  @Test
-  public void sexKeyValueUndelimited1Test() {
-    // State
-    ExtendedRecord er = erDynamicPropertiesFn.apply("sex=F crown rump length=8 mm");
-    BasicRecord br = brFn.get();
-
-    // When
-    DynamicPropertiesInterpreter.interpretSex(er, br);
-
-    // Should
-    Assert.assertEquals("F", er.getCoreTerms().get(DwcTerm.sex.qualifiedName()));
-  }
-
-  @Test
-  public void sexUnkeyed1Test() {
-    // State
-    ExtendedRecord er = erDynamicPropertiesFn.apply("words male female unknown more words");
-    BasicRecord br = brFn.get();
-
-    // When
-    DynamicPropertiesInterpreter.interpretSex(er, br);
-
-    // Should
-    Assert.assertEquals("male/female", er.getCoreTerms().get(DwcTerm.sex.qualifiedName()));
-  }
-
-  @Test
-  public void sexUnkeyed2Test() {
-    // State
-    ExtendedRecord er = erDynamicPropertiesFn.apply("words male female male more words");
     BasicRecord br = brFn.get();
 
     // When
@@ -142,7 +105,7 @@ public class DynamicPropertiesInterpreterTest {
   }
 
   @Test
-  public void sexUnkeyed3Test() {
+  public void sexEmptyValueTest() {
     // State
     ExtendedRecord er = erDynamicPropertiesFn.apply("");
     BasicRecord br = brFn.get();
@@ -152,57 +115,5 @@ public class DynamicPropertiesInterpreterTest {
 
     // Should
     Assert.assertNull(er.getCoreTerms().get(DwcTerm.sex.qualifiedName()));
-  }
-
-  @Test
-  public void excluded1Test() {
-    // State
-    ExtendedRecord er = erDynamicPropertiesFn.apply("Respective sex and msmt. in mm");
-    BasicRecord br = brFn.get();
-
-    // When
-    DynamicPropertiesInterpreter.interpretSex(er, br);
-
-    // Should
-    Assert.assertNull(er.getCoreTerms().get(DwcTerm.sex.qualifiedName()));
-  }
-
-  @Test
-  public void preferredOrSearch1Test() {
-    // State
-    ExtendedRecord er = erDynamicPropertiesFn.apply("mention male in a phrase");
-    BasicRecord br = brFn.get();
-
-    // When
-    DynamicPropertiesInterpreter.interpretSex(er, br);
-
-    // Should
-    Assert.assertEquals("male", er.getCoreTerms().get(DwcTerm.sex.qualifiedName()));
-  }
-
-  @Test
-  public void preferredOrSearch2Test() {
-    // State
-    ExtendedRecord er = erDynamicPropertiesFn.apply("male in a phrase");
-    BasicRecord br = brFn.get();
-
-    // When
-    DynamicPropertiesInterpreter.interpretSex(er, br);
-
-    // Should
-    Assert.assertEquals("male", er.getCoreTerms().get(DwcTerm.sex.qualifiedName()));
-  }
-
-  @Test
-  public void preferredOrSearch3Test() {
-    // State
-    ExtendedRecord er = erDynamicPropertiesFn.apply("male or female");
-    BasicRecord br = brFn.get();
-
-    // When
-    DynamicPropertiesInterpreter.interpretSex(er, br);
-
-    // Should
-    Assert.assertEquals("male,female", er.getCoreTerms().get(DwcTerm.sex.qualifiedName()));
   }
 }

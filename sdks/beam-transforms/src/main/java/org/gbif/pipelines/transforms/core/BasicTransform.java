@@ -164,6 +164,7 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
         .via(BasicInterpreter.interpretOccurrenceStatus(occStatusKvStore))
         .via(BasicInterpreter.interpretIsClustered(clusteringService))
         .via(DynamicPropertiesInterpreter::interpretHasTissue)
+        .via(DynamicPropertiesInterpreter::interpretSex)
         .getOfNullable();
   }
 }

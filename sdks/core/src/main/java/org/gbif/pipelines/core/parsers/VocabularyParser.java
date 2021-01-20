@@ -1,11 +1,5 @@
 package org.gbif.pipelines.core.parsers;
 
-import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
-
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Consumer;
-import java.util.function.Function;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import org.gbif.api.vocabulary.BasisOfRecord;
@@ -26,6 +20,13 @@ import org.gbif.common.parsers.core.EnumParser;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.function.Function;
+
+import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
 
 /** Utility class that parses Enum based terms. */
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
@@ -80,17 +81,6 @@ public class VocabularyParser<T extends Enum<T>> {
     return new VocabularyParser<>(CONTINENT_PARSER, DwcTerm.continent);
   }
 
-  /**
-   * Runs a parsing method on a extended record.
-   *
-   * @param er to be used as input
-   * @param onParse consumer called during parsing
-   */
-  public void parse(ExtendedRecord er, Consumer<ParseResult<T>> onParse) {
-    Optional.ofNullable(extractValue(er, term))
-        .ifPresent(value -> onParse.accept(parser.parse(value)));
-  }
-
   /** @return a type status parser. */
   public static VocabularyParser<Rank> rankParser() {
     return new VocabularyParser<>(RANK_PARSER, DwcTerm.taxonRank);
@@ -99,6 +89,26 @@ public class VocabularyParser<T extends Enum<T>> {
   /** @return a type status parser. */
   public static VocabularyParser<Rank> verbatimTaxonRankParser() {
     return new VocabularyParser<>(RANK_PARSER, DwcTerm.verbatimTaxonRank);
+  }
+
+  /**
+   * Runs a parsing method on a extended record.
+   *
+   * @param value to be used as input
+   * @param onParse consumer called during parsing
+   */
+  public void parse(String value, Consumer<ParseResult<T>> onParse) {
+    Optional.ofNullable(value).ifPresent(r -> onParse.accept(parser.parse(r)));
+  }
+
+  /**
+   * Runs a parsing method on a extended record.
+   *
+   * @param er to be used as input
+   * @param onParse consumer called during parsing
+   */
+  public void parse(ExtendedRecord er, Consumer<ParseResult<T>> onParse) {
+    parse(extractValue(er, term), onParse);
   }
 
   /**
