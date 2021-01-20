@@ -329,5 +329,5 @@ solr-sh-args:
     conf: spark.default.parallelism=500
     num-executors: 6
     executor-cores: 8
-    executor-memory: 24G
+    executor-memory: 20G
     driver-memory: 4G
