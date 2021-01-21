@@ -9,7 +9,8 @@ public enum ALARecordTypes
   ALA_UUID,
   ALA_TAXONOMY,
   ALA_ATTRIBUTION,
-  ALA_SENSITIVE_DATA;
+  ALA_SENSITIVE_DATA,
+  JACKKNIFE_OUTLIER;
 
   ALARecordTypes() {}
 

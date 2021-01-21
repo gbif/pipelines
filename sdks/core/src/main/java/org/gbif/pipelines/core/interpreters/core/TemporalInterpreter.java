@@ -1,6 +1,8 @@
 package org.gbif.pipelines.core.interpreters.core;
 
-import static org.gbif.pipelines.core.utils.ModelUtils.*;
+import static org.gbif.pipelines.core.utils.ModelUtils.addIssueSet;
+import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
+import static org.gbif.pipelines.core.utils.ModelUtils.hasValue;
 
 import com.google.common.collect.Range;
 import java.io.Serializable;
@@ -58,9 +60,10 @@ public class TemporalInterpreter implements Serializable {
 
     EventRange eventRange = temporalRangeParser.parse(year, month, day, normalizedEventDate);
 
-    eventRange
-        .getFrom()
-        .map(AtomizedLocalDate::fromTemporalAccessor)
+    Optional<TemporalAccessor> ta =
+        eventRange.isReversed() ? eventRange.getTo() : eventRange.getFrom();
+
+    ta.map(AtomizedLocalDate::fromTemporalAccessor)
         .ifPresent(
             ald -> {
               tr.setYear(ald.getYear());

@@ -42,6 +42,7 @@
       "basisOfRecord": {"type": "keyword"},
       "sex": {"type": "keyword", "copy_to": "all"},
       "lifeStage": {"type": "keyword", "copy_to": "all"},
+      "lifeStageLineage": {"type": "keyword", "copy_to": "all"},
       "establishmentMeans": {"type": "keyword", "copy_to": "all"},
       "individualCount": {"type": "integer"},
       "typeStatus": {"type": "keyword", "copy_to": "all"},

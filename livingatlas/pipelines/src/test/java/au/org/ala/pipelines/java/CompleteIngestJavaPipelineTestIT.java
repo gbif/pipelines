@@ -4,8 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import au.org.ala.pipelines.beam.*;
-import au.org.ala.pipelines.beam.ALAUUIDMintingPipeline;
-import au.org.ala.pipelines.beam.DwcaToVerbatimPipeline;
 import au.org.ala.pipelines.options.ALASolrPipelineOptions;
 import au.org.ala.pipelines.options.AllDatasetsPipelinesOptions;
 import au.org.ala.pipelines.options.UUIDPipelineOptions;
@@ -172,6 +170,7 @@ public class CompleteIngestJavaPipelineTestIT {
               "--inputPath=/tmp/la-pipelines-test/complete-pipeline-java",
               "--allDatasetsInputPath=/tmp/la-pipelines-test/complete-pipeline-java/all-datasets",
               "--properties=" + TestUtils.getPipelinesConfigFile(),
+              "--includeSensitiveData=true",
               "--includeImages=false"
             });
     IndexRecordPipeline.run(solrOptions);

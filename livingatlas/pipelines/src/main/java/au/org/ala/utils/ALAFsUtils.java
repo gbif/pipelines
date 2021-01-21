@@ -16,6 +16,7 @@ import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.*;
+import org.apache.hadoop.fs.FileSystem;
 import org.gbif.pipelines.common.beam.options.BasePipelineOptions;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
@@ -115,7 +116,9 @@ public class ALAFsUtils {
 
   /** Build a path to sampling downloads. */
   public static String buildPathSamplingUsingTargetPath(AllDatasetsPipelinesOptions options) {
-    if (options.getDatasetId() == null || "all".equals(options.getDatasetId())) {
+    if (options.getDatasetId() == null
+        || "all".equals(options.getDatasetId())
+        || "*".equals(options.getDatasetId())) {
       return String.join("/", options.getAllDatasetsInputPath(), "sampling");
     }
     return PathBuilder.buildDatasetAttemptPath(options, "sampling", false);
