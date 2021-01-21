@@ -68,7 +68,7 @@ public class LifeStageParserTest {
 
     // Should
     Assert.assertTrue(result.isPresent());
-    Assert.assertEquals("after hatching yearr", result.get());
+    Assert.assertEquals("after hatching year", result.get());
   }
 
   @Test
@@ -171,7 +171,7 @@ public class LifeStageParserTest {
 
     // Should
     Assert.assertTrue(result.isPresent());
-    Assert.assertEquals("Adulte", result.get());
+    Assert.assertEquals("adulte", result.get());
   }
 
   @Test
@@ -184,7 +184,7 @@ public class LifeStageParserTest {
 
     // Should
     Assert.assertTrue(result.isPresent());
-    Assert.assertEquals("AGE IMM", result.get());
+    Assert.assertEquals("imm", result.get());
   }
 
   @Test
@@ -222,8 +222,7 @@ public class LifeStageParserTest {
     Optional<String> result = LifeStageParser.parse(value);
 
     // Should
-    Assert.assertTrue(result.isPresent());
-    Assert.assertEquals("subadultery", result.get());
+    Assert.assertFalse(result.isPresent());
   }
 
   @Test
@@ -288,7 +287,7 @@ public class LifeStageParserTest {
 
     // Should
     Assert.assertTrue(result.isPresent());
-    Assert.assertEquals("Têtard", result.get());
+    Assert.assertEquals("têtard", result.get());
   }
 
   @Test
@@ -417,7 +416,7 @@ public class LifeStageParserTest {
 
     // Should
     Assert.assertTrue(result.isPresent());
-    Assert.assertEquals("IMM", result.get());
+    Assert.assertEquals("imm", result.get());
   }
 
   @Test
@@ -651,6 +650,6 @@ public class LifeStageParserTest {
 
     // Should
     Assert.assertTrue(result.isPresent());
-    Assert.assertEquals("YOLK SAC", result.get());
+    Assert.assertEquals("yolk sac", result.get());
   }
 }
