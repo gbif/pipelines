@@ -155,6 +155,7 @@ public class DynamicPropertiesInterpreterTest {
     DynamicPropertiesInterpreter.interpretLifeStage(vocabularyLookupFn).accept(er, br);
 
     // Should
+    Assert.assertNull(br.getLifeStage());
     Assert.assertTrue(br.getLifeStageLineage().isEmpty());
   }
 
@@ -168,6 +169,7 @@ public class DynamicPropertiesInterpreterTest {
     DynamicPropertiesInterpreter.interpretLifeStage(vocabularyLookupFn).accept(er, br);
 
     // Should
+    Assert.assertNull(br.getLifeStage());
     Assert.assertTrue(br.getLifeStageLineage().isEmpty());
   }
 
@@ -183,6 +185,7 @@ public class DynamicPropertiesInterpreterTest {
     DynamicPropertiesInterpreter.interpretLifeStage(vocabularyLookupFn).accept(er, br);
 
     // Should
+    Assert.assertEquals("Adult", br.getLifeStage());
     Assert.assertEquals("Adult", br.getLifeStageLineage().get(0));
   }
 
@@ -196,6 +199,7 @@ public class DynamicPropertiesInterpreterTest {
     DynamicPropertiesInterpreter.interpretLifeStage(null).accept(er, br);
 
     // Should
+    Assert.assertNull(br.getLifeStage());
     Assert.assertTrue(br.getLifeStageLineage().isEmpty());
   }
 

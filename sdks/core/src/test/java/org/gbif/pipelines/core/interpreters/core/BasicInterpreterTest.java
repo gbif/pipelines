@@ -500,6 +500,7 @@ public class BasicInterpreterTest {
 
     // Should
     Assert.assertNull(br.getLifeStage());
+    Assert.assertTrue(br.getLifeStageLineage().isEmpty());
   }
 
   @Test
@@ -516,6 +517,7 @@ public class BasicInterpreterTest {
 
     // Should
     Assert.assertNull(br.getLifeStage());
+    Assert.assertTrue(br.getLifeStageLineage().isEmpty());
   }
 
   @Test
@@ -532,6 +534,7 @@ public class BasicInterpreterTest {
 
     // Should
     Assert.assertEquals("Adult", br.getLifeStage());
+    Assert.assertEquals("Adult", br.getLifeStageLineage().get(0));
   }
 
   @Test
@@ -548,6 +551,7 @@ public class BasicInterpreterTest {
 
     // Should
     Assert.assertNull(br.getLifeStage());
+    Assert.assertTrue(br.getLifeStageLineage().isEmpty());
   }
 
   @Test
@@ -564,6 +568,7 @@ public class BasicInterpreterTest {
 
     // Should
     Assert.assertNull(br.getLifeStage());
+    Assert.assertTrue(br.getLifeStageLineage().isEmpty());
   }
 
   private void assertIssueSize(BasicRecord br, int expectedSize) {
