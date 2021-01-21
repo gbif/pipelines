@@ -1,9 +1,13 @@
 package org.gbif.pipelines.core.parsers.dynamic;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class TissueParser {
   private static final Set<String> TISSUE_TOKENS =
       new HashSet<>(

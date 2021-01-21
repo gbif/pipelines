@@ -1,11 +1,15 @@
 package org.gbif.pipelines.core.parsers.dynamic;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class SexParser {
 
   private static final Pattern SEX_KEY_VALUE_DELIMITED =
