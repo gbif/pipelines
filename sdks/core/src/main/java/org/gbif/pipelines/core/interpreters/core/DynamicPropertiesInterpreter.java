@@ -1,5 +1,11 @@
 package org.gbif.pipelines.core.interpreters.core;
 
+import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareOptValue;
+
+import java.util.Optional;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import org.gbif.api.vocabulary.Sex;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.dwc.terms.DwcTerm;
@@ -12,14 +18,7 @@ import org.gbif.pipelines.core.parsers.dynamic.TissueParser;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.DynamicProperty;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.vocabulary.model.Concept;
-
-import java.util.Optional;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.Function;
-
-import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareOptValue;
+import org.gbif.vocabulary.lookup.LookupConcept;
 
 public class DynamicPropertiesInterpreter {
 
@@ -54,15 +53,15 @@ public class DynamicPropertiesInterpreter {
   }
 
   public static BiConsumer<ExtendedRecord, BasicRecord> interpretLifeStage(
-      Function<String, Optional<Concept>> vocabularyLookupFn) {
+      Function<String, Optional<LookupConcept>> vocabularyLookupFn) {
     return (er, br) -> {
       if (vocabularyLookupFn == null || br.getLifeStage() != null) {
         return;
       }
 
       extractNullAwareOptValue(er, DwcTerm.dynamicProperties)
-          .flatMap(v -> LifeStageParser.parse(v).flatMap(vocabularyLookupFn).map(Concept::getName))
-          .ifPresent(br::setLifeStage);
+          .flatMap(v -> LifeStageParser.parse(v).flatMap(vocabularyLookupFn))
+          .ifPresent(x -> BasicInterpreter.getLookupConceptConsumer(br).accept(x));
     };
   }
 }

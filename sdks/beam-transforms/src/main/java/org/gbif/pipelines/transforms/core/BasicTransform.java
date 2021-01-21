@@ -1,5 +1,14 @@
 package org.gbif.pipelines.transforms.core;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.BASIC_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.BASIC;
+import static org.gbif.pipelines.core.interpreters.core.BasicInterpreter.GBIF_ID_INVALID;
+import static org.gbif.pipelines.core.interpreters.core.BasicInterpreter.interpretCopyGbifId;
+
+import java.time.Instant;
+import java.util.Optional;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import org.apache.beam.sdk.transforms.MapElements;
@@ -17,18 +26,8 @@ import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.transforms.Transform;
+import org.gbif.vocabulary.lookup.LookupConcept;
 import org.gbif.vocabulary.lookup.VocabularyLookup;
-import org.gbif.vocabulary.model.Concept;
-
-import java.time.Instant;
-import java.util.Optional;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
-
-import static org.gbif.pipelines.common.PipelinesVariables.Metrics.BASIC_RECORDS_COUNT;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.BASIC;
-import static org.gbif.pipelines.core.interpreters.core.BasicInterpreter.GBIF_ID_INVALID;
-import static org.gbif.pipelines.core.interpreters.core.BasicInterpreter.interpretCopyGbifId;
 
 /**
  * Beam level transformations for the DWC Occurrence, reads an avro, writs an avro, maps from value
@@ -53,7 +52,7 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
   private VocabularyLookup lifeStageLookup;
   private ClusteringService clusteringService;
 
-  private Function<String, Optional<Concept>> lifeStageLookupFn;
+  private Function<String, Optional<LookupConcept>> lifeStageLookupFn;
 
   @Builder(buildMethodName = "create")
   private BasicTransform(

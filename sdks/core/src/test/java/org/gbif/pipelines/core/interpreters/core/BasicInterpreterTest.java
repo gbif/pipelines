@@ -3,6 +3,7 @@ package org.gbif.pipelines.core.interpreters.core;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +19,7 @@ import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.pipelines.io.avro.AgentIdentifier;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.vocabulary.lookup.LookupConcept;
 import org.gbif.vocabulary.model.Concept;
 import org.junit.Assert;
 import org.junit.Test;
@@ -26,12 +28,14 @@ public class BasicInterpreterTest {
 
   private static final String ID = "777";
 
-  private final Function<String, Optional<Concept>> vocabularyLookupFn =
+  private final Function<String, Optional<LookupConcept>> vocabularyLookupFn =
       v -> {
         if (v.equalsIgnoreCase("adult")) {
           Concept concept = new Concept();
           concept.setName("Adult");
-          return Optional.of(concept);
+          LookupConcept lookupConcept = LookupConcept.of(concept, new ArrayList<>(1));
+
+          return Optional.of(lookupConcept);
         }
         return Optional.empty();
       };
