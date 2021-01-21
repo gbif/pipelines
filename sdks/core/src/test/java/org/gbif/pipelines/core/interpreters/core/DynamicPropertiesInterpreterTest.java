@@ -5,10 +5,12 @@ import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.DynamicProperty;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.vocabulary.model.Concept;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.Collections;
+import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -29,6 +31,16 @@ public class DynamicPropertiesInterpreterTest {
 
   private final Supplier<BasicRecord> brFn = () -> BasicRecord.newBuilder().setId(ID).build();
 
+  private final Function<String, Optional<Concept>> vocabularyLookupFn =
+      v -> {
+        if (v.equalsIgnoreCase("adult")) {
+          Concept concept = new Concept();
+          concept.setName("Adult");
+          return Optional.of(concept);
+        }
+        return Optional.empty();
+      };
+
   @Test
   public void tissueEmptyTest() {
     // State
@@ -43,7 +55,6 @@ public class DynamicPropertiesInterpreterTest {
     DynamicProperty property =
         br.getDynamicProperties().get(PipelinesVariables.DynamicProperties.Key.HAS_TISSUE);
     Assert.assertEquals(PipelinesVariables.DynamicProperties.Type.BOOLEAN, property.getType());
-    Assert.assertEquals("false", property.getValue());
   }
 
   @Test
@@ -115,5 +126,73 @@ public class DynamicPropertiesInterpreterTest {
 
     // Should
     Assert.assertNull(br.getSex());
+  }
+
+  @Test
+  public void lifeStageEmptyValueTest() {
+    // State
+    ExtendedRecord er = erDynamicPropertiesFn.apply("");
+    BasicRecord br = brFn.get();
+
+    // When
+    DynamicPropertiesInterpreter.interpretLifeStage(vocabularyLookupFn).accept(er, br);
+
+    // Should
+    Assert.assertNull(br.getLifeStage());
+  }
+
+  @Test
+  public void lifeStageRandomValueTest() {
+    // State
+    ExtendedRecord er = erDynamicPropertiesFn.apply("lifeStage=unknown ; crown-rump length=8 mm");
+    BasicRecord br = brFn.get();
+
+    // When
+    DynamicPropertiesInterpreter.interpretLifeStage(vocabularyLookupFn).accept(er, br);
+
+    // Should
+    Assert.assertNull(br.getLifeStage());
+  }
+
+  @Test
+  public void lifeStageAdultValueTest() {
+    // State
+    ExtendedRecord er =
+        erDynamicPropertiesFn.apply(
+            "sex=female;age class=adult;total length=495 mm;tail length=210 mm;");
+    BasicRecord br = brFn.get();
+
+    // When
+    DynamicPropertiesInterpreter.interpretLifeStage(vocabularyLookupFn).accept(er, br);
+
+    // Should
+    Assert.assertEquals("Adult", br.getLifeStage());
+  }
+
+  @Test
+  public void lifeStageNullFnTest() {
+    // State
+    ExtendedRecord er = erDynamicPropertiesFn.apply("");
+    BasicRecord br = brFn.get();
+
+    // When
+    DynamicPropertiesInterpreter.interpretLifeStage(null).accept(er, br);
+
+    // Should
+    Assert.assertNull(br.getLifeStage());
+  }
+
+  @Test
+  public void lifeStageNotNullTest() {
+    // State
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).build();
+    er.getCoreTerms().put(DwcTerm.lifeStage.qualifiedName(), "something");
+    BasicRecord br = brFn.get();
+
+    // When
+    DynamicPropertiesInterpreter.interpretLifeStage(vocabularyLookupFn).accept(er, br);
+
+    // Should
+    Assert.assertNull(br.getLifeStage());
   }
 }

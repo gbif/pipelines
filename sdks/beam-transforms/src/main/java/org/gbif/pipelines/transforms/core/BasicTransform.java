@@ -1,13 +1,5 @@
 package org.gbif.pipelines.transforms.core;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Metrics.BASIC_RECORDS_COUNT;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.BASIC;
-import static org.gbif.pipelines.core.interpreters.core.BasicInterpreter.GBIF_ID_INVALID;
-import static org.gbif.pipelines.core.interpreters.core.BasicInterpreter.interpretCopyGbifId;
-
-import java.time.Instant;
-import java.util.Optional;
-import java.util.function.BiConsumer;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import org.apache.beam.sdk.transforms.MapElements;
@@ -26,6 +18,17 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.transforms.Transform;
 import org.gbif.vocabulary.lookup.VocabularyLookup;
+import org.gbif.vocabulary.model.Concept;
+
+import java.time.Instant;
+import java.util.Optional;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
+
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.BASIC_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.BASIC;
+import static org.gbif.pipelines.core.interpreters.core.BasicInterpreter.GBIF_ID_INVALID;
+import static org.gbif.pipelines.core.interpreters.core.BasicInterpreter.interpretCopyGbifId;
 
 /**
  * Beam level transformations for the DWC Occurrence, reads an avro, writs an avro, maps from value
@@ -49,6 +52,8 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
   private HBaseLockingKeyService keygenService;
   private VocabularyLookup lifeStageLookup;
   private ClusteringService clusteringService;
+
+  private Function<String, Optional<Concept>> lifeStageLookupFn;
 
   @Builder(buildMethodName = "create")
   private BasicTransform(
@@ -104,6 +109,9 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
     }
     if (lifeStageLookupSupplier != null) {
       lifeStageLookup = lifeStageLookupSupplier.get();
+      if (lifeStageLookup != null) {
+        lifeStageLookupFn = lifeStageLookup::lookup;
+      }
     }
     if (clusteringServiceSupplier != null) {
       clusteringService = clusteringServiceSupplier.get();
@@ -149,7 +157,7 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
         .via(BasicInterpreter::interpretTypifiedName)
         .via(BasicInterpreter::interpretSex)
         .via(BasicInterpreter::interpretEstablishmentMeans)
-        .via(BasicInterpreter.interpretLifeStage(lifeStageLookup))
+        .via(BasicInterpreter.interpretLifeStage(lifeStageLookupFn))
         .via(BasicInterpreter::interpretTypeStatus)
         .via(BasicInterpreter::interpretIndividualCount)
         .via(BasicInterpreter::interpretReferences)
@@ -165,6 +173,7 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
         .via(BasicInterpreter.interpretIsClustered(clusteringService))
         .via(DynamicPropertiesInterpreter::interpretHasTissue)
         .via(DynamicPropertiesInterpreter::interpretSex)
+        .via(DynamicPropertiesInterpreter.interpretLifeStage(lifeStageLookupFn))
         .getOfNullable();
   }
 }

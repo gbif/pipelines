@@ -36,10 +36,10 @@ public class TissueParser {
               "cor",
               "teixit"));
 
-  public static boolean parseHasTissue(String value) {
-    if (value == null || value.isEmpty()) {
+  public static boolean hasTissue(String source) {
+    if (source == null || source.isEmpty()) {
       return false;
     }
-    return TISSUE_TOKENS.stream().anyMatch(value::contains);
+    return TISSUE_TOKENS.stream().anyMatch(source::contains);
   }
 }

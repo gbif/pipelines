@@ -11,7 +11,7 @@ public class TissueParserTest {
     String value = "";
 
     // When
-    boolean result = TissueParser.parseHasTissue(value);
+    boolean result = TissueParser.hasTissue(value);
 
     // Should
     Assert.assertFalse(result);
@@ -23,7 +23,7 @@ public class TissueParserTest {
     String value = null;
 
     // When
-    boolean result = TissueParser.parseHasTissue(value);
+    boolean result = TissueParser.hasTissue(value);
 
     // Should
     Assert.assertFalse(result);
@@ -35,7 +35,7 @@ public class TissueParserTest {
     String value = "frozen carcass";
 
     // When
-    boolean result = TissueParser.parseHasTissue(value);
+    boolean result = TissueParser.hasTissue(value);
 
     // Should
     Assert.assertTrue(result);
@@ -47,7 +47,7 @@ public class TissueParserTest {
     String value = "tissue something";
 
     // When
-    boolean result = TissueParser.parseHasTissue(value);
+    boolean result = TissueParser.hasTissue(value);
 
     // Should
     Assert.assertTrue(result);
@@ -59,7 +59,7 @@ public class TissueParserTest {
     String value = "+tissue something";
 
     // When
-    boolean result = TissueParser.parseHasTissue(value);
+    boolean result = TissueParser.hasTissue(value);
 
     // Should
     Assert.assertTrue(result);

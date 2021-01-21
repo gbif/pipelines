@@ -13,7 +13,7 @@ public class SexParserTest {
     String value = "sex=female;age class=adult;total length=495 mm;tail length=210 mm;";
 
     // When
-    Optional<String> result = SexParser.parseSex(value);
+    Optional<String> result = SexParser.parse(value);
 
     // Should
     Assert.assertTrue(result.isPresent());
@@ -26,7 +26,7 @@ public class SexParserTest {
     String value = "weight=81.00 g; sex=female ? ; age=u ad.";
 
     // When
-    Optional<String> result = SexParser.parseSex(value);
+    Optional<String> result = SexParser.parse(value);
 
     // Should
     Assert.assertTrue(result.isPresent());
@@ -39,7 +39,7 @@ public class SexParserTest {
     String value = "sex=unknown ; crown-rump length=8 mm";
 
     // When
-    Optional<String> result = SexParser.parseSex(value);
+    Optional<String> result = SexParser.parse(value);
 
     // Should
     Assert.assertTrue(result.isPresent());
@@ -52,7 +52,7 @@ public class SexParserTest {
     String value = "sex=F crown rump length=8 mm";
 
     // When
-    Optional<String> result = SexParser.parseSex(value);
+    Optional<String> result = SexParser.parse(value);
 
     // Should
     Assert.assertTrue(result.isPresent());
@@ -65,7 +65,7 @@ public class SexParserTest {
     String value = "words male female unknown more words";
 
     // When
-    Optional<String> result = SexParser.parseSex(value);
+    Optional<String> result = SexParser.parse(value);
 
     // Should
     Assert.assertFalse(result.isPresent());
@@ -77,7 +77,7 @@ public class SexParserTest {
     String value = "words male female male more words";
 
     // When
-    Optional<String> result = SexParser.parseSex(value);
+    Optional<String> result = SexParser.parse(value);
 
     // Should
     Assert.assertFalse(result.isPresent());
@@ -89,7 +89,7 @@ public class SexParserTest {
     String value = "";
 
     // When
-    Optional<String> result = SexParser.parseSex(value);
+    Optional<String> result = SexParser.parse(value);
 
     // Should
     Assert.assertFalse(result.isPresent());
@@ -101,7 +101,7 @@ public class SexParserTest {
     String value = "mention MALE in a phrase";
 
     // When
-    Optional<String> result = SexParser.parseSex(value);
+    Optional<String> result = SexParser.parse(value);
 
     // Should
     Assert.assertTrue(result.isPresent());
@@ -114,7 +114,7 @@ public class SexParserTest {
     String value = "MALE in a phrase";
 
     // When
-    Optional<String> result = SexParser.parseSex(value);
+    Optional<String> result = SexParser.parse(value);
 
     // Should
     Assert.assertTrue(result.isPresent());
@@ -127,7 +127,7 @@ public class SexParserTest {
     String value = "male or female";
 
     // When
-    Optional<String> result = SexParser.parseSex(value);
+    Optional<String> result = SexParser.parse(value);
 
     // Should
     Assert.assertFalse(result.isPresent());
@@ -139,7 +139,7 @@ public class SexParserTest {
     String value = "male or male";
 
     // When
-    Optional<String> result = SexParser.parseSex(value);
+    Optional<String> result = SexParser.parse(value);
 
     // Should
     Assert.assertTrue(result.isPresent());
@@ -152,7 +152,7 @@ public class SexParserTest {
     String value = "age class=adult;total length=495 mm;tail length=210 mm;";
 
     // When
-    Optional<String> result = SexParser.parseSex(value);
+    Optional<String> result = SexParser.parse(value);
 
     // Should
     Assert.assertFalse(result.isPresent());

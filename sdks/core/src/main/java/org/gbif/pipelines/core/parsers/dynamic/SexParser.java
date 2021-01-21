@@ -18,12 +18,12 @@ public class SexParser {
   private static final List<Pattern> PATTERNS =
       Arrays.asList(SEX_KEY_VALUE_DELIMITED, SEX_KEY_VALUE_UNDELIMITED, SEX_UNKEYED);
 
-  public static Optional<String> parseSex(String value) {
-    if (value == null || value.isEmpty()) {
+  public static Optional<String> parse(String source) {
+    if (source == null || source.isEmpty()) {
       return Optional.empty();
     }
     for (Pattern p : PATTERNS) {
-      Matcher matcher = p.matcher(value.toLowerCase());
+      Matcher matcher = p.matcher(source.toLowerCase());
       String result = matcher.find() ? matcher.group("value") : null;
       if (result != null) {
         while (matcher.find()) {
