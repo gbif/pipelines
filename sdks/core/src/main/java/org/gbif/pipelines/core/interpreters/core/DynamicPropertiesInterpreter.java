@@ -23,15 +23,14 @@ import org.gbif.vocabulary.lookup.LookupConcept;
 public class DynamicPropertiesInterpreter {
 
   public static void interpretHasTissue(ExtendedRecord er, BasicRecord br) {
-    Optional<String> value = extractNullAwareOptValue(er, DwcTerm.preparations);
-    DynamicProperty.Builder builder = DynamicProperty.newBuilder().setType(Type.BOOLEAN);
-    if (value.isPresent()) {
-      boolean any = TissueParser.hasTissue(value.get());
-      builder.setValue(Boolean.valueOf(any).toString());
-    } else {
-      builder.setValue(Boolean.FALSE.toString());
-    }
-    br.getDynamicProperties().put(Key.HAS_TISSUE, builder.build());
+    extractNullAwareOptValue(er, DwcTerm.preparations)
+        .ifPresent(
+            v -> {
+              DynamicProperty.Builder builder = DynamicProperty.newBuilder().setType(Type.BOOLEAN);
+              boolean any = TissueParser.hasTissue(v);
+              builder.setValue(Boolean.valueOf(any).toString());
+              br.getDynamicProperties().put(Key.HAS_TISSUE, builder.build());
+            });
   }
 
   public static void interpretSex(ExtendedRecord er, BasicRecord br) {

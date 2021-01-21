@@ -57,7 +57,7 @@ public class DynamicPropertiesInterpreterTest {
     // Should
     DynamicProperty property =
         br.getDynamicProperties().get(PipelinesVariables.DynamicProperties.Key.HAS_TISSUE);
-    Assert.assertEquals(PipelinesVariables.DynamicProperties.Type.BOOLEAN, property.getType());
+    Assert.assertNull(property);
   }
 
   @Test
@@ -72,8 +72,7 @@ public class DynamicPropertiesInterpreterTest {
     // Should
     DynamicProperty property =
         br.getDynamicProperties().get(PipelinesVariables.DynamicProperties.Key.HAS_TISSUE);
-    Assert.assertEquals(PipelinesVariables.DynamicProperties.Type.BOOLEAN, property.getType());
-    Assert.assertEquals("false", property.getValue());
+    Assert.assertNull(property);
   }
 
   @Test
