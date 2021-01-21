@@ -129,6 +129,20 @@ public class DynamicPropertiesInterpreterTest {
   }
 
   @Test
+  public void sexTermNotEmptyTest() {
+    // State
+    ExtendedRecord er = erDynamicPropertiesFn.apply("");
+    BasicRecord br = brFn.get();
+    br.setSex("something");
+
+    // When
+    DynamicPropertiesInterpreter.interpretSex(er, br);
+
+    // Should
+    Assert.assertEquals("something", br.getSex());
+  }
+
+  @Test
   public void lifeStageEmptyValueTest() {
     // State
     ExtendedRecord er = erDynamicPropertiesFn.apply("");

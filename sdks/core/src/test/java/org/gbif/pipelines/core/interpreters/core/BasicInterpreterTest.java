@@ -27,14 +27,14 @@ public class BasicInterpreterTest {
   private static final String ID = "777";
 
   private final Function<String, Optional<Concept>> vocabularyLookupFn =
-          v -> {
-            if (v.equalsIgnoreCase("adult")) {
-              Concept concept = new Concept();
-              concept.setName("Adult");
-              return Optional.of(concept);
-            }
-            return Optional.empty();
-          };
+      v -> {
+        if (v.equalsIgnoreCase("adult")) {
+          Concept concept = new Concept();
+          concept.setName("Adult");
+          return Optional.of(concept);
+        }
+        return Optional.empty();
+      };
 
   @Test
   public void interpretIndividaulCountTest() {

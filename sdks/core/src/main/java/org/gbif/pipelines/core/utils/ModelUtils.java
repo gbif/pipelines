@@ -30,6 +30,10 @@ public class ModelUtils {
         : value;
   }
 
+  public static Optional<String> extractNullAwareOptValue(ExtendedRecord er, Term term) {
+    return Optional.ofNullable(extractNullAwareValue(er, term));
+  }
+
   public static Optional<String> extractOptValue(ExtendedRecord er, Term term) {
     return Optional.ofNullable(extractValue(er, term));
   }

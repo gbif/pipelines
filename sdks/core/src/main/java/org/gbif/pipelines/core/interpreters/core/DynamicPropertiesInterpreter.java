@@ -19,35 +19,38 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareValue;
+import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareOptValue;
 
 public class DynamicPropertiesInterpreter {
 
   public static void interpretHasTissue(ExtendedRecord er, BasicRecord br) {
-    String value = extractNullAwareValue(er, DwcTerm.preparations);
+    Optional<String> value = extractNullAwareOptValue(er, DwcTerm.preparations);
     DynamicProperty.Builder builder = DynamicProperty.newBuilder().setType(Type.BOOLEAN);
-    if (value == null || value.isEmpty()) {
-      builder.setValue(Boolean.FALSE.toString());
-    } else {
-      boolean any = TissueParser.hasTissue(value);
+    if (value.isPresent()) {
+      boolean any = TissueParser.hasTissue(value.get());
       builder.setValue(Boolean.valueOf(any).toString());
+    } else {
+      builder.setValue(Boolean.FALSE.toString());
     }
     br.getDynamicProperties().put(Key.HAS_TISSUE, builder.build());
   }
 
   public static void interpretSex(ExtendedRecord er, BasicRecord br) {
-    if (br.getSex() == null) {
-      String value = extractNullAwareValue(er, DwcTerm.dynamicProperties);
-
-      Consumer<ParseResult<Sex>> fn =
-          parseResult -> {
-            if (parseResult.isSuccessful()) {
-              br.setSex(parseResult.getPayload().name());
-            }
-          };
-
-      SexParser.parse(value).ifPresent(r -> VocabularyParser.sexParser().parse(r, fn));
+    if (br.getSex() != null) {
+      return;
     }
+    extractNullAwareOptValue(er, DwcTerm.dynamicProperties)
+        .ifPresent(
+            v -> {
+              Consumer<ParseResult<Sex>> fn =
+                  parseResult -> {
+                    if (parseResult.isSuccessful()) {
+                      br.setSex(parseResult.getPayload().name());
+                    }
+                  };
+
+              SexParser.parse(v).ifPresent(r -> VocabularyParser.sexParser().parse(r, fn));
+            });
   }
 
   public static BiConsumer<ExtendedRecord, BasicRecord> interpretLifeStage(
@@ -57,9 +60,8 @@ public class DynamicPropertiesInterpreter {
         return;
       }
 
-      LifeStageParser.parse(extractNullAwareValue(er, DwcTerm.dynamicProperties))
-          .flatMap(vocabularyLookupFn)
-          .map(Concept::getName)
+      extractNullAwareOptValue(er, DwcTerm.dynamicProperties)
+          .flatMap(v -> LifeStageParser.parse(v).flatMap(vocabularyLookupFn).map(Concept::getName))
           .ifPresent(br::setLifeStage);
     };
   }

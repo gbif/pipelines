@@ -6,6 +6,19 @@ import org.junit.Test;
 import java.util.Optional;
 
 public class LifeStageParserTest {
+
+  @Test
+  public void lifeStageKeyValueNullTest() {
+    // State
+    String value = null;
+
+    // When
+    Optional<String> result = LifeStageParser.parse(value);
+
+    // Should
+    Assert.assertFalse(result.isPresent());
+  }
+
   @Test
   public void lifeStageKeyValueDelimited1Test() {
     // State
