@@ -77,7 +77,7 @@ public class DiagnosticTool {
 
       String triplet = OccurrenceKeyBuilder.buildKey(ic, cc, cn).orElse(null);
 
-      deletionStrategyType.getKeysToDelete(triplet, occID).forEach(keygenService::deleteKey);
+      deletionStrategyType.deleteKeys(keygenService, triplet, occID);
     }
   }
 }

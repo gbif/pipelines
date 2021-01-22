@@ -1,10 +1,10 @@
 package org.gbif.pipelines.diagnostics.strategy;
 
-import java.util.List;
+import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 
 public interface DeletionStrategy {
 
-  List<Long> getKeysToDelete(String triplet, String occurrenceId);
+  void deleteKeys(HBaseLockingKeyService keygenService, String triplet, String occurrenceId);
 
   enum DeletionStrategyType {
     min(new MinStrategy()),
@@ -13,14 +13,15 @@ public interface DeletionStrategy {
     triplet(new TripletStrategy()),
     all(new AllStrategy());
 
-    private DeletionStrategy deletionStrategy;
+    private final DeletionStrategy deletionStrategy;
 
     DeletionStrategyType(DeletionStrategy deletionStrategy) {
       this.deletionStrategy = deletionStrategy;
     }
 
-    public List<Long> getKeysToDelete(String triplet, String occurrenceId) {
-      return deletionStrategy.getKeysToDelete(triplet, occurrenceId);
+    public void deleteKeys(
+        HBaseLockingKeyService keygenService, String triplet, String occurrenceId) {
+      deletionStrategy.deleteKeys(keygenService, triplet, occurrenceId);
     }
   }
 }
