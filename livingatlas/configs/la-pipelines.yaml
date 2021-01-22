@@ -183,6 +183,7 @@ solr:
   zkHost: localhost:9983
 
 # JackKnife specific configuration
+# class: au.org.ala.pipelines.beam.ALAReverseJackKnifePipeline
 jackKnife:
   appName: Jack knife outlier detection for {datasetId}
   jackKnifePath: "{fsPath}/pipelines-jackknife"
@@ -283,18 +284,6 @@ sensitive-sh-args:
 sample-sh-args:
   local:
     jvm: -Xmx8g -XX:+UseG1GC
-
-sample-avro-sh-args:
-  local:
-    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
-  spark-embedded:
-    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
-  spark-cluster:
-    conf: spark.default.parallelism=144
-    num-executors: 24
-    executor-cores: 8
-    executor-memory: 7G
-    driver-memory: 1G
 
 index-sh-args:
   local:

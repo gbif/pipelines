@@ -115,37 +115,10 @@ public class IndexRecordToSolrPipeline {
 
       // If configured to do so, include jack knife information
       if (options.getIncludeJackKnife()) {
-
-        log.info("Adding jack knife information");
-
-        // Load Jackknife
-        PCollection<JackKnifeOutlierRecord> jackKnifeRecords =
-            loadJackKnifeRecords(options, pipeline);
-
-        // Convert to KV <recordID, JackKnifeOutlierRecord>
-        PCollection<KV<String, JackKnifeOutlierRecord>> jackKnifeRecordsKeyedRecordID =
-            jackKnifeRecords.apply(
-                MapElements.via(
-                    new SimpleFunction<
-                        JackKnifeOutlierRecord, KV<String, JackKnifeOutlierRecord>>() {
-                      @Override
-                      public KV<String, JackKnifeOutlierRecord> apply(
-                          JackKnifeOutlierRecord input) {
-                        return KV.of(input.getId(), input);
-                      }
-                    }));
-
-        // Join indexRecordsSampling and jackKnife
-        PCollection<KV<String, KV<IndexRecord, JackKnifeOutlierRecord>>>
-            indexRecordSamplingJoinJackKnife =
-                Join.leftOuterJoin(
-                    indexRecordsWithSampling, jackKnifeRecordsKeyedRecordID, nullJkor);
-
-        // Add Jackknife information
-        recordsWithCoordsToBeIndexed =
-            indexRecordSamplingJoinJackKnife.apply(ParDo.of(addJackknifeInfo(nullJkor)));
-
+        log.info("Adding jack knife to the index");
+        recordsWithCoordsToBeIndexed = addJacknifeInfo(options, pipeline, indexRecordsWithSampling);
       } else {
+        log.info("Skipping adding jack knife to the index");
         recordsWithCoordsToBeIndexed = indexRecordsWithSampling.apply(Values.create());
       }
 
@@ -160,6 +133,30 @@ public class IndexRecordToSolrPipeline {
       writeToSolr(options, recordsWithoutCoordinates, conn);
 
     } else {
+      log.info(
+          "Sampling will NOT be added to the index. includeSampling={}",
+          options.getIncludeSampling());
+
+      if (options.getIncludeJackKnife()) {
+
+        log.info("Adding jack knife to the index");
+        PCollection<KV<String, IndexRecord>> indexRecordsCollectionKeyed =
+            indexRecordsCollection.apply(
+                MapElements.via(
+                    new SimpleFunction<IndexRecord, KV<String, IndexRecord>>() {
+                      @Override
+                      public KV<String, IndexRecord> apply(IndexRecord input) {
+                        return KV.of(input.getId(), input);
+                      }
+                    }));
+
+        indexRecordsCollection = addJacknifeInfo(options, pipeline, indexRecordsCollectionKeyed);
+      } else {
+        log.info(
+            "Skipping adding jack knife to the index. includeJackKnife={}",
+            options.getIncludeJackKnife());
+      }
+
       log.info("Adding step 4: Create SOLR connection");
       SolrIO.ConnectionConfiguration conn =
           SolrIO.ConnectionConfiguration.create(options.getZkHost());
@@ -171,6 +168,26 @@ public class IndexRecordToSolrPipeline {
     pipeline.run(options).waitUntilFinish();
 
     log.info("Solr indexing pipeline complete");
+  }
+
+  private static PCollection<IndexRecord> addJacknifeInfo(
+      SolrPipelineOptions options,
+      Pipeline pipeline,
+      PCollection<KV<String, IndexRecord>> indexRecordsWithSampling) {
+    PCollection<IndexRecord> recordsWithCoordsToBeIndexed;
+    // Load Jackknife, keyed on ID
+    PCollection<KV<String, JackKnifeOutlierRecord>> jackKnifeRecordsKeyedRecordID =
+        loadJackKnifeRecords(options, pipeline);
+
+    // Join indexRecordsSampling and jackKnife
+    PCollection<KV<String, KV<IndexRecord, JackKnifeOutlierRecord>>>
+        indexRecordSamplingJoinJackKnife =
+            Join.leftOuterJoin(indexRecordsWithSampling, jackKnifeRecordsKeyedRecordID, nullJkor);
+
+    // Add Jackknife information
+    recordsWithCoordsToBeIndexed =
+        indexRecordSamplingJoinJackKnife.apply(ParDo.of(addJackknifeInfo(nullJkor)));
+    return recordsWithCoordsToBeIndexed;
   }
 
   private static void writeToSolr(
@@ -192,6 +209,7 @@ public class IndexRecordToSolrPipeline {
 
   private static DoFn<KV<String, KV<IndexRecord, JackKnifeOutlierRecord>>, IndexRecord>
       addJackknifeInfo(JackKnifeOutlierRecord nullJkor) {
+
     return new DoFn<KV<String, KV<IndexRecord, JackKnifeOutlierRecord>>, IndexRecord>() {
       @ProcessElement
       public void processElement(ProcessContext c) {
@@ -199,22 +217,24 @@ public class IndexRecordToSolrPipeline {
         KV<String, KV<IndexRecord, JackKnifeOutlierRecord>> e = c.element();
         IndexRecord indexRecord = e.getValue().getKey();
         JackKnifeOutlierRecord jkor = e.getValue().getValue();
-
+        Map<String, Integer> ints = indexRecord.getInts();
+        if (ints == null) {
+          ints = new HashMap<>();
+          indexRecord.setInts(ints);
+        }
         if (jkor != nullJkor) {
-          Map<String, Integer> ints = indexRecord.getInts();
-          if (ints == null) {
-            ints = new HashMap<String, Integer>();
-            indexRecord.setInts(ints);
-          }
+
           ints.put("outlierLayerCount", jkor.getItems().size());
 
-          Map<String, List<String>> stringsList = indexRecord.getMultiValues();
-          if (stringsList == null) {
-            stringsList = new HashMap();
-            indexRecord.setMultiValues(stringsList);
+          Map<String, List<String>> multiValues = indexRecord.getMultiValues();
+          if (multiValues == null) {
+            multiValues = new HashMap();
+            indexRecord.setMultiValues(multiValues);
           }
 
-          stringsList.put("outlierLayer", jkor.getItems());
+          multiValues.put("outlierLayer", jkor.getItems());
+        } else {
+          ints.put("outlierLayerCount", 0);
         }
 
         c.output(indexRecord);
@@ -316,12 +336,21 @@ public class IndexRecordToSolrPipeline {
     return p.apply(AvroIO.read(SampleRecord.class).from(samplingPath));
   }
 
-  private static PCollection<JackKnifeOutlierRecord> loadJackKnifeRecords(
+  private static PCollection<KV<String, JackKnifeOutlierRecord>> loadJackKnifeRecords(
       SolrPipelineOptions options, Pipeline p) {
     String jackknifePath =
         PathBuilder.buildPath(options.getJackKnifePath(), "outliers", "*" + AVRO_EXTENSION)
             .toString();
     log.info("Loading jackknife from {}", jackknifePath);
-    return p.apply(AvroIO.read(JackKnifeOutlierRecord.class).from(jackknifePath));
+
+    return p.apply(AvroIO.read(JackKnifeOutlierRecord.class).from(jackknifePath))
+        .apply(
+            MapElements.via(
+                new SimpleFunction<JackKnifeOutlierRecord, KV<String, JackKnifeOutlierRecord>>() {
+                  @Override
+                  public KV<String, JackKnifeOutlierRecord> apply(JackKnifeOutlierRecord input) {
+                    return KV.of(input.getId(), input);
+                  }
+                }));
   }
 }
