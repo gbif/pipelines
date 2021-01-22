@@ -8,6 +8,9 @@ import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 import lombok.NonNull;
@@ -125,7 +128,7 @@ public class IndexRecordTransform implements Serializable {
       TaxonProfile tpr,
       ALASensitivityRecord sr) {
 
-    Set<String> skipKeys = new HashSet<String>();
+    Set<String> skipKeys = new HashSet<>();
     skipKeys.add("id");
     skipKeys.add("created");
     skipKeys.add("text");
@@ -153,7 +156,7 @@ public class IndexRecordTransform implements Serializable {
     indexRecord.setDates(new HashMap<>());
     indexRecord.setDoubles(new HashMap<>());
     indexRecord.setMultiValues(new HashMap<>());
-    List<String> assertions = new ArrayList<String>();
+    List<String> assertions = new ArrayList<>();
 
     // If a sensitive record, construct new versions of the data with adjustments
     boolean sensitive = sr != null && sr.getSensitive() != null && sr.getSensitive();
@@ -218,19 +221,7 @@ public class IndexRecordTransform implements Serializable {
 
     // GBIF taxonomy - add if available
     if (txr != null) {
-      // add the classification
-      List<RankedName> taxonomy = txr.getClassification();
-      for (RankedName entry : taxonomy) {
-        indexRecord
-            .getInts()
-            .put("gbif_s_" + entry.getRank().toString().toLowerCase() + "_id", entry.getKey());
-        indexRecord
-            .getStrings()
-            .put("gbif_s_" + entry.getRank().toString().toLowerCase(), entry.getName());
-      }
-
-      indexRecord.getStrings().put("gbif_s_rank", txr.getAcceptedUsage().getRank().toString());
-      indexRecord.getStrings().put("gbif_s_scientificName", txr.getAcceptedUsage().getName());
+      addGBIFTaxonomy(txr, indexRecord, assertions);
     }
 
     // Verbatim (Raw) data
@@ -321,20 +312,13 @@ public class IndexRecordTransform implements Serializable {
                   atxr.getFamily())); // is set to IGNORE in headerAttribute
 
       // legacy fields referenced in biocache-service code
-      indexRecord.getStrings().put("taxon_name", atxr.getScientificName());
-      indexRecord.getStrings().put("lsid", atxr.getTaxonConceptID());
       indexRecord.setTaxonID(atxr.getTaxonConceptID());
-      indexRecord.getStrings().put("rank", atxr.getRank());
-
-      if (atxr.getVernacularName() != null) {
-        indexRecord.getStrings().put("common_name", atxr.getVernacularName());
-      }
 
       for (String s : atxr.getSpeciesGroup()) {
-        indexRecord.getStrings().put("species_group", s);
+        indexRecord.getStrings().put("speciesGroup", s);
       }
       for (String s : atxr.getSpeciesSubgroup()) {
-        indexRecord.getStrings().put("species_subgroup", s);
+        indexRecord.getStrings().put("speciesSubgroup", s);
       }
     }
 
@@ -344,7 +328,14 @@ public class IndexRecordTransform implements Serializable {
     indexRecord.getBooleans().put("geospatial_kosher", geospatialKosher);
 
     // FIXME  - see #162
-    indexRecord.getDates().put("first_loaded_date", new Date().getTime());
+    if (ur.getFirstLoaded() != null) {
+      indexRecord
+          .getDates()
+          .put(
+              "firstLoadedDate",
+              LocalDateTime.parse(ur.getFirstLoaded(), DateTimeFormatter.ISO_DATE_TIME)
+                  .toEpochSecond(ZoneOffset.UTC));
+    }
 
     // Add legacy collectory fields
     if (aar != null) {
@@ -363,12 +354,7 @@ public class IndexRecordTransform implements Serializable {
       addIfNotEmpty(indexRecord, "collectionName", aar.getCollectionName());
     }
 
-    // legacy fields reference directly in biocache-service code
-    if (txr != null) {
-      IssueRecord taxonomicIssues = txr.getIssues();
-      assertions.addAll(taxonomicIssues.getIssueList());
-    }
-
+    // add image identifiers
     if (isr != null && isr.getImageIDs() != null && !isr.getImageIDs().isEmpty()) {
       indexRecord.getStrings().put("image_url", isr.getImageIDs().get(0));
       indexRecord.getMultiValues().put("all_image_url", isr.getImageIDs());
@@ -377,48 +363,7 @@ public class IndexRecordTransform implements Serializable {
     }
 
     if (tpr != null && tpr.getSpeciesListID() != null && !tpr.getSpeciesListID().isEmpty()) {
-
-      indexRecord.getMultiValues().put("species_list_uid", tpr.getSpeciesListID());
-
-      // CONSERVATION STATUS
-      String stateProvince = lr.getStateProvince();
-      String country = lr.getCountry();
-
-      // index conservation status
-      List<ConservationStatus> conservationStatuses = tpr.getConservationStatuses();
-      for (ConservationStatus conservationStatus : conservationStatuses) {
-        if (conservationStatus.getRegion() != null) {
-          if (conservationStatus.getRegion().equalsIgnoreCase(stateProvince)) {
-
-            if (Strings.isNotBlank(conservationStatus.getSourceStatus())) {
-              indexRecord
-                  .getStrings()
-                  .put("raw_state_conservation", conservationStatus.getSourceStatus());
-            }
-            if (Strings.isNotBlank(conservationStatus.getStatus())) {
-              indexRecord.getStrings().put("state_conservation", conservationStatus.getStatus());
-            }
-          }
-          if (conservationStatus.getRegion().equalsIgnoreCase(country)) {
-            if (Strings.isNotBlank(conservationStatus.getStatus())) {
-              indexRecord.getStrings().put("country_conservation", conservationStatus.getStatus());
-            }
-          }
-        }
-      }
-
-      // index invasive status
-      List<InvasiveStatus> invasiveStatuses = tpr.getInvasiveStatuses();
-      for (InvasiveStatus invasiveStatus : invasiveStatuses) {
-        if (invasiveStatus.getRegion() != null) {
-          if (invasiveStatus.getRegion().equalsIgnoreCase(stateProvince)) {
-            indexRecord.getStrings().put("state_invasive", "invasive");
-          }
-          if (invasiveStatus.getRegion().equalsIgnoreCase(country)) {
-            indexRecord.getStrings().put("country_invasive", "invasive");
-          }
-        }
-      }
+      addSpeciesListInfo(lr, tpr, indexRecord);
     }
 
     assertions.addAll(lr.getIssues().getIssueList());
@@ -432,6 +377,71 @@ public class IndexRecordTransform implements Serializable {
     indexRecord.getMultiValues().put("assertions", assertions);
 
     return indexRecord.build();
+  }
+
+  private static void addSpeciesListInfo(
+      LocationRecord lr, TaxonProfile tpr, IndexRecord.Builder indexRecord) {
+    indexRecord.getMultiValues().put("speciesListUid", tpr.getSpeciesListID());
+
+    // CONSERVATION STATUS
+    String stateProvince = lr.getStateProvince();
+    String country = lr.getCountry();
+
+    // index conservation status
+    List<ConservationStatus> conservationStatuses = tpr.getConservationStatuses();
+    for (ConservationStatus conservationStatus : conservationStatuses) {
+      if (conservationStatus.getRegion() != null) {
+        if (conservationStatus.getRegion().equalsIgnoreCase(stateProvince)) {
+
+          if (Strings.isNotBlank(conservationStatus.getSourceStatus())) {
+            indexRecord
+                .getStrings()
+                .put("raw_stateConservation", conservationStatus.getSourceStatus());
+          }
+          if (Strings.isNotBlank(conservationStatus.getStatus())) {
+            indexRecord.getStrings().put("stateConservation", conservationStatus.getStatus());
+          }
+        }
+        if (conservationStatus.getRegion().equalsIgnoreCase(country)) {
+          if (Strings.isNotBlank(conservationStatus.getStatus())) {
+            indexRecord.getStrings().put("countryConservation", conservationStatus.getStatus());
+          }
+        }
+      }
+    }
+
+    // index invasive status
+    List<InvasiveStatus> invasiveStatuses = tpr.getInvasiveStatuses();
+    for (InvasiveStatus invasiveStatus : invasiveStatuses) {
+      if (invasiveStatus.getRegion() != null) {
+        if (invasiveStatus.getRegion().equalsIgnoreCase(stateProvince)) {
+          indexRecord.getStrings().put("stateInvasive", "invasive");
+        }
+        if (invasiveStatus.getRegion().equalsIgnoreCase(country)) {
+          indexRecord.getStrings().put("countryInvasive", "invasive");
+        }
+      }
+    }
+  }
+
+  private static void addGBIFTaxonomy(
+      TaxonRecord txr, IndexRecord.Builder indexRecord, List<String> assertions) {
+    // add the classification
+    List<RankedName> taxonomy = txr.getClassification();
+    for (RankedName entry : taxonomy) {
+      indexRecord
+          .getInts()
+          .put("gbif_s_" + entry.getRank().toString().toLowerCase() + "_id", entry.getKey());
+      indexRecord
+          .getStrings()
+          .put("gbif_s_" + entry.getRank().toString().toLowerCase(), entry.getName());
+    }
+
+    indexRecord.getStrings().put("gbif_s_rank", txr.getAcceptedUsage().getRank().toString());
+    indexRecord.getStrings().put("gbif_s_scientificName", txr.getAcceptedUsage().getName());
+
+    IssueRecord taxonomicIssues = txr.getIssues();
+    assertions.addAll(taxonomicIssues.getIssueList());
   }
 
   public ParDo.SingleOutput<KV<String, CoGbkResult>, IndexRecord> converter() {
