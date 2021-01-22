@@ -70,6 +70,12 @@
       <artifactId>lombok</artifactId>
     </dependency>
 
+    <!-- This project -->
+    <dependency>
+      <groupId>org.gbif.pipelines</groupId>
+      <artifactId>keygen</artifactId>
+    </dependency>
+
     <!-- GBIF -->
     <dependency>
       <groupId>org.gbif</groupId>
