@@ -46,20 +46,23 @@ Pipeline ingress steps:
     ┌───── do-all ──────────────────────────────────┐
     │                                               │
 dwca-avro --> interpret --> uuid -->                │
-     sample --> index --> solr
+     sample --> index --> jackknife --> solr
 
 -  'dwca-avro' reads a Dwc-A and converts it to an verbatim.avro file;
 -  'interpret' reads verbatim.avro, interprets it and writes the interpreted data and the issues to Avro files;
+-  'sds' runs the sensitive data checks;
 -  'validate' validates the identifiers for a dataset, checking for duplicate and empty keys;
 -  'uuid' mints UUID on new records and rematches to existing UUIDs for records loaded before;
 -  'image-load' pushes an export of multimedia AVRO files to the image service;
 -  'image-sync' retrieves details of images stored in image service for indexing purposes;
 -  'sample' use the sampling service to retrieve values for points for the layers in the spatial service;
 -  'index' generates a AVRO records ready to be index to SOLR;
+-  'jackknife' adds an aggregated jackknife AVRO for all datasets. Requires samping-avro. After running a full 'index' is required.
 -  'solr' reads index records in AVRO and submits them to SOLR;
 -  'archive-list' dumps out a list of archives that can be ingested to '/tmp/dataset-archive-list.csv';
 -  'dataset-list' dumps out a list of datasets that have been ingested to '/tmp/dataset-counts.csv';
 -  'validation-report' dumps out a CSV list of datasets ready to be indexed to '/tmp/validation-report.csv';
+-  'clustering' clustering of occurrences;
 
 All the steps generate an output. If only the final output is desired, the intermediate outputs can be ignored.
 
@@ -68,12 +71,15 @@ Usage:
   $CMD [options] dataset-list
   $CMD [options] dwca-avro     (<dr>...|all)
   $CMD [options] interpret     (<dr>...|all)         $WHEREL
+  $CMD [options] sds     (<dr>...|all)         $WHEREL
   $CMD [options] validate      (<dr>...|all)         $WHERE
   $CMD [options] uuid          (<dr>...|all)         $WHERE
   $CMD [options] image-load    (<dr>...|all)         $WHERE
   $CMD [options] image-sync    (<dr>...|all)         $WHERE
   $CMD [options] index         (<dr>...|all)         $WHEREL
   $CMD [options] sample        (<dr>...|all)         $WHERE
+  $CMD [options] jackknife     (all)                 $WHERE
+  $CMD [options] clustering    (all)                 $WHERE
   $CMD [options] solr          (<dr>...|all)         $WHERE
   $CMD [options] validation-report
   $CMD [options] do-all        (<dr>...|all) $WHEREL
@@ -224,7 +230,7 @@ for JAR in $LOCAL_PIPELINES_JAR; do
 done
 
 FS_PATH=$(getConf fs.$(getConf fs.platform).fsPath)
-if [[ ! -d $FS_PATH ]]
+if [[ ! -d $FS_PATH && $(getConf fs.platform) = "local" ]]
 then
     log.error "Cannot find $FS_PATH."
     exit 1
@@ -363,7 +369,7 @@ function spark-cluster-pipeline() {
 
     if [[ $ltype = "spark-cluster" ]] ; then
         $_D /data/spark/bin/spark-submit \
-            --name $NAME \
+            --name "$NAME" \
             $CONF \
             $(toArg $SH_ARGS num-executors) \
             $(toArg $SH_ARGS executor-cores) \
@@ -394,7 +400,7 @@ function interpret () {
     spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
 
     SH_ARGS=interpret-sh-args.spark-cluster
-    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "interpret-$dr"
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "interpret $dr"
 
     logStepEnd "Interpretation" $dr $ltype $SECONDS
 }
@@ -413,7 +419,7 @@ function validate () {
     spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
 
     SH_ARGS=uuid-sh-args.spark-cluster
-    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "validate-uuid-$dr"
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "validate-uuid $dr"
 
     logStepEnd "Validation" $dr $ltype $SECONDS
 }
@@ -432,7 +438,7 @@ function uuid () {
     spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
 
     SH_ARGS=uuid-sh-args.spark-cluster
-    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "uuid-minting-$dr"
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "uuid-minting $dr"
 
     logStepEnd "UUID" $dr $ltype $SECONDS
 }
@@ -546,6 +552,65 @@ function sample () {
     java-pipeline $ltype $SH_ARGS $CLASS $dr
 
     logStepEnd "Sampling" $dr local $SECONDS
+}
+
+function sds () {
+    local dr="$1" ltype="$2"
+
+    logStepStart "SDS" $dr
+    SECONDS=0
+
+    SH_ARGS=index-sh-args.local
+    CLASS=au.org.ala.pipelines.beam.ALAInterpretedToSensitivePipeline
+    java-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=index-sh-args.spark-embedded
+    CLASS=au.org.ala.pipelines.beam.ALAInterpretedToSensitivePipeline
+    spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=index-sh-args.spark-cluster
+    CLASS=au.org.ala.pipelines.beam.ALAInterpretedToSensitivePipeline
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "SDS for $dr"
+
+    logStepEnd "SDS" $dr $ltype $SECONDS
+}
+
+function jackknife () {
+    local dr="*" ltype="$TYPE"
+    CLASS=au.org.ala.pipelines.beam.ALAReverseJackKnifePipeline
+
+    logStepStart "Jackknife" $dr
+    SECONDS=0
+
+    SH_ARGS=jackknife-sh-args.local
+    java-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=jackknife-sh-args.spark-embedded
+    spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=jackknife-sh-args.spark-cluster
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "add-jackknife $dr"
+
+    logStepEnd "Jackknife" $dr $ltype $SECONDS
+}
+
+function clustering () {
+    local dr="*" ltype="$TYPE"
+    CLASS=au.org.ala.pipelines.beam.ClusteringPipeline
+
+    logStepStart "Clustering" $dr
+    SECONDS=0
+
+    SH_ARGS=clustering-sh-args.local
+    java-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=clustering-sh-args.spark-embedded
+    spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=clustering-sh-args.spark-cluster
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "add-jackknife $dr"
+
+    logStepEnd "Clustering" $dr $ltype $SECONDS
 }
 
 function solr () {
@@ -700,12 +765,32 @@ if ($image_load || $do_all); then
     fi
 fi
 
-if ($sample || $do_all); then
-  do_step_simple sample
+if ($sds || $do_all); then
+    do_step sds
 fi
 
 if ($index || $do_all); then
     do_step index
+fi
+
+if ($sample || $do_all); then
+  do_step_simple sample
+fi
+
+if ($clustering || $do_all); then
+  if [[ $2 = "all" ]] ; then
+    do_step clustering
+  else
+    echo "WARN: 'clustering' not run when 'dr' != 'all'"
+  fi
+fi
+
+if ($jackknife || $do_all); then
+  if [[ $2 = "all" ]] ; then
+    do_step jackknife
+  else
+    echo "WARN: 'jackknife' not run when 'dr' != 'all'"
+  fi
 fi
 
 if ($solr || $do_all); then

@@ -192,6 +192,12 @@ jackKnife:
   allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
   runner: SparkRunner
 
+clustering:
+  appName: Occurrence clustering
+  clusteringPath: "{fsPath}/pipelines-clustering"
+  allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
+  runner: SparkRunner
+
 # class: au.org.ala.utils.DumpDatasetSize
 dataset-count-dump:
   inputPath: '{fsPath}/pipelines-data'
@@ -298,6 +304,18 @@ index-sh-args:
     driver-memory: 4G
 
 jackknife-sh-args:
+  local:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-embedded:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-cluster:
+    conf:
+    num-executors: 24
+    executor-cores: 8
+    executor-memory: 7G
+    driver-memory: 1G
+
+clustering-sh-args:
   local:
     jvm: -Xmx8g -XX:+UseG1GC
   spark-embedded:
