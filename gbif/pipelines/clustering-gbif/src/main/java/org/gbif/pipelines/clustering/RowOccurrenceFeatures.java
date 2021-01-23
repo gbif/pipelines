@@ -211,7 +211,7 @@ public class RowOccurrenceFeatures implements OccurrenceFeatures {
   }
 
   @Override
-  public List<String> getIdentifiers() {
+  public List<String> listIdentifiers() {
     return getStrings(
         "occurrenceID", "fieldNumber", "recordNumber", "catalogNumber", "otherCatalogNumbers");
   }
