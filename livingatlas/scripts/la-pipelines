@@ -62,6 +62,7 @@ dwca-avro --> interpret --> uuid -->                │
 -  'archive-list' dumps out a list of archives that can be ingested to '/tmp/dataset-archive-list.csv';
 -  'dataset-list' dumps out a list of datasets that have been ingested to '/tmp/dataset-counts.csv';
 -  'validation-report' dumps out a CSV list of datasets ready to be indexed to '/tmp/validation-report.csv';
+-  'clustering' clustering of occurrences;
 
 All the steps generate an output. If only the final output is desired, the intermediate outputs can be ignored.
 
@@ -78,6 +79,7 @@ Usage:
   $CMD [options] index         (<dr>...|all)         $WHEREL
   $CMD [options] sample        (<dr>...|all)         $WHERE
   $CMD [options] jackknife     (all)                 $WHERE
+  $CMD [options] clustering    (all)                 $WHERE
   $CMD [options] solr          (<dr>...|all)         $WHERE
   $CMD [options] validation-report
   $CMD [options] do-all        (<dr>...|all) $WHEREL
@@ -592,6 +594,25 @@ function jackknife () {
     logStepEnd "Jackknife" $dr $ltype $SECONDS
 }
 
+function clustering () {
+    local dr="*" ltype="$TYPE"
+    CLASS=au.org.ala.pipelines.beam.ClusteringPipeline
+
+    logStepStart "Clustering" $dr
+    SECONDS=0
+
+    SH_ARGS=clustering-sh-args.local
+    java-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=clustering-sh-args.spark-embedded
+    spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=clustering-sh-args.spark-cluster
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "add-jackknife $dr"
+
+    logStepEnd "Clustering" $dr $ltype $SECONDS
+}
+
 function solr () {
     local dr="$1" ltype="$2"
     CLASS=au.org.ala.pipelines.beam.IndexRecordToSolrPipeline
@@ -754,6 +775,14 @@ fi
 
 if ($sample || $do_all); then
   do_step_simple sample
+fi
+
+if ($clustering || $do_all); then
+  if [[ $2 = "all" ]] ; then
+    do_step clustering
+  else
+    echo "WARN: 'clustering' not run when 'dr' != 'all'"
+  fi
 fi
 
 if ($jackknife || $do_all); then

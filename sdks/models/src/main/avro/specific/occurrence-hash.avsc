@@ -1,0 +1,33 @@
+[
+    {
+      "name":"OccurrenceHash",
+      "namespace":"org.gbif.pipelines.io.avro",
+      "type":"record",
+      "doc":"OccurrenceHash",
+      "fields":[
+        {"name": "hashKey", "type":  "string"},
+        {"name": "datasetKey", "type":  "string"},
+        {"name": "uuid", "type": "string"}
+      ]
+    },
+    {
+      "name":"ClusteringCandidate",
+      "namespace":"org.gbif.pipelines.io.avro",
+      "type":"record",
+      "doc":"OccurrenceHash",
+      "fields":[
+        {"name": "datasetKey", "type":  "string"},
+        {"name": "uuid", "type": "string"}
+      ]
+    },
+    {
+      "name":"ClusteringCandidates",
+      "namespace":"org.gbif.pipelines.io.avro",
+      "type":"record",
+      "doc":"ConservationStatus",
+      "fields":[
+        {"name": "hashKey", "type": "string"},
+        {"name": "candidates", "type": {"type" : "array", "items" : "ClusteringCandidate"}, "default" : []}
+      ]
+    }
+]
