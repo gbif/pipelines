@@ -176,34 +176,28 @@ public class OccurrenceRelationships {
     // ignore case and [-_., ] chars
     // otherCatalogNumbers is not parsed, but a good addition could be to explore that
     Set<String> intersection = new HashSet();
-    getFields(
-            o1,
-            "occurrenceID",
-            "fieldNumber",
-            "recordNumber",
-            "catalogNumber",
-            "otherCatalogNumbers")
-        .forEach(
-            id -> {
-              if (id != null) {
-                intersection.add(normalizeID(id));
-              }
-            });
+    List<String> identifiers =
+        Arrays.asList(
+            o1.getFieldNumber(),
+            o1.getRecordNumber(),
+            o1.getCatalogNumber(),
+            o1.getOtherCatalogNumbers(),
+            o1.getOccurrenceID());
+
+    identifiers.forEach(
+        id -> {
+          if (id != null) {
+            intersection.add(normalizeID(id));
+          }
+        });
 
     Set<String> toMatch = new HashSet();
-    getFields(
-            o2,
-            "occurrenceID",
-            "fieldNumber",
-            "recordNumber",
-            "catalogNumber",
-            "otherCatalogNumbers")
-        .forEach(
-            id -> {
-              if (id != null) {
-                toMatch.add(normalizeID(id));
-              }
-            });
+    identifiers.forEach(
+        id -> {
+          if (id != null) {
+            toMatch.add(normalizeID(id));
+          }
+        });
 
     intersection.retainAll(toMatch);
 
@@ -253,18 +247,5 @@ public class OccurrenceRelationships {
       return n.length() == 0 ? null : n;
     }
     return null;
-  }
-
-  public static List<String> getFields(OccurrenceFeatures o, String... fields) {
-    List<String> fieldValues = new ArrayList<>();
-    for (String field : fields) {
-      Object value = o.get(field);
-      if (value != null) {
-        fieldValues.add(value.toString());
-      } else {
-        fieldValues.add(null);
-      }
-    }
-    return fieldValues;
   }
 }

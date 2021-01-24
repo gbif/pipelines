@@ -98,8 +98,17 @@ public class ClusteringPipeline {
                                 .setYear(source.getInts().get("year"))
                                 .setMonth(source.getInts().get("month"))
                                 .setDay(source.getInts().get("day"))
+                                .setEventDate(source.getLongs().get("eventDate"))
                                 .setTypeStatus(source.getStrings().get("typeStatus"))
-                                .setRecordedBy(source.getStrings().get("recordedBy"));
+                                .setRecordedBy(source.getStrings().get("recordedBy"))
+                                .setRecordedBy(source.getStrings().get("fieldNumber"))
+                                .setRecordNumber(source.getStrings().get("recordNumber"))
+                                .setCatalogNumber(source.getStrings().get("catalogNumber"))
+                                .setOccurrenceID(source.getStrings().get("occurrenceID"))
+                                .setOtherCatalogNumbers(
+                                    source.getStrings().get("otherCatalogNumbers"))
+                                .setCollectionCode(source.getStrings().get("collectionCode"))
+                                .setInstitutionCode(source.getStrings().get("institutionCode"));
 
                         // specimen only hashes
                         if (Strings.isNotEmpty(builder.getSpeciesKey())
@@ -281,7 +290,10 @@ public class ClusteringPipeline {
                       public Relationships apply(KV<String, Iterable<Relationship>> input) {
                         List<Relationship> list = new ArrayList<Relationship>();
                         input.getValue().iterator().forEachRemaining(list::add);
-                        return Relationships.newBuilder().setId(input.getKey()).build();
+                        return Relationships.newBuilder()
+                            .setId(input.getKey())
+                            .setRelationships(list)
+                            .build();
                       }
                     }));
 
