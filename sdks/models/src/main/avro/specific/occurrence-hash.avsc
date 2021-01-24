@@ -1,23 +1,26 @@
 [
     {
-      "name":"OccurrenceHash",
+      "name":"OccurrenceFeatures",
       "namespace":"org.gbif.pipelines.io.avro",
       "type":"record",
-      "doc":"OccurrenceHash",
+      "doc":"OccurrenceFeatures",
       "fields":[
         {"name": "hashKey", "type":  "string"},
         {"name": "datasetKey", "type":  "string"},
-        {"name": "uuid", "type": "string"}
-      ]
-    },
-    {
-      "name":"ClusteringCandidate",
-      "namespace":"org.gbif.pipelines.io.avro",
-      "type":"record",
-      "doc":"OccurrenceHash",
-      "fields":[
-        {"name": "datasetKey", "type":  "string"},
-        {"name": "uuid", "type": "string"}
+        {"name": "id", "type": "string"},
+        {"name": "speciesKey", "type": ["null", "string"], "default" : null },
+        {"name": "taxonKey", "type": ["null", "string"], "default" : null },
+        {"name": "basisOfRecord", "type": ["null", "string"], "default" : null },
+        {"name": "decimalLatitude", "type": ["null", "double"], "default" : null},
+        {"name": "decimalLongitude", "type": ["null", "double"], "default" : null},
+        {"name": "year", "type": ["null", "int"], "default" : null},
+        {"name": "month", "type": ["null", "int"], "default" : null},
+        {"name": "day", "type": ["null", "int"], "default" : null},
+        {"name": "eventDate", "type": ["null", "long"], "default" : null},
+        {"name": "scientificName", "type": ["null", "string"], "default" : null },
+        {"name": "countryCode", "type": ["null", "string"], "default" : null },
+        {"name": "typeStatus", "type": ["null", "string"], "default" : null },
+        {"name": "recordedBy", "type": ["null", "string"], "default" : null }
       ]
     },
     {
@@ -27,7 +30,30 @@
       "doc":"ConservationStatus",
       "fields":[
         {"name": "hashKey", "type": "string"},
-        {"name": "candidates", "type": {"type" : "array", "items" : "ClusteringCandidate"}, "default" : []}
+        {"name": "candidates", "type": {"type" : "array", "items" : "OccurrenceFeatures"}, "default" : []}
       ]
-    }
+    },
+     {
+       "name":"Relationship",
+       "namespace":"org.gbif.pipelines.io.avro",
+       "type":"record",
+       "doc":"RelationshipAssertion",
+       "fields":[
+         {"name": "id1", "type": "string"},
+         {"name": "id2", "type": "string"},
+         {"name": "reasons", "type": "string"},
+         {"name": "dataset1", "type": "string"},
+         {"name": "dataset2", "type": "string"}
+       ]
+     },
+     {
+       "name":"Relationships",
+       "namespace":"org.gbif.pipelines.io.avro",
+       "type":"record",
+       "doc":"RelationshipAssertion",
+       "fields":[
+         {"name": "id", "type": "string"},
+         {"name": "relationships", "type": {"type" : "array", "items" : "Relationship"}, "default" : []}
+       ]
+     }
 ]

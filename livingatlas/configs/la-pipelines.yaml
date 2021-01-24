@@ -194,6 +194,7 @@ jackKnife:
 
 clustering:
   appName: Occurrence clustering
+  dumpCandidatesForDebug: true
   clusteringPath: "{fsPath}/pipelines-clustering"
   allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
   runner: SparkRunner

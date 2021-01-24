@@ -4,6 +4,7 @@ import static au.org.ala.clustering.RelationshipAssertion.FEATURE_ASSERTION.*;
 
 import java.time.LocalDate;
 import java.util.*;
+import org.gbif.pipelines.io.avro.OccurrenceFeatures;
 
 /** Generates relationship assertions for occurrence records. */
 public class OccurrenceRelationships {
@@ -72,7 +73,7 @@ public class OccurrenceRelationships {
       OccurrenceFeatures o1, OccurrenceFeatures o2, RelationshipAssertion assertion) {
     if (equalsAndNotNull(o1, o2, "taxonKey")
         && equalsAndNotNull(o1, o2, "typeStatus")
-        && o1.getString("typeStatus").equalsIgnoreCase("HOLOTYPE")) {
+        && "HOLOTYPE".equalsIgnoreCase(o1.getTypeStatus())) {
       assertion.collect(SAME_SPECIMEN);
     }
   }
@@ -116,14 +117,14 @@ public class OccurrenceRelationships {
    */
   private static boolean withinDays(
       OccurrenceFeatures o1, OccurrenceFeatures o2, int thresholdInDays) {
-    if (o1.getInt("year") != null
-        && o1.getInt("month") != null
-        && o1.getInt("day") != null
-        && o2.getInt("year") != null
-        && o2.getInt("month") != null
-        && o2.getInt("day") != null) {
-      LocalDate d1 = LocalDate.of(o1.getInt("year"), o1.getInt("month"), o1.getInt("day"));
-      LocalDate d2 = LocalDate.of(o2.getInt("year"), o2.getInt("month"), o2.getInt("day"));
+    if (o1.getYear() != null
+        && o1.getMonth() != null
+        && o1.getDay() != null
+        && o2.getYear() != null
+        && o2.getMonth() != null
+        && o2.getDay() != null) {
+      LocalDate d1 = LocalDate.of(o1.getYear(), o1.getMonth(), o1.getDay());
+      LocalDate d2 = LocalDate.of(o2.getYear(), o2.getMonth(), o2.getDay());
       int daysApart = Math.abs(d1.until(d2).getDays());
       return daysApart <= thresholdInDays;
     }
@@ -149,10 +150,10 @@ public class OccurrenceRelationships {
     } else if (presentOnBoth(o1, o2, "decimalLatitude", "decimalLongitude")) {
       double distance =
           Haversine.distance(
-              o1.getDouble("decimalLatitude"),
-              o1.getDouble("decimalLongitude"),
-              o2.getDouble("decimalLatitude"),
-              o2.getDouble("decimalLongitude"));
+              o1.getDecimalLatitude(),
+              o1.getDecimalLongitude(),
+              o2.getDecimalLatitude(),
+              o2.getDecimalLongitude());
 
       if (distance <= 0.200) assertion.collect(WITHIN_200m); // 157m is 3 decimal places
       if (distance <= 2.00) assertion.collect(WITHIN_2Km); // 1569m is worst 3 decimal places
@@ -175,8 +176,13 @@ public class OccurrenceRelationships {
     // ignore case and [-_., ] chars
     // otherCatalogNumbers is not parsed, but a good addition could be to explore that
     Set<String> intersection = new HashSet();
-    o1.getStrings(
-            "occurrenceID", "fieldNumber", "recordNumber", "catalogNumber", "otherCatalogNumbers")
+    getFields(
+            o1,
+            "occurrenceID",
+            "fieldNumber",
+            "recordNumber",
+            "catalogNumber",
+            "otherCatalogNumbers")
         .forEach(
             id -> {
               if (id != null) {
@@ -185,8 +191,13 @@ public class OccurrenceRelationships {
             });
 
     Set<String> toMatch = new HashSet();
-    o2.getStrings(
-            "occurrenceID", "fieldNumber", "recordNumber", "catalogNumber", "otherCatalogNumbers")
+    getFields(
+            o2,
+            "occurrenceID",
+            "fieldNumber",
+            "recordNumber",
+            "catalogNumber",
+            "otherCatalogNumbers")
         .forEach(
             id -> {
               if (id != null) {
@@ -242,5 +253,18 @@ public class OccurrenceRelationships {
       return n.length() == 0 ? null : n;
     }
     return null;
+  }
+
+  public static List<String> getFields(OccurrenceFeatures o, String... fields) {
+    List<String> fieldValues = new ArrayList<>();
+    for (String field : fields) {
+      Object value = o.get(field);
+      if (value != null) {
+        fieldValues.add(value.toString());
+      } else {
+        fieldValues.add(null);
+      }
+    }
+    return fieldValues;
   }
 }

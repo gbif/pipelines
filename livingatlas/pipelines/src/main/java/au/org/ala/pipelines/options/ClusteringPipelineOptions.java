@@ -15,7 +15,6 @@ public interface ClusteringPipelineOptions
 
   void setClusteringPath(String jackKnifePath);
 
-
   @Description("Path to JackKnife avro files")
   @Default.Boolean(false)
   Boolean getDumpCandidatesForDebug();
