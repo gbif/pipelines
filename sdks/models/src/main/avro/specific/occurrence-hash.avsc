@@ -20,7 +20,14 @@
         {"name": "scientificName", "type": ["null", "string"], "default" : null },
         {"name": "countryCode", "type": ["null", "string"], "default" : null },
         {"name": "typeStatus", "type": ["null", "string"], "default" : null },
-        {"name": "recordedBy", "type": ["null", "string"], "default" : null }
+        {"name": "occurrenceID", "type": ["null", "string"], "default" : null },
+        {"name": "recordedBy", "type": ["null", "string"], "default" : null },
+        {"name": "fieldNumber", "type": ["null", "string"], "default" : null },
+        {"name": "recordNumber", "type": ["null", "string"], "default" : null },
+        {"name": "catalogNumber", "type": ["null", "string"], "default" : null },
+        {"name": "otherCatalogNumbers", "type": ["null", "string"], "default" : null },
+        {"name": "collectionCode", "type": ["null", "string"], "default" : null },
+        {"name": "institutionCode", "type": ["null", "string"], "default" : null }
       ]
     },
     {
