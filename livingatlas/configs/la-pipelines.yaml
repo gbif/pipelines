@@ -176,6 +176,7 @@ solr:
   targetPath: '{fsPath}/pipelines-data'
   allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
   jackKnifePath: "{fsPath}/pipelines-jackknife"
+  clusteringPath: "{fsPath}/pipelines-clustering"
   solrCollection: biocache
   includeSampling: true
   includeJackKnife: false

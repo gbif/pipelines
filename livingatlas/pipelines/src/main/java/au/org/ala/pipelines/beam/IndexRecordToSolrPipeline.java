@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.extensions.joinlibrary.Join;
@@ -25,9 +26,7 @@ import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.*;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
-import org.gbif.pipelines.io.avro.IndexRecord;
-import org.gbif.pipelines.io.avro.JackKnifeOutlierRecord;
-import org.gbif.pipelines.io.avro.SampleRecord;
+import org.gbif.pipelines.io.avro.*;
 import org.joda.time.Duration;
 import org.slf4j.MDC;
 
@@ -36,7 +35,9 @@ import org.slf4j.MDC;
 public class IndexRecordToSolrPipeline {
 
   static final JackKnifeOutlierRecord nullJkor =
-      JackKnifeOutlierRecord.newBuilder().setId("").setItems(new ArrayList<>()).build();
+      JackKnifeOutlierRecord.newBuilder().setId("EMPTY").setItems(new ArrayList<>()).build();
+  static final Relationships nullClustering =
+      Relationships.newBuilder().setId("EMPTY").setRelationships(new ArrayList<>()).build();
 
   public static void main(String[] args) throws Exception {
     VersionInfo.print();
@@ -111,15 +112,20 @@ public class IndexRecordToSolrPipeline {
       PCollection<KV<String, IndexRecord>> indexRecordsWithSampling =
           results.apply(ParDo.of(joinSampling(indexRecordTag, samplingTag)));
 
-      PCollection<IndexRecord> recordsWithCoordsToBeIndexed = null;
-
       // If configured to do so, include jack knife information
       if (options.getIncludeJackKnife()) {
         log.info("Adding jack knife to the index");
-        recordsWithCoordsToBeIndexed = addJacknifeInfo(options, pipeline, indexRecordsWithSampling);
+        indexRecordsWithSampling = addJacknifeInfo(options, pipeline, indexRecordsWithSampling);
       } else {
         log.info("Skipping adding jack knife to the index");
-        recordsWithCoordsToBeIndexed = indexRecordsWithSampling.apply(Values.create());
+      }
+
+      // If configured to do so, include jack knife information
+      if (options.getIncludeClustering()) {
+        log.info("Adding clustering to the index");
+        indexRecordsWithSampling = addClusteringInfo(options, pipeline, indexRecordsWithSampling);
+      } else {
+        log.info("Skipping adding clustering to the index");
       }
 
       log.info("Adding step 4: Create SOLR connection");
@@ -127,7 +133,7 @@ public class IndexRecordToSolrPipeline {
           SolrIO.ConnectionConfiguration.create(options.getZkHost());
 
       log.info("Adding step 5: Write records with coordinates to SOLR");
-      writeToSolr(options, recordsWithCoordsToBeIndexed, conn);
+      writeToSolr(options, indexRecordsWithSampling.apply(Values.create()), conn);
 
       log.info("Adding step 6: Write records without coordinates to SOLR");
       writeToSolr(options, recordsWithoutCoordinates, conn);
@@ -150,7 +156,9 @@ public class IndexRecordToSolrPipeline {
                       }
                     }));
 
-        indexRecordsCollection = addJacknifeInfo(options, pipeline, indexRecordsCollectionKeyed);
+        indexRecordsCollectionKeyed =
+            addJacknifeInfo(options, pipeline, indexRecordsCollectionKeyed);
+        indexRecordsCollection = indexRecordsCollectionKeyed.apply(Values.create());
       } else {
         log.info(
             "Skipping adding jack knife to the index. includeJackKnife={}",
@@ -170,11 +178,11 @@ public class IndexRecordToSolrPipeline {
     log.info("Solr indexing pipeline complete");
   }
 
-  private static PCollection<IndexRecord> addJacknifeInfo(
+  private static PCollection<KV<String, IndexRecord>> addJacknifeInfo(
       SolrPipelineOptions options,
       Pipeline pipeline,
-      PCollection<KV<String, IndexRecord>> indexRecordsWithSampling) {
-    PCollection<IndexRecord> recordsWithCoordsToBeIndexed;
+      PCollection<KV<String, IndexRecord>> indexRecords) {
+
     // Load Jackknife, keyed on ID
     PCollection<KV<String, JackKnifeOutlierRecord>> jackKnifeRecordsKeyedRecordID =
         loadJackKnifeRecords(options, pipeline);
@@ -182,12 +190,27 @@ public class IndexRecordToSolrPipeline {
     // Join indexRecordsSampling and jackKnife
     PCollection<KV<String, KV<IndexRecord, JackKnifeOutlierRecord>>>
         indexRecordSamplingJoinJackKnife =
-            Join.leftOuterJoin(indexRecordsWithSampling, jackKnifeRecordsKeyedRecordID, nullJkor);
+            Join.leftOuterJoin(indexRecords, jackKnifeRecordsKeyedRecordID, nullJkor);
 
     // Add Jackknife information
-    recordsWithCoordsToBeIndexed =
-        indexRecordSamplingJoinJackKnife.apply(ParDo.of(addJackknifeInfo(nullJkor)));
-    return recordsWithCoordsToBeIndexed;
+    return indexRecordSamplingJoinJackKnife.apply(ParDo.of(addJackknifeInfo(nullJkor)));
+  }
+
+  private static PCollection<KV<String, IndexRecord>> addClusteringInfo(
+      SolrPipelineOptions options,
+      Pipeline pipeline,
+      PCollection<KV<String, IndexRecord>> indexRecords) {
+
+    // Load clustering, keyed on ID
+    PCollection<KV<String, Relationships>> clusteringRecordsKeyedRecordID =
+        loadClusteringRecords(options, pipeline);
+
+    // Join indexRecordsSampling and jackKnife
+    PCollection<KV<String, KV<IndexRecord, Relationships>>> indexRecordJoinClustering =
+        Join.leftOuterJoin(indexRecords, clusteringRecordsKeyedRecordID, nullClustering);
+
+    // Add Jackknife information
+    return indexRecordJoinClustering.apply(ParDo.of(addClusteringInfo(nullClustering)));
   }
 
   private static void writeToSolr(
@@ -207,10 +230,11 @@ public class IndexRecordToSolrPipeline {
                         Duration.standardMinutes(options.getSolrRetryDurationInMins()))));
   }
 
-  private static DoFn<KV<String, KV<IndexRecord, JackKnifeOutlierRecord>>, IndexRecord>
+  private static DoFn<KV<String, KV<IndexRecord, JackKnifeOutlierRecord>>, KV<String, IndexRecord>>
       addJackknifeInfo(JackKnifeOutlierRecord nullJkor) {
 
-    return new DoFn<KV<String, KV<IndexRecord, JackKnifeOutlierRecord>>, IndexRecord>() {
+    return new DoFn<
+        KV<String, KV<IndexRecord, JackKnifeOutlierRecord>>, KV<String, IndexRecord>>() {
       @ProcessElement
       public void processElement(ProcessContext c) {
 
@@ -237,7 +261,58 @@ public class IndexRecordToSolrPipeline {
           ints.put("outlierLayerCount", 0);
         }
 
-        c.output(indexRecord);
+        c.output(KV.of(indexRecord.getId(), indexRecord));
+      }
+    };
+  }
+
+  private static DoFn<KV<String, KV<IndexRecord, Relationships>>, KV<String, IndexRecord>>
+      addClusteringInfo(Relationships nullClustering) {
+
+    return new DoFn<KV<String, KV<IndexRecord, Relationships>>, KV<String, IndexRecord>>() {
+      @ProcessElement
+      public void processElement(ProcessContext c) {
+
+        KV<String, KV<IndexRecord, Relationships>> e = c.element();
+        IndexRecord indexRecord = e.getValue().getKey();
+        Relationships jkor = e.getValue().getValue();
+
+        Map<String, List<String>> multiValues = indexRecord.getMultiValues();
+        Map<String, Boolean> booleans = indexRecord.getBooleans();
+
+        if (multiValues == null) {
+          multiValues = new HashMap<>();
+          indexRecord.setMultiValues(multiValues);
+        }
+
+        if (booleans == null) {
+          booleans = new HashMap<>();
+          indexRecord.setBooleans(booleans);
+        }
+
+        if (jkor != nullClustering) {
+
+          booleans.put("isClustered", true);
+
+          List<String> id1s =
+              jkor.getRelationships().stream()
+                  .map(Relationship::getId1)
+                  .collect(Collectors.toList());
+          List<String> id2s =
+              jkor.getRelationships().stream()
+                  .map(Relationship::getId2)
+                  .collect(Collectors.toList());
+
+          id1s.addAll(id2s);
+          id1s.remove(indexRecord.getId());
+
+          multiValues.put("clusteredWith", id1s);
+
+        } else {
+          booleans.put("isClustered", false);
+        }
+
+        c.output(KV.of(indexRecord.getId(), indexRecord));
       }
     };
   }
@@ -349,6 +424,23 @@ public class IndexRecordToSolrPipeline {
                 new SimpleFunction<JackKnifeOutlierRecord, KV<String, JackKnifeOutlierRecord>>() {
                   @Override
                   public KV<String, JackKnifeOutlierRecord> apply(JackKnifeOutlierRecord input) {
+                    return KV.of(input.getId(), input);
+                  }
+                }));
+  }
+
+  private static PCollection<KV<String, Relationships>> loadClusteringRecords(
+      SolrPipelineOptions options, Pipeline p) {
+    String path =
+        PathBuilder.buildPath(options.getClusteringPath(), "*" + AVRO_EXTENSION).toString();
+    log.info("Loading clustering from {}", path);
+
+    return p.apply(AvroIO.read(Relationships.class).from(path))
+        .apply(
+            MapElements.via(
+                new SimpleFunction<Relationships, KV<String, Relationships>>() {
+                  @Override
+                  public KV<String, Relationships> apply(Relationships input) {
                     return KV.of(input.getId(), input);
                   }
                 }));
