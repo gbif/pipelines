@@ -29,6 +29,18 @@ import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.*;
 import org.slf4j.MDC;
 
+/**
+ * Clustering pipeline which is a Apache Beam port of the work in the module
+ * https://github.com/gbif/occurrence/tree/master/occurrence-clustering
+ *
+ * <p>This pipeline required that IndexRecords have been generated in a prior step for all datasets
+ * (see @{@link IndexRecordPipeline}.
+ *
+ * <p>The IndexRecords which are stored on the filesystem in AVRO format are read and used to
+ * generate clusters using the algorithm from the occurrence-clustering module.
+ *
+ * <p>The output is then write to AVRO files using the @{@link Relationships} AVRO class.
+ */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ClusteringPipeline {
