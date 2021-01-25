@@ -2,19 +2,21 @@ package org.gbif.pipelines.diagnostics;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
+import java.io.File;
+import java.util.Objects;
+import javax.validation.constraints.NotNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.hadoop.hbase.client.Connection;
 import org.gbif.dwc.Archive;
 import org.gbif.dwc.DwcFiles;
 import org.gbif.dwc.record.Record;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.diagnostics.strategy.DeletionStrategy.DeletionStrategyType;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
+import org.gbif.pipelines.keygen.common.HbaseConnectionFactory;
+import org.gbif.pipelines.keygen.config.KeygenConfig;
 import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
-
-import javax.validation.constraints.NotNull;
-import java.io.File;
-import java.util.Objects;
 
 @Slf4j
 public class DiagnosticTool {
@@ -30,6 +32,14 @@ public class DiagnosticTool {
   @Parameter(names = "--tmp")
   @NotNull
   public File tmp = new File("/tmp/dwca-diagnostic-tool");
+
+  @Parameter(names = "--zk-connection", description = "Zookeeper connection")
+  @NotNull
+  public String zkConnection;
+
+  @Parameter(names = "--lookup-table", description = "Occurrence lookup table")
+  @NotNull
+  public String lookupTable;
 
   @Parameter(
       names = "--deletion-strategy",
@@ -53,8 +63,11 @@ public class DiagnosticTool {
     if (main.help) {
       jc.usage();
     }
-    Objects.requireNonNull(main.directory, "--input-directory can't be null");
-    Objects.requireNonNull(main.deletionStrategyType, "--deletion-strategy can't be null");
+    Objects.requireNonNull(main.directory, "--input-directory can't be null, use --help");
+    Objects.requireNonNull(
+        main.deletionStrategyType, "--deletion-strategy can't be null, use --help");
+    Objects.requireNonNull(main.zkConnection, "--zk-connection can't be null, use --help");
+    Objects.requireNonNull(main.lookupTable, "--lookup-table can't be null, use --help");
     main.run();
   }
 
@@ -67,7 +80,11 @@ public class DiagnosticTool {
 
     Archive dwca = DwcFiles.fromCompressed(directory.toPath(), tmp.toPath());
 
-    HBaseLockingKeyService keygenService = null; // Init
+    KeygenConfig cfg =
+        KeygenConfig.builder().zkConnectionString(zkConnection).lookupTable(lookupTable).create();
+
+    Connection connection = HbaseConnectionFactory.getInstance(zkConnection).getConnection();
+    HBaseLockingKeyService keygenService = new HBaseLockingKeyService(cfg, connection, datasetKey);
 
     for (Record r : dwca.getCore()) {
       String ic = r.value(DwcTerm.institutionCode);
@@ -77,7 +94,9 @@ public class DiagnosticTool {
 
       String triplet = OccurrenceKeyBuilder.buildKey(ic, cc, cn).orElse(null);
 
-      deletionStrategyType.deleteKeys(keygenService, triplet, occID);
+      deletionStrategyType
+          .getKeysToDelete(keygenService, triplet, occID)
+          .forEach(System.out::println);
     }
   }
 }
