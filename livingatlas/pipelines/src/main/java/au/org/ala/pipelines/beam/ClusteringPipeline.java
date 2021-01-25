@@ -5,6 +5,7 @@ import au.org.ala.clustering.RelationshipAssertion;
 import au.org.ala.pipelines.options.AllDatasetsPipelinesOptions;
 import au.org.ala.pipelines.options.ClusteringPipelineOptions;
 import au.org.ala.pipelines.util.VersionInfo;
+import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationUtils;
 import java.io.FileNotFoundException;
@@ -22,7 +23,9 @@ import org.apache.beam.sdk.transforms.*;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.directory.api.util.Strings;
+import org.apache.hadoop.fs.FileSystem;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.*;
 import org.slf4j.MDC;
 
@@ -66,6 +69,9 @@ public class ClusteringPipeline {
 
     log.info("Creating a pipeline from options");
     Pipeline pipeline = Pipeline.create(options);
+
+    // clear previous runs
+    clearPreviousClustering(options);
 
     // read index records
     PCollection<IndexRecord> indexRecords = loadIndexRecords(options, pipeline);
@@ -114,13 +120,14 @@ public class ClusteringPipeline {
                         if (Strings.isNotEmpty(builder.getSpeciesKey())
                             && Strings.isNotEmpty(builder.getBasisOfRecord())
                             && specimenBORs.contains(builder.getBasisOfRecord())) {
+
                           // output hashes for each combination
                           Arrays.asList(
-                                  source.getStrings().get("occurrenceID"),
-                                  source.getStrings().get("fieldNumber"),
-                                  source.getStrings().get("recordNumber"),
-                                  source.getStrings().get("catalogNumber"),
-                                  source.getStrings().get("otherCatalogNumbers"))
+                                  builder.getOccurrenceID(),
+                                  builder.getFieldNumber(),
+                                  builder.getRecordNumber(),
+                                  builder.getCatalogNumber(),
+                                  builder.getOtherCatalogNumbers())
                               .stream()
                               .filter(
                                   value ->
@@ -140,6 +147,7 @@ public class ClusteringPipeline {
                                               .build()));
                         }
 
+                        // hashes for all records
                         if (builder.getDecimalLatitude() != null
                             && builder.getDecimalLongitude() != null
                             && builder.getYear() != null
@@ -219,25 +227,6 @@ public class ClusteringPipeline {
                       }
                     }));
 
-    candidates.apply(
-        AvroIO.write(ClusteringCandidates.class)
-            .to(options.getClusteringPath() + "/candidates/candidates")
-            .withSuffix(".avro")
-            .withCodec(BASE_CODEC));
-
-    /**
-     * SELECT t1.gbifId as id1, t1.datasetKey as ds1, t2.gbifId as id2, t2.datasetKey as ds2 FROM
-     * DF_hashed t1 JOIN DF_hashed t2 ON t1.hash = t2.hash WHERE t1.gbifId < t2.gbifId AND
-     * t1.datasetKey != t2.datasetKey GROUP BY t1.gbifId, t1.datasetKey, t2.gbifId, t2.datasetKey
-     * """);
-     */
-
-    // process occurrence feature pairs, skipping pairs from the same dataset....
-
-    // hashKey -> candidate
-
-    // what we want  UUID -> List<RelationshipAssertion>
-
     // need to Group by UUID
     PCollection<KV<String, Relationship>> relationships =
         candidates.apply(
@@ -270,7 +259,7 @@ public class ClusteringPipeline {
                                     .setReasons(assertion.getJustificationAsDelimited())
                                     .build();
 
-                            // output for both
+                            // output the relationship in both directions
                             out.output(KV.of(o1.getId(), relationship));
                             out.output(KV.of(o2.getId(), relationship));
                           }
@@ -306,6 +295,13 @@ public class ClusteringPipeline {
 
     // write candidates out to disk ??
     pipeline.run().waitUntilFinish();
+  }
+
+  private static void clearPreviousClustering(ClusteringPipelineOptions options) {
+    FileSystem fs =
+        FsUtils.getFileSystem(
+            options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getInputPath());
+    ALAFsUtils.deleteIfExist(fs, options.getClusteringPath());
   }
 
   private static PCollection<IndexRecord> loadIndexRecords(
