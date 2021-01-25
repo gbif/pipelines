@@ -9,13 +9,13 @@ import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 public interface ClusteringPipelineOptions
     extends PipelineOptions, InterpretationPipelineOptions, AllDatasetsPipelinesOptions {
 
-  @Description("Path to JackKnife avro files")
+  @Description("Path to clustering avro files")
   @Default.String("")
   String getClusteringPath();
 
-  void setClusteringPath(String jackKnifePath);
+  void setClusteringPath(String clusteringPath);
 
-  @Description("Path to JackKnife avro files")
+  @Description("Whether to dump out candidates for debug")
   @Default.Boolean(false)
   Boolean getDumpCandidatesForDebug();
 
