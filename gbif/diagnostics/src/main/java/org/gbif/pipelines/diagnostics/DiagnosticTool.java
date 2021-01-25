@@ -26,9 +26,18 @@ public class DiagnosticTool {
   @NotNull
   public String datasetKey;
 
-  @Parameter(names = "--input-directory", description = "DWCA archive full input path")
-  @NotNull
-  public File directory;
+  @Parameter(
+      names = "--input-directory",
+      description = "Use DWCA archive as a lookup keys source, provide full input path")
+  public File dwcaDirectory;
+
+  @Parameter(names = "--triplet-lookup-key", description = "Use single triplet as a lookup key")
+  public String tripletLookupKey;
+
+  @Parameter(
+      names = "--occurrenceID-lookup-key",
+      description = "Use single occurrenceID as a lookup key")
+  public String occurrenceIdLookupKey;
 
   @Parameter(names = "--tmp")
   @NotNull
@@ -70,23 +79,38 @@ public class DiagnosticTool {
     if (main.help) {
       jc.usage();
     }
-    Objects.requireNonNull(main.directory, "--input-directory can't be null, use --help");
+
+    boolean useTriple = main.tripletLookupKey != null && !main.tripletLookupKey.isEmpty();
+    boolean useOccurrenceId =
+        main.occurrenceIdLookupKey != null && !main.occurrenceIdLookupKey.isEmpty();
+    boolean useDwcaDirectory = main.dwcaDirectory != null && main.dwcaDirectory.exists();
+
+    if (!useDwcaDirectory && !useTriple && !useOccurrenceId) {
+      log.error("Lookup source is empty, use one of 3 variants");
+      jc.usage();
+      System.exit(-1);
+    }
+
+    if (useDwcaDirectory && (useTriple || useOccurrenceId)) {
+      log.error("Lookup source can't be dwca and triplet/occurrenceId");
+      jc.usage();
+      System.exit(-1);
+    }
+
     Objects.requireNonNull(
         main.deletionStrategyType, "--deletion-strategy can't be null, use --help");
     Objects.requireNonNull(main.zkConnection, "--zk-connection can't be null, use --help");
     Objects.requireNonNull(main.lookupTable, "--lookup-table can't be null, use --help");
     Objects.requireNonNull(main.onlyCollisions, "--only-collisions can't be null, use --help");
+
     main.run();
   }
 
-  @SneakyThrows
   public void run() {
     log.info(
         "Running diagnostic tool for - {}, using deletion strategy - {}",
-        directory,
+        dwcaDirectory,
         deletionStrategyType);
-
-    Archive dwca = DwcFiles.fromCompressed(directory.toPath(), tmp.toPath());
 
     KeygenConfig cfg =
         KeygenConfig.builder().zkConnectionString(zkConnection).lookupTable(lookupTable).create();
@@ -94,6 +118,17 @@ public class DiagnosticTool {
     Connection connection = HbaseConnectionFactory.getInstance(zkConnection).getConnection();
     HBaseLockingKeyService keygenService = new HBaseLockingKeyService(cfg, connection, datasetKey);
 
+    if (dwcaDirectory != null) {
+      runDwca(keygenService);
+    } else {
+      runSingleLookup(keygenService);
+    }
+  }
+
+  @SneakyThrows
+  public void runDwca(HBaseLockingKeyService keygenService) {
+
+    Archive dwca = DwcFiles.fromCompressed(dwcaDirectory.toPath(), tmp.toPath());
     for (Record r : dwca.getCore()) {
       String ic = r.value(DwcTerm.institutionCode);
       String cc = r.value(DwcTerm.collectionCode);
@@ -106,5 +141,11 @@ public class DiagnosticTool {
           .getKeysToDelete(keygenService, onlyCollisions, triplet, occID)
           .forEach(System.out::println);
     }
+  }
+
+  public void runSingleLookup(HBaseLockingKeyService keygenService) {
+    deletionStrategyType
+        .getKeysToDelete(keygenService, onlyCollisions, tripletLookupKey, occurrenceIdLookupKey)
+        .forEach(System.out::println);
   }
 }
