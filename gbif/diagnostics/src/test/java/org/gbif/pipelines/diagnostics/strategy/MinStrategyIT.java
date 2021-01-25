@@ -1,7 +1,5 @@
 package org.gbif.pipelines.diagnostics.strategy;
 
-import java.io.IOException;
-import java.util.Set;
 import org.gbif.pipelines.diagnostics.common.HbaseServer;
 import org.gbif.pipelines.diagnostics.common.HbaseStore;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
@@ -11,7 +9,10 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-public class MinStrategyTest {
+import java.io.IOException;
+import java.util.Set;
+
+public class MinStrategyIT {
 
   /** {@link ClassRule} requires this field to be public. */
   @ClassRule public static final HbaseServer HBASE_SERVER = new HbaseServer();
@@ -44,7 +45,8 @@ public class MinStrategyTest {
         new HBaseLockingKeyService(HbaseServer.CFG, HBASE_SERVER.getConnection(), datasetKey);
 
     // When
-    Set<String> keysToDelete = new MinStrategy().getKeysToDelete(keygenService, triplet, occId);
+    Set<String> keysToDelete =
+        new MinStrategy().getKeysToDelete(keygenService, false, triplet, occId);
 
     // Should
     Assert.assertEquals(1, keysToDelete.size());
@@ -73,7 +75,8 @@ public class MinStrategyTest {
         new HBaseLockingKeyService(HbaseServer.CFG, HBASE_SERVER.getConnection(), datasetKey);
 
     // When
-    Set<String> keysToDelete = new MinStrategy().getKeysToDelete(keygenService, triplet, occId);
+    Set<String> keysToDelete =
+        new MinStrategy().getKeysToDelete(keygenService, false, triplet, occId);
 
     // Should
     Assert.assertEquals(0, keysToDelete.size());
@@ -102,7 +105,8 @@ public class MinStrategyTest {
         new HBaseLockingKeyService(HbaseServer.CFG, HBASE_SERVER.getConnection(), datasetKey);
 
     // When
-    Set<String> keysToDelete = new MinStrategy().getKeysToDelete(keygenService, triplet, occId);
+    Set<String> keysToDelete =
+        new MinStrategy().getKeysToDelete(keygenService, false, triplet, occId);
 
     // Should
     Assert.assertEquals(1, keysToDelete.size());
@@ -128,7 +132,8 @@ public class MinStrategyTest {
         new HBaseLockingKeyService(HbaseServer.CFG, HBASE_SERVER.getConnection(), datasetKey);
 
     // When
-    Set<String> keysToDelete = new MinStrategy().getKeysToDelete(keygenService, triplet, occId);
+    Set<String> keysToDelete =
+        new MinStrategy().getKeysToDelete(keygenService, false, triplet, occId);
 
     // Should
     Assert.assertEquals(0, keysToDelete.size());

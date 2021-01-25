@@ -1,21 +1,37 @@
 package org.gbif.pipelines.diagnostics.strategy;
 
-import java.util.Collections;
-import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
+
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
 
 @Slf4j
 public class TripletStrategy implements DeletionStrategy {
   @Override
   public Set<String> getKeysToDelete(
-      HBaseLockingKeyService keygenService, String triplet, String occurrenceId) {
+      HBaseLockingKeyService keygenService,
+      boolean onlyCollisions,
+      String triplet,
+      String occurrenceId) {
 
-    if (triplet != null
-        && !triplet.isEmpty()
-        && keygenService.findKey(Collections.singleton(triplet)) != null) {
-      return Collections.singleton(triplet);
+    Optional<Long> tripletKey = LookupKeyUtils.getKey(keygenService, triplet);
+
+    Set<String> keys = new HashSet<>(1);
+    if (!onlyCollisions) {
+      tripletKey.ifPresent(x -> keys.add(triplet));
+      return keys;
     }
-    return Collections.emptySet();
+
+    Optional<Long> occurrenceIdtKey = LookupKeyUtils.getKey(keygenService, occurrenceId);
+
+    if (tripletKey.isPresent()
+        && occurrenceIdtKey.isPresent()
+        && !occurrenceIdtKey.get().equals(tripletKey.get())) {
+      keys.add(triplet);
+    }
+
+    return keys;
   }
 }

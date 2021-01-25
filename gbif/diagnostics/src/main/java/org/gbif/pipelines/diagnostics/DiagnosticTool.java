@@ -2,9 +2,6 @@ package org.gbif.pipelines.diagnostics;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
-import java.io.File;
-import java.util.Objects;
-import javax.validation.constraints.NotNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.hbase.client.Connection;
@@ -17,6 +14,10 @@ import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.keygen.common.HbaseConnectionFactory;
 import org.gbif.pipelines.keygen.config.KeygenConfig;
 import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
+
+import javax.validation.constraints.NotNull;
+import java.io.File;
+import java.util.Objects;
 
 @Slf4j
 public class DiagnosticTool {
@@ -53,6 +54,12 @@ public class DiagnosticTool {
   @NotNull
   public DeletionStrategyType deletionStrategyType;
 
+  @Parameter(
+      names = "--only-collisions",
+      description = "Apply deletion strategy only for IDs with collisions")
+  @NotNull
+  public Boolean onlyCollisions;
+
   @Parameter(names = "--help", description = "Display help information", order = 4)
   public boolean help = false;
 
@@ -68,6 +75,7 @@ public class DiagnosticTool {
         main.deletionStrategyType, "--deletion-strategy can't be null, use --help");
     Objects.requireNonNull(main.zkConnection, "--zk-connection can't be null, use --help");
     Objects.requireNonNull(main.lookupTable, "--lookup-table can't be null, use --help");
+    Objects.requireNonNull(main.onlyCollisions, "--only-collisions can't be null, use --help");
     main.run();
   }
 
@@ -95,7 +103,7 @@ public class DiagnosticTool {
       String triplet = OccurrenceKeyBuilder.buildKey(ic, cc, cn).orElse(null);
 
       deletionStrategyType
-          .getKeysToDelete(keygenService, triplet, occID)
+          .getKeysToDelete(keygenService, onlyCollisions, triplet, occID)
           .forEach(System.out::println);
     }
   }

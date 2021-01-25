@@ -1,31 +1,23 @@
 package org.gbif.pipelines.diagnostics.strategy;
 
+import lombok.extern.slf4j.Slf4j;
+import org.gbif.pipelines.keygen.HBaseLockingKeyService;
+
 import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
-import lombok.extern.slf4j.Slf4j;
-import org.gbif.pipelines.keygen.HBaseLockingKeyService;
-import org.gbif.pipelines.keygen.api.KeyLookupResult;
 
 @Slf4j
 public class MinStrategy implements DeletionStrategy {
   @Override
   public Set<String> getKeysToDelete(
-      HBaseLockingKeyService keygenService, String triplet, String occurrenceId) {
+      HBaseLockingKeyService keygenService,
+      boolean onlyCollisions,
+      String triplet,
+      String occurrenceId) {
 
-    Optional<Long> tripletKey = Optional.empty();
-    if (triplet != null && !triplet.isEmpty()) {
-      tripletKey =
-          Optional.ofNullable(keygenService.findKey(Collections.singleton(triplet)))
-              .map(KeyLookupResult::getKey);
-    }
-
-    Optional<Long> occurrenceIdtKey = Optional.empty();
-    if (occurrenceId != null && !occurrenceId.isEmpty()) {
-      occurrenceIdtKey =
-          Optional.ofNullable(keygenService.findKey(Collections.singleton(occurrenceId)))
-              .map(KeyLookupResult::getKey);
-    }
+    Optional<Long> tripletKey = LookupKeyUtils.getKey(keygenService, triplet);
+    Optional<Long> occurrenceIdtKey = LookupKeyUtils.getKey(keygenService, occurrenceId);
 
     if (!tripletKey.isPresent() || !occurrenceIdtKey.isPresent()) {
       return Collections.emptySet();

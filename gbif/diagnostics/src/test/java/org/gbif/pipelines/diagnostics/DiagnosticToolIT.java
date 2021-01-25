@@ -5,7 +5,7 @@ import org.gbif.pipelines.diagnostics.common.HbaseServer;
 import org.junit.Before;
 import org.junit.ClassRule;
 
-public class DiagnosticToolTest {
+public class DiagnosticToolIT {
 
   /** {@link ClassRule} requires this field to be public. */
   @ClassRule public static final HbaseServer HBASE_SERVER = new HbaseServer();
