@@ -18,6 +18,7 @@ import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
 import javax.validation.constraints.NotNull;
 import java.io.File;
 import java.util.Objects;
+import java.util.Set;
 
 @Slf4j
 public class DiagnosticTool {
@@ -137,15 +138,20 @@ public class DiagnosticTool {
 
       String triplet = OccurrenceKeyBuilder.buildKey(ic, cc, cn).orElse(null);
 
-      deletionStrategyType
-          .getKeysToDelete(keygenService, onlyCollisions, triplet, occID)
-          .forEach(System.out::println);
+      Set<String> keysToDelete =
+          deletionStrategyType.getKeysToDelete(keygenService, onlyCollisions, triplet, occID);
+
+      keysToDelete.forEach(k -> log.info("Delete lookup key - {}", k));
+      keygenService.deleteKeyByUniques(keysToDelete);
     }
   }
 
   public void runSingleLookup(HBaseLockingKeyService keygenService) {
-    deletionStrategyType
-        .getKeysToDelete(keygenService, onlyCollisions, tripletLookupKey, occurrenceIdLookupKey)
-        .forEach(System.out::println);
+    Set<String> keysToDelete =
+        deletionStrategyType.getKeysToDelete(
+            keygenService, onlyCollisions, tripletLookupKey, occurrenceIdLookupKey);
+
+    keysToDelete.forEach(k -> log.info("Delete lookup key - {}", k));
+    keygenService.deleteKeyByUniques(keysToDelete);
   }
 }
