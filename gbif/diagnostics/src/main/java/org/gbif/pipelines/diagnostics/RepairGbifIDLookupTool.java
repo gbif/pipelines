@@ -19,10 +19,7 @@ import org.gbif.pipelines.keygen.common.HbaseConnectionFactory;
 import org.gbif.pipelines.keygen.config.KeygenConfig;
 import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
 
-/**
- * Diagnostic tool to print out the values in occurrenceID and the triplet in each crawl attempt
- * DwC-A. Example usage to print all records for a dataset:
- */
+
 @Slf4j
 @Builder
 public class RepairGbifIDLookupTool {
