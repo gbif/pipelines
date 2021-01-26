@@ -19,7 +19,6 @@ import org.gbif.pipelines.keygen.common.HbaseConnectionFactory;
 import org.gbif.pipelines.keygen.config.KeygenConfig;
 import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
 
-
 @Slf4j
 @Builder
 public class RepairGbifIDLookupTool {
