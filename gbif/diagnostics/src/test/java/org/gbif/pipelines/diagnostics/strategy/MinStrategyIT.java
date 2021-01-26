@@ -1,5 +1,7 @@
 package org.gbif.pipelines.diagnostics.strategy;
 
+import java.io.IOException;
+import java.util.Set;
 import org.gbif.pipelines.diagnostics.common.HbaseServer;
 import org.gbif.pipelines.diagnostics.common.HbaseStore;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
@@ -8,9 +10,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.util.Set;
 
 public class MinStrategyIT {
 

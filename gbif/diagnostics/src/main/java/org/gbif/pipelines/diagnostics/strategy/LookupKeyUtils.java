@@ -1,12 +1,11 @@
 package org.gbif.pipelines.diagnostics.strategy;
 
+import java.util.Collections;
+import java.util.Optional;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.keygen.api.KeyLookupResult;
-
-import java.util.Collections;
-import java.util.Optional;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class LookupKeyUtils {

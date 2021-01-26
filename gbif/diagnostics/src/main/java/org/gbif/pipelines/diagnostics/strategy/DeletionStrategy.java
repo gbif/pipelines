@@ -1,8 +1,7 @@
 package org.gbif.pipelines.diagnostics.strategy;
 
-import org.gbif.pipelines.keygen.HBaseLockingKeyService;
-
 import java.util.Set;
+import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 
 public interface DeletionStrategy {
 
@@ -17,7 +16,7 @@ public interface DeletionStrategy {
     max(new MaxStrategy()),
     occurrenceID(new OccurrenceIdStrategy()),
     triplet(new TripletStrategy()),
-    all(new AllStrategy());
+    both(new BothStrategy());
 
     private final DeletionStrategy deletionStrategy;
 

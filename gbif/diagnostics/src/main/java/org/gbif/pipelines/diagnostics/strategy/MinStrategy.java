@@ -1,11 +1,10 @@
 package org.gbif.pipelines.diagnostics.strategy;
 
-import lombok.extern.slf4j.Slf4j;
-import org.gbif.pipelines.keygen.HBaseLockingKeyService;
-
 import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
+import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 
 @Slf4j
 public class MinStrategy implements DeletionStrategy {

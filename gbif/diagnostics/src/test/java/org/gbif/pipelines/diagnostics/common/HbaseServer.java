@@ -29,6 +29,10 @@ public class HbaseServer extends ExternalResource {
   private static final byte[] LOOKUP_TABLE = Bytes.toBytes(CFG.getLookupTable());
   private static final String CF_NAME = "o";
   private static final byte[] CF = Bytes.toBytes(CF_NAME);
+  private static final byte[] COUNTER_TABLE = Bytes.toBytes(CFG.getCounterTable());
+  private static final String COUNTER_CF_NAME = "o";
+  private static final byte[] COUNTER_CF = Bytes.toBytes(COUNTER_CF_NAME);
+  private static final byte[] OCCURRENCE_TABLE = Bytes.toBytes(CFG.getOccurrenceTable());
 
   private static final HBaseTestingUtility TEST_UTIL = new HBaseTestingUtility();
 
@@ -44,9 +48,9 @@ public class HbaseServer extends ExternalResource {
   protected void before() throws Exception {
     log.info("Create hbase mini-cluster");
     TEST_UTIL.startMiniCluster(1);
-
     TEST_UTIL.createTable(LOOKUP_TABLE, CF);
-
+    TEST_UTIL.createTable(COUNTER_TABLE, COUNTER_CF);
+    TEST_UTIL.createTable(OCCURRENCE_TABLE, CF);
     connection = ConnectionFactory.createConnection(TEST_UTIL.getConfiguration());
 
     lookupTableStore =

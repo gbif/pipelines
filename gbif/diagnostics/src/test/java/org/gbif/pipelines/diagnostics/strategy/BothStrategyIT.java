@@ -1,5 +1,7 @@
 package org.gbif.pipelines.diagnostics.strategy;
 
+import java.io.IOException;
+import java.util.Set;
 import org.gbif.pipelines.diagnostics.common.HbaseServer;
 import org.gbif.pipelines.diagnostics.common.HbaseStore;
 import org.gbif.pipelines.diagnostics.common.HbaseStore.KV;
@@ -10,10 +12,7 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.util.Set;
-
-public class AllStrategyIT {
+public class BothStrategyIT {
 
   /** {@link ClassRule} requires this field to be public. */
   @ClassRule public static final HbaseServer HBASE_SERVER = new HbaseServer();
@@ -50,7 +49,7 @@ public class AllStrategyIT {
 
     // When
     Set<String> keysToDelete =
-        new AllStrategy().getKeysToDelete(keygenService, false, triplet, occId);
+        new BothStrategy().getKeysToDelete(keygenService, false, triplet, occId);
 
     // Should
     Assert.assertEquals(2, keysToDelete.size());
@@ -85,7 +84,7 @@ public class AllStrategyIT {
 
     // When
     Set<String> keysToDelete =
-        new AllStrategy().getKeysToDelete(keygenService, true, triplet, occId);
+        new BothStrategy().getKeysToDelete(keygenService, true, triplet, occId);
 
     // Should
     Assert.assertEquals(0, keysToDelete.size());
@@ -118,7 +117,7 @@ public class AllStrategyIT {
 
     // When
     Set<String> keysToDelete =
-        new AllStrategy().getKeysToDelete(keygenService, true, triplet, occId);
+        new BothStrategy().getKeysToDelete(keygenService, true, triplet, occId);
 
     // Should
     Assert.assertEquals(2, keysToDelete.size());

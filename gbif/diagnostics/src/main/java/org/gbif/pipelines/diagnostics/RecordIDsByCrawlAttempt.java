@@ -3,16 +3,16 @@ package org.gbif.pipelines.diagnostics;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Comparator;
 import javax.validation.constraints.NotNull;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.gbif.dwc.Archive;
 import org.gbif.dwc.DwcFiles;
 import org.gbif.dwc.record.Record;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.utils.file.ClosableIterator;
 
 /**
  * Diagnostic tool to print out the values in occurrenceID and the triplet in each crawl attempt
@@ -24,6 +24,7 @@ import org.gbif.utils.file.ClosableIterator;
  * --directory /crawler/dwca/dataset1 --tmp /tmp/scratch
  * </pre>
  */
+@Slf4j
 public class RecordIDsByCrawlAttempt {
   private static final String ARCHIVE_REGEX = ".{36}.[0-9]*.dwca"; // filename format of attempts
 
@@ -56,45 +57,42 @@ public class RecordIDsByCrawlAttempt {
                     && !Files.isSymbolicLink(f.toPath())
                     && f.getName().matches(ARCHIVE_REGEX));
 
+    if (archives == null) {
+      log.error("Archives are empty or null");
+      System.exit(-1);
+    }
+
     // sort by the attempt numerically
     Arrays.sort(archives, Comparator.comparingInt(RecordIDsByCrawlAttempt::attemptFromName));
 
     // System console allowing to read or pipe to other processes
-    System.out.println(
-        String.format(
-            "%s\t%s\t%s\t%s\t%s",
-            "Attempt", "institutionCode", "collectionCode", "catalogNumber", "occurrenceID"));
-    Arrays.asList(archives)
-        .forEach(
-            a -> {
-              try {
-                Archive dwca = DwcFiles.fromCompressed(a.toPath(), tmp.toPath());
-                ClosableIterator<Record> iter = dwca.getCore().iterator();
-                while (iter.hasNext()) {
-                  Record r = iter.next();
-                  String cn = r.value(DwcTerm.catalogNumber);
-                  String occID = r.value(DwcTerm.occurrenceID);
-                  if ((cn != null && cn.equals(catalogNumber))
-                      || (occID != null && occID.equals(occurrenceID))) {
-
-                    System.out.println(
-                        String.format(
-                            "%d\t%s\t%s\t%s\t%s",
-                            attemptFromName(a),
-                            r.value(DwcTerm.institutionCode),
-                            r.value(DwcTerm.collectionCode),
-                            r.value(DwcTerm.catalogNumber),
-                            r.value(DwcTerm.occurrenceID)));
-                  }
-                }
-
-              } catch (IOException e) {
-                throw new RuntimeException(e);
-              }
-            });
+    System.out.printf(
+        "%s\t%s\t%s\t%s\t%s%n",
+        "Attempt", "institutionCode", "collectionCode", "catalogNumber", "occurrenceID");
+    Arrays.asList(archives).forEach(this::print);
   }
 
   private static int attemptFromName(File file) {
     return Integer.parseInt(file.getName().substring(37).replace(".dwca", ""));
+  }
+
+  @SneakyThrows
+  private void print(File a) {
+    Archive dwca = DwcFiles.fromCompressed(a.toPath(), tmp.toPath());
+    for (Record r : dwca.getCore()) {
+      String cn = r.value(DwcTerm.catalogNumber);
+      String occID = r.value(DwcTerm.occurrenceID);
+      if ((cn != null && cn.equals(catalogNumber))
+          || (occID != null && occID.equals(occurrenceID))) {
+
+        System.out.printf(
+            "%d\t%s\t%s\t%s\t%s%n",
+            attemptFromName(a),
+            r.value(DwcTerm.institutionCode),
+            r.value(DwcTerm.collectionCode),
+            r.value(DwcTerm.catalogNumber),
+            r.value(DwcTerm.occurrenceID));
+      }
+    }
   }
 }

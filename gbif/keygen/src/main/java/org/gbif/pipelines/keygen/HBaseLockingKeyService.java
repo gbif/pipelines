@@ -433,12 +433,11 @@ public class HBaseLockingKeyService implements Serializable {
     checkNotNull(scope, "scope can't be null");
 
     // craft a delete for every uniqueString
-    Set<String> lookupKeys = OccurrenceKeyBuilder.buildKeys(uniqueStrings, scope);
-
     List<Delete> keysToDelete =
-        lookupKeys.stream()
-            .map(lookupKey -> new Delete(Bytes.toBytes(lookupKey)))
-            .collect(Collectors.toCollection(() -> new ArrayList<>(lookupKeys.size())));
+        OccurrenceKeyBuilder.buildKeys(uniqueStrings, scope).stream()
+            .map(k -> HBaseStore.saltKey(k, NUMBER_OF_BUCKETS))
+            .map(Delete::new)
+            .collect(Collectors.toList());
 
     if (!keysToDelete.isEmpty()) {
       try (Table lookupTable = connection.getTable(lookupTableName)) {
