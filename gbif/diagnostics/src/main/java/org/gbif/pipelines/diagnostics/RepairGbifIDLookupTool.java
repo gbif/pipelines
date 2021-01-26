@@ -23,7 +23,7 @@ import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
 @Builder
 public class RepairGbifIDLookupTool {
 
-  @Parameter(names = "--datase-key", description = "GBIF registry ID for the dataset")
+  @Parameter(names = "--dataset-key", description = "GBIF registry ID for the dataset")
   @NotNull
   public String datasetKey;
 

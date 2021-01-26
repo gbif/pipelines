@@ -30,7 +30,7 @@ public class RepairGbifIDLookupToolIT {
 
     // State
     String[] args = {
-      "--datase-key",
+      "--dataset-key",
       "508089ca-ddb4-4112-b2cb-cb1bff8f39ad",
       "--lookup-table",
       HbaseServer.CFG.getLookupTable(),
@@ -50,7 +50,7 @@ public class RepairGbifIDLookupToolIT {
     String[] args = {
       "--input-directory",
       this.getClass().getResource("/dwca").getFile(),
-      "--datase-key",
+      "--dataset-key",
       "508089ca-ddb4-4112-b2cb-cb1bff8f39ad",
       "--triplet-lookup-key",
       "triplet",
@@ -72,7 +72,7 @@ public class RepairGbifIDLookupToolIT {
 
     // State
     String[] args = {
-      "--datase-key",
+      "--dataset-key",
       "508089ca-ddb4-4112-b2cb-cb1bff8f39ad",
       "--triplet-lookup-key",
       "triplet",
@@ -92,7 +92,7 @@ public class RepairGbifIDLookupToolIT {
 
     // State
     String[] args = {
-      "--datase-key",
+      "--dataset-key",
       "508089ca-ddb4-4112-b2cb-cb1bff8f39ad",
       "--triplet-lookup-key",
       "triplet",
