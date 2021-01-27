@@ -1,5 +1,6 @@
 package org.gbif.pipelines.diagnostics.strategy;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Set;
 import org.gbif.pipelines.diagnostics.common.HbaseServer;
@@ -23,7 +24,7 @@ public class BothStrategyIT {
   }
 
   @Test
-  public void allTest() {
+  public void bothTest() {
 
     // State
     String datasetKey = "508089ca-ddb4-4112-b2cb-cb1bff8f39ad";
@@ -58,7 +59,7 @@ public class BothStrategyIT {
   }
 
   @Test
-  public void allNoCollisionTest() {
+  public void bothNoCollisionTest() {
 
     // State
     String datasetKey = "508089ca-ddb4-4112-b2cb-cb1bff8f39ad";
@@ -91,7 +92,7 @@ public class BothStrategyIT {
   }
 
   @Test
-  public void allCollisionTest() {
+  public void bothCollisionTest() {
 
     // State
     String datasetKey = "508089ca-ddb4-4112-b2cb-cb1bff8f39ad";

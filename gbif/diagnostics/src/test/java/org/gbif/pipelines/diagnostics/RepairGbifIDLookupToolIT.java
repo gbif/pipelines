@@ -48,7 +48,7 @@ public class RepairGbifIDLookupToolIT {
 
     // State
     String[] args = {
-      "--input-directory",
+      "--input-source",
       this.getClass().getResource("/dwca").getFile(),
       "--dataset-key",
       "508089ca-ddb4-4112-b2cb-cb1bff8f39ad",
@@ -221,7 +221,7 @@ public class RepairGbifIDLookupToolIT {
     // When
     RepairGbifIDLookupTool.builder()
         .datasetKey(datasetKey)
-        .dwcaDirectory(dwca)
+        .dwcaSource(dwca)
         .lookupTable(HbaseServer.CFG.getLookupTable())
         .counterTable(HbaseServer.CFG.getCounterTable())
         .occurrenceTable(HbaseServer.CFG.getOccurrenceTable())
