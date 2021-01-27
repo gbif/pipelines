@@ -3,8 +3,8 @@ package org.gbif.pipelines.diagnostics;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import java.io.File;
-import java.util.Set;
 import java.nio.file.Path;
+import java.util.Set;
 import java.util.UUID;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -122,7 +122,7 @@ public class RepairGbifIDLookupTool {
   public void run() {
     log.info(
         "Running diagnostic tool for - {}, using deletion strategy - {}",
-            dwcaSource,
+        dwcaSource,
         deletionStrategyType);
 
     KeygenConfig cfg =

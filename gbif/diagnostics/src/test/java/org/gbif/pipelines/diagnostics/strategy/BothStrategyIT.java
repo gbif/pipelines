@@ -1,6 +1,5 @@
 package org.gbif.pipelines.diagnostics.strategy;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Set;
 import org.gbif.pipelines.diagnostics.common.HbaseServer;
