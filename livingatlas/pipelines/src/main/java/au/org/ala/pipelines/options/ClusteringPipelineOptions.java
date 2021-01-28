@@ -10,7 +10,7 @@ public interface ClusteringPipelineOptions
     extends PipelineOptions, InterpretationPipelineOptions, AllDatasetsPipelinesOptions {
 
   @Description("Path to clustering avro files")
-  @Default.String("")
+  @Default.String("/data/pipelines-clustering")
   String getClusteringPath();
 
   void setClusteringPath(String clusteringPath);
