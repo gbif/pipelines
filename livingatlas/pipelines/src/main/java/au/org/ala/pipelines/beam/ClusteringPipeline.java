@@ -1,7 +1,9 @@
 package au.org.ala.pipelines.beam;
 
+import au.org.ala.clustering.ClusterPair;
 import au.org.ala.clustering.OccurrenceRelationships;
 import au.org.ala.clustering.RelationshipAssertion;
+import au.org.ala.clustering.RepresentativeRecordUtils;
 import au.org.ala.pipelines.options.AllDatasetsPipelinesOptions;
 import au.org.ala.pipelines.options.ClusteringPipelineOptions;
 import au.org.ala.pipelines.util.VersionInfo;
@@ -9,9 +11,7 @@ import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationUtils;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -68,7 +68,7 @@ public class ClusteringPipeline {
     // JackKnife is run across all datasets.
     options.setDatasetId("*");
 
-    MDC.put("datasetId", "*");
+    MDC.put("datasetId", "ALL_RECORDS");
     MDC.put("attempt", options.getAttempt().toString());
     MDC.put("step", "CLUSTERING");
 
@@ -250,32 +250,73 @@ public class ClusteringPipeline {
                       OutputReceiver<KV<String, Relationship>> out) {
 
                     List<OccurrenceFeatures> candidates = source.getCandidates();
+                    List<ClusterPair> pairs = new ArrayList<>();
+
                     while (!candidates.isEmpty()) {
 
                       OccurrenceFeatures o1 = candidates.remove(0);
 
                       for (OccurrenceFeatures o2 : candidates) {
+
                         // if datasetKey != datasetKey
                         if (!o1.getDatasetKey().equals(o2.getDatasetKey())) {
-
+                          // do a complete comparison to see if the
+                          // records have a relationship
                           RelationshipAssertion assertion =
                               OccurrenceRelationships.generate(o1, o2);
+
                           if (assertion != null) {
-
-                            Relationship relationship =
-                                Relationship.newBuilder()
-                                    .setId1(o1.getId())
-                                    .setId2(o2.getId())
-                                    .setDataset1(o1.getDatasetKey())
-                                    .setDataset2(o2.getDatasetKey())
-                                    .setReasons(assertion.getJustificationAsDelimited())
-                                    .build();
-
-                            // output the relationship in both directions
-                            out.output(KV.of(o1.getId(), relationship));
-                            out.output(KV.of(o2.getId(), relationship));
+                            pairs.add(
+                                ClusterPair.builder().o1(o1).o2(o2).assertion(assertion).build());
                           }
                         }
+                      }
+                    }
+
+                    if (pairs.size() > 10) {
+                      log.error("Finding clusters of size: " + pairs.size());
+                    }
+
+                    // cluster occurrences
+                    List<List<OccurrenceFeatures>> clusters =
+                        RepresentativeRecordUtils.createClusters(pairs);
+
+                    if (clusters.size() > 1) {
+                      log.error("Finding no of clusters of size: " + clusters.size());
+                    }
+
+                    // within each cluster, nominate the
+                    // RepresentativeRecord (primary) and the AssociatedRecord (duplicate)
+                    for (List<OccurrenceFeatures> cluster : clusters) {
+
+                      if (cluster.size() < 30) {
+
+                        // find the representative record
+                        OccurrenceFeatures representativeRecord =
+                            RepresentativeRecordUtils.findRepresentativeRecord(cluster);
+
+                        // determine representative records
+                        // Note: we are currently losing the relationship assertions at this point
+                        Relationship.Builder builder =
+                            Relationship.newBuilder()
+                                .setRepId(representativeRecord.getId())
+                                .setRepDataset(representativeRecord.getDatasetKey());
+
+                        for (OccurrenceFeatures associatedRecord : cluster) {
+
+                          if (!associatedRecord.equals(representativeRecord)) {
+                            Relationship r =
+                                builder
+                                    .setDupId(associatedRecord.getId())
+                                    .setDupDataset(associatedRecord.getDatasetKey())
+                                    .build();
+
+                            out.output(KV.of(representativeRecord.getId(), r));
+                            out.output(KV.of(associatedRecord.getId(), r));
+                          }
+                        }
+                      } else {
+                        log.warn("Avoiding marking a cluster of size {}", cluster.size());
                       }
                     }
                   }
@@ -301,7 +342,7 @@ public class ClusteringPipeline {
     // write out to AVRO for debug
     relationshipsGrouped.apply(
         AvroIO.write(Relationships.class)
-            .to(options.getClusteringPath() + "/relationships")
+            .to(options.getClusteringPath() + "/relationships/relationships")
             .withSuffix(".avro")
             .withCodec(BASE_CODEC));
 
@@ -310,10 +351,13 @@ public class ClusteringPipeline {
   }
 
   private static void clearPreviousClustering(ClusteringPipelineOptions options) {
+
+    log.info("Clearing clustering path {}", options.getClusteringPath());
     FileSystem fs =
         FsUtils.getFileSystem(
             options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getInputPath());
-    ALAFsUtils.deleteIfExist(fs, options.getClusteringPath());
+    ALAFsUtils.deleteIfExist(fs, options.getClusteringPath() + "/relationships");
+    log.info("Cleared clustering path {}.", options.getClusteringPath());
   }
 
   private static PCollection<IndexRecord> loadIndexRecords(

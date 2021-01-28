@@ -9,10 +9,7 @@ import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationUtils;
 import avro.shaded.com.google.common.collect.ImmutableMap;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
@@ -248,10 +245,14 @@ public class IndexRecordToSolrPipeline {
         KV<String, KV<IndexRecord, Relationships>> e = c.element();
 
         IndexRecord indexRecord = e.getValue().getKey();
+        String id = indexRecord.getId();
+
         Relationships jkor = e.getValue().getValue();
 
         Map<String, List<String>> multiValues = indexRecord.getMultiValues();
         Map<String, Boolean> booleans = indexRecord.getBooleans();
+        Map<String, String> strings = indexRecord.getStrings();
+        Map<String, Integer> ints = indexRecord.getInts();
 
         if (multiValues == null) {
           multiValues = new HashMap<>();
@@ -263,23 +264,41 @@ public class IndexRecordToSolrPipeline {
           indexRecord.setBooleans(booleans);
         }
 
+        if (strings == null) {
+          strings = new HashMap<>();
+          indexRecord.setStrings(strings);
+        }
+
+        if (ints == null) {
+          ints = new HashMap<>();
+          indexRecord.setInts(ints);
+        }
+
         if (jkor != nullClustering) {
 
           booleans.put("isClustered", true);
 
-          List<String> id1s =
+          List<String> representativeIds =
               jkor.getRelationships().stream()
-                  .map(Relationship::getId1)
-                  .collect(Collectors.toList());
-          List<String> id2s =
-              jkor.getRelationships().stream()
-                  .map(Relationship::getId2)
+                  .map(Relationship::getRepId)
                   .collect(Collectors.toList());
 
-          id1s.addAll(id2s);
-          id1s.remove(indexRecord.getId());
+          List<String> duplicateIds =
+              jkor.getRelationships().stream()
+                  .map(Relationship::getDupId)
+                  .collect(Collectors.toList());
 
-          multiValues.put("clusteredWith", id1s);
+          multiValues.put("representativeRecords", representativeIds);
+          multiValues.put("duplicateRecords", duplicateIds);
+          ints.put("representativeRecordCount", representativeIds.size());
+          ints.put("duplicateRecordCount", duplicateIds.size());
+
+          if (representativeIds.contains(id) && duplicateIds.contains(id))
+            strings.put("duplicateStatus", "BOTH");
+          else if (representativeIds.contains(id))
+            strings.put("duplicateStatus", "REPRESENTATIVE_RECORD");
+          else if (duplicateIds.contains(id)) strings.put("duplicateStatus", "ASSOCIATED_RECORD");
+          else strings.put("duplicateStatus", "ERROR");
 
         } else {
           booleans.put("isClustered", false);

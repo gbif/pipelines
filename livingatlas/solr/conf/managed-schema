@@ -364,7 +364,12 @@
   <!-- Clustering (Duplicate detection) -->
   <field name="isClustered" type="boolean" docValues="true" indexed="true"/>
   <field name="clusteredWith" type="string" docValues="true" indexed="true" multiValued="true"/>
-  <field name="clusteredAssertions" type="string" docValues="true" indexed="true" multiValued="true"/>
+
+  <field name="representativeRecords" type="string" docValues="true" indexed="true" multiValued="true"/>
+  <field name="duplicateRecords" type="string" docValues="true" indexed="true" multiValued="true"/>
+  <field name="representativeRecordCount" type="int" docValues="true" indexed="true"/>
+  <field name="duplicateRecordCount" type="int" docValues="true" indexed="true"/>
+  <field name="duplicateStatus" type="string" docValues="true" indexed="true"/>
 
   <!-- Large text fields (not supported by doc values) -->
   <field name="raw_footprintWKT"  type="text" />
@@ -388,6 +393,8 @@
   <field name="rankID"     type="int"   docValues="true" indexed="true"/>
   <field name="matchType"  type="string" docValues="true" indexed="true"/>
   <field name="nameType"  type="string" docValues="true" indexed="true"/>
+
+
 
   <!-- ALA Sensitive data fields -->
   <field name="sensitive"  type="boolean" docValues="true" indexed="true"/>

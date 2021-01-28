@@ -46,11 +46,10 @@
        "type":"record",
        "doc":"RelationshipAssertion",
        "fields":[
-         {"name": "id1", "type": "string"},
-         {"name": "id2", "type": "string"},
-         {"name": "reasons", "type": "string"},
-         {"name": "dataset1", "type": "string"},
-         {"name": "dataset2", "type": "string"}
+         {"name": "repId", "type": "string"},
+         {"name": "dupId", "type": "string"},
+         {"name": "repDataset", "type": "string"},
+         {"name": "dupDataset", "type": "string"}
        ]
      },
      {
