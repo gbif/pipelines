@@ -148,6 +148,8 @@ public class LocationInterpreter {
           FootprintWKTParser.parseFootprintWKT(footprintSRS, verbatimFootprintWKT);
       if (result.isSuccessful()) {
         lr.setFootprintWKT(result.getResult());
+      } else {
+        addIssue(lr, result.getIssues());
       }
     }
   }

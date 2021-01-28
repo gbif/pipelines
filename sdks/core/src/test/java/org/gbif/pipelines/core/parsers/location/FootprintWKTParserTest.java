@@ -27,6 +27,7 @@ public class FootprintWKTParserTest {
     ParsedField<String> footPrintWKT =
         FootprintWKTParser.parseFootprintWKT(fromCRS, "POLYGON((0 0, 0 10, 10 10, 10 0))");
     Assert.assertFalse(footPrintWKT.isSuccessful());
-    footPrintWKT.getIssues().contains(OccurrenceIssue.FOOTPRINT_WKT_INVALID);
+    Assert.assertTrue(
+        footPrintWKT.getIssues().contains(OccurrenceIssue.FOOTPRINT_WKT_INVALID.name()));
   }
 }
