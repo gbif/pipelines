@@ -17,6 +17,7 @@
   <modules>
     <module>coordinator</module>
     <module>keygen</module>
+    <module>diagnostics</module>
     <module>pipelines</module>
   </modules>
 
