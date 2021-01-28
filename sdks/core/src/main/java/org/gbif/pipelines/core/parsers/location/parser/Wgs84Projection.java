@@ -13,19 +13,11 @@ import java.util.TreeSet;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.gbif.common.parsers.core.ParseResult;
-import org.gbif.common.parsers.geospatial.DatumParser;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.core.parsers.common.ParsedField;
-import org.geotools.factory.BasicFactories;
-import org.geotools.factory.FactoryRegistryException;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
-import org.geotools.referencing.cs.DefaultEllipsoidalCS;
-import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
-import org.opengis.referencing.datum.DatumAuthorityFactory;
-import org.opengis.referencing.datum.GeodeticDatum;
 import org.opengis.referencing.operation.MathTransform;
 
 /** Utils class that reprojects to WGS84 based on geotools transformations and SRS databases. */
@@ -33,17 +25,7 @@ import org.opengis.referencing.operation.MathTransform;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class Wgs84Projection {
 
-  private static final DatumParser PARSER = DatumParser.getInstance();
   private static final double SUSPICIOUS_SHIFT = 0.1d;
-  private static DatumAuthorityFactory datumFactory;
-
-  static {
-    try {
-      datumFactory = BasicFactories.getDefault().getDatumAuthorityFactory();
-    } catch (FactoryRegistryException e) {
-      log.error("Failed to create geotools datum factory", e);
-    }
-  }
 
   /**
    * Reproject the given location into WGS84 location based on a known source datum or SRS. Darwin
@@ -68,7 +50,7 @@ public class Wgs84Projection {
     }
 
     try {
-      CoordinateReferenceSystem crs = parseCRS(datum);
+      CoordinateReferenceSystem crs = SpatialReferenceSystemParser.parseCRS(datum);
       if (crs == null) {
         issues.add(GEODETIC_DATUM_INVALID.name());
         issues.add(GEODETIC_DATUM_ASSUMED_WGS84.name());
@@ -113,36 +95,5 @@ public class Wgs84Projection {
     }
 
     return ParsedField.fail(new LatLng(lat, lon), issues);
-  }
-
-  /**
-   * Parses the given datum or SRS code and constructs a full 2D geographic reference system.
-   *
-   * @return the parsed CRS or null if it can't be interpreted
-   */
-  private static CoordinateReferenceSystem parseCRS(String datum) {
-    CoordinateReferenceSystem crs = null;
-    ParseResult<Integer> epsgCode = PARSER.parse(datum);
-    if (epsgCode.isSuccessful()) {
-      final String code = "EPSG:" + epsgCode.getPayload();
-
-      // first try to create a full fledged CRS from the given code
-      try {
-        crs = CRS.decode(code);
-
-      } catch (FactoryException e) {
-        // that didn't work, maybe it is *just* a datum
-        try {
-          GeodeticDatum dat = datumFactory.createGeodeticDatum(code);
-          crs = new DefaultGeographicCRS(dat, DefaultEllipsoidalCS.GEODETIC_2D);
-
-        } catch (FactoryException e1) {
-          // also not a datum, no further ideas, log error
-          // swallow anything and return null instead
-          log.info("No CRS or DATUM for given datum code >>{}<<: {}", datum, e1.getMessage());
-        }
-      }
-    }
-    return crs;
   }
 }
