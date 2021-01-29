@@ -43,7 +43,6 @@ public class CompleteIngestPipelineTestIT {
   }
 
   /** Tests for SOLR index creation. */
-  @Ignore
   @Test
   @Ignore
   public void testIngestPipeline() throws Exception {
