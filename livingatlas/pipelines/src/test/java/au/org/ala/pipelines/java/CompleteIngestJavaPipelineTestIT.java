@@ -50,6 +50,7 @@ public class CompleteIngestJavaPipelineTestIT {
   /** Tests for SOLR index creation. */
   @Ignore
   @Test
+  @Ignore
   public void testIngestPipeline() throws Exception {
 
     // clear up previous test runs
