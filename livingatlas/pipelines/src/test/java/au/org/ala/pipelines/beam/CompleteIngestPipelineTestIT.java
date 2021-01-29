@@ -20,6 +20,7 @@ import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -43,6 +44,7 @@ public class CompleteIngestPipelineTestIT {
 
   /** Tests for SOLR index creation. */
   @Test
+  @Ignore
   public void testIngestPipeline() throws Exception {
 
     // clear up previous test runs

@@ -3,14 +3,14 @@ package org.gbif.pipelines.keygen;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -55,7 +55,8 @@ public class HBaseLockingKeyService implements Serializable {
   private static final long COUNTER_ROW = 1; // row ID holding the counter
 
   @VisibleForTesting
-  static final int NUMBER_OF_BUCKETS = 100; // TODO: consider if this should be parameterized.
+  public static final int NUMBER_OF_BUCKETS =
+      100; // TODO: consider if this should be parameterized.
 
   // The number of IDs to reserve at a time in batch
   private static final int BATCHED_ID_SIZE = 1000;
@@ -97,9 +98,9 @@ public class HBaseLockingKeyService implements Serializable {
   /** */
   public KeyLookupResult generateKey(Set<String> uniqueStrings, String scope) {
     Map<String, KeyStatus> statusMap =
-        Maps.newTreeMap(); // required: predictable sorting for e.g. testing
+        new TreeMap<>(); // required: predictable sorting for e.g. testing
     Map<String, Long> existingKeyMap =
-        Maps.newTreeMap(); // required: predictable sorting for e.g. testing
+        new TreeMap<>(); // required: predictable sorting for e.g. testing
     byte[] lockId = Bytes.toBytes(UUID.randomUUID().toString());
 
     // lookupTable schema: lookupKey | status | lock | key
@@ -291,7 +292,7 @@ public class HBaseLockingKeyService implements Serializable {
 
     Set<String> lookupKeys = OccurrenceKeyBuilder.buildKeys(uniqueStrings, scope);
     Map<String, Long> foundOccurrenceKeys =
-        Maps.newTreeMap(); // required: predictable sorting for e.g. testing
+        new TreeMap<>(); // required: predictable sorting for e.g. testing
 
     // get the occurrenceKey for each lookupKey, and set a flag if we find any null
     boolean gotNulls = false;
@@ -340,7 +341,7 @@ public class HBaseLockingKeyService implements Serializable {
 
   @SneakyThrows
   public Set<Long> findKeysByScope(String scope) {
-    Set<Long> keys = Sets.newHashSet();
+    Set<Long> keys = new HashSet<>();
     // note HTableStore isn't capable of ad hoc scans
     Scan scan = new Scan();
     scan.setCacheBlocks(false);
@@ -391,7 +392,7 @@ public class HBaseLockingKeyService implements Serializable {
     Scan scan = new Scan();
     scan.addColumn(Columns.CF, Bytes.toBytes(Columns.LOOKUP_KEY_COLUMN));
     // TODO: this is still too slow even with prefix - lease timeouts in logs
-    List<Filter> filters = Lists.newArrayList();
+    List<Filter> filters = new ArrayList<>();
     if (rawDatasetKey == null) {
       log.warn(
           "About to scan lookup table with no datasetKey prefix - target key for deletion is [{}]",
@@ -411,7 +412,7 @@ public class HBaseLockingKeyService implements Serializable {
     scan.setFilter(filterList);
     try (Table lookupTable = connection.getTable(lookupTableName);
         ResultScanner resultScanner = lookupTable.getScanner(scan)) {
-      List<Delete> keysToDelete = Lists.newArrayList();
+      List<Delete> keysToDelete = new ArrayList<>();
       for (Result result : resultScanner) {
         Delete delete = new Delete(result.getRow());
         keysToDelete.add(delete);
@@ -432,13 +433,11 @@ public class HBaseLockingKeyService implements Serializable {
     checkNotNull(scope, "scope can't be null");
 
     // craft a delete for every uniqueString
-    Set<String> lookupKeys = OccurrenceKeyBuilder.buildKeys(uniqueStrings, scope);
-
     List<Delete> keysToDelete =
-        lookupKeys.stream()
-            .map(lookupKey -> new Delete(Bytes.toBytes(lookupKey)))
-            .collect(
-                Collectors.toCollection(() -> Lists.newArrayListWithCapacity(lookupKeys.size())));
+        OccurrenceKeyBuilder.buildKeys(uniqueStrings, scope).stream()
+            .map(k -> HBaseStore.saltKey(k, NUMBER_OF_BUCKETS))
+            .map(Delete::new)
+            .collect(Collectors.toList());
 
     if (!keysToDelete.isEmpty()) {
       try (Table lookupTable = connection.getTable(lookupTableName)) {
@@ -482,7 +481,7 @@ public class HBaseLockingKeyService implements Serializable {
         .forEach(entry -> lookupTableStore.delete(entry.getKey(), Columns.LOOKUP_LOCK_COLUMN));
   }
 
-  enum KeyStatus {
+  public enum KeyStatus {
     ALLOCATING,
     ALLOCATED
   }
