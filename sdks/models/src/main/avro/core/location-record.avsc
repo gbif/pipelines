@@ -53,7 +53,6 @@
         {"name": "georeferencedDate", "type": ["null", "string"], "logicalType":"timestamp-millis", "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/dateIdentified"},
         {"name": "gadm", "type": ["null", "GadmFeatures"], "default" : null, "doc": "http://rs.gbif.org/terms/gadm/3.0/"},
         {"name": "footprintWKT","type":["null","string"],"default":null, "doc":"http://rs.tdwg.org/dwc/terms/footprintWKT"},
-        {"name": "footprintSRS","type":["null","string"],"default":null, "doc":"http://rs.tdwg.org/dwc/terms/footprintSRS"},
         {"name": "issues", "type": "IssueRecord", "default":{}}
       ]
     }
