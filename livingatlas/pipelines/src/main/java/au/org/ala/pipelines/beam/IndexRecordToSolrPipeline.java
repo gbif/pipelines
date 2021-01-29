@@ -281,11 +281,13 @@ public class IndexRecordToSolrPipeline {
           List<String> representativeIds =
               jkor.getRelationships().stream()
                   .map(Relationship::getRepId)
+                  .distinct()
                   .collect(Collectors.toList());
 
           List<String> duplicateIds =
               jkor.getRelationships().stream()
                   .map(Relationship::getDupId)
+                  .distinct()
                   .collect(Collectors.toList());
 
           multiValues.put("representativeRecords", representativeIds);
@@ -297,8 +299,12 @@ public class IndexRecordToSolrPipeline {
             strings.put("duplicateStatus", "BOTH");
           else if (representativeIds.contains(id))
             strings.put("duplicateStatus", "REPRESENTATIVE_RECORD");
-          else if (duplicateIds.contains(id)) strings.put("duplicateStatus", "ASSOCIATED_RECORD");
-          else strings.put("duplicateStatus", "ERROR");
+          else if (duplicateIds.contains(id))
+            strings.put("duplicateStatus", "ASSOCIATED_RECORD");
+          else if (duplicateIds.isEmpty() && representativeIds.isEmpty())
+            strings.put("duplicateStatus", "NOT_LINKED");
+          else
+            strings.put("duplicateStatus", "ERROR");
 
         } else {
           booleans.put("isClustered", false);
@@ -448,7 +454,9 @@ public class IndexRecordToSolrPipeline {
   private static PCollection<KV<String, Relationships>> loadClusteringRecords(
       SolrPipelineOptions options, Pipeline p) {
     String path =
-        PathBuilder.buildPath(options.getClusteringPath(), "*" + AVRO_EXTENSION).toString();
+        PathBuilder.buildPath(
+                options.getClusteringPath() + "/relationships/", "relationships-*" + AVRO_EXTENSION)
+            .toString();
     log.info("Loading clustering from {}", path);
 
     return p.apply(AvroIO.read(Relationships.class).from(path))
