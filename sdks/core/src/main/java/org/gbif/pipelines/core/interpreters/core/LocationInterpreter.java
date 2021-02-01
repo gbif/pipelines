@@ -27,13 +27,16 @@ import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.core.parsers.SimpleTypeParser;
 import org.gbif.pipelines.core.parsers.VocabularyParser;
 import org.gbif.pipelines.core.parsers.common.ParsedField;
+import org.gbif.pipelines.core.parsers.location.parser.FootprintWKTParser;
 import org.gbif.pipelines.core.parsers.location.parser.GadmParser;
 import org.gbif.pipelines.core.parsers.location.parser.LocationParser;
 import org.gbif.pipelines.core.parsers.location.parser.ParsedLocation;
+import org.gbif.pipelines.core.parsers.location.parser.SpatialReferenceSystemParser;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.rest.client.geocode.GeocodeResponse;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 /** Interprets the location terms of a {@link ExtendedRecord}. */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -127,6 +130,28 @@ public class LocationInterpreter {
         GadmParser.parseGadm(lr, geocodeKvStore).ifPresent(lr::setGadm);
       }
     };
+  }
+
+  /**
+   * Uses the interpreted DwcTerm#footprintSRS} and {@link DwcTerm#footprintWKT} terms to populate
+   * the footprintWKT in WGS84 projection.
+   */
+  public static void interpretFootprintWKT(ExtendedRecord er, LocationRecord lr) {
+    String verbatimFootprintSRS = extractNullAwareValue(er, DwcTerm.footprintSRS);
+    CoordinateReferenceSystem footprintSRS =
+        SpatialReferenceSystemParser.parseCRS(verbatimFootprintSRS);
+    if (footprintSRS == null) {
+      addIssue(lr, FOOTPRINT_SRS_INVALID);
+    } else {
+      String verbatimFootprintWKT = extractNullAwareValue(er, DwcTerm.footprintWKT);
+      ParsedField<String> result =
+          FootprintWKTParser.parseFootprintWKT(footprintSRS, verbatimFootprintWKT);
+      if (result.isSuccessful()) {
+        lr.setFootprintWKT(result.getResult());
+      } else {
+        addIssue(lr, result.getIssues());
+      }
+    }
   }
 
   /** Interprets the publishing country for eBird dataset. */
