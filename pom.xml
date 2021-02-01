@@ -1019,24 +1019,24 @@
       <id>coverage</id>
       <build>
         <plugins>
-          <plugin>
-            <groupId>org.jacoco</groupId>
-            <artifactId>jacoco-maven-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>prepare-agent-ut</id>
-                <goals>
-                  <goal>prepare-agent</goal>
-                </goals>
-                <configuration>
-                  <destFile>${jacoco.merged.output.file}</destFile>
-                  <append>true</append>
-                  <includes>*.org.*</includes>
-                  <propertyName>surefireArgLine</propertyName>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
+<!--          <plugin>-->
+<!--            <groupId>org.jacoco</groupId>-->
+<!--            <artifactId>jacoco-maven-plugin</artifactId>-->
+<!--            <executions>-->
+<!--              <execution>-->
+<!--                <id>prepare-agent-ut</id>-->
+<!--                <goals>-->
+<!--                  <goal>prepare-agent</goal>-->
+<!--                </goals>-->
+<!--                <configuration>-->
+<!--                  <destFile>${jacoco.merged.output.file}</destFile>-->
+<!--                  <append>true</append>-->
+<!--                  <includes>*.org.*</includes>-->
+<!--                  <propertyName>surefireArgLine</propertyName>-->
+<!--                </configuration>-->
+<!--              </execution>-->
+<!--            </executions>-->
+<!--          </plugin>-->
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-surefire-plugin</artifactId>
