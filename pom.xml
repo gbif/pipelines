@@ -1029,7 +1029,7 @@
                   <goal>prepare-agent</goal>
                 </goals>
                 <configuration>
-                  <destFile>${jacoco.it.output.file}</destFile>
+                  <destFile>${jacoco.ut.output.file}</destFile>
                   <append>true</append>
                   <includes>*.org.*</includes>
                   <propertyName>surefireArgLine</propertyName>
