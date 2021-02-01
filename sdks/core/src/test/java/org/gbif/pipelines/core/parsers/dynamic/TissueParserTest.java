@@ -1,5 +1,6 @@
 package org.gbif.pipelines.core.parsers.dynamic;
 
+import java.util.Optional;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -11,10 +12,10 @@ public class TissueParserTest {
     String value = "";
 
     // When
-    boolean result = TissueParser.hasTissue(value);
+    Optional<Boolean> result = TissueParser.hasTissue(value);
 
     // Should
-    Assert.assertFalse(result);
+    Assert.assertFalse(result.isPresent());
   }
 
   @Test
@@ -23,10 +24,10 @@ public class TissueParserTest {
     String value = null;
 
     // When
-    boolean result = TissueParser.hasTissue(value);
+    Optional<Boolean> result = TissueParser.hasTissue(value);
 
     // Should
-    Assert.assertFalse(result);
+    Assert.assertFalse(result.isPresent());
   }
 
   @Test
@@ -35,10 +36,10 @@ public class TissueParserTest {
     String value = "frozen carcass";
 
     // When
-    boolean result = TissueParser.hasTissue(value);
+    Optional<Boolean> result = TissueParser.hasTissue(value);
 
     // Should
-    Assert.assertTrue(result);
+    Assert.assertTrue(result.isPresent());
   }
 
   @Test
@@ -47,10 +48,10 @@ public class TissueParserTest {
     String value = "tissue something";
 
     // When
-    boolean result = TissueParser.hasTissue(value);
+    Optional<Boolean> result = TissueParser.hasTissue(value);
 
     // Should
-    Assert.assertTrue(result);
+    Assert.assertTrue(result.isPresent());
   }
 
   @Test
@@ -59,9 +60,9 @@ public class TissueParserTest {
     String value = "+tissue something";
 
     // When
-    boolean result = TissueParser.hasTissue(value);
+    Optional<Boolean> result = TissueParser.hasTissue(value);
 
     // Should
-    Assert.assertTrue(result);
+    Assert.assertTrue(result.isPresent());
   }
 }

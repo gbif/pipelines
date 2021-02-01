@@ -12,7 +12,9 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables.DynamicProperties.Key;
 import org.gbif.pipelines.common.PipelinesVariables.DynamicProperties.Type;
 import org.gbif.pipelines.core.parsers.VocabularyParser;
+import org.gbif.pipelines.core.parsers.dynamic.LengthParser;
 import org.gbif.pipelines.core.parsers.dynamic.LifeStageParser;
+import org.gbif.pipelines.core.parsers.dynamic.MassParser;
 import org.gbif.pipelines.core.parsers.dynamic.SexParser;
 import org.gbif.pipelines.core.parsers.dynamic.TissueParser;
 import org.gbif.pipelines.io.avro.BasicRecord;
@@ -24,11 +26,11 @@ public class DynamicPropertiesInterpreter {
 
   public static void interpretHasTissue(ExtendedRecord er, BasicRecord br) {
     extractNullAwareOptValue(er, DwcTerm.preparations)
+        .flatMap(TissueParser::hasTissue)
         .ifPresent(
-            v -> {
+            any -> {
               DynamicProperty.Builder builder = DynamicProperty.newBuilder().setType(Type.BOOLEAN);
-              boolean any = TissueParser.hasTissue(v);
-              builder.setValue(Boolean.valueOf(any).toString());
+              builder.setValue(any.toString());
               br.getDynamicProperties().put(Key.HAS_TISSUE, builder.build());
             });
   }
@@ -62,5 +64,27 @@ public class DynamicPropertiesInterpreter {
           .flatMap(v -> LifeStageParser.parse(v).flatMap(vocabularyLookupFn))
           .ifPresent(x -> BasicInterpreter.getLookupConceptConsumer(br).accept(x));
     };
+  }
+
+  public static void interpretLength(ExtendedRecord er, BasicRecord br) {
+    extractNullAwareOptValue(er, DwcTerm.preparations)
+        .flatMap(LengthParser::parse)
+        .ifPresent(
+            value -> {
+              DynamicProperty.Builder builder = DynamicProperty.newBuilder().setType(Type.DOUBLE);
+              builder.setValue(value);
+              br.getDynamicProperties().put(Key.LENGTH, builder.build());
+            });
+  }
+
+  public static void interpretMass(ExtendedRecord er, BasicRecord br) {
+    extractNullAwareOptValue(er, DwcTerm.preparations)
+        .flatMap(MassParser::parse)
+        .ifPresent(
+            value -> {
+              DynamicProperty.Builder builder = DynamicProperty.newBuilder().setType(Type.DOUBLE);
+              builder.setValue(value);
+              br.getDynamicProperties().put(Key.MASS, builder.build());
+            });
   }
 }

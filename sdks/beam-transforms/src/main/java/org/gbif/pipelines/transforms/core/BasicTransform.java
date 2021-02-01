@@ -173,6 +173,8 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
         .via(DynamicPropertiesInterpreter::interpretHasTissue)
         .via(DynamicPropertiesInterpreter::interpretSex)
         .via(DynamicPropertiesInterpreter.interpretLifeStage(lifeStageLookupFn))
+        .via(DynamicPropertiesInterpreter::interpretLength)
+        .via(DynamicPropertiesInterpreter::interpretMass)
         .getOfNullable();
   }
 }
