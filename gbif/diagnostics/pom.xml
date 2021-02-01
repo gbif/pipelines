@@ -63,6 +63,17 @@
         </executions>
       </plugin>
     </plugins>
+    <resources>
+      <resource>
+        <directory>src/test/resources</directory>
+        <targetPath>../test-classes/</targetPath>
+        <filtering>true</filtering>
+      </resource>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+      </resource>
+    </resources>
   </build>
 
   <dependencies>
