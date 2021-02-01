@@ -1031,13 +1031,24 @@
                 <configuration>
                   <destFile>${jacoco.ut.output.file}</destFile>
                   <append>true</append>
-                  <includes>org.gbif.*</includes>
+                  <includes>*.org.*</includes>
+                  <propertyName>surefireArgLine</propertyName>
+                </configuration>
+              </execution>
+              <execution>
+                <id>prepare-agent-it</id>
+                <goals>
+                  <goal>prepare-agent-integration</goal>
+                </goals>
+                <configuration>
+                  <destFile>${jacoco.it.output.file}</destFile>
+                  <append>true</append>
+                  <includes>*.org.*</includes>
                   <propertyName>surefireArgLine</propertyName>
                 </configuration>
               </execution>
             </executions>
           </plugin>
-
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-surefire-plugin</artifactId>
