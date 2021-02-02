@@ -7,6 +7,10 @@ import java.util.Set;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
+/**
+ * Java version of
+ * https://github.com/VertNet/post-harvest-processor/blob/master/lib/vn_utils.py#L1152
+ */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class TissueParser {
   private static final Set<String> TISSUE_TOKENS =

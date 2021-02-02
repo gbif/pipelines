@@ -6,6 +6,8 @@ import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import org.gbif.api.vocabulary.Sex;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.dwc.terms.DwcTerm;
@@ -22,6 +24,7 @@ import org.gbif.pipelines.io.avro.DynamicProperty;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.vocabulary.lookup.LookupConcept;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class DynamicPropertiesInterpreter {
 
   public static void interpretHasTissue(ExtendedRecord er, BasicRecord br) {
@@ -39,18 +42,17 @@ public class DynamicPropertiesInterpreter {
     if (br.getSex() != null) {
       return;
     }
-    extractNullAwareOptValue(er, DwcTerm.dynamicProperties)
-        .ifPresent(
-            v -> {
-              Consumer<ParseResult<Sex>> fn =
-                  parseResult -> {
-                    if (parseResult.isSuccessful()) {
-                      br.setSex(parseResult.getPayload().name());
-                    }
-                  };
 
-              SexParser.parse(v).ifPresent(r -> VocabularyParser.sexParser().parse(r, fn));
-            });
+    Consumer<ParseResult<Sex>> fn =
+        parseResult -> {
+          if (parseResult.isSuccessful()) {
+            br.setSex(parseResult.getPayload().name());
+          }
+        };
+
+    extractNullAwareOptValue(er, DwcTerm.dynamicProperties)
+        .flatMap(SexParser::parse)
+        .ifPresent(r -> VocabularyParser.sexParser().parse(r, fn));
   }
 
   public static BiConsumer<ExtendedRecord, BasicRecord> interpretLifeStage(

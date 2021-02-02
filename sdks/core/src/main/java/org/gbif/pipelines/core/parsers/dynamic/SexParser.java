@@ -8,6 +8,10 @@ import java.util.regex.Pattern;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
+/**
+ * Java version of
+ * https://github.com/VertNet/post-harvest-processor/blob/master/lib/trait_parsers/sex_parser.py
+ */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class SexParser {
 
@@ -25,19 +29,25 @@ public class SexParser {
     if (source == null || source.isEmpty()) {
       return Optional.empty();
     }
-    for (Pattern p : PATTERNS) {
-      Matcher matcher = p.matcher(source.toLowerCase());
-      String result = matcher.find() ? matcher.group("value") : null;
-      if (result != null) {
-        while (matcher.find()) {
-          String group = matcher.group("value");
-          if (!group.equals(result)) {
-            return Optional.empty();
+
+    try {
+      for (Pattern p : PATTERNS) {
+        Matcher matcher = p.matcher(source.toLowerCase());
+        String result = matcher.find() ? matcher.group("value") : null;
+        if (result != null) {
+          while (matcher.find()) {
+            String group = matcher.group("value");
+            if (!group.equals(result)) {
+              return Optional.empty();
+            }
           }
+          return Optional.of(result);
         }
-        return Optional.of(result);
       }
+    } catch (RuntimeException ex) {
+      return Optional.empty();
     }
+
     return Optional.empty();
   }
 }

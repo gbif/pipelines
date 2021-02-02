@@ -16,10 +16,10 @@
     "namespace":"org.gbif.pipelines.io.avro",
     "type":"record",
     "fields":[
-      {"name": "clazz", "type": ["null", "string"] },
-      {"name": "key", "type": ["null", "string"] },
-      {"name": "type", "type": ["null", "string"] },
-      {"name": "value", "type": ["null", "string"] }
+      {"name": "clazz", "type": ["null", "string"], "default" : null },
+      {"name": "key", "type": ["null", "string"], "default" : null },
+      {"name": "type", "type": ["null", "string"], "default" : null },
+      {"name": "value", "type": ["null", "string"], "default" : null }
     ]
   },
   {

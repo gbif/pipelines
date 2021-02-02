@@ -8,6 +8,10 @@ import java.util.regex.Pattern;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
+/**
+ * Java version of
+ * https://github.com/VertNet/post-harvest-processor/blob/master/lib/trait_parsers/life_stage_parser.py
+ */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class LifeStageParser {
 
@@ -40,16 +44,22 @@ public class LifeStageParser {
     if (source == null || source.isEmpty()) {
       return Optional.empty();
     }
-    Matcher exclude = EXCLUDE_PATTERN.matcher(source.toLowerCase());
-    if (exclude.find()) {
+
+    try {
+      Matcher exclude = EXCLUDE_PATTERN.matcher(source.toLowerCase());
+      if (exclude.find()) {
+        return Optional.empty();
+      }
+      for (Pattern p : PATTERNS) {
+        Matcher matcher = p.matcher(source.toLowerCase());
+        if (matcher.find()) {
+          return Optional.ofNullable(matcher.group("value"));
+        }
+      }
+    } catch (RuntimeException ex) {
       return Optional.empty();
     }
-    for (Pattern p : PATTERNS) {
-      Matcher matcher = p.matcher(source.toLowerCase());
-      if (matcher.find()) {
-        return Optional.ofNullable(matcher.group("value"));
-      }
-    }
+
     return Optional.empty();
   }
 }
