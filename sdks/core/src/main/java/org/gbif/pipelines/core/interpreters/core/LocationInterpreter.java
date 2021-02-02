@@ -10,8 +10,8 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_COORDINATE_MISMATC
 import static org.gbif.api.vocabulary.OccurrenceIssue.FOOTPRINT_SRS_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.ZERO_COORDINATE;
 import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
+import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareOptValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareValue;
-import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareValueOpt;
 
 import com.google.common.base.Strings;
 import java.util.Arrays;
@@ -149,7 +149,7 @@ public class LocationInterpreter {
    * the footprintWKT in WGS84 projection.
    */
   public static void interpretFootprintWKT(ExtendedRecord er, LocationRecord lr) {
-    Optional<String> verbatimFootprintSRS = extractNullAwareValueOpt(er, DwcTerm.footprintSRS);
+    Optional<String> verbatimFootprintSRS = extractNullAwareOptValue(er, DwcTerm.footprintSRS);
     CoordinateReferenceSystem footprintSRS =
         verbatimFootprintSRS.map(SpatialReferenceSystemParser::parseCRS).orElse(null);
 
@@ -157,7 +157,7 @@ public class LocationInterpreter {
       addIssue(lr, FOOTPRINT_SRS_INVALID);
     } else {
 
-      extractNullAwareValueOpt(er, DwcTerm.footprintWKT)
+      extractNullAwareOptValue(er, DwcTerm.footprintWKT)
           .map(wkt -> FootprintWKTParser.parseFootprintWKT(footprintSRS, wkt))
           .ifPresent(
               result -> {

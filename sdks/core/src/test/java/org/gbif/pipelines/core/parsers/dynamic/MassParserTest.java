@@ -1,9 +1,8 @@
 package org.gbif.pipelines.core.parsers.dynamic;
 
+import java.util.Optional;
 import org.junit.Assert;
 import org.junit.Test;
-
-import java.util.Optional;
 
 public class MassParserTest {
 
