@@ -239,6 +239,17 @@ public class ClusteringPipeline {
                       }
                     }));
 
+    // establish clusters of records
+    // KV<List<String>, List<OccurrenceFeatures>>
+
+    // do we have overlapping clusters ?
+
+    //
+
+    // if so join them together
+
+    // check the integrity of each cluster a -> b
+
     // need to Group by UUID
     PCollection<KV<String, Relationship>> relationships =
         candidates.apply(
@@ -249,17 +260,20 @@ public class ClusteringPipeline {
                       @Element ClusteringCandidates source,
                       OutputReceiver<KV<String, Relationship>> out) {
 
-                    List<OccurrenceFeatures> candidates = source.getCandidates();
-                    List<ClusterPair> pairs = new ArrayList<>();
+                    if (source.getCandidates().size() < 50) {
 
-                    while (!candidates.isEmpty()) {
+                      List<OccurrenceFeatures> candidates = source.getCandidates();
+                      List<ClusterPair> pairs = new ArrayList<>();
 
-                      OccurrenceFeatures o1 = candidates.remove(0);
+                      while (!candidates.isEmpty()) {
 
-                      for (OccurrenceFeatures o2 : candidates) {
+                        OccurrenceFeatures o1 = candidates.remove(0);
 
-                        // if datasetKey != datasetKey
-                        if (!o1.getDatasetKey().equals(o2.getDatasetKey())) {
+                        for (OccurrenceFeatures o2 : candidates) {
+
+                          // if datasetKey != datasetKey
+                          //                        if
+                          // (!o1.getDatasetKey().equals(o2.getDatasetKey())) {
                           // do a complete comparison to see if the
                           // records have a relationship
                           RelationshipAssertion assertion =
@@ -269,54 +283,55 @@ public class ClusteringPipeline {
                             pairs.add(
                                 ClusterPair.builder().o1(o1).o2(o2).assertion(assertion).build());
                           }
+                          //                        }
                         }
                       }
-                    }
 
-                    if (pairs.size() > 10) {
-                      log.error("Finding clusters of size: " + pairs.size());
-                    }
+                      if (pairs.size() > 10) {
+                        log.error("Finding clusters of size: " + pairs.size());
+                      }
 
-                    // cluster occurrences
-                    List<List<OccurrenceFeatures>> clusters =
-                        RepresentativeRecordUtils.createClusters(pairs);
+                      // cluster occurrences
+                      List<List<OccurrenceFeatures>> clusters =
+                          RepresentativeRecordUtils.createClusters(pairs);
 
-                    if (clusters.size() > 1) {
-                      log.error("Finding no of clusters of size: " + clusters.size());
-                    }
+                      if (clusters.size() > 1) {
+                        log.error("Finding no of clusters of size: " + clusters.size());
+                      }
 
-                    // within each cluster, nominate the
-                    // RepresentativeRecord (primary) and the AssociatedRecord (duplicate)
-                    for (List<OccurrenceFeatures> cluster : clusters) {
+                      // within each cluster, nominate the
+                      // RepresentativeRecord (primary) and the AssociatedRecord (duplicate)
+                      for (List<OccurrenceFeatures> cluster : clusters) {
 
-                      if (cluster.size() < 30) {
+                        if (cluster.size() < 50) {
 
-                        // find the representative record
-                        OccurrenceFeatures representativeRecord =
-                            RepresentativeRecordUtils.findRepresentativeRecord(cluster);
+                          // find the representative record
+                          OccurrenceFeatures representativeRecord =
+                              RepresentativeRecordUtils.findRepresentativeRecord(cluster);
 
-                        // determine representative records
-                        // Note: we are currently losing the relationship assertions at this point
-                        Relationship.Builder builder =
-                            Relationship.newBuilder()
-                                .setRepId(representativeRecord.getId())
-                                .setRepDataset(representativeRecord.getDatasetKey());
+                          // determine representative records
+                          // Note: we are currently losing the relationship assertions at this point
+                          Relationship.Builder builder =
+                              Relationship.newBuilder()
+                                  .setRepId(representativeRecord.getId())
+                                  .setRepDataset(representativeRecord.getDatasetKey());
 
-                        for (OccurrenceFeatures associatedRecord : cluster) {
+                          for (OccurrenceFeatures associatedRecord : cluster) {
 
-                          if (!associatedRecord.equals(representativeRecord)) {
-                            Relationship r =
-                                builder
-                                    .setDupId(associatedRecord.getId())
-                                    .setDupDataset(associatedRecord.getDatasetKey())
-                                    .build();
+                            if (!associatedRecord.getId().equals(representativeRecord.getId())) {
+                              Relationship r =
+                                  builder
+                                      .setDupId(associatedRecord.getId())
+                                      .setDupDataset(associatedRecord.getDatasetKey())
+                                      .build();
 
-                            out.output(KV.of(representativeRecord.getId(), r));
-                            out.output(KV.of(associatedRecord.getId(), r));
+                              out.output(KV.of(representativeRecord.getId(), r));
+                              out.output(KV.of(associatedRecord.getId(), r));
+                            }
                           }
+                        } else {
+                          log.warn("Avoiding marking a cluster of size {}", cluster.size());
                         }
-                      } else {
-                        log.warn("Avoiding marking a cluster of size {}", cluster.size());
                       }
                     }
                   }

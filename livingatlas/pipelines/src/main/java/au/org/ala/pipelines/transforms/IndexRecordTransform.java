@@ -4,6 +4,7 @@ import static org.apache.avro.Schema.Type.UNION;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
 
 import au.org.ala.pipelines.interpreters.SensitiveDataInterpreter;
+import com.google.common.collect.ImmutableSet;
 import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.text.ParseException;
@@ -68,6 +69,17 @@ public class IndexRecordTransform implements Serializable {
   @NonNull private PCollectionView<MetadataRecord> metadataView;
 
   String datasetID;
+
+  static Set<String> interpretedFields;
+
+  static {
+    interpretedFields = getAddedValues();
+  }
+
+  public static void main(String[] args) {
+
+    interpretedFields.stream().sorted().forEach(value -> System.out.println(value));
+  }
 
   public static IndexRecordTransform create(
       TupleTag<ExtendedRecord> erTag,
@@ -200,7 +212,6 @@ public class IndexRecordTransform implements Serializable {
     addToIndexRecord(lr, indexRecord, skipKeys);
     addToIndexRecord(tr, indexRecord, skipKeys);
     addToIndexRecord(br, indexRecord, skipKeys);
-    addToIndexRecord(er, indexRecord, skipKeys);
     addToIndexRecord(mdr, indexRecord, skipKeys);
 
     // add event date
@@ -224,16 +235,6 @@ public class IndexRecordTransform implements Serializable {
       addGBIFTaxonomy(txr, indexRecord, assertions);
     }
 
-    // Verbatim (Raw) data
-    Map<String, String> raw = er.getCoreTerms();
-    for (Map.Entry<String, String> entry : raw.entrySet()) {
-      String key = entry.getKey();
-      if (key.startsWith("http")) {
-        key = key.substring(key.lastIndexOf("/") + 1);
-      }
-      indexRecord.getStrings().put("raw_" + key, entry.getValue());
-    }
-
     indexRecord.getBooleans().put("sensitive", sensitive);
 
     // Sensitive (Original) data
@@ -251,7 +252,7 @@ public class IndexRecordTransform implements Serializable {
       for (Map.Entry<String, String> entry : sr.getOriginal().entrySet()) {
         Term field = TERM_FACTORY.findTerm(entry.getKey());
         if (entry.getValue() != null) {
-          indexRecord.getStrings().put("original_" + field.simpleName(), entry.getValue());
+          indexRecord.getStrings().put("sensitive_" + field.simpleName(), entry.getValue());
         }
       }
     }
@@ -294,7 +295,7 @@ public class IndexRecordTransform implements Serializable {
                   "|",
                   atxr.getScientificName(),
                   atxr.getTaxonConceptID(),
-                  atxr.getVernacularName(),
+                  StringUtils.trimToEmpty(atxr.getVernacularName()),
                   atxr.getKingdom(),
                   atxr.getFamily())); // is set to IGNORE in headerAttributes
 
@@ -304,28 +305,24 @@ public class IndexRecordTransform implements Serializable {
               "common_name_and_lsid",
               String.join(
                   "|",
-                  atxr.getVernacularName(),
+                  StringUtils.trimToEmpty(atxr.getVernacularName()),
                   atxr.getScientificName(),
                   atxr.getTaxonConceptID(),
-                  atxr.getVernacularName(),
+                  StringUtils.trimToEmpty(atxr.getVernacularName()),
                   atxr.getKingdom(),
                   atxr.getFamily())); // is set to IGNORE in headerAttribute
 
       // legacy fields referenced in biocache-service code
       indexRecord.setTaxonID(atxr.getTaxonConceptID());
 
-      for (String s : atxr.getSpeciesGroup()) {
-        indexRecord.getStrings().put("speciesGroup", s);
-      }
-      for (String s : atxr.getSpeciesSubgroup()) {
-        indexRecord.getStrings().put("speciesSubgroup", s);
-      }
+      indexRecord.getMultiValues().put("speciesGroup", atxr.getSpeciesGroup());
+      indexRecord.getMultiValues().put("speciesSubgroup", atxr.getSpeciesSubgroup());
     }
 
     // FIXME see #99
     boolean geospatialKosher =
-        lr.getHasGeospatialIssue() != null && lr.getHasGeospatialIssue() ? true : false;
-    indexRecord.getBooleans().put("geospatial_kosher", geospatialKosher);
+        lr.getHasGeospatialIssue() != null && lr.getHasGeospatialIssue() ? false : true;
+    indexRecord.getBooleans().put("spatiallyValid", geospatialKosher);
 
     // FIXME  - see #162
     if (ur.getFirstLoaded() != null) {
@@ -352,6 +349,11 @@ public class IndexRecordTransform implements Serializable {
       addIfNotEmpty(indexRecord, "collectionUid", aar.getCollectionUid());
       addIfNotEmpty(indexRecord, "institutionName", aar.getInstitutionName());
       addIfNotEmpty(indexRecord, "collectionName", aar.getCollectionName());
+
+      // add hub IDs
+      if (aar.getHubMemberships() != null && !aar.getHubMemberships().isEmpty()) {
+        indexRecord.getMultiValues().put("dataHubUid", aar.getHubMemberships());
+      }
     }
 
     // add image identifiers
@@ -360,6 +362,8 @@ public class IndexRecordTransform implements Serializable {
       indexRecord.getMultiValues().put("all_image_url", isr.getImageIDs());
       // FIX ME - do we need mime type.....
       indexRecord.getStrings().put("multimedia", "Image");
+    } else {
+
     }
 
     if (tpr != null && tpr.getSpeciesListID() != null && !tpr.getSpeciesListID().isEmpty()) {
@@ -370,13 +374,59 @@ public class IndexRecordTransform implements Serializable {
     assertions.addAll(tr.getIssues().getIssueList());
     assertions.addAll(br.getIssues().getIssueList());
     assertions.addAll(mdr.getIssues().getIssueList());
+
     if (sr != null) {
       assertions.addAll(sr.getIssues().getIssueList());
     }
 
     indexRecord.getMultiValues().put("assertions", assertions);
 
+    // Verbatim (Raw) data
+    Map<String, String> raw = er.getCoreTerms();
+    for (Map.Entry<String, String> entry : raw.entrySet()) {
+
+      String key = entry.getKey();
+      if (key.startsWith("http")) {
+        key = key.substring(key.lastIndexOf("/") + 1);
+      }
+
+      // if we already have an interpreted value, prefix with raw_
+      if (interpretedFields.contains(key)) {
+        indexRecord.getStrings().put("raw_" + key, entry.getValue());
+      } else {
+        indexRecord.getStrings().put(key, entry.getValue());
+      }
+    }
     return indexRecord.build();
+  }
+
+  public static Set<String> getAddedValues() {
+    return ImmutableSet.<String>builder()
+        .addAll(
+            LocationRecord.getClassSchema().getFields().stream()
+                .map(field -> field.name())
+                .collect(Collectors.toList()))
+        .addAll(
+            ALAAttributionRecord.getClassSchema().getFields().stream()
+                .map(field -> field.name())
+                .collect(Collectors.toList()))
+        .addAll(
+            ALATaxonRecord.getClassSchema().getFields().stream()
+                .map(field -> field.name())
+                .collect(Collectors.toList()))
+        .addAll(
+            MetadataRecord.getClassSchema().getFields().stream()
+                .map(field -> field.name())
+                .collect(Collectors.toList()))
+        .addAll(
+            BasicRecord.getClassSchema().getFields().stream()
+                .map(field -> field.name())
+                .collect(Collectors.toList()))
+        .addAll(
+            TemporalRecord.getClassSchema().getFields().stream()
+                .map(field -> field.name())
+                .collect(Collectors.toList()))
+        .build();
   }
 
   private static void addSpeciesListInfo(
@@ -415,10 +465,10 @@ public class IndexRecordTransform implements Serializable {
     for (InvasiveStatus invasiveStatus : invasiveStatuses) {
       if (invasiveStatus.getRegion() != null) {
         if (invasiveStatus.getRegion().equalsIgnoreCase(stateProvince)) {
-          indexRecord.getStrings().put("stateInvasive", "invasive");
+          indexRecord.getStrings().put("stateInvasive", "INVASIVE");
         }
         if (invasiveStatus.getRegion().equalsIgnoreCase(country)) {
-          indexRecord.getStrings().put("countryInvasive", "invasive");
+          indexRecord.getStrings().put("countryInvasive", "INVASIVE");
         }
       }
     }
@@ -468,13 +518,6 @@ public class IndexRecordTransform implements Serializable {
               txr = v.getOnly(txrTag, TaxonRecord.newBuilder().setId(k).build());
             }
 
-            // Extension
-            MultimediaRecord mr = v.getOnly(mrTag, MultimediaRecord.newBuilder().setId(k).build());
-            ImageRecord ir = v.getOnly(irTag, ImageRecord.newBuilder().setId(k).build());
-            AudubonRecord ar = v.getOnly(arTag, AudubonRecord.newBuilder().setId(k).build());
-            MeasurementOrFactRecord mfr =
-                v.getOnly(mfrTag, MeasurementOrFactRecord.newBuilder().setId(k).build());
-
             // ALA specific
             ALAUUIDRecord ur = v.getOnly(urTag);
             ALATaxonRecord atxr = v.getOnly(atxrTag, ALATaxonRecord.newBuilder().setId(k).build());
@@ -496,11 +539,13 @@ public class IndexRecordTransform implements Serializable {
               sr = v.getOnly(srTag, null);
             }
 
-            IndexRecord doc =
-                createIndexRecord(mdr, br, tr, lr, txr, atxr, er, aar, ur, isr, tpr, sr);
+            if (aar != null && aar.getDataResourceUid() != null) {
+              IndexRecord doc =
+                  createIndexRecord(mdr, br, tr, lr, txr, atxr, er, aar, ur, isr, tpr, sr);
 
-            c.output(doc);
-            counter.inc();
+              c.output(doc);
+              counter.inc();
+            }
           }
         };
 
