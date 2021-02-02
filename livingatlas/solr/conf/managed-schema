@@ -136,7 +136,8 @@
   <!-- legacy fields referenced by biocache-service code - to be reviewed and refactored out if possible -->
   <field name="lft"               type="int"    docValues="true" indexed="true"/>
   <field name="rgt"               type="int"    docValues="true" indexed="true"/>
-  <field name="geospatial_kosher" type="boolean" docValues="true" multiValued="false" indexed="true" />
+  <field name="spatiallyValid"    type="boolean" docValues="true" multiValued="false" indexed="true" />
+  <field name="geospatial_kosher"    type="boolean" docValues="true" multiValued="false" indexed="true" />
   <field name="firstLoadedDate"   type="date"   docValues="true" multiValued="false" indexed="true"/>
   <field name="speciesGroup"      type="string"  docValues="true" multiValued="true"  indexed="true"/>
   <field name="speciesSubgroup"   type="string"  docValues="true" multiValued="true"  indexed="true" />
@@ -190,7 +191,7 @@
   <field name="depth" type="double" docValues="true" indexed="true"/>
   <field name="depthAccuracy" type="double" docValues="true" indexed="true"/>
   <field name="disposition" type="string" docValues="true" indexed="true"/>
-  <field name="dynamicProperties" type="string" docValues="true" indexed="true"/>
+  <field name="dynamicProperties" type="text"  indexed="true"/>
   <field name="earliestAgeOrLowestStage" type="string" docValues="true" indexed="true"/>
   <field name="earliestEonOrLowestEonothem" type="string" docValues="true" indexed="true"/>
   <field name="earliestEpochOrLowestSeries" type="string" docValues="true" indexed="true"/>
@@ -209,7 +210,7 @@
   <field name="fieldNumber" type="string" docValues="true" indexed="true"/>
   <field name="footprintSRS" type="string" docValues="true" indexed="true"/>
   <field name="footprintSpatialFit" type="string" docValues="true" indexed="true"/>
-  <field name="footprintWKT" type="string" docValues="true" indexed="true"/>
+  <field name="footprintWKT" type="text" indexed="true"/>
   <field name="formation" type="string" docValues="true" indexed="true"/>
   <field name="fromLithostratigraphicUnit" type="string" docValues="true" indexed="true"/>
   <field name="genus" type="string" docValues="true" indexed="true"/>
@@ -345,7 +346,7 @@
   <field name="type"  type="string" docValues="true" indexed="true"/>
   <field name="typeStatus"  type="string" docValues="true" indexed="true"/>
   <field name="verbatimCoordinateSystem"  type="string" docValues="true" indexed="true"/>
-  <field name="verbatimCoordinates"  type="string" docValues="true" indexed="true"/>
+  <field name="verbatimCoordinates"  type="text" indexed="true"/>
   <field name="verbatimDepth"  type="string" docValues="true" indexed="true"/>
   <field name="verbatimElevation"  type="string" docValues="true" indexed="true"/>
   <field name="verbatimEventDate"  type="string" docValues="true" indexed="true"/>
@@ -366,7 +367,8 @@
   <field name="duplicateRecords" type="string" docValues="true" indexed="true" multiValued="true"/>
   <field name="representativeRecordCount" type="int" docValues="true" indexed="true"/>
   <field name="duplicateRecordCount" type="int" docValues="true" indexed="true"/>
-  <field name="duplicateStatus" type="string" docValues="true" indexed="true"/>
+  <field name="duplicateStatus" type="string" docValues="true" indexed="true"  multiValued="true"/>
+  <field name="duplicateType" type="string" docValues="true" indexed="true"  multiValued="true"/>
 
   <!-- Large text fields (not supported by doc values) -->
   <field name="raw_footprintWKT"  type="text" />
@@ -401,6 +403,7 @@
   <field name="dataProviderUid" type="string" docValues="true" indexed="true" />
   <field name="institutionUid" type="string" docValues="true" indexed="true" />
   <field name="collectionUid" type="string" docValues="true" indexed="true" />
+  <field name="dataHubUid" type="string" docValues="true" indexed="true" multiValued="true"  />
   <field name="dataResourceName" type="string" docValues="true" indexed="true" />
   <field name="dataProviderName" type="string" docValues="true" indexed="true" />
   <field name="institutionName" type="string" docValues="true" indexed="true" />
@@ -419,24 +422,16 @@
   <field name="institution_uid" type="string" docValues="true" indexed="true" />
   <field name="collection_uid" type="string" docValues="true" indexed="true" />
   <field name="data_resource_uid" type="string" docValues="true" indexed="true" />
+  <field name="rank_id" type="string" docValues="true" indexed="true" />
+  <field name="species_list_uid" type="string" docValues="true" indexed="true" />
 
-  <!-- to be removed -->
-  <copyField source="scientificName" dest="taxon_name"/>
-  <copyField source="basisOfRecord" dest="basis_of_record"/>
-  <copyField source="vernacularName" dest="common_name"/>
-  <copyField source="taxonConceptID" dest="lsid"/>
-  <copyField source="firstLoadedDate" dest="first_loaded_date"/>
-  <copyField source="speciesGroup" dest="species_group"/>
-  <copyField source="speciesSubgroup" dest="species_subgroup"/>
-  <copyField source="stateProvince" dest="state"/>
-  <copyField source="occurrenceStatus" dest="occurrence_status"/>
-  <copyField source="institutionUid" dest="institution_uid"/>
-  <copyField source="collectionUid" dest="collection_uid"/>
-  <copyField source="dataResourceUid" dest="data_resource_uid"/>
-
-
+  <!-- occurrenceDetails needs to be remapped on export -->
+  <field name="occurrenceDetails" type="string" docValues="true" indexed="true" />
+  <field name="userId" type="string" docValues="true" indexed="true" />
 
   <field name="machineTags"  type="string" docValues="true" indexed="true" multiValued="true" />
+
+  <dynamicField name="sensitive_*" type="string" docValues="true" indexed="true" />
 
   <!-- ALA specific fields -->
   <dynamicField name="gbif_s_*" type="string" docValues="true" indexed="true" />
@@ -473,7 +468,6 @@
 
   <copyField source="lat_long" dest="geohash"/>
   <copyField source="lat_long" dest="location"/>
-
 
   <!-- Deprecated ALA SOLR fields no longer in use will be mapped to this unused SOLR field so
        as not to throw an error. No data will be added to this field.  -->

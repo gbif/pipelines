@@ -204,6 +204,7 @@ public class IndexRecordToSolrPipeline {
 
     return new DoFn<
         KV<String, KV<IndexRecord, JackKnifeOutlierRecord>>, KV<String, IndexRecord>>() {
+
       @ProcessElement
       public void processElement(ProcessContext c) {
 
@@ -211,11 +212,13 @@ public class IndexRecordToSolrPipeline {
         IndexRecord indexRecord = e.getValue().getKey();
         JackKnifeOutlierRecord jkor = e.getValue().getValue();
         Map<String, Integer> ints = indexRecord.getInts();
+
         if (ints == null) {
           ints = new HashMap<>();
           indexRecord.setInts(ints);
         }
-        if (jkor != nullJkor) {
+
+        if (jkor != nullJkor && !"EMPTY".equals(jkor.getId())) {
 
           ints.put("outlierLayerCount", jkor.getItems().size());
 
@@ -274,40 +277,68 @@ public class IndexRecordToSolrPipeline {
           indexRecord.setInts(ints);
         }
 
-        if (jkor != nullClustering) {
+        if (jkor != nullClustering
+            && !"EMPTY".equals(jkor.getId())
+            && !jkor.getRelationships().isEmpty()) {
 
           booleans.put("isClustered", true);
+
+          List<Relationship> relationships = jkor.getRelationships();
+          List<String> duplicateStatus = new ArrayList<>();
+          List<String> duplicateType = new ArrayList<>();
+          jkor.getRelationships().stream()
+              .forEach(
+                  relationship -> {
+                    boolean linkingError = false;
+                    if (relationship.getRepId().equals(id)) {
+                      duplicateStatus.add("REPRESENTATIVE");
+                    } else if (relationship.getDupId().equals(id)) {
+                      duplicateStatus.add("ASSOCIATED");
+                    } else {
+                      linkingError = true;
+                      duplicateStatus.add("DUPLICATE_STATUS_ERROR");
+                    }
+
+                    if (relationship.getDupDataset().equals(relationship.getRepDataset())) {
+                      duplicateType.add("SAME_DATASET");
+                    } else if (!linkingError) {
+                      duplicateType.add("DIFFERENT_DATASET");
+                    } else {
+                      duplicateType.add("LINKING_ERROR");
+                    }
+                  });
 
           List<String> representativeIds =
               jkor.getRelationships().stream()
                   .map(Relationship::getRepId)
                   .distinct()
+                  .filter(recordId -> !recordId.equals(id))
                   .collect(Collectors.toList());
 
           List<String> duplicateIds =
               jkor.getRelationships().stream()
                   .map(Relationship::getDupId)
                   .distinct()
+                  .filter(recordId -> !recordId.equals(id))
                   .collect(Collectors.toList());
 
-          multiValues.put("representativeRecords", representativeIds);
-          multiValues.put("duplicateRecords", duplicateIds);
+          if (!representativeIds.isEmpty()) {
+            multiValues.put("representativeRecords", representativeIds);
+          }
+          if (!duplicateIds.isEmpty()) {
+            multiValues.put("duplicateRecords", duplicateIds);
+          }
+
+          multiValues.put("duplicateStatus", duplicateStatus);
+          multiValues.put("duplicateType", duplicateType);
+
+          // these are debug fields - TO BE REMOVED
           ints.put("representativeRecordCount", representativeIds.size());
           ints.put("duplicateRecordCount", duplicateIds.size());
 
-          if (representativeIds.contains(id) && duplicateIds.contains(id))
-            strings.put("duplicateStatus", "BOTH");
-          else if (representativeIds.contains(id))
-            strings.put("duplicateStatus", "REPRESENTATIVE_RECORD");
-          else if (duplicateIds.contains(id))
-            strings.put("duplicateStatus", "ASSOCIATED_RECORD");
-          else if (duplicateIds.isEmpty() && representativeIds.isEmpty())
-            strings.put("duplicateStatus", "NOT_LINKED");
-          else
-            strings.put("duplicateStatus", "ERROR");
-
         } else {
           booleans.put("isClustered", false);
+          strings.put("duplicateStatus", "NOT_LINKED");
         }
 
         c.output(KV.of(indexRecord.getId(), indexRecord));
