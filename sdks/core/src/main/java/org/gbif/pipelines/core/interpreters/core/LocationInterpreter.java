@@ -1,12 +1,24 @@
 package org.gbif.pipelines.core.interpreters.core;
 
 import static org.gbif.api.model.Constants.EBIRD_DATASET_KEY;
-import static org.gbif.api.vocabulary.OccurrenceIssue.*;
+import static org.gbif.api.vocabulary.OccurrenceIssue.CONTINENT_INVALID;
+import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_INVALID;
+import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_OUT_OF_RANGE;
+import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_PRECISION_INVALID;
+import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_UNCERTAINTY_METERS_INVALID;
+import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_COORDINATE_MISMATCH;
+import static org.gbif.api.vocabulary.OccurrenceIssue.FOOTPRINT_SRS_INVALID;
+import static org.gbif.api.vocabulary.OccurrenceIssue.ZERO_COORDINATE;
 import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareValue;
+import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareValueOpt;
 
 import com.google.common.base.Strings;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -137,20 +149,24 @@ public class LocationInterpreter {
    * the footprintWKT in WGS84 projection.
    */
   public static void interpretFootprintWKT(ExtendedRecord er, LocationRecord lr) {
-    String verbatimFootprintSRS = extractNullAwareValue(er, DwcTerm.footprintSRS);
+    Optional<String> verbatimFootprintSRS = extractNullAwareValueOpt(er, DwcTerm.footprintSRS);
     CoordinateReferenceSystem footprintSRS =
-        SpatialReferenceSystemParser.parseCRS(verbatimFootprintSRS);
-    if (footprintSRS == null) {
+        verbatimFootprintSRS.map(SpatialReferenceSystemParser::parseCRS).orElse(null);
+
+    if (verbatimFootprintSRS.isPresent() && footprintSRS == null) {
       addIssue(lr, FOOTPRINT_SRS_INVALID);
     } else {
-      String verbatimFootprintWKT = extractNullAwareValue(er, DwcTerm.footprintWKT);
-      ParsedField<String> result =
-          FootprintWKTParser.parseFootprintWKT(footprintSRS, verbatimFootprintWKT);
-      if (result.isSuccessful()) {
-        lr.setFootprintWKT(result.getResult());
-      } else {
-        addIssue(lr, result.getIssues());
-      }
+
+      extractNullAwareValueOpt(er, DwcTerm.footprintWKT)
+          .map(wkt -> FootprintWKTParser.parseFootprintWKT(footprintSRS, wkt))
+          .ifPresent(
+              result -> {
+                if (result.isSuccessful()) {
+                  lr.setFootprintWKT(result.getResult());
+                } else {
+                  addIssue(lr, result.getIssues());
+                }
+              });
     }
   }
 

@@ -9,7 +9,6 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.apache.hadoop.hbase.client.Result;
 import org.gbif.api.model.occurrence.VerbatimOccurrence;
-import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.Term;
 import org.gbif.occurrence.persistence.util.OccurrenceBuilder;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -60,7 +59,7 @@ public class OccurrenceConverter {
 
   /** Transforms a Map<Term,String> into Map<Term.qualifiedName/String,String>. */
   private static Map<String, String> toVerbatimMap(Map<Term, String> verbatimMap) {
-    Map<String, String> rawMap = new HashMap<>();
+    Map<String, String> rawMap = new HashMap<>(verbatimMap.size());
     verbatimMap.forEach((k, v) -> rawMap.put(k.qualifiedName(), v));
     return rawMap;
   }
@@ -71,12 +70,12 @@ public class OccurrenceConverter {
    * verbatimExtensions.
    */
   private static Map<String, List<Map<String, String>>> toVerbatimExtensionsMap(
-      Map<Extension, List<Map<Term, String>>> verbatimExtensions) {
-    Map<String, List<Map<String, String>>> rawExtensions = new HashMap<>();
+      Map<String, List<Map<Term, String>>> verbatimExtensions) {
+    Map<String, List<Map<String, String>>> rawExtensions = new HashMap<>(verbatimExtensions.size());
     verbatimExtensions.forEach(
         (k, v) ->
             rawExtensions.put(
-                k.getRowType(),
+                k,
                 v.stream().map(OccurrenceConverter::toVerbatimMap).collect(Collectors.toList())));
     return rawExtensions;
   }

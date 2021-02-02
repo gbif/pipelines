@@ -22,7 +22,7 @@ public class FootprintWKTParser {
 
   private static CoordinateReferenceSystem WGS84;
 
-  /** WGS84 is the reference CRS. */
+  // WGS84 is the reference CRS.
   static {
     try {
       WGS84 = CRS.decode("EPSG:4326");

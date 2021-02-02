@@ -176,7 +176,7 @@ public class LocationTransformTest {
       "56.26",
       "9.51",
       "Copenhagen", // 15
-      "GEODETIC_DATUM_ASSUMED_WGS84",
+      "GEODETIC_DATUM_ASSUMED_WGS84,FOOTPRINT_SRS_INVALID",
       "155.5",
       "44.5",
       "105.0",
@@ -189,6 +189,9 @@ public class LocationTransformTest {
       "Denmark",
       "Midtjylland",
       "Silkeborg",
+      null,
+      null,
+      "blabla",
       null
     };
     final String[] japan = {
@@ -208,7 +211,7 @@ public class LocationTransformTest {
       "36.21",
       "138.25",
       "Tokyo", // 15
-      "GEODETIC_DATUM_ASSUMED_WGS84",
+      "GEODETIC_DATUM_ASSUMED_WGS84,FOOTPRINT_WKT_INVALID",
       "155.5",
       "44.5",
       "105.0",
@@ -221,6 +224,9 @@ public class LocationTransformTest {
       "Japan",
       "Nagano",
       "Nagawa",
+      null,
+      "blabla",
+      null,
       null
     };
     final String[] arctic = {
@@ -253,7 +259,10 @@ public class LocationTransformTest {
       null,
       null,
       null,
-      null
+      null,
+      "POLYGON((100000 515000,100000 520000,105000 520000,105000 515000,100000 515000))",
+      "EPSG:28992",
+      "POLYGON ((52.619749292808244 4.575033022857827, 52.66468072273538 4.574203170903047, 52.665162889286556 4.648106265726084, 52.6202308261076 4.648860682668263, 52.619749292808244 4.575033022857827))"
     };
 
     final MetadataRecord mdr =
@@ -313,6 +322,10 @@ public class LocationTransformTest {
               terms.put(DwcTerm.decimalLongitude.qualifiedName(), x[14]);
               Optional.ofNullable(x[15])
                   .ifPresent(y -> terms.put(DwcTerm.stateProvince.qualifiedName(), y));
+              Optional.ofNullable(x[30])
+                  .ifPresent(y -> terms.put(DwcTerm.footprintWKT.qualifiedName(), y));
+              Optional.ofNullable(x[31])
+                  .ifPresent(y -> terms.put(DwcTerm.footprintSRS.qualifiedName(), y));
               terms.put(
                   GbifTerm.publishingCountry.qualifiedName(),
                   metadataRecord.getDatasetPublishingCountry());
@@ -365,8 +378,10 @@ public class LocationTransformTest {
                       .setHasGeospatialIssue(false)
                       .setPublishingCountry(mdr.getDatasetPublishingCountry())
                       .setCreated(0L)
+                      .setFootprintWKT(x[32])
                       .build();
-              record.getIssues().getIssueList().add(x[16]);
+              Arrays.asList(x[16].split(","))
+                  .forEach(z -> record.getIssues().getIssueList().add(z));
               return record;
             })
         .collect(Collectors.toList());
