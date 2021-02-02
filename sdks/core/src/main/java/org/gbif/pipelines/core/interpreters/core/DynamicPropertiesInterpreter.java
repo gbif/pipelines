@@ -29,7 +29,7 @@ public class DynamicPropertiesInterpreter {
         .flatMap(TissueParser::hasTissue)
         .ifPresent(
             any -> {
-              DynamicProperty.Builder builder = DynamicProperty.newBuilder().setType(Type.BOOLEAN);
+              DynamicProperty.Builder builder = DynamicProperty.newBuilder().setClazz(Type.BOOLEAN);
               builder.setValue(any.toString());
               br.getDynamicProperties().put(Key.HAS_TISSUE, builder.build());
             });
@@ -69,22 +69,12 @@ public class DynamicPropertiesInterpreter {
   public static void interpretLength(ExtendedRecord er, BasicRecord br) {
     extractNullAwareOptValue(er, DwcTerm.preparations)
         .flatMap(LengthParser::parse)
-        .ifPresent(
-            value -> {
-              DynamicProperty.Builder builder = DynamicProperty.newBuilder().setType(Type.DOUBLE);
-              builder.setValue(value);
-              br.getDynamicProperties().put(Key.LENGTH, builder.build());
-            });
+        .ifPresent(value -> br.getDynamicProperties().put(Key.LENGTH, value));
   }
 
   public static void interpretMass(ExtendedRecord er, BasicRecord br) {
     extractNullAwareOptValue(er, DwcTerm.preparations)
         .flatMap(MassParser::parse)
-        .ifPresent(
-            value -> {
-              DynamicProperty.Builder builder = DynamicProperty.newBuilder().setType(Type.DOUBLE);
-              builder.setValue(value);
-              br.getDynamicProperties().put(Key.MASS, builder.build());
-            });
+        .ifPresent(value -> br.getDynamicProperties().put(Key.MASS, value));
   }
 }

@@ -3,11 +3,12 @@ package org.gbif.pipelines.core.parsers.dynamic;
 import java.util.Optional;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.gbif.pipelines.io.avro.DynamicProperty;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class MassParser {
 
-  public static Optional<String> parse(String source) {
+  public static Optional<DynamicProperty> parse(String source) {
     return Optional.empty();
   }
 }
