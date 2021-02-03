@@ -197,7 +197,7 @@ public class MassParser {
       "(?<key>(?&wt_key_word))(?&key_end)(?<value>(?&range))\\s*(?<units>(?&wt_units))?";
   private static final Pattern WT_KEY_AMBIGUOUS_PT = PARSER.initPattern(WT_KEY_AMBIGUOUS);
 
-  private static final Pattern UNITS_FROM_KEY = Pattern.compile("(grams)$");
+  private static final Pattern UNITS_FROM_KEY = Pattern.compile("(?<units>grams)$");
 
   @VisibleForTesting protected static final String TOTAL_WEIGHT = "total weight";
 
@@ -232,7 +232,7 @@ public class MassParser {
           String units = PARSER.getGroup(matcher, null, "units", "units1", "units2");
           if (key != null && units == null) {
             Matcher km = UNITS_FROM_KEY.matcher(key);
-            units = km.find() ? "grams" : null;
+            units = km.find() ? km.group() : null;
           }
 
           if (key != null && value != null && TOTAL_WEIGHT_SET.contains(key)) {

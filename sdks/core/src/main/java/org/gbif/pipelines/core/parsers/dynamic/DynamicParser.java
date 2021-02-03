@@ -1,10 +1,13 @@
 package org.gbif.pipelines.core.parsers.dynamic;
 
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(staticName = "create")
 class DynamicParser {
@@ -55,5 +58,13 @@ class DynamicParser {
       }
       mainTemplateMap.replace(e.getKey(), v);
     }
+  }
+
+  @Getter
+  @Builder
+  protected static final class PatternDefault {
+    private final Pattern pattern;
+    private final String defaultKey;
+    private final String typeKey;
   }
 }

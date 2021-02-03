@@ -95,7 +95,7 @@ public class LengthParser {
   static {
     // Used for parsing forms like: 2 ft 4 inches
     PARSER.put("(?&len_foot)", "(?:foot|feet|ft)s?(?&dot)");
-    PARSER.put("(?&len_inch)", "(?:inch e?|in)s?(?&dot)");
+    PARSER.put("(?&len_inch)", "(?:inche?|in)s?(?&dot)");
     // Abbreviations for total length
     PARSER.put("(?&len_key_abbrev)", "t(?&dot)o?l(?&dot)|s(?&dot)l(?&dot)");
     // For when the key is a suffix like: 44 mm TL
@@ -126,9 +126,9 @@ public class LengthParser {
         "(?&svl_len_key)",
         "snout(?&dash)vent(?&dash)lengths?(?:(?&dash)in(?&dash)mm)?|s(?&dot)v(?&dot)(:?l(?&dot))?|snout\\s+vent\\s+lengths?");
     // Length unit words
-    PARSER.put("(?&len_units_word)", "(?:meter|millimeter|centimeter|foot|feet|inch e?)s?");
+    PARSER.put("(?&len_units_word)", "(?:meter|millimeter|centimeter|foot|feet|inche?)s?");
     // Length unit abbreviations
-    PARSER.put("(?&len_units_abbrev)", "(?:[cm](?&dot)m|in|ft)(?&dot)s?");
+    PARSER.put("(?&len_units_abbrev)", "(?:[cm](?&dot)m|in|ft)(?&dot)");
     // All length units
     PARSER.put("(?&len_units)", "(?&len_units_word)|(?&len_units_abbrev)");
     // Gather all length key types
@@ -240,7 +240,7 @@ public class LengthParser {
           + "(?<units>(?&len_units))?";
   private static final Pattern SVL_LEN_KEY_PT = PARSER.initPattern(SVL_LEN_KEY);
 
-  private static final Pattern UNITS_FROM_KEY = Pattern.compile("(?<units> mm | millimeters ) $");
+  private static final Pattern UNITS_FROM_KEY = Pattern.compile("(?<units>mm|millimeters)$");
 
   private static final List<Pattern> PATTERNS =
       Arrays.asList(
@@ -284,12 +284,12 @@ public class LengthParser {
         Matcher matcher = p.matcher(source.toLowerCase());
 
         if (matcher.find()) {
-          String key = PARSER.getGroup(matcher, "", "key");
+          String key = PARSER.getGroup(matcher, "total length", "key");
           String value = PARSER.getGroup(matcher, null, "value", "value1", "value2");
-          String units = PARSER.getGroup(matcher, null, "units", "units1", "units2");
+          String units = PARSER.getGroup(matcher, "mm", "units", "units1", "units2");
           if (key != null && units == null) {
             Matcher km = UNITS_FROM_KEY.matcher(key);
-            units = km.find() ? km.group("units") : null;
+            units = km.find() ? km.group() : null;
           }
 
           if (key != null && value != null && LENGTH_MAP.containsKey(key)) {
