@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
  * https://github.com/VertNet/post-harvest-processor/blob/master/lib/trait_parsers/trait_parser.py
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class RegexDefaultTemplates {
+class RegexDefaultTemplates {
 
   private static final Map<String, String> MAP = new HashMap<>();
 
@@ -52,7 +52,7 @@ public class RegexDefaultTemplates {
     MAP.put("(?&close)", "[\\)\\]\\}]?");
   }
 
-  public static Map<String, String> get() {
+  static Map<String, String> get() {
     return MAP;
   }
 }

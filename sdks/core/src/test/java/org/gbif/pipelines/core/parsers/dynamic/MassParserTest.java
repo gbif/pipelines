@@ -11,11 +11,6 @@ import org.junit.Test;
 public class MassParserTest {
 
   @Test
-  public void testDefualtMap() {
-    MassParser.MAIN_TEMPLATE_MAP.forEach((k, v) -> Assert.assertFalse(v.contains("?&")));
-  }
-
-  @Test
   public void parser1Test() {
     // State
     String value = "762-292-121-76 2435.0g";
