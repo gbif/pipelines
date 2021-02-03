@@ -34,7 +34,7 @@ class RegexDefaultTemplates {
         "(?&shorthand_words)",
         "on\\s*tag|specimens?|catalog|measurements(?:\\s+[a-zA-Z]+)|tag\\s+\\d+\\s*=?(?:male|female)?\\s*,|meas[.,]?(?:\\s+\\w+\\.\\w+\\.)?");
     // Common keyword misspellings that precede shorthand measurement
-    MAP.put("(?&shorthand_typos)", "mesurements|Measurementsnt");
+    MAP.put("(?&shorthand_typos)", "mesurements|measurementsnt");
     // Keys where we need units to know if it's for mass or length
     MAP.put("(?&key_units_req)", "measurements?|body|total");
     // Characters that separate shorthand values

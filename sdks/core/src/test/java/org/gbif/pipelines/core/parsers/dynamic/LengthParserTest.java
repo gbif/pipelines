@@ -525,7 +525,7 @@ public class LengthParserTest {
     // Should
     Assert.assertTrue(result.isPresent());
     Assert.assertEquals("total length", result.get().getKey());
-    Assert.assertEquals("mm", result.get().getValue());
+    Assert.assertEquals("mm", result.get().getType());
     Assert.assertEquals("157", result.get().getValue());
     Assert.assertEquals("String", result.get().getClazz());
   }
@@ -705,7 +705,7 @@ public class LengthParserTest {
 
     // Should
     Assert.assertTrue(result.isPresent());
-    Assert.assertEquals("Meas: L", result.get().getKey());
+    Assert.assertEquals("total length", result.get().getKey());
     Assert.assertEquals("mm", result.get().getType());
     Assert.assertEquals("21.0", result.get().getValue());
     Assert.assertEquals("String", result.get().getClazz());
@@ -721,7 +721,7 @@ public class LengthParserTest {
 
     // Should
     Assert.assertTrue(result.isPresent());
-    Assert.assertEquals("Meas: L", result.get().getKey());
+    Assert.assertEquals("total length", result.get().getKey());
     Assert.assertEquals("cm", result.get().getType());
     Assert.assertEquals("21.0", result.get().getValue());
     Assert.assertEquals("String", result.get().getClazz());
@@ -833,7 +833,7 @@ public class LengthParserTest {
 
     // Should
     Assert.assertTrue(result.isPresent());
-    Assert.assertEquals("Measurements: L", result.get().getKey());
+    Assert.assertEquals("total length", result.get().getKey());
     Assert.assertEquals("cm", result.get().getType());
     Assert.assertEquals("21.0", result.get().getValue());
     Assert.assertEquals("String", result.get().getClazz());
