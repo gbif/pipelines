@@ -69,13 +69,13 @@ public class DynamicPropertiesInterpreter {
   }
 
   public static void interpretLength(ExtendedRecord er, BasicRecord br) {
-    extractNullAwareOptValue(er, DwcTerm.preparations)
+    extractNullAwareOptValue(er, DwcTerm.dynamicProperties)
         .flatMap(LengthParser::parse)
         .ifPresent(value -> br.getDynamicProperties().put(Key.LENGTH, value));
   }
 
   public static void interpretMass(ExtendedRecord er, BasicRecord br) {
-    extractNullAwareOptValue(er, DwcTerm.preparations)
+    extractNullAwareOptValue(er, DwcTerm.dynamicProperties)
         .flatMap(MassParser::parse)
         .ifPresent(value -> br.getDynamicProperties().put(Key.MASS, value));
   }

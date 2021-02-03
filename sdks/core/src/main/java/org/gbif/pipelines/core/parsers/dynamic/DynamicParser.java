@@ -47,7 +47,6 @@ class DynamicParser {
             .defaultKey(defaultKey)
             .defaulType(defaultType)
             .build());
-    System.out.println(result);
   }
 
   protected String getGroup(Matcher matcher, String value, String... group) {
