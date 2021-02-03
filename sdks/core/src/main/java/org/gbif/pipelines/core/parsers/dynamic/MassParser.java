@@ -73,7 +73,8 @@ public class MassParser {
               "wts",
               "wts."));
 
-  @VisibleForTesting protected static final Map<String, String> R_MAP = new LinkedHashMap<>();
+  @VisibleForTesting
+  protected static final Map<String, String> MAIN_TEMPLATE_MAP = new LinkedHashMap<>();
 
   static {
     // Use to parse forms like: 2 lbs 4 oz.
@@ -113,14 +114,14 @@ public class MassParser {
         "(?&all_wt_keys)",
         "(?&total_wt_key)|(?&other_wt_key)|(?&wt_key_word)|(?&key_units_req)|(?&shorthand_words)|(?&shorthand_typos)");
 
-    for (Map.Entry<String, String> e : R_MAP.entrySet()) {
+    for (Map.Entry<String, String> e : MAIN_TEMPLATE_MAP.entrySet()) {
       String v = e.getValue();
-      for (Map.Entry<String, String> e2 : R_MAP.entrySet()) {
+      for (Map.Entry<String, String> e2 : MAIN_TEMPLATE_MAP.entrySet()) {
         if (!e.getKey().equals(e2.getKey())) {
           v = v.replace(e2.getKey(), e2.getValue());
         }
       }
-      R_MAP.replace(e.getKey(), v);
+      MAIN_TEMPLATE_MAP.replace(e.getKey(), v);
     }
   }
 
@@ -131,7 +132,6 @@ public class MassParser {
           + "(?<units1>(?&wt_pound))\\s*"
           + "(?<value2>(?&range))\\s*"
           + "(?<units2>(?&wt_ounce))";
-
   private static final Pattern EN_WT_PT = initPattern(EN_WT);
 
   // Look for body mass with a total weight key and optional units
@@ -139,7 +139,6 @@ public class MassParser {
       "\\b(?<key>(?&total_wt_key))(?&key_end)"
           + "(?<value>(?&range))\\s*"
           + "(?<units>(?&wt_units))?";
-
   private static final Pattern TOTAL_WT_KEY_PT = initPattern(TOTAL_WT_KEY);
 
   // Look for these secondary body mass keys next
@@ -147,7 +146,6 @@ public class MassParser {
       "\\b(?<key>(?&other_wt_key))(?&key_end)"
           + "(?<value>(?&range))\\s*"
           + "(?<units>(?&wt_units))?";
-
   private static final Pattern OTHER_WT_KEY_PT = initPattern(OTHER_WT_KEY);
 
   // Look for keys where the units are required
@@ -155,7 +153,6 @@ public class MassParser {
       "\\b(?<key>(?&key_units_req))(?&key_end)"
           + "(?<value>(?&range))\\s*"
           + "(?<units>(?&wt_units))";
-
   private static final Pattern KEY_UNITS_REQ_PT = initPattern(KEY_UNITS_REQ);
 
   // Look for the body mass in a phrase
@@ -163,7 +160,6 @@ public class MassParser {
       "\\b(?<key>(?&wt_in_phrase))\\D{1,32}"
           + "(?<value>(?&range))\\s*"
           + "(?<units>(?&wt_units))?";
-
   private static final Pattern WT_IN_PHRASE_PT = initPattern(WT_IN_PHRASE);
 
   // An out of order parse: body mass (g) 20-25
@@ -171,13 +167,11 @@ public class MassParser {
       "\\b(?<key>(?&wt_key_word))\\s*"
           + "(?&open)\\s*(?<units>(?&wt_units))\\s*(?&close)\\s*"
           + "(?<value>(?&range))";
-
   private static final Pattern WT_KEY_WORD_PT = initPattern(WT_KEY_WORD);
 
   // These keys require units to disambiguate what is being measured
   private static final String WT_KEY_WORD_REQ =
       "(?<key>(?&wt_key_word))(?&key_end)(?<value>(?&range))\\s*(?<units>(?&wt_units))";
-
   private static final Pattern WT_KEY_WORD_REQ_PT = initPattern(WT_KEY_WORD_REQ);
 
   // Body mass is in shorthand notation
@@ -186,7 +180,6 @@ public class MassParser {
           + "(?&wt_shorthand)\\s*"
           + "(?<value>(?&number))\\s*"
           + "(?<units>(?&wt_units))?";
-
   private static final Pattern WT_SHORTHAND_PT = initPattern(WT_SHORTHAND);
 
   // Body mass is in shorthand notation (units required)
@@ -195,7 +188,6 @@ public class MassParser {
           + "(?&wt_shorthand_req)\\s*"
           + "(?<value>(?&number))\\s*"
           + "(?<units>(?&wt_units))";
-
   private static final Pattern WT_SHORTHAND_REQ_PT = initPattern(WT_SHORTHAND_REQ);
 
   // A shorthand notation with some abbreviations in it
@@ -204,18 +196,15 @@ public class MassParser {
           + "(?&wt_shorthand_euro)\\s*"
           + "(?<value>(?&number))\\s*"
           + "(?<units>(?&wt_units))?";
-
   private static final Pattern WT_SHORTHAND_EURO_PT = initPattern(WT_SHORTHAND_EURO);
 
   // A notation using 'fa'. It can be shorter than the other shorthand notations
   private static final String WT_FA = "fa\\d*-(?<value>(?&number))\\s*(?<units>(?&wt_units))?";
-
   private static final Pattern WT_FA_PT = initPattern(WT_FA);
 
   // Now we can look for the body mass, RANGE, optional units
   private static final String WT_KEY_AMBIGUOUS =
       "(?<key>(?&wt_key_word))(?&key_end)(?<value>(?&range))\\s*(?<units>(?&wt_units))?";
-
   private static final Pattern WT_KEY_AMBIGUOUS_PT = initPattern(WT_KEY_AMBIGUOUS);
 
   private static final Pattern UNITS_FROM_KEY = Pattern.compile("(grams)$");
@@ -239,18 +228,18 @@ public class MassParser {
 
   private static void put(String key, String value) {
     String result = value;
-    for (Map.Entry<String, String> entry : RegexDefault.get().entrySet()) {
+    for (Map.Entry<String, String> entry : RegexDefaultTemplates.get().entrySet()) {
       result = result.replace(entry.getKey(), entry.getValue());
     }
-    R_MAP.put(key, result);
+    MAIN_TEMPLATE_MAP.put(key, result);
   }
 
   private static Pattern initPattern(String value) {
     String result = value;
-    for (Map.Entry<String, String> entry : R_MAP.entrySet()) {
+    for (Map.Entry<String, String> entry : MAIN_TEMPLATE_MAP.entrySet()) {
       result = result.replace(entry.getKey(), entry.getValue());
     }
-    for (Map.Entry<String, String> entry : RegexDefault.get().entrySet()) {
+    for (Map.Entry<String, String> entry : RegexDefaultTemplates.get().entrySet()) {
       result = result.replace(entry.getKey(), entry.getValue());
     }
     return Pattern.compile(result);

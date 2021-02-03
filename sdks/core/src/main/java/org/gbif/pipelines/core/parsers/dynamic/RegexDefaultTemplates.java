@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
  * https://github.com/VertNet/post-harvest-processor/blob/master/lib/trait_parsers/trait_parser.py
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class RegexDefault {
+public class RegexDefaultTemplates {
 
   private static final Map<String, String> MAP = new HashMap<>();
 

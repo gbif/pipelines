@@ -12,7 +12,7 @@ public class MassParserTest {
 
   @Test
   public void testDefualtMap() {
-    MassParser.R_MAP.forEach((k, v) -> Assert.assertFalse(v.contains("?&")));
+    MassParser.MAIN_TEMPLATE_MAP.forEach((k, v) -> Assert.assertFalse(v.contains("?&")));
   }
 
   @Test
