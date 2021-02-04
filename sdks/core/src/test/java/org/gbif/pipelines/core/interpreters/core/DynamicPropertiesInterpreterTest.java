@@ -43,46 +43,6 @@ public class DynamicPropertiesInterpreterTest {
       };
 
   @Test
-  public void tissueEmptyTest() {
-    // State
-    ExtendedRecord er =
-        ExtendedRecord.newBuilder().setId(ID).setCoreTerms(Collections.emptyMap()).build();
-    BasicRecord br = brFn.get();
-
-    // When
-    DynamicPropertiesInterpreter.interpretPreparations(er, br);
-
-    // Should
-    Assert.assertNull(br.getPreparations());
-  }
-
-  @Test
-  public void tissueNullTest() {
-    // State
-    ExtendedRecord er = erFn.apply(DwcTerm.preparations, null);
-    BasicRecord br = brFn.get();
-
-    // When
-    DynamicPropertiesInterpreter.interpretPreparations(er, br);
-
-    // Should
-    Assert.assertNull(br.getPreparations());
-  }
-
-  @Test
-  public void tissueTest() {
-    // State
-    ExtendedRecord er = erFn.apply(DwcTerm.preparations, "frozen carcass");
-    BasicRecord br = brFn.get();
-
-    // When
-    DynamicPropertiesInterpreter.interpretPreparations(er, br);
-
-    // Should
-    Assert.assertEquals("tissue", br.getPreparations());
-  }
-
-  @Test
   public void sexFemaleValueTest() {
     // State
     ExtendedRecord er = erDynamicPropertiesFn.apply("weight=81.00 g; sex=female; age=u ad.");

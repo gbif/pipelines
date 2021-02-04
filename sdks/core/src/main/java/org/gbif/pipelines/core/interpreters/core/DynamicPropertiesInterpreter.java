@@ -14,20 +14,12 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.parsers.VocabularyParser;
 import org.gbif.pipelines.core.parsers.dynamic.LifeStageParser;
 import org.gbif.pipelines.core.parsers.dynamic.SexParser;
-import org.gbif.pipelines.core.parsers.dynamic.TissueParser;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.vocabulary.lookup.LookupConcept;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class DynamicPropertiesInterpreter {
-
-  public static void interpretPreparations(ExtendedRecord er, BasicRecord br) {
-    extractNullAwareOptValue(er, DwcTerm.preparations)
-        .flatMap(TissueParser::hasTissue)
-        .map(x -> x ? "tissue" : null)
-        .ifPresent(any -> br.setPreparations(any));
-  }
 
   public static void interpretSex(ExtendedRecord er, BasicRecord br) {
     if (br.getSex() != null) {

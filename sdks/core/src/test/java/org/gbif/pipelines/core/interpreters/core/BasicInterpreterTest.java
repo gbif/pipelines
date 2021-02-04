@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -569,6 +570,52 @@ public class BasicInterpreterTest {
     // Should
     Assert.assertNull(br.getLifeStage());
     Assert.assertTrue(br.getLifeStageLineage().isEmpty());
+  }
+
+  @Test
+  public void tissueEmptyTest() {
+    // State
+    ExtendedRecord er =
+        ExtendedRecord.newBuilder().setId(ID).setCoreTerms(Collections.emptyMap()).build();
+    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
+
+    // When
+    BasicInterpreter.interpretPreparations(er, br);
+
+    // Should
+    Assert.assertNull(br.getPreparations());
+  }
+
+  @Test
+  public void tissueNullTest() {
+    // State
+    Map<String, String> coreMap = new HashMap<>(1);
+    coreMap.put(DwcTerm.preparations.qualifiedName(), null);
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+
+    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
+
+    // When
+    BasicInterpreter.interpretPreparations(er, br);
+
+    // Should
+    Assert.assertNull(br.getPreparations());
+  }
+
+  @Test
+  public void tissueTest() {
+    // State
+    Map<String, String> coreMap = new HashMap<>(1);
+    coreMap.put(DwcTerm.preparations.qualifiedName(), "frozen carcass");
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+
+    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
+
+    // When
+    BasicInterpreter.interpretPreparations(er, br);
+
+    // Should
+    Assert.assertEquals("tissue", br.getPreparations());
   }
 
   private void assertIssueSize(BasicRecord br, int expectedSize) {
