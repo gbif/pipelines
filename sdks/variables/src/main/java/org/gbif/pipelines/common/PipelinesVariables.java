@@ -126,14 +126,7 @@ public class PipelinesVariables {
   public static class DynamicProperties {
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
-    public static class Type {
-      public static final String BOOLEAN = Boolean.class.getSimpleName();
-      public static final String STRING = String.class.getSimpleName();
-    }
-
-    @NoArgsConstructor(access = AccessLevel.PRIVATE)
-    public static class Key {
-      public static final String HAS_TISSUE = "hasTissue";
+    public static class Field {
       public static final String MASS = "mass";
       public static final String LENGTH = "length";
     }

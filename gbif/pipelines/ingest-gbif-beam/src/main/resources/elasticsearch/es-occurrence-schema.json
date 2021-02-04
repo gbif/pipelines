@@ -333,13 +333,6 @@
         }
       },
 
-      "dynamicProperties": {
-        "type": "object",
-        "properties": {
-          "hasTissue": {"type": "boolean"}
-        }
-      },
-
       "measurementOrFactItems": {"type": "nested", "enabled": false},
       "amplificationItems": {"type": "nested", "enabled": false},
 

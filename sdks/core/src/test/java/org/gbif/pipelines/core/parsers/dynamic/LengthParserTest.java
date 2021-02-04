@@ -1,7 +1,8 @@
 package org.gbif.pipelines.core.parsers.dynamic;
 
+import static org.gbif.pipelines.common.PipelinesVariables.DynamicProperties.*;
+
 import java.util.Optional;
-import org.gbif.pipelines.io.avro.DynamicProperty;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -20,7 +21,7 @@ public class LengthParserTest {
     Assert.assertEquals("total length", result.get().getKey());
     Assert.assertEquals("mm", result.get().getType());
     Assert.assertEquals("123", result.get().getValue());
-    Assert.assertEquals("String", result.get().getClazz());
+    Assert.assertEquals(Field.LENGTH, result.get().getField());
   }
 
   @Test
@@ -37,7 +38,7 @@ public class LengthParserTest {
     Assert.assertEquals("total length", result.get().getKey());
     Assert.assertEquals("mm", result.get().getType());
     Assert.assertEquals("230", result.get().getValue());
-    Assert.assertEquals("String", result.get().getClazz());
+    Assert.assertEquals(Field.LENGTH, result.get().getField());
   }
 
   @Test
@@ -77,7 +78,7 @@ public class LengthParserTest {
     Assert.assertEquals("total length", result.get().getKey());
     Assert.assertEquals("mm", result.get().getType());
     Assert.assertEquals("308", result.get().getValue());
-    Assert.assertEquals("String", result.get().getClazz());
+    Assert.assertEquals(Field.LENGTH, result.get().getField());
   }
 
   @Test
@@ -93,7 +94,7 @@ public class LengthParserTest {
     Assert.assertEquals("total length", result.get().getKey());
     Assert.assertEquals("mm", result.get().getType());
     Assert.assertEquals("308", result.get().getValue());
-    Assert.assertEquals("String", result.get().getClazz());
+    Assert.assertEquals(Field.LENGTH, result.get().getField());
   }
 
   @Test
@@ -109,7 +110,7 @@ public class LengthParserTest {
     Assert.assertEquals("total length", result.get().getKey());
     Assert.assertEquals("mm", result.get().getType());
     Assert.assertEquals("143", result.get().getValue());
-    Assert.assertEquals("String", result.get().getClazz());
+    Assert.assertEquals(Field.LENGTH, result.get().getField());
   }
 
   @Test
@@ -125,7 +126,7 @@ public class LengthParserTest {
     Assert.assertEquals("total length", result.get().getKey());
     Assert.assertEquals("mm", result.get().getType());
     Assert.assertEquals("143", result.get().getValue());
-    Assert.assertEquals("String", result.get().getClazz());
+    Assert.assertEquals(Field.LENGTH, result.get().getField());
   }
 
   @Test
@@ -141,7 +142,7 @@ public class LengthParserTest {
     Assert.assertEquals("total length", result.get().getKey());
     Assert.assertEquals("mm", result.get().getType());
     Assert.assertEquals("111", result.get().getValue());
-    Assert.assertEquals("String", result.get().getClazz());
+    Assert.assertEquals(Field.LENGTH, result.get().getField());
   }
 
   @Test
@@ -158,7 +159,7 @@ public class LengthParserTest {
     Assert.assertEquals("total length", result.get().getKey());
     Assert.assertEquals("mm", result.get().getType());
     Assert.assertEquals("230", result.get().getValue());
-    Assert.assertEquals("String", result.get().getClazz());
+    Assert.assertEquals(Field.LENGTH, result.get().getField());
   }
 
   @Test
@@ -174,7 +175,7 @@ public class LengthParserTest {
     Assert.assertEquals("head-body length", result.get().getKey());
     Assert.assertEquals("cm", result.get().getType());
     Assert.assertEquals("345", result.get().getValue());
-    Assert.assertEquals("String", result.get().getClazz());
+    Assert.assertEquals(Field.LENGTH, result.get().getField());
   }
 
   @Test
@@ -190,7 +191,7 @@ public class LengthParserTest {
     Assert.assertEquals("total length", result.get().getKey());
     Assert.assertEquals("feet, inches", result.get().getType());
     Assert.assertEquals("2, 3.1 - 4.5", result.get().getValue());
-    Assert.assertEquals("String", result.get().getClazz());
+    Assert.assertEquals(Field.LENGTH, result.get().getField());
   }
 
   @Test
@@ -206,7 +207,7 @@ public class LengthParserTest {
     Assert.assertEquals("total length", result.get().getKey());
     Assert.assertEquals("2, 3.1 - 4.5", result.get().getValue());
     Assert.assertEquals("ft., in.", result.get().getType());
-    Assert.assertEquals("String", result.get().getClazz());
+    Assert.assertEquals(Field.LENGTH, result.get().getField());
   }
 
   @Test
@@ -222,7 +223,7 @@ public class LengthParserTest {
     Assert.assertEquals("total length", result.get().getKey());
     Assert.assertEquals("ft.", result.get().getType());
     Assert.assertEquals("2", result.get().getValue());
-    Assert.assertEquals("String", result.get().getClazz());
+    Assert.assertEquals(Field.LENGTH, result.get().getField());
   }
 
   @Test
@@ -238,7 +239,7 @@ public class LengthParserTest {
     Assert.assertEquals("total length", result.get().getKey());
     Assert.assertEquals("mm", result.get().getType());
     Assert.assertEquals("186", result.get().getValue());
-    Assert.assertEquals("String", result.get().getClazz());
+    Assert.assertEquals(Field.LENGTH, result.get().getField());
   }
 
   @Test
@@ -254,7 +255,7 @@ public class LengthParserTest {
     Assert.assertEquals("total length", result.get().getKey());
     Assert.assertEquals("mm", result.get().getType());
     Assert.assertEquals("8", result.get().getValue());
-    Assert.assertEquals("String", result.get().getClazz());
+    Assert.assertEquals(Field.LENGTH, result.get().getField());
   }
 
   @Test
@@ -270,7 +271,7 @@ public class LengthParserTest {
     Assert.assertEquals("total length", result.get().getKey());
     Assert.assertEquals("mm", result.get().getType());
     Assert.assertEquals("8", result.get().getValue());
-    Assert.assertEquals("String", result.get().getClazz());
+    Assert.assertEquals(Field.LENGTH, result.get().getField());
   }
 
   @Test
@@ -286,7 +287,7 @@ public class LengthParserTest {
     Assert.assertEquals("total length", result.get().getKey());
     Assert.assertNull(result.get().getType());
     Assert.assertEquals("120", result.get().getValue());
-    Assert.assertEquals("String", result.get().getClazz());
+    Assert.assertEquals(Field.LENGTH, result.get().getField());
   }
 
   @Test
@@ -302,7 +303,7 @@ public class LengthParserTest {
     Assert.assertEquals("total length", result.get().getKey());
     Assert.assertEquals("mm", result.get().getType());
     Assert.assertEquals("101.3", result.get().getValue());
-    Assert.assertEquals("String", result.get().getClazz());
+    Assert.assertEquals(Field.LENGTH, result.get().getField());
   }
 
   @Test
@@ -318,7 +319,7 @@ public class LengthParserTest {
     Assert.assertEquals("total length", result.get().getKey());
     Assert.assertNull(result.get().getType());
     Assert.assertEquals("153", result.get().getValue());
-    Assert.assertEquals("String", result.get().getClazz());
+    Assert.assertEquals(Field.LENGTH, result.get().getField());
   }
 
   @Test
@@ -334,7 +335,7 @@ public class LengthParserTest {
     Assert.assertEquals("total length", result.get().getKey());
     Assert.assertNull(result.get().getType());
     Assert.assertEquals("117", result.get().getValue());
-    Assert.assertEquals("String", result.get().getClazz());
+    Assert.assertEquals(Field.LENGTH, result.get().getField());
   }
 
   @Test
@@ -350,7 +351,7 @@ public class LengthParserTest {
     Assert.assertEquals("snout-vent length", result.get().getKey());
     Assert.assertEquals("mm.", result.get().getType());
     Assert.assertEquals("16 to 23", result.get().getValue());
-    Assert.assertEquals("String", result.get().getClazz());
+    Assert.assertEquals(Field.LENGTH, result.get().getField());
   }
 
   @Test
@@ -366,7 +367,7 @@ public class LengthParserTest {
     Assert.assertEquals("total length", result.get().getKey());
     Assert.assertEquals("cm", result.get().getType());
     Assert.assertEquals("13", result.get().getValue());
-    Assert.assertEquals("String", result.get().getClazz());
+    Assert.assertEquals(Field.LENGTH, result.get().getField());
   }
 
   @Test
@@ -382,7 +383,7 @@ public class LengthParserTest {
     Assert.assertEquals("total length", result.get().getKey());
     Assert.assertEquals("in", result.get().getType());
     Assert.assertEquals("31.5-58.3", result.get().getValue());
-    Assert.assertEquals("String", result.get().getClazz());
+    Assert.assertEquals(Field.LENGTH, result.get().getField());
   }
 
   @Test
@@ -398,7 +399,7 @@ public class LengthParserTest {
     Assert.assertEquals("snout-vent length", result.get().getKey());
     Assert.assertEquals("mm", result.get().getType());
     Assert.assertEquals("52", result.get().getValue());
-    Assert.assertEquals("String", result.get().getClazz());
+    Assert.assertEquals(Field.LENGTH, result.get().getField());
   }
 
   @Test
@@ -414,7 +415,7 @@ public class LengthParserTest {
     Assert.assertEquals("total length", result.get().getKey());
     Assert.assertEquals("mm", result.get().getType());
     Assert.assertEquals("257", result.get().getValue());
-    Assert.assertEquals("String", result.get().getClazz());
+    Assert.assertEquals(Field.LENGTH, result.get().getField());
   }
 
   @Test
@@ -430,7 +431,7 @@ public class LengthParserTest {
     Assert.assertEquals("total length", result.get().getKey());
     Assert.assertEquals("mm", result.get().getType());
     Assert.assertEquals("272", result.get().getValue());
-    Assert.assertEquals("String", result.get().getClazz());
+    Assert.assertEquals(Field.LENGTH, result.get().getField());
   }
 
   @Test
@@ -446,7 +447,7 @@ public class LengthParserTest {
     Assert.assertEquals("total length", result.get().getKey());
     Assert.assertNull(result.get().getType());
     Assert.assertEquals("12.0", result.get().getValue());
-    Assert.assertEquals("String", result.get().getClazz());
+    Assert.assertEquals(Field.LENGTH, result.get().getField());
   }
 
   @Test
@@ -463,7 +464,7 @@ public class LengthParserTest {
     Assert.assertEquals("total length", result.get().getKey());
     Assert.assertNull(result.get().getType());
     Assert.assertEquals("119-137", result.get().getValue());
-    Assert.assertEquals("String", result.get().getClazz());
+    Assert.assertEquals(Field.LENGTH, result.get().getField());
   }
 
   @Test
@@ -479,7 +480,7 @@ public class LengthParserTest {
     Assert.assertEquals("total length", result.get().getKey());
     Assert.assertEquals("mm", result.get().getType());
     Assert.assertEquals("44", result.get().getValue());
-    Assert.assertEquals("String", result.get().getClazz());
+    Assert.assertEquals(Field.LENGTH, result.get().getField());
   }
 
   @Test
@@ -495,7 +496,7 @@ public class LengthParserTest {
     Assert.assertEquals("total length", result.get().getKey());
     Assert.assertEquals("mm", result.get().getType());
     Assert.assertEquals("270", result.get().getValue());
-    Assert.assertEquals("String", result.get().getClazz());
+    Assert.assertEquals(Field.LENGTH, result.get().getField());
   }
 
   @Test
@@ -511,7 +512,7 @@ public class LengthParserTest {
     Assert.assertEquals("total length", result.get().getKey());
     Assert.assertNull(result.get().getType());
     Assert.assertEquals("20-29", result.get().getValue());
-    Assert.assertEquals("String", result.get().getClazz());
+    Assert.assertEquals(Field.LENGTH, result.get().getField());
   }
 
   @Test
@@ -527,7 +528,7 @@ public class LengthParserTest {
     Assert.assertEquals("total length", result.get().getKey());
     Assert.assertEquals("mm", result.get().getType());
     Assert.assertEquals("157", result.get().getValue());
-    Assert.assertEquals("String", result.get().getClazz());
+    Assert.assertEquals(Field.LENGTH, result.get().getField());
   }
 
   @Test
@@ -543,7 +544,7 @@ public class LengthParserTest {
     Assert.assertEquals("standard length", result.get().getKey());
     Assert.assertEquals("mm", result.get().getType());
     Assert.assertEquals("63-107", result.get().getValue());
-    Assert.assertEquals("String", result.get().getClazz());
+    Assert.assertEquals(Field.LENGTH, result.get().getField());
   }
 
   @Test
@@ -571,7 +572,7 @@ public class LengthParserTest {
     Assert.assertEquals("standard length", result.get().getKey());
     Assert.assertEquals("mm", result.get().getType());
     Assert.assertEquals("18.0-21.5", result.get().getValue());
-    Assert.assertEquals("String", result.get().getClazz());
+    Assert.assertEquals(Field.LENGTH, result.get().getField());
   }
 
   @Test
@@ -587,7 +588,7 @@ public class LengthParserTest {
     Assert.assertEquals("standard length", result.get().getKey());
     Assert.assertEquals("mm", result.get().getType());
     Assert.assertEquals("18-21.5", result.get().getValue());
-    Assert.assertEquals("String", result.get().getClazz());
+    Assert.assertEquals(Field.LENGTH, result.get().getField());
   }
 
   @Test
@@ -603,7 +604,7 @@ public class LengthParserTest {
     Assert.assertEquals("standard length", result.get().getKey());
     Assert.assertEquals("mm", result.get().getType());
     Assert.assertEquals("18.0-21", result.get().getValue());
-    Assert.assertEquals("String", result.get().getClazz());
+    Assert.assertEquals(Field.LENGTH, result.get().getField());
   }
 
   @Test
@@ -619,7 +620,7 @@ public class LengthParserTest {
     Assert.assertEquals("standard length", result.get().getKey());
     Assert.assertEquals("mm", result.get().getType());
     Assert.assertEquals("18-21", result.get().getValue());
-    Assert.assertEquals("String", result.get().getClazz());
+    Assert.assertEquals(Field.LENGTH, result.get().getField());
   }
 
   @Test
@@ -648,7 +649,7 @@ public class LengthParserTest {
     Assert.assertEquals("standard length", result.get().getKey());
     Assert.assertEquals("mm", result.get().getType());
     Assert.assertEquals("20-28", result.get().getValue());
-    Assert.assertEquals("String", result.get().getClazz());
+    Assert.assertEquals(Field.LENGTH, result.get().getField());
   }
 
   @Test
@@ -664,7 +665,7 @@ public class LengthParserTest {
     Assert.assertEquals("standard length", result.get().getKey());
     Assert.assertEquals("mm", result.get().getType());
     Assert.assertEquals("29", result.get().getValue());
-    Assert.assertEquals("String", result.get().getClazz());
+    Assert.assertEquals(Field.LENGTH, result.get().getField());
   }
 
   @Test
@@ -680,7 +681,7 @@ public class LengthParserTest {
     Assert.assertEquals("total length", result.get().getKey());
     Assert.assertEquals("mm", result.get().getType());
     Assert.assertEquals("159", result.get().getValue());
-    Assert.assertEquals("String", result.get().getClazz());
+    Assert.assertEquals(Field.LENGTH, result.get().getField());
   }
 
   @Test
@@ -708,7 +709,7 @@ public class LengthParserTest {
     Assert.assertEquals("total length", result.get().getKey());
     Assert.assertEquals("mm", result.get().getType());
     Assert.assertEquals("21.0", result.get().getValue());
-    Assert.assertEquals("String", result.get().getClazz());
+    Assert.assertEquals(Field.LENGTH, result.get().getField());
   }
 
   @Test
@@ -724,7 +725,7 @@ public class LengthParserTest {
     Assert.assertEquals("total length", result.get().getKey());
     Assert.assertEquals("cm", result.get().getType());
     Assert.assertEquals("21.0", result.get().getValue());
-    Assert.assertEquals("String", result.get().getClazz());
+    Assert.assertEquals(Field.LENGTH, result.get().getField());
   }
 
   @Test
@@ -740,7 +741,7 @@ public class LengthParserTest {
     Assert.assertEquals("total length", result.get().getKey());
     Assert.assertEquals("mm.", result.get().getType());
     Assert.assertEquals("375", result.get().getValue());
-    Assert.assertEquals("String", result.get().getClazz());
+    Assert.assertEquals(Field.LENGTH, result.get().getField());
   }
 
   @Test
@@ -756,7 +757,7 @@ public class LengthParserTest {
     Assert.assertEquals("standard length", result.get().getKey());
     Assert.assertEquals("mm", result.get().getType());
     Assert.assertEquals("12", result.get().getValue());
-    Assert.assertEquals("String", result.get().getClazz());
+    Assert.assertEquals(Field.LENGTH, result.get().getField());
   }
 
   @Test
@@ -772,7 +773,7 @@ public class LengthParserTest {
     Assert.assertEquals("standard length", result.get().getKey());
     Assert.assertEquals("mm", result.get().getType());
     Assert.assertEquals("12-14", result.get().getValue());
-    Assert.assertEquals("String", result.get().getClazz());
+    Assert.assertEquals(Field.LENGTH, result.get().getField());
   }
 
   @Test
@@ -788,7 +789,7 @@ public class LengthParserTest {
     Assert.assertEquals("snout-vent length", result.get().getKey());
     Assert.assertNull(result.get().getType());
     Assert.assertEquals("1.2", result.get().getValue());
-    Assert.assertEquals("String", result.get().getClazz());
+    Assert.assertEquals(Field.LENGTH, result.get().getField());
   }
 
   @Test
@@ -804,7 +805,7 @@ public class LengthParserTest {
     Assert.assertEquals("total length", result.get().getKey());
     Assert.assertEquals("mm", result.get().getType());
     Assert.assertEquals("123", result.get().getValue());
-    Assert.assertEquals("String", result.get().getClazz());
+    Assert.assertEquals(Field.LENGTH, result.get().getField());
   }
 
   @Test
@@ -820,7 +821,7 @@ public class LengthParserTest {
     Assert.assertEquals("total length", result.get().getKey());
     Assert.assertEquals("mm", result.get().getType());
     Assert.assertEquals("12-34", result.get().getValue());
-    Assert.assertEquals("String", result.get().getClazz());
+    Assert.assertEquals(Field.LENGTH, result.get().getField());
   }
 
   @Test
@@ -836,7 +837,7 @@ public class LengthParserTest {
     Assert.assertEquals("total length", result.get().getKey());
     Assert.assertEquals("cm", result.get().getType());
     Assert.assertEquals("21.0", result.get().getValue());
-    Assert.assertEquals("String", result.get().getClazz());
+    Assert.assertEquals(Field.LENGTH, result.get().getField());
   }
 
   @Test
@@ -852,6 +853,6 @@ public class LengthParserTest {
     Assert.assertEquals("snout-vent length", result.get().getKey());
     Assert.assertNull(result.get().getType());
     Assert.assertEquals("44", result.get().getValue());
-    Assert.assertEquals("String", result.get().getClazz());
+    Assert.assertEquals(Field.LENGTH, result.get().getField());
   }
 }

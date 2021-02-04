@@ -1,7 +1,5 @@
 package org.gbif.pipelines.core.parsers.dynamic;
 
-import static org.gbif.pipelines.common.PipelinesVariables.DynamicProperties.*;
-
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -9,17 +7,16 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
-import org.gbif.pipelines.io.avro.DynamicProperty;
 
-@AllArgsConstructor(staticName = "create")
+@Builder
 class DynamicParser {
 
   private final Map<String, String> mainTemplateMap = new LinkedHashMap<>();
   private final List<PatternDefault> patterns = new ArrayList<>();
   private final Pattern unitsFromKey;
   private final Map<String, String> keyMap;
+  private final String field;
 
   protected void addTemplate(String key, String value) {
     String result = value;
@@ -96,14 +93,13 @@ class DynamicParser {
           }
 
           if (key != null && value != null && keyMap.containsKey(key)) {
-            DynamicProperty dynamicProperty =
-                DynamicProperty.newBuilder()
-                    .setKey(keyMap.get(key))
-                    .setValue(value)
-                    .setClazz(Type.STRING)
-                    .setType(units)
-                    .build();
-            return Optional.of(dynamicProperty);
+            return Optional.of(
+                DynamicProperty.builder()
+                    .field(field)
+                    .key(keyMap.get(key))
+                    .value(value)
+                    .type(units)
+                    .build());
           }
         }
       }

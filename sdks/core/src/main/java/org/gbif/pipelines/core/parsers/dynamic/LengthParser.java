@@ -1,12 +1,13 @@
 package org.gbif.pipelines.core.parsers.dynamic;
 
+import static org.gbif.pipelines.common.PipelinesVariables.DynamicProperties.Field;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import org.gbif.pipelines.io.avro.DynamicProperty;
 
 /**
  * Java version of
@@ -88,7 +89,13 @@ public class LengthParser {
   private static final DynamicParser PARSER;
 
   static {
-    PARSER = DynamicParser.create(Pattern.compile("(?<units>mm|millimeters)$"), LENGTH_MAP);
+    PARSER =
+        DynamicParser.builder()
+            .field(Field.LENGTH)
+            .keyMap(LENGTH_MAP)
+            .unitsFromKey(Pattern.compile("(?<units>mm|millimeters)$"))
+            .build();
+
     // Used for parsing forms like: 2 ft 4 inches
     PARSER.addTemplate("(?&len_foot)", "(?:foot|feet|ft)s?(?&dot)");
     PARSER.addTemplate("(?&len_inch)", "(?:inche?|in)s?(?&dot)");

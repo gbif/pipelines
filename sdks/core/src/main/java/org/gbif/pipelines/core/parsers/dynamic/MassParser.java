@@ -1,5 +1,7 @@
 package org.gbif.pipelines.core.parsers.dynamic;
 
+import static org.gbif.pipelines.common.PipelinesVariables.DynamicProperties.Field;
+
 import com.google.common.annotations.VisibleForTesting;
 import java.util.HashMap;
 import java.util.Map;
@@ -8,7 +10,6 @@ import java.util.regex.Pattern;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.gbif.pipelines.io.avro.DynamicProperty;
 
 /**
  * Java version of
@@ -73,7 +74,13 @@ public class MassParser {
   private static final DynamicParser PARSER;
 
   static {
-    PARSER = DynamicParser.create(Pattern.compile("(?<units>grams)$"), TOTAL_WEIGHT_MAP);
+    PARSER =
+        DynamicParser.builder()
+            .field(Field.MASS)
+            .keyMap(TOTAL_WEIGHT_MAP)
+            .unitsFromKey(Pattern.compile("(?<units>grams)$"))
+            .build();
+
     // Use to parse forms like: 2 lbs 4 oz.
     PARSER.addTemplate("(?&wt_pound)", "(?:pound|lb)s?(?&dot)");
     PARSER.addTemplate("(?&wt_ounce)", "(?:ounce|oz)s?(?&dot)");

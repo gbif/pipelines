@@ -1,10 +1,9 @@
 package org.gbif.pipelines.core.parsers.dynamic;
 
+import static org.gbif.pipelines.common.PipelinesVariables.DynamicProperties.*;
 import static org.gbif.pipelines.core.parsers.dynamic.MassParser.TOTAL_WEIGHT;
 
 import java.util.Optional;
-import org.gbif.pipelines.common.PipelinesVariables.DynamicProperties.Type;
-import org.gbif.pipelines.io.avro.DynamicProperty;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -23,7 +22,7 @@ public class MassParserTest {
     Assert.assertEquals(TOTAL_WEIGHT, result.get().getKey());
     Assert.assertEquals("g", result.get().getType());
     Assert.assertEquals("2435.0", result.get().getValue());
-    Assert.assertEquals(Type.STRING, result.get().getClazz());
+    Assert.assertEquals(Field.MASS, result.get().getField());
   }
 
   @Test
@@ -39,7 +38,7 @@ public class MassParserTest {
     Assert.assertEquals(TOTAL_WEIGHT, result.get().getKey());
     Assert.assertEquals("g", result.get().getType());
     Assert.assertEquals("0.77", result.get().getValue());
-    Assert.assertEquals(Type.STRING, result.get().getClazz());
+    Assert.assertEquals(Field.MASS, result.get().getField());
   }
 
   @Test
@@ -55,7 +54,7 @@ public class MassParserTest {
     Assert.assertEquals(TOTAL_WEIGHT, result.get().getKey());
     Assert.assertEquals("g", result.get().getType());
     Assert.assertEquals("62", result.get().getValue());
-    Assert.assertEquals(Type.STRING, result.get().getClazz());
+    Assert.assertEquals(Field.MASS, result.get().getField());
   }
 
   @Test
@@ -71,7 +70,7 @@ public class MassParserTest {
     Assert.assertEquals(TOTAL_WEIGHT, result.get().getKey());
     Assert.assertEquals("g", result.get().getType());
     Assert.assertEquals("20", result.get().getValue());
-    Assert.assertEquals(Type.STRING, result.get().getClazz());
+    Assert.assertEquals(Field.MASS, result.get().getField());
   }
 
   @Test
@@ -87,7 +86,7 @@ public class MassParserTest {
     Assert.assertEquals(TOTAL_WEIGHT, result.get().getKey());
     Assert.assertEquals("lbs., oz", result.get().getType());
     Assert.assertEquals("2, 3.1 - 4.5", result.get().getValue());
-    Assert.assertEquals(Type.STRING, result.get().getClazz());
+    Assert.assertEquals(Field.MASS, result.get().getField());
   }
 
   @Test
@@ -104,7 +103,7 @@ public class MassParserTest {
     Assert.assertEquals(TOTAL_WEIGHT, result.get().getKey());
     Assert.assertEquals("g", result.get().getType());
     Assert.assertEquals("[139.5]", result.get().getValue());
-    Assert.assertEquals(Type.STRING, result.get().getClazz());
+    Assert.assertEquals(Field.MASS, result.get().getField());
   }
 
   @Test
@@ -121,7 +120,7 @@ public class MassParserTest {
     Assert.assertEquals(TOTAL_WEIGHT, result.get().getKey());
     Assert.assertEquals("gr.", result.get().getType());
     Assert.assertEquals("94", result.get().getValue());
-    Assert.assertEquals(Type.STRING, result.get().getClazz());
+    Assert.assertEquals(Field.MASS, result.get().getField());
   }
 
   @Test
@@ -137,7 +136,7 @@ public class MassParserTest {
     Assert.assertEquals(TOTAL_WEIGHT, result.get().getKey());
     Assert.assertEquals("g", result.get().getType());
     Assert.assertEquals("35", result.get().getValue());
-    Assert.assertEquals(Type.STRING, result.get().getClazz());
+    Assert.assertEquals(Field.MASS, result.get().getField());
   }
 
   @Test
@@ -153,7 +152,7 @@ public class MassParserTest {
     Assert.assertEquals(TOTAL_WEIGHT, result.get().getKey());
     Assert.assertEquals("g", result.get().getType());
     Assert.assertEquals("20.2", result.get().getValue());
-    Assert.assertEquals(Type.STRING, result.get().getClazz());
+    Assert.assertEquals(Field.MASS, result.get().getField());
   }
 
   @Test
@@ -169,7 +168,7 @@ public class MassParserTest {
     Assert.assertEquals(TOTAL_WEIGHT, result.get().getKey());
     Assert.assertEquals("g", result.get().getType());
     Assert.assertEquals("15", result.get().getValue());
-    Assert.assertEquals(Type.STRING, result.get().getClazz());
+    Assert.assertEquals(Field.MASS, result.get().getField());
   }
 
   @Test
@@ -185,7 +184,7 @@ public class MassParserTest {
     Assert.assertEquals(TOTAL_WEIGHT, result.get().getKey());
     Assert.assertEquals("g", result.get().getType());
     Assert.assertEquals("41", result.get().getValue());
-    Assert.assertEquals(Type.STRING, result.get().getClazz());
+    Assert.assertEquals(Field.MASS, result.get().getField());
   }
 
   @Test
@@ -201,7 +200,7 @@ public class MassParserTest {
     Assert.assertEquals(TOTAL_WEIGHT, result.get().getKey());
     Assert.assertEquals("g", result.get().getType());
     Assert.assertEquals("5.4", result.get().getValue());
-    Assert.assertEquals(Type.STRING, result.get().getClazz());
+    Assert.assertEquals(Field.MASS, result.get().getField());
   }
 
   @Test
@@ -217,7 +216,7 @@ public class MassParserTest {
     Assert.assertEquals(TOTAL_WEIGHT, result.get().getKey());
     Assert.assertNull(result.get().getType());
     Assert.assertEquals("5.4", result.get().getValue());
-    Assert.assertEquals(Type.STRING, result.get().getClazz());
+    Assert.assertEquals(Field.MASS, result.get().getField());
   }
 
   @Test
@@ -233,7 +232,7 @@ public class MassParserTest {
     Assert.assertEquals(TOTAL_WEIGHT, result.get().getKey());
     Assert.assertNull(result.get().getType());
     Assert.assertEquals("31", result.get().getValue());
-    Assert.assertEquals(Type.STRING, result.get().getClazz());
+    Assert.assertEquals(Field.MASS, result.get().getField());
   }
 
   @Test
@@ -249,7 +248,7 @@ public class MassParserTest {
     Assert.assertEquals(TOTAL_WEIGHT, result.get().getKey());
     Assert.assertEquals("g", result.get().getType());
     Assert.assertEquals("13", result.get().getValue());
-    Assert.assertEquals(Type.STRING, result.get().getClazz());
+    Assert.assertEquals(Field.MASS, result.get().getField());
   }
 
   @Test
@@ -265,7 +264,7 @@ public class MassParserTest {
     Assert.assertEquals(TOTAL_WEIGHT, result.get().getKey());
     Assert.assertNull(result.get().getType());
     Assert.assertEquals("13", result.get().getValue());
-    Assert.assertEquals(Type.STRING, result.get().getClazz());
+    Assert.assertEquals(Field.MASS, result.get().getField());
   }
 
   @Test
@@ -282,7 +281,7 @@ public class MassParserTest {
     Assert.assertEquals(TOTAL_WEIGHT, result.get().getKey());
     Assert.assertEquals("g", result.get().getType());
     Assert.assertEquals("22", result.get().getValue());
-    Assert.assertEquals(Type.STRING, result.get().getClazz());
+    Assert.assertEquals(Field.MASS, result.get().getField());
   }
 
   @Test
@@ -298,7 +297,7 @@ public class MassParserTest {
     Assert.assertEquals(TOTAL_WEIGHT, result.get().getKey());
     Assert.assertEquals("grams", result.get().getType());
     Assert.assertEquals("20.1", result.get().getValue());
-    Assert.assertEquals(Type.STRING, result.get().getClazz());
+    Assert.assertEquals(Field.MASS, result.get().getField());
   }
 
   @Test
@@ -315,7 +314,7 @@ public class MassParserTest {
     Assert.assertEquals(TOTAL_WEIGHT, result.get().getKey());
     Assert.assertNull(result.get().getType());
     Assert.assertEquals("1,192.0", result.get().getValue());
-    Assert.assertEquals(Type.STRING, result.get().getClazz());
+    Assert.assertEquals(Field.MASS, result.get().getField());
   }
 
   @Test
@@ -331,7 +330,7 @@ public class MassParserTest {
     Assert.assertEquals(TOTAL_WEIGHT, result.get().getKey());
     Assert.assertNull(result.get().getType());
     Assert.assertEquals("20.5-31.8", result.get().getValue());
-    Assert.assertEquals(Type.STRING, result.get().getClazz());
+    Assert.assertEquals(Field.MASS, result.get().getField());
   }
 
   @Test
@@ -347,7 +346,7 @@ public class MassParserTest {
     Assert.assertEquals(TOTAL_WEIGHT, result.get().getKey());
     Assert.assertNull(result.get().getType());
     Assert.assertEquals("20.5-32", result.get().getValue());
-    Assert.assertEquals(Type.STRING, result.get().getClazz());
+    Assert.assertEquals(Field.MASS, result.get().getField());
   }
 
   @Test
@@ -363,7 +362,7 @@ public class MassParserTest {
     Assert.assertEquals(TOTAL_WEIGHT, result.get().getKey());
     Assert.assertNull(result.get().getType());
     Assert.assertEquals("21-31.8", result.get().getValue());
-    Assert.assertEquals(Type.STRING, result.get().getClazz());
+    Assert.assertEquals(Field.MASS, result.get().getField());
   }
 
   @Test
@@ -379,7 +378,7 @@ public class MassParserTest {
     Assert.assertEquals(TOTAL_WEIGHT, result.get().getKey());
     Assert.assertNull(result.get().getType());
     Assert.assertEquals("21-32", result.get().getValue());
-    Assert.assertEquals(Type.STRING, result.get().getClazz());
+    Assert.assertEquals(Field.MASS, result.get().getField());
   }
 
   @Test
@@ -408,7 +407,7 @@ public class MassParserTest {
     Assert.assertEquals(TOTAL_WEIGHT, result.get().getKey());
     Assert.assertEquals("g", result.get().getType());
     Assert.assertEquals("5.4", result.get().getValue());
-    Assert.assertEquals(Type.STRING, result.get().getClazz());
+    Assert.assertEquals(Field.MASS, result.get().getField());
   }
 
   @Test

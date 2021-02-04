@@ -11,31 +11,22 @@ import lombok.NoArgsConstructor;
 import org.gbif.api.vocabulary.Sex;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.common.PipelinesVariables.DynamicProperties.Key;
-import org.gbif.pipelines.common.PipelinesVariables.DynamicProperties.Type;
 import org.gbif.pipelines.core.parsers.VocabularyParser;
-import org.gbif.pipelines.core.parsers.dynamic.LengthParser;
 import org.gbif.pipelines.core.parsers.dynamic.LifeStageParser;
-import org.gbif.pipelines.core.parsers.dynamic.MassParser;
 import org.gbif.pipelines.core.parsers.dynamic.SexParser;
 import org.gbif.pipelines.core.parsers.dynamic.TissueParser;
 import org.gbif.pipelines.io.avro.BasicRecord;
-import org.gbif.pipelines.io.avro.DynamicProperty;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.vocabulary.lookup.LookupConcept;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class DynamicPropertiesInterpreter {
 
-  public static void interpretHasTissue(ExtendedRecord er, BasicRecord br) {
+  public static void interpretPreparations(ExtendedRecord er, BasicRecord br) {
     extractNullAwareOptValue(er, DwcTerm.preparations)
         .flatMap(TissueParser::hasTissue)
-        .ifPresent(
-            any -> {
-              DynamicProperty.Builder builder = DynamicProperty.newBuilder().setClazz(Type.BOOLEAN);
-              builder.setValue(any.toString());
-              br.getDynamicProperties().put(Key.HAS_TISSUE, builder.build());
-            });
+        .map(x -> x ? "tissue" : null)
+        .ifPresent(any -> br.setPreparations(any));
   }
 
   public static void interpretSex(ExtendedRecord er, BasicRecord br) {
@@ -66,17 +57,5 @@ public class DynamicPropertiesInterpreter {
           .flatMap(v -> LifeStageParser.parse(v).flatMap(vocabularyLookupFn))
           .ifPresent(x -> BasicInterpreter.getLookupConceptConsumer(br).accept(x));
     };
-  }
-
-  public static void interpretLength(ExtendedRecord er, BasicRecord br) {
-    extractNullAwareOptValue(er, DwcTerm.dynamicProperties)
-        .flatMap(LengthParser::parse)
-        .ifPresent(value -> br.getDynamicProperties().put(Key.LENGTH, value));
-  }
-
-  public static void interpretMass(ExtendedRecord er, BasicRecord br) {
-    extractNullAwareOptValue(er, DwcTerm.dynamicProperties)
-        .flatMap(MassParser::parse)
-        .ifPresent(value -> br.getDynamicProperties().put(Key.MASS, value));
   }
 }

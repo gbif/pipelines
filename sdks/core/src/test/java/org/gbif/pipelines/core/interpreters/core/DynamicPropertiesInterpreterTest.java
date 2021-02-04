@@ -1,8 +1,5 @@
 package org.gbif.pipelines.core.interpreters.core;
 
-import static org.gbif.pipelines.common.PipelinesVariables.DynamicProperties.Key;
-import static org.gbif.pipelines.common.PipelinesVariables.DynamicProperties.Type;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Optional;
@@ -11,7 +8,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.BasicRecord;
-import org.gbif.pipelines.io.avro.DynamicProperty;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.vocabulary.lookup.LookupConcept;
 import org.gbif.vocabulary.model.Concept;
@@ -54,11 +50,10 @@ public class DynamicPropertiesInterpreterTest {
     BasicRecord br = brFn.get();
 
     // When
-    DynamicPropertiesInterpreter.interpretHasTissue(er, br);
+    DynamicPropertiesInterpreter.interpretPreparations(er, br);
 
     // Should
-    DynamicProperty property = br.getDynamicProperties().get(Key.HAS_TISSUE);
-    Assert.assertNull(property);
+    Assert.assertNull(br.getPreparations());
   }
 
   @Test
@@ -68,11 +63,10 @@ public class DynamicPropertiesInterpreterTest {
     BasicRecord br = brFn.get();
 
     // When
-    DynamicPropertiesInterpreter.interpretHasTissue(er, br);
+    DynamicPropertiesInterpreter.interpretPreparations(er, br);
 
     // Should
-    DynamicProperty property = br.getDynamicProperties().get(Key.HAS_TISSUE);
-    Assert.assertNull(property);
+    Assert.assertNull(br.getPreparations());
   }
 
   @Test
@@ -82,12 +76,10 @@ public class DynamicPropertiesInterpreterTest {
     BasicRecord br = brFn.get();
 
     // When
-    DynamicPropertiesInterpreter.interpretHasTissue(er, br);
+    DynamicPropertiesInterpreter.interpretPreparations(er, br);
 
     // Should
-    DynamicProperty property = br.getDynamicProperties().get(Key.HAS_TISSUE);
-    Assert.assertEquals(Type.BOOLEAN, property.getClazz());
-    Assert.assertEquals("true", property.getValue());
+    Assert.assertEquals("tissue", br.getPreparations());
   }
 
   @Test
@@ -213,43 +205,5 @@ public class DynamicPropertiesInterpreterTest {
 
     // Should
     Assert.assertTrue(br.getLifeStageLineage().isEmpty());
-  }
-
-  @Test
-  public void massValueTest() {
-    // State
-    ExtendedRecord er =
-        erDynamicPropertiesFn.apply(
-            "sex=female;age class=adult;total length=495 mm;tail length=210 mm;weight=100g");
-    BasicRecord br = brFn.get();
-
-    // When
-    DynamicPropertiesInterpreter.interpretMass(er, br);
-
-    // Should
-    Assert.assertFalse(br.getDynamicProperties().isEmpty());
-    Assert.assertEquals("String", br.getDynamicProperties().get(Key.MASS).getClazz());
-    Assert.assertEquals("total weight", br.getDynamicProperties().get(Key.MASS).getKey());
-    Assert.assertEquals("g", br.getDynamicProperties().get(Key.MASS).getType());
-    Assert.assertEquals("100", br.getDynamicProperties().get(Key.MASS).getValue());
-  }
-
-  @Test
-  public void lengthValueTest() {
-    // State
-    ExtendedRecord er =
-        erDynamicPropertiesFn.apply(
-            "sex=female;age class=adult;total length=495 mm;tail length=210 mm;");
-    BasicRecord br = brFn.get();
-
-    // When
-    DynamicPropertiesInterpreter.interpretLength(er, br);
-
-    // Should
-    Assert.assertFalse(br.getDynamicProperties().isEmpty());
-    Assert.assertEquals("String", br.getDynamicProperties().get(Key.LENGTH).getClazz());
-    Assert.assertEquals("total length", br.getDynamicProperties().get(Key.LENGTH).getKey());
-    Assert.assertEquals("mm", br.getDynamicProperties().get(Key.LENGTH).getType());
-    Assert.assertEquals("495", br.getDynamicProperties().get(Key.LENGTH).getValue());
   }
 }
