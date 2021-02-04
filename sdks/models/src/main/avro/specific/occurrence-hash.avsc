@@ -49,7 +49,8 @@
          {"name": "repId", "type": "string"},
          {"name": "dupId", "type": "string"},
          {"name": "repDataset", "type": "string"},
-         {"name": "dupDataset", "type": "string"}
+         {"name": "dupDataset", "type": "string"},
+         {"name": "justification", "type": "string"}
        ]
      },
      {

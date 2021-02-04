@@ -273,6 +273,7 @@ public class IndexRecordTransform implements Serializable {
         if (value != null
             && !field.name().equals("speciesGroup")
             && !field.name().equals("speciesSubgroup")
+            && !field.name().equals("rank")
             && !skipKeys.contains(field.name())) {
           if (field.name().equalsIgnoreCase("issues")) {
             assertions.add((String) value);
@@ -284,7 +285,15 @@ public class IndexRecordTransform implements Serializable {
             }
           }
         }
+
+        if (atxr.getRank() != null) {
+          indexRecord.getStrings().put("taxonRank", atxr.getRank());
+        }
       }
+      // legacy fields referenced in biocache-service code
+      indexRecord.setTaxonID(atxr.getTaxonConceptID());
+      indexRecord.getMultiValues().put("speciesGroup", atxr.getSpeciesGroup());
+      indexRecord.getMultiValues().put("speciesSubgroup", atxr.getSpeciesSubgroup());
 
       // required for EYA
       indexRecord
@@ -311,20 +320,14 @@ public class IndexRecordTransform implements Serializable {
                   StringUtils.trimToEmpty(atxr.getVernacularName()),
                   atxr.getKingdom(),
                   atxr.getFamily())); // is set to IGNORE in headerAttribute
-
-      // legacy fields referenced in biocache-service code
-      indexRecord.setTaxonID(atxr.getTaxonConceptID());
-
-      indexRecord.getMultiValues().put("speciesGroup", atxr.getSpeciesGroup());
-      indexRecord.getMultiValues().put("speciesSubgroup", atxr.getSpeciesSubgroup());
     }
 
     // FIXME see #99
-    boolean geospatialKosher =
+    boolean spatiallyValid =
         lr.getHasGeospatialIssue() != null && lr.getHasGeospatialIssue() ? false : true;
-    indexRecord.getBooleans().put("spatiallyValid", geospatialKosher);
+    indexRecord.getBooleans().put("spatiallyValid", spatiallyValid);
 
-    // FIXME  - see #162
+    // see #162
     if (ur.getFirstLoaded() != null) {
       indexRecord
           .getDates()
