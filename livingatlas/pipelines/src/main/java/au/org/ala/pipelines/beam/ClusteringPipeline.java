@@ -310,7 +310,6 @@ public class ClusteringPipeline {
                               RepresentativeRecordUtils.findRepresentativeRecord(cluster);
 
                           // determine representative records
-                          // Note: we are currently losing the relationship assertions at this point
                           Relationship.Builder builder =
                               Relationship.newBuilder()
                                   .setRepId(representativeRecord.getId())
@@ -319,14 +318,64 @@ public class ClusteringPipeline {
                           for (OccurrenceFeatures associatedRecord : cluster) {
 
                             if (!associatedRecord.getId().equals(representativeRecord.getId())) {
-                              Relationship r =
-                                  builder
-                                      .setDupId(associatedRecord.getId())
-                                      .setDupDataset(associatedRecord.getDatasetKey())
-                                      .build();
 
-                              out.output(KV.of(representativeRecord.getId(), r));
-                              out.output(KV.of(associatedRecord.getId(), r));
+                              // determine representative records
+                              RelationshipAssertion assertion =
+                                  OccurrenceRelationships.generate(
+                                      representativeRecord, associatedRecord);
+
+                              if (assertion != null) {
+                                Relationship r =
+                                    builder
+                                        .setDupId(associatedRecord.getId())
+                                        .setDupDataset(associatedRecord.getDatasetKey())
+                                        .setJustification(assertion.getJustificationAsDelimited())
+                                        .build();
+
+                                out.output(KV.of(representativeRecord.getId(), r));
+                                out.output(KV.of(associatedRecord.getId(), r));
+                              } else {
+
+                                // do we go back for the ClusterPair ???
+                                // and work out which is the representative between the pair ??
+                                Optional<ClusterPair> clusterPair =
+                                    pairs.stream()
+                                        .filter(
+                                            pair ->
+                                                pair.getO1().equals(associatedRecord)
+                                                    || pair.getO2().equals(associatedRecord))
+                                        .findFirst();
+
+                                if (clusterPair.isPresent()) {
+                                  // which is the representative ?
+                                  OccurrenceFeatures rep =
+                                      RepresentativeRecordUtils.pickRepresentative(
+                                          Arrays.asList(
+                                              clusterPair.get().getO1(),
+                                              clusterPair.get().getO2()));
+
+                                  OccurrenceFeatures dup =
+                                      clusterPair.get().getO1().equals(rep)
+                                          ? clusterPair.get().getO2()
+                                          : clusterPair.get().getO1();
+
+                                  Relationship r =
+                                      builder
+                                          .setRepId(rep.getId())
+                                          .setRepDataset(rep.getDatasetKey())
+                                          .setDupId(dup.getId())
+                                          .setDupDataset(dup.getDatasetKey())
+                                          .setJustification(
+                                              clusterPair
+                                                  .get()
+                                                  .getAssertion()
+                                                  .getJustificationAsDelimited())
+                                          .build();
+
+                                  out.output(KV.of(rep.getId(), r));
+                                  out.output(KV.of(dup.getId(), r));
+                                }
+                              }
                             }
                           }
                         } else {

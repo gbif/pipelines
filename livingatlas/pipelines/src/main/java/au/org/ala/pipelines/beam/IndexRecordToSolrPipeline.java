@@ -281,64 +281,67 @@ public class IndexRecordToSolrPipeline {
             && !"EMPTY".equals(jkor.getId())
             && !jkor.getRelationships().isEmpty()) {
 
-          booleans.put("isClustered", true);
+          booleans.put("isInCluster", true);
 
-          List<Relationship> relationships = jkor.getRelationships();
-          List<String> duplicateStatus = new ArrayList<>();
+          boolean isRepresentative = false;
+
           List<String> duplicateType = new ArrayList<>();
-          jkor.getRelationships().stream()
-              .forEach(
-                  relationship -> {
-                    boolean linkingError = false;
-                    if (relationship.getRepId().equals(id)) {
-                      duplicateStatus.add("REPRESENTATIVE");
-                    } else if (relationship.getDupId().equals(id)) {
-                      duplicateStatus.add("ASSOCIATED");
-                    } else {
-                      linkingError = true;
-                      duplicateStatus.add("DUPLICATE_STATUS_ERROR");
-                    }
+          for (Relationship relationship : jkor.getRelationships()) {
 
-                    if (relationship.getDupDataset().equals(relationship.getRepDataset())) {
-                      duplicateType.add("SAME_DATASET");
-                    } else if (!linkingError) {
-                      duplicateType.add("DIFFERENT_DATASET");
-                    } else {
-                      duplicateType.add("LINKING_ERROR");
-                    }
-                  });
+            // A record may end up being marked as both associative
+            // and representative in two or more separate clusters.
+            // The important thing here is that if it is marked
+            // as representative in any relationship we mark is as such
+            // as the sole purpose of representative/associative markers
+            // is to allow users to filter out duplicates.
+            boolean linkingError = false;
+            if (relationship.getRepId().equals(id)) {
+              isRepresentative = true;
+            }
 
-          List<String> representativeIds =
+            if (relationship.getDupDataset().equals(relationship.getRepDataset())) {
+              duplicateType.add("SAME_DATASET");
+            } else if (!linkingError) {
+              duplicateType.add("DIFFERENT_DATASET");
+            } else {
+              duplicateType.add("LINKING_ERROR");
+            }
+          }
+
+          String duplicateStatus = "ASSOCIATED";
+          if (isRepresentative) {
+            duplicateStatus = "REPRESENTATIVE";
+          }
+
+          List<String> isRepresentativeOf =
               jkor.getRelationships().stream()
                   .map(Relationship::getRepId)
                   .distinct()
                   .filter(recordId -> !recordId.equals(id))
                   .collect(Collectors.toList());
 
-          List<String> duplicateIds =
+          List<String> isDuplicateOf =
               jkor.getRelationships().stream()
                   .map(Relationship::getDupId)
                   .distinct()
                   .filter(recordId -> !recordId.equals(id))
                   .collect(Collectors.toList());
 
-          if (!representativeIds.isEmpty()) {
-            multiValues.put("representativeRecords", representativeIds);
-          }
-          if (!duplicateIds.isEmpty()) {
-            multiValues.put("duplicateRecords", duplicateIds);
+          if (!isRepresentativeOf.isEmpty()) {
+            multiValues.put("isRepresentativeOf", isRepresentativeOf);
           }
 
-          multiValues.put("duplicateStatus", duplicateStatus);
+          if (!isDuplicateOf.isEmpty()) {
+            multiValues.put("isDuplicateOf", isDuplicateOf);
+          }
+
+          strings.put("duplicateStatus", duplicateStatus);
           multiValues.put("duplicateType", duplicateType);
 
-          // these are debug fields - TO BE REMOVED
-          ints.put("representativeRecordCount", representativeIds.size());
-          ints.put("duplicateRecordCount", duplicateIds.size());
-
         } else {
-          booleans.put("isClustered", false);
+          booleans.put("isInCluster", false);
           strings.put("duplicateStatus", "NOT_LINKED");
+          multiValues.put("duplicateType", Arrays.asList("NOT_LINKED"));
         }
 
         c.output(KV.of(indexRecord.getId(), indexRecord));

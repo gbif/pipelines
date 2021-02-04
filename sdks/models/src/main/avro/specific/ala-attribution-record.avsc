@@ -15,6 +15,7 @@
     {"name": "institutionName", "type": ["null", "string"], "default" : null },
     {"name": "licenseType", "type": ["null", "string"], "default" : null },
     {"name": "licenseVersion", "type": ["null", "string"], "default" : null },
+    {"name": "provenance", "type": ["null", "string"], "default" : null },
     {"name": "hubMemberships", "type": {"type": "array", "items": "string"}, "default" : [] },
     {"name": "issues", "type": "IssueRecord", "default":{}},
     {"name": "connectionParameters", "default" : null, "type" : ["null",
