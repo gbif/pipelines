@@ -53,7 +53,8 @@ public class OccurrenceExtensionTransform extends DoFn<ExtendedRecord, ExtendedR
                         counterFn.accept(COUNTER_NAME);
                         resultConsumer.accept(extEr);
                       }));
-    } else {
+      // Fix for https://github.com/gbif/pipelines/issues/471
+    } else if (DwcTerm.Occurrence.qualifiedName().equals(er.getCoreRowType())) {
       resultConsumer.accept(er);
     }
   }
