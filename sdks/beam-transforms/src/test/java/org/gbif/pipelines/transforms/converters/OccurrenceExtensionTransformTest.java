@@ -102,14 +102,12 @@ public class OccurrenceExtensionTransformTest {
                 Collections.singletonMap(Occurrence.qualifiedName(), Collections.emptyList()))
             .build();
 
-    final List<ExtendedRecord> expected = createCollection(true, false, id + "_" + somethingCore);
-
     // When
     PCollection<ExtendedRecord> result =
         p.apply(Create.of(er)).apply(OccurrenceExtensionTransform.create());
 
     // Should
-    PAssert.that(result).containsInAnyOrder(expected);
+    PAssert.that(result).empty();
     p.run();
   }
 
