@@ -34,26 +34,33 @@ public class OccurrenceExtensionTransformTest {
   public void extensionContainsOccurrenceTest() {
 
     // State
-    String id = "1";
+    String coreId = "1";
+    String extId = "2";
+    String ext2Id = "3";
+    String ext3Id = "4";
     String somethingCore = "somethingCore";
     String somethingExt = "somethingExt";
 
+    Map<String, String> core = new HashMap<>(2);
+    core.put(DwcTerm.occurrenceID.qualifiedName(), coreId);
+    core.put(somethingCore, somethingCore);
+
     Map<String, String> ext1 = new HashMap<>(2);
-    ext1.put(DwcTerm.occurrenceID.qualifiedName(), id);
+    ext1.put(DwcTerm.occurrenceID.qualifiedName(), extId);
     ext1.put(somethingExt, somethingExt);
 
     Map<String, String> ext2 = new HashMap<>(2);
-    ext2.put(DwcTerm.occurrenceID.qualifiedName(), id);
+    ext2.put(DwcTerm.occurrenceID.qualifiedName(), ext2Id);
     ext2.put(somethingExt, somethingExt);
 
     Map<String, String> ext3 = new HashMap<>(2);
-    ext3.put(DwcTerm.occurrenceID.qualifiedName(), id);
+    ext3.put(DwcTerm.occurrenceID.qualifiedName(), ext3Id);
     ext3.put(somethingExt, somethingExt);
 
     ExtendedRecord er =
         ExtendedRecord.newBuilder()
-            .setId(id)
-            .setCoreTerms(Collections.singletonMap(somethingCore, somethingCore))
+            .setId(coreId)
+            .setCoreTerms(core)
             .setExtensions(
                 Collections.singletonMap(
                     Occurrence.qualifiedName(), Arrays.asList(ext1, ext2, ext3)))
@@ -63,9 +70,9 @@ public class OccurrenceExtensionTransformTest {
         createCollection(
             false,
             false,
-            id + "_" + somethingCore + "_" + somethingExt,
-            id + "_" + somethingCore + "_" + somethingExt,
-            id + "_" + somethingCore + "_" + somethingExt);
+            extId + "_" + somethingCore + "_" + somethingExt,
+            ext2Id + "_" + somethingCore + "_" + somethingExt,
+            ext3Id + "_" + somethingCore + "_" + somethingExt);
 
     // When
     PCollection<ExtendedRecord> result =
@@ -95,14 +102,12 @@ public class OccurrenceExtensionTransformTest {
                 Collections.singletonMap(Occurrence.qualifiedName(), Collections.emptyList()))
             .build();
 
-    final List<ExtendedRecord> expected = createCollection(true, false, id + "_" + somethingCore);
-
     // When
     PCollection<ExtendedRecord> result =
         p.apply(Create.of(er)).apply(OccurrenceExtensionTransform.create());
 
     // Should
-    PAssert.that(result).containsInAnyOrder(expected);
+    PAssert.that(result).empty();
     p.run();
   }
 
@@ -127,6 +132,33 @@ public class OccurrenceExtensionTransformTest {
 
     // Should
     PAssert.that(result).containsInAnyOrder(expected);
+    p.run();
+  }
+
+  @Test
+  public void eventNoOccurrenceExtensionTest() {
+
+    // State
+    String id = "1";
+    String somethingCore = "somethingCore";
+
+    Map<String, String> ext = new HashMap<>(2);
+    ext.put(DwcTerm.occurrenceID.qualifiedName(), id);
+    ext.put(somethingCore, somethingCore);
+
+    ExtendedRecord er =
+        ExtendedRecord.newBuilder()
+            .setId(id)
+            .setCoreRowType("non-occurrence")
+            .setCoreTerms(ext)
+            .build();
+
+    // When
+    PCollection<ExtendedRecord> result =
+        p.apply(Create.of(er)).apply(OccurrenceExtensionTransform.create());
+
+    // Should
+    PAssert.that(result).empty();
     p.run();
   }
 

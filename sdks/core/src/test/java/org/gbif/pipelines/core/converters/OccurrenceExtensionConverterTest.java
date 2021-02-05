@@ -1,6 +1,5 @@
 package org.gbif.pipelines.core.converters;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -14,14 +13,17 @@ public class OccurrenceExtensionConverterTest {
   @Test
   public void occurrenceAsExtensionTest() {
     // State
-    String id = "1";
+    String idCore = "1";
+    String idExt = "2";
     String somethingCore = "somethingCore";
     String somethingExt = "somethingExt";
 
-    Map<String, String> coreMap = Collections.singletonMap(somethingCore, somethingCore);
+    Map<String, String> coreMap = new HashMap<>(2);
+    coreMap.put(DwcTerm.occurrenceID.qualifiedName(), idCore);
+    coreMap.put(somethingCore, somethingCore);
 
     Map<String, String> extMap = new HashMap<>(2);
-    extMap.put(DwcTerm.occurrenceID.qualifiedName(), id);
+    extMap.put(DwcTerm.occurrenceID.qualifiedName(), idExt);
     extMap.put(somethingExt, somethingExt);
 
     // When
@@ -30,7 +32,7 @@ public class OccurrenceExtensionConverterTest {
     // Should
     Assert.assertTrue(result.isPresent());
     ExtendedRecord erResult = result.get();
-    Assert.assertEquals(id, erResult.getId());
+    Assert.assertEquals(idExt, erResult.getId());
     Assert.assertEquals(somethingCore, erResult.getCoreTerms().get(somethingCore));
     Assert.assertEquals(somethingExt, erResult.getCoreTerms().get(somethingExt));
   }
