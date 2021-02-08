@@ -1,3 +1,14 @@
+[
+{
+  "name" : "EntityReference",
+  "namespace":"org.gbif.pipelines.io.avro",
+  "type" : "record",
+  "fields" : [
+    {"name": "uid", "type": ["null", "string"], "default" : null },
+    {"name": "name", "type": ["null", "string"], "default" : null },
+    {"name": "uri", "type": ["null", "string"], "default" : null }
+  ]
+},
 {
   "name":"ALAAttributionRecord",
   "namespace":"org.gbif.pipelines.io.avro",
@@ -16,7 +27,7 @@
     {"name": "licenseType", "type": ["null", "string"], "default" : null },
     {"name": "licenseVersion", "type": ["null", "string"], "default" : null },
     {"name": "provenance", "type": ["null", "string"], "default" : null },
-    {"name": "hubMemberships", "type": {"type": "array", "items": "string"}, "default" : [] },
+    {"name": "hubMembership", "type": {"type": "array", "items": "EntityReference"}, "default" : [] },
     {"name": "issues", "type": "IssueRecord", "default":{}},
     {"name": "connectionParameters", "default" : null, "type" : ["null",
         {
@@ -32,3 +43,4 @@
     }
   ]
 }
+]
