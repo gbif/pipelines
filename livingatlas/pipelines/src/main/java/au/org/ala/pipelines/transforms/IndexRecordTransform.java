@@ -354,8 +354,14 @@ public class IndexRecordTransform implements Serializable {
       addIfNotEmpty(indexRecord, "collectionName", aar.getCollectionName());
 
       // add hub IDs
-      if (aar.getHubMemberships() != null && !aar.getHubMemberships().isEmpty()) {
-        indexRecord.getMultiValues().put("dataHubUid", aar.getHubMemberships());
+      if (aar.getHubMembership() != null && !aar.getHubMembership().isEmpty()) {
+        indexRecord
+            .getMultiValues()
+            .put(
+                "dataHubUid",
+                aar.getHubMembership().stream()
+                    .map(enr -> enr.getUid())
+                    .collect(Collectors.toList()));
       }
     }
 
@@ -400,6 +406,7 @@ public class IndexRecordTransform implements Serializable {
         indexRecord.getStrings().put(key, entry.getValue());
       }
     }
+
     return indexRecord.build();
   }
 

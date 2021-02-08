@@ -285,7 +285,7 @@ public class IndexRecordToSolrPipeline {
 
           boolean isRepresentative = false;
 
-          List<String> duplicateType = new ArrayList<>();
+          Set<String> duplicateType = new HashSet<>();
           for (Relationship relationship : jkor.getRelationships()) {
 
             // A record may end up being marked as both associative
@@ -335,8 +335,13 @@ public class IndexRecordToSolrPipeline {
             multiValues.put("isDuplicateOf", isDuplicateOf);
           }
 
+          // set the status
           strings.put("duplicateStatus", duplicateStatus);
-          multiValues.put("duplicateType", duplicateType);
+
+          // add duplicate types
+          List<String> duplicateTypeList = new ArrayList<>();
+          duplicateTypeList.addAll(duplicateType);
+          multiValues.put("duplicateType", duplicateTypeList);
 
         } else {
           booleans.put("isInCluster", false);

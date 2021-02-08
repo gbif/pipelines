@@ -33,6 +33,16 @@ public class AttributionKVStoreTestIT {
   }
 
   @Test
+  public void testAttributionHubMembership() throws Exception {
+    KeyValueStore<String, ALACollectoryMetadata> kvs =
+        ALAAttributionKVStoreFactory.create(TestUtils.getConfig());
+    ALACollectoryMetadata m = kvs.get("dr376");
+    assertEquals(2, m.getHubMembership().size());
+
+    kvs.close();
+  }
+
+  @Test
   public void testAttributionLookup() throws Exception {
 
     KeyValueStore<String, ALACollectoryMetadata> kvs =
