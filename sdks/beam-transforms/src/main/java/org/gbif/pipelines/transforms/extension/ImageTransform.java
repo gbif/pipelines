@@ -2,6 +2,7 @@ package org.gbif.pipelines.transforms.extension;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.IMAGE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.IMAGE;
+import static org.gbif.pipelines.core.utils.ModelUtils.hasExtension;
 
 import java.time.Instant;
 import java.util.List;
@@ -76,11 +77,7 @@ public class ImageTransform extends Transform<ExtendedRecord, ImageRecord> {
                     .setId(er.getId())
                     .setCreated(Instant.now().toEpochMilli())
                     .build())
-        .when(
-            er ->
-                Optional.ofNullable(er.getExtensions().get(Extension.IMAGE.getRowType()))
-                    .filter(l -> !l.isEmpty())
-                    .isPresent())
+        .when(er -> hasExtension(er, Extension.IMAGE))
         .via(imageInterpreter::interpret)
         .getOfNullable();
   }

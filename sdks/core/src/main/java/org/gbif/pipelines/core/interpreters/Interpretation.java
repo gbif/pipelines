@@ -74,11 +74,11 @@ public class Interpretation<S> {
     }
 
     public Handler<T> via(BiConsumer<S, T> func) {
-      return new Handler<>(target).via(func);
+      return new Handler<>(target, null).via(func);
     }
 
     public Handler<T> via(Consumer<T> func) {
-      return new Handler<>(target).via(func);
+      return new Handler<>(target, null).via(func);
     }
   }
 
@@ -86,6 +86,7 @@ public class Interpretation<S> {
   public class Handler<T> {
 
     private final T target;
+    private Predicate<T> skipPredicate;
 
     /**
      * @param func BiConsumer for applying an interpretation function, where S as a source data
@@ -105,13 +106,29 @@ public class Interpretation<S> {
       return this;
     }
 
+    /** @param func skips the result if the result of predicate is true */
+    public Handler<T> skipWhen(Predicate<T> func) {
+      if (skipPredicate == null) {
+        skipPredicate = func;
+      } else {
+        skipPredicate = skipPredicate.and(func);
+      }
+      return this;
+    }
+
     /** @return target data object */
     public Optional<T> getOfNullable() {
+      if (skipPredicate != null && target != null && skipPredicate.test(target)) {
+        return Optional.empty();
+      }
       return Optional.ofNullable(target);
     }
 
     /** @return target data object */
     public Optional<T> get() {
+      if (skipPredicate != null && skipPredicate.test(target)) {
+        return Optional.empty();
+      }
       return Optional.of(target);
     }
 

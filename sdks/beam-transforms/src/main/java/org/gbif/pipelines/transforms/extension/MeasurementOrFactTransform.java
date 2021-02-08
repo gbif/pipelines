@@ -2,9 +2,11 @@ package org.gbif.pipelines.transforms.extension;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMENT_OR_FACT_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.MEASUREMENT_OR_FACT;
+import static org.gbif.pipelines.core.utils.ModelUtils.hasExtension;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import lombok.Builder;
 import org.apache.beam.sdk.transforms.MapElements;
@@ -12,6 +14,7 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.common.parsers.date.DateComponentOrdering;
+import org.gbif.pipelines.core.converters.MeasurementOrFactConverter;
 import org.gbif.pipelines.core.functions.SerializableConsumer;
 import org.gbif.pipelines.core.functions.SerializableFunction;
 import org.gbif.pipelines.core.interpreters.Interpretation;
@@ -77,19 +80,29 @@ public class MeasurementOrFactTransform extends Transform<ExtendedRecord, Measur
 
   @Override
   public Optional<MeasurementOrFactRecord> convert(ExtendedRecord source) {
-    return Interpretation.from(source)
+
+    ExtendedRecord record = source;
+
+    List<Map<String, String>> dynExts =
+        MeasurementOrFactConverter.extractFromDynamicProperties(source);
+
+    if (!dynExts.isEmpty()) {
+      record = ExtendedRecord.newBuilder(source).build();
+      if (hasExtension(record, Extension.MEASUREMENT_OR_FACT)) {
+        record.getExtensions().get(Extension.MEASUREMENT_OR_FACT.getRowType()).addAll(dynExts);
+      } else {
+        record.getExtensions().put(Extension.MEASUREMENT_OR_FACT.getRowType(), dynExts);
+      }
+    }
+
+    return Interpretation.from(record)
         .to(
             er ->
                 MeasurementOrFactRecord.newBuilder()
                     .setId(er.getId())
                     .setCreated(Instant.now().toEpochMilli())
                     .build())
-        .when(
-            er ->
-                Optional.ofNullable(
-                        er.getExtensions().get(Extension.MEASUREMENT_OR_FACT.getRowType()))
-                    .filter(l -> !l.isEmpty())
-                    .isPresent())
+        .when(er -> hasExtension(source, Extension.MEASUREMENT_OR_FACT))
         .via(measurementOrFactInterpreter::interpret)
         .getOfNullable();
   }
