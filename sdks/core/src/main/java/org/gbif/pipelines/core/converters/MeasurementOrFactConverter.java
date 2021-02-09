@@ -5,6 +5,7 @@ import static org.gbif.pipelines.core.utils.ModelUtils.hasValueNullAware;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.gbif.dwc.terms.DwcTerm;
@@ -26,7 +27,11 @@ public class MeasurementOrFactConverter {
     return Collections.emptyList();
   }
 
-  private static Map<String, String> map(DynamicProperty dp) {
-    return Collections.emptyMap();
+  private static Map<String, String> map(DynamicProperty property) {
+    Map<String, String> map = new HashMap<>(3);
+    map.put(DwcTerm.measurementType.qualifiedName(), property.getKey());
+    map.put(DwcTerm.measurementValue.qualifiedName(), property.getValue());
+    map.put(DwcTerm.measurementUnit.qualifiedName(), property.getType());
+    return map;
   }
 }

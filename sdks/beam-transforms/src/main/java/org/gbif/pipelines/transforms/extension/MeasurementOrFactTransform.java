@@ -102,7 +102,7 @@ public class MeasurementOrFactTransform extends Transform<ExtendedRecord, Measur
                     .setId(er.getId())
                     .setCreated(Instant.now().toEpochMilli())
                     .build())
-        .when(er -> hasExtension(source, Extension.MEASUREMENT_OR_FACT))
+        .when(er -> hasExtension(source, Extension.MEASUREMENT_OR_FACT) || !dynExts.isEmpty())
         .via(measurementOrFactInterpreter::interpret)
         .getOfNullable();
   }
