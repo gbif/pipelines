@@ -341,13 +341,13 @@ public class GbifJsonConverterTest {
                     MeasurementOrFact.newBuilder()
                         .setType("{\"something\":1}{\"something\":1}")
                         .setId("123")
-                        .setValueParsed(1.1d)
-                        .setDeterminedDateParsed(
+                        .setValue("1.1")
+                        .setDeterminedDate(
                             DeterminedDate.newBuilder().setGte("2010").setLte("2011").build())
                         .build(),
                     MeasurementOrFact.newBuilder()
                         .setId("124")
-                        .setDeterminedDateParsed(
+                        .setDeterminedDate(
                             DeterminedDate.newBuilder().setGte("2010").setLte("2012").build())
                         .build(),
                     MeasurementOrFact.newBuilder().setId("125").build()))
@@ -446,11 +446,9 @@ public class GbifJsonConverterTest {
     String expectedMeasurementOrFactItems =
         "[{\"id\":\"123\",\"type\":\"{\\\"something\\\":1}"
             + "{\\\"something\\\":1}\","
-            + "\"value\":1.1,"
-            + "\"determinedDate\":{\"gte\": \"2010\", \"lte\": \"2011\"}},{\"id\":\"124\","
-            + "\"type\":null,"
-            + "\"value\":null,"
-            + "\"determinedDate\":{\"gte\": \"2010\", \"lte\": \"2012\"}}]";
+            + "\"value\":\"1.1\","
+            + "\"unit\":null,"
+            + "\"determinedDate\":{\"gte\": \"2010\", \"lte\": \"2011\"}}]";
     assertEquals(expectedMeasurementOrFactItems, result.path("measurementOrFactItems").toString());
 
     String expectedIssues = "[\"BASIS_OF_RECORD_INVALID\",\"ZERO_COORDINATE\"]";

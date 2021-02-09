@@ -673,14 +673,15 @@ public class GbifJsonConverter {
 
       List<ObjectNode> nodes =
           mfr.getMeasurementOrFactItems().stream()
-              .filter(x -> x.getValueParsed() != null || x.getDeterminedDateParsed() != null)
+              .filter(x -> x.getValue() != null && x.getType() != null)
               .map(
                   x -> {
                     ObjectNode node = JsonConverter.createObjectNode();
                     node.put("id", x.getId());
                     node.put("type", x.getType());
-                    node.put("value", x.getValueParsed());
-                    node.set("determinedDate", new POJONode(x.getDeterminedDateParsed()));
+                    node.put("value", x.getValue());
+                    node.put("unit", x.getUnit());
+                    node.set("determinedDate", new POJONode(x.getDeterminedDate()));
                     return node;
                   })
               .collect(Collectors.toList());

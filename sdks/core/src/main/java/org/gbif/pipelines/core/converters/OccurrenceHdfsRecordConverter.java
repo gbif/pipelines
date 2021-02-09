@@ -50,13 +50,12 @@ public class OccurrenceHdfsRecordConverter {
   // Registered converters
   private static final Map<
           Class<? extends SpecificRecordBase>, BiConsumer<OccurrenceHdfsRecord, SpecificRecordBase>>
-      CONVERTERS;
+      CONVERTERS = new HashMap<>(8);
 
   private static final TermFactory TERM_FACTORY = TermFactory.instance();
 
   // Converters
   static {
-    CONVERTERS = new HashMap<>();
     CONVERTERS.put(ExtendedRecord.class, extendedRecordMapper());
     CONVERTERS.put(BasicRecord.class, basicRecordMapper());
     CONVERTERS.put(LocationRecord.class, locationMapper());

@@ -1472,5 +1472,11 @@
       "type" : "array",
       "items" : [ "string", "null" ]
     }, "null" ]
-  } ]
+  },{
+    "name": "measurementFactRecord",
+    "type": {
+      "type" : "array",
+      "items" : "MeasurementOrFact"},
+    "default" : []
+  }]
 }

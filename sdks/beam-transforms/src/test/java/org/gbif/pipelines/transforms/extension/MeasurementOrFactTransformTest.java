@@ -52,16 +52,10 @@ public class MeasurementOrFactTransformTest {
             .setValue("495")
             .setUnit("mm")
             .setType("total length")
-            .setValueParsed(495d)
             .build();
 
     MeasurementOrFact mass =
-        MeasurementOrFact.newBuilder()
-            .setValue("100")
-            .setUnit("g")
-            .setType("total weight")
-            .setValueParsed(100d)
-            .build();
+        MeasurementOrFact.newBuilder().setValue("100").setUnit("g").setType("total weight").build();
 
     MeasurementOrFact ext =
         MeasurementOrFact.newBuilder().setValue("ext").setUnit("ext").setType("ext").build();
@@ -99,16 +93,10 @@ public class MeasurementOrFactTransformTest {
             .setValue("495")
             .setUnit("mm")
             .setType("total length")
-            .setValueParsed(495d)
             .build();
 
     MeasurementOrFact mass =
-        MeasurementOrFact.newBuilder()
-            .setValue("100")
-            .setUnit("g")
-            .setType("total weight")
-            .setValueParsed(100d)
-            .build();
+        MeasurementOrFact.newBuilder().setValue("100").setUnit("g").setType("total weight").build();
 
     List<MeasurementOrFact> mfcList = Arrays.asList(length, mass);
     MeasurementOrFactRecord mfc =

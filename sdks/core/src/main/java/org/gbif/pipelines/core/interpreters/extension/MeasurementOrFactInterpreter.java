@@ -4,7 +4,6 @@ import java.time.temporal.TemporalAccessor;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Consumer;
 import lombok.Builder;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.common.parsers.date.DateComponentOrdering;
@@ -13,7 +12,6 @@ import org.gbif.pipelines.core.functions.SerializableFunction;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation.Result;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation.TargetHandler;
-import org.gbif.pipelines.core.parsers.SimpleTypeParser;
 import org.gbif.pipelines.core.parsers.temporal.EventRange;
 import org.gbif.pipelines.core.parsers.temporal.TemporalParser;
 import org.gbif.pipelines.core.parsers.temporal.TemporalRangeParser;
@@ -40,7 +38,7 @@ public class MeasurementOrFactInterpreter {
           .map(DwcTerm.measurementDeterminedBy, MeasurementOrFact::setDeterminedBy)
           .map(DwcTerm.measurementMethod, MeasurementOrFact::setMethod)
           .map(DwcTerm.measurementRemarks, MeasurementOrFact::setRemarks)
-          .map(DwcTerm.measurementValue, MeasurementOrFactInterpreter::parseAndSetValue)
+          .map(DwcTerm.measurementValue, MeasurementOrFact::setValue)
           .map(DwcTerm.measurementDeterminedDate, this::parseAndSetDeterminedDate);
 
   private final TemporalRangeParser temporalParser;
@@ -69,23 +67,6 @@ public class MeasurementOrFactInterpreter {
     mfr.getIssues().setIssueList(result.getIssuesAsList());
   }
 
-  /**
-   * Parser for "http://rs.tdwg.org/dwc/terms/measurementValue" term value, tries to parse if it is
-   * a Double
-   */
-  private static void parseAndSetValue(MeasurementOrFact mf, String v) {
-    mf.setValue(v);
-    Consumer<Optional<Double>> fn =
-        result ->
-            result.ifPresent(
-                x -> {
-                  if (!x.isInfinite() && !x.isNaN()) {
-                    mf.setValueParsed(x);
-                  }
-                });
-    SimpleTypeParser.parseDouble(v, fn);
-  }
-
   /** Parser for "http://rs.tdwg.org/dwc/terms/measurementDeterminedDate" term value */
   private void parseAndSetDeterminedDate(MeasurementOrFact mf, String v) {
     String normalizedDate = Optional.ofNullable(preprocessDateFn).map(x -> x.apply(v)).orElse(v);
@@ -95,7 +76,6 @@ public class MeasurementOrFactInterpreter {
     eventRange.getFrom().map(TemporalAccessor::toString).ifPresent(determinedDate::setGte);
     eventRange.getTo().map(TemporalAccessor::toString).ifPresent(determinedDate::setLte);
 
-    mf.setDeterminedDateParsed(determinedDate);
-    mf.setDeterminedDate(v);
+    mf.setDeterminedDate(determinedDate);
   }
 }
