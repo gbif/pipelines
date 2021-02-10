@@ -299,10 +299,10 @@ index-sh-args:
   spark-embedded:
     jvm: -Xmx8g -XX:+UseG1GC
   spark-cluster:
-    conf: spark.default.parallelism=192
-    num-executors: 24
+    conf: spark.default.parallelism=500
+    num-executors: 6
     executor-cores: 8
-    executor-memory: 7G
+    executor-memory: 20G
     driver-memory: 4G
 
 jackknife-sh-args:
@@ -323,11 +323,11 @@ clustering-sh-args:
   spark-embedded:
     jvm: -Xmx8g -XX:+UseG1GC
   spark-cluster:
-    conf:
-    num-executors: 24
+    conf: spark.default.parallelism=500
+    num-executors: 6
     executor-cores: 8
-    executor-memory: 7G
-    driver-memory: 1G
+    executor-memory: 20G
+    driver-memory: 4G
 
 solr-sh-args:
   local:

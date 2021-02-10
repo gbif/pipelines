@@ -29,6 +29,8 @@ import org.apache.beam.sdk.values.TupleTag;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.util.Strings;
 import org.apache.solr.common.SolrInputDocument;
+import org.gbif.api.vocabulary.Extension;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.TermFactory;
 import org.gbif.pipelines.io.avro.*;
@@ -40,6 +42,11 @@ import org.jetbrains.annotations.NotNull;
  */
 @Slf4j
 public class IndexRecordTransform implements Serializable {
+
+  public static final String LOAN_DESTINATION_TERM =
+      "http://data.ggbn.org/schemas/ggbn/terms/loanDestination";
+  public static final String LOAN_IDENTIFIER_TERM =
+      "http://data.ggbn.org/schemas/ggbn/terms/loanIdentifier";
 
   private static final long serialVersionUID = 1279313931024806169L;
   private static final TermFactory TERM_FACTORY = TermFactory.instance();
@@ -158,6 +165,9 @@ public class IndexRecordTransform implements Serializable {
     skipKeys.add("networkKeys");
     skipKeys.add("protocol");
     skipKeys.add("issues");
+    // FIXME - add these separately
+    skipKeys.add("identifiedByIds");
+    skipKeys.add("recordedByIds");
     skipKeys.add("machineTags"); // TODO review content
 
     IndexRecord.Builder indexRecord = IndexRecord.newBuilder().setId(ur.getUuid());
@@ -213,6 +223,23 @@ public class IndexRecordTransform implements Serializable {
     addToIndexRecord(tr, indexRecord, skipKeys);
     addToIndexRecord(br, indexRecord, skipKeys);
     addToIndexRecord(mdr, indexRecord, skipKeys);
+
+    if (br != null) {
+      if (br.getRecordedByIds() != null && br.getRecordedByIds().isEmpty()) {
+        indexRecord
+            .getMultiValues()
+            .put(
+                "recordedByID",
+                br.getRecordedByIds().stream().map(a -> a.getValue()).collect(Collectors.toList()));
+      }
+      if (br.getIdentifiedByIds() != null && br.getIdentifiedByIds().isEmpty()) {
+        indexRecord
+            .getMultiValues()
+            .put(
+                "identifiedByID",
+                br.getRecordedByIds().stream().map(a -> a.getValue()).collect(Collectors.toList()));
+      }
+    }
 
     // add event date
     try {
@@ -288,6 +315,10 @@ public class IndexRecordTransform implements Serializable {
 
         if (atxr.getRank() != null) {
           indexRecord.getStrings().put("taxonRank", atxr.getRank());
+          if (atxr.getRankID() != null && atxr.getRankID() == 8000) {
+            indexRecord.getStrings().put("subspecies", atxr.getScientificName());
+            indexRecord.getStrings().put("subspeciesID", atxr.getTaxonConceptID());
+          }
         }
       }
       // legacy fields referenced in biocache-service code
@@ -407,7 +438,49 @@ public class IndexRecordTransform implements Serializable {
       }
     }
 
+    Map<String, List<Map<String, String>>> extensions = er.getExtensions();
+
+    List<Map<String, String>> identifications =
+        extensions.get(Extension.IDENTIFICATION.getRowType());
+    if (identifications != null && !identifications.isEmpty()) {
+      // the flat SOLR schema will only allow for 1 identification per record
+      Map<String, String> identification = identifications.get(0);
+      addTermSafely(indexRecord, identification, DwcTerm.identificationID);
+      addTermSafely(indexRecord, identification, DwcTerm.identifiedBy);
+      addTermSafely(indexRecord, identification, DwcTerm.identificationRemarks);
+      addTermSafely(indexRecord, identification, DwcTerm.dateIdentified);
+      addTermSafely(indexRecord, identification, DwcTerm.identificationQualifier);
+    }
+
+    List<Map<String, String>> loans =
+        extensions.get("http://data.ggbn.org/schemas/ggbn/terms/Loan");
+    if (loans != null && !loans.isEmpty()) {
+      // the flat SOLR schema will only allow for 1 loan per record
+      Map<String, String> loan = loans.get(0);
+      addTermSafely(indexRecord, loan, LOAN_DESTINATION_TERM);
+      addTermSafely(indexRecord, loan, LOAN_IDENTIFIER_TERM);
+    }
     return indexRecord.build();
+  }
+
+  private static void addTermSafely(
+      IndexRecord.Builder indexRecord, Map<String, String> extension, DwcTerm dwcTerm) {
+    String termValue = extension.get(dwcTerm.name());
+    if (Strings.isNotBlank(termValue)) {
+      indexRecord.getStrings().put(dwcTerm.simpleName(), termValue);
+    }
+  }
+
+  private static void addTermSafely(
+      IndexRecord.Builder indexRecord, Map<String, String> extension, String dwcTerm) {
+    String termValue = extension.get(dwcTerm);
+    if (Strings.isNotBlank(termValue)) {
+      String termToUse = dwcTerm;
+      if (dwcTerm.startsWith("http")) {
+        termToUse = dwcTerm.substring(dwcTerm.lastIndexOf("/") + 1);
+      }
+      indexRecord.getStrings().put(termToUse, termValue);
+    }
   }
 
   public static Set<String> getAddedValues() {
@@ -529,32 +602,42 @@ public class IndexRecordTransform implements Serializable {
             }
 
             // ALA specific
-            ALAUUIDRecord ur = v.getOnly(urTag);
-            ALATaxonRecord atxr = v.getOnly(atxrTag, ALATaxonRecord.newBuilder().setId(k).build());
-            ALAAttributionRecord aar =
-                v.getOnly(aarTag, ALAAttributionRecord.newBuilder().setId(k).build());
+            ALAUUIDRecord ur = v.getOnly(urTag, null);
+            if (ur != null) {
 
-            ImageServiceRecord isr = null;
-            if (isTag != null) {
-              isr = v.getOnly(isTag, ImageServiceRecord.newBuilder().setId(k).build());
-            }
+              ALATaxonRecord atxr =
+                  v.getOnly(atxrTag, ALATaxonRecord.newBuilder().setId(k).build());
+              ALAAttributionRecord aar =
+                  v.getOnly(aarTag, ALAAttributionRecord.newBuilder().setId(k).build());
 
-            TaxonProfile tpr = null;
-            if (tpTag != null) {
-              tpr = v.getOnly(tpTag, TaxonProfile.newBuilder().setId(k).build());
-            }
+              ImageServiceRecord isr = null;
+              if (isTag != null) {
+                isr = v.getOnly(isTag, ImageServiceRecord.newBuilder().setId(k).build());
+              }
 
-            ALASensitivityRecord sr = null;
-            if (srTag != null) {
-              sr = v.getOnly(srTag, null);
-            }
+              TaxonProfile tpr = null;
+              if (tpTag != null) {
+                tpr = v.getOnly(tpTag, TaxonProfile.newBuilder().setId(k).build());
+              }
 
-            if (aar != null && aar.getDataResourceUid() != null) {
-              IndexRecord doc =
-                  createIndexRecord(mdr, br, tr, lr, txr, atxr, er, aar, ur, isr, tpr, sr);
+              ALASensitivityRecord sr = null;
+              if (srTag != null) {
+                sr = v.getOnly(srTag, null);
+              }
 
-              c.output(doc);
-              counter.inc();
+              if (aar != null && aar.getDataResourceUid() != null) {
+                IndexRecord doc =
+                    createIndexRecord(mdr, br, tr, lr, txr, atxr, er, aar, ur, isr, tpr, sr);
+
+                c.output(doc);
+                counter.inc();
+              }
+            } else {
+              if (er != null) {
+                log.error("UUID missing for record ID " + er.getId());
+              } else {
+                log.error("UUID missing and ER empty");
+              }
             }
           }
         };

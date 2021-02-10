@@ -60,16 +60,10 @@ public class ALAAttributionKVStoreFactory {
           public ALACollectoryMetadata get(String key) {
             try {
               return service.lookupDataResource(key);
-            } catch (org.gbif.rest.client.retrofit.RestClientException ex) {
-              throw logAndThrow(ex, "Unable to connect to rest service");
-            } catch (retrofit2.HttpException ex2) {
-              throw logAndThrow(ex2, "Unable to connect to http service");
             } catch (Exception ex) {
-              throw logAndThrow(
-                  ex,
-                  "Error contacting the collectory service to retrieve data resource metadata. Has resource been removed ? "
-                      + key);
+              log.error("Problem looking up metadata for " + key, ex);
             }
+            return ALACollectoryMetadata.EMPTY;
           }
 
           @Override
