@@ -615,7 +615,7 @@ public class BasicInterpreterTest {
     BasicInterpreter.interpretPreparations(er, br);
 
     // Should
-    Assert.assertEquals("tissue", br.getPreparations());
+    Assert.assertEquals("frozen carcass", br.getPreparations());
   }
 
   private void assertIssueSize(BasicRecord br, int expectedSize) {

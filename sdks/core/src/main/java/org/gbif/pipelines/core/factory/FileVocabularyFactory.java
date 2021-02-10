@@ -92,6 +92,6 @@ public class FileVocabularyFactory {
 
   /** Enum with the terms that are backed by a vocabulary. */
   public enum VocabularyBackedTerm {
-    LIFE_STAGE;
+    LIFE_STAGE
   }
 }

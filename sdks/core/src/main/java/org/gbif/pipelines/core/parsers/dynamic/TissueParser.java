@@ -2,7 +2,6 @@ package org.gbif.pipelines.core.parsers.dynamic;
 
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -44,10 +43,10 @@ public class TissueParser {
               "cor",
               "teixit"));
 
-  public static Optional<Boolean> hasTissue(String source) {
+  public static boolean hasTissue(String source) {
     if (source == null || source.isEmpty()) {
-      return Optional.empty();
+      return false;
     }
-    return Optional.of(TISSUE_TOKENS.stream().anyMatch(source::contains));
+    return TISSUE_TOKENS.stream().anyMatch(source::contains);
   }
 }

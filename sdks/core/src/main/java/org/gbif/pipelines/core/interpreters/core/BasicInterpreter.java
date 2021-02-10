@@ -366,8 +366,7 @@ public class BasicInterpreter {
   /** {@link DwcTerm#preparations} interpretation. */
   public static void interpretPreparations(ExtendedRecord er, BasicRecord br) {
     extractNullAwareOptValue(er, DwcTerm.preparations)
-        .flatMap(TissueParser::hasTissue)
-        .map(x -> x ? "tissue" : null)
+        .filter(TissueParser::hasTissue)
         .ifPresent(br::setPreparations);
   }
 
