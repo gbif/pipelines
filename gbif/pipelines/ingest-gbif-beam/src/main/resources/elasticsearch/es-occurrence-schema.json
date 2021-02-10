@@ -333,7 +333,14 @@
         }
       },
 
-      "measurementOrFactItems": {"type": "nested", "enabled": false},
+      "measurementOrFactItems": {
+        "type": "nested",
+        "properties": {
+          "measurementType": {"type": "keyword"},
+          "measurementValue": {"type": "keyword"},
+          "measurementUnit": {"type": "keyword"}
+        }
+      },
       "amplificationItems": {"type": "nested", "enabled": false},
 
       "locationFeatureLayers":{"type": "nested"},

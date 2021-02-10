@@ -208,10 +208,7 @@ public class VerbatimToInterpretedPipeline {
 
     // Extension
     MeasurementOrFactTransform measurementTransform =
-        MeasurementOrFactTransform.builder()
-            .orderings(dateComponentOrdering)
-            .create()
-            .counterFn(incMetricFn);
+        MeasurementOrFactTransform.builder().create().counterFn(incMetricFn);
 
     MultimediaTransform multimediaTransform =
         MultimediaTransform.builder()
@@ -249,7 +246,6 @@ public class VerbatimToInterpretedPipeline {
     multimediaTransform.setup();
     audubonTransform.setup();
     imageTransform.setup();
-    measurementTransform.setup();
 
     try (SyncDataFileWriter<ExtendedRecord> verbatimWriter =
             createWriter(options, ExtendedRecord.getClassSchema(), verbatimTransform, id);

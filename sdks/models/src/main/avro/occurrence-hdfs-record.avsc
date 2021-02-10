@@ -1473,7 +1473,7 @@
       "items" : [ "string", "null" ]
     }, "null" ]
   },{
-    "name": "measurementFactRecord",
+    "name": "measurementfactrecord",
     "type": {
       "type" : "array",
       "items" : "MeasurementOrFact"},

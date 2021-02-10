@@ -49,16 +49,24 @@ public class MeasurementOrFactTransformTest {
     // Expected
     MeasurementOrFact length =
         MeasurementOrFact.newBuilder()
-            .setValue("495")
-            .setUnit("mm")
-            .setType("total length")
+            .setMeasurementValue("495")
+            .setMeasurementUnit("mm")
+            .setMeasurementType("total length")
             .build();
 
     MeasurementOrFact mass =
-        MeasurementOrFact.newBuilder().setValue("100").setUnit("g").setType("total weight").build();
+        MeasurementOrFact.newBuilder()
+            .setMeasurementValue("100")
+            .setMeasurementUnit("g")
+            .setMeasurementType("total weight")
+            .build();
 
     MeasurementOrFact ext =
-        MeasurementOrFact.newBuilder().setValue("ext").setUnit("ext").setType("ext").build();
+        MeasurementOrFact.newBuilder()
+            .setMeasurementValue("ext")
+            .setMeasurementUnit("ext")
+            .setMeasurementType("ext")
+            .build();
 
     List<MeasurementOrFact> mfcList = Arrays.asList(ext, length, mass);
     MeasurementOrFactRecord mfc =
@@ -90,13 +98,17 @@ public class MeasurementOrFactTransformTest {
     // Expected
     MeasurementOrFact length =
         MeasurementOrFact.newBuilder()
-            .setValue("495")
-            .setUnit("mm")
-            .setType("total length")
+            .setMeasurementValue("495")
+            .setMeasurementUnit("mm")
+            .setMeasurementType("total length")
             .build();
 
     MeasurementOrFact mass =
-        MeasurementOrFact.newBuilder().setValue("100").setUnit("g").setType("total weight").build();
+        MeasurementOrFact.newBuilder()
+            .setMeasurementValue("100")
+            .setMeasurementUnit("g")
+            .setMeasurementType("total weight")
+            .build();
 
     List<MeasurementOrFact> mfcList = Arrays.asList(length, mass);
     MeasurementOrFactRecord mfc =
@@ -127,7 +139,11 @@ public class MeasurementOrFactTransformTest {
 
     // Expected
     MeasurementOrFact ext =
-        MeasurementOrFact.newBuilder().setValue("ext").setUnit("ext").setType("ext").build();
+        MeasurementOrFact.newBuilder()
+            .setMeasurementValue("ext")
+            .setMeasurementUnit("ext")
+            .setMeasurementType("ext")
+            .build();
 
     MeasurementOrFactRecord mfc =
         MeasurementOrFactRecord.newBuilder()

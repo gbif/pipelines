@@ -18,13 +18,10 @@ public class MeasurementOrFactInterpreterTest {
 
     // Expected
     String expected =
-        "{\"id\": \"id\", \"created\": 0, \"measurementOrFactItems\": [{\"id\": \"Id1\", \"type\": \"Type1\", \"value\": \"1.5\", "
-            + "\"accuracy\": \"Accurancy1\", \"unit\": \"Unit1\", \"determinedDate\": {\"gte\": \"2010\", \"lte\": \"2011\"}, \"determinedBy\": "
-            + "\"By1\", \"method\": \"Method1\", \"remarks\": \"Remarks1\"}, {\"id\": \"Id2\", \"type\": \"Type2\", \"value\": \"Value2\","
-            + " \"accuracy\": \"Accurancy2\", \"unit\": \"Unit2\", \"determinedDate\": {\"gte\": \"2010-12-12\", \"lte\": null}, \"determinedBy\": "
-            + "\"By2\", \"method\": \"Method2\", \"remarks\": \"Remarks2\"}, {\"id\": null, \"type\": null, \"value\": \"1\", \"accuracy\": null, "
-            + "\"unit\": null, \"determinedDate\": {\"gte\": null, \"lte\": null}, \"determinedBy\": null, \"method\": null, \"remarks\": null}]"
-            + ", \"issues\": {\"issueList\": []}}";
+        "{\"id\": \"id\", \"created\": 0, \"measurementOrFactItems\": [{\"measurementType\": \"Type1\", "
+            + "\"measurementValue\": \"1.5\", \"measurementUnit\": \"Unit1\"}, {\"measurementType\": \"Type2\", "
+            + "\"measurementValue\": \"Value2\", \"measurementUnit\": \"Unit2\"}, {\"measurementType\": null, "
+            + "\"measurementValue\": \"1\", \"measurementUnit\": null}], \"issues\": {\"issueList\": []}}";
 
     // State
     Map<String, String> ext1 = new HashMap<>();
@@ -62,7 +59,7 @@ public class MeasurementOrFactInterpreterTest {
         MeasurementOrFactRecord.newBuilder().setId(record.getId()).setCreated(0L).build();
 
     // When
-    MeasurementOrFactInterpreter.builder().create().interpret(record, mfr);
+    MeasurementOrFactInterpreter.create().interpret(record, mfr);
 
     // Should
     Assert.assertEquals(expected, mfr.toString());

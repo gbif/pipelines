@@ -32,27 +32,7 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
 import org.gbif.pipelines.core.utils.MediaSerDeserUtils;
-import org.gbif.pipelines.io.avro.AgentIdentifier;
-import org.gbif.pipelines.io.avro.Authorship;
-import org.gbif.pipelines.io.avro.BasicRecord;
-import org.gbif.pipelines.io.avro.EventDate;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.IssueRecord;
-import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MediaType;
-import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.io.avro.Multimedia;
-import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.NamePart;
-import org.gbif.pipelines.io.avro.NameType;
-import org.gbif.pipelines.io.avro.Nomenclature;
-import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
-import org.gbif.pipelines.io.avro.ParsedName;
-import org.gbif.pipelines.io.avro.Rank;
-import org.gbif.pipelines.io.avro.RankedName;
-import org.gbif.pipelines.io.avro.State;
-import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.io.avro.grscicoll.Match;
 import org.junit.Assert;
@@ -148,10 +128,27 @@ public class OccurrenceHdfsRecordConverterTest {
             .setEventDate(EventDate.newBuilder().setGte("2000").setLte("2010").build())
             .build();
 
+    MeasurementOrFactRecord measurementOrFactRecord =
+        MeasurementOrFactRecord.newBuilder()
+            .setId("1")
+            .setMeasurementOrFactItems(
+                Collections.singletonList(
+                    MeasurementOrFact.newBuilder()
+                        .setMeasurementType("t")
+                        .setMeasurementValue("v")
+                        .setMeasurementUnit("u")
+                        .build()))
+            .build();
+
     // When
     OccurrenceHdfsRecord hdfsRecord =
         toOccurrenceHdfsRecord(
-            basicRecord, metadataRecord, taxonRecord, temporalRecord, extendedRecord);
+            basicRecord,
+            metadataRecord,
+            taxonRecord,
+            temporalRecord,
+            extendedRecord,
+            measurementOrFactRecord);
 
     // Should
     // Test common fields
@@ -219,6 +216,11 @@ public class OccurrenceHdfsRecordConverterTest {
         hdfsRecord
             .getDwcaextension()
             .contains("http://data.ggbn.org/schemas/ggbn/terms/Amplification"));
+
+    Assert.assertEquals(1, hdfsRecord.getMeasurementfactrecord().size());
+    Assert.assertEquals("t", hdfsRecord.getMeasurementfactrecord().get(0).getMeasurementType());
+    Assert.assertEquals("u", hdfsRecord.getMeasurementfactrecord().get(0).getMeasurementUnit());
+    Assert.assertEquals("v", hdfsRecord.getMeasurementfactrecord().get(0).getMeasurementValue());
   }
 
   @Test
@@ -648,5 +650,23 @@ public class OccurrenceHdfsRecordConverterTest {
     // Should
     Assert.assertEquals(institutionMatch.getKey(), hdfsRecord.getInstitutionkey());
     Assert.assertEquals(collectionMatch.getKey(), hdfsRecord.getCollectionkey());
+  }
+
+  @Test
+  public void measurementOrFactRecordMapperTest() {
+    // State
+    MeasurementOrFactRecord record =
+        MeasurementOrFactRecord.newBuilder()
+            .setId("1")
+            .setMeasurementOrFactItems(
+                Collections.singletonList(
+                    MeasurementOrFact.newBuilder().setMeasurementUnit("u").build()))
+            .build();
+
+    // When
+    OccurrenceHdfsRecord hdfsRecord = toOccurrenceHdfsRecord(record);
+
+    // Should
+    Assert.assertTrue(hdfsRecord.getMeasurementfactrecord().isEmpty());
   }
 }

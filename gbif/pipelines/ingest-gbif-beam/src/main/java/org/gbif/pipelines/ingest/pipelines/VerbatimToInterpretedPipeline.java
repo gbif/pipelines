@@ -172,7 +172,7 @@ public class VerbatimToInterpretedPipeline {
 
     // Extension
     MeasurementOrFactTransform measurementOrFactTransform =
-        MeasurementOrFactTransform.builder().orderings(dateComponentOrdering).create();
+        MeasurementOrFactTransform.builder().create();
 
     MultimediaTransform multimediaTransform =
         MultimediaTransform.builder().orderings(dateComponentOrdering).create();
