@@ -321,6 +321,7 @@
   <field name="reproductiveCondition"  type="string" docValues="true" indexed="true"/>
   <field name="resourceID"  type="string" docValues="true" indexed="true"/>
   <field name="resourceRelationshipID"  type="string" docValues="true" indexed="true"/>
+  <field name="rights"  type="string" docValues="true" indexed="true"/>
   <field name="rightsHolder"  type="string" docValues="true" indexed="true"/>
   <field name="sampleSizeUnit"  type="string" docValues="true" indexed="true"/>
   <field name="sampleSizeValue"  type="string" docValues="true" indexed="true"/>
@@ -330,7 +331,7 @@
   <field name="scientificNameAuthorship"  type="string" docValues="true" indexed="true"/>
   <field name="scientificNameID"  type="string" docValues="true" indexed="true"/>
   <field name="sex"  type="string" docValues="true" indexed="true"/>
-  <field name="source_mat_id"  type="string" docValues="true" indexed="true"/>
+  <field name="source"  type="string" docValues="true" indexed="true"/>
   <field name="specificEpithet"  type="string" docValues="true" indexed="true"/>
   <field name="startDayOfYear"  type="string" docValues="true" indexed="true"/>
   <field name="stateProvince"  type="string" docValues="true" indexed="true"/>
@@ -370,11 +371,22 @@
   <field name="raw_verbatimCoordinates" type="text" />
 
   <!-- recent GBIF additions -->
-  <field name="identifiedByIds"  type="string" docValues="true" indexed="true"/>
-  <field name="recordedByIds"  type="string" docValues="true" indexed="true"/>
-  <field name="typifiedName"  type="string" docValues="true" indexed="true"/>
+  <field name="identifiedByID"  type="string" docValues="true" indexed="true" multiValued="true"/>
+  <field name="recordedByID"  type="string" docValues="true" indexed="true" multiValued="true"/>
+  <field name="typifiedName"  type="string" docValues="true" indexed="true" />
+
+
+  <!-- recent additions to be validated... -->
+  <field name="photographer"  type="string" docValues="true" indexed="true" />
+  <field name="northing"  type="string" docValues="true" indexed="true" />
+  <field name="easting"  type="string" docValues="true" indexed="true" />
+  <field name="zone"  type="string" docValues="true" indexed="true" />
+  <field name="identifierRole"  type="string" docValues="true" indexed="true" />
+
 
   <!-- ALA 'DWC' additional fields -->
+  <field name="subspecies"    type="string" docValues="true" indexed="true"/>
+  <field name="subspeciesID"  type="string" docValues="true" indexed="true"/>
   <field name="species"    type="string" docValues="true" indexed="true"/>
   <field name="speciesID"  type="string" docValues="true" indexed="true"/>
   <field name="genusID"    type="string" docValues="true" indexed="true"/>
@@ -387,10 +399,19 @@
   <field name="matchType"  type="string" docValues="true" indexed="true"/>
   <field name="nameType"   type="string" docValues="true" indexed="true"/>
 
+  <field name="superfamily" type="string" docValues="true" indexed="true"/>
+  <field name="subfamily"   type="string" docValues="true" indexed="true"/>
+
   <!-- ALA Sensitive data fields -->
   <field name="sensitive"  type="boolean" docValues="true" indexed="true"/>
   <field name="generalisationInMetres"  type="string" docValues="true" indexed="true"/>
   <field name="generalisationToApplyInMetres"  type="string" docValues="true" indexed="true"/>
+
+  <!-- GGBN loan fields -->
+  <field name="loanDestination"  type="string" docValues="true" indexed="true"/>
+  <field name="loanIdentifier"  type="string" docValues="true" indexed="true"/>
+  <field name="secondaryCollectors"  type="string" docValues="true" indexed="true"/>
+  <field name="abcdTypeStatus"  type="string" docValues="true" indexed="true"/>
 
   <!-- ALA legacy attribution fields -->
   <field name="dataResourceUid"   type="string" docValues="true" indexed="true" />
