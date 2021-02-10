@@ -263,6 +263,7 @@ public class OccurrenceHdfsRecordConverterTest {
     basicRecord.setRelativeOrganismQuantity(2d);
     basicRecord.setLicense(License.UNSPECIFIED.name());
     basicRecord.setIsClustered(true);
+    basicRecord.setPreparations("tissue");
 
     // When
     OccurrenceHdfsRecord hdfsRecord = toOccurrenceHdfsRecord(basicRecord);
@@ -283,6 +284,7 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals(Double.valueOf(2d), hdfsRecord.getRelativeorganismquantity());
     Assert.assertNull(hdfsRecord.getLicense());
     Assert.assertTrue(hdfsRecord.getIsincluster());
+    Assert.assertEquals("tissue", hdfsRecord.getPreparations());
   }
 
   @Test
