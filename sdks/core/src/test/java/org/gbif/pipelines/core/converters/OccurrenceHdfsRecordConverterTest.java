@@ -177,7 +177,8 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals(OccurrenceStatus.ABSENT.name(), hdfsRecord.getVOccurrencestatus());
     Assert.assertEquals("0", hdfsRecord.getVIndividualcount());
     Assert.assertEquals("2000/2010", hdfsRecord.getVEventdate());
-    Assert.assertEquals(ThreatStatus.CRITICALLY_ENDANGERED.name(), hdfsRecord.getIucnRedListCategory());
+    Assert.assertEquals(
+        ThreatStatus.CRITICALLY_ENDANGERED.name(), hdfsRecord.getIucnRedListCategory());
 
     // Test fields names with reserved words
     Assert.assertEquals("CLASS", hdfsRecord.getClass$());
