@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class LengthParser {
 
-  private static final Map<String, String> LENGTH_MAP = new HashMap<>();
+  private static final Map<String, String> LENGTH_MAP = new HashMap<>(65);
 
   static {
     LENGTH_MAP.put("_english_", "total length");

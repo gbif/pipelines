@@ -21,7 +21,7 @@ public class MassParser {
 
   @VisibleForTesting protected static final String TOTAL_WEIGHT = "total weight";
 
-  private static final Map<String, String> TOTAL_WEIGHT_MAP = new HashMap<>();
+  private static final Map<String, String> TOTAL_WEIGHT_MAP = new HashMap<>(45);
 
   static {
     TOTAL_WEIGHT_MAP.put("_english_", TOTAL_WEIGHT);

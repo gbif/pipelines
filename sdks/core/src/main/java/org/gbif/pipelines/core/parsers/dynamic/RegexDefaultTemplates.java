@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 class RegexDefaultTemplates {
 
-  private static final Map<String, String> MAP = new HashMap<>();
+  private static final Map<String, String> MAP = new HashMap<>(14);
 
   static {
     // For our purposes numbers are always positive and decimals.
