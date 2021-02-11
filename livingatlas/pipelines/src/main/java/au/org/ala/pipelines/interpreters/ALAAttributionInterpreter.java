@@ -28,6 +28,8 @@ public class ALAAttributionInterpreter {
           aar.setDataResourceName(m.getName());
           aar.setLicenseType(m.getLicenseType());
           aar.setLicenseVersion(m.getLicenseVersion());
+          aar.setHasDefaultValues(
+              m.getDefaultDarwinCoreValues() != null && !m.getDefaultDarwinCoreValues().isEmpty());
         } else {
           throw new RuntimeException(
               "Unable to retrieve connection parameters for dataset: " + mr.getId());

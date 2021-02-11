@@ -141,8 +141,8 @@
   <field name="speciesGroup"       type="string"  docValues="true" multiValued="true"  indexed="true" />
   <field name="speciesSubgroup"    type="string"  docValues="true" multiValued="true"  indexed="true" />
   <field name="speciesListUid"     type="string"  docValues="true" multiValued="true"  indexed="true" />
-  <field name="image_url"          type="string"  docValues="true" multiValued="false" indexed="true" />
-  <field name="all_image_url"      type="string"  docValues="true" multiValued="true"  indexed="true" />
+  <field name="imageID"            type="string"  docValues="true" multiValued="false" indexed="true" />
+  <field name="imageIDs"           type="string"  docValues="true" multiValued="true"  indexed="true" />
   <field name="multimedia"         type="string"  docValues="true" multiValued="true"  indexed="true" />
   <field name="assertions"         type="string"  docValues="true" multiValued="true"  indexed="true" />
 
