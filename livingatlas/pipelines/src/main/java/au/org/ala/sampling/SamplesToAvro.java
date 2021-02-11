@@ -59,12 +59,12 @@ public class SamplesToAvro {
         OutputStream output = fs.create(new Path(outputPath));
         DatumWriter<SampleRecord> datumWriter =
             new GenericDatumWriter<>(SampleRecord.getClassSchema());
-        DataFileWriter dataFileWriter = new DataFileWriter<SampleRecord>(datumWriter);
+        DataFileWriter<SampleRecord> dataFileWriter = new DataFileWriter<>(datumWriter);
         dataFileWriter.setCodec(BASE_CODEC);
         dataFileWriter.create(SampleRecord.getClassSchema(), output);
 
         String[] columnHeaders = csvReader.readNext();
-        String[] line = new String[0];
+        String[] line;
         while ((line = csvReader.readNext()) != null) {
 
           if (line.length == columnHeaders.length) {

@@ -10,7 +10,7 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 /** Tests for Spatial Reference Systems parsing. */
 public class SpatialReferenceSystemParserTest {
 
-  private static Stream<String> VALID_SRSs =
+  private static final Stream<String> VALID_SRSs =
       Stream.of("EPSG:32629", "EPSG:27700", "EPSG:32636", "EPSG:4326", "EPSG:28992");
 
   /** Test that a list CRS reported to GBIF through occurrence records. */

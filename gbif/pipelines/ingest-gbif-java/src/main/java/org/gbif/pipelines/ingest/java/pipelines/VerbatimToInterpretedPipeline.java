@@ -18,6 +18,7 @@ import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.Schema;
+import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.gbif.api.model.pipelines.StepType;
@@ -391,8 +392,8 @@ public class VerbatimToInterpretedPipeline {
         .createSyncDataFileWriter();
   }
 
-  private static <T> SyncDataFileWriter<T> createWriter(
-      InterpretationPipelineOptions options, Schema schema, Transform transform, String id) {
+  private static <T extends SpecificRecordBase> SyncDataFileWriter<T> createWriter(
+      InterpretationPipelineOptions options, Schema schema, Transform<?, T> transform, String id) {
     return createWriter(options, schema, transform, id, false);
   }
 

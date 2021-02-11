@@ -6,7 +6,6 @@ import au.org.ala.kvs.client.ALACollectoryMetadata;
 import au.org.ala.pipelines.vocabulary.ALAOccurrenceIssue;
 import au.org.ala.sds.api.*;
 import au.org.ala.sds.generalise.*;
-import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 import org.apache.avro.Schema;
@@ -30,7 +29,7 @@ public class SensitiveDataInterpreterTest {
   private Set<Term> sensitive;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     this.dataResource =
         ALACollectoryMetadata.builder().name("Test data resource").uid(DATARESOURCE_UID).build();
     this.generalisations =
@@ -118,7 +117,7 @@ public class SensitiveDataInterpreterTest {
                   SensitiveTaxon.builder()
                       .scientificName(sensitivityQuery.getScientificName())
                       .taxonId(sensitivityQuery.getTaxonId())
-                      .instances(Arrays.asList(instance))
+                      .instances(Collections.singletonList(instance))
                       .build();
               ValidationReport vr =
                   ValidationReport.builder().category("Sensitive").taxon(taxon).build();
@@ -197,7 +196,7 @@ public class SensitiveDataInterpreterTest {
           }
 
           @Override
-          public void close() throws IOException {}
+          public void close() {}
         };
   }
 

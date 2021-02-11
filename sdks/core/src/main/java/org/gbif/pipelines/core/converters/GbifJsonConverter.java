@@ -319,13 +319,14 @@ public class GbifJsonConverter {
                   .ifPresent(
                       v1 ->
                           v1.forEach(
-                              v2 -> {
-                                v2.forEach(
-                                    (k2, v3) ->
-                                        Optional.ofNullable(v3)
-                                            .ifPresent(
-                                                v4 -> allFieldValues.add(getEscapedTextNode(v4))));
-                              })));
+                              v2 ->
+                                  v2.forEach(
+                                      (k2, v3) ->
+                                          Optional.ofNullable(v3)
+                                              .ifPresent(
+                                                  v4 ->
+                                                      allFieldValues.add(
+                                                          getEscapedTextNode(v4)))))));
       jc.getMainNode().putArray("all").addAll(allFieldValues);
 
       // Main node

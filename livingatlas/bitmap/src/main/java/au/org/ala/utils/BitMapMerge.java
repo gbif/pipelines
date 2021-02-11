@@ -48,20 +48,20 @@ public class BitMapMerge {
 
     for (int x = 0; x < width; x++) {
       for (int y = 0; y < height; y++) {
-        String key = "";
+        StringBuilder key = new StringBuilder();
         for (BufferedImage image : images) {
           int colour = image.getRGB(x, y) & 0x00FFFFFF;
           if (colour == 0x000000) {
-            key = "BLACK";
+            key.append("BLACK");
             break;
           }
           if (colour == 0xFFFFFF) {
-            key += "W";
+            key.append("W");
           } else {
-            key += (colour);
+            key.append(colour);
           }
         }
-        combined.setRGB(x, y, getColour(key));
+        combined.setRGB(x, y, getColour(key.toString()));
       }
     }
     System.out.println("Writing to " + target);

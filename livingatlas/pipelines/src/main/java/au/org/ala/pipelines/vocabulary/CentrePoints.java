@@ -41,7 +41,7 @@ public class CentrePoints {
   private CentrePoints() {}
 
   public static CentrePoints getInstance(String filePath) throws FileNotFoundException {
-    InputStream is = new FileInputStream(new File(filePath));
+    InputStream is = new FileInputStream(filePath);
     return getInstance(is);
   }
 
