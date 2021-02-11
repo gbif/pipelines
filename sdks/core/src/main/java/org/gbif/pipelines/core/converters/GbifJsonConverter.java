@@ -479,6 +479,7 @@ public class GbifJsonConverter {
               .setUsage(trOrg.getUsage())
               .setUsageParsedName(trOrg.getUsageParsedName())
               .setDiagnostics(trOrg.getDiagnostics())
+              .setIucnRedListCategory(trOrg.getIucnRedListCategory())
               .setIssues(null); // Issues are accumulated
 
       if (!skipId) {
