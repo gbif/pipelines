@@ -165,9 +165,8 @@ public class IndexRecordTransform implements Serializable {
     skipKeys.add("networkKeys");
     skipKeys.add("protocol");
     skipKeys.add("issues");
-    // FIXME - add these separately
-    skipKeys.add("identifiedByIds");
-    skipKeys.add("recordedByIds");
+    skipKeys.add("identifiedByID"); // multi value field
+    skipKeys.add("recordedByID"); // multi value field
     skipKeys.add("machineTags"); // TODO review content
 
     IndexRecord.Builder indexRecord = IndexRecord.newBuilder().setId(ur.getUuid());
@@ -371,10 +370,6 @@ public class IndexRecordTransform implements Serializable {
     // Add legacy collectory fields
     if (aar != null) {
       addIfNotEmpty(indexRecord, "license", aar.getLicenseType());
-      addIfNotEmpty(
-          indexRecord,
-          "raw_dataResourceUid",
-          aar.getDataResourceUid()); // for backwards compatibility
       addIfNotEmpty(indexRecord, "dataResourceUid", aar.getDataResourceUid());
       addIfNotEmpty(indexRecord, "dataResourceName", aar.getDataResourceName());
       addIfNotEmpty(indexRecord, "dataProviderUid", aar.getDataProviderUid());
@@ -383,6 +378,8 @@ public class IndexRecordTransform implements Serializable {
       addIfNotEmpty(indexRecord, "collectionUid", aar.getCollectionUid());
       addIfNotEmpty(indexRecord, "institutionName", aar.getInstitutionName());
       addIfNotEmpty(indexRecord, "collectionName", aar.getCollectionName());
+      addIfNotEmpty(indexRecord, "provenance", aar.getProvenance());
+      indexRecord.getBooleans().put("defaultValuesUsed", aar.getHasDefaultValues());
 
       // add hub IDs
       if (aar.getHubMembership() != null && !aar.getHubMembership().isEmpty()) {
@@ -398,8 +395,8 @@ public class IndexRecordTransform implements Serializable {
 
     // add image identifiers
     if (isr != null && isr.getImageIDs() != null && !isr.getImageIDs().isEmpty()) {
-      indexRecord.getStrings().put("image_url", isr.getImageIDs().get(0));
-      indexRecord.getMultiValues().put("all_image_url", isr.getImageIDs());
+      indexRecord.getStrings().put("imageID", isr.getImageIDs().get(0));
+      indexRecord.getMultiValues().put("imageIDs", isr.getImageIDs());
       // FIX ME - do we need mime type.....
       indexRecord.getStrings().put("multimedia", "Image");
     } else {
