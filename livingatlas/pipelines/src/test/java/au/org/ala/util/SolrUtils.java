@@ -163,7 +163,7 @@ public class SolrUtils {
     final CollectionAdminRequest.List listRequest = new CollectionAdminRequest.List();
     CollectionAdminResponse response = listRequest.process(cloudSolrClient);
 
-    List<String> collections = (List) response.getResponse().get("collections");
+    List<String> collections = (List<String>) response.getResponse().get("collections");
 
     if (collections != null && collections.contains(BIOCACHE_TEST_SOLR_COLLECTION)) {
       final CollectionAdminRequest.Delete adminRequest = new CollectionAdminRequest.Delete();

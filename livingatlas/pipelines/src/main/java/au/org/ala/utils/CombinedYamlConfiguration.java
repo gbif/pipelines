@@ -1,6 +1,5 @@
 package au.org.ala.utils;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
@@ -50,7 +49,7 @@ public class CombinedYamlConfiguration {
     // Load each yaml, and combine the values
     Map<String, Object> merged = new LinkedHashMap<>();
     for (String path : yamlConfigPaths) {
-      InputStream input = new FileInputStream(new File(path));
+      InputStream input = new FileInputStream(path);
       Yaml yaml = new Yaml();
       LinkedHashMap<String, Object> loaded = yaml.load(input);
       if (loaded != null) {

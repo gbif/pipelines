@@ -322,7 +322,8 @@
               "uninomial": {"type": "text", "index":  false}
             }
           },
-          "verbatimScientificName": {"type": "keyword", "boost": 100.0, "copy_to": "all", "normalizer": "lowercase_normalizer"}
+          "verbatimScientificName": {"type": "keyword", "boost": 100.0, "copy_to": "all", "normalizer": "lowercase_normalizer"},
+          "iucnRedListCategory": {"type": "keyword"}
         }
       },
 

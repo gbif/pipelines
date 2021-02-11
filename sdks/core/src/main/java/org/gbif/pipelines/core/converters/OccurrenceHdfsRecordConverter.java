@@ -294,6 +294,10 @@ public class OccurrenceHdfsRecordConverter {
           .ifPresent(d -> hr.setTaxonomicstatus(d.name()));
 
       setCreatedIfGreater(hr, tr.getCreated());
+
+      Optional.ofNullable(tr.getIucnRedListCategory())
+          .ifPresent(u -> hr.setIucnRedListCategory(u.name()));
+
       addIssues(tr.getIssues(), hr);
     };
   }

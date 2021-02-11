@@ -86,7 +86,6 @@ public class LocationTransformTest {
         gadm2.setSource("http://gadm.org/");
         gadm2.setName("Silkeborg");
         gadm2.setIsoCountryCode2Digit("DK");
-        gadm2.setDistance(0d);
       } else {
         gadm0.setId("JPN");
         gadm0.setType("GADM0");
@@ -107,8 +106,8 @@ public class LocationTransformTest {
         gadm2.setSource("http://gadm.org/");
         gadm2.setName("Nagawa");
         gadm2.setIsoCountryCode2Digit("JP");
-        gadm2.setDistance(0d);
       }
+      gadm2.setDistance(0d);
       locations.add(gadm0);
       locations.add(gadm1);
       locations.add(gadm2);

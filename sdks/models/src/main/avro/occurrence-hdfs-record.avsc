@@ -1478,5 +1478,8 @@
       "type" : "array",
       "items" : "MeasurementOrFact"},
     "default" : []
+  }, {
+    "name" : "iucnRedListCategory",
+    "type" : [ "string", "null" ]
   }]
 }

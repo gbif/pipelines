@@ -19,7 +19,7 @@ public class JackKnifeTest {
 
     // too few values
     int size = 10;
-    Double values[] = new Double[size];
+    Double[] values = new Double[size];
     double[] result = JackKnife.jackknife(values, size + 1);
     assertNull(result);
 

@@ -125,7 +125,7 @@ public class IndexRecordTransform implements Serializable {
       TaxonProfile tpr,
       ALASensitivityRecord sr) {
 
-    Set<String> skipKeys = new HashSet<String>();
+    Set<String> skipKeys = new HashSet<>();
     skipKeys.add("id");
     skipKeys.add("created");
     skipKeys.add("text");
@@ -153,7 +153,7 @@ public class IndexRecordTransform implements Serializable {
     indexRecord.setDates(new HashMap<>());
     indexRecord.setDoubles(new HashMap<>());
     indexRecord.setMultiValues(new HashMap<>());
-    List<String> assertions = new ArrayList<String>();
+    List<String> assertions = new ArrayList<>();
 
     // If a sensitive record, construct new versions of the data with adjustments
     if (sr != null && sr.getSensitive()) {
@@ -334,8 +334,7 @@ public class IndexRecordTransform implements Serializable {
     }
 
     // FIXME see #99
-    boolean geospatialKosher =
-        lr.getHasGeospatialIssue() != null && lr.getHasGeospatialIssue() ? true : false;
+    boolean geospatialKosher = lr.getHasGeospatialIssue() != null && lr.getHasGeospatialIssue();
     indexRecord.getBooleans().put("geospatial_kosher", geospatialKosher);
 
     // FIXME  - see #162
@@ -575,8 +574,6 @@ public class IndexRecordTransform implements Serializable {
                                       builder.getBooleans().put(f.name(), (Boolean) r);
                                       break;
                                     case FLOAT:
-                                      builder.getDoubles().put(f.name(), (Double) r);
-                                      break;
                                     case DOUBLE:
                                       builder.getDoubles().put(f.name(), (Double) r);
                                       break;
