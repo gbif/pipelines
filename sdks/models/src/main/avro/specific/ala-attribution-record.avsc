@@ -27,7 +27,7 @@
     {"name": "licenseType", "type": ["null", "string"], "default" : null },
     {"name": "licenseVersion", "type": ["null", "string"], "default" : null },
     {"name": "provenance", "type": ["null", "string"], "default" : null },
-    {"name": "hasDefaultValues", "type": ["null", "boolean"], "default" : false },
+    {"name": "hasDefaultValues", "type": "boolean", "default" : false },
     {"name": "hubMembership", "type": {"type": "array", "items": "EntityReference"}, "default" : [] },
     {"name": "issues", "type": "IssueRecord", "default":{}},
     {"name": "connectionParameters", "default" : null, "type" : ["null",
