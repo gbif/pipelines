@@ -183,10 +183,14 @@ solr:
   runner: SparkRunner
   zkHost: localhost:9983
 
+# class: au.org.ala.pipelines.beam.IndexRecordToSolrPipeline
+solrSchema:
+  appName: SOLR Schema Sync
+
 # JackKnife specific configuration
 # class: au.org.ala.pipelines.beam.ALAReverseJackKnifePipeline
 jackKnife:
-  appName: Jack knife outlier detection for {datasetId}
+  appName: Jack knife outlier detection
   jackKnifePath: "{fsPath}/pipelines-jackknife"
   layers: el882,el889,el887,el865,el894
   minSampleThreshold: 80
@@ -338,5 +342,5 @@ solr-sh-args:
     conf: spark.default.parallelism=500
     num-executors: 6
     executor-cores: 8
-    executor-memory: 20G
+    executor-memory: 24G
     driver-memory: 4G
