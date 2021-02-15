@@ -8,12 +8,15 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.parsers.dynamic.DynamicProperty;
 import org.gbif.pipelines.core.parsers.dynamic.LengthParser;
 import org.gbif.pipelines.core.parsers.dynamic.MassParser;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class MeasurementOrFactConverter {
 
   public static List<Map<String, String>> extractFromDynamicProperties(ExtendedRecord er) {

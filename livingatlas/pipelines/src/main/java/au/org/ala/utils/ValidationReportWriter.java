@@ -134,7 +134,7 @@ public class ValidationReportWriter {
               fileStatus
                   .getPath()
                   .toString()
-                  .substring(fileStatus.getPath().toString().lastIndexOf("/") + 1);
+                  .substring(fileStatus.getPath().toString().lastIndexOf('/') + 1);
 
           // dataset found
           boolean verbatimLoaded;

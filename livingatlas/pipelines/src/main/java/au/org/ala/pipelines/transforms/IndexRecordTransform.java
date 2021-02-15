@@ -237,7 +237,7 @@ public class IndexRecordTransform implements Serializable {
     for (Map.Entry<String, String> entry : raw.entrySet()) {
       String key = entry.getKey();
       if (key.startsWith("http")) {
-        key = key.substring(key.lastIndexOf("/") + 1);
+        key = key.substring(key.lastIndexOf('/') + 1);
       }
       indexRecord.getStrings().put("raw_" + key, entry.getValue());
     }
@@ -393,10 +393,9 @@ public class IndexRecordTransform implements Serializable {
               indexRecord.getStrings().put("state_conservation", conservationStatus.getStatus());
             }
           }
-          if (conservationStatus.getRegion().equalsIgnoreCase(country)) {
-            if (Strings.isNotBlank(conservationStatus.getStatus())) {
-              indexRecord.getStrings().put("country_conservation", conservationStatus.getStatus());
-            }
+          if (conservationStatus.getRegion().equalsIgnoreCase(country)
+              && Strings.isNotBlank(conservationStatus.getStatus())) {
+            indexRecord.getStrings().put("country_conservation", conservationStatus.getStatus());
           }
         }
       }
@@ -565,33 +564,31 @@ public class IndexRecordTransform implements Serializable {
                                       .findFirst()
                                       .map(Schema::getType)
                                   : Optional.of(schema.getType());
-                          if (r != null) {
-                            type.ifPresent(
-                                t -> {
-                                  switch (t) {
-                                    case BOOLEAN:
-                                      //
-                                      builder.getBooleans().put(f.name(), (Boolean) r);
-                                      break;
-                                    case FLOAT:
-                                    case DOUBLE:
-                                      builder.getDoubles().put(f.name(), (Double) r);
-                                      break;
-                                    case INT:
-                                      builder.getInts().put(f.name(), (Integer) r);
-                                      break;
-                                    case LONG:
-                                      builder.getLongs().put(f.name(), (Long) r);
-                                      break;
-                                    case ARRAY:
-                                      builder.getMultiValues().put(f.name(), (java.util.List) r);
-                                      break;
-                                    default:
-                                      builder.getStrings().put(f.name(), r.toString());
-                                      break;
-                                  }
-                                });
-                          }
+                          type.ifPresent(
+                              t -> {
+                                switch (t) {
+                                  case BOOLEAN:
+                                    //
+                                    builder.getBooleans().put(f.name(), (Boolean) r);
+                                    break;
+                                  case FLOAT:
+                                  case DOUBLE:
+                                    builder.getDoubles().put(f.name(), (Double) r);
+                                    break;
+                                  case INT:
+                                    builder.getInts().put(f.name(), (Integer) r);
+                                    break;
+                                  case LONG:
+                                    builder.getLongs().put(f.name(), (Long) r);
+                                    break;
+                                  case ARRAY:
+                                    builder.getMultiValues().put(f.name(), (List) r);
+                                    break;
+                                  default:
+                                    builder.getStrings().put(f.name(), r.toString());
+                                    break;
+                                }
+                              });
                         }));
   }
 

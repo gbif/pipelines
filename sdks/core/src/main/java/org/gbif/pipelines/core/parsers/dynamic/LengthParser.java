@@ -85,7 +85,7 @@ public class LengthParser {
           .replaceRegexKeyGroupResultWith("totallengthinmm", "total length")
 
           //
-          .addUnitsFromKey("(?<units>mm|millimeters)$")
+          .addUnitsFromKeyRegex("(?<units>mm|millimeters)$")
 
           // Add templates for common regex functions
 

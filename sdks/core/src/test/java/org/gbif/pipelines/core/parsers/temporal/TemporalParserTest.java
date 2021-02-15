@@ -7,6 +7,7 @@ import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.core.OccurrenceParseResult;
@@ -297,7 +298,7 @@ public class TemporalParserTest {
     // until
     // we refactor to inject a Calendar or we move to new Java 8 Date/Time API
     try {
-      Thread.sleep(1000);
+      TimeUnit.MILLISECONDS.sleep(1_000);
     } catch (InterruptedException e) {
       fail(e.getMessage());
     }

@@ -153,7 +153,7 @@ public class CentrePoints {
 
   private int noOfDecimalPlace(double number) {
     String numberString = String.valueOf(number);
-    int decimalPointLoc = numberString.indexOf(".");
+    int decimalPointLoc = numberString.indexOf('.');
     if (decimalPointLoc < 0) {
       return 0;
     } else {

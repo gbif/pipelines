@@ -1,6 +1,8 @@
 package au.org.ala.utils;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import au.org.ala.pipelines.jackknife.JackKnife;
 import org.junit.Rule;
@@ -32,7 +34,7 @@ public class JackKnifeTest {
     values = new Double[] {1.0, 2.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 16.0, 17.0};
     result = JackKnife.jackknife(values, values.length - 1);
     assertNotNull(result);
-    assertEquals(result[0], 8.0, 0.0);
-    assertEquals(result[1], 14.0, 0.0);
+    assertEquals(8.0, result[0], 0.0);
+    assertEquals(14.0, result[1], 0.0);
   }
 }

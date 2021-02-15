@@ -52,7 +52,9 @@ public class SensitiveDataInterpreter {
    */
   public static void constructFields(
       Set<Term> sensitive, Map<String, String> properties, ExtendedRecord er) {
-    if (er == null) return;
+    if (er == null) {
+      return;
+    }
     er.getExtensions()
         .values()
         .forEach(el -> el.forEach(ext -> constructFields(sensitive, properties, ext)));
@@ -73,13 +75,17 @@ public class SensitiveDataInterpreter {
   public static void constructFields(
       Set<Term> sensitive, Map<String, String> properties, TaxonRecord record) {
 
-    if (record == null) return;
+    if (record == null) {
+      return;
+    }
     RankedName name = record.getAcceptedUsage();
-    if (name == null) return;
+    if (name == null) {
+      return;
+    }
     constructField(name, DwcTerm.scientificName, sensitive, properties, RankedName::getName);
     constructField(name, DwcTerm.taxonConceptID, sensitive, properties, n -> n.getKey().toString());
     constructField(name, DwcTerm.taxonRank, sensitive, properties, n -> n.getRank().name());
-    String taxonRank = DwcTerm.taxonRank.qualifiedName();
+
     if (record.getClassification() != null) {
       for (RankedName r : record.getClassification()) {
         Term rank = TERM_FACTORY.findTerm(r.getRank().name().toLowerCase());
@@ -102,7 +108,9 @@ public class SensitiveDataInterpreter {
    */
   public static void constructFields(
       Set<Term> sensitive, Map<String, String> properties, TemporalRecord record) {
-    if (record == null) return;
+    if (record == null) {
+      return;
+    }
     EventDate eventDate = record.getEventDate();
     constructField(eventDate, DwcTerm.eventDate, sensitive, properties, EventDate::getGte);
     constructField(record, DwcTerm.day, sensitive, properties, TemporalRecord::getDay);
@@ -122,7 +130,9 @@ public class SensitiveDataInterpreter {
    */
   public static void constructFields(
       Set<Term> sensitive, Map<String, String> properties, IndexedRecord record) {
-    if (record == null) return;
+    if (record == null) {
+      return;
+    }
     for (Schema.Field f : record.getSchema().getFields()) {
       Term term = TERM_FACTORY.findTerm(f.name());
       String name = term.qualifiedName();
@@ -139,7 +149,9 @@ public class SensitiveDataInterpreter {
         (key, value) -> {
           Term term = TERM_FACTORY.findTerm(key);
           String sn = term == null ? null : term.qualifiedName();
-          if (sn != null && properties.get(sn) == null) properties.put(sn, value);
+          if (sn != null && properties.get(sn) == null) {
+            properties.put(sn, value);
+          }
         });
   }
 
@@ -160,9 +172,13 @@ public class SensitiveDataInterpreter {
       Set<Term> fields,
       Map<String, String> properties,
       Function<R, V> getter) {
-    if (!fields.contains(term)) return;
+    if (!fields.contains(term)) {
+      return;
+    }
     String name = term.qualifiedName();
-    if (properties.containsKey(name)) return;
+    if (properties.containsKey(name)) {
+      return;
+    }
     V value = getter.apply(record);
     properties.put(name, value == null ? null : value.toString());
   }
@@ -241,7 +257,9 @@ public class SensitiveDataInterpreter {
       Set<Term> sensitive, ALASensitivityRecord sr, IndexedRecord record, Set<Term> ignore) {
     Map<String, String> altered = sr.getAltered();
 
-    if (altered == null || altered.isEmpty()) return;
+    if (altered == null || altered.isEmpty()) {
+      return;
+    }
     for (Schema.Field f : record.getSchema().getFields()) {
       Term term = TERM_FACTORY.findTerm(f.name());
       if (altered.containsKey(term.qualifiedName()) && !ignore.contains(term)) {
@@ -279,14 +297,17 @@ public class SensitiveDataInterpreter {
                           + " in schema "
                           + schema);
               }
-              if (v != null) break;
+              if (v != null) {
+                break;
+              }
             } catch (NumberFormatException ex) {
               // Silently ignore in the hope that something comes along later
             }
           }
-          if (v == null)
+          if (v == null) {
             throw new IllegalArgumentException(
                 "Unable to parse " + s + " for field " + term + " from schema " + schema);
+          }
         }
         record.put(f.pos(), v);
       }
@@ -319,8 +340,11 @@ public class SensitiveDataInterpreter {
               if (sensitive.contains(term)) {
                 String qn = term.qualifiedName();
                 if (values.containsKey(qn)) {
-                  if (v == null && removeNulls) values.remove(qn);
-                  else values.put(qn, v);
+                  if (v != null || !removeNulls) {
+                    values.put(qn, v);
+                  } else {
+                    values.remove(qn);
+                  }
                 }
               }
             });
@@ -338,7 +362,9 @@ public class SensitiveDataInterpreter {
     boolean hasName =
         properties.get(DwcTerm.scientificName.simpleName()) != null
             || properties.get(DwcTerm.scientificName.qualifiedName()) != null;
-    if (!hasName) addIssue(sr, ALAOccurrenceIssue.NAME_NOT_SUPPLIED);
+    if (!hasName) {
+      addIssue(sr, ALAOccurrenceIssue.NAME_NOT_SUPPLIED);
+    }
     return hasName;
   }
 
@@ -381,8 +407,12 @@ public class SensitiveDataInterpreter {
             .build();
     SensitivityReport report = reportStore.get(query);
     sr.setSensitive(report.isSensitive());
-    if (!report.isValid()) addIssue(sr, ALAOccurrenceIssue.SENSITIVITY_REPORT_INVALID);
-    if (!report.isLoadable()) addIssue(sr, ALAOccurrenceIssue.SENSITIVITY_REPORT_NOT_LOADABLE);
+    if (!report.isValid()) {
+      addIssue(sr, ALAOccurrenceIssue.SENSITIVITY_REPORT_INVALID);
+    }
+    if (!report.isLoadable()) {
+      addIssue(sr, ALAOccurrenceIssue.SENSITIVITY_REPORT_NOT_LOADABLE);
+    }
     if (report.isSensitive()) {
       Map<String, Object> original = new HashMap<>();
       Map<String, Object> result = new HashMap<>();
@@ -425,13 +455,17 @@ public class SensitiveDataInterpreter {
    */
   public static String extractScientificName(
       final ALATaxonRecord atxr, final TaxonRecord txr, final ExtendedRecord er) {
-    String scientificName = null;
-    if (atxr != null && (scientificName = atxr.getScientificName()) != null) return scientificName;
-    if (txr != null && (scientificName = txr.getAcceptedUsage().getName()) != null)
+    String scientificName;
+    if (atxr != null && (scientificName = atxr.getScientificName()) != null) {
       return scientificName;
+    }
+    if (txr != null && (scientificName = txr.getAcceptedUsage().getName()) != null) {
+      return scientificName;
+    }
     if (er != null
-        && (scientificName = ModelUtils.extractValue(er, DwcTerm.scientificName)) != null)
+        && (scientificName = ModelUtils.extractValue(er, DwcTerm.scientificName)) != null) {
       return scientificName;
+    }
     return null;
   }
 
@@ -445,32 +479,34 @@ public class SensitiveDataInterpreter {
    */
   public static String extractTaxonId(
       final ALATaxonRecord atxr, final TaxonRecord txr, final ExtendedRecord er) {
-    String taxonId = null;
-    if (atxr != null && (taxonId = atxr.getTaxonConceptID()) != null) return taxonId;
+    String taxonId;
+    if (atxr != null && (taxonId = atxr.getTaxonConceptID()) != null) {
+      return taxonId;
+    }
     if (txr != null) {
       Integer key = txr.getAcceptedUsage().getKey();
-      if (key != null) return key.toString();
+      if (key != null) {
+        return key.toString();
+      }
     }
     if (er != null) {
-      if ((taxonId = ModelUtils.extractValue(er, DwcTerm.taxonConceptID)) != null) return taxonId;
-      if ((taxonId = ModelUtils.extractValue(er, DwcTerm.taxonID)) != null) return taxonId;
+      if ((taxonId = ModelUtils.extractValue(er, DwcTerm.taxonConceptID)) != null) {
+        return taxonId;
+      }
+      if ((taxonId = ModelUtils.extractValue(er, DwcTerm.taxonID)) != null) {
+        return taxonId;
+      }
     }
     return null;
   }
 
-  /**
-   * Convert a map into a map of string key-values.
-   *
-   * @param original
-   * @param <K>
-   * @param <V>
-   * @return
-   */
+  /** Convert a map into a map of string key-values. */
   protected static <K, V> Map<String, String> toStringMap(Map<K, V> original) {
     Map<String, String> strings = new HashMap<>(original.size());
-    for (Map.Entry<K, V> entry : original.entrySet())
+    for (Map.Entry<K, V> entry : original.entrySet()) {
       strings.put(
           entry.getKey().toString(), entry.getValue() == null ? null : entry.getValue().toString());
+    }
     return strings;
   }
 }

@@ -70,7 +70,7 @@ public class MassParser {
           .replaceRegexKeyGroupResultWith("wts.", TOTAL_WEIGHT)
 
           //
-          .addUnitsFromKey("(?<units>grams)$")
+          .addUnitsFromKeyRegex("(?<units>grams)$")
 
           // Add templates for common regex functions
 

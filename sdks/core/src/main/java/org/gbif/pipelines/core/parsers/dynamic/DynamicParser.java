@@ -12,6 +12,16 @@ import lombok.Builder;
 
 class DynamicParser {
 
+  public static final String KEY_GROUP = "key";
+
+  public static final String VALUE_GROUP = "value";
+  public static final String VALUE_1_GROUP = "value1";
+  public static final String VALUE_2_GROUP = "value2";
+
+  public static final String UNITS_GROUP = "units";
+  public static final String UNITS_1_GROUP = "units1";
+  public static final String UNITS_2_GROUP = "units2";
+
   private final List<PatternDefault> patternList;
   private final Pattern unitsFromKey;
   private final Map<String, String> keyMap;
@@ -43,9 +53,9 @@ class DynamicParser {
         Matcher matcher = p.pattern.matcher(source.toLowerCase());
 
         if (matcher.find()) {
-          String key = getGroup(matcher, p.defaultKey, "key");
-          String value = getGroup(matcher, null, "value", "value1", "value2");
-          String units = getGroup(matcher, p.defaulType, "units", "units1", "units2");
+          String key = getGroup(matcher, p.defaultKey, KEY_GROUP);
+          String value = getGroup(matcher, null, VALUE_GROUP, VALUE_1_GROUP, VALUE_2_GROUP);
+          String units = getGroup(matcher, p.defaulType, UNITS_GROUP, UNITS_1_GROUP, UNITS_2_GROUP);
           if (key != null && units == null) {
             Matcher km = unitsFromKey.matcher(key);
             units = km.find() ? km.group() : null;
@@ -93,8 +103,8 @@ class DynamicParser {
     private Pattern unitsFromKey;
     private String fieldName;
 
-    protected DynamicParserBuilder addUnitsFromKey(String unitsFromKey) {
-      this.unitsFromKey = Pattern.compile(unitsFromKey);
+    protected DynamicParserBuilder addUnitsFromKeyRegex(String regex) {
+      this.unitsFromKey = Pattern.compile(regex);
       return this;
     }
 

@@ -23,13 +23,11 @@ public class CombinedYamlConfigurationTest {
   public static void loadConf() throws FileNotFoundException {
     testConf =
         new CombinedYamlConfiguration(
-            new String[] {
-              "--someArg=1",
-              "--runner=other",
-              "--datasetId=dr893",
-              "--fsPath=/data",
-              "--config=target/test-classes/pipelines.yaml,src/test/resources/pipelines-local.yaml"
-            });
+            "--someArg=1",
+            "--runner=other",
+            "--datasetId=dr893",
+            "--fsPath=/data",
+            "--config=target/test-classes/pipelines.yaml,src/test/resources/pipelines-local.yaml");
   }
 
   public static Throwable exceptionOf(Callable<?> callable) {
@@ -44,7 +42,7 @@ public class CombinedYamlConfigurationTest {
   @Test
   public void getUnknownValueReturnsEmptyList() throws FileNotFoundException {
     assertThat(
-        new CombinedYamlConfiguration(new String[] {"--config=target/test-classes/pipelines.yaml"})
+        new CombinedYamlConfiguration("--config=target/test-classes/pipelines.yaml")
             .subSet("general2")
             .size(),
         equalTo(0));
@@ -131,15 +129,13 @@ public class CombinedYamlConfigurationTest {
         exceptionOf(
             () ->
                 new CombinedYamlConfiguration(
-                    new String[] {"--config=src/test/resources/missing-la-pipelines.yaml"})),
+                    "--config=src/test/resources/missing-la-pipelines.yaml")),
         instanceOf(FileNotFoundException.class));
   }
 
   @Test
   public void expectExceptionWhenMissingConfigArgument() {
-    assertThat(
-        exceptionOf(() -> new CombinedYamlConfiguration(new String[] {})),
-        instanceOf(RuntimeException.class));
+    assertThat(exceptionOf(CombinedYamlConfiguration::new), instanceOf(RuntimeException.class));
   }
 
   @Ignore("Works locally, but fails on Jenkins")
