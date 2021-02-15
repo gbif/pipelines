@@ -56,10 +56,10 @@ public class SamplesToAvro {
         CSVReader csvReader = new CSVReader(new InputStreamReader(inputStream));
 
         String outputPath = LayerCrawler.getSampleAvroPath(options);
-        OutputStream output = fs.create(new Path(outputPath));
         DatumWriter<SampleRecord> datumWriter =
             new GenericDatumWriter<>(SampleRecord.getClassSchema());
-        try (DataFileWriter<SampleRecord> dataFileWriter = new DataFileWriter<>(datumWriter)) {
+        try (OutputStream output = fs.create(new Path(outputPath));
+            DataFileWriter<SampleRecord> dataFileWriter = new DataFileWriter<>(datumWriter)) {
           dataFileWriter.setCodec(BASE_CODEC);
           dataFileWriter.create(SampleRecord.getClassSchema(), output);
 

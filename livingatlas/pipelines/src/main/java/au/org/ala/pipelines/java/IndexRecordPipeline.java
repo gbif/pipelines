@@ -42,8 +42,24 @@ import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.io.AvroReader;
 import org.gbif.pipelines.core.utils.FsUtils;
-import org.gbif.pipelines.io.avro.*;
-import org.gbif.pipelines.transforms.core.*;
+import org.gbif.pipelines.io.avro.ALAAttributionRecord;
+import org.gbif.pipelines.io.avro.ALASensitivityRecord;
+import org.gbif.pipelines.io.avro.ALATaxonRecord;
+import org.gbif.pipelines.io.avro.ALAUUIDRecord;
+import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.ImageServiceRecord;
+import org.gbif.pipelines.io.avro.IndexRecord;
+import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.io.avro.TaxonProfile;
+import org.gbif.pipelines.io.avro.TaxonRecord;
+import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.transforms.core.BasicTransform;
+import org.gbif.pipelines.transforms.core.LocationTransform;
+import org.gbif.pipelines.transforms.core.TaxonomyTransform;
+import org.gbif.pipelines.transforms.core.TemporalTransform;
+import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.slf4j.MDC;
 
@@ -326,18 +342,18 @@ public class IndexRecordPipeline {
         FsUtils.getFileSystem(
             options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getInputPath());
 
-    OutputStream output =
-        fs.create(
-            new Path(
-                options.getAllDatasetsInputPath()
-                    + "/index-record/"
-                    + options.getDatasetId()
-                    + "/"
-                    + options.getDatasetId()
-                    + ".avro"));
+    Path otputPath =
+        new Path(
+            options.getAllDatasetsInputPath()
+                + "/index-record/"
+                + options.getDatasetId()
+                + "/"
+                + options.getDatasetId()
+                + ".avro");
 
     DatumWriter<IndexRecord> datumWriter = new GenericDatumWriter<>(IndexRecord.getClassSchema());
-    try (DataFileWriter<IndexRecord> dataFileWriter = new DataFileWriter<>(datumWriter)) {
+    try (OutputStream output = fs.create(otputPath);
+        DataFileWriter<IndexRecord> dataFileWriter = new DataFileWriter<>(datumWriter)) {
       dataFileWriter.setCodec(BASE_CODEC);
       dataFileWriter.create(IndexRecord.getClassSchema(), output);
 
