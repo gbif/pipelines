@@ -266,7 +266,7 @@ public class BitMapGenerator {
     String idName = args[1];
     String outputFolder = args[2];
 
-    BitMapGenerator bmg = new BitMapGenerator(url, db, user, password);
+    BitMapGenerator bmg = new BitMapGenerator(url, db, password, user);
     String[] svgs = bmg.generateSVG(layer, idName);
     // Use layer name as default file name.
     // bmg.writeBitmap(svg, outputFolder, layer);
