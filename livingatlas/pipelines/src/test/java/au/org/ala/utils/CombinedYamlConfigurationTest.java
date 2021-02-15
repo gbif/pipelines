@@ -153,7 +153,6 @@ public class CombinedYamlConfigurationTest {
     assertThat(
         ((Map<String, Object>) map.get("alaNameMatch")).get("wsUrl"),
         equalTo("http://localhost:9179"));
-    assertThat(
-        (map.get("unicode-test")), equalTo("Лорем ипсум долор сит амет, дуо еа прима семпер"));
+    assertThat(map.get("unicode-test"), equalTo("Лорем ипсум долор сит амет, дуо еа прима семпер"));
   }
 }

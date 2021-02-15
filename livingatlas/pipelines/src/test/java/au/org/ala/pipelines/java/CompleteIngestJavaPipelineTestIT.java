@@ -194,13 +194,13 @@ public class CompleteIngestJavaPipelineTestIT {
 
     // sample
     LayerCrawler.init(
-        (new CombinedYamlConfiguration(
+        new CombinedYamlConfiguration(
             "--datasetId=" + datasetID,
             "--attempt=1",
             "--runner=DirectRunner",
             "--targetPath=/tmp/la-pipelines-test/complete-pipeline-java",
             "--inputPath=/tmp/la-pipelines-test/complete-pipeline-java",
-            "--config=" + TestUtils.getPipelinesConfigFile())));
+            "--config=" + TestUtils.getPipelinesConfigFile()));
     LayerCrawler.run(latLngOptions);
 
     // index into SOLR
