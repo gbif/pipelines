@@ -336,20 +336,8 @@ public class GbifJsonConverterTest {
             .setUsage(name2)
             .build();
 
-    MeasurementOrFactRecord mfr =
-        MeasurementOrFactRecord.newBuilder()
-            .setId("777")
-            .setMeasurementOrFactItems(
-                Arrays.asList(
-                    MeasurementOrFact.newBuilder()
-                        .setMeasurementType("{\"something\":1}{\"something\":1}")
-                        .setMeasurementValue("1.1")
-                        .build(),
-                    MeasurementOrFact.newBuilder().build()))
-            .build();
-
     // When
-    ObjectNode result = GbifJsonConverter.toJson(er, tmr, lr, tr, asr, mfr);
+    ObjectNode result = GbifJsonConverter.toJson(er, tmr, lr, tr, asr);
 
     // Should
     assertTrue(JsonValidationUtils.isValid(result.toString()));
@@ -437,11 +425,6 @@ public class GbifJsonConverterTest {
     assertEquals(
         "[{\"key\":\"data\",\"value\":\"value\"}]",
         result.path("locationFeatureLayers").toString());
-
-    String expectedMeasurementOrFactItems =
-        "[{\"measurementType\":\"{\\\"something\\\":1}{\\\"something\\\":1}\","
-            + "\"measurementValue\":\"1.1\",\"measurementUnit\":null}]";
-    assertEquals(expectedMeasurementOrFactItems, result.path("measurementOrFactItems").toString());
 
     String expectedIssues = "[\"BASIS_OF_RECORD_INVALID\",\"ZERO_COORDINATE\"]";
     assertEquals(expectedIssues, result.path("issues").toString());
@@ -613,25 +596,6 @@ public class GbifJsonConverterTest {
             .setCreated(0L)
             .setItems(Collections.singletonMap("{awdawd}", "\"{\"wad\":\"adw\"}\""))
             .build();
-
-    // When
-    String result = GbifJsonConverter.toStringPartialJson(record);
-
-    // Should
-    assertEquals(expected, result);
-    assertTrue(JsonValidationUtils.isValid(result));
-  }
-
-  @Test
-  public void measurementOrFactRecordSkipIssuesWithIdTest() {
-
-    // Expected
-    String expected =
-        "{\"id\":\"777\"," + "\"measurementOrFactItems\":[]," + "\"created\":\"1970-01-01T00:00\"}";
-
-    // State
-    MeasurementOrFactRecord record =
-        MeasurementOrFactRecord.newBuilder().setId("777").setCreated(0L).build();
 
     // When
     String result = GbifJsonConverter.toStringPartialJson(record);

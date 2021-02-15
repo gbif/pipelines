@@ -51,7 +51,6 @@ import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
-import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.slf4j.MDC;
@@ -143,7 +142,6 @@ public class InterpretedToHdfsViewPipeline {
     LocationTransform locationTransform = LocationTransform.builder().create();
 
     // Extension
-    MeasurementOrFactTransform measurementTransform = MeasurementOrFactTransform.builder().create();
     MultimediaTransform multimediaTransform = MultimediaTransform.builder().create();
     AudubonTransform audubonTransform = AudubonTransform.builder().create();
     ImageTransform imageTransform = ImageTransform.builder().create();
@@ -254,16 +252,6 @@ public class InterpretedToHdfsViewPipeline {
                     pathFn.apply(audubonTransform.getBaseName())),
             executor);
 
-    CompletableFuture<Map<String, MeasurementOrFactRecord>> measurementMapFeature =
-        CompletableFuture.supplyAsync(
-            () ->
-                AvroReader.readRecords(
-                    hdfsSiteConfig,
-                    coreSiteConfig,
-                    MeasurementOrFactRecord.class,
-                    pathFn.apply(measurementTransform.getBaseName())),
-            executor);
-
     CompletableFuture.allOf(
             metadataMapFeature,
             verbatimMapFeature,
@@ -274,8 +262,7 @@ public class InterpretedToHdfsViewPipeline {
             grscicollMapFeature,
             multimediaMapFeature,
             imageMapFeature,
-            audubonMapFeature,
-            measurementMapFeature)
+            audubonMapFeature)
         .get();
 
     MetadataRecord metadata = metadataMapFeature.get().values().iterator().next();
@@ -288,7 +275,6 @@ public class InterpretedToHdfsViewPipeline {
     Map<String, MultimediaRecord> multimediaMap = multimediaMapFeature.get();
     Map<String, ImageRecord> imageMap = imageMapFeature.get();
     Map<String, AudubonRecord> audubonMap = audubonMapFeature.get();
-    Map<String, MeasurementOrFactRecord> measurementMap = measurementMapFeature.get();
 
     // Join all records, convert into OccurrenceHdfsRecord and save as an avro file
     Function<BasicRecord, OccurrenceHdfsRecord> occurrenceHdfsRecordFn =
@@ -310,14 +296,12 @@ public class InterpretedToHdfsViewPipeline {
           ImageRecord ir = imageMap.getOrDefault(k, ImageRecord.newBuilder().setId(k).build());
           AudubonRecord ar =
               audubonMap.getOrDefault(k, AudubonRecord.newBuilder().setId(k).build());
-          MeasurementOrFactRecord mfr =
-              measurementMap.getOrDefault(k, MeasurementOrFactRecord.newBuilder().setId(k).build());
 
           metrics.incMetric(AVRO_TO_HDFS_COUNT);
 
           MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
           return OccurrenceHdfsRecordConverter.toOccurrenceHdfsRecord(
-              br, metadata, tr, lr, txr, gr, mmr, mfr, er);
+              br, metadata, tr, lr, txr, gr, mmr, er);
         };
 
     boolean useSyncMode = options.getSyncThreshold() > basicMap.size();

@@ -47,7 +47,6 @@ import org.gbif.pipelines.io.avro.GadmFeatures;
 import org.gbif.pipelines.io.avro.Issues;
 import org.gbif.pipelines.io.avro.LocationFeatureRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.Multimedia;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.RankedName;
@@ -101,7 +100,6 @@ public class GbifJsonConverter {
           .converter(TaxonRecord.class, getTaxonomyRecordConverter())
           .converter(LocationFeatureRecord.class, getLocationFeatureRecordConverter())
           .converter(AmplificationRecord.class, getAmplificationRecordConverter())
-          .converter(MeasurementOrFactRecord.class, getMeasurementOrFactRecordConverter())
           .converter(MultimediaRecord.class, getMultimediaConverter())
           .converter(BasicRecord.class, getBasicRecordConverter())
           .converter(GrscicollRecord.class, getGrscicollRecordConverter());
@@ -630,49 +628,6 @@ public class GbifJsonConverter {
               .collect(Collectors.toList());
 
       jc.addJsonArray("amplificationItems", nodes);
-    };
-  }
-
-  /**
-   * String converter for {@link MeasurementOrFactRecord}, convert an object to specific string view
-   *
-   * <pre>{@code
-   * Result example:
-   *
-   * {
-   *  "id": "777",
-   *  "measurementOrFactItems": [
-   *     {
-   *       "type": "{\"something\":1}{\"something\":1}",
-   *       "value": "1.1",
-   *       "unit": "mm"
-   *     }
-   *   ]
-   * }
-   * }</pre>
-   */
-  private BiConsumer<JsonConverter, SpecificRecordBase> getMeasurementOrFactRecordConverter() {
-    return (jc, record) -> {
-      MeasurementOrFactRecord mfr = (MeasurementOrFactRecord) record;
-
-      if (!skipId) {
-        jc.addJsonTextFieldNoCheck(ID, mfr.getId());
-      }
-
-      List<ObjectNode> nodes =
-          mfr.getMeasurementOrFactItems().stream()
-              .filter(x -> x.getMeasurementValue() != null && x.getMeasurementType() != null)
-              .map(
-                  x -> {
-                    ObjectNode node = JsonConverter.createObjectNode();
-                    node.put("measurementType", x.getMeasurementType());
-                    node.put("measurementValue", x.getMeasurementValue());
-                    node.put("measurementUnit", x.getMeasurementUnit());
-                    return node;
-                  })
-              .collect(Collectors.toList());
-
-      jc.addJsonArray("measurementOrFactItems", nodes);
     };
   }
 

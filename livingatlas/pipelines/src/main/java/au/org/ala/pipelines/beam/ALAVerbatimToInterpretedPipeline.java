@@ -41,9 +41,6 @@ import org.gbif.pipelines.transforms.common.UniqueIdTransform;
 import org.gbif.pipelines.transforms.converters.OccurrenceExtensionTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
-import org.gbif.pipelines.transforms.extension.AudubonTransform;
-import org.gbif.pipelines.transforms.extension.ImageTransform;
-import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.DefaultValuesTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
@@ -165,14 +162,8 @@ public class ALAVerbatimToInterpretedPipeline {
         TemporalTransform.builder().orderings(dateComponentOrdering).create();
 
     // Extension
-    MeasurementOrFactTransform measurementOrFactTransform =
-        MeasurementOrFactTransform.builder().create();
     MultimediaTransform multimediaTransform =
         MultimediaTransform.builder().orderings(dateComponentOrdering).create();
-    AudubonTransform audubonTransform =
-        AudubonTransform.builder().orderings(dateComponentOrdering).create();
-    ImageTransform imageTransform =
-        ImageTransform.builder().orderings(dateComponentOrdering).create();
 
     // ALA specific - Attribution
     ALAAttributionTransform alaAttributionTransform =
@@ -249,21 +240,6 @@ public class ALAVerbatimToInterpretedPipeline {
         .apply("Check multimedia transform condition", multimediaTransform.check(types))
         .apply("Interpret multimedia", multimediaTransform.interpret())
         .apply("Write multimedia to avro", multimediaTransform.write(pathFn));
-
-    uniqueRecords
-        .apply("Check image transform condition", imageTransform.check(types))
-        .apply("Interpret image", imageTransform.interpret())
-        .apply("Write image to avro", imageTransform.write(pathFn));
-
-    uniqueRecords
-        .apply("Check audubon transform condition", audubonTransform.check(types))
-        .apply("Interpret audubon", audubonTransform.interpret())
-        .apply("Write audubon to avro", audubonTransform.write(pathFn));
-
-    uniqueRecords
-        .apply("Check measurement transform condition", measurementOrFactTransform.check(types))
-        .apply("Interpret measurement", measurementOrFactTransform.interpret())
-        .apply("Write measurement to avro", measurementOrFactTransform.write(pathFn));
 
     uniqueRecords
         .apply("Check collection attribution", alaAttributionTransform.check(types))

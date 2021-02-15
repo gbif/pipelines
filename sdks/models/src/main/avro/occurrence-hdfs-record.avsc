@@ -1472,12 +1472,6 @@
       "type" : "array",
       "items" : [ "string", "null" ]
     }, "null" ]
-  },{
-    "name": "measurementfactrecord",
-    "type": {
-      "type" : "array",
-      "items" : "MeasurementOrFact"},
-    "default" : []
   }, {
     "name" : "iucnRedListCategory",
     "type" : [ "string", "null" ]

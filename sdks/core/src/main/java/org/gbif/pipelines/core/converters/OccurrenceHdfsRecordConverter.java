@@ -34,8 +34,6 @@ import org.gbif.pipelines.io.avro.Diagnostic;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IssueRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MeasurementOrFact;
-import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.Multimedia;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
@@ -66,7 +64,6 @@ public class OccurrenceHdfsRecordConverter {
     CONVERTERS.put(TemporalRecord.class, temporalMapper());
     CONVERTERS.put(MetadataRecord.class, metadataMapper());
     CONVERTERS.put(MultimediaRecord.class, multimediaMapper());
-    CONVERTERS.put(MeasurementOrFactRecord.class, measurementOrFactRecordMapper());
   }
 
   /**
@@ -549,24 +546,6 @@ public class OccurrenceHdfsRecordConverter {
 
       setCreatedIfGreater(hr, mr.getCreated());
       hr.setMediatype(mediaTypes);
-    };
-  }
-
-  /**
-   * Collects the {@link MeasurementOrFactRecord} measurement and fact extension data into the
-   * {@link OccurrenceHdfsRecord#setMeasurementfactrecord(List)} (List)}.
-   */
-  private static BiConsumer<OccurrenceHdfsRecord, SpecificRecordBase>
-      measurementOrFactRecordMapper() {
-    return (hr, sr) -> {
-      MeasurementOrFactRecord mfr = (MeasurementOrFactRecord) sr;
-
-      List<MeasurementOrFact> facts =
-          mfr.getMeasurementOrFactItems().stream()
-              .filter(x -> x.getMeasurementType() != null && x.getMeasurementValue() != null)
-              .collect(Collectors.toList());
-
-      hr.setMeasurementfactrecord(facts);
     };
   }
 
