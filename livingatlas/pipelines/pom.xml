@@ -280,7 +280,7 @@
 
     <!-- ALA libraries -->
     <ala-namematching-service.version>1.0</ala-namematching-service.version>
-    <ala-sensitive-data-service.version>1.1</ala-sensitive-data-service.version>
+    <ala-sensitive-data-service.version>1.1-SNAPSHOT</ala-sensitive-data-service.version>
 
     <!-- Default port for ALA Name Matcher Docker container -->
     <alanm.port>9279</alanm.port>
