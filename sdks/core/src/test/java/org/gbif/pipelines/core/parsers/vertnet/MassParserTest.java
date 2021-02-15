@@ -1,7 +1,7 @@
-package org.gbif.pipelines.core.parsers.dynamic;
+package org.gbif.pipelines.core.parsers.vertnet;
 
 import static org.gbif.pipelines.common.PipelinesVariables.DynamicProperties.*;
-import static org.gbif.pipelines.core.parsers.dynamic.MassParser.TOTAL_WEIGHT;
+import static org.gbif.pipelines.core.parsers.vertnet.MassParser.TOTAL_WEIGHT;
 
 import java.util.Optional;
 import org.junit.Assert;

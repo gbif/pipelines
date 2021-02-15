@@ -1,4 +1,4 @@
-package org.gbif.pipelines.core.parsers.dynamic;
+package org.gbif.pipelines.core.parsers.vertnet;
 
 import static org.gbif.pipelines.common.PipelinesVariables.DynamicProperties.Parser;
 
@@ -69,7 +69,7 @@ public class MassParser {
           .replaceRegexKeyGroupResultWith("wts", TOTAL_WEIGHT)
           .replaceRegexKeyGroupResultWith("wts.", TOTAL_WEIGHT)
 
-          //
+          // In the case when key may contain units
           .addUnitsFromKeyRegex("(?<units>grams)$")
 
           // Add templates for common regex functions

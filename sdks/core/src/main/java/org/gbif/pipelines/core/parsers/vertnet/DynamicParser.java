@@ -1,4 +1,4 @@
-package org.gbif.pipelines.core.parsers.dynamic;
+package org.gbif.pipelines.core.parsers.vertnet;
 
 import java.util.ArrayList;
 import java.util.HashMap;

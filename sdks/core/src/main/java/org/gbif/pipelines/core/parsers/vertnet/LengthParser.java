@@ -1,4 +1,4 @@
-package org.gbif.pipelines.core.parsers.dynamic;
+package org.gbif.pipelines.core.parsers.vertnet;
 
 import static org.gbif.pipelines.common.PipelinesVariables.DynamicProperties.Parser;
 
@@ -84,7 +84,7 @@ public class LengthParser {
           .replaceRegexKeyGroupResultWith("totallengthin", "total length")
           .replaceRegexKeyGroupResultWith("totallengthinmm", "total length")
 
-          //
+          // In the case when key may contain units
           .addUnitsFromKeyRegex("(?<units>mm|millimeters)$")
 
           // Add templates for common regex functions

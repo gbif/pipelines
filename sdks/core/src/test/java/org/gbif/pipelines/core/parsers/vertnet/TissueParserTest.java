@@ -1,4 +1,4 @@
-package org.gbif.pipelines.core.parsers.dynamic;
+package org.gbif.pipelines.core.parsers.vertnet;
 
 import org.junit.Assert;
 import org.junit.Test;

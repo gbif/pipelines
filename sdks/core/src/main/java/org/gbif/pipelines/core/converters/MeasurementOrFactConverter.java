@@ -11,9 +11,9 @@ import java.util.Map;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.core.parsers.dynamic.DynamicProperty;
-import org.gbif.pipelines.core.parsers.dynamic.LengthParser;
-import org.gbif.pipelines.core.parsers.dynamic.MassParser;
+import org.gbif.pipelines.core.parsers.vertnet.DynamicProperty;
+import org.gbif.pipelines.core.parsers.vertnet.LengthParser;
+import org.gbif.pipelines.core.parsers.vertnet.MassParser;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)

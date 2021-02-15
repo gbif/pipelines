@@ -1,4 +1,4 @@
-package org.gbif.pipelines.core.parsers.dynamic;
+package org.gbif.pipelines.core.parsers.vertnet;
 
 import static org.gbif.pipelines.common.PipelinesVariables.DynamicProperties.*;
 
