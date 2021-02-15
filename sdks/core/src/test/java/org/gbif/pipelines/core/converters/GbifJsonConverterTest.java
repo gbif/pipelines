@@ -71,7 +71,6 @@ public class GbifJsonConverterTest {
             .setLifeStage("Tadpole")
             .setLifeStageLineage(Arrays.asList("Larva", "Tadpole"))
             .setIsClustered(true)
-            .setPreparations("preparations")
             .setRecordedByIds(
                 Collections.singletonList(
                     AgentIdentifier.newBuilder()
@@ -178,7 +177,6 @@ public class GbifJsonConverterTest {
     assertEquals("Code 1'2\"", result.path("countryCode").asText());
     assertEquals("[68]", result.path("locality").asText());
     assertTrue(result.path("isClustered").asBoolean());
-    assertEquals("preparations", result.path("preparations").asText());
     assertEquals(
         "http://rs.tdwg.org/ac/terms/Multimedia", result.path("extensions").get(0).asText());
 

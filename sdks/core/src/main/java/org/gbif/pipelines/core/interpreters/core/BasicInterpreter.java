@@ -47,7 +47,6 @@ import org.gbif.pipelines.core.parsers.SimpleTypeParser;
 import org.gbif.pipelines.core.parsers.VocabularyParser;
 import org.gbif.pipelines.core.parsers.clustering.ClusteringService;
 import org.gbif.pipelines.core.parsers.identifier.AgentIdentifierParser;
-import org.gbif.pipelines.core.parsers.vertnet.TissueParser;
 import org.gbif.pipelines.core.utils.ModelUtils;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -361,13 +360,6 @@ public class BasicInterpreter {
         .map(AgentIdentifierParser::parse)
         .map(ArrayList::new)
         .ifPresent(br::setRecordedByIds);
-  }
-
-  /** {@link DwcTerm#preparations} interpretation. */
-  public static void interpretPreparations(ExtendedRecord er, BasicRecord br) {
-    extractNullAwareOptValue(er, DwcTerm.preparations)
-        .filter(TissueParser::hasTissue)
-        .ifPresent(br::setPreparations);
   }
 
   /** {@link DwcTerm#occurrenceStatus} interpretation. */

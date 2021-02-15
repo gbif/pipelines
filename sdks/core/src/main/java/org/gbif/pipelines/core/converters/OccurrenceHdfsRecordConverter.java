@@ -343,7 +343,6 @@ public class OccurrenceHdfsRecordConverter {
       hr.setRelativeorganismquantity(br.getRelativeOrganismQuantity());
       hr.setOccurrencestatus(br.getOccurrenceStatus());
       hr.setIsincluster(br.getIsClustered());
-      hr.setPreparations(br.getPreparations());
 
       Optional.ofNullable(br.getRecordedByIds())
           .ifPresent(

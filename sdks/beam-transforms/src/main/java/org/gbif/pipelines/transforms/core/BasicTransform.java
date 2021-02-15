@@ -170,7 +170,6 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
         .via(BasicInterpreter::interpretRecordedByIds)
         .via(BasicInterpreter.interpretOccurrenceStatus(occStatusKvStore))
         .via(BasicInterpreter.interpretIsClustered(clusteringService))
-        .via(BasicInterpreter::interpretPreparations)
         .via(DynamicPropertiesInterpreter::interpretSex)
         .via(DynamicPropertiesInterpreter.interpretLifeStage(lifeStageLookupFn))
         .getOfNullable();
