@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import org.elasticsearch.client.ResponseException;
 import org.gbif.pipelines.estools.EsIndex;
 import org.gbif.pipelines.estools.model.IndexParams;
@@ -49,7 +50,7 @@ public class EsIndexIT extends EsApiIntegration {
             IndexParams.builder().indexName(DEFAULT_IDX_NAME).settingsType(INDEXING).build());
 
     // assert index created
-    assertIndexWithSettingsAndIndexName(idxCreated, DATASET_TEST, DEFAULT_ATTEMPT);
+    assertIndexWithSettingsAndIndexName(idxCreated);
   }
 
   @Test
@@ -65,7 +66,7 @@ public class EsIndexIT extends EsApiIntegration {
                 .build());
 
     // assert index created
-    assertIndexWithSettingsAndIndexName(idxCreated, DATASET_TEST, DEFAULT_ATTEMPT);
+    assertIndexWithSettingsAndIndexName(idxCreated);
 
     // assert mappings
     JsonNode mappings = getMappingsFromIndex(idxCreated).path(idxCreated).path(Field.MAPPINGS);
@@ -189,9 +190,9 @@ public class EsIndexIT extends EsApiIntegration {
     EsIndex.swapIndexInAliases(ES_SERVER.getEsConfig(), Collections.singleton(ALIAS_TEST), idx);
 
     // wait the refresh interval for the documents to become searchable.
-    Thread.sleep(
-        Long.parseLong(Iterables.get(Splitter.on('s').split(Searching.REFRESH_INTERVAL), 0)) * 1000
-            + 500);
+    TimeUnit.MILLISECONDS.sleep(
+        (Long.parseLong(Iterables.get(Splitter.on('s').split(Searching.REFRESH_INTERVAL), 0)) * 1000
+            + 500));
 
     // assert results against the alias
     assertEquals(n, EsIndex.countDocuments(ES_SERVER.getEsConfig(), ALIAS_TEST));
@@ -200,14 +201,13 @@ public class EsIndexIT extends EsApiIntegration {
   }
 
   /** Utility method to assert a newly created index. */
-  private static void assertIndexWithSettingsAndIndexName(
-      String idxCreated, String datasetId, int attempt) {
+  private static void assertIndexWithSettingsAndIndexName(String idxCreated) {
     // assert index created
     assertTrue(EsService.existsIndex(ES_SERVER.getEsClient(), idxCreated));
     // assert index settings
     assertIndexingSettings(idxCreated);
     // assert idx name
-    assertEquals(datasetId + INDEX_SEPARATOR + attempt, idxCreated);
+    assertEquals(DATASET_TEST + INDEX_SEPARATOR + DEFAULT_ATTEMPT, idxCreated);
   }
 
   @Test

@@ -11,9 +11,6 @@ import org.gbif.pipelines.transforms.common.UniqueIdTransform;
 import org.gbif.pipelines.transforms.converters.GbifJsonTransform;
 import org.gbif.pipelines.transforms.converters.OccurrenceExtensionTransform;
 import org.gbif.pipelines.transforms.core.*;
-import org.gbif.pipelines.transforms.extension.AudubonTransform;
-import org.gbif.pipelines.transforms.extension.ImageTransform;
-import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 
@@ -29,9 +26,6 @@ public class IngestMetricsBuilder {
         .addMetric(GrscicollTransform.class, GRSCICOLL_RECORDS_COUNT)
         .addMetric(TemporalTransform.class, TEMPORAL_RECORDS_COUNT)
         .addMetric(VerbatimTransform.class, VERBATIM_RECORDS_COUNT)
-        .addMetric(AudubonTransform.class, AUDUBON_RECORDS_COUNT)
-        .addMetric(ImageTransform.class, IMAGE_RECORDS_COUNT)
-        .addMetric(MeasurementOrFactTransform.class, MEASUREMENT_OR_FACT_RECORDS_COUNT)
         .addMetric(MultimediaTransform.class, MULTIMEDIA_RECORDS_COUNT)
         .addMetric(FilterExtendedRecordTransform.class, FILTER_ER_BASED_ON_GBIF_ID)
         .addMetric(UniqueGbifIdTransform.class, UNIQUE_GBIF_IDS_COUNT)

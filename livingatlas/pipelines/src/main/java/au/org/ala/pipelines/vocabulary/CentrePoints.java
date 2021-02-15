@@ -145,7 +145,7 @@ public class CentrePoints {
       for (int i = 0; i < decimalPlaces; i++) {
         x = x * 10;
       }
-      return ((double) (Math.round(number * x))) / x;
+      return (double) Math.round(number * x) / x;
     } else {
       return Math.round(number);
     }
@@ -153,7 +153,7 @@ public class CentrePoints {
 
   private int noOfDecimalPlace(double number) {
     String numberString = String.valueOf(number);
-    int decimalPointLoc = numberString.indexOf(".");
+    int decimalPointLoc = numberString.indexOf('.');
     if (decimalPointLoc < 0) {
       return 0;
     } else {

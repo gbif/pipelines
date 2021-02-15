@@ -10,6 +10,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
+import lombok.Builder;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.Schema;
@@ -35,75 +36,32 @@ import org.jetbrains.annotations.NotNull;
  * (SOLR or ElasticSearch)
  */
 @Slf4j
+@Builder
 public class IndexRecordTransform implements Serializable {
 
   private static final long serialVersionUID = 1279313931024806169L;
   private static final TermFactory TERM_FACTORY = TermFactory.instance();
   // Core
-  @NonNull private TupleTag<ExtendedRecord> erTag;
-  @NonNull private TupleTag<BasicRecord> brTag;
-  @NonNull private TupleTag<TemporalRecord> trTag;
-  @NonNull private TupleTag<LocationRecord> lrTag;
+  @NonNull private final TupleTag<ExtendedRecord> erTag;
+  @NonNull private final TupleTag<BasicRecord> brTag;
+  @NonNull private final TupleTag<TemporalRecord> trTag;
+  @NonNull private final TupleTag<LocationRecord> lrTag;
 
-  private TupleTag<TaxonRecord> txrTag;
-  @NonNull private TupleTag<ALATaxonRecord> atxrTag;
-  // Extension
-  @NonNull private TupleTag<MultimediaRecord> mrTag;
-  @NonNull private TupleTag<ImageRecord> irTag;
-  @NonNull private TupleTag<AudubonRecord> arTag;
-  @NonNull private TupleTag<MeasurementOrFactRecord> mfrTag;
+  private final TupleTag<TaxonRecord> txrTag;
+  @NonNull private final TupleTag<ALATaxonRecord> atxrTag;
 
-  private TupleTag<ALAAttributionRecord> aarTag;
-  @NonNull private TupleTag<ALAUUIDRecord> urTag;
+  private final TupleTag<ALAAttributionRecord> aarTag;
+  @NonNull private final TupleTag<ALAUUIDRecord> urTag;
 
-  @NonNull private TupleTag<ImageServiceRecord> isTag;
+  @NonNull private final TupleTag<ImageServiceRecord> isTag;
 
-  @NonNull private TupleTag<TaxonProfile> tpTag;
+  @NonNull private final TupleTag<TaxonProfile> tpTag;
 
-  @NonNull private TupleTag<ALASensitivityRecord> srTag;
+  @NonNull private final TupleTag<ALASensitivityRecord> srTag;
 
-  @NonNull private PCollectionView<MetadataRecord> metadataView;
+  @NonNull private final PCollectionView<MetadataRecord> metadataView;
 
   String datasetID;
-
-  public static IndexRecordTransform create(
-      TupleTag<ExtendedRecord> erTag,
-      TupleTag<BasicRecord> brTag,
-      TupleTag<TemporalRecord> trTag,
-      TupleTag<LocationRecord> lrTag,
-      TupleTag<TaxonRecord> txrTag,
-      TupleTag<ALATaxonRecord> atxrTag,
-      TupleTag<MultimediaRecord> mrTag,
-      TupleTag<ImageRecord> irTag,
-      TupleTag<AudubonRecord> arTag,
-      TupleTag<MeasurementOrFactRecord> mfrTag,
-      TupleTag<ALAAttributionRecord> aarTag,
-      TupleTag<ALAUUIDRecord> urTag,
-      TupleTag<ImageServiceRecord> isTag,
-      TupleTag<TaxonProfile> tpTag,
-      TupleTag<ALASensitivityRecord> srTag,
-      PCollectionView<MetadataRecord> metadataView,
-      String datasetID) {
-    IndexRecordTransform t = new IndexRecordTransform();
-    t.erTag = erTag;
-    t.brTag = brTag;
-    t.trTag = trTag;
-    t.lrTag = lrTag;
-    t.txrTag = txrTag;
-    t.atxrTag = atxrTag;
-    t.mrTag = mrTag;
-    t.irTag = irTag;
-    t.arTag = arTag;
-    t.mfrTag = mfrTag;
-    t.aarTag = aarTag;
-    t.urTag = urTag;
-    t.isTag = isTag;
-    t.tpTag = tpTag;
-    t.srTag = srTag;
-    t.metadataView = metadataView;
-    t.datasetID = datasetID;
-    return t;
-  }
 
   /**
    * Create a IndexRecord using the supplied records.
@@ -237,7 +195,7 @@ public class IndexRecordTransform implements Serializable {
     for (Map.Entry<String, String> entry : raw.entrySet()) {
       String key = entry.getKey();
       if (key.startsWith("http")) {
-        key = key.substring(key.lastIndexOf("/") + 1);
+        key = key.substring(key.lastIndexOf('/') + 1);
       }
       indexRecord.getStrings().put("raw_" + key, entry.getValue());
     }
@@ -263,7 +221,7 @@ public class IndexRecordTransform implements Serializable {
       }
     }
 
-    if (lr != null && lr.getHasCoordinate() != null && lr.getHasCoordinate()) {
+    if (lr.getHasCoordinate() != null && lr.getHasCoordinate()) {
       addGeo(indexRecord, lr.getDecimalLatitude(), lr.getDecimalLongitude());
     }
 
@@ -393,10 +351,9 @@ public class IndexRecordTransform implements Serializable {
               indexRecord.getStrings().put("state_conservation", conservationStatus.getStatus());
             }
           }
-          if (conservationStatus.getRegion().equalsIgnoreCase(country)) {
-            if (Strings.isNotBlank(conservationStatus.getStatus())) {
-              indexRecord.getStrings().put("country_conservation", conservationStatus.getStatus());
-            }
+          if (conservationStatus.getRegion().equalsIgnoreCase(country)
+              && Strings.isNotBlank(conservationStatus.getStatus())) {
+            indexRecord.getStrings().put("country_conservation", conservationStatus.getStatus());
           }
         }
       }
@@ -451,13 +408,6 @@ public class IndexRecordTransform implements Serializable {
             if (txrTag != null) {
               txr = v.getOnly(txrTag, TaxonRecord.newBuilder().setId(k).build());
             }
-
-            // Extension
-            MultimediaRecord mr = v.getOnly(mrTag, MultimediaRecord.newBuilder().setId(k).build());
-            ImageRecord ir = v.getOnly(irTag, ImageRecord.newBuilder().setId(k).build());
-            AudubonRecord ar = v.getOnly(arTag, AudubonRecord.newBuilder().setId(k).build());
-            MeasurementOrFactRecord mfr =
-                v.getOnly(mfrTag, MeasurementOrFactRecord.newBuilder().setId(k).build());
 
             // ALA specific
             ALAUUIDRecord ur = v.getOnly(urTag);
@@ -565,33 +515,31 @@ public class IndexRecordTransform implements Serializable {
                                       .findFirst()
                                       .map(Schema::getType)
                                   : Optional.of(schema.getType());
-                          if (r != null) {
-                            type.ifPresent(
-                                t -> {
-                                  switch (t) {
-                                    case BOOLEAN:
-                                      //
-                                      builder.getBooleans().put(f.name(), (Boolean) r);
-                                      break;
-                                    case FLOAT:
-                                    case DOUBLE:
-                                      builder.getDoubles().put(f.name(), (Double) r);
-                                      break;
-                                    case INT:
-                                      builder.getInts().put(f.name(), (Integer) r);
-                                      break;
-                                    case LONG:
-                                      builder.getLongs().put(f.name(), (Long) r);
-                                      break;
-                                    case ARRAY:
-                                      builder.getMultiValues().put(f.name(), (java.util.List) r);
-                                      break;
-                                    default:
-                                      builder.getStrings().put(f.name(), r.toString());
-                                      break;
-                                  }
-                                });
-                          }
+                          type.ifPresent(
+                              t -> {
+                                switch (t) {
+                                  case BOOLEAN:
+                                    //
+                                    builder.getBooleans().put(f.name(), (Boolean) r);
+                                    break;
+                                  case FLOAT:
+                                  case DOUBLE:
+                                    builder.getDoubles().put(f.name(), (Double) r);
+                                    break;
+                                  case INT:
+                                    builder.getInts().put(f.name(), (Integer) r);
+                                    break;
+                                  case LONG:
+                                    builder.getLongs().put(f.name(), (Long) r);
+                                    break;
+                                  case ARRAY:
+                                    builder.getMultiValues().put(f.name(), (List) r);
+                                    break;
+                                  default:
+                                    builder.getStrings().put(f.name(), r.toString());
+                                    break;
+                                }
+                              });
                         }));
   }
 

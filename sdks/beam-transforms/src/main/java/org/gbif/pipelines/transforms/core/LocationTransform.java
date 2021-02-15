@@ -103,14 +103,13 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
 
   public Optional<LocationRecord> processElement(ExtendedRecord source, MetadataRecord mdr) {
 
-    LocationRecord lr =
-        LocationRecord.newBuilder()
-            .setId(source.getId())
-            .setCreated(Instant.now().toEpochMilli())
-            .build();
-
     return Interpretation.from(source)
-        .to(lr)
+        .to(
+            er ->
+                LocationRecord.newBuilder()
+                    .setId(er.getId())
+                    .setCreated(Instant.now().toEpochMilli())
+                    .build())
         .when(er -> !er.getCoreTerms().isEmpty())
         .via(LocationInterpreter.interpretCountryAndCoordinates(geocodeKvStore, mdr))
         .via(LocationInterpreter.interpretGadm(geocodeKvStore))

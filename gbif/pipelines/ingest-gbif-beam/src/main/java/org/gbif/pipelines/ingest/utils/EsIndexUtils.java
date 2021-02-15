@@ -80,7 +80,7 @@ public class EsIndexUtils {
 
     boolean independentIndex = options.getEsIndexName().startsWith(options.getDatasetId());
 
-    Map<String, String> settings = new HashMap<>();
+    Map<String, String> settings = new HashMap<>(5);
     settings.put(
         Field.INDEX_REFRESH_INTERVAL,
         independentIndex ? Indexing.REFRESH_INTERVAL : options.getIndexRefreshInterval());
@@ -149,7 +149,7 @@ public class EsIndexUtils {
 
     // we first check if there are indexes to swap to avoid unnecessary locks
     if (idxToAdd != null || !idxToRemove.isEmpty()) {
-      Map<String, String> searchSettings = new HashMap<>();
+      Map<String, String> searchSettings = new HashMap<>(2);
       searchSettings.put(Field.INDEX_REFRESH_INTERVAL, options.getIndexRefreshInterval());
       searchSettings.put(Field.INDEX_NUMBER_REPLICAS, options.getIndexNumberReplicas().toString());
 

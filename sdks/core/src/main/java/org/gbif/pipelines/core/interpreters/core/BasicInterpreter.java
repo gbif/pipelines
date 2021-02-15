@@ -1,7 +1,17 @@
 package org.gbif.pipelines.core.interpreters.core;
 
-import static org.gbif.api.vocabulary.OccurrenceIssue.*;
-import static org.gbif.pipelines.core.utils.ModelUtils.*;
+import static org.gbif.api.vocabulary.OccurrenceIssue.BASIS_OF_RECORD_INVALID;
+import static org.gbif.api.vocabulary.OccurrenceIssue.INDIVIDUAL_COUNT_CONFLICTS_WITH_OCCURRENCE_STATUS;
+import static org.gbif.api.vocabulary.OccurrenceIssue.INDIVIDUAL_COUNT_INVALID;
+import static org.gbif.api.vocabulary.OccurrenceIssue.OCCURRENCE_STATUS_INFERRED_FROM_BASIS_OF_RECORD;
+import static org.gbif.api.vocabulary.OccurrenceIssue.OCCURRENCE_STATUS_INFERRED_FROM_INDIVIDUAL_COUNT;
+import static org.gbif.api.vocabulary.OccurrenceIssue.OCCURRENCE_STATUS_UNPARSABLE;
+import static org.gbif.api.vocabulary.OccurrenceIssue.REFERENCES_URI_INVALID;
+import static org.gbif.api.vocabulary.OccurrenceIssue.TYPE_STATUS_INVALID;
+import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
+import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareOptValue;
+import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
+import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
 
 import com.google.common.base.Strings;
 import java.net.URI;
@@ -18,7 +28,12 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.gbif.api.vocabulary.*;
+import org.gbif.api.vocabulary.BasisOfRecord;
+import org.gbif.api.vocabulary.EstablishmentMeans;
+import org.gbif.api.vocabulary.License;
+import org.gbif.api.vocabulary.OccurrenceStatus;
+import org.gbif.api.vocabulary.Sex;
+import org.gbif.api.vocabulary.TypeStatus;
 import org.gbif.common.parsers.LicenseParser;
 import org.gbif.common.parsers.NumberParser;
 import org.gbif.common.parsers.UrlParser;
@@ -38,7 +53,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.keygen.api.KeyLookupResult;
 import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
-import org.gbif.vocabulary.lookup.VocabularyLookup;
+import org.gbif.vocabulary.lookup.LookupConcept;
 
 /**
  * Interpreting function that receives a ExtendedRecord instance and applies an interpretation to
@@ -162,28 +177,28 @@ public class BasicInterpreter {
 
   /** {@link DwcTerm#lifeStage} interpretation. */
   public static BiConsumer<ExtendedRecord, BasicRecord> interpretLifeStage(
-      VocabularyLookup vocabularyLookup) {
+      Function<String, Optional<LookupConcept>> vocabularyLookupFn) {
     return (er, br) -> {
-      if (vocabularyLookup == null) {
+      if (vocabularyLookupFn == null) {
         return;
       }
 
-      String value = extractValue(er, DwcTerm.lifeStage);
-      if (!Strings.isNullOrEmpty(value)) {
-        vocabularyLookup
-            .lookup(value)
-            .ifPresent(
-                c -> {
-                  br.setLifeStage(c.getConcept().getName());
+      extractNullAwareOptValue(er, DwcTerm.lifeStage)
+          .flatMap(vocabularyLookupFn)
+          .ifPresent(getLookupConceptConsumer(br));
+    };
+  }
 
-                  // we sort the parents starting from the top as in taxonomy
-                  List<String> parents = c.getParents();
-                  Collections.reverse(parents);
-                  // add the concept itself
-                  parents.add(c.getConcept().getName());
-                  br.setLifeStageLineage(parents);
-                });
-      }
+  public static Consumer<LookupConcept> getLookupConceptConsumer(BasicRecord br) {
+    return c -> {
+      br.setLifeStage(c.getConcept().getName());
+
+      // we sort the parents starting from the top as in taxonomy
+      List<String> parents = c.getParents();
+      Collections.reverse(parents);
+      // add the concept itself
+      parents.add(c.getConcept().getName());
+      br.setLifeStageLineage(parents);
     };
   }
 

@@ -46,7 +46,6 @@ import org.gbif.pipelines.transforms.common.ExtensionFilterTransform;
 import org.gbif.pipelines.transforms.core.*;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
-import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.java.DefaultValuesTransform;
 import org.gbif.pipelines.transforms.java.OccurrenceExtensionTransform;
@@ -208,12 +207,6 @@ public class VerbatimToInterpretedPipeline {
             .counterFn(incMetricFn);
 
     // Extension
-    MeasurementOrFactTransform measurementTransform =
-        MeasurementOrFactTransform.builder()
-            .orderings(dateComponentOrdering)
-            .create()
-            .counterFn(incMetricFn);
-
     MultimediaTransform multimediaTransform =
         MultimediaTransform.builder()
             .orderings(dateComponentOrdering)
@@ -250,7 +243,6 @@ public class VerbatimToInterpretedPipeline {
     multimediaTransform.setup();
     audubonTransform.setup();
     imageTransform.setup();
-    measurementTransform.setup();
 
     try (SyncDataFileWriter<ExtendedRecord> verbatimWriter =
             createWriter(options, ExtendedRecord.getClassSchema(), verbatimTransform, id);
@@ -268,9 +260,6 @@ public class VerbatimToInterpretedPipeline {
             createWriter(options, ImageRecord.getClassSchema(), imageTransform, id);
         SyncDataFileWriter<AudubonRecord> audubonWriter =
             createWriter(options, AudubonRecord.getClassSchema(), audubonTransform, id);
-        SyncDataFileWriter<MeasurementOrFactRecord> measurementWriter =
-            createWriter(
-                options, MeasurementOrFactRecord.getClassSchema(), measurementTransform, id);
         SyncDataFileWriter<TaxonRecord> taxonWriter =
             createWriter(options, TaxonRecord.getClassSchema(), taxonomyTransform, id);
         SyncDataFileWriter<GrscicollRecord> grscicollWriter =
@@ -316,7 +305,6 @@ public class VerbatimToInterpretedPipeline {
               multimediaTransform.processElement(er).ifPresent(multimediaWriter::append);
               imageTransform.processElement(er).ifPresent(imageWriter::append);
               audubonTransform.processElement(er).ifPresent(audubonWriter::append);
-              measurementTransform.processElement(er).ifPresent(measurementWriter::append);
               taxonomyTransform.processElement(er).ifPresent(taxonWriter::append);
               grscicollTransform.processElement(er, mdr).ifPresent(grscicollWriter::append);
               locationTransform.processElement(er, mdr).ifPresent(locationWriter::append);

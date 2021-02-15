@@ -18,6 +18,7 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAccessor;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.function.UnaryOperator;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -133,7 +134,7 @@ public class ImageServiceLoadPipeline {
       log.info("Polling image service until complete...");
       if (!batchUploadResponse.getStatus().equals("COMPLETE")) {
         log.info("Status " + batchUploadResponse.getStatus() + " sleeping....");
-        Thread.sleep(options.getSleepTimeInMillis());
+        TimeUnit.MILLISECONDS.sleep(options.getSleepTimeInMillis());
       }
     } else {
       log.info("Async response received. Check image service dashboard to monitor progress");

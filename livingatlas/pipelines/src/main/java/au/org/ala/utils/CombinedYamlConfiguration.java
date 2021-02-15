@@ -21,7 +21,7 @@ public class CombinedYamlConfiguration {
   private final Map<String, String> mainArgs = new LinkedHashMap<>();
   private final Map<String, Object> combined;
 
-  public CombinedYamlConfiguration(String[] mainArgs) throws FileNotFoundException {
+  public CombinedYamlConfiguration(String... mainArgs) throws FileNotFoundException {
     // First: copy main args to map
     for (String arg : mainArgs) {
       // For each arg of type --varName=value we remove the -- and split by = in varName and value

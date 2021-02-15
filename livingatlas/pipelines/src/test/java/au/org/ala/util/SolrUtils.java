@@ -47,8 +47,7 @@ public class SolrUtils {
 
     // the config location is override in the pom file for maven test runs
     CombinedYamlConfiguration testConf =
-        new CombinedYamlConfiguration(
-            new String[] {"--config=" + TestUtils.getPipelinesConfigFile()});
+        new CombinedYamlConfiguration("--config=" + TestUtils.getPipelinesConfigFile());
 
     Map<String, String> testConfMap = (Map<String, String>) testConf.get("test");
     return testConfMap.get(propertyName);
