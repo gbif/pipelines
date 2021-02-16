@@ -31,7 +31,8 @@ public class BalancerService extends AbstractIdleService {
     listener = new MessageListener(stepConfig.messaging.getConnectionParameters(), 1);
     publisher = new DefaultMessagePublisher(stepConfig.messaging.getConnectionParameters());
 
-    listener.listen(stepConfig.queueName, stepConfig.poolSize, new BalancerCallback(config, publisher));
+    listener.listen(
+        stepConfig.queueName, stepConfig.poolSize, new BalancerCallback(config, publisher));
   }
 
   @Override
