@@ -82,6 +82,7 @@ public class ALATaxonomyTransform extends Transform<ExtendedRecord, ALATaxonReco
     return this;
   }
 
+  /** Beam @Setup can be applied only to void method */
   public ALATaxonomyTransform init() {
     setup();
     return this;

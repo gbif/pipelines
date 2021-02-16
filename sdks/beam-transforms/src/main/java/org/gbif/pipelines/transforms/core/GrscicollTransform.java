@@ -76,6 +76,12 @@ public class GrscicollTransform extends Transform<ExtendedRecord, GrscicollRecor
     }
   }
 
+  /** Beam @Setup can be applied only to void method */
+  public GrscicollTransform init() {
+    setup();
+    return this;
+  }
+
   /** Beam @Teardown closes initialized resources */
   @Teardown
   public void tearDown() {

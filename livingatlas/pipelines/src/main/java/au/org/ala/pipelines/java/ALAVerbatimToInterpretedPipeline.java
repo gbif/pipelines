@@ -189,14 +189,16 @@ public class ALAVerbatimToInterpretedPipeline {
         TemporalTransform.builder()
             .orderings(dateComponentOrdering)
             .create()
-            .counterFn(incMetricFn);
+            .counterFn(incMetricFn)
+            .init();
 
     // Extension
     MultimediaTransform multimediaTransform =
         MultimediaTransform.builder()
             .orderings(dateComponentOrdering)
             .create()
-            .counterFn(incMetricFn);
+            .counterFn(incMetricFn)
+            .init();
 
     // Extra
     OccurrenceExtensionTransform occExtensionTransform =
@@ -207,7 +209,9 @@ public class ALAVerbatimToInterpretedPipeline {
         ALAAttributionTransform.builder()
             .dataResourceKvStoreSupplier(ALAAttributionKVStoreFactory.getInstanceSupplier(config))
             .collectionKvStoreSupplier(ALACollectionKVStoreFactory.getInstanceSupplier(config))
-            .create();
+            .create()
+            .counterFn(incMetricFn)
+            .init();
 
     // ALA specific - Taxonomy
     // ALA specific - Taxonomy
@@ -218,7 +222,9 @@ public class ALAVerbatimToInterpretedPipeline {
             .kingdomCheckStoreSupplier(
                 ALANameCheckKVStoreFactory.getInstanceSupplier("kingdom", config))
             .dataResourceStoreSupplier(ALAAttributionKVStoreFactory.getInstanceSupplier(config))
-            .create();
+            .create()
+            .counterFn(incMetricFn)
+            .init();
 
     // ALA specific - Location
     LocationTransform locationTransform =
@@ -226,7 +232,9 @@ public class ALAVerbatimToInterpretedPipeline {
             .alaConfig(config)
             .countryKvStoreSupplier(GeocodeKvStoreFactory.createCountrySupplier(config))
             .stateProvinceKvStoreSupplier(GeocodeKvStoreFactory.createStateProvinceSupplier(config))
-            .create();
+            .create()
+            .counterFn(incMetricFn)
+            .init();
 
     // ALA specific - Default values
     ALADefaultValuesTransform alaDefaultValuesTransform =
@@ -234,12 +242,6 @@ public class ALAVerbatimToInterpretedPipeline {
             .datasetId(datasetId)
             .dataResourceKvStoreSupplier(ALAAttributionKVStoreFactory.getInstanceSupplier(config))
             .create();
-
-    temporalTransform.setup();
-    locationTransform.setup();
-    alaTaxonomyTransform.setup();
-    alaAttributionTransform.setup();
-    multimediaTransform.setup();
 
     log.info("Creating writers");
     try (SyncDataFileWriter<ExtendedRecord> verbatimWriter =

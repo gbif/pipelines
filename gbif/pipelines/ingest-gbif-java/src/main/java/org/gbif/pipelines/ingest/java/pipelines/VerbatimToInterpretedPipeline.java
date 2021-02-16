@@ -164,7 +164,8 @@ public class VerbatimToInterpretedPipeline {
             .attempt(attempt)
             .endpointType(endPointType)
             .create()
-            .counterFn(incMetricFn);
+            .counterFn(incMetricFn)
+            .init();
 
     BasicTransform basicTransform =
         BasicTransform.builder()
@@ -178,25 +179,29 @@ public class VerbatimToInterpretedPipeline {
             .useExtendedRecordId(useErdId)
             .clusteringServiceSupplier(ClusteringServiceFactory.getInstanceSupplier(config))
             .create()
-            .counterFn(incMetricFn);
+            .counterFn(incMetricFn)
+            .init();
 
     TaxonomyTransform taxonomyTransform =
         TaxonomyTransform.builder()
             .kvStoreSupplier(NameUsageMatchStoreFactory.getInstanceSupplier(config))
             .create()
-            .counterFn(incMetricFn);
+            .counterFn(incMetricFn)
+            .init();
 
     GrscicollTransform grscicollTransform =
         GrscicollTransform.builder()
             .kvStoreSupplier(GrscicollLookupKvStoreFactory.getInstanceSupplier(config))
             .create()
-            .counterFn(incMetricFn);
+            .counterFn(incMetricFn)
+            .init();
 
     LocationTransform locationTransform =
         LocationTransform.builder()
             .geocodeKvStoreSupplier(GeocodeKvStoreFactory.getInstanceSupplier(config))
             .create()
-            .counterFn(incMetricFn);
+            .counterFn(incMetricFn)
+            .init();
 
     VerbatimTransform verbatimTransform = VerbatimTransform.create().counterFn(incMetricFn);
 
@@ -204,20 +209,30 @@ public class VerbatimToInterpretedPipeline {
         TemporalTransform.builder()
             .orderings(dateComponentOrdering)
             .create()
-            .counterFn(incMetricFn);
+            .counterFn(incMetricFn)
+            .init();
 
     // Extension
     MultimediaTransform multimediaTransform =
         MultimediaTransform.builder()
             .orderings(dateComponentOrdering)
             .create()
-            .counterFn(incMetricFn);
+            .counterFn(incMetricFn)
+            .init();
 
     AudubonTransform audubonTransform =
-        AudubonTransform.builder().orderings(dateComponentOrdering).create().counterFn(incMetricFn);
+        AudubonTransform.builder()
+            .orderings(dateComponentOrdering)
+            .create()
+            .counterFn(incMetricFn)
+            .init();
 
     ImageTransform imageTransform =
-        ImageTransform.builder().orderings(dateComponentOrdering).create().counterFn(incMetricFn);
+        ImageTransform.builder()
+            .orderings(dateComponentOrdering)
+            .create()
+            .counterFn(incMetricFn)
+            .init();
 
     // Extra
     OccurrenceExtensionTransform occExtensionTransform =
@@ -230,19 +245,8 @@ public class VerbatimToInterpretedPipeline {
         DefaultValuesTransform.builder()
             .clientSupplier(MetadataServiceClientFactory.getInstanceSupplier(config))
             .datasetId(datasetId)
-            .create();
-
-    // Init transforms
-    basicTransform.setup();
-    locationTransform.setup();
-    taxonomyTransform.setup();
-    grscicollTransform.setup();
-    metadataTransform.setup();
-    defaultValuesTransform.setup();
-    temporalTransform.setup();
-    multimediaTransform.setup();
-    audubonTransform.setup();
-    imageTransform.setup();
+            .create()
+            .init();
 
     try (SyncDataFileWriter<ExtendedRecord> verbatimWriter =
             createWriter(options, ExtendedRecord.getClassSchema(), verbatimTransform, id);

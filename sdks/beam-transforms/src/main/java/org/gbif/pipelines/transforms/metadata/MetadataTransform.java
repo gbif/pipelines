@@ -63,6 +63,12 @@ public class MetadataTransform extends Transform<String, MetadataRecord> {
     }
   }
 
+  /** Beam @Setup can be applied only to void method * */
+  public MetadataTransform init() {
+    setup();
+    return this;
+  }
+
   @Override
   public Optional<MetadataRecord> convert(String source) {
     return Interpretation.from(source)
