@@ -26,7 +26,8 @@ public class SolrSchemaPipeline {
     VersionInfo.print();
     MDC.put("step", "SOLR_SCHEMA");
 
-    String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "solr");
+    String[] combinedArgs =
+        new CombinedYamlConfiguration(args).toArgs("general", "solr", "solrSchema");
     SolrPipelineOptions options =
         PipelinesOptionsFactory.create(SolrPipelineOptions.class, combinedArgs);
     MDC.put("datasetId", options.getDatasetId() != null ? options.getDatasetId() : "ALL_RECORDS");

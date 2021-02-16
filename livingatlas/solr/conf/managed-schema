@@ -145,6 +145,7 @@
   <field name="imageIDs"           type="string"  docValues="true" multiValued="true"  indexed="true" />
   <field name="multimedia"         type="string"  docValues="true" multiValued="true"  indexed="true" />
   <field name="assertions"         type="string"  docValues="true" multiValued="true"  indexed="true" />
+  <field name="defaultValuesUsed"  type="boolean" docValues="true" multiValued="true"  indexed="true" />
 
   <!-- Legacy conservation fields -->
   <field name="raw_stateConservation" type="string"  docValues="true" multiValued="false"  indexed="true" />
@@ -199,8 +200,8 @@
   <field name="earliestPeriodOrLowestSystem" type="string" docValues="true" indexed="true"/>
   <field name="endDayOfYear" type="string" docValues="true" indexed="true"/>
   <field name="establishmentMeans" type="string" docValues="true" indexed="true"/>
-  <field name="eventDate" type="string" docValues="true" indexed="true"/>
-  <field name="eventDateSingle" type="date" docValues="true" indexed="true"/>
+  <field name="eventDate"    type="date" docValues="true" indexed="true"/>
+  <field name="eventDateEnd" type="date" docValues="true" indexed="true"/>
   <field name="eventID" type="string" docValues="true" indexed="true"/>
   <field name="eventRemarks" type="string" docValues="true" indexed="true"/>
   <field name="eventTime" type="string" docValues="true" indexed="true"/>
@@ -372,17 +373,16 @@
 
   <!-- recent GBIF additions -->
   <field name="identifiedByID"  type="string" docValues="true" indexed="true" multiValued="true"/>
-  <field name="recordedByID"  type="string" docValues="true" indexed="true" multiValued="true"/>
-  <field name="typifiedName"  type="string" docValues="true" indexed="true" />
+  <field name="recordedByID"    type="string" docValues="true" indexed="true" multiValued="true"/>
+  <field name="typifiedName"    type="string" docValues="true" indexed="true" />
 
-
-  <!-- recent additions to be validated... -->
+  <!-- TODO recent additions to be validated... -->
+  <field name="decade"  type="int" docValues="true" indexed="true" />
   <field name="photographer"  type="string" docValues="true" indexed="true" />
   <field name="northing"  type="string" docValues="true" indexed="true" />
   <field name="easting"  type="string" docValues="true" indexed="true" />
   <field name="zone"  type="string" docValues="true" indexed="true" />
   <field name="identifierRole"  type="string" docValues="true" indexed="true" />
-
 
   <!-- ALA 'DWC' additional fields -->
   <field name="subspecies"    type="string" docValues="true" indexed="true"/>
@@ -399,6 +399,7 @@
   <field name="matchType"  type="string" docValues="true" indexed="true"/>
   <field name="nameType"   type="string" docValues="true" indexed="true"/>
 
+  <!-- coming from some sources such as AVH -->
   <field name="superfamily" type="string" docValues="true" indexed="true"/>
   <field name="subfamily"   type="string" docValues="true" indexed="true"/>
 
@@ -407,7 +408,7 @@
   <field name="generalisationInMetres"  type="string" docValues="true" indexed="true"/>
   <field name="generalisationToApplyInMetres"  type="string" docValues="true" indexed="true"/>
 
-  <!-- GGBN loan fields -->
+  <!-- GGBN loan fields and ABCD fields -->
   <field name="loanDestination"  type="string" docValues="true" indexed="true"/>
   <field name="loanIdentifier"  type="string" docValues="true" indexed="true"/>
   <field name="secondaryCollectors"  type="string" docValues="true" indexed="true"/>
@@ -419,6 +420,7 @@
   <field name="institutionUid"    type="string" docValues="true" indexed="true" />
   <field name="collectionUid"     type="string" docValues="true" indexed="true" />
   <field name="dataHubUid"        type="string" docValues="true" indexed="true" multiValued="true" />
+  <field name="dataHubName"       type="string" docValues="true" indexed="true" multiValued="true" />
   <field name="dataResourceName"  type="string" docValues="true" indexed="true" />
   <field name="dataProviderName"  type="string" docValues="true" indexed="true" />
   <field name="institutionName"   type="string" docValues="true" indexed="true" />
