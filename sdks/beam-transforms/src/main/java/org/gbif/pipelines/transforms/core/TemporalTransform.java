@@ -67,6 +67,12 @@ public class TemporalTransform extends Transform<ExtendedRecord, TemporalRecord>
     return this;
   }
 
+  /** Beam @Setup can be applied only to void method */
+  public TemporalTransform init() {
+    setup();
+    return this;
+  }
+
   @Override
   public Optional<TemporalRecord> convert(ExtendedRecord source) {
     return Interpretation.from(source)

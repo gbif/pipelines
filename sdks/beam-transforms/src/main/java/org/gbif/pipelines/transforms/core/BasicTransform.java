@@ -117,6 +117,12 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
     }
   }
 
+  /** Beam @Setup can be applied only to void method */
+  public BasicTransform init() {
+    setup();
+    return this;
+  }
+
   /** Beam @Teardown closes initialized resources */
   @SneakyThrows
   @Teardown

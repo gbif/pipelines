@@ -57,6 +57,12 @@ public class AudubonTransform extends Transform<ExtendedRecord, AudubonRecord> {
     }
   }
 
+  /** Beam @Setup can be applied only to void method */
+  public AudubonTransform init() {
+    setup();
+    return this;
+  }
+
   /** Maps {@link AudubonRecord} to key value, where key is {@link AudubonRecord#getId} */
   public MapElements<AudubonRecord, KV<String, AudubonRecord>> toKv() {
     return MapElements.into(new TypeDescriptor<KV<String, AudubonRecord>>() {})
