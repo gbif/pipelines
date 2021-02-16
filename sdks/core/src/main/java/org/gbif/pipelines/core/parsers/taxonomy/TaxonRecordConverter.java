@@ -48,7 +48,7 @@ public class TaxonRecordConverter {
 
     // IUCN Red List Category
     Optional.ofNullable(source.getIucnRedListCategory())
-        .map(cat -> ThreatStatus.valueOf(cat.name()))
+        .map(cat -> ThreatStatus.valueOf(cat.getIucnRedListName()))
         .ifPresent(taxonRecord::setIucnRedListCategory);
 
     return taxonRecord;
