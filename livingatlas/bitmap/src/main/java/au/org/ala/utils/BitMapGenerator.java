@@ -91,9 +91,9 @@ public class BitMapGenerator {
 
       String idSQL = String.format("SELECT DISTINCT %s as id FROM %s;", idName, layer);
       try (ResultSet idRs = stmt.executeQuery(idSQL)) {
+        Random random = new Random();
         while (idRs.next()) {
           String id = idRs.getString("id");
-          Random random = new Random();
           // create a big random number - maximum is ffffff (hex) = 16777215 (dez)
           int nextInt = random.nextInt(0xffffff + 1);
           // format it as hexadecimal string (with hashtag and leading zeros)
