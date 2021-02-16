@@ -3,6 +3,8 @@ package org.gbif.pipelines.transforms;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.UnaryOperator;
+import lombok.SneakyThrows;
+import org.apache.avro.Schema;
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.beam.sdk.io.AvroIO;
@@ -17,6 +19,7 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.InterpretationType;
 import org.gbif.pipelines.core.functions.SerializableConsumer;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.Record;
 import org.gbif.pipelines.transforms.common.CheckTransforms;
 
 /**
@@ -25,7 +28,7 @@ import org.gbif.pipelines.transforms.common.CheckTransforms;
  * <p>Beam level transformations for the Amplification extension, reads an avro, writes an avro,
  * maps from value to keyValue and transforms form {@link R} to {@link T}.
  */
-public abstract class Transform<R, T extends SpecificRecordBase> extends DoFn<R, T> {
+public abstract class Transform<R, T extends SpecificRecordBase & Record> extends DoFn<R, T> {
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
 
@@ -149,5 +152,18 @@ public abstract class Transform<R, T extends SpecificRecordBase> extends DoFn<R,
   /** @return TupleTag required for grouping */
   public TupleTag<T> getTag() {
     return tag;
+  }
+
+  public Class<T> getReturnClazz() {
+    return clazz;
+  }
+
+  @SneakyThrows
+  public Schema getAvroSchema() {
+    return clazz.newInstance().getSchema();
+  }
+
+  public static CodecFactory getBaseCodec() {
+    return BASE_CODEC;
   }
 }
