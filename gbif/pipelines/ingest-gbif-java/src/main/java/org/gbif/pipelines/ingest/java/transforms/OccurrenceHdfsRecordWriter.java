@@ -29,23 +29,31 @@ public class OccurrenceHdfsRecordWriter {
 
   @SneakyThrows
   public void write() {
-    boolean useSyncMode = options.getSyncThreshold() > basicRecords.size();
-
     try (SyncDataFileWriter<OccurrenceHdfsRecord> writer = createWriter(options)) {
+      boolean useSyncMode = options.getSyncThreshold() > basicRecords.size();
       if (useSyncMode) {
-        basicRecords.stream().map(occurrenceHdfsRecordFn).forEach(writer::append);
+        syncWrite(writer);
       } else {
-        CompletableFuture<?>[] futures =
-            basicRecords.stream()
-                .map(
-                    br ->
-                        CompletableFuture.runAsync(
-                            () -> writer.append(occurrenceHdfsRecordFn.apply(br)), executor))
-                .toArray(CompletableFuture[]::new);
-        // Wait for all futures
-        CompletableFuture.allOf(futures).get();
+        asyncWrite(writer);
       }
     }
+  }
+
+  @SneakyThrows
+  private void asyncWrite(SyncDataFileWriter<OccurrenceHdfsRecord> writer) {
+    CompletableFuture<?>[] futures =
+        basicRecords.stream()
+            .map(
+                br ->
+                    CompletableFuture.runAsync(
+                        () -> writer.append(occurrenceHdfsRecordFn.apply(br)), executor))
+            .toArray(CompletableFuture[]::new);
+    // Wait for all futures
+    CompletableFuture.allOf(futures).get();
+  }
+
+  private void syncWrite(SyncDataFileWriter<OccurrenceHdfsRecord> writer) {
+    basicRecords.stream().map(occurrenceHdfsRecordFn).forEach(writer::append);
   }
 
   /** Create an AVRO file writer */
