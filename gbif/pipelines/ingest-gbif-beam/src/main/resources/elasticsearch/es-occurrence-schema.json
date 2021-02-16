@@ -48,6 +48,7 @@
       "typeStatus": {"type": "keyword", "copy_to": "all"},
       "typifiedName": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
       "references": {"type":"text", "copy_to": "all"},
+      "preparations": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
       "recordedByIds": {
         "type": "object",
         "properties": {
@@ -334,7 +335,6 @@
         }
       },
 
-      "measurementOrFactItems": {"type": "nested", "enabled": false},
       "amplificationItems": {"type": "nested", "enabled": false},
 
       "locationFeatureLayers":{"type": "nested"},

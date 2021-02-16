@@ -34,7 +34,6 @@ import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
@@ -48,7 +47,6 @@ import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
-import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.slf4j.MDC;
@@ -147,7 +145,6 @@ public class InterpretedToEsIndexPipeline {
     LocationTransform locationTransform = LocationTransform.builder().create();
 
     // Extension
-    MeasurementOrFactTransform measurementTransform = MeasurementOrFactTransform.builder().create();
     MultimediaTransform multimediaTransform = MultimediaTransform.builder().create();
     AudubonTransform audubonTransform = AudubonTransform.builder().create();
     ImageTransform imageTransform = ImageTransform.builder().create();
@@ -258,16 +255,6 @@ public class InterpretedToEsIndexPipeline {
                     pathFn.apply(audubonTransform.getBaseName())),
             executor);
 
-    CompletableFuture<Map<String, MeasurementOrFactRecord>> measurementMapFeature =
-        CompletableFuture.supplyAsync(
-            () ->
-                AvroReader.readRecords(
-                    hdfsSiteConfig,
-                    coreSiteConfig,
-                    MeasurementOrFactRecord.class,
-                    pathFn.apply(measurementTransform.getBaseName())),
-            executor);
-
     CompletableFuture.allOf(
             metadataMapFeature,
             verbatimMapFeature,
@@ -278,8 +265,7 @@ public class InterpretedToEsIndexPipeline {
             grscicollMapFeature,
             multimediaMapFeature,
             imageMapFeature,
-            audubonMapFeature,
-            measurementMapFeature)
+            audubonMapFeature)
         .get();
 
     MetadataRecord metadata = metadataMapFeature.get().values().iterator().next();
@@ -292,7 +278,6 @@ public class InterpretedToEsIndexPipeline {
     Map<String, MultimediaRecord> multimediaMap = multimediaMapFeature.get();
     Map<String, ImageRecord> imageMap = imageMapFeature.get();
     Map<String, AudubonRecord> audubonMap = audubonMapFeature.get();
-    Map<String, MeasurementOrFactRecord> measurementMap = measurementMapFeature.get();
 
     log.info("Joining avro files...");
     // Join all records, convert into string json and IndexRequest for ES
@@ -315,11 +300,9 @@ public class InterpretedToEsIndexPipeline {
           ImageRecord ir = imageMap.getOrDefault(k, ImageRecord.newBuilder().setId(k).build());
           AudubonRecord ar =
               audubonMap.getOrDefault(k, AudubonRecord.newBuilder().setId(k).build());
-          MeasurementOrFactRecord mfr =
-              measurementMap.getOrDefault(k, MeasurementOrFactRecord.newBuilder().setId(k).build());
 
           MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
-          ObjectNode json = GbifJsonConverter.toJson(metadata, br, tr, lr, txr, gr, mmr, mfr, er);
+          ObjectNode json = GbifJsonConverter.toJson(metadata, br, tr, lr, txr, gr, mmr, er);
 
           metrics.incMetric(AVRO_TO_JSON_COUNT);
 

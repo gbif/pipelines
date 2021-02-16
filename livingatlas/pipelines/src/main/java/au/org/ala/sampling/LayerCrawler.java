@@ -15,6 +15,7 @@ import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -251,7 +252,7 @@ public class LayerCrawler {
             Duration.between(batchStart, batchCurrentTime).getSeconds());
 
         if (!state.equals(FINISHED_STATUS)) {
-          Thread.sleep(batchStatusSleepTime);
+          TimeUnit.MILLISECONDS.sleep(batchStatusSleepTime);
         } else {
           log.info("Downloading sampling batch {}", batchId);
 

@@ -80,17 +80,6 @@ public class VocabularyParser<T extends Enum<T>> {
     return new VocabularyParser<>(CONTINENT_PARSER, DwcTerm.continent);
   }
 
-  /**
-   * Runs a parsing method on a extended record.
-   *
-   * @param er to be used as input
-   * @param onParse consumer called during parsing
-   */
-  public void parse(ExtendedRecord er, Consumer<ParseResult<T>> onParse) {
-    Optional.ofNullable(extractValue(er, term))
-        .ifPresent(value -> onParse.accept(parser.parse(value)));
-  }
-
   /** @return a type status parser. */
   public static VocabularyParser<Rank> rankParser() {
     return new VocabularyParser<>(RANK_PARSER, DwcTerm.taxonRank);
@@ -99,6 +88,26 @@ public class VocabularyParser<T extends Enum<T>> {
   /** @return a type status parser. */
   public static VocabularyParser<Rank> verbatimTaxonRankParser() {
     return new VocabularyParser<>(RANK_PARSER, DwcTerm.verbatimTaxonRank);
+  }
+
+  /**
+   * Runs a parsing method on a extended record.
+   *
+   * @param value to be used as input
+   * @param onParse consumer called during parsing
+   */
+  public void parse(String value, Consumer<ParseResult<T>> onParse) {
+    Optional.ofNullable(value).ifPresent(r -> onParse.accept(parser.parse(r)));
+  }
+
+  /**
+   * Runs a parsing method on a extended record.
+   *
+   * @param er to be used as input
+   * @param onParse consumer called during parsing
+   */
+  public void parse(ExtendedRecord er, Consumer<ParseResult<T>> onParse) {
+    parse(extractValue(er, term), onParse);
   }
 
   /**

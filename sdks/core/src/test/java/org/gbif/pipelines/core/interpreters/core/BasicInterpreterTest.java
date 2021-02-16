@@ -3,9 +3,12 @@ package org.gbif.pipelines.core.interpreters.core;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.gbif.api.vocabulary.AgentIdentifierType;
@@ -16,12 +19,26 @@ import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.pipelines.io.avro.AgentIdentifier;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.vocabulary.lookup.LookupConcept;
+import org.gbif.vocabulary.model.Concept;
 import org.junit.Assert;
 import org.junit.Test;
 
 public class BasicInterpreterTest {
 
   private static final String ID = "777";
+
+  private final Function<String, Optional<LookupConcept>> vocabularyLookupFn =
+      v -> {
+        if (v.equalsIgnoreCase("adult")) {
+          Concept concept = new Concept();
+          concept.setName("Adult");
+          LookupConcept lookupConcept = LookupConcept.of(concept, new ArrayList<>(1));
+
+          return Optional.of(lookupConcept);
+        }
+        return Optional.empty();
+      };
 
   @Test
   public void interpretIndividaulCountTest() {
@@ -392,7 +409,7 @@ public class BasicInterpreterTest {
             .collect(Collectors.toList());
 
     // State
-    Map<String, String> coreMap = new HashMap<>();
+    Map<String, String> coreMap = new HashMap<>(2);
     coreMap.put(
         GbifTerm.recordedByID.qualifiedName(),
         " https://orcid.org/0000-0002-0144-1997| https://orcid.org/0000-0002-0144-1997 | https://orcid.org/0000-0002-0144-1997|someid");
@@ -418,7 +435,7 @@ public class BasicInterpreterTest {
   public void interpretBasisOfRecordTest() {
 
     // State
-    Map<String, String> coreMap = new HashMap<>();
+    Map<String, String> coreMap = new HashMap<>(1);
     coreMap.put(DwcTerm.basisOfRecord.qualifiedName(), "LIVING_SPECIMEN");
     ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
 
@@ -435,7 +452,7 @@ public class BasicInterpreterTest {
   public void interpretBasisOfRecordNullTest() {
 
     // State
-    Map<String, String> coreMap = new HashMap<>();
+    Map<String, String> coreMap = new HashMap<>(1);
     coreMap.put(DwcTerm.basisOfRecord.qualifiedName(), null);
     ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
 
@@ -454,7 +471,7 @@ public class BasicInterpreterTest {
   public void interpretBasisOfRecordRubbishTest() {
 
     // State
-    Map<String, String> coreMap = new HashMap<>();
+    Map<String, String> coreMap = new HashMap<>(1);
     coreMap.put(DwcTerm.basisOfRecord.qualifiedName(), "adwadaw");
     ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
 
@@ -467,6 +484,91 @@ public class BasicInterpreterTest {
     Assert.assertEquals("UNKNOWN", br.getBasisOfRecord());
     assertIssueSize(br, 1);
     assertIssue(OccurrenceIssue.BASIS_OF_RECORD_INVALID, br);
+  }
+
+  @Test
+  public void lifeStageEmptyValueTest() {
+    // State
+    Map<String, String> coreMap = new HashMap<>(1);
+    coreMap.put(DwcTerm.lifeStage.qualifiedName(), "");
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+
+    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
+
+    // When
+    BasicInterpreter.interpretLifeStage(vocabularyLookupFn).accept(er, br);
+
+    // Should
+    Assert.assertNull(br.getLifeStage());
+    Assert.assertTrue(br.getLifeStageLineage().isEmpty());
+  }
+
+  @Test
+  public void lifeStageRandomValueTest() {
+    // State
+    Map<String, String> coreMap = new HashMap<>(1);
+    coreMap.put(DwcTerm.lifeStage.qualifiedName(), "adwadaw");
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+
+    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
+
+    // When
+    BasicInterpreter.interpretLifeStage(vocabularyLookupFn).accept(er, br);
+
+    // Should
+    Assert.assertNull(br.getLifeStage());
+    Assert.assertTrue(br.getLifeStageLineage().isEmpty());
+  }
+
+  @Test
+  public void lifeStageAdultValueTest() {
+    // State
+    Map<String, String> coreMap = new HashMap<>(1);
+    coreMap.put(DwcTerm.lifeStage.qualifiedName(), "adult");
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+
+    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
+
+    // When
+    BasicInterpreter.interpretLifeStage(vocabularyLookupFn).accept(er, br);
+
+    // Should
+    Assert.assertEquals("Adult", br.getLifeStage());
+    Assert.assertEquals("Adult", br.getLifeStageLineage().get(0));
+  }
+
+  @Test
+  public void lifeStageNullFnTest() {
+    // State
+    Map<String, String> coreMap = new HashMap<>(1);
+    coreMap.put(DwcTerm.lifeStage.qualifiedName(), "adult");
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+
+    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
+
+    // When
+    BasicInterpreter.interpretLifeStage(null).accept(er, br);
+
+    // Should
+    Assert.assertNull(br.getLifeStage());
+    Assert.assertTrue(br.getLifeStageLineage().isEmpty());
+  }
+
+  @Test
+  public void lifeStageNotNullTest() {
+    // State
+    Map<String, String> coreMap = new HashMap<>(1);
+    coreMap.put(DwcTerm.lifeStage.qualifiedName(), "adwadaw");
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+
+    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
+
+    // When
+    BasicInterpreter.interpretLifeStage(vocabularyLookupFn).accept(er, br);
+
+    // Should
+    Assert.assertNull(br.getLifeStage());
+    Assert.assertTrue(br.getLifeStageLineage().isEmpty());
   }
 
   private void assertIssueSize(BasicRecord br, int expectedSize) {

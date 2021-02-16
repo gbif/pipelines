@@ -56,47 +56,47 @@ public class SamplesToAvro {
         CSVReader csvReader = new CSVReader(new InputStreamReader(inputStream));
 
         String outputPath = LayerCrawler.getSampleAvroPath(options);
-        OutputStream output = fs.create(new Path(outputPath));
         DatumWriter<SampleRecord> datumWriter =
             new GenericDatumWriter<>(SampleRecord.getClassSchema());
-        DataFileWriter dataFileWriter = new DataFileWriter<SampleRecord>(datumWriter);
-        dataFileWriter.setCodec(BASE_CODEC);
-        dataFileWriter.create(SampleRecord.getClassSchema(), output);
+        try (OutputStream output = fs.create(new Path(outputPath));
+            DataFileWriter<SampleRecord> dataFileWriter = new DataFileWriter<>(datumWriter)) {
+          dataFileWriter.setCodec(BASE_CODEC);
+          dataFileWriter.create(SampleRecord.getClassSchema(), output);
 
-        String[] columnHeaders = csvReader.readNext();
-        String[] line = new String[0];
-        while ((line = csvReader.readNext()) != null) {
+          String[] columnHeaders = csvReader.readNext();
+          String[] line;
+          while ((line = csvReader.readNext()) != null) {
 
-          if (line.length == columnHeaders.length) {
+            if (line.length == columnHeaders.length) {
 
-            HashMap<String, String> strings = new HashMap<>();
-            HashMap<String, Double> doubles = new HashMap<>();
+              HashMap<String, String> strings = new HashMap<>();
+              HashMap<String, Double> doubles = new HashMap<>();
 
-            // first two columns are latitude,longitude
-            for (int i = 2; i < columnHeaders.length; i++) {
-              if (StringUtils.trimToNull(line[i]) != null) {
-                if (columnHeaders[i].startsWith("el")) {
-                  try {
-                    doubles.put(columnHeaders[i], Double.parseDouble(line[i]));
-                  } catch (NumberFormatException ex) {
-                    // do something
+              // first two columns are latitude,longitude
+              for (int i = 2; i < columnHeaders.length; i++) {
+                if (StringUtils.trimToNull(line[i]) != null) {
+                  if (columnHeaders[i].startsWith("el")) {
+                    try {
+                      doubles.put(columnHeaders[i], Double.parseDouble(line[i]));
+                    } catch (NumberFormatException ex) {
+                      // do something
+                    }
+                  } else {
+                    strings.put(columnHeaders[i], line[i]);
                   }
-                } else {
-                  strings.put(columnHeaders[i], line[i]);
                 }
               }
-            }
 
-            SampleRecord sampleRecord =
-                SampleRecord.newBuilder()
-                    .setLatLng(line[0] + "," + line[1])
-                    .setDoubles(doubles)
-                    .setStrings(strings)
-                    .build();
-            dataFileWriter.append(sampleRecord);
+              SampleRecord sampleRecord =
+                  SampleRecord.newBuilder()
+                      .setLatLng(line[0] + "," + line[1])
+                      .setDoubles(doubles)
+                      .setStrings(strings)
+                      .build();
+              dataFileWriter.append(sampleRecord);
+            }
           }
         }
-        dataFileWriter.close();
         log.info("File written to {}", outputPath);
       }
     }

@@ -1,5 +1,7 @@
 package org.gbif.pipelines.common.utils;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.google.common.base.Strings;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -11,7 +13,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.StringJoiner;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -114,7 +115,7 @@ public class HdfsUtils {
     FileSystem fs = getFileSystem(hdfsSiteConfig, coreSiteConfig, filePath);
     Path fsPath = new Path(filePath);
     if (fs.exists(fsPath)) {
-      try (BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(fsPath)))) {
+      try (BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(fsPath), UTF_8))) {
         return br.lines()
             .map(x -> x.replace("\u0000", ""))
             .filter(y -> y.startsWith(key))
@@ -138,7 +139,8 @@ public class HdfsUtils {
     Path fsPath = new Path(filePath);
     try {
       if (fs.exists(fsPath)) {
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(fsPath)))) {
+        try (BufferedReader br =
+            new BufferedReader(new InputStreamReader(fs.open(fsPath), UTF_8))) {
           return br.lines()
               .map(x -> x.replace("\u0000", ""))
               .filter(s -> !Strings.isNullOrEmpty(s))
@@ -156,15 +158,11 @@ public class HdfsUtils {
 
   /** Store an Avro file on HDFS in /data/ingest/<datasetUUID>/<attemptID>/verbatim.avro */
   public static Path buildOutputPath(String... values) {
-    StringJoiner joiner = new StringJoiner(org.apache.hadoop.fs.Path.SEPARATOR);
-    Arrays.stream(values).forEach(joiner::add);
-    return new org.apache.hadoop.fs.Path(joiner.toString());
+    return new org.apache.hadoop.fs.Path(buildOutputPathAsString(values));
   }
 
   public static String buildOutputPathAsString(String... values) {
-    StringJoiner joiner = new StringJoiner(org.apache.hadoop.fs.Path.SEPARATOR);
-    Arrays.stream(values).forEach(joiner::add);
-    return joiner.toString();
+    return String.join(org.apache.hadoop.fs.Path.SEPARATOR, values);
   }
 
   /** Delete HDFS directory */

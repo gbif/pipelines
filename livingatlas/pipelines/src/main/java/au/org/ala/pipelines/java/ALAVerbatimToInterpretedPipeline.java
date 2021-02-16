@@ -29,6 +29,7 @@ import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.Schema;
+import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.gbif.api.model.pipelines.StepType;
@@ -49,9 +50,6 @@ import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.transforms.Transform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
-import org.gbif.pipelines.transforms.extension.AudubonTransform;
-import org.gbif.pipelines.transforms.extension.ImageTransform;
-import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.java.OccurrenceExtensionTransform;
 import org.gbif.pipelines.transforms.java.UniqueGbifIdTransform;
@@ -70,9 +68,6 @@ import org.slf4j.MDC;
  *      {@link org.gbif.pipelines.io.avro.BasicRecord},
  *      {@link org.gbif.pipelines.io.avro.TemporalRecord},
  *      {@link org.gbif.pipelines.io.avro.MultimediaRecord},
- *      {@link org.gbif.pipelines.io.avro.ImageRecord},
- *      {@link org.gbif.pipelines.io.avro.AudubonRecord},
- *      {@link org.gbif.pipelines.io.avro.MeasurementOrFactRecord},
  *      {@link org.gbif.pipelines.io.avro.ALATaxonRecord},
  *      {@link org.gbif.pipelines.io.avro.ALAAttributionRecord},
  *      {@link org.gbif.pipelines.io.avro.LocationRecord}
@@ -197,23 +192,11 @@ public class ALAVerbatimToInterpretedPipeline {
             .counterFn(incMetricFn);
 
     // Extension
-    MeasurementOrFactTransform measurementTransform =
-        MeasurementOrFactTransform.builder()
-            .orderings(dateComponentOrdering)
-            .create()
-            .counterFn(incMetricFn);
-
     MultimediaTransform multimediaTransform =
         MultimediaTransform.builder()
             .orderings(dateComponentOrdering)
             .create()
             .counterFn(incMetricFn);
-
-    AudubonTransform audubonTransform =
-        AudubonTransform.builder().orderings(dateComponentOrdering).create().counterFn(incMetricFn);
-
-    ImageTransform imageTransform =
-        ImageTransform.builder().orderings(dateComponentOrdering).create().counterFn(incMetricFn);
 
     // Extra
     OccurrenceExtensionTransform occExtensionTransform =
@@ -256,10 +239,7 @@ public class ALAVerbatimToInterpretedPipeline {
     locationTransform.setup();
     alaTaxonomyTransform.setup();
     alaAttributionTransform.setup();
-    imageTransform.setup();
-    audubonTransform.setup();
     multimediaTransform.setup();
-    measurementTransform.setup();
 
     log.info("Creating writers");
     try (SyncDataFileWriter<ExtendedRecord> verbatimWriter =
@@ -270,15 +250,8 @@ public class ALAVerbatimToInterpretedPipeline {
             createWriter(options, BasicRecord.getClassSchema(), basicTransform, id);
         SyncDataFileWriter<TemporalRecord> temporalWriter =
             createWriter(options, TemporalRecord.getClassSchema(), temporalTransform, id);
-        SyncDataFileWriter<MeasurementOrFactRecord> measurementWriter =
-            createWriter(
-                options, MeasurementOrFactRecord.getClassSchema(), measurementTransform, id);
         SyncDataFileWriter<MultimediaRecord> multimediaWriter =
             createWriter(options, MultimediaRecord.getClassSchema(), multimediaTransform, id);
-        SyncDataFileWriter<ImageRecord> imageWriter =
-            createWriter(options, ImageRecord.getClassSchema(), imageTransform, id);
-        SyncDataFileWriter<AudubonRecord> audubonWriter =
-            createWriter(options, AudubonRecord.getClassSchema(), audubonTransform, id);
 
         // ALA specific
         SyncDataFileWriter<LocationRecord> locationWriter =
@@ -331,9 +304,6 @@ public class ALAVerbatimToInterpretedPipeline {
             verbatimWriter.append(er);
             temporalTransform.processElement(er).ifPresent(temporalWriter::append);
             multimediaTransform.processElement(er).ifPresent(multimediaWriter::append);
-            imageTransform.processElement(er).ifPresent(imageWriter::append);
-            audubonTransform.processElement(er).ifPresent(audubonWriter::append);
-            measurementTransform.processElement(er).ifPresent(measurementWriter::append);
 
             // ALA specific
             locationTransform.processElement(er, mdr).ifPresent(locationWriter::append);
@@ -392,8 +362,8 @@ public class ALAVerbatimToInterpretedPipeline {
 
   /** Create an AVRO file writer */
   @SneakyThrows
-  private static <T> SyncDataFileWriter<T> createWriter(
-      InterpretationPipelineOptions options, Schema schema, Transform transform, String id) {
+  private static <T extends SpecificRecordBase> SyncDataFileWriter<T> createWriter(
+      InterpretationPipelineOptions options, Schema schema, Transform<?, T> transform, String id) {
     UnaryOperator<String> pathFn =
         t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, id + AVRO_EXTENSION);
     Path path = new Path(pathFn.apply(transform.getBaseName()));

@@ -16,7 +16,7 @@
 package org.gbif.converters.parser.xml.parsing.xml;
 
 import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -96,14 +96,14 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
   private String dayIdentified;
   private String dateIdentified;
 
-  private List<IdentifierRecord> identifierRecords = Lists.newArrayList();
-  private List<TypificationRecord> typificationRecords = Lists.newArrayList();
-  private List<Identification> identifications = Lists.newArrayList();
-  private List<ImageRecord> images = Lists.newArrayList();
-  private List<LinkRecord> links = Lists.newArrayList();
+  private List<IdentifierRecord> identifierRecords = new ArrayList<>();
+  private List<TypificationRecord> typificationRecords = new ArrayList<>();
+  private List<Identification> identifications = new ArrayList<>();
+  private List<ImageRecord> images = new ArrayList<>();
+  private List<LinkRecord> links = new ArrayList<>();
 
   public List<RawOccurrenceRecord> generateRawOccurrenceRecords() {
-    List<RawOccurrenceRecord> records = Lists.newArrayList();
+    List<RawOccurrenceRecord> records = new ArrayList<>();
 
     // reconcile year/month/date into an occurrenceDate string, if necessary
     occurrenceDate = reconcileDate(occurrenceDate, year, month, day);
@@ -121,7 +121,7 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
         // take any that have preferred flag set
         // if no preferred flags are set, take them all
         boolean gotPreferred = false;
-        List<RawOccurrenceRecord> preferred = Lists.newArrayList();
+        List<RawOccurrenceRecord> preferred = new ArrayList<>();
         for (Identification ident : identifications) {
           RawOccurrenceRecord bareBones = generateBareRor();
           ident.populateRawOccurrenceRecord(bareBones, true);

@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.IntNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.POJONode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.base.Strings;
 import java.time.Instant;
@@ -48,7 +47,6 @@ import org.gbif.pipelines.io.avro.GadmFeatures;
 import org.gbif.pipelines.io.avro.Issues;
 import org.gbif.pipelines.io.avro.LocationFeatureRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.Multimedia;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.RankedName;
@@ -102,7 +100,6 @@ public class GbifJsonConverter {
           .converter(TaxonRecord.class, getTaxonomyRecordConverter())
           .converter(LocationFeatureRecord.class, getLocationFeatureRecordConverter())
           .converter(AmplificationRecord.class, getAmplificationRecordConverter())
-          .converter(MeasurementOrFactRecord.class, getMeasurementOrFactRecordConverter())
           .converter(MultimediaRecord.class, getMultimediaConverter())
           .converter(BasicRecord.class, getBasicRecordConverter())
           .converter(GrscicollRecord.class, getGrscicollRecordConverter());
@@ -319,13 +316,14 @@ public class GbifJsonConverter {
                   .ifPresent(
                       v1 ->
                           v1.forEach(
-                              v2 -> {
-                                v2.forEach(
-                                    (k2, v3) ->
-                                        Optional.ofNullable(v3)
-                                            .ifPresent(
-                                                v4 -> allFieldValues.add(getEscapedTextNode(v4))));
-                              })));
+                              v2 ->
+                                  v2.forEach(
+                                      (k2, v3) ->
+                                          Optional.ofNullable(v3)
+                                              .ifPresent(
+                                                  v4 ->
+                                                      allFieldValues.add(
+                                                          getEscapedTextNode(v4)))))));
       jc.getMainNode().putArray("all").addAll(allFieldValues);
 
       // Main node
@@ -630,63 +628,6 @@ public class GbifJsonConverter {
               .collect(Collectors.toList());
 
       jc.addJsonArray("amplificationItems", nodes);
-    };
-  }
-
-  /**
-   * String converter for {@link MeasurementOrFactRecord}, convert an object to specific string view
-   *
-   * <pre>{@code
-   * Result example:
-   *
-   * {
-   *  "id": "777",
-   *  "measurementOrFactItems": [
-   *     {
-   *       "id": "123",
-   *       "type": "{\"something\":1}{\"something\":1}",
-   *       "value": 1.1,
-   *       "determinedDate": {
-   *         "gte": "2010",
-   *         "lte": "2011"
-   *       }
-   *     },
-   *     {
-   *       "id": "124",
-   *       "type": null,
-   *       "value": null,
-   *       "determinedDate": {
-   *         "gte": "2010",
-   *         "lte": "2012"
-   *       }
-   *     }
-   *   ]
-   * }
-   * }</pre>
-   */
-  private BiConsumer<JsonConverter, SpecificRecordBase> getMeasurementOrFactRecordConverter() {
-    return (jc, record) -> {
-      MeasurementOrFactRecord mfr = (MeasurementOrFactRecord) record;
-
-      if (!skipId) {
-        jc.addJsonTextFieldNoCheck(ID, mfr.getId());
-      }
-
-      List<ObjectNode> nodes =
-          mfr.getMeasurementOrFactItems().stream()
-              .filter(x -> x.getValueParsed() != null || x.getDeterminedDateParsed() != null)
-              .map(
-                  x -> {
-                    ObjectNode node = JsonConverter.createObjectNode();
-                    node.put("id", x.getId());
-                    node.put("type", x.getType());
-                    node.put("value", x.getValueParsed());
-                    node.set("determinedDate", new POJONode(x.getDeterminedDateParsed()));
-                    return node;
-                  })
-              .collect(Collectors.toList());
-
-      jc.addJsonArray("measurementOrFactItems", nodes);
     };
   }
 

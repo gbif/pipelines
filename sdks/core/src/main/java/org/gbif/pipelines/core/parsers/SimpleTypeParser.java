@@ -1,5 +1,6 @@
 package org.gbif.pipelines.core.parsers;
 
+import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareOptValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareValue;
 
 import java.util.Optional;
@@ -21,7 +22,7 @@ public class SimpleTypeParser {
   /** Parses an integer value and consumes its response (if any). */
   public static void parseInt(
       ExtendedRecord er, DwcTerm term, Consumer<Optional<Integer>> consumer) {
-    Optional.ofNullable(extractNullAwareValue(er, term))
+    extractNullAwareOptValue(er, term)
         .ifPresent(
             termValue -> {
               boolean matches = INT_PATTERN.matcher(termValue).matches();
@@ -36,7 +37,7 @@ public class SimpleTypeParser {
   /** Parses a positive integer value and consumes its response (if any). */
   public static void parsePositiveInt(
       ExtendedRecord er, DwcTerm term, Consumer<Optional<Integer>> consumer) {
-    Optional.ofNullable(extractNullAwareValue(er, term))
+    extractNullAwareOptValue(er, term)
         .ifPresent(termValue -> consumer.accept(parsePositiveIntOpt(termValue)));
   }
 

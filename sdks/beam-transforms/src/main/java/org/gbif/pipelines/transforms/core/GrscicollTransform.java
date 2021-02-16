@@ -101,16 +101,11 @@ public class GrscicollTransform extends Transform<ExtendedRecord, GrscicollRecor
   }
 
   public Optional<GrscicollRecord> processElement(ExtendedRecord source, MetadataRecord mdr) {
-    GrscicollRecord gr =
-        GrscicollRecord.newBuilder().setCreated(Instant.now().toEpochMilli()).build();
-
-    Interpretation.from(source)
-        .to(gr)
+    return Interpretation.from(source)
+        .to(GrscicollRecord.newBuilder().setCreated(Instant.now().toEpochMilli()).build())
         .when(er -> !er.getCoreTerms().isEmpty())
-        .via(GrscicollInterpreter.grscicollInterpreter(kvStore, mdr));
-
-    // the id is null when there is an error in the interpretation. In these
-    // cases we do not write the GrscicollRecord because it is totally empty.
-    return gr.getId() == null ? Optional.empty() : Optional.of(gr);
+        .via(GrscicollInterpreter.grscicollInterpreter(kvStore, mdr))
+        .skipWhen(gr -> gr.getId() == null)
+        .getOfNullable();
   }
 }

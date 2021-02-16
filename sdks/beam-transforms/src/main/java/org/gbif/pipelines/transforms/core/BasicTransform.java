@@ -8,6 +8,7 @@ import static org.gbif.pipelines.core.interpreters.core.BasicInterpreter.interpr
 import java.time.Instant;
 import java.util.Optional;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import org.apache.beam.sdk.transforms.MapElements;
@@ -19,11 +20,13 @@ import org.gbif.pipelines.core.functions.SerializableConsumer;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.BasicInterpreter;
+import org.gbif.pipelines.core.interpreters.core.DynamicPropertiesInterpreter;
 import org.gbif.pipelines.core.parsers.clustering.ClusteringService;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.transforms.Transform;
+import org.gbif.vocabulary.lookup.LookupConcept;
 import org.gbif.vocabulary.lookup.VocabularyLookup;
 
 /**
@@ -48,6 +51,8 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
   private HBaseLockingKeyService keygenService;
   private VocabularyLookup lifeStageLookup;
   private ClusteringService clusteringService;
+
+  private Function<String, Optional<LookupConcept>> lifeStageLookupFn;
 
   @Builder(buildMethodName = "create")
   private BasicTransform(
@@ -103,6 +108,9 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
     }
     if (lifeStageLookupSupplier != null) {
       lifeStageLookup = lifeStageLookupSupplier.get();
+      if (lifeStageLookup != null) {
+        lifeStageLookupFn = lifeStageLookup::lookup;
+      }
     }
     if (clusteringServiceSupplier != null) {
       clusteringService = clusteringServiceSupplier.get();
@@ -148,7 +156,7 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
         .via(BasicInterpreter::interpretTypifiedName)
         .via(BasicInterpreter::interpretSex)
         .via(BasicInterpreter::interpretEstablishmentMeans)
-        .via(BasicInterpreter.interpretLifeStage(lifeStageLookup))
+        .via(BasicInterpreter.interpretLifeStage(lifeStageLookupFn))
         .via(BasicInterpreter::interpretTypeStatus)
         .via(BasicInterpreter::interpretIndividualCount)
         .via(BasicInterpreter::interpretReferences)
@@ -162,6 +170,8 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
         .via(BasicInterpreter::interpretRecordedByIds)
         .via(BasicInterpreter.interpretOccurrenceStatus(occStatusKvStore))
         .via(BasicInterpreter.interpretIsClustered(clusteringService))
+        .via(DynamicPropertiesInterpreter::interpretSex)
+        .via(DynamicPropertiesInterpreter.interpretLifeStage(lifeStageLookupFn))
         .getOfNullable();
   }
 }

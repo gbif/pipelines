@@ -48,7 +48,7 @@ public class SpeciesListPipelineIT {
 
     assertTrue(tps.get("not-an-uuid-1").getSpeciesListID().contains("dr1"));
     assertEquals(
-        tps.get("not-an-uuid-1").getConservationStatuses().get(0).getStatus(), "Endangered");
+        "Endangered", tps.get("not-an-uuid-1").getConservationStatuses().get(0).getStatus());
   }
 
   public void loadTestDataset(String datasetID, String inputPath) throws Exception {

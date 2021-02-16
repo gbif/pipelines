@@ -32,6 +32,7 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
 import org.gbif.pipelines.core.utils.MediaSerDeserUtils;
+import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.AgentIdentifier;
 import org.gbif.pipelines.io.avro.Authorship;
 import org.gbif.pipelines.io.avro.BasicRecord;
@@ -150,10 +151,27 @@ public class OccurrenceHdfsRecordConverterTest {
             .setEventDate(EventDate.newBuilder().setGte("2000").setLte("2010").build())
             .build();
 
+    MeasurementOrFactRecord measurementOrFactRecord =
+        MeasurementOrFactRecord.newBuilder()
+            .setId("1")
+            .setMeasurementOrFactItems(
+                Collections.singletonList(
+                    MeasurementOrFact.newBuilder()
+                        .setMeasurementType("t")
+                        .setMeasurementValue("v")
+                        .setMeasurementUnit("u")
+                        .build()))
+            .build();
+
     // When
     OccurrenceHdfsRecord hdfsRecord =
         toOccurrenceHdfsRecord(
-            basicRecord, metadataRecord, taxonRecord, temporalRecord, extendedRecord);
+            basicRecord,
+            metadataRecord,
+            taxonRecord,
+            temporalRecord,
+            extendedRecord,
+            measurementOrFactRecord);
 
     // Should
     // Test common fields

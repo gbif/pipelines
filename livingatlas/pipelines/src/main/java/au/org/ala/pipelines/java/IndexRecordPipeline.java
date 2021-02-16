@@ -42,12 +42,24 @@ import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.io.AvroReader;
 import org.gbif.pipelines.core.utils.FsUtils;
-import org.gbif.pipelines.io.avro.*;
-import org.gbif.pipelines.transforms.core.*;
-import org.gbif.pipelines.transforms.extension.AudubonTransform;
-import org.gbif.pipelines.transforms.extension.ImageTransform;
-import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
-import org.gbif.pipelines.transforms.extension.MultimediaTransform;
+import org.gbif.pipelines.io.avro.ALAAttributionRecord;
+import org.gbif.pipelines.io.avro.ALASensitivityRecord;
+import org.gbif.pipelines.io.avro.ALATaxonRecord;
+import org.gbif.pipelines.io.avro.ALAUUIDRecord;
+import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.ImageServiceRecord;
+import org.gbif.pipelines.io.avro.IndexRecord;
+import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.io.avro.TaxonProfile;
+import org.gbif.pipelines.io.avro.TaxonRecord;
+import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.transforms.core.BasicTransform;
+import org.gbif.pipelines.transforms.core.LocationTransform;
+import org.gbif.pipelines.transforms.core.TaxonomyTransform;
+import org.gbif.pipelines.transforms.core.TemporalTransform;
+import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.slf4j.MDC;
 
@@ -134,12 +146,6 @@ public class IndexRecordPipeline {
     TemporalTransform temporalTransform = TemporalTransform.builder().create();
     TaxonomyTransform taxonomyTransform = TaxonomyTransform.builder().create();
 
-    // Extension
-    MeasurementOrFactTransform measurementTransform = MeasurementOrFactTransform.builder().create();
-    MultimediaTransform multimediaTransform = MultimediaTransform.builder().create();
-    AudubonTransform audubonTransform = AudubonTransform.builder().create();
-    ImageTransform imageTransform = ImageTransform.builder().create();
-
     // ALA Specific transforms
     ALATaxonomyTransform alaTaxonomyTransform = ALATaxonomyTransform.builder().create();
     ALAAttributionTransform alaAttributionTransform = ALAAttributionTransform.builder().create();
@@ -216,56 +222,12 @@ public class IndexRecordPipeline {
               executor);
     }
 
-    CompletableFuture<Map<String, MultimediaRecord>> multimediaMapFeature =
-        CompletableFuture.supplyAsync(
-            () ->
-                AvroReader.readRecords(
-                    hdfsSiteConfig,
-                    coreSiteConfig,
-                    MultimediaRecord.class,
-                    pathFn.apply(multimediaTransform.getBaseName())),
-            executor);
-
-    CompletableFuture<Map<String, ImageRecord>> imageMapFeature =
-        CompletableFuture.supplyAsync(
-            () ->
-                AvroReader.readRecords(
-                    hdfsSiteConfig,
-                    coreSiteConfig,
-                    ImageRecord.class,
-                    pathFn.apply(imageTransform.getBaseName())),
-            executor);
-
-    CompletableFuture<Map<String, AudubonRecord>> audubonMapFeature =
-        CompletableFuture.supplyAsync(
-            () ->
-                AvroReader.readRecords(
-                    hdfsSiteConfig,
-                    coreSiteConfig,
-                    AudubonRecord.class,
-                    pathFn.apply(audubonTransform.getBaseName())),
-            executor);
-
-    CompletableFuture<Map<String, MeasurementOrFactRecord>> measurementMapFeature =
-        CompletableFuture.supplyAsync(
-            () ->
-                AvroReader.readRecords(
-                    hdfsSiteConfig,
-                    coreSiteConfig,
-                    MeasurementOrFactRecord.class,
-                    pathFn.apply(measurementTransform.getBaseName())),
-            executor);
-
     CompletableFuture.allOf(
             metadataMapFeature,
             verbatimMapFeature,
             basicMapFeature,
             temporalMapFeature,
             locationMapFeature,
-            multimediaMapFeature,
-            imageMapFeature,
-            audubonMapFeature,
-            measurementMapFeature,
             taxonMapFeature)
         .get();
 
@@ -341,11 +303,6 @@ public class IndexRecordPipeline {
     Map<String, TaxonProfile> taxonProfileMap =
         options.getIncludeSpeciesLists() ? taxonProfileMapFeature.get() : Collections.emptyMap();
 
-    Map<String, MultimediaRecord> multimediaMap = multimediaMapFeature.get();
-    Map<String, ImageRecord> imageMap = imageMapFeature.get();
-    Map<String, AudubonRecord> audubonMap = audubonMapFeature.get();
-    Map<String, MeasurementOrFactRecord> measurementMap = measurementMapFeature.get();
-
     log.info("Joining avro files...");
     // Join all records, convert into string json and IndexRequest for ES
     Function<BasicRecord, IndexRecord> indexRequestFn =
@@ -373,46 +330,37 @@ public class IndexRecordPipeline {
           TaxonProfile tpr =
               taxonProfileMap.getOrDefault(k, TaxonProfile.newBuilder().setId(k).build());
 
-          // Extension
-          MultimediaRecord mr =
-              multimediaMap.getOrDefault(k, MultimediaRecord.newBuilder().setId(k).build());
-          ImageRecord ir = imageMap.getOrDefault(k, ImageRecord.newBuilder().setId(k).build());
-          AudubonRecord ar =
-              audubonMap.getOrDefault(k, AudubonRecord.newBuilder().setId(k).build());
-          MeasurementOrFactRecord mfr =
-              measurementMap.getOrDefault(k, MeasurementOrFactRecord.newBuilder().setId(k).build());
-
           return IndexRecordTransform.createIndexRecord(
               metadata, br, tr, lr, txr, atxr, er, aar, aur, isr, tpr, sr);
         };
 
     List<IndexRecord> indexRecords =
-        basicMap.values().stream().map(br -> indexRequestFn.apply(br)).collect(Collectors.toList());
+        basicMap.values().stream().map(indexRequestFn).collect(Collectors.toList());
 
     // get filesystem
     FileSystem fs =
         FsUtils.getFileSystem(
             options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getInputPath());
 
-    OutputStream output =
-        fs.create(
-            new Path(
-                options.getAllDatasetsInputPath()
-                    + "/index-record/"
-                    + options.getDatasetId()
-                    + "/"
-                    + options.getDatasetId()
-                    + ".avro"));
+    Path otputPath =
+        new Path(
+            options.getAllDatasetsInputPath()
+                + "/index-record/"
+                + options.getDatasetId()
+                + "/"
+                + options.getDatasetId()
+                + ".avro");
 
     DatumWriter<IndexRecord> datumWriter = new GenericDatumWriter<>(IndexRecord.getClassSchema());
-    DataFileWriter dataFileWriter = new DataFileWriter<IndexRecord>(datumWriter);
-    dataFileWriter.setCodec(BASE_CODEC);
-    dataFileWriter.create(IndexRecord.getClassSchema(), output);
+    try (OutputStream output = fs.create(otputPath);
+        DataFileWriter<IndexRecord> dataFileWriter = new DataFileWriter<>(datumWriter)) {
+      dataFileWriter.setCodec(BASE_CODEC);
+      dataFileWriter.create(IndexRecord.getClassSchema(), output);
 
-    for (IndexRecord indexRecord : indexRecords) {
-      dataFileWriter.append(indexRecord);
+      for (IndexRecord indexRecord : indexRecords) {
+        dataFileWriter.append(indexRecord);
+      }
     }
-    dataFileWriter.close();
 
     MetricsHandler.saveCountersToTargetPathFile(options, metrics.getMetricsResult());
     log.info("Pipeline has been finished - {}", LocalDateTime.now());

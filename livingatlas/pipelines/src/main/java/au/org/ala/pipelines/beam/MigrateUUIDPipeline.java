@@ -93,7 +93,7 @@ public class MigrateUUIDPipeline {
       try {
         CSVReader csvReader = new CSVReader(new StringReader(line));
         String[] fields = csvReader.readNext();
-        String datasetID = fields[0].substring(0, fields[0].indexOf("|"));
+        String datasetID = fields[0].substring(0, fields[0].indexOf('|'));
         ALAUUIDRecord record =
             ALAUUIDRecord.newBuilder()
                 .setId(fields[1])

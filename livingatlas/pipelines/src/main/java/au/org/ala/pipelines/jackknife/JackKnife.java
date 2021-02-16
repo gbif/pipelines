@@ -7,8 +7,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class JackKnife {
 
-  /** Takes a list of sampled values and returns the statistics for these results. */
   /**
+   * Takes a list of sampled values and returns the statistics for these results
+   *
    * @param values array of values used for jackknife. Nulls permitted.
    * @param minSampleThreshold minimum number of values
    * @return null or JackKnifeStats
@@ -18,17 +19,17 @@ public class JackKnife {
     double maxValue, minValue;
 
     int nulls = 0;
-    for (int i = 0; i < values.length; i++) {
-      if (values[i] == null) {
+    for (Double value : values) {
+      if (value == null) {
         nulls++;
       }
     }
 
     double[] valuesWithoutNulls = new double[values.length - nulls];
     int pos = 0;
-    for (int i = 0; i < values.length; i++) {
-      if (values[i] != null) {
-        valuesWithoutNulls[pos++] = values[i];
+    for (Double value : values) {
+      if (value != null) {
+        valuesWithoutNulls[pos++] = value;
       }
     }
 

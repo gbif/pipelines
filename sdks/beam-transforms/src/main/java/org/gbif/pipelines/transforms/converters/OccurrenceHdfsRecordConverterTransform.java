@@ -21,7 +21,6 @@ import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
@@ -82,7 +81,6 @@ public class OccurrenceHdfsRecordConverterTransform implements Serializable {
   @NonNull private final TupleTag<MultimediaRecord> multimediaRecordTag;
   @NonNull private final TupleTag<ImageRecord> imageRecordTag;
   @NonNull private final TupleTag<AudubonRecord> audubonRecordTag;
-  @NonNull private final TupleTag<MeasurementOrFactRecord> measurementOrFactRecordTag;
 
   @NonNull private final PCollectionView<MetadataRecord> metadataView;
 
@@ -117,15 +115,11 @@ public class OccurrenceHdfsRecordConverterTransform implements Serializable {
             ImageRecord ir = v.getOnly(imageRecordTag, ImageRecord.newBuilder().setId(k).build());
             AudubonRecord ar =
                 v.getOnly(audubonRecordTag, AudubonRecord.newBuilder().setId(k).build());
-            MeasurementOrFactRecord mfr =
-                v.getOnly(
-                    measurementOrFactRecordTag,
-                    MeasurementOrFactRecord.newBuilder().setId(k).build());
 
             MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
             OccurrenceHdfsRecord record =
                 OccurrenceHdfsRecordConverter.toOccurrenceHdfsRecord(
-                    br, mdr, tr, lr, txr, gr, mmr, mfr, er);
+                    br, mdr, tr, lr, txr, gr, mmr, er);
 
             c.output(record);
 
