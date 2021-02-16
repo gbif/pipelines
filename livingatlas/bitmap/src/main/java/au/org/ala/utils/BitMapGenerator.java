@@ -17,6 +17,7 @@ import java.util.Properties;
 import java.util.Random;
 import javax.imageio.ImageIO;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.batik.transcoder.TranscoderException;
 import org.apache.batik.transcoder.TranscoderInput;
 import org.apache.batik.transcoder.TranscoderOutput;
@@ -32,6 +33,7 @@ import org.apache.http.annotation.Obsolete;
  *
  * <p>A dockerised postgres needs to setup first. database: eez; user: eez); password: eez);
  */
+@Slf4j
 @AllArgsConstructor
 public class BitMapGenerator {
 
@@ -80,7 +82,7 @@ public class BitMapGenerator {
     StringBuilder hollowSvg = new StringBuilder();
     try (Connection conn = DriverManager.getConnection(uri.toString(), props);
         Statement stmt = conn.createStatement()) {
-      System.out.println("Successfully Connected.");
+      log.info("Successfully Connected.");
 
       filledSvg.append(SVG_HEADER);
       hollowSvg.append(SVG_HEADER);
@@ -128,12 +130,11 @@ public class BitMapGenerator {
 
     Path filledPngFile = Files.createTempFile(layerName, "-filled.png");
     Path hollowPngFile = Files.createTempFile(layerName, "-hollow.png");
-    System.out.println("Generating bitmap for " + layerName);
+    log.info("Generating bitmap for {}", layerName);
 
     Path filledSvgFile = Files.createTempFile(layerName, "-filled.svg");
     Path hollowSvgFile = Files.createTempFile(layerName, "-hollow.svg");
-    System.out.println(
-        "→ Generating SVG for " + layerName + " as " + filledSvgFile + " and " + hollowSvgFile);
+    log.info("→ Generating SVG for {} as {} and {}", layerName, filledSvgFile, hollowSvgFile);
     try (Writer filledSvg =
             new OutputStreamWriter(
                 new FileOutputStream(filledSvgFile.toFile()), StandardCharsets.UTF_8);
@@ -144,7 +145,7 @@ public class BitMapGenerator {
       hollowSvg.write(twoSvgs[1]);
     }
 
-    System.out.println("→ Converting SVG to PNG for " + layerName + " as " + hollowPngFile);
+    log.info("→ Converting SVG to PNG for {} as {}", layerName, hollowPngFile);
     try (OutputStream pngOut = new FileOutputStream(hollowPngFile.toFile())) {
       TranscoderInput svgImage = new TranscoderInput(hollowSvgFile.toString());
       TranscoderOutput pngImage = new TranscoderOutput(pngOut);
@@ -153,7 +154,7 @@ public class BitMapGenerator {
       pngTranscoder.transcode(svgImage, pngImage);
     }
 
-    System.out.println("→ Converting SVG to PNG for " + layerName + " as " + filledPngFile);
+    log.info("→ Converting SVG to PNG for {} as {}", layerName, filledPngFile);
     try (OutputStream pngOut = new FileOutputStream(filledPngFile.toFile())) {
       TranscoderInput svgImage = new TranscoderInput(filledSvgFile.toString());
       TranscoderOutput pngImage = new TranscoderOutput(pngOut);
@@ -164,11 +165,11 @@ public class BitMapGenerator {
 
     Path pngFile = Paths.get(outputFolder).resolve(layerName + ".png");
     if (pngFile.toFile().exists()) {
-      System.err.println(
-          "Won't overwrite " + pngFile + ", remove it first if you want to regenerate it (slow).");
+      log.error(
+          "Won't overwrite {}, remove it first if you want to regenerate it (slow).", pngFile);
       return;
     }
-    System.out.println("→ Combining both PNGs for " + layerName + " as " + pngFile);
+    log.info("→ Combining both PNGs for {} as {}", layerName, pngFile);
     BufferedImage filled = ImageIO.read(filledPngFile.toFile());
     BufferedImage hollow = ImageIO.read(hollowPngFile.toFile());
 
@@ -218,11 +219,11 @@ public class BitMapGenerator {
     String svgFile = Paths.get(outputFolder, fileName + ".svg").toString();
     try (BufferedWriter writer = new BufferedWriter(new FileWriter(svgFile))) {
       writer.write(content);
-      System.out.println("Successfully generated.");
+      log.info("Successfully generated.");
     }
 
-    System.out.println(svgFile + " is generated.");
-    System.out.println("Converting SVG to PNG");
+    log.info("{} is generated.", svgFile);
+    log.info("Converting SVG to PNG");
 
     String pngFile = Paths.get(outputFolder, fileName + ".png").toString();
     Files.deleteIfExists(Paths.get(pngFile));
@@ -234,7 +235,7 @@ public class BitMapGenerator {
       pngTranscoder.addTranscodingHint(ImageTranscoder.KEY_BACKGROUND_COLOR, Color.white);
       pngTranscoder.transcode(svgImage, pngImage);
     }
-    System.out.println(pngFile + " is generated.");
+    log.info("{} is generated.", pngFile);
   }
 
   /** BitMapGenerator cw_state_poly feature /Users/Shared/Relocated Items/Security/data/sds-shp/ */
@@ -253,12 +254,12 @@ public class BitMapGenerator {
             : System.getProperty("password");
 
     if (args.length != 3) {
-      System.out.println("Error: args are incorrect!");
-      System.out.println("Minimum three arguments required: layerName, AttrName, outputFolder");
-      System.out.println("Example: BitMapGenerator cw_state_poly feature /data/sds-shp/");
-      System.out.println(
+      log.info("Error: args are incorrect!");
+      log.info("Minimum three arguments required: layerName, AttrName, outputFolder");
+      log.info("Example: BitMapGenerator cw_state_poly feature /data/sds-shp/");
+      log.info(
           "It will generate a bitmap from cw_state_poly layer/table, and use attribute: feature to colourise polygons");
-      System.out.println(
+      log.info(
           "Complete command could be: java -Durl=jdbc:postgresql://127.0.0.1 -Ddb=sds -Duser=sds -Dpassword=sds -jar target/pipelines-BUILD_VERSION-shaded.jar au.org.ala.utils.BitMapGenerator cw_state_poly feature /data/sds-shp/");
     }
 
