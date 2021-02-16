@@ -25,8 +25,6 @@ public class OccurrenceHdfsRecordConverter {
 
   private final IngestMetrics metrics;
 
-  @NonNull private final String esIndexName;
-
   @NonNull private final MetadataRecord metadata;
   @NonNull private final Map<String, ExtendedRecord> verbatimMap;
   @NonNull private final Map<String, TemporalRecord> temporalMap;
