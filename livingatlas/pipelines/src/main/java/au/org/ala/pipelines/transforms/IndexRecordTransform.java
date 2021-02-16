@@ -165,8 +165,8 @@ public class IndexRecordTransform implements Serializable {
     skipKeys.add("networkKeys");
     skipKeys.add("protocol");
     skipKeys.add("issues");
-    skipKeys.add("identifiedByID"); // multi value field
-    skipKeys.add("recordedByID"); // multi value field
+    skipKeys.add("identifiedByIds"); // multi value field
+    skipKeys.add("recordedByIds"); // multi value field
     skipKeys.add("machineTags"); // TODO review content
 
     IndexRecord.Builder indexRecord = IndexRecord.newBuilder().setId(ur.getUuid());
@@ -245,15 +245,29 @@ public class IndexRecordTransform implements Serializable {
       if (tr.getEventDate() != null
           && tr.getEventDate().getGte() != null
           && tr.getEventDate().getGte().length() == 10) {
+
         indexRecord
             .getDates()
             .put(
-                "eventDateSingle",
+                DwcTerm.eventDate.simpleName(),
                 new SimpleDateFormat("yyyy-MM-dd").parse(tr.getEventDate().getGte()).getTime());
+
+        // eventDateEnd
+        if (tr.getEventDate().getLte() != null) {
+          indexRecord
+              .getDates()
+              .put(
+                  "eventDateEnd",
+                  new SimpleDateFormat("yyyy-MM-dd").parse(tr.getEventDate().getLte()).getTime());
+        }
       }
     } catch (ParseException e) {
       log.error(
           "Un-parsable date produced by downstream interpretation " + tr.getEventDate().getGte());
+    }
+
+    if (tr.getYear() != null && tr.getYear() > 0) {
+      indexRecord.getInts().put("decade", ((tr.getYear() / 10) * 10));
     }
 
     // GBIF taxonomy - add if available
@@ -266,9 +280,13 @@ public class IndexRecordTransform implements Serializable {
     // Sensitive (Original) data
     if (sensitive) {
       if (sr.getDataGeneralizations() != null)
-        indexRecord.getStrings().put("dataGeneralizations", sr.getDataGeneralizations());
+        indexRecord
+            .getStrings()
+            .put(DwcTerm.dataGeneralizations.simpleName(), sr.getDataGeneralizations());
       if (sr.getInformationWithheld() != null)
-        indexRecord.getStrings().put("informationWithheld", sr.getInformationWithheld());
+        indexRecord
+            .getStrings()
+            .put(DwcTerm.informationWithheld.simpleName(), sr.getInformationWithheld());
       if (sr.getGeneralisationInMetres() != null)
         indexRecord.getStrings().put("generalisationInMetres", sr.getGeneralisationInMetres());
       if (sr.getGeneralisationInMetres() != null)
@@ -313,7 +331,7 @@ public class IndexRecordTransform implements Serializable {
         }
 
         if (atxr.getRank() != null) {
-          indexRecord.getStrings().put("taxonRank", atxr.getRank());
+          indexRecord.getStrings().put(DwcTerm.taxonRank.simpleName(), atxr.getRank());
           if (atxr.getRankID() != null && atxr.getRankID() == 8000) {
             indexRecord.getStrings().put("subspecies", atxr.getScientificName());
             indexRecord.getStrings().put("subspeciesID", atxr.getTaxonConceptID());
@@ -379,7 +397,11 @@ public class IndexRecordTransform implements Serializable {
       addIfNotEmpty(indexRecord, "institutionName", aar.getInstitutionName());
       addIfNotEmpty(indexRecord, "collectionName", aar.getCollectionName());
       addIfNotEmpty(indexRecord, "provenance", aar.getProvenance());
-      indexRecord.getBooleans().put("defaultValuesUsed", aar.getHasDefaultValues());
+      indexRecord
+          .getBooleans()
+          .put(
+              "defaultValuesUsed",
+              aar.getHasDefaultValues() != null ? aar.getHasDefaultValues() : false);
 
       // add hub IDs
       if (aar.getHubMembership() != null && !aar.getHubMembership().isEmpty()) {
@@ -389,6 +411,13 @@ public class IndexRecordTransform implements Serializable {
                 "dataHubUid",
                 aar.getHubMembership().stream()
                     .map(enr -> enr.getUid())
+                    .collect(Collectors.toList()));
+        indexRecord
+            .getMultiValues()
+            .put(
+                "dataHubName",
+                aar.getHubMembership().stream()
+                    .map(enr -> enr.getName())
                     .collect(Collectors.toList()));
       }
     }

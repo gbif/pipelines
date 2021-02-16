@@ -158,7 +158,6 @@ sensitive:
   runner: SparkRunner
 
 # class: au.org.ala.pipelines.java.IndexRecordPipeline
-# class: au.org.ala.pipelines.beam.IndexRecordPipeline
 index:
   appName: IndexRecord generation for {datasetId}
   inputPath: '{fsPath}/pipelines-data'
