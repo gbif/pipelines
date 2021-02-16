@@ -135,7 +135,7 @@ public class ALASensitiveDataRecordTransform
       generalisations = conservationService.getGeneralisations();
       sensitiveFields = null;
     }
-    if (sensitiveFields == null) {
+    if (sensitiveFields == null && generalisations != null) {
       log.debug("Building sensitive field list");
       sensitiveFields = new HashSet<>(generalisations.size());
       for (Generalisation g : generalisations) {
