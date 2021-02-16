@@ -10,6 +10,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
@@ -71,7 +73,8 @@ public class BitMapGenerator {
   private final String password;
   private final String user;
 
-  public String[] generateSVG(String layer, String idName) throws SQLException, URISyntaxException {
+  public String[] generateSVG(String layer, String idName)
+      throws SQLException, URISyntaxException, NoSuchAlgorithmException {
     URI uri = new URI(url + "/" + db);
 
     Properties props = new Properties();
@@ -91,7 +94,7 @@ public class BitMapGenerator {
 
       String idSQL = String.format("SELECT DISTINCT %s as id FROM %s;", idName, layer);
       try (ResultSet idRs = stmt.executeQuery(idSQL)) {
-        Random random = new Random();
+        Random random = SecureRandom.getInstanceStrong();
         while (idRs.next()) {
           String id = idRs.getString("id");
           // create a big random number - maximum is ffffff (hex) = 16777215 (dez)
