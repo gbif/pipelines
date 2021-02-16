@@ -23,9 +23,15 @@ public class MeasurementOrFactInterpreter {
   private static final TargetHandler<MeasurementOrFact> HANDLER =
       ExtensionInterpretation.extension(Extension.MEASUREMENT_OR_FACT)
           .to(MeasurementOrFact::new)
+          .map(DwcTerm.measurementID, MeasurementOrFact::setMeasurementID)
           .map(DwcTerm.measurementType, MeasurementOrFact::setMeasurementType)
           .map(DwcTerm.measurementUnit, MeasurementOrFact::setMeasurementUnit)
-          .map(DwcTerm.measurementValue, MeasurementOrFact::setMeasurementValue);
+          .map(DwcTerm.measurementValue, MeasurementOrFact::setMeasurementValue)
+          .map(DwcTerm.measurementAccuracy, MeasurementOrFact::setMeasurementValue)
+          .map(DwcTerm.measurementDeterminedBy, MeasurementOrFact::setMeasurementDeterminedBy)
+          .map(DwcTerm.measurementDeterminedDate, MeasurementOrFact::setMeasurementDeterminedDate)
+          .map(DwcTerm.measurementMethod, MeasurementOrFact::setMeasurementMethod)
+          .map(DwcTerm.measurementRemarks, MeasurementOrFact::setMeasurementRemarks);
 
   /**
    * Interprets measurements or facts of a {@link ExtendedRecord} and populates a {@link
