@@ -27,7 +27,7 @@ public class MeasurementOrFactInterpreter {
           .map(DwcTerm.measurementType, MeasurementOrFact::setMeasurementType)
           .map(DwcTerm.measurementUnit, MeasurementOrFact::setMeasurementUnit)
           .map(DwcTerm.measurementValue, MeasurementOrFact::setMeasurementValue)
-          .map(DwcTerm.measurementAccuracy, MeasurementOrFact::setMeasurementValue)
+          .map(DwcTerm.measurementAccuracy, MeasurementOrFact::setMeasurementAccuracy)
           .map(DwcTerm.measurementDeterminedBy, MeasurementOrFact::setMeasurementDeterminedBy)
           .map(DwcTerm.measurementDeterminedDate, MeasurementOrFact::setMeasurementDeterminedDate)
           .map(DwcTerm.measurementMethod, MeasurementOrFact::setMeasurementMethod)
