@@ -44,9 +44,11 @@ public class OccurrenceHdfsRecordWriter {
     CompletableFuture<?>[] futures =
         basicRecords.stream()
             .map(
-                br ->
-                    CompletableFuture.runAsync(
-                        () -> writer.append(occurrenceHdfsRecordFn.apply(br)), executor))
+                br -> {
+                  OccurrenceHdfsRecord occurrenceHdfsRecord = occurrenceHdfsRecordFn.apply(br);
+                  Runnable runnable = () -> writer.append(occurrenceHdfsRecord);
+                  return CompletableFuture.runAsync(runnable, executor);
+                })
             .toArray(CompletableFuture[]::new);
     // Wait for all futures
     CompletableFuture.allOf(futures).get();
