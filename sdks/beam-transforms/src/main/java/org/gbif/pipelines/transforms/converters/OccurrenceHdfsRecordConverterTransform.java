@@ -118,8 +118,17 @@ public class OccurrenceHdfsRecordConverterTransform implements Serializable {
 
             MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
             OccurrenceHdfsRecord record =
-                OccurrenceHdfsRecordConverter.toOccurrenceHdfsRecord(
-                    br, mdr, tr, lr, txr, gr, mmr, er);
+                OccurrenceHdfsRecordConverter.builder()
+                    .basicRecord(br)
+                    .metadataRecord(mdr)
+                    .temporalRecord(tr)
+                    .locationRecord(lr)
+                    .taxonRecord(txr)
+                    .grscicollRecord(gr)
+                    .multimediaRecord(mmr)
+                    .extendedRecord(er)
+                    .build()
+                    .convert();
 
             c.output(record);
 

@@ -52,11 +52,21 @@ public class OccurrenceHdfsRecordConverter {
       ImageRecord ir = imageMap.getOrDefault(k, ImageRecord.newBuilder().setId(k).build());
       AudubonRecord ar = audubonMap.getOrDefault(k, AudubonRecord.newBuilder().setId(k).build());
 
+      MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
+
       metrics.incMetric(AVRO_TO_HDFS_COUNT);
 
-      MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
-      return org.gbif.pipelines.core.converters.OccurrenceHdfsRecordConverter
-          .toOccurrenceHdfsRecord(br, metadata, tr, lr, txr, gr, mmr, er);
+      return org.gbif.pipelines.core.converters.OccurrenceHdfsRecordConverter.builder()
+          .basicRecord(br)
+          .metadataRecord(metadata)
+          .temporalRecord(tr)
+          .locationRecord(lr)
+          .taxonRecord(txr)
+          .grscicollRecord(gr)
+          .multimediaRecord(mmr)
+          .extendedRecord(er)
+          .build()
+          .convert();
     };
   }
 }

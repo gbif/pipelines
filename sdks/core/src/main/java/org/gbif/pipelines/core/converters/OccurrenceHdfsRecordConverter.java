@@ -3,17 +3,12 @@ package org.gbif.pipelines.core.converters;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.base.Strings;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.Schema;
 import org.apache.avro.specific.SpecificRecordBase;
@@ -44,38 +39,64 @@ import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 
 /** Utility class to convert interpreted and extended records into {@link OccurrenceHdfsRecord}. */
 @Slf4j
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder
 public class OccurrenceHdfsRecordConverter {
-
-  // Registered converters
-  private static final Map<
-          Class<? extends SpecificRecordBase>, BiConsumer<OccurrenceHdfsRecord, SpecificRecordBase>>
-      CONVERTERS = new HashMap<>(8);
 
   private static final TermFactory TERM_FACTORY = TermFactory.instance();
 
-  // Converters
-  static {
-    CONVERTERS.put(ExtendedRecord.class, extendedRecordMapper());
-    CONVERTERS.put(BasicRecord.class, basicRecordMapper());
-    CONVERTERS.put(LocationRecord.class, locationMapper());
-    CONVERTERS.put(TaxonRecord.class, taxonMapper());
-    CONVERTERS.put(GrscicollRecord.class, grscicollMapper());
-    CONVERTERS.put(TemporalRecord.class, temporalMapper());
-    CONVERTERS.put(MetadataRecord.class, metadataMapper());
-    CONVERTERS.put(MultimediaRecord.class, multimediaMapper());
+  private final ExtendedRecord extendedRecord;
+  private final BasicRecord basicRecord;
+  private final LocationRecord locationRecord;
+  private final TaxonRecord taxonRecord;
+  private final GrscicollRecord grscicollRecord;
+  private final TemporalRecord temporalRecord;
+  private final MetadataRecord metadataRecord;
+  private final MultimediaRecord multimediaRecord;
+
+  /**
+   * Collects data from {@link SpecificRecordBase} instances into a {@link OccurrenceHdfsRecord}.
+   *
+   * @return a {@link OccurrenceHdfsRecord} instance based on the input records
+   */
+  public OccurrenceHdfsRecord convert() {
+    OccurrenceHdfsRecord occurrenceHdfsRecord = new OccurrenceHdfsRecord();
+    occurrenceHdfsRecord.setIssue(new ArrayList<>());
+
+    // Order is important
+    mapBasicRecord(occurrenceHdfsRecord);
+    mapMetadataRecord(occurrenceHdfsRecord);
+    mapTemporalRecord(occurrenceHdfsRecord);
+    mapLocationRecord(occurrenceHdfsRecord);
+    mapTaxonRecord(occurrenceHdfsRecord);
+    mapGrscicollRecord(occurrenceHdfsRecord);
+    mapMultimediaRecord(occurrenceHdfsRecord);
+    mapExtendedRecord(occurrenceHdfsRecord);
+
+    // The id (the <id> reference in the DWCA meta.xml) is an identifier local to the DWCA, and
+    // could only have been
+    // used for "un-starring" a DWCA star record. However, we've exposed it as DcTerm.identifier for
+    // a long time in
+    // our public API v1, so we continue to do this.
+    if (extendedRecord != null && basicRecord != null) {
+      setIdentifier(basicRecord, extendedRecord, occurrenceHdfsRecord);
+    }
+
+    return occurrenceHdfsRecord;
   }
 
   /**
    * Sets the lastInterpreted and lastParsed dates if the new value is greater that the existing one
    * or if it is not set.
    */
-  private static void setCreatedIfGreater(OccurrenceHdfsRecord hr, Long created) {
+  private static void setCreatedIfGreater(OccurrenceHdfsRecord occurrenceHdfsRecord, Long created) {
     if (Objects.nonNull(created)) {
       Long maxCreated =
-          Math.max(created, Optional.ofNullable(hr.getLastinterpreted()).orElse(Long.MIN_VALUE));
-      hr.setLastinterpreted(maxCreated);
-      hr.setLastparsed(maxCreated);
+          Math.max(
+              created,
+              Optional.ofNullable(occurrenceHdfsRecord.getLastinterpreted())
+                  .orElse(Long.MIN_VALUE));
+      occurrenceHdfsRecord.setLastinterpreted(maxCreated);
+      occurrenceHdfsRecord.setLastparsed(maxCreated);
     }
   }
 
@@ -83,288 +104,297 @@ public class OccurrenceHdfsRecordConverter {
    * Adds the list of issues to the list of issues in the {@link OccurrenceHdfsRecord}.
    *
    * @param issueRecord record issues
-   * @param hr target object
+   * @param occurrenceHdfsRecord target object
    */
-  private static void addIssues(IssueRecord issueRecord, OccurrenceHdfsRecord hr) {
+  private static void addIssues(
+      IssueRecord issueRecord, OccurrenceHdfsRecord occurrenceHdfsRecord) {
     if (Objects.nonNull(issueRecord) && Objects.nonNull(issueRecord.getIssueList())) {
-      List<String> currentIssues = hr.getIssue();
+      List<String> currentIssues = occurrenceHdfsRecord.getIssue();
       currentIssues.addAll(issueRecord.getIssueList());
-      hr.setIssue(currentIssues);
+      occurrenceHdfsRecord.setIssue(currentIssues);
     }
   }
 
   /** Copies the {@link LocationRecord} data into the {@link OccurrenceHdfsRecord}. */
-  private static BiConsumer<OccurrenceHdfsRecord, SpecificRecordBase> locationMapper() {
-    return (hr, sr) -> {
-      LocationRecord lr = (LocationRecord) sr;
-      hr.setCountrycode(lr.getCountryCode());
-      hr.setContinent(lr.getContinent());
-      hr.setDecimallatitude(lr.getDecimalLatitude());
-      hr.setDecimallongitude(lr.getDecimalLongitude());
-      hr.setCoordinateprecision(lr.getCoordinatePrecision());
-      hr.setCoordinateuncertaintyinmeters(lr.getCoordinateUncertaintyInMeters());
-      hr.setDepth(lr.getDepth());
-      hr.setDepthaccuracy(lr.getDepthAccuracy());
-      hr.setElevation(lr.getElevation());
-      hr.setElevationaccuracy(lr.getElevationAccuracy());
-      if (Objects.nonNull(lr.getMaximumDistanceAboveSurfaceInMeters())) {
-        hr.setMaximumdistanceabovesurfaceinmeters(
-            lr.getMaximumDistanceAboveSurfaceInMeters().toString());
-      }
-      if (Objects.nonNull(lr.getMinimumDistanceAboveSurfaceInMeters())) {
-        hr.setMinimumdistanceabovesurfaceinmeters(
-            lr.getMinimumDistanceAboveSurfaceInMeters().toString());
-      }
-      hr.setStateprovince(lr.getStateProvince());
-      hr.setWaterbody(lr.getWaterBody());
-      hr.setHascoordinate(lr.getHasCoordinate());
-      hr.setHasgeospatialissues(lr.getHasGeospatialIssue());
-      hr.setRepatriated(lr.getRepatriated());
-      hr.setLocality(lr.getLocality());
-      hr.setPublishingcountry(lr.getPublishingCountry());
-      Optional.ofNullable(lr.getGadm())
-          .ifPresent(
-              g -> {
-                hr.setLevel0gid(g.getLevel0Gid());
-                hr.setLevel1gid(g.getLevel1Gid());
-                hr.setLevel2gid(g.getLevel2Gid());
-                hr.setLevel3gid(g.getLevel3Gid());
-                hr.setLevel0name(g.getLevel0Name());
-                hr.setLevel1name(g.getLevel1Name());
-                hr.setLevel2name(g.getLevel2Name());
-                hr.setLevel3name(g.getLevel3Name());
-              });
+  private void mapLocationRecord(OccurrenceHdfsRecord occurrenceHdfsRecord) {
+    if (locationRecord == null) {
+      return;
+    }
+    occurrenceHdfsRecord.setCountrycode(locationRecord.getCountryCode());
+    occurrenceHdfsRecord.setContinent(locationRecord.getContinent());
+    occurrenceHdfsRecord.setDecimallatitude(locationRecord.getDecimalLatitude());
+    occurrenceHdfsRecord.setDecimallongitude(locationRecord.getDecimalLongitude());
+    occurrenceHdfsRecord.setCoordinateprecision(locationRecord.getCoordinatePrecision());
+    occurrenceHdfsRecord.setCoordinateuncertaintyinmeters(
+        locationRecord.getCoordinateUncertaintyInMeters());
+    occurrenceHdfsRecord.setDepth(locationRecord.getDepth());
+    occurrenceHdfsRecord.setDepthaccuracy(locationRecord.getDepthAccuracy());
+    occurrenceHdfsRecord.setElevation(locationRecord.getElevation());
+    occurrenceHdfsRecord.setElevationaccuracy(locationRecord.getElevationAccuracy());
+    if (Objects.nonNull(locationRecord.getMaximumDistanceAboveSurfaceInMeters())) {
+      occurrenceHdfsRecord.setMaximumdistanceabovesurfaceinmeters(
+          locationRecord.getMaximumDistanceAboveSurfaceInMeters().toString());
+    }
+    if (Objects.nonNull(locationRecord.getMinimumDistanceAboveSurfaceInMeters())) {
+      occurrenceHdfsRecord.setMinimumdistanceabovesurfaceinmeters(
+          locationRecord.getMinimumDistanceAboveSurfaceInMeters().toString());
+    }
+    occurrenceHdfsRecord.setStateprovince(locationRecord.getStateProvince());
+    occurrenceHdfsRecord.setWaterbody(locationRecord.getWaterBody());
+    occurrenceHdfsRecord.setHascoordinate(locationRecord.getHasCoordinate());
+    occurrenceHdfsRecord.setHasgeospatialissues(locationRecord.getHasGeospatialIssue());
+    occurrenceHdfsRecord.setRepatriated(locationRecord.getRepatriated());
+    occurrenceHdfsRecord.setLocality(locationRecord.getLocality());
+    occurrenceHdfsRecord.setPublishingcountry(locationRecord.getPublishingCountry());
+    Optional.ofNullable(locationRecord.getGadm())
+        .ifPresent(
+            g -> {
+              occurrenceHdfsRecord.setLevel0gid(g.getLevel0Gid());
+              occurrenceHdfsRecord.setLevel1gid(g.getLevel1Gid());
+              occurrenceHdfsRecord.setLevel2gid(g.getLevel2Gid());
+              occurrenceHdfsRecord.setLevel3gid(g.getLevel3Gid());
+              occurrenceHdfsRecord.setLevel0name(g.getLevel0Name());
+              occurrenceHdfsRecord.setLevel1name(g.getLevel1Name());
+              occurrenceHdfsRecord.setLevel2name(g.getLevel2Name());
+              occurrenceHdfsRecord.setLevel3name(g.getLevel3Name());
+            });
 
-      setCreatedIfGreater(hr, lr.getCreated());
-      addIssues(lr.getIssues(), hr);
-    };
+    setCreatedIfGreater(occurrenceHdfsRecord, locationRecord.getCreated());
+    addIssues(locationRecord.getIssues(), occurrenceHdfsRecord);
   }
 
   /** Copies the {@link MetadataRecord} data into the {@link OccurrenceHdfsRecord}. */
-  private static BiConsumer<OccurrenceHdfsRecord, SpecificRecordBase> metadataMapper() {
-    return (hr, sr) -> {
-      MetadataRecord mr = (MetadataRecord) sr;
-      hr.setCrawlid(mr.getCrawlId());
-      hr.setDatasetkey(mr.getDatasetKey());
-      hr.setDatasetname(mr.getDatasetTitle());
-      hr.setInstallationkey(mr.getInstallationKey());
-      hr.setProtocol(mr.getProtocol());
-      hr.setNetworkkey(mr.getNetworkKeys());
-      hr.setPublisher(mr.getPublisherTitle());
-      hr.setPublishingorgkey(mr.getPublishingOrganizationKey());
-      hr.setLastcrawled(mr.getLastCrawled());
-      hr.setProjectid(mr.getProjectId());
-      hr.setProgrammeacronym(mr.getProgrammeAcronym());
-      hr.setHostingorganizationkey(mr.getHostingOrganizationKey());
+  private void mapMetadataRecord(OccurrenceHdfsRecord occurrenceHdfsRecord) {
+    if (metadataRecord == null) {
+      return;
+    }
+    occurrenceHdfsRecord.setCrawlid(metadataRecord.getCrawlId());
+    occurrenceHdfsRecord.setDatasetkey(metadataRecord.getDatasetKey());
+    occurrenceHdfsRecord.setDatasetname(metadataRecord.getDatasetTitle());
+    occurrenceHdfsRecord.setInstallationkey(metadataRecord.getInstallationKey());
+    occurrenceHdfsRecord.setProtocol(metadataRecord.getProtocol());
+    occurrenceHdfsRecord.setNetworkkey(metadataRecord.getNetworkKeys());
+    occurrenceHdfsRecord.setPublisher(metadataRecord.getPublisherTitle());
+    occurrenceHdfsRecord.setPublishingorgkey(metadataRecord.getPublishingOrganizationKey());
+    occurrenceHdfsRecord.setLastcrawled(metadataRecord.getLastCrawled());
+    occurrenceHdfsRecord.setProjectid(metadataRecord.getProjectId());
+    occurrenceHdfsRecord.setProgrammeacronym(metadataRecord.getProgrammeAcronym());
+    occurrenceHdfsRecord.setHostingorganizationkey(metadataRecord.getHostingOrganizationKey());
 
-      if (hr.getLicense() == null) {
-        hr.setLicense(mr.getLicense());
-      }
+    if (occurrenceHdfsRecord.getLicense() == null) {
+      occurrenceHdfsRecord.setLicense(metadataRecord.getLicense());
+    }
 
-      setCreatedIfGreater(hr, mr.getCreated());
-      addIssues(mr.getIssues(), hr);
-    };
+    setCreatedIfGreater(occurrenceHdfsRecord, metadataRecord.getCreated());
+    addIssues(metadataRecord.getIssues(), occurrenceHdfsRecord);
   }
 
   /** Copies the {@link TemporalRecord} data into the {@link OccurrenceHdfsRecord}. */
-  private static BiConsumer<OccurrenceHdfsRecord, SpecificRecordBase> temporalMapper() {
-    return (hr, sr) -> {
-      TemporalRecord tr = (TemporalRecord) sr;
-      Optional.ofNullable(tr.getDateIdentified())
-          .map(StringToDateFunctions.getStringToDateFn())
-          .ifPresent(date -> hr.setDateidentified(date.getTime()));
-      Optional.ofNullable(tr.getModified())
-          .map(StringToDateFunctions.getStringToDateFn())
-          .ifPresent(date -> hr.setModified(date.getTime()));
-      hr.setDay(tr.getDay());
-      hr.setMonth(tr.getMonth());
-      hr.setYear(tr.getYear());
+  private void mapTemporalRecord(OccurrenceHdfsRecord occurrenceHdfsRecord) {
+    if (temporalRecord == null) {
+      return;
+    }
+    Optional.ofNullable(temporalRecord.getDateIdentified())
+        .map(StringToDateFunctions.getStringToDateFn())
+        .ifPresent(date -> occurrenceHdfsRecord.setDateidentified(date.getTime()));
+    Optional.ofNullable(temporalRecord.getModified())
+        .map(StringToDateFunctions.getStringToDateFn())
+        .ifPresent(date -> occurrenceHdfsRecord.setModified(date.getTime()));
+    occurrenceHdfsRecord.setDay(temporalRecord.getDay());
+    occurrenceHdfsRecord.setMonth(temporalRecord.getMonth());
+    occurrenceHdfsRecord.setYear(temporalRecord.getYear());
 
-      if (Objects.nonNull(tr.getStartDayOfYear())) {
-        hr.setStartdayofyear(tr.getStartDayOfYear().toString());
-      } else {
-        hr.setStartdayofyear(null);
-      }
+    if (Objects.nonNull(temporalRecord.getStartDayOfYear())) {
+      occurrenceHdfsRecord.setStartdayofyear(temporalRecord.getStartDayOfYear().toString());
+    } else {
+      occurrenceHdfsRecord.setStartdayofyear(null);
+    }
 
-      if (Objects.nonNull(tr.getEndDayOfYear())) {
-        hr.setEnddayofyear(tr.getEndDayOfYear().toString());
-      } else {
-        hr.setEnddayofyear(null);
-      }
+    if (Objects.nonNull(temporalRecord.getEndDayOfYear())) {
+      occurrenceHdfsRecord.setEnddayofyear(temporalRecord.getEndDayOfYear().toString());
+    } else {
+      occurrenceHdfsRecord.setEnddayofyear(null);
+    }
 
-      if (tr.getEventDate() != null && tr.getEventDate().getGte() != null) {
-        Optional.ofNullable(tr.getEventDate().getGte())
-            .map(StringToDateFunctions.getStringToDateFn(true))
-            .ifPresent(eventDate -> hr.setEventdate(eventDate.getTime()));
-      } else {
-        TemporalUtils.getTemporal(tr.getYear(), tr.getMonth(), tr.getDay())
-            .map(StringToDateFunctions.getTemporalToDateFn())
-            .ifPresent(eventDate -> hr.setEventdate(eventDate.getTime()));
-      }
+    if (temporalRecord.getEventDate() != null && temporalRecord.getEventDate().getGte() != null) {
+      Optional.ofNullable(temporalRecord.getEventDate().getGte())
+          .map(StringToDateFunctions.getStringToDateFn(true))
+          .ifPresent(eventDate -> occurrenceHdfsRecord.setEventdate(eventDate.getTime()));
+    } else {
+      TemporalUtils.getTemporal(
+              temporalRecord.getYear(), temporalRecord.getMonth(), temporalRecord.getDay())
+          .map(StringToDateFunctions.getTemporalToDateFn())
+          .ifPresent(eventDate -> occurrenceHdfsRecord.setEventdate(eventDate.getTime()));
+    }
 
-      setCreatedIfGreater(hr, tr.getCreated());
-      addIssues(tr.getIssues(), hr);
-    };
+    setCreatedIfGreater(occurrenceHdfsRecord, temporalRecord.getCreated());
+    addIssues(temporalRecord.getIssues(), occurrenceHdfsRecord);
   }
 
   /** Copies the {@link TaxonRecord} data into the {@link OccurrenceHdfsRecord}. */
-  private static BiConsumer<OccurrenceHdfsRecord, SpecificRecordBase> taxonMapper() {
-    return (hr, sr) -> {
-      TaxonRecord tr = (TaxonRecord) sr;
-      Optional.ofNullable(tr.getUsage()).ifPresent(x -> hr.setTaxonkey(x.getKey()));
-      if (Objects.nonNull(tr.getClassification())) {
-        tr.getClassification()
-            .forEach(
-                rankedName -> {
-                  switch (rankedName.getRank()) {
-                    case KINGDOM:
-                      hr.setKingdom(rankedName.getName());
-                      hr.setKingdomkey(rankedName.getKey());
-                      break;
-                    case PHYLUM:
-                      hr.setPhylum(rankedName.getName());
-                      hr.setPhylumkey(rankedName.getKey());
-                      break;
-                    case CLASS:
-                      hr.setClass$(rankedName.getName());
-                      hr.setClasskey(rankedName.getKey());
-                      break;
-                    case ORDER:
-                      hr.setOrder(rankedName.getName());
-                      hr.setOrderkey(rankedName.getKey());
-                      break;
-                    case FAMILY:
-                      hr.setFamily(rankedName.getName());
-                      hr.setFamilykey(rankedName.getKey());
-                      break;
-                    case GENUS:
-                      hr.setGenus(rankedName.getName());
-                      hr.setGenuskey(rankedName.getKey());
-                      break;
-                    case SUBGENUS:
-                      hr.setSubgenus(rankedName.getName());
-                      hr.setSubgenuskey(rankedName.getKey());
-                      break;
-                    case SPECIES:
-                      hr.setSpecies(rankedName.getName());
-                      hr.setSpecieskey(rankedName.getKey());
-                      break;
-                    default:
-                      break;
-                  }
-                });
+  private void mapTaxonRecord(OccurrenceHdfsRecord occurrenceHdfsRecord) {
+    if (taxonRecord == null) {
+      return;
+    }
+    Optional.ofNullable(taxonRecord.getUsage())
+        .ifPresent(x -> occurrenceHdfsRecord.setTaxonkey(x.getKey()));
+    if (Objects.nonNull(taxonRecord.getClassification())) {
+      taxonRecord
+          .getClassification()
+          .forEach(
+              rankedName -> {
+                switch (rankedName.getRank()) {
+                  case KINGDOM:
+                    occurrenceHdfsRecord.setKingdom(rankedName.getName());
+                    occurrenceHdfsRecord.setKingdomkey(rankedName.getKey());
+                    break;
+                  case PHYLUM:
+                    occurrenceHdfsRecord.setPhylum(rankedName.getName());
+                    occurrenceHdfsRecord.setPhylumkey(rankedName.getKey());
+                    break;
+                  case CLASS:
+                    occurrenceHdfsRecord.setClass$(rankedName.getName());
+                    occurrenceHdfsRecord.setClasskey(rankedName.getKey());
+                    break;
+                  case ORDER:
+                    occurrenceHdfsRecord.setOrder(rankedName.getName());
+                    occurrenceHdfsRecord.setOrderkey(rankedName.getKey());
+                    break;
+                  case FAMILY:
+                    occurrenceHdfsRecord.setFamily(rankedName.getName());
+                    occurrenceHdfsRecord.setFamilykey(rankedName.getKey());
+                    break;
+                  case GENUS:
+                    occurrenceHdfsRecord.setGenus(rankedName.getName());
+                    occurrenceHdfsRecord.setGenuskey(rankedName.getKey());
+                    break;
+                  case SUBGENUS:
+                    occurrenceHdfsRecord.setSubgenus(rankedName.getName());
+                    occurrenceHdfsRecord.setSubgenuskey(rankedName.getKey());
+                    break;
+                  case SPECIES:
+                    occurrenceHdfsRecord.setSpecies(rankedName.getName());
+                    occurrenceHdfsRecord.setSpecieskey(rankedName.getKey());
+                    break;
+                  default:
+                    break;
+                }
+              });
+    }
+
+    if (Objects.nonNull(taxonRecord.getAcceptedUsage())) {
+      occurrenceHdfsRecord.setAcceptedscientificname(taxonRecord.getAcceptedUsage().getName());
+      occurrenceHdfsRecord.setAcceptednameusageid(
+          taxonRecord.getAcceptedUsage().getKey().toString());
+      if (Objects.nonNull(taxonRecord.getAcceptedUsage().getKey())) {
+        occurrenceHdfsRecord.setAcceptedtaxonkey(taxonRecord.getAcceptedUsage().getKey());
       }
+      Optional.ofNullable(taxonRecord.getAcceptedUsage().getRank())
+          .ifPresent(r -> occurrenceHdfsRecord.setTaxonrank(r.name()));
+    } else if (Objects.nonNull(taxonRecord.getUsage()) && taxonRecord.getUsage().getKey() != 0) {
+      // if the acceptedUsage is null we use the usage as the accepted as longs as it's not
+      // incertidae sedis
+      occurrenceHdfsRecord.setAcceptedtaxonkey(taxonRecord.getUsage().getKey());
+      occurrenceHdfsRecord.setAcceptedscientificname(taxonRecord.getUsage().getName());
+      occurrenceHdfsRecord.setAcceptednameusageid(taxonRecord.getUsage().getKey().toString());
+    }
 
-      if (Objects.nonNull(tr.getAcceptedUsage())) {
-        hr.setAcceptedscientificname(tr.getAcceptedUsage().getName());
-        hr.setAcceptednameusageid(tr.getAcceptedUsage().getKey().toString());
-        if (Objects.nonNull(tr.getAcceptedUsage().getKey())) {
-          hr.setAcceptedtaxonkey(tr.getAcceptedUsage().getKey());
-        }
-        Optional.ofNullable(tr.getAcceptedUsage().getRank())
-            .ifPresent(r -> hr.setTaxonrank(r.name()));
-      } else if (Objects.nonNull(tr.getUsage()) && tr.getUsage().getKey() != 0) {
-        // if the acceptedUsage is null we use the usage as the accepted as longs as it's not
-        // incertidae sedis
-        hr.setAcceptedtaxonkey(tr.getUsage().getKey());
-        hr.setAcceptedscientificname(tr.getUsage().getName());
-        hr.setAcceptednameusageid(tr.getUsage().getKey().toString());
-      }
+    if (Objects.nonNull(taxonRecord.getUsage())) {
+      occurrenceHdfsRecord.setTaxonkey(taxonRecord.getUsage().getKey());
+      occurrenceHdfsRecord.setScientificname(taxonRecord.getUsage().getName());
+      Optional.ofNullable(taxonRecord.getUsage().getRank())
+          .ifPresent(r -> occurrenceHdfsRecord.setTaxonrank(r.name()));
+    }
 
-      if (Objects.nonNull(tr.getUsage())) {
-        hr.setTaxonkey(tr.getUsage().getKey());
-        hr.setScientificname(tr.getUsage().getName());
-        Optional.ofNullable(tr.getUsage().getRank()).ifPresent(r -> hr.setTaxonrank(r.name()));
-      }
+    if (Objects.nonNull(taxonRecord.getUsageParsedName())) {
+      occurrenceHdfsRecord.setGenericname(
+          Objects.nonNull(taxonRecord.getUsageParsedName().getGenus())
+              ? taxonRecord.getUsageParsedName().getGenus()
+              : taxonRecord.getUsageParsedName().getUninomial());
+      occurrenceHdfsRecord.setSpecificepithet(
+          taxonRecord.getUsageParsedName().getSpecificEpithet());
+      occurrenceHdfsRecord.setInfraspecificepithet(
+          taxonRecord.getUsageParsedName().getInfraspecificEpithet());
+    }
 
-      if (Objects.nonNull(tr.getUsageParsedName())) {
-        hr.setGenericname(
-            Objects.nonNull(tr.getUsageParsedName().getGenus())
-                ? tr.getUsageParsedName().getGenus()
-                : tr.getUsageParsedName().getUninomial());
-        hr.setSpecificepithet(tr.getUsageParsedName().getSpecificEpithet());
-        hr.setInfraspecificepithet(tr.getUsageParsedName().getInfraspecificEpithet());
-      }
+    Optional.ofNullable(taxonRecord.getDiagnostics())
+        .map(Diagnostic::getStatus)
+        .ifPresent(d -> occurrenceHdfsRecord.setTaxonomicstatus(d.name()));
 
-      Optional.ofNullable(tr.getDiagnostics())
-          .map(Diagnostic::getStatus)
-          .ifPresent(d -> hr.setTaxonomicstatus(d.name()));
+    setCreatedIfGreater(occurrenceHdfsRecord, taxonRecord.getCreated());
 
-      setCreatedIfGreater(hr, tr.getCreated());
+    Optional.ofNullable(taxonRecord.getIucnRedListCategory())
+        .ifPresent(u -> occurrenceHdfsRecord.setIucnRedListCategory(u.name()));
 
-      Optional.ofNullable(tr.getIucnRedListCategory())
-          .ifPresent(u -> hr.setIucnRedListCategory(u.name()));
-
-      addIssues(tr.getIssues(), hr);
-    };
+    addIssues(taxonRecord.getIssues(), occurrenceHdfsRecord);
   }
 
   /** Copies the {@link GrscicollRecord} data into the {@link OccurrenceHdfsRecord}. */
-  private static BiConsumer<OccurrenceHdfsRecord, SpecificRecordBase> grscicollMapper() {
-    return (hr, sr) -> {
-      GrscicollRecord gr = (GrscicollRecord) sr;
+  private void mapGrscicollRecord(OccurrenceHdfsRecord occurrenceHdfsRecord) {
+    if (grscicollRecord == null) {
+      return;
+    }
 
-      if (gr.getInstitutionMatch() != null) {
-        String institutionKey = gr.getInstitutionMatch().getKey();
-        if (institutionKey != null) {
-          hr.setInstitutionkey(institutionKey);
-        }
+    if (grscicollRecord.getInstitutionMatch() != null) {
+      String institutionKey = grscicollRecord.getInstitutionMatch().getKey();
+      if (institutionKey != null) {
+        occurrenceHdfsRecord.setInstitutionkey(institutionKey);
       }
+    }
 
-      if (gr.getCollectionMatch() != null) {
-        String collectionKey = gr.getCollectionMatch().getKey();
-        if (collectionKey != null) {
-          hr.setCollectionkey(collectionKey);
-        }
+    if (grscicollRecord.getCollectionMatch() != null) {
+      String collectionKey = grscicollRecord.getCollectionMatch().getKey();
+      if (collectionKey != null) {
+        occurrenceHdfsRecord.setCollectionkey(collectionKey);
       }
-    };
+    }
   }
 
   /** Copies the {@link BasicRecord} data into the {@link OccurrenceHdfsRecord}. */
-  private static BiConsumer<OccurrenceHdfsRecord, SpecificRecordBase> basicRecordMapper() {
-    return (hr, sr) -> {
-      BasicRecord br = (BasicRecord) sr;
-      if (Objects.nonNull(br.getGbifId())) {
-        hr.setGbifid(br.getGbifId());
-      }
-      hr.setBasisofrecord(br.getBasisOfRecord());
-      hr.setEstablishmentmeans(br.getEstablishmentMeans());
-      hr.setIndividualcount(br.getIndividualCount());
-      hr.setLifestage(br.getLifeStage());
-      hr.setLifestagelineage(br.getLifeStageLineage());
-      hr.setReferences(br.getReferences());
-      hr.setSex(br.getSex());
-      hr.setTypestatus(br.getTypeStatus());
-      hr.setTypifiedname(br.getTypifiedName());
-      hr.setOrganismquantity(br.getOrganismQuantity());
-      hr.setOrganismquantitytype(br.getOrganismQuantityType());
-      hr.setSamplesizeunit(br.getSampleSizeUnit());
-      hr.setSamplesizevalue(br.getSampleSizeValue());
-      hr.setRelativeorganismquantity(br.getRelativeOrganismQuantity());
-      hr.setOccurrencestatus(br.getOccurrenceStatus());
-      hr.setIsincluster(br.getIsClustered());
+  private void mapBasicRecord(OccurrenceHdfsRecord occurrenceHdfsRecord) {
+    if (basicRecord == null) {
+      return;
+    }
+    if (Objects.nonNull(basicRecord.getGbifId())) {
+      occurrenceHdfsRecord.setGbifid(basicRecord.getGbifId());
+    }
+    occurrenceHdfsRecord.setBasisofrecord(basicRecord.getBasisOfRecord());
+    occurrenceHdfsRecord.setEstablishmentmeans(basicRecord.getEstablishmentMeans());
+    occurrenceHdfsRecord.setIndividualcount(basicRecord.getIndividualCount());
+    occurrenceHdfsRecord.setLifestage(basicRecord.getLifeStage());
+    occurrenceHdfsRecord.setLifestagelineage(basicRecord.getLifeStageLineage());
+    occurrenceHdfsRecord.setReferences(basicRecord.getReferences());
+    occurrenceHdfsRecord.setSex(basicRecord.getSex());
+    occurrenceHdfsRecord.setTypestatus(basicRecord.getTypeStatus());
+    occurrenceHdfsRecord.setTypifiedname(basicRecord.getTypifiedName());
+    occurrenceHdfsRecord.setOrganismquantity(basicRecord.getOrganismQuantity());
+    occurrenceHdfsRecord.setOrganismquantitytype(basicRecord.getOrganismQuantityType());
+    occurrenceHdfsRecord.setSamplesizeunit(basicRecord.getSampleSizeUnit());
+    occurrenceHdfsRecord.setSamplesizevalue(basicRecord.getSampleSizeValue());
+    occurrenceHdfsRecord.setRelativeorganismquantity(basicRecord.getRelativeOrganismQuantity());
+    occurrenceHdfsRecord.setOccurrencestatus(basicRecord.getOccurrenceStatus());
+    occurrenceHdfsRecord.setIsincluster(basicRecord.getIsClustered());
 
-      Optional.ofNullable(br.getRecordedByIds())
-          .ifPresent(
-              uis ->
-                  hr.setRecordedbyid(
-                      uis.stream().map(AgentIdentifier::getValue).collect(Collectors.toList())));
+    Optional.ofNullable(basicRecord.getRecordedByIds())
+        .ifPresent(
+            uis ->
+                occurrenceHdfsRecord.setRecordedbyid(
+                    uis.stream().map(AgentIdentifier::getValue).collect(Collectors.toList())));
 
-      Optional.ofNullable(br.getIdentifiedByIds())
-          .ifPresent(
-              uis ->
-                  hr.setIdentifiedbyid(
-                      uis.stream().map(AgentIdentifier::getValue).collect(Collectors.toList())));
+    Optional.ofNullable(basicRecord.getIdentifiedByIds())
+        .ifPresent(
+            uis ->
+                occurrenceHdfsRecord.setIdentifiedbyid(
+                    uis.stream().map(AgentIdentifier::getValue).collect(Collectors.toList())));
 
-      if (br.getLicense() != null
-          && !License.UNSUPPORTED.name().equals(br.getLicense())
-          && !License.UNSPECIFIED.name().equals(br.getLicense())) {
-        hr.setLicense(br.getLicense());
-      }
+    if (basicRecord.getLicense() != null
+        && !License.UNSUPPORTED.name().equals(basicRecord.getLicense())
+        && !License.UNSPECIFIED.name().equals(basicRecord.getLicense())) {
+      occurrenceHdfsRecord.setLicense(basicRecord.getLicense());
+    }
 
-      setCreatedIfGreater(hr, br.getCreated());
-      addIssues(br.getIssues(), hr);
-    };
+    setCreatedIfGreater(occurrenceHdfsRecord, basicRecord.getCreated());
+    addIssues(basicRecord.getIssues(), occurrenceHdfsRecord);
   }
 
   /**
@@ -375,7 +405,8 @@ public class OccurrenceHdfsRecordConverter {
    * been used for "un-starring" a DWCA star record. However, we've exposed it as DcTerm.identifier
    * for a long time in our public API v1, so we continue to do this.
    */
-  private static void setIdentifier(BasicRecord br, ExtendedRecord er, OccurrenceHdfsRecord hr) {
+  private static void setIdentifier(
+      BasicRecord br, ExtendedRecord er, OccurrenceHdfsRecord occurrenceHdfsRecord) {
 
     String institutionCode = er.getCoreTerms().get(DwcTerm.institutionCode.qualifiedName());
     String collectionCode = er.getCoreTerms().get(DwcTerm.collectionCode.qualifiedName());
@@ -390,8 +421,8 @@ public class OccurrenceHdfsRecordConverter {
 
     if (!br.getId().equals(gbifId)
         && (!Strings.isNullOrEmpty(occId) || !br.getId().equals(triplet))) {
-      hr.setIdentifier(br.getId());
-      hr.setVIdentifier(br.getId());
+      occurrenceHdfsRecord.setIdentifier(br.getId());
+      occurrenceHdfsRecord.setVIdentifier(br.getId());
     }
   }
 
@@ -440,112 +471,85 @@ public class OccurrenceHdfsRecordConverter {
   }
 
   /** Copies the {@link ExtendedRecord} data into the {@link OccurrenceHdfsRecord}. */
-  private static BiConsumer<OccurrenceHdfsRecord, SpecificRecordBase> extendedRecordMapper() {
-    return (hr, sr) -> {
-      ExtendedRecord er = (ExtendedRecord) sr;
-      er.getCoreTerms()
-          .forEach(
-              (k, v) ->
-                  Optional.ofNullable(TERM_FACTORY.findTerm(k))
-                      .ifPresent(
-                          term -> {
-                            if (TermUtils.verbatimTerms().contains(term)) {
-                              Optional.ofNullable(verbatimSchemaField(term))
-                                  .ifPresent(
-                                      field -> {
-                                        String verbatimField =
-                                            "V"
-                                                + field.name().substring(2, 3).toUpperCase()
-                                                + field.name().substring(3);
-                                        setHdfsRecordField(hr, field, verbatimField, v);
-                                      });
-                            }
+  private void mapExtendedRecord(OccurrenceHdfsRecord occurrenceHdfsRecord) {
+    if (extendedRecord == null) {
+      return;
+    }
 
-                            if (!TermUtils.isInterpretedSourceTerm(term)) {
-                              Optional.ofNullable(interpretedSchemaField(term))
-                                  .ifPresent(
-                                      field -> {
-                                        // Fields that were set by other mappers are ignored
-                                        if (Objects.isNull(hr.get(field.name()))) {
-                                          String interpretedFieldname = field.name();
-                                          if (DcTerm.abstract_ == term) {
-                                            interpretedFieldname = "abstract$";
-                                          } else if (DwcTerm.class_ == term) {
-                                            interpretedFieldname = "class$";
-                                          } else if (DwcTerm.group == term) {
-                                            interpretedFieldname = "group";
-                                          } else if (DwcTerm.order == term) {
-                                            interpretedFieldname = "order";
-                                          } else if (DcTerm.date == term) {
-                                            interpretedFieldname = "date";
-                                          } else if (DcTerm.format == term) {
-                                            interpretedFieldname = "format";
-                                          }
-                                          setHdfsRecordField(hr, field, interpretedFieldname, v);
-                                        }
-                                      });
-                            }
-                          }));
+    extendedRecord.getCoreTerms().forEach((k, v) -> mapTerm(k, v, occurrenceHdfsRecord));
 
-      List<String> extensions =
-          er.getExtensions().entrySet().stream()
-              .filter(e -> e.getValue() != null && !e.getValue().isEmpty())
-              .map(Entry::getKey)
-              .collect(Collectors.toList());
-      hr.setDwcaextension(extensions);
-    };
+    List<String> extensions =
+        extendedRecord.getExtensions().entrySet().stream()
+            .filter(e -> e.getValue() != null && !e.getValue().isEmpty())
+            .map(Entry::getKey)
+            .collect(Collectors.toList());
+    occurrenceHdfsRecord.setDwcaextension(extensions);
   }
 
-  /**
-   * Collects data from {@link SpecificRecordBase} instances into a {@link OccurrenceHdfsRecord}.
-   *
-   * @param records list of input records
-   * @return a {@link OccurrenceHdfsRecord} instance based on the input records
-   */
-  public static OccurrenceHdfsRecord toOccurrenceHdfsRecord(SpecificRecordBase... records) {
-    OccurrenceHdfsRecord occurrenceHdfsRecord = new OccurrenceHdfsRecord();
-    occurrenceHdfsRecord.setIssue(new ArrayList<>());
-    for (SpecificRecordBase record : records) {
-      Optional.ofNullable(CONVERTERS.get(record.getClass()))
-          .ifPresent(consumer -> consumer.accept(occurrenceHdfsRecord, record));
+  private void mapTerm(String k, String v, OccurrenceHdfsRecord occurrenceHdfsRecord) {
+    Term term = TERM_FACTORY.findTerm(k);
+
+    if (term == null) {
+      return;
     }
 
-    // The id (the <id> reference in the DWCA meta.xml) is an identifier local to the DWCA, and
-    // could only have been
-    // used for "un-starring" a DWCA star record. However, we've exposed it as DcTerm.identifier for
-    // a long time in
-    // our public API v1, so we continue to do this.
-    Optional<SpecificRecordBase> erOpt =
-        Arrays.stream(records).filter(x -> x instanceof ExtendedRecord).findFirst();
-    Optional<SpecificRecordBase> brOpt =
-        Arrays.stream(records).filter(x -> x instanceof BasicRecord).findFirst();
-    if (erOpt.isPresent() && brOpt.isPresent()) {
-      setIdentifier((BasicRecord) brOpt.get(), (ExtendedRecord) erOpt.get(), occurrenceHdfsRecord);
+    if (TermUtils.verbatimTerms().contains(term)) {
+      Optional.ofNullable(verbatimSchemaField(term))
+          .ifPresent(
+              field -> {
+                String verbatimField =
+                    "V" + field.name().substring(2, 3).toUpperCase() + field.name().substring(3);
+                setHdfsRecordField(occurrenceHdfsRecord, field, verbatimField, v);
+              });
     }
 
-    return occurrenceHdfsRecord;
+    if (!TermUtils.isInterpretedSourceTerm(term)) {
+      Optional.ofNullable(interpretedSchemaField(term))
+          .ifPresent(
+              field -> {
+                // Fields that were set by other mappers are ignored
+                if (Objects.isNull(occurrenceHdfsRecord.get(field.name()))) {
+                  String interpretedFieldname = field.name();
+                  if (DcTerm.abstract_ == term) {
+                    interpretedFieldname = "abstract$";
+                  } else if (DwcTerm.class_ == term) {
+                    interpretedFieldname = "class$";
+                  } else if (DwcTerm.group == term) {
+                    interpretedFieldname = "group";
+                  } else if (DwcTerm.order == term) {
+                    interpretedFieldname = "order";
+                  } else if (DcTerm.date == term) {
+                    interpretedFieldname = "date";
+                  } else if (DcTerm.format == term) {
+                    interpretedFieldname = "format";
+                  }
+                  setHdfsRecordField(occurrenceHdfsRecord, field, interpretedFieldname, v);
+                }
+              });
+    }
   }
 
   /**
    * Collects the {@link MultimediaRecord} mediaTypes data into the {@link
    * OccurrenceHdfsRecord#setMediatype(List)}.
    */
-  private static BiConsumer<OccurrenceHdfsRecord, SpecificRecordBase> multimediaMapper() {
-    return (hr, sr) -> {
-      MultimediaRecord mr = (MultimediaRecord) sr;
-      // media types
-      List<String> mediaTypes =
-          mr.getMultimediaItems().stream()
-              .map(Multimedia::getType)
-              .filter(type -> !Strings.isNullOrEmpty(type))
-              .map(TextNode::valueOf)
-              .map(TextNode::asText)
-              .collect(Collectors.toList());
-      hr.setExtMultimedia(MediaSerDeserUtils.toJson(mr.getMultimediaItems()));
+  private void mapMultimediaRecord(OccurrenceHdfsRecord occurrenceHdfsRecord) {
+    if (multimediaRecord == null) {
+      return;
+    }
+    // media types
+    List<String> mediaTypes =
+        multimediaRecord.getMultimediaItems().stream()
+            .map(Multimedia::getType)
+            .filter(type -> !Strings.isNullOrEmpty(type))
+            .map(TextNode::valueOf)
+            .map(TextNode::asText)
+            .collect(Collectors.toList());
+    occurrenceHdfsRecord.setExtMultimedia(
+        MediaSerDeserUtils.toJson(multimediaRecord.getMultimediaItems()));
 
-      setCreatedIfGreater(hr, mr.getCreated());
-      hr.setMediatype(mediaTypes);
-    };
+    setCreatedIfGreater(occurrenceHdfsRecord, multimediaRecord.getCreated());
+    occurrenceHdfsRecord.setMediatype(mediaTypes);
   }
 
   /** Gets the {@link Schema.Field} associated to a verbatim term. */
