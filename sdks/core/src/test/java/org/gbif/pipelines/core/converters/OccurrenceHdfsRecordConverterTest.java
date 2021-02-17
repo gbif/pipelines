@@ -128,18 +128,6 @@ public class OccurrenceHdfsRecordConverterTest {
             .setEventDate(EventDate.newBuilder().setGte("2000").setLte("2010").build())
             .build();
 
-    MeasurementOrFactRecord measurementOrFactRecord =
-        MeasurementOrFactRecord.newBuilder()
-            .setId("1")
-            .setMeasurementOrFactItems(
-                Collections.singletonList(
-                    MeasurementOrFact.newBuilder()
-                        .setMeasurementType("t")
-                        .setMeasurementValue("v")
-                        .setMeasurementUnit("u")
-                        .build()))
-            .build();
-
     // When
     OccurrenceHdfsRecord hdfsRecord =
         OccurrenceHdfsRecordConverter.builder()
@@ -219,6 +207,14 @@ public class OccurrenceHdfsRecordConverterTest {
         hdfsRecord
             .getDwcaextension()
             .contains("http://data.ggbn.org/schemas/ggbn/terms/Amplification"));
+
+    Assert.assertEquals(1, hdfsRecord.getRawextensions().size());
+    Assert.assertEquals(
+        1,
+        hdfsRecord
+            .getRawextensions()
+            .get("http://data.ggbn.org/schemas/ggbn/terms/Amplification")
+            .size());
   }
 
   @Test
