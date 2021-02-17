@@ -12,6 +12,7 @@ import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
+import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.crawler.balancer.BalancerConfiguration;
 import org.gbif.pipelines.crawler.interpret.InterpreterConfiguration;
@@ -84,9 +85,11 @@ public class InterpretedMessageHandler {
 
     // Strategy 2: Chooses a runner type by calculating verbatim.avro file size
     String verbatim = Conversion.FILE_NAME + Pipeline.AVRO_EXTENSION;
-    String verbatimPath = String.join("/", config.repositoryPath, datasetId, attempt, verbatim);
+    StepConfiguration stepConfig = config.stepConfig;
+    String verbatimPath = String.join("/", stepConfig.repositoryPath, datasetId, attempt, verbatim);
     long fileSizeByte =
-        HdfsUtils.getFileSizeByte(config.hdfsSiteConfig, config.coreSiteConfig, verbatimPath);
+        HdfsUtils.getFileSizeByte(
+            stepConfig.hdfsSiteConfig, stepConfig.coreSiteConfig, verbatimPath);
     if (fileSizeByte > 0) {
       long switchFileSizeByte = config.switchFileSizeMb * 1024L * 1024L;
       runner = fileSizeByte > switchFileSizeByte ? StepRunner.DISTRIBUTED : StepRunner.STANDALONE;
@@ -107,13 +110,14 @@ public class InterpretedMessageHandler {
     String datasetId = message.getDatasetUuid().toString();
     String attempt = Integer.toString(message.getAttempt());
     String metaFileName = new InterpreterConfiguration().metaFileName;
-    String metaPath = String.join("/", config.repositoryPath, datasetId, attempt, metaFileName);
+    StepConfiguration stepConfig = config.stepConfig;
+    String metaPath = String.join("/", stepConfig.repositoryPath, datasetId, attempt, metaFileName);
 
     Long messageNumber = message.getNumberOfRecords();
     String fileNumber =
         HdfsUtils.getValueByKey(
-            config.hdfsSiteConfig,
-            config.coreSiteConfig,
+            stepConfig.hdfsSiteConfig,
+            stepConfig.coreSiteConfig,
             metaPath,
             Metrics.BASIC_RECORDS_COUNT + "Attempted");
 

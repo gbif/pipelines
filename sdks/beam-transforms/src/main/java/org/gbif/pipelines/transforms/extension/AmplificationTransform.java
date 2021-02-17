@@ -64,6 +64,12 @@ public class AmplificationTransform extends Transform<ExtendedRecord, Amplificat
     }
   }
 
+  /** Beam @Setup can be applied only to void method */
+  public AmplificationTransform init() {
+    setup();
+    return this;
+  }
+
   @Override
   public Optional<AmplificationRecord> convert(ExtendedRecord source) {
     return Interpretation.from(source)

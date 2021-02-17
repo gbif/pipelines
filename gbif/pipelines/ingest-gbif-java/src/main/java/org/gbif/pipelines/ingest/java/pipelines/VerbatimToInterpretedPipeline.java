@@ -6,18 +6,20 @@ import static org.gbif.pipelines.core.utils.FsUtils.createParentDirectories;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
-import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.avro.Schema;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -37,13 +39,33 @@ import org.gbif.pipelines.core.io.AvroReader;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
 import org.gbif.pipelines.core.io.SyncDataFileWriterBuilder;
 import org.gbif.pipelines.core.utils.FsUtils;
-import org.gbif.pipelines.factory.*;
+import org.gbif.pipelines.factory.ClusteringServiceFactory;
+import org.gbif.pipelines.factory.GeocodeKvStoreFactory;
+import org.gbif.pipelines.factory.GrscicollLookupKvStoreFactory;
+import org.gbif.pipelines.factory.KeygenServiceFactory;
+import org.gbif.pipelines.factory.MetadataServiceClientFactory;
+import org.gbif.pipelines.factory.NameUsageMatchStoreFactory;
+import org.gbif.pipelines.factory.OccurrenceStatusKvStoreFactory;
 import org.gbif.pipelines.ingest.java.metrics.IngestMetricsBuilder;
-import org.gbif.pipelines.io.avro.*;
+import org.gbif.pipelines.io.avro.AudubonRecord;
+import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.ImageRecord;
+import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.io.avro.MultimediaRecord;
+import org.gbif.pipelines.io.avro.Record;
+import org.gbif.pipelines.io.avro.TaxonRecord;
+import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.transforms.Transform;
 import org.gbif.pipelines.transforms.common.ExtensionFilterTransform;
-import org.gbif.pipelines.transforms.core.*;
+import org.gbif.pipelines.transforms.core.BasicTransform;
+import org.gbif.pipelines.transforms.core.GrscicollTransform;
+import org.gbif.pipelines.transforms.core.LocationTransform;
+import org.gbif.pipelines.transforms.core.TaxonomyTransform;
+import org.gbif.pipelines.transforms.core.TemporalTransform;
+import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
@@ -164,7 +186,8 @@ public class VerbatimToInterpretedPipeline {
             .attempt(attempt)
             .endpointType(endPointType)
             .create()
-            .counterFn(incMetricFn);
+            .counterFn(incMetricFn)
+            .init();
 
     BasicTransform basicTransform =
         BasicTransform.builder()
@@ -178,25 +201,29 @@ public class VerbatimToInterpretedPipeline {
             .useExtendedRecordId(useErdId)
             .clusteringServiceSupplier(ClusteringServiceFactory.getInstanceSupplier(config))
             .create()
-            .counterFn(incMetricFn);
+            .counterFn(incMetricFn)
+            .init();
 
     TaxonomyTransform taxonomyTransform =
         TaxonomyTransform.builder()
             .kvStoreSupplier(NameUsageMatchStoreFactory.getInstanceSupplier(config))
             .create()
-            .counterFn(incMetricFn);
+            .counterFn(incMetricFn)
+            .init();
 
     GrscicollTransform grscicollTransform =
         GrscicollTransform.builder()
             .kvStoreSupplier(GrscicollLookupKvStoreFactory.getInstanceSupplier(config))
             .create()
-            .counterFn(incMetricFn);
+            .counterFn(incMetricFn)
+            .init();
 
     LocationTransform locationTransform =
         LocationTransform.builder()
             .geocodeKvStoreSupplier(GeocodeKvStoreFactory.getInstanceSupplier(config))
             .create()
-            .counterFn(incMetricFn);
+            .counterFn(incMetricFn)
+            .init();
 
     VerbatimTransform verbatimTransform = VerbatimTransform.create().counterFn(incMetricFn);
 
@@ -204,20 +231,30 @@ public class VerbatimToInterpretedPipeline {
         TemporalTransform.builder()
             .orderings(dateComponentOrdering)
             .create()
-            .counterFn(incMetricFn);
+            .counterFn(incMetricFn)
+            .init();
 
     // Extension
     MultimediaTransform multimediaTransform =
         MultimediaTransform.builder()
             .orderings(dateComponentOrdering)
             .create()
-            .counterFn(incMetricFn);
+            .counterFn(incMetricFn)
+            .init();
 
     AudubonTransform audubonTransform =
-        AudubonTransform.builder().orderings(dateComponentOrdering).create().counterFn(incMetricFn);
+        AudubonTransform.builder()
+            .orderings(dateComponentOrdering)
+            .create()
+            .counterFn(incMetricFn)
+            .init();
 
     ImageTransform imageTransform =
-        ImageTransform.builder().orderings(dateComponentOrdering).create().counterFn(incMetricFn);
+        ImageTransform.builder()
+            .orderings(dateComponentOrdering)
+            .create()
+            .counterFn(incMetricFn)
+            .init();
 
     // Extra
     OccurrenceExtensionTransform occExtensionTransform =
@@ -230,42 +267,31 @@ public class VerbatimToInterpretedPipeline {
         DefaultValuesTransform.builder()
             .clientSupplier(MetadataServiceClientFactory.getInstanceSupplier(config))
             .datasetId(datasetId)
-            .create();
-
-    // Init transforms
-    basicTransform.setup();
-    locationTransform.setup();
-    taxonomyTransform.setup();
-    grscicollTransform.setup();
-    metadataTransform.setup();
-    defaultValuesTransform.setup();
-    temporalTransform.setup();
-    multimediaTransform.setup();
-    audubonTransform.setup();
-    imageTransform.setup();
+            .create()
+            .init();
 
     try (SyncDataFileWriter<ExtendedRecord> verbatimWriter =
-            createWriter(options, ExtendedRecord.getClassSchema(), verbatimTransform, id);
+            createAvroWriter(options, verbatimTransform, id);
         SyncDataFileWriter<MetadataRecord> metadataWriter =
-            createWriter(options, MetadataRecord.getClassSchema(), metadataTransform, id);
+            createAvroWriter(options, metadataTransform, id);
         SyncDataFileWriter<BasicRecord> basicWriter =
-            createWriter(options, BasicRecord.getClassSchema(), basicTransform, id);
+            createAvroWriter(options, basicTransform, id);
         SyncDataFileWriter<BasicRecord> basicInvalidWriter =
-            createWriter(options, BasicRecord.getClassSchema(), basicTransform, id, true);
+            createAvroWriter(options, basicTransform, id, true);
         SyncDataFileWriter<TemporalRecord> temporalWriter =
-            createWriter(options, TemporalRecord.getClassSchema(), temporalTransform, id);
+            createAvroWriter(options, temporalTransform, id);
         SyncDataFileWriter<MultimediaRecord> multimediaWriter =
-            createWriter(options, MultimediaRecord.getClassSchema(), multimediaTransform, id);
+            createAvroWriter(options, multimediaTransform, id);
         SyncDataFileWriter<ImageRecord> imageWriter =
-            createWriter(options, ImageRecord.getClassSchema(), imageTransform, id);
+            createAvroWriter(options, imageTransform, id);
         SyncDataFileWriter<AudubonRecord> audubonWriter =
-            createWriter(options, AudubonRecord.getClassSchema(), audubonTransform, id);
+            createAvroWriter(options, audubonTransform, id);
         SyncDataFileWriter<TaxonRecord> taxonWriter =
-            createWriter(options, TaxonRecord.getClassSchema(), taxonomyTransform, id);
+            createAvroWriter(options, taxonomyTransform, id);
         SyncDataFileWriter<GrscicollRecord> grscicollWriter =
-            createWriter(options, GrscicollRecord.getClassSchema(), grscicollTransform, id);
+            createAvroWriter(options, grscicollTransform, id);
         SyncDataFileWriter<LocationRecord> locationWriter =
-            createWriter(options, LocationRecord.getClassSchema(), locationTransform, id)) {
+            createAvroWriter(options, locationTransform, id)) {
 
       // Create MetadataRecord
       MetadataRecord mdr =
@@ -359,20 +385,19 @@ public class VerbatimToInterpretedPipeline {
 
   /** Create an AVRO file writer */
   @SneakyThrows
-  private static <T> SyncDataFileWriter<T> createWriter(
+  private static <T> SyncDataFileWriter<T> createAvroWriter(
       InterpretationPipelineOptions options,
-      Schema schema,
       Transform transform,
       String id,
       boolean useInvalidName) {
-    UnaryOperator<String> pathFn =
-        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, id + AVRO_EXTENSION);
     String baseName = useInvalidName ? transform.getBaseInvalidName() : transform.getBaseName();
-    Path path = new Path(pathFn.apply(baseName));
+    String pathString =
+        PathBuilder.buildPathInterpretUsingTargetPath(options, baseName, id + AVRO_EXTENSION);
+    Path path = new Path(pathString);
     FileSystem fs =
         createParentDirectories(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), path);
     return SyncDataFileWriterBuilder.builder()
-        .schema(schema)
+        .schema(transform.getAvroSchema())
         .codec(options.getAvroCompressionType())
         .outputStream(fs.create(path))
         .syncInterval(options.getAvroSyncInterval())
@@ -380,9 +405,9 @@ public class VerbatimToInterpretedPipeline {
         .createSyncDataFileWriter();
   }
 
-  private static <T extends SpecificRecordBase> SyncDataFileWriter<T> createWriter(
-      InterpretationPipelineOptions options, Schema schema, Transform<?, T> transform, String id) {
-    return createWriter(options, schema, transform, id, false);
+  private static <T extends SpecificRecordBase & Record> SyncDataFileWriter<T> createAvroWriter(
+      InterpretationPipelineOptions options, Transform<?, T> transform, String id) {
+    return createAvroWriter(options, transform, id, false);
   }
 
   /** Closes resources only one time, before JVM shuts down */

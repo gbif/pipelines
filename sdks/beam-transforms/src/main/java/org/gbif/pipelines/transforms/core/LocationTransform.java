@@ -79,6 +79,12 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
     }
   }
 
+  /** Beam @Setup can be applied only to void method */
+  public LocationTransform init() {
+    setup();
+    return this;
+  }
+
   /** Beam @Teardown closes initialized resources */
   @Teardown
   public void tearDown() {

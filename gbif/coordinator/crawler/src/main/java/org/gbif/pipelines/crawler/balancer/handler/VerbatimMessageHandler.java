@@ -16,6 +16,7 @@ import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage.Validatio
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
+import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.crawler.balancer.BalancerConfiguration;
 import org.gbif.pipelines.crawler.dwca.DwcaToAvroConfiguration;
@@ -104,9 +105,11 @@ public class VerbatimMessageHandler {
 
     // Strategy 2: Chooses a runner type by calculating verbatim.avro file size
     String verbatim = Conversion.FILE_NAME + Pipeline.AVRO_EXTENSION;
-    String verbatimPath = String.join("/", config.repositoryPath, datasetId, attempt, verbatim);
+    StepConfiguration stepConfig = config.stepConfig;
+    String verbatimPath = String.join("/", stepConfig.repositoryPath, datasetId, attempt, verbatim);
     long fileSizeByte =
-        HdfsUtils.getFileSizeByte(config.hdfsSiteConfig, config.coreSiteConfig, verbatimPath);
+        HdfsUtils.getFileSizeByte(
+            stepConfig.hdfsSiteConfig, stepConfig.coreSiteConfig, verbatimPath);
     if (fileSizeByte > 0) {
       long switchFileSizeByte = config.switchFileSizeMb * 1024L * 1024L;
       runner = fileSizeByte > switchFileSizeByte ? StepRunner.DISTRIBUTED : StepRunner.STANDALONE;
@@ -124,7 +127,8 @@ public class VerbatimMessageHandler {
     String datasetId = message.getDatasetUuid().toString();
     String attempt = Integer.toString(message.getAttempt());
     String metaFileName = new DwcaToAvroConfiguration().metaFileName;
-    String metaPath = String.join("/", config.repositoryPath, datasetId, attempt, metaFileName);
+    StepConfiguration stepConfig = config.stepConfig;
+    String metaPath = String.join("/", stepConfig.repositoryPath, datasetId, attempt, metaFileName);
     log.info("Getting records number from the file - {}", metaPath);
 
     Long messageNumber =
@@ -134,7 +138,10 @@ public class VerbatimMessageHandler {
             : null;
     String fileNumber =
         HdfsUtils.getValueByKey(
-            config.hdfsSiteConfig, config.coreSiteConfig, metaPath, Metrics.ARCHIVE_TO_ER_COUNT);
+            stepConfig.hdfsSiteConfig,
+            stepConfig.coreSiteConfig,
+            metaPath,
+            Metrics.ARCHIVE_TO_ER_COUNT);
 
     if (messageNumber == null && (fileNumber == null || fileNumber.isEmpty())) {
       throw new IllegalArgumentException(
@@ -157,9 +164,11 @@ public class VerbatimMessageHandler {
   private static Integer getLatestAttempt(
       BalancerConfiguration config, PipelinesVerbatimMessage message) {
     String datasetId = message.getDatasetUuid().toString();
-    String path = String.join("/", config.repositoryPath, datasetId);
+    StepConfiguration stepConfig = config.stepConfig;
+    String path = String.join("/", stepConfig.repositoryPath, datasetId);
     log.info("Parsing HDFS directory - {}", path);
-    return HdfsUtils.getSubDirList(config.hdfsSiteConfig, config.coreSiteConfig, path).stream()
+    return HdfsUtils.getSubDirList(stepConfig.hdfsSiteConfig, stepConfig.coreSiteConfig, path)
+        .stream()
         .map(y -> y.getPath().getName())
         .filter(x -> x.chars().allMatch(Character::isDigit))
         .mapToInt(Integer::valueOf)

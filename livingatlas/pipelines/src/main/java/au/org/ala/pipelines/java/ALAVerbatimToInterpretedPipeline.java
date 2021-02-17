@@ -10,14 +10,22 @@ import au.org.ala.kvs.cache.ALACollectionKVStoreFactory;
 import au.org.ala.kvs.cache.ALANameCheckKVStoreFactory;
 import au.org.ala.kvs.cache.ALANameMatchKVStoreFactory;
 import au.org.ala.kvs.cache.GeocodeKvStoreFactory;
-import au.org.ala.pipelines.transforms.*;
+import au.org.ala.pipelines.transforms.ALAAttributionTransform;
+import au.org.ala.pipelines.transforms.ALABasicTransform;
+import au.org.ala.pipelines.transforms.ALADefaultValuesTransform;
+import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
+import au.org.ala.pipelines.transforms.LocationTransform;
 import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationUtils;
 import java.io.FileNotFoundException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -28,7 +36,6 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.avro.Schema;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -46,7 +53,15 @@ import org.gbif.pipelines.core.io.SyncDataFileWriter;
 import org.gbif.pipelines.core.io.SyncDataFileWriterBuilder;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.factory.OccurrenceStatusKvStoreFactory;
-import org.gbif.pipelines.io.avro.*;
+import org.gbif.pipelines.io.avro.ALAAttributionRecord;
+import org.gbif.pipelines.io.avro.ALATaxonRecord;
+import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.io.avro.MultimediaRecord;
+import org.gbif.pipelines.io.avro.Record;
+import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.transforms.Transform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
@@ -189,14 +204,16 @@ public class ALAVerbatimToInterpretedPipeline {
         TemporalTransform.builder()
             .orderings(dateComponentOrdering)
             .create()
-            .counterFn(incMetricFn);
+            .counterFn(incMetricFn)
+            .init();
 
     // Extension
     MultimediaTransform multimediaTransform =
         MultimediaTransform.builder()
             .orderings(dateComponentOrdering)
             .create()
-            .counterFn(incMetricFn);
+            .counterFn(incMetricFn)
+            .init();
 
     // Extra
     OccurrenceExtensionTransform occExtensionTransform =
@@ -207,7 +224,9 @@ public class ALAVerbatimToInterpretedPipeline {
         ALAAttributionTransform.builder()
             .dataResourceKvStoreSupplier(ALAAttributionKVStoreFactory.getInstanceSupplier(config))
             .collectionKvStoreSupplier(ALACollectionKVStoreFactory.getInstanceSupplier(config))
-            .create();
+            .create()
+            .counterFn(incMetricFn)
+            .init();
 
     // ALA specific - Taxonomy
     // ALA specific - Taxonomy
@@ -218,7 +237,9 @@ public class ALAVerbatimToInterpretedPipeline {
             .kingdomCheckStoreSupplier(
                 ALANameCheckKVStoreFactory.getInstanceSupplier("kingdom", config))
             .dataResourceStoreSupplier(ALAAttributionKVStoreFactory.getInstanceSupplier(config))
-            .create();
+            .create()
+            .counterFn(incMetricFn)
+            .init();
 
     // ALA specific - Location
     LocationTransform locationTransform =
@@ -226,7 +247,9 @@ public class ALAVerbatimToInterpretedPipeline {
             .alaConfig(config)
             .countryKvStoreSupplier(GeocodeKvStoreFactory.createCountrySupplier(config))
             .stateProvinceKvStoreSupplier(GeocodeKvStoreFactory.createStateProvinceSupplier(config))
-            .create();
+            .create()
+            .counterFn(incMetricFn)
+            .init();
 
     // ALA specific - Default values
     ALADefaultValuesTransform alaDefaultValuesTransform =
@@ -235,32 +258,25 @@ public class ALAVerbatimToInterpretedPipeline {
             .dataResourceKvStoreSupplier(ALAAttributionKVStoreFactory.getInstanceSupplier(config))
             .create();
 
-    temporalTransform.setup();
-    locationTransform.setup();
-    alaTaxonomyTransform.setup();
-    alaAttributionTransform.setup();
-    multimediaTransform.setup();
-
     log.info("Creating writers");
     try (SyncDataFileWriter<ExtendedRecord> verbatimWriter =
-            createWriter(options, ExtendedRecord.getClassSchema(), verbatimTransform, id);
+            createAvroWriter(options, verbatimTransform, id);
         SyncDataFileWriter<MetadataRecord> metadataWriter =
-            createWriter(options, MetadataRecord.getClassSchema(), metadataTransform, id);
+            createAvroWriter(options, metadataTransform, id);
         SyncDataFileWriter<BasicRecord> basicWriter =
-            createWriter(options, BasicRecord.getClassSchema(), basicTransform, id);
+            createAvroWriter(options, basicTransform, id);
         SyncDataFileWriter<TemporalRecord> temporalWriter =
-            createWriter(options, TemporalRecord.getClassSchema(), temporalTransform, id);
+            createAvroWriter(options, temporalTransform, id);
         SyncDataFileWriter<MultimediaRecord> multimediaWriter =
-            createWriter(options, MultimediaRecord.getClassSchema(), multimediaTransform, id);
+            createAvroWriter(options, multimediaTransform, id);
 
         // ALA specific
         SyncDataFileWriter<LocationRecord> locationWriter =
-            createWriter(options, LocationRecord.getClassSchema(), locationTransform, id);
+            createAvroWriter(options, locationTransform, id);
         SyncDataFileWriter<ALATaxonRecord> alaTaxonWriter =
-            createWriter(options, ALATaxonRecord.getClassSchema(), alaTaxonomyTransform, id);
+            createAvroWriter(options, alaTaxonomyTransform, id);
         SyncDataFileWriter<ALAAttributionRecord> alaAttributionWriter =
-            createWriter(
-                options, ALAAttributionRecord.getClassSchema(), alaAttributionTransform, id)) {
+            createAvroWriter(options, alaAttributionTransform, id)) {
 
       log.info("Creating metadata record");
       // Create MetadataRecord
@@ -357,13 +373,13 @@ public class ALAVerbatimToInterpretedPipeline {
 
     log.info("Saving metrics...");
     MetricsHandler.saveCountersToTargetPathFile(options, metrics.getMetricsResult());
-    log.info("Pipeline has been finished - " + LocalDateTime.now());
+    log.info("Pipeline has been finished - {}", LocalDateTime.now());
   }
 
   /** Create an AVRO file writer */
   @SneakyThrows
-  private static <T extends SpecificRecordBase> SyncDataFileWriter<T> createWriter(
-      InterpretationPipelineOptions options, Schema schema, Transform<?, T> transform, String id) {
+  private static <T extends SpecificRecordBase & Record> SyncDataFileWriter<T> createAvroWriter(
+      InterpretationPipelineOptions options, Transform<?, T> transform, String id) {
     UnaryOperator<String> pathFn =
         t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, id + AVRO_EXTENSION);
     Path path = new Path(pathFn.apply(transform.getBaseName()));
@@ -372,7 +388,7 @@ public class ALAVerbatimToInterpretedPipeline {
     fs.mkdirs(path.getParent());
 
     return SyncDataFileWriterBuilder.builder()
-        .schema(schema)
+        .schema(transform.getAvroSchema())
         .codec(options.getAvroCompressionType())
         .outputStream(fs.create(path))
         .syncInterval(options.getAvroSyncInterval())

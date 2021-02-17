@@ -66,6 +66,12 @@ public class TaxonomyTransform extends Transform<ExtendedRecord, TaxonRecord> {
     }
   }
 
+  /** Beam @Setup can be applied only to void method */
+  public TaxonomyTransform init() {
+    setup();
+    return this;
+  }
+
   /** Beam @Teardown closes initialized resources */
   @Teardown
   public void tearDown() {
