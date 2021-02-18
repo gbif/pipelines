@@ -1,0 +1,31 @@
+/**
+ * Represents the interpreted fields of terms related to MeasurementOrFact extension.
+ * http://rs.gbif.org/extension/dwc/measurements_or_facts.xml
+ */
+{
+  "name":"MeasurementOrFact",
+  "namespace":"org.gbif.pipelines.io.avro.table",
+  "type":"record",
+  "fields":[
+    {"name": "gbifid", "type" : "long", "doc": "GBIF internal identifier"},
+    {"name": "v_measurementid", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementID"},
+    {"name": "v_measurementtype", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementType"},
+    {"name": "v_measurementvalue", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementValue"},
+    {"name": "v_measurementunit", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementUnit"},
+    {"name": "v_measurementaccuracy", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementAccuracy"},
+    {"name": "v_measurementdeterminedBy", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementDeterminedBy"},
+    {"name": "v_measurementdeterminedDate", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementDeterminedDate"},
+    {"name": "v_measurementmethod", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementMethod"},
+    {"name": "v_measurementremarks", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementRemarks"},
+    {"name": "measurementid", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementID"},
+    {"name": "measurementtype", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementType"},
+    {"name": "measurementvalue", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementValue"},
+    {"name": "measurementunit", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementUnit"},
+    {"name": "measurementaccuracy", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementAccuracy"},
+    {"name": "measurementdeterminedBy", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementDeterminedBy"},
+    {"name": "measurementdeterminedDate", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementDeterminedDate"},
+    {"name": "measurementmethod", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementMethod"},
+    {"name": "measurementremarks", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementRemarks"}
+  ]
+}
+
