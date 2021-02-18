@@ -1,6 +1,7 @@
 package org.gbif.pipelines.core.interpreters.extension;
 
 import java.util.Objects;
+import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DwcTerm;
@@ -17,7 +18,7 @@ import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
  *
  * @see <a href="http://rs.gbif.org/extension/dwc/measurements_or_facts.xml</a>
  */
-@NoArgsConstructor(staticName = "create")
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class MeasurementOrFactInterpreter {
 
   private static final TargetHandler<MeasurementOrFact> HANDLER =
