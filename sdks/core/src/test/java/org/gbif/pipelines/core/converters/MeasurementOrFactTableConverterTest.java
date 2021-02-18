@@ -68,6 +68,22 @@ public class MeasurementOrFactTableConverterTest {
   }
 
   @Test
+  public void noExtensionTest() {
+
+    // State
+    ExtendedRecord extendedRecord = ExtendedRecord.newBuilder().setId("id").build();
+
+    BasicRecord basicRecord = BasicRecord.newBuilder().setId("777").setGbifId(777L).build();
+
+    // When
+    Optional<MeasurementOrFactTable> result =
+        MeasurementOrFactTableConverter.convert(basicRecord, extendedRecord);
+
+    // Should
+    Assert.assertFalse(result.isPresent());
+  }
+
+  @Test
   public void basicRecordNullTest() {
     // State
     BasicRecord basicRecord = BasicRecord.newBuilder().setId("777").setGbifId(777L).build();
