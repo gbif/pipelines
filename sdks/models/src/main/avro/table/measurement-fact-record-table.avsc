@@ -3,8 +3,8 @@
  * http://rs.gbif.org/extension/dwc/measurements_or_facts.xml
  */
 {
-  "name":"MeasurementOrFact",
-  "namespace":"org.gbif.pipelines.io.avro.table",
+  "name":"MeasurementOrFactTable",
+  "namespace":"org.gbif.pipelines.io.avro",
   "type":"record",
   "fields":[
     {"name": "gbifid", "type" : "long", "doc": "GBIF internal identifier"},
