@@ -1,5 +1,7 @@
 package org.gbif.pipelines.core.converters;
 
+import java.util.Optional;
+import java.util.function.Function;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.gbif.api.vocabulary.Extension;
@@ -9,9 +11,6 @@ import org.gbif.pipelines.core.interpreters.ExtensionInterpretation.TargetHandle
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MeasurementOrFactTable;
-
-import java.util.Optional;
-import java.util.function.Function;
 
 /**
  * Converter for the MeasurementsOrFacts extension, converts/map form {@link ExtendedRecord} to
