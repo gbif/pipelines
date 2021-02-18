@@ -3,9 +3,7 @@ package org.gbif.pipelines.core.converters;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.base.Strings;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
@@ -15,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.Schema;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.commons.beanutils.PropertyUtils;
-import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.License;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
@@ -74,7 +71,6 @@ public class OccurrenceHdfsRecordConverter {
     mapGrscicollRecord(occurrenceHdfsRecord);
     mapMultimediaRecord(occurrenceHdfsRecord);
     mapExtendedRecord(occurrenceHdfsRecord);
-    mapRawExtensions(occurrenceHdfsRecord);
 
     // The id (the <id> reference in the DWCA meta.xml) is an identifier local to the DWCA, and
     // could only have been
@@ -554,25 +550,6 @@ public class OccurrenceHdfsRecordConverter {
 
     setCreatedIfGreater(occurrenceHdfsRecord, multimediaRecord.getCreated());
     occurrenceHdfsRecord.setMediatype(mediaTypes);
-  }
-
-  /**
-   * Collects the all avaliable extensions data (except for all multimedia types) into the {@link
-   * OccurrenceHdfsRecord#setRawextensions}.
-   */
-  private void mapRawExtensions(OccurrenceHdfsRecord occurrenceHdfsRecord) {
-    if (extendedRecord == null
-        || extendedRecord.getExtensions() == null
-        || extendedRecord.getExtensions().isEmpty()) {
-      return;
-    }
-
-    Map<String, List<Map<String, String>>> map = new HashMap<>(extendedRecord.getExtensions());
-    map.remove(Extension.AUDUBON.getRowType());
-    map.remove(Extension.IMAGE.getRowType());
-    map.remove(Extension.MULTIMEDIA.getRowType());
-
-    occurrenceHdfsRecord.setRawextensions(map);
   }
 
   /** Gets the {@link Schema.Field} associated to a verbatim term. */

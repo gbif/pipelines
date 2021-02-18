@@ -1475,14 +1475,5 @@
   }, {
     "name" : "iucnRedListCategory",
     "type" : [ "string", "null" ]
-  }, {
-    "name": "rawextensions", "doc": "The extensions records", "type": [{
-      "type": "map", "values": {
-        "type": "array", "doc": "The extension records", "default": [], "items": {
-          "type": "map", "doc": "The extension record terms", "default": {}, "values": ["null", "string"]
-          }
-        }
-      }, "null" ]
-    }
-  ]
+  }]
 }

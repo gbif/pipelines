@@ -207,14 +207,6 @@ public class OccurrenceHdfsRecordConverterTest {
         hdfsRecord
             .getDwcaextension()
             .contains("http://data.ggbn.org/schemas/ggbn/terms/Amplification"));
-
-    Assert.assertEquals(1, hdfsRecord.getRawextensions().size());
-    Assert.assertEquals(
-        1,
-        hdfsRecord
-            .getRawextensions()
-            .get("http://data.ggbn.org/schemas/ggbn/terms/Amplification")
-            .size());
   }
 
   @Test
