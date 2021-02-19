@@ -1,9 +1,11 @@
 package org.gbif.pipelines.ingest.java.pipelines;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 import static org.gbif.pipelines.ingest.java.transforms.InterpretedAvroReader.readAvroAsFuture;
 
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -17,9 +19,11 @@ import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.ingest.java.metrics.IngestMetricsBuilder;
+import org.gbif.pipelines.ingest.java.transforms.MeasurementOrFactTableConverter;
 import org.gbif.pipelines.ingest.java.transforms.OccurrenceHdfsRecordConverter;
-import org.gbif.pipelines.ingest.java.transforms.OccurrenceHdfsRecordWriter;
+import org.gbif.pipelines.ingest.java.transforms.TableRecordWriter;
 import org.gbif.pipelines.ingest.utils.HdfsViewAvroUtils;
 import org.gbif.pipelines.ingest.utils.SharedLockUtils;
 import org.gbif.pipelines.io.avro.AudubonRecord;
@@ -28,6 +32,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
+import org.gbif.pipelines.io.avro.MeasurementOrFactTable;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
@@ -152,7 +157,7 @@ public class InterpretedToHdfsViewPipeline {
     CompletableFuture<Map<String, AudubonRecord>> audubonMapFeature =
         readAvroAsFuture(options, executor, AudubonTransform.builder().create());
 
-    Function<BasicRecord, OccurrenceHdfsRecord> occurrenceHdfsRecordFn =
+    Function<BasicRecord, Optional<OccurrenceHdfsRecord>> occurrenceHdfsRecordFn =
         OccurrenceHdfsRecordConverter.builder()
             .metrics(metrics)
             .metadata(metadataMapFeature.get().values().iterator().next())
@@ -167,9 +172,33 @@ public class InterpretedToHdfsViewPipeline {
             .build()
             .getFn();
 
-    OccurrenceHdfsRecordWriter.builder()
-        .occurrenceHdfsRecordFn(occurrenceHdfsRecordFn)
+    Function<BasicRecord, Optional<MeasurementOrFactTable>> moftFn =
+        MeasurementOrFactTableConverter.builder()
+            .metrics(metrics)
+            .verbatimMap(verbatimMapFeature.get())
+            .build()
+            .getFn();
+
+    String id = options.getDatasetId() + '_' + options.getAttempt();
+
+    // Write OccurrenceHdfsRecord
+    TableRecordWriter.<OccurrenceHdfsRecord>builder()
+        .recordFunction(occurrenceHdfsRecordFn)
         .basicRecords(basicMapFeature.get().values())
+        .targetTempPath(
+            PathBuilder.buildFilePathHdfsViewUsingInputPath(options, id + AVRO_EXTENSION))
+        .schema(OccurrenceHdfsRecord.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .build()
+        .write();
+
+    // Write MeasurementOrFactTable
+    TableRecordWriter.<MeasurementOrFactTable>builder()
+        .recordFunction(moftFn)
+        .basicRecords(basicMapFeature.get().values())
+        .targetTempPath(PathBuilder.buildFilePathMoftUsingInputPath(options, id + AVRO_EXTENSION))
+        .schema(MeasurementOrFactTable.getClassSchema())
         .executor(executor)
         .options(options)
         .build()

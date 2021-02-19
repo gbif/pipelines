@@ -1,5 +1,9 @@
-package org.gbif.pipelines.transforms.converters;
+package org.gbif.pipelines.transforms.table;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
@@ -21,14 +25,9 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 @RunWith(JUnit4.class)
 @Category(NeedsRunner.class)
-public class MeasurementOrFactTableTransformTest {
+public class MeasurementOrFactTableTest {
 
   @Rule public final transient TestPipeline p = TestPipeline.create();
 
@@ -40,8 +39,8 @@ public class MeasurementOrFactTableTransformTest {
     BasicRecord br = BasicRecord.newBuilder().setId("777").setGbifId(777L).build();
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     BasicTransform basicTransform = BasicTransform.builder().create();
-    MeasurementOrFactTableConverterTransform transform =
-        MeasurementOrFactTableConverterTransform.builder()
+    MeasurementOrFactTableTransform transform =
+        MeasurementOrFactTableTransform.builder()
             .extendedRecordTag(verbatimTransform.getTag())
             .basicRecordTag(basicTransform.getTag())
             .build();
@@ -90,8 +89,8 @@ public class MeasurementOrFactTableTransformTest {
 
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     BasicTransform basicTransform = BasicTransform.builder().create();
-    MeasurementOrFactTableConverterTransform transform =
-        MeasurementOrFactTableConverterTransform.builder()
+    MeasurementOrFactTableTransform transform =
+        MeasurementOrFactTableTransform.builder()
             .extendedRecordTag(verbatimTransform.getTag())
             .basicRecordTag(basicTransform.getTag())
             .build();

@@ -77,7 +77,10 @@ public class PipelinesVariables {
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static class HdfsView {
 
+      public static final String VIEW_OCCURRENCE_DIR = "occurrence";
       public static final String VIEW_OCCURRENCE = "view_occurrence";
+      public static final String VIEW_MOFT_DIR = "measurementorfacttable";
+      public static final String VIEW_MOFT = "view_moft";
     }
   }
 

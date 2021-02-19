@@ -1,10 +1,13 @@
 package org.gbif.pipelines.ingest.java.transforms;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
 import org.apache.avro.file.DataFileReader;
@@ -12,25 +15,32 @@ import org.apache.avro.io.DatumReader;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class OccurrenceHdfsRecordWriterTest {
+public class TableRecordWriterTest {
 
   @Test
   public void writerSyncTest() throws IOException {
 
     // State
     Long gbifID = 777L;
-    List<BasicRecord> list =
-        Collections.singletonList(BasicRecord.newBuilder().setId("1").setGbifId(gbifID).build());
-    Function<BasicRecord, OccurrenceHdfsRecord> fn =
+
+    BasicRecord basicRecord = BasicRecord.newBuilder().setId("1").setGbifId(gbifID).build();
+    BasicRecord skipBasicRecord = BasicRecord.newBuilder().setId("1").setGbifId(-gbifID).build();
+    List<BasicRecord> list = Arrays.asList(basicRecord, skipBasicRecord);
+
+    Function<BasicRecord, Optional<OccurrenceHdfsRecord>> fn =
         br -> {
+          if (br.getGbifId() < 0) {
+            return Optional.empty();
+          }
           OccurrenceHdfsRecord hdfsRecord = new OccurrenceHdfsRecord();
           hdfsRecord.setGbifid(br.getGbifId());
-          return hdfsRecord;
+          return Optional.of(hdfsRecord);
         };
 
     String outputFile = getClass().getResource("/hdfsview/occurrence/").getFile();
@@ -45,12 +55,17 @@ public class OccurrenceHdfsRecordWriterTest {
     };
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
 
+    String id = options.getDatasetId() + '_' + options.getAttempt();
+    String path = PathBuilder.buildFilePathHdfsViewUsingInputPath(options, id + AVRO_EXTENSION);
+
     // When
-    OccurrenceHdfsRecordWriter.builder()
-        .occurrenceHdfsRecordFn(fn)
+    TableRecordWriter.<OccurrenceHdfsRecord>builder()
+        .recordFunction(fn)
         .basicRecords(list)
         .executor(Executors.newSingleThreadExecutor())
         .options(options)
+        .targetTempPath(path)
+        .schema(OccurrenceHdfsRecord.getClassSchema())
         .build()
         .write();
 
@@ -78,13 +93,19 @@ public class OccurrenceHdfsRecordWriterTest {
 
     // State
     Long gbifID = 777L;
-    List<BasicRecord> list =
-        Collections.singletonList(BasicRecord.newBuilder().setId("1").setGbifId(gbifID).build());
-    Function<BasicRecord, OccurrenceHdfsRecord> fn =
+
+    BasicRecord basicRecord = BasicRecord.newBuilder().setId("1").setGbifId(gbifID).build();
+    BasicRecord skipBasicRecord = BasicRecord.newBuilder().setId("1").setGbifId(-gbifID).build();
+    List<BasicRecord> list = Arrays.asList(basicRecord, skipBasicRecord);
+
+    Function<BasicRecord, Optional<OccurrenceHdfsRecord>> fn =
         br -> {
+          if (br.getGbifId() < 0) {
+            return Optional.empty();
+          }
           OccurrenceHdfsRecord hdfsRecord = new OccurrenceHdfsRecord();
           hdfsRecord.setGbifid(br.getGbifId());
-          return hdfsRecord;
+          return Optional.of(hdfsRecord);
         };
 
     String outputFile = getClass().getResource("/hdfsview/occurrence/").getFile();
@@ -100,12 +121,17 @@ public class OccurrenceHdfsRecordWriterTest {
     };
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
 
+    String id = options.getDatasetId() + '_' + options.getAttempt();
+    String path = PathBuilder.buildFilePathHdfsViewUsingInputPath(options, id + AVRO_EXTENSION);
+
     // When
-    OccurrenceHdfsRecordWriter.builder()
-        .occurrenceHdfsRecordFn(fn)
+    TableRecordWriter.<OccurrenceHdfsRecord>builder()
+        .recordFunction(fn)
         .basicRecords(list)
         .executor(Executors.newSingleThreadExecutor())
         .options(options)
+        .targetTempPath(path)
+        .schema(OccurrenceHdfsRecord.getClassSchema())
         .build()
         .write();
 

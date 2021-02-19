@@ -5,6 +5,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_HDFS_
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
 import org.gbif.pipelines.ingest.java.metrics.IngestMetricsBuilder;
 import org.gbif.pipelines.io.avro.AudubonRecord;
@@ -42,7 +43,7 @@ public class OccurrenceHdfsRecordConverterTest {
     AudubonRecord audubonRecord = AudubonRecord.newBuilder().setId(ID).build();
 
     // When
-    OccurrenceHdfsRecord hdfsRecord =
+    Optional<OccurrenceHdfsRecord> hdfsRecord =
         OccurrenceHdfsRecordConverter.builder()
             .metrics(metrics)
             .metadata(metadataRecord)
@@ -60,7 +61,8 @@ public class OccurrenceHdfsRecordConverterTest {
 
     // Should
     Assert.assertNotNull(hdfsRecord);
-    Assert.assertEquals(Long.valueOf(1L), hdfsRecord.getGbifid());
+    Assert.assertTrue(hdfsRecord.isPresent());
+    Assert.assertEquals(Long.valueOf(1L), hdfsRecord.get().getGbifid());
 
     Map<String, Long> map = new HashMap<>();
     metrics

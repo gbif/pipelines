@@ -3,6 +3,7 @@ package org.gbif.pipelines.ingest.java.transforms;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_HDFS_COUNT;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import lombok.Builder;
 import lombok.NonNull;
@@ -36,7 +37,7 @@ public class OccurrenceHdfsRecordConverter {
   @NonNull private final Map<String, AudubonRecord> audubonMap;
 
   /** Join all records, convert into OccurrenceHdfsRecord and save as an avro file */
-  public Function<BasicRecord, OccurrenceHdfsRecord> getFn() {
+  public Function<BasicRecord, Optional<OccurrenceHdfsRecord>> getFn() {
     return br -> {
       String k = br.getId();
       // Core
@@ -56,17 +57,20 @@ public class OccurrenceHdfsRecordConverter {
 
       metrics.incMetric(AVRO_TO_HDFS_COUNT);
 
-      return org.gbif.pipelines.core.converters.OccurrenceHdfsRecordConverter.builder()
-          .basicRecord(br)
-          .metadataRecord(metadata)
-          .temporalRecord(tr)
-          .locationRecord(lr)
-          .taxonRecord(txr)
-          .grscicollRecord(gr)
-          .multimediaRecord(mmr)
-          .extendedRecord(er)
-          .build()
-          .convert();
+      OccurrenceHdfsRecord hdfsRecord =
+          org.gbif.pipelines.core.converters.OccurrenceHdfsRecordConverter.builder()
+              .basicRecord(br)
+              .metadataRecord(metadata)
+              .temporalRecord(tr)
+              .locationRecord(lr)
+              .taxonRecord(txr)
+              .grscicollRecord(gr)
+              .multimediaRecord(mmr)
+              .extendedRecord(er)
+              .build()
+              .convert();
+
+      return Optional.of(hdfsRecord);
     };
   }
 }

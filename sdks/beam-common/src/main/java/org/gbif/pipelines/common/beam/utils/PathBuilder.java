@@ -1,6 +1,7 @@
 package org.gbif.pipelines.common.beam.utils;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.DIRECTORY_NAME;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.MEASUREMENT_OR_FACT_TABLE;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE_HDFS_RECORD;
 
 import com.google.common.base.Strings;
@@ -91,6 +92,33 @@ public class PathBuilder {
     return buildPath(
             buildDatasetAttemptPath(options, DIRECTORY_NAME, true),
             OCCURRENCE_HDFS_RECORD.name().toLowerCase())
+        .toString();
+  }
+
+  /**
+   * Builds the target base path of the MeasurementOrFactTable hdfs view.
+   *
+   * @param options options pipeline options
+   * @return path to the directory where the MeasurementOrFactTable hdfs view is stored
+   */
+  public static String buildFilePathMoftUsingInputPath(
+      BasePipelineOptions options, String uniqueId) {
+    return buildPath(
+            buildPathMoftUsingInputPath(options),
+            PipelinesVariables.Pipeline.HdfsView.VIEW_MOFT + "_" + uniqueId)
+        .toString();
+  }
+
+  /**
+   * Builds the target base path of the MeasurementOrFactTable hdfs view.
+   *
+   * @param options options pipeline options
+   * @return path to the directory where the MeasurementOrFactTable hdfs view is stored
+   */
+  public static String buildPathMoftUsingInputPath(BasePipelineOptions options) {
+    return buildPath(
+            buildDatasetAttemptPath(options, DIRECTORY_NAME, true),
+            MEASUREMENT_OR_FACT_TABLE.name().toLowerCase())
         .toString();
   }
 
