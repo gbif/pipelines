@@ -1,4 +1,4 @@
-package org.gbif.pipelines.transforms.extension;
+package org.gbif.pipelines.transforms.converters;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT;
 
@@ -29,7 +29,9 @@ import org.gbif.pipelines.io.avro.MeasurementOrFactTable;
  * @see <a href="http://rs.gbif.org/extension/dwc/measurements_or_facts.xml</a>
  */
 @Builder
-public class MeasurementOrFactTableTransform implements Serializable {
+public class MeasurementOrFactTableConverterTransform implements Serializable {
+
+  private static final long serialVersionUID = 4705389346756029671L;
 
   // Core
   @NonNull private final TupleTag<ExtendedRecord> extendedRecordTag;
@@ -41,7 +43,8 @@ public class MeasurementOrFactTableTransform implements Serializable {
 
           private final Counter counter =
               Metrics.counter(
-                  MeasurementOrFactTableTransform.class, MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT);
+                  MeasurementOrFactTableConverterTransform.class,
+                  MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT);
 
           @ProcessElement
           public void processElement(ProcessContext c) {
