@@ -57,7 +57,8 @@ public class PipelinesVariables {
         AMPLIFICATION,
         // Specific
         LOCATION_FEATURE,
-        OCCURRENCE_HDFS_RECORD;
+        OCCURRENCE_HDFS_RECORD,
+        MEASUREMENT_OR_FACT_TABLE;
 
         @Override
         public String all() {
@@ -114,6 +115,7 @@ public class PipelinesVariables {
     public static final String IMAGE_RECORDS_COUNT = "imageRecordsCount";
     public static final String AUDUBON_RECORDS_COUNT = "audubonRecordsCount";
     public static final String MEASUREMENT_OR_FACT_RECORDS_COUNT = "measurementOrFactRecordsCount";
+    public static final String MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT = "measurementOrFactTableRecordsCount";
     public static final String AMPLIFICATION_RECORDS_COUNT = "amplificationRecordsCount";
 
     public static final String HDFS_VIEW_RECORDS_COUNT = "hdfsViewRecordsCount";

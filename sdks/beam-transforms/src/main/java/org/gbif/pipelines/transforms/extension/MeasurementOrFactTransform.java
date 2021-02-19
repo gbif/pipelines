@@ -23,7 +23,7 @@ import org.gbif.pipelines.transforms.Transform;
 
 /**
  * Beam level transformations for the Measurements_or_facts extension, reads an avro, writes an
- * avro, maps from value to keyValue and transforms form{@link ExtendedRecord} to {@link
+ * avro, maps from value to keyValue and transforms from {@link ExtendedRecord} to {@link
  * MeasurementOrFactRecord}.
  *
  * <p>ParDo runs sequence of interpretations for {@link MeasurementOrFactRecord} using {@link
