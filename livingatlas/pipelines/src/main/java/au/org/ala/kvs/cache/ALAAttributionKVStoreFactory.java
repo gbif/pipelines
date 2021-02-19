@@ -60,8 +60,10 @@ public class ALAAttributionKVStoreFactory {
           public ALACollectoryMetadata get(String key) {
             try {
               return service.lookupDataResource(key);
+            } catch (retrofit2.HttpException ex) {
+              log.error("HttpException looking up metadata for " + key, ex);
             } catch (Exception ex) {
-              log.error("Problem looking up metadata for " + key, ex);
+              log.error("Exception looking up metadata for " + key, ex);
             }
             return ALACollectoryMetadata.EMPTY;
           }

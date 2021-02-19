@@ -4,6 +4,7 @@ import static org.apache.avro.Schema.Type.UNION;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
 
 import au.org.ala.pipelines.interpreters.SensitiveDataInterpreter;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableSet;
 import java.io.Serializable;
 import java.text.DecimalFormat;
@@ -67,7 +68,7 @@ public class IndexRecordTransform implements Serializable {
   private TupleTag<ALAAttributionRecord> aarTag;
   @NonNull private TupleTag<ALAUUIDRecord> urTag;
 
-  @NonNull private TupleTag<ImageServiceRecord> isTag;
+  @NonNull private TupleTag<ImageRecord> isTag;
 
   @NonNull private TupleTag<TaxonProfile> tpTag;
 
@@ -101,7 +102,7 @@ public class IndexRecordTransform implements Serializable {
       TupleTag<MeasurementOrFactRecord> mfrTag,
       TupleTag<ALAAttributionRecord> aarTag,
       TupleTag<ALAUUIDRecord> urTag,
-      TupleTag<ImageServiceRecord> isTag,
+      TupleTag<ImageRecord> isTag,
       TupleTag<TaxonProfile> tpTag,
       TupleTag<ALASensitivityRecord> srTag,
       PCollectionView<MetadataRecord> metadataView,
@@ -143,7 +144,7 @@ public class IndexRecordTransform implements Serializable {
       ExtendedRecord er,
       ALAAttributionRecord aar,
       ALAUUIDRecord ur,
-      ImageServiceRecord isr,
+      ImageRecord isr,
       TaxonProfile tpr,
       ALASensitivityRecord sr) {
 
@@ -268,6 +269,18 @@ public class IndexRecordTransform implements Serializable {
 
     if (tr.getYear() != null && tr.getYear() > 0) {
       indexRecord.getInts().put("decade", ((tr.getYear() / 10) * 10));
+
+      // Added for backwards compatibility
+      // see
+      // https://github.com/AtlasOfLivingAustralia/biocache-store/blob/develop/src/main/scala/au/org/ala/biocache/index/IndexDAO.scala#L1077
+      String occurrenceYear = tr.getYear() + "-01-01";
+      try {
+        long occurrenceYearTime =
+            new SimpleDateFormat("yyyy-MM-dd").parse(occurrenceYear).getTime();
+        indexRecord.getDates().put("occurrenceYear", occurrenceYearTime);
+      } catch (ParseException ex) {
+        // NOP
+      }
     }
 
     // GBIF taxonomy - add if available
@@ -275,7 +288,9 @@ public class IndexRecordTransform implements Serializable {
       addGBIFTaxonomy(txr, indexRecord, assertions);
     }
 
-    indexRecord.getBooleans().put("sensitive", sensitive);
+    if (sensitive) {
+      indexRecord.getStrings().put("sensitive", "generalised");
+    }
 
     // Sensitive (Original) data
     if (sensitive) {
@@ -423,21 +438,93 @@ public class IndexRecordTransform implements Serializable {
     }
 
     // add image identifiers
-    if (isr != null && isr.getImageIDs() != null && !isr.getImageIDs().isEmpty()) {
-      indexRecord.getStrings().put("imageID", isr.getImageIDs().get(0));
-      indexRecord.getMultiValues().put("imageIDs", isr.getImageIDs());
-      // FIX ME - do we need mime type.....
-      indexRecord.getStrings().put("multimedia", "Image");
-    } else {
+    if (isr != null && isr.getImageItems() != null && !isr.getImageItems().isEmpty()) {
 
+      Set<String> multimedia = new HashSet<>();
+      Set<String> licenses = new HashSet<>();
+      List<String> images = new ArrayList<>();
+      List<String> videos = new ArrayList<>();
+      List<String> sounds = new ArrayList<>();
+      isr.getImageItems().stream()
+          .forEach(
+              image -> {
+                if (StringUtils.isNotEmpty(image.getLicense())) {
+                  licenses.add(image.getLicense());
+                }
+
+                if (image.getFormat() != null) {
+                  if (image.getFormat().startsWith("image")) {
+                    multimedia.add("Image");
+                    images.add(image.getIdentifier());
+                  }
+                  if (image.getFormat().startsWith("audio")) {
+                    multimedia.add("Sound");
+                    sounds.add(image.getIdentifier());
+                  }
+                  if (image.getFormat().startsWith("video")) {
+                    multimedia.add("Video");
+                    videos.add(image.getIdentifier());
+                  }
+                }
+              });
+
+      if (!images.isEmpty()) {
+        indexRecord.getStrings().put("imageID", isr.getImageItems().get(0).getIdentifier());
+        indexRecord
+            .getMultiValues()
+            .put(
+                "imageIDs",
+                isr.getImageItems().stream()
+                    .map(i -> i.getIdentifier())
+                    .collect(Collectors.toList()));
+      }
+      if (!sounds.isEmpty()) {
+        indexRecord
+            .getMultiValues()
+            .put(
+                "soundIDs",
+                isr.getImageItems().stream()
+                    .map(i -> i.getIdentifier())
+                    .collect(Collectors.toList()));
+      }
+      if (!videos.isEmpty()) {
+        indexRecord
+            .getMultiValues()
+            .put(
+                "videoIDs",
+                isr.getImageItems().stream()
+                    .map(i -> i.getIdentifier())
+                    .collect(Collectors.toList()));
+      }
+
+      if (!multimedia.isEmpty()) {
+        List<String> distinctList = multimedia.stream().collect(Collectors.toList());
+        indexRecord.getMultiValues().put("multimedia", distinctList);
+      }
+
+      if (!licenses.isEmpty()) {
+        indexRecord
+            .getMultiValues()
+            .put("multimediaLicense", licenses.stream().collect(Collectors.toList()));
+      }
     }
 
     if (tpr != null && tpr.getSpeciesListID() != null && !tpr.getSpeciesListID().isEmpty()) {
       addSpeciesListInfo(lr, tpr, indexRecord);
     }
 
-    assertions.addAll(lr.getIssues().getIssueList());
-    assertions.addAll(tr.getIssues().getIssueList());
+    List<String> taxonomicIssues = tr.getIssues().getIssueList();
+    List<String> geospatialIssues = lr.getIssues().getIssueList();
+    if (taxonomicIssues != null && !taxonomicIssues.isEmpty()) {
+      indexRecord.getMultiValues().put("taxonomicIssues", taxonomicIssues);
+    }
+    if (geospatialIssues != null && !geospatialIssues.isEmpty()) {
+      indexRecord.getMultiValues().put("geospatialIssues", geospatialIssues);
+    }
+
+    // add all to assertions
+    assertions.addAll(taxonomicIssues);
+    assertions.addAll(geospatialIssues);
     assertions.addAll(br.getIssues().getIssueList());
     assertions.addAll(mdr.getIssues().getIssueList());
 
@@ -460,7 +547,17 @@ public class IndexRecordTransform implements Serializable {
       if (interpretedFields.contains(key)) {
         indexRecord.getStrings().put("raw_" + key, entry.getValue());
       } else {
-        indexRecord.getStrings().put(key, entry.getValue());
+        if (key.endsWith(DwcTerm.dynamicProperties.simpleName())) {
+          try {
+            ObjectMapper om = new ObjectMapper();
+            Map dynamicProperties = om.readValue(entry.getValue(), Map.class);
+            indexRecord.setDynamicProperties(dynamicProperties);
+          } catch (Exception e) {
+            // NOP
+          }
+        } else {
+          indexRecord.getStrings().put(key, entry.getValue());
+        }
       }
     }
 
@@ -636,9 +733,9 @@ public class IndexRecordTransform implements Serializable {
               ALAAttributionRecord aar =
                   v.getOnly(aarTag, ALAAttributionRecord.newBuilder().setId(k).build());
 
-              ImageServiceRecord isr = null;
+              ImageRecord isr = null;
               if (isTag != null) {
-                isr = v.getOnly(isTag, ImageServiceRecord.newBuilder().setId(k).build());
+                isr = v.getOnly(isTag, ImageRecord.newBuilder().setId(k).build());
               }
 
               TaxonProfile tpr = null;
@@ -835,6 +932,16 @@ public class IndexRecordTransform implements Serializable {
     for (Map.Entry<String, List<String>> s : indexRecord.getMultiValues().entrySet()) {
       for (String value : s.getValue()) {
         doc.addField(s.getKey(), value);
+      }
+    }
+
+    if (indexRecord.getDynamicProperties() != null
+        && !indexRecord.getDynamicProperties().isEmpty()) {
+      for (Map.Entry<String, String> entry : indexRecord.getDynamicProperties().entrySet()) {
+        if (StringUtils.isNotEmpty(entry.getValue())) {
+          String key = entry.getKey().replaceAll("[^A-Za-z0-9]", "_");
+          doc.addField("dynamicProperties_" + key, entry.getValue());
+        }
       }
     }
 

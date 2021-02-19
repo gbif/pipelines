@@ -310,14 +310,14 @@ public class IndexRecordPipeline {
                     pathFn.apply(sensitiveTransform.getBaseName())),
             executor);
 
-    CompletableFuture<Map<String, ImageServiceRecord>> imageServiceMapFeature =
+    CompletableFuture<Map<String, ImageRecord>> imageServiceMapFeature =
         CompletableFuture.supplyAsync(
             () ->
                 AvroReader.readRecords(
                     hdfsSiteConfig,
                     coreSiteConfig,
-                    ImageServiceRecord.class,
-                    imageServicePathFn.apply("image-service-record")),
+                    ImageRecord.class,
+                    imageServicePathFn.apply("image-record")),
             executor);
 
     CompletableFuture<Map<String, TaxonProfile>> taxonProfileMapFeature =
@@ -335,7 +335,7 @@ public class IndexRecordPipeline {
     Map<String, ALAAttributionRecord> alaAttributionMap = alaAttributionMapFeature.get();
     Map<String, ALASensitivityRecord> alaSensitivityMap =
         options.getIncludeSensitiveData() ? alaSensitiveMapFeature.get() : Collections.emptyMap();
-    Map<String, ImageServiceRecord> imageServiceMap =
+    Map<String, ImageRecord> imageServiceMap =
         options.getIncludeImages() ? imageServiceMapFeature.get() : Collections.emptyMap();
 
     Map<String, TaxonProfile> taxonProfileMap =
@@ -368,8 +368,8 @@ public class IndexRecordPipeline {
           ALAAttributionRecord aar =
               alaAttributionMap.getOrDefault(k, ALAAttributionRecord.newBuilder().setId(k).build());
           ALASensitivityRecord sr = alaSensitivityMap.getOrDefault(k, null);
-          ImageServiceRecord isr =
-              imageServiceMap.getOrDefault(k, ImageServiceRecord.newBuilder().setId(k).build());
+          ImageRecord isr =
+              imageServiceMap.getOrDefault(k, ImageRecord.newBuilder().setId(k).build());
           TaxonProfile tpr =
               taxonProfileMap.getOrDefault(k, TaxonProfile.newBuilder().setId(k).build());
 

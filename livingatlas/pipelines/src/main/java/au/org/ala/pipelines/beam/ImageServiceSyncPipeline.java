@@ -34,9 +34,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
-import org.gbif.pipelines.io.avro.ImageServiceRecord;
-import org.gbif.pipelines.io.avro.Multimedia;
-import org.gbif.pipelines.io.avro.MultimediaRecord;
+import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.rest.client.retrofit.SyncCall;
 import org.slf4j.MDC;
@@ -135,22 +133,29 @@ public class ImageServiceSyncPipeline {
 
     Pipeline p = Pipeline.create(options);
 
-    // Read the export file from image-service download. This is a 2 column CSV file [imageID,
-    // imageURL]
-    // Convert to KV of URL -> imageID
-    PCollection<KV<String, String>> imageServiceExportMapping =
+    // Read the export file from image-service download. This is a 2 column
+    // CSV file [imageID, imageURL] downloaded from image service
+    // Convert to KV of URL -> [imageID, mimeType, licence]
+    PCollection<KV<String, Image>> imageServiceExportMapping =
         p.apply(TextIO.read().from(imageMappingPath))
             .apply(
                 ParDo.of(
-                    new DoFn<String, KV<String, String>>() {
+                    new DoFn<String, KV<String, Image>>() {
                       @ProcessElement
                       public void processElement(
-                          @Element String imageMapping, OutputReceiver<KV<String, String>> out) {
+                          @Element String imageMapping, OutputReceiver<KV<String, Image>> out) {
                         String[] parts = imageMapping.split(",");
-                        if (parts.length == 2) {
-                          // CSV is imageID, URL
+                        if (parts.length >= 9) {
+                          // CSV is imageID
                           // Swap so we key on URL for later grouping
-                          out.output(KV.of(parts[1], parts[0]));
+                          Image image =
+                              Image.newBuilder()
+                                  .setIdentifier(parts[0])
+                                  .setCreator(parts[5])
+                                  .setFormat(parts[7])
+                                  .setLicense(parts[8])
+                                  .build();
+                          out.output(KV.of(parts[1], image));
                         } else {
                           log.error("Problem with line: " + imageMapping);
                         }
@@ -162,46 +167,48 @@ public class ImageServiceSyncPipeline {
     UnaryOperator<String> pathFn =
         t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
 
-    // URL -> recordID
+    // Transform multimedia AVRO to map [RecordID -> Multimedia]
     log.info("Reading multimedia for this dataset");
-    PCollection<KV<String, String>> multimediaItems =
-        p.apply("Read Multimedia", multimediaTransform.read(pathFn))
-            .apply("Extract URL -> RecordID map", ParDo.of(new MultimediaRecordFcn()));
+    PCollection<KV<String, KV<String, Multimedia>>> multimediaItems =
+        p.apply(multimediaTransform.read(pathFn)).apply(ParDo.of(new MultimediaFcn()));
 
+    // retrieve a list of image service base URLs
     final String[] recognisedPaths = options.getRecognisedPaths().split("|");
 
-    // For image service URLs, just convert to <recordID, imageID> but
+    // For image service URLs in Multimedia AVRO - as is the case in the data migration,
+    // we cheat.
+    // Just convert the URL to an imageID and create a <recordID, imageID>.
     // Taking URLs of the form
     // https://images.ala.org.au/image/proxyImageThumbnailLarge?imageId=<UUID>
     // and substring-ing to UUID
-    PCollection<KV<String, String>> imageServiceUrlsCollection =
+    PCollection<KV<String, Image>> imageServiceUrlsCollection =
         multimediaItems
             .apply(
                 Filter.by(
                     input ->
                         Arrays.stream(recognisedPaths)
-                            .anyMatch(path -> input.getKey().startsWith(path))))
-            .apply(
-                MapElements.into(
-                        TypeDescriptors.kvs(TypeDescriptors.strings(), TypeDescriptors.strings()))
-                    .via(
-                        kv ->
-                            KV.of(
-                                kv.getValue(),
-                                kv.getKey().substring(kv.getKey().lastIndexOf("=") + 1))));
+                            .anyMatch(
+                                path ->
+                                    input.getValue().getValue().getIdentifier().startsWith(path))))
+            .apply(ParDo.of(new ImageServiceMultimediaToImageFcn()));
 
     // These are NOT image service URLs i.e. they should be URLs as provided
     // by the data publisher
-    PCollection<KV<String, String>> nonImageServiceUrls =
+
+    // RECORDID - > Multimedia
+    // Change to URL -> KV<RecordID, Multimedia>
+    PCollection<KV<String, KV<String, Multimedia>>> nonImageServiceUrls =
         multimediaItems.apply(
             Filter.by(
                 input ->
                     Arrays.stream(recognisedPaths)
-                        .noneMatch(path -> input.getKey().startsWith(path))));
+                        .noneMatch(
+                            path -> input.getValue().getValue().getIdentifier().startsWith(path))));
 
     log.info("Create join collection");
-    final TupleTag<String> imageServiceExportMappingTag = new TupleTag<String>() {};
-    final TupleTag<String> nonImageServiceUrlsTag = new TupleTag<String>() {};
+    final TupleTag<Image> imageServiceExportMappingTag = new TupleTag<Image>() {};
+    final TupleTag<KV<String, Multimedia>> nonImageServiceUrlsTag =
+        new TupleTag<KV<String, Multimedia>>() {};
 
     // Merge collection values into a CoGbkResult collection.
     PCollection<KV<String, CoGbkResult>> joinedCollection =
@@ -211,32 +218,40 @@ public class ImageServiceSyncPipeline {
             .and(nonImageServiceUrlsTag, nonImageServiceUrls) // image
             .apply(CoGroupByKey.create());
 
-    PCollection<KV<String, String>> nonImageServiceUrlCollection =
+    // Join by URL
+    PCollection<KV<String, Image>> nonImageServiceUrlCollection =
         joinedCollection.apply(
             ParDo.of(
-                new DoFn<KV<String, CoGbkResult>, KV<String, String>>() {
+                new DoFn<KV<String, CoGbkResult>, KV<String, Image>>() {
                   @ProcessElement
                   public void processElement(ProcessContext c) {
                     KV<String, CoGbkResult> e = c.element();
-                    Iterable<String> recordIDs = e.getValue().getAll(imageServiceExportMappingTag);
-                    Iterable<String> imageIDs = e.getValue().getAll(nonImageServiceUrlsTag);
-                    if (recordIDs.iterator().hasNext()) {
-                      String recordID = recordIDs.iterator().next();
-                      if (imageIDs.iterator().hasNext()) {
-                        c.output(KV.of(recordID, imageIDs.iterator().next()));
+
+                    Iterable<KV<String, Multimedia>> imageIDs =
+                        e.getValue().getAll(nonImageServiceUrlsTag);
+
+                    Iterable<Image> imageService =
+                        e.getValue().getAll(imageServiceExportMappingTag);
+
+                    if (imageIDs.iterator().hasNext()) {
+                      KV<String, Multimedia> recordIDMultimedia = imageIDs.iterator().next();
+
+                      String recordID = recordIDMultimedia.getKey();
+                      if (imageService.iterator().hasNext()) {
+                        c.output(KV.of(recordID, imageService.iterator().next()));
                       }
                     }
                   }
                 }));
 
-    // Union of image service URL and non image service & run groupby recordID
-    PCollection<KV<String, String>> combinedNotGrouped =
+    //    // Union of image service URL and non image service & run groupby recordID
+    PCollection<KV<String, Image>> combinedNotGrouped =
         PCollectionList.of(imageServiceUrlsCollection)
             .and(nonImageServiceUrlCollection)
             .apply("Flatten the non and image service", Flatten.pCollections());
 
     // grouped by RecordID
-    PCollection<KV<String, Iterable<String>>> combined =
+    PCollection<KV<String, Iterable<Image>>> combined =
         combinedNotGrouped.apply("Group by RecordID", GroupByKey.create());
 
     // write output to /<DATASET-ID>/<attempt>/images/image-service-record-*.avro
@@ -247,16 +262,13 @@ public class ImageServiceSyncPipeline {
             options.getDatasetId(),
             options.getAttempt().toString(),
             "images",
-            "image-service-record");
+            "image-record");
 
     // write to AVRO
     combined
         .apply(ParDo.of(new ImageServiceRecordFcn()))
         .apply(
-            AvroIO.write(ImageServiceRecord.class)
-                .to(avroPath)
-                .withSuffix(".avro")
-                .withCodec(BASE_CODEC));
+            AvroIO.write(ImageRecord.class).to(avroPath).withSuffix(".avro").withCodec(BASE_CODEC));
 
     PipelineResult result = p.run();
     result.waitUntilFinish();
@@ -265,17 +277,47 @@ public class ImageServiceSyncPipeline {
   }
 
   /** Function to create KV<ImageURL,RecordID> from MultimediaRecord. */
-  static class MultimediaRecordFcn extends DoFn<MultimediaRecord, KV<String, String>> {
+  static class ImageServiceMultimediaToImageFcn
+      extends DoFn<KV<String, KV<String, Multimedia>>, KV<String, Image>> {
 
     @ProcessElement
     public void processElement(
-        @Element MultimediaRecord multimediaRecord, OutputReceiver<KV<String, String>> out) {
-      try {
+        @Element KV<String, KV<String, Multimedia>> multimediaRecordMap,
+        OutputReceiver<KV<String, Image>> out) {
 
+      // multimediaRecordMap is a   URL -> <RecordID, Multimedia>
+      // translate to <RecordID, Image>
+      String recordID = multimediaRecordMap.getValue().getKey();
+
+      // extract imageID from URL
+      String imageServiceURL = multimediaRecordMap.getKey();
+
+      String identifier = imageServiceURL.substring(imageServiceURL.lastIndexOf("=") + 1);
+      Multimedia multimedia = multimediaRecordMap.getValue().getValue();
+      Image image =
+          Image.newBuilder()
+              .setCreator(multimedia.getCreator())
+              .setFormat(multimedia.getFormat())
+              .setLicense(multimedia.getLicense())
+              .setIdentifier(identifier)
+              .build();
+      out.output(KV.of(recordID, image));
+    }
+  }
+
+  /** Function to create KV<ImageURL,RecordID> from MultimediaRecord. */
+  static class MultimediaFcn extends DoFn<MultimediaRecord, KV<String, KV<String, Multimedia>>> {
+
+    @ProcessElement
+    public void processElement(
+        @Element MultimediaRecord multimediaRecord,
+        OutputReceiver<KV<String, KV<String, Multimedia>>> out) {
+      try {
         List<Multimedia> list = multimediaRecord.getMultimediaItems();
         for (Multimedia multimedia : list) {
           if (multimedia.getIdentifier() != null) {
-            out.output(KV.of(multimedia.getIdentifier(), multimediaRecord.getId()));
+            out.output(
+                KV.of(multimedia.getIdentifier(), KV.of(multimediaRecord.getId(), multimedia)));
           }
         }
       } catch (Exception e) {
@@ -284,18 +326,16 @@ public class ImageServiceSyncPipeline {
     }
   }
 
-  static class ImageServiceRecordFcn
-      extends DoFn<KV<String, Iterable<String>>, ImageServiceRecord> {
+  static class ImageServiceRecordFcn extends DoFn<KV<String, Iterable<Image>>, ImageRecord> {
 
     @ProcessElement
     public void processElement(
-        @Element KV<String, Iterable<String>> recordIDImageID,
-        OutputReceiver<ImageServiceRecord> out) {
+        @Element KV<String, Iterable<Image>> recordIDImage, OutputReceiver<ImageRecord> out) {
       try {
         out.output(
-            ImageServiceRecord.newBuilder()
-                .setId(recordIDImageID.getKey())
-                .setImageIDs(ImmutableList.copyOf(recordIDImageID.getValue()))
+            ImageRecord.newBuilder()
+                .setId(recordIDImage.getKey())
+                .setImageItems(ImmutableList.copyOf(recordIDImage.getValue()))
                 .build());
       } catch (Exception e) {
         throw new RuntimeException(e.getMessage());
