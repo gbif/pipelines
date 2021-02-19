@@ -3,13 +3,18 @@ package au.org.ala.pipelines.interpreters;
 import au.org.ala.kvs.client.ALACollectionLookup;
 import au.org.ala.kvs.client.ALACollectionMatch;
 import au.org.ala.kvs.client.ALACollectoryMetadata;
+import au.org.ala.kvs.client.EntityReference;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.BiConsumer;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.KeyValueStore;
-import org.gbif.pipelines.io.avro.*;
+import org.gbif.pipelines.io.avro.ALAAttributionRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.MetadataRecord;
 
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -30,6 +35,23 @@ public class ALAAttributionInterpreter {
           aar.setLicenseVersion(m.getLicenseVersion());
           aar.setHasDefaultValues(
               m.getDefaultDarwinCoreValues() != null && !m.getDefaultDarwinCoreValues().isEmpty());
+
+          // hub memberships
+          List<EntityReference> hubs = m.getHubMembership();
+          if (hubs != null && !hubs.isEmpty()) {
+            List<org.gbif.pipelines.io.avro.EntityReference> refs = new ArrayList<>();
+            aar.setHubMembership(refs);
+            hubs.stream()
+                .forEach(
+                    hub ->
+                        refs.add(
+                            org.gbif.pipelines.io.avro.EntityReference.newBuilder()
+                                .setName(hub.getName())
+                                .setUid(hub.getUid())
+                                .setUri(hub.getUri())
+                                .build()));
+          }
+
         } else {
           throw new RuntimeException(
               "Unable to retrieve connection parameters for dataset: " + mr.getId());

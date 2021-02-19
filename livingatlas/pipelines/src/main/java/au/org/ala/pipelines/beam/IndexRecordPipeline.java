@@ -173,9 +173,9 @@ public class IndexRecordPipeline {
             .apply("Map attribution to KV", alaAttributionTransform.toKv());
 
     // load images
-    PCollection<KV<String, ImageServiceRecord>> alaImageServiceRecords = null;
+    PCollection<KV<String, ImageRecord>> alaImageRecords = null;
     if (options.getIncludeImages()) {
-      alaImageServiceRecords = getLoadImageServiceRecords(options, p);
+      alaImageRecords = getLoadImageServiceRecords(options, p);
     }
 
     // load taxon profiles
@@ -191,8 +191,7 @@ public class IndexRecordPipeline {
               .apply("Map attribution to KV", alaSensitiveDataRecordTransform.toKv());
     }
 
-    final TupleTag<ImageServiceRecord> imageServiceRecordTupleTag =
-        new TupleTag<ImageServiceRecord>() {};
+    final TupleTag<ImageRecord> imageRecordTupleTag = new TupleTag<ImageRecord>() {};
 
     final TupleTag<TaxonProfile> speciesListsRecordTupleTag = new TupleTag<TaxonProfile>() {};
 
@@ -210,7 +209,7 @@ public class IndexRecordPipeline {
             measurementOrFactTransform.getTag(),
             alaAttributionTransform.getTag(),
             alaUuidTransform.getTag(),
-            options.getIncludeImages() ? imageServiceRecordTupleTag : null,
+            options.getIncludeImages() ? imageRecordTupleTag : null,
             options.getIncludeSpeciesLists() ? speciesListsRecordTupleTag : null,
             options.getIncludeSensitiveData() ? alaSensitiveDataRecordTransform.getTag() : null,
             metadataView,
@@ -243,7 +242,7 @@ public class IndexRecordPipeline {
     }
 
     if (options.getIncludeImages()) {
-      kpct = kpct.and(imageServiceRecordTupleTag, alaImageServiceRecords);
+      kpct = kpct.and(imageRecordTupleTag, alaImageRecords);
     }
 
     if (options.getIncludeGbifTaxonomy()) {
@@ -291,12 +290,12 @@ public class IndexRecordPipeline {
    * @param p
    * @return
    */
-  private static PCollection<KV<String, ImageServiceRecord>> getLoadImageServiceRecords(
+  private static PCollection<KV<String, ImageRecord>> getLoadImageServiceRecords(
       IndexingPipelineOptions options, Pipeline p) {
-    PCollection<KV<String, ImageServiceRecord>> alaImageServiceRecords;
+    PCollection<KV<String, ImageRecord>> alaImageServiceRecords;
     alaImageServiceRecords =
         p.apply(
-                AvroIO.read(ImageServiceRecord.class)
+                AvroIO.read(ImageRecord.class)
                     .from(
                         String.join(
                             "/",
@@ -306,8 +305,8 @@ public class IndexRecordPipeline {
                             "images",
                             "*.avro")))
             .apply(
-                MapElements.into(new TypeDescriptor<KV<String, ImageServiceRecord>>() {})
-                    .via((ImageServiceRecord tr) -> KV.of(tr.getId(), tr)));
+                MapElements.into(new TypeDescriptor<KV<String, ImageRecord>>() {})
+                    .via((ImageRecord tr) -> KV.of(tr.getId(), tr)));
     return alaImageServiceRecords;
   }
 }

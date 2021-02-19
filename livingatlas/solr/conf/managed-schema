@@ -143,9 +143,17 @@
   <field name="speciesListUid"     type="string"  docValues="true" multiValued="true"  indexed="true" />
   <field name="imageID"            type="string"  docValues="true" multiValued="false" indexed="true" />
   <field name="imageIDs"           type="string"  docValues="true" multiValued="true"  indexed="true" />
+  <field name="soundIDs"           type="string"  docValues="true" multiValued="true"  indexed="true" />
+  <field name="videoIDs"           type="string"  docValues="true" multiValued="true"  indexed="true" />
   <field name="multimedia"         type="string"  docValues="true" multiValued="true"  indexed="true" />
+  <field name="multimediaLicense"  type="string"  docValues="true" multiValued="true"  indexed="true" />
   <field name="assertions"         type="string"  docValues="true" multiValued="true"  indexed="true" />
+  <field name="geospatialIssues"   type="string"  docValues="true" multiValued="true"  indexed="true" />
+  <field name="taxonomicIssues"    type="string"  docValues="true" multiValued="true"  indexed="true" />
   <field name="defaultValuesUsed"  type="boolean" docValues="true" multiValued="true"  indexed="true" />
+  <field name="occurrenceYear"     type="date" docValues="true" multiValued="true"  indexed="true" />
+  <!-- to be removed -->
+  <field name="occurrence_year"    type="date" docValues="true" multiValued="true"  indexed="true" />
 
   <!-- Legacy conservation fields -->
   <field name="raw_stateConservation" type="string"  docValues="true" multiValued="false"  indexed="true" />
@@ -191,7 +199,6 @@
   <field name="depth" type="double" docValues="true" indexed="true"/>
   <field name="depthAccuracy" type="double" docValues="true" indexed="true"/>
   <field name="disposition" type="string" docValues="true" indexed="true"/>
-  <field name="dynamicProperties" type="text"  indexed="true"/>
   <field name="earliestAgeOrLowestStage" type="string" docValues="true" indexed="true"/>
   <field name="earliestEonOrLowestEonothem" type="string" docValues="true" indexed="true"/>
   <field name="earliestEpochOrLowestSeries" type="string" docValues="true" indexed="true"/>
@@ -404,9 +411,9 @@
   <field name="subfamily"   type="string" docValues="true" indexed="true"/>
 
   <!-- ALA Sensitive data fields -->
-  <field name="sensitive"  type="boolean" docValues="true" indexed="true"/>
-  <field name="generalisationInMetres"  type="string" docValues="true" indexed="true"/>
-  <field name="generalisationToApplyInMetres"  type="string" docValues="true" indexed="true"/>
+  <field name="sensitive"                       type="string" docValues="true" indexed="true"/>
+  <field name="generalisationInMetres"          type="string" docValues="true" indexed="true"/>
+  <field name="generalisationToApplyInMetres"   type="string" docValues="true" indexed="true"/>
 
   <!-- GGBN loan fields and ABCD fields -->
   <field name="loanDestination"  type="string" docValues="true" indexed="true"/>
@@ -470,9 +477,11 @@
   <dynamicField name="*_b" type="boolean" docValues="true" indexed="true" stored="false"/>
   <dynamicField name="*_f" type="float" docValues="true" indexed="true" stored="false"/>
   <dynamicField name="*_d" type="double" docValues="true" indexed="true" stored="false"/>
+  <dynamicField name="dynamicProperties_*" type="string" docValues="true" indexed="true" stored="false"/>
 
   <copyField source="lat_long" dest="geohash"/>
   <copyField source="lat_long" dest="location"/>
+  <copyField source="occurrenceYear" dest="occurrence_year"/>
 
   <!-- Deprecated ALA SOLR fields no longer in use will be mapped to this unused SOLR field so
        as not to throw an error. No data will be added to this field.  -->

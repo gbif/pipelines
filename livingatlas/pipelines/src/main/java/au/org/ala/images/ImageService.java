@@ -13,6 +13,6 @@ public interface ImageService {
   Call<BatchUploadResponse> upload(
       @Part("dataResourceUid") RequestBody dataResourceUid, @Part MultipartBody.Part file);
 
-  @GET("/ws/exportDatasetMapping/{dataResourceUid}")
+  @GET("/ws/exportDataset/{dataResourceUid}")
   Call<ResponseBody> downloadMappingFile(@Path("dataResourceUid") String dataResourceUid);
 }
