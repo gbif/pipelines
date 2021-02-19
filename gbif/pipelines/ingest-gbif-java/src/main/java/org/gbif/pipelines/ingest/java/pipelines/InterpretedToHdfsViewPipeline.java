@@ -182,27 +182,34 @@ public class InterpretedToHdfsViewPipeline {
     String id = options.getDatasetId() + '_' + options.getAttempt();
 
     // Write OccurrenceHdfsRecord
-    TableRecordWriter.<OccurrenceHdfsRecord>builder()
-        .recordFunction(occurrenceHdfsRecordFn)
-        .basicRecords(basicMapFeature.get().values())
-        .targetTempPath(
-            PathBuilder.buildFilePathHdfsViewUsingInputPath(options, id + AVRO_EXTENSION))
-        .schema(OccurrenceHdfsRecord.getClassSchema())
-        .executor(executor)
-        .options(options)
-        .build()
-        .write();
+    TableRecordWriter<OccurrenceHdfsRecord> occurrenceHdfsRecordWriter =
+        TableRecordWriter.<OccurrenceHdfsRecord>builder()
+            .recordFunction(occurrenceHdfsRecordFn)
+            .basicRecords(basicMapFeature.get().values())
+            .targetTempPath(
+                PathBuilder.buildFilePathHdfsViewUsingInputPath(options, id + AVRO_EXTENSION))
+            .schema(OccurrenceHdfsRecord.getClassSchema())
+            .executor(executor)
+            .options(options)
+            .build()
+            .write();
 
     // Write MeasurementOrFactTable
-    TableRecordWriter.<MeasurementOrFactTable>builder()
-        .recordFunction(moftFn)
-        .basicRecords(basicMapFeature.get().values())
-        .targetTempPath(PathBuilder.buildFilePathMoftUsingInputPath(options, id + AVRO_EXTENSION))
-        .schema(MeasurementOrFactTable.getClassSchema())
-        .executor(executor)
-        .options(options)
-        .build()
-        .write();
+    TableRecordWriter<MeasurementOrFactTable> measurementOrFactTableWriter =
+        TableRecordWriter.<MeasurementOrFactTable>builder()
+            .recordFunction(moftFn)
+            .basicRecords(basicMapFeature.get().values())
+            .targetTempPath(
+                PathBuilder.buildFilePathMoftUsingInputPath(options, id + AVRO_EXTENSION))
+            .schema(MeasurementOrFactTable.getClassSchema())
+            .executor(executor)
+            .options(options)
+            .build()
+            .write();
+
+    // Wait if async
+    occurrenceHdfsRecordWriter.waitAsync();
+    measurementOrFactTableWriter.waitAsync();
 
     SharedLockUtils.doHdfsPrefixLock(options, () -> HdfsViewAvroUtils.move(options));
 

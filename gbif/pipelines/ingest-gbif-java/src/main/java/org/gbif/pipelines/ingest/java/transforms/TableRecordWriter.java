@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 import lombok.Builder;
@@ -29,35 +30,49 @@ public class TableRecordWriter<T> {
   @NonNull private final Schema schema;
   @NonNull private final ExecutorService executor;
 
+  private Runnable waitFn;
+
   @SneakyThrows
-  public void write() {
+  public TableRecordWriter<T> write() {
     try (SyncDataFileWriter<T> writer = createWriter(options)) {
       boolean useSyncMode = options.getSyncThreshold() > basicRecords.size();
       if (useSyncMode) {
         syncWrite(writer);
       } else {
-        asyncWrite(writer);
+        CompletableFuture<?>[] futures = asyncWrite(writer);
+
+        waitFn =
+            () -> {
+              try {
+                CompletableFuture.allOf(futures).get();
+              } catch (InterruptedException | ExecutionException ex) {
+                throw new RuntimeException(ex);
+              }
+            };
       }
+    }
+    return this;
+  }
+
+  public void waitAsync() {
+    if (waitFn != null) {
+      waitFn.run();
     }
   }
 
-  @SneakyThrows
-  private void asyncWrite(SyncDataFileWriter<T> writer) {
-    CompletableFuture<?>[] futures =
-        basicRecords.stream()
-            .map(
-                br -> {
-                  Optional<T> t = recordFunction.apply(br);
-                  if (t.isPresent()) {
-                    Runnable runnable = () -> writer.append(t.get());
-                    return CompletableFuture.runAsync(runnable, executor);
-                  }
-                  return null;
-                })
-            .filter(Objects::nonNull)
-            .toArray(CompletableFuture[]::new);
-    // Wait for all futures
-    CompletableFuture.allOf(futures).get();
+  private CompletableFuture<?>[] asyncWrite(SyncDataFileWriter<T> writer) {
+    return basicRecords.stream()
+        .map(
+            br -> {
+              Optional<T> t = recordFunction.apply(br);
+              if (t.isPresent()) {
+                Runnable runnable = () -> writer.append(t.get());
+                return CompletableFuture.runAsync(runnable, executor);
+              }
+              return null;
+            })
+        .filter(Objects::nonNull)
+        .toArray(CompletableFuture[]::new);
   }
 
   private void syncWrite(SyncDataFileWriter<T> writer) {

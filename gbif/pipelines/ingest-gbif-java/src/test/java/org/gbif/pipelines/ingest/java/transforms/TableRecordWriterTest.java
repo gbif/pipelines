@@ -67,7 +67,8 @@ public class TableRecordWriterTest {
         .targetTempPath(path)
         .schema(OccurrenceHdfsRecord.getClassSchema())
         .build()
-        .write();
+        .write()
+        .waitAsync();
 
     // Deserialize OccurrenceHdfsRecord from disk
     File result =
@@ -133,7 +134,8 @@ public class TableRecordWriterTest {
         .targetTempPath(path)
         .schema(OccurrenceHdfsRecord.getClassSchema())
         .build()
-        .write();
+        .write()
+        .waitAsync();
 
     // Deserialize OccurrenceHdfsRecord from disk
     File result =
