@@ -1,8 +1,7 @@
 package org.gbif.pipelines.ingest.java.pipelines;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.ALL;
-import static org.gbif.pipelines.core.utils.FsUtils.createParentDirectories;
+import static org.gbif.pipelines.ingest.java.transforms.InterpretedAvroWriter.createAvroWriter;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -20,16 +19,12 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.avro.specific.SpecificRecordBase;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
-import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.factory.ConfigFactory;
 import org.gbif.pipelines.core.factory.FileVocabularyFactory;
@@ -37,7 +32,6 @@ import org.gbif.pipelines.core.factory.FileVocabularyFactory.VocabularyBackedTer
 import org.gbif.pipelines.core.functions.SerializableConsumer;
 import org.gbif.pipelines.core.io.AvroReader;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
-import org.gbif.pipelines.core.io.SyncDataFileWriterBuilder;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.factory.ClusteringServiceFactory;
 import org.gbif.pipelines.factory.GeocodeKvStoreFactory;
@@ -54,11 +48,9 @@ import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.Record;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
-import org.gbif.pipelines.transforms.Transform;
 import org.gbif.pipelines.transforms.common.ExtensionFilterTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.GrscicollTransform;
@@ -381,33 +373,6 @@ public class VerbatimToInterpretedPipeline {
 
     MetricsHandler.saveCountersToTargetPathFile(options, metrics.getMetricsResult());
     log.info("Pipeline has been finished - {}", LocalDateTime.now());
-  }
-
-  /** Create an AVRO file writer */
-  @SneakyThrows
-  private static <T> SyncDataFileWriter<T> createAvroWriter(
-      InterpretationPipelineOptions options,
-      Transform transform,
-      String id,
-      boolean useInvalidName) {
-    String baseName = useInvalidName ? transform.getBaseInvalidName() : transform.getBaseName();
-    String pathString =
-        PathBuilder.buildPathInterpretUsingTargetPath(options, baseName, id + AVRO_EXTENSION);
-    Path path = new Path(pathString);
-    FileSystem fs =
-        createParentDirectories(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), path);
-    return SyncDataFileWriterBuilder.builder()
-        .schema(transform.getAvroSchema())
-        .codec(options.getAvroCompressionType())
-        .outputStream(fs.create(path))
-        .syncInterval(options.getAvroSyncInterval())
-        .build()
-        .createSyncDataFileWriter();
-  }
-
-  private static <T extends SpecificRecordBase & Record> SyncDataFileWriter<T> createAvroWriter(
-      InterpretationPipelineOptions options, Transform<?, T> transform, String id) {
-    return createAvroWriter(options, transform, id, false);
   }
 
   /** Closes resources only one time, before JVM shuts down */

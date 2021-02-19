@@ -49,6 +49,7 @@ import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
+import org.gbif.wrangler.lock.Mutex;
 import org.slf4j.MDC;
 
 /**
@@ -211,7 +212,13 @@ public class InterpretedToHdfsViewPipeline {
     occurrenceHdfsRecordWriter.waitAsync();
     measurementOrFactTableWriter.waitAsync();
 
-    SharedLockUtils.doHdfsPrefixLock(options, () -> HdfsViewAvroUtils.move(options));
+    // Move files
+    Mutex.Action action = () -> HdfsViewAvroUtils.move(options);
+    if (options.getProperties() != null) {
+      SharedLockUtils.doHdfsPrefixLock(options, action);
+    } else {
+      action.execute();
+    }
 
     MetricsHandler.saveCountersToInputPathFile(options, metrics.getMetricsResult());
     log.info("Pipeline has been finished - {}", LocalDateTime.now());
