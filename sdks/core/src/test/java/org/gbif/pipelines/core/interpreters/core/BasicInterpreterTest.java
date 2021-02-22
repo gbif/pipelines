@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.gbif.api.vocabulary.AgentIdentifierType;
@@ -16,6 +15,7 @@ import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
+import org.gbif.pipelines.core.functions.SerializableFunction;
 import org.gbif.pipelines.io.avro.AgentIdentifier;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -28,7 +28,7 @@ public class BasicInterpreterTest {
 
   private static final String ID = "777";
 
-  private final Function<String, Optional<LookupConcept>> vocabularyLookupFn =
+  private final SerializableFunction<String, Optional<LookupConcept>> vocabularyLookupFn =
       v -> {
         if (v.equalsIgnoreCase("adult")) {
           Concept concept = new Concept();

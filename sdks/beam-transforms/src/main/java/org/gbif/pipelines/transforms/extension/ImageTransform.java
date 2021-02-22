@@ -57,6 +57,12 @@ public class ImageTransform extends Transform<ExtendedRecord, ImageRecord> {
     }
   }
 
+  /** Beam @Setup can be applied only to void method */
+  public ImageTransform init() {
+    setup();
+    return this;
+  }
+
   /** Maps {@link ImageRecord} to key value, where key is {@link ImageRecord#getId} */
   public MapElements<ImageRecord, KV<String, ImageRecord>> toKv() {
     return MapElements.into(new TypeDescriptor<KV<String, ImageRecord>>() {})

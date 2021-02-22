@@ -1,6 +1,7 @@
 package org.gbif.pipelines.core.interpreters.extension;
 
 import java.util.Objects;
+import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DwcTerm;
@@ -17,15 +18,21 @@ import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
  *
  * @see <a href="http://rs.gbif.org/extension/dwc/measurements_or_facts.xml</a>
  */
-@NoArgsConstructor(staticName = "create")
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class MeasurementOrFactInterpreter {
 
   private static final TargetHandler<MeasurementOrFact> HANDLER =
       ExtensionInterpretation.extension(Extension.MEASUREMENT_OR_FACT)
           .to(MeasurementOrFact::new)
+          .map(DwcTerm.measurementID, MeasurementOrFact::setMeasurementID)
           .map(DwcTerm.measurementType, MeasurementOrFact::setMeasurementType)
           .map(DwcTerm.measurementUnit, MeasurementOrFact::setMeasurementUnit)
-          .map(DwcTerm.measurementValue, MeasurementOrFact::setMeasurementValue);
+          .map(DwcTerm.measurementValue, MeasurementOrFact::setMeasurementValue)
+          .map(DwcTerm.measurementAccuracy, MeasurementOrFact::setMeasurementAccuracy)
+          .map(DwcTerm.measurementDeterminedBy, MeasurementOrFact::setMeasurementDeterminedBy)
+          .map(DwcTerm.measurementDeterminedDate, MeasurementOrFact::setMeasurementDeterminedDate)
+          .map(DwcTerm.measurementMethod, MeasurementOrFact::setMeasurementMethod)
+          .map(DwcTerm.measurementRemarks, MeasurementOrFact::setMeasurementRemarks);
 
   /**
    * Interprets measurements or facts of a {@link ExtendedRecord} and populates a {@link

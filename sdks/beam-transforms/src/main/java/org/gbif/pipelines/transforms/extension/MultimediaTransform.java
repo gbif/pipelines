@@ -63,6 +63,12 @@ public class MultimediaTransform extends Transform<ExtendedRecord, MultimediaRec
     }
   }
 
+  /** Beam @Setup can be applied only to void method */
+  public MultimediaTransform init() {
+    setup();
+    return this;
+  }
+
   /** Maps {@link MultimediaRecord} to key value, where key is {@link MultimediaRecord#getId} */
   public MapElements<MultimediaRecord, KV<String, MultimediaRecord>> toKv() {
     return MapElements.into(new TypeDescriptor<KV<String, MultimediaRecord>>() {})

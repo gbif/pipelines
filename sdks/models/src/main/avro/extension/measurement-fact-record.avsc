@@ -8,9 +8,15 @@
     "namespace":"org.gbif.pipelines.io.avro",
     "type":"record",
     "fields":[
+      {"name": "measurementID", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementID"},
       {"name": "measurementType", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementType"},
       {"name": "measurementValue", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementValue"},
-      {"name": "measurementUnit", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementUnit"}
+      {"name": "measurementUnit", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementUnit"},
+      {"name": "measurementAccuracy", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementAccuracy"},
+      {"name": "measurementDeterminedBy", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementDeterminedBy"},
+      {"name": "measurementDeterminedDate", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementDeterminedDate"},
+      {"name": "measurementMethod", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementMethod"},
+      {"name": "measurementRemarks", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementRemarks"}
     ]
   },
   {

@@ -1,6 +1,5 @@
 package org.gbif.pipelines.core.converters;
 
-import static org.gbif.pipelines.core.converters.OccurrenceHdfsRecordConverter.toOccurrenceHdfsRecord;
 import static org.junit.Assert.assertEquals;
 
 import java.time.LocalDate;
@@ -151,27 +150,16 @@ public class OccurrenceHdfsRecordConverterTest {
             .setEventDate(EventDate.newBuilder().setGte("2000").setLte("2010").build())
             .build();
 
-    MeasurementOrFactRecord measurementOrFactRecord =
-        MeasurementOrFactRecord.newBuilder()
-            .setId("1")
-            .setMeasurementOrFactItems(
-                Collections.singletonList(
-                    MeasurementOrFact.newBuilder()
-                        .setMeasurementType("t")
-                        .setMeasurementValue("v")
-                        .setMeasurementUnit("u")
-                        .build()))
-            .build();
-
     // When
     OccurrenceHdfsRecord hdfsRecord =
-        toOccurrenceHdfsRecord(
-            basicRecord,
-            metadataRecord,
-            taxonRecord,
-            temporalRecord,
-            extendedRecord,
-            measurementOrFactRecord);
+        OccurrenceHdfsRecordConverter.builder()
+            .basicRecord(basicRecord)
+            .metadataRecord(metadataRecord)
+            .taxonRecord(taxonRecord)
+            .temporalRecord(temporalRecord)
+            .extendedRecord(extendedRecord)
+            .build()
+            .convert();
 
     // Should
     // Test common fields
@@ -253,7 +241,11 @@ public class OccurrenceHdfsRecordConverterTest {
     multimedia.setLicense(License.CC_BY_4_0.name());
     multimedia.setSource("image.jpg");
     multimediaRecord.setMultimediaItems(Collections.singletonList(multimedia));
-    OccurrenceHdfsRecord hdfsRecord = toOccurrenceHdfsRecord(multimediaRecord);
+    OccurrenceHdfsRecord hdfsRecord =
+        OccurrenceHdfsRecordConverter.builder()
+            .multimediaRecord(multimediaRecord)
+            .build()
+            .convert();
 
     // Testing de-serialization
     List<Multimedia> media = MediaSerDeserUtils.fromJson(hdfsRecord.getExtMultimedia());
@@ -285,7 +277,8 @@ public class OccurrenceHdfsRecordConverterTest {
     basicRecord.setIsClustered(true);
 
     // When
-    OccurrenceHdfsRecord hdfsRecord = toOccurrenceHdfsRecord(basicRecord);
+    OccurrenceHdfsRecord hdfsRecord =
+        OccurrenceHdfsRecordConverter.builder().basicRecord(basicRecord).build().convert();
 
     // Should
     Assert.assertEquals(BasisOfRecord.HUMAN_OBSERVATION.name(), hdfsRecord.getBasisofrecord());
@@ -376,7 +369,8 @@ public class OccurrenceHdfsRecordConverterTest {
     taxonRecord.setNomenclature(Nomenclature.newBuilder().setSource("nothing").build());
 
     // When
-    OccurrenceHdfsRecord hdfsRecord = toOccurrenceHdfsRecord(taxonRecord);
+    OccurrenceHdfsRecord hdfsRecord =
+        OccurrenceHdfsRecordConverter.builder().taxonRecord(taxonRecord).build().convert();
 
     // Should
     Assert.assertEquals("Archaea", hdfsRecord.getKingdom());
@@ -427,7 +421,10 @@ public class OccurrenceHdfsRecordConverterTest {
             .setDateIdentified(rawEventDate)
             .setModified(rawEventDate)
             .build();
-    OccurrenceHdfsRecord hdfsRecord = toOccurrenceHdfsRecord(temporalRecord);
+
+    OccurrenceHdfsRecord hdfsRecord =
+        OccurrenceHdfsRecordConverter.builder().temporalRecord(temporalRecord).build().convert();
+
     Assert.assertEquals(Integer.valueOf(1), hdfsRecord.getDay());
     Assert.assertEquals(Integer.valueOf(1), hdfsRecord.getMonth());
     Assert.assertEquals(Integer.valueOf(2019), hdfsRecord.getYear());
@@ -464,7 +461,8 @@ public class OccurrenceHdfsRecordConverterTest {
             .build();
 
     // When
-    OccurrenceHdfsRecord hdfsRecord = toOccurrenceHdfsRecord(metadataRecord);
+    OccurrenceHdfsRecord hdfsRecord =
+        OccurrenceHdfsRecordConverter.builder().metadataRecord(metadataRecord).build().convert();
 
     // Should
     Assert.assertEquals(datasetKey, hdfsRecord.getDatasetkey());
@@ -504,7 +502,8 @@ public class OccurrenceHdfsRecordConverterTest {
             .build();
 
     // When
-    OccurrenceHdfsRecord hdfsRecord = toOccurrenceHdfsRecord(locationRecord);
+    OccurrenceHdfsRecord hdfsRecord =
+        OccurrenceHdfsRecordConverter.builder().locationRecord(locationRecord).build().convert();
 
     // Should
     Assert.assertEquals(Country.COSTA_RICA.getIso2LetterCode(), hdfsRecord.getCountrycode());
@@ -544,7 +543,8 @@ public class OccurrenceHdfsRecordConverterTest {
             .build();
 
     // When
-    OccurrenceHdfsRecord hdfsRecord = toOccurrenceHdfsRecord(temporalRecord);
+    OccurrenceHdfsRecord hdfsRecord =
+        OccurrenceHdfsRecordConverter.builder().temporalRecord(temporalRecord).build().convert();
 
     // Should
     Assert.assertArrayEquals(issues, hdfsRecord.getIssue().toArray(new String[issues.length]));
@@ -657,7 +657,7 @@ public class OccurrenceHdfsRecordConverterTest {
             .setMatchType(MatchType.FUZZY.name())
             .build();
 
-    GrscicollRecord record =
+    GrscicollRecord grscicollRecord =
         GrscicollRecord.newBuilder()
             .setId("1")
             .setInstitutionMatch(institutionMatch)
@@ -665,7 +665,8 @@ public class OccurrenceHdfsRecordConverterTest {
             .build();
 
     // When
-    OccurrenceHdfsRecord hdfsRecord = toOccurrenceHdfsRecord(record);
+    OccurrenceHdfsRecord hdfsRecord =
+        OccurrenceHdfsRecordConverter.builder().grscicollRecord(grscicollRecord).build().convert();
 
     // Should
     Assert.assertEquals(institutionMatch.getKey(), hdfsRecord.getInstitutionkey());

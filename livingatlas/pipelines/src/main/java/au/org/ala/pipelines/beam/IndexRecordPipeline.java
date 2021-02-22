@@ -155,12 +155,12 @@ public class IndexRecordPipeline {
 
     // ALA Specific
     PCollection<KV<String, ALAUUIDRecord>> alaUUidCollection =
-        p.apply("Read Taxon", alaUuidTransform.read(identifiersPathFn))
-            .apply("Map Taxon to KV", alaUuidTransform.toKv());
+        p.apply("Read UUID", alaUuidTransform.read(identifiersPathFn))
+            .apply("Map UUID to KV", alaUuidTransform.toKv());
 
     PCollection<KV<String, ALATaxonRecord>> alaTaxonCollection =
-        p.apply("Read Taxon", alaTaxonomyTransform.read(pathFn))
-            .apply("Map Taxon to KV", alaTaxonomyTransform.toKv());
+        p.apply("Read ALA Taxon", alaTaxonomyTransform.read(pathFn))
+            .apply("Map ALA Taxon to KV", alaTaxonomyTransform.toKv());
 
     PCollection<KV<String, ALAAttributionRecord>> alaAttributionCollection =
         p.apply("Read attribution", alaAttributionTransform.read(pathFn))
@@ -182,7 +182,7 @@ public class IndexRecordPipeline {
     if (options.getIncludeSensitiveData()) {
       alaSensitiveDataCollection =
           p.apply("Read sensitive data", alaSensitiveDataRecordTransform.read(pathFn))
-              .apply("Map attribution to KV", alaSensitiveDataRecordTransform.toKv());
+              .apply("Map sensitive to KV", alaSensitiveDataRecordTransform.toKv());
     }
 
     final TupleTag<ImageServiceRecord> imageServiceRecordTupleTag =

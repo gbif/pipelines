@@ -16,7 +16,6 @@
   <description>Utilities to support helpdesk investigations</description>
 
   <properties>
-    <sonar.skip>true</sonar.skip>
     <jcommander.version>1.78</jcommander.version>
   </properties>
 

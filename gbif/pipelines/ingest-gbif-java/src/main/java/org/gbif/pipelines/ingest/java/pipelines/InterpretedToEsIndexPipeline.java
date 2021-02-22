@@ -1,18 +1,13 @@
 package org.gbif.pipelines.ingest.java.pipelines;
 
-import static org.elasticsearch.common.xcontent.XContentType.JSON;
-import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing.GBIF_ID;
+import static org.gbif.pipelines.ingest.java.transforms.InterpretedAvroReader.readAvroAsFuture;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
-import java.util.function.UnaryOperator;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
@@ -23,12 +18,9 @@ import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
-import org.gbif.pipelines.common.beam.utils.PathBuilder;
-import org.gbif.pipelines.core.converters.GbifJsonConverter;
-import org.gbif.pipelines.core.converters.MultimediaConverter;
-import org.gbif.pipelines.core.io.AvroReader;
 import org.gbif.pipelines.core.io.ElasticsearchWriter;
 import org.gbif.pipelines.ingest.java.metrics.IngestMetricsBuilder;
+import org.gbif.pipelines.ingest.java.transforms.IndexRequestConverter;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -126,29 +118,6 @@ public class InterpretedToEsIndexPipeline {
     MDC.put("attempt", options.getAttempt().toString());
     MDC.put("step", StepType.INTERPRETED_TO_INDEX.name());
 
-    log.info("Options");
-    UnaryOperator<String> pathFn =
-        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
-
-    String esDocumentId = options.getEsDocumentId();
-    String hdfsSiteConfig = options.getHdfsSiteConfig();
-    String coreSiteConfig = options.getCoreSiteConfig();
-
-    log.info("Creating transformations");
-    // Core
-    BasicTransform basicTransform = BasicTransform.builder().create();
-    MetadataTransform metadataTransform = MetadataTransform.builder().create();
-    VerbatimTransform verbatimTransform = VerbatimTransform.create();
-    TemporalTransform temporalTransform = TemporalTransform.builder().create();
-    TaxonomyTransform taxonomyTransform = TaxonomyTransform.builder().create();
-    GrscicollTransform grscicollTransform = GrscicollTransform.builder().create();
-    LocationTransform locationTransform = LocationTransform.builder().create();
-
-    // Extension
-    MultimediaTransform multimediaTransform = MultimediaTransform.builder().create();
-    AudubonTransform audubonTransform = AudubonTransform.builder().create();
-    ImageTransform imageTransform = ImageTransform.builder().create();
-
     log.info("Init metrics");
     IngestMetrics metrics = IngestMetricsBuilder.createInterpretedToEsIndexMetrics();
 
@@ -156,165 +125,51 @@ public class InterpretedToEsIndexPipeline {
     log.info("Reading avro files...");
     // Reading all avro files in parallel
     CompletableFuture<Map<String, MetadataRecord>> metadataMapFeature =
-        CompletableFuture.supplyAsync(
-            () ->
-                AvroReader.readRecords(
-                    hdfsSiteConfig,
-                    coreSiteConfig,
-                    MetadataRecord.class,
-                    pathFn.apply(metadataTransform.getBaseName())),
-            executor);
+        readAvroAsFuture(options, executor, MetadataTransform.builder().create());
 
     CompletableFuture<Map<String, ExtendedRecord>> verbatimMapFeature =
-        CompletableFuture.supplyAsync(
-            () ->
-                AvroReader.readRecords(
-                    hdfsSiteConfig,
-                    coreSiteConfig,
-                    ExtendedRecord.class,
-                    pathFn.apply(verbatimTransform.getBaseName())),
-            executor);
+        readAvroAsFuture(options, executor, VerbatimTransform.create());
 
     CompletableFuture<Map<String, BasicRecord>> basicMapFeature =
-        CompletableFuture.supplyAsync(
-            () ->
-                AvroReader.readRecords(
-                    hdfsSiteConfig,
-                    coreSiteConfig,
-                    BasicRecord.class,
-                    pathFn.apply(basicTransform.getBaseName())),
-            executor);
+        readAvroAsFuture(options, executor, BasicTransform.builder().create());
 
     CompletableFuture<Map<String, TemporalRecord>> temporalMapFeature =
-        CompletableFuture.supplyAsync(
-            () ->
-                AvroReader.readRecords(
-                    hdfsSiteConfig,
-                    coreSiteConfig,
-                    TemporalRecord.class,
-                    pathFn.apply(temporalTransform.getBaseName())),
-            executor);
+        readAvroAsFuture(options, executor, TemporalTransform.builder().create());
 
     CompletableFuture<Map<String, LocationRecord>> locationMapFeature =
-        CompletableFuture.supplyAsync(
-            () ->
-                AvroReader.readRecords(
-                    hdfsSiteConfig,
-                    coreSiteConfig,
-                    LocationRecord.class,
-                    pathFn.apply(locationTransform.getBaseName())),
-            executor);
+        readAvroAsFuture(options, executor, LocationTransform.builder().create());
 
     CompletableFuture<Map<String, TaxonRecord>> taxonMapFeature =
-        CompletableFuture.supplyAsync(
-            () ->
-                AvroReader.readRecords(
-                    hdfsSiteConfig,
-                    coreSiteConfig,
-                    TaxonRecord.class,
-                    pathFn.apply(taxonomyTransform.getBaseName())),
-            executor);
+        readAvroAsFuture(options, executor, TaxonomyTransform.builder().create());
 
     CompletableFuture<Map<String, GrscicollRecord>> grscicollMapFeature =
-        CompletableFuture.supplyAsync(
-            () ->
-                AvroReader.readRecords(
-                    hdfsSiteConfig,
-                    coreSiteConfig,
-                    GrscicollRecord.class,
-                    pathFn.apply(grscicollTransform.getBaseName())),
-            executor);
+        readAvroAsFuture(options, executor, GrscicollTransform.builder().create());
 
     CompletableFuture<Map<String, MultimediaRecord>> multimediaMapFeature =
-        CompletableFuture.supplyAsync(
-            () ->
-                AvroReader.readRecords(
-                    hdfsSiteConfig,
-                    coreSiteConfig,
-                    MultimediaRecord.class,
-                    pathFn.apply(multimediaTransform.getBaseName())),
-            executor);
+        readAvroAsFuture(options, executor, MultimediaTransform.builder().create());
 
     CompletableFuture<Map<String, ImageRecord>> imageMapFeature =
-        CompletableFuture.supplyAsync(
-            () ->
-                AvroReader.readRecords(
-                    hdfsSiteConfig,
-                    coreSiteConfig,
-                    ImageRecord.class,
-                    pathFn.apply(imageTransform.getBaseName())),
-            executor);
+        readAvroAsFuture(options, executor, ImageTransform.builder().create());
 
     CompletableFuture<Map<String, AudubonRecord>> audubonMapFeature =
-        CompletableFuture.supplyAsync(
-            () ->
-                AvroReader.readRecords(
-                    hdfsSiteConfig,
-                    coreSiteConfig,
-                    AudubonRecord.class,
-                    pathFn.apply(audubonTransform.getBaseName())),
-            executor);
+        readAvroAsFuture(options, executor, AudubonTransform.builder().create());
 
-    CompletableFuture.allOf(
-            metadataMapFeature,
-            verbatimMapFeature,
-            basicMapFeature,
-            temporalMapFeature,
-            locationMapFeature,
-            taxonMapFeature,
-            grscicollMapFeature,
-            multimediaMapFeature,
-            imageMapFeature,
-            audubonMapFeature)
-        .get();
-
-    MetadataRecord metadata = metadataMapFeature.get().values().iterator().next();
-    Map<String, BasicRecord> basicMap = basicMapFeature.get();
-    Map<String, ExtendedRecord> verbatimMap = verbatimMapFeature.get();
-    Map<String, TemporalRecord> temporalMap = temporalMapFeature.get();
-    Map<String, LocationRecord> locationMap = locationMapFeature.get();
-    Map<String, TaxonRecord> taxonMap = taxonMapFeature.get();
-    Map<String, GrscicollRecord> grscicollMap = grscicollMapFeature.get();
-    Map<String, MultimediaRecord> multimediaMap = multimediaMapFeature.get();
-    Map<String, ImageRecord> imageMap = imageMapFeature.get();
-    Map<String, AudubonRecord> audubonMap = audubonMapFeature.get();
-
-    log.info("Joining avro files...");
-    // Join all records, convert into string json and IndexRequest for ES
     Function<BasicRecord, IndexRequest> indexRequestFn =
-        br -> {
-          String k = br.getId();
-          // Core
-          ExtendedRecord er =
-              verbatimMap.getOrDefault(k, ExtendedRecord.newBuilder().setId(k).build());
-          TemporalRecord tr =
-              temporalMap.getOrDefault(k, TemporalRecord.newBuilder().setId(k).build());
-          LocationRecord lr =
-              locationMap.getOrDefault(k, LocationRecord.newBuilder().setId(k).build());
-          TaxonRecord txr = taxonMap.getOrDefault(k, TaxonRecord.newBuilder().setId(k).build());
-          GrscicollRecord gr =
-              grscicollMap.getOrDefault(k, GrscicollRecord.newBuilder().setId(k).build());
-          // Extension
-          MultimediaRecord mr =
-              multimediaMap.getOrDefault(k, MultimediaRecord.newBuilder().setId(k).build());
-          ImageRecord ir = imageMap.getOrDefault(k, ImageRecord.newBuilder().setId(k).build());
-          AudubonRecord ar =
-              audubonMap.getOrDefault(k, AudubonRecord.newBuilder().setId(k).build());
-
-          MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
-          ObjectNode json = GbifJsonConverter.toJson(metadata, br, tr, lr, txr, gr, mmr, er);
-
-          metrics.incMetric(AVRO_TO_JSON_COUNT);
-
-          String docId =
-              esDocumentId.equals(GBIF_ID)
-                  ? br.getGbifId().toString()
-                  : json.get(esDocumentId).asText();
-
-          return new IndexRequest(options.getEsIndexName()).id(docId).source(json.toString(), JSON);
-        };
-
-    boolean useSyncMode = options.getSyncThreshold() > basicMap.size();
+        IndexRequestConverter.builder()
+            .metrics(metrics)
+            .esIndexName(options.getEsIndexName())
+            .esDocumentId(options.getEsDocumentId())
+            .metadata(metadataMapFeature.get().values().iterator().next())
+            .verbatimMap(verbatimMapFeature.get())
+            .temporalMap(temporalMapFeature.get())
+            .locationMap(locationMapFeature.get())
+            .taxonMap(taxonMapFeature.get())
+            .grscicollMap(grscicollMapFeature.get())
+            .multimediaMap(multimediaMapFeature.get())
+            .imageMap(imageMapFeature.get())
+            .audubonMap(audubonMapFeature.get())
+            .build()
+            .getFn();
 
     log.info("Pushing data into Elasticsearch");
     ElasticsearchWriter.<BasicRecord>builder()
@@ -322,9 +177,9 @@ public class InterpretedToEsIndexPipeline {
         .esMaxBatchSize(options.getEsMaxBatchSize())
         .esMaxBatchSizeBytes(options.getEsMaxBatchSizeBytes())
         .executor(executor)
-        .useSyncMode(useSyncMode)
+        .syncModeThreshold(options.getSyncThreshold())
         .indexRequestFn(indexRequestFn)
-        .records(basicMap.values())
+        .records(basicMapFeature.get().values())
         .build()
         .write();
 

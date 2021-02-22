@@ -118,28 +118,28 @@ public class ALASensitiveDataRecordTransform
   /** Beam @Setup initializes resources */
   @Setup
   public void setup() {
-    if (this.speciesStore == null && this.speciesStoreSupplier != null) {
+    if (speciesStore == null && speciesStoreSupplier != null) {
       log.debug("Initialize Sensitive Species KvStore");
-      this.speciesStore = this.speciesStoreSupplier.get();
+      speciesStore = speciesStoreSupplier.get();
     }
-    if (this.reportStore == null && this.reportStoreSupplier != null) {
+    if (reportStore == null && reportStoreSupplier != null) {
       log.debug("Initialize Sensitivity Report KvStore");
-      this.reportStore = this.reportStoreSupplier.get();
+      reportStore = reportStoreSupplier.get();
     }
-    if (this.conservationService == null && this.conservationServiceSupplier != null) {
+    if (conservationService == null && conservationServiceSupplier != null) {
       log.debug("Initialize Conservation API");
-      this.conservationService = this.conservationServiceSupplier.get();
+      conservationService = conservationServiceSupplier.get();
     }
-    if (this.generalisations == null) {
+    if (generalisations == null && conservationService != null) {
       log.debug("Get generalisations to apply");
-      this.generalisations = this.conservationService.getGeneralisations();
-      this.sensitiveFields = null;
+      generalisations = conservationService.getGeneralisations();
+      sensitiveFields = null;
     }
-    if (this.sensitiveFields == null) {
+    if (sensitiveFields == null && generalisations != null) {
       log.debug("Building sensitive field list");
-      this.sensitiveFields = new HashSet<>(this.generalisations.size());
-      for (Generalisation g : this.generalisations) {
-        this.sensitiveFields.addAll(
+      sensitiveFields = new HashSet<>(generalisations.size());
+      for (Generalisation g : generalisations) {
+        sensitiveFields.addAll(
             g.getFields().stream().map(FieldAccessor::getField).collect(Collectors.toSet()));
       }
     }
@@ -166,17 +166,19 @@ public class ALASensitiveDataRecordTransform
     CoGbkResult v = source.getValue();
     String id = source.getKey();
 
-    if (v == null) return Optional.empty();
+    if (v == null) {
+      return Optional.empty();
+    }
 
-    ExtendedRecord ier = this.erTag == null ? null : v.getOnly(this.erTag, null);
-    TemporalRecord itr = this.trTag == null ? null : v.getOnly(this.trTag, null);
-    TaxonRecord itxr = this.txrTag == null ? null : v.getOnly(this.txrTag, null);
-    ALATaxonRecord iatxr = this.atxrTag == null ? null : v.getOnly(this.atxrTag, null);
-    LocationRecord ilr = this.lrTag == null ? null : v.getOnly(lrTag, null);
+    ExtendedRecord ier = erTag == null ? null : v.getOnly(erTag, null);
+    TemporalRecord itr = trTag == null ? null : v.getOnly(trTag, null);
+    TaxonRecord itxr = txrTag == null ? null : v.getOnly(txrTag, null);
+    ALATaxonRecord iatxr = atxrTag == null ? null : v.getOnly(atxrTag, null);
+    LocationRecord ilr = lrTag == null ? null : v.getOnly(lrTag, null);
 
     ALASensitivityRecord sr = ALASensitivityRecord.newBuilder().setId(id).build();
 
-    Map<String, String> properties = new HashMap<>(this.sensitiveFields.size());
+    Map<String, String> properties = new HashMap<>(sensitiveFields.size());
     properties.put(
         DwcTerm.scientificName.qualifiedName(),
         SensitiveDataInterpreter.extractScientificName(iatxr, itxr, ier));

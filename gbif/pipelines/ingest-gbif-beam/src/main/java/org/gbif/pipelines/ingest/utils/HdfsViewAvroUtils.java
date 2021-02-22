@@ -1,6 +1,9 @@
 package org.gbif.pipelines.ingest.utils;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.HdfsView.VIEW_MOFT;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.HdfsView.VIEW_MOFT_DIR;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.HdfsView.VIEW_OCCURRENCE;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.HdfsView.VIEW_OCCURRENCE_DIR;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -18,20 +21,37 @@ public class HdfsViewAvroUtils {
    * the dataset being processed.
    */
   public static void move(InterpretationPipelineOptions options) {
-    // Moving files to the directory of latest records
+
+    // OccurrenceHdfsRecord
+    move(
+        options,
+        VIEW_OCCURRENCE_DIR,
+        VIEW_OCCURRENCE,
+        PathBuilder.buildFilePathHdfsViewUsingInputPath(options, "*.avro"));
+
+    // MeasurementOrFactTable
+    move(
+        options,
+        VIEW_MOFT_DIR,
+        VIEW_MOFT,
+        PathBuilder.buildFilePathMoftUsingInputPath(options, "*.avro"));
+  }
+
+  private static void move(
+      InterpretationPipelineOptions options, String viewDir, String view, String filter) {
     String targetPath = options.getTargetPath();
 
     String deletePath =
-        PathBuilder.buildPath(targetPath, VIEW_OCCURRENCE + "_" + options.getDatasetId() + "_*")
+        PathBuilder.buildPath(targetPath, viewDir, view + "_" + options.getDatasetId() + "_*")
             .toString();
     log.info("Deleting avro files {}", deletePath);
     FsUtils.deleteByPattern(
         options.getHdfsSiteConfig(), options.getCoreSiteConfig(), targetPath, deletePath);
-    String filter = PathBuilder.buildFilePathHdfsViewUsingInputPath(options, "*.avro");
 
-    log.info("Moving files with pattern {} to {}", filter, targetPath);
+    String movePath = PathBuilder.buildPath(targetPath, viewDir).toString();
+    log.info("Moving files with pattern {} to {}", filter, movePath);
     FsUtils.moveDirectory(
-        options.getHdfsSiteConfig(), options.getCoreSiteConfig(), targetPath, filter);
-    log.info("Files moved to {} directory", targetPath);
+        options.getHdfsSiteConfig(), options.getCoreSiteConfig(), movePath, filter);
+    log.info("Files moved to {} directory", movePath);
   }
 }

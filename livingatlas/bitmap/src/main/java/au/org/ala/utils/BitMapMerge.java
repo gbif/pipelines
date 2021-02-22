@@ -15,39 +15,43 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import javax.imageio.ImageIO;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Merge multiple bitmaps If there are overlapped zones, this part of colour will be replaced with
  * another unique colour
  */
+@Slf4j
 public class BitMapMerge {
 
-  private Map<String, Integer> colourKey = new HashMap<>();
-  private Set<Integer> usedColours = new HashSet<>();
+  private static final int HEIGHT = 3600;
+  private static final int WIDTH = 7200;
+
+  private final Map<String, Integer> colourKey = new HashMap<>();
+  private final Set<Integer> usedColours = new HashSet<>();
+
   private int lastColour = 0;
   private int inc = 0;
-  private int height = 3600;
-  private int width = 7200;
 
   /** Combines the bitmaps for every layer into a single bitmap, for use as a client cache. */
   public void combineAllBitmaps(String target, String... bitmaps) throws IOException {
     // Path pngFile = Paths.get(target);
 
-    System.out.println("Generating combined layer bitmap.");
+    log.info("Generating combined layer bitmap.");
     Stopwatch sw = Stopwatch.createStarted();
 
-    BufferedImage combined = new BufferedImage(width, height, TYPE_INT_RGB);
+    BufferedImage combined = new BufferedImage(WIDTH, HEIGHT, TYPE_INT_RGB);
 
     BufferedImage[] images = new BufferedImage[bitmaps.length];
     for (int i = 0; i < bitmaps.length; i++) {
-      System.out.println("Loading " + bitmaps[i]);
+      log.info("Loading {}", bitmaps[i]);
       images[i] = ImageIO.read(new FileInputStream(bitmaps[i]));
-      assert (height == combined.getHeight());
-      assert (width == combined.getWidth());
+      assert (HEIGHT == combined.getHeight());
+      assert (WIDTH == combined.getWidth());
     }
 
-    for (int x = 0; x < width; x++) {
-      for (int y = 0; y < height; y++) {
+    for (int x = 0; x < WIDTH; x++) {
+      for (int y = 0; y < HEIGHT; y++) {
         StringBuilder key = new StringBuilder();
         for (BufferedImage image : images) {
           int colour = image.getRGB(x, y) & 0x00FFFFFF;
@@ -64,18 +68,20 @@ public class BitMapMerge {
         combined.setRGB(x, y, getColour(key.toString()));
       }
     }
-    System.out.println("Writing to " + target);
+    log.info("Writing to {}", target);
     File pngFile = new File(target);
-    pngFile.createNewFile();
-    OutputStream pngOut = new FileOutputStream(pngFile, false);
-    ImageIO.write(combined, "PNG", pngOut);
-
-    System.out.println(
-        "Combined bitmap with "
-            + colourKey.size()
-            + " colours completed in "
-            + sw.elapsed(TimeUnit.SECONDS)
-            + "s");
+    boolean isCreated = pngFile.createNewFile();
+    if (isCreated) {
+      try (OutputStream pngOut = new FileOutputStream(pngFile, false)) {
+        ImageIO.write(combined, "PNG", pngOut);
+        log.info(
+            "Combined bitmap with {} colours completed in {} s",
+            colourKey.size(),
+            sw.elapsed(TimeUnit.SECONDS));
+      }
+    } else {
+      log.error("PNG file {} wasn't created!", target);
+    }
   }
 
   private synchronized int getColour(String key) {
@@ -88,7 +94,6 @@ public class BitMapMerge {
       for (inc = 2400; inc < 20000; inc++) {
         if (0xFFFFFF % inc == 3) break;
       }
-      //   System.out.println("Colour increment is " + inc);
     }
 
     if (key.matches("^W+$")) {
@@ -101,7 +106,6 @@ public class BitMapMerge {
 
     if (!colourKey.containsKey(key)) {
       lastColour = (lastColour + inc) % 0xFFFFFF;
-      //    System.out.println("Colour "+key+" is now "+String.format("#%06x", lastColour));
       assert !usedColours.contains(lastColour);
       colourKey.put(key, lastColour);
       usedColours.add(lastColour);
