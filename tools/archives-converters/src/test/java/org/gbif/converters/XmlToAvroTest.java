@@ -35,11 +35,11 @@ public class XmlToAvroTest {
     fields.add(createSchemaField("gbifId", "GBIF OccurrenceId"));
     // Add RAW fields
     ext.getProperties().stream()
-        .map(p -> createSchemaField(p.getName().toLowerCase(), p.getQualname()))
+        .map(p -> createSchemaField("v_" + p.getName().toLowerCase(), p.getQualname()))
         .forEach(fields::add);
     // Add fields
     ext.getProperties().stream()
-        .map(p -> createSchemaField("v_" + p.getName().toLowerCase(), p.getQualname()))
+        .map(p -> createSchemaField(p.getName().toLowerCase(), p.getQualname()))
         .forEach(fields::add);
 
     String schema =
