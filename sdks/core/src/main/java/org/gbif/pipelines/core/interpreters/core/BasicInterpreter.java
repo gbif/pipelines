@@ -43,6 +43,7 @@ import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.kvs.KeyValueStore;
+import org.gbif.pipelines.core.functions.SerializableFunction;
 import org.gbif.pipelines.core.parsers.SimpleTypeParser;
 import org.gbif.pipelines.core.parsers.VocabularyParser;
 import org.gbif.pipelines.core.parsers.clustering.ClusteringService;
@@ -177,7 +178,7 @@ public class BasicInterpreter {
 
   /** {@link DwcTerm#lifeStage} interpretation. */
   public static BiConsumer<ExtendedRecord, BasicRecord> interpretLifeStage(
-      Function<String, Optional<LookupConcept>> vocabularyLookupFn) {
+      SerializableFunction<String, Optional<LookupConcept>> vocabularyLookupFn) {
     return (er, br) -> {
       if (vocabularyLookupFn == null) {
         return;

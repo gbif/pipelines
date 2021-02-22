@@ -3,6 +3,8 @@ package org.gbif.pipelines.ingest.java.transforms;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 import static org.gbif.pipelines.core.utils.FsUtils.createParentDirectories;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.hadoop.fs.FileSystem;
@@ -14,6 +16,7 @@ import org.gbif.pipelines.core.io.SyncDataFileWriterBuilder;
 import org.gbif.pipelines.io.avro.Record;
 import org.gbif.pipelines.transforms.Transform;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class InterpretedAvroWriter {
 
   /** Create an AVRO file writer */

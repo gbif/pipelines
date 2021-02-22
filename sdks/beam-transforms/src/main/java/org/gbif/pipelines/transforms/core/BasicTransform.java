@@ -8,7 +8,6 @@ import static org.gbif.pipelines.core.interpreters.core.BasicInterpreter.interpr
 import java.time.Instant;
 import java.util.Optional;
 import java.util.function.BiConsumer;
-import java.util.function.Function;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import org.apache.beam.sdk.transforms.MapElements;
@@ -17,6 +16,7 @@ import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.api.vocabulary.OccurrenceStatus;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.core.functions.SerializableConsumer;
+import org.gbif.pipelines.core.functions.SerializableFunction;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.BasicInterpreter;
@@ -52,7 +52,7 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
   private VocabularyLookup lifeStageLookup;
   private ClusteringService clusteringService;
 
-  private Function<String, Optional<LookupConcept>> lifeStageLookupFn;
+  private SerializableFunction<String, Optional<LookupConcept>> lifeStageLookupFn;
 
   @Builder(buildMethodName = "create")
   private BasicTransform(

@@ -13,76 +13,84 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class LengthParser {
 
+  private static final String TOTAL_LENGTH = "total length";
+  private static final String HEAD_BODY_LENGTH = "head-body length";
+  private static final String FORK_LENGTH = "fork length";
+  private static final String STANDARD_LENGTH = "standard length";
+  private static final String SNOUT_VENT_LENGTH = "snout-vent length";
+  private static final String SHORTHAND = "_shorthand_";
+  private static final String ENGLISH = "_english_";
+
   private static final DynamicParser PARSER =
       DynamicParser.builder()
           .parserName(Parser.LENGTH)
 
           // Add all replacement values for regex <key> group
-          .replaceRegexKeyGroupResultWith("_english_", "total length")
-          .replaceRegexKeyGroupResultWith("_shorthand_", "total length")
-          .replaceRegexKeyGroupResultWith("body", "head-body length")
-          .replaceRegexKeyGroupResultWith("body length", "head-body length")
-          .replaceRegexKeyGroupResultWith("catalog", "total length")
-          .replaceRegexKeyGroupResultWith("fork length", "fork length")
-          .replaceRegexKeyGroupResultWith("forklength", "fork length")
-          .replaceRegexKeyGroupResultWith("headbodylengthinmillimeters", "head-body length")
-          .replaceRegexKeyGroupResultWith("label length", "total length")
-          .replaceRegexKeyGroupResultWith("label. length", "total length")
-          .replaceRegexKeyGroupResultWith("label.length", "total length")
-          .replaceRegexKeyGroupResultWith("length", "total length")
-          .replaceRegexKeyGroupResultWith("lengthinmillimeters", "total length")
-          .replaceRegexKeyGroupResultWith("lengths", "total length")
-          .replaceRegexKeyGroupResultWith("max length", "total length")
-          .replaceRegexKeyGroupResultWith("maxlength", "total length")
-          .replaceRegexKeyGroupResultWith("mean length", "total length")
-          .replaceRegexKeyGroupResultWith("meas", "total length")
-          .replaceRegexKeyGroupResultWith("meas,", "total length")
-          .replaceRegexKeyGroupResultWith("meas.", "total length")
-          .replaceRegexKeyGroupResultWith("meas. h.b.", "head-body length")
-          .replaceRegexKeyGroupResultWith("meas: l", "total length")
-          .replaceRegexKeyGroupResultWith("measurement", "total length")
-          .replaceRegexKeyGroupResultWith("measurements", "total length")
-          .replaceRegexKeyGroupResultWith("measurements are", "total length")
-          .replaceRegexKeyGroupResultWith("measurements made", "total length")
-          .replaceRegexKeyGroupResultWith("measurements of", "total length")
-          .replaceRegexKeyGroupResultWith("measurements questionable", "total length")
-          .replaceRegexKeyGroupResultWith("measurements read", "total length")
-          .replaceRegexKeyGroupResultWith("measurements reads", "total length")
-          .replaceRegexKeyGroupResultWith("measurements: l", "total length")
-          .replaceRegexKeyGroupResultWith("measurementsnt", "total length")
-          .replaceRegexKeyGroupResultWith("mesurements", "total length")
-          .replaceRegexKeyGroupResultWith("on tag", "total length")
-          .replaceRegexKeyGroupResultWith("s.l", "standard length")
-          .replaceRegexKeyGroupResultWith("s.l.", "standard length")
-          .replaceRegexKeyGroupResultWith("s.v.", "snout-vent length")
-          .replaceRegexKeyGroupResultWith("sl", "standard length")
-          .replaceRegexKeyGroupResultWith("sl.", "standard length")
-          .replaceRegexKeyGroupResultWith("snout vent length", "snout-vent length")
-          .replaceRegexKeyGroupResultWith("snout vent lengths", "snout-vent length")
-          .replaceRegexKeyGroupResultWith("snout-vent length", "snout-vent length")
-          .replaceRegexKeyGroupResultWith("snout-vent lengths", "snout-vent length")
-          .replaceRegexKeyGroupResultWith("snoutventlengthinmm", "snout-vent length")
-          .replaceRegexKeyGroupResultWith("specimen", "total length")
-          .replaceRegexKeyGroupResultWith("specimens", "total length")
-          .replaceRegexKeyGroupResultWith("standard length", "standard length")
-          .replaceRegexKeyGroupResultWith("sv", "snout-vent length")
-          .replaceRegexKeyGroupResultWith("svl", "snout-vent length")
-          .replaceRegexKeyGroupResultWith("svl.", "snout-vent length")
-          .replaceRegexKeyGroupResultWith("t.l", "total length")
-          .replaceRegexKeyGroupResultWith("t.l.", "total length")
-          .replaceRegexKeyGroupResultWith("tag", "total length")
-          .replaceRegexKeyGroupResultWith("tl", "total length")
-          .replaceRegexKeyGroupResultWith("tl.", "total length")
-          .replaceRegexKeyGroupResultWith("tl_", "total length")
-          .replaceRegexKeyGroupResultWith("tol", "total length")
-          .replaceRegexKeyGroupResultWith("total", "total length")
-          .replaceRegexKeyGroupResultWith("total  length", "total length")
-          .replaceRegexKeyGroupResultWith("total length", "total length")
-          .replaceRegexKeyGroupResultWith("total length in mm", "total length")
-          .replaceRegexKeyGroupResultWith("total lengths", "total length")
-          .replaceRegexKeyGroupResultWith("totallength", "total length")
-          .replaceRegexKeyGroupResultWith("totallengthin", "total length")
-          .replaceRegexKeyGroupResultWith("totallengthinmm", "total length")
+          .replaceRegexKeyGroupResultWith(ENGLISH, TOTAL_LENGTH)
+          .replaceRegexKeyGroupResultWith(SHORTHAND, TOTAL_LENGTH)
+          .replaceRegexKeyGroupResultWith("body", HEAD_BODY_LENGTH)
+          .replaceRegexKeyGroupResultWith("body length", HEAD_BODY_LENGTH)
+          .replaceRegexKeyGroupResultWith("catalog", TOTAL_LENGTH)
+          .replaceRegexKeyGroupResultWith(FORK_LENGTH, FORK_LENGTH)
+          .replaceRegexKeyGroupResultWith("forklength", FORK_LENGTH)
+          .replaceRegexKeyGroupResultWith("headbodylengthinmillimeters", HEAD_BODY_LENGTH)
+          .replaceRegexKeyGroupResultWith("label length", TOTAL_LENGTH)
+          .replaceRegexKeyGroupResultWith("label. length", TOTAL_LENGTH)
+          .replaceRegexKeyGroupResultWith("label.length", TOTAL_LENGTH)
+          .replaceRegexKeyGroupResultWith("length", TOTAL_LENGTH)
+          .replaceRegexKeyGroupResultWith("lengthinmillimeters", TOTAL_LENGTH)
+          .replaceRegexKeyGroupResultWith("lengths", TOTAL_LENGTH)
+          .replaceRegexKeyGroupResultWith("max length", TOTAL_LENGTH)
+          .replaceRegexKeyGroupResultWith("maxlength", TOTAL_LENGTH)
+          .replaceRegexKeyGroupResultWith("mean length", TOTAL_LENGTH)
+          .replaceRegexKeyGroupResultWith("meas", TOTAL_LENGTH)
+          .replaceRegexKeyGroupResultWith("meas,", TOTAL_LENGTH)
+          .replaceRegexKeyGroupResultWith("meas.", TOTAL_LENGTH)
+          .replaceRegexKeyGroupResultWith("meas. h.b.", HEAD_BODY_LENGTH)
+          .replaceRegexKeyGroupResultWith("meas: l", TOTAL_LENGTH)
+          .replaceRegexKeyGroupResultWith("measurement", TOTAL_LENGTH)
+          .replaceRegexKeyGroupResultWith("measurements", TOTAL_LENGTH)
+          .replaceRegexKeyGroupResultWith("measurements are", TOTAL_LENGTH)
+          .replaceRegexKeyGroupResultWith("measurements made", TOTAL_LENGTH)
+          .replaceRegexKeyGroupResultWith("measurements of", TOTAL_LENGTH)
+          .replaceRegexKeyGroupResultWith("measurements questionable", TOTAL_LENGTH)
+          .replaceRegexKeyGroupResultWith("measurements read", TOTAL_LENGTH)
+          .replaceRegexKeyGroupResultWith("measurements reads", TOTAL_LENGTH)
+          .replaceRegexKeyGroupResultWith("measurements: l", TOTAL_LENGTH)
+          .replaceRegexKeyGroupResultWith("measurementsnt", TOTAL_LENGTH)
+          .replaceRegexKeyGroupResultWith("mesurements", TOTAL_LENGTH)
+          .replaceRegexKeyGroupResultWith("on tag", TOTAL_LENGTH)
+          .replaceRegexKeyGroupResultWith("s.l", STANDARD_LENGTH)
+          .replaceRegexKeyGroupResultWith("s.l.", STANDARD_LENGTH)
+          .replaceRegexKeyGroupResultWith("s.v.", SNOUT_VENT_LENGTH)
+          .replaceRegexKeyGroupResultWith("sl", STANDARD_LENGTH)
+          .replaceRegexKeyGroupResultWith("sl.", STANDARD_LENGTH)
+          .replaceRegexKeyGroupResultWith("snout vent length", SNOUT_VENT_LENGTH)
+          .replaceRegexKeyGroupResultWith("snout vent lengths", SNOUT_VENT_LENGTH)
+          .replaceRegexKeyGroupResultWith(SNOUT_VENT_LENGTH, SNOUT_VENT_LENGTH)
+          .replaceRegexKeyGroupResultWith("snout-vent lengths", SNOUT_VENT_LENGTH)
+          .replaceRegexKeyGroupResultWith("snoutventlengthinmm", SNOUT_VENT_LENGTH)
+          .replaceRegexKeyGroupResultWith("specimen", TOTAL_LENGTH)
+          .replaceRegexKeyGroupResultWith("specimens", TOTAL_LENGTH)
+          .replaceRegexKeyGroupResultWith(STANDARD_LENGTH, STANDARD_LENGTH)
+          .replaceRegexKeyGroupResultWith("sv", SNOUT_VENT_LENGTH)
+          .replaceRegexKeyGroupResultWith("svl", SNOUT_VENT_LENGTH)
+          .replaceRegexKeyGroupResultWith("svl.", SNOUT_VENT_LENGTH)
+          .replaceRegexKeyGroupResultWith("t.l", TOTAL_LENGTH)
+          .replaceRegexKeyGroupResultWith("t.l.", TOTAL_LENGTH)
+          .replaceRegexKeyGroupResultWith("tag", TOTAL_LENGTH)
+          .replaceRegexKeyGroupResultWith("tl", TOTAL_LENGTH)
+          .replaceRegexKeyGroupResultWith("tl.", TOTAL_LENGTH)
+          .replaceRegexKeyGroupResultWith("tl_", TOTAL_LENGTH)
+          .replaceRegexKeyGroupResultWith("tol", TOTAL_LENGTH)
+          .replaceRegexKeyGroupResultWith("total", TOTAL_LENGTH)
+          .replaceRegexKeyGroupResultWith("total  length", TOTAL_LENGTH)
+          .replaceRegexKeyGroupResultWith(TOTAL_LENGTH, TOTAL_LENGTH)
+          .replaceRegexKeyGroupResultWith("total length in mm", TOTAL_LENGTH)
+          .replaceRegexKeyGroupResultWith("total lengths", TOTAL_LENGTH)
+          .replaceRegexKeyGroupResultWith("totallength", TOTAL_LENGTH)
+          .replaceRegexKeyGroupResultWith("totallengthin", TOTAL_LENGTH)
+          .replaceRegexKeyGroupResultWith("totallengthinmm", TOTAL_LENGTH)
 
           // In the case when key may contain units
           .addUnitsFromKeyRegex("(?<units>mm|millimeters)$")
@@ -143,7 +151,7 @@ public class LengthParser {
                   + "(?<units1>(?&len_foot))\\s*"
                   + "(?<value2>(?&range))\\s*"
                   + "(?<units2>(?&len_inch))",
-              "_english_",
+              ENGLISH,
               null)
           // Look for total key, number (not a range) and optional units
           // Like: total length = 10.5 mm
@@ -191,7 +199,7 @@ public class LengthParser {
           // Length is in shorthand notation
           .addMatchPattern(
               "\\b(?:(?<key>(?&all_len_keys))(?&key_end))?(?<value>(?&number))(?&len_shorthand)",
-              "_shorthand_",
+              SHORTHAND,
               "mm")
           // A shorthand notation with some abbreviations in it
           .addMatchPattern(
@@ -199,7 +207,7 @@ public class LengthParser {
                   + "[a-z]*"
                   + "(?<value>(?&number))"
                   + "(?&len_shorthand_euro)",
-              "_shorthand_",
+              SHORTHAND,
               "mm")
           // Now we can look for the total length, RANGE, optional units
           // See 'total_len_key_num' above

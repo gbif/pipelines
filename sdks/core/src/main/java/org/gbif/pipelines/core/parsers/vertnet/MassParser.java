@@ -16,6 +16,9 @@ import lombok.extern.slf4j.Slf4j;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class MassParser {
 
+  private static final String ENGLISH = "_english_";
+  private static final String SHORTHAND = "_shorthand_";
+
   @VisibleForTesting protected static final String TOTAL_WEIGHT = "total weight";
 
   private static final DynamicParser PARSER =
@@ -23,8 +26,8 @@ public class MassParser {
           .parserName(Parser.MASS)
 
           // Add all replacement values for regex <key> group
-          .replaceRegexKeyGroupResultWith("_english_", TOTAL_WEIGHT)
-          .replaceRegexKeyGroupResultWith("_shorthand_", TOTAL_WEIGHT)
+          .replaceRegexKeyGroupResultWith(ENGLISH, TOTAL_WEIGHT)
+          .replaceRegexKeyGroupResultWith(SHORTHAND, TOTAL_WEIGHT)
           .replaceRegexKeyGroupResultWith("body", TOTAL_WEIGHT)
           .replaceRegexKeyGroupResultWith("body mass", TOTAL_WEIGHT)
           .replaceRegexKeyGroupResultWith("body weight", TOTAL_WEIGHT)
@@ -122,7 +125,7 @@ public class MassParser {
                   + "(?<units1>(?&wt_pound))\\s*"
                   + "(?<value2>(?&range))\\s*"
                   + "(?<units2>(?&wt_ounce))",
-              "_english_",
+              ENGLISH,
               null)
           // Look for body mass with a total weight key and optional units
           .addMatchPattern(
@@ -158,7 +161,7 @@ public class MassParser {
                   + "(?&wt_shorthand)\\s*"
                   + "(?<value>(?&number))\\s*"
                   + "(?<units>(?&wt_units))?",
-              "_shorthand_",
+              SHORTHAND,
               null)
           // Body mass is in shorthand notation (units required)
           .addMatchPattern(
@@ -166,7 +169,7 @@ public class MassParser {
                   + "(?&wt_shorthand_req)\\s*"
                   + "(?<value>(?&number))\\s*"
                   + "(?<units>(?&wt_units))",
-              "_shorthand_",
+              SHORTHAND,
               null)
           // A shorthand notation with some abbreviations in it
           .addMatchPattern(
@@ -174,11 +177,11 @@ public class MassParser {
                   + "(?&wt_shorthand_euro)\\s*"
                   + "(?<value>(?&number))\\s*"
                   + "(?<units>(?&wt_units))?",
-              "_shorthand_",
+              SHORTHAND,
               null)
           // A notation using 'fa'. It can be shorter than the other shorthand notations
           .addMatchPattern(
-              "fa\\d*-(?<value>(?&number))\\s*(?<units>(?&wt_units))?", "_shorthand_", null)
+              "fa\\d*-(?<value>(?&number))\\s*(?<units>(?&wt_units))?", SHORTHAND, null)
           // Now we can look for the body mass, RANGE, optional units
           .addMatchPattern(
               "(?<key>(?&wt_key_word))(?&key_end)(?<value>(?&range))\\s*(?<units>(?&wt_units))?")
