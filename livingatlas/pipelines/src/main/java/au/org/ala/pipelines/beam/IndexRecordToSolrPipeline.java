@@ -87,7 +87,7 @@ public class IndexRecordToSolrPipeline {
       // Load Samples - keyed on LatLng
       PCollection<KV<String, SampleRecord>> sampleRecords = loadSampleRecords(options, pipeline);
 
-      // split into records with coordinates and records without
+      // Split into records with coordinates and records without
       // Filter records with coordinates - we will join these to samples
       PCollection<KV<String, IndexRecord>> recordsWithCoordinates =
           indexRecordsCollection.apply(
@@ -113,38 +113,67 @@ public class IndexRecordToSolrPipeline {
                     }
                   }));
 
-      // Co group IndexRecords with coordinates with Sample data
-      final TupleTag<IndexRecord> indexRecordTag = new TupleTag<>();
-      final TupleTag<SampleRecord> samplingTag = new TupleTag<>();
+      PCollectionList<KV<String, IndexRecord>> partitions =
+          recordsWithCoordinatesKeyedLatng.apply(
+              Partition.of(
+                  3,
+                  new Partition.PartitionFn<KV<String, IndexRecord>>() {
+                    @Override
+                    public int partitionFor(KV<String, IndexRecord> elem, int numPartitions) {
+                      return (elem.getValue().getInts().get("month") != null
+                              ? elem.getValue().getInts().get("month")
+                              : 0)
+                          % 3;
+                    }
+                  }));
 
-      // Join collections by LatLng string
-      PCollection<KV<String, CoGbkResult>> results =
-          KeyedPCollectionTuple.of(samplingTag, sampleRecords)
-              .and(indexRecordTag, recordsWithCoordinatesKeyedLatng)
-              .apply(CoGroupByKey.create());
+      PCollection<KV<String, IndexRecord>> p0 = joinSampleRecord(sampleRecords, partitions.get(0));
+      PCollection<KV<String, IndexRecord>> p1 = joinSampleRecord(sampleRecords, partitions.get(1));
+      PCollection<KV<String, IndexRecord>> p2 = joinSampleRecord(sampleRecords, partitions.get(2));
 
-      // Create collection which contains samples keyed with indexRecord.id
-      indexRecordsCollection = results.apply(ParDo.of(joinSampling(indexRecordTag, samplingTag)));
+      PCollection<KV<String, IndexRecord>> pcs =
+          PCollectionList.of(p0)
+              .and(p1)
+              .and(p2)
+              .apply(Flatten.<KV<String, IndexRecord>>pCollections());
+
+      log.info("Adding step 4: Create SOLR connection");
+      SolrIO.ConnectionConfiguration conn =
+          SolrIO.ConnectionConfiguration.create(options.getZkHost());
+
+      writeToSolr(options, pcs, conn);
+
+      if (recordsWithoutCoordinates != null) {
+        log.info("Adding step 5: Write records (without coordinates) to SOLR");
+        writeToSolr(options, recordsWithoutCoordinates, conn);
+      }
+
     } else {
       log.info("Skipping adding sampling");
-    }
-
-    log.info("Adding step 4: Create SOLR connection");
-    SolrIO.ConnectionConfiguration conn =
-        SolrIO.ConnectionConfiguration.create(options.getZkHost());
-
-    log.info("Adding step 5: Write records to SOLR");
-    writeToSolr(options, indexRecordsCollection, conn);
-
-    if (recordsWithoutCoordinates != null) {
-      log.info("Adding step 5: Write records (without coordinates) to SOLR");
-      writeToSolr(options, recordsWithoutCoordinates, conn);
     }
 
     log.info("Starting pipeline");
     pipeline.run(options).waitUntilFinish();
 
     log.info("Solr indexing pipeline complete");
+  }
+
+  private static PCollection<KV<String, IndexRecord>> joinSampleRecord(
+      PCollection<KV<String, SampleRecord>> sampleRecords,
+      PCollection<KV<String, IndexRecord>> recordsWithCoordinatesKeyedLatng) {
+    PCollection<KV<String, IndexRecord>> indexRecordsCollection;
+    // Co group IndexRecords with coordinates with Sample data
+    final TupleTag<IndexRecord> indexRecordTag = new TupleTag<>();
+    final TupleTag<SampleRecord> samplingTag = new TupleTag<>();
+
+    // Join collections by LatLng string
+    PCollection<KV<String, CoGbkResult>> results =
+        KeyedPCollectionTuple.of(samplingTag, sampleRecords)
+            .and(indexRecordTag, recordsWithCoordinatesKeyedLatng)
+            .apply(CoGroupByKey.create());
+
+    // Create collection which contains samples keyed with indexRecord.id
+    return results.apply(ParDo.of(joinSampling(indexRecordTag, samplingTag)));
   }
 
   private static PCollection<KV<String, IndexRecord>> addJacknifeInfo(
