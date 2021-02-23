@@ -18,7 +18,8 @@ public class XmlToAvscGeneratorMojoTest {
 
     XmlToAvscGeneratorMojo mojo = new XmlToAvscGeneratorMojo();
     mojo.setExtensions(
-        Collections.singletonList("https://rs.gbif.org/extension/dwc/measurements_or_facts.xml"));
+        Collections.singletonList(
+            "MeasurementOrFactTable,https://rs.gbif.org/extension/dwc/measurements_or_facts.xml"));
     mojo.setNamespace("org.gbif.pipelines.io.avro");
     mojo.setPathToWrite(path);
 

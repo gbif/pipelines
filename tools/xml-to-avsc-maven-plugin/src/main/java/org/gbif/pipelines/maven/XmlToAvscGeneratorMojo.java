@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.apache.avro.JsonProperties;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
 import org.apache.maven.plugin.AbstractMojo;
@@ -39,13 +40,18 @@ public class XmlToAvscGeneratorMojo extends AbstractMojo {
 
   @Override
   public void execute() throws MojoExecutionException {
-    for (String extension : extensions) {
-      try {
-        URL url = new URL(extension);
-        convertAndWrite(url);
-      } catch (Exception ex) {
-        throw new MojoExecutionException(ex.getMessage());
+
+    try {
+      Files.createDirectories(Paths.get(pathToWrite));
+
+      for (String extension : extensions) {
+
+        String[] ext = extension.split(",");
+        URL url = new URL(ext[1]);
+        convertAndWrite(ext[0], url);
       }
+    } catch (Exception ex) {
+      throw new MojoExecutionException(ex.getMessage());
     }
   }
 
@@ -61,7 +67,7 @@ public class XmlToAvscGeneratorMojo extends AbstractMojo {
     this.namespace = namespace;
   }
 
-  private void convertAndWrite(URL url) throws Exception {
+  private void convertAndWrite(String name, URL url) throws Exception {
     // Read extension
     ThesaurusHandlingRule thr = new ThesaurusHandlingRule(new EmptyVocabulariesManager());
     ExtensionFactory factory = new ExtensionFactory(thr, SAXUtils.getNsAwareSaxParserFactory());
@@ -70,25 +76,18 @@ public class XmlToAvscGeneratorMojo extends AbstractMojo {
     // Convert into an avro schema
     List<Schema.Field> fields = new ArrayList<>(ext.getProperties().size() + 1);
     // Add gbifID
-    fields.add(createSchemaField("gbifid", Type.LONG, false, "GBIF internal identifier"));
+    fields.add(createSchemaField("gbifid", Type.LONG, "GBIF internal identifier", false));
     // Add RAW fields
     ext.getProperties().stream()
-        .map(p -> createSchemaField("v_" + p.getName().toLowerCase(), p.getQualname()))
+        .map(p -> createSchemaField("v_" + nomalizeFieldName(p.getName()), p.getQualname()))
         .forEach(fields::add);
     // Add fields
     ext.getProperties().stream()
-        .map(p -> createSchemaField(p.getName().toLowerCase(), p.getQualname()))
+        .map(p -> createSchemaField(nomalizeFieldName(p.getName()), p.getQualname()))
         .forEach(fields::add);
 
-    String className = ext.getName() + "Table";
-
     String schema =
-        Schema.createRecord(
-                className,
-                "Avro Schema of Hive Table for " + ext.getName(),
-                namespace,
-                false,
-                fields)
+        Schema.createRecord(name, "Avro Schema of Hive Table for " + name, namespace, false, fields)
             .toString(true);
 
     // Add comment
@@ -96,14 +95,18 @@ public class XmlToAvscGeneratorMojo extends AbstractMojo {
     schema = comment + schema;
 
     // Save into a file
-    Path path = Paths.get(pathToWrite, normalizeFileName(className));
+    Path path = Paths.get(pathToWrite, normalizeFileName(name));
     Files.deleteIfExists(path);
     getLog().info("Create avro schema for " + ext.getName() + " extension - " + path.toString());
     Files.write(path, schema.getBytes(UTF_8));
   }
 
   private Schema.Field createSchemaField(String name, String doc) {
-    return createSchemaField(name, Type.STRING, true, doc);
+    return createSchemaField(name, Type.STRING, doc, true);
+  }
+
+  private String nomalizeFieldName(String name) {
+    return name.toLowerCase().trim().replace('-', '_');
   }
 
   private String normalizeFileName(String name) {
@@ -115,15 +118,18 @@ public class XmlToAvscGeneratorMojo extends AbstractMojo {
   }
 
   private Schema.Field createSchemaField(
-      String name, Schema.Type type, boolean isNull, String doc) {
-    List<Schema> optionalString = new ArrayList<>(2);
+      String name, Schema.Type type, String doc, boolean isNull) {
 
+    Schema schema;
     if (isNull) {
+      List<Schema> optionalString = new ArrayList<>(2);
       optionalString.add(Schema.create(Schema.Type.NULL));
+      optionalString.add(Schema.create(type));
+      schema = Schema.createUnion(optionalString);
+    } else {
+      schema = Schema.create(type);
     }
-    optionalString.add(Schema.create(type));
-
-    return new Schema.Field(name, Schema.createUnion(optionalString), doc, "null");
+    return new Schema.Field(name, schema, doc, JsonProperties.NULL_VALUE);
   }
 
   private static class EmptyVocabulariesManager implements VocabulariesManager {

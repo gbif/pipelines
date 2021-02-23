@@ -37,8 +37,8 @@
               <pathToWrite>${schema-generated-path}</pathToWrite>
               <namespace>${namespace}</namespace>
               <extensions>
-                <extension>https://rs.gbif.org/extension/dwc/measurements_or_facts.xml</extension>
-                <extension>https://rs.gbif.org/extension/ggbn/cloning.xml</extension>
+                <extension>MeasurementOrFactTable,https://rs.gbif.org/extension/dwc/measurements_or_facts.xml</extension>
+                <extension>CloningTable,https://rs.gbif.org/extension/ggbn/cloning.xml</extension>
               </extensions>
             </configuration>
           </execution>
@@ -112,6 +112,9 @@
           <filesets>
             <fileset>
               <directory>${avro-generated-path}</directory>
+            </fileset>
+            <fileset>
+              <directory>${schema-generated-path}</directory>
             </fileset>
           </filesets>
         </configuration>
