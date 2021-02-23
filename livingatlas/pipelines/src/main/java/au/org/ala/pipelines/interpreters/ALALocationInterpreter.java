@@ -54,6 +54,32 @@ public class ALALocationInterpreter {
    * Interpret stateProvince values, performing a coordinate lookup and comparing with supplied
    * stateProvince.
    *
+   * @param biomeLookupService Provided by GBIF GADM
+   */
+  public static BiConsumer<ExtendedRecord, LocationRecord> interpretBiome(
+      KeyValueStore<LatLng, GeocodeResponse> biomeLookupService) {
+    return (er, lr) -> {
+      ParsedField<LatLng> parsedLatLon = CoordinatesParser.parseCoords(er);
+      addIssue(lr, parsedLatLon.getIssues());
+
+      if (parsedLatLon.isSuccessful()) {
+
+        LatLng latlng = parsedLatLon.getResult();
+        lr.setDecimalLatitude(latlng.getLatitude());
+        lr.setDecimalLongitude(latlng.getLongitude());
+        lr.setHasCoordinate(true);
+
+        // do the lookup by coordinates
+        GeocodeResponse biome = biomeLookupService.get(latlng);
+        lr.setBiome(biome.getLocations().get(0).getName());
+      }
+    };
+  }
+
+  /**
+   * Interpret stateProvince values, performing a coordinate lookup and comparing with supplied
+   * stateProvince.
+   *
    * @param stateProvinceLookupService Provided by ALA country/state SHP file
    */
   public static BiConsumer<ExtendedRecord, LocationRecord> interpretStateProvince(

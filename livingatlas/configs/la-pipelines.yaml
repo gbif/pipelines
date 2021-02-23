@@ -60,6 +60,9 @@ geocodeConfig:
   stateProvince:
     path: /data/pipelines-shp/cw_state_poly
     field: FEATURE
+  biome:
+    path: /data/pipelines-shp/gadm0
+    field: FEATURE
 #locationInfoConfig:
 #    countryNamesFile : /data/pipelines-data/resources/countries.txt
 #    countryCentrePointsFile : /data/pipelines-data/resources/countryCentrePoints.txt
@@ -341,5 +344,5 @@ solr-sh-args:
     conf: spark.default.parallelism=500
     num-executors: 6
     executor-cores: 8
-    executor-memory: 24G
-    driver-memory: 4G
+    executor-memory: 22G
+    driver-memory: 6G

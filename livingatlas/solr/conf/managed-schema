@@ -119,15 +119,17 @@
   <field name="id" type="string" docValues="true" multiValued="false" indexed="true"/>
 
   <!-- required for WMS -->
-  <field name="point-0.0001" type="string" docValues="true" indexed="true" />
-  <field name="point-0.001" type="string" docValues="true" indexed="true" />
-  <field name="point-0.01" type="string" docValues="true" indexed="true" />
-  <field name="point-0.02" type="string" docValues="true" indexed="true"/>
-  <field name="point-0.1" type="string" docValues="true" indexed="true"/>
-  <field name="point-1" type="string" docValues="true" indexed="true" />
-  <field name="lat_long" type="string" docValues="true" indexed="false" />
-  <field name="geohash"  type="geohash"  indexed="true"/>
-  <field name="location" type="location" indexed="true"/>
+  <field name="point-0.0001"  type="string" docValues="true" indexed="true" />
+  <field name="point-0.001"   type="string" docValues="true" indexed="true" />
+  <field name="point-0.01"    type="string" docValues="true" indexed="true" />
+  <field name="point-0.02"    type="string" docValues="true" indexed="true"/>
+  <field name="point-0.1"     type="string" docValues="true" indexed="true"/>
+  <field name="point-1"       type="string" docValues="true" indexed="true" />
+  <field name="lat_long"      type="string" docValues="true" indexed="false" />
+  <field name="biome"         type="string" docValues="true" indexed="true" />
+  <field name="speciesHabitats"         type="string" docValues="true" indexed="true" />
+  <field name="geohash"       type="geohash"  indexed="true"/>
+  <field name="location"      type="location" indexed="true"/>
 
   <!-- required for Explore Your Area -->
   <field name="names_and_lsid"       type="string" docValues="true" indexed="true"/>
@@ -150,7 +152,7 @@
   <field name="assertions"         type="string"  docValues="true" multiValued="true"  indexed="true" />
   <field name="geospatialIssues"   type="string"  docValues="true" multiValued="true"  indexed="true" />
   <field name="taxonomicIssues"    type="string"  docValues="true" multiValued="true"  indexed="true" />
-  <field name="defaultValuesUsed"  type="boolean" docValues="true" multiValued="true"  indexed="true" />
+  <field name="defaultValuesUsed"  type="boolean" docValues="true" indexed="true" />
   <field name="occurrenceYear"     type="date" docValues="true" multiValued="true"  indexed="true" />
   <!-- to be removed -->
   <field name="occurrence_year"    type="date" docValues="true" multiValued="true"  indexed="true" />
@@ -481,6 +483,7 @@
 
   <copyField source="lat_long" dest="geohash"/>
   <copyField source="lat_long" dest="location"/>
+  <copyField source="biome"    dest="speciesHabitats"/>
   <copyField source="occurrenceYear" dest="occurrence_year"/>
 
   <!-- Deprecated ALA SOLR fields no longer in use will be mapped to this unused SOLR field so

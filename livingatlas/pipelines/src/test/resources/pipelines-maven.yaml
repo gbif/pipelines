@@ -27,6 +27,9 @@ geocodeConfig:
     path: "/tmp/pipelines-shp/cw_state_poly"
     field: FEATURE
     source: "http://vliz.be/vmdcdata/marbound/"
+  biome:
+    path: "/tmp/pipelines-shp/gadm0"
+    field: FEATURE
 
 general:
   targetPath: /data/pipelines-data
