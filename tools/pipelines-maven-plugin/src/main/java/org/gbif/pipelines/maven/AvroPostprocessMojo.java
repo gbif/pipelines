@@ -76,6 +76,14 @@ public class AvroPostprocessMojo extends AbstractMojo {
     }
   }
 
+  public void setDirectory(String directory) {
+    this.directory = directory;
+  }
+
+  public void setDefaultPackage(String defaultPackage) {
+    this.defaultPackage = defaultPackage;
+  }
+
   /**
    * Modifies java class, adds Issues interface, Beam Avro and override annotation
    *
