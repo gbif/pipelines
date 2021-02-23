@@ -1,20 +1,16 @@
 package org.gbif.pipelines.maven;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-
-import org.gbif.dwc.digester.ThesaurusHandlingRule;
-import org.gbif.dwc.extensions.Extension;
-import org.gbif.dwc.extensions.ExtensionFactory;
-import org.gbif.dwc.extensions.VocabulariesManager;
-import org.gbif.dwc.extensions.Vocabulary;
-import org.gbif.dwc.xml.SAXUtils;
-
+import java.util.stream.Collectors;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
 import org.apache.maven.plugin.AbstractMojo;
@@ -22,8 +18,12 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
+import org.gbif.dwc.digester.ThesaurusHandlingRule;
+import org.gbif.dwc.extensions.Extension;
+import org.gbif.dwc.extensions.ExtensionFactory;
+import org.gbif.dwc.extensions.VocabulariesManager;
+import org.gbif.dwc.extensions.Vocabulary;
+import org.gbif.dwc.xml.SAXUtils;
 
 @Mojo(name = "postprocess", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
 public class XmlToAvscGeneratorMojo extends AbstractMojo {
@@ -47,6 +47,18 @@ public class XmlToAvscGeneratorMojo extends AbstractMojo {
         throw new MojoExecutionException(ex.getMessage());
       }
     }
+  }
+
+  public void setExtensions(List<String> extensions) {
+    this.extensions = extensions;
+  }
+
+  public void setPathToWrite(String pathToWrite) {
+    this.pathToWrite = pathToWrite;
+  }
+
+  public void setNamespace(String namespace) {
+    this.namespace = namespace;
   }
 
   private void convertAndWrite(URL url) throws Exception {
@@ -78,9 +90,9 @@ public class XmlToAvscGeneratorMojo extends AbstractMojo {
                 fields)
             .toString(true);
 
-    Path path = Paths.get(pathToWrite, className + ".avsc");
+    Path path = Paths.get(pathToWrite, normalizeFileName(className));
 
-    getLog().info("Create avro schema for extension - " + path.toString());
+    getLog().info("Create avro schema for " + ext.getName() + " extension - " + path.toString());
 
     Files.write(path, schema.getBytes(UTF_8));
   }
@@ -89,9 +101,17 @@ public class XmlToAvscGeneratorMojo extends AbstractMojo {
     return createSchemaField(name, Type.STRING, true, doc);
   }
 
+  private String normalizeFileName(String name) {
+    String result =
+        Arrays.stream(name.split("(?=[A-Z])"))
+            .map(String::toLowerCase)
+            .collect(Collectors.joining("_"));
+    return result + ".avsc";
+  }
+
   private Schema.Field createSchemaField(
       String name, Schema.Type type, boolean isNull, String doc) {
-    List<Schema> optionalString = new ArrayList<>();
+    List<Schema> optionalString = new ArrayList<>(2);
 
     if (isNull) {
       optionalString.add(Schema.create(Schema.Type.NULL));
