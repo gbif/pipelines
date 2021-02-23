@@ -15,6 +15,7 @@ temp
 tmp
 minicluster
 release.properties
+avro/table
 
 # la-pipelines debian package
 livingatlas/debian/*.debhelper

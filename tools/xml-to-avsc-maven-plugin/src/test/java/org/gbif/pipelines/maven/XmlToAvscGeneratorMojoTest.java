@@ -26,7 +26,7 @@ public class XmlToAvscGeneratorMojoTest {
     mojo.execute();
 
     // Should
-    Path result = Paths.get(path, "measurement_or_fact_table.avsc");
+    Path result = Paths.get(path, "measurement-or-fact-table.avsc");
     Assert.assertTrue(Files.exists(result));
 
     Schema schema = new Schema.Parser().parse(result.toFile());

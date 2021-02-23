@@ -191,6 +191,11 @@
           <version>${project.version}</version>
         </plugin>
         <plugin>
+          <groupId>org.gbif.pipelines</groupId>
+          <artifactId>xml-to-avsc-maven-plugin</artifactId>
+          <version>${project.version}</version>
+        </plugin>
+        <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-javadoc-plugin</artifactId>
           <version>${maven-javadoc-plugin.version}</version>

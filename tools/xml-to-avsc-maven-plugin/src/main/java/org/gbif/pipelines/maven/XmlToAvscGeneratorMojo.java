@@ -25,24 +25,24 @@ import org.gbif.dwc.extensions.VocabulariesManager;
 import org.gbif.dwc.extensions.Vocabulary;
 import org.gbif.dwc.xml.SAXUtils;
 
-@Mojo(name = "postprocess", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
+@Mojo(name = "avroschemageneration", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
 public class XmlToAvscGeneratorMojo extends AbstractMojo {
 
-  @Parameter(property = "postprocess.extensions")
+  @Parameter(property = "avroschemageneration.extensions")
   private List<String> extensions;
 
-  @Parameter(property = "postprocess.pathToWrite")
+  @Parameter(property = "avroschemageneration.pathToWrite")
   private String pathToWrite;
 
-  @Parameter(property = "postprocess.namespace")
+  @Parameter(property = "avroschemageneration.namespace")
   private String namespace;
 
   @Override
   public void execute() throws MojoExecutionException {
     for (String extension : extensions) {
       try {
-        URL url1 = new URL(extension);
-        convertAndWrite(url1);
+        URL url = new URL(extension);
+        convertAndWrite(url);
       } catch (Exception ex) {
         throw new MojoExecutionException(ex.getMessage());
       }
@@ -67,9 +67,10 @@ public class XmlToAvscGeneratorMojo extends AbstractMojo {
     ExtensionFactory factory = new ExtensionFactory(thr, SAXUtils.getNsAwareSaxParserFactory());
     Extension ext = factory.build(url.openStream(), url, false);
 
+    // Convert into an avro schema
     List<Schema.Field> fields = new ArrayList<>(ext.getProperties().size() + 1);
     // Add gbifID
-    fields.add(createSchemaField("gbifId", Type.LONG, false, "GBIF internal identifier"));
+    fields.add(createSchemaField("gbifid", Type.LONG, false, "GBIF internal identifier"));
     // Add RAW fields
     ext.getProperties().stream()
         .map(p -> createSchemaField("v_" + p.getName().toLowerCase(), p.getQualname()))
@@ -90,10 +91,14 @@ public class XmlToAvscGeneratorMojo extends AbstractMojo {
                 fields)
             .toString(true);
 
+    // Add comment
+    String comment = "/** This class was genereted by xml-to-avsc-maven-plugin */\n";
+    schema = comment + schema;
+
+    // Save into a file
     Path path = Paths.get(pathToWrite, normalizeFileName(className));
-
+    Files.deleteIfExists(path);
     getLog().info("Create avro schema for " + ext.getName() + " extension - " + path.toString());
-
     Files.write(path, schema.getBytes(UTF_8));
   }
 
@@ -105,7 +110,7 @@ public class XmlToAvscGeneratorMojo extends AbstractMojo {
     String result =
         Arrays.stream(name.split("(?=[A-Z])"))
             .map(String::toLowerCase)
-            .collect(Collectors.joining("_"));
+            .collect(Collectors.joining("-"));
     return result + ".avsc";
   }
 
