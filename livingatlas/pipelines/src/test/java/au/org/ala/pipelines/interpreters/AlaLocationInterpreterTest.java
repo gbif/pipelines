@@ -52,6 +52,27 @@ public class AlaLocationInterpreterTest {
   }
 
   @Test
+  public void biomeTest() {
+    LocationRecord lr = LocationRecord.newBuilder().setId(ID).build();
+
+    KeyValueTestStoreStub<LatLng, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
+    Location terrestrial = new Location();
+    terrestrial.setName("Terrestrial");
+    kvStore.put(
+        new LatLng(-31.25d, 146.921099d),
+        new GeocodeResponse(Collections.singletonList(terrestrial)));
+
+    Map<String, String> coreMap = new HashMap<>();
+    coreMap.put(DwcTerm.decimalLatitude.qualifiedName(), "-31.25");
+    coreMap.put(DwcTerm.decimalLongitude.qualifiedName(), "146.921099");
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+
+    ALALocationInterpreter.interpretBiome(kvStore).accept(er, lr);
+
+    assertEquals("Terrestrial", lr.getBiome());
+  }
+
+  @Test
   public void gbifAlaTest() {
 
     LocationRecord lr = LocationRecord.newBuilder().setId(ID).build();
