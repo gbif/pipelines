@@ -43,7 +43,7 @@ public class RecordedByKVStoreFactory {
 
   public static SerializableSupplier<KeyValueStore<String, List<String>>> createSupplier(
       ALAPipelinesConfig config) {
-    return () -> new RecordedByKVStoreFactory(config).kvStore;
+    return () -> getInstance(config);
   }
 
   public static SerializableSupplier<KeyValueStore<String, List<String>>> getInstanceSupplier(

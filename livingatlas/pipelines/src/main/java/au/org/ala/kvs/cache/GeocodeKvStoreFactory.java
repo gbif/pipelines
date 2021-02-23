@@ -9,6 +9,7 @@ import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.core.parsers.location.GeocodeKvStore;
+import org.gbif.pipelines.core.parsers.location.cache.BinaryBitmapLookup;
 import org.gbif.pipelines.factory.BufferedImageFactory;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.gbif.rest.client.geocode.Location;
@@ -62,25 +63,11 @@ public class GeocodeKvStoreFactory {
         BufferedImageFactory.loadImageFile(
             config.getGeocodeConfig().getBiome().getPath() + BITMAP_EXT);
 
-    // uses the GADM layer
-    KeyValueStore<LatLng, GeocodeResponse> biomeStoreLoadFn =
-        new KeyValueStore<LatLng, GeocodeResponse>() {
-          @Override
-          public void close() throws IOException {
-            // NOP
-          }
-
-          @Override
-          public GeocodeResponse get(LatLng latLng) {
-            return BIOME_TERRESTRIAL;
-          }
-        };
-
-    GeocodeKvStore gadmBitMapStore =
-        GeocodeKvStore.create(biomeStoreLoadFn, biomeCacheImage, "BIOME", false);
-
     this.biomeKvStore =
         new KeyValueStore<LatLng, GeocodeResponse>() {
+
+          final BinaryBitmapLookup bbl = BinaryBitmapLookup.create(biomeCacheImage, "BIOME");
+
           @Override
           public void close() throws IOException {
             // NOP
@@ -88,18 +75,16 @@ public class GeocodeKvStoreFactory {
 
           @Override
           public GeocodeResponse get(LatLng latLng) {
-            GeocodeResponse response = gadmBitMapStore.get(latLng);
-            if (response != null
-                && response.getLocations() != null
-                && !response.getLocations().isEmpty()) {
-              return response;
+            boolean isTerrestrial = bbl.intersects(latLng);
+            if (isTerrestrial) {
+              return BIOME_TERRESTRIAL;
             }
             return BIOME_MARINE;
           }
         };
   }
 
-  public static KeyValueStore<LatLng, GeocodeResponse> getInstance(ALAPipelinesConfig config) {
+  private static GeocodeKvStoreFactory getInstance(ALAPipelinesConfig config) {
     if (instance == null) {
       synchronized (MUTEX) {
         if (instance == null) {
@@ -107,21 +92,21 @@ public class GeocodeKvStoreFactory {
         }
       }
     }
-    return instance.countryKvStore;
+    return instance;
   }
 
   public static SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> createCountrySupplier(
       ALAPipelinesConfig config) {
-    return () -> new GeocodeKvStoreFactory(config).countryKvStore;
+    return () -> getInstance(config).countryKvStore;
   }
 
   public static SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>>
       createStateProvinceSupplier(ALAPipelinesConfig config) {
-    return () -> new GeocodeKvStoreFactory(config).stateProvinceKvStore;
+    return () -> getInstance(config).stateProvinceKvStore;
   }
 
   public static SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> createBiomeSupplier(
       ALAPipelinesConfig config) {
-    return () -> new GeocodeKvStoreFactory(config).biomeKvStore;
+    return () -> getInstance(config).biomeKvStore;
   }
 }
