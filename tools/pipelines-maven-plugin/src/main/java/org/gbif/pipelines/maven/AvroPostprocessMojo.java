@@ -112,6 +112,10 @@ public class AvroPostprocessMojo extends AbstractMojo {
     if (idxs.get(0) != -1 || idxs.get(1) != -1) {
       try {
         if (Files.deleteIfExists(path)) {
+
+          getLog().info("\n");
+          getLog().info(String.join("\n", lines));
+
           Files.write(path, lines);
           if (Files.exists(path)) {
             getLog().info("Modified - " + path.toString());
