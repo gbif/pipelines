@@ -185,30 +185,27 @@ public class InterpretedToHdfsViewPipeline {
     Map<String, BasicRecord> basicRecordMap = basicMapFeature.get();
 
     // Write OccurrenceHdfsRecord
-    TableRecordWriter<OccurrenceHdfsRecord> occurrenceHdfsRecordWriter =
-        TableRecordWriter.<OccurrenceHdfsRecord>builder()
-            .recordFunction(occurrenceHdfsRecordFn)
-            .basicRecords(basicRecordMap.values())
-            .targetTempPath(
-                PathBuilder.buildFilePathHdfsViewUsingInputPath(options, id + AVRO_EXTENSION))
-            .schema(OccurrenceHdfsRecord.getClassSchema())
-            .executor(executor)
-            .options(options)
-            .build()
-            .write();
+    TableRecordWriter.<OccurrenceHdfsRecord>builder()
+        .recordFunction(occurrenceHdfsRecordFn)
+        .basicRecords(basicRecordMap.values())
+        .targetTempPath(
+            PathBuilder.buildFilePathHdfsViewUsingInputPath(options, id + AVRO_EXTENSION))
+        .schema(OccurrenceHdfsRecord.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .build()
+        .write();
 
     // Write MeasurementOrFactTable
-    TableRecordWriter<MeasurementOrFactTable> measurementOrFactTableWriter =
-        TableRecordWriter.<MeasurementOrFactTable>builder()
-            .recordFunction(moftFn)
-            .basicRecords(basicRecordMap.values())
-            .targetTempPath(
-                PathBuilder.buildFilePathMoftUsingInputPath(options, id + AVRO_EXTENSION))
-            .schema(MeasurementOrFactTable.getClassSchema())
-            .executor(executor)
-            .options(options)
-            .build()
-            .write();
+    TableRecordWriter.<MeasurementOrFactTable>builder()
+        .recordFunction(moftFn)
+        .basicRecords(basicRecordMap.values())
+        .targetTempPath(PathBuilder.buildFilePathMoftUsingInputPath(options, id + AVRO_EXTENSION))
+        .schema(MeasurementOrFactTable.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .build()
+        .write();
 
     // Move files
     Mutex.Action action = () -> HdfsViewAvroUtils.move(options);

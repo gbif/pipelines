@@ -30,7 +30,7 @@ public class TableRecordWriter<T> {
   @NonNull private final ExecutorService executor;
 
   @SneakyThrows
-  public TableRecordWriter<T> write() {
+  public void write() {
     try (SyncDataFileWriter<T> writer = createWriter(options)) {
       boolean useSyncMode = options.getSyncThreshold() > basicRecords.size();
       if (useSyncMode) {
@@ -40,7 +40,6 @@ public class TableRecordWriter<T> {
         CompletableFuture.allOf(futures).get();
       }
     }
-    return this;
   }
 
   private CompletableFuture<?>[] asyncWrite(SyncDataFileWriter<T> writer) {
