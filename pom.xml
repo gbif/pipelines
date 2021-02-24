@@ -184,21 +184,6 @@
     <pluginManagement>
       <plugins>
         <plugin>
-          <groupId>org.apache.avro</groupId>
-          <artifactId>avro-maven-plugin</artifactId>
-          <version>${avro.version}</version>
-        </plugin>
-        <plugin>
-          <groupId>org.gbif.pipelines</groupId>
-          <artifactId>pipelines-maven-plugin</artifactId>
-          <version>${project.version}</version>
-        </plugin>
-        <plugin>
-          <groupId>org.gbif.pipelines</groupId>
-          <artifactId>xml-to-avsc-maven-plugin</artifactId>
-          <version>${project.version}</version>
-        </plugin>
-        <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-javadoc-plugin</artifactId>
           <version>${maven-javadoc-plugin.version}</version>
@@ -287,7 +272,6 @@
             <classesDirectory>${project.build.outputDirectory}</classesDirectory>
           </configuration>
         </plugin>
-
         <plugin>
           <groupId>org.jacoco</groupId>
           <artifactId>jacoco-maven-plugin</artifactId>

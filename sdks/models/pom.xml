@@ -28,10 +28,11 @@
       <plugin>
         <groupId>org.gbif.pipelines</groupId>
         <artifactId>xml-to-avsc-maven-plugin</artifactId>
+        <version>${project.version}</version>
         <executions>
           <execution>
             <id>avroschemageneration</id>
-            <phase>initialize</phase>
+            <phase>generate-sources</phase>
             <goals>
               <goal>avroschemageneration</goal>
             </goals>
@@ -49,6 +50,7 @@
       <plugin>
         <groupId>org.apache.avro</groupId>
         <artifactId>avro-maven-plugin</artifactId>
+        <version>${avro.version}</version>
         <executions>
           <execution>
             <id>schemas</id>
@@ -74,6 +76,7 @@
       <plugin>
         <groupId>org.gbif.pipelines</groupId>
         <artifactId>pipelines-maven-plugin</artifactId>
+        <version>${project.version}</version>
         <executions>
           <execution>
             <id>postprocess</id>
