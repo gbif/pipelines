@@ -37,8 +37,7 @@
               <pathToWrite>${schema-generated-path}</pathToWrite>
               <namespace>${namespace}</namespace>
               <extensions>
-                <extension>MeasurementOrFactTable,https://rs.gbif.org/extension/dwc/measurements_or_facts.xml</extension>
-                <extension>CloningTable,https://rs.gbif.org/extension/ggbn/cloning.xml</extension>
+                <extension>${extension.mof}</extension>
               </extensions>
             </configuration>
           </execution>
