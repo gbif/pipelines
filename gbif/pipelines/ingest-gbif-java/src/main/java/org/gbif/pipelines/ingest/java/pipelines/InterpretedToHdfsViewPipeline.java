@@ -182,11 +182,13 @@ public class InterpretedToHdfsViewPipeline {
 
     String id = options.getDatasetId() + '_' + options.getAttempt();
 
+    Map<String, BasicRecord> basicRecordMap = basicMapFeature.get();
+
     // Write OccurrenceHdfsRecord
     TableRecordWriter<OccurrenceHdfsRecord> occurrenceHdfsRecordWriter =
         TableRecordWriter.<OccurrenceHdfsRecord>builder()
             .recordFunction(occurrenceHdfsRecordFn)
-            .basicRecords(basicMapFeature.get().values())
+            .basicRecords(basicRecordMap.values())
             .targetTempPath(
                 PathBuilder.buildFilePathHdfsViewUsingInputPath(options, id + AVRO_EXTENSION))
             .schema(OccurrenceHdfsRecord.getClassSchema())
@@ -199,7 +201,7 @@ public class InterpretedToHdfsViewPipeline {
     TableRecordWriter<MeasurementOrFactTable> measurementOrFactTableWriter =
         TableRecordWriter.<MeasurementOrFactTable>builder()
             .recordFunction(moftFn)
-            .basicRecords(basicMapFeature.get().values())
+            .basicRecords(basicRecordMap.values())
             .targetTempPath(
                 PathBuilder.buildFilePathMoftUsingInputPath(options, id + AVRO_EXTENSION))
             .schema(MeasurementOrFactTable.getClassSchema())
