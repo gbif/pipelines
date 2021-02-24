@@ -154,6 +154,9 @@ public class AvroPostprocessMojo extends AbstractMojo {
               + "import org.apache.beam.sdk.coders.DefaultCoder;\n";
       lines.add(beforeIdx, imports);
       lines.add(beforeIdx + 1, "@DefaultCoder(AvroCoder.class)");
+    } else {
+      getLog().warn("addAvroCodecAnnotation == -1 for the class:");
+      getLog().warn(String.join("\n", lines));
     }
   }
 
