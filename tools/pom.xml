@@ -16,9 +16,10 @@
   <description>Module for different independent tools</description>
 
   <modules>
-    <module>pipelines-maven-plugin</module>
-    <module>elasticsearch-tools</module>
     <module>archives-converters</module>
+    <module>elasticsearch-tools</module>
+    <module>pipelines-maven-plugin</module>
+    <module>xml-to-avsc-maven-plugin</module>
   </modules>
 
 </project>

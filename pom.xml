@@ -175,21 +175,14 @@
     <jacoco.ut.output.file>${coverage.dir}/jacoco-ut.exec</jacoco.ut.output.file>
     <jacoco.merged.output.file>${coverage.dir}/jacoco.exec</jacoco.merged.output.file>
 
+    <!-- Extensions -->
+    <extension.mof>MeasurementOrFactTable,https://rs.gbif.org/extension/dwc/measurements_or_facts.xml</extension.mof>
+
   </properties>
 
   <build>
     <pluginManagement>
       <plugins>
-        <plugin>
-          <groupId>org.apache.avro</groupId>
-          <artifactId>avro-maven-plugin</artifactId>
-          <version>${avro.version}</version>
-        </plugin>
-        <plugin>
-          <groupId>org.gbif.pipelines</groupId>
-          <artifactId>pipelines-maven-plugin</artifactId>
-          <version>${project.version}</version>
-        </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-javadoc-plugin</artifactId>
@@ -279,7 +272,6 @@
             <classesDirectory>${project.build.outputDirectory}</classesDirectory>
           </configuration>
         </plugin>
-
         <plugin>
           <groupId>org.jacoco</groupId>
           <artifactId>jacoco-maven-plugin</artifactId>
