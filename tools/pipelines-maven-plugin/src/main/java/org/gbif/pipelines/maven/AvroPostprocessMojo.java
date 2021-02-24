@@ -150,7 +150,8 @@ public class AvroPostprocessMojo extends AbstractMojo {
     int beforeIdx = idxs.get(0);
     if (beforeIdx != -1) {
       String imports =
-          "import org.apache.beam.sdk.coders.AvroCoder;\nimport org.apache.beam.sdk.coders.DefaultCoder;";
+          "import org.apache.beam.sdk.coders.AvroCoder;\n"
+              + "import org.apache.beam.sdk.coders.DefaultCoder;\n";
       lines.add(beforeIdx, imports);
       lines.add(beforeIdx + 1, "@DefaultCoder(AvroCoder.class)");
     }
