@@ -47,7 +47,7 @@ import org.apache.maven.plugins.annotations.Parameter;
  *
  * }</pre>
  */
-@Mojo(name = "postprocess", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
+@Mojo(name = "postprocess", defaultPhase = LifecyclePhase.PROCESS_SOURCES)
 public class AvroPostprocessMojo extends AbstractMojo {
 
   private static final String DEFAULT = "-gbif";

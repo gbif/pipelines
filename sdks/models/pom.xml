@@ -24,7 +24,7 @@
 
   <build>
     <plugins>
-      <!-- Change avro schemas from XML extensions-->
+      <!-- Generate avro schemas from XML extensions-->
       <plugin>
         <groupId>org.gbif.pipelines</groupId>
         <artifactId>xml-to-avsc-maven-plugin</artifactId>
@@ -63,7 +63,6 @@
               <testOutputDirectory>../demo/src/main/java/test/java-generated/</testOutputDirectory>
               <imports>
                 <import>${project.basedir}/src/main/avro/issue-record.avsc</import>
-                <import>${project.basedir}/src/main/avro/extension/measurement-fact-record.avsc</import>
               </imports>
             </configuration>
           </execution>
