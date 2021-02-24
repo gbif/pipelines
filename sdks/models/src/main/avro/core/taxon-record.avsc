@@ -155,7 +155,7 @@
       },
       {"name" : "usageParsedName", "type" : ["null", "ParsedName"], "default" : null},
       {"name": "issues", "type": "IssueRecord", "default":{}},
-      {"name" : "iucnRedListCategory", "type" : ["null", "ThreatStatus"], "default" : null}
+      {"name" : "iucnRedListCategory", "type" : ["null", "ThreatStatus"], "default" : null, "doc":"The IUCN Red List Category or conservation status"}
     ]
   },
 {
