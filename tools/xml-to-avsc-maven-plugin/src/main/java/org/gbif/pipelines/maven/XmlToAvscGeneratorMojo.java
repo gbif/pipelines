@@ -48,7 +48,11 @@ public class XmlToAvscGeneratorMojo extends AbstractMojo {
 
         String[] ext = extension.split(",");
         URL url = new URL(ext[1]);
-        convertAndWrite(ext[0], url);
+        String name = ext[0];
+        Path path = Paths.get(pathToWrite, normalizeFileName(name));
+        if (!Files.exists(path)) {
+          convertAndWrite(name, url, path);
+        }
       }
     } catch (Exception ex) {
       throw new MojoExecutionException(ex.getMessage());
@@ -67,7 +71,7 @@ public class XmlToAvscGeneratorMojo extends AbstractMojo {
     this.namespace = namespace;
   }
 
-  private void convertAndWrite(String name, URL url) throws Exception {
+  private void convertAndWrite(String name, URL url, Path path) throws Exception {
     // Read extension
     ThesaurusHandlingRule thr = new ThesaurusHandlingRule(new EmptyVocabulariesManager());
     ExtensionFactory factory = new ExtensionFactory(thr, SAXUtils.getNsAwareSaxParserFactory());
@@ -95,7 +99,6 @@ public class XmlToAvscGeneratorMojo extends AbstractMojo {
     schema = comment + schema;
 
     // Save into a file
-    Path path = Paths.get(pathToWrite, normalizeFileName(name));
     Files.deleteIfExists(path);
     getLog().info("Create avro schema for " + ext.getName() + " extension - " + path.toString());
     Files.write(path, schema.getBytes(UTF_8));
