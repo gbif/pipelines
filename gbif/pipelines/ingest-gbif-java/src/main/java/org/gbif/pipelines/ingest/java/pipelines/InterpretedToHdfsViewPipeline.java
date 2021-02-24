@@ -208,10 +208,6 @@ public class InterpretedToHdfsViewPipeline {
             .build()
             .write();
 
-    // Wait if async
-    occurrenceHdfsRecordWriter.waitAsync();
-    measurementOrFactTableWriter.waitAsync();
-
     // Move files
     Mutex.Action action = () -> HdfsViewAvroUtils.move(options);
     if (options.getProperties() != null) {
