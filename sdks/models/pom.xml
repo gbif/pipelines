@@ -30,6 +30,8 @@
         <artifactId>xml-to-avsc-maven-plugin</artifactId>
         <executions>
           <execution>
+            <id>avroschemageneration</id>
+            <phase>initialize</phase>
             <goals>
               <goal>avroschemageneration</goal>
             </goals>
@@ -74,6 +76,8 @@
         <artifactId>pipelines-maven-plugin</artifactId>
         <executions>
           <execution>
+            <id>postprocess</id>
+            <phase>process-sources</phase>
             <goals>
               <goal>postprocess</goal>
             </goals>
