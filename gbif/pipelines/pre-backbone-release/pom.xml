@@ -14,6 +14,11 @@
   <name>Pipelines :: GBIF :: Pipelines :: Pre-backbone Release</name>
   <description>Utility to assess the impact of a backbone on occurrence data before it is deployed</description>
 
+  <properties>
+    <hive.version>1.2.0</hive.version>
+    <sonar.skip>true</sonar.skip>
+  </properties>
+
   <build>
     <plugins>
       <plugin>
@@ -88,10 +93,6 @@
       </plugin>
     </plugins>
   </build>
-
-  <properties>
-    <hive.version>1.2.0</hive.version>
-  </properties>
 
   <dependencies>
 
