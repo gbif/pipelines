@@ -84,6 +84,25 @@ public class IndexRecordPipeline {
       return;
     }
 
+    FileSystem fs =
+        FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
+            .getFs(options.getInputPath());
+
+    final long lastLoadedDate =
+        ValidationUtils.metricsModificationTime(
+            fs,
+            options.getInputPath(),
+            options.getDatasetId(),
+            options.getAttempt(),
+            ValidationUtils.VERBATIM_METRICS);
+    final long lastProcessedDate =
+        ValidationUtils.metricsModificationTime(
+            fs,
+            options.getInputPath(),
+            options.getDatasetId(),
+            options.getAttempt(),
+            ValidationUtils.INTERPRETATION_METRICS);
+
     log.info("Adding step 1: Options");
     UnaryOperator<String> pathFn =
         t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
@@ -192,7 +211,6 @@ public class IndexRecordPipeline {
     }
 
     final TupleTag<ImageRecord> imageRecordTupleTag = new TupleTag<ImageRecord>() {};
-
     final TupleTag<TaxonProfile> speciesListsRecordTupleTag = new TupleTag<TaxonProfile>() {};
 
     IndexRecordTransform indexRecordTransform =
@@ -213,7 +231,9 @@ public class IndexRecordPipeline {
             options.getIncludeSpeciesLists() ? speciesListsRecordTupleTag : null,
             options.getIncludeSensitiveData() ? alaSensitiveDataRecordTransform.getTag() : null,
             metadataView,
-            options.getDatasetId());
+            options.getDatasetId(),
+            lastLoadedDate,
+            lastProcessedDate);
 
     log.info("Adding step 3: Converting into a json object");
     ParDo.SingleOutput<KV<String, CoGbkResult>, IndexRecord> alaSolrDoFn =
@@ -265,9 +285,6 @@ public class IndexRecordPipeline {
             + options.getDatasetId();
 
     // clean previous runs
-    FileSystem fs =
-        FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
-            .getFs(options.getInputPath());
     ALAFsUtils.deleteIfExist(fs, outputPath);
 
     // write to AVRO file instead....

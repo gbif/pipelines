@@ -116,6 +116,26 @@ public class IndexRecordPipeline {
       return;
     }
 
+    // get filesystem
+    FileSystem fs =
+        FsUtils.getFileSystem(
+            options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getInputPath());
+
+    final long lastLoadedDate =
+        ValidationUtils.metricsModificationTime(
+            fs,
+            options.getInputPath(),
+            options.getDatasetId(),
+            options.getAttempt(),
+            ValidationUtils.VERBATIM_METRICS);
+    final long lastProcessedDate =
+        ValidationUtils.metricsModificationTime(
+            fs,
+            options.getInputPath(),
+            options.getDatasetId(),
+            options.getAttempt(),
+            ValidationUtils.INTERPRETATION_METRICS);
+
     UnaryOperator<String> pathFn =
         t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
     UnaryOperator<String> identifiersPathFn =
@@ -383,16 +403,24 @@ public class IndexRecordPipeline {
               measurementMap.getOrDefault(k, MeasurementOrFactRecord.newBuilder().setId(k).build());
 
           return IndexRecordTransform.createIndexRecord(
-              metadata, br, tr, lr, txr, atxr, er, aar, aur, isr, tpr, sr);
+              metadata,
+              br,
+              tr,
+              lr,
+              txr,
+              atxr,
+              er,
+              aar,
+              aur,
+              isr,
+              tpr,
+              sr,
+              lastLoadedDate,
+              lastProcessedDate);
         };
 
     List<IndexRecord> indexRecords =
         basicMap.values().stream().map(br -> indexRequestFn.apply(br)).collect(Collectors.toList());
-
-    // get filesystem
-    FileSystem fs =
-        FsUtils.getFileSystem(
-            options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getInputPath());
 
     OutputStream output =
         fs.create(

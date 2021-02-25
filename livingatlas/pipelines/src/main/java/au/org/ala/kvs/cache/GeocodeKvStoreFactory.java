@@ -32,8 +32,8 @@ public class GeocodeKvStoreFactory {
     terrestrial.setName("TERRESTRIAL");
     BIOME_TERRESTRIAL = new GeocodeResponse(Collections.singletonList(terrestrial));
     final Location marine = new Location();
-    terrestrial.setName("MARINE");
-    BIOME_MARINE = new GeocodeResponse(Collections.singletonList(terrestrial));
+    marine.setName("MARINE");
+    BIOME_MARINE = new GeocodeResponse(Collections.singletonList(marine));
   }
 
   @SneakyThrows

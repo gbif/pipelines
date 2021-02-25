@@ -47,8 +47,8 @@ public class BinaryBitmapLookup {
 
     int colour = img.getRGB(x, y) & 0x00FFFFFF; // Ignore possible transparency.
 
-    String hex = String.format("#%06x", colour);
     if (log.isDebugEnabled()) {
+      String hex = String.format("#%06x", colour);
       log.debug(
               "[{}] LatLong {},{} has pixel {},{} with colour {}", kvStoreType, lat, lng, x, y, hex);
     }

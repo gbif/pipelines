@@ -78,6 +78,10 @@ public class IndexRecordTransform implements Serializable {
 
   String datasetID;
 
+  Long lastLoadDate;
+
+  Long lastLoadProcessed;
+
   static Set<String> interpretedFields;
 
   static {
@@ -106,7 +110,9 @@ public class IndexRecordTransform implements Serializable {
       TupleTag<TaxonProfile> tpTag,
       TupleTag<ALASensitivityRecord> srTag,
       PCollectionView<MetadataRecord> metadataView,
-      String datasetID) {
+      String datasetID,
+      Long lastLoadDate,
+      Long lastLoadProcessed) {
     IndexRecordTransform t = new IndexRecordTransform();
     t.erTag = erTag;
     t.brTag = brTag;
@@ -125,6 +131,8 @@ public class IndexRecordTransform implements Serializable {
     t.srTag = srTag;
     t.metadataView = metadataView;
     t.datasetID = datasetID;
+    t.lastLoadDate = lastLoadDate;
+    t.lastLoadProcessed = lastLoadProcessed;
     return t;
   }
 
@@ -146,7 +154,9 @@ public class IndexRecordTransform implements Serializable {
       ALAUUIDRecord ur,
       ImageRecord isr,
       TaxonProfile tpr,
-      ALASensitivityRecord sr) {
+      ALASensitivityRecord sr,
+      Long lastLoadDate,
+      Long lastProcessedDate) {
 
     Set<String> skipKeys = new HashSet<>();
     skipKeys.add("id");
@@ -179,6 +189,10 @@ public class IndexRecordTransform implements Serializable {
     indexRecord.setDoubles(new HashMap<>());
     indexRecord.setMultiValues(new HashMap<>());
     List<String> assertions = new ArrayList<>();
+
+    // add timestamps
+    indexRecord.getDates().put("lastLoadDate", lastLoadDate);
+    indexRecord.getDates().put("lastProcessedDate", lastProcessedDate);
 
     // If a sensitive record, construct new versions of the data with adjustments
     boolean sensitive = sr != null && sr.getSensitive() != null && sr.getSensitive();
@@ -385,12 +399,12 @@ public class IndexRecordTransform implements Serializable {
                   atxr.getFamily())); // is set to IGNORE in headerAttribute
     }
 
-    // FIXME see #99
+    // see https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/99
     boolean spatiallyValid =
         lr.getHasGeospatialIssue() != null && lr.getHasGeospatialIssue() ? false : true;
     indexRecord.getBooleans().put("spatiallyValid", spatiallyValid);
 
-    // see #162
+    // see  https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/162
     if (ur.getFirstLoaded() != null) {
       indexRecord
           .getDates()
@@ -549,6 +563,12 @@ public class IndexRecordTransform implements Serializable {
       } else {
         if (key.endsWith(DwcTerm.dynamicProperties.simpleName())) {
           try {
+            // index separate properties and the dynamicProperties
+            // field as a string as it may not be parseable JSON
+            indexRecord.getStrings().put(DwcTerm.dynamicProperties.simpleName(), entry.getValue());
+
+            // attempt JSON parse - best effort service only, if this fails
+            // we carry on indexing
             ObjectMapper om = new ObjectMapper();
             Map dynamicProperties = om.readValue(entry.getValue(), Map.class);
             indexRecord.setDynamicProperties(dynamicProperties);
@@ -750,7 +770,21 @@ public class IndexRecordTransform implements Serializable {
 
               if (aar != null && aar.getDataResourceUid() != null) {
                 IndexRecord doc =
-                    createIndexRecord(mdr, br, tr, lr, txr, atxr, er, aar, ur, isr, tpr, sr);
+                    createIndexRecord(
+                        mdr,
+                        br,
+                        tr,
+                        lr,
+                        txr,
+                        atxr,
+                        er,
+                        aar,
+                        ur,
+                        isr,
+                        tpr,
+                        sr,
+                        lastLoadDate,
+                        lastLoadProcessed);
 
                 c.output(doc);
                 counter.inc();
