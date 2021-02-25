@@ -180,8 +180,9 @@ solr:
   jackKnifePath: "{fsPath}/pipelines-jackknife"
   clusteringPath: "{fsPath}/pipelines-clustering"
   solrCollection: biocache
-  includeSampling: true
+  includeSampling: false
   includeJackKnife: false
+  includeClustering: false
   runner: SparkRunner
   zkHost: localhost:9983
 
@@ -236,6 +237,32 @@ interpret-sh-args:
     executor-cores: 8
     executor-memory: 7G
     driver-memory: 1G
+#    conf: spark.default.parallelism=144
+#    num-executors: 12
+#    executor-cores: 8
+#    executor-memory: 7G
+#    driver-memory: 2G
+
+# 6mins with errors
+#    conf: spark.default.parallelism=144
+#    num-executors: 12
+#    executor-cores: 8
+#    executor-memory: 8G
+#    driver-memory: 1G
+
+# 6mins
+#  conf: spark.default.parallelism=144
+#  num-executors: 16
+#  executor-cores: 8
+#  executor-memory: 7G
+#  driver-memory: 1G
+
+#9 mins
+#    conf: spark.default.parallelism=500
+#    num-executors: 12
+#    executor-cores: 8
+#    executor-memory: 20G
+#    driver-memory: 4G
 
 image-sync-sh-args:
   local:
