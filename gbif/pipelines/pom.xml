@@ -21,6 +21,7 @@
     <module>ingest-gbif-beam</module>
     <module>ingest-gbif-java</module>
     <module>pre-backbone-release</module>
+    <module>clustering-gbif</module>
   </modules>
 
 </project>
