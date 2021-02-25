@@ -22,7 +22,47 @@ import org.junit.Test;
 public class GeocodeServiceTestIT {
 
   /**
-   * Tests the Get operation on {@link KeyValueCache} that wraps a simple KV store backed by a
+   * Tests the Get operation on {@link KeyValueStore} that wraps a simple KV store backed by a
+   * HashMap.
+   */
+  @Test
+  public void testBiomeTerrestrial() {
+
+    KeyValueStore<LatLng, GeocodeResponse> geoService =
+        GeocodeKvStoreFactory.createBiomeSupplier(TestUtils.getConfig()).get();
+
+    GeocodeResponse resp =
+        geoService.get(LatLng.builder().withLongitude(146.2).withLatitude(-27.9).build());
+
+    assertFalse(resp.getLocations().isEmpty());
+    Collection<Location> locations = resp.getLocations();
+    assertFalse(locations.isEmpty());
+
+    Optional<Location> biome = locations.stream().findFirst();
+    assertTrue(biome.isPresent());
+    assertEquals("TERRESTRIAL", biome.get().getName());
+  }
+
+  @Test
+  public void testBiomeMarine() {
+
+    KeyValueStore<LatLng, GeocodeResponse> geoService =
+        GeocodeKvStoreFactory.createBiomeSupplier(TestUtils.getConfig()).get();
+
+    GeocodeResponse resp =
+        geoService.get(LatLng.builder().withLongitude(106.6).withLatitude(-31.2).build());
+
+    assertFalse(resp.getLocations().isEmpty());
+    Collection<Location> locations = resp.getLocations();
+    assertFalse(locations.isEmpty());
+
+    Optional<Location> biome = locations.stream().findFirst();
+    assertTrue(biome.isPresent());
+    assertEquals("MARINE", biome.get().getName());
+  }
+
+  /**
+   * Tests the Get operation on {@link KeyValueStore} that wraps a simple KV store backed by a
    * HashMap.
    */
   @Test

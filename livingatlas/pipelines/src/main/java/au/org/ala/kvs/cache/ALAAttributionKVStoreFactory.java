@@ -81,16 +81,4 @@ public class ALAAttributionKVStoreFactory {
       getInstanceSupplier(ALAPipelinesConfig config) {
     return () -> ALAAttributionKVStoreFactory.getInstance(config);
   }
-
-  /**
-   * Wraps an exception into a {@link RuntimeException}.
-   *
-   * @param throwable to propagate
-   * @param message to log and use for the exception wrapper
-   * @return a new {@link RuntimeException}
-   */
-  private static RuntimeException logAndThrow(Throwable throwable, String message) {
-    log.error(message, throwable);
-    return new RuntimeException(throwable);
-  }
 }
