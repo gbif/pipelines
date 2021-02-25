@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 public class RelationshipAssertion<T extends OccurrenceFeatures> {
 
   // Capture the reasoning why a relationship
-  public enum FEATURE_ASSERTION {
+  public enum FeatureAssertion {
     SAME_ACCEPTED_SPECIES, // i.e. binomial level
     SAME_DATE,
     NON_CONFLICTING_DATE, // e.g. one side is null
@@ -36,7 +36,7 @@ public class RelationshipAssertion<T extends OccurrenceFeatures> {
 
   private final T o1;
   private final T o2;
-  private final Set<FEATURE_ASSERTION> justification =
+  private final Set<FeatureAssertion> justification =
       new TreeSet<>(); // reasons the assertion is being made
 
   public RelationshipAssertion(T o1, T o2) {
@@ -44,7 +44,7 @@ public class RelationshipAssertion<T extends OccurrenceFeatures> {
     this.o2 = o2;
   }
 
-  public void collect(FEATURE_ASSERTION reason) {
+  public void collect(FeatureAssertion reason) {
     justification.add(reason);
   }
 
@@ -60,18 +60,15 @@ public class RelationshipAssertion<T extends OccurrenceFeatures> {
     return justification.stream().map(Enum::name).collect(Collectors.joining(","));
   }
 
-  public boolean justificationContains(FEATURE_ASSERTION reason) {
+  public boolean justificationContains(FeatureAssertion reason) {
     return justification.contains(reason);
   }
 
-  public boolean justificationContainsAll(FEATURE_ASSERTION... reason) {
+  public boolean justificationContainsAll(FeatureAssertion... reason) {
     return justification.containsAll(Arrays.asList(reason));
   }
 
-  public boolean justificationDoesNotContain(FEATURE_ASSERTION... reason) {
-    for (FEATURE_ASSERTION f : reason) {
-      if (justification.contains(f)) return false;
-    }
-    return true;
+  public boolean justificationDoesNotContain(FeatureAssertion... reason) {
+    return Arrays.stream(reason).noneMatch(justification::contains);
   }
 }

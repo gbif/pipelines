@@ -1,75 +1,34 @@
 package org.gbif.pipelines.core.parsers.clustering;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import lombok.Builder;
 
 /** A POJO implementation for simple tests. */
+@Builder
 public class OccurrenceFeaturesPojo implements OccurrenceFeatures {
-  private String id;
-  private String datasetKey;
-  private Integer speciesKey;
-  private Integer taxonKey;
-  private String basisOfRecord;
-  private Double decimalLatitude;
-  private Double decimalLongitude;
-  private Integer year;
-  private Integer month;
-  private Integer day;
-  private String eventDate;
-  private String scientificName;
-  private String countryCode;
-  private String typeStatus;
-  private String occurrenceID;
-  private String recordedBy;
-  private String fieldNumber;
-  private String recordNumber;
-  private String catalogNumber;
-  private String otherCatalogNumbers;
-
-  private OccurrenceFeaturesPojo(
-      String id,
-      String datasetKey,
-      Integer speciesKey,
-      Integer taxonKey,
-      String basisOfRecord,
-      Double decimalLatitude,
-      Double decimalLongitude,
-      Integer year,
-      Integer month,
-      Integer day,
-      String eventDate,
-      String scientificName,
-      String countryCode,
-      String typeStatus,
-      String occurrenceID,
-      String recordedBy,
-      String fieldNumber,
-      String recordNumber,
-      String catalogNumber,
-      String otherCatalogNumbers) {
-    this.id = id;
-    this.datasetKey = datasetKey;
-    this.speciesKey = speciesKey;
-    this.taxonKey = taxonKey;
-    this.basisOfRecord = basisOfRecord;
-    this.decimalLatitude = decimalLatitude;
-    this.decimalLongitude = decimalLongitude;
-    this.year = year;
-    this.month = month;
-    this.day = day;
-    this.eventDate = eventDate;
-    this.scientificName = scientificName;
-    this.countryCode = countryCode;
-    this.typeStatus = typeStatus;
-    this.occurrenceID = occurrenceID;
-    this.recordedBy = recordedBy;
-    this.fieldNumber = fieldNumber;
-    this.recordNumber = recordNumber;
-    this.catalogNumber = catalogNumber;
-    this.otherCatalogNumbers = otherCatalogNumbers;
-  }
+  private final String id;
+  private final String datasetKey;
+  private final Integer speciesKey;
+  private final Integer taxonKey;
+  private final String basisOfRecord;
+  private final Double decimalLatitude;
+  private final Double decimalLongitude;
+  private final Integer year;
+  private final Integer month;
+  private final Integer day;
+  private final String eventDate;
+  private final String scientificName;
+  private final String countryCode;
+  private final String typeStatus;
+  private final String occurrenceID;
+  private final String recordedBy;
+  private final String fieldNumber;
+  private final String recordNumber;
+  private final String catalogNumber;
+  private final String otherCatalogNumbers;
 
   @Override
   public String getId() {
@@ -173,165 +132,13 @@ public class OccurrenceFeaturesPojo implements OccurrenceFeatures {
 
   @Override
   public List<String> getIdentifiers() {
-    return Arrays.asList(
+    return Stream.of(
             getOccurrenceID(),
             getFieldNumber(),
             getRecordNumber(),
             getCatalogNumber(),
             getOtherCatalogNumbers())
-        .stream()
         .filter(Objects::nonNull)
         .collect(Collectors.toList());
-  }
-
-  static OccurrenceFeaturesPojoBuilder newBuilder() {
-    return new OccurrenceFeaturesPojoBuilder();
-  }
-
-  static class OccurrenceFeaturesPojoBuilder {
-    private String id;
-    private String datasetKey;
-    private Integer speciesKey;
-    private Integer taxonKey;
-    private String basisOfRecord;
-    private Double decimalLatitude;
-    private Double decimalLongitude;
-    private Integer year;
-    private Integer month;
-    private Integer day;
-    private String eventDate;
-    private String scientificName;
-    private String countryCode;
-    private String typeStatus;
-    private String occurrenceID;
-    private String recordedBy;
-    private String fieldNumber;
-    private String recordNumber;
-    private String catalogNumber;
-    private String otherCatalogNumbers;
-
-    public OccurrenceFeaturesPojoBuilder setId(String id) {
-      this.id = id;
-      return this;
-    }
-
-    public OccurrenceFeaturesPojoBuilder setDatasetKey(String datasetKey) {
-      this.datasetKey = datasetKey;
-      return this;
-    }
-
-    public OccurrenceFeaturesPojoBuilder setSpeciesKey(Integer speciesKey) {
-      this.speciesKey = speciesKey;
-      return this;
-    }
-
-    public OccurrenceFeaturesPojoBuilder setTaxonKey(Integer taxonKey) {
-      this.taxonKey = taxonKey;
-      return this;
-    }
-
-    public OccurrenceFeaturesPojoBuilder setBasisOfRecord(String basisOfRecord) {
-      this.basisOfRecord = basisOfRecord;
-      return this;
-    }
-
-    public OccurrenceFeaturesPojoBuilder setDecimalLatitude(Double decimalLatitude) {
-      this.decimalLatitude = decimalLatitude;
-      return this;
-    }
-
-    public OccurrenceFeaturesPojoBuilder setDecimalLongitude(Double decimalLongitude) {
-      this.decimalLongitude = decimalLongitude;
-      return this;
-    }
-
-    public OccurrenceFeaturesPojoBuilder setYear(Integer year) {
-      this.year = year;
-      return this;
-    }
-
-    public OccurrenceFeaturesPojoBuilder setMonth(Integer month) {
-      this.month = month;
-      return this;
-    }
-
-    public OccurrenceFeaturesPojoBuilder setDay(Integer day) {
-      this.day = day;
-      return this;
-    }
-
-    public OccurrenceFeaturesPojoBuilder setEventDate(String eventDate) {
-      this.eventDate = eventDate;
-      return this;
-    }
-
-    public OccurrenceFeaturesPojoBuilder setScientificName(String scientificName) {
-      this.scientificName = scientificName;
-      return this;
-    }
-
-    public OccurrenceFeaturesPojoBuilder setCountryCode(String countryCode) {
-      this.countryCode = countryCode;
-      return this;
-    }
-
-    public OccurrenceFeaturesPojoBuilder setTypeStatus(String typeStatus) {
-      this.typeStatus = typeStatus;
-      return this;
-    }
-
-    public OccurrenceFeaturesPojoBuilder setOccurrenceID(String occurrenceID) {
-      this.occurrenceID = occurrenceID;
-      return this;
-    }
-
-    public OccurrenceFeaturesPojoBuilder setRecordedBy(String recordedBy) {
-      this.recordedBy = recordedBy;
-      return this;
-    }
-
-    public OccurrenceFeaturesPojoBuilder setFieldNumber(String fieldNumber) {
-      this.fieldNumber = fieldNumber;
-      return this;
-    }
-
-    public OccurrenceFeaturesPojoBuilder setRecordNumber(String recordNumber) {
-      this.recordNumber = recordNumber;
-      return this;
-    }
-
-    public OccurrenceFeaturesPojoBuilder setCatalogNumber(String catalogNumber) {
-      this.catalogNumber = catalogNumber;
-      return this;
-    }
-
-    public OccurrenceFeaturesPojoBuilder setOtherCatalogNumbers(String otherCatalogNumbers) {
-      this.otherCatalogNumbers = otherCatalogNumbers;
-      return this;
-    }
-
-    public OccurrenceFeaturesPojo build() {
-      return new OccurrenceFeaturesPojo(
-          id,
-          datasetKey,
-          speciesKey,
-          taxonKey,
-          basisOfRecord,
-          decimalLatitude,
-          decimalLongitude,
-          year,
-          month,
-          day,
-          eventDate,
-          scientificName,
-          countryCode,
-          typeStatus,
-          occurrenceID,
-          recordedBy,
-          fieldNumber,
-          recordNumber,
-          catalogNumber,
-          otherCatalogNumbers);
-    }
   }
 }

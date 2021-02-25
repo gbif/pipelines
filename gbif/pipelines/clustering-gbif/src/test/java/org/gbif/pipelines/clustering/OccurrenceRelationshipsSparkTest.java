@@ -1,6 +1,6 @@
 package org.gbif.pipelines.clustering;
 
-import static org.gbif.pipelines.core.parsers.clustering.RelationshipAssertion.FEATURE_ASSERTION.*;
+import static org.gbif.pipelines.core.parsers.clustering.RelationshipAssertion.FeatureAssertion.*;
 import static org.junit.Assert.*;
 
 import java.util.Arrays;
@@ -27,7 +27,7 @@ import org.junit.Test;
 public class OccurrenceRelationshipsSparkTest {
 
   // Schema mirrors the production occurrence HDFS view of GBIF
-  private static final StructType schema =
+  private static final StructType SCHEMA =
       new StructType(
           new StructField[] {
             DataTypes.createStructField("gbifId", DataTypes.LongType, true),
@@ -105,7 +105,7 @@ public class OccurrenceRelationshipsSparkTest {
                 .with("day", 21)
                 .buildWithSchema());
 
-    RelationshipAssertion assertion = OccurrenceRelationships.generate(o1, o2);
+    RelationshipAssertion<OccurrenceFeatures> assertion = OccurrenceRelationships.generate(o1, o2);
 
     assertNotNull(assertion);
     assertTrue(assertion.justificationContains(SAME_ACCEPTED_SPECIES));
@@ -144,7 +144,7 @@ public class OccurrenceRelationshipsSparkTest {
                 .with("eventDate", "2016-06-11T00:00:00")
                 .buildWithSchema());
 
-    RelationshipAssertion assertion = OccurrenceRelationships.generate(o1, o2);
+    RelationshipAssertion<OccurrenceFeatures> assertion = OccurrenceRelationships.generate(o1, o2);
 
     assertNotNull(assertion);
     assertTrue(assertion.justificationContains(SAME_ACCEPTED_SPECIES));
@@ -174,7 +174,7 @@ public class OccurrenceRelationshipsSparkTest {
                 .with("typeStatus", "HoloType")
                 .buildWithSchema());
 
-    RelationshipAssertion assertion = OccurrenceRelationships.generate(o1, o2);
+    RelationshipAssertion<OccurrenceFeatures> assertion = OccurrenceRelationships.generate(o1, o2);
     assertNotNull(assertion);
     assertTrue(assertion.justificationContains(SAME_SPECIMEN));
   }
@@ -214,7 +214,7 @@ public class OccurrenceRelationshipsSparkTest {
                 .with("recordedBy", "Donald Hobern")
                 .buildWithSchema());
 
-    RelationshipAssertion assertion = OccurrenceRelationships.generate(o1, o2);
+    RelationshipAssertion<OccurrenceFeatures> assertion = OccurrenceRelationships.generate(o1, o2);
     assertNotNull(assertion);
     assertTrue(
         assertion.justificationContainsAll(
@@ -241,7 +241,7 @@ public class OccurrenceRelationshipsSparkTest {
     OccurrenceFeatures o2 =
         new RowOccurrenceFeatures(
             new RowBuilder()
-                .with("gbifId", 2268858676l)
+                .with("gbifId", 2268858676L)
                 .with("speciesKey", 3794925)
                 .with("decimalLatitude", 21.86558d)
                 .with("decimalLongitude", -102.90929d)
@@ -253,7 +253,7 @@ public class OccurrenceRelationshipsSparkTest {
                     "David S. Seigler|J.T. Miller") // we should at some point detect this match
                 .buildWithSchema());
 
-    RelationshipAssertion assertion = OccurrenceRelationships.generate(o1, o2);
+    RelationshipAssertion<OccurrenceFeatures> assertion = OccurrenceRelationships.generate(o1, o2);
     assertNotNull(assertion);
     assertTrue(assertion.justificationContainsAll(SAME_DATE, WITHIN_200m, SAME_ACCEPTED_SPECIES));
   }
@@ -305,13 +305,14 @@ public class OccurrenceRelationshipsSparkTest {
                   .with("month", 12)
                   .with("day", 21)
                   .buildSchemaless());
-      final Dataset<Row> data = sqlContext.createDataFrame(rows, schema);
+      final Dataset<Row> data = sqlContext.createDataFrame(rows, SCHEMA);
       List<Row> rowData = data.collectAsList();
 
       OccurrenceFeatures o1 = new RowOccurrenceFeatures(rowData.get(0));
       OccurrenceFeatures o2 = new RowOccurrenceFeatures(rowData.get(1));
 
-      RelationshipAssertion assertion = OccurrenceRelationships.generate(o1, o2);
+      RelationshipAssertion<OccurrenceFeatures> assertion =
+          OccurrenceRelationships.generate(o1, o2);
 
       assertNotNull(assertion);
       assertTrue(assertion.justificationContains(SAME_ACCEPTED_SPECIES));
@@ -324,10 +325,10 @@ public class OccurrenceRelationshipsSparkTest {
    * Utility builder of rows. Rows will adhere to the schema but may be constructed with or without.
    */
   private static class RowBuilder {
-    private Object[] values = new Object[schema.fieldNames().length];
+    private final Object[] values = new Object[SCHEMA.fieldNames().length];
 
     private RowBuilder with(String field, Object value) {
-      values[Arrays.asList(schema.fieldNames()).indexOf(field)] = value;
+      values[Arrays.asList(SCHEMA.fieldNames()).indexOf(field)] = value;
       return this;
     }
 
@@ -336,7 +337,7 @@ public class OccurrenceRelationshipsSparkTest {
     }
 
     private Row buildWithSchema() {
-      return new GenericRowWithSchema(values, schema);
+      return new GenericRowWithSchema(values, SCHEMA);
     }
   }
 }

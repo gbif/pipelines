@@ -75,8 +75,11 @@ public class RowOccurrenceFeatures implements OccurrenceFeatures {
   }
 
   private static <T> T assertNotNull(T value, String message) {
-    if (value == null) throw new IllegalArgumentException(message);
-    else return value;
+    if (value == null) {
+      throw new IllegalArgumentException(message);
+    } else {
+      return value;
+    }
   }
 
   /**

@@ -1,23 +1,26 @@
 package org.gbif.pipelines.core.parsers.clustering;
 
-import static org.gbif.pipelines.core.parsers.clustering.RelationshipAssertion.FEATURE_ASSERTION.*;
-import static org.gbif.pipelines.core.parsers.clustering.RelationshipAssertion.FEATURE_ASSERTION.IDENTIFIERS_OVERLAP;
+import static org.gbif.pipelines.core.parsers.clustering.RelationshipAssertion.FeatureAssertion.*;
+import static org.gbif.pipelines.core.parsers.clustering.RelationshipAssertion.FeatureAssertion.IDENTIFIERS_OVERLAP;
 
 import java.time.LocalDate;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
+import org.gbif.pipelines.core.parsers.clustering.RelationshipAssertion.FeatureAssertion;
 
 /** Generates relationship assertions for occurrence records. */
 public class OccurrenceRelationships {
   private static final String REGEX_IDENTIFIERS =
       "[-.,_ :|/\\\\#%&]"; // chars to remove from identifiers
 
+  private static final int THRESHOLD_IN_DAYS = 1;
+
   /** Will either generate an assertion with justification or return null. */
   public static <T extends OccurrenceFeatures> RelationshipAssertion<T> generate(T o1, T o2) {
 
-    RelationshipAssertion assertion = new RelationshipAssertion(o1, o2);
+    RelationshipAssertion<T> assertion = new RelationshipAssertion<>(o1, o2);
 
     // a rule based approach which could port to e.g. easy-rules if this approach is to grow
 
@@ -38,7 +41,7 @@ public class OccurrenceRelationships {
     }
 
     // fact combinations that are of interest as assertions
-    RelationshipAssertion.FEATURE_ASSERTION[][] passConditions = {
+    FeatureAssertion[][] passConditions = {
       {SAME_ACCEPTED_SPECIES, SAME_COORDINATES, SAME_DATE},
       {SAME_ACCEPTED_SPECIES, WITHIN_200m, SAME_DATE}, // accommodate 3 decimal place roundings
       {SAME_ACCEPTED_SPECIES, SAME_COORDINATES, NON_CONFLICTING_DATE, IDENTIFIERS_OVERLAP},
@@ -59,8 +62,10 @@ public class OccurrenceRelationships {
     // always exclude things on different location or date
     if (assertion.justificationDoesNotContain(DIFFERENT_DATE, DIFFERENT_COUNTRY)) {
       // for any ruleset that matches we generate the assertion
-      for (RelationshipAssertion.FEATURE_ASSERTION[] conditions : passConditions) {
-        if (assertion.justificationContainsAll(conditions)) return assertion;
+      for (FeatureAssertion[] conditions : passConditions) {
+        if (assertion.justificationContainsAll(conditions)) {
+          return assertion;
+        }
       }
     }
 
@@ -71,8 +76,8 @@ public class OccurrenceRelationships {
    * A specimen is the same if it is the holotype of the same species. Other cases may be added, but
    * difficult to be 100% sure.
    */
-  private static void assertSameSpecimen(
-      OccurrenceFeatures o1, OccurrenceFeatures o2, RelationshipAssertion assertion) {
+  private static <T extends OccurrenceFeatures> void assertSameSpecimen(
+      OccurrenceFeatures o1, OccurrenceFeatures o2, RelationshipAssertion<T> assertion) {
     if (equalsAndNotNull(o1.getTaxonKey(), o2.getTaxonKey())
         && equalsAndNotNull(o1.getTypeStatus(), o2.getTypeStatus())
         && o1.getTypeStatus().equalsIgnoreCase("HOLOTYPE")) {
@@ -80,23 +85,23 @@ public class OccurrenceRelationships {
     }
   }
 
-  private static void assertTypification(
-      OccurrenceFeatures o1, OccurrenceFeatures o2, RelationshipAssertion assertion) {
+  private static <T extends OccurrenceFeatures> void assertTypification(
+      OccurrenceFeatures o1, OccurrenceFeatures o2, RelationshipAssertion<T> assertion) {
     if (equalsAndNotNull(o1.getScientificName(), o2.getScientificName())
         && presentOnBoth(o1.getTypeStatus(), o2.getTypeStatus())) {
       assertion.collect(TYPIFICATION_RELATION);
     }
   }
 
-  private static void compareTaxa(
-      OccurrenceFeatures o1, OccurrenceFeatures o2, RelationshipAssertion assertion) {
+  private static <T extends OccurrenceFeatures> void compareTaxa(
+      OccurrenceFeatures o1, OccurrenceFeatures o2, RelationshipAssertion<T> assertion) {
     if (equalsAndNotNull(o1.getSpeciesKey(), o2.getSpeciesKey())) {
       assertion.collect(SAME_ACCEPTED_SPECIES);
     }
   }
 
-  private static void compareDates(
-      OccurrenceFeatures o1, OccurrenceFeatures o2, RelationshipAssertion assertion) {
+  private static <T extends OccurrenceFeatures> void compareDates(
+      OccurrenceFeatures o1, OccurrenceFeatures o2, RelationshipAssertion<T> assertion) {
     if (equalsAndNotNull(o1.getYear(), o2.getYear())
         && equalsAndNotNull(o1.getMonth(), o2.getMonth())
         && equalsAndNotNull(o1.getDay(), o2.getDay())) {
@@ -105,7 +110,7 @@ public class OccurrenceRelationships {
       assertion.collect(SAME_DATE);
     } else if (presentOnOneOnly(o1.getEventDate(), o2.getEventDate())) {
       assertion.collect(NON_CONFLICTING_DATE);
-    } else if (withinDays(o1, o2, 1)) {
+    } else if (withinDays(o1, o2)) {
       // accommodate records 1 day apart for e.g. start and end day of an overnight trap, or a
       // timezone issue
       assertion.collect(APPROXIMATE_DATE);
@@ -118,8 +123,7 @@ public class OccurrenceRelationships {
    * @return true if o1 and o2 are collected with threshold days (e.g. 12/3/2020 and 13/3/2020 are 1
    *     day apart)
    */
-  private static boolean withinDays(
-      OccurrenceFeatures o1, OccurrenceFeatures o2, int thresholdInDays) {
+  private static boolean withinDays(OccurrenceFeatures o1, OccurrenceFeatures o2) {
     if (o1.getYear() != null
         && o1.getMonth() != null
         && o1.getDay() != null
@@ -129,21 +133,21 @@ public class OccurrenceRelationships {
       LocalDate d1 = LocalDate.of(o1.getYear(), o1.getMonth(), o1.getDay());
       LocalDate d2 = LocalDate.of(o2.getYear(), o2.getMonth(), o2.getDay());
       int daysApart = Math.abs(d1.until(d2).getDays());
-      return daysApart <= thresholdInDays;
+      return daysApart <= THRESHOLD_IN_DAYS;
     }
     return false;
   }
 
-  private static void compareCollectors(
-      OccurrenceFeatures o1, OccurrenceFeatures o2, RelationshipAssertion assertion) {
+  private static <T extends OccurrenceFeatures> void compareCollectors(
+      OccurrenceFeatures o1, OccurrenceFeatures o2, RelationshipAssertion<T> assertion) {
     if (equalsAndNotNull(o1.getRecordedBy(), o2.getRecordedBy())) {
       // this could be improved with parsing and similarity checks
       assertion.collect(SAME_RECORDER_NAME);
     }
   }
 
-  private static void compareCoordinates(
-      OccurrenceFeatures o1, OccurrenceFeatures o2, RelationshipAssertion assertion) {
+  private static <T extends OccurrenceFeatures> void compareCoordinates(
+      OccurrenceFeatures o1, OccurrenceFeatures o2, RelationshipAssertion<T> assertion) {
     if (equalsAndNotNull(o1.getDecimalLatitude(), o2.getDecimalLatitude())
         && equalsAndNotNull(o1.getDecimalLongitude(), o2.getDecimalLongitude())) {
       assertion.collect(SAME_COORDINATES);
@@ -159,13 +163,17 @@ public class OccurrenceRelationships {
               o2.getDecimalLatitude(),
               o2.getDecimalLongitude());
 
-      if (distance <= 0.200) assertion.collect(WITHIN_200m); // 157m is 3 decimal places
-      if (distance <= 2.00) assertion.collect(WITHIN_2Km); // 1569m is worst 3 decimal places
+      if (distance <= 0.200) {
+        assertion.collect(WITHIN_200m); // 157m is 3 decimal places
+      }
+      if (distance <= 2.00) {
+        assertion.collect(WITHIN_2Km); // 1569m is worst 3 decimal places
+      }
     }
   }
 
-  private static void compareCountry(
-      OccurrenceFeatures o1, OccurrenceFeatures o2, RelationshipAssertion assertion) {
+  private static <T extends OccurrenceFeatures> void compareCountry(
+      OccurrenceFeatures o1, OccurrenceFeatures o2, RelationshipAssertion<T> assertion) {
     if (equalsAndNotNull(o1.getCountryCode(), o2.getCountryCode())) {
       assertion.collect(SAME_COUNTRY);
     } else if (presentOnOneOnly(o1.getCountryCode(), o2.getCountryCode())) {
@@ -175,27 +183,21 @@ public class OccurrenceRelationships {
     }
   }
 
-  private static void compareIdentifiers(
-      OccurrenceFeatures o1, OccurrenceFeatures o2, RelationshipAssertion assertion) {
+  private static <T extends OccurrenceFeatures> void compareIdentifiers(
+      OccurrenceFeatures o1, OccurrenceFeatures o2, RelationshipAssertion<T> assertion) {
     // ignore case and [-_., ] chars
     // otherCatalogNumbers is not parsed, but a good addition could be to explore that
-    Set<String> intersection = new HashSet<>();
-    o1.getIdentifiers()
-        .forEach(
-            id -> {
-              if (id != null) {
-                intersection.add(normalizeID(id));
-              }
-            });
+    Set<String> intersection =
+        o1.getIdentifiers().stream()
+            .filter(Objects::nonNull)
+            .map(OccurrenceRelationships::normalizeID)
+            .collect(Collectors.toSet());
 
-    Set<String> toMatch = new HashSet<>();
-    o2.getIdentifiers()
-        .forEach(
-            id -> {
-              if (id != null) {
-                toMatch.add(normalizeID(id));
-              }
-            });
+    Set<String> toMatch =
+        o2.getIdentifiers().stream()
+            .filter(Objects::nonNull)
+            .map(OccurrenceRelationships::normalizeID)
+            .collect(Collectors.toSet());
 
     intersection.retainAll(toMatch);
 

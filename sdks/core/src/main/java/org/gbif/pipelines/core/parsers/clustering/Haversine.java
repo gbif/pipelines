@@ -1,9 +1,13 @@
 package org.gbif.pipelines.core.parsers.clustering;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
 /**
  * Haversine implementation providing approximate distance between 2 points. Credit to Jason Winn on
  * https://github.com/jasonwinn/haversine/blob/master/Haversine.java
  */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class Haversine {
   private static final int APPROX_EARTH_RADIUS_KM = 6371;
 

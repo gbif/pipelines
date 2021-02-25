@@ -1,6 +1,6 @@
 package org.gbif.pipelines.core.parsers.clustering;
 
-import static org.gbif.pipelines.core.parsers.clustering.RelationshipAssertion.FEATURE_ASSERTION.*;
+import static org.gbif.pipelines.core.parsers.clustering.RelationshipAssertion.FeatureAssertion.*;
 import static org.junit.Assert.*;
 
 import org.junit.Test;
@@ -10,34 +10,34 @@ public class OccurrenceRelationshipsTest {
   @Test
   public void testSimpleAssertions() {
     OccurrenceFeatures o1 =
-        OccurrenceFeaturesPojo.newBuilder()
-            .setId("o1")
-            .setDatasetKey("1")
-            .setOccurrenceID("1")
-            .setSpeciesKey(1)
-            .setDecimalLatitude(44.0d)
-            .setDecimalLongitude(44.0d)
-            .setCatalogNumber("TIM1")
-            .setYear(1978)
-            .setMonth(12)
-            .setDay(21)
+        OccurrenceFeaturesPojo.builder()
+            .id("o1")
+            .datasetKey("1")
+            .occurrenceID("1")
+            .speciesKey(1)
+            .decimalLatitude(44.0d)
+            .decimalLongitude(44.0d)
+            .catalogNumber("TIM1")
+            .year(1978)
+            .month(12)
+            .day(21)
             .build();
 
     OccurrenceFeatures o2 =
-        OccurrenceFeaturesPojo.newBuilder()
-            .setId("o2")
-            .setDatasetKey("2")
-            .setOccurrenceID("2")
-            .setSpeciesKey(1)
-            .setDecimalLatitude(44.0d)
-            .setDecimalLongitude(44.0d)
-            .setCatalogNumber("TIM1")
-            .setYear(1978)
-            .setMonth(12)
-            .setDay(21)
+        OccurrenceFeaturesPojo.builder()
+            .id("o2")
+            .datasetKey("2")
+            .occurrenceID("2")
+            .speciesKey(1)
+            .decimalLatitude(44.0d)
+            .decimalLongitude(44.0d)
+            .catalogNumber("TIM1")
+            .year(1978)
+            .month(12)
+            .day(21)
             .build();
 
-    RelationshipAssertion assertion = OccurrenceRelationships.generate(o1, o2);
+    RelationshipAssertion<OccurrenceFeatures> assertion = OccurrenceRelationships.generate(o1, o2);
 
     assertNotNull(assertion);
     assertTrue(assertion.justificationContains(SAME_ACCEPTED_SPECIES));
@@ -47,38 +47,38 @@ public class OccurrenceRelationshipsTest {
   @Test
   public void testCortinarius() {
     OccurrenceFeatures o1 =
-        OccurrenceFeaturesPojo.newBuilder()
-            .setId("o1")
-            .setDatasetKey("1")
-            .setOccurrenceID("urn:catalog:O:F:304835")
-            .setRecordNumber("TEB 12-16")
-            .setSpeciesKey(3348943)
-            .setDecimalLatitude(60.3302d)
-            .setDecimalLongitude(10.4647d)
-            .setCatalogNumber("304835")
-            .setYear(2016)
-            .setMonth(6)
-            .setDay(11)
-            .setEventDate("2016-06-11T00:00:00")
+        OccurrenceFeaturesPojo.builder()
+            .id("o1")
+            .datasetKey("1")
+            .occurrenceID("urn:catalog:O:F:304835")
+            .recordNumber("TEB 12-16")
+            .speciesKey(3348943)
+            .decimalLatitude(60.3302d)
+            .decimalLongitude(10.4647d)
+            .catalogNumber("304835")
+            .year(2016)
+            .month(6)
+            .day(11)
+            .eventDate("2016-06-11T00:00:00")
             .build();
 
     OccurrenceFeatures o2 =
-        OccurrenceFeaturesPojo.newBuilder()
-            .setId("o2")
-            .setDatasetKey("2")
-            .setOccurrenceID("urn:uuid:152ce614-69e1-4fbe-8f1c-3340d0a15491")
-            .setSpeciesKey(3348943)
-            .setDecimalLatitude(60.330181d)
-            .setDecimalLongitude(10.464743d)
-            .setCatalogNumber("O-DFL-6644/2-D")
-            .setRecordNumber("TEB 12-16")
-            .setYear(2016)
-            .setMonth(6)
-            .setDay(11)
-            .setEventDate("2016-06-11T00:00:00")
+        OccurrenceFeaturesPojo.builder()
+            .id("o2")
+            .datasetKey("2")
+            .occurrenceID("urn:uuid:152ce614-69e1-4fbe-8f1c-3340d0a15491")
+            .speciesKey(3348943)
+            .decimalLatitude(60.330181d)
+            .decimalLongitude(10.464743d)
+            .catalogNumber("O-DFL-6644/2-D")
+            .recordNumber("TEB 12-16")
+            .year(2016)
+            .month(6)
+            .day(11)
+            .eventDate("2016-06-11T00:00:00")
             .build();
 
-    RelationshipAssertion assertion = OccurrenceRelationships.generate(o1, o2);
+    RelationshipAssertion<OccurrenceFeatures> assertion = OccurrenceRelationships.generate(o1, o2);
 
     assertNotNull(assertion);
     assertTrue(assertion.justificationContains(SAME_ACCEPTED_SPECIES));
@@ -89,28 +89,28 @@ public class OccurrenceRelationshipsTest {
   @Test
   public void testHolotype() {
     OccurrenceFeatures o1 =
-        OccurrenceFeaturesPojo.newBuilder()
-            .setId("o1")
-            .setDatasetKey("1")
-            .setTaxonKey(3350984)
-            .setDecimalLatitude(10d)
-            .setDecimalLongitude(10d)
-            .setCountryCode("DK")
-            .setTypeStatus("HoloType")
+        OccurrenceFeaturesPojo.builder()
+            .id("o1")
+            .datasetKey("1")
+            .taxonKey(3350984)
+            .decimalLatitude(10d)
+            .decimalLongitude(10d)
+            .countryCode("DK")
+            .typeStatus("HoloType")
             .build();
 
     OccurrenceFeatures o2 =
-        OccurrenceFeaturesPojo.newBuilder()
-            .setId("o2")
-            .setDatasetKey("2")
-            .setTaxonKey(3350984)
-            .setDecimalLatitude(20d) // different
-            .setDecimalLongitude(20d) // different
-            .setCountryCode("NO") // different
-            .setTypeStatus("HoloType")
+        OccurrenceFeaturesPojo.builder()
+            .id("o2")
+            .datasetKey("2")
+            .taxonKey(3350984)
+            .decimalLatitude(20d) // different
+            .decimalLongitude(20d) // different
+            .countryCode("NO") // different
+            .typeStatus("HoloType")
             .build();
 
-    RelationshipAssertion assertion = OccurrenceRelationships.generate(o1, o2);
+    RelationshipAssertion<OccurrenceFeatures> assertion = OccurrenceRelationships.generate(o1, o2);
     assertNotNull(assertion);
     assertTrue(assertion.justificationContains(SAME_SPECIMEN));
   }
@@ -123,34 +123,34 @@ public class OccurrenceRelationshipsTest {
     // different
     // days
     OccurrenceFeatures o1 =
-        OccurrenceFeaturesPojo.newBuilder()
-            .setId("49635968")
-            .setDatasetKey("1")
-            .setSpeciesKey(1850114)
-            .setDecimalLatitude(55.737d)
-            .setDecimalLongitude(12.538d)
-            .setYear(2004)
-            .setMonth(8)
-            .setDay(1) // day trap set
-            .setCountryCode("DK")
-            .setRecordedBy("Donald Hobern")
+        OccurrenceFeaturesPojo.builder()
+            .id("49635968")
+            .datasetKey("1")
+            .speciesKey(1850114)
+            .decimalLatitude(55.737d)
+            .decimalLongitude(12.538d)
+            .year(2004)
+            .month(8)
+            .day(1) // day trap set
+            .countryCode("DK")
+            .recordedBy("Donald Hobern")
             .build();
 
     OccurrenceFeatures o2 =
-        OccurrenceFeaturesPojo.newBuilder()
-            .setId("1227719129")
-            .setDatasetKey("2")
-            .setSpeciesKey(1850114)
-            .setDecimalLatitude(55.736932d) // different
-            .setDecimalLongitude(12.538104d)
-            .setYear(2004)
-            .setMonth(8)
-            .setDay(2) // day collected
-            .setCountryCode("DK")
-            .setRecordedBy("Donald Hobern")
+        OccurrenceFeaturesPojo.builder()
+            .id("1227719129")
+            .datasetKey("2")
+            .speciesKey(1850114)
+            .decimalLatitude(55.736932d) // different
+            .decimalLongitude(12.538104d)
+            .year(2004)
+            .month(8)
+            .day(2) // day collected
+            .countryCode("DK")
+            .recordedBy("Donald Hobern")
             .build();
 
-    RelationshipAssertion assertion = OccurrenceRelationships.generate(o1, o2);
+    RelationshipAssertion<OccurrenceFeatures> assertion = OccurrenceRelationships.generate(o1, o2);
     assertNotNull(assertion);
     assertTrue(
         assertion.justificationContainsAll(
@@ -162,33 +162,32 @@ public class OccurrenceRelationshipsTest {
   public void test3DP() {
     // real records of Seigler & Miller
     OccurrenceFeatures o1 =
-        OccurrenceFeaturesPojo.newBuilder()
-            .setId("1675790844")
-            .setDatasetKey("1")
-            .setSpeciesKey(3794925)
-            .setDecimalLatitude(21.8656d)
-            .setDecimalLongitude(-102.909d)
-            .setYear(2007)
-            .setMonth(5)
-            .setDay(26)
-            .setRecordedBy("D. S. Seigler & J. T. Miller")
+        OccurrenceFeaturesPojo.builder()
+            .id("1675790844")
+            .datasetKey("1")
+            .speciesKey(3794925)
+            .decimalLatitude(21.8656d)
+            .decimalLongitude(-102.909d)
+            .year(2007)
+            .month(5)
+            .day(26)
+            .recordedBy("D. S. Seigler & J. T. Miller")
             .build();
 
     OccurrenceFeatures o2 =
-        OccurrenceFeaturesPojo.newBuilder()
-            .setId("2268858676")
-            .setDatasetKey("2")
-            .setSpeciesKey(3794925)
-            .setDecimalLatitude(21.86558d)
-            .setDecimalLongitude(-102.90929d)
-            .setYear(2007)
-            .setMonth(5)
-            .setDay(26)
-            .setRecordedBy(
-                "David S. Seigler|J.T. Miller") // we should at some point detect this match
+        OccurrenceFeaturesPojo.builder()
+            .id("2268858676")
+            .datasetKey("2")
+            .speciesKey(3794925)
+            .decimalLatitude(21.86558d)
+            .decimalLongitude(-102.90929d)
+            .year(2007)
+            .month(5)
+            .day(26)
+            .recordedBy("David S. Seigler|J.T. Miller") // we should at some point detect this match
             .build();
 
-    RelationshipAssertion assertion = OccurrenceRelationships.generate(o1, o2);
+    RelationshipAssertion<OccurrenceFeatures> assertion = OccurrenceRelationships.generate(o1, o2);
     assertNotNull(assertion);
     assertTrue(assertion.justificationContainsAll(SAME_DATE, WITHIN_200m, SAME_ACCEPTED_SPECIES));
   }
