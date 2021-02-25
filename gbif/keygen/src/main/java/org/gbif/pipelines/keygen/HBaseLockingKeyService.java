@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.io.Serializable;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -74,7 +75,9 @@ public class HBaseLockingKeyService implements Serializable {
   private final HBaseStore<Long> counterTableStore;
 
   private final String datasetId;
+  private final Random random;
 
+  @SneakyThrows
   public HBaseLockingKeyService(KeygenConfig cfg, Connection connection, String datasetId) {
     this.lookupTableName =
         TableName.valueOf(checkNotNull(cfg.getLookupTable(), "lookupTable can't be null"));
@@ -89,6 +92,7 @@ public class HBaseLockingKeyService implements Serializable {
     this.occurrenceTableStore =
         new HBaseStore<>(cfg.getOccurrenceTable(), Columns.OCCURRENCE_COLUMN_FAMILY, connection);
     this.datasetId = datasetId;
+    this.random = SecureRandom.getInstanceStrong();
   }
 
   public HBaseLockingKeyService(KeygenConfig cfg, Connection connection) {
@@ -212,7 +216,6 @@ public class HBaseLockingKeyService implements Serializable {
       log.debug("Failed to get lock. Releasing held locks and trying again.");
       releaseLocks(statusMap);
       try {
-        Random random = new Random();
         TimeUnit.MILLISECONDS.sleep(
             WAIT_BEFORE_RETRY_MS + random.nextInt(WAIT_SKEW) - random.nextInt(WAIT_SKEW));
       } catch (InterruptedException e) {
