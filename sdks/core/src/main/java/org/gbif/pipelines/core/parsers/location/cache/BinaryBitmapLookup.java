@@ -50,7 +50,7 @@ public class BinaryBitmapLookup {
     if (log.isDebugEnabled()) {
       String hex = String.format("#%06x", colour);
       log.debug(
-              "[{}] LatLong {},{} has pixel {},{} with colour {}", kvStoreType, lat, lng, x, y, hex);
+          "[{}] LatLong {},{} has pixel {},{} with colour {}", kvStoreType, lat, lng, x, y, hex);
     }
 
     switch (colour) {
