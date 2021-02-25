@@ -20,6 +20,7 @@
     <module>elasticsearch-tools</module>
     <module>pipelines-maven-plugin</module>
     <module>xml-to-avsc-maven-plugin</module>
+    <module>extension-converter-maven-plugin</module>
   </modules>
 
 </project>
