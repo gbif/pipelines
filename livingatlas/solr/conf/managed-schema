@@ -23,6 +23,15 @@
             distanceUnits="degrees"
             autoIndex="true"
   />
+  <fieldType name="quad"
+            class="solr.SpatialRecursivePrefixTreeFieldType"
+            datelineRule="ccwRect"
+            spatialContextFactory="org.locationtech.spatial4j.context.jts.JtsSpatialContextFactory"
+            validationRule="none"
+            distanceUnits="degrees"
+            prefixTree="quad"
+            autoIndex="true"
+  />
   <fieldType name="location"
             class="solr.LatLonPointSpatialField"
             docValues="true"
@@ -129,6 +138,7 @@
   <field name="biome"         type="string" docValues="true" indexed="true" />
   <field name="speciesHabitats"         type="string" docValues="true" indexed="true" />
   <field name="geohash"       type="geohash"  indexed="true"/>
+  <field name="quad"          type="quad"        indexed="true"/>
   <field name="location"      type="location" indexed="true"/>
 
   <!-- required for Explore Your Area -->
@@ -140,6 +150,8 @@
   <field name="rgt"                type="int"     docValues="true" indexed="true" />
   <field name="spatiallyValid"     type="boolean" docValues="true" multiValued="false" indexed="true" />
   <field name="firstLoadedDate"    type="date"    docValues="true" multiValued="false" indexed="true" />
+  <field name="lastLoadDate"       type="date"    docValues="true" multiValued="false" indexed="true" />
+  <field name="lastProcessedDate"  type="date"    docValues="true" multiValued="false" indexed="true" />
   <field name="speciesGroup"       type="string"  docValues="true" multiValued="true"  indexed="true" />
   <field name="speciesSubgroup"    type="string"  docValues="true" multiValued="true"  indexed="true" />
   <field name="speciesListUid"     type="string"  docValues="true" multiValued="true"  indexed="true" />
@@ -201,6 +213,7 @@
   <field name="depth" type="double" docValues="true" indexed="true"/>
   <field name="depthAccuracy" type="double" docValues="true" indexed="true"/>
   <field name="disposition" type="string" docValues="true" indexed="true"/>
+  <field name="dynamicProperties" type="text" indexed="true"/>
   <field name="earliestAgeOrLowestStage" type="string" docValues="true" indexed="true"/>
   <field name="earliestEonOrLowestEonothem" type="string" docValues="true" indexed="true"/>
   <field name="earliestEpochOrLowestSeries" type="string" docValues="true" indexed="true"/>

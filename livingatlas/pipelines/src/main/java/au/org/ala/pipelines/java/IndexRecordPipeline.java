@@ -340,9 +340,12 @@ public class IndexRecordPipeline {
                     imageServicePathFn.apply("image-record")),
             executor);
 
-    CompletableFuture<Map<String, TaxonProfile>> taxonProfileMapFeature =
-        CompletableFuture.supplyAsync(
-            () -> SpeciesListPipeline.generateTaxonProfileCollection(options), executor);
+    CompletableFuture<Map<String, TaxonProfile>> taxonProfileMapFeature = null;
+    if (options.getIncludeSpeciesLists()) {
+      taxonProfileMapFeature =
+          CompletableFuture.supplyAsync(
+              () -> SpeciesListPipeline.generateTaxonProfileCollection(options), executor);
+    }
 
     MetadataRecord metadata = metadataMapFeature.get().values().iterator().next();
     Map<String, BasicRecord> basicMap = basicMapFeature.get();

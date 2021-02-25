@@ -149,7 +149,11 @@ public class IndexRecordToSolrPipeline {
       }
 
     } else {
-      log.info("Skipping adding sampling");
+      log.info("Adding step 4: Create SOLR connection");
+      SolrIO.ConnectionConfiguration conn =
+          SolrIO.ConnectionConfiguration.create(options.getZkHost());
+
+      writeToSolr(options, indexRecordsCollection, conn);
     }
 
     log.info("Starting pipeline");
