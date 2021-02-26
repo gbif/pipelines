@@ -189,12 +189,13 @@ object Cluster {
     }
 
     // Spark DF naming convention requires that we alias each term to avoid naming collision while still having
-    // named fields to access (i.e. not relying the column number of the term)
+    // named fields to access (i.e. not relying the column number of the term). All taxa keys are converted to String
+    // to allow shared routines between GBIF and ALA (https://github.com/gbif/pipelines/issues/484)
     val pairs = sql("""
       SELECT
 
         t1.gbifId AS t1_gbifId, t1.datasetKey AS t1_datasetKey, t1.basisOfRecord AS t1_basisOfRecord, t1.publishingorgkey AS t1_publishingOrgKey, t1.datasetName AS t1_datasetName, t1.publisher AS t1_publishingOrgName,
-        t1.kingdomKey AS t1_kingdomKey, t1.phylumKey AS t1_phylumKey, t1.classKey AS t1_classKey, t1.orderKey AS t1_orderKey, t1.familyKey AS t1_familyKey, t1.genusKey AS t1_genusKey, t1.speciesKey AS t1_speciesKey, t1.acceptedTaxonKey AS t1_acceptedTaxonKey, t1.taxonKey AS t1_taxonKey,
+        CAST(t1.kingdomKey AS String) AS t1_kingdomKey, CAST(t1.phylumKey AS String) AS t1_phylumKey, CAST(t1.classKey AS String) AS t1_classKey, CAST(t1.orderKey AS String) AS t1_orderKey, CAST(t1.familyKey AS String) AS t1_familyKey, CAST(t1.genusKey AS String) AS t1_genusKey, CAST(t1.speciesKey AS String) AS t1_speciesKey, CAST(t1.acceptedTaxonKey AS String) AS t1_acceptedTaxonKey, CAST(t1.taxonKey AS String) AS t1_taxonKey,
         t1.scientificName AS t1_scientificName, t1.acceptedScientificName AS t1_acceptedScientificName, t1.kingdom AS t1_kingdom, t1.phylum AS t1_phylum, t1.order_ AS t1_order, t1.family AS t1_family, t1.genus AS t1_genus, t1.species AS t1_species, t1.genericName AS t1_genericName, t1.specificEpithet AS t1_specificEpithet, t1.taxonRank AS t1_taxonRank,
         t1.typeStatus AS t1_typeStatus, t1.preparations AS t1_preparations,
         t1.decimalLatitude AS t1_decimalLatitude, t1.decimalLongitude AS t1_decimalLongitude, t1.countryCode AS t1_countryCode,
@@ -204,7 +205,7 @@ object Cluster {
         t1.ext_multimedia AS t1_media,
 
         t2.gbifId AS t2_gbifId, t2.datasetKey AS t2_datasetKey, t2.basisOfRecord AS t2_basisOfRecord, t2.publishingorgkey AS t2_publishingOrgKey, t2.datasetName AS t2_datasetName, t2.publisher AS t2_publishingOrgName,
-        t2.kingdomKey AS t2_kingdomKey, t2.phylumKey AS t2_phylumKey, t2.classKey AS t2_classKey, t2.orderKey AS t2_orderKey, t2.familyKey AS t2_familyKey, t2.genusKey AS t2_genusKey, t2.speciesKey AS t2_speciesKey, t2.acceptedTaxonKey AS t2_acceptedTaxonKey, t2.taxonKey AS t2_taxonKey,
+        CAST(t2.kingdomKey AS String) AS t2_kingdomKey, CAST(t2.phylumKey AS String) AS t2_phylumKey, CAST(t2.classKey AS String) AS t2_classKey, CAST(t2.orderKey AS String) AS t2_orderKey, CAST(t2.familyKey AS String) AS t2_familyKey, CAST(t2.genusKey AS String) AS t2_genusKey, CAST(t2.speciesKey AS String) AS t2_speciesKey, CAST(t2.acceptedTaxonKey AS String) AS t2_acceptedTaxonKey, CAST(t2.taxonKey AS String) AS t2_taxonKey,
         t2.scientificName AS t2_scientificName, t2.acceptedScientificName AS t2_acceptedScientificName, t2.kingdom AS t2_kingdom, t2.phylum AS t2_phylum, t2.order_ AS t2_order, t2.family AS t2_family, t2.genus AS t2_genus, t2.species AS t2_species, t2.genericName AS t2_genericName, t2.specificEpithet AS t2_specificEpithet, t2.taxonRank AS t2_taxonRank,
         t2.typeStatus AS t2_typeStatus, t2.preparations AS t2_preparations,
         t2.decimalLatitude AS t2_decimalLatitude, t2.decimalLongitude AS t2_decimalLongitude, t2.countryCode AS t2_countryCode,

@@ -7,6 +7,7 @@ package object clustering {
   // SPECIMENS
   val specimenBORs = List("PRESERVED_SPECIMEN", "MATERIAL_SAMPLE", "LIVING_SPECIMEN", "FOSSIL_SPECIMEN")
 
+  // SQL to extract fields necessary for grouping for candidate pairs
   val SQL_OCCURRENCE = """
 SELECT
   gbifId, datasetKey, basisOfRecord, publishingorgkey, datasetName, publisher,
