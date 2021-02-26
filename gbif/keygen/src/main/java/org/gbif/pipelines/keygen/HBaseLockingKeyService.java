@@ -68,8 +68,6 @@ public class HBaseLockingKeyService implements Serializable {
 
   private static final int HBASE_CLIENT_CACHING = 200;
 
-  private final Random random;
-
   private final Connection connection;
   private final TableName lookupTableName;
   private final HBaseStore<Long> occurrenceTableStore;
@@ -77,6 +75,7 @@ public class HBaseLockingKeyService implements Serializable {
   private final HBaseStore<Long> counterTableStore;
 
   private final String datasetId;
+  private final Random random;
 
   @SneakyThrows
   public HBaseLockingKeyService(KeygenConfig cfg, Connection connection, String datasetId) {
@@ -93,7 +92,6 @@ public class HBaseLockingKeyService implements Serializable {
     this.occurrenceTableStore =
         new HBaseStore<>(cfg.getOccurrenceTable(), Columns.OCCURRENCE_COLUMN_FAMILY, connection);
     this.datasetId = datasetId;
-
     this.random = SecureRandom.getInstanceStrong();
   }
 

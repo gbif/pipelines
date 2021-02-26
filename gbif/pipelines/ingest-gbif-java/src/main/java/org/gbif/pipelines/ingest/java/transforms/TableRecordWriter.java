@@ -6,7 +6,6 @@ import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 import lombok.Builder;
@@ -30,33 +29,16 @@ public class TableRecordWriter<T> {
   @NonNull private final Schema schema;
   @NonNull private final ExecutorService executor;
 
-  private Runnable waitFn;
-
   @SneakyThrows
-  public TableRecordWriter<T> write() {
+  public void write() {
     try (SyncDataFileWriter<T> writer = createWriter(options)) {
       boolean useSyncMode = options.getSyncThreshold() > basicRecords.size();
       if (useSyncMode) {
         syncWrite(writer);
       } else {
         CompletableFuture<?>[] futures = asyncWrite(writer);
-
-        waitFn =
-            () -> {
-              try {
-                CompletableFuture.allOf(futures).get();
-              } catch (InterruptedException | ExecutionException ex) {
-                throw new RuntimeException(ex);
-              }
-            };
+        CompletableFuture.allOf(futures).get();
       }
-    }
-    return this;
-  }
-
-  public void waitAsync() {
-    if (waitFn != null) {
-      waitFn.run();
     }
   }
 
