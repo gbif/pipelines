@@ -26,7 +26,9 @@ import org.junit.Test;
  */
 public class OccurrenceRelationshipsSparkTest {
 
-  // Schema mirrors the production occurrence HDFS view of GBIF
+  // Schema mirrors the production occurrence HDFS view of GBIF with the exception of taxa keys
+  // being String
+  // due to https://github.com/gbif/pipelines/issues/484 to allow for GBIF/ALA use.
   private static final StructType SCHEMA =
       new StructType(
           new StructField[] {
@@ -36,15 +38,15 @@ public class OccurrenceRelationshipsSparkTest {
             DataTypes.createStructField("publishingoOrgKey", DataTypes.StringType, true),
             DataTypes.createStructField("datasetName", DataTypes.StringType, true),
             DataTypes.createStructField("publisher", DataTypes.StringType, true),
-            DataTypes.createStructField("kingdomKey", DataTypes.IntegerType, true),
-            DataTypes.createStructField("phylumKey", DataTypes.IntegerType, true),
-            DataTypes.createStructField("classKey", DataTypes.IntegerType, true),
-            DataTypes.createStructField("orderKey", DataTypes.IntegerType, true),
-            DataTypes.createStructField("familyKey", DataTypes.IntegerType, true),
-            DataTypes.createStructField("genusKey", DataTypes.IntegerType, true),
-            DataTypes.createStructField("speciesKey", DataTypes.IntegerType, true),
-            DataTypes.createStructField("acceptedTaxonKey", DataTypes.IntegerType, true),
-            DataTypes.createStructField("taxonKey", DataTypes.IntegerType, true),
+            DataTypes.createStructField("kingdomKey", DataTypes.StringType, true),
+            DataTypes.createStructField("phylumKey", DataTypes.StringType, true),
+            DataTypes.createStructField("classKey", DataTypes.StringType, true),
+            DataTypes.createStructField("orderKey", DataTypes.StringType, true),
+            DataTypes.createStructField("familyKey", DataTypes.StringType, true),
+            DataTypes.createStructField("genusKey", DataTypes.StringType, true),
+            DataTypes.createStructField("speciesKey", DataTypes.StringType, true),
+            DataTypes.createStructField("acceptedTaxonKey", DataTypes.StringType, true),
+            DataTypes.createStructField("taxonKey", DataTypes.StringType, true),
             DataTypes.createStructField("scientificName", DataTypes.StringType, true),
             DataTypes.createStructField("acceptedScientificName", DataTypes.StringType, true),
             DataTypes.createStructField("kingdom", DataTypes.StringType, true),
@@ -83,7 +85,7 @@ public class OccurrenceRelationshipsSparkTest {
         new RowOccurrenceFeatures(
             new RowBuilder()
                 .with("occurrenceID", "1")
-                .with("speciesKey", 1)
+                .with("speciesKey", "1")
                 .with("decimalLatitude", 44.0d)
                 .with("decimalLongitude", 44.0d)
                 .with("catalogNumber", "TIM1")
@@ -96,7 +98,7 @@ public class OccurrenceRelationshipsSparkTest {
         new RowOccurrenceFeatures(
             new RowBuilder()
                 .with("occurrenceID", "2")
-                .with("speciesKey", 1)
+                .with("speciesKey", "1")
                 .with("decimalLatitude", 44.0d)
                 .with("decimalLongitude", 44.0d)
                 .with("catalogNumber", "//TIM1")
@@ -119,7 +121,7 @@ public class OccurrenceRelationshipsSparkTest {
             new RowBuilder()
                 .with("occurrenceID", "urn:catalog:O:F:304835")
                 .with("recordNumber", "TEB 12-16")
-                .with("speciesKey", 3348943)
+                .with("speciesKey", "3348943")
                 .with("decimalLatitude", 60.3302d)
                 .with("decimalLongitude", 10.4647d)
                 .with("catalogNumber", "304835")
@@ -133,7 +135,7 @@ public class OccurrenceRelationshipsSparkTest {
         new RowOccurrenceFeatures(
             new RowBuilder()
                 .with("occurrenceID", "urn:uuid:152ce614-69e1-4fbe-8f1c-3340d0a15491")
-                .with("speciesKey", 3348943)
+                .with("speciesKey", "3348943")
                 .with("decimalLatitude", 60.330181d)
                 .with("decimalLongitude", 10.464743d)
                 .with("catalogNumber", "O-DFL-6644/2-D")
@@ -157,7 +159,7 @@ public class OccurrenceRelationshipsSparkTest {
     OccurrenceFeatures o1 =
         new RowOccurrenceFeatures(
             new RowBuilder()
-                .with("taxonKey", 3350984)
+                .with("taxonKey", "3350984")
                 .with("decimalLatitude", 10d)
                 .with("decimalLongitude", 10d)
                 .with("countryCode", "DK")
@@ -167,7 +169,7 @@ public class OccurrenceRelationshipsSparkTest {
     OccurrenceFeatures o2 =
         new RowOccurrenceFeatures(
             new RowBuilder()
-                .with("taxonKey", 3350984)
+                .with("taxonKey", "3350984")
                 .with("decimalLatitude", 20d) // different
                 .with("decimalLongitude", 20d) // different
                 .with("countryCode", "NO") // different
@@ -190,7 +192,7 @@ public class OccurrenceRelationshipsSparkTest {
         new RowOccurrenceFeatures(
             new RowBuilder()
                 .with("gbifId", 49635968)
-                .with("speciesKey", 1850114)
+                .with("speciesKey", "1850114")
                 .with("decimalLatitude", 55.737d)
                 .with("decimalLongitude", 12.538d)
                 .with("year", 2004)
@@ -204,7 +206,7 @@ public class OccurrenceRelationshipsSparkTest {
         new RowOccurrenceFeatures(
             new RowBuilder()
                 .with("gbifId", 1227719129)
-                .with("speciesKey", 1850114)
+                .with("speciesKey", "1850114")
                 .with("decimalLatitude", 55.736932d) // different
                 .with("decimalLongitude", 12.538104d)
                 .with("year", 2004)
@@ -229,7 +231,7 @@ public class OccurrenceRelationshipsSparkTest {
         new RowOccurrenceFeatures(
             new RowBuilder()
                 .with("gbifId", 1675790844)
-                .with("speciesKey", 3794925)
+                .with("speciesKey", "3794925")
                 .with("decimalLatitude", 21.8656d)
                 .with("decimalLongitude", -102.909d)
                 .with("year", 2007)
@@ -242,7 +244,7 @@ public class OccurrenceRelationshipsSparkTest {
         new RowOccurrenceFeatures(
             new RowBuilder()
                 .with("gbifId", 2268858676L)
-                .with("speciesKey", 3794925)
+                .with("speciesKey", "3794925")
                 .with("decimalLatitude", 21.86558d)
                 .with("decimalLongitude", -102.90929d)
                 .with("year", 2007)
@@ -287,7 +289,7 @@ public class OccurrenceRelationshipsSparkTest {
           Arrays.asList(
               new RowBuilder()
                   .with("occurrenceID", "1")
-                  .with("speciesKey", 1)
+                  .with("speciesKey", "1")
                   .with("decimalLatitude", 44.0d)
                   .with("decimalLongitude", 44.0d)
                   .with("catalogNumber", "TIM1")
@@ -297,7 +299,7 @@ public class OccurrenceRelationshipsSparkTest {
                   .buildSchemaless(),
               new RowBuilder()
                   .with("occurrenceID", "2")
-                  .with("speciesKey", 1)
+                  .with("speciesKey", "1")
                   .with("decimalLatitude", 44.0d)
                   .with("decimalLongitude", 44.0d)
                   .with("catalogNumber", "//TIM1")

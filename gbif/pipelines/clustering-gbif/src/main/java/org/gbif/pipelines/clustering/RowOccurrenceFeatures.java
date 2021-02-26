@@ -121,12 +121,12 @@ public class RowOccurrenceFeatures implements OccurrenceFeatures {
   }
 
   @Override
-  public Integer getSpeciesKey() {
+  public String getSpeciesKey() {
     return get("speciesKey");
   }
 
   @Override
-  public Integer getTaxonKey() {
+  public String getTaxonKey() {
     return get("taxonKey");
   }
 

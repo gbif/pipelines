@@ -11,9 +11,9 @@ public interface OccurrenceFeatures {
 
   String getDatasetKey();
 
-  Integer getSpeciesKey();
+  String getSpeciesKey();
 
-  Integer getTaxonKey();
+  String getTaxonKey();
 
   String getBasisOfRecord();
 

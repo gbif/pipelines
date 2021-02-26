@@ -11,8 +11,8 @@ import lombok.Builder;
 public class OccurrenceFeaturesPojo implements OccurrenceFeatures {
   private final String id;
   private final String datasetKey;
-  private final Integer speciesKey;
-  private final Integer taxonKey;
+  private final String speciesKey;
+  private final String taxonKey;
   private final String basisOfRecord;
   private final Double decimalLatitude;
   private final Double decimalLongitude;
@@ -41,12 +41,12 @@ public class OccurrenceFeaturesPojo implements OccurrenceFeatures {
   }
 
   @Override
-  public Integer getSpeciesKey() {
+  public String getSpeciesKey() {
     return speciesKey;
   }
 
   @Override
-  public Integer getTaxonKey() {
+  public String getTaxonKey() {
     return taxonKey;
   }
 
