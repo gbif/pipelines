@@ -105,9 +105,9 @@ public class ValidationUtils {
       log.warn(
           "The imported verbatim is newer than the interpretation. Interpretation should be re-ran.");
     }
-    if (interpretationTime > uuidTime) {
+    if (verbatimTime > uuidTime) {
       log.warn(
-          "The imported interpretation is newer than the uuid. Unable to index until UUID minting re-ran");
+          "The imported verbatim AVRO is newer than the uuid. Unable to index until UUID minting re-ran");
       return ValidationResult.builder().valid(false).message(UUID_REQUIRED).build();
     }
 
