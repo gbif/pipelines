@@ -11,11 +11,15 @@
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>xml-to-avsc-maven-plugin</artifactId>
+  <artifactId>extension-converter-maven-plugin</artifactId>
   <packaging>maven-plugin</packaging>
 
-  <name>Pipelines :: Tools :: XML to AVSC Maven plugin</name>
-  <description>Maven plugin generates avro schemas based on DWC XML extensions</description>
+  <name>Pipelines :: Tools :: Extension converter</name>
+  <description>Maven plugin generates conveters java classes for raw extensions</description>
+
+  <properties>
+    <freemarker.version>2.3.31</freemarker.version>
+  </properties>
 
   <build>
     <plugins>
@@ -24,7 +28,7 @@
         <artifactId>maven-plugin-plugin</artifactId>
         <executions>
           <execution>
-            <id>avroschemageneration</id>
+            <id>extensiongeneration</id>
             <phase>generate-sources</phase>
           </execution>
         </executions>
@@ -50,8 +54,9 @@
     </dependency>
 
     <dependency>
-      <groupId>org.apache.avro</groupId>
-      <artifactId>avro</artifactId>
+      <groupId>org.freemarker</groupId>
+      <artifactId>freemarker</artifactId>
+      <version>${freemarker.version}</version>
     </dependency>
 
     <!-- Test -->
@@ -62,3 +67,4 @@
   </dependencies>
 
 </project>
+

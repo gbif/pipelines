@@ -18,7 +18,6 @@
   <properties>
     <avro-generated-path>${project.basedir}/src/main/java-generated/</avro-generated-path>
     <schema-generated-path>${project.basedir}/src/main/avro/table/</schema-generated-path>
-    <namespace>org.gbif.pipelines.io.avro</namespace>
     <sonar.skip>true</sonar.skip>
   </properties>
 

@@ -175,7 +175,8 @@
     <jacoco.ut.output.file>${coverage.dir}/jacoco-ut.exec</jacoco.ut.output.file>
     <jacoco.merged.output.file>${coverage.dir}/jacoco.exec</jacoco.merged.output.file>
 
-    <!-- Extensions -->
+    <!-- Extensions and AVRO-->
+    <namespace>org.gbif.pipelines.io.avro</namespace>
     <extension.mof>MeasurementOrFactTable,https://rs.gbif.org/extension/dwc/measurements_or_facts.xml</extension.mof>
 
   </properties>
