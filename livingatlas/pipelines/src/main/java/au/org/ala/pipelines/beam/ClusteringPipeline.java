@@ -1,8 +1,8 @@
 package au.org.ala.pipelines.beam;
 
 import au.org.ala.clustering.ClusterPair;
-import au.org.ala.clustering.OccurrenceRelationships;
-import au.org.ala.clustering.RelationshipAssertion;
+import au.org.ala.clustering.ClusteringCandidates;
+import au.org.ala.clustering.HashKeyOccurrence;
 import au.org.ala.clustering.RepresentativeRecordUtils;
 import au.org.ala.pipelines.options.AllDatasetsPipelinesOptions;
 import au.org.ala.pipelines.options.ClusteringPipelineOptions;
@@ -25,6 +25,9 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.directory.api.util.Strings;
 import org.apache.hadoop.fs.FileSystem;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.core.parsers.clustering.OccurrenceFeatures;
+import org.gbif.pipelines.core.parsers.clustering.OccurrenceRelationships;
+import org.gbif.pipelines.core.parsers.clustering.RelationshipAssertion;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.*;
 import org.slf4j.MDC;
@@ -89,14 +92,14 @@ public class ClusteringPipeline {
     PCollection<IndexRecord> indexRecords = loadIndexRecords(options, pipeline);
 
     // create hashes for everything
-    PCollection<OccurrenceFeatures> hashAll =
+    PCollection<HashKeyOccurrence> hashAll =
         indexRecords
             .apply(
                 ParDo.of(
-                    new DoFn<IndexRecord, OccurrenceFeatures>() {
+                    new DoFn<IndexRecord, HashKeyOccurrence>() {
                       @ProcessElement
                       public void processElement(
-                          @Element IndexRecord source, OutputReceiver<OccurrenceFeatures> out) {
+                          @Element IndexRecord source, OutputReceiver<HashKeyOccurrence> out) {
 
                         String datasetKey = source.getStrings().get("dataResourceUid");
                         if (datasetKey == null) {
@@ -104,42 +107,59 @@ public class ClusteringPipeline {
                           return;
                         }
 
-                        OccurrenceFeatures.Builder builder =
-                            OccurrenceFeatures.newBuilder()
-                                .setId(source.getId())
-                                .setDatasetKey(datasetKey)
-                                .setSpeciesKey(source.getStrings().get("speciesID"))
-                                .setTaxonKey(source.getStrings().get("taxonConceptID"))
-                                .setBasisOfRecord(source.getStrings().get("basisOfRecord"))
-                                .setDecimalLatitude(source.getDoubles().get("decimalLatitude"))
-                                .setDecimalLongitude(source.getDoubles().get("decimalLongitude"))
-                                .setYear(source.getInts().get("year"))
-                                .setMonth(source.getInts().get("month"))
-                                .setDay(source.getInts().get("day"))
-                                .setEventDate(source.getLongs().get("eventDate"))
-                                .setTypeStatus(source.getStrings().get("typeStatus"))
-                                .setRecordedBy(source.getStrings().get("recordedBy"))
-                                .setRecordedBy(source.getStrings().get("fieldNumber"))
-                                .setRecordNumber(source.getStrings().get("recordNumber"))
-                                .setCatalogNumber(source.getStrings().get("catalogNumber"))
-                                .setOccurrenceID(source.getStrings().get("occurrenceID"))
-                                .setOtherCatalogNumbers(
-                                    source.getStrings().get("otherCatalogNumbers"))
-                                .setCollectionCode(source.getStrings().get("collectionCode"))
-                                .setInstitutionCode(source.getStrings().get("institutionCode"));
+                        String speciesKey = source.getStrings().get("speciesID");
+                        String taxonKey = source.getStrings().get("taxonConceptOD");
+                        String typeStatus = source.getStrings().get("typeStatus");
+                        String basisOfRecord = source.getStrings().get("basisOfRecord");
+                        Double decimalLatitude = source.getDoubles().get("decimalLatitude");
+                        Double decimalLongitude = source.getDoubles().get("decimalLongitude");
 
+                        Integer year = source.getInts().get("year");
+                        Integer month = source.getInts().get("month");
+                        Integer day = source.getInts().get("day");
+
+                        String occurrenceID = source.getStrings().get("occurrenceID");
+                        String fieldNumber = source.getStrings().get("fieldNumber");
+                        String recordNumber = source.getStrings().get("recordNumber");
+                        String catalogNumber = source.getStrings().get("catalogNumber");
+                        String otherCatalogNumbers = source.getStrings().get("otherCatalogNumbers");
+
+                        String recordedBy = source.getStrings().get("recordedBy");
+
+                        HashKeyOccurrence.HashKeyOccurrenceBuilder builder =
+                            HashKeyOccurrence.builder()
+                                .id(source.getId())
+                                .datasetKey(datasetKey)
+                                .speciesKey(speciesKey)
+                                .taxonKey(source.getStrings().get("taxonConceptID"))
+                                .basisOfRecord(source.getStrings().get("basisOfRecord"))
+                                .decimalLatitude(source.getDoubles().get("decimalLatitude"))
+                                .decimalLongitude(source.getDoubles().get("decimalLongitude"))
+                                .year(source.getInts().get("year"))
+                                .month(source.getInts().get("month"))
+                                .day(source.getInts().get("day"))
+                                .eventDate(source.getLongs().get("eventDate").toString())
+                                .typeStatus(source.getStrings().get("typeStatus"))
+                                .recordedBy(source.getStrings().get("recordedBy"))
+                                .recordedBy(source.getStrings().get("fieldNumber"))
+                                .recordNumber(source.getStrings().get("recordNumber"))
+                                .catalogNumber(source.getStrings().get("catalogNumber"))
+                                .occurrenceID(source.getStrings().get("occurrenceID"))
+                                .otherCatalogNumbers(
+                                    source.getStrings().get("otherCatalogNumbers"));
+                        //
                         // specimen only hashes
-                        if (Strings.isNotEmpty(builder.getSpeciesKey())
-                            && Strings.isNotEmpty(builder.getBasisOfRecord())
-                            && specimenBORs.contains(builder.getBasisOfRecord())) {
+                        if (Strings.isNotEmpty(speciesKey)
+                            && Strings.isNotEmpty(basisOfRecord)
+                            && specimenBORs.contains(basisOfRecord)) {
 
                           // output hashes for each combination
                           Arrays.asList(
-                                  builder.getOccurrenceID(),
-                                  builder.getFieldNumber(),
-                                  builder.getRecordNumber(),
-                                  builder.getCatalogNumber(),
-                                  builder.getOtherCatalogNumbers())
+                                  occurrenceID,
+                                  fieldNumber,
+                                  recordNumber,
+                                  catalogNumber,
+                                  otherCatalogNumbers)
                               .stream()
                               .filter(
                                   value ->
@@ -152,55 +172,42 @@ public class ClusteringPipeline {
                                   id ->
                                       out.output(
                                           builder
-                                              .setHashKey(
-                                                  builder.getSpeciesKey()
+                                              .hashKey(
+                                                  speciesKey
                                                       + "|"
                                                       + OccurrenceRelationships.normalizeID(id))
                                               .build()));
                         }
 
                         // hashes for all records
-                        if (builder.getDecimalLatitude() != null
-                            && builder.getDecimalLongitude() != null
-                            && builder.getYear() != null
-                            && builder.getMonth() != null
-                            && builder.getDay() != null) {
+                        if (decimalLatitude != null
+                            && decimalLongitude != null
+                            && year != null
+                            && month != null
+                            && day != null) {
                           out.output(
                               builder
-                                  .setHashKey(
+                                  .hashKey(
                                       String.join(
                                           "|",
-                                          builder.getSpeciesKey(),
-                                          Long.toString(
-                                              Math.round(builder.getDecimalLatitude() * 1000)),
-                                          Long.toString(
-                                              Math.round(builder.getDecimalLongitude() * 1000)),
-                                          Integer.toString(builder.getYear()),
-                                          Integer.toString(builder.getMonth()),
-                                          Integer.toString(builder.getDay())))
+                                          speciesKey,
+                                          Long.toString(Math.round(decimalLatitude * 1000)),
+                                          Long.toString(Math.round(decimalLongitude * 1000)),
+                                          Integer.toString(year),
+                                          Integer.toString(month),
+                                          Integer.toString(day)))
                                   .build());
                         }
 
-                        if (Strings.isNotEmpty(builder.getTaxonKey())
-                            && Strings.isNotEmpty(builder.getTypeStatus())) {
-                          out.output(
-                              builder
-                                  .setHashKey(builder.getTaxonKey() + "|" + builder.getTypeStatus())
-                                  .build());
+                        if (Strings.isNotEmpty(taxonKey) && Strings.isNotEmpty(typeStatus)) {
+                          out.output(builder.hashKey(taxonKey + "|" + typeStatus).build());
                         }
 
-                        if (Strings.isNotEmpty(builder.getTaxonKey())
-                            && builder.getYear() != null
-                            && Strings.isNotEmpty(builder.getRecordedBy())) {
+                        if (Strings.isNotEmpty(taxonKey)
+                            && year != null
+                            && Strings.isNotEmpty(recordedBy)) {
                           out.output(
-                              builder
-                                  .setHashKey(
-                                      builder.getTaxonKey()
-                                          + "|"
-                                          + builder.getYear()
-                                          + "|"
-                                          + builder.getRecordedBy())
-                                  .build());
+                              builder.hashKey(taxonKey + "|" + year + "|" + recordedBy).build());
                         }
                       }
                     }))
@@ -211,16 +218,16 @@ public class ClusteringPipeline {
         hashAll
             .apply(
                 MapElements.via(
-                    new SimpleFunction<OccurrenceFeatures, KV<String, OccurrenceFeatures>>() {
+                    new SimpleFunction<HashKeyOccurrence, KV<String, HashKeyOccurrence>>() {
                       @Override
-                      public KV<String, OccurrenceFeatures> apply(OccurrenceFeatures input) {
+                      public KV<String, HashKeyOccurrence> apply(HashKeyOccurrence input) {
                         return KV.of(input.getHashKey(), input);
                       }
                     }))
-            .apply(GroupByKey.<String, OccurrenceFeatures>create())
+            .apply(GroupByKey.<String, HashKeyOccurrence>create())
             .apply(
                 ParDo.of(
-                    new DoFn<KV<String, Iterable<OccurrenceFeatures>>, ClusteringCandidates>() {
+                    new DoFn<KV<String, Iterable<HashKeyOccurrence>>, ClusteringCandidates>() {
                       @ProcessElement
                       public void processElement(
                           @Element KV<String, Iterable<OccurrenceFeatures>> source,
@@ -231,24 +238,13 @@ public class ClusteringPipeline {
 
                         if (result.size() > 1) {
                           out.output(
-                              ClusteringCandidates.newBuilder()
-                                  .setHashKey(source.getKey())
-                                  .setCandidates(result)
+                              ClusteringCandidates.builder()
+                                  .hashKey(source.getKey())
+                                  .candidates(result)
                                   .build());
                         }
                       }
                     }));
-
-    // establish clusters of records
-    // KV<List<String>, List<OccurrenceFeatures>>
-
-    // do we have overlapping clusters ?
-
-    //
-
-    // if so join them together
-
-    // check the integrity of each cluster a -> b
 
     // need to Group by UUID
     PCollection<KV<String, Relationship>> relationships =
@@ -271,12 +267,7 @@ public class ClusteringPipeline {
 
                         for (OccurrenceFeatures o2 : candidates) {
 
-                          // if datasetKey != datasetKey
-                          //                        if
-                          // (!o1.getDatasetKey().equals(o2.getDatasetKey())) {
-                          // do a complete comparison to see if the
-                          // records have a relationship
-                          RelationshipAssertion assertion =
+                          RelationshipAssertion<OccurrenceFeatures> assertion =
                               OccurrenceRelationships.generate(o1, o2);
 
                           if (assertion != null) {
