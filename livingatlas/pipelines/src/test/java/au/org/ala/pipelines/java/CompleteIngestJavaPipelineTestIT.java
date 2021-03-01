@@ -173,7 +173,8 @@ public class CompleteIngestJavaPipelineTestIT {
               "--inputPath=/tmp/la-pipelines-test/complete-pipeline-java",
               "--allDatasetsInputPath=/tmp/la-pipelines-test/complete-pipeline-java/all-datasets",
               "--properties=" + TestUtils.getPipelinesConfigFile(),
-              "--includeImages=false"
+              "--includeImages=false",
+              "--includeSensitiveData=true"
             });
     IndexRecordPipeline.run(solrOptions);
 
@@ -221,7 +222,6 @@ public class CompleteIngestJavaPipelineTestIT {
               "--zkHost=" + SolrUtils.getZkHost(),
               "--solrCollection=" + SolrUtils.BIOCACHE_TEST_SOLR_COLLECTION,
               "--includeSampling=true",
-              "--includeSensitiveData=true",
               "--includeImages=false"
             });
     IndexRecordToSolrPipeline.run(solrOptions2);
