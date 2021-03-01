@@ -1,12 +1,24 @@
 package org.gbif.pipelines.core.interpreters.core;
 
 import static org.gbif.api.model.Constants.EBIRD_DATASET_KEY;
-import static org.gbif.api.vocabulary.OccurrenceIssue.*;
+import static org.gbif.api.vocabulary.OccurrenceIssue.CONTINENT_INVALID;
+import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_INVALID;
+import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_OUT_OF_RANGE;
+import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_PRECISION_INVALID;
+import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_UNCERTAINTY_METERS_INVALID;
+import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_COORDINATE_MISMATCH;
+import static org.gbif.api.vocabulary.OccurrenceIssue.FOOTPRINT_SRS_INVALID;
+import static org.gbif.api.vocabulary.OccurrenceIssue.ZERO_COORDINATE;
 import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
+import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareOptValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareValue;
 
 import com.google.common.base.Strings;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -27,13 +39,16 @@ import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.core.parsers.SimpleTypeParser;
 import org.gbif.pipelines.core.parsers.VocabularyParser;
 import org.gbif.pipelines.core.parsers.common.ParsedField;
+import org.gbif.pipelines.core.parsers.location.parser.FootprintWKTParser;
 import org.gbif.pipelines.core.parsers.location.parser.GadmParser;
 import org.gbif.pipelines.core.parsers.location.parser.LocationParser;
 import org.gbif.pipelines.core.parsers.location.parser.ParsedLocation;
+import org.gbif.pipelines.core.parsers.location.parser.SpatialReferenceSystemParser;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.rest.client.geocode.GeocodeResponse;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 /** Interprets the location terms of a {@link ExtendedRecord}. */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -127,6 +142,32 @@ public class LocationInterpreter {
         GadmParser.parseGadm(lr, geocodeKvStore).ifPresent(lr::setGadm);
       }
     };
+  }
+
+  /**
+   * Uses the interpreted DwcTerm#footprintSRS} and {@link DwcTerm#footprintWKT} terms to populate
+   * the footprintWKT in WGS84 projection.
+   */
+  public static void interpretFootprintWKT(ExtendedRecord er, LocationRecord lr) {
+    Optional<String> verbatimFootprintSRS = extractNullAwareOptValue(er, DwcTerm.footprintSRS);
+    CoordinateReferenceSystem footprintSRS =
+        verbatimFootprintSRS.map(SpatialReferenceSystemParser::parseCRS).orElse(null);
+
+    if (verbatimFootprintSRS.isPresent() && footprintSRS == null) {
+      addIssue(lr, FOOTPRINT_SRS_INVALID);
+    } else {
+
+      extractNullAwareOptValue(er, DwcTerm.footprintWKT)
+          .map(wkt -> FootprintWKTParser.parseFootprintWKT(footprintSRS, wkt))
+          .ifPresent(
+              result -> {
+                if (result.isSuccessful()) {
+                  lr.setFootprintWKT(result.getResult());
+                } else {
+                  addIssue(lr, result.getIssues());
+                }
+              });
+    }
   }
 
   /** Interprets the publishing country for eBird dataset. */

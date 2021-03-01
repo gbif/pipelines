@@ -28,7 +28,6 @@ import org.gbif.pipelines.transforms.converters.GbifJsonTransform;
 import org.gbif.pipelines.transforms.core.*;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
-import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.slf4j.MDC;
@@ -44,7 +43,6 @@ import org.slf4j.MDC;
  *      {@link org.gbif.pipelines.io.avro.MultimediaRecord},
  *      {@link org.gbif.pipelines.io.avro.ImageRecord},
  *      {@link org.gbif.pipelines.io.avro.AudubonRecord},
- *      {@link org.gbif.pipelines.io.avro.MeasurementOrFactRecord},
  *      {@link org.gbif.pipelines.io.avro.TaxonRecord},
  *      {@link org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord},
  *      {@link org.gbif.pipelines.io.avro.LocationRecord}
@@ -110,8 +108,6 @@ public class InterpretedToEsIndexPipeline {
     LocationTransform locationTransform = LocationTransform.builder().create();
 
     // Extension
-    MeasurementOrFactTransform measurementOrFactTransform =
-        MeasurementOrFactTransform.builder().create();
     MultimediaTransform multimediaTransform = MultimediaTransform.builder().create();
     AudubonTransform audubonTransform = AudubonTransform.builder().create();
     ImageTransform imageTransform = ImageTransform.builder().create();
@@ -157,10 +153,6 @@ public class InterpretedToEsIndexPipeline {
         p.apply("Read Audubon", audubonTransform.read(pathFn))
             .apply("Map Audubon to KV", audubonTransform.toKv());
 
-    PCollection<KV<String, MeasurementOrFactRecord>> measurementCollection =
-        p.apply("Read Measurement", measurementOrFactTransform.read(pathFn))
-            .apply("Map Measurement to KV", measurementOrFactTransform.toKv());
-
     log.info("Adding step 3: Converting into a json object");
     SingleOutput<KV<String, CoGbkResult>, String> gbifJsonDoFn =
         GbifJsonTransform.builder()
@@ -173,7 +165,6 @@ public class InterpretedToEsIndexPipeline {
             .multimediaRecordTag(multimediaTransform.getTag())
             .imageRecordTag(imageTransform.getTag())
             .audubonRecordTag(audubonTransform.getTag())
-            .measurementOrFactRecordTag(measurementOrFactTransform.getTag())
             .metadataView(metadataView)
             .build()
             .converter();
@@ -190,7 +181,6 @@ public class InterpretedToEsIndexPipeline {
             .and(multimediaTransform.getTag(), multimediaCollection)
             .and(imageTransform.getTag(), imageCollection)
             .and(audubonTransform.getTag(), audubonCollection)
-            .and(measurementOrFactTransform.getTag(), measurementCollection)
             // Raw
             .and(verbatimTransform.getTag(), verbatimCollection)
             // Apply

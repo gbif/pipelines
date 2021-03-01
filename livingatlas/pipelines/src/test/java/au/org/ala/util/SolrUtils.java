@@ -47,8 +47,7 @@ public class SolrUtils {
 
     // the config location is override in the pom file for maven test runs
     CombinedYamlConfiguration testConf =
-        new CombinedYamlConfiguration(
-            new String[] {"--config=" + TestUtils.getPipelinesConfigFile()});
+        new CombinedYamlConfiguration("--config=" + TestUtils.getPipelinesConfigFile());
 
     Map<String, String> testConfMap = (Map<String, String>) testConf.get("test");
     return testConfMap.get(propertyName);
@@ -163,7 +162,7 @@ public class SolrUtils {
     final CollectionAdminRequest.List listRequest = new CollectionAdminRequest.List();
     CollectionAdminResponse response = listRequest.process(cloudSolrClient);
 
-    List<String> collections = (List) response.getResponse().get("collections");
+    List<String> collections = (List<String>) response.getResponse().get("collections");
 
     if (collections != null && collections.contains(BIOCACHE_TEST_SOLR_COLLECTION)) {
       final CollectionAdminRequest.Delete adminRequest = new CollectionAdminRequest.Delete();

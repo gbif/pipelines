@@ -1,6 +1,5 @@
 package au.org.ala.utils;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
@@ -22,7 +21,7 @@ public class CombinedYamlConfiguration {
   private final Map<String, String> mainArgs = new LinkedHashMap<>();
   private final Map<String, Object> combined;
 
-  public CombinedYamlConfiguration(String[] mainArgs) throws FileNotFoundException {
+  public CombinedYamlConfiguration(String... mainArgs) throws FileNotFoundException {
     // First: copy main args to map
     for (String arg : mainArgs) {
       // For each arg of type --varName=value we remove the -- and split by = in varName and value
@@ -50,7 +49,7 @@ public class CombinedYamlConfiguration {
     // Load each yaml, and combine the values
     Map<String, Object> merged = new LinkedHashMap<>();
     for (String path : yamlConfigPaths) {
-      InputStream input = new FileInputStream(new File(path));
+      InputStream input = new FileInputStream(path);
       Yaml yaml = new Yaml();
       LinkedHashMap<String, Object> loaded = yaml.load(input);
       if (loaded != null) {

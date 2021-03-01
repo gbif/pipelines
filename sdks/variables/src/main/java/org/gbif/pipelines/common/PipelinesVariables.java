@@ -57,7 +57,8 @@ public class PipelinesVariables {
         AMPLIFICATION,
         // Specific
         LOCATION_FEATURE,
-        OCCURRENCE_HDFS_RECORD;
+        OCCURRENCE_HDFS_RECORD,
+        MEASUREMENT_OR_FACT_TABLE;
 
         @Override
         public String all() {
@@ -76,7 +77,10 @@ public class PipelinesVariables {
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static class HdfsView {
 
+      public static final String VIEW_OCCURRENCE_DIR = "occurrence";
       public static final String VIEW_OCCURRENCE = "view_occurrence";
+      public static final String VIEW_MOFT_DIR = "measurementorfacttable";
+      public static final String VIEW_MOFT = "view_moft";
     }
   }
 
@@ -114,11 +118,23 @@ public class PipelinesVariables {
     public static final String IMAGE_RECORDS_COUNT = "imageRecordsCount";
     public static final String AUDUBON_RECORDS_COUNT = "audubonRecordsCount";
     public static final String MEASUREMENT_OR_FACT_RECORDS_COUNT = "measurementOrFactRecordsCount";
+    public static final String MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT =
+        "measurementOrFactTableRecordsCount";
     public static final String AMPLIFICATION_RECORDS_COUNT = "amplificationRecordsCount";
 
     public static final String HDFS_VIEW_RECORDS_COUNT = "hdfsViewRecordsCount";
     public static final String FRAGMENTER_COUNT = "fragmenterRecordsCount";
     // Specific
     public static final String LOCATION_FEATURE_RECORDS_COUNT = "locationFeatureRecordsCount";
+  }
+
+  @NoArgsConstructor(access = AccessLevel.PRIVATE)
+  public static class DynamicProperties {
+
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
+    public static class Parser {
+      public static final String MASS = "mass";
+      public static final String LENGTH = "length";
+    }
   }
 }

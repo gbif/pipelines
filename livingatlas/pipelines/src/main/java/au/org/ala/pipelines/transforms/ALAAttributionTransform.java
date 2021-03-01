@@ -70,6 +70,7 @@ public class ALAAttributionTransform extends Transform<ExtendedRecord, ALAAttrib
     return this;
   }
 
+  /** Beam @Setup can be applied only to void method */
   public ALAAttributionTransform init() {
     setup();
     return this;

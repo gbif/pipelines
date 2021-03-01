@@ -2,6 +2,7 @@ package org.gbif.pipelines.transforms.extension;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AMPLIFICATION_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.AMPLIFICATION;
+import static org.gbif.pipelines.core.utils.ModelUtils.hasExtension;
 
 import java.time.Instant;
 import java.util.Optional;
@@ -63,6 +64,12 @@ public class AmplificationTransform extends Transform<ExtendedRecord, Amplificat
     }
   }
 
+  /** Beam @Setup can be applied only to void method */
+  public AmplificationTransform init() {
+    setup();
+    return this;
+  }
+
   @Override
   public Optional<AmplificationRecord> convert(ExtendedRecord source) {
     return Interpretation.from(source)
@@ -72,12 +79,7 @@ public class AmplificationTransform extends Transform<ExtendedRecord, Amplificat
                     .setId(er.getId())
                     .setCreated(Instant.now().toEpochMilli())
                     .build())
-        .when(
-            er ->
-                Optional.ofNullable(
-                        er.getExtensions().get(AmplificationInterpreter.EXTENSION_ROW_TYPE))
-                    .filter(l -> !l.isEmpty())
-                    .isPresent())
+        .when(er -> hasExtension(er, AmplificationInterpreter.EXTENSION_ROW_TYPE))
         .via(AmplificationInterpreter.interpret(client))
         .getOfNullable();
   }

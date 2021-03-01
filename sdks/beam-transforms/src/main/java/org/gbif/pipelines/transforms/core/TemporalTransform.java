@@ -67,16 +67,21 @@ public class TemporalTransform extends Transform<ExtendedRecord, TemporalRecord>
     return this;
   }
 
+  /** Beam @Setup can be applied only to void method */
+  public TemporalTransform init() {
+    setup();
+    return this;
+  }
+
   @Override
   public Optional<TemporalRecord> convert(ExtendedRecord source) {
-    TemporalRecord tr =
-        TemporalRecord.newBuilder()
-            .setId(source.getId())
-            .setCreated(Instant.now().toEpochMilli())
-            .build();
-
     return Interpretation.from(source)
-        .to(tr)
+        .to(
+            er ->
+                TemporalRecord.newBuilder()
+                    .setId(er.getId())
+                    .setCreated(Instant.now().toEpochMilli())
+                    .build())
         .when(er -> !er.getCoreTerms().isEmpty())
         .via(temporalInterpreter::interpretTemporal)
         .via(temporalInterpreter::interpretModified)

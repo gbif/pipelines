@@ -58,7 +58,7 @@ public final class EsConstants {
     public static final String ANALYSIS =
         "{\"normalizer\":{\"lowercase_normalizer\":{\"type\":\"custom\",\"char_filter\":[],\"filter\":[\"lowercase\"]}},"
             + "\"analyzer\": {\"lowercase_analyzer\": {\"filter\": [\"lowercase\"],\"tokenizer\": \"keyword\",\"type\": \"custom\",\"char_filter\": []}}}";
-    private static final Map<String, String> DEFAULT_INDEXING_SETTINGS = new HashMap<>();
+    private static final Map<String, String> DEFAULT_INDEXING_SETTINGS = new HashMap<>(5);
 
     static {
       DEFAULT_INDEXING_SETTINGS.put(Field.INDEX_REFRESH_INTERVAL, Indexing.REFRESH_INTERVAL);

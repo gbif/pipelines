@@ -7,6 +7,12 @@ import au.org.ala.pipelines.parser.CollectorNameParser;
 import org.junit.Test;
 
 public class ColloctorNameParserTest {
+
+  @Test
+  public void numericTest() {
+    assertEquals(null, CollectorNameParser.parse("123"));
+  }
+
   @Test
   public void singleNameTest() {
     assertEquals(

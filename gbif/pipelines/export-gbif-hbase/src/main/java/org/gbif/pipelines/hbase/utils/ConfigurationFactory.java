@@ -1,5 +1,7 @@
 package org.gbif.pipelines.hbase.utils;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
@@ -35,7 +37,7 @@ public class ConfigurationFactory {
 
     Scan scan = new Scan();
     scan.setBatch(options.getBatchSize()); // for safety
-    scan.addFamily("o".getBytes());
+    scan.addFamily("o".getBytes(UTF_8));
     ClientProtos.Scan proto = ProtobufUtil.toScan(scan);
     hbaseConf.set(TableInputFormat.SCAN, Base64.encodeBytes(proto.toByteArray()));
 

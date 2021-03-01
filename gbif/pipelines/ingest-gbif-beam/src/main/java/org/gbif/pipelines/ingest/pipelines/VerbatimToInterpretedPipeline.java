@@ -42,7 +42,6 @@ import org.gbif.pipelines.transforms.converters.OccurrenceExtensionTransform;
 import org.gbif.pipelines.transforms.core.*;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
-import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.DefaultValuesTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
@@ -60,7 +59,6 @@ import org.slf4j.MDC;
  *      {@link org.gbif.pipelines.io.avro.MultimediaRecord},
  *      {@link org.gbif.pipelines.io.avro.ImageRecord},
  *      {@link org.gbif.pipelines.io.avro.AudubonRecord},
- *      {@link org.gbif.pipelines.io.avro.MeasurementOrFactRecord},
  *      {@link org.gbif.pipelines.io.avro.TaxonRecord},
  *      {@link org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord},
  *      {@link org.gbif.pipelines.io.avro.LocationRecord}
@@ -171,9 +169,6 @@ public class VerbatimToInterpretedPipeline {
             .create();
 
     // Extension
-    MeasurementOrFactTransform measurementOrFactTransform =
-        MeasurementOrFactTransform.builder().orderings(dateComponentOrdering).create();
-
     MultimediaTransform multimediaTransform =
         MultimediaTransform.builder().orderings(dateComponentOrdering).create();
 
@@ -281,11 +276,6 @@ public class VerbatimToInterpretedPipeline {
         .apply("Check audubon transform condition", audubonTransform.check(types))
         .apply("Interpret audubon", audubonTransform.interpret())
         .apply("Write audubon to avro", audubonTransform.write(pathFn));
-
-    filteredUniqueRecords
-        .apply("Check measurement transform condition", measurementOrFactTransform.check(types))
-        .apply("Interpret measurement", measurementOrFactTransform.interpret())
-        .apply("Write measurement to avro", measurementOrFactTransform.write(pathFn));
 
     filteredUniqueRecords
         .apply("Check taxonomy transform condition", taxonomyTransform.check(types))

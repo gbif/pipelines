@@ -55,7 +55,7 @@ public class JsonConverter {
 
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
-  private static final Map<Character, Character> CHAR_MAP = new HashMap<>();
+  private static final Map<Character, Character> CHAR_MAP = new HashMap<>(2);
 
   static {
     CHAR_MAP.put('\u001E', ',');

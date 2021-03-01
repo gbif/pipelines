@@ -12,6 +12,7 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.MediaType;
 import org.gbif.pipelines.io.avro.Rank;
+import org.gbif.pipelines.io.avro.ThreatStatus;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.io.avro.grscicoll.Match;
 import org.junit.Assert;
@@ -333,28 +334,8 @@ public class GbifJsonConverterTest {
             .setUsage(name2)
             .build();
 
-    MeasurementOrFactRecord mfr =
-        MeasurementOrFactRecord.newBuilder()
-            .setId("777")
-            .setMeasurementOrFactItems(
-                Arrays.asList(
-                    MeasurementOrFact.newBuilder()
-                        .setType("{\"something\":1}{\"something\":1}")
-                        .setId("123")
-                        .setValueParsed(1.1d)
-                        .setDeterminedDateParsed(
-                            DeterminedDate.newBuilder().setGte("2010").setLte("2011").build())
-                        .build(),
-                    MeasurementOrFact.newBuilder()
-                        .setId("124")
-                        .setDeterminedDateParsed(
-                            DeterminedDate.newBuilder().setGte("2010").setLte("2012").build())
-                        .build(),
-                    MeasurementOrFact.newBuilder().setId("125").build()))
-            .build();
-
     // When
-    ObjectNode result = GbifJsonConverter.toJson(er, tmr, lr, tr, asr, mfr);
+    ObjectNode result = GbifJsonConverter.toJson(er, tmr, lr, tr, asr);
 
     // Should
     assertTrue(JsonValidationUtils.isValid(result.toString()));
@@ -443,16 +424,6 @@ public class GbifJsonConverterTest {
         "[{\"key\":\"data\",\"value\":\"value\"}]",
         result.path("locationFeatureLayers").toString());
 
-    String expectedMeasurementOrFactItems =
-        "[{\"id\":\"123\",\"type\":\"{\\\"something\\\":1}"
-            + "{\\\"something\\\":1}\","
-            + "\"value\":1.1,"
-            + "\"determinedDate\":{\"gte\": \"2010\", \"lte\": \"2011\"}},{\"id\":\"124\","
-            + "\"type\":null,"
-            + "\"value\":null,"
-            + "\"determinedDate\":{\"gte\": \"2010\", \"lte\": \"2012\"}}]";
-    assertEquals(expectedMeasurementOrFactItems, result.path("measurementOrFactItems").toString());
-
     String expectedIssues = "[\"BASIS_OF_RECORD_INVALID\",\"ZERO_COORDINATE\"]";
     assertEquals(expectedIssues, result.path("issues").toString());
     assertEquals(
@@ -506,6 +477,7 @@ public class GbifJsonConverterTest {
             + "\"acceptedUsage\":{\"key\":2,"
             + "\"name\":\"Name2\","
             + "\"rank\":\"ABERRATION\"},"
+            + "\"iucnRedListCategory\":\"CRITICALLY_ENDANGERED\","
             + "\"chemoformKey\":1,"
             + "\"chemoform\":\"Name\","
             + "\"aberrationKey\":2,"
@@ -531,6 +503,7 @@ public class GbifJsonConverterTest {
                 RankedName.newBuilder().setKey(1).setName("n").setRank(Rank.ABERRATION).build())
             .setClassification(rankedNameList)
             .setAcceptedUsage(name2)
+            .setIucnRedListCategory(ThreatStatus.CRITICALLY_ENDANGERED)
             .build();
 
     ExtendedRecord extendedRecord =
@@ -621,25 +594,6 @@ public class GbifJsonConverterTest {
             .setCreated(0L)
             .setItems(Collections.singletonMap("{awdawd}", "\"{\"wad\":\"adw\"}\""))
             .build();
-
-    // When
-    String result = GbifJsonConverter.toStringPartialJson(record);
-
-    // Should
-    assertEquals(expected, result);
-    assertTrue(JsonValidationUtils.isValid(result));
-  }
-
-  @Test
-  public void measurementOrFactRecordSkipIssuesWithIdTest() {
-
-    // Expected
-    String expected =
-        "{\"id\":\"777\"," + "\"measurementOrFactItems\":[]," + "\"created\":\"1970-01-01T00:00\"}";
-
-    // State
-    MeasurementOrFactRecord record =
-        MeasurementOrFactRecord.newBuilder().setId("777").setCreated(0L).build();
 
     // When
     String result = GbifJsonConverter.toStringPartialJson(record);

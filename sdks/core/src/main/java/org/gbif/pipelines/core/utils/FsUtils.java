@@ -1,5 +1,6 @@
 package org.gbif.pipelines.core.utils;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.DIRECTORY_NAME;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.ALL;
 
@@ -214,7 +215,7 @@ public final class FsUtils {
     Path fPath = new Path(filePath);
     if (fs.exists(fPath)) {
       log.info("Reading properties path - {}", filePath);
-      try (BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(fPath)))) {
+      try (BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(fPath), UTF_8))) {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         mapper.configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true);
         mapper.findAndRegisterModules();

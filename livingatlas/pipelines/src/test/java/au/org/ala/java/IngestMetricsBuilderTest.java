@@ -47,16 +47,13 @@ public class IngestMetricsBuilderTest {
         .getCounters()
         .forEach(mr -> map.put(mr.getName().getName(), mr.getAttempted()));
 
-    Assert.assertEquals(18, map.size());
+    Assert.assertEquals(15, map.size());
     Assert.assertEquals(Long.valueOf(1L), map.get(BASIC_RECORDS_COUNT));
     Assert.assertEquals(Long.valueOf(1L), map.get(LOCATION_RECORDS_COUNT));
     Assert.assertEquals(Long.valueOf(1L), map.get(METADATA_RECORDS_COUNT));
     Assert.assertEquals(Long.valueOf(1L), map.get(TAXON_RECORDS_COUNT));
     Assert.assertEquals(Long.valueOf(1L), map.get(TEMPORAL_RECORDS_COUNT));
     Assert.assertEquals(Long.valueOf(1L), map.get(VERBATIM_RECORDS_COUNT));
-    Assert.assertEquals(Long.valueOf(1L), map.get(AUDUBON_RECORDS_COUNT));
-    Assert.assertEquals(Long.valueOf(1L), map.get(IMAGE_RECORDS_COUNT));
-    Assert.assertEquals(Long.valueOf(1L), map.get(MEASUREMENT_OR_FACT_RECORDS_COUNT));
     Assert.assertEquals(Long.valueOf(1L), map.get(MULTIMEDIA_RECORDS_COUNT));
     Assert.assertEquals(Long.valueOf(1L), map.get(FILTER_ER_BASED_ON_GBIF_ID));
     Assert.assertEquals(Long.valueOf(1L), map.get(UNIQUE_GBIF_IDS_COUNT));

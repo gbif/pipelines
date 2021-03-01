@@ -3,6 +3,7 @@ package org.gbif.pipelines.ingest.pipelines;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE_HDFS_RECORD;
 import static org.gbif.pipelines.common.beam.utils.PathBuilder.buildFilePathHdfsViewUsingInputPath;
+import static org.gbif.pipelines.common.beam.utils.PathBuilder.buildFilePathMoftUsingInputPath;
 
 import java.util.Collections;
 import java.util.Set;
@@ -12,9 +13,7 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
-import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
 import org.apache.beam.sdk.transforms.View;
-import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.transforms.join.CoGroupByKey;
 import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.KV;
@@ -28,16 +27,29 @@ import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.ingest.utils.HdfsViewAvroUtils;
 import org.gbif.pipelines.ingest.utils.SharedLockUtils;
-import org.gbif.pipelines.io.avro.*;
+import org.gbif.pipelines.io.avro.AudubonRecord;
+import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.ImageRecord;
+import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.io.avro.MultimediaRecord;
+import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
+import org.gbif.pipelines.io.avro.TaxonRecord;
+import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
-import org.gbif.pipelines.transforms.common.OccurrenceHdfsRecordTransform;
-import org.gbif.pipelines.transforms.converters.OccurrenceHdfsRecordConverterTransform;
-import org.gbif.pipelines.transforms.core.*;
+import org.gbif.pipelines.transforms.core.BasicTransform;
+import org.gbif.pipelines.transforms.core.GrscicollTransform;
+import org.gbif.pipelines.transforms.core.LocationTransform;
+import org.gbif.pipelines.transforms.core.TaxonomyTransform;
+import org.gbif.pipelines.transforms.core.TemporalTransform;
+import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
-import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
+import org.gbif.pipelines.transforms.table.MeasurementOrFactTableTransform;
+import org.gbif.pipelines.transforms.table.OccurrenceHdfsRecordTransform;
 import org.slf4j.MDC;
 
 /**
@@ -51,7 +63,6 @@ import org.slf4j.MDC;
  *      {@link MultimediaRecord},
  *      {@link ImageRecord},
  *      {@link AudubonRecord},
- *      {@link MeasurementOrFactRecord},
  *      {@link TaxonRecord},
  *      {@link GrscicollRecord},
  *      {@link LocationRecord}
@@ -95,7 +106,9 @@ public class InterpretedToHdfsViewPipeline {
     Integer attempt = options.getAttempt();
     Integer numberOfShards = options.getNumberOfShards();
     Set<String> types = Collections.singleton(OCCURRENCE_HDFS_RECORD.name());
-    String targetTempPath = buildFilePathHdfsViewUsingInputPath(options, datasetId + '_' + attempt);
+    String targetHdfsTempPath =
+        buildFilePathHdfsViewUsingInputPath(options, datasetId + '_' + attempt);
+    String targetMoftTempPath = buildFilePathMoftUsingInputPath(options, datasetId + '_' + attempt);
 
     MDC.put("datasetKey", datasetId);
     MDC.put("attempt", attempt.toString());
@@ -121,8 +134,6 @@ public class InterpretedToHdfsViewPipeline {
     GrscicollTransform grscicollTransform = GrscicollTransform.builder().create();
     LocationTransform locationTransform = LocationTransform.builder().create();
     // Extension
-    MeasurementOrFactTransform measurementOrFactTransform =
-        MeasurementOrFactTransform.builder().create();
     MultimediaTransform multimediaTransform = MultimediaTransform.builder().create();
     AudubonTransform audubonTransform = AudubonTransform.builder().create();
     ImageTransform imageTransform = ImageTransform.builder().create();
@@ -168,13 +179,9 @@ public class InterpretedToHdfsViewPipeline {
         p.apply("Read Audubon", audubonTransform.read(interpretPathFn))
             .apply("Map Audubon to KV", audubonTransform.toKv());
 
-    PCollection<KV<String, MeasurementOrFactRecord>> measurementCollection =
-        p.apply("Read Measurement", measurementOrFactTransform.read(interpretPathFn))
-            .apply("Map Measurement to KV", measurementOrFactTransform.toKv());
-
     log.info("Adding step 3: Converting into a OccurrenceHdfsRecord object");
-    SingleOutput<KV<String, CoGbkResult>, OccurrenceHdfsRecord> toHdfsRecordDoFn =
-        OccurrenceHdfsRecordConverterTransform.builder()
+    OccurrenceHdfsRecordTransform hdfsRecordTransform =
+        OccurrenceHdfsRecordTransform.builder()
             .extendedRecordTag(verbatimTransform.getTag())
             .basicRecordTag(basicTransform.getTag())
             .temporalRecordTag(temporalTransform.getTag())
@@ -184,10 +191,14 @@ public class InterpretedToHdfsViewPipeline {
             .multimediaRecordTag(multimediaTransform.getTag())
             .imageRecordTag(imageTransform.getTag())
             .audubonRecordTag(audubonTransform.getTag())
-            .measurementOrFactRecordTag(measurementOrFactTransform.getTag())
             .metadataView(metadataView)
-            .build()
-            .converter();
+            .build();
+
+    MeasurementOrFactTableTransform measurementOrFactTableTransform =
+        MeasurementOrFactTableTransform.builder()
+            .basicRecordTag(basicTransform.getTag())
+            .extendedRecordTag(verbatimTransform.getTag())
+            .build();
 
     KeyedPCollectionTuple
         // Core
@@ -200,13 +211,21 @@ public class InterpretedToHdfsViewPipeline {
         .and(multimediaTransform.getTag(), multimediaCollection)
         .and(imageTransform.getTag(), imageCollection)
         .and(audubonTransform.getTag(), audubonCollection)
-        .and(measurementOrFactTransform.getTag(), measurementCollection)
         // Raw
         .and(verbatimTransform.getTag(), verbatimCollection)
         // Apply
-        .apply("Grouping objects", CoGroupByKey.create())
-        .apply("Merging to HdfsRecord", toHdfsRecordDoFn)
-        .apply(OccurrenceHdfsRecordTransform.create().write(targetTempPath, numberOfShards));
+        .apply("Grouping hdfs objects", CoGroupByKey.create())
+        .apply("Merging to HdfsRecord", hdfsRecordTransform.converter())
+        .apply(hdfsRecordTransform.write(targetHdfsTempPath, numberOfShards));
+
+    KeyedPCollectionTuple
+        // Join
+        .of(basicTransform.getTag(), basicCollection)
+        .and(verbatimTransform.getTag(), verbatimCollection)
+        // Apply
+        .apply("Grouping Moft objects", CoGroupByKey.create())
+        .apply("Merging to Moft", measurementOrFactTableTransform.converter())
+        .apply(measurementOrFactTableTransform.write(targetMoftTempPath, numberOfShards));
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();

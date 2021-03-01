@@ -48,6 +48,7 @@
       "typeStatus": {"type": "keyword", "copy_to": "all"},
       "typifiedName": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
       "references": {"type":"text", "copy_to": "all"},
+      "preparations": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
       "recordedByIds": {
         "type": "object",
         "properties": {
@@ -321,7 +322,8 @@
               "uninomial": {"type": "text", "index":  false}
             }
           },
-          "verbatimScientificName": {"type": "keyword", "boost": 100.0, "copy_to": "all", "normalizer": "lowercase_normalizer"}
+          "verbatimScientificName": {"type": "keyword", "boost": 100.0, "copy_to": "all", "normalizer": "lowercase_normalizer"},
+          "iucnRedListCategory": {"type": "keyword"}
         }
       },
 
@@ -333,7 +335,6 @@
         }
       },
 
-      "measurementOrFactItems": {"type": "nested", "enabled": false},
       "amplificationItems": {"type": "nested", "enabled": false},
 
       "locationFeatureLayers":{"type": "nested"},

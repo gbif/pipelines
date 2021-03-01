@@ -1,10 +1,11 @@
-package org.gbif.pipelines.transforms.converters;
+package org.gbif.pipelines.transforms.table;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_HDFS_COUNT;
 
 import java.io.Serializable;
 import lombok.Builder;
 import lombok.NonNull;
+import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.DoFn;
@@ -14,6 +15,7 @@ import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
+import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.core.converters.MultimediaConverter;
 import org.gbif.pipelines.core.converters.OccurrenceHdfsRecordConverter;
 import org.gbif.pipelines.io.avro.AudubonRecord;
@@ -21,13 +23,13 @@ import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
+import org.gbif.pipelines.transforms.Transform;
 
 /**
  * Beam level transformation for Occurrence HDFS Downloads Table. The transformation consumes
@@ -67,7 +69,7 @@ import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
  */
 @SuppressWarnings("ConstantConditions")
 @Builder
-public class OccurrenceHdfsRecordConverterTransform implements Serializable {
+public class OccurrenceHdfsRecordTransform implements Serializable {
 
   private static final long serialVersionUID = 4605359346756029671L;
 
@@ -82,7 +84,6 @@ public class OccurrenceHdfsRecordConverterTransform implements Serializable {
   @NonNull private final TupleTag<MultimediaRecord> multimediaRecordTag;
   @NonNull private final TupleTag<ImageRecord> imageRecordTag;
   @NonNull private final TupleTag<AudubonRecord> audubonRecordTag;
-  @NonNull private final TupleTag<MeasurementOrFactRecord> measurementOrFactRecordTag;
 
   @NonNull private final PCollectionView<MetadataRecord> metadataView;
 
@@ -92,7 +93,7 @@ public class OccurrenceHdfsRecordConverterTransform implements Serializable {
         new DoFn<KV<String, CoGbkResult>, OccurrenceHdfsRecord>() {
 
           private final Counter counter =
-              Metrics.counter(OccurrenceHdfsRecordConverterTransform.class, AVRO_TO_HDFS_COUNT);
+              Metrics.counter(OccurrenceHdfsRecordTransform.class, AVRO_TO_HDFS_COUNT);
 
           @ProcessElement
           public void processElement(ProcessContext c) {
@@ -117,15 +118,20 @@ public class OccurrenceHdfsRecordConverterTransform implements Serializable {
             ImageRecord ir = v.getOnly(imageRecordTag, ImageRecord.newBuilder().setId(k).build());
             AudubonRecord ar =
                 v.getOnly(audubonRecordTag, AudubonRecord.newBuilder().setId(k).build());
-            MeasurementOrFactRecord mfr =
-                v.getOnly(
-                    measurementOrFactRecordTag,
-                    MeasurementOrFactRecord.newBuilder().setId(k).build());
 
             MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
             OccurrenceHdfsRecord record =
-                OccurrenceHdfsRecordConverter.toOccurrenceHdfsRecord(
-                    br, mdr, tr, lr, txr, gr, mmr, mfr, er);
+                OccurrenceHdfsRecordConverter.builder()
+                    .basicRecord(br)
+                    .metadataRecord(mdr)
+                    .temporalRecord(tr)
+                    .locationRecord(lr)
+                    .taxonRecord(txr)
+                    .grscicollRecord(gr)
+                    .multimediaRecord(mmr)
+                    .extendedRecord(er)
+                    .build()
+                    .convert();
 
             c.output(record);
 
@@ -134,5 +140,20 @@ public class OccurrenceHdfsRecordConverterTransform implements Serializable {
         };
 
     return ParDo.of(fn).withSideInputs(metadataView);
+  }
+
+  /**
+   * Writes {@link OccurrenceHdfsRecord} *.avro files to path, data will be split into several
+   * files, uses Snappy compression codec by default
+   *
+   * @param toPath path with name to output files, like - directory/name
+   */
+  public AvroIO.Write<OccurrenceHdfsRecord> write(String toPath, Integer numShards) {
+    AvroIO.Write<OccurrenceHdfsRecord> write =
+        AvroIO.write(OccurrenceHdfsRecord.class)
+            .to(toPath)
+            .withSuffix(PipelinesVariables.Pipeline.AVRO_EXTENSION)
+            .withCodec(Transform.getBaseCodec());
+    return numShards == null ? write : write.withNumShards(numShards);
   }
 }
