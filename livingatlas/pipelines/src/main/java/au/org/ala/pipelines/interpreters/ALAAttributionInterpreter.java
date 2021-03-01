@@ -29,6 +29,7 @@ public class ALAAttributionInterpreter {
           aar.setDataResourceUid(m.getUid());
           if (m.getProvider() != null) {
             aar.setDataProviderUid(m.getProvider().getUid());
+            aar.setDataProviderName(m.getProvider().getName());
           }
           aar.setDataResourceName(m.getName());
           aar.setLicenseType(m.getLicenseType());
