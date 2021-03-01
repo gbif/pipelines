@@ -10,7 +10,7 @@ import org.junit.Test;
 public class AvroPostprocessMojoTest {
 
   @Test
-  public void avroPostprocessMojoTest() throws Exception {
+  public void mojoTest() throws Exception {
 
     // State
     String path = getClass().getResource("/generated/").getFile();

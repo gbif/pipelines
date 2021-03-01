@@ -24,8 +24,8 @@
         <artifactId>maven-plugin-plugin</artifactId>
         <executions>
           <execution>
-            <id>default-descriptor</id>
-            <phase>process-classes</phase>
+            <id>avroschemageneration</id>
+            <phase>generate-sources</phase>
           </execution>
         </executions>
       </plugin>
