@@ -42,7 +42,7 @@ public class GeocodeKvStoreFactory {
         GeocodeKvStore.create(stateProvinceStore, stateCacheImage, "STATEPROVINCE", false);
   }
 
-  public static KeyValueStore<LatLng, GeocodeResponse> getInstance(ALAPipelinesConfig config) {
+  private static GeocodeKvStoreFactory getInstance(ALAPipelinesConfig config) {
     if (instance == null) {
       synchronized (MUTEX) {
         if (instance == null) {
@@ -50,16 +50,16 @@ public class GeocodeKvStoreFactory {
         }
       }
     }
-    return instance.countryKvStore;
+    return instance;
   }
 
   public static SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> createCountrySupplier(
       ALAPipelinesConfig config) {
-    return () -> new GeocodeKvStoreFactory(config).countryKvStore;
+    return () -> getInstance(config).countryKvStore;
   }
 
   public static SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>>
       createStateProvinceSupplier(ALAPipelinesConfig config) {
-    return () -> new GeocodeKvStoreFactory(config).stateProvinceKvStore;
+    return () -> getInstance(config).stateProvinceKvStore;
   }
 }

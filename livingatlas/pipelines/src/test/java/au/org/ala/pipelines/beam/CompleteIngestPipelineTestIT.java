@@ -170,7 +170,6 @@ public class CompleteIngestPipelineTestIT {
               "--inputPath=/tmp/la-pipelines-test/complete-pipeline",
               "--allDatasetsInputPath=/tmp/la-pipelines-test/complete-pipeline/all-datasets",
               "--properties=" + TestUtils.getPipelinesConfigFile(),
-              "--includeSampling=true",
               "--includeSensitiveData=true",
               "--includeImages=false"
             });
