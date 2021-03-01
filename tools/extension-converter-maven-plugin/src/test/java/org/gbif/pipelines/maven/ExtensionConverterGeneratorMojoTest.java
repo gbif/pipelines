@@ -34,4 +34,16 @@ public class ExtensionConverterGeneratorMojoTest {
             "org/gbif/pipelines/core/converters/MeasurementOrFactTableConverter.java");
     Assert.assertTrue(Files.exists(result));
   }
+
+  @Test
+  public void normalizeNameTest() {
+    // State
+    String name = "lib_reads_seqd";
+
+    // When
+    String result = new ExtensionConverterGeneratorMojo().normalizeName(name);
+
+    // Should
+    Assert.assertEquals("Libreadsseqd", result);
+  }
 }

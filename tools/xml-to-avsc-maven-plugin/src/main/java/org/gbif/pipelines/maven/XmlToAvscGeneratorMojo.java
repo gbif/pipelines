@@ -109,7 +109,11 @@ public class XmlToAvscGeneratorMojo extends AbstractMojo {
   }
 
   private String normalizeFieldName(String name) {
-    return name.toLowerCase().trim().replace('-', '_');
+    return name.toLowerCase()
+        .trim()
+        .replace("-", "")
+        .replaceAll("_", "")
+        .replaceAll("class", "clazz");
   }
 
   private String normalizeFileName(String name) {
