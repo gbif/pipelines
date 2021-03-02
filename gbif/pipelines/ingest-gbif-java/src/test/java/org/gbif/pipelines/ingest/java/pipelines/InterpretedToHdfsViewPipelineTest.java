@@ -1,6 +1,6 @@
 package org.gbif.pipelines.ingest.java.pipelines;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.HdfsView.VIEW_MOFT_DIR;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.HdfsView.VIEW_MEASUREMENT_OR_FACT_DIR;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.HdfsView.VIEW_OCCURRENCE_DIR;
 
 import java.io.File;
@@ -183,8 +183,8 @@ public class InterpretedToHdfsViewPipelineTest {
         new File(
             output
                 + "/"
-                + VIEW_MOFT_DIR
-                + "/view_moft_d596fccb-2319-42eb-b13b-986c932780ad_147.avro");
+                + VIEW_MEASUREMENT_OR_FACT_DIR
+                + "/view_measurementorfact_d596fccb-2319-42eb-b13b-986c932780ad_147.avro");
     DatumReader<MeasurementOrFactTable> moftDatumReader =
         new SpecificDatumReader<>(MeasurementOrFactTable.class);
     try (DataFileReader<MeasurementOrFactTable> dataFileReader =

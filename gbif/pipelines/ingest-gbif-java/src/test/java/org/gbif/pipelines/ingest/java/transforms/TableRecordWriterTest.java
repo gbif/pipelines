@@ -1,6 +1,8 @@
 package org.gbif.pipelines.ingest.java.transforms;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.HdfsView.VIEW_OCCURRENCE;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE_HDFS_RECORD;
 
 import java.io.File;
 import java.io.IOException;
@@ -56,7 +58,9 @@ public class TableRecordWriterTest {
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
 
     String id = options.getDatasetId() + '_' + options.getAttempt();
-    String path = PathBuilder.buildFilePathHdfsViewUsingInputPath(options, id + AVRO_EXTENSION);
+    String path =
+        PathBuilder.buildFilePathViewUsingInputPath(
+            options, OCCURRENCE_HDFS_RECORD, VIEW_OCCURRENCE, id + AVRO_EXTENSION);
 
     // When
     TableRecordWriter.<OccurrenceHdfsRecord>builder()
@@ -122,7 +126,9 @@ public class TableRecordWriterTest {
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
 
     String id = options.getDatasetId() + '_' + options.getAttempt();
-    String path = PathBuilder.buildFilePathHdfsViewUsingInputPath(options, id + AVRO_EXTENSION);
+    String path =
+        PathBuilder.buildFilePathViewUsingInputPath(
+            options, OCCURRENCE_HDFS_RECORD, VIEW_OCCURRENCE, id + AVRO_EXTENSION);
 
     // When
     TableRecordWriter.<OccurrenceHdfsRecord>builder()

@@ -1,7 +1,28 @@
 package org.gbif.pipelines.ingest.java.pipelines;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Metrics.*;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AMPLIFICATION_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.CHRONOMETRIC_AGE_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.CHRONOMETRIC_DATE_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.CLONING_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.EXTENDED_MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.GEL_IMAGE_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.GERMPLASM_ACCESSION_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.IDENTIFICATION_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.IDENTIFIER_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.LOAN_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MATERIAL_SAMPLE_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMENT_SCORE_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMENT_TRAIT_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMENT_TRIAL_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.PERMIT_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.PREPARATION_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.PRESERVATION_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.REFERENCES_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.RESOURCE_RELATION_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.HdfsView.*;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.*;
 import static org.gbif.pipelines.ingest.java.transforms.InterpretedAvroReader.readAvroAsFuture;
 
 import java.time.LocalDateTime;
@@ -10,12 +31,14 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
@@ -162,6 +185,10 @@ public class InterpretedToHdfsViewPipeline {
     MDC.put("attempt", options.getAttempt().toString());
     MDC.put("step", StepType.INTERPRETED_TO_INDEX.name());
 
+    String id = options.getDatasetId() + '_' + options.getAttempt() + AVRO_EXTENSION;
+    BiFunction<RecordType, String, String> pathFn =
+        (rt, v) -> PathBuilder.buildFilePathViewUsingInputPath(options, rt, v, id);
+
     log.info("Init metrics");
     IngestMetrics metrics = IngestMetricsBuilder.createInterpretedToHdfsViewMetrics();
 
@@ -198,7 +225,6 @@ public class InterpretedToHdfsViewPipeline {
     CompletableFuture<Map<String, AudubonRecord>> audubonMapFeature =
         readAvroAsFuture(options, executor, AudubonTransform.builder().create());
 
-    String id = options.getDatasetId() + '_' + options.getAttempt();
     Map<String, BasicRecord> basicRecordMap = basicMapFeature.get();
 
     // OccurrenceHdfsRecord
@@ -220,8 +246,7 @@ public class InterpretedToHdfsViewPipeline {
     TableRecordWriter.<OccurrenceHdfsRecord>builder()
         .recordFunction(occurrenceHdfsRecordFn)
         .basicRecords(basicRecordMap.values())
-        .targetTempPath(
-            PathBuilder.buildFilePathHdfsViewUsingInputPath(options, id + AVRO_EXTENSION))
+        .targetTempPath(pathFn.apply(OCCURRENCE_HDFS_RECORD, VIEW_OCCURRENCE))
         .schema(OccurrenceHdfsRecord.getClassSchema())
         .executor(executor)
         .options(options)
@@ -241,7 +266,7 @@ public class InterpretedToHdfsViewPipeline {
     TableRecordWriter.<MeasurementOrFactTable>builder()
         .recordFunction(measurementOrFactFn)
         .basicRecords(basicRecordMap.values())
-        .targetTempPath(PathBuilder.buildFilePathMoftUsingInputPath(options, id + AVRO_EXTENSION))
+        .targetTempPath(pathFn.apply(MEASUREMENT_OR_FACT_TABLE, VIEW_MEASUREMENT_OR_FACT))
         .schema(MeasurementOrFactTable.getClassSchema())
         .executor(executor)
         .options(options)
@@ -261,7 +286,7 @@ public class InterpretedToHdfsViewPipeline {
     TableRecordWriter.<IdentificationTable>builder()
         .recordFunction(identificationFn)
         .basicRecords(basicRecordMap.values())
-        .targetTempPath(PathBuilder.buildFilePathMoftUsingInputPath(options, id + AVRO_EXTENSION))
+        .targetTempPath(pathFn.apply(IDENTIFICATION_TABLE, VIEW_IDENTIFICATION))
         .schema(IdentificationTable.getClassSchema())
         .executor(executor)
         .options(options)
@@ -281,7 +306,7 @@ public class InterpretedToHdfsViewPipeline {
     TableRecordWriter.<ResourceRelationTable>builder()
         .recordFunction(resourceRelationFn)
         .basicRecords(basicRecordMap.values())
-        .targetTempPath(PathBuilder.buildFilePathMoftUsingInputPath(options, id + AVRO_EXTENSION))
+        .targetTempPath(pathFn.apply(RESOURCE_RELATION_TABLE, VIEW_RESOURCE_RELATION))
         .schema(ResourceRelationTable.getClassSchema())
         .executor(executor)
         .options(options)
@@ -289,7 +314,7 @@ public class InterpretedToHdfsViewPipeline {
         .write();
 
     // AmplificationTable
-    Function<BasicRecord, Optional<AmplificationTable>> moftFn =
+    Function<BasicRecord, Optional<AmplificationTable>> amplificationFn =
         TableConverter.<AmplificationTable>builder()
             .metrics(metrics)
             .converterFn(AmplificationTableConverter::convert)
@@ -299,9 +324,9 @@ public class InterpretedToHdfsViewPipeline {
             .getFn();
 
     TableRecordWriter.<AmplificationTable>builder()
-        .recordFunction(moftFn)
+        .recordFunction(amplificationFn)
         .basicRecords(basicRecordMap.values())
-        .targetTempPath(PathBuilder.buildFilePathMoftUsingInputPath(options, id + AVRO_EXTENSION))
+        .targetTempPath(pathFn.apply(AMPLIFICATION_TABLE, VIEW_AMPLIFICATION))
         .schema(AmplificationTable.getClassSchema())
         .executor(executor)
         .options(options)
@@ -321,7 +346,7 @@ public class InterpretedToHdfsViewPipeline {
     TableRecordWriter.<CloningTable>builder()
         .recordFunction(cloningFn)
         .basicRecords(basicRecordMap.values())
-        .targetTempPath(PathBuilder.buildFilePathMoftUsingInputPath(options, id + AVRO_EXTENSION))
+        .targetTempPath(pathFn.apply(CLONING_TABLE, VIEW_CLONING))
         .schema(CloningTable.getClassSchema())
         .executor(executor)
         .options(options)
@@ -341,7 +366,7 @@ public class InterpretedToHdfsViewPipeline {
     TableRecordWriter.<GelImageTable>builder()
         .recordFunction(gelImageFn)
         .basicRecords(basicRecordMap.values())
-        .targetTempPath(PathBuilder.buildFilePathMoftUsingInputPath(options, id + AVRO_EXTENSION))
+        .targetTempPath(pathFn.apply(GEL_IMAGE_TABLE, VIEW_GEL_IMAGE))
         .schema(GelImageTable.getClassSchema())
         .executor(executor)
         .options(options)
@@ -361,7 +386,7 @@ public class InterpretedToHdfsViewPipeline {
     TableRecordWriter.<LoanTable>builder()
         .recordFunction(loanFn)
         .basicRecords(basicRecordMap.values())
-        .targetTempPath(PathBuilder.buildFilePathMoftUsingInputPath(options, id + AVRO_EXTENSION))
+        .targetTempPath(pathFn.apply(LOAN_TABLE, VIEW_LOAN))
         .schema(LoanTable.getClassSchema())
         .executor(executor)
         .options(options)
@@ -381,7 +406,7 @@ public class InterpretedToHdfsViewPipeline {
     TableRecordWriter.<MaterialSampleTable>builder()
         .recordFunction(materialSampleFn)
         .basicRecords(basicRecordMap.values())
-        .targetTempPath(PathBuilder.buildFilePathMoftUsingInputPath(options, id + AVRO_EXTENSION))
+        .targetTempPath(pathFn.apply(MATERIAL_SAMPLE_TABLE, VIEW_MATERIAL_SAMPLE))
         .schema(MaterialSampleTable.getClassSchema())
         .executor(executor)
         .options(options)
@@ -401,7 +426,7 @@ public class InterpretedToHdfsViewPipeline {
     TableRecordWriter.<PermitTable>builder()
         .recordFunction(permitFn)
         .basicRecords(basicRecordMap.values())
-        .targetTempPath(PathBuilder.buildFilePathMoftUsingInputPath(options, id + AVRO_EXTENSION))
+        .targetTempPath(pathFn.apply(PERMIT_TABLE, VIEW_PERMIT))
         .schema(PermitTable.getClassSchema())
         .executor(executor)
         .options(options)
@@ -421,7 +446,7 @@ public class InterpretedToHdfsViewPipeline {
     TableRecordWriter.<PreparationTable>builder()
         .recordFunction(preparationFn)
         .basicRecords(basicRecordMap.values())
-        .targetTempPath(PathBuilder.buildFilePathMoftUsingInputPath(options, id + AVRO_EXTENSION))
+        .targetTempPath(pathFn.apply(PREPARATION_TABLE, VIEW_PREPARATION))
         .schema(PreparationTable.getClassSchema())
         .executor(executor)
         .options(options)
@@ -441,7 +466,7 @@ public class InterpretedToHdfsViewPipeline {
     TableRecordWriter.<PreservationTable>builder()
         .recordFunction(preservationFn)
         .basicRecords(basicRecordMap.values())
-        .targetTempPath(PathBuilder.buildFilePathMoftUsingInputPath(options, id + AVRO_EXTENSION))
+        .targetTempPath(pathFn.apply(PRESERVATION_TABLE, VIEW_PRESERVATION))
         .schema(PreservationTable.getClassSchema())
         .executor(executor)
         .options(options)
@@ -461,7 +486,7 @@ public class InterpretedToHdfsViewPipeline {
     TableRecordWriter.<MeasurementScoreTable>builder()
         .recordFunction(measurementScoreFn)
         .basicRecords(basicRecordMap.values())
-        .targetTempPath(PathBuilder.buildFilePathMoftUsingInputPath(options, id + AVRO_EXTENSION))
+        .targetTempPath(pathFn.apply(MEASUREMENT_SCORE_TABLE, VIEW_MEASUREMENT_SCORE))
         .schema(MeasurementScoreTable.getClassSchema())
         .executor(executor)
         .options(options)
@@ -481,7 +506,7 @@ public class InterpretedToHdfsViewPipeline {
     TableRecordWriter.<MeasurementTraitTable>builder()
         .recordFunction(measurementTraitFn)
         .basicRecords(basicRecordMap.values())
-        .targetTempPath(PathBuilder.buildFilePathMoftUsingInputPath(options, id + AVRO_EXTENSION))
+        .targetTempPath(pathFn.apply(MEASUREMENT_TRAIT_TABLE, VIEW_MEASUREMENT_TRAIT))
         .schema(MeasurementTraitTable.getClassSchema())
         .executor(executor)
         .options(options)
@@ -501,7 +526,7 @@ public class InterpretedToHdfsViewPipeline {
     TableRecordWriter.<MeasurementTrialTable>builder()
         .recordFunction(measurementTrialFn)
         .basicRecords(basicRecordMap.values())
-        .targetTempPath(PathBuilder.buildFilePathMoftUsingInputPath(options, id + AVRO_EXTENSION))
+        .targetTempPath(pathFn.apply(MEASUREMENT_TRIAL_TABLE, VIEW_MEASUREMENT_TRIAL))
         .schema(MeasurementTrialTable.getClassSchema())
         .executor(executor)
         .options(options)
@@ -521,7 +546,7 @@ public class InterpretedToHdfsViewPipeline {
     TableRecordWriter.<GermplasmAccessionTable>builder()
         .recordFunction(germplasmAccessionFn)
         .basicRecords(basicRecordMap.values())
-        .targetTempPath(PathBuilder.buildFilePathMoftUsingInputPath(options, id + AVRO_EXTENSION))
+        .targetTempPath(pathFn.apply(GERMPLASM_ACCESSION_TABLE, VIEW_GERMPLASM_ACCESSION))
         .schema(GermplasmAccessionTable.getClassSchema())
         .executor(executor)
         .options(options)
@@ -541,7 +566,8 @@ public class InterpretedToHdfsViewPipeline {
     TableRecordWriter.<ExtendedMeasurementOrFactTable>builder()
         .recordFunction(extendedMeasurementOrFactFn)
         .basicRecords(basicRecordMap.values())
-        .targetTempPath(PathBuilder.buildFilePathMoftUsingInputPath(options, id + AVRO_EXTENSION))
+        .targetTempPath(
+            pathFn.apply(EXTENDED_MEASUREMENT_OR_FACT_TABLE, VIEW_EXTENDED_MEASUREMENT_OR_FACT))
         .schema(ExtendedMeasurementOrFactTable.getClassSchema())
         .executor(executor)
         .options(options)
@@ -561,7 +587,7 @@ public class InterpretedToHdfsViewPipeline {
     TableRecordWriter.<ChronometricAgeTable>builder()
         .recordFunction(chronometricAgeFn)
         .basicRecords(basicRecordMap.values())
-        .targetTempPath(PathBuilder.buildFilePathMoftUsingInputPath(options, id + AVRO_EXTENSION))
+        .targetTempPath(pathFn.apply(CHRONOMETRIC_AGE_TABLE, VIEW_CHRONOMETRIC_AGE))
         .schema(ChronometricAgeTable.getClassSchema())
         .executor(executor)
         .options(options)
@@ -581,7 +607,7 @@ public class InterpretedToHdfsViewPipeline {
     TableRecordWriter.<ChronometricDateTable>builder()
         .recordFunction(chronometricDateFn)
         .basicRecords(basicRecordMap.values())
-        .targetTempPath(PathBuilder.buildFilePathMoftUsingInputPath(options, id + AVRO_EXTENSION))
+        .targetTempPath(pathFn.apply(CHRONOMETRIC_DATE_TABLE, VIEW_CHRONOMETRIC_DATE))
         .schema(ChronometricDateTable.getClassSchema())
         .executor(executor)
         .options(options)
@@ -601,7 +627,7 @@ public class InterpretedToHdfsViewPipeline {
     TableRecordWriter.<ReferencesTable>builder()
         .recordFunction(referencesFn)
         .basicRecords(basicRecordMap.values())
-        .targetTempPath(PathBuilder.buildFilePathMoftUsingInputPath(options, id + AVRO_EXTENSION))
+        .targetTempPath(pathFn.apply(REFERENCES_TABLE, VIEW_REFERENCES))
         .schema(ReferencesTable.getClassSchema())
         .executor(executor)
         .options(options)
@@ -621,7 +647,7 @@ public class InterpretedToHdfsViewPipeline {
     TableRecordWriter.<IdentifierTable>builder()
         .recordFunction(identifierFn)
         .basicRecords(basicRecordMap.values())
-        .targetTempPath(PathBuilder.buildFilePathMoftUsingInputPath(options, id + AVRO_EXTENSION))
+        .targetTempPath(pathFn.apply(IDENTIFIER_TABLE, VIEW_IDENTIFIER))
         .schema(IdentifierTable.getClassSchema())
         .executor(executor)
         .options(options)

@@ -1,8 +1,6 @@
 package org.gbif.pipelines.common.beam.utils;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.DIRECTORY_NAME;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.MEASUREMENT_OR_FACT_TABLE;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE_HDFS_RECORD;
 
 import com.google.common.base.Strings;
 import lombok.AccessLevel;
@@ -10,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.Path;
 import org.gbif.pipelines.common.PipelinesVariables;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.beam.options.BasePipelineOptions;
 
 @Slf4j
@@ -69,56 +68,17 @@ public class PathBuilder {
   }
 
   /**
-   * Builds the target base path of the Occurrence hdfs view.
+   * Builds the target base path of a hdfs view.
    *
    * @param options options pipeline options
    * @return path to the directory where the occurrence hdfs view is stored
    */
-  public static String buildFilePathHdfsViewUsingInputPath(
-      BasePipelineOptions options, String uniqueId) {
-    return buildPath(
-            buildPathHdfsViewUsingInputPath(options),
-            PipelinesVariables.Pipeline.HdfsView.VIEW_OCCURRENCE + "_" + uniqueId)
-        .toString();
-  }
-
-  /**
-   * Builds the target base path of the Occurrence hdfs view.
-   *
-   * @param options options pipeline options
-   * @return path to the directory where the occurrence hdfs view is stored
-   */
-  public static String buildPathHdfsViewUsingInputPath(BasePipelineOptions options) {
+  public static String buildFilePathViewUsingInputPath(
+      BasePipelineOptions options, RecordType type, String view, String uniqueId) {
     return buildPath(
             buildDatasetAttemptPath(options, DIRECTORY_NAME, true),
-            OCCURRENCE_HDFS_RECORD.name().toLowerCase())
-        .toString();
-  }
-
-  /**
-   * Builds the target base path of the MeasurementOrFactTable hdfs view.
-   *
-   * @param options options pipeline options
-   * @return path to the directory where the MeasurementOrFactTable hdfs view is stored
-   */
-  public static String buildFilePathMoftUsingInputPath(
-      BasePipelineOptions options, String uniqueId) {
-    return buildPath(
-            buildPathMoftUsingInputPath(options),
-            PipelinesVariables.Pipeline.HdfsView.VIEW_MOFT + "_" + uniqueId)
-        .toString();
-  }
-
-  /**
-   * Builds the target base path of the MeasurementOrFactTable hdfs view.
-   *
-   * @param options options pipeline options
-   * @return path to the directory where the MeasurementOrFactTable hdfs view is stored
-   */
-  public static String buildPathMoftUsingInputPath(BasePipelineOptions options) {
-    return buildPath(
-            buildDatasetAttemptPath(options, DIRECTORY_NAME, true),
-            MEASUREMENT_OR_FACT_TABLE.name().toLowerCase())
+            type.name().toLowerCase(),
+            view + "_" + uniqueId)
         .toString();
   }
 
