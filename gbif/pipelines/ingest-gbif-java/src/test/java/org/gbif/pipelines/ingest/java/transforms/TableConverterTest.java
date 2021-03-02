@@ -10,6 +10,7 @@ import java.util.Optional;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
+import org.gbif.pipelines.core.converters.MeasurementOrFactTableConverter;
 import org.gbif.pipelines.ingest.java.metrics.IngestMetricsBuilder;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -17,7 +18,7 @@ import org.gbif.pipelines.io.avro.MeasurementOrFactTable;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class MeasurementOrFactTableConverterTest {
+public class TableConverterTest {
 
   private static final String ID = "777";
 
@@ -39,9 +40,11 @@ public class MeasurementOrFactTableConverterTest {
 
     // When
     Optional<MeasurementOrFactTable> measurementOrFactTable =
-        MeasurementOrFactTableConverter.builder()
+        TableConverter.<MeasurementOrFactTable>builder()
             .metrics(metrics)
             .verbatimMap(Collections.singletonMap(ID, extendedRecord))
+            .converterFn(MeasurementOrFactTableConverter::convert)
+            .counterName(MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT)
             .build()
             .getFn()
             .apply(basicRecord);

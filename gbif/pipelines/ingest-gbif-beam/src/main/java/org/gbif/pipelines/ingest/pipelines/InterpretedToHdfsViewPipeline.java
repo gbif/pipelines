@@ -1,5 +1,25 @@
 package org.gbif.pipelines.ingest.pipelines;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AMPLIFICATION_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.CHRONOMETRIC_AGE_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.CHRONOMETRIC_DATE_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.CLONING_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.EXTENDED_MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.GEL_IMAGE_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.GERMPLASM_ACCESSION_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.IDENTIFICATION_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.IDENTIFIER_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.LOAN_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MATERIAL_SAMPLE_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMENT_SCORE_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMENT_TRAIT_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMENT_TRIAL_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.PERMIT_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.PREPARATION_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.PRESERVATION_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.REFERENCES_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.RESOURCE_RELATION_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE_HDFS_RECORD;
 import static org.gbif.pipelines.common.beam.utils.PathBuilder.buildFilePathHdfsViewUsingInputPath;
@@ -14,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.transforms.View;
+import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.transforms.join.CoGroupByKey;
 import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.KV;
@@ -24,17 +45,57 @@ import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
+import org.gbif.pipelines.core.converters.AmplificationTableConverter;
+import org.gbif.pipelines.core.converters.ChronometricAgeTableConverter;
+import org.gbif.pipelines.core.converters.ChronometricDateTableConverter;
+import org.gbif.pipelines.core.converters.CloningTableConverter;
+import org.gbif.pipelines.core.converters.ExtendedMeasurementOrFactTableConverter;
+import org.gbif.pipelines.core.converters.GelImageTableConverter;
+import org.gbif.pipelines.core.converters.GermplasmAccessionTableConverter;
+import org.gbif.pipelines.core.converters.IdentificationTableConverter;
+import org.gbif.pipelines.core.converters.IdentifierTableConverter;
+import org.gbif.pipelines.core.converters.LoanTableConverter;
+import org.gbif.pipelines.core.converters.MaterialSampleTableConverter;
+import org.gbif.pipelines.core.converters.MeasurementOrFactTableConverter;
+import org.gbif.pipelines.core.converters.MeasurementScoreTableConverter;
+import org.gbif.pipelines.core.converters.MeasurementTraitTableConverter;
+import org.gbif.pipelines.core.converters.MeasurementTrialTableConverter;
+import org.gbif.pipelines.core.converters.PermitTableConverter;
+import org.gbif.pipelines.core.converters.PreparationTableConverter;
+import org.gbif.pipelines.core.converters.PreservationTableConverter;
+import org.gbif.pipelines.core.converters.ReferencesTableConverter;
+import org.gbif.pipelines.core.converters.ResourceRelationTableConverter;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.ingest.utils.HdfsViewAvroUtils;
 import org.gbif.pipelines.ingest.utils.SharedLockUtils;
+import org.gbif.pipelines.io.avro.AmplificationTable;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.ChronometricAgeTable;
+import org.gbif.pipelines.io.avro.ChronometricDateTable;
+import org.gbif.pipelines.io.avro.CloningTable;
+import org.gbif.pipelines.io.avro.ExtendedMeasurementOrFactTable;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.GelImageTable;
+import org.gbif.pipelines.io.avro.GermplasmAccessionTable;
+import org.gbif.pipelines.io.avro.IdentificationTable;
+import org.gbif.pipelines.io.avro.IdentifierTable;
 import org.gbif.pipelines.io.avro.ImageRecord;
+import org.gbif.pipelines.io.avro.LoanTable;
 import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MaterialSampleTable;
+import org.gbif.pipelines.io.avro.MeasurementOrFactTable;
+import org.gbif.pipelines.io.avro.MeasurementScoreTable;
+import org.gbif.pipelines.io.avro.MeasurementTraitTable;
+import org.gbif.pipelines.io.avro.MeasurementTrialTable;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
+import org.gbif.pipelines.io.avro.PermitTable;
+import org.gbif.pipelines.io.avro.PreparationTable;
+import org.gbif.pipelines.io.avro.PreservationTable;
+import org.gbif.pipelines.io.avro.ReferencesTable;
+import org.gbif.pipelines.io.avro.ResourceRelationTable;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
@@ -48,8 +109,8 @@ import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
-import org.gbif.pipelines.transforms.table.MeasurementOrFactTableTransform;
 import org.gbif.pipelines.transforms.table.OccurrenceHdfsRecordTransform;
+import org.gbif.pipelines.transforms.table.TableTransform;
 import org.slf4j.MDC;
 
 /**
@@ -65,9 +126,10 @@ import org.slf4j.MDC;
  *      {@link AudubonRecord},
  *      {@link TaxonRecord},
  *      {@link GrscicollRecord},
- *      {@link LocationRecord}
+ *      {@link LocationRecord},
+ *      and etc
  *    2) Joins avro files
- *    3) Converts to a {@link OccurrenceHdfsRecord} based on the input files
+ *    3) Converts to a {@link OccurrenceHdfsRecord} and table based on the input files
  *    4) Moves the produced files to a directory where the latest version of HDFS records are kept
  * </pre>
  *
@@ -179,6 +241,8 @@ public class InterpretedToHdfsViewPipeline {
         p.apply("Read Audubon", audubonTransform.read(interpretPathFn))
             .apply("Map Audubon to KV", audubonTransform.toKv());
 
+    // OccurrenceHdfsRecord
+
     log.info("Adding step 3: Converting into a OccurrenceHdfsRecord object");
     OccurrenceHdfsRecordTransform hdfsRecordTransform =
         OccurrenceHdfsRecordTransform.builder()
@@ -192,12 +256,6 @@ public class InterpretedToHdfsViewPipeline {
             .imageRecordTag(imageTransform.getTag())
             .audubonRecordTag(audubonTransform.getTag())
             .metadataView(metadataView)
-            .build();
-
-    MeasurementOrFactTableTransform measurementOrFactTableTransform =
-        MeasurementOrFactTableTransform.builder()
-            .basicRecordTag(basicTransform.getTag())
-            .extendedRecordTag(verbatimTransform.getTag())
             .build();
 
     KeyedPCollectionTuple
@@ -214,18 +272,300 @@ public class InterpretedToHdfsViewPipeline {
         // Raw
         .and(verbatimTransform.getTag(), verbatimCollection)
         // Apply
-        .apply("Grouping hdfs objects", CoGroupByKey.create())
-        .apply("Merging to HdfsRecord", hdfsRecordTransform.converter())
+        .apply("Group hdfs objects", CoGroupByKey.create())
+        .apply("Merge to HdfsRecord", hdfsRecordTransform.converter())
         .apply(hdfsRecordTransform.write(targetHdfsTempPath, numberOfShards));
 
-    KeyedPCollectionTuple
-        // Join
-        .of(basicTransform.getTag(), basicCollection)
-        .and(verbatimTransform.getTag(), verbatimCollection)
-        // Apply
-        .apply("Grouping Moft objects", CoGroupByKey.create())
-        .apply("Merging to Moft", measurementOrFactTableTransform.converter())
+    // Table records
+    PCollection<KV<String, CoGbkResult>> tableCollection =
+        KeyedPCollectionTuple
+            // Join
+            .of(basicTransform.getTag(), basicCollection)
+            .and(verbatimTransform.getTag(), verbatimCollection)
+            // Apply
+            .apply("Group table objects", CoGroupByKey.create());
+
+    // MeasurementOrFact
+    TableTransform<MeasurementOrFactTable> measurementOrFactTableTransform =
+        TableTransform.<MeasurementOrFactTable>builder()
+            .converterFn(MeasurementOrFactTableConverter::convert)
+            .clazz(MeasurementOrFactTable.class)
+            .counterName(MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT)
+            .extendedRecordTag(verbatimTransform.getTag())
+            .basicRecordTag(basicTransform.getTag())
+            .build();
+
+    tableCollection
+        .apply("Convert to MeasurementOrFact", measurementOrFactTableTransform.converter())
         .apply(measurementOrFactTableTransform.write(targetMoftTempPath, numberOfShards));
+
+    // Identification
+    TableTransform<IdentificationTable> identificationTableTransform =
+        TableTransform.<IdentificationTable>builder()
+            .converterFn(IdentificationTableConverter::convert)
+            .clazz(IdentificationTable.class)
+            .counterName(IDENTIFICATION_TABLE_RECORDS_COUNT)
+            .extendedRecordTag(verbatimTransform.getTag())
+            .basicRecordTag(basicTransform.getTag())
+            .build();
+
+    tableCollection
+        .apply("Convert to Identification", identificationTableTransform.converter())
+        .apply(identificationTableTransform.write(targetMoftTempPath, numberOfShards));
+
+    // ResourceRelation
+    TableTransform<ResourceRelationTable> resourceRelationTableTransform =
+        TableTransform.<ResourceRelationTable>builder()
+            .converterFn(ResourceRelationTableConverter::convert)
+            .clazz(ResourceRelationTable.class)
+            .counterName(RESOURCE_RELATION_TABLE_RECORDS_COUNT)
+            .extendedRecordTag(verbatimTransform.getTag())
+            .basicRecordTag(basicTransform.getTag())
+            .build();
+
+    tableCollection
+        .apply("Convert to ResourceRelation", resourceRelationTableTransform.converter())
+        .apply(resourceRelationTableTransform.write(targetMoftTempPath, numberOfShards));
+
+    // Amplification
+    TableTransform<AmplificationTable> amplificationTableTransform =
+        TableTransform.<AmplificationTable>builder()
+            .converterFn(AmplificationTableConverter::convert)
+            .clazz(AmplificationTable.class)
+            .counterName(AMPLIFICATION_TABLE_RECORDS_COUNT)
+            .extendedRecordTag(verbatimTransform.getTag())
+            .basicRecordTag(basicTransform.getTag())
+            .build();
+
+    tableCollection
+        .apply("Convert to Amplification", amplificationTableTransform.converter())
+        .apply(amplificationTableTransform.write(targetMoftTempPath, numberOfShards));
+
+    // Cloning
+    TableTransform<CloningTable> cloningTableTransform =
+        TableTransform.<CloningTable>builder()
+            .converterFn(CloningTableConverter::convert)
+            .clazz(CloningTable.class)
+            .counterName(CLONING_TABLE_RECORDS_COUNT)
+            .extendedRecordTag(verbatimTransform.getTag())
+            .basicRecordTag(basicTransform.getTag())
+            .build();
+
+    tableCollection
+        .apply("Convert to Cloning", cloningTableTransform.converter())
+        .apply(cloningTableTransform.write(targetMoftTempPath, numberOfShards));
+
+    // GelImage
+    TableTransform<GelImageTable> gelImageTableTransform =
+        TableTransform.<GelImageTable>builder()
+            .converterFn(GelImageTableConverter::convert)
+            .clazz(GelImageTable.class)
+            .counterName(GEL_IMAGE_TABLE_RECORDS_COUNT)
+            .extendedRecordTag(verbatimTransform.getTag())
+            .basicRecordTag(basicTransform.getTag())
+            .build();
+
+    tableCollection
+        .apply("Convert to GelImage", gelImageTableTransform.converter())
+        .apply(gelImageTableTransform.write(targetMoftTempPath, numberOfShards));
+
+    // Loan
+    TableTransform<LoanTable> loanTableTransform =
+        TableTransform.<LoanTable>builder()
+            .converterFn(LoanTableConverter::convert)
+            .clazz(LoanTable.class)
+            .counterName(LOAN_TABLE_RECORDS_COUNT)
+            .extendedRecordTag(verbatimTransform.getTag())
+            .basicRecordTag(basicTransform.getTag())
+            .build();
+
+    tableCollection
+        .apply("Convert to Loan", loanTableTransform.converter())
+        .apply(loanTableTransform.write(targetMoftTempPath, numberOfShards));
+
+    // MaterialSample
+    TableTransform<MaterialSampleTable> materialSampleTableTransform =
+        TableTransform.<MaterialSampleTable>builder()
+            .converterFn(MaterialSampleTableConverter::convert)
+            .clazz(MaterialSampleTable.class)
+            .counterName(MATERIAL_SAMPLE_TABLE_RECORDS_COUNT)
+            .extendedRecordTag(verbatimTransform.getTag())
+            .basicRecordTag(basicTransform.getTag())
+            .build();
+
+    tableCollection
+        .apply("Convert to MaterialSample", materialSampleTableTransform.converter())
+        .apply(materialSampleTableTransform.write(targetMoftTempPath, numberOfShards));
+
+    // Permit
+    TableTransform<PermitTable> permitTableTransform =
+        TableTransform.<PermitTable>builder()
+            .converterFn(PermitTableConverter::convert)
+            .clazz(PermitTable.class)
+            .counterName(PERMIT_TABLE_RECORDS_COUNT)
+            .extendedRecordTag(verbatimTransform.getTag())
+            .basicRecordTag(basicTransform.getTag())
+            .build();
+
+    tableCollection
+        .apply("Convert to Permit", permitTableTransform.converter())
+        .apply(permitTableTransform.write(targetMoftTempPath, numberOfShards));
+
+    // Preparation
+    TableTransform<PreparationTable> preparationTableTransform =
+        TableTransform.<PreparationTable>builder()
+            .converterFn(PreparationTableConverter::convert)
+            .clazz(PreparationTable.class)
+            .counterName(PREPARATION_TABLE_RECORDS_COUNT)
+            .extendedRecordTag(verbatimTransform.getTag())
+            .basicRecordTag(basicTransform.getTag())
+            .build();
+
+    tableCollection
+        .apply("Convert to Preparation", preparationTableTransform.converter())
+        .apply(preparationTableTransform.write(targetMoftTempPath, numberOfShards));
+
+    // Preservation
+    TableTransform<PreservationTable> preservationTableTransform =
+        TableTransform.<PreservationTable>builder()
+            .converterFn(PreservationTableConverter::convert)
+            .clazz(PreservationTable.class)
+            .counterName(PRESERVATION_TABLE_RECORDS_COUNT)
+            .extendedRecordTag(verbatimTransform.getTag())
+            .basicRecordTag(basicTransform.getTag())
+            .build();
+
+    tableCollection
+        .apply("Convert to Preservation", preservationTableTransform.converter())
+        .apply(preservationTableTransform.write(targetMoftTempPath, numberOfShards));
+
+    // MeasurementScore
+    TableTransform<MeasurementScoreTable> measurementScoreTableTransform =
+        TableTransform.<MeasurementScoreTable>builder()
+            .converterFn(MeasurementScoreTableConverter::convert)
+            .clazz(MeasurementScoreTable.class)
+            .counterName(MEASUREMENT_SCORE_TABLE_RECORDS_COUNT)
+            .extendedRecordTag(verbatimTransform.getTag())
+            .basicRecordTag(basicTransform.getTag())
+            .build();
+
+    tableCollection
+        .apply("Convert to MeasurementScore", measurementScoreTableTransform.converter())
+        .apply(measurementScoreTableTransform.write(targetMoftTempPath, numberOfShards));
+
+    // MeasurementTrait
+    TableTransform<MeasurementTraitTable> measurementTraitTableTransform =
+        TableTransform.<MeasurementTraitTable>builder()
+            .converterFn(MeasurementTraitTableConverter::convert)
+            .clazz(MeasurementTraitTable.class)
+            .counterName(MEASUREMENT_TRAIT_TABLE_RECORDS_COUNT)
+            .extendedRecordTag(verbatimTransform.getTag())
+            .basicRecordTag(basicTransform.getTag())
+            .build();
+
+    tableCollection
+        .apply("Convert to MeasurementTrait", measurementTraitTableTransform.converter())
+        .apply(measurementTraitTableTransform.write(targetMoftTempPath, numberOfShards));
+
+    // MeasurementTrial
+    TableTransform<MeasurementTrialTable> measurementTrialTableTransform =
+        TableTransform.<MeasurementTrialTable>builder()
+            .converterFn(MeasurementTrialTableConverter::convert)
+            .clazz(MeasurementTrialTable.class)
+            .counterName(MEASUREMENT_TRIAL_TABLE_RECORDS_COUNT)
+            .extendedRecordTag(verbatimTransform.getTag())
+            .basicRecordTag(basicTransform.getTag())
+            .build();
+
+    tableCollection
+        .apply("Convert to MeasurementTrial", measurementTrialTableTransform.converter())
+        .apply(measurementTrialTableTransform.write(targetMoftTempPath, numberOfShards));
+
+    // GermplasmAccession
+    TableTransform<GermplasmAccessionTable> accessionTableTransform =
+        TableTransform.<GermplasmAccessionTable>builder()
+            .converterFn(GermplasmAccessionTableConverter::convert)
+            .clazz(GermplasmAccessionTable.class)
+            .counterName(GERMPLASM_ACCESSION_TABLE_RECORDS_COUNT)
+            .extendedRecordTag(verbatimTransform.getTag())
+            .basicRecordTag(basicTransform.getTag())
+            .build();
+
+    tableCollection
+        .apply("Convert to GermplasmAccession", accessionTableTransform.converter())
+        .apply(accessionTableTransform.write(targetMoftTempPath, numberOfShards));
+
+    // ExtendedMeasurementOrFact
+    TableTransform<ExtendedMeasurementOrFactTable> extendedMeasurementOrFactTableTransform =
+        TableTransform.<ExtendedMeasurementOrFactTable>builder()
+            .converterFn(ExtendedMeasurementOrFactTableConverter::convert)
+            .clazz(ExtendedMeasurementOrFactTable.class)
+            .counterName(EXTENDED_MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT)
+            .extendedRecordTag(verbatimTransform.getTag())
+            .basicRecordTag(basicTransform.getTag())
+            .build();
+
+    tableCollection
+        .apply(
+            "Convert to ExtendedMeasurementOrFact",
+            extendedMeasurementOrFactTableTransform.converter())
+        .apply(extendedMeasurementOrFactTableTransform.write(targetMoftTempPath, numberOfShards));
+
+    // ChronometricAge
+    TableTransform<ChronometricAgeTable> chronometricAgeTableTransform =
+        TableTransform.<ChronometricAgeTable>builder()
+            .converterFn(ChronometricAgeTableConverter::convert)
+            .clazz(ChronometricAgeTable.class)
+            .counterName(CHRONOMETRIC_AGE_TABLE_RECORDS_COUNT)
+            .extendedRecordTag(verbatimTransform.getTag())
+            .basicRecordTag(basicTransform.getTag())
+            .build();
+
+    tableCollection
+        .apply("Convert to ChronometricAge", chronometricAgeTableTransform.converter())
+        .apply(chronometricAgeTableTransform.write(targetMoftTempPath, numberOfShards));
+
+    // ChronometricDate
+    TableTransform<ChronometricDateTable> chronometricDateTableTransform =
+        TableTransform.<ChronometricDateTable>builder()
+            .converterFn(ChronometricDateTableConverter::convert)
+            .clazz(ChronometricDateTable.class)
+            .counterName(CHRONOMETRIC_DATE_TABLE_RECORDS_COUNT)
+            .extendedRecordTag(verbatimTransform.getTag())
+            .basicRecordTag(basicTransform.getTag())
+            .build();
+
+    tableCollection
+        .apply("Convert to ChronometricDate", chronometricDateTableTransform.converter())
+        .apply(chronometricDateTableTransform.write(targetMoftTempPath, numberOfShards));
+
+    // References
+    TableTransform<ReferencesTable> referencesTableTransform =
+        TableTransform.<ReferencesTable>builder()
+            .converterFn(ReferencesTableConverter::convert)
+            .clazz(ReferencesTable.class)
+            .counterName(REFERENCES_TABLE_RECORDS_COUNT)
+            .extendedRecordTag(verbatimTransform.getTag())
+            .basicRecordTag(basicTransform.getTag())
+            .build();
+
+    tableCollection
+        .apply("Convert to References", referencesTableTransform.converter())
+        .apply(referencesTableTransform.write(targetMoftTempPath, numberOfShards));
+
+    // Identifier
+    TableTransform<IdentifierTable> identifierTableTransform =
+        TableTransform.<IdentifierTable>builder()
+            .converterFn(IdentifierTableConverter::convert)
+            .clazz(IdentifierTable.class)
+            .counterName(IDENTIFIER_TABLE_RECORDS_COUNT)
+            .extendedRecordTag(verbatimTransform.getTag())
+            .basicRecordTag(basicTransform.getTag())
+            .build();
+
+    tableCollection
+        .apply("Convert to Identifier", identifierTableTransform.converter())
+        .apply(identifierTableTransform.write(targetMoftTempPath, numberOfShards));
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();

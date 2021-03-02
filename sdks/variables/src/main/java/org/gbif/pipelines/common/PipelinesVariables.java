@@ -118,11 +118,41 @@ public class PipelinesVariables {
     public static final String IMAGE_RECORDS_COUNT = "imageRecordsCount";
     public static final String AUDUBON_RECORDS_COUNT = "audubonRecordsCount";
     public static final String MEASUREMENT_OR_FACT_RECORDS_COUNT = "measurementOrFactRecordsCount";
+    public static final String AMPLIFICATION_RECORDS_COUNT = "amplificationRecordsCount";
+    // HDFS Tables
     public static final String MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT =
         "measurementOrFactTableRecordsCount";
-    public static final String AMPLIFICATION_RECORDS_COUNT = "amplificationRecordsCount";
-
+    public static final String IDENTIFICATION_TABLE_RECORDS_COUNT =
+        "identificationTableRecordsCount";
+    public static final String RESOURCE_RELATION_TABLE_RECORDS_COUNT =
+        "resourceRelationTableRecordsCount";
+    public static final String AMPLIFICATION_TABLE_RECORDS_COUNT = "amplificationTableRecordsCount";
+    public static final String CLONING_TABLE_RECORDS_COUNT = "cloningTableRecordsCount";
+    public static final String GEL_IMAGE_TABLE_RECORDS_COUNT = "gelImageTableRecordsCount";
+    public static final String LOAN_TABLE_RECORDS_COUNT = "loanTableRecordsCount";
+    public static final String MATERIAL_SAMPLE_TABLE_RECORDS_COUNT =
+        "materialSampleTableRecordsCount";
+    public static final String PERMIT_TABLE_RECORDS_COUNT = "permitTableRecordsCount";
+    public static final String PREPARATION_TABLE_RECORDS_COUNT = "preparationTableRecordsCount";
+    public static final String PRESERVATION_TABLE_RECORDS_COUNT = "preservationTableRecordsCount";
+    public static final String MEASUREMENT_SCORE_TABLE_RECORDS_COUNT =
+        "measurementScoreTableRecordsCount";
+    public static final String MEASUREMENT_TRAIT_TABLE_RECORDS_COUNT =
+        "measurementTraitTableRecordsCount";
+    public static final String MEASUREMENT_TRIAL_TABLE_RECORDS_COUNT =
+        "measurementTrialTableRecordsCount";
+    public static final String GERMPLASM_ACCESSION_TABLE_RECORDS_COUNT =
+        "germplasmAccessionTableRecordsCount";
+    public static final String EXTENDED_MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT =
+        "extendedMeasurementOrFactTableRecordsCount";
+    public static final String CHRONOMETRIC_AGE_TABLE_RECORDS_COUNT =
+        "chronometricAgeTableRecordsCount";
+    public static final String CHRONOMETRIC_DATE_TABLE_RECORDS_COUNT =
+        "chronometricDateTableRecordsCount";
+    public static final String REFERENCES_TABLE_RECORDS_COUNT = "referencesTableRecordsCount";
+    public static final String IDENTIFIER_TABLE_RECORDS_COUNT = "identifierTableRecordsCount";
     public static final String HDFS_VIEW_RECORDS_COUNT = "hdfsViewRecordsCount";
+    // Fragmenter
     public static final String FRAGMENTER_COUNT = "fragmenterRecordsCount";
     // Specific
     public static final String LOCATION_FEATURE_RECORDS_COUNT = "locationFeatureRecordsCount";
