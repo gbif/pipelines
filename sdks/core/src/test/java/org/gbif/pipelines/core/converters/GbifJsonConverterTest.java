@@ -12,7 +12,6 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.MediaType;
 import org.gbif.pipelines.io.avro.Rank;
-import org.gbif.pipelines.io.avro.ThreatStatus;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.io.avro.grscicoll.Match;
 import org.junit.Assert;
@@ -477,7 +476,7 @@ public class GbifJsonConverterTest {
             + "\"acceptedUsage\":{\"key\":2,"
             + "\"name\":\"Name2\","
             + "\"rank\":\"ABERRATION\"},"
-            + "\"iucnRedListCategory\":\"CRITICALLY_ENDANGERED\","
+            + "\"iucnRedListCategoryCode\":\"CR\","
             + "\"chemoformKey\":1,"
             + "\"chemoform\":\"Name\","
             + "\"aberrationKey\":2,"
@@ -503,7 +502,7 @@ public class GbifJsonConverterTest {
                 RankedName.newBuilder().setKey(1).setName("n").setRank(Rank.ABERRATION).build())
             .setClassification(rankedNameList)
             .setAcceptedUsage(name2)
-            .setIucnRedListCategory(ThreatStatus.CRITICALLY_ENDANGERED)
+            .setIucnRedListCategoryCode(ThreatStatus.CRITICALLY_ENDANGERED.getCode())
             .build();
 
     ExtendedRecord extendedRecord =

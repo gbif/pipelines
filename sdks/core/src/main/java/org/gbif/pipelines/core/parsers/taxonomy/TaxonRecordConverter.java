@@ -13,7 +13,6 @@ import org.gbif.pipelines.io.avro.Rank;
 import org.gbif.pipelines.io.avro.RankedName;
 import org.gbif.pipelines.io.avro.Status;
 import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.io.avro.ThreatStatus;
 import org.gbif.rest.client.species.IucnRedListCategory;
 import org.gbif.rest.client.species.NameUsageMatch;
 
@@ -49,8 +48,8 @@ public class TaxonRecordConverter {
 
     // IUCN Red List Category
     Optional.ofNullable(source.getIucnRedListCategory())
-        .map(IucnRedListCategory::getCategory)
-        .ifPresent(cat -> taxonRecord.setIucnRedListCategory(ThreatStatus.valueOf(cat)));
+        .map(IucnRedListCategory::getCode)
+        .ifPresent(taxonRecord::setIucnRedListCategoryCode);
 
     return taxonRecord;
   }
