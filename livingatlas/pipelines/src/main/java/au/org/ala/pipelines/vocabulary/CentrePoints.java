@@ -1,6 +1,7 @@
 package au.org.ala.pipelines.vocabulary;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -60,7 +61,7 @@ public class CentrePoints {
     // 3 columns: country code, latitude, longitude,
     // 4 columns: country code, latitude, longitude,country name
     // 7 coluns: country code, latitude, longitude, bbox
-    new BufferedReader(new InputStreamReader(is))
+    new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))
         .lines()
         .map(String::trim)
         .filter(

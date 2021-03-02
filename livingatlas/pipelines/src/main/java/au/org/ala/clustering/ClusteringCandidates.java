@@ -3,12 +3,17 @@ package au.org.ala.clustering;
 import java.util.List;
 import lombok.Builder;
 import lombok.Getter;
-import org.gbif.pipelines.core.parsers.clustering.OccurrenceFeatures;
+import lombok.Setter;
+import org.apache.beam.sdk.schemas.JavaBeanSchema;
+import org.apache.beam.sdk.schemas.annotations.DefaultSchema;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 @Builder
 @Getter
+@Setter
+@DefaultSchema(JavaBeanSchema.class)
 public class ClusteringCandidates {
 
-  String hashKey;
-  List<OccurrenceFeatures> candidates;
+  @Nullable String hashKey;
+  @Nullable List<HashKeyOccurrence> candidates;
 }
