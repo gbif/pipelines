@@ -51,15 +51,6 @@
      ]
   },
   {
-     "name" : "ThreatStatus",
-     "namespace" : "org.gbif.pipelines.io.avro",
-     "type" : "enum",
-     "symbols" : [
-        "EXTINCT", "EXTINCT_IN_THE_WILD", "REGIONALLY_EXTINCT", "CRITICALLY_ENDANGERED", "ENDANGERED",
-        "VULNERABLE", "NEAR_THREATENED", "LEAST_CONCERN", "DATA_DEFICIENT", "NOT_APPLICABLE", "NOT_EVALUATED"
-     ]
-  },
-  {
     "name" : "Nomenclature",
     "namespace" : "org.gbif.pipelines.io.avro",
     "type" : "record",
@@ -155,7 +146,7 @@
       },
       {"name" : "usageParsedName", "type" : ["null", "ParsedName"], "default" : null},
       {"name": "issues", "type": "IssueRecord", "default":{}},
-      {"name" : "iucnRedListCategory", "type" : ["null", "ThreatStatus"], "default" : null, "doc":"The IUCN Red List Category or conservation status"}
+      {"name" : "iucnRedListCategoryCode", "type" : ["null", "string"], "default" : null, "doc":"The IUCN Red List Category or conservation status"}
     ]
   },
 {

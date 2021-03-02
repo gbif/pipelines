@@ -25,6 +25,7 @@ import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.api.vocabulary.OccurrenceStatus;
 import org.gbif.api.vocabulary.Sex;
+import org.gbif.api.vocabulary.ThreatStatus;
 import org.gbif.api.vocabulary.TypeStatus;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
@@ -53,7 +54,6 @@ import org.gbif.pipelines.io.avro.RankedName;
 import org.gbif.pipelines.io.avro.State;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.io.avro.ThreatStatus;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.io.avro.grscicoll.Match;
 import org.junit.Assert;
@@ -139,7 +139,7 @@ public class OccurrenceHdfsRecordConverterTest {
                 2L) // This value for lastParsed and lastInterpreted since is greater that the Basic
             // record created date
             .setClassification(classification)
-            .setIucnRedListCategory(ThreatStatus.CRITICALLY_ENDANGERED)
+            .setIucnRedListCategoryCode(ThreatStatus.CRITICALLY_ENDANGERED.getCode())
             .build();
 
     TemporalRecord temporalRecord =
@@ -184,7 +184,7 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals("0", hdfsRecord.getVIndividualcount());
     Assert.assertEquals("2000/2010", hdfsRecord.getVEventdate());
     Assert.assertEquals(
-        ThreatStatus.CRITICALLY_ENDANGERED.name(), hdfsRecord.getIucnredlistcategory());
+        ThreatStatus.CRITICALLY_ENDANGERED.getCode(), hdfsRecord.getIucnredlistcategory());
 
     // Test fields names with reserved words
     Assert.assertEquals("CLASS", hdfsRecord.getClass$());

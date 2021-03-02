@@ -323,8 +323,7 @@ public class OccurrenceHdfsRecordConverter {
 
     setCreatedIfGreater(occurrenceHdfsRecord, taxonRecord.getCreated());
 
-    Optional.ofNullable(taxonRecord.getIucnRedListCategory())
-        .ifPresent(u -> occurrenceHdfsRecord.setIucnredlistcategory(u.name()));
+    occurrenceHdfsRecord.setIucnredlistcategory(taxonRecord.getIucnRedListCategoryCode());
 
     addIssues(taxonRecord.getIssues(), occurrenceHdfsRecord);
   }
