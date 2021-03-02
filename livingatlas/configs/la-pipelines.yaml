@@ -126,7 +126,6 @@ sample:
   allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
 
 images:
-  appName: Image syncing for {datasetId}
   runner: SparkRunner
   inputPath: '{fsPath}/pipelines-data'
   tempLocation: /tmp
@@ -176,6 +175,7 @@ solr:
   targetPath: '{fsPath}/pipelines-data'
   allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
   jackKnifePath: "{fsPath}/pipelines-jackknife"
+  clusteringPath: "{fsPath}/pipelines-clustering"
   solrCollection: biocache
   includeSampling: true
   includeJackKnife: false
@@ -189,6 +189,12 @@ jackKnife:
   jackKnifePath: "{fsPath}/pipelines-jackknife"
   layers: el882,el889,el887,el865,el894
   minSampleThreshold: 80
+  allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
+  runner: SparkRunner
+
+clustering:
+  appName: Occurrence clustering
+  clusteringPath: "{fsPath}/pipelines-clustering"
   allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
   runner: SparkRunner
 
@@ -210,7 +216,14 @@ dataset-archive-list:
   inputPath: '{fsPath}/pipelines-data'
   targetPath: /tmp/dataset-archive-list.csv
 
+migrate-uuids:
+  inputPath: '{fsPath}/pipelines-data/occ_uuid.csv'
+  targetPath: '{fsPath}/pipelines-data'
+  hdfsSiteConfig: ""
+  # FIXME: MigrateUUIDPipeline should use this also?
+
 ### la-pipelines cli additional arguments, like JVM or spark command line arguments
+
 interpret-sh-args:
   local:
     jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
@@ -285,19 +298,31 @@ sample-sh-args:
   local:
     jvm: -Xmx8g -XX:+UseG1GC
 
+sample-avro-sh-args:
+  local:
+    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
+  spark-embedded:
+    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
+  spark-cluster:
+    conf: spark.default.parallelism=144
+    num-executors: 24
+    executor-cores: 8
+    executor-memory: 7G
+    driver-memory: 1G
+
 index-sh-args:
   local:
     jvm: -Xmx8g -XX:+UseG1GC
   spark-embedded:
     jvm: -Xmx8g -XX:+UseG1GC
   spark-cluster:
-    conf: spark.default.parallelism=192
+    conf:
     num-executors: 24
     executor-cores: 8
     executor-memory: 7G
-    driver-memory: 4G
+    driver-memory: 1G
 
-jackknife-sh-args:
+clustering-sh-args:
   local:
     jvm: -Xmx8g -XX:+UseG1GC
   spark-embedded:

@@ -1,150 +1,236 @@
 package au.org.ala.clustering;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import lombok.Builder;
+import org.apache.beam.sdk.coders.DefaultCoder;
+import org.apache.beam.sdk.schemas.JavaBeanSchema;
+import org.apache.beam.sdk.schemas.SchemaCoder;
+import org.apache.beam.sdk.schemas.annotations.DefaultSchema;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.gbif.pipelines.core.parsers.clustering.OccurrenceFeatures;
 
-/** A POJO implementation for simple tests. */
-@Builder
+@DefaultCoder(SchemaCoder.class)
+@DefaultSchema(JavaBeanSchema.class)
 public class HashKeyOccurrence implements OccurrenceFeatures {
-  private final String hashKey;
-  private final String id;
-  private final String datasetKey;
-  private final String speciesKey;
-  private final String taxonKey;
-  private final String basisOfRecord;
-  private final Double decimalLatitude;
-  private final Double decimalLongitude;
-  private final Integer year;
-  private final Integer month;
-  private final Integer day;
-  private final String eventDate;
-  private final String scientificName;
-  private final String countryCode;
-  private final String typeStatus;
-  private final String occurrenceID;
-  private final String recordedBy;
-  private final String fieldNumber;
-  private final String recordNumber;
-  private final String catalogNumber;
-  private final String otherCatalogNumbers;
 
-  public String getHashKey() {
+  @Nullable String hashKey = null;
+  @Nullable String id = null;
+  @Nullable String datasetKey = null;
+  @Nullable String speciesKey = null;
+  @Nullable String taxonKey = null;
+  @Nullable String basisOfRecord = null;
+  @Nullable Double decimalLatitude = null;
+  @Nullable Double decimalLongitude = null;
+  @Nullable Integer year = null;
+  @Nullable Integer month = null;
+  @Nullable Integer day = null;
+  @Nullable String eventDate = null;
+  @Nullable String scientificName = null;
+  @Nullable String countryCode = null;
+  @Nullable String typeStatus = null;
+  @Nullable String occurrenceID = null;
+  @Nullable String recordedBy = null;
+  @Nullable String fieldNumber = null;
+  @Nullable String recordNumber = null;
+  @Nullable String catalogNumber = null;
+  @Nullable String otherCatalogNumbers = null;
+
+  public @Nullable String getHashKey() {
     return hashKey;
   }
 
+  public void setHashKey(@Nullable String hashKey) {
+    this.hashKey = hashKey;
+  }
+
   @Override
-  public String getId() {
+  public @Nullable String getId() {
     return id;
   }
 
+  public void setId(@Nullable String id) {
+    this.id = id;
+  }
+
   @Override
-  public String getDatasetKey() {
+  public @Nullable String getDatasetKey() {
     return datasetKey;
   }
 
+  public void setDatasetKey(@Nullable String datasetKey) {
+    this.datasetKey = datasetKey;
+  }
+
   @Override
-  public String getSpeciesKey() {
+  public @Nullable String getSpeciesKey() {
     return speciesKey;
   }
 
+  public void setSpeciesKey(@Nullable String speciesKey) {
+    this.speciesKey = speciesKey;
+  }
+
   @Override
-  public String getTaxonKey() {
+  public @Nullable String getTaxonKey() {
     return taxonKey;
   }
 
+  public void setTaxonKey(@Nullable String taxonKey) {
+    this.taxonKey = taxonKey;
+  }
+
   @Override
-  public String getBasisOfRecord() {
+  public @Nullable String getBasisOfRecord() {
     return basisOfRecord;
   }
 
+  public void setBasisOfRecord(@Nullable String basisOfRecord) {
+    this.basisOfRecord = basisOfRecord;
+  }
+
   @Override
-  public Double getDecimalLatitude() {
+  public @Nullable Double getDecimalLatitude() {
     return decimalLatitude;
   }
 
+  public void setDecimalLatitude(@Nullable Double decimalLatitude) {
+    this.decimalLatitude = decimalLatitude;
+  }
+
   @Override
-  public Double getDecimalLongitude() {
+  public @Nullable Double getDecimalLongitude() {
     return decimalLongitude;
   }
 
+  public void setDecimalLongitude(@Nullable Double decimalLongitude) {
+    this.decimalLongitude = decimalLongitude;
+  }
+
   @Override
-  public Integer getYear() {
+  public @Nullable Integer getYear() {
     return year;
   }
 
+  public void setYear(@Nullable Integer year) {
+    this.year = year;
+  }
+
   @Override
-  public Integer getMonth() {
+  public @Nullable Integer getMonth() {
     return month;
   }
 
+  public void setMonth(@Nullable Integer month) {
+    this.month = month;
+  }
+
   @Override
-  public Integer getDay() {
+  public @Nullable Integer getDay() {
     return day;
   }
 
+  public void setDay(@Nullable Integer day) {
+    this.day = day;
+  }
+
   @Override
-  public String getEventDate() {
+  public @Nullable String getEventDate() {
     return eventDate;
   }
 
+  public void setEventDate(@Nullable String eventDate) {
+    this.eventDate = eventDate;
+  }
+
   @Override
-  public String getScientificName() {
+  public @Nullable String getScientificName() {
     return scientificName;
   }
 
+  public void setScientificName(@Nullable String scientificName) {
+    this.scientificName = scientificName;
+  }
+
   @Override
-  public String getCountryCode() {
+  public @Nullable String getCountryCode() {
     return countryCode;
   }
 
+  public void setCountryCode(@Nullable String countryCode) {
+    this.countryCode = countryCode;
+  }
+
   @Override
-  public String getTypeStatus() {
+  public @Nullable String getTypeStatus() {
     return typeStatus;
   }
 
+  public void setTypeStatus(@Nullable String typeStatus) {
+    this.typeStatus = typeStatus;
+  }
+
   @Override
-  public String getOccurrenceID() {
+  public @Nullable String getOccurrenceID() {
     return occurrenceID;
   }
 
+  public void setOccurrenceID(@Nullable String occurrenceID) {
+    this.occurrenceID = occurrenceID;
+  }
+
   @Override
-  public String getRecordedBy() {
+  public @Nullable String getRecordedBy() {
     return recordedBy;
   }
 
+  public void setRecordedBy(@Nullable String recordedBy) {
+    this.recordedBy = recordedBy;
+  }
+
   @Override
-  public String getFieldNumber() {
+  public @Nullable String getFieldNumber() {
     return fieldNumber;
   }
 
+  public void setFieldNumber(@Nullable String fieldNumber) {
+    this.fieldNumber = fieldNumber;
+  }
+
   @Override
-  public String getRecordNumber() {
+  public @Nullable String getRecordNumber() {
     return recordNumber;
   }
 
+  public void setRecordNumber(@Nullable String recordNumber) {
+    this.recordNumber = recordNumber;
+  }
+
   @Override
-  public String getCatalogNumber() {
+  public @Nullable String getCatalogNumber() {
     return catalogNumber;
   }
 
-  @Override
-  public String getOtherCatalogNumbers() {
-    return otherCatalogNumbers;
+  public void setCatalogNumber(@Nullable String catalogNumber) {
+    this.catalogNumber = catalogNumber;
   }
 
   @Override
-  public List<String> getIdentifiers() {
-    return Stream.of(
-            getOccurrenceID(),
-            getFieldNumber(),
-            getRecordNumber(),
-            getCatalogNumber(),
-            getOtherCatalogNumbers())
-        .filter(Objects::nonNull)
-        .collect(Collectors.toList());
+  public @Nullable String getOtherCatalogNumbers() {
+    return otherCatalogNumbers;
+  }
+
+  public void setOtherCatalogNumbers(@Nullable String otherCatalogNumbers) {
+    this.otherCatalogNumbers = otherCatalogNumbers;
+  }
+
+  @Override
+  public List<String> listIdentifiers() {
+    List<String> identifiers = new ArrayList<>();
+    if (occurrenceID != null) identifiers.add(occurrenceID);
+    if (fieldNumber != null) identifiers.add(fieldNumber);
+    if (recordNumber != null) identifiers.add(recordNumber);
+    if (catalogNumber != null) identifiers.add(catalogNumber);
+    if (otherCatalogNumbers != null) identifiers.add(otherCatalogNumbers);
+    return identifiers;
   }
 }

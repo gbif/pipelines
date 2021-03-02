@@ -327,6 +327,7 @@
     <!-- use same version as okhttp -->
     <!-- avoids this issue https://stackoverflow.com/questions/56854548/mockwebserver-java-lang-nosuchmethoderror -->
     <mockwebserver.version>4.2.2</mockwebserver.version>
+    <checker-qual.version>3.9.1</checker-qual.version>
   </properties>
 
   <scm>
@@ -928,6 +929,11 @@
           <artifactId>commons-io</artifactId>
         </exclusion>
       </exclusions>
+    </dependency>
+    <dependency>
+        <groupId>org.checkerframework</groupId>
+        <artifactId>checker-qual</artifactId>
+        <version>${checker-qual.version}</version>
     </dependency>
   </dependencies>
 </project>

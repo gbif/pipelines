@@ -15,9 +15,10 @@ public interface ClusteringPipelineOptions
 
   void setClusteringPath(String clusteringPath);
 
-  @Description("Whether to dump out candidates for debug")
-  @Default.Boolean(false)
-  Boolean getDumpCandidatesForDebug();
+  @Description(
+      "CandidatesCutoff - if we find more than this number of grouped candidates, then drop the cluster")
+  @Default.Integer(50)
+  Integer getCandidatesCutoff();
 
-  void setDumpCandidatesForDebug(Boolean dumpCandidatesForDebug);
+  void setCandidatesCutoff(Integer candidatesCutoff);
 }
