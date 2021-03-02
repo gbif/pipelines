@@ -83,11 +83,11 @@ public class XmlToAvscGeneratorMojo extends AbstractMojo {
     fields.add(createSchemaField("gbifid", Type.LONG, "GBIF internal identifier", false));
     // Add RAW fields
     ext.getProperties().stream()
-        .map(p -> createSchemaField("v_" + nomalizeFieldName(p.getName()), p.getQualname()))
+        .map(p -> createSchemaField("v_" + normalizeFieldName(p.getName()), p.getQualname()))
         .forEach(fields::add);
     // Add fields
     ext.getProperties().stream()
-        .map(p -> createSchemaField(nomalizeFieldName(p.getName()), p.getQualname()))
+        .map(p -> createSchemaField(normalizeFieldName(p.getName()), p.getQualname()))
         .forEach(fields::add);
 
     String schema =
@@ -108,7 +108,7 @@ public class XmlToAvscGeneratorMojo extends AbstractMojo {
     return createSchemaField(name, Type.STRING, doc, true);
   }
 
-  private String nomalizeFieldName(String name) {
+  private String normalizeFieldName(String name) {
     return name.toLowerCase().trim().replace('-', '_');
   }
 

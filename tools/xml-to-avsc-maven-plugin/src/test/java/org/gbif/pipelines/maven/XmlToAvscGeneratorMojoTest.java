@@ -11,7 +11,7 @@ import org.junit.Test;
 public class XmlToAvscGeneratorMojoTest {
 
   @Test
-  public void xmlToAvscGeneratorMojoTest() throws Exception {
+  public void mojoTest() throws Exception {
 
     // State
     String path = getClass().getResource("/generated/").getFile();

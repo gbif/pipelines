@@ -23,7 +23,7 @@
         <artifactId>maven-plugin-plugin</artifactId>
         <executions>
           <execution>
-            <id>default-descriptor</id>
+            <id>postprocess</id>
             <phase>process-classes</phase>
           </execution>
         </executions>
