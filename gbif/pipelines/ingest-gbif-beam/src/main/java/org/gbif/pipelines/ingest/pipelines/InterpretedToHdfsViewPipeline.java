@@ -21,27 +21,6 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.PRESERVATION_
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.REFERENCES_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.RESOURCE_RELATION_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.HdfsView.VIEW_AMPLIFICATION;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.HdfsView.VIEW_CHRONOMETRIC_AGE;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.HdfsView.VIEW_CHRONOMETRIC_DATE;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.HdfsView.VIEW_CLONING;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.HdfsView.VIEW_EXTENDED_MEASUREMENT_OR_FACT;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.HdfsView.VIEW_GEL_IMAGE;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.HdfsView.VIEW_GERMPLASM_ACCESSION;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.HdfsView.VIEW_IDENTIFICATION;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.HdfsView.VIEW_IDENTIFIER;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.HdfsView.VIEW_LOAN;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.HdfsView.VIEW_MATERIAL_SAMPLE;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.HdfsView.VIEW_MEASUREMENT_OR_FACT;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.HdfsView.VIEW_MEASUREMENT_SCORE;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.HdfsView.VIEW_MEASUREMENT_TRAIT;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.HdfsView.VIEW_MEASUREMENT_TRIAL;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.HdfsView.VIEW_OCCURRENCE;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.HdfsView.VIEW_PERMIT;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.HdfsView.VIEW_PREPARATION;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.HdfsView.VIEW_PRESERVATION;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.HdfsView.VIEW_REFERENCES;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.HdfsView.VIEW_RESOURCE_RELATION;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.AMPLIFICATION_TABLE;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.CHRONOMETRIC_AGE_TABLE;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.CHRONOMETRIC_DATE_TABLE;
@@ -57,17 +36,17 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.MEASUREMENT_SCORE_TABLE;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.MEASUREMENT_TRAIT_TABLE;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.MEASUREMENT_TRIAL_TABLE;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE_HDFS_RECORD;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE_TABLE;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.PERMIT_TABLE;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.PREPARATION_TABLE;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.PRESERVATION_TABLE;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.REFERENCES_TABLE;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.RESOURCE_RELATION_TABLE;
 
-import java.util.Collections;
 import java.util.Set;
-import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.function.UnaryOperator;
+import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -208,11 +187,11 @@ public class InterpretedToHdfsViewPipeline {
     String datasetId = options.getDatasetId();
     Integer attempt = options.getAttempt();
     Integer numberOfShards = options.getNumberOfShards();
-    Set<String> types = Collections.singleton(OCCURRENCE_HDFS_RECORD.name());
+    Set<String> types =
+        RecordType.getAllTables().stream().map(RecordType::name).collect(Collectors.toSet());
 
-    BiFunction<RecordType, String, String> pathFn =
-        (rt, v) ->
-            PathBuilder.buildFilePathViewUsingInputPath(options, rt, v, datasetId + '_' + attempt);
+    Function<RecordType, String> pathFn =
+        rt -> PathBuilder.buildFilePathViewUsingInputPath(options, rt, datasetId + '_' + attempt);
 
     MDC.put("datasetKey", datasetId);
     MDC.put("attempt", attempt.toString());
@@ -316,9 +295,7 @@ public class InterpretedToHdfsViewPipeline {
         // Apply
         .apply("Group hdfs objects", CoGroupByKey.create())
         .apply("Merge to HdfsRecord", hdfsRecordTransform.converter())
-        .apply(
-            hdfsRecordTransform.write(
-                pathFn.apply(OCCURRENCE_HDFS_RECORD, VIEW_OCCURRENCE), numberOfShards));
+        .apply(hdfsRecordTransform.write(pathFn.apply(OCCURRENCE_TABLE), numberOfShards));
 
     // Table records
     PCollection<KV<String, CoGbkResult>> tableCollection =
@@ -343,7 +320,7 @@ public class InterpretedToHdfsViewPipeline {
         .apply("Convert to MeasurementOrFact", measurementOrFactTableTransform.converter())
         .apply(
             measurementOrFactTableTransform.write(
-                pathFn.apply(MEASUREMENT_OR_FACT_TABLE, VIEW_MEASUREMENT_OR_FACT), numberOfShards));
+                pathFn.apply(MEASUREMENT_OR_FACT_TABLE), numberOfShards));
 
     // Identification
     TableTransform<IdentificationTable> identificationTableTransform =
@@ -358,8 +335,7 @@ public class InterpretedToHdfsViewPipeline {
     tableCollection
         .apply("Convert to Identification", identificationTableTransform.converter())
         .apply(
-            identificationTableTransform.write(
-                pathFn.apply(IDENTIFICATION_TABLE, VIEW_IDENTIFICATION), numberOfShards));
+            identificationTableTransform.write(pathFn.apply(IDENTIFICATION_TABLE), numberOfShards));
 
     // ResourceRelation
     TableTransform<ResourceRelationTable> resourceRelationTableTransform =
@@ -375,7 +351,7 @@ public class InterpretedToHdfsViewPipeline {
         .apply("Convert to ResourceRelation", resourceRelationTableTransform.converter())
         .apply(
             resourceRelationTableTransform.write(
-                pathFn.apply(RESOURCE_RELATION_TABLE, VIEW_RESOURCE_RELATION), numberOfShards));
+                pathFn.apply(RESOURCE_RELATION_TABLE), numberOfShards));
 
     // Amplification
     TableTransform<AmplificationTable> amplificationTableTransform =
@@ -390,8 +366,7 @@ public class InterpretedToHdfsViewPipeline {
     tableCollection
         .apply("Convert to Amplification", amplificationTableTransform.converter())
         .apply(
-            amplificationTableTransform.write(
-                pathFn.apply(AMPLIFICATION_TABLE, VIEW_AMPLIFICATION), numberOfShards));
+            amplificationTableTransform.write(pathFn.apply(AMPLIFICATION_TABLE), numberOfShards));
 
     // Cloning
     TableTransform<CloningTable> cloningTableTransform =
@@ -405,8 +380,7 @@ public class InterpretedToHdfsViewPipeline {
 
     tableCollection
         .apply("Convert to Cloning", cloningTableTransform.converter())
-        .apply(
-            cloningTableTransform.write(pathFn.apply(CLONING_TABLE, VIEW_CLONING), numberOfShards));
+        .apply(cloningTableTransform.write(pathFn.apply(CLONING_TABLE), numberOfShards));
 
     // GelImage
     TableTransform<GelImageTable> gelImageTableTransform =
@@ -420,9 +394,7 @@ public class InterpretedToHdfsViewPipeline {
 
     tableCollection
         .apply("Convert to GelImage", gelImageTableTransform.converter())
-        .apply(
-            gelImageTableTransform.write(
-                pathFn.apply(GEL_IMAGE_TABLE, VIEW_GEL_IMAGE), numberOfShards));
+        .apply(gelImageTableTransform.write(pathFn.apply(GEL_IMAGE_TABLE), numberOfShards));
 
     // Loan
     TableTransform<LoanTable> loanTableTransform =
@@ -436,7 +408,7 @@ public class InterpretedToHdfsViewPipeline {
 
     tableCollection
         .apply("Convert to Loan", loanTableTransform.converter())
-        .apply(loanTableTransform.write(pathFn.apply(LOAN_TABLE, VIEW_LOAN), numberOfShards));
+        .apply(loanTableTransform.write(pathFn.apply(LOAN_TABLE), numberOfShards));
 
     // MaterialSample
     TableTransform<MaterialSampleTable> materialSampleTableTransform =
@@ -452,7 +424,7 @@ public class InterpretedToHdfsViewPipeline {
         .apply("Convert to MaterialSample", materialSampleTableTransform.converter())
         .apply(
             materialSampleTableTransform.write(
-                pathFn.apply(MATERIAL_SAMPLE_TABLE, VIEW_MATERIAL_SAMPLE), numberOfShards));
+                pathFn.apply(MATERIAL_SAMPLE_TABLE), numberOfShards));
 
     // Permit
     TableTransform<PermitTable> permitTableTransform =
@@ -466,7 +438,7 @@ public class InterpretedToHdfsViewPipeline {
 
     tableCollection
         .apply("Convert to Permit", permitTableTransform.converter())
-        .apply(permitTableTransform.write(pathFn.apply(PERMIT_TABLE, VIEW_PERMIT), numberOfShards));
+        .apply(permitTableTransform.write(pathFn.apply(PERMIT_TABLE), numberOfShards));
 
     // Preparation
     TableTransform<PreparationTable> preparationTableTransform =
@@ -480,9 +452,7 @@ public class InterpretedToHdfsViewPipeline {
 
     tableCollection
         .apply("Convert to Preparation", preparationTableTransform.converter())
-        .apply(
-            preparationTableTransform.write(
-                pathFn.apply(PREPARATION_TABLE, VIEW_PREPARATION), numberOfShards));
+        .apply(preparationTableTransform.write(pathFn.apply(PREPARATION_TABLE), numberOfShards));
 
     // Preservation
     TableTransform<PreservationTable> preservationTableTransform =
@@ -496,9 +466,7 @@ public class InterpretedToHdfsViewPipeline {
 
     tableCollection
         .apply("Convert to Preservation", preservationTableTransform.converter())
-        .apply(
-            preservationTableTransform.write(
-                pathFn.apply(PRESERVATION_TABLE, VIEW_PRESERVATION), numberOfShards));
+        .apply(preservationTableTransform.write(pathFn.apply(PRESERVATION_TABLE), numberOfShards));
 
     // MeasurementScore
     TableTransform<MeasurementScoreTable> measurementScoreTableTransform =
@@ -514,7 +482,7 @@ public class InterpretedToHdfsViewPipeline {
         .apply("Convert to MeasurementScore", measurementScoreTableTransform.converter())
         .apply(
             measurementScoreTableTransform.write(
-                pathFn.apply(MEASUREMENT_SCORE_TABLE, VIEW_MEASUREMENT_SCORE), numberOfShards));
+                pathFn.apply(MEASUREMENT_SCORE_TABLE), numberOfShards));
 
     // MeasurementTrait
     TableTransform<MeasurementTraitTable> measurementTraitTableTransform =
@@ -530,7 +498,7 @@ public class InterpretedToHdfsViewPipeline {
         .apply("Convert to MeasurementTrait", measurementTraitTableTransform.converter())
         .apply(
             measurementTraitTableTransform.write(
-                pathFn.apply(MEASUREMENT_TRAIT_TABLE, VIEW_MEASUREMENT_TRAIT), numberOfShards));
+                pathFn.apply(MEASUREMENT_TRAIT_TABLE), numberOfShards));
 
     // MeasurementTrial
     TableTransform<MeasurementTrialTable> measurementTrialTableTransform =
@@ -546,7 +514,7 @@ public class InterpretedToHdfsViewPipeline {
         .apply("Convert to MeasurementTrial", measurementTrialTableTransform.converter())
         .apply(
             measurementTrialTableTransform.write(
-                pathFn.apply(MEASUREMENT_TRIAL_TABLE, VIEW_MEASUREMENT_TRIAL), numberOfShards));
+                pathFn.apply(MEASUREMENT_TRIAL_TABLE), numberOfShards));
 
     // GermplasmAccession
     TableTransform<GermplasmAccessionTable> accessionTableTransform =
@@ -561,8 +529,7 @@ public class InterpretedToHdfsViewPipeline {
     tableCollection
         .apply("Convert to GermplasmAccession", accessionTableTransform.converter())
         .apply(
-            accessionTableTransform.write(
-                pathFn.apply(GERMPLASM_ACCESSION_TABLE, VIEW_GERMPLASM_ACCESSION), numberOfShards));
+            accessionTableTransform.write(pathFn.apply(GERMPLASM_ACCESSION_TABLE), numberOfShards));
 
     // ExtendedMeasurementOrFact
     TableTransform<ExtendedMeasurementOrFactTable> extendedMeasurementOrFactTableTransform =
@@ -580,8 +547,7 @@ public class InterpretedToHdfsViewPipeline {
             extendedMeasurementOrFactTableTransform.converter())
         .apply(
             extendedMeasurementOrFactTableTransform.write(
-                pathFn.apply(EXTENDED_MEASUREMENT_OR_FACT_TABLE, VIEW_EXTENDED_MEASUREMENT_OR_FACT),
-                numberOfShards));
+                pathFn.apply(EXTENDED_MEASUREMENT_OR_FACT_TABLE), numberOfShards));
 
     // ChronometricAge
     TableTransform<ChronometricAgeTable> chronometricAgeTableTransform =
@@ -597,7 +563,7 @@ public class InterpretedToHdfsViewPipeline {
         .apply("Convert to ChronometricAge", chronometricAgeTableTransform.converter())
         .apply(
             chronometricAgeTableTransform.write(
-                pathFn.apply(CHRONOMETRIC_AGE_TABLE, VIEW_CHRONOMETRIC_AGE), numberOfShards));
+                pathFn.apply(CHRONOMETRIC_AGE_TABLE), numberOfShards));
 
     // ChronometricDate
     TableTransform<ChronometricDateTable> chronometricDateTableTransform =
@@ -613,7 +579,7 @@ public class InterpretedToHdfsViewPipeline {
         .apply("Convert to ChronometricDate", chronometricDateTableTransform.converter())
         .apply(
             chronometricDateTableTransform.write(
-                pathFn.apply(CHRONOMETRIC_DATE_TABLE, VIEW_CHRONOMETRIC_DATE), numberOfShards));
+                pathFn.apply(CHRONOMETRIC_DATE_TABLE), numberOfShards));
 
     // References
     TableTransform<ReferencesTable> referencesTableTransform =
@@ -627,9 +593,7 @@ public class InterpretedToHdfsViewPipeline {
 
     tableCollection
         .apply("Convert to References", referencesTableTransform.converter())
-        .apply(
-            referencesTableTransform.write(
-                pathFn.apply(REFERENCES_TABLE, VIEW_REFERENCES), numberOfShards));
+        .apply(referencesTableTransform.write(pathFn.apply(REFERENCES_TABLE), numberOfShards));
 
     // Identifier
     TableTransform<IdentifierTable> identifierTableTransform =
@@ -643,9 +607,7 @@ public class InterpretedToHdfsViewPipeline {
 
     tableCollection
         .apply("Convert to Identifier", identifierTableTransform.converter())
-        .apply(
-            identifierTableTransform.write(
-                pathFn.apply(IDENTIFIER_TABLE, VIEW_IDENTIFIER), numberOfShards));
+        .apply(identifierTableTransform.write(pathFn.apply(IDENTIFIER_TABLE), numberOfShards));
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();

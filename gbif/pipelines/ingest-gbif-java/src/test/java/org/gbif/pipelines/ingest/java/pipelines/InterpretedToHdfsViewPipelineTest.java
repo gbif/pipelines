@@ -1,7 +1,7 @@
 package org.gbif.pipelines.ingest.java.pipelines;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.HdfsView.VIEW_MEASUREMENT_OR_FACT_DIR;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.HdfsView.VIEW_OCCURRENCE_DIR;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.MEASUREMENT_OR_FACT_TABLE;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE_TABLE;
 
 import java.io.File;
 import java.io.IOException;
@@ -165,8 +165,8 @@ public class InterpretedToHdfsViewPipelineTest {
         new File(
             output
                 + "/"
-                + VIEW_OCCURRENCE_DIR
-                + "/view_occurrence_d596fccb-2319-42eb-b13b-986c932780ad_147.avro");
+                + OCCURRENCE_TABLE.getPathName()
+                + "/d596fccb-2319-42eb-b13b-986c932780ad_147.avro");
     DatumReader<OccurrenceHdfsRecord> ohrDatumReader =
         new SpecificDatumReader<>(OccurrenceHdfsRecord.class);
     try (DataFileReader<OccurrenceHdfsRecord> dataFileReader =
@@ -183,8 +183,8 @@ public class InterpretedToHdfsViewPipelineTest {
         new File(
             output
                 + "/"
-                + VIEW_MEASUREMENT_OR_FACT_DIR
-                + "/view_measurementorfact_d596fccb-2319-42eb-b13b-986c932780ad_147.avro");
+                + MEASUREMENT_OR_FACT_TABLE.getPathName()
+                + "/d596fccb-2319-42eb-b13b-986c932780ad_147.avro");
     DatumReader<MeasurementOrFactTable> moftDatumReader =
         new SpecificDatumReader<>(MeasurementOrFactTable.class);
     try (DataFileReader<MeasurementOrFactTable> dataFileReader =

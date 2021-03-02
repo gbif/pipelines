@@ -21,18 +21,18 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.PRESERVATION_
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.REFERENCES_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.RESOURCE_RELATION_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.HdfsView.*;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.*;
 import static org.gbif.pipelines.ingest.java.transforms.InterpretedAvroReader.readAvroAsFuture;
 
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
@@ -64,6 +64,7 @@ import org.gbif.pipelines.core.converters.PreparationTableConverter;
 import org.gbif.pipelines.core.converters.PreservationTableConverter;
 import org.gbif.pipelines.core.converters.ReferencesTableConverter;
 import org.gbif.pipelines.core.converters.ResourceRelationTableConverter;
+import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.ingest.java.metrics.IngestMetricsBuilder;
 import org.gbif.pipelines.ingest.java.transforms.OccurrenceHdfsRecordConverter;
 import org.gbif.pipelines.ingest.java.transforms.TableConverter;
@@ -185,9 +186,19 @@ public class InterpretedToHdfsViewPipeline {
     MDC.put("attempt", options.getAttempt().toString());
     MDC.put("step", StepType.INTERPRETED_TO_INDEX.name());
 
+    String hdfsSiteConfig = options.getHdfsSiteConfig();
+    String coreSiteConfig = options.getCoreSiteConfig();
+    String datasetId = options.getDatasetId();
+    Integer attempt = options.getAttempt();
+    Set<String> types =
+        RecordType.getAllTables().stream().map(RecordType::name).collect(Collectors.toSet());
+    // Deletes the target path if it exists
+    FsUtils.deleteInterpretIfExist(
+        hdfsSiteConfig, coreSiteConfig, options.getInputPath(), datasetId, attempt, types);
+
     String id = options.getDatasetId() + '_' + options.getAttempt() + AVRO_EXTENSION;
-    BiFunction<RecordType, String, String> pathFn =
-        (rt, v) -> PathBuilder.buildFilePathViewUsingInputPath(options, rt, v, id);
+    Function<RecordType, String> pathFn =
+        rt -> PathBuilder.buildFilePathViewUsingInputPath(options, rt, id);
 
     log.info("Init metrics");
     IngestMetrics metrics = IngestMetricsBuilder.createInterpretedToHdfsViewMetrics();
@@ -246,7 +257,7 @@ public class InterpretedToHdfsViewPipeline {
     TableRecordWriter.<OccurrenceHdfsRecord>builder()
         .recordFunction(occurrenceHdfsRecordFn)
         .basicRecords(basicRecordMap.values())
-        .targetTempPath(pathFn.apply(OCCURRENCE_HDFS_RECORD, VIEW_OCCURRENCE))
+        .targetTempPath(pathFn.apply(OCCURRENCE_TABLE))
         .schema(OccurrenceHdfsRecord.getClassSchema())
         .executor(executor)
         .options(options)
@@ -266,7 +277,7 @@ public class InterpretedToHdfsViewPipeline {
     TableRecordWriter.<MeasurementOrFactTable>builder()
         .recordFunction(measurementOrFactFn)
         .basicRecords(basicRecordMap.values())
-        .targetTempPath(pathFn.apply(MEASUREMENT_OR_FACT_TABLE, VIEW_MEASUREMENT_OR_FACT))
+        .targetTempPath(pathFn.apply(MEASUREMENT_OR_FACT_TABLE))
         .schema(MeasurementOrFactTable.getClassSchema())
         .executor(executor)
         .options(options)
@@ -286,7 +297,7 @@ public class InterpretedToHdfsViewPipeline {
     TableRecordWriter.<IdentificationTable>builder()
         .recordFunction(identificationFn)
         .basicRecords(basicRecordMap.values())
-        .targetTempPath(pathFn.apply(IDENTIFICATION_TABLE, VIEW_IDENTIFICATION))
+        .targetTempPath(pathFn.apply(IDENTIFICATION_TABLE))
         .schema(IdentificationTable.getClassSchema())
         .executor(executor)
         .options(options)
@@ -306,7 +317,7 @@ public class InterpretedToHdfsViewPipeline {
     TableRecordWriter.<ResourceRelationTable>builder()
         .recordFunction(resourceRelationFn)
         .basicRecords(basicRecordMap.values())
-        .targetTempPath(pathFn.apply(RESOURCE_RELATION_TABLE, VIEW_RESOURCE_RELATION))
+        .targetTempPath(pathFn.apply(RESOURCE_RELATION_TABLE))
         .schema(ResourceRelationTable.getClassSchema())
         .executor(executor)
         .options(options)
@@ -326,7 +337,7 @@ public class InterpretedToHdfsViewPipeline {
     TableRecordWriter.<AmplificationTable>builder()
         .recordFunction(amplificationFn)
         .basicRecords(basicRecordMap.values())
-        .targetTempPath(pathFn.apply(AMPLIFICATION_TABLE, VIEW_AMPLIFICATION))
+        .targetTempPath(pathFn.apply(AMPLIFICATION_TABLE))
         .schema(AmplificationTable.getClassSchema())
         .executor(executor)
         .options(options)
@@ -346,7 +357,7 @@ public class InterpretedToHdfsViewPipeline {
     TableRecordWriter.<CloningTable>builder()
         .recordFunction(cloningFn)
         .basicRecords(basicRecordMap.values())
-        .targetTempPath(pathFn.apply(CLONING_TABLE, VIEW_CLONING))
+        .targetTempPath(pathFn.apply(CLONING_TABLE))
         .schema(CloningTable.getClassSchema())
         .executor(executor)
         .options(options)
@@ -366,7 +377,7 @@ public class InterpretedToHdfsViewPipeline {
     TableRecordWriter.<GelImageTable>builder()
         .recordFunction(gelImageFn)
         .basicRecords(basicRecordMap.values())
-        .targetTempPath(pathFn.apply(GEL_IMAGE_TABLE, VIEW_GEL_IMAGE))
+        .targetTempPath(pathFn.apply(GEL_IMAGE_TABLE))
         .schema(GelImageTable.getClassSchema())
         .executor(executor)
         .options(options)
@@ -386,7 +397,7 @@ public class InterpretedToHdfsViewPipeline {
     TableRecordWriter.<LoanTable>builder()
         .recordFunction(loanFn)
         .basicRecords(basicRecordMap.values())
-        .targetTempPath(pathFn.apply(LOAN_TABLE, VIEW_LOAN))
+        .targetTempPath(pathFn.apply(LOAN_TABLE))
         .schema(LoanTable.getClassSchema())
         .executor(executor)
         .options(options)
@@ -406,7 +417,7 @@ public class InterpretedToHdfsViewPipeline {
     TableRecordWriter.<MaterialSampleTable>builder()
         .recordFunction(materialSampleFn)
         .basicRecords(basicRecordMap.values())
-        .targetTempPath(pathFn.apply(MATERIAL_SAMPLE_TABLE, VIEW_MATERIAL_SAMPLE))
+        .targetTempPath(pathFn.apply(MATERIAL_SAMPLE_TABLE))
         .schema(MaterialSampleTable.getClassSchema())
         .executor(executor)
         .options(options)
@@ -426,7 +437,7 @@ public class InterpretedToHdfsViewPipeline {
     TableRecordWriter.<PermitTable>builder()
         .recordFunction(permitFn)
         .basicRecords(basicRecordMap.values())
-        .targetTempPath(pathFn.apply(PERMIT_TABLE, VIEW_PERMIT))
+        .targetTempPath(pathFn.apply(PERMIT_TABLE))
         .schema(PermitTable.getClassSchema())
         .executor(executor)
         .options(options)
@@ -446,7 +457,7 @@ public class InterpretedToHdfsViewPipeline {
     TableRecordWriter.<PreparationTable>builder()
         .recordFunction(preparationFn)
         .basicRecords(basicRecordMap.values())
-        .targetTempPath(pathFn.apply(PREPARATION_TABLE, VIEW_PREPARATION))
+        .targetTempPath(pathFn.apply(PREPARATION_TABLE))
         .schema(PreparationTable.getClassSchema())
         .executor(executor)
         .options(options)
@@ -466,7 +477,7 @@ public class InterpretedToHdfsViewPipeline {
     TableRecordWriter.<PreservationTable>builder()
         .recordFunction(preservationFn)
         .basicRecords(basicRecordMap.values())
-        .targetTempPath(pathFn.apply(PRESERVATION_TABLE, VIEW_PRESERVATION))
+        .targetTempPath(pathFn.apply(PRESERVATION_TABLE))
         .schema(PreservationTable.getClassSchema())
         .executor(executor)
         .options(options)
@@ -486,7 +497,7 @@ public class InterpretedToHdfsViewPipeline {
     TableRecordWriter.<MeasurementScoreTable>builder()
         .recordFunction(measurementScoreFn)
         .basicRecords(basicRecordMap.values())
-        .targetTempPath(pathFn.apply(MEASUREMENT_SCORE_TABLE, VIEW_MEASUREMENT_SCORE))
+        .targetTempPath(pathFn.apply(MEASUREMENT_SCORE_TABLE))
         .schema(MeasurementScoreTable.getClassSchema())
         .executor(executor)
         .options(options)
@@ -506,7 +517,7 @@ public class InterpretedToHdfsViewPipeline {
     TableRecordWriter.<MeasurementTraitTable>builder()
         .recordFunction(measurementTraitFn)
         .basicRecords(basicRecordMap.values())
-        .targetTempPath(pathFn.apply(MEASUREMENT_TRAIT_TABLE, VIEW_MEASUREMENT_TRAIT))
+        .targetTempPath(pathFn.apply(MEASUREMENT_TRAIT_TABLE))
         .schema(MeasurementTraitTable.getClassSchema())
         .executor(executor)
         .options(options)
@@ -526,7 +537,7 @@ public class InterpretedToHdfsViewPipeline {
     TableRecordWriter.<MeasurementTrialTable>builder()
         .recordFunction(measurementTrialFn)
         .basicRecords(basicRecordMap.values())
-        .targetTempPath(pathFn.apply(MEASUREMENT_TRIAL_TABLE, VIEW_MEASUREMENT_TRIAL))
+        .targetTempPath(pathFn.apply(MEASUREMENT_TRIAL_TABLE))
         .schema(MeasurementTrialTable.getClassSchema())
         .executor(executor)
         .options(options)
@@ -546,7 +557,7 @@ public class InterpretedToHdfsViewPipeline {
     TableRecordWriter.<GermplasmAccessionTable>builder()
         .recordFunction(germplasmAccessionFn)
         .basicRecords(basicRecordMap.values())
-        .targetTempPath(pathFn.apply(GERMPLASM_ACCESSION_TABLE, VIEW_GERMPLASM_ACCESSION))
+        .targetTempPath(pathFn.apply(GERMPLASM_ACCESSION_TABLE))
         .schema(GermplasmAccessionTable.getClassSchema())
         .executor(executor)
         .options(options)
@@ -566,8 +577,7 @@ public class InterpretedToHdfsViewPipeline {
     TableRecordWriter.<ExtendedMeasurementOrFactTable>builder()
         .recordFunction(extendedMeasurementOrFactFn)
         .basicRecords(basicRecordMap.values())
-        .targetTempPath(
-            pathFn.apply(EXTENDED_MEASUREMENT_OR_FACT_TABLE, VIEW_EXTENDED_MEASUREMENT_OR_FACT))
+        .targetTempPath(pathFn.apply(EXTENDED_MEASUREMENT_OR_FACT_TABLE))
         .schema(ExtendedMeasurementOrFactTable.getClassSchema())
         .executor(executor)
         .options(options)
@@ -587,7 +597,7 @@ public class InterpretedToHdfsViewPipeline {
     TableRecordWriter.<ChronometricAgeTable>builder()
         .recordFunction(chronometricAgeFn)
         .basicRecords(basicRecordMap.values())
-        .targetTempPath(pathFn.apply(CHRONOMETRIC_AGE_TABLE, VIEW_CHRONOMETRIC_AGE))
+        .targetTempPath(pathFn.apply(CHRONOMETRIC_AGE_TABLE))
         .schema(ChronometricAgeTable.getClassSchema())
         .executor(executor)
         .options(options)
@@ -607,7 +617,7 @@ public class InterpretedToHdfsViewPipeline {
     TableRecordWriter.<ChronometricDateTable>builder()
         .recordFunction(chronometricDateFn)
         .basicRecords(basicRecordMap.values())
-        .targetTempPath(pathFn.apply(CHRONOMETRIC_DATE_TABLE, VIEW_CHRONOMETRIC_DATE))
+        .targetTempPath(pathFn.apply(CHRONOMETRIC_DATE_TABLE))
         .schema(ChronometricDateTable.getClassSchema())
         .executor(executor)
         .options(options)
@@ -627,7 +637,7 @@ public class InterpretedToHdfsViewPipeline {
     TableRecordWriter.<ReferencesTable>builder()
         .recordFunction(referencesFn)
         .basicRecords(basicRecordMap.values())
-        .targetTempPath(pathFn.apply(REFERENCES_TABLE, VIEW_REFERENCES))
+        .targetTempPath(pathFn.apply(REFERENCES_TABLE))
         .schema(ReferencesTable.getClassSchema())
         .executor(executor)
         .options(options)
@@ -647,7 +657,7 @@ public class InterpretedToHdfsViewPipeline {
     TableRecordWriter.<IdentifierTable>builder()
         .recordFunction(identifierFn)
         .basicRecords(basicRecordMap.values())
-        .targetTempPath(pathFn.apply(IDENTIFIER_TABLE, VIEW_IDENTIFIER))
+        .targetTempPath(pathFn.apply(IDENTIFIER_TABLE))
         .schema(IdentifierTable.getClassSchema())
         .executor(executor)
         .options(options)

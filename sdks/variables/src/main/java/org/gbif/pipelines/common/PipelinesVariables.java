@@ -1,6 +1,9 @@
 package org.gbif.pipelines.common;
 
 import java.io.Serializable;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
@@ -58,7 +61,7 @@ public class PipelinesVariables {
         // Specific
         LOCATION_FEATURE,
         // Tables,
-        OCCURRENCE_HDFS_RECORD,
+        OCCURRENCE_TABLE,
         MEASUREMENT_OR_FACT_TABLE,
         IDENTIFICATION_TABLE,
         RESOURCE_RELATION_TABLE,
@@ -84,6 +87,36 @@ public class PipelinesVariables {
         public String all() {
           return ALL.name();
         }
+
+        public String getPathName() {
+          return this.name().replaceAll("_", "").toLowerCase();
+        }
+
+        public static Set<RecordType> getAllTables() {
+          return new HashSet<>(
+              Arrays.asList(
+                  OCCURRENCE_TABLE,
+                  MEASUREMENT_OR_FACT_TABLE,
+                  IDENTIFICATION_TABLE,
+                  RESOURCE_RELATION_TABLE,
+                  AMPLIFICATION_TABLE,
+                  CLONING_TABLE,
+                  GEL_IMAGE_TABLE,
+                  LOAN_TABLE,
+                  MATERIAL_SAMPLE_TABLE,
+                  PERMIT_TABLE,
+                  PREPARATION_TABLE,
+                  PRESERVATION_TABLE,
+                  MEASUREMENT_SCORE_TABLE,
+                  MEASUREMENT_TRAIT_TABLE,
+                  MEASUREMENT_TRIAL_TABLE,
+                  GERMPLASM_ACCESSION_TABLE,
+                  EXTENDED_MEASUREMENT_OR_FACT_TABLE,
+                  CHRONOMETRIC_AGE_TABLE,
+                  CHRONOMETRIC_DATE_TABLE,
+                  REFERENCES_TABLE,
+                  IDENTIFIER_TABLE));
+        }
       }
     }
 
@@ -92,75 +125,6 @@ public class PipelinesVariables {
 
       public static final String INDEX_TYPE = "record";
       public static final String GBIF_ID = "gbifId";
-    }
-
-    @NoArgsConstructor(access = AccessLevel.PRIVATE)
-    public static class HdfsView {
-
-      public static final String VIEW_OCCURRENCE_DIR = "occurrence";
-      public static final String VIEW_OCCURRENCE = "view_occurrence";
-
-      public static final String VIEW_MEASUREMENT_OR_FACT_DIR = "measurementorfacttable";
-      public static final String VIEW_MEASUREMENT_OR_FACT = "view_measurementorfact";
-
-      public static final String VIEW_IDENTIFICATION_DIR = "identificationtable";
-      public static final String VIEW_IDENTIFICATION = "view_identification";
-
-      public static final String VIEW_RESOURCE_RELATION_DIR = "resourcerelationtable";
-      public static final String VIEW_RESOURCE_RELATION = "view_resourcerelation";
-
-      public static final String VIEW_AMPLIFICATION_DIR = "amplificationtable";
-      public static final String VIEW_AMPLIFICATION = "view_amplification";
-
-      public static final String VIEW_CLONING_DIR = "cloningtable";
-      public static final String VIEW_CLONING = "view_cloning";
-
-      public static final String VIEW_GEL_IMAGE_DIR = "gelimagetable";
-      public static final String VIEW_GEL_IMAGE = "view_gelimage";
-
-      public static final String VIEW_LOAN_DIR = "loantable";
-      public static final String VIEW_LOAN = "view_loan";
-
-      public static final String VIEW_MATERIAL_SAMPLE_DIR = "materialsampletable";
-      public static final String VIEW_MATERIAL_SAMPLE = "view_materialsample";
-
-      public static final String VIEW_PERMIT_DIR = "permittable";
-      public static final String VIEW_PERMIT = "view_permit";
-
-      public static final String VIEW_PREPARATION_DIR = "preparationtable";
-      public static final String VIEW_PREPARATION = "view_preparation";
-
-      public static final String VIEW_PRESERVATION_DIR = "preservationtable";
-      public static final String VIEW_PRESERVATION = "view_preservation";
-
-      public static final String VIEW_MEASUREMENT_SCORE_DIR = "measurementscoretable";
-      public static final String VIEW_MEASUREMENT_SCORE = "view_measurementscore";
-
-      public static final String VIEW_MEASUREMENT_TRAIT_DIR = "measurementtraittable";
-      public static final String VIEW_MEASUREMENT_TRAIT = "view_measurementtrait";
-
-      public static final String VIEW_MEASUREMENT_TRIAL_DIR = "measurementtrialtable";
-      public static final String VIEW_MEASUREMENT_TRIAL = "view_measurementtrial";
-
-      public static final String VIEW_GERMPLASM_ACCESSION_DIR = "germplasmaccessiontable";
-      public static final String VIEW_GERMPLASM_ACCESSION = "view_germplasmaccession";
-
-      public static final String VIEW_EXTENDED_MEASUREMENT_OR_FACT_DIR =
-          "extendedmeasurementorfacttable";
-      public static final String VIEW_EXTENDED_MEASUREMENT_OR_FACT =
-          "view_extendedmeasurementorfact";
-
-      public static final String VIEW_CHRONOMETRIC_AGE_DIR = "chronometricagetable";
-      public static final String VIEW_CHRONOMETRIC_AGE = "view_chronometricage";
-
-      public static final String VIEW_CHRONOMETRIC_DATE_DIR = "chronometricdatetable";
-      public static final String VIEW_CHRONOMETRIC_DATE = "view_chronometricdate";
-
-      public static final String VIEW_REFERENCES_DIR = "referencestable";
-      public static final String VIEW_REFERENCES = "view_references";
-
-      public static final String VIEW_IDENTIFIER_DIR = "identifiertable";
-      public static final String VIEW_IDENTIFIER = "view_identifier";
     }
   }
 

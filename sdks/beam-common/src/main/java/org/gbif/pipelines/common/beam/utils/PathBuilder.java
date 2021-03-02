@@ -74,11 +74,11 @@ public class PathBuilder {
    * @return path to the directory where the occurrence hdfs view is stored
    */
   public static String buildFilePathViewUsingInputPath(
-      BasePipelineOptions options, RecordType type, String view, String uniqueId) {
+      BasePipelineOptions options, RecordType type, String uniqueId) {
     return buildPath(
             buildDatasetAttemptPath(options, DIRECTORY_NAME, true),
             type.name().toLowerCase(),
-            view + "_" + uniqueId)
+            uniqueId)
         .toString();
   }
 
