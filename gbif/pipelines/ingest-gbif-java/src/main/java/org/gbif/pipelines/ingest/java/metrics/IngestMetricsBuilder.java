@@ -1,6 +1,47 @@
 package org.gbif.pipelines.ingest.java.metrics;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Metrics.*;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AMPLIFICATION_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AUDUBON_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_HDFS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.BASIC_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.CHRONOMETRIC_AGE_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.CHRONOMETRIC_DATE_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.CLONING_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.DUPLICATE_GBIF_IDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.DUPLICATE_IDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.EXTENDED_MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.FILTER_ER_BASED_ON_GBIF_ID;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.GEL_IMAGE_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.GERMPLASM_ACCESSION_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.GRSCICOLL_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.IDENTICAL_GBIF_OBJECTS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.IDENTICAL_OBJECTS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.IDENTIFICATION_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.IDENTIFIER_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.IMAGE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.INVALID_GBIF_ID_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.LOAN_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.LOCATION_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MATERIAL_SAMPLE_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMENT_OR_FACT_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMENT_SCORE_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMENT_TRAIT_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMENT_TRIAL_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.METADATA_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MULTIMEDIA_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.OCCURRENCE_EXT_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.PERMIT_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.PREPARATION_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.PRESERVATION_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.REFERENCES_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.RESOURCE_RELATION_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.TAXON_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.TEMPORAL_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.UNIQUE_GBIF_IDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.UNIQUE_IDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.VERBATIM_RECORDS_COUNT;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -21,8 +62,27 @@ import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
+import org.gbif.pipelines.transforms.table.AmplificationTableTransform;
+import org.gbif.pipelines.transforms.table.ChronometricAgeTableTransform;
+import org.gbif.pipelines.transforms.table.ChronometricDateTableTransform;
+import org.gbif.pipelines.transforms.table.CloningTableTransform;
+import org.gbif.pipelines.transforms.table.ExtendedMeasurementOrFactTableTransform;
+import org.gbif.pipelines.transforms.table.GelImageTableTransform;
+import org.gbif.pipelines.transforms.table.GermplasmAccessionTableTransform;
+import org.gbif.pipelines.transforms.table.GermplasmMeasurementScoreTableTransform;
+import org.gbif.pipelines.transforms.table.GermplasmMeasurementTraitTableTransform;
+import org.gbif.pipelines.transforms.table.GermplasmMeasurementTrialTableTransform;
+import org.gbif.pipelines.transforms.table.IdentificationTableTransform;
+import org.gbif.pipelines.transforms.table.IdentifierTableTransform;
+import org.gbif.pipelines.transforms.table.LoanTableTransform;
+import org.gbif.pipelines.transforms.table.MaterialSampleTableTransform;
+import org.gbif.pipelines.transforms.table.MeasurementOrFactTableTransform;
 import org.gbif.pipelines.transforms.table.OccurrenceHdfsRecordTransform;
-import org.gbif.pipelines.transforms.table.TableTransform;
+import org.gbif.pipelines.transforms.table.PermitTableTransform;
+import org.gbif.pipelines.transforms.table.PreparationTableTransform;
+import org.gbif.pipelines.transforms.table.PreservationTableTransform;
+import org.gbif.pipelines.transforms.table.ReferenceTableTransform;
+import org.gbif.pipelines.transforms.table.ResourceRelationshipTableTransform;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class IngestMetricsBuilder {
@@ -67,25 +127,30 @@ public class IngestMetricsBuilder {
   public static IngestMetrics createInterpretedToHdfsViewMetrics() {
     return IngestMetrics.create()
         .addMetric(OccurrenceHdfsRecordTransform.class, AVRO_TO_HDFS_COUNT)
-        .addMetric(TableTransform.class, MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT)
-        .addMetric(TableTransform.class, IDENTIFICATION_TABLE_RECORDS_COUNT)
-        .addMetric(TableTransform.class, RESOURCE_RELATION_TABLE_RECORDS_COUNT)
-        .addMetric(TableTransform.class, AMPLIFICATION_TABLE_RECORDS_COUNT)
-        .addMetric(TableTransform.class, CLONING_TABLE_RECORDS_COUNT)
-        .addMetric(TableTransform.class, GEL_IMAGE_TABLE_RECORDS_COUNT)
-        .addMetric(TableTransform.class, LOAN_TABLE_RECORDS_COUNT)
-        .addMetric(TableTransform.class, MATERIAL_SAMPLE_TABLE_RECORDS_COUNT)
-        .addMetric(TableTransform.class, PERMIT_TABLE_RECORDS_COUNT)
-        .addMetric(TableTransform.class, PREPARATION_TABLE_RECORDS_COUNT)
-        .addMetric(TableTransform.class, PRESERVATION_TABLE_RECORDS_COUNT)
-        .addMetric(TableTransform.class, MEASUREMENT_SCORE_TABLE_RECORDS_COUNT)
-        .addMetric(TableTransform.class, MEASUREMENT_TRAIT_TABLE_RECORDS_COUNT)
-        .addMetric(TableTransform.class, MEASUREMENT_TRIAL_TABLE_RECORDS_COUNT)
-        .addMetric(TableTransform.class, GERMPLASM_ACCESSION_TABLE_RECORDS_COUNT)
-        .addMetric(TableTransform.class, EXTENDED_MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT)
-        .addMetric(TableTransform.class, CHRONOMETRIC_AGE_TABLE_RECORDS_COUNT)
-        .addMetric(TableTransform.class, CHRONOMETRIC_DATE_TABLE_RECORDS_COUNT)
-        .addMetric(TableTransform.class, REFERENCES_TABLE_RECORDS_COUNT)
-        .addMetric(TableTransform.class, IDENTIFIER_TABLE_RECORDS_COUNT);
+        .addMetric(MeasurementOrFactTableTransform.class, MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT)
+        .addMetric(IdentificationTableTransform.class, IDENTIFICATION_TABLE_RECORDS_COUNT)
+        .addMetric(ResourceRelationshipTableTransform.class, RESOURCE_RELATION_TABLE_RECORDS_COUNT)
+        .addMetric(AmplificationTableTransform.class, AMPLIFICATION_TABLE_RECORDS_COUNT)
+        .addMetric(CloningTableTransform.class, CLONING_TABLE_RECORDS_COUNT)
+        .addMetric(GelImageTableTransform.class, GEL_IMAGE_TABLE_RECORDS_COUNT)
+        .addMetric(LoanTableTransform.class, LOAN_TABLE_RECORDS_COUNT)
+        .addMetric(MaterialSampleTableTransform.class, MATERIAL_SAMPLE_TABLE_RECORDS_COUNT)
+        .addMetric(PermitTableTransform.class, PERMIT_TABLE_RECORDS_COUNT)
+        .addMetric(PreparationTableTransform.class, PREPARATION_TABLE_RECORDS_COUNT)
+        .addMetric(PreservationTableTransform.class, PRESERVATION_TABLE_RECORDS_COUNT)
+        .addMetric(
+            GermplasmMeasurementScoreTableTransform.class, MEASUREMENT_SCORE_TABLE_RECORDS_COUNT)
+        .addMetric(
+            GermplasmMeasurementTraitTableTransform.class, MEASUREMENT_TRAIT_TABLE_RECORDS_COUNT)
+        .addMetric(
+            GermplasmMeasurementTrialTableTransform.class, MEASUREMENT_TRIAL_TABLE_RECORDS_COUNT)
+        .addMetric(GermplasmAccessionTableTransform.class, GERMPLASM_ACCESSION_TABLE_RECORDS_COUNT)
+        .addMetric(
+            ExtendedMeasurementOrFactTableTransform.class,
+            EXTENDED_MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT)
+        .addMetric(ChronometricAgeTableTransform.class, CHRONOMETRIC_AGE_TABLE_RECORDS_COUNT)
+        .addMetric(ChronometricDateTableTransform.class, CHRONOMETRIC_DATE_TABLE_RECORDS_COUNT)
+        .addMetric(ReferenceTableTransform.class, REFERENCES_TABLE_RECORDS_COUNT)
+        .addMetric(IdentifierTableTransform.class, IDENTIFIER_TABLE_RECORDS_COUNT);
   }
 }

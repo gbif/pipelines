@@ -1,7 +1,5 @@
 package org.gbif.pipelines.transforms.table;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -16,7 +14,6 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.core.converters.MeasurementOrFactTableConverter;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.extension.MeasurementOrFactTable;
@@ -30,7 +27,7 @@ import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 @Category(NeedsRunner.class)
-public class TableTransformTest {
+public class MeasurementOrFactTableTransformTest {
 
   @Rule public final transient TestPipeline p = TestPipeline.create();
 
@@ -43,11 +40,8 @@ public class TableTransformTest {
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     BasicTransform basicTransform = BasicTransform.builder().create();
 
-    TableTransform<MeasurementOrFactTable> transform =
-        TableTransform.<MeasurementOrFactTable>builder()
-            .converterFn(MeasurementOrFactTableConverter::convert)
-            .clazz(MeasurementOrFactTable.class)
-            .counterName(MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT)
+    MeasurementOrFactTableTransform transform =
+        MeasurementOrFactTableTransform.builder()
             .extendedRecordTag(verbatimTransform.getTag())
             .basicRecordTag(basicTransform.getTag())
             .build();
@@ -96,11 +90,8 @@ public class TableTransformTest {
 
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     BasicTransform basicTransform = BasicTransform.builder().create();
-    TableTransform<MeasurementOrFactTable> transform =
-        TableTransform.<MeasurementOrFactTable>builder()
-            .converterFn(MeasurementOrFactTableConverter::convert)
-            .clazz(MeasurementOrFactTable.class)
-            .counterName(MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT)
+    MeasurementOrFactTableTransform transform =
+        MeasurementOrFactTableTransform.builder()
             .extendedRecordTag(verbatimTransform.getTag())
             .basicRecordTag(basicTransform.getTag())
             .build();

@@ -1,43 +1,39 @@
 package org.gbif.pipelines.transforms.table;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.GERMPLASM_ACCESSION_TABLE_RECORDS_COUNT;
+
 import java.io.Serializable;
-import java.util.Optional;
 import lombok.Builder;
 import lombok.NonNull;
-import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.transforms.SerializableBiFunction;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TupleTag;
 import org.gbif.pipelines.common.PipelinesVariables;
+import org.gbif.pipelines.core.converters.GermplasmAccessionTableConverter;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.extension.GermplasmAccessionTable;
 import org.gbif.pipelines.transforms.Transform;
 
 @SuppressWarnings("ConstantConditions")
 @Builder
-public class TableTransform<T extends SpecificRecordBase> implements Serializable {
+public class GermplasmAccessionTableTransform implements Serializable {
 
   @NonNull private final TupleTag<ExtendedRecord> extendedRecordTag;
   @NonNull private final TupleTag<BasicRecord> basicRecordTag;
 
-  @NonNull private final String counterName;
+  public ParDo.SingleOutput<KV<String, CoGbkResult>, GermplasmAccessionTable> converter() {
+    DoFn<KV<String, CoGbkResult>, GermplasmAccessionTable> fn =
+        new DoFn<KV<String, CoGbkResult>, GermplasmAccessionTable>() {
 
-  @NonNull private final Class<T> clazz;
-
-  @NonNull
-  private final SerializableBiFunction<BasicRecord, ExtendedRecord, Optional<T>> converterFn;
-
-  public ParDo.SingleOutput<KV<String, CoGbkResult>, T> converter() {
-    DoFn<KV<String, CoGbkResult>, T> fn =
-        new DoFn<KV<String, CoGbkResult>, T>() {
-
-          private final Counter counter = Metrics.counter(TableTransform.class, counterName);
+          private final Counter counter =
+              Metrics.counter(
+                  GermplasmAccessionTableTransform.class, GERMPLASM_ACCESSION_TABLE_RECORDS_COUNT);
 
           @ProcessElement
           public void processElement(ProcessContext c) {
@@ -49,8 +45,7 @@ public class TableTransform<T extends SpecificRecordBase> implements Serializabl
 
             BasicRecord br = v.getOnly(basicRecordTag, BasicRecord.newBuilder().setId(k).build());
 
-            converterFn
-                .apply(br, er)
+            GermplasmAccessionTableConverter.convert(br, er)
                 .ifPresent(
                     record -> {
                       c.output(record);
@@ -61,9 +56,9 @@ public class TableTransform<T extends SpecificRecordBase> implements Serializabl
     return ParDo.of(fn);
   }
 
-  public AvroIO.Write<T> write(String toPath, Integer numShards) {
-    AvroIO.Write<T> write =
-        AvroIO.write(clazz)
+  public AvroIO.Write<GermplasmAccessionTable> write(String toPath, Integer numShards) {
+    AvroIO.Write<GermplasmAccessionTable> write =
+        AvroIO.write(GermplasmAccessionTable.class)
             .to(toPath)
             .withSuffix(PipelinesVariables.Pipeline.AVRO_EXTENSION)
             .withCodec(Transform.getBaseCodec());
