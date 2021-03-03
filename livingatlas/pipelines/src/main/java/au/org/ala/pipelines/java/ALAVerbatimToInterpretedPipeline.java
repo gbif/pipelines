@@ -195,10 +195,7 @@ public class ALAVerbatimToInterpretedPipeline {
 
     // Extension
     MeasurementOrFactTransform measurementTransform =
-        MeasurementOrFactTransform.builder()
-            .orderings(dateComponentOrdering)
-            .create()
-            .counterFn(incMetricFn);
+        MeasurementOrFactTransform.builder().create().counterFn(incMetricFn);
 
     MultimediaTransform multimediaTransform =
         MultimediaTransform.builder()
@@ -256,7 +253,6 @@ public class ALAVerbatimToInterpretedPipeline {
     imageTransform.setup();
     audubonTransform.setup();
     multimediaTransform.setup();
-    measurementTransform.setup();
 
     log.info("Creating writers");
     try (SyncDataFileWriter<ExtendedRecord> verbatimWriter =

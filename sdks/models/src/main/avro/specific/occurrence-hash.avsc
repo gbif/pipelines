@@ -1,45 +1,4 @@
 [
-    {
-      "name":"OccurrenceFeatures",
-      "namespace":"org.gbif.pipelines.io.avro",
-      "type":"record",
-      "doc":"OccurrenceFeatures",
-      "fields":[
-        {"name": "hashKey", "type":  "string"},
-        {"name": "datasetKey", "type":  "string"},
-        {"name": "id", "type": "string"},
-        {"name": "speciesKey", "type": ["null", "string"], "default" : null },
-        {"name": "taxonKey", "type": ["null", "string"], "default" : null },
-        {"name": "basisOfRecord", "type": ["null", "string"], "default" : null },
-        {"name": "decimalLatitude", "type": ["null", "double"], "default" : null},
-        {"name": "decimalLongitude", "type": ["null", "double"], "default" : null},
-        {"name": "year", "type": ["null", "int"], "default" : null},
-        {"name": "month", "type": ["null", "int"], "default" : null},
-        {"name": "day", "type": ["null", "int"], "default" : null},
-        {"name": "eventDate", "type": ["null", "long"], "default" : null},
-        {"name": "scientificName", "type": ["null", "string"], "default" : null },
-        {"name": "countryCode", "type": ["null", "string"], "default" : null },
-        {"name": "typeStatus", "type": ["null", "string"], "default" : null },
-        {"name": "occurrenceID", "type": ["null", "string"], "default" : null },
-        {"name": "recordedBy", "type": ["null", "string"], "default" : null },
-        {"name": "fieldNumber", "type": ["null", "string"], "default" : null },
-        {"name": "recordNumber", "type": ["null", "string"], "default" : null },
-        {"name": "catalogNumber", "type": ["null", "string"], "default" : null },
-        {"name": "otherCatalogNumbers", "type": ["null", "string"], "default" : null },
-        {"name": "collectionCode", "type": ["null", "string"], "default" : null },
-        {"name": "institutionCode", "type": ["null", "string"], "default" : null }
-      ]
-    },
-    {
-      "name":"ClusteringCandidates",
-      "namespace":"org.gbif.pipelines.io.avro",
-      "type":"record",
-      "doc":"ConservationStatus",
-      "fields":[
-        {"name": "hashKey", "type": "string"},
-        {"name": "candidates", "type": {"type" : "array", "items" : "OccurrenceFeatures"}, "default" : []}
-      ]
-    },
      {
        "name":"Relationship",
        "namespace":"org.gbif.pipelines.io.avro",

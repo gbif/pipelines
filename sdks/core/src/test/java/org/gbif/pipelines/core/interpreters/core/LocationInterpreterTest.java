@@ -34,6 +34,7 @@ import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.gbif.rest.client.geocode.Location;
+import org.junit.Assert;
 import org.junit.Test;
 
 public class LocationInterpreterTest {
@@ -325,5 +326,72 @@ public class LocationInterpreterTest {
     assertNull(lr.getDepth());
     assertNotNull(lr.getElevation());
     assertTrue(lr.getIssues().getIssueList().isEmpty());
+  }
+
+  @Test
+  public void issueInvalidFootprintSRSTest() {
+
+    // State
+    ExtendedRecord source = ExtendedRecord.newBuilder().setId("1").build();
+    Map<String, String> coreMap = new HashMap<>();
+    coreMap.put(DwcTerm.footprintSRS.qualifiedName(), "invalid!");
+    source.setCoreTerms(coreMap);
+    LocationRecord result = LocationRecord.newBuilder().setId("1").build();
+
+    // When
+    LocationInterpreter.interpretFootprintWKT(source, result);
+
+    // Should
+    Assert.assertTrue(
+        result.getIssues().getIssueList().stream()
+            .anyMatch(issue -> issue.equals(OccurrenceIssue.FOOTPRINT_SRS_INVALID.name())));
+  }
+
+  @Test
+  public void issueInvalidFootprintWKTTest() {
+
+    // State
+    ExtendedRecord source = ExtendedRecord.newBuilder().setId("1").build();
+    Map<String, String> coreMap = new HashMap<>();
+    coreMap.put(DwcTerm.footprintSRS.qualifiedName(), "EPSG:28992");
+    coreMap.put(DwcTerm.footprintWKT.qualifiedName(), "POLYGON((0 0, 0 10, 10 10, 10 0))");
+    source.setCoreTerms(coreMap);
+    LocationRecord result = LocationRecord.newBuilder().setId("1").build();
+
+    // When
+    LocationInterpreter.interpretFootprintWKT(source, result);
+
+    // Should
+    Assert.assertTrue(
+        result.getIssues().getIssueList().stream()
+            .anyMatch(issue -> issue.equals(OccurrenceIssue.FOOTPRINT_WKT_INVALID.name())));
+  }
+
+  @Test
+  public void footprintWKTTest() {
+
+    // State
+    ExtendedRecord source = ExtendedRecord.newBuilder().setId("1").build();
+    Map<String, String> coreMap = new HashMap<>();
+    coreMap.put(DwcTerm.footprintSRS.qualifiedName(), "EPSG:28992");
+    coreMap.put(
+        DwcTerm.footprintWKT.qualifiedName(),
+        "POLYGON((100000 515000,100000 520000,105000 520000,105000 515000,100000 515000))");
+    source.setCoreTerms(coreMap);
+    LocationRecord result = LocationRecord.newBuilder().setId("1").build();
+
+    // Value projected in WGS84
+    LocationRecord expected =
+        LocationRecord.newBuilder()
+            .setId("1")
+            .setFootprintWKT(
+                "POLYGON ((52.619749292808244 4.575033022857827, 52.66468072273538 4.574203170903047, 52.665162889286556 4.648106265726084, 52.6202308261076 4.648860682668263, 52.619749292808244 4.575033022857827))")
+            .build();
+
+    // When
+    LocationInterpreter.interpretFootprintWKT(source, result);
+
+    // Should
+    assertEquals(expected, result);
   }
 }

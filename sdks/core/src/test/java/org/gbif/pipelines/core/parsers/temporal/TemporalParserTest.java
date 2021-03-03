@@ -7,6 +7,7 @@ import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.core.OccurrenceParseResult;
@@ -218,7 +219,7 @@ public class TemporalParserTest {
     assertEquals(0, result.getIssues().size());
 
     result = TemporalParser.create().parseRecordedDate("1984", "05", "02", "1984-05-02T19:34");
-    assertResult(LocalDateTime.of(1984, 5, 2, 19, 34, 00), result);
+    assertResult(LocalDateTime.of(1984, 5, 2, 19, 34, 0), result);
     assertEquals(0, result.getIssues().size());
   }
 
@@ -297,7 +298,7 @@ public class TemporalParserTest {
     // until
     // we refactor to inject a Calendar or we move to new Java 8 Date/Time API
     try {
-      Thread.sleep(1000);
+      TimeUnit.MILLISECONDS.sleep(1_000);
     } catch (InterruptedException e) {
       fail(e.getMessage());
     }
@@ -316,10 +317,10 @@ public class TemporalParserTest {
     assertResult(Year.of(1999), temporalParser.parseRecordedDate(null, null, null, "1999"));
     assertResult(Year.of(1999), temporalParser.parseRecordedDate(null, null, null, "1999/2000"));
     assertResult(
-        YearMonth.of(1999, 01),
+        YearMonth.of(1999, 1),
         temporalParser.parseRecordedDate(null, null, null, "1999-01/1999-12"));
     assertResult(
-        ZonedDateTime.of(LocalDateTime.of(2004, 12, 30, 00, 00, 00, 00), ZoneOffset.UTC),
+        ZonedDateTime.of(LocalDateTime.of(2004, 12, 30, 0, 0, 0, 0), ZoneOffset.UTC),
         temporalParser.parseRecordedDate(
             null, null, null, "2004-12-30T00:00:00+0000/2005-03-13T24:00:00+0000"));
   }

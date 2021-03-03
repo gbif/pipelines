@@ -102,7 +102,7 @@ public class TestUtils {
               }
 
               String datasetID =
-                  request.getPath().substring(request.getPath().lastIndexOf("/") + 1);
+                  request.getPath().substring(request.getPath().lastIndexOf('/') + 1);
               // read src
               File absolutePath = new File("src/test/resources/collectory/" + datasetID + ".json");
 

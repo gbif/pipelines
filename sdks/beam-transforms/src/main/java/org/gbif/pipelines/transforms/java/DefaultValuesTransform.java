@@ -24,8 +24,9 @@ public class DefaultValuesTransform {
             .create();
   }
 
-  public void setup() {
+  public DefaultValuesTransform init() {
     transform.setup();
+    return this;
   }
 
   public void replaceDefaultValues(Map<String, ExtendedRecord> source) {

@@ -1,5 +1,6 @@
 package org.gbif.pipelines.hbase.pipelines;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.beam.sdk.io.FileIO.Write.defaultNaming;
 
 import lombok.AccessLevel;
@@ -56,7 +57,7 @@ public class ExportHBasePipeline {
 
     Scan scan = new Scan();
     scan.setBatch(options.getBatchSize()); // for safety
-    scan.addFamily("o".getBytes());
+    scan.addFamily("o".getBytes(UTF_8));
 
     PCollection<Result> rows =
         p.apply(

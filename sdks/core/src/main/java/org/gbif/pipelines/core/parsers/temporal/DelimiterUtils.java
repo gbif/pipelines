@@ -58,7 +58,7 @@ public class DelimiterUtils {
       String[] periods = src.split(CHAR_PERIOD);
       String from = periods[0];
       String to = periods[1];
-      String ym = from.substring(0, from.lastIndexOf("-")); // Get YM
+      String ym = from.substring(0, from.lastIndexOf('-')); // Get YM
       to = ym + "-" + to;
       return new String[] {from, to};
     } else if (src.matches(ISO_YMD_MD_RANGE)) {
@@ -66,7 +66,7 @@ public class DelimiterUtils {
       String[] periods = src.split(CHAR_PERIOD);
       String from = periods[0];
       String to = periods[1];
-      String y = from.substring(0, from.indexOf("-")); // Get Y
+      String y = from.substring(0, from.indexOf('-')); // Get Y
       to = y + "-" + to;
       return new String[] {from, to};
     }

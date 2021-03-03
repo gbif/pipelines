@@ -4,15 +4,15 @@ import com.google.common.base.Strings;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import org.gbif.pipelines.io.avro.*;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class SpeciesListUtils {
 
   /**
    * Creates a reusable template (Builder) for a TaxonProfile based on the supplied species lists.
-   *
-   * @param speciesLists
-   * @return
    */
   public static TaxonProfile.Builder createTaxonProfileBuilder(
       Iterable<SpeciesListRecord> speciesLists,

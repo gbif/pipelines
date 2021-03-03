@@ -66,6 +66,12 @@ public class TaxonomyTransform extends Transform<ExtendedRecord, TaxonRecord> {
     }
   }
 
+  /** Beam @Setup can be applied only to void method */
+  public TaxonomyTransform init() {
+    setup();
+    return this;
+  }
+
   /** Beam @Teardown closes initialized resources */
   @Teardown
   public void tearDown() {
@@ -81,15 +87,11 @@ public class TaxonomyTransform extends Transform<ExtendedRecord, TaxonRecord> {
 
   @Override
   public Optional<TaxonRecord> convert(ExtendedRecord source) {
-    TaxonRecord tr = TaxonRecord.newBuilder().setCreated(Instant.now().toEpochMilli()).build();
-
-    Interpretation.from(source)
-        .to(tr)
+    return Interpretation.from(source)
+        .to(TaxonRecord.newBuilder().setCreated(Instant.now().toEpochMilli()).build())
         .when(er -> !er.getCoreTerms().isEmpty())
-        .via(TaxonomyInterpreter.taxonomyInterpreter(kvStore));
-
-    // the id is null when there is an error in the interpretation. In these
-    // cases we do not write the taxonRecord because it is totally empty.
-    return tr.getId() == null ? Optional.empty() : Optional.of(tr);
+        .via(TaxonomyInterpreter.taxonomyInterpreter(kvStore))
+        .skipWhen(tr -> tr.getId() == null)
+        .getOfNullable();
   }
 }

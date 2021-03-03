@@ -23,6 +23,7 @@ import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
+import org.gbif.pipelines.core.functions.SerializableConsumer;
 import org.gbif.pipelines.core.functions.SerializableFunction;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.core.interpreters.Interpretation;
@@ -122,6 +123,12 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
     }
   }
 
+  /** Beam @Setup can be applied only to void method */
+  public LocationTransform init() {
+    setup();
+    return this;
+  }
+
   /** Beam @Teardown closes initialized resources */
   @Teardown
   public void tearDown() {
@@ -152,6 +159,11 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
   @ProcessElement
   public void processElement(ProcessContext c) {
     processElement(c.element(), c.sideInput(metadataView)).ifPresent(c::output);
+  }
+
+  public LocationTransform counterFn(SerializableConsumer<String> counterFn) {
+    setCounterFn(counterFn);
+    return this;
   }
 
   public Optional<LocationRecord> processElement(ExtendedRecord source, MetadataRecord mdr) {

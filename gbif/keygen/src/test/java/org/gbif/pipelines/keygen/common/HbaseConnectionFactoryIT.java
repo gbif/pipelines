@@ -6,16 +6,8 @@ import java.util.function.Supplier;
 import org.apache.hadoop.hbase.client.Connection;
 import org.junit.Assert;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
-@RunWith(Parameterized.class)
 public class HbaseConnectionFactoryIT {
-
-  @Parameterized.Parameters
-  public static Object[][] data() {
-    return new Object[3][0];
-  }
 
   private final Supplier<CompletableFuture<Connection>> connectionAsyncSupplier =
       () -> CompletableFuture.supplyAsync(HbaseConnectionFactory.getInstance()::getConnection);

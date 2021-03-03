@@ -11,11 +11,9 @@ import org.gbif.common.messaging.config.MessagingConfiguration;
 @ToString
 public class StepConfiguration {
 
-  @ParametersDelegate @Valid @NotNull
-  public ZooKeeperConfiguration zooKeeper = new ZooKeeperConfiguration();
+  @ParametersDelegate @Valid public ZooKeeperConfiguration zooKeeper = new ZooKeeperConfiguration();
 
-  @ParametersDelegate @NotNull @Valid
-  public RegistryConfiguration registry = new RegistryConfiguration();
+  @ParametersDelegate @Valid public RegistryConfiguration registry = new RegistryConfiguration();
 
   @ParametersDelegate @Valid @NotNull
   public MessagingConfiguration messaging = new MessagingConfiguration();

@@ -3,7 +3,6 @@ package org.gbif.pipelines.common.configs;
 import com.beust.jcommander.Parameter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
 import lombok.ToString;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
@@ -21,13 +20,11 @@ public class ZooKeeperConfiguration {
   @Parameter(
       names = "--zk-connection-string",
       description = "The connection string to connect to ZooKeeper")
-  @NotNull
   public String connectionString;
 
   @Parameter(
       names = "--zk-namespace",
       description = "The namespace in ZooKeeper under which all data lives")
-  @NotNull
   public String namespace;
 
   @Parameter(

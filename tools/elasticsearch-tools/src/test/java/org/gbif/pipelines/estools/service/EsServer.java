@@ -10,6 +10,7 @@ import org.gbif.pipelines.estools.client.EsClient;
 import org.gbif.pipelines.estools.client.EsConfig;
 import org.junit.rules.ExternalResource;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
+import org.testcontainers.utility.DockerImageName;
 
 /**
  * ES server used for testing purposes.
@@ -29,7 +30,9 @@ public class EsServer extends ExternalResource {
   protected void before() throws Throwable {
     embeddedElastic =
         new ElasticsearchContainer(
-            "docker.elastic.co/elasticsearch/elasticsearch:" + getEsVersion());
+                DockerImageName.parse("docker.elastic.co/elasticsearch/elasticsearch-oss")
+                    .withTag(getEsVersion()))
+            .withReuse(true);
 
     embeddedElastic.start();
 

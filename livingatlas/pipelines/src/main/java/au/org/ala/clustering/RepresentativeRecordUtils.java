@@ -1,7 +1,7 @@
 package au.org.ala.clustering;
 
 import java.util.*;
-import org.gbif.pipelines.io.avro.OccurrenceFeatures;
+import org.gbif.pipelines.core.parsers.clustering.OccurrenceFeatures;
 
 public class RepresentativeRecordUtils {
 
@@ -14,10 +14,10 @@ public class RepresentativeRecordUtils {
    * @param cluster
    * @return OccurrenceFeatures considered the representative record.
    */
-  public static OccurrenceFeatures findRepresentativeRecord(List<OccurrenceFeatures> cluster) {
+  public static HashKeyOccurrence findRepresentativeRecord(List<HashKeyOccurrence> cluster) {
 
     // get highest resolution coordinates
-    List<OccurrenceFeatures> highestRanking = rankCoordPrecision(cluster);
+    List<HashKeyOccurrence> highestRanking = rankCoordPrecision(cluster);
     if (highestRanking.size() == 1) {
       return highestRanking.get(0);
     }
@@ -35,28 +35,28 @@ public class RepresentativeRecordUtils {
     return pickRepresentative(highestRanking);
   }
 
-  public static OccurrenceFeatures pickRepresentative(List<OccurrenceFeatures> cluster) {
+  public static HashKeyOccurrence pickRepresentative(List<HashKeyOccurrence> cluster) {
     cluster.sort(
-        new Comparator<OccurrenceFeatures>() {
+        new Comparator<HashKeyOccurrence>() {
           @Override
-          public int compare(OccurrenceFeatures o1, OccurrenceFeatures o2) {
+          public int compare(HashKeyOccurrence o1, HashKeyOccurrence o2) {
             return o1.getId().compareTo(o2.getId());
           }
         });
     return cluster.get(0);
   }
 
-  public static List<OccurrenceFeatures> rankDatePrecision(List<OccurrenceFeatures> cluster) {
+  public static List<HashKeyOccurrence> rankDatePrecision(List<HashKeyOccurrence> cluster) {
 
-    Iterator<OccurrenceFeatures> iter = cluster.iterator();
-    OccurrenceFeatures occurrenceFeatures = iter.next();
+    Iterator<HashKeyOccurrence> iter = cluster.iterator();
+    HashKeyOccurrence occurrenceFeatures = iter.next();
     Integer highestPrecision = determineDatePrecision(occurrenceFeatures);
-    List<OccurrenceFeatures> highestRanking = new ArrayList<>();
+    List<HashKeyOccurrence> highestRanking = new ArrayList<>();
     highestRanking.add(occurrenceFeatures);
 
     while (iter.hasNext()) {
 
-      OccurrenceFeatures occurrenceFeatures1 = iter.next();
+      HashKeyOccurrence occurrenceFeatures1 = iter.next();
       Integer precision = determineDatePrecision(occurrenceFeatures1);
       if (precision == highestPrecision) {
         highestRanking.add(occurrenceFeatures1);
@@ -78,17 +78,17 @@ public class RepresentativeRecordUtils {
    * @param cluster
    * @return
    */
-  public static List<OccurrenceFeatures> rankCoordPrecision(List<OccurrenceFeatures> cluster) {
+  public static List<HashKeyOccurrence> rankCoordPrecision(List<HashKeyOccurrence> cluster) {
 
-    Iterator<OccurrenceFeatures> iter = cluster.iterator();
-    OccurrenceFeatures occurrenceFeatures = iter.next();
+    Iterator<HashKeyOccurrence> iter = cluster.iterator();
+    HashKeyOccurrence occurrenceFeatures = iter.next();
     Integer highestPrecision = determineCoordPrecision(occurrenceFeatures);
-    List<OccurrenceFeatures> highestRanking = new ArrayList<>();
+    List<HashKeyOccurrence> highestRanking = new ArrayList<>();
     highestRanking.add(occurrenceFeatures);
 
     while (iter.hasNext()) {
 
-      OccurrenceFeatures occurrenceFeatures1 = iter.next();
+      HashKeyOccurrence occurrenceFeatures1 = iter.next();
       Integer precision = determineCoordPrecision(occurrenceFeatures1);
       if (precision == highestPrecision) {
         highestRanking.add(occurrenceFeatures1);
@@ -157,15 +157,15 @@ public class RepresentativeRecordUtils {
     return datePrecision;
   }
 
-  public static List<List<OccurrenceFeatures>> createClusters(List<ClusterPair> pairs) {
+  public static List<List<HashKeyOccurrence>> createClusters(List<ClusterPair> pairs) {
 
-    List<List<OccurrenceFeatures>> clusters = new ArrayList<>();
+    List<List<HashKeyOccurrence>> clusters = new ArrayList<>();
 
     for (ClusterPair pair : pairs) {
       boolean added = false;
 
       // iterate through each cluster
-      for (List<OccurrenceFeatures> cluster : clusters) {
+      for (List<HashKeyOccurrence> cluster : clusters) {
         boolean present = cluster.contains(pair.getO1()) || cluster.contains(pair.getO2());
         if (present) {
           added = true;
@@ -176,7 +176,7 @@ public class RepresentativeRecordUtils {
 
       if (!added) {
         // create a cluster
-        List<OccurrenceFeatures> newCluster = new ArrayList<>();
+        List<HashKeyOccurrence> newCluster = new ArrayList<>();
         newCluster.add(pair.getO1());
         newCluster.add(pair.getO2());
         clusters.add(newCluster);
