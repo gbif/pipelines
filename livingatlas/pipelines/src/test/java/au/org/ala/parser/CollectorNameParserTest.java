@@ -6,7 +6,7 @@ import static org.junit.Assert.assertEquals;
 import au.org.ala.pipelines.parser.CollectorNameParser;
 import org.junit.Test;
 
-public class ColloctorNameParserTest {
+public class CollectorNameParserTest {
 
   @Test
   public void numericTest() {
@@ -14,10 +14,17 @@ public class ColloctorNameParserTest {
   }
 
   @Test
+  public void nina() {
+    assertEquals("Filippova, Nina", CollectorNameParser.parse("Nina Filippova"));
+    assertEquals("Filippova, Nina", CollectorNameParser.parse("Filippova, Nina"));
+  }
+
+  @Test
   public void singleNameTest() {
     assertEquals(
         "Hegedus, Alexandra Danica", CollectorNameParser.parse("Hegedus, Ms Alexandra Danica"));
     assertEquals("Field, P. Ross", CollectorNameParser.parse("Field, Ross P."));
+    assertEquals("Field, P. Ross", CollectorNameParser.parse("Field, P. Ross"));
     assertEquals("van Leeuwen, S.", CollectorNameParser.parse("van Leeuwen, S."));
     assertEquals("Starr, Simon", CollectorNameParser.parse("Simon Starr"));
     assertEquals("Kaspiew, B.", CollectorNameParser.parse("B Kaspiew (Professor)"));
