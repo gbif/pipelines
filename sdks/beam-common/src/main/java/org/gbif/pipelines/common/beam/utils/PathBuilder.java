@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.Path;
 import org.gbif.pipelines.common.PipelinesVariables;
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.beam.options.BasePipelineOptions;
 
 @Slf4j
@@ -74,11 +73,9 @@ public class PathBuilder {
    * @return path to the directory where the occurrence hdfs view is stored
    */
   public static String buildFilePathViewUsingInputPath(
-      BasePipelineOptions options, RecordType type, String uniqueId) {
+      BasePipelineOptions options, String type, String uniqueId) {
     return buildPath(
-            buildDatasetAttemptPath(options, DIRECTORY_NAME, true),
-            type.name().toLowerCase(),
-            uniqueId)
+            buildDatasetAttemptPath(options, DIRECTORY_NAME, true), type.toLowerCase(), uniqueId)
         .toString();
   }
 

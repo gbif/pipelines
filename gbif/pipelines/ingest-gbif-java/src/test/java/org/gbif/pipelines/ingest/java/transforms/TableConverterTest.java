@@ -14,7 +14,7 @@ import org.gbif.pipelines.core.converters.MeasurementOrFactTableConverter;
 import org.gbif.pipelines.ingest.java.metrics.IngestMetricsBuilder;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.MeasurementOrFactTable;
+import org.gbif.pipelines.io.avro.extension.MeasurementOrFactTable;
 import org.junit.Assert;
 import org.junit.Test;
 

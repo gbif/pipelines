@@ -6,6 +6,7 @@ import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateExceptionHandler;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.StringReader;
 import java.io.Writer;
@@ -13,16 +14,18 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.digester.ThesaurusHandlingRule;
-import org.gbif.dwc.extensions.Extension;
 import org.gbif.dwc.extensions.ExtensionFactory;
 import org.gbif.dwc.extensions.VocabulariesManager;
 import org.gbif.dwc.extensions.Vocabulary;
@@ -34,9 +37,6 @@ public class ExtensionConverterGeneratorMojo extends AbstractMojo {
 
   private static final String POSTFIX_CLASS_NAME = "Converter.java";
 
-  @Parameter(property = "extensiongeneration.extensions")
-  private List<String> extensions;
-
   @Parameter(property = "extensiongeneration.pathToWrite")
   private String pathToWrite;
 
@@ -45,6 +45,9 @@ public class ExtensionConverterGeneratorMojo extends AbstractMojo {
 
   @Parameter(property = "extensiongeneration.avroNamespace")
   private String avroNamespace;
+
+  @Parameter(property = "extensiongeneration.extensionPackage", defaultValue = "extension")
+  private String extensionPackage;
 
   @Override
   public void execute() throws MojoExecutionException {
@@ -55,43 +58,28 @@ public class ExtensionConverterGeneratorMojo extends AbstractMojo {
       Files.createDirectories(Paths.get(finalPath));
       Configuration cfg = createConfig();
 
-      for (String extension : extensions) {
+      Map<Extension, String> extensions = Extension.availableExtensionResources();
+      extensions.remove(org.gbif.api.vocabulary.Extension.AUDUBON);
+      extensions.remove(org.gbif.api.vocabulary.Extension.IMAGE);
+      extensions.remove(org.gbif.api.vocabulary.Extension.MULTIMEDIA);
 
-        String[] ext = extension.split(",");
+      for (Entry<Extension, String> extension : extensions.entrySet()) {
+        try {
+          URL url = new URL(extension.getValue());
+          String name = normalizeClassNmae(extension.getKey().name());
 
-        URL url = new URL(ext[1]);
-        String name = ext[0];
-
-        Path classPath = Paths.get(finalPath, name + POSTFIX_CLASS_NAME);
-        if (!Files.exists(classPath)) {
-          Extension dwcExt = getExtension(url);
-
-          List<Setter> setters =
-              dwcExt.getProperties().stream()
-                  .map(e -> new Setter(e.getQualname(), normalizeName(e.getName())))
-                  .collect(Collectors.toList());
-
-          ExtensionPojo extPojo =
-              new ExtensionPojo(
-                  name, avroNamespace, packagePath, dwcExt.getRowType().qualifiedName(), setters);
-
-          Template temp =
-              new Template("table-converter", new StringReader(Templates.TABLE_CONVERTER), cfg);
-
-          Writer out = new OutputStreamWriter(new FileOutputStream(classPath.toFile()));
-          temp.process(extPojo, out);
-
-          getLog().info("DWC extension java converter class is generated - " + classPath);
+          Path classPath = Paths.get(finalPath, name + POSTFIX_CLASS_NAME);
+          if (!Files.exists(classPath)) {
+            createAndWrite(name, url, classPath, cfg);
+          }
+        } catch (Exception ex) {
+          getLog().warn(ex.getMessage());
         }
       }
 
-    } catch (Exception ex) {
+    } catch (IOException ex) {
       throw new MojoExecutionException(ex.getMessage());
     }
-  }
-
-  public void setExtensions(List<String> extensions) {
-    this.extensions = extensions;
   }
 
   public void setPathToWrite(String pathToWrite) {
@@ -105,6 +93,35 @@ public class ExtensionConverterGeneratorMojo extends AbstractMojo {
   public void setPackagePath(String packagePath) {
     this.packagePath = packagePath;
   }
+
+  /** Create a java class file using Freemarker template */
+  private void createAndWrite(String name, URL url, Path classPath, Configuration cfg)
+      throws Exception {
+    org.gbif.dwc.extensions.Extension dwcExt = getExtension(url);
+
+    List<Setter> setters =
+        dwcExt.getProperties().stream()
+            .map(e -> new Setter(e.getQualname(), normalizeName(e.getName())))
+            .collect(Collectors.toList());
+
+    ExtensionPojo extPojo =
+        new ExtensionPojo(
+            name,
+            avroNamespace,
+            packagePath,
+            dwcExt.getRowType().qualifiedName(),
+            setters,
+            extensionPackage);
+
+    Template temp =
+        new Template("table-converter", new StringReader(Templates.TABLE_CONVERTER), cfg);
+
+    Writer out = new OutputStreamWriter(new FileOutputStream(classPath.toFile()));
+    temp.process(extPojo, out);
+
+    getLog().info("DWC extension java converter class is generated - " + classPath);
+  }
+
   /** Create Freemarker config */
   private Configuration createConfig() {
     Configuration cfg = new Configuration(Configuration.VERSION_2_3_31);
@@ -117,8 +134,16 @@ public class ExtensionConverterGeneratorMojo extends AbstractMojo {
     return cfg;
   }
 
+  private String normalizeClassNmae(String name) {
+    return Arrays.stream(name.split("_"))
+            .map(String::toLowerCase)
+            .map(x -> x.substring(0, 1).toUpperCase() + x.substring(1))
+            .collect(Collectors.joining())
+        + "Table";
+  }
+
   /** Read DWC extension from URL */
-  private Extension getExtension(URL url) throws Exception {
+  private org.gbif.dwc.extensions.Extension getExtension(URL url) throws Exception {
     ThesaurusHandlingRule thr = new ThesaurusHandlingRule(new EmptyVocabulariesManager());
     ExtensionFactory factory = new ExtensionFactory(thr, SAXUtils.getNsAwareSaxParserFactory());
     return factory.build(url.openStream(), url, false);
@@ -126,8 +151,7 @@ public class ExtensionConverterGeneratorMojo extends AbstractMojo {
 
   /** Normalize name and retun result like - Normalizename */
   protected String normalizeName(String name) {
-    String replace =
-        name.toLowerCase().trim().replaceAll("-", "").replaceAll("_", "").replace("class", "clazz");
+    String replace = name.toLowerCase().trim().replaceAll("-", "").replaceAll("_", "");
     return replace.substring(0, 1).toUpperCase() + replace.substring(1);
   }
 

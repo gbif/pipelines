@@ -37,29 +37,7 @@
             </goals>
             <configuration>
               <pathToWrite>${schema-generated-path}</pathToWrite>
-              <namespace>${namespace}</namespace>
-              <extensions>
-                <extension>${ext.measurementorfact}</extension>
-                <extension>${ext.identification}</extension>
-                <extension>${ext.resourcerelation}</extension>
-                <extension>${ext.amplification}</extension>
-                <extension>${ext.cloning}</extension>
-                <extension>${ext.gelimage}</extension>
-                <extension>${ext.loan}</extension>
-                <extension>${ext.materialsample}</extension>
-                <extension>${ext.permit}</extension>
-                <extension>${ext.preparation}</extension>
-                <extension>${ext.preservation}</extension>
-                <extension>${ext.measurementscore}</extension>
-                <extension>${ext.measurementtrait}</extension>
-                <extension>${ext.measurementtrial}</extension>
-                <extension>${ext.germplasmaccession}</extension>
-                <extension>${ext.extendedmeasurementorfact}</extension>
-                <extension>${ext.chronometricage}</extension>
-                <extension>${ext.chronometricdate}</extension>
-                <extension>${ext.references}</extension>
-                <extension>${ext.identifier}</extension>
-              </extensions>
+              <namespace>${namespace}.extension</namespace>
             </configuration>
           </execution>
         </executions>

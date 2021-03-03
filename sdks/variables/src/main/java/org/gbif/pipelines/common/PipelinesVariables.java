@@ -22,6 +22,8 @@ public class PipelinesVariables {
     public static final String INTERPRETED_TO_HDFS = "interpreted-to-hdfs";
     public static final String FRAGMENTER = "fragmenter";
 
+    public static final String OCCURRENCE = "occurrence";
+
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static class Conversion {
 
@@ -61,10 +63,10 @@ public class PipelinesVariables {
         // Specific
         LOCATION_FEATURE,
         // Tables,
-        OCCURRENCE_TABLE,
+        OCCURRENCE,
         MEASUREMENT_OR_FACT_TABLE,
         IDENTIFICATION_TABLE,
-        RESOURCE_RELATION_TABLE,
+        RESOURCE_RELATIONSHIP_TABLE,
         AMPLIFICATION_TABLE,
         CLONING_TABLE,
         GEL_IMAGE_TABLE,
@@ -73,14 +75,14 @@ public class PipelinesVariables {
         PERMIT_TABLE,
         PREPARATION_TABLE,
         PRESERVATION_TABLE,
-        MEASUREMENT_SCORE_TABLE,
-        MEASUREMENT_TRAIT_TABLE,
-        MEASUREMENT_TRIAL_TABLE,
+        GERMPLASM_MEASUREMENT_SCORE_TABLE,
+        GERMPLASM_MEASUREMENT_TRAIT_TABLE,
+        GERMPLASM_MEASUREMENT_TRIAL_TABLE,
         GERMPLASM_ACCESSION_TABLE,
         EXTENDED_MEASUREMENT_OR_FACT_TABLE,
         CHRONOMETRIC_AGE_TABLE,
         CHRONOMETRIC_DATE_TABLE,
-        REFERENCES_TABLE,
+        REFERENCE_TABLE,
         IDENTIFIER_TABLE;
 
         @Override
@@ -88,17 +90,13 @@ public class PipelinesVariables {
           return ALL.name();
         }
 
-        public String getPathName() {
-          return this.name().replaceAll("_", "").toLowerCase();
-        }
-
         public static Set<RecordType> getAllTables() {
           return new HashSet<>(
               Arrays.asList(
-                  OCCURRENCE_TABLE,
+                  OCCURRENCE,
                   MEASUREMENT_OR_FACT_TABLE,
                   IDENTIFICATION_TABLE,
-                  RESOURCE_RELATION_TABLE,
+                  RESOURCE_RELATIONSHIP_TABLE,
                   AMPLIFICATION_TABLE,
                   CLONING_TABLE,
                   GEL_IMAGE_TABLE,
@@ -107,14 +105,14 @@ public class PipelinesVariables {
                   PERMIT_TABLE,
                   PREPARATION_TABLE,
                   PRESERVATION_TABLE,
-                  MEASUREMENT_SCORE_TABLE,
-                  MEASUREMENT_TRAIT_TABLE,
-                  MEASUREMENT_TRIAL_TABLE,
+                  GERMPLASM_MEASUREMENT_SCORE_TABLE,
+                  GERMPLASM_MEASUREMENT_TRAIT_TABLE,
+                  GERMPLASM_MEASUREMENT_TRIAL_TABLE,
                   GERMPLASM_ACCESSION_TABLE,
                   EXTENDED_MEASUREMENT_OR_FACT_TABLE,
                   CHRONOMETRIC_AGE_TABLE,
                   CHRONOMETRIC_DATE_TABLE,
-                  REFERENCES_TABLE,
+                  REFERENCE_TABLE,
                   IDENTIFIER_TABLE));
         }
       }

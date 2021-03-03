@@ -9,7 +9,7 @@ import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.MeasurementOrFactTable;
+import org.gbif.pipelines.io.avro.extension.MeasurementOrFactTable;
 import org.junit.Assert;
 import org.junit.Test;
 

@@ -77,7 +77,7 @@
     <!-- GBIF libraries -->
     <gbif-parsers.version>0.53</gbif-parsers.version>
     <dwca-io.version>2.8</dwca-io.version>
-    <gbif-api.version>0.140</gbif-api.version>
+    <gbif-api.version>0.141-SNAPSHOT</gbif-api.version>
     <gbif-common.version>0.47</gbif-common.version>
     <dwc-api.version>1.32</dwc-api.version>
     <kvs.version>1.17</kvs.version>
@@ -177,26 +177,6 @@
 
     <!-- Extensions and AVRO-->
     <namespace>org.gbif.pipelines.io.avro</namespace>
-    <ext.measurementorfact>MeasurementOrFactTable,https://rs.gbif.org/extension/dwc/measurements_or_facts.xml</ext.measurementorfact>
-    <ext.identification>IdentificationTable,https://rs.gbif.org/extension/dwc/identification.xml</ext.identification>
-    <ext.resourcerelation>ResourceRelationTable,https://rs.gbif.org/extension/dwc/resource_relation.xml</ext.resourcerelation>
-    <ext.amplification>AmplificationTable,https://rs.gbif.org/extension/ggbn/amplification.xml</ext.amplification>
-    <ext.cloning>CloningTable,https://rs.gbif.org/extension/ggbn/cloning.xml</ext.cloning>
-    <ext.gelimage>GelImageTable,https://rs.gbif.org/extension/ggbn/gelimage.xml</ext.gelimage>
-    <ext.loan>LoanTable,https://rs.gbif.org/extension/ggbn/loan.xml</ext.loan>
-    <ext.materialsample>MaterialSampleTable,https://rs.gbif.org/extension/ggbn/materialsample.xml</ext.materialsample>
-    <ext.permit>PermitTable,https://rs.gbif.org/extension/ggbn/permit.xml</ext.permit>
-    <ext.preparation>PreparationTable,https://rs.gbif.org/extension/ggbn/preparation.xml</ext.preparation>
-    <ext.preservation>PreservationTable,https://rs.gbif.org/extension/ggbn/preservation.xml</ext.preservation>
-    <ext.measurementscore>MeasurementScoreTable,https://rs.gbif.org/extension/germplasm/MeasurementScore.xml</ext.measurementscore>
-    <ext.measurementtrait>MeasurementTraitTable,https://rs.gbif.org/extension/germplasm/MeasurementTrait.xml</ext.measurementtrait>
-    <ext.measurementtrial>MeasurementTrialTable,https://rs.gbif.org/extension/germplasm/MeasurementTrial.xml</ext.measurementtrial>
-    <ext.germplasmaccession>GermplasmAccessionTable,https://rs.gbif.org/extension/germplasm/GermplasmAccession.xml</ext.germplasmaccession>
-    <ext.extendedmeasurementorfact>ExtendedMeasurementOrFactTable,https://rs.gbif.org/extension/obis/extended_measurement_or_fact.xml</ext.extendedmeasurementorfact>
-    <ext.chronometricage>ChronometricAgeTable,https://rs.gbif.org/extension/zooarchnet/ChronometricAge_2020-10-06.xml</ext.chronometricage>
-    <ext.chronometricdate>ChronometricDateTable,https://rs.gbif.org/extension/zooarchnet/chronometricDate.xml</ext.chronometricdate>
-    <ext.references>ReferencesTable,https://rs.gbif.org/extension/gbif/1.0/references.xml</ext.references>
-    <ext.identifier>IdentifierTable,https://rs.gbif.org/extension/gbif/1.0/identifier.xml</ext.identifier>
 
   </properties>
 

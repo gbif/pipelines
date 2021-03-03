@@ -2,6 +2,7 @@ package org.gbif.pipelines.maven;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -10,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
 import org.apache.avro.JsonProperties;
 import org.apache.avro.Schema;
@@ -19,8 +21,8 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.digester.ThesaurusHandlingRule;
-import org.gbif.dwc.extensions.Extension;
 import org.gbif.dwc.extensions.ExtensionFactory;
 import org.gbif.dwc.extensions.VocabulariesManager;
 import org.gbif.dwc.extensions.Vocabulary;
@@ -28,9 +30,6 @@ import org.gbif.dwc.xml.SAXUtils;
 
 @Mojo(name = "avroschemageneration", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
 public class XmlToAvscGeneratorMojo extends AbstractMojo {
-
-  @Parameter(property = "avroschemageneration.extensions")
-  private List<String> extensions;
 
   @Parameter(property = "avroschemageneration.pathToWrite")
   private String pathToWrite;
@@ -44,23 +43,28 @@ public class XmlToAvscGeneratorMojo extends AbstractMojo {
     try {
       Files.createDirectories(Paths.get(pathToWrite));
 
-      for (String extension : extensions) {
+      Map<Extension, String> extensions = Extension.availableExtensionResources();
+      extensions.remove(Extension.AUDUBON);
+      extensions.remove(Extension.IMAGE);
+      extensions.remove(Extension.MULTIMEDIA);
 
-        String[] ext = extension.split(",");
-        URL url = new URL(ext[1]);
-        String name = ext[0];
-        Path path = Paths.get(pathToWrite, normalizeFileName(name));
-        if (!Files.exists(path)) {
-          convertAndWrite(name, url, path);
+      for (Entry<Extension, String> extension : extensions.entrySet()) {
+
+        try {
+          String name = normalizeClassNmae(extension.getKey().name());
+          URL url = new URL(extension.getValue());
+
+          Path path = Paths.get(pathToWrite, normalizeFileName(name));
+          if (!Files.exists(path)) {
+            convertAndWrite(name, url, path);
+          }
+        } catch (Exception ex) {
+          getLog().warn(ex.getMessage());
         }
       }
-    } catch (Exception ex) {
+    } catch (IOException ex) {
       throw new MojoExecutionException(ex.getMessage());
     }
-  }
-
-  public void setExtensions(List<String> extensions) {
-    this.extensions = extensions;
   }
 
   public void setPathToWrite(String pathToWrite) {
@@ -75,7 +79,7 @@ public class XmlToAvscGeneratorMojo extends AbstractMojo {
     // Read extension
     ThesaurusHandlingRule thr = new ThesaurusHandlingRule(new EmptyVocabulariesManager());
     ExtensionFactory factory = new ExtensionFactory(thr, SAXUtils.getNsAwareSaxParserFactory());
-    Extension ext = factory.build(url.openStream(), url, false);
+    org.gbif.dwc.extensions.Extension ext = factory.build(url.openStream(), url, false);
 
     // Convert into an avro schema
     List<Schema.Field> fields = new ArrayList<>(ext.getProperties().size() + 1);
@@ -108,12 +112,16 @@ public class XmlToAvscGeneratorMojo extends AbstractMojo {
     return createSchemaField(name, Type.STRING, doc, true);
   }
 
+  private String normalizeClassNmae(String name) {
+    return Arrays.stream(name.split("_"))
+            .map(String::toLowerCase)
+            .map(x -> x.substring(0, 1).toUpperCase() + x.substring(1))
+            .collect(Collectors.joining())
+        + "Table";
+  }
+
   private String normalizeFieldName(String name) {
-    return name.toLowerCase()
-        .trim()
-        .replace("-", "")
-        .replaceAll("_", "")
-        .replaceAll("class", "clazz");
+    return name.toLowerCase().trim().replace("-", "").replaceAll("_", "");
   }
 
   private String normalizeFileName(String name) {
