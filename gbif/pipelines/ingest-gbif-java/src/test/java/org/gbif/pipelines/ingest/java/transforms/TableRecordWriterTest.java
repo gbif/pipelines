@@ -1,6 +1,7 @@
 package org.gbif.pipelines.ingest.java.transforms;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.OCCURRENCE;
 
 import java.io.File;
 import java.io.IOException;
@@ -56,7 +57,8 @@ public class TableRecordWriterTest {
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
 
     String id = options.getDatasetId() + '_' + options.getAttempt();
-    String path = PathBuilder.buildFilePathHdfsViewUsingInputPath(options, id + AVRO_EXTENSION);
+    String path =
+        PathBuilder.buildFilePathViewUsingInputPath(options, OCCURRENCE, id + AVRO_EXTENSION);
 
     // When
     TableRecordWriter.<OccurrenceHdfsRecord>builder()
@@ -73,7 +75,7 @@ public class TableRecordWriterTest {
     File result =
         new File(
             outputFile
-                + "/d596fccb-2319-42eb-b13b-986c932780ad/146/interpreted/occurrence_hdfs_record/view_occurrence_d596fccb-2319-42eb-b13b-986c932780ad_146.avro");
+                + "/d596fccb-2319-42eb-b13b-986c932780ad/146/interpreted/occurrence/d596fccb-2319-42eb-b13b-986c932780ad_146.avro");
     DatumReader<OccurrenceHdfsRecord> datumReader =
         new SpecificDatumReader<>(OccurrenceHdfsRecord.class);
     try (DataFileReader<OccurrenceHdfsRecord> dataFileReader =
@@ -122,7 +124,8 @@ public class TableRecordWriterTest {
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
 
     String id = options.getDatasetId() + '_' + options.getAttempt();
-    String path = PathBuilder.buildFilePathHdfsViewUsingInputPath(options, id + AVRO_EXTENSION);
+    String path =
+        PathBuilder.buildFilePathViewUsingInputPath(options, OCCURRENCE, id + AVRO_EXTENSION);
 
     // When
     TableRecordWriter.<OccurrenceHdfsRecord>builder()
@@ -139,7 +142,7 @@ public class TableRecordWriterTest {
     File result =
         new File(
             outputFile
-                + "/d596fccb-2319-42eb-b13b-986c932780ad/146/interpreted/occurrence_hdfs_record/view_occurrence_d596fccb-2319-42eb-b13b-986c932780ad_146.avro");
+                + "/d596fccb-2319-42eb-b13b-986c932780ad/146/interpreted/occurrence/d596fccb-2319-42eb-b13b-986c932780ad_146.avro");
     DatumReader<OccurrenceHdfsRecord> datumReader =
         new SpecificDatumReader<>(OccurrenceHdfsRecord.class);
     try (DataFileReader<OccurrenceHdfsRecord> dataFileReader =

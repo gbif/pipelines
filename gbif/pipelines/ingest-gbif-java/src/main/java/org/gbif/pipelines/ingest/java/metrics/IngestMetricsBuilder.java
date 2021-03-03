@@ -21,8 +21,8 @@ import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
-import org.gbif.pipelines.transforms.table.MeasurementOrFactTableTransform;
 import org.gbif.pipelines.transforms.table.OccurrenceHdfsRecordTransform;
+import org.gbif.pipelines.transforms.table.TableTransform;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class IngestMetricsBuilder {
@@ -63,13 +63,29 @@ public class IngestMetricsBuilder {
     return IngestMetrics.create().addMetric(GbifJsonTransform.class, AVRO_TO_JSON_COUNT);
   }
 
-  /**
-   * {@link IngestMetrics} for {@link
-   * org.gbif.pipelines.ingest.java.pipelines.InterpretedToHdfsViewPipeline}
-   */
+  /** {@link IngestMetrics} for hdfs tables */
   public static IngestMetrics createInterpretedToHdfsViewMetrics() {
     return IngestMetrics.create()
         .addMetric(OccurrenceHdfsRecordTransform.class, AVRO_TO_HDFS_COUNT)
-        .addMetric(MeasurementOrFactTableTransform.class, MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT);
+        .addMetric(TableTransform.class, MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT)
+        .addMetric(TableTransform.class, IDENTIFICATION_TABLE_RECORDS_COUNT)
+        .addMetric(TableTransform.class, RESOURCE_RELATION_TABLE_RECORDS_COUNT)
+        .addMetric(TableTransform.class, AMPLIFICATION_TABLE_RECORDS_COUNT)
+        .addMetric(TableTransform.class, CLONING_TABLE_RECORDS_COUNT)
+        .addMetric(TableTransform.class, GEL_IMAGE_TABLE_RECORDS_COUNT)
+        .addMetric(TableTransform.class, LOAN_TABLE_RECORDS_COUNT)
+        .addMetric(TableTransform.class, MATERIAL_SAMPLE_TABLE_RECORDS_COUNT)
+        .addMetric(TableTransform.class, PERMIT_TABLE_RECORDS_COUNT)
+        .addMetric(TableTransform.class, PREPARATION_TABLE_RECORDS_COUNT)
+        .addMetric(TableTransform.class, PRESERVATION_TABLE_RECORDS_COUNT)
+        .addMetric(TableTransform.class, MEASUREMENT_SCORE_TABLE_RECORDS_COUNT)
+        .addMetric(TableTransform.class, MEASUREMENT_TRAIT_TABLE_RECORDS_COUNT)
+        .addMetric(TableTransform.class, MEASUREMENT_TRIAL_TABLE_RECORDS_COUNT)
+        .addMetric(TableTransform.class, GERMPLASM_ACCESSION_TABLE_RECORDS_COUNT)
+        .addMetric(TableTransform.class, EXTENDED_MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT)
+        .addMetric(TableTransform.class, CHRONOMETRIC_AGE_TABLE_RECORDS_COUNT)
+        .addMetric(TableTransform.class, CHRONOMETRIC_DATE_TABLE_RECORDS_COUNT)
+        .addMetric(TableTransform.class, REFERENCES_TABLE_RECORDS_COUNT)
+        .addMetric(TableTransform.class, IDENTIFIER_TABLE_RECORDS_COUNT);
   }
 }

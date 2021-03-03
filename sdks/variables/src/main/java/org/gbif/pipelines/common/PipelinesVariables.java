@@ -1,6 +1,9 @@
 package org.gbif.pipelines.common;
 
 import java.io.Serializable;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
@@ -18,6 +21,8 @@ public class PipelinesVariables {
     public static final String INTERPRETED_TO_INDEX = "interpreted-to-index";
     public static final String INTERPRETED_TO_HDFS = "interpreted-to-hdfs";
     public static final String FRAGMENTER = "fragmenter";
+
+    public static final String OCCURRENCE = "occurrence";
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static class Conversion {
@@ -57,12 +62,58 @@ public class PipelinesVariables {
         AMPLIFICATION,
         // Specific
         LOCATION_FEATURE,
-        OCCURRENCE_HDFS_RECORD,
-        MEASUREMENT_OR_FACT_TABLE;
+        // Tables,
+        OCCURRENCE,
+        MEASUREMENT_OR_FACT_TABLE,
+        IDENTIFICATION_TABLE,
+        RESOURCE_RELATIONSHIP_TABLE,
+        AMPLIFICATION_TABLE,
+        CLONING_TABLE,
+        GEL_IMAGE_TABLE,
+        LOAN_TABLE,
+        MATERIAL_SAMPLE_TABLE,
+        PERMIT_TABLE,
+        PREPARATION_TABLE,
+        PRESERVATION_TABLE,
+        GERMPLASM_MEASUREMENT_SCORE_TABLE,
+        GERMPLASM_MEASUREMENT_TRAIT_TABLE,
+        GERMPLASM_MEASUREMENT_TRIAL_TABLE,
+        GERMPLASM_ACCESSION_TABLE,
+        EXTENDED_MEASUREMENT_OR_FACT_TABLE,
+        CHRONOMETRIC_AGE_TABLE,
+        CHRONOMETRIC_DATE_TABLE,
+        REFERENCE_TABLE,
+        IDENTIFIER_TABLE;
 
         @Override
         public String all() {
           return ALL.name();
+        }
+
+        public static Set<RecordType> getAllTables() {
+          return new HashSet<>(
+              Arrays.asList(
+                  OCCURRENCE,
+                  MEASUREMENT_OR_FACT_TABLE,
+                  IDENTIFICATION_TABLE,
+                  RESOURCE_RELATIONSHIP_TABLE,
+                  AMPLIFICATION_TABLE,
+                  CLONING_TABLE,
+                  GEL_IMAGE_TABLE,
+                  LOAN_TABLE,
+                  MATERIAL_SAMPLE_TABLE,
+                  PERMIT_TABLE,
+                  PREPARATION_TABLE,
+                  PRESERVATION_TABLE,
+                  GERMPLASM_MEASUREMENT_SCORE_TABLE,
+                  GERMPLASM_MEASUREMENT_TRAIT_TABLE,
+                  GERMPLASM_MEASUREMENT_TRIAL_TABLE,
+                  GERMPLASM_ACCESSION_TABLE,
+                  EXTENDED_MEASUREMENT_OR_FACT_TABLE,
+                  CHRONOMETRIC_AGE_TABLE,
+                  CHRONOMETRIC_DATE_TABLE,
+                  REFERENCE_TABLE,
+                  IDENTIFIER_TABLE));
         }
       }
     }
@@ -72,15 +123,6 @@ public class PipelinesVariables {
 
       public static final String INDEX_TYPE = "record";
       public static final String GBIF_ID = "gbifId";
-    }
-
-    @NoArgsConstructor(access = AccessLevel.PRIVATE)
-    public static class HdfsView {
-
-      public static final String VIEW_OCCURRENCE_DIR = "occurrence";
-      public static final String VIEW_OCCURRENCE = "view_occurrence";
-      public static final String VIEW_MOFT_DIR = "measurementorfacttable";
-      public static final String VIEW_MOFT = "view_moft";
     }
   }
 
@@ -118,11 +160,41 @@ public class PipelinesVariables {
     public static final String IMAGE_RECORDS_COUNT = "imageRecordsCount";
     public static final String AUDUBON_RECORDS_COUNT = "audubonRecordsCount";
     public static final String MEASUREMENT_OR_FACT_RECORDS_COUNT = "measurementOrFactRecordsCount";
+    public static final String AMPLIFICATION_RECORDS_COUNT = "amplificationRecordsCount";
+    // HDFS Tables
     public static final String MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT =
         "measurementOrFactTableRecordsCount";
-    public static final String AMPLIFICATION_RECORDS_COUNT = "amplificationRecordsCount";
-
+    public static final String IDENTIFICATION_TABLE_RECORDS_COUNT =
+        "identificationTableRecordsCount";
+    public static final String RESOURCE_RELATION_TABLE_RECORDS_COUNT =
+        "resourceRelationTableRecordsCount";
+    public static final String AMPLIFICATION_TABLE_RECORDS_COUNT = "amplificationTableRecordsCount";
+    public static final String CLONING_TABLE_RECORDS_COUNT = "cloningTableRecordsCount";
+    public static final String GEL_IMAGE_TABLE_RECORDS_COUNT = "gelImageTableRecordsCount";
+    public static final String LOAN_TABLE_RECORDS_COUNT = "loanTableRecordsCount";
+    public static final String MATERIAL_SAMPLE_TABLE_RECORDS_COUNT =
+        "materialSampleTableRecordsCount";
+    public static final String PERMIT_TABLE_RECORDS_COUNT = "permitTableRecordsCount";
+    public static final String PREPARATION_TABLE_RECORDS_COUNT = "preparationTableRecordsCount";
+    public static final String PRESERVATION_TABLE_RECORDS_COUNT = "preservationTableRecordsCount";
+    public static final String MEASUREMENT_SCORE_TABLE_RECORDS_COUNT =
+        "measurementScoreTableRecordsCount";
+    public static final String MEASUREMENT_TRAIT_TABLE_RECORDS_COUNT =
+        "measurementTraitTableRecordsCount";
+    public static final String MEASUREMENT_TRIAL_TABLE_RECORDS_COUNT =
+        "measurementTrialTableRecordsCount";
+    public static final String GERMPLASM_ACCESSION_TABLE_RECORDS_COUNT =
+        "germplasmAccessionTableRecordsCount";
+    public static final String EXTENDED_MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT =
+        "extendedMeasurementOrFactTableRecordsCount";
+    public static final String CHRONOMETRIC_AGE_TABLE_RECORDS_COUNT =
+        "chronometricAgeTableRecordsCount";
+    public static final String CHRONOMETRIC_DATE_TABLE_RECORDS_COUNT =
+        "chronometricDateTableRecordsCount";
+    public static final String REFERENCES_TABLE_RECORDS_COUNT = "referencesTableRecordsCount";
+    public static final String IDENTIFIER_TABLE_RECORDS_COUNT = "identifierTableRecordsCount";
     public static final String HDFS_VIEW_RECORDS_COUNT = "hdfsViewRecordsCount";
+    // Fragmenter
     public static final String FRAGMENTER_COUNT = "fragmenterRecordsCount";
     // Specific
     public static final String LOCATION_FEATURE_RECORDS_COUNT = "locationFeatureRecordsCount";

@@ -39,9 +39,6 @@
               <pathToWrite>${generated-path}</pathToWrite>
               <avroNamespace>${namespace}</avroNamespace>
               <packagePath>${package}</packagePath>
-              <extensions>
-                <extension>${extension.mof}</extension>
-              </extensions>
             </configuration>
           </execution>
         </executions>

@@ -14,6 +14,8 @@ public class ExtensionPojo {
 
   private List<Setter> setters;
 
+  private String extensionPackage;
+
   public ExtensionPojo() {}
 
   public ExtensionPojo(
@@ -21,12 +23,14 @@ public class ExtensionPojo {
       String namespace,
       String packagePath,
       String rowType,
-      List<Setter> setters) {
+      List<Setter> setters,
+      String extensionPackage) {
     this.tableName = tableName;
     this.namespace = namespace;
     this.packagePath = packagePath;
     this.rowType = rowType;
     this.setters = setters;
+    this.extensionPackage = extensionPackage;
   }
 
   public String getTableName() {
@@ -69,15 +73,25 @@ public class ExtensionPojo {
     this.setters = setters;
   }
 
+  public String getExtensionPackage() {
+    return extensionPackage;
+  }
+
+  public void setExtensionPackage(String extensionPackage) {
+    this.extensionPackage = extensionPackage;
+  }
+
   public static class Setter {
     private String qualifier;
     private String name;
+    private String vName;
 
     public Setter() {}
 
     public Setter(String qualifier, String name) {
       this.qualifier = qualifier;
-      this.name = name;
+      this.name = name.equals("Class") ? "Class$" : name;
+      this.vName = "V" + name;
     }
 
     public String getQualifier() {
@@ -94,6 +108,14 @@ public class ExtensionPojo {
 
     public void setName(String name) {
       this.name = name;
+    }
+
+    public String getvName() {
+      return vName;
+    }
+
+    public void setvName(String vName) {
+      this.vName = vName;
     }
   }
 }

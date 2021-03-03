@@ -3,7 +3,6 @@ package org.gbif.pipelines.maven;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
 import org.apache.avro.Schema;
 import org.junit.Assert;
 import org.junit.Test;
@@ -17,9 +16,6 @@ public class XmlToAvscGeneratorMojoTest {
     String path = getClass().getResource("/generated/").getFile();
 
     XmlToAvscGeneratorMojo mojo = new XmlToAvscGeneratorMojo();
-    mojo.setExtensions(
-        Collections.singletonList(
-            "MeasurementOrFactTable,https://rs.gbif.org/extension/dwc/measurements_or_facts.xml"));
     mojo.setNamespace("org.gbif.pipelines.io.avro");
     mojo.setPathToWrite(path);
 

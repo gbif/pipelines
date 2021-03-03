@@ -1,17 +1,15 @@
 package org.gbif.pipelines.ingest.java.pipelines;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.HdfsView.VIEW_MOFT_DIR;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.HdfsView.VIEW_OCCURRENCE_DIR;
-
 import java.io.File;
-import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.specific.SpecificDatumReader;
+import org.apache.avro.specific.SpecificRecordBase;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
@@ -23,12 +21,14 @@ import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MeasurementOrFactTable;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.extension.ExtendedMeasurementOrFactTable;
+import org.gbif.pipelines.io.avro.extension.GermplasmMeasurementTrialTable;
+import org.gbif.pipelines.io.avro.extension.MeasurementOrFactTable;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.GrscicollTransform;
@@ -48,7 +48,7 @@ public class InterpretedToHdfsViewPipelineTest {
   private static final String ID = "777";
 
   @Test
-  public void pipelineTest() throws IOException {
+  public void pipelineTest() throws Exception {
 
     // State
     String outputFile = getClass().getResource("/").getFile();
@@ -159,40 +159,28 @@ public class InterpretedToHdfsViewPipelineTest {
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
     InterpretedToHdfsViewPipeline.run(options);
 
-    // Should
-    // Deserialize OccurrenceHdfsRecord from disk
-    File ohrResult =
-        new File(
-            output
-                + "/"
-                + VIEW_OCCURRENCE_DIR
-                + "/view_occurrence_d596fccb-2319-42eb-b13b-986c932780ad_147.avro");
-    DatumReader<OccurrenceHdfsRecord> ohrDatumReader =
-        new SpecificDatumReader<>(OccurrenceHdfsRecord.class);
-    try (DataFileReader<OccurrenceHdfsRecord> dataFileReader =
-        new DataFileReader<>(ohrResult, ohrDatumReader)) {
-      while (dataFileReader.hasNext()) {
-        OccurrenceHdfsRecord record = dataFileReader.next();
-        Assert.assertNotNull(record);
-        Assert.assertEquals(Long.valueOf(1L), record.getGbifid());
-      }
-    }
+    Function<String, String> outputFn =
+        s -> output + "/" + s + "/d596fccb-2319-42eb-b13b-986c932780ad_147.avro";
 
-    // Deserialize MeasurementOrFactTable from disk
-    File moftResult =
-        new File(
-            output
-                + "/"
-                + VIEW_MOFT_DIR
-                + "/view_moft_d596fccb-2319-42eb-b13b-986c932780ad_147.avro");
-    DatumReader<MeasurementOrFactTable> moftDatumReader =
-        new SpecificDatumReader<>(MeasurementOrFactTable.class);
-    try (DataFileReader<MeasurementOrFactTable> dataFileReader =
-        new DataFileReader<>(moftResult, moftDatumReader)) {
+    assertFile(OccurrenceHdfsRecord.class, outputFn.apply("occurrence"));
+    assertFile(MeasurementOrFactTable.class, outputFn.apply("measurementorfacttable"));
+    assertFile(
+        ExtendedMeasurementOrFactTable.class, outputFn.apply("extendedmeasurementorfacttable"));
+    assertFile(
+        GermplasmMeasurementTrialTable.class, outputFn.apply("germplasmmeasurementtrialtable"));
+  }
+
+  private <T extends SpecificRecordBase> void assertFile(Class<T> clazz, String output)
+      throws Exception {
+    File file = new File(output);
+    DatumReader<T> ohrDatumReader = new SpecificDatumReader<>(clazz);
+    try (DataFileReader<T> dataFileReader = new DataFileReader<>(file, ohrDatumReader)) {
       while (dataFileReader.hasNext()) {
-        MeasurementOrFactTable record = dataFileReader.next();
+        T record = dataFileReader.next();
         Assert.assertNotNull(record);
-        Assert.assertEquals(Long.valueOf(1L), record.getGbifid());
+
+        Long gbifid = (Long) record.get("gbifid");
+        Assert.assertEquals(Long.valueOf(1L), gbifid);
       }
     }
   }

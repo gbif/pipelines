@@ -37,10 +37,7 @@
             </goals>
             <configuration>
               <pathToWrite>${schema-generated-path}</pathToWrite>
-              <namespace>${namespace}</namespace>
-              <extensions>
-                <extension>${extension.mof}</extension>
-              </extensions>
+              <namespace>${namespace}.extension</namespace>
             </configuration>
           </execution>
         </executions>

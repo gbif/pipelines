@@ -1,28 +1,75 @@
 package org.gbif.pipelines.ingest.java.pipelines;
 
+import static org.gbif.api.vocabulary.Extension.*;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AMPLIFICATION_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.CHRONOMETRIC_AGE_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.CHRONOMETRIC_DATE_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.CLONING_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.EXTENDED_MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.GEL_IMAGE_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.GERMPLASM_ACCESSION_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.IDENTIFICATION_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.IDENTIFIER_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.LOAN_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MATERIAL_SAMPLE_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMENT_SCORE_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMENT_TRAIT_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMENT_TRIAL_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.PERMIT_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.PREPARATION_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.PRESERVATION_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.REFERENCES_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.RESOURCE_RELATION_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.OCCURRENCE;
 import static org.gbif.pipelines.ingest.java.transforms.InterpretedAvroReader.readAvroAsFuture;
 
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.api.vocabulary.*;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
+import org.gbif.pipelines.core.converters.AmplificationTableConverter;
+import org.gbif.pipelines.core.converters.ChronometricAgeTableConverter;
+import org.gbif.pipelines.core.converters.ChronometricDateTableConverter;
+import org.gbif.pipelines.core.converters.CloningTableConverter;
+import org.gbif.pipelines.core.converters.ExtendedMeasurementOrFactTableConverter;
+import org.gbif.pipelines.core.converters.GelImageTableConverter;
+import org.gbif.pipelines.core.converters.GermplasmAccessionTableConverter;
+import org.gbif.pipelines.core.converters.GermplasmMeasurementScoreTableConverter;
+import org.gbif.pipelines.core.converters.GermplasmMeasurementTraitTableConverter;
+import org.gbif.pipelines.core.converters.GermplasmMeasurementTrialTableConverter;
+import org.gbif.pipelines.core.converters.IdentificationTableConverter;
+import org.gbif.pipelines.core.converters.IdentifierTableConverter;
+import org.gbif.pipelines.core.converters.LoanTableConverter;
+import org.gbif.pipelines.core.converters.MaterialSampleTableConverter;
+import org.gbif.pipelines.core.converters.MeasurementOrFactTableConverter;
+import org.gbif.pipelines.core.converters.PermitTableConverter;
+import org.gbif.pipelines.core.converters.PreparationTableConverter;
+import org.gbif.pipelines.core.converters.PreservationTableConverter;
+import org.gbif.pipelines.core.converters.ReferenceTableConverter;
+import org.gbif.pipelines.core.converters.ResourceRelationshipTableConverter;
+import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.ingest.java.metrics.IngestMetricsBuilder;
-import org.gbif.pipelines.ingest.java.transforms.MeasurementOrFactTableConverter;
 import org.gbif.pipelines.ingest.java.transforms.OccurrenceHdfsRecordConverter;
+import org.gbif.pipelines.ingest.java.transforms.TableConverter;
 import org.gbif.pipelines.ingest.java.transforms.TableRecordWriter;
 import org.gbif.pipelines.ingest.utils.HdfsViewAvroUtils;
 import org.gbif.pipelines.ingest.utils.SharedLockUtils;
@@ -32,12 +79,31 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
-import org.gbif.pipelines.io.avro.MeasurementOrFactTable;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.extension.AmplificationTable;
+import org.gbif.pipelines.io.avro.extension.ChronometricAgeTable;
+import org.gbif.pipelines.io.avro.extension.ChronometricDateTable;
+import org.gbif.pipelines.io.avro.extension.CloningTable;
+import org.gbif.pipelines.io.avro.extension.ExtendedMeasurementOrFactTable;
+import org.gbif.pipelines.io.avro.extension.GelImageTable;
+import org.gbif.pipelines.io.avro.extension.GermplasmAccessionTable;
+import org.gbif.pipelines.io.avro.extension.GermplasmMeasurementScoreTable;
+import org.gbif.pipelines.io.avro.extension.GermplasmMeasurementTraitTable;
+import org.gbif.pipelines.io.avro.extension.GermplasmMeasurementTrialTable;
+import org.gbif.pipelines.io.avro.extension.IdentificationTable;
+import org.gbif.pipelines.io.avro.extension.IdentifierTable;
+import org.gbif.pipelines.io.avro.extension.LoanTable;
+import org.gbif.pipelines.io.avro.extension.MaterialSampleTable;
+import org.gbif.pipelines.io.avro.extension.MeasurementOrFactTable;
+import org.gbif.pipelines.io.avro.extension.PermitTable;
+import org.gbif.pipelines.io.avro.extension.PreparationTable;
+import org.gbif.pipelines.io.avro.extension.PreservationTable;
+import org.gbif.pipelines.io.avro.extension.ReferenceTable;
+import org.gbif.pipelines.io.avro.extension.ResourceRelationshipTable;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.GrscicollTransform;
@@ -122,6 +188,23 @@ public class InterpretedToHdfsViewPipeline {
     MDC.put("attempt", options.getAttempt().toString());
     MDC.put("step", StepType.INTERPRETED_TO_INDEX.name());
 
+    String hdfsSiteConfig = options.getHdfsSiteConfig();
+    String coreSiteConfig = options.getCoreSiteConfig();
+    String datasetId = options.getDatasetId();
+    Integer attempt = options.getAttempt();
+    Set<String> types =
+        RecordType.getAllTables().stream().map(RecordType::name).collect(Collectors.toSet());
+
+    // Deletes the target path if it exists
+    FsUtils.deleteInterpretIfExist(
+        hdfsSiteConfig, coreSiteConfig, options.getInputPath(), datasetId, attempt, types);
+
+    Function<String, String> pathFn =
+        st -> {
+          String id = datasetId + '_' + attempt + AVRO_EXTENSION;
+          return PathBuilder.buildFilePathViewUsingInputPath(options, st.toLowerCase(), id);
+        };
+
     log.info("Init metrics");
     IngestMetrics metrics = IngestMetricsBuilder.createInterpretedToHdfsViewMetrics();
 
@@ -158,6 +241,9 @@ public class InterpretedToHdfsViewPipeline {
     CompletableFuture<Map<String, AudubonRecord>> audubonMapFeature =
         readAvroAsFuture(options, executor, AudubonTransform.builder().create());
 
+    Map<String, BasicRecord> basicRecordMap = basicMapFeature.get();
+
+    // OccurrenceHdfsRecord
     Function<BasicRecord, Optional<OccurrenceHdfsRecord>> occurrenceHdfsRecordFn =
         OccurrenceHdfsRecordConverter.builder()
             .metrics(metrics)
@@ -173,35 +259,411 @@ public class InterpretedToHdfsViewPipeline {
             .build()
             .getFn();
 
-    Function<BasicRecord, Optional<MeasurementOrFactTable>> moftFn =
-        MeasurementOrFactTableConverter.builder()
-            .metrics(metrics)
-            .verbatimMap(verbatimMapFeature.get())
-            .build()
-            .getFn();
-
-    String id = options.getDatasetId() + '_' + options.getAttempt();
-
-    Map<String, BasicRecord> basicRecordMap = basicMapFeature.get();
-
-    // Write OccurrenceHdfsRecord
     TableRecordWriter.<OccurrenceHdfsRecord>builder()
         .recordFunction(occurrenceHdfsRecordFn)
         .basicRecords(basicRecordMap.values())
-        .targetTempPath(
-            PathBuilder.buildFilePathHdfsViewUsingInputPath(options, id + AVRO_EXTENSION))
+        .targetTempPath(pathFn.apply(OCCURRENCE))
         .schema(OccurrenceHdfsRecord.getClassSchema())
         .executor(executor)
         .options(options)
         .build()
         .write();
 
-    // Write MeasurementOrFactTable
+    // MeasurementOrFactTable
+    Function<BasicRecord, Optional<MeasurementOrFactTable>> measurementOrFactFn =
+        TableConverter.<MeasurementOrFactTable>builder()
+            .metrics(metrics)
+            .converterFn(MeasurementOrFactTableConverter::convert)
+            .counterName(MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT)
+            .verbatimMap(verbatimMapFeature.get())
+            .build()
+            .getFn();
+
     TableRecordWriter.<MeasurementOrFactTable>builder()
-        .recordFunction(moftFn)
+        .recordFunction(measurementOrFactFn)
         .basicRecords(basicRecordMap.values())
-        .targetTempPath(PathBuilder.buildFilePathMoftUsingInputPath(options, id + AVRO_EXTENSION))
+        .targetTempPath(pathFn.apply(RecordType.MEASUREMENT_OR_FACT_TABLE.name()))
         .schema(MeasurementOrFactTable.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .build()
+        .write();
+
+    // IdentificationTable
+    Function<BasicRecord, Optional<IdentificationTable>> identificationFn =
+        TableConverter.<IdentificationTable>builder()
+            .metrics(metrics)
+            .converterFn(IdentificationTableConverter::convert)
+            .counterName(IDENTIFICATION_TABLE_RECORDS_COUNT)
+            .verbatimMap(verbatimMapFeature.get())
+            .build()
+            .getFn();
+
+    TableRecordWriter.<IdentificationTable>builder()
+        .recordFunction(identificationFn)
+        .basicRecords(basicRecordMap.values())
+        .targetTempPath(pathFn.apply(RecordType.IDENTIFICATION_TABLE.name()))
+        .schema(IdentificationTable.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .build()
+        .write();
+
+    // ResourceRelationTable
+    Function<BasicRecord, Optional<ResourceRelationshipTable>> resourceRelationFn =
+        TableConverter.<ResourceRelationshipTable>builder()
+            .metrics(metrics)
+            .converterFn(ResourceRelationshipTableConverter::convert)
+            .counterName(RESOURCE_RELATION_TABLE_RECORDS_COUNT)
+            .verbatimMap(verbatimMapFeature.get())
+            .build()
+            .getFn();
+
+    TableRecordWriter.<ResourceRelationshipTable>builder()
+        .recordFunction(resourceRelationFn)
+        .basicRecords(basicRecordMap.values())
+        .targetTempPath(pathFn.apply(RecordType.RESOURCE_RELATIONSHIP_TABLE.name()))
+        .schema(ResourceRelationshipTable.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .build()
+        .write();
+
+    // AmplificationTable
+    Function<BasicRecord, Optional<AmplificationTable>> amplificationFn =
+        TableConverter.<AmplificationTable>builder()
+            .metrics(metrics)
+            .converterFn(AmplificationTableConverter::convert)
+            .counterName(AMPLIFICATION_TABLE_RECORDS_COUNT)
+            .verbatimMap(verbatimMapFeature.get())
+            .build()
+            .getFn();
+
+    TableRecordWriter.<AmplificationTable>builder()
+        .recordFunction(amplificationFn)
+        .basicRecords(basicRecordMap.values())
+        .targetTempPath(pathFn.apply(RecordType.AMPLIFICATION_TABLE.name()))
+        .schema(AmplificationTable.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .build()
+        .write();
+
+    // CloningTable
+    Function<BasicRecord, Optional<CloningTable>> cloningFn =
+        TableConverter.<CloningTable>builder()
+            .metrics(metrics)
+            .converterFn(CloningTableConverter::convert)
+            .counterName(CLONING_TABLE_RECORDS_COUNT)
+            .verbatimMap(verbatimMapFeature.get())
+            .build()
+            .getFn();
+
+    TableRecordWriter.<CloningTable>builder()
+        .recordFunction(cloningFn)
+        .basicRecords(basicRecordMap.values())
+        .targetTempPath(pathFn.apply(RecordType.CLONING_TABLE.name()))
+        .schema(CloningTable.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .build()
+        .write();
+
+    // GelImageTable
+    Function<BasicRecord, Optional<GelImageTable>> gelImageFn =
+        TableConverter.<GelImageTable>builder()
+            .metrics(metrics)
+            .converterFn(GelImageTableConverter::convert)
+            .counterName(GEL_IMAGE_TABLE_RECORDS_COUNT)
+            .verbatimMap(verbatimMapFeature.get())
+            .build()
+            .getFn();
+
+    TableRecordWriter.<GelImageTable>builder()
+        .recordFunction(gelImageFn)
+        .basicRecords(basicRecordMap.values())
+        .targetTempPath(pathFn.apply(RecordType.GEL_IMAGE_TABLE.name()))
+        .schema(GelImageTable.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .build()
+        .write();
+
+    // LoanTable
+    Function<BasicRecord, Optional<LoanTable>> loanFn =
+        TableConverter.<LoanTable>builder()
+            .metrics(metrics)
+            .converterFn(LoanTableConverter::convert)
+            .counterName(LOAN_TABLE_RECORDS_COUNT)
+            .verbatimMap(verbatimMapFeature.get())
+            .build()
+            .getFn();
+
+    TableRecordWriter.<LoanTable>builder()
+        .recordFunction(loanFn)
+        .basicRecords(basicRecordMap.values())
+        .targetTempPath(pathFn.apply(RecordType.LOAN_TABLE.name()))
+        .schema(LoanTable.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .build()
+        .write();
+
+    // MaterialSampleTable
+    Function<BasicRecord, Optional<MaterialSampleTable>> materialSampleFn =
+        TableConverter.<MaterialSampleTable>builder()
+            .metrics(metrics)
+            .converterFn(MaterialSampleTableConverter::convert)
+            .counterName(MATERIAL_SAMPLE_TABLE_RECORDS_COUNT)
+            .verbatimMap(verbatimMapFeature.get())
+            .build()
+            .getFn();
+
+    TableRecordWriter.<MaterialSampleTable>builder()
+        .recordFunction(materialSampleFn)
+        .basicRecords(basicRecordMap.values())
+        .targetTempPath(pathFn.apply(RecordType.MATERIAL_SAMPLE_TABLE.name()))
+        .schema(MaterialSampleTable.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .build()
+        .write();
+
+    // PermitTable
+    Function<BasicRecord, Optional<PermitTable>> permitFn =
+        TableConverter.<PermitTable>builder()
+            .metrics(metrics)
+            .converterFn(PermitTableConverter::convert)
+            .counterName(PERMIT_TABLE_RECORDS_COUNT)
+            .verbatimMap(verbatimMapFeature.get())
+            .build()
+            .getFn();
+
+    TableRecordWriter.<PermitTable>builder()
+        .recordFunction(permitFn)
+        .basicRecords(basicRecordMap.values())
+        .targetTempPath(pathFn.apply(RecordType.PERMIT_TABLE.name()))
+        .schema(PermitTable.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .build()
+        .write();
+
+    // PreparationTable
+    Function<BasicRecord, Optional<PreparationTable>> preparationFn =
+        TableConverter.<PreparationTable>builder()
+            .metrics(metrics)
+            .converterFn(PreparationTableConverter::convert)
+            .counterName(PREPARATION_TABLE_RECORDS_COUNT)
+            .verbatimMap(verbatimMapFeature.get())
+            .build()
+            .getFn();
+
+    TableRecordWriter.<PreparationTable>builder()
+        .recordFunction(preparationFn)
+        .basicRecords(basicRecordMap.values())
+        .targetTempPath(pathFn.apply(RecordType.PREPARATION_TABLE.name()))
+        .schema(PreparationTable.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .build()
+        .write();
+
+    // PreservationTable
+    Function<BasicRecord, Optional<PreservationTable>> preservationFn =
+        TableConverter.<PreservationTable>builder()
+            .metrics(metrics)
+            .converterFn(PreservationTableConverter::convert)
+            .counterName(PRESERVATION_TABLE_RECORDS_COUNT)
+            .verbatimMap(verbatimMapFeature.get())
+            .build()
+            .getFn();
+
+    TableRecordWriter.<PreservationTable>builder()
+        .recordFunction(preservationFn)
+        .basicRecords(basicRecordMap.values())
+        .targetTempPath(pathFn.apply(RecordType.PRESERVATION_TABLE.name()))
+        .schema(PreservationTable.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .build()
+        .write();
+
+    // MeasurementScoreTable
+    Function<BasicRecord, Optional<GermplasmMeasurementScoreTable>> measurementScoreFn =
+        TableConverter.<GermplasmMeasurementScoreTable>builder()
+            .metrics(metrics)
+            .converterFn(GermplasmMeasurementScoreTableConverter::convert)
+            .counterName(MEASUREMENT_SCORE_TABLE_RECORDS_COUNT)
+            .verbatimMap(verbatimMapFeature.get())
+            .build()
+            .getFn();
+
+    TableRecordWriter.<GermplasmMeasurementScoreTable>builder()
+        .recordFunction(measurementScoreFn)
+        .basicRecords(basicRecordMap.values())
+        .targetTempPath(pathFn.apply(RecordType.GERMPLASM_MEASUREMENT_SCORE_TABLE.name()))
+        .schema(GermplasmMeasurementScoreTable.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .build()
+        .write();
+
+    // MeasurementTraitTable
+    Function<BasicRecord, Optional<GermplasmMeasurementTraitTable>> measurementTraitFn =
+        TableConverter.<GermplasmMeasurementTraitTable>builder()
+            .metrics(metrics)
+            .converterFn(GermplasmMeasurementTraitTableConverter::convert)
+            .counterName(MEASUREMENT_TRAIT_TABLE_RECORDS_COUNT)
+            .verbatimMap(verbatimMapFeature.get())
+            .build()
+            .getFn();
+
+    TableRecordWriter.<GermplasmMeasurementTraitTable>builder()
+        .recordFunction(measurementTraitFn)
+        .basicRecords(basicRecordMap.values())
+        .targetTempPath(pathFn.apply(RecordType.GERMPLASM_MEASUREMENT_TRAIT_TABLE.name()))
+        .schema(GermplasmMeasurementTraitTable.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .build()
+        .write();
+
+    // MeasurementTrialTable
+    Function<BasicRecord, Optional<GermplasmMeasurementTrialTable>> measurementTrialFn =
+        TableConverter.<GermplasmMeasurementTrialTable>builder()
+            .metrics(metrics)
+            .converterFn(GermplasmMeasurementTrialTableConverter::convert)
+            .counterName(MEASUREMENT_TRIAL_TABLE_RECORDS_COUNT)
+            .verbatimMap(verbatimMapFeature.get())
+            .build()
+            .getFn();
+
+    TableRecordWriter.<GermplasmMeasurementTrialTable>builder()
+        .recordFunction(measurementTrialFn)
+        .basicRecords(basicRecordMap.values())
+        .targetTempPath(pathFn.apply(RecordType.GERMPLASM_MEASUREMENT_TRIAL_TABLE.name()))
+        .schema(GermplasmMeasurementTrialTable.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .build()
+        .write();
+
+    // GermplasmAccessionTable
+    Function<BasicRecord, Optional<GermplasmAccessionTable>> germplasmAccessionFn =
+        TableConverter.<GermplasmAccessionTable>builder()
+            .metrics(metrics)
+            .converterFn(GermplasmAccessionTableConverter::convert)
+            .counterName(GERMPLASM_ACCESSION_TABLE_RECORDS_COUNT)
+            .verbatimMap(verbatimMapFeature.get())
+            .build()
+            .getFn();
+
+    TableRecordWriter.<GermplasmAccessionTable>builder()
+        .recordFunction(germplasmAccessionFn)
+        .basicRecords(basicRecordMap.values())
+        .targetTempPath(pathFn.apply(RecordType.GERMPLASM_ACCESSION_TABLE.name()))
+        .schema(GermplasmAccessionTable.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .build()
+        .write();
+
+    // ExtendedMeasurementOrFactTable
+    Function<BasicRecord, Optional<ExtendedMeasurementOrFactTable>> extendedMeasurementOrFactFn =
+        TableConverter.<ExtendedMeasurementOrFactTable>builder()
+            .metrics(metrics)
+            .converterFn(ExtendedMeasurementOrFactTableConverter::convert)
+            .counterName(EXTENDED_MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT)
+            .verbatimMap(verbatimMapFeature.get())
+            .build()
+            .getFn();
+
+    TableRecordWriter.<ExtendedMeasurementOrFactTable>builder()
+        .recordFunction(extendedMeasurementOrFactFn)
+        .basicRecords(basicRecordMap.values())
+        .targetTempPath(pathFn.apply(RecordType.EXTENDED_MEASUREMENT_OR_FACT_TABLE.name()))
+        .schema(ExtendedMeasurementOrFactTable.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .build()
+        .write();
+
+    // ChronometricAgeTable
+    Function<BasicRecord, Optional<ChronometricAgeTable>> chronometricAgeFn =
+        TableConverter.<ChronometricAgeTable>builder()
+            .metrics(metrics)
+            .converterFn(ChronometricAgeTableConverter::convert)
+            .counterName(CHRONOMETRIC_AGE_TABLE_RECORDS_COUNT)
+            .verbatimMap(verbatimMapFeature.get())
+            .build()
+            .getFn();
+
+    TableRecordWriter.<ChronometricAgeTable>builder()
+        .recordFunction(chronometricAgeFn)
+        .basicRecords(basicRecordMap.values())
+        .targetTempPath(pathFn.apply(RecordType.CHRONOMETRIC_AGE_TABLE.name()))
+        .schema(ChronometricAgeTable.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .build()
+        .write();
+
+    // ChronometricDateTable
+    Function<BasicRecord, Optional<ChronometricDateTable>> chronometricDateFn =
+        TableConverter.<ChronometricDateTable>builder()
+            .metrics(metrics)
+            .converterFn(ChronometricDateTableConverter::convert)
+            .counterName(CHRONOMETRIC_DATE_TABLE_RECORDS_COUNT)
+            .verbatimMap(verbatimMapFeature.get())
+            .build()
+            .getFn();
+
+    TableRecordWriter.<ChronometricDateTable>builder()
+        .recordFunction(chronometricDateFn)
+        .basicRecords(basicRecordMap.values())
+        .targetTempPath(pathFn.apply(RecordType.CHRONOMETRIC_DATE_TABLE.name()))
+        .schema(ChronometricDateTable.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .build()
+        .write();
+
+    // ReferencesTable
+    Function<BasicRecord, Optional<ReferenceTable>> referencesFn =
+        TableConverter.<ReferenceTable>builder()
+            .metrics(metrics)
+            .converterFn(ReferenceTableConverter::convert)
+            .counterName(REFERENCES_TABLE_RECORDS_COUNT)
+            .verbatimMap(verbatimMapFeature.get())
+            .build()
+            .getFn();
+
+    TableRecordWriter.<ReferenceTable>builder()
+        .recordFunction(referencesFn)
+        .basicRecords(basicRecordMap.values())
+        .targetTempPath(pathFn.apply(RecordType.REFERENCE_TABLE.name()))
+        .schema(ReferenceTable.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .build()
+        .write();
+
+    // IdentifierTable
+    Function<BasicRecord, Optional<IdentifierTable>> identifierFn =
+        TableConverter.<IdentifierTable>builder()
+            .metrics(metrics)
+            .converterFn(IdentifierTableConverter::convert)
+            .counterName(IDENTIFIER_TABLE_RECORDS_COUNT)
+            .verbatimMap(verbatimMapFeature.get())
+            .build()
+            .getFn();
+
+    TableRecordWriter.<IdentifierTable>builder()
+        .recordFunction(identifierFn)
+        .basicRecords(basicRecordMap.values())
+        .targetTempPath(pathFn.apply(RecordType.IDENTIFIER_TABLE.name()))
+        .schema(IdentifierTable.getClassSchema())
         .executor(executor)
         .options(options)
         .build()
