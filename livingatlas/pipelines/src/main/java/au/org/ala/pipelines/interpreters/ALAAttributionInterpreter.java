@@ -71,7 +71,7 @@ public class ALAAttributionInterpreter {
                 .get(DwcTerm.collectionCode.namespace() + DwcTerm.collectionCode.name());
         String institutionCode =
             er.getCoreTerms()
-                .get(DwcTerm.collectionCode.namespace() + DwcTerm.collectionCode.name());
+                .get(DwcTerm.institutionCode.namespace() + DwcTerm.institutionCode.name());
 
         if (collectionCode != null || institutionCode != null) {
           ALACollectionLookup lookup =

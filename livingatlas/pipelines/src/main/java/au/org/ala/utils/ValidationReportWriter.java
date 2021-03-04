@@ -167,7 +167,7 @@ public class ValidationReportWriter {
                   fs, inputPath, datasetID, attempt, ValidationUtils.INTERPRETATION_METRICS);
           sdsRan =
               ValidationUtils.metricsExists(
-                  fs, inputPath, datasetID, attempt, ValidationUtils.SDS_METRICS);
+                  fs, inputPath, datasetID, attempt, ValidationUtils.SENSITIVE_METRICS);
           indexingRan =
               ValidationUtils.metricsExists(
                   fs, inputPath, datasetID, attempt, ValidationUtils.INDEXING_METRICS);

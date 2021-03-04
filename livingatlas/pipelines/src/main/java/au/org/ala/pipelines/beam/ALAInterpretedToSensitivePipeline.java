@@ -47,7 +47,7 @@ public class ALAInterpretedToSensitivePipeline {
     String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "sensitive");
     InterpretationPipelineOptions options =
         PipelinesOptionsFactory.createInterpretation(combinedArgs);
-    options.setMetaFileName(ValidationUtils.SDS_METRICS);
+    options.setMetaFileName(ValidationUtils.SENSITIVE_METRICS);
     run(options);
   }
 

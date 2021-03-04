@@ -45,7 +45,6 @@ public class ValidationUtils {
   public static final String IMAGE_SERVICE_METRICS = "image-service-metrics.yml";
   public static final String UUID_METRICS = "uuid-metrics.yml";
   public static final String INTERPRETATION_METRICS = "interpretation-metrics.yml";
-  public static final String SDS_METRICS = "sds-metrics.yml";
   public static final String VERBATIM_METRICS = "dwca-metrics.yml";
   public static final String INDEXING_METRICS = "indexing-metrics.yml";
   public static final String SENSITIVE_METRICS = "sensitive-metrics.yml";
@@ -112,12 +111,12 @@ public class ValidationUtils {
     }
 
     if (sdsRequired) {
-      boolean sdsRan = metricsAvailable(fs, filePath, datasetId, attempt, SDS_METRICS);
+      boolean sdsRan = metricsAvailable(fs, filePath, datasetId, attempt, SENSITIVE_METRICS);
       if (!sdsRan) {
         return ValidationResult.builder().valid(false).message(SDS_REQUIRED).build();
       }
 
-      long sdsTime = metricsModificationTime(fs, filePath, datasetId, attempt, SDS_METRICS);
+      long sdsTime = metricsModificationTime(fs, filePath, datasetId, attempt, SENSITIVE_METRICS);
       if (interpretationTime > sdsTime) {
         log.warn(
             "The imported interpretation is newer than the SDS. Unable to index until SDS re-ran");
