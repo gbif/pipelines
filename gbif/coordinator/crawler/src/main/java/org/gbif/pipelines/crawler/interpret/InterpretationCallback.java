@@ -158,7 +158,8 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
         repeatAttempt,
         message.getResetPrefix(),
         message.getEndpointType(),
-        message.getValidationResult());
+        message.getValidationResult(),
+        message.getExtensionRowTypes());
   }
 
   private void runLocal(ProcessRunnerBuilderBuilder builder) {
