@@ -63,6 +63,12 @@ geocodeConfig:
   biome:
     path: /data/pipelines-shp/gadm0
     field: FEATURE
+
+gbifConfig:
+  vocabularyConfig:
+    vocabulariesPath: /data/pipelines-vocabularies
+    lifeStageVocabName: LifeStage
+
 #locationInfoConfig:
 #    countryNamesFile : /data/pipelines-data/resources/countries.txt
 #    countryCentrePointsFile : /data/pipelines-data/resources/countryCentrePoints.txt
