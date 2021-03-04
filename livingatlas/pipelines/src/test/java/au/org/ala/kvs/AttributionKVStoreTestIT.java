@@ -82,26 +82,9 @@ public class AttributionKVStoreTestIT {
   public void testAttributionConnectionIssues() throws Exception {
     KeyValueStore<String, ALACollectoryMetadata> kvs =
         ALAAttributionKVStoreFactory.create(TestUtils.getConfig());
-    try {
-      ALACollectoryMetadata m = kvs.get("dr893XXXXXX");
-      fail("Exception not thrown");
-    } catch (RuntimeException e) {
-      // expected
-    }
+    ALACollectoryMetadata m = kvs.get("dr893XXXXXX");
+    assertEquals(m, ALACollectoryMetadata.EMPTY);
     kvs.close();
-  }
-
-  @Test
-  public void testAttributionLookupFail() {
-
-    KeyValueStore<String, ALACollectoryMetadata> kvs =
-        ALAAttributionKVStoreFactory.create(TestUtils.getConfig());
-    try {
-      ALACollectoryMetadata m = kvs.get("dr893XXXXXXX");
-      fail("Exception not thrown");
-    } catch (RuntimeException e) {
-      // expected
-    }
   }
 
   @Test
