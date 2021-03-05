@@ -84,6 +84,25 @@ public class IndexRecordPipeline {
       return;
     }
 
+    FileSystem fs =
+        FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
+            .getFs(options.getInputPath());
+
+    final long lastLoadedDate =
+        ValidationUtils.metricsModificationTime(
+            fs,
+            options.getInputPath(),
+            options.getDatasetId(),
+            options.getAttempt(),
+            ValidationUtils.VERBATIM_METRICS);
+    final long lastProcessedDate =
+        ValidationUtils.metricsModificationTime(
+            fs,
+            options.getInputPath(),
+            options.getDatasetId(),
+            options.getAttempt(),
+            ValidationUtils.INTERPRETATION_METRICS);
+
     log.info("Adding step 1: Options");
     UnaryOperator<String> pathFn =
         t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
@@ -173,9 +192,9 @@ public class IndexRecordPipeline {
             .apply("Map attribution to KV", alaAttributionTransform.toKv());
 
     // load images
-    PCollection<KV<String, ImageServiceRecord>> alaImageServiceRecords = null;
+    PCollection<KV<String, ImageRecord>> alaImageRecords = null;
     if (options.getIncludeImages()) {
-      alaImageServiceRecords = getLoadImageServiceRecords(options, p);
+      alaImageRecords = getLoadImageServiceRecords(options, p);
     }
 
     // load taxon profiles
@@ -191,9 +210,7 @@ public class IndexRecordPipeline {
               .apply("Map attribution to KV", alaSensitiveDataRecordTransform.toKv());
     }
 
-    final TupleTag<ImageServiceRecord> imageServiceRecordTupleTag =
-        new TupleTag<ImageServiceRecord>() {};
-
+    final TupleTag<ImageRecord> imageRecordTupleTag = new TupleTag<ImageRecord>() {};
     final TupleTag<TaxonProfile> speciesListsRecordTupleTag = new TupleTag<TaxonProfile>() {};
 
     IndexRecordTransform indexRecordTransform =
@@ -210,11 +227,13 @@ public class IndexRecordPipeline {
             measurementOrFactTransform.getTag(),
             alaAttributionTransform.getTag(),
             alaUuidTransform.getTag(),
-            options.getIncludeImages() ? imageServiceRecordTupleTag : null,
+            options.getIncludeImages() ? imageRecordTupleTag : null,
             options.getIncludeSpeciesLists() ? speciesListsRecordTupleTag : null,
             options.getIncludeSensitiveData() ? alaSensitiveDataRecordTransform.getTag() : null,
             metadataView,
-            options.getDatasetId());
+            options.getDatasetId(),
+            lastLoadedDate,
+            lastProcessedDate);
 
     log.info("Adding step 3: Converting into a json object");
     ParDo.SingleOutput<KV<String, CoGbkResult>, IndexRecord> alaSolrDoFn =
@@ -243,7 +262,7 @@ public class IndexRecordPipeline {
     }
 
     if (options.getIncludeImages()) {
-      kpct = kpct.and(imageServiceRecordTupleTag, alaImageServiceRecords);
+      kpct = kpct.and(imageRecordTupleTag, alaImageRecords);
     }
 
     if (options.getIncludeGbifTaxonomy()) {
@@ -266,9 +285,6 @@ public class IndexRecordPipeline {
             + options.getDatasetId();
 
     // clean previous runs
-    FileSystem fs =
-        FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
-            .getFs(options.getInputPath());
     ALAFsUtils.deleteIfExist(fs, outputPath);
 
     // write to AVRO file instead....
@@ -291,12 +307,12 @@ public class IndexRecordPipeline {
    * @param p
    * @return
    */
-  private static PCollection<KV<String, ImageServiceRecord>> getLoadImageServiceRecords(
+  private static PCollection<KV<String, ImageRecord>> getLoadImageServiceRecords(
       IndexingPipelineOptions options, Pipeline p) {
-    PCollection<KV<String, ImageServiceRecord>> alaImageServiceRecords;
+    PCollection<KV<String, ImageRecord>> alaImageServiceRecords;
     alaImageServiceRecords =
         p.apply(
-                AvroIO.read(ImageServiceRecord.class)
+                AvroIO.read(ImageRecord.class)
                     .from(
                         String.join(
                             "/",
@@ -306,8 +322,8 @@ public class IndexRecordPipeline {
                             "images",
                             "*.avro")))
             .apply(
-                MapElements.into(new TypeDescriptor<KV<String, ImageServiceRecord>>() {})
-                    .via((ImageServiceRecord tr) -> KV.of(tr.getId(), tr)));
+                MapElements.into(new TypeDescriptor<KV<String, ImageRecord>>() {})
+                    .via((ImageRecord tr) -> KV.of(tr.getId(), tr)));
     return alaImageServiceRecords;
   }
 }

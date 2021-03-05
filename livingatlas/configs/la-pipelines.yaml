@@ -60,6 +60,15 @@ geocodeConfig:
   stateProvince:
     path: /data/pipelines-shp/cw_state_poly
     field: FEATURE
+  biome:
+    path: /data/pipelines-shp/gadm0
+    field: FEATURE
+
+gbifConfig:
+  vocabularyConfig:
+    vocabulariesPath: /data/pipelines-vocabularies
+    lifeStageVocabName: LifeStage
+
 #locationInfoConfig:
 #    countryNamesFile : /data/pipelines-data/resources/countries.txt
 #    countryCentrePointsFile : /data/pipelines-data/resources/countryCentrePoints.txt
@@ -158,7 +167,6 @@ sensitive:
   runner: SparkRunner
 
 # class: au.org.ala.pipelines.java.IndexRecordPipeline
-# class: au.org.ala.pipelines.beam.IndexRecordPipeline
 index:
   appName: IndexRecord generation for {datasetId}
   inputPath: '{fsPath}/pipelines-data'
@@ -176,19 +184,32 @@ solr:
   targetPath: '{fsPath}/pipelines-data'
   allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
   jackKnifePath: "{fsPath}/pipelines-jackknife"
+  clusteringPath: "{fsPath}/pipelines-clustering"
   solrCollection: biocache
-  includeSampling: true
+  includeSampling: false
   includeJackKnife: false
+  includeClustering: false
   runner: SparkRunner
   zkHost: localhost:9983
+
+# class: au.org.ala.pipelines.beam.IndexRecordToSolrPipeline
+solrSchema:
+  appName: SOLR Schema Sync
 
 # JackKnife specific configuration
 # class: au.org.ala.pipelines.beam.ALAReverseJackKnifePipeline
 jackKnife:
-  appName: Jack knife outlier detection for {datasetId}
+  appName: Jack knife outlier detection
   jackKnifePath: "{fsPath}/pipelines-jackknife"
   layers: el882,el889,el887,el865,el894
   minSampleThreshold: 80
+  allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
+  runner: SparkRunner
+
+clustering:
+  appName: Occurrence clustering
+  dumpCandidatesForDebug: true
+  clusteringPath: "{fsPath}/pipelines-clustering"
   allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
   runner: SparkRunner
 
@@ -222,6 +243,32 @@ interpret-sh-args:
     executor-cores: 8
     executor-memory: 7G
     driver-memory: 1G
+#    conf: spark.default.parallelism=144
+#    num-executors: 12
+#    executor-cores: 8
+#    executor-memory: 7G
+#    driver-memory: 2G
+
+# 6mins with errors
+#    conf: spark.default.parallelism=144
+#    num-executors: 12
+#    executor-cores: 8
+#    executor-memory: 8G
+#    driver-memory: 1G
+
+# 6mins
+#  conf: spark.default.parallelism=144
+#  num-executors: 16
+#  executor-cores: 8
+#  executor-memory: 7G
+#  driver-memory: 1G
+
+#9 mins
+#    conf: spark.default.parallelism=500
+#    num-executors: 12
+#    executor-cores: 8
+#    executor-memory: 20G
+#    driver-memory: 4G
 
 image-sync-sh-args:
   local:
@@ -291,10 +338,10 @@ index-sh-args:
   spark-embedded:
     jvm: -Xmx8g -XX:+UseG1GC
   spark-cluster:
-    conf: spark.default.parallelism=192
-    num-executors: 24
+    conf: spark.default.parallelism=500
+    num-executors: 6
     executor-cores: 8
-    executor-memory: 7G
+    executor-memory: 20G
     driver-memory: 4G
 
 jackknife-sh-args:
@@ -309,7 +356,7 @@ jackknife-sh-args:
     executor-memory: 7G
     driver-memory: 1G
 
-solr-sh-args:
+clustering-sh-args:
   local:
     jvm: -Xmx8g -XX:+UseG1GC
   spark-embedded:
@@ -320,3 +367,15 @@ solr-sh-args:
     executor-cores: 8
     executor-memory: 20G
     driver-memory: 4G
+
+solr-sh-args:
+  local:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-embedded:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-cluster:
+    conf: spark.default.parallelism=500
+    num-executors: 6
+    executor-cores: 8
+    executor-memory: 22G
+    driver-memory: 6G

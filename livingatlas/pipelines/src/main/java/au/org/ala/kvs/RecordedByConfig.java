@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Data
 public class RecordedByConfig implements Serializable {
 
-  public static final Long DEFAULT_CACHESIZEMB = 64L;
+  public static final Long DEFAULT_CACHE_SIZE_MB = 64L;
 
-  private Long cacheSizeMb = DEFAULT_CACHESIZEMB;
+  private Long cacheSizeMb = DEFAULT_CACHE_SIZE_MB;
 }

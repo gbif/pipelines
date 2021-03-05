@@ -28,6 +28,7 @@ import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
+import org.gbif.pipelines.core.factory.FileVocabularyFactory;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.factory.OccurrenceStatusKvStoreFactory;
 import org.gbif.pipelines.io.avro.BasicRecord;
@@ -153,6 +154,14 @@ public class ALAVerbatimToInterpretedPipeline {
         MetadataTransform.builder().endpointType(endPointType).attempt(attempt).create();
     ALABasicTransform basicTransform =
         ALABasicTransform.builder()
+            .lifeStageLookupSupplier(
+                config.getGbifConfig().getVocabularyConfig() != null
+                    ? FileVocabularyFactory.getInstanceSupplier(
+                        config.getGbifConfig(),
+                        hdfsSiteConfig,
+                        coreSiteConfig,
+                        FileVocabularyFactory.VocabularyBackedTerm.LIFE_STAGE)
+                    : null)
             .recordedByKvStoreSupplier(RecordedByKVStoreFactory.createSupplier(config))
             .occStatusKvStoreSupplier(
                 OccurrenceStatusKvStoreFactory.createSupplier(config.getGbifConfig()))
