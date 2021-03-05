@@ -130,6 +130,7 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
       Path inputPath = buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid());
       interpretedTypes = DwcaExtensionTermUtils.fromLocation(inputPath);
       interpretedTypes.addAll(getAllInterpretationAsString());
+      interpretedTypes.remove(null);
     } catch (IllegalStateException ex) {
       log.warn(ex.getMessage());
     }
