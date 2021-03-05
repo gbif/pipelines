@@ -23,6 +23,25 @@
             distanceUnits="degrees"
             autoIndex="true"
   />
+  <fieldType name="quad"
+            class="solr.SpatialRecursivePrefixTreeFieldType"
+            datelineRule="ccwRect"
+            spatialContextFactory="org.locationtech.spatial4j.context.jts.JtsSpatialContextFactory"
+            validationRule="none"
+            distanceUnits="degrees"
+            prefixTree="quad"
+            autoIndex="true"
+  />
+  <fieldType name="packedQuad"
+            class="solr.SpatialRecursivePrefixTreeFieldType"
+            datelineRule="ccwRect"
+            spatialContextFactory="org.locationtech.spatial4j.context.jts.JtsSpatialContextFactory"
+            validationRule="none"
+            distanceUnits="degrees"
+            prefixTree="packedQuad"
+            autoIndex="true"
+  />
+
   <fieldType name="location"
             class="solr.LatLonPointSpatialField"
             docValues="true"
@@ -119,46 +138,56 @@
   <field name="id" type="string" docValues="true" multiValued="false" indexed="true"/>
 
   <!-- required for WMS -->
-  <field name="point-0.0001" type="string" docValues="true" indexed="true" />
-  <field name="point-0.001" type="string" docValues="true" indexed="true" />
-  <field name="point-0.01" type="string" docValues="true" indexed="true" />
-  <field name="point-0.02" type="string" docValues="true" indexed="true"/>
-  <field name="point-0.1" type="string" docValues="true" indexed="true"/>
-  <field name="point-1" type="string" docValues="true" indexed="true" />
-  <field name="lat_long" type="string" docValues="true" indexed="false" />
-  <field name="geohash"  type="geohash"  indexed="true"/>
-  <field name="location" type="location" indexed="true"/>
+  <field name="point-0.0001"  type="string" docValues="true" indexed="true" />
+  <field name="point-0.001"   type="string" docValues="true" indexed="true" />
+  <field name="point-0.01"    type="string" docValues="true" indexed="true" />
+  <field name="point-0.02"    type="string" docValues="true" indexed="true"/>
+  <field name="point-0.1"     type="string" docValues="true" indexed="true"/>
+  <field name="point-1"       type="string" docValues="true" indexed="true" />
+  <field name="lat_long"      type="string" docValues="true" indexed="false" />
+  <field name="biome"         type="string" docValues="true" indexed="true" />
+  <field name="speciesHabitats"         type="string" docValues="true" indexed="true" />
+  <field name="geohash"       type="geohash"     indexed="true"/>
+  <field name="quad"          type="quad"        indexed="true"/>
+  <field name="packedQuad"    type="packedQuad"  indexed="true"/>
+  <field name="location"      type="location" indexed="true"/>
 
   <!-- required for Explore Your Area -->
   <field name="names_and_lsid"       type="string" docValues="true" indexed="true"/>
   <field name="common_name_and_lsid" type="string" docValues="true" indexed="true"/>
 
   <!-- legacy fields referenced by biocache-service code - to be reviewed and refactored out if possible -->
-  <field name="taxon_name"        type="string"  docValues="true" indexed="true"/>
-  <field name="common_name"       type="string"  docValues="true" indexed="true"/>
-  <field name="rank"              type="string"  docValues="true" indexed="true"/>
-  <field name="rank_id"           type="int"    docValues="true" indexed="true"/>
-  <field name="lsid"              type="string"  docValues="true" indexed="true"/>
-  <field name="lft"               type="int"    docValues="true" indexed="true"/>
-  <field name="rgt"               type="int"    docValues="true" indexed="true"/>
-  <field name="geospatial_kosher" type="boolean" docValues="true" multiValued="false" indexed="true" />
-  <field name="firstLoadedDate"   type="date"   docValues="true" multiValued="false" indexed="true"/>
-  <field name="speciesGroup"      type="string"  docValues="true" multiValued="true"  indexed="true"/>
-  <field name="speciesSubgroup"   type="string"  docValues="true" multiValued="true"  indexed="true" />
-  <field name="species_list_uid"  type="string"  docValues="true" multiValued="true"  indexed="true" />
-  <field name="image_url"         type="string"  docValues="true" multiValued="false" indexed="true" />
-  <field name="all_image_url"     type="string"  docValues="true" multiValued="true"  indexed="true" />
-  <field name="multimedia"        type="string"  docValues="true" multiValued="true"  indexed="true" />
-  <field name="assertions"        type="string"  docValues="true" multiValued="true"  indexed="true" />
+  <field name="lft"                type="int"     docValues="true" indexed="true" />
+  <field name="rgt"                type="int"     docValues="true" indexed="true" />
+  <field name="spatiallyValid"     type="boolean" docValues="true" multiValued="false" indexed="true" />
+  <field name="firstLoadedDate"    type="date"    docValues="true" multiValued="false" indexed="true" />
+  <field name="lastLoadDate"       type="date"    docValues="true" multiValued="false" indexed="true" />
+  <field name="lastProcessedDate"  type="date"    docValues="true" multiValued="false" indexed="true" />
+  <field name="speciesGroup"       type="string"  docValues="true" multiValued="true"  indexed="true" />
+  <field name="speciesSubgroup"    type="string"  docValues="true" multiValued="true"  indexed="true" />
+  <field name="speciesListUid"     type="string"  docValues="true" multiValued="true"  indexed="true" />
+  <field name="imageID"            type="string"  docValues="true" multiValued="false" indexed="true" />
+  <field name="imageIDs"           type="string"  docValues="true" multiValued="true"  indexed="true" />
+  <field name="soundIDs"           type="string"  docValues="true" multiValued="true"  indexed="true" />
+  <field name="videoIDs"           type="string"  docValues="true" multiValued="true"  indexed="true" />
+  <field name="multimedia"         type="string"  docValues="true" multiValued="true"  indexed="true" />
+  <field name="multimediaLicense"  type="string"  docValues="true" multiValued="true"  indexed="true" />
+  <field name="assertions"         type="string"  docValues="true" multiValued="true"  indexed="true" />
+  <field name="geospatialIssues"   type="string"  docValues="true" multiValued="true"  indexed="true" />
+  <field name="taxonomicIssues"    type="string"  docValues="true" multiValued="true"  indexed="true" />
+  <field name="defaultValuesUsed"  type="boolean" docValues="true" indexed="true" />
+  <field name="occurrenceYear"     type="date" docValues="true" multiValued="true"  indexed="true" />
+  <!-- to be removed -->
+  <field name="occurrence_year"    type="date" docValues="true" multiValued="true"  indexed="true" />
 
   <!-- Legacy conservation fields -->
-  <field name="raw_state_conservation" type="string"  docValues="true" multiValued="false"  indexed="true" />
-  <field name="state_conservation"     type="string"  docValues="true" multiValued="false"  indexed="true" />
-  <field name="country_conservation"   type="string"  docValues="true" multiValued="false"  indexed="true" />
+  <field name="raw_stateConservation" type="string"  docValues="true" multiValued="false"  indexed="true" />
+  <field name="stateConservation"     type="string"  docValues="true" multiValued="false"  indexed="true" />
+  <field name="countryConservation"   type="string"  docValues="true" multiValued="false"  indexed="true" />
 
   <!-- Additional invasive fields -->
-  <field name="state_invasive"         type="string"  docValues="true" multiValued="false"  indexed="true" />
-  <field name="country_invasive"       type="string"  docValues="true" multiValued="false"  indexed="true" />
+  <field name="stateInvasive"         type="string"  docValues="true" multiValued="false"  indexed="true" />
+  <field name="countryInvasive"       type="string"  docValues="true" multiValued="false"  indexed="true" />
 
   <!-- All DWC fields -->
   <field name="acceptedNameUsage" type="string" docValues="true" indexed="true"/>
@@ -188,13 +217,14 @@
   <field name="datasetID" type="string" docValues="true" indexed="true"/>
   <field name="datasetName" type="string" docValues="true" indexed="true"/>
   <field name="dateIdentified" type="string" docValues="true" indexed="true"/>
+  <field name="datePrecision" type="string" docValues="true" indexed="true"/>
   <field name="day" type="int" docValues="true" indexed="true"/>
   <field name="decimalLatitude" type="double" docValues="true" indexed="true"/>
   <field name="decimalLongitude" type="double" docValues="true" indexed="true"/>
   <field name="depth" type="double" docValues="true" indexed="true"/>
   <field name="depthAccuracy" type="double" docValues="true" indexed="true"/>
   <field name="disposition" type="string" docValues="true" indexed="true"/>
-  <field name="dynamicProperties" type="string" docValues="true" indexed="true"/>
+  <field name="dynamicProperties" type="text" indexed="true"/>
   <field name="earliestAgeOrLowestStage" type="string" docValues="true" indexed="true"/>
   <field name="earliestEonOrLowestEonothem" type="string" docValues="true" indexed="true"/>
   <field name="earliestEpochOrLowestSeries" type="string" docValues="true" indexed="true"/>
@@ -203,8 +233,8 @@
   <field name="earliestPeriodOrLowestSystem" type="string" docValues="true" indexed="true"/>
   <field name="endDayOfYear" type="string" docValues="true" indexed="true"/>
   <field name="establishmentMeans" type="string" docValues="true" indexed="true"/>
-  <field name="eventDate" type="string" docValues="true" indexed="true"/>
-  <field name="eventDateSingle" type="date" docValues="true" indexed="true"/>
+  <field name="eventDate"    type="date" docValues="true" indexed="true"/>
+  <field name="eventDateEnd" type="date" docValues="true" indexed="true"/>
   <field name="eventID" type="string" docValues="true" indexed="true"/>
   <field name="eventRemarks" type="string" docValues="true" indexed="true"/>
   <field name="eventTime" type="string" docValues="true" indexed="true"/>
@@ -213,7 +243,7 @@
   <field name="fieldNumber" type="string" docValues="true" indexed="true"/>
   <field name="footprintSRS" type="string" docValues="true" indexed="true"/>
   <field name="footprintSpatialFit" type="string" docValues="true" indexed="true"/>
-  <field name="footprintWKT" type="string" docValues="true" indexed="true"/>
+  <field name="footprintWKT" type="text" indexed="true"/>
   <field name="formation" type="string" docValues="true" indexed="true"/>
   <field name="fromLithostratigraphicUnit" type="string" docValues="true" indexed="true"/>
   <field name="genus" type="string" docValues="true" indexed="true"/>
@@ -325,6 +355,7 @@
   <field name="reproductiveCondition"  type="string" docValues="true" indexed="true"/>
   <field name="resourceID"  type="string" docValues="true" indexed="true"/>
   <field name="resourceRelationshipID"  type="string" docValues="true" indexed="true"/>
+  <field name="rights"  type="string" docValues="true" indexed="true"/>
   <field name="rightsHolder"  type="string" docValues="true" indexed="true"/>
   <field name="sampleSizeUnit"  type="string" docValues="true" indexed="true"/>
   <field name="sampleSizeValue"  type="string" docValues="true" indexed="true"/>
@@ -334,7 +365,7 @@
   <field name="scientificNameAuthorship"  type="string" docValues="true" indexed="true"/>
   <field name="scientificNameID"  type="string" docValues="true" indexed="true"/>
   <field name="sex"  type="string" docValues="true" indexed="true"/>
-  <field name="source_mat_id"  type="string" docValues="true" indexed="true"/>
+  <field name="source"  type="string" docValues="true" indexed="true"/>
   <field name="specificEpithet"  type="string" docValues="true" indexed="true"/>
   <field name="startDayOfYear"  type="string" docValues="true" indexed="true"/>
   <field name="stateProvince"  type="string" docValues="true" indexed="true"/>
@@ -348,7 +379,7 @@
   <field name="type"  type="string" docValues="true" indexed="true"/>
   <field name="typeStatus"  type="string" docValues="true" indexed="true"/>
   <field name="verbatimCoordinateSystem"  type="string" docValues="true" indexed="true"/>
-  <field name="verbatimCoordinates"  type="string" docValues="true" indexed="true"/>
+  <field name="verbatimCoordinates"  type="text" indexed="true"/>
   <field name="verbatimDepth"  type="string" docValues="true" indexed="true"/>
   <field name="verbatimElevation"  type="string" docValues="true" indexed="true"/>
   <field name="verbatimEventDate"  type="string" docValues="true" indexed="true"/>
@@ -361,17 +392,34 @@
   <field name="waterBody"  type="string" docValues="true" indexed="true"/>
   <field name="year"  type="int" docValues="true" indexed="true"/>
 
+  <!-- Clustering (Duplicate detection) -->
+  <field name="isInCluster"        type="boolean" docValues="true" indexed="true"/>
+  <field name="isRepresentativeOf" type="string"  docValues="true" indexed="true" multiValued="true"/>
+  <field name="isDuplicateOf"      type="string"  docValues="true" indexed="true" multiValued="true"/>
+  <field name="duplicateStatus"    type="string"  docValues="true" indexed="true" multiValued="true"/>
+  <field name="duplicateType"      type="string"  docValues="true" indexed="true" multiValued="true"/>
+
   <!-- Large text fields (not supported by doc values) -->
-  <field name="raw_footprintWKT"  type="text" />
-  <field name="raw_dynamicProperties"  type="text" />
-  <field name="raw_verbatimCoordinates"  type="text" />
+  <field name="raw_footprintWKT"        type="text" />
+  <field name="raw_dynamicProperties"   type="text" />
+  <field name="raw_verbatimCoordinates" type="text" />
 
   <!-- recent GBIF additions -->
-  <field name="identifiedByIds"  type="string" docValues="true" indexed="true"/>
-  <field name="recordedByIds"  type="string" docValues="true" indexed="true"/>
-  <field name="typifiedName"  type="string" docValues="true" indexed="true"/>
+  <field name="identifiedByID"  type="string" docValues="true" indexed="true" multiValued="true"/>
+  <field name="recordedByID"    type="string" docValues="true" indexed="true" multiValued="true"/>
+  <field name="typifiedName"    type="string" docValues="true" indexed="true" />
+
+  <!-- TODO recent additions to be validated... -->
+  <field name="decade"  type="int" docValues="true" indexed="true" />
+  <field name="photographer"  type="string" docValues="true" indexed="true" />
+  <field name="northing"  type="string" docValues="true" indexed="true" />
+  <field name="easting"  type="string" docValues="true" indexed="true" />
+  <field name="zone"  type="string" docValues="true" indexed="true" />
+  <field name="identifierRole"  type="string" docValues="true" indexed="true" />
 
   <!-- ALA 'DWC' additional fields -->
+  <field name="subspecies"    type="string" docValues="true" indexed="true"/>
+  <field name="subspeciesID"  type="string" docValues="true" indexed="true"/>
   <field name="species"    type="string" docValues="true" indexed="true"/>
   <field name="speciesID"  type="string" docValues="true" indexed="true"/>
   <field name="genusID"    type="string" docValues="true" indexed="true"/>
@@ -380,26 +428,51 @@
   <field name="classID"    type="string" docValues="true" indexed="true"/>
   <field name="phylumID"   type="string" docValues="true" indexed="true"/>
   <field name="kingdomID"  type="string" docValues="true" indexed="true"/>
-  <field name="rankID"     type="int"   docValues="true" indexed="true"/>
+  <field name="rankID"     type="int"    docValues="true" indexed="true"/>
   <field name="matchType"  type="string" docValues="true" indexed="true"/>
-  <field name="nameType"  type="string" docValues="true" indexed="true"/>
+  <field name="nameType"   type="string" docValues="true" indexed="true"/>
+
+  <!-- coming from some sources such as AVH -->
+  <field name="superfamily" type="string" docValues="true" indexed="true"/>
+  <field name="subfamily"   type="string" docValues="true" indexed="true"/>
 
   <!-- ALA Sensitive data fields -->
-  <field name="sensitive"  type="boolean" docValues="true" indexed="true"/>
-  <field name="generalisationInMetres"  type="string" docValues="true" indexed="true"/>
-  <field name="generalisationToApplyInMetres"  type="string" docValues="true" indexed="true"/>
+  <field name="sensitive"                       type="string" docValues="true" indexed="true"/>
+  <field name="generalisationInMetres"          type="string" docValues="true" indexed="true"/>
+  <field name="generalisationToApplyInMetres"   type="string" docValues="true" indexed="true"/>
+
+  <!-- GGBN loan fields and ABCD fields -->
+  <field name="loanDestination"  type="string" docValues="true" indexed="true"/>
+  <field name="loanIdentifier"  type="string" docValues="true" indexed="true"/>
+  <field name="secondaryCollectors"  type="string" docValues="true" indexed="true"/>
+  <field name="abcdTypeStatus"  type="string" docValues="true" indexed="true"/>
 
   <!-- ALA legacy attribution fields -->
-  <field name="dataResourceUid" type="string" docValues="true" indexed="true" />
-  <field name="dataProviderUid" type="string" docValues="true" indexed="true" />
-  <field name="institutionUid" type="string" docValues="true" indexed="true" />
-  <field name="collectionUid" type="string" docValues="true" indexed="true" />
-  <field name="dataResourceName" type="string" docValues="true" indexed="true" />
-  <field name="dataProviderName" type="string" docValues="true" indexed="true" />
-  <field name="institutionName" type="string" docValues="true" indexed="true" />
-  <field name="collectionName" type="string" docValues="true" indexed="true" />
+  <field name="raw_dataResourceUid"   type="string" docValues="true" indexed="true" />
+  <field name="dataResourceUid"   type="string" docValues="true" indexed="true" />
+  <field name="dataProviderUid"   type="string" docValues="true" indexed="true" />
+  <field name="institutionUid"    type="string" docValues="true" indexed="true" />
+  <field name="collectionUid"     type="string" docValues="true" indexed="true" />
+  <field name="dataHubUid"        type="string" docValues="true" indexed="true" multiValued="true" />
+  <field name="dataHubName"       type="string" docValues="true" indexed="true" multiValued="true" />
+  <field name="dataResourceName"  type="string" docValues="true" indexed="true" />
+  <field name="dataProviderName"  type="string" docValues="true" indexed="true" />
+  <field name="institutionName"   type="string" docValues="true" indexed="true" />
+  <field name="collectionName"    type="string" docValues="true" indexed="true" />
+  <field name="provenance"        type="string" docValues="true" indexed="true" />
+
+  <!-- Free text search fields -->
+  <field name="text"         type="text"   multiValued="true" indexed="true" stored="false" />
+  <field name="matched_name" type="string" multiValued="true" indexed="true" stored="false" />
+
+  <!-- occurrenceDetails needs to be remapped on export -->
+  <!-- see https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/236 -->
+  <field name="occurrenceDetails" type="string" docValues="true" indexed="true" />
+  <field name="userId" type="string" docValues="true" indexed="true" />
 
   <field name="machineTags"  type="string" docValues="true" indexed="true" multiValued="true" />
+
+  <dynamicField name="sensitive_*" type="string" docValues="true" indexed="true" />
 
   <!-- ALA specific fields -->
   <dynamicField name="gbif_s_*" type="string" docValues="true" indexed="true" />
@@ -422,9 +495,11 @@
   <!-- Original data fields for generalised data -->
   <dynamicField name="original_*" type="string" docValues="true" indexed="false"/>
 
+  <!-- Map deprecated fields to this field -->
+  <dynamicField name="deprecated_*" type="string" docValues="true" indexed="false"/>
+
   <!-- Adhoc fields -->
   <dynamicField name="_*"    type="string" docValues="true" indexed="true" stored="false"/>
-
   <dynamicField name="*_m_s" type="string" docValues="true" multiValued="true" indexed="true" stored="false"/>
   <dynamicField name="*_dt" type="date" docValues="true" indexed="true" stored="false"/>
   <dynamicField name="*_i" type="int" docValues="true" indexed="true" stored="false"/>
@@ -433,12 +508,58 @@
   <dynamicField name="*_b" type="boolean" docValues="true" indexed="true" stored="false"/>
   <dynamicField name="*_f" type="float" docValues="true" indexed="true" stored="false"/>
   <dynamicField name="*_d" type="double" docValues="true" indexed="true" stored="false"/>
+  <dynamicField name="dynamicProperties_*" type="string" docValues="true" indexed="true" stored="false"/>
 
-  <copyField source="lat_long" dest="geohash"/>
-  <copyField source="lat_long" dest="location"/>
+  <copyField source="lat_long"         dest="geohash"/>
+  <copyField source="lat_long"         dest="location"/>
+  <copyField source="lat_long"         dest="quad"/>
+  <copyField source="lat_long"         dest="packedQuad"/>
+  <copyField source="biome"            dest="speciesHabitats"/>
+  <copyField source="occurrenceYear"   dest="occurrence_year"/>
+  <copyField source="dataResourceUid"  dest="raw_dataResourceUid"/>
 
+  <!-- Do we need this -->
+  <copyField source="basisOfRecord" dest="text"/>
+  <copyField source="catalogNumber" dest="text"/>
+  <copyField source="class" dest="text"/>
+  <copyField source="collectionCode" dest="text"/>
+  <copyField source="collectionName" dest="text"/>
+  <copyField source="country" dest="text"/>
+  <copyField source="countryConservation" dest="text"/>
+  <copyField source="dataProviderName" dest="text"/>
+  <copyField source="dataResourceName" dest="text"/>
+  <copyField source="dataResourceUid" dest="text"/>
+  <copyField source="eventID" dest="text"/>
+  <copyField source="family" dest="text"/>
+  <copyField source="genus" dest="text"/>
+  <copyField source="id" dest="text"/>
+  <copyField source="institutionCode" dest="text"/>
+  <copyField source="institutionName" dest="text"/>
+  <copyField source="kingdom" dest="text"/>
+  <copyField source="locationID" dest="text"/>
+  <copyField source="occurrenceID" dest="text"/>
+  <copyField source="order" dest="text"/>
+  <copyField source="originalNameUsage" dest="text"/>
+  <copyField source="phylum" dest="text"/>
+  <copyField source="raw_basis_of_record" dest="text"/>
+  <copyField source="raw_countryConservation" dest="text"/>
+  <copyField source="raw_scientificName" dest="text"/>
+  <copyField source="raw_stateConservation" dest="text"/>
+  <copyField source="raw_typeStatus" dest="text"/>
+  <copyField source="raw_vernacularName" dest="text"/>
+  <copyField source="recordedBy" dest="text"/>
+  <copyField source="scientificName" dest="matched_name"/>
+  <copyField source="scientificName" dest="text"/>
+  <copyField source="species" dest="text"/>
+  <copyField source="speciesGroup" dest="text"/>
+  <copyField source="speciesSubgroup" dest="text"/>
+  <copyField source="stateConservation" dest="text"/>
+  <copyField source="stateProvince" dest="text"/>
+  <copyField source="typeStatus" dest="text"/>
+  <copyField source="vernacularName" dest="matched_name"/>
+  <copyField source="vernacularName" dest="text"/>
 
-  <!-- Depricated ALA SOLR fields no longer in use will be mapped to this unused SOLR field so
+  <!-- Deprecated ALA SOLR fields no longer in use will be mapped to this unused SOLR field so
        as not to throw an error. No data will be added to this field.  -->
   <field name="null" type="string" docValues="true" indexed="true" stored="true"/>
 
