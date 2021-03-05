@@ -81,7 +81,7 @@
     <gbif-cli.version>0.14</gbif-cli.version>
     <gbif-common-ws.version>0.48</gbif-common-ws.version>
     <gbif-httputils.version>0.12</gbif-httputils.version>
-    <gbif-postal-service.version>1.0-SNAPSHOT</gbif-postal-service.version>
+    <gbif-postal-service.version>1.0</gbif-postal-service.version>
     <gbif-registry.version>2.153</gbif-registry.version>
     <gbif-wrangler.version>0.3</gbif-wrangler.version>
     <gbif-crawler.version>0.113</gbif-crawler.version>
