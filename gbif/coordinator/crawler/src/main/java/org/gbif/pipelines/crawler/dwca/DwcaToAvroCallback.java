@@ -1,5 +1,6 @@
 package org.gbif.pipelines.crawler.dwca;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.getAllInterpretationAsString;
 import static org.gbif.pipelines.common.utils.PathUtil.buildDwcaInputPath;
 
 import java.nio.file.Path;
@@ -124,10 +125,9 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
     }
 
     // Calculates and checks existence of DwC Archive
-    UUID datasetId = message.getDatasetUuid();
-    Path inputPath = buildDwcaInputPath(config.archiveRepository, datasetId);
-    Set<String> extTerms = DwcaExtensionTermUtils.fromLocation(inputPath);
-    extTerms.addAll(config.interpretTypes);
+    Path inputPath = buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid());
+    Set<String> interpretedTypes = DwcaExtensionTermUtils.fromLocation(inputPath);
+    interpretedTypes.addAll(getAllInterpretationAsString());
 
     // Common variables
     OccurrenceValidationReport report = message.getValidationReport().getOccurrenceReport();
@@ -139,7 +139,7 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
     return new PipelinesVerbatimMessage(
         message.getDatasetUuid(),
         message.getAttempt(),
-        extTerms,
+        interpretedTypes,
         message.getPipelineSteps(),
         message.getEndpointType(),
         validationResult);

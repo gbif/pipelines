@@ -20,7 +20,19 @@ public class HdfsViewAvroUtils {
    * the dataset being processed.
    */
   public static void move(InterpretationPipelineOptions options) {
+    if (options.getInterpretationTypes().size() == 1
+        && options.getInterpretationTypes().contains(OCCURRENCE.name())) {
+      moveOccurrence(options);
+    } else {
+      moveAll(options);
+    }
+  }
 
+  private static void moveOccurrence(InterpretationPipelineOptions options) {
+    move(options, OCCURRENCE);
+  }
+
+  private static void moveAll(InterpretationPipelineOptions options) {
     move(options, OCCURRENCE);
     move(options, RecordType.MEASUREMENT_OR_FACT_TABLE, Extension.MEASUREMENT_OR_FACT);
     move(options, RecordType.IDENTIFICATION_TABLE, Extension.IDENTIFICATION);

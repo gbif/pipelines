@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
@@ -61,6 +62,8 @@ public class PipelinesVariables {
         // Specific
         LOCATION_FEATURE,
         // Tables,
+        // Remeber to add mapping to org.gbif.pipelines.core.utils.DwcaExtensionTermUtils
+        // and org.gbif.pipelines.ingest.utils.HdfsViewAvroUtils
         OCCURRENCE,
         MEASUREMENT_OR_FACT_TABLE,
         IDENTIFICATION_TABLE,
@@ -86,6 +89,32 @@ public class PipelinesVariables {
         @Override
         public String all() {
           return ALL.name();
+        }
+
+        public static Set<RecordType> getAllInterpretation() {
+          return new HashSet<>(
+              Arrays.asList(
+                  VERBATIM,
+                  // Core types
+                  METADATA,
+                  BASIC,
+                  TEMPORAL,
+                  LOCATION,
+                  TAXONOMY,
+                  GRSCICOLL,
+                  // Extension types
+                  IMAGE,
+                  MULTIMEDIA,
+                  AUDUBON,
+                  MEASUREMENT_OR_FACT,
+                  AMPLIFICATION,
+                  // Specific
+                  LOCATION_FEATURE,
+                  OCCURRENCE));
+        }
+
+        public static Set<String> getAllInterpretationAsString() {
+          return getAllInterpretation().stream().map(RecordType::name).collect(Collectors.toSet());
         }
 
         public static Set<RecordType> getAllTables() {
