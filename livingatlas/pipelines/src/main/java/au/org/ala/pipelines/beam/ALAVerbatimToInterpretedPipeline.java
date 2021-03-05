@@ -154,12 +154,14 @@ public class ALAVerbatimToInterpretedPipeline {
         MetadataTransform.builder().endpointType(endPointType).attempt(attempt).create();
     ALABasicTransform basicTransform =
         ALABasicTransform.builder()
-            .lifeStageLookupSupplier( config.getGbifConfig().getVocabularyConfig() != null ?
-                    FileVocabularyFactory.getInstanceSupplier(
-                    config.getGbifConfig(),
-                    hdfsSiteConfig,
-                    coreSiteConfig,
-                    FileVocabularyFactory.VocabularyBackedTerm.LIFE_STAGE) : null)
+            .lifeStageLookupSupplier(
+                config.getGbifConfig().getVocabularyConfig() != null
+                    ? FileVocabularyFactory.getInstanceSupplier(
+                        config.getGbifConfig(),
+                        hdfsSiteConfig,
+                        coreSiteConfig,
+                        FileVocabularyFactory.VocabularyBackedTerm.LIFE_STAGE)
+                    : null)
             .recordedByKvStoreSupplier(RecordedByKVStoreFactory.createSupplier(config))
             .occStatusKvStoreSupplier(
                 OccurrenceStatusKvStoreFactory.createSupplier(config.getGbifConfig()))
