@@ -28,7 +28,7 @@ public class XmlToAvscGeneratorMojoTest {
 
     Schema schema = new Schema.Parser().parse(result.toFile());
     Assert.assertEquals("MeasurementOrFactTable", schema.getName());
-    Assert.assertEquals("org.gbif.pipelines.io.avro", schema.getNamespace());
+    Assert.assertEquals("org.gbif.pipelines.io.avro.dwc", schema.getNamespace());
     Assert.assertEquals(19, schema.getFields().size());
   }
 }
