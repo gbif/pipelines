@@ -5,7 +5,7 @@
   <parent>
     <groupId>au.org.ala</groupId>
     <artifactId>livingatlas</artifactId>
-    <version>2.8.0-SNAPSHOT</version>
+    <version>2.8.0</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -333,7 +333,7 @@
     <connection>scm:git:git@github.com:AtlasOfLivingAustralia/la-pipelines.git</connection>
     <url>https://github.com/AtlasOfLivingAustralia/la-pipelines</url>
     <developerConnection>scm:git:git@github.com:AtlasOfLivingAustralia/la-pipelines.git</developerConnection>
-    <tag>HEAD</tag>
+    <tag>pipelines-parent-2.8.0</tag>
   </scm>
 
   <dependencies>
