@@ -1,6 +1,7 @@
 package org.gbif.pipelines.crawler.fragmenter;
 
 import static org.gbif.crawler.constants.PipelinesNodePaths.getPipelinesInfoPath;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE;
 import static org.gbif.pipelines.fragmenter.common.TableAssert.assertTable;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -110,7 +111,8 @@ public class FragmenterCallbackIT {
             null,
             null,
             endpointType,
-            VALIDATION_RESULT);
+            VALIDATION_RESULT,
+            Collections.singleton(OCCURRENCE.name()));
 
     FragmenterCallback callback =
         new FragmenterCallback(
@@ -168,7 +170,8 @@ public class FragmenterCallbackIT {
             null,
             null,
             endpointType,
-            VALIDATION_RESULT);
+            VALIDATION_RESULT,
+            Collections.singleton(OCCURRENCE.name()));
 
     FragmenterCallback callback =
         new FragmenterCallback(
@@ -226,7 +229,8 @@ public class FragmenterCallbackIT {
             null,
             null,
             endpointType,
-            VALIDATION_RESULT);
+            VALIDATION_RESULT,
+            Collections.singleton(OCCURRENCE.name()));
 
     FragmenterCallback callback =
         new FragmenterCallback(
@@ -283,7 +287,8 @@ public class FragmenterCallbackIT {
             StepType.FRAGMENTER.name(),
             null,
             endpointType,
-            VALIDATION_RESULT);
+            VALIDATION_RESULT,
+            Collections.singleton(OCCURRENCE.name()));
 
     FragmenterCallback callback =
         new FragmenterCallback(
@@ -332,7 +337,8 @@ public class FragmenterCallbackIT {
             StepType.HDFS_VIEW.name(),
             null,
             endpointType,
-            VALIDATION_RESULT);
+            VALIDATION_RESULT,
+            Collections.singleton(OCCURRENCE.name()));
 
     FragmenterCallback callback =
         new FragmenterCallback(

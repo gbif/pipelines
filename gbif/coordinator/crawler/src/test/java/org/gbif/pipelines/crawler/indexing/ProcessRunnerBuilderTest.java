@@ -1,5 +1,6 @@
 package org.gbif.pipelines.crawler.indexing;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE;
 import static org.junit.Assert.assertEquals;
 
 import java.util.Collections;
@@ -63,7 +64,15 @@ public class ProcessRunnerBuilderTest {
     ValidationResult vr = new ValidationResult();
     PipelinesInterpretedMessage message =
         new PipelinesInterpretedMessage(
-            datasetId, attempt, steps, null, false, null, EndpointType.DWC_ARCHIVE, vr);
+            datasetId,
+            attempt,
+            steps,
+            null,
+            false,
+            null,
+            EndpointType.DWC_ARCHIVE,
+            vr,
+            Collections.singleton(OCCURRENCE.name()));
 
     String indexName = "occurrence";
 
@@ -127,7 +136,15 @@ public class ProcessRunnerBuilderTest {
     ValidationResult vr = new ValidationResult();
     PipelinesInterpretedMessage message =
         new PipelinesInterpretedMessage(
-            datasetId, attempt, steps, 100L, false, null, EndpointType.DWC_ARCHIVE, vr);
+            datasetId,
+            attempt,
+            steps,
+            100L,
+            false,
+            null,
+            EndpointType.DWC_ARCHIVE,
+            vr,
+            Collections.singleton(OCCURRENCE.name()));
 
     String indexName = "occurrence";
 

@@ -159,7 +159,7 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
         message.getResetPrefix(),
         message.getEndpointType(),
         message.getValidationResult(),
-        message.getExtensionRowTypes());
+        message.getInterpretTypes());
   }
 
   private void runLocal(ProcessRunnerBuilderBuilder builder) {

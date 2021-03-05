@@ -1,6 +1,6 @@
 package org.gbif.pipelines.ingest.utils;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.OCCURRENCE;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -21,7 +21,7 @@ public class HdfsViewAvroUtils {
    */
   public static void move(InterpretationPipelineOptions options) {
 
-    move(options, OCCURRENCE, OCCURRENCE);
+    move(options, OCCURRENCE);
     move(options, RecordType.MEASUREMENT_OR_FACT_TABLE, Extension.MEASUREMENT_OR_FACT);
     move(options, RecordType.IDENTIFICATION_TABLE, Extension.IDENTIFICATION);
     move(options, RecordType.RESOURCE_RELATIONSHIP_TABLE, Extension.RESOURCE_RELATIONSHIP);
@@ -54,6 +54,11 @@ public class HdfsViewAvroUtils {
     move(options, RecordType.CHRONOMETRIC_DATE_TABLE, Extension.CHRONOMETRIC_DATE);
     move(options, RecordType.REFERENCE_TABLE, Extension.REFERENCE);
     move(options, RecordType.IDENTIFIER_TABLE, Extension.IDENTIFIER);
+  }
+
+  private static void move(InterpretationPipelineOptions options, RecordType recordType) {
+    String path = recordType.name().toLowerCase();
+    move(options, path, path);
   }
 
   private static void move(

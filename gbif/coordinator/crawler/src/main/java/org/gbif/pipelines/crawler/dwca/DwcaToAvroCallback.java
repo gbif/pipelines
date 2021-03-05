@@ -127,6 +127,7 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
     UUID datasetId = message.getDatasetUuid();
     Path inputPath = buildDwcaInputPath(config.archiveRepository, datasetId);
     Set<String> extTerms = DwcaExtensionTermUtils.fromLocation(inputPath);
+    extTerms.addAll(config.interpretTypes);
 
     // Common variables
     OccurrenceValidationReport report = message.getValidationReport().getOccurrenceReport();
@@ -138,11 +139,10 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
     return new PipelinesVerbatimMessage(
         message.getDatasetUuid(),
         message.getAttempt(),
-        config.interpretTypes,
+        extTerms,
         message.getPipelineSteps(),
         message.getEndpointType(),
-        validationResult,
-        extTerms);
+        validationResult);
   }
 
   /**

@@ -66,8 +66,7 @@ public class VerbatimMessageHandler {
             m.getExtraPath(),
             result,
             m.getResetPrefix(),
-            m.getExecutionId(),
-            m.getExtensionRowTypes());
+            m.getExecutionId());
 
     publisher.send(outputMessage);
 

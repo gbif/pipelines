@@ -5,6 +5,7 @@ import static org.gbif.pipelines.core.utils.FsUtils.createParentDirectories;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
@@ -14,10 +15,12 @@ import lombok.SneakyThrows;
 import org.apache.avro.Schema;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.InterpretationType;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
 import org.gbif.pipelines.core.io.SyncDataFileWriterBuilder;
 import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.transforms.common.CheckTransforms;
 
 @Builder
 public class TableRecordWriter<T> {
@@ -25,19 +28,23 @@ public class TableRecordWriter<T> {
   @NonNull private final InterpretationPipelineOptions options;
   @NonNull private final Collection<BasicRecord> basicRecords;
   @NonNull private final Function<BasicRecord, Optional<T>> recordFunction;
-  @NonNull private final String targetTempPath;
+  @NonNull private final Function<InterpretationType, String> targetPathFn;
   @NonNull private final Schema schema;
   @NonNull private final ExecutorService executor;
+  @NonNull private final Set<String> types;
+  @NonNull private final InterpretationType recordType;
 
   @SneakyThrows
   public void write() {
-    try (SyncDataFileWriter<T> writer = createWriter(options)) {
-      boolean useSyncMode = options.getSyncThreshold() > basicRecords.size();
-      if (useSyncMode) {
-        syncWrite(writer);
-      } else {
-        CompletableFuture<?>[] futures = asyncWrite(writer);
-        CompletableFuture.allOf(futures).get();
+    if (CheckTransforms.checkRecordType(types, recordType)) {
+      try (SyncDataFileWriter<T> writer = createWriter(options)) {
+        boolean useSyncMode = options.getSyncThreshold() > basicRecords.size();
+        if (useSyncMode) {
+          syncWrite(writer);
+        } else {
+          CompletableFuture<?>[] futures = asyncWrite(writer);
+          CompletableFuture.allOf(futures).get();
+        }
       }
     }
   }
@@ -68,7 +75,7 @@ public class TableRecordWriter<T> {
   /** Create an AVRO file writer */
   @SneakyThrows
   private SyncDataFileWriter<T> createWriter(InterpretationPipelineOptions options) {
-    Path path = new Path(targetTempPath);
+    Path path = new Path(targetPathFn.apply(recordType));
     FileSystem verbatimFs =
         createParentDirectories(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), path);
     return SyncDataFileWriterBuilder.builder()

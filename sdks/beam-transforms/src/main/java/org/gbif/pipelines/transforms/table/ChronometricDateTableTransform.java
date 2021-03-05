@@ -1,73 +1,37 @@
 package org.gbif.pipelines.transforms.table;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.CHRONOMETRIC_DATE_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.CHRONOMETRIC_DATE_TABLE;
 
-import java.io.Serializable;
+import java.util.Set;
 import lombok.Builder;
-import lombok.NonNull;
-import org.apache.beam.sdk.io.AvroIO;
-import org.apache.beam.sdk.metrics.Counter;
-import org.apache.beam.sdk.metrics.Metrics;
-import org.apache.beam.sdk.transforms.DoFn;
-import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.transforms.join.CoGbkResult;
-import org.apache.beam.sdk.values.KV;
+import org.apache.beam.sdk.transforms.SerializableFunction;
 import org.apache.beam.sdk.values.TupleTag;
-import org.gbif.pipelines.common.PipelinesVariables;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.InterpretationType;
 import org.gbif.pipelines.core.converters.ChronometricDateTableConverter;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.extension.ChronometricDateTable;
-import org.gbif.pipelines.transforms.Transform;
 
-@SuppressWarnings("ConstantConditions")
-@Builder
-public class ChronometricDateTableTransform implements Serializable {
+public class ChronometricDateTableTransform extends TableTransform<ChronometricDateTable> {
 
-  @NonNull private final TupleTag<ExtendedRecord> extendedRecordTag;
-  @NonNull private final TupleTag<BasicRecord> basicRecordTag;
-
-  public ParDo.SingleOutput<KV<String, CoGbkResult>, ChronometricDateTable> converter() {
-    DoFn<KV<String, CoGbkResult>, ChronometricDateTable> fn =
-        new DoFn<KV<String, CoGbkResult>, ChronometricDateTable>() {
-
-          private final Counter counter =
-              Metrics.counter(
-                  ChronometricDateTableTransform.class, CHRONOMETRIC_DATE_TABLE_RECORDS_COUNT);
-
-          @ProcessElement
-          public void processElement(ProcessContext c) {
-            CoGbkResult v = c.element().getValue();
-            String k = c.element().getKey();
-
-            ExtendedRecord er =
-                v.getOnly(extendedRecordTag, ExtendedRecord.newBuilder().setId(k).build());
-
-            BasicRecord br = v.getOnly(basicRecordTag, BasicRecord.newBuilder().setId(k).build());
-
-            ChronometricDateTableConverter.convert(br, er)
-                .ifPresent(
-                    record -> {
-                      c.output(record);
-                      counter.inc();
-                    });
-          }
-        };
-    return ParDo.of(fn);
-  }
-
-  public AvroIO.Write<ChronometricDateTable> write(String toPath, Integer numShards) {
-    AvroIO.Write<ChronometricDateTable> write =
-        AvroIO.write(ChronometricDateTable.class)
-            .to(toPath)
-            .withSuffix(PipelinesVariables.Pipeline.AVRO_EXTENSION)
-            .withCodec(Transform.getBaseCodec());
-
-    if (numShards == null || numShards <= 0) {
-      return write;
-    } else {
-      int shards = -Math.floorDiv(-numShards, 2);
-      return write.withNumShards(shards);
-    }
+  @Builder
+  public ChronometricDateTableTransform(
+      TupleTag<ExtendedRecord> extendedRecordTag,
+      TupleTag<BasicRecord> basicRecordTag,
+      SerializableFunction<InterpretationType, String> pathFn,
+      Integer numShards,
+      Set<String> types) {
+    super(
+        ChronometricDateTable.class,
+        CHRONOMETRIC_DATE_TABLE,
+        ChronometricDateTableTransform.class.getName(),
+        CHRONOMETRIC_DATE_TABLE_RECORDS_COUNT,
+        ChronometricDateTableConverter::convert);
+    this.setExtendedRecordTag(extendedRecordTag)
+        .setBasicRecordTag(basicRecordTag)
+        .setPathFn(pathFn)
+        .setNumShards(numShards)
+        .setTypes(types);
   }
 }

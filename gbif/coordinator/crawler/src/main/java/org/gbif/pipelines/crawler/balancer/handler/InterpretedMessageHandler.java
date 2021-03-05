@@ -54,7 +54,7 @@ public class InterpretedMessageHandler {
             m.getExecutionId(),
             m.getEndpointType(),
             m.getValidationResult(),
-            m.getExtensionRowTypes());
+            m.getInterpretTypes());
 
     publisher.send(outputMessage);
 

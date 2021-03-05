@@ -22,8 +22,6 @@ public class PipelinesVariables {
     public static final String INTERPRETED_TO_HDFS = "interpreted-to-hdfs";
     public static final String FRAGMENTER = "fragmenter";
 
-    public static final String OCCURRENCE = "occurrence";
-
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static class Conversion {
 
@@ -166,7 +164,7 @@ public class PipelinesVariables {
         "measurementOrFactTableRecordsCount";
     public static final String IDENTIFICATION_TABLE_RECORDS_COUNT =
         "identificationTableRecordsCount";
-    public static final String RESOURCE_RELATION_TABLE_RECORDS_COUNT =
+    public static final String RESOURCE_RELATIONSHIP_TABLE_RECORDS_COUNT =
         "resourceRelationTableRecordsCount";
     public static final String AMPLIFICATION_TABLE_RECORDS_COUNT = "amplificationTableRecordsCount";
     public static final String CLONING_TABLE_RECORDS_COUNT = "cloningTableRecordsCount";
@@ -191,7 +189,7 @@ public class PipelinesVariables {
         "chronometricAgeTableRecordsCount";
     public static final String CHRONOMETRIC_DATE_TABLE_RECORDS_COUNT =
         "chronometricDateTableRecordsCount";
-    public static final String REFERENCES_TABLE_RECORDS_COUNT = "referencesTableRecordsCount";
+    public static final String REFERENCE_TABLE_RECORDS_COUNT = "referencesTableRecordsCount";
     public static final String IDENTIFIER_TABLE_RECORDS_COUNT = "identifierTableRecordsCount";
     public static final String HDFS_VIEW_RECORDS_COUNT = "hdfsViewRecordsCount";
     // Fragmenter

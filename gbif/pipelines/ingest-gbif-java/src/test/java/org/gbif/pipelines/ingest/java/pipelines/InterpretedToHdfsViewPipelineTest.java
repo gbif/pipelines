@@ -65,7 +65,8 @@ public class InterpretedToHdfsViewPipelineTest {
       "--metaFileName=interpreted-to-hdfs.yml",
       "--inputPath=" + output,
       "--targetPath=" + input,
-      "--numberOfShards=1"
+      "--numberOfShards=1",
+      "--interpretationTypes=OCCURRENCE,MEASUREMENT_OR_FACT_TABLE,EXTENDED_MEASUREMENT_OR_FACT_TABLE,GERMPLASM_MEASUREMENT_TRIAL_TABLE"
     };
     InterpretationPipelineOptions optionsWriter =
         PipelinesOptionsFactory.createInterpretation(argsWriter);
@@ -154,7 +155,8 @@ public class InterpretedToHdfsViewPipelineTest {
       "--metaFileName=interpreted-to-hdfs.yml",
       "--inputPath=" + input,
       "--targetPath=" + output,
-      "--numberOfShards=1"
+      "--numberOfShards=1",
+      "--interpretationTypes=OCCURRENCE,MEASUREMENT_OR_FACT_TABLE,EXTENDED_MEASUREMENT_OR_FACT_TABLE,GERMPLASM_MEASUREMENT_TRIAL_TABLE"
     };
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
     InterpretedToHdfsViewPipeline.run(options);
@@ -168,6 +170,12 @@ public class InterpretedToHdfsViewPipelineTest {
         ExtendedMeasurementOrFactTable.class, outputFn.apply("extendedmeasurementorfacttable"));
     assertFile(
         GermplasmMeasurementTrialTable.class, outputFn.apply("germplasmmeasurementtrialtable"));
+    assertFileExistFalse(outputFn.apply("permittable"));
+    assertFileExistFalse(outputFn.apply("loantable"));
+  }
+
+  private void assertFileExistFalse(String output) {
+    Assert.assertFalse(new File(output).exists());
   }
 
   private <T extends SpecificRecordBase> void assertFile(Class<T> clazz, String output)

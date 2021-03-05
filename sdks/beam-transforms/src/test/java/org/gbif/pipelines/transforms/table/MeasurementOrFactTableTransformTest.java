@@ -60,7 +60,7 @@ public class MeasurementOrFactTableTransformTest {
             .and(verbatimTransform.getTag(), verbatimCollection)
             // Apply
             .apply("Grouping objects", CoGroupByKey.create())
-            .apply("Merging", transform.converter());
+            .apply("Merging", transform.convert());
 
     // Should
     PAssert.that(result).empty();
@@ -110,7 +110,7 @@ public class MeasurementOrFactTableTransformTest {
             .and(verbatimTransform.getTag(), verbatimCollection)
             // Apply
             .apply("Grouping objects", CoGroupByKey.create())
-            .apply("Merging", transform.converter());
+            .apply("Merging", transform.convert());
 
     // Should
     MeasurementOrFactTable expected =
