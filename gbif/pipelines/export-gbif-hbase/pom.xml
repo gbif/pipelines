@@ -18,6 +18,7 @@
 
   <properties>
     <gbif-occurrence.version>0.95</gbif-occurrence.version>
+    <sonar.skip>true</sonar.skip>
   </properties>
 
   <build>

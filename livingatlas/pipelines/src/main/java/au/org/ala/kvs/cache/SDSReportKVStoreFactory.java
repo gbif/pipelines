@@ -56,7 +56,7 @@ public class SDSReportKVStoreFactory {
           try {
             wsClient.close();
           } catch (Exception e) {
-            logAndThrow(e, "Unable to close");
+            log.warn("Unable to close", e);
           }
         };
 
@@ -67,40 +67,32 @@ public class SDSReportKVStoreFactory {
   private static KeyValueStore<SensitivityQuery, SensitivityReport> cache2kBackedKVStore(
       ALASDSServiceClient sdsService, Command closeHandler, ALAPipelinesConfig config) {
 
-    KeyValueStore kvs =
+    KeyValueStore<SensitivityQuery, SensitivityReport> kvs =
         new KeyValueStore<SensitivityQuery, SensitivityReport>() {
           @Override
           public SensitivityReport get(SensitivityQuery key) {
             try {
               return sdsService.report(key);
             } catch (Exception ex) {
-              throw logAndThrow(ex, "Error contacting the sensitive data service");
+              log.error("Error contacting the sensitive data service", ex);
+              throw new RuntimeException(ex);
             }
           }
 
           @Override
-          public void close() throws IOException {
+          public void close() {
             closeHandler.execute();
           }
         };
     return KeyValueCache.cache(
-        kvs, config.getAlaNameMatch().getCacheSizeMb(), SensitivityQuery.class, Boolean.class);
+        kvs,
+        config.getAlaNameMatch().getCacheSizeMb(),
+        SensitivityQuery.class,
+        SensitivityReport.class);
   }
 
   public static SerializableSupplier<KeyValueStore<SensitivityQuery, SensitivityReport>>
       getInstanceSupplier(ALAPipelinesConfig config) {
     return () -> SDSReportKVStoreFactory.getInstance(config);
-  }
-
-  /**
-   * Wraps an exception into a {@link RuntimeException}.
-   *
-   * @param throwable to propagate
-   * @param message to log and use for the exception wrapper
-   * @return a new {@link RuntimeException}
-   */
-  private static RuntimeException logAndThrow(Throwable throwable, String message) {
-    log.error(message, throwable);
-    return new RuntimeException(throwable);
   }
 }

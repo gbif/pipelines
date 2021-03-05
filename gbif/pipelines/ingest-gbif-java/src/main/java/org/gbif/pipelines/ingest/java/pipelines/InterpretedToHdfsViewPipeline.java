@@ -1,34 +1,76 @@
 package org.gbif.pipelines.ingest.java.pipelines;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_HDFS_COUNT;
+import static org.gbif.api.vocabulary.Extension.*;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AMPLIFICATION_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.CHRONOMETRIC_AGE_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.CHRONOMETRIC_DATE_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.CLONING_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.EXTENDED_MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.GEL_IMAGE_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.GERMPLASM_ACCESSION_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.IDENTIFICATION_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.IDENTIFIER_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.LOAN_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MATERIAL_SAMPLE_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMENT_SCORE_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMENT_TRAIT_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMENT_TRIAL_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.PERMIT_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.PREPARATION_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.PRESERVATION_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.REFERENCES_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.RESOURCE_RELATION_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
-import static org.gbif.pipelines.core.utils.FsUtils.createParentDirectories;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.OCCURRENCE;
+import static org.gbif.pipelines.ingest.java.transforms.InterpretedAvroReader.readAvroAsFuture;
 
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
-import java.util.function.UnaryOperator;
+import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.api.vocabulary.*;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
-import org.gbif.pipelines.core.converters.MultimediaConverter;
-import org.gbif.pipelines.core.converters.OccurrenceHdfsRecordConverter;
-import org.gbif.pipelines.core.io.AvroReader;
-import org.gbif.pipelines.core.io.SyncDataFileWriter;
-import org.gbif.pipelines.core.io.SyncDataFileWriterBuilder;
+import org.gbif.pipelines.core.converters.AmplificationTableConverter;
+import org.gbif.pipelines.core.converters.ChronometricAgeTableConverter;
+import org.gbif.pipelines.core.converters.ChronometricDateTableConverter;
+import org.gbif.pipelines.core.converters.CloningTableConverter;
+import org.gbif.pipelines.core.converters.ExtendedMeasurementOrFactTableConverter;
+import org.gbif.pipelines.core.converters.GelImageTableConverter;
+import org.gbif.pipelines.core.converters.GermplasmAccessionTableConverter;
+import org.gbif.pipelines.core.converters.GermplasmMeasurementScoreTableConverter;
+import org.gbif.pipelines.core.converters.GermplasmMeasurementTraitTableConverter;
+import org.gbif.pipelines.core.converters.GermplasmMeasurementTrialTableConverter;
+import org.gbif.pipelines.core.converters.IdentificationTableConverter;
+import org.gbif.pipelines.core.converters.IdentifierTableConverter;
+import org.gbif.pipelines.core.converters.LoanTableConverter;
+import org.gbif.pipelines.core.converters.MaterialSampleTableConverter;
+import org.gbif.pipelines.core.converters.MeasurementOrFactTableConverter;
+import org.gbif.pipelines.core.converters.PermitTableConverter;
+import org.gbif.pipelines.core.converters.PreparationTableConverter;
+import org.gbif.pipelines.core.converters.PreservationTableConverter;
+import org.gbif.pipelines.core.converters.ReferenceTableConverter;
+import org.gbif.pipelines.core.converters.ResourceRelationshipTableConverter;
+import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.ingest.java.metrics.IngestMetricsBuilder;
+import org.gbif.pipelines.ingest.java.transforms.OccurrenceHdfsRecordConverter;
+import org.gbif.pipelines.ingest.java.transforms.TableConverter;
+import org.gbif.pipelines.ingest.java.transforms.TableRecordWriter;
 import org.gbif.pipelines.ingest.utils.HdfsViewAvroUtils;
 import org.gbif.pipelines.ingest.utils.SharedLockUtils;
 import org.gbif.pipelines.io.avro.AudubonRecord;
@@ -42,6 +84,26 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.extension.AmplificationTable;
+import org.gbif.pipelines.io.avro.extension.ChronometricAgeTable;
+import org.gbif.pipelines.io.avro.extension.ChronometricDateTable;
+import org.gbif.pipelines.io.avro.extension.CloningTable;
+import org.gbif.pipelines.io.avro.extension.ExtendedMeasurementOrFactTable;
+import org.gbif.pipelines.io.avro.extension.GelImageTable;
+import org.gbif.pipelines.io.avro.extension.GermplasmAccessionTable;
+import org.gbif.pipelines.io.avro.extension.GermplasmMeasurementScoreTable;
+import org.gbif.pipelines.io.avro.extension.GermplasmMeasurementTraitTable;
+import org.gbif.pipelines.io.avro.extension.GermplasmMeasurementTrialTable;
+import org.gbif.pipelines.io.avro.extension.IdentificationTable;
+import org.gbif.pipelines.io.avro.extension.IdentifierTable;
+import org.gbif.pipelines.io.avro.extension.LoanTable;
+import org.gbif.pipelines.io.avro.extension.MaterialSampleTable;
+import org.gbif.pipelines.io.avro.extension.MeasurementOrFactTable;
+import org.gbif.pipelines.io.avro.extension.PermitTable;
+import org.gbif.pipelines.io.avro.extension.PreparationTable;
+import org.gbif.pipelines.io.avro.extension.PreservationTable;
+import org.gbif.pipelines.io.avro.extension.ReferenceTable;
+import org.gbif.pipelines.io.avro.extension.ResourceRelationshipTable;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.GrscicollTransform;
@@ -51,9 +113,9 @@ import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
-import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
+import org.gbif.wrangler.lock.Mutex;
 import org.slf4j.MDC;
 
 /**
@@ -126,27 +188,22 @@ public class InterpretedToHdfsViewPipeline {
     MDC.put("attempt", options.getAttempt().toString());
     MDC.put("step", StepType.INTERPRETED_TO_INDEX.name());
 
-    log.info("Options");
-    UnaryOperator<String> pathFn =
-        t -> PathBuilder.buildPathInterpretUsingInputPath(options, t, "*" + AVRO_EXTENSION);
     String hdfsSiteConfig = options.getHdfsSiteConfig();
     String coreSiteConfig = options.getCoreSiteConfig();
+    String datasetId = options.getDatasetId();
+    Integer attempt = options.getAttempt();
+    Set<String> types =
+        RecordType.getAllTables().stream().map(RecordType::name).collect(Collectors.toSet());
 
-    log.info("Creating transformations");
-    // Core
-    BasicTransform basicTransform = BasicTransform.builder().create();
-    MetadataTransform metadataTransform = MetadataTransform.builder().create();
-    VerbatimTransform verbatimTransform = VerbatimTransform.create();
-    TemporalTransform temporalTransform = TemporalTransform.builder().create();
-    TaxonomyTransform taxonomyTransform = TaxonomyTransform.builder().create();
-    GrscicollTransform grscicollTransform = GrscicollTransform.builder().create();
-    LocationTransform locationTransform = LocationTransform.builder().create();
+    // Deletes the target path if it exists
+    FsUtils.deleteInterpretIfExist(
+        hdfsSiteConfig, coreSiteConfig, options.getInputPath(), datasetId, attempt, types);
 
-    // Extension
-    MeasurementOrFactTransform measurementTransform = MeasurementOrFactTransform.builder().create();
-    MultimediaTransform multimediaTransform = MultimediaTransform.builder().create();
-    AudubonTransform audubonTransform = AudubonTransform.builder().create();
-    ImageTransform imageTransform = ImageTransform.builder().create();
+    Function<String, String> pathFn =
+        st -> {
+          String id = datasetId + '_' + attempt + AVRO_EXTENSION;
+          return PathBuilder.buildFilePathViewUsingInputPath(options, st.toLowerCase(), id);
+        };
 
     log.info("Init metrics");
     IngestMetrics metrics = IngestMetricsBuilder.createInterpretedToHdfsViewMetrics();
@@ -155,212 +212,472 @@ public class InterpretedToHdfsViewPipeline {
 
     // Reading all avro files in parallel
     CompletableFuture<Map<String, MetadataRecord>> metadataMapFeature =
-        CompletableFuture.supplyAsync(
-            () ->
-                AvroReader.readRecords(
-                    hdfsSiteConfig,
-                    coreSiteConfig,
-                    MetadataRecord.class,
-                    pathFn.apply(metadataTransform.getBaseName())),
-            executor);
+        readAvroAsFuture(options, executor, MetadataTransform.builder().create());
 
     CompletableFuture<Map<String, ExtendedRecord>> verbatimMapFeature =
-        CompletableFuture.supplyAsync(
-            () ->
-                AvroReader.readRecords(
-                    hdfsSiteConfig,
-                    coreSiteConfig,
-                    ExtendedRecord.class,
-                    pathFn.apply(verbatimTransform.getBaseName())),
-            executor);
+        readAvroAsFuture(options, executor, VerbatimTransform.create());
 
     CompletableFuture<Map<String, BasicRecord>> basicMapFeature =
-        CompletableFuture.supplyAsync(
-            () ->
-                AvroReader.readRecords(
-                    hdfsSiteConfig,
-                    coreSiteConfig,
-                    BasicRecord.class,
-                    pathFn.apply(basicTransform.getBaseName())),
-            executor);
+        readAvroAsFuture(options, executor, BasicTransform.builder().create());
 
     CompletableFuture<Map<String, TemporalRecord>> temporalMapFeature =
-        CompletableFuture.supplyAsync(
-            () ->
-                AvroReader.readRecords(
-                    hdfsSiteConfig,
-                    coreSiteConfig,
-                    TemporalRecord.class,
-                    pathFn.apply(temporalTransform.getBaseName())),
-            executor);
+        readAvroAsFuture(options, executor, TemporalTransform.builder().create());
 
     CompletableFuture<Map<String, LocationRecord>> locationMapFeature =
-        CompletableFuture.supplyAsync(
-            () ->
-                AvroReader.readRecords(
-                    hdfsSiteConfig,
-                    coreSiteConfig,
-                    LocationRecord.class,
-                    pathFn.apply(locationTransform.getBaseName())),
-            executor);
+        readAvroAsFuture(options, executor, LocationTransform.builder().create());
 
     CompletableFuture<Map<String, TaxonRecord>> taxonMapFeature =
-        CompletableFuture.supplyAsync(
-            () ->
-                AvroReader.readRecords(
-                    hdfsSiteConfig,
-                    coreSiteConfig,
-                    TaxonRecord.class,
-                    pathFn.apply(taxonomyTransform.getBaseName())),
-            executor);
+        readAvroAsFuture(options, executor, TaxonomyTransform.builder().create());
 
     CompletableFuture<Map<String, GrscicollRecord>> grscicollMapFeature =
-        CompletableFuture.supplyAsync(
-            () ->
-                AvroReader.readRecords(
-                    hdfsSiteConfig,
-                    coreSiteConfig,
-                    GrscicollRecord.class,
-                    pathFn.apply(grscicollTransform.getBaseName())),
-            executor);
+        readAvroAsFuture(options, executor, GrscicollTransform.builder().create());
 
     CompletableFuture<Map<String, MultimediaRecord>> multimediaMapFeature =
-        CompletableFuture.supplyAsync(
-            () ->
-                AvroReader.readRecords(
-                    hdfsSiteConfig,
-                    coreSiteConfig,
-                    MultimediaRecord.class,
-                    pathFn.apply(multimediaTransform.getBaseName())),
-            executor);
+        readAvroAsFuture(options, executor, MultimediaTransform.builder().create());
 
     CompletableFuture<Map<String, ImageRecord>> imageMapFeature =
-        CompletableFuture.supplyAsync(
-            () ->
-                AvroReader.readRecords(
-                    hdfsSiteConfig,
-                    coreSiteConfig,
-                    ImageRecord.class,
-                    pathFn.apply(imageTransform.getBaseName())),
-            executor);
+        readAvroAsFuture(options, executor, ImageTransform.builder().create());
 
     CompletableFuture<Map<String, AudubonRecord>> audubonMapFeature =
-        CompletableFuture.supplyAsync(
-            () ->
-                AvroReader.readRecords(
-                    hdfsSiteConfig,
-                    coreSiteConfig,
-                    AudubonRecord.class,
-                    pathFn.apply(audubonTransform.getBaseName())),
-            executor);
+        readAvroAsFuture(options, executor, AudubonTransform.builder().create());
 
-    CompletableFuture<Map<String, MeasurementOrFactRecord>> measurementMapFeature =
-        CompletableFuture.supplyAsync(
-            () ->
-                AvroReader.readRecords(
-                    hdfsSiteConfig,
-                    coreSiteConfig,
-                    MeasurementOrFactRecord.class,
-                    pathFn.apply(measurementTransform.getBaseName())),
-            executor);
+    Map<String, BasicRecord> basicRecordMap = basicMapFeature.get();
 
-    CompletableFuture.allOf(
-            metadataMapFeature,
-            verbatimMapFeature,
-            basicMapFeature,
-            temporalMapFeature,
-            locationMapFeature,
-            taxonMapFeature,
-            grscicollMapFeature,
-            multimediaMapFeature,
-            imageMapFeature,
-            audubonMapFeature,
-            measurementMapFeature)
-        .get();
+    // OccurrenceHdfsRecord
+    Function<BasicRecord, Optional<OccurrenceHdfsRecord>> occurrenceHdfsRecordFn =
+        OccurrenceHdfsRecordConverter.builder()
+            .metrics(metrics)
+            .metadata(metadataMapFeature.get().values().iterator().next())
+            .verbatimMap(verbatimMapFeature.get())
+            .temporalMap(temporalMapFeature.get())
+            .locationMap(locationMapFeature.get())
+            .taxonMap(taxonMapFeature.get())
+            .grscicollMap(grscicollMapFeature.get())
+            .multimediaMap(multimediaMapFeature.get())
+            .imageMap(imageMapFeature.get())
+            .audubonMap(audubonMapFeature.get())
+            .build()
+            .getFn();
 
-    MetadataRecord metadata = metadataMapFeature.get().values().iterator().next();
-    Map<String, BasicRecord> basicMap = basicMapFeature.get();
-    Map<String, ExtendedRecord> verbatimMap = verbatimMapFeature.get();
-    Map<String, TemporalRecord> temporalMap = temporalMapFeature.get();
-    Map<String, LocationRecord> locationMap = locationMapFeature.get();
-    Map<String, TaxonRecord> taxonMap = taxonMapFeature.get();
-    Map<String, GrscicollRecord> grscicollMap = grscicollMapFeature.get();
-    Map<String, MultimediaRecord> multimediaMap = multimediaMapFeature.get();
-    Map<String, ImageRecord> imageMap = imageMapFeature.get();
-    Map<String, AudubonRecord> audubonMap = audubonMapFeature.get();
-    Map<String, MeasurementOrFactRecord> measurementMap = measurementMapFeature.get();
+    TableRecordWriter.<OccurrenceHdfsRecord>builder()
+        .recordFunction(occurrenceHdfsRecordFn)
+        .basicRecords(basicRecordMap.values())
+        .targetTempPath(pathFn.apply(OCCURRENCE))
+        .schema(OccurrenceHdfsRecord.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .build()
+        .write();
 
-    // Join all records, convert into OccurrenceHdfsRecord and save as an avro file
-    Function<BasicRecord, OccurrenceHdfsRecord> occurrenceHdfsRecordFn =
-        br -> {
-          String k = br.getId();
-          // Core
-          ExtendedRecord er =
-              verbatimMap.getOrDefault(k, ExtendedRecord.newBuilder().setId(k).build());
-          TemporalRecord tr =
-              temporalMap.getOrDefault(k, TemporalRecord.newBuilder().setId(k).build());
-          LocationRecord lr =
-              locationMap.getOrDefault(k, LocationRecord.newBuilder().setId(k).build());
-          TaxonRecord txr = taxonMap.getOrDefault(k, TaxonRecord.newBuilder().setId(k).build());
-          GrscicollRecord gr =
-              grscicollMap.getOrDefault(k, GrscicollRecord.newBuilder().setId(k).build());
-          // Extension
-          MultimediaRecord mr =
-              multimediaMap.getOrDefault(k, MultimediaRecord.newBuilder().setId(k).build());
-          ImageRecord ir = imageMap.getOrDefault(k, ImageRecord.newBuilder().setId(k).build());
-          AudubonRecord ar =
-              audubonMap.getOrDefault(k, AudubonRecord.newBuilder().setId(k).build());
-          MeasurementOrFactRecord mfr =
-              measurementMap.getOrDefault(k, MeasurementOrFactRecord.newBuilder().setId(k).build());
+    // MeasurementOrFactTable
+    Function<BasicRecord, Optional<MeasurementOrFactTable>> measurementOrFactFn =
+        TableConverter.<MeasurementOrFactTable>builder()
+            .metrics(metrics)
+            .converterFn(MeasurementOrFactTableConverter::convert)
+            .counterName(MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT)
+            .verbatimMap(verbatimMapFeature.get())
+            .build()
+            .getFn();
 
-          metrics.incMetric(AVRO_TO_HDFS_COUNT);
+    TableRecordWriter.<MeasurementOrFactTable>builder()
+        .recordFunction(measurementOrFactFn)
+        .basicRecords(basicRecordMap.values())
+        .targetTempPath(pathFn.apply(RecordType.MEASUREMENT_OR_FACT_TABLE.name()))
+        .schema(MeasurementOrFactTable.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .build()
+        .write();
 
-          MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
-          return OccurrenceHdfsRecordConverter.toOccurrenceHdfsRecord(
-              br, metadata, tr, lr, txr, gr, mmr, mfr, er);
-        };
+    // IdentificationTable
+    Function<BasicRecord, Optional<IdentificationTable>> identificationFn =
+        TableConverter.<IdentificationTable>builder()
+            .metrics(metrics)
+            .converterFn(IdentificationTableConverter::convert)
+            .counterName(IDENTIFICATION_TABLE_RECORDS_COUNT)
+            .verbatimMap(verbatimMapFeature.get())
+            .build()
+            .getFn();
 
-    boolean useSyncMode = options.getSyncThreshold() > basicMap.size();
+    TableRecordWriter.<IdentificationTable>builder()
+        .recordFunction(identificationFn)
+        .basicRecords(basicRecordMap.values())
+        .targetTempPath(pathFn.apply(RecordType.IDENTIFICATION_TABLE.name()))
+        .schema(IdentificationTable.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .build()
+        .write();
 
-    try (SyncDataFileWriter<OccurrenceHdfsRecord> writer = createWriter(options)) {
-      if (useSyncMode) {
-        basicMap.values().stream().map(occurrenceHdfsRecordFn).forEach(writer::append);
-      } else {
-        CompletableFuture<?>[] futures =
-            basicMap.values().stream()
-                .map(
-                    br ->
-                        CompletableFuture.runAsync(
-                            () -> writer.append(occurrenceHdfsRecordFn.apply(br)), executor))
-                .toArray(CompletableFuture[]::new);
-        // Wait for all futures
-        CompletableFuture.allOf(futures).get();
-      }
+    // ResourceRelationTable
+    Function<BasicRecord, Optional<ResourceRelationshipTable>> resourceRelationFn =
+        TableConverter.<ResourceRelationshipTable>builder()
+            .metrics(metrics)
+            .converterFn(ResourceRelationshipTableConverter::convert)
+            .counterName(RESOURCE_RELATION_TABLE_RECORDS_COUNT)
+            .verbatimMap(verbatimMapFeature.get())
+            .build()
+            .getFn();
+
+    TableRecordWriter.<ResourceRelationshipTable>builder()
+        .recordFunction(resourceRelationFn)
+        .basicRecords(basicRecordMap.values())
+        .targetTempPath(pathFn.apply(RecordType.RESOURCE_RELATIONSHIP_TABLE.name()))
+        .schema(ResourceRelationshipTable.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .build()
+        .write();
+
+    // AmplificationTable
+    Function<BasicRecord, Optional<AmplificationTable>> amplificationFn =
+        TableConverter.<AmplificationTable>builder()
+            .metrics(metrics)
+            .converterFn(AmplificationTableConverter::convert)
+            .counterName(AMPLIFICATION_TABLE_RECORDS_COUNT)
+            .verbatimMap(verbatimMapFeature.get())
+            .build()
+            .getFn();
+
+    TableRecordWriter.<AmplificationTable>builder()
+        .recordFunction(amplificationFn)
+        .basicRecords(basicRecordMap.values())
+        .targetTempPath(pathFn.apply(RecordType.AMPLIFICATION_TABLE.name()))
+        .schema(AmplificationTable.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .build()
+        .write();
+
+    // CloningTable
+    Function<BasicRecord, Optional<CloningTable>> cloningFn =
+        TableConverter.<CloningTable>builder()
+            .metrics(metrics)
+            .converterFn(CloningTableConverter::convert)
+            .counterName(CLONING_TABLE_RECORDS_COUNT)
+            .verbatimMap(verbatimMapFeature.get())
+            .build()
+            .getFn();
+
+    TableRecordWriter.<CloningTable>builder()
+        .recordFunction(cloningFn)
+        .basicRecords(basicRecordMap.values())
+        .targetTempPath(pathFn.apply(RecordType.CLONING_TABLE.name()))
+        .schema(CloningTable.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .build()
+        .write();
+
+    // GelImageTable
+    Function<BasicRecord, Optional<GelImageTable>> gelImageFn =
+        TableConverter.<GelImageTable>builder()
+            .metrics(metrics)
+            .converterFn(GelImageTableConverter::convert)
+            .counterName(GEL_IMAGE_TABLE_RECORDS_COUNT)
+            .verbatimMap(verbatimMapFeature.get())
+            .build()
+            .getFn();
+
+    TableRecordWriter.<GelImageTable>builder()
+        .recordFunction(gelImageFn)
+        .basicRecords(basicRecordMap.values())
+        .targetTempPath(pathFn.apply(RecordType.GEL_IMAGE_TABLE.name()))
+        .schema(GelImageTable.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .build()
+        .write();
+
+    // LoanTable
+    Function<BasicRecord, Optional<LoanTable>> loanFn =
+        TableConverter.<LoanTable>builder()
+            .metrics(metrics)
+            .converterFn(LoanTableConverter::convert)
+            .counterName(LOAN_TABLE_RECORDS_COUNT)
+            .verbatimMap(verbatimMapFeature.get())
+            .build()
+            .getFn();
+
+    TableRecordWriter.<LoanTable>builder()
+        .recordFunction(loanFn)
+        .basicRecords(basicRecordMap.values())
+        .targetTempPath(pathFn.apply(RecordType.LOAN_TABLE.name()))
+        .schema(LoanTable.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .build()
+        .write();
+
+    // MaterialSampleTable
+    Function<BasicRecord, Optional<MaterialSampleTable>> materialSampleFn =
+        TableConverter.<MaterialSampleTable>builder()
+            .metrics(metrics)
+            .converterFn(MaterialSampleTableConverter::convert)
+            .counterName(MATERIAL_SAMPLE_TABLE_RECORDS_COUNT)
+            .verbatimMap(verbatimMapFeature.get())
+            .build()
+            .getFn();
+
+    TableRecordWriter.<MaterialSampleTable>builder()
+        .recordFunction(materialSampleFn)
+        .basicRecords(basicRecordMap.values())
+        .targetTempPath(pathFn.apply(RecordType.MATERIAL_SAMPLE_TABLE.name()))
+        .schema(MaterialSampleTable.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .build()
+        .write();
+
+    // PermitTable
+    Function<BasicRecord, Optional<PermitTable>> permitFn =
+        TableConverter.<PermitTable>builder()
+            .metrics(metrics)
+            .converterFn(PermitTableConverter::convert)
+            .counterName(PERMIT_TABLE_RECORDS_COUNT)
+            .verbatimMap(verbatimMapFeature.get())
+            .build()
+            .getFn();
+
+    TableRecordWriter.<PermitTable>builder()
+        .recordFunction(permitFn)
+        .basicRecords(basicRecordMap.values())
+        .targetTempPath(pathFn.apply(RecordType.PERMIT_TABLE.name()))
+        .schema(PermitTable.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .build()
+        .write();
+
+    // PreparationTable
+    Function<BasicRecord, Optional<PreparationTable>> preparationFn =
+        TableConverter.<PreparationTable>builder()
+            .metrics(metrics)
+            .converterFn(PreparationTableConverter::convert)
+            .counterName(PREPARATION_TABLE_RECORDS_COUNT)
+            .verbatimMap(verbatimMapFeature.get())
+            .build()
+            .getFn();
+
+    TableRecordWriter.<PreparationTable>builder()
+        .recordFunction(preparationFn)
+        .basicRecords(basicRecordMap.values())
+        .targetTempPath(pathFn.apply(RecordType.PREPARATION_TABLE.name()))
+        .schema(PreparationTable.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .build()
+        .write();
+
+    // PreservationTable
+    Function<BasicRecord, Optional<PreservationTable>> preservationFn =
+        TableConverter.<PreservationTable>builder()
+            .metrics(metrics)
+            .converterFn(PreservationTableConverter::convert)
+            .counterName(PRESERVATION_TABLE_RECORDS_COUNT)
+            .verbatimMap(verbatimMapFeature.get())
+            .build()
+            .getFn();
+
+    TableRecordWriter.<PreservationTable>builder()
+        .recordFunction(preservationFn)
+        .basicRecords(basicRecordMap.values())
+        .targetTempPath(pathFn.apply(RecordType.PRESERVATION_TABLE.name()))
+        .schema(PreservationTable.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .build()
+        .write();
+
+    // MeasurementScoreTable
+    Function<BasicRecord, Optional<GermplasmMeasurementScoreTable>> measurementScoreFn =
+        TableConverter.<GermplasmMeasurementScoreTable>builder()
+            .metrics(metrics)
+            .converterFn(GermplasmMeasurementScoreTableConverter::convert)
+            .counterName(MEASUREMENT_SCORE_TABLE_RECORDS_COUNT)
+            .verbatimMap(verbatimMapFeature.get())
+            .build()
+            .getFn();
+
+    TableRecordWriter.<GermplasmMeasurementScoreTable>builder()
+        .recordFunction(measurementScoreFn)
+        .basicRecords(basicRecordMap.values())
+        .targetTempPath(pathFn.apply(RecordType.GERMPLASM_MEASUREMENT_SCORE_TABLE.name()))
+        .schema(GermplasmMeasurementScoreTable.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .build()
+        .write();
+
+    // MeasurementTraitTable
+    Function<BasicRecord, Optional<GermplasmMeasurementTraitTable>> measurementTraitFn =
+        TableConverter.<GermplasmMeasurementTraitTable>builder()
+            .metrics(metrics)
+            .converterFn(GermplasmMeasurementTraitTableConverter::convert)
+            .counterName(MEASUREMENT_TRAIT_TABLE_RECORDS_COUNT)
+            .verbatimMap(verbatimMapFeature.get())
+            .build()
+            .getFn();
+
+    TableRecordWriter.<GermplasmMeasurementTraitTable>builder()
+        .recordFunction(measurementTraitFn)
+        .basicRecords(basicRecordMap.values())
+        .targetTempPath(pathFn.apply(RecordType.GERMPLASM_MEASUREMENT_TRAIT_TABLE.name()))
+        .schema(GermplasmMeasurementTraitTable.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .build()
+        .write();
+
+    // MeasurementTrialTable
+    Function<BasicRecord, Optional<GermplasmMeasurementTrialTable>> measurementTrialFn =
+        TableConverter.<GermplasmMeasurementTrialTable>builder()
+            .metrics(metrics)
+            .converterFn(GermplasmMeasurementTrialTableConverter::convert)
+            .counterName(MEASUREMENT_TRIAL_TABLE_RECORDS_COUNT)
+            .verbatimMap(verbatimMapFeature.get())
+            .build()
+            .getFn();
+
+    TableRecordWriter.<GermplasmMeasurementTrialTable>builder()
+        .recordFunction(measurementTrialFn)
+        .basicRecords(basicRecordMap.values())
+        .targetTempPath(pathFn.apply(RecordType.GERMPLASM_MEASUREMENT_TRIAL_TABLE.name()))
+        .schema(GermplasmMeasurementTrialTable.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .build()
+        .write();
+
+    // GermplasmAccessionTable
+    Function<BasicRecord, Optional<GermplasmAccessionTable>> germplasmAccessionFn =
+        TableConverter.<GermplasmAccessionTable>builder()
+            .metrics(metrics)
+            .converterFn(GermplasmAccessionTableConverter::convert)
+            .counterName(GERMPLASM_ACCESSION_TABLE_RECORDS_COUNT)
+            .verbatimMap(verbatimMapFeature.get())
+            .build()
+            .getFn();
+
+    TableRecordWriter.<GermplasmAccessionTable>builder()
+        .recordFunction(germplasmAccessionFn)
+        .basicRecords(basicRecordMap.values())
+        .targetTempPath(pathFn.apply(RecordType.GERMPLASM_ACCESSION_TABLE.name()))
+        .schema(GermplasmAccessionTable.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .build()
+        .write();
+
+    // ExtendedMeasurementOrFactTable
+    Function<BasicRecord, Optional<ExtendedMeasurementOrFactTable>> extendedMeasurementOrFactFn =
+        TableConverter.<ExtendedMeasurementOrFactTable>builder()
+            .metrics(metrics)
+            .converterFn(ExtendedMeasurementOrFactTableConverter::convert)
+            .counterName(EXTENDED_MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT)
+            .verbatimMap(verbatimMapFeature.get())
+            .build()
+            .getFn();
+
+    TableRecordWriter.<ExtendedMeasurementOrFactTable>builder()
+        .recordFunction(extendedMeasurementOrFactFn)
+        .basicRecords(basicRecordMap.values())
+        .targetTempPath(pathFn.apply(RecordType.EXTENDED_MEASUREMENT_OR_FACT_TABLE.name()))
+        .schema(ExtendedMeasurementOrFactTable.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .build()
+        .write();
+
+    // ChronometricAgeTable
+    Function<BasicRecord, Optional<ChronometricAgeTable>> chronometricAgeFn =
+        TableConverter.<ChronometricAgeTable>builder()
+            .metrics(metrics)
+            .converterFn(ChronometricAgeTableConverter::convert)
+            .counterName(CHRONOMETRIC_AGE_TABLE_RECORDS_COUNT)
+            .verbatimMap(verbatimMapFeature.get())
+            .build()
+            .getFn();
+
+    TableRecordWriter.<ChronometricAgeTable>builder()
+        .recordFunction(chronometricAgeFn)
+        .basicRecords(basicRecordMap.values())
+        .targetTempPath(pathFn.apply(RecordType.CHRONOMETRIC_AGE_TABLE.name()))
+        .schema(ChronometricAgeTable.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .build()
+        .write();
+
+    // ChronometricDateTable
+    Function<BasicRecord, Optional<ChronometricDateTable>> chronometricDateFn =
+        TableConverter.<ChronometricDateTable>builder()
+            .metrics(metrics)
+            .converterFn(ChronometricDateTableConverter::convert)
+            .counterName(CHRONOMETRIC_DATE_TABLE_RECORDS_COUNT)
+            .verbatimMap(verbatimMapFeature.get())
+            .build()
+            .getFn();
+
+    TableRecordWriter.<ChronometricDateTable>builder()
+        .recordFunction(chronometricDateFn)
+        .basicRecords(basicRecordMap.values())
+        .targetTempPath(pathFn.apply(RecordType.CHRONOMETRIC_DATE_TABLE.name()))
+        .schema(ChronometricDateTable.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .build()
+        .write();
+
+    // ReferencesTable
+    Function<BasicRecord, Optional<ReferenceTable>> referencesFn =
+        TableConverter.<ReferenceTable>builder()
+            .metrics(metrics)
+            .converterFn(ReferenceTableConverter::convert)
+            .counterName(REFERENCES_TABLE_RECORDS_COUNT)
+            .verbatimMap(verbatimMapFeature.get())
+            .build()
+            .getFn();
+
+    TableRecordWriter.<ReferenceTable>builder()
+        .recordFunction(referencesFn)
+        .basicRecords(basicRecordMap.values())
+        .targetTempPath(pathFn.apply(RecordType.REFERENCE_TABLE.name()))
+        .schema(ReferenceTable.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .build()
+        .write();
+
+    // IdentifierTable
+    Function<BasicRecord, Optional<IdentifierTable>> identifierFn =
+        TableConverter.<IdentifierTable>builder()
+            .metrics(metrics)
+            .converterFn(IdentifierTableConverter::convert)
+            .counterName(IDENTIFIER_TABLE_RECORDS_COUNT)
+            .verbatimMap(verbatimMapFeature.get())
+            .build()
+            .getFn();
+
+    TableRecordWriter.<IdentifierTable>builder()
+        .recordFunction(identifierFn)
+        .basicRecords(basicRecordMap.values())
+        .targetTempPath(pathFn.apply(RecordType.IDENTIFIER_TABLE.name()))
+        .schema(IdentifierTable.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .build()
+        .write();
+
+    // Move files
+    Mutex.Action action = () -> HdfsViewAvroUtils.move(options);
+    if (options.getProperties() != null) {
+      SharedLockUtils.doHdfsPrefixLock(options, action);
+    } else {
+      action.execute();
     }
-
-    SharedLockUtils.doHdfsPrefixLock(options, () -> HdfsViewAvroUtils.move(options));
 
     MetricsHandler.saveCountersToInputPathFile(options, metrics.getMetricsResult());
     log.info("Pipeline has been finished - {}", LocalDateTime.now());
-  }
-
-  /** Create an AVRO file writer */
-  @SneakyThrows
-  @SuppressWarnings("all")
-  private static SyncDataFileWriter<OccurrenceHdfsRecord> createWriter(
-      InterpretationPipelineOptions options) {
-    String id = options.getDatasetId() + '_' + options.getAttempt();
-    String targetTempPath =
-        PathBuilder.buildFilePathHdfsViewUsingInputPath(options, id + AVRO_EXTENSION);
-    Path path = new Path(targetTempPath);
-    FileSystem verbatimFs =
-        createParentDirectories(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), path);
-    return SyncDataFileWriterBuilder.builder()
-        .schema(OccurrenceHdfsRecord.getClassSchema())
-        .codec(options.getAvroCompressionType())
-        .outputStream(verbatimFs.create(path))
-        .syncInterval(options.getAvroSyncInterval())
-        .build()
-        .createSyncDataFileWriter();
   }
 }

@@ -18,7 +18,6 @@
   </description>
 
   <properties>
-    <sonar.skip>true</sonar.skip>
     <!-- Guava version required by HBase libraries -->
     <guava.hbase.version>12.0.1</guava.hbase.version>
   </properties>

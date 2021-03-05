@@ -5,7 +5,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.Queue;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.Phaser;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import lombok.Builder;
@@ -27,7 +31,7 @@ import org.elasticsearch.common.unit.TimeValue;
 public class ElasticsearchWriter<T> {
 
   private String[] esHosts;
-  private boolean useSyncMode;
+  private int syncModeThreshold;
   private Function<T, IndexRequest> indexRequestFn;
   private ExecutorService executor;
   private Collection<T> records;
@@ -37,6 +41,8 @@ public class ElasticsearchWriter<T> {
 
   @SneakyThrows
   public void write() {
+
+    boolean useSyncMode = syncModeThreshold > records.size();
 
     // Create ES client and extra function
     HttpHost[] hosts = Arrays.stream(esHosts).map(HttpHost::create).toArray(HttpHost[]::new);
@@ -89,7 +95,7 @@ public class ElasticsearchWriter<T> {
         if (peek == null
             || peek.numberOfActions() > esMaxBatchSize - 1
             || peek.estimatedSizeInBytes() > esMaxBatchSizeBytes) {
-          checkBackpressure(phaser);
+          checkBackpressure(useSyncMode, phaser);
           pushIntoEsFn.run();
           requests.add(new BulkRequest().timeout(TimeValue.timeValueMinutes(5L)));
         }
@@ -107,7 +113,7 @@ public class ElasticsearchWriter<T> {
    * If the mode is async, check back pressure, the number of running async tasks must be less than
    * backPressure setting
    */
-  private void checkBackpressure(Phaser phaser) {
+  private void checkBackpressure(boolean useSyncMode, Phaser phaser) {
     if (!useSyncMode && backPressure != null && backPressure > 0) {
       while (phaser.getUnarrivedParties() > backPressure) {
         log.info("Back pressure barrier: too many rows wainting...");

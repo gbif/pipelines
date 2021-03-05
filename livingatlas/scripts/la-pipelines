@@ -43,10 +43,10 @@ The $CMD can be executed to run all the ingress steps or only a few of them:
 
 Pipeline ingress steps:
 
-    ┌───── do-all ──────────────────────────────────┐
-    │                                               │
-dwca-avro --> interpret --> uuid -->                │
-     sample --> index --> jackknife --> solr
+    ┌───── do-all ───────────────────────────────────────────────┐
+    │                                                            │
+dwca-avro --> interpret --> validate --> uuid --> image-sync ... │
+  --> image-load --> sds --> index --> sample --> jackknife --> solr
 
 -  'dwca-avro' reads a Dwc-A and converts it to an verbatim.avro file;
 -  'interpret' reads verbatim.avro, interprets it and writes the interpreted data and the issues to Avro files;
@@ -70,11 +70,11 @@ Usage:
   $CMD [options] dataset-list
   $CMD [options] dwca-avro     (<dr>...|all)
   $CMD [options] interpret     (<dr>...|all)         $WHEREL
-  $CMD [options] sds     (<dr>...|all)         $WHEREL
+  $CMD [options] sds           (<dr>...|all)         $WHEREL
   $CMD [options] validate      (<dr>...|all)         $WHERE
   $CMD [options] uuid          (<dr>...|all)         $WHERE
-  $CMD [options] image-load    (<dr>...|all)         $WHERE
   $CMD [options] image-sync    (<dr>...|all)         $WHERE
+  $CMD [options] image-load    (<dr>...|all)         $WHERE
   $CMD [options] index         (<dr>...|all)         $WHEREL
   $CMD [options] sample        (<dr>...|all)         $WHERE
   $CMD [options] jackknife     (all)                 $WHERE

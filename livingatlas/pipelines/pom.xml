@@ -205,7 +205,7 @@
             </image>
             <image>
               <alias>ala-nameservice</alias>
-              <name>charvolant/ala-namematching-service:v20200214-5</name>
+              <name>charvolant/ala-namematching-service:v20200214-6</name>
               <run>
                 <ports>
                   <port>${alanm.admin.port}:9180</port>
@@ -223,7 +223,7 @@
             </image>
             <image>
               <alias>ala-sensitive-service</alias>
-              <name>charvolant/ala-sensitive-data-service:v20200214-2</name>
+              <name>charvolant/ala-sensitive-data-service:v20200214-3</name>
               <run>
                 <ports>
                   <port>${sds.admin.port}:9190</port>

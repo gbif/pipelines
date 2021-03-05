@@ -2,6 +2,8 @@ package org.gbif.pipelines.transforms.extension;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MULTIMEDIA_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.MULTIMEDIA;
+import static org.gbif.pipelines.core.utils.ModelUtils.hasExtension;
+import static org.gbif.pipelines.core.utils.ModelUtils.hasValueNullAware;
 
 import java.time.Instant;
 import java.util.List;
@@ -17,7 +19,6 @@ import org.gbif.pipelines.core.functions.SerializableConsumer;
 import org.gbif.pipelines.core.functions.SerializableFunction;
 import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.core.interpreters.extension.MultimediaInterpreter;
-import org.gbif.pipelines.core.utils.ModelUtils;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.transforms.Transform;
@@ -62,6 +63,12 @@ public class MultimediaTransform extends Transform<ExtendedRecord, MultimediaRec
     }
   }
 
+  /** Beam @Setup can be applied only to void method */
+  public MultimediaTransform init() {
+    setup();
+    return this;
+  }
+
   /** Maps {@link MultimediaRecord} to key value, where key is {@link MultimediaRecord#getId} */
   public MapElements<MultimediaRecord, KV<String, MultimediaRecord>> toKv() {
     return MapElements.into(new TypeDescriptor<KV<String, MultimediaRecord>>() {})
@@ -84,10 +91,8 @@ public class MultimediaTransform extends Transform<ExtendedRecord, MultimediaRec
                     .build())
         .when(
             er ->
-                Optional.ofNullable(er.getExtensions().get(Extension.MULTIMEDIA.getRowType()))
-                        .filter(l -> !l.isEmpty())
-                        .isPresent()
-                    || ModelUtils.extractOptValue(er, DwcTerm.associatedMedia).isPresent())
+                hasExtension(er, Extension.MULTIMEDIA)
+                    || hasValueNullAware(er, DwcTerm.associatedMedia))
         .via(multimediaInterpreter::interpret)
         .via(MultimediaInterpreter::interpretAssociatedMedia)
         .getOfNullable();

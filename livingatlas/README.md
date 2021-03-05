@@ -83,17 +83,29 @@ docker-compose -f pipelines/src/main/docker/ala-nameservice.yml up -d
 docker-compose -f pipelines/src/main/docker/solr8.yml up -d
 ```
 1. `cd scripts`
-1. To convert DwCA to AVRO, run `./dwca-avro.sh dr893`
-1. To interpret, run `./interpret-spark-embedded.sh dr893`
-1. To mint UUIDs, run `./uuid-spark-embedded.sh dr893`
+1. To convert DwCA to AVRO, run `./la-pipelines dwca-avro dr893`
+1. To interpret, run `./la-pipelines interpret dr893 --embedded`
+1. To mint UUIDs, run `./la-pipelines uuid dr893 --embedded`
 1. To sample run:
-    1. `./export-latlng-embedded.sh dr893`
-    1. `./sample.sh dr893`
-    1. `./sample-avro-embedded.sh dr893`
+    1. `./la-pipelines sample dr893 --embedded`
 1. To setup SOLR:
     1. Run `cd ../solr/scripts` and  then run ' `./update-solr-config.sh`
     1. Run `cd ../../scripts`
-1. To index, run `./index-spark-embedded.sh dr893`
+1. To index, run `./la-pipelines index dr893 --embedded`
+1. Run `./la-pipelines -h` for help and more steps:
+```
+LA-Pipelines data ingress utility.
+
+The la-pipelines can be executed to run all the ingress steps or only a few of them:
+
+Pipeline ingress steps:
+
+    ┌───── do-all ───────────────────────────────────────────────┐
+    │                                                            │
+dwca-avro --> interpret --> validate --> uuid --> image-sync ... │
+  --> image-load --> sds --> index --> sample --> jackknife --> solr
+(...)
+```
 
 ## Integration Tests
 

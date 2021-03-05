@@ -14,11 +14,11 @@ import org.apache.avro.specific.SpecificDatumWriter;
 @Builder
 public class SyncDataFileWriterBuilder {
 
-  @NonNull private Schema schema;
-  @NonNull private String codec;
-  @NonNull private OutputStream outputStream;
-  private Integer syncInterval;
-  private Boolean flushOnEveryBlock;
+  @NonNull private final Schema schema;
+  @NonNull private final String codec;
+  @NonNull private final OutputStream outputStream;
+  private final Integer syncInterval;
+  private final Boolean flushOnEveryBlock;
 
   public <T> SyncDataFileWriter<T> createSyncDataFileWriter() throws IOException {
     DataFileWriter<T> dataFileWriter = new DataFileWriter<>(new SpecificDatumWriter<>(schema));

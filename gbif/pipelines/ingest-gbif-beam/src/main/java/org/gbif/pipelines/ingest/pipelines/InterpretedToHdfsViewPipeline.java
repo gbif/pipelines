@@ -1,18 +1,18 @@
 package org.gbif.pipelines.ingest.pipelines;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE_HDFS_RECORD;
-import static org.gbif.pipelines.common.beam.utils.PathBuilder.buildFilePathHdfsViewUsingInputPath;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.*;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.OCCURRENCE;
 
-import java.util.Collections;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.UnaryOperator;
+import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
-import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
 import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.transforms.join.CoGroupByKey;
@@ -21,6 +21,7 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
@@ -28,16 +29,48 @@ import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.ingest.utils.HdfsViewAvroUtils;
 import org.gbif.pipelines.ingest.utils.SharedLockUtils;
-import org.gbif.pipelines.io.avro.*;
+import org.gbif.pipelines.io.avro.AudubonRecord;
+import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.ImageRecord;
+import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.io.avro.MultimediaRecord;
+import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
+import org.gbif.pipelines.io.avro.TaxonRecord;
+import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
-import org.gbif.pipelines.transforms.common.OccurrenceHdfsRecordTransform;
-import org.gbif.pipelines.transforms.converters.OccurrenceHdfsRecordConverterTransform;
-import org.gbif.pipelines.transforms.core.*;
+import org.gbif.pipelines.transforms.core.BasicTransform;
+import org.gbif.pipelines.transforms.core.GrscicollTransform;
+import org.gbif.pipelines.transforms.core.LocationTransform;
+import org.gbif.pipelines.transforms.core.TaxonomyTransform;
+import org.gbif.pipelines.transforms.core.TemporalTransform;
+import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
-import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
+import org.gbif.pipelines.transforms.table.AmplificationTableTransform;
+import org.gbif.pipelines.transforms.table.ChronometricAgeTableTransform;
+import org.gbif.pipelines.transforms.table.ChronometricDateTableTransform;
+import org.gbif.pipelines.transforms.table.CloningTableTransform;
+import org.gbif.pipelines.transforms.table.ExtendedMeasurementOrFactTableTransform;
+import org.gbif.pipelines.transforms.table.GelImageTableTransform;
+import org.gbif.pipelines.transforms.table.GermplasmAccessionTableTransform;
+import org.gbif.pipelines.transforms.table.GermplasmMeasurementScoreTableTransform;
+import org.gbif.pipelines.transforms.table.GermplasmMeasurementTraitTableTransform;
+import org.gbif.pipelines.transforms.table.GermplasmMeasurementTrialTableTransform;
+import org.gbif.pipelines.transforms.table.IdentificationTableTransform;
+import org.gbif.pipelines.transforms.table.IdentifierTableTransform;
+import org.gbif.pipelines.transforms.table.LoanTableTransform;
+import org.gbif.pipelines.transforms.table.MaterialSampleTableTransform;
+import org.gbif.pipelines.transforms.table.MeasurementOrFactTableTransform;
+import org.gbif.pipelines.transforms.table.OccurrenceHdfsRecordTransform;
+import org.gbif.pipelines.transforms.table.PermitTableTransform;
+import org.gbif.pipelines.transforms.table.PreparationTableTransform;
+import org.gbif.pipelines.transforms.table.PreservationTableTransform;
+import org.gbif.pipelines.transforms.table.ReferenceTableTransform;
+import org.gbif.pipelines.transforms.table.ResourceRelationshipTableTransform;
 import org.slf4j.MDC;
 
 /**
@@ -51,12 +84,12 @@ import org.slf4j.MDC;
  *      {@link MultimediaRecord},
  *      {@link ImageRecord},
  *      {@link AudubonRecord},
- *      {@link MeasurementOrFactRecord},
  *      {@link TaxonRecord},
  *      {@link GrscicollRecord},
- *      {@link LocationRecord}
+ *      {@link LocationRecord},
+ *      and etc
  *    2) Joins avro files
- *    3) Converts to a {@link OccurrenceHdfsRecord} based on the input files
+ *    3) Converts to a {@link OccurrenceHdfsRecord} and table based on the input files
  *    4) Moves the produced files to a directory where the latest version of HDFS records are kept
  * </pre>
  *
@@ -94,8 +127,12 @@ public class InterpretedToHdfsViewPipeline {
     String datasetId = options.getDatasetId();
     Integer attempt = options.getAttempt();
     Integer numberOfShards = options.getNumberOfShards();
-    Set<String> types = Collections.singleton(OCCURRENCE_HDFS_RECORD.name());
-    String targetTempPath = buildFilePathHdfsViewUsingInputPath(options, datasetId + '_' + attempt);
+    Set<String> types = getAllTables().stream().map(RecordType::name).collect(Collectors.toSet());
+
+    Function<String, String> pathFn =
+        st ->
+            PathBuilder.buildFilePathViewUsingInputPath(
+                options, st.toLowerCase(), datasetId + '_' + attempt);
 
     MDC.put("datasetKey", datasetId);
     MDC.put("attempt", attempt.toString());
@@ -121,8 +158,6 @@ public class InterpretedToHdfsViewPipeline {
     GrscicollTransform grscicollTransform = GrscicollTransform.builder().create();
     LocationTransform locationTransform = LocationTransform.builder().create();
     // Extension
-    MeasurementOrFactTransform measurementOrFactTransform =
-        MeasurementOrFactTransform.builder().create();
     MultimediaTransform multimediaTransform = MultimediaTransform.builder().create();
     AudubonTransform audubonTransform = AudubonTransform.builder().create();
     ImageTransform imageTransform = ImageTransform.builder().create();
@@ -168,13 +203,11 @@ public class InterpretedToHdfsViewPipeline {
         p.apply("Read Audubon", audubonTransform.read(interpretPathFn))
             .apply("Map Audubon to KV", audubonTransform.toKv());
 
-    PCollection<KV<String, MeasurementOrFactRecord>> measurementCollection =
-        p.apply("Read Measurement", measurementOrFactTransform.read(interpretPathFn))
-            .apply("Map Measurement to KV", measurementOrFactTransform.toKv());
+    // OccurrenceHdfsRecord
 
     log.info("Adding step 3: Converting into a OccurrenceHdfsRecord object");
-    SingleOutput<KV<String, CoGbkResult>, OccurrenceHdfsRecord> toHdfsRecordDoFn =
-        OccurrenceHdfsRecordConverterTransform.builder()
+    OccurrenceHdfsRecordTransform hdfsRecordTransform =
+        OccurrenceHdfsRecordTransform.builder()
             .extendedRecordTag(verbatimTransform.getTag())
             .basicRecordTag(basicTransform.getTag())
             .temporalRecordTag(temporalTransform.getTag())
@@ -184,10 +217,8 @@ public class InterpretedToHdfsViewPipeline {
             .multimediaRecordTag(multimediaTransform.getTag())
             .imageRecordTag(imageTransform.getTag())
             .audubonRecordTag(audubonTransform.getTag())
-            .measurementOrFactRecordTag(measurementOrFactTransform.getTag())
             .metadataView(metadataView)
-            .build()
-            .converter();
+            .build();
 
     KeyedPCollectionTuple
         // Core
@@ -200,13 +231,273 @@ public class InterpretedToHdfsViewPipeline {
         .and(multimediaTransform.getTag(), multimediaCollection)
         .and(imageTransform.getTag(), imageCollection)
         .and(audubonTransform.getTag(), audubonCollection)
-        .and(measurementOrFactTransform.getTag(), measurementCollection)
         // Raw
         .and(verbatimTransform.getTag(), verbatimCollection)
         // Apply
-        .apply("Grouping objects", CoGroupByKey.create())
-        .apply("Merging to HdfsRecord", toHdfsRecordDoFn)
-        .apply(OccurrenceHdfsRecordTransform.create().write(targetTempPath, numberOfShards));
+        .apply("Group hdfs objects", CoGroupByKey.create())
+        .apply("Merge to HdfsRecord", hdfsRecordTransform.converter())
+        .apply(hdfsRecordTransform.write(pathFn.apply(OCCURRENCE), numberOfShards));
+
+    // Table records
+    PCollection<KV<String, CoGbkResult>> tableCollection =
+        KeyedPCollectionTuple
+            // Join
+            .of(basicTransform.getTag(), basicCollection)
+            .and(verbatimTransform.getTag(), verbatimCollection)
+            // Apply
+            .apply("Group table objects", CoGroupByKey.create());
+
+    // MeasurementOrFact
+    MeasurementOrFactTableTransform measurementOrFactTableTransform =
+        MeasurementOrFactTableTransform.builder()
+            .extendedRecordTag(verbatimTransform.getTag())
+            .basicRecordTag(basicTransform.getTag())
+            .build();
+
+    tableCollection
+        .apply("Convert to MeasurementOrFact", measurementOrFactTableTransform.converter())
+        .apply(
+            measurementOrFactTableTransform.write(
+                pathFn.apply(MEASUREMENT_OR_FACT_TABLE.name()), numberOfShards));
+
+    // Identification
+    IdentificationTableTransform identificationTableTransform =
+        IdentificationTableTransform.builder()
+            .extendedRecordTag(verbatimTransform.getTag())
+            .basicRecordTag(basicTransform.getTag())
+            .build();
+
+    tableCollection
+        .apply("Convert to Identification", identificationTableTransform.converter())
+        .apply(
+            identificationTableTransform.write(
+                pathFn.apply(IDENTIFICATION_TABLE.name()), numberOfShards));
+
+    // ResourceRelation
+    ResourceRelationshipTableTransform resourceRelationTableTransform =
+        ResourceRelationshipTableTransform.builder()
+            .extendedRecordTag(verbatimTransform.getTag())
+            .basicRecordTag(basicTransform.getTag())
+            .build();
+
+    tableCollection
+        .apply("Convert to ResourceRelation", resourceRelationTableTransform.converter())
+        .apply(
+            resourceRelationTableTransform.write(
+                pathFn.apply(RESOURCE_RELATIONSHIP_TABLE.name()), numberOfShards));
+
+    // Amplification
+    AmplificationTableTransform amplificationTableTransform =
+        AmplificationTableTransform.builder()
+            .extendedRecordTag(verbatimTransform.getTag())
+            .basicRecordTag(basicTransform.getTag())
+            .build();
+
+    tableCollection
+        .apply("Convert to Amplification", amplificationTableTransform.converter())
+        .apply(
+            amplificationTableTransform.write(
+                pathFn.apply(AMPLIFICATION_TABLE.name()), numberOfShards));
+
+    // Cloning
+    CloningTableTransform cloningTableTransform =
+        CloningTableTransform.builder()
+            .extendedRecordTag(verbatimTransform.getTag())
+            .basicRecordTag(basicTransform.getTag())
+            .build();
+
+    tableCollection
+        .apply("Convert to Cloning", cloningTableTransform.converter())
+        .apply(cloningTableTransform.write(pathFn.apply(CLONING_TABLE.name()), numberOfShards));
+
+    // GelImage
+    GelImageTableTransform gelImageTableTransform =
+        GelImageTableTransform.builder()
+            .extendedRecordTag(verbatimTransform.getTag())
+            .basicRecordTag(basicTransform.getTag())
+            .build();
+
+    tableCollection
+        .apply("Convert to GelImage", gelImageTableTransform.converter())
+        .apply(gelImageTableTransform.write(pathFn.apply(GEL_IMAGE_TABLE.name()), numberOfShards));
+
+    // Loan
+    LoanTableTransform loanTableTransform =
+        LoanTableTransform.builder()
+            .extendedRecordTag(verbatimTransform.getTag())
+            .basicRecordTag(basicTransform.getTag())
+            .build();
+
+    tableCollection
+        .apply("Convert to Loan", loanTableTransform.converter())
+        .apply(loanTableTransform.write(pathFn.apply(LOAN_TABLE.name()), numberOfShards));
+
+    // MaterialSample
+    MaterialSampleTableTransform materialSampleTableTransform =
+        MaterialSampleTableTransform.builder()
+            .extendedRecordTag(verbatimTransform.getTag())
+            .basicRecordTag(basicTransform.getTag())
+            .build();
+
+    tableCollection
+        .apply("Convert to MaterialSample", materialSampleTableTransform.converter())
+        .apply(
+            materialSampleTableTransform.write(
+                pathFn.apply(MATERIAL_SAMPLE_TABLE.name()), numberOfShards));
+
+    // Permit
+    PermitTableTransform permitTableTransform =
+        PermitTableTransform.builder()
+            .extendedRecordTag(verbatimTransform.getTag())
+            .basicRecordTag(basicTransform.getTag())
+            .build();
+
+    tableCollection
+        .apply("Convert to Permit", permitTableTransform.converter())
+        .apply(permitTableTransform.write(pathFn.apply(PERMIT_TABLE.name()), numberOfShards));
+
+    // Preparation
+    PreparationTableTransform preparationTableTransform =
+        PreparationTableTransform.builder()
+            .extendedRecordTag(verbatimTransform.getTag())
+            .basicRecordTag(basicTransform.getTag())
+            .build();
+
+    tableCollection
+        .apply("Convert to Preparation", preparationTableTransform.converter())
+        .apply(
+            preparationTableTransform.write(
+                pathFn.apply(PREPARATION_TABLE.name()), numberOfShards));
+
+    // Preservation
+    PreservationTableTransform preservationTableTransform =
+        PreservationTableTransform.builder()
+            .extendedRecordTag(verbatimTransform.getTag())
+            .basicRecordTag(basicTransform.getTag())
+            .build();
+
+    tableCollection
+        .apply("Convert to Preservation", preservationTableTransform.converter())
+        .apply(
+            preservationTableTransform.write(
+                pathFn.apply(PRESERVATION_TABLE.name()), numberOfShards));
+
+    // MeasurementScore
+    GermplasmMeasurementScoreTableTransform measurementScoreTableTransform =
+        GermplasmMeasurementScoreTableTransform.builder()
+            .extendedRecordTag(verbatimTransform.getTag())
+            .basicRecordTag(basicTransform.getTag())
+            .build();
+
+    tableCollection
+        .apply("Convert to MeasurementScore", measurementScoreTableTransform.converter())
+        .apply(
+            measurementScoreTableTransform.write(
+                pathFn.apply(GERMPLASM_MEASUREMENT_SCORE_TABLE.name()), numberOfShards));
+
+    // MeasurementTrait
+    GermplasmMeasurementTraitTableTransform measurementTraitTableTransform =
+        GermplasmMeasurementTraitTableTransform.builder()
+            .extendedRecordTag(verbatimTransform.getTag())
+            .basicRecordTag(basicTransform.getTag())
+            .build();
+
+    tableCollection
+        .apply("Convert to MeasurementTrait", measurementTraitTableTransform.converter())
+        .apply(
+            measurementTraitTableTransform.write(
+                pathFn.apply(GERMPLASM_MEASUREMENT_TRAIT_TABLE.name()), numberOfShards));
+
+    // MeasurementTrial
+    GermplasmMeasurementTrialTableTransform measurementTrialTableTransform =
+        GermplasmMeasurementTrialTableTransform.builder()
+            .extendedRecordTag(verbatimTransform.getTag())
+            .basicRecordTag(basicTransform.getTag())
+            .build();
+
+    tableCollection
+        .apply("Convert to MeasurementTrial", measurementTrialTableTransform.converter())
+        .apply(
+            measurementTrialTableTransform.write(
+                pathFn.apply(GERMPLASM_MEASUREMENT_TRIAL_TABLE.name()), numberOfShards));
+
+    // GermplasmAccession
+    GermplasmAccessionTableTransform accessionTableTransform =
+        GermplasmAccessionTableTransform.builder()
+            .extendedRecordTag(verbatimTransform.getTag())
+            .basicRecordTag(basicTransform.getTag())
+            .build();
+
+    tableCollection
+        .apply("Convert to GermplasmAccession", accessionTableTransform.converter())
+        .apply(
+            accessionTableTransform.write(
+                pathFn.apply(GERMPLASM_ACCESSION_TABLE.name()), numberOfShards));
+
+    // ExtendedMeasurementOrFact
+    ExtendedMeasurementOrFactTableTransform extendedMeasurementOrFactTableTransform =
+        ExtendedMeasurementOrFactTableTransform.builder()
+            .extendedRecordTag(verbatimTransform.getTag())
+            .basicRecordTag(basicTransform.getTag())
+            .build();
+
+    tableCollection
+        .apply(
+            "Convert to ExtendedMeasurementOrFact",
+            extendedMeasurementOrFactTableTransform.converter())
+        .apply(
+            extendedMeasurementOrFactTableTransform.write(
+                pathFn.apply(EXTENDED_MEASUREMENT_OR_FACT_TABLE.name()), numberOfShards));
+
+    // ChronometricAge
+    ChronometricAgeTableTransform chronometricAgeTableTransform =
+        ChronometricAgeTableTransform.builder()
+            .extendedRecordTag(verbatimTransform.getTag())
+            .basicRecordTag(basicTransform.getTag())
+            .build();
+
+    tableCollection
+        .apply("Convert to ChronometricAge", chronometricAgeTableTransform.converter())
+        .apply(
+            chronometricAgeTableTransform.write(
+                pathFn.apply(CHRONOMETRIC_AGE_TABLE.name()), numberOfShards));
+
+    // ChronometricDate
+    ChronometricDateTableTransform chronometricDateTableTransform =
+        ChronometricDateTableTransform.builder()
+            .extendedRecordTag(verbatimTransform.getTag())
+            .basicRecordTag(basicTransform.getTag())
+            .build();
+
+    tableCollection
+        .apply("Convert to ChronometricDate", chronometricDateTableTransform.converter())
+        .apply(
+            chronometricDateTableTransform.write(
+                pathFn.apply(CHRONOMETRIC_DATE_TABLE.name()), numberOfShards));
+
+    // References
+    ReferenceTableTransform referencesTableTransform =
+        ReferenceTableTransform.builder()
+            .extendedRecordTag(verbatimTransform.getTag())
+            .basicRecordTag(basicTransform.getTag())
+            .build();
+
+    tableCollection
+        .apply("Convert to References", referencesTableTransform.converter())
+        .apply(
+            referencesTableTransform.write(pathFn.apply(REFERENCE_TABLE.name()), numberOfShards));
+
+    // Identifier
+    IdentifierTableTransform identifierTableTransform =
+        IdentifierTableTransform.builder()
+            .extendedRecordTag(verbatimTransform.getTag())
+            .basicRecordTag(basicTransform.getTag())
+            .build();
+
+    tableCollection
+        .apply("Convert to Identifier", identifierTableTransform.converter())
+        .apply(
+            identifierTableTransform.write(pathFn.apply(IDENTIFIER_TABLE.name()), numberOfShards));
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();

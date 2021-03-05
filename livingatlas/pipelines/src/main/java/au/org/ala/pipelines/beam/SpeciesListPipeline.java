@@ -8,6 +8,7 @@ import au.org.ala.pipelines.util.SpeciesListUtils;
 import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.specieslists.SpeciesListDownloader;
 import au.org.ala.utils.CombinedYamlConfiguration;
+import java.io.IOException;
 import java.util.function.UnaryOperator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.file.CodecFactory;
@@ -88,7 +89,7 @@ public class SpeciesListPipeline {
 
   /** Generate a PCollection of taxon profiles. */
   public static PCollection<KV<String, TaxonProfile>> generateTaxonProfileCollection(
-      Pipeline p, SpeciesLevelPipelineOptions options) throws Exception {
+      Pipeline p, SpeciesLevelPipelineOptions options) throws IOException {
 
     SpeciesListDownloader.run(options);
 

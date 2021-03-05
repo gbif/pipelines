@@ -4,7 +4,6 @@ import static au.org.ala.pipelines.common.ALARecordTypes.JACKKNIFE_OUTLIER;
 
 import java.util.Optional;
 import lombok.Builder;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -44,7 +43,6 @@ public class JackKnifeOutlierTransform extends Transform<ExtendedRecord, JackKni
   }
 
   /** Beam @Setup initializes resources */
-  @SneakyThrows
   @Setup
   public void setup() {}
 

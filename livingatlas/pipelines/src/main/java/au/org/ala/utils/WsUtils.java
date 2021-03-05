@@ -46,7 +46,7 @@ public class WsUtils {
     ObjectMapper om = new ObjectMapper();
     om.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
 
-    return (new retrofit2.Retrofit.Builder())
+    return new retrofit2.Retrofit.Builder()
         .client(okHttpClient)
         .baseUrl(wsConfig.getWsUrl())
         .addConverterFactory(JacksonConverterFactory.create(om))
@@ -62,7 +62,7 @@ public class WsUtils {
     ObjectMapper om = new ObjectMapper();
     om.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
 
-    return (new retrofit2.Retrofit.Builder())
+    return new retrofit2.Retrofit.Builder()
         .client(okHttpClient)
         .baseUrl(wsConfig.getWsUrl())
         .addConverterFactory(JacksonConverterFactory.create(om))
@@ -71,15 +71,10 @@ public class WsUtils {
         .create(theClass);
   }
 
-  /**
-   * Create an OKHttpClient adding headers to the requests.
-   *
-   * @param config
-   * @return
-   */
+  /** Create an OKHttpClient adding headers to the requests. */
   public static OkHttpClient createOKClient(WsConfig config) {
     OkHttpClient.Builder clientBuilder =
-        (new OkHttpClient.Builder())
+        new OkHttpClient.Builder()
             .connectTimeout(config.getTimeoutSec(), TimeUnit.SECONDS)
             .readTimeout(config.getTimeoutSec(), TimeUnit.SECONDS);
     clientBuilder.cache(createCache(config.getCacheSizeMb()));

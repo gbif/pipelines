@@ -47,7 +47,7 @@ import org.apache.maven.plugins.annotations.Parameter;
  *
  * }</pre>
  */
-@Mojo(name = "postprocess", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
+@Mojo(name = "postprocess", defaultPhase = LifecyclePhase.PROCESS_SOURCES)
 public class AvroPostprocessMojo extends AbstractMojo {
 
   private static final String DEFAULT = "-gbif";
@@ -74,6 +74,14 @@ public class AvroPostprocessMojo extends AbstractMojo {
         searchClasses().forEach(this::modifyFile);
       }
     }
+  }
+
+  public void setDirectory(String directory) {
+    this.directory = directory;
+  }
+
+  public void setDefaultPackage(String defaultPackage) {
+    this.defaultPackage = defaultPackage;
   }
 
   /**
@@ -103,11 +111,19 @@ public class AvroPostprocessMojo extends AbstractMojo {
   private void writeFile(Path path, List<String> lines, List<Integer> idxs) {
     if (idxs.get(0) != -1 || idxs.get(1) != -1) {
       try {
-        Files.write(path, lines);
+        if (Files.deleteIfExists(path)) {
+          Files.write(path, lines);
+          if (Files.exists(path)) {
+            getLog().info("Modified - " + path.toString());
+          } else {
+            getLog().error("Can't create file - " + path.toString());
+          }
+        } else {
+          getLog().error("Can't modify - " + path.toString());
+        }
       } catch (IOException ex) {
         throw new IllegalStateException(ex.getMessage(), ex);
       }
-      getLog().info("Modified - " + path.toString());
     }
   }
 
@@ -134,7 +150,8 @@ public class AvroPostprocessMojo extends AbstractMojo {
     int beforeIdx = idxs.get(0);
     if (beforeIdx != -1) {
       String imports =
-          "import org.apache.beam.sdk.coders.AvroCoder;\nimport org.apache.beam.sdk.coders.DefaultCoder;";
+          "import org.apache.beam.sdk.coders.AvroCoder;\n"
+              + "import org.apache.beam.sdk.coders.DefaultCoder;\n";
       lines.add(beforeIdx, imports);
       lines.add(beforeIdx + 1, "@DefaultCoder(AvroCoder.class)");
     }
@@ -220,7 +237,7 @@ public class AvroPostprocessMojo extends AbstractMojo {
   /** Searches for all java classes in a directory */
   private List<Path> searchClasses() {
     try (Stream<Path> paths = Files.walk(Paths.get(directory))) {
-      return paths.filter(path -> path.toFile().isFile()).collect(Collectors.toList());
+      return paths.filter(path -> path.toFile().isFile()).sorted().collect(Collectors.toList());
     } catch (IOException ex) {
       throw new IllegalStateException(ex.getMessage(), ex);
     }

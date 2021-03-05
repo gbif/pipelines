@@ -198,16 +198,14 @@ public class CompleteIngestPipelineTestIT {
 
     // sample
     LayerCrawler.init(
-        (new CombinedYamlConfiguration(
-            new String[] {
-              "--datasetId=" + datasetID,
-              "--attempt=1",
-              "--runner=DirectRunner",
-              "--targetPath=/tmp/la-pipelines-test/complete-pipeline",
-              "--inputPath=/tmp/la-pipelines-test/complete-pipeline",
-              "--allDatasetsInputPath=/tmp/la-pipelines-test/complete-pipeline/all-datasets",
-              "--config=" + TestUtils.getPipelinesConfigFile()
-            })));
+        new CombinedYamlConfiguration(
+            "--datasetId=" + datasetID,
+            "--attempt=1",
+            "--runner=DirectRunner",
+            "--targetPath=/tmp/la-pipelines-test/complete-pipeline",
+            "--inputPath=/tmp/la-pipelines-test/complete-pipeline",
+            "--allDatasetsInputPath=/tmp/la-pipelines-test/complete-pipeline/all-datasets",
+            "--config=" + TestUtils.getPipelinesConfigFile()));
     LayerCrawler.run(latLngOptions);
 
     ALASolrPipelineOptions solrOptions2 =

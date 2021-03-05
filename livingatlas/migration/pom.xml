@@ -19,6 +19,7 @@
          which uses version 1.58
          -->
         <jcommander.version>1.78</jcommander.version>
+        <sonar.skip>true</sonar.skip>
     </properties>
     <build>
         <plugins>

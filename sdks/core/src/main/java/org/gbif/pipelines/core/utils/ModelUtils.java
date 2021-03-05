@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.Set;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -30,12 +31,30 @@ public class ModelUtils {
         : value;
   }
 
+  public static Optional<String> extractNullAwareOptValue(ExtendedRecord er, Term term) {
+    return Optional.ofNullable(extractNullAwareValue(er, term));
+  }
+
   public static Optional<String> extractOptValue(ExtendedRecord er, Term term) {
     return Optional.ofNullable(extractValue(er, term));
   }
 
   public static boolean hasValue(ExtendedRecord er, Term term) {
     return extractOptValue(er, term).isPresent();
+  }
+
+  public static boolean hasValueNullAware(ExtendedRecord er, Term term) {
+    return extractNullAwareOptValue(er, term).isPresent();
+  }
+
+  public static boolean hasExtension(ExtendedRecord er, Extension extension) {
+    return hasExtension(er, extension.getRowType());
+  }
+
+  public static boolean hasExtension(ExtendedRecord er, String extension) {
+    return Optional.ofNullable(er.getExtensions().get(extension))
+        .filter(l -> !l.isEmpty())
+        .isPresent();
   }
 
   /** Checks if a {@link ExtendedRecord} is null or empty. */

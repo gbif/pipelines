@@ -17,15 +17,36 @@
 
   <properties>
     <avro-generated-path>${project.basedir}/src/main/java-generated/</avro-generated-path>
+    <schema-generated-path>${project.basedir}/src/main/avro/table/</schema-generated-path>
     <sonar.skip>true</sonar.skip>
   </properties>
 
   <build>
     <plugins>
+      <!-- Generate avro schemas from XML extensions-->
+      <plugin>
+        <groupId>org.gbif.pipelines</groupId>
+        <artifactId>xml-to-avsc-maven-plugin</artifactId>
+        <version>${project.version}</version>
+        <executions>
+          <execution>
+            <id>avroschemageneration</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>avroschemageneration</goal>
+            </goals>
+            <configuration>
+              <pathToWrite>${schema-generated-path}</pathToWrite>
+              <namespace>${namespace}.extension</namespace>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
       <!--  Generate source from Avro definitions -->
       <plugin>
         <groupId>org.apache.avro</groupId>
         <artifactId>avro-maven-plugin</artifactId>
+        <version>${avro.version}</version>
         <executions>
           <execution>
             <id>schemas</id>
@@ -51,14 +72,17 @@
       <plugin>
         <groupId>org.gbif.pipelines</groupId>
         <artifactId>pipelines-maven-plugin</artifactId>
+        <version>${project.version}</version>
         <executions>
           <execution>
+            <id>postprocess</id>
+            <phase>process-sources</phase>
             <goals>
               <goal>postprocess</goal>
             </goals>
             <configuration>
               <directory>${avro-generated-path}</directory>
-              <defaultPackage>org.gbif.pipelines.io.avro</defaultPackage>
+              <defaultPackage>${namespace}</defaultPackage>
             </configuration>
           </execution>
         </executions>
@@ -89,6 +113,9 @@
           <filesets>
             <fileset>
               <directory>${avro-generated-path}</directory>
+            </fileset>
+            <fileset>
+              <directory>${schema-generated-path}</directory>
             </fileset>
           </filesets>
         </configuration>

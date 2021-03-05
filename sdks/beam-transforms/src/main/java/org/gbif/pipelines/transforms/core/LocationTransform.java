@@ -79,6 +79,12 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
     }
   }
 
+  /** Beam @Setup can be applied only to void method */
+  public LocationTransform init() {
+    setup();
+    return this;
+  }
+
   /** Beam @Teardown closes initialized resources */
   @Teardown
   public void tearDown() {
@@ -103,14 +109,13 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
 
   public Optional<LocationRecord> processElement(ExtendedRecord source, MetadataRecord mdr) {
 
-    LocationRecord lr =
-        LocationRecord.newBuilder()
-            .setId(source.getId())
-            .setCreated(Instant.now().toEpochMilli())
-            .build();
-
     return Interpretation.from(source)
-        .to(lr)
+        .to(
+            er ->
+                LocationRecord.newBuilder()
+                    .setId(er.getId())
+                    .setCreated(Instant.now().toEpochMilli())
+                    .build())
         .when(er -> !er.getCoreTerms().isEmpty())
         .via(LocationInterpreter.interpretCountryAndCoordinates(geocodeKvStore, mdr))
         .via(LocationInterpreter.interpretGadm(geocodeKvStore))
@@ -128,6 +133,7 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
         .via(LocationInterpreter::interpretCoordinatePrecision)
         .via(LocationInterpreter::interpretCoordinateUncertaintyInMeters)
         .via(LocationInterpreter::interpretLocality)
+        .via(LocationInterpreter::interpretFootprintWKT)
         .via(r -> this.incCounter())
         .getOfNullable();
   }

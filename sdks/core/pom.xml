@@ -16,11 +16,66 @@
   <description>Main module contains API like classes, such as data interpretations, converters, DwCA reader and etc.
   </description>
 
+  <properties>
+    <generated-path>${project.basedir}/src/main/java-generated/</generated-path>
+    <package>org.gbif.pipelines.core.converters</package>
+  </properties>
+
   <build>
     <plugins>
       <plugin>
+        <groupId>org.gbif.pipelines</groupId>
+        <artifactId>extension-converter-maven-plugin</artifactId>
+        <version>${project.version}</version>
+        <executions>
+          <execution>
+            <id>extensiongeneration</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>extensiongeneration</goal>
+            </goals>
+            <configuration>
+              <templatePath>${generated-path}</templatePath>
+              <pathToWrite>${generated-path}</pathToWrite>
+              <avroNamespace>${namespace}</avroNamespace>
+              <packagePath>${package}</packagePath>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
+      </plugin>
+      <!-- Add the generated sources to the classpath for IDEs -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>add-source</goal>
+            </goals>
+            <configuration>
+              <sources>
+                <source>${generated-path}</source>
+              </sources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- Clean generated path -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-clean-plugin</artifactId>
+        <configuration>
+          <filesets>
+            <fileset>
+              <directory>${generated-path}</directory>
+            </fileset>
+          </filesets>
+        </configuration>
       </plugin>
     </plugins>
     <resources>

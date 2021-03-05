@@ -7,7 +7,6 @@ import au.org.ala.pipelines.interpreters.ALABasicInterpreter;
 import java.time.Instant;
 import java.util.Optional;
 import lombok.Builder;
-import lombok.SneakyThrows;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
@@ -61,7 +60,6 @@ public class ALABasicTransform extends Transform<ExtendedRecord, BasicRecord> {
   }
 
   /** Beam @Teardown closes initialized resources */
-  @SneakyThrows
   @Teardown
   public void tearDown() {
     // NOP

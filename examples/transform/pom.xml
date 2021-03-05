@@ -51,6 +51,7 @@
       <plugin>
         <groupId>org.gbif.pipelines</groupId>
         <artifactId>pipelines-maven-plugin</artifactId>
+        <version>${project.version}</version>
         <executions>
           <execution>
             <goals>

@@ -107,9 +107,10 @@ public class SpeciesListDownloader {
     log.info("Writing output to {}", outputPath);
 
     // create the output file
-    OutputStream output = fs.create(new Path(outputPath));
-    try (DataFileWriter<SpeciesListRecord> dataFileWriter =
-        new DataFileWriter<>(new GenericDatumWriter<>(SpeciesListRecord.getClassSchema()))) {
+
+    try (OutputStream output = fs.create(new Path(outputPath));
+        DataFileWriter<SpeciesListRecord> dataFileWriter =
+            new DataFileWriter<>(new GenericDatumWriter<>(SpeciesListRecord.getClassSchema()))) {
       dataFileWriter.create(SpeciesListRecord.getClassSchema(), output);
 
       int counter = 0;

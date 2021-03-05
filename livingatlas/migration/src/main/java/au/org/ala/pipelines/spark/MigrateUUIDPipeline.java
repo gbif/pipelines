@@ -90,7 +90,7 @@ public class MigrateUUIDPipeline implements Serializable {
                         && row.getString(0).startsWith("dr"))
             .map(
                 row -> {
-                  String datasetID = row.getString(0).substring(0, row.getString(0).indexOf("|"));
+                  String datasetID = row.getString(0).substring(0, row.getString(0).indexOf('|'));
                   return Tuple4.apply(
                       datasetID,
                       "temp_" + datasetID + "_" + row.getString(1),
@@ -123,9 +123,9 @@ public class MigrateUUIDPipeline implements Serializable {
       Path sourcePath = locatedFileStatus.getPath();
       String fullPath = sourcePath.toString();
 
-      if (fullPath.lastIndexOf("=") > 0) {
+      if (fullPath.lastIndexOf('=') > 0) {
         String dataSetID =
-            fullPath.substring(fullPath.lastIndexOf("=") + 1, fullPath.lastIndexOf("/"));
+            fullPath.substring(fullPath.lastIndexOf('=') + 1, fullPath.lastIndexOf('/'));
 
         // move to correct location
         String newPath = targetPath + "/" + dataSetID + "/1/identifiers/ala_uuid/";

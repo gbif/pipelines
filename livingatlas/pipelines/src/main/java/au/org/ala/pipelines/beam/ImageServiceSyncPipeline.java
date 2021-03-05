@@ -188,7 +188,7 @@ public class ImageServiceSyncPipeline {
                         kv ->
                             KV.of(
                                 kv.getValue(),
-                                kv.getKey().substring(kv.getKey().lastIndexOf("=") + 1))));
+                                kv.getKey().substring(kv.getKey().lastIndexOf('=') + 1))));
 
     // These are NOT image service URLs i.e. they should be URLs as provided
     // by the data publisher

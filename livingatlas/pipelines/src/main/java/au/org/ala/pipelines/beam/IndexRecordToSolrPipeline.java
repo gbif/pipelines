@@ -69,7 +69,7 @@ public class IndexRecordToSolrPipeline {
 
       // Filter records with coordinates - we will join these to samples
       PCollection<IndexRecord> recordsWithCoordinates =
-          indexRecordsCollection.apply(Filter.by(indexRecord -> hasCoordinates(indexRecord)));
+          indexRecordsCollection.apply(Filter.by(IndexRecordToSolrPipeline::hasCoordinates));
 
       // Filter records without coordinates - we will index, but not sample these
       PCollection<IndexRecord> recordsWithoutCoordinates =
@@ -149,14 +149,14 @@ public class IndexRecordToSolrPipeline {
                       if (jkor != nullJkor) {
                         Map<String, Integer> ints = indexRecord.getInts();
                         if (ints == null) {
-                          ints = new HashMap<String, Integer>();
+                          ints = new HashMap<>();
                           indexRecord.setInts(ints);
                         }
                         ints.put("outlierLayerCount", jkor.getItems().size());
 
                         Map<String, List<String>> stringsList = indexRecord.getMultiValues();
                         if (stringsList == null) {
-                          stringsList = new HashMap();
+                          stringsList = new HashMap<>();
                           indexRecord.setMultiValues(stringsList);
                         }
 
@@ -245,13 +245,9 @@ public class IndexRecordToSolrPipeline {
         indexRecordIterable.forEach(
             indexRecord -> {
               Map<String, String> strings =
-                  indexRecord.getStrings() != null
-                      ? indexRecord.getStrings()
-                      : new HashMap<String, String>();
+                  indexRecord.getStrings() != null ? indexRecord.getStrings() : new HashMap<>();
               Map<String, Double> doubles =
-                  indexRecord.getDoubles() != null
-                      ? indexRecord.getDoubles()
-                      : new HashMap<String, Double>();
+                  indexRecord.getDoubles() != null ? indexRecord.getDoubles() : new HashMap<>();
 
               Map<String, String> stringsToPersist =
                   ImmutableMap.<String, String>builder()
