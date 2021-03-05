@@ -1,5 +1,7 @@
 package org.gbif.pipelines.crawler.abcd;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.getAllInterpretationAsString;
+
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileNotFoundException;
@@ -103,7 +105,7 @@ public class AbcdToAvroCallback extends AbstractMessageCallback<PipelinesAbcdMes
     return new PipelinesVerbatimMessage(
         message.getDatasetUuid(),
         message.getAttempt(),
-        config.interpretTypes,
+        getAllInterpretationAsString(),
         message.getPipelineSteps(),
         message.getEndpointType());
   }
