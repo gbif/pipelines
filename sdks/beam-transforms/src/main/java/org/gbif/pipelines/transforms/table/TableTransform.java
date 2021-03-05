@@ -14,7 +14,6 @@ import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
 import org.apache.beam.sdk.transforms.SerializableBiFunction;
-import org.apache.beam.sdk.transforms.SerializableFunction;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
@@ -40,7 +39,7 @@ public abstract class TableTransform<T extends SpecificRecordBase>
 
   @NonNull private TupleTag<BasicRecord> basicRecordTag;
 
-  @NonNull private SerializableFunction<InterpretationType, String> pathFn;
+  @NonNull private String path;
 
   @NonNull private Integer numShards;
 
@@ -70,8 +69,8 @@ public abstract class TableTransform<T extends SpecificRecordBase>
     return this;
   }
 
-  public TableTransform<T> setPathFn(SerializableFunction<InterpretationType, String> pathFn) {
-    this.pathFn = pathFn;
+  public TableTransform<T> setPath(String path) {
+    this.path = path;
     return this;
   }
 
@@ -101,10 +100,8 @@ public abstract class TableTransform<T extends SpecificRecordBase>
   }
 
   public AvroIO.Write<T> write() {
-
-    String toPath = pathFn.apply(recordType);
     AvroIO.Write<T> write =
-        AvroIO.write(clazz).to(toPath).withSuffix(AVRO_EXTENSION).withCodec(BASE_CODEC);
+        AvroIO.write(clazz).to(path).withSuffix(AVRO_EXTENSION).withCodec(BASE_CODEC);
 
     if (numShards == null || numShards <= 0) {
       return write;
