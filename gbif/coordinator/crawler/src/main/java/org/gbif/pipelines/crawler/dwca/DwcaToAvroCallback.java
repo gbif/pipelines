@@ -125,9 +125,14 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
     }
 
     // Calculates and checks existence of DwC Archive
-    Path inputPath = buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid());
-    Set<String> interpretedTypes = DwcaExtensionTermUtils.fromLocation(inputPath);
-    interpretedTypes.addAll(getAllInterpretationAsString());
+    Set<String> interpretedTypes = config.interpretTypes;
+    try {
+      Path inputPath = buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid());
+      interpretedTypes = DwcaExtensionTermUtils.fromLocation(inputPath);
+      interpretedTypes.addAll(getAllInterpretationAsString());
+    } catch (IllegalStateException ex) {
+      log.warn(ex.getMessage());
+    }
 
     // Common variables
     OccurrenceValidationReport report = message.getValidationReport().getOccurrenceReport();
