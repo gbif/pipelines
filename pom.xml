@@ -77,13 +77,13 @@
     <!-- GBIF libraries -->
     <gbif-parsers.version>0.53</gbif-parsers.version>
     <dwca-io.version>2.8</dwca-io.version>
-    <gbif-api.version>0.141-SNAPSHOT</gbif-api.version>
+    <gbif-api.version>0.141</gbif-api.version>
     <gbif-common.version>0.47</gbif-common.version>
     <dwc-api.version>1.32</dwc-api.version>
     <kvs.version>1.17</kvs.version>
     <hbase-utils.version>0.12</hbase-utils.version>
     <gbif-wrangler.version>0.3</gbif-wrangler.version>
-    <gbif-occurrence.version>0.155</gbif-occurrence.version>
+    <gbif-occurrence.version>0.157</gbif-occurrence.version>
     <data-repo-api.version>1.2</data-repo-api.version>
     <vocabulary-lookup.version>0.34</vocabulary-lookup.version>
 
