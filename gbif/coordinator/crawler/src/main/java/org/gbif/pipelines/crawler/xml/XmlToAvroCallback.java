@@ -1,5 +1,6 @@
 package org.gbif.pipelines.crawler.xml;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.getAllInterpretationAsString;
 import static org.gbif.pipelines.common.utils.HdfsUtils.buildOutputPath;
 import static org.gbif.pipelines.common.utils.PathUtil.buildXmlInputPath;
 
@@ -150,7 +151,7 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
     return new PipelinesVerbatimMessage(
         message.getDatasetUuid(),
         message.getAttempt(),
-        config.interpretTypes,
+        getAllInterpretationAsString(),
         message.getPipelineSteps(),
         message.getEndpointType());
   }

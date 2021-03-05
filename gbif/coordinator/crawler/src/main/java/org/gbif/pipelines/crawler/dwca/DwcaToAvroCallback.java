@@ -1,12 +1,15 @@
 package org.gbif.pipelines.crawler.dwca;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.getAllInterpretationAsString;
 import static org.gbif.pipelines.common.utils.PathUtil.buildDwcaInputPath;
 
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.file.CodecFactory;
 import org.apache.curator.framework.CuratorFramework;
@@ -20,6 +23,7 @@ import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage.Validatio
 import org.gbif.common.messaging.api.messages.Platform;
 import org.gbif.converters.DwcaToAvroConverter;
 import org.gbif.pipelines.common.utils.HdfsUtils;
+import org.gbif.pipelines.core.utils.DwcaExtensionTermUtils;
 import org.gbif.pipelines.crawler.PipelinesCallback;
 import org.gbif.pipelines.crawler.StepHandler;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
@@ -104,6 +108,7 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
     };
   }
 
+  @SneakyThrows
   @Override
   public PipelinesVerbatimMessage createOutgoingMessage(PipelinesDwcaMessage message) {
     Objects.requireNonNull(message.getEndpointType(), "endpointType can't be NULL!");
@@ -118,6 +123,18 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
                   StepType.HDFS_VIEW.name(),
                   StepType.FRAGMENTER.name())));
     }
+
+    // Calculates and checks existence of DwC Archive
+    Set<String> interpretedTypes = config.interpretTypes;
+    try {
+      Path inputPath = buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid());
+      interpretedTypes = DwcaExtensionTermUtils.fromLocation(inputPath);
+      interpretedTypes.addAll(getAllInterpretationAsString());
+      interpretedTypes.remove(null);
+    } catch (IllegalStateException ex) {
+      log.warn(ex.getMessage());
+    }
+
     // Common variables
     OccurrenceValidationReport report = message.getValidationReport().getOccurrenceReport();
     Long numberOfRecords = report == null ? null : (long) report.getCheckedRecords();
@@ -128,7 +145,7 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
     return new PipelinesVerbatimMessage(
         message.getDatasetUuid(),
         message.getAttempt(),
-        config.interpretTypes,
+        interpretedTypes,
         message.getPipelineSteps(),
         message.getEndpointType(),
         validationResult);

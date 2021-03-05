@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
@@ -21,8 +22,6 @@ public class PipelinesVariables {
     public static final String INTERPRETED_TO_INDEX = "interpreted-to-index";
     public static final String INTERPRETED_TO_HDFS = "interpreted-to-hdfs";
     public static final String FRAGMENTER = "fragmenter";
-
-    public static final String OCCURRENCE = "occurrence";
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static class Conversion {
@@ -63,6 +62,8 @@ public class PipelinesVariables {
         // Specific
         LOCATION_FEATURE,
         // Tables,
+        // Remeber to add mapping to org.gbif.pipelines.core.utils.DwcaExtensionTermUtils
+        // and org.gbif.pipelines.ingest.utils.HdfsViewAvroUtils
         OCCURRENCE,
         MEASUREMENT_OR_FACT_TABLE,
         IDENTIFICATION_TABLE,
@@ -88,6 +89,32 @@ public class PipelinesVariables {
         @Override
         public String all() {
           return ALL.name();
+        }
+
+        public static Set<RecordType> getAllInterpretation() {
+          return new HashSet<>(
+              Arrays.asList(
+                  VERBATIM,
+                  // Core types
+                  METADATA,
+                  BASIC,
+                  TEMPORAL,
+                  LOCATION,
+                  TAXONOMY,
+                  GRSCICOLL,
+                  // Extension types
+                  IMAGE,
+                  MULTIMEDIA,
+                  AUDUBON,
+                  MEASUREMENT_OR_FACT,
+                  AMPLIFICATION,
+                  // Specific
+                  LOCATION_FEATURE,
+                  OCCURRENCE));
+        }
+
+        public static Set<String> getAllInterpretationAsString() {
+          return getAllInterpretation().stream().map(RecordType::name).collect(Collectors.toSet());
         }
 
         public static Set<RecordType> getAllTables() {
@@ -166,7 +193,7 @@ public class PipelinesVariables {
         "measurementOrFactTableRecordsCount";
     public static final String IDENTIFICATION_TABLE_RECORDS_COUNT =
         "identificationTableRecordsCount";
-    public static final String RESOURCE_RELATION_TABLE_RECORDS_COUNT =
+    public static final String RESOURCE_RELATIONSHIP_TABLE_RECORDS_COUNT =
         "resourceRelationTableRecordsCount";
     public static final String AMPLIFICATION_TABLE_RECORDS_COUNT = "amplificationTableRecordsCount";
     public static final String CLONING_TABLE_RECORDS_COUNT = "cloningTableRecordsCount";
@@ -191,7 +218,7 @@ public class PipelinesVariables {
         "chronometricAgeTableRecordsCount";
     public static final String CHRONOMETRIC_DATE_TABLE_RECORDS_COUNT =
         "chronometricDateTableRecordsCount";
-    public static final String REFERENCES_TABLE_RECORDS_COUNT = "referencesTableRecordsCount";
+    public static final String REFERENCE_TABLE_RECORDS_COUNT = "referencesTableRecordsCount";
     public static final String IDENTIFIER_TABLE_RECORDS_COUNT = "identifierTableRecordsCount";
     public static final String HDFS_VIEW_RECORDS_COUNT = "hdfsViewRecordsCount";
     // Fragmenter

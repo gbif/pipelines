@@ -35,8 +35,8 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.OCCURRENCE_EX
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.PERMIT_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.PREPARATION_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.PRESERVATION_TABLE_RECORDS_COUNT;
-import static org.gbif.pipelines.common.PipelinesVariables.Metrics.REFERENCES_TABLE_RECORDS_COUNT;
-import static org.gbif.pipelines.common.PipelinesVariables.Metrics.RESOURCE_RELATION_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.REFERENCE_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.RESOURCE_RELATIONSHIP_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.TAXON_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.TEMPORAL_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.UNIQUE_GBIF_IDS_COUNT;
@@ -129,7 +129,8 @@ public class IngestMetricsBuilder {
         .addMetric(OccurrenceHdfsRecordTransform.class, AVRO_TO_HDFS_COUNT)
         .addMetric(MeasurementOrFactTableTransform.class, MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT)
         .addMetric(IdentificationTableTransform.class, IDENTIFICATION_TABLE_RECORDS_COUNT)
-        .addMetric(ResourceRelationshipTableTransform.class, RESOURCE_RELATION_TABLE_RECORDS_COUNT)
+        .addMetric(
+            ResourceRelationshipTableTransform.class, RESOURCE_RELATIONSHIP_TABLE_RECORDS_COUNT)
         .addMetric(AmplificationTableTransform.class, AMPLIFICATION_TABLE_RECORDS_COUNT)
         .addMetric(CloningTableTransform.class, CLONING_TABLE_RECORDS_COUNT)
         .addMetric(GelImageTableTransform.class, GEL_IMAGE_TABLE_RECORDS_COUNT)
@@ -150,7 +151,7 @@ public class IngestMetricsBuilder {
             EXTENDED_MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT)
         .addMetric(ChronometricAgeTableTransform.class, CHRONOMETRIC_AGE_TABLE_RECORDS_COUNT)
         .addMetric(ChronometricDateTableTransform.class, CHRONOMETRIC_DATE_TABLE_RECORDS_COUNT)
-        .addMetric(ReferenceTableTransform.class, REFERENCES_TABLE_RECORDS_COUNT)
+        .addMetric(ReferenceTableTransform.class, REFERENCE_TABLE_RECORDS_COUNT)
         .addMetric(IdentifierTableTransform.class, IDENTIFIER_TABLE_RECORDS_COUNT);
   }
 }

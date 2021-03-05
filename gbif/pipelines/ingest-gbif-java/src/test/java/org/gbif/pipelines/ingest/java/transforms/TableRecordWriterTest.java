@@ -1,7 +1,7 @@
 package org.gbif.pipelines.ingest.java.transforms;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.OCCURRENCE;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,6 +14,7 @@ import java.util.function.Function;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.specific.SpecificDatumReader;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.InterpretationType;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
@@ -52,13 +53,16 @@ public class TableRecordWriterTest {
       "--interpretationTypes=ALL",
       "--runner=SparkRunner",
       "--inputPath=" + outputFile,
-      "--targetPath=" + outputFile
+      "--targetPath=" + outputFile,
+      "--interpretationTypes=OCCURRENCE"
     };
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
 
-    String id = options.getDatasetId() + '_' + options.getAttempt();
-    String path =
-        PathBuilder.buildFilePathViewUsingInputPath(options, OCCURRENCE, id + AVRO_EXTENSION);
+    Function<InterpretationType, String> pathFn =
+        st -> {
+          String id = options.getDatasetId() + '_' + options.getAttempt() + AVRO_EXTENSION;
+          return PathBuilder.buildFilePathViewUsingInputPath(options, st.name().toLowerCase(), id);
+        };
 
     // When
     TableRecordWriter.<OccurrenceHdfsRecord>builder()
@@ -66,8 +70,10 @@ public class TableRecordWriterTest {
         .basicRecords(list)
         .executor(Executors.newSingleThreadExecutor())
         .options(options)
-        .targetTempPath(path)
+        .targetPathFn(pathFn)
         .schema(OccurrenceHdfsRecord.getClassSchema())
+        .recordType(OCCURRENCE)
+        .types(options.getInterpretationTypes())
         .build()
         .write();
 
@@ -119,13 +125,16 @@ public class TableRecordWriterTest {
       "--runner=SparkRunner",
       "--inputPath=" + outputFile,
       "--targetPath=" + outputFile,
-      "--syncThreshold=0"
+      "--syncThreshold=0",
+      "--interpretationTypes=OCCURRENCE"
     };
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
 
-    String id = options.getDatasetId() + '_' + options.getAttempt();
-    String path =
-        PathBuilder.buildFilePathViewUsingInputPath(options, OCCURRENCE, id + AVRO_EXTENSION);
+    Function<InterpretationType, String> pathFn =
+        st -> {
+          String id = options.getDatasetId() + '_' + options.getAttempt() + AVRO_EXTENSION;
+          return PathBuilder.buildFilePathViewUsingInputPath(options, st.name().toLowerCase(), id);
+        };
 
     // When
     TableRecordWriter.<OccurrenceHdfsRecord>builder()
@@ -133,8 +142,10 @@ public class TableRecordWriterTest {
         .basicRecords(list)
         .executor(Executors.newSingleThreadExecutor())
         .options(options)
-        .targetTempPath(path)
+        .targetPathFn(pathFn)
         .schema(OccurrenceHdfsRecord.getClassSchema())
+        .recordType(OCCURRENCE)
+        .types(options.getInterpretationTypes())
         .build()
         .write();
 

@@ -26,9 +26,9 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.io.avro.extension.ExtendedMeasurementOrFactTable;
-import org.gbif.pipelines.io.avro.extension.GermplasmMeasurementTrialTable;
-import org.gbif.pipelines.io.avro.extension.MeasurementOrFactTable;
+import org.gbif.pipelines.io.avro.extension.dwc.MeasurementOrFactTable;
+import org.gbif.pipelines.io.avro.extension.germplasm.GermplasmMeasurementTrialTable;
+import org.gbif.pipelines.io.avro.extension.obis.ExtendedMeasurementOrFactTable;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.GrscicollTransform;
@@ -48,15 +48,15 @@ public class InterpretedToHdfsViewPipelineTest {
   private static final String ID = "777";
 
   @Test
-  public void pipelineTest() throws Exception {
+  public void pipelineAllTest() throws Exception {
 
     // State
     String outputFile = getClass().getResource("/").getFile();
 
     String postfix = "777";
 
-    String input = outputFile + "data/ingest";
-    String output = outputFile + "data/hdfsview";
+    String input = outputFile + "data0/ingest";
+    String output = outputFile + "data0/hdfsview";
 
     String[] argsWriter = {
       "--datasetId=d596fccb-2319-42eb-b13b-986c932780ad",
@@ -65,7 +65,8 @@ public class InterpretedToHdfsViewPipelineTest {
       "--metaFileName=interpreted-to-hdfs.yml",
       "--inputPath=" + output,
       "--targetPath=" + input,
-      "--numberOfShards=1"
+      "--numberOfShards=1",
+      "--interpretationTypes=OCCURRENCE,MEASUREMENT_OR_FACT_TABLE,EXTENDED_MEASUREMENT_OR_FACT_TABLE,GERMPLASM_MEASUREMENT_TRIAL_TABLE"
     };
     InterpretationPipelineOptions optionsWriter =
         PipelinesOptionsFactory.createInterpretation(argsWriter);
@@ -154,7 +155,8 @@ public class InterpretedToHdfsViewPipelineTest {
       "--metaFileName=interpreted-to-hdfs.yml",
       "--inputPath=" + input,
       "--targetPath=" + output,
-      "--numberOfShards=1"
+      "--numberOfShards=1",
+      "--interpretationTypes=OCCURRENCE,MEASUREMENT_OR_FACT_TABLE,EXTENDED_MEASUREMENT_OR_FACT_TABLE,GERMPLASM_MEASUREMENT_TRIAL_TABLE"
     };
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
     InterpretedToHdfsViewPipeline.run(options);
@@ -168,6 +170,137 @@ public class InterpretedToHdfsViewPipelineTest {
         ExtendedMeasurementOrFactTable.class, outputFn.apply("extendedmeasurementorfacttable"));
     assertFile(
         GermplasmMeasurementTrialTable.class, outputFn.apply("germplasmmeasurementtrialtable"));
+    assertFileExistFalse(outputFn.apply("permittable"));
+    assertFileExistFalse(outputFn.apply("loantable"));
+  }
+
+  @Test
+  public void pipelineOccurrenceTest() throws Exception {
+
+    // State
+    String outputFile = getClass().getResource("/").getFile();
+
+    String postfix = "777";
+
+    String input = outputFile + "data1/ingest";
+    String output = outputFile + "data1/hdfsview";
+
+    String[] argsWriter = {
+      "--datasetId=d596fccb-2319-42eb-b13b-986c932780ad",
+      "--attempt=147",
+      "--runner=SparkRunner",
+      "--metaFileName=interpreted-to-hdfs.yml",
+      "--inputPath=" + output,
+      "--targetPath=" + input,
+      "--numberOfShards=1",
+      "--interpretationTypes=OCCURRENCE"
+    };
+    InterpretationPipelineOptions optionsWriter =
+        PipelinesOptionsFactory.createInterpretation(argsWriter);
+
+    try (SyncDataFileWriter<ExtendedRecord> writer =
+        InterpretedAvroWriter.createAvroWriter(
+            optionsWriter, VerbatimTransform.create(), postfix)) {
+      Map<String, String> ext1 = new HashMap<>();
+      ext1.put(DwcTerm.measurementID.qualifiedName(), "Id1");
+      ext1.put(DwcTerm.measurementType.qualifiedName(), "Type1");
+      ext1.put(DwcTerm.measurementValue.qualifiedName(), "1.5");
+      ext1.put(DwcTerm.measurementAccuracy.qualifiedName(), "Accurancy1");
+      ext1.put(DwcTerm.measurementUnit.qualifiedName(), "Unit1");
+      ext1.put(DwcTerm.measurementDeterminedBy.qualifiedName(), "By1");
+      ext1.put(DwcTerm.measurementMethod.qualifiedName(), "Method1");
+      ext1.put(DwcTerm.measurementRemarks.qualifiedName(), "Remarks1");
+      ext1.put(DwcTerm.measurementDeterminedDate.qualifiedName(), "2010/2011");
+
+      Map<String, List<Map<String, String>>> ext = new HashMap<>();
+      ext.put(Extension.MEASUREMENT_OR_FACT.getRowType(), Collections.singletonList(ext1));
+
+      ExtendedRecord extendedRecord =
+          ExtendedRecord.newBuilder().setId(ID).setExtensions(ext).build();
+      writer.append(extendedRecord);
+    }
+    try (SyncDataFileWriter<BasicRecord> writer =
+        InterpretedAvroWriter.createAvroWriter(
+            optionsWriter, BasicTransform.builder().create(), postfix)) {
+      BasicRecord basicRecord = BasicRecord.newBuilder().setId(ID).setGbifId(1L).build();
+      writer.append(basicRecord);
+    }
+    try (SyncDataFileWriter<MetadataRecord> writer =
+        InterpretedAvroWriter.createAvroWriter(
+            optionsWriter, MetadataTransform.builder().create(), postfix)) {
+      MetadataRecord metadataRecord = MetadataRecord.newBuilder().setId(ID).build();
+      writer.append(metadataRecord);
+    }
+    try (SyncDataFileWriter<TemporalRecord> writer =
+        InterpretedAvroWriter.createAvroWriter(
+            optionsWriter, TemporalTransform.builder().create(), postfix)) {
+      TemporalRecord temporalRecord = TemporalRecord.newBuilder().setId(ID).build();
+      writer.append(temporalRecord);
+    }
+    try (SyncDataFileWriter<LocationRecord> writer =
+        InterpretedAvroWriter.createAvroWriter(
+            optionsWriter, LocationTransform.builder().create(), postfix)) {
+      LocationRecord locationRecord = LocationRecord.newBuilder().setId(ID).build();
+      writer.append(locationRecord);
+    }
+    try (SyncDataFileWriter<TaxonRecord> writer =
+        InterpretedAvroWriter.createAvroWriter(
+            optionsWriter, TaxonomyTransform.builder().create(), postfix)) {
+      TaxonRecord taxonRecord = TaxonRecord.newBuilder().setId(ID).build();
+      writer.append(taxonRecord);
+    }
+    try (SyncDataFileWriter<GrscicollRecord> writer =
+        InterpretedAvroWriter.createAvroWriter(
+            optionsWriter, GrscicollTransform.builder().create(), postfix)) {
+      GrscicollRecord grscicollRecord = GrscicollRecord.newBuilder().setId(ID).build();
+      writer.append(grscicollRecord);
+    }
+    try (SyncDataFileWriter<MultimediaRecord> writer =
+        InterpretedAvroWriter.createAvroWriter(
+            optionsWriter, MultimediaTransform.builder().create(), postfix)) {
+      MultimediaRecord multimediaRecord = MultimediaRecord.newBuilder().setId(ID).build();
+      writer.append(multimediaRecord);
+    }
+    try (SyncDataFileWriter<ImageRecord> writer =
+        InterpretedAvroWriter.createAvroWriter(
+            optionsWriter, ImageTransform.builder().create(), postfix)) {
+      ImageRecord imageRecord = ImageRecord.newBuilder().setId(ID).build();
+      writer.append(imageRecord);
+    }
+    try (SyncDataFileWriter<AudubonRecord> writer =
+        InterpretedAvroWriter.createAvroWriter(
+            optionsWriter, AudubonTransform.builder().create(), postfix)) {
+      AudubonRecord audubonRecord = AudubonRecord.newBuilder().setId(ID).build();
+      writer.append(audubonRecord);
+    }
+
+    // When
+    String[] args = {
+      "--datasetId=d596fccb-2319-42eb-b13b-986c932780ad",
+      "--attempt=147",
+      "--runner=SparkRunner",
+      "--metaFileName=interpreted-to-hdfs.yml",
+      "--inputPath=" + input,
+      "--targetPath=" + output,
+      "--numberOfShards=1",
+      "--interpretationTypes=OCCURRENCE"
+    };
+    InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
+    InterpretedToHdfsViewPipeline.run(options);
+
+    Function<String, String> outputFn =
+        s -> output + "/" + s + "/d596fccb-2319-42eb-b13b-986c932780ad_147.avro";
+
+    assertFile(OccurrenceHdfsRecord.class, outputFn.apply("occurrence"));
+    assertFileExistFalse(outputFn.apply("measurementorfacttable"));
+    assertFileExistFalse(outputFn.apply("extendedmeasurementorfacttable"));
+    assertFileExistFalse(outputFn.apply("germplasmmeasurementtrialtable"));
+    assertFileExistFalse(outputFn.apply("permittable"));
+    assertFileExistFalse(outputFn.apply("loantable"));
+  }
+
+  private void assertFileExistFalse(String output) {
+    Assert.assertFalse(new File(output).exists());
   }
 
   private <T extends SpecificRecordBase> void assertFile(Class<T> clazz, String output)

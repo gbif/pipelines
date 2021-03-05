@@ -1,5 +1,6 @@
 package org.gbif.pipelines.crawler.hdfs;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE;
 import static org.junit.Assert.assertEquals;
 
 import java.util.Collections;
@@ -36,7 +37,7 @@ public class ProcessRunnerBuilderTest {
             + "--class org.gbif.Test --master yarn --deploy-mode cluster --executor-memory 1G --executor-cores 1 --num-executors 1 "
             + "--driver-memory 4G java.jar --datasetId=de7ffb5e-c07b-42dc-8a88-f67a4465fe3d --attempt=1 --runner=SparkRunner "
             + "--metaFileName=interpreted-to-hdfs.yml --inputPath=tmp --targetPath=target --hdfsSiteConfig=hdfs.xml "
-            + "--coreSiteConfig=core.xml --numberOfShards=10 --properties=/path/ws.config";
+            + "--coreSiteConfig=core.xml --numberOfShards=10 --properties=/path/ws.config --interpretationTypes=OCCURRENCE";
 
     HdfsViewConfiguration config = new HdfsViewConfiguration();
     config.distributedConfig.jarPath = "java.jar";
@@ -62,7 +63,15 @@ public class ProcessRunnerBuilderTest {
     ValidationResult vr = new ValidationResult();
     PipelinesInterpretedMessage message =
         new PipelinesInterpretedMessage(
-            datasetId, attempt, steps, null, false, null, EndpointType.DWC_ARCHIVE, vr);
+            datasetId,
+            attempt,
+            steps,
+            null,
+            false,
+            null,
+            EndpointType.DWC_ARCHIVE,
+            vr,
+            Collections.singleton(OCCURRENCE.name()));
 
     // Expected
     ProcessBuilder builder =
@@ -92,7 +101,7 @@ public class ProcessRunnerBuilderTest {
             + "--class org.gbif.Test --master yarn --deploy-mode cluster "
             + "--executor-memory 1G --executor-cores 1 --num-executors 1 --driver-memory 4G java.jar --datasetId=de7ffb5e-c07b-42dc-8a88-f67a4465fe3d "
             + "--attempt=1 --runner=SparkRunner --metaFileName=interpreted-to-hdfs.yml --inputPath=tmp --targetPath=target --hdfsSiteConfig=hdfs.xml "
-            + "--coreSiteConfig=core.xml --numberOfShards=10 --properties=/path/ws.config";
+            + "--coreSiteConfig=core.xml --numberOfShards=10 --properties=/path/ws.config --interpretationTypes=OCCURRENCE";
 
     HdfsViewConfiguration config = new HdfsViewConfiguration();
     config.distributedConfig.jarPath = "java.jar";
@@ -123,7 +132,15 @@ public class ProcessRunnerBuilderTest {
     ValidationResult vr = new ValidationResult();
     PipelinesInterpretedMessage message =
         new PipelinesInterpretedMessage(
-            datasetId, attempt, steps, 100L, false, null, EndpointType.DWC_ARCHIVE, vr);
+            datasetId,
+            attempt,
+            steps,
+            100L,
+            false,
+            null,
+            EndpointType.DWC_ARCHIVE,
+            vr,
+            Collections.singleton(OCCURRENCE.name()));
 
     // Expected
     ProcessBuilder builder =

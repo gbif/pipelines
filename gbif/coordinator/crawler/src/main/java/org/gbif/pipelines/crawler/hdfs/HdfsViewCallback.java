@@ -4,6 +4,8 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 
 import com.google.common.base.Strings;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Predicate;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +17,7 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesHdfsViewBuiltMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.crawler.PipelinesCallback;
 import org.gbif.pipelines.crawler.StepHandler;
@@ -68,6 +71,10 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
   public Runnable createRunnable(PipelinesInterpretedMessage message) {
     return () -> {
       try {
+
+        // If there is one step only like metadata, we have to run OCCURRENCE steps
+        message.setInterpretTypes(swapInterpretTypes(message.getInterpretTypes()));
+
         ProcessRunnerBuilderBuilder builder =
             ProcessRunnerBuilder.builder()
                 .config(config)
@@ -243,5 +250,20 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
     numberOfShards =
         numberOfShards - numberOfShardsFloor > 0.5d ? numberOfShardsFloor + 1 : numberOfShardsFloor;
     return numberOfShards <= 0 ? 1 : (int) numberOfShards;
+  }
+
+  // If there is one step only like metadata, we have to run OCCURRENCE steps
+  private Set<String> swapInterpretTypes(Set<String> interpretTypes) {
+    if (interpretTypes.isEmpty()) {
+      return Collections.singleton(RecordType.ALL.name());
+    }
+    if (interpretTypes.size() == 1 && interpretTypes.contains(RecordType.ALL.name())) {
+      return Collections.singleton(RecordType.ALL.name());
+    }
+    if (interpretTypes.size() == 1
+        && RecordType.getAllInterpretationAsString().containsAll(interpretTypes)) {
+      return Collections.singleton(RecordType.OCCURRENCE.name());
+    }
+    return interpretTypes;
   }
 }

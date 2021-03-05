@@ -86,7 +86,10 @@ final class ProcessRunnerBuilder {
         .add("--hdfsSiteConfig=" + Objects.requireNonNull(config.stepConfig.hdfsSiteConfig))
         .add("--coreSiteConfig=" + Objects.requireNonNull(config.stepConfig.coreSiteConfig))
         .add("--numberOfShards=" + numberOfShards)
-        .add("--properties=" + Objects.requireNonNull(config.pipelinesConfig));
+        .add("--properties=" + Objects.requireNonNull(config.pipelinesConfig))
+        .add(
+            "--interpretationTypes="
+                + Objects.requireNonNull(String.join(",", message.getInterpretTypes())));
 
     return command.toString();
   }
