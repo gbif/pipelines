@@ -11,7 +11,7 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.Inte
 import org.gbif.pipelines.core.converters.ChronometricDateTableConverter;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.extension.ChronometricDateTable;
+import org.gbif.pipelines.io.avro.extension.zooarchnet.ChronometricDateTable;
 
 public class ChronometricDateTableTransform extends TableTransform<ChronometricDateTable> {
 

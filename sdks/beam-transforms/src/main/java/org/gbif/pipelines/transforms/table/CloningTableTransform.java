@@ -11,7 +11,7 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.Inte
 import org.gbif.pipelines.core.converters.CloningTableConverter;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.extension.CloningTable;
+import org.gbif.pipelines.io.avro.extension.ggbn.CloningTable;
 
 public class CloningTableTransform extends TableTransform<CloningTable> {
 

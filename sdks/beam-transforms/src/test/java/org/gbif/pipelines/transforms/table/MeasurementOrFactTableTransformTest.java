@@ -16,7 +16,7 @@ import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.extension.MeasurementOrFactTable;
+import org.gbif.pipelines.io.avro.extension.dwc.MeasurementOrFactTable;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.junit.Rule;

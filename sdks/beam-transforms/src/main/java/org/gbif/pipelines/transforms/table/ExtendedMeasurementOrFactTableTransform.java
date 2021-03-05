@@ -11,7 +11,7 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.Inte
 import org.gbif.pipelines.core.converters.ExtendedMeasurementOrFactTableConverter;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.extension.ExtendedMeasurementOrFactTable;
+import org.gbif.pipelines.io.avro.extension.obis.ExtendedMeasurementOrFactTable;
 
 public class ExtendedMeasurementOrFactTableTransform
     extends TableTransform<ExtendedMeasurementOrFactTable> {

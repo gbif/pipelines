@@ -11,7 +11,7 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.Inte
 import org.gbif.pipelines.core.converters.AmplificationTableConverter;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.extension.AmplificationTable;
+import org.gbif.pipelines.io.avro.extension.ggbn.AmplificationTable;
 
 public class AmplificationTableTransform extends TableTransform<AmplificationTable> {
 

@@ -11,7 +11,7 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.Inte
 import org.gbif.pipelines.core.converters.LoanTableConverter;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.extension.LoanTable;
+import org.gbif.pipelines.io.avro.extension.ggbn.LoanTable;
 
 public class LoanTableTransform extends TableTransform<LoanTable> {
 

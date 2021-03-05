@@ -11,7 +11,7 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.Inte
 import org.gbif.pipelines.core.converters.GermplasmMeasurementScoreTableConverter;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.extension.GermplasmMeasurementScoreTable;
+import org.gbif.pipelines.io.avro.extension.germplasm.GermplasmMeasurementScoreTable;
 
 public class GermplasmMeasurementScoreTableTransform
     extends TableTransform<GermplasmMeasurementScoreTable> {

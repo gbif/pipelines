@@ -11,7 +11,7 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.Inte
 import org.gbif.pipelines.core.converters.GermplasmAccessionTableConverter;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.extension.GermplasmAccessionTable;
+import org.gbif.pipelines.io.avro.extension.germplasm.GermplasmAccessionTable;
 
 public class GermplasmAccessionTableTransform extends TableTransform<GermplasmAccessionTable> {
 

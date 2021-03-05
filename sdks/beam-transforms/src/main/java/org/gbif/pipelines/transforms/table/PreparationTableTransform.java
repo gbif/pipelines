@@ -11,7 +11,7 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.Inte
 import org.gbif.pipelines.core.converters.PreparationTableConverter;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.extension.PreparationTable;
+import org.gbif.pipelines.io.avro.extension.ggbn.PreparationTable;
 
 public class PreparationTableTransform extends TableTransform<PreparationTable> {
 

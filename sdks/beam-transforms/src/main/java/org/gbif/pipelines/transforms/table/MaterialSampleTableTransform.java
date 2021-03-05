@@ -11,7 +11,7 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.Inte
 import org.gbif.pipelines.core.converters.MaterialSampleTableConverter;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.extension.MaterialSampleTable;
+import org.gbif.pipelines.io.avro.extension.ggbn.MaterialSampleTable;
 
 public class MaterialSampleTableTransform extends TableTransform<MaterialSampleTable> {
 

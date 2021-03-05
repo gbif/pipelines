@@ -11,7 +11,7 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.Inte
 import org.gbif.pipelines.core.converters.PermitTableConverter;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.extension.PermitTable;
+import org.gbif.pipelines.io.avro.extension.ggbn.PermitTable;
 
 public class PermitTableTransform extends TableTransform<PermitTable> {
 

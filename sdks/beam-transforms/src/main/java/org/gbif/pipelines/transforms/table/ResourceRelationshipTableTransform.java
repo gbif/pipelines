@@ -11,7 +11,7 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.Inte
 import org.gbif.pipelines.core.converters.ResourceRelationshipTableConverter;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.extension.ResourceRelationshipTable;
+import org.gbif.pipelines.io.avro.extension.dwc.ResourceRelationshipTable;
 
 public class ResourceRelationshipTableTransform extends TableTransform<ResourceRelationshipTable> {
 

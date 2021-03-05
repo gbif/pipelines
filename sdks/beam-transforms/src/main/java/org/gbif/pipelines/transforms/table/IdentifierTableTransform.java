@@ -11,7 +11,7 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.Inte
 import org.gbif.pipelines.core.converters.IdentifierTableConverter;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.extension.IdentifierTable;
+import org.gbif.pipelines.io.avro.extension.gbif.IdentifierTable;
 
 public class IdentifierTableTransform extends TableTransform<IdentifierTable> {
 

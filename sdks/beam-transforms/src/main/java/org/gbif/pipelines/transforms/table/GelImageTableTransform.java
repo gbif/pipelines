@@ -11,7 +11,7 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.Inte
 import org.gbif.pipelines.core.converters.GelImageTableConverter;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.extension.GelImageTable;
+import org.gbif.pipelines.io.avro.extension.ggbn.GelImageTable;
 
 public class GelImageTableTransform extends TableTransform<GelImageTable> {
 

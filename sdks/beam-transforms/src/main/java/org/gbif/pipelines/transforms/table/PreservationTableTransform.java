@@ -11,7 +11,7 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.Inte
 import org.gbif.pipelines.core.converters.PreservationTableConverter;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.extension.PreservationTable;
+import org.gbif.pipelines.io.avro.extension.ggbn.PreservationTable;
 
 public class PreservationTableTransform extends TableTransform<PreservationTable> {
 
