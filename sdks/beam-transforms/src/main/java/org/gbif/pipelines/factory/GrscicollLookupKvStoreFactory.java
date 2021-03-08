@@ -1,5 +1,6 @@
 package org.gbif.pipelines.factory;
 
+import java.util.Optional;
 import lombok.SneakyThrows;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.conf.CachedHBaseKVStoreConfiguration;
@@ -7,6 +8,7 @@ import org.gbif.kvs.grscicoll.GrscicollLookupKVStoreFactory;
 import org.gbif.kvs.grscicoll.GrscicollLookupRequest;
 import org.gbif.kvs.hbase.HBaseKVStoreConfiguration;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.core.config.model.WsConfig;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.rest.client.configuration.ClientConfiguration;
 import org.gbif.rest.client.grscicoll.GrscicollLookupResponse;
@@ -47,9 +49,14 @@ public class GrscicollLookupKvStoreFactory {
       return null;
     }
 
+    String api =
+        Optional.ofNullable(config.getGrscicollLookup().getApi())
+            .map(WsConfig::getWsUrl)
+            .orElse(config.getGbifApi().getWsUrl());
+
     ClientConfiguration clientConfiguration =
         ClientConfiguration.builder()
-            .withBaseApiUrl(config.getGbifApi().getWsUrl())
+            .withBaseApiUrl(api)
             .withFileCacheMaxSizeMb(config.getGrscicollLookup().getWsCacheSizeMb())
             .withTimeOut(config.getGrscicollLookup().getWsTimeoutSec())
             .build();
