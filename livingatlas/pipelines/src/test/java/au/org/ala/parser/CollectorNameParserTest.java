@@ -9,8 +9,13 @@ import org.junit.Test;
 public class CollectorNameParserTest {
 
   @Test
+  public void numericTest1() {
+    assertEquals("NSWOBS-01369", CollectorNameParser.parse("NSWOBS-01369"));
+  }
+
+  @Test
   public void numericTest() {
-    assertEquals(null, CollectorNameParser.parse("123"));
+    assertEquals("123", CollectorNameParser.parse("123"));
   }
 
   @Test
@@ -83,8 +88,12 @@ public class CollectorNameParserTest {
   public void ignoreBracketsTest() {
     assertArrayEquals(
         new String[] {"Kinnear, A.J."}, CollectorNameParser.parseList("\"KINNEAR A.J. (Sandy)\""));
+
+    // changing this test to keep the identifier if that is supplied as
+    // this maybe useful in itself
     assertArrayEquals(
-        new String[] {"Ratkowsky, David"}, CollectorNameParser.parseList("David Ratkowsky (2589)"));
+        new String[] {"David Ratkowsky (2589)"},
+        CollectorNameParser.parseList("David Ratkowsky (2589)"));
   }
 
   @Test

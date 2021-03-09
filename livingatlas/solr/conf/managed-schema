@@ -288,6 +288,7 @@
   <field name="latestPeriodOrHighestSystem" type="string" docValues="true" indexed="true"/>
   <field name="license" type="string" docValues="true" indexed="true"/>
   <field name="lifeStage" type="string" docValues="true" indexed="true"/>
+  <field name="lifeStageLineage" type="string" docValues="true" indexed="true" multiValued="true"/>
   <field name="lithostratigraphicTerms" type="string" docValues="true" indexed="true"/>
   <field name="locality" type="string" docValues="true" indexed="true"/>
   <field name="locationAccordingTo" type="string" docValues="true" indexed="true"/>

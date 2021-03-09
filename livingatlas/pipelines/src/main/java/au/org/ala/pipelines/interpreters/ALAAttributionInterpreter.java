@@ -10,6 +10,7 @@ import java.util.function.BiConsumer;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.directory.api.util.Strings;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.io.avro.ALAAttributionRecord;
@@ -73,7 +74,7 @@ public class ALAAttributionInterpreter {
             er.getCoreTerms()
                 .get(DwcTerm.institutionCode.namespace() + DwcTerm.institutionCode.name());
 
-        if (collectionCode != null || institutionCode != null) {
+        if (!Strings.isEmpty(collectionCode)) {
           ALACollectionLookup lookup =
               ALACollectionLookup.builder()
                   .collectionCode(collectionCode)
