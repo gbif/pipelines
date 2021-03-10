@@ -68,10 +68,19 @@ public class GrscicollInterpreter {
         return;
       }
 
+      gr.setId(er.getId());
+
       // institution match
       Match institutionMatchResponse = lookupResponse.getInstitutionMatch();
       if (institutionMatchResponse.getMatchType() == MatchType.NONE) {
-        addIssue(gr, getInstitutionMatchNoneIssue(institutionMatchResponse.getStatus()));
+        OccurrenceIssue noneInstitutionIssue =
+            getInstitutionMatchNoneIssue(institutionMatchResponse.getStatus());
+        addIssue(gr, noneInstitutionIssue);
+
+        if (noneInstitutionIssue == OccurrenceIssue.DIFFERENT_OWNER_INSTITUTION) {
+          // skipping collections since we don't link records with different owner
+          return;
+        }
       } else {
         gr.setInstitutionMatch(GrscicollRecordConverter.convertMatch(institutionMatchResponse));
 
@@ -91,8 +100,6 @@ public class GrscicollInterpreter {
           addIssue(gr, OccurrenceIssue.COLLECTION_MATCH_FUZZY);
         }
       }
-
-      gr.setId(er.getId());
     };
   }
 
