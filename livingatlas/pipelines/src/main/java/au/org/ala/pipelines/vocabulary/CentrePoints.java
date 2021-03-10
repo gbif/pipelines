@@ -174,7 +174,7 @@ public class CentrePoints {
       for (int i = 0; i < decimalPlaces; i++) {
         x = x * 10;
       }
-      return Math.round(number * x) / x;
+      return ((double) (Math.round(number * x))) / x;
     } else {
       return Math.round(number);
     }

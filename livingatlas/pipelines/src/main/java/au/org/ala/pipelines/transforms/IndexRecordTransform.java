@@ -514,11 +514,6 @@ public class IndexRecordTransform implements Serializable {
   }
 
   static void addGeo(IndexRecord.Builder doc, Double lat, Double lon) {
-
-    if (lat == null || lon == null){
-      return;
-    }
-
     String latlon = "";
     // ensure that the lat longs are in the required range before
     if (lat <= 90 && lat >= -90d && lon <= 180 && lon >= -180d) {
