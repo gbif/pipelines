@@ -69,6 +69,11 @@
           </execution>
         </executions>
       </plugin>
+      <!-- Copy pom.xml value to test resources maven.properties -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+      </plugin>
     </plugins>
   </build>
 
@@ -160,6 +165,11 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>elasticsearch</artifactId>
+      <scope>test</scope>
     </dependency>
 
   </dependencies>

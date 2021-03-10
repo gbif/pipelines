@@ -26,6 +26,7 @@ import org.gbif.pipelines.estools.model.IndexParams;
 import org.gbif.pipelines.estools.service.EsConstants.Field;
 import org.gbif.pipelines.estools.service.EsConstants.Indexing;
 import org.gbif.pipelines.estools.service.EsService;
+import org.gbif.wrangler.lock.Mutex;
 
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -153,15 +154,19 @@ public class EsIndexUtils {
       searchSettings.put(Field.INDEX_REFRESH_INTERVAL, options.getIndexRefreshInterval());
       searchSettings.put(Field.INDEX_NUMBER_REPLICAS, options.getIndexNumberReplicas().toString());
 
-      SharedLockUtils.doInWriteLock(
-          lockConfig,
+      Mutex.Action action =
           () ->
               EsIndex.swapIndexInAliases(
                   config,
                   Sets.newHashSet(options.getEsAlias()),
                   idxToAdd,
                   idxToRemove,
-                  searchSettings));
+                  searchSettings);
+      if (lockConfig != null) {
+        SharedLockUtils.doInWriteLock(lockConfig, action);
+      } else {
+        action.execute();
+      }
     }
   }
 
