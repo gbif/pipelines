@@ -142,6 +142,7 @@ public class GeocodeShpIntersectService {
       Location l = new Location();
       l.setType(POLITICAL_LOCATION_TYPE);
       l.setSource(config.getCountry().getSource());
+      l.setId(value);
       l.setName(value);
       l.setIsoCountryCode2Digit(value);
       locations.add(l);
@@ -149,6 +150,7 @@ public class GeocodeShpIntersectService {
       String eezValue = eez.intersect(longitude, latitude);
       if (eezValue != null) {
         Location l = new Location();
+        l.setId(eezValue);
         l.setType(EEZ_LOCATION_TYPE);
         l.setSource(config.getEez().getSource());
         l.setName(eezValue);
@@ -166,6 +168,7 @@ public class GeocodeShpIntersectService {
       Location l = new Location();
       l.setType(STATE_PROVINCE_LOCATION_TYPE);
       l.setSource(config.getStateProvince().getSource());
+      l.setId(state);
       l.setName(state);
       locations.add(l);
     }

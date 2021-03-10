@@ -2,8 +2,9 @@ package au.org.ala.pipelines.beam;
 
 import static org.junit.Assert.*;
 
-import au.org.ala.pipelines.options.ALASolrPipelineOptions;
 import au.org.ala.pipelines.options.AllDatasetsPipelinesOptions;
+import au.org.ala.pipelines.options.IndexingPipelineOptions;
+import au.org.ala.pipelines.options.SolrPipelineOptions;
 import au.org.ala.pipelines.options.UUIDPipelineOptions;
 import au.org.ala.sampling.LayerCrawler;
 import au.org.ala.util.SolrUtils;
@@ -20,7 +21,6 @@ import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -44,7 +44,6 @@ public class CompleteIngestPipelineTestIT {
 
   /** Tests for SOLR index creation. */
   @Test
-  @Ignore
   public void testIngestPipeline() throws Exception {
 
     // clear up previous test runs
@@ -159,9 +158,9 @@ public class CompleteIngestPipelineTestIT {
     ALAInterpretedToSensitivePipeline.run(sensitivityOptions);
 
     // solr
-    ALASolrPipelineOptions solrOptions =
+    IndexingPipelineOptions solrOptions =
         PipelinesOptionsFactory.create(
-            ALASolrPipelineOptions.class,
+            IndexingPipelineOptions.class,
             new String[] {
               "--datasetId=" + datasetID,
               "--attempt=1",
@@ -171,7 +170,6 @@ public class CompleteIngestPipelineTestIT {
               "--inputPath=/tmp/la-pipelines-test/complete-pipeline",
               "--allDatasetsInputPath=/tmp/la-pipelines-test/complete-pipeline/all-datasets",
               "--properties=" + TestUtils.getPipelinesConfigFile(),
-              "--includeSampling=true",
               "--includeSensitiveData=true",
               "--includeImages=false"
             });
@@ -198,19 +196,21 @@ public class CompleteIngestPipelineTestIT {
 
     // sample
     LayerCrawler.init(
-        new CombinedYamlConfiguration(
-            "--datasetId=" + datasetID,
-            "--attempt=1",
-            "--runner=DirectRunner",
-            "--targetPath=/tmp/la-pipelines-test/complete-pipeline",
-            "--inputPath=/tmp/la-pipelines-test/complete-pipeline",
-            "--allDatasetsInputPath=/tmp/la-pipelines-test/complete-pipeline/all-datasets",
-            "--config=" + TestUtils.getPipelinesConfigFile()));
+        (new CombinedYamlConfiguration(
+            new String[] {
+              "--datasetId=" + datasetID,
+              "--attempt=1",
+              "--runner=DirectRunner",
+              "--targetPath=/tmp/la-pipelines-test/complete-pipeline",
+              "--inputPath=/tmp/la-pipelines-test/complete-pipeline",
+              "--allDatasetsInputPath=/tmp/la-pipelines-test/complete-pipeline/all-datasets",
+              "--config=" + TestUtils.getPipelinesConfigFile()
+            })));
     LayerCrawler.run(latLngOptions);
 
-    ALASolrPipelineOptions solrOptions2 =
+    SolrPipelineOptions solrOptions2 =
         PipelinesOptionsFactory.create(
-            ALASolrPipelineOptions.class,
+            SolrPipelineOptions.class,
             new String[] {
               "--datasetId=" + datasetID,
               "--attempt=1",

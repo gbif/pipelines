@@ -8,9 +8,11 @@ import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
-import lombok.Builder;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.Schema;
@@ -36,32 +38,75 @@ import org.jetbrains.annotations.NotNull;
  * (SOLR or ElasticSearch)
  */
 @Slf4j
-@Builder
 public class IndexRecordTransform implements Serializable {
 
   private static final long serialVersionUID = 1279313931024806169L;
   private static final TermFactory TERM_FACTORY = TermFactory.instance();
   // Core
-  @NonNull private final TupleTag<ExtendedRecord> erTag;
-  @NonNull private final TupleTag<BasicRecord> brTag;
-  @NonNull private final TupleTag<TemporalRecord> trTag;
-  @NonNull private final TupleTag<LocationRecord> lrTag;
+  @NonNull private TupleTag<ExtendedRecord> erTag;
+  @NonNull private TupleTag<BasicRecord> brTag;
+  @NonNull private TupleTag<TemporalRecord> trTag;
+  @NonNull private TupleTag<LocationRecord> lrTag;
 
-  private final TupleTag<TaxonRecord> txrTag;
-  @NonNull private final TupleTag<ALATaxonRecord> atxrTag;
+  private TupleTag<TaxonRecord> txrTag;
+  @NonNull private TupleTag<ALATaxonRecord> atxrTag;
+  // Extension
+  @NonNull private TupleTag<MultimediaRecord> mrTag;
+  @NonNull private TupleTag<ImageRecord> irTag;
+  @NonNull private TupleTag<AudubonRecord> arTag;
+  @NonNull private TupleTag<MeasurementOrFactRecord> mfrTag;
 
-  private final TupleTag<ALAAttributionRecord> aarTag;
-  @NonNull private final TupleTag<ALAUUIDRecord> urTag;
+  private TupleTag<ALAAttributionRecord> aarTag;
+  @NonNull private TupleTag<ALAUUIDRecord> urTag;
 
-  @NonNull private final TupleTag<ImageServiceRecord> isTag;
+  @NonNull private TupleTag<ImageServiceRecord> isTag;
 
-  @NonNull private final TupleTag<TaxonProfile> tpTag;
+  @NonNull private TupleTag<TaxonProfile> tpTag;
 
-  @NonNull private final TupleTag<ALASensitivityRecord> srTag;
+  @NonNull private TupleTag<ALASensitivityRecord> srTag;
 
-  @NonNull private final PCollectionView<MetadataRecord> metadataView;
+  @NonNull private PCollectionView<MetadataRecord> metadataView;
 
   String datasetID;
+
+  public static IndexRecordTransform create(
+      TupleTag<ExtendedRecord> erTag,
+      TupleTag<BasicRecord> brTag,
+      TupleTag<TemporalRecord> trTag,
+      TupleTag<LocationRecord> lrTag,
+      TupleTag<TaxonRecord> txrTag,
+      TupleTag<ALATaxonRecord> atxrTag,
+      TupleTag<MultimediaRecord> mrTag,
+      TupleTag<ImageRecord> irTag,
+      TupleTag<AudubonRecord> arTag,
+      TupleTag<MeasurementOrFactRecord> mfrTag,
+      TupleTag<ALAAttributionRecord> aarTag,
+      TupleTag<ALAUUIDRecord> urTag,
+      TupleTag<ImageServiceRecord> isTag,
+      TupleTag<TaxonProfile> tpTag,
+      TupleTag<ALASensitivityRecord> srTag,
+      PCollectionView<MetadataRecord> metadataView,
+      String datasetID) {
+    IndexRecordTransform t = new IndexRecordTransform();
+    t.erTag = erTag;
+    t.brTag = brTag;
+    t.trTag = trTag;
+    t.lrTag = lrTag;
+    t.txrTag = txrTag;
+    t.atxrTag = atxrTag;
+    t.mrTag = mrTag;
+    t.irTag = irTag;
+    t.arTag = arTag;
+    t.mfrTag = mfrTag;
+    t.aarTag = aarTag;
+    t.urTag = urTag;
+    t.isTag = isTag;
+    t.tpTag = tpTag;
+    t.srTag = srTag;
+    t.metadataView = metadataView;
+    t.datasetID = datasetID;
+    return t;
+  }
 
   /**
    * Create a IndexRecord using the supplied records.
@@ -114,40 +159,41 @@ public class IndexRecordTransform implements Serializable {
     List<String> assertions = new ArrayList<>();
 
     // If a sensitive record, construct new versions of the data with adjustments
-    if (sr != null && sr.getSensitive()) {
-      Set<Term> sensitive =
+    boolean sensitive = sr != null && sr.getSensitive() != null && sr.getSensitive();
+    if (sensitive) {
+      Set<Term> sensitiveTerms =
           sr.getAltered().keySet().stream().map(TERM_FACTORY::findTerm).collect(Collectors.toSet());
       if (mdr != null) {
         mdr = MetadataRecord.newBuilder(mdr).build();
-        SensitiveDataInterpreter.applySensitivity(sensitive, sr, mdr);
+        SensitiveDataInterpreter.applySensitivity(sensitiveTerms, sr, mdr);
       }
       if (br != null) {
         br = BasicRecord.newBuilder(br).build();
-        SensitiveDataInterpreter.applySensitivity(sensitive, sr, br);
+        SensitiveDataInterpreter.applySensitivity(sensitiveTerms, sr, br);
       }
       if (tr != null) {
         tr = TemporalRecord.newBuilder(tr).build();
-        SensitiveDataInterpreter.applySensitivity(sensitive, sr, tr);
+        SensitiveDataInterpreter.applySensitivity(sensitiveTerms, sr, tr);
       }
       if (lr != null) {
         lr = LocationRecord.newBuilder(lr).build();
-        SensitiveDataInterpreter.applySensitivity(sensitive, sr, lr);
+        SensitiveDataInterpreter.applySensitivity(sensitiveTerms, sr, lr);
       }
       if (txr != null) {
         txr = TaxonRecord.newBuilder(txr).build();
-        SensitiveDataInterpreter.applySensitivity(sensitive, sr, txr);
+        SensitiveDataInterpreter.applySensitivity(sensitiveTerms, sr, txr);
       }
       if (atxr != null) {
         atxr = ALATaxonRecord.newBuilder(atxr).build();
-        SensitiveDataInterpreter.applySensitivity(sensitive, sr, atxr);
+        SensitiveDataInterpreter.applySensitivity(sensitiveTerms, sr, atxr);
       }
       if (er != null) {
         er = ExtendedRecord.newBuilder(er).build();
-        SensitiveDataInterpreter.applySensitivity(sensitive, sr, er);
+        SensitiveDataInterpreter.applySensitivity(sensitiveTerms, sr, er);
       }
       if (aar != null) {
         aar = ALAAttributionRecord.newBuilder(aar).build();
-        SensitiveDataInterpreter.applySensitivity(sensitive, sr, aar);
+        SensitiveDataInterpreter.applySensitivity(sensitiveTerms, sr, aar);
       }
     }
 
@@ -175,19 +221,7 @@ public class IndexRecordTransform implements Serializable {
 
     // GBIF taxonomy - add if available
     if (txr != null) {
-      // add the classification
-      List<RankedName> taxonomy = txr.getClassification();
-      for (RankedName entry : taxonomy) {
-        indexRecord
-            .getInts()
-            .put("gbif_s_" + entry.getRank().toString().toLowerCase() + "_id", entry.getKey());
-        indexRecord
-            .getStrings()
-            .put("gbif_s_" + entry.getRank().toString().toLowerCase(), entry.getName());
-      }
-
-      indexRecord.getStrings().put("gbif_s_rank", txr.getAcceptedUsage().getRank().toString());
-      indexRecord.getStrings().put("gbif_s_scientificName", txr.getAcceptedUsage().getName());
+      addGBIFTaxonomy(txr, indexRecord, assertions);
     }
 
     // Verbatim (Raw) data
@@ -195,14 +229,15 @@ public class IndexRecordTransform implements Serializable {
     for (Map.Entry<String, String> entry : raw.entrySet()) {
       String key = entry.getKey();
       if (key.startsWith("http")) {
-        key = key.substring(key.lastIndexOf('/') + 1);
+        key = key.substring(key.lastIndexOf("/") + 1);
       }
       indexRecord.getStrings().put("raw_" + key, entry.getValue());
     }
 
+    indexRecord.getBooleans().put("sensitive", sensitive);
+
     // Sensitive (Original) data
-    if (sr != null && sr.getSensitive()) {
-      indexRecord.getBooleans().put("sensitive", true);
+    if (sensitive) {
       if (sr.getDataGeneralizations() != null)
         indexRecord.getStrings().put("dataGeneralizations", sr.getDataGeneralizations());
       if (sr.getInformationWithheld() != null)
@@ -221,7 +256,11 @@ public class IndexRecordTransform implements Serializable {
       }
     }
 
-    if (lr.getHasCoordinate() != null && lr.getHasCoordinate()) {
+    if (lr != null
+        && lr.getHasCoordinate() != null
+        && lr.getHasCoordinate()
+        && lr.getDecimalLatitude() != null
+        && lr.getDecimalLongitude() != null) {
       addGeo(indexRecord, lr.getDecimalLatitude(), lr.getDecimalLongitude());
     }
 
@@ -273,30 +312,30 @@ public class IndexRecordTransform implements Serializable {
                   atxr.getFamily())); // is set to IGNORE in headerAttribute
 
       // legacy fields referenced in biocache-service code
-      indexRecord.getStrings().put("taxon_name", atxr.getScientificName());
-      indexRecord.getStrings().put("lsid", atxr.getTaxonConceptID());
       indexRecord.setTaxonID(atxr.getTaxonConceptID());
-      indexRecord.getStrings().put("rank", atxr.getRank());
-      indexRecord.getInts().put("rank_id", atxr.getRankID());
-
-      if (atxr.getVernacularName() != null) {
-        indexRecord.getStrings().put("common_name", atxr.getVernacularName());
-      }
 
       for (String s : atxr.getSpeciesGroup()) {
-        indexRecord.getStrings().put("species_group", s);
+        indexRecord.getStrings().put("speciesGroup", s);
       }
       for (String s : atxr.getSpeciesSubgroup()) {
-        indexRecord.getStrings().put("species_subgroup", s);
+        indexRecord.getStrings().put("speciesSubgroup", s);
       }
     }
 
     // FIXME see #99
-    boolean geospatialKosher = lr.getHasGeospatialIssue() != null && lr.getHasGeospatialIssue();
+    boolean geospatialKosher =
+        lr.getHasGeospatialIssue() != null && lr.getHasGeospatialIssue() ? true : false;
     indexRecord.getBooleans().put("geospatial_kosher", geospatialKosher);
 
     // FIXME  - see #162
-    indexRecord.getDates().put("first_loaded_date", new Date().getTime());
+    if (ur.getFirstLoaded() != null) {
+      indexRecord
+          .getDates()
+          .put(
+              "firstLoadedDate",
+              LocalDateTime.parse(ur.getFirstLoaded(), DateTimeFormatter.ISO_DATE_TIME)
+                  .toEpochSecond(ZoneOffset.UTC));
+    }
 
     // Add legacy collectory fields
     if (aar != null) {
@@ -315,12 +354,7 @@ public class IndexRecordTransform implements Serializable {
       addIfNotEmpty(indexRecord, "collectionName", aar.getCollectionName());
     }
 
-    // legacy fields reference directly in biocache-service code
-    if (txr != null) {
-      IssueRecord taxonomicIssues = txr.getIssues();
-      assertions.addAll(taxonomicIssues.getIssueList());
-    }
-
+    // add image identifiers
     if (isr != null && isr.getImageIDs() != null && !isr.getImageIDs().isEmpty()) {
       indexRecord.getStrings().put("image_url", isr.getImageIDs().get(0));
       indexRecord.getMultiValues().put("all_image_url", isr.getImageIDs());
@@ -329,47 +363,7 @@ public class IndexRecordTransform implements Serializable {
     }
 
     if (tpr != null && tpr.getSpeciesListID() != null && !tpr.getSpeciesListID().isEmpty()) {
-
-      indexRecord.getMultiValues().put("species_list_uid", tpr.getSpeciesListID());
-
-      // CONSERVATION STATUS
-      String stateProvince = lr.getStateProvince();
-      String country = lr.getCountry();
-
-      // index conservation status
-      List<ConservationStatus> conservationStatuses = tpr.getConservationStatuses();
-      for (ConservationStatus conservationStatus : conservationStatuses) {
-        if (conservationStatus.getRegion() != null) {
-          if (conservationStatus.getRegion().equalsIgnoreCase(stateProvince)) {
-
-            if (Strings.isNotBlank(conservationStatus.getSourceStatus())) {
-              indexRecord
-                  .getStrings()
-                  .put("raw_state_conservation", conservationStatus.getSourceStatus());
-            }
-            if (Strings.isNotBlank(conservationStatus.getStatus())) {
-              indexRecord.getStrings().put("state_conservation", conservationStatus.getStatus());
-            }
-          }
-          if (conservationStatus.getRegion().equalsIgnoreCase(country)
-              && Strings.isNotBlank(conservationStatus.getStatus())) {
-            indexRecord.getStrings().put("country_conservation", conservationStatus.getStatus());
-          }
-        }
-      }
-
-      // index invasive status
-      List<InvasiveStatus> invasiveStatuses = tpr.getInvasiveStatuses();
-      for (InvasiveStatus invasiveStatus : invasiveStatuses) {
-        if (invasiveStatus.getRegion() != null) {
-          if (invasiveStatus.getRegion().equalsIgnoreCase(stateProvince)) {
-            indexRecord.getStrings().put("state_invasive", "invasive");
-          }
-          if (invasiveStatus.getRegion().equalsIgnoreCase(country)) {
-            indexRecord.getStrings().put("country_invasive", "invasive");
-          }
-        }
-      }
+      addSpeciesListInfo(lr, tpr, indexRecord);
     }
 
     assertions.addAll(lr.getIssues().getIssueList());
@@ -383,6 +377,71 @@ public class IndexRecordTransform implements Serializable {
     indexRecord.getMultiValues().put("assertions", assertions);
 
     return indexRecord.build();
+  }
+
+  private static void addSpeciesListInfo(
+      LocationRecord lr, TaxonProfile tpr, IndexRecord.Builder indexRecord) {
+    indexRecord.getMultiValues().put("speciesListUid", tpr.getSpeciesListID());
+
+    // CONSERVATION STATUS
+    String stateProvince = lr.getStateProvince();
+    String country = lr.getCountry();
+
+    // index conservation status
+    List<ConservationStatus> conservationStatuses = tpr.getConservationStatuses();
+    for (ConservationStatus conservationStatus : conservationStatuses) {
+      if (conservationStatus.getRegion() != null) {
+        if (conservationStatus.getRegion().equalsIgnoreCase(stateProvince)) {
+
+          if (Strings.isNotBlank(conservationStatus.getSourceStatus())) {
+            indexRecord
+                .getStrings()
+                .put("raw_stateConservation", conservationStatus.getSourceStatus());
+          }
+          if (Strings.isNotBlank(conservationStatus.getStatus())) {
+            indexRecord.getStrings().put("stateConservation", conservationStatus.getStatus());
+          }
+        }
+        if (conservationStatus.getRegion().equalsIgnoreCase(country)) {
+          if (Strings.isNotBlank(conservationStatus.getStatus())) {
+            indexRecord.getStrings().put("countryConservation", conservationStatus.getStatus());
+          }
+        }
+      }
+    }
+
+    // index invasive status
+    List<InvasiveStatus> invasiveStatuses = tpr.getInvasiveStatuses();
+    for (InvasiveStatus invasiveStatus : invasiveStatuses) {
+      if (invasiveStatus.getRegion() != null) {
+        if (invasiveStatus.getRegion().equalsIgnoreCase(stateProvince)) {
+          indexRecord.getStrings().put("stateInvasive", "invasive");
+        }
+        if (invasiveStatus.getRegion().equalsIgnoreCase(country)) {
+          indexRecord.getStrings().put("countryInvasive", "invasive");
+        }
+      }
+    }
+  }
+
+  private static void addGBIFTaxonomy(
+      TaxonRecord txr, IndexRecord.Builder indexRecord, List<String> assertions) {
+    // add the classification
+    List<RankedName> taxonomy = txr.getClassification();
+    for (RankedName entry : taxonomy) {
+      indexRecord
+          .getInts()
+          .put("gbif_s_" + entry.getRank().toString().toLowerCase() + "_id", entry.getKey());
+      indexRecord
+          .getStrings()
+          .put("gbif_s_" + entry.getRank().toString().toLowerCase(), entry.getName());
+    }
+
+    indexRecord.getStrings().put("gbif_s_rank", txr.getAcceptedUsage().getRank().toString());
+    indexRecord.getStrings().put("gbif_s_scientificName", txr.getAcceptedUsage().getName());
+
+    IssueRecord taxonomicIssues = txr.getIssues();
+    assertions.addAll(taxonomicIssues.getIssueList());
   }
 
   public ParDo.SingleOutput<KV<String, CoGbkResult>, IndexRecord> converter() {
@@ -408,6 +467,13 @@ public class IndexRecordTransform implements Serializable {
             if (txrTag != null) {
               txr = v.getOnly(txrTag, TaxonRecord.newBuilder().setId(k).build());
             }
+
+            // Extension
+            MultimediaRecord mr = v.getOnly(mrTag, MultimediaRecord.newBuilder().setId(k).build());
+            ImageRecord ir = v.getOnly(irTag, ImageRecord.newBuilder().setId(k).build());
+            AudubonRecord ar = v.getOnly(arTag, AudubonRecord.newBuilder().setId(k).build());
+            MeasurementOrFactRecord mfr =
+                v.getOnly(mfrTag, MeasurementOrFactRecord.newBuilder().setId(k).build());
 
             // ALA specific
             ALAUUIDRecord ur = v.getOnly(urTag);
@@ -447,7 +513,7 @@ public class IndexRecordTransform implements Serializable {
     }
   }
 
-  static void addGeo(IndexRecord.Builder doc, double lat, double lon) {
+  static void addGeo(IndexRecord.Builder doc, Double lat, Double lon) {
     String latlon = "";
     // ensure that the lat longs are in the required range before
     if (lat <= 90 && lat >= -90d && lon <= 180 && lon >= -180d) {
@@ -515,31 +581,35 @@ public class IndexRecordTransform implements Serializable {
                                       .findFirst()
                                       .map(Schema::getType)
                                   : Optional.of(schema.getType());
-                          type.ifPresent(
-                              t -> {
-                                switch (t) {
-                                  case BOOLEAN:
-                                    //
-                                    builder.getBooleans().put(f.name(), (Boolean) r);
-                                    break;
-                                  case FLOAT:
-                                  case DOUBLE:
-                                    builder.getDoubles().put(f.name(), (Double) r);
-                                    break;
-                                  case INT:
-                                    builder.getInts().put(f.name(), (Integer) r);
-                                    break;
-                                  case LONG:
-                                    builder.getLongs().put(f.name(), (Long) r);
-                                    break;
-                                  case ARRAY:
-                                    builder.getMultiValues().put(f.name(), (List) r);
-                                    break;
-                                  default:
-                                    builder.getStrings().put(f.name(), r.toString());
-                                    break;
-                                }
-                              });
+                          if (r != null) {
+                            type.ifPresent(
+                                t -> {
+                                  switch (t) {
+                                    case BOOLEAN:
+                                      //
+                                      builder.getBooleans().put(f.name(), (Boolean) r);
+                                      break;
+                                    case FLOAT:
+                                      builder.getDoubles().put(f.name(), (Double) r);
+                                      break;
+                                    case DOUBLE:
+                                      builder.getDoubles().put(f.name(), (Double) r);
+                                      break;
+                                    case INT:
+                                      builder.getInts().put(f.name(), (Integer) r);
+                                      break;
+                                    case LONG:
+                                      builder.getLongs().put(f.name(), (Long) r);
+                                      break;
+                                    case ARRAY:
+                                      builder.getMultiValues().put(f.name(), (java.util.List) r);
+                                      break;
+                                    default:
+                                      builder.getStrings().put(f.name(), r.toString());
+                                      break;
+                                  }
+                                });
+                          }
                         }));
   }
 

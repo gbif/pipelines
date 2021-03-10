@@ -11,7 +11,6 @@ import java.util.Collection;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.kvs.KeyValueStore;
-import org.gbif.kvs.cache.KeyValueCache;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.core.parsers.location.GeocodeKvStore;
 import org.gbif.pipelines.factory.BufferedImageFactory;
@@ -44,10 +43,6 @@ public class GeocodeServiceTestIT {
     assertEquals("AU", country.get().getIsoCountryCode2Digit());
   }
 
-  /**
-   * Tests the Get operation on {@link KeyValueCache} that wraps a simple KV store backed by a
-   * HashMap.
-   */
   @Test
   public void testInsideEEZ() {
     KeyValueStore<LatLng, GeocodeResponse> geoService =
@@ -58,10 +53,6 @@ public class GeocodeServiceTestIT {
     assertEquals("AU", resp.getLocations().iterator().next().getIsoCountryCode2Digit());
   }
 
-  /**
-   * Tests the Get operation on {@link KeyValueCache} that wraps a simple KV store backed by a
-   * HashMap.
-   */
   @Test
   public void testInsideStateProvince() {
     KeyValueStore<LatLng, GeocodeResponse> geoService =
@@ -88,6 +79,62 @@ public class GeocodeServiceTestIT {
     assertEquals("Queensland", stateProvince.get().getName());
   }
 
+  @Test
+  public void testOutsideStateProvince() {
+    KeyValueStore<LatLng, GeocodeResponse> geoService =
+        GeocodeKvStoreFactory.createStateProvinceSupplier(TestUtils.getConfig()).get();
+
+    GeocodeResponse resp =
+        geoService.get(
+            LatLng.builder().withLongitude(-145.077283).withLatitude(-38.188337).build());
+    assertTrue(resp.getLocations().isEmpty());
+  }
+
+  //   -30.060141,151.905301;
+  @Test
+  public void testCountryEEZ1() {
+    KeyValueStore<LatLng, GeocodeResponse> geoService =
+        GeocodeKvStoreFactory.createCountrySupplier(TestUtils.getConfig()).get();
+
+    GeocodeResponse resp =
+        geoService.get(LatLng.builder().withLongitude(146.804061).withLatitude(-35.482884).build());
+
+    assertFalse(resp.getLocations().isEmpty());
+  }
+  //    -35.482884,146.804061
+  @Test
+  public void testCountryEEZ2() {
+    KeyValueStore<LatLng, GeocodeResponse> geoService =
+        GeocodeKvStoreFactory.createCountrySupplier(TestUtils.getConfig()).get();
+
+    GeocodeResponse resp =
+        geoService.get(LatLng.builder().withLongitude(151.905301).withLatitude(-30.060141).build());
+
+    assertFalse(resp.getLocations().isEmpty());
+  }
+
+  // -36.792365,146.074153
+  @Test
+  public void testCountryEEZ3() {
+    KeyValueStore<LatLng, GeocodeResponse> geoService =
+        GeocodeKvStoreFactory.createCountrySupplier(TestUtils.getConfig()).get();
+
+    GeocodeResponse resp =
+        geoService.get(LatLng.builder().withLongitude(146.074153).withLatitude(-36.792365).build());
+    assertFalse(resp.getLocations().isEmpty());
+  }
+
+  @Test
+  public void testOutsideCountryEEZ() {
+    KeyValueStore<LatLng, GeocodeResponse> geoService =
+        GeocodeKvStoreFactory.createCountrySupplier(TestUtils.getConfig()).get();
+
+    GeocodeResponse resp =
+        geoService.get(
+            LatLng.builder().withLongitude(-145.077283).withLatitude(-38.188337).build());
+    assertTrue(resp.getLocations().isEmpty());
+  }
+
   /** This test demonstrates how to create a kvstore supporting bitmap cache */
   @Test
   public void testBitMap() {
@@ -101,10 +148,8 @@ public class GeocodeServiceTestIT {
     KeyValueStore<LatLng, GeocodeResponse> stateProvinceKvStore =
         GeocodeKvStore.create(stateProvinceStore, image);
 
-    GeocodeResponse resp =
-        stateProvinceKvStore.get(LatLng.builder().withLongitude(146.2).withLatitude(-27.9).build());
     // Check if search from BitMap
-    resp =
+    GeocodeResponse resp =
         stateProvinceKvStore.get(LatLng.builder().withLongitude(146.3).withLatitude(-27.9).build());
     assertEquals(1, resp.getLocations().size());
     assertEquals("Queensland", resp.getLocations().iterator().next().getName());

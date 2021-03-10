@@ -6,6 +6,7 @@
   "fields":[
     {"name": "id", "type": ["null", "string"]},
     {"name": "uuid", "type": ["null", "string"], "default" : null },
-    {"name": "uniqueKey", "type": ["null", "string"], "default" : null }
+    {"name": "uniqueKey", "type": ["null", "string"], "default" : null },
+    {"name": "firstLoaded", "type": ["null", "string"], "default" : null }
   ]
 }

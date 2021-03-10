@@ -1,15 +1,13 @@
 #!/usr/bin/env bash
-
-#PIPELINES_JAR=/efs-mount-point/pipelines.jar
-export MIGRATION_JAR="/efs-mount-point/migration.jar"
+export MIGRATION_JAR="/usr/share/la-pipelines/migration.jar"
 
 # HDFS_CONF is just blank when not using HDFS
-#export HDFS_CONF=/efs-mount-point/hdfs-site.xml
-#export HDFS_CONF=
-export HDFS_CONF="/efs-mount-point/hdfs-site.xml"
+export HDFS_SITE_CONF="/data/hadoop/etc/hadoop/hdfs-site.xml"
 
-export FS_PATH="hdfs://aws-spark-quoll-1.ala:9000"
+export CORE_SITE_CONF="/data/hadoop/etc/hadoop/core-site.xml"
+
+export FS_PATH="hdfs://aws-spark-quoll-1b.ala:9000"
 
 export DATA_PATH="pipelines-data"
 
-export SPARK_MASTER="spark://aws-spark-quoll-1.ala:7077"
+export SPARK_MASTER="spark://aws-spark-quoll-1b.ala:7077"
