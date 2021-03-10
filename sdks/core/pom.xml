@@ -35,7 +35,6 @@
               <goal>extensiongeneration</goal>
             </goals>
             <configuration>
-              <templatePath>${generated-path}</templatePath>
               <pathToWrite>${generated-path}</pathToWrite>
               <avroNamespace>${namespace}</avroNamespace>
               <packagePath>${package}</packagePath>
