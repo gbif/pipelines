@@ -14,6 +14,8 @@ public class ALAPipelinesConfig implements Serializable {
   PipelinesConfig gbifConfig;
   GeocodeShpConfig geocodeConfig;
   LocationInfoConfig locationInfoConfig;
+  RecordedByConfig recordedByConfig;
+
   // ALA specific
   private WsConfig collectory;
   private WsConfig alaNameMatch;

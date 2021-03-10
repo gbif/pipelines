@@ -2,6 +2,7 @@ package au.org.ala.pipelines.vocabulary;
 
 import java.io.*;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
@@ -33,20 +34,28 @@ import org.gbif.kvs.geocode.LatLng;
 @Slf4j
 public class CentrePoints {
 
+  private String regionType;
+
   private final Map<String, LatLng> centres = new HashMap<>();
   private final Map<String, BBox> bBox = new HashMap<>();
   // Only for country, map country code to country name
   private final Map<String, String> codes = new HashMap<>();
 
-  private CentrePoints() {}
+  private final Set<String> reportedMissing = new HashSet<String>();
+  private final int REPORTED_MISSING_MAX_SIZE = 1000;
 
-  public static CentrePoints getInstance(String filePath) throws FileNotFoundException {
-    InputStream is = new FileInputStream(filePath);
-    return getInstance(is);
+  private CentrePoints(String regionType) {
+    this.regionType = regionType;
   }
 
-  public static CentrePoints getInstance(InputStream is) {
-    CentrePoints cp = new CentrePoints();
+  public static CentrePoints getInstance(String filePath, String regionType)
+      throws FileNotFoundException {
+    InputStream is = new FileInputStream(new File(filePath));
+    return getInstance(is, regionType);
+  }
+
+  public static CentrePoints getInstance(InputStream is, String regionType) {
+    CentrePoints cp = new CentrePoints(regionType);
     // Use country as an example
     // 3 columns: country code, latitude, longitude,
     // 4 columns: country code, latitude, longitude,country name
@@ -108,12 +117,32 @@ public class CentrePoints {
       // compare approximated centre point with supplied coordinates
       if (log.isDebugEnabled()) {
         log.debug(
-            "{} {} VS {} {}", decimalLatitude, decimalLongitude, approximatedLat, approximatedLong);
+            "[{}] {} {} VS {} {}",
+            regionType,
+            decimalLatitude,
+            decimalLongitude,
+            approximatedLat,
+            approximatedLong);
       }
       return approximatedLat == decimalLatitude && approximatedLong == decimalLongitude;
     } else {
       if (log.isWarnEnabled()) {
-        log.warn("{} is not found in records", location);
+        // avoid repeated logging of the same issue
+        if (!reportedMissing.contains(location)
+            && reportedMissing.size() < REPORTED_MISSING_MAX_SIZE) {
+          log.warn(
+              "[{}] {} is not found in records. This is due to a bad {} name or missing entries in centre points file",
+              regionType,
+              location,
+              regionType);
+          reportedMissing.add(location);
+          if (reportedMissing.size() == REPORTED_MISSING_MAX_SIZE) {
+            log.warn(
+                "[{}] No longer logging missing centre point entries. Number of missing values exceeded {}. Please check the data is mapped correctly",
+                regionType,
+                REPORTED_MISSING_MAX_SIZE);
+          }
+        }
       }
       return false;
     }
@@ -145,7 +174,7 @@ public class CentrePoints {
       for (int i = 0; i < decimalPlaces; i++) {
         x = x * 10;
       }
-      return (double) Math.round(number * x) / x;
+      return ((double) (Math.round(number * x))) / x;
     } else {
       return Math.round(number);
     }
@@ -153,7 +182,7 @@ public class CentrePoints {
 
   private int noOfDecimalPlace(double number) {
     String numberString = String.valueOf(number);
-    int decimalPointLoc = numberString.indexOf('.');
+    int decimalPointLoc = numberString.indexOf(".");
     if (decimalPointLoc < 0) {
       return 0;
     } else {
