@@ -25,9 +25,7 @@ import org.gbif.pipelines.estools.service.EsService;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.junit.Before;
 import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 public class ElasticsearchWriterIT {
 
@@ -37,9 +35,6 @@ public class ElasticsearchWriterIT {
 
   /** {@link ClassRule} requires this field to be public. */
   @ClassRule public static final EsServer ES_SERVER = new EsServer();
-
-  /** {@link Rule} requires this field to be public. */
-  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Before
   public void cleanIndexes() {
