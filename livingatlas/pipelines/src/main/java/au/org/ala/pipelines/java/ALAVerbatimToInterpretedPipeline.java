@@ -379,7 +379,7 @@ public class ALAVerbatimToInterpretedPipeline {
 
     log.info("Saving metrics...");
     MetricsHandler.saveCountersToTargetPathFile(options, metrics.getMetricsResult());
-    log.info("Pipeline has been finished - " + LocalDateTime.now());
+    log.info("Pipeline has been finished - {}", LocalDateTime.now());
   }
 
   /** Create an AVRO file writer */

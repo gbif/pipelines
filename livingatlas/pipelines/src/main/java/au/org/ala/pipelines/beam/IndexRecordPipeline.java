@@ -188,7 +188,7 @@ public class IndexRecordPipeline {
     if (options.getIncludeSensitiveData()) {
       alaSensitiveDataCollection =
           p.apply("Read sensitive data", alaSensitiveDataRecordTransform.read(pathFn))
-              .apply("Map attribution to KV", alaSensitiveDataRecordTransform.toKv());
+              .apply("Map sensitive to KV", alaSensitiveDataRecordTransform.toKv());
     }
 
     final TupleTag<ImageServiceRecord> imageServiceRecordTupleTag =
