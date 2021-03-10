@@ -33,9 +33,6 @@ import org.gbif.pipelines.core.factory.FileSystemFactory;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.transforms.core.*;
 import org.gbif.pipelines.transforms.core.LocationTransform;
-import org.gbif.pipelines.transforms.extension.AudubonTransform;
-import org.gbif.pipelines.transforms.extension.ImageTransform;
-import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.slf4j.MDC;
@@ -120,11 +117,11 @@ public class IndexRecordPipeline {
     TaxonomyTransform taxonomyTransform = TaxonomyTransform.builder().create();
 
     // Extension
-    MeasurementOrFactTransform measurementOrFactTransform =
-        MeasurementOrFactTransform.builder().create();
+    //    MeasurementOrFactTransform measurementOrFactTransform =
+    //        MeasurementOrFactTransform.builder().create();
     MultimediaTransform multimediaTransform = MultimediaTransform.builder().create();
-    AudubonTransform audubonTransform = AudubonTransform.builder().create();
-    ImageTransform imageTransform = ImageTransform.builder().create();
+    //    AudubonTransform audubonTransform = AudubonTransform.builder().create();
+    //    ImageTransform imageTransform = ImageTransform.builder().create();
 
     // ALA specific
     ALAUUIDTransform alaUuidTransform = ALAUUIDTransform.create();
@@ -166,17 +163,17 @@ public class IndexRecordPipeline {
         p.apply("Read Multimedia", multimediaTransform.read(pathFn))
             .apply("Map Multimedia to KV", multimediaTransform.toKv());
 
-    PCollection<KV<String, ImageRecord>> imageCollection =
-        p.apply("Read Image", imageTransform.read(pathFn))
-            .apply("Map Image to KV", imageTransform.toKv());
-
-    PCollection<KV<String, AudubonRecord>> audubonCollection =
-        p.apply("Read Audubon", audubonTransform.read(pathFn))
-            .apply("Map Audubon to KV", audubonTransform.toKv());
-
-    PCollection<KV<String, MeasurementOrFactRecord>> measurementCollection =
-        p.apply("Read Measurement", measurementOrFactTransform.read(pathFn))
-            .apply("Map Measurement to KV", measurementOrFactTransform.toKv());
+    //    PCollection<KV<String, ImageRecord>> imageCollection =
+    //        p.apply("Read Image", imageTransform.read(pathFn))
+    //            .apply("Map Image to KV", imageTransform.toKv());
+    //
+    //    PCollection<KV<String, AudubonRecord>> audubonCollection =
+    //        p.apply("Read Audubon", audubonTransform.read(pathFn))
+    //            .apply("Map Audubon to KV", audubonTransform.toKv());
+    //
+    //    PCollection<KV<String, MeasurementOrFactRecord>> measurementCollection =
+    //        p.apply("Read Measurement", measurementOrFactTransform.read(pathFn))
+    //            .apply("Map Measurement to KV", measurementOrFactTransform.toKv());
 
     // ALA Specific
     PCollection<KV<String, ALAUUIDRecord>> alaUUidCollection =
@@ -222,9 +219,9 @@ public class IndexRecordPipeline {
             options.getIncludeGbifTaxonomy() ? taxonomyTransform.getTag() : null,
             alaTaxonomyTransform.getTag(),
             multimediaTransform.getTag(),
-            imageTransform.getTag(),
-            audubonTransform.getTag(),
-            measurementOrFactTransform.getTag(),
+            //            imageTransform.getTag(),
+            //            audubonTransform.getTag(),
+            //            measurementOrFactTransform.getTag(),
             alaAttributionTransform.getTag(),
             alaUuidTransform.getTag(),
             options.getIncludeImages() ? imageRecordTupleTag : null,
@@ -247,9 +244,9 @@ public class IndexRecordPipeline {
             .and(locationTransform.getTag(), locationCollection)
             // Extension
             .and(multimediaTransform.getTag(), multimediaCollection)
-            .and(imageTransform.getTag(), imageCollection)
-            .and(audubonTransform.getTag(), audubonCollection)
-            .and(measurementOrFactTransform.getTag(), measurementCollection)
+            //            .and(imageTransform.getTag(), imageCollection)
+            //            .and(audubonTransform.getTag(), audubonCollection)
+            //            .and(measurementOrFactTransform.getTag(), measurementCollection)
             // Raw
             .and(verbatimTransform.getTag(), verbatimCollection)
             // ALA Specific

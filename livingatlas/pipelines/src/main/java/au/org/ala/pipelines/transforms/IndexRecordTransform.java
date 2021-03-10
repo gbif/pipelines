@@ -101,9 +101,9 @@ public class IndexRecordTransform implements Serializable {
       TupleTag<TaxonRecord> txrTag,
       TupleTag<ALATaxonRecord> atxrTag,
       TupleTag<MultimediaRecord> mrTag,
-      TupleTag<ImageRecord> irTag,
-      TupleTag<AudubonRecord> arTag,
-      TupleTag<MeasurementOrFactRecord> mfrTag,
+      //      TupleTag<ImageRecord> irTag,
+      //      TupleTag<AudubonRecord> arTag,
+      //      TupleTag<MeasurementOrFactRecord> mfrTag,
       TupleTag<ALAAttributionRecord> aarTag,
       TupleTag<ALAUUIDRecord> urTag,
       TupleTag<ImageRecord> isTag,
@@ -121,9 +121,9 @@ public class IndexRecordTransform implements Serializable {
     t.txrTag = txrTag;
     t.atxrTag = atxrTag;
     t.mrTag = mrTag;
-    t.irTag = irTag;
-    t.arTag = arTag;
-    t.mfrTag = mfrTag;
+    //    t.irTag = irTag;
+    //    t.arTag = arTag;
+    //    t.mfrTag = mfrTag;
     t.aarTag = aarTag;
     t.urTag = urTag;
     t.isTag = isTag;

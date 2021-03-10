@@ -34,13 +34,9 @@ import org.gbif.pipelines.factory.OccurrenceStatusKvStoreFactory;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.transforms.common.UniqueIdTransform;
 import org.gbif.pipelines.transforms.converters.OccurrenceExtensionTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
-import org.gbif.pipelines.transforms.extension.AudubonTransform;
-import org.gbif.pipelines.transforms.extension.ImageTransform;
-import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.DefaultValuesTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
@@ -171,14 +167,14 @@ public class ALAVerbatimToInterpretedPipeline {
         TemporalTransform.builder().orderings(dateComponentOrdering).create();
 
     // Extension
-    MeasurementOrFactTransform measurementOrFactTransform =
-        MeasurementOrFactTransform.builder().create();
+    //    MeasurementOrFactTransform measurementOrFactTransform =
+    //        MeasurementOrFactTransform.builder().create();
     MultimediaTransform multimediaTransform =
         MultimediaTransform.builder().orderings(dateComponentOrdering).create();
-    AudubonTransform audubonTransform =
-        AudubonTransform.builder().orderings(dateComponentOrdering).create();
-    ImageTransform imageTransform =
-        ImageTransform.builder().orderings(dateComponentOrdering).create();
+    //    AudubonTransform audubonTransform =
+    //        AudubonTransform.builder().orderings(dateComponentOrdering).create();
+    //    ImageTransform imageTransform =
+    //        ImageTransform.builder().orderings(dateComponentOrdering).create();
 
     // ALA specific - Attribution
     ALAAttributionTransform alaAttributionTransform =
@@ -223,9 +219,7 @@ public class ALAVerbatimToInterpretedPipeline {
 
     // Create View for the further usage
     PCollectionView<MetadataRecord> metadataView =
-        metadataRecord
-            .apply("Check verbatim transform condition", metadataTransform.checkMetadata(types))
-            .apply("Convert into view", View.asSingleton());
+        metadataRecord.apply("Convert into view", View.asSingleton());
 
     locationTransform.setMetadataView(metadataView);
 
@@ -235,7 +229,6 @@ public class ALAVerbatimToInterpretedPipeline {
             ? verbatimTransform.emptyCollection(p)
             : p.apply("Read ExtendedRecords", verbatimTransform.read(options.getInputPath()))
                 .apply("Read occurrences from extension", OccurrenceExtensionTransform.create())
-                .apply("Filter duplicates", UniqueIdTransform.create())
                 .apply("Set default values", alaDefaultValuesTransform);
 
     uniqueRecords
@@ -257,20 +250,21 @@ public class ALAVerbatimToInterpretedPipeline {
         .apply("Interpret multimedia", multimediaTransform.interpret())
         .apply("Write multimedia to avro", multimediaTransform.write(pathFn));
 
-    uniqueRecords
-        .apply("Check image transform condition", imageTransform.check(types))
-        .apply("Interpret image", imageTransform.interpret())
-        .apply("Write image to avro", imageTransform.write(pathFn));
-
-    uniqueRecords
-        .apply("Check audubon transform condition", audubonTransform.check(types))
-        .apply("Interpret audubon", audubonTransform.interpret())
-        .apply("Write audubon to avro", audubonTransform.write(pathFn));
-
-    uniqueRecords
-        .apply("Check measurement transform condition", measurementOrFactTransform.check(types))
-        .apply("Interpret measurement", measurementOrFactTransform.interpret())
-        .apply("Write measurement to avro", measurementOrFactTransform.write(pathFn));
+    //    uniqueRecords
+    //        .apply("Check image transform condition", imageTransform.check(types))
+    //        .apply("Interpret image", imageTransform.interpret())
+    //        .apply("Write image to avro", imageTransform.write(pathFn));
+    //
+    //    uniqueRecords
+    //        .apply("Check audubon transform condition", audubonTransform.check(types))
+    //        .apply("Interpret audubon", audubonTransform.interpret())
+    //        .apply("Write audubon to avro", audubonTransform.write(pathFn));
+    //
+    //    uniqueRecords
+    //        .apply("Check measurement transform condition",
+    // measurementOrFactTransform.check(types))
+    //        .apply("Interpret measurement", measurementOrFactTransform.interpret())
+    //        .apply("Write measurement to avro", measurementOrFactTransform.write(pathFn));
 
     uniqueRecords
         .apply("Check collection attribution", alaAttributionTransform.check(types))

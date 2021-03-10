@@ -79,6 +79,6 @@ public class ALAAttributionKVStoreFactory {
 
   public static SerializableSupplier<KeyValueStore<String, ALACollectoryMetadata>>
       getInstanceSupplier(ALAPipelinesConfig config) {
-    return () -> ALAAttributionKVStoreFactory.getInstance(config);
+    return () -> getInstance(config);
   }
 }

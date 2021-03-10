@@ -202,22 +202,15 @@ public class ALAVerbatimToInterpretedPipeline {
             .create()
             .counterFn(incMetricFn);
 
-    // Extension
-    MeasurementOrFactTransform measurementTransform =
-        MeasurementOrFactTransform.builder().create().counterFn(incMetricFn);
+//     Extension
+//    MeasurementOrFactTransform measurementTransform =
+//        MeasurementOrFactTransform.builder().create().counterFn(incMetricFn);
 
     MultimediaTransform multimediaTransform =
         MultimediaTransform.builder()
             .orderings(dateComponentOrdering)
             .create()
             .counterFn(incMetricFn);
-
-    AudubonTransform audubonTransform =
-        AudubonTransform.builder().orderings(dateComponentOrdering).create().counterFn(incMetricFn);
-
-    ImageTransform imageTransform =
-        ImageTransform.builder().orderings(dateComponentOrdering).create().counterFn(incMetricFn);
-
     // Extra
     OccurrenceExtensionTransform occExtensionTransform =
         OccurrenceExtensionTransform.create().counterFn(incMetricFn);
@@ -260,8 +253,8 @@ public class ALAVerbatimToInterpretedPipeline {
     locationTransform.setup();
     alaTaxonomyTransform.setup();
     alaAttributionTransform.setup();
-    imageTransform.setup();
-    audubonTransform.setup();
+//    imageTransform.setup();
+//    audubonTransform.setup();
     multimediaTransform.setup();
 
     log.info("Creating writers");
@@ -273,15 +266,15 @@ public class ALAVerbatimToInterpretedPipeline {
             createWriter(options, BasicRecord.getClassSchema(), basicTransform, id);
         SyncDataFileWriter<TemporalRecord> temporalWriter =
             createWriter(options, TemporalRecord.getClassSchema(), temporalTransform, id);
-        SyncDataFileWriter<MeasurementOrFactRecord> measurementWriter =
-            createWriter(
-                options, MeasurementOrFactRecord.getClassSchema(), measurementTransform, id);
+//        SyncDataFileWriter<MeasurementOrFactRecord> measurementWriter =
+//            createWriter(
+//                options, MeasurementOrFactRecord.getClassSchema(), measurementTransform, id);
         SyncDataFileWriter<MultimediaRecord> multimediaWriter =
             createWriter(options, MultimediaRecord.getClassSchema(), multimediaTransform, id);
-        SyncDataFileWriter<ImageRecord> imageWriter =
-            createWriter(options, ImageRecord.getClassSchema(), imageTransform, id);
-        SyncDataFileWriter<AudubonRecord> audubonWriter =
-            createWriter(options, AudubonRecord.getClassSchema(), audubonTransform, id);
+//        SyncDataFileWriter<ImageRecord> imageWriter =
+//            createWriter(options, ImageRecord.getClassSchema(), imageTransform, id);
+//        SyncDataFileWriter<AudubonRecord> audubonWriter =
+//            createWriter(options, AudubonRecord.getClassSchema(), audubonTransform, id);
 
         // ALA specific
         SyncDataFileWriter<LocationRecord> locationWriter =
@@ -323,10 +316,9 @@ public class ALAVerbatimToInterpretedPipeline {
             basicTransform.processElement(er).ifPresent(basicWriter::append);
             temporalTransform.processElement(er).ifPresent(temporalWriter::append);
             multimediaTransform.processElement(er).ifPresent(multimediaWriter::append);
-            imageTransform.processElement(er).ifPresent(imageWriter::append);
-            audubonTransform.processElement(er).ifPresent(audubonWriter::append);
-            measurementTransform.processElement(er).ifPresent(measurementWriter::append);
-
+//            imageTransform.processElement(er).ifPresent(imageWriter::append);
+//            audubonTransform.processElement(er).ifPresent(audubonWriter::append);
+//            measurementTransform.processElement(er).ifPresent(measurementWriter::append);
             // ALA specific
             locationTransform.processElement(er, mdr).ifPresent(locationWriter::append);
             alaTaxonomyTransform.processElement(er).ifPresent(alaTaxonWriter::append);
