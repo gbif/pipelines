@@ -80,6 +80,9 @@
               <goal>testCompile</goal>
             </goals>
           </execution>
+          <configuration>
+              <secondaryCacheDir>/var/tmp/sbt</secondaryCacheDir>
+          </configuration>
         </executions>
       </plugin>
     </plugins>
