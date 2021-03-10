@@ -5,6 +5,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.core.io.SyncDataFileWriter;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.junit.Assert;
@@ -16,7 +17,7 @@ public class InterpretedAvroReaderTest {
   public void readerTest() throws Exception {
 
     // State
-    String outputFile = getClass().getResource("/avro/").getFile();
+    String outputFile = getClass().getResource("/").getFile() + "avro";
 
     String[] args = {
       "--datasetId=d596fccb-2319-42eb-b13b-986c932780ad",
@@ -28,6 +29,18 @@ public class InterpretedAvroReaderTest {
     };
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
 
+    try (SyncDataFileWriter<BasicRecord> writer =
+        InterpretedAvroWriter.createAvroWriter(options, BasicTransform.builder().create(), "1")) {
+      BasicRecord basicRecord = BasicRecord.newBuilder().setId("777").setGbifId(1L).build();
+      writer.append(basicRecord);
+    }
+
+    try (SyncDataFileWriter<BasicRecord> writer =
+        InterpretedAvroWriter.createAvroWriter(options, BasicTransform.builder().create(), "2")) {
+      BasicRecord basicRecord = BasicRecord.newBuilder().setId("888").setGbifId(2L).build();
+      writer.append(basicRecord);
+    }
+
     // When
     CompletableFuture<Map<String, BasicRecord>> result =
         InterpretedAvroReader.readAvroAsFuture(
@@ -35,6 +48,6 @@ public class InterpretedAvroReaderTest {
     Map<String, BasicRecord> map = result.get();
 
     // Should
-    Assert.assertEquals(307, map.size());
+    Assert.assertEquals(2, map.size());
   }
 }
