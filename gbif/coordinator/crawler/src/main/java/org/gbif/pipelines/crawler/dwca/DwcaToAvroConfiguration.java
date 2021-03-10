@@ -2,11 +2,14 @@ package org.gbif.pipelines.crawler.dwca;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParametersDelegate;
+import java.util.Collections;
+import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.ToString;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.configs.AvroWriteConfiguration;
 import org.gbif.pipelines.common.configs.BaseConfiguration;
 import org.gbif.pipelines.common.configs.StepConfiguration;
@@ -26,6 +29,10 @@ public class DwcaToAvroConfiguration implements BaseConfiguration {
   @Parameter(names = "--archive-repository")
   @NotNull
   public String archiveRepository;
+
+  @Parameter(names = "--interpret-types")
+  @NotNull
+  public Set<String> interpretTypes = Collections.singleton(RecordType.ALL.name());
 
   @Parameter(names = "--file-name")
   @NotNull

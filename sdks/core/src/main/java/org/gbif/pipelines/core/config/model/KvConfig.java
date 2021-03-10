@@ -24,4 +24,6 @@ public class KvConfig implements Serializable {
   private String tableName;
 
   private boolean restOnly = false;
+
+  private WsConfig api;
 }

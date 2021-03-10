@@ -4,19 +4,17 @@ import java.util.List;
 
 public class ExtensionPojo {
 
-  private String tableName;
+  private final String tableName;
 
-  private String namespace;
+  private final String namespace;
 
-  private String packagePath;
+  private final String packagePath;
 
-  private String rowType;
+  private final String rowType;
 
-  private List<Setter> setters;
+  private final List<Setter> setters;
 
-  private String extensionPackage;
-
-  public ExtensionPojo() {}
+  private final String extensionPackage;
 
   public ExtensionPojo(
       String tableName,
@@ -37,56 +35,30 @@ public class ExtensionPojo {
     return tableName;
   }
 
-  public void setTableName(String tableName) {
-    this.tableName = tableName;
-  }
-
   public String getNamespace() {
     return namespace;
-  }
-
-  public void setNamespace(String namespace) {
-    this.namespace = namespace;
   }
 
   public String getPackagePath() {
     return packagePath;
   }
 
-  public void setPackagePath(String packagePath) {
-    this.packagePath = packagePath;
-  }
-
   public String getRowType() {
     return rowType;
-  }
-
-  public void setRowType(String rowType) {
-    this.rowType = rowType;
   }
 
   public List<Setter> getSetters() {
     return setters;
   }
 
-  public void setSetters(List<Setter> setters) {
-    this.setters = setters;
-  }
-
   public String getExtensionPackage() {
     return extensionPackage;
   }
 
-  public void setExtensionPackage(String extensionPackage) {
-    this.extensionPackage = extensionPackage;
-  }
-
   public static class Setter {
-    private String qualifier;
-    private String name;
-    private String vName;
-
-    public Setter() {}
+    private final String qualifier;
+    private final String name;
+    private final String vName;
 
     public Setter(String qualifier, String name) {
       this.qualifier = qualifier;
@@ -98,24 +70,12 @@ public class ExtensionPojo {
       return qualifier;
     }
 
-    public void setQualifier(String qualifier) {
-      this.qualifier = qualifier;
-    }
-
     public String getName() {
       return name;
     }
 
-    public void setName(String name) {
-      this.name = name;
-    }
-
     public String getvName() {
       return vName;
-    }
-
-    public void setvName(String vName) {
-      this.vName = vName;
     }
   }
 }

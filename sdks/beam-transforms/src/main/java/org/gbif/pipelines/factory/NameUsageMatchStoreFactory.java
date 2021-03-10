@@ -1,5 +1,6 @@
 package org.gbif.pipelines.factory;
 
+import java.util.Optional;
 import lombok.SneakyThrows;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.conf.CachedHBaseKVStoreConfiguration;
@@ -7,6 +8,7 @@ import org.gbif.kvs.hbase.HBaseKVStoreConfiguration;
 import org.gbif.kvs.species.NameUsageMatchKVStoreFactory;
 import org.gbif.kvs.species.SpeciesMatchRequest;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.core.config.model.WsConfig;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.rest.client.configuration.ClientConfiguration;
 import org.gbif.rest.client.species.NameUsageMatch;
@@ -43,9 +45,14 @@ public class NameUsageMatchStoreFactory {
       return null;
     }
 
+    String api =
+        Optional.ofNullable(config.getNameUsageMatch().getApi())
+            .map(WsConfig::getWsUrl)
+            .orElse(config.getGbifApi().getWsUrl());
+
     ClientConfiguration clientConfiguration =
         ClientConfiguration.builder()
-            .withBaseApiUrl(config.getGbifApi().getWsUrl())
+            .withBaseApiUrl(api)
             .withFileCacheMaxSizeMb(config.getNameUsageMatch().getWsCacheSizeMb())
             .withTimeOut(config.getNameUsageMatch().getWsTimeoutSec())
             .build();

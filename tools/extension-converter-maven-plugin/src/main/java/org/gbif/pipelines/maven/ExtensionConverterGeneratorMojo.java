@@ -104,6 +104,9 @@ public class ExtensionConverterGeneratorMojo extends AbstractMojo {
             .map(e -> new Setter(e.getQualname(), normalizeName(e.getName())))
             .collect(Collectors.toList());
 
+    String[] extraNamespace =
+        url.toString().replaceAll("http://rs.gbif.org/extension/", "").split("/");
+
     ExtensionPojo extPojo =
         new ExtensionPojo(
             name,
@@ -111,7 +114,7 @@ public class ExtensionConverterGeneratorMojo extends AbstractMojo {
             packagePath,
             dwcExt.getRowType().qualifiedName(),
             setters,
-            extensionPackage);
+            extensionPackage + "." + extraNamespace[0]);
 
     Template temp =
         new Template("table-converter", new StringReader(Templates.TABLE_CONVERTER), cfg);

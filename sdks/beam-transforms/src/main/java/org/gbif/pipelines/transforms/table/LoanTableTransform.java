@@ -5,13 +5,11 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 
 import java.util.Set;
 import lombok.Builder;
-import org.apache.beam.sdk.transforms.SerializableFunction;
 import org.apache.beam.sdk.values.TupleTag;
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.InterpretationType;
 import org.gbif.pipelines.core.converters.LoanTableConverter;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.extension.LoanTable;
+import org.gbif.pipelines.io.avro.extension.ggbn.LoanTable;
 
 public class LoanTableTransform extends TableTransform<LoanTable> {
 
@@ -19,7 +17,7 @@ public class LoanTableTransform extends TableTransform<LoanTable> {
   public LoanTableTransform(
       TupleTag<ExtendedRecord> extendedRecordTag,
       TupleTag<BasicRecord> basicRecordTag,
-      SerializableFunction<InterpretationType, String> pathFn,
+      String path,
       Integer numShards,
       Set<String> types) {
     super(
@@ -30,7 +28,7 @@ public class LoanTableTransform extends TableTransform<LoanTable> {
         LoanTableConverter::convert);
     this.setExtendedRecordTag(extendedRecordTag)
         .setBasicRecordTag(basicRecordTag)
-        .setPathFn(pathFn)
+        .setPath(path)
         .setNumShards(numShards)
         .setTypes(types);
   }

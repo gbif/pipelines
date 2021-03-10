@@ -12,8 +12,6 @@ public class Templates {
           + "import java.util.Optional;\n"
           + "import java.util.function.Function;\n"
           + "\n"
-          + "import org.gbif.api.vocabulary.Extension;\n"
-          + "import org.gbif.dwc.terms.DwcTerm;\n"
           + "import org.gbif.pipelines.core.interpreters.ExtensionInterpretation;\n"
           + "import org.gbif.pipelines.core.interpreters.ExtensionInterpretation.TargetHandler;\n"
           + "import ${namespace}.BasicRecord;\n"
