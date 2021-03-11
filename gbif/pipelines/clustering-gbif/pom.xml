@@ -81,6 +81,9 @@
             </goals>
           </execution>
         </executions>
+        <configuration>
+          <secondaryCacheDir>/var/tmp/sbt</secondaryCacheDir>
+        </configuration>
       </plugin>
     </plugins>
   </build>
