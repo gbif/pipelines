@@ -1,9 +1,6 @@
 package org.gbif.pipelines.maven;
 
-/**
- * Simplification for template loading from resources, there is a copy of this template in the
- * resources directory, so you can change it and copy-past as a new template
- */
+/** Simplification for template loading from resources */
 public class Templates {
 
   public static final String TABLE_CONVERTER =
