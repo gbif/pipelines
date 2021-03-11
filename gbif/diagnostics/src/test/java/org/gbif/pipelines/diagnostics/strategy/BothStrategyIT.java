@@ -2,25 +2,24 @@ package org.gbif.pipelines.diagnostics.strategy;
 
 import java.io.IOException;
 import java.util.Set;
-import org.apache.hadoop.hbase.client.Connection;
 import org.gbif.pipelines.diagnostics.common.HbaseServer;
 import org.gbif.pipelines.diagnostics.common.HbaseStore;
 import org.gbif.pipelines.diagnostics.common.HbaseStore.KV;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
-import org.gbif.pipelines.keygen.hbase.HBaseStore;
 import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 public class BothStrategyIT {
 
-  public static final HBaseStore<String> LOOKUP_TABLE_STORE = HbaseServer.lookupTableStore;
-  public static final Connection CONNECTION = HbaseServer.connection;
+  /** {@link ClassRule} requires this field to be public. */
+  @ClassRule public static final HbaseServer HBASE_SERVER = new HbaseServer();
 
   @Before
   public void before() throws IOException {
-    HbaseServer.truncateTable();
+    HBASE_SERVER.truncateTable();
   }
 
   @Test
@@ -40,13 +39,13 @@ public class BothStrategyIT {
     long gbifId2 = 2L;
 
     HbaseStore.putRecords(
-        LOOKUP_TABLE_STORE,
+        HBASE_SERVER.getLookupTableStore(),
         KV.create(lookupOccId, gbifId),
         KV.create(lookupTriplet, gbifId),
         KV.create(occId2, gbifId2));
 
     HBaseLockingKeyService keygenService =
-        new HBaseLockingKeyService(HbaseServer.CFG, CONNECTION, datasetKey);
+        new HBaseLockingKeyService(HbaseServer.CFG, HBASE_SERVER.getConnection(), datasetKey);
 
     // When
     Set<String> keysToDelete =
@@ -75,13 +74,13 @@ public class BothStrategyIT {
     long gbifId2 = 2L;
 
     HbaseStore.putRecords(
-        LOOKUP_TABLE_STORE,
+        HBASE_SERVER.getLookupTableStore(),
         KV.create(lookupOccId, gbifId),
         KV.create(lookupTriplet, gbifId),
         KV.create(occId2, gbifId2));
 
     HBaseLockingKeyService keygenService =
-        new HBaseLockingKeyService(HbaseServer.CFG, CONNECTION, datasetKey);
+        new HBaseLockingKeyService(HbaseServer.CFG, HBASE_SERVER.getConnection(), datasetKey);
 
     // When
     Set<String> keysToDelete =
@@ -108,13 +107,13 @@ public class BothStrategyIT {
     long gbifId2 = 2L;
 
     HbaseStore.putRecords(
-        LOOKUP_TABLE_STORE,
+        HBASE_SERVER.getLookupTableStore(),
         KV.create(lookupOccId, gbifId),
         KV.create(lookupTriplet, gbifId2),
         KV.create(occId2, gbifId2));
 
     HBaseLockingKeyService keygenService =
-        new HBaseLockingKeyService(HbaseServer.CFG, CONNECTION, datasetKey);
+        new HBaseLockingKeyService(HbaseServer.CFG, HBASE_SERVER.getConnection(), datasetKey);
 
     // When
     Set<String> keysToDelete =
