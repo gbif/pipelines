@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Optional;
+import org.apache.hadoop.hbase.client.Connection;
 import org.gbif.pipelines.diagnostics.common.HbaseServer;
 import org.gbif.pipelines.diagnostics.strategy.DeletionStrategy.DeletionStrategyType;
 import org.gbif.pipelines.diagnostics.strategy.LookupKeyUtils;
@@ -12,17 +13,15 @@ import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Test;
 
 public class RepairGbifIDLookupToolIT {
 
-  /** {@link ClassRule} requires this field to be public. */
-  @ClassRule public static final HbaseServer HBASE_SERVER = new HbaseServer();
+  public static final Connection CONNECTION = HbaseServer.connection;
 
   @Before
   public void before() throws IOException {
-    HBASE_SERVER.truncateTable();
+    HbaseServer.truncateTable();
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -117,7 +116,7 @@ public class RepairGbifIDLookupToolIT {
     String triplet = OccurrenceKeyBuilder.buildKey("ic", "cc", "cn").orElse(null);
 
     HBaseLockingKeyService keygenService =
-        new HBaseLockingKeyService(HbaseServer.CFG, HBASE_SERVER.getConnection(), datasetKey);
+        new HBaseLockingKeyService(HbaseServer.CFG, CONNECTION, datasetKey);
 
     keygenService.generateKey(new HashSet<>(Arrays.asList(occId, triplet)));
 
@@ -137,7 +136,7 @@ public class RepairGbifIDLookupToolIT {
         .counterTable(HbaseServer.CFG.getCounterTable())
         .occurrenceTable(HbaseServer.CFG.getOccurrenceTable())
         .deletionStrategyType(DeletionStrategyType.both)
-        .connection(HBASE_SERVER.getConnection())
+        .connection(CONNECTION)
         .build()
         .run();
 
@@ -159,7 +158,7 @@ public class RepairGbifIDLookupToolIT {
     String triplet = OccurrenceKeyBuilder.buildKey("ic", "cc", "cn").orElse(null);
 
     HBaseLockingKeyService keygenService =
-        new HBaseLockingKeyService(HbaseServer.CFG, HBASE_SERVER.getConnection(), datasetKey);
+        new HBaseLockingKeyService(HbaseServer.CFG, CONNECTION, datasetKey);
 
     keygenService.generateKey(new HashSet<>(Arrays.asList(occId, triplet)));
 
@@ -179,7 +178,7 @@ public class RepairGbifIDLookupToolIT {
         .counterTable(HbaseServer.CFG.getCounterTable())
         .occurrenceTable(HbaseServer.CFG.getOccurrenceTable())
         .deletionStrategyType(DeletionStrategyType.both)
-        .connection(HBASE_SERVER.getConnection())
+        .connection(CONNECTION)
         .onlyCollisions(true)
         .build()
         .run();
@@ -207,7 +206,7 @@ public class RepairGbifIDLookupToolIT {
             .orElse(null);
 
     HBaseLockingKeyService keygenService =
-        new HBaseLockingKeyService(HbaseServer.CFG, HBASE_SERVER.getConnection(), datasetKey);
+        new HBaseLockingKeyService(HbaseServer.CFG, CONNECTION, datasetKey);
 
     keygenService.generateKey(new HashSet<>(Arrays.asList(occId, triplet)));
 
@@ -226,7 +225,7 @@ public class RepairGbifIDLookupToolIT {
         .counterTable(HbaseServer.CFG.getCounterTable())
         .occurrenceTable(HbaseServer.CFG.getOccurrenceTable())
         .deletionStrategyType(DeletionStrategyType.both)
-        .connection(HBASE_SERVER.getConnection())
+        .connection(CONNECTION)
         .build()
         .run();
 

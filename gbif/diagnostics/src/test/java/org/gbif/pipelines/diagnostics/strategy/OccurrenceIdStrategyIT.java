@@ -2,23 +2,24 @@ package org.gbif.pipelines.diagnostics.strategy;
 
 import java.io.IOException;
 import java.util.Set;
+import org.apache.hadoop.hbase.client.Connection;
 import org.gbif.pipelines.diagnostics.common.HbaseServer;
 import org.gbif.pipelines.diagnostics.common.HbaseStore;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
+import org.gbif.pipelines.keygen.hbase.HBaseStore;
 import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Test;
 
 public class OccurrenceIdStrategyIT {
 
-  /** {@link ClassRule} requires this field to be public. */
-  @ClassRule public static final HbaseServer HBASE_SERVER = new HbaseServer();
+  public static final HBaseStore<String> LOOKUP_TABLE_STORE = HbaseServer.lookupTableStore;
+  public static final Connection CONNECTION = HbaseServer.connection;
 
   @Before
   public void before() throws IOException {
-    HBASE_SERVER.truncateTable();
+    HbaseServer.truncateTable();
   }
 
   @Test
@@ -38,13 +39,13 @@ public class OccurrenceIdStrategyIT {
     long gbifId2 = 2L;
 
     HbaseStore.putRecords(
-        HBASE_SERVER.getLookupTableStore(),
+        LOOKUP_TABLE_STORE,
         HbaseStore.KV.create(lookupOccId, gbifId),
         HbaseStore.KV.create(lookupTriplet, gbifId),
         HbaseStore.KV.create(occId2, gbifId2));
 
     HBaseLockingKeyService keygenService =
-        new HBaseLockingKeyService(HbaseServer.CFG, HBASE_SERVER.getConnection(), datasetKey);
+        new HBaseLockingKeyService(HbaseServer.CFG, CONNECTION, datasetKey);
 
     // When
     Set<String> keysToDelete =
@@ -65,7 +66,7 @@ public class OccurrenceIdStrategyIT {
     String triplet = OccurrenceKeyBuilder.buildKey("ic", "cc", "cn").orElse(null);
 
     HBaseLockingKeyService keygenService =
-        new HBaseLockingKeyService(HbaseServer.CFG, HBASE_SERVER.getConnection(), datasetKey);
+        new HBaseLockingKeyService(HbaseServer.CFG, CONNECTION, datasetKey);
 
     // When
     Set<String> keysToDelete =
@@ -92,13 +93,13 @@ public class OccurrenceIdStrategyIT {
     long gbifId2 = 2L;
 
     HbaseStore.putRecords(
-        HBASE_SERVER.getLookupTableStore(),
+        LOOKUP_TABLE_STORE,
         HbaseStore.KV.create(lookupOccId, gbifId),
         HbaseStore.KV.create(lookupTriplet, gbifId),
         HbaseStore.KV.create(occId2, gbifId2));
 
     HBaseLockingKeyService keygenService =
-        new HBaseLockingKeyService(HbaseServer.CFG, HBASE_SERVER.getConnection(), datasetKey);
+        new HBaseLockingKeyService(HbaseServer.CFG, CONNECTION, datasetKey);
 
     // When
     Set<String> keysToDelete =
@@ -125,13 +126,13 @@ public class OccurrenceIdStrategyIT {
     long gbifId2 = 2L;
 
     HbaseStore.putRecords(
-        HBASE_SERVER.getLookupTableStore(),
+        LOOKUP_TABLE_STORE,
         HbaseStore.KV.create(lookupOccId, gbifId),
         HbaseStore.KV.create(lookupTriplet, gbifId2),
         HbaseStore.KV.create(occId2, gbifId2));
 
     HBaseLockingKeyService keygenService =
-        new HBaseLockingKeyService(HbaseServer.CFG, HBASE_SERVER.getConnection(), datasetKey);
+        new HBaseLockingKeyService(HbaseServer.CFG, CONNECTION, datasetKey);
 
     // When
     Set<String> keysToDelete =

@@ -8,15 +8,34 @@ import org.apache.hadoop.hbase.HBaseTestingUtility;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.ConnectionFactory;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.gbif.pipelines.diagnostics.RepairGbifIDLookupToolIT;
+import org.gbif.pipelines.diagnostics.strategy.BothStrategyIT;
+import org.gbif.pipelines.diagnostics.strategy.MaxStrategyIT;
+import org.gbif.pipelines.diagnostics.strategy.MinStrategyIT;
+import org.gbif.pipelines.diagnostics.strategy.OccurrenceIdStrategyIT;
+import org.gbif.pipelines.diagnostics.strategy.TripletStrategyIT;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.keygen.config.KeygenConfig;
 import org.gbif.pipelines.keygen.hbase.Columns;
 import org.gbif.pipelines.keygen.hbase.HBaseStore;
+import org.junit.ClassRule;
 import org.junit.rules.ExternalResource;
+import org.junit.runner.RunWith;
+import org.junit.runners.Suite;
+import org.junit.runners.Suite.SuiteClasses;
 
-@Slf4j
 @Getter
-public class HbaseServer extends ExternalResource {
+@Slf4j
+@RunWith(Suite.class)
+@SuiteClasses({
+  BothStrategyIT.class,
+  MaxStrategyIT.class,
+  MinStrategyIT.class,
+  OccurrenceIdStrategyIT.class,
+  TripletStrategyIT.class,
+  RepairGbifIDLookupToolIT.class
+})
+public class HbaseServer {
 
   public static final KeygenConfig CFG =
       KeygenConfig.builder()
@@ -36,38 +55,43 @@ public class HbaseServer extends ExternalResource {
 
   private static final HBaseTestingUtility TEST_UTIL = new HBaseTestingUtility();
 
-  private HBaseStore<String> lookupTableStore = null;
-  private Connection connection = null;
+  public static HBaseStore<String> lookupTableStore = null;
+  public static Connection connection = null;
 
-  public void truncateTable() throws IOException {
+  @ClassRule
+  public static ExternalResource getResource() {
+    return new ExternalResource() {
+      @Override
+      protected void before() throws Throwable {
+        log.info("Create hbase mini-cluster");
+        TEST_UTIL.startMiniCluster(1);
+        TEST_UTIL.createTable(LOOKUP_TABLE, CF);
+        TEST_UTIL.createTable(COUNTER_TABLE, COUNTER_CF);
+        TEST_UTIL.createTable(OCCURRENCE_TABLE, CF);
+        connection = ConnectionFactory.createConnection(TEST_UTIL.getConfiguration());
+
+        lookupTableStore =
+            new HBaseStore<>(
+                CFG.getLookupTable(),
+                Columns.OCCURRENCE_COLUMN_FAMILY,
+                connection,
+                HBaseLockingKeyService.NUMBER_OF_BUCKETS);
+      }
+
+      @SneakyThrows
+      @Override
+      protected void after() {
+        log.info("Shut down hbase mini-cluster");
+        TEST_UTIL.shutdownMiniCluster();
+        if (connection != null) {
+          connection.close();
+        }
+      }
+    };
+  }
+
+  public static void truncateTable() throws IOException {
     log.info("Trancate the table");
     TEST_UTIL.truncateTable(LOOKUP_TABLE);
-  }
-
-  @Override
-  protected void before() throws Exception {
-    log.info("Create hbase mini-cluster");
-    TEST_UTIL.startMiniCluster(1);
-    TEST_UTIL.createTable(LOOKUP_TABLE, CF);
-    TEST_UTIL.createTable(COUNTER_TABLE, COUNTER_CF);
-    TEST_UTIL.createTable(OCCURRENCE_TABLE, CF);
-    connection = ConnectionFactory.createConnection(TEST_UTIL.getConfiguration());
-
-    lookupTableStore =
-        new HBaseStore<>(
-            CFG.getLookupTable(),
-            Columns.OCCURRENCE_COLUMN_FAMILY,
-            connection,
-            HBaseLockingKeyService.NUMBER_OF_BUCKETS);
-  }
-
-  @SneakyThrows
-  @Override
-  protected void after() {
-    log.info("Shut down hbase mini-cluster");
-    TEST_UTIL.shutdownMiniCluster();
-    if (connection != null) {
-      connection.close();
-    }
   }
 }
