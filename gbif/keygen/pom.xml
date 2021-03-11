@@ -27,6 +27,9 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
+        <configuration>
+          <forkCount>2</forkCount>
+        </configuration>
       </plugin>
       <!-- Shade the project into an uber jar to send to Spark -->
       <plugin>
