@@ -131,7 +131,7 @@ public class OccurrenceFeaturesPojo implements OccurrenceFeatures {
   }
 
   @Override
-  public List<String> getIdentifiers() {
+  public List<String> listIdentifiers() {
     return Stream.of(
             getOccurrenceID(),
             getFieldNumber(),

@@ -49,7 +49,7 @@ public class ALAInterpretedToSensitivePipeline {
     run(options);
   }
 
-  public static void run(InterpretationPipelineOptions options) {
+  public static void run(InterpretationPipelineOptions options) throws IOException {
 
     ALAPipelinesConfig config =
         ALAPipelinesConfigFactory.getInstance(

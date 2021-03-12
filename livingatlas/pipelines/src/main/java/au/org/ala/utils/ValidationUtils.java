@@ -49,6 +49,7 @@ public class ValidationUtils {
   public static final String INDEXING_METRICS = "indexing-metrics.yml";
   public static final String SENSITIVE_METRICS = "sensitive-metrics.yml";
   public static final String JACKKNIFE_METRICS = "jackknife-metrics.yml";
+  public static final String CLUSTERING_METRICS = "clustering-metrics.yml";
 
   public static final String DUPLICATE_KEY_COUNT = "duplicateKeyCount";
   public static final String EMPTY_KEY_RECORDS = "emptyKeyRecords";
