@@ -613,16 +613,6 @@ public class IndexRecordTransform implements Serializable {
                         }));
   }
 
-  public static class KVIndexRecordToSolrInputDocumentFcn
-      extends DoFn<KV<String, IndexRecord>, SolrInputDocument> {
-    @ProcessElement
-    public void processElement(
-        @Element KV<String, IndexRecord> kvIndexRecord, OutputReceiver<SolrInputDocument> out) {
-      SolrInputDocument solrInputDocument = convertIndexRecordToSolrDoc(kvIndexRecord.getValue());
-      out.output(solrInputDocument);
-    }
-  }
-
   public static class IndexRecordToSolrInputDocumentFcn
       extends DoFn<IndexRecord, SolrInputDocument> {
     @ProcessElement

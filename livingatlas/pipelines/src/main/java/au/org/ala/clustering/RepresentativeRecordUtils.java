@@ -44,9 +44,9 @@ public class RepresentativeRecordUtils {
   }
 
   /**
-   * Returns from the list supplied the list of the highest rank occurrences in terms of date
-   * precision. Occurrences with a year, month and day will be ranked the highest. Occurrences with
-   * just a year value or nothing will be ranked lowest.
+   * Returns from the list supplied the list of the highest rank occurrences in terms
+   * of date precision. Occurrences with a year, month and day will be ranked the highest.
+   * Occurrences with just a year value or nothing will be ranked lowest.
    *
    * @param cluster
    * @return
@@ -163,8 +163,9 @@ public class RepresentativeRecordUtils {
   }
 
   /**
-   * Takes the list of paired occurrences and creates clusters from the pairs. i.e. If we have a
-   * pairs (A,B) and (B, C), this will form a cluster (A, B, C).
+   * Takes the list of paired occurrences and creates clusters from the pairs.
+   * i.e. If we have a pairs (A,B) and (B, C), this will form a cluster
+   * (A, B, C).
    *
    * @param pairs
    * @return
