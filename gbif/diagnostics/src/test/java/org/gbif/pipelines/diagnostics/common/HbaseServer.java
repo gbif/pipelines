@@ -47,6 +47,16 @@ public class HbaseServer extends ExternalResource {
   @Override
   protected void before() throws Exception {
     log.info("Create hbase mini-cluster");
+    TEST_UTIL.getConfiguration().setInt("hbase.master.port", HBaseTestingUtility.randomFreePort());
+    TEST_UTIL
+        .getConfiguration()
+        .setInt("hbase.master.info.port", HBaseTestingUtility.randomFreePort());
+    TEST_UTIL
+        .getConfiguration()
+        .setInt("hbase.regionserver.port", HBaseTestingUtility.randomFreePort());
+    TEST_UTIL
+        .getConfiguration()
+        .setInt("hbase.regionserver.info.port", HBaseTestingUtility.randomFreePort());
     TEST_UTIL.startMiniCluster(1);
     TEST_UTIL.createTable(LOOKUP_TABLE, CF);
     TEST_UTIL.createTable(COUNTER_TABLE, COUNTER_CF);

@@ -61,6 +61,16 @@ public class HBaseLockingKeyServiceIT {
 
   @BeforeClass
   public static void beforeClass() throws Exception {
+    TEST_UTIL.getConfiguration().setInt("hbase.master.port", HBaseTestingUtility.randomFreePort());
+    TEST_UTIL
+        .getConfiguration()
+        .setInt("hbase.master.info.port", HBaseTestingUtility.randomFreePort());
+    TEST_UTIL
+        .getConfiguration()
+        .setInt("hbase.regionserver.port", HBaseTestingUtility.randomFreePort());
+    TEST_UTIL
+        .getConfiguration()
+        .setInt("hbase.regionserver.info.port", HBaseTestingUtility.randomFreePort());
     TEST_UTIL.startMiniCluster(1);
     TEST_UTIL.createTable(LOOKUP_TABLE, CF);
     TEST_UTIL.createTable(COUNTER_TABLE, COUNTER_CF);

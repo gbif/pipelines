@@ -29,6 +29,7 @@
         <artifactId>maven-failsafe-plugin</artifactId>
         <configuration>
           <forkCount>2</forkCount>
+          <reuseForks>true</reuseForks>
         </configuration>
       </plugin>
       <!-- Shade the project into an uber jar to send to Spark -->
