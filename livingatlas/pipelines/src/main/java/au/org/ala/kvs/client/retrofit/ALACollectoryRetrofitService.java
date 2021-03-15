@@ -9,10 +9,10 @@ import retrofit2.http.Path;
 /** Collectory retrofit web service interface */
 public interface ALACollectoryRetrofitService {
 
-  @GET("/ws/dataResource/{dataResourceUid}")
+  @GET("dataResource/{dataResourceUid}")
   Call<ALACollectoryMetadata> lookupDataResource(@Path("dataResourceUid") String dataResourceUid);
 
-  @GET("/ws/lookup/inst/{institutionCode}/coll/{collectionCode}")
+  @GET("lookup/inst/{institutionCode}/coll/{collectionCode}")
   Call<ALACollectionMatch> lookupCodes(
       @Path("institutionCode") String institutionCode,
       @Path("collectionCode") String collectionCode);

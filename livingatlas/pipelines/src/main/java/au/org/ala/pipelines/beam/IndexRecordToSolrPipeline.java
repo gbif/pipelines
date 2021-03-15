@@ -87,7 +87,7 @@ public class IndexRecordToSolrPipeline {
       // Load Samples - keyed on LatLng
       PCollection<KV<String, SampleRecord>> sampleRecords = loadSampleRecords(options, pipeline);
 
-      // split into records with coordinates and records without
+      // Split into records with coordinates and records without
       // Filter records with coordinates - we will join these to samples
       PCollection<KV<String, IndexRecord>> recordsWithCoordinates =
           indexRecordsCollection.apply(
@@ -113,38 +113,83 @@ public class IndexRecordToSolrPipeline {
                     }
                   }));
 
-      // Co group IndexRecords with coordinates with Sample data
-      final TupleTag<IndexRecord> indexRecordTag = new TupleTag<>();
-      final TupleTag<SampleRecord> samplingTag = new TupleTag<>();
+      final Integer noOfPartitions = options.getNumOfPartitions();
+      PCollection<KV<String, IndexRecord>> pcs = null;
 
-      // Join collections by LatLng string
-      PCollection<KV<String, CoGbkResult>> results =
-          KeyedPCollectionTuple.of(samplingTag, sampleRecords)
-              .and(indexRecordTag, recordsWithCoordinatesKeyedLatng)
-              .apply(CoGroupByKey.create());
+      if (noOfPartitions > 1) {
 
-      // Create collection which contains samples keyed with indexRecord.id
-      indexRecordsCollection = results.apply(ParDo.of(joinSampling(indexRecordTag, samplingTag)));
+        PCollectionList<KV<String, IndexRecord>> partitions =
+            recordsWithCoordinatesKeyedLatng.apply(
+                Partition.of(
+                    noOfPartitions,
+                    new Partition.PartitionFn<KV<String, IndexRecord>>() {
+                      @Override
+                      public int partitionFor(KV<String, IndexRecord> elem, int numPartitions) {
+                        return (elem.getValue().getInts().get("month") != null
+                                ? elem.getValue().getInts().get("month")
+                                : 0)
+                            % noOfPartitions;
+                      }
+                    }));
+
+        PCollectionList<KV<String, IndexRecord>> pcl = null;
+        for (int i = 0; i < noOfPartitions; i++) {
+          PCollection<KV<String, IndexRecord>> p =
+              joinSampleRecord(sampleRecords, partitions.get(i));
+          if (i == 0) {
+            pcl = PCollectionList.of(p);
+          } else {
+            pcl = pcl.and(p);
+          }
+        }
+
+        pcs = pcl.apply(Flatten.<KV<String, IndexRecord>>pCollections());
+
+      } else {
+        pcs = joinSampleRecord(sampleRecords, recordsWithCoordinatesKeyedLatng);
+      }
+
+      log.info("Adding step 4: Create SOLR connection");
+      SolrIO.ConnectionConfiguration conn =
+          SolrIO.ConnectionConfiguration.create(options.getZkHost());
+
+      writeToSolr(options, pcs, conn);
+
+      if (recordsWithoutCoordinates != null) {
+        log.info("Adding step 5: Write records (without coordinates) to SOLR");
+        writeToSolr(options, recordsWithoutCoordinates, conn);
+      }
+
     } else {
-      log.info("Skipping adding sampling");
-    }
+      log.info("Adding step 4: Create SOLR connection");
+      SolrIO.ConnectionConfiguration conn =
+          SolrIO.ConnectionConfiguration.create(options.getZkHost());
 
-    log.info("Adding step 4: Create SOLR connection");
-    SolrIO.ConnectionConfiguration conn =
-        SolrIO.ConnectionConfiguration.create(options.getZkHost());
-
-    log.info("Adding step 5: Write records to SOLR");
-    writeToSolr(options, indexRecordsCollection, conn);
-
-    if (recordsWithoutCoordinates != null) {
-      log.info("Adding step 5: Write records (without coordinates) to SOLR");
-      writeToSolr(options, recordsWithoutCoordinates, conn);
+      writeToSolr(options, indexRecordsCollection, conn);
     }
 
     log.info("Starting pipeline");
     pipeline.run(options).waitUntilFinish();
 
     log.info("Solr indexing pipeline complete");
+  }
+
+  private static PCollection<KV<String, IndexRecord>> joinSampleRecord(
+      PCollection<KV<String, SampleRecord>> sampleRecords,
+      PCollection<KV<String, IndexRecord>> recordsWithCoordinatesKeyedLatng) {
+    PCollection<KV<String, IndexRecord>> indexRecordsCollection;
+    // Co group IndexRecords with coordinates with Sample data
+    final TupleTag<IndexRecord> indexRecordTag = new TupleTag<>();
+    final TupleTag<SampleRecord> samplingTag = new TupleTag<>();
+
+    // Join collections by LatLng string
+    PCollection<KV<String, CoGbkResult>> results =
+        KeyedPCollectionTuple.of(samplingTag, sampleRecords)
+            .and(indexRecordTag, recordsWithCoordinatesKeyedLatng)
+            .apply(CoGroupByKey.create());
+
+    // Create collection which contains samples keyed with indexRecord.id
+    return results.apply(ParDo.of(joinSampling(indexRecordTag, samplingTag)));
   }
 
   private static PCollection<KV<String, IndexRecord>> addJacknifeInfo(
@@ -285,7 +330,7 @@ public class IndexRecordToSolrPipeline {
 
           boolean isRepresentative = false;
 
-          List<String> duplicateType = new ArrayList<>();
+          Set<String> duplicateType = new HashSet<>();
           for (Relationship relationship : jkor.getRelationships()) {
 
             // A record may end up being marked as both associative
@@ -335,8 +380,13 @@ public class IndexRecordToSolrPipeline {
             multiValues.put("isDuplicateOf", isDuplicateOf);
           }
 
+          // set the status
           strings.put("duplicateStatus", duplicateStatus);
-          multiValues.put("duplicateType", duplicateType);
+
+          // add duplicate types
+          List<String> duplicateTypeList = new ArrayList<>();
+          duplicateTypeList.addAll(duplicateType);
+          multiValues.put("duplicateType", duplicateTypeList);
 
         } else {
           booleans.put("isInCluster", false);

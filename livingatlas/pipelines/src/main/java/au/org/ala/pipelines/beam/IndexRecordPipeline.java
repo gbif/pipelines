@@ -33,9 +33,6 @@ import org.gbif.pipelines.core.factory.FileSystemFactory;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.transforms.core.*;
 import org.gbif.pipelines.transforms.core.LocationTransform;
-import org.gbif.pipelines.transforms.extension.AudubonTransform;
-import org.gbif.pipelines.transforms.extension.ImageTransform;
-import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.slf4j.MDC;
@@ -84,6 +81,25 @@ public class IndexRecordPipeline {
       return;
     }
 
+    FileSystem fs =
+        FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
+            .getFs(options.getInputPath());
+
+    final long lastLoadedDate =
+        ValidationUtils.metricsModificationTime(
+            fs,
+            options.getInputPath(),
+            options.getDatasetId(),
+            options.getAttempt(),
+            ValidationUtils.VERBATIM_METRICS);
+    final long lastProcessedDate =
+        ValidationUtils.metricsModificationTime(
+            fs,
+            options.getInputPath(),
+            options.getDatasetId(),
+            options.getAttempt(),
+            ValidationUtils.INTERPRETATION_METRICS);
+
     log.info("Adding step 1: Options");
     UnaryOperator<String> pathFn =
         t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
@@ -101,11 +117,7 @@ public class IndexRecordPipeline {
     TaxonomyTransform taxonomyTransform = TaxonomyTransform.builder().create();
 
     // Extension
-    MeasurementOrFactTransform measurementOrFactTransform =
-        MeasurementOrFactTransform.builder().create();
     MultimediaTransform multimediaTransform = MultimediaTransform.builder().create();
-    AudubonTransform audubonTransform = AudubonTransform.builder().create();
-    ImageTransform imageTransform = ImageTransform.builder().create();
 
     // ALA specific
     ALAUUIDTransform alaUuidTransform = ALAUUIDTransform.create();
@@ -147,18 +159,6 @@ public class IndexRecordPipeline {
         p.apply("Read Multimedia", multimediaTransform.read(pathFn))
             .apply("Map Multimedia to KV", multimediaTransform.toKv());
 
-    PCollection<KV<String, ImageRecord>> imageCollection =
-        p.apply("Read Image", imageTransform.read(pathFn))
-            .apply("Map Image to KV", imageTransform.toKv());
-
-    PCollection<KV<String, AudubonRecord>> audubonCollection =
-        p.apply("Read Audubon", audubonTransform.read(pathFn))
-            .apply("Map Audubon to KV", audubonTransform.toKv());
-
-    PCollection<KV<String, MeasurementOrFactRecord>> measurementCollection =
-        p.apply("Read Measurement", measurementOrFactTransform.read(pathFn))
-            .apply("Map Measurement to KV", measurementOrFactTransform.toKv());
-
     // ALA Specific
     PCollection<KV<String, ALAUUIDRecord>> alaUUidCollection =
         p.apply("Read Taxon", alaUuidTransform.read(identifiersPathFn))
@@ -173,9 +173,9 @@ public class IndexRecordPipeline {
             .apply("Map attribution to KV", alaAttributionTransform.toKv());
 
     // load images
-    PCollection<KV<String, ImageServiceRecord>> alaImageServiceRecords = null;
+    PCollection<KV<String, ImageRecord>> alaImageRecords = null;
     if (options.getIncludeImages()) {
-      alaImageServiceRecords = getLoadImageServiceRecords(options, p);
+      alaImageRecords = getLoadImageServiceRecords(options, p);
     }
 
     // load taxon profiles
@@ -191,9 +191,7 @@ public class IndexRecordPipeline {
               .apply("Map attribution to KV", alaSensitiveDataRecordTransform.toKv());
     }
 
-    final TupleTag<ImageServiceRecord> imageServiceRecordTupleTag =
-        new TupleTag<ImageServiceRecord>() {};
-
+    final TupleTag<ImageRecord> imageRecordTupleTag = new TupleTag<ImageRecord>() {};
     final TupleTag<TaxonProfile> speciesListsRecordTupleTag = new TupleTag<TaxonProfile>() {};
 
     IndexRecordTransform indexRecordTransform =
@@ -205,16 +203,15 @@ public class IndexRecordPipeline {
             options.getIncludeGbifTaxonomy() ? taxonomyTransform.getTag() : null,
             alaTaxonomyTransform.getTag(),
             multimediaTransform.getTag(),
-            imageTransform.getTag(),
-            audubonTransform.getTag(),
-            measurementOrFactTransform.getTag(),
             alaAttributionTransform.getTag(),
             alaUuidTransform.getTag(),
-            options.getIncludeImages() ? imageServiceRecordTupleTag : null,
+            options.getIncludeImages() ? imageRecordTupleTag : null,
             options.getIncludeSpeciesLists() ? speciesListsRecordTupleTag : null,
             options.getIncludeSensitiveData() ? alaSensitiveDataRecordTransform.getTag() : null,
             metadataView,
-            options.getDatasetId());
+            options.getDatasetId(),
+            lastLoadedDate,
+            lastProcessedDate);
 
     log.info("Adding step 3: Converting into a json object");
     ParDo.SingleOutput<KV<String, CoGbkResult>, IndexRecord> alaSolrDoFn =
@@ -228,9 +225,6 @@ public class IndexRecordPipeline {
             .and(locationTransform.getTag(), locationCollection)
             // Extension
             .and(multimediaTransform.getTag(), multimediaCollection)
-            .and(imageTransform.getTag(), imageCollection)
-            .and(audubonTransform.getTag(), audubonCollection)
-            .and(measurementOrFactTransform.getTag(), measurementCollection)
             // Raw
             .and(verbatimTransform.getTag(), verbatimCollection)
             // ALA Specific
@@ -243,7 +237,7 @@ public class IndexRecordPipeline {
     }
 
     if (options.getIncludeImages()) {
-      kpct = kpct.and(imageServiceRecordTupleTag, alaImageServiceRecords);
+      kpct = kpct.and(imageRecordTupleTag, alaImageRecords);
     }
 
     if (options.getIncludeGbifTaxonomy()) {
@@ -266,9 +260,6 @@ public class IndexRecordPipeline {
             + options.getDatasetId();
 
     // clean previous runs
-    FileSystem fs =
-        FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
-            .getFs(options.getInputPath());
     ALAFsUtils.deleteIfExist(fs, outputPath);
 
     // write to AVRO file instead....
@@ -291,12 +282,12 @@ public class IndexRecordPipeline {
    * @param p
    * @return
    */
-  private static PCollection<KV<String, ImageServiceRecord>> getLoadImageServiceRecords(
+  private static PCollection<KV<String, ImageRecord>> getLoadImageServiceRecords(
       IndexingPipelineOptions options, Pipeline p) {
-    PCollection<KV<String, ImageServiceRecord>> alaImageServiceRecords;
+    PCollection<KV<String, ImageRecord>> alaImageServiceRecords;
     alaImageServiceRecords =
         p.apply(
-                AvroIO.read(ImageServiceRecord.class)
+                AvroIO.read(ImageRecord.class)
                     .from(
                         String.join(
                             "/",
@@ -306,8 +297,8 @@ public class IndexRecordPipeline {
                             "images",
                             "*.avro")))
             .apply(
-                MapElements.into(new TypeDescriptor<KV<String, ImageServiceRecord>>() {})
-                    .via((ImageServiceRecord tr) -> KV.of(tr.getId(), tr)));
+                MapElements.into(new TypeDescriptor<KV<String, ImageRecord>>() {})
+                    .via((ImageRecord tr) -> KV.of(tr.getId(), tr)));
     return alaImageServiceRecords;
   }
 }

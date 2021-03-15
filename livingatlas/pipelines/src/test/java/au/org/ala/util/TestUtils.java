@@ -88,11 +88,11 @@ public class TestUtils {
           public MockResponse dispatch(RecordedRequest request) throws InterruptedException {
             try {
 
-              if (request.getPath().equalsIgnoreCase("/ws/lookup/inst/CSIROCXXX/coll/ANIC")) {
+              if (request.getPath().equalsIgnoreCase("/lookup/inst/CSIROCXXX/coll/ANIC")) {
                 return new MockResponse().setResponseCode(400);
               }
 
-              if (request.getPath().equalsIgnoreCase("/ws/lookup/inst/CSIRO/coll/ANIC")) {
+              if (request.getPath().equalsIgnoreCase("/lookup/inst/CSIRO/coll/ANIC")) {
                 File absolutePath = new File("src/test/resources/collectory/ANIC.json");
                 String responseBody = FileUtils.readFileToString(absolutePath, "UTF-8");
                 return new MockResponse()

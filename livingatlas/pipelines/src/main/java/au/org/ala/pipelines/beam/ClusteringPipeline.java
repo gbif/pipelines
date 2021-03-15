@@ -30,10 +30,10 @@ import org.gbif.pipelines.io.avro.*;
 import org.slf4j.MDC;
 
 /**
- * Clustering pipeline that makes use of the clustering logic in {@link OccurrenceRelationships} to
- * group occurrences.
+ * Clustering pipeline which is a Apache Beam port of the work in the module
+ * https://github.com/gbif/occurrence/tree/master/occurrence-clustering
  *
- * <p>This pipeline requires IndexRecords to have been generated in a prior step for all datasets
+ * <p>This pipeline required that IndexRecords have been generated in a prior step for all datasets
  * (see @{@link IndexRecordPipeline}.
  *
  * <p>The IndexRecords which are stored on the filesystem in AVRO format are read and used to

@@ -6,11 +6,22 @@ import static org.junit.Assert.assertEquals;
 import au.org.ala.pipelines.parser.CollectorNameParser;
 import org.junit.Test;
 
-public class ColloctorNameParserTest {
+public class CollectorNameParserTest {
+
+  @Test
+  public void numericTest1() {
+    assertEquals("NSWOBS-01369", CollectorNameParser.parse("NSWOBS-01369"));
+  }
 
   @Test
   public void numericTest() {
-    assertEquals(null, CollectorNameParser.parse("123"));
+    assertEquals("123", CollectorNameParser.parse("123"));
+  }
+
+  @Test
+  public void nina() {
+    assertEquals("Filippova, Nina", CollectorNameParser.parse("Nina Filippova"));
+    assertEquals("Filippova, Nina", CollectorNameParser.parse("Filippova, Nina"));
   }
 
   @Test
@@ -18,6 +29,7 @@ public class ColloctorNameParserTest {
     assertEquals(
         "Hegedus, Alexandra Danica", CollectorNameParser.parse("Hegedus, Ms Alexandra Danica"));
     assertEquals("Field, P. Ross", CollectorNameParser.parse("Field, Ross P."));
+    assertEquals("Field, P. Ross", CollectorNameParser.parse("Field, P. Ross"));
     assertEquals("van Leeuwen, S.", CollectorNameParser.parse("van Leeuwen, S."));
     assertEquals("Starr, Simon", CollectorNameParser.parse("Simon Starr"));
     assertEquals("Kaspiew, B.", CollectorNameParser.parse("B Kaspiew (Professor)"));
@@ -76,8 +88,12 @@ public class ColloctorNameParserTest {
   public void ignoreBracketsTest() {
     assertArrayEquals(
         new String[] {"Kinnear, A.J."}, CollectorNameParser.parseList("\"KINNEAR A.J. (Sandy)\""));
+
+    // changing this test to keep the identifier if that is supplied as
+    // this maybe useful in itself
     assertArrayEquals(
-        new String[] {"Ratkowsky, David"}, CollectorNameParser.parseList("David Ratkowsky (2589)"));
+        new String[] {"David Ratkowsky (2589)"},
+        CollectorNameParser.parseList("David Ratkowsky (2589)"));
   }
 
   @Test

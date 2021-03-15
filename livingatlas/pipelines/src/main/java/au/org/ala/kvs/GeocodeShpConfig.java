@@ -12,4 +12,5 @@ public class GeocodeShpConfig implements Serializable {
   private ShapeFile country;
   private ShapeFile eez;
   private ShapeFile stateProvince;
+  private ShapeFile biome;
 }

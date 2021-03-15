@@ -6,6 +6,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.kvs.ALAPipelinesConfigFactory;
 import au.org.ala.kvs.cache.*;
+import au.org.ala.kvs.client.ALACollectoryMetadata;
 import au.org.ala.pipelines.transforms.*;
 import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.CombinedYamlConfiguration;
@@ -35,6 +36,7 @@ import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
+import org.gbif.pipelines.core.factory.FileVocabularyFactory;
 import org.gbif.pipelines.core.functions.SerializableConsumer;
 import org.gbif.pipelines.core.io.AvroReader;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
@@ -45,17 +47,13 @@ import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.transforms.Transform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
-import org.gbif.pipelines.transforms.extension.AudubonTransform;
-import org.gbif.pipelines.transforms.extension.ImageTransform;
-import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.java.OccurrenceExtensionTransform;
-import org.gbif.pipelines.transforms.java.UniqueGbifIdTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.slf4j.MDC;
 
 /**
- * WARNING - this is not suitable for use for archives over 50k records due to in-memory cache use.
+ * WARNING - this is not suitable for use for archives over 500k records due to in-memory cache use.
  *
  * <p>Pipeline sequence:
  *
@@ -141,11 +139,20 @@ public class ALAVerbatimToInterpretedPipeline {
     String targetPath = options.getTargetPath();
     String endPointType = options.getEndPointType();
 
-    VersionInfo.print();
     ALAPipelinesConfig config =
         ALAPipelinesConfigFactory.getInstance(
                 options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getProperties())
             .get();
+
+    // check collectory metadata available
+    ALACollectoryMetadata m =
+        ALAAttributionKVStoreFactory.create(config).get(options.getDatasetId());
+    if (Objects.equals(m, ALACollectoryMetadata.EMPTY)) {
+      log.error(
+          "Collectory metadata no available for {}. Will not run interpretation",
+          options.getDatasetId());
+      return;
+    }
 
     List<DateComponentOrdering> dateComponentOrdering =
         options.getDefaultDateFormat() == null
@@ -181,11 +188,20 @@ public class ALAVerbatimToInterpretedPipeline {
             .counterFn(incMetricFn);
     ALABasicTransform basicTransform =
         ALABasicTransform.builder()
+            .lifeStageLookupSupplier(
+                config.getGbifConfig().getVocabularyConfig() != null
+                    ? FileVocabularyFactory.getInstanceSupplier(
+                        config.getGbifConfig(),
+                        options.getHdfsSiteConfig(),
+                        options.getCoreSiteConfig(),
+                        FileVocabularyFactory.VocabularyBackedTerm.LIFE_STAGE)
+                    : null)
             .recordedByKvStoreSupplier(RecordedByKVStoreFactory.getInstanceSupplier(config))
             .occStatusKvStoreSupplier(
                 OccurrenceStatusKvStoreFactory.getInstanceSupplier(config.getGbifConfig()))
             .create()
             .counterFn(incMetricFn);
+
     VerbatimTransform verbatimTransform = VerbatimTransform.create().counterFn(incMetricFn);
     TemporalTransform temporalTransform =
         TemporalTransform.builder()
@@ -193,22 +209,11 @@ public class ALAVerbatimToInterpretedPipeline {
             .create()
             .counterFn(incMetricFn);
 
-    // Extension
-    MeasurementOrFactTransform measurementTransform =
-        MeasurementOrFactTransform.builder().create().counterFn(incMetricFn);
-
     MultimediaTransform multimediaTransform =
         MultimediaTransform.builder()
             .orderings(dateComponentOrdering)
             .create()
             .counterFn(incMetricFn);
-
-    AudubonTransform audubonTransform =
-        AudubonTransform.builder().orderings(dateComponentOrdering).create().counterFn(incMetricFn);
-
-    ImageTransform imageTransform =
-        ImageTransform.builder().orderings(dateComponentOrdering).create().counterFn(incMetricFn);
-
     // Extra
     OccurrenceExtensionTransform occExtensionTransform =
         OccurrenceExtensionTransform.create().counterFn(incMetricFn);
@@ -236,6 +241,7 @@ public class ALAVerbatimToInterpretedPipeline {
             .alaConfig(config)
             .countryKvStoreSupplier(GeocodeKvStoreFactory.createCountrySupplier(config))
             .stateProvinceKvStoreSupplier(GeocodeKvStoreFactory.createStateProvinceSupplier(config))
+            .biomeKvStoreSupplier(GeocodeKvStoreFactory.createBiomeSupplier(config))
             .create();
 
     // ALA specific - Default values
@@ -245,12 +251,11 @@ public class ALAVerbatimToInterpretedPipeline {
             .dataResourceKvStoreSupplier(ALAAttributionKVStoreFactory.getInstanceSupplier(config))
             .create();
 
+    basicTransform.setup();
     temporalTransform.setup();
     locationTransform.setup();
     alaTaxonomyTransform.setup();
     alaAttributionTransform.setup();
-    imageTransform.setup();
-    audubonTransform.setup();
     multimediaTransform.setup();
 
     log.info("Creating writers");
@@ -262,15 +267,8 @@ public class ALAVerbatimToInterpretedPipeline {
             createWriter(options, BasicRecord.getClassSchema(), basicTransform, id);
         SyncDataFileWriter<TemporalRecord> temporalWriter =
             createWriter(options, TemporalRecord.getClassSchema(), temporalTransform, id);
-        SyncDataFileWriter<MeasurementOrFactRecord> measurementWriter =
-            createWriter(
-                options, MeasurementOrFactRecord.getClassSchema(), measurementTransform, id);
         SyncDataFileWriter<MultimediaRecord> multimediaWriter =
             createWriter(options, MultimediaRecord.getClassSchema(), multimediaTransform, id);
-        SyncDataFileWriter<ImageRecord> imageWriter =
-            createWriter(options, ImageRecord.getClassSchema(), imageTransform, id);
-        SyncDataFileWriter<AudubonRecord> audubonWriter =
-            createWriter(options, AudubonRecord.getClassSchema(), audubonTransform, id);
 
         // ALA specific
         SyncDataFileWriter<LocationRecord> locationWriter =
@@ -304,49 +302,19 @@ public class ALAVerbatimToInterpretedPipeline {
 
       boolean useSyncMode = options.getSyncThreshold() > erExtMap.size();
 
-      // Filter GBIF id duplicates
-      log.info("Filter GBIF id duplicates");
-      UniqueGbifIdTransform gbifIdTransform =
-          UniqueGbifIdTransform.builder()
-              .executor(executor)
-              .erMap(erExtMap)
-              .basicTransformFn(basicTransform::processElement)
-              .useSyncMode(useSyncMode)
-              .skipTransform(true)
-              .build()
-              .run();
-
       // Create interpretation function
       log.info("Create interpretation function");
       Consumer<ExtendedRecord> interpretAllFn =
           er -> {
             verbatimWriter.append(er);
+            basicTransform.processElement(er).ifPresent(basicWriter::append);
             temporalTransform.processElement(er).ifPresent(temporalWriter::append);
             multimediaTransform.processElement(er).ifPresent(multimediaWriter::append);
-            imageTransform.processElement(er).ifPresent(imageWriter::append);
-            audubonTransform.processElement(er).ifPresent(audubonWriter::append);
-            measurementTransform.processElement(er).ifPresent(measurementWriter::append);
-
             // ALA specific
             locationTransform.processElement(er, mdr).ifPresent(locationWriter::append);
             alaTaxonomyTransform.processElement(er).ifPresent(alaTaxonWriter::append);
             alaAttributionTransform.processElement(er, mdr).ifPresent(alaAttributionWriter::append);
           };
-
-      // Run async writing for BasicRecords
-      log.info("Run async writing for BasicRecords");
-      Stream<CompletableFuture<Void>> streamBr;
-      Collection<BasicRecord> brCollection = gbifIdTransform.getBrMap().values();
-      if (useSyncMode) {
-        streamBr =
-            Stream.of(
-                CompletableFuture.runAsync(
-                    () -> brCollection.forEach(basicWriter::append), executor));
-      } else {
-        streamBr =
-            brCollection.stream()
-                .map(v -> CompletableFuture.runAsync(() -> basicWriter.append(v), executor));
-      }
 
       // Run async interpretation and writing for all records
       log.info("Run async writing for all records");
@@ -364,8 +332,7 @@ public class ALAVerbatimToInterpretedPipeline {
 
       // Wait for all features
       log.info("Wait for all features");
-      CompletableFuture<?>[] futures =
-          Stream.concat(streamBr, streamAll).toArray(CompletableFuture[]::new);
+      CompletableFuture<?>[] futures = streamAll.toArray(CompletableFuture[]::new);
       CompletableFuture.allOf(futures).get();
 
     } catch (Exception e) {

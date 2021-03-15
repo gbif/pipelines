@@ -37,7 +37,14 @@ public class ALACollectoryServiceClient implements ALACollectoryService {
    */
   @Override
   public ALACollectoryMetadata lookupDataResource(String dataResourceUid) {
-    return syncCall(alaCollectoryService.lookupDataResource(dataResourceUid));
+    try {
+      return syncCall(alaCollectoryService.lookupDataResource(dataResourceUid));
+    } catch (Exception e) {
+      // this necessary due to collectory returning 500s
+      // instead of 404s
+      log.error("Exception thrown when calling the collectory. " + e.getMessage(), e);
+      return ALACollectoryMetadata.EMPTY;
+    }
   }
 
   @Override
