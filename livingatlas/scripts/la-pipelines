@@ -520,28 +520,28 @@ function image-sync () {
     logStepEnd "Image-sync" $dr $ltype $SECONDS
 }
 
-function export-latlng () {
+function sampling () {
     local dr="$1" ltype="$2"
-    CLASS=au.org.ala.pipelines.beam.LatLongPipeline
+    CLASS=au.org.ala.pipelines.beam.SamplingPipeline
 
-    logStepStart "Export latlng" $dr
+    logStepStart "Sampling" $dr
     SECONDS=0
 
-    SH_ARGS=export-latlng-sh-args.local
+    SH_ARGS=sampling-sh-args.local
     java-pipeline $ltype $SH_ARGS $CLASS $dr
 
-    SH_ARGS=export-latlng-sh-args.spark-embedded
+    SH_ARGS=sampling-sh-args.spark-embedded
     spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
 
-    SH_ARGS=export-latlng-sh-args.spark-cluster
-    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "Export-lat-lng-$dr"
+    SH_ARGS=sampling-sh-args.spark-cluster
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "Sampling-$dr"
 
-    logStepEnd "Export latlng" $dr $ltype $SECONDS
+    logStepEnd "Sampling" $dr $ltype $SECONDS
 }
 
 function sample () {
 
-    do_step_simple export-latlng
+    do_step_simple sampling
 
     local dr="$1"
     ltype="local"

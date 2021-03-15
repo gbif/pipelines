@@ -2,14 +2,10 @@ package au.org.ala.pipelines.beam;
 
 import static org.junit.Assert.*;
 
-import au.org.ala.pipelines.options.AllDatasetsPipelinesOptions;
-import au.org.ala.pipelines.options.IndexingPipelineOptions;
-import au.org.ala.pipelines.options.SolrPipelineOptions;
-import au.org.ala.pipelines.options.UUIDPipelineOptions;
+import au.org.ala.pipelines.options.*;
 import au.org.ala.sampling.LayerCrawler;
 import au.org.ala.util.SolrUtils;
 import au.org.ala.util.TestUtils;
-import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationUtils;
 import java.io.File;
 import java.util.UUID;
@@ -180,9 +176,9 @@ public class CompleteIngestPipelineTestIT {
     IndexRecordPipeline.run(solrOptions);
 
     // export lat lngs
-    AllDatasetsPipelinesOptions latLngOptions =
+    SamplingPipelineOptions samplingOptions =
         PipelinesOptionsFactory.create(
-            AllDatasetsPipelinesOptions.class,
+            SamplingPipelineOptions.class,
             new String[] {
               "--datasetId=" + datasetID,
               "--attempt=1",
@@ -192,21 +188,11 @@ public class CompleteIngestPipelineTestIT {
               "--allDatasetsInputPath=/tmp/la-pipelines-test/complete-pipeline/all-datasets",
               "--properties=" + TestUtils.getPipelinesConfigFile()
             });
-    LatLongPipeline.run(latLngOptions);
+    SamplingPipeline.run(samplingOptions);
 
     // sample
-    LayerCrawler.init(
-        (new CombinedYamlConfiguration(
-            new String[] {
-              "--datasetId=" + datasetID,
-              "--attempt=1",
-              "--runner=DirectRunner",
-              "--targetPath=/tmp/la-pipelines-test/complete-pipeline",
-              "--inputPath=/tmp/la-pipelines-test/complete-pipeline",
-              "--allDatasetsInputPath=/tmp/la-pipelines-test/complete-pipeline/all-datasets",
-              "--config=" + TestUtils.getPipelinesConfigFile()
-            })));
-    LayerCrawler.run(latLngOptions);
+    LayerCrawler.init(samplingOptions);
+    LayerCrawler.run(samplingOptions);
 
     SolrPipelineOptions solrOptions2 =
         PipelinesOptionsFactory.create(

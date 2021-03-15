@@ -1,9 +1,9 @@
 package au.org.ala.sampling;
 
 import au.org.ala.pipelines.options.AllDatasetsPipelinesOptions;
+import au.org.ala.pipelines.options.SamplingPipelineOptions;
 import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.io.*;
 import java.net.URL;
 import java.nio.ByteBuffer;
@@ -21,23 +21,15 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.MDC;
-import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
-import retrofit2.http.Field;
-import retrofit2.http.FormUrlEncoded;
-import retrofit2.http.GET;
-import retrofit2.http.POST;
-import retrofit2.http.Path;
 
 /**
  * A utility to crawl the ALA layers. Requires an input csv containing lat, lng (no header) and an
@@ -59,25 +51,25 @@ public class LayerCrawler {
 
   public static void main(String[] args) throws Exception {
     CombinedYamlConfiguration conf = new CombinedYamlConfiguration(args);
-    String[] combinedArgs = conf.toArgs("general", "sample");
-    AllDatasetsPipelinesOptions options =
-        PipelinesOptionsFactory.create(AllDatasetsPipelinesOptions.class, combinedArgs);
+    String[] combinedArgs = conf.toArgs("general", "sampling");
+    SamplingPipelineOptions options =
+        PipelinesOptionsFactory.create(SamplingPipelineOptions.class, combinedArgs);
     MDC.put("datasetId", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
     MDC.put("step", "SAMPLING");
 
-    init(conf);
+    init(options);
     run(options);
     // FIXME: Issue logged here: https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/105
     System.exit(0);
   }
 
-  public static void init(CombinedYamlConfiguration conf) {
+  public static void init(SamplingPipelineOptions options) {
     MDC.put("step", "SAMPLING");
-    String baseUrl = (String) conf.get("layerCrawler.baseUrl");
-    batchSize = (Integer) conf.get("layerCrawler.batchSize");
-    batchStatusSleepTime = (Integer) conf.get("layerCrawler.batchStatusSleepTime");
-    downloadRetries = (Integer) conf.get("layerCrawler.downloadRetries");
+    String baseUrl = options.getBaseUrl();
+    batchSize = options.getBatchSize();
+    batchStatusSleepTime = options.getBatchStatusSleepTime();
+    downloadRetries = options.getDownloadRetries();
     log.info("Using {} service", baseUrl);
     retrofit =
         new Retrofit.Builder()
@@ -87,7 +79,7 @@ public class LayerCrawler {
             .build();
   }
 
-  public static void run(AllDatasetsPipelinesOptions options) throws Exception {
+  public static void run(SamplingPipelineOptions options) throws Exception {
 
     FileSystem fs =
         FsUtils.getFileSystem(
@@ -97,11 +89,6 @@ public class LayerCrawler {
 
     // list file in directory
     LayerCrawler lc = new LayerCrawler();
-
-    // delete existing sampling output
-    String samplingDir = getSamplingDirectoryPath(options);
-
-    FsUtils.deleteIfExist(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), samplingDir);
 
     // (re)create sampling output directories
     String sampleDownloadPath = getSampleDownloadPath(options);
@@ -120,14 +107,24 @@ public class LayerCrawler {
     Collection<String> latLngFiles = ALAFsUtils.listPaths(fs, latLngExportPath);
     String layerList = lc.getRequiredLayers();
 
+    log.info("Running sampling using lat lng files: {} ", latLngFiles.size());
     for (String inputFile : latLngFiles) {
       lc.crawl(fs, layerList, inputFile, sampleDownloadPath);
     }
 
-    log.info("Converting downloaded sampling CSV to AVRO");
+    log.info("Finished layer sampling. Downloads in CSV directory: {}", sampleDownloadPath);
+    log.info("Converting downloaded sampling CSV to AVRO...");
     SamplesToAvro.run(options);
+    log.info("Converted.");
 
     Instant batchFinish = Instant.now();
+
+    if (!options.getKeepLatLngExports()) {
+      log.info("Cleaning up lat lng export.....");
+      ALAFsUtils.deleteIfExist(fs, latLngExportPath);
+    } else {
+      log.info("Keeping lat lng exports {}", latLngExportPath);
+    }
 
     log.info(
         "Finished sampling for {}. Time taken {} minutes",
@@ -180,19 +177,6 @@ public class LayerCrawler {
         + ".avro";
   }
 
-  @NotNull
-  private static String getSamplingDirectoryPath(AllDatasetsPipelinesOptions options) {
-    if (options.getDatasetId() == null || "all".equals(options.getDatasetId())) {
-      return options.getAllDatasetsInputPath() + "/sampling";
-    }
-    return String.join(
-        "/",
-        options.getInputPath(),
-        options.getDatasetId(),
-        options.getAttempt().toString(),
-        "sampling");
-  }
-
   public LayerCrawler() {
     log.info("Initialising crawler....");
     this.service = retrofit.create(SamplingService.class);
@@ -203,8 +187,8 @@ public class LayerCrawler {
 
     log.info("Retrieving layer list from sampling service");
     String layers =
-        Objects.requireNonNull(service.getLayers().execute().body()).stream()
-            .filter(SamplingService.Layer::getEnabled)
+        Objects.requireNonNull(service.getFields().execute().body()).stream()
+            .filter(Field::getEnabled)
             .map(l -> String.valueOf(l.getId()))
             .collect(Collectors.joining(","));
 
@@ -320,54 +304,6 @@ public class LayerCrawler {
       }
     }
     return false;
-  }
-
-  /** Simple client to the ALA sampling service. */
-  private interface SamplingService {
-
-    /** Return an inventory of layers in the ALA spatial portal */
-    @GET("fields")
-    Call<List<Layer>> getLayers();
-
-    /** Return an inventory of layers in the ALA spatial portal */
-    @GET("intersect/batch/{id}")
-    Call<BatchStatus> getBatchStatus(@Path("id") String id);
-
-    /**
-     * Trigger a job to run the intersection and return the job key to poll.
-     *
-     * @param layerIds The layers of interest in comma separated form
-     * @param coordinatePairs The coordinates in lat,lng,lat,lng... format
-     * @return The batch submited
-     */
-    @FormUrlEncoded
-    @POST("intersect/batch")
-    Call<Batch> submitIntersectBatch(
-        @Field("fids") String layerIds, @Field("points") String coordinatePairs);
-
-    @Getter
-    @Setter
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    class Layer {
-
-      private String id;
-      private Boolean enabled;
-    }
-
-    @Getter
-    @Setter
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    class Batch {
-      private String batchId;
-    }
-
-    @Getter
-    @Setter
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    class BatchStatus {
-      private String status;
-      private String downloadUrl;
-    }
   }
 
   /**

@@ -121,19 +121,6 @@ uuid:
   runner: SparkRunner
   inputPath: '{fsPath}/pipelines-data'
 
-# class: au.org.ala.pipelines.beam.ALAInterpretedToLatLongCSVPipeline
-export-latlng:
-  inputPath: '{fsPath}/pipelines-data'
-  allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
-  runner: SparkRunner
-  appName: Lat Long export for {datasetId}
-
-# class: au.org.ala.sampling.LayerCrawler
-sample:
-  inputPath: '{fsPath}/pipelines-data'
-  appName: Sample for {datasetId}
-  allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
-
 images:
   appName: Image syncing for {datasetId}
   runner: SparkRunner
@@ -152,13 +139,17 @@ speciesLists:
   includeConservationStatus: true
   includeInvasiveStatus: true
 
-# LayerCrawler specific configuration
-layerCrawler:
+# Sampling specific configuration
+sampling:
+  appName: Sample for {datasetId}
   # baseUrl: https://spatial.your-l-a.site/ws/
   baseUrl: https://sampling.ala.org.au/sampling-service/
   batchSize: 25000
   batchStatusSleepTime: 1000
   downloadRetries: 5
+  inputPath: '{fsPath}/pipelines-data'
+  allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
+  runner: SparkRunner
 
 # class: au.org.ala.pipelines.beam.ALAInterpretedToSensitivePipeline
 sensitive:
@@ -305,7 +296,7 @@ uuid-sh-args:
     executor-memory: 7G
     driver-memory: 1G
 
-export-latlng-sh-args:
+sampling-sh-args:
   local:
     jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
   spark-embedded:

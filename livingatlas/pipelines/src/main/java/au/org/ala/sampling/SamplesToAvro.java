@@ -1,7 +1,9 @@
 package au.org.ala.sampling;
 
 import au.com.bytecode.opencsv.CSVReader;
-import au.org.ala.pipelines.options.AllDatasetsPipelinesOptions;
+import au.org.ala.pipelines.options.SamplingPipelineOptions;
+import au.org.ala.pipelines.util.SamplingUtils;
+import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import java.io.*;
 import java.util.HashMap;
@@ -25,8 +27,8 @@ public class SamplesToAvro {
   public static void main(String[] args) throws Exception {
     CombinedYamlConfiguration conf = new CombinedYamlConfiguration(args);
     String[] combinedArgs = conf.toArgs("general", "sample");
-    AllDatasetsPipelinesOptions options =
-        PipelinesOptionsFactory.create(AllDatasetsPipelinesOptions.class, combinedArgs);
+    SamplingPipelineOptions options =
+        PipelinesOptionsFactory.create(SamplingPipelineOptions.class, combinedArgs);
     MDC.put("step", "SAMPLING");
 
     run(options);
@@ -34,7 +36,9 @@ public class SamplesToAvro {
     System.exit(0);
   }
 
-  public static void run(AllDatasetsPipelinesOptions options) throws Exception {
+  public static void run(SamplingPipelineOptions options) throws Exception {
+
+    Integer counter = 0;
 
     // get filesystem
     FileSystem fs =
@@ -42,9 +46,15 @@ public class SamplesToAvro {
             options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getInputPath());
 
     // Read CSV
-    String samplePath = LayerCrawler.getSampleDownloadPath(options);
+    String sampleCSVDownloadPath = LayerCrawler.getSampleDownloadPath(options);
 
-    RemoteIterator<LocatedFileStatus> iter = fs.listFiles(new Path(samplePath), false);
+    if (!ALAFsUtils.exists(fs, sampleCSVDownloadPath)) {
+      log.info("No sampling to convert to AVRO. No work to be done.");
+      SamplingUtils.writeSamplingMetrics(options, counter, fs);
+      return;
+    }
+
+    RemoteIterator<LocatedFileStatus> iter = fs.listFiles(new Path(sampleCSVDownloadPath), false);
 
     while (iter.hasNext()) {
 
@@ -94,12 +104,23 @@ public class SamplesToAvro {
                       .setStrings(strings)
                       .build();
               dataFileWriter.append(sampleRecord);
+              counter = +1;
             }
           }
         }
         log.info("File written to {}", outputPath);
       }
     }
+
+    if (!options.getKeepSamplingDownloads()) {
+      log.info("Deleting sampling CSV downloads.");
+      ALAFsUtils.deleteIfExist(fs, sampleCSVDownloadPath);
+      log.info("Deleted.");
+    } else {
+      log.info("Keeping sampling CSV downloads.");
+    }
+
+    SamplingUtils.writeSamplingMetrics(options, counter, fs);
     log.info("Conversion to avro complete.");
   }
 }
