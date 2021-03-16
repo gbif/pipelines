@@ -294,7 +294,7 @@
             </execution>
             <execution>
               <id>report-ut-coverage</id>
-              <phase>test</phase>
+              <phase>verify</phase>
               <goals>
                 <goal>report</goal>
               </goals>
@@ -316,7 +316,7 @@
             </execution>
             <execution>
               <id>report-it-coverage</id>
-              <phase>post-integration-test</phase>
+              <phase>verify</phase>
               <goals>
                 <goal>report-integration</goal>
               </goals>
