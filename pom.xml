@@ -287,6 +287,7 @@
                 <goal>prepare-agent</goal>
               </goals>
               <configuration>
+                <append>true</append>
                 <destFile>${jacoco.ut.output.file}</destFile>
                 <propertyName>surefireArgLine</propertyName>
               </configuration>
@@ -326,7 +327,7 @@
             </execution>
             <execution>
               <id>merge-exec-files</id>
-              <phase>post-integration-test</phase>
+              <phase>install</phase>
               <goals>
                 <goal>merge</goal>
               </goals>
@@ -335,7 +336,7 @@
                   <fileSet>
                     <directory>${coverage.dir}</directory>
                     <includes>
-                      <include>*.exec</include>
+                      <include>jacoco-*.exec</include>
                     </includes>
                   </fileSet>
                 </fileSets>
