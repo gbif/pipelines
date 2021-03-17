@@ -311,7 +311,6 @@
     <jackson-module-scala_2.11.version>2.11.1</jackson-module-scala_2.11.version>
     <jcommander.version>1.78</jcommander.version>
     <layers-store.version>2.0.3</layers-store.version>
-    <junit.version>5.6.2</junit.version>
     <json-simple.version>1.1.1</json-simple.version>
 
     <!-- GBIF parent currently using 2.4.0 -->
@@ -854,9 +853,8 @@
 
     <!-- Test -->
     <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-api</artifactId>
-      <version>${junit.version}</version>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
