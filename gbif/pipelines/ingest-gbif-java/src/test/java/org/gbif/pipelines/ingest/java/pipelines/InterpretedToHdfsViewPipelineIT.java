@@ -43,7 +43,7 @@ import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class InterpretedToHdfsViewPipelineTest {
+public class InterpretedToHdfsViewPipelineIT {
 
   private static final String ID = "777";
 

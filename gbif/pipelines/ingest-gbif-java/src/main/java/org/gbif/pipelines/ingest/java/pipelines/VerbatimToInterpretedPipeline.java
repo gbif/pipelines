@@ -21,6 +21,10 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.parsers.date.DateComponentOrdering;
+import org.gbif.kvs.KeyValueStore;
+import org.gbif.kvs.geocode.LatLng;
+import org.gbif.kvs.grscicoll.GrscicollLookupRequest;
+import org.gbif.kvs.species.SpeciesMatchRequest;
 import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
@@ -30,9 +34,11 @@ import org.gbif.pipelines.core.factory.ConfigFactory;
 import org.gbif.pipelines.core.factory.FileVocabularyFactory;
 import org.gbif.pipelines.core.factory.FileVocabularyFactory.VocabularyBackedTerm;
 import org.gbif.pipelines.core.functions.SerializableConsumer;
+import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.core.io.AvroReader;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
 import org.gbif.pipelines.core.utils.FsUtils;
+import org.gbif.pipelines.core.ws.metadata.MetadataServiceClient;
 import org.gbif.pipelines.factory.ClusteringServiceFactory;
 import org.gbif.pipelines.factory.GeocodeKvStoreFactory;
 import org.gbif.pipelines.factory.GrscicollLookupKvStoreFactory;
@@ -65,6 +71,9 @@ import org.gbif.pipelines.transforms.java.DefaultValuesTransform;
 import org.gbif.pipelines.transforms.java.OccurrenceExtensionTransform;
 import org.gbif.pipelines.transforms.java.UniqueGbifIdTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
+import org.gbif.rest.client.geocode.GeocodeResponse;
+import org.gbif.rest.client.grscicoll.GrscicollLookupResponse;
+import org.gbif.rest.client.species.NameUsageMatch;
 import org.slf4j.MDC;
 
 /**
@@ -170,11 +179,26 @@ public class VerbatimToInterpretedPipeline {
     IngestMetrics metrics = IngestMetricsBuilder.createVerbatimToInterpretedMetrics();
     SerializableConsumer<String> incMetricFn = metrics::incMetric;
 
+    SerializableSupplier<MetadataServiceClient> metadataServiceClientSerializableSupplier =
+        MetadataServiceClientFactory.getInstanceSupplier(config);
+    SerializableSupplier<KeyValueStore<SpeciesMatchRequest, NameUsageMatch>>
+        nameUsageMatchServiceSupplier = NameUsageMatchStoreFactory.getInstanceSupplier(config);
+    SerializableSupplier<KeyValueStore<GrscicollLookupRequest, GrscicollLookupResponse>>
+        grscicollServiceSupplier = GrscicollLookupKvStoreFactory.getInstanceSupplier(config);
+    SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> geocodeServiceSupplier =
+        GeocodeKvStoreFactory.getInstanceSupplier(config);
+    if (options.getTestMode()) {
+      metadataServiceClientSerializableSupplier = null;
+      nameUsageMatchServiceSupplier = null;
+      grscicollServiceSupplier = null;
+      geocodeServiceSupplier = null;
+    }
+
     log.info("Creating pipelines transforms");
     // Core
     MetadataTransform metadataTransform =
         MetadataTransform.builder()
-            .clientSupplier(MetadataServiceClientFactory.getInstanceSupplier(config))
+            .clientSupplier(metadataServiceClientSerializableSupplier)
             .attempt(attempt)
             .endpointType(endPointType)
             .create()
@@ -198,21 +222,21 @@ public class VerbatimToInterpretedPipeline {
 
     TaxonomyTransform taxonomyTransform =
         TaxonomyTransform.builder()
-            .kvStoreSupplier(NameUsageMatchStoreFactory.getInstanceSupplier(config))
+            .kvStoreSupplier(nameUsageMatchServiceSupplier)
             .create()
             .counterFn(incMetricFn)
             .init();
 
     GrscicollTransform grscicollTransform =
         GrscicollTransform.builder()
-            .kvStoreSupplier(GrscicollLookupKvStoreFactory.getInstanceSupplier(config))
+            .kvStoreSupplier(grscicollServiceSupplier)
             .create()
             .counterFn(incMetricFn)
             .init();
 
     LocationTransform locationTransform =
         LocationTransform.builder()
-            .geocodeKvStoreSupplier(GeocodeKvStoreFactory.getInstanceSupplier(config))
+            .geocodeKvStoreSupplier(geocodeServiceSupplier)
             .create()
             .counterFn(incMetricFn)
             .init();
@@ -257,7 +281,7 @@ public class VerbatimToInterpretedPipeline {
 
     DefaultValuesTransform defaultValuesTransform =
         DefaultValuesTransform.builder()
-            .clientSupplier(MetadataServiceClientFactory.getInstanceSupplier(config))
+            .clientSupplier(metadataServiceClientSerializableSupplier)
             .datasetId(datasetId)
             .create()
             .init();
