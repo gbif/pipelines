@@ -116,7 +116,7 @@
               <shadedArtifactAttached>true</shadedArtifactAttached>
               <shadedClassifierName>shaded</shadedClassifierName>
               <transformers>
-                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                   <mainClass>org.gbif.pipelines.ingest.pipelines.DwcaToVerbatimPipeline</mainClass>
                 </transformer>
@@ -165,7 +165,6 @@
       <plugin>
         <groupId>io.fabric8</groupId>
         <artifactId>docker-maven-plugin</artifactId>
-        <version>${io.fabric8.version}</version>
         <extensions>true</extensions>
         <executions>
           <execution>
@@ -317,7 +316,6 @@
     <spark.embedded.version>2.4.5</spark.embedded.version>
 
     <!-- Plugins -->
-    <io.fabric8.version>0.33.0</io.fabric8.version>
     <org.jetbrains.annotations>13.0</org.jetbrains.annotations>
 
     <download-maven-plugin.version>1.6.0</download-maven-plugin.version>
