@@ -31,7 +31,6 @@ import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -121,15 +120,32 @@ public class InterpretationCallbackIT {
     assertEquals(0, publisher.getMessages().size());
   }
 
-  @Ignore
   @Test
-  public void testNormalCase() throws Exception {
+  public void testInvalidChildSystemProcess() throws Exception {
 
     // State
     InterpreterConfiguration config = new InterpreterConfiguration();
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/interpreted/").getFile();
-    config.processRunner = STANDALONE.name();
+    config.processRunner = DISTRIBUTED.name();
     config.pipelinesConfig = "pipelines.yaml";
+    config.stepConfig.coreSiteConfig = "";
+    config.stepConfig.hdfsSiteConfig = "";
+
+    config.sparkConfig.recordsPerThread = 100000;
+    config.sparkConfig.parallelismMin = 10;
+    config.sparkConfig.parallelismMax = 100;
+    config.sparkConfig.memoryOverhead = 1280;
+    config.sparkConfig.executorMemoryGbMin = 4;
+    config.sparkConfig.executorMemoryGbMax = 12;
+    config.sparkConfig.executorCores = 5;
+    config.sparkConfig.executorNumbersMin = 6;
+    config.sparkConfig.executorNumbersMax = 10;
+    config.sparkConfig.driverMemory = "1G";
+
+    config.distributedConfig.deployMode = "cluster";
+    config.distributedConfig.mainClass =
+        "org.gbif.pipelines.ingest.pipelines.VerbatimToInterpretedPipeline";
+    config.distributedConfig.jarPath = "a://b/a/c/ingest-gbif.jar";
 
     ExecutorService executorService = Executors.newSingleThreadExecutor();
     CloseableHttpClient closeableHttpClient = new CloseableHttpClientStub(200, "[]");
@@ -149,7 +165,7 @@ public class InterpretationCallbackIT {
             attempt,
             Collections.singleton(RecordType.ALL.name()),
             Collections.singleton(VERBATIM_TO_INTERPRETED.name()),
-            STANDALONE.name(),
+            DISTRIBUTED.name(),
             EndpointType.DWC_ARCHIVE,
             null,
             validationResult,
@@ -161,13 +177,12 @@ public class InterpretationCallbackIT {
 
     // Should
     assertTrue(checkExists(curator, crawlId, INTERPRETED_LABEL));
-    assertTrue(checkExists(curator, crawlId, Fn.SUCCESSFUL_MESSAGE.apply(INTERPRETED_LABEL)));
+    assertTrue(checkExists(curator, crawlId, Fn.ERROR_MESSAGE.apply(INTERPRETED_LABEL)));
     assertTrue(checkExists(curator, crawlId, Fn.MQ_CLASS_NAME.apply(INTERPRETED_LABEL)));
     assertTrue(checkExists(curator, crawlId, Fn.MQ_MESSAGE.apply(INTERPRETED_LABEL)));
-    assertEquals(1, publisher.getMessages().size());
+    assertEquals(0, publisher.getMessages().size());
 
     // Clean
-    // HdfsUtils.deleteDirectory(null, null, path.toString());
     curator
         .delete()
         .deletingChildrenIfNeeded()
