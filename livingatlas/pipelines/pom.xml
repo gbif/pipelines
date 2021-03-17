@@ -37,26 +37,13 @@
               <goal>wget</goal>
             </goals>
             <configuration>
-              <url>https://pipelines-shp.s3-ap-southeast-2.amazonaws.com/pipelines-shapefiles.zip</url>
-              <unpack>true</unpack>
-              <outputDirectory>/tmp/pipelines-shp</outputDirectory>
-            </configuration>
-          </execution>
-          <execution>
-            <id>install-shapefiles2</id>
-            <phase>pre-integration-test</phase>
-            <goals>
-              <goal>wget</goal>
-            </goals>
-            <configuration>
-              <url>https://archives.ala.org.au/archives/layers/sds-layers_with_bitmaps.tgz</url>
+              <url>https://biocache.ala.org.au/archives/pipelines/pipelines-shapefiles.zip</url>
               <unpack>true</unpack>
               <outputDirectory>/tmp/pipelines-shp</outputDirectory>
             </configuration>
           </execution>
         </executions>
       </plugin>
-
       <!--
         This configuration is required to override the version in the GBIF mother POM
         which causes OOM issues due to its use of forking.
