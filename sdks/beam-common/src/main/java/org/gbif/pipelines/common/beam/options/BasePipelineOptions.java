@@ -62,6 +62,12 @@ public interface BasePipelineOptions extends PipelineOptions {
 
   void setSyncThreshold(int syncThreshold);
 
+  @Description("Turn off some services for testing")
+  @Default.Boolean(false)
+  boolean getTestMode();
+
+  void setTestMode(boolean testMode);
+
   /** A {@link DefaultValueFactory} which locates a default directory. */
   class DefaultDirectoryFactory implements DefaultValueFactory<String> {
 

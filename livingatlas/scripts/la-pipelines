@@ -59,9 +59,11 @@ dwca-avro --> interpret --> validate --> uuid --> image-sync ... │
 -  'index' generates a AVRO records ready to be index to SOLR;
 -  'jackknife' adds an aggregated jackknife AVRO for all datasets. Requires samping-avro. After running a full 'index' is required.
 -  'solr' reads index records in AVRO and submits them to SOLR;
+-  'solr-sync' sync schema
 -  'archive-list' dumps out a list of archives that can be ingested to '/tmp/dataset-archive-list.csv';
 -  'dataset-list' dumps out a list of datasets that have been ingested to '/tmp/dataset-counts.csv';
 -  'validation-report' dumps out a CSV list of datasets ready to be indexed to '/tmp/validation-report.csv';
+-  'clustering' clustering of occurrences;
 
 All the steps generate an output. If only the final output is desired, the intermediate outputs can be ignored.
 
@@ -78,7 +80,9 @@ Usage:
   $CMD [options] index         (<dr>...|all)         $WHEREL
   $CMD [options] sample        (<dr>...|all)         $WHERE
   $CMD [options] jackknife     (all)                 $WHERE
+  $CMD [options] clustering    (all)                 $WHERE
   $CMD [options] solr          (<dr>...|all)         $WHERE
+  $CMD [options] solr-sync          (<dr>...|all)         $WHERE
   $CMD [options] validation-report
   $CMD [options] do-all        (<dr>...|all) $WHEREL
   $CMD -h | --help
@@ -592,6 +596,25 @@ function jackknife () {
     logStepEnd "Jackknife" $dr $ltype $SECONDS
 }
 
+function clustering () {
+    local dr="*" ltype="$TYPE"
+    CLASS=au.org.ala.pipelines.beam.ClusteringPipeline
+
+    logStepStart "Clustering" $dr
+    SECONDS=0
+
+    SH_ARGS=clustering-sh-args.local
+    java-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=clustering-sh-args.spark-embedded
+    spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=clustering-sh-args.spark-cluster
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "add-clustering $dr"
+
+    logStepEnd "Clustering" $dr $ltype $SECONDS
+}
+
 function solr () {
     local dr="$1" ltype="$2"
     CLASS=au.org.ala.pipelines.beam.IndexRecordToSolrPipeline
@@ -609,6 +632,25 @@ function solr () {
     spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "SOLR"
 
     logStepEnd "SOLR"  $dr $ltype $SECONDS
+}
+
+function solr-sync () {
+    local dr="$1" ltype="$2"
+    CLASS=au.org.ala.pipelines.beam.SolrSchemaPipeline
+
+    logStepStart "SOLR-SCHEMA" $dr
+    SECONDS=0
+
+    SH_ARGS=solr-sh-args.local
+    java-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=solr-sh-args.spark-embedded
+    spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=solr-sh-args.spark-cluster
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "SOLR-SCHEMA"
+
+    logStepEnd "SOLR-SCHEMA"  $dr $ltype $SECONDS
 }
 
 function index () {
@@ -756,6 +798,14 @@ if ($sample || $do_all); then
   do_step_simple sample
 fi
 
+if ($clustering || $do_all); then
+  if [[ $2 = "all" ]] ; then
+    do_step clustering
+  else
+    echo "WARN: 'clustering' not run when 'dr' != 'all'"
+  fi
+fi
+
 if ($jackknife || $do_all); then
   if [[ $2 = "all" ]] ; then
     do_step jackknife
@@ -767,6 +817,11 @@ fi
 if ($solr || $do_all); then
   do_step_simple solr
 fi
+
+if ($solr_sync || $do_all); then
+  do_step_simple solr-sync
+fi
+
 
 # All ended correctly, so untrap EXIT catch
 trap - EXIT

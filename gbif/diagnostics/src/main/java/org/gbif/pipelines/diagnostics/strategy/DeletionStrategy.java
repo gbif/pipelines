@@ -12,11 +12,11 @@ public interface DeletionStrategy {
       String occurrenceId);
 
   enum DeletionStrategyType {
-    min(new MinStrategy()),
-    max(new MaxStrategy()),
-    occurrenceID(new OccurrenceIdStrategy()),
-    triplet(new TripletStrategy()),
-    both(new BothStrategy());
+    MIN(new MinStrategy()),
+    MAX(new MaxStrategy()),
+    OCCURRENCE_ID(new OccurrenceIdStrategy()),
+    TRIPLET(new TripletStrategy()),
+    BOTH(new BothStrategy());
 
     private final DeletionStrategy deletionStrategy;
 

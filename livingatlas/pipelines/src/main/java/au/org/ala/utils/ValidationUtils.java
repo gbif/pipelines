@@ -49,6 +49,7 @@ public class ValidationUtils {
   public static final String INDEXING_METRICS = "indexing-metrics.yml";
   public static final String SENSITIVE_METRICS = "sensitive-metrics.yml";
   public static final String JACKKNIFE_METRICS = "jackknife-metrics.yml";
+  public static final String CLUSTERING_METRICS = "clustering-metrics.yml";
 
   public static final String DUPLICATE_KEY_COUNT = "duplicateKeyCount";
   public static final String EMPTY_KEY_RECORDS = "emptyKeyRecords";
@@ -103,9 +104,9 @@ public class ValidationUtils {
       log.warn(
           "The imported verbatim is newer than the interpretation. Interpretation should be re-ran.");
     }
-    if (interpretationTime > uuidTime) {
+    if (verbatimTime > uuidTime) {
       log.warn(
-          "The imported interpretation is newer than the uuid. Unable to index until UUID minting re-ran");
+          "The imported verbatim AVRO is newer than the uuid. Unable to index until UUID minting re-ran");
       return ValidationResult.builder().valid(false).message(UUID_REQUIRED).build();
     }
 

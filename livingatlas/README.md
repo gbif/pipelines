@@ -5,7 +5,7 @@
 | [![Build Status](https://builds.gbif.org/job/pipelines-la-dev/badge/icon?style=flat-square)](https://builds.gbif.org/job/pipelines/)| GBIF Jenkins build for ala- dev branch |
 | [![Coverage](https://sonar.gbif.org/api/project_badges/measure?project=org.gbif.pipelines%3Apipelines-parent&metric=coverage)](https://sonar.gbif.org/dashboard?id=org.gbif.pipelines%3Apipelines-parent) |  Sonar  |
 
-The aim of this module is to add functionality required by the Living Atlases to facilitate the replacement to [biocache-store](https://github.com/AtlasOfLivingAustralia/biocache-store) for data ingress. 
+This module is to add functionality required by the Living Atlases to facilitate the replacement to [biocache-store](https://github.com/AtlasOfLivingAustralia/biocache-store) for data ingress. 
 
 ## Architecture
 
@@ -29,34 +29,23 @@ This list of transforms will need to be added to backfill some of the ingress re
 
 For information on how the architecture between biocache-store and pipelines differ, [see this page](architectures.md).
 
-
-In addition pipelines for following will need to be developed:
-
-* Duplicate detection
-* Environmental outlier detection
-* Expert distribution outliers
-
-## To be done:
-
-1. Sensible use of GBIF's key/value store framework (backend storage to be identified)
-2. Dealing with sensitive data
-4. Integration with Lists tool
-6. Handling of images with ALA's image-service as storage
-
 ## Dependent projects
 
 The pipelines work will necessitate some minor additional API additions and change to the following components:
 
 ### biocache-service
-[experimental/pipelines branch](https://github.com/AtlasOfLivingAustralia/biocache-service/tree/experimental/pipelines) 
-The aim for this proof of concept is to make very minimal changes to biocache-service, maintain the existing API and have no impact on existing services and applications.
+[pipelines branch](https://github.com/AtlasOfLivingAustralia/biocache-service/tree/epic/pipelines%2Fdevelop) 
+A version 3.x of biocache-service is in development.
+This will not use Cassandra for storage of occurrence records.
 
 ### ala-namematching-service
-A simple **drop wizard wrapper around the [ala-name-matching](https://github.com/AtlasOfLivingAustralia/ala-name-matching) library** has been prototyped to support integration with pipelines.
+A simple **drop wizard wrapper around the [ala-name-matching](https://github.com/AtlasOfLivingAustralia/ala-name-matching) library** 
+has been developed to support integration with pipelines. This service is package in docker container.
  
 ## Getting started
 
-In the absence of ansible scripts, below are some instructions for setting up a local development environment for pipelines.
+Ansible scripts have been developed and are available [here](https://github.com/AtlasOfLivingAustralia/ala-install/tree/27_pipelines_spark_hadoop), 
+Below are some instructions for setting up a local development environment for pipelines.
 These steps will load a dataset into a SOLR index.
 
 ### Software requirements:
@@ -70,7 +59,6 @@ These steps will load a dataset into a SOLR index.
 ### Setting up la-pipelines
   
 1. Download shape files from [here](https://pipelines-shp.s3-ap-southeast-2.amazonaws.com/pipelines-shapefiles.zip) and expand into `/data/pipelines-shp` directory
-1. Download SDS shape files from [here](https://biocache.ala.org.au/archives/layers/sds-layers.tgz) and expand into `/data/pipelines-shp` directory
 1. Download a test darwin core archive (e.g. https://archives.ala.org.au/archives/gbif/dr893/dr893.zip)
 1. Create the following directory `/data/pipelines-data`
 1. Build with maven `mvn clean package`

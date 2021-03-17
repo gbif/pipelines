@@ -45,8 +45,7 @@ public class ALAReverseJackKnifePipeline {
 
   public static void main(String[] args) throws FileNotFoundException {
     VersionInfo.print();
-    String[] combinedArgs =
-        new CombinedYamlConfiguration(args).toArgs("general", "sample-avro", "jackKnife");
+    String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "jackKnife");
     JackKnifePipelineOptions options =
         PipelinesOptionsFactory.create(JackKnifePipelineOptions.class, combinedArgs);
     options.setMetaFileName(ValidationUtils.JACKKNIFE_METRICS);

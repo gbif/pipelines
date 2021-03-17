@@ -102,13 +102,13 @@ public class CollectorNameParser {
       Pattern.compile(FIRSTNAME_SURNAME_PATTERN);
   private static final Pattern AND_NAME_LIST_PATTERN_P = Pattern.compile(AND_NAME_LIST_PATTERN);
 
-  private static final Pattern CONTAINS_ALPHA = Pattern.compile("[A-Za-z]{1,}");
+  private static final Pattern CONTAINS_NUMBER = Pattern.compile("[0-9]{1,}");
 
   public static String[] parseList(String source) {
 
     // if it contains numbers, its is likely to be an ID  - avoid parsing
-    if (!CONTAINS_ALPHA.matcher(source).find()) {
-      return null;
+    if (CONTAINS_NUMBER.matcher(source).find()) {
+      return new String[] {source};
     }
 
     // pattern 1
@@ -199,8 +199,8 @@ public class CollectorNameParser {
   public static String parse(String source) {
 
     // if it contains numbers, its is likely to be an ID  - avoid parsing
-    if (!CONTAINS_ALPHA.matcher(source).find()) {
-      return null;
+    if (CONTAINS_NUMBER.matcher(source).find()) {
+      return source;
     }
 
     if (source.matches(UNKNOWN_PATTERN)) {

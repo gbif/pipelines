@@ -42,24 +42,9 @@ import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.io.AvroReader;
 import org.gbif.pipelines.core.utils.FsUtils;
-import org.gbif.pipelines.io.avro.ALAAttributionRecord;
-import org.gbif.pipelines.io.avro.ALASensitivityRecord;
-import org.gbif.pipelines.io.avro.ALATaxonRecord;
-import org.gbif.pipelines.io.avro.ALAUUIDRecord;
-import org.gbif.pipelines.io.avro.BasicRecord;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.ImageServiceRecord;
-import org.gbif.pipelines.io.avro.IndexRecord;
-import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.io.avro.TaxonProfile;
-import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.transforms.core.BasicTransform;
-import org.gbif.pipelines.transforms.core.LocationTransform;
-import org.gbif.pipelines.transforms.core.TaxonomyTransform;
-import org.gbif.pipelines.transforms.core.TemporalTransform;
-import org.gbif.pipelines.transforms.core.VerbatimTransform;
+import org.gbif.pipelines.io.avro.*;
+import org.gbif.pipelines.transforms.core.*;
+import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.slf4j.MDC;
 
@@ -72,9 +57,6 @@ import org.slf4j.MDC;
  *      {@link org.gbif.pipelines.io.avro.BasicRecord},
  *      {@link org.gbif.pipelines.io.avro.TemporalRecord},
  *      {@link org.gbif.pipelines.io.avro.MultimediaRecord},
- *      {@link org.gbif.pipelines.io.avro.ImageRecord},
- *      {@link org.gbif.pipelines.io.avro.AudubonRecord},
- *      {@link org.gbif.pipelines.io.avro.MeasurementOrFactRecord},
  *      {@link org.gbif.pipelines.io.avro.TaxonRecord},
  *      {@link org.gbif.pipelines.io.avro.LocationRecord}
  *    2) Joins avro files
@@ -128,6 +110,26 @@ public class IndexRecordPipeline {
       return;
     }
 
+    // get filesystem
+    FileSystem fs =
+        FsUtils.getFileSystem(
+            options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getInputPath());
+
+    final long lastLoadedDate =
+        ValidationUtils.metricsModificationTime(
+            fs,
+            options.getInputPath(),
+            options.getDatasetId(),
+            options.getAttempt(),
+            ValidationUtils.VERBATIM_METRICS);
+    final long lastProcessedDate =
+        ValidationUtils.metricsModificationTime(
+            fs,
+            options.getInputPath(),
+            options.getDatasetId(),
+            options.getAttempt(),
+            ValidationUtils.INTERPRETATION_METRICS);
+
     UnaryOperator<String> pathFn =
         t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
     UnaryOperator<String> identifiersPathFn =
@@ -145,6 +147,9 @@ public class IndexRecordPipeline {
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.builder().create();
     TaxonomyTransform taxonomyTransform = TaxonomyTransform.builder().create();
+
+    // Extension
+    MultimediaTransform multimediaTransform = MultimediaTransform.builder().create();
 
     // ALA Specific transforms
     ALATaxonomyTransform alaTaxonomyTransform = ALATaxonomyTransform.builder().create();
@@ -272,19 +277,22 @@ public class IndexRecordPipeline {
                     pathFn.apply(sensitiveTransform.getBaseName())),
             executor);
 
-    CompletableFuture<Map<String, ImageServiceRecord>> imageServiceMapFeature =
+    CompletableFuture<Map<String, ImageRecord>> imageServiceMapFeature =
         CompletableFuture.supplyAsync(
             () ->
                 AvroReader.readRecords(
                     hdfsSiteConfig,
                     coreSiteConfig,
-                    ImageServiceRecord.class,
-                    imageServicePathFn.apply("image-service-record")),
+                    ImageRecord.class,
+                    imageServicePathFn.apply("image-record")),
             executor);
 
-    CompletableFuture<Map<String, TaxonProfile>> taxonProfileMapFeature =
-        CompletableFuture.supplyAsync(
-            () -> SpeciesListPipeline.generateTaxonProfileCollection(options), executor);
+    CompletableFuture<Map<String, TaxonProfile>> taxonProfileMapFeature = null;
+    if (options.getIncludeSpeciesLists()) {
+      taxonProfileMapFeature =
+          CompletableFuture.supplyAsync(
+              () -> SpeciesListPipeline.generateTaxonProfileCollection(options), executor);
+    }
 
     MetadataRecord metadata = metadataMapFeature.get().values().iterator().next();
     Map<String, BasicRecord> basicMap = basicMapFeature.get();
@@ -297,7 +305,7 @@ public class IndexRecordPipeline {
     Map<String, ALAAttributionRecord> alaAttributionMap = alaAttributionMapFeature.get();
     Map<String, ALASensitivityRecord> alaSensitivityMap =
         options.getIncludeSensitiveData() ? alaSensitiveMapFeature.get() : Collections.emptyMap();
-    Map<String, ImageServiceRecord> imageServiceMap =
+    Map<String, ImageRecord> imageServiceMap =
         options.getIncludeImages() ? imageServiceMapFeature.get() : Collections.emptyMap();
 
     Map<String, TaxonProfile> taxonProfileMap =
@@ -325,42 +333,50 @@ public class IndexRecordPipeline {
           ALAAttributionRecord aar =
               alaAttributionMap.getOrDefault(k, ALAAttributionRecord.newBuilder().setId(k).build());
           ALASensitivityRecord sr = alaSensitivityMap.getOrDefault(k, null);
-          ImageServiceRecord isr =
-              imageServiceMap.getOrDefault(k, ImageServiceRecord.newBuilder().setId(k).build());
+          ImageRecord isr =
+              imageServiceMap.getOrDefault(k, ImageRecord.newBuilder().setId(k).build());
           TaxonProfile tpr =
               taxonProfileMap.getOrDefault(k, TaxonProfile.newBuilder().setId(k).build());
 
           return IndexRecordTransform.createIndexRecord(
-              metadata, br, tr, lr, txr, atxr, er, aar, aur, isr, tpr, sr);
+              metadata,
+              br,
+              tr,
+              lr,
+              txr,
+              atxr,
+              er,
+              aar,
+              aur,
+              isr,
+              tpr,
+              sr,
+              lastLoadedDate,
+              lastProcessedDate);
         };
 
     List<IndexRecord> indexRecords =
-        basicMap.values().stream().map(indexRequestFn).collect(Collectors.toList());
+        basicMap.values().stream().map(br -> indexRequestFn.apply(br)).collect(Collectors.toList());
 
-    // get filesystem
-    FileSystem fs =
-        FsUtils.getFileSystem(
-            options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getInputPath());
-
-    Path otputPath =
-        new Path(
-            options.getAllDatasetsInputPath()
-                + "/index-record/"
-                + options.getDatasetId()
-                + "/"
-                + options.getDatasetId()
-                + ".avro");
+    OutputStream output =
+        fs.create(
+            new Path(
+                options.getAllDatasetsInputPath()
+                    + "/index-record/"
+                    + options.getDatasetId()
+                    + "/"
+                    + options.getDatasetId()
+                    + ".avro"));
 
     DatumWriter<IndexRecord> datumWriter = new GenericDatumWriter<>(IndexRecord.getClassSchema());
-    try (OutputStream output = fs.create(otputPath);
-        DataFileWriter<IndexRecord> dataFileWriter = new DataFileWriter<>(datumWriter)) {
-      dataFileWriter.setCodec(BASE_CODEC);
-      dataFileWriter.create(IndexRecord.getClassSchema(), output);
+    DataFileWriter dataFileWriter = new DataFileWriter<IndexRecord>(datumWriter);
+    dataFileWriter.setCodec(BASE_CODEC);
+    dataFileWriter.create(IndexRecord.getClassSchema(), output);
 
-      for (IndexRecord indexRecord : indexRecords) {
-        dataFileWriter.append(indexRecord);
-      }
+    for (IndexRecord indexRecord : indexRecords) {
+      dataFileWriter.append(indexRecord);
     }
+    dataFileWriter.close();
 
     MetricsHandler.saveCountersToTargetPathFile(options, metrics.getMetricsResult());
     log.info("Pipeline has been finished - {}", LocalDateTime.now());

@@ -88,10 +88,10 @@ public class CompleteIngestJavaPipelineTestIT {
     assertEquals(Long.valueOf(6), SolrUtils.getRecordCount("cl927:*"));
 
     // 3. has a sensitive record
-    assertEquals(Long.valueOf(1), SolrUtils.getRecordCount("sensitive:true"));
-    SolrDocument sensitive = SolrUtils.getRecords("sensitive:true").get(0);
+    assertEquals(Long.valueOf(1), SolrUtils.getRecordCount("sensitive:generalised"));
+    SolrDocument sensitive = SolrUtils.getRecords("sensitive:generalised").get(0);
     assertEquals(-35.3, (double) sensitive.get("decimalLatitude"), 0.00001);
-    assertEquals("-35.260319", sensitive.get("original_decimalLatitude"));
+    assertEquals("-35.260319", sensitive.get("sensitive_decimalLatitude"));
   }
 
   public void loadTestDataset(String datasetID, String inputPath) throws Exception {
@@ -155,8 +155,7 @@ public class CompleteIngestJavaPipelineTestIT {
               "--metaFileName=" + ValidationUtils.SENSITIVE_METRICS,
               "--targetPath=/tmp/la-pipelines-test/complete-pipeline-java",
               "--inputPath=/tmp/la-pipelines-test/complete-pipeline-java",
-              "--properties=" + TestUtils.getPipelinesConfigFile(),
-              "--useExtendedRecordId=true"
+              "--properties=" + TestUtils.getPipelinesConfigFile()
             });
     ALAInterpretedToSensitivePipeline.run(sensitivityOptions);
 

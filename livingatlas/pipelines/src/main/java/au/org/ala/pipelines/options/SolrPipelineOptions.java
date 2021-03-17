@@ -52,4 +52,22 @@ public interface SolrPipelineOptions extends IndexingPipelineOptions {
   Boolean getIncludeJackKnife();
 
   void setIncludeJackKnife(Boolean includeJackKnife);
+
+  @Description("Include clustering")
+  @Default.Boolean(false)
+  Boolean getIncludeClustering();
+
+  void setIncludeClustering(Boolean includeClustering);
+
+  @Description("Path to clustering avro files")
+  @Default.String("")
+  String getClusteringPath();
+
+  void setClusteringPath(String clusteringPath);
+
+  @Description("Number of partitions to use")
+  @Default.Integer(1)
+  Integer getNumOfPartitions();
+
+  void setNumOfPartitions(Integer numOfPartitions);
 }

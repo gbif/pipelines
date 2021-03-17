@@ -60,16 +60,12 @@ public class ALAAttributionKVStoreFactory {
           public ALACollectoryMetadata get(String key) {
             try {
               return service.lookupDataResource(key);
-            } catch (org.gbif.rest.client.retrofit.RestClientException ex) {
-              throw logAndThrow(ex, "Unable to connect to rest service");
-            } catch (retrofit2.HttpException ex2) {
-              throw logAndThrow(ex2, "Unable to connect to http service");
+            } catch (retrofit2.HttpException ex) {
+              log.error("HttpException looking up metadata for " + key, ex);
             } catch (Exception ex) {
-              throw logAndThrow(
-                  ex,
-                  "Error contacting the collectory service to retrieve data resource metadata. Has resource been removed ? "
-                      + key);
+              log.error("Exception looking up metadata for " + key, ex);
             }
+            return ALACollectoryMetadata.EMPTY;
           }
 
           @Override
@@ -83,18 +79,6 @@ public class ALAAttributionKVStoreFactory {
 
   public static SerializableSupplier<KeyValueStore<String, ALACollectoryMetadata>>
       getInstanceSupplier(ALAPipelinesConfig config) {
-    return () -> ALAAttributionKVStoreFactory.getInstance(config);
-  }
-
-  /**
-   * Wraps an exception into a {@link RuntimeException}.
-   *
-   * @param throwable to propagate
-   * @param message to log and use for the exception wrapper
-   * @return a new {@link RuntimeException}
-   */
-  private static RuntimeException logAndThrow(Throwable throwable, String message) {
-    log.error(message, throwable);
-    return new RuntimeException(throwable);
+    return () -> getInstance(config);
   }
 }

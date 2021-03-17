@@ -188,13 +188,13 @@ public class OccurrenceRelationships {
     // ignore case and [-_., ] chars
     // otherCatalogNumbers is not parsed, but a good addition could be to explore that
     Set<String> intersection =
-        o1.getIdentifiers().stream()
+        o1.listIdentifiers().stream()
             .filter(Objects::nonNull)
             .map(OccurrenceRelationships::normalizeID)
             .collect(Collectors.toSet());
 
     Set<String> toMatch =
-        o2.getIdentifiers().stream()
+        o2.listIdentifiers().stream()
             .filter(Objects::nonNull)
             .map(OccurrenceRelationships::normalizeID)
             .collect(Collectors.toSet());

@@ -66,11 +66,11 @@ public class RepairGbifIDLookupTool {
       names = "--deletion-strategy",
       description =
           "Which gbifID to delete? "
-              + "min - compares gbifIDs for triplet and occurrenceID and deletes oldest. "
-              + "max - compares gbifIDs for triplet and occurrenceID and deletes latest. "
-              + "triplet - Deletes gbifIDs for triplets. "
-              + "occurrenceID - Deletes gbifIDs for occurrenceIDs. "
-              + "both - Deletes gbifIDs for occurrenceIDs and triplets.")
+              + "MIN - compares gbifIDs for triplet and occurrenceID and deletes oldest. "
+              + "MAX - compares gbifIDs for triplet and occurrenceID and deletes latest. "
+              + "TRIPLET - Deletes gbifIDs for triplets. "
+              + "OCCURRENCE_ID - Deletes gbifIDs for occurrenceIDs. "
+              + "BOTH - Deletes gbifIDs for occurrenceIDs and triplets.")
   @NotNull
   public DeletionStrategyType deletionStrategyType;
 

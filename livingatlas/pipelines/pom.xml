@@ -37,19 +37,7 @@
               <goal>wget</goal>
             </goals>
             <configuration>
-              <url>https://pipelines-shp.s3-ap-southeast-2.amazonaws.com/pipelines-shapefiles.zip</url>
-              <unpack>true</unpack>
-              <outputDirectory>/tmp/pipelines-shp</outputDirectory>
-            </configuration>
-          </execution>
-          <execution>
-            <id>install-shapefiles2</id>
-            <phase>pre-integration-test</phase>
-            <goals>
-              <goal>wget</goal>
-            </goals>
-            <configuration>
-              <url>https://archives.ala.org.au/archives/layers/sds-layers_with_bitmaps.tgz</url>
+              <url>https://biocache.ala.org.au/archives/pipelines/pipelines-shapefiles.zip</url>
               <unpack>true</unpack>
               <outputDirectory>/tmp/pipelines-shp</outputDirectory>
             </configuration>
@@ -242,30 +230,30 @@
         </configuration>
       </plugin>
       <plugin>
-      <groupId>pl.project13.maven</groupId>
-      <artifactId>git-commit-id-plugin</artifactId>
-      <version>2.2.4</version>
-      <executions>
-        <execution>
-          <id>get-the-git-infos</id>
-          <goals>
-            <goal>revision</goal>
-          </goals>
-        </execution>
-      </executions>
-      <configuration>
-        <dotGitDirectory>${project.basedir}/.git</dotGitDirectory>
-        <prefix>git</prefix>
-        <verbose>false</verbose>
-        <generateGitPropertiesFile>true</generateGitPropertiesFile>
-        <generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties</generateGitPropertiesFilename>
-        <format>json</format>
-        <gitDescribe>
-          <skip>false</skip>
-          <always>true</always>
-          <dirty>-dirty</dirty>
-        </gitDescribe>
-      </configuration>
+        <groupId>pl.project13.maven</groupId>
+        <artifactId>git-commit-id-plugin</artifactId>
+        <version>2.2.4</version>
+        <executions>
+          <execution>
+            <id>get-the-git-infos</id>
+            <goals>
+              <goal>revision</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <dotGitDirectory>${project.basedir}/.git</dotGitDirectory>
+          <prefix>git</prefix>
+          <verbose>false</verbose>
+          <generateGitPropertiesFile>true</generateGitPropertiesFile>
+          <generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties</generateGitPropertiesFilename>
+          <format>json</format>
+          <gitDescribe>
+            <skip>false</skip>
+            <always>true</always>
+            <dirty>-dirty</dirty>
+          </gitDescribe>
+        </configuration>
       </plugin>
     </plugins>
   </build>
@@ -324,6 +312,7 @@
     <!-- use same version as okhttp -->
     <!-- avoids this issue https://stackoverflow.com/questions/56854548/mockwebserver-java-lang-nosuchmethoderror -->
     <mockwebserver.version>4.2.2</mockwebserver.version>
+    <checker-qual.version>3.9.1</checker-qual.version>
   </properties>
 
   <scm>
@@ -427,10 +416,10 @@
       <groupId>org.gbif.pipelines</groupId>
       <artifactId>beam-common</artifactId>
       <exclusions>
-          <exclusion>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-stdlib</artifactId>
-          </exclusion>
+        <exclusion>
+          <groupId>org.jetbrains.kotlin</groupId>
+          <artifactId>kotlin-stdlib</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -924,6 +913,11 @@
           <artifactId>commons-io</artifactId>
         </exclusion>
       </exclusions>
+    </dependency>
+    <dependency>
+        <groupId>org.checkerframework</groupId>
+        <artifactId>checker-qual</artifactId>
+        <version>${checker-qual.version}</version>
     </dependency>
   </dependencies>
 </project>

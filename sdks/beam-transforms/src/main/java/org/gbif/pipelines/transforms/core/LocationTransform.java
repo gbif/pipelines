@@ -88,11 +88,13 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
   /** Beam @Teardown closes initialized resources */
   @Teardown
   public void tearDown() {
-    try {
-      log.info("Close geocodeKvStore");
-      geocodeKvStore.close();
-    } catch (IOException ex) {
-      log.warn("Can't close geocodeKvStore - {}", ex.getMessage());
+    if (geocodeKvStore != null) {
+      try {
+        log.info("Close geocodeKvStore");
+        geocodeKvStore.close();
+      } catch (IOException ex) {
+        log.warn("Can't close geocodeKvStore - {}", ex.getMessage());
+      }
     }
   }
 

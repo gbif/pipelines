@@ -47,5 +47,5 @@ public interface OccurrenceFeatures {
 
   String getOtherCatalogNumbers();
 
-  List<String> getIdentifiers();
+  List<String> listIdentifiers();
 }

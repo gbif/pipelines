@@ -17,12 +17,15 @@ public class RecordedByKVStoreFactory {
 
   @SneakyThrows
   private RecordedByKVStoreFactory(ALAPipelinesConfig config) {
+
+    long cacheSize =
+        config.getRecordedByConfig() != null
+            ? config.getRecordedByConfig().getCacheSizeMb()
+            : RecordedByConfig.DEFAULT_CACHE_SIZE_MB;
     this.kvStore =
         KeyValueCache.cache(
             new RecordedByKVStore(),
-            config.getRecordedByConfig() != null
-                ? config.getRecordedByConfig().getCacheSizeMb()
-                : RecordedByConfig.DEFAULT_CACHESIZEMB,
+            cacheSize,
             String.class,
             (Class<List<String>>) Collections.<String>emptyList().getClass());
   }
@@ -40,7 +43,7 @@ public class RecordedByKVStoreFactory {
 
   public static SerializableSupplier<KeyValueStore<String, List<String>>> createSupplier(
       ALAPipelinesConfig config) {
-    return () -> new RecordedByKVStoreFactory(config).kvStore;
+    return () -> getInstance(config);
   }
 
   public static SerializableSupplier<KeyValueStore<String, List<String>>> getInstanceSupplier(

@@ -1,0 +1,25 @@
+[
+     {
+       "name":"Relationship",
+       "namespace":"org.gbif.pipelines.io.avro",
+       "type":"record",
+       "doc":"RelationshipAssertion",
+       "fields":[
+         {"name": "repId", "type": "string"},
+         {"name": "dupId", "type": "string"},
+         {"name": "repDataset", "type": "string"},
+         {"name": "dupDataset", "type": "string"},
+         {"name": "justification", "type": "string"}
+       ]
+     },
+     {
+       "name":"Relationships",
+       "namespace":"org.gbif.pipelines.io.avro",
+       "type":"record",
+       "doc":"RelationshipAssertion",
+       "fields":[
+         {"name": "id", "type": "string"},
+         {"name": "relationships", "type": {"type" : "array", "items" : "Relationship"}, "default" : []}
+       ]
+     }
+]
