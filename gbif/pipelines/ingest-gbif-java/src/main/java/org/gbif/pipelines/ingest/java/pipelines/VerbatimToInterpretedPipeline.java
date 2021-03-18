@@ -324,7 +324,7 @@ public class VerbatimToInterpretedPipeline {
               imageTransform.processElement(er).ifPresent(imageWriter::append);
               audubonTransform.processElement(er).ifPresent(audubonWriter::append);
               taxonomyTransform.processElement(er).ifPresent(taxonWriter::append);
-              grscicollTransform.processElement(er, mdr).ifPresent(grscicollWriter::append);
+              grscicollTransform.processElement(er, br, mdr).ifPresent(grscicollWriter::append);
               locationTransform.processElement(er, mdr).ifPresent(locationWriter::append);
             } else {
               basicInvalidWriter.append(br);
