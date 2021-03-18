@@ -174,6 +174,8 @@ public class VerbatimToInterpretedPipeline {
     GrscicollTransform grscicollTransform =
         GrscicollTransform.builder()
             .kvStoreSupplier(GrscicollLookupKvStoreFactory.createSupplier(config))
+            .erTag(verbatimTransform.getTag())
+            .brTag(basicTransform.getTag())
             .create();
 
     LocationTransform locationTransform =

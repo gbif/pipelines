@@ -203,9 +203,13 @@ public class VerbatimToInterpretedPipeline {
             .counterFn(incMetricFn)
             .init();
 
+    VerbatimTransform verbatimTransform = VerbatimTransform.create().counterFn(incMetricFn);
+
     GrscicollTransform grscicollTransform =
         GrscicollTransform.builder()
             .kvStoreSupplier(GrscicollLookupKvStoreFactory.getInstanceSupplier(config))
+            .erTag(verbatimTransform.getTag())
+            .brTag(basicTransform.getTag())
             .create()
             .counterFn(incMetricFn)
             .init();
@@ -216,8 +220,6 @@ public class VerbatimToInterpretedPipeline {
             .create()
             .counterFn(incMetricFn)
             .init();
-
-    VerbatimTransform verbatimTransform = VerbatimTransform.create().counterFn(incMetricFn);
 
     TemporalTransform temporalTransform =
         TemporalTransform.builder()
