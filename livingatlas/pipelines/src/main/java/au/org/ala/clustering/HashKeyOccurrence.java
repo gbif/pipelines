@@ -226,11 +226,21 @@ public class HashKeyOccurrence implements OccurrenceFeatures {
   @Override
   public List<String> listIdentifiers() {
     List<String> identifiers = new ArrayList<>();
-    if (occurrenceID != null) identifiers.add(occurrenceID);
-    if (fieldNumber != null) identifiers.add(fieldNumber);
-    if (recordNumber != null) identifiers.add(recordNumber);
-    if (catalogNumber != null) identifiers.add(catalogNumber);
-    if (otherCatalogNumbers != null) identifiers.add(otherCatalogNumbers);
+    if (occurrenceID != null) {
+      identifiers.add(occurrenceID);
+    }
+    if (fieldNumber != null) {
+      identifiers.add(fieldNumber);
+    }
+    if (recordNumber != null) {
+      identifiers.add(recordNumber);
+    }
+    if (catalogNumber != null) {
+      identifiers.add(catalogNumber);
+    }
+    if (otherCatalogNumbers != null) {
+      identifiers.add(otherCatalogNumbers);
+    }
     return identifiers;
   }
 }

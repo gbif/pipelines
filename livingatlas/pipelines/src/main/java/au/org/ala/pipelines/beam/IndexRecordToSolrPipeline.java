@@ -458,13 +458,7 @@ public class IndexRecordToSolrPipeline {
     };
   }
 
-  /**
-   * Load index records from AVRO.
-   *
-   * @param options
-   * @param p
-   * @return
-   */
+  /** Load index records from AVRO. */
   private static PCollection<KV<String, IndexRecord>> loadIndexRecords(
       SolrPipelineOptions options, Pipeline p) {
     if (options.getDatasetId() != null && !"all".equalsIgnoreCase(options.getDatasetId())) {

@@ -213,8 +213,7 @@ public class ALAReverseJackKnifePipeline {
                           try {
                             double[] model =
                                 JackKnife.jackknife(
-                                    values[i].toArray(new Double[values[i].size()]),
-                                    minSampleThreshold);
+                                    values[i].toArray(new Double[0]), minSampleThreshold);
                             jackKnifeModels.add(model);
                             if (model != null) {
                               JackKnifeModelRecord jkmr =
@@ -257,8 +256,7 @@ public class ALAReverseJackKnifePipeline {
                           // Collect only IDs containing outlier layers.
                           if (outliers != null) {
                             JackKnifeOutlierRecord jor =
-                                new JackKnifeOutlierRecord()
-                                    .newBuilder()
+                                JackKnifeOutlierRecord.newBuilder()
                                     .setItems(outliers)
                                     .setId(ids.get(i))
                                     .build();

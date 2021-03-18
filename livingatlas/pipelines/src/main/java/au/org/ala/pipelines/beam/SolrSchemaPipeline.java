@@ -76,7 +76,7 @@ public class SolrSchemaPipeline {
         .apply(
             "Extract String fields",
             FlatMapElements.into(TypeDescriptors.strings())
-                .via((IndexRecord record) -> indexRecordToDesc(record)))
+                .via(SolrSchemaPipeline::indexRecordToDesc))
         .apply(Count.perElement())
         .apply(
             MapElements.via(
@@ -97,13 +97,7 @@ public class SolrSchemaPipeline {
     log.info("Solr indexing pipeline complete");
   }
 
-  /**
-   * Load index records from AVRO.
-   *
-   * @param options
-   * @param p
-   * @return
-   */
+  /** Load index records from AVRO. */
   private static PCollection<IndexRecord> loadIndexRecords(
       SolrPipelineOptions options, Pipeline p) {
     if (options.getDatasetId() != null && !"all".equalsIgnoreCase(options.getDatasetId())) {

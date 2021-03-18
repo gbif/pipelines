@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.Schema;
+import org.apache.avro.Schema.Field;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
@@ -83,7 +84,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
 
   public static void main(String[] args) {
 
-    interpretedFields.stream().sorted().forEach(value -> System.out.println(value));
+    interpretedFields.stream().sorted().forEach(System.out::println);
   }
 
   public static IndexRecordTransform create(
@@ -317,8 +318,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
       }
     }
 
-    if (lr != null
-        && lr.getHasCoordinate() != null
+    if (lr.getHasCoordinate() != null
         && lr.getHasCoordinate()
         && lr.getDecimalLatitude() != null
         && lr.getDecimalLongitude() != null) {
@@ -395,8 +395,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     }
 
     // see https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/99
-    boolean spatiallyValid =
-        lr.getHasGeospatialIssue() != null && lr.getHasGeospatialIssue() ? false : true;
+    boolean spatiallyValid = lr.getHasGeospatialIssue() == null || !lr.getHasGeospatialIssue();
     indexRecord.getBooleans().put(SPATIALLY_VALID, spatiallyValid);
 
     // see  https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/162
@@ -434,14 +433,14 @@ public class IndexRecordTransform implements Serializable, IndexFields {
             .put(
                 DATA_HUB_UID,
                 aar.getHubMembership().stream()
-                    .map(enr -> enr.getUid())
+                    .map(EntityReference::getUid)
                     .collect(Collectors.toList()));
         indexRecord
             .getMultiValues()
             .put(
                 DATA_HUB_NAME,
                 aar.getHubMembership().stream()
-                    .map(enr -> enr.getName())
+                    .map(EntityReference::getName)
                     .collect(Collectors.toList()));
       }
     }
@@ -454,7 +453,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
       List<String> images = new ArrayList<>();
       List<String> videos = new ArrayList<>();
       List<String> sounds = new ArrayList<>();
-      isr.getImageItems().stream()
+      isr.getImageItems()
           .forEach(
               image -> {
                 if (StringUtils.isNotEmpty(image.getLicense())) {
@@ -484,7 +483,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
             .put(
                 IMAGE_IDS,
                 isr.getImageItems().stream()
-                    .map(i -> i.getIdentifier())
+                    .map(Image::getIdentifier)
                     .collect(Collectors.toList()));
       }
       if (!sounds.isEmpty()) {
@@ -493,7 +492,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
             .put(
                 SOUND_IDS,
                 isr.getImageItems().stream()
-                    .map(i -> i.getIdentifier())
+                    .map(Image::getIdentifier)
                     .collect(Collectors.toList()));
       }
       if (!videos.isEmpty()) {
@@ -502,19 +501,17 @@ public class IndexRecordTransform implements Serializable, IndexFields {
             .put(
                 VIDEO_IDS,
                 isr.getImageItems().stream()
-                    .map(i -> i.getIdentifier())
+                    .map(Image::getIdentifier)
                     .collect(Collectors.toList()));
       }
 
       if (!multimedia.isEmpty()) {
-        List<String> distinctList = multimedia.stream().collect(Collectors.toList());
+        List<String> distinctList = new ArrayList<>(multimedia);
         indexRecord.getMultiValues().put(MULTIMEDIA, distinctList);
       }
 
       if (!licenses.isEmpty()) {
-        indexRecord
-            .getMultiValues()
-            .put(MULTIMEDIA_LICENSE, licenses.stream().collect(Collectors.toList()));
+        indexRecord.getMultiValues().put(MULTIMEDIA_LICENSE, new ArrayList<>(licenses));
       }
     }
 
@@ -624,27 +621,27 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     return ImmutableSet.<String>builder()
         .addAll(
             LocationRecord.getClassSchema().getFields().stream()
-                .map(field -> field.name())
+                .map(Field::name)
                 .collect(Collectors.toList()))
         .addAll(
             ALAAttributionRecord.getClassSchema().getFields().stream()
-                .map(field -> field.name())
+                .map(Field::name)
                 .collect(Collectors.toList()))
         .addAll(
             ALATaxonRecord.getClassSchema().getFields().stream()
-                .map(field -> field.name())
+                .map(Field::name)
                 .collect(Collectors.toList()))
         .addAll(
             MetadataRecord.getClassSchema().getFields().stream()
-                .map(field -> field.name())
+                .map(Field::name)
                 .collect(Collectors.toList()))
         .addAll(
             BasicRecord.getClassSchema().getFields().stream()
-                .map(field -> field.name())
+                .map(Field::name)
                 .collect(Collectors.toList()))
         .addAll(
             TemporalRecord.getClassSchema().getFields().stream()
-                .map(field -> field.name())
+                .map(Field::name)
                 .collect(Collectors.toList()))
         .build();
   }
@@ -868,35 +865,33 @@ public class IndexRecordTransform implements Serializable, IndexFields {
                                       .findFirst()
                                       .map(Schema::getType)
                                   : Optional.of(schema.getType());
-                          if (r != null) {
-                            type.ifPresent(
-                                t -> {
-                                  switch (t) {
-                                    case BOOLEAN:
-                                      //
-                                      builder.getBooleans().put(f.name(), (Boolean) r);
-                                      break;
-                                    case FLOAT:
-                                      builder.getDoubles().put(f.name(), (Double) r);
-                                      break;
-                                    case DOUBLE:
-                                      builder.getDoubles().put(f.name(), (Double) r);
-                                      break;
-                                    case INT:
-                                      builder.getInts().put(f.name(), (Integer) r);
-                                      break;
-                                    case LONG:
-                                      builder.getLongs().put(f.name(), (Long) r);
-                                      break;
-                                    case ARRAY:
-                                      builder.getMultiValues().put(f.name(), (java.util.List) r);
-                                      break;
-                                    default:
-                                      builder.getStrings().put(f.name(), r.toString());
-                                      break;
-                                  }
-                                });
-                          }
+                          type.ifPresent(
+                              t -> {
+                                switch (t) {
+                                  case BOOLEAN:
+                                    //
+                                    builder.getBooleans().put(f.name(), (Boolean) r);
+                                    break;
+                                  case FLOAT:
+                                    builder.getDoubles().put(f.name(), (Double) r);
+                                    break;
+                                  case DOUBLE:
+                                    builder.getDoubles().put(f.name(), (Double) r);
+                                    break;
+                                  case INT:
+                                    builder.getInts().put(f.name(), (Integer) r);
+                                    break;
+                                  case LONG:
+                                    builder.getLongs().put(f.name(), (Long) r);
+                                    break;
+                                  case ARRAY:
+                                    builder.getMultiValues().put(f.name(), (List) r);
+                                    break;
+                                  default:
+                                    builder.getStrings().put(f.name(), r.toString());
+                                    break;
+                                }
+                              });
                         }));
   }
 
