@@ -233,6 +233,11 @@
       <artifactId>elasticsearch</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.apache.beam</groupId>
+      <artifactId>beam-runners-direct-java</artifactId>
+      <scope>test</scope>
+    </dependency>
 
   </dependencies>
 

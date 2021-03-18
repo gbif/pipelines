@@ -714,10 +714,10 @@ public class InterpretedToHdfsViewPipeline {
 
     // Move files
     Mutex.Action action = () -> HdfsViewAvroUtils.move(options);
-    if (options.getProperties() != null) {
-      SharedLockUtils.doHdfsPrefixLock(options, action);
-    } else {
+    if (options.getTestMode()) {
       action.execute();
+    } else {
+      SharedLockUtils.doHdfsPrefixLock(options, action);
     }
 
     MetricsHandler.saveCountersToInputPathFile(options, metrics.getMetricsResult());
