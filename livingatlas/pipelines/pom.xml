@@ -306,7 +306,7 @@
     <!-- Plugins -->
     <org.jetbrains.annotations>13.0</org.jetbrains.annotations>
 
-    <download-maven-plugin.version>1.6.0</download-maven-plugin.version>
+    <download-maven-plugin.version>1.6.1</download-maven-plugin.version>
     <jcabi-log.version>0.18.1</jcabi-log.version>
 
     <!-- use same version as okhttp -->
