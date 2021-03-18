@@ -39,7 +39,6 @@ import org.gbif.pipelines.core.io.AvroReader;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.core.ws.metadata.MetadataServiceClient;
-import org.gbif.pipelines.core.ws.metadata.MetadataServiceClient;
 import org.gbif.pipelines.factory.ClusteringServiceFactory;
 import org.gbif.pipelines.factory.GeocodeKvStoreFactory;
 import org.gbif.pipelines.factory.GrscicollLookupKvStoreFactory;
@@ -233,7 +232,6 @@ public class VerbatimToInterpretedPipeline {
     GrscicollTransform grscicollTransform =
         GrscicollTransform.builder()
             .kvStoreSupplier(grscicollServiceSupplier)
-            .kvStoreSupplier(GrscicollLookupKvStoreFactory.getInstanceSupplier(config))
             .erTag(verbatimTransform.getTag())
             .brTag(basicTransform.getTag())
             .create()
