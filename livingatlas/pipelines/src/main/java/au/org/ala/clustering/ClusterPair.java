@@ -9,5 +9,5 @@ import org.gbif.pipelines.core.parsers.clustering.RelationshipAssertion;
 public class ClusterPair {
   HashKeyOccurrence o1;
   HashKeyOccurrence o2;
-  RelationshipAssertion assertion;
+  RelationshipAssertion<HashKeyOccurrence> assertion;
 }

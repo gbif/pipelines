@@ -356,7 +356,7 @@ public class IndexRecordPipeline {
         };
 
     List<IndexRecord> indexRecords =
-        basicMap.values().stream().map(br -> indexRequestFn.apply(br)).collect(Collectors.toList());
+        basicMap.values().stream().map(indexRequestFn).collect(Collectors.toList());
 
     OutputStream output =
         fs.create(
@@ -369,14 +369,14 @@ public class IndexRecordPipeline {
                     + ".avro"));
 
     DatumWriter<IndexRecord> datumWriter = new GenericDatumWriter<>(IndexRecord.getClassSchema());
-    DataFileWriter dataFileWriter = new DataFileWriter<IndexRecord>(datumWriter);
-    dataFileWriter.setCodec(BASE_CODEC);
-    dataFileWriter.create(IndexRecord.getClassSchema(), output);
+    try (DataFileWriter<IndexRecord> dataFileWriter = new DataFileWriter<>(datumWriter)) {
+      dataFileWriter.setCodec(BASE_CODEC);
+      dataFileWriter.create(IndexRecord.getClassSchema(), output);
 
-    for (IndexRecord indexRecord : indexRecords) {
-      dataFileWriter.append(indexRecord);
+      for (IndexRecord indexRecord : indexRecords) {
+        dataFileWriter.append(indexRecord);
+      }
     }
-    dataFileWriter.close();
 
     MetricsHandler.saveCountersToTargetPathFile(options, metrics.getMetricsResult());
     log.info("Pipeline has been finished - {}", LocalDateTime.now());

@@ -275,13 +275,7 @@ public class IndexRecordPipeline {
     log.info("Pipeline has been finished");
   }
 
-  /**
-   * Load image service records for a dataset.
-   *
-   * @param options
-   * @param p
-   * @return
-   */
+  /** Load image service records for a dataset. */
   private static PCollection<KV<String, ImageRecord>> getLoadImageServiceRecords(
       IndexingPipelineOptions options, Pipeline p) {
     PCollection<KV<String, ImageRecord>> alaImageServiceRecords;

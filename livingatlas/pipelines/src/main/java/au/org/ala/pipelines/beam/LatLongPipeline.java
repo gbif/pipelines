@@ -94,13 +94,7 @@ public class LatLongPipeline {
     log.info("Pipeline has been finished. Output written to " + outputPath + "/latlng.csv");
   }
 
-  /**
-   * Load index records from AVRO.
-   *
-   * @param options
-   * @param p
-   * @return
-   */
+  /** Load index records from AVRO. */
   private static PCollection<IndexRecord> loadIndexRecords(
       AllDatasetsPipelinesOptions options, Pipeline p) {
     if (options.getDatasetId() != null && !"all".equalsIgnoreCase(options.getDatasetId())) {

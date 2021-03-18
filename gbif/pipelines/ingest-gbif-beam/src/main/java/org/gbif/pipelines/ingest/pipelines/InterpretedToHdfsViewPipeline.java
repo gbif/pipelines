@@ -5,6 +5,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.getAllTables;
 
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
@@ -72,6 +73,7 @@ import org.gbif.pipelines.transforms.table.PreparationTableTransform;
 import org.gbif.pipelines.transforms.table.PreservationTableTransform;
 import org.gbif.pipelines.transforms.table.ReferenceTableTransform;
 import org.gbif.pipelines.transforms.table.ResourceRelationshipTableTransform;
+import org.gbif.wrangler.lock.Mutex;
 import org.slf4j.MDC;
 
 /**
@@ -122,6 +124,12 @@ public class InterpretedToHdfsViewPipeline {
   }
 
   public static void run(InterpretationPipelineOptions options) {
+    run(options, Pipeline::create);
+  }
+
+  public static void run(
+      InterpretationPipelineOptions options,
+      Function<InterpretationPipelineOptions, Pipeline> pipelinesFn) {
 
     String hdfsSiteConfig = options.getHdfsSiteConfig();
     String coreSiteConfig = options.getCoreSiteConfig();
@@ -149,7 +157,7 @@ public class InterpretedToHdfsViewPipeline {
     UnaryOperator<String> interpretPathFn =
         t -> PathBuilder.buildPathInterpretUsingInputPath(options, t, "*" + AVRO_EXTENSION);
 
-    Pipeline p = Pipeline.create(options);
+    Pipeline p = pipelinesFn.apply(options);
 
     log.info("Adding step 2: Reading AVROs");
     // Core
@@ -433,7 +441,12 @@ public class InterpretedToHdfsViewPipeline {
     PipelineResult result = p.run();
 
     if (PipelineResult.State.DONE == result.waitUntilFinish()) {
-      SharedLockUtils.doHdfsPrefixLock(options, () -> HdfsViewAvroUtils.move(options));
+      Mutex.Action action = () -> HdfsViewAvroUtils.move(options);
+      if (options.getTestMode()) {
+        action.execute();
+      } else {
+        SharedLockUtils.doHdfsPrefixLock(options, action);
+      }
     }
 
     // Metrics

@@ -43,15 +43,14 @@ public class ALAAttributionInterpreter {
           if (hubs != null && !hubs.isEmpty()) {
             List<org.gbif.pipelines.io.avro.EntityReference> refs = new ArrayList<>();
             aar.setHubMembership(refs);
-            hubs.stream()
-                .forEach(
-                    hub ->
-                        refs.add(
-                            org.gbif.pipelines.io.avro.EntityReference.newBuilder()
-                                .setName(hub.getName())
-                                .setUid(hub.getUid())
-                                .setUri(hub.getUri())
-                                .build()));
+            hubs.forEach(
+                hub ->
+                    refs.add(
+                        org.gbif.pipelines.io.avro.EntityReference.newBuilder()
+                            .setName(hub.getName())
+                            .setUid(hub.getUid())
+                            .setUri(hub.getUri())
+                            .build()));
           }
 
         } else {

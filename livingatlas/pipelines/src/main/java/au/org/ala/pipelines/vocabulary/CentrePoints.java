@@ -42,8 +42,8 @@ public class CentrePoints {
   // Only for country, map country code to country name
   private final Map<String, String> codes = new HashMap<>();
 
-  private final Set<String> reportedMissing = new HashSet<String>();
-  private final int REPORTED_MISSING_MAX_SIZE = 1000;
+  private final Set<String> reportedMissing = new HashSet<>();
+  private final int reportedMissingMaxSize = 1000;
 
   private CentrePoints(String regionType) {
     this.regionType = regionType;
@@ -130,18 +130,18 @@ public class CentrePoints {
       if (log.isWarnEnabled()) {
         // avoid repeated logging of the same issue
         if (!reportedMissing.contains(location)
-            && reportedMissing.size() < REPORTED_MISSING_MAX_SIZE) {
+            && reportedMissing.size() < reportedMissingMaxSize) {
           log.warn(
               "[{}] {} is not found in records. This is due to a bad {} name or missing entries in centre points file",
               regionType,
               location,
               regionType);
           reportedMissing.add(location);
-          if (reportedMissing.size() == REPORTED_MISSING_MAX_SIZE) {
+          if (reportedMissing.size() == reportedMissingMaxSize) {
             log.warn(
                 "[{}] No longer logging missing centre point entries. Number of missing values exceeded {}. Please check the data is mapped correctly",
                 regionType,
-                REPORTED_MISSING_MAX_SIZE);
+                reportedMissingMaxSize);
           }
         }
       }

@@ -1,4 +1,4 @@
-package org.gbif.pipelines.ingest.java.pipelines;
+package org.gbif.pipelines.ingest.pipelines;
 
 import java.io.File;
 import java.util.Collections;
@@ -10,12 +10,14 @@ import org.apache.avro.file.DataFileReader;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificRecordBase;
+import org.apache.beam.sdk.testing.NeedsRunner;
+import org.apache.beam.sdk.testing.TestPipeline;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
-import org.gbif.pipelines.ingest.java.transforms.InterpretedAvroWriter;
+import org.gbif.pipelines.ingest.pipelines.utils.InterpretedAvroWriter;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -41,11 +43,19 @@ import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
+@RunWith(JUnit4.class)
+@Category(NeedsRunner.class)
 public class InterpretedToHdfsViewPipelineIT {
 
   private static final String ID = "777";
+
+  @Rule public final transient TestPipeline p = TestPipeline.create();
 
   @Test
   public void pipelineAllTest() throws Exception {
@@ -67,7 +77,7 @@ public class InterpretedToHdfsViewPipelineIT {
       "--targetPath=" + input,
       "--numberOfShards=1",
       "--interpretationTypes=OCCURRENCE,MEASUREMENT_OR_FACT_TABLE,EXTENDED_MEASUREMENT_OR_FACT_TABLE,GERMPLASM_MEASUREMENT_TRIAL_TABLE",
-      "--testMode=true"
+      "--properties=" + outputFile + "/lock.yaml"
     };
     InterpretationPipelineOptions optionsWriter =
         PipelinesOptionsFactory.createInterpretation(argsWriter);
@@ -161,10 +171,10 @@ public class InterpretedToHdfsViewPipelineIT {
       "--testMode=true"
     };
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
-    InterpretedToHdfsViewPipeline.run(options);
+    InterpretedToHdfsViewPipeline.run(options, opt -> p);
 
     Function<String, String> outputFn =
-        s -> output + "/" + s + "/d596fccb-2319-42eb-b13b-986c932780ad_147.avro";
+        s -> output + "/" + s + "/d596fccb-2319-42eb-b13b-986c932780ad_147-00000-of-00001.avro";
 
     assertFile(OccurrenceHdfsRecord.class, outputFn.apply("occurrence"));
     assertFile(MeasurementOrFactTable.class, outputFn.apply("measurementorfacttable"));
@@ -195,8 +205,7 @@ public class InterpretedToHdfsViewPipelineIT {
       "--inputPath=" + output,
       "--targetPath=" + input,
       "--numberOfShards=1",
-      "--interpretationTypes=OCCURRENCE",
-      "--testMode=true"
+      "--interpretationTypes=OCCURRENCE"
     };
     InterpretationPipelineOptions optionsWriter =
         PipelinesOptionsFactory.createInterpretation(argsWriter);
@@ -290,10 +299,10 @@ public class InterpretedToHdfsViewPipelineIT {
       "--testMode=true"
     };
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
-    InterpretedToHdfsViewPipeline.run(options);
+    InterpretedToHdfsViewPipeline.run(options, opt -> p);
 
     Function<String, String> outputFn =
-        s -> output + "/" + s + "/d596fccb-2319-42eb-b13b-986c932780ad_147.avro";
+        s -> output + "/" + s + "/d596fccb-2319-42eb-b13b-986c932780ad_147-00000-of-00001.avro";
 
     assertFile(OccurrenceHdfsRecord.class, outputFn.apply("occurrence"));
     assertFileExistFalse(outputFn.apply("measurementorfacttable"));
