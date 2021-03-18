@@ -17,9 +17,8 @@ import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 /** Filter uses invalid BasicRecord collection as a source to find and skip ExtendedRecord record */
-@SuppressWarnings("ConstantConditions")
 @AllArgsConstructor(staticName = "create")
-public class FilterExtendedRecordTransform implements Serializable {
+public class FilterRecordsTransform implements Serializable {
 
   private static final long serialVersionUID = 2953351237274578363L;
 
@@ -27,13 +26,13 @@ public class FilterExtendedRecordTransform implements Serializable {
   @NonNull private final TupleTag<ExtendedRecord> erTag;
   @NonNull private final TupleTag<BasicRecord> brTag;
 
-  public SingleOutput<KV<String, CoGbkResult>, KV<String, CoGbkResult>> filter() {
+  public SingleOutput<KV<String, CoGbkResult>, CoGbkResult> filter() {
 
-    DoFn<KV<String, CoGbkResult>, KV<String, CoGbkResult>> fn =
-        new DoFn<KV<String, CoGbkResult>, KV<String, CoGbkResult>>() {
+    DoFn<KV<String, CoGbkResult>, CoGbkResult> fn =
+        new DoFn<KV<String, CoGbkResult>, CoGbkResult>() {
 
           private final Counter counter =
-              Metrics.counter(FilterExtendedRecordTransform.class, FILTER_ER_BASED_ON_GBIF_ID);
+              Metrics.counter(FilterRecordsTransform.class, FILTER_ER_BASED_ON_GBIF_ID);
 
           @ProcessElement
           public void processElement(ProcessContext c) {
@@ -41,10 +40,24 @@ public class FilterExtendedRecordTransform implements Serializable {
             String k = c.element().getKey();
 
             BasicRecord br = v.getOnly(brTag, BasicRecord.newBuilder().setId(k).build());
-            if (br.getCreated() == null) {
-              c.output(c.element());
+            if (br != null && br.getCreated() == null) {
+              c.output(v);
               counter.inc();
             }
+          }
+        };
+
+    return ParDo.of(fn);
+  }
+
+  public SingleOutput<CoGbkResult, ExtendedRecord> extractExtendedRecords() {
+    DoFn<CoGbkResult, ExtendedRecord> fn =
+        new DoFn<CoGbkResult, ExtendedRecord>() {
+          @ProcessElement
+          public void processElement(ProcessContext c) {
+            CoGbkResult v = c.element();
+            ExtendedRecord er = v.getOnly(erTag);
+            c.output(er);
           }
         };
 

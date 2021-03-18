@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Setter;
@@ -31,11 +30,10 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.transforms.Transform;
-import org.gbif.pipelines.transforms.common.CheckTransforms;
 import org.gbif.rest.client.grscicoll.GrscicollLookupResponse;
 
 @Slf4j
-public class GrscicollTransform extends Transform<KV<String, CoGbkResult>, GrscicollRecord> {
+public class GrscicollTransform extends Transform<CoGbkResult, GrscicollRecord> {
 
   private final SerializableSupplier<KeyValueStore<GrscicollLookupRequest, GrscicollLookupResponse>>
       kvStoreSupplier;
@@ -70,21 +68,13 @@ public class GrscicollTransform extends Transform<KV<String, CoGbkResult>, Grsci
         .via((GrscicollRecord gr) -> KV.of(gr.getId(), gr));
   }
 
-  // TODO: check with Nikolay
-  public CheckTransforms<KV<String, CoGbkResult>> checkTypes(Set<String> types) {
-    return CheckTransforms.create(
-        (Class<KV<String, CoGbkResult>>)
-            new TypeDescriptor<KV<String, CoGbkResult>>() {}.getRawType(),
-        CheckTransforms.checkRecordType(types, getRecordType()));
-  }
-
   public GrscicollTransform counterFn(SerializableConsumer<String> counterFn) {
     setCounterFn(counterFn);
     return this;
   }
 
   @Override
-  public SingleOutput<KV<String, CoGbkResult>, GrscicollRecord> interpret() {
+  public SingleOutput<CoGbkResult, GrscicollRecord> interpret() {
     return ParDo.of(this).withSideInputs(metadataView);
   }
 
@@ -117,17 +107,17 @@ public class GrscicollTransform extends Transform<KV<String, CoGbkResult>, Grsci
   }
 
   @Override
-  public Optional<GrscicollRecord> convert(KV<String, CoGbkResult> source) {
+  public Optional<GrscicollRecord> convert(CoGbkResult source) {
     throw new IllegalArgumentException("Method is not implemented!");
   }
 
   @Override
   @ProcessElement
   public void processElement(ProcessContext c) {
-    CoGbkResult v = c.element().getValue();
+    CoGbkResult v = c.element();
 
-    ExtendedRecord er = v.getOnly(erTag);
-    BasicRecord br = v.getOnly(brTag);
+    ExtendedRecord er = v.getOnly(erTag, null);
+    BasicRecord br = v.getOnly(brTag, null);
 
     if (er == null || br == null) {
       return;
