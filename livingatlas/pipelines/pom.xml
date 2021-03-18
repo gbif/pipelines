@@ -37,9 +37,9 @@
               <goal>wget</goal>
             </goals>
             <configuration>
-              <url>https://biocache.ala.org.au/archives/pipelines/pipelines-shapefiles.zip</url>
+              <url>http://download.gbif.org/pipelines/livingatlas/pipelines-shapefiles-v2.zip</url>
               <unpack>true</unpack>
-              <outputDirectory>/tmp/pipelines-shp-${git.branch}</outputDirectory>
+              <outputDirectory>/tmp/pipelines-shp</outputDirectory>
             </configuration>
           </execution>
         </executions>
