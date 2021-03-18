@@ -35,7 +35,7 @@ public class GrscicollInterpreter {
       MetadataRecord mdr,
       BasicRecord br) {
     return (er, gr) -> {
-      if (kvStore == null) {
+      if (kvStore == null || mdr == null || br == null) {
         return;
       }
 

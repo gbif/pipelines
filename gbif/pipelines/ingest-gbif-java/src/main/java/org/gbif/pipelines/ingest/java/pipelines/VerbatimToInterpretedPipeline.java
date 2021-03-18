@@ -344,7 +344,7 @@ public class VerbatimToInterpretedPipeline {
           er -> {
             BasicRecord brInvalid = gbifIdTransform.getBrInvalidMap().get(er.getId());
             if (brInvalid == null) {
-              BasicRecord brValid = gbifIdTransform.getBrMap().get(er.getId());
+              BasicRecord br = gbifIdTransform.getBrMap().get(er.getId());
 
               verbatimWriter.append(er);
               temporalTransform.processElement(er).ifPresent(temporalWriter::append);
@@ -352,7 +352,7 @@ public class VerbatimToInterpretedPipeline {
               imageTransform.processElement(er).ifPresent(imageWriter::append);
               audubonTransform.processElement(er).ifPresent(audubonWriter::append);
               taxonomyTransform.processElement(er).ifPresent(taxonWriter::append);
-              grscicollTransform.processElement(er, brValid, mdr).ifPresent(grscicollWriter::append);
+              grscicollTransform.processElement(er, br, mdr).ifPresent(grscicollWriter::append);
               locationTransform.processElement(er, mdr).ifPresent(locationWriter::append);
             } else {
               basicInvalidWriter.append(brInvalid);
