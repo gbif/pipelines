@@ -66,7 +66,8 @@ public class InterpretedToHdfsViewPipelineIT {
       "--inputPath=" + output,
       "--targetPath=" + input,
       "--numberOfShards=1",
-      "--interpretationTypes=OCCURRENCE,MEASUREMENT_OR_FACT_TABLE,EXTENDED_MEASUREMENT_OR_FACT_TABLE,GERMPLASM_MEASUREMENT_TRIAL_TABLE"
+      "--interpretationTypes=OCCURRENCE,MEASUREMENT_OR_FACT_TABLE,EXTENDED_MEASUREMENT_OR_FACT_TABLE,GERMPLASM_MEASUREMENT_TRIAL_TABLE",
+      "--testMode=true"
     };
     InterpretationPipelineOptions optionsWriter =
         PipelinesOptionsFactory.createInterpretation(argsWriter);
@@ -156,7 +157,8 @@ public class InterpretedToHdfsViewPipelineIT {
       "--inputPath=" + input,
       "--targetPath=" + output,
       "--numberOfShards=1",
-      "--interpretationTypes=OCCURRENCE,MEASUREMENT_OR_FACT_TABLE,EXTENDED_MEASUREMENT_OR_FACT_TABLE,GERMPLASM_MEASUREMENT_TRIAL_TABLE"
+      "--interpretationTypes=OCCURRENCE,MEASUREMENT_OR_FACT_TABLE,EXTENDED_MEASUREMENT_OR_FACT_TABLE,GERMPLASM_MEASUREMENT_TRIAL_TABLE",
+      "--testMode=true"
     };
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
     InterpretedToHdfsViewPipeline.run(options);
@@ -193,7 +195,8 @@ public class InterpretedToHdfsViewPipelineIT {
       "--inputPath=" + output,
       "--targetPath=" + input,
       "--numberOfShards=1",
-      "--interpretationTypes=OCCURRENCE"
+      "--interpretationTypes=OCCURRENCE",
+      "--testMode=true"
     };
     InterpretationPipelineOptions optionsWriter =
         PipelinesOptionsFactory.createInterpretation(argsWriter);
@@ -283,7 +286,8 @@ public class InterpretedToHdfsViewPipelineIT {
       "--inputPath=" + input,
       "--targetPath=" + output,
       "--numberOfShards=1",
-      "--interpretationTypes=OCCURRENCE"
+      "--interpretationTypes=OCCURRENCE",
+      "--testMode=true"
     };
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
     InterpretedToHdfsViewPipeline.run(options);
