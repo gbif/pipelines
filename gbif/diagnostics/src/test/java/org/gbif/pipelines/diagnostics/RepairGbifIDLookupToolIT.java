@@ -35,7 +35,7 @@ public class RepairGbifIDLookupToolIT {
       "--lookup-table",
       HbaseServer.CFG.getLookupTable(),
       "--deletion-strategy",
-      "both",
+      "BOTH",
       "--only-collisions"
     };
 
@@ -59,7 +59,7 @@ public class RepairGbifIDLookupToolIT {
       "--lookup-table",
       HbaseServer.CFG.getLookupTable(),
       "--deletion-strategy",
-      "both",
+      "BOTH",
       "--only-collisions"
     };
 
@@ -99,7 +99,7 @@ public class RepairGbifIDLookupToolIT {
       "--occurrenceID-lookup-key",
       "occId",
       "--deletion-strategy",
-      "both",
+      "BOTH",
       "--only-collisions"
     };
 
@@ -136,7 +136,7 @@ public class RepairGbifIDLookupToolIT {
         .lookupTable(HbaseServer.CFG.getLookupTable())
         .counterTable(HbaseServer.CFG.getCounterTable())
         .occurrenceTable(HbaseServer.CFG.getOccurrenceTable())
-        .deletionStrategyType(DeletionStrategyType.both)
+        .deletionStrategyType(DeletionStrategyType.BOTH)
         .connection(HBASE_SERVER.getConnection())
         .build()
         .run();
@@ -178,7 +178,7 @@ public class RepairGbifIDLookupToolIT {
         .lookupTable(HbaseServer.CFG.getLookupTable())
         .counterTable(HbaseServer.CFG.getCounterTable())
         .occurrenceTable(HbaseServer.CFG.getOccurrenceTable())
-        .deletionStrategyType(DeletionStrategyType.both)
+        .deletionStrategyType(DeletionStrategyType.BOTH)
         .connection(HBASE_SERVER.getConnection())
         .onlyCollisions(true)
         .build()
@@ -225,7 +225,7 @@ public class RepairGbifIDLookupToolIT {
         .lookupTable(HbaseServer.CFG.getLookupTable())
         .counterTable(HbaseServer.CFG.getCounterTable())
         .occurrenceTable(HbaseServer.CFG.getOccurrenceTable())
-        .deletionStrategyType(DeletionStrategyType.both)
+        .deletionStrategyType(DeletionStrategyType.BOTH)
         .connection(HBASE_SERVER.getConnection())
         .build()
         .run();

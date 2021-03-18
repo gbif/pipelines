@@ -5,7 +5,6 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.Objects;
 import java.util.Optional;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
@@ -75,7 +74,7 @@ public class TaxonomyTransform extends Transform<ExtendedRecord, TaxonRecord> {
   /** Beam @Teardown closes initialized resources */
   @Teardown
   public void tearDown() {
-    if (Objects.nonNull(kvStore)) {
+    if (kvStore != null) {
       try {
         log.info("Close NameUsageMatchKvStore");
         kvStore.close();
