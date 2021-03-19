@@ -22,7 +22,6 @@
         <filtering>true</filtering>
       </testResource>
     </testResources>
-
     <plugins>
       <!-- Download supporting shapefiles -->
       <plugin>
@@ -87,6 +86,7 @@
             <filter>
               <artifact>*:*</artifact>
               <excludes>
+                <exclude>module-info.class</exclude>
                 <exclude>META-INF/*.SF</exclude>
                 <exclude>META-INF/*.DSA</exclude>
                 <exclude>META-INF/*.RSA</exclude>
@@ -290,7 +290,6 @@
     <commons-configuration.version>1.6</commons-configuration.version>
     <netty.version>3.9.9.Final</netty.version>
     <netty-all.version>4.1.42.Final</netty-all.version>
-    <ingest-hdfs-table.version>2.2.34</ingest-hdfs-table.version>
     <snakeyaml.version>1.25</snakeyaml.version>
     <streamex.version>0.7.2</streamex.version>
     <!-- This is overriding GBIF mother pom which is using a 2.11.0.rc1  -->
@@ -299,6 +298,7 @@
     <jcommander.version>1.78</jcommander.version>
     <layers-store.version>2.0.3</layers-store.version>
     <json-simple.version>1.1.1</json-simple.version>
+    <gbif-parsers.version>0.53</gbif-parsers.version>
 
     <!-- GBIF parent currently using 2.4.0 -->
     <spark.embedded.version>2.4.5</spark.embedded.version>
@@ -422,41 +422,8 @@
         </exclusion>
       </exclusions>
     </dependency>
-    <dependency>
-      <groupId>org.gbif.pipelines</groupId>
-      <artifactId>ingest-hdfs-table</artifactId>
-      <version>${ingest-hdfs-table.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>ch.qos.logback</groupId>
-          <artifactId>logback-classic</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif.pipelines</groupId>
-      <artifactId>keygen</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif.pipelines</groupId>
-      <artifactId>archives-converters</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif.occurrence</groupId>
-      <artifactId>occurrence-hdfs-table</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>com.beust</groupId>
-          <artifactId>jcommander</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
 
     <!-- GBIF -->
-    <dependency>
-      <groupId>org.gbif</groupId>
-      <artifactId>dwca-io</artifactId>
-    </dependency>
     <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>dwc-api</artifactId>
@@ -464,7 +431,7 @@
     <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>gbif-parsers</artifactId>
-      <version>0.53</version>
+      <version>${gbif-parsers.version}</version>
     </dependency>
     <dependency>
       <groupId>org.gbif</groupId>
@@ -508,10 +475,6 @@
           <artifactId>logback-classic</artifactId>
         </exclusion>
       </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif</groupId>
-      <artifactId>gbif-wrangler</artifactId>
     </dependency>
 
     <!-- Avro -->
