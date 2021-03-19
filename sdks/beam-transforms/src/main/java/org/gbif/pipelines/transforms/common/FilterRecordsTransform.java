@@ -1,10 +1,10 @@
 package org.gbif.pipelines.transforms.common;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Metrics.FILTER_ER_BASED_ON_GBIF_ID;
-
 import java.io.Serializable;
-import lombok.AllArgsConstructor;
-import lombok.NonNull;
+
+import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.DoFn;
@@ -13,8 +13,11 @@ import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TupleTag;
-import org.gbif.pipelines.io.avro.BasicRecord;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
+
+import lombok.AllArgsConstructor;
+import lombok.NonNull;
+
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.FILTER_ER_BASED_ON_GBIF_ID;
 
 /** Filter uses invalid BasicRecord collection as a source to find and skip ExtendedRecord record */
 @AllArgsConstructor(staticName = "create")
@@ -26,6 +29,7 @@ public class FilterRecordsTransform implements Serializable {
   @NonNull private final TupleTag<ExtendedRecord> erTag;
   @NonNull private final TupleTag<BasicRecord> brTag;
 
+  /** Filters the records by discarding the results that have an invalid {@link BasicRecord} */
   public SingleOutput<KV<String, CoGbkResult>, CoGbkResult> filter() {
 
     DoFn<KV<String, CoGbkResult>, CoGbkResult> fn =
@@ -50,6 +54,9 @@ public class FilterRecordsTransform implements Serializable {
     return ParDo.of(fn);
   }
 
+  /**
+   * It extracts the {@link ExtendedRecord} from a {@link CoGbkResult}.
+   */
   public SingleOutput<CoGbkResult, ExtendedRecord> extractExtendedRecords() {
     DoFn<CoGbkResult, ExtendedRecord> fn =
         new DoFn<CoGbkResult, ExtendedRecord>() {

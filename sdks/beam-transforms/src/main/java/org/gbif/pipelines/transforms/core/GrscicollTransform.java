@@ -119,15 +119,15 @@ public class GrscicollTransform extends Transform<CoGbkResult, GrscicollRecord> 
     ExtendedRecord er = v.getOnly(erTag, null);
     BasicRecord br = v.getOnly(brTag, null);
 
-    if (er == null || br == null) {
-      return;
-    }
-
     processElement(er, br, c.sideInput(metadataView)).ifPresent(c::output);
   }
 
   public Optional<GrscicollRecord> processElement(
       ExtendedRecord source, BasicRecord br, MetadataRecord mdr) {
+    if (source == null) {
+      return Optional.empty();
+    }
+
     return Interpretation.from(source)
         .to(GrscicollRecord.newBuilder().setCreated(Instant.now().toEpochMilli()).build())
         .when(er -> !er.getCoreTerms().isEmpty())

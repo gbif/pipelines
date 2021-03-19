@@ -3,7 +3,14 @@ package org.gbif.pipelines.transforms;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.UnaryOperator;
-import lombok.SneakyThrows;
+
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.InterpretationType;
+import org.gbif.pipelines.core.functions.SerializableConsumer;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.Record;
+import org.gbif.pipelines.transforms.common.CheckTransforms;
+
 import org.apache.avro.Schema;
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.specific.SpecificRecordBase;
@@ -15,12 +22,8 @@ import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TupleTag;
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.InterpretationType;
-import org.gbif.pipelines.core.functions.SerializableConsumer;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.Record;
-import org.gbif.pipelines.transforms.common.CheckTransforms;
+
+import lombok.SneakyThrows;
 
 /**
  * Common class for all transformations
@@ -61,12 +64,19 @@ public abstract class Transform<R, T extends SpecificRecordBase & Record> extend
   }
 
   /**
-   * Checks if list contains {@link InterpretationType}, else returns empty {@link PCollection<T>}
+   * Default {@link #check(Set, Class)} that returns a {@link CheckTransforms} of {@link
+   * ExtendedRecord}.
    */
   public CheckTransforms<ExtendedRecord> check(Set<String> types) {
     return check(types, ExtendedRecord.class);
   }
 
+  /**
+   * Checks if list contains {@link InterpretationType}, else returns empty {@link PCollection<T>}.
+   *
+   * <p>This method should be used only when the deafault {@link #check(Set)} doesn't fill the
+   * needs.
+   */
   public <S> CheckTransforms<S> check(Set<String> types, Class<S> outputClass) {
     return CheckTransforms.create(outputClass, CheckTransforms.checkRecordType(types, recordType));
   }
