@@ -19,81 +19,6 @@
     <sonar.skip>true</sonar.skip>
   </properties>
 
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-shade-plugin</artifactId>
-        <configuration>
-          <createDependencyReducedPom>false</createDependencyReducedPom>
-          <filters>
-            <filter>
-              <artifact>*:*</artifact>
-              <excludes>
-                <exclude>META-INF/*.SF</exclude>
-                <exclude>META-INF/*.DSA</exclude>
-                <exclude>META-INF/*.RSA</exclude>
-              </excludes>
-            </filter>
-          </filters>
-        </configuration>
-        <executions>
-          <execution>
-            <phase>package</phase>
-            <goals>
-              <goal>shade</goal>
-            </goals>
-            <configuration>
-              <shadedArtifactAttached>true</shadedArtifactAttached>
-              <shadedClassifierName>shaded</shadedClassifierName>
-              <transformers>
-                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
-              </transformers>
-              <relocations>
-                <!-- Transient from core: conflicts with Beam on Spark -->
-                <relocation>
-                  <pattern>com.google.gson</pattern>
-                  <shadedPattern>g282.com.google.gson</shadedPattern>
-                </relocation>
-                <!-- Transient from core: conflicts with Beam on Spark -->
-                <relocation>
-                  <pattern>okio</pattern>
-                  <shadedPattern>o113.okio</shadedPattern>
-                </relocation>
-
-                <relocation>
-                  <pattern>retrofit2</pattern>
-                  <shadedPattern>gbif.retrofit2</shadedPattern>
-                </relocation>
-                <!-- Important: Do not relocate org.apache.hadoop.hive -->
-                <relocation>
-                  <pattern>org.apache.hadoop.hive.conf</pattern>
-                  <shadedPattern>h12.org.apache.hadoop.hive.conf</shadedPattern>
-                </relocation>
-                <relocation>
-                  <pattern>org.apache.hadoop.hive.ql</pattern>
-                  <shadedPattern>h12.org.apache.hadoop.hive.ql</shadedPattern>
-                </relocation>
-                <relocation>
-                  <pattern>org.apache.hadoop.hive.metastore</pattern>
-                  <shadedPattern>h12.org.apache.hadoop.hive.metastore</shadedPattern>
-                </relocation>
-                <relocation>
-                  <pattern>com.fasterxml.jackson</pattern>
-                  <shadedPattern>j299.com.fasterxml.jackson</shadedPattern>
-                </relocation>
-                <relocation>
-                  <pattern>org.apache.calcite</pattern>
-                  <pattern>org.apache.beam.repackaged.sql</pattern>
-                </relocation>
-              </relocations>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
-  </build>
-
   <dependencies>
 
     <!-- Tools -->
@@ -205,4 +130,85 @@
     </dependency>
 
   </dependencies>
+
+  <profiles>
+    <profile>
+      <id>extraArtifacts</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-shade-plugin</artifactId>
+            <configuration>
+              <createDependencyReducedPom>false</createDependencyReducedPom>
+              <filters>
+                <filter>
+                  <artifact>*:*</artifact>
+                  <excludes>
+                    <exclude>META-INF/*.SF</exclude>
+                    <exclude>META-INF/*.DSA</exclude>
+                    <exclude>META-INF/*.RSA</exclude>
+                  </excludes>
+                </filter>
+              </filters>
+            </configuration>
+            <executions>
+              <execution>
+                <phase>package</phase>
+                <goals>
+                  <goal>shade</goal>
+                </goals>
+                <configuration>
+                  <shadedArtifactAttached>true</shadedArtifactAttached>
+                  <shadedClassifierName>shaded</shadedClassifierName>
+                  <transformers>
+                    <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+                  </transformers>
+                  <relocations>
+                    <!-- Transient from core: conflicts with Beam on Spark -->
+                    <relocation>
+                      <pattern>com.google.gson</pattern>
+                      <shadedPattern>g282.com.google.gson</shadedPattern>
+                    </relocation>
+                    <!-- Transient from core: conflicts with Beam on Spark -->
+                    <relocation>
+                      <pattern>okio</pattern>
+                      <shadedPattern>o113.okio</shadedPattern>
+                    </relocation>
+
+                    <relocation>
+                      <pattern>retrofit2</pattern>
+                      <shadedPattern>gbif.retrofit2</shadedPattern>
+                    </relocation>
+                    <!-- Important: Do not relocate org.apache.hadoop.hive -->
+                    <relocation>
+                      <pattern>org.apache.hadoop.hive.conf</pattern>
+                      <shadedPattern>h12.org.apache.hadoop.hive.conf</shadedPattern>
+                    </relocation>
+                    <relocation>
+                      <pattern>org.apache.hadoop.hive.ql</pattern>
+                      <shadedPattern>h12.org.apache.hadoop.hive.ql</shadedPattern>
+                    </relocation>
+                    <relocation>
+                      <pattern>org.apache.hadoop.hive.metastore</pattern>
+                      <shadedPattern>h12.org.apache.hadoop.hive.metastore</shadedPattern>
+                    </relocation>
+                    <relocation>
+                      <pattern>com.fasterxml.jackson</pattern>
+                      <shadedPattern>j299.com.fasterxml.jackson</shadedPattern>
+                    </relocation>
+                    <relocation>
+                      <pattern>org.apache.calcite</pattern>
+                      <pattern>org.apache.beam.repackaged.sql</pattern>
+                    </relocation>
+                  </relocations>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
 </project>
