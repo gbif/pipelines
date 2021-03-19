@@ -1,28 +1,16 @@
 package org.gbif.pipelines.transforms.core;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
-import org.gbif.api.model.collections.lookup.Match.MatchType;
-import org.gbif.api.vocabulary.BasisOfRecord;
-import org.gbif.api.vocabulary.Country;
-import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwc.terms.GbifTerm;
-import org.gbif.kvs.KeyValueStore;
-import org.gbif.kvs.grscicoll.GrscicollLookupRequest;
-import org.gbif.pipelines.core.functions.SerializableSupplier;
-import org.gbif.pipelines.io.avro.BasicRecord;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
-import org.gbif.rest.client.grscicoll.GrscicollLookupResponse;
-import org.gbif.rest.client.grscicoll.GrscicollLookupResponse.EntityMatchedResponse;
-import org.gbif.rest.client.grscicoll.GrscicollLookupResponse.Match;
-
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
@@ -38,16 +26,26 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TypeDescriptor;
+import org.gbif.api.model.collections.lookup.Match.MatchType;
+import org.gbif.api.vocabulary.BasisOfRecord;
+import org.gbif.api.vocabulary.Country;
+import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.GbifTerm;
+import org.gbif.kvs.KeyValueStore;
+import org.gbif.kvs.grscicoll.GrscicollLookupRequest;
+import org.gbif.pipelines.core.functions.SerializableSupplier;
+import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
+import org.gbif.rest.client.grscicoll.GrscicollLookupResponse;
+import org.gbif.rest.client.grscicoll.GrscicollLookupResponse.EntityMatchedResponse;
+import org.gbif.rest.client.grscicoll.GrscicollLookupResponse.Match;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 /** Tests the {@link GrscicollTransform}. */
 @RunWith(JUnit4.class)

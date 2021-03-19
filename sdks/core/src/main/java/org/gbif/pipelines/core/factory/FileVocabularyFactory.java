@@ -32,8 +32,8 @@ public class FileVocabularyFactory {
    * lookup:
    *
    * <ul>
-   *   <li>LifeStage uses a {@link PreFilters#REMOVE_NUMERIC_PREFIX} filter. This filter removes all the
-   *       number characters that are present at the beginning of the value.</li>
+   *   <li>LifeStage uses a {@link PreFilters#REMOVE_NUMERIC_PREFIX} filter. This filter removes all
+   *       the number characters that are present at the beginning of the value.
    * </ul>
    *
    * @param config pipelines config that contains specific config for the vocabularies

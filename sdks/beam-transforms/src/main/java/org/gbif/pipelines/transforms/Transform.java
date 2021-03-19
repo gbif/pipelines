@@ -3,14 +3,7 @@ package org.gbif.pipelines.transforms;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.UnaryOperator;
-
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.InterpretationType;
-import org.gbif.pipelines.core.functions.SerializableConsumer;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.Record;
-import org.gbif.pipelines.transforms.common.CheckTransforms;
-
+import lombok.SneakyThrows;
 import org.apache.avro.Schema;
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.specific.SpecificRecordBase;
@@ -22,8 +15,12 @@ import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TupleTag;
-
-import lombok.SneakyThrows;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.InterpretationType;
+import org.gbif.pipelines.core.functions.SerializableConsumer;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.Record;
+import org.gbif.pipelines.transforms.common.CheckTransforms;
 
 /**
  * Common class for all transformations

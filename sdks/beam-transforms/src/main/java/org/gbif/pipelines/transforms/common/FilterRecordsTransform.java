@@ -1,10 +1,10 @@
 package org.gbif.pipelines.transforms.common;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.FILTER_ER_BASED_ON_GBIF_ID;
+
 import java.io.Serializable;
-
-import org.gbif.pipelines.io.avro.BasicRecord;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-
+import lombok.AllArgsConstructor;
+import lombok.NonNull;
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.DoFn;
@@ -13,11 +13,8 @@ import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TupleTag;
-
-import lombok.AllArgsConstructor;
-import lombok.NonNull;
-
-import static org.gbif.pipelines.common.PipelinesVariables.Metrics.FILTER_ER_BASED_ON_GBIF_ID;
+import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 /** Filter uses invalid BasicRecord collection as a source to find and skip ExtendedRecord record */
 @AllArgsConstructor(staticName = "create")
@@ -54,9 +51,7 @@ public class FilterRecordsTransform implements Serializable {
     return ParDo.of(fn);
   }
 
-  /**
-   * It extracts the {@link ExtendedRecord} from a {@link CoGbkResult}.
-   */
+  /** It extracts the {@link ExtendedRecord} from a {@link CoGbkResult}. */
   public SingleOutput<CoGbkResult, ExtendedRecord> extractExtendedRecords() {
     DoFn<CoGbkResult, ExtendedRecord> fn =
         new DoFn<CoGbkResult, ExtendedRecord>() {
