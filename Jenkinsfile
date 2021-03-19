@@ -121,4 +121,4 @@ pipeline {
               channel: "#dev"
     }
   }
-}}
+}
