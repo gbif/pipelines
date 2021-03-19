@@ -1,7 +1,7 @@
 package au.org.ala.pipelines.java;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import au.org.ala.pipelines.beam.*;
 import au.org.ala.pipelines.beam.ALAUUIDMintingPipeline;

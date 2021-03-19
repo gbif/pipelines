@@ -22,7 +22,6 @@
         <filtering>true</filtering>
       </testResource>
     </testResources>
-
     <plugins>
       <!-- Download supporting shapefiles -->
       <plugin>
@@ -37,7 +36,7 @@
               <goal>wget</goal>
             </goals>
             <configuration>
-              <url>https://biocache.ala.org.au/archives/pipelines/pipelines-shapefiles.zip</url>
+              <url>http://download.gbif.org/pipelines/livingatlas/pipelines-shapefiles-v2.zip</url>
               <unpack>true</unpack>
               <outputDirectory>/tmp/pipelines-shp</outputDirectory>
             </configuration>
@@ -87,6 +86,7 @@
             <filter>
               <artifact>*:*</artifact>
               <excludes>
+                <exclude>module-info.class</exclude>
                 <exclude>META-INF/*.SF</exclude>
                 <exclude>META-INF/*.DSA</exclude>
                 <exclude>META-INF/*.RSA</exclude>
@@ -104,7 +104,7 @@
               <shadedArtifactAttached>true</shadedArtifactAttached>
               <shadedClassifierName>shaded</shadedClassifierName>
               <transformers>
-                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                   <mainClass>org.gbif.pipelines.ingest.pipelines.DwcaToVerbatimPipeline</mainClass>
                 </transformer>
@@ -153,7 +153,6 @@
       <plugin>
         <groupId>io.fabric8</groupId>
         <artifactId>docker-maven-plugin</artifactId>
-        <version>${io.fabric8.version}</version>
         <extensions>true</extensions>
         <executions>
           <execution>
@@ -291,7 +290,6 @@
     <commons-configuration.version>1.6</commons-configuration.version>
     <netty.version>3.9.9.Final</netty.version>
     <netty-all.version>4.1.42.Final</netty-all.version>
-    <ingest-hdfs-table.version>2.2.34</ingest-hdfs-table.version>
     <snakeyaml.version>1.25</snakeyaml.version>
     <streamex.version>0.7.2</streamex.version>
     <!-- This is overriding GBIF mother pom which is using a 2.11.0.rc1  -->
@@ -299,14 +297,13 @@
     <jackson-module-scala_2.11.version>2.11.1</jackson-module-scala_2.11.version>
     <jcommander.version>1.78</jcommander.version>
     <layers-store.version>2.0.3</layers-store.version>
-    <junit.version>5.6.2</junit.version>
     <json-simple.version>1.1.1</json-simple.version>
+    <gbif-parsers.version>0.53</gbif-parsers.version>
 
     <!-- GBIF parent currently using 2.4.0 -->
     <spark.embedded.version>2.4.5</spark.embedded.version>
 
     <!-- Plugins -->
-    <io.fabric8.version>0.33.0</io.fabric8.version>
     <org.jetbrains.annotations>13.0</org.jetbrains.annotations>
 
     <download-maven-plugin.version>1.6.1</download-maven-plugin.version>
@@ -425,41 +422,8 @@
         </exclusion>
       </exclusions>
     </dependency>
-    <dependency>
-      <groupId>org.gbif.pipelines</groupId>
-      <artifactId>ingest-hdfs-table</artifactId>
-      <version>${ingest-hdfs-table.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>ch.qos.logback</groupId>
-          <artifactId>logback-classic</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif.pipelines</groupId>
-      <artifactId>keygen</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif.pipelines</groupId>
-      <artifactId>archives-converters</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif.occurrence</groupId>
-      <artifactId>occurrence-hdfs-table</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>com.beust</groupId>
-          <artifactId>jcommander</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
 
     <!-- GBIF -->
-    <dependency>
-      <groupId>org.gbif</groupId>
-      <artifactId>dwca-io</artifactId>
-    </dependency>
     <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>dwc-api</artifactId>
@@ -467,7 +431,7 @@
     <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>gbif-parsers</artifactId>
-      <version>0.53</version>
+      <version>${gbif-parsers.version}</version>
     </dependency>
     <dependency>
       <groupId>org.gbif</groupId>
@@ -511,10 +475,6 @@
           <artifactId>logback-classic</artifactId>
         </exclusion>
       </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif</groupId>
-      <artifactId>gbif-wrangler</artifactId>
     </dependency>
 
     <!-- Avro -->
@@ -843,9 +803,8 @@
 
     <!-- Test -->
     <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-api</artifactId>
-      <version>${junit.version}</version>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>

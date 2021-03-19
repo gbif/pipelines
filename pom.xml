@@ -151,10 +151,12 @@
     <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
     <maven-plugin-plugin.version>3.6.0</maven-plugin-plugin.version>
     <maven-javadoc-plugin.version>3.0.1</maven-javadoc-plugin.version>
-    <maven-failsafe-plugin.version>2.22.2</maven-failsafe-plugin.version>
+    <maven-failsafe-plugin.version>3.0.0-M5</maven-failsafe-plugin.version>
+    <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
     <jacoco-maven-plugin.version>0.8.6</jacoco-maven-plugin.version>
-    <sonar-maven-plugin.version>3.6.0.1398</sonar-maven-plugin.version>
+    <sonar-maven-plugin.version>3.8.0.2131</sonar-maven-plugin.version>
     <spotless-maven-plugin.version>2.0.1</spotless-maven-plugin.version>
+    <io.fabric8.version>0.33.0</io.fabric8.version>
 
     <!-- Checkstyle -->
     <plexus-compiler-javac-errorprone.version>2.8.3</plexus-compiler-javac-errorprone.version>
@@ -250,6 +252,13 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-failsafe-plugin</artifactId>
           <version>${maven-failsafe-plugin.version}</version>
+          <dependencies>
+            <dependency>
+              <groupId>org.apache.maven.surefire</groupId>
+              <artifactId>surefire-junit47</artifactId>
+              <version>${maven-failsafe-plugin.version}</version>
+            </dependency>
+          </dependencies>
           <executions>
             <execution>
               <id>integration-test</id>
@@ -286,13 +295,14 @@
                 <goal>prepare-agent</goal>
               </goals>
               <configuration>
+                <append>true</append>
                 <destFile>${jacoco.ut.output.file}</destFile>
                 <propertyName>surefireArgLine</propertyName>
               </configuration>
             </execution>
             <execution>
               <id>report-ut-coverage</id>
-              <phase>test</phase>
+              <phase>verify</phase>
               <goals>
                 <goal>report</goal>
               </goals>
@@ -314,7 +324,7 @@
             </execution>
             <execution>
               <id>report-it-coverage</id>
-              <phase>post-integration-test</phase>
+              <phase>verify</phase>
               <goals>
                 <goal>report-integration</goal>
               </goals>
@@ -325,7 +335,7 @@
             </execution>
             <execution>
               <id>merge-exec-files</id>
-              <phase>post-integration-test</phase>
+              <phase>install</phase>
               <goals>
                 <goal>merge</goal>
               </goals>
@@ -334,7 +344,7 @@
                   <fileSet>
                     <directory>${coverage.dir}</directory>
                     <includes>
-                      <include>*.exec</include>
+                      <include>jacoco-*.exec</include>
                     </includes>
                   </fileSet>
                 </fileSets>
@@ -356,6 +366,11 @@
             </java>
           </configuration>
         </plugin>
+        <plugin>
+          <groupId>io.fabric8</groupId>
+          <artifactId>docker-maven-plugin</artifactId>
+          <version>${io.fabric8.version}</version>
+        </plugin>
       </plugins>
     </pluginManagement>
     <plugins>
@@ -373,6 +388,7 @@
           </execution>
         </executions>
       </plugin>
+
     </plugins>
   </build>
 
@@ -1032,6 +1048,13 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-surefire-plugin</artifactId>
+            <dependencies>
+              <dependency>
+                <groupId>org.apache.maven.surefire</groupId>
+                <artifactId>surefire-junit47</artifactId>
+                <version>${maven-failsafe-plugin.version}</version>
+              </dependency>
+            </dependencies>
             <configuration>
               <argLine>${surefireArgLine}</argLine>
               <excludes>
