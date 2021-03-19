@@ -1,5 +1,6 @@
 pipeline {
-  agent any6tools {
+  agent any
+  tools {
     maven 'Maven3.6'
     jdk 'JDK8'
   }
