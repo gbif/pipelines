@@ -34,7 +34,7 @@ pipeline {
         }
       }
       steps {
-        sh 'mvn clean package install -T 2C -e -U -DskipTests -DskipITs -Ddocker.skip.run'
+        sh 'mvn clean package install -T 2C -e -DskipTests -DskipITs -Ddocker.skip.run'
       }
     }
     stage('Tests') {
