@@ -160,7 +160,7 @@ public class XmlToAvroCallbackIT {
   @Test
   public void testReasonNotNormalCase() {
     // State
-    int attempt = 60;
+    int attempt = 1;
     XmlToAvroConfiguration config = new XmlToAvroConfiguration();
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
