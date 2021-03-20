@@ -64,7 +64,7 @@ pipeline {
             ALANM_PORT = findFreePort()
             ALANM_ADMIN_PORT = findFreePort()
             ALA_SOLR_PORT = findFreePort()
-            ALA_ZK_PORT = ALA_SOLR_PORT + 1000
+            ALA_ZK_PORT = "${sh(script:'$(($ALA_SOLR_PORT+1000))', returnStdout: true)}"
             SDS_ADMIN_PORT = findFreePort()
             SDS_PORT = findFreePort()
           }
