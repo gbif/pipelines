@@ -66,7 +66,7 @@ pipeline {
             ALA_SOLR_PORT = findFreePort()
             ALA_ZK_PORT = ALA_SOLR_PORT + 1000
             SDS_ADMIN_PORT = findFreePort()
-            SDS_PORT =  = findFreePort()
+            SDS_PORT = findFreePort()
           }
           steps {
             configFileProvider([configFile(
