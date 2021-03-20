@@ -1,7 +1,7 @@
 pipeline {
   agent any
   tools {
-    maven 'Maven3.2'
+    maven 'Maven3.6'
     jdk 'JDK8'
   }
   options {
@@ -60,6 +60,14 @@ pipeline {
           }
         }
         stage('Integration tests') {
+          environment {
+            ALANM_PORT = findFreePort()
+            ALANM_ADMIN_PORT = findFreePort()
+            ALA_SOLR_PORT = findFreePort()
+            ALA_ZK_PORT = ALA_SOLR_PORT + 1000
+            SDS_ADMIN_PORT = findFreePort()
+            SDS_PORT =  = findFreePort()
+          }
           steps {
             configFileProvider([configFile(
                     fileId: 'org.jenkinsci.plugins.configfiles.maven.GlobalMavenSettingsConfig1387378707709',
@@ -125,4 +133,9 @@ pipeline {
               channel: "#dev"
     }
   }
+}
+
+
+int findFreePort(){
+  return new ServerSocket(0).withCloseable { socket -> socket.getLocalPort() }
 }
