@@ -34,10 +34,8 @@ pipeline {
         }
       }
       steps {
-        configFileProvider(
-                [configFile(fileId: 'org.jenkinsci.plugins.configfiles.maven.GlobalMavenSettingsConfig1387378707709',
-                        variable: 'MAVEN_SETTINGS_XML')]) {
-          sh 'mvn -s $MAVEN_SETTINGS_XML clean package install -T 2C -e -DskipTests -DskipITs -Ddocker.skip.run'
+        withMaven {
+          sh 'mvn clean package install -T 2C -e -DskipTests -DskipITs -Ddocker.skip.run'
         }
       }
     }
