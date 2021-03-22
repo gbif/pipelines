@@ -3,6 +3,7 @@ package au.org.ala.pipelines.options;
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 
+/** Options for piupelines that run against sampling services. */
 public interface SamplingPipelineOptions extends AllDatasetsPipelinesOptions {
 
   @Description("Base URL for sampling service")

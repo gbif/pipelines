@@ -33,11 +33,9 @@ import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.factory.FileVocabularyFactory;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.factory.OccurrenceStatusKvStoreFactory;
-import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.transforms.converters.OccurrenceExtensionTransform;
-import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.DefaultValuesTransform;
@@ -45,19 +43,21 @@ import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.slf4j.MDC;
 
 /**
- * ALA interpretation pipeline sequence:
+ * Interpretation pipeline that reads verbatim AVRO files ({@link ExtendedRecord} and parses and
+ * produces an interpreted output of these data.
+ *
+ * <p>The processing sequence:
  *
  * <pre>
  *    1) Reads verbatim.avro file
  *    2) Interprets and converts avro {@link ExtendedRecord} file to:
  *      {@link MetadataRecord},
  *      {@link DefaultValuesTransform},
- *      {@link BasicRecord},
+ *      {@link ALABasicTransform},
  *      {@link org.gbif.pipelines.io.avro.TemporalRecord},
  *      {@link org.gbif.pipelines.io.avro.MultimediaRecord},
  *      {@link org.gbif.pipelines.io.avro.ImageRecord},
  *      {@link org.gbif.pipelines.io.avro.AudubonRecord},
- *      {@link org.gbif.pipelines.io.avro.MeasurementOrFactRecord},
  *      {@link org.gbif.pipelines.io.avro.ALATaxonRecord},
  *      {@link org.gbif.pipelines.io.avro.ALAAttributionRecord},
  *      {@link LocationTransform}
@@ -174,8 +174,8 @@ public class ALAVerbatimToInterpretedPipeline {
                 OccurrenceStatusKvStoreFactory.createSupplier(config.getGbifConfig()))
             .create();
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
-    TemporalTransform temporalTransform =
-        TemporalTransform.builder().orderings(dateComponentOrdering).create();
+    ALATemporalTransform temporalTransform =
+        ALATemporalTransform.builder().orderings(dateComponentOrdering).create();
 
     // Extension
     MultimediaTransform multimediaTransform =

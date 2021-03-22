@@ -53,6 +53,7 @@ dwca-avro --> interpret --> validate --> uuid --> image-sync ... │
 -  'sds' runs the sensitive data checks;
 -  'validate' validates the identifiers for a dataset, checking for duplicate and empty keys;
 -  'uuid' mints UUID on new records and rematches to existing UUIDs for records loaded before;
+-  'migrate' used for migration;
 -  'image-load' pushes an export of multimedia AVRO files to the image service;
 -  'image-sync' retrieves details of images stored in image service for indexing purposes;
 -  'sample' use the sampling service to retrieve values for points for the layers in the spatial service;
@@ -75,6 +76,7 @@ Usage:
   $CMD [options] sds           (<dr>...|all)         $WHEREL
   $CMD [options] validate      (<dr>...|all)         $WHERE
   $CMD [options] uuid          (<dr>...|all)         $WHERE
+  $CMD [options] migrate  (<dr>...|all)         $WHERE
   $CMD [options] image-sync    (<dr>...|all)         $WHERE
   $CMD [options] image-load    (<dr>...|all)         $WHERE
   $CMD [options] index         (<dr>...|all)         $WHEREL
@@ -445,6 +447,25 @@ function uuid () {
     logStepEnd "UUID" $dr $ltype $SECONDS
 }
 
+function migrate () {
+    local dr="$1" ltype="$2"
+    CLASS=au.org.ala.pipelines.beam.UUIDMigrationPipeline
+
+    logStepStart "migrate" $dr
+    SECONDS=0
+
+    SH_ARGS=uuid-sh-args.local
+    java-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=uuid-sh-args.spark-embedded
+    spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=uuid-sh-args.spark-cluster
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "migrate-uuid $dr"
+
+    logStepEnd "migrate" $dr $ltype $SECONDS
+}
+
 function image-load () {
     dr=$1
     ltype=$2
@@ -740,6 +761,10 @@ fi
 
 if ($uuid || $do_all); then
     do_step uuid
+fi
+
+if ($migrate); then
+    do_step migrate
 fi
 
 if ($image_sync || $do_all); then

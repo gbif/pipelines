@@ -24,7 +24,7 @@ import org.gbif.pipelines.core.factory.FileSystemFactory;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.slf4j.MDC;
 
-/** Thin wrapper around DwcaToVerbatimPipeline to allow for Yaml config setup. */
+/** Wrapper around DwcaToVerbatimPipeline to allow for Yaml config setup. */
 @Slf4j
 public class ALADwcaToVerbatimPipeline {
 

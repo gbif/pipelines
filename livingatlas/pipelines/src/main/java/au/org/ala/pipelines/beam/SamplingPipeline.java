@@ -33,9 +33,11 @@ import org.gbif.pipelines.io.avro.SampleRecord;
 import org.slf4j.MDC;
 
 /**
- * A pipeline that exports a unique set of coordinates for a dataset into CSV. This pipeline can
- * only be ran after the {@link ALAVerbatimToInterpretedPipeline} has been ran as it relies on the
- * output of the LocationTransform.
+ * A pipeline that exports a unique set of coordinates for a dataset into CSV for downstream
+ * sampling.
+ *
+ * <p>This pipeline can only be ran after the {@link ALAVerbatimToInterpretedPipeline} has been ran
+ * as it relies on the output of the LocationTransform.
  *
  * <p>In addition, this pipeline will check configured sampling service for newly available layers.
  */
