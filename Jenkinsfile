@@ -60,13 +60,12 @@ pipeline {
             ALANM_PORT = findFreePort()
             ALANM_ADMIN_PORT = findFreePort()
             ALA_SOLR_PORT = findFreePort()
-            ALA_ZK_PORT = getZkPort()
             SDS_ADMIN_PORT = findFreePort()
             SDS_PORT = findFreePort()
           }
           steps {
             withMaven(maven: 'Maven3.6') {
-              sh 'mvn resources:testResources docker:build docker:start failsafe:integration-test docker:stop -T 1C -Dparallel=classes -DuseUnlimitedThreads=true -e -Pcoverage -Dalanm.port=$ALANM_PORT -Dalanm.admin.port=$ALANM_ADMIN_PORT -Dsolr8.zk.port=$ALA_ZK_PORT -Dsolr8.http.port=$ALA_SOLR_PORT -Dsds.admin.port=$SDS_ADMIN_PORT -Dsds.port=$SDS_PORT'
+              sh 'mvn resources:testResources docker:build docker:start failsafe:integration-test docker:stop -T 1C -Dparallel=classes -DuseUnlimitedThreads=true -e -Pcoverage -Dalanm.port=$ALANM_PORT -Dalanm.admin.port=$ALANM_ADMIN_PORT -Dsolr8.zk.port=$(($ALA_SOLR_PORT+1000)) -Dsolr8.http.port=$ALA_SOLR_PORT -Dsds.admin.port=$SDS_ADMIN_PORT -Dsds.port=$SDS_PORT'
             }
           }
         }
@@ -94,10 +93,8 @@ pipeline {
         }
       }
       steps {
-        configFileProvider(
-                [configFile(fileId: 'org.jenkinsci.plugins.configfiles.maven.GlobalMavenSettingsConfig1387378707709',
-                        variable: 'MAVEN_SETTINGS_XML')]) {
-          sh 'mvn -s $MAVEN_SETTINGS_XML -B -DskipTests deploy'
+        withMaven(maven: 'Maven3.6') {
+          sh 'mvn -B -DskipTests deploy'
         }
       }
     }
@@ -112,11 +109,8 @@ pipeline {
         RELEASE_ARGS = createReleaseArgs()
       }
       steps {
-        configFileProvider(
-                [configFile(fileId: 'org.jenkinsci.plugins.configfiles.maven.GlobalMavenSettingsConfig1387378707709',
-                        variable: 'MAVEN_SETTINGS_XML')]) {
-          git 'https://github.com/gbif/vocabulary.git'
-          sh 'mvn -s $MAVEN_SETTINGS_XML -B release:prepare release:perform $RELEASE_ARGS'
+        withMaven(maven: 'Maven3.6') {
+          sh 'mvn -B release:prepare release:perform $RELEASE_ARGS'
         }
       }
     }
@@ -138,8 +132,4 @@ int findFreePort(){
       socket.close()
     }
   }
-}
-
-int getZkPort() {
-  return env.ALA_SOLR_PORT.toInteger() + 1000
 }
