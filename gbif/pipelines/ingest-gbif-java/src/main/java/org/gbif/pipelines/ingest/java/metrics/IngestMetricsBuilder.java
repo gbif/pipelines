@@ -46,7 +46,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.VERBATIM_RECO
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
-import org.gbif.pipelines.transforms.common.FilterExtendedRecordTransform;
+import org.gbif.pipelines.transforms.common.FilterRecordsTransform;
 import org.gbif.pipelines.transforms.common.UniqueGbifIdTransform;
 import org.gbif.pipelines.transforms.common.UniqueIdTransform;
 import org.gbif.pipelines.transforms.converters.GbifJsonTransform;
@@ -104,7 +104,7 @@ public class IngestMetricsBuilder {
         .addMetric(ImageTransform.class, IMAGE_RECORDS_COUNT)
         .addMetric(MeasurementOrFactTransform.class, MEASUREMENT_OR_FACT_RECORDS_COUNT)
         .addMetric(MultimediaTransform.class, MULTIMEDIA_RECORDS_COUNT)
-        .addMetric(FilterExtendedRecordTransform.class, FILTER_ER_BASED_ON_GBIF_ID)
+        .addMetric(FilterRecordsTransform.class, FILTER_ER_BASED_ON_GBIF_ID)
         .addMetric(UniqueGbifIdTransform.class, UNIQUE_GBIF_IDS_COUNT)
         .addMetric(UniqueGbifIdTransform.class, DUPLICATE_GBIF_IDS_COUNT)
         .addMetric(UniqueGbifIdTransform.class, IDENTICAL_GBIF_OBJECTS_COUNT)

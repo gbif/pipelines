@@ -227,9 +227,13 @@ public class VerbatimToInterpretedPipeline {
             .counterFn(incMetricFn)
             .init();
 
+    VerbatimTransform verbatimTransform = VerbatimTransform.create().counterFn(incMetricFn);
+
     GrscicollTransform grscicollTransform =
         GrscicollTransform.builder()
             .kvStoreSupplier(grscicollServiceSupplier)
+            .erTag(verbatimTransform.getTag())
+            .brTag(basicTransform.getTag())
             .create()
             .counterFn(incMetricFn)
             .init();
@@ -240,8 +244,6 @@ public class VerbatimToInterpretedPipeline {
             .create()
             .counterFn(incMetricFn)
             .init();
-
-    VerbatimTransform verbatimTransform = VerbatimTransform.create().counterFn(incMetricFn);
 
     TemporalTransform temporalTransform =
         TemporalTransform.builder()
@@ -340,18 +342,20 @@ public class VerbatimToInterpretedPipeline {
       // Create interpretation function
       Consumer<ExtendedRecord> interpretAllFn =
           er -> {
-            BasicRecord br = gbifIdTransform.getBrInvalidMap().get(er.getId());
-            if (br == null) {
+            BasicRecord brInvalid = gbifIdTransform.getBrInvalidMap().get(er.getId());
+            if (brInvalid == null) {
+              BasicRecord br = gbifIdTransform.getBrMap().get(er.getId());
+
               verbatimWriter.append(er);
               temporalTransform.processElement(er).ifPresent(temporalWriter::append);
               multimediaTransform.processElement(er).ifPresent(multimediaWriter::append);
               imageTransform.processElement(er).ifPresent(imageWriter::append);
               audubonTransform.processElement(er).ifPresent(audubonWriter::append);
               taxonomyTransform.processElement(er).ifPresent(taxonWriter::append);
-              grscicollTransform.processElement(er, mdr).ifPresent(grscicollWriter::append);
+              grscicollTransform.processElement(er, br, mdr).ifPresent(grscicollWriter::append);
               locationTransform.processElement(er, mdr).ifPresent(locationWriter::append);
             } else {
-              basicInvalidWriter.append(br);
+              basicInvalidWriter.append(brInvalid);
             }
           };
 

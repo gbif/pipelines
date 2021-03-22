@@ -7,16 +7,19 @@ import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareValue;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.collections.lookup.Match.MatchType;
 import org.gbif.api.model.collections.lookup.Match.Status;
+import org.gbif.api.vocabulary.BasisOfRecord;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.grscicoll.GrscicollLookupRequest;
 import org.gbif.pipelines.core.converters.GrscicollRecordConverter;
+import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
@@ -28,9 +31,11 @@ import org.gbif.rest.client.grscicoll.GrscicollLookupResponse.Match;
 public class GrscicollInterpreter {
 
   public static BiConsumer<ExtendedRecord, GrscicollRecord> grscicollInterpreter(
-      KeyValueStore<GrscicollLookupRequest, GrscicollLookupResponse> kvStore, MetadataRecord mdr) {
+      KeyValueStore<GrscicollLookupRequest, GrscicollLookupResponse> kvStore,
+      MetadataRecord mdr,
+      BasicRecord br) {
     return (er, gr) -> {
-      if (kvStore == null) {
+      if (kvStore == null || mdr == null || br == null) {
         return;
       }
 
@@ -70,37 +75,50 @@ public class GrscicollInterpreter {
 
       gr.setId(er.getId());
 
+      boolean isSpecimen = isSpecimenRecord(br);
+      Consumer<OccurrenceIssue> flagRecord =
+          i -> {
+            // we only flag records that are specimens
+            if (isSpecimen) {
+              addIssue(gr, i);
+            }
+          };
+
       // institution match
       Match institutionMatchResponse = lookupResponse.getInstitutionMatch();
       if (institutionMatchResponse.getMatchType() == MatchType.NONE) {
-        OccurrenceIssue noneInstitutionIssue =
-            getInstitutionMatchNoneIssue(institutionMatchResponse.getStatus());
-        addIssue(gr, noneInstitutionIssue);
+        flagRecord.accept(getInstitutionMatchNoneIssue(institutionMatchResponse.getStatus()));
 
-        if (noneInstitutionIssue == OccurrenceIssue.DIFFERENT_OWNER_INSTITUTION) {
-          // skipping collections since we don't link records with different owner
-          return;
-        }
-      } else {
-        gr.setInstitutionMatch(GrscicollRecordConverter.convertMatch(institutionMatchResponse));
+        // we skip the collections when there is no institution match
+        return;
+      }
 
-        if (institutionMatchResponse.getMatchType() == MatchType.FUZZY) {
-          addIssue(gr, OccurrenceIssue.INSTITUTION_MATCH_FUZZY);
-        }
+      gr.setInstitutionMatch(GrscicollRecordConverter.convertMatch(institutionMatchResponse));
+
+      if (institutionMatchResponse.getMatchType() == MatchType.FUZZY) {
+        flagRecord.accept(OccurrenceIssue.INSTITUTION_MATCH_FUZZY);
       }
 
       // collection match
       Match collectionMatchResponse = lookupResponse.getCollectionMatch();
       if (collectionMatchResponse.getMatchType() == MatchType.NONE) {
-        addIssue(gr, getCollectionMatchNoneIssue(collectionMatchResponse.getStatus()));
+        flagRecord.accept(getCollectionMatchNoneIssue(collectionMatchResponse.getStatus()));
       } else {
         gr.setCollectionMatch(GrscicollRecordConverter.convertMatch(collectionMatchResponse));
 
         if (collectionMatchResponse.getMatchType() == MatchType.FUZZY) {
-          addIssue(gr, OccurrenceIssue.COLLECTION_MATCH_FUZZY);
+          flagRecord.accept(OccurrenceIssue.COLLECTION_MATCH_FUZZY);
         }
       }
     };
+  }
+
+  private static boolean isSpecimenRecord(BasicRecord br) {
+    BasisOfRecord bor = BasisOfRecord.valueOf(br.getBasisOfRecord());
+    return bor == BasisOfRecord.PRESERVED_SPECIMEN
+        || bor == BasisOfRecord.FOSSIL_SPECIMEN
+        || bor == BasisOfRecord.LIVING_SPECIMEN
+        || bor == BasisOfRecord.MATERIAL_SAMPLE;
   }
 
   @VisibleForTesting

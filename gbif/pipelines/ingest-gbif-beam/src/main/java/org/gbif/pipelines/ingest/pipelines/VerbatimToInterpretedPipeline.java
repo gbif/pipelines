@@ -12,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.transforms.Create;
-import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
 import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.transforms.join.CoGroupByKey;
@@ -37,16 +36,27 @@ import org.gbif.pipelines.core.factory.FileVocabularyFactory.VocabularyBackedTer
 import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.core.ws.metadata.MetadataServiceClient;
-import org.gbif.pipelines.factory.*;
+import org.gbif.pipelines.factory.ClusteringServiceFactory;
+import org.gbif.pipelines.factory.GeocodeKvStoreFactory;
+import org.gbif.pipelines.factory.GrscicollLookupKvStoreFactory;
+import org.gbif.pipelines.factory.KeygenServiceFactory;
+import org.gbif.pipelines.factory.MetadataServiceClientFactory;
+import org.gbif.pipelines.factory.NameUsageMatchStoreFactory;
+import org.gbif.pipelines.factory.OccurrenceStatusKvStoreFactory;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.transforms.common.ExtensionFilterTransform;
-import org.gbif.pipelines.transforms.common.FilterExtendedRecordTransform;
+import org.gbif.pipelines.transforms.common.FilterRecordsTransform;
 import org.gbif.pipelines.transforms.common.UniqueGbifIdTransform;
 import org.gbif.pipelines.transforms.common.UniqueIdTransform;
 import org.gbif.pipelines.transforms.converters.OccurrenceExtensionTransform;
-import org.gbif.pipelines.transforms.core.*;
+import org.gbif.pipelines.transforms.core.BasicTransform;
+import org.gbif.pipelines.transforms.core.GrscicollTransform;
+import org.gbif.pipelines.transforms.core.LocationTransform;
+import org.gbif.pipelines.transforms.core.TaxonomyTransform;
+import org.gbif.pipelines.transforms.core.TemporalTransform;
+import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
@@ -188,7 +198,11 @@ public class VerbatimToInterpretedPipeline {
         TaxonomyTransform.builder().kvStoreSupplier(nameUsageMatchServiceSupplier).create();
 
     GrscicollTransform grscicollTransform =
-        GrscicollTransform.builder().kvStoreSupplier(grscicollServiceSupplier).create();
+        GrscicollTransform.builder()
+            .kvStoreSupplier(grscicollServiceSupplier)
+            .erTag(verbatimTransform.getTag())
+            .brTag(basicTransform.getTag())
+            .create();
 
     LocationTransform locationTransform =
         LocationTransform.builder().geocodeKvStoreSupplier(geocodeServiceSupplier).create();
@@ -256,18 +270,21 @@ public class VerbatimToInterpretedPipeline {
             .get(gbifIdTransform.getInvalidTag())
             .apply("Map basic to KV", basicTransform.toKv());
 
-    SingleOutput<KV<String, CoGbkResult>, ExtendedRecord> filterByGbifIdFn =
-        FilterExtendedRecordTransform.create(verbatimTransform.getTag(), basicTransform.getTag())
-            .filter();
+    FilterRecordsTransform filterRecordsTransform =
+        FilterRecordsTransform.create(verbatimTransform.getTag(), basicTransform.getTag());
 
-    PCollection<ExtendedRecord> filteredUniqueRecords =
+    PCollection<CoGbkResult> filteredErBr =
         KeyedPCollectionTuple
             // Core
             .of(verbatimTransform.getTag(), uniqueRecordsKv)
             .and(basicTransform.getTag(), uniqueBasicRecordsKv)
             // Apply
             .apply("Grouping objects", CoGroupByKey.create())
-            .apply("Filter verbatim", filterByGbifIdFn);
+            .apply("Filter verbatim", filterRecordsTransform.filter());
+
+    PCollection<ExtendedRecord> filteredUniqueRecords =
+        filteredErBr.apply(
+            "Get the filtered extended records", filterRecordsTransform.extractExtendedRecords());
 
     // Interpret and write all record types
     basicCollection
@@ -307,8 +324,10 @@ public class VerbatimToInterpretedPipeline {
         .apply("Interpret taxonomy", taxonomyTransform.interpret())
         .apply("Write taxon to avro", taxonomyTransform.write(pathFn));
 
-    filteredUniqueRecords
-        .apply("Check grscicoll transform condition", grscicollTransform.check(types))
+    filteredErBr
+        .apply(
+            "Check grscicoll transform condition",
+            grscicollTransform.check(types, CoGbkResult.class))
         .apply("Interpret grscicoll", grscicollTransform.interpret())
         .apply("Write grscicoll to avro", grscicollTransform.write(pathFn));
 
