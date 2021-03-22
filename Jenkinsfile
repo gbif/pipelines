@@ -123,6 +123,9 @@ pipeline {
       slackSend message: "Pipelines build failed! - ${env.JOB_NAME} ${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)",
               channel: "#dev"
     }
+    always {
+      junit '**/target/failsafe-reports/*.xml'
+    }
   }
 }
 
