@@ -60,7 +60,7 @@ pipeline {
             ALANM_PORT = findFreePort()
             ALANM_ADMIN_PORT = findFreePort()
             ALA_SOLR_PORT = findFreePort()
-            ALA_ZK_PORT = "${sh(script:'$(($ALA_SOLR_PORT+1000))', returnStdout: true)}"
+            ALA_ZK_PORT = getZkPort()
             SDS_ADMIN_PORT = findFreePort()
             SDS_PORT = findFreePort()
           }
@@ -133,9 +133,13 @@ pipeline {
 int findFreePort(){
    new ServerSocket(0).with { socket ->
     try {
-      return socket.getLocalPort();
+      return socket.getLocalPort()
     } finally {
       socket.close()
     }
   }
+}
+
+int getZkPort() {
+  return env.ALA_SOLR_PORT.toInteger() + 1000
 }
