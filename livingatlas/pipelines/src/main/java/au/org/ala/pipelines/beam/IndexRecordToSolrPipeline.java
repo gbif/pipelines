@@ -2,6 +2,7 @@ package au.org.ala.pipelines.beam;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
+import au.org.ala.pipelines.options.AllDatasetsPipelinesOptions;
 import au.org.ala.pipelines.options.SolrPipelineOptions;
 import au.org.ala.pipelines.transforms.IndexRecordTransform;
 import au.org.ala.pipelines.util.VersionInfo;
@@ -461,30 +462,7 @@ public class IndexRecordToSolrPipeline {
   /** Load index records from AVRO. */
   private static PCollection<KV<String, IndexRecord>> loadIndexRecords(
       SolrPipelineOptions options, Pipeline p) {
-    if (options.getDatasetId() != null && !"all".equalsIgnoreCase(options.getDatasetId())) {
-      return p.apply(
-              AvroIO.read(IndexRecord.class)
-                  .from(
-                      String.join(
-                          "/",
-                          options.getAllDatasetsInputPath(),
-                          "index-record",
-                          options.getDatasetId() + "/*.avro")))
-          .apply(
-              MapElements.via(
-                  new SimpleFunction<IndexRecord, KV<String, IndexRecord>>() {
-                    @Override
-                    public KV<String, IndexRecord> apply(IndexRecord input) {
-                      return KV.of(input.getId(), input);
-                    }
-                  }));
-    }
-
-    return p.apply(
-            AvroIO.read(IndexRecord.class)
-                .from(
-                    String.join(
-                        "/", options.getAllDatasetsInputPath(), "index-record", "*/*.avro")))
+    return ALAFsUtils.loadIndexRecords(options, p)
         .apply(
             MapElements.via(
                 new SimpleFunction<IndexRecord, KV<String, IndexRecord>>() {
@@ -496,7 +474,7 @@ public class IndexRecordToSolrPipeline {
   }
 
   private static PCollection<KV<String, SampleRecord>> loadSampleRecords(
-      SolrPipelineOptions options, Pipeline p) {
+      AllDatasetsPipelinesOptions options, Pipeline p) {
     String samplingPath =
         String.join("/", ALAFsUtils.buildPathSamplingUsingTargetPath(options), "*.avro");
     log.info("Loading sampling from {}", samplingPath);

@@ -15,6 +15,9 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.io.AvroIO;
+import org.apache.beam.sdk.values.PCollection;
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.fs.FileSystem;
 import org.gbif.pipelines.common.beam.options.BasePipelineOptions;
@@ -23,6 +26,7 @@ import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
 import org.gbif.pipelines.core.utils.FsUtils;
+import org.gbif.pipelines.io.avro.IndexRecord;
 
 /** Extensions to FSUtils. See {@link FsUtils} */
 @Slf4j
@@ -50,67 +54,10 @@ public class ALAFsUtils {
         .toString();
   }
 
-  public static String buildPathMultimediaDeltaUsingTargetPath(BasePipelineOptions options) {
-    return PathBuilder.buildPath(
-            PathBuilder.buildDatasetAttemptPath(options, "multimedia-delta", false),
-            "multimedia-delta")
-        .toString();
-  }
-
-  /**
-   * Constructs the path for reading / writing generalised data. This is written outside of
-   * /interpreted directory.
-   *
-   * <p>Example /data/pipelines-data/dr893/1/generalised/ala_sensitive_taxon where name =
-   * 'ala_sensitive_taxon'
-   */
-  public static String buildPathGeneralisedUsingTargetPath(
-      InterpretationPipelineOptions options, String name) {
-    return PathBuilder.buildPath(
-            PathBuilder.buildDatasetAttemptPath(options, "generalised", false), name, "generalise")
-        .toString();
-  }
-
-  /**
-   * Constructs the path for reading / writing sampling. This is written outside of /interpreted
-   * directory.
-   *
-   * <p>Example /data/pipelines-data/dr893/1/sampling/ala_uuid where name = 'ala_uuid'
-   */
-  public static String buildPathSamplingUsingTargetPath(
-      BasePipelineOptions options, String name, String uniqueId) {
-    return PathBuilder.buildPath(
-            PathBuilder.buildDatasetAttemptPath(options, "sampling", false),
-            name,
-            name + "-" + uniqueId)
-        .toString();
-  }
-
   public static String buildPathImageServiceUsingTargetPath(
       BasePipelineOptions options, String name, String uniqueId) {
     return PathBuilder.buildPath(
             PathBuilder.buildDatasetAttemptPath(options, "images", false), name + "-" + uniqueId)
-        .toString();
-  }
-
-  public static String buildPathTaxonProfileUsingTargetPath(
-      BasePipelineOptions options, String name, String uniqueId) {
-    return PathBuilder.buildPath(
-            PathBuilder.buildDatasetAttemptPath(options, "taxonprofiles", false),
-            name + "-" + uniqueId)
-        .toString();
-  }
-
-  /** Build a path to sampling downloads. */
-  public static String buildPathSamplingDownloadsUsingTargetPath(
-      AllDatasetsPipelinesOptions options) {
-
-    if (options.getDatasetId() == null || "all".equals(options.getDatasetId())) {
-      return String.join("/", options.getAllDatasetsInputPath(), "sampling", "downloads");
-    }
-
-    return PathBuilder.buildPath(
-            PathBuilder.buildDatasetAttemptPath(options, "sampling", false), "downloads")
         .toString();
   }
 
@@ -122,6 +69,32 @@ public class ALAFsUtils {
       return String.join("/", options.getAllDatasetsInputPath(), "sampling");
     }
     return PathBuilder.buildDatasetAttemptPath(options, "sampling", false);
+  }
+
+  /**
+   * Removes a directory with content if the folder exists
+   *
+   * @param directoryPath path to some directory
+   */
+  public static boolean existsAndNonEmpty(FileSystem fs, String directoryPath) {
+    Path path = new Path(directoryPath);
+    try {
+      boolean exists = fs.exists(path);
+      log.info(" {} exists - {}", path, exists);
+      if (!exists) {
+        return false;
+      }
+      if (log.isDebugEnabled()) {
+        RemoteIterator<LocatedFileStatus> iter = fs.listFiles(path, true);
+        while (iter.hasNext()) {
+          log.debug("File: {}", iter.next().getPath().toString());
+        }
+      }
+      return fs.listFiles(path, true).hasNext();
+    } catch (IOException e) {
+      log.error("Can't delete {} directory, cause - {}", directoryPath, e.getCause());
+      return false;
+    }
   }
 
   /**
@@ -294,5 +267,30 @@ public class ALAFsUtils {
                 entry -> entry.getKey().getParent() + "/" + entry.getKey().getName(),
                 (e1, e2) -> e1,
                 LinkedHashMap::new));
+  }
+
+  /**
+   * Load index records from AVRO.
+   *
+   * @param options
+   * @param p
+   * @return
+   */
+  public static PCollection<IndexRecord> loadIndexRecords(
+      AllDatasetsPipelinesOptions options, Pipeline p) {
+
+    String dataResourceFolder = options.getDatasetId();
+    if (dataResourceFolder == null || "all".equalsIgnoreCase(dataResourceFolder)) {
+      dataResourceFolder = "*";
+    }
+    return p.apply(
+        AvroIO.read(IndexRecord.class)
+            .from(
+                String.join(
+                    "/",
+                    options.getAllDatasetsInputPath(),
+                    "index-record",
+                    dataResourceFolder,
+                    "*.avro")));
   }
 }

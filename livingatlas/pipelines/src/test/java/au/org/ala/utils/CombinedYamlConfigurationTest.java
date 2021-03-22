@@ -86,9 +86,9 @@ public class CombinedYamlConfigurationTest {
 
   @Test
   public void weSubstituteYamlValuesWithArgs() {
-    String[] args = testConf.toArgs("general", "export-latlng");
+    String[] args = testConf.toArgs("general", "sampling");
     Map<String, Object> argsInMap = argsToMap(args);
-    assertThat(argsInMap.get("appName"), equalTo("Lat Long export for dr893"));
+    assertThat(argsInMap.get("appName"), equalTo("Sampling for dr893"));
     assertThat(argsInMap.get("inputPath"), equalTo("/data/pipelines-data"));
   }
 

@@ -2,8 +2,7 @@
 
 These docker compose files can use for local development.
 
-If you are running integration tests, 
-please use the following to run
+If you are running integration tests, please use the following to run
 containers to work with the tests:
 
 ```
