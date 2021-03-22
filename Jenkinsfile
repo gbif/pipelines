@@ -76,11 +76,14 @@ pipeline {
         allOf {
           not { expression { params.RELEASE } };
           not { expression { params.DOCUMENTATION } };
+          branch 'dev';
         }
       }
       steps {
         withSonarQubeEnv('GBIF Sonarqube') {
-          sh 'mvn sonar:sonar'
+          withMaven(maven: 'Maven3.6') {
+            sh 'mvn sonar:sonar'
+          }
         }
       }
     }
