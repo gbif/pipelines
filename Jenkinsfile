@@ -34,7 +34,7 @@ pipeline {
         }
       }
       steps {
-        withMaven {
+        withMaven(maven: 'Maven3.6') {
           sh 'mvn clean package install -T 2C -e -DskipTests -DskipITs -Ddocker.skip.run'
         }
       }
