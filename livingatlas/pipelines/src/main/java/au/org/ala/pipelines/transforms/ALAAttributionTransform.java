@@ -10,9 +10,7 @@ import java.util.Optional;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.transforms.MapElements;
-import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
-import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.core.functions.SerializableConsumer;
@@ -44,7 +42,7 @@ public class ALAAttributionTransform extends Transform<ExtendedRecord, ALAAttrib
   private final SerializableSupplier<KeyValueStore<ALACollectionLookup, ALACollectionMatch>>
       collectionKvStoreSupplier;
 
-  private PCollectionView<MetadataRecord> metadataView;
+  private final String datasetId;
 
   @Builder(buildMethodName = "create")
   private ALAAttributionTransform(
@@ -53,7 +51,8 @@ public class ALAAttributionTransform extends Transform<ExtendedRecord, ALAAttrib
           dataResourceKvStoreSupplier,
       KeyValueStore<ALACollectionLookup, ALACollectionMatch> collectionKvStore,
       SerializableSupplier<KeyValueStore<ALACollectionLookup, ALACollectionMatch>>
-          collectionKvStoreSupplier) {
+          collectionKvStoreSupplier,
+      String datasetId) {
     super(
         ALAAttributionRecord.class,
         ALA_ATTRIBUTION,
@@ -63,6 +62,7 @@ public class ALAAttributionTransform extends Transform<ExtendedRecord, ALAAttrib
     this.collectionKvStore = collectionKvStore;
     this.dataResourceKvStoreSupplier = dataResourceKvStoreSupplier;
     this.collectionKvStoreSupplier = collectionKvStoreSupplier;
+    this.datasetId = datasetId;
   }
 
   public ALAAttributionTransform counterFn(SerializableConsumer<String> counterFn) {
@@ -93,28 +93,11 @@ public class ALAAttributionTransform extends Transform<ExtendedRecord, ALAAttrib
     }
   }
 
-  public ParDo.SingleOutput<ExtendedRecord, ALAAttributionRecord> interpret(
-      PCollectionView<MetadataRecord> metadataView) {
-    this.metadataView = metadataView;
-    return ParDo.of(this).withSideInputs(metadataView);
-  }
-
   @Override
-  @ProcessElement
-  public void processElement(ProcessContext c) {
-    processElement(c.element(), c.sideInput(metadataView)).ifPresent(c::output);
-  }
-
-  @Override
-  public Optional<ALAAttributionRecord> convert(ExtendedRecord extendedRecord) {
-    throw new IllegalArgumentException("Method is not implemented!");
-  }
-
-  public Optional<ALAAttributionRecord> processElement(ExtendedRecord source, MetadataRecord mdr) {
-
+  public Optional<ALAAttributionRecord> convert(ExtendedRecord source) {
     return Interpretation.from(source)
         .to(ALAAttributionRecord.newBuilder().setId(source.getId()).build())
-        .via(ALAAttributionInterpreter.interpretDatasetKey(mdr, dataResourceKvStore))
+        .via(ALAAttributionInterpreter.interpretDatasetKey(datasetId, dataResourceKvStore))
         .via(ALAAttributionInterpreter.interpretCodes(collectionKvStore))
         .getOfNullable();
   }

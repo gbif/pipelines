@@ -21,4 +21,10 @@ public interface ClusteringPipelineOptions
   Integer getCandidatesCutoff();
 
   void setCandidatesCutoff(Integer candidatesCutoff);
+
+  @Description("Include sampling")
+  @Default.Boolean(false)
+  Boolean isOutputDebugAvro();
+
+  void setOutputDebugAvro(Boolean outputDebugAvro);
 }

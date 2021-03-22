@@ -15,7 +15,6 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.io.avro.ALAAttributionRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.MetadataRecord;
 
 /** Attribution interpreter providing additional attribution information to records. */
 @Slf4j
@@ -23,10 +22,10 @@ import org.gbif.pipelines.io.avro.MetadataRecord;
 public class ALAAttributionInterpreter {
 
   public static BiConsumer<ExtendedRecord, ALAAttributionRecord> interpretDatasetKey(
-      MetadataRecord mr, KeyValueStore<String, ALACollectoryMetadata> dataResourceKvStore) {
+      String datasetId, KeyValueStore<String, ALACollectoryMetadata> dataResourceKvStore) {
     return (key, aar) -> {
-      if (dataResourceKvStore != null && mr.getId() != null) {
-        ALACollectoryMetadata m = dataResourceKvStore.get(mr.getId());
+      if (dataResourceKvStore != null && datasetId != null) {
+        ALACollectoryMetadata m = dataResourceKvStore.get(datasetId);
         if (m != null) {
           aar.setDataResourceUid(m.getUid());
           if (m.getProvider() != null) {
@@ -36,6 +35,7 @@ public class ALAAttributionInterpreter {
           aar.setDataResourceName(m.getName());
           aar.setLicenseType(m.getLicenseType());
           aar.setLicenseVersion(m.getLicenseVersion());
+          aar.setProvenance(m.getProvenance());
           aar.setHasDefaultValues(
               m.getDefaultDarwinCoreValues() != null && !m.getDefaultDarwinCoreValues().isEmpty());
 
@@ -56,7 +56,7 @@ public class ALAAttributionInterpreter {
 
         } else {
           throw new RuntimeException(
-              "Unable to retrieve connection parameters for dataset: " + mr.getId());
+              "Unable to retrieve connection parameters for dataset: " + datasetId);
         }
       }
     };

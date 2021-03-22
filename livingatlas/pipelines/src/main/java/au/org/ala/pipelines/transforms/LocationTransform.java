@@ -11,14 +11,10 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import lombok.Builder;
-import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.transforms.MapElements;
-import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
 import org.apache.beam.sdk.values.KV;
-import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.kvs.KeyValueStore;
@@ -30,7 +26,6 @@ import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.LocationInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.transforms.Transform;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 
@@ -52,9 +47,7 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
   private ALALocationInterpreter alaLocationInterpreter;
   private CentrePoints countryCentrePoints;
   private CentrePoints stateProvinceCentrePoints;
-  private Vocab stateProvinceVocab;
-
-  @Setter private PCollectionView<MetadataRecord> metadataView;
+  private StateProvinceParser stateProvinceParser;
 
   @Builder(buildMethodName = "create")
   private LocationTransform(
@@ -62,7 +55,6 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
       SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> countryKvStoreSupplier,
       SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> stateProvinceKvStoreSupplier,
       SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> biomeKvStoreSupplier,
-      PCollectionView<MetadataRecord> metadataView,
       List<DateComponentOrdering> orderings,
       SerializableFunction<String, String> preprocessDateFn) {
 
@@ -75,7 +67,6 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
     this.countryKvStoreSupplier = countryKvStoreSupplier;
     this.stateProvinceKvStoreSupplier = stateProvinceKvStoreSupplier;
     this.biomeKvStoreSupplier = biomeKvStoreSupplier;
-    this.metadataView = metadataView;
     this.orderings = orderings;
     this.preprocessDateFn = preprocessDateFn;
   }
@@ -84,11 +75,6 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
   public MapElements<LocationRecord, KV<String, LocationRecord>> toKv() {
     return MapElements.into(new TypeDescriptor<KV<String, LocationRecord>>() {})
         .via((LocationRecord lr) -> KV.of(lr.getId(), lr));
-  }
-
-  @Override
-  public SingleOutput<ExtendedRecord, LocationRecord> interpret() {
-    return ParDo.of(this).withSideInputs(metadataView);
   }
 
   /** Beam @Setup initializes resources */
@@ -111,8 +97,9 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
     countryCentrePoints = CountryCentrePoints.getInstance(alaConfig.getLocationInfoConfig());
     stateProvinceCentrePoints =
         StateProvinceCentrePoints.getInstance(alaConfig.getLocationInfoConfig());
-    stateProvinceVocab =
-        StateProvince.getInstance(alaConfig.getLocationInfoConfig().getStateProvinceNamesFile());
+    stateProvinceParser =
+        StateProvinceParser.getInstance(
+            alaConfig.getLocationInfoConfig().getStateProvinceNamesFile());
 
     if (alaLocationInterpreter == null) {
       alaLocationInterpreter =
@@ -150,23 +137,13 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
     }
   }
 
-  @Override
-  public Optional<LocationRecord> convert(ExtendedRecord source) {
-    throw new IllegalArgumentException("Method is not implemented!");
-  }
-
-  @Override
-  @ProcessElement
-  public void processElement(ProcessContext c) {
-    processElement(c.element(), c.sideInput(metadataView)).ifPresent(c::output);
-  }
-
   public LocationTransform counterFn(SerializableConsumer<String> counterFn) {
     setCounterFn(counterFn);
     return this;
   }
 
-  public Optional<LocationRecord> processElement(ExtendedRecord source, MetadataRecord mdr) {
+  @Override
+  public Optional<LocationRecord> convert(ExtendedRecord source) {
 
     LocationRecord lr =
         LocationRecord.newBuilder()
@@ -178,7 +155,7 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
         Interpretation.from(source)
             .to(lr)
             .when(er -> !er.getCoreTerms().isEmpty())
-            .via(LocationInterpreter.interpretCountryAndCoordinates(countryKvStore, mdr))
+            .via(LocationInterpreter.interpretCountryAndCoordinates(countryKvStore, null))
             .via(ALALocationInterpreter.interpretStateProvince(stateProvinceKvStore))
             .via(ALALocationInterpreter.interpretBiome(biomeKvStore))
             .via(LocationInterpreter::interpretContinent)
@@ -197,7 +174,8 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
             .via(ALALocationInterpreter::interpretGeoreferenceTerms)
             .via(
                 ALALocationInterpreter.verifyLocationInfo(
-                    countryCentrePoints, stateProvinceCentrePoints, stateProvinceVocab))
+                    countryCentrePoints, stateProvinceCentrePoints, stateProvinceParser))
+            .via(ALALocationInterpreter.validateStateProvince(stateProvinceParser))
             .get();
 
     result.ifPresent(r -> this.incCounter());

@@ -65,6 +65,7 @@ dwca-avro --> interpret --> validate --> uuid --> image-sync ... │
 -  'dataset-list' dumps out a list of datasets that have been ingested to '/tmp/dataset-counts.csv';
 -  'validation-report' dumps out a CSV list of datasets ready to be indexed to '/tmp/validation-report.csv';
 -  'clustering' clustering of occurrences;
+-  'prune-datasets' remove any datasets no longer registered in the collectory;
 
 All the steps generate an output. If only the final output is desired, the intermediate outputs can be ignored.
 
@@ -85,6 +86,7 @@ Usage:
   $CMD [options] clustering    (all)                 $WHERE
   $CMD [options] solr          (<dr>...|all)         $WHERE
   $CMD [options] solr-sync          (<dr>...|all)         $WHERE
+  $CMD [options] prune-datasets
   $CMD [options] validation-report
   $CMD [options] do-all        (<dr>...|all) $WHEREL
   $CMD -h | --help
@@ -283,10 +285,10 @@ function archive-list() {
        --config=$config $ARGS
 }
 
-function validation-report() {
+function prune-datasets() {
     # dump out archive list
-    log.info "Creating validation report"
-    java $EXTRA_JVM_CLI_ARGS -cp $LOCAL_PIPELINES_JAR au.org.ala.utils.ValidationReportWriter \
+    log.info "Removing unregistered datasets"
+    java $EXTRA_JVM_CLI_ARGS -cp $LOCAL_PIPELINES_JAR au.org.ala.utils.PruneUnregisteredDatasets \
        --config=$config $ARGS
 }
 
@@ -313,7 +315,8 @@ function dwca-avro () {
           -cp $LOCAL_PIPELINES_JAR $CLASS \
           --datasetId=$dr \
           --deleteLockFileOnExit=true \
-          --config=$config $ARGS
+          --config=$config $ARGS \
+          --experiments=use_deprecated_read
       logStepEnd "DWCA-AVRO conversion" $dr local $SECONDS
     else
 
@@ -384,7 +387,8 @@ function spark-cluster-pipeline() {
             --driver-java-options "-Dlog4j.configuration=file:$CONFIG_DIR/log4j.properties" \
             $PIPELINES_JAR \
             --datasetId=$dr \
-            --config=$config $ARGS
+            --config=$config $ARGS \
+            --experiments=use_deprecated_read
         # TODO set here an optional colorized log4j properties
     fi
 }
@@ -469,7 +473,7 @@ function migrate () {
 function image-load () {
     dr=$1
     ltype=$2
-    CLASS=au.org.ala.pipelines.beam.ImageServiceLoadPipeline
+    CLASS=au.org.ala.pipelines.beam.ImageServiceDiffLoadPipeline
 
     logStepStart "Image-load" $dr
     SECONDS=0
@@ -705,6 +709,10 @@ fi
 
 if ($validation_report) ; then
     validation-report
+fi
+
+if ($prune_datasets) ; then
+    prune-datasets
 fi
 
 if ($do_all || $dwca_avro) ; then
