@@ -131,5 +131,11 @@ pipeline {
 
 
 int findFreePort(){
-  return new ServerSocket(0).withCloseable { socket -> socket.getLocalPort() }
+   new ServerSocket(0).with { socket ->
+    try {
+      return socket.getLocalPort();
+    } finally {
+      socket.close()
+    }
+  }
 }
