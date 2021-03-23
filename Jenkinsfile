@@ -82,7 +82,7 @@ pipeline {
       }
       steps {
         withSonarQubeEnv('GBIF Sonarqube') {
-          withMaven(maven: 'Maven3.6') {
+          withMaven(maven: 'Maven3.6', mavenSettingsConfig: 'Secrets') {
             sh 'mvn sonar:sonar'
           }
         }
