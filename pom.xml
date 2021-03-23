@@ -478,6 +478,14 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
           </exclusion>
+          <exclusion>
+            <groupId>org.gbif</groupId>
+            <artifactId>gbif-common-service</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.beust</groupId>
+            <artifactId>jcommander</artifactId>
+          </exclusion>
         </exclusions>
       </dependency>
       <dependency>
