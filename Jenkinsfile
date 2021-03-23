@@ -97,8 +97,10 @@ pipeline {
         }
       }
       steps {
-        withMaven(maven: 'Maven3.6', mavenSettingsConfig: 'org.jenkinsci.plugins.configfiles.maven.GlobalMavenSettingsConfig1387378707709') {
-          sh 'mvn -B -DskipTests -X deploy'
+        configFileProvider(
+                [configFile(fileId: 'org.jenkinsci.plugins.configfiles.maven.GlobalMavenSettingsConfig1387378707709',
+                        variable: 'MAVEN_SETTINGS_XML')]) {
+          sh 'mvn -s $MAVEN_SETTINGS_XML -B -DskipTests deploy'
         }
       }
     }
