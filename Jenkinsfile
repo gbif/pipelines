@@ -98,7 +98,7 @@ pipeline {
       }
       steps {
         withMaven(maven: 'Maven3.6', mavenSettingsConfig: 'org.jenkinsci.plugins.configfiles.maven.GlobalMavenSettingsConfig1387378707709') {
-          sh 'mvn -B -DskipTests deploy'
+          sh 'mvn -B -DskipTests -X deploy'
         }
       }
     }
