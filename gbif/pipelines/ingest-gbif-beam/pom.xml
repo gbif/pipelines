@@ -119,6 +119,12 @@
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
       <artifactId>beam-common</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.gbif.pipelines</groupId>
+          <artifactId>archives-converters</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
@@ -167,6 +173,12 @@
     <dependency>
       <groupId>org.apache.beam</groupId>
       <artifactId>beam-runners-spark</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.beam</groupId>
+          <artifactId>beam-sdks-java-extensions-google-cloud-platform-core</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.beam</groupId>
