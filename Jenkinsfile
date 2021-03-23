@@ -93,7 +93,7 @@ pipeline {
         allOf {
           not { expression { params.RELEASE } };
           not { expression { params.DOCUMENTATION } };
-          branch 'master';
+          branch 'dev';
         }
       }
       steps {
