@@ -5,7 +5,7 @@ pipeline {
     jdk 'JDK8'
   }
   options {
-    buildDiscarder(logRotator(numToKeepStr: '10'))
+    buildDiscarder(logRotator(numToKeepStr: '4'))
     timestamps ()
   }
   parameters {
@@ -65,6 +65,7 @@ pipeline {
           }
           steps {
             withMaven(maven: 'Maven3.6') {
+              //Zookeeper port is SOLR_PORT + 1000
               sh 'mvn resources:testResources docker:build docker:start failsafe:integration-test docker:stop -T 1C -Dparallel=classes -DuseUnlimitedThreads=true -e -Pcoverage -Dalanm.port=$ALANM_PORT -Dalanm.admin.port=$ALANM_ADMIN_PORT -Dsolr8.zk.port=$(($ALA_SOLR_PORT+1000)) -Dsolr8.http.port=$ALA_SOLR_PORT -Dsds.admin.port=$SDS_ADMIN_PORT -Dsds.port=$SDS_PORT'
             }
           }
@@ -129,7 +130,9 @@ pipeline {
   }
 }
 
-
+/**
+ * Finds a free tcp port.
+ */
 int findFreePort(){
    new ServerSocket(0).with { socket ->
     try {
@@ -140,6 +143,9 @@ int findFreePort(){
   }
 }
 
+/**
+ * Creates the Maven release arguments based on the pipeline parameters.
+ */
 def createReleaseArgs() {
   def args = ""
   if (params.RELEASE_VERSION != '') {
