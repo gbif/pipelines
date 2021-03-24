@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.gbif</groupId>
     <artifactId>motherpom</artifactId>
-    <version>50</version>
+    <version>51-SNAPSHOT</version>
   </parent>
 
   <groupId>org.gbif.pipelines</groupId>
@@ -216,32 +216,6 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
-          <version>${maven-compiler-plugin.version}</version>
-          <configuration combine.self="override">
-            <compilerId>javac-with-errorprone</compilerId>
-            <forceJavacCompilerUse>true</forceJavacCompilerUse>
-            <source>${jdkLevel}</source>
-            <target>${jdkLevel}</target>
-            <compilerArgs>
-              <arg>-XepExcludedPaths:.*/src/main/java-generated/.*</arg>
-              <arg>-XepDisableWarningsInGeneratedCode</arg>
-              <arg>-Xep:MissingOverride:ERROR</arg>
-              <arg>-Xep:ParameterName:OFF</arg>
-            </compilerArgs>
-          </configuration>
-          <dependencies>
-            <dependency>
-              <groupId>org.codehaus.plexus</groupId>
-              <artifactId>plexus-compiler-javac-errorprone</artifactId>
-              <version>${plexus-compiler-javac-errorprone.version}</version>
-            </dependency>
-            <!-- Override plexus-compiler-javac-errorprone's dependency on Errorprone with the latest version -->
-            <dependency>
-              <groupId>com.google.errorprone</groupId>
-              <artifactId>error_prone_core</artifactId>
-              <version>${error_prone_core.version}</version>
-            </dependency>
-          </dependencies>
         </plugin>
         <plugin>
           <groupId>org.sonarsource.scanner.maven</groupId>
@@ -251,7 +225,6 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-failsafe-plugin</artifactId>
-          <version>${maven-failsafe-plugin.version}</version>
           <dependencies>
             <dependency>
               <groupId>org.apache.maven.surefire</groupId>
@@ -259,99 +232,10 @@
               <version>${maven-failsafe-plugin.version}</version>
             </dependency>
           </dependencies>
-          <executions>
-            <execution>
-              <id>integration-test</id>
-              <goals>
-                <goal>integration-test</goal>
-              </goals>
-            </execution>
-            <execution>
-              <id>verify</id>
-              <goals>
-                <goal>verify</goal>
-              </goals>
-            </execution>
-          </executions>
-          <configuration combine.self="override">
-            <redirectTestOutputToFile>true</redirectTestOutputToFile>
-            <argLine>${failsafeArgLine}</argLine>
-            <runOrder>random</runOrder>
-            <trimStackTrace>false</trimStackTrace>
-            <classesDirectory>${project.build.outputDirectory}</classesDirectory>
-          </configuration>
         </plugin>
         <plugin>
           <groupId>org.jacoco</groupId>
           <artifactId>jacoco-maven-plugin</artifactId>
-          <version>${jacoco-maven-plugin.version}</version>
-          <configuration combine.self="override">
-            <append>true</append>
-          </configuration>
-          <executions>
-            <execution>
-              <id>prepare-agent-ut</id>
-              <goals>
-                <goal>prepare-agent</goal>
-              </goals>
-              <configuration combine.self="override">
-                <append>true</append>
-                <destFile>${jacoco.ut.output.file}</destFile>
-                <propertyName>surefireArgLine</propertyName>
-              </configuration>
-            </execution>
-            <execution>
-              <id>report-ut-coverage</id>
-              <phase>verify</phase>
-              <goals>
-                <goal>report</goal>
-              </goals>
-              <configuration combine.self="override">
-                <dataFile>${jacoco.ut.output.file}</dataFile>
-                <outputDirectory>${coverage.report.ut.dir}</outputDirectory>
-              </configuration>
-            </execution>
-            <execution>
-              <id>prepare-agent-it</id>
-              <goals>
-                <goal>prepare-agent-integration</goal>
-              </goals>
-              <phase>package</phase>
-              <configuration combine.self="override">
-                <destFile>${jacoco.it.output.file}</destFile>
-                <propertyName>failsafeArgLine</propertyName>
-              </configuration>
-            </execution>
-            <execution>
-              <id>report-it-coverage</id>
-              <phase>verify</phase>
-              <goals>
-                <goal>report-integration</goal>
-              </goals>
-              <configuration combine.self="override">
-                <dataFile>${jacoco.it.output.file}</dataFile>
-                <outputDirectory>${coverage.report.it.dir}</outputDirectory>
-              </configuration>
-            </execution>
-            <execution>
-              <id>merge-exec-files</id>
-              <phase>install</phase>
-              <goals>
-                <goal>merge</goal>
-              </goals>
-              <configuration combine.self="override">
-                <fileSets>
-                  <fileSet>
-                    <directory>${coverage.dir}</directory>
-                    <includes>
-                      <include>jacoco-*.exec</include>
-                    </includes>
-                  </fileSet>
-                </fileSets>
-                <destFile>${jacoco.merged.output.file}</destFile>
-              </configuration>
-            </execution>
-          </executions>
         </plugin>
         <plugin>
           <groupId>com.diffplug.spotless</groupId>
@@ -387,7 +271,6 @@
             </goals>
           </execution>
         </executions>
-        <configuration combine.self="override"/>
       </plugin>
 
     </plugins>
@@ -1037,7 +920,7 @@
                 <goals>
                   <goal>prepare-agent</goal>
                 </goals>
-                <configuration combine.self="override">
+                <configuration>
                   <destFile>${jacoco.ut.output.file}</destFile>
                   <append>true</append>
                   <includes>org.gbif.*,au.org.ala.*</includes>
@@ -1056,12 +939,6 @@
                 <version>${maven-failsafe-plugin.version}</version>
               </dependency>
             </dependencies>
-            <configuration combine.self="override">
-              <argLine>${surefireArgLine}</argLine>
-              <excludes>
-                <exclude>**/*IT.java</exclude>
-              </excludes>
-            </configuration>
           </plugin>
         </plugins>
       </build>

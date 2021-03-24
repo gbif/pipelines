@@ -5,12 +5,9 @@ import static org.junit.Assert.*;
 
 import java.util.Arrays;
 import java.util.List;
-import org.apache.spark.SparkConf;
-import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
-import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructField;
@@ -24,7 +21,7 @@ import org.junit.Test;
  * Tests for relationship assertions when using Spark Row as the source. Further tests should be
  * added to the OccurrenceRelationshipsTest and only spark specific tests added here.
  */
-public class OccurrenceRelationshipsSparkTest {
+public class OccurrenceRelationshipsSparkTest extends BaseSparkTest {
 
   // Schema mirrors the production occurrence HDFS view of GBIF with the exception of taxa keys
   // being String
@@ -274,53 +271,38 @@ public class OccurrenceRelationshipsSparkTest {
   /** Test to simply verify that a Spark dataset row operates the same as the isolated Row tests. */
   @Test
   public void testWithSpark() {
-    SparkConf conf =
-        new SparkConf()
-            .setMaster("local[*]")
-            .setAppName("test")
-            .set("spark.ui.enabled", "false")
-            .set("spark.testing", "true"); // ignore memory check
+    List<Row> rows =
+        Arrays.asList(
+            new RowBuilder()
+                .with("occurrenceID", "1")
+                .with("speciesKey", "1")
+                .with("decimalLatitude", 44.0d)
+                .with("decimalLongitude", 44.0d)
+                .with("catalogNumber", "TIM1")
+                .with("year", 1978)
+                .with("month", 12)
+                .with("day", 21)
+                .buildSchemaless(),
+            new RowBuilder()
+                .with("occurrenceID", "2")
+                .with("speciesKey", "1")
+                .with("decimalLatitude", 44.0d)
+                .with("decimalLongitude", 44.0d)
+                .with("catalogNumber", "//TIM1")
+                .with("year", 1978)
+                .with("month", 12)
+                .with("day", 21)
+                .buildSchemaless());
+    final Dataset<Row> data = sqlContext.createDataFrame(rows, SCHEMA);
+    List<Row> rowData = data.collectAsList();
 
-    JavaSparkContext jsc = new JavaSparkContext(conf);
-    SQLContext sqlContext = new SQLContext(jsc);
+    OccurrenceFeatures o1 = new RowOccurrenceFeatures(rowData.get(0));
+    OccurrenceFeatures o2 = new RowOccurrenceFeatures(rowData.get(1));
 
-    try {
-      List<Row> rows =
-          Arrays.asList(
-              new RowBuilder()
-                  .with("occurrenceID", "1")
-                  .with("speciesKey", "1")
-                  .with("decimalLatitude", 44.0d)
-                  .with("decimalLongitude", 44.0d)
-                  .with("catalogNumber", "TIM1")
-                  .with("year", 1978)
-                  .with("month", 12)
-                  .with("day", 21)
-                  .buildSchemaless(),
-              new RowBuilder()
-                  .with("occurrenceID", "2")
-                  .with("speciesKey", "1")
-                  .with("decimalLatitude", 44.0d)
-                  .with("decimalLongitude", 44.0d)
-                  .with("catalogNumber", "//TIM1")
-                  .with("year", 1978)
-                  .with("month", 12)
-                  .with("day", 21)
-                  .buildSchemaless());
-      final Dataset<Row> data = sqlContext.createDataFrame(rows, SCHEMA);
-      List<Row> rowData = data.collectAsList();
+    RelationshipAssertion<OccurrenceFeatures> assertion = OccurrenceRelationships.generate(o1, o2);
 
-      OccurrenceFeatures o1 = new RowOccurrenceFeatures(rowData.get(0));
-      OccurrenceFeatures o2 = new RowOccurrenceFeatures(rowData.get(1));
-
-      RelationshipAssertion<OccurrenceFeatures> assertion =
-          OccurrenceRelationships.generate(o1, o2);
-
-      assertNotNull(assertion);
-      assertTrue(assertion.justificationContains(SAME_ACCEPTED_SPECIES));
-    } finally {
-      jsc.stop();
-    }
+    assertNotNull(assertion);
+    assertTrue(assertion.justificationContains(SAME_ACCEPTED_SPECIES));
   }
 
   /**
