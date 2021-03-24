@@ -2,13 +2,17 @@ package au.org.ala.pipelines.transforms;
 
 import static au.org.ala.pipelines.common.ALARecordTypes.ALA_SENSITIVE_DATA;
 
+import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.pipelines.interpreters.SensitiveDataInterpreter;
+import au.org.ala.pipelines.vocabulary.Sensitivity;
+import au.org.ala.pipelines.vocabulary.Vocab;
 import au.org.ala.sds.api.ConservationApi;
 import au.org.ala.sds.api.SensitivityQuery;
 import au.org.ala.sds.api.SensitivityReport;
 import au.org.ala.sds.api.SpeciesCheck;
 import au.org.ala.sds.generalise.FieldAccessor;
 import au.org.ala.sds.generalise.Generalisation;
+import java.io.FileNotFoundException;
 import java.util.*;
 import java.util.stream.Collectors;
 import lombok.Builder;
@@ -43,6 +47,11 @@ import org.gbif.pipelines.transforms.Transform;
 public class ALASensitiveDataRecordTransform
     extends Transform<KV<String, CoGbkResult>, ALASensitivityRecord> {
 
+  /** Fields that indicate that the raw 2record has been generalised */
+  private static final Set<Term> GENERALISATION_FIELDS =
+      new HashSet<>(Arrays.asList(DwcTerm.dataGeneralizations, DwcTerm.informationWithheld));
+
+  private final ALAPipelinesConfig config;
   private final String datasetId;
   private KeyValueStore<SpeciesCheck, Boolean> speciesStore;
   private KeyValueStore<SensitivityQuery, SensitivityReport> reportStore;
@@ -51,6 +60,7 @@ public class ALASensitiveDataRecordTransform
   private final SerializableSupplier<KeyValueStore<SensitivityQuery, SensitivityReport>>
       reportStoreSupplier;
   private final SerializableSupplier<ConservationApi> conservationServiceSupplier;
+  private Vocab sensitivityVocab;
 
   private List<Generalisation> generalisations;
   private Set<Term> sensitiveFields;
@@ -63,6 +73,7 @@ public class ALASensitiveDataRecordTransform
 
   @Builder(buildMethodName = "create")
   private ALASensitiveDataRecordTransform(
+      ALAPipelinesConfig config,
       String datasetId,
       KeyValueStore<SpeciesCheck, Boolean> speciesStore,
       SerializableSupplier<KeyValueStore<SpeciesCheck, Boolean>> speciesStoreSupplier,
@@ -81,6 +92,7 @@ public class ALASensitiveDataRecordTransform
         ALASensitiveDataRecordTransform.class.getName(),
         "alaSensitiveDataRecordCount");
 
+    this.config = config;
     this.datasetId = datasetId;
     this.speciesStore = speciesStore;
     this.reportStore = reportStore;
@@ -143,6 +155,13 @@ public class ALASensitiveDataRecordTransform
             g.getFields().stream().map(FieldAccessor::getField).collect(Collectors.toSet()));
       }
     }
+    try {
+      sensitivityVocab =
+          Sensitivity.getInstance(config != null ? config.getSensitivityVocabFile() : null);
+    } catch (FileNotFoundException e) {
+      log.error("Unable to get vocabulary file " + config.getSensitivityVocabFile());
+      sensitivityVocab = null;
+    }
   }
 
   /** Beam @Teardown closes initialized resources */
@@ -186,6 +205,9 @@ public class ALASensitiveDataRecordTransform
         DwcTerm.taxonConceptID.qualifiedName(),
         SensitiveDataInterpreter.extractTaxonId(iatxr, itxr, ier));
 
+    Map<String, String> dataGeneralisations = new HashMap<>();
+    SensitiveDataInterpreter.constructFields(GENERALISATION_FIELDS, dataGeneralisations, ier);
+
     SensitiveDataInterpreter.constructFields(sensitiveFields, properties, iatxr);
     SensitiveDataInterpreter.constructFields(sensitiveFields, properties, itxr);
     SensitiveDataInterpreter.constructFields(sensitiveFields, properties, itr);
@@ -194,7 +216,14 @@ public class ALASensitiveDataRecordTransform
 
     if (SensitiveDataInterpreter.sourceQualityChecks(properties, sr)) {
       SensitiveDataInterpreter.sensitiveDataInterpreter(
-          speciesStore, reportStore, generalisations, datasetId, properties, sr);
+          speciesStore,
+          reportStore,
+          generalisations,
+          datasetId,
+          properties,
+          dataGeneralisations,
+          sensitivityVocab,
+          sr);
     }
     return Optional.of(sr);
   }

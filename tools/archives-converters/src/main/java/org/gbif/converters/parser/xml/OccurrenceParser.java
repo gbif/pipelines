@@ -15,7 +15,6 @@
  */
 package org.gbif.converters.parser.xml;
 
-import com.sun.org.apache.xerces.internal.impl.io.MalformedByteSequenceException;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -37,6 +36,7 @@ import javax.xml.transform.TransformerException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.digester.Digester;
 import org.apache.commons.digester.NodeCreateRule;
+import org.apache.xerces.impl.io.MalformedByteSequenceException;
 import org.gbif.api.exception.ServiceUnavailableException;
 import org.gbif.converters.parser.xml.constants.ExtractionSimpleXPaths;
 import org.gbif.converters.parser.xml.model.RawOccurrenceRecord;

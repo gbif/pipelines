@@ -91,6 +91,7 @@ public class ALAInterpretedToSensitivePipeline {
     ALATaxonomyTransform alaTaxonomyTransform = ALATaxonomyTransform.builder().create();
     ALASensitiveDataRecordTransform alaSensitiveDataRecordTransform =
         ALASensitiveDataRecordTransform.builder()
+            .config(config)
             .datasetId(options.getDatasetId())
             .speciesStoreSupplier(SDSCheckKVStoreFactory.getInstanceSupplier(config))
             .reportStoreSupplier(SDSReportKVStoreFactory.getInstanceSupplier(config))

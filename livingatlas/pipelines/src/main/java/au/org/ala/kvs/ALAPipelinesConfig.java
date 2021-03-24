@@ -20,6 +20,7 @@ public class ALAPipelinesConfig implements Serializable {
   private WsConfig collectory;
   private WsConfig alaNameMatch;
   private WsConfig sds;
+  private String sensitivityVocabFile;
   private WsConfig speciesListService;
   private WsConfig imageService;
 

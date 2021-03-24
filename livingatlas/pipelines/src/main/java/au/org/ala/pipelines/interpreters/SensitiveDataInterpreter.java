@@ -1,6 +1,7 @@
 package au.org.ala.pipelines.interpreters;
 
 import au.org.ala.pipelines.vocabulary.ALAOccurrenceIssue;
+import au.org.ala.pipelines.vocabulary.Vocab;
 import au.org.ala.sds.api.SensitivityQuery;
 import au.org.ala.sds.api.SensitivityReport;
 import au.org.ala.sds.api.SpeciesCheck;
@@ -148,9 +149,11 @@ public class SensitiveDataInterpreter {
     values.forEach(
         (key, value) -> {
           Term term = TERM_FACTORY.findTerm(key);
-          String sn = term == null ? null : term.qualifiedName();
-          if (sn != null && properties.get(sn) == null) {
-            properties.put(sn, value);
+          if (sensitive.contains(term)) {
+            String sn = term == null ? null : term.qualifiedName();
+            if (sn != null && properties.get(sn) == null) {
+              properties.put(sn, value);
+            }
           }
         });
   }
@@ -375,6 +378,8 @@ public class SensitiveDataInterpreter {
    * @param reportStore The sensitive data report
    * @param generalisations The generalisations to apply
    * @param properties The properties that have values
+   * @param existingGeneralisations Any pre-existing generalisations
+   * @param sensitivityVocab The vocabulary to use when deriving sensitivity terms
    * @param sr The sensitivity record
    */
   public static void sensitiveDataInterpreter(
@@ -383,6 +388,8 @@ public class SensitiveDataInterpreter {
       final List<Generalisation> generalisations,
       String dataResourceUid,
       Map<String, String> properties,
+      Map<String, String> existingGeneralisations,
+      Vocab sensitivityVocab,
       ALASensitivityRecord sr) {
 
     String scientificName = properties.get(DwcTerm.scientificName.qualifiedName());
@@ -390,9 +397,9 @@ public class SensitiveDataInterpreter {
 
     SpeciesCheck speciesCheck =
         SpeciesCheck.builder().scientificName(scientificName).taxonId(taxonId).build();
-    sr.setSensitive(speciesStore.get(speciesCheck));
+    sr.setIsSensitive(speciesStore.get(speciesCheck));
 
-    if (sr.getSensitive() == null || !sr.getSensitive()) {
+    if (sr.getIsSensitive() == null || !sr.getIsSensitive()) {
       return;
     }
     String stateProvince = properties.get(DwcTerm.stateProvince.qualifiedName());
@@ -406,7 +413,7 @@ public class SensitiveDataInterpreter {
             .country(country)
             .build();
     SensitivityReport report = reportStore.get(query);
-    sr.setSensitive(report.isSensitive());
+    sr.setIsSensitive(report.isSensitive());
     if (!report.isValid()) {
       addIssue(sr, ALAOccurrenceIssue.SENSITIVITY_REPORT_INVALID);
     }
@@ -432,6 +439,11 @@ public class SensitiveDataInterpreter {
           GENERALISATION_IN_METRES.get(result).getValue().map(Object::toString).orElse(null));
       sr.setOriginal(toStringMap(original));
       sr.setAltered(toStringMap(result));
+      String sensitivity = existingGeneralisations.isEmpty() ? "generalised" : "alreadyGeneralised";
+      if (sensitivityVocab != null) {
+        sensitivity = sensitivityVocab.matchTerm(sensitivity).orElse(sensitivity);
+      }
+      sr.setSensitive(sensitivity);
     }
   }
 
