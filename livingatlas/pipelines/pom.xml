@@ -403,6 +403,12 @@
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
       <artifactId>core</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.elasticsearch.client</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
@@ -632,6 +638,11 @@
     <dependency>
       <groupId>com.fasterxml.jackson.dataformat</groupId>
       <artifactId>jackson-dataformat-avro</artifactId>
+      <version>${jackson.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.dataformat</groupId>
+      <artifactId>jackson-dataformat-yaml</artifactId>
       <version>${jackson.version}</version>
     </dependency>
 
@@ -881,10 +892,6 @@
         <groupId>org.checkerframework</groupId>
         <artifactId>checker-qual</artifactId>
         <version>${checker-qual.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-databind</artifactId>
     </dependency>
   </dependencies>
 </project>
