@@ -4,6 +4,8 @@ import static org.junit.Assert.*;
 
 import au.org.ala.kvs.client.ALACollectoryMetadata;
 import au.org.ala.pipelines.vocabulary.ALAOccurrenceIssue;
+import au.org.ala.pipelines.vocabulary.Sensitivity;
+import au.org.ala.pipelines.vocabulary.Vocab;
 import au.org.ala.sds.api.*;
 import au.org.ala.sds.generalise.*;
 import java.util.*;
@@ -27,9 +29,10 @@ public class SensitiveDataInterpreterTest {
   private ConservationApi conservationApi;
   private List<Generalisation> generalisations;
   private Set<Term> sensitive;
+  private Vocab sensitiveVocab;
 
   @Before
-  public void setUp() {
+  public void setUp() throws Exception {
     this.dataResource =
         ALACollectoryMetadata.builder().name("Test data resource").uid(DATARESOURCE_UID).build();
     this.generalisations =
@@ -198,6 +201,7 @@ public class SensitiveDataInterpreterTest {
           @Override
           public void close() {}
         };
+    this.sensitiveVocab = Sensitivity.getInstance(null);
   }
 
   @Test
@@ -370,7 +374,7 @@ public class SensitiveDataInterpreterTest {
     ALASensitivityRecord sr =
         ALASensitivityRecord.newBuilder()
             .setId("1")
-            .setSensitive(true)
+            .setIsSensitive(true)
             .setAltered(properties)
             .build();
     SensitiveDataInterpreter.applySensitivity(this.sensitive, sr, lr);
@@ -451,7 +455,7 @@ public class SensitiveDataInterpreterTest {
     ALASensitivityRecord sr =
         ALASensitivityRecord.newBuilder()
             .setId("1")
-            .setSensitive(true)
+            .setIsSensitive(true)
             .setAltered(properties)
             .build();
     SensitiveDataInterpreter.applySensitivity(this.sensitive, sr, tr);
@@ -508,6 +512,7 @@ public class SensitiveDataInterpreterTest {
     map.put(DwcTerm.decimalLongitude.qualifiedName(), "149.55");
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
     Map<String, String> properties = new HashMap<>();
+    Map<String, String> generalisations = new HashMap<>();
     SensitiveDataInterpreter.constructFields(this.sensitive, properties, er);
     SensitiveDataInterpreter.sensitiveDataInterpreter(
         this.sensitivityLookup,
@@ -515,9 +520,49 @@ public class SensitiveDataInterpreterTest {
         this.generalisations,
         "dr1",
         properties,
+        generalisations,
+        this.sensitiveVocab,
         sr);
     assertTrue(sr.getIssues().getIssueList().isEmpty());
-    assertTrue(sr.getSensitive());
+    assertTrue(sr.getIsSensitive());
+    assertEquals("generalised", sr.getSensitive());
+    assertEquals("Test generalisation", sr.getDataGeneralizations());
+    assertEquals(5, sr.getAltered().size());
+    assertEquals("-39.8", sr.getAltered().get(DwcTerm.decimalLatitude.qualifiedName()));
+    assertEquals("149.5", sr.getAltered().get(DwcTerm.decimalLongitude.qualifiedName()));
+    assertEquals(5, sr.getOriginal().size());
+    assertEquals("-39.78", sr.getOriginal().get(DwcTerm.decimalLatitude.qualifiedName()));
+    assertEquals("149.55", sr.getOriginal().get(DwcTerm.decimalLongitude.qualifiedName()));
+  }
+
+  @Test
+  public void testSensitiveDataInterpreter2() {
+    ALASensitivityRecord sr = ALASensitivityRecord.newBuilder().setId("1").build();
+    Map<String, String> map = new HashMap<>();
+    map.put(DwcTerm.scientificName.qualifiedName(), "Acacia dealbata");
+    map.put(DwcTerm.eventDate.qualifiedName(), "2020-01-01");
+    map.put(
+        DwcTerm.taxonConceptID.qualifiedName(),
+        "https://id.biodiversity.org.au/taxon/apni/51286863");
+    map.put(DwcTerm.decimalLatitude.qualifiedName(), "-39.78");
+    map.put(DwcTerm.decimalLongitude.qualifiedName(), "149.55");
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
+    Map<String, String> properties = new HashMap<>();
+    Map<String, String> generalisations = new HashMap<>();
+    generalisations.put(DwcTerm.dataGeneralizations.qualifiedName(), "generalised");
+    SensitiveDataInterpreter.constructFields(this.sensitive, properties, er);
+    SensitiveDataInterpreter.sensitiveDataInterpreter(
+        this.sensitivityLookup,
+        this.sensitivityReportLookup,
+        this.generalisations,
+        "dr1",
+        properties,
+        generalisations,
+        this.sensitiveVocab,
+        sr);
+    assertTrue(sr.getIssues().getIssueList().isEmpty());
+    assertTrue(sr.getIsSensitive());
+    assertEquals("alreadyGeneralised", sr.getSensitive());
     assertEquals("Test generalisation", sr.getDataGeneralizations());
     assertEquals(5, sr.getAltered().size());
     assertEquals("-39.8", sr.getAltered().get(DwcTerm.decimalLatitude.qualifiedName()));

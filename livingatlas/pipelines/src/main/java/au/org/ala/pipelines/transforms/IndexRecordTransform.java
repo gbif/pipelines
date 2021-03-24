@@ -183,8 +183,8 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     indexRecord.getDates().put(LAST_PROCESSED_DATE, lastProcessedDate);
 
     // If a sensitive record, construct new versions of the data with adjustments
-    boolean sensitive = sr != null && sr.getSensitive() != null && sr.getSensitive();
-    if (sensitive) {
+    boolean isSensitive = sr != null && sr.getIsSensitive() != null && sr.getIsSensitive();
+    if (isSensitive) {
       Set<Term> sensitiveTerms =
           sr.getAltered().keySet().stream().map(TERM_FACTORY::findTerm).collect(Collectors.toSet());
       if (mdr != null) {
@@ -290,12 +290,12 @@ public class IndexRecordTransform implements Serializable, IndexFields {
       addGBIFTaxonomy(txr, indexRecord, assertions);
     }
 
-    if (sensitive) {
-      indexRecord.getStrings().put(SENSITIVE, "generalised");
+    if (isSensitive) {
+      indexRecord.getStrings().put(SENSITIVE, sr.getSensitive());
     }
 
     // Sensitive (Original) data
-    if (sensitive) {
+    if (isSensitive) {
       if (sr.getDataGeneralizations() != null)
         indexRecord
             .getStrings()
