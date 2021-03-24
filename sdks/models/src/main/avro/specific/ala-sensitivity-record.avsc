@@ -6,7 +6,8 @@
   "fields":[
       {"name" : "id", "type" : ["null", "string"], "default" : null, "doc" : "Pipelines identifier"},
       {"name" : "created", "type" : ["null", "long"], "default" : null, "doc" : "The timestamp the record was created"},
-      {"name" : "sensitive", "type" : [ "null", "boolean" ], "default" : null, "doc" : "Does this record have any sensitive data features" },
+      {"name" : "isSensitive", "type" : [ "null", "boolean" ], "default" : null, "doc" : "Does this record have any sensitive data features" },
+      {"name" : "sensitive", "type" : [ "null", "string" ], "default" : null, "doc" : "A text description of the sensitivity status, derived from a standard vocabulary" },
       {"name" : "dataGeneralizations", "type" : ["null", "string"], "default" : null, "doc" : "Description of any generalisations that have been applied"},
       {"name" : "informationWithheld", "type" : ["null", "string"], "default" : null, "doc" : "Description of any information that has been removed"},
       {"name" : "generalisationToApplyInMetres", "type" : ["null", "string"], "default" : null, "doc" : "Coordinate generalisation radius"},

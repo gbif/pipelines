@@ -67,14 +67,15 @@ public class SensitiveDataPipelineTestIT {
             null, null, ALASensitivityRecord.class, ala_sensitive_data.getPath() + "/*.avro");
     ALASensitivityRecord sds1 = sds.get("not-an-uuid-1");
     assertNotNull(sds1);
-    assertTrue(sds1.getSensitive());
+    assertTrue(sds1.getIsSensitive());
+    assertEquals("generalised", sds1.getSensitive());
     assertEquals(
         "Record is Australia in Endangered. Generalised to 10km by Birds Australia.",
         sds1.getDataGeneralizations());
     assertEquals("149.4", sds1.getAltered().get("http://rs.tdwg.org/dwc/terms/decimalLongitude"));
     ALASensitivityRecord sds2 = sds.get("not-an-uuid-2");
     assertNotNull(sds2);
-    assertFalse(sds2.getSensitive());
+    assertFalse(sds2.getIsSensitive());
   }
 
   public void loadTestDataset(String datasetID, String inputPath) throws Exception {
