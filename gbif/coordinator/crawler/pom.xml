@@ -131,6 +131,12 @@
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
       <artifactId>ingest-gbif-java</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.beam</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
@@ -229,6 +235,26 @@
         <exclusion>
           <artifactId>commons-logging</artifactId>
           <groupId>commons-logging</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <!-- Beam -->
+    <dependency>
+      <groupId>org.apache.beam</groupId>
+      <artifactId>beam-sdks-java-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.beam</groupId>
+      <artifactId>beam-sdks-java-io-hadoop-file-system</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.beam</groupId>
+      <artifactId>beam-runners-spark</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.beam</groupId>
+          <artifactId>beam-sdks-java-extensions-google-cloud-platform-core</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
