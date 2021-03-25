@@ -66,7 +66,7 @@ pipeline {
           steps {
             withMaven(maven: 'Maven3.6') {
               //Zookeeper port is SOLR_PORT + 1000
-              sh 'mvn resources:testResources integration-test -e -Pcoverage -Dalanm.port=$ALANM_PORT -Dalanm.admin.port=$ALANM_ADMIN_PORT -Dsolr8.zk.port=$(($ALA_SOLR_PORT+1000)) -Dsolr8.http.port=$ALA_SOLR_PORT -Dsds.admin.port=$SDS_ADMIN_PORT -Dsds.port=$SDS_PORT'
+              sh 'mvn resources:testResources docker:build docker:start failsafe:integration-test docker:stop -e -T 1C -Pcoverage -Dalanm.port=$ALANM_PORT -Dalanm.admin.port=$ALANM_ADMIN_PORT -Dsolr8.zk.port=$(($ALA_SOLR_PORT+1000)) -Dsolr8.http.port=$ALA_SOLR_PORT -Dsds.admin.port=$SDS_ADMIN_PORT -Dsds.port=$SDS_PORT'
             }
           }
         }
