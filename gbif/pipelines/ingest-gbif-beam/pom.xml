@@ -207,6 +207,11 @@
       <artifactId>beam-sdks-java-io-elasticsearch</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>org.apache.lucene</groupId>
+      <artifactId>lucene-core</artifactId>
+    </dependency>
+
     <!-- Hadoop -->
     <dependency>
       <groupId>org.apache.hadoop</groupId>

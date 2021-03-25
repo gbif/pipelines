@@ -89,7 +89,7 @@
 
     <!-- Common libraries -->
     <avro.version>1.8.2</avro.version>
-    <apache.beam.version>2.24.0</apache.beam.version>
+    <apache.beam.version>2.28.0</apache.beam.version>
     <hadoop.version>2.6.0-cdh5.16.2</hadoop.version>
     <hadoop-core.version>2.6.0-mr1-cdh5.16.2</hadoop-core.version>
     <hbase.version>1.2.0-cdh5.16.2</hbase.version>
@@ -110,8 +110,10 @@
     <log4j.version>1.2.17</log4j.version>
     <logstash-gelf.version>1.11.2</logstash-gelf.version>
 
-    <elasticsearch.version>7.5.0</elasticsearch.version>
-    <apache.httpcomponents.version>4.4.5</apache.httpcomponents.version>
+    <!-- ES version matches Beam version -->
+    <elasticsearch.version>7.9.2</elasticsearch.version>
+    <pipelines.lucene.version>8.6.2</pipelines.lucene.version>
+    <apache.httpcomponents.version>4.4.12</apache.httpcomponents.version>
 
     <jackson.version>2.12.2</jackson.version>
 
@@ -783,6 +785,11 @@
         <groupId>org.elasticsearch.client</groupId>
         <artifactId>elasticsearch-rest-high-level-client</artifactId>
         <version>${elasticsearch.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.lucene</groupId>
+        <artifactId>lucene-core</artifactId>
+        <version>${pipelines.lucene.version}</version>
       </dependency>
 
       <!-- Json -->
