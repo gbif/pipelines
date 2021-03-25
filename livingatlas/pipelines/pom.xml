@@ -262,9 +262,6 @@
     <!-- Common variables -->
     <surefireArgLine>-Xmx1024m</surefireArgLine>
 
-    <!-- GBIF libraries -->
-    <gbif-common.version>0.48</gbif-common.version>
-
     <!-- ALA libraries -->
     <ala-namematching-service.version>1.0</ala-namematching-service.version>
     <ala-sensitive-data-service.version>1.1</ala-sensitive-data-service.version>
@@ -286,7 +283,6 @@
     <sds.host>localhost</sds.host>
 
     <!-- Tools-->
-    <geotools.version>20.5</geotools.version>
     <commons-configuration.version>1.6</commons-configuration.version>
     <netty.version>3.9.9.Final</netty.version>
     <netty-all.version>4.1.42.Final</netty-all.version>
@@ -295,7 +291,6 @@
     <jcommander.version>1.78</jcommander.version>
     <layers-store.version>2.0.3</layers-store.version>
     <json-simple.version>1.1.1</json-simple.version>
-    <gbif-parsers.version>0.53</gbif-parsers.version>
 
     <!-- GBIF parent currently using 2.4.0 -->
     <spark.embedded.version>2.4.5</spark.embedded.version>
