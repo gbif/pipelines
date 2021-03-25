@@ -83,7 +83,7 @@ pipeline {
       steps {
         withSonarQubeEnv('GBIF Sonarqube') {
           withMaven(maven: 'Maven3.6', mavenSettingsConfig: 'org.jenkinsci.plugins.configfiles.maven.GlobalMavenSettingsConfig1387378707709') {
-              sh 'mvn sonar:sonar'
+              sh 'mvn  jacoco:prepare-agent jacoco:report sonar:sonar -DskipITs'
           }
         }
       }
