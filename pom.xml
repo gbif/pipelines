@@ -37,6 +37,14 @@
       <id>gh-pages</id>
       <url>http://gbif.github.io/pipelines/</url>
     </site>
+    <repository>
+      <id>gbif-release</id>
+      <url>http://repository.gbif.org/content/repositories/releases</url>
+    </repository>
+    <snapshotRepository>
+      <id>gbif-deploy</id>
+      <url>http://repository.gbif.org/content/repositories/snapshots</url>
+    </snapshotRepository>
   </distributionManagement>
 
   <repositories>
