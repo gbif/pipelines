@@ -159,10 +159,6 @@
     <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
     <maven-plugin-plugin.version>3.6.0</maven-plugin-plugin.version>
     <maven-javadoc-plugin.version>3.0.1</maven-javadoc-plugin.version>
-    <maven-failsafe-plugin.version>3.0.0-M5</maven-failsafe-plugin.version>
-    <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
-    <jacoco-maven-plugin.version>0.8.6</jacoco-maven-plugin.version>
-    <sonar-maven-plugin.version>3.8.0.2131</sonar-maven-plugin.version>
     <spotless-maven-plugin.version>2.0.1</spotless-maven-plugin.version>
     <io.fabric8.version>0.33.0</io.fabric8.version>
 
@@ -171,11 +167,13 @@
     <error_prone_core.version>2.3.2</error_prone_core.version>
 
     <!-- Sonar -->
+    <sonar.projectName>GBIF Pipelines</sonar.projectName>
+    <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
+    <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
     <sonar.jacoco.reportPaths>${jacoco.merged.output.file}</sonar.jacoco.reportPaths>
     <sonar.exclusions>**/java-generated/**</sonar.exclusions>
     <sonar.cpd.exclusions>**/java-generated/**</sonar.cpd.exclusions>
     <sonar.language>java</sonar.language>
-    <sonar.sources>src/main/java</sonar.sources>
 
     <!-- JaCoCo -->
     <coverage.dir>${project.basedir}/../target/coverage</coverage.dir>
@@ -224,11 +222,6 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
-        </plugin>
-        <plugin>
-          <groupId>org.sonarsource.scanner.maven</groupId>
-          <artifactId>sonar-maven-plugin</artifactId>
-          <version>${sonar-maven-plugin.version}</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
