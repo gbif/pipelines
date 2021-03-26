@@ -262,9 +262,6 @@
     <!-- Common variables -->
     <surefireArgLine>-Xmx1024m</surefireArgLine>
 
-    <!-- GBIF libraries -->
-    <gbif-common.version>0.48</gbif-common.version>
-
     <!-- ALA libraries -->
     <ala-namematching-service.version>1.0</ala-namematching-service.version>
     <ala-sensitive-data-service.version>1.1</ala-sensitive-data-service.version>
@@ -286,19 +283,16 @@
     <sds.host>localhost</sds.host>
 
     <!-- Tools-->
-    <geotools.version>20.5</geotools.version>
     <commons-configuration.version>1.6</commons-configuration.version>
     <netty.version>3.9.9.Final</netty.version>
     <netty-all.version>4.1.42.Final</netty-all.version>
     <snakeyaml.version>1.25</snakeyaml.version>
     <streamex.version>0.7.2</streamex.version>
-    <!-- This is overriding GBIF mother pom which is using a 2.11.0.rc1  -->
-    <jackson.version>2.11.1</jackson.version>
-    <jackson-module-scala_2.11.version>2.11.1</jackson-module-scala_2.11.version>
     <jcommander.version>1.78</jcommander.version>
     <layers-store.version>2.0.3</layers-store.version>
     <json-simple.version>1.1.1</json-simple.version>
-    <gbif-parsers.version>0.53</gbif-parsers.version>
+
+    <apache.beam.solr.version>2.24.0</apache.beam.solr.version>
 
     <!-- GBIF parent currently using 2.4.0 -->
     <spark.embedded.version>2.4.5</spark.embedded.version>
@@ -365,7 +359,7 @@
     <dependency>
       <groupId>org.apache.beam</groupId>
       <artifactId>beam-sdks-java-io-solr</artifactId>
-      <version>${apache.beam.version}</version>
+      <version>${apache.beam.solr.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.beam</groupId>
@@ -403,6 +397,16 @@
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
       <artifactId>core</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.elasticsearch.client</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.gbif.occurrence</groupId>
+          <artifactId>occurrence-hdfs-table</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
@@ -634,6 +638,11 @@
       <artifactId>jackson-dataformat-avro</artifactId>
       <version>${jackson.version}</version>
     </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.dataformat</groupId>
+      <artifactId>jackson-dataformat-yaml</artifactId>
+      <version>${jackson.version}</version>
+    </dependency>
 
     <!-- Http clients -->
     <dependency>
@@ -746,7 +755,7 @@
     <dependency>
       <groupId>com.fasterxml.jackson.module</groupId>
       <artifactId>jackson-module-scala_2.11</artifactId>
-      <version>${jackson-module-scala_2.11.version}</version>
+      <version>${jackson.version}</version>
       <scope>compile</scope>
     </dependency>
     <dependency>

@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-.buildSrc/mvnw clean verify package install -PextraArtifacts
+.buildSrc/mvnw clean verify package install -PextraArtifacts -PexampleArtifacts

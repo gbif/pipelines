@@ -1,5 +1,6 @@
 package au.org.ala.pipelines.vocabulary;
 
+import com.google.common.base.Strings;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -7,7 +8,6 @@ import java.io.InputStream;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.elasticsearch.common.Strings;
 
 /**
  * Load a list of state names and variants For example: Northern Territory nterritory nterrit nt
