@@ -4,11 +4,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
-import org.apache.spark.SparkConf;
-import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.*;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -22,28 +18,8 @@ import org.junit.Test;
  *   WHERE datasetKey='50c9509d-22c7-4a22-a47d-8c48425ef4a7' AND recordedBy='Tim Robertson'
  * </pre>
  */
-public class OccurrenceFeaturesSparkTest {
+public class OccurrenceFeaturesSparkTest extends BaseSparkTest {
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
-  private JavaSparkContext jsc;
-  private SQLContext sqlContext;
-
-  @Before
-  public void setup() {
-    SparkConf conf =
-        new SparkConf()
-            .setMaster("local[*]")
-            .setAppName("test")
-            .set("spark.ui.enabled", "false")
-            .set("spark.testing", "true"); // ignore memory check
-    jsc = new JavaSparkContext(conf);
-    sqlContext = new SQLContext(jsc);
-  }
-
-  @After
-  public void teardown() {
-    jsc.stop();
-  }
 
   /** Test to ensure that JSON is generated correctly for nested JSON. */
   @Test

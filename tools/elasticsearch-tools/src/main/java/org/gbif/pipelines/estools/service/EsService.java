@@ -239,6 +239,16 @@ public class EsService {
   }
 
   /**
+   * Deletes all the indexes of the ES instance.
+   *
+   * @param esClient client to call ES. It is required.
+   */
+  @SneakyThrows
+  public static void deleteIndex(@NonNull EsClient esClient, String idxName) {
+    esClient.performDeleteRequest(idxName);
+  }
+
+  /**
    * Checks if an index exists in the ES instance.
    *
    * @param esClient client to call ES. It is required.

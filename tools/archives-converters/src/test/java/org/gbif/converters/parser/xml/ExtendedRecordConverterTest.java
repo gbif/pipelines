@@ -22,14 +22,31 @@ public class ExtendedRecordConverterTest {
 
   private final int number = ForkJoinPool.getCommonPoolParallelism();
 
-  private final String inpPath =
-      getClass().getResource("/responses/pages/7ef15372-1387-11e2-bb2e-00145eb45e9a/").getFile();
-  private final String outPath = inpPath + "verbatim.avro";
+  private String inputPath;
+  private String outPath;
+
   private final CodecFactory codec = CodecFactory.snappyCodec();
+
+  private String getTestInputPath() {
+    if (inputPath == null) {
+      inputPath =
+          getClass()
+              .getResource("/responses/pages/7ef15372-1387-11e2-bb2e-00145eb45e9a/")
+              .getFile();
+    }
+    return inputPath;
+  }
+
+  private String getTestOutPath() {
+    if (outPath == null) {
+      outPath = getTestInputPath() + "verbatim.avro";
+    }
+    return outPath;
+  }
 
   @Test(expected = ParsingException.class)
   public void inputPathIsAbsentTest() throws Exception {
-    try (OutputStream output = new FileOutputStream(outPath);
+    try (OutputStream output = new FileOutputStream(getTestOutPath());
         SyncDataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
       ExtendedRecordConverter.create(number).toAvro("", dataFileWrite);
     }
@@ -37,7 +54,7 @@ public class ExtendedRecordConverterTest {
 
   @Test(expected = ParsingException.class)
   public void outputPathIsAbsentTest() throws Exception {
-    try (OutputStream output = new FileOutputStream(outPath);
+    try (OutputStream output = new FileOutputStream(getTestOutPath());
         SyncDataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
       ExtendedRecordConverter.create(number).toAvro("test", dataFileWrite);
     }
@@ -45,7 +62,7 @@ public class ExtendedRecordConverterTest {
 
   @Test(expected = ParsingException.class)
   public void inputPathIsNullTest() throws Exception {
-    try (OutputStream output = new FileOutputStream(outPath);
+    try (OutputStream output = new FileOutputStream(getTestOutPath());
         SyncDataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
       ExtendedRecordConverter.create(number).toAvro(null, dataFileWrite);
     }
@@ -60,7 +77,7 @@ public class ExtendedRecordConverterTest {
 
   @Test(expected = ParsingException.class)
   public void inputPathNotValidTest() throws Exception {
-    try (OutputStream output = new FileOutputStream(outPath);
+    try (OutputStream output = new FileOutputStream(getTestOutPath());
         SyncDataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
       ExtendedRecordConverter.create(number).toAvro("test", dataFileWrite);
     }
@@ -69,10 +86,10 @@ public class ExtendedRecordConverterTest {
   @Test(expected = ParsingException.class)
   public void inputFileWrongExtensionTest() throws Exception {
     // State
-    String inputPath = inpPath + "61.zip";
+    String inputPath = getTestInputPath() + "61.zip";
 
     // When
-    try (OutputStream output = new FileOutputStream(outPath);
+    try (OutputStream output = new FileOutputStream(getTestOutPath());
         SyncDataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
       ExtendedRecordConverter.create(number).toAvro(inputPath, dataFileWrite);
     }
@@ -81,16 +98,16 @@ public class ExtendedRecordConverterTest {
   @Test
   public void parsingDirectoryTest() throws Exception {
     // State
-    String inputPath = inpPath + "61";
+    String inputPath = getTestInputPath() + "61";
 
     // When
-    try (OutputStream output = new FileOutputStream(outPath);
+    try (OutputStream output = new FileOutputStream(getTestOutPath());
         SyncDataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
       ExtendedRecordConverter.create(number).toAvro(inputPath, dataFileWrite);
     }
 
     // Should
-    File verbatim = new File(outPath);
+    File verbatim = new File(getTestOutPath());
     Assert.assertTrue(verbatim.exists());
     Files.deleteIfExists(verbatim.toPath());
   }
@@ -98,16 +115,16 @@ public class ExtendedRecordConverterTest {
   @Test
   public void parsingArchiveTest() throws Exception {
     // State
-    String inputPath = inpPath + "61.tar.xz";
+    String inputPath = getTestInputPath() + "61.tar.xz";
 
     // When
-    try (OutputStream output = new FileOutputStream(outPath);
+    try (OutputStream output = new FileOutputStream(getTestOutPath());
         SyncDataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
       ExtendedRecordConverter.create(number).toAvro(inputPath, dataFileWrite);
     }
 
     // Should
-    File verbatim = new File(outPath);
+    File verbatim = new File(getTestOutPath());
     Assert.assertTrue(verbatim.exists());
     Files.deleteIfExists(verbatim.toPath());
   }
@@ -115,16 +132,16 @@ public class ExtendedRecordConverterTest {
   @Test
   public void avroDeserializingTest() throws Exception {
     // State
-    String inputPath = inpPath + "61";
+    String inputPath = getTestInputPath() + "61";
 
     // When
-    try (OutputStream output = new FileOutputStream(outPath);
+    try (OutputStream output = new FileOutputStream(getTestOutPath());
         SyncDataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
       ExtendedRecordConverter.create(number).toAvro(inputPath, dataFileWrite);
     }
 
     // Should
-    File verbatim = new File(outPath);
+    File verbatim = new File(getTestOutPath());
     Assert.assertTrue(verbatim.exists());
 
     // Deserialize ExtendedRecord from disk

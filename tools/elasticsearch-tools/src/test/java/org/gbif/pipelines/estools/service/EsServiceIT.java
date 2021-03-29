@@ -45,7 +45,7 @@ public class EsServiceIT extends EsApiIntegration {
 
   @Before
   public void cleanIndexes() {
-    EsService.deleteAllIndexes(ES_SERVER.getEsClient());
+    EsService.deleteIndex(ES_SERVER.getEsClient(), "id*");
   }
 
   @Test

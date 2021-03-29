@@ -66,7 +66,7 @@ pipeline {
           steps {
             withMaven(maven: 'Maven3.6') {
               //Zookeeper port is SOLR_PORT + 1000
-              sh 'mvn resources:testResources docker:build docker:start failsafe:integration-test docker:stop -T 1C -Dparallel=classes -DuseUnlimitedThreads=true -e -Pcoverage -Dalanm.port=$ALANM_PORT -Dalanm.admin.port=$ALANM_ADMIN_PORT -Dsolr8.zk.port=$(($ALA_SOLR_PORT+1000)) -Dsolr8.http.port=$ALA_SOLR_PORT -Dsds.admin.port=$SDS_ADMIN_PORT -Dsds.port=$SDS_PORT'
+              sh 'mvn resources:testResources docker:build docker:start failsafe:integration-test docker:stop -e -T 1C -Pcoverage -Dalanm.port=$ALANM_PORT -Dalanm.admin.port=$ALANM_ADMIN_PORT -Dsolr8.zk.port=$(($ALA_SOLR_PORT+1000)) -Dsolr8.http.port=$ALA_SOLR_PORT -Dsds.admin.port=$SDS_ADMIN_PORT -Dsds.port=$SDS_PORT'
             }
           }
         }
@@ -81,10 +81,10 @@ pipeline {
         }
       }
       steps {
-        withMaven(maven: 'Maven3.6', mavenSettingsConfig: 'org.jenkinsci.plugins.configfiles.maven.GlobalMavenSettingsConfig1387378707709') {
-          withSonarQubeEnv('GBIF Sonarqube') {
-            sh 'mvn sonar:sonar'
-         }
+        withSonarQubeEnv('GBIF Sonarqube') {
+          withMaven(maven: 'Maven3.6', mavenSettingsConfig: 'org.jenkinsci.plugins.configfiles.maven.GlobalMavenSettingsConfig1387378707709') {
+              sh 'mvn  jacoco:prepare-agent jacoco:report sonar:sonar -DskipITs'
+          }
         }
       }
     }
@@ -97,10 +97,8 @@ pipeline {
         }
       }
       steps {
-        configFileProvider(
-                [configFile(fileId: 'org.jenkinsci.plugins.configfiles.maven.GlobalMavenSettingsConfig1387378707709',
-                        variable: 'MAVEN_SETTINGS_XML')]) {
-          sh 'mvn -s $MAVEN_SETTINGS_XML -B -DskipTests deploy'
+        withMaven(maven: 'Maven3.6', mavenSettingsConfig: 'org.jenkinsci.plugins.configfiles.maven.GlobalMavenSettingsConfig1387378707709') {
+          sh 'mvn -DskipTests deploy'
         }
       }
     }

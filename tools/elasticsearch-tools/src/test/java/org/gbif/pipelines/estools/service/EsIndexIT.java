@@ -38,7 +38,7 @@ public class EsIndexIT extends EsApiIntegration {
 
   @After
   public void cleanIndexes() {
-    EsService.deleteAllIndexes(ES_SERVER.getEsClient());
+    EsService.deleteIndex(ES_SERVER.getEsClient(), DATASET_TEST + "_*");
   }
 
   @Test
