@@ -187,6 +187,7 @@ public class VerbatimToInterpretedPipeline {
             .isOccurrenceIdValid(options.isOccurrenceIdValid())
             .useExtendedRecordId(options.isUseExtendedRecordId())
             .clusteringServiceSupplier(ClusteringServiceFactory.createSupplier(config))
+            .useDynamicPropertiesInterpretation(true)
             .create();
 
     VerbatimTransform verbatimTransform = VerbatimTransform.create();

@@ -216,6 +216,7 @@ public class VerbatimToInterpretedPipeline {
             .isOccurrenceIdValid(occIdValid)
             .useExtendedRecordId(useErdId)
             .clusteringServiceSupplier(ClusteringServiceFactory.getInstanceSupplier(config))
+            .useDynamicPropertiesInterpretation(true)
             .create()
             .counterFn(incMetricFn)
             .init();

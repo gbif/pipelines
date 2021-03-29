@@ -47,6 +47,8 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
       occStatusKvStoreSupplier;
   private final SerializableSupplier<ClusteringService> clusteringServiceSupplier;
 
+  @Builder.Default private boolean useDynamicPropertiesInterpretation = false;
+
   private KeyValueStore<String, OccurrenceStatus> occStatusKvStore;
   private HBaseLockingKeyService keygenService;
   private VocabularyLookup lifeStageLookup;
@@ -59,6 +61,7 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
       boolean isTripletValid,
       boolean isOccurrenceIdValid,
       boolean useExtendedRecordId,
+      boolean useDynamicPropertiesInterpretation,
       BiConsumer<ExtendedRecord, BasicRecord> gbifIdFn,
       SerializableSupplier<HBaseLockingKeyService> keygenServiceSupplier,
       SerializableSupplier<VocabularyLookup> lifeStageLookupSupplier,
@@ -68,6 +71,7 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
     this.isTripletValid = isTripletValid;
     this.isOccurrenceIdValid = isOccurrenceIdValid;
     this.useExtendedRecordId = useExtendedRecordId;
+    this.useDynamicPropertiesInterpretation = useDynamicPropertiesInterpretation;
     this.gbifIdFn = gbifIdFn;
     this.keygenServiceSupplier = keygenServiceSupplier;
     this.occStatusKvStoreSupplier = occStatusKvStoreSupplier;
@@ -152,32 +156,42 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
       interpretCopyGbifId().accept(source, br);
     }
 
-    return Interpretation.from(source)
-        .to(br)
-        .when(er -> !er.getCoreTerms().isEmpty())
-        .via(
-            BasicInterpreter.interpretGbifId(
-                keygenService, isTripletValid, isOccurrenceIdValid, useExtendedRecordId, gbifIdFn))
-        .via(BasicInterpreter::interpretBasisOfRecord)
-        .via(BasicInterpreter::interpretTypifiedName)
-        .via(BasicInterpreter::interpretSex)
-        .via(BasicInterpreter::interpretEstablishmentMeans)
-        .via(BasicInterpreter.interpretLifeStage(lifeStageLookupFn))
-        .via(BasicInterpreter::interpretTypeStatus)
-        .via(BasicInterpreter::interpretIndividualCount)
-        .via(BasicInterpreter::interpretReferences)
-        .via(BasicInterpreter::interpretOrganismQuantity)
-        .via(BasicInterpreter::interpretOrganismQuantityType)
-        .via(BasicInterpreter::interpretSampleSizeUnit)
-        .via(BasicInterpreter::interpretSampleSizeValue)
-        .via(BasicInterpreter::interpretRelativeOrganismQuantity)
-        .via(BasicInterpreter::interpretLicense)
-        .via(BasicInterpreter::interpretIdentifiedByIds)
-        .via(BasicInterpreter::interpretRecordedByIds)
-        .via(BasicInterpreter.interpretOccurrenceStatus(occStatusKvStore))
-        .via(BasicInterpreter.interpretIsClustered(clusteringService))
-        .via(DynamicPropertiesInterpreter::interpretSex)
-        .via(DynamicPropertiesInterpreter.interpretLifeStage(lifeStageLookupFn))
-        .getOfNullable();
+    Interpretation<ExtendedRecord>.Handler<BasicRecord> handler =
+        Interpretation.from(source)
+            .to(br)
+            .when(er -> !er.getCoreTerms().isEmpty())
+            .via(
+                BasicInterpreter.interpretGbifId(
+                    keygenService,
+                    isTripletValid,
+                    isOccurrenceIdValid,
+                    useExtendedRecordId,
+                    gbifIdFn))
+            .via(BasicInterpreter::interpretBasisOfRecord)
+            .via(BasicInterpreter::interpretTypifiedName)
+            .via(BasicInterpreter::interpretSex)
+            .via(BasicInterpreter::interpretEstablishmentMeans)
+            .via(BasicInterpreter.interpretLifeStage(lifeStageLookupFn))
+            .via(BasicInterpreter::interpretTypeStatus)
+            .via(BasicInterpreter::interpretIndividualCount)
+            .via(BasicInterpreter::interpretReferences)
+            .via(BasicInterpreter::interpretOrganismQuantity)
+            .via(BasicInterpreter::interpretOrganismQuantityType)
+            .via(BasicInterpreter::interpretSampleSizeUnit)
+            .via(BasicInterpreter::interpretSampleSizeValue)
+            .via(BasicInterpreter::interpretRelativeOrganismQuantity)
+            .via(BasicInterpreter::interpretLicense)
+            .via(BasicInterpreter::interpretIdentifiedByIds)
+            .via(BasicInterpreter::interpretRecordedByIds)
+            .via(BasicInterpreter.interpretOccurrenceStatus(occStatusKvStore))
+            .via(BasicInterpreter.interpretIsClustered(clusteringService));
+
+    if (useDynamicPropertiesInterpretation) {
+      handler
+          .via(DynamicPropertiesInterpreter::interpretSex)
+          .via(DynamicPropertiesInterpreter.interpretLifeStage(lifeStageLookupFn));
+    }
+
+    return handler.getOfNullable();
   }
 }
