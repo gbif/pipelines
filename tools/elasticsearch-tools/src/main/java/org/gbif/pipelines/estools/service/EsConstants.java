@@ -23,7 +23,6 @@ public final class EsConstants {
     public static final String MAPPINGS = "mappings";
     public static final String ALIAS = "alias";
     public static final String COUNT = "count";
-    public static final String ANALYSIS = "analysis";
     public static final String MAX_RESULT_WINDOW = "max_result_window";
 
     public static final String INDEX_REFRESH_INTERVAL = Util.INDEX_PREFIX + Field.REFRESH_INTERVAL;
@@ -31,8 +30,9 @@ public final class EsConstants {
     public static final String INDEX_NUMBER_REPLICAS = Util.INDEX_PREFIX + Field.NUMBER_REPLICAS;
     public static final String INDEX_TRANSLOG_DURABILITY =
         Util.INDEX_PREFIX + Field.TRANSLOG + Util.JSON_CONCATENATOR + Field.DURABILITY;
-    public static final String INDEX_ANALYSIS = Util.INDEX_PREFIX + Field.ANALYSIS;
     public static final String INDEX_MAX_RESULT_WINDOW = Util.INDEX_PREFIX + MAX_RESULT_WINDOW;
+
+    public static final String INDEX_ANALYSIS = "analysis";
   }
 
   @NoArgsConstructor(access = AccessLevel.PRIVATE)

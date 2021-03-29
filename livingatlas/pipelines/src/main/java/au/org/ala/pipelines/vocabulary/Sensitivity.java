@@ -1,10 +1,10 @@
 package au.org.ala.pipelines.vocabulary;
 
+import com.google.common.base.Strings;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
-import org.elasticsearch.common.Strings;
 
 /** The vocabulary for sensitivity terms. */
 public class Sensitivity {

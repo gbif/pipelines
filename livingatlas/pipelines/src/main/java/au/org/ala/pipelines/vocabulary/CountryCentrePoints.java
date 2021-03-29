@@ -1,6 +1,7 @@
 package au.org.ala.pipelines.vocabulary;
 
 import au.org.ala.kvs.LocationInfoConfig;
+import com.google.common.base.Strings;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -8,7 +9,6 @@ import java.io.InputStream;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.elasticsearch.common.Strings;
 
 /** Load centres of countries from resources */
 @Slf4j

@@ -2,10 +2,10 @@ package au.org.ala.kvs.client;
 
 import au.org.ala.kvs.GeocodeShpConfig;
 import au.org.ala.layers.intersect.SimpleShapeFile;
+import com.google.common.base.Strings;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import joptsimple.internal.Strings;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.rest.client.geocode.Location;
 
@@ -18,15 +18,16 @@ import org.gbif.rest.client.geocode.Location;
 @Slf4j
 public class GeocodeShpIntersectService {
 
+  public static final String LINE_SEPARATOR = System.getProperty("line.separator");
+  public static final String STATE_PROVINCE_LOCATION_TYPE = "StateProvince";
+  public static final String POLITICAL_LOCATION_TYPE = "Political";
+  public static final String EEZ_LOCATION_TYPE = "EEZ";
+
   private static GeocodeShpIntersectService instance;
   private final GeocodeShpConfig config;
   private final SimpleShapeFile countries;
   private final SimpleShapeFile eez;
   private final SimpleShapeFile states;
-
-  public static final String STATE_PROVINCE_LOCATION_TYPE = "StateProvince";
-  public static final String POLITICAL_LOCATION_TYPE = "Political";
-  public static final String EEZ_LOCATION_TYPE = "EEZ";
 
   private GeocodeShpIntersectService(GeocodeShpConfig config) {
     synchronized (this) {
@@ -70,21 +71,16 @@ public class GeocodeShpIntersectService {
     }
 
     if (!Strings.isNullOrEmpty(error)) {
-      error =
-          Strings.LINE_SEPARATOR
-              + Strings.repeat('*', 128)
-              + Strings.LINE_SEPARATOR
-              + error
-              + Strings.LINE_SEPARATOR;
+      error = LINE_SEPARATOR + Strings.repeat("*", 128) + LINE_SEPARATOR + error + LINE_SEPARATOR;
       error +=
-          Strings.LINE_SEPARATOR
+          LINE_SEPARATOR
               + "The following properties are mandatory in the pipelines.yaml for location interpretation:";
       error +=
-          Strings.LINE_SEPARATOR
+          LINE_SEPARATOR
               + "Those properties need to be defined in a property file given by -- properties argument.";
-      error += Strings.LINE_SEPARATOR;
+      error += LINE_SEPARATOR;
       error +=
-          Strings.LINE_SEPARATOR
+          LINE_SEPARATOR
               + "\t"
               + String.format(
                   "%-32s%-48s%-32s",
@@ -92,12 +88,12 @@ public class GeocodeShpIntersectService {
                   "SHP file for country searching.",
                   "Example: /data/pipelines-shp/political (DO NOT INCLUDE extension)");
       error +=
-          Strings.LINE_SEPARATOR
+          LINE_SEPARATOR
               + "\t"
               + String.format(
                   "%-32s%-48s", "geocodeConfig.country.nameField", "SHP field of country name");
       error +=
-          Strings.LINE_SEPARATOR
+          LINE_SEPARATOR
               + "\t"
               + String.format(
                   "%-32s%-48s%-32s",
@@ -105,12 +101,12 @@ public class GeocodeShpIntersectService {
                   "SHP file for country searching.",
                   "Example: /data/pipelines-shp/eez (DO NOT INCLUDE extension)");
       error +=
-          Strings.LINE_SEPARATOR
+          LINE_SEPARATOR
               + "\t"
               + String.format(
                   "%-32s%-48s", "geocodeConfig.eez.nameField", "SHP field of country name");
       error +=
-          Strings.LINE_SEPARATOR
+          LINE_SEPARATOR
               + "\t"
               + String.format(
                   "%-32s%-48s%-32s",
@@ -118,11 +114,11 @@ public class GeocodeShpIntersectService {
                   "SHP file for state searching.",
                   "Example: /data/pipelines-shp/cw_state_poly (DO NOT INCLUDE extension)");
       error +=
-          Strings.LINE_SEPARATOR
+          LINE_SEPARATOR
               + "\t"
               + String.format(
                   "%-32s%-48s", "geocodeConfig.stateProvince.nameField", "SHP field of state name");
-      error += Strings.LINE_SEPARATOR + Strings.repeat('*', 128);
+      error += LINE_SEPARATOR + Strings.repeat("*", 128);
       log.error(error);
       throw new RuntimeException(error);
     }

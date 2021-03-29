@@ -1,12 +1,12 @@
 package org.gbif.pipelines.estools.service;
 
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.POJONode;
 import java.io.InputStream;
 import java.util.Map;
 import java.util.function.Predicate;
@@ -103,7 +103,14 @@ public final class JsonHandler {
 
     map.entrySet().stream()
         .filter(x -> IS_COMPLEX_OBJECT.test(x.getValue()))
-        .forEach(e -> objectNode.putPOJO(e.getKey(), new POJONode(e.getValue())));
+        .forEach(
+            e -> {
+              try {
+                objectNode.set(e.getKey(), MAPPER.readTree(e.getValue()));
+              } catch (JsonProcessingException ex) {
+                throw new IllegalArgumentException(ex.getMessage());
+              }
+            });
 
     return objectNode;
   }
