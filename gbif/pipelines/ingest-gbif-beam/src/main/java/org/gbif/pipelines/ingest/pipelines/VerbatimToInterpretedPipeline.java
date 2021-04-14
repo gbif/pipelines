@@ -264,7 +264,7 @@ public class VerbatimToInterpretedPipeline {
 
     PCollection<KV<String, BasicRecord>> uniqueBasicRecordsKv =
         basicCollection
-            .get(gbifIdTransform.getInvalidTag())
+            .get(gbifIdTransform.getTag())
             .apply("Map basic to KV", basicTransform.toKv());
 
     FilterRecordsTransform filterRecordsTransform =

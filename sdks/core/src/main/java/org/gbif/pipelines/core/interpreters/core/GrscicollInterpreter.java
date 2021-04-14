@@ -116,9 +116,6 @@ public class GrscicollInterpreter {
   }
 
   private static boolean isSpecimenRecord(BasicRecord br) {
-    if (br.getBasisOfRecord() == null || br.getBasisOfRecord().isEmpty()) {
-      throw new RuntimeException(br.toString());
-    }
     BasisOfRecord bor = BasisOfRecord.valueOf(br.getBasisOfRecord());
     return bor == BasisOfRecord.PRESERVED_SPECIMEN
         || bor == BasisOfRecord.FOSSIL_SPECIMEN
