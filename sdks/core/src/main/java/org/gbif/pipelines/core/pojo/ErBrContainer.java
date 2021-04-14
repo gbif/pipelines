@@ -11,6 +11,8 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 @AllArgsConstructor(staticName = "create")
 public class ErBrContainer implements Serializable {
 
+  private static final long serialVersionUID = 2953355237274578333L;
+
   private final ExtendedRecord er;
   private final BasicRecord br;
 }
