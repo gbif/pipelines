@@ -13,7 +13,6 @@ import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.View;
-import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.transforms.join.CoGroupByKey;
 import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.KV;
@@ -34,6 +33,7 @@ import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.factory.FileVocabularyFactory;
 import org.gbif.pipelines.core.factory.FileVocabularyFactory.VocabularyBackedTerm;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
+import org.gbif.pipelines.core.pojo.ErBrContainer;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.core.ws.metadata.MetadataServiceClient;
 import org.gbif.pipelines.factory.ClusteringServiceFactory;
@@ -199,11 +199,7 @@ public class VerbatimToInterpretedPipeline {
         TaxonomyTransform.builder().kvStoreSupplier(nameUsageMatchServiceSupplier).create();
 
     GrscicollTransform grscicollTransform =
-        GrscicollTransform.builder()
-            .kvStoreSupplier(grscicollServiceSupplier)
-            .erTag(verbatimTransform.getTag())
-            .brTag(basicTransform.getTag())
-            .create();
+        GrscicollTransform.builder().kvStoreSupplier(grscicollServiceSupplier).create();
 
     LocationTransform locationTransform =
         LocationTransform.builder().geocodeKvStoreSupplier(geocodeServiceSupplier).create();
@@ -274,7 +270,7 @@ public class VerbatimToInterpretedPipeline {
     FilterRecordsTransform filterRecordsTransform =
         FilterRecordsTransform.create(verbatimTransform.getTag(), basicTransform.getTag());
 
-    PCollection<CoGbkResult> filteredErBr =
+    PCollection<ErBrContainer> filteredErBr =
         KeyedPCollectionTuple
             // Core
             .of(verbatimTransform.getTag(), uniqueRecordsKv)
@@ -328,7 +324,7 @@ public class VerbatimToInterpretedPipeline {
     filteredErBr
         .apply(
             "Check grscicoll transform condition",
-            grscicollTransform.check(types, CoGbkResult.class))
+            grscicollTransform.check(types, ErBrContainer.class))
         .apply("Interpret grscicoll", grscicollTransform.interpret())
         .apply("Write grscicoll to avro", grscicollTransform.write(pathFn));
 

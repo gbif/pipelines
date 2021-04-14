@@ -233,8 +233,6 @@ public class VerbatimToInterpretedPipeline {
     GrscicollTransform grscicollTransform =
         GrscicollTransform.builder()
             .kvStoreSupplier(grscicollServiceSupplier)
-            .erTag(verbatimTransform.getTag())
-            .brTag(basicTransform.getTag())
             .create()
             .counterFn(incMetricFn)
             .init();
