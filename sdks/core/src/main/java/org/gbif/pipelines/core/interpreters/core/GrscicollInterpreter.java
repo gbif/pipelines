@@ -1,16 +1,8 @@
 package org.gbif.pipelines.core.interpreters.core;
 
-import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
-import static org.gbif.pipelines.core.utils.ModelUtils.checkNullOrEmpty;
-import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareValue;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Strings;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
 import org.gbif.api.model.collections.lookup.Match.MatchType;
 import org.gbif.api.model.collections.lookup.Match.Status;
 import org.gbif.api.vocabulary.BasisOfRecord;
@@ -25,6 +17,16 @@ import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.rest.client.grscicoll.GrscicollLookupResponse;
 import org.gbif.rest.client.grscicoll.GrscicollLookupResponse.Match;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Strings;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
+import static org.gbif.pipelines.core.utils.ModelUtils.checkNullOrEmpty;
+import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareValue;
 
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -114,6 +116,9 @@ public class GrscicollInterpreter {
   }
 
   private static boolean isSpecimenRecord(BasicRecord br) {
+    if (br.getBasisOfRecord() == null || br.getBasisOfRecord().isEmpty()) {
+      throw new RuntimeException(br.toString());
+    }
     BasisOfRecord bor = BasisOfRecord.valueOf(br.getBasisOfRecord());
     return bor == BasisOfRecord.PRESERVED_SPECIMEN
         || bor == BasisOfRecord.FOSSIL_SPECIMEN
