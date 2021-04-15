@@ -347,9 +347,6 @@ public class VerbatimToInterpretedPipeline {
             if (brInvalid == null) {
               BasicRecord br = gbifIdTransform.getBrMap().get(er.getId());
 
-              if (basicTransform.checkType(types) && br != null) {
-                basicWriter.append(br);
-              }
               if (verbatimTransform.checkType(types)) {
                 verbatimWriter.append(er);
               }
@@ -374,30 +371,42 @@ public class VerbatimToInterpretedPipeline {
               if (locationTransform.checkType(types)) {
                 locationTransform.processElement(er, mdr).ifPresent(locationWriter::append);
               }
-            } else if (basicTransform.checkType(types)) {
+            } else {
               basicInvalidWriter.append(brInvalid);
             }
           };
 
       log.info("Starting interpretation...");
+      // Run async writing for BasicRecords
+      Stream<CompletableFuture<Void>> streamBr;
+      Collection<BasicRecord> brCollection = gbifIdTransform.getBrMap().values();
+      if (useSyncMode) {
+        streamBr =
+            Stream.of(
+                CompletableFuture.runAsync(
+                    () -> brCollection.forEach(basicWriter::append), executor));
+      } else {
+        streamBr =
+            brCollection.stream()
+                .map(v -> CompletableFuture.runAsync(() -> basicWriter.append(v), executor));
+      }
 
       // Run async interpretation and writing for all records
-      CompletableFuture<?>[] futures;
+      Stream<CompletableFuture<Void>> streamAll;
       Collection<ExtendedRecord> erCollection = erExtMap.values();
       if (useSyncMode) {
-        futures =
+        streamAll =
             Stream.of(
-                    CompletableFuture.runAsync(
-                        () -> erCollection.forEach(interpretAllFn), executor))
-                .toArray(CompletableFuture[]::new);
+                CompletableFuture.runAsync(() -> erCollection.forEach(interpretAllFn), executor));
       } else {
-        futures =
+        streamAll =
             erCollection.stream()
-                .map(v -> CompletableFuture.runAsync(() -> interpretAllFn.accept(v), executor))
-                .toArray(CompletableFuture[]::new);
+                .map(v -> CompletableFuture.runAsync(() -> interpretAllFn.accept(v), executor));
       }
 
       // Wait for all features
+      CompletableFuture<?>[] futures =
+          Stream.concat(streamBr, streamAll).toArray(CompletableFuture[]::new);
       CompletableFuture.allOf(futures).get();
 
     } catch (Exception e) {
