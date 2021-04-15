@@ -2,6 +2,7 @@ package org.gbif.pipelines.ingest.pipelines;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -25,6 +26,7 @@ import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.kvs.grscicoll.GrscicollLookupRequest;
 import org.gbif.kvs.species.SpeciesMatchRequest;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
@@ -123,7 +125,7 @@ public class VerbatimToInterpretedPipeline {
 
     String datasetId = options.getDatasetId();
     Integer attempt = options.getAttempt();
-    Set<String> types = options.getInterpretationTypes();
+    Set<String> types = addDependedSteps(options.getInterpretationTypes());
     String targetPath = options.getTargetPath();
     String hdfsSiteConfig = options.getHdfsSiteConfig();
     String coreSiteConfig = options.getCoreSiteConfig();
@@ -344,5 +346,21 @@ public class VerbatimToInterpretedPipeline {
     FsUtils.deleteDirectoryByPrefix(hdfsSiteConfig, coreSiteConfig, tempPath, ".temp-beam");
 
     log.info("Pipeline has been finished");
+  }
+
+  /**
+   * Some steps can't be run without depended, GRSCICOLL uses 3 types of reocrds ExtendedRecord,
+   * MetadataRecord and BasicRecord, and etc
+   */
+  private static Set<String> addDependedSteps(Set<String> types) {
+    Set<String> result = new HashSet<>(types);
+    if (result.contains(RecordType.GRSCICOLL.name())) {
+      result.add(RecordType.METADATA.name());
+      result.add(RecordType.BASIC.name());
+    }
+    if (result.contains(RecordType.LOCATION.name())) {
+      result.add(RecordType.METADATA.name());
+    }
+    return result;
   }
 }
