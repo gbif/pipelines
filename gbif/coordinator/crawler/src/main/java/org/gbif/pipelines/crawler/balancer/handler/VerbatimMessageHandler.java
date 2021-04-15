@@ -1,7 +1,5 @@
 package org.gbif.pipelines.crawler.balancer.handler;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.METADATA;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import lombok.AccessLevel;
