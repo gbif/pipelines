@@ -1,12 +1,11 @@
 package org.gbif.pipelines.ingest.java.pipelines;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.ALL;
 import static org.gbif.pipelines.ingest.java.transforms.InterpretedAvroWriter.createAvroWriter;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Collection;
-import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -25,6 +24,7 @@ import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.kvs.grscicoll.GrscicollLookupRequest;
 import org.gbif.kvs.species.SpeciesMatchRequest;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
@@ -151,7 +151,7 @@ public class VerbatimToInterpretedPipeline {
     boolean tripletValid = options.isTripletValid();
     boolean occIdValid = options.isOccurrenceIdValid();
     boolean useErdId = options.isUseExtendedRecordId();
-    Set<String> types = Collections.singleton(ALL.name());
+    Set<String> types = addDependedSteps(options.getInterpretationTypes());
     String targetPath = options.getTargetPath();
     String endPointType = options.getEndPointType();
     String hdfsSiteConfig = options.getHdfsSiteConfig();
@@ -315,7 +315,9 @@ public class VerbatimToInterpretedPipeline {
           metadataTransform
               .processElement(options.getDatasetId())
               .orElseThrow(() -> new IllegalArgumentException("MetadataRecord can't be null"));
-      metadataWriter.append(mdr);
+      if (metadataTransform.checkType(types)) {
+        metadataWriter.append(mdr);
+      }
 
       // Read DWCA and replace default values
       Map<String, ExtendedRecord> erMap =
@@ -345,50 +347,57 @@ public class VerbatimToInterpretedPipeline {
             if (brInvalid == null) {
               BasicRecord br = gbifIdTransform.getBrMap().get(er.getId());
 
-              verbatimWriter.append(er);
-              temporalTransform.processElement(er).ifPresent(temporalWriter::append);
-              multimediaTransform.processElement(er).ifPresent(multimediaWriter::append);
-              imageTransform.processElement(er).ifPresent(imageWriter::append);
-              audubonTransform.processElement(er).ifPresent(audubonWriter::append);
-              taxonomyTransform.processElement(er).ifPresent(taxonWriter::append);
-              grscicollTransform.processElement(er, br, mdr).ifPresent(grscicollWriter::append);
-              locationTransform.processElement(er, mdr).ifPresent(locationWriter::append);
-            } else {
+              if (basicTransform.checkType(types) && br != null) {
+                basicWriter.append(br);
+              }
+              if (verbatimTransform.checkType(types)) {
+                verbatimWriter.append(er);
+              }
+              if (temporalTransform.checkType(types)) {
+                temporalTransform.processElement(er).ifPresent(temporalWriter::append);
+              }
+              if (multimediaTransform.checkType(types)) {
+                multimediaTransform.processElement(er).ifPresent(multimediaWriter::append);
+              }
+              if (imageTransform.checkType(types)) {
+                imageTransform.processElement(er).ifPresent(imageWriter::append);
+              }
+              if (audubonTransform.checkType(types)) {
+                audubonTransform.processElement(er).ifPresent(audubonWriter::append);
+              }
+              if (taxonomyTransform.checkType(types)) {
+                taxonomyTransform.processElement(er).ifPresent(taxonWriter::append);
+              }
+              if (grscicollTransform.checkType(types)) {
+                grscicollTransform.processElement(er, br, mdr).ifPresent(grscicollWriter::append);
+              }
+              if (locationTransform.checkType(types)) {
+                locationTransform.processElement(er, mdr).ifPresent(locationWriter::append);
+              }
+            } else if (basicTransform.checkType(types)) {
               basicInvalidWriter.append(brInvalid);
             }
           };
 
       log.info("Starting interpretation...");
-      // Run async writing for BasicRecords
-      Stream<CompletableFuture<Void>> streamBr;
-      Collection<BasicRecord> brCollection = gbifIdTransform.getBrMap().values();
-      if (useSyncMode) {
-        streamBr =
-            Stream.of(
-                CompletableFuture.runAsync(
-                    () -> brCollection.forEach(basicWriter::append), executor));
-      } else {
-        streamBr =
-            brCollection.stream()
-                .map(v -> CompletableFuture.runAsync(() -> basicWriter.append(v), executor));
-      }
 
       // Run async interpretation and writing for all records
-      Stream<CompletableFuture<Void>> streamAll;
+      CompletableFuture<?>[] futures;
       Collection<ExtendedRecord> erCollection = erExtMap.values();
       if (useSyncMode) {
-        streamAll =
+        futures =
             Stream.of(
-                CompletableFuture.runAsync(() -> erCollection.forEach(interpretAllFn), executor));
+                    CompletableFuture.runAsync(
+                        () -> erCollection.forEach(interpretAllFn), executor))
+                .toArray(CompletableFuture[]::new);
       } else {
-        streamAll =
+        futures =
             erCollection.stream()
-                .map(v -> CompletableFuture.runAsync(() -> interpretAllFn.accept(v), executor));
+                .map(v -> CompletableFuture.runAsync(() -> interpretAllFn.accept(v), executor))
+                .toArray(CompletableFuture[]::new);
       }
 
       // Wait for all features
-      CompletableFuture<?>[] futures =
-          Stream.concat(streamBr, streamAll).toArray(CompletableFuture[]::new);
       CompletableFuture.allOf(futures).get();
 
     } catch (Exception e) {
@@ -400,6 +409,22 @@ public class VerbatimToInterpretedPipeline {
 
     MetricsHandler.saveCountersToTargetPathFile(options, metrics.getMetricsResult());
     log.info("Pipeline has been finished - {}", LocalDateTime.now());
+  }
+
+  /**
+   * Some steps can't be run without depended, GRSCICOLL uses 3 types of reocrds ExtendedRecord,
+   * MetadataRecord and BasicRecord, and etc
+   */
+  private static Set<String> addDependedSteps(Set<String> types) {
+    Set<String> result = new HashSet<>(types);
+    if (result.contains(RecordType.GRSCICOLL.name())) {
+      result.add(RecordType.METADATA.name());
+      result.add(RecordType.BASIC.name());
+    }
+    if (result.contains(RecordType.LOCATION.name())) {
+      result.add(RecordType.METADATA.name());
+    }
+    return result;
   }
 
   /** Closes resources only one time, before JVM shuts down */

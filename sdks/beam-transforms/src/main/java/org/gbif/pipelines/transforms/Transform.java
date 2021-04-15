@@ -78,6 +78,11 @@ public abstract class Transform<R, T extends SpecificRecordBase & Record> extend
     return CheckTransforms.create(outputClass, CheckTransforms.checkRecordType(types, recordType));
   }
 
+  /** Useful for the java version of pipelines where you only want to use boolean */
+  public boolean checkType(Set<String> types) {
+    return CheckTransforms.checkRecordType(types, recordType);
+  }
+
   /**
    * Reads avro files from path, which contains {@link T}
    *
