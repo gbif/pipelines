@@ -222,15 +222,15 @@ public class VerbatimToInterpretedPipeline {
     // Create and write metadata
     PCollection<MetadataRecord> metadataRecord =
         p.apply("Create metadata collection", Create.of(options.getDatasetId()))
+            .apply(
+                "Check metadata transform condition", metadataTransform.check(types, String.class))
             .apply("Interpret metadata", metadataTransform.interpret());
 
     metadataRecord.apply("Write metadata to avro", metadataTransform.write(pathFn));
 
     // Create View for the further usage
     PCollectionView<MetadataRecord> metadataView =
-        metadataRecord
-            .apply("Check metadata transform condition", metadataTransform.checkMetadata(types))
-            .apply("Convert into view", View.asSingleton());
+        metadataRecord.apply("Convert into view", View.asSingleton());
 
     locationTransform.setMetadataView(metadataView);
     grscicollTransform.setMetadataView(metadataView);
