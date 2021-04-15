@@ -86,13 +86,6 @@ public class VerbatimMessageHandler {
 
     StepRunner runner;
 
-    if (message.getInterpretTypes().size() == 1
-        && message.getInterpretTypes().contains(METADATA.name())) {
-      runner = StepRunner.STANDALONE;
-      log.info("Interpret type is METADATA only, Spark Runner type - {}", runner);
-      return runner;
-    }
-
     // Strategy 1: Chooses a runner type by number of records in a dataset
     if (recordsNumber > 0) {
       runner =
