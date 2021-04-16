@@ -426,7 +426,11 @@ public class VerbatimToInterpretedPipeline {
    */
   private static Set<String> addDependedSteps(Set<String> types) {
     Set<String> result = new HashSet<>(types);
-    result.add(RecordType.BASIC.name());
+    if (result.size() == 1 && result.contains(RecordType.METADATA.name())) {
+      return result;
+    } else {
+      result.add(RecordType.BASIC.name());
+    }
     if (result.contains(RecordType.GRSCICOLL.name())
         || result.contains(RecordType.LOCATION.name())) {
       result.add(RecordType.METADATA.name());
