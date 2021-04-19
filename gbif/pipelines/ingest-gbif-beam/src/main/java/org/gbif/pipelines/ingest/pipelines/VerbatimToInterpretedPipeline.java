@@ -1,8 +1,9 @@
 package org.gbif.pipelines.ingest.pipelines;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
+
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -125,7 +126,7 @@ public class VerbatimToInterpretedPipeline {
 
     String datasetId = options.getDatasetId();
     Integer attempt = options.getAttempt();
-    Set<String> types = addDependedSteps(options.getInterpretationTypes());
+    Set<String> types = options.getInterpretationTypes();
     String targetPath = options.getTargetPath();
     String hdfsSiteConfig = options.getHdfsSiteConfig();
     String coreSiteConfig = options.getCoreSiteConfig();
@@ -150,6 +151,9 @@ public class VerbatimToInterpretedPipeline {
 
     UnaryOperator<String> pathFn =
         t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, id);
+
+    UnaryOperator<String> interpretedPathFn =
+        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
 
     log.info("Creating a pipeline from options");
     Pipeline p = pipelinesFn.apply(options);
@@ -221,14 +225,18 @@ public class VerbatimToInterpretedPipeline {
         UniqueGbifIdTransform.create(options.isUseExtendedRecordId());
 
     log.info("Creating beam pipeline");
-    // Create and write metadata
-    PCollection<MetadataRecord> metadataRecord =
-        p.apply("Create metadata collection", Create.of(options.getDatasetId()))
-            .apply(
-                "Check metadata transform condition", metadataTransform.check(types, String.class))
-            .apply("Interpret metadata", metadataTransform.interpret());
 
-    metadataRecord.apply("Write metadata to avro", metadataTransform.write(pathFn));
+    // Create and write metadata
+    PCollection<MetadataRecord> metadataRecord;
+    if (useMetadataRecordWriteIO(types)) {
+      metadataRecord =
+          p.apply("Create metadata collection", Create.of(options.getDatasetId()))
+              .apply("Interpret metadata", metadataTransform.interpret());
+
+      metadataRecord.apply("Write metadata to avro", metadataTransform.write(pathFn));
+    } else {
+      metadataRecord = p.apply("Read metadata record", metadataTransform.read(interpretedPathFn));
+    }
 
     // Create View for the further usage
     PCollectionView<MetadataRecord> metadataView =
@@ -254,20 +262,36 @@ public class VerbatimToInterpretedPipeline {
                         .create()
                         .interpret());
 
-    PCollectionTuple basicCollection =
-        uniqueRecords
-            .apply("Check basic transform condition", basicTransform.check(types))
-            .apply("Interpret basic", basicTransform.interpret())
-            .apply("Get invalid GBIF IDs", gbifIdTransform);
-
     // Filter record with identical GBIF ID
     PCollection<KV<String, ExtendedRecord>> uniqueRecordsKv =
         uniqueRecords.apply("Map verbatim to KV", verbatimTransform.toKv());
 
-    PCollection<KV<String, BasicRecord>> uniqueBasicRecordsKv =
-        basicCollection
-            .get(gbifIdTransform.getTag())
-            .apply("Map basic to KV", basicTransform.toKv());
+    // Process Basic record
+    PCollection<KV<String, BasicRecord>> uniqueBasicRecordsKv;
+    if (useBasicRecordWriteIO(types)) {
+      PCollectionTuple basicCollection =
+          uniqueRecords
+              .apply("Interpret basic", basicTransform.interpret())
+              .apply("Get invalid GBIF IDs", gbifIdTransform);
+
+      uniqueBasicRecordsKv =
+          basicCollection
+              .get(gbifIdTransform.getTag())
+              .apply("Map basic to KV", basicTransform.toKv());
+
+      // Interpret and write all record types
+      basicCollection
+          .get(gbifIdTransform.getTag())
+          .apply("Write basic to avro", basicTransform.write(pathFn));
+
+      basicCollection
+          .get(gbifIdTransform.getInvalidTag())
+          .apply("Write invalid basic to avro", basicTransform.writeInvalid(pathFn));
+    } else {
+      uniqueBasicRecordsKv =
+          p.apply("Read Basic records", basicTransform.read(interpretedPathFn))
+              .apply("Map to Basic record KV", basicTransform.toKv());
+    }
 
     FilterRecordsTransform filterRecordsTransform =
         FilterRecordsTransform.create(verbatimTransform.getTag(), basicTransform.getTag());
@@ -284,15 +308,6 @@ public class VerbatimToInterpretedPipeline {
     PCollection<ExtendedRecord> filteredUniqueRecords =
         filteredErBr.apply(
             "Get the filtered extended records", filterRecordsTransform.extractExtendedRecords());
-
-    // Interpret and write all record types
-    basicCollection
-        .get(gbifIdTransform.getTag())
-        .apply("Write basic to avro", basicTransform.write(pathFn));
-
-    basicCollection
-        .get(gbifIdTransform.getInvalidTag())
-        .apply("Write invalid basic to avro", basicTransform.writeInvalid(pathFn));
 
     filteredUniqueRecords
         .apply("Check verbatim transform condition", verbatimTransform.check(types))
@@ -348,21 +363,11 @@ public class VerbatimToInterpretedPipeline {
     log.info("Pipeline has been finished");
   }
 
-  /**
-   * Some steps can't be run without depended, GRSCICOLL uses 3 types of reocrds ExtendedRecord,
-   * MetadataRecord and BasicRecord, and etc
-   */
-  private static Set<String> addDependedSteps(Set<String> types) {
-    Set<String> result = new HashSet<>(types);
-    if (result.size() == 1 && result.contains(RecordType.METADATA.name())) {
-      return result;
-    } else {
-      result.add(RecordType.BASIC.name());
-    }
-    if (result.contains(RecordType.GRSCICOLL.name())
-        || result.contains(RecordType.LOCATION.name())) {
-      result.add(RecordType.METADATA.name());
-    }
-    return result;
+  private static boolean useBasicRecordWriteIO(Set<String> types) {
+    return types.contains(RecordType.BASIC.name()) || types.contains(RecordType.ALL.name());
+  }
+
+  private static boolean useMetadataRecordWriteIO(Set<String> types) {
+    return types.contains(RecordType.METADATA.name()) || types.contains(RecordType.ALL.name());
   }
 }
