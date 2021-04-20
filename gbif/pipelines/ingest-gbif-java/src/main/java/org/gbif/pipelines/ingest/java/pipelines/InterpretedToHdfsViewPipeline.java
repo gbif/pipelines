@@ -25,6 +25,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 import static org.gbif.pipelines.ingest.java.transforms.InterpretedAvroReader.readAvroAsFuture;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -267,7 +268,7 @@ public class InterpretedToHdfsViewPipeline {
         .schema(OccurrenceHdfsRecord.getClassSchema())
         .executor(executor)
         .options(options)
-        .types(types)
+        .types(Collections.singleton(OCCURRENCE.name()))
         .recordType(OCCURRENCE)
         .build()
         .write();

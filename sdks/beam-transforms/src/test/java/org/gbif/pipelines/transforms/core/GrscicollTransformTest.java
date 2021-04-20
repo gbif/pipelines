@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import lombok.AllArgsConstructor;
+import lombok.NonNull;
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
@@ -25,6 +27,7 @@ import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
+import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.api.model.collections.lookup.Match.MatchType;
 import org.gbif.api.vocabulary.BasisOfRecord;
@@ -34,6 +37,7 @@ import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.grscicoll.GrscicollLookupRequest;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
+import org.gbif.pipelines.core.pojo.ErBrContainer;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
@@ -66,13 +70,18 @@ public class GrscicollTransformTest {
           KeyValueStore<GrscicollLookupRequest, GrscicollLookupResponse>>
       KV_STORE = createKvStore();
 
-  private static class ExtractCoGbkResult extends DoFn<KV<String, CoGbkResult>, CoGbkResult>
+  @AllArgsConstructor(staticName = "create")
+  private static class ExtractCoGbkResult extends DoFn<KV<String, CoGbkResult>, ErBrContainer>
       implements Serializable {
+
+    // Core
+    @NonNull private final TupleTag<ExtendedRecord> erTag;
+    @NonNull private final TupleTag<BasicRecord> brTag;
 
     @ProcessElement
     public void processElement(ProcessContext c) {
       CoGbkResult v = c.element().getValue();
-      c.output(v);
+      c.output(ErBrContainer.create(v.getOnly(erTag), v.getOnly(brTag)));
     }
   }
 
@@ -201,21 +210,22 @@ public class GrscicollTransformTest {
                 MapElements.into(new TypeDescriptor<KV<String, BasicRecord>>() {})
                     .via((BasicRecord br) -> KV.of(br.getId(), br)));
 
-    PCollection<CoGbkResult> filteredErBr =
+    PCollection<ErBrContainer> filteredErBr =
         KeyedPCollectionTuple
             // Core
             .of(verbatimTransform.getTag(), extendedRecordsKv)
             .and(basicTransform.getTag(), basicRecordsKv)
             // Apply
             .apply("Grouping objects", CoGroupByKey.create())
-            .apply("Extract CoGbkResult", ParDo.of(new ExtractCoGbkResult()));
+            .apply(
+                "Extract CoGbkResult",
+                ParDo.of(
+                    new ExtractCoGbkResult(verbatimTransform.getTag(), basicTransform.getTag())));
 
     return filteredErBr.apply(
         "grscicoll transform",
         GrscicollTransform.builder()
             .kvStoreSupplier(KV_STORE)
-            .erTag(verbatimTransform.getTag())
-            .brTag(basicTransform.getTag())
             .metadataView(metadataView)
             .create()
             .interpret());

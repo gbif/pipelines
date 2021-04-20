@@ -1,19 +1,19 @@
 package org.gbif.pipelines.ingest.java.pipelines;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.ALL;
 import static org.gbif.pipelines.ingest.java.transforms.InterpretedAvroWriter.createAvroWriter;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Stream;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -25,6 +25,7 @@ import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.kvs.grscicoll.GrscicollLookupRequest;
 import org.gbif.kvs.species.SpeciesMatchRequest;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
@@ -47,6 +48,7 @@ import org.gbif.pipelines.factory.MetadataServiceClientFactory;
 import org.gbif.pipelines.factory.NameUsageMatchStoreFactory;
 import org.gbif.pipelines.factory.OccurrenceStatusKvStoreFactory;
 import org.gbif.pipelines.ingest.java.metrics.IngestMetricsBuilder;
+import org.gbif.pipelines.ingest.java.transforms.InterpretedAvroReader;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -151,7 +153,7 @@ public class VerbatimToInterpretedPipeline {
     boolean tripletValid = options.isTripletValid();
     boolean occIdValid = options.isOccurrenceIdValid();
     boolean useErdId = options.isUseExtendedRecordId();
-    Set<String> types = Collections.singleton(ALL.name());
+    Set<String> types = options.getInterpretationTypes();
     String targetPath = options.getTargetPath();
     String endPointType = options.getEndPointType();
     String hdfsSiteConfig = options.getHdfsSiteConfig();
@@ -233,8 +235,6 @@ public class VerbatimToInterpretedPipeline {
     GrscicollTransform grscicollTransform =
         GrscicollTransform.builder()
             .kvStoreSupplier(grscicollServiceSupplier)
-            .erTag(verbatimTransform.getTag())
-            .brTag(basicTransform.getTag())
             .create()
             .counterFn(incMetricFn)
             .init();
@@ -312,12 +312,21 @@ public class VerbatimToInterpretedPipeline {
         SyncDataFileWriter<LocationRecord> locationWriter =
             createAvroWriter(options, locationTransform, id)) {
 
-      // Create MetadataRecord
-      MetadataRecord mdr =
-          metadataTransform
-              .processElement(options.getDatasetId())
-              .orElseThrow(() -> new IllegalArgumentException("MetadataRecord can't be null"));
-      metadataWriter.append(mdr);
+      // Create or read MetadataRecord
+      MetadataRecord mdr;
+      if (useMetadataRecordWriteIO(types)) {
+        mdr =
+            metadataTransform
+                .processElement(options.getDatasetId())
+                .orElseThrow(() -> new IllegalArgumentException("MetadataRecord can't be null"));
+
+        metadataWriter.append(mdr);
+      } else {
+        metadataWriter.close();
+        mdr =
+            InterpretedAvroReader.readAvroUseTargetPath(options, metadataTransform)
+                .get(options.getDatasetId());
+      }
 
       // Read DWCA and replace default values
       Map<String, ExtendedRecord> erMap =
@@ -329,12 +338,24 @@ public class VerbatimToInterpretedPipeline {
 
       boolean useSyncMode = options.getSyncThreshold() > erExtMap.size();
 
+      // Skip interpretation and use avro reader when partial intepretation is activated
+      Function<ExtendedRecord, Optional<BasicRecord>> brFn;
+      if (useBasicRecordWriteIO(types)) {
+        brFn = basicTransform::processElement;
+      } else {
+        basicWriter.close();
+        basicInvalidWriter.close();
+        Map<String, BasicRecord> basicRecordMap =
+            InterpretedAvroReader.readAvroUseTargetPath(options, basicTransform);
+        brFn = er -> Optional.ofNullable(basicRecordMap.get(er.getId()));
+      }
+
       // Filter GBIF id duplicates
       UniqueGbifIdTransform gbifIdTransform =
           UniqueGbifIdTransform.builder()
               .executor(executor)
               .erMap(erExtMap)
-              .basicTransformFn(basicTransform::processElement)
+              .basicTransformFn(brFn)
               .useSyncMode(useSyncMode)
               .skipTransform(useErdId)
               .build()
@@ -347,14 +368,30 @@ public class VerbatimToInterpretedPipeline {
             if (brInvalid == null) {
               BasicRecord br = gbifIdTransform.getBrMap().get(er.getId());
 
-              verbatimWriter.append(er);
-              temporalTransform.processElement(er).ifPresent(temporalWriter::append);
-              multimediaTransform.processElement(er).ifPresent(multimediaWriter::append);
-              imageTransform.processElement(er).ifPresent(imageWriter::append);
-              audubonTransform.processElement(er).ifPresent(audubonWriter::append);
-              taxonomyTransform.processElement(er).ifPresent(taxonWriter::append);
-              grscicollTransform.processElement(er, br, mdr).ifPresent(grscicollWriter::append);
-              locationTransform.processElement(er, mdr).ifPresent(locationWriter::append);
+              if (verbatimTransform.checkType(types)) {
+                verbatimWriter.append(er);
+              }
+              if (temporalTransform.checkType(types)) {
+                temporalTransform.processElement(er).ifPresent(temporalWriter::append);
+              }
+              if (multimediaTransform.checkType(types)) {
+                multimediaTransform.processElement(er).ifPresent(multimediaWriter::append);
+              }
+              if (imageTransform.checkType(types)) {
+                imageTransform.processElement(er).ifPresent(imageWriter::append);
+              }
+              if (audubonTransform.checkType(types)) {
+                audubonTransform.processElement(er).ifPresent(audubonWriter::append);
+              }
+              if (taxonomyTransform.checkType(types)) {
+                taxonomyTransform.processElement(er).ifPresent(taxonWriter::append);
+              }
+              if (grscicollTransform.checkType(types)) {
+                grscicollTransform.processElement(er, br, mdr).ifPresent(grscicollWriter::append);
+              }
+              if (locationTransform.checkType(types)) {
+                locationTransform.processElement(er, mdr).ifPresent(locationWriter::append);
+              }
             } else {
               basicInvalidWriter.append(brInvalid);
             }
@@ -362,17 +399,19 @@ public class VerbatimToInterpretedPipeline {
 
       log.info("Starting interpretation...");
       // Run async writing for BasicRecords
-      Stream<CompletableFuture<Void>> streamBr;
-      Collection<BasicRecord> brCollection = gbifIdTransform.getBrMap().values();
-      if (useSyncMode) {
-        streamBr =
-            Stream.of(
-                CompletableFuture.runAsync(
-                    () -> brCollection.forEach(basicWriter::append), executor));
-      } else {
-        streamBr =
-            brCollection.stream()
-                .map(v -> CompletableFuture.runAsync(() -> basicWriter.append(v), executor));
+      Stream<CompletableFuture<Void>> streamBr = Stream.empty();
+      if (useBasicRecordWriteIO(types)) {
+        Collection<BasicRecord> brCollection = gbifIdTransform.getBrMap().values();
+        if (useSyncMode) {
+          streamBr =
+              Stream.of(
+                  CompletableFuture.runAsync(
+                      () -> brCollection.forEach(basicWriter::append), executor));
+        } else {
+          streamBr =
+              brCollection.stream()
+                  .map(v -> CompletableFuture.runAsync(() -> basicWriter.append(v), executor));
+        }
       }
 
       // Run async interpretation and writing for all records
@@ -402,6 +441,14 @@ public class VerbatimToInterpretedPipeline {
 
     MetricsHandler.saveCountersToTargetPathFile(options, metrics.getMetricsResult());
     log.info("Pipeline has been finished - {}", LocalDateTime.now());
+  }
+
+  private static boolean useBasicRecordWriteIO(Set<String> types) {
+    return types.contains(RecordType.BASIC.name()) || types.contains(RecordType.ALL.name());
+  }
+
+  private static boolean useMetadataRecordWriteIO(Set<String> types) {
+    return types.contains(RecordType.METADATA.name()) || types.contains(RecordType.ALL.name());
   }
 
   /** Closes resources only one time, before JVM shuts down */
