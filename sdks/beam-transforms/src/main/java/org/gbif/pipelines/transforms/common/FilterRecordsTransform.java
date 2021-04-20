@@ -40,9 +40,9 @@ public class FilterRecordsTransform implements Serializable {
           public void processElement(ProcessContext c) {
             CoGbkResult v = c.element().getValue();
 
+            ExtendedRecord er = v.getOnly(erTag, null);
             BasicRecord br = v.getOnly(brTag, null);
-            if (br != null && br.getCreated() != null) {
-              ExtendedRecord er = v.getOnly(erTag);
+            if (er != null && br != null && br.getCreated() != null) {
               c.output(ErBrContainer.create(er, br));
               counter.inc();
             }
