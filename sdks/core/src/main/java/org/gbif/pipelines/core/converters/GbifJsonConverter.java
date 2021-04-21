@@ -1,7 +1,5 @@
 package org.gbif.pipelines.core.converters;
 
-import static org.gbif.pipelines.core.converters.JsonConverter.getEscapedTextNode;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.IntNode;
@@ -18,6 +16,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -29,6 +28,7 @@ import lombok.Builder;
 import lombok.Singular;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificRecordBase;
+import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.date.TemporalAccessorUtils;
@@ -82,6 +82,13 @@ public class GbifJsonConverter {
 
   private static final Set<String> EXCLUDE_ALL =
       Collections.singleton(DwcTerm.footprintWKT.qualifiedName());
+
+  private static final Set<String> INCLUDE_EXT_ALL =
+      new HashSet<>(
+          Arrays.asList(
+              Extension.MULTIMEDIA.getRowType(),
+              Extension.AUDUBON.getRowType(),
+              Extension.IMAGE.getRowType()));
 
   private static final TermFactory TERM_FACTORY = TermFactory.instance();
 
@@ -303,28 +310,32 @@ public class GbifJsonConverter {
       verbatimNode.set("extensions", extNode);
 
       // Copy to all field
-      Set<TextNode> allFieldValues = new HashSet<>();
+      Set<String> allFieldValues = new HashSet<>();
+
       core.entrySet().stream()
-          .filter(s -> !EXCLUDE_ALL.contains(s.getKey()))
+          .filter(termValue -> !EXCLUDE_ALL.contains(termValue.getKey()))
+          .filter(termValue -> termValue.getValue() != null)
+          .map(Entry::getValue)
+          .forEach(allFieldValues::add);
+
+      ext.entrySet().stream()
+          .filter(kv -> INCLUDE_EXT_ALL.contains(kv.getKey()))
+          .map(Entry::getValue)
+          .filter(Objects::nonNull)
           .forEach(
-              s ->
-                  Optional.ofNullable(s.getValue())
-                      .ifPresent(v1 -> allFieldValues.add(getEscapedTextNode(v1))));
-      ext.forEach(
-          (k, v) ->
-              Optional.ofNullable(v)
-                  .ifPresent(
-                      v1 ->
-                          v1.forEach(
-                              v2 ->
-                                  v2.forEach(
-                                      (k2, v3) ->
-                                          Optional.ofNullable(v3)
-                                              .ifPresent(
-                                                  v4 ->
-                                                      allFieldValues.add(
-                                                          getEscapedTextNode(v4)))))));
-      jc.getMainNode().putArray("all").addAll(allFieldValues);
+              extension ->
+                  extension.forEach(
+                      termValueMap ->
+                          termValueMap.values().stream()
+                              .filter(Objects::nonNull)
+                              .forEach(allFieldValues::add)));
+
+      Set<TextNode> textNodeMap =
+          allFieldValues.stream()
+              .map(JsonConverter::getEscapedTextNode)
+              .collect(Collectors.toSet());
+
+      jc.getMainNode().putArray("all").addAll(textNodeMap);
 
       // Main node
       jc.getMainNode().set("verbatim", verbatimNode);
