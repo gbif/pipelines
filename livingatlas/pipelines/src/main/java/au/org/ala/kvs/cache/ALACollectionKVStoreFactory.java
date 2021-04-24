@@ -13,6 +13,7 @@ import org.gbif.kvs.hbase.Command;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.rest.client.configuration.ClientConfiguration;
 
+/** Key value store factory for Collection lookups */
 @Slf4j
 public class ALACollectionKVStoreFactory {
 

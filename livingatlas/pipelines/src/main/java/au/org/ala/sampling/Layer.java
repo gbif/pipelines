@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.Getter;
 import lombok.Setter;
 
+/** A spatial layer in stored and served by the spatial service. */
 @Getter
 @Setter
 @JsonIgnoreProperties(ignoreUnknown = true)

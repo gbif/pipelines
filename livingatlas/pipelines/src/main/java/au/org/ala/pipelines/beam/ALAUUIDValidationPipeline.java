@@ -11,10 +11,7 @@ import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationUtils;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -102,10 +99,14 @@ public class ALAUUIDValidationPipeline {
                     .withCoder(StringUtf8Coder.of())));
 
     List<String> uniqueTerms = Collections.emptyList();
+    Boolean stripSpaces = false;
+    Map<String, String> defaultValues = null;
 
     // construct unique list of darwin core terms
     if (collectoryMetadata.getConnectionParameters() != null) {
       uniqueTerms = collectoryMetadata.getConnectionParameters().getTermsForUniqueKey();
+      stripSpaces = collectoryMetadata.getConnectionParameters().getStrip();
+      defaultValues = collectoryMetadata.getDefaultDarwinCoreValues();
       if (uniqueTerms == null) {
         uniqueTerms = Collections.emptyList();
       }
@@ -152,9 +153,7 @@ public class ALAUUIDValidationPipeline {
                           options.getTargetPath(),
                           options.getDatasetId().trim(),
                           options.getAttempt().toString(),
-                          "interpreted",
-                          "verbatim",
-                          "*.avro")));
+                          "verbatim.avro")));
 
       // check all records have valid keys
       PCollection<String> invalidKeyResults =
@@ -179,6 +178,10 @@ public class ALAUUIDValidationPipeline {
       // add the invalid key records
       results = results.and(invalidKeyResults.setCoder(StringUtf8Coder.of()));
 
+      final boolean stripSpacesFinal = stripSpaces != null ? stripSpaces : false;
+      final Map<String, String> defaultValuesFinal =
+          defaultValues != null ? defaultValues : Collections.emptyMap();
+
       // check all records for duplicates
       PCollection<KV<String, Long>> keyCounts =
           records
@@ -191,8 +194,13 @@ public class ALAUUIDValidationPipeline {
                             OutputReceiver<String> out,
                             ProcessContext c) {
                           out.output(
-                              ValidationUtils.generateUniqueKeyForValidation(
-                                  datasetID, source, uniqueDwcTerms));
+                              ValidationUtils.generateUniqueKey(
+                                  datasetID,
+                                  source,
+                                  uniqueDwcTerms,
+                                  defaultValuesFinal,
+                                  stripSpacesFinal,
+                                  false));
                         }
                       }))
               .apply(Count.perElement());

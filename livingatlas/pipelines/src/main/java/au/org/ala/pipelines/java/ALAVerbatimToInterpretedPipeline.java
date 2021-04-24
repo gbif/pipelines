@@ -45,7 +45,6 @@ import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.factory.OccurrenceStatusKvStoreFactory;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.transforms.Transform;
-import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.java.OccurrenceExtensionTransform;
@@ -203,8 +202,8 @@ public class ALAVerbatimToInterpretedPipeline {
             .counterFn(incMetricFn);
 
     VerbatimTransform verbatimTransform = VerbatimTransform.create().counterFn(incMetricFn);
-    TemporalTransform temporalTransform =
-        TemporalTransform.builder()
+    ALATemporalTransform temporalTransform =
+        ALATemporalTransform.builder()
             .orderings(dateComponentOrdering)
             .create()
             .counterFn(incMetricFn);

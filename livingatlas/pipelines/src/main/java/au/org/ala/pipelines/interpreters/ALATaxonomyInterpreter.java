@@ -28,6 +28,7 @@ import org.gbif.pipelines.io.avro.ALATaxonRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.NameType;
 
+/** Providing taxonomic matching functionality for occurrence records. */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ALATaxonomyInterpreter {

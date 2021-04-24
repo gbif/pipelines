@@ -22,6 +22,8 @@ public class ConnectionParameters {
 
   List<String> termsForUniqueKey;
 
+  Boolean strip;
+
   @JsonPOJOBuilder(withPrefix = "")
   @JsonIgnoreProperties(ignoreUnknown = true)
   public static class ConnectionParametersBuilder {}

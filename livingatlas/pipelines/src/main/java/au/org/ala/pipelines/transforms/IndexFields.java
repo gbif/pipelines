@@ -14,6 +14,7 @@ public interface IndexFields {
   String DATA_PROVIDER_UID = "dataProviderUid";
   String DATA_RESOURCE_NAME = "dataResourceName";
   String DATA_RESOURCE_UID = "dataResourceUid";
+  String DATE_PRECISION = "datePrecision";
   String DECADE = "decade";
   String DEFAULT_VALUES_USED = "defaultValuesUsed";
   String DYNAMIC_PROPERTIES_PREFIX = "dynamicProperties_";

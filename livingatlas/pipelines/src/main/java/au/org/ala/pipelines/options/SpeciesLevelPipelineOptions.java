@@ -4,6 +4,7 @@ import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 
+/** Options for pipelines that use species level information. */
 public interface SpeciesLevelPipelineOptions extends InterpretationPipelineOptions {
 
   @Description("Default directory where species level information is stored to")

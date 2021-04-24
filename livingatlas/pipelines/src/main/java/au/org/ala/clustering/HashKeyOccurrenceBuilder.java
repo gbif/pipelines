@@ -1,5 +1,6 @@
 package au.org.ala.clustering;
 
+/** Builder for {@link HashKeyOccurrence} */
 public final class HashKeyOccurrenceBuilder {
   String hashKey = null;
   String id = null;
