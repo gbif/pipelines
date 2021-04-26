@@ -37,7 +37,8 @@ public class ProcessRunnerBuilderTest {
             + "--class org.gbif.Test --master yarn --deploy-mode cluster --executor-memory 1G --executor-cores 1 --num-executors 1 "
             + "--driver-memory 4G java.jar --datasetId=de7ffb5e-c07b-42dc-8a88-f67a4465fe3d --attempt=1 --runner=SparkRunner "
             + "--metaFileName=interpreted-to-hdfs.yml --inputPath=tmp --targetPath=target --hdfsSiteConfig=hdfs.xml "
-            + "--coreSiteConfig=core.xml --numberOfShards=10 --properties=/path/ws.config --interpretationTypes=OCCURRENCE";
+            + "--coreSiteConfig=core.xml --numberOfShards=10 --properties=/path/ws.config --interpretationTypes=OCCURRENCE "
+            + "--experiments=use_deprecated_read";
 
     HdfsViewConfiguration config = new HdfsViewConfiguration();
     config.distributedConfig.jarPath = "java.jar";
@@ -101,7 +102,8 @@ public class ProcessRunnerBuilderTest {
             + "--class org.gbif.Test --master yarn --deploy-mode cluster "
             + "--executor-memory 1G --executor-cores 1 --num-executors 1 --driver-memory 4G java.jar --datasetId=de7ffb5e-c07b-42dc-8a88-f67a4465fe3d "
             + "--attempt=1 --runner=SparkRunner --metaFileName=interpreted-to-hdfs.yml --inputPath=tmp --targetPath=target --hdfsSiteConfig=hdfs.xml "
-            + "--coreSiteConfig=core.xml --numberOfShards=10 --properties=/path/ws.config --interpretationTypes=OCCURRENCE";
+            + "--coreSiteConfig=core.xml --numberOfShards=10 --properties=/path/ws.config --interpretationTypes=OCCURRENCE "
+            + "--experiments=use_deprecated_read";
 
     HdfsViewConfiguration config = new HdfsViewConfiguration();
     config.distributedConfig.jarPath = "java.jar";

@@ -91,6 +91,10 @@ final class ProcessRunnerBuilder {
             "--interpretationTypes="
                 + Objects.requireNonNull(String.join(",", message.getInterpretTypes())));
 
+    if (config.useBeamDeprecatedRead) {
+      command.add("--experiments=use_deprecated_read");
+    }
+
     return command.toString();
   }
 
