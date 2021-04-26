@@ -10,8 +10,7 @@ import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationResult;
 import au.org.ala.utils.ValidationUtils;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -20,16 +19,14 @@ import org.apache.avro.file.CodecFactory;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.AvroIO;
-import org.apache.beam.sdk.metrics.Counter;
-import org.apache.beam.sdk.metrics.Metrics;
+import org.apache.beam.sdk.metrics.*;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptor;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.*;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.UnknownTerm;
@@ -38,6 +35,7 @@ import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.*;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.MDC;
 
 /**
@@ -68,6 +66,7 @@ import org.slf4j.MDC;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ALAUUIDMintingPipeline {
 
+  public static final String NEW_UUIDS = "newUuids";
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
 
   public static final String NO_ID_MARKER_STRING = "NO_ID";
@@ -77,7 +76,10 @@ public class ALAUUIDMintingPipeline {
   public static final String IDENTIFIERS_DIR = "identifiers";
   public static final String UNIQUE_COMPOSITE_KEY_JOIN_CHAR = "|";
 
-  private static final String NOW = ZonedDateTime.now().format(DateTimeFormatter.ISO_INSTANT);
+  private static final long NOW = System.currentTimeMillis();
+  public static final String BACKUP_SUFFIX = "_backup_";
+  public static final String PRESERVED_UUIDS = "preservedUuids";
+  public static final String ORPHANED_UNIQUE_KEYS = "orphanedUniqueKeys";
 
   public static void main(String[] args) throws Exception {
     VersionInfo.print();
@@ -146,11 +148,16 @@ public class ALAUUIDMintingPipeline {
 
     // construct unique list of darwin core terms
     List<String> uniqueTerms = collectoryMetadata.getConnectionParameters().getTermsForUniqueKey();
+    Boolean stripSpaces = collectoryMetadata.getConnectionParameters().getStrip();
+    final boolean stripSpacesFinal = stripSpaces != null ? stripSpaces : false;
+    Map<String, String> defaultValues = collectoryMetadata.getDefaultDarwinCoreValues();
+    final Map<String, String> defaultValuesFinal =
+        defaultValues != null ? defaultValues : Collections.emptyMap();
 
     if ((uniqueTerms == null || uniqueTerms.isEmpty())) {
       log.error(
           "Unable to proceed, No unique terms specified for dataset: " + options.getDatasetId());
-      System.exit(1);
+      return;
     }
 
     final List<Term> uniqueDwcTerms = new ArrayList<>();
@@ -177,9 +184,7 @@ public class ALAUUIDMintingPipeline {
                             options.getTargetPath(),
                             options.getDatasetId().trim(),
                             options.getAttempt().toString(),
-                            "interpreted",
-                            "verbatim",
-                            "*.avro")))
+                            "verbatim.avro")))
             .apply(
                 ParDo.of(
                     new DoFn<ExtendedRecord, KV<String, String>>() {
@@ -191,7 +196,12 @@ public class ALAUUIDMintingPipeline {
                         out.output(
                             KV.of(
                                 ValidationUtils.generateUniqueKey(
-                                    datasetID, source, uniqueDwcTerms),
+                                    datasetID,
+                                    source,
+                                    uniqueDwcTerms,
+                                    defaultValuesFinal,
+                                    stripSpacesFinal,
+                                    true),
                                 source.getId()));
                       }
                     }));
@@ -203,6 +213,8 @@ public class ALAUUIDMintingPipeline {
         FsUtils.getFileSystem(
             options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getInputPath());
     Path path = new Path(alaRecordDirectoryPath);
+
+    boolean initialLoad = !fs.exists(path);
 
     // load existing UUIDs if available
     if (fs.exists(path)) {
@@ -240,19 +252,141 @@ public class ALAUUIDMintingPipeline {
     Path existingVersionUUids = new Path(alaRecordDirectoryPath);
     Path newVersionUUids = new Path(alaRecordDirectoryPath + "_new");
 
+    if (!initialLoad) {
+      log.info("Checking the percentage change in new UUIDs:");
+
+      // has anything changed ????
+      Double newUuids = getMetricCount(result, NEW_UUIDS);
+      Double preservedUuid = getMetricCount(result, PRESERVED_UUIDS);
+      Double orphaned = getMetricCount(result, ORPHANED_UNIQUE_KEYS);
+      Integer percentageChange = (int) ((newUuids / (newUuids + preservedUuid)) * 100d);
+
+      log.info(
+          "{}: {}, {}: {}, {}: {}",
+          NEW_UUIDS,
+          newUuids,
+          PRESERVED_UUIDS,
+          preservedUuid,
+          ORPHANED_UNIQUE_KEYS,
+          orphaned);
+
+      log.info(
+          "Percentage UUID change: {}, allowed percentage: {}, override percentage check: {}",
+          percentageChange,
+          options.getPercentageChangeAllowed(),
+          options.getOverridePercentageCheck());
+
+      if (percentageChange > options.getPercentageChangeAllowed()
+          && !options.getOverridePercentageCheck()) {
+        log.warn(
+            "The number of records with new identifiers has changed by 50%. This update will be blocked.");
+        fs.delete(newVersionUUids, true);
+        return;
+      }
+
+    } else {
+      log.info("As this is an initial load for this dataset, UUID change checks are not ran.");
+    }
+
     // rename backup existing
     if (fs.exists(existingVersionUUids)) {
-      String backupPath = alaRecordDirectoryPath + "_backup_" + System.currentTimeMillis();
+      String backupPath = alaRecordDirectoryPath + BACKUP_SUFFIX + System.currentTimeMillis();
       log.info("Backing up existing UUIDs to {}", backupPath);
       fs.rename(existingVersionUUids, new Path(backupPath));
     }
+
     // rename new version to current path
     fs.rename(newVersionUUids, existingVersionUUids);
     log.info("Pipeline complete.");
 
+    // prune backups, reducing the number of backups kept to conserve disk space
+    pruneBackups(options, fs);
+
     log.info("Writing metrics.....");
     MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
     log.info("Writing metrics written.");
+  }
+
+  /**
+   * Prune backups of UUIDs.
+   *
+   * @param options
+   * @param fs
+   * @throws Exception
+   */
+  public static void pruneBackups(UUIDPipelineOptions options, FileSystem fs) throws Exception {
+
+    String alaRecordDirectoryPath =
+        String.join(
+            "/",
+            options.getTargetPath(),
+            options.getDatasetId().trim(),
+            options.getAttempt().toString(),
+            IDENTIFIERS_DIR);
+
+    log.info("Checking for backups to prune....{}", alaRecordDirectoryPath);
+    FileStatus[] fileStatuses = fs.listStatus(new Path(alaRecordDirectoryPath));
+
+    // retrieve a list backup directories
+    List<FileStatus> backups = new ArrayList<>();
+    for (FileStatus fileStatus : fileStatuses) {
+      String name = fileStatus.getPath().getName();
+      if (name.startsWith(ALARecordTypes.ALA_UUID.name().toLowerCase() + BACKUP_SUFFIX)) {
+        backups.add(fileStatus);
+      }
+    }
+
+    // sort by newest to oldest
+    backups.sort(
+        new Comparator<FileStatus>() {
+          @Override
+          public int compare(FileStatus o1, FileStatus o2) {
+            return o1.getModificationTime() < o2.getModificationTime() ? 1 : -1;
+          }
+        });
+
+    if (log.isDebugEnabled()) {
+      for (FileStatus fileStatus : backups) {
+        String name = fileStatus.getPath().getName();
+        long modifiedTime = fileStatus.getModificationTime();
+        log.info(
+            "{} = {}", name, new SimpleDateFormat("dd MMM HH:mm").format(new Date(modifiedTime)));
+      }
+    }
+
+    if (backups.size() > options.getNumberOfBackupsToKeep()) {
+      List<FileStatus> toPrune =
+          backups.subList(options.getNumberOfBackupsToKeep(), backups.size());
+      toPrune.stream()
+          .forEach(
+              toPruneFs -> {
+                try {
+                  log.info("Pruning backup {} ", toPruneFs.getPath().getName());
+                  fs.delete(toPruneFs.getPath(), true);
+                } catch (Exception e) {
+                  log.error("Unable to prune {} ", toPruneFs.getPath().getName());
+                }
+              });
+    }
+  }
+
+  @NotNull
+  private static Double getMetricCount(PipelineResult result, String countName) {
+    Iterator<MetricResult<Long>> iter =
+        result
+            .metrics()
+            .queryMetrics(
+                MetricsFilter.builder()
+                    .addNameFilter(MetricNameFilter.named(CreateALAUUIDRecordFcn.class, countName))
+                    .build())
+            .getCounters()
+            .iterator();
+
+    if (iter.hasNext()) {
+      return iter.next().getAttempted().doubleValue();
+    }
+
+    return 0d;
   }
 
   /** Function to create ALAUUIDRecords. */
@@ -261,10 +395,10 @@ public class ALAUUIDMintingPipeline {
 
     // TODO this counts are inaccurate when using SparkRunner
     private final Counter orphanedUniqueKeys =
-        Metrics.counter(CreateALAUUIDRecordFcn.class, "orphanedUniqueKeys");
-    private final Counter newUuids = Metrics.counter(CreateALAUUIDRecordFcn.class, "newUuids");
+        Metrics.counter(CreateALAUUIDRecordFcn.class, ORPHANED_UNIQUE_KEYS);
+    private final Counter newUuids = Metrics.counter(CreateALAUUIDRecordFcn.class, NEW_UUIDS);
     private final Counter preservedUuids =
-        Metrics.counter(CreateALAUUIDRecordFcn.class, "preservedUuids");
+        Metrics.counter(CreateALAUUIDRecordFcn.class, PRESERVED_UUIDS);
 
     @ProcessElement
     public void processElement(

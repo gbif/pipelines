@@ -8,6 +8,7 @@ import org.apache.beam.sdk.schemas.JavaBeanSchema;
 import org.apache.beam.sdk.schemas.annotations.DefaultSchema;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/** Cluster grouping of occurrences that have matching hash keys. */
 @Builder
 @Getter
 @Setter

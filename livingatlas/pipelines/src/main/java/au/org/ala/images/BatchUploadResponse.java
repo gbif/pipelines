@@ -7,7 +7,7 @@ import lombok.Builder;
 import lombok.ToString;
 import lombok.Value;
 
-/** An ALA Collection Match response object. */
+/** A response from the image service's batch upload webservice. */
 @JsonDeserialize(builder = BatchUploadResponse.BatchUploadResponseBuilder.class)
 @Value
 @Builder

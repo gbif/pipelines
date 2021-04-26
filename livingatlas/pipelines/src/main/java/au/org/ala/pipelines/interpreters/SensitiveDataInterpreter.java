@@ -22,6 +22,7 @@ import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.core.utils.ModelUtils;
 import org.gbif.pipelines.io.avro.*;
 
+/** Sensitive data interpretation methods. */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class SensitiveDataInterpreter {

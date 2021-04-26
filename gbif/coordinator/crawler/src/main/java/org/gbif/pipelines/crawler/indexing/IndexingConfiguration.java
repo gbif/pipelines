@@ -40,6 +40,9 @@ public class IndexingConfiguration implements BaseConfiguration {
   @NotNull
   public String pipelinesConfig;
 
+  @Parameter(names = "--use-beam-deprecated-read")
+  public boolean useBeamDeprecatedRead = true;
+
   @Override
   public String getHdfsSiteConfig() {
     return stepConfig.hdfsSiteConfig;

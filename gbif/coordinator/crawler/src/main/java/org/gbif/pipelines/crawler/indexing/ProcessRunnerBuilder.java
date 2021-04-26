@@ -108,6 +108,10 @@ final class ProcessRunnerBuilder {
     Optional.ofNullable(config.indexConfig.numberReplicas)
         .ifPresent(x -> command.add("--indexNumberReplicas=" + x));
 
+    if (config.useBeamDeprecatedRead) {
+      command.add("--experiments=use_deprecated_read");
+    }
+
     return command.toString();
   }
 

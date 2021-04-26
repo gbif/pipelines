@@ -4,6 +4,7 @@ import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 
+/** Options for running pipelines that run against the image service. */
 public interface ImageServicePipelineOptions extends InterpretationPipelineOptions {
 
   @Description("Image Service sleep time between polling")

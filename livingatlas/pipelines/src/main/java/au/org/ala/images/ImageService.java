@@ -6,6 +6,7 @@ import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.*;
 
+/** An interface representing ALA's image service. */
 public interface ImageService {
 
   @Multipart

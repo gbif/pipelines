@@ -7,6 +7,9 @@ import com.google.common.base.Strings;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.avro.Schema;
@@ -113,16 +116,20 @@ public class MigrateUUIDPipeline implements Serializable {
                 Encoders.tuple(
                     Encoders.STRING(), Encoders.STRING(), Encoders.STRING(), Encoders.STRING()));
 
-    Dataset<Tuple2<String, String>> firstLoadedDataset =
+    Dataset<Tuple2<String, Long>> firstLoadedDataset =
         occFirstLoadedDataset
             .filter(row -> StringUtils.isNotEmpty(row.getString(1)))
             .map(
                 row -> {
                   return Tuple2.apply(
                       row.getString(0), // UUID
-                      row.getString(1)); // firstLoaded
+                      row.getString(1) == null
+                              || "firstLoaded".equals(row.getString(1)) // skip header
+                          ? null
+                          : LocalDateTime.parse(row.getString(1), DateTimeFormatter.ISO_DATE_TIME)
+                              .toEpochSecond(ZoneOffset.UTC)); // firstLoaded
                 },
-                Encoders.tuple(Encoders.STRING(), Encoders.STRING()));
+                Encoders.tuple(Encoders.STRING(), Encoders.LONG()));
 
     Dataset<Row> combined =
         uuidRecords.join(

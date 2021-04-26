@@ -10,9 +10,6 @@ import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 import lombok.NonNull;
@@ -269,6 +266,10 @@ public class IndexRecordTransform implements Serializable, IndexFields {
           "Un-parsable date produced by downstream interpretation " + tr.getEventDate().getGte());
     }
 
+    if (tr.getDatePrecision() != null) {
+      indexRecord.getStrings().put(DATE_PRECISION, tr.getDatePrecision());
+    }
+
     if (tr.getYear() != null && tr.getYear() > 0) {
       indexRecord.getInts().put(DECADE, ((tr.getYear() / 10) * 10));
 
@@ -400,12 +401,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
 
     // see  https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/162
     if (ur.getFirstLoaded() != null) {
-      indexRecord
-          .getDates()
-          .put(
-              FIRST_LOADED_DATE,
-              LocalDateTime.parse(ur.getFirstLoaded(), DateTimeFormatter.ISO_DATE_TIME)
-                  .toEpochSecond(ZoneOffset.UTC));
+      indexRecord.getDates().put(FIRST_LOADED_DATE, ur.getFirstLoaded());
     }
 
     // Add legacy collectory fields
@@ -524,6 +520,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     if (taxonomicIssues != null && !taxonomicIssues.isEmpty()) {
       indexRecord.getMultiValues().put(TAXONOMIC_ISSUES, taxonomicIssues);
     }
+
     if (geospatialIssues != null && !geospatialIssues.isEmpty()) {
       indexRecord.getMultiValues().put(GEOSPATIAL_ISSUES, geospatialIssues);
     }
