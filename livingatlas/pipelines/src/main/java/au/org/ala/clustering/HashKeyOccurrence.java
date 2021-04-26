@@ -9,6 +9,7 @@ import org.apache.beam.sdk.schemas.annotations.DefaultSchema;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.gbif.pipelines.core.parsers.clustering.OccurrenceFeatures;
 
+/** An occurrence with hashkey. The hashkey is used to group related occurrences. */
 @DefaultCoder(SchemaCoder.class)
 @DefaultSchema(JavaBeanSchema.class)
 public class HashKeyOccurrence implements OccurrenceFeatures {

@@ -8,6 +8,7 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.gbif.pipelines.io.avro.*;
 
+/** Utility code for integration with species lists. */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class SpeciesListUtils {
 

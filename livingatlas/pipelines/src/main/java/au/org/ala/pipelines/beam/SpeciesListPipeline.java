@@ -27,7 +27,9 @@ import org.gbif.pipelines.io.avro.*;
 
 /**
  * Beam based species list pipeline which will download the species list information and create a
- * TaxonProfile extension for a dataset, which contains:
+ * TaxonProfile extension for a dataset.
+ *
+ * <p>This extension contains:
  *
  * <ul>
  *   <li>Links to species lists for records

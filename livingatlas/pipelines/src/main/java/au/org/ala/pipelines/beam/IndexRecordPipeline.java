@@ -38,8 +38,9 @@ import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.slf4j.MDC;
 
 /**
- * ALA Beam pipeline for creating an index of the records. This pipeline works 2 ways depending on
- * configuration.
+ * Pipeline for creating an index of the records in AVRO.
+ *
+ * <p>This pipeline works 2 ways depending on configuration.
  *
  * <ul>
  *   <li>Produces AVRO records ready to be index into SOLR in a separate pipeline see {@link

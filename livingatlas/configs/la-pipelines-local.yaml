@@ -1,7 +1,1 @@
-# Deployment specific configuration for local machine using a locally installed HDFS.
-# This file should be copied over `la-pipelines-local.yaml` when deployed
-# so that it is used by the scripts.
-#
-
-
-
+# which filesystem to use: local or hdfs

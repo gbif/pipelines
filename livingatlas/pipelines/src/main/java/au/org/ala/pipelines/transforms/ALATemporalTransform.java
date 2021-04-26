@@ -62,6 +62,7 @@ public class ALATemporalTransform extends Transform<ExtendedRecord, TemporalReco
         .via(ALATemporalInterpreter::checkRecordDateQuality)
         .via(ALATemporalInterpreter::checkDateIdentified)
         .via(ALATemporalInterpreter::checkGeoreferencedDate)
+        .via(ALATemporalInterpreter::checkDatePrecision)
         .getOfNullable();
   }
 }

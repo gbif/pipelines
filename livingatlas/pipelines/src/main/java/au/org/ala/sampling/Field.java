@@ -6,6 +6,9 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * Represent a field in the sampling service. A field is a property derived from a spatial layer.
+ */
 @Getter
 @Setter
 @JsonIgnoreProperties(ignoreUnknown = true)

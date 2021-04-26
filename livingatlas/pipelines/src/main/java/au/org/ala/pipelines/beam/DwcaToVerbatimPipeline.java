@@ -17,7 +17,10 @@ import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.slf4j.MDC;
 
 /**
- * Pipeline sequence:
+ * Pipeline that reads a DwCA an converts to AVRO using the {@link
+ * org.gbif.pipelines.io.avro.ExtendedRecord}
+ *
+ * <p>Pipeline sequence:
  *
  * <pre>
  *    1) Reads DwCA archive and converts to {@link org.gbif.pipelines.io.avro.ExtendedRecord}
