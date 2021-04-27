@@ -20,10 +20,7 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
-import org.apache.beam.sdk.transforms.Create;
-import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.values.PCollection;
-import org.apache.beam.sdk.values.PCollectionView;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
@@ -39,7 +36,6 @@ import org.gbif.pipelines.transforms.converters.OccurrenceExtensionTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.DefaultValuesTransform;
-import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.slf4j.MDC;
 
 /**
@@ -156,9 +152,6 @@ public class ALAVerbatimToInterpretedPipeline {
       return;
     }
 
-    // Core
-    MetadataTransform metadataTransform =
-        MetadataTransform.builder().endpointType(endPointType).attempt(attempt).create();
     ALABasicTransform basicTransform =
         ALABasicTransform.builder()
             .lifeStageLookupSupplier(
@@ -173,7 +166,9 @@ public class ALAVerbatimToInterpretedPipeline {
             .occStatusKvStoreSupplier(
                 OccurrenceStatusKvStoreFactory.createSupplier(config.getGbifConfig()))
             .create();
+
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
+
     ALATemporalTransform temporalTransform =
         ALATemporalTransform.builder().orderings(dateComponentOrdering).create();
 
@@ -186,6 +181,7 @@ public class ALAVerbatimToInterpretedPipeline {
         ALAAttributionTransform.builder()
             .dataResourceKvStoreSupplier(ALAAttributionKVStoreFactory.getInstanceSupplier(config))
             .collectionKvStoreSupplier(ALACollectionKVStoreFactory.getInstanceSupplier(config))
+            .datasetId(options.getDatasetId())
             .create();
 
     // ALA specific - Taxonomy
@@ -215,26 +211,12 @@ public class ALAVerbatimToInterpretedPipeline {
             .create();
 
     log.info("Creating beam pipeline");
-    // Create and write metadata
-    PCollection<MetadataRecord> metadataRecord =
-        p.apply("Create metadata collection", Create.of(options.getDatasetId()))
-            .apply("Interpret metadata", metadataTransform.interpret());
-
-    metadataRecord.apply("Write metadata to avro", metadataTransform.write(pathFn));
-
-    // Create View for the further usage
-    PCollectionView<MetadataRecord> metadataView =
-        metadataRecord.apply("Convert into view", View.asSingleton());
-
-    locationTransform.setMetadataView(metadataView);
 
     // Interpret and write all record types
     PCollection<ExtendedRecord> uniqueRecords =
-        metadataTransform.metadataOnly(types)
-            ? verbatimTransform.emptyCollection(p)
-            : p.apply("Read ExtendedRecords", verbatimTransform.read(options.getInputPath()))
-                .apply("Read occurrences from extension", OccurrenceExtensionTransform.create())
-                .apply("Set default values", alaDefaultValuesTransform);
+        p.apply("Read ExtendedRecords", verbatimTransform.read(options.getInputPath()))
+            .apply("Read occurrences from extension", OccurrenceExtensionTransform.create())
+            .apply("Set default values", alaDefaultValuesTransform);
 
     uniqueRecords
         .apply("Check verbatim transform condition", verbatimTransform.check(types))
@@ -257,8 +239,7 @@ public class ALAVerbatimToInterpretedPipeline {
 
     uniqueRecords
         .apply("Check collection attribution", alaAttributionTransform.check(types))
-        .apply(
-            "Interpret ALA collection attribution", alaAttributionTransform.interpret(metadataView))
+        .apply("Interpret ALA collection attribution", alaAttributionTransform.interpret())
         .apply("Write attribution to avro", alaAttributionTransform.write(pathFn));
 
     uniqueRecords

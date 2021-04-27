@@ -222,6 +222,7 @@ public class ALAVerbatimToInterpretedPipeline {
         ALAAttributionTransform.builder()
             .dataResourceKvStoreSupplier(ALAAttributionKVStoreFactory.getInstanceSupplier(config))
             .collectionKvStoreSupplier(ALACollectionKVStoreFactory.getInstanceSupplier(config))
+            .datasetId(options.getDatasetId())
             .create();
 
     // ALA specific - Taxonomy
@@ -310,9 +311,9 @@ public class ALAVerbatimToInterpretedPipeline {
             temporalTransform.processElement(er).ifPresent(temporalWriter::append);
             multimediaTransform.processElement(er).ifPresent(multimediaWriter::append);
             // ALA specific
-            locationTransform.processElement(er, mdr).ifPresent(locationWriter::append);
+            locationTransform.processElement(er).ifPresent(locationWriter::append);
             alaTaxonomyTransform.processElement(er).ifPresent(alaTaxonWriter::append);
-            alaAttributionTransform.processElement(er, mdr).ifPresent(alaAttributionWriter::append);
+            alaAttributionTransform.processElement(er).ifPresent(alaAttributionWriter::append);
           };
 
       // Run async interpretation and writing for all records

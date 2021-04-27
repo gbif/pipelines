@@ -205,10 +205,16 @@ clustering:
   allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
   runner: SparkRunner
 
+# class: DumpArchiveList
+dataset-archive-list:
+  inputPath: '{fsPath}/dwca-imports'
+  targetPath: /tmp/dataset-archive-list.csv
+
 # class: au.org.ala.utils.DumpDatasetSize
 dataset-count-dump:
   inputPath: '{fsPath}/pipelines-data'
   targetPath: /tmp/dataset-counts.csv
+  dwcaImportPath: '{fsPath}/dwca-imports'
 
 validation-report:
   inputPath: '{fsPath}/pipelines-data'
@@ -218,10 +224,6 @@ validation-report:
   checkSolr: true
   checkSampling: true
   solrCollection: biocache
-
-dataset-archive-list:
-  inputPath: '{fsPath}/pipelines-data'
-  targetPath: /tmp/dataset-archive-list.csv
 
 ### la-pipelines cli additional arguments, like JVM or spark command line arguments
 interpret-sh-args:

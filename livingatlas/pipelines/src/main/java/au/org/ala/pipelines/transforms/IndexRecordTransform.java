@@ -1,5 +1,6 @@
 package au.org.ala.pipelines.transforms;
 
+import static au.org.ala.pipelines.transforms.IndexValues.*;
 import static org.apache.avro.Schema.Type.UNION;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
 
@@ -54,7 +55,6 @@ public class IndexRecordTransform implements Serializable, IndexFields {
 
   private TupleTag<TaxonRecord> txrTag;
   @NonNull private TupleTag<ALATaxonRecord> atxrTag;
-  @NonNull private TupleTag<MultimediaRecord> mrTag;
 
   private TupleTag<ALAAttributionRecord> aarTag;
   @NonNull private TupleTag<ALAUUIDRecord> urTag;
@@ -79,11 +79,6 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     interpretedFields = getAddedValues();
   }
 
-  public static void main(String[] args) {
-
-    interpretedFields.stream().sorted().forEach(System.out::println);
-  }
-
   public static IndexRecordTransform create(
       TupleTag<ExtendedRecord> erTag,
       TupleTag<BasicRecord> brTag,
@@ -97,7 +92,6 @@ public class IndexRecordTransform implements Serializable, IndexFields {
       TupleTag<ImageRecord> isTag,
       TupleTag<TaxonProfile> tpTag,
       TupleTag<ALASensitivityRecord> srTag,
-      PCollectionView<MetadataRecord> metadataView,
       String datasetID,
       Long lastLoadDate,
       Long lastLoadProcessed) {
@@ -108,13 +102,11 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     t.lrTag = lrTag;
     t.txrTag = txrTag;
     t.atxrTag = atxrTag;
-    t.mrTag = mrTag;
     t.aarTag = aarTag;
     t.urTag = urTag;
     t.isTag = isTag;
     t.tpTag = tpTag;
     t.srTag = srTag;
-    t.metadataView = metadataView;
     t.datasetID = datasetID;
     t.lastLoadDate = lastLoadDate;
     t.lastLoadProcessed = lastLoadProcessed;
@@ -128,7 +120,6 @@ public class IndexRecordTransform implements Serializable, IndexFields {
    */
   @NotNull
   public static IndexRecord createIndexRecord(
-      MetadataRecord mdr,
       BasicRecord br,
       TemporalRecord tr,
       LocationRecord lr,
@@ -184,10 +175,6 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     if (isSensitive) {
       Set<Term> sensitiveTerms =
           sr.getAltered().keySet().stream().map(TERM_FACTORY::findTerm).collect(Collectors.toSet());
-      if (mdr != null) {
-        mdr = MetadataRecord.newBuilder(mdr).build();
-        SensitiveDataInterpreter.applySensitivity(sensitiveTerms, sr, mdr);
-      }
       if (br != null) {
         br = BasicRecord.newBuilder(br).build();
         SensitiveDataInterpreter.applySensitivity(sensitiveTerms, sr, br);
@@ -221,7 +208,6 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     addToIndexRecord(lr, indexRecord, skipKeys);
     addToIndexRecord(tr, indexRecord, skipKeys);
     addToIndexRecord(br, indexRecord, skipKeys);
-    addToIndexRecord(mdr, indexRecord, skipKeys);
 
     if (br != null) {
       if (br.getRecordedByIds() != null && br.getRecordedByIds().isEmpty()) {
@@ -334,8 +320,10 @@ public class IndexRecordTransform implements Serializable, IndexFields {
         if (value != null
             && !field.name().equals(SPECIES_GROUP)
             && !field.name().equals(SPECIES_SUBGROUP)
-            && !field.name().equals(RANK)
+            && !field.name().equals(TAXON_RANK)
+            && !field.name().equals("classs") // avoid indexing with "classs" spelling
             && !skipKeys.contains(field.name())) {
+
           if (field.name().equalsIgnoreCase("issues")) {
             assertions.add((String) value);
           } else {
@@ -347,9 +335,15 @@ public class IndexRecordTransform implements Serializable, IndexFields {
           }
         }
 
-        if (atxr.getRank() != null) {
-          indexRecord.getStrings().put(DwcTerm.taxonRank.simpleName(), atxr.getRank());
-          if (atxr.getRankID() != null && atxr.getRankID() == SUBSPECIES_RANK_ID) {
+        if (atxr.getClasss() != null) {
+          indexRecord.getStrings().put(DwcTerm.class_.simpleName(), atxr.getClasss());
+        }
+
+        if (atxr.getTaxonRank() != null) {
+          indexRecord
+              .getStrings()
+              .put(DwcTerm.taxonRank.simpleName(), atxr.getTaxonRank().toLowerCase());
+          if (atxr.getTaxonRankID() != null && atxr.getTaxonRankID() == SUBSPECIES_RANK_ID) {
             indexRecord.getStrings().put(SUBSPECIES, atxr.getScientificName());
             indexRecord.getStrings().put(SUBSPECIES_ID, atxr.getTaxonConceptID());
           }
@@ -406,7 +400,13 @@ public class IndexRecordTransform implements Serializable, IndexFields {
 
     // Add legacy collectory fields
     if (aar != null) {
-      addIfNotEmpty(indexRecord, DcTerm.license.simpleName(), aar.getLicenseType());
+      // if the licence is null in the basic record (which is the record-level licence)
+      // then use the licence supplied by the collectory
+      // see https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/271
+      if (indexRecord.getStrings().get(DcTerm.license.simpleName()) == null) {
+        addIfNotEmpty(indexRecord, DcTerm.license.simpleName(), aar.getLicenseType());
+      }
+
       addIfNotEmpty(indexRecord, DATA_RESOURCE_UID, aar.getDataResourceUid());
       addIfNotEmpty(indexRecord, DATA_RESOURCE_NAME, aar.getDataResourceName());
       addIfNotEmpty(indexRecord, DATA_PROVIDER_UID, aar.getDataProviderUid());
@@ -430,13 +430,6 @@ public class IndexRecordTransform implements Serializable, IndexFields {
                 DATA_HUB_UID,
                 aar.getHubMembership().stream()
                     .map(EntityReference::getUid)
-                    .collect(Collectors.toList()));
-        indexRecord
-            .getMultiValues()
-            .put(
-                DATA_HUB_NAME,
-                aar.getHubMembership().stream()
-                    .map(EntityReference::getName)
                     .collect(Collectors.toList()));
       }
     }
@@ -515,10 +508,11 @@ public class IndexRecordTransform implements Serializable, IndexFields {
       addSpeciesListInfo(lr, tpr, indexRecord);
     }
 
-    List<String> taxonomicIssues = tr.getIssues().getIssueList();
+    List<String> temporalIssues = tr.getIssues().getIssueList();
+    List<String> taxonomicIssues = atxr.getIssues().getIssueList();
     List<String> geospatialIssues = lr.getIssues().getIssueList();
     if (taxonomicIssues != null && !taxonomicIssues.isEmpty()) {
-      indexRecord.getMultiValues().put(TAXONOMIC_ISSUES, taxonomicIssues);
+      indexRecord.getMultiValues().put(TAXONOMIC_ISSUES, temporalIssues);
     }
 
     if (geospatialIssues != null && !geospatialIssues.isEmpty()) {
@@ -526,10 +520,10 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     }
 
     // add all to assertions
+    assertions.addAll(temporalIssues);
     assertions.addAll(taxonomicIssues);
     assertions.addAll(geospatialIssues);
     assertions.addAll(br.getIssues().getIssueList());
-    assertions.addAll(mdr.getIssues().getIssueList());
 
     if (sr != null) {
       assertions.addAll(sr.getIssues().getIssueList());
@@ -629,10 +623,6 @@ public class IndexRecordTransform implements Serializable, IndexFields {
                 .map(Field::name)
                 .collect(Collectors.toList()))
         .addAll(
-            MetadataRecord.getClassSchema().getFields().stream()
-                .map(Field::name)
-                .collect(Collectors.toList()))
-        .addAll(
             BasicRecord.getClassSchema().getFields().stream()
                 .map(Field::name)
                 .collect(Collectors.toList()))
@@ -722,7 +712,6 @@ public class IndexRecordTransform implements Serializable, IndexFields {
             String k = c.element().getKey();
 
             // Core
-            MetadataRecord mdr = c.sideInput(metadataView);
             ExtendedRecord er = v.getOnly(erTag, ExtendedRecord.newBuilder().setId(k).build());
             BasicRecord br = v.getOnly(brTag, BasicRecord.newBuilder().setId(k).build());
             TemporalRecord tr = v.getOnly(trTag, TemporalRecord.newBuilder().setId(k).build());
@@ -759,7 +748,6 @@ public class IndexRecordTransform implements Serializable, IndexFields {
               if (aar != null && aar.getDataResourceUid() != null) {
                 IndexRecord doc =
                     createIndexRecord(
-                        mdr,
                         br,
                         tr,
                         lr,
@@ -787,7 +775,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
           }
         };
 
-    return ParDo.of(fn).withSideInputs(metadataView);
+    return ParDo.of(fn);
   }
 
   static void addIfNotEmpty(IndexRecord.Builder doc, String fieldName, String value) {
@@ -948,7 +936,9 @@ public class IndexRecordTransform implements Serializable, IndexFields {
       for (Map.Entry<String, String> entry : indexRecord.getDynamicProperties().entrySet()) {
         if (StringUtils.isNotEmpty(entry.getValue())) {
           String key = entry.getKey().replaceAll("[^A-Za-z0-9]", "_");
-          doc.addField(DYNAMIC_PROPERTIES_PREFIX + key, entry.getValue());
+          if (StringUtils.isNotEmpty(key)) {
+            doc.addField(DYNAMIC_PROPERTIES_PREFIX + key, entry.getValue());
+          }
         }
       }
     }

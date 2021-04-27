@@ -30,4 +30,22 @@ public interface ImageServicePipelineOptions extends InterpretationPipelineOptio
   String getRecognisedPaths();
 
   void setRecognisedPaths(String recognisedPaths);
+
+  @Description("Output a list imageIDs for images that are no longer referenced by this dataset")
+  @Default.Boolean(true)
+  boolean isOutputDeletes();
+
+  void setOutputDeletes(boolean outputDeletes);
+
+  @Description("If set to true, upload new a list of new images to be loaded by the image service")
+  @Default.Boolean(true)
+  boolean isUploadNewImages();
+
+  void setUploadNewImages(boolean uploadNewImages);
+
+  @Description("If set to true, upload metadata updates for existing images already stored by the image service")
+  @Default.Boolean(true)
+  boolean isUpdateMetadata();
+
+  void setUpdateMetadata(boolean updateMetadata);
 }
