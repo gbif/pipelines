@@ -571,4 +571,50 @@ public class SensitiveDataInterpreterTest {
     assertEquals("-39.78", sr.getOriginal().get(DwcTerm.decimalLatitude.qualifiedName()));
     assertEquals("149.55", sr.getOriginal().get(DwcTerm.decimalLongitude.qualifiedName()));
   }
+
+  @Test
+  public void testSensitiveDataInterpreter3() {
+    this.generalisations =
+        Arrays.asList(
+            new RetainGeneralisation(DwcTerm.scientificName),
+            new LatLongGeneralisation(DwcTerm.decimalLatitude, DwcTerm.decimalLongitude),
+            new MessageGeneralisation(
+                DwcTerm.dataGeneralizations,
+                "Data is already generalised",
+                true,
+                MessageGeneralisation.Trigger.ANY),
+            new AddingGeneralisation(DwcTerm.coordinateUncertaintyInMeters, true, true, 0));
+    ALASensitivityRecord sr = ALASensitivityRecord.newBuilder().setId("1").build();
+    Map<String, String> map = new HashMap<>();
+    map.put(DwcTerm.scientificName.qualifiedName(), "Acacia dealbata");
+    map.put(DwcTerm.eventDate.qualifiedName(), "2020-01-01");
+    map.put(
+        DwcTerm.taxonConceptID.qualifiedName(),
+        "https://id.biodiversity.org.au/taxon/apni/51286863");
+    map.put(DwcTerm.decimalLatitude.qualifiedName(), "-39.78");
+    map.put(DwcTerm.decimalLongitude.qualifiedName(), "149.55");
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
+    Map<String, String> properties = new HashMap<>();
+    Map<String, String> generalisations = new HashMap<>();
+    SensitiveDataInterpreter.constructFields(this.sensitive, properties, er);
+    SensitiveDataInterpreter.sensitiveDataInterpreter(
+        this.sensitivityLookup,
+        this.sensitivityReportLookup,
+        this.generalisations,
+        "dr1",
+        properties,
+        generalisations,
+        this.sensitiveVocab,
+        sr);
+    assertTrue(sr.getIssues().getIssueList().isEmpty());
+    assertTrue(sr.getIsSensitive());
+    assertEquals("alreadyGeneralised", sr.getSensitive());
+    assertEquals("Data is already generalised", sr.getDataGeneralizations());
+    assertEquals(4, sr.getAltered().size());
+    assertEquals("-39.8", sr.getAltered().get(DwcTerm.decimalLatitude.qualifiedName()));
+    assertEquals("149.5", sr.getAltered().get(DwcTerm.decimalLongitude.qualifiedName()));
+    assertEquals(4, sr.getOriginal().size());
+    assertEquals("-39.78", sr.getOriginal().get(DwcTerm.decimalLatitude.qualifiedName()));
+    assertEquals("149.55", sr.getOriginal().get(DwcTerm.decimalLongitude.qualifiedName()));
+  }
 }

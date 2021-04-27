@@ -440,7 +440,13 @@ public class SensitiveDataInterpreter {
           GENERALISATION_IN_METRES.get(result).getValue().map(Object::toString).orElse(null));
       sr.setOriginal(toStringMap(original));
       sr.setAltered(toStringMap(result));
-      String sensitivity = existingGeneralisations.isEmpty() ? "generalised" : "alreadyGeneralised";
+      boolean alreadyGeneralised = !existingGeneralisations.isEmpty();
+      if (sr.getDataGeneralizations() != null)
+        alreadyGeneralised =
+            alreadyGeneralised
+                || sr.getDataGeneralizations().contains("already generalised")
+                || sr.getDataGeneralizations().contains("already generalized");
+      String sensitivity = alreadyGeneralised ? "alreadyGeneralised" : "generalised";
       if (sensitivityVocab != null) {
         sensitivity = sensitivityVocab.matchTerm(sensitivity).orElse(sensitivity);
       }
