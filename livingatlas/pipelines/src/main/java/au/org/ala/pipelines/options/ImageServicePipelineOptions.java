@@ -43,7 +43,8 @@ public interface ImageServicePipelineOptions extends InterpretationPipelineOptio
 
   void setUploadNewImages(boolean uploadNewImages);
 
-  @Description("If set to true, upload metadata updates for existing images already stored by the image service")
+  @Description(
+      "If set to true, upload metadata updates for existing images already stored by the image service")
   @Default.Boolean(true)
   boolean isUpdateMetadata();
 
