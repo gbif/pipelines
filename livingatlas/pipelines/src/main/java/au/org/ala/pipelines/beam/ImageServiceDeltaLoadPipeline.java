@@ -66,7 +66,7 @@ import retrofit2.Call;
  * <p>Pushes an AVRO export to the image service.
  */
 @Slf4j
-public class ImageServiceLoadPipeline {
+public class ImageServiceDeltaLoadPipeline {
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
 

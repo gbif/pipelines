@@ -309,7 +309,7 @@ public class SensitiveDataInterpreterTest {
             .setTaxonConceptID("https://id.biodiversity.org.au/taxon/apni/51286863")
             .setKingdom("Plantae")
             .setScientificNameAuthorship("Link")
-            .setRank("species")
+            .setTaxonRank("species")
             .build();
     Map<String, String> properties = new HashMap<>();
     Set<Term> sensitive =
@@ -446,7 +446,7 @@ public class SensitiveDataInterpreterTest {
             .setTaxonConceptID("https://id.biodiversity.org.au/taxon/apni/51286863")
             .setKingdom("Plantae")
             .setScientificNameAuthorship("Link")
-            .setRank("species")
+            .setTaxonRank("species")
             .build();
     Map<String, String> properties = new HashMap<>();
     properties.put(DwcTerm.scientificName.qualifiedName(), "Acacia");
@@ -460,7 +460,7 @@ public class SensitiveDataInterpreterTest {
             .build();
     SensitiveDataInterpreter.applySensitivity(this.sensitive, sr, tr);
     assertEquals("Acacia", tr.getScientificName());
-    assertEquals("species", tr.getRank());
+    assertEquals("species", tr.getTaxonRank());
   }
 
   @Test

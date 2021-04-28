@@ -4,15 +4,13 @@ import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.kvs.ALAPipelinesConfigFactory;
 import au.org.ala.pipelines.options.SpeciesLevelPipelineOptions;
 import au.org.ala.pipelines.util.VersionInfo;
-import au.org.ala.pipelines.vocabulary.StateProvince;
-import au.org.ala.pipelines.vocabulary.Vocab;
+import au.org.ala.pipelines.vocabulary.StateProvinceParser;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.WsUtils;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.ResponseBody;
 import org.apache.avro.file.DataFileWriter;
@@ -62,8 +60,8 @@ public class SpeciesListDownloader {
                 options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getProperties())
             .get();
 
-    final Vocab stateProvinceVocab =
-        StateProvince.getInstance(config.getLocationInfoConfig().getStateProvinceNamesFile());
+    final StateProvinceParser stateProvinceParser =
+        StateProvinceParser.getInstance(config.getLocationInfoConfig().getStateProvinceNamesFile());
 
     // get filesystem
     FileSystem fs =
@@ -138,10 +136,10 @@ public class SpeciesListDownloader {
 
           if (list.getRegion() != null) {
             // match states
-            Optional<String> match = stateProvinceVocab.matchTerm(list.getRegion());
+            ParseResult<String> match = stateProvinceParser.parse(list.getRegion());
 
-            if (match.isPresent()) {
-              region = match.get();
+            if (match.isSuccessful()) {
+              region = match.getPayload();
             } else {
               // match country
               ParseResult<Country> pr = CountryParser.getInstance().parse(list.getRegion());

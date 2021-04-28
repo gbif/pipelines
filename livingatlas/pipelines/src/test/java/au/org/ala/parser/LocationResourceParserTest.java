@@ -4,10 +4,9 @@ import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.kvs.LocationInfoConfig;
 import au.org.ala.pipelines.vocabulary.CentrePoints;
 import au.org.ala.pipelines.vocabulary.CountryCentrePoints;
-import au.org.ala.pipelines.vocabulary.StateProvince;
 import au.org.ala.pipelines.vocabulary.StateProvinceCentrePoints;
+import au.org.ala.pipelines.vocabulary.StateProvinceParser;
 import java.io.FileNotFoundException;
-import java.util.Optional;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,13 +39,17 @@ public class LocationResourceParserTest {
   @Test
   public void stateNameMatchingTest() throws FileNotFoundException {
     Assert.assertEquals(
-        Optional.of("Queensland"),
-        StateProvince.getInstance(alaConfig.getLocationInfoConfig().getStateProvinceNamesFile())
-            .matchTerm("QLD"));
+        "Queensland",
+        StateProvinceParser.getInstance(
+                alaConfig.getLocationInfoConfig().getStateProvinceNamesFile())
+            .parse("QLD")
+            .getPayload());
     Assert.assertEquals(
-        Optional.of("Victoria"),
-        StateProvince.getInstance(alaConfig.getLocationInfoConfig().getStateProvinceNamesFile())
-            .matchTerm("VIC"));
+        "Victoria",
+        StateProvinceParser.getInstance(
+                alaConfig.getLocationInfoConfig().getStateProvinceNamesFile())
+            .parse("VIC")
+            .getPayload());
   }
 
   @Test

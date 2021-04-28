@@ -7,7 +7,7 @@ import au.org.ala.pipelines.parser.CoordinatesParser;
 import au.org.ala.pipelines.parser.DistanceParser;
 import au.org.ala.pipelines.vocabulary.ALAOccurrenceIssue;
 import au.org.ala.pipelines.vocabulary.CentrePoints;
-import au.org.ala.pipelines.vocabulary.Vocab;
+import au.org.ala.pipelines.vocabulary.StateProvinceParser;
 import com.google.common.base.Strings;
 import com.google.common.collect.Range;
 import java.time.LocalDate;
@@ -21,6 +21,7 @@ import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.core.OccurrenceParseResult;
+import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.common.parsers.date.TemporalAccessorUtils;
 import org.gbif.dwc.terms.DwcTerm;
@@ -126,7 +127,7 @@ public class ALALocationInterpreter {
   public static BiConsumer<ExtendedRecord, LocationRecord> verifyLocationInfo(
       CentrePoints countryCentrePoints,
       CentrePoints stateProvinceCentrePoints,
-      Vocab stateProvinceVocab) {
+      StateProvinceParser stateProvinceParser) {
 
     return (er, lr) -> {
       if (lr.getDecimalLongitude() != null && lr.getDecimalLatitude() != null) {
@@ -138,25 +139,26 @@ public class ALALocationInterpreter {
 
         if (!Strings.isNullOrEmpty(lr.getStateProvince())) {
           // Formalize state name
-          Optional<String> formalStateName = stateProvinceVocab.matchTerm(lr.getStateProvince());
-          formalStateName.ifPresent(lr::setStateProvince);
+          ParseResult<String> formalStateName = stateProvinceParser.parse(lr.getStateProvince());
+          lr.setStateProvince(formalStateName.getPayload());
 
           String suppliedStateProvince = extractNullAwareValue(er, DwcTerm.stateProvince);
           if (!Strings.isNullOrEmpty(suppliedStateProvince)) {
             // If the stateProvince that is retrieved using the coordinates differs from the
             // supplied stateProvince
             // raise an issue
-            Optional<String> formalSuppliedName =
-                stateProvinceVocab.matchTerm(suppliedStateProvince);
-            if (formalSuppliedName.isPresent()) {
-              suppliedStateProvince = formalSuppliedName.get();
+            ParseResult<String> formalSuppliedName =
+                stateProvinceParser.parse(suppliedStateProvince);
+            if (formalSuppliedName.getPayload() != null) {
+              suppliedStateProvince = formalSuppliedName.getPayload();
             }
             if (!suppliedStateProvince.equalsIgnoreCase(lr.getStateProvince()))
               addIssue(lr, ALAOccurrenceIssue.STATE_COORDINATE_MISMATCH.name());
           }
 
-          if (stateProvinceCentrePoints.coordinatesMatchCentre(
-              lr.getStateProvince(), lr.getDecimalLatitude(), lr.getDecimalLongitude())) {
+          if (lr.getStateProvince() != null
+              && stateProvinceCentrePoints.coordinatesMatchCentre(
+                  lr.getStateProvince(), lr.getDecimalLatitude(), lr.getDecimalLongitude())) {
             addIssue(lr, ALAOccurrenceIssue.COORDINATES_CENTRE_OF_STATEPROVINCE.name());
           } else if (log.isTraceEnabled()) {
             log.trace(
@@ -166,6 +168,17 @@ public class ALALocationInterpreter {
                 lr.getStateProvince());
           }
         }
+      }
+    };
+  }
+
+  /** Verify country and state info, */
+  public static BiConsumer<ExtendedRecord, LocationRecord> validateStateProvince(
+      StateProvinceParser stateProvinceParser) {
+    return (er, lr) -> {
+      if (!Strings.isNullOrEmpty(lr.getStateProvince())) {
+        ParseResult<String> formalStateName = stateProvinceParser.parse(lr.getStateProvince());
+        lr.setStateProvince(formalStateName.getPayload());
       }
     };
   }
