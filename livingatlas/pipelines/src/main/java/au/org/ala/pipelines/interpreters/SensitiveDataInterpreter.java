@@ -36,6 +36,11 @@ public class SensitiveDataInterpreter {
       new FieldAccessor(TERM_FACTORY.findTerm("generalisationToApplyInMetres"));
   protected static final FieldAccessor GENERALISATION_IN_METRES =
       new FieldAccessor(TERM_FACTORY.findTerm("generalisationInMetres"));
+  protected static final FieldAccessor DECIMAL_LATITUDE =
+      new FieldAccessor(DwcTerm.decimalLatitude);
+  protected static final FieldAccessor DECIMAL_LONGITUDE =
+      new FieldAccessor(DwcTerm.decimalLongitude);
+  protected static final double UNALTERED = 0.000001;
 
   /** Bits to skip when generically updating the temporal record */
   private static final Set<Term> SKIP_TEMPORAL_UPDATE = Collections.singleton(DwcTerm.eventDate);
@@ -440,12 +445,32 @@ public class SensitiveDataInterpreter {
           GENERALISATION_IN_METRES.get(result).getValue().map(Object::toString).orElse(null));
       sr.setOriginal(toStringMap(original));
       sr.setAltered(toStringMap(result));
+      // We already have notes about generalisations
       boolean alreadyGeneralised = !existingGeneralisations.isEmpty();
-      if (sr.getDataGeneralizations() != null)
+      // The message contains a note about already generalising things
+      if (sr.getDataGeneralizations() != null) {
         alreadyGeneralised =
             alreadyGeneralised
                 || sr.getDataGeneralizations().contains("already generalised")
                 || sr.getDataGeneralizations().contains("already generalized");
+      }
+      // The lat/long hasn't changed
+      Optional<Double> originalLat =
+          DECIMAL_LATITUDE.get(original).getValue().map(v -> parseDouble(v));
+      Optional<Double> generalisedLat =
+          DECIMAL_LATITUDE.get(result).getValue().map(v -> parseDouble(v));
+      Optional<Double> originalLong =
+          DECIMAL_LONGITUDE.get(original).getValue().map(v -> parseDouble(v));
+      Optional<Double> generalisedLong =
+          DECIMAL_LONGITUDE.get(result).getValue().map(v -> parseDouble(v));
+      if (originalLat.isPresent()
+          && generalisedLat.isPresent()
+          && originalLong.isPresent()
+          && generalisedLong.isPresent()) {
+        if (Math.abs(originalLat.get() - generalisedLat.get()) < UNALTERED
+            && Math.abs(originalLong.get() - generalisedLong.get()) < UNALTERED)
+          alreadyGeneralised = true;
+      }
       String sensitivity = alreadyGeneralised ? "alreadyGeneralised" : "generalised";
       if (sensitivityVocab != null) {
         sensitivity = sensitivityVocab.matchTerm(sensitivity).orElse(sensitivity);
@@ -527,5 +552,23 @@ public class SensitiveDataInterpreter {
           entry.getKey().toString(), entry.getValue() == null ? null : entry.getValue().toString());
     }
     return strings;
+  }
+
+  /**
+   * Try to parse a double.
+   *
+   * @param v The double
+   * @return A resulting double or empty value if null or unparsable.
+   */
+  protected static Double parseDouble(Object v) {
+    if (v == null) return null;
+    if (v instanceof Number) return ((Number) v).doubleValue();
+    String vs = v.toString();
+    if (vs.isEmpty()) return null;
+    try {
+      return Double.parseDouble(vs);
+    } catch (NumberFormatException ex) {
+      return null;
+    }
   }
 }

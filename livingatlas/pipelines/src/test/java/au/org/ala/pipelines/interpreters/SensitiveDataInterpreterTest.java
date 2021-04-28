@@ -617,4 +617,40 @@ public class SensitiveDataInterpreterTest {
     assertEquals("-39.78", sr.getOriginal().get(DwcTerm.decimalLatitude.qualifiedName()));
     assertEquals("149.55", sr.getOriginal().get(DwcTerm.decimalLongitude.qualifiedName()));
   }
+
+  @Test
+  public void testSensitiveDataInterpreter5() {
+    ALASensitivityRecord sr = ALASensitivityRecord.newBuilder().setId("1").build();
+    Map<String, String> map = new HashMap<>();
+    map.put(DwcTerm.scientificName.qualifiedName(), "Acacia dealbata");
+    map.put(DwcTerm.eventDate.qualifiedName(), "2020-01-01");
+    map.put(
+        DwcTerm.taxonConceptID.qualifiedName(),
+        "https://id.biodiversity.org.au/taxon/apni/51286863");
+    map.put(DwcTerm.decimalLatitude.qualifiedName(), "-39.7");
+    map.put(DwcTerm.decimalLongitude.qualifiedName(), "149.5");
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
+    Map<String, String> properties = new HashMap<>();
+    Map<String, String> generalisations = new HashMap<>();
+    SensitiveDataInterpreter.constructFields(this.sensitive, properties, er);
+    SensitiveDataInterpreter.sensitiveDataInterpreter(
+        this.sensitivityLookup,
+        this.sensitivityReportLookup,
+        this.generalisations,
+        "dr1",
+        properties,
+        generalisations,
+        this.sensitiveVocab,
+        sr);
+    assertTrue(sr.getIssues().getIssueList().isEmpty());
+    assertTrue(sr.getIsSensitive());
+    assertEquals("alreadyGeneralised", sr.getSensitive());
+    assertEquals("Test generalisation", sr.getDataGeneralizations());
+    assertEquals(5, sr.getAltered().size());
+    assertEquals("-39.7", sr.getAltered().get(DwcTerm.decimalLatitude.qualifiedName()));
+    assertEquals("149.5", sr.getAltered().get(DwcTerm.decimalLongitude.qualifiedName()));
+    assertEquals(5, sr.getOriginal().size());
+    assertEquals("-39.7", sr.getOriginal().get(DwcTerm.decimalLatitude.qualifiedName()));
+    assertEquals("149.5", sr.getOriginal().get(DwcTerm.decimalLongitude.qualifiedName()));
+  }
 }
