@@ -383,6 +383,8 @@ public class IndexRecordToSolrPipeline {
 
           if (!isRepresentativeOf.isEmpty()) {
             multiValues.put(IndexFields.IS_REPRESENTATIVE_OF, isRepresentativeOf);
+            strings.put(
+                DwcTerm.associatedOccurrences.simpleName(), String.join("|", isRepresentativeOf));
           }
 
           if (!isDuplicateOf.isEmpty()) {
