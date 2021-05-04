@@ -66,6 +66,7 @@ dwca-avro --> interpret --> validate --> uuid --> image-sync ... │
 -  'validation-report' dumps out a CSV list of datasets ready to be indexed to '/tmp/validation-report.csv';
 -  'clustering' clustering of occurrences;
 -  'prune-datasets' remove any datasets no longer registered in the collectory;
+-  'dwca-export' export a dwca archive;
 
 All the steps generate an output. If only the final output is desired, the intermediate outputs can be ignored.
 
@@ -89,6 +90,7 @@ Usage:
   $CMD [options] prune-datasets
   $CMD [options] validation-report
   $CMD [options] do-all        (<dr>...|all) $WHEREL
+  $CMD [options] dwca-export     (<dr>...|all)         $WHERE
   $CMD -h | --help
   $CMD -v | --version
 
@@ -708,6 +710,43 @@ function index () {
     logStepEnd "Index-Record" $dr $ltype $SECONDS
 }
 
+function dwca_export () {
+    dr=$1
+    ltype=$2
+    CLASS=au.org.ala.pipelines.beam.IndexRecordToDwcaPipeline
+
+    logStepStart "Dwca-export" $dr
+    SECONDS=0
+
+    PRE=image-sync-sh-args.spark-embedded
+    if [[ $ltype = "spark-embedded" || $ltype = "local" ]] ; then
+        $_D java $EXTRA_JVM_CLI_ARGS \
+            $(getConf $PRE.jvm)  \
+            -cp $PIPELINES_JAR $CLASS \
+            --datasetId=$dr \
+            --config=$config $ARGS
+    fi
+
+    PRE=image-sync-sh-args.spark-cluster
+    if [[ $ltype = "spark-cluster" ]] ; then
+        $_D /data/spark/bin/spark-submit \
+            --name "Dwca-export $dr" \
+            $(toArg $PRE num-executors) \
+            $(toArg $PRE executor-cores) \
+            $(toArg $PRE executor-memory) \
+            $(toArg $PRE driver-memory) \
+            --class $CLASS \
+            --master $SPARK_MASTER \
+            --driver-java-options "-Dlog4j.configuration=file:$CONFIG_DIR/log4j.properties" \
+            $PIPELINES_JAR \
+            --datasetId=$dr \
+            --config=$config $ARGS
+            # TODO set here an optional colorized log4j properties
+    fi
+
+    logStepEnd "Dwca-export" $dr $ltype $SECONDS
+}
+
 if ($archive_list) ; then
     archive-list
 fi
@@ -774,6 +813,10 @@ fi
 
 if ($validate || $do_all); then
     do_step validate
+fi
+
+if ($dwca_export || $do_all); then
+    do_step dwca_export
 fi
 
 if ($uuid || $do_all); then
