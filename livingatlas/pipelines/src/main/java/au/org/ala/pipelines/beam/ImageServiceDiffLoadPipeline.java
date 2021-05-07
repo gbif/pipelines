@@ -115,35 +115,40 @@ public class ImageServiceDiffLoadPipeline {
                           @Element String imageMapping, OutputReceiver<KV<String, Multimedia>> out)
                           throws Exception {
 
-                        final CSVParser parser = new CSVParser();
-                        String[] parts = parser.parseLine(imageMapping);
+                        try {
+                          final CSVParser parser = new CSVParser();
+                          String[] parts = parser.parseLine(imageMapping);
 
-                        if (parts.length != NO_OF_CSV_FIELDS) {
-                          throw new RuntimeException("Problem with line: " + imageMapping);
+                          if (parts.length == NO_OF_CSV_FIELDS) {
+
+                            // CSV is imageID
+                            // Swap so we key on URL for later grouping
+                            Multimedia multimedia =
+                                Multimedia.newBuilder()
+                                    .setIdentifier(parts[0]) // image service ID
+                                    .setAudience(parts[2])
+                                    .setContributor(parts[3])
+                                    .setCreated(parts[4])
+                                    .setCreator(parts[5])
+                                    .setDescription(parts[6])
+                                    .setFormat(parts[7])
+                                    .setLicense(parts[8])
+                                    .setPublisher(parts[9])
+                                    .setReferences(parts[10])
+                                    .setRightsHolder(parts[11])
+                                    .setSource(parts[12])
+                                    .setTitle(parts[13])
+                                    .setType(parts[14])
+                                    .build();
+
+                            // output imageURL (from source) -> multimedia
+                            out.output(KV.of(StringUtils.trim(parts[1]).toLowerCase(), multimedia));
+                          } else {
+                            log.error("Problem line length: " + imageMapping);
+                          }
+                        } catch (Exception e) {
+                          log.error("Problem parsing line: " + imageMapping);
                         }
-
-                        // CSV is imageID
-                        // Swap so we key on URL for later grouping
-                        Multimedia multimedia =
-                            Multimedia.newBuilder()
-                                .setIdentifier(parts[0]) // image service ID
-                                .setAudience(parts[2])
-                                .setContributor(parts[3])
-                                .setCreated(parts[4])
-                                .setCreator(parts[5])
-                                .setDescription(parts[6])
-                                .setFormat(parts[7])
-                                .setLicense(parts[8])
-                                .setPublisher(parts[9])
-                                .setReferences(parts[10])
-                                .setRightsHolder(parts[11])
-                                .setSource(parts[12])
-                                .setTitle(parts[13])
-                                .setType(parts[14])
-                                .build();
-
-                        // output imageURL (from source) -> multimedia
-                        out.output(KV.of(StringUtils.trim(parts[1]).toLowerCase(), multimedia));
                       }
                     }));
 

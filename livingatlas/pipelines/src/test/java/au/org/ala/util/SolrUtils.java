@@ -8,6 +8,7 @@ import java.nio.file.FileSystem;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 import okio.BufferedSink;
@@ -22,6 +23,7 @@ import org.apache.solr.client.solrj.request.ConfigSetAdminRequest;
 import org.apache.solr.client.solrj.response.CollectionAdminResponse;
 import org.apache.solr.client.solrj.response.ConfigSetAdminResponse;
 import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
 import org.jetbrains.annotations.NotNull;
 
@@ -179,6 +181,25 @@ public class SolrUtils {
     adminRequest.setCollectionName(BIOCACHE_TEST_SOLR_COLLECTION);
     adminRequest.process(cloudSolrClient);
     cloudSolrClient.close();
+  }
+
+  public static Optional<SolrDocument> getRecord(String queryUrl) throws Exception {
+    CloudSolrClient solr = new CloudSolrClient(getZkHost());
+    solr.setDefaultCollection(BIOCACHE_TEST_SOLR_COLLECTION);
+
+    SolrQuery params = new SolrQuery();
+    params.setQuery(queryUrl);
+    params.setSort("score ", SolrQuery.ORDER.desc);
+    params.setStart(Integer.getInteger("0"));
+    params.setRows(Integer.getInteger("100"));
+
+    QueryResponse response = solr.query(params);
+    SolrDocumentList results = response.getResults();
+    if (results.isEmpty()) {
+      return Optional.empty();
+    } else {
+      return Optional.of(results.get(0));
+    }
   }
 
   public static Long getRecordCount(String queryUrl) throws Exception {

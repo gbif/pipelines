@@ -1,5 +1,6 @@
 package au.org.ala.pipelines.java;
 
+import static au.org.ala.pipelines.beam.CompleteIngestPipelineTestIT.checkSingleRecordContent;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -88,6 +89,9 @@ public class CompleteIngestJavaPipelineTestIT {
     SolrDocument sensitive = SolrUtils.getRecords("sensitive:generalised").get(0);
     assertEquals(-35.3, (double) sensitive.get("decimalLatitude"), 0.00001);
     assertEquals("-35.260319", sensitive.get("sensitive_decimalLatitude"));
+
+    // 4. check content of record
+    checkSingleRecordContent();
   }
 
   public void loadTestDataset(String datasetID, String inputPath) throws Exception {

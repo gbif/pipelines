@@ -13,4 +13,5 @@ public interface IndexValues {
   String IMAGE = "Image";
   String SOUND = "Sound";
   String VIDEO = "Video";
+  String PIPELINES_GEODETIC_DATUM = "EPSG:4326";
 }
