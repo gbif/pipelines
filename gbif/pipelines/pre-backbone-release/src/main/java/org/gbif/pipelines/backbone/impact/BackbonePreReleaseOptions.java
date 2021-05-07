@@ -47,4 +47,10 @@ public interface BackbonePreReleaseOptions extends HadoopFileSystemOptions {
   int getMinimumOccurrenceCount();
 
   void setMinimumOccurrenceCount(int minimumOccurrenceCount);
+
+  @Description("Controls if keys should be omitted or not")
+  @Default.Boolean(false)
+  boolean getSkipKeys();
+
+  void setSkipKeys(boolean skipKeys);
 }

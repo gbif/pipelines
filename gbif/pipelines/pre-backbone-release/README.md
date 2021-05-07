@@ -83,7 +83,7 @@ GROUP BY
   acceptedTaxonKey;
 ```
 
-Execute the pipeline using e.g.:
+Execute the pipeline using e.g. (not --skipKeys=false can be added to omit taxa keys in the result):
 ```
 spark2-submit \
   --class org.gbif.pipelines.backbone.impact.BackbonePreRelease \
@@ -92,13 +92,12 @@ spark2-submit \
   --minimumOccurrenceCount=1000
   --scope=1
 ```
-
 Get the result:
 ```
 hdfs dfs -getmerge /tmp/backbone-pre-release-impact /tmp/report-1000.txt
 ```
 
-Prepend a header
+Prepend a header (optionally use the header-no-keys.tsv)
 ```
 cat header.tsv /tmp/report-1000.txt > ./report-1000.tsv
 ```

@@ -24,6 +24,7 @@ import org.apache.thrift.TException;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.species.NameUsageMatchKVStoreFactory;
 import org.gbif.kvs.species.SpeciesMatchRequest;
+import org.gbif.rest.client.configuration.ChecklistbankClientsConfiguration;
 import org.gbif.rest.client.configuration.ClientConfiguration;
 import org.gbif.rest.client.species.NameUsageMatch;
 
@@ -57,7 +58,8 @@ public class BackbonePreRelease {
                     options.getAPIBaseURI(),
                     schema,
                     options.getScope(),
-                    options.getMinimumOccurrenceCount())));
+                    options.getMinimumOccurrenceCount(),
+                    options.getSkipKeys())));
 
     matched.apply(TextIO.write().to(options.getTargetDir()));
 
@@ -80,23 +82,29 @@ public class BackbonePreRelease {
     private final HCatSchema schema;
     private final Integer scope;
     private final int minCount;
+    private final boolean skipKeys;
     private KeyValueStore<SpeciesMatchRequest, NameUsageMatch> service;
 
-    MatchTransform(String baseAPIUrl, HCatSchema schema, Integer scope, int minCount) {
+    MatchTransform(
+        String baseAPIUrl, HCatSchema schema, Integer scope, int minCount, boolean skipKeys) {
       this.baseAPIUrl = baseAPIUrl;
       this.schema = schema;
       this.scope = scope;
       this.minCount = minCount;
+      this.skipKeys = skipKeys;
     }
 
     @Setup
     public void setup() {
       service =
           NameUsageMatchKVStoreFactory.nameUsageMatchKVStore(
-              ClientConfiguration.builder()
-                  .withBaseApiUrl(baseAPIUrl)
-                  .withFileCacheMaxSizeMb(1L)
-                  .withTimeOut(120L)
+              ChecklistbankClientsConfiguration.builder()
+                  .nameUSageClientConfiguration(
+                      ClientConfiguration.builder()
+                          .withBaseApiUrl(baseAPIUrl)
+                          .withFileCacheMaxSizeMb(1L)
+                          .withTimeOut(120L)
+                          .build())
                   .build());
     }
 
@@ -138,7 +146,7 @@ public class BackbonePreRelease {
 
         // if classifications differ, then we log them in the report otherwise we skip them.
         if (!existing.equals(proposed)) {
-          c.output(toTabDelimited(count, matchRequest, existing, proposed));
+          c.output(toTabDelimited(count, matchRequest, existing, proposed, skipKeys));
         }
       }
     }
@@ -173,7 +181,8 @@ public class BackbonePreRelease {
         long count,
         SpeciesMatchRequest verbatim,
         GBIFClassification current,
-        GBIFClassification proposed) {
+        GBIFClassification proposed,
+        boolean skipKeys) {
 
       return String.join(
           "\t",
@@ -191,8 +200,8 @@ public class BackbonePreRelease {
           verbatim.getScientificName(),
           verbatim.getGenericName(),
           verbatim.getScientificNameAuthorship(),
-          current.toString(),
-          proposed.toString());
+          current.toString(skipKeys),
+          proposed.toString(skipKeys));
     }
 
     @Teardown
