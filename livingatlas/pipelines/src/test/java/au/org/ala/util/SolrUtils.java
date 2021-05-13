@@ -189,9 +189,9 @@ public class SolrUtils {
 
     SolrQuery params = new SolrQuery();
     params.setQuery(queryUrl);
-    params.setSort("score ", SolrQuery.ORDER.desc);
-    params.setStart(Integer.getInteger("0"));
-    params.setRows(Integer.getInteger("100"));
+    params.setSort("score", SolrQuery.ORDER.desc);
+    params.setStart(0);
+    params.setRows(100);
 
     QueryResponse response = solr.query(params);
     SolrDocumentList results = response.getResults();
@@ -208,9 +208,9 @@ public class SolrUtils {
 
     SolrQuery params = new SolrQuery();
     params.setQuery(queryUrl);
-    params.setSort("score ", SolrQuery.ORDER.desc);
-    params.setStart(Integer.getInteger("0"));
-    params.setRows(Integer.getInteger("100"));
+    params.setSort("score", SolrQuery.ORDER.desc);
+    params.setStart(0);
+    params.setRows(100);
 
     QueryResponse response = solr.query(params);
     SolrDocumentList results = response.getResults();
@@ -223,9 +223,9 @@ public class SolrUtils {
 
     SolrQuery params = new SolrQuery();
     params.setQuery(queryUrl);
-    params.setSort("score ", SolrQuery.ORDER.desc);
-    params.setStart(Integer.getInteger("0"));
-    params.setRows(Integer.getInteger("100"));
+    params.setSort("score", SolrQuery.ORDER.desc);
+    params.setStart(0);
+    params.setRows(100);
 
     QueryResponse response = solr.query(params);
     return response.getResults();

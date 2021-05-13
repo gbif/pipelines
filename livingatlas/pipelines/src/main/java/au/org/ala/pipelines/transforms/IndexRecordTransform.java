@@ -46,6 +46,8 @@ public class IndexRecordTransform implements Serializable, IndexFields {
 
   private static final long serialVersionUID = 1279313931024806169L;
   private static final TermFactory TERM_FACTORY = TermFactory.instance();
+  public static final String ISSUES = "issues";
+  public static final String CLASSS = "classs";
 
   // Core
   @NonNull private TupleTag<ExtendedRecord> erTag;
@@ -323,9 +325,9 @@ public class IndexRecordTransform implements Serializable, IndexFields {
             && !field.name().equals(TAXON_RANK)
             && !skipKeys.contains(field.name())) {
 
-          if (field.name().equalsIgnoreCase("classs")) {
+          if (field.name().equalsIgnoreCase(CLASSS)) {
             indexRecord.getStrings().put(DwcTerm.class_.simpleName(), value.toString());
-          } else if (field.name().equalsIgnoreCase("issues")) {
+          } else if (field.name().equalsIgnoreCase(ISSUES)) {
             assertions.add((String) value);
           } else {
             if (value instanceof Integer) {

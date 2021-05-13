@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 package org.apache.beam.sdk.io.solr;
+
 import static org.apache.beam.vendor.guava.v26_0_jre.com.google.common.base.Preconditions.checkArgument;
 import static org.apache.beam.vendor.guava.v26_0_jre.com.google.common.base.Preconditions.checkNotNull;
 import static org.apache.beam.vendor.guava.v26_0_jre.com.google.common.base.Preconditions.checkState;
@@ -26,7 +27,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Optional;
 import java.util.function.Predicate;
 import org.apache.beam.sdk.annotations.Experimental;
 import org.apache.beam.sdk.annotations.Experimental.Kind;
@@ -44,7 +44,6 @@ import org.apache.beam.sdk.values.PBegin;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PDone;
 import org.apache.beam.vendor.guava.v26_0_jre.com.google.common.annotations.VisibleForTesting;
-import org.apache.beam.vendor.guava.v26_0_jre.com.google.common.collect.ImmutableList;
 import org.apache.beam.vendor.guava.v26_0_jre.com.google.common.collect.ImmutableSet;
 import org.apache.http.client.HttpClient;
 import org.apache.solr.client.solrj.SolrQuery;
@@ -65,8 +64,8 @@ import org.apache.solr.common.cloud.Replica;
 import org.apache.solr.common.cloud.Slice;
 import org.apache.solr.common.cloud.ZkStateReader;
 import org.apache.solr.common.params.CursorMarkParams;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.apache.solr.common.params.ModifiableSolrParams;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.joda.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -114,8 +113,8 @@ import org.slf4j.LoggerFactory;
  */
 @Experimental(Kind.SOURCE_SINK)
 @SuppressWarnings({
-        "rawtypes", // TODO(https://issues.apache.org/jira/browse/BEAM-10556)
-        "nullness" // TODO(https://issues.apache.org/jira/browse/BEAM-10402)
+  "rawtypes", // TODO(https://issues.apache.org/jira/browse/BEAM-10556)
+  "nullness" // TODO(https://issues.apache.org/jira/browse/BEAM-10402)
 })
 public class SolrIO {
 
@@ -255,13 +254,13 @@ public class SolrIO {
     public static RetryConfiguration create(int maxAttempts, Duration maxDuration) {
       checkArgument(maxAttempts > 0, "maxAttempts must be greater than 0");
       checkArgument(
-              maxDuration != null && maxDuration.isLongerThan(Duration.ZERO),
-              "maxDuration must be greater than 0");
+          maxDuration != null && maxDuration.isLongerThan(Duration.ZERO),
+          "maxDuration must be greater than 0");
       return new AutoValue_SolrIO_RetryConfiguration.Builder()
-              .setMaxAttempts(maxAttempts)
-              .setMaxDuration(maxDuration)
-              .setRetryPredicate(DEFAULT_RETRY_PREDICATE)
-              .build();
+          .setMaxAttempts(maxAttempts)
+          .setMaxDuration(maxDuration)
+          .setRetryPredicate(DEFAULT_RETRY_PREDICATE)
+          .build();
     }
 
     // Exposed only to allow tests to easily simulate server errors
@@ -282,18 +281,18 @@ public class SolrIO {
     /** This is the default predicate used to test if a failed Solr operation should be retried. */
     private static class DefaultRetryPredicate implements RetryPredicate {
       private static final ImmutableSet<Integer> ELIGIBLE_CODES =
-              ImmutableSet.of(
-                      SolrException.ErrorCode.CONFLICT.code,
-                      SolrException.ErrorCode.SERVER_ERROR.code,
-                      SolrException.ErrorCode.SERVICE_UNAVAILABLE.code,
-                      SolrException.ErrorCode.INVALID_STATE.code,
-                      SolrException.ErrorCode.UNKNOWN.code);
+          ImmutableSet.of(
+              SolrException.ErrorCode.CONFLICT.code,
+              SolrException.ErrorCode.SERVER_ERROR.code,
+              SolrException.ErrorCode.SERVICE_UNAVAILABLE.code,
+              SolrException.ErrorCode.INVALID_STATE.code,
+              SolrException.ErrorCode.UNKNOWN.code);
 
       @Override
       public boolean test(Throwable t) {
         return (t instanceof IOException
-                || t instanceof SolrServerException
-                || (t instanceof SolrException && ELIGIBLE_CODES.contains(((SolrException) t).code())));
+            || t instanceof SolrServerException
+            || (t instanceof SolrException && ELIGIBLE_CODES.contains(((SolrException) t).code())));
       }
     }
   }
@@ -372,10 +371,10 @@ public class SolrIO {
       // TODO remove this configuration, we can figure out the best number
       // by tuning batchSize when pipelines run.
       checkArgument(
-              batchSize > 0 && batchSize < MAX_BATCH_SIZE,
-              "Valid values for batchSize are 1 (inclusive) to %s (exclusive), but was: %s ",
-              MAX_BATCH_SIZE,
-              batchSize);
+          batchSize > 0 && batchSize < MAX_BATCH_SIZE,
+          "Valid values for batchSize are 1 (inclusive) to %s (exclusive), but was: %s ",
+          MAX_BATCH_SIZE,
+          batchSize);
       return builder().setBatchSize(batchSize).build();
     }
 
@@ -388,7 +387,7 @@ public class SolrIO {
     @Override
     public PCollection<SolrDocument> expand(PBegin input) {
       checkArgument(
-              getConnectionConfiguration() != null, "withConnectionConfiguration() is required");
+          getConnectionConfiguration() != null, "withConnectionConfiguration() is required");
       checkArgument(getCollection() != null, "from() is required");
       return input.apply("Create", Create.of(this)).apply("ReadAll", readAll());
     }
@@ -416,9 +415,9 @@ public class SolrIO {
 
     static ReplicaInfo create(Replica replica) {
       return new AutoValue_SolrIO_ReplicaInfo(
-              replica.getStr(ZkStateReader.CORE_NAME_PROP),
-              replica.getCoreUrl(),
-              replica.getStr(ZkStateReader.BASE_URL_PROP));
+          replica.getStr(ZkStateReader.CORE_NAME_PROP),
+          replica.getCoreUrl(),
+          replica.getStr(ZkStateReader.BASE_URL_PROP));
     }
   }
 
@@ -439,7 +438,7 @@ public class SolrIO {
             // We need to check both state of the replica and live nodes
             // to make sure that the replica is alive
             if (replica.getState() == Replica.State.ACTIVE
-                    && clusterState.getLiveNodes().contains(replica.getNodeName())) {
+                && clusterState.getLiveNodes().contains(replica.getNodeName())) {
               randomActiveReplica = replica;
               break;
             }
@@ -447,9 +446,9 @@ public class SolrIO {
           // TODO in case of this replica goes inactive while the pipeline runs.
           // We should pick another active replica of this shard.
           checkState(
-                  randomActiveReplica != null,
-                  "Can not found an active replica for slice %s",
-                  slice.getName());
+              randomActiveReplica != null,
+              "Can not found an active replica for slice %s",
+              slice.getName());
           out.output(spec.withReplicaInfo(ReplicaInfo.create(checkNotNull(randomActiveReplica))));
         }
       }
@@ -470,7 +469,7 @@ public class SolrIO {
       solrQuery.setRows(spec.getBatchSize());
       solrQuery.setDistrib(false);
       try (AuthorizedSolrClient<HttpSolrClient> client =
-                   spec.getConnectionConfiguration().createClient(replicaInfo.baseUrl())) {
+          spec.getConnectionConfiguration().createClient(replicaInfo.baseUrl())) {
         SchemaRequest.UniqueKey request = new SchemaRequest.UniqueKey();
         try {
           SchemaResponse.UniqueKeyResponse response = client.process(spec.getCollection(), request);
@@ -503,9 +502,9 @@ public class SolrIO {
     @Override
     public PCollection<SolrDocument> expand(PCollection<Read> input) {
       return input
-              .apply("Split", ParDo.of(new SplitFn()))
-              .apply("Reshuffle", Reshuffle.viaRandomKey())
-              .apply("Read", ParDo.of(new ReadFn()));
+          .apply("Split", ParDo.of(new SplitFn()))
+          .apply("Reshuffle", Reshuffle.viaRandomKey())
+          .apply("Read", ParDo.of(new ReadFn()));
     }
   }
 
@@ -622,17 +621,17 @@ public class SolrIO {
         solrClient = spec.getConnectionConfiguration().createClient();
 
         retryBackoff =
-                FluentBackoff.DEFAULT
-                        .withMaxRetries(0) // default to no retrying
-                        .withInitialBackoff(RETRY_INITIAL_BACKOFF);
+            FluentBackoff.DEFAULT
+                .withMaxRetries(0) // default to no retrying
+                .withInitialBackoff(RETRY_INITIAL_BACKOFF);
 
         if (spec.getRetryConfiguration() != null) {
           // FluentBackoff counts retries excluding the original while we count attempts
           // to remove ambiguity (hence the -1)
           retryBackoff =
-                  retryBackoff
-                          .withMaxRetries(spec.getRetryConfiguration().getMaxAttempts() - 1)
-                          .withMaxCumulativeBackoff(spec.getRetryConfiguration().getMaxDuration());
+              retryBackoff
+                  .withMaxRetries(spec.getRetryConfiguration().getMaxAttempts() - 1)
+                  .withMaxCumulativeBackoff(spec.getRetryConfiguration().getMaxDuration());
         }
       }
 
@@ -676,18 +675,18 @@ public class SolrIO {
 
               // fail immediately if no retry configuration doesn't handle this
               if (spec.getRetryConfiguration() == null
-                      || !spec.getRetryConfiguration().getRetryPredicate().test(exception)) {
+                  || !spec.getRetryConfiguration().getRetryPredicate().test(exception)) {
                 throw new IOException(
-                        "Error writing to Solr (no attempt made to retry)", exception);
+                    "Error writing to Solr (no attempt made to retry)", exception);
               }
 
               // see if we can pause and try again
               if (!BackOffUtils.next(sleeper, backoff)) {
                 throw new IOException(
-                        String.format(
-                                "Error writing to Solr after %d attempt(s). No more attempts allowed",
-                                attempt),
-                        exception);
+                    String.format(
+                        "Error writing to Solr after %d attempt(s). No more attempts allowed",
+                        attempt),
+                    exception);
 
               } else {
                 // Note: this used in test cases to verify behavior
