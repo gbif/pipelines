@@ -102,7 +102,7 @@ import org.gbif.pipelines.io.avro.extension.ggbn.PermitTable;
 import org.gbif.pipelines.io.avro.extension.ggbn.PreparationTable;
 import org.gbif.pipelines.io.avro.extension.ggbn.PreservationTable;
 import org.gbif.pipelines.io.avro.extension.obis.ExtendedMeasurementOrFactTable;
-import org.gbif.pipelines.io.avro.extension.zooarchnet.ChronometricAgeTable;
+import org.gbif.pipelines.io.avro.extension.dwc.ChronometricAgeTable;
 import org.gbif.pipelines.io.avro.extension.zooarchnet.ChronometricDateTable;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.transforms.core.BasicTransform;
