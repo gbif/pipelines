@@ -312,6 +312,7 @@ function dwca-avro () {
     if [[ $dr != "all" ]] ; then
       logStepStart "DWCA-AVRO conversion" $dr
       $_D java $EXTRA_JVM_CLI_ARGS -Dspark.local.dir=$SPARK_TMP \
+          -Djava.io.tmpdir=$DWCA_TMP \
           -cp $LOCAL_PIPELINES_JAR $CLASS \
           --datasetId=$dr \
           --deleteLockFileOnExit=true \
@@ -328,6 +329,7 @@ function dwca-avro () {
       do
           log.info "Dataset = $dr and Input file = $inputPath"
           $_D java $EXTRA_JVM_CLI_ARGS -Dspark.local.dir=$SPARK_TMP \
+              -Djava.io.tmpdir=$DWCA_TMP \
               -cp $LOCAL_PIPELINES_JAR $CLASS \
               --datasetId=$dr \
               --inputPath=$inputPath \
