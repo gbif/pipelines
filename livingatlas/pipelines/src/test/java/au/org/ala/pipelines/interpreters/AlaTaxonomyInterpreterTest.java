@@ -221,8 +221,8 @@ public class AlaTaxonomyInterpreterTest {
         atr.getTaxonConceptID());
     assertEquals("Osphranter rufus", atr.getScientificName());
     assertEquals("(Desmarest, 1822)", atr.getScientificNameAuthorship());
-    assertEquals("SPECIES", atr.getRank());
-    assertEquals(7000, (int) atr.getRankID());
+    assertEquals("SPECIES", atr.getTaxonRank());
+    assertEquals(7000, (int) atr.getTaxonRankID());
     assertEquals("exactMatch", atr.getMatchType());
     assertEquals("SCIENTIFIC", atr.getNameType());
     assertEquals(202407, (int) atr.getLft());
@@ -406,7 +406,7 @@ public class AlaTaxonomyInterpreterTest {
             .setId("1")
             .setTaxonConceptID("https://id.biodiversity.org.au/taxon/apni/51286863")
             .setScientificName("Acacia dealbata")
-            .setRank("SPECIES")
+            .setTaxonRank("SPECIES")
             .setMatchType(ALAMatchType.higherMatch.name())
             .build();
     ALATaxonomyInterpreter.alaResultQualityChecks(this.dataResource).accept(er, atr);
@@ -425,7 +425,7 @@ public class AlaTaxonomyInterpreterTest {
             .setId("1")
             .setTaxonConceptID("https://id.biodiversity.org.au/taxon/apni/51286863")
             .setScientificName("Acacia dealbata")
-            .setRank("SPECIES")
+            .setTaxonRank("SPECIES")
             .setMatchType(ALAMatchType.fuzzyMatch.name())
             .build();
     ALATaxonomyInterpreter.alaResultQualityChecks(this.dataResource).accept(er, atr);
@@ -444,7 +444,7 @@ public class AlaTaxonomyInterpreterTest {
             .setId("1")
             .setTaxonConceptID("https://id.biodiversity.org.au/taxon/apni/51286863")
             .setScientificName("Acacia dealbata")
-            .setRank("SPECIES")
+            .setTaxonRank("SPECIES")
             .setNameType(NameType.PLACEHOLDER.name())
             .build();
     ALATaxonomyInterpreter.alaResultQualityChecks(this.dataResource).accept(er, atr);

@@ -1,10 +1,14 @@
 package au.org.ala.pipelines.beam;
 
+import static au.org.ala.pipelines.transforms.IndexFields.*;
+import static au.org.ala.pipelines.transforms.IndexValues.*;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
 import au.org.ala.pipelines.options.AllDatasetsPipelinesOptions;
 import au.org.ala.pipelines.options.SolrPipelineOptions;
+import au.org.ala.pipelines.transforms.IndexFields;
 import au.org.ala.pipelines.transforms.IndexRecordTransform;
+import au.org.ala.pipelines.transforms.IndexValues;
 import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
@@ -22,6 +26,7 @@ import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.transforms.join.CoGroupByKey;
 import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.*;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.io.avro.*;
@@ -126,8 +131,8 @@ public class IndexRecordToSolrPipeline {
                     new Partition.PartitionFn<KV<String, IndexRecord>>() {
                       @Override
                       public int partitionFor(KV<String, IndexRecord> elem, int numPartitions) {
-                        return (elem.getValue().getInts().get("month") != null
-                                ? elem.getValue().getInts().get("month")
+                        return (elem.getValue().getInts().get(DwcTerm.month.simpleName()) != null
+                                ? elem.getValue().getInts().get(DwcTerm.month.simpleName())
                                 : 0)
                             % noOfPartitions;
                       }
@@ -233,7 +238,9 @@ public class IndexRecordToSolrPipeline {
       PCollection<KV<String, IndexRecord>> kvIndexRecords,
       SolrIO.ConnectionConfiguration conn) {
     kvIndexRecords
-        .apply("SOLR_doc", ParDo.of(new IndexRecordTransform.KVIndexRecordToSolrInputDocumentFcn()))
+        .apply(
+            "IndexRecord to SOLR Document",
+            ParDo.of(new IndexRecordTransform.KVIndexRecordToSolrInputDocumentFcn()))
         .apply(
             SolrIO.write()
                 .to(options.getSolrCollection())
@@ -266,7 +273,7 @@ public class IndexRecordToSolrPipeline {
 
         if (jkor != nullJkor && !"EMPTY".equals(jkor.getId())) {
 
-          ints.put("outlierLayerCount", jkor.getItems().size());
+          ints.put(OUTLIER_LAYER_COUNT, jkor.getItems().size());
 
           Map<String, List<String>> multiValues = indexRecord.getMultiValues();
           if (multiValues == null) {
@@ -274,9 +281,9 @@ public class IndexRecordToSolrPipeline {
             indexRecord.setMultiValues(multiValues);
           }
 
-          multiValues.put("outlierLayer", jkor.getItems());
+          multiValues.put(OUTLIER_LAYER, jkor.getItems());
         } else {
-          ints.put("outlierLayerCount", 0);
+          ints.put(OUTLIER_LAYER_COUNT, 0);
         }
 
         c.output(KV.of(indexRecord.getId(), indexRecord));
@@ -327,7 +334,7 @@ public class IndexRecordToSolrPipeline {
             && !"EMPTY".equals(jkor.getId())
             && !jkor.getRelationships().isEmpty()) {
 
-          booleans.put("isInCluster", true);
+          booleans.put(IS_IN_CLUSTER, true);
 
           boolean isRepresentative = false;
 
@@ -346,55 +353,57 @@ public class IndexRecordToSolrPipeline {
             }
 
             if (relationship.getDupDataset().equals(relationship.getRepDataset())) {
-              duplicateType.add("SAME_DATASET");
+              duplicateType.add(SAME_DATASET);
             } else if (!linkingError) {
-              duplicateType.add("DIFFERENT_DATASET");
+              duplicateType.add(DIFFERENT_DATASET);
             } else {
-              duplicateType.add("LINKING_ERROR");
+              duplicateType.add(LINKING_ERROR);
             }
           }
 
-          String duplicateStatus = "ASSOCIATED";
+          String duplicateStatus = IndexValues.ASSOCIATED;
           if (isRepresentative) {
-            duplicateStatus = "REPRESENTATIVE";
+            duplicateStatus = IndexValues.REPRESENTATIVE;
           }
 
+          // a record may be representative of several records
           List<String> isRepresentativeOf =
-              jkor.getRelationships().stream()
-                  .map(Relationship::getRepId)
-                  .distinct()
-                  .filter(recordId -> !recordId.equals(id))
-                  .collect(Collectors.toList());
-
-          List<String> isDuplicateOf =
               jkor.getRelationships().stream()
                   .map(Relationship::getDupId)
                   .distinct()
                   .filter(recordId -> !recordId.equals(id))
                   .collect(Collectors.toList());
 
+          // a record is a duplicate of a single representative record
+          List<Relationship> isDuplicateOf =
+              jkor.getRelationships().stream()
+                  .distinct()
+                  .filter(relationship -> relationship.getDupId().equals(id))
+                  .collect(Collectors.toList());
+
           if (!isRepresentativeOf.isEmpty()) {
-            multiValues.put("isRepresentativeOf", isRepresentativeOf);
+            multiValues.put(IndexFields.IS_REPRESENTATIVE_OF, isRepresentativeOf);
+            strings.put(
+                DwcTerm.associatedOccurrences.simpleName(), String.join("|", isRepresentativeOf));
           }
 
           if (!isDuplicateOf.isEmpty()) {
-            multiValues.put("isDuplicateOf", isDuplicateOf);
+            strings.put(IS_DUPLICATE_OF, isDuplicateOf.get(0).getRepId());
+            String[] justification = isDuplicateOf.get(0).getJustification().split(",");
+            multiValues.put(DUPLICATE_JUSTIFICATION, Arrays.asList(justification));
           }
 
           // set the status
-          strings.put("duplicateStatus", duplicateStatus);
+          strings.put(DUPLICATE_STATUS, duplicateStatus);
 
           // add duplicate types
           List<String> duplicateTypeList = new ArrayList<>();
           duplicateTypeList.addAll(duplicateType);
-          multiValues.put("duplicateType", duplicateTypeList);
+          multiValues.put(DUPLICATE_TYPE, duplicateTypeList);
 
         } else {
-          booleans.put("isInCluster", false);
-          strings.put("duplicateStatus", "NOT_LINKED");
-          multiValues.put("duplicateType", Arrays.asList("NOT_LINKED"));
+          booleans.put(IS_IN_CLUSTER, false);
         }
-
         c.output(KV.of(indexRecord.getId(), indexRecord));
       }
     };

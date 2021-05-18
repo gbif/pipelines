@@ -2,6 +2,8 @@ package au.org.ala.kvs.client.retrofit;
 
 import au.org.ala.kvs.client.ALACollectionMatch;
 import au.org.ala.kvs.client.ALACollectoryMetadata;
+import au.org.ala.kvs.client.EntityReference;
+import java.util.List;
 import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Path;
@@ -16,4 +18,7 @@ public interface ALACollectoryRetrofitService {
   Call<ALACollectionMatch> lookupCodes(
       @Path("institutionCode") String institutionCode,
       @Path("collectionCode") String collectionCode);
+
+  @GET("dataResource")
+  Call<List<EntityReference>> lookupDataResources();
 }

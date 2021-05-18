@@ -45,7 +45,6 @@ import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.transforms.core.*;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
-import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.slf4j.MDC;
 
 /**
@@ -143,7 +142,6 @@ public class IndexRecordPipeline {
     log.info("Creating transformations");
     // Core
     BasicTransform basicTransform = BasicTransform.builder().create();
-    MetadataTransform metadataTransform = MetadataTransform.builder().create();
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.builder().create();
     TaxonomyTransform taxonomyTransform = TaxonomyTransform.builder().create();
@@ -162,17 +160,8 @@ public class IndexRecordPipeline {
     IngestMetrics metrics = IngestMetricsBuilder.createInterpretedToEsIndexMetrics();
 
     log.info("Creating pipeline");
-    // Reading all avro files in parallel
-    CompletableFuture<Map<String, MetadataRecord>> metadataMapFeature =
-        CompletableFuture.supplyAsync(
-            () ->
-                AvroReader.readRecords(
-                    hdfsSiteConfig,
-                    coreSiteConfig,
-                    MetadataRecord.class,
-                    pathFn.apply(metadataTransform.getBaseName())),
-            executor);
 
+    // Reading all avro files in parallel
     CompletableFuture<Map<String, ExtendedRecord>> verbatimMapFeature =
         CompletableFuture.supplyAsync(
             () ->
@@ -228,7 +217,6 @@ public class IndexRecordPipeline {
     }
 
     CompletableFuture.allOf(
-            metadataMapFeature,
             verbatimMapFeature,
             basicMapFeature,
             temporalMapFeature,
@@ -294,7 +282,6 @@ public class IndexRecordPipeline {
               () -> SpeciesListPipeline.generateTaxonProfileCollection(options), executor);
     }
 
-    MetadataRecord metadata = metadataMapFeature.get().values().iterator().next();
     Map<String, BasicRecord> basicMap = basicMapFeature.get();
     Map<String, ExtendedRecord> verbatimMap = verbatimMapFeature.get();
     Map<String, TemporalRecord> temporalMap = temporalMapFeature.get();
@@ -339,20 +326,7 @@ public class IndexRecordPipeline {
               taxonProfileMap.getOrDefault(k, TaxonProfile.newBuilder().setId(k).build());
 
           return IndexRecordTransform.createIndexRecord(
-              metadata,
-              br,
-              tr,
-              lr,
-              txr,
-              atxr,
-              er,
-              aar,
-              aur,
-              isr,
-              tpr,
-              sr,
-              lastLoadedDate,
-              lastProcessedDate);
+              br, tr, lr, txr, atxr, er, aar, aur, isr, tpr, sr, lastLoadedDate, lastProcessedDate);
         };
 
     List<IndexRecord> indexRecords =
