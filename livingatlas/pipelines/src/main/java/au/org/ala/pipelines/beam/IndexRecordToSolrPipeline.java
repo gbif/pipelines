@@ -392,7 +392,7 @@ public class IndexRecordToSolrPipeline {
             String[] justification = isDuplicateOf.get(0).getJustification().split(",");
             multiValues.put(DUPLICATE_JUSTIFICATION, Arrays.asList(justification));
             strings.put(
-                    DwcTerm.associatedOccurrences.simpleName(), isDuplicateOf.get(0).getRepId());
+                DwcTerm.associatedOccurrences.simpleName(), isDuplicateOf.get(0).getRepId());
           }
 
           // set the status
