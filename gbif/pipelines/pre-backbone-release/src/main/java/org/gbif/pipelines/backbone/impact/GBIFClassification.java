@@ -187,4 +187,21 @@ class GBIFClassification {
       return String.join("\t", allVals);
     }
   }
+
+  /** An equals implementation that uses all fields except the keys. */
+  public boolean classificationEquals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    GBIFClassification that = (GBIFClassification) o;
+    return Objects.equals(kingdom, that.kingdom)
+        && Objects.equals(phylum, that.phylum)
+        && Objects.equals(klass, that.klass)
+        && Objects.equals(order, that.order)
+        && Objects.equals(family, that.family)
+        && Objects.equals(genus, that.genus)
+        && Objects.equals(subGenus, that.subGenus)
+        && Objects.equals(species, that.species)
+        && Objects.equals(scientificName, that.scientificName)
+        && Objects.equals(acceptedScientificName, that.acceptedScientificName);
+  }
 }
