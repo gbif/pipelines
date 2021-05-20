@@ -21,8 +21,19 @@ public class JackKnifeTest {
 
     // too few values
     int size = 10;
-    Double[] values = new Double[size];
-    double[] result = JackKnife.jackknife(values, size + 1);
+    Double[] values =
+        new Double[] {
+          Double.NaN,
+          Double.NaN,
+          Double.NaN,
+          Double.NaN,
+          Double.NaN,
+          Double.NaN,
+          Double.NaN,
+          Double.NaN,
+          Double.NaN
+        };
+    double[] result = JackKnife.jackknife(values, values.length + 1);
     assertNull(result);
 
     // too many outliers
