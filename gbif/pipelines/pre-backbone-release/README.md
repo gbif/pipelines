@@ -89,9 +89,16 @@ spark2-submit \
   --class org.gbif.pipelines.backbone.impact.BackbonePreRelease \
   --master yarn --executor-memory 4G --executor-cores 2 --num-executors 100 \
   pre-backbone-release-2.2.4-SNAPSHOT-shaded.jar \
-  --minimumOccurrenceCount=1000
+  --datebase=tim \
+  --table=classifications \
+  --targetDir=hdfs:///tmp/backbone-pre-release-impact/report \
+  --metastoreUris=thrift://c4hivemetastore.gbif-uat.org:9083
+  --APIBaseURI=http://api.gbif-uat.org/v1/
   --scope=1
+  --minimumOccurrenceCount=1000
+  --skipKeys=false
 ```
+
 Get the result:
 ```
 hdfs dfs -getmerge /tmp/backbone-pre-release-impact /tmp/report-1000.txt
