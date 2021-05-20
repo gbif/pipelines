@@ -21,12 +21,19 @@ import org.apache.hive.hcatalog.data.HCatRecord;
 import org.apache.hive.hcatalog.data.schema.HCatSchema;
 import org.apache.hive.hcatalog.data.schema.HCatSchemaUtils;
 import org.apache.thrift.TException;
-import org.gbif.kvs.KeyValueStore;
-import org.gbif.kvs.species.NameUsageMatchKVStoreFactory;
+import org.gbif.api.vocabulary.Rank;
 import org.gbif.kvs.species.SpeciesMatchRequest;
+import org.gbif.kvs.species.TaxonParsers;
+import org.gbif.rest.client.configuration.ChecklistbankClientsConfiguration;
 import org.gbif.rest.client.configuration.ClientConfiguration;
 import org.gbif.rest.client.species.NameUsageMatch;
+import org.gbif.rest.client.species.retrofit.ChecklistbankServiceSyncClient;
 
+/**
+ * Takes the classification from verbatim data and runs it against a species lookup service
+ * bypassing the key value cache. Outputs a report capturing the verbatim, current and "new"" values
+ * for the classifications.
+ */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class BackbonePreRelease {
@@ -57,7 +64,8 @@ public class BackbonePreRelease {
                     options.getAPIBaseURI(),
                     schema,
                     options.getScope(),
-                    options.getMinimumOccurrenceCount())));
+                    options.getMinimumOccurrenceCount(),
+                    options.getSkipKeys())));
 
     matched.apply(TextIO.write().to(options.getTargetDir()));
 
@@ -80,23 +88,35 @@ public class BackbonePreRelease {
     private final HCatSchema schema;
     private final Integer scope;
     private final int minCount;
-    private KeyValueStore<SpeciesMatchRequest, NameUsageMatch> service;
+    private final boolean skipKeys;
+    private ChecklistbankServiceSyncClient service; // direct service, no cache
 
-    MatchTransform(String baseAPIUrl, HCatSchema schema, Integer scope, int minCount) {
+    MatchTransform(
+        String baseAPIUrl, HCatSchema schema, Integer scope, int minCount, boolean skipKeys) {
       this.baseAPIUrl = baseAPIUrl;
       this.schema = schema;
       this.scope = scope;
       this.minCount = minCount;
+      this.skipKeys = skipKeys;
     }
 
     @Setup
     public void setup() {
       service =
-          NameUsageMatchKVStoreFactory.nameUsageMatchKVStore(
-              ClientConfiguration.builder()
-                  .withBaseApiUrl(baseAPIUrl)
-                  .withFileCacheMaxSizeMb(1L)
-                  .withTimeOut(120L)
+          new ChecklistbankServiceSyncClient(
+              ChecklistbankClientsConfiguration.builder()
+                  .nameUSageClientConfiguration(
+                      ClientConfiguration.builder()
+                          .withBaseApiUrl(baseAPIUrl)
+                          .withFileCacheMaxSizeMb(1L)
+                          .withTimeOut(120L)
+                          .build())
+                  .checklistbankClientConfiguration( // required but not used
+                      ClientConfiguration.builder()
+                          .withBaseApiUrl(baseAPIUrl)
+                          .withFileCacheMaxSizeMb(1L)
+                          .withTimeOut(120L)
+                          .build())
                   .build());
     }
 
@@ -109,6 +129,8 @@ public class BackbonePreRelease {
       long count = source.getLong("occurrenceCount", schema);
       if (count > minCount && (scope == null || taxaKeys(source, schema).contains(scope))) {
 
+        // We use the request to ensure we apply the same "clean" operations as the production
+        // pipelines, even though we short circuit the cache and use the lookup service directly.
         SpeciesMatchRequest matchRequest =
             SpeciesMatchRequest.builder()
                 .withKingdom(source.getString("v_kingdom", schema))
@@ -126,19 +148,45 @@ public class BackbonePreRelease {
                     source.getString("v_scientificNameAuthorship", schema))
                 .build();
 
-        NameUsageMatch usageMatch = service.get(matchRequest);
+        try {
+          // short circuit the cache, but replicate same logic of the NameUsageMatchKVStoreFactory
+          NameUsageMatch usageMatch =
+              service.match(
+                  matchRequest.getKingdom(),
+                  matchRequest.getPhylum(),
+                  matchRequest.getClazz(),
+                  matchRequest.getOrder(),
+                  matchRequest.getFamily(),
+                  matchRequest.getGenus(),
+                  Optional.ofNullable(TaxonParsers.interpretRank(matchRequest))
+                      .map(Rank::name)
+                      .orElse(null),
+                  TaxonParsers.interpretScientificName(matchRequest),
+                  false,
+                  false);
 
-        GBIFClassification existing = GBIFClassification.buildFromHive(source, schema);
-        GBIFClassification proposed;
-        if (usageMatch == null || isEmpty(usageMatch)) {
-          proposed = GBIFClassification.newIncertaeSedis();
-        } else {
-          proposed = GBIFClassification.buildFromNameUsageMatch(usageMatch);
-        }
+          GBIFClassification existing = GBIFClassification.buildFromHive(source, schema);
+          GBIFClassification proposed;
+          if (usageMatch == null || isEmpty(usageMatch)) {
+            proposed = GBIFClassification.newIncertaeSedis();
+          } else {
+            proposed = GBIFClassification.buildFromNameUsageMatch(usageMatch);
+          }
 
-        // if classifications differ, then we log them in the report otherwise we skip them.
-        if (!existing.equals(proposed)) {
-          c.output(toTabDelimited(count, matchRequest, existing, proposed));
+          // emit classifications that differ, optionally considering the keys
+          if (skipKeys && !existing.classificationEquals(proposed)) {
+            c.output(toTabDelimited(count, matchRequest, existing, proposed, skipKeys));
+
+          } else if (!skipKeys && !existing.equals(proposed)) {
+            c.output(toTabDelimited(count, matchRequest, existing, proposed, skipKeys));
+          }
+
+        } catch (Exception e) {
+          // console logging to simplify spark diagnostics
+          System.err.println("Lookup failed:");
+          System.err.println(matchRequest);
+          e.printStackTrace();
+          throw e; // fail the job
         }
       }
     }
@@ -173,7 +221,8 @@ public class BackbonePreRelease {
         long count,
         SpeciesMatchRequest verbatim,
         GBIFClassification current,
-        GBIFClassification proposed) {
+        GBIFClassification proposed,
+        boolean skipKeys) {
 
       return String.join(
           "\t",
@@ -191,8 +240,8 @@ public class BackbonePreRelease {
           verbatim.getScientificName(),
           verbatim.getGenericName(),
           verbatim.getScientificNameAuthorship(),
-          current.toString(),
-          proposed.toString());
+          current.toString(skipKeys),
+          proposed.toString(skipKeys));
     }
 
     @Teardown

@@ -1,6 +1,8 @@
 package org.gbif.pipelines.backbone.impact;
 
+import java.util.Arrays;
 import java.util.Objects;
+import java.util.stream.Stream;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -142,21 +144,30 @@ class GBIFClassification {
     return c;
   }
 
-  /** @return order in tab delimited format */
+  /** @return classification in tab delimited format */
   @Override
   public String toString() {
-    return String.join(
-        "\t",
-        kingdom,
-        phylum,
-        klass,
-        order,
-        family,
-        genus,
-        subGenus,
-        species,
-        scientificName,
-        acceptedScientificName,
+    return toString(false);
+  }
+
+  /** @return classification in tab delimited format optionally skipping keys */
+  public String toString(boolean skipKeys) {
+    CharSequence[] defaultValues = {
+      kingdom,
+      phylum,
+      klass,
+      order,
+      family,
+      genus,
+      subGenus,
+      species,
+      scientificName,
+      acceptedScientificName
+    };
+
+    if (skipKeys) return String.join("\t", defaultValues);
+    else {
+      CharSequence[] keyVals = {
         String.valueOf(kingdomKey),
         String.valueOf(phylumKey),
         String.valueOf(classKey),
@@ -166,6 +177,31 @@ class GBIFClassification {
         String.valueOf(subGenusKey),
         String.valueOf(speciesKey),
         String.valueOf(taxonKey),
-        String.valueOf(acceptedTaxonKey));
+        String.valueOf(acceptedTaxonKey)
+      };
+
+      CharSequence[] allVals =
+          Stream.concat(Arrays.stream(defaultValues), Arrays.stream(keyVals))
+              .toArray(CharSequence[]::new);
+
+      return String.join("\t", allVals);
+    }
+  }
+
+  /** An equals implementation that uses all fields except the keys. */
+  public boolean classificationEquals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    GBIFClassification that = (GBIFClassification) o;
+    return Objects.equals(kingdom, that.kingdom)
+        && Objects.equals(phylum, that.phylum)
+        && Objects.equals(klass, that.klass)
+        && Objects.equals(order, that.order)
+        && Objects.equals(family, that.family)
+        && Objects.equals(genus, that.genus)
+        && Objects.equals(subGenus, that.subGenus)
+        && Objects.equals(species, that.species)
+        && Objects.equals(scientificName, that.scientificName)
+        && Objects.equals(acceptedScientificName, that.acceptedScientificName);
   }
 }
