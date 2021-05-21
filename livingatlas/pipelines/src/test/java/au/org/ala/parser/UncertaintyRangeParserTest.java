@@ -4,16 +4,13 @@ import static org.junit.Assert.assertEquals;
 
 import au.org.ala.pipelines.parser.DistanceParser;
 import java.util.UnknownFormatConversionException;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 /**
  * Tests ported from
  * https://github.com/AtlasOfLivingAustralia/biocache-store/blob/master/src/test/scala/au/org/ala/biocache/DistanceRangeParserTest.scala
  */
 public class UncertaintyRangeParserTest {
-  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void parseRange() {

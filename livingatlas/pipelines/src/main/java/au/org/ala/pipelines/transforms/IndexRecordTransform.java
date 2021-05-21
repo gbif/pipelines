@@ -1,5 +1,6 @@
 package au.org.ala.pipelines.transforms;
 
+import static au.org.ala.pipelines.beam.ALAUUIDMintingPipeline.REMOVED_PREFIX_MARKER;
 import static au.org.ala.pipelines.transforms.IndexValues.*;
 import static org.apache.avro.Schema.Type.UNION;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
@@ -24,7 +25,6 @@ import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.values.KV;
-import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.util.Strings;
@@ -49,6 +49,8 @@ public class IndexRecordTransform implements Serializable, IndexFields {
   private static final TermFactory TERM_FACTORY = TermFactory.instance();
   public static final String ISSUES = "issues";
   public static final String CLASSS = "classs";
+  public static final int YYYY_DD_MM_FORMAT_LENGTH = 10;
+  public static final int YYYY_MM_DDTHH_mm_ss_Z_LENGTH = 22;
 
   // Core
   @NonNull private TupleTag<ExtendedRecord> erTag;
@@ -60,6 +62,9 @@ public class IndexRecordTransform implements Serializable, IndexFields {
   @NonNull private TupleTag<ALATaxonRecord> atxrTag;
 
   private TupleTag<ALAAttributionRecord> aarTag;
+
+  private TupleTag<MultimediaRecord> mrTag;
+
   @NonNull private TupleTag<ALAUUIDRecord> urTag;
 
   @NonNull private TupleTag<ImageRecord> isTag;
@@ -67,8 +72,6 @@ public class IndexRecordTransform implements Serializable, IndexFields {
   @NonNull private TupleTag<TaxonProfile> tpTag;
 
   @NonNull private TupleTag<ALASensitivityRecord> srTag;
-
-  @NonNull private PCollectionView<MetadataRecord> metadataView;
 
   String datasetID;
 
@@ -105,6 +108,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     t.lrTag = lrTag;
     t.txrTag = txrTag;
     t.atxrTag = atxrTag;
+    t.mrTag = mrTag;
     t.aarTag = aarTag;
     t.urTag = urTag;
     t.isTag = isTag;
@@ -134,6 +138,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
       ImageRecord isr,
       TaxonProfile tpr,
       ALASensitivityRecord sr,
+      MultimediaRecord mr,
       Long lastLoadDate,
       Long lastProcessedDate) {
 
@@ -233,13 +238,21 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     try {
       if (tr.getEventDate() != null
           && tr.getEventDate().getGte() != null
-          && tr.getEventDate().getGte().length() == 10) {
+          && (tr.getEventDate().getGte().length() == YYYY_DD_MM_FORMAT_LENGTH
+              || tr.getEventDate().getGte().length() == YYYY_MM_DDTHH_mm_ss_Z_LENGTH)) {
+        // Event dates come through interpretation 2 format
+        // 1) yyyy-MM-dd
+        // 2) yyyy-MM-ddTHH:mm:ssXXX e.g. 2019-09-13T13:35+10:00
+        Date date = null;
+        if (tr.getEventDate().getGte().length() == YYYY_MM_DDTHH_mm_ss_Z_LENGTH) {
+          SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mmXXX");
+          date = sdf.parse(tr.getEventDate().getGte());
+        } else {
+          SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+          date = sdf.parse(tr.getEventDate().getGte());
+        }
 
-        indexRecord
-            .getDates()
-            .put(
-                DwcTerm.eventDate.simpleName(),
-                new SimpleDateFormat("yyyy-MM-dd").parse(tr.getEventDate().getGte()).getTime());
+        indexRecord.getDates().put(DwcTerm.eventDate.simpleName(), date.getTime());
 
         // eventDateEnd
         if (tr.getEventDate().getLte() != null) {
@@ -521,6 +534,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     List<String> temporalIssues = tr.getIssues().getIssueList();
     List<String> taxonomicIssues = atxr.getIssues().getIssueList();
     List<String> geospatialIssues = lr.getIssues().getIssueList();
+
     if (taxonomicIssues != null && !taxonomicIssues.isEmpty()) {
       indexRecord.getMultiValues().put(TAXONOMIC_ISSUES, temporalIssues);
     }
@@ -533,6 +547,11 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     assertions.addAll(temporalIssues);
     assertions.addAll(taxonomicIssues);
     assertions.addAll(geospatialIssues);
+
+    if (mr != null) {
+      assertions.addAll(mr.getIssues().getIssueList());
+    }
+
     assertions.addAll(br.getIssues().getIssueList());
 
     if (sr != null) {
@@ -640,8 +659,13 @@ public class IndexRecordTransform implements Serializable, IndexFields {
             TemporalRecord.getClassSchema().getFields().stream()
                 .map(Field::name)
                 .collect(Collectors.toList()))
+        .addAll(
+            ALASensitivityRecord.getClassSchema().getFields().stream()
+                .map(Field::name)
+                .collect(Collectors.toList()))
         .add(DwcTerm.class_.simpleName())
         .add(DwcTerm.geodeticDatum.simpleName())
+        .add(DwcTerm.associatedOccurrences.simpleName())
         .build();
   }
 
@@ -723,22 +747,25 @@ public class IndexRecordTransform implements Serializable, IndexFields {
             CoGbkResult v = c.element().getValue();
             String k = c.element().getKey();
 
-            // Core
-            ExtendedRecord er = v.getOnly(erTag, ExtendedRecord.newBuilder().setId(k).build());
-            BasicRecord br = v.getOnly(brTag, BasicRecord.newBuilder().setId(k).build());
-            TemporalRecord tr = v.getOnly(trTag, TemporalRecord.newBuilder().setId(k).build());
-            LocationRecord lr = v.getOnly(lrTag, LocationRecord.newBuilder().setId(k).build());
-            TaxonRecord txr = null;
-            if (txrTag != null) {
-              txr = v.getOnly(txrTag, TaxonRecord.newBuilder().setId(k).build());
-            }
-
             // ALA specific
             ALAUUIDRecord ur = v.getOnly(urTag, null);
-            if (ur != null) {
+
+            if (ur != null && !ur.getId().startsWith(REMOVED_PREFIX_MARKER)) {
+
+              // Core
+              ExtendedRecord er = v.getOnly(erTag, ExtendedRecord.newBuilder().setId(k).build());
+              BasicRecord br = v.getOnly(brTag, BasicRecord.newBuilder().setId(k).build());
+              TemporalRecord tr = v.getOnly(trTag, TemporalRecord.newBuilder().setId(k).build());
+              LocationRecord lr = v.getOnly(lrTag, LocationRecord.newBuilder().setId(k).build());
+              TaxonRecord txr = null;
+
+              if (txrTag != null) {
+                txr = v.getOnly(txrTag, TaxonRecord.newBuilder().setId(k).build());
+              }
 
               ALATaxonRecord atxr =
                   v.getOnly(atxrTag, ALATaxonRecord.newBuilder().setId(k).build());
+
               ALAAttributionRecord aar =
                   v.getOnly(aarTag, ALAAttributionRecord.newBuilder().setId(k).build());
 
@@ -757,6 +784,11 @@ public class IndexRecordTransform implements Serializable, IndexFields {
                 sr = v.getOnly(srTag, null);
               }
 
+              MultimediaRecord mr = null;
+              if (srTag != null) {
+                mr = v.getOnly(mrTag, null);
+              }
+
               if (aar != null && aar.getDataResourceUid() != null) {
                 IndexRecord doc =
                     createIndexRecord(
@@ -771,17 +803,35 @@ public class IndexRecordTransform implements Serializable, IndexFields {
                         isr,
                         tpr,
                         sr,
+                        mr,
                         lastLoadDate,
                         lastLoadProcessed);
 
                 c.output(doc);
                 counter.inc();
+              } else {
+                if (aar == null) {
+                  throw new RuntimeException("AAR missing for record ID " + ur.getId());
+                } else {
+                  throw new RuntimeException(
+                      "AAR is present, but data resource UID is null for"
+                          + " ur.getId():"
+                          + ur.getId()
+                          + " ur.getUuid():"
+                          + ur.getUuid()
+                          + " aar.getId(): "
+                          + aar.getId());
+                }
               }
             } else {
-              if (er != null) {
-                log.error("UUID missing for record ID " + er.getId());
-              } else {
-                log.error("UUID missing and ER empty");
+              if (!ur.getId().startsWith(REMOVED_PREFIX_MARKER)) {
+                if (ur != null) {
+                  log.error("UUID missing for record ID " + ur.getId());
+                  throw new RuntimeException("UUID missing for record ID " + ur.getId());
+                } else {
+                  log.error("UUID missing and ER empty");
+                  throw new RuntimeException("UUID missing and ER empty");
+                }
               }
             }
           }

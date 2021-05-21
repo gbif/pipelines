@@ -299,6 +299,13 @@ function dataset-list() {
          --config=$config $ARGS
 }
 
+function validation-report() {
+    # dump out archive list
+    log.info "Creating validation report"
+    java $EXTRA_JVM_CLI_ARGS -cp $LOCAL_PIPELINES_JAR au.org.ala.utils.ValidationReportWriter \
+       --config=$config $ARGS
+}
+
 function dwca-avro () {
     dr=$1
     CLASS=au.org.ala.pipelines.beam.ALADwcaToVerbatimPipeline

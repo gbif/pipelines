@@ -19,14 +19,22 @@ geocodeConfig:
     path: "/tmp/pipelines-shp/political"
     field: ISO_A2
     source: "http://www.naturalearthdata.com"
+    intersectBuffer:  0.135
+    intersectMapping:
+      CX: AU
+      CC: AU
+      HM: AU
+      NF: AU
   eez:
     path: "/tmp/pipelines-shp/eez"
     field: ISO2
     source: "http://www.naturalearthdata.com"
+    intersectBuffer: 0.135
   stateProvince:
     path: "/tmp/pipelines-shp/cw_state_poly"
     field: FEATURE
     source: "http://vliz.be/vmdcdata/marbound/"
+    intersectBuffer: 0.135
   biome:
     path: "/tmp/pipelines-shp/gadm0"
     field: FEATURE

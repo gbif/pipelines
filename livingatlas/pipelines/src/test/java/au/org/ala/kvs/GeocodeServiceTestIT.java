@@ -26,6 +26,130 @@ public class GeocodeServiceTestIT {
    * HashMap.
    */
   @Test
+  public void testCountryCoastalPoint() {
+
+    KeyValueStore<LatLng, GeocodeResponse> geoService =
+        GeocodeKvStoreFactory.createCountrySupplier(TestUtils.getConfig()).get();
+
+    GeocodeResponse resp =
+        geoService.get(LatLng.builder().withLongitude(119.7).withLatitude(-20.0).build());
+    assertTrue(!resp.getLocations().isEmpty());
+    assertEquals("AU", resp.getLocations().get(0).getName());
+
+    GeocodeResponse resp2 =
+        geoService.get(
+            LatLng.builder().withLongitude(124.9500000000).withLatitude(-15.0667000000).build());
+    assertTrue(!resp2.getLocations().isEmpty());
+    assertEquals("AU", resp2.getLocations().get(0).getName());
+
+    GeocodeResponse resp3 =
+        geoService.get(LatLng.builder().withLongitude(115.445278).withLatitude(-20.827222).build());
+    assertTrue(!resp3.getLocations().isEmpty());
+    assertEquals("AU", resp3.getLocations().get(0).getName());
+  }
+
+  @Test
+  public void testExternalTerritories() {
+
+    KeyValueStore<LatLng, GeocodeResponse> geoService =
+        GeocodeKvStoreFactory.createCountrySupplier(TestUtils.getConfig()).get();
+
+    // Christmas Island
+    GeocodeResponse resp =
+        geoService.get(
+            LatLng.builder()
+                .withLongitude(105.65916507921472)
+                .withLatitude(-10.47444666578651)
+                .build());
+    assertTrue(!resp.getLocations().isEmpty());
+    assertEquals("AU", resp.getLocations().get(0).getName());
+
+    // Cocos Island
+    GeocodeResponse resp2 =
+        geoService.get(
+            LatLng.builder()
+                .withLongitude(96.82189811041627)
+                .withLatitude(-12.149492596153177)
+                .build());
+    assertTrue(!resp2.getLocations().isEmpty());
+    assertEquals("AU", resp2.getLocations().get(0).getName());
+
+    // HM Heard Island and McDonald Islands
+    GeocodeResponse resp3 =
+        geoService.get(
+            LatLng.builder()
+                .withLongitude(73.50048378875914)
+                .withLatitude(-53.05122953207953)
+                .build());
+    assertTrue(!resp3.getLocations().isEmpty());
+    assertEquals("AU", resp2.getLocations().get(0).getName());
+
+    // Norfolk Island
+    GeocodeResponse resp4 =
+        geoService.get(
+            LatLng.builder()
+                .withLongitude(167.96164271317312)
+                .withLatitude(-29.030669709715056)
+                .build());
+    assertTrue(!resp4.getLocations().isEmpty());
+    assertEquals("AU", resp4.getLocations().get(0).getName());
+
+    // Lord Howe
+    GeocodeResponse resp5 =
+        geoService.get(
+            LatLng.builder()
+                .withLongitude(159.0851385821144)
+                .withLatitude(-31.560315624981254)
+                .build());
+    assertTrue(!resp5.getLocations().isEmpty());
+    assertEquals("AU", resp5.getLocations().get(0).getName());
+  }
+
+  /**
+   * Tests the Get operation on {@link KeyValueStore} that wraps a simple KV store backed by a
+   * HashMap.
+   */
+  @Test
+  public void testCountryDatelineTests() {
+
+    KeyValueStore<LatLng, GeocodeResponse> geoService =
+        GeocodeKvStoreFactory.createCountrySupplier(TestUtils.getConfig()).get();
+
+    // FJ
+    GeocodeResponse resp =
+        geoService.get(LatLng.builder().withLongitude(179.9).withLatitude(-17.99).build());
+    assertFalse(resp.getLocations().isEmpty());
+    assertEquals("FJ", resp.getLocations().get(0).getName());
+
+    // NZ
+    GeocodeResponse resp2 =
+        geoService.get(LatLng.builder().withLongitude(179.9).withLatitude(-40.0).build());
+    assertFalse(resp2.getLocations().isEmpty());
+    assertEquals("NZ", resp2.getLocations().get(0).getName());
+
+    // NZ - other side of dateline
+    GeocodeResponse resp3 =
+        geoService.get(LatLng.builder().withLongitude(-179.9).withLatitude(-40.0).build());
+    assertFalse(resp3.getLocations().isEmpty());
+    assertEquals("NZ", resp3.getLocations().get(0).getName());
+
+    // south pole
+    GeocodeResponse resp4 =
+        geoService.get(LatLng.builder().withLongitude(179.9).withLatitude(-90.0).build());
+    assertFalse(resp4.getLocations().isEmpty());
+    assertEquals("AQ", resp4.getLocations().get(0).getName());
+
+    // north pole
+    GeocodeResponse resp5 =
+        geoService.get(LatLng.builder().withLongitude(179.9).withLatitude(90.0).build());
+    assertTrue(resp5.getLocations().isEmpty());
+  }
+
+  /**
+   * Tests the Get operation on {@link KeyValueStore} that wraps a simple KV store backed by a
+   * HashMap.
+   */
+  @Test
   public void testBiomeTerrestrial() {
 
     KeyValueStore<LatLng, GeocodeResponse> geoService =

@@ -3,6 +3,7 @@ package au.org.ala.kvs.cache;
 import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.kvs.client.*;
 import au.org.ala.kvs.client.retrofit.ALACollectoryServiceClient;
+import java.util.concurrent.TimeUnit;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.kvs.KeyValueStore;
@@ -58,14 +59,23 @@ public class ALAAttributionKVStoreFactory {
         new KeyValueStore<String, ALACollectoryMetadata>() {
           @Override
           public ALACollectoryMetadata get(String key) {
-            try {
-              return service.lookupDataResource(key);
-            } catch (retrofit2.HttpException ex) {
-              log.error("HttpException looking up metadata for " + key, ex);
-            } catch (Exception ex) {
-              log.error("Exception looking up metadata for " + key, ex);
+
+            for (int i = 0; i < config.getCollectory().getRetryConfig().getMaxAttempts(); i++) {
+              try {
+                return service.lookupDataResource(key);
+              } catch (retrofit2.HttpException ex) {
+                log.error("HttpException looking up metadata for " + key, ex);
+              } catch (Exception ex) {
+                log.error("Exception looking up metadata for " + key, ex);
+              }
+              try {
+                TimeUnit.MILLISECONDS.sleep(
+                    config.getCollectory().getRetryConfig().getInitialIntervalMillis());
+              } catch (Exception e) {
+                //
+              }
             }
-            return ALACollectoryMetadata.EMPTY;
+            throw new RuntimeException("Unable to retrieve metadata for " + key);
           }
 
           @Override

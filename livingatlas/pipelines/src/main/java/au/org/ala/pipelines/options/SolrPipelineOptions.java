@@ -70,4 +70,9 @@ public interface SolrPipelineOptions extends IndexingPipelineOptions {
   Integer getNumOfPartitions();
 
   void setNumOfPartitions(Integer numOfPartitions);
+
+  @Description("Output AVRO to file path")
+  String getOutputAvroToFilePath();
+
+  void setOutputAvroToFilePath(String outputAvroToFilePath);
 }

@@ -12,12 +12,12 @@ import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.WsUtils;
 import com.google.common.base.Objects;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.UnaryOperator;
+import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import lombok.extern.slf4j.Slf4j;
@@ -34,10 +34,8 @@ import org.apache.beam.sdk.transforms.*;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.fs.FSDataInputStream;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.LocatedFileStatus;
-import org.apache.hadoop.fs.RemoteIterator;
+import org.apache.hadoop.fs.*;
+import org.gbif.dwc.terms.DcTerm;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
@@ -67,11 +65,29 @@ import retrofit2.Call;
 @Slf4j
 public class ImageServiceDiffLoadPipeline {
 
-  public static final int NO_OF_CSV_FIELDS = 16;
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
 
   public static final Multimedia EMPTY_MULTIMEDIA = Multimedia.newBuilder().build();
   public static final String METADATA_UPDATES_PATH = "/metadata-updates/metadata";
+  public static final String IMAGEID = "imageid";
+  public static final String[] REQUIRED_HEADERS =
+      new String[] {
+        IMAGEID,
+        DcTerm.identifier.simpleName(),
+        DcTerm.audience.simpleName(),
+        DcTerm.contributor.simpleName(),
+        DcTerm.created.simpleName(),
+        DcTerm.creator.simpleName(),
+        DcTerm.description.simpleName(),
+        DcTerm.format.simpleName(),
+        DcTerm.license.simpleName(),
+        DcTerm.publisher.simpleName(),
+        DcTerm.references.simpleName(),
+        DcTerm.rightsHolder.simpleName(),
+        DcTerm.source.simpleName(),
+        DcTerm.title.simpleName(),
+        DcTerm.type.simpleName()
+      };
 
   public static void main(String[] args) throws Exception {
     String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "images");
@@ -104,6 +120,36 @@ public class ImageServiceDiffLoadPipeline {
 
     Pipeline p = Pipeline.create(options);
 
+    List<String> headers = readHeaders(fs, imageServiceExportPath);
+    if (headers.size() < REQUIRED_HEADERS.length) {
+      throw new RuntimeException(
+          "Invalid number of fields in CSV less than required. "
+              + "Expected: "
+              + REQUIRED_HEADERS.length
+              + ",actual: "
+              + headers.size());
+    }
+
+    // validate that all required headers are present
+    validateHeaders(headers);
+
+    // find indexes for DC terms
+    final int imageidIdx = headers.indexOf(IMAGEID);
+    final int identifierIdx = headers.indexOf(DcTerm.identifier.simpleName());
+    final int audienceIdx = headers.indexOf(DcTerm.audience.simpleName());
+    final int contributorIdx = headers.indexOf(DcTerm.contributor.simpleName());
+    final int createdIdx = headers.indexOf(DcTerm.created.simpleName());
+    final int creatorIdx = headers.indexOf(DcTerm.creator.simpleName());
+    final int descriptionIdx = headers.indexOf(DcTerm.description.simpleName());
+    final int formatIdx = headers.indexOf(DcTerm.format.simpleName());
+    final int licenseIdx = headers.indexOf(DcTerm.license.simpleName());
+    final int publisherIdx = headers.indexOf(DcTerm.publisher.simpleName());
+    final int referencesIdx = headers.indexOf(DcTerm.references.simpleName());
+    final int rightsHolderIdx = headers.indexOf(DcTerm.rightsHolder.simpleName());
+    final int sourceIdx = headers.indexOf(DcTerm.source.simpleName());
+    final int titleIdx = headers.indexOf(DcTerm.title.simpleName());
+    final int typeIdx = headers.indexOf(DcTerm.type.simpleName());
+
     // load the CSV - Create images Key-ed on URL
     PCollection<KV<String, Multimedia>> imageServiceExportMapping =
         p.apply(TextIO.read().from(imageServiceExportPath).withCompression(Compression.GZIP))
@@ -119,35 +165,52 @@ public class ImageServiceDiffLoadPipeline {
                           final CSVParser parser = new CSVParser();
                           String[] parts = parser.parseLine(imageMapping);
 
-                          if (parts.length == NO_OF_CSV_FIELDS) {
+                          // ignore header line
+                          if (!IMAGEID.equals(parts[imageidIdx])) {
 
-                            // CSV is imageID
-                            // Swap so we key on URL for later grouping
-                            Multimedia multimedia =
-                                Multimedia.newBuilder()
-                                    .setIdentifier(parts[0]) // image service ID
-                                    .setAudience(parts[2])
-                                    .setContributor(parts[3])
-                                    .setCreated(parts[4])
-                                    .setCreator(parts[5])
-                                    .setDescription(parts[6])
-                                    .setFormat(parts[7])
-                                    .setLicense(parts[8])
-                                    .setPublisher(parts[9])
-                                    .setReferences(parts[10])
-                                    .setRightsHolder(parts[11])
-                                    .setSource(parts[12])
-                                    .setTitle(parts[13])
-                                    .setType(parts[14])
-                                    .build();
+                            // check for the required number of fields
+                            if (parts.length >= REQUIRED_HEADERS.length) {
 
-                            // output imageURL (from source) -> multimedia
-                            out.output(KV.of(StringUtils.trim(parts[1]).toLowerCase(), multimedia));
-                          } else {
-                            log.error("Problem line length: " + imageMapping);
+                              String imageUrl = parts[identifierIdx];
+
+                              // CSV is imageID
+                              // Swap so we key on URL for later grouping
+                              Multimedia multimedia =
+                                  Multimedia.newBuilder()
+                                      .setIdentifier(parts[imageidIdx]) // image service ID
+                                      .setAudience(parts[audienceIdx])
+                                      .setContributor(parts[contributorIdx])
+                                      .setCreated(parts[createdIdx])
+                                      .setCreator(parts[creatorIdx])
+                                      .setDescription(parts[descriptionIdx])
+                                      .setFormat(parts[formatIdx])
+                                      .setLicense(parts[licenseIdx])
+                                      .setPublisher(parts[publisherIdx])
+                                      .setReferences(parts[referencesIdx])
+                                      .setRightsHolder(parts[rightsHolderIdx])
+                                      .setSource(parts[sourceIdx])
+                                      .setTitle(parts[titleIdx])
+                                      .setType(parts[typeIdx])
+                                      .build();
+
+                              // output imageURL (from source) -> multimedia
+                              out.output(
+                                  KV.of(StringUtils.trim(imageUrl).toLowerCase(), multimedia));
+                            } else {
+                              log.error(
+                                  "Problem no of fields - expected:"
+                                      + REQUIRED_HEADERS.length
+                                      + ", actual:"
+                                      + parts.length);
+                            }
                           }
                         } catch (Exception e) {
-                          log.error("Problem parsing line: " + imageMapping);
+                          log.error(
+                              "Problem parsing line: "
+                                  + imageMapping
+                                  + "Error message: "
+                                  + e.getMessage(),
+                              e);
                         }
                       }
                     }));
@@ -372,7 +435,7 @@ public class ImageServiceDiffLoadPipeline {
           .forEach(
               multimedia -> {
                 if (multimedia.getIdentifier() != null) {
-                  out.output(KV.of(multimedia.getIdentifier().toLowerCase(), multimedia));
+                  out.output(KV.of(multimedia.getIdentifier().toLowerCase().trim(), multimedia));
                 }
               });
     }
@@ -406,5 +469,26 @@ public class ImageServiceDiffLoadPipeline {
     }
 
     return newArchive;
+  }
+
+  public static List<String> readHeaders(FileSystem fs, String imageServiceExportPath)
+      throws IOException {
+
+    InputStream input = ALAFsUtils.openInputStream(fs, imageServiceExportPath);
+    GZIPInputStream inputStream = new GZIPInputStream(input);
+    BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+    String headerLine = reader.readLine();
+    final CSVParser parser = new CSVParser();
+    List<String> headers = Arrays.asList(parser.parseLine(headerLine));
+    reader.close();
+    return headers;
+  }
+
+  public static void validateHeaders(List<String> headers) {
+    for (String hdr : REQUIRED_HEADERS) {
+      if (headers.indexOf(hdr) < 0) {
+        throw new RuntimeException("Missing header: " + hdr);
+      }
+    }
   }
 }

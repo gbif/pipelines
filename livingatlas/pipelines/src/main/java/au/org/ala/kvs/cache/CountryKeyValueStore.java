@@ -2,16 +2,20 @@ package au.org.ala.kvs.cache;
 
 import au.org.ala.kvs.GeocodeShpConfig;
 import au.org.ala.kvs.client.GeocodeShpIntersectService;
+import java.util.List;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.rest.client.geocode.GeocodeResponse;
+import org.gbif.rest.client.geocode.Location;
 
 public class CountryKeyValueStore implements KeyValueStore<LatLng, GeocodeResponse> {
 
   private final GeocodeShpIntersectService service;
+  private GeocodeShpConfig config;
 
   private CountryKeyValueStore(GeocodeShpConfig config) {
     this.service = GeocodeShpIntersectService.getInstance(config);
+    this.config = config;
   }
 
   public static CountryKeyValueStore create(GeocodeShpConfig config) {
@@ -25,6 +29,20 @@ public class CountryKeyValueStore implements KeyValueStore<LatLng, GeocodeRespon
 
   @Override
   public GeocodeResponse get(LatLng latLng) {
-    return new GeocodeResponse(service.lookupCountry(latLng.getLatitude(), latLng.getLongitude()));
+    List<Location> locations = service.lookupCountry(latLng.getLatitude(), latLng.getLongitude());
+    if (locations != null && !locations.isEmpty()) {
+      for (Location location : locations) {
+        if (location.getName() != null
+            && config.getCountry().getIntersectMapping() != null
+            && config.getCountry().getIntersectMapping().containsKey(location.getName())) {
+          String mappedCode = config.getCountry().getIntersectMapping().get(location.getName());
+          // remap
+          location.setName(mappedCode);
+          location.setId(mappedCode);
+          location.setIsoCountryCode2Digit(mappedCode);
+        }
+      }
+    }
+    return new GeocodeResponse(locations);
   }
 }

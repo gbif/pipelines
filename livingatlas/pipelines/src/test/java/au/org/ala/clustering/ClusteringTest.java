@@ -1,18 +1,14 @@
-package au.org.ala;
+package au.org.ala.clustering;
 
-import static org.junit.Assert.*;
-import static org.junit.Assert.assertNotNull;
-
-import au.org.ala.clustering.ClusteringCandidates;
-import au.org.ala.clustering.HashKeyOccurrence;
-import au.org.ala.clustering.HashKeyOccurrenceBuilder;
 import au.org.ala.pipelines.beam.ClusteringPipeline;
+import com.google.common.base.Splitter;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.beam.sdk.values.KV;
 import org.gbif.pipelines.core.parsers.clustering.OccurrenceRelationships;
 import org.gbif.pipelines.core.parsers.clustering.RelationshipAssertion;
 import org.gbif.pipelines.io.avro.Relationship;
+import org.junit.Assert;
 import org.junit.Test;
 
 public class ClusteringTest {
@@ -40,22 +36,22 @@ public class ClusteringTest {
             "urn:lsid:biodiversity.org.au:afd.taxon:9b8ca2d0-3524-4e12-a328-9a426b31cd12|-12381|130859|1994|9|26,6ca4917e-36e9-4067-bd29-4de87f1e303c,dr340,urn:lsid:biodiversity.org.au:afd.taxon:9b8ca2d0-3524-4e12-a328-9a426b31cd12,Pteropus alecto,AU,urn:lsid:biodiversity.org.au:afd.taxon:9b8ca2d0-3524-4e12-a328-9a426b31cd12,PRESERVED_SPECIMEN,-12.38091,130.85902,1994,9,26,,null,null,null,null,M.41902.001,urn:lsid:ozcam.taxonomy.org.au:AM:Mammalogy:M.41902.001,ecatalogue.irn:2217345; urn:catalog:AM:Mammalogy:M.41902.001");
 
     RelationshipAssertion<HashKeyOccurrence> assertion = OccurrenceRelationships.generate(h1, h2);
-    assertNotNull(assertion);
-    assertNotNull(
+    Assert.assertNotNull(assertion);
+    Assert.assertNotNull(
         assertion.justificationContains(
             RelationshipAssertion.FeatureAssertion.SAME_ACCEPTED_SPECIES));
-    assertNotNull(
+    Assert.assertNotNull(
         assertion.justificationContains(RelationshipAssertion.FeatureAssertion.SAME_COORDINATES));
-    assertNotNull(
+    Assert.assertNotNull(
         assertion.justificationContains(RelationshipAssertion.FeatureAssertion.SAME_COUNTRY));
 
     // assertion related
-    assertNotNull(OccurrenceRelationships.generate(h1, h2));
-    assertNotNull(OccurrenceRelationships.generate(h2, h3));
-    assertNotNull(OccurrenceRelationships.generate(h3, h4));
-    assertNotNull(OccurrenceRelationships.generate(h1, h3));
-    assertNotNull(OccurrenceRelationships.generate(h1, h4));
-    assertNotNull(OccurrenceRelationships.generate(h2, h4));
+    Assert.assertNotNull(OccurrenceRelationships.generate(h1, h2));
+    Assert.assertNotNull(OccurrenceRelationships.generate(h2, h3));
+    Assert.assertNotNull(OccurrenceRelationships.generate(h3, h4));
+    Assert.assertNotNull(OccurrenceRelationships.generate(h1, h3));
+    Assert.assertNotNull(OccurrenceRelationships.generate(h1, h4));
+    Assert.assertNotNull(OccurrenceRelationships.generate(h2, h4));
 
     List<HashKeyOccurrence> candidates = new ArrayList<>();
     candidates.add(h1);
@@ -71,11 +67,11 @@ public class ClusteringTest {
             .build();
 
     List<KV<String, Relationship>> kvs2 = ClusteringPipeline.createRelationships(cc, 50);
-    assertNotEquals(kvs2.size(), 0);
+    Assert.assertNotEquals(kvs2.size(), 0);
   }
 
   public HashKeyOccurrence createFromString(String str) {
-    String[] parts = str.split(",");
+    String[] parts = Splitter.on(',').splitToList(str).toArray(new String[0]);
     return HashKeyOccurrenceBuilder.aHashKeyOccurrence()
         .withHashKey(parts[0])
         .withId(parts[1])
