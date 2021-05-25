@@ -137,6 +137,9 @@
 
   <field name="id" type="string" docValues="true" multiValued="false" indexed="true"/>
 
+  <!-- version field required for updating user assertions -->
+  <field name="_version_" type="long" indexed="true" stored="true" multiValued="false"/>
+
   <!-- required for WMS -->
   <field name="point-0.0001"  type="string" docValues="true" indexed="true" />
   <field name="point-0.001"   type="string" docValues="true" indexed="true" />

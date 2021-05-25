@@ -10,7 +10,7 @@ public class JackKnife {
   /**
    * Takes a list of sampled values and returns the statistics for these results
    *
-   * @param values array of values used for jackknife. Nulls permitted.
+   * @param values array of values used for jackknife. Double.NaN indicates absence.
    * @param minSampleThreshold minimum number of values
    * @return null or JackKnifeStats
    */
@@ -18,32 +18,32 @@ public class JackKnife {
     // inclusive outlier range
     double maxValue, minValue;
 
-    int nulls = 0;
+    int missingValues = 0;
     for (Double value : values) {
-      if (value == null) {
-        nulls++;
+      if (Double.isNaN(value)) {
+        missingValues++;
       }
     }
 
-    double[] valuesWithoutNulls = new double[values.length - nulls];
+    double[] valuesNotMissing = new double[values.length - missingValues];
     int pos = 0;
     for (Double value : values) {
-      if (value != null) {
-        valuesWithoutNulls[pos++] = value;
+      if (!Double.isNaN(value)) {
+        valuesNotMissing[pos++] = value;
       }
     }
 
-    // number of non-null values
-    int n = valuesWithoutNulls.length;
+    // number of actual values
+    int n = valuesNotMissing.length;
 
-    if (valuesWithoutNulls.length < minSampleThreshold) {
+    if (valuesNotMissing.length < minSampleThreshold) {
       return null;
     }
 
-    Arrays.sort(valuesWithoutNulls);
+    Arrays.sort(valuesNotMissing);
 
-    double min = valuesWithoutNulls[0];
-    double max = valuesWithoutNulls[n - 1];
+    double min = valuesNotMissing[0];
+    double max = valuesNotMissing[n - 1];
 
     double smean = 0;
     double sstd = 0;
@@ -54,12 +54,12 @@ public class JackKnife {
       return null;
     }
 
-    for (double v : valuesWithoutNulls) {
+    for (double v : valuesNotMissing) {
       smean += v;
     }
     smean = smean / n;
 
-    for (double v : valuesWithoutNulls) {
+    for (double v : valuesNotMissing) {
       sstd += Math.pow(v - smean, 2);
     }
     sstd = Math.sqrt(sstd / n);
@@ -68,19 +68,19 @@ public class JackKnife {
     int maxIdx = -1;
 
     for (int i = 0; i < n; i++) {
-      double v = valuesWithoutNulls[i];
+      double v = valuesNotMissing[i];
       double y;
 
       // values are sorted so a range check is not required for values[i+1] and values[i-1]
       if (v < smean) {
-        y = (valuesWithoutNulls[i + 1] - v) * (smean - v);
+        y = (valuesNotMissing[i + 1] - v) * (smean - v);
         double c = y / sstd;
 
         if (c > threshold) {
           minIdx = i; // continue searching for a larger minIdx
         }
       } else if (v > smean) {
-        y = (v - valuesWithoutNulls[i - 1]) * (v - smean);
+        y = (v - valuesNotMissing[i - 1]) * (v - smean);
         double c = y / sstd;
 
         if (c > threshold) {
@@ -94,13 +94,13 @@ public class JackKnife {
     int outlierCount = 0;
 
     // set minimum outlier value
-    minValue = valuesWithoutNulls[minIdx + 1];
+    minValue = valuesNotMissing[minIdx + 1];
     outlierCount += minIdx + 1;
 
     // set maximum outlier value
-    if (maxIdx < 0) maxValue = valuesWithoutNulls[n - 1]; // larger than largest value
+    if (maxIdx < 0) maxValue = valuesNotMissing[n - 1]; // larger than largest value
     else {
-      maxValue = valuesWithoutNulls[maxIdx - 1];
+      maxValue = valuesNotMissing[maxIdx - 1];
       outlierCount += n - maxIdx;
     }
 
