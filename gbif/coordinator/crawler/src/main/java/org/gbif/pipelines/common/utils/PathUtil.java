@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Stream;
 import lombok.AccessLevel;
@@ -33,21 +32,16 @@ public class PathUtil {
    * check a tar archive - /mnt/auto/crawler/xml/9bed66b3-4caa-42bb-9c93-71d7ba109dad/2.tar.xz
    */
   public static Path buildXmlInputPath(
-      String archiveRepository,
-      Set<String> archiveRepositorySubdir,
-      UUID dataSetUuid,
-      String attempt) {
+      String archiveRepository, String archiveRepositorySubdir, UUID dataSetUuid, String attempt) {
 
-    Path directoryPath =
-        archiveRepositorySubdir.stream()
-            .map(subdir -> Paths.get(archiveRepository, subdir, dataSetUuid.toString()).toFile())
-            .filter(File::exists)
-            .findFirst()
-            .orElseThrow(
-                () ->
-                    new IllegalArgumentException(
-                        "Can't find directory for dataset - " + dataSetUuid))
-            .toPath();
+    File file =
+        Paths.get(archiveRepository, archiveRepositorySubdir, dataSetUuid.toString()).toFile();
+
+    if (!file.exists()) {
+      throw new IllegalArgumentException("Can't find directory for dataset - " + dataSetUuid);
+    }
+
+    Path directoryPath = file.toPath();
 
     // Check dir, as an example - /mnt/auto/crawler/xml/9bed66b3-4caa-42bb-9c93-71d7ba109dad/2
     Path sibling = directoryPath.resolve(String.valueOf(attempt));

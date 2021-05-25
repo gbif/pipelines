@@ -2,7 +2,6 @@ package org.gbif.pipelines.crawler.fragmenter;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParametersDelegate;
-import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
@@ -44,9 +43,13 @@ public class FragmenterConfiguration implements BaseConfiguration {
   @NotNull
   public String xmlArchiveRepository;
 
-  @Parameter(names = "--xml-archive-repository-subdir")
+  @Parameter(names = "--xml-archive-repository-abcd")
   @NotNull
-  public Set<String> xmlArchiveRepositorySubdir;
+  public String xmlArchiveRepositoryAbcd;
+
+  @Parameter(names = "--xml-archive-repository-xml")
+  @NotNull
+  public String xmlArchiveRepositoryXml;
 
   @Parameter(names = "--async-threshold")
   public int asyncThreshold = 5_000;
