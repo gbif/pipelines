@@ -157,7 +157,7 @@ public class FragmenterCallbackIT {
     int attempt = 61;
     String crawlId = uuid.toString();
     int expSize = 20;
-    EndpointType endpointType = EndpointType.TAPIR;
+    EndpointType endpointType = EndpointType.BIOCASE_XML_ARCHIVE;
 
     PipelinesInterpretedMessage message =
         new PipelinesInterpretedMessage(
