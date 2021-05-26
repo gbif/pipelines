@@ -2,7 +2,6 @@ package org.gbif.pipelines.ingest.java.pipelines;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AMPLIFICATION_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.CHRONOMETRIC_AGE_TABLE_RECORDS_COUNT;
-import static org.gbif.pipelines.common.PipelinesVariables.Metrics.CHRONOMETRIC_DATE_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.CLONING_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.EXTENDED_MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.GEL_IMAGE_TABLE_RECORDS_COUNT;
@@ -48,7 +47,6 @@ import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.converters.AmplificationTableConverter;
 import org.gbif.pipelines.core.converters.ChronometricAgeTableConverter;
-import org.gbif.pipelines.core.converters.ChronometricDateTableConverter;
 import org.gbif.pipelines.core.converters.CloningTableConverter;
 import org.gbif.pipelines.core.converters.ExtendedMeasurementOrFactTableConverter;
 import org.gbif.pipelines.core.converters.GelImageTableConverter;
@@ -103,7 +101,6 @@ import org.gbif.pipelines.io.avro.extension.ggbn.PermitTable;
 import org.gbif.pipelines.io.avro.extension.ggbn.PreparationTable;
 import org.gbif.pipelines.io.avro.extension.ggbn.PreservationTable;
 import org.gbif.pipelines.io.avro.extension.obis.ExtendedMeasurementOrFactTable;
-import org.gbif.pipelines.io.avro.extension.zooarchnet.ChronometricDateTable;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.GrscicollTransform;
@@ -643,28 +640,6 @@ public class InterpretedToHdfsViewPipeline {
         .executor(executor)
         .options(options)
         .recordType(CHRONOMETRIC_AGE_TABLE)
-        .types(types)
-        .build()
-        .write();
-
-    // ChronometricDateTable
-    Function<BasicRecord, Optional<ChronometricDateTable>> chronometricDateFn =
-        TableConverter.<ChronometricDateTable>builder()
-            .metrics(metrics)
-            .converterFn(ChronometricDateTableConverter::convert)
-            .counterName(CHRONOMETRIC_DATE_TABLE_RECORDS_COUNT)
-            .verbatimMap(verbatimMapFeature.get())
-            .build()
-            .getFn();
-
-    TableRecordWriter.<ChronometricDateTable>builder()
-        .recordFunction(chronometricDateFn)
-        .basicRecords(basicRecordMap.values())
-        .targetPathFn(pathFn)
-        .schema(ChronometricDateTable.getClassSchema())
-        .executor(executor)
-        .options(options)
-        .recordType(CHRONOMETRIC_DATE_TABLE)
         .types(types)
         .build()
         .write();
