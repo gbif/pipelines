@@ -1,5 +1,6 @@
 package au.org.ala.pipelines.interpreters;
 
+import au.org.ala.pipelines.transforms.IndexFields;
 import au.org.ala.pipelines.vocabulary.ALAOccurrenceIssue;
 import au.org.ala.pipelines.vocabulary.Vocab;
 import au.org.ala.sds.api.SensitivityQuery;
@@ -27,6 +28,8 @@ import org.gbif.pipelines.io.avro.*;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class SensitiveDataInterpreter {
   protected static final TermFactory TERM_FACTORY = TermFactory.instance();
+  protected static final Term EVENT_DATE_END_TERM =
+      TERM_FACTORY.findTerm(IndexFields.EVENT_DATE_END);
 
   protected static final FieldAccessor DATA_GENERALIZATIONS =
       new FieldAccessor(DwcTerm.dataGeneralizations);
@@ -120,6 +123,7 @@ public class SensitiveDataInterpreter {
     }
     EventDate eventDate = record.getEventDate();
     constructField(eventDate, DwcTerm.eventDate, sensitive, properties, EventDate::getGte);
+    constructField(eventDate, EVENT_DATE_END_TERM, sensitive, properties, EventDate::getLte);
     constructField(record, DwcTerm.day, sensitive, properties, TemporalRecord::getDay);
     constructField(record, DwcTerm.month, sensitive, properties, TemporalRecord::getMonth);
     constructField(record, DwcTerm.year, sensitive, properties, TemporalRecord::getYear);
