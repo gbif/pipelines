@@ -87,7 +87,7 @@ public class AbcdToAvroCallbackIT {
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.xmlReaderParallelism = 4;
-    config.archiveRepositorySubdir = Collections.singleton("abcd");
+    config.archiveRepositorySubdir = "abcd";
     AbcdToAvroCallback callback =
         new AbcdToAvroCallback(curator, config, executor, publisher, historyClient, null);
     PipelinesAbcdMessage message =
@@ -126,7 +126,7 @@ public class AbcdToAvroCallbackIT {
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.xmlReaderParallelism = 4;
-    config.archiveRepositorySubdir = Collections.singleton("abcd");
+    config.archiveRepositorySubdir = "abcd";
     AbcdToAvroCallback callback =
         new AbcdToAvroCallback(curator, config, executor, publisher, historyClient, null);
     PipelinesAbcdMessage message =
@@ -166,7 +166,7 @@ public class AbcdToAvroCallbackIT {
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.xmlReaderParallelism = 4;
-    config.archiveRepositorySubdir = Collections.singleton("abcd");
+    config.archiveRepositorySubdir = "abcd";
     AbcdToAvroCallback callback =
         new AbcdToAvroCallback(curator, config, executor, publisher, historyClient, null);
     PipelinesAbcdMessage message =

@@ -87,7 +87,7 @@ public class XmlToAvroCallbackIT {
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.xmlReaderParallelism = 4;
-    config.archiveRepositorySubdir = Collections.singleton("xml");
+    config.archiveRepositorySubdir = "xml";
     XmlToAvroCallback callback =
         new XmlToAvroCallback(config, publisher, curator, historyClient, executor, null);
     PipelinesXmlMessage message =
@@ -126,7 +126,7 @@ public class XmlToAvroCallbackIT {
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.xmlReaderParallelism = 4;
-    config.archiveRepositorySubdir = Collections.singleton("xml");
+    config.archiveRepositorySubdir = "xml";
     XmlToAvroCallback callback =
         new XmlToAvroCallback(config, publisher, curator, historyClient, executor, null);
     PipelinesXmlMessage message =
@@ -166,7 +166,7 @@ public class XmlToAvroCallbackIT {
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.xmlReaderParallelism = 4;
-    config.archiveRepositorySubdir = Collections.singleton("xml");
+    config.archiveRepositorySubdir = "xml";
     XmlToAvroCallback callback =
         new XmlToAvroCallback(config, publisher, curator, historyClient, executor, null);
     PipelinesXmlMessage message =

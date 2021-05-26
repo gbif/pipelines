@@ -89,13 +89,14 @@ public class FragmenterCallback extends AbstractMessageCallback<PipelinesInterpr
         strategy = DwcaStrategy.create();
         pathToArchive = buildDwcaInputPath(config.dwcaArchiveRepository, datasetId);
       } else {
+        String subdir =
+            getXmlSubdir(
+                message.getEndpointType(),
+                config.xmlArchiveRepositoryXml,
+                config.xmlArchiveRepositoryAbcd);
         strategy = XmlStrategy.create();
         pathToArchive =
-            buildXmlInputPath(
-                config.xmlArchiveRepository,
-                config.xmlArchiveRepositorySubdir,
-                datasetId,
-                attempt.toString());
+            buildXmlInputPath(config.xmlArchiveRepository, subdir, datasetId, attempt.toString());
       }
 
       boolean useSync = message.getNumberOfRecords() < config.asyncThreshold;
@@ -150,6 +151,20 @@ public class FragmenterCallback extends AbstractMessageCallback<PipelinesInterpr
       FsUtils.createFile(fs, path, info);
     } catch (IOException ex) {
       log.error(ex.getMessage(), ex);
+    }
+  }
+
+  private String getXmlSubdir(EndpointType endpointType, String xmlSubdir, String abcdSubdir) {
+    switch (endpointType) {
+      case BIOCASE_XML_ARCHIVE:
+        return abcdSubdir;
+      case BIOCASE:
+      case DIGIR:
+      case TAPIR:
+      case DIGIR_MANIS:
+        return xmlSubdir;
+      default:
+        throw new IllegalArgumentException("EndpointType doesn't have mapping to subdirctory!");
     }
   }
 }
