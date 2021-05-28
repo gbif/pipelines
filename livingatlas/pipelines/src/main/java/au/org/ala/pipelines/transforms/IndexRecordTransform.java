@@ -30,6 +30,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.util.Strings;
 import org.apache.solr.common.SolrInputDocument;
 import org.gbif.api.vocabulary.Extension;
+import org.gbif.api.vocabulary.License;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
@@ -404,9 +405,15 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     // Add legacy collectory fields
     if (aar != null) {
       // if the licence is null in the basic record (which is the record-level licence)
+      // or licence is License.UNSPECIFIED in the basic record (licence provided at the record-level
+      // is null)
       // then use the licence supplied by the collectory
       // see https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/271
-      if (indexRecord.getStrings().get(DcTerm.license.simpleName()) == null) {
+      if (indexRecord.getStrings().get(DcTerm.license.simpleName()) == null
+          || indexRecord
+              .getStrings()
+              .get(DcTerm.license.simpleName())
+              .equals(License.UNSPECIFIED.name())) {
         addIfNotEmpty(indexRecord, DcTerm.license.simpleName(), aar.getLicenseType());
       }
 
