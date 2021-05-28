@@ -1,9 +1,12 @@
 package au.org.ala.pipelines.interpreters;
 
+import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
+
 import au.org.ala.kvs.client.ALACollectionLookup;
 import au.org.ala.kvs.client.ALACollectionMatch;
 import au.org.ala.kvs.client.ALACollectoryMetadata;
 import au.org.ala.kvs.client.EntityReference;
+import au.org.ala.pipelines.vocabulary.ALAOccurrenceIssue;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
@@ -81,6 +84,11 @@ public class ALAAttributionInterpreter {
                   .institutionCode(institutionCode)
                   .build();
           ALACollectionMatch m = collectionKvStore.get(lookup);
+
+          // Only the collection code is in the lookup
+          if (m.getCollectionUid() == null) {
+            addIssue(aar, ALAOccurrenceIssue.UNRECOGNISED_COLLECTION_CODE.name());
+          }
           aar.setCollectionUid(m.getCollectionUid());
           aar.setCollectionName(m.getCollectionName());
           aar.setInstitutionUid(m.getInstitutionUid());
