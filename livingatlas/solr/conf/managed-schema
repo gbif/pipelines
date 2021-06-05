@@ -559,6 +559,7 @@
   <field name="raw_family"					             type="string"  docValues="true" indexed="true" />
   <field name="raw_familyID"					         type="string"  docValues="true" indexed="true" />
   <field name="raw_format"					             type="string"  docValues="true" indexed="true" />
+  <field name="raw_geodeticDatum"       			     type="string"  docValues="true" indexed="true" />
   <field name="raw_generalisationInMetres"			     type="string"  docValues="true" indexed="true" />
   <field name="raw_generalisationToApplyInMetres"	     type="string"  docValues="true" indexed="true" />
   <field name="raw_genus"					             type="string"  docValues="true" indexed="true" />
@@ -648,28 +649,16 @@
   <dynamicField name="raw_*" type="string" docValues="true" indexed="true"/>
 
   <!-- Environmental fields -->
-  <dynamicField name="el*"  type="float" docValues="true" indexed="true"/>
+  <dynamicField name="el*" type="float" docValues="true" indexed="true"/>
 
   <!-- Contextual fields -->
-  <dynamicField name="cl*"  type="string" docValues="true" indexed="true" />
-
-  <!-- Original data fields for generalised data -->
-  <dynamicField name="original_*" type="string" docValues="true" indexed="false"/>
+  <dynamicField name="cl*" type="string" docValues="true" indexed="true" />
 
   <!-- Map deprecated fields to this field -->
   <dynamicField name="deprecated_*" type="string" docValues="true" indexed="false"/>
 
   <!-- Adhoc fields -->
-  <dynamicField name="_*"    type="string" docValues="true" indexed="true" stored="false"/>
-  <dynamicField name="*_m_s" type="string" docValues="true" multiValued="true" indexed="true" stored="false"/>
-  <dynamicField name="*_dt" type="date" docValues="true" indexed="true" stored="false"/>
-  <dynamicField name="*_i" type="int" docValues="true" indexed="true" stored="false"/>
-  <dynamicField name="*_s" type="string" docValues="true" indexed="true" stored="false"/>
-  <dynamicField name="*_l" type="long" docValues="true" indexed="true" stored="false"/>./
-  <dynamicField name="*_b" type="boolean" docValues="true" indexed="true" stored="false"/>
-  <dynamicField name="*_f" type="float" docValues="true" indexed="true" stored="false"/>
-  <dynamicField name="*_d" type="double" docValues="true" indexed="true" stored="false"/>
-  <dynamicField name="dynamicProperties_*" type="string" docValues="true" indexed="true" stored="false"/>
+  <dynamicField name="dynamicProperties_*" type="string" docValues="true" indexed="true"/>
 
   <copyField source="lat_long"         dest="geohash"/>
   <copyField source="lat_long"         dest="location"/>

@@ -51,6 +51,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
   public static final String CLASSS = "classs";
   public static final int YYYY_DD_MM_FORMAT_LENGTH = 10;
   public static final int YYYY_MM_DDTHH_mm_ss_Z_LENGTH = 22;
+  public static final String RAW_PREFIX = "raw_";
 
   // Core
   @NonNull private TupleTag<ExtendedRecord> erTag;
@@ -571,7 +572,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
 
       // if we already have an interpreted value, prefix with raw_
       if (interpretedFields.contains(key)) {
-        indexRecord.getStrings().put("raw_" + key, entry.getValue());
+        indexRecord.getStrings().put(RAW_PREFIX + key, entry.getValue());
       } else {
         if (key.endsWith(DwcTerm.dynamicProperties.simpleName())) {
           try {
@@ -943,23 +944,31 @@ public class IndexRecordTransform implements Serializable, IndexFields {
                         }));
   }
 
-  public static class KVIndexRecordToSolrInputDocumentFcn
-      extends DoFn<KV<String, IndexRecord>, SolrInputDocument> {
-    @ProcessElement
-    public void processElement(
-        @Element KV<String, IndexRecord> kvIndexRecord, OutputReceiver<SolrInputDocument> out) {
-      SolrInputDocument solrInputDocument = convertIndexRecordToSolrDoc(kvIndexRecord.getValue());
-      out.output(solrInputDocument);
+  private static boolean startsWithPrefix(List<String> dynamicFieldPrefixes, String value) {
+    for (String prefix : dynamicFieldPrefixes) {
+      if (value.startsWith(prefix)) {
+        return true;
+      }
     }
+    return false;
   }
 
-  public static SolrInputDocument convertIndexRecordToSolrDoc(IndexRecord indexRecord) {
+  public static SolrInputDocument convertIndexRecordToSolrDoc(
+      IndexRecord indexRecord, List<String> schemaFields, List<String> dynamicFieldPrefixes) {
     SolrInputDocument doc = new SolrInputDocument();
     doc.setField(ID, indexRecord.getId());
 
     // strings
     for (Map.Entry<String, String> s : indexRecord.getStrings().entrySet()) {
-      doc.addField(s.getKey(), s.getValue());
+      if (schemaFields.contains(s.getKey()) || startsWithPrefix(dynamicFieldPrefixes, s.getKey())) {
+        doc.addField(s.getKey(), s.getValue());
+      } else {
+        // clean up field name before adding
+        String key = s.getKey().replaceAll("[^A-Za-z0-9]", "_");
+        if (StringUtils.isNotEmpty(key)) {
+          doc.addField(DYNAMIC_PROPERTIES_PREFIX + key, s.getValue());
+        }
+      }
     }
 
     // doubles
@@ -994,6 +1003,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
       }
     }
 
+    // dynamic properties
     if (indexRecord.getDynamicProperties() != null
         && !indexRecord.getDynamicProperties().isEmpty()) {
       for (Map.Entry<String, String> entry : indexRecord.getDynamicProperties().entrySet()) {
