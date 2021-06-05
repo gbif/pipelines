@@ -1,47 +1,69 @@
 [
-{
-  "name" : "EntityReference",
-  "namespace":"org.gbif.pipelines.io.avro",
-  "type" : "record",
-  "fields" : [
-    {"name": "uid", "type": ["null", "string"], "default" : null },
-    {"name": "name", "type": ["null", "string"], "default" : null },
-    {"name": "uri", "type": ["null", "string"], "default" : null }
-  ]
-},
-{
-  "name":"ALAAttributionRecord",
-  "namespace":"org.gbif.pipelines.io.avro",
-  "type":"record",
-  "doc":"ALA Attribution",
-  "fields":[
-    {"name": "id","type":"string"},
-    {"name": "dataResourceUid", "type": ["null", "string"], "default" : null },
-    {"name": "dataResourceName", "type": ["null", "string"], "default" : null },
-    {"name": "dataProviderUid", "type": ["null", "string"], "default" : null },
-    {"name": "dataProviderName", "type": ["null", "string"], "default" : null },
-    {"name": "collectionUid", "type": ["null", "string"], "default" : null },
-    {"name": "collectionName", "type": ["null", "string"], "default" : null },
-    {"name": "institutionUid", "type": ["null", "string"], "default" : null },
-    {"name": "institutionName", "type": ["null", "string"], "default" : null },
-    {"name": "licenseType", "type": ["null", "string"], "default" : null },
-    {"name": "licenseVersion", "type": ["null", "string"], "default" : null },
-    {"name": "provenance", "type": ["null", "string"], "default" : null },
-    {"name": "hasDefaultValues", "type": "boolean", "default" : false },
-    {"name": "hubMembership", "type": {"type": "array", "items": "EntityReference"}, "default" : [] },
-    {"name": "issues", "type": "IssueRecord", "default":{}},
-    {"name": "connectionParameters", "default" : null, "type" : ["null",
+  {
+    "name" : "EntityReference",
+    "namespace":"org.gbif.pipelines.io.avro",
+    "type" : "record",
+    "fields" : [
+      {"name": "uid", "type": ["null", "string"], "default" : null },
+      {"name": "name", "type": ["null", "string"], "default" : null },
+      {"name": "uri", "type": ["null", "string"], "default" : null }
+    ]
+  },
+  {
+    "name":"ALAMetadataRecord",
+    "namespace":"org.gbif.pipelines.io.avro",
+    "type":"record",
+    "doc":"ALA Metadata Record",
+    "fields":[
+      {"name": "id","type":"string"},
+      {"name": "dataResourceUid", "type": ["null", "string"], "default" : null },
+      {"name": "dataResourceName", "type": ["null", "string"], "default" : null },
+      {"name": "dataProviderUid", "type": ["null", "string"], "default" : null },
+      {"name": "dataProviderName", "type": ["null", "string"], "default" : null },
+      {"name": "collectionUid", "type": ["null", "string"], "default" : null },
+      {"name": "collectionName", "type": ["null", "string"], "default" : null },
+      {"name": "institutionUid", "type": ["null", "string"], "default" : null },
+      {"name": "institutionName", "type": ["null", "string"], "default" : null },
+      {"name": "licenseType", "type": ["null", "string"], "default" : null },
+      {"name": "licenseVersion", "type": ["null", "string"], "default" : null },
+      {"name": "provenance", "type": ["null", "string"], "default" : null },
+      {"name": "hasDefaultValues", "type": "boolean", "default" : false },
+      {"name": "hubMembership", "type": {"type": "array", "items": "EntityReference"}, "default" : [] },
+      {"name": "connectionParameters", "default" : null, "type" : ["null",
         {
           "name" : "ConnectionParameters",
           "type" : "record",
           "fields" : [
-			{"name": "protocol", "type": ["null", "string"], "default" : null },
-			{"name": "url", "type": ["null", "string"], "default" : null },
-			{"name": "termsForUniqueKey", "type": {"type": "array", "items": "string"}, "default" : [] }
+            {"name": "protocol", "type": ["null", "string"], "default" : null },
+            {"name": "url", "type": ["null", "string"], "default" : null },
+            {"name": "termsForUniqueKey", "type": {"type": "array", "items": "string"}, "default" : [] }
           ]
         }
       ]
-    }
-  ]
-}
+      }
+    ]
+  },
+  {
+    "name":"ALAAttributionRecord",
+    "namespace":"org.gbif.pipelines.io.avro",
+    "type":"record",
+    "doc":"ALA Attribution",
+    "fields":[
+      {"name": "id","type":"string"},
+      {"name": "dataResourceUid", "type": ["null", "string"], "default" : null },
+      {"name": "dataResourceName", "type": ["null", "string"], "default" : null },
+      {"name": "dataProviderUid", "type": ["null", "string"], "default" : null },
+      {"name": "dataProviderName", "type": ["null", "string"], "default" : null },
+      {"name": "collectionUid", "type": ["null", "string"], "default" : null },
+      {"name": "collectionName", "type": ["null", "string"], "default" : null },
+      {"name": "institutionUid", "type": ["null", "string"], "default" : null },
+      {"name": "institutionName", "type": ["null", "string"], "default" : null },
+      {"name": "licenseType", "type": ["null", "string"], "default" : null },
+      {"name": "licenseVersion", "type": ["null", "string"], "default" : null },
+      {"name": "provenance", "type": ["null", "string"], "default" : null },
+      {"name": "hasDefaultValues", "type": "boolean", "default" : false },
+      {"name": "hubMembership", "type": {"type": "array", "items": "EntityReference"}, "default" : [] },
+      {"name": "issues", "type": "IssueRecord", "default":{}}
+    ]
+  }
 ]

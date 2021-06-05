@@ -5,22 +5,18 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import au.org.ala.pipelines.jackknife.JackKnife;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 /**
  * Tests ported from
  * https://github.com/AtlasOfLivingAustralia/biocache-store/blob/master/src/test/scala/au/org/ala/biocache/DistanceRangeParserTest.scala
  */
 public class JackKnifeTest {
-  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void jackKnife() {
 
     // too few values
-    int size = 10;
     Double[] values =
         new Double[] {
           Double.NaN,

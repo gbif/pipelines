@@ -1,10 +1,12 @@
 package au.org.ala.kvs.client;
 
 import au.org.ala.kvs.GeocodeShpConfig;
+import au.org.ala.kvs.ShapeFile;
 import au.org.ala.layers.intersect.SimpleShapeFile;
 import com.google.common.base.Strings;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.rest.client.geocode.Location;
@@ -133,17 +135,18 @@ public class GeocodeShpIntersectService {
 
   public List<Location> lookupCountry(Double latitude, Double longitude) {
     List<Location> locations = new ArrayList<>();
-    String value = countries.intersect(longitude, latitude);
-    if (value != null) {
+    String countryValue = countries.intersect(longitude, latitude);
+    String eezValue = null;
+    if (countryValue != null) {
       Location l = new Location();
       l.setType(POLITICAL_LOCATION_TYPE);
       l.setSource(config.getCountry().getSource());
-      l.setId(value);
-      l.setName(value);
-      l.setIsoCountryCode2Digit(value);
+      l.setId(countryValue);
+      l.setName(countryValue);
+      l.setIsoCountryCode2Digit(countryValue);
       locations.add(l);
     } else {
-      String eezValue = eez.intersect(longitude, latitude);
+      eezValue = eez.intersect(longitude, latitude);
       if (eezValue != null) {
         Location l = new Location();
         l.setId(eezValue);
@@ -154,6 +157,40 @@ public class GeocodeShpIntersectService {
         locations.add(l);
       }
     }
+
+    // if no country value, add a 10km buffer
+    if (countryValue == null
+        && eezValue == null
+        && config.getCountry().getIntersectBuffer() != null
+        && config.getCountry().getIntersectBuffer() > 0) {
+      // add the buffer of 0.1 = approx 11km
+      String consensus = intersectWithBuffer(countries, config.getCountry(), latitude, longitude);
+      if (consensus != null) {
+        Location l = new Location();
+        l.setType(POLITICAL_LOCATION_TYPE);
+        l.setSource(config.getCountry().getSource());
+        l.setId(consensus);
+        l.setName(consensus);
+        l.setIsoCountryCode2Digit(consensus);
+        locations.add(l);
+      }
+
+      if (consensus == null
+          && config.getEez().getIntersectBuffer() != null
+          && config.getEez().getIntersectBuffer() > 0) {
+        consensus = intersectWithBuffer(eez, config.getEez(), latitude, longitude);
+        if (consensus != null) {
+          Location l = new Location();
+          l.setType(POLITICAL_LOCATION_TYPE);
+          l.setSource(config.getCountry().getSource());
+          l.setId(consensus);
+          l.setName(consensus);
+          l.setIsoCountryCode2Digit(consensus);
+          locations.add(l);
+        }
+      }
+    }
+
     return locations;
   }
 
@@ -168,6 +205,54 @@ public class GeocodeShpIntersectService {
       l.setName(state);
       locations.add(l);
     }
+
+    // if no state vlaue value, add a 10km buffer
+    if (state == null
+        && config.getStateProvince().getIntersectBuffer() != null
+        && config.getStateProvince().getIntersectBuffer() > 0) {
+      // add the buffer of 0.1 = approx 11km
+      String consensus =
+          intersectWithBuffer(states, config.getStateProvince(), latitude, longitude);
+      if (consensus != null) {
+        Location l = new Location();
+        l.setType(POLITICAL_LOCATION_TYPE);
+        l.setSource(config.getCountry().getSource());
+        l.setId(consensus);
+        l.setName(consensus);
+        l.setIsoCountryCode2Digit(consensus);
+        locations.add(l);
+      }
+    }
+
     return locations;
+  }
+
+  private String intersectWithBuffer(
+      SimpleShapeFile simpleShapeFile, ShapeFile config, Double latitude, Double longitude) {
+    String sw =
+        simpleShapeFile.intersect(
+            longitude - config.getIntersectBuffer(), latitude - config.getIntersectBuffer());
+    String nw =
+        simpleShapeFile.intersect(
+            longitude - config.getIntersectBuffer(), latitude + config.getIntersectBuffer());
+    String se =
+        simpleShapeFile.intersect(
+            longitude + config.getIntersectBuffer(), latitude - config.getIntersectBuffer());
+    String ne =
+        simpleShapeFile.intersect(
+            longitude + config.getIntersectBuffer(), latitude + config.getIntersectBuffer());
+    return getConsensus(Arrays.asList(new String[] {sw, nw, se, ne}));
+  }
+
+  private String getConsensus(List<String> survey) {
+    String consensus = null;
+    for (String s : survey) {
+      if (consensus == null) {
+        consensus = s;
+      } else if (s != null && !consensus.equals(s)) {
+        return null;
+      }
+    }
+    return consensus;
   }
 }

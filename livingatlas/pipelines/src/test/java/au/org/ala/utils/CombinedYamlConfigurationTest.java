@@ -5,6 +5,7 @@ import static org.hamcrest.Matchers.*;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.LinkedHashMap;
@@ -142,7 +143,7 @@ public class CombinedYamlConfigurationTest {
   @Test
   public void testYamlDump() throws IOException {
     String yamlPath = testConf.toYamlFile();
-    String yamlStr = new String(Files.readAllBytes(Paths.get(yamlPath)));
+    String yamlStr = new String(Files.readAllBytes(Paths.get(yamlPath)), StandardCharsets.UTF_8);
 
     assertThat(yamlStr.length(), greaterThan(0));
     assertThat(yamlStr.contains("{fsPath}"), equalTo(false));

@@ -7,6 +7,9 @@ import au.com.bytecode.opencsv.CSVReader;
 import au.org.ala.pipelines.options.ClusteringPipelineOptions;
 import au.org.ala.utils.ValidationUtils;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.avro.file.CodecFactory;
@@ -75,10 +78,12 @@ public class ClusteringPipelineIT {
     String absolutePath = new File("src/test/resources").getAbsolutePath();
 
     // Step 1: load a dataset and verify all records have a UUID associated
-    CSVReader csvReader =
-        new CSVReader(
-            new FileReader(
-                new File(absolutePath + "/clustering/" + dataResourceUid + "/occurrence.csv")));
+    Reader reader =
+        Files.newBufferedReader(
+            Paths.get(absolutePath + "/clustering/" + dataResourceUid + "/occurrence.csv"),
+            StandardCharsets.UTF_8);
+
+    CSVReader csvReader = new CSVReader(reader);
 
     DatumWriter<IndexRecord> datumWriter = new GenericDatumWriter<>(IndexRecord.getClassSchema());
 

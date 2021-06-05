@@ -9,6 +9,10 @@ import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.utils.AnnotationUtils;
 
+/**
+ * Living Atlas issue extension. We should look to merge this with {@link
+ * org.gbif.api.vocabulary.OccurrenceIssue} enum See: https://github.com/gbif/pipelines/issues/530
+ */
 public enum ALAOccurrenceIssue implements InterpretationRemark {
 
   // Location related
@@ -19,7 +23,6 @@ public enum ALAOccurrenceIssue implements InterpretationRemark {
   MISSING_COORDINATEPRECISION(InterpretationRemarkSeverity.WARNING, TermsGroup.COORDINATES_TERMS),
   UNCERTAINTY_IN_PRECISION(InterpretationRemarkSeverity.WARNING, TermsGroup.COORDINATES_TERMS),
   UNCERTAINTY_NOT_SPECIFIED(InterpretationRemarkSeverity.WARNING, TermsGroup.COORDINATES_TERMS),
-  COORDINATE_PRECISION_INVALID(InterpretationRemarkSeverity.WARNING, TermsGroup.COORDINATES_TERMS),
 
   STATE_COORDINATE_MISMATCH(
       InterpretationRemarkSeverity.WARNING, TermsGroup.COORDINATES_COUNTRY_TERMS),

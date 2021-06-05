@@ -38,10 +38,11 @@ import org.slf4j.MDC;
 public class IndexRecordToSolrPipeline {
 
   static final SampleRecord nullSampling = SampleRecord.newBuilder().setLatLng("NO_VALUE").build();
+  public static final String EMPTY = "EMPTY";
   static final JackKnifeOutlierRecord nullJkor =
-      JackKnifeOutlierRecord.newBuilder().setId("EMPTY").setItems(new ArrayList<>()).build();
+      JackKnifeOutlierRecord.newBuilder().setId(EMPTY).setItems(new ArrayList<>()).build();
   static final Relationships nullClustering =
-      Relationships.newBuilder().setId("EMPTY").setRelationships(new ArrayList<>()).build();
+      Relationships.newBuilder().setId(EMPTY).setRelationships(new ArrayList<>()).build();
 
   public static void main(String[] args) throws Exception {
     VersionInfo.print();
@@ -237,19 +238,26 @@ public class IndexRecordToSolrPipeline {
       SolrPipelineOptions options,
       PCollection<KV<String, IndexRecord>> kvIndexRecords,
       SolrIO.ConnectionConfiguration conn) {
-    kvIndexRecords
-        .apply(
-            "IndexRecord to SOLR Document",
-            ParDo.of(new IndexRecordTransform.KVIndexRecordToSolrInputDocumentFcn()))
-        .apply(
-            SolrIO.write()
-                .to(options.getSolrCollection())
-                .withConnectionConfiguration(conn)
-                .withMaxBatchSize(options.getSolrBatchSize())
-                .withRetryConfiguration(
-                    SolrIO.RetryConfiguration.create(
-                        options.getSolrRetryMaxAttempts(),
-                        Duration.standardMinutes(options.getSolrRetryDurationInMins()))));
+
+    if (options.getOutputAvroToFilePath() == null) {
+      kvIndexRecords
+          .apply(
+              "IndexRecord to SOLR Document",
+              ParDo.of(new IndexRecordTransform.KVIndexRecordToSolrInputDocumentFcn()))
+          .apply(
+              SolrIO.write()
+                  .to(options.getSolrCollection())
+                  .withConnectionConfiguration(conn)
+                  .withMaxBatchSize(options.getSolrBatchSize())
+                  .withRetryConfiguration(
+                      SolrIO.RetryConfiguration.create(
+                          options.getSolrRetryMaxAttempts(),
+                          Duration.standardMinutes(options.getSolrRetryDurationInMins()))));
+    } else {
+      kvIndexRecords
+          .apply(Values.create())
+          .apply(AvroIO.write(IndexRecord.class).to(options.getOutputAvroToFilePath()));
+    }
   }
 
   private static DoFn<KV<String, KV<IndexRecord, JackKnifeOutlierRecord>>, KV<String, IndexRecord>>
@@ -271,7 +279,7 @@ public class IndexRecordToSolrPipeline {
           indexRecord.setInts(ints);
         }
 
-        if (jkor != nullJkor && !"EMPTY".equals(jkor.getId())) {
+        if (jkor != nullJkor && !EMPTY.equals(jkor.getId())) {
 
           ints.put(OUTLIER_LAYER_COUNT, jkor.getItems().size());
 
@@ -331,7 +339,7 @@ public class IndexRecordToSolrPipeline {
         }
 
         if (jkor != nullClustering
-            && !"EMPTY".equals(jkor.getId())
+            && !EMPTY.equals(jkor.getId())
             && !jkor.getRelationships().isEmpty()) {
 
           booleans.put(IS_IN_CLUSTER, true);

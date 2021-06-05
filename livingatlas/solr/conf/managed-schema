@@ -137,8 +137,8 @@
 
   <field name="id" type="string" docValues="true" multiValued="false" indexed="true"/>
 
-  <!-- version field required for updating user assertions -->
-  <field name="_version_" type="long" indexed="true" stored="true" multiValued="false"/>
+  <!-- required for solr optimistic concurrency update -->
+  <field name="_version_" type="long" docValues="true" indexed="false" stored="false"/>
 
   <!-- required for WMS -->
   <field name="point-0.0001"  type="string" docValues="true" indexed="true" />
@@ -149,7 +149,6 @@
   <field name="point-1"       type="string" docValues="true" indexed="true" />
   <field name="lat_long"      type="string" docValues="true" indexed="false" />
   <field name="biome"         type="string" docValues="true" indexed="true" />
-  <field name="speciesHabitats"         type="string" docValues="true" indexed="true" />
   <field name="geohash"       type="geohash"     indexed="true"/>
   <field name="quad"          type="quad"        indexed="true"/>
   <field name="packedQuad"    type="packedQuad"  indexed="true"/>
@@ -492,10 +491,13 @@
   <field name="userAssertions"         type="string"  docValues="true" indexed="true" />
   <field name="hasUserAssertions"      type="boolean" docValues="true" indexed="true" />
   <field name="lastAssertionDate"      type="date"    docValues="true" indexed="true" />
+  <field name="userVerified"           type="boolean" docValues="true" indexed="true" />
 
   <!-- Free text search fields -->
   <field name="text"                   type="text"    multiValued="true" indexed="true" stored="false" />
   <field name="matched_name"           type="string"  multiValued="true" indexed="true" stored="false" />
+  <field name="text_recordedBy"        type="textgen" multiValued="true" indexed="true" stored="false" />
+  <field name="text_identifiedBy"      type="textgen" multiValued="true" indexed="true" stored="false" />
 
   <!-- occurrenceDetails needs to be remapped on export -->
   <!-- see https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/236 -->
@@ -673,7 +675,6 @@
   <copyField source="lat_long"         dest="location"/>
   <copyField source="lat_long"         dest="quad"/>
   <copyField source="lat_long"         dest="packedQuad"/>
-  <copyField source="biome"            dest="speciesHabitats"/>
   <copyField source="occurrenceYear"   dest="occurrence_year"/>
 
   <!-- Do we need this -->
@@ -706,6 +707,8 @@
   <copyField source="raw_typeStatus" dest="text"/>
   <copyField source="raw_vernacularName" dest="text"/>
   <copyField source="recordedBy" dest="text"/>
+  <copyField source="identifiedBy" dest="text_identifiedBy"/>
+  <copyField source="recordedBy" dest="text_recordedBy"/>
   <copyField source="scientificName" dest="matched_name"/>
   <copyField source="scientificName" dest="text"/>
   <copyField source="species" dest="text"/>

@@ -202,6 +202,16 @@ public class IndexRecordPipeline {
                     pathFn.apply(locationTransform.getBaseName())),
             executor);
 
+    CompletableFuture<Map<String, MultimediaRecord>> multimediaFeature =
+        CompletableFuture.supplyAsync(
+            () ->
+                AvroReader.readRecords(
+                    hdfsSiteConfig,
+                    coreSiteConfig,
+                    MultimediaRecord.class,
+                    pathFn.apply(multimediaTransform.getBaseName())),
+            executor);
+
     CompletableFuture<Map<String, TaxonRecord>> taxonMapFeature =
         CompletableFuture.completedFuture(Collections.emptyMap());
     if (options.getIncludeGbifTaxonomy()) {
@@ -286,8 +296,9 @@ public class IndexRecordPipeline {
     Map<String, ExtendedRecord> verbatimMap = verbatimMapFeature.get();
     Map<String, TemporalRecord> temporalMap = temporalMapFeature.get();
     Map<String, LocationRecord> locationMap = locationMapFeature.get();
-
     Map<String, ALAUUIDRecord> aurMap = alaUuidMapFeature.get();
+
+    Map<String, MultimediaRecord> mrMap = multimediaFeature.get();
     Map<String, ALATaxonRecord> alaTaxonMap = alaTaxonMapFeature.get();
     Map<String, ALAAttributionRecord> alaAttributionMap = alaAttributionMapFeature.get();
     Map<String, ALASensitivityRecord> alaSensitivityMap =
@@ -314,7 +325,8 @@ public class IndexRecordPipeline {
           TaxonRecord txr = null;
 
           // ALA specific
-          ALAUUIDRecord aur = aurMap.getOrDefault(k, ALAUUIDRecord.newBuilder().setId(k).build());
+          ALAUUIDRecord aur = aurMap.getOrDefault(k, null);
+          MultimediaRecord mr = mrMap.getOrDefault(k, null);
           ALATaxonRecord atxr =
               alaTaxonMap.getOrDefault(k, ALATaxonRecord.newBuilder().setId(k).build());
           ALAAttributionRecord aar =
@@ -326,7 +338,20 @@ public class IndexRecordPipeline {
               taxonProfileMap.getOrDefault(k, TaxonProfile.newBuilder().setId(k).build());
 
           return IndexRecordTransform.createIndexRecord(
-              br, tr, lr, txr, atxr, er, aar, aur, isr, tpr, sr, lastLoadedDate, lastProcessedDate);
+              br,
+              tr,
+              lr,
+              txr,
+              atxr,
+              er,
+              aar,
+              aur,
+              isr,
+              tpr,
+              sr,
+              mr,
+              lastLoadedDate,
+              lastProcessedDate);
         };
 
     List<IndexRecord> indexRecords =

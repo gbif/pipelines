@@ -41,12 +41,20 @@ geocodeConfig:
   country:
     path: /data/pipelines-shp/political
     field: ISO_A2
+    intersectBuffer: 0.135
+    intersectMapping:
+      CX: AU
+      CC: AU
+      HM: AU
+      NF: AU
   eez:
     path: /data/pipelines-shp/eez
     field: ISO2
+    intersectBuffer:  0.135
   stateProvince:
     path: /data/pipelines-shp/cw_state_poly
     field: FEATURE
+    intersectBuffer: 0.135
   biome:
     path: /data/pipelines-shp/gadm0
     field: FEATURE

@@ -94,7 +94,7 @@ public class CompleteIngestPipelineTestIT {
   public static void checkSingleRecordContent() throws Exception {
     Optional<SolrDocument> record = SolrUtils.getRecord("occurrenceID:not-an-uuid-5");
 
-    assertEquals(record.isPresent(), true);
+    assertTrue(record.isPresent());
     assertEquals("not-an-uuid-5", record.get().get("occurrenceID"));
 
     assertEquals("Scioglyptis chionomera", record.get().get("scientificName"));

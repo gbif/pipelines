@@ -40,10 +40,13 @@ sds:
 collectory:
   wsUrl: https://collections.ala.org.au/ws/
   timeoutSec: 70
+  retryConfig:
+    maxAttempts: 10
+    initialIntervalMillis: 10000
   httpHeaders:
     Authorization: add-a-api-key-here
 imageService:
-  wsUrl: https://aws-image-service-pipelines-test.ala.org.au/
+  wsUrl: https://images-test.ala.org.au/
   timeoutSec: 70
   httpHeaders:
     apiKey: add-a-api-key-here
@@ -54,12 +57,20 @@ geocodeConfig:
   country:
     path: /data/pipelines-shp/political
     field: ISO_A2
+    intersectBuffer:  0.135
+    intersectMapping:
+      CX: AU
+      CC: AU
+      HM: AU
+      NF: AU
   eez:
     path: /data/pipelines-shp/eez
     field: ISO2
+    intersectBuffer:  0.135
   stateProvince:
     path: /data/pipelines-shp/cw_state_poly
     field: FEATURE
+    intersectBuffer: 0
   biome:
     path: /data/pipelines-shp/gadm0
     field: FEATURE

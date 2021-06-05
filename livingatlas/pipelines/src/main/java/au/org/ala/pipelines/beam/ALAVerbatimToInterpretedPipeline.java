@@ -20,7 +20,10 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
+import org.apache.beam.sdk.transforms.Create;
+import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.PCollectionView;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
@@ -30,6 +33,7 @@ import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.factory.FileVocabularyFactory;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.factory.OccurrenceStatusKvStoreFactory;
+import org.gbif.pipelines.io.avro.ALAMetadataRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.transforms.converters.OccurrenceExtensionTransform;
@@ -110,8 +114,6 @@ public class ALAVerbatimToInterpretedPipeline {
     MDC.put("attempt", attempt.toString());
     MDC.put("step", StepType.VERBATIM_TO_INTERPRETED.name());
 
-    String endPointType = options.getEndPointType();
-
     Set<String> types = options.getInterpretationTypes();
 
     String targetPath = options.getTargetPath();
@@ -152,6 +154,12 @@ public class ALAVerbatimToInterpretedPipeline {
       return;
     }
 
+    ALAMetadataTransform metadataTransform =
+        ALAMetadataTransform.builder()
+            .dataResourceKvStoreSupplier(ALAAttributionKVStoreFactory.getInstanceSupplier(config))
+            .datasetId(datasetId)
+            .create();
+
     ALABasicTransform basicTransform =
         ALABasicTransform.builder()
             .lifeStageLookupSupplier(
@@ -176,12 +184,20 @@ public class ALAVerbatimToInterpretedPipeline {
     MultimediaTransform multimediaTransform =
         MultimediaTransform.builder().orderings(dateComponentOrdering).create();
 
+    // Create and write metadata
+    PCollection<ALAMetadataRecord> metadataRecord =
+        p.apply("Create metadata collection", Create.of(options.getDatasetId()))
+            .apply("Interpret metadata", metadataTransform.interpret());
+
+    // Create View for the further usage
+    PCollectionView<ALAMetadataRecord> metadataView =
+        metadataRecord.apply("Convert into view", View.asSingleton());
+
     // ALA specific - Attribution
     ALAAttributionTransform alaAttributionTransform =
         ALAAttributionTransform.builder()
-            .dataResourceKvStoreSupplier(ALAAttributionKVStoreFactory.getInstanceSupplier(config))
             .collectionKvStoreSupplier(ALACollectionKVStoreFactory.getInstanceSupplier(config))
-            .datasetId(options.getDatasetId())
+            .metadataView(metadataView)
             .create();
 
     // ALA specific - Taxonomy
@@ -211,6 +227,10 @@ public class ALAVerbatimToInterpretedPipeline {
             .create();
 
     log.info("Creating beam pipeline");
+
+    metadataRecord.apply("Write metadata to avro", metadataTransform.write(pathFn));
+
+    alaAttributionTransform.setMetadataView(metadataView);
 
     // Interpret and write all record types
     PCollection<ExtendedRecord> uniqueRecords =

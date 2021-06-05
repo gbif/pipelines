@@ -4,13 +4,15 @@ import static au.org.ala.pipelines.common.ALARecordTypes.ALA_ATTRIBUTION;
 
 import au.org.ala.kvs.client.ALACollectionLookup;
 import au.org.ala.kvs.client.ALACollectionMatch;
-import au.org.ala.kvs.client.ALACollectoryMetadata;
 import au.org.ala.pipelines.interpreters.ALAAttributionInterpreter;
 import java.util.Optional;
 import lombok.Builder;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.transforms.MapElements;
+import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
+import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.core.functions.SerializableConsumer;
@@ -34,35 +36,31 @@ import org.gbif.pipelines.transforms.Transform;
 @Slf4j
 public class ALAAttributionTransform extends Transform<ExtendedRecord, ALAAttributionRecord> {
 
-  private KeyValueStore<String, ALACollectoryMetadata> dataResourceKvStore;
-  private final SerializableSupplier<KeyValueStore<String, ALACollectoryMetadata>>
-      dataResourceKvStoreSupplier;
-
   private KeyValueStore<ALACollectionLookup, ALACollectionMatch> collectionKvStore;
   private final SerializableSupplier<KeyValueStore<ALACollectionLookup, ALACollectionMatch>>
       collectionKvStoreSupplier;
 
-  private final String datasetId;
+  @Setter private PCollectionView<ALAMetadataRecord> metadataView;
 
   @Builder(buildMethodName = "create")
   private ALAAttributionTransform(
-      KeyValueStore<String, ALACollectoryMetadata> dataResourceKvStore,
-      SerializableSupplier<KeyValueStore<String, ALACollectoryMetadata>>
-          dataResourceKvStoreSupplier,
       KeyValueStore<ALACollectionLookup, ALACollectionMatch> collectionKvStore,
       SerializableSupplier<KeyValueStore<ALACollectionLookup, ALACollectionMatch>>
           collectionKvStoreSupplier,
-      String datasetId) {
+      PCollectionView<ALAMetadataRecord> metadataView) {
     super(
         ALAAttributionRecord.class,
         ALA_ATTRIBUTION,
         ALAAttributionTransform.class.getName(),
         "alaAttributionRecordsCount");
-    this.dataResourceKvStore = dataResourceKvStore;
     this.collectionKvStore = collectionKvStore;
-    this.dataResourceKvStoreSupplier = dataResourceKvStoreSupplier;
     this.collectionKvStoreSupplier = collectionKvStoreSupplier;
-    this.datasetId = datasetId;
+    this.metadataView = metadataView;
+  }
+
+  @Override
+  public ParDo.SingleOutput<ExtendedRecord, ALAAttributionRecord> interpret() {
+    return ParDo.of(this).withSideInputs(metadataView);
   }
 
   public ALAAttributionTransform counterFn(SerializableConsumer<String> counterFn) {
@@ -85,9 +83,6 @@ public class ALAAttributionTransform extends Transform<ExtendedRecord, ALAAttrib
   /** Beam @Setup initializes resources */
   @Setup
   public void setup() {
-    if (dataResourceKvStore == null && dataResourceKvStoreSupplier != null) {
-      dataResourceKvStore = dataResourceKvStoreSupplier.get();
-    }
     if (collectionKvStore == null && collectionKvStoreSupplier != null) {
       collectionKvStore = collectionKvStoreSupplier.get();
     }
@@ -95,10 +90,20 @@ public class ALAAttributionTransform extends Transform<ExtendedRecord, ALAAttrib
 
   @Override
   public Optional<ALAAttributionRecord> convert(ExtendedRecord source) {
+    throw new IllegalArgumentException("Method is not implemented!");
+  }
+
+  @Override
+  @ProcessElement
+  public void processElement(ProcessContext c) {
+    processElement(c.element(), c.sideInput(metadataView)).ifPresent(c::output);
+  }
+
+  public Optional<ALAAttributionRecord> processElement(
+      ExtendedRecord source, ALAMetadataRecord mdr) {
     return Interpretation.from(source)
         .to(ALAAttributionRecord.newBuilder().setId(source.getId()).build())
-        .via(ALAAttributionInterpreter.interpretDatasetKey(datasetId, dataResourceKvStore))
-        .via(ALAAttributionInterpreter.interpretCodes(collectionKvStore))
+        .via(ALAAttributionInterpreter.interpretCodes(collectionKvStore, mdr))
         .getOfNullable();
   }
 }

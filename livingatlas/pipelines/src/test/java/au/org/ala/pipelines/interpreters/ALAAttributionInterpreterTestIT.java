@@ -14,6 +14,7 @@ import okhttp3.mockwebserver.MockWebServer;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.io.avro.ALAAttributionRecord;
+import org.gbif.pipelines.io.avro.ALAMetadataRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.junit.After;
 import org.junit.Before;
@@ -39,8 +40,12 @@ public class ALAAttributionInterpreterTestIT {
 
     KeyValueStore<ALACollectionLookup, ALACollectionMatch> kvs =
         ALACollectionKVStoreFactory.create(TestUtils.getConfig());
+
+    ALAMetadataRecord mdr =
+        ALAMetadataRecord.newBuilder().setDataResourceUid("test").setId("test").build();
+
     BiConsumer<ExtendedRecord, ALAAttributionRecord> fcn =
-        ALAAttributionInterpreter.interpretCodes(kvs);
+        ALAAttributionInterpreter.interpretCodes(kvs, mdr);
 
     Map<String, String> map = new HashMap<>();
     map.put(DwcTerm.institutionCode.namespace() + DwcTerm.institutionCode.simpleName(), "CSIRO");
@@ -59,8 +64,12 @@ public class ALAAttributionInterpreterTestIT {
 
     KeyValueStore<ALACollectionLookup, ALACollectionMatch> kvs =
         ALACollectionKVStoreFactory.create(TestUtils.getConfig());
+
+    ALAMetadataRecord mdr =
+        ALAMetadataRecord.newBuilder().setDataResourceUid("test").setId("test").build();
+
     BiConsumer<ExtendedRecord, ALAAttributionRecord> fcn =
-        ALAAttributionInterpreter.interpretCodes(kvs);
+        ALAAttributionInterpreter.interpretCodes(kvs, mdr);
 
     Map<String, String> map = new HashMap<>();
     map.put(DwcTerm.institutionCode.namespace() + DwcTerm.institutionCode.simpleName(), "ANIC");

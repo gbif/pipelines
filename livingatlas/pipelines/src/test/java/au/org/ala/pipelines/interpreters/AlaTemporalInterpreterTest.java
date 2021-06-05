@@ -1,7 +1,6 @@
 package au.org.ala.pipelines.interpreters;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import au.org.ala.pipelines.vocabulary.ALAOccurrenceIssue;
 import java.util.HashMap;
@@ -40,7 +39,7 @@ public class AlaTemporalInterpreterTest {
     TemporalRecord tr = create("2000-01-01/2000-01-01");
     ALATemporalInterpreter.checkDatePrecision(null, tr);
     assertEquals("2000-01-01", tr.getEventDate().getGte());
-    assertEquals(null, tr.getEventDate().getLte());
+    assertNull(tr.getEventDate().getLte());
     assertEquals(ALATemporalInterpreter.DAY_PRECISION, tr.getDatePrecision());
   }
 
@@ -49,7 +48,7 @@ public class AlaTemporalInterpreterTest {
     TemporalRecord tr = create("2000-01-01");
     ALATemporalInterpreter.checkDatePrecision(null, tr);
     assertEquals("2000-01-01", tr.getEventDate().getGte());
-    assertEquals(null, tr.getEventDate().getLte());
+    assertNull(tr.getEventDate().getLte());
     assertEquals(ALATemporalInterpreter.DAY_PRECISION, tr.getDatePrecision());
   }
 
@@ -57,8 +56,8 @@ public class AlaTemporalInterpreterTest {
   public void testDatePrecisionMonthRange() {
     TemporalRecord tr = create("2000-01/2000-02");
     ALATemporalInterpreter.checkDatePrecision(null, tr);
-    assertEquals(tr.getEventDate().getGte(), "2000-01");
-    assertEquals(tr.getEventDate().getLte(), "2000-02");
+    assertEquals("2000-01", tr.getEventDate().getGte());
+    assertEquals("2000-02", tr.getEventDate().getLte());
     assertEquals(ALATemporalInterpreter.MONTH_RANGE_PRECISION, tr.getDatePrecision());
   }
 
@@ -66,8 +65,8 @@ public class AlaTemporalInterpreterTest {
   public void testDatePrecisionMonth() {
     TemporalRecord tr = create("2000-01/2000-01");
     ALATemporalInterpreter.checkDatePrecision(null, tr);
-    assertEquals(tr.getEventDate().getGte(), "2000-01");
-    assertEquals(tr.getEventDate().getLte(), null);
+    assertEquals("2000-01", tr.getEventDate().getGte());
+    assertNull(tr.getEventDate().getLte());
     assertEquals(ALATemporalInterpreter.MONTH_PRECISION, tr.getDatePrecision());
   }
 
@@ -75,8 +74,8 @@ public class AlaTemporalInterpreterTest {
   public void testDatePrecisionMonth2() {
     TemporalRecord tr = create("2000-01");
     ALATemporalInterpreter.checkDatePrecision(null, tr);
-    assertEquals(tr.getEventDate().getGte(), "2000-01");
-    assertEquals(tr.getEventDate().getLte(), null);
+    assertEquals("2000-01", tr.getEventDate().getGte());
+    assertNull(tr.getEventDate().getLte());
     assertEquals(ALATemporalInterpreter.MONTH_PRECISION, tr.getDatePrecision());
   }
 
@@ -84,8 +83,8 @@ public class AlaTemporalInterpreterTest {
   public void testDatePrecisionYear() {
     TemporalRecord tr = create("2000/2001");
     ALATemporalInterpreter.checkDatePrecision(null, tr);
-    assertEquals(tr.getEventDate().getGte(), "2000");
-    assertEquals(tr.getEventDate().getLte(), "2001");
+    assertEquals("2000", tr.getEventDate().getGte());
+    assertEquals("2001", tr.getEventDate().getLte());
     assertEquals(ALATemporalInterpreter.YEAR_RANGE_PRECISION, tr.getDatePrecision());
   }
 
@@ -93,8 +92,8 @@ public class AlaTemporalInterpreterTest {
   public void testDatePrecisionYear2() {
     TemporalRecord tr = create("2000/2000");
     ALATemporalInterpreter.checkDatePrecision(null, tr);
-    assertEquals(tr.getEventDate().getGte(), "2000");
-    assertEquals(null, tr.getEventDate().getLte());
+    assertEquals("2000", tr.getEventDate().getGte());
+    assertNull(tr.getEventDate().getLte());
     assertEquals(ALATemporalInterpreter.YEAR_PRECISION, tr.getDatePrecision());
   }
 
@@ -108,8 +107,8 @@ public class AlaTemporalInterpreterTest {
     TemporalInterpreter temporalInterpreter = TemporalInterpreter.builder().create();
     temporalInterpreter.interpretTemporal(er, tr);
 
-    assertEquals(tr.getEventDate().getGte(), "2000");
-    assertEquals(tr.getEventDate().getLte(), "2001");
+    assertEquals("2000", tr.getEventDate().getGte());
+    assertEquals("2001", tr.getEventDate().getLte());
   }
 
   @Test

@@ -536,7 +536,10 @@
          especially if the skipped fields are large compressed text
          fields.
     -->
-    <enableLazyFieldLoading>true</enableLazyFieldLoading>
+    <!-- Set to false due to a bug in 8.8
+         See: https://stackoverflow.com/questions/66335803/solr-throws-error-on-partial-update-after-upgrade-to-8-8
+    -->
+    <enableLazyFieldLoading>false</enableLazyFieldLoading>
 
     <!-- Use Filter For Sorted Query
 

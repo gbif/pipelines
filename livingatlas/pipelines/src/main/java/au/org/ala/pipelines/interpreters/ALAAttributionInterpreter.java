@@ -10,6 +10,7 @@ import au.org.ala.pipelines.vocabulary.ALAOccurrenceIssue;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +18,7 @@ import org.apache.directory.api.util.Strings;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.io.avro.ALAAttributionRecord;
+import org.gbif.pipelines.io.avro.ALAMetadataRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 /** Attribution interpreter providing additional attribution information to records. */
@@ -24,29 +26,29 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ALAAttributionInterpreter {
 
-  public static BiConsumer<ExtendedRecord, ALAAttributionRecord> interpretDatasetKey(
+  public static Consumer<ALAMetadataRecord> interpretDatasetKey(
       String datasetId, KeyValueStore<String, ALACollectoryMetadata> dataResourceKvStore) {
-    return (key, aar) -> {
+    return (mdr) -> {
       if (dataResourceKvStore != null && datasetId != null) {
         ALACollectoryMetadata m = dataResourceKvStore.get(datasetId);
-        if (m != null) {
-          aar.setDataResourceUid(m.getUid());
+        if (m != null && !m.equals(ALACollectoryMetadata.EMPTY)) {
+          mdr.setDataResourceUid(m.getUid());
           if (m.getProvider() != null) {
-            aar.setDataProviderUid(m.getProvider().getUid());
-            aar.setDataProviderName(m.getProvider().getName());
+            mdr.setDataProviderUid(m.getProvider().getUid());
+            mdr.setDataProviderName(m.getProvider().getName());
           }
-          aar.setDataResourceName(m.getName());
-          aar.setLicenseType(m.getLicenseType());
-          aar.setLicenseVersion(m.getLicenseVersion());
-          aar.setProvenance(m.getProvenance());
-          aar.setHasDefaultValues(
+          mdr.setDataResourceName(m.getName());
+          mdr.setLicenseType(m.getLicenseType());
+          mdr.setLicenseVersion(m.getLicenseVersion());
+          mdr.setProvenance(m.getProvenance());
+          mdr.setHasDefaultValues(
               m.getDefaultDarwinCoreValues() != null && !m.getDefaultDarwinCoreValues().isEmpty());
 
           // hub memberships
           List<EntityReference> hubs = m.getHubMembership();
           if (hubs != null && !hubs.isEmpty()) {
             List<org.gbif.pipelines.io.avro.EntityReference> refs = new ArrayList<>();
-            aar.setHubMembership(refs);
+            mdr.setHubMembership(refs);
             hubs.forEach(
                 hub ->
                     refs.add(
@@ -61,13 +63,37 @@ public class ALAAttributionInterpreter {
           throw new RuntimeException(
               "Unable to retrieve connection parameters for dataset: " + datasetId);
         }
+      } else {
+        if (dataResourceKvStore == null) {
+          throw new RuntimeException(
+              "Unable to retrieve connection parameters for dataset: "
+                  + datasetId
+                  + ", dataResourceKvStore is NULL");
+        }
+        if (datasetId == null) {
+          throw new RuntimeException("Unable to retrieve connection parameters. datasetId is NULL");
+        }
       }
     };
   }
 
   public static BiConsumer<ExtendedRecord, ALAAttributionRecord> interpretCodes(
-      KeyValueStore<ALACollectionLookup, ALACollectionMatch> collectionKvStore) {
+      KeyValueStore<ALACollectionLookup, ALACollectionMatch> collectionKvStore,
+      ALAMetadataRecord mdr) {
     return (er, aar) -> {
+
+      // copy values from MDR to AAR
+      aar.setDataResourceUid(mdr.getDataResourceUid());
+      aar.setDataResourceName(mdr.getDataResourceName());
+      aar.setDataProviderUid(mdr.getDataProviderUid());
+      aar.setDataProviderName(mdr.getDataProviderName());
+      aar.setHubMembership(mdr.getHubMembership());
+      aar.setLicenseType(mdr.getLicenseType());
+      aar.setLicenseVersion(mdr.getLicenseVersion());
+      aar.setProvenance(mdr.getProvenance());
+      aar.setHasDefaultValues(mdr.getHasDefaultValues());
+      aar.setHubMembership(mdr.getHubMembership());
+
       if (collectionKvStore != null) {
 
         String collectionCode =

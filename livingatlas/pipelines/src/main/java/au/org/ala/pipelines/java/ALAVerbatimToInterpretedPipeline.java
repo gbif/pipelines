@@ -48,7 +48,6 @@ import org.gbif.pipelines.transforms.Transform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.java.OccurrenceExtensionTransform;
-import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.slf4j.MDC;
 
 /**
@@ -179,12 +178,6 @@ public class ALAVerbatimToInterpretedPipeline {
     log.info("Creating pipelines transforms");
 
     // Core
-    MetadataTransform metadataTransform =
-        MetadataTransform.builder()
-            .endpointType(endPointType)
-            .attempt(attempt)
-            .create()
-            .counterFn(incMetricFn);
     ALABasicTransform basicTransform =
         ALABasicTransform.builder()
             .lifeStageLookupSupplier(
@@ -217,12 +210,27 @@ public class ALAVerbatimToInterpretedPipeline {
     OccurrenceExtensionTransform occExtensionTransform =
         OccurrenceExtensionTransform.create().counterFn(incMetricFn);
 
+    // Collectory metadata
+    ALAMetadataTransform metadataTransform =
+        ALAMetadataTransform.builder()
+            .dataResourceKvStoreSupplier(ALAAttributionKVStoreFactory.getInstanceSupplier(config))
+            .datasetId(datasetId)
+            .create();
+    metadataTransform.setup();
+
+    Optional<ALAMetadataRecord> result = metadataTransform.processElement(options.getDatasetId());
+    ALAMetadataRecord mdr;
+    if (result.isPresent()) {
+      mdr = result.get();
+    } else {
+      throw new RuntimeException(
+          "Unable to retrieve metadata from collectory for datasetId:" + datasetId);
+    }
+
     // ALA specific - Attribution
     ALAAttributionTransform alaAttributionTransform =
         ALAAttributionTransform.builder()
-            .dataResourceKvStoreSupplier(ALAAttributionKVStoreFactory.getInstanceSupplier(config))
             .collectionKvStoreSupplier(ALACollectionKVStoreFactory.getInstanceSupplier(config))
-            .datasetId(options.getDatasetId())
             .create();
 
     // ALA specific - Taxonomy
@@ -261,8 +269,6 @@ public class ALAVerbatimToInterpretedPipeline {
     log.info("Creating writers");
     try (SyncDataFileWriter<ExtendedRecord> verbatimWriter =
             createWriter(options, ExtendedRecord.getClassSchema(), verbatimTransform, id);
-        SyncDataFileWriter<MetadataRecord> metadataWriter =
-            createWriter(options, MetadataRecord.getClassSchema(), metadataTransform, id);
         SyncDataFileWriter<BasicRecord> basicWriter =
             createWriter(options, BasicRecord.getClassSchema(), basicTransform, id);
         SyncDataFileWriter<TemporalRecord> temporalWriter =
@@ -280,12 +286,6 @@ public class ALAVerbatimToInterpretedPipeline {
                 options, ALAAttributionRecord.getClassSchema(), alaAttributionTransform, id)) {
 
       log.info("Creating metadata record");
-      // Create MetadataRecord
-      MetadataRecord mdr =
-          metadataTransform
-              .processElement(options.getDatasetId())
-              .orElseThrow(() -> new IllegalArgumentException("MetadataRecord can't be null"));
-      metadataWriter.append(mdr);
 
       // Read DWCA and replace default values
       log.info("Reading Verbatim into erMap");
@@ -313,7 +313,7 @@ public class ALAVerbatimToInterpretedPipeline {
             // ALA specific
             locationTransform.processElement(er).ifPresent(locationWriter::append);
             alaTaxonomyTransform.processElement(er).ifPresent(alaTaxonWriter::append);
-            alaAttributionTransform.processElement(er).ifPresent(alaAttributionWriter::append);
+            alaAttributionTransform.processElement(er, mdr).ifPresent(alaAttributionWriter::append);
           };
 
       // Run async interpretation and writing for all records
