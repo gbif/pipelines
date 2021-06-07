@@ -37,6 +37,9 @@ public class InterpreterConfiguration implements BaseConfiguration {
   @NotNull
   public String processRunner;
 
+  @Parameter(names = "--validator-only")
+  public boolean validatorOnly = false;
+
   @Parameter(names = "--delete-after-days")
   public long deleteAfterDays = 7L;
 

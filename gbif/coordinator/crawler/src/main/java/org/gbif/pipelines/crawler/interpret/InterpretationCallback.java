@@ -73,6 +73,7 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
         .config(config)
         .curator(curator)
         .stepType(StepType.VERBATIM_TO_INTERPRETED)
+        .isValidator(config.validatorOnly)
         .publisher(publisher)
         .message(message)
         .handler(this)

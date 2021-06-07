@@ -42,13 +42,14 @@ public class ZookeeperUtils {
    *
    * @param crawlId root node path
    */
-  public static void checkMonitoringById(CuratorFramework curator, int size, String crawlId) {
+  public static void checkMonitoringById(
+      CuratorFramework curator, int size, String crawlId, boolean isValidator) {
     try {
-      String path = getPipelinesInfoPath(crawlId);
+      String path = getPipelinesInfoPath(crawlId, isValidator);
       if (checkExists(curator, path)) {
         InterProcessMutex mutex = new InterProcessMutex(curator, path);
         mutex.acquire();
-        int counter = getAsInteger(curator, crawlId, SIZE).orElse(0) + 1;
+        int counter = getAsInteger(curator, crawlId, SIZE, isValidator).orElse(0) + 1;
         if (counter >= size) {
 
           log.info("Delete zookeeper node, crawlId - {}", crawlId);
@@ -65,7 +66,7 @@ public class ZookeeperUtils {
           }
 
         } else {
-          updateMonitoring(curator, crawlId, SIZE, Integer.toString(counter));
+          updateMonitoring(curator, crawlId, SIZE, Integer.toString(counter), isValidator);
         }
         mutex.release();
       }
@@ -76,8 +77,8 @@ public class ZookeeperUtils {
 
   /** Read value from Zookeeper as a {@link String} */
   public static Optional<Integer> getAsInteger(
-      CuratorFramework curator, String crawlId, String path) throws Exception {
-    String infoPath = getPipelinesInfoPath(crawlId, path);
+      CuratorFramework curator, String crawlId, String path, boolean isValidator) throws Exception {
+    String infoPath = getPipelinesInfoPath(crawlId, path, isValidator);
     if (checkExists(curator, infoPath)) {
       byte[] responseData = curator.getData().forPath(infoPath);
       if (responseData != null && responseData.length > 0) {
@@ -107,8 +108,8 @@ public class ZookeeperUtils {
    * @param value some String value
    */
   public static void updateMonitoring(
-      CuratorFramework curator, String crawlId, String path, String value) {
-    String fullPath = getPipelinesInfoPath(crawlId, path);
+      CuratorFramework curator, String crawlId, String path, String value, boolean isValidator) {
+    String fullPath = getPipelinesInfoPath(crawlId, path, isValidator);
     updateMonitoring(curator, fullPath, value, CreateMode.EPHEMERAL);
   }
 
@@ -148,8 +149,9 @@ public class ZookeeperUtils {
    * @param crawlId root node path
    * @param path child node path
    */
-  public static void updateMonitoringDate(CuratorFramework curator, String crawlId, String path) {
+  public static void updateMonitoringDate(
+      CuratorFramework curator, String crawlId, String path, boolean isValidator) {
     String value = LocalDateTime.now(ZoneOffset.UTC).format(ISO_LOCAL_DATE_TIME);
-    updateMonitoring(curator, crawlId, path, value);
+    updateMonitoring(curator, crawlId, path, value, isValidator);
   }
 }

@@ -38,6 +38,9 @@ public class DwcaToAvroConfiguration implements BaseConfiguration {
   @NotNull
   public String fileName = Conversion.FILE_NAME + Pipeline.AVRO_EXTENSION;
 
+  @Parameter(names = "--validator-only")
+  public boolean validatorOnly = false;
+
   @Override
   public String getHdfsSiteConfig() {
     return stepConfig.hdfsSiteConfig;

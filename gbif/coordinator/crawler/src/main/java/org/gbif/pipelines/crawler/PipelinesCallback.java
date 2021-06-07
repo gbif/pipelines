@@ -67,6 +67,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
   private static Properties properties;
   private final MessagePublisher publisher;
   @NonNull private final StepType stepType;
+  @NonNull private final Boolean isValidator;
   @NonNull private final CuratorFramework curator;
   @NonNull private final PipelinesHistoryWsClient client;
   @NonNull private final BaseConfiguration config;
@@ -122,7 +123,8 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
 
       // Check start date If CLI was restarted it will be empty
       String startDateZkPath = Fn.START_DATE.apply(stepType.getLabel());
-      String fullPath = getPipelinesInfoPath(message.getDatasetUuid().toString(), startDateZkPath);
+      String fullPath =
+          getPipelinesInfoPath(message.getDatasetUuid().toString(), startDateZkPath, isValidator);
 
       log.info("Message has been received {}", message);
       if (ZookeeperUtils.getAsString(curator, fullPath).isPresent()) {
@@ -142,23 +144,28 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
       }
 
       String mqMessageZkPath = Fn.MQ_MESSAGE.apply(stepType.getLabel());
-      ZookeeperUtils.updateMonitoring(curator, datasetKey, mqMessageZkPath, message.toString());
+      ZookeeperUtils.updateMonitoring(
+          curator, datasetKey, mqMessageZkPath, message.toString(), isValidator);
 
       String mqClassNameZkPath = Fn.MQ_CLASS_NAME.apply(stepType.getLabel());
       ZookeeperUtils.updateMonitoring(
-          curator, datasetKey, mqClassNameZkPath, message.getClass().getCanonicalName());
+          curator,
+          datasetKey,
+          mqClassNameZkPath,
+          message.getClass().getCanonicalName(),
+          isValidator);
 
-      ZookeeperUtils.updateMonitoringDate(curator, datasetKey, startDateZkPath);
+      ZookeeperUtils.updateMonitoringDate(curator, datasetKey, startDateZkPath, isValidator);
 
       String runnerZkPath = Fn.RUNNER.apply(stepType.getLabel());
-      ZookeeperUtils.updateMonitoring(curator, datasetKey, runnerZkPath, getRunner());
+      ZookeeperUtils.updateMonitoring(curator, datasetKey, runnerZkPath, getRunner(), isValidator);
 
       log.info("Handler has been started, datasetKey - {}", datasetKey);
       runnable.run();
       log.info("Handler has been finished, datasetKey - {}", datasetKey);
 
       String endDatePath = Fn.END_DATE.apply(stepType.getLabel());
-      ZookeeperUtils.updateMonitoringDate(curator, datasetKey, endDatePath);
+      ZookeeperUtils.updateMonitoringDate(curator, datasetKey, endDatePath, isValidator);
 
       // update tracking status
       trackingInfo.ifPresent(info -> updateTrackingStatus(info, PipelineStep.Status.COMPLETED));
@@ -167,7 +174,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
       if (outgoingMessage != null) {
         String successfulPath = Fn.SUCCESSFUL_AVAILABILITY.apply(stepType.getLabel());
         ZookeeperUtils.updateMonitoring(
-            curator, datasetKey, successfulPath, Boolean.TRUE.toString());
+            curator, datasetKey, successfulPath, Boolean.TRUE.toString(), isValidator);
 
         // set the executionId
         trackingInfo.ifPresent(info -> outgoingMessage.setExecutionId(info.executionId));
@@ -180,21 +187,23 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
         log.info(info);
 
         String successfulMessagePath = Fn.SUCCESSFUL_MESSAGE.apply(stepType.getLabel());
-        ZookeeperUtils.updateMonitoring(curator, datasetKey, successfulMessagePath, info);
+        ZookeeperUtils.updateMonitoring(
+            curator, datasetKey, successfulMessagePath, info, isValidator);
       }
 
       // Change zookeeper counter for passed steps
-      ZookeeperUtils.checkMonitoringById(curator, steps.size(), datasetKey);
+      ZookeeperUtils.checkMonitoringById(curator, steps.size(), datasetKey, isValidator);
 
     } catch (Exception ex) {
       String error = "Error for datasetKey - " + datasetKey + " : " + ex.getMessage();
       log.error(error, ex);
 
       String errorPath = Fn.ERROR_AVAILABILITY.apply(stepType.getLabel());
-      ZookeeperUtils.updateMonitoring(curator, datasetKey, errorPath, Boolean.TRUE.toString());
+      ZookeeperUtils.updateMonitoring(
+          curator, datasetKey, errorPath, Boolean.TRUE.toString(), isValidator);
 
       String errorMessagePath = Fn.ERROR_MESSAGE.apply(stepType.getLabel());
-      ZookeeperUtils.updateMonitoring(curator, datasetKey, errorMessagePath, error);
+      ZookeeperUtils.updateMonitoring(curator, datasetKey, errorMessagePath, error, isValidator);
 
       // update tracking status
       trackingInfo.ifPresent(info -> updateTrackingStatus(info, PipelineStep.Status.FAILED));

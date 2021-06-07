@@ -56,6 +56,7 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
         .config(config)
         .curator(curator)
         .stepType(StepType.DWCA_TO_VERBATIM)
+        .isValidator(config.validatorOnly)
         .publisher(publisher)
         .message(message)
         .handler(this)

@@ -83,7 +83,7 @@
     <gbif-postal-service.version>1.0</gbif-postal-service.version>
     <gbif-registry.version>2.153</gbif-registry.version>
     <gbif-wrangler.version>0.3</gbif-wrangler.version>
-    <gbif-crawler.version>0.113</gbif-crawler.version>
+    <gbif-crawler.version>1.10-SNAPSHOT</gbif-crawler.version>
 
     <guava.version>23.0</guava.version>
 
