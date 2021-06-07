@@ -84,6 +84,9 @@ public class CompleteIngestJavaPipelineTestIT {
     assertEquals(Long.valueOf(6), SolrUtils.getRecordCount("cl620:*"));
     assertEquals(Long.valueOf(6), SolrUtils.getRecordCount("cl927:*"));
 
+    assertEquals(
+        Long.valueOf(5), SolrUtils.getRecordCount("dynamicProperties_nonDwcFieldSalinity:*"));
+
     // 3. has a sensitive record
     assertEquals(Long.valueOf(1), SolrUtils.getRecordCount("sensitive:generalised"));
     SolrDocument sensitive = SolrUtils.getRecords("sensitive:generalised").get(0);
