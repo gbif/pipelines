@@ -137,7 +137,7 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
         message.getPipelineSteps(),
         null,
         null,
-        config.validatorOnly);
+        message.isValidator() || config.validatorOnly);
   }
 
   private void runLocal(ProcessRunnerBuilderBuilder builder) {

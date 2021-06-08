@@ -48,7 +48,7 @@ public class HdfsViewService extends AbstractIdleService {
         new HdfsViewCallback(config, publisher, curator, historyWsClient, executor);
 
     String routingKey =
-        PipelinesInterpretedMessage.ROUTING_KEY + "." + config.processRunner.toLowerCase();
+        new PipelinesInterpretedMessage().setRunner(config.processRunner).getRoutingKey();
     listener.listen(c.queueName, routingKey, c.poolSize, callback);
   }
 

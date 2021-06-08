@@ -98,7 +98,7 @@ final class ProcessRunnerBuilder {
 
     Optional.ofNullable(defaultDateFormat).ifPresent(x -> command.add("--defaultDateFormat=" + x));
 
-    if (config.validatorOnly) {
+    if (message.isValidator() || config.validatorOnly) {
       command
           .add("--tripletValid=false")
           .add("--occurrenceIdValid=false")

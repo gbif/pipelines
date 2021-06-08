@@ -73,7 +73,7 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
         .config(config)
         .curator(curator)
         .stepType(StepType.VERBATIM_TO_INTERPRETED)
-        .isValidator(config.validatorOnly)
+        .isValidator(message.isValidator())
         .publisher(publisher)
         .message(message)
         .handler(this)
@@ -165,7 +165,7 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
         message.getEndpointType(),
         message.getValidationResult(),
         message.getInterpretTypes(),
-        config.validatorOnly);
+        message.isValidator() || config.validatorOnly);
   }
 
   private void runLocal(ProcessRunnerBuilderBuilder builder) {

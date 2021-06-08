@@ -59,9 +59,11 @@ public class InterpretationService extends AbstractIdleService {
         new InterpretationCallback(
             config, publisher, curator, historyWsClient, httpClient, executor);
 
-    String validator = config.validatorOnly ? ".validator." : ".";
     String routingKey =
-        PipelinesVerbatimMessage.ROUTING_KEY + validator + config.processRunner.toLowerCase();
+        new PipelinesVerbatimMessage()
+            .setValidator(config.validatorOnly)
+            .setRunner(config.processRunner)
+            .getRoutingKey();
     listener.listen(c.queueName, routingKey, c.poolSize, callback);
   }
 

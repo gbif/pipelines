@@ -37,8 +37,8 @@ public class DwcaToAvroService extends AbstractIdleService {
     PipelinesHistoryWsClient client =
         c.registry.newRegistryInjector().getInstance(PipelinesHistoryWsClient.class);
 
-    String validator = config.validatorOnly ? ".validator" : "";
-    String routingKey = PipelinesVerbatimMessage.ROUTING_KEY + validator;
+    String routingKey =
+        new PipelinesVerbatimMessage().setValidator(config.validatorOnly).getRoutingKey();
     listener.listen(
         c.queueName,
         routingKey,

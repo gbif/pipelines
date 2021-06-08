@@ -56,7 +56,7 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
         .config(config)
         .curator(curator)
         .stepType(StepType.DWCA_TO_VERBATIM)
-        .isValidator(config.validatorOnly)
+        .isValidator(message.isValidator())
         .publisher(publisher)
         .message(message)
         .handler(this)
@@ -154,7 +154,7 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
         validationResult,
         null,
         null,
-        config.validatorOnly);
+        message.isValidator() || config.validatorOnly);
   }
 
   /**

@@ -59,7 +59,10 @@ public class IndexingService extends AbstractIdleService {
         new IndexingCallback(config, publisher, curator, httpClient, client, executor);
 
     String routingKey =
-        PipelinesInterpretedMessage.ROUTING_KEY + "." + config.processRunner.toLowerCase();
+        new PipelinesInterpretedMessage()
+            .setValidator(config.validatorOnly)
+            .setRunner(config.processRunner)
+            .getRoutingKey();
     listener.listen(c.queueName, routingKey, c.poolSize, callback);
   }
 
