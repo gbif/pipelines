@@ -26,10 +26,15 @@ import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.transforms.join.CoGroupByKey;
 import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.*;
+import org.apache.solr.client.solrj.impl.CloudSolrClient;
+import org.apache.solr.client.solrj.request.schema.SchemaRequest;
+import org.apache.solr.client.solrj.response.schema.SchemaResponse;
+import org.apache.solr.common.SolrInputDocument;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.io.avro.*;
+import org.jetbrains.annotations.NotNull;
 import org.joda.time.Duration;
 import org.slf4j.MDC;
 
@@ -62,6 +67,9 @@ public class IndexRecordToSolrPipeline {
   }
 
   public static void run(SolrPipelineOptions options) {
+
+    final List<String> schemaFields = getSchemaFields(options);
+    final List<String> dynamicFieldPrefixes = getSchemaDynamicFieldPrefixes(options);
 
     Pipeline pipeline = Pipeline.create(options);
 
@@ -160,11 +168,11 @@ public class IndexRecordToSolrPipeline {
       SolrIO.ConnectionConfiguration conn =
           SolrIO.ConnectionConfiguration.create(options.getZkHost());
 
-      writeToSolr(options, pcs, conn);
+      writeToSolr(options, pcs, conn, schemaFields, dynamicFieldPrefixes);
 
       if (recordsWithoutCoordinates != null) {
         log.info("Adding step 5: Write records (without coordinates) to SOLR");
-        writeToSolr(options, recordsWithoutCoordinates, conn);
+        writeToSolr(options, recordsWithoutCoordinates, conn, schemaFields, dynamicFieldPrefixes);
       }
 
     } else {
@@ -172,13 +180,46 @@ public class IndexRecordToSolrPipeline {
       SolrIO.ConnectionConfiguration conn =
           SolrIO.ConnectionConfiguration.create(options.getZkHost());
 
-      writeToSolr(options, indexRecordsCollection, conn);
+      writeToSolr(options, indexRecordsCollection, conn, schemaFields, dynamicFieldPrefixes);
     }
 
     log.info("Starting pipeline");
     pipeline.run(options).waitUntilFinish();
 
     log.info("Solr indexing pipeline complete");
+  }
+
+  @NotNull
+  private static List<String> getSchemaFields(SolrPipelineOptions options) {
+    try {
+      CloudSolrClient client = new CloudSolrClient(options.getZkHost());
+      SchemaRequest.Fields fields = new SchemaRequest.Fields();
+      SchemaResponse.FieldsResponse response = fields.process(client, options.getSolrCollection());
+      final List<String> schemaFields =
+          response.getFields().stream()
+              .map(f -> f.get("name").toString())
+              .collect(Collectors.toList());
+      return schemaFields;
+    } catch (Exception e) {
+      throw new RuntimeException("Unable to retrieve schema fields: " + e.getMessage());
+    }
+  }
+
+  @NotNull
+  private static List<String> getSchemaDynamicFieldPrefixes(SolrPipelineOptions options) {
+    try {
+      CloudSolrClient client = new CloudSolrClient(options.getZkHost());
+      SchemaRequest.DynamicFields fields = new SchemaRequest.DynamicFields();
+      SchemaResponse.DynamicFieldsResponse response =
+          fields.process(client, options.getSolrCollection());
+      final List<String> schemaFields =
+          response.getDynamicFields().stream()
+              .map(f -> f.get("name").toString().replace("*", ""))
+              .collect(Collectors.toList());
+      return schemaFields;
+    } catch (Exception e) {
+      throw new RuntimeException("Unable to retrieve schema fields: " + e.getMessage());
+    }
   }
 
   private static PCollection<KV<String, IndexRecord>> joinSampleRecord(
@@ -237,13 +278,27 @@ public class IndexRecordToSolrPipeline {
   private static void writeToSolr(
       SolrPipelineOptions options,
       PCollection<KV<String, IndexRecord>> kvIndexRecords,
-      SolrIO.ConnectionConfiguration conn) {
+      SolrIO.ConnectionConfiguration conn,
+      final List<String> schemaFields,
+      final List<String> dynamicFieldPrefixes) {
 
     if (options.getOutputAvroToFilePath() == null) {
+
       kvIndexRecords
           .apply(
               "IndexRecord to SOLR Document",
-              ParDo.of(new IndexRecordTransform.KVIndexRecordToSolrInputDocumentFcn()))
+              ParDo.of(
+                  new DoFn<KV<String, IndexRecord>, SolrInputDocument>() {
+                    @DoFn.ProcessElement
+                    public void processElement(
+                        @DoFn.Element KV<String, IndexRecord> kvIndexRecord,
+                        OutputReceiver<SolrInputDocument> out) {
+                      SolrInputDocument solrInputDocument =
+                          IndexRecordTransform.convertIndexRecordToSolrDoc(
+                              kvIndexRecord.getValue(), schemaFields, dynamicFieldPrefixes);
+                      out.output(solrInputDocument);
+                    }
+                  }))
           .apply(
               SolrIO.write()
                   .to(options.getSolrCollection())
