@@ -214,6 +214,11 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
 
   private Optional<TrackingInfo> trackPipelineStep() {
     try {
+
+      if (isValidator) {
+        return Optional.empty();
+      }
+
       // create pipeline process. If it already exists it returns the existing one (the db query
       // does an upsert).
       UUID datasetUuid = message.getDatasetUuid();
