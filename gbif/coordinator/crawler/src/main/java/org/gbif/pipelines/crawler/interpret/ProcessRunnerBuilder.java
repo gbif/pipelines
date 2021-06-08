@@ -98,17 +98,23 @@ final class ProcessRunnerBuilder {
 
     Optional.ofNullable(defaultDateFormat).ifPresent(x -> command.add("--defaultDateFormat=" + x));
 
-    Optional.ofNullable(message.getValidationResult())
-        .ifPresent(
-            vr ->
-                command
-                    .add("--tripletValid=" + vr.isTripletValid())
-                    .add("--occurrenceIdValid=" + vr.isOccurrenceIdValid()));
+    if (config.validatorOnly) {
+      command
+          .add("--tripletValid=false")
+          .add("--occurrenceIdValid=false")
+          .add("--useExtendedRecordId=true");
+    } else {
+      Optional.ofNullable(message.getValidationResult())
+          .ifPresent(
+              vr ->
+                  command
+                      .add("--tripletValid=" + vr.isTripletValid())
+                      .add("--occurrenceIdValid=" + vr.isOccurrenceIdValid()));
 
-    Optional.ofNullable(message.getValidationResult())
-        .flatMap(vr -> Optional.ofNullable(vr.isUseExtendedRecordId()))
-        .ifPresent(x -> command.add("--useExtendedRecordId=" + x));
-
+      Optional.ofNullable(message.getValidationResult())
+          .flatMap(vr -> Optional.ofNullable(vr.isUseExtendedRecordId()))
+          .ifPresent(x -> command.add("--useExtendedRecordId=" + x));
+    }
     if (config.useBeamDeprecatedRead) {
       command.add("--experiments=use_deprecated_read");
     }

@@ -67,12 +67,13 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
   private static Properties properties;
   private final MessagePublisher publisher;
   @NonNull private final StepType stepType;
-  @NonNull private final Boolean isValidator;
   @NonNull private final CuratorFramework curator;
   @NonNull private final PipelinesHistoryWsClient client;
   @NonNull private final BaseConfiguration config;
   @NonNull private final I message;
   @NonNull private final StepHandler<I, O> handler;
+
+  @Builder.Default private boolean isValidator = false;
 
   static {
     try {
