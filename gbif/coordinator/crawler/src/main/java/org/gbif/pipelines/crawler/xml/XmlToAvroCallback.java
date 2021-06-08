@@ -25,6 +25,7 @@ import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
+import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage.ValidationResult;
 import org.gbif.common.messaging.api.messages.PipelinesXmlMessage;
 import org.gbif.common.messaging.api.messages.Platform;
 import org.gbif.converters.XmlToAvroConverter;
@@ -153,7 +154,13 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
         message.getAttempt(),
         getAllInterpretationAsString(),
         message.getPipelineSteps(),
-        message.getEndpointType());
+        null,
+        message.getEndpointType(),
+        null,
+        new ValidationResult(true, true, null, null),
+        null,
+        null,
+        config.validatorOnly);
   }
 
   @Override

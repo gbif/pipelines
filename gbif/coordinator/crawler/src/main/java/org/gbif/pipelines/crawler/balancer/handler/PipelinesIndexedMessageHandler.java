@@ -33,7 +33,8 @@ public class PipelinesIndexedMessageHandler {
             m.getAttempt(),
             m.getPipelineSteps(),
             m.getRunner(),
-            m.getExecutionId());
+            m.getExecutionId(),
+            m.isValidator());
 
     publisher.send(outputMessage);
 

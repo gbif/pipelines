@@ -62,17 +62,22 @@ public class ProcessRunnerBuilderTest {
     int attempt = 1;
     Set<String> steps = Collections.singleton(RecordType.ALL.name());
     ValidationResult vr = new ValidationResult();
+
     PipelinesInterpretedMessage message =
         new PipelinesInterpretedMessage(
             datasetId,
             attempt,
             steps,
             null,
+            null,
             false,
+            null,
+            null,
             null,
             EndpointType.DWC_ARCHIVE,
             vr,
-            Collections.singleton(OCCURRENCE.name()));
+            Collections.singleton(OCCURRENCE.name()),
+            false);
 
     // Expected
     ProcessBuilder builder =
@@ -138,11 +143,15 @@ public class ProcessRunnerBuilderTest {
             attempt,
             steps,
             100L,
+            null,
             false,
+            null,
+            null,
             null,
             EndpointType.DWC_ARCHIVE,
             vr,
-            Collections.singleton(OCCURRENCE.name()));
+            Collections.singleton(OCCURRENCE.name()),
+            false);
 
     // Expected
     ProcessBuilder builder =

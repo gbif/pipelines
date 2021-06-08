@@ -132,7 +132,12 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
   @Override
   public PipelinesIndexedMessage createOutgoingMessage(PipelinesInterpretedMessage message) {
     return new PipelinesIndexedMessage(
-        message.getDatasetUuid(), message.getAttempt(), message.getPipelineSteps());
+        message.getDatasetUuid(),
+        message.getAttempt(),
+        message.getPipelineSteps(),
+        null,
+        null,
+        config.validatorOnly);
   }
 
   private void runLocal(ProcessRunnerBuilderBuilder builder) {

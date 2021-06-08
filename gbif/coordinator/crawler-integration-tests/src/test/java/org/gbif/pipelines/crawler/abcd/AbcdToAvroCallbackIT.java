@@ -98,7 +98,8 @@ public class AbcdToAvroCallbackIT {
             true,
             Collections.emptySet(),
             EndpointType.BIOCASE_XML_ARCHIVE,
-            EXECUTION_ID);
+            EXECUTION_ID,
+            false);
     String crawlId = DATASET_UUID.toString();
 
     // When
@@ -137,7 +138,8 @@ public class AbcdToAvroCallbackIT {
             true,
             Collections.emptySet(),
             EndpointType.DIGIR,
-            EXECUTION_ID);
+            EXECUTION_ID,
+            false);
 
     // When
     callback.handleMessage(message);
@@ -177,7 +179,8 @@ public class AbcdToAvroCallbackIT {
             false,
             Collections.emptySet(),
             EndpointType.DIGIR,
-            EXECUTION_ID);
+            EXECUTION_ID,
+            false);
     String crawlId = DATASET_UUID.toString();
 
     // When

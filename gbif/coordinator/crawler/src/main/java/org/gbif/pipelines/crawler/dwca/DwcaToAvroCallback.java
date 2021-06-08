@@ -148,8 +148,13 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
         message.getAttempt(),
         interpretedTypes,
         message.getPipelineSteps(),
+        null,
         message.getEndpointType(),
-        validationResult);
+        null,
+        validationResult,
+        null,
+        null,
+        config.validatorOnly);
   }
 
   /**

@@ -103,6 +103,7 @@ public class DwcaToAvroCallbackIT {
             Collections.emptySet(),
             EndpointType.DWC_ARCHIVE,
             Platform.PIPELINES,
+            null,
             null);
 
     // When
@@ -149,7 +150,8 @@ public class DwcaToAvroCallbackIT {
             Collections.singleton(DWCA_TO_VERBATIM.name()),
             EndpointType.DWC_ARCHIVE,
             Platform.PIPELINES,
-            EXECUTION_ID);
+            EXECUTION_ID,
+            false);
 
     // When
     callback.handleMessage(message);
@@ -194,7 +196,8 @@ public class DwcaToAvroCallbackIT {
             Collections.emptySet(),
             EndpointType.DWC_ARCHIVE,
             Platform.PIPELINES,
-            EXECUTION_ID);
+            EXECUTION_ID,
+            false);
 
     // When
     callback.handleMessage(message);
@@ -238,7 +241,8 @@ public class DwcaToAvroCallbackIT {
             Collections.singleton(DWCA_TO_VERBATIM.name()),
             EndpointType.DWC_ARCHIVE,
             Platform.PIPELINES,
-            EXECUTION_ID);
+            EXECUTION_ID,
+            false);
 
     // When
     callback.handleMessage(message);

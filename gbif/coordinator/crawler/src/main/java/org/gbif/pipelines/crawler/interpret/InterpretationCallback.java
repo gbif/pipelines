@@ -151,16 +151,21 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
     }
 
     boolean repeatAttempt = pathExists(message);
+
     return new PipelinesInterpretedMessage(
         message.getDatasetUuid(),
         message.getAttempt(),
         message.getPipelineSteps(),
         recordsNumber,
+        null,
         repeatAttempt,
         message.getResetPrefix(),
+        null,
+        null,
         message.getEndpointType(),
         message.getValidationResult(),
-        message.getInterpretTypes());
+        message.getInterpretTypes(),
+        config.validatorOnly);
   }
 
   private void runLocal(ProcessRunnerBuilderBuilder builder) {

@@ -90,6 +90,7 @@ public class XmlToAvroCallbackIT {
     config.archiveRepositorySubdir = "xml";
     XmlToAvroCallback callback =
         new XmlToAvroCallback(config, publisher, curator, historyClient, executor, null);
+
     PipelinesXmlMessage message =
         new PipelinesXmlMessage(
             DATASET_UUID,
@@ -99,7 +100,8 @@ public class XmlToAvroCallbackIT {
             Collections.emptySet(),
             EndpointType.BIOCASE_XML_ARCHIVE,
             Platform.PIPELINES,
-            EXECUTION_ID);
+            EXECUTION_ID,
+            false);
     String crawlId = DATASET_UUID.toString();
 
     // When
@@ -129,6 +131,7 @@ public class XmlToAvroCallbackIT {
     config.archiveRepositorySubdir = "xml";
     XmlToAvroCallback callback =
         new XmlToAvroCallback(config, publisher, curator, historyClient, executor, null);
+
     PipelinesXmlMessage message =
         new PipelinesXmlMessage(
             DATASET_UUID,
@@ -138,7 +141,8 @@ public class XmlToAvroCallbackIT {
             Collections.emptySet(),
             EndpointType.BIOCASE_XML_ARCHIVE,
             Platform.PIPELINES,
-            EXECUTION_ID);
+            EXECUTION_ID,
+            false);
     String crawlId = DATASET_UUID.toString();
 
     // When
@@ -178,7 +182,8 @@ public class XmlToAvroCallbackIT {
             Collections.emptySet(),
             EndpointType.BIOCASE_XML_ARCHIVE,
             Platform.PIPELINES,
-            EXECUTION_ID);
+            EXECUTION_ID,
+            false);
     String crawlId = datasetKey.toString();
 
     // When

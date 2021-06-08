@@ -43,6 +43,9 @@ public class IndexingConfiguration implements BaseConfiguration {
   @Parameter(names = "--use-beam-deprecated-read")
   public boolean useBeamDeprecatedRead = true;
 
+  @Parameter(names = "--validator-only")
+  public boolean validatorOnly = false;
+
   @Override
   public String getHdfsSiteConfig() {
     return stepConfig.hdfsSiteConfig;
