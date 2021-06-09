@@ -59,11 +59,13 @@ public class InterpretationService extends AbstractIdleService {
         new InterpretationCallback(
             config, publisher, curator, historyWsClient, httpClient, executor);
 
-    String routingKey =
-        new PipelinesVerbatimMessage()
-            .setValidator(config.validatorOnly)
-            .setRunner(config.processRunner)
-            .getRoutingKey();
+    String routingKey;
+    PipelinesVerbatimMessage vm = new PipelinesVerbatimMessage().setValidator(config.validatorOnly);
+    if (config.validatorOnly && config.validatorListenAllMq) {
+      routingKey = vm.getRoutingKey() + ".*";
+    } else {
+      routingKey = vm.setRunner(config.processRunner).getRoutingKey();
+    }
     listener.listen(c.queueName, routingKey, c.poolSize, callback);
   }
 

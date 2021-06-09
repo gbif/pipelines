@@ -46,6 +46,9 @@ public class IndexingConfiguration implements BaseConfiguration {
   @Parameter(names = "--validator-only")
   public boolean validatorOnly = false;
 
+  @Parameter(names = "--validator-listen-all-mq")
+  public boolean validatorListenAllMq = true;
+
   @Override
   public String getHdfsSiteConfig() {
     return stepConfig.hdfsSiteConfig;

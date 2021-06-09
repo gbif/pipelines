@@ -53,7 +53,7 @@ public class FragmenterService extends AbstractIdleService {
         new FragmenterCallback(
             config, publisher, curator, client, executor, hbaseConnection, keygenConfig);
 
-    String routingKey = PipelinesInterpretedMessage.ROUTING_KEY + ".*";
+    String routingKey = new PipelinesInterpretedMessage().getRoutingKey() + ".*";
     listener.listen(c.queueName, routingKey, c.poolSize, callback);
   }
 

@@ -40,6 +40,9 @@ public class InterpreterConfiguration implements BaseConfiguration {
   @Parameter(names = "--validator-only")
   public boolean validatorOnly = false;
 
+  @Parameter(names = "--validator-listen-all-mq")
+  public boolean validatorListenAllMq = true;
+
   @Parameter(names = "--delete-after-days")
   public long deleteAfterDays = 7L;
 
