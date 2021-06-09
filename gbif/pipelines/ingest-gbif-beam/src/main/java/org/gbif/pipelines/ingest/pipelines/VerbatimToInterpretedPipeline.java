@@ -158,8 +158,12 @@ public class VerbatimToInterpretedPipeline {
     log.info("Creating a pipeline from options");
     Pipeline p = pipelinesFn.apply(options);
 
-    SerializableSupplier<MetadataServiceClient> metadataServiceClientSerializableSupplier =
-        MetadataServiceClientFactory.createSupplier(config);
+    // Init external clients - ws, kv caches, etc
+    SerializableSupplier<MetadataServiceClient> metadataServiceClientSerializableSupplier = null;
+    if (options.getUseMetadataWsCalls()) {
+      metadataServiceClientSerializableSupplier =
+          MetadataServiceClientFactory.createSupplier(config);
+    }
     SerializableSupplier<KeyValueStore<SpeciesMatchRequest, NameUsageMatch>>
         nameUsageMatchServiceSupplier = NameUsageMatchStoreFactory.createSupplier(config);
     SerializableSupplier<KeyValueStore<GrscicollLookupRequest, GrscicollLookupResponse>>

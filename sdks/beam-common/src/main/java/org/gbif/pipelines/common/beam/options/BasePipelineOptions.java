@@ -68,6 +68,12 @@ public interface BasePipelineOptions extends PipelineOptions {
 
   void setTestMode(boolean testMode);
 
+  @Description("Use metadata ws calls, false can be usefull for valitador and etc")
+  @Default.Boolean(true)
+  boolean getUseMetadataWsCalls();
+
+  void setUseMetadataWsCalls(boolean useMetadataWsCalls);
+
   /** A {@link DefaultValueFactory} which locates a default directory. */
   class DefaultDirectoryFactory implements DefaultValueFactory<String> {
 
@@ -75,7 +81,7 @@ public interface BasePipelineOptions extends PipelineOptions {
       List<Configuration> configs =
           options.as(HadoopFileSystemOptions.class).getHdfsConfiguration();
 
-      return Optional.ofNullable(configs)
+      return Optional.of(configs)
           .filter(x -> !x.isEmpty())
           // we take the first config as default
           .map(c -> configs.get(0).get(CommonConfigurationKeysPublic.FS_DEFAULT_NAME_KEY));

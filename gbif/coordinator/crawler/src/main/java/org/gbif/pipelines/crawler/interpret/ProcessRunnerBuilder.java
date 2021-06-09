@@ -102,7 +102,8 @@ final class ProcessRunnerBuilder {
       command
           .add("--tripletValid=false")
           .add("--occurrenceIdValid=false")
-          .add("--useExtendedRecordId=true");
+          .add("--useExtendedRecordId=true")
+          .add("--useMetadataWsCalls=false");
     } else {
       Optional.ofNullable(message.getValidationResult())
           .ifPresent(

@@ -181,8 +181,11 @@ public class VerbatimToInterpretedPipeline {
     IngestMetrics metrics = IngestMetricsBuilder.createVerbatimToInterpretedMetrics();
     SerializableConsumer<String> incMetricFn = metrics::incMetric;
 
-    SerializableSupplier<MetadataServiceClient> metadataServiceClientSerializableSupplier =
-        MetadataServiceClientFactory.getInstanceSupplier(config);
+    SerializableSupplier<MetadataServiceClient> metadataServiceClientSerializableSupplier = null;
+    if (options.getUseMetadataWsCalls()) {
+      metadataServiceClientSerializableSupplier =
+          MetadataServiceClientFactory.getInstanceSupplier(config);
+    }
     SerializableSupplier<KeyValueStore<SpeciesMatchRequest, NameUsageMatch>>
         nameUsageMatchServiceSupplier = NameUsageMatchStoreFactory.getInstanceSupplier(config);
     SerializableSupplier<KeyValueStore<GrscicollLookupRequest, GrscicollLookupResponse>>
