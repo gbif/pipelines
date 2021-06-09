@@ -81,7 +81,7 @@ public interface BasePipelineOptions extends PipelineOptions {
       List<Configuration> configs =
           options.as(HadoopFileSystemOptions.class).getHdfsConfiguration();
 
-      return Optional.of(configs)
+      return Optional.ofNullable(configs)
           .filter(x -> !x.isEmpty())
           // we take the first config as default
           .map(c -> configs.get(0).get(CommonConfigurationKeysPublic.FS_DEFAULT_NAME_KEY));
