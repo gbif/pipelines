@@ -88,7 +88,10 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
   @Override
   public boolean isMessageCorrect(PipelinesVerbatimMessage message) {
     if (Strings.isNullOrEmpty(message.getRunner())) {
-      throw new IllegalArgumentException("Runner can't be null or empty " + message.toString());
+      throw new IllegalArgumentException("Runner can't be null or empty " + message);
+    }
+    if ((message.isValidator() || config.validatorOnly) && config.validatorListenAllMq) {
+      return true;
     }
     return config.processRunner.equals(message.getRunner());
   }
