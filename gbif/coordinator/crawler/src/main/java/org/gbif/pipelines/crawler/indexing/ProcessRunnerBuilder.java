@@ -108,6 +108,10 @@ final class ProcessRunnerBuilder {
     Optional.ofNullable(config.indexConfig.numberReplicas)
         .ifPresent(x -> command.add("--indexNumberReplicas=" + x));
 
+    if (message.isValidator() || config.validatorOnly) {
+      command.add("--esDocumentId=id");
+    }
+
     if (config.useBeamDeprecatedRead) {
       command.add("--experiments=use_deprecated_read");
     }
