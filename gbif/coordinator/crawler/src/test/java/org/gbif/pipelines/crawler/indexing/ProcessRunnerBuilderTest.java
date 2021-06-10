@@ -112,7 +112,8 @@ public class ProcessRunnerBuilderTest {
             + "--deploy-mode cluster --executor-memory 1G --executor-cores 1 --num-executors 1 --driver-memory 4G java.jar "
             + "--datasetId=de7ffb5e-c07b-42dc-8a88-f67a4465fe3d --attempt=1 --runner=SparkRunner --inputPath=tmp --targetPath=tmp "
             + "--metaFileName=interpreted-to-index.yml --hdfsSiteConfig=hdfs.xml --coreSiteConfig=core.xml "
-            + "--esHosts=http://host.com:9300 --properties=/path/ws.config --esIndexName=occurrence --experiments=use_deprecated_read";
+            + "--esHosts=http://host.com:9300 --properties=/path/ws.config --esIndexName=occurrence "
+            + "--esDocumentId=id --experiments=use_deprecated_read";
 
     IndexingConfiguration config = new IndexingConfiguration();
     config.distributedConfig.jarPath = "java.jar";
