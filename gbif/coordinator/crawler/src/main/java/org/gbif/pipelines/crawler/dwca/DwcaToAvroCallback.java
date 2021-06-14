@@ -51,11 +51,15 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
 
   @Override
   public void handleMessage(PipelinesDwcaMessage message) {
+    StepType type =
+        message.isValidator() || config.validatorOnly
+            ? StepType.VALIDATOR_DWCA_TO_VERBATIM
+            : StepType.DWCA_TO_VERBATIM;
     PipelinesCallback.<PipelinesDwcaMessage, PipelinesVerbatimMessage>builder()
         .client(client)
         .config(config)
         .curator(curator)
-        .stepType(StepType.DWCA_TO_VERBATIM)
+        .stepType(type)
         .isValidator(message.isValidator())
         .publisher(publisher)
         .message(message)

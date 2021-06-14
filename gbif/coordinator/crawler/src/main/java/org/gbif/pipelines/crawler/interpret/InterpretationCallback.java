@@ -68,11 +68,16 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
 
   @Override
   public void handleMessage(PipelinesVerbatimMessage message) {
+    StepType type =
+        message.isValidator() || config.validatorOnly
+            ? StepType.VALIDATOR_VERBATIM_TO_INTERPRETED
+            : StepType.VERBATIM_TO_INTERPRETED;
+
     PipelinesCallback.<PipelinesVerbatimMessage, PipelinesInterpretedMessage>builder()
         .client(historyWsClient)
         .config(config)
         .curator(curator)
-        .stepType(StepType.VERBATIM_TO_INTERPRETED)
+        .stepType(type)
         .isValidator(message.isValidator())
         .publisher(publisher)
         .message(message)

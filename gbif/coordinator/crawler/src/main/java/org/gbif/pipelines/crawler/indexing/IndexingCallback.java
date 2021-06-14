@@ -37,7 +37,6 @@ import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpretedMessage>
     implements StepHandler<PipelinesInterpretedMessage, PipelinesIndexedMessage> {
 
-  private static final StepType TYPE = StepType.INTERPRETED_TO_INDEX;
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
   private final IndexingConfiguration config;
@@ -64,11 +63,15 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
 
   @Override
   public void handleMessage(PipelinesInterpretedMessage message) {
+    StepType type =
+        message.isValidator() || config.validatorOnly
+            ? StepType.VALIDATOR_INTERPRETED_TO_INDEX
+            : StepType.INTERPRETED_TO_INDEX;
     PipelinesCallback.<PipelinesInterpretedMessage, PipelinesIndexedMessage>builder()
         .client(client)
         .config(config)
         .curator(curator)
-        .stepType(TYPE)
+        .stepType(type)
         .publisher(publisher)
         .message(message)
         .handler(this)
@@ -88,8 +91,12 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
     if ((message.isValidator() || config.validatorOnly) && config.validatorListenAllMq) {
       return true;
     }
+    StepType type =
+        message.isValidator() || config.validatorOnly
+            ? StepType.VALIDATOR_INTERPRETED_TO_INDEX
+            : StepType.INTERPRETED_TO_INDEX;
     if (message.getOnlyForStep() != null
-        && !message.getOnlyForStep().equalsIgnoreCase(TYPE.name())) {
+        && !message.getOnlyForStep().equalsIgnoreCase(type.name())) {
       return false;
     }
     return config.processRunner.equals(message.getRunner());
