@@ -450,24 +450,24 @@
   <field name="subfamily"   type="string" docValues="true" indexed="true"/>
 
   <!-- ALA Sensitive data fields -->
-  <field name="sensitive"                             type="string" docValues="true" indexed="true"/>
-  <field name="sensitive_dataGeneralizations"         type="string" docValues="true" indexed="true"/>
-  <field name="sensitive_day"                         type="string" docValues="true" indexed="true"/>
-  <field name="sensitive_decimalLatitude"             type="string" docValues="true" indexed="true"/>
-  <field name="sensitive_decimalLongitude"            type="string" docValues="true" indexed="true"/>
-  <field name="sensitive_eventDate"                   type="string" docValues="true" indexed="true"/>
-  <field name="sensitive_eventID"                     type="string" docValues="true" indexed="true"/>
-  <field name="sensitive_eventTime"                   type="string" docValues="true" indexed="true"/>
-  <field name="sensitive_footprintWKT"                type="string" docValues="true" indexed="true"/>
-  <field name="sensitive_locality"                    type="string" docValues="true" indexed="true"/>
-  <field name="sensitive_locationRemarks"             type="string" docValues="true" indexed="true"/>
-  <field name="sensitive_month"                       type="string" docValues="true" indexed="true"/>
-  <field name="sensitive_verbatimCoordinates"         type="string" docValues="true" indexed="true"/>
-  <field name="sensitive_verbatimEventDate"           type="string" docValues="true" indexed="true"/>
-  <field name="sensitive_verbatimLatitude"            type="string" docValues="true" indexed="true"/>
-  <field name="sensitive_verbatimLocality"            type="string" docValues="true" indexed="true"/>
-  <field name="generalisationInMetres"          type="string" docValues="true" indexed="true"/>
-  <field name="generalisationToApplyInMetres"   type="string" docValues="true" indexed="true"/>
+  <field name="sensitive"                             type="string"   docValues="true" indexed="true"/>
+  <field name="sensitive_dataGeneralizations"         type="string"   docValues="true" indexed="true"/>
+  <field name="sensitive_day"                         type="string"   docValues="true" indexed="true"/>
+  <field name="sensitive_decimalLatitude"             type="string"   docValues="true" indexed="true"/>
+  <field name="sensitive_decimalLongitude"            type="string"   docValues="true" indexed="true"/>
+  <field name="sensitive_eventDate"                   type="string"   docValues="true" indexed="true"/>
+  <field name="sensitive_eventID"                     type="string"   docValues="true" indexed="true"/>
+  <field name="sensitive_eventTime"                   type="string"   docValues="true" indexed="true"/>
+  <field name="sensitive_footprintWKT"                type="textsort" docValues="true" indexed="true"/>
+  <field name="sensitive_locality"                    type="string"   docValues="true" indexed="true"/>
+  <field name="sensitive_locationRemarks"             type="string"   docValues="true" indexed="true"/>
+  <field name="sensitive_month"                       type="string"   docValues="true" indexed="true"/>
+  <field name="sensitive_verbatimCoordinates"         type="string"   docValues="true" indexed="true"/>
+  <field name="sensitive_verbatimEventDate"           type="string"   docValues="true" indexed="true"/>
+  <field name="sensitive_verbatimLatitude"            type="string"   docValues="true" indexed="true"/>
+  <field name="sensitive_verbatimLocality"            type="string"   docValues="true" indexed="true"/>
+  <field name="generalisationInMetres"                type="string"   docValues="true" indexed="true"/>
+  <field name="generalisationToApplyInMetres"         type="string"   docValues="true" indexed="true"/>
 
   <!-- GGBN loan fields and ABCD fields -->
   <field name="loanDestination"  type="string" docValues="true" indexed="true"/>
@@ -496,7 +496,7 @@
   <field name="userVerified"           type="boolean" docValues="true" indexed="true" />
 
   <!-- Free text search fields -->
-  <field name="text"                   type="text"    multiValued="true" indexed="true" stored="false" />
+  <field name="text"                   type="textgen" multiValued="true" indexed="true" stored="false" />
   <field name="matched_name"           type="string"  multiValued="true" indexed="true" stored="false" />
   <field name="text_recordedBy"        type="textgen" multiValued="true" indexed="true" stored="false" />
   <field name="text_identifiedBy"      type="textgen" multiValued="true" indexed="true" stored="false" />
