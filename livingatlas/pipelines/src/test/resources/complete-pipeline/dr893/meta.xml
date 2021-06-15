@@ -48,5 +48,6 @@
         <field index="39" term="http://rs.tdwg.org/dwc/terms/otherCatalogNumbers"/>
         <field index="40" term="http://purl.org/dc/terms/references"/>
         <field index="41" term="nonDwcFieldSalinity"/>
+        <field index="42" term="http://rs.tdwg.org/dwc/terms/preparations"/>
       </core>
     </archive>

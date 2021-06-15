@@ -80,6 +80,8 @@ public class CompleteIngestPipelineTestIT {
     // 2. includes samples
     assertEquals(Long.valueOf(6), SolrUtils.getRecordCount("cl620:*"));
     assertEquals(Long.valueOf(6), SolrUtils.getRecordCount("cl927:*"));
+    assertEquals(Long.valueOf(5), SolrUtils.getRecordCount("preparations:*"));
+    assertEquals(Long.valueOf(1), SolrUtils.getRecordCount("preparations:Spirit"));
 
     // dynamic properties indexing
     assertEquals(

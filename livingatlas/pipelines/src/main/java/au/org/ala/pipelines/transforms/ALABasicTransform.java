@@ -3,11 +3,14 @@ package au.org.ala.pipelines.transforms;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.BASIC_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.BASIC;
 
+import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.pipelines.interpreters.ALABasicInterpreter;
+import au.org.ala.pipelines.vocabulary.PreparationsParser;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import lombok.Builder;
+import lombok.SneakyThrows;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
@@ -32,6 +35,8 @@ import org.gbif.vocabulary.lookup.VocabularyLookup;
  */
 public class ALABasicTransform extends Transform<ExtendedRecord, BasicRecord> {
 
+  private final ALAPipelinesConfig alaConfig;
+
   private final SerializableSupplier<KeyValueStore<String, OccurrenceStatus>>
       occStatusKvStoreSupplier;
 
@@ -47,12 +52,16 @@ public class ALABasicTransform extends Transform<ExtendedRecord, BasicRecord> {
 
   private SerializableFunction<String, Optional<LookupConcept>> lifeStageLookupFn;
 
+  private PreparationsParser preparationsParser;
+
   @Builder(buildMethodName = "create")
   private ALABasicTransform(
+      ALAPipelinesConfig alaConfig,
       SerializableSupplier<KeyValueStore<String, OccurrenceStatus>> occStatusKvStoreSupplier,
       SerializableSupplier<KeyValueStore<String, List<String>>> recordedByKvStoreSupplier,
       SerializableSupplier<VocabularyLookup> lifeStageLookupSupplier) {
     super(BasicRecord.class, BASIC, ALABasicTransform.class.getName(), BASIC_RECORDS_COUNT);
+    this.alaConfig = alaConfig;
     this.occStatusKvStoreSupplier = occStatusKvStoreSupplier;
     this.recordedByKvStoreSupplier = recordedByKvStoreSupplier;
     this.lifeStageLookupSupplier = lifeStageLookupSupplier;
@@ -71,6 +80,7 @@ public class ALABasicTransform extends Transform<ExtendedRecord, BasicRecord> {
 
   /** Beam @Setup initializes resources */
   @Setup
+  @SneakyThrows
   public void setup() {
     if (occStatusKvStore == null && occStatusKvStoreSupplier != null) {
       occStatusKvStore = occStatusKvStoreSupplier.get();
@@ -84,6 +94,10 @@ public class ALABasicTransform extends Transform<ExtendedRecord, BasicRecord> {
         lifeStageLookupFn = lifeStageLookup::lookup;
       }
     }
+
+    preparationsParser =
+        PreparationsParser.getInstance(
+            alaConfig != null ? alaConfig.getPreparationsVocabFile() : null);
   }
 
   /** Beam @Teardown closes initialized resources */
@@ -122,6 +136,7 @@ public class ALABasicTransform extends Transform<ExtendedRecord, BasicRecord> {
         .via(BasicInterpreter.interpretOccurrenceStatus(occStatusKvStore))
         .via(ALABasicInterpreter::interpretLicense)
         .via(ALABasicInterpreter.interpretRecordedBy(recordedByKvStore))
+        .via(ALABasicInterpreter.interpretPreparations(preparationsParser))
         .getOfNullable();
   }
 }

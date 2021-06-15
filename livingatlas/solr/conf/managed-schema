@@ -347,7 +347,7 @@
   <field name="parentNameUsageID"  type="string" docValues="true" indexed="true"/>
   <field name="phylum"  type="string" docValues="true" indexed="true"/>
   <field name="pointRadiusSpatialFit"  type="string" docValues="true" indexed="true"/>
-  <field name="preparations"  type="string" docValues="true" indexed="true"/>
+  <field name="preparations"  type="string" docValues="true" indexed="true" multiValued="true" />
   <field name="previousIdentifications"  type="string" docValues="true" indexed="true"/>
   <field name="recordNumber"  type="string" docValues="true" indexed="true"/>
   <field name="recordedBy"  type="string" docValues="true" indexed="true" multiValued="true"/>
