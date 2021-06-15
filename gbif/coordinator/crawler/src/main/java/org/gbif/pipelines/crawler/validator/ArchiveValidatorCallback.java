@@ -2,18 +2,20 @@ package org.gbif.pipelines.crawler.validator;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
+import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
-import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
-import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
+import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
+import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.pipelines.crawler.PipelinesCallback;
 import org.gbif.pipelines.crawler.StepHandler;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 
-/** Callback which is called when the {@link PipelinesDwcaMessage} is received. */
+/** Callback which is called when the {@link PipelinesArchiveValidatorMessage} is received. */
 @Slf4j
-public class ArchiveValidatorCallback extends AbstractMessageCallback<PipelinesDwcaMessage>
-    implements StepHandler<PipelinesDwcaMessage, PipelinesVerbatimMessage> {
+public class ArchiveValidatorCallback
+    extends AbstractMessageCallback<PipelinesArchiveValidatorMessage>
+    implements StepHandler<PipelinesArchiveValidatorMessage, PipelineBasedMessage> {
 
   private final ArchiveValidatorConfiguration config;
   private final MessagePublisher publisher;
@@ -32,12 +34,12 @@ public class ArchiveValidatorCallback extends AbstractMessageCallback<PipelinesD
   }
 
   @Override
-  public void handleMessage(PipelinesDwcaMessage message) {
-    PipelinesCallback.<PipelinesDwcaMessage, PipelinesVerbatimMessage>builder()
+  public void handleMessage(PipelinesArchiveValidatorMessage message) {
+    PipelinesCallback.<PipelinesArchiveValidatorMessage, PipelineBasedMessage>builder()
         .client(client)
         .config(config)
         .curator(curator)
-        .stepType(null) // Add new type
+        .stepType(StepType.VALIDATOR_VALIDATE_ARCHIVE)
         .isValidator(message.isValidator())
         .publisher(publisher)
         .message(message)
@@ -47,19 +49,19 @@ public class ArchiveValidatorCallback extends AbstractMessageCallback<PipelinesD
   }
 
   @Override
-  public boolean isMessageCorrect(PipelinesDwcaMessage message) {
+  public boolean isMessageCorrect(PipelinesArchiveValidatorMessage message) {
     return true;
   }
 
   @Override
-  public Runnable createRunnable(PipelinesDwcaMessage message) {
+  public Runnable createRunnable(PipelinesArchiveValidatorMessage message) {
     return () -> {
       log.info("EMPTY!");
     };
   }
 
   @Override
-  public PipelinesVerbatimMessage createOutgoingMessage(PipelinesDwcaMessage message) {
+  public PipelineBasedMessage createOutgoingMessage(PipelinesArchiveValidatorMessage message) {
     return null;
   }
 }

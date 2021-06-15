@@ -7,8 +7,8 @@ import org.kohsuke.MetaInfServices;
 
 /**
  * Entry class for cli command, to start service to validate downloaded archive. This command starts
- * a service which listens to the {@link org.gbif.common.messaging.api.messages.PipelinesDwcaMessage
- * } and perform conversion
+ * a service which listens to the {@link
+ * org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage } and perform conversion
  */
 @MetaInfServices(Command.class)
 public class ArchiveValidatorCommand extends ServiceCommand {

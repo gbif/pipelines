@@ -8,7 +8,7 @@ import org.kohsuke.MetaInfServices;
 /**
  * Entry class for cli command, to start service to collect metrics using ES index. This command
  * starts a service which listens to the {@link
- * org.gbif.common.messaging.api.messages.PipelinesDwcaMessage } and perform conversion
+ * org.gbif.common.messaging.api.messages.PipelinesIndexedMessage } and perform conversion
  */
 @MetaInfServices(Command.class)
 public class MetricsCollectorCommand extends ServiceCommand {
