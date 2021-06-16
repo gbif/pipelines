@@ -615,6 +615,7 @@
   <field name="raw_publisherTitle"					     type="string"  docValues="true" indexed="true" />
   <field name="raw_publishingCountry"					 type="string"  docValues="true" indexed="true" />
   <field name="raw_publishingOrganizationKey"			 type="string"  docValues="true" indexed="true" />
+  <field name="raw_preparations"	            		 type="string"  docValues="true" indexed="true" />
   <field name="raw_taxonRank"					         type="string"  docValues="true" indexed="true" />
   <field name="raw_taxonRankID"					         type="string"  docValues="true" indexed="true" />
   <field name="raw_recordedBy"					         type="string"  docValues="true" indexed="true" />
