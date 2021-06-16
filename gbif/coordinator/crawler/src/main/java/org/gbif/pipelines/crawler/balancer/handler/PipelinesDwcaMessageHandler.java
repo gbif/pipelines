@@ -5,6 +5,8 @@ import java.io.IOException;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.gbif.api.model.crawler.DwcaValidationReport;
+import org.gbif.api.model.crawler.OccurrenceValidationReport;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
 import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
@@ -26,13 +28,23 @@ public class PipelinesDwcaMessageHandler {
     ObjectMapper mapper = new ObjectMapper();
     PipelinesDwcaMessage m = mapper.readValue(message.getPayload(), PipelinesDwcaMessage.class);
 
+    OccurrenceValidationReport occurrenceReport = m.getValidationReport().getOccurrenceReport();
+
     PipelinesDwcaMessage outputMessage =
         new PipelinesDwcaMessage(
             m.getDatasetUuid(),
             m.getDatasetType(),
             m.getSource(),
             m.getAttempt(),
-            m.getValidationReport(),
+            new DwcaValidationReport(
+                m.getDatasetUuid(),
+                new OccurrenceValidationReport(
+                    occurrenceReport.getCheckedRecords(),
+                    occurrenceReport.getUniqueTriplets(),
+                    occurrenceReport.getRecordsWithInvalidTriplets(),
+                    occurrenceReport.getUniqueOccurrenceIds(),
+                    occurrenceReport.getRecordsMissingOccurrenceId(),
+                    occurrenceReport.isAllRecordsChecked())),
             m.getPipelineSteps(),
             m.getEndpointType(),
             m.getPlatform(),
