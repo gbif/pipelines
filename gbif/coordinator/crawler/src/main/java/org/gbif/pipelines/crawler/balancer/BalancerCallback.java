@@ -6,14 +6,20 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
+import org.gbif.common.messaging.api.messages.PipelinesAbcdMessage;
 import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
+import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
 import org.gbif.common.messaging.api.messages.PipelinesHdfsViewBuiltMessage;
 import org.gbif.common.messaging.api.messages.PipelinesIndexedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
+import org.gbif.common.messaging.api.messages.PipelinesXmlMessage;
 import org.gbif.pipelines.crawler.balancer.handler.InterpretedMessageHandler;
+import org.gbif.pipelines.crawler.balancer.handler.PipelinesAbcdMessageHandler;
+import org.gbif.pipelines.crawler.balancer.handler.PipelinesDwcaMessageHandler;
 import org.gbif.pipelines.crawler.balancer.handler.PipelinesHdfsViewBuiltMessageHandler;
 import org.gbif.pipelines.crawler.balancer.handler.PipelinesIndexedMessageHandler;
+import org.gbif.pipelines.crawler.balancer.handler.PipelinesXmlMessageHandler;
 import org.gbif.pipelines.crawler.balancer.handler.VerbatimMessageHandler;
 
 /**
@@ -48,6 +54,12 @@ public class BalancerCallback extends AbstractMessageCallback<PipelinesBalancerM
         PipelinesIndexedMessageHandler.handle(publisher, message);
       } else if (PipelinesHdfsViewBuiltMessage.class.getSimpleName().equals(className)) {
         PipelinesHdfsViewBuiltMessageHandler.handle(publisher, message);
+      } else if (PipelinesDwcaMessage.class.getSimpleName().equals(className)) {
+        PipelinesDwcaMessageHandler.handle(publisher, message);
+      } else if (PipelinesXmlMessage.class.getSimpleName().equals(className)) {
+        PipelinesXmlMessageHandler.handle(publisher, message);
+      } else if (PipelinesAbcdMessage.class.getSimpleName().equals(className)) {
+        PipelinesAbcdMessageHandler.handle(publisher, message);
       } else {
         log.error("Handler for {} wasn't found!", className);
       }

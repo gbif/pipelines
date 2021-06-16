@@ -119,6 +119,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
 
       // Check the step
       if (!steps.contains(stepType.name())) {
+        log.info("Type is not specified in the pipelineSteps array");
         return;
       }
 
