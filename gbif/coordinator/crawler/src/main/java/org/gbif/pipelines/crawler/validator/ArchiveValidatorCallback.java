@@ -79,7 +79,7 @@ public class ArchiveValidatorCallback
         message.getAttempt(),
         new DwcaValidationReport(
             message.getDatasetUuid(), new OccurrenceValidationReport(1, 1, 0, 1, 0, true)),
-        null,
+        message.getPipelineSteps(),
         EndpointType.DWC_ARCHIVE,
         Platform.PIPELINES,
         1L,
