@@ -54,7 +54,9 @@ public class MetricsCollectorCallback extends AbstractMessageCallback<PipelinesI
 
   @Override
   public Runnable createRunnable(PipelinesIndexedMessage message) {
-    return () -> {};
+    return () -> {
+      log.info("Dummy MetricsCollectorCallback run!");
+    };
   }
 
   @Override
