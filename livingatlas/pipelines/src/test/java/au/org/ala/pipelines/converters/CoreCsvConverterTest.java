@@ -60,11 +60,11 @@ public class CoreCsvConverterTest {
       "\"raw_er_eventID\"", // DwcTerm.eventID
       "\"raw_er_identifiedBy\"", // DwcTerm.identifiedBy
       "\"raw_er_occurrenceRemarks\"", // DwcTerm.occurrenceRemarks
-      "\"raw_er_dataGeneralizations\"", // DwcTerm.dataGeneralizations
+      "\"\"", // DwcTerm.dataGeneralizations
       "\"raw_er_otherCatalogNumbers\"", // DwcTerm.otherCatalogNumbers
       "\"raw_er_acceptedNameUsage\"", // DwcTerm.acceptedNameUsage
       "\"raw_er_acceptedNameUsageID\"", // DwcTerm.acceptedNameUsageID
-      "\"raw_er_associatedOccurrences\"", // DwcTerm.associatedOccurrences
+      "\"\"", // DwcTerm.associatedOccurrences
       "\"raw_er_associatedReferences\"", // DwcTerm.associatedReferences
       "\"raw_er_associatedSequences\"", // DwcTerm.associatedSequences
       "\"raw_er_associatedTaxa\"", // DwcTerm.associatedTaxa
@@ -103,7 +103,7 @@ public class CoreCsvConverterTest {
       "\"raw_er_identificationReferences\"", // DwcTerm.identificationReferences
       "\"raw_er_identificationRemarks\"", // DwcTerm.identificationRemarks
       "\"raw_er_identificationVerificationStatus\"", // DwcTerm.identificationVerificationStatus
-      "\"raw_er_informationWithheld\"", // DwcTerm.informationWithheld
+      "\"\"", // DwcTerm.informationWithheld
       "\"raw_er_infraspecificEpithet\"", // DwcTerm.infraspecificEpithet
       "\"raw_er_institutionID\"", // DwcTerm.institutionID
       "\"raw_er_island\"", // DwcTerm.island
@@ -138,7 +138,7 @@ public class CoreCsvConverterTest {
       "\"raw_er_parentNameUsage\"", // DwcTerm.parentNameUsage
       "\"raw_er_parentNameUsageID\"", // DwcTerm.parentNameUsageID
       "\"raw_er_pointRadiusSpatialFit\"", // DwcTerm.pointRadiusSpatialFit
-      "\"raw_er_preparations\"", // DwcTerm.preparations
+      "\"\"", // DwcTerm.preparations
       "\"raw_er_previousIdentifications\"", // DwcTerm.previousIdentifications
       "\"raw_er_relatedResourceID\"", // DwcTerm.relatedResourceID
       "\"raw_er_relationshipAccordingTo\"", // DwcTerm.relationshipAccordingTo
@@ -848,7 +848,7 @@ public class CoreCsvConverterTest {
   public void converterDefualtTest() {
     // Expected
     // tr = 1, br = 2, lr = 3, trx = 4, atxr = 5, aur = 6, ir = 7, asr = 8
-    String[] expectet = {
+    String[] expected = {
       // DWC Terms
       "\"aur_uuid\"", // DwcTerm.occurrenceID
       "\"raw_er_catalogNumber\"", // DwcTerm.catalogNumber
@@ -888,7 +888,7 @@ public class CoreCsvConverterTest {
       "\"raw_er_eventID\"", // DwcTerm.eventID
       "\"raw_er_identifiedBy\"", // DwcTerm.identifiedBy
       "\"raw_er_occurrenceRemarks\"", // DwcTerm.occurrenceRemarks
-      "\"raw_er_dataGeneralizations\"", // DwcTerm.dataGeneralizations
+      "\"\"", // DwcTerm.dataGeneralizations
       "\"raw_er_otherCatalogNumbers\"", // DwcTerm.otherCatalogNumbers
       "\"\"", // DwcTerm.acceptedNameUsage
       "\"\"", // DwcTerm.acceptedNameUsageID
@@ -1166,7 +1166,7 @@ public class CoreCsvConverterTest {
     String result = CoreCsvConverter.convert(source);
 
     // Should
-    Assert.assertEquals(String.join(",", expectet), result);
+    Assert.assertEquals(String.join(",", expected), result);
   }
 
   @Test

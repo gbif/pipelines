@@ -13,6 +13,7 @@ import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationUtils;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.URL;
@@ -102,11 +103,12 @@ public class IndexRecordToDwcaPipeline {
             options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getInputPath());
 
     String url = config.getCollectory().getWsUrl() + "/eml/" + options.getDatasetId();
-    String out = new Scanner(new URL(url).openStream(), "UTF-8").useDelimiter("\\A").next();
-    OutputStream output = ALAFsUtils.openOutputStream(fs, pathFn.apply("eml.xml"));
-    OutputStreamWriter writer = new OutputStreamWriter(output);
-    writer.write(out);
-    writer.flush();
-    writer.close();
+    URL emlUrl = new URL(url);
+    try (InputStream input = emlUrl.openStream();
+        OutputStream output = ALAFsUtils.openOutputStream(fs, pathFn.apply("eml.xml"));
+        OutputStreamWriter writer = new OutputStreamWriter(output); ) {
+      String out = new Scanner(input, "UTF-8").useDelimiter("\\A").next();
+      writer.write(out);
+    }
   }
 }
