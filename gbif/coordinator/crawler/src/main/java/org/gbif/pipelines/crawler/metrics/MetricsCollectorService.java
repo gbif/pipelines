@@ -38,7 +38,8 @@ public class MetricsCollectorService extends AbstractIdleService {
         c.registry.newRegistryInjector().getInstance(PipelinesHistoryWsClient.class);
 
     String routingKey =
-        new PipelinesIndexedMessage().setValidator(config.validatorOnly).getRoutingKey();
+        new PipelinesIndexedMessage().setValidator(config.validatorOnly).getRoutingKey() + ".*";
+
     listener.listen(
         c.queueName,
         routingKey,
