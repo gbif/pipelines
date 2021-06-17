@@ -72,6 +72,7 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
         .config(config)
         .curator(curator)
         .stepType(type)
+        .isValidator(message.isValidator())
         .publisher(publisher)
         .message(message)
         .handler(this)
