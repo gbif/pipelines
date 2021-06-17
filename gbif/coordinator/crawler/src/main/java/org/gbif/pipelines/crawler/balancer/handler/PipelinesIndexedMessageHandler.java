@@ -5,6 +5,7 @@ import java.io.IOException;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
 import org.gbif.common.messaging.api.messages.PipelinesIndexedMessage;
@@ -27,12 +28,14 @@ public class PipelinesIndexedMessageHandler {
     PipelinesIndexedMessage m =
         mapper.readValue(message.getPayload(), PipelinesIndexedMessage.class);
 
+    StepRunner runner = StepRunner.DISTRIBUTED;
+
     PipelinesIndexedMessage outputMessage =
         new PipelinesIndexedMessage(
             m.getDatasetUuid(),
             m.getAttempt(),
             m.getPipelineSteps(),
-            m.getRunner(),
+            runner.name(),
             m.getExecutionId(),
             m.isValidator());
 

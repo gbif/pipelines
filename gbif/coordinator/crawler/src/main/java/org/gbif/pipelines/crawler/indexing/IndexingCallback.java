@@ -146,7 +146,7 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
         message.getDatasetUuid(),
         message.getAttempt(),
         message.getPipelineSteps(),
-        null,
+        null, // Set in balancer cli
         null,
         message.isValidator() || config.validatorOnly);
   }

@@ -165,7 +165,7 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
         message.getAttempt(),
         message.getPipelineSteps(),
         recordsNumber,
-        null,
+        null, // Set in balancer cli
         repeatAttempt,
         message.getResetPrefix(),
         null,
