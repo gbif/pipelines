@@ -6,7 +6,7 @@ import org.apache.curator.framework.CuratorFramework;
 import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
-import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
+import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
 import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 
@@ -38,7 +38,7 @@ public class DwcaToAvroService extends AbstractIdleService {
         c.registry.newRegistryInjector().getInstance(PipelinesHistoryWsClient.class);
 
     String routingKey =
-        new PipelinesVerbatimMessage().setValidator(config.validatorOnly).getRoutingKey();
+        new PipelinesDwcaMessage().setValidator(config.validatorOnly).getRoutingKey();
     listener.listen(
         c.queueName,
         routingKey,
