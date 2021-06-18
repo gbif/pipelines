@@ -75,4 +75,53 @@ public class IndexRequestConverterTest {
     Assert.assertEquals(1, map.size());
     Assert.assertEquals(Long.valueOf(1L), map.get(AVRO_TO_JSON_COUNT));
   }
+
+  @Test
+  public void igonreEsDocumentIdConverterTest() {
+
+    // State
+    IngestMetrics metrics = IngestMetricsBuilder.createInterpretedToEsIndexMetrics();
+    BasicRecord basicRecord = BasicRecord.newBuilder().setId(ID).setGbifId(1L).build();
+    MetadataRecord metadataRecord = MetadataRecord.newBuilder().setId(ID).build();
+    ExtendedRecord extendedRecord = ExtendedRecord.newBuilder().setId(ID).build();
+    TemporalRecord temporalRecord = TemporalRecord.newBuilder().setId(ID).build();
+    LocationRecord locationRecord = LocationRecord.newBuilder().setId(ID).build();
+    TaxonRecord taxonRecord = TaxonRecord.newBuilder().setId(ID).build();
+    GrscicollRecord grscicollRecord = GrscicollRecord.newBuilder().setId(ID).build();
+    MultimediaRecord multimediaRecord = MultimediaRecord.newBuilder().setId(ID).build();
+    ImageRecord imageRecord = ImageRecord.newBuilder().setId(ID).build();
+    AudubonRecord audubonRecord = AudubonRecord.newBuilder().setId(ID).build();
+
+    // When
+    IndexRequest indexRequest =
+        IndexRequestConverter.builder()
+            .metrics(metrics)
+            .metadata(metadataRecord)
+            .esIndexName("name")
+            .verbatimMap(Collections.singletonMap(ID, extendedRecord))
+            .temporalMap(Collections.singletonMap(ID, temporalRecord))
+            .locationMap(Collections.singletonMap(ID, locationRecord))
+            .taxonMap(Collections.singletonMap(ID, taxonRecord))
+            .grscicollMap(Collections.singletonMap(ID, grscicollRecord))
+            .multimediaMap(Collections.singletonMap(ID, multimediaRecord))
+            .imageMap(Collections.singletonMap(ID, imageRecord))
+            .audubonMap(Collections.singletonMap(ID, audubonRecord))
+            .build()
+            .getFn()
+            .apply(basicRecord);
+
+    // Should
+    Assert.assertNotNull(indexRequest);
+    Assert.assertNull(indexRequest.id());
+
+    Map<String, Long> map = new HashMap<>();
+    metrics
+        .getMetricsResult()
+        .allMetrics()
+        .getCounters()
+        .forEach(mr -> map.put(mr.getName().getName(), mr.getAttempted()));
+
+    Assert.assertEquals(1, map.size());
+    Assert.assertEquals(Long.valueOf(1L), map.get(AVRO_TO_JSON_COUNT));
+  }
 }

@@ -109,7 +109,8 @@ final class ProcessRunnerBuilder {
         .ifPresent(x -> command.add("--indexNumberReplicas=" + x));
 
     if (message.isValidator() || config.validatorOnly) {
-      command.add("--esDocumentId=id");
+      command.add("--esDocumentId=");
+      command.add("--esSchemaPath=elasticsearch/es-validator-schema.json");
     }
 
     if (config.useBeamDeprecatedRead) {

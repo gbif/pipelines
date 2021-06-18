@@ -212,12 +212,18 @@ public class InterpretedToEsIndexPipeline {
         ElasticsearchIO.ConnectionConfiguration.create(
             options.getEsHosts(), options.getEsIndexName(), "_doc");
 
-    jsonCollection.apply(
+    ElasticsearchIO.Write writeIO =
         ElasticsearchIO.write()
             .withConnectionConfiguration(esConfig)
             .withMaxBatchSizeBytes(options.getEsMaxBatchSizeBytes())
-            .withMaxBatchSize(options.getEsMaxBatchSize())
-            .withIdFn(input -> input.get(esDocumentId).asText()));
+            .withMaxBatchSize(options.getEsMaxBatchSize());
+
+    // Ignore gbifID as ES doc ID, useful for validator
+    if (esDocumentId != null && !esDocumentId.isEmpty()) {
+      writeIO = writeIO.withIdFn(input -> input.get(esDocumentId).asText());
+    }
+
+    jsonCollection.apply(writeIO);
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();
