@@ -228,7 +228,7 @@
   <field name="depth" type="double" docValues="true" indexed="true"/>
   <field name="depthAccuracy" type="double" docValues="true" indexed="true"/>
   <field name="disposition" type="string" docValues="true" indexed="true"/>
-  <field name="dynamicProperties" type="textsort" docValues="true" indexed="true"/>
+  <field name="dynamicProperties" type="string" docValues="true" indexed="true" />
   <field name="earliestAgeOrLowestStage" type="string" docValues="true" indexed="true"/>
   <field name="earliestEonOrLowestEonothem" type="string" docValues="true" indexed="true"/>
   <field name="earliestEpochOrLowestSeries" type="string" docValues="true" indexed="true"/>
@@ -247,7 +247,7 @@
   <field name="fieldNumber" type="string" docValues="true" indexed="true"/>
   <field name="footprintSRS" type="string" docValues="true" indexed="true"/>
   <field name="footprintSpatialFit" type="string" docValues="true" indexed="true"/>
-  <field name="footprintWKT" type="textsort" docValues="true" indexed="true"/>
+  <field name="footprintWKT" type="string" docValues="true" indexed="true" />
   <field name="formation" type="string" docValues="true" indexed="true"/>
   <field name="fromLithostratigraphicUnit" type="string" docValues="true" indexed="true"/>
   <field name="genus" type="string" docValues="true" indexed="true"/>
@@ -385,7 +385,7 @@
   <field name="type"  type="string" docValues="true" indexed="true"/>
   <field name="typeStatus"  type="string" docValues="true" indexed="true"/>
   <field name="verbatimCoordinateSystem"  type="string" docValues="true" indexed="true"/>
-  <field name="verbatimCoordinates"  type="textsort" docValues="true" indexed="true"/>
+  <field name="verbatimCoordinates"  type="string" docValues="true" indexed="true" />
   <field name="verbatimDepth"  type="string" docValues="true" indexed="true"/>
   <field name="verbatimElevation"  type="string" docValues="true" indexed="true"/>
   <field name="verbatimEventDate"  type="string" docValues="true" indexed="true"/>
@@ -407,9 +407,9 @@
   <field name="duplicateJustification"   type="string"  docValues="true" indexed="true" multiValued="true"/>
 
   <!-- Large text fields -->
-  <field name="raw_footprintWKT"         type="textsort" docValues="true" />
-  <field name="raw_dynamicProperties"    type="textsort" docValues="true" />
-  <field name="raw_verbatimCoordinates"  type="textsort" docValues="true" />
+  <field name="raw_footprintWKT"         type="string" docValues="true"  useDocValuesAsStored="true" />
+  <field name="raw_dynamicProperties"    type="string" docValues="true"  useDocValuesAsStored="true" />
+  <field name="raw_verbatimCoordinates"  type="string" docValues="true"  useDocValuesAsStored="true" />
 
   <!-- recent GBIF additions -->
   <field name="identifiedByID"  type="string" docValues="true" indexed="true" multiValued="true"/>
@@ -458,7 +458,7 @@
   <field name="sensitive_eventDate"                   type="string"   docValues="true" indexed="true"/>
   <field name="sensitive_eventID"                     type="string"   docValues="true" indexed="true"/>
   <field name="sensitive_eventTime"                   type="string"   docValues="true" indexed="true"/>
-  <field name="sensitive_footprintWKT"                type="textsort" docValues="true" indexed="true"/>
+  <field name="sensitive_footprintWKT"                type="string"   docValues="true" indexed="true"/>
   <field name="sensitive_locality"                    type="string"   docValues="true" indexed="true"/>
   <field name="sensitive_locationRemarks"             type="string"   docValues="true" indexed="true"/>
   <field name="sensitive_month"                       type="string"   docValues="true" indexed="true"/>
@@ -505,6 +505,8 @@
   <!-- see https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/236 -->
   <field name="occurrenceDetails" type="string" docValues="true" indexed="true" />
   <field name="userId" type="string" docValues="true" indexed="true" />
+
+  <field name="contentTypes" type="string" multiValued="true" docValues="true" indexed="true" />
 
   <field name="machineTags"  type="string" docValues="true" indexed="true" multiValued="true" />
 

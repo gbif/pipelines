@@ -8,6 +8,7 @@ public interface IndexFields {
   String COMMON_NAME_AND_LSID = "common_name_and_lsid";
   String COUNTRY_CONSERVATION = "countryConservation";
   String COUNTRY_INVASIVE = "countryInvasive";
+  String CONTENT_TYPES = "contentTypes";
   String DATA_HUB_NAME = "dataHubName";
   String DATA_HUB_UID = "dataHubUid";
   String DATA_PROVIDER_NAME = "dataProviderName";
