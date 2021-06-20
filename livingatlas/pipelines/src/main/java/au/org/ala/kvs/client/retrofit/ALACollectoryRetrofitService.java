@@ -21,4 +21,7 @@ public interface ALACollectoryRetrofitService {
 
   @GET("dataResource")
   Call<List<EntityReference>> lookupDataResources();
+
+  @GET("eml/{dataResourceUid}")
+  Call<String> lookupEML(@Path("dataResourceUid") String dataResourceUid);
 }

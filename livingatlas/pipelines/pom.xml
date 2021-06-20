@@ -895,5 +895,10 @@
         <artifactId>checker-qual</artifactId>
         <version>${checker-qual.version}</version>
     </dependency>
+
+    <dependency>
+      <groupId>org.freemarker</groupId>
+      <artifactId>freemarker</artifactId>
+    </dependency>
   </dependencies>
 </project>
