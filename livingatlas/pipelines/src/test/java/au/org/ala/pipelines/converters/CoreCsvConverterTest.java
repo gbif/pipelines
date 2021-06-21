@@ -138,7 +138,7 @@ public class CoreCsvConverterTest {
       "\"raw_er_parentNameUsage\"", // DwcTerm.parentNameUsage
       "\"raw_er_parentNameUsageID\"", // DwcTerm.parentNameUsageID
       "\"raw_er_pointRadiusSpatialFit\"", // DwcTerm.pointRadiusSpatialFit
-      "\"\"", // DwcTerm.preparations
+      "\"raw_er_preparations\"", // DwcTerm.preparations
       "\"raw_er_previousIdentifications\"", // DwcTerm.previousIdentifications
       "\"raw_er_relatedResourceID\"", // DwcTerm.relatedResourceID
       "\"raw_er_relationshipAccordingTo\"", // DwcTerm.relationshipAccordingTo
