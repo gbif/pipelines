@@ -134,6 +134,8 @@
       <filter class="solr.LowerCaseFilterFactory"/>
     </analyzer>
   </fieldType>
+  <fieldType name="textsort" class="solr.SortableTextField" positionIncrementGap="100">
+  </fieldType>
 
   <field name="id" type="string" docValues="true" multiValued="false" indexed="true"/>
 
@@ -226,7 +228,7 @@
   <field name="depth" type="double" docValues="true" indexed="true"/>
   <field name="depthAccuracy" type="double" docValues="true" indexed="true"/>
   <field name="disposition" type="string" docValues="true" indexed="true"/>
-  <field name="dynamicProperties" type="text" indexed="true"/>
+  <field name="dynamicProperties" type="textsort" docValues="true" indexed="true"/>
   <field name="earliestAgeOrLowestStage" type="string" docValues="true" indexed="true"/>
   <field name="earliestEonOrLowestEonothem" type="string" docValues="true" indexed="true"/>
   <field name="earliestEpochOrLowestSeries" type="string" docValues="true" indexed="true"/>
@@ -245,7 +247,7 @@
   <field name="fieldNumber" type="string" docValues="true" indexed="true"/>
   <field name="footprintSRS" type="string" docValues="true" indexed="true"/>
   <field name="footprintSpatialFit" type="string" docValues="true" indexed="true"/>
-  <field name="footprintWKT" type="text" indexed="true"/>
+  <field name="footprintWKT" type="textsort" docValues="true" indexed="true"/>
   <field name="formation" type="string" docValues="true" indexed="true"/>
   <field name="fromLithostratigraphicUnit" type="string" docValues="true" indexed="true"/>
   <field name="genus" type="string" docValues="true" indexed="true"/>
@@ -383,7 +385,7 @@
   <field name="type"  type="string" docValues="true" indexed="true"/>
   <field name="typeStatus"  type="string" docValues="true" indexed="true"/>
   <field name="verbatimCoordinateSystem"  type="string" docValues="true" indexed="true"/>
-  <field name="verbatimCoordinates"  type="text" indexed="true"/>
+  <field name="verbatimCoordinates"  type="textsort" docValues="true" indexed="true"/>
   <field name="verbatimDepth"  type="string" docValues="true" indexed="true"/>
   <field name="verbatimElevation"  type="string" docValues="true" indexed="true"/>
   <field name="verbatimEventDate"  type="string" docValues="true" indexed="true"/>
@@ -404,10 +406,10 @@
   <field name="duplicateType"            type="string"  docValues="true" indexed="true" multiValued="true"/>
   <field name="duplicateJustification"   type="string"  docValues="true" indexed="true" multiValued="true"/>
 
-  <!-- Large text fields (not supported by doc values) -->
-  <field name="raw_footprintWKT"         type="text" />
-  <field name="raw_dynamicProperties"    type="text" />
-  <field name="raw_verbatimCoordinates"  type="text" />
+  <!-- Large text fields -->
+  <field name="raw_footprintWKT"         type="textsort" docValues="true" />
+  <field name="raw_dynamicProperties"    type="textsort" docValues="true" />
+  <field name="raw_verbatimCoordinates"  type="textsort" docValues="true" />
 
   <!-- recent GBIF additions -->
   <field name="identifiedByID"  type="string" docValues="true" indexed="true" multiValued="true"/>
@@ -448,24 +450,24 @@
   <field name="subfamily"   type="string" docValues="true" indexed="true"/>
 
   <!-- ALA Sensitive data fields -->
-  <field name="sensitive"                             type="string" docValues="true" indexed="true"/>
-  <field name="sensitive_dataGeneralizations"         type="string" docValues="true" indexed="true"/>
-  <field name="sensitive_day"                         type="string" docValues="true" indexed="true"/>
-  <field name="sensitive_decimalLatitude"             type="string" docValues="true" indexed="true"/>
-  <field name="sensitive_decimalLongitude"            type="string" docValues="true" indexed="true"/>
-  <field name="sensitive_eventDate"                   type="string" docValues="true" indexed="true"/>
-  <field name="sensitive_eventID"                     type="string" docValues="true" indexed="true"/>
-  <field name="sensitive_eventTime"                   type="string" docValues="true" indexed="true"/>
-  <field name="sensitive_footprintWKT"                type="string" docValues="true" indexed="true"/>
-  <field name="sensitive_locality"                    type="string" docValues="true" indexed="true"/>
-  <field name="sensitive_locationRemarks"             type="string" docValues="true" indexed="true"/>
-  <field name="sensitive_month"                       type="string" docValues="true" indexed="true"/>
-  <field name="sensitive_verbatimCoordinates"         type="string" docValues="true" indexed="true"/>
-  <field name="sensitive_verbatimEventDate"           type="string" docValues="true" indexed="true"/>
-  <field name="sensitive_verbatimLatitude"            type="string" docValues="true" indexed="true"/>
-  <field name="sensitive_verbatimLocality"            type="string" docValues="true" indexed="true"/>
-  <field name="generalisationInMetres"          type="string" docValues="true" indexed="true"/>
-  <field name="generalisationToApplyInMetres"   type="string" docValues="true" indexed="true"/>
+  <field name="sensitive"                             type="string"   docValues="true" indexed="true"/>
+  <field name="sensitive_dataGeneralizations"         type="string"   docValues="true" indexed="true"/>
+  <field name="sensitive_day"                         type="string"   docValues="true" indexed="true"/>
+  <field name="sensitive_decimalLatitude"             type="string"   docValues="true" indexed="true"/>
+  <field name="sensitive_decimalLongitude"            type="string"   docValues="true" indexed="true"/>
+  <field name="sensitive_eventDate"                   type="string"   docValues="true" indexed="true"/>
+  <field name="sensitive_eventID"                     type="string"   docValues="true" indexed="true"/>
+  <field name="sensitive_eventTime"                   type="string"   docValues="true" indexed="true"/>
+  <field name="sensitive_footprintWKT"                type="textsort" docValues="true" indexed="true"/>
+  <field name="sensitive_locality"                    type="string"   docValues="true" indexed="true"/>
+  <field name="sensitive_locationRemarks"             type="string"   docValues="true" indexed="true"/>
+  <field name="sensitive_month"                       type="string"   docValues="true" indexed="true"/>
+  <field name="sensitive_verbatimCoordinates"         type="string"   docValues="true" indexed="true"/>
+  <field name="sensitive_verbatimEventDate"           type="string"   docValues="true" indexed="true"/>
+  <field name="sensitive_verbatimLatitude"            type="string"   docValues="true" indexed="true"/>
+  <field name="sensitive_verbatimLocality"            type="string"   docValues="true" indexed="true"/>
+  <field name="generalisationInMetres"                type="string"   docValues="true" indexed="true"/>
+  <field name="generalisationToApplyInMetres"         type="string"   docValues="true" indexed="true"/>
 
   <!-- GGBN loan fields and ABCD fields -->
   <field name="loanDestination"  type="string" docValues="true" indexed="true"/>
@@ -494,7 +496,7 @@
   <field name="userVerified"           type="boolean" docValues="true" indexed="true" />
 
   <!-- Free text search fields -->
-  <field name="text"                   type="text"    multiValued="true" indexed="true" stored="false" />
+  <field name="text"                   type="textgen" multiValued="true" indexed="true" stored="false" />
   <field name="matched_name"           type="string"  multiValued="true" indexed="true" stored="false" />
   <field name="text_recordedBy"        type="textgen" multiValued="true" indexed="true" stored="false" />
   <field name="text_identifiedBy"      type="textgen" multiValued="true" indexed="true" stored="false" />

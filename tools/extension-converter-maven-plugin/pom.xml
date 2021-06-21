@@ -15,10 +15,6 @@
   <name>Pipelines :: Tools :: Extension converter</name>
   <description>Maven plugin generates conveters java classes for raw extensions</description>
 
-  <properties>
-    <freemarker.version>2.3.31</freemarker.version>
-  </properties>
-
   <build>
     <plugins>
       <plugin>
@@ -58,7 +54,6 @@
     <dependency>
       <groupId>org.freemarker</groupId>
       <artifactId>freemarker</artifactId>
-      <version>${freemarker.version}</version>
     </dependency>
 
     <!-- Test -->
