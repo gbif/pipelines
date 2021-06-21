@@ -1,13 +1,38 @@
 {
     "dynamic_templates": [
       {
-        "verbatim": {
+        "verbatim_string": {
           "path_match": "verbatim.*",
-          "mapping": {
-            "type": "keyword",
-            "normalizer": "lowercase_normalizer",
-            "copy_to": "all"
-          }
+          "match_mapping_type": "string",
+          "mapping": {  "type": "keyword" }
+        }
+      },
+      {
+        "verbatim_boolean": {
+          "path_match": "verbatim.*",
+          "match_mapping_type": "boolean",
+          "mapping": { "type": "keyword" }
+        }
+      },
+      {
+        "verbatim_date": {
+          "path_match": "verbatim.*",
+          "match_mapping_type": "date",
+          "mapping": { "type": "keyword" }
+        }
+      },
+      {
+        "verbatim_double": {
+          "path_match": "verbatim.*",
+          "match_mapping_type": "double",
+          "mapping": { "type": "keyword" }
+        }
+      },
+      {
+        "verbatim_long": {
+          "path_match": "verbatim.*",
+          "match_mapping_type": "long",
+          "mapping": { "type": "keyword" }
         }
       }
     ],
@@ -339,6 +364,12 @@
 
       "locationFeatureLayers":{"type": "nested"},
 
-      "verbatim": {"type": "object", "enabled": true}
+      "verbatim": {
+        "type": "nested",
+        "properties": {
+          "core": { "type": "nested" },
+          "extensions": { "type": "nested" }
+        }
+      }
     }
 }
