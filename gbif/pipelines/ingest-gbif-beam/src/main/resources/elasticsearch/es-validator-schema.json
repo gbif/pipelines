@@ -365,10 +365,10 @@
       "locationFeatureLayers":{"type": "nested"},
 
       "verbatim": {
-        "type": "nested",
+        "type": "object",
         "properties": {
-          "core": { "type": "nested" },
-          "extensions": { "type": "nested" }
+          "core": { "type": "object" },
+          "extensions": { "type": "object" }
         }
       }
     }
