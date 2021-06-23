@@ -973,14 +973,15 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     SolrInputDocument doc = new SolrInputDocument();
     doc.setField(ID, indexRecord.getId());
 
-    // strings
+    // keep track of added dynamic properties
     for (Map.Entry<String, String> s : indexRecord.getStrings().entrySet()) {
       if (schemaFields.contains(s.getKey()) || startsWithPrefix(dynamicFieldPrefixes, s.getKey())) {
         addStringSafely(doc, s.getKey(), s.getValue());
       } else {
         // clean up field name before adding
         String key = s.getKey().replaceAll("[^A-Za-z0-9]", "_");
-        if (StringUtils.isNotEmpty(key)) {
+        if (StringUtils.isNotEmpty(key)
+            && doc.getFieldValue(DYNAMIC_PROPERTIES_PREFIX + key) == null) {
           addStringSafely(doc, DYNAMIC_PROPERTIES_PREFIX + key, s.getValue());
         }
       }
@@ -1024,7 +1025,8 @@ public class IndexRecordTransform implements Serializable, IndexFields {
       for (Map.Entry<String, String> entry : indexRecord.getDynamicProperties().entrySet()) {
         if (StringUtils.isNotEmpty(entry.getValue())) {
           String key = entry.getKey().replaceAll("[^A-Za-z0-9]", "_");
-          if (StringUtils.isNotEmpty(key)) {
+          if (StringUtils.isNotEmpty(key)
+              && doc.getFieldValue(DYNAMIC_PROPERTIES_PREFIX + key) == null) {
             addStringSafely(doc, DYNAMIC_PROPERTIES_PREFIX + key, entry.getValue());
           }
         }
