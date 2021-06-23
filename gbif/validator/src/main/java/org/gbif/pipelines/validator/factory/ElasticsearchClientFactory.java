@@ -1,13 +1,11 @@
 package org.gbif.pipelines.validator.factory;
 
 import java.util.Arrays;
-
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
-
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ElasticsearchClientFactory {

@@ -1,14 +1,12 @@
 package org.gbif.pipelines.validator;
 
-import org.gbif.dwc.terms.Term;
-
-import org.elasticsearch.client.core.CountRequest;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import org.elasticsearch.client.core.CountRequest;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.gbif.dwc.terms.Term;
 
 @Builder
 public class CountRequestBuilder {
@@ -23,7 +21,7 @@ public class CountRequestBuilder {
     BoolQueryBuilder boolQueryBuilder =
         QueryBuilders.boolQuery()
             .must(QueryBuilders.termQuery("datasetKey", datasetKey))
-            .must(QueryBuilders.existsQuery(prefix + term.qualifiedName()));
+            .must(QueryBuilders.existsQuery(prefix + "." + term.qualifiedName()));
 
     CountRequest request = countRequest.query(boolQueryBuilder).indices(indexName);
 
