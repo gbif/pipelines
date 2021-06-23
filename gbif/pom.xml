@@ -19,6 +19,7 @@
     <module>keygen</module>
     <module>diagnostics</module>
     <module>pipelines</module>
+    <module>validator</module>
   </modules>
 
 
