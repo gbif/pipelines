@@ -71,11 +71,11 @@ public class MetricsCollectorIT {
     Metrics result =
         MetricsCollector.builder()
             .coreTerms(coreTerms)
-            .extenstionsTerms(extTerms)
+            .extensionsTerms(extTerms)
             .datasetKey(datasetKey)
             .index(IDX_NAME)
             .corePrefix("verbatim.core")
-            .extenstionsPrefix("verbatim.extensions")
+            .extensionsPrefix("verbatim.extensions")
             .esHost(ES_SERVER.getEsConfig().getRawHosts())
             .build()
             .collect();

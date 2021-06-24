@@ -345,6 +345,11 @@
         <artifactId>crawler</artifactId>
         <version>${project.version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.gbif.pipelines</groupId>
+        <artifactId>validator</artifactId>
+        <version>${project.version}</version>
+      </dependency>
 
       <!-- GBIF -->
       <dependency>

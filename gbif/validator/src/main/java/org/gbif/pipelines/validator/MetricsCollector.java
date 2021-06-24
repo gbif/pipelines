@@ -19,11 +19,11 @@ public class MetricsCollector {
 
   private final String[] esHost;
   private final List<Term> coreTerms;
-  private final Map<Extension, List<Term>> extenstionsTerms;
+  private final Map<Extension, List<Term>> extensionsTerms;
   private final String datasetKey;
   private final String index;
   private final String corePrefix;
-  private final String extenstionsPrefix;
+  private final String extensionsPrefix;
 
   public Metrics collect() {
 
@@ -32,9 +32,9 @@ public class MetricsCollector {
 
     // Query ES all extensions terms
     Map<Extension, Map<Term, Long>> extensionsTermsCountMap = new HashMap<>();
-    extenstionsTerms.forEach(
+    extensionsTerms.forEach(
         (key, value) -> {
-          String extPrefix = extenstionsPrefix + "." + key.getRowType();
+          String extPrefix = extensionsPrefix + "." + key.getRowType();
           Map<Term, Long> extTermCountMap = queryTermsCount(extPrefix, value);
           extensionsTermsCountMap.put(key, extTermCountMap);
         });

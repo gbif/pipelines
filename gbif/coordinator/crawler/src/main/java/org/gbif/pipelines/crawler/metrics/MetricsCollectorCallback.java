@@ -1,14 +1,21 @@
 package org.gbif.pipelines.crawler.metrics;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.api.vocabulary.Extension;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesIndexedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesMetricsCollectedMessage;
+import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.crawler.PipelinesCallback;
 import org.gbif.pipelines.crawler.StepHandler;
+import org.gbif.pipelines.validator.Metrics;
+import org.gbif.pipelines.validator.MetricsCollector;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 
 /** Callback which is called when the {@link PipelinesIndexedMessage} is received. */
@@ -55,12 +62,22 @@ public class MetricsCollectorCallback extends AbstractMessageCallback<PipelinesI
   @Override
   public Runnable createRunnable(PipelinesIndexedMessage message) {
     return () -> {
-      log.info("Dummy MetricsCollectorCallback run!");
-    };
-  }
+      List<Term> coreTerms = Collections.emptyList();
+      Map<Extension, List<Term>> extenstionsTerms = Collections.emptyMap();
 
-  @Override
-  public PipelinesMetricsCollectedMessage createOutgoingMessage(PipelinesIndexedMessage message) {
-    return null;
+      Metrics result =
+          MetricsCollector.builder()
+              .coreTerms(coreTerms)
+              .extensionsTerms(extenstionsTerms)
+              .datasetKey(message.getDatasetUuid().toString())
+              .index(config.indexName)
+              .corePrefix(config.corePrefix)
+              .extensionsPrefix(config.extensionsPrefix)
+              .esHost(config.esConfig.hosts)
+              .build()
+              .collect();
+
+      log.info(result.toString());
+    };
   }
 }

@@ -6,7 +6,9 @@ public interface StepHandler<I extends PipelineBasedMessage, O extends PipelineB
 
   Runnable createRunnable(I message);
 
-  O createOutgoingMessage(I message);
+  default O createOutgoingMessage(I message) {
+    return null;
+  }
 
   boolean isMessageCorrect(I message);
 }

@@ -22,6 +22,15 @@ public class MetricsCollectorConfiguration implements BaseConfiguration {
   @Parameter(names = "--meta-file-name")
   public String metaFileName = Pipeline.COLLECT_METRICS + ".yml";
 
+  @Parameter(names = "--index-name")
+  public String indexName = "validator";
+
+  @Parameter(names = "--core-prefix")
+  public String corePrefix = "verbatim.core";
+
+  @Parameter(names = "--extensions-prefix")
+  public String extensionsPrefix = "verbatim.extensions";
+
   @Parameter(names = "--validator-only")
   public boolean validatorOnly = false;
 
