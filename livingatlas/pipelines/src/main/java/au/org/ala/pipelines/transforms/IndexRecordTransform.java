@@ -440,6 +440,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
       addIfNotEmpty(indexRecord, INSTITUTION_NAME, aar.getInstitutionName());
       addIfNotEmpty(indexRecord, COLLECTION_NAME, aar.getCollectionName());
       addIfNotEmpty(indexRecord, PROVENANCE, aar.getProvenance());
+      addIfNotEmpty(indexRecord, CONTENT_TYPES, aar.getContentTypes());
       indexRecord
           .getBooleans()
           .put(
@@ -847,6 +848,12 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     }
   }
 
+  static void addIfNotEmpty(IndexRecord.Builder doc, String fieldName, List<String> values) {
+    if (values != null && !values.isEmpty()) {
+      doc.getMultiValues().put(fieldName, values);
+    }
+  }
+
   static void addGeo(IndexRecord.Builder doc, Double lat, Double lon) {
     String latlon = "";
     // ensure that the lat longs are in the required range before
@@ -953,20 +960,29 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     return false;
   }
 
+  public static void addStringSafely(SolrInputDocument doc, String key, String value) {
+    // current limitation on SOLR string field size
+    if (value.getBytes().length < 32765) {
+      doc.addField(key, value);
+    }
+  }
+
   public static SolrInputDocument convertIndexRecordToSolrDoc(
       IndexRecord indexRecord, List<String> schemaFields, List<String> dynamicFieldPrefixes) {
+
     SolrInputDocument doc = new SolrInputDocument();
     doc.setField(ID, indexRecord.getId());
 
-    // strings
+    // keep track of added dynamic properties
     for (Map.Entry<String, String> s : indexRecord.getStrings().entrySet()) {
       if (schemaFields.contains(s.getKey()) || startsWithPrefix(dynamicFieldPrefixes, s.getKey())) {
-        doc.addField(s.getKey(), s.getValue());
+        addStringSafely(doc, s.getKey(), s.getValue());
       } else {
         // clean up field name before adding
         String key = s.getKey().replaceAll("[^A-Za-z0-9]", "_");
-        if (StringUtils.isNotEmpty(key)) {
-          doc.addField(DYNAMIC_PROPERTIES_PREFIX + key, s.getValue());
+        if (StringUtils.isNotEmpty(key)
+            && doc.getFieldValue(DYNAMIC_PROPERTIES_PREFIX + key) == null) {
+          addStringSafely(doc, DYNAMIC_PROPERTIES_PREFIX + key, s.getValue());
         }
       }
     }
@@ -999,7 +1015,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     // multi-value fields
     for (Map.Entry<String, List<String>> s : indexRecord.getMultiValues().entrySet()) {
       for (String value : s.getValue()) {
-        doc.addField(s.getKey(), value);
+        addStringSafely(doc, s.getKey(), value);
       }
     }
 
@@ -1009,8 +1025,9 @@ public class IndexRecordTransform implements Serializable, IndexFields {
       for (Map.Entry<String, String> entry : indexRecord.getDynamicProperties().entrySet()) {
         if (StringUtils.isNotEmpty(entry.getValue())) {
           String key = entry.getKey().replaceAll("[^A-Za-z0-9]", "_");
-          if (StringUtils.isNotEmpty(key)) {
-            doc.addField(DYNAMIC_PROPERTIES_PREFIX + key, entry.getValue());
+          if (StringUtils.isNotEmpty(key)
+              && doc.getFieldValue(DYNAMIC_PROPERTIES_PREFIX + key) == null) {
+            addStringSafely(doc, DYNAMIC_PROPERTIES_PREFIX + key, entry.getValue());
           }
         }
       }

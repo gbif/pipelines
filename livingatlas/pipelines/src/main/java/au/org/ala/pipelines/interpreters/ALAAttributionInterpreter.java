@@ -43,7 +43,7 @@ public class ALAAttributionInterpreter {
           mdr.setProvenance(m.getProvenance());
           mdr.setHasDefaultValues(
               m.getDefaultDarwinCoreValues() != null && !m.getDefaultDarwinCoreValues().isEmpty());
-
+          mdr.setContentTypes(m.getContentTypes());
           // hub memberships
           List<EntityReference> hubs = m.getHubMembership();
           if (hubs != null && !hubs.isEmpty()) {
@@ -93,6 +93,7 @@ public class ALAAttributionInterpreter {
       aar.setProvenance(mdr.getProvenance());
       aar.setHasDefaultValues(mdr.getHasDefaultValues());
       aar.setHubMembership(mdr.getHubMembership());
+      aar.setContentTypes(mdr.getContentTypes());
 
       if (collectionKvStore != null) {
 

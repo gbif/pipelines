@@ -36,6 +36,7 @@ public class ALACollectoryMetadata {
   Map<String, String> defaultDarwinCoreValues;
   List<Map<String, String>> taxonomyCoverageHints;
   List<EntityReference> hubMembership;
+  List<String> contentTypes;
 
   /**
    * Build a map of hints suitable for a name search.
