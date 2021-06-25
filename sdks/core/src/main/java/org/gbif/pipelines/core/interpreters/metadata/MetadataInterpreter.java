@@ -41,11 +41,19 @@ public class MetadataInterpreter {
       if (client != null) {
 
         Dataset dataset = client.getDataset(datasetId);
+
+        // https://github.com/gbif/pipelines/issues/401
+        License license = getLicense(dataset.getLicense());
+        if (license == null || license == License.UNSPECIFIED || license == License.UNSUPPORTED) {
+          throw new IllegalArgumentException(
+              "Dataset licence can't be UNSPECIFIED or UNSUPPORTED!");
+        } else {
+          mdr.setLicense(license.name());
+        }
+
         mdr.setDatasetTitle(dataset.getTitle());
         mdr.setInstallationKey(dataset.getInstallationKey());
         mdr.setPublishingOrganizationKey(dataset.getPublishingOrganizationKey());
-        Optional.ofNullable(getLicense(dataset.getLicense()))
-            .ifPresent(license -> mdr.setLicense(license.name()));
 
         List<Network> networkList = client.getNetworkFromDataset(datasetId);
         if (networkList != null && !networkList.isEmpty()) {
