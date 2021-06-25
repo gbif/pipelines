@@ -51,6 +51,7 @@
       "type": "keyword",
       "normalizer": "lowercase_normalizer"
     },
+    "issues": {"type": "keyword"},
     "verbatim": {
       "type": "object",
       "properties": {

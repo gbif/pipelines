@@ -15,6 +15,8 @@ import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.estools.EsIndex;
 import org.gbif.pipelines.estools.model.IndexParams;
 import org.gbif.pipelines.estools.service.EsService;
+import org.gbif.pipelines.validator.metircs.Metrics;
+import org.gbif.pipelines.validator.metircs.MetricsCollector;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -41,12 +43,11 @@ public class MetricsCollectorIT {
     String datasetKey = "675a1bfd-9bcc-46ea-a417-1f68f23a10f6";
 
     String document =
-        "{\"datasetKey\":\"675a1bfd-9bcc-46ea-a417-1f68f23a10f6\","
-            + "\"verbatim\":{\"core\":{\"http://rs.tdwg.org/dwc/terms/maximumElevationInMeters\":\"1150\","
-            + "\"http://rs.tdwg.org/dwc/terms/organismID\":\"251\"},"
-            + "\"extensions\":{\"http://rs.tdwg.org/dwc/terms/MeasurementOrFact\":"
-            + "[{\"http://rs.tdwg.org/dwc/terms/measurementValue\":\"1.7\"},"
-            + "{\"http://rs.tdwg.org/dwc/terms/measurementValue\":\"5.0\"},"
+        "{\"datasetKey\":\"675a1bfd-9bcc-46ea-a417-1f68f23a10f6\",\"issues\":[\"GEODETIC_DATUM_ASSUMED_WGS84\","
+            + "\"RANDOM_ISSUE\"],\"verbatim\":{\"core\":{\"http://rs.tdwg.org/dwc/terms/maximumElevationInMeters\":"
+            + "\"1150\",\"http://rs.tdwg.org/dwc/terms/organismID\":\"251\"},\"extensions\":"
+            + "{\"http://rs.tdwg.org/dwc/terms/MeasurementOrFact\":[{\"http://rs.tdwg.org/dwc/terms/measurementValue\":"
+            + "\"1.7\"},{\"http://rs.tdwg.org/dwc/terms/measurementValue\":\"5.0\"},"
             + "{\"http://rs.tdwg.org/dwc/terms/measurementValue\":\"5.83\"}]}}}";
 
     EsIndex.createIndex(
@@ -84,17 +85,30 @@ public class MetricsCollectorIT {
             .collect();
 
     // Should
+
     // Core
-    Map<Term, Long> coreTermsCountMap = result.getCoreTermsCountMap();
-    Assert.assertEquals(Long.valueOf(1L), coreTermsCountMap.get(DwcTerm.maximumElevationInMeters));
-    Assert.assertEquals(Long.valueOf(1L), coreTermsCountMap.get(DwcTerm.organismID));
-    Assert.assertEquals(Long.valueOf(0L), coreTermsCountMap.get(DwcTerm.occurrenceID));
-    Assert.assertNull(coreTermsCountMap.get(DwcTerm.county));
+    Map<String, Long> coreTermsCountMap = result.getCoreTermsCountMap();
+    Assert.assertEquals(
+        Long.valueOf(1L), coreTermsCountMap.get(DwcTerm.maximumElevationInMeters.qualifiedName()));
+    Assert.assertEquals(
+        Long.valueOf(1L), coreTermsCountMap.get(DwcTerm.organismID.qualifiedName()));
+    Assert.assertEquals(
+        Long.valueOf(0L), coreTermsCountMap.get(DwcTerm.occurrenceID.qualifiedName()));
+    Assert.assertNull(coreTermsCountMap.get(DwcTerm.county.qualifiedName()));
+
     // Extensions
-    Map<Term, Long> extTermsCountMap =
-        result.getExtensionsTermsCountMap().get(Extension.MEASUREMENT_OR_FACT);
-    Assert.assertEquals(Long.valueOf(1L), extTermsCountMap.get(DwcTerm.measurementValue));
-    Assert.assertEquals(Long.valueOf(0L), extTermsCountMap.get(DwcTerm.measurementType));
-    Assert.assertNull(extTermsCountMap.get(DwcTerm.county));
+    Map<String, Long> extTermsCountMap =
+        result.getExtensionsTermsCountMap().get(Extension.MEASUREMENT_OR_FACT.getRowType());
+    Assert.assertEquals(
+        Long.valueOf(1L), extTermsCountMap.get(DwcTerm.measurementValue.qualifiedName()));
+    Assert.assertEquals(
+        Long.valueOf(0L), extTermsCountMap.get(DwcTerm.measurementType.qualifiedName()));
+    Assert.assertNull(extTermsCountMap.get(DwcTerm.county.qualifiedName()));
+
+    // OccurrenceIssues
+    Map<String, Long> issuesMap = result.getOccurrenceIssuesMap();
+    Assert.assertEquals(2, issuesMap.size());
+    Assert.assertEquals(Long.valueOf(1L), issuesMap.get("RANDOM_ISSUE"));
+    Assert.assertEquals(Long.valueOf(1L), issuesMap.get("GEODETIC_DATUM_ASSUMED_WGS84"));
   }
 }
