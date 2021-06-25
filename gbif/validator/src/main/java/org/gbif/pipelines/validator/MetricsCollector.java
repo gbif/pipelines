@@ -1,8 +1,8 @@
 package org.gbif.pipelines.validator;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.SneakyThrows;
@@ -11,6 +11,8 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.core.CountRequest;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.Term;
+import org.gbif.pipelines.estools.client.EsClient;
+import org.gbif.pipelines.estools.service.EsService;
 import org.gbif.pipelines.validator.CountRequestBuilder.TermCountRequest;
 import org.gbif.pipelines.validator.factory.ElasticsearchClientFactory;
 
@@ -18,14 +20,17 @@ import org.gbif.pipelines.validator.factory.ElasticsearchClientFactory;
 public class MetricsCollector {
 
   private final String[] esHost;
-  private final List<Term> coreTerms;
-  private final Map<Extension, List<Term>> extensionsTerms;
+  private final Set<Term> coreTerms;
+  private final Map<Extension, Set<Term>> extensionsTerms;
   private final String datasetKey;
   private final String index;
   private final String corePrefix;
   private final String extensionsPrefix;
 
   public Metrics collect() {
+
+    EsService.refreshIndex(
+        EsClient.from(ElasticsearchClientFactory.getInstance(esHost).getLowLevelClient()), index);
 
     // Query ES all core terms
     Map<Term, Long> coreTermCountMap = queryTermsCount(corePrefix, coreTerms);
@@ -45,7 +50,7 @@ public class MetricsCollector {
         .build();
   }
 
-  private Map<Term, Long> queryTermsCount(String prefix, List<Term> terms) {
+  private Map<Term, Long> queryTermsCount(String prefix, Set<Term> terms) {
     return terms.stream()
         .parallel()
         .map(term -> buildCountRequest(prefix, term))

@@ -6,8 +6,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
@@ -57,16 +58,17 @@ public class MetricsCollectorIT {
             .build());
 
     EsService.indexDocument(ES_SERVER.getEsClient(), IDX_NAME, 1L, document);
-    EsService.refreshIndex(ES_SERVER.getEsClient(), IDX_NAME);
 
     // When
-    List<Term> coreTerms =
-        Arrays.asList(DwcTerm.maximumElevationInMeters, DwcTerm.organismID, DwcTerm.occurrenceID);
+    Set<Term> coreTerms =
+        new HashSet<>(
+            Arrays.asList(
+                DwcTerm.maximumElevationInMeters, DwcTerm.organismID, DwcTerm.occurrenceID));
 
-    Map<Extension, List<Term>> extTerms =
+    Map<Extension, Set<Term>> extTerms =
         Collections.singletonMap(
             Extension.MEASUREMENT_OR_FACT,
-            Arrays.asList(DwcTerm.measurementValue, DwcTerm.measurementType));
+            new HashSet<>(Arrays.asList(DwcTerm.measurementValue, DwcTerm.measurementType)));
 
     Metrics result =
         MetricsCollector.builder()

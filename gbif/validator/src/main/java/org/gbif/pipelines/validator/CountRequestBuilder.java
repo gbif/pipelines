@@ -3,11 +3,13 @@ package org.gbif.pipelines.validator;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.client.core.CountRequest;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.gbif.dwc.terms.Term;
 
+@Slf4j
 @Builder
 public class CountRequestBuilder {
 

@@ -1,6 +1,5 @@
 package org.gbif.pipelines.core.utils;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
@@ -8,13 +7,16 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import lombok.SneakyThrows;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.Archive;
+import org.gbif.dwc.ArchiveFile;
 import org.gbif.dwc.DwcFiles;
+import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class DwcaExtensionTermUtils {
+public class DwcaTermUtils {
 
   private static final Map<String, String> EXTENSION_TYPE_MAP = new HashMap<>();
 
@@ -59,19 +61,32 @@ public class DwcaExtensionTermUtils {
     EXTENSION_TYPE_MAP.put(Extension.IDENTIFIER.getRowType(), RecordType.IDENTIFIER_TABLE.name());
   }
 
-  public static Set<String> fromLocation(Path path) throws IOException {
-    Archive archive = DwcFiles.fromLocation(path);
-    return readExtensionTerms(archive);
+  @SneakyThrows
+  public static Archive fromLocation(Path path) {
+    return DwcFiles.fromLocation(path);
   }
 
-  public static Set<String> fromCompressed(Path path, Path workingDir) throws IOException {
-    Archive archive = DwcFiles.fromCompressed(path, workingDir);
-    return readExtensionTerms(archive);
+  @SneakyThrows
+  public static Archive fromCompressed(Path path, Path workingDir) {
+    return DwcFiles.fromCompressed(path, workingDir);
   }
 
-  private static Set<String> readExtensionTerms(Archive archive) {
+  public static Set<String> getExtensionAsTerms(Archive archive) {
     return archive.getExtensions().stream()
         .map(x -> EXTENSION_TYPE_MAP.get(x.getRowType().qualifiedName()))
         .collect(Collectors.toSet());
+  }
+
+  public static Set<Term> getCoreTerms(Archive archive) {
+    return archive.getCore().getTerms();
+  }
+
+  public static Map<Extension, Set<Term>> getExtensionsTerms(Archive archive) {
+    return archive.getExtensions().stream()
+        .collect(
+            Collectors.toMap(
+                af -> Extension.fromRowType(af.getRowType().qualifiedName()),
+                ArchiveFile::getTerms,
+                (a, b) -> b));
   }
 }

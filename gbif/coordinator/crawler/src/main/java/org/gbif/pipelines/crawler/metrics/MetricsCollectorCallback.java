@@ -1,8 +1,10 @@
 package org.gbif.pipelines.crawler.metrics;
 
-import java.util.Collections;
-import java.util.List;
+import static org.gbif.pipelines.common.utils.PathUtil.buildDwcaInputPath;
+
+import java.nio.file.Path;
 import java.util.Map;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
 import org.gbif.api.model.pipelines.StepType;
@@ -11,7 +13,9 @@ import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesIndexedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesMetricsCollectedMessage;
+import org.gbif.dwc.Archive;
 import org.gbif.dwc.terms.Term;
+import org.gbif.pipelines.core.utils.DwcaTermUtils;
 import org.gbif.pipelines.crawler.PipelinesCallback;
 import org.gbif.pipelines.crawler.StepHandler;
 import org.gbif.pipelines.validator.Metrics;
@@ -62,8 +66,10 @@ public class MetricsCollectorCallback extends AbstractMessageCallback<PipelinesI
   @Override
   public Runnable createRunnable(PipelinesIndexedMessage message) {
     return () -> {
-      List<Term> coreTerms = Collections.emptyList();
-      Map<Extension, List<Term>> extenstionsTerms = Collections.emptyMap();
+      Path inputPath = buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid());
+      Archive archive = DwcaTermUtils.fromLocation(inputPath);
+      Set<Term> coreTerms = DwcaTermUtils.getCoreTerms(archive);
+      Map<Extension, Set<Term>> extenstionsTerms = DwcaTermUtils.getExtensionsTerms(archive);
 
       Metrics result =
           MetricsCollector.builder()

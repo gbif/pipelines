@@ -22,6 +22,10 @@ public class MetricsCollectorConfiguration implements BaseConfiguration {
   @Parameter(names = "--meta-file-name")
   public String metaFileName = Pipeline.COLLECT_METRICS + ".yml";
 
+  @Parameter(names = "--archive-repository")
+  @NotNull
+  public String archiveRepository;
+
   @Parameter(names = "--index-name")
   public String indexName = "validator";
 
