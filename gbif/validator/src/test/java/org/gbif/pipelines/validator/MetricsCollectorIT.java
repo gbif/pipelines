@@ -58,6 +58,7 @@ public class MetricsCollectorIT {
             .build());
 
     EsService.indexDocument(ES_SERVER.getEsClient(), IDX_NAME, 1L, document);
+    EsService.refreshIndex(ES_SERVER.getEsClient(), IDX_NAME);
 
     // When
     Set<Term> coreTerms =

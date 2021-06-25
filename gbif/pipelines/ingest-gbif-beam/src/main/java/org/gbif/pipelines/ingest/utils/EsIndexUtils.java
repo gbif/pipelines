@@ -184,4 +184,13 @@ public class EsIndexUtils {
         options.getSearchQueryTimeoutSec(),
         options.getSearchQueryAttempts());
   }
+
+  /**
+   * Connects to Elasticsearch instance and refreshes index to make queries work without waiting for
+   * an update timeout
+   */
+  public static void refreshIndex(EsIndexingPipelineOptions options) {
+    EsService.refreshIndex(
+        EsClient.from(EsConfig.from(options.getEsHosts())), options.getEsIndexName());
+  }
 }
