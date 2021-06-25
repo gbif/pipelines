@@ -23,6 +23,18 @@
         <artifactId>maven-failsafe-plugin</artifactId>
       </plugin>
     </plugins>
+    <!-- Copy pom.xml value to test resources maven.properties -->
+    <resources>
+      <resource>
+        <directory>src/test/resources</directory>
+        <targetPath>../test-classes/</targetPath>
+        <filtering>true</filtering>
+      </resource>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+      </resource>
+    </resources>
   </build>
 
   <dependencies>
