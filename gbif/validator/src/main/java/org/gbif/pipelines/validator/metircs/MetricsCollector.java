@@ -13,11 +13,14 @@ import org.elasticsearch.client.core.CountRequest;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.bucket.MultiBucketsAggregation.Bucket;
 import org.elasticsearch.search.aggregations.bucket.terms.ParsedStringTerms;
+import org.elasticsearch.search.aggregations.metrics.ParsedValueCount;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.validator.ValidationStatus;
 import org.gbif.pipelines.validator.factory.ElasticsearchClientFactory;
 import org.gbif.pipelines.validator.metircs.Metrics.Result;
+import org.gbif.pipelines.validator.metircs.request.ExtensionTermCountRequestBuilder;
+import org.gbif.pipelines.validator.metircs.request.ExtensionTermCountRequestBuilder.ExtTermCountRequest;
 import org.gbif.pipelines.validator.metircs.request.OccurrenceIssuesRequestBuilder;
 import org.gbif.pipelines.validator.metircs.request.TermCountRequestBuilder;
 import org.gbif.pipelines.validator.metircs.request.TermCountRequestBuilder.TermCountRequest;
@@ -38,7 +41,7 @@ public class MetricsCollector {
     // Core
     Metrics.Core core =
         Metrics.Core.builder()
-            .indexedCount(1L)
+            .indexedCount(queryDocCount())
             .indexedCoreTerm(queryTermsCount(corePrefix, coreTerms))
             .occurrenceIssuesMap(queryOccurrenceIssues())
             .build();
@@ -51,8 +54,8 @@ public class MetricsCollector {
                   String extPrefix = extensionsPrefix + "." + es.getKey().getRowType();
                   return Metrics.Extension.builder()
                       .rowType(es.getKey().getRowType())
-                      .indexedCount(queryDocCount())
-                      .extensionsTermsCountMap(queryTermsCount(extPrefix, es.getValue()))
+                      // .indexedCount(queryDocCount())
+                      .extensionsTermsCountMap(queryExtTermsCount(extPrefix, es.getValue()))
                       .build();
                 })
             .collect(Collectors.toList());
@@ -78,20 +81,41 @@ public class MetricsCollector {
             Collectors.toMap(t -> t.getTerm().qualifiedName(), t -> getCount(t.getCountRequest())));
   }
 
+  private Map<String, Long> queryExtTermsCount(String prefix, Set<Term> terms) {
+
+    return terms.stream()
+        .parallel()
+        .map(term -> buildExtCountRequest(prefix, term))
+        .collect(
+            Collectors.toMap(
+                t -> t.getTerm().qualifiedName(), t -> getExtCount(t.getSearchRequest())));
+  }
+
+  private ExtTermCountRequest buildExtCountRequest(String prefix, Term term) {
+    return ExtensionTermCountRequestBuilder.builder()
+        .prefix(prefix)
+        .termValue(datasetKey)
+        .indexName(index)
+        .term(term)
+        .build()
+        .getRequest();
+  }
+
   private TermCountRequest buildCountRequest(String prefix, Term term) {
     return TermCountRequestBuilder.builder()
         .prefix(prefix)
-        .datasetKey(datasetKey)
+        .termValue(datasetKey)
         .indexName(index)
+        .term(term)
         .build()
-        .getRequest(term);
+        .getRequest();
   }
 
   @SneakyThrows
   private Map<String, Long> queryOccurrenceIssues() {
     SearchRequest request =
         OccurrenceIssuesRequestBuilder.builder()
-            .datasetKey(datasetKey)
+            .termValue(datasetKey)
             .indexName(index)
             .build()
             .getRequest();
@@ -108,9 +132,20 @@ public class MetricsCollector {
   }
 
   @SneakyThrows
-  private long getCount(CountRequest countRequest) {
+  private long getExtCount(SearchRequest request) {
+    Aggregation aggregation =
+        ElasticsearchClientFactory.getInstance(esHost)
+            .search(request, RequestOptions.DEFAULT)
+            .getAggregations()
+            .get(ExtensionTermCountRequestBuilder.AGGREGATION);
+
+    return ((ParsedValueCount) aggregation).getValue();
+  }
+
+  @SneakyThrows
+  private long getCount(CountRequest request) {
     return ElasticsearchClientFactory.getInstance(esHost)
-        .count(countRequest, RequestOptions.DEFAULT)
+        .count(request, RequestOptions.DEFAULT)
         .getCount();
   }
 }

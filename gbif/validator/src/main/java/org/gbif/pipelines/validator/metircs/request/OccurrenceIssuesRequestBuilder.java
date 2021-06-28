@@ -19,7 +19,9 @@ public class OccurrenceIssuesRequestBuilder {
 
   public static final String AGGREGATION = "by_issues";
 
-  private final String datasetKey;
+  @Builder.Default private final String termName = "datasetKey";
+  private final String termValue;
+  @Builder.Default private final String aggsField = "issues";
   private final String indexName;
 
   public SearchRequest getRequest() {
@@ -27,8 +29,8 @@ public class OccurrenceIssuesRequestBuilder {
         .source(
             new SearchSourceBuilder()
                 .size(0)
-                .query(QueryBuilders.termQuery("datasetKey", datasetKey))
-                .aggregation(AggregationBuilders.terms(AGGREGATION).field("issues").size(1_024)))
+                .query(QueryBuilders.termQuery(termName, termValue))
+                .aggregation(AggregationBuilders.terms(AGGREGATION).field(aggsField).size(1_024)))
         .indices(indexName);
   }
 }

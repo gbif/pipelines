@@ -111,9 +111,12 @@ public class MetricsCollectorIT {
     assertEquals(Long.valueOf(1L), issues.get("GEODETIC_DATUM_ASSUMED_WGS84"));
 
     // Extensions
-    Map<String, Long> resExtTerms =
-        result.getResult().getExtensions().get(0).getExtensionsTermsCountMap();
-    assertEquals(Long.valueOf(1L), resExtTerms.get(DwcTerm.measurementValue.qualifiedName()));
+    Metrics.Extension extension = result.getResult().getExtensions().get(0);
+
+    // assertEquals(Long.valueOf(3L), extension.getIndexedCount());
+
+    Map<String, Long> resExtTerms = extension.getExtensionsTermsCountMap();
+    assertEquals(Long.valueOf(3L), resExtTerms.get(DwcTerm.measurementValue.qualifiedName()));
     assertEquals(Long.valueOf(0L), resExtTerms.get(DwcTerm.measurementType.qualifiedName()));
     assertNull(resExtTerms.get(DwcTerm.county.qualifiedName()));
   }

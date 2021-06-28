@@ -20,22 +20,24 @@ import org.gbif.dwc.terms.Term;
 @Builder
 public class TermCountRequestBuilder {
 
-  private final String datasetKey;
+  @Builder.Default private final String termName = "datasetKey";
+  private final String termValue;
   private final String prefix;
   private final String indexName;
+  private final Term term;
 
   public TermCountRequest getRequest() {
-    return getRequest(null);
-  }
-
-  public TermCountRequest getRequest(Term term) {
 
     BoolQueryBuilder boolQueryBuilder =
-        QueryBuilders.boolQuery().must(QueryBuilders.termQuery("datasetKey", this.datasetKey));
+        QueryBuilders.boolQuery().must(QueryBuilders.termQuery(termName, this.termValue));
 
     if (term != null) {
-      boolQueryBuilder =
-          boolQueryBuilder.must(QueryBuilders.existsQuery(prefix + "." + term.qualifiedName()));
+      String exists =
+          prefix == null || prefix.isEmpty()
+              ? term.qualifiedName()
+              : prefix + "." + term.qualifiedName();
+
+      boolQueryBuilder = boolQueryBuilder.must(QueryBuilders.existsQuery(exists));
     }
 
     CountRequest request = new CountRequest().query(boolQueryBuilder).indices(indexName);
