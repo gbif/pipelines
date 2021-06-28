@@ -1,15 +1,16 @@
 package org.gbif.pipelines.validator.metircs;
 
+import java.io.IOException;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.core.CountRequest;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.bucket.MultiBucketsAggregation.Bucket;
 import org.elasticsearch.search.aggregations.bucket.terms.ParsedStringTerms;
@@ -25,6 +26,7 @@ import org.gbif.pipelines.validator.metircs.request.OccurrenceIssuesRequestBuild
 import org.gbif.pipelines.validator.metircs.request.TermCountRequestBuilder;
 import org.gbif.pipelines.validator.metircs.request.TermCountRequestBuilder.TermCountRequest;
 
+// TODO: DOC
 @Builder
 public class MetricsCollector {
 
@@ -36,14 +38,15 @@ public class MetricsCollector {
   private final String corePrefix;
   private final String extensionsPrefix;
 
+  // TODO: DOC
   public Metrics collect() {
 
     // Core
     Metrics.Core core =
         Metrics.Core.builder()
             .indexedCount(queryDocCount())
-            .indexedCoreTerm(queryTermsCount(corePrefix, coreTerms))
-            .occurrenceIssuesMap(queryOccurrenceIssues())
+            .indexedCoreTerm(queryCoreTermsCount())
+            .occurrenceIssuesMap(queryOccurrenceIssuesCount())
             .build();
 
     // Extensions
@@ -68,51 +71,86 @@ public class MetricsCollector {
         .build();
   }
 
+  @SneakyThrows
   private Long queryDocCount() {
-    return getCount(buildCountRequest(null, null).getCountRequest());
+    TermCountRequest request =
+        TermCountRequestBuilder.builder()
+            .termValue(datasetKey)
+            .indexName(index)
+            .build()
+            .getRequest();
+
+    return ElasticsearchClientFactory.getInstance(esHost)
+        .count(request.getCountRequest(), RequestOptions.DEFAULT)
+        .getCount();
   }
 
-  private Map<String, Long> queryTermsCount(String prefix, Set<Term> terms) {
+  // TODO: DOC
+  private Map<String, Long> queryCoreTermsCount() {
 
-    return terms.stream()
+    Function<Term, TermCountRequest> requestFn =
+        term ->
+            TermCountRequestBuilder.builder()
+                .termValue(datasetKey)
+                .prefix(corePrefix)
+                .indexName(index)
+                .term(term)
+                .build()
+                .getRequest();
+
+    Function<TermCountRequest, Long> countFn =
+        termCountRequest -> {
+          try {
+            return ElasticsearchClientFactory.getInstance(esHost)
+                .count(termCountRequest.getCountRequest(), RequestOptions.DEFAULT)
+                .getCount();
+          } catch (IOException ex) {
+            throw new RuntimeException(ex.getMessage(), ex);
+          }
+        };
+
+    return coreTerms.stream()
         .parallel()
-        .map(term -> buildCountRequest(prefix, term))
-        .collect(
-            Collectors.toMap(t -> t.getTerm().qualifiedName(), t -> getCount(t.getCountRequest())));
+        .map(requestFn)
+        .collect(Collectors.toMap(t -> t.getTerm().qualifiedName(), countFn));
   }
 
+  // TODO: DOC
   private Map<String, Long> queryExtTermsCount(String prefix, Set<Term> terms) {
 
+    Function<Term, ExtTermCountRequest> requestFn =
+        (term) ->
+            ExtensionTermCountRequestBuilder.builder()
+                .prefix(prefix)
+                .termValue(datasetKey)
+                .indexName(index)
+                .term(term)
+                .build()
+                .getRequest();
+
+    Function<ExtTermCountRequest, Long> countFn =
+        extTermCountRequest -> {
+          try {
+            Aggregation aggregation =
+                ElasticsearchClientFactory.getInstance(esHost)
+                    .search(extTermCountRequest.getSearchRequest(), RequestOptions.DEFAULT)
+                    .getAggregations()
+                    .get(ExtensionTermCountRequestBuilder.AGGREGATION);
+            return ((ParsedValueCount) aggregation).getValue();
+          } catch (IOException ex) {
+            throw new RuntimeException(ex.getMessage(), ex);
+          }
+        };
+
     return terms.stream()
         .parallel()
-        .map(term -> buildExtCountRequest(prefix, term))
-        .collect(
-            Collectors.toMap(
-                t -> t.getTerm().qualifiedName(), t -> getExtCount(t.getSearchRequest())));
+        .map(requestFn)
+        .collect(Collectors.toMap(t -> t.getTerm().qualifiedName(), countFn));
   }
 
-  private ExtTermCountRequest buildExtCountRequest(String prefix, Term term) {
-    return ExtensionTermCountRequestBuilder.builder()
-        .prefix(prefix)
-        .termValue(datasetKey)
-        .indexName(index)
-        .term(term)
-        .build()
-        .getRequest();
-  }
-
-  private TermCountRequest buildCountRequest(String prefix, Term term) {
-    return TermCountRequestBuilder.builder()
-        .prefix(prefix)
-        .termValue(datasetKey)
-        .indexName(index)
-        .term(term)
-        .build()
-        .getRequest();
-  }
-
+  // TODO: DOC
   @SneakyThrows
-  private Map<String, Long> queryOccurrenceIssues() {
+  private Map<String, Long> queryOccurrenceIssuesCount() {
     SearchRequest request =
         OccurrenceIssuesRequestBuilder.builder()
             .termValue(datasetKey)
@@ -129,23 +167,5 @@ public class MetricsCollector {
     return ((ParsedStringTerms) aggregation)
         .getBuckets().stream()
             .collect(Collectors.toMap(Bucket::getKeyAsString, Bucket::getDocCount, (a1, b) -> b));
-  }
-
-  @SneakyThrows
-  private long getExtCount(SearchRequest request) {
-    Aggregation aggregation =
-        ElasticsearchClientFactory.getInstance(esHost)
-            .search(request, RequestOptions.DEFAULT)
-            .getAggregations()
-            .get(ExtensionTermCountRequestBuilder.AGGREGATION);
-
-    return ((ParsedValueCount) aggregation).getValue();
-  }
-
-  @SneakyThrows
-  private long getCount(CountRequest request) {
-    return ElasticsearchClientFactory.getInstance(esHost)
-        .count(request, RequestOptions.DEFAULT)
-        .getCount();
   }
 }
