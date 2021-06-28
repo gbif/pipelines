@@ -21,7 +21,7 @@ public class ElasticsearchClientFactory {
     this.client = new RestHighLevelClient(RestClient.builder(hosts));
   }
 
-  public static RestHighLevelClient getInstance(String[] esHosts) {
+  public static RestHighLevelClient getInstance(String... esHosts) {
     if (instance == null) {
       synchronized (MUTEX) {
         if (instance == null) {

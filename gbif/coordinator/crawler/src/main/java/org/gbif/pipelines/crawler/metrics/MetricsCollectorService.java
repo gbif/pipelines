@@ -1,6 +1,7 @@
 package org.gbif.pipelines.crawler.metrics;
 
 import com.google.common.util.concurrent.AbstractIdleService;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
 import org.gbif.common.messaging.DefaultMessagePublisher;
@@ -8,6 +9,7 @@ import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesIndexedMessage;
 import org.gbif.pipelines.common.configs.StepConfiguration;
+import org.gbif.pipelines.validator.factory.ElasticsearchClientFactory;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 
 /**
@@ -47,11 +49,13 @@ public class MetricsCollectorService extends AbstractIdleService {
         new MetricsCollectorCallback(this.config, publisher, curator, client));
   }
 
+  @SneakyThrows
   @Override
   protected void shutDown() {
     publisher.close();
     listener.close();
     curator.close();
+    ElasticsearchClientFactory.getInstance().close();
     log.info("Stopping pipelines-metrics-collector service");
   }
 }
