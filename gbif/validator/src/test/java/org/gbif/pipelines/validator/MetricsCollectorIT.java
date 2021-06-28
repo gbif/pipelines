@@ -1,6 +1,9 @@
 package org.gbif.pipelines.validator;
 
 import static org.gbif.pipelines.estools.common.SettingsType.INDEXING;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -16,8 +19,8 @@ import org.gbif.pipelines.estools.EsIndex;
 import org.gbif.pipelines.estools.model.IndexParams;
 import org.gbif.pipelines.estools.service.EsService;
 import org.gbif.pipelines.validator.metircs.Metrics;
+import org.gbif.pipelines.validator.metircs.Metrics.Core;
 import org.gbif.pipelines.validator.metircs.MetricsCollector;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -86,29 +89,32 @@ public class MetricsCollectorIT {
 
     // Should
 
-    // Core
-    Map<String, Long> coreTermsCountMap = result.getCoreTermsCountMap();
-    Assert.assertEquals(
-        Long.valueOf(1L), coreTermsCountMap.get(DwcTerm.maximumElevationInMeters.qualifiedName()));
-    Assert.assertEquals(
-        Long.valueOf(1L), coreTermsCountMap.get(DwcTerm.organismID.qualifiedName()));
-    Assert.assertEquals(
-        Long.valueOf(0L), coreTermsCountMap.get(DwcTerm.occurrenceID.qualifiedName()));
-    Assert.assertNull(coreTermsCountMap.get(DwcTerm.county.qualifiedName()));
+    // Metrics
+    assertEquals(datasetKey, result.getDatasetKey());
+    assertEquals(ValidationStatus.FINISHED, result.getStatus());
+    assertNotNull(result.getEndTimestamp());
 
-    // Extensions
-    Map<String, Long> extTermsCountMap =
-        result.getExtensionsTermsCountMap().get(Extension.MEASUREMENT_OR_FACT.getRowType());
-    Assert.assertEquals(
-        Long.valueOf(1L), extTermsCountMap.get(DwcTerm.measurementValue.qualifiedName()));
-    Assert.assertEquals(
-        Long.valueOf(0L), extTermsCountMap.get(DwcTerm.measurementType.qualifiedName()));
-    Assert.assertNull(extTermsCountMap.get(DwcTerm.county.qualifiedName()));
+    // Core
+    Core core = result.getResult().getCore();
+    Map<String, Long> resCoreTerms = core.getIndexedCoreTerm();
+    assertEquals(Long.valueOf(1L), core.getIndexedCount());
+    assertEquals(
+        Long.valueOf(1L), resCoreTerms.get(DwcTerm.maximumElevationInMeters.qualifiedName()));
+    assertEquals(Long.valueOf(1L), resCoreTerms.get(DwcTerm.organismID.qualifiedName()));
+    assertEquals(Long.valueOf(0L), resCoreTerms.get(DwcTerm.occurrenceID.qualifiedName()));
+    assertNull(resCoreTerms.get(DwcTerm.county.qualifiedName()));
 
     // OccurrenceIssues
-    Map<String, Long> issuesMap = result.getOccurrenceIssuesMap();
-    Assert.assertEquals(2, issuesMap.size());
-    Assert.assertEquals(Long.valueOf(1L), issuesMap.get("RANDOM_ISSUE"));
-    Assert.assertEquals(Long.valueOf(1L), issuesMap.get("GEODETIC_DATUM_ASSUMED_WGS84"));
+    Map<String, Long> issues = core.getOccurrenceIssuesMap();
+    assertEquals(2, issues.size());
+    assertEquals(Long.valueOf(1L), issues.get("RANDOM_ISSUE"));
+    assertEquals(Long.valueOf(1L), issues.get("GEODETIC_DATUM_ASSUMED_WGS84"));
+
+    // Extensions
+    Map<String, Long> resExtTerms =
+        result.getResult().getExtensions().get(0).getExtensionsTermsCountMap();
+    assertEquals(Long.valueOf(1L), resExtTerms.get(DwcTerm.measurementValue.qualifiedName()));
+    assertEquals(Long.valueOf(0L), resExtTerms.get(DwcTerm.measurementType.qualifiedName()));
+    assertNull(resExtTerms.get(DwcTerm.county.qualifiedName()));
   }
 }

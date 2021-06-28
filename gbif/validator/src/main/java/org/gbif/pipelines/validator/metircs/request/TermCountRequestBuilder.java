@@ -1,10 +1,11 @@
-package org.gbif.pipelines.validator.metircs.es;
+package org.gbif.pipelines.validator.metircs.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.client.core.CountRequest;
+import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.gbif.dwc.terms.Term;
 
@@ -23,15 +24,21 @@ public class TermCountRequestBuilder {
   private final String prefix;
   private final String indexName;
 
+  public TermCountRequest getRequest() {
+    return getRequest(null);
+  }
+
   public TermCountRequest getRequest(Term term) {
 
-    CountRequest request =
-        new CountRequest()
-            .query(
-                QueryBuilders.boolQuery()
-                    .must(QueryBuilders.termQuery("datasetKey", datasetKey))
-                    .must(QueryBuilders.existsQuery(prefix + "." + term.qualifiedName())))
-            .indices(indexName);
+    BoolQueryBuilder boolQueryBuilder =
+        QueryBuilders.boolQuery().must(QueryBuilders.termQuery("datasetKey", this.datasetKey));
+
+    if (term != null) {
+      boolQueryBuilder =
+          boolQueryBuilder.must(QueryBuilders.existsQuery(prefix + "." + term.qualifiedName()));
+    }
+
+    CountRequest request = new CountRequest().query(boolQueryBuilder).indices(indexName);
 
     return TermCountRequest.create(term, request);
   }
