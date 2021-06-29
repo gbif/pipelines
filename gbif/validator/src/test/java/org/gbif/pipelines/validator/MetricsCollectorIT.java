@@ -20,6 +20,7 @@ import org.gbif.pipelines.estools.model.IndexParams;
 import org.gbif.pipelines.estools.service.EsService;
 import org.gbif.pipelines.validator.metircs.Metrics;
 import org.gbif.pipelines.validator.metircs.Metrics.Core;
+import org.gbif.pipelines.validator.metircs.Metrics.Core.TermInfo;
 import org.gbif.pipelines.validator.metircs.MetricsCollector;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -46,9 +47,10 @@ public class MetricsCollectorIT {
     String datasetKey = "675a1bfd-9bcc-46ea-a417-1f68f23a10f6";
 
     String document =
-        "{\"datasetKey\":\"675a1bfd-9bcc-46ea-a417-1f68f23a10f6\",\"issues\":[\"GEODETIC_DATUM_ASSUMED_WGS84\","
-            + "\"RANDOM_ISSUE\"],\"verbatim\":{\"core\":{\"http://rs.tdwg.org/dwc/terms/maximumElevationInMeters\":"
-            + "\"1150\",\"http://rs.tdwg.org/dwc/terms/organismID\":\"251\"},\"extensions\":"
+        "{\"datasetKey\":\"675a1bfd-9bcc-46ea-a417-1f68f23a10f6\",\"maximumElevationInMeters\":2.2,\"issues\":"
+            + "[\"GEODETIC_DATUM_ASSUMED_WGS84\",\"RANDOM_ISSUE\"],\"verbatim\":{\"core\":"
+            + "{\"http://rs.tdwg.org/dwc/terms/maximumElevationInMeters\":\"1150\","
+            + "\"http://rs.tdwg.org/dwc/terms/organismID\":\"251\",\"http://rs.tdwg.org/dwc/terms/bed\":\"251\"},\"extensions\":"
             + "{\"http://rs.tdwg.org/dwc/terms/MeasurementOrFact\":[{\"http://rs.tdwg.org/dwc/terms/measurementValue\":"
             + "\"1.7\"},{\"http://rs.tdwg.org/dwc/terms/measurementValue\":\"5.0\"},"
             + "{\"http://rs.tdwg.org/dwc/terms/measurementValue\":\"5.83\"}]}}}";
@@ -68,7 +70,10 @@ public class MetricsCollectorIT {
     Set<Term> coreTerms =
         new HashSet<>(
             Arrays.asList(
-                DwcTerm.maximumElevationInMeters, DwcTerm.organismID, DwcTerm.occurrenceID));
+                DwcTerm.maximumElevationInMeters,
+                DwcTerm.organismID,
+                DwcTerm.occurrenceID,
+                DwcTerm.bed));
 
     Map<Extension, Set<Term>> extTerms =
         Collections.singletonMap(
@@ -96,16 +101,36 @@ public class MetricsCollectorIT {
 
     // Core
     Core core = result.getResult().getCore();
-    Map<String, Long> resCoreTerms = core.getIndexedCoreTerm();
+    Map<String, TermInfo> resCoreTerms = core.getIndexedCoreTerms();
+
     assertEquals(Long.valueOf(1L), core.getIndexedCount());
+
     assertEquals(
-        Long.valueOf(1L), resCoreTerms.get(DwcTerm.maximumElevationInMeters.qualifiedName()));
-    assertEquals(Long.valueOf(1L), resCoreTerms.get(DwcTerm.organismID.qualifiedName()));
-    assertEquals(Long.valueOf(0L), resCoreTerms.get(DwcTerm.occurrenceID.qualifiedName()));
+        Long.valueOf(1L),
+        resCoreTerms.get(DwcTerm.maximumElevationInMeters.qualifiedName()).getRawIndexed());
+    assertEquals(
+        Long.valueOf(1L),
+        resCoreTerms.get(DwcTerm.maximumElevationInMeters.qualifiedName()).getInterpretedIndexed());
+
+    assertEquals(
+        Long.valueOf(1L), resCoreTerms.get(DwcTerm.organismID.qualifiedName()).getRawIndexed());
+    assertEquals(
+        Long.valueOf(0L),
+        resCoreTerms.get(DwcTerm.organismID.qualifiedName()).getInterpretedIndexed());
+
+    assertEquals(
+        Long.valueOf(0L), resCoreTerms.get(DwcTerm.occurrenceID.qualifiedName()).getRawIndexed());
+    assertEquals(
+        Long.valueOf(0L),
+        resCoreTerms.get(DwcTerm.occurrenceID.qualifiedName()).getInterpretedIndexed());
+
     assertNull(resCoreTerms.get(DwcTerm.county.qualifiedName()));
 
+    assertEquals(Long.valueOf(1L), resCoreTerms.get(DwcTerm.bed.qualifiedName()).getRawIndexed());
+    assertNull(resCoreTerms.get(DwcTerm.bed.qualifiedName()).getInterpretedIndexed());
+
     // OccurrenceIssues
-    Map<String, Long> issues = core.getOccurrenceIssuesMap();
+    Map<String, Long> issues = core.getOccurrenceIssues();
     assertEquals(2, issues.size());
     assertEquals(Long.valueOf(1L), issues.get("RANDOM_ISSUE"));
     assertEquals(Long.valueOf(1L), issues.get("GEODETIC_DATUM_ASSUMED_WGS84"));
@@ -113,9 +138,7 @@ public class MetricsCollectorIT {
     // Extensions
     Metrics.Extension extension = result.getResult().getExtensions().get(0);
 
-    // assertEquals(Long.valueOf(3L), extension.getIndexedCount());
-
-    Map<String, Long> resExtTerms = extension.getExtensionsTermsCountMap();
+    Map<String, Long> resExtTerms = extension.getExtensionsTermsCounts();
     assertEquals(Long.valueOf(3L), resExtTerms.get(DwcTerm.measurementValue.qualifiedName()));
     assertEquals(Long.valueOf(0L), resExtTerms.get(DwcTerm.measurementType.qualifiedName()));
     assertNull(resExtTerms.get(DwcTerm.county.qualifiedName()));

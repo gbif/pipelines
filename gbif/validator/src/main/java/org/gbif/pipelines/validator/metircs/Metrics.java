@@ -35,8 +35,16 @@ public class Metrics {
   public static class Core {
     @Builder.Default private Long fileCount = 0L;
     @Builder.Default private Long indexedCount = 0L;
-    @Builder.Default private Map<String, Long> indexedCoreTerm = Collections.emptyMap();
-    @Builder.Default private Map<String, Long> occurrenceIssuesMap = Collections.emptyMap();
+    @Builder.Default private Map<String, TermInfo> indexedCoreTerms = Collections.emptyMap();
+    @Builder.Default private Map<String, Long> occurrenceIssues = Collections.emptyMap();
+
+    @JsonDeserialize(builder = TermInfo.TermInfoBuilder.class)
+    @Builder
+    @Data
+    public static class TermInfo {
+      @Builder.Default private Long rawIndexed = 0L;
+      @Builder.Default private Long interpretedIndexed = null;
+    }
   }
 
   @JsonDeserialize(builder = Extension.ExtensionBuilder.class)
@@ -45,7 +53,6 @@ public class Metrics {
   public static class Extension {
     @Builder.Default private String rowType = "";
     @Builder.Default private Long fileCount = 0L;
-    @Builder.Default private Long indexedCount = 0L;
-    @Builder.Default private Map<String, Long> extensionsTermsCountMap = Collections.emptyMap();
+    @Builder.Default private Map<String, Long> extensionsTermsCounts = Collections.emptyMap();
   }
 }

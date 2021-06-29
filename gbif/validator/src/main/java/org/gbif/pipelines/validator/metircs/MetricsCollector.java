@@ -19,6 +19,7 @@ import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.validator.ValidationStatus;
 import org.gbif.pipelines.validator.factory.ElasticsearchClientFactory;
+import org.gbif.pipelines.validator.metircs.Metrics.Core.TermInfo;
 import org.gbif.pipelines.validator.metircs.Metrics.Result;
 import org.gbif.pipelines.validator.metircs.request.ExtensionTermCountRequestBuilder;
 import org.gbif.pipelines.validator.metircs.request.ExtensionTermCountRequestBuilder.ExtTermCountRequest;
@@ -45,8 +46,8 @@ public class MetricsCollector {
     Metrics.Core core =
         Metrics.Core.builder()
             .indexedCount(queryDocCount())
-            .indexedCoreTerm(queryCoreTermsCount())
-            .occurrenceIssuesMap(queryOccurrenceIssuesCount())
+            .indexedCoreTerms(queryCoreTermsCount())
+            .occurrenceIssues(queryOccurrenceIssuesCount())
             .build();
 
     // Extensions
@@ -57,8 +58,7 @@ public class MetricsCollector {
                   String extPrefix = extensionsPrefix + "." + es.getKey().getRowType();
                   return Metrics.Extension.builder()
                       .rowType(es.getKey().getRowType())
-                      // .indexedCount(queryDocCount())
-                      .extensionsTermsCountMap(queryExtTermsCount(extPrefix, es.getValue()))
+                      .extensionsTermsCounts(queryExtTermsCount(extPrefix, es.getValue()))
                       .build();
                 })
             .collect(Collectors.toList());
@@ -81,12 +81,12 @@ public class MetricsCollector {
             .getRequest();
 
     return ElasticsearchClientFactory.getInstance(esHost)
-        .count(request.getCountRequest(), RequestOptions.DEFAULT)
+        .count(request.getRawCountRequest(), RequestOptions.DEFAULT)
         .getCount();
   }
 
   // TODO: DOC
-  private Map<String, Long> queryCoreTermsCount() {
+  private Map<String, TermInfo> queryCoreTermsCount() {
 
     Function<Term, TermCountRequest> requestFn =
         term ->
@@ -98,12 +98,27 @@ public class MetricsCollector {
                 .build()
                 .getRequest();
 
-    Function<TermCountRequest, Long> countFn =
-        termCountRequest -> {
+    Function<TermCountRequest, TermInfo> countFn =
+        tcr -> {
           try {
-            return ElasticsearchClientFactory.getInstance(esHost)
-                .count(termCountRequest.getCountRequest(), RequestOptions.DEFAULT)
-                .getCount();
+            Long rawCount =
+                ElasticsearchClientFactory.getInstance(esHost)
+                    .count(tcr.getRawCountRequest(), RequestOptions.DEFAULT)
+                    .getCount();
+
+            Long interpretedCount = null;
+            if (tcr.getInterpretedCountRequest().isPresent()) {
+              interpretedCount =
+                  ElasticsearchClientFactory.getInstance(esHost)
+                      .count(tcr.getInterpretedCountRequest().get(), RequestOptions.DEFAULT)
+                      .getCount();
+            }
+
+            return TermInfo.builder()
+                .rawIndexed(rawCount)
+                .interpretedIndexed(interpretedCount)
+                .build();
+
           } catch (IOException ex) {
             throw new RuntimeException(ex.getMessage(), ex);
           }

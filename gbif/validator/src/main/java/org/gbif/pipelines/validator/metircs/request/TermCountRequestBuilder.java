@@ -1,5 +1,6 @@
 package org.gbif.pipelines.validator.metircs.request;
 
+import java.util.Optional;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -8,6 +9,7 @@ import org.elasticsearch.client.core.CountRequest;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.gbif.dwc.terms.Term;
+import org.gbif.pipelines.validator.metircs.RawToInderpreted;
 
 /**
  * Similir to _count API call
@@ -27,7 +29,27 @@ public class TermCountRequestBuilder {
   private final Term term;
 
   public TermCountRequest getRequest() {
+    CountRequest rawRequest = getRawCountRequest();
+    CountRequest interpretedRequest = getinterpretedCountRequest().orElse(null);
 
+    return TermCountRequest.create(term, rawRequest, interpretedRequest);
+  }
+
+  private Optional<CountRequest> getinterpretedCountRequest() {
+    if (term == null) {
+      return Optional.empty();
+    }
+
+    return RawToInderpreted.getInterpretedField(term)
+        .map(
+            field ->
+                QueryBuilders.boolQuery()
+                    .must(QueryBuilders.termQuery(termName, this.termValue))
+                    .must(QueryBuilders.existsQuery(field)))
+        .map(bqb -> new CountRequest().query(bqb).indices(indexName));
+  }
+
+  private CountRequest getRawCountRequest() {
     BoolQueryBuilder boolQueryBuilder =
         QueryBuilders.boolQuery().must(QueryBuilders.termQuery(termName, this.termValue));
 
@@ -40,15 +62,18 @@ public class TermCountRequestBuilder {
       boolQueryBuilder = boolQueryBuilder.must(QueryBuilders.existsQuery(exists));
     }
 
-    CountRequest request = new CountRequest().query(boolQueryBuilder).indices(indexName);
-
-    return TermCountRequest.create(term, request);
+    return new CountRequest().query(boolQueryBuilder).indices(indexName);
   }
 
-  @Getter
   @AllArgsConstructor(staticName = "create")
   public static class TermCountRequest {
-    private final Term term;
-    private final CountRequest countRequest;
+
+    @Getter private final Term term;
+    @Getter private final CountRequest rawCountRequest;
+    private final CountRequest interpretedCountRequest;
+
+    public Optional<CountRequest> getInterpretedCountRequest() {
+      return Optional.ofNullable(interpretedCountRequest);
+    }
   }
 }

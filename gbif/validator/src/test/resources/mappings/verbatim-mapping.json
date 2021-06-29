@@ -51,6 +51,7 @@
       "type": "keyword",
       "normalizer": "lowercase_normalizer"
     },
+    "maximumDepthInMeters": {"type": "double"},
     "issues": {"type": "keyword"},
     "verbatim": {
       "type": "object",
