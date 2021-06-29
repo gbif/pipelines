@@ -1,6 +1,8 @@
 package org.gbif.pipelines.validator.metircs;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import java.io.IOException;
 import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -54,5 +56,16 @@ public class Metrics {
     @Builder.Default private String rowType = "";
     @Builder.Default private Long fileCount = 0L;
     @Builder.Default private Map<String, Long> extensionsTermsCounts = Collections.emptyMap();
+  }
+
+  @Override
+  public String toString() {
+    ObjectMapper objectMapper = new ObjectMapper();
+    try {
+      return objectMapper.writeValueAsString(this);
+    } catch (IOException e) {
+      // NOP
+    }
+    return "";
   }
 }
