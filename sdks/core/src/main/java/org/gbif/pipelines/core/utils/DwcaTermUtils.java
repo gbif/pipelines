@@ -78,6 +78,7 @@ public class DwcaTermUtils {
   }
 
   public static Set<Term> getCoreTerms(Archive archive) {
+    archive.validate();
     return archive.getCore().getTerms();
   }
 
