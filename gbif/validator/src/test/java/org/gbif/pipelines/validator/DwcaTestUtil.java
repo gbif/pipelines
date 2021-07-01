@@ -19,8 +19,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.UUID;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
 import org.gbif.dwc.Archive;
 import org.gbif.dwc.DwcFiles;
 
@@ -38,15 +36,10 @@ public class DwcaTestUtil {
     Files.copy(srcFile.toPath(), tmpFile.toPath());
 
     File dwcaDir = new File(tmpFile.getParent(), uuid.toString());
-    if ("zip".equalsIgnoreCase(FilenameUtils.getExtension(srcFile.getName()))) {
+    if (srcFile.toString().endsWith(".zip")) {
       return DwcFiles.fromCompressed(tmpFile.toPath(), dwcaDir.toPath());
     }
 
     return DwcFiles.fromLocation(tmpFile.toPath());
-  }
-
-  public static void cleanupArchive(Archive archive) {
-    File zip = archive.getLocation();
-    FileUtils.deleteQuietly(zip);
   }
 }

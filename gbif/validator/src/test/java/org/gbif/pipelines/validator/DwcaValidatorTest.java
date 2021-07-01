@@ -71,9 +71,6 @@ public class DwcaValidatorTest {
         report.getOccurrenceReport().getUniqueOccurrenceIds(),
         report.getOccurrenceReport().getCheckedRecords()
             - report.getOccurrenceReport().getRecordsMissingOccurrenceId());
-
-    // Post actions
-    DwcaTestUtil.cleanupArchive(archive);
   }
 
   @Test
@@ -104,9 +101,6 @@ public class DwcaValidatorTest {
         report.getOccurrenceReport().getUniqueOccurrenceIds(),
         report.getOccurrenceReport().getCheckedRecords()
             - report.getOccurrenceReport().getRecordsMissingOccurrenceId());
-
-    // Post actions
-    DwcaTestUtil.cleanupArchive(archive);
   }
 
   @Test
@@ -146,9 +140,6 @@ public class DwcaValidatorTest {
         report.getOccurrenceReport().getUniqueOccurrenceIds(),
         report.getOccurrenceReport().getCheckedRecords()
             - report.getOccurrenceReport().getRecordsMissingOccurrenceId());
-
-    // Post actions
-    DwcaTestUtil.cleanupArchive(archive);
   }
 
   @Test
@@ -167,9 +158,6 @@ public class DwcaValidatorTest {
     assertEquals(100, report.getOccurrenceReport().getRecordsMissingOccurrenceId());
     assertFalse(report.isValid());
     assertTrue(report.getOccurrenceReport().isAllRecordsChecked());
-
-    // Post actions
-    DwcaTestUtil.cleanupArchive(archive);
   }
 
   @Test
@@ -190,9 +178,6 @@ public class DwcaValidatorTest {
     assertTrue(report.isValid());
     assertTrue(report.getOccurrenceReport().isAllRecordsChecked());
     assertNull(report.getInvalidationReason());
-
-    // Post actions
-    DwcaTestUtil.cleanupArchive(archive);
   }
 
   @Test
@@ -212,9 +197,6 @@ public class DwcaValidatorTest {
     assertTrue(report.isValid());
     assertTrue(report.getOccurrenceReport().isAllRecordsChecked());
     assertNull(report.getInvalidationReason());
-
-    // Post actions
-    DwcaTestUtil.cleanupArchive(archive);
   }
 
   @Test
@@ -235,9 +217,6 @@ public class DwcaValidatorTest {
     assertTrue(report.isValid());
     assertTrue(report.getOccurrenceReport().isAllRecordsChecked());
     assertNull(report.getInvalidationReason());
-
-    // Post actions
-    DwcaTestUtil.cleanupArchive(archive);
   }
 
   @Test
@@ -260,9 +239,6 @@ public class DwcaValidatorTest {
     assertEquals(
         "Archive invalid because [50% invalid triplets is > than threshold of 25%; 45 duplicate triplets detected; 100 records without an occurrence id (should be 0)]",
         report.getOccurrenceReport().getInvalidationReason());
-
-    // Post actions
-    DwcaTestUtil.cleanupArchive(archive);
   }
 
   @Test
@@ -285,9 +261,6 @@ public class DwcaValidatorTest {
     assertEquals(
         "Archive invalid because [50% invalid triplets is > than threshold of 25%; 45 duplicate triplets detected; 100 records without an occurrence id (should be 0)]",
         report.getOccurrenceReport().getInvalidationReason());
-
-    // Post actions
-    DwcaTestUtil.cleanupArchive(archive);
   }
 
   @Test
@@ -306,9 +279,6 @@ public class DwcaValidatorTest {
     assertEquals(0, report.getOccurrenceReport().getRecordsMissingOccurrenceId());
     assertTrue(report.isValid());
     assertNull(report.getOccurrenceReport().getInvalidationReason());
-
-    // Post actions
-    DwcaTestUtil.cleanupArchive(archive);
   }
 
   @Test
@@ -325,9 +295,6 @@ public class DwcaValidatorTest {
     assertEquals(15, report.getGenericReport().getCheckedRecords());
     assertTrue(report.getGenericReport().getDuplicateIds().isEmpty());
     assertTrue(report.getGenericReport().getRowNumbersMissingId().isEmpty());
-
-    // Post actions
-    DwcaTestUtil.cleanupArchive(archive);
   }
 
   @Test
@@ -344,9 +311,6 @@ public class DwcaValidatorTest {
     assertEquals(15, report.getGenericReport().getCheckedRecords());
     assertEquals(0, report.getGenericReport().getDuplicateIds().size());
     assertEquals(0, report.getGenericReport().getRowNumbersMissingId().size());
-
-    // Post actions
-    DwcaTestUtil.cleanupArchive(archive);
   }
 
   @Test
@@ -363,9 +327,6 @@ public class DwcaValidatorTest {
     assertEquals(15, report.getGenericReport().getCheckedRecords());
     assertEquals(0, report.getGenericReport().getDuplicateIds().size());
     assertEquals(2, report.getGenericReport().getRowNumbersMissingId().size());
-
-    // Post actions
-    DwcaTestUtil.cleanupArchive(archive);
   }
 
   @Test
@@ -382,8 +343,5 @@ public class DwcaValidatorTest {
     assertEquals(15, report.getGenericReport().getCheckedRecords());
     assertEquals(1, report.getGenericReport().getDuplicateIds().size());
     assertEquals(0, report.getGenericReport().getRowNumbersMissingId().size());
-
-    // Post actions
-    DwcaTestUtil.cleanupArchive(archive);
   }
 }
