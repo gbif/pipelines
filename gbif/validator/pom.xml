@@ -29,10 +29,16 @@
         <directory>src/test/resources</directory>
         <targetPath>../test-classes/</targetPath>
         <filtering>true</filtering>
+        <includes>
+          <include>*.properties</include>
+        </includes>
       </resource>
       <resource>
         <directory>src/main/resources</directory>
         <filtering>true</filtering>
+        <includes>
+          <include>*.properties</include>
+        </includes>
       </resource>
     </resources>
   </build>
@@ -83,6 +89,11 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+    </dependency>
+
 
     <!-- Test -->
     <dependency>
