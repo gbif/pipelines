@@ -95,10 +95,16 @@
         <directory>src/test/resources</directory>
         <targetPath>../test-classes/</targetPath>
         <filtering>true</filtering>
+        <includes>
+          <include>*.properties</include>
+        </includes>
       </resource>
       <resource>
         <directory>src/main/resources</directory>
         <filtering>true</filtering>
+        <includes>
+          <include>*.properties</include>
+        </includes>
       </resource>
     </resources>
   </build>
