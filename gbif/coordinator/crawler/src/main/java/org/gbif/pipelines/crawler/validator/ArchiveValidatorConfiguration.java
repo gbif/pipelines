@@ -22,6 +22,12 @@ public class ArchiveValidatorConfiguration implements BaseConfiguration {
   @NotNull
   public String archiveRepository;
 
+  @Parameter(names = "--max-example-errors")
+  public int maxExampleErrors = 100;
+
+  @Parameter(names = "--max-records")
+  public int maxRecords = 2_000_000;
+
   @Parameter(names = "--validator-only")
   public boolean validatorOnly = false;
 

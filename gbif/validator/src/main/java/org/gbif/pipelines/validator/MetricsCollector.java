@@ -1,4 +1,4 @@
-package org.gbif.pipelines.validator.metircs;
+package org.gbif.pipelines.validator;
 
 import java.io.IOException;
 import java.time.ZonedDateTime;
@@ -17,8 +17,8 @@ import org.elasticsearch.search.aggregations.bucket.terms.ParsedStringTerms;
 import org.elasticsearch.search.aggregations.metrics.ParsedValueCount;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.Term;
-import org.gbif.pipelines.validator.ValidationStatus;
 import org.gbif.pipelines.validator.factory.ElasticsearchClientFactory;
+import org.gbif.pipelines.validator.metircs.Metrics;
 import org.gbif.pipelines.validator.metircs.Metrics.Core.TermInfo;
 import org.gbif.pipelines.validator.metircs.Metrics.Result;
 import org.gbif.pipelines.validator.metircs.request.ExtensionTermCountRequestBuilder;

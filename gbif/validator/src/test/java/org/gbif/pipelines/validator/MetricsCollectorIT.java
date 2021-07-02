@@ -21,7 +21,6 @@ import org.gbif.pipelines.estools.service.EsService;
 import org.gbif.pipelines.validator.metircs.Metrics;
 import org.gbif.pipelines.validator.metircs.Metrics.Core;
 import org.gbif.pipelines.validator.metircs.Metrics.Core.TermInfo;
-import org.gbif.pipelines.validator.metircs.MetricsCollector;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;

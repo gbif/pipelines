@@ -11,24 +11,13 @@ import java.net.URI;
 import java.util.UUID;
 import org.apache.commons.io.FileUtils;
 import org.gbif.api.model.crawler.DwcaValidationReport;
-import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.dwc.Archive;
 import org.gbif.dwc.DwcFiles;
-import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
 public class DwcaValidatorTest {
-
-  private Dataset dataset;
-
-  @Before
-  public void setUp() {
-    dataset = new Dataset();
-    dataset.setKey(UUID.randomUUID());
-    dataset.setType(DatasetType.OCCURRENCE);
-  }
 
   @Test
   @Ignore("manual test to validate archives")
@@ -43,7 +32,15 @@ public class DwcaValidatorTest {
     FileUtils.copyURLToFile(dwca.toURL(), tmp);
 
     Archive archive = DwcFiles.fromCompressed(tmp.toPath(), dwcaDir.toPath());
-    DwcaValidationReport report = DwcaValidator.validate(dataset, archive);
+
+    DwcaValidationReport report =
+        DwcaValidator.builder()
+            .datasetKey(UUID.randomUUID())
+            .datasetType(DatasetType.OCCURRENCE)
+            .archive(archive)
+            .build()
+            .validate();
+
     System.out.println(report);
   }
 
@@ -53,7 +50,13 @@ public class DwcaValidatorTest {
     Archive archive = DwcaTestUtil.openArchive("/dwca/dwca-one-hundred-good-triplets-good-ids.zip");
 
     // When
-    DwcaValidationReport report = DwcaValidator.validate(dataset, archive);
+    DwcaValidationReport report =
+        DwcaValidator.builder()
+            .datasetKey(UUID.randomUUID())
+            .datasetType(DatasetType.OCCURRENCE)
+            .archive(archive)
+            .build()
+            .validate();
 
     // Should
     assertEquals(100, report.getOccurrenceReport().getCheckedRecords());
@@ -76,14 +79,17 @@ public class DwcaValidatorTest {
   @Test
   public void checklistGoodTripletsGoodIdsTest() throws IOException {
 
-    // State
-    dataset.setType(DatasetType.CHECKLIST);
-
     Archive archive =
         DwcaTestUtil.openArchive("/dwca/dwca_checklist-one-hundred-good-triplets-good-ids.zip");
 
     // When
-    DwcaValidationReport report = DwcaValidator.validate(dataset, archive);
+    DwcaValidationReport report =
+        DwcaValidator.builder()
+            .datasetKey(UUID.randomUUID())
+            .datasetType(DatasetType.CHECKLIST)
+            .archive(archive)
+            .build()
+            .validate();
 
     // Should
     assertEquals(100, report.getOccurrenceReport().getCheckedRecords());
@@ -107,10 +113,15 @@ public class DwcaValidatorTest {
   public void emlOnlyTest() throws IOException {
     // State
     Archive archive = DwcaTestUtil.openArchive("/dwca/eml.xml");
-    dataset.setType(DatasetType.METADATA);
 
     // When
-    DwcaValidationReport report = DwcaValidator.validate(dataset, archive);
+    DwcaValidationReport report =
+        DwcaValidator.builder()
+            .datasetKey(UUID.randomUUID())
+            .datasetType(DatasetType.METADATA)
+            .archive(archive)
+            .build()
+            .validate();
 
     // Should
     assertTrue(report.isValid());
@@ -122,7 +133,13 @@ public class DwcaValidatorTest {
     Archive archive = DwcaTestUtil.openArchive("/dwca/dwca-one-thousand-good-triplets-no-id.zip");
 
     // When
-    DwcaValidationReport report = DwcaValidator.validate(dataset, archive);
+    DwcaValidationReport report =
+        DwcaValidator.builder()
+            .datasetKey(UUID.randomUUID())
+            .datasetType(DatasetType.OCCURRENCE)
+            .archive(archive)
+            .build()
+            .validate();
 
     // Should
     assertEquals(1000, report.getOccurrenceReport().getCheckedRecords());
@@ -148,7 +165,13 @@ public class DwcaValidatorTest {
     Archive archive = DwcaTestUtil.openArchive("/dwca/dwca-one-hundred-dupe-triplet.zip");
 
     // When
-    DwcaValidationReport report = DwcaValidator.validate(dataset, archive);
+    DwcaValidationReport report =
+        DwcaValidator.builder()
+            .datasetKey(UUID.randomUUID())
+            .datasetType(DatasetType.OCCURRENCE)
+            .archive(archive)
+            .build()
+            .validate();
 
     // Should
     assertEquals(100, report.getOccurrenceReport().getCheckedRecords());
@@ -167,7 +190,13 @@ public class DwcaValidatorTest {
         DwcaTestUtil.openArchive("/dwca/dwca-one-hundred-20-percent-invalid-triplet.zip");
 
     // When
-    DwcaValidationReport report = DwcaValidator.validate(dataset, archive);
+    DwcaValidationReport report =
+        DwcaValidator.builder()
+            .datasetKey(UUID.randomUUID())
+            .datasetType(DatasetType.OCCURRENCE)
+            .archive(archive)
+            .build()
+            .validate();
 
     // Should
     assertEquals(100, report.getOccurrenceReport().getCheckedRecords());
@@ -186,7 +215,13 @@ public class DwcaValidatorTest {
     Archive archive = DwcaTestUtil.openArchive("/dwca/dwca-one-hundred-good-triplets-dupe-ids.zip");
 
     // When
-    DwcaValidationReport report = DwcaValidator.validate(dataset, archive);
+    DwcaValidationReport report =
+        DwcaValidator.builder()
+            .datasetKey(UUID.randomUUID())
+            .datasetType(DatasetType.OCCURRENCE)
+            .archive(archive)
+            .build()
+            .validate();
 
     // Should
     assertEquals(100, report.getOccurrenceReport().getCheckedRecords());
@@ -206,7 +241,13 @@ public class DwcaValidatorTest {
         DwcaTestUtil.openArchive("/dwca/dwca-one-hundred-good-triplets-dupe-and-missing-ids.zip");
 
     // When
-    DwcaValidationReport report = DwcaValidator.validate(dataset, archive);
+    DwcaValidationReport report =
+        DwcaValidator.builder()
+            .datasetKey(UUID.randomUUID())
+            .datasetType(DatasetType.OCCURRENCE)
+            .archive(archive)
+            .build()
+            .validate();
 
     // Should
     assertEquals(100, report.getOccurrenceReport().getCheckedRecords());
@@ -227,7 +268,13 @@ public class DwcaValidatorTest {
             "/dwca/dwca-one-hundred-50-percent-invalid-with-dupes-triplet.zip");
 
     // When
-    DwcaValidationReport report = DwcaValidator.validate(dataset, archive);
+    DwcaValidationReport report =
+        DwcaValidator.builder()
+            .datasetKey(UUID.randomUUID())
+            .datasetType(DatasetType.OCCURRENCE)
+            .archive(archive)
+            .build()
+            .validate();
 
     // Should
     assertEquals(100, report.getOccurrenceReport().getCheckedRecords());
@@ -249,7 +296,13 @@ public class DwcaValidatorTest {
             "/dwca/dwca-one-hundred-50-percent-invalid-with-dupes-triplet.zip");
 
     // When
-    DwcaValidationReport report = DwcaValidator.validate(dataset, archive);
+    DwcaValidationReport report =
+        DwcaValidator.builder()
+            .datasetKey(UUID.randomUUID())
+            .datasetType(DatasetType.OCCURRENCE)
+            .archive(archive)
+            .build()
+            .validate();
 
     // Should
     assertEquals(100, report.getOccurrenceReport().getCheckedRecords());
@@ -269,7 +322,13 @@ public class DwcaValidatorTest {
     Archive archive = DwcaTestUtil.openArchive("/dwca/dwca-empty.zip");
 
     // When
-    DwcaValidationReport report = DwcaValidator.validate(dataset, archive);
+    DwcaValidationReport report =
+        DwcaValidator.builder()
+            .datasetKey(UUID.randomUUID())
+            .datasetType(DatasetType.OCCURRENCE)
+            .archive(archive)
+            .build()
+            .validate();
 
     // Should
     assertEquals(0, report.getOccurrenceReport().getCheckedRecords());
@@ -284,11 +343,16 @@ public class DwcaValidatorTest {
   @Test
   public void goodChecklistTaxonIDTest() throws IOException {
     // State
-    dataset.setType(DatasetType.CHECKLIST);
     Archive archive = DwcaTestUtil.openArchive("/dwca/checklist_good_taxonid.zip");
 
     // When
-    DwcaValidationReport report = DwcaValidator.validate(dataset, archive);
+    DwcaValidationReport report =
+        DwcaValidator.builder()
+            .datasetKey(UUID.randomUUID())
+            .datasetType(DatasetType.CHECKLIST)
+            .archive(archive)
+            .build()
+            .validate();
 
     // Should
     assertTrue("Validation failed: " + report.getInvalidationReason(), report.isValid());
@@ -300,11 +364,16 @@ public class DwcaValidatorTest {
   @Test
   public void goodGenericCoreTest() throws IOException {
     // State
-    dataset.setType(DatasetType.CHECKLIST);
     Archive archive = DwcaTestUtil.openArchive("/dwca/checklist_good_coreid.zip");
 
     // When
-    DwcaValidationReport report = DwcaValidator.validate(dataset, archive);
+    DwcaValidationReport report =
+        DwcaValidator.builder()
+            .datasetKey(UUID.randomUUID())
+            .datasetType(DatasetType.CHECKLIST)
+            .archive(archive)
+            .build()
+            .validate();
 
     // Should
     assertTrue("Validation failed: " + report.getInvalidationReason(), report.isValid());
@@ -316,11 +385,16 @@ public class DwcaValidatorTest {
   @Test
   public void badGenericMissingTest() throws IOException {
     // State
-    dataset.setType(DatasetType.CHECKLIST);
     Archive archive = DwcaTestUtil.openArchive("/dwca/checklist_missing_taxonid.zip");
 
     // When
-    DwcaValidationReport report = DwcaValidator.validate(dataset, archive);
+    DwcaValidationReport report =
+        DwcaValidator.builder()
+            .datasetKey(UUID.randomUUID())
+            .datasetType(DatasetType.CHECKLIST)
+            .archive(archive)
+            .build()
+            .validate();
 
     // Should
     assertFalse("Validation succeeded", report.isValid());
@@ -332,11 +406,16 @@ public class DwcaValidatorTest {
   @Test
   public void badGenericDuplTest() throws IOException {
     // State
-    dataset.setType(DatasetType.CHECKLIST);
     Archive archive = DwcaTestUtil.openArchive("/dwca/checklist_dupl_coreid.zip");
 
     // When
-    DwcaValidationReport report = DwcaValidator.validate(dataset, archive);
+    DwcaValidationReport report =
+        DwcaValidator.builder()
+            .datasetKey(UUID.randomUUID())
+            .datasetType(DatasetType.CHECKLIST)
+            .archive(archive)
+            .build()
+            .validate();
 
     // Should
     assertFalse("Validation succeeded", report.isValid());

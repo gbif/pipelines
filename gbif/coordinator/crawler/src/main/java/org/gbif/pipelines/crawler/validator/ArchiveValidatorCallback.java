@@ -1,6 +1,9 @@
 package org.gbif.pipelines.crawler.validator;
 
+import static org.gbif.pipelines.common.utils.PathUtil.buildDwcaInputPath;
+
 import java.net.URI;
+import java.nio.file.Path;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
@@ -15,8 +18,11 @@ import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
 import org.gbif.common.messaging.api.messages.Platform;
+import org.gbif.dwc.Archive;
+import org.gbif.pipelines.core.utils.DwcaTermUtils;
 import org.gbif.pipelines.crawler.PipelinesCallback;
 import org.gbif.pipelines.crawler.StepHandler;
+import org.gbif.pipelines.validator.DwcaValidator;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 
 /** Callback which is called when the {@link PipelinesArchiveValidatorMessage} is received. */
@@ -64,25 +70,42 @@ public class ArchiveValidatorCallback
   @Override
   public Runnable createRunnable(PipelinesArchiveValidatorMessage message) {
     return () -> {
-      log.info("Dummy ArchiveValidatorCallback run!");
+      if (message.getEndpointType() == EndpointType.DWC_ARCHIVE) {
+        Path inputPath = buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid());
+        Archive archive = DwcaTermUtils.fromLocation(inputPath);
+        DwcaValidationReport report =
+            DwcaValidator.builder()
+                .archive(archive)
+                .datasetKey(message.getDatasetUuid())
+                .datasetType(DatasetType.OCCURRENCE)
+                .maxExampleErrors(config.maxExampleErrors)
+                .maxRecords(config.maxRecords)
+                .build()
+                .validate();
+        log.info("Report {}", report);
+      }
     };
   }
 
   @SneakyThrows
   @Override
   public PipelineBasedMessage createOutgoingMessage(PipelinesArchiveValidatorMessage message) {
-    // TODO: ONLY FOR TESTING
-    return new PipelinesDwcaMessage(
-        message.getDatasetUuid(),
-        DatasetType.OCCURRENCE,
-        new URI("https://gbif.org"),
-        message.getAttempt(),
-        new DwcaValidationReport(
-            message.getDatasetUuid(), new OccurrenceValidationReport(1, 1, 0, 1, 0, true)),
-        message.getPipelineSteps(),
-        EndpointType.DWC_ARCHIVE,
-        Platform.PIPELINES,
-        1L,
-        true);
+    if (message.getEndpointType() == EndpointType.DWC_ARCHIVE) {
+      // TODO: ONLY FOR TESTING
+      return new PipelinesDwcaMessage(
+          message.getDatasetUuid(),
+          DatasetType.OCCURRENCE,
+          new URI("https://gbif.org"),
+          message.getAttempt(),
+          new DwcaValidationReport(
+              message.getDatasetUuid(), new OccurrenceValidationReport(1, 1, 0, 1, 0, true)),
+          message.getPipelineSteps(),
+          EndpointType.DWC_ARCHIVE,
+          Platform.PIPELINES,
+          1L,
+          true);
+    }
+    throw new IllegalArgumentException(
+        "EndpointType " + message.getEndpointType() + " is not supported");
   }
 }

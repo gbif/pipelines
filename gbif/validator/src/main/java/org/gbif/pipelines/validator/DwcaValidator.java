@@ -15,20 +15,21 @@
  */
 package org.gbif.pipelines.validator;
 
-import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import javax.annotation.Nullable;
+import lombok.Builder;
+import lombok.SneakyThrows;
 import org.gbif.api.model.crawler.DwcaValidationReport;
 import org.gbif.api.model.crawler.GenericValidationReport;
 import org.gbif.api.model.crawler.OccurrenceValidationReport;
-import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.dwc.Archive;
 import org.gbif.dwc.record.Record;
@@ -61,139 +62,127 @@ import org.slf4j.LoggerFactory;
  *       extensions are used
  * </ul>
  */
+@Builder
 public class DwcaValidator {
 
   private static final Logger LOG = LoggerFactory.getLogger(DwcaValidator.class);
 
   // The mapping of dataset type to primary key term in the core
-  private static final Map<DatasetType, DwcTerm> DATASET_TYPE_CORE_ID =
-      ImmutableMap.of(
-          DatasetType.CHECKLIST, DwcTerm.taxonID,
-          DatasetType.SAMPLING_EVENT, DwcTerm.eventID);
+  private static final Map<DatasetType, DwcTerm> DATASET_TYPE_CORE_ID = new HashMap<>(2);
+
+  static {
+    DATASET_TYPE_CORE_ID.put(DatasetType.CHECKLIST, DwcTerm.taxonID);
+    DATASET_TYPE_CORE_ID.put(DatasetType.SAMPLING_EVENT, DwcTerm.eventID);
+  }
 
   // limit the number of checked records to protect against memory exhaustion
-  private static final int MAX_RECORDS = 2000000;
+  @Builder.Default private final int maxRecords = 2_000_000;
 
   // the number of samples to store to illustrate issues
-  private static final int MAX_EXAMPLE_ERRORS = 100;
+  @Builder.Default private final int maxExampleErrors = 100;
+
+  private final UUID datasetKey;
+  private final DatasetType datasetType;
+  private final Archive archive;
+  private final String metadata;
+  private final Term term;
 
   private int checkedRecords;
   private int recordsWithInvalidTriplets;
   private int recordsMissingOccurrenceId;
   // unique occurrenceIds
-  private Set<String> uniqueOccurrenceIds = Sets.newHashSet();
+  private final Set<String> uniqueOccurrenceIds = new HashSet<>();
   // unique triplets
-  private Set<String> uniqueTriplets = Sets.newHashSet();
+  private final Set<String> uniqueTriplets = new HashSet<>();
 
-  private DwcaValidator() {}
+  /**
+   * Produce a report for a metadata-only dataset.
+   *
+   * @return a "passed" report
+   */
+  public DwcaValidationReport validateMetadata() {
+    return new DwcaValidationReport(
+        datasetKey,
+        new GenericValidationReport(0, true, Collections.emptyList(), Collections.emptyList()));
+  }
 
   /**
    * Produce a report with the counts of good and bad unique identifiers (triplets and occurrenceId)
    * in the archive.
    *
-   * @param dataset the parent Dataset of the archive
-   * @param archive the archive as opened by the dwca-io project's {@link org.gbif.dwc.DwcFiles}
    * @return a report with the counts of good, bad and missing identifiers
    */
-  public static DwcaValidationReport validate(Dataset dataset, Archive archive) throws IOException {
-    DwcaValidator validator = new DwcaValidator();
-    return validator.check(dataset, archive);
-  }
+  @SneakyThrows
+  public DwcaValidationReport validate() {
+    if (datasetType == DatasetType.OCCURRENCE) {
+      return new DwcaValidationReport(datasetKey, validateOccurrenceCore());
 
-  /**
-   * Produce a report for a metadata-only dataset.
-   *
-   * @param dataset the parent Dataset of the metadata
-   * @param metadata the metadata file contents
-   * @return a "passed" report
-   */
-  public static DwcaValidationReport validate(Dataset dataset, String metadata) throws IOException {
-    return new DwcaValidationReport(
-        dataset.getKey(),
-        new GenericValidationReport(0, true, Collections.emptyList(), Collections.emptyList()));
-  }
-
-  /**
-   * Internal non static working method that does the validation. If an occurrence core is found
-   * this is what gets validated. Otherwise extension records from either dwc:Occurrence or
-   * gbif:TypesAndSpecimen are validated with Occurrence being the preferred extension.
-   */
-  private DwcaValidationReport check(Dataset dataset, Archive archive) throws IOException {
-    if (dataset.getType() == DatasetType.OCCURRENCE) {
-      return new DwcaValidationReport(dataset.getKey(), validateOccurrenceCore(archive));
-
-    } else if (DATASET_TYPE_CORE_ID.keySet().contains(dataset.getType())) {
-      GenericValidationReport report =
-          validateGenericCore(archive, DATASET_TYPE_CORE_ID.get(dataset.getType()));
+    } else if (DATASET_TYPE_CORE_ID.containsKey(datasetType)) {
+      GenericValidationReport report = validateGenericCore();
 
       // validate any occurrence extension
       if (archive.getExtension(DwcTerm.Occurrence) == null) {
         LOG.info(
             "Dataset [{}] of type[{}] has an archive with no mapped occurrence extension",
-            dataset.getKey(),
-            dataset.getType());
-        return new DwcaValidationReport(dataset.getKey(), report);
+            datasetKey,
+            datasetType);
+        return new DwcaValidationReport(datasetKey, report);
       } else {
-        return new DwcaValidationReport(
-            dataset.getKey(),
-            validateOccurrenceExtension(archive, DwcTerm.Occurrence),
-            report,
-            null);
+        return new DwcaValidationReport(datasetKey, validateOccurrenceExtension(), report, null);
       }
-    } else if (dataset.getType() == DatasetType.METADATA) {
+    } else if (datasetType == DatasetType.METADATA) {
       // TODO validate the EML (requires the new validator library)
       return new DwcaValidationReport(
-          dataset.getKey(),
+          datasetKey,
           new GenericValidationReport(0, true, Collections.emptyList(), Collections.emptyList()));
     } else {
       LOG.info(
           "DwC-A for dataset[{}] of type[{}] is INVALID because it is not a supported type",
-          dataset.getKey(),
-          dataset.getType());
+          datasetKey,
+          datasetType);
       return new DwcaValidationReport(
-          dataset.getKey(), "Dataset type[" + dataset.getType() + "] is not supported in indexing");
+          datasetKey, "Dataset type[" + datasetType + "] is not supported in indexing");
     }
   }
 
   /**
    * Performs basic checking that the primary key constraints are satisfied (present and unique).
    *
-   * @param archive To check
-   * @param term To use to verify the uniqueness (e.g. DwcTerm.taxonID for taxon core)
    * @return The report produced
    */
-  private GenericValidationReport validateGenericCore(Archive archive, Term term)
-      throws IOException {
+  @SneakyThrows
+  private GenericValidationReport validateGenericCore() {
+    Term type = DATASET_TYPE_CORE_ID.get(datasetType);
     int records = 0;
     List<String> duplicateIds = new ArrayList<>();
     List<Integer> linesMissingIds = new ArrayList<>();
-    Set<String> ids = Sets.newHashSet();
-    final boolean useCoreID = !archive.getCore().hasTerm(term);
+    Set<String> ids = new HashSet<>();
+    final boolean useCoreID = !archive.getCore().hasTerm(type);
 
     try (ClosableIterator<Record> it = archive.getCore().iterator(true, true)) {
       while (it.hasNext()) {
         Record rec = it.next();
         records++;
-        String id = useCoreID ? rec.id() : rec.value(term);
-        if (linesMissingIds.size() < MAX_EXAMPLE_ERRORS && Strings.isNullOrEmpty(id)) {
+        String id = useCoreID ? rec.id() : rec.value(type);
+        if (linesMissingIds.size() < maxExampleErrors && isNullOrEmpty(id)) {
           linesMissingIds.add(records);
         }
-        if (duplicateIds.size() < MAX_EXAMPLE_ERRORS && ids.contains(id)) {
+        if (duplicateIds.size() < maxExampleErrors && ids.contains(id)) {
           duplicateIds.add(id);
         }
-
-        if (!Strings.isNullOrEmpty(id) && ids.size() < MAX_RECORDS) {
+        if (!isNullOrEmpty(id) && ids.size() < maxRecords) {
           ids.add(id);
         }
       }
-    } catch (Exception e) {
-      throw new IOException(e);
+    } catch (Exception ex) {
+      throw new IOException(ex);
     }
     return new GenericValidationReport(
-        records, records != MAX_RECORDS, duplicateIds, linesMissingIds);
+        records, records != maxRecords, duplicateIds, linesMissingIds);
   }
 
-  private OccurrenceValidationReport validateOccurrenceCore(Archive archive) throws IOException {
+  @SneakyThrows
+  private OccurrenceValidationReport validateOccurrenceCore() {
     try (ClosableIterator<Record> it = archive.getCore().iterator(true, true)) {
       while (it.hasNext()) {
         Record record = it.next();
@@ -211,11 +200,11 @@ public class DwcaValidator {
         recordsWithInvalidTriplets,
         uniqueOccurrenceIds.size(),
         recordsMissingOccurrenceId,
-        checkedRecords != MAX_RECORDS);
+        checkedRecords != maxRecords);
   }
 
-  private OccurrenceValidationReport validateOccurrenceExtension(
-      Archive archive, final Term rowType) throws IOException {
+  @SneakyThrows
+  private OccurrenceValidationReport validateOccurrenceExtension() {
 
     // this can take some time if the archive includes extension(s)
     archive.initialize();
@@ -225,7 +214,7 @@ public class DwcaValidator {
       while (iterator.hasNext()) {
         StarRecord star = iterator.next();
         // inner loop over extension records
-        List<Record> records = star.extension(rowType);
+        List<Record> records = star.extension(DwcTerm.Occurrence);
         if (records != null) {
           for (Record ext : records) {
             if (checkOccurrenceRecord(ext, getTriplet(star.core(), ext))) {
@@ -243,14 +232,10 @@ public class DwcaValidator {
         recordsWithInvalidTriplets,
         uniqueOccurrenceIds.size(),
         recordsMissingOccurrenceId,
-        checkedRecords != MAX_RECORDS);
+        checkedRecords != maxRecords);
   }
 
-  /**
-   * @param rec
-   * @param triplet
-   * @return should we continue or not
-   */
+  /** @return should we continue or not */
   private boolean checkOccurrenceRecord(Record rec, String triplet) {
     checkedRecords++;
 
@@ -269,7 +254,7 @@ public class DwcaValidator {
       uniqueOccurrenceIds.add(occurrenceId);
     }
 
-    return checkedRecords == MAX_RECORDS;
+    return checkedRecords == maxRecords;
   }
 
   /**
@@ -282,18 +267,22 @@ public class DwcaValidator {
     String collectionCode = valueFromExtOverCore(core, ext, DwcTerm.collectionCode);
     String catalogNumber = valueFromExtOverCore(core, ext, DwcTerm.catalogNumber);
 
-    if (!Strings.isNullOrEmpty(institutionCode)
-        && !Strings.isNullOrEmpty(collectionCode)
-        && !Strings.isNullOrEmpty(catalogNumber)) {
+    if (!isNullOrEmpty(institutionCode)
+        && !isNullOrEmpty(collectionCode)
+        && !isNullOrEmpty(catalogNumber)) {
       return institutionCode + "§" + collectionCode + "§" + catalogNumber;
     }
     return null;
   }
 
   private String valueFromExtOverCore(Record core, @Nullable Record ext, Term term) {
-    if (ext != null && !Strings.isNullOrEmpty(ext.value(term))) {
+    if (ext != null && !isNullOrEmpty(ext.value(term))) {
       return ext.value(term);
     }
     return core.value(term);
+  }
+
+  private boolean isNullOrEmpty(String s) {
+    return s == null || s.isEmpty();
   }
 }
