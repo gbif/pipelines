@@ -17,6 +17,7 @@
   <modules>
     <module>crawler</module>
     <module>crawler-integration-tests</module>
+    <module>crawler-integration-tests-hbase</module>
   </modules>
 
 
