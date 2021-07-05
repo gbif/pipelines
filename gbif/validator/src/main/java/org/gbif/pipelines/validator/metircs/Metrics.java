@@ -10,6 +10,8 @@ import java.util.Map;
 import java.util.UUID;
 import lombok.Builder;
 import lombok.Data;
+import org.gbif.api.model.crawler.GenericValidationReport;
+import org.gbif.api.model.crawler.OccurrenceValidationReport;
 import org.gbif.pipelines.validator.ValidationStatus;
 
 @JsonDeserialize(builder = Metrics.MetricsBuilder.class)
@@ -22,6 +24,7 @@ public class Metrics {
   private Long endTimestamp;
   @Builder.Default private ValidationStatus status = ValidationStatus.RUNNING;
   @Builder.Default private Result result = Result.builder().build();
+  private ArchiveValidationReport archiveValidationReport;
 
   @JsonDeserialize(builder = Result.ResultBuilder.class)
   @Builder
@@ -56,6 +59,15 @@ public class Metrics {
     @Builder.Default private String rowType = "";
     @Builder.Default private Long fileCount = 0L;
     @Builder.Default private Map<String, Long> extensionsTermsCounts = Collections.emptyMap();
+  }
+
+  @JsonDeserialize(builder = ArchiveValidationReport.ArchiveValidationReportBuilder.class)
+  @Builder
+  @Data
+  public static class ArchiveValidationReport {
+    private final OccurrenceValidationReport occurrenceReport;
+    private final GenericValidationReport genericReport;
+    private final String invalidationReason;
   }
 
   @Override
