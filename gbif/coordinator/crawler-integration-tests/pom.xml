@@ -24,6 +24,24 @@
         </configuration>
       </plugin>
     </plugins>
+    <!-- Copy pom.xml value to test resources maven.properties -->
+    <resources>
+      <resource>
+        <directory>src/test/resources</directory>
+        <targetPath>../test-classes/</targetPath>
+        <filtering>true</filtering>
+        <includes>
+          <include>*.properties</include>
+        </includes>
+      </resource>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+        <includes>
+          <include>*.properties</include>
+        </includes>
+      </resource>
+    </resources>
   </build>
 
   <properties>
@@ -31,6 +49,7 @@
     <curator-test.version>2.12.0</curator-test.version>
     <fest.version>2.0M10</fest.version>
     <mockito.version>2.8.9</mockito.version>
+    <guava.version>17.0</guava.version>
   </properties>
 
   <dependencies>
@@ -93,7 +112,17 @@
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
-      <version>${guava.hbase.version}</version>
+      <version>${guava.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>elasticsearch</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.pipelines</groupId>
+      <artifactId>elasticsearch-tools</artifactId>
       <scope>test</scope>
     </dependency>
 
