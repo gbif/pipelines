@@ -86,12 +86,18 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
   /**
    * The main process handling:
    *
-   * <p>1) Receives a MQ message 2) Updates Zookeeper start date monitoring metrics 3) Create
-   * pipeline step in tracking service 4) Runs runnable function, which is the main message
-   * processing logic 5) Updates Zookeeper end date monitoring metrics 6) Update status in tracking
-   * service 7) Sends a wrapped message to Balancer microservice 8) Updates Zookeeper successful or
-   * error monitoring metrics 9) Cleans Zookeeper monitoring metrics if the received message is the
+   * <pre>
+   *   1) Receives a MQ message
+   *   2) Updates Zookeeper start date monitoring metrics
+   *   3) Create pipeline step in tracking service
+   *   4) Runs runnable function, which is the main message processing logic
+   *   5) Updates Zookeeper end date monitoring metrics
+   *   6) Update status in tracking service
+   *   7) Sends a wrapped message to Balancer microservice
+   *   8) Updates Zookeeper successful or error monitoring metrics
+   *   9) Cleans Zookeeper monitoring metrics if the received message is the
    * last
+   * </pre>
    */
   public void handleMessage() {
 
@@ -172,11 +178,12 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
       // update tracking status
       trackingInfo.ifPresent(info -> updateTrackingStatus(info, PipelineStep.Status.COMPLETED));
 
+      String successfulPath = Fn.SUCCESSFUL_AVAILABILITY.apply(stepType.getLabel());
+      ZookeeperUtils.updateMonitoring(
+          curator, datasetKey, successfulPath, Boolean.TRUE.toString(), isValidator);
+
       // Send a wrapped outgoing message to Balancer queue
       if (outgoingMessage != null) {
-        String successfulPath = Fn.SUCCESSFUL_AVAILABILITY.apply(stepType.getLabel());
-        ZookeeperUtils.updateMonitoring(
-            curator, datasetKey, successfulPath, Boolean.TRUE.toString(), isValidator);
 
         // set the executionId
         trackingInfo.ifPresent(info -> outgoingMessage.setExecutionId(info.executionId));

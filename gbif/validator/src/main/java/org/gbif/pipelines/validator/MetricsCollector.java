@@ -53,6 +53,7 @@ public class MetricsCollector {
     // Extensions
     List<Metrics.Extension> extensions =
         extensionsTerms.entrySet().stream()
+            .filter(es -> es.getKey() != null)
             .map(
                 es -> {
                   String extPrefix = extensionsPrefix + "." + es.getKey().getRowType();
