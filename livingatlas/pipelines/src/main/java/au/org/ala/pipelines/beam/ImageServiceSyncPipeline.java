@@ -1,5 +1,7 @@
 package au.org.ala.pipelines.beam;
 
+import static au.org.ala.pipelines.beam.ImagePipelineUtils.*;
+import static au.org.ala.pipelines.beam.ImageServiceDiffLoadPipeline.IMAGEID;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
 import au.com.bytecode.opencsv.CSVParser;
@@ -15,6 +17,7 @@ import com.google.common.collect.ImmutableList;
 import java.io.*;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +38,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.gbif.dwc.terms.DcTerm;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
@@ -57,6 +61,18 @@ import retrofit2.Call;
 public class ImageServiceSyncPipeline {
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
+
+  public static final List<String> REQUIRED_HEADERS =
+      Arrays.stream(
+              new String[] {
+                IMAGEID.toLowerCase(Locale.ROOT),
+                DcTerm.identifier.simpleName(),
+                DcTerm.creator.simpleName(),
+                DcTerm.format.simpleName(),
+                DcTerm.license.simpleName(),
+              })
+          .map(s -> s.toLowerCase(Locale.ROOT))
+          .collect(Collectors.toList());
 
   public static void main(String[] args) throws Exception {
     String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "images");
@@ -130,12 +146,26 @@ public class ImageServiceSyncPipeline {
    * <p>1. Download CSV export from https://images-dev.ala.org.au/ws/exportDatasetMapping/dr123 2.
    * Extract CSV 3. Load into HDFS 4. Generate ImageServiceRecord AVRO
    */
-  public static void run(ImageServicePipelineOptions options, String imageMappingPath) {
+  public static void run(ImageServicePipelineOptions options, String imageMappingPath)
+      throws IOException {
 
     // now lets start the pipelines
     log.info("Creating a pipeline from options");
 
     Pipeline p = Pipeline.create(options);
+
+    FileSystem fs =
+        FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
+            .getFs(options.getInputPath());
+
+    List<String> headers = readHeadersLowerCased(fs, imageMappingPath);
+    validateHeaders(headers, REQUIRED_HEADERS);
+
+    final int imageIdIdx = indexOf(headers, IMAGEID);
+    final int identifierIdx = indexOf(headers, DcTerm.identifier);
+    final int creatorIdx = indexOf(headers, DcTerm.creator);
+    final int formatIdx = indexOf(headers, DcTerm.format);
+    final int licenceIdx = indexOf(headers, DcTerm.license);
 
     // Read the export file from image-service download. This is a
     // GZipped CSV file downloaded from image service with the following fields:
@@ -151,8 +181,7 @@ public class ImageServiceSyncPipeline {
                     new DoFn<String, KV<String, Image>>() {
                       @ProcessElement
                       public void processElement(
-                          @Element String imageMapping, OutputReceiver<KV<String, Image>> out)
-                          throws Exception {
+                          @Element String imageMapping, OutputReceiver<KV<String, Image>> out) {
 
                         try {
                           final CSVParser parser = new CSVParser();
@@ -163,13 +192,13 @@ public class ImageServiceSyncPipeline {
                             // Swap so we key on URL for later grouping
                             Image image =
                                 Image.newBuilder()
-                                    .setIdentifier(parts[0]) // image service ID
-                                    .setCreator(parts[5])
-                                    .setFormat(parts[7])
-                                    .setLicense(parts[8])
+                                    .setIdentifier(parts[imageIdIdx]) // image service ID
+                                    .setCreator(parts[creatorIdx])
+                                    .setFormat(parts[formatIdx])
+                                    .setLicense(parts[licenceIdx])
                                     .build();
 
-                            out.output(KV.of(parts[1], image));
+                            out.output(KV.of(parts[identifierIdx], image));
                           } else {
                             log.error("Problem with line: " + imageMapping);
                           }

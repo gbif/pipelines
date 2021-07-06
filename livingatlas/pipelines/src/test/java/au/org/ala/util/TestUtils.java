@@ -3,7 +3,11 @@ package au.org.ala.util;
 import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.kvs.ALAPipelinesConfigFactory;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.net.URL;
+import java.util.zip.GZIPOutputStream;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.mockwebserver.Dispatcher;
 import okhttp3.mockwebserver.MockResponse;
@@ -123,5 +127,18 @@ public class TestUtils {
         };
     server.setDispatcher(dispatcher);
     return server;
+  }
+
+  public static void compressGzip(String source, String target) throws IOException {
+
+    try (GZIPOutputStream gos = new GZIPOutputStream(new FileOutputStream(target));
+        FileInputStream fis = new FileInputStream(source)) {
+      // copy file
+      byte[] buffer = new byte[1024];
+      int len;
+      while ((len = fis.read(buffer)) > 0) {
+        gos.write(buffer, 0, len);
+      }
+    }
   }
 }
