@@ -86,19 +86,7 @@ public class MetricsCollectorCallbackIT {
   @Test
   public void testNormalCase() throws Exception {
     // State
-    MetricsCollectorConfiguration config = new MetricsCollectorConfiguration();
-    // Main
-    config.archiveRepository =
-        this.getClass().getClassLoader().getResource("dataset/dwca").getPath();
-    config.validatorOnly = true;
-
-    // ES
-    config.esConfig.hosts = ES_SERVER.getEsConfig().getRawHosts();
-    // Step config
-    config.stepConfig.repositoryPath =
-        this.getClass().getClassLoader().getResource("data7/ingest").getPath();
-    config.stepConfig.coreSiteConfig = "";
-    config.stepConfig.hdfsSiteConfig = "";
+    MetricsCollectorConfiguration config = createConfig();
 
     MetricsCollectorCallback callback =
         new MetricsCollectorCallback(config, publisher, curator, historyWsClient);
@@ -107,18 +95,7 @@ public class MetricsCollectorCallbackIT {
     int attempt = 60;
     String crawlId = DATASET_UUID;
 
-    PipelinesIndexedMessage message = new PipelinesIndexedMessage();
-
-    message.setDatasetUuid(uuid);
-    message.setAttempt(attempt);
-    message.setExecutionId(EXECUTION_ID);
-    message.setValidator(true);
-    message.setRunner(StepRunner.STANDALONE.name());
-    message.setPipelineSteps(
-        new HashSet<>(
-            Arrays.asList(
-                StepType.VALIDATOR_INTERPRETED_TO_INDEX.name(),
-                StepType.VALIDATOR_COLLECT_METRICS.name())));
+    PipelinesIndexedMessage message = createMessage(uuid, attempt);
 
     // Index document
     String document =
@@ -159,21 +136,9 @@ public class MetricsCollectorCallbackIT {
   }
 
   @Test
-  public void testNormalSingleStepCase() throws Exception {
+  public void testNormalSingleStepCase() {
     // State
-    MetricsCollectorConfiguration config = new MetricsCollectorConfiguration();
-    // Main
-    config.archiveRepository =
-        this.getClass().getClassLoader().getResource("dataset/dwca").getPath();
-    config.validatorOnly = true;
-
-    // ES
-    config.esConfig.hosts = ES_SERVER.getEsConfig().getRawHosts();
-    // Step config
-    config.stepConfig.repositoryPath =
-        this.getClass().getClassLoader().getResource("data7/ingest").getPath();
-    config.stepConfig.coreSiteConfig = "";
-    config.stepConfig.hdfsSiteConfig = "";
+    MetricsCollectorConfiguration config = createConfig();
 
     MetricsCollectorCallback callback =
         new MetricsCollectorCallback(config, publisher, curator, historyWsClient);
@@ -182,13 +147,7 @@ public class MetricsCollectorCallbackIT {
     int attempt = 60;
     String crawlId = DATASET_UUID;
 
-    PipelinesIndexedMessage message = new PipelinesIndexedMessage();
-
-    message.setDatasetUuid(uuid);
-    message.setAttempt(attempt);
-    message.setExecutionId(EXECUTION_ID);
-    message.setValidator(true);
-    message.setRunner(StepRunner.STANDALONE.name());
+    PipelinesIndexedMessage message = createMessage(uuid, attempt);
     message.setPipelineSteps(Collections.singleton(StepType.VALIDATOR_COLLECT_METRICS.name()));
 
     // Index document
@@ -224,6 +183,68 @@ public class MetricsCollectorCallbackIT {
     assertFalse(checkExists(curator, crawlId, Fn.END_DATE.apply(LABEL)));
     assertFalse(checkExists(curator, crawlId, Fn.SUCCESSFUL.apply(LABEL)));
     assertEquals(0, publisher.getMessages().size());
+  }
+
+  @Test
+  public void testFailedCase() throws Exception {
+    // State
+    MetricsCollectorConfiguration config = createConfig();
+
+    MetricsCollectorCallback callback =
+        new MetricsCollectorCallback(config, publisher, curator, historyWsClient);
+
+    UUID uuid = UUID.fromString(DATASET_UUID);
+    int attempt = 60;
+    String crawlId = DATASET_UUID;
+
+    PipelinesIndexedMessage message = createMessage(uuid, attempt);
+    message.setPipelineSteps(Collections.singleton(StepType.VALIDATOR_COLLECT_METRICS.name()));
+
+    // When
+    callback.handleMessage(message);
+
+    // Should
+    assertTrue(checkExists(curator, crawlId, LABEL));
+    assertTrue(checkExists(curator, crawlId, Fn.ERROR_MESSAGE.apply(LABEL)));
+    assertTrue(checkExists(curator, crawlId, Fn.MQ_CLASS_NAME.apply(LABEL)));
+    assertTrue(checkExists(curator, crawlId, Fn.MQ_MESSAGE.apply(LABEL)));
+    assertTrue(publisher.getMessages().isEmpty());
+
+    // Clean
+    curator.delete().deletingChildrenIfNeeded().forPath(getPipelinesInfoPath(crawlId, LABEL, true));
+  }
+
+  private PipelinesIndexedMessage createMessage(UUID uuid, int attempt) {
+    PipelinesIndexedMessage message = new PipelinesIndexedMessage();
+
+    message.setDatasetUuid(uuid);
+    message.setAttempt(attempt);
+    message.setExecutionId(EXECUTION_ID);
+    message.setValidator(true);
+    message.setRunner(StepRunner.STANDALONE.name());
+    message.setPipelineSteps(
+        new HashSet<>(
+            Arrays.asList(
+                StepType.VALIDATOR_INTERPRETED_TO_INDEX.name(),
+                StepType.VALIDATOR_COLLECT_METRICS.name())));
+    return message;
+  }
+
+  private MetricsCollectorConfiguration createConfig() {
+    MetricsCollectorConfiguration config = new MetricsCollectorConfiguration();
+    // Main
+    config.archiveRepository =
+        this.getClass().getClassLoader().getResource("dataset/dwca").getPath();
+    config.validatorOnly = true;
+
+    // ES
+    config.esConfig.hosts = ES_SERVER.getEsConfig().getRawHosts();
+    // Step config
+    config.stepConfig.repositoryPath =
+        this.getClass().getClassLoader().getResource("data7/ingest").getPath();
+    config.stepConfig.coreSiteConfig = "";
+    config.stepConfig.hdfsSiteConfig = "";
+    return config;
   }
 
   private boolean checkExists(CuratorFramework curator, String id, String path) {

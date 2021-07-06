@@ -94,30 +94,7 @@ public class IndexingCallbackIT {
   @Test
   public void testNormalCase() throws Exception {
     // State
-    IndexingConfiguration config = new IndexingConfiguration();
-    // Main
-    config.standaloneNumberThreads = 1;
-    config.processRunner = StepRunner.STANDALONE.name();
-    config.pipelinesConfig = this.getClass().getClassLoader().getResource("lock.yaml").getPath();
-    // Indexing
-    config.indexConfig.numberReplicas = 1;
-    config.indexConfig.recordsPerShard = 1_000;
-    config.indexConfig.bigIndexIfRecordsMoreThan = 10_000;
-    config.indexConfig.defaultPrefixName = "default";
-    config.indexConfig.defaultSize = 2_000;
-    config.indexConfig.defaultNewIfSize = 2_500;
-    config.indexConfig.defaultSmallestIndexCatUrl =
-        ES_SERVER.getEsConfig().getRawHosts()[0]
-            + "/_cat/indices/%s*?v&h=docs.count,index&s=docs.count:asc&format=json";
-    config.indexConfig.occurrenceAlias = "occurrence";
-    config.indexConfig.occurrenceVersion = "a";
-    // ES
-    config.esConfig.hosts = ES_SERVER.getEsConfig().getRawHosts();
-    // Step config
-    config.stepConfig.repositoryPath =
-        this.getClass().getClassLoader().getResource("data7/ingest").getPath();
-    config.stepConfig.coreSiteConfig = "";
-    config.stepConfig.hdfsSiteConfig = "";
+    IndexingConfiguration config = createConfig();
 
     ExecutorService executor = Executors.newSingleThreadExecutor();
 
@@ -128,18 +105,7 @@ public class IndexingCallbackIT {
     int attempt = 60;
     String crawlId = DATASET_UUID;
 
-    PipelinesInterpretedMessage message = new PipelinesInterpretedMessage();
-    message.setDatasetUuid(uuid);
-    message.setAttempt(attempt);
-    message.setEndpointType(EndpointType.DWC_ARCHIVE);
-    message.setExecutionId(EXECUTION_ID);
-    message.setNumberOfRecords(1L);
-    message.setValidator(false);
-    message.setRunner(StepRunner.STANDALONE.name());
-    message.setInterpretTypes(Collections.singleton("ALL"));
-    message.setPipelineSteps(
-        new HashSet<>(
-            Arrays.asList(StepType.INTERPRETED_TO_INDEX.name(), StepType.HDFS_VIEW.name())));
+    PipelinesInterpretedMessage message = createMessage(uuid, attempt);
 
     // When
     callback.handleMessage(message);
@@ -149,7 +115,7 @@ public class IndexingCallbackIT {
         Paths.get(
             config.stepConfig.repositoryPath
                 + "/"
-                + DATASET_UUID
+                + uuid
                 + "/"
                 + attempt
                 + "/"
@@ -168,11 +134,175 @@ public class IndexingCallbackIT {
   @Test
   public void testNormalSingleStepCase() {
     // State
+    IndexingConfiguration config = createConfig();
+    ExecutorService executor = Executors.newSingleThreadExecutor();
+
+    IndexingCallback callback =
+        new IndexingCallback(config, publisher, curator, httpClient, historyWsClient, executor);
+
+    UUID uuid = UUID.fromString(DATASET_UUID);
+    int attempt = 60;
+    String crawlId = DATASET_UUID;
+
+    PipelinesInterpretedMessage message = createMessage(uuid, attempt);
+    message.setPipelineSteps(Collections.singleton(StepType.INTERPRETED_TO_INDEX.name()));
+
+    // When
+    callback.handleMessage(message);
+
+    // Should
+    Path path =
+        Paths.get(
+            config.stepConfig.repositoryPath
+                + "/"
+                + uuid
+                + "/"
+                + attempt
+                + "/"
+                + config.metaFileName);
+
+    assertTrue(path.toFile().exists());
+    assertFalse(checkExists(curator, crawlId, LABEL));
+    assertFalse(checkExists(curator, crawlId, Fn.SUCCESSFUL_MESSAGE.apply(LABEL)));
+    assertFalse(checkExists(curator, crawlId, Fn.MQ_CLASS_NAME.apply(LABEL)));
+    assertFalse(checkExists(curator, crawlId, Fn.MQ_MESSAGE.apply(LABEL)));
+    assertEquals(1, publisher.getMessages().size());
+  }
+
+  @Test
+  public void testFailedCase() throws Exception {
+    // State
+    UUID uuid = UUID.fromString(DATASET_UUID);
+    int attempt = 59; // Wrong attempt
+
+    IndexingConfiguration config = createConfig();
+    ExecutorService executor = Executors.newSingleThreadExecutor();
+
+    IndexingCallback callback =
+        new IndexingCallback(config, publisher, curator, httpClient, historyWsClient, executor);
+
+    String crawlId = DATASET_UUID;
+
+    PipelinesInterpretedMessage message = createMessage(uuid, attempt);
+    message.setPipelineSteps(Collections.singleton(StepType.INTERPRETED_TO_INDEX.name()));
+
+    // When
+    callback.handleMessage(message);
+
+    // Should
+    assertTrue(checkExists(curator, crawlId, LABEL));
+    assertTrue(checkExists(curator, crawlId, Fn.ERROR_MESSAGE.apply(LABEL)));
+    assertTrue(checkExists(curator, crawlId, Fn.MQ_CLASS_NAME.apply(LABEL)));
+    assertTrue(checkExists(curator, crawlId, Fn.MQ_MESSAGE.apply(LABEL)));
+    assertTrue(publisher.getMessages().isEmpty());
+
+    // Clean
+    curator.delete().deletingChildrenIfNeeded().forPath(getPipelinesInfoPath(crawlId, LABEL));
+  }
+
+  @Test
+  public void testWrongRunnerCase() {
+    // State
+    UUID uuid = UUID.fromString(DATASET_UUID);
+    int attempt = 60;
+
+    IndexingConfiguration config = createConfig();
+    config.processRunner = StepRunner.DISTRIBUTED.name(); // Message type is STANDALONE
+
+    ExecutorService executor = Executors.newSingleThreadExecutor();
+
+    IndexingCallback callback =
+        new IndexingCallback(config, publisher, curator, httpClient, historyWsClient, executor);
+
+    PipelinesInterpretedMessage message = createMessage(uuid, attempt);
+    message.setPipelineSteps(Collections.singleton(StepType.INTERPRETED_TO_INDEX.name()));
+
+    // When
+    callback.handleMessage(message);
+
+    // Should
+    assertFalse(checkExists(curator, DATASET_UUID, LABEL));
+    assertTrue(publisher.getMessages().isEmpty());
+  }
+
+  @Test
+  public void testFailedDistrebutedCase() throws Exception {
+    // State
+    UUID uuid = UUID.fromString(DATASET_UUID);
+    int attempt = 60;
+
+    IndexingConfiguration config = createConfig();
+    config.processRunner = StepRunner.DISTRIBUTED.name();
+
+    ExecutorService executor = Executors.newSingleThreadExecutor();
+
+    IndexingCallback callback =
+        new IndexingCallback(config, publisher, curator, httpClient, historyWsClient, executor);
+
+    String crawlId = DATASET_UUID;
+
+    PipelinesInterpretedMessage message = createMessage(uuid, attempt);
+    message.setRunner(StepRunner.DISTRIBUTED.name());
+    message.setPipelineSteps(Collections.singleton(StepType.INTERPRETED_TO_INDEX.name()));
+
+    // When
+    callback.handleMessage(message);
+
+    // Should
+    assertTrue(checkExists(curator, crawlId, LABEL));
+    assertTrue(checkExists(curator, crawlId, Fn.ERROR_MESSAGE.apply(LABEL)));
+    assertTrue(checkExists(curator, crawlId, Fn.MQ_CLASS_NAME.apply(LABEL)));
+    assertTrue(checkExists(curator, crawlId, Fn.MQ_MESSAGE.apply(LABEL)));
+    assertTrue(publisher.getMessages().isEmpty());
+
+    // Clean
+    curator.delete().deletingChildrenIfNeeded().forPath(getPipelinesInfoPath(crawlId, LABEL));
+  }
+
+  @Test
+  public void testWrongMessageSettingsCase() {
+    // State
+    UUID uuid = UUID.fromString(DATASET_UUID);
+    int attempt = 60;
+
+    IndexingConfiguration config = createConfig();
+    ExecutorService executor = Executors.newSingleThreadExecutor();
+
+    IndexingCallback callback =
+        new IndexingCallback(config, publisher, curator, httpClient, historyWsClient, executor);
+
+    PipelinesInterpretedMessage message = createMessage(uuid, attempt);
+    message.setOnlyForStep(StepType.HDFS_VIEW.name()); // Wrong type
+
+    // When
+    callback.handleMessage(message);
+
+    // Should
+    assertFalse(checkExists(curator, DATASET_UUID, LABEL));
+    assertTrue(publisher.getMessages().isEmpty());
+  }
+
+  private PipelinesInterpretedMessage createMessage(UUID uuid, int attempt) {
+    PipelinesInterpretedMessage message = new PipelinesInterpretedMessage();
+    message.setDatasetUuid(uuid);
+    message.setAttempt(attempt);
+    message.setEndpointType(EndpointType.DWC_ARCHIVE);
+    message.setExecutionId(EXECUTION_ID);
+    message.setNumberOfRecords(1L);
+    message.setValidator(false);
+    message.setRunner(StepRunner.STANDALONE.name());
+    message.setInterpretTypes(Collections.singleton("ALL"));
+    message.setPipelineSteps(
+        new HashSet<>(
+            Arrays.asList(StepType.INTERPRETED_TO_INDEX.name(), StepType.HDFS_VIEW.name())));
+    return message;
+  }
+
+  private IndexingConfiguration createConfig() {
     IndexingConfiguration config = new IndexingConfiguration();
     // Main
     config.standaloneNumberThreads = 1;
     config.processRunner = StepRunner.STANDALONE.name();
-    config.pipelinesConfig = this.getClass().getClassLoader().getResource("lock.yaml").getPath();
     // Indexing
     config.indexConfig.numberReplicas = 1;
     config.indexConfig.recordsPerShard = 1_000;
@@ -188,51 +318,12 @@ public class IndexingCallbackIT {
     // ES
     config.esConfig.hosts = ES_SERVER.getEsConfig().getRawHosts();
     // Step config
-    config.stepConfig.repositoryPath =
-        this.getClass().getClassLoader().getResource("data7/ingest").getPath();
     config.stepConfig.coreSiteConfig = "";
     config.stepConfig.hdfsSiteConfig = "";
-
-    ExecutorService executor = Executors.newSingleThreadExecutor();
-
-    IndexingCallback callback =
-        new IndexingCallback(config, publisher, curator, httpClient, historyWsClient, executor);
-
-    UUID uuid = UUID.fromString(DATASET_UUID);
-    int attempt = 60;
-    String crawlId = DATASET_UUID;
-
-    PipelinesInterpretedMessage message = new PipelinesInterpretedMessage();
-    message.setDatasetUuid(uuid);
-    message.setAttempt(attempt);
-    message.setEndpointType(EndpointType.DWC_ARCHIVE);
-    message.setExecutionId(EXECUTION_ID);
-    message.setNumberOfRecords(1L);
-    message.setValidator(false);
-    message.setRunner(StepRunner.STANDALONE.name());
-    message.setInterpretTypes(Collections.singleton("ALL"));
-    message.setPipelineSteps(Collections.singleton(StepType.INTERPRETED_TO_INDEX.name()));
-
-    // When
-    callback.handleMessage(message);
-
-    // Should
-    Path path =
-        Paths.get(
-            config.stepConfig.repositoryPath
-                + "/"
-                + DATASET_UUID
-                + "/"
-                + attempt
-                + "/"
-                + config.metaFileName);
-
-    assertTrue(path.toFile().exists());
-    assertFalse(checkExists(curator, crawlId, LABEL));
-    assertFalse(checkExists(curator, crawlId, Fn.SUCCESSFUL_MESSAGE.apply(LABEL)));
-    assertFalse(checkExists(curator, crawlId, Fn.MQ_CLASS_NAME.apply(LABEL)));
-    assertFalse(checkExists(curator, crawlId, Fn.MQ_MESSAGE.apply(LABEL)));
-    assertEquals(1, publisher.getMessages().size());
+    config.pipelinesConfig = this.getClass().getClassLoader().getResource("lock.yaml").getPath();
+    config.stepConfig.repositoryPath =
+        this.getClass().getClassLoader().getResource("data7/ingest").getPath();
+    return config;
   }
 
   private boolean checkExists(CuratorFramework curator, String id, String path) {
