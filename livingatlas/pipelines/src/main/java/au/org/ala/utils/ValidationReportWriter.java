@@ -265,7 +265,10 @@ public class ValidationReportWriter {
   /** Retrieve index counts for all datasets. */
   public Map<String, Long> indexCounts(String zkHost, String solrCollection) {
 
-    try (SolrClient cloudSolrClient = new CloudSolrClient(zkHost)) {
+    List<String> zkHosts = Arrays.stream(zkHost.split(",")).collect(Collectors.toList());
+
+    try (SolrClient cloudSolrClient =
+        new CloudSolrClient.Builder(zkHosts, Optional.empty()).build()) {
       final Map<String, String> queryParamMap = new HashMap<>();
       queryParamMap.put("q", "*:*");
       queryParamMap.put("facet", "on");

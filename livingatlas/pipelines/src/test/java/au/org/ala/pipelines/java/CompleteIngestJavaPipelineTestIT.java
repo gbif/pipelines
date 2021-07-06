@@ -14,6 +14,7 @@ import au.org.ala.util.TestUtils;
 import au.org.ala.utils.ValidationUtils;
 import java.io.File;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import okhttp3.mockwebserver.MockWebServer;
 import org.apache.commons.io.FileUtils;
 import org.apache.solr.common.SolrDocument;
@@ -212,7 +213,7 @@ public class CompleteIngestJavaPipelineTestIT {
               "--inputPath=/tmp/la-pipelines-test/complete-pipeline-java",
               "--allDatasetsInputPath=/tmp/la-pipelines-test/complete-pipeline-java/all-datasets",
               "--properties=" + TestUtils.getPipelinesConfigFile(),
-              "--zkHost=" + SolrUtils.getZkHost(),
+              "--zkHost=" + SolrUtils.getZkHosts().stream().collect(Collectors.joining(",")),
               "--solrCollection=" + SolrUtils.BIOCACHE_TEST_SOLR_COLLECTION,
               "--includeSampling=true",
               "--includeImages=false"
