@@ -4,6 +4,7 @@ import au.org.ala.pipelines.options.ImageServicePipelineOptions;
 import au.org.ala.util.TestUtils;
 import au.org.ala.utils.ValidationUtils;
 import java.io.File;
+import java.io.IOException;
 import okhttp3.mockwebserver.MockWebServer;
 import org.apache.commons.io.FileUtils;
 import org.gbif.pipelines.common.beam.options.DwcaPipelineOptions;
@@ -32,14 +33,15 @@ public class ImageServicePipelineTestIT {
 
   /** Test the generation of UUIDs for datasets that are use non-DwC terms for unique key terms */
   @Test
-  public void testNonDwC() {
+  public void testNonDwC() throws Exception {
     // dr1864 - has deviceId
     String absolutePath = new File("src/test/resources").getAbsolutePath();
     // Step 1: load a dataset and verify all records have a UUID associated
     loadTestDataset("dr893", absolutePath + "/image-service/dr893", "image-service");
   }
 
-  public void loadTestDataset(String datasetID, String inputPath, String testDir) {
+  public void loadTestDataset(String datasetID, String inputPath, String testDir)
+      throws IOException {
 
     DwcaPipelineOptions dwcaOptions =
         PipelinesOptionsFactory.create(
