@@ -1,5 +1,6 @@
 package au.org.ala.pipelines.beam;
 
+import static au.org.ala.pipelines.beam.ImagePipelineUtils.*;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
 import au.com.bytecode.opencsv.CSVParser;
@@ -15,9 +16,10 @@ import com.google.common.base.Objects;
 import java.io.*;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 import java.util.function.UnaryOperator;
-import java.util.zip.GZIPInputStream;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import lombok.extern.slf4j.Slf4j;
@@ -69,25 +71,28 @@ public class ImageServiceDiffLoadPipeline {
 
   public static final Multimedia EMPTY_MULTIMEDIA = Multimedia.newBuilder().build();
   public static final String METADATA_UPDATES_PATH = "/metadata-updates/metadata";
-  public static final String IMAGEID = "imageid";
-  public static final String[] REQUIRED_HEADERS =
-      new String[] {
-        IMAGEID,
-        DcTerm.identifier.simpleName(),
-        DcTerm.audience.simpleName(),
-        DcTerm.contributor.simpleName(),
-        DcTerm.created.simpleName(),
-        DcTerm.creator.simpleName(),
-        DcTerm.description.simpleName(),
-        DcTerm.format.simpleName(),
-        DcTerm.license.simpleName(),
-        DcTerm.publisher.simpleName(),
-        DcTerm.references.simpleName(),
-        DcTerm.rightsHolder.simpleName(),
-        DcTerm.source.simpleName(),
-        DcTerm.title.simpleName(),
-        DcTerm.type.simpleName()
-      };
+  public static final String IMAGEID = "imageID";
+  public static final List<String> REQUIRED_HEADERS =
+      Arrays.stream(
+              new String[] {
+                IMAGEID.toLowerCase(Locale.ROOT),
+                DcTerm.identifier.simpleName(),
+                DcTerm.audience.simpleName(),
+                DcTerm.contributor.simpleName(),
+                DcTerm.created.simpleName(),
+                DcTerm.creator.simpleName(),
+                DcTerm.description.simpleName(),
+                DcTerm.format.simpleName(),
+                DcTerm.license.simpleName(),
+                DcTerm.publisher.simpleName(),
+                DcTerm.references.simpleName(),
+                DcTerm.rightsHolder.simpleName(),
+                DcTerm.source.simpleName(),
+                DcTerm.title.simpleName(),
+                DcTerm.type.simpleName()
+              })
+          .map(s -> s.toLowerCase(Locale.ROOT))
+          .collect(Collectors.toList());
 
   public static void main(String[] args) throws Exception {
     String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "images");
@@ -120,35 +125,35 @@ public class ImageServiceDiffLoadPipeline {
 
     Pipeline p = Pipeline.create(options);
 
-    List<String> headers = readHeaders(fs, imageServiceExportPath);
-    if (headers.size() < REQUIRED_HEADERS.length) {
+    List<String> headers = readHeadersLowerCased(fs, imageServiceExportPath);
+    if (headers.size() < REQUIRED_HEADERS.size()) {
       throw new RuntimeException(
           "Invalid number of fields in CSV less than required. "
               + "Expected: "
-              + REQUIRED_HEADERS.length
+              + REQUIRED_HEADERS.size()
               + ",actual: "
               + headers.size());
     }
 
     // validate that all required headers are present
-    validateHeaders(headers);
+    validateHeaders(headers, REQUIRED_HEADERS);
 
     // find indexes for DC terms
-    final int imageidIdx = headers.indexOf(IMAGEID);
-    final int identifierIdx = headers.indexOf(DcTerm.identifier.simpleName());
-    final int audienceIdx = headers.indexOf(DcTerm.audience.simpleName());
-    final int contributorIdx = headers.indexOf(DcTerm.contributor.simpleName());
-    final int createdIdx = headers.indexOf(DcTerm.created.simpleName());
-    final int creatorIdx = headers.indexOf(DcTerm.creator.simpleName());
-    final int descriptionIdx = headers.indexOf(DcTerm.description.simpleName());
-    final int formatIdx = headers.indexOf(DcTerm.format.simpleName());
-    final int licenseIdx = headers.indexOf(DcTerm.license.simpleName());
-    final int publisherIdx = headers.indexOf(DcTerm.publisher.simpleName());
-    final int referencesIdx = headers.indexOf(DcTerm.references.simpleName());
-    final int rightsHolderIdx = headers.indexOf(DcTerm.rightsHolder.simpleName());
-    final int sourceIdx = headers.indexOf(DcTerm.source.simpleName());
-    final int titleIdx = headers.indexOf(DcTerm.title.simpleName());
-    final int typeIdx = headers.indexOf(DcTerm.type.simpleName());
+    final int imageidIdx = indexOf(headers, IMAGEID);
+    final int identifierIdx = indexOf(headers, DcTerm.identifier);
+    final int audienceIdx = indexOf(headers, DcTerm.audience);
+    final int contributorIdx = indexOf(headers, DcTerm.contributor);
+    final int createdIdx = indexOf(headers, DcTerm.created);
+    final int creatorIdx = indexOf(headers, DcTerm.creator);
+    final int descriptionIdx = indexOf(headers, DcTerm.description);
+    final int formatIdx = indexOf(headers, DcTerm.format);
+    final int licenseIdx = indexOf(headers, DcTerm.license);
+    final int publisherIdx = indexOf(headers, DcTerm.publisher);
+    final int referencesIdx = indexOf(headers, DcTerm.references);
+    final int rightsHolderIdx = indexOf(headers, DcTerm.rightsHolder);
+    final int sourceIdx = indexOf(headers, DcTerm.source);
+    final int titleIdx = indexOf(headers, DcTerm.title);
+    final int typeIdx = indexOf(headers, DcTerm.type);
 
     // load the CSV - Create images Key-ed on URL
     PCollection<KV<String, Multimedia>> imageServiceExportMapping =
@@ -169,7 +174,7 @@ public class ImageServiceDiffLoadPipeline {
                           if (!IMAGEID.equals(parts[imageidIdx])) {
 
                             // check for the required number of fields
-                            if (parts.length >= REQUIRED_HEADERS.length) {
+                            if (parts.length >= REQUIRED_HEADERS.size()) {
 
                               String imageUrl = parts[identifierIdx];
 
@@ -199,7 +204,7 @@ public class ImageServiceDiffLoadPipeline {
                             } else {
                               log.error(
                                   "Problem no of fields - expected:"
-                                      + REQUIRED_HEADERS.length
+                                      + REQUIRED_HEADERS.size()
                                       + ", actual:"
                                       + parts.length);
                             }
@@ -385,7 +390,6 @@ public class ImageServiceDiffLoadPipeline {
    */
   public static boolean hasMetadataChanges(Multimedia avroImage, Multimedia serviceImage) {
     if (avroImage.getIdentifier() != null && serviceImage.getIdentifier() != null) {
-
       if (!Objects.equal(clean(avroImage.getAudience()), clean(serviceImage.getAudience())))
         return true;
       if (!Objects.equal(clean(avroImage.getContributor()), clean(serviceImage.getContributor())))
@@ -469,26 +473,5 @@ public class ImageServiceDiffLoadPipeline {
     }
 
     return newArchive;
-  }
-
-  public static List<String> readHeaders(FileSystem fs, String imageServiceExportPath)
-      throws IOException {
-
-    InputStream input = ALAFsUtils.openInputStream(fs, imageServiceExportPath);
-    GZIPInputStream inputStream = new GZIPInputStream(input);
-    BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-    String headerLine = reader.readLine();
-    final CSVParser parser = new CSVParser();
-    List<String> headers = Arrays.asList(parser.parseLine(headerLine));
-    reader.close();
-    return headers;
-  }
-
-  public static void validateHeaders(List<String> headers) {
-    for (String hdr : REQUIRED_HEADERS) {
-      if (headers.indexOf(hdr) < 0) {
-        throw new RuntimeException("Missing header: " + hdr);
-      }
-    }
   }
 }
