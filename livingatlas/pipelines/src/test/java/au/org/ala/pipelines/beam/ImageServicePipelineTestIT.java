@@ -93,7 +93,10 @@ public class ImageServicePipelineTestIT {
     String absolutePath = new File("src/test/resources").getAbsolutePath();
     String imageServiceExportPath =
         absolutePath + "/" + testDir + "/" + datasetID + "/image-service-export.csv";
+    String imageServiceExportPathGz = imageServiceExportPath + ".gz";
 
-    ImageServiceSyncPipeline.run(imageOptions, imageServiceExportPath);
+    TestUtils.compressGzip(imageServiceExportPath, imageServiceExportPathGz);
+
+    ImageServiceSyncPipeline.run(imageOptions, imageServiceExportPathGz);
   }
 }
