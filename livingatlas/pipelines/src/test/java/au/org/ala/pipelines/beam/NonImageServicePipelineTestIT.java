@@ -32,14 +32,14 @@ public class NonImageServicePipelineTestIT {
 
   /** Test the generation of UUIDs for datasets that are use non-DwC terms for unique key terms */
   @Test
-  public void testNonDwC() {
+  public void testNonDwC() throws Exception {
     // dr1864 - has deviceId
     String absolutePath = new File("src/test/resources").getAbsolutePath();
     // Step 1: load a dataset and verify all records have a UUID associated
     loadTestDataset("dr893", absolutePath + "/image-service-non/dr893", "image-service-non");
   }
 
-  public void loadTestDataset(String datasetID, String inputPath, String testDir) {
+  public void loadTestDataset(String datasetID, String inputPath, String testDir) throws Exception {
 
     DwcaPipelineOptions dwcaOptions =
         PipelinesOptionsFactory.create(
