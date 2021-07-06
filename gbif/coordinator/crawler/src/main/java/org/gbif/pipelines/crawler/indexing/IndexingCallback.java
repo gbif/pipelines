@@ -244,10 +244,13 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
   }
 
   /**
-   * Computes the name for ES index: Case 1 - Independent index for datasets where number of records
-   * more than config.indexIndepRecord Case 2 - Default static index name for datasets where last
-   * changed date more than config.indexDefStaticDateDurationDd Case 3 - Default dynamic index name
-   * for all other datasets
+   * Computes the name for ES index:
+   *
+   * <pre>
+   * Case 1 - Independent index for datasets where number of records more than config.indexIndepRecord
+   * Case 2 - Default static index name for datasets where last changed date more than config.indexDefStaticDateDurationDd
+   * Case 3 - Default dynamic index name for all other datasets
+   * </pre>
    */
   private String computeIndexName(PipelinesInterpretedMessage message, long recordsNumber)
       throws IOException {
@@ -272,9 +275,12 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
   }
 
   /**
-   * Computes number of index shards: 1) in case of default index -> config.indexDefSize /
-   * config.indexRecordsPerShard 2) in case of independent index -> recordsNumber /
-   * config.indexRecordsPerShard
+   * Computes number of index shards:
+   *
+   * <pre>
+   * 1) in case of default index -> config.indexDefSize / config.indexRecordsPerShard
+   * 2) in case of independent index -> recordsNumber / config.indexRecordsPerShard
+   * </pre>
    */
   private int computeNumberOfShards(String indexName, long recordsNumber) {
     if (indexName.startsWith(config.indexConfig.defaultPrefixName)) {
