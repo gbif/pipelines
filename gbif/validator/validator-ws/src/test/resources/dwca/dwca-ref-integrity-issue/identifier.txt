@@ -1,0 +1,5 @@
+id	identifier	title
+1	CCDB-03768 A03	DNA Barcode sample ID
+2	CCDB-03768 A02	DNA Barcode sample ID
+3	CCDB-03768 A01	DNA Barcode sample ID
+15	CCDB-03768 A04	DNA Barcode sample ID

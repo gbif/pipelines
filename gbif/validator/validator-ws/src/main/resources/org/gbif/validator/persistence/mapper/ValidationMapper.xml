@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.gbif.validator.persistence.mapper.ValidationMapper">
+  <!-- Auto-mapping and eager loading of sub resources  -->
+  <resultMap id="VALIDATION_MAP" type="org.gbif.validator.api.Validation" autoMapping="true">
+    <id property="key" column="key"/>
+    <result property="status" column="status"/>
+    <result property="fileFormat" column="file_format"/>
+    <result property="username" column="username"/>
+    <result property="file" column="file"/>
+    <result property="fileSize" column="file_size"/>
+    <result property="result" column="result"/>
+    <result property="created" column="created"/>
+    <result property="modified" column="modified"/>
+    <result property="deleted" column="deleted"/>
+  </resultMap>
+
+  <sql id="WRITABLE_VALIDATION_FIELDS">
+    key,
+    status,
+    <if test="fileFormat != null">
+    file_format,
+    </if>
+    <if test="username != null">
+    username,
+    </if>
+    <if test="file != null">
+    file,
+    </if>
+    <if test="fileSize != null and fileSize > 0">
+    file_size,
+    </if>
+    <if test="result != null">
+    result,
+    </if>
+    created,
+    modified
+  </sql>
+
+  <sql id="VALIDATION_FIELDS">
+    key, status, file_format, username, file, file_size, result, created, modified, deleted
+  </sql>
+
+  <!--
+    key, created and deleted are never changed
+   -->
+  <sql id="VALIDATION_UPDATE">
+    key = #{key,jdbcType=OTHER},
+    status = #{status,jdbcType=OTHER},
+    <if test="fileFormat != null">
+    file_format = #{fileFormat,jdbcType=OTHER},
+    </if>
+    <if test="username != null">
+    username = #{username,jdbcType=VARCHAR},
+    </if>
+    <if test="file != null">
+    file = #{file,jdbcType=VARCHAR},
+    </if>
+    <if test="fileSize != null and fileSize > 0">
+    file_size = #{fileSize,jdbcType=BIGINT},
+    </if>
+    <if test="result != null">
+    result = #{result,jdbcType=VARCHAR},
+    </if>
+    modified = now(),
+    deleted = null
+  </sql>
+
+  <sql id="WRITABLE_VALIDATION_FIELD_TYPES">
+    #{key,jdbcType=OTHER},
+    #{status,jdbcType=OTHER},
+    <if test="fileFormat != null">
+    #{fileFormat,jdbcType=OTHER},
+    </if>
+    <if test="username != null">
+    #{username,jdbcType=VARCHAR},
+    </if>
+    <if test="file != null">
+    #{file,jdbcType=VARCHAR},
+    </if>
+    <if test="fileSize != null and fileSize > 0">
+    #{fileSize,jdbcType=BIGINT},
+    </if>
+    <if test="result != null">
+    #{result,jdbcType=VARCHAR},
+    </if>
+    now(),
+    now()
+  </sql>
+
+  <!--  Note: you can get entities which are deleted -->
+  <select id="get" resultMap="VALIDATION_MAP">
+    SELECT <include refid="VALIDATION_FIELDS"/>
+    FROM validation
+    WHERE key = #{key,jdbcType=OTHER}
+  </select>
+
+  <insert id="create" parameterType="org.gbif.validator.api.Validation">
+    INSERT INTO validation(<include refid="WRITABLE_VALIDATION_FIELDS"/>)
+    VALUES(<include refid="WRITABLE_VALIDATION_FIELD_TYPES"/>)
+  </insert>
+
+  <update id="update" parameterType="org.gbif.validator.api.Validation">
+    UPDATE validation
+    SET <include refid="VALIDATION_UPDATE"/>
+    WHERE key = #{key,jdbcType=OTHER}
+  </update>
+
+  <!-- For safety, should it be already deleted nothing is done -->
+  <update id="delete">
+    UPDATE validation
+    SET deleted = now()
+    WHERE key = #{key,jdbcType=OTHER} AND deleted IS NULL
+  </update>
+
+  <!--
+    Append safe ordering, omitting deleted entities
+    Sort order includes key, since created is not a unique sort order, so not robust
+  -->
+  <select id="list" resultType="org.gbif.validator.api.Validation"  resultMap="VALIDATION_MAP" parameterType="map">
+    SELECT <include refid="VALIDATION_FIELDS"/>
+    FROM validation
+    WHERE deleted IS NULL
+    <if test="username != null" >
+      AND username = #{username,jdbcType=OTHER}
+    </if>
+    ORDER BY created DESC, key
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
+  <select id="count" resultType="Integer" parameterType="map">
+    SELECT COUNT(*)
+    FROM validation
+    WHERE deleted IS NULL
+    <if test="username != null" >
+      AND username = #{username,jdbcType=OTHER}
+    </if>
+  </select>
+
+</mapper>
