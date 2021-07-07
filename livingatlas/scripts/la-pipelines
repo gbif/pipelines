@@ -20,6 +20,33 @@ then
     exit 1
 fi
 
+# https://mikefarah.gitbook.io/yq/upgrading-from-v3
+if [[ "$(yq -V 2>&1)" =~ .*3.?.?.* ]]
+then
+    function YQ_VERIFY() {
+        yq v "$1"
+    }
+    function YQ_NAVIGATE () {
+        OUT=$(yq r "$1" "$2")
+        echo "$OUT"
+    }
+else
+    if [[ "$(yq -V 2>&1)" =~ .*4.?.?.* ]]
+then
+    function YQ_VERIFY() {
+        yq e 'true' "$1" > /dev/null
+    }
+    function YQ_NAVIGATE () {
+        OUT=$(yq e ".$2" "$1")
+        if [[ "$OUT" == "null" ]]; then OUT=""; fi
+        echo "$OUT"
+    }
+else
+    echo "ERROR: Unsupported yq version"
+    exit 1
+fi
+fi
+
 set -e # Stop on any failure
 
 # Detect if we are in production or not
@@ -184,7 +211,7 @@ done
 # Validate yaml of configs
 for f in $configList
 do
-    YML_V=$(yq v $f; echo $?)
+    YML_V=$(YQ_VERIFY $f; echo $?)
     if [[ $YML_V != 0 ]] ; then log.error Config $f is not valid ; exit 1; fi
 done
 
@@ -193,7 +220,7 @@ function getConf() {
     val=
     for i in $configList
     do
-        valTmp=$(yq r $i $1)
+        valTmp=$(YQ_NAVIGATE $i $1)
         if [[ -n $valTmp ]] ; then val=$valTmp; fi
     done
     echo $val
