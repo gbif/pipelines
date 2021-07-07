@@ -198,13 +198,17 @@ public class SolrIO {
     }
 
     AuthorizedSolrClient<CloudSolrClient> createClient() {
-      CloudSolrClient solrClient = new CloudSolrClient(getZkHost(), createHttpClient());
+      CloudSolrClient solrClient = new CloudSolrClient.Builder().withZkHost(getZkHost()).build();
       solrClient.setZkClientTimeout(180000);
       return new AuthorizedSolrClient<>(solrClient, this);
     }
 
     AuthorizedSolrClient<HttpSolrClient> createClient(String shardUrl) {
-      HttpSolrClient solrClient = new HttpSolrClient(shardUrl, createHttpClient());
+      HttpSolrClient solrClient =
+          new HttpSolrClient.Builder()
+              .withHttpClient(createHttpClient())
+              .withBaseSolrUrl(shardUrl)
+              .build();
       return new AuthorizedSolrClient<>(solrClient, this);
     }
   }

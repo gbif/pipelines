@@ -192,7 +192,8 @@ public class IndexRecordToSolrPipeline {
   @NotNull
   private static List<String> getSchemaFields(SolrPipelineOptions options) {
     try {
-      CloudSolrClient client = new CloudSolrClient(options.getZkHost());
+      CloudSolrClient client =
+          new CloudSolrClient.Builder().withZkHost(options.getZkHost()).build();
       SchemaRequest.Fields fields = new SchemaRequest.Fields();
       SchemaResponse.FieldsResponse response = fields.process(client, options.getSolrCollection());
       final List<String> schemaFields =
@@ -208,7 +209,8 @@ public class IndexRecordToSolrPipeline {
   @NotNull
   private static List<String> getSchemaDynamicFieldPrefixes(SolrPipelineOptions options) {
     try {
-      CloudSolrClient client = new CloudSolrClient(options.getZkHost());
+      CloudSolrClient client =
+          new CloudSolrClient.Builder().withZkHost(options.getZkHost()).build();
       SchemaRequest.DynamicFields fields = new SchemaRequest.DynamicFields();
       SchemaResponse.DynamicFieldsResponse response =
           fields.process(client, options.getSolrCollection());
