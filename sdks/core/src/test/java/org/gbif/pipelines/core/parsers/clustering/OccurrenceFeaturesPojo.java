@@ -1,9 +1,5 @@
 package org.gbif.pipelines.core.parsers.clustering;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import lombok.Builder;
 
 /** A POJO implementation for simple tests. */
@@ -29,6 +25,8 @@ public class OccurrenceFeaturesPojo implements OccurrenceFeatures {
   private final String recordNumber;
   private final String catalogNumber;
   private final String otherCatalogNumbers;
+  private final String institutionCode;
+  private final String collectionCode;
 
   @Override
   public String getId() {
@@ -131,14 +129,12 @@ public class OccurrenceFeaturesPojo implements OccurrenceFeatures {
   }
 
   @Override
-  public List<String> listIdentifiers() {
-    return Stream.of(
-            getOccurrenceID(),
-            getFieldNumber(),
-            getRecordNumber(),
-            getCatalogNumber(),
-            getOtherCatalogNumbers())
-        .filter(Objects::nonNull)
-        .collect(Collectors.toList());
+  public String getInstitutionCode() {
+    return institutionCode;
+  }
+
+  @Override
+  public String getCollectionCode() {
+    return collectionCode;
   }
 }
