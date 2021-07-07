@@ -37,7 +37,7 @@ then
         yq e 'true' "$1" > /dev/null
     }
     function YQ_NAVIGATE () {
-        OUT=$(yq e """.$2""" "$1")
+        OUT=$(yq e ".$2" "$1")
         if [[ "$OUT" == "null" ]]; then OUT=""; fi
         echo "$OUT"
     }
