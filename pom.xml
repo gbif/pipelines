@@ -104,7 +104,7 @@
     <curator.version>2.9.0</curator.version>
 
     <geotools.version>20.5</geotools.version>
-    <commons-lang3.version>3.4</commons-lang3.version>
+    <commons-lang3.version>3.10</commons-lang3.version>
     <guava.version>20.0</guava.version>
     <!-- Guava version required by HBase libraries -->
     <guava.hbase.version>12.0.1</guava.hbase.version>
@@ -113,7 +113,7 @@
     <resilience4j.version>1.1.0</resilience4j.version>
 
     <!-- Logging -->
-    <slf4j.version>1.7.5</slf4j.version>
+    <slf4j.version>1.7.16</slf4j.version>
     <logback.version>1.2.3</logback.version>
     <log4j.version>1.2.17</log4j.version>
     <logstash-gelf.version>1.11.2</logstash-gelf.version>
@@ -347,7 +347,27 @@
       </dependency>
       <dependency>
         <groupId>org.gbif.pipelines</groupId>
-        <artifactId>validator</artifactId>
+        <artifactId>validator-core</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.pipelines</groupId>
+        <artifactId>eml-validator</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.pipelines</groupId>
+        <artifactId>validator-ws</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.pipelines</groupId>
+        <artifactId>validator-ws-client</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.pipelines</groupId>
+        <artifactId>validator-api</artifactId>
         <version>${project.version}</version>
       </dependency>
 

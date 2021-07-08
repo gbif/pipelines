@@ -143,7 +143,7 @@
     </dependency>
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
-      <artifactId>validator</artifactId>
+      <artifactId>validator-core</artifactId>
     </dependency>
 
     <!-- GBIF -->
