@@ -9,9 +9,12 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.security.Principal;
 import java.util.UUID;
+import lombok.SneakyThrows;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.common.messaging.api.MessagePublisher;
+import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.persistence.mapper.ValidationMapper;
 import org.gbif.validator.ws.file.DataFile;
@@ -42,11 +45,15 @@ public class ValidationResource {
 
   private final UploadFileManager fileTransferManager;
   private final ValidationMapper validationMapper;
+  private final MessagePublisher messagePublisher;
 
   public ValidationResource(
-      UploadFileManager fileTransferManager, ValidationMapper validationMapper) {
+      UploadFileManager fileTransferManager,
+      ValidationMapper validationMapper,
+      MessagePublisher messagePublisher) {
     this.fileTransferManager = fileTransferManager;
     this.validationMapper = validationMapper;
+    this.messagePublisher = messagePublisher;
   }
 
   /** Encodes an URL, specially URLs with blank spaces can be problematics. */
@@ -101,7 +108,7 @@ public class ValidationResource {
               resultDataFile -> update(key, resultDataFile, Validation.Status.SUBMITTED),
               err -> {
                 LOG.error("Error processing file", err);
-                updateStatus(key, Validation.Status.SUBMITTED, err.getMessage());
+                updateStatus(key, Validation.Status.FAILED, err.getMessage());
               });
       return create(key, downloadResult.getDataFile(), principal, Validation.Status.DOWNLOADING);
     } catch (FileSizeException ex) {
@@ -134,7 +141,19 @@ public class ValidationResource {
             .username(principal.getName())
             .build();
     validationMapper.create(validation);
-    return validationMapper.get(key);
+    validation = validationMapper.get(key);
+    if (Validation.Status.SUBMITTED == validation.getStatus()) {
+      notify(validation);
+    }
+    return validation;
+  }
+
+  @SneakyThrows
+  private void notify(Validation validation) {
+    PipelinesArchiveValidatorMessage message = new PipelinesArchiveValidatorMessage();
+    message.setValidator(true);
+    message.setDatasetUuid(validation.getKey());
+    messagePublisher.send(message);
   }
 
   /** Updates the data of a validation. */
@@ -148,7 +167,9 @@ public class ValidationResource {
             .fileSize(dataFile.getSize())
             .build();
     validationMapper.update(validation);
-    return validationMapper.get(key);
+    validation = validationMapper.get(key);
+    notify(validation);
+    return validation;
   }
 
   /** Updates the status of a validation process. */
