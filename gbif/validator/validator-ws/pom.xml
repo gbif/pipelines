@@ -318,6 +318,10 @@
       <groupId>org.gbif.validator</groupId>
       <artifactId>validator-api</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.gbif.common</groupId>
+      <artifactId>gbif-postal-service</artifactId>
+    </dependency>
 
     <!-- Xml-->
     <dependency>

@@ -3,6 +3,7 @@ package org.gbif.validator.ws.it;
 import java.util.Collections;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.vocabulary.UserRole;
+import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.registry.identity.service.BasicUserSuretyDelegate;
 import org.gbif.registry.identity.service.UserSuretyDelegate;
 import org.gbif.registry.identity.service.UserSuretyDelegateImpl;
@@ -13,6 +14,7 @@ import org.gbif.registry.surety.ChallengeCodeManager;
 import org.gbif.registry.surety.OrganizationChallengeCodeManager;
 import org.gbif.registry.surety.UserChallengeCodeManager;
 import org.gbif.validator.it.mocks.ChallengeCodeManagerMock;
+import org.gbif.validator.it.mocks.MessagePublisherMock;
 import org.gbif.validator.it.mocks.UserMapperMock;
 import org.gbif.validator.ws.config.ValidatorWsConfiguration;
 import org.gbif.validator.ws.config.WebMvcConfiguration;
@@ -112,6 +114,11 @@ public class ValidatorWsItConfiguration extends ValidatorWsConfiguration {
   @Bean
   public UserSuretyDelegate userSuretyDelegate(ChallengeCodeManager<Integer> challengeCodeManager) {
     return new BasicUserSuretyDelegate(challengeCodeManager);
+  }
+
+  @Bean
+  public MessagePublisher messagePublisher() {
+    return new MessagePublisherMock();
   }
 
   /** Empty config class to include the config made by WebMvcConfig. */

@@ -154,7 +154,8 @@ public class ValidationResourceIT {
         "validation.datasource.password=",
         "upload.workingDirectory=" + workingDirectory.toString(),
         "upload.maxUploadSize=3145728",
-        "storePath=" + storeDirectory.toString()
+        "storePath=" + storeDirectory.toString(),
+        "messaging.enabled=false"
       };
     }
   }

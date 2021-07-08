@@ -62,6 +62,7 @@
     <gbif-common-spring-ws.version>1.16-SNAPSHOT</gbif-common-spring-ws.version>
     <gbif-common-mybatis.version>1.1</gbif-common-mybatis.version>
     <gbif-common.version>0.50</gbif-common.version>
+    <gbif-postal-service.version>1.2-SNAPSHOT</gbif-postal-service.version>
 
     <!-- Spring -->
     <spring-boot.version>2.3.7.RELEASE</spring-boot.version>
@@ -459,6 +460,11 @@
         <groupId>org.gbif.validator</groupId>
         <artifactId>validator-api</artifactId>
         <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.common</groupId>
+        <artifactId>gbif-postal-service</artifactId>
+        <version>${gbif-postal-service.version}</version>
       </dependency>
 
       <!-- Persistence -->
