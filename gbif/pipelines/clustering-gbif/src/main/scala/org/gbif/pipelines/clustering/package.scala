@@ -1,5 +1,7 @@
 package org.gbif.pipelines
 
+import org.apache.spark.sql.Row
+
 package object clustering {
   // IDs to skip
   val omitIds = List("NO APLICA", "NA", "[]", "NO DISPONIBLE", "NO DISPONIBL", "NO NUMBER", "--", "UNKNOWN")
@@ -24,4 +26,16 @@ WHERE speciesKey IS NOT NULL
 """
 
   case class SimpleOccurrence(gbifID: String, decimalLatitude: Double)
+
+  /**
+   * @return A triplified version of the codes if all present, otherwise None
+   */
+  def triplify(r: Row) : Option[String] = {
+    val ic = Option(r.getAs[String]("institutionCode"));
+    val cc = Option(r.getAs[String]("collectionCode"));
+    val cn = Option(r.getAs[String]("catalogNumber"));
+
+    if (!ic.isEmpty && !cc.isEmpty && !cn.isEmpty) Option(ic.get + ":" + cc.get + ":" + cn.get)
+    else None
+  }
 }

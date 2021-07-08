@@ -1,7 +1,5 @@
 package au.org.ala.clustering;
 
-import java.util.ArrayList;
-import java.util.List;
 import org.apache.beam.sdk.coders.DefaultCoder;
 import org.apache.beam.sdk.schemas.JavaBeanSchema;
 import org.apache.beam.sdk.schemas.SchemaCoder;
@@ -35,6 +33,8 @@ public class HashKeyOccurrence implements OccurrenceFeatures {
   @Nullable String recordNumber = null;
   @Nullable String catalogNumber = null;
   @Nullable String otherCatalogNumbers = null;
+  @Nullable String institutionCode = null;
+  @Nullable String collectionCode = null;
 
   public @Nullable String getHashKey() {
     return hashKey;
@@ -225,23 +225,20 @@ public class HashKeyOccurrence implements OccurrenceFeatures {
   }
 
   @Override
-  public List<String> listIdentifiers() {
-    List<String> identifiers = new ArrayList<>();
-    if (occurrenceID != null) {
-      identifiers.add(occurrenceID);
-    }
-    if (fieldNumber != null) {
-      identifiers.add(fieldNumber);
-    }
-    if (recordNumber != null) {
-      identifiers.add(recordNumber);
-    }
-    if (catalogNumber != null) {
-      identifiers.add(catalogNumber);
-    }
-    if (otherCatalogNumbers != null) {
-      identifiers.add(otherCatalogNumbers);
-    }
-    return identifiers;
+  public @Nullable String getInstitutionCode() {
+    return institutionCode;
+  }
+
+  public void setInstitutionCode(@Nullable String institutionCode) {
+    this.institutionCode = institutionCode;
+  }
+
+  @Override
+  public @Nullable String getCollectionCode() {
+    return collectionCode;
+  }
+
+  public void setCollectionCode(@Nullable String collectionCode) {
+    this.collectionCode = collectionCode;
   }
 }

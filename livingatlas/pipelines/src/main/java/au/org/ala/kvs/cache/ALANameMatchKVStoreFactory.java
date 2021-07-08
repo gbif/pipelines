@@ -7,6 +7,7 @@ import au.org.ala.names.ws.api.NameUsageMatch;
 import au.org.ala.names.ws.client.ALANameUsageMatchServiceClient;
 import au.org.ala.utils.WsUtils;
 import au.org.ala.ws.ClientConfiguration;
+import au.org.ala.ws.ClientException;
 import java.io.IOException;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -49,7 +50,6 @@ public class ALANameMatchKVStoreFactory {
       throws IOException {
     WsConfig ws = config.getAlaNameMatch();
     ClientConfiguration clientConfiguration = WsUtils.createConfiguration(ws);
-
     ALANameUsageMatchServiceClient wsClient =
         new ALANameUsageMatchServiceClient(clientConfiguration);
     Command closeHandler =
@@ -73,12 +73,31 @@ public class ALANameMatchKVStoreFactory {
         new KeyValueStore<NameSearch, NameUsageMatch>() {
           @Override
           public NameUsageMatch get(NameSearch key) {
+            Exception ex = null;
             try {
-              return nameMatchService.match(key);
-            } catch (Exception ex) {
-              log.error("Error contacting the species match service", ex);
-              throw new RuntimeException(ex);
+              for (int i = 0; i < config.getAlaNameMatch().getRetryConfig().getMaxAttempts(); i++) {
+                try {
+                  return nameMatchService.match(key);
+                } catch (ClientException exception) {
+                  log.error(
+                      "ClientException contacting the species match service with key: "
+                          + key.toString(),
+                      exception);
+                  ex = exception;
+                  Thread.sleep(
+                      config.getAlaNameMatch().getRetryConfig().getInitialIntervalMillis());
+                } catch (Exception ex1) {
+                  log.error(
+                      "Exception contacting the species match service with key: " + key.toString(),
+                      ex1);
+                  ex = ex1;
+                  Thread.sleep(5000);
+                }
+              }
+            } catch (InterruptedException ie) {
+              // NOP
             }
+            throw new RuntimeException(ex);
           }
 
           @Override

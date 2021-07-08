@@ -192,6 +192,35 @@ public class OccurrenceRelationshipsTest {
     assertTrue(assertion.justificationContainsAll(SAME_DATE, WITHIN_200m, SAME_ACCEPTED_SPECIES));
   }
 
+  // test that triplets used in e.g. catalogNumber will be handled (e.g. arctos, embl)
+  @Test
+  public void testMaterialiseTriplet() {
+    OccurrenceFeatures o1 =
+        OccurrenceFeaturesPojo.builder()
+            .id("1")
+            .datasetKey("1")
+            .speciesKey("1")
+            .institutionCode("A")
+            .collectionCode("B")
+            .catalogNumber("C")
+            .build();
+
+    OccurrenceFeatures o2 =
+        OccurrenceFeaturesPojo.builder()
+            .id("2")
+            .datasetKey("2")
+            .speciesKey("1")
+            .eventDate("20210101")
+            .decimalLatitude(1.0)
+            .decimalLongitude(1.0)
+            .catalogNumber("A:B:C")
+            .build();
+
+    RelationshipAssertion<OccurrenceFeatures> assertion = OccurrenceRelationships.generate(o1, o2);
+    assertNotNull(assertion);
+    assertTrue(assertion.justificationContainsAll(IDENTIFIERS_OVERLAP));
+  }
+
   @Test
   public void testNormaliseID() {
     assertEquals("ABC", OccurrenceRelationships.normalizeID(" A-/, B \\C"));

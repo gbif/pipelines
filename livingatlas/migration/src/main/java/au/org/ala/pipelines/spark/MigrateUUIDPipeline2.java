@@ -20,7 +20,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
-import org.apache.spark.api.java.function.FilterFunction;
 import org.apache.spark.sql.*;
 import scala.Tuple3;
 
@@ -100,14 +99,6 @@ public class MigrateUUIDPipeline2 implements Serializable {
                 Encoders.tuple(Encoders.STRING(), Encoders.STRING(), Encoders.LONG()));
 
     firstLoadedDataset
-        .filter(
-            new FilterFunction<Tuple3<String, String, Long>>() {
-              @Override
-              public boolean call(Tuple3<String, String, Long> stringStringLongTuple3)
-                  throws Exception {
-                return stringStringLongTuple3._3() != null;
-              }
-            })
         .select(col("_1").as("datasetID"), col("_2").as("uuid"), col("_3").as("firstLoaded"))
         .write()
         .partitionBy("datasetID")
