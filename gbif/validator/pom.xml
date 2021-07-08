@@ -30,6 +30,7 @@
     <registry.version>3.66-SNAPSHOT</registry.version>
     <gbif-common-spring-ws.version>1.16-SNAPSHOT</gbif-common-spring-ws.version>
     <gbif-common-mybatis.version>1.1</gbif-common-mybatis.version>
+    <gbif-postal-service.version>1.2-SNAPSHOT</gbif-postal-service.version>
 
     <!-- Spring -->
     <spring-boot.version>2.3.7.RELEASE</spring-boot.version>
@@ -334,6 +335,11 @@
             <artifactId>gbif-common</artifactId>
           </exclusion>
         </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.common</groupId>
+        <artifactId>gbif-postal-service</artifactId>
+        <version>${gbif-postal-service.version}</version>
       </dependency>
       <dependency>
         <groupId>org.gbif.registry</groupId>
