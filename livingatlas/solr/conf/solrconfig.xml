@@ -840,6 +840,18 @@
     </lst>
   </requestHandler>
 
+  <!-- ExportHandler
+
+       https://solr.apache.org/guide/implicit-requesthandlers.html#query-handlers
+
+       Export full sorted result sets.
+   -->
+  <requestHandler name="/export" class="solr.ExportHandler">
+    <lst name="defaults">
+      <str name="wt">json</str>
+      <str name="df">text</str>
+    </lst>
+  </requestHandler>
 
   <!-- realtime get handler, guaranteed to return the latest stored fields of
        any document, without the need to commit or open a new searcher.  The
