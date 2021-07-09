@@ -1,5 +1,5 @@
 appkeys:
-  file: /usr/local/gbif/conf/appkeys.properties
+  file: @appkeys.testfile@
 
 schemas:
   eml: http://rs.gbif.org/schema/eml-2.1.1/eml.xsd
