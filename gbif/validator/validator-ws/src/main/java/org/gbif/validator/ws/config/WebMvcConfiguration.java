@@ -17,6 +17,7 @@ package org.gbif.validator.ws.config;
 
 import java.util.Arrays;
 import java.util.List;
+import org.gbif.ws.converter.UuidTextMessageConverter;
 import org.gbif.ws.server.provider.PageableHandlerMethodArgumentResolver;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
@@ -41,6 +42,7 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
     stringHttpMessageConverter.setSupportedMediaTypes(
         Arrays.asList(MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN));
     converters.add(stringHttpMessageConverter);
+    converters.add(new UuidTextMessageConverter());
   }
 
   @Override

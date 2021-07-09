@@ -9,12 +9,15 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.security.Principal;
 import java.util.UUID;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import lombok.SneakyThrows;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
+import org.gbif.registry.security.UserRoles;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.persistence.mapper.ValidationMapper;
 import org.gbif.validator.ws.file.DataFile;
@@ -23,10 +26,16 @@ import org.gbif.validator.ws.file.UploadFileManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -78,9 +87,7 @@ public class ValidationResource {
   }
 
   /** Uploads a file and starts the validation process. */
-  @PostMapping(
-      consumes = {MediaType.MULTIPART_FORM_DATA_VALUE},
-      produces = {MediaType.APPLICATION_JSON_VALUE})
+  @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
   public Validation submitFile(
       @RequestParam("file") MultipartFile file, @Autowired Principal principal) {
     UUID key = UUID.randomUUID();
@@ -92,8 +99,7 @@ public class ValidationResource {
   /** Asynchronously downloads a file from an URL and starts the validation process. */
   @PostMapping(
       path = "/url",
-      consumes = {MediaType.MULTIPART_FORM_DATA_VALUE},
-      produces = {MediaType.APPLICATION_JSON_VALUE})
+      consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
   public Validation submitUrl(
       @RequestParam("fileUrl") String fileURL, @Autowired Principal principal)
       throws FileSizeException {
@@ -119,8 +125,44 @@ public class ValidationResource {
     }
   }
 
+  /** Gets the detail of Validation. */
+  @GetMapping(path = "/{key}")
+  public Validation get(@PathVariable UUID key) {
+    return validationMapper.get(key);
+  }
+
+  /** Gets the detail of Validation. */
+  @PutMapping(
+      path = "/{key}",
+      consumes = {MediaType.APPLICATION_JSON_VALUE})
+  public ResponseEntity update(
+      @PathVariable UUID key,
+      @RequestBody @Valid @NotNull Validation validation,
+      @Autowired Principal principal) {
+    if (!key.equals(validation.getKey())) {
+      return ResponseEntity.badRequest().body("Wrong validation key for this url");
+    }
+
+    Validation existingValidation = validationMapper.get(key);
+    if (existingValidation == null) {
+      return ResponseEntity.notFound().build();
+    }
+    if (!canUpdate(existingValidation, principal)) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    } else {
+      update(validation);
+      return ResponseEntity.ok().build();
+    }
+  }
+
+  private boolean canUpdate(Validation validation, Principal principal) {
+    return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
+            .anyMatch(a -> a.getAuthority().equals(UserRoles.ADMIN_ROLE))
+        || validation.getUsername().equals(principal.getName());
+  }
+
   /** Lists the validations of an user. */
-  @GetMapping(produces = {MediaType.APPLICATION_JSON_VALUE})
+  @GetMapping
   public PagingResponse<Validation> list(Pageable page, @Autowired Principal principal) {
     page = page == null ? new PagingRequest() : page;
     long total = validationMapper.count(principal.getName());
@@ -166,10 +208,15 @@ public class ValidationResource {
             .file(dataFile.getFilePath().toString())
             .fileSize(dataFile.getSize())
             .build();
-    validationMapper.update(validation);
+    update(validation);
     validation = validationMapper.get(key);
-    notify(validation);
     return validation;
+  }
+
+  /** Updates and notifies the update. */
+  private void update(Validation validation) {
+    validationMapper.update(validation);
+    notify(validation);
   }
 
   /** Updates the status of a validation process. */
