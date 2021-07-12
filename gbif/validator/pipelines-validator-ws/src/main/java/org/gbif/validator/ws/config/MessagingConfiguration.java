@@ -17,27 +17,25 @@ package org.gbif.validator.ws.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
+import lombok.extern.slf4j.Slf4j;
 import org.gbif.common.messaging.ConnectionParameters;
 import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.DefaultMessageRegistry;
 import org.gbif.common.messaging.api.MessagePublisher;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.amqp.RabbitProperties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+@Slf4j
 @Configuration
 public class MessagingConfiguration {
-
-  private static final Logger LOG = LoggerFactory.getLogger(MessagingConfiguration.class);
 
   @Bean
   @ConditionalOnProperty(value = "messaging.enabled", havingValue = "true")
   public MessagePublisher messagePublisher(
       ObjectMapper objectMapper, RabbitProperties rabbitProperties) throws IOException {
-    LOG.info("DefaultMessagePublisher activated");
+    log.info("DefaultMessagePublisher activated");
     return new DefaultMessagePublisher(
         new ConnectionParameters(
             rabbitProperties.getHost(),

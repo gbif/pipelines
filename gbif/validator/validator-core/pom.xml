@@ -54,6 +54,10 @@
     <!-- This project -->
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
+      <artifactId>validator-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.pipelines</groupId>
       <artifactId>elasticsearch-tools</artifactId>
     </dependency>
 

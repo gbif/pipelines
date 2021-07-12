@@ -2,7 +2,6 @@ package org.gbif.pipelines.validator;
 
 import static org.gbif.pipelines.estools.common.SettingsType.INDEXING;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import java.nio.file.Path;
@@ -12,15 +11,16 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.estools.EsIndex;
 import org.gbif.pipelines.estools.model.IndexParams;
 import org.gbif.pipelines.estools.service.EsService;
-import org.gbif.pipelines.validator.metircs.Metrics;
-import org.gbif.pipelines.validator.metircs.Metrics.Core;
-import org.gbif.pipelines.validator.metircs.Metrics.Core.TermInfo;
+import org.gbif.validator.api.Validation.Metrics;
+import org.gbif.validator.api.Validation.Metrics.Core;
+import org.gbif.validator.api.Validation.Metrics.Core.TermInfo;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -83,7 +83,7 @@ public class MetricsCollectorIT {
         MetricsCollector.builder()
             .coreTerms(coreTerms)
             .extensionsTerms(extTerms)
-            .datasetKey(datasetKey)
+            .key(UUID.fromString(datasetKey))
             .index(IDX_NAME)
             .corePrefix("verbatim.core")
             .extensionsPrefix("verbatim.extensions")
@@ -93,13 +93,8 @@ public class MetricsCollectorIT {
 
     // Should
 
-    // Metrics
-    assertEquals(datasetKey, result.getDatasetKey());
-    assertEquals(ValidationStatus.FINISHED, result.getStatus());
-    assertNotNull(result.getEndTimestamp());
-
     // Core
-    Core core = result.getResult().getCore();
+    Core core = result.getCore();
     Map<String, TermInfo> resCoreTerms = core.getIndexedCoreTerms();
 
     assertEquals(Long.valueOf(1L), core.getIndexedCount());
@@ -135,7 +130,7 @@ public class MetricsCollectorIT {
     assertEquals(Long.valueOf(1L), issues.get("GEODETIC_DATUM_ASSUMED_WGS84"));
 
     // Extensions
-    Metrics.Extension extension = result.getResult().getExtensions().get(0);
+    Metrics.Extension extension = result.getExtensions().get(0);
 
     Map<String, Long> resExtTerms = extension.getExtensionsTermsCounts();
     assertEquals(Long.valueOf(3L), resExtTerms.get(DwcTerm.measurementValue.qualifiedName()));

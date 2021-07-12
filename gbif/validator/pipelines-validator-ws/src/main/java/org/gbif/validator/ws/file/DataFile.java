@@ -8,7 +8,7 @@ import org.gbif.validator.api.FileFormat;
 
 @Data
 @Builder
-@AllArgsConstructor(staticName = "newInstance")
+@AllArgsConstructor(staticName = "create")
 public class DataFile {
 
   private final Path filePath;

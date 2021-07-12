@@ -36,7 +36,7 @@ public class EmlValidationResource {
       consumes = {MediaType.APPLICATION_XML_VALUE},
       produces = {MediaType.APPLICATION_JSON_VALUE})
   @SneakyThrows
-  private XmlSchemaValidator.ValidationResult validateEml(@RequestBody byte[] document) {
+  public XmlSchemaValidator.ValidationResult validateEml(@RequestBody byte[] document) {
     try {
       String xmlDoc = new String(document, StandardCharsets.UTF_8);
       return schemaValidatorFactory.newValidatorFromDocument(xmlDoc).validate(xmlDoc);

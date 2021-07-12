@@ -3,29 +3,30 @@ package org.gbif.dwca.validation.xml;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
+import javax.xml.XMLConstants;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.Validator;
 import lombok.Builder;
 import lombok.Data;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.gbif.dwca.validation.XmlSchemaValidator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
+@Slf4j
 @Data
 @Builder
 public class XmlSchemaValidatorImpl implements XmlSchemaValidator {
 
-  private static final Logger LOG = LoggerFactory.getLogger(XmlSchemaValidatorImpl.class);
-
   private final Schema schema;
 
+  @SneakyThrows
   private Validator newValidator(Schema schema) {
     Validator validator = schema.newValidator();
+    validator.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
     validator.setErrorHandler(new CollectorErrorHandler());
     return validator;
   }
@@ -50,13 +51,13 @@ public class XmlSchemaValidatorImpl implements XmlSchemaValidator {
     private final List<ValidationError> errors = new ArrayList<>();
 
     @Override
-    public void warning(SAXParseException exception) throws SAXException {
+    public void warning(SAXParseException exception) {
       errors.add(
           ValidationError.builder().level(ValidationError.Level.WARNING).error(exception).build());
     }
 
     @Override
-    public void error(SAXParseException exception) throws SAXException {
+    public void error(SAXParseException exception) {
       errors.add(
           ValidationError.builder().level(ValidationError.Level.ERROR).error(exception).build());
     }

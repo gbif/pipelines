@@ -17,18 +17,16 @@ import java.util.function.Consumer;
 import lombok.Builder;
 import lombok.Data;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
  * Class responsible to manage files uploaded for validation. This class will unzip the file is
  * required.
  */
+@Slf4j
 public class UploadFileManager {
-
-  private static final Logger LOG = LoggerFactory.getLogger(UploadFileManager.class);
 
   @Data
   @Builder
@@ -44,7 +42,6 @@ public class UploadFileManager {
     private final CompletableFuture<DataFile> task;
   }
 
-  private final Path workingDirectory;
   private final Path storePath;
 
   private final DownloadFileManager downloadFileManager;
@@ -52,10 +49,10 @@ public class UploadFileManager {
   public UploadFileManager(
       String workingDirectory, String storeDirectory, DownloadFileManager downloadFileManager)
       throws IOException {
-    this.workingDirectory = Paths.get(workingDirectory);
+    Path workingDirectory1 = Paths.get(workingDirectory);
     this.storePath = Paths.get(storeDirectory);
     this.downloadFileManager = downloadFileManager;
-    createIfNotExists(this.workingDirectory);
+    createIfNotExists(workingDirectory1);
     createIfNotExists(storePath);
   }
 
@@ -80,7 +77,7 @@ public class UploadFileManager {
       // from here we can decide to change the content type (e.g. zipped excel file)
       return fromMediaTypeAndFormat(dataFilePath, fileName, detectedMediaType, finalPath);
     } catch (Exception ex) {
-      LOG.warn("Deleting temporary content of {} after IOException.", fileName);
+      log.warn("Deleting temporary content of {} after IOException.", fileName);
       FileUtils.deleteDirectory(destinationFolder.toFile());
       throw ex;
     }
@@ -92,7 +89,7 @@ public class UploadFileManager {
     return evaluateMediaTypeAndFormat(finalPath, detectedMediaType)
         .map(
             mtf ->
-                DataFile.newInstance(
+                DataFile.create(
                     dataFilePath,
                     fileName,
                     mtf.getFileFormat(),

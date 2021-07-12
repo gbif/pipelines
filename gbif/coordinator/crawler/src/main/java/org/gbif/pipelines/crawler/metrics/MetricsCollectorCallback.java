@@ -19,8 +19,8 @@ import org.gbif.pipelines.core.utils.DwcaTermUtils;
 import org.gbif.pipelines.crawler.PipelinesCallback;
 import org.gbif.pipelines.crawler.StepHandler;
 import org.gbif.pipelines.validator.MetricsCollector;
-import org.gbif.pipelines.validator.metircs.Metrics;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
+import org.gbif.validator.api.Validation.Metrics;
 
 /** Callback which is called when the {@link PipelinesIndexedMessage} is received. */
 @Slf4j
@@ -75,7 +75,7 @@ public class MetricsCollectorCallback extends AbstractMessageCallback<PipelinesI
           MetricsCollector.builder()
               .coreTerms(coreTerms)
               .extensionsTerms(extenstionsTerms)
-              .datasetKey(message.getDatasetUuid().toString())
+              .key(message.getDatasetUuid())
               .index(config.indexName)
               .corePrefix(config.corePrefix)
               .extensionsPrefix(config.extensionsPrefix)

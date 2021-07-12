@@ -10,23 +10,20 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.gbif.dwca.validation.XmlSchemaValidator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 
+@Slf4j
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class SchemaValidatorFactory {
 
-  private static final Logger LOG = LoggerFactory.getLogger(SchemaValidatorFactory.class);
-
   private final Map<String, Schema> cache = new HashMap<>();
-
-  public SchemaValidatorFactory() {
-    // Nothing
-  }
 
   @SneakyThrows
   public SchemaValidatorFactory(String... preLoadedSchemaLocations) {
@@ -37,7 +34,7 @@ public class SchemaValidatorFactory {
 
   @SneakyThrows
   public Schema load(URI schema) {
-    LOG.info("Loading xml schema from {}", schema);
+    log.info("Loading xml schema from {}", schema);
     // define the type of schema - we use W3C:
     // resolve validation driver:
     SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
@@ -76,6 +73,7 @@ public class SchemaValidatorFactory {
   @SneakyThrows
   private String getSchema(String xmlDocument) {
     DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+    dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
     dbf.setValidating(false);
     DocumentBuilder db = dbf.newDocumentBuilder();
     Document doc = db.parse(new InputSource(new StringReader(xmlDocument)));
