@@ -94,7 +94,7 @@
     <!-- GBIF dependencies -->
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
-      <artifactId>validator-ws</artifactId>
+      <artifactId>pipelines-validator-ws</artifactId>
     </dependency>
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
@@ -188,6 +188,12 @@
   </dependencies>
 
   <build>
+    <testResources>
+      <testResource>
+        <directory>src/test/resources</directory>
+        <filtering>true</filtering>
+      </testResource>
+    </testResources>
     <plugins>
       <plugin>
         <groupId>org.springframework.boot</groupId>

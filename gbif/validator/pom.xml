@@ -2,13 +2,14 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
   <parent>
     <groupId>org.gbif.pipelines</groupId>
     <artifactId>gbif</artifactId>
     <version>2.9.7-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
-  <modelVersion>4.0.0</modelVersion>
 
   <artifactId>validator</artifactId>
   <packaging>pom</packaging>
@@ -19,7 +20,7 @@
   <modules>
     <module>validator-core</module>
     <module>validator-api</module>
-    <module>validator-ws</module>
+    <module>pipelines-validator-ws</module>
     <module>validator-ws-client</module>
     <module>validator-it-tests</module>
     <module>eml-validator</module>
@@ -74,16 +75,6 @@
     <!-- Logging -->
     <logstash-encoder.version>4.11</logstash-encoder.version>
 
-    <!-- Other -->
-    <main.basedir>${project.basedir}</main.basedir>
-    <release.tagNameBase>${project.artifactId}</release.tagNameBase>
-
-    <!-- Sonar -->
-    <sonar.projectName>GBIF Pipelines Validator</sonar.projectName>
-    <sonar.exclusions>**/*Stub.java</sonar.exclusions>
-    <sonar.cpd.exclusions>**/*Stub.java</sonar.cpd.exclusions>
-    <sonar.coverage.exclusions>**/*Stub.java</sonar.coverage.exclusions>
-
     <!-- Plugin versions -->
     <spring-boot-maven-plugin.version>${spring-boot.version}</spring-boot-maven-plugin.version>
   </properties>
@@ -102,7 +93,6 @@
 
   <dependencyManagement>
     <dependencies>
-      <!-- Tools -->
 
       <!-- Special media type handling -->
       <dependency>

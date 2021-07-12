@@ -175,9 +175,14 @@
     <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
     <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
     <sonar.jacoco.reportPaths>${jacoco.merged.output.file}</sonar.jacoco.reportPaths>
-    <sonar.exclusions>**/java-generated/**</sonar.exclusions>
-    <sonar.cpd.exclusions>**/java-generated/**</sonar.cpd.exclusions>
+    <sonar.exclusions>**/java-generated/**,**/*Stub.java</sonar.exclusions>
+    <sonar.cpd.exclusions>**/java-generated/**,**/*Stub.java</sonar.cpd.exclusions>
+    <sonar.coverage.exclusions>**/java-generated/**,**/*Stub.java</sonar.coverage.exclusions>
     <sonar.language>java</sonar.language>
+
+    <!-- Other -->
+    <main.basedir>${project.basedir}</main.basedir>
+    <release.tagNameBase>${project.artifactId}</release.tagNameBase>
 
     <!-- JaCoCo -->
     <coverage.dir>${project.basedir}/../target/coverage</coverage.dir>
@@ -357,7 +362,7 @@
       </dependency>
       <dependency>
         <groupId>org.gbif.pipelines</groupId>
-        <artifactId>validator-ws</artifactId>
+        <artifactId>pipelines-validator-ws</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>

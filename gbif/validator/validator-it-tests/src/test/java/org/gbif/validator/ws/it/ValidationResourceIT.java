@@ -114,12 +114,28 @@ public class ValidationResourceIT {
     File archive = readTestFileInputStream("/Archive.zip");
     Validation validation = validationWsClient.submitFile(archive);
     Assertions.assertNotNull(validation);
+
+    // Can the new validation be retrieved?
+    Validation persistedValidation = validationWsClient.get(validation.getKey());
+    Assertions.assertNotNull(persistedValidation);
   }
 
   @Test
   public void validationSubmitUrlIT() {
     Validation validation = validationWsClient.submitUrl(testPath("/Archive.zip"));
     Assertions.assertNotNull(validation);
+  }
+
+  @Test
+  public void validationUpdateIT() {
+    File archive = readTestFileInputStream("/Archive.zip");
+    Validation validation = validationWsClient.submitFile(archive);
+
+    validation.setStatus(Validation.Status.FINISHED);
+    validationWsClient.update(validation);
+
+    Validation persistedValidation = validationWsClient.get(validation.getKey());
+    Assertions.assertEquals(Validation.Status.FINISHED, persistedValidation.getStatus());
   }
 
   @SneakyThrows
