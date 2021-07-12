@@ -14,7 +14,6 @@ public interface ValidationMapper {
    * Gets a Validation by its key/identifier.
    *
    * @param key validation identifier
-   * @return
    */
   Validation get(@Param("key") UUID key);
 

@@ -1,10 +1,10 @@
 package org.gbif.pipelines.validator;
 
 import java.io.IOException;
-import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.Builder;
@@ -18,14 +18,13 @@ import org.elasticsearch.search.aggregations.metrics.ParsedValueCount;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.validator.factory.ElasticsearchClientFactory;
-import org.gbif.pipelines.validator.metircs.Metrics;
-import org.gbif.pipelines.validator.metircs.Metrics.Core.TermInfo;
-import org.gbif.pipelines.validator.metircs.Metrics.Result;
 import org.gbif.pipelines.validator.metircs.request.ExtensionTermCountRequestBuilder;
 import org.gbif.pipelines.validator.metircs.request.ExtensionTermCountRequestBuilder.ExtTermCountRequest;
 import org.gbif.pipelines.validator.metircs.request.OccurrenceIssuesRequestBuilder;
 import org.gbif.pipelines.validator.metircs.request.TermCountRequestBuilder;
 import org.gbif.pipelines.validator.metircs.request.TermCountRequestBuilder.TermCountRequest;
+import org.gbif.validator.api.Validation.Metrics;
+import org.gbif.validator.api.Validation.Metrics.Core.TermInfo;
 
 // TODO: DOC
 @Builder
@@ -34,7 +33,7 @@ public class MetricsCollector {
   private final String[] esHost;
   private final Set<Term> coreTerms;
   private final Map<Extension, Set<Term>> extensionsTerms;
-  private final String datasetKey;
+  private final UUID key;
   private final String index;
   private final String corePrefix;
   private final String extensionsPrefix;
@@ -64,19 +63,14 @@ public class MetricsCollector {
                 })
             .collect(Collectors.toList());
 
-    return Metrics.builder()
-        .datasetKey(datasetKey)
-        .status(ValidationStatus.FINISHED)
-        .endTimestamp(ZonedDateTime.now().toEpochSecond())
-        .result(Result.builder().core(core).extensions(extensions).build())
-        .build();
+    return Metrics.builder().core(core).extensions(extensions).build();
   }
 
   @SneakyThrows
   private Long queryDocCount() {
     TermCountRequest request =
         TermCountRequestBuilder.builder()
-            .termValue(datasetKey)
+            .termValue(key.toString())
             .indexName(index)
             .build()
             .getRequest();
@@ -92,7 +86,7 @@ public class MetricsCollector {
     Function<Term, TermCountRequest> requestFn =
         term ->
             TermCountRequestBuilder.builder()
-                .termValue(datasetKey)
+                .termValue(key.toString())
                 .prefix(corePrefix)
                 .indexName(index)
                 .term(term)
@@ -138,7 +132,7 @@ public class MetricsCollector {
         (term) ->
             ExtensionTermCountRequestBuilder.builder()
                 .prefix(prefix)
-                .termValue(datasetKey)
+                .termValue(key.toString())
                 .indexName(index)
                 .term(term)
                 .build()
@@ -169,7 +163,7 @@ public class MetricsCollector {
   private Map<String, Long> queryOccurrenceIssuesCount() {
     SearchRequest request =
         OccurrenceIssuesRequestBuilder.builder()
-            .termValue(datasetKey)
+            .termValue(key.toString())
             .indexName(index)
             .build()
             .getRequest();

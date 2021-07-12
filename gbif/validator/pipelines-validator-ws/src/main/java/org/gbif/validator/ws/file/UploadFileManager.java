@@ -42,7 +42,6 @@ public class UploadFileManager {
     private final CompletableFuture<DataFile> task;
   }
 
-  private final Path workingDirectory;
   private final Path storePath;
 
   private final DownloadFileManager downloadFileManager;
@@ -50,10 +49,10 @@ public class UploadFileManager {
   public UploadFileManager(
       String workingDirectory, String storeDirectory, DownloadFileManager downloadFileManager)
       throws IOException {
-    this.workingDirectory = Paths.get(workingDirectory);
+    Path workingDirectory1 = Paths.get(workingDirectory);
     this.storePath = Paths.get(storeDirectory);
     this.downloadFileManager = downloadFileManager;
-    createIfNotExists(this.workingDirectory);
+    createIfNotExists(workingDirectory1);
     createIfNotExists(storePath);
   }
 
@@ -90,7 +89,7 @@ public class UploadFileManager {
     return evaluateMediaTypeAndFormat(finalPath, detectedMediaType)
         .map(
             mtf ->
-                DataFile.newInstance(
+                DataFile.create(
                     dataFilePath,
                     fileName,
                     mtf.getFileFormat(),
