@@ -257,6 +257,12 @@
       <artifactId>spring-cloud-openfeign-core</artifactId>
     </dependency>
 
+    <!-- Discovery -->
+    <dependency>
+      <groupId>org.apache.zookeeper</groupId>
+      <artifactId>zookeeper</artifactId>
+    </dependency>
+
     <!-- Commons -->
     <dependency>
       <groupId>commons-io</groupId>
