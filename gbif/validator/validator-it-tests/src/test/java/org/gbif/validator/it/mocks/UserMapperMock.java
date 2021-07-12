@@ -20,9 +20,9 @@ import org.gbif.registry.persistence.mapper.UserMapper;
 
 public class UserMapperMock implements UserMapper {
 
-  private Map<String, GbifUser> users = new HashMap<>();
+  private final Map<String, GbifUser> users = new HashMap<>();
 
-  private AtomicInteger keyGen = new AtomicInteger();
+  private final AtomicInteger keyGen = new AtomicInteger();
 
   @Override
   public void create(GbifUser gbifUser) {

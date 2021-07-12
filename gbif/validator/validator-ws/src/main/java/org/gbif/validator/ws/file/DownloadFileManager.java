@@ -11,15 +11,13 @@ import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import lombok.SneakyThrows;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 public class DownloadFileManager {
-
-  private static Logger LOG = LoggerFactory.getLogger(DownloadFileManager.class);
 
   public static boolean isAvailable(String url) {
     try {
@@ -28,7 +26,7 @@ public class DownloadFileManager {
       con.setRequestMethod("HEAD");
       return (con.getResponseCode() == HttpURLConnection.HTTP_OK);
     } catch (Exception e) {
-      LOG.warn("Error getting file information", e);
+      log.warn("Error getting file information", e);
       return false;
     }
   }
@@ -55,7 +53,7 @@ public class DownloadFileManager {
         .whenComplete(
             (result, error) -> {
               if (error != null) {
-                LOG.error("Error downloading file from url " + url, error);
+                log.error("Error downloading file from url " + url, error);
                 errorCallback.accept(error);
               } else {
                 successCallback.accept(result);

@@ -12,7 +12,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import org.apache.tika.Tika;
 import org.gbif.validator.api.FileFormat;
 
@@ -20,17 +23,14 @@ import org.gbif.validator.api.FileFormat;
  * Utility class to: - automatically detect the media types based on file or bytes. - decide
  * org.gbif.validation.api.vocabulary.FileFormat based on media type
  */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class MediaTypeAndFormatDetector {
 
   private static final Tika TIKA = new Tika();
 
-  private MediaTypeAndFormatDetector() {}
-
   /**
    * @see org.apache.tika.detect.Detector
-   * @param filePath
    * @return detected media type
-   * @throws IOException
    */
   public static String detectMediaType(Path filePath) throws IOException {
     return TIKA.detect(filePath);
@@ -41,11 +41,8 @@ public class MediaTypeAndFormatDetector {
    * detection is used on the start of the file ... if available, the filename is then used to
    * improve the detail of the detection" Source: https://tika.apache.org/1.1/detection.html
    *
-   * @param is
    * @param filename filename including the extension. Optional but used to improve the detail of
    *     the detection.
-   * @return
-   * @throws IOException
    * @see org.apache.tika.detect.Detector
    */
   public static String detectMediaType(InputStream is, @Nullable String filename)
@@ -60,8 +57,6 @@ public class MediaTypeAndFormatDetector {
    * FileFormat}.
    *
    * @param dataFilePath shall point to data file or folder (not a zip file)
-   * @param detectedContentType
-   * @return
    */
   public static Optional<MediaTypeAndFormat> evaluateMediaTypeAndFormat(
       Path dataFilePath, String detectedContentType) throws IOException {
@@ -69,7 +64,10 @@ public class MediaTypeAndFormatDetector {
     String currentDetectedContentType = detectedContentType;
 
     if (COMPRESS_CONTENT_TYPE.contains(detectedContentType)) {
-      List<Path> content = Files.list(dataFilePath).collect(Collectors.toList());
+      List<Path> content;
+      try (Stream<Path> list = Files.list(dataFilePath)) {
+        content = list.collect(Collectors.toList());
+      }
       if (content.size() == 1) {
         currentDetectedContentType = MediaTypeAndFormatDetector.detectMediaType(content.get(0));
       } else {

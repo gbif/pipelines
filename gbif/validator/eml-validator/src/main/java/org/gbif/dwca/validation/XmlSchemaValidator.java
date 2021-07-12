@@ -10,7 +10,7 @@ public interface XmlSchemaValidator {
 
   @Data
   @Builder
-  public static class ValidationError {
+  class ValidationError {
 
     public enum Level {
       WARNING,
@@ -26,7 +26,7 @@ public interface XmlSchemaValidator {
 
   @Data
   @Builder
-  public static class ValidationResult {
+  class ValidationResult {
 
     private final List<XmlSchemaValidator.ValidationError> errors;
 

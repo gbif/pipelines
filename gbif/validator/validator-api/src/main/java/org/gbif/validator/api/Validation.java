@@ -20,7 +20,7 @@ public class Validation {
     SUBMITTED,
     RUNNING,
     FINISHED,
-    FAILED;
+    FAILED
   }
 
   private UUID key;

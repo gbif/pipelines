@@ -5,15 +5,13 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.gbif.utils.file.CompressionUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+@Slf4j
 @UtilityClass
 public class CompressUtil {
-
-  private static Logger LOG = LoggerFactory.getLogger(CompressUtil.class);
 
   protected static CompletableFuture<Path> decompressAsync(
       Path zipFile,
@@ -24,7 +22,7 @@ public class CompressUtil {
         .whenComplete(
             (result, error) -> {
               if (error != null) {
-                LOG.error("Error extracting file  " + zipFile, error);
+                log.error("Error extracting file  " + zipFile, error);
                 errorCallback.accept(error);
               } else {
                 successCallback.accept(result);

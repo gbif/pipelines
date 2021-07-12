@@ -27,6 +27,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 import lombok.Builder;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.crawler.DwcaValidationReport;
 import org.gbif.api.model.crawler.GenericValidationReport;
 import org.gbif.api.model.crawler.OccurrenceValidationReport;
@@ -37,8 +38,6 @@ import org.gbif.dwc.record.StarRecord;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.utils.file.ClosableIterator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * This performs the validity checking for DwC-A for the purposes <em>of deciding if the archive is
@@ -62,10 +61,9 @@ import org.slf4j.LoggerFactory;
  *       extensions are used
  * </ul>
  */
+@Slf4j
 @Builder
 public class DwcaValidator {
-
-  private static final Logger LOG = LoggerFactory.getLogger(DwcaValidator.class);
 
   // The mapping of dataset type to primary key term in the core
   private static final Map<DatasetType, DwcTerm> DATASET_TYPE_CORE_ID = new HashMap<>(2);
@@ -122,7 +120,7 @@ public class DwcaValidator {
 
       // validate any occurrence extension
       if (archive.getExtension(DwcTerm.Occurrence) == null) {
-        LOG.info(
+        log.info(
             "Dataset [{}] of type[{}] has an archive with no mapped occurrence extension",
             datasetKey,
             datasetType);
@@ -136,7 +134,7 @@ public class DwcaValidator {
           datasetKey,
           new GenericValidationReport(0, true, Collections.emptyList(), Collections.emptyList()));
     } else {
-      LOG.info(
+      log.info(
           "DwC-A for dataset[{}] of type[{}] is INVALID because it is not a supported type",
           datasetKey,
           datasetType);

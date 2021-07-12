@@ -10,6 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.Principal;
 import java.util.UUID;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -20,8 +21,6 @@ import org.gbif.validator.persistence.mapper.ValidationMapper;
 import org.gbif.validator.ws.file.DataFile;
 import org.gbif.validator.ws.file.FileSizeException;
 import org.gbif.validator.ws.file.UploadFileManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
@@ -36,12 +35,11 @@ import org.springframework.web.multipart.MultipartFile;
  * Validation resource services, it allows to validates files (synchronous) and url
  * (asynchronously). Additional it provides services to list and retrieve validations statuses.
  */
+@Slf4j
 @RestController
 @RequestMapping(value = "validation", produces = MediaType.APPLICATION_JSON_VALUE)
 @Secured({USER_ROLE})
 public class ValidationResource {
-
-  private static final Logger LOG = LoggerFactory.getLogger(ValidationResource.class);
 
   private final UploadFileManager fileTransferManager;
   private final ValidationMapper validationMapper;
@@ -72,7 +70,7 @@ public class ValidationResource {
               url.getRef());
       return uri.toURL().toString();
     } catch (Exception ex) {
-      LOG.error("Url encoding error", ex);
+      log.error("Url encoding error", ex);
       throw new IllegalArgumentException(ex);
     }
   }
@@ -107,14 +105,14 @@ public class ValidationResource {
               key.toString(),
               resultDataFile -> update(key, resultDataFile, Validation.Status.SUBMITTED),
               err -> {
-                LOG.error("Error processing file", err);
+                log.error("Error processing file", err);
                 updateStatus(key, Validation.Status.FAILED, err.getMessage());
               });
       return create(key, downloadResult.getDataFile(), principal, Validation.Status.DOWNLOADING);
     } catch (FileSizeException ex) {
       throw ex;
     } catch (IOException ex) {
-      LOG.warn("Can not download file submitted", ex);
+      log.warn("Can not download file submitted", ex);
       throw new RuntimeException(ex);
     }
   }
