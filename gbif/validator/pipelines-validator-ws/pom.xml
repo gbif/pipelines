@@ -11,7 +11,7 @@
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>validator-ws</artifactId>
+  <artifactId>pipelines-validator-ws</artifactId>
 
   <name>Pipelines :: GBIF :: Validator :: Web Services</name>
   <description>RESTful service layer of the GBIF Data Validator</description>

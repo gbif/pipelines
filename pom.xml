@@ -362,7 +362,7 @@
       </dependency>
       <dependency>
         <groupId>org.gbif.pipelines</groupId>
-        <artifactId>validator-ws</artifactId>
+        <artifactId>pipelines-validator-ws</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>

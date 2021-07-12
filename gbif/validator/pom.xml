@@ -20,7 +20,7 @@
   <modules>
     <module>validator-core</module>
     <module>validator-api</module>
-    <module>validator-ws</module>
+    <module>pipelines-validator-ws</module>
     <module>validator-ws-client</module>
     <module>validator-it-tests</module>
     <module>eml-validator</module>
