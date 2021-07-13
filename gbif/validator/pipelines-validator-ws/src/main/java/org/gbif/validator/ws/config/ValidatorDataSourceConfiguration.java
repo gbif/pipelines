@@ -19,7 +19,9 @@ import com.zaxxer.hikari.HikariDataSource;
 import java.util.UUID;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.mybatis.type.UuidTypeHandler;
+import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Validation;
+import org.gbif.validator.persistence.mapper.MetricsJsonTypeHandler;
 import org.gbif.validator.persistence.mapper.ValidationMapper;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.mapper.MapperFactoryBean;
@@ -64,6 +66,11 @@ public class ValidatorDataSourceConfiguration {
     // Type handlers
     configuration.getTypeHandlerRegistry().register(UUID.class, UuidTypeHandler.class);
     configuration.getTypeAliasRegistry().registerAlias("UuidTypeHandler", UuidTypeHandler.class);
+
+    configuration.getTypeHandlerRegistry().register(Metrics.class, MetricsJsonTypeHandler.class);
+    configuration
+        .getTypeAliasRegistry()
+        .registerAlias("MetricsJsonTypeHandler", MetricsJsonTypeHandler.class);
 
     // Type aliases
     configuration.getTypeAliasRegistry().registerAlias("Validation", Validation.class);

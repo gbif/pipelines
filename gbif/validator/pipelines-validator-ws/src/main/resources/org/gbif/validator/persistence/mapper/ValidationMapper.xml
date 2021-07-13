@@ -9,7 +9,7 @@
     <result property="username" column="username"/>
     <result property="file" column="file"/>
     <result property="fileSize" column="file_size"/>
-    <result property="metrics" column="metrics"/>
+    <result property="metrics" column="metrics" typeHandler="MetricsJsonTypeHandler"/>
     <result property="created" column="created"/>
     <result property="modified" column="modified"/>
     <result property="deleted" column="deleted"/>
@@ -60,7 +60,7 @@
     file_size = #{fileSize,jdbcType=BIGINT},
     </if>
     <if test="metrics != null">
-    metrics = #{metrics,jdbcType=VARCHAR},
+    metrics = #{metrics,jdbcType=OTHER},
     </if>
     modified = now(),
     deleted = null
@@ -82,7 +82,7 @@
     #{fileSize,jdbcType=BIGINT},
     </if>
     <if test="metrics != null">
-    #{metrics,jdbcType=VARCHAR},
+    #{metrics,jdbcType=OTHER},
     </if>
     now(),
     now()
