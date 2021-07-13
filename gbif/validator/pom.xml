@@ -56,7 +56,7 @@
     <junit-platform-commons.version>1.7.0</junit-platform-commons.version>
 
     <!-- Json/Xml-->
-    <xml-apis.version>1.3.04</xml-apis.version>
+    <xml-apis.version>1.4.01</xml-apis.version>
 
     <!-- Special media type handling-->
     <apache-poi.version>5.0.0</apache-poi.version>

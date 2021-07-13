@@ -82,7 +82,7 @@
     #{fileSize,jdbcType=BIGINT},
     </if>
     <if test="metrics != null">
-    #{metrics,jdbcType=VARCHAR},
+    #{metrics,jdbcType=OTHER},
     </if>
     now(),
     now()

@@ -1,39 +1,8 @@
 package org.gbif.dwca.validation;
 
-import com.fasterxml.jackson.annotation.JsonFilter;
-import java.util.List;
-import lombok.Builder;
-import lombok.Data;
-import org.xml.sax.SAXParseException;
+import org.gbif.validator.api.XmlSchemaValidatorResult;
 
 public interface XmlSchemaValidator {
 
-  @Data
-  @Builder
-  class ValidationError {
-
-    public enum Level {
-      WARNING,
-      ERROR,
-      FATAL
-    }
-
-    private final XmlSchemaValidator.ValidationError.Level level;
-
-    @JsonFilter("stackTrace")
-    private final SAXParseException error;
-  }
-
-  @Data
-  @Builder
-  class ValidationResult {
-
-    private final List<XmlSchemaValidator.ValidationError> errors;
-
-    public boolean isValid() {
-      return errors.isEmpty();
-    }
-  }
-
-  ValidationResult validate(String document);
+  XmlSchemaValidatorResult validate(String document);
 }

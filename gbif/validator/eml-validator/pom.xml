@@ -52,6 +52,12 @@
       <artifactId>lombok</artifactId>
     </dependency>
 
+    <!-- This project -->
+    <dependency>
+      <groupId>org.gbif.pipelines</groupId>
+      <artifactId>validator-api</artifactId>
+    </dependency>
+
     <!-- Logging -->
     <dependency>
       <groupId>org.slf4j</groupId>
