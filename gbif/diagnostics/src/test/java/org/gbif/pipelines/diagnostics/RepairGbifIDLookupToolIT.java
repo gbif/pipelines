@@ -237,4 +237,51 @@ public class RepairGbifIDLookupToolIT {
     Assert.assertFalse(tripletKey.isPresent());
     Assert.assertFalse(occurrenceIdtKey.isPresent());
   }
+
+  @Test
+  public void dwcaDryRunTest() {
+
+    // State
+    File dwca = new File(this.getClass().getResource("/dwca/regular").getFile());
+
+    String datasetKey = "508089ca-ddb4-4112-b2cb-cb1bff8f39ad";
+
+    String occId = "926773";
+    String triplet =
+        OccurrenceKeyBuilder.buildKey(
+                "AWI", "Kongsfjorden/Spitsbergen - soft bottom fauna", "MarBEF/MacroBEN_926773")
+            .orElse(null);
+
+    HBaseLockingKeyService keygenService =
+        new HBaseLockingKeyService(HbaseServer.CFG, HBASE_SERVER.getConnection(), datasetKey);
+
+    keygenService.generateKey(new HashSet<>(Arrays.asList(occId, triplet)));
+
+    // Should
+    Optional<Long> tripletKey = LookupKeyUtils.getKey(keygenService, triplet);
+    Optional<Long> occurrenceIdtKey = LookupKeyUtils.getKey(keygenService, occId);
+
+    Assert.assertTrue(tripletKey.isPresent());
+    Assert.assertTrue(occurrenceIdtKey.isPresent());
+
+    // When
+    RepairGbifIDLookupTool.builder()
+        .datasetKey(datasetKey)
+        .dwcaSource(dwca)
+        .lookupTable(HbaseServer.CFG.getLookupTable())
+        .counterTable(HbaseServer.CFG.getCounterTable())
+        .occurrenceTable(HbaseServer.CFG.getOccurrenceTable())
+        .deletionStrategyType(DeletionStrategyType.BOTH)
+        .connection(HBASE_SERVER.getConnection())
+        .dryRun(true)
+        .build()
+        .run();
+
+    // Should
+    tripletKey = LookupKeyUtils.getKey(keygenService, triplet);
+    occurrenceIdtKey = LookupKeyUtils.getKey(keygenService, occId);
+
+    Assert.assertTrue(tripletKey.isPresent());
+    Assert.assertTrue(occurrenceIdtKey.isPresent());
+  }
 }
