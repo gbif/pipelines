@@ -10,9 +10,7 @@ import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
 import org.postgresql.util.PGobject;
 
-/**
- * Generic TypeHandler for Java types mapped to json data.
- */
+/** Generic TypeHandler for Java types mapped to json data. */
 public abstract class JsonTypeHandler<T> extends BaseTypeHandler<T> {
 
   private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -29,7 +27,7 @@ public abstract class JsonTypeHandler<T> extends BaseTypeHandler<T> {
     if (ps != null) {
       PGobject ext = new PGobject();
       ext.setType("json");
-      ext.setValue(parameter != null? MAPPER.writeValueAsString(parameter) : null);
+      ext.setValue(parameter != null ? MAPPER.writeValueAsString(parameter) : null);
       ps.setObject(i, ext);
     }
   }
@@ -49,9 +47,7 @@ public abstract class JsonTypeHandler<T> extends BaseTypeHandler<T> {
     return readValue(callableStatement.getString(i));
   }
 
-  /**
-   * Converts any nullable string into the target type.
-   */
+  /** Converts any nullable string into the target type. */
   @SneakyThrows
   private T readValue(String value) {
     if (value != null) {
