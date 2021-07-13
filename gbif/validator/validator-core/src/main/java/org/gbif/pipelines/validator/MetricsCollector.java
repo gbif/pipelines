@@ -23,8 +23,8 @@ import org.gbif.pipelines.validator.metircs.request.ExtensionTermCountRequestBui
 import org.gbif.pipelines.validator.metircs.request.OccurrenceIssuesRequestBuilder;
 import org.gbif.pipelines.validator.metircs.request.TermCountRequestBuilder;
 import org.gbif.pipelines.validator.metircs.request.TermCountRequestBuilder.TermCountRequest;
-import org.gbif.validator.api.Validation.Metrics;
-import org.gbif.validator.api.Validation.Metrics.Core.TermInfo;
+import org.gbif.validator.api.Metrics;
+import org.gbif.validator.api.Metrics.Core.TermInfo;
 
 // TODO: DOC
 @Builder

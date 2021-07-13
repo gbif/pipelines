@@ -13,7 +13,7 @@ CREATE TABLE validation
   file varchar(255) NOT NULL,
   file_size bigint,
   created timestamp with time zone NOT NULL DEFAULT now(),
-  result text,
   modified timestamp with time zone NOT NULL DEFAULT now(),
-  deleted timestamp with time zone
+  deleted timestamp with time zone,
+  metrics json
 );

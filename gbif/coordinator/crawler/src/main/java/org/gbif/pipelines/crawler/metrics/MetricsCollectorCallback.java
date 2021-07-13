@@ -20,7 +20,7 @@ import org.gbif.pipelines.crawler.PipelinesCallback;
 import org.gbif.pipelines.crawler.StepHandler;
 import org.gbif.pipelines.validator.MetricsCollector;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
-import org.gbif.validator.api.Validation.Metrics;
+import org.gbif.validator.api.Metrics;
 
 /** Callback which is called when the {@link PipelinesIndexedMessage} is received. */
 @Slf4j

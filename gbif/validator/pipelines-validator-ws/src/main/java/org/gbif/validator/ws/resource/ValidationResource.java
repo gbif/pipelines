@@ -19,6 +19,8 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.registry.security.UserRoles;
+import org.gbif.validator.api.Metrics;
+import org.gbif.validator.api.Metrics.ArchiveValidationReport;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.persistence.mapper.ValidationMapper;
 import org.gbif.validator.ws.file.DataFile;
@@ -112,7 +114,15 @@ public class ValidationResource {
               resultDataFile -> update(key, resultDataFile, Validation.Status.SUBMITTED),
               err -> {
                 log.error("Error processing file", err);
-                updateStatus(key, Validation.Status.FAILED, err.getMessage());
+                updateStatus(
+                    key,
+                    Validation.Status.FAILED,
+                    Metrics.builder()
+                        .archiveValidationReport(
+                            ArchiveValidationReport.builder()
+                                .invalidationReason(err.getMessage())
+                                .build())
+                        .build());
               });
       return create(key, downloadResult.getDataFile(), principal, Validation.Status.DOWNLOADING);
     } catch (FileSizeException ex) {
@@ -218,8 +228,8 @@ public class ValidationResource {
   }
 
   /** Updates the status of a validation process. */
-  private Validation updateStatus(UUID key, Validation.Status status, String result) {
-    Validation validation = Validation.builder().key(key).status(status).result(result).build();
+  private Validation updateStatus(UUID key, Validation.Status status, Metrics metrics) {
+    Validation validation = Validation.builder().key(key).status(status).metrics(metrics).build();
     validationMapper.update(validation);
     return validationMapper.get(key);
   }
