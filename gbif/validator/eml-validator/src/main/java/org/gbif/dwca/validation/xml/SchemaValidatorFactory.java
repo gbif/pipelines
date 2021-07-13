@@ -18,6 +18,7 @@ import org.gbif.dwca.validation.XmlSchemaValidator;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -39,7 +40,12 @@ public class SchemaValidatorFactory {
     // resolve validation driver:
     SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
     // create schema by reading it from gbif online resources:
-    Schema xmlSchema = factory.newSchema(schema.toURL());
+    Schema xmlSchema = null;
+    try {
+      xmlSchema = factory.newSchema(schema.toURL());
+    } catch (SAXException ex) {
+      log.warn(ex.getMessage(), ex);
+    }
     cache.put(schema.toString(), xmlSchema);
     return xmlSchema;
   }
@@ -47,7 +53,7 @@ public class SchemaValidatorFactory {
   @SneakyThrows
   public XmlSchemaValidator newValidator(String schemaUrl) {
     return Optional.ofNullable(schemaUrl)
-        .map(cache::get)
+        .map(schema -> Optional.ofNullable(cache.get(schema)).orElse(load(URI.create(schema))))
         .map(val -> XmlSchemaValidatorImpl.builder().schema(val).build())
         .orElseThrow(() -> new IllegalArgumentException(schemaUrl + "XML schema not supported"));
   }

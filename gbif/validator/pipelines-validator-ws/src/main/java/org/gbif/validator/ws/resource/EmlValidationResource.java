@@ -5,8 +5,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import lombok.SneakyThrows;
-import org.gbif.dwca.validation.XmlSchemaValidator;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
+import org.gbif.validator.api.XmlSchemaValidatorResult;
+import org.gbif.validator.api.XmlSchemaValidatorResult.XmlSchemaValidatorError;
 import org.gbif.validator.ws.config.ValidatorWsConfiguration;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,7 +37,7 @@ public class EmlValidationResource {
       consumes = {MediaType.APPLICATION_XML_VALUE},
       produces = {MediaType.APPLICATION_JSON_VALUE})
   @SneakyThrows
-  public XmlSchemaValidator.ValidationResult validateEml(@RequestBody byte[] document) {
+  public XmlSchemaValidatorResult validateEml(@RequestBody byte[] document) {
     try {
       String xmlDoc = new String(document, StandardCharsets.UTF_8);
       return schemaValidatorFactory.newValidatorFromDocument(xmlDoc).validate(xmlDoc);
@@ -49,14 +50,12 @@ public class EmlValidationResource {
    * Translates a Throwable into a XmlSchemaValidator.ValidationResult if possible. Otherwise, it
    * propagates the error,
    */
-  private XmlSchemaValidator.ValidationResult toValidationError(Throwable ex) {
+  private XmlSchemaValidatorResult toValidationError(Throwable ex) {
     if (ex instanceof SAXParseException) {
-      return XmlSchemaValidator.ValidationResult.builder()
+      return XmlSchemaValidatorResult.builder()
           .errors(
               Collections.singletonList(
-                  XmlSchemaValidator.ValidationError.builder()
-                      .error((SAXParseException) ex)
-                      .build()))
+                  XmlSchemaValidatorError.builder().error(ex.getMessage()).build()))
           .build();
     }
     throw new RuntimeException(ex);

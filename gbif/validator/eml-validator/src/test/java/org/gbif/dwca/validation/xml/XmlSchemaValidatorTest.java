@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import lombok.SneakyThrows;
 import org.gbif.dwca.validation.XmlSchemaValidator;
+import org.gbif.validator.api.XmlSchemaValidatorResult;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockserver.integration.ClientAndServer;
@@ -42,15 +43,14 @@ public class XmlSchemaValidatorTest {
   @Test
   public void validXmlTest() {
     XmlSchemaValidator emlValidator = getEmlValidator();
-    XmlSchemaValidator.ValidationResult result =
-        emlValidator.validate(readTestFile("/xml/ebird-eml.xml"));
+    XmlSchemaValidatorResult result = emlValidator.validate(readTestFile("/xml/ebird-eml.xml"));
     assertTrue(result.isValid());
   }
 
   @Test
   public void invalidXmlTest() {
     XmlSchemaValidator emlValidator = getEmlValidator();
-    XmlSchemaValidator.ValidationResult result =
+    XmlSchemaValidatorResult result =
         emlValidator.validate(readTestFile("/xml/invalid-ebird-eml.xml"));
     assertFalse(result.isValid());
     assertTrue(result.getErrors().size() > 0);

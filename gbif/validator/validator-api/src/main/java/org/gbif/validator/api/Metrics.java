@@ -27,6 +27,10 @@ public class Metrics {
   private ArchiveValidationReport archiveValidationReport =
       ArchiveValidationReport.builder().build();
 
+  @Builder.Default
+  private XmlSchemaValidatorResult xmlSchemaValidatorResult =
+      XmlSchemaValidatorResult.builder().build();
+
   @Data
   @Builder
   @NoArgsConstructor

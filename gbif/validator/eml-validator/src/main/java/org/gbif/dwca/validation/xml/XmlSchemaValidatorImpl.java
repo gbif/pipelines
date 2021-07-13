@@ -3,7 +3,6 @@ package org.gbif.dwca.validation.xml;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
-import javax.xml.XMLConstants;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.Validator;
@@ -12,6 +11,8 @@ import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.dwca.validation.XmlSchemaValidator;
+import org.gbif.validator.api.XmlSchemaValidatorResult;
+import org.gbif.validator.api.XmlSchemaValidatorResult.XmlSchemaValidatorError;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
@@ -23,21 +24,23 @@ public class XmlSchemaValidatorImpl implements XmlSchemaValidator {
 
   private final Schema schema;
 
+  /**
+   * Properties XMLConstants.ACCESS_EXTERNAL_DTD and XMLConstants.ACCESS_EXTERNAL_SCHEMA are not
+   * supported by Java 8 we currently use
+   */
   @SneakyThrows
   private Validator newValidator(Schema schema) {
     Validator validator = schema.newValidator();
-    validator.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "");
-    validator.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
     validator.setErrorHandler(new CollectorErrorHandler());
     return validator;
   }
 
   @SneakyThrows
   @Override
-  public ValidationResult validate(String document) {
+  public XmlSchemaValidatorResult validate(String document) {
     Validator validator = newValidator(schema);
     validator.validate(new StreamSource(new StringReader(document)));
-    return ValidationResult.builder()
+    return XmlSchemaValidatorResult.builder()
         .errors(((CollectorErrorHandler) validator.getErrorHandler()).getErrors())
         .build();
   }
@@ -49,24 +52,33 @@ public class XmlSchemaValidatorImpl implements XmlSchemaValidator {
   @Data
   public static class CollectorErrorHandler implements ErrorHandler {
 
-    private final List<ValidationError> errors = new ArrayList<>();
+    private final List<XmlSchemaValidatorError> errors = new ArrayList<>();
 
     @Override
     public void warning(SAXParseException exception) {
       errors.add(
-          ValidationError.builder().level(ValidationError.Level.WARNING).error(exception).build());
+          XmlSchemaValidatorError.builder()
+              .level(XmlSchemaValidatorError.Level.WARNING)
+              .error(exception.getMessage())
+              .build());
     }
 
     @Override
     public void error(SAXParseException exception) {
       errors.add(
-          ValidationError.builder().level(ValidationError.Level.ERROR).error(exception).build());
+          XmlSchemaValidatorError.builder()
+              .level(XmlSchemaValidatorError.Level.ERROR)
+              .error(exception.getMessage())
+              .build());
     }
 
     @Override
     public void fatalError(SAXParseException exception) throws SAXException {
       errors.add(
-          ValidationError.builder().level(ValidationError.Level.FATAL).error(exception).build());
+          XmlSchemaValidatorError.builder()
+              .level(XmlSchemaValidatorError.Level.FATAL)
+              .error(exception.getMessage())
+              .build());
       throw exception;
     }
   }
