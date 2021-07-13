@@ -191,7 +191,14 @@
     <testResources>
       <testResource>
         <directory>src/test/resources</directory>
+        <filtering>false</filtering>
+      </testResource>
+      <testResource>
+        <directory>src/test/resources</directory>
         <filtering>true</filtering>
+        <includes>
+          <include>**/application-test.yml</include>
+        </includes>
       </testResource>
     </testResources>
     <plugins>
