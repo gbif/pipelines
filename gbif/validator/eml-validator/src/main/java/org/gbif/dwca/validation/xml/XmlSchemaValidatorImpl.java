@@ -26,7 +26,8 @@ public class XmlSchemaValidatorImpl implements XmlSchemaValidator {
   @SneakyThrows
   private Validator newValidator(Schema schema) {
     Validator validator = schema.newValidator();
-    validator.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+    validator.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+    validator.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
     validator.setErrorHandler(new CollectorErrorHandler());
     return validator;
   }
