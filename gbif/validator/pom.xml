@@ -45,6 +45,8 @@
     <spring.version>5.2.12.RELEASE</spring.version>
     <spring-security.version>5.3.6.RELEASE</spring-security.version>
     <feign.version>10.11</feign.version>
+    <zookeeper.version>3.4.14</zookeeper.version>
+    <curator.version>4.0.1</curator.version>
 
     <!-- Tests -->
     <junit-jupiter.version>5.7.2</junit-jupiter.version>
@@ -148,7 +150,6 @@
         <groupId>org.springframework.cloud</groupId>
         <artifactId>spring-cloud-starter-zookeeper-discovery</artifactId>
         <version>${spring-cloud-zookeeper.version}</version>
-        <scope>runtime</scope>
         <exclusions>
           <exclusion>
             <groupId>org.apache.zookeeper</groupId>
@@ -170,17 +171,12 @@
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-loadbalancer</artifactId>
           </exclusion>
-          <exclusion>
-            <groupId>org.codehaus.jackson</groupId>
-            <artifactId>jackson-core-asl</artifactId>
-          </exclusion>
         </exclusions>
       </dependency>
       <dependency>
         <groupId>org.springframework.cloud</groupId>
         <artifactId>spring-cloud-starter-zookeeper-config</artifactId>
         <version>${spring-cloud-zookeeper.version}</version>
-        <scope>runtime</scope>
       </dependency>
       <dependency>
         <groupId>org.springframework.cloud</groupId>
@@ -196,7 +192,6 @@
         <groupId>de.codecentric</groupId>
         <artifactId>spring-boot-admin-starter-client</artifactId>
         <version>${spring-boot-admin.version}</version>
-        <scope>runtime</scope>
       </dependency>
       <dependency>
         <groupId>org.springframework.cloud</groupId>
@@ -207,7 +202,6 @@
         <groupId>org.springdoc</groupId>
         <artifactId>springdoc-openapi-ui</artifactId>
         <version>${springdoc-openapi-ui.version}</version>
-        <scope>runtime</scope>
       </dependency>
       <dependency>
         <groupId>org.springframework.boot</groupId>
@@ -277,6 +271,12 @@
         <groupId>commons-fileupload</groupId>
         <artifactId>commons-fileupload</artifactId>
         <version>${commons-fileupload.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.zookeeper</groupId>
+        <artifactId>zookeeper</artifactId>
+        <version>${zookeeper.version}</version>
+        <scope>runtime</scope>
       </dependency>
 
       <!-- Validation -->
