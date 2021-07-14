@@ -1,5 +1,6 @@
 package org.gbif.validator.ws.it;
 
+import com.zaxxer.hikari.HikariDataSource;
 import java.util.Collections;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.vocabulary.UserRole;
@@ -13,6 +14,7 @@ import org.gbif.registry.security.RegistryUserDetailsService;
 import org.gbif.registry.surety.ChallengeCodeManager;
 import org.gbif.registry.surety.OrganizationChallengeCodeManager;
 import org.gbif.registry.surety.UserChallengeCodeManager;
+import org.gbif.validator.it.EmbeddedPostgresServer;
 import org.gbif.validator.it.mocks.ChallengeCodeManagerMock;
 import org.gbif.validator.it.mocks.MessagePublisherMock;
 import org.gbif.validator.it.mocks.UserMapperMock;
@@ -22,14 +24,18 @@ import org.gbif.validator.ws.file.DownloadFileManager;
 import org.gbif.validator.ws.security.RegistrySecurityConfiguration;
 import org.gbif.ws.security.NoAuthWebSecurityConfigurer;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;
+import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -67,6 +73,8 @@ import org.springframework.test.context.ActiveProfiles;
     })
 @ActiveProfiles("test")
 public class ValidatorWsItConfiguration extends ValidatorWsConfiguration {
+
+  public static final String LIQUIBASE_MASTER_FILE = "org/gbif/validator/liquibase/master.xml";
 
   public static final GbifUser TEST_USER = new GbifUser();
   public static final String TEST_USER_PASSWORD = "hi";
@@ -119,6 +127,26 @@ public class ValidatorWsItConfiguration extends ValidatorWsConfiguration {
   @Bean
   public MessagePublisher messagePublisher() {
     return new MessagePublisherMock();
+  }
+
+  @Bean
+  public EmbeddedPostgresServer embeddedPostgresServer() {
+    return new EmbeddedPostgresServer(LIQUIBASE_MASTER_FILE);
+  }
+
+  @Bean(name = "validationDataSourceProperties")
+  @Primary
+  @ConditionalOnProperty(name = "testdb", havingValue = "true")
+  public DataSourceProperties dataSourceProperties(EmbeddedPostgresServer embeddedPostgresServer) {
+    return embeddedPostgresServer.dataSourceProperties();
+  }
+
+  @Bean(name = "validationDataSource")
+  @Primary
+  @ConfigurationProperties("validation.datasource.hikari")
+  @ConditionalOnProperty(name = "testdb", havingValue = "true")
+  public HikariDataSource dataSource(DataSourceProperties dataSourceProperties) {
+    return dataSourceProperties.initializeDataSourceBuilder().type(HikariDataSource.class).build();
   }
 
   /** Empty config class to include the config made by WebMvcConfig. */

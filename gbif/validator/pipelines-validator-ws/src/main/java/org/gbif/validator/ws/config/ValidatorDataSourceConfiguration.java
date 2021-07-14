@@ -26,6 +26,7 @@ import org.gbif.validator.persistence.mapper.ValidationMapper;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.mapper.MapperFactoryBean;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -39,6 +40,7 @@ public class ValidatorDataSourceConfiguration {
   @Bean(name = "validationDataSourceProperties")
   @Primary
   @ConfigurationProperties("validation.datasource")
+  @ConditionalOnProperty(name = "testdb", havingValue = "false")
   public DataSourceProperties dataSourceProperties() {
     return new DataSourceProperties();
   }
@@ -46,6 +48,7 @@ public class ValidatorDataSourceConfiguration {
   @Bean(name = "validationDataSource")
   @Primary
   @ConfigurationProperties("validation.datasource.hikari")
+  @ConditionalOnProperty(name = "testdb", havingValue = "false")
   public HikariDataSource dataSource() {
     return dataSourceProperties()
         .initializeDataSourceBuilder()
