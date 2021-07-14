@@ -1,5 +1,7 @@
 package au.org.ala.pipelines.transforms;
 
+import static au.org.ala.pipelines.beam.ALAUUIDMintingPipeline.REMOVED_PREFIX_MARKER;
+import static au.org.ala.pipelines.transforms.IndexValues.*;
 import static org.apache.avro.Schema.Type.UNION;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
 
@@ -10,14 +12,12 @@ import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.Schema;
+import org.apache.avro.Schema.Field;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
@@ -25,12 +25,12 @@ import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.values.KV;
-import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.util.Strings;
 import org.apache.solr.common.SolrInputDocument;
 import org.gbif.api.vocabulary.Extension;
+import org.gbif.api.vocabulary.License;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
@@ -47,6 +47,11 @@ public class IndexRecordTransform implements Serializable, IndexFields {
 
   private static final long serialVersionUID = 1279313931024806169L;
   private static final TermFactory TERM_FACTORY = TermFactory.instance();
+  public static final String ISSUES = "issues";
+  public static final String CLASSS = "classs";
+  public static final int YYYY_DD_MM_FORMAT_LENGTH = 10;
+  public static final int YYYY_MM_DDTHH_mm_ss_Z_LENGTH = 22;
+  public static final String RAW_PREFIX = "raw_";
 
   // Core
   @NonNull private TupleTag<ExtendedRecord> erTag;
@@ -56,9 +61,11 @@ public class IndexRecordTransform implements Serializable, IndexFields {
 
   private TupleTag<TaxonRecord> txrTag;
   @NonNull private TupleTag<ALATaxonRecord> atxrTag;
-  @NonNull private TupleTag<MultimediaRecord> mrTag;
 
   private TupleTag<ALAAttributionRecord> aarTag;
+
+  private TupleTag<MultimediaRecord> mrTag;
+
   @NonNull private TupleTag<ALAUUIDRecord> urTag;
 
   @NonNull private TupleTag<ImageRecord> isTag;
@@ -66,8 +73,6 @@ public class IndexRecordTransform implements Serializable, IndexFields {
   @NonNull private TupleTag<TaxonProfile> tpTag;
 
   @NonNull private TupleTag<ALASensitivityRecord> srTag;
-
-  @NonNull private PCollectionView<MetadataRecord> metadataView;
 
   String datasetID;
 
@@ -79,11 +84,6 @@ public class IndexRecordTransform implements Serializable, IndexFields {
 
   static {
     interpretedFields = getAddedValues();
-  }
-
-  public static void main(String[] args) {
-
-    interpretedFields.stream().sorted().forEach(value -> System.out.println(value));
   }
 
   public static IndexRecordTransform create(
@@ -99,7 +99,6 @@ public class IndexRecordTransform implements Serializable, IndexFields {
       TupleTag<ImageRecord> isTag,
       TupleTag<TaxonProfile> tpTag,
       TupleTag<ALASensitivityRecord> srTag,
-      PCollectionView<MetadataRecord> metadataView,
       String datasetID,
       Long lastLoadDate,
       Long lastLoadProcessed) {
@@ -116,7 +115,6 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     t.isTag = isTag;
     t.tpTag = tpTag;
     t.srTag = srTag;
-    t.metadataView = metadataView;
     t.datasetID = datasetID;
     t.lastLoadDate = lastLoadDate;
     t.lastLoadProcessed = lastLoadProcessed;
@@ -130,7 +128,6 @@ public class IndexRecordTransform implements Serializable, IndexFields {
    */
   @NotNull
   public static IndexRecord createIndexRecord(
-      MetadataRecord mdr,
       BasicRecord br,
       TemporalRecord tr,
       LocationRecord lr,
@@ -142,6 +139,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
       ImageRecord isr,
       TaxonProfile tpr,
       ALASensitivityRecord sr,
+      MultimediaRecord mr,
       Long lastLoadDate,
       Long lastProcessedDate) {
 
@@ -182,14 +180,10 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     indexRecord.getDates().put(LAST_PROCESSED_DATE, lastProcessedDate);
 
     // If a sensitive record, construct new versions of the data with adjustments
-    boolean sensitive = sr != null && sr.getSensitive() != null && sr.getSensitive();
-    if (sensitive) {
+    boolean isSensitive = sr != null && sr.getIsSensitive() != null && sr.getIsSensitive();
+    if (isSensitive) {
       Set<Term> sensitiveTerms =
           sr.getAltered().keySet().stream().map(TERM_FACTORY::findTerm).collect(Collectors.toSet());
-      if (mdr != null) {
-        mdr = MetadataRecord.newBuilder(mdr).build();
-        SensitiveDataInterpreter.applySensitivity(sensitiveTerms, sr, mdr);
-      }
       if (br != null) {
         br = BasicRecord.newBuilder(br).build();
         SensitiveDataInterpreter.applySensitivity(sensitiveTerms, sr, br);
@@ -223,7 +217,6 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     addToIndexRecord(lr, indexRecord, skipKeys);
     addToIndexRecord(tr, indexRecord, skipKeys);
     addToIndexRecord(br, indexRecord, skipKeys);
-    addToIndexRecord(mdr, indexRecord, skipKeys);
 
     if (br != null) {
       if (br.getRecordedByIds() != null && br.getRecordedByIds().isEmpty()) {
@@ -246,13 +239,21 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     try {
       if (tr.getEventDate() != null
           && tr.getEventDate().getGte() != null
-          && tr.getEventDate().getGte().length() == 10) {
+          && (tr.getEventDate().getGte().length() == YYYY_DD_MM_FORMAT_LENGTH
+              || tr.getEventDate().getGte().length() == YYYY_MM_DDTHH_mm_ss_Z_LENGTH)) {
+        // Event dates come through interpretation 2 format
+        // 1) yyyy-MM-dd
+        // 2) yyyy-MM-ddTHH:mm:ssXXX e.g. 2019-09-13T13:35+10:00
+        Date date = null;
+        if (tr.getEventDate().getGte().length() == YYYY_MM_DDTHH_mm_ss_Z_LENGTH) {
+          SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mmXXX");
+          date = sdf.parse(tr.getEventDate().getGte());
+        } else {
+          SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+          date = sdf.parse(tr.getEventDate().getGte());
+        }
 
-        indexRecord
-            .getDates()
-            .put(
-                DwcTerm.eventDate.simpleName(),
-                new SimpleDateFormat("yyyy-MM-dd").parse(tr.getEventDate().getGte()).getTime());
+        indexRecord.getDates().put(DwcTerm.eventDate.simpleName(), date.getTime());
 
         // eventDateEnd
         if (tr.getEventDate().getLte() != null) {
@@ -266,6 +267,10 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     } catch (ParseException e) {
       log.error(
           "Un-parsable date produced by downstream interpretation " + tr.getEventDate().getGte());
+    }
+
+    if (tr.getDatePrecision() != null) {
+      indexRecord.getStrings().put(DATE_PRECISION, tr.getDatePrecision());
     }
 
     if (tr.getYear() != null && tr.getYear() > 0) {
@@ -289,12 +294,12 @@ public class IndexRecordTransform implements Serializable, IndexFields {
       addGBIFTaxonomy(txr, indexRecord, assertions);
     }
 
-    if (sensitive) {
-      indexRecord.getStrings().put(SENSITIVE, "generalised");
+    if (isSensitive) {
+      indexRecord.getStrings().put(SENSITIVE, sr.getSensitive());
     }
 
     // Sensitive (Original) data
-    if (sensitive) {
+    if (isSensitive) {
       if (sr.getDataGeneralizations() != null)
         indexRecord
             .getStrings()
@@ -317,8 +322,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
       }
     }
 
-    if (lr != null
-        && lr.getHasCoordinate() != null
+    if (lr.getHasCoordinate() != null
         && lr.getHasCoordinate()
         && lr.getDecimalLatitude() != null
         && lr.getDecimalLongitude() != null) {
@@ -333,9 +337,12 @@ public class IndexRecordTransform implements Serializable, IndexFields {
         if (value != null
             && !field.name().equals(SPECIES_GROUP)
             && !field.name().equals(SPECIES_SUBGROUP)
-            && !field.name().equals(RANK)
+            && !field.name().equals(TAXON_RANK)
             && !skipKeys.contains(field.name())) {
-          if (field.name().equalsIgnoreCase("issues")) {
+
+          if (field.name().equalsIgnoreCase(CLASSS)) {
+            indexRecord.getStrings().put(DwcTerm.class_.simpleName(), value.toString());
+          } else if (field.name().equalsIgnoreCase(ISSUES)) {
             assertions.add((String) value);
           } else {
             if (value instanceof Integer) {
@@ -346,9 +353,15 @@ public class IndexRecordTransform implements Serializable, IndexFields {
           }
         }
 
-        if (atxr.getRank() != null) {
-          indexRecord.getStrings().put(DwcTerm.taxonRank.simpleName(), atxr.getRank());
-          if (atxr.getRankID() != null && atxr.getRankID() == SUBSPECIES_RANK_ID) {
+        if (atxr.getClasss() != null) {
+          indexRecord.getStrings().put(DwcTerm.class_.simpleName(), atxr.getClasss());
+        }
+
+        if (atxr.getTaxonRank() != null) {
+          indexRecord
+              .getStrings()
+              .put(DwcTerm.taxonRank.simpleName(), atxr.getTaxonRank().toLowerCase());
+          if (atxr.getTaxonRankID() != null && atxr.getTaxonRankID() == SUBSPECIES_RANK_ID) {
             indexRecord.getStrings().put(SUBSPECIES, atxr.getScientificName());
             indexRecord.getStrings().put(SUBSPECIES_ID, atxr.getTaxonConceptID());
           }
@@ -395,23 +408,29 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     }
 
     // see https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/99
-    boolean spatiallyValid =
-        lr.getHasGeospatialIssue() != null && lr.getHasGeospatialIssue() ? false : true;
+    boolean spatiallyValid = lr.getHasGeospatialIssue() == null || !lr.getHasGeospatialIssue();
     indexRecord.getBooleans().put(SPATIALLY_VALID, spatiallyValid);
 
     // see  https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/162
     if (ur.getFirstLoaded() != null) {
-      indexRecord
-          .getDates()
-          .put(
-              FIRST_LOADED_DATE,
-              LocalDateTime.parse(ur.getFirstLoaded(), DateTimeFormatter.ISO_DATE_TIME)
-                  .toEpochSecond(ZoneOffset.UTC));
+      indexRecord.getDates().put(FIRST_LOADED_DATE, ur.getFirstLoaded());
     }
 
     // Add legacy collectory fields
     if (aar != null) {
-      addIfNotEmpty(indexRecord, DcTerm.license.simpleName(), aar.getLicenseType());
+      // if the licence is null in the basic record (which is the record-level licence)
+      // or licence is License.UNSPECIFIED in the basic record (licence provided at the record-level
+      // is null)
+      // then use the licence supplied by the collectory
+      // see https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/271
+      if (indexRecord.getStrings().get(DcTerm.license.simpleName()) == null
+          || indexRecord
+              .getStrings()
+              .get(DcTerm.license.simpleName())
+              .equals(License.UNSPECIFIED.name())) {
+        addIfNotEmpty(indexRecord, DcTerm.license.simpleName(), aar.getLicenseType());
+      }
+
       addIfNotEmpty(indexRecord, DATA_RESOURCE_UID, aar.getDataResourceUid());
       addIfNotEmpty(indexRecord, DATA_RESOURCE_NAME, aar.getDataResourceName());
       addIfNotEmpty(indexRecord, DATA_PROVIDER_UID, aar.getDataProviderUid());
@@ -421,6 +440,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
       addIfNotEmpty(indexRecord, INSTITUTION_NAME, aar.getInstitutionName());
       addIfNotEmpty(indexRecord, COLLECTION_NAME, aar.getCollectionName());
       addIfNotEmpty(indexRecord, PROVENANCE, aar.getProvenance());
+      addIfNotEmpty(indexRecord, CONTENT_TYPES, aar.getContentTypes());
       indexRecord
           .getBooleans()
           .put(
@@ -434,14 +454,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
             .put(
                 DATA_HUB_UID,
                 aar.getHubMembership().stream()
-                    .map(enr -> enr.getUid())
-                    .collect(Collectors.toList()));
-        indexRecord
-            .getMultiValues()
-            .put(
-                DATA_HUB_NAME,
-                aar.getHubMembership().stream()
-                    .map(enr -> enr.getName())
+                    .map(EntityReference::getUid)
                     .collect(Collectors.toList()));
       }
     }
@@ -454,7 +467,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
       List<String> images = new ArrayList<>();
       List<String> videos = new ArrayList<>();
       List<String> sounds = new ArrayList<>();
-      isr.getImageItems().stream()
+      isr.getImageItems()
           .forEach(
               image -> {
                 if (StringUtils.isNotEmpty(image.getLicense())) {
@@ -484,7 +497,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
             .put(
                 IMAGE_IDS,
                 isr.getImageItems().stream()
-                    .map(i -> i.getIdentifier())
+                    .map(Image::getIdentifier)
                     .collect(Collectors.toList()));
       }
       if (!sounds.isEmpty()) {
@@ -493,7 +506,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
             .put(
                 SOUND_IDS,
                 isr.getImageItems().stream()
-                    .map(i -> i.getIdentifier())
+                    .map(Image::getIdentifier)
                     .collect(Collectors.toList()));
       }
       if (!videos.isEmpty()) {
@@ -502,19 +515,17 @@ public class IndexRecordTransform implements Serializable, IndexFields {
             .put(
                 VIDEO_IDS,
                 isr.getImageItems().stream()
-                    .map(i -> i.getIdentifier())
+                    .map(Image::getIdentifier)
                     .collect(Collectors.toList()));
       }
 
       if (!multimedia.isEmpty()) {
-        List<String> distinctList = multimedia.stream().collect(Collectors.toList());
+        List<String> distinctList = new ArrayList<>(multimedia);
         indexRecord.getMultiValues().put(MULTIMEDIA, distinctList);
       }
 
       if (!licenses.isEmpty()) {
-        indexRecord
-            .getMultiValues()
-            .put(MULTIMEDIA_LICENSE, licenses.stream().collect(Collectors.toList()));
+        indexRecord.getMultiValues().put(MULTIMEDIA_LICENSE, new ArrayList<>(licenses));
       }
     }
 
@@ -522,20 +533,28 @@ public class IndexRecordTransform implements Serializable, IndexFields {
       addSpeciesListInfo(lr, tpr, indexRecord);
     }
 
-    List<String> taxonomicIssues = tr.getIssues().getIssueList();
+    List<String> temporalIssues = tr.getIssues().getIssueList();
+    List<String> taxonomicIssues = atxr.getIssues().getIssueList();
     List<String> geospatialIssues = lr.getIssues().getIssueList();
+
     if (taxonomicIssues != null && !taxonomicIssues.isEmpty()) {
-      indexRecord.getMultiValues().put(TAXONOMIC_ISSUES, taxonomicIssues);
+      indexRecord.getMultiValues().put(TAXONOMIC_ISSUES, temporalIssues);
     }
+
     if (geospatialIssues != null && !geospatialIssues.isEmpty()) {
       indexRecord.getMultiValues().put(GEOSPATIAL_ISSUES, geospatialIssues);
     }
 
     // add all to assertions
+    assertions.addAll(temporalIssues);
     assertions.addAll(taxonomicIssues);
     assertions.addAll(geospatialIssues);
+
+    if (mr != null) {
+      assertions.addAll(mr.getIssues().getIssueList());
+    }
+
     assertions.addAll(br.getIssues().getIssueList());
-    assertions.addAll(mdr.getIssues().getIssueList());
 
     if (sr != null) {
       assertions.addAll(sr.getIssues().getIssueList());
@@ -554,7 +573,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
 
       // if we already have an interpreted value, prefix with raw_
       if (interpretedFields.contains(key)) {
-        indexRecord.getStrings().put("raw_" + key, entry.getValue());
+        indexRecord.getStrings().put(RAW_PREFIX + key, entry.getValue());
       } else {
         if (key.endsWith(DwcTerm.dynamicProperties.simpleName())) {
           try {
@@ -624,28 +643,31 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     return ImmutableSet.<String>builder()
         .addAll(
             LocationRecord.getClassSchema().getFields().stream()
-                .map(field -> field.name())
+                .map(Field::name)
                 .collect(Collectors.toList()))
         .addAll(
             ALAAttributionRecord.getClassSchema().getFields().stream()
-                .map(field -> field.name())
+                .map(Field::name)
                 .collect(Collectors.toList()))
         .addAll(
             ALATaxonRecord.getClassSchema().getFields().stream()
-                .map(field -> field.name())
-                .collect(Collectors.toList()))
-        .addAll(
-            MetadataRecord.getClassSchema().getFields().stream()
-                .map(field -> field.name())
+                .map(Field::name)
                 .collect(Collectors.toList()))
         .addAll(
             BasicRecord.getClassSchema().getFields().stream()
-                .map(field -> field.name())
+                .map(Field::name)
                 .collect(Collectors.toList()))
         .addAll(
             TemporalRecord.getClassSchema().getFields().stream()
-                .map(field -> field.name())
+                .map(Field::name)
                 .collect(Collectors.toList()))
+        .addAll(
+            ALASensitivityRecord.getClassSchema().getFields().stream()
+                .map(Field::name)
+                .collect(Collectors.toList()))
+        .add(DwcTerm.class_.simpleName())
+        .add(DwcTerm.geodeticDatum.simpleName())
+        .add(DwcTerm.associatedOccurrences.simpleName())
         .build();
   }
 
@@ -727,23 +749,25 @@ public class IndexRecordTransform implements Serializable, IndexFields {
             CoGbkResult v = c.element().getValue();
             String k = c.element().getKey();
 
-            // Core
-            MetadataRecord mdr = c.sideInput(metadataView);
-            ExtendedRecord er = v.getOnly(erTag, ExtendedRecord.newBuilder().setId(k).build());
-            BasicRecord br = v.getOnly(brTag, BasicRecord.newBuilder().setId(k).build());
-            TemporalRecord tr = v.getOnly(trTag, TemporalRecord.newBuilder().setId(k).build());
-            LocationRecord lr = v.getOnly(lrTag, LocationRecord.newBuilder().setId(k).build());
-            TaxonRecord txr = null;
-            if (txrTag != null) {
-              txr = v.getOnly(txrTag, TaxonRecord.newBuilder().setId(k).build());
-            }
-
             // ALA specific
             ALAUUIDRecord ur = v.getOnly(urTag, null);
-            if (ur != null) {
+
+            if (ur != null && !ur.getId().startsWith(REMOVED_PREFIX_MARKER)) {
+
+              // Core
+              ExtendedRecord er = v.getOnly(erTag, ExtendedRecord.newBuilder().setId(k).build());
+              BasicRecord br = v.getOnly(brTag, BasicRecord.newBuilder().setId(k).build());
+              TemporalRecord tr = v.getOnly(trTag, TemporalRecord.newBuilder().setId(k).build());
+              LocationRecord lr = v.getOnly(lrTag, LocationRecord.newBuilder().setId(k).build());
+              TaxonRecord txr = null;
+
+              if (txrTag != null) {
+                txr = v.getOnly(txrTag, TaxonRecord.newBuilder().setId(k).build());
+              }
 
               ALATaxonRecord atxr =
                   v.getOnly(atxrTag, ALATaxonRecord.newBuilder().setId(k).build());
+
               ALAAttributionRecord aar =
                   v.getOnly(aarTag, ALAAttributionRecord.newBuilder().setId(k).build());
 
@@ -762,10 +786,14 @@ public class IndexRecordTransform implements Serializable, IndexFields {
                 sr = v.getOnly(srTag, null);
               }
 
+              MultimediaRecord mr = null;
+              if (srTag != null) {
+                mr = v.getOnly(mrTag, null);
+              }
+
               if (aar != null && aar.getDataResourceUid() != null) {
                 IndexRecord doc =
                     createIndexRecord(
-                        mdr,
                         br,
                         tr,
                         lr,
@@ -777,28 +805,52 @@ public class IndexRecordTransform implements Serializable, IndexFields {
                         isr,
                         tpr,
                         sr,
+                        mr,
                         lastLoadDate,
                         lastLoadProcessed);
 
                 c.output(doc);
                 counter.inc();
+              } else {
+                if (aar == null) {
+                  throw new RuntimeException("AAR missing for record ID " + ur.getId());
+                } else {
+                  throw new RuntimeException(
+                      "AAR is present, but data resource UID is null for"
+                          + " ur.getId():"
+                          + ur.getId()
+                          + " ur.getUuid():"
+                          + ur.getUuid()
+                          + " aar.getId(): "
+                          + aar.getId());
+                }
               }
             } else {
-              if (er != null) {
-                log.error("UUID missing for record ID " + er.getId());
-              } else {
-                log.error("UUID missing and ER empty");
+              if (!ur.getId().startsWith(REMOVED_PREFIX_MARKER)) {
+                if (ur != null) {
+                  log.error("UUID missing for record ID " + ur.getId());
+                  throw new RuntimeException("UUID missing for record ID " + ur.getId());
+                } else {
+                  log.error("UUID missing and ER empty");
+                  throw new RuntimeException("UUID missing and ER empty");
+                }
               }
             }
           }
         };
 
-    return ParDo.of(fn).withSideInputs(metadataView);
+    return ParDo.of(fn);
   }
 
   static void addIfNotEmpty(IndexRecord.Builder doc, String fieldName, String value) {
     if (StringUtils.isNotEmpty(value)) {
       doc.getStrings().put(fieldName, value);
+    }
+  }
+
+  static void addIfNotEmpty(IndexRecord.Builder doc, String fieldName, List<String> values) {
+    if (values != null && !values.isEmpty()) {
+      doc.getMultiValues().put(fieldName, values);
     }
   }
 
@@ -811,6 +863,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
       doc.setLatLng(latlon);
     }
 
+    doc.getStrings().put(DwcTerm.geodeticDatum.simpleName(), PIPELINES_GEODETIC_DATUM);
     doc.getStrings().put(LAT_LONG, latlon); // is set to IGNORE in headerAttributes
     doc.getStrings()
         .put(POINT_1, getLatLongString(lat, lon, "#")); // is set to IGNORE in headerAttributes
@@ -868,55 +921,70 @@ public class IndexRecordTransform implements Serializable, IndexFields {
                                       .findFirst()
                                       .map(Schema::getType)
                                   : Optional.of(schema.getType());
-                          if (r != null) {
-                            type.ifPresent(
-                                t -> {
-                                  switch (t) {
-                                    case BOOLEAN:
-                                      //
-                                      builder.getBooleans().put(f.name(), (Boolean) r);
-                                      break;
-                                    case FLOAT:
-                                      builder.getDoubles().put(f.name(), (Double) r);
-                                      break;
-                                    case DOUBLE:
-                                      builder.getDoubles().put(f.name(), (Double) r);
-                                      break;
-                                    case INT:
-                                      builder.getInts().put(f.name(), (Integer) r);
-                                      break;
-                                    case LONG:
-                                      builder.getLongs().put(f.name(), (Long) r);
-                                      break;
-                                    case ARRAY:
-                                      builder.getMultiValues().put(f.name(), (java.util.List) r);
-                                      break;
-                                    default:
-                                      builder.getStrings().put(f.name(), r.toString());
-                                      break;
-                                  }
-                                });
-                          }
+                          type.ifPresent(
+                              t -> {
+                                switch (t) {
+                                  case BOOLEAN:
+                                    //
+                                    builder.getBooleans().put(f.name(), (Boolean) r);
+                                    break;
+                                  case FLOAT:
+                                    builder.getDoubles().put(f.name(), (Double) r);
+                                    break;
+                                  case DOUBLE:
+                                    builder.getDoubles().put(f.name(), (Double) r);
+                                    break;
+                                  case INT:
+                                    builder.getInts().put(f.name(), (Integer) r);
+                                    break;
+                                  case LONG:
+                                    builder.getLongs().put(f.name(), (Long) r);
+                                    break;
+                                  case ARRAY:
+                                    builder.getMultiValues().put(f.name(), (List) r);
+                                    break;
+                                  default:
+                                    builder.getStrings().put(f.name(), r.toString());
+                                    break;
+                                }
+                              });
                         }));
   }
 
-  public static class KVIndexRecordToSolrInputDocumentFcn
-      extends DoFn<KV<String, IndexRecord>, SolrInputDocument> {
-    @ProcessElement
-    public void processElement(
-        @Element KV<String, IndexRecord> kvIndexRecord, OutputReceiver<SolrInputDocument> out) {
-      SolrInputDocument solrInputDocument = convertIndexRecordToSolrDoc(kvIndexRecord.getValue());
-      out.output(solrInputDocument);
+  private static boolean startsWithPrefix(List<String> dynamicFieldPrefixes, String value) {
+    for (String prefix : dynamicFieldPrefixes) {
+      if (value.startsWith(prefix)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public static void addStringSafely(SolrInputDocument doc, String key, String value) {
+    // current limitation on SOLR string field size
+    if (value.getBytes().length < 32765) {
+      doc.addField(key, value);
     }
   }
 
-  public static SolrInputDocument convertIndexRecordToSolrDoc(IndexRecord indexRecord) {
+  public static SolrInputDocument convertIndexRecordToSolrDoc(
+      IndexRecord indexRecord, List<String> schemaFields, List<String> dynamicFieldPrefixes) {
+
     SolrInputDocument doc = new SolrInputDocument();
     doc.setField(ID, indexRecord.getId());
 
-    // strings
+    // keep track of added dynamic properties
     for (Map.Entry<String, String> s : indexRecord.getStrings().entrySet()) {
-      doc.addField(s.getKey(), s.getValue());
+      if (schemaFields.contains(s.getKey()) || startsWithPrefix(dynamicFieldPrefixes, s.getKey())) {
+        addStringSafely(doc, s.getKey(), s.getValue());
+      } else {
+        // clean up field name before adding
+        String key = s.getKey().replaceAll("[^A-Za-z0-9]", "_");
+        if (StringUtils.isNotEmpty(key)
+            && doc.getFieldValue(DYNAMIC_PROPERTIES_PREFIX + key) == null) {
+          addStringSafely(doc, DYNAMIC_PROPERTIES_PREFIX + key, s.getValue());
+        }
+      }
     }
 
     // doubles
@@ -947,16 +1015,20 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     // multi-value fields
     for (Map.Entry<String, List<String>> s : indexRecord.getMultiValues().entrySet()) {
       for (String value : s.getValue()) {
-        doc.addField(s.getKey(), value);
+        addStringSafely(doc, s.getKey(), value);
       }
     }
 
+    // dynamic properties
     if (indexRecord.getDynamicProperties() != null
         && !indexRecord.getDynamicProperties().isEmpty()) {
       for (Map.Entry<String, String> entry : indexRecord.getDynamicProperties().entrySet()) {
         if (StringUtils.isNotEmpty(entry.getValue())) {
           String key = entry.getKey().replaceAll("[^A-Za-z0-9]", "_");
-          doc.addField(DYNAMIC_PROPERTIES_PREFIX + key, entry.getValue());
+          if (StringUtils.isNotEmpty(key)
+              && doc.getFieldValue(DYNAMIC_PROPERTIES_PREFIX + key) == null) {
+            addStringSafely(doc, DYNAMIC_PROPERTIES_PREFIX + key, entry.getValue());
+          }
         }
       }
     }

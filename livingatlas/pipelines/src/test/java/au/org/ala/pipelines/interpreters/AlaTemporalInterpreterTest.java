@@ -1,6 +1,6 @@
 package au.org.ala.pipelines.interpreters;
 
-import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.*;
 
 import au.org.ala.pipelines.vocabulary.ALAOccurrenceIssue;
 import java.util.HashMap;
@@ -13,6 +13,103 @@ import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.junit.Test;
 
 public class AlaTemporalInterpreterTest {
+
+  public static TemporalRecord create(String date) {
+    Map<String, String> map = new HashMap<>();
+    map.put(DwcTerm.eventDate.qualifiedName(), date);
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
+    TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
+
+    TemporalInterpreter temporalInterpreter = TemporalInterpreter.builder().create();
+    temporalInterpreter.interpretTemporal(er, tr);
+    return tr;
+  }
+
+  @Test
+  public void testDatePrecisionDayRange() {
+    TemporalRecord tr = create("2000-01-01/2000-01-05");
+    ALATemporalInterpreter.checkDatePrecision(null, tr);
+    assertEquals("2000-01-01", tr.getEventDate().getGte());
+    assertEquals("2000-01-05", tr.getEventDate().getLte());
+    assertEquals(ALATemporalInterpreter.DAY_RANGE_PRECISION, tr.getDatePrecision());
+  }
+
+  @Test
+  public void testDatePrecisionDayRange1() {
+    TemporalRecord tr = create("2000-01-01/2000-01-01");
+    ALATemporalInterpreter.checkDatePrecision(null, tr);
+    assertEquals("2000-01-01", tr.getEventDate().getGte());
+    assertNull(tr.getEventDate().getLte());
+    assertEquals(ALATemporalInterpreter.DAY_PRECISION, tr.getDatePrecision());
+  }
+
+  @Test
+  public void testDatePrecisionDayRange2() {
+    TemporalRecord tr = create("2000-01-01");
+    ALATemporalInterpreter.checkDatePrecision(null, tr);
+    assertEquals("2000-01-01", tr.getEventDate().getGte());
+    assertNull(tr.getEventDate().getLte());
+    assertEquals(ALATemporalInterpreter.DAY_PRECISION, tr.getDatePrecision());
+  }
+
+  @Test
+  public void testDatePrecisionMonthRange() {
+    TemporalRecord tr = create("2000-01/2000-02");
+    ALATemporalInterpreter.checkDatePrecision(null, tr);
+    assertEquals("2000-01", tr.getEventDate().getGte());
+    assertEquals("2000-02", tr.getEventDate().getLte());
+    assertEquals(ALATemporalInterpreter.MONTH_RANGE_PRECISION, tr.getDatePrecision());
+  }
+
+  @Test
+  public void testDatePrecisionMonth() {
+    TemporalRecord tr = create("2000-01/2000-01");
+    ALATemporalInterpreter.checkDatePrecision(null, tr);
+    assertEquals("2000-01", tr.getEventDate().getGte());
+    assertNull(tr.getEventDate().getLte());
+    assertEquals(ALATemporalInterpreter.MONTH_PRECISION, tr.getDatePrecision());
+  }
+
+  @Test
+  public void testDatePrecisionMonth2() {
+    TemporalRecord tr = create("2000-01");
+    ALATemporalInterpreter.checkDatePrecision(null, tr);
+    assertEquals("2000-01", tr.getEventDate().getGte());
+    assertNull(tr.getEventDate().getLte());
+    assertEquals(ALATemporalInterpreter.MONTH_PRECISION, tr.getDatePrecision());
+  }
+
+  @Test
+  public void testDatePrecisionYear() {
+    TemporalRecord tr = create("2000/2001");
+    ALATemporalInterpreter.checkDatePrecision(null, tr);
+    assertEquals("2000", tr.getEventDate().getGte());
+    assertEquals("2001", tr.getEventDate().getLte());
+    assertEquals(ALATemporalInterpreter.YEAR_RANGE_PRECISION, tr.getDatePrecision());
+  }
+
+  @Test
+  public void testDatePrecisionYear2() {
+    TemporalRecord tr = create("2000/2000");
+    ALATemporalInterpreter.checkDatePrecision(null, tr);
+    assertEquals("2000", tr.getEventDate().getGte());
+    assertNull(tr.getEventDate().getLte());
+    assertEquals(ALATemporalInterpreter.YEAR_PRECISION, tr.getDatePrecision());
+  }
+
+  @Test
+  public void testDatePrecisionYearRange() {
+    Map<String, String> map = new HashMap<>();
+    map.put(DwcTerm.eventDate.qualifiedName(), "2000/2001");
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
+    TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
+
+    TemporalInterpreter temporalInterpreter = TemporalInterpreter.builder().create();
+    temporalInterpreter.interpretTemporal(er, tr);
+
+    assertEquals("2000", tr.getEventDate().getGte());
+    assertEquals("2001", tr.getEventDate().getLte());
+  }
 
   @Test
   public void testQualityAssertion() {
@@ -89,7 +186,7 @@ public class AlaTemporalInterpreterTest {
   }
 
   @Test
-  public void testAUformatDatessertions() {
+  public void testAUformatDateAssertions() {
     Map<String, String> map = new HashMap<>();
     map.put(DwcTerm.year.qualifiedName(), "");
     map.put(DwcTerm.month.qualifiedName(), " "); // keep the space at the end

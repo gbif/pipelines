@@ -1,6 +1,7 @@
 package au.org.ala.utils;
 
 import static au.org.ala.pipelines.beam.ALAUUIDMintingPipeline.UNIQUE_COMPOSITE_KEY_JOIN_CHAR;
+import static java.util.stream.Collectors.joining;
 
 import au.org.ala.pipelines.options.IndexingPipelineOptions;
 import au.org.ala.pipelines.options.UUIDPipelineOptions;
@@ -10,7 +11,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
@@ -50,6 +50,7 @@ public class ValidationUtils {
   public static final String SENSITIVE_METRICS = "sensitive-metrics.yml";
   public static final String JACKKNIFE_METRICS = "jackknife-metrics.yml";
   public static final String CLUSTERING_METRICS = "clustering-metrics.yml";
+  public static final String SAMPLING_METRICS = "sampling-metrics.yml";
 
   public static final String DUPLICATE_KEY_COUNT = "duplicateKeyCount";
   public static final String EMPTY_KEY_RECORDS = "emptyKeyRecords";
@@ -327,61 +328,60 @@ public class ValidationUtils {
    * Generate a unique key based on the darwin core fields. This works the same was unique keys
    * where generated in the biocache-store. This is repeated to maintain backwards compatibility
    * with existing data holdings.
+   *
+   * @param datasetID DatasetID for this key
+   * @param source ExtendedRecord to source values from
+   * @param uniqueTerms Terms to use to contruct the key
+   * @param stripSpaces Whether to strip internal spaces the strings in the key
+   * @param errorOnEmpty Whether to thrown an error on empty unique term values or return an empty
+   *     key
    */
   public static String generateUniqueKey(
-      String datasetID, ExtendedRecord source, List<Term> uniqueTerms) {
+      String datasetID,
+      ExtendedRecord source,
+      List<Term> uniqueTerms,
+      Map<String, String> defaultValues,
+      boolean stripSpaces,
+      Boolean errorOnEmpty) {
 
     List<String> uniqueValues = new ArrayList<>();
     boolean allUniqueValuesAreEmpty = true;
     for (Term term : uniqueTerms) {
       String value = ModelUtils.extractNullAwareValue(source, term);
+
+      // if null or empty, check default values...
+      if (value == null
+          || StringUtils.trimToNull(value) == null
+              && defaultValues.containsKey(term.simpleName())) {
+        value = defaultValues.get(term.simpleName());
+      }
+
       if (value != null && StringUtils.trimToNull(value) != null) {
         // we have a term with a value
         allUniqueValuesAreEmpty = false;
-        uniqueValues.add(value.trim());
+
+        // if configured, strip spaces from the keys
+        if (stripSpaces) {
+          uniqueValues.add(value.replaceAll("\\s", ""));
+        } else {
+          uniqueValues.add(value.trim());
+        }
       }
     }
 
     if (allUniqueValuesAreEmpty) {
+      if (errorOnEmpty) {
+        String termList = uniqueTerms.stream().map(Term::simpleName).collect(joining(","));
+        String errorMessage =
+            String.format(
+                "Unable to load dataset %s, All supplied unique terms (%s) where empty record with ID %s",
+                datasetID, termList, source.getId());
 
-      String termList = uniqueTerms.stream().map(Term::simpleName).collect(Collectors.joining(","));
-      String errorMessage =
-          String.format(
-              "Unable to load dataset %s, All supplied unique terms (%s) where empty record with ID %s",
-              datasetID, termList, source.getId());
-
-      log.warn(errorMessage);
-      throw new RuntimeException(errorMessage);
-    }
-
-    // add the datasetID
-    uniqueValues.add(0, datasetID);
-
-    // create the unique key
-    return String.join(UNIQUE_COMPOSITE_KEY_JOIN_CHAR, uniqueValues);
-  }
-
-  /**
-   * Generate a unique key based on the darwin core fields. This works the same was unique keys
-   * where generated in the biocache-store. This is repeated to maintain backwards compatibility
-   * with existing data holdings.
-   */
-  public static String generateUniqueKeyForValidation(
-      String datasetID, ExtendedRecord source, List<Term> uniqueTerms) {
-
-    final List<String> uniqueValues = new ArrayList<>();
-    boolean allUniqueValuesAreEmpty = true;
-    for (Term term : uniqueTerms) {
-      String value = ModelUtils.extractNullAwareValue(source, term);
-      if (value != null && StringUtils.trimToNull(value) != null) {
-        // we have a term with a value
-        allUniqueValuesAreEmpty = false;
-        uniqueValues.add(value.trim());
+        log.warn(errorMessage);
+        throw new RuntimeException(errorMessage);
+      } else {
+        return "";
       }
-    }
-
-    if (allUniqueValuesAreEmpty) {
-      return "";
     }
 
     // add the datasetID

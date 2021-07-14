@@ -1,10 +1,12 @@
 package org.gbif.pipelines.estools.service;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Properties;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpHost;
+import org.apache.http.nio.entity.NStringEntity;
 import org.elasticsearch.client.RestClient;
 import org.gbif.pipelines.estools.client.EsClient;
 import org.gbif.pipelines.estools.client.EsConfig;
@@ -39,17 +41,23 @@ public class EsServer extends ExternalResource {
     esConfig = EsConfig.from(getServerAddress());
     restClient = buildRestClient();
     esClient = EsClient.from(esConfig);
+
+    // Fix for https://github.com/gbif/pipelines/issues/568
+    esClient.performPutRequest(
+        "/_cluster/settings",
+        Collections.emptyMap(),
+        new NStringEntity(
+            "{\"persistent\":{\"cluster.routing.allocation.disk.threshold_enabled\":false}}"));
   }
 
   @Override
   protected void after() {
-    embeddedElastic.stop();
-    esClient.close();
+    /*esClient.close();
     try {
       restClient.close();
     } catch (IOException e) {
       log.error("Could not close rest client for testing", e);
-    }
+    }*/
   }
 
   private RestClient buildRestClient() {

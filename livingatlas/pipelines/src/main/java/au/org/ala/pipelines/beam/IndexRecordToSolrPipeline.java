@@ -1,9 +1,14 @@
 package au.org.ala.pipelines.beam;
 
+import static au.org.ala.pipelines.transforms.IndexFields.*;
+import static au.org.ala.pipelines.transforms.IndexValues.*;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
+import au.org.ala.pipelines.options.AllDatasetsPipelinesOptions;
 import au.org.ala.pipelines.options.SolrPipelineOptions;
+import au.org.ala.pipelines.transforms.IndexFields;
 import au.org.ala.pipelines.transforms.IndexRecordTransform;
+import au.org.ala.pipelines.transforms.IndexValues;
 import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
@@ -21,9 +26,15 @@ import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.transforms.join.CoGroupByKey;
 import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.*;
+import org.apache.solr.client.solrj.impl.CloudSolrClient;
+import org.apache.solr.client.solrj.request.schema.SchemaRequest;
+import org.apache.solr.client.solrj.response.schema.SchemaResponse;
+import org.apache.solr.common.SolrInputDocument;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.io.avro.*;
+import org.jetbrains.annotations.NotNull;
 import org.joda.time.Duration;
 import org.slf4j.MDC;
 
@@ -32,10 +43,11 @@ import org.slf4j.MDC;
 public class IndexRecordToSolrPipeline {
 
   static final SampleRecord nullSampling = SampleRecord.newBuilder().setLatLng("NO_VALUE").build();
+  public static final String EMPTY = "EMPTY";
   static final JackKnifeOutlierRecord nullJkor =
-      JackKnifeOutlierRecord.newBuilder().setId("EMPTY").setItems(new ArrayList<>()).build();
+      JackKnifeOutlierRecord.newBuilder().setId(EMPTY).setItems(new ArrayList<>()).build();
   static final Relationships nullClustering =
-      Relationships.newBuilder().setId("EMPTY").setRelationships(new ArrayList<>()).build();
+      Relationships.newBuilder().setId(EMPTY).setRelationships(new ArrayList<>()).build();
 
   public static void main(String[] args) throws Exception {
     VersionInfo.print();
@@ -55,6 +67,9 @@ public class IndexRecordToSolrPipeline {
   }
 
   public static void run(SolrPipelineOptions options) {
+
+    final List<String> schemaFields = getSchemaFields(options);
+    final List<String> dynamicFieldPrefixes = getSchemaDynamicFieldPrefixes(options);
 
     Pipeline pipeline = Pipeline.create(options);
 
@@ -125,8 +140,8 @@ public class IndexRecordToSolrPipeline {
                     new Partition.PartitionFn<KV<String, IndexRecord>>() {
                       @Override
                       public int partitionFor(KV<String, IndexRecord> elem, int numPartitions) {
-                        return (elem.getValue().getInts().get("month") != null
-                                ? elem.getValue().getInts().get("month")
+                        return (elem.getValue().getInts().get(DwcTerm.month.simpleName()) != null
+                                ? elem.getValue().getInts().get(DwcTerm.month.simpleName())
                                 : 0)
                             % noOfPartitions;
                       }
@@ -153,11 +168,11 @@ public class IndexRecordToSolrPipeline {
       SolrIO.ConnectionConfiguration conn =
           SolrIO.ConnectionConfiguration.create(options.getZkHost());
 
-      writeToSolr(options, pcs, conn);
+      writeToSolr(options, pcs, conn, schemaFields, dynamicFieldPrefixes);
 
       if (recordsWithoutCoordinates != null) {
         log.info("Adding step 5: Write records (without coordinates) to SOLR");
-        writeToSolr(options, recordsWithoutCoordinates, conn);
+        writeToSolr(options, recordsWithoutCoordinates, conn, schemaFields, dynamicFieldPrefixes);
       }
 
     } else {
@@ -165,13 +180,48 @@ public class IndexRecordToSolrPipeline {
       SolrIO.ConnectionConfiguration conn =
           SolrIO.ConnectionConfiguration.create(options.getZkHost());
 
-      writeToSolr(options, indexRecordsCollection, conn);
+      writeToSolr(options, indexRecordsCollection, conn, schemaFields, dynamicFieldPrefixes);
     }
 
     log.info("Starting pipeline");
     pipeline.run(options).waitUntilFinish();
 
     log.info("Solr indexing pipeline complete");
+  }
+
+  @NotNull
+  private static List<String> getSchemaFields(SolrPipelineOptions options) {
+    try {
+      CloudSolrClient client =
+          new CloudSolrClient.Builder().withZkHost(options.getZkHost()).build();
+      SchemaRequest.Fields fields = new SchemaRequest.Fields();
+      SchemaResponse.FieldsResponse response = fields.process(client, options.getSolrCollection());
+      final List<String> schemaFields =
+          response.getFields().stream()
+              .map(f -> f.get("name").toString())
+              .collect(Collectors.toList());
+      return schemaFields;
+    } catch (Exception e) {
+      throw new RuntimeException("Unable to retrieve schema fields: " + e.getMessage());
+    }
+  }
+
+  @NotNull
+  private static List<String> getSchemaDynamicFieldPrefixes(SolrPipelineOptions options) {
+    try {
+      CloudSolrClient client =
+          new CloudSolrClient.Builder().withZkHost(options.getZkHost()).build();
+      SchemaRequest.DynamicFields fields = new SchemaRequest.DynamicFields();
+      SchemaResponse.DynamicFieldsResponse response =
+          fields.process(client, options.getSolrCollection());
+      final List<String> schemaFields =
+          response.getDynamicFields().stream()
+              .map(f -> f.get("name").toString().replace("*", ""))
+              .collect(Collectors.toList());
+      return schemaFields;
+    } catch (Exception e) {
+      throw new RuntimeException("Unable to retrieve schema fields: " + e.getMessage());
+    }
   }
 
   private static PCollection<KV<String, IndexRecord>> joinSampleRecord(
@@ -230,18 +280,41 @@ public class IndexRecordToSolrPipeline {
   private static void writeToSolr(
       SolrPipelineOptions options,
       PCollection<KV<String, IndexRecord>> kvIndexRecords,
-      SolrIO.ConnectionConfiguration conn) {
-    kvIndexRecords
-        .apply("SOLR_doc", ParDo.of(new IndexRecordTransform.KVIndexRecordToSolrInputDocumentFcn()))
-        .apply(
-            SolrIO.write()
-                .to(options.getSolrCollection())
-                .withConnectionConfiguration(conn)
-                .withMaxBatchSize(options.getSolrBatchSize())
-                .withRetryConfiguration(
-                    SolrIO.RetryConfiguration.create(
-                        options.getSolrRetryMaxAttempts(),
-                        Duration.standardMinutes(options.getSolrRetryDurationInMins()))));
+      SolrIO.ConnectionConfiguration conn,
+      final List<String> schemaFields,
+      final List<String> dynamicFieldPrefixes) {
+
+    if (options.getOutputAvroToFilePath() == null) {
+
+      kvIndexRecords
+          .apply(
+              "IndexRecord to SOLR Document",
+              ParDo.of(
+                  new DoFn<KV<String, IndexRecord>, SolrInputDocument>() {
+                    @DoFn.ProcessElement
+                    public void processElement(
+                        @DoFn.Element KV<String, IndexRecord> kvIndexRecord,
+                        OutputReceiver<SolrInputDocument> out) {
+                      SolrInputDocument solrInputDocument =
+                          IndexRecordTransform.convertIndexRecordToSolrDoc(
+                              kvIndexRecord.getValue(), schemaFields, dynamicFieldPrefixes);
+                      out.output(solrInputDocument);
+                    }
+                  }))
+          .apply(
+              SolrIO.write()
+                  .to(options.getSolrCollection())
+                  .withConnectionConfiguration(conn)
+                  .withMaxBatchSize(options.getSolrBatchSize())
+                  .withRetryConfiguration(
+                      SolrIO.RetryConfiguration.create(
+                          options.getSolrRetryMaxAttempts(),
+                          Duration.standardMinutes(options.getSolrRetryDurationInMins()))));
+    } else {
+      kvIndexRecords
+          .apply(Values.create())
+          .apply(AvroIO.write(IndexRecord.class).to(options.getOutputAvroToFilePath()));
+    }
   }
 
   private static DoFn<KV<String, KV<IndexRecord, JackKnifeOutlierRecord>>, KV<String, IndexRecord>>
@@ -263,9 +336,9 @@ public class IndexRecordToSolrPipeline {
           indexRecord.setInts(ints);
         }
 
-        if (jkor != nullJkor && !"EMPTY".equals(jkor.getId())) {
+        if (jkor != nullJkor && !EMPTY.equals(jkor.getId())) {
 
-          ints.put("outlierLayerCount", jkor.getItems().size());
+          ints.put(OUTLIER_LAYER_COUNT, jkor.getItems().size());
 
           Map<String, List<String>> multiValues = indexRecord.getMultiValues();
           if (multiValues == null) {
@@ -273,9 +346,9 @@ public class IndexRecordToSolrPipeline {
             indexRecord.setMultiValues(multiValues);
           }
 
-          multiValues.put("outlierLayer", jkor.getItems());
+          multiValues.put(OUTLIER_LAYER, jkor.getItems());
         } else {
-          ints.put("outlierLayerCount", 0);
+          ints.put(OUTLIER_LAYER_COUNT, 0);
         }
 
         c.output(KV.of(indexRecord.getId(), indexRecord));
@@ -323,10 +396,10 @@ public class IndexRecordToSolrPipeline {
         }
 
         if (jkor != nullClustering
-            && !"EMPTY".equals(jkor.getId())
+            && !EMPTY.equals(jkor.getId())
             && !jkor.getRelationships().isEmpty()) {
 
-          booleans.put("isInCluster", true);
+          booleans.put(IS_IN_CLUSTER, true);
 
           boolean isRepresentative = false;
 
@@ -345,55 +418,59 @@ public class IndexRecordToSolrPipeline {
             }
 
             if (relationship.getDupDataset().equals(relationship.getRepDataset())) {
-              duplicateType.add("SAME_DATASET");
+              duplicateType.add(SAME_DATASET);
             } else if (!linkingError) {
-              duplicateType.add("DIFFERENT_DATASET");
+              duplicateType.add(DIFFERENT_DATASET);
             } else {
-              duplicateType.add("LINKING_ERROR");
+              duplicateType.add(LINKING_ERROR);
             }
           }
 
-          String duplicateStatus = "ASSOCIATED";
+          String duplicateStatus = IndexValues.ASSOCIATED;
           if (isRepresentative) {
-            duplicateStatus = "REPRESENTATIVE";
+            duplicateStatus = IndexValues.REPRESENTATIVE;
           }
 
+          // a record may be representative of several records
           List<String> isRepresentativeOf =
-              jkor.getRelationships().stream()
-                  .map(Relationship::getRepId)
-                  .distinct()
-                  .filter(recordId -> !recordId.equals(id))
-                  .collect(Collectors.toList());
-
-          List<String> isDuplicateOf =
               jkor.getRelationships().stream()
                   .map(Relationship::getDupId)
                   .distinct()
                   .filter(recordId -> !recordId.equals(id))
                   .collect(Collectors.toList());
 
+          // a record is a duplicate of a single representative record
+          List<Relationship> isDuplicateOf =
+              jkor.getRelationships().stream()
+                  .distinct()
+                  .filter(relationship -> relationship.getDupId().equals(id))
+                  .collect(Collectors.toList());
+
           if (!isRepresentativeOf.isEmpty()) {
-            multiValues.put("isRepresentativeOf", isRepresentativeOf);
+            multiValues.put(IndexFields.IS_REPRESENTATIVE_OF, isRepresentativeOf);
+            strings.put(
+                DwcTerm.associatedOccurrences.simpleName(), String.join("|", isRepresentativeOf));
           }
 
           if (!isDuplicateOf.isEmpty()) {
-            multiValues.put("isDuplicateOf", isDuplicateOf);
+            strings.put(IS_DUPLICATE_OF, isDuplicateOf.get(0).getRepId());
+            String[] justification = isDuplicateOf.get(0).getJustification().split(",");
+            multiValues.put(DUPLICATE_JUSTIFICATION, Arrays.asList(justification));
+            strings.put(
+                DwcTerm.associatedOccurrences.simpleName(), isDuplicateOf.get(0).getRepId());
           }
 
           // set the status
-          strings.put("duplicateStatus", duplicateStatus);
+          strings.put(DUPLICATE_STATUS, duplicateStatus);
 
           // add duplicate types
           List<String> duplicateTypeList = new ArrayList<>();
           duplicateTypeList.addAll(duplicateType);
-          multiValues.put("duplicateType", duplicateTypeList);
+          multiValues.put(DUPLICATE_TYPE, duplicateTypeList);
 
         } else {
-          booleans.put("isInCluster", false);
-          strings.put("duplicateStatus", "NOT_LINKED");
-          multiValues.put("duplicateType", Arrays.asList("NOT_LINKED"));
+          booleans.put(IS_IN_CLUSTER, false);
         }
-
         c.output(KV.of(indexRecord.getId(), indexRecord));
       }
     };
@@ -458,39 +535,10 @@ public class IndexRecordToSolrPipeline {
     };
   }
 
-  /**
-   * Load index records from AVRO.
-   *
-   * @param options
-   * @param p
-   * @return
-   */
+  /** Load index records from AVRO. */
   private static PCollection<KV<String, IndexRecord>> loadIndexRecords(
       SolrPipelineOptions options, Pipeline p) {
-    if (options.getDatasetId() != null && !"all".equalsIgnoreCase(options.getDatasetId())) {
-      return p.apply(
-              AvroIO.read(IndexRecord.class)
-                  .from(
-                      String.join(
-                          "/",
-                          options.getAllDatasetsInputPath(),
-                          "index-record",
-                          options.getDatasetId() + "/*.avro")))
-          .apply(
-              MapElements.via(
-                  new SimpleFunction<IndexRecord, KV<String, IndexRecord>>() {
-                    @Override
-                    public KV<String, IndexRecord> apply(IndexRecord input) {
-                      return KV.of(input.getId(), input);
-                    }
-                  }));
-    }
-
-    return p.apply(
-            AvroIO.read(IndexRecord.class)
-                .from(
-                    String.join(
-                        "/", options.getAllDatasetsInputPath(), "index-record", "*/*.avro")))
+    return ALAFsUtils.loadIndexRecords(options, p)
         .apply(
             MapElements.via(
                 new SimpleFunction<IndexRecord, KV<String, IndexRecord>>() {
@@ -502,7 +550,7 @@ public class IndexRecordToSolrPipeline {
   }
 
   private static PCollection<KV<String, SampleRecord>> loadSampleRecords(
-      SolrPipelineOptions options, Pipeline p) {
+      AllDatasetsPipelinesOptions options, Pipeline p) {
     String samplingPath =
         String.join("/", ALAFsUtils.buildPathSamplingUsingTargetPath(options), "*.avro");
     log.info("Loading sampling from {}", samplingPath);

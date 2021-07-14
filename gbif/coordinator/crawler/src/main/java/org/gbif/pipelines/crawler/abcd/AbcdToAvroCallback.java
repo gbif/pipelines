@@ -72,14 +72,15 @@ public class AbcdToAvroCallback extends AbstractMessageCallback<PipelinesAbcdMes
   @Override
   public Runnable createRunnable(PipelinesAbcdMessage message) {
 
-    String subdir =
-        config.archiveRepositorySubdir.stream()
-            .findFirst()
-            .orElseThrow(() -> new IllegalArgumentException("archiveRepositorySubdir is empty"));
-
     uncompress(
-        Paths.get(config.archiveRepository, subdir, message.getDatasetUuid().toString() + ".abcda"),
-        Paths.get(config.archiveRepository, subdir, message.getDatasetUuid().toString()));
+        Paths.get(
+            config.archiveRepository,
+            config.archiveRepositorySubdir,
+            message.getDatasetUuid().toString() + ".abcda"),
+        Paths.get(
+            config.archiveRepository,
+            config.archiveRepositorySubdir,
+            message.getDatasetUuid().toString()));
 
     return callback.createRunnable(
         message.getDatasetUuid(),

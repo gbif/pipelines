@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +29,11 @@ public class ALACollectoryServiceClient implements ALACollectoryService {
     okHttpClient = WsUtils.createOKClient(config);
     alaCollectoryService =
         WsUtils.createClient(okHttpClient, config, ALACollectoryRetrofitService.class);
+  }
+  /** Retrieve list of resources */
+  @Override
+  public List<EntityReference> listDataResources() throws Exception {
+    return syncCall(alaCollectoryService.lookupDataResources());
   }
 
   /**

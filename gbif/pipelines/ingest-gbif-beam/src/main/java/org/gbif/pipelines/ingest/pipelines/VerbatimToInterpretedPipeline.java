@@ -1,5 +1,7 @@
 package org.gbif.pipelines.ingest.pipelines;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
+
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -12,9 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.transforms.Create;
-import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
 import org.apache.beam.sdk.transforms.View;
-import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.transforms.join.CoGroupByKey;
 import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.KV;
@@ -27,6 +27,7 @@ import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.kvs.grscicoll.GrscicollLookupRequest;
 import org.gbif.kvs.species.SpeciesMatchRequest;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
@@ -35,18 +36,30 @@ import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.factory.FileVocabularyFactory;
 import org.gbif.pipelines.core.factory.FileVocabularyFactory.VocabularyBackedTerm;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
+import org.gbif.pipelines.core.pojo.ErBrContainer;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.core.ws.metadata.MetadataServiceClient;
-import org.gbif.pipelines.factory.*;
+import org.gbif.pipelines.factory.ClusteringServiceFactory;
+import org.gbif.pipelines.factory.GeocodeKvStoreFactory;
+import org.gbif.pipelines.factory.GrscicollLookupKvStoreFactory;
+import org.gbif.pipelines.factory.KeygenServiceFactory;
+import org.gbif.pipelines.factory.MetadataServiceClientFactory;
+import org.gbif.pipelines.factory.NameUsageMatchStoreFactory;
+import org.gbif.pipelines.factory.OccurrenceStatusKvStoreFactory;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.transforms.common.ExtensionFilterTransform;
-import org.gbif.pipelines.transforms.common.FilterExtendedRecordTransform;
+import org.gbif.pipelines.transforms.common.FilterRecordsTransform;
 import org.gbif.pipelines.transforms.common.UniqueGbifIdTransform;
 import org.gbif.pipelines.transforms.common.UniqueIdTransform;
 import org.gbif.pipelines.transforms.converters.OccurrenceExtensionTransform;
-import org.gbif.pipelines.transforms.core.*;
+import org.gbif.pipelines.transforms.core.BasicTransform;
+import org.gbif.pipelines.transforms.core.GrscicollTransform;
+import org.gbif.pipelines.transforms.core.LocationTransform;
+import org.gbif.pipelines.transforms.core.TaxonomyTransform;
+import org.gbif.pipelines.transforms.core.TemporalTransform;
+import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
@@ -139,6 +152,9 @@ public class VerbatimToInterpretedPipeline {
     UnaryOperator<String> pathFn =
         t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, id);
 
+    UnaryOperator<String> interpretedPathFn =
+        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
+
     log.info("Creating a pipeline from options");
     Pipeline p = pipelinesFn.apply(options);
 
@@ -177,6 +193,7 @@ public class VerbatimToInterpretedPipeline {
             .isOccurrenceIdValid(options.isOccurrenceIdValid())
             .useExtendedRecordId(options.isUseExtendedRecordId())
             .clusteringServiceSupplier(ClusteringServiceFactory.createSupplier(config))
+            .useDynamicPropertiesInterpretation(true)
             .create();
 
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
@@ -208,18 +225,22 @@ public class VerbatimToInterpretedPipeline {
         UniqueGbifIdTransform.create(options.isUseExtendedRecordId());
 
     log.info("Creating beam pipeline");
-    // Create and write metadata
-    PCollection<MetadataRecord> metadataRecord =
-        p.apply("Create metadata collection", Create.of(options.getDatasetId()))
-            .apply("Interpret metadata", metadataTransform.interpret());
 
-    metadataRecord.apply("Write metadata to avro", metadataTransform.write(pathFn));
+    // Create and write metadata
+    PCollection<MetadataRecord> metadataRecord;
+    if (useMetadataRecordWriteIO(types)) {
+      metadataRecord =
+          p.apply("Create metadata collection", Create.of(options.getDatasetId()))
+              .apply("Interpret metadata", metadataTransform.interpret());
+
+      metadataRecord.apply("Write metadata to avro", metadataTransform.write(pathFn));
+    } else {
+      metadataRecord = p.apply("Read metadata record", metadataTransform.read(interpretedPathFn));
+    }
 
     // Create View for the further usage
     PCollectionView<MetadataRecord> metadataView =
-        metadataRecord
-            .apply("Check metadata transform condition", metadataTransform.checkMetadata(types))
-            .apply("Convert into view", View.asSingleton());
+        metadataRecord.apply("Convert into view", View.asSingleton());
 
     locationTransform.setMetadataView(metadataView);
     grscicollTransform.setMetadataView(metadataView);
@@ -241,42 +262,52 @@ public class VerbatimToInterpretedPipeline {
                         .create()
                         .interpret());
 
-    PCollectionTuple basicCollection =
-        uniqueRecords
-            .apply("Check basic transform condition", basicTransform.check(types))
-            .apply("Interpret basic", basicTransform.interpret())
-            .apply("Get invalid GBIF IDs", gbifIdTransform);
-
     // Filter record with identical GBIF ID
     PCollection<KV<String, ExtendedRecord>> uniqueRecordsKv =
         uniqueRecords.apply("Map verbatim to KV", verbatimTransform.toKv());
 
-    PCollection<KV<String, BasicRecord>> uniqueBasicRecordsKv =
-        basicCollection
-            .get(gbifIdTransform.getInvalidTag())
-            .apply("Map basic to KV", basicTransform.toKv());
+    // Process Basic record
+    PCollection<KV<String, BasicRecord>> uniqueBasicRecordsKv;
+    if (useBasicRecordWriteIO(types)) {
+      PCollectionTuple basicCollection =
+          uniqueRecords
+              .apply("Interpret basic", basicTransform.interpret())
+              .apply("Get invalid GBIF IDs", gbifIdTransform);
 
-    SingleOutput<KV<String, CoGbkResult>, ExtendedRecord> filterByGbifIdFn =
-        FilterExtendedRecordTransform.create(verbatimTransform.getTag(), basicTransform.getTag())
-            .filter();
+      uniqueBasicRecordsKv =
+          basicCollection
+              .get(gbifIdTransform.getTag())
+              .apply("Map basic to KV", basicTransform.toKv());
 
-    PCollection<ExtendedRecord> filteredUniqueRecords =
+      // Interpret and write all record types
+      basicCollection
+          .get(gbifIdTransform.getTag())
+          .apply("Write basic to avro", basicTransform.write(pathFn));
+
+      basicCollection
+          .get(gbifIdTransform.getInvalidTag())
+          .apply("Write invalid basic to avro", basicTransform.writeInvalid(pathFn));
+    } else {
+      uniqueBasicRecordsKv =
+          p.apply("Read Basic records", basicTransform.read(interpretedPathFn))
+              .apply("Map to Basic record KV", basicTransform.toKv());
+    }
+
+    FilterRecordsTransform filterRecordsTransform =
+        FilterRecordsTransform.create(verbatimTransform.getTag(), basicTransform.getTag());
+
+    PCollection<ErBrContainer> filteredErBr =
         KeyedPCollectionTuple
             // Core
             .of(verbatimTransform.getTag(), uniqueRecordsKv)
             .and(basicTransform.getTag(), uniqueBasicRecordsKv)
             // Apply
             .apply("Grouping objects", CoGroupByKey.create())
-            .apply("Filter verbatim", filterByGbifIdFn);
+            .apply("Filter verbatim", filterRecordsTransform.filter());
 
-    // Interpret and write all record types
-    basicCollection
-        .get(gbifIdTransform.getTag())
-        .apply("Write basic to avro", basicTransform.write(pathFn));
-
-    basicCollection
-        .get(gbifIdTransform.getInvalidTag())
-        .apply("Write invalid basic to avro", basicTransform.writeInvalid(pathFn));
+    PCollection<ExtendedRecord> filteredUniqueRecords =
+        filteredErBr.apply(
+            "Get the filtered extended records", filterRecordsTransform.extractExtendedRecords());
 
     filteredUniqueRecords
         .apply("Check verbatim transform condition", verbatimTransform.check(types))
@@ -307,8 +338,10 @@ public class VerbatimToInterpretedPipeline {
         .apply("Interpret taxonomy", taxonomyTransform.interpret())
         .apply("Write taxon to avro", taxonomyTransform.write(pathFn));
 
-    filteredUniqueRecords
-        .apply("Check grscicoll transform condition", grscicollTransform.check(types))
+    filteredErBr
+        .apply(
+            "Check grscicoll transform condition",
+            grscicollTransform.check(types, ErBrContainer.class))
         .apply("Interpret grscicoll", grscicollTransform.interpret())
         .apply("Write grscicoll to avro", grscicollTransform.write(pathFn));
 
@@ -328,5 +361,13 @@ public class VerbatimToInterpretedPipeline {
     FsUtils.deleteDirectoryByPrefix(hdfsSiteConfig, coreSiteConfig, tempPath, ".temp-beam");
 
     log.info("Pipeline has been finished");
+  }
+
+  private static boolean useBasicRecordWriteIO(Set<String> types) {
+    return types.contains(RecordType.BASIC.name()) || types.contains(RecordType.ALL.name());
+  }
+
+  private static boolean useMetadataRecordWriteIO(Set<String> types) {
+    return types.contains(RecordType.METADATA.name()) || types.contains(RecordType.ALL.name());
   }
 }

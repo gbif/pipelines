@@ -536,7 +536,10 @@
          especially if the skipped fields are large compressed text
          fields.
     -->
-    <enableLazyFieldLoading>true</enableLazyFieldLoading>
+    <!-- Set to false due to a bug in 8.8
+         See: https://stackoverflow.com/questions/66335803/solr-throws-error-on-partial-update-after-upgrade-to-8-8
+    -->
+    <enableLazyFieldLoading>false</enableLazyFieldLoading>
 
     <!-- Use Filter For Sorted Query
 
@@ -771,7 +774,7 @@
     <lst name="defaults">
       <str name="echoParams">explicit</str>
       <int name="rows">10</int>
-      <str name="df">scientificName</str>
+      <str name="df">text</str>
     </lst>
     <!-- In addition to defaults, "appends" params can be specified
          to identify values which should be appended to the list of
@@ -837,6 +840,18 @@
     </lst>
   </requestHandler>
 
+  <!-- ExportHandler
+
+       https://solr.apache.org/guide/implicit-requesthandlers.html#query-handlers
+
+       Export full sorted result sets.
+   -->
+  <requestHandler name="/export" class="solr.ExportHandler">
+    <lst name="defaults">
+      <str name="wt">json</str>
+      <str name="df">text</str>
+    </lst>
+  </requestHandler>
 
   <!-- realtime get handler, guaranteed to return the latest stored fields of
        any document, without the need to commit or open a new searcher.  The

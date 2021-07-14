@@ -28,6 +28,7 @@ import org.gbif.pipelines.io.avro.ALATaxonRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.NameType;
 
+/** Providing taxonomic matching functionality for occurrence records. */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ALATaxonomyInterpreter {
@@ -95,12 +96,12 @@ public class ALATaxonomyInterpreter {
         dataResource == null ? null : dataResource.getDefaultDarwinCoreValues();
 
     return (er, atr) -> {
-      String rank = extractValue(er, DwcTerm.taxonRank, defaults);
+      String taxonRank = extractValue(er, DwcTerm.taxonRank, defaults);
       String scientificName = extractValue(er, DwcTerm.scientificName, defaults);
       String vernacularName = extractValue(er, DwcTerm.vernacularName, defaults);
       String kingdom = extractValue(er, DwcTerm.kingdom, defaults);
 
-      if (rank == null) {
+      if (taxonRank == null) {
         addIssue(atr, ALAOccurrenceIssue.MISSING_TAXONRANK);
       }
       if (scientificName == null && vernacularName == null) {
@@ -165,8 +166,8 @@ public class ALATaxonomyInterpreter {
           atr.setTaxonConceptID(usageMatch.getTaxonConceptID());
           atr.setScientificName(usageMatch.getScientificName());
           atr.setScientificNameAuthorship(usageMatch.getScientificNameAuthorship());
-          atr.setRank(usageMatch.getRank());
-          atr.setRankID(usageMatch.getRankID());
+          atr.setTaxonRank(usageMatch.getRank());
+          atr.setTaxonRankID(usageMatch.getRankID());
           atr.setLft(usageMatch.getLft());
           atr.setRgt(usageMatch.getRgt());
           atr.setMatchType(usageMatch.getMatchType());
@@ -225,7 +226,7 @@ public class ALATaxonomyInterpreter {
         dataResource == null ? null : dataResource.getDefaultDarwinCoreValues();
 
     return (er, atr) -> {
-      String rank = atr.getRank();
+      String rank = atr.getTaxonRank();
       String scientificName = atr.getScientificName();
 
       // Check to see whether the resulting taxon matches a supplied default name

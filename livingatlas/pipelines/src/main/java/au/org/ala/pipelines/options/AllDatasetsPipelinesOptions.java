@@ -3,12 +3,11 @@ package au.org.ala.pipelines.options;
 import org.apache.beam.sdk.options.*;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 
+/** Options for pipelines that run across all datasets. */
 public interface AllDatasetsPipelinesOptions
     extends PipelineOptions, InterpretationPipelineOptions {
 
-  @Description(
-      "Default directory where the target file will be written. By default, it takes the hdfs root directory "
-          + "specified in \"fs.defaultFS\". If no configurations are set it takes \"hdfs://\" as default")
+  @Description("Directory for writing output for pipelines operating on all datasets")
   String getAllDatasetsInputPath();
 
   void setAllDatasetsInputPath(String allDatasetsInputPath);

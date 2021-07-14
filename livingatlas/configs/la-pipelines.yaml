@@ -34,16 +34,22 @@ recordedByConfig:
 alaNameMatch:
   wsUrl: http://localhost:9179
   timeoutSec: 70
+  retryConfig:
+    maxAttempts: 5
+    initialIntervalMillis: 5000
 sds:
   wsUrl: http://localhost:9189
   timeoutSec: 70
 collectory:
   wsUrl: https://collections.ala.org.au/ws/
   timeoutSec: 70
+  retryConfig:
+    maxAttempts: 10
+    initialIntervalMillis: 10000
   httpHeaders:
     Authorization: add-a-api-key-here
 imageService:
-  wsUrl: https://aws-image-service-pipelines-test.ala.org.au/
+  wsUrl: https://images-test.ala.org.au/
   timeoutSec: 70
   httpHeaders:
     apiKey: add-a-api-key-here
@@ -54,12 +60,20 @@ geocodeConfig:
   country:
     path: /data/pipelines-shp/political
     field: ISO_A2
+    intersectBuffer:  0.135
+    intersectMapping:
+      CX: AU
+      CC: AU
+      HM: AU
+      NF: AU
   eez:
     path: /data/pipelines-shp/eez
     field: ISO2
+    intersectBuffer:  0.135
   stateProvince:
     path: /data/pipelines-shp/cw_state_poly
     field: FEATURE
+    intersectBuffer: 0
   biome:
     path: /data/pipelines-shp/gadm0
     field: FEATURE
@@ -120,19 +134,8 @@ uuid:
   appName: UUID minting for {datasetId}
   runner: SparkRunner
   inputPath: '{fsPath}/pipelines-data'
-
-# class: au.org.ala.pipelines.beam.ALAInterpretedToLatLongCSVPipeline
-export-latlng:
-  inputPath: '{fsPath}/pipelines-data'
-  allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
-  runner: SparkRunner
-  appName: Lat Long export for {datasetId}
-
-# class: au.org.ala.sampling.LayerCrawler
-sample:
-  inputPath: '{fsPath}/pipelines-data'
-  appName: Sample for {datasetId}
-  allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
+  numberOfBackupsToKeep: 10
+  percentageChangeAllowed: 50
 
 images:
   appName: Image syncing for {datasetId}
@@ -152,13 +155,17 @@ speciesLists:
   includeConservationStatus: true
   includeInvasiveStatus: true
 
-# LayerCrawler specific configuration
-layerCrawler:
+# Sampling specific configuration
+sampling:
+  appName: Sample for {datasetId}
   # baseUrl: https://spatial.your-l-a.site/ws/
   baseUrl: https://sampling.ala.org.au/sampling-service/
   batchSize: 25000
   batchStatusSleepTime: 1000
   downloadRetries: 5
+  inputPath: '{fsPath}/pipelines-data'
+  allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
+  runner: SparkRunner
 
 # class: au.org.ala.pipelines.beam.ALAInterpretedToSensitivePipeline
 sensitive:
@@ -212,10 +219,16 @@ clustering:
   allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
   runner: SparkRunner
 
+# class: DumpArchiveList
+dataset-archive-list:
+  inputPath: '{fsPath}/dwca-imports'
+  targetPath: /tmp/dataset-archive-list.csv
+
 # class: au.org.ala.utils.DumpDatasetSize
 dataset-count-dump:
   inputPath: '{fsPath}/pipelines-data'
   targetPath: /tmp/dataset-counts.csv
+  dwcaImportPath: '{fsPath}/dwca-imports'
 
 validation-report:
   inputPath: '{fsPath}/pipelines-data'
@@ -225,10 +238,6 @@ validation-report:
   checkSolr: true
   checkSampling: true
   solrCollection: biocache
-
-dataset-archive-list:
-  inputPath: '{fsPath}/pipelines-data'
-  targetPath: /tmp/dataset-archive-list.csv
 
 ### la-pipelines cli additional arguments, like JVM or spark command line arguments
 interpret-sh-args:
@@ -299,13 +308,13 @@ uuid-sh-args:
   spark-embedded:
     jvm: -Xmx8g -XX:+UseG1GC
   spark-cluster:
-    conf:
-    num-executors: 24
+    conf: spark.default.parallelism=500
+    num-executors: 6
     executor-cores: 8
-    executor-memory: 7G
-    driver-memory: 1G
+    executor-memory: 20G
+    driver-memory: 4G
 
-export-latlng-sh-args:
+sampling-sh-args:
   local:
     jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
   spark-embedded:

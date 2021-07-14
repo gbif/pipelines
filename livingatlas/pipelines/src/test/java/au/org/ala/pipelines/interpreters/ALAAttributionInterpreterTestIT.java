@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 import au.org.ala.kvs.cache.ALACollectionKVStoreFactory;
 import au.org.ala.kvs.client.ALACollectionLookup;
 import au.org.ala.kvs.client.ALACollectionMatch;
+import au.org.ala.pipelines.vocabulary.ALAOccurrenceIssue;
 import au.org.ala.util.TestUtils;
 import java.util.HashMap;
 import java.util.Map;
@@ -13,6 +14,7 @@ import okhttp3.mockwebserver.MockWebServer;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.io.avro.ALAAttributionRecord;
+import org.gbif.pipelines.io.avro.ALAMetadataRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.junit.After;
 import org.junit.Before;
@@ -38,8 +40,12 @@ public class ALAAttributionInterpreterTestIT {
 
     KeyValueStore<ALACollectionLookup, ALACollectionMatch> kvs =
         ALACollectionKVStoreFactory.create(TestUtils.getConfig());
+
+    ALAMetadataRecord mdr =
+        ALAMetadataRecord.newBuilder().setDataResourceUid("test").setId("test").build();
+
     BiConsumer<ExtendedRecord, ALAAttributionRecord> fcn =
-        ALAAttributionInterpreter.interpretCodes(kvs);
+        ALAAttributionInterpreter.interpretCodes(kvs, mdr);
 
     Map<String, String> map = new HashMap<>();
     map.put(DwcTerm.institutionCode.namespace() + DwcTerm.institutionCode.simpleName(), "CSIRO");
@@ -50,6 +56,7 @@ public class ALAAttributionInterpreterTestIT {
     fcn.accept(ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build(), aar);
     assertNotNull(aar.getCollectionUid());
     assertEquals("co13", aar.getCollectionUid());
+    assertEquals(0, aar.getIssues().getIssueList().size());
   }
 
   @Test
@@ -57,8 +64,12 @@ public class ALAAttributionInterpreterTestIT {
 
     KeyValueStore<ALACollectionLookup, ALACollectionMatch> kvs =
         ALACollectionKVStoreFactory.create(TestUtils.getConfig());
+
+    ALAMetadataRecord mdr =
+        ALAMetadataRecord.newBuilder().setDataResourceUid("test").setId("test").build();
+
     BiConsumer<ExtendedRecord, ALAAttributionRecord> fcn =
-        ALAAttributionInterpreter.interpretCodes(kvs);
+        ALAAttributionInterpreter.interpretCodes(kvs, mdr);
 
     Map<String, String> map = new HashMap<>();
     map.put(DwcTerm.institutionCode.namespace() + DwcTerm.institutionCode.simpleName(), "ANIC");
@@ -69,5 +80,9 @@ public class ALAAttributionInterpreterTestIT {
 
     fcn.accept(ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build(), aar);
     assertNull(aar.getCollectionUid());
+    assertEquals(1, aar.getIssues().getIssueList().size());
+    assertEquals(
+        ALAOccurrenceIssue.UNRECOGNISED_COLLECTION_CODE.name(),
+        aar.getIssues().getIssueList().get(0));
   }
 }

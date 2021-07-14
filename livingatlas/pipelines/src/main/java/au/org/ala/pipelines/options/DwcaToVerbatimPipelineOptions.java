@@ -4,6 +4,7 @@ import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 
+/** Options for running DwCA to Verbatim AVRO pipelines. */
 public interface DwcaToVerbatimPipelineOptions extends InterpretationPipelineOptions {
 
   @Description("Delete lock file on exit")

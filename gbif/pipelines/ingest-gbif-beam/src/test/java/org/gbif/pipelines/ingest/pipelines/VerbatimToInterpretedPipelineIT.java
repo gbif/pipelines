@@ -67,7 +67,31 @@ public class VerbatimToInterpretedPipelineIT {
       "--metaFileName=verbatim-to-interpreted.yml",
       "--inputPath=" + outputFile + "/" + DATASET_KEY + "/" + attempt + "/verbatim.avro",
       "--targetPath=" + outputFile,
-      "--interpretationTypes=ALL",
+      "--interpretationTypes=TEMPORAL,LOCATION,GRSCICOLL,MULTIMEDIA,MEASUREMENT_OR_FACT_TABLE,BASIC,TAXONOMY,IMAGE,AMPLIFICATION,OCCURRENCE,VERBATIM,LOCATION_FEATURE,MEASUREMENT_OR_FACT,AUDUBON,METADATA",
+      "--properties=" + outputFile + "/pipelines.yaml",
+      "--testMode=true"
+    };
+
+    // When, Should
+    pipelineTest(args, attempt, outputFile);
+  }
+
+  @Test
+  public void pipelineTaxonomySynchTest() throws Exception {
+
+    // State
+    String outputFile = getClass().getResource("/data7/ingest").getFile();
+
+    String attempt = "60";
+
+    String[] args = {
+      "--datasetId=" + DATASET_KEY,
+      "--attempt=" + attempt,
+      "--runner=SparkRunner",
+      "--metaFileName=verbatim-to-interpreted.yml",
+      "--inputPath=" + outputFile + "/" + DATASET_KEY + "/" + attempt + "/verbatim.avro",
+      "--targetPath=" + outputFile,
+      "--interpretationTypes=TAXONOMY",
       "--properties=" + outputFile + "/pipelines.yaml",
       "--testMode=true"
     };

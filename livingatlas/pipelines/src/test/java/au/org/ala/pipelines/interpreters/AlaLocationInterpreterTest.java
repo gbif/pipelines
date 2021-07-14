@@ -33,7 +33,7 @@ public class AlaLocationInterpreterTest {
 
   private CentrePoints countryCentrePoints;
   private CentrePoints stateProvinceCentrePoints;
-  private Vocab stateProvinceVocab;
+  private StateProvinceParser stateProvinceParser;
 
   @Before
   public void set() {
@@ -43,8 +43,9 @@ public class AlaLocationInterpreterTest {
       countryCentrePoints = CountryCentrePoints.getInstance(alaConfig.getLocationInfoConfig());
       stateProvinceCentrePoints =
           StateProvinceCentrePoints.getInstance(alaConfig.getLocationInfoConfig());
-      stateProvinceVocab =
-          StateProvince.getInstance(alaConfig.getLocationInfoConfig().getStateProvinceNamesFile());
+      stateProvinceParser =
+          StateProvinceParser.getInstance(
+              alaConfig.getLocationInfoConfig().getStateProvinceNamesFile());
     } catch (Exception e) {
       log.error(e.getMessage(), e);
       throw new RuntimeException(e.getMessage());
@@ -182,7 +183,7 @@ public class AlaLocationInterpreterTest {
 
     ALALocationInterpreter.interpretStateProvince(kvStore).accept(er, lr);
     ALALocationInterpreter.verifyLocationInfo(
-            countryCentrePoints, stateProvinceCentrePoints, stateProvinceVocab)
+            countryCentrePoints, stateProvinceCentrePoints, stateProvinceParser)
         .accept(er, lr);
 
     assertEquals("New South Wales", lr.getStateProvince());
@@ -216,7 +217,7 @@ public class AlaLocationInterpreterTest {
 
     ALALocationInterpreter.interpretStateProvince(kvStore).accept(er, lr);
     ALALocationInterpreter.verifyLocationInfo(
-            countryCentrePoints, stateProvinceCentrePoints, stateProvinceVocab)
+            countryCentrePoints, stateProvinceCentrePoints, stateProvinceParser)
         .accept(er, lr);
 
     assertEquals("New South Wales", lr.getStateProvince());
@@ -246,7 +247,7 @@ public class AlaLocationInterpreterTest {
 
     ALALocationInterpreter.interpretStateProvince(kvStore).accept(er, lr);
     ALALocationInterpreter.verifyLocationInfo(
-            countryCentrePoints, stateProvinceCentrePoints, stateProvinceVocab)
+            countryCentrePoints, stateProvinceCentrePoints, stateProvinceParser)
         .accept(er, lr);
 
     assertEquals("New South Wales", lr.getStateProvince());
@@ -285,7 +286,7 @@ public class AlaLocationInterpreterTest {
 
     ALALocationInterpreter.interpretStateProvince(kvStore).accept(er, lr);
     ALALocationInterpreter.verifyLocationInfo(
-            countryCentrePoints, stateProvinceCentrePoints, stateProvinceVocab)
+            countryCentrePoints, stateProvinceCentrePoints, stateProvinceParser)
         .accept(er, lr);
     assertEquals("Victoria", lr.getStateProvince());
 
@@ -369,7 +370,7 @@ public class AlaLocationInterpreterTest {
 
     LocationInterpreter.interpretCountryAndCoordinates(store, mdr).accept(er, lr);
     ALALocationInterpreter.verifyLocationInfo(
-            countryCentrePoints, stateProvinceCentrePoints, stateProvinceVocab)
+            countryCentrePoints, stateProvinceCentrePoints, stateProvinceParser)
         .accept(er, lr);
 
     assertArrayEquals(

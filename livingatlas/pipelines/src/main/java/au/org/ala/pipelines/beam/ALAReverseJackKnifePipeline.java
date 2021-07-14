@@ -16,15 +16,13 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
+import org.apache.beam.sdk.extensions.joinlibrary.Join;
 import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.GroupByKey;
 import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.transforms.join.CoGbkResult;
-import org.apache.beam.sdk.transforms.join.CoGroupByKey;
-import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.*;
 import org.apache.commons.lang.StringUtils;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
@@ -123,40 +121,41 @@ public class ALAReverseJackKnifePipeline {
                   public void processElement(ProcessContext c) {
                     SampleRecord e = c.element();
                     Double[] values = new Double[layers.length];
+                    int countNull = 0;
                     for (int i = 0; i < layers.length; i++) {
                       values[i] = e.getDoubles().getOrDefault(layers[i], Double.NaN);
+                      if (values[i] == null) {
+                        countNull++;
+                      }
                     }
                     String latlng = e.getLatLng();
-                    if (latlng != null) {
+                    if (latlng != null && countNull < layers.length) {
                       c.output(KV.of(latlng, values));
                     }
                   }
                 }));
 
-    // Co group IndexRecords with coordinates with Sample data
-    final TupleTag<KV<String, String>> indexRecordTag = new TupleTag<>();
-    final TupleTag<Double[]> samplingTag = new TupleTag<>();
-
     // Join collections by LatLng string
-    PCollection<KV<String, CoGbkResult>> results =
-        KeyedPCollectionTuple.of(samplingTag, sampleRecordsKeyedLatng)
-            .and(indexRecordTag, recordsWithCoordinatesKeyedLatng)
-            .apply(CoGroupByKey.create());
+    PCollection<KV<String, KV<KV<String, String>, Double[]>>> results =
+        Join.innerJoin(recordsWithCoordinatesKeyedLatng, sampleRecordsKeyedLatng);
 
     // Group by speciesID
     PCollection<KV<String, Iterable<KV<String, Double[]>>>> groups =
         results
             .apply(
                 ParDo.of(
-                    new DoFn<KV<String, CoGbkResult>, KV<String, KV<String, Double[]>>>() {
+                    new DoFn<
+                        KV<String, KV<KV<String, String>, Double[]>>,
+                        KV<String, KV<String, Double[]>>>() {
                       @ProcessElement
                       public void processElement(ProcessContext c) {
-                        KV<String, CoGbkResult> e = c.element();
+                        KV<String, KV<KV<String, String>, Double[]>> e = c.element();
                         try {
-                          String recordID = e.getValue().getOnly(indexRecordTag).getKey();
-                          String speciesID = e.getValue().getOnly(indexRecordTag).getValue();
-                          Double[] sampling = e.getValue().getOnly(samplingTag);
+                          Double[] sampling = e.getValue().getValue();
+                          KV<String, String> ir = e.getValue().getKey();
 
+                          String recordID = ir.getKey();
+                          String speciesID = ir.getValue();
                           c.output(KV.of(speciesID, KV.of(recordID, sampling)));
                         } catch (Exception ex) {
 
@@ -210,12 +209,11 @@ public class ALAReverseJackKnifePipeline {
                         // Generate jacknife models for each layer.
                         List<double[]> jackKnifeModels = new ArrayList<>(layers.length);
                         for (int i = 0; i < layers.length; i++) {
+                          double[] model = null;
                           try {
-                            double[] model =
+                            model =
                                 JackKnife.jackknife(
-                                    values[i].toArray(new Double[values[i].size()]),
-                                    minSampleThreshold);
-                            jackKnifeModels.add(model);
+                                    values[i].toArray(new Double[0]), minSampleThreshold);
                             if (model != null) {
                               JackKnifeModelRecord jkmr =
                                   JackKnifeModelRecord.newBuilder()
@@ -223,6 +221,11 @@ public class ALAReverseJackKnifePipeline {
                                       .setFeature(layers[i])
                                       .setMin(model[0])
                                       .setMax(model[1])
+                                      .setCount(
+                                          (int)
+                                              values[i].stream()
+                                                  .filter(v -> !Double.isNaN(v))
+                                                  .count())
                                       .build();
                               c.output(jackKnifeModelRecordTag, jkmr);
                               counterModels.inc();
@@ -234,6 +237,8 @@ public class ALAReverseJackKnifePipeline {
                                     + " "
                                     + layers[i],
                                 ex.getMessage());
+                          } finally {
+                            jackKnifeModels.add(model);
                           }
                         }
 
@@ -257,8 +262,7 @@ public class ALAReverseJackKnifePipeline {
                           // Collect only IDs containing outlier layers.
                           if (outliers != null) {
                             JackKnifeOutlierRecord jor =
-                                new JackKnifeOutlierRecord()
-                                    .newBuilder()
+                                JackKnifeOutlierRecord.newBuilder()
                                     .setItems(outliers)
                                     .setId(ids.get(i))
                                     .build();

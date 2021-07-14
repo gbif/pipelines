@@ -7,7 +7,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import joptsimple.internal.Strings;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.beam.options.EsIndexingPipelineOptions;
@@ -161,7 +160,7 @@ public class InterpretedToEsIndexExtendedPipelineIT {
       "--metaFileName=interpreted-to-index.yml",
       "--inputPath=" + input,
       "--targetPath=" + input,
-      "--esHosts=" + Strings.join(ES_SERVER.getEsConfig().getRawHosts(), ","),
+      "--esHosts=" + String.join(",", ES_SERVER.getEsConfig().getRawHosts()),
       "--esIndexName=interpretedtoesindexextendedpipelineit",
       "--esAlias=occurrence_interpretedtoesindexextendedpipelineit",
       "--indexNumberShards=1",

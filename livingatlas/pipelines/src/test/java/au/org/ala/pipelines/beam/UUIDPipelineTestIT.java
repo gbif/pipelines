@@ -15,9 +15,9 @@ import org.gbif.pipelines.common.beam.options.DwcaPipelineOptions;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.jupiter.api.Assertions;
 
 public class UUIDPipelineTestIT {
 
@@ -163,6 +163,6 @@ public class UUIDPipelineTestIT {
     ALAUUIDMintingPipeline.run(uuidOptions);
 
     // check the UUIDs validate
-    Assertions.assertTrue(ValidationUtils.checkValidationFile(uuidOptions).getValid());
+    Assert.assertTrue(ValidationUtils.checkValidationFile(uuidOptions).getValid());
   }
 }

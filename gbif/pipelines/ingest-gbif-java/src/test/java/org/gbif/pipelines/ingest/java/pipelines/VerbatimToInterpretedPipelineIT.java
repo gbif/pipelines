@@ -48,7 +48,7 @@ public class VerbatimToInterpretedPipelineIT {
     // State
     String outputFile = getClass().getResource("/data7/ingest").getFile();
 
-    String attempt = "60";
+    String attempt = "55";
 
     String[] args = {
       "--datasetId=" + DATASET_KEY,
@@ -67,12 +67,36 @@ public class VerbatimToInterpretedPipelineIT {
   }
 
   @Test
+  public void pipelineTaxonomySynchTest() throws Exception {
+
+    // State
+    String outputFile = getClass().getResource("/data7/ingest").getFile();
+
+    String attempt = "77";
+
+    String[] args = {
+      "--datasetId=" + DATASET_KEY,
+      "--attempt=" + attempt,
+      "--runner=SparkRunner",
+      "--metaFileName=verbatim-to-interpreted.yml",
+      "--inputPath=" + outputFile + "/" + DATASET_KEY + "/" + attempt + "/verbatim.avro",
+      "--targetPath=" + outputFile,
+      "--interpretationTypes=TAXONOMY",
+      "--properties=" + outputFile + "/pipelines.yaml",
+      "--testMode=true"
+    };
+
+    // When, Should
+    pipelineTest(args, attempt, outputFile);
+  }
+
+  @Test
   public void pipelineAllAsynchTest() throws Exception {
 
     // State
     String outputFile = getClass().getResource("/data7/ingest").getFile();
 
-    String attempt = "61";
+    String attempt = "71";
 
     String[] args = {
       "--datasetId=" + DATASET_KEY,

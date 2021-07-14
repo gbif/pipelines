@@ -3,6 +3,7 @@ package au.org.ala.clustering;
 import java.util.*;
 import org.gbif.pipelines.core.parsers.clustering.OccurrenceFeatures;
 
+/** Utility methods for identifying the representative record in cluster. */
 public class RepresentativeRecordUtils {
 
   /**
@@ -11,58 +12,50 @@ public class RepresentativeRecordUtils {
    *
    * <p>1) Coordinates 2) Date 3) First added to system
    *
-   * @param cluster
    * @return OccurrenceFeatures considered the representative record.
    */
-  public static HashKeyOccurrence findRepresentativeRecord(List<HashKeyOccurrence> cluster) {
+  public static HashKeyOccurrence findRepresentativeRecord(Set<HashKeyOccurrence> cluster) {
 
     // get highest resolution coordinates
-    List<HashKeyOccurrence> highestRanking = rankCoordPrecision(cluster);
+    Set<HashKeyOccurrence> highestRanking = rankCoordPrecision(cluster);
     if (highestRanking.size() == 1) {
-      return highestRanking.get(0);
+      return highestRanking.stream().findFirst().get();
     }
 
     // get highest resolution dates
     highestRanking = rankDatePrecision(highestRanking);
     if (highestRanking.size() == 1) {
-      return highestRanking.get(0);
+      return highestRanking.stream().findFirst().get();
     }
 
     // otherwise, just pick one using a consistent method
     return pickRepresentative(highestRanking);
   }
 
-  public static HashKeyOccurrence pickRepresentative(List<HashKeyOccurrence> cluster) {
-    cluster.sort(
-        new Comparator<HashKeyOccurrence>() {
-          @Override
-          public int compare(HashKeyOccurrence o1, HashKeyOccurrence o2) {
-            return o1.getId().compareTo(o2.getId());
-          }
-        });
-    return cluster.get(0);
+  public static HashKeyOccurrence pickRepresentative(Set<HashKeyOccurrence> cluster) {
+    return cluster.stream()
+        .sorted(Comparator.comparing(HashKeyOccurrence::getId))
+        .findFirst()
+        .get();
   }
 
   /**
    * Returns from the list supplied the list of the highest rank occurrences in terms of date
    * precision. Occurrences with a year, month and day will be ranked the highest. Occurrences with
    * just a year value or nothing will be ranked lowest.
-   *
-   * @param cluster
-   * @return
    */
-  public static List<HashKeyOccurrence> rankDatePrecision(List<HashKeyOccurrence> cluster) {
+  public static Set<HashKeyOccurrence> rankDatePrecision(Set<HashKeyOccurrence> cluster) {
 
     Iterator<HashKeyOccurrence> iter = cluster.iterator();
     HashKeyOccurrence occurrenceFeatures = iter.next();
-    Integer highestPrecision = determineDatePrecision(occurrenceFeatures);
-    List<HashKeyOccurrence> highestRanking = new ArrayList<>();
+    int highestPrecision = determineDatePrecision(occurrenceFeatures);
+    Set<HashKeyOccurrence> highestRanking = new HashSet<>();
     highestRanking.add(occurrenceFeatures);
 
     while (iter.hasNext()) {
 
       HashKeyOccurrence occurrenceFeatures1 = iter.next();
-      Integer precision = determineDatePrecision(occurrenceFeatures1);
+      int precision = determineDatePrecision(occurrenceFeatures1);
       if (precision == highestPrecision) {
         highestRanking.add(occurrenceFeatures1);
       } else if (precision > highestPrecision) {
@@ -79,26 +72,23 @@ public class RepresentativeRecordUtils {
   /**
    * Returns a subset of the cluster containing the occurrence features with the highest record
    * precision.
-   *
-   * @param cluster
-   * @return
    */
-  public static List<HashKeyOccurrence> rankCoordPrecision(List<HashKeyOccurrence> cluster) {
+  public static Set<HashKeyOccurrence> rankCoordPrecision(Set<HashKeyOccurrence> cluster) {
 
     Iterator<HashKeyOccurrence> iter = cluster.iterator();
     HashKeyOccurrence occurrenceFeatures = iter.next();
-    Integer highestPrecision = determineCoordPrecision(occurrenceFeatures);
-    List<HashKeyOccurrence> highestRanking = new ArrayList<>();
+    int highestPrecision = determineCoordPrecision(occurrenceFeatures);
+    LinkedHashSet<HashKeyOccurrence> highestRanking = new LinkedHashSet<>();
     highestRanking.add(occurrenceFeatures);
 
     while (iter.hasNext()) {
 
       HashKeyOccurrence occurrenceFeatures1 = iter.next();
-      Integer precision = determineCoordPrecision(occurrenceFeatures1);
+      int precision = determineCoordPrecision(occurrenceFeatures1);
       if (precision == highestPrecision) {
         highestRanking.add(occurrenceFeatures1);
       } else if (precision > highestPrecision) {
-        highestRanking = new ArrayList<>();
+        highestRanking = new LinkedHashSet<>();
         highestRanking.add(occurrenceFeatures1);
         highestPrecision = precision;
       }
@@ -144,9 +134,9 @@ public class RepresentativeRecordUtils {
    * Reports precision of the date information as a number. A record with year, month and day = 3,
    * with a point removed for each component that is missing.
    */
-  public static Integer determineDatePrecision(OccurrenceFeatures occurrenceFeatures) {
+  public static int determineDatePrecision(OccurrenceFeatures occurrenceFeatures) {
 
-    Integer datePrecision = 0;
+    int datePrecision = 0;
     if (occurrenceFeatures.getYear() != null) {
       datePrecision += 1;
     }
@@ -165,19 +155,16 @@ public class RepresentativeRecordUtils {
   /**
    * Takes the list of paired occurrences and creates clusters from the pairs. i.e. If we have a
    * pairs (A,B) and (B, C), this will form a cluster (A, B, C).
-   *
-   * @param pairs
-   * @return
    */
-  public static List<List<HashKeyOccurrence>> createClusters(List<ClusterPair> pairs) {
+  public static List<Set<HashKeyOccurrence>> createClusters(List<ClusterPair> pairs) {
 
-    List<List<HashKeyOccurrence>> clusters = new ArrayList<>();
+    List<Set<HashKeyOccurrence>> clusters = new ArrayList<>();
 
     for (ClusterPair pair : pairs) {
       boolean added = false;
 
       // iterate through each cluster
-      for (List<HashKeyOccurrence> cluster : clusters) {
+      for (Set<HashKeyOccurrence> cluster : clusters) {
         boolean present = cluster.contains(pair.getO1()) || cluster.contains(pair.getO2());
         if (present) {
           added = true;
@@ -188,7 +175,7 @@ public class RepresentativeRecordUtils {
 
       if (!added) {
         // create a cluster
-        List<HashKeyOccurrence> newCluster = new ArrayList<>();
+        Set<HashKeyOccurrence> newCluster = new HashSet<>();
         newCluster.add(pair.getO1());
         newCluster.add(pair.getO2());
         clusters.add(newCluster);

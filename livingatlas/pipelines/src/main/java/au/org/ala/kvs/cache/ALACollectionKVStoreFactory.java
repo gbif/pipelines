@@ -11,8 +11,8 @@ import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.cache.KeyValueCache;
 import org.gbif.kvs.hbase.Command;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
-import org.gbif.rest.client.configuration.ClientConfiguration;
 
+/** Key value store factory for Collection lookups */
 @Slf4j
 public class ALACollectionKVStoreFactory {
 
@@ -40,13 +40,6 @@ public class ALACollectionKVStoreFactory {
   public static KeyValueStore<ALACollectionLookup, ALACollectionMatch> create(
       ALAPipelinesConfig config) {
 
-    ClientConfiguration clientConfiguration =
-        ClientConfiguration.builder()
-            .withBaseApiUrl(config.getCollectory().getWsUrl()) // GBIF base API url
-            .withTimeOut(
-                config.getCollectory().getTimeoutSec()) // Geocode service connection time-out
-            .build();
-
     ALACollectoryServiceClient wsClient = new ALACollectoryServiceClient(config.getCollectory());
     Command closeHandler =
         () -> {
@@ -72,7 +65,7 @@ public class ALACollectionKVStoreFactory {
             try {
               return service.lookupCodes(key.getInstitutionCode(), key.getCollectionCode());
             } catch (Exception ex) {
-              // this is can happen for bad data and this service is suspectible to http 404 due to
+              // this is can happen for bad data and this service is susceptible to http 404 due to
               // the fact
               // it takes URL parameters from the raw data. So log and carry on for now.
               log.error(

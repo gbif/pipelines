@@ -15,15 +15,19 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class XmlToAvroConverterTest {
 
-  private final String inpPath =
-      getClass().getResource("/responses/pages/7ef15372-1387-11e2-bb2e-00145eb45e9a/").getFile();
-  private final String outPath = inpPath + "verbatim.avro";
+  private String getTestInputPath() {
+    return getClass()
+        .getResource("/responses/pages/7ef15372-1387-11e2-bb2e-00145eb45e9a/")
+        .getFile();
+  }
 
   @Test
   public void avroDeserializingNoramlIdTest() throws IOException {
 
     // State
-    String inputPath = inpPath + "61";
+    String inputPath = getTestInputPath() + "61";
+
+    String outPath = inputPath + "verbatim.avro";
 
     // When
     XmlToAvroConverter.create().inputPath(inputPath).outputPath(outPath).convert();

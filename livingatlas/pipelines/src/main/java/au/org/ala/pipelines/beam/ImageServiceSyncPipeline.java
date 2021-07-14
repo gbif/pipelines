@@ -1,7 +1,10 @@
 package au.org.ala.pipelines.beam;
 
+import static au.org.ala.pipelines.beam.ImagePipelineUtils.*;
+import static au.org.ala.pipelines.beam.ImageServiceDiffLoadPipeline.IMAGEID;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
+import au.com.bytecode.opencsv.CSVParser;
 import au.org.ala.images.ImageService;
 import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.kvs.ALAPipelinesConfigFactory;
@@ -14,14 +17,16 @@ import com.google.common.collect.ImmutableList;
 import java.io.*;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.UnaryOperator;
-import java.util.zip.GZIPInputStream;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.ResponseBody;
 import org.apache.avro.file.CodecFactory;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.AvroIO;
+import org.apache.beam.sdk.io.Compression;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.transforms.*;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
@@ -30,7 +35,10 @@ import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.gbif.dwc.terms.DcTerm;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
@@ -53,6 +61,18 @@ import retrofit2.Call;
 public class ImageServiceSyncPipeline {
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
+
+  public static final List<String> REQUIRED_HEADERS =
+      Arrays.stream(
+              new String[] {
+                IMAGEID.toLowerCase(Locale.ROOT),
+                DcTerm.identifier.simpleName(),
+                DcTerm.creator.simpleName(),
+                DcTerm.format.simpleName(),
+                DcTerm.license.simpleName(),
+              })
+          .map(s -> s.toLowerCase(Locale.ROOT))
+          .collect(Collectors.toList());
 
   public static void main(String[] args) throws Exception {
     String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "images");
@@ -126,41 +146,63 @@ public class ImageServiceSyncPipeline {
    * <p>1. Download CSV export from https://images-dev.ala.org.au/ws/exportDatasetMapping/dr123 2.
    * Extract CSV 3. Load into HDFS 4. Generate ImageServiceRecord AVRO
    */
-  public static void run(ImageServicePipelineOptions options, String imageMappingPath) {
+  public static void run(ImageServicePipelineOptions options, String imageMappingPath)
+      throws IOException {
 
     // now lets start the pipelines
     log.info("Creating a pipeline from options");
 
     Pipeline p = Pipeline.create(options);
 
+    FileSystem fs =
+        FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
+            .getFs(options.getInputPath());
+
+    List<String> headers = readHeadersLowerCased(fs, imageMappingPath);
+    validateHeaders(headers, REQUIRED_HEADERS);
+
+    final int imageIdIdx = indexOf(headers, IMAGEID);
+    final int identifierIdx = indexOf(headers, DcTerm.identifier);
+    final int creatorIdx = indexOf(headers, DcTerm.creator);
+    final int formatIdx = indexOf(headers, DcTerm.format);
+    final int licenceIdx = indexOf(headers, DcTerm.license);
+
     // Read the export file from image-service download. This is a
-    // CSV file downloaded from image service with the following fields:
+    // GZipped CSV file downloaded from image service with the following fields:
     // image_identifier as "imageID, identifier, audience, contributor
     // created, creator, description, format, license, publisher
     // references,rightsHolder,source, title,type
     //
     // Convert to KV of URL -> [imageID, mimeType, licence]
     PCollection<KV<String, Image>> imageServiceExportMapping =
-        p.apply(TextIO.read().from(imageMappingPath))
+        p.apply(TextIO.read().from(imageMappingPath).withCompression(Compression.GZIP))
             .apply(
                 ParDo.of(
                     new DoFn<String, KV<String, Image>>() {
                       @ProcessElement
                       public void processElement(
                           @Element String imageMapping, OutputReceiver<KV<String, Image>> out) {
-                        String[] parts = imageMapping.split(",");
-                        if (parts.length >= 9) {
-                          // CSV is imageID
-                          // Swap so we key on URL for later grouping
-                          Image image =
-                              Image.newBuilder()
-                                  .setIdentifier(parts[0])
-                                  .setCreator(parts[5])
-                                  .setFormat(parts[7])
-                                  .setLicense(parts[8])
-                                  .build();
-                          out.output(KV.of(parts[1], image));
-                        } else {
+
+                        try {
+                          final CSVParser parser = new CSVParser();
+                          String[] parts = parser.parseLine(imageMapping);
+
+                          if (parts.length >= 9) {
+                            // CSV is imageID
+                            // Swap so we key on URL for later grouping
+                            Image image =
+                                Image.newBuilder()
+                                    .setIdentifier(parts[imageIdIdx]) // image service ID
+                                    .setCreator(parts[creatorIdx])
+                                    .setFormat(parts[formatIdx])
+                                    .setLicense(parts[licenceIdx])
+                                    .build();
+
+                            out.output(KV.of(parts[identifierIdx], image));
+                          } else {
+                            log.error("Problem with line: " + imageMapping);
+                          }
+                        } catch (Exception e) {
                           log.error("Problem with line: " + imageMapping);
                         }
                       }
@@ -177,7 +219,14 @@ public class ImageServiceSyncPipeline {
         p.apply(multimediaTransform.read(pathFn)).apply(ParDo.of(new MultimediaFcn()));
 
     // retrieve a list of image service base URLs
-    final String[] recognisedPaths = options.getRecognisedPaths().split("|");
+    final List<String> recognisedPaths =
+        Arrays.stream(options.getRecognisedPaths().split("\\|"))
+            .map(rp -> StringUtils.trimToNull(rp))
+            .filter(s -> s != null)
+            .collect(Collectors.toList());
+
+    log.info("Recognised path size: {}", recognisedPaths.size());
+    recognisedPaths.stream().forEach(path -> log.info("Recognised paths: {}", path));
 
     // For image service URLs in Multimedia AVRO - as is the case in the data migration,
     // we cheat.
@@ -185,12 +234,12 @@ public class ImageServiceSyncPipeline {
     // Taking URLs of the form
     // https://images.ala.org.au/image/proxyImageThumbnailLarge?imageId=<UUID>
     // and substring-ing to UUID
-    PCollection<KV<String, Image>> imageServiceUrlsCollection =
+    PCollection<KV<String, Image>> imageServiceUrls =
         multimediaItems
             .apply(
                 Filter.by(
                     input ->
-                        Arrays.stream(recognisedPaths)
+                        recognisedPaths.stream()
                             .anyMatch(
                                 path ->
                                     input.getValue().getValue().getIdentifier().startsWith(path))))
@@ -198,16 +247,16 @@ public class ImageServiceSyncPipeline {
 
     // These are NOT image service URLs i.e. they should be URLs as provided
     // by the data publisher
-
     // RECORDID - > Multimedia
     // Change to URL -> KV<RecordID, Multimedia>
     PCollection<KV<String, KV<String, Multimedia>>> nonImageServiceUrls =
         multimediaItems.apply(
             Filter.by(
                 input ->
-                    Arrays.stream(recognisedPaths)
-                        .noneMatch(
-                            path -> input.getValue().getValue().getIdentifier().startsWith(path))));
+                    !(recognisedPaths.stream()
+                        .anyMatch(
+                            path ->
+                                input.getValue().getValue().getIdentifier().startsWith(path)))));
 
     log.info("Create join collection");
     final TupleTag<Image> imageServiceExportMappingTag = new TupleTag<Image>() {};
@@ -234,23 +283,23 @@ public class ImageServiceSyncPipeline {
                     Iterable<KV<String, Multimedia>> imageIDs =
                         e.getValue().getAll(nonImageServiceUrlsTag);
 
-                    Iterable<Image> imageService =
+                    Iterable<Image> imageServiceExport =
                         e.getValue().getAll(imageServiceExportMappingTag);
 
                     if (imageIDs.iterator().hasNext()) {
                       KV<String, Multimedia> recordIDMultimedia = imageIDs.iterator().next();
 
                       String recordID = recordIDMultimedia.getKey();
-                      if (imageService.iterator().hasNext()) {
-                        c.output(KV.of(recordID, imageService.iterator().next()));
+                      if (imageServiceExport.iterator().hasNext()) {
+                        c.output(KV.of(recordID, imageServiceExport.iterator().next()));
                       }
                     }
                   }
                 }));
 
-    //    // Union of image service URL and non image service & run groupby recordID
+    // Union of image service URL and non image service & run groupby recordID
     PCollection<KV<String, Image>> combinedNotGrouped =
-        PCollectionList.of(imageServiceUrlsCollection)
+        PCollectionList.of(imageServiceUrls)
             .and(nonImageServiceUrlCollection)
             .apply("Flatten the non and image service", Flatten.pCollections());
 
@@ -258,7 +307,7 @@ public class ImageServiceSyncPipeline {
     PCollection<KV<String, Iterable<Image>>> combined =
         combinedNotGrouped.apply("Group by RecordID", GroupByKey.create());
 
-    // write output to /<DATASET-ID>/<attempt>/images/image-service-record-*.avro
+    // write output to /<DATASET-ID>/<attempt>/images/image-record-*.avro
     String avroPath =
         String.join(
             "/",
@@ -280,7 +329,10 @@ public class ImageServiceSyncPipeline {
     log.info("Finished");
   }
 
-  /** Function to create KV<ImageURL,RecordID> from MultimediaRecord. */
+  /**
+   * Function to create KV<RecordID,Image> from MultimediaRecord where Image is a link to the image
+   * stored in the image service.
+   */
   static class ImageServiceMultimediaToImageFcn
       extends DoFn<KV<String, KV<String, Multimedia>>, KV<String, Image>> {
 
@@ -297,13 +349,21 @@ public class ImageServiceSyncPipeline {
       String imageServiceURL = multimediaRecordMap.getKey();
 
       String identifier = imageServiceURL.substring(imageServiceURL.lastIndexOf("=") + 1);
+
       Multimedia multimedia = multimediaRecordMap.getValue().getValue();
       Image image =
           Image.newBuilder()
+              .setIdentifier(identifier)
+              .setAudience(multimedia.getAudience())
+              .setContributor(multimedia.getContributor())
+              .setCreated(multimedia.getCreated())
               .setCreator(multimedia.getCreator())
               .setFormat(multimedia.getFormat())
               .setLicense(multimedia.getLicense())
-              .setIdentifier(identifier)
+              .setPublisher(multimedia.getPublisher())
+              .setReferences(multimedia.getReferences())
+              .setRightsHolder(multimedia.getRightsHolder())
+              .setTitle(multimedia.getTitle())
               .build();
       out.output(KV.of(recordID, image));
     }
@@ -354,7 +414,7 @@ public class ImageServiceSyncPipeline {
    *
    * <p>for pipeline processing.
    */
-  private static String downloadImageMapping(ImageServicePipelineOptions options)
+  public static String downloadImageMapping(ImageServicePipelineOptions options)
       throws IOException {
 
     String tmpDir = options.getTempLocation() != null ? options.getTempLocation() : "/tmp";
@@ -387,38 +447,16 @@ public class ImageServiceSyncPipeline {
             options.getAttempt().toString(),
             "images",
             "image-service-export",
-            "export.csv");
+            "export.csv.gz");
     FileSystem fs =
         FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
             .getFs(options.getInputPath());
-    OutputStream outputStream = ALAFsUtils.openOutputStream(fs, hdfsPath);
-    decompressToStream(localFile, outputStream);
+
+    fs.copyFromLocalFile(new Path(filePath), new Path(hdfsPath));
 
     // delete the original download to avoid clogging up the local file system
     FileUtils.deleteQuietly(localFile);
 
     return hdfsPath;
-  }
-
-  public static void decompressToStream(File sourceFile, OutputStream fos) {
-    try {
-      // Create a gzip input stream to decompress the source
-      // file defined by the file input stream.
-      try (GZIPInputStream gzis = new GZIPInputStream(new FileInputStream(sourceFile))) {
-
-        // Create a buffer and temporary variable used during the
-        // file decompress process.
-        byte[] buffer = new byte[1024];
-        int length;
-
-        // Read from the compressed source file and write the
-        // decompress file.
-        while ((length = gzis.read(buffer)) > 0) {
-          fos.write(buffer, 0, length);
-        }
-      }
-    } catch (IOException e) {
-      log.warn(e.getMessage(), e);
-    }
   }
 }

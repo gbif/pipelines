@@ -12,10 +12,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class DumpArchiveList {
 
-  @Parameter(names = "--inputPath", description = "Comma-separated list of group names to be run")
+  @Parameter(
+      names = "--inputPath",
+      description = "Data directory for dwca imports e.g. /data/dwca-imports")
   private String inputPath;
 
-  @Parameter(names = "--targetPath", description = "Comma-separated list of group names to be run")
+  @Parameter(names = "--targetPath", description = "CSV Output path")
   private String targetPath;
 
   @Parameter(

@@ -109,6 +109,10 @@ final class ProcessRunnerBuilder {
         .flatMap(vr -> Optional.ofNullable(vr.isUseExtendedRecordId()))
         .ifPresent(x -> command.add("--useExtendedRecordId=" + x));
 
+    if (config.useBeamDeprecatedRead) {
+      command.add("--experiments=use_deprecated_read");
+    }
+
     return command.toString();
   }
 

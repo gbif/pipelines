@@ -17,6 +17,10 @@ import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
+/**
+ * Extensions to {@link org.gbif.pipelines.core.interpreters.core.BasicInterpreter} to support
+ * living atlases.
+ */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ALABasicInterpreter {
 

@@ -41,12 +41,20 @@ geocodeConfig:
   country:
     path: /data/pipelines-shp/political
     field: ISO_A2
+    intersectBuffer: 0.135
+    intersectMapping:
+      CX: AU
+      CC: AU
+      HM: AU
+      NF: AU
   eez:
     path: /data/pipelines-shp/eez
     field: ISO2
+    intersectBuffer:  0.135
   stateProvince:
     path: /data/pipelines-shp/cw_state_poly
     field: FEATURE
+    intersectBuffer: 0.135
   biome:
     path: /data/pipelines-shp/gadm0
     field: FEATURE
@@ -109,26 +117,16 @@ uuid:
   # useExtendedRecordId: true
 
 # class: au.org.ala.pipelines.beam.ALAInterpretedToLatLongCSVPipeline
-export-latlng:
-  inputPath: '{fsPath}/pipelines-data'
-  runner: SparkRunner
-  appName: Lat Long export for {datasetId}
-
-# class: au.org.ala.sampling.LayerCrawler
-sample:
-  inputPath: '{fsPath}/pipelines-data'
-  appName: Sample for {datasetId}
-  metaFileName: indexing-metrics.yml
-  runner: SparkRunner
-  # TODO improve/move this
-
-# LayerCrawler specific configuration
-layerCrawler:
+sampling:
   # baseUrl: https://spatial.your-l-a.site/ws/
+  appName: Sampling for {datasetId}
   baseUrl: https://sampling.ala.org.au/sampling-service/
   batchSize: 25000
   batchStatusSleepTime: 1000
   downloadRetries: 5
+  inputPath: '{fsPath}/pipelines-data'
+  metaFileName: indexing-metrics.yml
+  runner: SparkRunner
 
 speciesLists:
   runner: SparkRunner
@@ -198,7 +196,7 @@ uuid-sh-args:
     executor-memory: 7G
     driver-memory: 1G
 
-export-latlng-sh-args:
+export-sampling-sh-args:
   spark-embedded:
     jvm:
   spark-cluster:

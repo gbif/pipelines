@@ -6,7 +6,6 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_HDFS_
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.BASIC_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.CHRONOMETRIC_AGE_TABLE_RECORDS_COUNT;
-import static org.gbif.pipelines.common.PipelinesVariables.Metrics.CHRONOMETRIC_DATE_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.CLONING_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.DUPLICATE_GBIF_IDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.DUPLICATE_IDS_COUNT;
@@ -46,7 +45,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.VERBATIM_RECO
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
-import org.gbif.pipelines.transforms.common.FilterExtendedRecordTransform;
+import org.gbif.pipelines.transforms.common.FilterRecordsTransform;
 import org.gbif.pipelines.transforms.common.UniqueGbifIdTransform;
 import org.gbif.pipelines.transforms.common.UniqueIdTransform;
 import org.gbif.pipelines.transforms.converters.GbifJsonTransform;
@@ -64,7 +63,6 @@ import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.gbif.pipelines.transforms.table.AmplificationTableTransform;
 import org.gbif.pipelines.transforms.table.ChronometricAgeTableTransform;
-import org.gbif.pipelines.transforms.table.ChronometricDateTableTransform;
 import org.gbif.pipelines.transforms.table.CloningTableTransform;
 import org.gbif.pipelines.transforms.table.ExtendedMeasurementOrFactTableTransform;
 import org.gbif.pipelines.transforms.table.GelImageTableTransform;
@@ -104,7 +102,7 @@ public class IngestMetricsBuilder {
         .addMetric(ImageTransform.class, IMAGE_RECORDS_COUNT)
         .addMetric(MeasurementOrFactTransform.class, MEASUREMENT_OR_FACT_RECORDS_COUNT)
         .addMetric(MultimediaTransform.class, MULTIMEDIA_RECORDS_COUNT)
-        .addMetric(FilterExtendedRecordTransform.class, FILTER_ER_BASED_ON_GBIF_ID)
+        .addMetric(FilterRecordsTransform.class, FILTER_ER_BASED_ON_GBIF_ID)
         .addMetric(UniqueGbifIdTransform.class, UNIQUE_GBIF_IDS_COUNT)
         .addMetric(UniqueGbifIdTransform.class, DUPLICATE_GBIF_IDS_COUNT)
         .addMetric(UniqueGbifIdTransform.class, IDENTICAL_GBIF_OBJECTS_COUNT)
@@ -150,7 +148,6 @@ public class IngestMetricsBuilder {
             ExtendedMeasurementOrFactTableTransform.class,
             EXTENDED_MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT)
         .addMetric(ChronometricAgeTableTransform.class, CHRONOMETRIC_AGE_TABLE_RECORDS_COUNT)
-        .addMetric(ChronometricDateTableTransform.class, CHRONOMETRIC_DATE_TABLE_RECORDS_COUNT)
         .addMetric(ReferenceTableTransform.class, REFERENCE_TABLE_RECORDS_COUNT)
         .addMetric(IdentifierTableTransform.class, IDENTIFIER_TABLE_RECORDS_COUNT);
   }

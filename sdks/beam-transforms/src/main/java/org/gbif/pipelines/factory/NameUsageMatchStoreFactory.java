@@ -10,6 +10,7 @@ import org.gbif.kvs.species.SpeciesMatchRequest;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.config.model.WsConfig;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
+import org.gbif.rest.client.configuration.ChecklistbankClientsConfiguration;
 import org.gbif.rest.client.configuration.ClientConfiguration;
 import org.gbif.rest.client.species.NameUsageMatch;
 
@@ -50,11 +51,20 @@ public class NameUsageMatchStoreFactory {
             .map(WsConfig::getWsUrl)
             .orElse(config.getGbifApi().getWsUrl());
 
-    ClientConfiguration clientConfiguration =
-        ClientConfiguration.builder()
-            .withBaseApiUrl(api)
-            .withFileCacheMaxSizeMb(config.getNameUsageMatch().getWsCacheSizeMb())
-            .withTimeOut(config.getNameUsageMatch().getWsTimeoutSec())
+    ChecklistbankClientsConfiguration clientConfiguration =
+        ChecklistbankClientsConfiguration.builder()
+            .nameUSageClientConfiguration(
+                ClientConfiguration.builder()
+                    .withBaseApiUrl(api)
+                    .withFileCacheMaxSizeMb(config.getNameUsageMatch().getWsCacheSizeMb())
+                    .withTimeOut(config.getNameUsageMatch().getWsTimeoutSec())
+                    .build())
+            .checklistbankClientConfiguration(
+                ClientConfiguration.builder()
+                    .withBaseApiUrl(api)
+                    .withFileCacheMaxSizeMb(config.getNameUsageMatch().getWsCacheSizeMb())
+                    .withTimeOut(config.getNameUsageMatch().getWsTimeoutSec())
+                    .build())
             .build();
 
     String zk = config.getNameUsageMatch().getZkConnectionString();

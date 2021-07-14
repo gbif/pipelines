@@ -17,7 +17,7 @@ import org.gbif.pipelines.core.config.model.WsConfig;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
 
 /**
- * Check for names.
+ * Key value store factory for name lookups
  *
  * <p>Each store is rank-specific. If a name is supplied, then it is checked against the nmame
  * service to see if there is something of an appropriate rank.

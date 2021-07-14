@@ -16,8 +16,20 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 
+/**
+ * Extensions to {@link org.gbif.pipelines.core.interpreters.core.TemporalInterpreter} for living
+ * atlases.
+ */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ALATemporalInterpreter {
+
+  public static final String DAY_RANGE_PRECISION = "DAY_RANGE";
+  public static final String MONTH_RANGE_PRECISION = "MONTH_RANGE";
+  public static final String YEAR_RANGE_PRECISION = "YEAR_RANGE";
+  public static final String NOT_SUPPLIED = "NOT_SUPPLIED";
+  public static final String DAY_PRECISION = "DAY";
+  public static final String MONTH_PRECISION = "MONTH";
+  public static final String YEAR_PRECISION = "YEAR";
 
   protected static final LocalDate MIN_LOCAL_DATE = LocalDate.of(1600, 1, 1);
 
@@ -85,6 +97,109 @@ public class ALATemporalInterpreter {
               .before(TemporalAccessorUtils.toDate(parsedGeoreferencedResult.getPayload()))) {
         addIssue(tr, ALAOccurrenceIssue.GEOREFERENCE_POST_OCCURRENCE.name());
       }
+    }
+  }
+
+  static final int YEAR_PRECISION_LENGTH = "yyyy".length();
+  static final int MONTH_PRECISION_LENGTH = "yyyy-MM".length();
+  static final int DAY_PRECISION_LENGTH = "yyyy-MM-dd".length();
+
+  /** All verification process require TemporalInterpreter.interpretTemporal has been called. */
+  public static void checkDatePrecision(ExtendedRecord er, TemporalRecord tr) {
+
+    String determinedDatePrecision = NOT_SUPPLIED;
+
+    if (tr.getEventDate() != null) {
+
+      // do we have a range
+      if (tr.getEventDate().getLte() != null && tr.getEventDate().getGte() != null) {
+
+        determinedDatePrecision =
+            DAY_RANGE_PRECISION; // assume day range precision, then downgrade as required
+
+        // catch
+        if (tr.getEventDate().getLte().equals(tr.getEventDate().getGte())) {
+          if (tr.getEventDate().getLte().length() == DAY_PRECISION_LENGTH) {
+            determinedDatePrecision = DAY_PRECISION;
+          }
+          if (tr.getEventDate().getLte().length() == MONTH_PRECISION_LENGTH) {
+            determinedDatePrecision = MONTH_PRECISION;
+          }
+          if (tr.getEventDate().getLte().length() == YEAR_PRECISION_LENGTH) {
+            determinedDatePrecision = YEAR_PRECISION;
+          }
+        }
+
+        String startDay = null;
+        String startMonth = null;
+        String startYear = null;
+
+        if (tr.getEventDate().getGte().length() >= YEAR_PRECISION_LENGTH) {
+          // first 4 chars
+          startYear = tr.getEventDate().getGte().substring(0, 4);
+        }
+        if (tr.getEventDate().getGte().length() >= MONTH_PRECISION_LENGTH) {
+          // first 4 chars
+          startMonth = tr.getEventDate().getGte().substring(5, 7);
+        }
+        if (tr.getEventDate().getGte().length() == DAY_PRECISION_LENGTH) {
+          // first 4 chars
+          startDay = tr.getEventDate().getGte().substring(8, 10);
+        }
+
+        String endDay = null;
+        String endMonth = null;
+        String endYear = null;
+
+        if (tr.getEventDate().getLte().length() >= YEAR_PRECISION_LENGTH) {
+          // first 4 chars
+          endYear = tr.getEventDate().getLte().substring(0, 4);
+        }
+        if (tr.getEventDate().getLte().length() >= MONTH_PRECISION_LENGTH) {
+          // first 4 chars
+          endMonth = tr.getEventDate().getLte().substring(5, 7);
+        }
+        if (tr.getEventDate().getLte().length() == DAY_PRECISION_LENGTH) {
+          // first 4 chars
+          endDay = tr.getEventDate().getLte().substring(8, 10);
+        }
+
+        if (((StringUtils.isEmpty(startDay) && StringUtils.isEmpty(endDay)
+                || startDay.equals(endDay)))
+            && StringUtils.isNotEmpty(startMonth)
+            && startMonth.equals(endMonth)
+            && StringUtils.isNotEmpty(startYear)
+            && startYear.equals(endYear)) {
+          determinedDatePrecision = MONTH_PRECISION;
+        } else if (StringUtils.isEmpty(startDay) && StringUtils.isEmpty(endDay)) {
+          determinedDatePrecision = MONTH_RANGE_PRECISION;
+        }
+
+        if (((StringUtils.isEmpty(startDay) && StringUtils.isEmpty(endDay))
+                || startDay.equals(endDay))
+            && (startMonth != endMonth
+                || (StringUtils.isEmpty(startMonth) && StringUtils.isEmpty(endMonth)))
+            && startYear == endYear
+            && StringUtils.isNotEmpty(startYear)) {
+          determinedDatePrecision = YEAR_PRECISION;
+        } else if (StringUtils.isEmpty(startMonth) && StringUtils.isEmpty(endMonth)) {
+          determinedDatePrecision = YEAR_RANGE_PRECISION;
+        }
+
+      } else if (tr.getEventDate().getGte() != null) {
+        determinedDatePrecision = DAY_PRECISION;
+        // single date
+        if (tr.getEventDate().getGte().length() == MONTH_PRECISION_LENGTH) {
+          determinedDatePrecision = MONTH_PRECISION;
+        }
+        if (tr.getEventDate().getGte().length() == YEAR_PRECISION_LENGTH) {
+          determinedDatePrecision = YEAR_PRECISION;
+        }
+      } else {
+        determinedDatePrecision = NOT_SUPPLIED;
+      }
+
+      tr.setDatePrecision(determinedDatePrecision);
     }
   }
 }

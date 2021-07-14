@@ -9,7 +9,7 @@ import org.apache.beam.sdk.values.TupleTag;
 import org.gbif.pipelines.core.converters.ChronometricAgeTableConverter;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.extension.zooarchnet.ChronometricAgeTable;
+import org.gbif.pipelines.io.avro.extension.dwc.ChronometricAgeTable;
 
 public class ChronometricAgeTableTransform extends TableTransform<ChronometricAgeTable> {
 

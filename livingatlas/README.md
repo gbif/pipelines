@@ -27,20 +27,31 @@ This list of transforms will need to be added to backfill some of the ingress re
 * *Spatial layers* - will make use of existing services in https://spatial.ala.org.au/ws/ to retrieve sampled environmental and contextual values for geospatial points
 * *Species lists* - will make use of existing services in https://lists.ala.org.au to retrieve species lists.
 
-For information on how the architecture between biocache-store and pipelines differ, [see this page](architectures.md).
+For information on how the architecture between [biocache-store](https://github.com/AtlasOfLivingAustralia/biocache-store) 
+and pipelines differ, [see this page](architectures.md).
 
 ## Dependent projects
 
-The pipelines work will necessitate some minor additional API additions and change to the following components:
+The pipelines work has necessitated some minor additional API additions and change 
+to the following components:
 
 ### biocache-service
 [pipelines branch](https://github.com/AtlasOfLivingAustralia/biocache-service/tree/epic/pipelines%2Fdevelop) 
 A version 3.x of biocache-service is in development.
-This will not use Cassandra for storage of occurrence records.
+This will not use Cassandra for storage of occurrence records, but Cassandra is still required for the storage
+of user assertions and query identifiers (used to store large query parameters such as WKT strings).
 
 ### ala-namematching-service
 A simple **drop wizard wrapper around the [ala-name-matching](https://github.com/AtlasOfLivingAustralia/ala-name-matching) library** 
-has been developed to support integration with pipelines. This service is package in docker container.
+has been developed to support integration with pipelines. 
+This service is package in docker container as is deployed as a service using ansible.
+For testing locally, use the [docker-compose files](pipelines/src/main/docker/ala-name-service.yml).
+
+### ala-sensitive-data-service
+A simple **drop wizard wrapper around the [ala-sensitive-data-service](https://github.com/AtlasOfLivingAustralia/ala-sensitive-data-service) library**
+has been developed to support integration with pipelines.
+This service is package in docker container as is deployed as a service using ansible.
+For testing locally, use the [docker-compose files](pipelines/src/main/docker/ala-sensitive-data-service.yml).
  
 ## Getting started
 
@@ -67,14 +78,14 @@ These steps will load a dataset into a SOLR index.
 
 1. Start required docker containers using
 ```
-docker-compose -f pipelines/src/main/docker/ala-nameservice.yml up -d
+docker-compose -f pipelines/src/main/docker/ala-name-service.yml up -d
 docker-compose -f pipelines/src/main/docker/solr8.yml up -d
 ```
 1. `cd scripts`
 1. To convert DwCA to AVRO, run `./la-pipelines dwca-avro dr893`
 1. To interpret, run `./la-pipelines interpret dr893 --embedded`
 1. To mint UUIDs, run `./la-pipelines uuid dr893 --embedded`
-1. To sample run:
+1. (Optional) To sample run:
     1. `./la-pipelines sample dr893 --embedded`
 1. To setup SOLR:
     1. Run `cd ../solr/scripts` and  then run ' `./update-solr-config.sh`

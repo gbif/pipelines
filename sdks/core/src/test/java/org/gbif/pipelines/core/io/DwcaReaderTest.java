@@ -40,6 +40,19 @@ public class DwcaReaderTest {
     }
   }
 
+  @Test(expected = NullPointerException.class)
+  public void nullTermTest() throws IOException {
+    // State
+    String fileName = getClass().getResource("/dwca/plants_dwca_null").getFile();
+
+    // When
+    try (DwcaReader dwCAReader = DwcaReader.fromLocation(fileName)) {
+      dwCAReader.advance();
+      // Should
+      dwCAReader.getCurrent();
+    }
+  }
+
   @Test
   @Ignore("Fails cause of resource settings in pom.xml/build")
   public void zipFileReaderTest() throws IOException {

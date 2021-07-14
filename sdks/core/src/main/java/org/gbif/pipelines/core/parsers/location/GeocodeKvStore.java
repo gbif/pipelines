@@ -63,7 +63,9 @@ public class GeocodeKvStore implements KeyValueStore<LatLng, GeocodeResponse>, S
     }
 
     // If that doesn't help, use the database.
-    if (locations == null) {
+    if (locations == null
+        || locations.getLocations() == null
+        || locations.getLocations().isEmpty()) {
       locations = kvStore.get(latLng);
     }
 

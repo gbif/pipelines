@@ -1,7 +1,5 @@
 package org.gbif.pipelines.crawler.balancer.handler;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.METADATA;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import lombok.AccessLevel;
@@ -85,13 +83,6 @@ public class VerbatimMessageHandler {
     String attempt = String.valueOf(message.getAttempt());
 
     StepRunner runner;
-
-    if (message.getInterpretTypes().size() == 1
-        && message.getInterpretTypes().contains(METADATA.name())) {
-      runner = StepRunner.STANDALONE;
-      log.info("Interpret type is METADATA only, Spark Runner type - {}", runner);
-      return runner;
-    }
 
     // Strategy 1: Chooses a runner type by number of records in a dataset
     if (recordsNumber > 0) {

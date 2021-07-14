@@ -29,9 +29,25 @@ res1: Long = 18675270
 spark.sqlContext.sql("CREATE TEMPORARY VIEW VERBATIM USING avro OPTIONS (path \"/data/pipelines-data/dr2009/1/verbatim.avro\")")
 ```
 
+```
+spark.sqlContext.sql("CREATE TEMPORARY VIEW VERBATIM_DR2009 USING avro OPTIONS (path \"hdfs://aws-spark-quoll-master.ala:9000/pipelines-data/dr2009/1/verbatim.avro\")")
+spark.sqlContext.sql("CREATE TEMPORARY VIEW UUID_DR2009 USING avro OPTIONS (path \"hdfs://aws-spark-quoll-master.ala:9000/pipelines-data/dr2009/1/identifiers/ala_uuid/*.avro\")")
+spark.sqlContext.sql("CREATE TEMPORARY VIEW UUID_DR359 USING avro OPTIONS (path \"hdfs://aws-spark-quoll-master.ala:9000/pipelines-data/dr359/1/identifiers/ala_uuid/*.avro\")")
+spark.sqlContext.sql("CREATE TEMPORARY VIEW VERBATIM USING avro OPTIONS (path \"hdfs://aws-spark-quoll-master.ala:9000/pipelines-data/*/1/verbatim.avro\")")
+
+spark.sqlContext.sql("SELECT * FROM UUID_DR2009").show(false)
+spark.sqlContext.sql("SELECT * FROM UUID_DR359").show(false)
+spark.sqlContext.sql("SELECT * FROM VERBATIM_DR2009").show(false)
+```
+
+
 ## Retrieve a single record
 
 ```
 spark.sqlContext.sql("SELECT coreTerms FROM VERBATIM where id='944d2aea-58ee-4e53-aecf-19c46b061d09'").show(false)
+
+spark.sqlContext.sql("SELECT id, coreTerms FROM VERBATIM where id='944d2aea-58ee-4e53-aecf-19c46b061d09'").show(false)
+
+spark.sqlContext.sql("SELECT id, coreTerms FROM VERBATIM").show(false)
 ```
 

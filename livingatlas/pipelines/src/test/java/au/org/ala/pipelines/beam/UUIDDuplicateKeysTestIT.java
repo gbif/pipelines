@@ -1,7 +1,7 @@
 package au.org.ala.pipelines.beam;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 import au.org.ala.pipelines.options.UUIDPipelineOptions;
 import au.org.ala.util.TestUtils;
@@ -93,7 +93,7 @@ public class UUIDDuplicateKeysTestIT {
     ALAUUIDValidationPipeline.run(uuidOptions);
 
     // assert count is 2
-    assertEquals(2L, ValidationUtils.getDuplicateKeyCount(uuidOptions));
+    assertEquals(2L, ValidationUtils.getDuplicateKeyCount(uuidOptions).longValue());
     assertFalse(ValidationUtils.checkValidationFile(uuidOptions).getValid());
   }
 }

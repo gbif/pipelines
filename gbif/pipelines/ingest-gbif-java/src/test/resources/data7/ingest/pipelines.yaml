@@ -17,8 +17,7 @@ extensionsAllowedForVerbatimSet:
   - http://data.ggbn.org/schemas/ggbn/terms/Preparation
   - http://data.ggbn.org/schemas/ggbn/terms/Preservation
   - http://rs.iobis.org/obis/terms/ExtendedMeasurementOrFact
-  - http://zooarchnet.org/dwc/terms/ChronometricAge
-  - http://zooarchnet.org/dwc/terms/ChronometricDate
+  - http://rs.tdwg.org/chrono/terms/ChronometricAge
   - http://purl.org/germplasm/germplasmTerm#GermplasmAccession
   - http://purl.org/germplasm/germplasmTerm#MeasurementScore
   - http://purl.org/germplasm/germplasmTerm#MeasurementTrait

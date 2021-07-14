@@ -33,16 +33,24 @@ public class MetadataInterpreter {
   /** Gets information from GBIF API by datasetId */
   public static BiConsumer<String, MetadataRecord> interpret(MetadataServiceClient client) {
     return (datasetId, mdr) -> {
+      mdr.setDatasetKey(datasetId);
+
       if (client != null) {
 
-        mdr.setDatasetKey(datasetId);
-
         Dataset dataset = client.getDataset(datasetId);
+
+        // https://github.com/gbif/pipelines/issues/401
+        License license = getLicense(dataset.getLicense());
+        if (license == null || license == License.UNSPECIFIED || license == License.UNSUPPORTED) {
+          throw new IllegalArgumentException(
+              "Dataset licence can't be UNSPECIFIED or UNSUPPORTED!");
+        } else {
+          mdr.setLicense(license.name());
+        }
+
         mdr.setDatasetTitle(dataset.getTitle());
         mdr.setInstallationKey(dataset.getInstallationKey());
         mdr.setPublishingOrganizationKey(dataset.getPublishingOrganizationKey());
-        Optional.ofNullable(getLicense(dataset.getLicense()))
-            .ifPresent(license -> mdr.setLicense(license.name()));
 
         List<Network> networkList = client.getNetworkFromDataset(datasetId);
         if (networkList != null && !networkList.isEmpty()) {
@@ -104,9 +112,7 @@ public class MetadataInterpreter {
                   }
                 })
             .orElse(null);
-    License license = LicenseParser.getInstance().parseUriThenTitle(uri, null);
-    // UNSPECIFIED must be mapped to null
-    return License.UNSPECIFIED == license ? null : license;
+    return LicenseParser.getInstance().parseUriThenTitle(uri, null);
   }
 
   /** Gets the latest crawl attempt time, if exists. */

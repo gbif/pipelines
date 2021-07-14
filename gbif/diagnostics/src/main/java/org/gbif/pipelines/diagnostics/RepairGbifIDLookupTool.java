@@ -62,6 +62,10 @@ public class RepairGbifIDLookupTool {
   @NotNull
   public String occurrenceTable;
 
+  @Parameter(names = "--dry-run", description = "Prints messages, but skips delete method")
+  @Builder.Default
+  public boolean dryRun = false;
+
   @Parameter(
       names = "--deletion-strategy",
       description =
@@ -185,7 +189,9 @@ public class RepairGbifIDLookupTool {
     Set<String> keysToDelete =
         deletionStrategyType.getKeysToDelete(keygenService, onlyCollisions, triplet, occurrenceId);
     keysToDelete.forEach(k -> log.info("Delete lookup key - {}", k));
-    keygenService.deleteKeyByUniques(keysToDelete);
+    if (!dryRun) {
+      keygenService.deleteKeyByUniques(keysToDelete);
+    }
     log.info("Lookup keys deleted");
   }
 }

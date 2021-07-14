@@ -3,8 +3,10 @@ package org.gbif.pipelines.core.io;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.function.Function;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.dwc.Archive;
@@ -41,6 +43,12 @@ public class DwcaReader implements Closeable {
 
   /** Creates and DwcaReader using a StarRecord iterator. */
   private DwcaReader(Archive archive) {
+
+    archive.getCore().getHeader().stream()
+        .flatMap(Collection::stream)
+        .forEach(
+            x -> Objects.requireNonNull(x, "One of the terms is NULL, please check meta.xml file"));
+
     if (archive.getExtensions().isEmpty()) {
       this.iterator = archive.getCore().iterator();
       this.convertFn =

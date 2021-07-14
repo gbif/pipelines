@@ -87,7 +87,7 @@ public class XmlToAvroCallbackIT {
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.xmlReaderParallelism = 4;
-    config.archiveRepositorySubdir = Collections.singleton("xml");
+    config.archiveRepositorySubdir = "xml";
     XmlToAvroCallback callback =
         new XmlToAvroCallback(config, publisher, curator, historyClient, executor, null);
     PipelinesXmlMessage message =
@@ -126,7 +126,7 @@ public class XmlToAvroCallbackIT {
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.xmlReaderParallelism = 4;
-    config.archiveRepositorySubdir = Collections.singleton("xml");
+    config.archiveRepositorySubdir = "xml";
     XmlToAvroCallback callback =
         new XmlToAvroCallback(config, publisher, curator, historyClient, executor, null);
     PipelinesXmlMessage message =
@@ -160,17 +160,18 @@ public class XmlToAvroCallbackIT {
   @Test
   public void testReasonNotNormalCase() {
     // State
-    int attempt = 60;
+    int attempt = 1;
+    UUID datasetKey = UUID.randomUUID();
     XmlToAvroConfiguration config = new XmlToAvroConfiguration();
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.xmlReaderParallelism = 4;
-    config.archiveRepositorySubdir = Collections.singleton("xml");
+    config.archiveRepositorySubdir = "xml";
     XmlToAvroCallback callback =
         new XmlToAvroCallback(config, publisher, curator, historyClient, executor, null);
     PipelinesXmlMessage message =
         new PipelinesXmlMessage(
-            DATASET_UUID,
+            datasetKey,
             attempt,
             20,
             FinishReason.NOT_MODIFIED,
@@ -178,13 +179,13 @@ public class XmlToAvroCallbackIT {
             EndpointType.BIOCASE_XML_ARCHIVE,
             Platform.PIPELINES,
             EXECUTION_ID);
-    String crawlId = DATASET_UUID.toString();
+    String crawlId = datasetKey.toString();
 
     // When
     callback.handleMessage(message);
 
     // Should
-    Path path = Paths.get(config.stepConfig.repositoryPath + STRING_UUID + "/" + attempt + AVRO);
+    Path path = Paths.get(config.stepConfig.repositoryPath + crawlId + "/" + attempt + AVRO);
     assertFalse(path.toFile().exists());
     assertFalse(checkExists(curator, crawlId, XML_LABEL));
     assertFalse(checkExists(curator, crawlId, Fn.SUCCESSFUL_MESSAGE.apply(XML_LABEL)));

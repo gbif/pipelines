@@ -54,7 +54,6 @@ import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.gbif.pipelines.transforms.table.AmplificationTableTransform;
 import org.gbif.pipelines.transforms.table.ChronometricAgeTableTransform;
-import org.gbif.pipelines.transforms.table.ChronometricDateTableTransform;
 import org.gbif.pipelines.transforms.table.CloningTableTransform;
 import org.gbif.pipelines.transforms.table.ExtendedMeasurementOrFactTableTransform;
 import org.gbif.pipelines.transforms.table.GelImageTableTransform;
@@ -406,15 +405,6 @@ public class InterpretedToHdfsViewPipeline {
         .basicRecordTag(basicTransform.getTag())
         .numShards(numberOfShards)
         .path(pathFn.apply(CHRONOMETRIC_AGE_TABLE))
-        .types(types)
-        .build()
-        .write(tableCollection);
-
-    ChronometricDateTableTransform.builder()
-        .extendedRecordTag(verbatimTransform.getTag())
-        .basicRecordTag(basicTransform.getTag())
-        .numShards(numberOfShards)
-        .path(pathFn.apply(CHRONOMETRIC_DATE_TABLE))
         .types(types)
         .build()
         .write(tableCollection);

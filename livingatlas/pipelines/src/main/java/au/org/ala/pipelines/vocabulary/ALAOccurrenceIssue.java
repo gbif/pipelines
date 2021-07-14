@@ -9,6 +9,10 @@ import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.utils.AnnotationUtils;
 
+/**
+ * Living Atlas issue extension. We should look to merge this with {@link
+ * org.gbif.api.vocabulary.OccurrenceIssue} enum See: https://github.com/gbif/pipelines/issues/530
+ */
 public enum ALAOccurrenceIssue implements InterpretationRemark {
 
   // Location related
@@ -19,7 +23,6 @@ public enum ALAOccurrenceIssue implements InterpretationRemark {
   MISSING_COORDINATEPRECISION(InterpretationRemarkSeverity.WARNING, TermsGroup.COORDINATES_TERMS),
   UNCERTAINTY_IN_PRECISION(InterpretationRemarkSeverity.WARNING, TermsGroup.COORDINATES_TERMS),
   UNCERTAINTY_NOT_SPECIFIED(InterpretationRemarkSeverity.WARNING, TermsGroup.COORDINATES_TERMS),
-  COORDINATE_PRECISION_INVALID(InterpretationRemarkSeverity.WARNING, TermsGroup.COORDINATES_TERMS),
 
   STATE_COORDINATE_MISMATCH(
       InterpretationRemarkSeverity.WARNING, TermsGroup.COORDINATES_COUNTRY_TERMS),
@@ -100,7 +103,13 @@ public enum ALAOccurrenceIssue implements InterpretationRemark {
   SENSITIVITY_REPORT_INVALID(InterpretationRemarkSeverity.ERROR, TermsGroup.SENSITIVE_DATA_TERMS),
   /** The sensitivity report cannot be applied to the record */
   SENSITIVITY_REPORT_NOT_LOADABLE(
-      InterpretationRemarkSeverity.ERROR, TermsGroup.SENSITIVE_DATA_TERMS);
+      InterpretationRemarkSeverity.ERROR, TermsGroup.SENSITIVE_DATA_TERMS),
+
+  // Attribution related
+  /** The collection code lookup failed */
+  UNRECOGNISED_COLLECTION_CODE(InterpretationRemarkSeverity.ERROR, TermsGroup.ATTRIBUTION_TERMS),
+  /** The institution code lookup failed */
+  UNRECOGNISED_INSTITUTION_CODE(InterpretationRemarkSeverity.ERROR, TermsGroup.ATTRIBUTION_TERMS);
 
   private final Set<Term> relatedTerms;
   private final InterpretationRemarkSeverity severity;
@@ -144,6 +153,7 @@ public enum ALAOccurrenceIssue implements InterpretationRemark {
     static final Term[] TAXONOMY_TERMS;
     static final Term[] GEOREFERENCE_TERMS;
     static final Term[] SENSITIVE_DATA_TERMS;
+    static final Term[] ATTRIBUTION_TERMS;
 
     private TermsGroup() {}
 
@@ -213,6 +223,13 @@ public enum ALAOccurrenceIssue implements InterpretationRemark {
             DwcTerm.decimalLatitude,
             DwcTerm.decimalLongitude,
             DwcTerm.eventDate
+          };
+      ATTRIBUTION_TERMS =
+          new Term[] {
+            DwcTerm.collectionCode,
+            DwcTerm.collectionID,
+            DwcTerm.institutionCode,
+            DwcTerm.institutionID
           };
     }
   }

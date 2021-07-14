@@ -1,32 +1,37 @@
 package au.org.ala.pipelines.vocabulary;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.kvs.LocationInfoConfig;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.Optional;
 import org.junit.Test;
 
 public class StateProvinceVocabTest {
   @Test
   public void testStateProvinceWithClasspathResource() throws IOException {
     ALAPipelinesConfig alaConfig = new ALAPipelinesConfig();
-    alaConfig.setLocationInfoConfig(new LocationInfoConfig());
+    LocationInfoConfig locationInfoConfig = new LocationInfoConfig();
+    alaConfig.setLocationInfoConfig(locationInfoConfig);
+    locationInfoConfig.setStateProvinceNamesFile("/stateProvinces.tsv");
 
     assertEquals(
-        Optional.of("Australian Capital Territory"),
-        StateProvince.getInstance(alaConfig.getLocationInfoConfig().getStateProvinceNamesFile())
-            .matchTerm("ACT"));
+        "Australian Capital Territory",
+        StateProvinceParser.getInstance(
+                alaConfig.getLocationInfoConfig().getStateProvinceNamesFile())
+            .parse("ACT")
+            .getPayload());
 
     // nterritory
     assertEquals(
-        Optional.of("Tasmania"),
-        StateProvince.getInstance(alaConfig.getLocationInfoConfig().getStateProvinceNamesFile())
-            .matchTerm("tasmania"));
+        "Tasmania",
+        StateProvinceParser.getInstance(
+                alaConfig.getLocationInfoConfig().getStateProvinceNamesFile())
+            .parse("tasmania")
+            .getPayload());
   }
 
   /** Missing external resources files */
@@ -40,9 +45,10 @@ public class StateProvinceVocabTest {
         assertThrows(
             FileNotFoundException.class,
             () ->
-                StateProvince.getInstance(
+                StateProvinceParser.getInstance(
                         alaConfig.getLocationInfoConfig().getStateProvinceNamesFile())
-                    .matchTerm("ACT"));
+                    .parse("ACT")
+                    .getPayload());
     assertTrue(stateNameException.getMessage().contains("none_exists.txt"));
 
     Exception stateCentreException =

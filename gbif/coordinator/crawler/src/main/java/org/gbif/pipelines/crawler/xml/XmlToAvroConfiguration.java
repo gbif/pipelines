@@ -37,7 +37,7 @@ public class XmlToAvroConfiguration implements BaseConfiguration {
 
   @Parameter(names = "--archive-repository-subdir")
   @NotNull
-  public Set<String> archiveRepositorySubdir;
+  public String archiveRepositorySubdir;
 
   @Parameter(names = "--interpret-types")
   @NotNull

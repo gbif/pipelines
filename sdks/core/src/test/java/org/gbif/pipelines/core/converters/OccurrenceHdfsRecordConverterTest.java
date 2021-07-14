@@ -233,7 +233,9 @@ public class OccurrenceHdfsRecordConverterTest {
 
   @Test
   public void multimediaMapperTest() {
-    //
+    // State
+    String[] issues = {OccurrenceIssue.MULTIMEDIA_DATE_INVALID.name()};
+
     MultimediaRecord multimediaRecord = new MultimediaRecord();
     multimediaRecord.setId("1");
     Multimedia multimedia = new Multimedia();
@@ -241,16 +243,23 @@ public class OccurrenceHdfsRecordConverterTest {
     multimedia.setLicense(License.CC_BY_4_0.name());
     multimedia.setSource("image.jpg");
     multimediaRecord.setMultimediaItems(Collections.singletonList(multimedia));
+    multimediaRecord.setIssues(
+        IssueRecord.newBuilder().setIssueList(Arrays.asList(issues)).build());
+
+    // When
     OccurrenceHdfsRecord hdfsRecord =
         OccurrenceHdfsRecordConverter.builder()
             .multimediaRecord(multimediaRecord)
             .build()
             .convert();
 
+    // Should
     // Testing de-serialization
     List<Multimedia> media = MediaSerDeserUtils.fromJson(hdfsRecord.getExtMultimedia());
     Assert.assertEquals(media.get(0), multimedia);
     Assert.assertTrue(hdfsRecord.getMediatype().contains(MediaType.StillImage.name()));
+    Assert.assertTrue(
+        hdfsRecord.getIssue().contains(OccurrenceIssue.MULTIMEDIA_DATE_INVALID.name()));
   }
 
   @Test
@@ -645,6 +654,8 @@ public class OccurrenceHdfsRecordConverterTest {
   @Test
   public void grscicollMapperTest() {
     // State
+    String[] issues = {OccurrenceIssue.INSTITUTION_COLLECTION_MISMATCH.name()};
+
     Match institutionMatch =
         Match.newBuilder()
             .setKey("cb0098db-6ff6-4a5d-ad29-51348d114e41")
@@ -662,6 +673,7 @@ public class OccurrenceHdfsRecordConverterTest {
             .setId("1")
             .setInstitutionMatch(institutionMatch)
             .setCollectionMatch(collectionMatch)
+            .setIssues(IssueRecord.newBuilder().setIssueList(Arrays.asList(issues)).build())
             .build();
 
     // When
@@ -671,5 +683,7 @@ public class OccurrenceHdfsRecordConverterTest {
     // Should
     Assert.assertEquals(institutionMatch.getKey(), hdfsRecord.getInstitutionkey());
     Assert.assertEquals(collectionMatch.getKey(), hdfsRecord.getCollectionkey());
+    Assert.assertTrue(
+        hdfsRecord.getIssue().contains(OccurrenceIssue.INSTITUTION_COLLECTION_MISMATCH.name()));
   }
 }

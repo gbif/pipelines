@@ -20,6 +20,33 @@ then
     exit 1
 fi
 
+# https://mikefarah.gitbook.io/yq/upgrading-from-v3
+if [[ "$(yq -V 2>&1)" =~ .*3.?.?.* ]]
+then
+    function YQ_VERIFY() {
+        yq v "$1"
+    }
+    function YQ_NAVIGATE () {
+        OUT=$(yq r "$1" "$2")
+        echo "$OUT"
+    }
+else
+    if [[ "$(yq -V 2>&1)" =~ .*4.?.?.* ]]
+then
+    function YQ_VERIFY() {
+        yq e 'true' "$1" > /dev/null
+    }
+    function YQ_NAVIGATE () {
+        OUT=$(yq e ".$2" "$1")
+        if [[ "$OUT" == "null" ]]; then OUT=""; fi
+        echo "$OUT"
+    }
+else
+    echo "ERROR: Unsupported yq version"
+    exit 1
+fi
+fi
+
 set -e # Stop on any failure
 
 # Detect if we are in production or not
@@ -53,6 +80,7 @@ dwca-avro --> interpret --> validate --> uuid --> image-sync ... │
 -  'sds' runs the sensitive data checks;
 -  'validate' validates the identifiers for a dataset, checking for duplicate and empty keys;
 -  'uuid' mints UUID on new records and rematches to existing UUIDs for records loaded before;
+-  'migrate' used for migration;
 -  'image-load' pushes an export of multimedia AVRO files to the image service;
 -  'image-sync' retrieves details of images stored in image service for indexing purposes;
 -  'sample' use the sampling service to retrieve values for points for the layers in the spatial service;
@@ -64,6 +92,8 @@ dwca-avro --> interpret --> validate --> uuid --> image-sync ... │
 -  'dataset-list' dumps out a list of datasets that have been ingested to '/tmp/dataset-counts.csv';
 -  'validation-report' dumps out a CSV list of datasets ready to be indexed to '/tmp/validation-report.csv';
 -  'clustering' clustering of occurrences;
+-  'prune-datasets' remove any datasets no longer registered in the collectory;
+-  'dwca-export' export a dwca archive;
 
 All the steps generate an output. If only the final output is desired, the intermediate outputs can be ignored.
 
@@ -75,6 +105,7 @@ Usage:
   $CMD [options] sds           (<dr>...|all)         $WHEREL
   $CMD [options] validate      (<dr>...|all)         $WHERE
   $CMD [options] uuid          (<dr>...|all)         $WHERE
+  $CMD [options] migrate  (<dr>...|all)         $WHERE
   $CMD [options] image-sync    (<dr>...|all)         $WHERE
   $CMD [options] image-load    (<dr>...|all)         $WHERE
   $CMD [options] index         (<dr>...|all)         $WHEREL
@@ -83,8 +114,10 @@ Usage:
   $CMD [options] clustering    (all)                 $WHERE
   $CMD [options] solr          (<dr>...|all)         $WHERE
   $CMD [options] solr-sync          (<dr>...|all)         $WHERE
+  $CMD [options] prune-datasets
   $CMD [options] validation-report
   $CMD [options] do-all        (<dr>...|all) $WHEREL
+  $CMD [options] dwca-export     (<dr>...|all)         $WHERE
   $CMD -h | --help
   $CMD -v | --version
 
@@ -178,7 +211,7 @@ done
 # Validate yaml of configs
 for f in $configList
 do
-    YML_V=$(yq v $f; echo $?)
+    YML_V=$(YQ_VERIFY $f; echo $?)
     if [[ $YML_V != 0 ]] ; then log.error Config $f is not valid ; exit 1; fi
 done
 
@@ -187,7 +220,7 @@ function getConf() {
     val=
     for i in $configList
     do
-        valTmp=$(yq r $i $1)
+        valTmp=$(YQ_NAVIGATE $i $1)
         if [[ -n $valTmp ]] ; then val=$valTmp; fi
     done
     echo $val
@@ -281,10 +314,10 @@ function archive-list() {
        --config=$config $ARGS
 }
 
-function validation-report() {
+function prune-datasets() {
     # dump out archive list
-    log.info "Creating validation report"
-    java $EXTRA_JVM_CLI_ARGS -cp $LOCAL_PIPELINES_JAR au.org.ala.utils.ValidationReportWriter \
+    log.info "Removing unregistered datasets"
+    java $EXTRA_JVM_CLI_ARGS -cp $LOCAL_PIPELINES_JAR au.org.ala.utils.PruneUnregisteredDatasets \
        --config=$config $ARGS
 }
 
@@ -293,6 +326,13 @@ function dataset-list() {
     log.info "Dumping dataset list"
     java $EXTRA_JVM_CLI_ARGS -cp $LOCAL_PIPELINES_JAR au.org.ala.utils.DumpDatasetSize \
          --config=$config $ARGS
+}
+
+function validation-report() {
+    # dump out archive list
+    log.info "Creating validation report"
+    java $EXTRA_JVM_CLI_ARGS -cp $LOCAL_PIPELINES_JAR au.org.ala.utils.ValidationReportWriter \
+       --config=$config $ARGS
 }
 
 function dwca-avro () {
@@ -308,10 +348,12 @@ function dwca-avro () {
     if [[ $dr != "all" ]] ; then
       logStepStart "DWCA-AVRO conversion" $dr
       $_D java $EXTRA_JVM_CLI_ARGS -Dspark.local.dir=$SPARK_TMP \
+          -Djava.io.tmpdir=$DWCA_TMP \
           -cp $LOCAL_PIPELINES_JAR $CLASS \
           --datasetId=$dr \
           --deleteLockFileOnExit=true \
-          --config=$config $ARGS
+          --config=$config $ARGS \
+          --experiments=use_deprecated_read
       logStepEnd "DWCA-AVRO conversion" $dr local $SECONDS
     else
 
@@ -323,6 +365,7 @@ function dwca-avro () {
       do
           log.info "Dataset = $dr and Input file = $inputPath"
           $_D java $EXTRA_JVM_CLI_ARGS -Dspark.local.dir=$SPARK_TMP \
+              -Djava.io.tmpdir=$DWCA_TMP \
               -cp $LOCAL_PIPELINES_JAR $CLASS \
               --datasetId=$dr \
               --inputPath=$inputPath \
@@ -382,7 +425,8 @@ function spark-cluster-pipeline() {
             --driver-java-options "-Dlog4j.configuration=file:$CONFIG_DIR/log4j.properties" \
             $PIPELINES_JAR \
             --datasetId=$dr \
-            --config=$config $ARGS
+            --config=$config $ARGS \
+            --experiments=use_deprecated_read
         # TODO set here an optional colorized log4j properties
     fi
 }
@@ -445,10 +489,29 @@ function uuid () {
     logStepEnd "UUID" $dr $ltype $SECONDS
 }
 
+function migrate () {
+    local dr="$1" ltype="$2"
+    CLASS=au.org.ala.pipelines.beam.UUIDMigrationPipeline
+
+    logStepStart "migrate" $dr
+    SECONDS=0
+
+    SH_ARGS=uuid-sh-args.local
+    java-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=uuid-sh-args.spark-embedded
+    spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=uuid-sh-args.spark-cluster
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "migrate-uuid $dr"
+
+    logStepEnd "migrate" $dr $ltype $SECONDS
+}
+
 function image-load () {
     dr=$1
     ltype=$2
-    CLASS=au.org.ala.pipelines.beam.ImageServiceLoadPipeline
+    CLASS=au.org.ala.pipelines.beam.ImageServiceDiffLoadPipeline
 
     logStepStart "Image-load" $dr
     SECONDS=0
@@ -520,28 +583,28 @@ function image-sync () {
     logStepEnd "Image-sync" $dr $ltype $SECONDS
 }
 
-function export-latlng () {
+function sampling () {
     local dr="$1" ltype="$2"
-    CLASS=au.org.ala.pipelines.beam.LatLongPipeline
+    CLASS=au.org.ala.pipelines.beam.SamplingPipeline
 
-    logStepStart "Export latlng" $dr
+    logStepStart "Sampling" $dr
     SECONDS=0
 
-    SH_ARGS=export-latlng-sh-args.local
+    SH_ARGS=sampling-sh-args.local
     java-pipeline $ltype $SH_ARGS $CLASS $dr
 
-    SH_ARGS=export-latlng-sh-args.spark-embedded
+    SH_ARGS=sampling-sh-args.spark-embedded
     spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
 
-    SH_ARGS=export-latlng-sh-args.spark-cluster
-    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "Export-lat-lng-$dr"
+    SH_ARGS=sampling-sh-args.spark-cluster
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "Sampling-$dr"
 
-    logStepEnd "Export latlng" $dr $ltype $SECONDS
+    logStepEnd "Sampling" $dr $ltype $SECONDS
 }
 
 function sample () {
 
-    do_step_simple export-latlng
+    do_step_simple sampling
 
     local dr="$1"
     ltype="local"
@@ -674,6 +737,43 @@ function index () {
     logStepEnd "Index-Record" $dr $ltype $SECONDS
 }
 
+function dwca_export () {
+    dr=$1
+    ltype=$2
+    CLASS=au.org.ala.pipelines.beam.IndexRecordToDwcaPipeline
+
+    logStepStart "Dwca-export" $dr
+    SECONDS=0
+
+    PRE=image-sync-sh-args.spark-embedded
+    if [[ $ltype = "spark-embedded" || $ltype = "local" ]] ; then
+        $_D java $EXTRA_JVM_CLI_ARGS \
+            $(getConf $PRE.jvm)  \
+            -cp $PIPELINES_JAR $CLASS \
+            --datasetId=$dr \
+            --config=$config $ARGS
+    fi
+
+    PRE=image-sync-sh-args.spark-cluster
+    if [[ $ltype = "spark-cluster" ]] ; then
+        $_D /data/spark/bin/spark-submit \
+            --name "Dwca-export $dr" \
+            $(toArg $PRE num-executors) \
+            $(toArg $PRE executor-cores) \
+            $(toArg $PRE executor-memory) \
+            $(toArg $PRE driver-memory) \
+            --class $CLASS \
+            --master $SPARK_MASTER \
+            --driver-java-options "-Dlog4j.configuration=file:$CONFIG_DIR/log4j.properties" \
+            $PIPELINES_JAR \
+            --datasetId=$dr \
+            --config=$config $ARGS
+            # TODO set here an optional colorized log4j properties
+    fi
+
+    logStepEnd "Dwca-export" $dr $ltype $SECONDS
+}
+
 if ($archive_list) ; then
     archive-list
 fi
@@ -684,6 +784,10 @@ fi
 
 if ($validation_report) ; then
     validation-report
+fi
+
+if ($prune_datasets) ; then
+    prune-datasets
 fi
 
 if ($do_all || $dwca_avro) ; then
@@ -738,8 +842,16 @@ if ($validate || $do_all); then
     do_step validate
 fi
 
+if ($dwca_export || $do_all); then
+    do_step dwca_export
+fi
+
 if ($uuid || $do_all); then
     do_step uuid
+fi
+
+if ($migrate); then
+    do_step migrate
 fi
 
 if ($image_sync || $do_all); then

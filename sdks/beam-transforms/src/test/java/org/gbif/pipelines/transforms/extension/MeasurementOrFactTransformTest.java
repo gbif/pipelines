@@ -84,7 +84,11 @@ public class MeasurementOrFactTransformTest {
     // When
     PCollection<MeasurementOrFactRecord> dataStream =
         p.apply(Create.of(extendedRecord))
-            .apply(MeasurementOrFactTransform.builder().create().interpret())
+            .apply(
+                MeasurementOrFactTransform.builder()
+                    .useDynamicPropertiesInterpretation(true)
+                    .create()
+                    .interpret())
             .apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
 
     // Should
@@ -126,7 +130,11 @@ public class MeasurementOrFactTransformTest {
     // When
     PCollection<MeasurementOrFactRecord> dataStream =
         p.apply(Create.of(extendedRecord))
-            .apply(MeasurementOrFactTransform.builder().create().interpret())
+            .apply(
+                MeasurementOrFactTransform.builder()
+                    .useDynamicPropertiesInterpretation(true)
+                    .create()
+                    .interpret())
             .apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
 
     // Should

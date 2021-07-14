@@ -17,13 +17,13 @@ import org.gbif.pipelines.estools.common.SettingsType;
 @ToString
 public class IndexParams {
 
-  private String indexName;
-  private String datasetKey;
-  private Integer attempt;
-  private SettingsType settingsType;
-  private Map<String, String> settings;
-  private Path pathMappings;
-  private String mappings;
+  private final String indexName;
+  private final String datasetKey;
+  private final Integer attempt;
+  private final SettingsType settingsType;
+  private final Map<String, String> settings;
+  private final Path pathMappings;
+  private final String mappings;
 
   public String getIndexName() {
     return Strings.isNullOrEmpty(this.indexName)

@@ -5,7 +5,7 @@
   <parent>
     <groupId>au.org.ala</groupId>
     <artifactId>livingatlas</artifactId>
-    <version>2.8.2-SNAPSHOT</version>
+    <version>2.9.7-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -22,7 +22,6 @@
         <filtering>true</filtering>
       </testResource>
     </testResources>
-
     <plugins>
       <!-- Download supporting shapefiles -->
       <plugin>
@@ -37,7 +36,7 @@
               <goal>wget</goal>
             </goals>
             <configuration>
-              <url>https://biocache.ala.org.au/archives/pipelines/pipelines-shapefiles.zip</url>
+              <url>http://download.gbif.org/pipelines/livingatlas/pipelines-shapefiles-v2.zip</url>
               <unpack>true</unpack>
               <outputDirectory>/tmp/pipelines-shp</outputDirectory>
             </configuration>
@@ -87,6 +86,7 @@
             <filter>
               <artifact>*:*</artifact>
               <excludes>
+                <exclude>module-info.class</exclude>
                 <exclude>META-INF/*.SF</exclude>
                 <exclude>META-INF/*.DSA</exclude>
                 <exclude>META-INF/*.RSA</exclude>
@@ -153,7 +153,6 @@
       <plugin>
         <groupId>io.fabric8</groupId>
         <artifactId>docker-maven-plugin</artifactId>
-        <version>${io.fabric8.version}</version>
         <extensions>true</extensions>
         <executions>
           <execution>
@@ -263,9 +262,6 @@
     <!-- Common variables -->
     <surefireArgLine>-Xmx1024m</surefireArgLine>
 
-    <!-- GBIF libraries -->
-    <gbif-common.version>0.48</gbif-common.version>
-
     <!-- ALA libraries -->
     <ala-namematching-service.version>1.0</ala-namematching-service.version>
     <ala-sensitive-data-service.version>1.1</ala-sensitive-data-service.version>
@@ -287,29 +283,22 @@
     <sds.host>localhost</sds.host>
 
     <!-- Tools-->
-    <geotools.version>20.5</geotools.version>
     <commons-configuration.version>1.6</commons-configuration.version>
     <netty.version>3.9.9.Final</netty.version>
     <netty-all.version>4.1.42.Final</netty-all.version>
-    <ingest-hdfs-table.version>2.2.34</ingest-hdfs-table.version>
     <snakeyaml.version>1.25</snakeyaml.version>
     <streamex.version>0.7.2</streamex.version>
-    <!-- This is overriding GBIF mother pom which is using a 2.11.0.rc1  -->
-    <jackson.version>2.11.1</jackson.version>
-    <jackson-module-scala_2.11.version>2.11.1</jackson-module-scala_2.11.version>
     <jcommander.version>1.78</jcommander.version>
     <layers-store.version>2.0.3</layers-store.version>
-    <junit.version>5.6.2</junit.version>
     <json-simple.version>1.1.1</json-simple.version>
 
     <!-- GBIF parent currently using 2.4.0 -->
     <spark.embedded.version>2.4.5</spark.embedded.version>
 
     <!-- Plugins -->
-    <io.fabric8.version>0.33.0</io.fabric8.version>
     <org.jetbrains.annotations>13.0</org.jetbrains.annotations>
 
-    <download-maven-plugin.version>1.6.0</download-maven-plugin.version>
+    <download-maven-plugin.version>1.6.1</download-maven-plugin.version>
     <jcabi-log.version>0.18.1</jcabi-log.version>
 
     <!-- use same version as okhttp -->
@@ -319,10 +308,10 @@
   </properties>
 
   <scm>
-    <connection>scm:git:git@github.com:AtlasOfLivingAustralia/la-pipelines.git</connection>
-    <url>https://github.com/AtlasOfLivingAustralia/la-pipelines</url>
-    <developerConnection>scm:git:git@github.com:AtlasOfLivingAustralia/la-pipelines.git</developerConnection>
-    <tag>HEAD</tag>
+    <connection>scm:git:git@github.com:gbif/pipelines.git</connection>
+    <url>https://github.com/gbif/pipelines</url>
+    <developerConnection>scm:git:git@github.com:gbif/pipelines.git</developerConnection>
+    <tag>pipelines-parent-2.2.11</tag>
   </scm>
 
   <dependencies>
@@ -406,6 +395,16 @@
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
       <artifactId>core</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.elasticsearch.client</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.gbif.occurrence</groupId>
+          <artifactId>occurrence-hdfs-table</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
@@ -425,41 +424,8 @@
         </exclusion>
       </exclusions>
     </dependency>
-    <dependency>
-      <groupId>org.gbif.pipelines</groupId>
-      <artifactId>ingest-hdfs-table</artifactId>
-      <version>${ingest-hdfs-table.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>ch.qos.logback</groupId>
-          <artifactId>logback-classic</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif.pipelines</groupId>
-      <artifactId>keygen</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif.pipelines</groupId>
-      <artifactId>archives-converters</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif.occurrence</groupId>
-      <artifactId>occurrence-hdfs-table</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>com.beust</groupId>
-          <artifactId>jcommander</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
 
     <!-- GBIF -->
-    <dependency>
-      <groupId>org.gbif</groupId>
-      <artifactId>dwca-io</artifactId>
-    </dependency>
     <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>dwc-api</artifactId>
@@ -467,7 +433,7 @@
     <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>gbif-parsers</artifactId>
-      <version>0.53</version>
+      <version>${gbif-parsers.version}</version>
     </dependency>
     <dependency>
       <groupId>org.gbif</groupId>
@@ -511,10 +477,6 @@
           <artifactId>logback-classic</artifactId>
         </exclusion>
       </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif</groupId>
-      <artifactId>gbif-wrangler</artifactId>
     </dependency>
 
     <!-- Avro -->
@@ -563,6 +525,10 @@
         <exclusion>
           <groupId>commons-httpclient</groupId>
           <artifactId>commons-httpclient</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.zookeeper</groupId>
+          <artifactId>zookeeper</artifactId>
         </exclusion>
         <exclusion>
           <groupId>org.mortbay.jetty</groupId>
@@ -672,6 +638,11 @@
     <dependency>
       <groupId>com.fasterxml.jackson.dataformat</groupId>
       <artifactId>jackson-dataformat-avro</artifactId>
+      <version>${jackson.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.dataformat</groupId>
+      <artifactId>jackson-dataformat-yaml</artifactId>
       <version>${jackson.version}</version>
     </dependency>
 
@@ -786,7 +757,7 @@
     <dependency>
       <groupId>com.fasterxml.jackson.module</groupId>
       <artifactId>jackson-module-scala_2.11</artifactId>
-      <version>${jackson-module-scala_2.11.version}</version>
+      <version>${jackson.version}</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
@@ -843,9 +814,8 @@
 
     <!-- Test -->
     <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-api</artifactId>
-      <version>${junit.version}</version>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -876,13 +846,13 @@
       <groupId>org.apache.zookeeper</groupId>
       <artifactId>zookeeper</artifactId>
       <version>${zookeeper-version}</version>
-      <scope>test</scope>
       <exclusions>
         <exclusion>
           <groupId>org.jboss.netty</groupId>
           <artifactId>netty</artifactId>
         </exclusion>
       </exclusions>
+      <scope>compile</scope>
     </dependency>
 
     <!-- ALA's layers store -->
@@ -922,6 +892,11 @@
         <groupId>org.checkerframework</groupId>
         <artifactId>checker-qual</artifactId>
         <version>${checker-qual.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.freemarker</groupId>
+      <artifactId>freemarker</artifactId>
     </dependency>
   </dependencies>
 </project>

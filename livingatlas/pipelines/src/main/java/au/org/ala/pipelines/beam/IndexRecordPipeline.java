@@ -19,7 +19,6 @@ import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.transforms.join.CoGroupByKey;
 import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
@@ -34,12 +33,12 @@ import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.transforms.core.*;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
-import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.slf4j.MDC;
 
 /**
- * ALA Beam pipeline for creating an index of the records. This pipeline works 2 ways depending on
- * configuration.
+ * Pipeline for creating an index of the records in AVRO.
+ *
+ * <p>This pipeline works 2 ways depending on configuration.
  *
  * <ul>
  *   <li>Produces AVRO records ready to be index into SOLR in a separate pipeline see {@link
@@ -111,7 +110,6 @@ public class IndexRecordPipeline {
     log.info("Adding step 2: Creating transformations");
     // Core
     ALABasicTransform basicTransform = ALABasicTransform.builder().create();
-    MetadataTransform metadataTransform = MetadataTransform.builder().create();
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.builder().create();
     TaxonomyTransform taxonomyTransform = TaxonomyTransform.builder().create();
@@ -128,10 +126,6 @@ public class IndexRecordPipeline {
         ALASensitiveDataRecordTransform.builder().create();
 
     log.info("Adding step 3: Creating beam pipeline");
-    PCollectionView<MetadataRecord> metadataView =
-        p.apply("Read Metadata", metadataTransform.read(pathFn))
-            .apply("Convert to view", View.asSingleton());
-
     PCollection<KV<String, ExtendedRecord>> verbatimCollection =
         p.apply("Read Verbatim", verbatimTransform.read(pathFn))
             .apply("Map Verbatim to KV", verbatimTransform.toKv());
@@ -208,7 +202,6 @@ public class IndexRecordPipeline {
             options.getIncludeImages() ? imageRecordTupleTag : null,
             options.getIncludeSpeciesLists() ? speciesListsRecordTupleTag : null,
             options.getIncludeSensitiveData() ? alaSensitiveDataRecordTransform.getTag() : null,
-            metadataView,
             options.getDatasetId(),
             lastLoadedDate,
             lastProcessedDate);
@@ -275,13 +268,7 @@ public class IndexRecordPipeline {
     log.info("Pipeline has been finished");
   }
 
-  /**
-   * Load image service records for a dataset.
-   *
-   * @param options
-   * @param p
-   * @return
-   */
+  /** Load image service records for a dataset. */
   private static PCollection<KV<String, ImageRecord>> getLoadImageServiceRecords(
       IndexingPipelineOptions options, Pipeline p) {
     PCollection<KV<String, ImageRecord>> alaImageServiceRecords;

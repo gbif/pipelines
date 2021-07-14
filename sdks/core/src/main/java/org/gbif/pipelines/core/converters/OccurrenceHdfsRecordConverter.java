@@ -347,6 +347,8 @@ public class OccurrenceHdfsRecordConverter {
         occurrenceHdfsRecord.setCollectionkey(collectionKey);
       }
     }
+
+    addIssues(grscicollRecord.getIssues(), occurrenceHdfsRecord);
   }
 
   /** Copies the {@link BasicRecord} data into the {@link OccurrenceHdfsRecord}. */
@@ -549,6 +551,8 @@ public class OccurrenceHdfsRecordConverter {
 
     setCreatedIfGreater(occurrenceHdfsRecord, multimediaRecord.getCreated());
     occurrenceHdfsRecord.setMediatype(mediaTypes);
+
+    addIssues(multimediaRecord.getIssues(), occurrenceHdfsRecord);
   }
 
   /** Gets the {@link Schema.Field} associated to a verbatim term. */

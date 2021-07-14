@@ -4,11 +4,24 @@ import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 
+/** Options for running UUID based pipelines. */
 public interface UUIDPipelineOptions extends InterpretationPipelineOptions {
 
-  @Description("Allow UUIDs to be created for datasets with empty unique terms specified")
-  @Default.Boolean(false)
-  boolean isAllowEmptyUniqueTerms();
+  @Description("The number of backups to keep")
+  @Default.Integer(10)
+  Integer getNumberOfBackupsToKeep();
 
-  void setAllowEmptyUniqueTerms(boolean allowEmptyUniqueTerms);
+  void setNumberOfBackupsToKeep(Integer numberOfBackupsToKeep);
+
+  @Description("The permitted percentage change in UUIDs")
+  @Default.Integer(50)
+  Integer getPercentageChangeAllowed();
+
+  void setPercentageChangeAllowed(Integer percentageChangeAllowed);
+
+  @Description("Override permitted percentage change in UUIDs check")
+  @Default.Boolean(false)
+  Boolean getOverridePercentageCheck();
+
+  void setOverridePercentageCheck(Boolean overridePercentageCheck);
 }

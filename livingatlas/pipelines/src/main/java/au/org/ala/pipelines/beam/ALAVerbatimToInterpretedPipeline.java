@@ -33,31 +33,31 @@ import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.factory.FileVocabularyFactory;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.factory.OccurrenceStatusKvStoreFactory;
-import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.ALAMetadataRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.transforms.converters.OccurrenceExtensionTransform;
-import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.DefaultValuesTransform;
-import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.slf4j.MDC;
 
 /**
- * ALA interpretation pipeline sequence:
+ * Interpretation pipeline that reads verbatim AVRO files ({@link ExtendedRecord} and parses and
+ * produces an interpreted output of these data.
+ *
+ * <p>The processing sequence:
  *
  * <pre>
  *    1) Reads verbatim.avro file
  *    2) Interprets and converts avro {@link ExtendedRecord} file to:
  *      {@link MetadataRecord},
  *      {@link DefaultValuesTransform},
- *      {@link BasicRecord},
+ *      {@link ALABasicTransform},
  *      {@link org.gbif.pipelines.io.avro.TemporalRecord},
  *      {@link org.gbif.pipelines.io.avro.MultimediaRecord},
  *      {@link org.gbif.pipelines.io.avro.ImageRecord},
  *      {@link org.gbif.pipelines.io.avro.AudubonRecord},
- *      {@link org.gbif.pipelines.io.avro.MeasurementOrFactRecord},
  *      {@link org.gbif.pipelines.io.avro.ALATaxonRecord},
  *      {@link org.gbif.pipelines.io.avro.ALAAttributionRecord},
  *      {@link LocationTransform}
@@ -114,8 +114,6 @@ public class ALAVerbatimToInterpretedPipeline {
     MDC.put("attempt", attempt.toString());
     MDC.put("step", StepType.VERBATIM_TO_INTERPRETED.name());
 
-    String endPointType = options.getEndPointType();
-
     Set<String> types = options.getInterpretationTypes();
 
     String targetPath = options.getTargetPath();
@@ -156,9 +154,12 @@ public class ALAVerbatimToInterpretedPipeline {
       return;
     }
 
-    // Core
-    MetadataTransform metadataTransform =
-        MetadataTransform.builder().endpointType(endPointType).attempt(attempt).create();
+    ALAMetadataTransform metadataTransform =
+        ALAMetadataTransform.builder()
+            .dataResourceKvStoreSupplier(ALAAttributionKVStoreFactory.getInstanceSupplier(config))
+            .datasetId(datasetId)
+            .create();
+
     ALABasicTransform basicTransform =
         ALABasicTransform.builder()
             .lifeStageLookupSupplier(
@@ -173,19 +174,30 @@ public class ALAVerbatimToInterpretedPipeline {
             .occStatusKvStoreSupplier(
                 OccurrenceStatusKvStoreFactory.createSupplier(config.getGbifConfig()))
             .create();
+
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
-    TemporalTransform temporalTransform =
-        TemporalTransform.builder().orderings(dateComponentOrdering).create();
+
+    ALATemporalTransform temporalTransform =
+        ALATemporalTransform.builder().orderings(dateComponentOrdering).create();
 
     // Extension
     MultimediaTransform multimediaTransform =
         MultimediaTransform.builder().orderings(dateComponentOrdering).create();
 
+    // Create and write metadata
+    PCollection<ALAMetadataRecord> metadataRecord =
+        p.apply("Create metadata collection", Create.of(options.getDatasetId()))
+            .apply("Interpret metadata", metadataTransform.interpret());
+
+    // Create View for the further usage
+    PCollectionView<ALAMetadataRecord> metadataView =
+        metadataRecord.apply("Convert into view", View.asSingleton());
+
     // ALA specific - Attribution
     ALAAttributionTransform alaAttributionTransform =
         ALAAttributionTransform.builder()
-            .dataResourceKvStoreSupplier(ALAAttributionKVStoreFactory.getInstanceSupplier(config))
             .collectionKvStoreSupplier(ALACollectionKVStoreFactory.getInstanceSupplier(config))
+            .metadataView(metadataView)
             .create();
 
     // ALA specific - Taxonomy
@@ -215,26 +227,16 @@ public class ALAVerbatimToInterpretedPipeline {
             .create();
 
     log.info("Creating beam pipeline");
-    // Create and write metadata
-    PCollection<MetadataRecord> metadataRecord =
-        p.apply("Create metadata collection", Create.of(options.getDatasetId()))
-            .apply("Interpret metadata", metadataTransform.interpret());
 
     metadataRecord.apply("Write metadata to avro", metadataTransform.write(pathFn));
 
-    // Create View for the further usage
-    PCollectionView<MetadataRecord> metadataView =
-        metadataRecord.apply("Convert into view", View.asSingleton());
-
-    locationTransform.setMetadataView(metadataView);
+    alaAttributionTransform.setMetadataView(metadataView);
 
     // Interpret and write all record types
     PCollection<ExtendedRecord> uniqueRecords =
-        metadataTransform.metadataOnly(types)
-            ? verbatimTransform.emptyCollection(p)
-            : p.apply("Read ExtendedRecords", verbatimTransform.read(options.getInputPath()))
-                .apply("Read occurrences from extension", OccurrenceExtensionTransform.create())
-                .apply("Set default values", alaDefaultValuesTransform);
+        p.apply("Read ExtendedRecords", verbatimTransform.read(options.getInputPath()))
+            .apply("Read occurrences from extension", OccurrenceExtensionTransform.create())
+            .apply("Set default values", alaDefaultValuesTransform);
 
     uniqueRecords
         .apply("Check verbatim transform condition", verbatimTransform.check(types))
@@ -257,8 +259,7 @@ public class ALAVerbatimToInterpretedPipeline {
 
     uniqueRecords
         .apply("Check collection attribution", alaAttributionTransform.check(types))
-        .apply(
-            "Interpret ALA collection attribution", alaAttributionTransform.interpret(metadataView))
+        .apply("Interpret ALA collection attribution", alaAttributionTransform.interpret())
         .apply("Write attribution to avro", alaAttributionTransform.write(pathFn));
 
     uniqueRecords

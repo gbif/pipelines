@@ -61,11 +61,26 @@ public abstract class Transform<R, T extends SpecificRecordBase & Record> extend
   }
 
   /**
-   * Checks if list contains {@link InterpretationType}, else returns empty {@link PCollection<T>}
+   * Default {@link #check(Set, Class)} that returns a {@link CheckTransforms} of {@link
+   * ExtendedRecord}.
    */
   public CheckTransforms<ExtendedRecord> check(Set<String> types) {
-    return CheckTransforms.create(
-        ExtendedRecord.class, CheckTransforms.checkRecordType(types, recordType));
+    return check(types, ExtendedRecord.class);
+  }
+
+  /**
+   * Checks if list contains {@link InterpretationType}, else returns empty {@link PCollection<T>}.
+   *
+   * <p>This method should be used only when the deafault {@link #check(Set)} doesn't fill the
+   * needs.
+   */
+  public <S> CheckTransforms<S> check(Set<String> types, Class<S> outputClass) {
+    return CheckTransforms.create(outputClass, CheckTransforms.checkRecordType(types, recordType));
+  }
+
+  /** Useful for the java version of pipelines where you only want to use boolean */
+  public boolean checkType(Set<String> types) {
+    return CheckTransforms.checkRecordType(types, recordType);
   }
 
   /**

@@ -5,6 +5,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 import static org.gbif.pipelines.core.utils.ModelUtils.hasExtension;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -33,13 +34,17 @@ import org.gbif.pipelines.transforms.Transform;
  */
 public class MeasurementOrFactTransform extends Transform<ExtendedRecord, MeasurementOrFactRecord> {
 
+  @Builder.Default private boolean useDynamicPropertiesInterpretation = false;
+
   @Builder(buildMethodName = "create")
-  private MeasurementOrFactTransform() {
+  private MeasurementOrFactTransform(boolean useDynamicPropertiesInterpretation) {
     super(
         MeasurementOrFactRecord.class,
         MEASUREMENT_OR_FACT,
         MeasurementOrFactTransform.class.getName(),
         MEASUREMENT_OR_FACT_RECORDS_COUNT);
+
+    this.useDynamicPropertiesInterpretation = useDynamicPropertiesInterpretation;
   }
 
   /**
@@ -61,8 +66,10 @@ public class MeasurementOrFactTransform extends Transform<ExtendedRecord, Measur
 
     ExtendedRecord record = source;
 
-    List<Map<String, String>> dynExts =
-        MeasurementOrFactConverter.extractFromDynamicProperties(source);
+    List<Map<String, String>> dynExts = Collections.emptyList();
+    if (useDynamicPropertiesInterpretation) {
+      dynExts = MeasurementOrFactConverter.extractFromDynamicProperties(source);
+    }
 
     if (!dynExts.isEmpty()) {
       record = ExtendedRecord.newBuilder(source).build();
@@ -73,6 +80,10 @@ public class MeasurementOrFactTransform extends Transform<ExtendedRecord, Measur
       }
     }
 
+    if (!hasExtension(record, Extension.MEASUREMENT_OR_FACT)) {
+      return Optional.empty();
+    }
+
     return Interpretation.from(record)
         .to(
             er ->
@@ -80,7 +91,6 @@ public class MeasurementOrFactTransform extends Transform<ExtendedRecord, Measur
                     .setId(er.getId())
                     .setCreated(Instant.now().toEpochMilli())
                     .build())
-        .when(er -> hasExtension(source, Extension.MEASUREMENT_OR_FACT) || !dynExts.isEmpty())
         .via(MeasurementOrFactInterpreter::interpret)
         .getOfNullable();
   }

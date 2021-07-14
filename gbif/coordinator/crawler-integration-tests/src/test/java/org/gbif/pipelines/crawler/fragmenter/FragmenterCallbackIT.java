@@ -149,14 +149,15 @@ public class FragmenterCallbackIT {
     FragmenterConfiguration config = new FragmenterConfiguration();
     config.hbaseFragmentsTable = HbaseServer.FRAGMENT_TABLE_NAME;
     config.xmlArchiveRepository = getClass().getResource(REPO_PATH).getFile();
-    config.xmlArchiveRepositorySubdir = new HashSet<>(Arrays.asList("xml", "abcd"));
+    config.xmlArchiveRepositoryAbcd = "abcd";
+    config.xmlArchiveRepositoryXml = "xml";
     config.stepConfig.repositoryPath = getClass().getResource(REPO_PATH).getFile();
 
     UUID uuid = UUID.fromString("830c56c4-57bf-4858-9795-c1f8c7ff9b1e");
     int attempt = 61;
     String crawlId = uuid.toString();
     int expSize = 20;
-    EndpointType endpointType = EndpointType.TAPIR;
+    EndpointType endpointType = EndpointType.BIOCASE_XML_ARCHIVE;
 
     PipelinesInterpretedMessage message =
         new PipelinesInterpretedMessage(
@@ -208,7 +209,8 @@ public class FragmenterCallbackIT {
     FragmenterConfiguration config = new FragmenterConfiguration();
     config.hbaseFragmentsTable = HbaseServer.FRAGMENT_TABLE_NAME;
     config.xmlArchiveRepository = getClass().getResource(REPO_PATH).getFile();
-    config.xmlArchiveRepositorySubdir = new HashSet<>(Arrays.asList("xml", "abcd"));
+    config.xmlArchiveRepositoryAbcd = "abcd";
+    config.xmlArchiveRepositoryXml = "xml";
     config.stepConfig.repositoryPath = getClass().getResource(REPO_PATH).getFile();
 
     UUID uuid = UUID.fromString("7ef15372-1387-11e2-bb2e-00145eb45e9a");

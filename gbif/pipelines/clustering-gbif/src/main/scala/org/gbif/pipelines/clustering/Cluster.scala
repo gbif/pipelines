@@ -97,7 +97,8 @@ object Cluster {
             Option(r.getAs[String]("fieldNumber")),
             Option(r.getAs[String]("recordNumber")),
             Option(r.getAs[String]("catalogNumber")),
-            Option(r.getAs[String]("otherCatalogNumbers"))
+            Option(r.getAs[String]("otherCatalogNumbers")),
+            triplify(r) // ic:cc:cn format
           )
 
           // clean IDs

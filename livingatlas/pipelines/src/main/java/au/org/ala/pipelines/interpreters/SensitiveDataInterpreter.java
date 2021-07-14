@@ -1,6 +1,8 @@
 package au.org.ala.pipelines.interpreters;
 
+import au.org.ala.pipelines.transforms.IndexFields;
 import au.org.ala.pipelines.vocabulary.ALAOccurrenceIssue;
+import au.org.ala.pipelines.vocabulary.Vocab;
 import au.org.ala.sds.api.SensitivityQuery;
 import au.org.ala.sds.api.SensitivityReport;
 import au.org.ala.sds.api.SpeciesCheck;
@@ -21,10 +23,13 @@ import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.core.utils.ModelUtils;
 import org.gbif.pipelines.io.avro.*;
 
+/** Sensitive data interpretation methods. */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class SensitiveDataInterpreter {
   protected static final TermFactory TERM_FACTORY = TermFactory.instance();
+  protected static final Term EVENT_DATE_END_TERM =
+      TERM_FACTORY.findTerm(IndexFields.EVENT_DATE_END);
 
   protected static final FieldAccessor DATA_GENERALIZATIONS =
       new FieldAccessor(DwcTerm.dataGeneralizations);
@@ -34,6 +39,11 @@ public class SensitiveDataInterpreter {
       new FieldAccessor(TERM_FACTORY.findTerm("generalisationToApplyInMetres"));
   protected static final FieldAccessor GENERALISATION_IN_METRES =
       new FieldAccessor(TERM_FACTORY.findTerm("generalisationInMetres"));
+  protected static final FieldAccessor DECIMAL_LATITUDE =
+      new FieldAccessor(DwcTerm.decimalLatitude);
+  protected static final FieldAccessor DECIMAL_LONGITUDE =
+      new FieldAccessor(DwcTerm.decimalLongitude);
+  protected static final double UNALTERED = 0.000001;
 
   /** Bits to skip when generically updating the temporal record */
   private static final Set<Term> SKIP_TEMPORAL_UPDATE = Collections.singleton(DwcTerm.eventDate);
@@ -113,6 +123,7 @@ public class SensitiveDataInterpreter {
     }
     EventDate eventDate = record.getEventDate();
     constructField(eventDate, DwcTerm.eventDate, sensitive, properties, EventDate::getGte);
+    constructField(eventDate, EVENT_DATE_END_TERM, sensitive, properties, EventDate::getLte);
     constructField(record, DwcTerm.day, sensitive, properties, TemporalRecord::getDay);
     constructField(record, DwcTerm.month, sensitive, properties, TemporalRecord::getMonth);
     constructField(record, DwcTerm.year, sensitive, properties, TemporalRecord::getYear);
@@ -148,9 +159,11 @@ public class SensitiveDataInterpreter {
     values.forEach(
         (key, value) -> {
           Term term = TERM_FACTORY.findTerm(key);
-          String sn = term == null ? null : term.qualifiedName();
-          if (sn != null && properties.get(sn) == null) {
-            properties.put(sn, value);
+          if (sensitive.contains(term)) {
+            String sn = term == null ? null : term.qualifiedName();
+            if (sn != null && properties.get(sn) == null) {
+              properties.put(sn, value);
+            }
           }
         });
   }
@@ -375,6 +388,8 @@ public class SensitiveDataInterpreter {
    * @param reportStore The sensitive data report
    * @param generalisations The generalisations to apply
    * @param properties The properties that have values
+   * @param existingGeneralisations Any pre-existing generalisations
+   * @param sensitivityVocab The vocabulary to use when deriving sensitivity terms
    * @param sr The sensitivity record
    */
   public static void sensitiveDataInterpreter(
@@ -383,6 +398,8 @@ public class SensitiveDataInterpreter {
       final List<Generalisation> generalisations,
       String dataResourceUid,
       Map<String, String> properties,
+      Map<String, String> existingGeneralisations,
+      Vocab sensitivityVocab,
       ALASensitivityRecord sr) {
 
     String scientificName = properties.get(DwcTerm.scientificName.qualifiedName());
@@ -390,9 +407,9 @@ public class SensitiveDataInterpreter {
 
     SpeciesCheck speciesCheck =
         SpeciesCheck.builder().scientificName(scientificName).taxonId(taxonId).build();
-    sr.setSensitive(speciesStore.get(speciesCheck));
+    sr.setIsSensitive(speciesStore.get(speciesCheck));
 
-    if (sr.getSensitive() == null || !sr.getSensitive()) {
+    if (sr.getIsSensitive() == null || !sr.getIsSensitive()) {
       return;
     }
     String stateProvince = properties.get(DwcTerm.stateProvince.qualifiedName());
@@ -406,7 +423,7 @@ public class SensitiveDataInterpreter {
             .country(country)
             .build();
     SensitivityReport report = reportStore.get(query);
-    sr.setSensitive(report.isSensitive());
+    sr.setIsSensitive(report.isSensitive());
     if (!report.isValid()) {
       addIssue(sr, ALAOccurrenceIssue.SENSITIVITY_REPORT_INVALID);
     }
@@ -432,6 +449,37 @@ public class SensitiveDataInterpreter {
           GENERALISATION_IN_METRES.get(result).getValue().map(Object::toString).orElse(null));
       sr.setOriginal(toStringMap(original));
       sr.setAltered(toStringMap(result));
+      // We already have notes about generalisations
+      boolean alreadyGeneralised = !existingGeneralisations.isEmpty();
+      // The message contains a note about already generalising things
+      if (sr.getDataGeneralizations() != null) {
+        alreadyGeneralised =
+            alreadyGeneralised
+                || sr.getDataGeneralizations().contains("already generalised")
+                || sr.getDataGeneralizations().contains("already generalized");
+      }
+      // The lat/long hasn't changed
+      Optional<Double> originalLat =
+          DECIMAL_LATITUDE.get(original).getValue().map(v -> parseDouble(v));
+      Optional<Double> generalisedLat =
+          DECIMAL_LATITUDE.get(result).getValue().map(v -> parseDouble(v));
+      Optional<Double> originalLong =
+          DECIMAL_LONGITUDE.get(original).getValue().map(v -> parseDouble(v));
+      Optional<Double> generalisedLong =
+          DECIMAL_LONGITUDE.get(result).getValue().map(v -> parseDouble(v));
+      if (originalLat.isPresent()
+          && generalisedLat.isPresent()
+          && originalLong.isPresent()
+          && generalisedLong.isPresent()) {
+        if (Math.abs(originalLat.get() - generalisedLat.get()) < UNALTERED
+            && Math.abs(originalLong.get() - generalisedLong.get()) < UNALTERED)
+          alreadyGeneralised = true;
+      }
+      String sensitivity = alreadyGeneralised ? "alreadyGeneralised" : "generalised";
+      if (sensitivityVocab != null) {
+        sensitivity = sensitivityVocab.matchTerm(sensitivity).orElse(sensitivity);
+      }
+      sr.setSensitive(sensitivity);
     }
   }
 
@@ -508,5 +556,23 @@ public class SensitiveDataInterpreter {
           entry.getKey().toString(), entry.getValue() == null ? null : entry.getValue().toString());
     }
     return strings;
+  }
+
+  /**
+   * Try to parse a double.
+   *
+   * @param v The double
+   * @return A resulting double or empty value if null or unparsable.
+   */
+  protected static Double parseDouble(Object v) {
+    if (v == null) return null;
+    if (v instanceof Number) return ((Number) v).doubleValue();
+    String vs = v.toString();
+    if (vs.isEmpty()) return null;
+    try {
+      return Double.parseDouble(vs);
+    } catch (NumberFormatException ex) {
+      return null;
+    }
   }
 }
