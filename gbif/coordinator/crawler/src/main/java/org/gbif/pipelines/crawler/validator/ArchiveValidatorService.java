@@ -7,6 +7,7 @@ import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
+import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
 import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 
@@ -37,13 +38,16 @@ public class ArchiveValidatorService extends AbstractIdleService {
     PipelinesHistoryWsClient client =
         c.registry.newRegistryInjector().getInstance(PipelinesHistoryWsClient.class);
 
+    SchemaValidatorFactory schemaValidatorFactory = new SchemaValidatorFactory();
+
     String routingKey =
         new PipelinesArchiveValidatorMessage().setValidator(config.validatorOnly).getRoutingKey();
     listener.listen(
         c.queueName,
         routingKey,
         c.poolSize,
-        new ArchiveValidatorCallback(this.config, publisher, curator, client));
+        new ArchiveValidatorCallback(
+            this.config, publisher, curator, client, schemaValidatorFactory));
   }
 
   @Override

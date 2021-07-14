@@ -20,6 +20,7 @@ import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
+import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
 import org.gbif.pipelines.common.utils.ZookeeperUtils;
 import org.gbif.pipelines.crawler.MessagePublisherStub;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
@@ -78,7 +79,8 @@ public class ArchiveValidatorCallbackIT {
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
 
     ArchiveValidatorCallback callback =
-        new ArchiveValidatorCallback(config, publisher, curator, historyWsClient);
+        new ArchiveValidatorCallback(
+            config, publisher, curator, historyWsClient, new SchemaValidatorFactory());
 
     UUID uuid = UUID.fromString(DATASET_UUID);
     int attempt = 2;
@@ -118,7 +120,8 @@ public class ArchiveValidatorCallbackIT {
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
 
     ArchiveValidatorCallback callback =
-        new ArchiveValidatorCallback(config, publisher, curator, historyWsClient);
+        new ArchiveValidatorCallback(
+            config, publisher, curator, historyWsClient, new SchemaValidatorFactory());
 
     UUID uuid = UUID.fromString(DATASET_UUID);
     int attempt = 2;
@@ -153,7 +156,8 @@ public class ArchiveValidatorCallbackIT {
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
 
     ArchiveValidatorCallback callback =
-        new ArchiveValidatorCallback(config, publisher, curator, historyWsClient);
+        new ArchiveValidatorCallback(
+            config, publisher, curator, historyWsClient, new SchemaValidatorFactory());
 
     UUID uuid = UUID.randomUUID(); // Use wron datasetKey
     int attempt = 2;

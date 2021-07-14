@@ -2,13 +2,11 @@ package org.gbif.pipelines.crawler.validator;
 
 import static org.gbif.pipelines.common.utils.PathUtil.buildDwcaInputPath;
 
-import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
-import java.util.stream.Stream;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
@@ -44,16 +42,19 @@ public class ArchiveValidatorCallback
   private final MessagePublisher publisher;
   private final CuratorFramework curator;
   private final PipelinesHistoryWsClient client;
+  private final SchemaValidatorFactory schemaValidatorFactory;
 
   public ArchiveValidatorCallback(
       ArchiveValidatorConfiguration config,
       MessagePublisher publisher,
       CuratorFramework curator,
-      PipelinesHistoryWsClient client) {
+      PipelinesHistoryWsClient client,
+      SchemaValidatorFactory schemaValidatorFactory) {
     this.config = config;
     this.publisher = publisher;
     this.curator = curator;
     this.client = client;
+    this.schemaValidatorFactory = schemaValidatorFactory;
   }
 
   @Override
@@ -98,25 +99,18 @@ public class ArchiveValidatorCallback
   @SneakyThrows
   private Optional<XmlSchemaValidatorResult> validateEmlSchema(
       PipelinesArchiveValidatorMessage message) {
-    SchemaValidatorFactory schemaValidatorFactory = new SchemaValidatorFactory();
-    Path inputPath = buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid());
-    try (Stream<Path> pathStream = Files.list(inputPath)) {
-      return pathStream
-          .filter(x -> x.toString().equals("metadata.xml"))
-          .map(
-              x -> {
-                try {
-                  return Files.readAllBytes(x);
-                } catch (IOException e) {
-                  throw new IllegalArgumentException(e);
-                }
-              })
-          .map(
-              x -> {
-                String xmlDoc = new String(x, StandardCharsets.UTF_8);
-                return schemaValidatorFactory.newValidatorFromDocument(xmlDoc).validate(xmlDoc);
-              })
-          .findAny();
+
+    Path inputPath =
+        buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid())
+            .resolve("metadata.xml");
+
+    try {
+      byte[] bytes = Files.readAllBytes(inputPath);
+      String xmlDoc = new String(bytes, StandardCharsets.UTF_8);
+      return Optional.ofNullable(
+          schemaValidatorFactory.newValidatorFromDocument(xmlDoc).validate(xmlDoc));
+    } catch (Exception ex) {
+      throw new IllegalArgumentException(ex.getMessage(), ex);
     }
   }
 
