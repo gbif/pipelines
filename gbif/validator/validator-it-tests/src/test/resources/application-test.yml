@@ -1,5 +1,6 @@
 appkeys:
   file: @appkeys.testfile@
+testdb: true
 
 schemas:
   eml: http://rs.gbif.org/schema/eml-2.1.1/eml.xsd
@@ -11,6 +12,12 @@ gbif:
   ws:
     security:
       wrappedContent: false
+validation:
+  datasource:
+    hikari:
+      idleTimeout: 60000
+      maximumPoolSize: 10
+      minimumIdle: 1
 spring:
   application.name: pipelines-validator-ws
   liquibase:

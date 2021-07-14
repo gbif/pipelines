@@ -3,17 +3,14 @@ package org.gbif.validator.ws.it;
 import static org.gbif.validator.ws.it.ValidatorWsItConfiguration.TEST_USER;
 import static org.gbif.validator.ws.it.ValidatorWsItConfiguration.TEST_USER_PASSWORD;
 
-import io.zonky.test.db.postgres.embedded.LiquibasePreparer;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.stream.Stream;
 import lombok.SneakyThrows;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.validator.api.Validation;
-import org.gbif.validator.it.EmbeddedDataBaseInitializer;
 import org.gbif.validator.ws.client.ValidationWsClient;
 import org.gbif.ws.client.ClientBuilder;
 import org.junit.jupiter.api.AfterAll;
@@ -146,28 +143,15 @@ public class ValidationResourceIT {
   static class ContextInitializerItTests
       implements ApplicationContextInitializer<ConfigurableApplicationContext> {
 
-    public static final String LIQUIBASE_MASTER_FILE = "org/gbif/validator/liquibase/master.xml";
-
     @Override
     public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
 
-      EmbeddedDataBaseInitializer database =
-          new EmbeddedDataBaseInitializer(
-              LiquibasePreparer.forClasspathLocation(LIQUIBASE_MASTER_FILE));
-
-      TestPropertyValues.of(Stream.of(dbTestPropertyPairs(database)).toArray(String[]::new))
-          .applyTo(configurableApplicationContext);
+      TestPropertyValues.of(testPropertyPairs()).applyTo(configurableApplicationContext);
     }
 
     /** Creates the registry datasource settings from the embedded database. */
-    String[] dbTestPropertyPairs(EmbeddedDataBaseInitializer database) {
+    private static String[] testPropertyPairs() {
       return new String[] {
-        "validation.datasource.url=jdbc:postgresql://localhost:"
-            + database.getConnectionInfo().getPort()
-            + "/"
-            + database.getConnectionInfo().getDbName(),
-        "validation.datasource.username=" + database.getConnectionInfo().getUser(),
-        "validation.datasource.password=",
         "upload.workingDirectory=" + workingDirectory.toString(),
         "upload.maxUploadSize=3145728",
         "storePath=" + storeDirectory.toString(),

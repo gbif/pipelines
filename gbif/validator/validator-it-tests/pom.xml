@@ -16,6 +16,10 @@
   <name>Pipelines :: GBIF :: Validator :: Integration Tests</name>
   <description>Integration tests for validation web services and clients</description>
 
+  <properties>
+    <postgres.version>11.11</postgres.version>
+  </properties>
+
   <dependencies>
     <!-- Utilities -->
     <dependency>
@@ -131,16 +135,6 @@
 
     <!-- Third party dependencies -->
     <dependency>
-      <groupId>io.zonky.test</groupId>
-      <artifactId>embedded-database-spring-test</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.zonky.test</groupId>
-      <artifactId>embedded-postgres</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-api</artifactId>
       <scope>test</scope>
@@ -185,6 +179,17 @@
       <groupId>com.google.code.findbugs</groupId>
       <artifactId>jsr305</artifactId>
     </dependency>
+
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>postgresql</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>testcontainers</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
@@ -198,6 +203,7 @@
         <filtering>true</filtering>
         <includes>
           <include>**/application-test.yml</include>
+          <include>**/maven.properties</include>
         </includes>
       </testResource>
     </testResources>
