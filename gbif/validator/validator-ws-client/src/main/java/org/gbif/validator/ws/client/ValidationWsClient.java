@@ -10,9 +10,9 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestPart;
 
 @RequestMapping(value = "/validation", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -36,7 +36,8 @@ public interface ValidationWsClient {
   Validation get(@PathVariable("key") UUID key);
 
   /** Updates a validation data. */
-  @PutMapping(
+  @RequestMapping(
+      method = RequestMethod.PUT,
       path = "/{key}",
       consumes = {MediaType.APPLICATION_JSON_VALUE})
   void update(@PathVariable("key") UUID key, @RequestBody Validation validation);

@@ -8,12 +8,15 @@ import java.sql.SQLException;
 import lombok.SneakyThrows;
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
+import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
 import org.postgresql.util.PGobject;
 
 /** Generic TypeHandler for Java types mapped to json data. */
 public abstract class JsonTypeHandler<T> extends BaseTypeHandler<T> {
 
-  private static final ObjectMapper MAPPER = new ObjectMapper();
+  private static final ObjectMapper MAPPER =
+      JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport();
+
   private final Class<T> clazz;
 
   public JsonTypeHandler(Class<T> clazz) {

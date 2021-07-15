@@ -11,10 +11,12 @@ import lombok.SneakyThrows;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
 import org.gbif.validator.ws.file.DownloadFileManager;
 import org.gbif.validator.ws.file.UploadFileManager;
+import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.core.annotation.Order;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.web.multipart.commons.CommonsMultipartResolver;
@@ -75,6 +77,12 @@ public class ValidatorWsConfiguration {
     MultipartFilter multipartFilter = new MultipartFilter();
     multipartFilter.setMultipartResolverBeanName("multipartResolver");
     return multipartFilter;
+  }
+
+  @Primary
+  @Bean
+  public ObjectMapper registryObjectMapper() {
+    return JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport();
   }
 
   /** Configure the Jackson ObjectMapper adding a custom JsonFilter for errors. */

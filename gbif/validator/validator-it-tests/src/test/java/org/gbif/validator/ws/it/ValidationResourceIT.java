@@ -7,12 +7,17 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import lombok.SneakyThrows;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.crawler.OccurrenceValidationReport;
+import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Validation;
+import org.gbif.validator.api.XmlSchemaValidatorResult;
 import org.gbif.validator.ws.client.ValidationWsClient;
 import org.gbif.ws.client.ClientBuilder;
+import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -64,6 +69,7 @@ public class ValidationResourceIT {
             .withUrl("http://localhost:" + port)
             .withCredentials(TEST_USER.getUserName(), TEST_USER_PASSWORD)
             .withFormEncoder()
+            .withObjectMapper(JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport())
             .build(ValidationWsClient.class);
   }
 
@@ -129,9 +135,28 @@ public class ValidationResourceIT {
     Validation validation = validationWsClient.submitFile(archive);
 
     validation.setStatus(Validation.Status.FINISHED);
-    validationWsClient.update(validation);
 
+    Metrics metrics =
+        Metrics.builder()
+            .core(Metrics.Core.builder().indexedCount(100L).build())
+            .extensions(
+                Collections.singletonList(
+                    Metrics.Extension.builder().rowType("occurrence").fileCount(1L).build()))
+            .archiveValidationReport(
+                Metrics.ArchiveValidationReport.builder()
+                    .occurrenceReport(
+                        new OccurrenceValidationReport(
+                            100, 100,
+                            0, 100,
+                            0, true))
+                    .build())
+            .xmlSchemaValidatorResult(
+                XmlSchemaValidatorResult.builder().errors(Collections.EMPTY_LIST).build())
+            .build();
+    validation.setMetrics(metrics);
+    validationWsClient.update(validation);
     Validation persistedValidation = validationWsClient.get(validation.getKey());
+    Assertions.assertEquals(metrics, persistedValidation.getMetrics());
     Assertions.assertEquals(Validation.Status.FINISHED, persistedValidation.getStatus());
   }
 
