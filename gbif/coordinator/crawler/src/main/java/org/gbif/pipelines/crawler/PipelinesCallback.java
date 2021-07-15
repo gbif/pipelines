@@ -117,7 +117,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
         MDCCloseable mdc1 = MDC.putCloseable("attempt", message.getAttempt().toString());
         MDCCloseable mdc2 = MDC.putCloseable("step", stepType.name())) {
 
-      if (!handler.isMessageCorrect(message)) {
+      if (!handler.isMessageCorrect(message) || isValidatorAborted()) {
         log.info(
             "Skip the message, cause the runner is different or it wasn't modified, exit from handler");
         return;
@@ -236,6 +236,14 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
     }
 
     log.info("Message handler ended - {}", message);
+  }
+
+  private boolean isValidatorAborted() {
+    if (isValidator) {
+      Validation validation = validationClient.get(message.getDatasetUuid());
+      return validation.getStatus() == Status.ABORTED;
+    }
+    return false;
   }
 
   private void updateValidatorInfo(Status status) {
