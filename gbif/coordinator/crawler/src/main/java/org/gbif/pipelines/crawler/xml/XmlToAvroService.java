@@ -12,7 +12,9 @@ import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.pipelines.common.configs.StepConfiguration;
-import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
+import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
+import org.gbif.validator.ws.client.ValidationWsClient;
+import org.gbif.ws.client.ClientBuilder;
 
 /**
  * Service for the {@link XmlToAvroCommand}.
@@ -44,8 +46,20 @@ public class XmlToAvroService extends AbstractIdleService {
     publisher = new DefaultMessagePublisher(c.messaging.getConnectionParameters());
     curator = c.zooKeeper.getCuratorFramework();
     executor = Executors.newFixedThreadPool(config.xmlReaderParallelism);
-    PipelinesHistoryWsClient client =
-        c.registry.newRegistryInjector().getInstance(PipelinesHistoryWsClient.class);
+
+    PipelinesHistoryClient historyClient =
+        new ClientBuilder()
+            .withUrl(config.stepConfig.registry.wsUrl)
+            .withCredentials(config.stepConfig.registry.user, config.stepConfig.registry.password)
+            .withFormEncoder()
+            .build(PipelinesHistoryClient.class);
+
+    ValidationWsClient validationClient =
+        new ClientBuilder()
+            .withUrl(config.stepConfig.registry.wsUrl)
+            .withCredentials(config.stepConfig.registry.user, config.stepConfig.registry.password)
+            .withFormEncoder()
+            .build(ValidationWsClient.class);
 
     HttpClient httpClient =
         HttpClients.custom()
@@ -54,7 +68,8 @@ public class XmlToAvroService extends AbstractIdleService {
             .build();
 
     XmlToAvroCallback callback =
-        new XmlToAvroCallback(config, publisher, curator, client, executor, httpClient);
+        new XmlToAvroCallback(
+            config, publisher, curator, historyClient, validationClient, executor, httpClient);
     listener.listen(c.queueName, c.poolSize, callback);
   }
 

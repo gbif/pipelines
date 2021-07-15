@@ -28,8 +28,9 @@ import org.gbif.pipelines.crawler.PipelinesCallback;
 import org.gbif.pipelines.crawler.StepHandler;
 import org.gbif.pipelines.crawler.xml.XmlToAvroCallback;
 import org.gbif.pipelines.crawler.xml.XmlToAvroConfiguration;
-import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
+import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.utils.file.CompressionUtil;
+import org.gbif.validator.ws.client.ValidationWsClient;
 
 /** Call back which is called when the {@link PipelinesXmlMessage} is received. */
 @Slf4j
@@ -39,7 +40,8 @@ public class AbcdToAvroCallback extends AbstractMessageCallback<PipelinesAbcdMes
   private final CuratorFramework curator;
   private final XmlToAvroConfiguration config;
   private final MessagePublisher publisher;
-  private final PipelinesHistoryWsClient client;
+  private final PipelinesHistoryClient historyClient;
+  private final ValidationWsClient validationClient;
   private final XmlToAvroCallback callback;
 
   public AbcdToAvroCallback(
@@ -47,19 +49,24 @@ public class AbcdToAvroCallback extends AbstractMessageCallback<PipelinesAbcdMes
       XmlToAvroConfiguration config,
       ExecutorService executor,
       MessagePublisher publisher,
-      PipelinesHistoryWsClient client,
+      PipelinesHistoryClient historyClient,
+      ValidationWsClient validationClient,
       HttpClient httpClient) {
     this.curator = curator;
     this.config = config;
     this.publisher = publisher;
-    this.client = client;
-    this.callback = new XmlToAvroCallback(config, publisher, curator, client, executor, httpClient);
+    this.historyClient = historyClient;
+    this.validationClient = validationClient;
+    this.callback =
+        new XmlToAvroCallback(
+            config, publisher, curator, historyClient, validationClient, executor, httpClient);
   }
 
   @Override
   public void handleMessage(PipelinesAbcdMessage message) {
     PipelinesCallback.<PipelinesAbcdMessage, PipelinesVerbatimMessage>builder()
-        .client(client)
+        .historyClient(historyClient)
+        .validationClient(validationClient)
         .config(config)
         .curator(curator)
         .stepType(StepType.ABCD_TO_VERBATIM)

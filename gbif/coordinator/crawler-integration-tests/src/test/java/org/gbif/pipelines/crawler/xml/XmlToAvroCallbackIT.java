@@ -26,7 +26,8 @@ import org.gbif.common.messaging.api.messages.Platform;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.common.utils.ZookeeperUtils;
 import org.gbif.pipelines.crawler.MessagePublisherStub;
-import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
+import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
+import org.gbif.validator.ws.client.ValidationWsClient;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -45,7 +46,8 @@ public class XmlToAvroCallbackIT {
   private static CuratorFramework curator;
   private static TestingServer server;
   private static MessagePublisherStub publisher;
-  private static PipelinesHistoryWsClient historyClient;
+  private static PipelinesHistoryClient historyClient;
+  private static ValidationWsClient validationClient;
   private static ExecutorService executor;
 
   @BeforeClass
@@ -63,7 +65,8 @@ public class XmlToAvroCallbackIT {
     executor = Executors.newSingleThreadExecutor();
 
     publisher = MessagePublisherStub.create();
-    historyClient = Mockito.mock(PipelinesHistoryWsClient.class);
+    historyClient = Mockito.mock(PipelinesHistoryClient.class);
+    validationClient = Mockito.mock(ValidationWsClient.class);
   }
 
   @AfterClass
@@ -89,7 +92,8 @@ public class XmlToAvroCallbackIT {
     config.xmlReaderParallelism = 4;
     config.archiveRepositorySubdir = "xml";
     XmlToAvroCallback callback =
-        new XmlToAvroCallback(config, publisher, curator, historyClient, executor, null);
+        new XmlToAvroCallback(
+            config, publisher, curator, historyClient, validationClient, executor, null);
 
     PipelinesXmlMessage message =
         new PipelinesXmlMessage(
@@ -130,7 +134,8 @@ public class XmlToAvroCallbackIT {
     config.xmlReaderParallelism = 4;
     config.archiveRepositorySubdir = "xml";
     XmlToAvroCallback callback =
-        new XmlToAvroCallback(config, publisher, curator, historyClient, executor, null);
+        new XmlToAvroCallback(
+            config, publisher, curator, historyClient, validationClient, executor, null);
 
     PipelinesXmlMessage message =
         new PipelinesXmlMessage(
@@ -172,7 +177,8 @@ public class XmlToAvroCallbackIT {
     config.xmlReaderParallelism = 4;
     config.archiveRepositorySubdir = "xml";
     XmlToAvroCallback callback =
-        new XmlToAvroCallback(config, publisher, curator, historyClient, executor, null);
+        new XmlToAvroCallback(
+            config, publisher, curator, historyClient, validationClient, executor, null);
     PipelinesXmlMessage message =
         new PipelinesXmlMessage(
             datasetKey,

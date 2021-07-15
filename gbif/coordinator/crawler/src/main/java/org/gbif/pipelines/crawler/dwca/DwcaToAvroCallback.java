@@ -26,7 +26,8 @@ import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.utils.DwcaTermUtils;
 import org.gbif.pipelines.crawler.PipelinesCallback;
 import org.gbif.pipelines.crawler.StepHandler;
-import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
+import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
+import org.gbif.validator.ws.client.ValidationWsClient;
 
 /** Callback which is called when the {@link PipelinesDwcaMessage} is received. */
 @Slf4j
@@ -36,17 +37,20 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
   private final DwcaToAvroConfiguration config;
   private final MessagePublisher publisher;
   private final CuratorFramework curator;
-  private final PipelinesHistoryWsClient client;
+  private final PipelinesHistoryClient historyClient;
+  private final ValidationWsClient validationClient;
 
   public DwcaToAvroCallback(
       DwcaToAvroConfiguration config,
       MessagePublisher publisher,
       CuratorFramework curator,
-      PipelinesHistoryWsClient client) {
+      PipelinesHistoryClient historyClient,
+      ValidationWsClient validationClient) {
     this.config = config;
     this.publisher = publisher;
     this.curator = curator;
-    this.client = client;
+    this.historyClient = historyClient;
+    this.validationClient = validationClient;
   }
 
   @Override
@@ -56,7 +60,8 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
             ? StepType.VALIDATOR_DWCA_TO_VERBATIM
             : StepType.DWCA_TO_VERBATIM;
     PipelinesCallback.<PipelinesDwcaMessage, PipelinesVerbatimMessage>builder()
-        .client(client)
+        .historyClient(historyClient)
+        .validationClient(validationClient)
         .config(config)
         .curator(curator)
         .stepType(type)

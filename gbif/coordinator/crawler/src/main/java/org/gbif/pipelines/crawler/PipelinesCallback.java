@@ -26,6 +26,7 @@ import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.model.pipelines.PipelineStep.MetricInfo;
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.api.model.pipelines.ws.PipelineProcessParameters;
 import org.gbif.api.model.pipelines.ws.PipelineStepParameters;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
@@ -41,8 +42,9 @@ import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
 import org.gbif.pipelines.common.configs.BaseConfiguration;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.common.utils.ZookeeperUtils;
-import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
+import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.utils.file.properties.PropertiesUtil;
+import org.gbif.validator.ws.client.ValidationWsClient;
 import org.slf4j.MDC;
 import org.slf4j.MDC.MDCCloseable;
 
@@ -68,10 +70,11 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
   private final MessagePublisher publisher;
   @NonNull private final StepType stepType;
   @NonNull private final CuratorFramework curator;
-  @NonNull private final PipelinesHistoryWsClient client;
+  @NonNull private final PipelinesHistoryClient historyClient;
   @NonNull private final BaseConfiguration config;
   @NonNull private final I message;
   @NonNull private final StepHandler<I, O> handler;
+  private final ValidationWsClient validationClient;
 
   @Builder.Default private boolean isValidator = false;
 
@@ -232,7 +235,8 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
       // does an upsert).
       UUID datasetUuid = message.getDatasetUuid();
       Integer attempt = message.getAttempt();
-      long processKey = client.createOrGetPipelineProcess(datasetUuid, attempt);
+      long processKey =
+          historyClient.createPipelineProcess(new PipelineProcessParameters(datasetUuid, attempt));
 
       Long executionId = message.getExecutionId();
       if (executionId == null) {
@@ -240,7 +244,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
         PipelineExecution execution =
             new PipelineExecution().setStepsToRun(Collections.singletonList(stepType));
 
-        executionId = client.addPipelineExecution(processKey, execution);
+        executionId = historyClient.addPipelineExecution(processKey, execution);
         message.setExecutionId(executionId);
       }
 
@@ -253,7 +257,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
               .setRunner(StepRunner.valueOf(getRunner()))
               .setPipelinesVersion(getPipelinesVersion());
 
-      long stepKey = client.addPipelineStep(processKey, executionId, step);
+      long stepKey = historyClient.addPipelineStep(processKey, executionId, step);
 
       return Optional.of(
           new TrackingInfo(
@@ -276,7 +280,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
     try {
       Runnable r =
           () ->
-              client.updatePipelineStepStatusAndMetrics(
+              historyClient.updatePipelineStepStatusAndMetrics(
                   ti.processKey, ti.executionId, ti.stepKey, psp);
       Retry.decorateRunnable(RETRY, r).run();
     } catch (Exception ex) {

@@ -24,7 +24,7 @@ import org.gbif.pipelines.crawler.StepHandler;
 import org.gbif.pipelines.crawler.hdfs.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
 import org.gbif.pipelines.crawler.interpret.InterpreterConfiguration;
 import org.gbif.pipelines.ingest.java.pipelines.InterpretedToHdfsViewPipeline;
-import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
+import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 
 /** Callback which is called when the {@link PipelinesInterpretedMessage} is received. */
 @Slf4j
@@ -36,26 +36,26 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
   private final HdfsViewConfiguration config;
   private final MessagePublisher publisher;
   private final CuratorFramework curator;
-  private final PipelinesHistoryWsClient client;
+  private final PipelinesHistoryClient historyClient;
   private final ExecutorService executor;
 
   public HdfsViewCallback(
       HdfsViewConfiguration config,
       MessagePublisher publisher,
       CuratorFramework curator,
-      PipelinesHistoryWsClient client,
+      PipelinesHistoryClient historyClient,
       ExecutorService executor) {
     this.config = config;
     this.publisher = publisher;
     this.curator = curator;
-    this.client = client;
+    this.historyClient = historyClient;
     this.executor = executor;
   }
 
   @Override
   public void handleMessage(PipelinesInterpretedMessage message) {
     PipelinesCallback.<PipelinesInterpretedMessage, PipelinesHdfsViewBuiltMessage>builder()
-        .client(client)
+        .historyClient(historyClient)
         .config(config)
         .curator(curator)
         .stepType(TYPE)

@@ -27,7 +27,8 @@ import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.utils.ZookeeperUtils;
 import org.gbif.pipelines.crawler.MessagePublisherStub;
-import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
+import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
+import org.gbif.validator.ws.client.ValidationWsClient;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -42,7 +43,8 @@ public class InterpretationCallbackIT {
   private static CuratorFramework curator;
   private static TestingServer server;
   private static MessagePublisherStub publisher;
-  private static PipelinesHistoryWsClient historyWsClient;
+  private static PipelinesHistoryClient historyClient;
+  private static ValidationWsClient validationClient;
 
   @BeforeClass
   public static void setUp() throws Exception {
@@ -58,7 +60,8 @@ public class InterpretationCallbackIT {
 
     publisher = MessagePublisherStub.create();
 
-    historyWsClient = Mockito.mock(PipelinesHistoryWsClient.class);
+    historyClient = Mockito.mock(PipelinesHistoryClient.class);
+    validationClient = Mockito.mock(ValidationWsClient.class);
   }
 
   @AfterClass
@@ -86,7 +89,7 @@ public class InterpretationCallbackIT {
 
     InterpretationCallback callback =
         new InterpretationCallback(
-            config, publisher, curator, historyWsClient, null, executorService);
+            config, publisher, curator, historyClient, validationClient, null, executorService);
 
     UUID uuid = UUID.fromString(DATASET_UUID);
     int attempt = 60;
@@ -153,7 +156,13 @@ public class InterpretationCallbackIT {
 
     InterpretationCallback callback =
         new InterpretationCallback(
-            config, publisher, curator, historyWsClient, closeableHttpClient, executorService);
+            config,
+            publisher,
+            curator,
+            historyClient,
+            validationClient,
+            closeableHttpClient,
+            executorService);
 
     UUID uuid = UUID.fromString(DATASET_UUID);
     int attempt = 60;

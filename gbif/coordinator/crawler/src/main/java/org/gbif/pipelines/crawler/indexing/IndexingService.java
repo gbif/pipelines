@@ -14,7 +14,9 @@ import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.pipelines.common.configs.StepConfiguration;
-import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
+import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
+import org.gbif.validator.ws.client.ValidationWsClient;
+import org.gbif.ws.client.ClientBuilder;
 
 /**
  * A service which listens to the {@link
@@ -52,11 +54,23 @@ public class IndexingService extends AbstractIdleService {
                 RequestConfig.custom().setConnectTimeout(60_000).setSocketTimeout(60_000).build())
             .build();
 
-    PipelinesHistoryWsClient client =
-        c.registry.newRegistryInjector().getInstance(PipelinesHistoryWsClient.class);
+    PipelinesHistoryClient historyClient =
+        new ClientBuilder()
+            .withUrl(config.stepConfig.registry.wsUrl)
+            .withCredentials(config.stepConfig.registry.user, config.stepConfig.registry.password)
+            .withFormEncoder()
+            .build(PipelinesHistoryClient.class);
+
+    ValidationWsClient validationClient =
+        new ClientBuilder()
+            .withUrl(config.stepConfig.registry.wsUrl)
+            .withCredentials(config.stepConfig.registry.user, config.stepConfig.registry.password)
+            .withFormEncoder()
+            .build(ValidationWsClient.class);
 
     IndexingCallback callback =
-        new IndexingCallback(config, publisher, curator, httpClient, client, executor);
+        new IndexingCallback(
+            config, publisher, curator, httpClient, historyClient, validationClient, executor);
 
     String routingKey;
     PipelinesInterpretedMessage pm =

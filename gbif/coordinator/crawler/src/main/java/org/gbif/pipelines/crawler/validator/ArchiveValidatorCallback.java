@@ -27,10 +27,11 @@ import org.gbif.pipelines.core.utils.DwcaTermUtils;
 import org.gbif.pipelines.crawler.PipelinesCallback;
 import org.gbif.pipelines.crawler.StepHandler;
 import org.gbif.pipelines.validator.DwcaValidator;
-import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
+import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Metrics.ArchiveValidationReport;
 import org.gbif.validator.api.XmlSchemaValidatorResult;
+import org.gbif.validator.ws.client.ValidationWsClient;
 
 /** Callback which is called when the {@link PipelinesArchiveValidatorMessage} is received. */
 @Slf4j
@@ -41,26 +42,30 @@ public class ArchiveValidatorCallback
   private final ArchiveValidatorConfiguration config;
   private final MessagePublisher publisher;
   private final CuratorFramework curator;
-  private final PipelinesHistoryWsClient client;
+  private final PipelinesHistoryClient historyClient;
+  private final ValidationWsClient validationClient;
   private final SchemaValidatorFactory schemaValidatorFactory;
 
   public ArchiveValidatorCallback(
       ArchiveValidatorConfiguration config,
       MessagePublisher publisher,
       CuratorFramework curator,
-      PipelinesHistoryWsClient client,
+      PipelinesHistoryClient historyClient,
+      ValidationWsClient validationClient,
       SchemaValidatorFactory schemaValidatorFactory) {
     this.config = config;
     this.publisher = publisher;
     this.curator = curator;
-    this.client = client;
+    this.historyClient = historyClient;
+    this.validationClient = validationClient;
     this.schemaValidatorFactory = schemaValidatorFactory;
   }
 
   @Override
   public void handleMessage(PipelinesArchiveValidatorMessage message) {
     PipelinesCallback.<PipelinesArchiveValidatorMessage, PipelineBasedMessage>builder()
-        .client(client)
+        .historyClient(historyClient)
+        .validationClient(validationClient)
         .config(config)
         .curator(curator)
         .stepType(StepType.VALIDATOR_VALIDATE_ARCHIVE)

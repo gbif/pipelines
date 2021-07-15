@@ -34,7 +34,8 @@ import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.crawler.PipelinesCallback;
 import org.gbif.pipelines.crawler.StepHandler;
 import org.gbif.pipelines.crawler.dwca.DwcaToAvroConfiguration;
-import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
+import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
+import org.gbif.validator.ws.client.ValidationWsClient;
 
 /** Call back which is called when the {@link PipelinesXmlMessage} is received. */
 @Slf4j
@@ -47,7 +48,8 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
   private final XmlToAvroConfiguration config;
   private final MessagePublisher publisher;
   private final CuratorFramework curator;
-  private final PipelinesHistoryWsClient client;
+  private final PipelinesHistoryClient historyClient;
+  private final ValidationWsClient validationClient;
   private final ExecutorService executor;
   private final HttpClient httpClient;
 
@@ -55,13 +57,15 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
       XmlToAvroConfiguration config,
       MessagePublisher publisher,
       CuratorFramework curator,
-      PipelinesHistoryWsClient client,
+      PipelinesHistoryClient historyClient,
+      ValidationWsClient validationClient,
       ExecutorService executor,
       HttpClient httpClient) {
     this.config = config;
     this.publisher = publisher;
     this.curator = curator;
-    this.client = client;
+    this.historyClient = historyClient;
+    this.validationClient = validationClient;
     this.executor = executor;
     this.httpClient = httpClient;
   }
@@ -69,7 +73,8 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
   @Override
   public void handleMessage(PipelinesXmlMessage message) {
     PipelinesCallback.<PipelinesXmlMessage, PipelinesVerbatimMessage>builder()
-        .client(client)
+        .historyClient(historyClient)
+        .validationClient(validationClient)
         .config(config)
         .curator(curator)
         .stepType(StepType.XML_TO_VERBATIM)

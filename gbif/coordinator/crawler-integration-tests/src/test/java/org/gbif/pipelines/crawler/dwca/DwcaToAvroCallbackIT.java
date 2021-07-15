@@ -28,7 +28,8 @@ import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.common.utils.ZookeeperUtils;
 import org.gbif.pipelines.crawler.MessagePublisherStub;
-import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
+import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
+import org.gbif.validator.ws.client.ValidationWsClient;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -46,7 +47,8 @@ public class DwcaToAvroCallbackIT {
   private static CuratorFramework curator;
   private static TestingServer server;
   private static MessagePublisherStub publisher;
-  private static PipelinesHistoryWsClient historyWsClient;
+  private static PipelinesHistoryClient historyClient;
+  private static ValidationWsClient validationClient;
 
   @BeforeClass
   public static void setUp() throws Exception {
@@ -62,7 +64,8 @@ public class DwcaToAvroCallbackIT {
 
     publisher = MessagePublisherStub.create();
 
-    historyWsClient = Mockito.mock(PipelinesHistoryWsClient.class);
+    historyClient = Mockito.mock(PipelinesHistoryClient.class);
+    validationClient = Mockito.mock(ValidationWsClient.class);
   }
 
   @AfterClass
@@ -85,7 +88,7 @@ public class DwcaToAvroCallbackIT {
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
 
     DwcaToAvroCallback callback =
-        new DwcaToAvroCallback(config, publisher, curator, historyWsClient);
+        new DwcaToAvroCallback(config, publisher, curator, historyClient, validationClient);
 
     UUID uuid = UUID.fromString(DATASET_UUID);
     int attempt = 2;
@@ -132,7 +135,7 @@ public class DwcaToAvroCallbackIT {
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
 
     DwcaToAvroCallback callback =
-        new DwcaToAvroCallback(config, publisher, curator, historyWsClient);
+        new DwcaToAvroCallback(config, publisher, curator, historyClient, validationClient);
 
     UUID uuid = UUID.fromString(DATASET_UUID);
     int attempt = 2;
@@ -178,7 +181,7 @@ public class DwcaToAvroCallbackIT {
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
 
     DwcaToAvroCallback callback =
-        new DwcaToAvroCallback(config, publisher, curator, historyWsClient);
+        new DwcaToAvroCallback(config, publisher, curator, historyClient, validationClient);
 
     UUID uuid = UUID.fromString(DATASET_UUID);
     int attempt = 2;
@@ -223,7 +226,7 @@ public class DwcaToAvroCallbackIT {
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
 
     DwcaToAvroCallback callback =
-        new DwcaToAvroCallback(config, publisher, curator, historyWsClient);
+        new DwcaToAvroCallback(config, publisher, curator, historyClient, validationClient);
 
     UUID uuid = UUID.fromString(DATASET_UUID);
     int attempt = 2;

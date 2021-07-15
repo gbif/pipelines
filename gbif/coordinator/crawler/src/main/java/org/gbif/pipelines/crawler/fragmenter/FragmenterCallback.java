@@ -28,7 +28,7 @@ import org.gbif.pipelines.fragmenter.strategy.DwcaStrategy;
 import org.gbif.pipelines.fragmenter.strategy.Strategy;
 import org.gbif.pipelines.fragmenter.strategy.XmlStrategy;
 import org.gbif.pipelines.keygen.config.KeygenConfig;
-import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
+import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 
 /** Callback which is called when the {@link PipelinesInterpretedMessage} is received. */
 @Slf4j
@@ -40,7 +40,7 @@ public class FragmenterCallback extends AbstractMessageCallback<PipelinesInterpr
   private final FragmenterConfiguration config;
   private final MessagePublisher publisher;
   private final CuratorFramework curator;
-  private final PipelinesHistoryWsClient client;
+  private final PipelinesHistoryClient historyClient;
   private final ExecutorService executor;
   private final Connection hbaseConnection;
   private final KeygenConfig keygenConfig;
@@ -49,14 +49,14 @@ public class FragmenterCallback extends AbstractMessageCallback<PipelinesInterpr
       FragmenterConfiguration config,
       MessagePublisher publisher,
       CuratorFramework curator,
-      PipelinesHistoryWsClient client,
+      PipelinesHistoryClient historyClient,
       ExecutorService executor,
       Connection hbaseConnection,
       KeygenConfig keygenConfig) {
     this.config = config;
     this.publisher = publisher;
     this.curator = curator;
-    this.client = client;
+    this.historyClient = historyClient;
     this.executor = executor;
     this.hbaseConnection = hbaseConnection;
     this.keygenConfig = keygenConfig;
@@ -65,7 +65,7 @@ public class FragmenterCallback extends AbstractMessageCallback<PipelinesInterpr
   @Override
   public void handleMessage(PipelinesInterpretedMessage message) {
     PipelinesCallback.<PipelinesInterpretedMessage, PipelinesFragmenterMessage>builder()
-        .client(client)
+        .historyClient(historyClient)
         .config(config)
         .curator(curator)
         .stepType(TYPE)

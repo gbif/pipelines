@@ -30,7 +30,8 @@ import org.gbif.pipelines.crawler.StepHandler;
 import org.gbif.pipelines.crawler.indexing.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
 import org.gbif.pipelines.crawler.interpret.InterpreterConfiguration;
 import org.gbif.pipelines.ingest.java.pipelines.InterpretedToEsIndexExtendedPipeline;
-import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
+import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
+import org.gbif.validator.ws.client.ValidationWsClient;
 
 /** Callback which is called when the {@link PipelinesInterpretedMessage} is received. */
 @Slf4j
@@ -43,7 +44,8 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
   private final MessagePublisher publisher;
   private final CuratorFramework curator;
   private final HttpClient httpClient;
-  private final PipelinesHistoryWsClient client;
+  private final PipelinesHistoryClient historyClient;
+  private final ValidationWsClient validationClient;
   private final ExecutorService executor;
 
   public IndexingCallback(
@@ -51,13 +53,15 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
       MessagePublisher publisher,
       CuratorFramework curator,
       HttpClient httpClient,
-      PipelinesHistoryWsClient client,
+      PipelinesHistoryClient historyClient,
+      ValidationWsClient validationClient,
       ExecutorService executor) {
     this.config = config;
     this.publisher = publisher;
     this.curator = curator;
     this.httpClient = httpClient;
-    this.client = client;
+    this.historyClient = historyClient;
+    this.validationClient = validationClient;
     this.executor = executor;
   }
 
@@ -68,7 +72,8 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
             ? StepType.VALIDATOR_INTERPRETED_TO_INDEX
             : StepType.INTERPRETED_TO_INDEX;
     PipelinesCallback.<PipelinesInterpretedMessage, PipelinesIndexedMessage>builder()
-        .client(client)
+        .historyClient(historyClient)
+        .validationClient(validationClient)
         .config(config)
         .curator(curator)
         .stepType(type)

@@ -15,7 +15,8 @@ import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.factory.ConfigFactory;
 import org.gbif.pipelines.keygen.config.KeygenConfig;
-import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
+import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
+import org.gbif.ws.client.ClientBuilder;
 
 /**
  * A service which listens to the {@link
@@ -44,14 +45,20 @@ public class FragmenterService extends AbstractIdleService {
     publisher = new DefaultMessagePublisher(c.messaging.getConnectionParameters());
     curator = c.zooKeeper.getCuratorFramework();
     executor = Executors.newFixedThreadPool(config.numberThreads);
-    PipelinesHistoryWsClient client =
-        c.registry.newRegistryInjector().getInstance(PipelinesHistoryWsClient.class);
+
+    PipelinesHistoryClient historyClient =
+        new ClientBuilder()
+            .withUrl(config.stepConfig.registry.wsUrl)
+            .withCredentials(config.stepConfig.registry.user, config.stepConfig.registry.password)
+            .withFormEncoder()
+            .build(PipelinesHistoryClient.class);
+
     KeygenConfig keygenConfig =
         readConfig(c.hdfsSiteConfig, c.coreSiteConfig, config.pipelinesConfig);
 
     FragmenterCallback callback =
         new FragmenterCallback(
-            config, publisher, curator, client, executor, hbaseConnection, keygenConfig);
+            config, publisher, curator, historyClient, executor, hbaseConnection, keygenConfig);
 
     String routingKey = new PipelinesInterpretedMessage().getRoutingKey() + ".*";
     listener.listen(c.queueName, routingKey, c.poolSize, callback);

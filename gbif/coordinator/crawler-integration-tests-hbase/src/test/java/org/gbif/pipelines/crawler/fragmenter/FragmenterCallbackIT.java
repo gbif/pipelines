@@ -31,7 +31,7 @@ import org.gbif.pipelines.common.utils.ZookeeperUtils;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
 import org.gbif.pipelines.crawler.MessagePublisherStub;
 import org.gbif.pipelines.fragmenter.common.HbaseServer;
-import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
+import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -50,7 +50,7 @@ public class FragmenterCallbackIT {
   private static CuratorFramework curator;
   private static TestingServer server;
   private static MessagePublisherStub publisher;
-  private static PipelinesHistoryWsClient client;
+  private static PipelinesHistoryClient client;
 
   @ClassRule public static final HbaseServer HBASE_SERVER = new HbaseServer();
 
@@ -68,7 +68,7 @@ public class FragmenterCallbackIT {
 
     publisher = MessagePublisherStub.create();
 
-    client = Mockito.mock(PipelinesHistoryWsClient.class);
+    client = Mockito.mock(PipelinesHistoryClient.class);
   }
 
   @AfterClass

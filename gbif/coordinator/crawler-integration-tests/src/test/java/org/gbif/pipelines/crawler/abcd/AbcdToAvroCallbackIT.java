@@ -26,7 +26,8 @@ import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.common.utils.ZookeeperUtils;
 import org.gbif.pipelines.crawler.MessagePublisherStub;
 import org.gbif.pipelines.crawler.xml.XmlToAvroConfiguration;
-import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
+import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
+import org.gbif.validator.ws.client.ValidationWsClient;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -45,7 +46,8 @@ public class AbcdToAvroCallbackIT {
   private static CuratorFramework curator;
   private static TestingServer server;
   private static MessagePublisherStub publisher;
-  private static PipelinesHistoryWsClient historyClient;
+  private static PipelinesHistoryClient historyClient;
+  private static ValidationWsClient validationClient;
   private static ExecutorService executor;
 
   @BeforeClass
@@ -63,7 +65,8 @@ public class AbcdToAvroCallbackIT {
     executor = Executors.newSingleThreadExecutor();
 
     publisher = MessagePublisherStub.create();
-    historyClient = Mockito.mock(PipelinesHistoryWsClient.class);
+    historyClient = Mockito.mock(PipelinesHistoryClient.class);
+    validationClient = Mockito.mock(ValidationWsClient.class);
   }
 
   @AfterClass
@@ -89,7 +92,8 @@ public class AbcdToAvroCallbackIT {
     config.xmlReaderParallelism = 4;
     config.archiveRepositorySubdir = "abcd";
     AbcdToAvroCallback callback =
-        new AbcdToAvroCallback(curator, config, executor, publisher, historyClient, null);
+        new AbcdToAvroCallback(
+            curator, config, executor, publisher, historyClient, validationClient, null);
     PipelinesAbcdMessage message =
         new PipelinesAbcdMessage(
             DATASET_UUID,
@@ -129,7 +133,8 @@ public class AbcdToAvroCallbackIT {
     config.xmlReaderParallelism = 4;
     config.archiveRepositorySubdir = "abcd";
     AbcdToAvroCallback callback =
-        new AbcdToAvroCallback(curator, config, executor, publisher, historyClient, null);
+        new AbcdToAvroCallback(
+            curator, config, executor, publisher, historyClient, validationClient, null);
     PipelinesAbcdMessage message =
         new PipelinesAbcdMessage(
             UUID.fromString(datasetKey),
@@ -170,7 +175,8 @@ public class AbcdToAvroCallbackIT {
     config.xmlReaderParallelism = 4;
     config.archiveRepositorySubdir = "abcd";
     AbcdToAvroCallback callback =
-        new AbcdToAvroCallback(curator, config, executor, publisher, historyClient, null);
+        new AbcdToAvroCallback(
+            curator, config, executor, publisher, historyClient, validationClient, null);
     PipelinesAbcdMessage message =
         new PipelinesAbcdMessage(
             DATASET_UUID,

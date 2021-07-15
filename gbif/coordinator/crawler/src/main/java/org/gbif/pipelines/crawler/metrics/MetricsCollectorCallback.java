@@ -19,8 +19,9 @@ import org.gbif.pipelines.core.utils.DwcaTermUtils;
 import org.gbif.pipelines.crawler.PipelinesCallback;
 import org.gbif.pipelines.crawler.StepHandler;
 import org.gbif.pipelines.validator.MetricsCollector;
-import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
+import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.api.Metrics;
+import org.gbif.validator.ws.client.ValidationWsClient;
 
 /** Callback which is called when the {@link PipelinesIndexedMessage} is received. */
 @Slf4j
@@ -30,23 +31,27 @@ public class MetricsCollectorCallback extends AbstractMessageCallback<PipelinesI
   private final MetricsCollectorConfiguration config;
   private final MessagePublisher publisher;
   private final CuratorFramework curator;
-  private final PipelinesHistoryWsClient client;
+  private final PipelinesHistoryClient historyClient;
+  private final ValidationWsClient validationClient;
 
   public MetricsCollectorCallback(
       MetricsCollectorConfiguration config,
       MessagePublisher publisher,
       CuratorFramework curator,
-      PipelinesHistoryWsClient client) {
+      PipelinesHistoryClient historyClient,
+      ValidationWsClient validationClient) {
     this.config = config;
     this.publisher = publisher;
     this.curator = curator;
-    this.client = client;
+    this.historyClient = historyClient;
+    this.validationClient = validationClient;
   }
 
   @Override
   public void handleMessage(PipelinesIndexedMessage message) {
     PipelinesCallback.<PipelinesIndexedMessage, PipelinesMetricsCollectedMessage>builder()
-        .client(client)
+        .historyClient(historyClient)
+        .validationClient(validationClient)
         .config(config)
         .curator(curator)
         .stepType(StepType.VALIDATOR_COLLECT_METRICS)

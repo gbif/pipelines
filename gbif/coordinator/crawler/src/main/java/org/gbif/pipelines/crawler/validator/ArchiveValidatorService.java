@@ -9,7 +9,9 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
 import org.gbif.pipelines.common.configs.StepConfiguration;
-import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
+import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
+import org.gbif.validator.ws.client.ValidationWsClient;
+import org.gbif.ws.client.ClientBuilder;
 
 /**
  * A service which listens to the {@link org.gbif.common.messaging.api.messages.PipelinesDwcaMessage
@@ -35,8 +37,20 @@ public class ArchiveValidatorService extends AbstractIdleService {
     listener = new MessageListener(c.messaging.getConnectionParameters(), 1);
     publisher = new DefaultMessagePublisher(c.messaging.getConnectionParameters());
     curator = c.zooKeeper.getCuratorFramework();
-    PipelinesHistoryWsClient client =
-        c.registry.newRegistryInjector().getInstance(PipelinesHistoryWsClient.class);
+
+    PipelinesHistoryClient historyClient =
+        new ClientBuilder()
+            .withUrl(config.stepConfig.registry.wsUrl)
+            .withCredentials(config.stepConfig.registry.user, config.stepConfig.registry.password)
+            .withFormEncoder()
+            .build(PipelinesHistoryClient.class);
+
+    ValidationWsClient validationClient =
+        new ClientBuilder()
+            .withUrl(config.stepConfig.registry.wsUrl)
+            .withCredentials(config.stepConfig.registry.user, config.stepConfig.registry.password)
+            .withFormEncoder()
+            .build(ValidationWsClient.class);
 
     SchemaValidatorFactory schemaValidatorFactory = new SchemaValidatorFactory();
 
@@ -47,7 +61,12 @@ public class ArchiveValidatorService extends AbstractIdleService {
         routingKey,
         c.poolSize,
         new ArchiveValidatorCallback(
-            this.config, publisher, curator, client, schemaValidatorFactory));
+            this.config,
+            publisher,
+            curator,
+            historyClient,
+            validationClient,
+            schemaValidatorFactory));
   }
 
   @Override

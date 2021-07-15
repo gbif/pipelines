@@ -30,7 +30,8 @@ import org.gbif.pipelines.common.utils.ZookeeperUtils;
 import org.gbif.pipelines.crawler.MessagePublisherStub;
 import org.gbif.pipelines.crawler.utils.EsServer;
 import org.gbif.pipelines.estools.service.EsService;
-import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
+import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
+import org.gbif.validator.ws.client.ValidationWsClient;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -47,7 +48,8 @@ public class IndexingCallbackIT {
   private static CuratorFramework curator;
   private static TestingServer server;
   private static MessagePublisherStub publisher;
-  private static PipelinesHistoryWsClient historyWsClient;
+  private static PipelinesHistoryClient historyClient;
+  private static ValidationWsClient validationClient;
   private static CloseableHttpClient httpClient;
 
   @ClassRule public static final EsServer ES_SERVER = new EsServer();
@@ -71,7 +73,8 @@ public class IndexingCallbackIT {
 
     publisher = MessagePublisherStub.create();
 
-    historyWsClient = Mockito.mock(PipelinesHistoryWsClient.class);
+    historyClient = Mockito.mock(PipelinesHistoryClient.class);
+    validationClient = Mockito.mock(ValidationWsClient.class);
     httpClient =
         HttpClients.custom()
             .setDefaultRequestConfig(
@@ -99,7 +102,8 @@ public class IndexingCallbackIT {
     ExecutorService executor = Executors.newSingleThreadExecutor();
 
     IndexingCallback callback =
-        new IndexingCallback(config, publisher, curator, httpClient, historyWsClient, executor);
+        new IndexingCallback(
+            config, publisher, curator, httpClient, historyClient, validationClient, executor);
 
     UUID uuid = UUID.fromString(DATASET_UUID);
     int attempt = 60;
@@ -138,7 +142,8 @@ public class IndexingCallbackIT {
     ExecutorService executor = Executors.newSingleThreadExecutor();
 
     IndexingCallback callback =
-        new IndexingCallback(config, publisher, curator, httpClient, historyWsClient, executor);
+        new IndexingCallback(
+            config, publisher, curator, httpClient, historyClient, validationClient, executor);
 
     UUID uuid = UUID.fromString(DATASET_UUID);
     int attempt = 60;
@@ -179,7 +184,8 @@ public class IndexingCallbackIT {
     ExecutorService executor = Executors.newSingleThreadExecutor();
 
     IndexingCallback callback =
-        new IndexingCallback(config, publisher, curator, httpClient, historyWsClient, executor);
+        new IndexingCallback(
+            config, publisher, curator, httpClient, historyClient, validationClient, executor);
 
     String crawlId = DATASET_UUID;
 
@@ -212,7 +218,8 @@ public class IndexingCallbackIT {
     ExecutorService executor = Executors.newSingleThreadExecutor();
 
     IndexingCallback callback =
-        new IndexingCallback(config, publisher, curator, httpClient, historyWsClient, executor);
+        new IndexingCallback(
+            config, publisher, curator, httpClient, historyClient, validationClient, executor);
 
     PipelinesInterpretedMessage message = createMessage(uuid, attempt);
     message.setPipelineSteps(Collections.singleton(StepType.INTERPRETED_TO_INDEX.name()));
@@ -237,7 +244,8 @@ public class IndexingCallbackIT {
     ExecutorService executor = Executors.newSingleThreadExecutor();
 
     IndexingCallback callback =
-        new IndexingCallback(config, publisher, curator, httpClient, historyWsClient, executor);
+        new IndexingCallback(
+            config, publisher, curator, httpClient, historyClient, validationClient, executor);
 
     String crawlId = DATASET_UUID;
 
@@ -269,7 +277,8 @@ public class IndexingCallbackIT {
     ExecutorService executor = Executors.newSingleThreadExecutor();
 
     IndexingCallback callback =
-        new IndexingCallback(config, publisher, curator, httpClient, historyWsClient, executor);
+        new IndexingCallback(
+            config, publisher, curator, httpClient, historyClient, validationClient, executor);
 
     PipelinesInterpretedMessage message = createMessage(uuid, attempt);
     message.setOnlyForStep(StepType.HDFS_VIEW.name()); // Wrong type

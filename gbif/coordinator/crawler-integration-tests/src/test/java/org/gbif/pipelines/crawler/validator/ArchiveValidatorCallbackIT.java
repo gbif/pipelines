@@ -23,7 +23,8 @@ import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
 import org.gbif.pipelines.common.utils.ZookeeperUtils;
 import org.gbif.pipelines.crawler.MessagePublisherStub;
-import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
+import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
+import org.gbif.validator.ws.client.ValidationWsClient;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -40,7 +41,8 @@ public class ArchiveValidatorCallbackIT {
   private static CuratorFramework curator;
   private static TestingServer server;
   private static MessagePublisherStub publisher;
-  private static PipelinesHistoryWsClient historyWsClient;
+  private static PipelinesHistoryClient historyClient;
+  private static ValidationWsClient validationClient;
 
   @BeforeClass
   public static void setUp() throws Exception {
@@ -56,7 +58,8 @@ public class ArchiveValidatorCallbackIT {
 
     publisher = MessagePublisherStub.create();
 
-    historyWsClient = Mockito.mock(PipelinesHistoryWsClient.class);
+    historyClient = Mockito.mock(PipelinesHistoryClient.class);
+    validationClient = Mockito.mock(ValidationWsClient.class);
   }
 
   @AfterClass
@@ -80,7 +83,12 @@ public class ArchiveValidatorCallbackIT {
 
     ArchiveValidatorCallback callback =
         new ArchiveValidatorCallback(
-            config, publisher, curator, historyWsClient, new SchemaValidatorFactory());
+            config,
+            publisher,
+            curator,
+            historyClient,
+            validationClient,
+            new SchemaValidatorFactory());
 
     UUID uuid = UUID.fromString(DATASET_UUID);
     int attempt = 2;
@@ -121,7 +129,12 @@ public class ArchiveValidatorCallbackIT {
 
     ArchiveValidatorCallback callback =
         new ArchiveValidatorCallback(
-            config, publisher, curator, historyWsClient, new SchemaValidatorFactory());
+            config,
+            publisher,
+            curator,
+            historyClient,
+            validationClient,
+            new SchemaValidatorFactory());
 
     UUID uuid = UUID.fromString(DATASET_UUID);
     int attempt = 2;
@@ -157,7 +170,12 @@ public class ArchiveValidatorCallbackIT {
 
     ArchiveValidatorCallback callback =
         new ArchiveValidatorCallback(
-            config, publisher, curator, historyWsClient, new SchemaValidatorFactory());
+            config,
+            publisher,
+            curator,
+            historyClient,
+            validationClient,
+            new SchemaValidatorFactory());
 
     UUID uuid = UUID.randomUUID(); // Use wron datasetKey
     int attempt = 2;

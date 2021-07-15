@@ -27,7 +27,7 @@ import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
 import org.gbif.crawler.constants.CrawlerNodePaths;
 import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
 import org.gbif.pipelines.common.configs.BaseConfiguration;
-import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
+import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -44,7 +44,7 @@ public class PipelinesCallbackIT {
   private static CuratorFramework curator;
   private static TestingServer server;
 
-  @Mock private PipelinesHistoryWsClient historyClient;
+  @Mock private PipelinesHistoryClient historyClient;
 
   @Mock private MessagePublisher mockPublisher;
 
@@ -96,7 +96,7 @@ public class PipelinesCallbackIT {
         .curator(curator)
         .stepType(nextStepName)
         .publisher(null)
-        .client(historyClient)
+        .historyClient(historyClient)
         .handler(TestHandler.create())
         .config(TestConfig.create())
         .build()
@@ -111,7 +111,7 @@ public class PipelinesCallbackIT {
         .curator(curator)
         .stepType(nextStepName)
         .publisher(null)
-        .client(historyClient)
+        .historyClient(historyClient)
         .handler(TestHandler.create())
         .config(TestConfig.create())
         .build()
@@ -165,7 +165,7 @@ public class PipelinesCallbackIT {
         .curator(curator)
         .stepType(nextStepName)
         .publisher(mockPublisher)
-        .client(historyClient)
+        .historyClient(historyClient)
         .handler(TestHandler.create())
         .config(TestConfig.create())
         .build()
@@ -206,7 +206,7 @@ public class PipelinesCallbackIT {
         .curator(curator)
         .stepType(nextStepName)
         .publisher(mockPublisher)
-        .client(historyClient)
+        .historyClient(historyClient)
         .handler(TestHandler.create())
         .config(TestConfig.create())
         .build()
@@ -245,7 +245,7 @@ public class PipelinesCallbackIT {
         .curator(curator)
         .stepType(nextStepName)
         .publisher(mockPublisher)
-        .client(historyClient)
+        .historyClient(historyClient)
         .handler(TestExceptionHandler.create())
         .config(TestConfig.create())
         .build()
@@ -294,7 +294,7 @@ public class PipelinesCallbackIT {
         .curator(curator)
         .stepType(nextStepName)
         .publisher(mockPublisher)
-        .client(historyClient)
+        .historyClient(historyClient)
         .handler(TestHandler.create())
         .config(TestConfig.create())
         .build()
@@ -336,7 +336,7 @@ public class PipelinesCallbackIT {
         .curator(curator)
         .stepType(nextStepName)
         .publisher(mockPublisher)
-        .client(historyClient)
+        .historyClient(historyClient)
         .handler(TestHandler.create())
         .config(TestConfig.create())
         .build()

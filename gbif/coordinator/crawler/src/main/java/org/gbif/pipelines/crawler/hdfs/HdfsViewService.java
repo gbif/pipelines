@@ -10,7 +10,8 @@ import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.pipelines.common.configs.StepConfiguration;
-import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
+import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
+import org.gbif.ws.client.ClientBuilder;
 
 /**
  * A service which listens to the {@link
@@ -41,11 +42,16 @@ public class HdfsViewService extends AbstractIdleService {
         config.standaloneNumberThreads == null
             ? null
             : Executors.newFixedThreadPool(config.standaloneNumberThreads);
-    PipelinesHistoryWsClient historyWsClient =
-        c.registry.newRegistryInjector().getInstance(PipelinesHistoryWsClient.class);
+
+    PipelinesHistoryClient historyClient =
+        new ClientBuilder()
+            .withUrl(config.stepConfig.registry.wsUrl)
+            .withCredentials(config.stepConfig.registry.user, config.stepConfig.registry.password)
+            .withFormEncoder()
+            .build(PipelinesHistoryClient.class);
 
     HdfsViewCallback callback =
-        new HdfsViewCallback(config, publisher, curator, historyWsClient, executor);
+        new HdfsViewCallback(config, publisher, curator, historyClient, executor);
 
     String routingKey =
         new PipelinesInterpretedMessage().setRunner(config.processRunner).getRoutingKey();

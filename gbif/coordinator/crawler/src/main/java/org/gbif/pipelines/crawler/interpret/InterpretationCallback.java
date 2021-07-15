@@ -35,7 +35,8 @@ import org.gbif.pipelines.crawler.StepHandler;
 import org.gbif.pipelines.crawler.dwca.DwcaToAvroConfiguration;
 import org.gbif.pipelines.crawler.interpret.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
 import org.gbif.pipelines.ingest.java.pipelines.VerbatimToInterpretedPipeline;
-import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
+import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
+import org.gbif.validator.ws.client.ValidationWsClient;
 
 /** Callback which is called when the {@link PipelinesVerbatimMessage} is received. */
 @Slf4j
@@ -47,7 +48,8 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
   private final InterpreterConfiguration config;
   private final MessagePublisher publisher;
   private final CuratorFramework curator;
-  private final PipelinesHistoryWsClient historyWsClient;
+  private final PipelinesHistoryClient historyClient;
+  private final ValidationWsClient validationClient;
   private final CloseableHttpClient httpClient;
   private final ExecutorService executor;
 
@@ -55,13 +57,15 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
       InterpreterConfiguration config,
       MessagePublisher publisher,
       CuratorFramework curator,
-      PipelinesHistoryWsClient historyWsClient,
+      PipelinesHistoryClient historyClient,
+      ValidationWsClient validationClient,
       CloseableHttpClient httpClient,
       ExecutorService executor) {
     this.config = config;
     this.publisher = publisher;
     this.curator = curator;
-    this.historyWsClient = historyWsClient;
+    this.historyClient = historyClient;
+    this.validationClient = validationClient;
     this.httpClient = httpClient;
     this.executor = executor;
   }
@@ -74,7 +78,8 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
             : StepType.VERBATIM_TO_INTERPRETED;
 
     PipelinesCallback.<PipelinesVerbatimMessage, PipelinesInterpretedMessage>builder()
-        .client(historyWsClient)
+        .historyClient(historyClient)
+        .validationClient(validationClient)
         .config(config)
         .curator(curator)
         .stepType(type)

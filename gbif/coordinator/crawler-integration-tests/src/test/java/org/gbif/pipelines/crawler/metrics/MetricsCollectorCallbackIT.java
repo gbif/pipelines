@@ -27,7 +27,8 @@ import org.gbif.pipelines.crawler.utils.EsServer;
 import org.gbif.pipelines.estools.EsIndex;
 import org.gbif.pipelines.estools.model.IndexParams;
 import org.gbif.pipelines.estools.service.EsService;
-import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
+import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
+import org.gbif.validator.ws.client.ValidationWsClient;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -45,7 +46,8 @@ public class MetricsCollectorCallbackIT {
   private static CuratorFramework curator;
   private static TestingServer server;
   private static MessagePublisherStub publisher;
-  private static PipelinesHistoryWsClient historyWsClient;
+  private static PipelinesHistoryClient historyClient;
+  private static ValidationWsClient validationClient;
 
   @ClassRule public static final EsServer ES_SERVER = new EsServer();
 
@@ -68,7 +70,8 @@ public class MetricsCollectorCallbackIT {
 
     publisher = MessagePublisherStub.create();
 
-    historyWsClient = Mockito.mock(PipelinesHistoryWsClient.class);
+    historyClient = Mockito.mock(PipelinesHistoryClient.class);
+    validationClient = Mockito.mock(ValidationWsClient.class);
   }
 
   @AfterClass
@@ -89,7 +92,7 @@ public class MetricsCollectorCallbackIT {
     MetricsCollectorConfiguration config = createConfig();
 
     MetricsCollectorCallback callback =
-        new MetricsCollectorCallback(config, publisher, curator, historyWsClient);
+        new MetricsCollectorCallback(config, publisher, curator, historyClient, validationClient);
 
     UUID uuid = UUID.fromString(DATASET_UUID);
     int attempt = 60;
@@ -141,7 +144,7 @@ public class MetricsCollectorCallbackIT {
     MetricsCollectorConfiguration config = createConfig();
 
     MetricsCollectorCallback callback =
-        new MetricsCollectorCallback(config, publisher, curator, historyWsClient);
+        new MetricsCollectorCallback(config, publisher, curator, historyClient, validationClient);
 
     UUID uuid = UUID.fromString(DATASET_UUID);
     int attempt = 60;
@@ -191,7 +194,7 @@ public class MetricsCollectorCallbackIT {
     MetricsCollectorConfiguration config = createConfig();
 
     MetricsCollectorCallback callback =
-        new MetricsCollectorCallback(config, publisher, curator, historyWsClient);
+        new MetricsCollectorCallback(config, publisher, curator, historyClient, validationClient);
 
     UUID uuid = UUID.fromString(DATASET_UUID);
     int attempt = 60;

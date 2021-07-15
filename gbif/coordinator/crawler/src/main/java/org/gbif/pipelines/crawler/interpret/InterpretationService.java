@@ -14,7 +14,9 @@ import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.pipelines.common.configs.StepConfiguration;
-import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
+import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
+import org.gbif.validator.ws.client.ValidationWsClient;
+import org.gbif.ws.client.ClientBuilder;
 
 /**
  * A service which listens to the {@link
@@ -47,8 +49,20 @@ public class InterpretationService extends AbstractIdleService {
             ? null
             : Executors.newFixedThreadPool(config.standaloneNumberThreads);
 
-    PipelinesHistoryWsClient historyWsClient =
-        c.registry.newRegistryInjector().getInstance(PipelinesHistoryWsClient.class);
+    PipelinesHistoryClient historyClient =
+        new ClientBuilder()
+            .withUrl(config.stepConfig.registry.wsUrl)
+            .withCredentials(config.stepConfig.registry.user, config.stepConfig.registry.password)
+            .withFormEncoder()
+            .build(PipelinesHistoryClient.class);
+
+    ValidationWsClient validationClient =
+        new ClientBuilder()
+            .withUrl(config.stepConfig.registry.wsUrl)
+            .withCredentials(config.stepConfig.registry.user, config.stepConfig.registry.password)
+            .withFormEncoder()
+            .build(ValidationWsClient.class);
+
     httpClient =
         HttpClients.custom()
             .setDefaultRequestConfig(
@@ -57,7 +71,7 @@ public class InterpretationService extends AbstractIdleService {
 
     InterpretationCallback callback =
         new InterpretationCallback(
-            config, publisher, curator, historyWsClient, httpClient, executor);
+            config, publisher, curator, historyClient, validationClient, httpClient, executor);
 
     String routingKey;
     PipelinesVerbatimMessage vm = new PipelinesVerbatimMessage().setValidator(config.validatorOnly);
