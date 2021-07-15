@@ -13,6 +13,7 @@ import org.gbif.pipelines.validator.factory.ElasticsearchClientFactory;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.ws.client.ValidationWsClient;
 import org.gbif.ws.client.ClientBuilder;
+import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
 
 /**
  * A service which listens to the {@link org.gbif.common.messaging.api.messages.PipelinesDwcaMessage
@@ -50,7 +51,7 @@ public class MetricsCollectorService extends AbstractIdleService {
         new ClientBuilder()
             .withUrl(config.stepConfig.registry.wsUrl)
             .withCredentials(config.stepConfig.registry.user, config.stepConfig.registry.password)
-            .withFormEncoder()
+            .withObjectMapper(JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport())
             .build(ValidationWsClient.class);
 
     String routingKey =

@@ -17,6 +17,7 @@ import org.gbif.pipelines.core.factory.ConfigFactory;
 import org.gbif.pipelines.keygen.config.KeygenConfig;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.ws.client.ClientBuilder;
+import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
 
 /**
  * A service which listens to the {@link
@@ -50,7 +51,7 @@ public class FragmenterService extends AbstractIdleService {
         new ClientBuilder()
             .withUrl(config.stepConfig.registry.wsUrl)
             .withCredentials(config.stepConfig.registry.user, config.stepConfig.registry.password)
-            .withFormEncoder()
+            .withObjectMapper(JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport())
             .build(PipelinesHistoryClient.class);
 
     KeygenConfig keygenConfig =

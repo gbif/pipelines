@@ -17,6 +17,7 @@ import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.ws.client.ValidationWsClient;
 import org.gbif.ws.client.ClientBuilder;
+import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
 
 /**
  * A service which listens to the {@link
@@ -65,7 +66,7 @@ public class IndexingService extends AbstractIdleService {
         new ClientBuilder()
             .withUrl(config.stepConfig.registry.wsUrl)
             .withCredentials(config.stepConfig.registry.user, config.stepConfig.registry.password)
-            .withFormEncoder()
+            .withObjectMapper(JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport())
             .build(ValidationWsClient.class);
 
     IndexingCallback callback =
