@@ -8,7 +8,9 @@ import io.github.resilience4j.retry.IntervalFunction;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import java.io.IOException;
+import java.sql.Date;
 import java.time.Duration;
+import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -38,12 +40,15 @@ import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.common.messaging.api.messages.PipelinesXmlMessage;
 import org.gbif.crawler.constants.CrawlerNodePaths;
+import org.gbif.crawler.constants.PipelinesNodePaths;
 import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
 import org.gbif.pipelines.common.configs.BaseConfiguration;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.common.utils.ZookeeperUtils;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.utils.file.properties.PropertiesUtil;
+import org.gbif.validator.api.Validation;
+import org.gbif.validator.api.Validation.Status;
 import org.gbif.validator.ws.client.ValidationWsClient;
 import org.slf4j.MDC;
 import org.slf4j.MDC.MDCCloseable;
@@ -170,6 +175,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
 
       String runnerZkPath = Fn.RUNNER.apply(stepType.getLabel());
       ZookeeperUtils.updateMonitoring(curator, datasetKey, runnerZkPath, getRunner(), isValidator);
+      updateValidatorInfo(Status.RUNNING);
 
       log.info("Handler has been started, datasetKey - {}", datasetKey);
       runnable.run();
@@ -206,6 +212,13 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
       // Change zookeeper counter for passed steps
       ZookeeperUtils.checkMonitoringById(curator, steps.size(), datasetKey, isValidator);
 
+      // Check
+      if (isValidator
+          && !ZookeeperUtils.checkExists(
+              curator, PipelinesNodePaths.getPipelinesInfoPath(datasetKey, isValidator))) {
+        updateValidatorInfo(Status.FINISHED);
+      }
+
     } catch (Exception ex) {
       String error = "Error for datasetKey - " + datasetKey + " : " + ex.getMessage();
       log.error(error, ex);
@@ -219,9 +232,19 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
 
       // update tracking status
       trackingInfo.ifPresent(info -> updateTrackingStatus(info, PipelineStep.Status.FAILED));
+      updateValidatorInfo(Status.FAILED);
     }
 
     log.info("Message handler ended - {}", message);
+  }
+
+  private void updateValidatorInfo(Status status) {
+    if (isValidator) {
+      Validation validation = validationClient.get(message.getDatasetUuid());
+      validation.setStatus(status);
+      validation.setModified(new Date(ZonedDateTime.now().toEpochSecond()));
+      validationClient.update(message.getDatasetUuid(), validation);
+    }
   }
 
   private Optional<TrackingInfo> trackPipelineStep() {
