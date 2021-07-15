@@ -177,7 +177,7 @@ public class ArchiveValidatorCallbackIT {
             validationClient,
             new SchemaValidatorFactory());
 
-    UUID uuid = UUID.randomUUID(); // Use wron datasetKey
+    UUID uuid = UUID.randomUUID(); // Use wrong datasetKey
     int attempt = 2;
     String crawlId = uuid.toString();
 
