@@ -5,6 +5,8 @@ import java.util.UUID;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.validator.api.Validation;
+import org.gbif.ws.client.ClientBuilder;
+import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -44,5 +46,15 @@ public interface ValidationWsClient {
 
   default void update(Validation validation) {
     update(validation.getKey(), validation);
+  }
+
+  /** Default factory method for the ValidationWsClient. */
+  static ValidationWsClient getInstance(String url, String userName, String password) {
+    return new ClientBuilder()
+        .withUrl(url)
+        .withCredentials(userName, password)
+        .withFormEncoder()
+        .withObjectMapper(JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport())
+        .build(ValidationWsClient.class);
   }
 }
