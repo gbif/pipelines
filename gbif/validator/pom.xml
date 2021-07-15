@@ -28,10 +28,7 @@
 
   <properties>
     <!-- GBIF -->
-    <registry.version>3.66-SNAPSHOT</registry.version>
-    <gbif-common-spring-ws.version>1.16-SNAPSHOT</gbif-common-spring-ws.version>
     <gbif-common-mybatis.version>1.1</gbif-common-mybatis.version>
-    <gbif-postal-service.version>1.2-SNAPSHOT</gbif-postal-service.version>
 
     <!-- Spring -->
     <spring-boot.version>2.3.7.RELEASE</spring-boot.version>
@@ -96,36 +93,105 @@
   <dependencyManagement>
     <dependencies>
 
-      <!-- Special media type handling -->
+      <!-- GBIF -->
       <dependency>
-        <groupId>org.apache.poi</groupId>
-        <artifactId>poi</artifactId>
-        <version>${apache-poi.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.poi</groupId>
-        <artifactId>poi-ooxml</artifactId>
-        <version>${apache-poi.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.odftoolkit</groupId>
-        <artifactId>simple-odf</artifactId>
-        <version>${apache-odftoolkit.version}</version>
+        <groupId>org.gbif</groupId>
+        <artifactId>gbif-api</artifactId>
+        <version>${gbif-api.version}</version>
         <exclusions>
           <exclusion>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
+            <groupId>org.gbif</groupId>
+            <artifactId>gbif-common</artifactId>
           </exclusion>
           <exclusion>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-core-asl</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
       <dependency>
-        <groupId>org.apache.tika</groupId>
-        <artifactId>tika-core</artifactId>
-        <version>${apache-tika.version}</version>
+        <groupId>org.gbif</groupId>
+        <artifactId>gbif-common</artifactId>
+        <version>${gbif-common.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif</groupId>
+        <artifactId>gbif-common-ws</artifactId>
+        <version>${gbif-common-ws.version}</version>
+        <exclusions>
+          <exclusion>
+            <artifactId>commons-logging</artifactId>
+            <groupId>commons-logging</groupId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.gbif</groupId>
+            <artifactId>gbif-common</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.common</groupId>
+        <artifactId>gbif-postal-service</artifactId>
+        <version>${gbif-postal-service.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.registry</groupId>
+        <artifactId>registry-identity</artifactId>
+        <version>${registry.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.gbif.registry</groupId>
+            <artifactId>registry-mail</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-compress</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.registry</groupId>
+        <artifactId>registry-security</artifactId>
+        <version>${registry.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.registry</groupId>
+        <artifactId>registry-persistence</artifactId>
+        <version>${registry.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif</groupId>
+        <artifactId>gbif-common-mybatis</artifactId>
+        <version>${gbif-common-mybatis.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.registry</groupId>
+        <artifactId>registry-surety</artifactId>
+        <version>${registry.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
 
       <!-- Spring dependencies -->
@@ -256,6 +322,38 @@
         <version>${feign.version}</version>
       </dependency>
 
+      <!-- Special media type handling -->
+      <dependency>
+        <groupId>org.apache.poi</groupId>
+        <artifactId>poi</artifactId>
+        <version>${apache-poi.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.poi</groupId>
+        <artifactId>poi-ooxml</artifactId>
+        <version>${apache-poi.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.odftoolkit</groupId>
+        <artifactId>simple-odf</artifactId>
+        <version>${apache-odftoolkit.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.tika</groupId>
+        <artifactId>tika-core</artifactId>
+        <version>${apache-tika.version}</version>
+      </dependency>
+
       <!-- Commons -->
       <dependency>
         <groupId>commons-io</groupId>
@@ -286,107 +384,6 @@
         <version>${jsr305.version}</version>
       </dependency>
 
-      <!-- GBIF -->
-      <dependency>
-        <groupId>org.gbif</groupId>
-        <artifactId>gbif-api</artifactId>
-        <version>${gbif-api.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.gbif</groupId>
-            <artifactId>gbif-common</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.codehaus.jackson</groupId>
-            <artifactId>jackson-core-asl</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.gbif</groupId>
-        <artifactId>gbif-common</artifactId>
-        <version>${gbif-common.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.gbif</groupId>
-        <artifactId>gbif-common-ws</artifactId>
-        <version>${gbif-common-spring-ws.version}</version>
-        <exclusions>
-          <exclusion>
-            <artifactId>commons-logging</artifactId>
-            <groupId>commons-logging</groupId>
-          </exclusion>
-          <exclusion>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.gbif</groupId>
-            <artifactId>gbif-common</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.gbif.common</groupId>
-        <artifactId>gbif-postal-service</artifactId>
-        <version>${gbif-postal-service.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.gbif.registry</groupId>
-        <artifactId>registry-identity</artifactId>
-        <version>${registry.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.gbif.registry</groupId>
-            <artifactId>registry-mail</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-compress</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.gbif.registry</groupId>
-        <artifactId>registry-security</artifactId>
-        <version>${registry.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.gbif.registry</groupId>
-        <artifactId>registry-persistence</artifactId>
-        <version>${registry.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.gbif</groupId>
-        <artifactId>gbif-common-mybatis</artifactId>
-        <version>${gbif-common-mybatis.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.gbif.registry</groupId>
-        <artifactId>registry-surety</artifactId>
-        <version>${registry.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-
       <!-- Persistence -->
       <dependency>
         <groupId>com.zaxxer</groupId>
@@ -399,19 +396,19 @@
         <version>${mybatis.version}</version>
       </dependency>
 
+      <!-- Xml -->
+      <dependency>
+        <groupId>xml-apis</groupId>
+        <artifactId>xml-apis</artifactId>
+        <version>${xml-apis.version}</version>
+      </dependency>
+
       <!-- Logging -->
       <dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-simple</artifactId>
         <scope>test</scope>
         <version>${slf4j.version}</version>
-      </dependency>
-
-      <!-- Xml -->
-      <dependency>
-        <groupId>xml-apis</groupId>
-        <artifactId>xml-apis</artifactId>
-        <version>${xml-apis.version}</version>
       </dependency>
 
       <!-- Tests -->

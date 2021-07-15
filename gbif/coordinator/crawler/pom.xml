@@ -78,10 +78,7 @@
     <curator.version>4.0.1</curator.version>
 
     <gbif-cli.version>0.14</gbif-cli.version>
-    <gbif-common-ws.version>1.16-SNAPSHOT</gbif-common-ws.version>
     <gbif-httputils.version>0.12</gbif-httputils.version>
-    <gbif-postal-service.version>1.2-SNAPSHOT</gbif-postal-service.version>
-    <gbif-registry.version>3.65</gbif-registry.version>
     <gbif-wrangler.version>0.3</gbif-wrangler.version>
     <gbif-crawler.version>1.10-SNAPSHOT</gbif-crawler.version>
 
@@ -236,12 +233,12 @@
     <dependency>
       <groupId>org.gbif.registry</groupId>
       <artifactId>registry-metasync</artifactId>
-      <version>${gbif-registry.version}</version>
+      <version>${registry.version}</version>
     </dependency>
     <dependency>
       <groupId>org.gbif.registry</groupId>
       <artifactId>registry-ws-client</artifactId>
-      <version>${gbif-registry.version}</version>
+      <version>${registry.version}</version>
       <exclusions>
         <exclusion>
           <artifactId>commons-logging</artifactId>

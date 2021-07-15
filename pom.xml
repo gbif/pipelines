@@ -94,6 +94,9 @@
     <gbif-occurrence.version>0.157</gbif-occurrence.version>
     <data-repo-api.version>1.2</data-repo-api.version>
     <vocabulary-lookup.version>0.34</vocabulary-lookup.version>
+    <registry.version>3.66-SNAPSHOT</registry.version>
+    <gbif-common-ws.version>1.16-SNAPSHOT</gbif-common-ws.version>
+    <gbif-postal-service.version>1.2-SNAPSHOT</gbif-postal-service.version>
 
     <!-- Common libraries -->
     <avro.version>1.8.2</avro.version>
