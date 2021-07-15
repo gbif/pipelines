@@ -16,8 +16,6 @@ import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.XmlSchemaValidatorResult;
 import org.gbif.validator.ws.client.ValidationWsClient;
-import org.gbif.ws.client.ClientBuilder;
-import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -65,12 +63,8 @@ public class ValidationResourceIT {
   @Autowired
   public ValidationResourceIT(@LocalServerPort int port) {
     validationWsClient =
-        new ClientBuilder()
-            .withUrl("http://localhost:" + port)
-            .withCredentials(TEST_USER.getUserName(), TEST_USER_PASSWORD)
-            .withFormEncoder()
-            .withObjectMapper(JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport())
-            .build(ValidationWsClient.class);
+        ValidationWsClient.getInstance(
+            "http://localhost:" + port, TEST_USER.getUserName(), TEST_USER_PASSWORD);
   }
 
   @BeforeAll

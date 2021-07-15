@@ -291,10 +291,10 @@
       <artifactId>jsr305</artifactId>
     </dependency>
 
+    <!-- Persistence/JDBC Driver-->
     <dependency>
       <groupId> org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
-      <version>42.2.23</version>
     </dependency>
 
     <!-- GBIF -->
