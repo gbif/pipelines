@@ -8,6 +8,7 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.security.Principal;
+import java.util.Set;
 import java.util.UUID;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -27,6 +28,7 @@ import org.gbif.validator.ws.file.DataFile;
 import org.gbif.validator.ws.file.FileSizeException;
 import org.gbif.validator.ws.file.UploadFileManager;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -41,6 +43,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 /**
  * Validation resource services, it allows to validates files (synchronous) and url
@@ -55,14 +58,17 @@ public class ValidationResource {
   private final UploadFileManager fileTransferManager;
   private final ValidationMapper validationMapper;
   private final MessagePublisher messagePublisher;
+  private final int maxRunningValidationPerUser;
 
   public ValidationResource(
       UploadFileManager fileTransferManager,
       ValidationMapper validationMapper,
-      MessagePublisher messagePublisher) {
+      MessagePublisher messagePublisher,
+      @Value("${maxRunningValidationPerUser}") int maxRunningValidationPerUser) {
     this.fileTransferManager = fileTransferManager;
     this.validationMapper = validationMapper;
     this.messagePublisher = messagePublisher;
+    this.maxRunningValidationPerUser = maxRunningValidationPerUser;
   }
 
   /** Encodes an URL, specially URLs with blank spaces can be problematics. */
@@ -90,6 +96,7 @@ public class ValidationResource {
   @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
   public Validation submitFile(
       @RequestParam("file") MultipartFile file, @Autowired Principal principal) {
+    assertRunningValidationPerUser(principal.getName());
     UUID key = UUID.randomUUID();
     UploadFileManager.AsyncDataFileTask task =
         fileTransferManager.uploadDataFile(file, key.toString());
@@ -104,6 +111,7 @@ public class ValidationResource {
       @RequestParam("fileUrl") String fileURL, @Autowired Principal principal)
       throws FileSizeException {
     try {
+      assertRunningValidationPerUser(principal.getName());
       UUID key = UUID.randomUUID();
       String encodedFileURL = encode(fileURL);
       // this should also become asynchronous at some point
@@ -139,6 +147,20 @@ public class ValidationResource {
     return validationMapper.get(key);
   }
 
+  /** Cancels a Validation. */
+  @PutMapping(path = "/{key}/cancel")
+  public ResponseEntity<Void> cancel(@PathVariable UUID key, @Autowired Principal principal) {
+    Validation validation = assertExists(key);
+    if (!validation.isExecuting()) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST, "Validation is not in executing state");
+    }
+    assertCanUpdate(validation, principal);
+    validation.setStatus(Validation.Status.ABORTED);
+    update(validation);
+    return ResponseEntity.ok().build();
+  }
+
   /** Gets the detail of Validation. */
   @PutMapping(
       path = "/{key}",
@@ -150,32 +172,61 @@ public class ValidationResource {
     if (!key.equals(validation.getKey())) {
       return ResponseEntity.badRequest().body("Wrong validation key for this url");
     }
-
-    Validation existingValidation = validationMapper.get(key);
-    if (existingValidation == null) {
-      return ResponseEntity.notFound().build();
-    }
-    if (!canUpdate(existingValidation, principal)) {
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-    } else {
-      update(validation);
-      return ResponseEntity.ok().build();
-    }
+    Validation existingValidation = assertExists(key);
+    assertCanUpdate(existingValidation, principal);
+    update(validation);
+    return ResponseEntity.ok().build();
   }
 
+  /** Can the authenticated user update the validation object. */
   private boolean canUpdate(Validation validation, Principal principal) {
     return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
             .anyMatch(a -> a.getAuthority().equals(UserRoles.ADMIN_ROLE))
         || validation.getUsername().equals(principal.getName());
   }
 
+  /** Asserts the user has not reached the maximum number of executing validations. */
+  private void assertRunningValidationPerUser(String userName) {
+    if (validationMapper.count(userName, Validation.executingStatuses())
+        >= maxRunningValidationPerUser) {
+      // Enhance your calm
+      throw new ResponseStatusException(
+          HttpStatus.METHOD_FAILURE,
+          "Maximum number of executing validations of "
+              + maxRunningValidationPerUser
+              + " reached\n");
+    }
+  }
+
+  /** Asserts a user can update a validation */
+  private void assertCanUpdate(Validation validation, Principal principal) {
+    if (!canUpdate(validation, principal)) {
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+    }
+  }
+
+  /** Asserts that a validation exists. */
+  private Validation assertExists(UUID key) {
+    Validation existingValidation = validationMapper.get(key);
+    if (existingValidation == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+    }
+    return existingValidation;
+  }
+
   /** Lists the validations of an user. */
   @GetMapping
-  public PagingResponse<Validation> list(Pageable page, @Autowired Principal principal) {
+  public PagingResponse<Validation> list(
+      Pageable page,
+      @RequestParam(value = "status", required = false) Set<Validation.Status> status,
+      @Autowired Principal principal) {
     page = page == null ? new PagingRequest() : page;
-    long total = validationMapper.count(principal.getName());
+    long total = validationMapper.count(principal.getName(), status);
     return new PagingResponse<>(
-        page.getOffset(), page.getLimit(), total, validationMapper.list(page, principal.getName()));
+        page.getOffset(),
+        page.getLimit(),
+        total,
+        validationMapper.list(page, principal.getName(), status));
   }
 
   /** Persists an validation entity. */

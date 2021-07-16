@@ -102,7 +102,8 @@ public class ValidationResourceIT {
 
   @Test
   public void validationListIT() {
-    PagingResponse<Validation> validations = validationWsClient.list(new PagingRequest(0, 10));
+    PagingResponse<Validation> validations =
+        validationWsClient.list(new PagingRequest(0, 10), null);
     Assertions.assertNotNull(validations);
   }
 
@@ -115,6 +116,16 @@ public class ValidationResourceIT {
     // Can the new validation be retrieved?
     Validation persistedValidation = validationWsClient.get(validation.getKey());
     Assertions.assertNotNull(persistedValidation);
+
+    PagingResponse<Validation> validations =
+        validationWsClient.list(
+            new PagingRequest(0, 10), Collections.singleton(Validation.Status.SUBMITTED));
+    Assertions.assertTrue(validations.getCount() > 0);
+
+    PagingResponse<Validation> failedValidations =
+        validationWsClient.list(
+            new PagingRequest(0, 10), Collections.singleton(Validation.Status.RUNNING));
+    Assertions.assertTrue(failedValidations.getCount() == 0);
   }
 
   @Test
@@ -152,6 +163,25 @@ public class ValidationResourceIT {
     Validation persistedValidation = validationWsClient.get(validation.getKey());
     Assertions.assertEquals(metrics, persistedValidation.getMetrics());
     Assertions.assertEquals(Validation.Status.FINISHED, persistedValidation.getStatus());
+  }
+
+  @Test
+  public void cancelValidationIT() {
+    File archive = readTestFileInputStream("/Archive.zip");
+    Validation validation = validationWsClient.submitFile(archive);
+    Assertions.assertNotNull(validation);
+
+    // Can the new validation be retrieved?
+    Validation persistedValidation = validationWsClient.get(validation.getKey());
+    Assertions.assertNotNull(persistedValidation);
+
+    validationWsClient.cancel(persistedValidation.getKey());
+
+    PagingResponse<Validation> failedValidations =
+        validationWsClient.list(new PagingRequest(0, 10), Validation.finishedStatuses());
+    Assertions.assertTrue(
+        failedValidations.getResults().stream()
+            .anyMatch(v -> v.getKey().equals(persistedValidation.getKey())));
   }
 
   @SneakyThrows

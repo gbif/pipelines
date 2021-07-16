@@ -1,6 +1,7 @@
 package org.gbif.validator.ws.client;
 
 import java.io.File;
+import java.util.Set;
 import java.util.UUID;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 
 @RequestMapping(value = "/validation", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -31,7 +33,9 @@ public interface ValidationWsClient {
 
   /** Lists the validations of an user. */
   @GetMapping
-  PagingResponse<Validation> list(@SpringQueryMap Pageable page);
+  PagingResponse<Validation> list(
+      @SpringQueryMap Pageable page,
+      @RequestParam(value = "status", required = false) Set<Validation.Status> statuses);
 
   /** Get a validation data. */
   @GetMapping(path = "/{key}")
@@ -47,6 +51,13 @@ public interface ValidationWsClient {
   default void update(Validation validation) {
     update(validation.getKey(), validation);
   }
+
+  /** Cancel running validation. */
+  @RequestMapping(
+      method = RequestMethod.PUT,
+      path = "/{key}/cancel",
+      consumes = {MediaType.APPLICATION_JSON_VALUE})
+  void cancel(@PathVariable("key") UUID key);
 
   /** Default factory method for the ValidationWsClient. */
   static ValidationWsClient getInstance(String url, String userName, String password) {

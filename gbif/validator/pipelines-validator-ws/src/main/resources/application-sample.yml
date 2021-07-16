@@ -27,7 +27,7 @@ gbif:
   ws:
     security:
       wrappedContent: false
-
+maxRunningValidationPerUser: 3
 validation:
   datasource:
     url: @validation.datasource.url@

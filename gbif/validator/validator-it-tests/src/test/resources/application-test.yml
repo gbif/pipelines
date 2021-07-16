@@ -2,6 +2,8 @@ appkeys:
   file: @appkeys.testfile@
 testdb: true
 
+maxRunningValidationPerUser: 3
+
 schemas:
   eml: http://rs.gbif.org/schema/eml-2.1.1/eml.xsd
   emlGbifProfile: http://rs.gbif.org/schema/eml-gbif-profile/1.1/eml.xsd

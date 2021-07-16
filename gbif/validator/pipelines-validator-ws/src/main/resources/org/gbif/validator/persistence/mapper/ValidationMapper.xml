@@ -124,6 +124,12 @@
     <if test="username != null" >
       AND username = #{username,jdbcType=OTHER}
     </if>
+    <if test="statuses != null" >
+      AND status IN
+      <foreach item="status" collection="statuses" separator="," open="(" close=")">
+        #{status,jdbcType=OTHER}
+      </foreach>
+    </if>
     ORDER BY created DESC, key
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
@@ -136,6 +142,12 @@
     WHERE deleted IS NULL
     <if test="username != null" >
       AND username = #{username,jdbcType=OTHER}
+    </if>
+    <if test="statuses != null" >
+      AND status IN
+      <foreach item="status" collection="statuses" separator="," open="(" close=")">
+        #{status,jdbcType=OTHER}
+      </foreach>
     </if>
   </select>
 
