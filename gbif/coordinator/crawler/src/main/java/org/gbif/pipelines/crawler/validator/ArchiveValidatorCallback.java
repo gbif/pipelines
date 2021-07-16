@@ -30,6 +30,7 @@ import org.gbif.pipelines.validator.DwcaValidator;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Metrics.ArchiveValidationReport;
+import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.XmlSchemaValidatorResult;
 import org.gbif.validator.ws.client.ValidationWsClient;
 
@@ -96,9 +97,24 @@ public class ArchiveValidatorCallback
         }
       }
 
-      // TODO: Get metrics result from DB and populate ArchiveValidationReport
-      log.info(metrics.toString());
+      Validation validation = validationClient.get(message.getDatasetUuid());
+      merge(validation, metrics);
+
+      log.info("Update validation key {}, metrics {}", message.getDatasetUuid(), metrics);
+      validationClient.update(validation);
     };
+  }
+
+  private void merge(Validation validation, Metrics metrics) {
+    if (validation != null && metrics != null) {
+      Metrics validationMetrics = validation.getMetrics();
+      if (validationMetrics == null) {
+        validation.setMetrics(metrics);
+      } else {
+        validationMetrics.setArchiveValidationReport(metrics.getArchiveValidationReport());
+        validationMetrics.setXmlSchemaValidatorResult(metrics.getXmlSchemaValidatorResult());
+      }
+    }
   }
 
   @SneakyThrows

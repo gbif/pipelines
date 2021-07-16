@@ -21,6 +21,7 @@ import org.gbif.pipelines.crawler.StepHandler;
 import org.gbif.pipelines.validator.MetricsCollector;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.api.Metrics;
+import org.gbif.validator.api.Validation;
 import org.gbif.validator.ws.client.ValidationWsClient;
 
 /** Callback which is called when the {@link PipelinesIndexedMessage} is received. */
@@ -76,7 +77,7 @@ public class MetricsCollectorCallback extends AbstractMessageCallback<PipelinesI
       Set<Term> coreTerms = DwcaTermUtils.getCoreTerms(archive);
       Map<Extension, Set<Term>> extenstionsTerms = DwcaTermUtils.getExtensionsTerms(archive);
 
-      Metrics result =
+      Metrics metrics =
           MetricsCollector.builder()
               .coreTerms(coreTerms)
               .extensionsTerms(extenstionsTerms)
@@ -88,7 +89,23 @@ public class MetricsCollectorCallback extends AbstractMessageCallback<PipelinesI
               .build()
               .collect();
 
-      log.info(result.toString());
+      Validation validation = validationClient.get(message.getDatasetUuid());
+      merge(validation, metrics);
+
+      log.info("Update validation key {}, metrics {}", message.getDatasetUuid(), metrics);
+      validationClient.update(validation);
     };
+  }
+
+  private void merge(Validation validation, Metrics metrics) {
+    if (validation != null && metrics != null) {
+      Metrics validationMetrics = validation.getMetrics();
+      if (validationMetrics == null) {
+        validation.setMetrics(metrics);
+      } else {
+        validationMetrics.setCore(metrics.getCore());
+        validationMetrics.setExtensions(metrics.getExtensions());
+      }
+    }
   }
 }
