@@ -2,6 +2,9 @@ package org.gbif.validator.ws.it;
 
 import static org.gbif.validator.ws.it.ValidatorWsItConfiguration.TEST_USER;
 import static org.gbif.validator.ws.it.ValidatorWsItConfiguration.TEST_USER_PASSWORD;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -17,7 +20,6 @@ import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.XmlSchemaValidatorResult;
 import org.gbif.validator.ws.client.ValidationWsClient;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -104,34 +106,34 @@ public class ValidationResourceIT {
   public void validationListIT() {
     PagingResponse<Validation> validations =
         validationWsClient.list(new PagingRequest(0, 10), null);
-    Assertions.assertNotNull(validations);
+    assertNotNull(validations);
   }
 
   @Test
   public void validationSubmitFileIT() {
     File archive = readTestFileInputStream("/Archive.zip");
     Validation validation = validationWsClient.submitFile(archive);
-    Assertions.assertNotNull(validation);
+    assertNotNull(validation);
 
     // Can the new validation be retrieved?
     Validation persistedValidation = validationWsClient.get(validation.getKey());
-    Assertions.assertNotNull(persistedValidation);
+    assertNotNull(persistedValidation);
 
     PagingResponse<Validation> validations =
         validationWsClient.list(
             new PagingRequest(0, 10), Collections.singleton(Validation.Status.SUBMITTED));
-    Assertions.assertTrue(validations.getCount() > 0);
+    assertTrue(validations.getCount() > 0);
 
     PagingResponse<Validation> failedValidations =
         validationWsClient.list(
             new PagingRequest(0, 10), Collections.singleton(Validation.Status.RUNNING));
-    Assertions.assertTrue(failedValidations.getCount() == 0);
+    assertTrue(failedValidations.getCount() == 0);
   }
 
   @Test
   public void validationSubmitUrlIT() {
     Validation validation = validationWsClient.submitUrl(testPath("/Archive.zip"));
-    Assertions.assertNotNull(validation);
+    assertNotNull(validation);
   }
 
   @Test
@@ -161,25 +163,25 @@ public class ValidationResourceIT {
     validation.setMetrics(metrics);
     validationWsClient.update(validation);
     Validation persistedValidation = validationWsClient.get(validation.getKey());
-    Assertions.assertEquals(metrics, persistedValidation.getMetrics());
-    Assertions.assertEquals(Validation.Status.FINISHED, persistedValidation.getStatus());
+    assertEquals(metrics, persistedValidation.getMetrics());
+    assertEquals(Validation.Status.FINISHED, persistedValidation.getStatus());
   }
 
   @Test
   public void cancelValidationIT() {
     File archive = readTestFileInputStream("/Archive.zip");
     Validation validation = validationWsClient.submitFile(archive);
-    Assertions.assertNotNull(validation);
+    assertNotNull(validation);
 
     // Can the new validation be retrieved?
     Validation persistedValidation = validationWsClient.get(validation.getKey());
-    Assertions.assertNotNull(persistedValidation);
+    assertNotNull(persistedValidation);
 
     validationWsClient.cancel(persistedValidation.getKey());
 
     PagingResponse<Validation> failedValidations =
         validationWsClient.list(new PagingRequest(0, 10), Validation.finishedStatuses());
-    Assertions.assertTrue(
+    assertTrue(
         failedValidations.getResults().stream()
             .anyMatch(v -> v.getKey().equals(persistedValidation.getKey())));
   }
@@ -194,7 +196,6 @@ public class ValidationResourceIT {
 
     @Override
     public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
-
       TestPropertyValues.of(testPropertyPairs()).applyTo(configurableApplicationContext);
     }
 
