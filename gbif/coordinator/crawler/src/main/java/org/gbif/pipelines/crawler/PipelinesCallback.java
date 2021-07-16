@@ -262,19 +262,20 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
     if (isValidator) {
       Validation validation = validationClient.get(message.getDatasetUuid());
       if (validation != null) {
+
         if (ignoreMainStatus) {
           validation.setStatus(status);
         }
+
         validation.setModified(new Date(ZonedDateTime.now().toEpochSecond()));
-        if (validation.getMetrics() == null) {
-          Metrics metrics = Metrics.builder().build();
-          metrics.addStepType(stepType, status);
-          validation.setMetrics(metrics);
-        } else {
-          validation.getMetrics().addStepType(stepType, status);
-        }
+
+        Metrics metrics =
+            Optional.ofNullable(validation.getMetrics()).orElse(Metrics.builder().build());
+        metrics.addStepType(stepType, status);
+        validation.setMetrics(metrics);
 
         validationClient.update(message.getDatasetUuid(), validation);
+
       } else {
         log.warn(
             "Can't find validation data key {}, please check that record exists",
