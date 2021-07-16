@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.AllArgsConstructor;
@@ -12,6 +13,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.gbif.api.model.crawler.GenericValidationReport;
 import org.gbif.api.model.crawler.OccurrenceValidationReport;
+import org.gbif.api.model.pipelines.StepType;
+import org.gbif.validator.api.Validation.Status;
 
 @Data
 @Builder
@@ -20,6 +23,7 @@ import org.gbif.api.model.crawler.OccurrenceValidationReport;
 @JsonDeserialize(builder = Metrics.MetricsBuilder.class)
 public class Metrics {
 
+  @Builder.Default private Map<StepType, Status> stepTypes = new HashMap<>();
   @Builder.Default private Core core = Core.builder().build();
   @Builder.Default private List<Extension> extensions = Collections.emptyList();
 
@@ -30,6 +34,10 @@ public class Metrics {
   @Builder.Default
   private XmlSchemaValidatorResult xmlSchemaValidatorResult =
       XmlSchemaValidatorResult.builder().build();
+
+  public void addStepType(StepType stepType, Status status) {
+    stepTypes.put(stepType, status);
+  }
 
   @Data
   @Builder

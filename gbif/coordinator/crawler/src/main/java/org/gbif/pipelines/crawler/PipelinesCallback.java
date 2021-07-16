@@ -47,6 +47,7 @@ import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.common.utils.ZookeeperUtils;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.utils.file.properties.PropertiesUtil;
+import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.Validation.Status;
 import org.gbif.validator.ws.client.ValidationWsClient;
@@ -175,7 +176,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
 
       String runnerZkPath = Fn.RUNNER.apply(stepType.getLabel());
       ZookeeperUtils.updateMonitoring(curator, datasetKey, runnerZkPath, getRunner(), isValidator);
-      updateValidatorInfo(Status.RUNNING);
+      updateValidatorInfoStatus(Status.RUNNING);
 
       log.info("Handler has been started, datasetKey - {}", datasetKey);
       runnable.run();
@@ -211,12 +212,13 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
 
       // Change zookeeper counter for passed steps
       ZookeeperUtils.checkMonitoringById(curator, steps.size(), datasetKey, isValidator);
+      updateValidatorInfoStatus(Status.FINISHED, true);
 
       // Check
       if (isValidator
           && !ZookeeperUtils.checkExists(
               curator, PipelinesNodePaths.getPipelinesInfoPath(datasetKey, isValidator))) {
-        updateValidatorInfo(Status.FINISHED);
+        updateValidatorInfoStatus(Status.FINISHED);
       }
 
     } catch (Exception ex) {
@@ -232,7 +234,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
 
       // update tracking status
       trackingInfo.ifPresent(info -> updateTrackingStatus(info, PipelineStep.Status.FAILED));
-      updateValidatorInfo(Status.FAILED);
+      updateValidatorInfoStatus(Status.FAILED);
     }
 
     log.info("Message handler ended - {}", message);
@@ -252,12 +254,26 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
     return false;
   }
 
-  private void updateValidatorInfo(Status status) {
+  private void updateValidatorInfoStatus(Status status) {
+    updateValidatorInfoStatus(status, false);
+  }
+
+  private void updateValidatorInfoStatus(Status status, boolean ignoreMainStatus) {
     if (isValidator) {
       Validation validation = validationClient.get(message.getDatasetUuid());
       if (validation != null) {
-        validation.setStatus(status);
+        if (ignoreMainStatus) {
+          validation.setStatus(status);
+        }
         validation.setModified(new Date(ZonedDateTime.now().toEpochSecond()));
+        if (validation.getMetrics() == null) {
+          Metrics metrics = Metrics.builder().build();
+          metrics.addStepType(stepType, status);
+          validation.setMetrics(metrics);
+        } else {
+          validation.getMetrics().addStepType(stepType, status);
+        }
+
         validationClient.update(message.getDatasetUuid(), validation);
       } else {
         log.warn(
