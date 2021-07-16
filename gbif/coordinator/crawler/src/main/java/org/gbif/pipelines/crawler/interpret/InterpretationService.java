@@ -14,10 +14,9 @@ import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.pipelines.common.configs.StepConfiguration;
+import org.gbif.pipelines.crawler.ServiceFactory;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.ws.client.ValidationWsClient;
-import org.gbif.ws.client.ClientBuilder;
-import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
 
 /**
  * A service which listens to the {@link
@@ -51,18 +50,10 @@ public class InterpretationService extends AbstractIdleService {
             : Executors.newFixedThreadPool(config.standaloneNumberThreads);
 
     PipelinesHistoryClient historyClient =
-        new ClientBuilder()
-            .withUrl(config.stepConfig.registry.wsUrl)
-            .withCredentials(config.stepConfig.registry.user, config.stepConfig.registry.password)
-            .withFormEncoder()
-            .build(PipelinesHistoryClient.class);
+        ServiceFactory.createPipelinesHistoryClient(config.stepConfig);
 
     ValidationWsClient validationClient =
-        new ClientBuilder()
-            .withUrl(config.stepConfig.registry.wsUrl)
-            .withCredentials(config.stepConfig.registry.user, config.stepConfig.registry.password)
-            .withObjectMapper(JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport())
-            .build(ValidationWsClient.class);
+        ServiceFactory.createValidationWsClient(config.stepConfig);
 
     httpClient =
         HttpClients.custom()

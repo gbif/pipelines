@@ -14,10 +14,9 @@ import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.factory.ConfigFactory;
+import org.gbif.pipelines.crawler.ServiceFactory;
 import org.gbif.pipelines.keygen.config.KeygenConfig;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
-import org.gbif.ws.client.ClientBuilder;
-import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
 
 /**
  * A service which listens to the {@link
@@ -48,11 +47,7 @@ public class FragmenterService extends AbstractIdleService {
     executor = Executors.newFixedThreadPool(config.numberThreads);
 
     PipelinesHistoryClient historyClient =
-        new ClientBuilder()
-            .withUrl(config.stepConfig.registry.wsUrl)
-            .withCredentials(config.stepConfig.registry.user, config.stepConfig.registry.password)
-            .withObjectMapper(JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport())
-            .build(PipelinesHistoryClient.class);
+        ServiceFactory.createPipelinesHistoryClient(config.stepConfig);
 
     KeygenConfig keygenConfig =
         readConfig(c.hdfsSiteConfig, c.coreSiteConfig, config.pipelinesConfig);
