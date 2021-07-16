@@ -241,7 +241,13 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
   private boolean isValidatorAborted() {
     if (isValidator) {
       Validation validation = validationClient.get(message.getDatasetUuid());
-      return validation.getStatus() == Status.ABORTED;
+      if (validation != null) {
+        return validation.getStatus() == Status.ABORTED;
+      } else {
+        log.warn(
+            "Can't find validation data key {}, please check that record exists",
+            message.getDatasetUuid());
+      }
     }
     return false;
   }
@@ -249,9 +255,15 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
   private void updateValidatorInfo(Status status) {
     if (isValidator) {
       Validation validation = validationClient.get(message.getDatasetUuid());
-      validation.setStatus(status);
-      validation.setModified(new Date(ZonedDateTime.now().toEpochSecond()));
-      validationClient.update(message.getDatasetUuid(), validation);
+      if (validation != null) {
+        validation.setStatus(status);
+        validation.setModified(new Date(ZonedDateTime.now().toEpochSecond()));
+        validationClient.update(message.getDatasetUuid(), validation);
+      } else {
+        log.warn(
+            "Can't find validation data key {}, please check that record exists",
+            message.getDatasetUuid());
+      }
     }
   }
 
