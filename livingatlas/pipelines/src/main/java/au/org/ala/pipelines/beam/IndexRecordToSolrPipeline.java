@@ -60,6 +60,8 @@ public class IndexRecordToSolrPipeline {
     options.setMetaFileName(ValidationUtils.INDEXING_METRICS);
     PipelinesOptionsFactory.registerHdfs(options);
     run(options);
+    // FIXME: Issue logged here: https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/105
+    System.exit(0);
   }
 
   public static boolean hasCoordinates(IndexRecord indexRecord) {
