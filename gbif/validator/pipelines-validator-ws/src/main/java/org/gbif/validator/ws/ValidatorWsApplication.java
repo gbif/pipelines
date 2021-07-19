@@ -32,7 +32,7 @@ import org.springframework.context.annotation.FilterType;
           classes = {UserSuretyDelegateImpl.class, MyBatisConfiguration.class})
     })
 @EnableFeignClients
-@MapperScan("org.gbif.validation.persistence.mapper")
+@MapperScan("org.gbif.validator.persistence.mapper")
 public class ValidatorWsApplication {
 
   public static void main(String[] args) {
