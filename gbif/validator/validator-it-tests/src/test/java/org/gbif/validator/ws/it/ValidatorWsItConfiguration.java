@@ -57,6 +57,7 @@ import org.springframework.test.context.ActiveProfiles;
       "org.gbif.registry.persistence",
       "org.gbif.registry.identity",
       "org.gbif.registry.surety",
+      "org.gbif.validator.service",
       "org.gbif.validator.ws.resource",
       "org.gbif.validator.ws.config"
     },

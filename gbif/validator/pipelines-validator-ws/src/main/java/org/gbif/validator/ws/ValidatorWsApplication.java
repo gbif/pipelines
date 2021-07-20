@@ -21,6 +21,7 @@ import org.springframework.context.annotation.FilterType;
       "org.gbif.ws.server.advice",
       "org.gbif.ws.server.mapper",
       "org.gbif.registry.persistence",
+      "org.gbif.validator.service",
       "org.gbif.validator.ws",
       "org.gbif.ws.security",
       "org.gbif.registry.identity",

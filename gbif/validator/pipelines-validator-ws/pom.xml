@@ -139,6 +139,10 @@
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
     </dependency>
+    <dependency>
+      <groupId>io.vavr</groupId>
+      <artifactId>vavr</artifactId>
+    </dependency>
 
     <!-- Spring dependencies -->
     <dependency>
@@ -421,6 +425,5 @@
       <artifactId>spring-test</artifactId>
       <scope>test</scope>
     </dependency>
-
   </dependencies>
 </project>
