@@ -122,8 +122,7 @@ public class ArchiveValidatorCallback
       PipelinesArchiveValidatorMessage message) {
 
     Path inputPath =
-        buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid())
-            .resolve("metadata.xml");
+        buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid()).resolve("eml.xml");
 
     try {
       byte[] bytes = Files.readAllBytes(inputPath);
