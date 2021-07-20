@@ -1,6 +1,7 @@
 package org.gbif.validator.persistence.mapper;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -15,7 +16,8 @@ import org.postgresql.util.PGobject;
 public abstract class JsonTypeHandler<T> extends BaseTypeHandler<T> {
 
   private static final ObjectMapper MAPPER =
-      JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport();
+      JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport()
+          .registerModule(new JavaTimeModule());
 
   private final Class<T> clazz;
 
@@ -25,8 +27,7 @@ public abstract class JsonTypeHandler<T> extends BaseTypeHandler<T> {
 
   @Override
   @SneakyThrows
-  public void setNonNullParameter(PreparedStatement ps, int i, T parameter, JdbcType jdbcType)
-      throws SQLException {
+  public void setNonNullParameter(PreparedStatement ps, int i, T parameter, JdbcType jdbcType) {
     if (ps != null) {
       PGobject ext = new PGobject();
       ext.setType("json");
