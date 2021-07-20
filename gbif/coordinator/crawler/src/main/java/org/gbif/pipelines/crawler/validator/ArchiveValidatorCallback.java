@@ -80,7 +80,7 @@ public class ArchiveValidatorCallback
 
   @Override
   public boolean isMessageCorrect(PipelinesArchiveValidatorMessage message) {
-    return true;
+    return message.getEndpointType() != null && message.getDatasetUuid() != null;
   }
 
   @Override
