@@ -7,15 +7,11 @@ import java.sql.Date;
 import java.util.EnumSet;
 import java.util.Set;
 import java.util.UUID;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonDeserialize(builder = Validation.ValidationBuilder.class)
 public class Validation {
@@ -35,7 +31,7 @@ public class Validation {
     FAILED
   }
 
-  private UUID key;
+  private final UUID key;
   private Date created;
   private Date modified;
   private String username;

@@ -27,6 +27,10 @@
   </modules>
 
   <properties>
+
+    <!-- Tools -->
+    <vavr.version>0.10.3</vavr.version>
+
     <!-- GBIF -->
     <gbif-common-mybatis.version>1.1</gbif-common-mybatis.version>
 
@@ -92,6 +96,12 @@
 
   <dependencyManagement>
     <dependencies>
+      <!-- Tools -->
+      <dependency>
+        <groupId>io.vavr</groupId>
+        <artifactId>vavr</artifactId>
+        <version>${vavr.version}</version>
+      </dependency>
 
       <!-- GBIF -->
       <dependency>
