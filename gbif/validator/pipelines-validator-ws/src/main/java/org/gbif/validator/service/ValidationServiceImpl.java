@@ -5,14 +5,12 @@ import static org.gbif.validator.service.ValidationFactory.metricsFromError;
 import static org.gbif.validator.service.ValidationFactory.newValidationInstance;
 
 import io.vavr.control.Either;
+import io.vavr.control.Option;
 import java.io.IOException;
 import java.security.Principal;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +32,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @Slf4j
-public class ValidationService {
+@RequiredArgsConstructor
+public class ValidationServiceImpl implements ValidationService<MultipartFile> {
 
   private final UploadFileManager fileTransferManager;
 
@@ -42,61 +41,38 @@ public class ValidationService {
 
   private final MessagePublisher messagePublisher;
 
+  @Value("${maxRunningValidationPerUser}")
   private final int maxRunningValidationPerUser;
 
-  public ValidationService(
-      UploadFileManager fileTransferManager,
-      ValidationMapper validationMapper,
-      MessagePublisher messagePublisher,
-      @Value("${maxRunningValidationPerUser}") int maxRunningValidationPerUser) {
-    this.fileTransferManager = fileTransferManager;
-    this.validationMapper = validationMapper;
-    this.messagePublisher = messagePublisher;
-    this.maxRunningValidationPerUser = maxRunningValidationPerUser;
-  }
-
-  @Builder
-  @Data
-  @AllArgsConstructor(staticName = "of")
-  @RequiredArgsConstructor(staticName = "of")
-  public static class Error {
-    public enum Code {
-      MAX_RUNNING_VALIDATIONS,
-      MAX_FILE_SIZE_VIOLATION,
-      AUTHORIZATION_ERROR,
-      NOT_FOUND,
-      IO_ERROR,
-      VALIDATION_IS_NOT_EXECUTING;
-    }
-
-    private final Code code;
-    private Throwable error;
-  }
-
   /** Asserts the user has not reached the maximum number of executing validations. */
-  public Optional<Error> assertRunningValidation(String userName) {
+  @Override
+  public Optional<Validation.Error> reachedMaxRunningValidation(String userName) {
     if (validationMapper.count(userName, Validation.executingStatuses())
         >= maxRunningValidationPerUser) {
-      return Optional.of(Error.of(Error.Code.MAX_RUNNING_VALIDATIONS));
+      return Optional.of(Validation.Error.of(Validation.Error.Code.MAX_RUNNING_VALIDATIONS));
     }
     return Optional.empty();
   }
 
-  public Either<Error, Validation> submitFile(MultipartFile file, Principal principal) {
-    Optional<Error> error = assertRunningValidation(principal.getName());
+  @Override
+  public Either<Validation.Error, Validation> submitFile(MultipartFile file, Principal principal) {
+    Optional<Validation.Error> error = reachedMaxRunningValidation(principal.getName());
     if (error.isPresent()) {
       return Either.left(error.get());
     }
     UUID key = UUID.randomUUID();
     UploadFileManager.AsyncDataFileTask task =
         fileTransferManager.uploadDataFile(file, key.toString());
+    fileTransferManager.uploadDataFile(file, key.toString());
     return Either.right(
         create(key, task.getStart(), principal.getName(), Validation.Status.SUBMITTED));
   }
 
-  public Either<Error, Validation> validateFileFromUrl(String fileURL, Principal principal) {
+  @Override
+  public Either<Validation.Error, Validation> validateFileFromUrl(
+      String fileURL, Principal principal) {
     try {
-      Optional<Error> error = assertRunningValidation(principal.getName());
+      Optional<Validation.Error> error = reachedMaxRunningValidation(principal.getName());
       if (error.isPresent()) {
         return Either.left(error.get());
       }
@@ -120,44 +96,49 @@ public class ValidationService {
               Validation.Status.DOWNLOADING));
     } catch (FileSizeException ex) {
       log.error("File limit error", ex);
-      return Either.left(Error.of(Error.Code.MAX_FILE_SIZE_VIOLATION, ex));
+      return Either.left(Validation.Error.of(Validation.Error.Code.MAX_FILE_SIZE_VIOLATION, ex));
     } catch (IOException ex) {
       log.error("Can not download file submitted", ex);
-      return Either.left(Error.of(Error.Code.IO_ERROR, ex));
+      return Either.left(Validation.Error.of(Validation.Error.Code.IO_ERROR, ex));
     }
   }
 
-  public Either<Error, Validation> get(UUID key) {
-    Validation validation = validationMapper.get(key);
-    return validation != null
-        ? Either.right(validation)
-        : Either.left(Error.of(Error.Code.NOT_FOUND));
+  /** Gets a validation by its key, if exists */
+  @Override
+  public Either<Validation.Error, Validation> get(UUID key) {
+    return Option.of(validationMapper.get(key))
+        .toEither(Validation.Error.of(Validation.Error.Code.NOT_FOUND));
   }
 
-  public Either<Error, Validation> update(Validation validation, Principal principal) {
-    Either<Error, Validation> existingValidation = get(validation.getKey());
-    if (existingValidation.isLeft()) {
-      return existingValidation;
-    }
-    if (!canUpdate(existingValidation.get(), principal)) {
-      return Either.left(Error.of(Error.Code.AUTHORIZATION_ERROR));
-    }
-    return Either.right(updateAndGet(validation));
+  /** Updates validation data. */
+  @Override
+  public Either<Validation.Error, Validation> update(Validation validation, Principal principal) {
+    return get(validation.getKey())
+        .filterOrElse(
+            v -> canUpdate(v, principal),
+            v -> Validation.Error.of(Validation.Error.Code.AUTHORIZATION_ERROR))
+        .map(v -> updateAndGet(validation));
   }
 
-  public Either<Error, Validation> cancel(UUID key, Principal principal) {
-    Either<Error, Validation> result = get(key);
-    if (result.isLeft()) {
-      return result;
-    }
-    Validation validation = result.get();
-    if (!canUpdate(validation, principal)) {
-      return Either.left(Error.of(Error.Code.AUTHORIZATION_ERROR));
-    }
-    validation.setStatus(Validation.Status.ABORTED);
-    return Either.right(updateAndGet(validation));
+  /** Cancels a running validation. */
+  @Override
+  public Either<Validation.Error, Validation> cancel(UUID key, Principal principal) {
+    return get(key)
+        .filterOrElse(
+            v -> canUpdate(v, principal),
+            v -> Validation.Error.of(Validation.Error.Code.AUTHORIZATION_ERROR))
+        .filterOrElse(
+            v -> v.isExecuting(),
+            v -> Validation.Error.of(Validation.Error.Code.VALIDATION_IS_NOT_EXECUTING))
+        .map(
+            v -> {
+              v.setStatus(Validation.Status.ABORTED);
+              return updateAndGet(v);
+            });
   }
 
+  /** Paged result of validations of a an user. */
+  @Override
   public PagingResponse<Validation> list(
       Pageable page, Set<Validation.Status> status, Principal principal) {
     page = page == null ? new PagingRequest() : page;
@@ -202,11 +183,13 @@ public class ValidationService {
     return updateAndGet(validation);
   }
 
+  /** Updates and gets the updated validation */
   private Validation updateAndGet(Validation validation) {
     validationMapper.update(validation);
     return validationMapper.get(validation.getKey());
   }
 
+  /** Notifies a change or creation of a Validation. */
   @SneakyThrows
   private void notify(Validation validation) {
     PipelinesArchiveValidatorMessage message = new PipelinesArchiveValidatorMessage();

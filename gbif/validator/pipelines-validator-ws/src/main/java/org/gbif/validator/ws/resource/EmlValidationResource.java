@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
 import org.gbif.validator.api.XmlSchemaValidatorResult;
@@ -19,18 +20,12 @@ import org.xml.sax.SAXParseException;
 
 @RestController
 @RequestMapping(value = "validation/eml", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequiredArgsConstructor
 public class EmlValidationResource {
 
   private final ValidatorWsConfiguration.XmlSchemaLocations schemaLocations;
 
   private final SchemaValidatorFactory schemaValidatorFactory;
-
-  public EmlValidationResource(
-      ValidatorWsConfiguration.XmlSchemaLocations schemaLocations,
-      SchemaValidatorFactory schemaValidatorFactory) {
-    this.schemaLocations = schemaLocations;
-    this.schemaValidatorFactory = schemaValidatorFactory;
-  }
 
   /** Validates an EML document. */
   @PostMapping(

@@ -7,11 +7,17 @@ import java.sql.Date;
 import java.util.EnumSet;
 import java.util.Set;
 import java.util.UUID;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 
 @Data
 @Builder
+// Constructors are needed for MyBatis, persistence layer.
+@NoArgsConstructor
+@AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonDeserialize(builder = Validation.ValidationBuilder.class)
 public class Validation {
@@ -31,7 +37,7 @@ public class Validation {
     FAILED
   }
 
-  private final UUID key;
+  private UUID key;
   private Date created;
   private Date modified;
   private String username;
@@ -57,5 +63,24 @@ public class Validation {
   @JsonIgnore
   public boolean hasFinished() {
     return FINISHED_STATUSES.contains(status);
+  }
+
+  @Builder
+  @Data
+  @AllArgsConstructor(staticName = "of")
+  @RequiredArgsConstructor(staticName = "of")
+  public static class Error {
+
+    public enum Code {
+      MAX_RUNNING_VALIDATIONS,
+      MAX_FILE_SIZE_VIOLATION,
+      AUTHORIZATION_ERROR,
+      NOT_FOUND,
+      IO_ERROR,
+      VALIDATION_IS_NOT_EXECUTING;
+    }
+
+    private final Code code;
+    private Throwable error;
   }
 }

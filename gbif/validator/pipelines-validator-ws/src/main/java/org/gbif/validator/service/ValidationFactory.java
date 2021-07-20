@@ -6,7 +6,7 @@ import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.ws.file.DataFile;
 
-/** Utility class to create instances of API classes.*/
+/** Utility class to create instances of API classes. */
 @UtilityClass
 public class ValidationFactory {
 
