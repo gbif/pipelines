@@ -127,7 +127,7 @@ public class ValidationResourceIT {
     PagingResponse<Validation> failedValidations =
         validationWsClient.list(
             new PagingRequest(0, 10), Collections.singleton(Validation.Status.RUNNING));
-    assertTrue(failedValidations.getCount() == 0);
+    assertEquals(0, failedValidations.getCount());
   }
 
   @Test

@@ -69,11 +69,7 @@ public class MediaTypeAndFormatDetectorTest {
     }
   }
 
-  /**
-   * The following tests consider the folder as if it was the result of a zip extraction.
-   *
-   * @throws IOException
-   */
+  /** The following tests consider the folder as if it was the result of a zip extraction. */
   @Test
   public void testEvaluateMediaTypeAndFormat() throws IOException {
 

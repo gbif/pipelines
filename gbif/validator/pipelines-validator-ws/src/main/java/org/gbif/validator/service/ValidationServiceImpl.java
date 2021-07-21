@@ -23,6 +23,7 @@ import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.registry.security.UserRoles;
+import org.gbif.validator.api.FileFormat;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.Validation.Status;
 import org.gbif.validator.persistence.mapper.ValidationMapper;
@@ -68,6 +69,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
     UploadFileManager.AsyncDataFileTask task =
         fileTransferManager.uploadDataFile(file, key.toString());
     fileTransferManager.uploadDataFile(file, key.toString());
+    task.getTask().whenCompleteAsync((df, tr) -> notify(key, df.getFileFormat()));
     return Either.right(
         create(key, task.getStart(), principal.getName(), Validation.Status.SUBMITTED));
   }
@@ -165,19 +167,14 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
   private Validation create(
       UUID key, DataFile dataFile, String userName, Validation.Status status) {
     validationMapper.create(newValidationInstance(key, dataFile, userName, status));
-    Validation validation = validationMapper.get(key);
-    // Downloading is not notify
-    if (status == Status.SUBMITTED) {
-      notify(validation);
-    }
-    return validation;
+    return validationMapper.get(key);
   }
 
   /** Updates the data of a validation. */
   private Validation update(UUID key, DataFile dataFile, Validation.Status status) {
     Validation validation = updateAndGet(newValidationInstance(key, dataFile, status));
     if (status == Status.SUBMITTED) {
-      notify(validation);
+      notify(key, dataFile.getFileFormat());
     }
     return validation;
   }
@@ -197,10 +194,10 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
 
   /** Notifies when the file is submitted. */
   @SneakyThrows
-  private void notify(Validation validation) {
+  private void notify(UUID key, FileFormat fileFormat) {
     PipelinesArchiveValidatorMessage message = new PipelinesArchiveValidatorMessage();
     message.setValidator(true);
-    message.setDatasetUuid(validation.getKey());
+    message.setDatasetUuid(key);
     message.setAttempt(1);
     message.setExecutionId(1L);
     message.setPipelineSteps(
@@ -211,7 +208,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
                 StepType.VALIDATOR_VERBATIM_TO_INTERPRETED.name(),
                 StepType.VALIDATOR_INTERPRETED_TO_INDEX.name(),
                 StepType.VALIDATOR_COLLECT_METRICS.name())));
-    message.setFileFormat(validation.getFileFormat().name());
+    message.setFileFormat(fileFormat.name());
     messagePublisher.send(message);
   }
 }
