@@ -267,7 +267,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
       Validation validation = validationClient.get(message.getDatasetUuid());
       if (validation != null) {
 
-        if (ignoreMainStatus) {
+        if (!ignoreMainStatus) {
           validation.setStatus(status);
         }
 
