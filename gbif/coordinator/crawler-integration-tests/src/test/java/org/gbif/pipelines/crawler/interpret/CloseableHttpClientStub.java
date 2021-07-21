@@ -13,7 +13,6 @@ import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
 import org.apache.http.ProtocolVersion;
 import org.apache.http.StatusLine;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.conn.ClientConnectionManager;
@@ -29,8 +28,7 @@ public class CloseableHttpClientStub extends CloseableHttpClient {
 
   @Override
   protected CloseableHttpResponse doExecute(
-      HttpHost httpHost, HttpRequest httpRequest, HttpContext httpContext)
-      throws IOException, ClientProtocolException {
+      HttpHost httpHost, HttpRequest httpRequest, HttpContext httpContext) throws IOException {
     return null;
   }
 
@@ -48,8 +46,7 @@ public class CloseableHttpClientStub extends CloseableHttpClient {
   }
 
   @Override
-  public CloseableHttpResponse execute(HttpUriRequest request)
-      throws IOException, ClientProtocolException {
+  public CloseableHttpResponse execute(HttpUriRequest request) throws IOException {
     return new CloseableHttpResponse() {
       @Override
       public void close() throws IOException {}
