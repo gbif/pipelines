@@ -120,7 +120,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
 
       if (!handler.isMessageCorrect(message) || isValidatorAborted()) {
         log.info(
-            "Skip the message, cause the runner is different or it wasn't modified, exit from handler");
+            "Skip the message, please check that message is correct, runner or validation info, exit from handler");
         return;
       }
 
