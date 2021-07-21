@@ -158,7 +158,7 @@ public class ValidationResourceIT {
                             0, true))
                     .build())
             .xmlSchemaValidatorResult(
-                XmlSchemaValidatorResult.builder().errors(Collections.EMPTY_LIST).build())
+                XmlSchemaValidatorResult.builder().errors(Collections.emptyList()).build())
             .build();
     validation.setMetrics(metrics);
     validationWsClient.update(validation);
