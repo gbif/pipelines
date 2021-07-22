@@ -34,7 +34,6 @@ public class ArchiveValidatorCallbackIT {
 
   private static final String LABEL = VALIDATOR_VALIDATE_ARCHIVE.getLabel();
   private static final String DATASET_UUID = "9bed66b3-4caa-42bb-9c93-71d7ba109dad";
-  private static final String DUMMY_URL = "http://some.new.url";
   private static final String INPUT_DATASET_FOLDER = "/dataset/dwca";
   private static final long EXECUTION_ID = 1L;
   private static CuratorFramework curator;
@@ -199,6 +198,46 @@ public class ArchiveValidatorCallbackIT {
 
     // Clean
     curator.delete().deletingChildrenIfNeeded().forPath(getPipelinesInfoPath(crawlId, LABEL));
+  }
+
+  @Test
+  public void testFailedValidatorCase() {
+    // State
+    ArchiveValidatorConfiguration config = new ArchiveValidatorConfiguration();
+    config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
+    config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
+
+    ArchiveValidatorCallback callback =
+        new ArchiveValidatorCallback(
+            config,
+            publisher,
+            curator,
+            historyClient,
+            validationClient,
+            new SchemaValidatorFactory());
+
+    UUID uuid = UUID.randomUUID(); // Use wrong datasetKey
+    int attempt = 2;
+    String crawlId = uuid.toString();
+
+    PipelinesArchiveValidatorMessage message =
+        new PipelinesArchiveValidatorMessage(
+            uuid,
+            attempt,
+            Collections.singleton(VALIDATOR_VALIDATE_ARCHIVE.name()),
+            EXECUTION_ID,
+            true,
+            FileFormat.DWCA.name());
+
+    // When
+    callback.handleMessage(message);
+
+    // Should
+    assertFalse(checkExists(curator, crawlId, LABEL));
+    assertFalse(checkExists(curator, crawlId, Fn.ERROR_MESSAGE.apply(LABEL)));
+    assertFalse(checkExists(curator, crawlId, Fn.MQ_CLASS_NAME.apply(LABEL)));
+    assertFalse(checkExists(curator, crawlId, Fn.MQ_MESSAGE.apply(LABEL)));
+    assertTrue(publisher.getMessages().isEmpty());
   }
 
   private boolean checkExists(CuratorFramework curator, String id, String path) {

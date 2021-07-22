@@ -208,14 +208,11 @@ public class MetricsCollectorCallbackIT {
     callback.handleMessage(message);
 
     // Should
-    assertTrue(checkExists(curator, crawlId, LABEL));
-    assertTrue(checkExists(curator, crawlId, Fn.ERROR_MESSAGE.apply(LABEL)));
-    assertTrue(checkExists(curator, crawlId, Fn.MQ_CLASS_NAME.apply(LABEL)));
-    assertTrue(checkExists(curator, crawlId, Fn.MQ_MESSAGE.apply(LABEL)));
+    assertFalse(checkExists(curator, crawlId, LABEL));
+    assertFalse(checkExists(curator, crawlId, Fn.ERROR_MESSAGE.apply(LABEL)));
+    assertFalse(checkExists(curator, crawlId, Fn.MQ_CLASS_NAME.apply(LABEL)));
+    assertFalse(checkExists(curator, crawlId, Fn.MQ_MESSAGE.apply(LABEL)));
     assertTrue(publisher.getMessages().isEmpty());
-
-    // Clean
-    curator.delete().deletingChildrenIfNeeded().forPath(getPipelinesInfoPath(crawlId, LABEL, true));
   }
 
   private PipelinesIndexedMessage createMessage(UUID uuid, int attempt) {
