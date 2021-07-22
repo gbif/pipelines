@@ -1,6 +1,5 @@
 package org.gbif.validator.ws.file;
 
-import static org.gbif.validator.ws.file.CompressUtil.decompress;
 import static org.gbif.validator.ws.file.DownloadFileManager.isAvailable;
 import static org.gbif.validator.ws.file.MediaTypeAndFormatDetector.detectMediaType;
 import static org.gbif.validator.ws.file.MediaTypeAndFormatDetector.evaluateMediaTypeAndFormat;
@@ -19,6 +18,7 @@ import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.gbif.utils.file.CompressionUtil;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
@@ -69,13 +69,19 @@ public class UploadFileManager {
 
       // check if we have something to unzip
       String detectedMediaType = detectMediaType(dataFilePath);
-      Path finalPath =
-          COMPRESS_CONTENT_TYPE.contains(detectedMediaType)
-              ? decompress(dataFilePath, destinationFolder)
-              : dataFilePath;
+      if (COMPRESS_CONTENT_TYPE.contains(detectedMediaType)) {
+        CompressionUtil.decompressFile(destinationFolder.toFile(), dataFilePath.toFile());
+      }
 
       // from here we can decide to change the content type (e.g. zipped excel file)
-      return fromMediaTypeAndFormat(dataFilePath, fileName, detectedMediaType, finalPath);
+      DataFile dataFile =
+          fromMediaTypeAndFormat(dataFilePath, fileName, detectedMediaType, destinationFolder);
+
+      if (COMPRESS_CONTENT_TYPE.contains(detectedMediaType)) {
+        Files.delete(dataFilePath);
+      }
+
+      return dataFile;
     } catch (Exception ex) {
       log.warn("Deleting temporary content of {} after IOException.", fileName);
       FileUtils.deleteDirectory(destinationFolder.toFile());
