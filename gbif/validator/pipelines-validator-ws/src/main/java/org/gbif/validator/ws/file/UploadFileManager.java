@@ -124,26 +124,26 @@ public class UploadFileManager {
       Consumer<DataFile> resultCallback,
       Consumer<Throwable> errorCallback)
       throws IOException {
-    if (isAvailable(url)) {
 
-      String fileName = getFileName(url);
-      Path destinationFolder = getDestinationPath(targetDirectory);
-      createIfNotExists(destinationFolder);
-      Path dataFilePath = getDestinationPath(targetDirectory).resolve(fileName);
-      return AsyncDownloadResult.builder()
-          .dataFile(DataFile.builder().sourceFileName(fileName).filePath(dataFilePath).build())
-          .downloadTask(
-              downloadFileManager.downloadAsync(
-                  url,
-                  dataFilePath,
-                  file ->
-                      resultCallback.accept(
-                          extractAndGetFileInfo(dataFilePath, destinationFolder, fileName)),
-                  errorCallback))
-          .build();
-    } else {
+    if (!isAvailable(url)) {
       throw new IllegalArgumentException("Url " + url + " is not reachable");
     }
+
+    String fileName = getFileName(url);
+    Path destinationFolder = getDestinationPath(targetDirectory);
+    createIfNotExists(destinationFolder);
+    Path dataFilePath = getDestinationPath(targetDirectory).resolve(fileName);
+    return AsyncDownloadResult.builder()
+        .dataFile(DataFile.builder().sourceFileName(fileName).filePath(dataFilePath).build())
+        .downloadTask(
+            downloadFileManager.downloadAsync(
+                url,
+                dataFilePath,
+                file ->
+                    resultCallback.accept(
+                        extractAndGetFileInfo(dataFilePath, destinationFolder, fileName)),
+                errorCallback))
+        .build();
   }
 
   @SneakyThrows
