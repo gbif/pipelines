@@ -82,7 +82,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
   @NonNull private final StepHandler<I, O> handler;
   private final ValidationWsClient validationClient;
 
-  @Builder.Default private boolean isValidator = false;
+  @Builder.Default private final boolean isValidator = false;
 
   static {
     try {
@@ -120,7 +120,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
 
       if (!handler.isMessageCorrect(message) || isValidatorAborted()) {
         log.info(
-            "Skip the message, cause the runner is different or it wasn't modified, exit from handler");
+            "Skip the message, please check that message is correct, runner or validation info, exit from handler");
         return;
       }
 
@@ -244,7 +244,11 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
     if (isValidator) {
       Validation validation = validationClient.get(message.getDatasetUuid());
       if (validation != null) {
-        return validation.getStatus() == Status.ABORTED;
+        Status status = validation.getStatus();
+        return status == Status.ABORTED
+            || status == Status.FINISHED
+            || status == Status.FAILED
+            || status == Status.DOWNLOADING;
       } else {
         log.warn(
             "Can't find validation data key {}, please check that record exists",
@@ -263,7 +267,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
       Validation validation = validationClient.get(message.getDatasetUuid());
       if (validation != null) {
 
-        if (ignoreMainStatus) {
+        if (!ignoreMainStatus) {
           validation.setStatus(status);
         }
 

@@ -110,7 +110,7 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
   @Override
   public boolean isMessageCorrect(PipelinesInterpretedMessage message) {
     if (Strings.isNullOrEmpty(message.getRunner())) {
-      throw new IllegalArgumentException("Runner can't be null or empty " + message.toString());
+      throw new IllegalArgumentException("Runner can't be null or empty " + message);
     }
     if (message.getOnlyForStep() != null
         && !message.getOnlyForStep().equalsIgnoreCase(TYPE.name())) {

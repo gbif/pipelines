@@ -19,6 +19,7 @@ import org.apache.curator.retry.RetryOneTime;
 import org.apache.curator.test.TestingServer;
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.messages.PipelinesIndexedMessage;
 import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
 import org.gbif.pipelines.common.utils.ZookeeperUtils;
@@ -225,6 +226,7 @@ public class MetricsCollectorCallbackIT {
     message.setExecutionId(EXECUTION_ID);
     message.setValidator(true);
     message.setRunner(StepRunner.STANDALONE.name());
+    message.setEndpointType(EndpointType.DWC_ARCHIVE);
     message.setPipelineSteps(
         new HashSet<>(
             Arrays.asList(

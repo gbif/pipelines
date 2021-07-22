@@ -28,9 +28,11 @@ import org.gbif.pipelines.crawler.PipelinesCallback;
 import org.gbif.pipelines.crawler.StepHandler;
 import org.gbif.pipelines.validator.DwcaValidator;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
+import org.gbif.validator.api.FileFormat;
 import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Metrics.ArchiveValidationReport;
 import org.gbif.validator.api.Validation;
+import org.gbif.validator.api.Validation.Status;
 import org.gbif.validator.api.XmlSchemaValidatorResult;
 import org.gbif.validator.ws.client.ValidationWsClient;
 
@@ -80,28 +82,21 @@ public class ArchiveValidatorCallback
 
   @Override
   public boolean isMessageCorrect(PipelinesArchiveValidatorMessage message) {
-    return true;
+    return message.getFileFormat() != null && message.getDatasetUuid() != null;
   }
 
   @Override
   public Runnable createRunnable(PipelinesArchiveValidatorMessage message) {
     return () -> {
-      Metrics metrics = Metrics.builder().build();
-      if (message.getEndpointType() == EndpointType.DWC_ARCHIVE) {
-        Optional<XmlSchemaValidatorResult> xmlSchemaValidatorResult = validateEmlSchema(message);
-        if (xmlSchemaValidatorResult.isPresent()) {
-          if (xmlSchemaValidatorResult.get().isValid()) {
-            metrics = validateDwca(message);
-          }
-          metrics.setXmlSchemaValidatorResult(xmlSchemaValidatorResult.get());
-        }
+      log.info("Running validatoin for {}", message.getDatasetUuid());
+      if (message.getFileFormat().equals(FileFormat.DWCA.name())) {
+        validateDwca(message);
+      } else {
+        log.info("File format {} is not supported!", message.getFileFormat());
+        Validation validation = validationClient.get(message.getDatasetUuid());
+        validation.setStatus(Status.FAILED);
+        validationClient.update(validation);
       }
-
-      Validation validation = validationClient.get(message.getDatasetUuid());
-      merge(validation, metrics);
-
-      log.info("Update validation key {}, metrics {}", message.getDatasetUuid(), metrics);
-      validationClient.update(validation);
     };
   }
 
@@ -117,10 +112,26 @@ public class ArchiveValidatorCallback
     }
   }
 
+  private void validateDwca(PipelinesArchiveValidatorMessage message) {
+    Metrics metrics = Metrics.builder().build();
+    Optional<XmlSchemaValidatorResult> xmlSchemaValidatorResult = validateEmlSchema(message);
+    if (xmlSchemaValidatorResult.isPresent()) {
+      if (xmlSchemaValidatorResult.get().isValid()) {
+        metrics = validateDwcaFile(message);
+      }
+      metrics.setXmlSchemaValidatorResult(xmlSchemaValidatorResult.get());
+    }
+    Validation validation = validationClient.get(message.getDatasetUuid());
+    merge(validation, metrics);
+
+    log.info("Update validation key {}", message.getDatasetUuid());
+    validationClient.update(validation);
+  }
+
   @SneakyThrows
   private Optional<XmlSchemaValidatorResult> validateEmlSchema(
       PipelinesArchiveValidatorMessage message) {
-
+    log.info("Running EML schema validation for {}", message.getDatasetUuid());
     Path inputPath =
         buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid()).resolve("eml.xml");
 
@@ -134,7 +145,8 @@ public class ArchiveValidatorCallback
     }
   }
 
-  private Metrics validateDwca(PipelinesArchiveValidatorMessage message) {
+  private Metrics validateDwcaFile(PipelinesArchiveValidatorMessage message) {
+    log.info("Running DWCA validation for {}", message.getDatasetUuid());
     Path inputPath = buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid());
     Archive archive = DwcaTermUtils.fromLocation(inputPath);
 
@@ -161,22 +173,21 @@ public class ArchiveValidatorCallback
   @SneakyThrows
   @Override
   public PipelineBasedMessage createOutgoingMessage(PipelinesArchiveValidatorMessage message) {
-    if (message.getEndpointType() == EndpointType.DWC_ARCHIVE) {
-      // TODO: ONLY FOR TESTING
+    if (message.getFileFormat().equals(FileFormat.DWCA.name())) {
       return new PipelinesDwcaMessage(
           message.getDatasetUuid(),
           DatasetType.OCCURRENCE,
-          new URI("https://gbif.org"),
+          new URI(config.stepConfig.registry.wsUrl),
           message.getAttempt(),
           new DwcaValidationReport(
               message.getDatasetUuid(), new OccurrenceValidationReport(1, 1, 0, 1, 0, true)),
           message.getPipelineSteps(),
           EndpointType.DWC_ARCHIVE,
           Platform.PIPELINES,
-          1L,
+          message.getExecutionId(),
           true);
     }
     throw new IllegalArgumentException(
-        "EndpointType " + message.getEndpointType() + " is not supported");
+        "File format " + message.getFileFormat() + " is not supported");
   }
 }

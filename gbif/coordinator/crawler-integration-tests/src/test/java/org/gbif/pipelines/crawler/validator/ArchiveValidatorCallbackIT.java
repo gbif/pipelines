@@ -16,14 +16,13 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.RetryOneTime;
 import org.apache.curator.test.TestingServer;
-import org.gbif.api.model.pipelines.StepRunner;
-import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
 import org.gbif.pipelines.common.utils.ZookeeperUtils;
 import org.gbif.pipelines.crawler.MessagePublisherStub;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
+import org.gbif.validator.api.FileFormat;
 import org.gbif.validator.ws.client.ValidationWsClient;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -101,10 +100,9 @@ public class ArchiveValidatorCallbackIT {
             new HashSet<>(
                 Arrays.asList(
                     VALIDATOR_VALIDATE_ARCHIVE.name(), VALIDATOR_VERBATIM_TO_INTERPRETED.name())),
-            StepRunner.STANDALONE.name(),
             EXECUTION_ID,
             false,
-            EndpointType.DWC_ARCHIVE);
+            FileFormat.DWCA.name());
 
     // When
     callback.handleMessage(message);
@@ -145,10 +143,9 @@ public class ArchiveValidatorCallbackIT {
             uuid,
             attempt,
             Collections.singleton(VALIDATOR_VALIDATE_ARCHIVE.name()),
-            StepRunner.STANDALONE.name(),
             EXECUTION_ID,
             false,
-            EndpointType.DWC_ARCHIVE);
+            FileFormat.DWCA.name());
 
     // When
     callback.handleMessage(message);
@@ -186,10 +183,9 @@ public class ArchiveValidatorCallbackIT {
             uuid,
             attempt,
             Collections.singleton(VALIDATOR_VALIDATE_ARCHIVE.name()),
-            StepRunner.STANDALONE.name(),
             EXECUTION_ID,
             false,
-            EndpointType.DWC_ARCHIVE);
+            FileFormat.DWCA.name());
 
     // When
     callback.handleMessage(message);

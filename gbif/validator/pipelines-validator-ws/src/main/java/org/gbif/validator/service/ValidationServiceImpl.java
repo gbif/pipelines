@@ -8,6 +8,8 @@ import io.vavr.control.Either;
 import io.vavr.control.Option;
 import java.io.IOException;
 import java.security.Principal;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -17,10 +19,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.registry.security.UserRoles;
+import org.gbif.validator.api.FileFormat;
 import org.gbif.validator.api.Validation;
+import org.gbif.validator.api.Validation.Status;
 import org.gbif.validator.persistence.mapper.ValidationMapper;
 import org.gbif.validator.ws.file.DataFile;
 import org.gbif.validator.ws.file.FileSizeException;
@@ -127,7 +132,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
             v -> canUpdate(v, principal),
             v -> Validation.Error.of(Validation.Error.Code.AUTHORIZATION_ERROR))
         .filterOrElse(
-            v -> v.isExecuting(),
+            Validation::isExecuting,
             v -> Validation.Error.of(Validation.Error.Code.VALIDATION_IS_NOT_EXECUTING))
         .map(
             v -> {
@@ -160,18 +165,15 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
   private Validation create(
       UUID key, DataFile dataFile, String userName, Validation.Status status) {
     validationMapper.create(newValidationInstance(key, dataFile, userName, status));
-    Validation validation = validationMapper.get(key);
-    // Downloading is not notify
-    if (Validation.Status.DOWNLOADING != validation.getStatus()) {
-      notify(validation);
-    }
-    return validation;
+    return validationMapper.get(key);
   }
 
   /** Updates the data of a validation. */
   private Validation update(UUID key, DataFile dataFile, Validation.Status status) {
     Validation validation = updateAndGet(newValidationInstance(key, dataFile, status));
-    notify(validation);
+    if (status == Status.SUBMITTED) {
+      notify(key, dataFile.getFileFormat());
+    }
     return validation;
   }
 
@@ -188,12 +190,23 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
     return validationMapper.get(validation.getKey());
   }
 
-  /** Notifies a change or creation of a Validation. */
+  /** Notifies when the file is submitted. */
   @SneakyThrows
-  private void notify(Validation validation) {
+  private void notify(UUID key, FileFormat fileFormat) {
     PipelinesArchiveValidatorMessage message = new PipelinesArchiveValidatorMessage();
     message.setValidator(true);
-    message.setDatasetUuid(validation.getKey());
+    message.setDatasetUuid(key);
+    message.setAttempt(1);
+    message.setExecutionId(1L);
+    message.setPipelineSteps(
+        new HashSet<>(
+            Arrays.asList(
+                StepType.VALIDATOR_VALIDATE_ARCHIVE.name(),
+                StepType.VALIDATOR_DWCA_TO_VERBATIM.name(),
+                StepType.VALIDATOR_VERBATIM_TO_INTERPRETED.name(),
+                StepType.VALIDATOR_INTERPRETED_TO_INDEX.name(),
+                StepType.VALIDATOR_COLLECT_METRICS.name())));
+    message.setFileFormat(fileFormat.name());
     messagePublisher.send(message);
   }
 }
