@@ -69,7 +69,16 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
     UploadFileManager.AsyncDataFileTask task =
         fileTransferManager.uploadDataFile(file, key.toString());
     fileTransferManager.uploadDataFile(file, key.toString());
-    task.getTask().whenCompleteAsync((df, tr) -> notify(key, df.getFileFormat()));
+    task.getTask()
+        .whenCompleteAsync(
+            (df, tr) -> {
+              if (tr == null) {
+                notify(key, df.getFileFormat());
+              } else {
+                log.error(tr.getMessage(), tr);
+                updateFailedValidation(key, "Error during file submitting");
+              }
+            });
     return Either.right(
         create(key, task.getStart(), principal.getName(), Validation.Status.SUBMITTED));
   }
