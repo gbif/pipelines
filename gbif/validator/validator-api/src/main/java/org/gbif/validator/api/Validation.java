@@ -56,6 +56,16 @@ public class Validation {
   }
 
   @JsonIgnore
+  public boolean succeeded() {
+    return Status.FINISHED == this.status;
+  }
+
+  @JsonIgnore
+  public boolean failed() {
+    return Status.ABORTED == this.status || Status.FAILED == this.status;
+  }
+
+  @JsonIgnore
   public boolean isExecuting() {
     return EXECUTING_STATUSES.contains(status);
   }

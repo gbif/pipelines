@@ -23,6 +23,7 @@
     <module>pipelines-validator-ws</module>
     <module>validator-ws-client</module>
     <module>validator-it-tests</module>
+    <module>validator-mail</module>
     <module>eml-validator</module>
   </modules>
 
@@ -323,6 +324,22 @@
         <groupId>org.springframework.security</groupId>
         <artifactId>spring-security-crypto</artifactId>
         <version>${spring-security.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-mail</artifactId>
+        <version>${spring-boot.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-freemarker</artifactId>
+        <version>${spring-boot.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-configuration-processor</artifactId>
+        <version>${spring-boot.version}</version>
+        <optional>true</optional>
       </dependency>
 
       <!-- Feing Clients-->

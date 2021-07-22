@@ -63,7 +63,6 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
     UUID key = UUID.randomUUID();
     UploadFileManager.AsyncDataFileTask task =
         fileTransferManager.uploadDataFile(file, key.toString());
-    fileTransferManager.uploadDataFile(file, key.toString());
     return Either.right(
         create(key, task.getStart(), principal.getName(), Validation.Status.SUBMITTED));
   }
