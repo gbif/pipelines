@@ -13,7 +13,7 @@
   <artifactId>validator-core</artifactId>
   <packaging>jar</packaging>
 
-  <name>Pipelines :: GBIF :: Validator Core</name>
+  <name>Pipelines :: GBIF :: Validator :: Core</name>
   <description>The library to validate and collect validator metrics from ES</description>
 
   <build>
