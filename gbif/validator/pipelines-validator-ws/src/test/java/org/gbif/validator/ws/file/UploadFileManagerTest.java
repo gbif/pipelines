@@ -35,10 +35,22 @@ public class UploadFileManagerTest extends DownloadFileBaseTest {
   @SneakyThrows
   @Test
   public void uploadXmlMultiPartFileTest() {
-    try (InputStream xml = readTestFileInputStream("/xml/abcd2.xml")) {
-      // State
+    uploadTest("/xml/", "abcd2.xml", "application/xml", FileFormat.XML);
+  }
+
+  @SneakyThrows
+  @Test
+  public void uploadMultiPartFileTest() {
+    uploadTest("/dwca/", "Archive.zip", "application/zip", FileFormat.DWCA);
+  }
+
+  /** Generic method to test file uploads. */
+  @SneakyThrows
+  public void uploadTest(
+      String filePath, String fileName, String contentType, FileFormat fileFormat) {
+    try (InputStream archive = readTestFileInputStream(filePath + fileName)) {
       MockMultipartFile mockMultipartFile =
-          new MockMultipartFile("file", "abcd2.xml", "application/xml", xml);
+          new MockMultipartFile("file", fileName, contentType, archive);
       // directory inside the storeDirectory in which file is upload
       UUID targetDirectory = UUID.randomUUID();
 
@@ -48,20 +60,18 @@ public class UploadFileManagerTest extends DownloadFileBaseTest {
               storeDirectory.toString(),
               ctx.getBean(DownloadFileManager.class));
 
-      // When
       UploadFileManager.AsyncDataFileTask task =
           uploadFileManager.uploadDataFile(mockMultipartFile, targetDirectory.toString());
 
       // Wait the task to finish
       DataFile dataFile = task.getTask().get();
 
-      // Should
       assertTrue(Files.exists(dataFile.getFilePath()));
       assertTrue(dataFile.getSize() > 0);
-      assertEquals("abcd2.xml", dataFile.getSourceFileName());
-      assertEquals(FileFormat.XML, dataFile.getFileFormat());
-      assertEquals("application/xml", dataFile.getMediaType());
-      assertEquals("application/xml", dataFile.getReceivedAsMediaType());
+      assertEquals(fileName, dataFile.getSourceFileName());
+      assertEquals(fileFormat, dataFile.getFileFormat());
+      assertEquals(contentType, dataFile.getMediaType());
+      assertEquals(contentType, dataFile.getReceivedAsMediaType());
     }
   }
 

@@ -77,10 +77,6 @@ public class UploadFileManager {
       DataFile dataFile =
           fromMediaTypeAndFormat(dataFilePath, fileName, detectedMediaType, destinationFolder);
 
-      if (COMPRESS_CONTENT_TYPE.contains(detectedMediaType)) {
-        Files.delete(dataFilePath);
-      }
-
       return dataFile;
     } catch (Exception ex) {
       log.warn("Deleting temporary content of {} after IOException.", fileName);
