@@ -20,6 +20,7 @@ import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NonNull;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -40,7 +41,6 @@ import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.common.messaging.api.messages.PipelinesXmlMessage;
 import org.gbif.crawler.constants.CrawlerNodePaths;
-import org.gbif.crawler.constants.PipelinesNodePaths;
 import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
 import org.gbif.pipelines.common.configs.BaseConfiguration;
 import org.gbif.pipelines.common.utils.HdfsUtils;
@@ -119,6 +119,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
         MDCCloseable mdc2 = MDC.putCloseable("step", stepType.name())) {
 
       if (!handler.isMessageCorrect(message) || isValidatorAborted()) {
+        deleteValidatorZkPath(datasetKey);
         log.info(
             "Skip the message, please check that message is correct, runner or validation info, exit from handler");
         return;
@@ -140,8 +141,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
 
       // Check start date If CLI was restarted it will be empty
       String startDateZkPath = Fn.START_DATE.apply(stepType.getLabel());
-      String fullPath =
-          getPipelinesInfoPath(message.getDatasetUuid().toString(), startDateZkPath, isValidator);
+      String fullPath = getPipelinesInfoPath(datasetKey, startDateZkPath, isValidator);
 
       log.info("Message has been received {}", message);
       if (ZookeeperUtils.getAsString(curator, fullPath).isPresent()) {
@@ -176,7 +176,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
 
       String runnerZkPath = Fn.RUNNER.apply(stepType.getLabel());
       ZookeeperUtils.updateMonitoring(curator, datasetKey, runnerZkPath, getRunner(), isValidator);
-      updateValidatorInfoStatus(Status.RUNNING);
+      updateValidatorInfoStatus(Status.RUNNING, false);
 
       log.info("Handler has been started, datasetKey - {}", datasetKey);
       runnable.run();
@@ -212,14 +212,11 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
 
       // Change zookeeper counter for passed steps
       ZookeeperUtils.checkMonitoringById(curator, steps.size(), datasetKey, isValidator);
-      updateValidatorInfoStatus(Status.FINISHED, true);
 
-      // Check
-      if (isValidator
-          && !ZookeeperUtils.checkExists(
-              curator, PipelinesNodePaths.getPipelinesInfoPath(datasetKey, isValidator))) {
-        updateValidatorInfoStatus(Status.FINISHED);
-      }
+      String validatorZkPath = getPipelinesInfoPath(datasetKey, isValidator);
+      boolean ignoreMainStatus =
+          isValidator && ZookeeperUtils.checkExists(curator, validatorZkPath);
+      updateValidatorInfoStatus(Status.FINISHED, ignoreMainStatus);
 
     } catch (Exception ex) {
       String error = "Error for datasetKey - " + datasetKey + " : " + ex.getMessage();
@@ -234,7 +231,10 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
 
       // update tracking status
       trackingInfo.ifPresent(info -> updateTrackingStatus(info, PipelineStep.Status.FAILED));
-      updateValidatorInfoStatus(Status.FAILED);
+
+      // update validator info
+      updateValidatorInfoStatus(Status.FAILED, false);
+      deleteValidatorZkPath(datasetKey);
     }
 
     log.info("Message handler ended - {}", message);
@@ -258,8 +258,12 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
     return false;
   }
 
-  private void updateValidatorInfoStatus(Status status) {
-    updateValidatorInfoStatus(status, false);
+  @SneakyThrows
+  private void deleteValidatorZkPath(String datasetKey) {
+    if (isValidator) {
+      String path = getPipelinesInfoPath(datasetKey, isValidator);
+      curator.delete().deletingChildrenIfNeeded().forPath(path);
+    }
   }
 
   private void updateValidatorInfoStatus(Status status, boolean ignoreMainStatus) {

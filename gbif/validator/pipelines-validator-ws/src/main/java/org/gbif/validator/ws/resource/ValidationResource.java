@@ -44,7 +44,6 @@ public class ValidationResource {
   private final ErrorMapper errorMapper;
   private final ValidatorEmailService emailService;
 
-
   /** Uploads a file and starts the validation process. */
   @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
   public Validation submitFile(
@@ -71,16 +70,6 @@ public class ValidationResource {
   @PutMapping(path = "/{key}/cancel")
   public void cancel(@PathVariable UUID key, @Autowired Principal principal) {
     errorMapper.getOrElseThrow(validationService.cancel(key, principal));
-  }
-
-  /** Cancels a Validation. */
-  @GetMapping(path = "/email")
-  public void sendEmail(@Autowired Principal principal) {
-    emailService.sendEmailNotification(Validation.builder()
-                                         .username(principal.getName())
-                                         .key(UUID.randomUUID())
-                                         .status(Validation.Status.FAILED)
-                                         .build());
   }
 
   /** Gets the detail of Validation. */

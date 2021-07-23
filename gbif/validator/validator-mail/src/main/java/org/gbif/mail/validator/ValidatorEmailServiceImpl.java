@@ -22,7 +22,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class ValidatorEmailServiceImpl implements ValidatorEmailService {
 
-  private final EmailTemplateProcessor templateProcessor =  new FreemarkerEmailTemplateProcessor();
+  private final EmailTemplateProcessor templateProcessor = new FreemarkerEmailTemplateProcessor();
 
   private final UserHelperService userHelperService;
 
