@@ -16,7 +16,7 @@ public class ValidationFactory {
         .key(key)
         .fileFormat(dataFile.getFileFormat())
         .status(status)
-        .file(dataFile.getFilePath().toString())
+        .file(dataFile.getFilePath().getFileName().toString())
         .fileSize(dataFile.getSize())
         .username(userName)
         .build();
@@ -27,7 +27,7 @@ public class ValidationFactory {
         .key(key)
         .fileFormat(dataFile.getFileFormat())
         .status(status)
-        .file(dataFile.getFilePath().toString())
+        .file(dataFile.getFilePath().getFileName().toString())
         .fileSize(dataFile.getSize())
         .build();
   }
