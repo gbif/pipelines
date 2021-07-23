@@ -378,6 +378,11 @@
         <artifactId>validator-api</artifactId>
         <version>${project.version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.gbif.pipelines</groupId>
+        <artifactId>validator-mail</artifactId>
+        <version>${project.version}</version>
+      </dependency>
 
       <!-- GBIF -->
       <dependency>

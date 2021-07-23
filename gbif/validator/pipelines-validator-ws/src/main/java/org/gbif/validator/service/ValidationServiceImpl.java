@@ -22,6 +22,7 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
+import org.gbif.mail.validator.ValidatorEmailService;
 import org.gbif.registry.security.UserRoles;
 import org.gbif.validator.api.FileFormat;
 import org.gbif.validator.api.Validation;
@@ -46,12 +47,14 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
 
   private final MessagePublisher messagePublisher;
 
+  private final ValidatorEmailService emailService;
+
   @Value("${maxRunningValidationPerUser}")
   private final int maxRunningValidationPerUser;
 
   /** Asserts the user has not reached the maximum number of executing validations. */
   @Override
-  public Optional<Validation.Error> reachedMaxRunningValidation(String userName) {
+  public Optional<Validation.Error> reachedMaxRunningValidations(String userName) {
     if (validationMapper.count(userName, Validation.executingStatuses())
         >= maxRunningValidationPerUser) {
       return Optional.of(Validation.Error.of(Validation.Error.Code.MAX_RUNNING_VALIDATIONS));
@@ -60,8 +63,9 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
   }
 
   @Override
-  public Either<Validation.Error, Validation> submitFile(MultipartFile file, Principal principal) {
-    Optional<Validation.Error> error = reachedMaxRunningValidation(principal.getName());
+  public Either<Validation.Error, Validation> validateFile(
+      MultipartFile file, Principal principal) {
+    Optional<Validation.Error> error = reachedMaxRunningValidations(principal.getName());
     if (error.isPresent()) {
       return Either.left(error.get());
     }
@@ -76,7 +80,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
   public Either<Validation.Error, Validation> validateFileFromUrl(
       String fileURL, Principal principal) {
     try {
-      Optional<Validation.Error> error = reachedMaxRunningValidation(principal.getName());
+      Optional<Validation.Error> error = reachedMaxRunningValidations(principal.getName());
       if (error.isPresent()) {
         return Either.left(error.get());
       }
@@ -174,6 +178,9 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
     if (status == Status.SUBMITTED) {
       notify(key, dataFile.getFileFormat());
     }
+    if (validation.succeeded()) {
+      emailService.sendEmailNotification(validation);
+    }
     return validation;
   }
 
@@ -181,7 +188,9 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
   private Validation updateFailedValidation(UUID key, String errorMessage) {
     Validation validation =
         newValidationInstance(key, Validation.Status.FAILED, metricsFromError(errorMessage));
-    return updateAndGet(validation);
+    validation = updateAndGet(validation);
+    emailService.sendEmailNotification(validation);
+    return validation;
   }
 
   /** Updates and gets the updated validation */

@@ -30,7 +30,7 @@ import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
 /**
  * Email template processor allows to generate a {@link BaseEmailModel} from a Freemarker template.
  */
-public abstract class FreemarkerEmailTemplateProcessor implements EmailTemplateProcessor {
+public class FreemarkerEmailTemplateProcessor implements EmailTemplateProcessor {
 
   /**
    * Build a {@link BaseEmailModel} from

@@ -27,6 +27,11 @@ gbif:
   ws:
     security:
       wrappedContent: false
+  portal:
+    url: @gbif.portal.url@
+  mail:
+    bcc:
+    from: @gbif.mail.url@
 maxRunningValidationPerUser: 3
 validation:
   datasource:

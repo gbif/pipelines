@@ -5,6 +5,7 @@ import java.util.Collections;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.common.messaging.api.MessagePublisher;
+import org.gbif.mail.validator.ValidatorEmailService;
 import org.gbif.registry.identity.service.BasicUserSuretyDelegate;
 import org.gbif.registry.identity.service.UserSuretyDelegate;
 import org.gbif.registry.identity.service.UserSuretyDelegateImpl;
@@ -23,6 +24,7 @@ import org.gbif.validator.ws.config.WebMvcConfiguration;
 import org.gbif.validator.ws.file.DownloadFileManager;
 import org.gbif.validator.ws.security.RegistrySecurityConfiguration;
 import org.gbif.ws.security.NoAuthWebSecurityConfigurer;
+import org.mockito.Mockito;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration;
@@ -128,6 +130,11 @@ public class ValidatorWsItConfiguration extends ValidatorWsConfiguration {
   @Bean
   public MessagePublisher messagePublisher() {
     return new MessagePublisherMock();
+  }
+
+  @Bean
+  public ValidatorEmailService emailService() {
+    return Mockito.mock(ValidatorEmailService.class);
   }
 
   @Bean

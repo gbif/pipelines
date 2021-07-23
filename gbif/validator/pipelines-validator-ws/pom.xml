@@ -343,6 +343,10 @@
       <artifactId>validator-api</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.gbif.pipelines</groupId>
+      <artifactId>validator-mail</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.gbif.common</groupId>
       <artifactId>gbif-postal-service</artifactId>
     </dependency>

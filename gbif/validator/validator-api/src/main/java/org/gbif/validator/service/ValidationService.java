@@ -9,11 +9,16 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.validator.api.Validation;
 
+/**
+ * Data validation service.
+ *
+ * @param <MF> multi-part file upload type
+ */
 public interface ValidationService<MF> {
 
-  Optional<Validation.Error> reachedMaxRunningValidation(String userName);
+  Optional<Validation.Error> reachedMaxRunningValidations(String userName);
 
-  Either<Validation.Error, Validation> submitFile(MF file, Principal principal);
+  Either<Validation.Error, Validation> validateFile(MF file, Principal principal);
 
   Either<Validation.Error, Validation> validateFileFromUrl(String fileURL, Principal principal);
 

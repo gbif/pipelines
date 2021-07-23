@@ -8,20 +8,35 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.mail.BaseEmailModel;
+import org.gbif.mail.EmailSender;
 import org.gbif.mail.EmailTemplateProcessor;
 import org.gbif.mail.EmailType;
+import org.gbif.mail.FreemarkerEmailTemplateProcessor;
 import org.gbif.mail.UserHelperService;
 import org.gbif.validator.api.Validation;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 @RequiredArgsConstructor
 @Slf4j
-public class ValidatorEmailFactory {
+@Service
+public class ValidatorEmailServiceImpl implements ValidatorEmailService {
 
-  private EmailTemplateProcessor templateProcessor;
+  private final EmailTemplateProcessor templateProcessor =  new FreemarkerEmailTemplateProcessor();
 
-  private UserHelperService userHelperService;
+  private final UserHelperService userHelperService;
 
-  public Optional<BaseEmailModel> buildEmailModel(Validation validation, String portalUrl) {
+  private final EmailSender emailSender;
+
+  @Value("${gbif.portal.url}")
+  private final String portalUrl;
+
+  @Override
+  public void sendEmailNotification(Validation validation) {
+    buildEmailModel(validation).ifPresent(emailSender::send);
+  }
+
+  private Optional<BaseEmailModel> buildEmailModel(Validation validation) {
     return typeFromStatus(validation)
         .flatMap(
             t ->
@@ -34,11 +49,11 @@ public class ValidatorEmailFactory {
                                         templateProcessor.buildEmail(
                                             t,
                                             getNotificationAddresses(user),
-                                            ValidatorTemplateDataModel.builder()
-                                                // .validation(validation)
-                                                // .portalUrl(portalUrl)
+                                            ValidatorTemplateDataModel.modelBuilder()
+                                                .validation(validation)
+                                                .portalUrl(portalUrl)
                                                 .build(),
-                                            userHelperService.getLocale(user)))
+                                            userHelperService.getUserLocaleOrDefault(user)))
                                 .get()));
   }
 

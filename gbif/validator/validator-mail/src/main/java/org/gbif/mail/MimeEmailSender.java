@@ -21,6 +21,7 @@ import java.util.Set;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
@@ -33,7 +34,7 @@ import org.springframework.stereotype.Service;
 
 /** Allows to send {@link BaseEmailModel} */
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class MimeEmailSender implements EmailSender {
 
   public static final Marker NOTIFY_ADMIN = MarkerFactory.getMarker("NOTIFY_ADMIN");
@@ -49,7 +50,7 @@ public class MimeEmailSender implements EmailSender {
   private final Set<String> bccAddresses;
 
   @Value("classpath:email/images/GBIF-2015-full.png")
-  private Resource logoFile;
+  private final Resource logoFile;
 
   /**
    * Method that generates (using a template) and send an email containing a username and a

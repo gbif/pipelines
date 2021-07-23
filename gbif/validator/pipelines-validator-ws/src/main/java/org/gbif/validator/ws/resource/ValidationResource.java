@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.mail.validator.ValidatorEmailService;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.service.ErrorMapper;
 import org.gbif.validator.service.ValidationService;
@@ -41,12 +42,14 @@ public class ValidationResource {
 
   private final ValidationService<MultipartFile> validationService;
   private final ErrorMapper errorMapper;
+  private final ValidatorEmailService emailService;
+
 
   /** Uploads a file and starts the validation process. */
   @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
   public Validation submitFile(
       @RequestParam("file") MultipartFile file, @Autowired Principal principal) {
-    return errorMapper.getOrElseThrow(validationService.submitFile(file, principal));
+    return errorMapper.getOrElseThrow(validationService.validateFile(file, principal));
   }
 
   /** Asynchronously downloads a file from an URL and starts the validation process. */
@@ -68,6 +71,16 @@ public class ValidationResource {
   @PutMapping(path = "/{key}/cancel")
   public void cancel(@PathVariable UUID key, @Autowired Principal principal) {
     errorMapper.getOrElseThrow(validationService.cancel(key, principal));
+  }
+
+  /** Cancels a Validation. */
+  @GetMapping(path = "/email")
+  public void sendEmail(@Autowired Principal principal) {
+    emailService.sendEmailNotification(Validation.builder()
+                                         .username(principal.getName())
+                                         .key(UUID.randomUUID())
+                                         .status(Validation.Status.FAILED)
+                                         .build());
   }
 
   /** Gets the detail of Validation. */
