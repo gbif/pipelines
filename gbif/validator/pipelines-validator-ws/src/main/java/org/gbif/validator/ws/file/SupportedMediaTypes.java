@@ -30,6 +30,9 @@ public class SupportedMediaTypes {
   public static final MediaType APPLICATION_OPEN_DOC_SPREADSHEET_TYPE =
       new MediaType("application", "vnd.oasis.opendocument.spreadsheet");
 
+  // .xml
+  public static final String APPLICATION_XML = "application/xml";
+
   // the common one is defined by com.sun.jersey.multipart.file.CommonMediaTypes.ZIP , this is
   // another used by some sites
   public static final String APPLICATION_XZIP_COMPRESSED = "application/x-zip-compressed";
@@ -49,4 +52,6 @@ public class SupportedMediaTypes {
   public static final List<String> SPREADSHEET_CONTENT_TYPES =
       ImmutableList.of(
           APPLICATION_EXCEL, APPLICATION_OFFICE_SPREADSHEET, APPLICATION_OPEN_DOC_SPREADSHEET);
+
+  public static final List<String> XML_CONTENT_TYPES = ImmutableList.of(APPLICATION_XML);
 }

@@ -3,6 +3,7 @@ package org.gbif.validator.api;
 /** Data file format. */
 public enum FileFormat {
   DWCA(true),
+  XML(false),
   TABULAR(true),
   SPREADSHEET(false);
 

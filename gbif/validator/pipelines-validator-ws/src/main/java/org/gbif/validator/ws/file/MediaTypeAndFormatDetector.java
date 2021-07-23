@@ -3,6 +3,7 @@ package org.gbif.validator.ws.file;
 import static org.gbif.validator.ws.file.SupportedMediaTypes.COMPRESS_CONTENT_TYPE;
 import static org.gbif.validator.ws.file.SupportedMediaTypes.SPREADSHEET_CONTENT_TYPES;
 import static org.gbif.validator.ws.file.SupportedMediaTypes.TABULAR_CONTENT_TYPES;
+import static org.gbif.validator.ws.file.SupportedMediaTypes.XML_CONTENT_TYPES;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -61,7 +62,7 @@ public class MediaTypeAndFormatDetector {
   public static Optional<MediaTypeAndFormat> evaluateMediaTypeAndFormat(
       Path dataFilePath, String detectedContentType) throws IOException {
     Objects.requireNonNull(dataFilePath, "dataFilePath shall be provided");
-    String currentDetectedContentType = detectedContentType;
+    String contentType = detectedContentType;
 
     if (COMPRESS_CONTENT_TYPE.contains(detectedContentType)) {
       List<Path> content;
@@ -69,17 +70,22 @@ public class MediaTypeAndFormatDetector {
         content = list.collect(Collectors.toList());
       }
       if (content.size() == 1) {
-        currentDetectedContentType = MediaTypeAndFormatDetector.detectMediaType(content.get(0));
+        contentType = MediaTypeAndFormatDetector.detectMediaType(content.get(0));
       } else {
-        return Optional.of(new MediaTypeAndFormat(currentDetectedContentType, FileFormat.DWCA));
+        return Optional.of(new MediaTypeAndFormat(contentType, FileFormat.DWCA));
       }
     }
 
-    if (TABULAR_CONTENT_TYPES.contains(currentDetectedContentType)) {
-      return Optional.of(new MediaTypeAndFormat(currentDetectedContentType, FileFormat.TABULAR));
-    } else if (SPREADSHEET_CONTENT_TYPES.contains(currentDetectedContentType)) {
-      return Optional.of(
-          new MediaTypeAndFormat(currentDetectedContentType, FileFormat.SPREADSHEET));
+    if (TABULAR_CONTENT_TYPES.contains(contentType)) {
+      return Optional.of(new MediaTypeAndFormat(contentType, FileFormat.TABULAR));
+    }
+
+    if (SPREADSHEET_CONTENT_TYPES.contains(contentType)) {
+      return Optional.of(new MediaTypeAndFormat(contentType, FileFormat.SPREADSHEET));
+    }
+
+    if (XML_CONTENT_TYPES.contains(contentType)) {
+      return Optional.of(new MediaTypeAndFormat(contentType, FileFormat.XML));
     }
     return Optional.empty();
   }

@@ -78,6 +78,7 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
         .config(config)
         .curator(curator)
         .stepType(StepType.XML_TO_VERBATIM)
+        .isValidator(message.isValidator())
         .publisher(publisher)
         .message(message)
         .handler(this)

@@ -79,7 +79,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
                 notify(key, df.getFileFormat());
               } else {
                 log.error(tr.getMessage(), tr);
-                updateFailedValidation(key, "Error during file submitting");
+                updateFailedValidation(key, "Error during the file submitting");
               }
             });
     return Either.right(

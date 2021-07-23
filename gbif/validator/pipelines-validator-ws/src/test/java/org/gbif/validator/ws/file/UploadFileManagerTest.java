@@ -34,10 +34,11 @@ public class UploadFileManagerTest extends DownloadFileBaseTest {
 
   @SneakyThrows
   @Test
-  public void uploadMultiPartFileTest() {
-    try (InputStream archive = readTestFileInputStream("/dwca/Archive.zip")) {
+  public void uploadXmlMultiPartFileTest() {
+    try (InputStream xml = readTestFileInputStream("/xml/abcd2.xml")) {
+      // State
       MockMultipartFile mockMultipartFile =
-          new MockMultipartFile("file", "Archive.zip", "application/zip", archive);
+          new MockMultipartFile("file", "abcd2.xml", "application/xml", xml);
       // directory inside the storeDirectory in which file is upload
       UUID targetDirectory = UUID.randomUUID();
 
@@ -47,24 +48,27 @@ public class UploadFileManagerTest extends DownloadFileBaseTest {
               storeDirectory.toString(),
               ctx.getBean(DownloadFileManager.class));
 
+      // When
       UploadFileManager.AsyncDataFileTask task =
           uploadFileManager.uploadDataFile(mockMultipartFile, targetDirectory.toString());
 
       // Wait the task to finish
       DataFile dataFile = task.getTask().get();
 
+      // Should
       assertTrue(Files.exists(dataFile.getFilePath()));
       assertTrue(dataFile.getSize() > 0);
-      assertEquals("Archive.zip", dataFile.getSourceFileName());
-      assertEquals(FileFormat.DWCA, dataFile.getFileFormat());
-      assertEquals("application/zip", dataFile.getMediaType());
-      assertEquals("application/zip", dataFile.getReceivedAsMediaType());
+      assertEquals("abcd2.xml", dataFile.getSourceFileName());
+      assertEquals(FileFormat.XML, dataFile.getFileFormat());
+      assertEquals("application/xml", dataFile.getMediaType());
+      assertEquals("application/xml", dataFile.getReceivedAsMediaType());
     }
   }
 
   @SneakyThrows
   @Test
-  public void downloadFileTest() {
+  public void downloadZipFileTest() {
+    // State
     UploadFileManager uploadFileManager =
         new UploadFileManager(
             workingDirectory.toString(),
@@ -72,15 +76,18 @@ public class UploadFileManagerTest extends DownloadFileBaseTest {
             ctx.getBean(DownloadFileManager.class));
     UUID key = UUID.randomUUID();
 
+    // When
     UploadFileManager.AsyncDownloadResult downloadResult =
         uploadFileManager.downloadDataFile(
-            testPath("/Archive.zip"),
-            key.toString(),
-            file -> assertTrue(Files.exists(file.getFilePath())),
-            err -> fail());
+            testPath("/Archive.zip"), key.toString(), System.out::println, err -> fail());
+
+    // Should
     File downloadFile = downloadResult.getDownloadTask().get();
-    assertTrue(Files.exists(downloadFile.toPath()));
-    assertTrue(downloadResult.getDataFile().getSize() > 0);
+    Path parent = downloadFile.toPath().getParent();
+
+    assertTrue(Files.exists(parent.resolve("eml.xml")));
+    assertTrue(Files.exists(parent.resolve("meta.xml")));
+    assertTrue(Files.exists(parent.resolve("occurrence.txt")));
     assertEquals("Archive.zip", downloadResult.getDataFile().getSourceFileName());
   }
 }
