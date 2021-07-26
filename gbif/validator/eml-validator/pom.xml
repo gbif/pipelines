@@ -16,14 +16,6 @@
   <name>Pipelines :: GBIF :: Validator :: EML</name>
   <description>Library to perform validation of GBIF supported EML and other XML schemas</description>
 
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-failsafe-plugin</artifactId>
-      </plugin>
-    </plugins>
-  </build>
   <dependencyManagement>
     <dependencies>
       <dependency>
