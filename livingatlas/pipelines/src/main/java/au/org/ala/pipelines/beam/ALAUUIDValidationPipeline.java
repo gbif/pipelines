@@ -153,7 +153,9 @@ public class ALAUUIDValidationPipeline {
                           options.getTargetPath(),
                           options.getDatasetId().trim(),
                           options.getAttempt().toString(),
-                          "verbatim.avro")));
+                          "interpreted",
+                          "verbatim",
+                          "*.avro")));
 
       // check all records have valid keys
       PCollection<String> invalidKeyResults =
