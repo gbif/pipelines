@@ -11,6 +11,8 @@ import org.gbif.common.messaging.api.messages.Platform;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
 import org.gbif.pipelines.crawler.validator.ArchiveValidatorConfiguration;
 import org.gbif.pipelines.crawler.xml.XmlToAvroCallback;
+import org.gbif.validator.api.Metrics;
+import org.gbif.validator.api.Validation;
 import org.gbif.validator.ws.client.ValidationWsClient;
 
 @Slf4j
@@ -38,6 +40,14 @@ public class XmlArchiveValidator {
   }
 
   public void validate() {
-    throw new RuntimeException("NOT IMPLIMENTED!");
+    Metrics metrics = Metrics.builder().build();
+
+    // TODO: Validate XML files
+
+    Validation validation = validationClient.get(message.getDatasetUuid());
+    validation.setMetrics(metrics);
+
+    log.info("Update validation key {}", message.getDatasetUuid());
+    validationClient.update(validation);
   }
 }
