@@ -851,6 +851,14 @@
       <str name="wt">json</str>
       <str name="df">text</str>
     </lst>
+    <lst name="invariants">
+      <str name="rq">{!xport}</str>
+      <bool name="distrib">false</bool>
+    </lst>
+    <arr name="components">
+      <str>query</str>
+    </arr>
+    <str name="useParams">_EXPORT</str>
   </requestHandler>
 
   <!-- realtime get handler, guaranteed to return the latest stored fields of
