@@ -33,18 +33,18 @@ public class GeocodeServiceTestIT {
 
     GeocodeResponse resp =
         geoService.get(LatLng.builder().withLongitude(119.7).withLatitude(-20.0).build());
-    assertTrue(!resp.getLocations().isEmpty());
+    assertFalse(resp.getLocations().isEmpty());
     assertEquals("AU", resp.getLocations().get(0).getName());
 
     GeocodeResponse resp2 =
         geoService.get(
             LatLng.builder().withLongitude(124.9500000000).withLatitude(-15.0667000000).build());
-    assertTrue(!resp2.getLocations().isEmpty());
+    assertFalse(resp2.getLocations().isEmpty());
     assertEquals("AU", resp2.getLocations().get(0).getName());
 
     GeocodeResponse resp3 =
         geoService.get(LatLng.builder().withLongitude(115.445278).withLatitude(-20.827222).build());
-    assertTrue(!resp3.getLocations().isEmpty());
+    assertFalse(resp3.getLocations().isEmpty());
     assertEquals("AU", resp3.getLocations().get(0).getName());
   }
 
@@ -61,7 +61,7 @@ public class GeocodeServiceTestIT {
                 .withLongitude(105.65916507921472)
                 .withLatitude(-10.47444666578651)
                 .build());
-    assertTrue(!resp.getLocations().isEmpty());
+    assertFalse(resp.getLocations().isEmpty());
     assertEquals("AU", resp.getLocations().get(0).getName());
 
     // Cocos Island
@@ -71,7 +71,7 @@ public class GeocodeServiceTestIT {
                 .withLongitude(96.82189811041627)
                 .withLatitude(-12.149492596153177)
                 .build());
-    assertTrue(!resp2.getLocations().isEmpty());
+    assertFalse(resp2.getLocations().isEmpty());
     assertEquals("AU", resp2.getLocations().get(0).getName());
 
     // HM Heard Island and McDonald Islands
@@ -81,7 +81,7 @@ public class GeocodeServiceTestIT {
                 .withLongitude(73.50048378875914)
                 .withLatitude(-53.05122953207953)
                 .build());
-    assertTrue(!resp3.getLocations().isEmpty());
+    assertFalse(resp3.getLocations().isEmpty());
     assertEquals("AU", resp2.getLocations().get(0).getName());
 
     // Norfolk Island
@@ -91,7 +91,7 @@ public class GeocodeServiceTestIT {
                 .withLongitude(167.96164271317312)
                 .withLatitude(-29.030669709715056)
                 .build());
-    assertTrue(!resp4.getLocations().isEmpty());
+    assertFalse(resp4.getLocations().isEmpty());
     assertEquals("AU", resp4.getLocations().get(0).getName());
 
     // Lord Howe
@@ -101,7 +101,7 @@ public class GeocodeServiceTestIT {
                 .withLongitude(159.0851385821144)
                 .withLatitude(-31.560315624981254)
                 .build());
-    assertTrue(!resp5.getLocations().isEmpty());
+    assertFalse(resp5.getLocations().isEmpty());
     assertEquals("AU", resp5.getLocations().get(0).getName());
   }
 

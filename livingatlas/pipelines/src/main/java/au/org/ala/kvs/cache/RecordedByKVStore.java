@@ -1,7 +1,6 @@
 package au.org.ala.kvs.cache;
 
 import au.org.ala.pipelines.parser.CollectorNameParser;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -15,12 +14,12 @@ public class RecordedByKVStore implements KeyValueStore<String, List<String>> {
     if (result != null) {
       return Arrays.asList(result);
     } else {
-      return Collections.EMPTY_LIST;
+      return Collections.emptyList();
     }
   }
 
   @Override
-  public void close() throws IOException {
+  public void close() {
     // NOP
   }
 }

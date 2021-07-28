@@ -173,7 +173,7 @@ public class ALAUUIDValidationPipeline {
               .apply(Count.globally())
               .apply(
                   MapElements.into(TypeDescriptors.strings())
-                      .via(longValue -> EMPTY_KEY_RECORDS + ": " + longValue.toString()));
+                      .via(longValue -> EMPTY_KEY_RECORDS + ": " + longValue));
 
       // add the invalid key records
       results = results.and(invalidKeyResults.setCoder(StringUtf8Coder.of()));
@@ -226,7 +226,7 @@ public class ALAUUIDValidationPipeline {
               .apply(Sum.longsGlobally())
               .apply(
                   MapElements.into(TypeDescriptors.strings())
-                      .via(longValue -> DUPLICATE_RECORD_KEY_COUNT + ": " + longValue.toString()));
+                      .via(longValue -> DUPLICATE_RECORD_KEY_COUNT + ": " + longValue));
       results = results.and(duplicateKeyCount.setCoder(StringUtf8Coder.of()));
 
       // retrieve a count of duplicate keys
@@ -235,7 +235,7 @@ public class ALAUUIDValidationPipeline {
               .apply(Count.globally())
               .apply(
                   MapElements.into(TypeDescriptors.strings())
-                      .via(longValue -> DUPLICATE_KEY_COUNT + ": " + longValue.toString()));
+                      .via(longValue -> DUPLICATE_KEY_COUNT + ": " + longValue));
 
       // add the duplicate key records
       results = results.and(duplicateKeyResults.setCoder(StringUtf8Coder.of()));

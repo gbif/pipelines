@@ -182,12 +182,7 @@ public class UUIDMigrationPipeline {
         p.apply(TextIO.read().from(csvPath).withEmptyMatchTreatment(EmptyMatchTreatment.ALLOW))
             .apply(
                 Filter.by(
-                    new SerializableFunction<String, Boolean>() {
-                      @Override
-                      public Boolean apply(String input) {
-                        return input.split(",").length > 1;
-                      }
-                    }))
+                    (SerializableFunction<String, Boolean>) input -> input.split(",").length > 1))
             .apply(
                 "Format results",
                 MapElements.into(
@@ -221,7 +216,7 @@ public class UUIDMigrationPipeline {
         org.apache.beam.sdk.extensions.joinlibrary.Join.leftOuterJoin(records, firstLoaded, "");
 
     final String datasetID = options.getDatasetId();
-    final Boolean stripSpacesFinal = stripSpaces == null ? false : stripSpaces;
+    final Boolean stripSpacesFinal = stripSpaces != null && stripSpaces;
     final Map<String, String> defaultValuesFinal =
         defaultValues == null ? Collections.emptyMap() : defaultValues;
 

@@ -64,7 +64,7 @@ public class ClusteringPipelineIT {
     assertEquals(10, records.size());
 
     // test the existence of a relationship and check which is the representative record
-    Relationships r = ((Relationships) records.get("not-an-uuid-1"));
+    Relationships r = records.get("not-an-uuid-1");
     assertNotNull(r);
     assertEquals(1, r.getRelationships().size());
     assertEquals("not-an-uuid-1", r.getRelationships().get(0).getRepId());

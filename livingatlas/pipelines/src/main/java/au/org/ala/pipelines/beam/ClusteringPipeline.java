@@ -6,9 +6,10 @@ import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationUtils;
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -58,7 +59,7 @@ public class ClusteringPipeline {
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
 
-  public static void main(String[] args) throws FileNotFoundException {
+  public static void main(String[] args) throws IOException {
     VersionInfo.print();
     String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "clustering");
 
@@ -171,19 +172,17 @@ public class ClusteringPipeline {
                         && specimenBORs.contains(basisOfRecord)) {
 
                       // output hashes for each combination
-                      Arrays.asList(
+                      Stream.of(
                               occurrenceID,
                               fieldNumber,
                               recordNumber,
                               catalogNumber,
                               otherCatalogNumbers)
-                          .stream()
                           .filter(
                               value ->
                                   !Strings.isEmpty(value) && !omitIds.contains(value.toUpperCase()))
                           .distinct()
                           .collect(Collectors.toList())
-                          .stream()
                           .forEach(
                               id ->
                                   out.output(
@@ -283,7 +282,7 @@ public class ClusteringPipeline {
                           "Candidates: {}, Relationships {}",
                           source.getCandidates().size(),
                           output.size());
-                      output.forEach(kv -> out.output(kv));
+                      output.forEach(out::output);
                     }
                   }
                 }));
@@ -351,9 +350,7 @@ public class ClusteringPipeline {
 
                         Set<Relationship> set = new HashSet<>();
                         for (Relationships rs : input.getValue()) {
-                          for (Relationship r : rs.getRelationships()) {
-                            set.add(r);
-                          }
+                          set.addAll(rs.getRelationships());
                         }
                         return Relationships.newBuilder()
                             .setId(input.getKey())
@@ -416,10 +413,8 @@ public class ClusteringPipeline {
                       List<HashKeyOccurrence> candidates = source.getCandidates();
                       List<HashKeyOccurrence> processed = new ArrayList<>();
 
-                      Iterator<HashKeyOccurrence> iter = candidates.iterator();
-                      while (iter.hasNext()) {
+                      for (HashKeyOccurrence o1 : candidates) {
 
-                        HashKeyOccurrence o1 = iter.next();
                         processed.add(o1);
 
                         for (HashKeyOccurrence o2 : candidates) {
@@ -458,11 +453,9 @@ public class ClusteringPipeline {
                   public String apply(ClusteringCandidates input) {
                     return input.getHashKey()
                         + ","
-                        + String.join(
-                            "|",
-                            input.getCandidates().stream()
-                                .map(hk -> hk.getId())
-                                .collect(Collectors.toList()));
+                        + input.getCandidates().stream()
+                            .map(HashKeyOccurrence::getId)
+                            .collect(Collectors.joining("|"));
                   }
                 }))
         .apply(
@@ -521,10 +514,8 @@ public class ClusteringPipeline {
       List<ClusterPair> pairs = new ArrayList<>();
       List<HashKeyOccurrence> processed = new ArrayList<>();
 
-      Iterator<HashKeyOccurrence> iter = candidates.iterator();
-      while (iter.hasNext()) {
+      for (HashKeyOccurrence o1 : candidates) {
 
-        HashKeyOccurrence o1 = iter.next();
         processed.add(o1);
 
         for (HashKeyOccurrence o2 : candidates) {

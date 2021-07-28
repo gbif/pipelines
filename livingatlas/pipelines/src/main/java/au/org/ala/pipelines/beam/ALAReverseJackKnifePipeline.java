@@ -7,7 +7,7 @@ import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationUtils;
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -41,7 +41,7 @@ public class ALAReverseJackKnifePipeline {
   public static final String OUTLIER_RECORDS_COUNT = "outlierRecordsCount";
   public static final String JACKKNIFE_MODELS_COUNT = "modelRecordsCount";
 
-  public static void main(String[] args) throws FileNotFoundException {
+  public static void main(String[] args) throws IOException {
     VersionInfo.print();
     String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "jackKnife");
     JackKnifePipelineOptions options =

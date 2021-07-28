@@ -2,7 +2,6 @@ package au.org.ala.kvs.cache;
 
 import au.org.ala.kvs.ALAPipelinesConfig;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
 import java.util.Collections;
 import lombok.SneakyThrows;
 import org.gbif.kvs.KeyValueStore;
@@ -69,7 +68,7 @@ public class GeocodeKvStoreFactory {
           final BinaryBitmapLookup bbl = BinaryBitmapLookup.create(biomeCacheImage, "BIOME");
 
           @Override
-          public void close() throws IOException {
+          public void close() {
             // NOP
           }
 

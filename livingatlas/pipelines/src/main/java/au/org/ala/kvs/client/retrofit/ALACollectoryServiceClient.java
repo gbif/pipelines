@@ -32,7 +32,7 @@ public class ALACollectoryServiceClient implements ALACollectoryService {
   }
   /** Retrieve list of resources */
   @Override
-  public List<EntityReference> listDataResources() throws Exception {
+  public List<EntityReference> listDataResources() {
     return syncCall(alaCollectoryService.lookupDataResources());
   }
 

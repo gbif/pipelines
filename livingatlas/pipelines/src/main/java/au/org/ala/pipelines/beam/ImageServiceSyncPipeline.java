@@ -18,6 +18,7 @@ import java.io.*;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -221,12 +222,12 @@ public class ImageServiceSyncPipeline {
     // retrieve a list of image service base URLs
     final List<String> recognisedPaths =
         Arrays.stream(options.getRecognisedPaths().split("\\|"))
-            .map(rp -> StringUtils.trimToNull(rp))
-            .filter(s -> s != null)
+            .map(StringUtils::trimToNull)
+            .filter(Objects::nonNull)
             .collect(Collectors.toList());
 
     log.info("Recognised path size: {}", recognisedPaths.size());
-    recognisedPaths.stream().forEach(path -> log.info("Recognised paths: {}", path));
+    recognisedPaths.forEach(path -> log.info("Recognised paths: {}", path));
 
     // For image service URLs in Multimedia AVRO - as is the case in the data migration,
     // we cheat.
@@ -253,10 +254,9 @@ public class ImageServiceSyncPipeline {
         multimediaItems.apply(
             Filter.by(
                 input ->
-                    !(recognisedPaths.stream()
-                        .anyMatch(
-                            path ->
-                                input.getValue().getValue().getIdentifier().startsWith(path)))));
+                    recognisedPaths.stream()
+                        .noneMatch(
+                            path -> input.getValue().getValue().getIdentifier().startsWith(path))));
 
     log.info("Create join collection");
     final TupleTag<Image> imageServiceExportMappingTag = new TupleTag<Image>() {};

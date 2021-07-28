@@ -2,6 +2,7 @@ package au.org.ala.utils;
 
 import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.kvs.ALAPipelinesConfigFactory;
+import au.org.ala.kvs.client.EntityReference;
 import au.org.ala.kvs.client.retrofit.ALACollectoryServiceClient;
 import au.org.ala.pipelines.options.DatasetListPipelineOptions;
 import com.beust.jcommander.JCommander;
@@ -78,7 +79,7 @@ public class PruneUnregisteredDatasets {
     // get a list of all registered datasets
     List<String> uids =
         wsClient.listDataResources().stream()
-            .map(entityReference -> entityReference.getUid())
+            .map(EntityReference::getUid)
             .collect(Collectors.toList());
 
     // load all archives - return a map of <datasetId -> datasetInputPath>

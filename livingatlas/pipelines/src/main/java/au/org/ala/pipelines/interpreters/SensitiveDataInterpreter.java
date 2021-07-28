@@ -460,13 +460,13 @@ public class SensitiveDataInterpreter {
       }
       // The lat/long hasn't changed
       Optional<Double> originalLat =
-          DECIMAL_LATITUDE.get(original).getValue().map(v -> parseDouble(v));
+          DECIMAL_LATITUDE.get(original).getValue().map(SensitiveDataInterpreter::parseDouble);
       Optional<Double> generalisedLat =
-          DECIMAL_LATITUDE.get(result).getValue().map(v -> parseDouble(v));
+          DECIMAL_LATITUDE.get(result).getValue().map(SensitiveDataInterpreter::parseDouble);
       Optional<Double> originalLong =
-          DECIMAL_LONGITUDE.get(original).getValue().map(v -> parseDouble(v));
+          DECIMAL_LONGITUDE.get(original).getValue().map(SensitiveDataInterpreter::parseDouble);
       Optional<Double> generalisedLong =
-          DECIMAL_LONGITUDE.get(result).getValue().map(v -> parseDouble(v));
+          DECIMAL_LONGITUDE.get(result).getValue().map(SensitiveDataInterpreter::parseDouble);
       if (originalLat.isPresent()
           && generalisedLat.isPresent()
           && originalLong.isPresent()

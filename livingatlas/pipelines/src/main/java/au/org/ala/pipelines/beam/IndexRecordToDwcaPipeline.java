@@ -106,7 +106,7 @@ public class IndexRecordToDwcaPipeline {
     URL emlUrl = new URL(url);
     try (InputStream input = emlUrl.openStream();
         OutputStream output = ALAFsUtils.openOutputStream(fs, pathFn.apply("eml.xml"));
-        OutputStreamWriter writer = new OutputStreamWriter(output); ) {
+        OutputStreamWriter writer = new OutputStreamWriter(output)) {
       String out = new Scanner(input, "UTF-8").useDelimiter("\\A").next();
       writer.write(out);
     }
