@@ -339,13 +339,7 @@ public class ALAUUIDMintingPipeline {
     }
 
     // sort by newest to oldest
-    backups.sort(
-        new Comparator<FileStatus>() {
-          @Override
-          public int compare(FileStatus o1, FileStatus o2) {
-            return o1.getModificationTime() < o2.getModificationTime() ? 1 : -1;
-          }
-        });
+    backups.sort((o1, o2) -> o1.getModificationTime() < o2.getModificationTime() ? 1 : -1);
 
     if (log.isDebugEnabled()) {
       for (FileStatus fileStatus : backups) {
@@ -359,16 +353,15 @@ public class ALAUUIDMintingPipeline {
     if (backups.size() > options.getNumberOfBackupsToKeep()) {
       List<FileStatus> toPrune =
           backups.subList(options.getNumberOfBackupsToKeep(), backups.size());
-      toPrune.stream()
-          .forEach(
-              toPruneFs -> {
-                try {
-                  log.info("Pruning backup {} ", toPruneFs.getPath().getName());
-                  fs.delete(toPruneFs.getPath(), true);
-                } catch (Exception e) {
-                  log.error("Unable to prune {} ", toPruneFs.getPath().getName());
-                }
-              });
+      toPrune.forEach(
+          toPruneFs -> {
+            try {
+              log.info("Pruning backup {} ", toPruneFs.getPath().getName());
+              fs.delete(toPruneFs.getPath(), true);
+            } catch (Exception e) {
+              log.error("Unable to prune {} ", toPruneFs.getPath().getName());
+            }
+          });
     }
   }
 
@@ -437,7 +430,7 @@ public class ALAUUIDMintingPipeline {
                 .setFirstLoaded(uuidRecord.getFirstLoaded())
                 .setUniqueKey(uuidRecord.getUniqueKey())
                 .setUuid(uuidRecord.getUuid())
-                .setId(REMOVED_PREFIX_MARKER + UUID.randomUUID().toString())
+                .setId(REMOVED_PREFIX_MARKER + UUID.randomUUID())
                 .build();
 
         orphanedUniqueKeys.inc();

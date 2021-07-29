@@ -1,6 +1,8 @@
 package au.org.ala.pipelines.beam;
 
-import static au.org.ala.pipelines.beam.ImagePipelineUtils.*;
+import static au.org.ala.pipelines.beam.ImagePipelineUtils.indexOf;
+import static au.org.ala.pipelines.beam.ImagePipelineUtils.readHeadersLowerCased;
+import static au.org.ala.pipelines.beam.ImagePipelineUtils.validateHeaders;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
 import au.com.bytecode.opencsv.CSVParser;
@@ -13,7 +15,9 @@ import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.WsUtils;
 import com.google.common.base.Objects;
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -32,16 +36,24 @@ import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.io.Compression;
 import org.apache.beam.sdk.io.TextIO;
-import org.apache.beam.sdk.transforms.*;
+import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.Filter;
+import org.apache.beam.sdk.transforms.MapElements;
+import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.SimpleFunction;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.fs.*;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.LocatedFileStatus;
+import org.apache.hadoop.fs.RemoteIterator;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
-import org.gbif.pipelines.io.avro.*;
+import org.gbif.pipelines.io.avro.Multimedia;
+import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.rest.client.retrofit.SyncCall;
 import org.slf4j.MDC;
@@ -163,8 +175,8 @@ public class ImageServiceDiffLoadPipeline {
                     new DoFn<String, KV<String, Multimedia>>() {
                       @ProcessElement
                       public void processElement(
-                          @Element String imageMapping, OutputReceiver<KV<String, Multimedia>> out)
-                          throws Exception {
+                          @Element String imageMapping,
+                          OutputReceiver<KV<String, Multimedia>> out) {
 
                         try {
                           final CSVParser parser = new CSVParser();
@@ -435,13 +447,12 @@ public class ImageServiceDiffLoadPipeline {
     public void processElement(
         @Element MultimediaRecord multimediaRecord, OutputReceiver<KV<String, Multimedia>> out) {
       List<Multimedia> multimediaList = multimediaRecord.getMultimediaItems();
-      multimediaList.stream()
-          .forEach(
-              multimedia -> {
-                if (multimedia.getIdentifier() != null) {
-                  out.output(KV.of(multimedia.getIdentifier().toLowerCase().trim(), multimedia));
-                }
-              });
+      multimediaList.forEach(
+          multimedia -> {
+            if (multimedia.getIdentifier() != null) {
+              out.output(KV.of(multimedia.getIdentifier().toLowerCase().trim(), multimedia));
+            }
+          });
     }
   }
 

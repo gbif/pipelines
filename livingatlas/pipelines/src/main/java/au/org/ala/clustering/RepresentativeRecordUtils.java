@@ -33,10 +33,7 @@ public class RepresentativeRecordUtils {
   }
 
   public static HashKeyOccurrence pickRepresentative(Set<HashKeyOccurrence> cluster) {
-    return cluster.stream()
-        .sorted(Comparator.comparing(HashKeyOccurrence::getId))
-        .findFirst()
-        .get();
+    return cluster.stream().min(Comparator.comparing(HashKeyOccurrence::getId)).get();
   }
 
   /**

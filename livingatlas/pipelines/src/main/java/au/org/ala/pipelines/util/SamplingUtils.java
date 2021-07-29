@@ -38,7 +38,7 @@ public class SamplingUtils {
     if (fs.exists(metrics)) {
       return fs.getFileStatus(metrics).getModificationTime();
     } else {
-      return -1l;
+      return -1L;
     }
   }
 

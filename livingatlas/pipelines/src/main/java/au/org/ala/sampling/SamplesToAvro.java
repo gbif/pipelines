@@ -38,7 +38,7 @@ public class SamplesToAvro {
 
   public static void run(SamplingPipelineOptions options) throws Exception {
 
-    Integer counter = 0;
+    int counter = 0;
 
     // get filesystem
     FileSystem fs =

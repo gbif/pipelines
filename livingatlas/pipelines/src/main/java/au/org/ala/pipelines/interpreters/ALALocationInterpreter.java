@@ -107,8 +107,7 @@ public class ALALocationInterpreter {
             // which follows the GBIF implementation of setting DwCTerm country value
             lr.setStateProvince(stateProvince.get().getName());
           } else if (log.isDebugEnabled()) {
-            log.debug(
-                "Current stateProvince SHP file does not contain a state at {}", latlng.toString());
+            log.debug("Current stateProvince SHP file does not contain a state at {}", latlng);
           }
         } else if (log.isDebugEnabled()) {
           log.debug(

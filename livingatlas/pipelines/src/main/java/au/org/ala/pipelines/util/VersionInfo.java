@@ -17,11 +17,11 @@ public class VersionInfo {
   }
 
   public static void print() {
-    try {
+    try (InputStream is = VersionInfo.class.getResourceAsStream("/git.properties");
+        BufferedReader streamReader =
+            new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
       MDC.put("step", "VERSION_INFO");
-      InputStream is = VersionInfo.class.getResourceAsStream("/git.properties");
-      BufferedReader streamReader =
-          new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
+
       JSONParser parser = new JSONParser();
       JSONObject info = (JSONObject) parser.parse(streamReader);
       log.info("Commit URL: https://github.com/gbif/pipelines/commit/" + info.get("git.commit.id"));

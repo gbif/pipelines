@@ -241,7 +241,7 @@ public class GeocodeShpIntersectService {
     String ne =
         simpleShapeFile.intersect(
             longitude + config.getIntersectBuffer(), latitude + config.getIntersectBuffer());
-    return getConsensus(Arrays.asList(new String[] {sw, nw, se, ne}));
+    return getConsensus(Arrays.asList(sw, nw, se, ne));
   }
 
   private String getConsensus(List<String> survey) {

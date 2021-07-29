@@ -224,14 +224,18 @@ public class IndexRecordTransform implements Serializable, IndexFields {
             .getMultiValues()
             .put(
                 RECORDED_BY_ID,
-                br.getRecordedByIds().stream().map(a -> a.getValue()).collect(Collectors.toList()));
+                br.getRecordedByIds().stream()
+                    .map(AgentIdentifier::getValue)
+                    .collect(Collectors.toList()));
       }
       if (br.getIdentifiedByIds() != null && br.getIdentifiedByIds().isEmpty()) {
         indexRecord
             .getMultiValues()
             .put(
                 IDENTIFIED_BY_ID,
-                br.getRecordedByIds().stream().map(a -> a.getValue()).collect(Collectors.toList()));
+                br.getRecordedByIds().stream()
+                    .map(AgentIdentifier::getValue)
+                    .collect(Collectors.toList()));
       }
     }
 
@@ -929,8 +933,6 @@ public class IndexRecordTransform implements Serializable, IndexFields {
                                     builder.getBooleans().put(f.name(), (Boolean) r);
                                     break;
                                   case FLOAT:
-                                    builder.getDoubles().put(f.name(), (Double) r);
-                                    break;
                                   case DOUBLE:
                                     builder.getDoubles().put(f.name(), (Double) r);
                                     break;

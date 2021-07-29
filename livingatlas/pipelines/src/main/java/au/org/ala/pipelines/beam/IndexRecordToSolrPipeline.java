@@ -22,6 +22,7 @@ import org.apache.beam.sdk.extensions.joinlibrary.Join;
 import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.io.solr.SolrIO;
 import org.apache.beam.sdk.transforms.*;
+import org.apache.beam.sdk.transforms.Partition.PartitionFn;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.transforms.join.CoGroupByKey;
 import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
@@ -139,15 +140,12 @@ public class IndexRecordToSolrPipeline {
             recordsWithCoordinatesKeyedLatng.apply(
                 Partition.of(
                     noOfPartitions,
-                    new Partition.PartitionFn<KV<String, IndexRecord>>() {
-                      @Override
-                      public int partitionFor(KV<String, IndexRecord> elem, int numPartitions) {
-                        return (elem.getValue().getInts().get(DwcTerm.month.simpleName()) != null
-                                ? elem.getValue().getInts().get(DwcTerm.month.simpleName())
-                                : 0)
-                            % noOfPartitions;
-                      }
-                    }));
+                    (PartitionFn<KV<String, IndexRecord>>)
+                        (elem, numPartitions) ->
+                            (elem.getValue().getInts().get(DwcTerm.month.simpleName()) != null
+                                    ? elem.getValue().getInts().get(DwcTerm.month.simpleName())
+                                    : 0)
+                                % noOfPartitions));
 
         PCollectionList<KV<String, IndexRecord>> pcl = null;
         for (int i = 0; i < noOfPartitions; i++) {
@@ -160,7 +158,7 @@ public class IndexRecordToSolrPipeline {
           }
         }
 
-        pcs = pcl.apply(Flatten.<KV<String, IndexRecord>>pCollections());
+        pcs = pcl.apply(Flatten.pCollections());
 
       } else {
         pcs = joinSampleRecord(sampleRecords, recordsWithCoordinatesKeyedLatng);
@@ -198,11 +196,9 @@ public class IndexRecordToSolrPipeline {
           new CloudSolrClient.Builder().withZkHost(options.getZkHost()).build();
       SchemaRequest.Fields fields = new SchemaRequest.Fields();
       SchemaResponse.FieldsResponse response = fields.process(client, options.getSolrCollection());
-      final List<String> schemaFields =
-          response.getFields().stream()
-              .map(f -> f.get("name").toString())
-              .collect(Collectors.toList());
-      return schemaFields;
+      return response.getFields().stream()
+          .map(f -> f.get("name").toString())
+          .collect(Collectors.toList());
     } catch (Exception e) {
       throw new RuntimeException("Unable to retrieve schema fields: " + e.getMessage());
     }
@@ -216,11 +212,9 @@ public class IndexRecordToSolrPipeline {
       SchemaRequest.DynamicFields fields = new SchemaRequest.DynamicFields();
       SchemaResponse.DynamicFieldsResponse response =
           fields.process(client, options.getSolrCollection());
-      final List<String> schemaFields =
-          response.getDynamicFields().stream()
-              .map(f -> f.get("name").toString().replace("*", ""))
-              .collect(Collectors.toList());
-      return schemaFields;
+      return response.getDynamicFields().stream()
+          .map(f -> f.get("name").toString().replace("*", ""))
+          .collect(Collectors.toList());
     } catch (Exception e) {
       throw new RuntimeException("Unable to retrieve schema fields: " + e.getMessage());
     }
@@ -344,7 +338,7 @@ public class IndexRecordToSolrPipeline {
 
           Map<String, List<String>> multiValues = indexRecord.getMultiValues();
           if (multiValues == null) {
-            multiValues = new HashMap();
+            multiValues = new HashMap<>();
             indexRecord.setMultiValues(multiValues);
           }
 
@@ -466,8 +460,7 @@ public class IndexRecordToSolrPipeline {
           strings.put(DUPLICATE_STATUS, duplicateStatus);
 
           // add duplicate types
-          List<String> duplicateTypeList = new ArrayList<>();
-          duplicateTypeList.addAll(duplicateType);
+          List<String> duplicateTypeList = new ArrayList<>(duplicateType);
           multiValues.put(DUPLICATE_TYPE, duplicateTypeList);
 
         } else {
@@ -497,13 +490,9 @@ public class IndexRecordToSolrPipeline {
         indexRecordIterable.forEach(
             indexRecord -> {
               Map<String, String> strings =
-                  indexRecord.getStrings() != null
-                      ? indexRecord.getStrings()
-                      : new HashMap<String, String>();
+                  indexRecord.getStrings() != null ? indexRecord.getStrings() : new HashMap<>();
               Map<String, Double> doubles =
-                  indexRecord.getDoubles() != null
-                      ? indexRecord.getDoubles()
-                      : new HashMap<String, Double>();
+                  indexRecord.getDoubles() != null ? indexRecord.getDoubles() : new HashMap<>();
 
               Map<String, String> stringsToPersist =
                   ImmutableMap.<String, String>builder()

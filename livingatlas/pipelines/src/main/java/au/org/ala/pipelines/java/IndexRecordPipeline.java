@@ -13,7 +13,7 @@ import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationResult;
 import au.org.ala.utils.ValidationUtils;
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -68,7 +68,7 @@ public class IndexRecordPipeline {
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
 
-  public static void main(String[] args) throws FileNotFoundException {
+  public static void main(String[] args) throws IOException {
     VersionInfo.print();
     String[] combinedArgs =
         new CombinedYamlConfiguration(args).toArgs("general", "speciesLists", "index");

@@ -130,12 +130,8 @@ public class SamplingPipeline {
                 latLngs, sampledPoints, "NOT_SAMPLED")
             .apply(
                 Filter.by(
-                    new SerializableFunction<KV<String, KV<String, String>>, Boolean>() {
-                      @Override
-                      public Boolean apply(KV<String, KV<String, String>> input) {
-                        return input.getValue().getValue().equals("NOT_SAMPLED");
-                      }
-                    }))
+                    (SerializableFunction<KV<String, KV<String, String>>, Boolean>)
+                        input -> input.getValue().getValue().equals("NOT_SAMPLED")))
             .apply(Keys.create());
 
     String outputPath = PathBuilder.buildDatasetAttemptPath(options, "latlng", false);

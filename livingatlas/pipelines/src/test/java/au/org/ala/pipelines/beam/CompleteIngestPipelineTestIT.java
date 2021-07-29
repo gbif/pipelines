@@ -1,7 +1,6 @@
 package au.org.ala.pipelines.beam;
 
 import static org.junit.Assert.*;
-import static org.junit.Assert.assertEquals;
 
 import au.org.ala.pipelines.options.*;
 import au.org.ala.sampling.LayerCrawler;
@@ -13,7 +12,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import okhttp3.mockwebserver.MockWebServer;
 import org.apache.commons.io.FileUtils;
 import org.apache.solr.common.SolrDocument;
@@ -272,7 +270,7 @@ public class CompleteIngestPipelineTestIT {
               "--inputPath=/tmp/la-pipelines-test/complete-pipeline",
               "--allDatasetsInputPath=/tmp/la-pipelines-test/complete-pipeline/all-datasets",
               "--properties=" + TestUtils.getPipelinesConfigFile(),
-              "--zkHost=" + SolrUtils.getZkHosts().stream().collect(Collectors.joining(",")),
+              "--zkHost=" + String.join(",", SolrUtils.getZkHosts()),
               "--solrCollection=" + SolrUtils.BIOCACHE_TEST_SOLR_COLLECTION,
               "--includeSampling=true",
               "--includeSensitiveData=true",

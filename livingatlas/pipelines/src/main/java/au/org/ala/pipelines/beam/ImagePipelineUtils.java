@@ -18,7 +18,7 @@ public class ImagePipelineUtils {
 
   public static void validateHeaders(List<String> headers, List<String> requiredHeaders) {
     for (String hdr : requiredHeaders) {
-      if (headers.indexOf(hdr.toLowerCase(Locale.ROOT)) < 0) {
+      if (!headers.contains(hdr.toLowerCase(Locale.ROOT))) {
         throw new RuntimeException("Missing header: " + hdr);
       }
     }

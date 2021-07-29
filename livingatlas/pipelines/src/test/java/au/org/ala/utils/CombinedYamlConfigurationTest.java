@@ -21,7 +21,7 @@ public class CombinedYamlConfigurationTest {
   private static CombinedYamlConfiguration testConf;
 
   @BeforeClass
-  public static void loadConf() throws FileNotFoundException {
+  public static void loadConf() throws IOException {
     testConf =
         new CombinedYamlConfiguration(
             "--someArg=1",
@@ -41,7 +41,7 @@ public class CombinedYamlConfigurationTest {
   }
 
   @Test
-  public void getUnknownValueReturnsEmptyList() throws FileNotFoundException {
+  public void getUnknownValueReturnsEmptyList() throws IOException {
     assertThat(
         new CombinedYamlConfiguration("--config=target/test-classes/pipelines.yaml")
             .subSet("general2")
