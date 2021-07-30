@@ -1,10 +1,7 @@
 package org.gbif.pipelines.crawler.balancer.handler;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
@@ -12,10 +9,16 @@ import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.crawler.balancer.BalancerConfiguration;
 import org.gbif.pipelines.crawler.interpret.InterpreterConfiguration;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Populates and sends the {@link PipelinesInterpretedMessage} message, the main method is {@link
@@ -121,6 +124,14 @@ public class InterpretedMessageHandler {
             stepConfig.coreSiteConfig,
             metaPath,
             Metrics.BASIC_RECORDS_COUNT + "Attempted");
+
+    // Fail if fileNumber is null
+    boolean containsAll = message.getInterpretTypes().contains(RecordType.ALL.name());
+    boolean containsBasic = message.getInterpretTypes().contains(RecordType.BASIC.name());
+    if ((containsAll || containsBasic) && (fileNumber == null || Long.parseLong(fileNumber) == 0L)) {
+      throw new IllegalArgumentException(
+          "Basic records must be interpreted, but fileNumber is null or 0, please validate the archive!");
+    }
 
     if (messageNumber == null && (fileNumber == null || fileNumber.isEmpty())) {
       throw new IllegalArgumentException(
