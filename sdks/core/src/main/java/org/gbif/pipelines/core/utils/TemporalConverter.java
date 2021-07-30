@@ -11,9 +11,9 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class TemporalUtils {
+public class TemporalConverter {
 
-  public static Optional<TemporalAccessor> getTemporal(Integer year, Integer month, Integer day) {
+  public static Optional<TemporalAccessor> from(Integer year, Integer month, Integer day) {
     try {
       if (year != null && month != null && day != null) {
         return Optional.of(LocalDate.of(year, month, day));

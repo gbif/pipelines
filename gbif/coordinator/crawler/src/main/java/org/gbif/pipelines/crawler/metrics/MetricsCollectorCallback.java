@@ -2,9 +2,13 @@ package org.gbif.pipelines.crawler.metrics;
 
 import static org.gbif.pipelines.common.utils.PathUtil.buildDwcaInputPath;
 
+import java.io.File;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
 import org.gbif.api.model.pipelines.StepType;
@@ -14,9 +18,11 @@ import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesIndexedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesMetricsCollectedMessage;
+import org.gbif.converters.utils.XmlFilesReader;
+import org.gbif.converters.utils.XmlTermExtractor;
 import org.gbif.dwc.Archive;
 import org.gbif.dwc.terms.Term;
-import org.gbif.pipelines.core.utils.DwcaTermUtils;
+import org.gbif.pipelines.core.utils.DwcaUtils;
 import org.gbif.pipelines.crawler.PipelinesCallback;
 import org.gbif.pipelines.crawler.StepHandler;
 import org.gbif.pipelines.validator.MetricsCollector;
@@ -75,8 +81,10 @@ public class MetricsCollectorCallback extends AbstractMessageCallback<PipelinesI
   public Runnable createRunnable(PipelinesIndexedMessage message) {
     return () -> {
       log.info("Running metrics collector for {}", message.getDatasetUuid());
-      if (message.getEndpointType() == EndpointType.DWC_ARCHIVE) {
-        collectMetricsDwca(message);
+      if (message.getEndpointType() == EndpointType.DWC_ARCHIVE
+          || message.getEndpointType() == EndpointType.BIOCASE_XML_ARCHIVE) {
+        log.info("Collect {} metrics for {}", message.getEndpointType(), message.getDatasetUuid());
+        collectMetrics(message);
       } else {
         log.info("Endpoint type {} is not supported!", message.getEndpointType());
         Validation validation = validationClient.get(message.getDatasetUuid());
@@ -86,11 +94,22 @@ public class MetricsCollectorCallback extends AbstractMessageCallback<PipelinesI
     };
   }
 
-  private void collectMetricsDwca(PipelinesIndexedMessage message) {
+  @SneakyThrows
+  private void collectMetrics(PipelinesIndexedMessage message) {
     Path inputPath = buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid());
-    Archive archive = DwcaTermUtils.fromLocation(inputPath);
-    Set<Term> coreTerms = DwcaTermUtils.getCoreTerms(archive);
-    Map<Extension, Set<Term>> extenstionsTerms = DwcaTermUtils.getExtensionsTerms(archive);
+    Set<Term> coreTerms = Collections.emptySet();
+    Map<Extension, Set<Term>> extenstionsTerms = Collections.emptyMap();
+
+    if (message.getEndpointType() == EndpointType.DWC_ARCHIVE) {
+      Archive archive = DwcaUtils.fromLocation(inputPath);
+      coreTerms = DwcaUtils.getCoreTerms(archive);
+      extenstionsTerms = DwcaUtils.getExtensionsTerms(archive);
+    } else if (message.getEndpointType() == EndpointType.BIOCASE_XML_ARCHIVE) {
+      List<File> files = XmlFilesReader.getInputFiles(inputPath.toFile());
+      XmlTermExtractor extractor = XmlTermExtractor.extract(files);
+      coreTerms = extractor.getCore();
+      extenstionsTerms = extractor.getExtenstionsTerms();
+    }
 
     Metrics metrics =
         MetricsCollector.builder()

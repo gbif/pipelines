@@ -17,7 +17,7 @@ import org.gbif.pipelines.io.avro.Multimedia;
 /** Utility class to serialize and deserialize MediaObject instances from/to JSON. */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class MediaSerDeserUtils {
+public class MediaSerDeser {
 
   abstract static class IgnoreSchemaProperty {
 

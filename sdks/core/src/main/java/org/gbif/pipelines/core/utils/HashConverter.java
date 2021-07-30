@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class HashUtils {
+public class HashConverter {
 
   public static String getSha1(String... strings) {
     return getHash("SHA-1", strings);

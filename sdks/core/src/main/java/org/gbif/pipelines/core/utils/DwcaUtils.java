@@ -16,7 +16,7 @@ import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class DwcaTermUtils {
+public class DwcaUtils {
 
   private static final Map<String, String> EXTENSION_TYPE_MAP = new HashMap<>();
 

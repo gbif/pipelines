@@ -38,7 +38,7 @@ import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.TermFactory;
 import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
-import org.gbif.pipelines.core.utils.TemporalUtils;
+import org.gbif.pipelines.core.utils.TemporalConverter;
 import org.gbif.pipelines.io.avro.AmplificationRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.BlastResult;
@@ -439,7 +439,7 @@ public class GbifJsonConverter {
             Optional.ofNullable(tr.getEventDate().getGte())
                 .map(StringToDateFunctions.getStringToTemporalAccessor());
       } else {
-        tao = TemporalUtils.getTemporal(tr.getYear(), tr.getMonth(), tr.getDay());
+        tao = TemporalConverter.from(tr.getYear(), tr.getMonth(), tr.getDay());
       }
       tao.map(ta -> TemporalAccessorUtils.toEarliestLocalDateTime(ta, true))
           .ifPresent(d -> jc.addJsonTextFieldNoCheck("eventDateSingle", d.toString()));

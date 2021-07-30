@@ -27,7 +27,7 @@ import org.apache.beam.sdk.values.PCollectionTuple;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TupleTagList;
 import org.apache.beam.sdk.values.TypeDescriptor;
-import org.gbif.pipelines.core.utils.HashUtils;
+import org.gbif.pipelines.core.utils.HashConverter;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 
@@ -103,11 +103,11 @@ public class UniqueGbifIdTransform extends PTransform<PCollection<BasicRecord>, 
                     } else {
                       // Found duplicates, compare all duplicate records, maybe they are identical
                       Map<String, BasicRecord> map = new TreeMap<>();
-                      map.put(HashUtils.getSha1(next.getId()), next);
+                      map.put(HashConverter.getSha1(next.getId()), next);
 
                       while (iterator.hasNext()) {
                         BasicRecord br = iterator.next();
-                        map.put(HashUtils.getSha1(br.getId()), br);
+                        map.put(HashConverter.getSha1(br.getId()), br);
                       }
 
                       List<BasicRecord> records = new LinkedList<>(map.values());

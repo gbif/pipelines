@@ -19,7 +19,7 @@ import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
 import org.gbif.common.messaging.api.messages.Platform;
 import org.gbif.dwc.Archive;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
-import org.gbif.pipelines.core.utils.DwcaTermUtils;
+import org.gbif.pipelines.core.utils.DwcaUtils;
 import org.gbif.pipelines.crawler.validator.ArchiveValidatorConfiguration;
 import org.gbif.pipelines.validator.DwcaValidator;
 import org.gbif.validator.api.Metrics;
@@ -102,7 +102,7 @@ public class DwcaArchiveValidator {
   private Metrics validateDwcaFile() {
     log.info("Running DWCA validation for {}", message.getDatasetUuid());
     Path inputPath = buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid());
-    Archive archive = DwcaTermUtils.fromLocation(inputPath);
+    Archive archive = DwcaUtils.fromLocation(inputPath);
 
     DwcaValidationReport report =
         DwcaValidator.builder()

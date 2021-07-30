@@ -14,7 +14,7 @@ import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.values.PCollection;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.core.utils.HashUtils;
+import org.gbif.pipelines.core.utils.HashConverter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.junit.Rule;
 import org.junit.Test;
@@ -179,7 +179,7 @@ public class OccurrenceExtensionTransformTest {
               ExtendedRecord.Builder builder = ExtendedRecord.newBuilder().setCoreTerms(ext);
 
               if (isHashedId) {
-                builder.setId(HashUtils.getSha1(datasetId, array[0]));
+                builder.setId(HashConverter.getSha1(datasetId, array[0]));
               } else {
                 builder.setId(array[0]);
               }

@@ -22,8 +22,8 @@ public class DwcaTermUtilsTest {
     String fileName = getClass().getResource("/dwca/plants_dwca").getFile();
 
     // When
-    Archive archive = DwcaTermUtils.fromLocation(Paths.get(fileName));
-    Set<String> result = DwcaTermUtils.getExtensionAsTerms(archive);
+    Archive archive = DwcaUtils.fromLocation(Paths.get(fileName));
+    Set<String> result = DwcaUtils.getExtensionAsTerms(archive);
 
     // Should
     assertTrue(result.isEmpty());
@@ -35,8 +35,8 @@ public class DwcaTermUtilsTest {
     String fileName = getClass().getResource("/dwca/plants_dwca_ext").getFile();
 
     // When
-    Archive archive = DwcaTermUtils.fromLocation(Paths.get(fileName));
-    Set<String> result = DwcaTermUtils.getExtensionAsTerms(archive);
+    Archive archive = DwcaUtils.fromLocation(Paths.get(fileName));
+    Set<String> result = DwcaUtils.getExtensionAsTerms(archive);
 
     // Should
     assertTrue(result.contains(IDENTIFIER_TABLE.name()));
@@ -48,8 +48,8 @@ public class DwcaTermUtilsTest {
     String fileName = getClass().getResource("/dwca/plants_dwca_ext").getFile();
 
     // When
-    Archive archive = DwcaTermUtils.fromLocation(Paths.get(fileName));
-    Set<Term> result = DwcaTermUtils.getCoreTerms(archive);
+    Archive archive = DwcaUtils.fromLocation(Paths.get(fileName));
+    Set<Term> result = DwcaUtils.getCoreTerms(archive);
 
     // Should
     assertEquals(6, result.size());
@@ -67,8 +67,8 @@ public class DwcaTermUtilsTest {
     String fileName = getClass().getResource("/dwca/plants_dwca_ext").getFile();
 
     // When
-    Archive archive = DwcaTermUtils.fromLocation(Paths.get(fileName));
-    Map<Extension, Set<Term>> result = DwcaTermUtils.getExtensionsTerms(archive);
+    Archive archive = DwcaUtils.fromLocation(Paths.get(fileName));
+    Map<Extension, Set<Term>> result = DwcaUtils.getExtensionsTerms(archive);
 
     // Should
     assertEquals(1, result.size());

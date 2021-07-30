@@ -23,7 +23,7 @@ import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage.Validatio
 import org.gbif.common.messaging.api.messages.Platform;
 import org.gbif.converters.DwcaToAvroConverter;
 import org.gbif.pipelines.common.utils.HdfsUtils;
-import org.gbif.pipelines.core.utils.DwcaTermUtils;
+import org.gbif.pipelines.core.utils.DwcaUtils;
 import org.gbif.pipelines.crawler.PipelinesCallback;
 import org.gbif.pipelines.crawler.StepHandler;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
@@ -138,7 +138,7 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
     Set<String> interpretedTypes = config.interpretTypes;
     try {
       Path inputPath = buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid());
-      interpretedTypes = DwcaTermUtils.getExtensionAsTerms(DwcaTermUtils.fromLocation(inputPath));
+      interpretedTypes = DwcaUtils.getExtensionAsTerms(DwcaUtils.fromLocation(inputPath));
       interpretedTypes.addAll(getAllInterpretationAsString());
       interpretedTypes.remove(null);
     } catch (IllegalStateException ex) {

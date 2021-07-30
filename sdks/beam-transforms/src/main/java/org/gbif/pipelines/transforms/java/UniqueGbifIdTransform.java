@@ -13,7 +13,7 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.gbif.pipelines.core.utils.HashUtils;
+import org.gbif.pipelines.core.utils.HashConverter;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
@@ -88,7 +88,8 @@ public class UniqueGbifIdTransform {
   private void filter(BasicRecord br) {
     BasicRecord record = brMap.get(br.getGbifId().toString());
     if (record != null) {
-      int compare = HashUtils.getSha1(br.getId()).compareTo(HashUtils.getSha1(record.getId()));
+      int compare =
+          HashConverter.getSha1(br.getId()).compareTo(HashConverter.getSha1(record.getId()));
       if (compare < 0) {
         brMap.put(br.getGbifId().toString(), br);
         brInvalidMap.put(record.getId(), record);

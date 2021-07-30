@@ -21,8 +21,8 @@ import org.gbif.dwc.terms.TermFactory;
 import org.gbif.occurrence.common.TermUtils;
 import org.gbif.occurrence.download.hive.HiveColumns;
 import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
-import org.gbif.pipelines.core.utils.MediaSerDeserUtils;
-import org.gbif.pipelines.core.utils.TemporalUtils;
+import org.gbif.pipelines.core.utils.MediaSerDeser;
+import org.gbif.pipelines.core.utils.TemporalConverter;
 import org.gbif.pipelines.io.avro.AgentIdentifier;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.Diagnostic;
@@ -221,7 +221,7 @@ public class OccurrenceHdfsRecordConverter {
           .map(StringToDateFunctions.getStringToDateFn(true))
           .ifPresent(eventDate -> occurrenceHdfsRecord.setEventdate(eventDate.getTime()));
     } else {
-      TemporalUtils.getTemporal(
+      TemporalConverter.from(
               temporalRecord.getYear(), temporalRecord.getMonth(), temporalRecord.getDay())
           .map(StringToDateFunctions.getTemporalToDateFn())
           .ifPresent(eventDate -> occurrenceHdfsRecord.setEventdate(eventDate.getTime()));
@@ -547,7 +547,7 @@ public class OccurrenceHdfsRecordConverter {
             .map(TextNode::asText)
             .collect(Collectors.toList());
     occurrenceHdfsRecord.setExtMultimedia(
-        MediaSerDeserUtils.toJson(multimediaRecord.getMultimediaItems()));
+        MediaSerDeser.toJson(multimediaRecord.getMultimediaItems()));
 
     setCreatedIfGreater(occurrenceHdfsRecord, multimediaRecord.getCreated());
     occurrenceHdfsRecord.setMediatype(mediaTypes);
