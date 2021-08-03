@@ -212,6 +212,16 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
   /** Notifies when the file is submitted. */
   @SneakyThrows
   private void notify(UUID key, FileFormat fileFormat) {
+
+    String stepType;
+    if (fileFormat == FileFormat.DWCA) {
+      stepType = StepType.VALIDATOR_DWCA_TO_VERBATIM.name();
+    } else if (fileFormat == FileFormat.XML) {
+      stepType = StepType.VALIDATOR_XML_TO_VERBATIM.name();
+    } else {
+      throw new IllegalArgumentException("FileFormat is not supported - " + fileFormat);
+    }
+
     PipelinesArchiveValidatorMessage message = new PipelinesArchiveValidatorMessage();
     message.setValidator(true);
     message.setDatasetUuid(key);
@@ -221,7 +231,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
         new HashSet<>(
             Arrays.asList(
                 StepType.VALIDATOR_VALIDATE_ARCHIVE.name(),
-                StepType.VALIDATOR_DWCA_TO_VERBATIM.name(),
+                stepType,
                 StepType.VALIDATOR_VERBATIM_TO_INTERPRETED.name(),
                 StepType.VALIDATOR_INTERPRETED_TO_INDEX.name(),
                 StepType.VALIDATOR_COLLECT_METRICS.name())));

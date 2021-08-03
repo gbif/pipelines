@@ -72,12 +72,17 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
 
   @Override
   public void handleMessage(PipelinesXmlMessage message) {
+    StepType type =
+        message.isValidator() || config.validatorOnly
+            ? StepType.VALIDATOR_XML_TO_VERBATIM
+            : StepType.XML_TO_VERBATIM;
+
     PipelinesCallback.<PipelinesXmlMessage, PipelinesVerbatimMessage>builder()
         .historyClient(historyClient)
         .validationClient(validationClient)
         .config(config)
         .curator(curator)
-        .stepType(StepType.XML_TO_VERBATIM)
+        .stepType(type)
         .isValidator(message.isValidator())
         .publisher(publisher)
         .message(message)
