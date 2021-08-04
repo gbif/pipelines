@@ -17,14 +17,15 @@ import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class PipelinesDwcaMessageHandler {
 
+  private static final ObjectMapper MAPPER = new ObjectMapper();
+
   /** Main handler, basically computes the runner type and sends to the same consumer */
   public static void handle(MessagePublisher publisher, PipelinesBalancerMessage message)
       throws IOException {
 
     log.info("Process PipelinesDwcaMessage - {}", message);
 
-    ObjectMapper mapper = new ObjectMapper();
-    PipelinesDwcaMessage m = mapper.readValue(message.getPayload(), PipelinesDwcaMessage.class);
+    PipelinesDwcaMessage m = MAPPER.readValue(message.getPayload(), PipelinesDwcaMessage.class);
 
     PipelinesDwcaMessage outputMessage =
         new PipelinesDwcaMessage(

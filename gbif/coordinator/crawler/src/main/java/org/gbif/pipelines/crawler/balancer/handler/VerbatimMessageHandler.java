@@ -27,6 +27,8 @@ import org.gbif.pipelines.crawler.dwca.DwcaToAvroConfiguration;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class VerbatimMessageHandler {
 
+  private static final ObjectMapper MAPPER = new ObjectMapper();
+
   /** Main handler, basically computes the runner type and sends to the same consumer */
   public static void handle(
       BalancerConfiguration config, MessagePublisher publisher, PipelinesBalancerMessage message)
@@ -35,9 +37,8 @@ public class VerbatimMessageHandler {
     log.info("Process PipelinesVerbatimMessage - {}", message);
 
     // Populate message fields
-    ObjectMapper mapper = new ObjectMapper();
     PipelinesVerbatimMessage m =
-        mapper.readValue(message.getPayload(), PipelinesVerbatimMessage.class);
+        MAPPER.readValue(message.getPayload(), PipelinesVerbatimMessage.class);
 
     if (m.getAttempt() == null) {
       Integer attempt = getLatestAttempt(config, m);

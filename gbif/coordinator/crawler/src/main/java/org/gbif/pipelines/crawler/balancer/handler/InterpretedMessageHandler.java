@@ -26,6 +26,8 @@ import org.gbif.pipelines.crawler.interpret.InterpreterConfiguration;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class InterpretedMessageHandler {
 
+  private static final ObjectMapper MAPPER = new ObjectMapper();
+
   /** Main handler, basically computes the runner type and sends to the same consumer */
   public static void handle(
       BalancerConfiguration config, MessagePublisher publisher, PipelinesBalancerMessage message)
@@ -34,9 +36,8 @@ public class InterpretedMessageHandler {
     log.info("Process PipelinesInterpretedMessage - {}", message);
 
     // Populate message fields
-    ObjectMapper mapper = new ObjectMapper();
     PipelinesInterpretedMessage m =
-        mapper.readValue(message.getPayload(), PipelinesInterpretedMessage.class);
+        MAPPER.readValue(message.getPayload(), PipelinesInterpretedMessage.class);
 
     long recordsNumber = getRecordNumber(config, m);
 

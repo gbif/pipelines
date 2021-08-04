@@ -17,15 +17,16 @@ import org.gbif.common.messaging.api.messages.PipelinesHdfsViewBuiltMessage;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class PipelinesHdfsViewBuiltMessageHandler {
 
+  private static final ObjectMapper MAPPER = new ObjectMapper();
+
   /** Main handler, basically computes the runner type and sends to the same consumer */
   public static void handle(MessagePublisher publisher, PipelinesBalancerMessage message)
       throws IOException {
 
     log.info("Process PipelinesIndexedMessage - {}", message);
 
-    ObjectMapper mapper = new ObjectMapper();
     PipelinesHdfsViewBuiltMessage m =
-        mapper.readValue(message.getPayload(), PipelinesHdfsViewBuiltMessage.class);
+        MAPPER.readValue(message.getPayload(), PipelinesHdfsViewBuiltMessage.class);
 
     PipelinesHdfsViewBuiltMessage outputMessage =
         new PipelinesHdfsViewBuiltMessage(
