@@ -11,6 +11,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
+import org.gbif.common.messaging.api.messages.PipelinesXmlMessage;
 import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.pipelines.crawler.ServiceFactory;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
@@ -59,10 +60,13 @@ public class XmlToAvroService extends AbstractIdleService {
                 RequestConfig.custom().setConnectTimeout(60_000).setSocketTimeout(60_000).build())
             .build();
 
+    String routingKey =
+        new PipelinesXmlMessage().setValidator(config.validatorOnly).getRoutingKey();
+
     XmlToAvroCallback callback =
         new XmlToAvroCallback(
             config, publisher, curator, historyClient, validationClient, executor, httpClient);
-    listener.listen(c.queueName, c.poolSize, callback);
+    listener.listen(c.queueName, routingKey, c.poolSize, callback);
   }
 
   @Override
