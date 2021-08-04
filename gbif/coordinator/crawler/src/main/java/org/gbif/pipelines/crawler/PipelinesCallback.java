@@ -1,12 +1,5 @@
 package org.gbif.pipelines.crawler;
 
-import static org.gbif.crawler.constants.CrawlerNodePaths.PROCESS_STATE_OCCURRENCE;
-import static org.gbif.crawler.constants.PipelinesNodePaths.getPipelinesInfoPath;
-
-import com.google.common.annotations.VisibleForTesting;
-import io.github.resilience4j.retry.IntervalFunction;
-import io.github.resilience4j.retry.Retry;
-import io.github.resilience4j.retry.RetryConfig;
 import java.io.IOException;
 import java.sql.Date;
 import java.time.Duration;
@@ -17,13 +10,7 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.curator.framework.CuratorFramework;
-import org.codehaus.jackson.map.ObjectMapper;
+
 import org.gbif.api.model.pipelines.PipelineExecution;
 import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.model.pipelines.PipelineStep.MetricInfo;
@@ -51,8 +38,24 @@ import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.Validation.Status;
 import org.gbif.validator.ws.client.ValidationWsClient;
+
+import org.apache.curator.framework.CuratorFramework;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.MDC;
 import org.slf4j.MDC.MDCCloseable;
+
+import com.google.common.annotations.VisibleForTesting;
+import io.github.resilience4j.retry.IntervalFunction;
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryConfig;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.NonNull;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+
+import static org.gbif.crawler.constants.CrawlerNodePaths.PROCESS_STATE_OCCURRENCE;
+import static org.gbif.crawler.constants.PipelinesNodePaths.getPipelinesInfoPath;
 
 /**
  * Common class for building and handling a pipeline step. Contains {@link Builder} to simplify the
@@ -202,7 +205,11 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
         String messagePayload = outgoingMessage.toString();
         publisher.send(new PipelinesBalancerMessage(nextMessageClassName, messagePayload));
 
-        String info = "Next message has been sent - " + outgoingMessage;
+        String info =
+            "Next message has been sent - "
+                + outgoingMessage.getClass().getSimpleName()
+                + ":"
+                + outgoingMessage;
         log.info(info);
 
         String successfulMessagePath = Fn.SUCCESSFUL_MESSAGE.apply(stepType.getLabel());

@@ -1,7 +1,11 @@
 package org.gbif.pipelines.crawler.balancer.handler;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.ALL;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.BASIC;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
+import java.util.Set;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,7 +16,6 @@ import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.crawler.balancer.BalancerConfiguration;
@@ -126,10 +129,11 @@ public class InterpretedMessageHandler {
             Metrics.BASIC_RECORDS_COUNT + "Attempted");
 
     // Fail if fileNumber is null
-    boolean containsAll = message.getInterpretTypes().contains(RecordType.ALL.name());
-    boolean containsBasic = message.getInterpretTypes().contains(RecordType.BASIC.name());
-    if ((containsAll || containsBasic)
-        && (fileNumber == null || Long.parseLong(fileNumber) == 0L)) {
+    Set<String> types = message.getInterpretTypes();
+    boolean isCorrectType = types.contains(ALL.name()) || types.contains(BASIC.name());
+    boolean isNotValidator = !message.isValidator();
+    boolean noFileRecords = fileNumber == null || Long.parseLong(fileNumber) == 0L;
+    if (isCorrectType && isNotValidator && noFileRecords) {
       throw new IllegalArgumentException(
           "Basic records must be interpreted, but fileNumber is null or 0, please validate the archive!");
     }
