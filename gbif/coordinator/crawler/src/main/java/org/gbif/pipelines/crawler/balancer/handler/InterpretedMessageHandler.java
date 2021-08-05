@@ -129,13 +129,14 @@ public class InterpretedMessageHandler {
             Metrics.BASIC_RECORDS_COUNT + "Attempted");
 
     // Fail if fileNumber is null
-    Set<String> types = message.getInterpretTypes();
-    boolean isCorrectType = types.contains(ALL.name()) || types.contains(BASIC.name());
-    boolean isNotValidator = !message.isValidator();
-    boolean noFileRecords = fileNumber == null || Long.parseLong(fileNumber) == 0L;
-    if (isCorrectType && isNotValidator && noFileRecords) {
-      throw new IllegalArgumentException(
-          "Basic records must be interpreted, but fileNumber is null or 0, please validate the archive!");
+    if (!message.isValidator()) {
+      Set<String> types = message.getInterpretTypes();
+      boolean isCorrectType = types.contains(ALL.name()) || types.contains(BASIC.name());
+      boolean noFileRecords = fileNumber == null || Long.parseLong(fileNumber) == 0L;
+      if (isCorrectType && noFileRecords) {
+        throw new IllegalArgumentException(
+            "Basic records must be interpreted, but fileNumber is null or 0, please validate the archive!");
+      }
     }
 
     if (messageNumber == null && (fileNumber == null || fileNumber.isEmpty())) {
