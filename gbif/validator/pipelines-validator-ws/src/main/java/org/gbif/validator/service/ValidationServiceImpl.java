@@ -79,7 +79,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
         .whenCompleteAsync(
             (df, tr) -> {
               if (tr == null) {
-                notify(key, df.getFileFormat());
+                update(key, df, Validation.Status.SUBMITTED);
               } else {
                 log.error(tr.getMessage(), tr);
                 updateFailedValidation(key, "Error during the file submitting");

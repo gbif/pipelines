@@ -74,10 +74,7 @@ public class UploadFileManager {
       }
 
       // from here we can decide to change the content type (e.g. zipped excel file)
-      DataFile dataFile =
-          fromMediaTypeAndFormat(dataFilePath, fileName, detectedMediaType, destinationFolder);
-
-      return dataFile;
+      return fromMediaTypeAndFormat(dataFilePath, fileName, detectedMediaType, destinationFolder);
     } catch (Exception ex) {
       log.warn("Deleting temporary content of {} after IOException.", fileName);
       FileUtils.deleteDirectory(destinationFolder.toFile());

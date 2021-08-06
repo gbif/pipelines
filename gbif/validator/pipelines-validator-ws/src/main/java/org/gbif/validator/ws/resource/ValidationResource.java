@@ -76,7 +76,7 @@ public class ValidationResource {
   @PutMapping(
       path = "/{key}",
       consumes = {MediaType.APPLICATION_JSON_VALUE})
-  public ResponseEntity update(
+  public ResponseEntity<?> update(
       @PathVariable UUID key,
       @RequestBody @Valid @NotNull Validation validation,
       @Autowired Principal principal) {

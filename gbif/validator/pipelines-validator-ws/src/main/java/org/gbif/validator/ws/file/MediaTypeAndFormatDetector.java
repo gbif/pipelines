@@ -16,6 +16,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.apache.tika.Tika;
 import org.gbif.validator.api.FileFormat;
@@ -72,40 +74,29 @@ public class MediaTypeAndFormatDetector {
       if (content.size() == 1) {
         contentType = MediaTypeAndFormatDetector.detectMediaType(content.get(0));
       } else {
-        return Optional.of(new MediaTypeAndFormat(contentType, FileFormat.DWCA));
+        return Optional.of(MediaTypeAndFormat.create(contentType, FileFormat.DWCA));
       }
     }
 
     if (TABULAR_CONTENT_TYPES.contains(contentType)) {
-      return Optional.of(new MediaTypeAndFormat(contentType, FileFormat.TABULAR));
+      return Optional.of(MediaTypeAndFormat.create(contentType, FileFormat.TABULAR));
     }
 
     if (SPREADSHEET_CONTENT_TYPES.contains(contentType)) {
-      return Optional.of(new MediaTypeAndFormat(contentType, FileFormat.SPREADSHEET));
+      return Optional.of(MediaTypeAndFormat.create(contentType, FileFormat.SPREADSHEET));
     }
 
     if (XML_CONTENT_TYPES.contains(contentType)) {
-      return Optional.of(new MediaTypeAndFormat(contentType, FileFormat.XML));
+      return Optional.of(MediaTypeAndFormat.create(contentType, FileFormat.XML));
     }
     return Optional.empty();
   }
 
   /** Simple holder for mediaType and fileFormat */
+  @Getter
+  @AllArgsConstructor(staticName = "create")
   public static class MediaTypeAndFormat {
     private final String mediaType;
     private final FileFormat fileFormat;
-
-    public MediaTypeAndFormat(String mediaType, FileFormat fileFormat) {
-      this.mediaType = mediaType;
-      this.fileFormat = fileFormat;
-    }
-
-    public String getMediaType() {
-      return mediaType;
-    }
-
-    public FileFormat getFileFormat() {
-      return fileFormat;
-    }
   }
 }
