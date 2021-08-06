@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
@@ -63,7 +64,7 @@ public class MediaTypeAndFormatDetector {
    */
   public static Optional<MediaTypeAndFormat> evaluateMediaTypeAndFormat(
       Path dataFilePath, String detectedContentType) throws IOException {
-    Objects.requireNonNull(dataFilePath, "dataFilePath shall be provided");
+    Objects.requireNonNull(dataFilePath, "dataFilePath must be provided");
     String contentType = detectedContentType;
 
     if (COMPRESS_CONTENT_TYPE.contains(detectedContentType)) {
@@ -73,6 +74,8 @@ public class MediaTypeAndFormatDetector {
       }
       if (content.size() == 1) {
         contentType = MediaTypeAndFormatDetector.detectMediaType(content.get(0));
+      } else if (areAllFilesXml(content)) {
+        return Optional.of(MediaTypeAndFormat.create(contentType, FileFormat.XML));
       } else {
         return Optional.of(MediaTypeAndFormat.create(contentType, FileFormat.DWCA));
       }
@@ -90,6 +93,13 @@ public class MediaTypeAndFormatDetector {
       return Optional.of(MediaTypeAndFormat.create(contentType, FileFormat.XML));
     }
     return Optional.empty();
+  }
+
+  private static boolean areAllFilesXml(List<Path> files) {
+    BiFunction<Path, String, Boolean> suffixFn = (p, s) -> p.toFile().toString().endsWith(s);
+    return files.stream()
+        .filter(x -> !suffixFn.apply(x, ".zip"))
+        .allMatch(x -> suffixFn.apply(x, ".xml") || suffixFn.apply(x, ".response"));
   }
 
   /** Simple holder for mediaType and fileFormat */
