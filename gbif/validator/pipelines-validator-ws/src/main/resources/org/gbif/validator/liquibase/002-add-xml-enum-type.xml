@@ -4,8 +4,10 @@
   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
   <changeSet id="2" author="nikolay">
-    <sql>
-      ALTER TYPE enum_validation_file_format ADD VALUE 'XML';
+    <sql splitStatements="false" stripComments="false">
+      <![CDATA[
+        ALTER TYPE enum_validation_file_format ADD VALUE 'XML';
+      ]]>
     </sql>
   </changeSet>
 </databaseChangeLog>
