@@ -57,7 +57,10 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
   public Optional<Validation.Error> reachedMaxRunningValidations(String userName) {
     if (validationMapper.count(userName, Validation.executingStatuses())
         >= maxRunningValidationPerUser) {
-      return Optional.of(Validation.Error.of(Validation.Error.Code.MAX_RUNNING_VALIDATIONS));
+      return Optional.of(
+          Validation.Error.of(
+              Validation.Error.Code.MAX_RUNNING_VALIDATIONS,
+              new Throwable(userName + "has reached the maximum number of executing validations")));
     }
     return Optional.empty();
   }
