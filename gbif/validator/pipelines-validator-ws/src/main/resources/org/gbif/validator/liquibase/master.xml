@@ -5,5 +5,4 @@
   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
   <include file="org/gbif/validator/liquibase/001-initial.xml"/>
-  <include file="org/gbif/validator/liquibase/002-add-xml-enum-type.xml"/>
 </databaseChangeLog>
