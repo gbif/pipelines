@@ -29,6 +29,8 @@ public class UniqueGbifIdTransform {
 
   private final Map<String, BasicRecord> brMap = new ConcurrentHashMap<>();
   private final Map<String, BasicRecord> brInvalidMap = new ConcurrentHashMap<>();
+  // keyed by the ExtendedRecord ID
+  private final Map<String, BasicRecord> erBrMap = new ConcurrentHashMap<>();
 
   @NonNull private Function<ExtendedRecord, Optional<BasicRecord>> basicTransformFn;
 
@@ -81,6 +83,7 @@ public class UniqueGbifIdTransform {
                     brInvalidMap.put(br.getId(), br);
                     log.error("GBIF ID is null, occurrenceId - {}", br.getId());
                   }
+                  erBrMap.put(er.getId(), br);
                 });
   }
 
