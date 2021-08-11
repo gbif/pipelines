@@ -114,7 +114,6 @@ public class DwcaValidator {
   public DwcaValidationReport validate() {
     if (datasetType == DatasetType.OCCURRENCE) {
       return new DwcaValidationReport(datasetKey, validateOccurrenceCore());
-
     } else if (DATASET_TYPE_CORE_ID.containsKey(datasetType)) {
       GenericValidationReport report = validateGenericCore();
 
@@ -258,7 +257,7 @@ public class DwcaValidator {
   /**
    * Creates a triplet string if pieces are found in either the core or the occurrence extension.
    *
-   * @return the triplet string or null if it cant be found
+   * @return the triplet string or null if it can't be found
    */
   private String getTriplet(Record core, Record ext) {
     String institutionCode = valueFromExtOverCore(core, ext, DwcTerm.institutionCode);

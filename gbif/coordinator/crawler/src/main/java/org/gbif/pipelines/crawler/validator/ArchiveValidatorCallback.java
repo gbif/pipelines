@@ -4,6 +4,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.checklistbank.cli.common.NeoConfiguration;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
@@ -13,6 +14,7 @@ import org.gbif.pipelines.crawler.PipelinesCallback;
 import org.gbif.pipelines.crawler.StepHandler;
 import org.gbif.pipelines.crawler.validator.validate.DwcaArchiveValidator;
 import org.gbif.pipelines.crawler.validator.validate.XmlArchiveValidator;
+import org.gbif.pipelines.validator.checklists.ChecklistValidator;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.api.FileFormat;
 import org.gbif.validator.api.Validation;
@@ -31,6 +33,7 @@ public class ArchiveValidatorCallback
   private final PipelinesHistoryClient historyClient;
   private final ValidationWsClient validationClient;
   private final SchemaValidatorFactory schemaValidatorFactory;
+  private final ChecklistValidator checklistValidator;
 
   public ArchiveValidatorCallback(
       ArchiveValidatorConfiguration config,
@@ -45,6 +48,20 @@ public class ArchiveValidatorCallback
     this.historyClient = historyClient;
     this.validationClient = validationClient;
     this.schemaValidatorFactory = schemaValidatorFactory;
+    this.checklistValidator = new ChecklistValidator(toNeoConfiguration(config));
+
+  }
+
+  /**
+   * Creates a NeoConfiguration from the pipeline configuration.
+   */
+  private static NeoConfiguration toNeoConfiguration(ArchiveValidatorConfiguration config) {
+    NeoConfiguration neoConfiguration = new NeoConfiguration();
+    neoConfiguration.mappedMemory = config.neoMappedMemory;
+    neoConfiguration.neoRepository = config.neoRepository;
+    neoConfiguration.port = config.neoPort;
+    neoConfiguration.batchSize = config.neoBatchSize;
+    return neoConfiguration;
   }
 
   @Override
@@ -71,13 +88,14 @@ public class ArchiveValidatorCallback
   @Override
   public Runnable createRunnable(PipelinesArchiveValidatorMessage message) {
     return () -> {
-      log.info("Running validatoin for {}", message.getDatasetUuid());
+      log.info("Running validation for {}", message.getDatasetUuid());
       if (message.getFileFormat().equals(FileFormat.DWCA.name())) {
         DwcaArchiveValidator.builder()
             .validationClient(validationClient)
             .config(config)
             .message(message)
             .schemaValidatorFactory(schemaValidatorFactory)
+            .checklistValidator(checklistValidator)
             .build()
             .validate();
       } else if (message.getFileFormat().equals(FileFormat.XML.name())) {

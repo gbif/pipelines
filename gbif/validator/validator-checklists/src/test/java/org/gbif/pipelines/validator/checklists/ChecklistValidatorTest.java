@@ -5,8 +5,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
-import org.gbif.checklistbank.cli.normalizer.NormalizerConfiguration;
+import org.gbif.checklistbank.cli.common.NeoConfiguration;
+import org.gbif.validator.api.Metrics;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -17,16 +17,16 @@ public class ChecklistValidatorTest {
 
   @Test
   public void testChecklistEvaluator() {
-
-    ChecklistValidator checklistValidator =
-        new ChecklistValidator(new NormalizerConfiguration(), folder);
+    NeoConfiguration neoConfiguration = new NeoConfiguration();
+    neoConfiguration.neoRepository = folder.resolve("neo").toFile();
+    ChecklistValidator checklistValidator = new ChecklistValidator(neoConfiguration);
     try {
-      List<ChecklistValidator.ChecklistValidationResult> result =
+      Metrics.ChecklistValidationReport report =
           checklistValidator.evaluate(
               Paths.get(
                   ClassLoader.getSystemResource("checklists/00000001-c6af-11e2-9b88-00145eb45e9a/")
                       .getFile()));
-      assertEquals(20, result.size());
+      assertEquals(20, report.getResults().size());
     } catch (Exception e) {
       fail(e.getMessage());
     }

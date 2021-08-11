@@ -11,6 +11,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.gbif.api.model.checklistbank.NameUsage;
+import org.gbif.api.model.checklistbank.VerbatimNameUsage;
 import org.gbif.api.model.crawler.GenericValidationReport;
 import org.gbif.api.model.crawler.OccurrenceValidationReport;
 import org.gbif.api.model.pipelines.StepType;
@@ -26,6 +28,7 @@ public class Metrics {
   @Builder.Default private Map<StepType, Status> stepTypes = new HashMap<>();
   @Builder.Default private Core core = Core.builder().build();
   @Builder.Default private List<Extension> extensions = Collections.emptyList();
+  private ChecklistValidationReport checklistValidationReport;
 
   @Builder.Default
   private ArchiveValidationReport archiveValidationReport =
@@ -83,6 +86,22 @@ public class Metrics {
     private OccurrenceValidationReport occurrenceReport;
     private GenericValidationReport genericReport;
     private String invalidationReason;
+  }
+
+  @Data
+  @Builder
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @JsonDeserialize(builder = ChecklistValidationReport.ChecklistValidationReportBuilder.class)
+  public static class ChecklistValidationReport {
+    @Data
+    @Builder
+    public static class ChecklistValidationResult {
+      private final NameUsage nameUsage;
+      private final VerbatimNameUsage verbatimNameUsage;
+    }
+
+    private List<ChecklistValidationResult> results;
   }
 
   @Override

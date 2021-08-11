@@ -18,10 +18,12 @@ import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
 import org.gbif.common.messaging.api.messages.Platform;
 import org.gbif.dwc.Archive;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
 import org.gbif.pipelines.core.utils.DwcaUtils;
 import org.gbif.pipelines.crawler.validator.ArchiveValidatorConfiguration;
 import org.gbif.pipelines.validator.DwcaValidator;
+import org.gbif.pipelines.validator.checklists.ChecklistValidator;
 import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Metrics.ArchiveValidationReport;
 import org.gbif.validator.api.Validation;
@@ -36,6 +38,7 @@ public class DwcaArchiveValidator {
   private final ValidationWsClient validationClient;
   private final SchemaValidatorFactory schemaValidatorFactory;
   private final PipelinesArchiveValidatorMessage message;
+  private final ChecklistValidator checklistValidator;
 
   @SneakyThrows
   public PipelinesDwcaMessage createOutgoingMessage() {
@@ -49,7 +52,7 @@ public class DwcaArchiveValidator {
     m.setPipelineSteps(message.getPipelineSteps());
     m.setValidator(config.validatorOnly);
     m.setExecutionId(message.getExecutionId());
-    m.setDatasetType(DatasetType.OCCURRENCE);
+    m.setDatasetType(getDatasetType());
     m.setEndpointType(EndpointType.DWC_ARCHIVE);
     m.setPlatform(Platform.PIPELINES);
     return m;
@@ -104,23 +107,46 @@ public class DwcaArchiveValidator {
     Path inputPath = buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid());
     Archive archive = DwcaUtils.fromLocation(inputPath);
 
-    DwcaValidationReport report =
-        DwcaValidator.builder()
-            .archive(archive)
-            .datasetKey(message.getDatasetUuid())
-            .datasetType(DatasetType.OCCURRENCE)
-            .maxExampleErrors(config.maxExampleErrors)
-            .maxRecords(config.maxRecords)
-            .build()
-            .validate();
+    DatasetType datasetType = getDatasetType(archive);
 
-    return Metrics.builder()
-        .archiveValidationReport(
-            ArchiveValidationReport.builder()
-                .genericReport(report.getGenericReport())
-                .occurrenceReport(report.getOccurrenceReport())
-                .invalidationReason(report.getInvalidationReason())
-                .build())
-        .build();
+    Metrics.MetricsBuilder metrics = Metrics.builder();
+
+    if (DatasetType.OCCURRENCE == datasetType) {
+
+      DwcaValidationReport report = DwcaValidator.builder()
+        .archive(archive)
+        .datasetKey(message.getDatasetUuid())
+        .datasetType(getDatasetType(archive))
+        .maxExampleErrors(config.maxExampleErrors)
+        .maxRecords(config.maxRecords)
+        .build()
+        .validate();
+
+      metrics.archiveValidationReport(
+        ArchiveValidationReport.builder()
+          .genericReport(report.getGenericReport())
+          .occurrenceReport(report.getOccurrenceReport())
+          .invalidationReason(report.getInvalidationReason())
+          .build());
+    } else if (DatasetType.CHECKLIST == datasetType) {
+      metrics.checklistValidationReport(checklistValidator.evaluate(inputPath));
+    }
+
+    return metrics.build();
+  }
+
+  /**
+   * Gets the dataset type from the Archive parameter.
+   */
+  private static DatasetType getDatasetType(Archive archive) {
+    return DwcTerm.Taxon == archive.getCore().getRowType()? DatasetType.CHECKLIST : DatasetType.OCCURRENCE;
+  }
+
+  /**
+   * Gets the dataset type form the current archive data.
+   */
+  private DatasetType getDatasetType() {
+    Path inputPath = buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid());
+    return getDatasetType(DwcaUtils.fromLocation(inputPath));
   }
 }

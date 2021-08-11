@@ -9,6 +9,8 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.configs.BaseConfiguration;
 import org.gbif.pipelines.common.configs.StepConfiguration;
 
+import java.io.File;
+
 /** Configuration required to validate downloaded archive */
 @ToString
 public class ArchiveValidatorConfiguration implements BaseConfiguration {
@@ -30,6 +32,18 @@ public class ArchiveValidatorConfiguration implements BaseConfiguration {
 
   @Parameter(names = "--validator-only")
   public boolean validatorOnly = false;
+
+  @Parameter(names = "--neo-repository")
+  public File neoRepository = new File("/tmp/neo");
+
+  @Parameter(names = "--neo-batch-size")
+  public int neoBatchSize = 10000;
+
+  @Parameter(names = "--neo-mapped-memory")
+  public int neoMappedMemory = 128;
+
+  @Parameter(names = "--neo-port")
+  public int neoPort = 1337;
 
   @Override
   public String getHdfsSiteConfig() {

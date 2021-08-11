@@ -360,6 +360,11 @@
       </dependency>
       <dependency>
         <groupId>org.gbif.pipelines</groupId>
+        <artifactId>validator-checklists</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.pipelines</groupId>
         <artifactId>eml-validator</artifactId>
         <version>${project.version}</version>
       </dependency>
