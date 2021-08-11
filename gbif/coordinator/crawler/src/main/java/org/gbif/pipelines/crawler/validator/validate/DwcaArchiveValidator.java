@@ -113,21 +113,22 @@ public class DwcaArchiveValidator {
 
     if (DatasetType.OCCURRENCE == datasetType) {
 
-      DwcaValidationReport report = DwcaValidator.builder()
-        .archive(archive)
-        .datasetKey(message.getDatasetUuid())
-        .datasetType(getDatasetType(archive))
-        .maxExampleErrors(config.maxExampleErrors)
-        .maxRecords(config.maxRecords)
-        .build()
-        .validate();
+      DwcaValidationReport report =
+          DwcaValidator.builder()
+              .archive(archive)
+              .datasetKey(message.getDatasetUuid())
+              .datasetType(getDatasetType(archive))
+              .maxExampleErrors(config.maxExampleErrors)
+              .maxRecords(config.maxRecords)
+              .build()
+              .validate();
 
       metrics.archiveValidationReport(
-        ArchiveValidationReport.builder()
-          .genericReport(report.getGenericReport())
-          .occurrenceReport(report.getOccurrenceReport())
-          .invalidationReason(report.getInvalidationReason())
-          .build());
+          ArchiveValidationReport.builder()
+              .genericReport(report.getGenericReport())
+              .occurrenceReport(report.getOccurrenceReport())
+              .invalidationReason(report.getInvalidationReason())
+              .build());
     } else if (DatasetType.CHECKLIST == datasetType) {
       metrics.checklistValidationReport(checklistValidator.evaluate(inputPath));
     }
@@ -135,16 +136,14 @@ public class DwcaArchiveValidator {
     return metrics.build();
   }
 
-  /**
-   * Gets the dataset type from the Archive parameter.
-   */
+  /** Gets the dataset type from the Archive parameter. */
   private static DatasetType getDatasetType(Archive archive) {
-    return DwcTerm.Taxon == archive.getCore().getRowType()? DatasetType.CHECKLIST : DatasetType.OCCURRENCE;
+    return DwcTerm.Taxon == archive.getCore().getRowType()
+        ? DatasetType.CHECKLIST
+        : DatasetType.OCCURRENCE;
   }
 
-  /**
-   * Gets the dataset type form the current archive data.
-   */
+  /** Gets the dataset type form the current archive data. */
   private DatasetType getDatasetType() {
     Path inputPath = buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid());
     return getDatasetType(DwcaUtils.fromLocation(inputPath));

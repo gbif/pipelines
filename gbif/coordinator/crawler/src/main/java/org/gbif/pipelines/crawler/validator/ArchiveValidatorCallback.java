@@ -49,12 +49,9 @@ public class ArchiveValidatorCallback
     this.validationClient = validationClient;
     this.schemaValidatorFactory = schemaValidatorFactory;
     this.checklistValidator = new ChecklistValidator(toNeoConfiguration(config));
-
   }
 
-  /**
-   * Creates a NeoConfiguration from the pipeline configuration.
-   */
+  /** Creates a NeoConfiguration from the pipeline configuration. */
   private static NeoConfiguration toNeoConfiguration(ArchiveValidatorConfiguration config) {
     NeoConfiguration neoConfiguration = new NeoConfiguration();
     neoConfiguration.mappedMemory = config.neoMappedMemory;

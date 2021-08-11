@@ -2,14 +2,13 @@ package org.gbif.pipelines.crawler.validator;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParametersDelegate;
+import java.io.File;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.ToString;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.configs.BaseConfiguration;
 import org.gbif.pipelines.common.configs.StepConfiguration;
-
-import java.io.File;
 
 /** Configuration required to validate downloaded archive */
 @ToString
