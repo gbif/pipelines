@@ -52,7 +52,7 @@ public class DwcaArchiveValidator {
     m.setPipelineSteps(message.getPipelineSteps());
     m.setValidator(config.validatorOnly);
     m.setExecutionId(message.getExecutionId());
-    m.setDatasetType(getDatasetType());
+    getDatasetType().ifPresent(m::setDatasetType);
     m.setEndpointType(EndpointType.DWC_ARCHIVE);
     m.setPlatform(Platform.PIPELINES);
     return m;
@@ -144,8 +144,12 @@ public class DwcaArchiveValidator {
   }
 
   /** Gets the dataset type form the current archive data. */
-  private DatasetType getDatasetType() {
-    Path inputPath = buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid());
-    return getDatasetType(DwcaUtils.fromLocation(inputPath));
+  private Optional<DatasetType> getDatasetType() {
+    try {
+      Path inputPath = buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid());
+      return Optional.of(getDatasetType(DwcaUtils.fromLocation(inputPath)));
+    } catch (Exception ex) {
+      return Optional.empty();
+    }
   }
 }
