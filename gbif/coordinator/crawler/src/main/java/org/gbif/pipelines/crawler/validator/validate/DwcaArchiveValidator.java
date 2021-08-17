@@ -12,9 +12,12 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.crawler.DwcaValidationReport;
 import org.gbif.api.model.crawler.OccurrenceValidationReport;
+import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.EndpointType;
+import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
+import org.gbif.common.messaging.api.messages.PipelinesChecklistValidatorMessage;
 import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
 import org.gbif.common.messaging.api.messages.Platform;
 import org.gbif.dwc.Archive;
@@ -23,7 +26,6 @@ import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
 import org.gbif.pipelines.core.utils.DwcaUtils;
 import org.gbif.pipelines.crawler.validator.ArchiveValidatorConfiguration;
 import org.gbif.pipelines.validator.DwcaValidator;
-import org.gbif.pipelines.validator.checklists.ChecklistValidator;
 import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Metrics.ArchiveValidationReport;
 import org.gbif.validator.api.Validation;
@@ -38,7 +40,7 @@ public class DwcaArchiveValidator {
   private final ValidationWsClient validationClient;
   private final SchemaValidatorFactory schemaValidatorFactory;
   private final PipelinesArchiveValidatorMessage message;
-  private final ChecklistValidator checklistValidator;
+  private final MessagePublisher publisher;
 
   @SneakyThrows
   public PipelinesDwcaMessage createOutgoingMessage() {
@@ -130,10 +132,23 @@ public class DwcaArchiveValidator {
               .invalidationReason(report.getInvalidationReason())
               .build());
     } else if (DatasetType.CHECKLIST == datasetType) {
-      metrics.checklistValidationReport(checklistValidator.evaluate(inputPath));
+      sendChecklistValidatorMessage();
     }
 
     return metrics.build();
+  }
+
+  @SneakyThrows
+  private void sendChecklistValidatorMessage() {
+    StepType.
+    PipelinesChecklistValidatorMessage checklistValidatorMessage =
+        new PipelinesChecklistValidatorMessage(
+            message.getDatasetUuid(),
+            message.getAttempt(),
+            message.getPipelineSteps(),
+            message.getExecutionId(),
+            message.getFileFormat());
+    publisher.send(checklistValidatorMessage);
   }
 
   /** Gets the dataset type from the Archive parameter. */

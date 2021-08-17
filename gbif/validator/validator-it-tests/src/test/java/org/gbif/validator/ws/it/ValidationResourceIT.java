@@ -12,9 +12,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import lombok.SneakyThrows;
+import org.gbif.api.model.checklistbank.NameUsage;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.crawler.OccurrenceValidationReport;
+import org.gbif.api.vocabulary.NameUsageIssue;
 import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.XmlSchemaValidatorResult;
@@ -143,6 +145,10 @@ public class ValidationResourceIT {
 
     validation.setStatus(Validation.Status.FINISHED);
 
+    NameUsage nameUsage = new NameUsage();
+    nameUsage.setScientificName("Wild dog");
+    nameUsage.setIssues(Collections.singleton(NameUsageIssue.ACCEPTED_NAME_MISSING));
+
     Metrics metrics =
         Metrics.builder()
             .core(Metrics.Core.builder().indexedCount(100L).build())
@@ -159,6 +165,14 @@ public class ValidationResourceIT {
                     .build())
             .xmlSchemaValidatorResult(
                 XmlSchemaValidatorResult.builder().errors(Collections.emptyList()).build())
+            .checklistValidationReport(
+                Metrics.ChecklistValidationReport.builder()
+                    .results(
+                        Collections.singletonList(
+                            Metrics.ChecklistValidationReport.ChecklistValidationResult.builder()
+                                .nameUsage(nameUsage)
+                                .build()))
+                    .build())
             .build();
     validation.setMetrics(metrics);
     validationWsClient.update(validation);

@@ -2,7 +2,6 @@ package org.gbif.pipelines.crawler.validator;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParametersDelegate;
-import java.io.File;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.ToString;
@@ -31,18 +30,6 @@ public class ArchiveValidatorConfiguration implements BaseConfiguration {
 
   @Parameter(names = "--validator-only")
   public boolean validatorOnly = false;
-
-  @Parameter(names = "--neo-repository")
-  public File neoRepository = new File("/tmp/neo");
-
-  @Parameter(names = "--neo-batch-size")
-  public int neoBatchSize = 10000;
-
-  @Parameter(names = "--neo-mapped-memory")
-  public int neoMappedMemory = 128;
-
-  @Parameter(names = "--neo-port")
-  public int neoPort = 1337;
 
   @Override
   public String getHdfsSiteConfig() {

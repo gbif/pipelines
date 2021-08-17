@@ -94,11 +94,15 @@ public class Metrics {
   @AllArgsConstructor
   @JsonDeserialize(builder = ChecklistValidationReport.ChecklistValidationReportBuilder.class)
   public static class ChecklistValidationReport {
+
     @Data
     @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @JsonDeserialize(builder = ChecklistValidationResult.ChecklistValidationResultBuilder.class)
     public static class ChecklistValidationResult {
-      private final NameUsage nameUsage;
-      private final VerbatimNameUsage verbatimNameUsage;
+      private NameUsage nameUsage;
+      private VerbatimNameUsage verbatimNameUsage;
     }
 
     private List<ChecklistValidationResult> results;
