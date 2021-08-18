@@ -69,7 +69,7 @@ public class ChecklistValidatorCallback
   private void validateArchive(Validation validation) {
     try {
       LOG.info("Validating checklist archive: {}", validation.getKey());
-      Metrics.ChecklistValidationReport report = checklistValidator.evaluate(buildDwcaInputPath(config.archiveRepository, validation.getKey()))
+      Metrics.ChecklistValidationReport report = checklistValidator.evaluate(buildDwcaInputPath(config.archiveRepository, validation.getKey()));
       updateValidationFinished(validation, report);
     } catch (Exception ex) {
       LOG.error("Error validating checklist", ex);
