@@ -12,7 +12,6 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.crawler.DwcaValidationReport;
 import org.gbif.api.model.crawler.OccurrenceValidationReport;
-import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.MessagePublisher;
@@ -140,7 +139,6 @@ public class DwcaArchiveValidator {
 
   @SneakyThrows
   private void sendChecklistValidatorMessage() {
-    StepType.
     PipelinesChecklistValidatorMessage checklistValidatorMessage =
         new PipelinesChecklistValidatorMessage(
             message.getDatasetUuid(),
