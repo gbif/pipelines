@@ -5,9 +5,6 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.checklistbank.cli.common.NeoConfiguration;
 import org.gbif.common.messaging.AbstractMessageCallback;
@@ -17,6 +14,8 @@ import org.gbif.pipelines.validator.checklists.cli.config.ChecklistValidatorConf
 import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.ws.client.ValidationWsClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Callback which is called when the {@link PipelinesChecklistValidatorMessage} is received. */
 @Slf4j
@@ -61,15 +60,17 @@ public class ChecklistValidatorCallback
     if (validation != null) {
       validateArchive(validation);
     } else {
-      LOG.error("Checklist validation started: {}",  message);
+      LOG.error("Checklist validation started: {}", message);
     }
   }
 
-  /** Performs the validation and update of validation data.*/
+  /** Performs the validation and update of validation data. */
   private void validateArchive(Validation validation) {
     try {
       LOG.info("Validating checklist archive: {}", validation.getKey());
-      Metrics.ChecklistValidationReport report = checklistValidator.evaluate(buildDwcaInputPath(config.archiveRepository, validation.getKey()));
+      Metrics.ChecklistValidationReport report =
+          checklistValidator.evaluate(
+              buildDwcaInputPath(config.archiveRepository, validation.getKey()));
       updateValidationFinished(validation, report);
     } catch (Exception ex) {
       LOG.error("Error validating checklist", ex);
@@ -77,16 +78,21 @@ public class ChecklistValidatorCallback
     }
   }
 
-  /** Updates the data of a failed validation*/
+  /** Updates the data of a failed validation */
   private void updateFailedValidation(Validation validation) {
     validation.setStatus(Validation.Status.FAILED);
     validationClient.update(validation);
   }
 
-  /** Updates the data of a successful validation*/
-  private void updateValidationFinished(Validation validation, Metrics.ChecklistValidationReport checklistValidationReport) {
+  /** Updates the data of a successful validation */
+  private void updateValidationFinished(
+      Validation validation, Metrics.ChecklistValidationReport checklistValidationReport) {
     validation.getMetrics().setChecklistValidationReport(checklistValidationReport);
-    validation.getMetrics().setStepTypes(Collections.singletonMap(StepType.VALIDATOR_VALIDATE_ARCHIVE, Validation.Status.FINISHED));
+    validation
+        .getMetrics()
+        .setStepTypes(
+            Collections.singletonMap(
+                StepType.VALIDATOR_VALIDATE_ARCHIVE, Validation.Status.FINISHED));
     validation.setStatus(Validation.Status.FINISHED);
     validationClient.update(validation);
     LOG.info("Checklist validation finished: {}", validation.getKey());
