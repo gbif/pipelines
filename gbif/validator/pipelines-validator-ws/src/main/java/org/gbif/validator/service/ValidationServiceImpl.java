@@ -191,7 +191,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
     if (status == Status.SUBMITTED) {
       notify(key, dataFile.getFileFormat());
     }
-    if (validation.succeeded()) {
+    if (validation.hasFinished()) {
       emailService.sendEmailNotification(validation);
     }
     return validation;
