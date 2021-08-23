@@ -26,7 +26,7 @@ public class Validation {
       EnumSet.of(Status.SUBMITTED, Status.DOWNLOADING, Status.RUNNING);
 
   private static final EnumSet<Status> FINISHED_STATUSES =
-      EnumSet.of(Status.FINISHED ,Status.FAILED, Status.ABORTED);
+      EnumSet.of(Status.FINISHED, Status.FAILED, Status.ABORTED);
 
   public enum Status {
     DOWNLOADING,
