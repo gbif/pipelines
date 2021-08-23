@@ -369,7 +369,7 @@ public class VerbatimToInterpretedPipeline {
           er -> {
             BasicRecord brInvalid = gbifIdTransform.getBrInvalidMap().get(er.getId());
             if (brInvalid == null) {
-              BasicRecord br = gbifIdTransform.getBrMap().get(er.getId());
+              BasicRecord br = gbifIdTransform.getErBrMap().get(er.getId());
 
               if (verbatimTransform.checkType(types)) {
                 verbatimWriter.append(er);

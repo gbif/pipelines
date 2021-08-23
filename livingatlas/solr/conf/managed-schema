@@ -704,6 +704,7 @@
   <copyField source="recordedBy" dest="text"/>
   <copyField source="identifiedBy" dest="text_identifiedBy"/>
   <copyField source="recordedBy" dest="text_recordedBy"/>
+  <copyField source="raw_recordedBy" dest="text_recordedBy"/>
   <copyField source="scientificName" dest="matched_name"/>
   <copyField source="scientificName" dest="text"/>
   <copyField source="species" dest="text"/>
