@@ -191,9 +191,6 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
     if (status == Status.SUBMITTED) {
       notify(key, dataFile.getFileFormat());
     }
-    if (validation.hasFinished()) {
-      emailService.sendEmailNotification(validation);
-    }
     return validation;
   }
 
@@ -202,13 +199,15 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
     Validation validation =
         newValidationInstance(key, Validation.Status.FAILED, metricsFromError(errorMessage));
     validation = updateAndGet(validation);
-    emailService.sendEmailNotification(validation);
     return validation;
   }
 
   /** Updates and gets the updated validation */
   private Validation updateAndGet(Validation validation) {
     validationMapper.update(validation);
+    if (validation.hasFinished()) {
+      emailService.sendEmailNotification(validation);
+    }
     return validationMapper.get(validation.getKey());
   }
 
