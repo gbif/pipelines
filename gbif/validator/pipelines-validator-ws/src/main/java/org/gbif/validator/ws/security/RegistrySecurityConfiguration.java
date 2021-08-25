@@ -4,6 +4,8 @@ import com.zaxxer.hikari.HikariDataSource;
 import java.net.URI;
 import java.util.UUID;
 import lombok.SneakyThrows;
+
+import org.gbif.api.model.common.DOI;
 import org.gbif.mybatis.type.UriTypeHandler;
 import org.gbif.mybatis.type.UuidTypeHandler;
 import org.gbif.registry.identity.service.BasicUserSuretyDelegate;
@@ -11,16 +13,24 @@ import org.gbif.registry.identity.service.UserSuretyDelegate;
 import org.gbif.registry.identity.util.RegistryPasswordEncoder;
 import org.gbif.registry.persistence.mapper.CommentMapper;
 import org.gbif.registry.persistence.mapper.ContactMapper;
+import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.EndpointMapper;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
+import org.gbif.registry.persistence.mapper.InstallationMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.UserMapper;
+import org.gbif.registry.persistence.mapper.handler.DOITypeHandler;
 import org.gbif.registry.persistence.mapper.surety.ChallengeCodeMapper;
+import org.gbif.registry.security.LegacyAuthorizationFilter;
+import org.gbif.registry.security.LegacyAuthorizationService;
+import org.gbif.registry.security.LegacyAuthorizationServiceImpl;
 import org.gbif.registry.security.RegistryUserDetailsService;
 import org.gbif.registry.surety.ChallengeCodeManager;
 import org.gbif.ws.security.NoAuthWebSecurityConfigurer;
+import org.gbif.ws.server.filter.IdentityFilter;
+
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.mapper.MapperFactoryBean;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -29,6 +39,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -64,6 +75,7 @@ public class RegistrySecurityConfiguration {
         new org.apache.ibatis.session.Configuration();
     configuration.getTypeHandlerRegistry().register(UUID.class, UuidTypeHandler.class);
     configuration.getTypeHandlerRegistry().register(URI.class, UriTypeHandler.class);
+    configuration.getTypeHandlerRegistry().register(DOI.class, DOITypeHandler.class);
     configuration.getTypeHandlerRegistry().register("org.gbif.registry.persistence.handler");
     configuration.setMapUnderscoreToCamelCase(true);
     sqlSession.setConfiguration(configuration);
@@ -133,6 +145,18 @@ public class RegistrySecurityConfiguration {
   }
 
   @Bean
+  public MapperFactoryBean<DatasetMapper> datasetMapper(
+    @Qualifier("registrySqlSessionFactory") SqlSessionFactoryBean sqlSessionFactoryBean) {
+    return registerMapper(sqlSessionFactoryBean, DatasetMapper.class);
+  }
+
+  @Bean
+  public MapperFactoryBean<InstallationMapper> installationMapper(
+    @Qualifier("registrySqlSessionFactory") SqlSessionFactoryBean sqlSessionFactoryBean) {
+    return registerMapper(sqlSessionFactoryBean, InstallationMapper.class);
+  }
+
+  @Bean
   public UserDetailsService userDetailsService(UserMapper userMapper) {
     return new RegistryUserDetailsService(userMapper);
   }
@@ -147,14 +171,35 @@ public class RegistrySecurityConfiguration {
     return new BasicUserSuretyDelegate(challengeCodeManager);
   }
 
+  @Bean
+  public LegacyAuthorizationService legacyAuthorizationService(OrganizationMapper organizationMapper, DatasetMapper datasetMapper, InstallationMapper installationMapper) {
+    return new LegacyAuthorizationServiceImpl(organizationMapper, datasetMapper, installationMapper);
+  }
+
+  @Bean
+  public LegacyAuthorizationFilter legacyAuthorizationFilter(LegacyAuthorizationService legacyAuthorizationService) {
+    return new LegacyAuthorizationFilter(legacyAuthorizationService);
+  }
+
   @Configuration
   public static class ValidatorWebSecurity extends NoAuthWebSecurityConfigurer {
 
+    private final LegacyAuthorizationFilter legacyAuthorizationFilter;
+
+    @SneakyThrows
     public ValidatorWebSecurity(
         UserDetailsService userDetailsService,
         ApplicationContext context,
-        PasswordEncoder passwordEncoder) {
+        PasswordEncoder passwordEncoder,
+        LegacyAuthorizationFilter legacyAuthorizationFilter) {
       super(userDetailsService, context, passwordEncoder);
+      this.legacyAuthorizationFilter = legacyAuthorizationFilter;
+    }
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+      super.configure(http);
+      http.addFilterAfter(legacyAuthorizationFilter, IdentityFilter.class);
     }
   }
 }
