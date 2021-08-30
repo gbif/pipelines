@@ -55,7 +55,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
   /** Asserts the user has not reached the maximum number of executing validations. */
   @Override
   public Optional<Validation.Error> reachedMaxRunningValidations(String userName) {
-    if (validationMapper.count(userName, Validation.executingStatuses())
+    if (validationMapper.count(userName, Validation.executingStatuses(), null, null)
         >= maxRunningValidationPerUser) {
       return Optional.of(
           Validation.Error.of(
@@ -161,14 +161,18 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
   /** Paged result of validations of a an user. */
   @Override
   public PagingResponse<Validation> list(
-      Pageable page, Set<Validation.Status> status, Principal principal) {
+      Pageable page,
+      Set<Validation.Status> status,
+      UUID installationKey,
+      String sourceId,
+      Principal principal) {
     page = page == null ? new PagingRequest() : page;
-    long total = validationMapper.count(principal.getName(), status);
+    long total = validationMapper.count(principal.getName(), status, installationKey, sourceId);
     return new PagingResponse<>(
         page.getOffset(),
         page.getLimit(),
         total,
-        validationMapper.list(page, principal.getName(), status));
+        validationMapper.list(page, principal.getName(), status, installationKey, sourceId));
   }
 
   /** Can the authenticated user update the validation object. */

@@ -29,5 +29,9 @@ public interface ValidationService<MF> {
   Either<Validation.Error, Validation> cancel(UUID key, Principal principal);
 
   PagingResponse<Validation> list(
-      Pageable page, Set<Validation.Status> status, Principal principal);
+      Pageable page,
+      Set<Validation.Status> status,
+      UUID installationKey,
+      String sourceId,
+      Principal principal);
 }

@@ -4,7 +4,6 @@ import com.zaxxer.hikari.HikariDataSource;
 import java.net.URI;
 import java.util.UUID;
 import lombok.SneakyThrows;
-
 import org.gbif.api.model.common.DOI;
 import org.gbif.mybatis.type.UriTypeHandler;
 import org.gbif.mybatis.type.UuidTypeHandler;
@@ -30,7 +29,6 @@ import org.gbif.registry.security.RegistryUserDetailsService;
 import org.gbif.registry.surety.ChallengeCodeManager;
 import org.gbif.ws.security.NoAuthWebSecurityConfigurer;
 import org.gbif.ws.server.filter.IdentityFilter;
-
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.mapper.MapperFactoryBean;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -146,13 +144,13 @@ public class RegistrySecurityConfiguration {
 
   @Bean
   public MapperFactoryBean<DatasetMapper> datasetMapper(
-    @Qualifier("registrySqlSessionFactory") SqlSessionFactoryBean sqlSessionFactoryBean) {
+      @Qualifier("registrySqlSessionFactory") SqlSessionFactoryBean sqlSessionFactoryBean) {
     return registerMapper(sqlSessionFactoryBean, DatasetMapper.class);
   }
 
   @Bean
   public MapperFactoryBean<InstallationMapper> installationMapper(
-    @Qualifier("registrySqlSessionFactory") SqlSessionFactoryBean sqlSessionFactoryBean) {
+      @Qualifier("registrySqlSessionFactory") SqlSessionFactoryBean sqlSessionFactoryBean) {
     return registerMapper(sqlSessionFactoryBean, InstallationMapper.class);
   }
 
@@ -172,12 +170,23 @@ public class RegistrySecurityConfiguration {
   }
 
   @Bean
-  public LegacyAuthorizationService legacyAuthorizationService(OrganizationMapper organizationMapper, DatasetMapper datasetMapper, InstallationMapper installationMapper) {
-    return new LegacyAuthorizationServiceImpl(organizationMapper, datasetMapper, installationMapper);
+  public ValidateInstallationService validateInstallationService(
+      InstallationMapper installationMapper) {
+    return new ValidateInstallationServiceImpl(installationMapper);
   }
 
   @Bean
-  public LegacyAuthorizationFilter legacyAuthorizationFilter(LegacyAuthorizationService legacyAuthorizationService) {
+  public LegacyAuthorizationService legacyAuthorizationService(
+      OrganizationMapper organizationMapper,
+      DatasetMapper datasetMapper,
+      InstallationMapper installationMapper) {
+    return new LegacyAuthorizationServiceImpl(
+        organizationMapper, datasetMapper, installationMapper);
+  }
+
+  @Bean
+  public LegacyAuthorizationFilter legacyAuthorizationFilter(
+      LegacyAuthorizationService legacyAuthorizationService) {
     return new LegacyAuthorizationFilter(legacyAuthorizationService);
   }
 

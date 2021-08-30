@@ -37,14 +37,37 @@ public class Validation {
     FAILED
   }
 
+  /** Validation key/identifier. */
   private UUID key;
+
+  /** Identifier at the source. */
+  private String sourceId;
+
+  /** GBIF Installation from where the validation started. */
+  private UUID installationKey;
+
+  /** Timestamp when the validation was created. */
   private Date created;
+
+  /** Last modified timestamp. */
   private Date modified;
+
+  /** User that triggered or owns the validation. */
   private String username;
+
+  /** File name to be validated. */
   private String file;
+
+  /** File size in bytes. */
   private Long fileSize;
+
+  /** Detected file format. */
   private FileFormat fileFormat;
+
+  /** Validation status. */
   private Status status;
+
+  /** Validation result. */
   private Metrics metrics;
 
   public static Set<Status> executingStatuses() {

@@ -50,7 +50,9 @@ public interface ValidationMapper {
   List<Validation> list(
       @Nullable @Param("page") Pageable page,
       @Nullable @Param("username") String username,
-      @Nullable @Param("statuses") Set<Validation.Status> statuses);
+      @Nullable @Param("statuses") Set<Validation.Status> statuses,
+      @Nullable @Param("installationKey") UUID installationKey,
+      @Nullable @Param("sourceId") String sourceId);
 
   /**
    * Counts the number of validations of a optional user parameter.
@@ -61,5 +63,7 @@ public interface ValidationMapper {
    */
   int count(
       @Nullable @Param("username") String username,
-      @Nullable @Param("statuses") Set<Validation.Status> statuses);
+      @Nullable @Param("statuses") Set<Validation.Status> statuses,
+      @Nullable @Param("installationKey") UUID installationKey,
+      @Nullable @Param("sourceId") String sourceId);
 }

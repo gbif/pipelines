@@ -2,6 +2,8 @@ package org.gbif.validator.ws.it;
 
 import com.zaxxer.hikari.HikariDataSource;
 import java.util.Collections;
+import java.util.UUID;
+import javax.servlet.http.HttpServletRequest;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.common.messaging.api.MessagePublisher;
@@ -23,6 +25,7 @@ import org.gbif.validator.ws.config.ValidatorWsConfiguration;
 import org.gbif.validator.ws.config.WebMvcConfiguration;
 import org.gbif.validator.ws.file.DownloadFileManager;
 import org.gbif.validator.ws.security.RegistrySecurityConfiguration;
+import org.gbif.validator.ws.security.ValidateInstallationService;
 import org.gbif.ws.security.NoAuthWebSecurityConfigurer;
 import org.mockito.Mockito;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -155,6 +158,16 @@ public class ValidatorWsItConfiguration extends ValidatorWsConfiguration {
   @ConditionalOnProperty(name = "testdb", havingValue = "true")
   public HikariDataSource dataSource(DataSourceProperties dataSourceProperties) {
     return dataSourceProperties.initializeDataSourceBuilder().type(HikariDataSource.class).build();
+  }
+
+  /** Mock validation service. */
+  @Bean
+  public ValidateInstallationService validateInstallationService() {
+    return new ValidateInstallationService() {
+      @Override
+      public void validateInstallationAccess(
+          UUID installationKey, HttpServletRequest httpRequest) {}
+    };
   }
 
   /** Empty config class to include the config made by WebMvcConfig. */
