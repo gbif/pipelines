@@ -26,6 +26,21 @@ public interface ValidationWsClient {
   @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
   Validation submitFile(@RequestPart("file") File file);
 
+  /** Uploads a file and starts the validation process. */
+  @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+  Validation submitFile(
+      @RequestPart("file") File file,
+      @RequestParam(value = "sourceId", required = false) String sourceId,
+      @RequestParam(value ="installationKey", required = false) UUID installationKey);
+
+  @PostMapping(
+      path = "/url",
+      consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+  Validation submitUrl(
+      @RequestPart("fileUrl") String fileUrl,
+      @RequestParam(value ="sourceId", required = false) String sourceId,
+      @RequestParam(value ="installationKey", required = false) UUID installationKey);
+
   @PostMapping(
       path = "/url",
       consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})

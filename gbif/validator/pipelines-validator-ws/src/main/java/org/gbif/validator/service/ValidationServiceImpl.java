@@ -67,7 +67,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
 
   @Override
   public Either<Validation.Error, Validation> validateFile(
-      MultipartFile file, Principal principal) {
+      MultipartFile file, Principal principal, String sourceId, UUID installationKey) {
     Optional<Validation.Error> error = reachedMaxRunningValidations(principal.getName());
     if (error.isPresent()) {
       return Either.left(error.get());
@@ -86,12 +86,18 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
               }
             });
     return Either.right(
-        create(key, task.getStart(), principal.getName(), Validation.Status.SUBMITTED));
+        create(
+            key,
+            task.getStart(),
+            principal.getName(),
+            Validation.Status.SUBMITTED,
+            sourceId,
+            installationKey));
   }
 
   @Override
   public Either<Validation.Error, Validation> validateFileFromUrl(
-      String fileURL, Principal principal) {
+      String fileURL, Principal principal, String sourceId, UUID installationKey) {
     try {
       Optional<Validation.Error> error = reachedMaxRunningValidations(principal.getName());
       if (error.isPresent()) {
@@ -114,7 +120,9 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
               key,
               downloadResult.getDataFile(),
               principal.getName(),
-              Validation.Status.DOWNLOADING));
+              Validation.Status.DOWNLOADING,
+              sourceId,
+              installationKey));
     } catch (FileSizeException ex) {
       log.error("File limit error", ex);
       return Either.left(Validation.Error.of(Validation.Error.Code.MAX_FILE_SIZE_VIOLATION, ex));
@@ -184,8 +192,14 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
 
   /** Persists an validation entity. */
   private Validation create(
-      UUID key, DataFile dataFile, String userName, Validation.Status status) {
-    validationMapper.create(newValidationInstance(key, dataFile, userName, status));
+      UUID key,
+      DataFile dataFile,
+      String userName,
+      Validation.Status status,
+      String sourceId,
+      UUID installationKey) {
+    validationMapper.create(
+        newValidationInstance(key, dataFile, userName, status, sourceId, installationKey));
     return validationMapper.get(key);
   }
 

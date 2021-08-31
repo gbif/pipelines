@@ -18,9 +18,11 @@ public interface ValidationService<MF> {
 
   Optional<Validation.Error> reachedMaxRunningValidations(String userName);
 
-  Either<Validation.Error, Validation> validateFile(MF file, Principal principal);
+  Either<Validation.Error, Validation> validateFile(
+      MF file, Principal principal, String sourceId, UUID installationKey);
 
-  Either<Validation.Error, Validation> validateFileFromUrl(String fileURL, Principal principal);
+  Either<Validation.Error, Validation> validateFileFromUrl(
+      String fileURL, Principal principal, String sourceId, UUID installationKey);
 
   Either<Validation.Error, Validation> get(UUID key);
 

@@ -11,7 +11,12 @@ import org.gbif.validator.ws.file.DataFile;
 public class ValidationFactory {
 
   static Validation newValidationInstance(
-      UUID key, DataFile dataFile, String userName, Validation.Status status) {
+      UUID key,
+      DataFile dataFile,
+      String userName,
+      Validation.Status status,
+      String sourceId,
+      UUID installationKey) {
     return Validation.builder()
         .key(key)
         .fileFormat(dataFile.getFileFormat())
@@ -19,6 +24,8 @@ public class ValidationFactory {
         .file(dataFile.getFilePath().getFileName().toString())
         .fileSize(dataFile.getSize())
         .username(userName)
+        .installationKey(installationKey)
+        .sourceId(sourceId)
         .build();
   }
 

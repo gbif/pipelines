@@ -49,11 +49,13 @@ public class ValidationResource {
   @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
   public Validation submitFile(
       @RequestParam("file") MultipartFile file,
+      @RequestParam(value = "resourceId", required = false) String resourceId,
       @RequestParam(value = "installationKey", required = false) UUID installationKey,
       @Autowired Principal principal,
       @Autowired HttpServletRequest httpServletRequest) {
     validateInstallationService.validateInstallationAccess(installationKey, httpServletRequest);
-    return errorMapper.getOrElseThrow(validationService.validateFile(file, principal));
+    return errorMapper.getOrElseThrow(
+        validationService.validateFile(file, principal, resourceId, installationKey));
   }
 
   /** Asynchronously downloads a file from an URL and starts the validation process. */
@@ -62,11 +64,13 @@ public class ValidationResource {
       consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
   public Validation submitUrl(
       @RequestParam("fileUrl") String fileURL,
+      @RequestParam(value = "resourceId", required = false) String resourceId,
       @RequestParam(value = "installationKey", required = false) UUID installationKey,
       @Autowired Principal principal,
       @Autowired HttpServletRequest httpServletRequest) {
     validateInstallationService.validateInstallationAccess(installationKey, httpServletRequest);
-    return errorMapper.getOrElseThrow(validationService.validateFileFromUrl(fileURL, principal));
+    return errorMapper.getOrElseThrow(
+        validationService.validateFileFromUrl(fileURL, principal, resourceId, installationKey));
   }
 
   /** Gets the detail of Validation. */

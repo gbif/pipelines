@@ -23,6 +23,16 @@ public class ValidationWsClientStub implements ValidationWsClient {
   }
 
   @Override
+  public Validation submitFile(File file, String sourceId, UUID installationKey) {
+    return null;
+  }
+
+  @Override
+  public Validation submitUrl(String fileUrl, String sourceId, UUID installationKey) {
+    return null;
+  }
+
+  @Override
   public Validation submitUrl(String fileUrl) {
     return null;
   }
@@ -39,6 +49,11 @@ public class ValidationWsClientStub implements ValidationWsClient {
 
   @Override
   public void update(UUID key, Validation validation) {
+    this.validation = validation;
+  }
+
+  @Override
+  public void update(Validation validation) {
     this.validation = validation;
   }
 
