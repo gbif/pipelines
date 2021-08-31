@@ -27,7 +27,6 @@ import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.util.Strings;
 import org.apache.solr.common.SolrInputDocument;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.License;
@@ -626,7 +625,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
   private static void addTermSafely(
       IndexRecord.Builder indexRecord, Map<String, String> extension, DwcTerm dwcTerm) {
     String termValue = extension.get(dwcTerm.name());
-    if (Strings.isNotBlank(termValue)) {
+    if (isNotBlank(termValue)) {
       indexRecord.getStrings().put(dwcTerm.simpleName(), termValue);
     }
   }
@@ -634,7 +633,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
   private static void addTermSafely(
       IndexRecord.Builder indexRecord, Map<String, String> extension, String dwcTerm) {
     String termValue = extension.get(dwcTerm);
-    if (Strings.isNotBlank(termValue)) {
+    if (isNotBlank(termValue)) {
       String termToUse = dwcTerm;
       if (dwcTerm.startsWith("http")) {
         termToUse = dwcTerm.substring(dwcTerm.lastIndexOf("/") + 1);
@@ -689,17 +688,17 @@ public class IndexRecordTransform implements Serializable, IndexFields {
       if (conservationStatus.getRegion() != null) {
         if (conservationStatus.getRegion().equalsIgnoreCase(stateProvince)) {
 
-          if (Strings.isNotBlank(conservationStatus.getSourceStatus())) {
+          if (isNotBlank(conservationStatus.getSourceStatus())) {
             indexRecord
                 .getStrings()
                 .put(RAW_STATE_CONSERVATION, conservationStatus.getSourceStatus());
           }
-          if (Strings.isNotBlank(conservationStatus.getStatus())) {
+          if (isNotBlank(conservationStatus.getStatus())) {
             indexRecord.getStrings().put(STATE_CONSERVATION, conservationStatus.getStatus());
           }
         }
         if (conservationStatus.getRegion().equalsIgnoreCase(country)) {
-          if (Strings.isNotBlank(conservationStatus.getStatus())) {
+          if (isNotBlank(conservationStatus.getStatus())) {
             indexRecord.getStrings().put(COUNTRY_CONSERVATION, conservationStatus.getStatus());
           }
         }
@@ -1036,5 +1035,9 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     }
 
     return doc;
+  }
+
+  private static boolean isNotBlank(String s) {
+    return s != null && s.trim().isEmpty();
   }
 }
