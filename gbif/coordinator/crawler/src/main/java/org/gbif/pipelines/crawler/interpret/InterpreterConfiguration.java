@@ -40,6 +40,9 @@ public class InterpreterConfiguration implements BaseConfiguration {
   @Parameter(names = "--validator-only")
   public boolean validatorOnly = false;
 
+  @Parameter(names = "--skip-gbif-ids")
+  public boolean skipGbifIds = false;
+
   @Parameter(names = "--validator-listen-all-mq")
   public boolean validatorListenAllMq = true;
 

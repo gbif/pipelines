@@ -108,8 +108,11 @@ final class ProcessRunnerBuilder {
     Optional.ofNullable(config.indexConfig.numberReplicas)
         .ifPresent(x -> command.add("--indexNumberReplicas=" + x));
 
-    if (message.isValidator() || config.validatorOnly) {
+    if (config.esGeneratedIds) {
       command.add("--esDocumentId=");
+    }
+
+    if (message.isValidator() || config.validatorOnly) {
       command.add("--esSchemaPath=elasticsearch/es-validator-schema.json");
     }
 

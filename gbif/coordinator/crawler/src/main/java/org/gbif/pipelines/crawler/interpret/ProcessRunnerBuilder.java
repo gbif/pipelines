@@ -99,11 +99,14 @@ final class ProcessRunnerBuilder {
     Optional.ofNullable(defaultDateFormat).ifPresent(x -> command.add("--defaultDateFormat=" + x));
 
     if (message.isValidator() || config.validatorOnly) {
+      command.add("--useMetadataWsCalls=false");
+    }
+
+    if (config.skipGbifIds) {
       command
           .add("--tripletValid=false")
           .add("--occurrenceIdValid=false")
-          .add("--useExtendedRecordId=true")
-          .add("--useMetadataWsCalls=false");
+          .add("--useExtendedRecordId=true");
     } else {
       Optional.ofNullable(message.getValidationResult())
           .ifPresent(
@@ -116,6 +119,7 @@ final class ProcessRunnerBuilder {
           .flatMap(vr -> Optional.ofNullable(vr.isUseExtendedRecordId()))
           .ifPresent(x -> command.add("--useExtendedRecordId=" + x));
     }
+
     if (config.useBeamDeprecatedRead) {
       command.add("--experiments=use_deprecated_read");
     }

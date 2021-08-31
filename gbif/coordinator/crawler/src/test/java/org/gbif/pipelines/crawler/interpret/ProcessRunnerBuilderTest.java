@@ -108,8 +108,8 @@ public class ProcessRunnerBuilderTest {
             + "--driver-memory 4G java.jar --datasetId=de7ffb5e-c07b-42dc-8a88-f67a4465fe3d --attempt=1 --interpretationTypes=ALL "
             + "--runner=SparkRunner --targetPath=tmp --metaFileName=verbatim-to-interpreted.yml --inputPath=verbatim.avro "
             + "--avroCompressionType=SNAPPY --avroSyncInterval=1 --hdfsSiteConfig=hdfs.xml --coreSiteConfig=core.xml "
-            + "--properties=/path/ws.config --endPointType=DWC_ARCHIVE --tripletValid=false --occurrenceIdValid=false --useExtendedRecordId=true "
-            + "--useMetadataWsCalls=false --experiments=use_deprecated_read";
+            + "--properties=/path/ws.config --endPointType=DWC_ARCHIVE --useMetadataWsCalls=false --tripletValid=true "
+            + "--occurrenceIdValid=true --useExtendedRecordId=true --experiments=use_deprecated_read";
 
     InterpreterConfiguration config = new InterpreterConfiguration();
     config.distributedConfig.jarPath = "java.jar";
