@@ -1,7 +1,7 @@
 package org.gbif.pipelines.diagnostics.strategy;
 
 import java.io.IOException;
-import java.util.Set;
+import java.util.Map;
 import org.gbif.pipelines.diagnostics.common.HbaseServer;
 import org.gbif.pipelines.diagnostics.common.HbaseStore;
 import org.gbif.pipelines.diagnostics.common.HbaseStore.KV;
@@ -48,13 +48,13 @@ public class BothStrategyIT {
         new HBaseLockingKeyService(HbaseServer.CFG, HBASE_SERVER.getConnection(), datasetKey);
 
     // When
-    Set<String> keysToDelete =
+    Map<String, Long> keysToDelete =
         new BothStrategy().getKeysToDelete(keygenService, false, triplet, occId);
 
     // Should
     Assert.assertEquals(2, keysToDelete.size());
-    Assert.assertTrue(keysToDelete.contains(occId));
-    Assert.assertTrue(keysToDelete.contains(triplet));
+    Assert.assertEquals(Long.valueOf(gbifId), keysToDelete.get(occId));
+    Assert.assertEquals(Long.valueOf(gbifId), keysToDelete.get(triplet));
   }
 
   @Test
@@ -83,7 +83,7 @@ public class BothStrategyIT {
         new HBaseLockingKeyService(HbaseServer.CFG, HBASE_SERVER.getConnection(), datasetKey);
 
     // When
-    Set<String> keysToDelete =
+    Map<String, Long> keysToDelete =
         new BothStrategy().getKeysToDelete(keygenService, true, triplet, occId);
 
     // Should
@@ -116,12 +116,12 @@ public class BothStrategyIT {
         new HBaseLockingKeyService(HbaseServer.CFG, HBASE_SERVER.getConnection(), datasetKey);
 
     // When
-    Set<String> keysToDelete =
+    Map<String, Long> keysToDelete =
         new BothStrategy().getKeysToDelete(keygenService, true, triplet, occId);
 
     // Should
     Assert.assertEquals(2, keysToDelete.size());
-    Assert.assertTrue(keysToDelete.contains(occId));
-    Assert.assertTrue(keysToDelete.contains(triplet));
+    Assert.assertEquals(Long.valueOf(gbifId), keysToDelete.get(occId));
+    Assert.assertEquals(Long.valueOf(gbifId2), keysToDelete.get(triplet));
   }
 }

@@ -451,6 +451,7 @@ public class HBaseLockingKeyService implements Serializable {
 
   public void deleteKeyByUniques(Set<String> uniqueStrings) {
     deleteKeyByUniques(uniqueStrings, datasetId);
+    log.info("Lookup keys deleted: {}", String.join(",", uniqueStrings));
   }
 
   @SneakyThrows
