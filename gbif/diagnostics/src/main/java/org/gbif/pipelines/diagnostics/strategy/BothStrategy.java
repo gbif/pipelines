@@ -1,13 +1,13 @@
 package org.gbif.pipelines.diagnostics.strategy;
 
-import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 
 public class BothStrategy implements DeletionStrategy {
   @Override
-  public Set<String> getKeysToDelete(
+  public Map<String, Long> getKeysToDelete(
       HBaseLockingKeyService keygenService,
       boolean onlyCollisions,
       String triplet,
@@ -16,18 +16,18 @@ public class BothStrategy implements DeletionStrategy {
     Optional<Long> tripletKey = LookupKeyUtils.getKey(keygenService, triplet);
     Optional<Long> occurrenceIdtKey = LookupKeyUtils.getKey(keygenService, occurrenceId);
 
-    Set<String> keys = new HashSet<>(2);
+    Map<String, Long> keys = new HashMap<>(2);
     if (!onlyCollisions) {
-      tripletKey.ifPresent(x -> keys.add(triplet));
-      occurrenceIdtKey.ifPresent(x -> keys.add(occurrenceId));
+      tripletKey.ifPresent(x -> keys.put(triplet, x));
+      occurrenceIdtKey.ifPresent(x -> keys.put(occurrenceId, x));
     }
 
     if (onlyCollisions
         && tripletKey.isPresent()
         && occurrenceIdtKey.isPresent()
         && !occurrenceIdtKey.get().equals(tripletKey.get())) {
-      keys.add(triplet);
-      keys.add(occurrenceId);
+      keys.put(triplet, tripletKey.get());
+      keys.put(occurrenceId, occurrenceIdtKey.get());
     }
 
     return keys;

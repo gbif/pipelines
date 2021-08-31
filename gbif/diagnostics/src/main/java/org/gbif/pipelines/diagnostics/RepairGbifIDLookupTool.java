@@ -4,7 +4,7 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import java.io.File;
 import java.nio.file.Path;
-import java.util.Set;
+import java.util.Map;
 import java.util.UUID;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -186,12 +186,12 @@ public class RepairGbifIDLookupTool {
 
   private void deleteKeys(
       HBaseLockingKeyService keygenService, String triplet, String occurrenceId) {
-    Set<String> keysToDelete =
+    Map<String, Long> keysToDelete =
         deletionStrategyType.getKeysToDelete(keygenService, onlyCollisions, triplet, occurrenceId);
-    keysToDelete.forEach(k -> log.info("Delete lookup key - {}", k));
+    keysToDelete.forEach(
+        (key, value) -> log.info("Delete lookup key - {}, gbifID - {}", key, value));
     if (!dryRun) {
-      keygenService.deleteKeyByUniques(keysToDelete);
+      keygenService.deleteKeyByUniques(keysToDelete.keySet());
     }
-    log.info("Lookup keys deleted");
   }
 }
