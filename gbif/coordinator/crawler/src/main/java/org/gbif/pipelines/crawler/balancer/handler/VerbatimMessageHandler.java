@@ -99,7 +99,9 @@ public class VerbatimMessageHandler {
     // Strategy 2: Chooses a runner type by calculating verbatim.avro file size
     String verbatim = Conversion.FILE_NAME + Pipeline.AVRO_EXTENSION;
     StepConfiguration stepConfig = config.stepConfig;
-    String verbatimPath = String.join("/", stepConfig.repositoryPath, datasetId, attempt, verbatim);
+    String repositoryPath =
+        message.isValidator() ? config.validatorRepositoryPath : stepConfig.repositoryPath;
+    String verbatimPath = String.join("/", repositoryPath, datasetId, attempt, verbatim);
     long fileSizeByte =
         HdfsUtils.getFileSizeByte(
             stepConfig.hdfsSiteConfig, stepConfig.coreSiteConfig, verbatimPath);
@@ -121,7 +123,9 @@ public class VerbatimMessageHandler {
     String attempt = Integer.toString(message.getAttempt());
     String metaFileName = new DwcaToAvroConfiguration().metaFileName;
     StepConfiguration stepConfig = config.stepConfig;
-    String metaPath = String.join("/", stepConfig.repositoryPath, datasetId, attempt, metaFileName);
+    String repositoryPath =
+        message.isValidator() ? config.validatorRepositoryPath : stepConfig.repositoryPath;
+    String metaPath = String.join("/", repositoryPath, datasetId, attempt, metaFileName);
     log.info("Getting records number from the file - {}", metaPath);
 
     Long messageNumber =
@@ -158,7 +162,9 @@ public class VerbatimMessageHandler {
       BalancerConfiguration config, PipelinesVerbatimMessage message) {
     String datasetId = message.getDatasetUuid().toString();
     StepConfiguration stepConfig = config.stepConfig;
-    String path = String.join("/", stepConfig.repositoryPath, datasetId);
+    String repositoryPath =
+        message.isValidator() ? config.validatorRepositoryPath : stepConfig.repositoryPath;
+    String path = String.join("/", repositoryPath, datasetId);
     log.info("Parsing HDFS directory - {}", path);
     return HdfsUtils.getSubDirList(stepConfig.hdfsSiteConfig, stepConfig.coreSiteConfig, path)
         .stream()

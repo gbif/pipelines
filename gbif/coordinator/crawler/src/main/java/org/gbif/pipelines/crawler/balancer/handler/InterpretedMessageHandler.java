@@ -93,7 +93,9 @@ public class InterpretedMessageHandler {
     // Strategy 2: Chooses a runner type by calculating verbatim.avro file size
     String verbatim = Conversion.FILE_NAME + Pipeline.AVRO_EXTENSION;
     StepConfiguration stepConfig = config.stepConfig;
-    String verbatimPath = String.join("/", stepConfig.repositoryPath, datasetId, attempt, verbatim);
+    String repositoryPath =
+        message.isValidator() ? config.validatorRepositoryPath : stepConfig.repositoryPath;
+    String verbatimPath = String.join("/", repositoryPath, datasetId, attempt, verbatim);
     long fileSizeByte =
         HdfsUtils.getFileSizeByte(
             stepConfig.hdfsSiteConfig, stepConfig.coreSiteConfig, verbatimPath);
@@ -118,7 +120,9 @@ public class InterpretedMessageHandler {
     String attempt = Integer.toString(message.getAttempt());
     String metaFileName = new InterpreterConfiguration().metaFileName;
     StepConfiguration stepConfig = config.stepConfig;
-    String metaPath = String.join("/", stepConfig.repositoryPath, datasetId, attempt, metaFileName);
+    String repositoryPath =
+        message.isValidator() ? config.validatorRepositoryPath : stepConfig.repositoryPath;
+    String metaPath = String.join("/", repositoryPath, datasetId, attempt, metaFileName);
 
     Long messageNumber = message.getNumberOfRecords();
     String fileNumber =
