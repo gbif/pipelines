@@ -31,15 +31,15 @@ public interface ValidationWsClient {
   Validation submitFile(
       @RequestPart("file") File file,
       @RequestParam(value = "sourceId", required = false) String sourceId,
-      @RequestParam(value ="installationKey", required = false) UUID installationKey);
+      @RequestParam(value = "installationKey", required = false) UUID installationKey);
 
   @PostMapping(
       path = "/url",
       consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
   Validation submitUrl(
       @RequestPart("fileUrl") String fileUrl,
-      @RequestParam(value ="sourceId", required = false) String sourceId,
-      @RequestParam(value ="installationKey", required = false) UUID installationKey);
+      @RequestParam(value = "sourceId", required = false) String sourceId,
+      @RequestParam(value = "installationKey", required = false) UUID installationKey);
 
   @PostMapping(
       path = "/url",
