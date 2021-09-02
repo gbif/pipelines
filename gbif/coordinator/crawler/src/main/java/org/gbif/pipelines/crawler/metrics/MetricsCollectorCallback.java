@@ -2,9 +2,13 @@ package org.gbif.pipelines.crawler.metrics;
 
 import static org.gbif.pipelines.common.utils.PathUtil.buildDwcaInputPath;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -21,6 +25,7 @@ import org.gbif.common.messaging.api.messages.PipelinesMetricsCollectedMessage;
 import org.gbif.converters.utils.XmlFilesReader;
 import org.gbif.converters.utils.XmlTermExtractor;
 import org.gbif.dwc.Archive;
+import org.gbif.dwc.ArchiveFile;
 import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.core.utils.DwcaUtils;
 import org.gbif.pipelines.crawler.PipelinesCallback;
@@ -100,17 +105,28 @@ public class MetricsCollectorCallback extends AbstractMessageCallback<PipelinesI
     Set<Term> coreTerms = Collections.emptySet();
     Map<Extension, Set<Term>> extenstionsTerms = Collections.emptyMap();
 
+    long coreLineCount = 0;
+    Map<String, Long> extLineCount = new HashMap<>();
+
     if (message.getEndpointType() == EndpointType.DWC_ARCHIVE) {
       Archive archive = DwcaUtils.fromLocation(inputPath);
+      // Extract all terms
       coreTerms = DwcaUtils.getCoreTerms(archive);
       extenstionsTerms = DwcaUtils.getExtensionsTerms(archive);
+      // Count files lines
+      coreLineCount = countLines(archive.getCore().getLocationFile());
+      for (ArchiveFile ext : archive.getExtensions()) {
+        extLineCount.put(ext.getRowType().qualifiedName(), countLines(ext.getLocationFile()));
+      }
     } else if (message.getEndpointType() == EndpointType.BIOCASE_XML_ARCHIVE) {
       List<File> files = XmlFilesReader.getInputFiles(inputPath.toFile());
+      // Extract all terms
       XmlTermExtractor extractor = XmlTermExtractor.extract(files);
       coreTerms = extractor.getCore();
       extenstionsTerms = extractor.getExtenstionsTerms();
     }
 
+    // Collect metrics from ES
     Metrics metrics =
         MetricsCollector.builder()
             .coreTerms(coreTerms)
@@ -123,6 +139,13 @@ public class MetricsCollectorCallback extends AbstractMessageCallback<PipelinesI
             .build()
             .collect();
 
+    // Set files count values
+    metrics.getCore().setFileCount(coreLineCount);
+    for (Metrics.Extension ext : metrics.getExtensions()) {
+      ext.setFileCount(extLineCount.get(ext.getRowType()));
+    }
+
+    // Get saved metrics object and merge with the result
     Validation validation = validationClient.get(message.getDatasetUuid());
     merge(validation, metrics);
 
@@ -140,5 +163,17 @@ public class MetricsCollectorCallback extends AbstractMessageCallback<PipelinesI
         validationMetrics.setExtensions(metrics.getExtensions());
       }
     }
+  }
+
+  private long countLines(File file) {
+    long lines = 0;
+    try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+      while (reader.readLine() != null) {
+        lines++;
+      }
+    } catch (IOException ex) {
+      log.error(ex.getMessage(), ex);
+    }
+    return lines;
   }
 }
