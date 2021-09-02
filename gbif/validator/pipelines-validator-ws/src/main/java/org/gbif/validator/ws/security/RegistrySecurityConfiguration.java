@@ -5,6 +5,8 @@ import java.net.URI;
 import java.util.UUID;
 import lombok.SneakyThrows;
 import org.gbif.api.model.common.DOI;
+import org.gbif.api.service.registry.InstallationService;
+import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.mybatis.type.UriTypeHandler;
 import org.gbif.mybatis.type.UuidTypeHandler;
 import org.gbif.registry.identity.service.BasicUserSuretyDelegate;
@@ -27,11 +29,14 @@ import org.gbif.registry.security.LegacyAuthorizationService;
 import org.gbif.registry.security.LegacyAuthorizationServiceImpl;
 import org.gbif.registry.security.RegistryUserDetailsService;
 import org.gbif.registry.surety.ChallengeCodeManager;
+import org.gbif.registry.ws.client.InstallationClient;
+import org.gbif.ws.client.ClientBuilder;
 import org.gbif.ws.security.NoAuthWebSecurityConfigurer;
 import org.gbif.ws.server.filter.IdentityFilter;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.mapper.MapperFactoryBean;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.ApplicationContext;
@@ -171,8 +176,8 @@ public class RegistrySecurityConfiguration {
 
   @Bean
   public ValidateInstallationService validateInstallationService(
-      InstallationMapper installationMapper) {
-    return new ValidateInstallationServiceImpl(installationMapper);
+      InstallationService installationService, OrganizationService organizationService) {
+    return new ValidateInstallationServiceImpl(installationService, organizationService);
   }
 
   @Bean
@@ -188,6 +193,18 @@ public class RegistrySecurityConfiguration {
   public LegacyAuthorizationFilter legacyAuthorizationFilter(
       LegacyAuthorizationService legacyAuthorizationService) {
     return new LegacyAuthorizationFilter(legacyAuthorizationService);
+  }
+
+  @Bean
+  public InstallationService installationService(@Value("${registry.ws.url}") String apiUrl) {
+    ClientBuilder clientBuilder = new ClientBuilder();
+    return clientBuilder.withUrl(apiUrl).build(InstallationClient.class);
+  }
+
+  @Bean
+  public OrganizationService organizationService(@Value("${registry.ws.url}") String apiUrl) {
+    ClientBuilder clientBuilder = new ClientBuilder();
+    return clientBuilder.withUrl(apiUrl).build(OrganizationService.class);
   }
 
   @Configuration

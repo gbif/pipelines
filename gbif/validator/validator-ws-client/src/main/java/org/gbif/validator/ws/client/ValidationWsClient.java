@@ -3,6 +3,7 @@ package org.gbif.validator.ws.client;
 import java.io.File;
 import java.util.Set;
 import java.util.UUID;
+import javax.validation.constraints.Email;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.validator.api.Validation;
@@ -31,7 +32,9 @@ public interface ValidationWsClient {
   Validation submitFile(
       @RequestPart("file") File file,
       @RequestParam(value = "sourceId", required = false) String sourceId,
-      @RequestParam(value = "installationKey", required = false) UUID installationKey);
+      @RequestParam(value = "installationKey", required = false) UUID installationKey,
+      @RequestParam(value = "notificationEmail", required = false)
+          Set<@Email String> notificationEmails);
 
   @PostMapping(
       path = "/url",
@@ -39,12 +42,14 @@ public interface ValidationWsClient {
   Validation submitUrl(
       @RequestPart("fileUrl") String fileUrl,
       @RequestParam(value = "sourceId", required = false) String sourceId,
-      @RequestParam(value = "installationKey", required = false) UUID installationKey);
+      @RequestParam(value = "installationKey", required = false) UUID installationKey,
+      @RequestParam(value = "notificationEmail", required = false)
+          Set<@Email String> notificationEmails);
 
   @PostMapping(
       path = "/url",
       consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-  Validation submitUrl(@RequestPart("fileUrl") String fileUrl);
+  Validation submitUrl(@RequestParam("fileUrl") String fileUrl);
 
   /** Lists the validations of an user. */
   @GetMapping

@@ -8,6 +8,7 @@ CREATE TABLE validation
   key uuid NOT NULL PRIMARY KEY,
   source_id text,
   installation_key uuid,
+  notification_emails text[],
   status enum_validation_status NOT NULL,
   file_format enum_validation_file_format,
   username varchar(255) NOT NULL,

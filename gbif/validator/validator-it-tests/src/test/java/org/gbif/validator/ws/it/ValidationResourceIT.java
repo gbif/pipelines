@@ -4,13 +4,18 @@ import static org.gbif.validator.ws.it.ValidatorWsItConfiguration.TEST_USER;
 import static org.gbif.validator.ws.it.ValidatorWsItConfiguration.TEST_USER_PASSWORD;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.google.common.collect.Sets;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.Set;
+import java.util.UUID;
+import javax.validation.ValidationException;
 import lombok.SneakyThrows;
 import org.gbif.api.model.checklistbank.NameUsage;
 import org.gbif.api.model.common.paging.PagingRequest;
@@ -22,6 +27,7 @@ import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.XmlSchemaValidatorResult;
 import org.gbif.validator.ws.client.ValidationWsClient;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -114,8 +120,16 @@ public class ValidationResourceIT {
   @Test
   public void validationSubmitFileIT() {
     File archive = readTestFileInputStream("/Archive.zip");
-    Validation validation = validationWsClient.submitFile(archive);
+    String sourceId = UUID.randomUUID().toString();
+    UUID installationKey = UUID.randomUUID();
+    Set<String> notificationEmails = Sets.newHashSet("nobody@gbif.org", "test@gbif.org");
+    Validation validation =
+        validationWsClient.submitFile(archive, sourceId, installationKey, notificationEmails);
     assertNotNull(validation);
+    assertEquals(installationKey, validation.getInstallationKey());
+    assertEquals(sourceId, validation.getSourceId());
+    // Emails must not be exposed
+    assertNull(validation.getNotificationEmails());
 
     // Can the new validation be retrieved?
     Validation persistedValidation = validationWsClient.get(validation.getKey());
@@ -134,8 +148,37 @@ public class ValidationResourceIT {
 
   @Test
   public void validationSubmitUrlIT() {
-    Validation validation = validationWsClient.submitUrl(testPath("/Archive.zip"));
+    String sourceId = UUID.randomUUID().toString();
+    UUID installationKey = UUID.randomUUID();
+    Set<String> notificationEmails = Sets.newHashSet("nobody@gbif.org", "test@gbif.org");
+    Validation validation =
+        validationWsClient.submitUrl(
+            testPath("/Archive.zip"), sourceId, installationKey, notificationEmails);
     assertNotNull(validation);
+    assertEquals(installationKey, validation.getInstallationKey());
+    assertEquals(sourceId, validation.getSourceId());
+    // Emails must not be exposed
+    assertNull(validation.getNotificationEmails());
+  }
+
+  /** Test the notification addresses are sent when the installationKey is present. */
+  @Test
+  public void validationSubmitUrlMissingEmailsIT() {
+    String sourceId = UUID.randomUUID().toString();
+    UUID installationKey = UUID.randomUUID();
+    Assertions.assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            validationWsClient.submitUrl(
+                testPath("/Archive.zip"), sourceId, installationKey, null));
+  }
+
+  @Test
+  public void validationSubmitUrlWrongEmailFormatIT() {
+    Set<String> emails = Sets.newHashSet("thisnotandEmail!gmail.com");
+    Assertions.assertThrows(
+        ValidationException.class,
+        () -> validationWsClient.submitUrl(testPath("/Archive.zip"), null, null, emails));
   }
 
   @Test

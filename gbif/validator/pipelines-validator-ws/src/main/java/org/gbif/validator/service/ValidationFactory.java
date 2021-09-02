@@ -1,5 +1,6 @@
 package org.gbif.validator.service;
 
+import java.util.Set;
 import java.util.UUID;
 import lombok.experimental.UtilityClass;
 import org.gbif.validator.api.Metrics;
@@ -16,7 +17,8 @@ public class ValidationFactory {
       String userName,
       Validation.Status status,
       String sourceId,
-      UUID installationKey) {
+      UUID installationKey,
+      Set<String> notificationEmails) {
     return Validation.builder()
         .key(key)
         .fileFormat(dataFile.getFileFormat())
@@ -26,6 +28,7 @@ public class ValidationFactory {
         .username(userName)
         .installationKey(installationKey)
         .sourceId(sourceId)
+        .notificationEmails(notificationEmails)
         .build();
   }
 

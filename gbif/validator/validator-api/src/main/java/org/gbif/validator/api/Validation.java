@@ -46,6 +46,9 @@ public class Validation {
   /** GBIF Installation from where the validation started. */
   private UUID installationKey;
 
+  /** Notification email addresses. */
+  @JsonIgnore private Set<String> notificationEmails;
+
   /** Timestamp when the validation was created. */
   private Date created;
 

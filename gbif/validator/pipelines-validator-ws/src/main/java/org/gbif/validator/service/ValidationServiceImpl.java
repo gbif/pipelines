@@ -67,7 +67,11 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
 
   @Override
   public Either<Validation.Error, Validation> validateFile(
-      MultipartFile file, Principal principal, String sourceId, UUID installationKey) {
+      MultipartFile file,
+      Principal principal,
+      String sourceId,
+      UUID installationKey,
+      Set<String> notificationEmails) {
     Optional<Validation.Error> error = reachedMaxRunningValidations(principal.getName());
     if (error.isPresent()) {
       return Either.left(error.get());
@@ -92,12 +96,17 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
             principal.getName(),
             Validation.Status.SUBMITTED,
             sourceId,
-            installationKey));
+            installationKey,
+            notificationEmails));
   }
 
   @Override
   public Either<Validation.Error, Validation> validateFileFromUrl(
-      String fileURL, Principal principal, String sourceId, UUID installationKey) {
+      String fileURL,
+      Principal principal,
+      String sourceId,
+      UUID installationKey,
+      Set<String> notificationEmails) {
     try {
       Optional<Validation.Error> error = reachedMaxRunningValidations(principal.getName());
       if (error.isPresent()) {
@@ -122,7 +131,8 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
               principal.getName(),
               Validation.Status.DOWNLOADING,
               sourceId,
-              installationKey));
+              installationKey,
+              notificationEmails));
     } catch (FileSizeException ex) {
       log.error("File limit error", ex);
       return Either.left(Validation.Error.of(Validation.Error.Code.MAX_FILE_SIZE_VIOLATION, ex));
@@ -197,9 +207,11 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
       String userName,
       Validation.Status status,
       String sourceId,
-      UUID installationKey) {
+      UUID installationKey,
+      Set<String> notificationEmails) {
     validationMapper.create(
-        newValidationInstance(key, dataFile, userName, status, sourceId, installationKey));
+        newValidationInstance(
+            key, dataFile, userName, status, sourceId, installationKey, notificationEmails));
     return validationMapper.get(key);
   }
 
