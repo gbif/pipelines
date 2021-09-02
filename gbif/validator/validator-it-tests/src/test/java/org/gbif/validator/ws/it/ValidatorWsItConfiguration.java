@@ -1,10 +1,14 @@
 package org.gbif.validator.ws.it;
 
+import static org.mockito.Mockito.mock;
+
 import com.zaxxer.hikari.HikariDataSource;
 import java.util.Collections;
 import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 import org.gbif.api.model.common.GbifUser;
+import org.gbif.api.service.registry.InstallationService;
+import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.mail.validator.ValidatorEmailService;
@@ -138,6 +142,18 @@ public class ValidatorWsItConfiguration extends ValidatorWsConfiguration {
   @Bean
   public ValidatorEmailService emailService() {
     return Mockito.mock(ValidatorEmailService.class);
+  }
+
+  @Bean
+  public InstallationService installationService() {
+    InstallationService installationService = mock(InstallationService.class);
+    return installationService;
+  }
+
+  @Bean
+  public OrganizationService organizationService() {
+    OrganizationService organizationService = mock(OrganizationService.class);
+    return organizationService;
   }
 
   @Bean

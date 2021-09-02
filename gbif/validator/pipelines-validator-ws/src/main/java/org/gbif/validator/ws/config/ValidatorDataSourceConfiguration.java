@@ -22,6 +22,7 @@ import org.gbif.mybatis.type.UuidTypeHandler;
 import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.persistence.mapper.MetricsJsonTypeHandler;
+import org.gbif.validator.persistence.mapper.StringArraySetTypeHandler;
 import org.gbif.validator.persistence.mapper.ValidationMapper;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.mapper.MapperFactoryBean;
@@ -74,6 +75,9 @@ public class ValidatorDataSourceConfiguration {
     configuration
         .getTypeAliasRegistry()
         .registerAlias("MetricsJsonTypeHandler", MetricsJsonTypeHandler.class);
+    configuration
+        .getTypeAliasRegistry()
+        .registerAlias("StringArraySetTypeHandler", StringArraySetTypeHandler.class);
 
     // Type aliases
     configuration.getTypeAliasRegistry().registerAlias("Validation", Validation.class);

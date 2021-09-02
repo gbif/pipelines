@@ -2,11 +2,16 @@ package org.gbif.mail.validator;
 
 import io.vavr.control.Try;
 import java.util.Collections;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.common.GbifUser;
+import org.gbif.api.model.registry.Installation;
+import org.gbif.api.model.registry.Organization;
+import org.gbif.api.service.registry.InstallationService;
+import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.mail.BaseEmailModel;
 import org.gbif.mail.EmailSender;
 import org.gbif.mail.EmailTemplateProcessor;
@@ -20,6 +25,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @Slf4j
 @Service
+/** Freemarker based email service to send notifications about the validation status. */
 public class ValidatorEmailServiceImpl implements ValidatorEmailService {
 
   private final EmailTemplateProcessor templateProcessor = new FreemarkerEmailTemplateProcessor();
@@ -27,6 +33,10 @@ public class ValidatorEmailServiceImpl implements ValidatorEmailService {
   private final UserHelperService userHelperService;
 
   private final EmailSender emailSender;
+
+  private final InstallationService installationService;
+
+  private final OrganizationService organizationService;
 
   @Value("${gbif.portal.url}")
   private final String portalUrl;
@@ -36,6 +46,9 @@ public class ValidatorEmailServiceImpl implements ValidatorEmailService {
     buildEmailModel(validation).ifPresent(emailSender::send);
   }
 
+  /**
+   * Builds the email template if notification emails address is found from the validation or user.
+   */
   private Optional<BaseEmailModel> buildEmailModel(Validation validation) {
     return typeFromStatus(validation)
         .flatMap(
@@ -48,22 +61,50 @@ public class ValidatorEmailServiceImpl implements ValidatorEmailService {
                                     () ->
                                         templateProcessor.buildEmail(
                                             t,
-                                            getNotificationAddresses(user),
+                                            getNotificationAddresses(validation, user),
                                             ValidatorTemplateDataModel.modelBuilder()
                                                 .validation(validation)
                                                 .portalUrl(portalUrl)
                                                 .build(),
-                                            userHelperService.getUserLocaleOrDefault(user)))
+                                            getLocale(user, validation)))
                                 .get()));
   }
 
-  private Set<String> getNotificationAddresses(GbifUser user) {
+  /** Gets the locale from the user or through the validation.installationKey */
+  private Locale getLocale(GbifUser user, Validation validation) {
+    if (user != null) {
+      return userHelperService.getUserLocaleOrDefault(user);
+    }
+    if (validation.getInstallationKey() != null) {
+      Installation installation = installationService.get(validation.getInstallationKey());
+      if (installation != null && installation.getOrganizationKey() != null) {
+        Organization organization = organizationService.get(installation.getOrganizationKey());
+        if (organization != null && organization.getLanguage() != null) {
+          return organization.getLanguage().getLocale();
+        }
+      }
+    }
+    return Locale.ENGLISH;
+  }
+
+  /** Gets a notification address form the validation or user. */
+  private Set<String> getNotificationAddresses(Validation validation, GbifUser user) {
+    if (validation.getNotificationEmails() != null
+        && !validation.getNotificationEmails().isEmpty()) {
+      return validation.getNotificationEmails();
+    }
+    return getUserNotificationAddresses(user);
+  }
+
+  /** Gets the user's email address */
+  private Set<String> getUserNotificationAddresses(GbifUser user) {
     return Optional.ofNullable(user)
         .filter(u -> u.getEmail() != null)
         .map(u -> Collections.singleton(u.getEmail()))
         .orElse(Collections.emptySet());
   }
 
+  /** Gets the email type from validation status. */
   private Optional<EmailType> typeFromStatus(Validation validation) {
     if (validation.succeeded()) {
       return Optional.of(ValidatorEmailType.SUCCESSFUL);

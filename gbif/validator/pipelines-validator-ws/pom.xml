@@ -312,6 +312,10 @@
       <artifactId>registry-surety</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.gbif.registry</groupId>
+      <artifactId>registry-ws-client</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>gbif-common-mybatis</artifactId>
     </dependency>

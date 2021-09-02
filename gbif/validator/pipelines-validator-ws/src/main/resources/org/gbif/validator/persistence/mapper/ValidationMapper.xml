@@ -6,6 +6,7 @@
     <id property="key" column="key"/>
     <result property="sourceId" column="source_id"/>
     <result property="installationKey" column="installation_key"/>
+    <result property="notificationEmails" column="notification_emails" typeHandler="StringArraySetTypeHandler"/>
     <result property="status" column="status"/>
     <result property="fileFormat" column="file_format"/>
     <result property="username" column="username"/>
@@ -24,10 +25,13 @@
     file_format,
     </if>
     <if test="sourceId != null">
-      source_id,
+    source_id,
     </if>
     <if test="installationKey != null">
       installation_key,
+    </if>
+    <if test="notificationEmails != null">
+      notification_emails,
     </if>
     <if test="username != null">
     username,
@@ -46,7 +50,7 @@
   </sql>
 
   <sql id="VALIDATION_FIELDS">
-    key, source_id, installation_key, status, file_format, username, file, file_size, metrics, created, modified, deleted
+    key, source_id, installation_key, notification_emails, status, file_format, username, file, file_size, metrics, created, modified, deleted
   </sql>
 
   <!--
@@ -57,15 +61,6 @@
     status = #{status,jdbcType=OTHER},
     <if test="fileFormat != null">
     file_format = #{fileFormat,jdbcType=OTHER},
-    </if>
-    <if test="sourceId != null">
-    source_id = #{sourceId,jdbcType=OTHER},
-    </if>
-    <if test="installationKey != null">
-    installation_key = #{installationKey,jdbcType=OTHER},
-    </if>
-    <if test="username != null">
-    username = #{username,jdbcType=VARCHAR},
     </if>
     <if test="file != null">
     file = #{file,jdbcType=VARCHAR},
@@ -88,6 +83,9 @@
     </if>
     <if test="installationKey != null">
     #{installationKey,jdbcType=OTHER},
+    </if>
+    <if test="notificationEmails != null">
+    #{notificationEmails,jdbcType=OTHER,typeHandler=StringArraySetTypeHandler},
     </if>
     <if test="fileFormat != null">
     #{fileFormat,jdbcType=OTHER},
