@@ -5,44 +5,14 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 import java.util.UUID;
-import org.apache.commons.io.FileUtils;
 import org.gbif.api.model.crawler.DwcaValidationReport;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.dwc.Archive;
-import org.gbif.dwc.DwcFiles;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class DwcaValidatorTest {
-
-  @Test
-  @Ignore("manual test to validate archives")
-  public void manualUrlTest() throws IOException {
-    URI dwca = URI.create("http://pensoft.net/dwc/bdj/checklist_980.zip");
-
-    File tmp = File.createTempFile("gbif", "dwca");
-    tmp.deleteOnExit();
-    File dwcaDir = org.gbif.utils.file.FileUtils.createTempDir();
-    dwcaDir.deleteOnExit();
-
-    FileUtils.copyURLToFile(dwca.toURL(), tmp);
-
-    Archive archive = DwcFiles.fromCompressed(tmp.toPath(), dwcaDir.toPath());
-
-    DwcaValidationReport report =
-        DwcaValidator.builder()
-            .datasetKey(UUID.randomUUID())
-            .datasetType(DatasetType.OCCURRENCE)
-            .archive(archive)
-            .build()
-            .validate();
-
-    System.out.println(report);
-  }
 
   @Test
   public void goodTripletsGoodIdsTest() throws IOException {
