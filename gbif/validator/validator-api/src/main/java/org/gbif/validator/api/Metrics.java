@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -51,9 +52,9 @@ public class Metrics {
     @Builder.Default private Long fileCount = 0L;
     @Builder.Default private Long indexedCount = 0L;
 
-    @Builder.Default private Map<String, TermInfo> indexedCoreTerms = Collections.emptyMap();
+    @Builder.Default private Set<TermInfo> indexedCoreTerms = Collections.emptySet();
 
-    @Builder.Default private Map<String, Long> occurrenceIssues = Collections.emptyMap();
+    @Builder.Default private Set<IssueInfo> occurrenceIssues = Collections.emptySet();
 
     @Data
     @Builder
@@ -61,8 +62,30 @@ public class Metrics {
     @AllArgsConstructor
     @JsonDeserialize(builder = Core.TermInfo.TermInfoBuilder.class)
     public static class TermInfo {
+      private String term;
       @Builder.Default private Long rawIndexed = 0L;
       @Builder.Default private Long interpretedIndexed = null;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @JsonDeserialize(builder = Core.IssueInfo.IssueInfoBuilder.class)
+    public static class IssueInfo {
+      private String issue;
+      @Builder.Default private Long count = null;
+      @Builder.Default private List<IssueSample> sample = Collections.emptyList();
+
+      @Data
+      @Builder
+      @NoArgsConstructor
+      @AllArgsConstructor
+      @JsonDeserialize(builder = Core.IssueInfo.IssueSample.IssueSampleBuilder.class)
+      public static class IssueSample {
+        private String recordId;
+        private Map<String, Map<String, String>> relatedData;
+      }
     }
   }
 

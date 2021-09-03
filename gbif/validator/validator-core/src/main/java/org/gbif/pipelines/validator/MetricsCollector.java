@@ -12,7 +12,6 @@ import lombok.SneakyThrows;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.search.aggregations.Aggregation;
-import org.elasticsearch.search.aggregations.bucket.MultiBucketsAggregation.Bucket;
 import org.elasticsearch.search.aggregations.bucket.terms.ParsedStringTerms;
 import org.elasticsearch.search.aggregations.metrics.ParsedValueCount;
 import org.gbif.api.vocabulary.Extension;
@@ -24,6 +23,7 @@ import org.gbif.pipelines.validator.metircs.request.OccurrenceIssuesRequestBuild
 import org.gbif.pipelines.validator.metircs.request.TermCountRequestBuilder;
 import org.gbif.pipelines.validator.metircs.request.TermCountRequestBuilder.TermCountRequest;
 import org.gbif.validator.api.Metrics;
+import org.gbif.validator.api.Metrics.Core.IssueInfo;
 import org.gbif.validator.api.Metrics.Core.TermInfo;
 
 // TODO: DOC
@@ -81,7 +81,7 @@ public class MetricsCollector {
   }
 
   // TODO: DOC
-  private Map<String, TermInfo> queryCoreTermsCount() {
+  private Set<TermInfo> queryCoreTermsCount() {
 
     Function<Term, TermCountRequest> requestFn =
         term ->
@@ -110,6 +110,7 @@ public class MetricsCollector {
             }
 
             return TermInfo.builder()
+                .term(tcr.getTerm().qualifiedName())
                 .rawIndexed(rawCount)
                 .interpretedIndexed(interpretedCount)
                 .build();
@@ -119,10 +120,7 @@ public class MetricsCollector {
           }
         };
 
-    return coreTerms.stream()
-        .parallel()
-        .map(requestFn)
-        .collect(Collectors.toMap(t -> t.getTerm().qualifiedName(), countFn));
+    return coreTerms.stream().parallel().map(requestFn).map(countFn).collect(Collectors.toSet());
   }
 
   // TODO: DOC
@@ -160,7 +158,7 @@ public class MetricsCollector {
 
   // TODO: DOC
   @SneakyThrows
-  private Map<String, Long> queryOccurrenceIssuesCount() {
+  private Set<IssueInfo> queryOccurrenceIssuesCount() {
     SearchRequest request =
         OccurrenceIssuesRequestBuilder.builder()
             .termValue(key.toString())
@@ -176,6 +174,16 @@ public class MetricsCollector {
 
     return ((ParsedStringTerms) aggregation)
         .getBuckets().stream()
-            .collect(Collectors.toMap(Bucket::getKeyAsString, Bucket::getDocCount, (a1, b) -> b));
+            .map(
+                b -> {
+                  // TODO: GET RELATED TERMS SAMPLES!
+                  // SearchHit[] hits = ((ParsedTopHits)
+                  // b.getAggregations().get("by_hits")).getHits().getHits();
+                  return IssueInfo.builder()
+                      .issue(b.getKeyAsString())
+                      .count(b.getDocCount())
+                      .build();
+                })
+            .collect(Collectors.toSet());
   }
 }

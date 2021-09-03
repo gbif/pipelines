@@ -4,33 +4,54 @@ import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.TermQueryBuilder;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.TopHitsAggregationBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 
 /**
  * Similir to _search API call
  *
- * <p>{ "size": 0, "query": { "term": { "datasetKey": "6a54c048-dcd4-43c5-9218-03dafad7ad20" } },
- * "aggs": { "langs": { "terms": { "field": "issues", "size": 500 } } } }
+ * <p>{"size":0,"query":{"term":{"datasetKey":"d596fccb-2319-42eb-b13b-986c932780ad"}},
+ * "aggs":{"issues":{"terms":{"field":"issues","size":500},
+ * "aggs":{"hits":{"top_hits":{"_source":{"includes":["verbatim"]},"size":5}}}}}}
  */
 @Slf4j
 @Builder
 public class OccurrenceIssuesRequestBuilder {
 
   public static final String AGGREGATION = "by_issues";
+  public static final String SUB_AGGREGATION = "by_hits";
 
-  @Builder.Default private final String termName = "datasetKey";
   private final String termValue;
-  @Builder.Default private final String aggsField = "issues";
   private final String indexName;
+  @Builder.Default private final int size = 0;
+  @Builder.Default private final int subSize = 5;
+  @Builder.Default private final String termName = "datasetKey";
+  @Builder.Default private final String aggsField = "issues";
+  @Builder.Default private final String[] includeFields = {"verbatim"};
+  @Builder.Default private final String[] excludeFields = null;
 
   public SearchRequest getRequest() {
+
+    TermQueryBuilder filterByDatasetKey = QueryBuilders.termQuery(termName, termValue);
+
+    TopHitsAggregationBuilder aggregateHits =
+        AggregationBuilders.topHits(SUB_AGGREGATION).size(subSize).fetchSource(includeFields, null);
+
+    TermsAggregationBuilder aggregateIssues =
+        AggregationBuilders.terms(AGGREGATION)
+            .field(aggsField)
+            .size(1_024)
+            .subAggregation(aggregateHits);
+
     return new SearchRequest()
         .source(
             new SearchSourceBuilder()
-                .size(0)
-                .query(QueryBuilders.termQuery(termName, termValue))
-                .aggregation(AggregationBuilders.terms(AGGREGATION).field(aggsField).size(1_024)))
+                .size(size)
+                .query(filterByDatasetKey)
+                .aggregation(aggregateIssues))
         .indices(indexName);
   }
 }

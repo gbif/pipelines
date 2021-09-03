@@ -2,7 +2,9 @@ package org.gbif.pipelines.validator;
 
 import static org.gbif.pipelines.estools.common.SettingsType.INDEXING;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -10,6 +12,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import org.gbif.api.vocabulary.Extension;
@@ -20,6 +23,7 @@ import org.gbif.pipelines.estools.model.IndexParams;
 import org.gbif.pipelines.estools.service.EsService;
 import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Metrics.Core;
+import org.gbif.validator.api.Metrics.Core.IssueInfo;
 import org.gbif.validator.api.Metrics.Core.TermInfo;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -95,39 +99,54 @@ public class MetricsCollectorIT {
 
     // Core
     Core core = result.getCore();
-    Map<String, TermInfo> resCoreTerms = core.getIndexedCoreTerms();
+    Set<TermInfo> resCoreTerms = core.getIndexedCoreTerms();
 
     assertEquals(Long.valueOf(1L), core.getIndexedCount());
 
-    assertEquals(
-        Long.valueOf(1L),
-        resCoreTerms.get(DwcTerm.maximumElevationInMeters.qualifiedName()).getRawIndexed());
-    assertEquals(
-        Long.valueOf(1L),
-        resCoreTerms.get(DwcTerm.maximumElevationInMeters.qualifiedName()).getInterpretedIndexed());
+    assertTermInfo(
+        resCoreTerms,
+        TermInfo.builder()
+            .term(DwcTerm.maximumElevationInMeters.qualifiedName())
+            .rawIndexed(1L)
+            .interpretedIndexed(1L)
+            .build());
 
-    assertEquals(
-        Long.valueOf(1L), resCoreTerms.get(DwcTerm.organismID.qualifiedName()).getRawIndexed());
-    assertEquals(
-        Long.valueOf(0L),
-        resCoreTerms.get(DwcTerm.organismID.qualifiedName()).getInterpretedIndexed());
+    assertTermInfo(
+        resCoreTerms,
+        TermInfo.builder()
+            .term(DwcTerm.organismID.qualifiedName())
+            .rawIndexed(1L)
+            .interpretedIndexed(0L)
+            .build());
 
-    assertEquals(
-        Long.valueOf(0L), resCoreTerms.get(DwcTerm.occurrenceID.qualifiedName()).getRawIndexed());
-    assertEquals(
-        Long.valueOf(0L),
-        resCoreTerms.get(DwcTerm.occurrenceID.qualifiedName()).getInterpretedIndexed());
+    assertTermInfo(
+        resCoreTerms,
+        TermInfo.builder()
+            .term(DwcTerm.occurrenceID.qualifiedName())
+            .rawIndexed(0L)
+            .interpretedIndexed(0L)
+            .build());
 
-    assertNull(resCoreTerms.get(DwcTerm.county.qualifiedName()));
+    assertTermInfo(
+        resCoreTerms,
+        TermInfo.builder()
+            .term(DwcTerm.bed.qualifiedName())
+            .rawIndexed(1L)
+            .interpretedIndexed(null)
+            .build());
 
-    assertEquals(Long.valueOf(1L), resCoreTerms.get(DwcTerm.bed.qualifiedName()).getRawIndexed());
-    assertNull(resCoreTerms.get(DwcTerm.bed.qualifiedName()).getInterpretedIndexed());
+    Optional<TermInfo> anyTerm =
+        resCoreTerms.stream()
+            .filter(x -> x.getTerm().equalsIgnoreCase(DwcTerm.county.qualifiedName()))
+            .findAny();
+    assertFalse(anyTerm.isPresent());
 
     // OccurrenceIssues
-    Map<String, Long> issues = core.getOccurrenceIssues();
+    Set<IssueInfo> issues = core.getOccurrenceIssues();
     assertEquals(2, issues.size());
-    assertEquals(Long.valueOf(1L), issues.get("RANDOM_ISSUE"));
-    assertEquals(Long.valueOf(1L), issues.get("GEODETIC_DATUM_ASSUMED_WGS84"));
+    assertIssueInfo(issues, IssueInfo.builder().issue("RANDOM_ISSUE").count(1L).build());
+    assertIssueInfo(
+        issues, IssueInfo.builder().issue("GEODETIC_DATUM_ASSUMED_WGS84").count(1L).build());
 
     // Extensions
     Metrics.Extension extension = result.getExtensions().get(0);
@@ -136,5 +155,22 @@ public class MetricsCollectorIT {
     assertEquals(Long.valueOf(3L), resExtTerms.get(DwcTerm.measurementValue.qualifiedName()));
     assertEquals(Long.valueOf(0L), resExtTerms.get(DwcTerm.measurementType.qualifiedName()));
     assertNull(resExtTerms.get(DwcTerm.county.qualifiedName()));
+  }
+
+  private void assertTermInfo(Set<TermInfo> set, TermInfo termInfo) {
+    Optional<TermInfo> anyTerm =
+        set.stream().filter(x -> x.getTerm().equalsIgnoreCase(termInfo.getTerm())).findAny();
+    assertTrue(anyTerm.isPresent());
+    TermInfo info = anyTerm.get();
+    assertEquals(termInfo.getRawIndexed(), info.getRawIndexed());
+    assertEquals(termInfo.getInterpretedIndexed(), info.getInterpretedIndexed());
+  }
+
+  private void assertIssueInfo(Set<IssueInfo> set, IssueInfo issueInfo) {
+    Optional<IssueInfo> anyTerm =
+        set.stream().filter(x -> x.getIssue().equalsIgnoreCase(issueInfo.getIssue())).findAny();
+    assertTrue(anyTerm.isPresent());
+    IssueInfo info = anyTerm.get();
+    assertEquals(issueInfo.getCount(), info.getCount());
   }
 }
