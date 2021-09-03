@@ -7,7 +7,6 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.actuate.autoconfigure.elasticsearch.ElasticSearchRestHealthContributorAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 
@@ -33,7 +32,6 @@ import org.springframework.context.annotation.FilterType;
           type = FilterType.ASSIGNABLE_TYPE,
           classes = {UserSuretyDelegateImpl.class, MyBatisConfiguration.class})
     })
-@EnableFeignClients
 @MapperScan("org.gbif.validator.persistence.mapper")
 public class ValidatorWsApplication {
 

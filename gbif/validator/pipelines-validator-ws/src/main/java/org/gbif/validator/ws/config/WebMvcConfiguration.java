@@ -19,13 +19,18 @@ import java.util.Arrays;
 import java.util.List;
 import org.gbif.ws.converter.UuidTextMessageConverter;
 import org.gbif.ws.server.provider.PageableHandlerMethodArgumentResolver;
+import org.springframework.boot.autoconfigure.web.servlet.WebMvcRegistrations;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.StringHttpMessageConverter;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.ContentNegotiationConfigurer;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 /** Configures default Web elements. */
 @Configuration
@@ -48,5 +53,23 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
   @Override
   public void configureContentNegotiation(ContentNegotiationConfigurer configurer) {
     configurer.defaultContentType(MediaType.APPLICATION_JSON);
+  }
+
+  @Bean
+  public WebMvcRegistrations webMvcRegistrationsHandlerMapping() {
+    return new WebMvcRegistrations() {
+      @Override
+      public RequestMappingHandlerMapping getRequestMappingHandlerMapping() {
+        return new CustomRequestMappingHandlerMapping();
+      }
+    };
+  }
+
+  private static class CustomRequestMappingHandlerMapping extends RequestMappingHandlerMapping {
+
+    @Override
+    protected boolean isHandler(Class<?> beanType) {
+      return AnnotatedElementUtils.hasAnnotation(beanType, RestController.class);
+    }
   }
 }
