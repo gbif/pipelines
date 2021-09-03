@@ -73,7 +73,7 @@ public class Metrics {
   @JsonDeserialize(builder = Extension.ExtensionBuilder.class)
   public static class Extension {
     @Builder.Default private String rowType = "";
-    @Builder.Default private Long fileCount = 0L;
+    @Builder.Default private Long fileCount = null;
     @Builder.Default private Map<String, Long> extensionsTermsCounts = Collections.emptyMap();
   }
 

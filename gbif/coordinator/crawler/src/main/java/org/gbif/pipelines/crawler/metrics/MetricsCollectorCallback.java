@@ -105,7 +105,7 @@ public class MetricsCollectorCallback extends AbstractMessageCallback<PipelinesI
     Set<Term> coreTerms = Collections.emptySet();
     Map<Extension, Set<Term>> extenstionsTerms = Collections.emptyMap();
 
-    long coreLineCount = 0;
+    Long coreLineCount = null;
     Map<String, Long> extLineCount = new HashMap<>();
 
     if (message.getEndpointType() == EndpointType.DWC_ARCHIVE) {
