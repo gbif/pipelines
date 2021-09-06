@@ -12,10 +12,13 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.gbif.api.vocabulary.Extension;
+import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.estools.EsIndex;
@@ -24,6 +27,7 @@ import org.gbif.pipelines.estools.service.EsService;
 import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Metrics.Core;
 import org.gbif.validator.api.Metrics.Core.IssueInfo;
+import org.gbif.validator.api.Metrics.Core.IssueInfo.IssueSample;
 import org.gbif.validator.api.Metrics.Core.TermInfo;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -49,14 +53,26 @@ public class MetricsCollectorIT {
 
     String datasetKey = "675a1bfd-9bcc-46ea-a417-1f68f23a10f6";
 
-    String document =
-        "{\"datasetKey\":\"675a1bfd-9bcc-46ea-a417-1f68f23a10f6\",\"maximumElevationInMeters\":2.2,\"issues\":"
-            + "[\"GEODETIC_DATUM_ASSUMED_WGS84\",\"RANDOM_ISSUE\"],\"verbatim\":{\"core\":"
+    String documentOne =
+        "{\"datasetKey\":\"675a1bfd-9bcc-46ea-a417-1f68f23a10f6\",\"id\":\"bla\",\"maximumElevationInMeters\":2.2,\"issues\":"
+            + "[\"GEODETIC_DATUM_ASSUMED_WGS84\",\"ELEVATION_UNLIKELY\"],\"verbatim\":{\"core\":"
             + "{\"http://rs.tdwg.org/dwc/terms/maximumElevationInMeters\":\"1150\","
             + "\"http://rs.tdwg.org/dwc/terms/organismID\":\"251\",\"http://rs.tdwg.org/dwc/terms/bed\":\"251\"},\"extensions\":"
             + "{\"http://rs.tdwg.org/dwc/terms/MeasurementOrFact\":[{\"http://rs.tdwg.org/dwc/terms/measurementValue\":"
             + "\"1.7\"},{\"http://rs.tdwg.org/dwc/terms/measurementValue\":\"5.0\"},"
             + "{\"http://rs.tdwg.org/dwc/terms/measurementValue\":\"5.83\"}]}}}";
+
+    String documentTwo =
+        "{\"datasetKey\":\"675a1bfd-9bcc-46ea-a417-1f68f23a10f6\",\"id\":\"bla1\",\"maximumElevationInMeters\":3.2,\"issues\":"
+            + "[\"RANDOM_ISSUE\"],\"verbatim\":{\"core\":{\"http://rs.tdwg.org/dwc/terms/maximumElevationInMeters\":\"2150\","
+            + "\"http://rs.tdwg.org/dwc/terms/organismID\":\"251\",\"http://rs.tdwg.org/dwc/terms/bed\":\"351\"},\"extensions\":"
+            + "{\"http://rs.tdwg.org/dwc/terms/MeasurementOrFact\":[{\"http://rs.tdwg.org/dwc/terms/measurementValue\":"
+            + "\"2.7\"},{\"http://rs.tdwg.org/dwc/terms/measurementValue\":\"6.0\"},"
+            + "{\"http://rs.tdwg.org/dwc/terms/measurementValue\":\"6.83\"}]}}}";
+
+    String documentThree =
+        "{\"datasetKey\":\"675a1bfd-9bcc-46ea-a417-1f68f23a10f6\",\"id\":\"bla2\",\"maximumElevationInMeters\":3.2,"
+            + "\"issues\":[\"RANDOM_ISSUE\"],\"verbatim\":{\"core\":{}}}";
 
     EsIndex.createIndex(
         ES_SERVER.getEsConfig(),
@@ -66,7 +82,9 @@ public class MetricsCollectorIT {
             .pathMappings(MAPPINGS_PATH)
             .build());
 
-    EsService.indexDocument(ES_SERVER.getEsClient(), IDX_NAME, 1L, document);
+    EsService.indexDocument(ES_SERVER.getEsClient(), IDX_NAME, 1L, documentOne);
+    EsService.indexDocument(ES_SERVER.getEsClient(), IDX_NAME, 2L, documentTwo);
+    EsService.indexDocument(ES_SERVER.getEsClient(), IDX_NAME, 3L, documentThree);
     EsService.refreshIndex(ES_SERVER.getEsClient(), IDX_NAME);
 
     // When
@@ -101,21 +119,21 @@ public class MetricsCollectorIT {
     Core core = result.getCore();
     Set<TermInfo> resCoreTerms = core.getIndexedCoreTerms();
 
-    assertEquals(Long.valueOf(1L), core.getIndexedCount());
+    assertEquals(Long.valueOf(3L), core.getIndexedCount());
 
     assertTermInfo(
         resCoreTerms,
         TermInfo.builder()
             .term(DwcTerm.maximumElevationInMeters.qualifiedName())
-            .rawIndexed(1L)
-            .interpretedIndexed(1L)
+            .rawIndexed(2L)
+            .interpretedIndexed(3L)
             .build());
 
     assertTermInfo(
         resCoreTerms,
         TermInfo.builder()
             .term(DwcTerm.organismID.qualifiedName())
-            .rawIndexed(1L)
+            .rawIndexed(2L)
             .interpretedIndexed(0L)
             .build());
 
@@ -131,7 +149,7 @@ public class MetricsCollectorIT {
         resCoreTerms,
         TermInfo.builder()
             .term(DwcTerm.bed.qualifiedName())
-            .rawIndexed(1L)
+            .rawIndexed(2L)
             .interpretedIndexed(null)
             .build());
 
@@ -143,34 +161,76 @@ public class MetricsCollectorIT {
 
     // OccurrenceIssues
     Set<IssueInfo> issues = core.getOccurrenceIssues();
-    assertEquals(2, issues.size());
-    assertIssueInfo(issues, IssueInfo.builder().issue("RANDOM_ISSUE").count(1L).build());
+    assertEquals(3, issues.size());
     assertIssueInfo(
-        issues, IssueInfo.builder().issue("GEODETIC_DATUM_ASSUMED_WGS84").count(1L).build());
+        issues,
+        IssueInfo.builder()
+            .issue("RANDOM_ISSUE")
+            .count(2L)
+            .samples(
+                Arrays.asList(
+                    IssueSample.builder().recordId("bla1").build(),
+                    IssueSample.builder().recordId("bla2").build()))
+            .build());
+
+    assertIssueInfo(
+        issues,
+        IssueInfo.builder()
+            .issue(OccurrenceIssue.GEODETIC_DATUM_ASSUMED_WGS84.name())
+            .count(1L)
+            .samples(Collections.singletonList(IssueSample.builder().recordId("bla").build()))
+            .build());
+
+    assertIssueInfo(
+        issues,
+        IssueInfo.builder()
+            .issue(OccurrenceIssue.ELEVATION_UNLIKELY.name())
+            .count(1L)
+            .samples(
+                Collections.singletonList(
+                    IssueSample.builder()
+                        .relatedData(
+                            Collections.singletonMap(
+                                DwcTerm.maximumElevationInMeters.toString(), "1150"))
+                        .recordId("bla")
+                        .build()))
+            .build());
 
     // Extensions
     Metrics.Extension extension = result.getExtensions().get(0);
 
     Map<String, Long> resExtTerms = extension.getExtensionsTermsCounts();
-    assertEquals(Long.valueOf(3L), resExtTerms.get(DwcTerm.measurementValue.qualifiedName()));
+    assertEquals(Long.valueOf(6L), resExtTerms.get(DwcTerm.measurementValue.qualifiedName()));
     assertEquals(Long.valueOf(0L), resExtTerms.get(DwcTerm.measurementType.qualifiedName()));
     assertNull(resExtTerms.get(DwcTerm.county.qualifiedName()));
   }
 
-  private void assertTermInfo(Set<TermInfo> set, TermInfo termInfo) {
+  private void assertTermInfo(Set<TermInfo> set, TermInfo expected) {
     Optional<TermInfo> anyTerm =
-        set.stream().filter(x -> x.getTerm().equalsIgnoreCase(termInfo.getTerm())).findAny();
+        set.stream().filter(x -> x.getTerm().equalsIgnoreCase(expected.getTerm())).findAny();
     assertTrue(anyTerm.isPresent());
     TermInfo info = anyTerm.get();
-    assertEquals(termInfo.getRawIndexed(), info.getRawIndexed());
-    assertEquals(termInfo.getInterpretedIndexed(), info.getInterpretedIndexed());
+    assertEquals(expected.getRawIndexed(), info.getRawIndexed());
+    assertEquals(expected.getInterpretedIndexed(), info.getInterpretedIndexed());
   }
 
-  private void assertIssueInfo(Set<IssueInfo> set, IssueInfo issueInfo) {
+  private void assertIssueInfo(Set<IssueInfo> set, IssueInfo expected) {
     Optional<IssueInfo> anyTerm =
-        set.stream().filter(x -> x.getIssue().equalsIgnoreCase(issueInfo.getIssue())).findAny();
+        set.stream().filter(x -> x.getIssue().equalsIgnoreCase(expected.getIssue())).findAny();
     assertTrue(anyTerm.isPresent());
     IssueInfo info = anyTerm.get();
-    assertEquals(issueInfo.getCount(), info.getCount());
+    assertEquals(expected.getCount(), info.getCount());
+    assertEquals(expected.getSamples().size(), info.getSamples().size());
+
+    Map<String, Map<String, String>> infoAsMap =
+        info.getSamples().stream()
+            .collect(Collectors.toMap(IssueSample::getRecordId, IssueSample::getRelatedData));
+
+    for (IssueSample is : expected.getSamples()) {
+      assertTrue(infoAsMap.containsKey(is.getRecordId()));
+      for (Entry<String, String> entry : is.getRelatedData().entrySet()) {
+        assertEquals(entry.getValue(), infoAsMap.get(is.getRecordId()).get(entry.getKey()));
+      }
+    }
   }
 }

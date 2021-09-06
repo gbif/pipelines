@@ -1,6 +1,12 @@
 package org.gbif.pipelines.validator;
 
+import static org.gbif.pipelines.validator.metircs.request.OccurrenceIssuesRequestBuilder.HITS_AGGREGATION;
+import static org.gbif.pipelines.validator.metircs.request.OccurrenceIssuesRequestBuilder.ISSUES_AGGREGATION;
+
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -9,13 +15,19 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.bucket.terms.ParsedStringTerms;
+import org.elasticsearch.search.aggregations.bucket.terms.Terms.Bucket;
+import org.elasticsearch.search.aggregations.metrics.ParsedTopHits;
 import org.elasticsearch.search.aggregations.metrics.ParsedValueCount;
 import org.gbif.api.vocabulary.Extension;
+import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.Term;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
 import org.gbif.pipelines.validator.factory.ElasticsearchClientFactory;
 import org.gbif.pipelines.validator.metircs.request.ExtensionTermCountRequestBuilder;
 import org.gbif.pipelines.validator.metircs.request.ExtensionTermCountRequestBuilder.ExtTermCountRequest;
@@ -24,9 +36,11 @@ import org.gbif.pipelines.validator.metircs.request.TermCountRequestBuilder;
 import org.gbif.pipelines.validator.metircs.request.TermCountRequestBuilder.TermCountRequest;
 import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Metrics.Core.IssueInfo;
+import org.gbif.validator.api.Metrics.Core.IssueInfo.IssueSample;
 import org.gbif.validator.api.Metrics.Core.TermInfo;
 
 // TODO: DOC
+@Slf4j
 @Builder
 public class MetricsCollector {
 
@@ -170,20 +184,53 @@ public class MetricsCollector {
         ElasticsearchClientFactory.getInstance(esHost)
             .search(request, RequestOptions.DEFAULT)
             .getAggregations()
-            .get(OccurrenceIssuesRequestBuilder.AGGREGATION);
+            .get(ISSUES_AGGREGATION);
 
     return ((ParsedStringTerms) aggregation)
-        .getBuckets().stream()
-            .map(
-                b -> {
-                  // TODO: GET RELATED TERMS SAMPLES!
-                  // SearchHit[] hits = ((ParsedTopHits)
-                  // b.getAggregations().get("by_hits")).getHits().getHits();
-                  return IssueInfo.builder()
-                      .issue(b.getKeyAsString())
-                      .count(b.getDocCount())
-                      .build();
-                })
-            .collect(Collectors.toSet());
+        .getBuckets().stream().map(this::collectIssueInfo).collect(Collectors.toSet());
+  }
+
+  private IssueInfo collectIssueInfo(Bucket bucket) {
+    SearchHit[] hits =
+        ((ParsedTopHits) bucket.getAggregations().get(HITS_AGGREGATION)).getHits().getHits();
+
+    String occurrenceIssueString = bucket.getKeyAsString();
+
+    List<IssueSample> issueSamples = new ArrayList<>(hits.length);
+    for (SearchHit hit : hits) {
+      // Get core object map from verbatim record
+      Map<String, String> core =
+          ((HashMap<String, HashMap<String, String>>) hit.getSourceAsMap().get(Indexing.VERBATIM))
+              .get(Indexing.CORE);
+
+      // Get id of the record
+      String id = (String) hit.getSourceAsMap().get(Indexing.ID);
+
+      // Find related terms
+      Set<Term> terms = Collections.emptySet();
+      try {
+        OccurrenceIssue issue = OccurrenceIssue.valueOf(occurrenceIssueString);
+        terms = issue.getRelatedTerms();
+      } catch (IllegalArgumentException ex) {
+        log.warn("Can't find enum value for OccurrenceIssue - {}", occurrenceIssueString);
+      }
+
+      // Find values of the related terms
+      Map<String, String> relatedData = new HashMap<>();
+      for (Term term : terms) {
+        String s = core.get(term.qualifiedName());
+        if (s != null && !s.trim().isEmpty()) {
+          relatedData.put(term.toString(), s);
+        }
+      }
+
+      issueSamples.add(IssueSample.builder().recordId(id).relatedData(relatedData).build());
+    }
+
+    return IssueInfo.builder()
+        .issue(occurrenceIssueString)
+        .count(bucket.getDocCount())
+        .samples(issueSamples)
+        .build();
   }
 }

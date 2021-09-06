@@ -75,7 +75,7 @@ public class Metrics {
     public static class IssueInfo {
       private String issue;
       @Builder.Default private Long count = null;
-      @Builder.Default private List<IssueSample> sample = Collections.emptyList();
+      @Builder.Default private List<IssueSample> samples = Collections.emptyList();
 
       @Data
       @Builder
@@ -84,7 +84,7 @@ public class Metrics {
       @JsonDeserialize(builder = Core.IssueInfo.IssueSample.IssueSampleBuilder.class)
       public static class IssueSample {
         private String recordId;
-        private Map<String, Map<String, String>> relatedData;
+        @Builder.Default private Map<String, String> relatedData = Collections.emptyMap();
       }
     }
   }

@@ -9,6 +9,7 @@ import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 import org.elasticsearch.search.aggregations.metrics.TopHitsAggregationBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
 
 /**
  * Similir to _search API call
@@ -21,16 +22,16 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 @Builder
 public class OccurrenceIssuesRequestBuilder {
 
-  public static final String AGGREGATION = "by_issues";
-  public static final String SUB_AGGREGATION = "by_hits";
+  public static final String ISSUES_AGGREGATION = "by_issues";
+  public static final String HITS_AGGREGATION = "by_hits";
 
   private final String termValue;
   private final String indexName;
   @Builder.Default private final int size = 0;
   @Builder.Default private final int subSize = 5;
-  @Builder.Default private final String termName = "datasetKey";
-  @Builder.Default private final String aggsField = "issues";
-  @Builder.Default private final String[] includeFields = {"verbatim"};
+  @Builder.Default private final String termName = Indexing.DATASET_KEY;
+  @Builder.Default private final String aggsField = Indexing.ISSUES;
+  @Builder.Default private final String[] includeFields = {Indexing.ID, Indexing.VERBATIM};
   @Builder.Default private final String[] excludeFields = null;
 
   public SearchRequest getRequest() {
@@ -38,10 +39,12 @@ public class OccurrenceIssuesRequestBuilder {
     TermQueryBuilder filterByDatasetKey = QueryBuilders.termQuery(termName, termValue);
 
     TopHitsAggregationBuilder aggregateHits =
-        AggregationBuilders.topHits(SUB_AGGREGATION).size(subSize).fetchSource(includeFields, null);
+        AggregationBuilders.topHits(HITS_AGGREGATION)
+            .size(subSize)
+            .fetchSource(includeFields, null);
 
     TermsAggregationBuilder aggregateIssues =
-        AggregationBuilders.terms(AGGREGATION)
+        AggregationBuilders.terms(ISSUES_AGGREGATION)
             .field(aggsField)
             .size(1_024)
             .subAggregation(aggregateHits);

@@ -151,7 +151,44 @@ public class PipelinesVariables {
     public static class Indexing {
 
       public static final String INDEX_TYPE = "record";
+
+      // Fields
+      public static final String ID = "id";
       public static final String GBIF_ID = "gbifId";
+      public static final String VERBATIM = "verbatim";
+      public static final String CORE = "core";
+      public static final String EXTENSIONS = "extensions";
+      public static final String ISSUES = "issues";
+      public static final String NOT_ISSUES = "notIssues";
+      public static final String DATASET_KEY = "datasetKey";
+      public static final String CREATED = "created";
+      public static final String DECIMAL_LATITUDE = "decimalLatitude";
+      public static final String DECIMAL_LONGITUDE = "decimalLongitude";
+      public static final String MACHINE_TAGS = "machineTags";
+      public static final String CRAWL_ID = "crawlId";
+      public static final String LICENSE = "license";
+      public static final String ALL = "all";
+      public static final String DATASET_PUBLISHING_COUNTRY = "datasetPublishingCountry";
+      public static final String MEASUREMENT_OR_FACT_ITEMS = "measurementOrFactItems";
+      public static final String GBIF_CLASSIFICATION = "gbifClassification";
+      public static final String YEAR = "year";
+      public static final String DAY = "day";
+      public static final String MONTH = "month";
+      public static final String EVENT_DATE_SINGLE = "eventDateSingle";
+      public static final String EVENT_DATE = "eventDate";
+      public static final String GTE = "gte";
+      public static final String LTE = "lte";
+      public static final String LOCATION_FEATUE_LAYERS = "locationFeatureLayers";
+      public static final String COUNTRY = "country";
+      public static final String COUNTRY_CODE = "countryCode";
+      public static final String COORDINATES = "coordinates";
+      public static final String SCOORDINATES = "scoordinates";
+      public static final String LOCALITY = "locality";
+      public static final String IS_CLUSTERED = "isClustered";
+      public static final String RECORDED_BY = "recordedBy";
+      public static final String START_DAY_OF_YEAR = "startDayOfYear";
+      public static final String IDENTIFIED_BY = "identifiedBy";
+      public static final String HOSTING_ORGANIZATION_KEY = "hostingOrganizationKey";
     }
   }
 
