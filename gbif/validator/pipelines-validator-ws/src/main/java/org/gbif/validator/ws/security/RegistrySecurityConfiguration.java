@@ -2,11 +2,16 @@ package org.gbif.validator.ws.security;
 
 import com.zaxxer.hikari.HikariDataSource;
 import java.net.URI;
+import java.util.Locale;
 import java.util.UUID;
 import lombok.SneakyThrows;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.OrganizationService;
+import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.Language;
+import org.gbif.mybatis.type.CountryTypeHandler;
+import org.gbif.mybatis.type.LanguageTypeHandler;
 import org.gbif.mybatis.type.UriTypeHandler;
 import org.gbif.mybatis.type.UuidTypeHandler;
 import org.gbif.registry.identity.service.BasicUserSuretyDelegate;
@@ -23,8 +28,8 @@ import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.UserMapper;
 import org.gbif.registry.persistence.mapper.handler.DOITypeHandler;
+import org.gbif.registry.persistence.mapper.handler.LocaleTypeHandler;
 import org.gbif.registry.persistence.mapper.surety.ChallengeCodeMapper;
-import org.gbif.registry.security.LegacyAuthorizationFilter;
 import org.gbif.registry.security.LegacyAuthorizationService;
 import org.gbif.registry.security.LegacyAuthorizationServiceImpl;
 import org.gbif.registry.security.RegistryUserDetailsService;
@@ -79,6 +84,9 @@ public class RegistrySecurityConfiguration {
     configuration.getTypeHandlerRegistry().register(UUID.class, UuidTypeHandler.class);
     configuration.getTypeHandlerRegistry().register(URI.class, UriTypeHandler.class);
     configuration.getTypeHandlerRegistry().register(DOI.class, DOITypeHandler.class);
+    configuration.getTypeHandlerRegistry().register(Country.class, CountryTypeHandler.class);
+    configuration.getTypeHandlerRegistry().register(Language.class, LanguageTypeHandler.class);
+    configuration.getTypeHandlerRegistry().register(Locale.class, LocaleTypeHandler.class);
     configuration.getTypeHandlerRegistry().register("org.gbif.registry.persistence.handler");
     configuration.setMapUnderscoreToCamelCase(true);
     sqlSession.setConfiguration(configuration);
@@ -175,24 +183,12 @@ public class RegistrySecurityConfiguration {
   }
 
   @Bean
-  public ValidateInstallationService validateInstallationService(
-      InstallationService installationService, OrganizationService organizationService) {
-    return new ValidateInstallationServiceImpl(installationService, organizationService);
-  }
-
-  @Bean
   public LegacyAuthorizationService legacyAuthorizationService(
       OrganizationMapper organizationMapper,
       DatasetMapper datasetMapper,
       InstallationMapper installationMapper) {
     return new LegacyAuthorizationServiceImpl(
         organizationMapper, datasetMapper, installationMapper);
-  }
-
-  @Bean
-  public LegacyAuthorizationFilter legacyAuthorizationFilter(
-      LegacyAuthorizationService legacyAuthorizationService) {
-    return new LegacyAuthorizationFilter(legacyAuthorizationService);
   }
 
   @Bean
@@ -210,22 +206,22 @@ public class RegistrySecurityConfiguration {
   @Configuration
   public static class ValidatorWebSecurity extends NoAuthWebSecurityConfigurer {
 
-    private final LegacyAuthorizationFilter legacyAuthorizationFilter;
+    private final InstallationIdentityFilter installationIdentityFilter;
 
     @SneakyThrows
     public ValidatorWebSecurity(
         UserDetailsService userDetailsService,
         ApplicationContext context,
         PasswordEncoder passwordEncoder,
-        LegacyAuthorizationFilter legacyAuthorizationFilter) {
+        InstallationIdentityFilter installationIdentityFilter) {
       super(userDetailsService, context, passwordEncoder);
-      this.legacyAuthorizationFilter = legacyAuthorizationFilter;
+      this.installationIdentityFilter = installationIdentityFilter;
     }
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
       super.configure(http);
-      http.addFilterAfter(legacyAuthorizationFilter, IdentityFilter.class);
+      http.addFilterAfter(installationIdentityFilter, IdentityFilter.class);
     }
   }
 }

@@ -1,11 +1,12 @@
 package org.gbif.validator.ws.resource;
 
+import static org.gbif.registry.security.UserRoles.APP_ROLE;
+import static org.gbif.registry.security.UserRoles.IPT_ROLE;
 import static org.gbif.registry.security.UserRoles.USER_ROLE;
 
 import java.security.Principal;
 import java.util.Set;
 import java.util.UUID;
-import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
@@ -16,7 +17,6 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.service.ErrorMapper;
 import org.gbif.validator.service.ValidationService;
-import org.gbif.validator.ws.security.ValidateInstallationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -41,24 +41,19 @@ import org.springframework.web.server.ResponseStatusException;
 @Slf4j
 @RestController
 @RequestMapping(value = "validation", produces = MediaType.APPLICATION_JSON_VALUE)
-@Secured({USER_ROLE})
+@Secured({USER_ROLE, APP_ROLE, IPT_ROLE})
 @RequiredArgsConstructor
 @Validated
 public class ValidationResource {
 
   private final ValidationService<MultipartFile> validationService;
   private final ErrorMapper errorMapper;
-  private final ValidateInstallationService validateInstallationService;
 
-  private void validateRequest(
-      UUID installationKey, Set<String> notificationEmails, HttpServletRequest httpServletRequest) {
-    validateInstallationService.validateInstallationAccess(installationKey, httpServletRequest);
-    if (installationKey != null) {
-      if (notificationEmails == null || notificationEmails.isEmpty()) {
-        throw new ResponseStatusException(
-            HttpStatus.BAD_REQUEST,
-            "Notification emails must be provided when installation key is present");
-      }
+  private void validateRequest(UUID installationKey, Set<String> notificationEmails) {
+    if (installationKey != null && (notificationEmails == null || notificationEmails.isEmpty())) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
+          "Notification emails must be provided when installation key is present");
     }
   }
 
@@ -70,9 +65,8 @@ public class ValidationResource {
       @RequestParam(value = "installationKey", required = false) UUID installationKey,
       @RequestParam(value = "notificationEmail", required = false)
           Set<@Email String> notificationEmails,
-      @Autowired Principal principal,
-      @Autowired HttpServletRequest httpServletRequest) {
-    validateRequest(installationKey, notificationEmails, httpServletRequest);
+      @Autowired Principal principal) {
+    validateRequest(installationKey, notificationEmails);
     return errorMapper.getOrElseThrow(
         validationService.validateFile(
             file, principal, resourceId, installationKey, notificationEmails));
@@ -88,9 +82,8 @@ public class ValidationResource {
       @RequestParam(value = "installationKey", required = false) UUID installationKey,
       @RequestParam(value = "notificationEmail", required = false)
           Set<@Email String> notificationEmails,
-      @Autowired Principal principal,
-      @Autowired HttpServletRequest httpServletRequest) {
-    validateRequest(installationKey, notificationEmails, httpServletRequest);
+      @Autowired Principal principal) {
+    validateRequest(installationKey, notificationEmails);
     return errorMapper.getOrElseThrow(
         validationService.validateFileFromUrl(
             fileURL, principal, resourceId, installationKey, notificationEmails));
@@ -115,13 +108,10 @@ public class ValidationResource {
   public ResponseEntity<?> update(
       @PathVariable UUID key,
       @RequestBody @Valid @NotNull Validation validation,
-      @Autowired Principal principal,
-      @Autowired HttpServletRequest httpServletRequest) {
+      @Autowired Principal principal) {
     if (!key.equals(validation.getKey())) {
       return ResponseEntity.badRequest().body("Wrong validation key for this url");
     }
-    validateInstallationService.validateInstallationAccess(
-        validation.getInstallationKey(), httpServletRequest);
     return errorMapper.getOrElseThrow(
         validationService.update(validation, principal).map(v -> ResponseEntity.ok().build()));
   }

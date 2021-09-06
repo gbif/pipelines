@@ -26,6 +26,7 @@ import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.StringHttpMessageConverter;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.ContentNegotiationConfigurer;
@@ -65,11 +66,16 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
     };
   }
 
+  /**
+   * Custom request mapping, it checks for RestController annotation instead of RequestMapping to
+   * avoid instantiate Feing clients.
+   */
   private static class CustomRequestMappingHandlerMapping extends RequestMappingHandlerMapping {
 
     @Override
     protected boolean isHandler(Class<?> beanType) {
-      return AnnotatedElementUtils.hasAnnotation(beanType, RestController.class);
+      return (AnnotatedElementUtils.hasAnnotation(beanType, Controller.class)
+          || AnnotatedElementUtils.hasAnnotation(beanType, RestController.class));
     }
   }
 }
