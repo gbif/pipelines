@@ -13,7 +13,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
-import java.util.Set;
 import java.util.UUID;
 import javax.validation.ValidationException;
 import lombok.SneakyThrows;
@@ -24,6 +23,7 @@ import org.gbif.api.model.crawler.OccurrenceValidationReport;
 import org.gbif.api.vocabulary.NameUsageIssue;
 import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Validation;
+import org.gbif.validator.api.ValidationRequest;
 import org.gbif.validator.api.XmlSchemaValidatorResult;
 import org.gbif.validator.ws.client.ValidationWsClient;
 import org.junit.jupiter.api.AfterAll;
@@ -117,17 +117,22 @@ public class ValidationResourceIT {
     assertNotNull(validations);
   }
 
+  private static ValidationRequest testValidationRequest() {
+    return ValidationRequest.builder()
+        .installationKey(UUID.randomUUID())
+        .sourceId(UUID.randomUUID().toString())
+        .notificationEmail(Sets.newHashSet("nobody@gbif.org", "test@gbif.org"))
+        .build();
+  }
+
   @Test
   public void validationSubmitFileIT() {
     File archive = readTestFileInputStream("/Archive.zip");
-    String sourceId = UUID.randomUUID().toString();
-    UUID installationKey = UUID.randomUUID();
-    Set<String> notificationEmails = Sets.newHashSet("nobody@gbif.org", "test@gbif.org");
-    Validation validation =
-        validationWsClient.submitFile(archive, sourceId, installationKey, notificationEmails);
+    ValidationRequest validationRequest = testValidationRequest();
+    Validation validation = validationWsClient.submitFile(archive, validationRequest);
     assertNotNull(validation);
-    assertEquals(installationKey, validation.getInstallationKey());
-    assertEquals(sourceId, validation.getSourceId());
+    assertEquals(validationRequest.getInstallationKey(), validation.getInstallationKey());
+    assertEquals(validationRequest.getSourceId(), validation.getSourceId());
     // Emails must not be exposed
     assertNull(validation.getNotificationEmails());
 
@@ -148,15 +153,12 @@ public class ValidationResourceIT {
 
   @Test
   public void validationSubmitUrlIT() {
-    String sourceId = UUID.randomUUID().toString();
-    UUID installationKey = UUID.randomUUID();
-    Set<String> notificationEmails = Sets.newHashSet("nobody@gbif.org", "test@gbif.org");
+    ValidationRequest validationRequest = testValidationRequest();
     Validation validation =
-        validationWsClient.submitUrl(
-            testPath("/Archive.zip"), sourceId, installationKey, notificationEmails);
+        validationWsClient.submitUrl(testPath("/Archive.zip"), validationRequest);
     assertNotNull(validation);
-    assertEquals(installationKey, validation.getInstallationKey());
-    assertEquals(sourceId, validation.getSourceId());
+    assertEquals(validationRequest.getInstallationKey(), validation.getInstallationKey());
+    assertEquals(validationRequest.getSourceId(), validation.getSourceId());
     // Emails must not be exposed
     assertNull(validation.getNotificationEmails());
   }
@@ -164,21 +166,27 @@ public class ValidationResourceIT {
   /** Test the notification addresses are sent when the installationKey is present. */
   @Test
   public void validationSubmitUrlMissingEmailsIT() {
-    String sourceId = UUID.randomUUID().toString();
-    UUID installationKey = UUID.randomUUID();
     Assertions.assertThrows(
         IllegalArgumentException.class,
         () ->
             validationWsClient.submitUrl(
-                testPath("/Archive.zip"), sourceId, installationKey, null));
+                testPath("/Archive.zip"),
+                ValidationRequest.builder()
+                    .sourceId(UUID.randomUUID().toString())
+                    .installationKey(UUID.randomUUID())
+                    .build()));
   }
 
   @Test
   public void validationSubmitUrlWrongEmailFormatIT() {
-    Set<String> emails = Sets.newHashSet("thisnotandEmail!gmail.com");
     Assertions.assertThrows(
         ValidationException.class,
-        () -> validationWsClient.submitUrl(testPath("/Archive.zip"), null, null, emails));
+        () ->
+            validationWsClient.submitUrl(
+                testPath("/Archive.zip"),
+                ValidationRequest.builder()
+                    .notificationEmail(Sets.newHashSet("thisnotandEmail!gmail.com"))
+                    .build()));
   }
 
   @Test

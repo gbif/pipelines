@@ -8,6 +8,7 @@ import java.util.UUID;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.validator.api.Validation;
+import org.gbif.validator.api.ValidationRequest;
 
 /**
  * Data validation service.
@@ -19,18 +20,10 @@ public interface ValidationService<MF> {
   Optional<Validation.Error> reachedMaxRunningValidations(String userName);
 
   Either<Validation.Error, Validation> validateFile(
-      MF file,
-      Principal principal,
-      String sourceId,
-      UUID installationKey,
-      Set<String> notificationEmails);
+      MF file, Principal principal, ValidationRequest validationRequest);
 
   Either<Validation.Error, Validation> validateFileFromUrl(
-      String fileURL,
-      Principal principal,
-      String sourceId,
-      UUID installationKey,
-      Set<String> notificationEmails);
+      String fileURL, Principal principal, ValidationRequest validationRequest);
 
   Either<Validation.Error, Validation> get(UUID key);
 

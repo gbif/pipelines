@@ -27,6 +27,7 @@ import org.gbif.registry.security.UserRoles;
 import org.gbif.validator.api.FileFormat;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.Validation.Status;
+import org.gbif.validator.api.ValidationRequest;
 import org.gbif.validator.persistence.mapper.ValidationMapper;
 import org.gbif.validator.ws.file.DataFile;
 import org.gbif.validator.ws.file.FileSizeException;
@@ -65,14 +66,19 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
     return Optional.empty();
   }
 
+  public Optional<Validation.Error> validate(ValidationRequest validationRequest, String userName) {
+    if (validationRequest.getInstallationKey() != null
+        && (validationRequest.getNotificationEmail() == null
+            || validationRequest.getNotificationEmail().isEmpty())) {
+      return Optional.of(Validation.Error.of(Validation.Error.Code.NOTIFICATION_EMAILS_MISSING));
+    }
+    return reachedMaxRunningValidations(userName);
+  }
+
   @Override
   public Either<Validation.Error, Validation> validateFile(
-      MultipartFile file,
-      Principal principal,
-      String sourceId,
-      UUID installationKey,
-      Set<String> notificationEmails) {
-    Optional<Validation.Error> error = reachedMaxRunningValidations(principal.getName());
+      MultipartFile file, Principal principal, ValidationRequest validationRequest) {
+    Optional<Validation.Error> error = validate(validationRequest, principal.getName());
     if (error.isPresent()) {
       return Either.left(error.get());
     }
@@ -95,20 +101,14 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
             task.getStart(),
             principal.getName(),
             Validation.Status.SUBMITTED,
-            sourceId,
-            installationKey,
-            notificationEmails));
+            validationRequest));
   }
 
   @Override
   public Either<Validation.Error, Validation> validateFileFromUrl(
-      String fileURL,
-      Principal principal,
-      String sourceId,
-      UUID installationKey,
-      Set<String> notificationEmails) {
+      String fileURL, Principal principal, ValidationRequest validationRequest) {
     try {
-      Optional<Validation.Error> error = reachedMaxRunningValidations(principal.getName());
+      Optional<Validation.Error> error = validate(validationRequest, principal.getName());
       if (error.isPresent()) {
         return Either.left(error.get());
       }
@@ -130,9 +130,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
               downloadResult.getDataFile(),
               principal.getName(),
               Validation.Status.DOWNLOADING,
-              sourceId,
-              installationKey,
-              notificationEmails));
+              validationRequest));
     } catch (FileSizeException ex) {
       log.error("File limit error", ex);
       return Either.left(Validation.Error.of(Validation.Error.Code.MAX_FILE_SIZE_VIOLATION, ex));
@@ -206,12 +204,16 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
       DataFile dataFile,
       String userName,
       Validation.Status status,
-      String sourceId,
-      UUID installationKey,
-      Set<String> notificationEmails) {
+      ValidationRequest validationRequest) {
     validationMapper.create(
         newValidationInstance(
-            key, dataFile, userName, status, sourceId, installationKey, notificationEmails));
+            key,
+            dataFile,
+            userName,
+            status,
+            validationRequest.getSourceId(),
+            validationRequest.getInstallationKey(),
+            validationRequest.getNotificationEmail()));
     return validationMapper.get(key);
   }
 

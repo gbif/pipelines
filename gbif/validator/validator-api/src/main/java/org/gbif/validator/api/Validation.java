@@ -113,7 +113,8 @@ public class Validation {
       AUTHORIZATION_ERROR,
       NOT_FOUND,
       IO_ERROR,
-      VALIDATION_IS_NOT_EXECUTING
+      VALIDATION_IS_NOT_EXECUTING,
+      NOTIFICATION_EMAILS_MISSING
     }
 
     private final Code code;

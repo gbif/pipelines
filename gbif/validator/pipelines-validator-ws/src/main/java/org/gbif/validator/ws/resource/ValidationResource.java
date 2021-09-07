@@ -8,17 +8,16 @@ import java.security.Principal;
 import java.util.Set;
 import java.util.UUID;
 import javax.validation.Valid;
-import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.validator.api.Validation;
+import org.gbif.validator.api.ValidationRequest;
 import org.gbif.validator.service.ErrorMapper;
 import org.gbif.validator.service.ValidationService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
@@ -32,7 +31,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
 
 /**
  * Validation resource services, it allows validating files (synchronous) and url (asynchronously).
@@ -49,27 +47,14 @@ public class ValidationResource {
   private final ValidationService<MultipartFile> validationService;
   private final ErrorMapper errorMapper;
 
-  private void validateRequest(UUID installationKey, Set<String> notificationEmails) {
-    if (installationKey != null && (notificationEmails == null || notificationEmails.isEmpty())) {
-      throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST,
-          "Notification emails must be provided when installation key is present");
-    }
-  }
-
   /** Uploads a file and starts the validation process. */
   @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
   public Validation submitFile(
       @RequestParam("file") MultipartFile file,
-      @RequestParam(value = "sourceId", required = false) String resourceId,
-      @RequestParam(value = "installationKey", required = false) UUID installationKey,
-      @RequestParam(value = "notificationEmail", required = false)
-          Set<@Email String> notificationEmails,
+      @Valid ValidationRequest validationRequest,
       @Autowired Principal principal) {
-    validateRequest(installationKey, notificationEmails);
     return errorMapper.getOrElseThrow(
-        validationService.validateFile(
-            file, principal, resourceId, installationKey, notificationEmails));
+        validationService.validateFile(file, principal, validationRequest));
   }
 
   /** Asynchronously downloads a file from an URL and starts the validation process. */
@@ -78,15 +63,10 @@ public class ValidationResource {
       consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
   public Validation submitUrl(
       @RequestParam("fileUrl") String fileURL,
-      @RequestParam(value = "sourceId", required = false) String resourceId,
-      @RequestParam(value = "installationKey", required = false) UUID installationKey,
-      @RequestParam(value = "notificationEmail", required = false)
-          Set<@Email String> notificationEmails,
+      @Valid ValidationRequest validationRequest,
       @Autowired Principal principal) {
-    validateRequest(installationKey, notificationEmails);
     return errorMapper.getOrElseThrow(
-        validationService.validateFileFromUrl(
-            fileURL, principal, resourceId, installationKey, notificationEmails));
+        validationService.validateFileFromUrl(fileURL, principal, validationRequest));
   }
 
   /** Gets the detail of Validation. */

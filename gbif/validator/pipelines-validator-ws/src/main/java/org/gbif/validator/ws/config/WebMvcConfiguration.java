@@ -40,6 +40,7 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
   @Override
   public void addArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
     argumentResolvers.add(new PageableHandlerMethodArgumentResolver());
+    argumentResolvers.add(new ValidationRequestHandlerMethodArgumentResolver());
   }
 
   @Override

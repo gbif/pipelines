@@ -30,6 +30,10 @@ public class ErrorMapper implements Function<Validation.Error, ResponseStatusExc
     } else if (Validation.Error.Code.VALIDATION_IS_NOT_EXECUTING == error.getCode()) {
       return new ResponseStatusException(
           HttpStatus.BAD_REQUEST, "Validation is not in executing state");
+    } else if (Validation.Error.Code.NOTIFICATION_EMAILS_MISSING == error.getCode()) {
+      return new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
+          "Notification emails must be provided when installation key is present");
     }
     return new ResponseStatusException(
         HttpStatus.INTERNAL_SERVER_ERROR, "Error processing request");

@@ -3,10 +3,10 @@ package org.gbif.validator.ws.client;
 import java.io.File;
 import java.util.Set;
 import java.util.UUID;
-import javax.validation.constraints.Email;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.validator.api.Validation;
+import org.gbif.validator.api.ValidationRequest;
 import org.gbif.ws.client.ClientBuilder;
 import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
 import org.springframework.cloud.openfeign.SpringQueryMap;
@@ -30,21 +30,13 @@ public interface ValidationWsClient {
   /** Uploads a file and starts the validation process. */
   @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
   Validation submitFile(
-      @RequestPart("file") File file,
-      @RequestParam(value = "sourceId", required = false) String sourceId,
-      @RequestParam(value = "installationKey", required = false) UUID installationKey,
-      @RequestParam(value = "notificationEmail", required = false)
-          Set<@Email String> notificationEmails);
+      @RequestPart("file") File file, @SpringQueryMap ValidationRequest validationRequest);
 
   @PostMapping(
       path = "/url",
       consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
   Validation submitUrl(
-      @RequestPart("fileUrl") String fileUrl,
-      @RequestParam(value = "sourceId", required = false) String sourceId,
-      @RequestParam(value = "installationKey", required = false) UUID installationKey,
-      @RequestParam(value = "notificationEmail", required = false)
-          Set<@Email String> notificationEmails);
+      @RequestPart("fileUrl") String fileUrl, @SpringQueryMap ValidationRequest validationRequest);
 
   @PostMapping(
       path = "/url",
