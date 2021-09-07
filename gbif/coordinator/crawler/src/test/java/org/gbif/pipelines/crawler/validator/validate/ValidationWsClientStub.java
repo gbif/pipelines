@@ -3,12 +3,12 @@ package org.gbif.pipelines.crawler.validator.validate;
 import java.io.File;
 import java.util.Set;
 import java.util.UUID;
-import javax.validation.constraints.Email;
 import lombok.Builder;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.Validation.Status;
+import org.gbif.validator.api.ValidationRequest;
 import org.gbif.validator.ws.client.ValidationWsClient;
 
 @Builder
@@ -24,17 +24,12 @@ public class ValidationWsClientStub implements ValidationWsClient {
   }
 
   @Override
-  public Validation submitFile(
-      File file, String sourceId, UUID installationKey, Set<@Email String> notificationEmails) {
+  public Validation submitFile(File file, ValidationRequest validationRequest) {
     return null;
   }
 
   @Override
-  public Validation submitUrl(
-      String fileUrl,
-      String sourceId,
-      UUID installationKey,
-      Set<@Email String> notificationEmails) {
+  public Validation submitUrl(String fileUrl, ValidationRequest validationRequest) {
     return null;
   }
 
