@@ -153,6 +153,7 @@ public class MetricsCollectorCallback extends AbstractMessageCallback<PipelinesI
     validationClient.update(validation);
   }
 
+  /** Merge the validation response received from API and collected ES metrics */
   private void merge(Validation validation, Metrics metrics) {
     if (validation != null && metrics != null) {
       Metrics validationMetrics = validation.getMetrics();
@@ -165,8 +166,9 @@ public class MetricsCollectorCallback extends AbstractMessageCallback<PipelinesI
     }
   }
 
+  /** Efficient way of counting lines */
   private long countLines(File file) {
-    long lines = 0;
+    long lines = -1; // Exclude header
     try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
       while (reader.readLine() != null) {
         lines++;

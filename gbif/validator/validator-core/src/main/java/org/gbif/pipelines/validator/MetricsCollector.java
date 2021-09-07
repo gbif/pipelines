@@ -39,7 +39,16 @@ import org.gbif.validator.api.Metrics.Core.IssueInfo;
 import org.gbif.validator.api.Metrics.Core.IssueInfo.IssueSample;
 import org.gbif.validator.api.Metrics.Core.TermInfo;
 
-// TODO: DOC
+/**
+ * The class collects all necessary metrics using ES API, there are 4 main queries. such as:
+ *
+ * <pre>
+ * 1) Query total document count
+ * 2) Query core terms and return term, counts of raw and indexed terms
+ * 3) Query extensions terms and return term, and raw terms count
+ * 4) Query all issues and return issue value, and 5 terms samples
+ * </pre>
+ */
 @Slf4j
 @Builder
 public class MetricsCollector {
@@ -52,10 +61,10 @@ public class MetricsCollector {
   private final String corePrefix;
   private final String extensionsPrefix;
 
-  // TODO: DOC
+  /** Collect all metrics using ES API */
   public Metrics collect() {
 
-    // Core
+    // Collect core metrics
     Metrics.Core core =
         Metrics.Core.builder()
             .indexedCount(queryDocCount())
@@ -63,7 +72,7 @@ public class MetricsCollector {
             .occurrenceIssues(queryOccurrenceIssuesCount())
             .build();
 
-    // Extensions
+    // Collect extensions metrics
     List<Metrics.Extension> extensions =
         extensionsTerms.entrySet().stream()
             .filter(es -> es.getKey() != null)
@@ -80,6 +89,7 @@ public class MetricsCollector {
     return Metrics.builder().core(core).extensions(extensions).build();
   }
 
+  /** Query indexed document count by datasetKey */
   @SneakyThrows
   private Long queryDocCount() {
     TermCountRequest request =
@@ -94,7 +104,7 @@ public class MetricsCollector {
         .getCount();
   }
 
-  // TODO: DOC
+  /** Aggregate core terms and return term, counts of raw and indexed terms */
   private Set<TermInfo> queryCoreTermsCount() {
 
     Function<Term, TermCountRequest> requestFn =
@@ -137,7 +147,7 @@ public class MetricsCollector {
     return coreTerms.stream().parallel().map(requestFn).map(countFn).collect(Collectors.toSet());
   }
 
-  // TODO: DOC
+  /** Aggregate extensions terms and return term, counts of raw terms */
   private Map<String, Long> queryExtTermsCount(String prefix, Set<Term> terms) {
 
     Function<Term, ExtTermCountRequest> requestFn =
@@ -170,7 +180,7 @@ public class MetricsCollector {
         .collect(Collectors.toMap(t -> t.getTerm().qualifiedName(), countFn));
   }
 
-  // TODO: DOC
+  /** Aggregate all issues and return 5 samples per issue */
   @SneakyThrows
   private Set<IssueInfo> queryOccurrenceIssuesCount() {
     SearchRequest request =
@@ -190,6 +200,7 @@ public class MetricsCollector {
         .getBuckets().stream().map(this::collectIssueInfo).collect(Collectors.toSet());
   }
 
+  /** Process one issue bucket, get issue value, count and 5 samples of related data */
   private IssueInfo collectIssueInfo(Bucket bucket) {
     SearchHit[] hits =
         ((ParsedTopHits) bucket.getAggregations().get(HITS_AGGREGATION)).getHits().getHits();
