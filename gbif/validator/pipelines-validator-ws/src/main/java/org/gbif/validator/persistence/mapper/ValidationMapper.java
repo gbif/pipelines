@@ -1,12 +1,11 @@
 package org.gbif.validator.persistence.mapper;
 
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 import javax.annotation.Nullable;
 import org.apache.ibatis.annotations.Param;
-import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.validator.api.Validation;
+import org.gbif.validator.api.ValidationSearchRequest;
 
 /** MyBatis mapper for CRUD and list database operations. */
 public interface ValidationMapper {
@@ -40,30 +39,25 @@ public interface ValidationMapper {
   void update(Validation validation);
 
   /**
-   * Paginates thru validations, optionally filtered by username.
+   * Paginates through validations, optionally filtered by username.
    *
    * @param page paging parameters
    * @param username filter
-   * @param statuses filter
+   * @param searchRequest filter
    * @return a list of validation
    */
   List<Validation> list(
-      @Nullable @Param("page") Pageable page,
       @Nullable @Param("username") String username,
-      @Nullable @Param("statuses") Set<Validation.Status> statuses,
-      @Nullable @Param("installationKey") UUID installationKey,
-      @Nullable @Param("sourceId") String sourceId);
+      @Nullable @Param("searchRequest") ValidationSearchRequest searchRequest);
 
   /**
-   * Counts the number of validations of a optional user parameter.
+   * Counts the number of validations of an optional user parameter.
    *
    * @param username filter
-   * @param statuses filter
+   * @param searchRequest filter
    * @return number of validations
    */
   int count(
       @Nullable @Param("username") String username,
-      @Nullable @Param("statuses") Set<Validation.Status> statuses,
-      @Nullable @Param("installationKey") UUID installationKey,
-      @Nullable @Param("sourceId") String sourceId);
+      @Nullable @Param("searchRequest") ValidationSearchRequest searchRequest);
 }

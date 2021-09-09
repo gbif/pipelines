@@ -1,14 +1,10 @@
 package org.gbif.validator.service;
 
-import io.vavr.control.Either;
-import java.security.Principal;
-import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
-import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.ValidationRequest;
+import org.gbif.validator.api.ValidationSearchRequest;
 
 /**
  * Data validation service.
@@ -17,24 +13,17 @@ import org.gbif.validator.api.ValidationRequest;
  */
 public interface ValidationService<MF> {
 
-  Optional<Validation.Error> reachedMaxRunningValidations(String userName);
+  boolean reachedMaxRunningValidations(String userName);
 
-  Either<Validation.Error, Validation> validateFile(
-      MF file, Principal principal, ValidationRequest validationRequest);
+  Validation validateFile(MF file, ValidationRequest validationRequest);
 
-  Either<Validation.Error, Validation> validateFileFromUrl(
-      String fileURL, Principal principal, ValidationRequest validationRequest);
+  Validation validateFileFromUrl(String fileURL, ValidationRequest validationRequest);
 
-  Either<Validation.Error, Validation> get(UUID key);
+  Validation get(UUID key);
 
-  Either<Validation.Error, Validation> update(Validation validation, Principal principal);
+  Validation update(Validation validation);
 
-  Either<Validation.Error, Validation> cancel(UUID key, Principal principal);
+  Validation cancel(UUID key);
 
-  PagingResponse<Validation> list(
-      Pageable page,
-      Set<Validation.Status> status,
-      UUID installationKey,
-      String sourceId,
-      Principal principal);
+  PagingResponse<Validation> list(ValidationSearchRequest searchRequest);
 }

@@ -17,13 +17,13 @@ import java.util.UUID;
 import javax.validation.ValidationException;
 import lombok.SneakyThrows;
 import org.gbif.api.model.checklistbank.NameUsage;
-import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.crawler.OccurrenceValidationReport;
 import org.gbif.api.vocabulary.NameUsageIssue;
 import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.ValidationRequest;
+import org.gbif.validator.api.ValidationSearchRequest;
 import org.gbif.validator.api.XmlSchemaValidatorResult;
 import org.gbif.validator.ws.client.ValidationWsClient;
 import org.junit.jupiter.api.AfterAll;
@@ -113,7 +113,7 @@ public class ValidationResourceIT {
   @Test
   public void validationListIT() {
     PagingResponse<Validation> validations =
-        validationWsClient.list(new PagingRequest(0, 10), null);
+        validationWsClient.list(ValidationSearchRequest.builder().build());
     assertNotNull(validations);
   }
 
@@ -129,7 +129,7 @@ public class ValidationResourceIT {
   public void validationSubmitFileIT() {
     File archive = readTestFileInputStream("/Archive.zip");
     ValidationRequest validationRequest = testValidationRequest();
-    Validation validation = validationWsClient.submitFile(archive, validationRequest);
+    Validation validation = validationWsClient.validateFile(archive, validationRequest);
     assertNotNull(validation);
     assertEquals(validationRequest.getInstallationKey(), validation.getInstallationKey());
     assertEquals(validationRequest.getSourceId(), validation.getSourceId());
@@ -142,12 +142,21 @@ public class ValidationResourceIT {
 
     PagingResponse<Validation> validations =
         validationWsClient.list(
-            new PagingRequest(0, 10), Collections.singleton(Validation.Status.SUBMITTED));
+            ValidationSearchRequest.builder()
+                .offset(0L)
+                .limit(10)
+                .status(Collections.singleton(Validation.Status.SUBMITTED))
+                .sortByCreated(ValidationSearchRequest.SortOrder.DESC)
+                .build());
     assertTrue(validations.getCount() > 0);
 
     PagingResponse<Validation> failedValidations =
         validationWsClient.list(
-            new PagingRequest(0, 10), Collections.singleton(Validation.Status.RUNNING));
+            ValidationSearchRequest.builder()
+                .offset(0L)
+                .limit(10)
+                .status(Collections.singleton(Validation.Status.RUNNING))
+                .build());
     assertEquals(0, failedValidations.getCount());
   }
 
@@ -155,7 +164,7 @@ public class ValidationResourceIT {
   public void validationSubmitUrlIT() {
     ValidationRequest validationRequest = testValidationRequest();
     Validation validation =
-        validationWsClient.submitUrl(testPath("/Archive.zip"), validationRequest);
+        validationWsClient.validateFileFromUrl(testPath("/Archive.zip"), validationRequest);
     assertNotNull(validation);
     assertEquals(validationRequest.getInstallationKey(), validation.getInstallationKey());
     assertEquals(validationRequest.getSourceId(), validation.getSourceId());
@@ -169,7 +178,7 @@ public class ValidationResourceIT {
     Assertions.assertThrows(
         IllegalArgumentException.class,
         () ->
-            validationWsClient.submitUrl(
+            validationWsClient.validateFileFromUrl(
                 testPath("/Archive.zip"),
                 ValidationRequest.builder()
                     .sourceId(UUID.randomUUID().toString())
@@ -182,7 +191,7 @@ public class ValidationResourceIT {
     Assertions.assertThrows(
         ValidationException.class,
         () ->
-            validationWsClient.submitUrl(
+            validationWsClient.validateFileFromUrl(
                 testPath("/Archive.zip"),
                 ValidationRequest.builder()
                     .notificationEmail(Sets.newHashSet("thisnotandEmail!gmail.com"))
@@ -245,7 +254,12 @@ public class ValidationResourceIT {
     validationWsClient.cancel(persistedValidation.getKey());
 
     PagingResponse<Validation> failedValidations =
-        validationWsClient.list(new PagingRequest(0, 10), Validation.finishedStatuses());
+        validationWsClient.list(
+            ValidationSearchRequest.builder()
+                .offset(0L)
+                .limit(10)
+                .status(Validation.finishedStatuses())
+                .build());
     assertTrue(
         failedValidations.getResults().stream()
             .anyMatch(v -> v.getKey().equals(persistedValidation.getKey())));

@@ -1,14 +1,14 @@
 package org.gbif.pipelines.crawler.validator.validate;
 
 import java.io.File;
-import java.util.Set;
 import java.util.UUID;
 import lombok.Builder;
-import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.Validation.Status;
 import org.gbif.validator.api.ValidationRequest;
+import org.gbif.validator.api.ValidationSearchRequest;
+import org.gbif.validator.ws.client.ClientValidationSearchRequest;
 import org.gbif.validator.ws.client.ValidationWsClient;
 
 @Builder
@@ -19,27 +19,32 @@ public class ValidationWsClientStub implements ValidationWsClient {
   private Status status;
 
   @Override
+  public boolean reachedMaxRunningValidations(String userName) {
+    return false;
+  }
+
+  @Override
   public Validation submitFile(File file) {
     return null;
   }
 
   @Override
-  public Validation submitFile(File file, ValidationRequest validationRequest) {
+  public Validation validateFile(File file, ValidationRequest validationRequest) {
     return null;
   }
 
   @Override
-  public Validation submitUrl(String fileUrl, ValidationRequest validationRequest) {
+  public Validation validateFileFromUrl(String fileUrl, ValidationRequest validationRequest) {
     return null;
   }
 
   @Override
-  public Validation submitUrl(String fileUrl) {
+  public PagingResponse<Validation> list(ValidationSearchRequest searchRequest) {
     return null;
   }
 
   @Override
-  public PagingResponse<Validation> list(Pageable page, Set<Status> statuses) {
+  public PagingResponse<Validation> list(ClientValidationSearchRequest searchRequest) {
     return null;
   }
 
@@ -49,17 +54,18 @@ public class ValidationWsClientStub implements ValidationWsClient {
   }
 
   @Override
-  public void update(UUID key, Validation validation) {
-    this.validation = validation;
+  public Validation update(UUID key, Validation validation) {
+    return validation;
   }
 
   @Override
-  public void update(Validation validation) {
-    this.validation = validation;
+  public Validation update(Validation validation) {
+    return validation;
   }
 
   @Override
-  public void cancel(UUID key) {
+  public Validation cancel(UUID key) {
     this.status = Status.ABORTED;
+    return Validation.builder().key(key).status(Status.ABORTED).build();
   }
 }

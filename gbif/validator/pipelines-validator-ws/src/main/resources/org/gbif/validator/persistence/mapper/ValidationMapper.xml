@@ -142,21 +142,26 @@
     <if test="username != null" >
       AND username = #{username,jdbcType=OTHER}
     </if>
-    <if test="installationKey != null" >
+    <if test="searchRequest.installationKey != null" >
       AND installation_key = #{installationKey,jdbcType=OTHER}
     </if>
-    <if test="sourceId != null" >
+    <if test="searchRequest.sourceId != null" >
       AND source_id = #{sourceId,jdbcType=OTHER}
     </if>
-    <if test="statuses != null" >
+    <if test="searchRequest.status != null" >
       AND status IN
-      <foreach item="status" collection="statuses" separator="," open="(" close=")">
+      <foreach item="status" collection="searchRequest.status" separator="," open="(" close=")">
         #{status,jdbcType=OTHER}
       </foreach>
     </if>
-    ORDER BY created DESC, key
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
+    <if test="searchRequest.sortBy != null and !searchRequest.sortBy.empty">
+      ORDER BY
+      <foreach item="sort" collection="searchRequest.sortBy" separator=",">
+        ${@org.gbif.validator.persistence.mapper.ColumnMapper@toColumnName(sort.field)} ${sort.order.name}
+      </foreach>
+    </if>
+    <if test="searchRequest.limit != null and searchRequest.offset != null" >
+      LIMIT #{searchRequest.limit} OFFSET #{searchRequest.offset}
     </if>
   </select>
 
@@ -167,15 +172,15 @@
     <if test="username != null" >
       AND username = #{username,jdbcType=OTHER}
     </if>
-    <if test="installationKey != null" >
+    <if test="searchRequest.installationKey != null" >
       AND installation_key = #{installationKey,jdbcType=OTHER}
     </if>
-    <if test="sourceId != null" >
+    <if test="searchRequest.sourceId != null" >
       AND source_id = #{sourceId,jdbcType=OTHER}
     </if>
-    <if test="statuses != null" >
+    <if test="searchRequest.status != null" >
       AND status IN
-      <foreach item="status" collection="statuses" separator="," open="(" close=")">
+      <foreach item="status" collection="searchRequest.status" separator="," open="(" close=")">
         #{status,jdbcType=OTHER}
       </foreach>
     </if>

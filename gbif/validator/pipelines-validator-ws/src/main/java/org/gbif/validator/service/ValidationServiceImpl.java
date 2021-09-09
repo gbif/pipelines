@@ -4,20 +4,14 @@ import static org.gbif.validator.service.EncodingUtil.encode;
 import static org.gbif.validator.service.ValidationFactory.metricsFromError;
 import static org.gbif.validator.service.ValidationFactory.newValidationInstance;
 
-import io.vavr.control.Either;
-import io.vavr.control.Option;
 import java.io.IOException;
-import java.security.Principal;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.gbif.api.model.common.paging.Pageable;
-import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.api.MessagePublisher;
@@ -28,11 +22,14 @@ import org.gbif.validator.api.FileFormat;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.Validation.Status;
 import org.gbif.validator.api.ValidationRequest;
+import org.gbif.validator.api.ValidationSearchRequest;
 import org.gbif.validator.persistence.mapper.ValidationMapper;
 import org.gbif.validator.ws.file.DataFile;
 import org.gbif.validator.ws.file.FileSizeException;
 import org.gbif.validator.ws.file.UploadFileManager;
+import org.gbif.ws.security.GbifUserPrincipal;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -53,34 +50,33 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
   @Value("${maxRunningValidationPerUser}")
   private final int maxRunningValidationPerUser;
 
+  private final ErrorMapper errorMapper;
+
   /** Asserts the user has not reached the maximum number of executing validations. */
   @Override
-  public Optional<Validation.Error> reachedMaxRunningValidations(String userName) {
-    if (validationMapper.count(userName, Validation.executingStatuses(), null, null)
-        >= maxRunningValidationPerUser) {
-      return Optional.of(
-          Validation.Error.of(
-              Validation.Error.Code.MAX_RUNNING_VALIDATIONS,
-              new Throwable(userName + "has reached the maximum number of executing validations")));
-    }
-    return Optional.empty();
+  public boolean reachedMaxRunningValidations(String userName) {
+    return (validationMapper.count(
+            userName,
+            ValidationSearchRequest.builder().status(Validation.executingStatuses()).build())
+        >= maxRunningValidationPerUser);
   }
 
-  public Optional<Validation.Error> validate(ValidationRequest validationRequest, String userName) {
+  public Optional<Validation.ErrorCode> validate(ValidationRequest validationRequest) {
     if (validationRequest.getInstallationKey() != null
         && (validationRequest.getNotificationEmail() == null
             || validationRequest.getNotificationEmail().isEmpty())) {
-      return Optional.of(Validation.Error.of(Validation.Error.Code.NOTIFICATION_EMAILS_MISSING));
+      return Optional.of(Validation.ErrorCode.NOTIFICATION_EMAILS_MISSING);
     }
-    return reachedMaxRunningValidations(userName);
+    return reachedMaxRunningValidations(getPrincipal().getUsername())
+        ? Optional.of(Validation.ErrorCode.MAX_RUNNING_VALIDATIONS)
+        : Optional.empty();
   }
 
   @Override
-  public Either<Validation.Error, Validation> validateFile(
-      MultipartFile file, Principal principal, ValidationRequest validationRequest) {
-    Optional<Validation.Error> error = validate(validationRequest, principal.getName());
+  public Validation validateFile(MultipartFile file, ValidationRequest validationRequest) {
+    Optional<Validation.ErrorCode> error = validate(validationRequest);
     if (error.isPresent()) {
-      return Either.left(error.get());
+      throw errorMapper.apply(error.get());
     }
     UUID key = UUID.randomUUID();
     UploadFileManager.AsyncDataFileTask task =
@@ -95,22 +91,23 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
                 updateFailedValidation(key, "Error during the file submitting");
               }
             });
-    return Either.right(
-        create(
-            key,
-            task.getStart(),
-            principal.getName(),
-            Validation.Status.SUBMITTED,
-            validationRequest));
+    return create(key, task.getStart(), Validation.Status.SUBMITTED, validationRequest);
+  }
+
+  private GbifUserPrincipal getPrincipal() {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    if (authentication != null && authentication.isAuthenticated()) {
+      return (GbifUserPrincipal) authentication.getPrincipal();
+    }
+    throw new SecurityException("User credentials not found");
   }
 
   @Override
-  public Either<Validation.Error, Validation> validateFileFromUrl(
-      String fileURL, Principal principal, ValidationRequest validationRequest) {
+  public Validation validateFileFromUrl(String fileURL, ValidationRequest validationRequest) {
     try {
-      Optional<Validation.Error> error = validate(validationRequest, principal.getName());
+      Optional<Validation.ErrorCode> error = validate(validationRequest);
       if (error.isPresent()) {
-        return Either.left(error.get());
+        throw errorMapper.apply(error.get());
       }
       UUID key = UUID.randomUUID();
       String encodedFileURL = encode(fileURL);
@@ -124,92 +121,74 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
                 log.error("Error processing file", err);
                 updateFailedValidation(key, err.getMessage());
               });
-      return Either.right(
-          create(
-              key,
-              downloadResult.getDataFile(),
-              principal.getName(),
-              Validation.Status.DOWNLOADING,
-              validationRequest));
+      return create(
+          key, downloadResult.getDataFile(), Validation.Status.DOWNLOADING, validationRequest);
     } catch (FileSizeException ex) {
       log.error("File limit error", ex);
-      return Either.left(Validation.Error.of(Validation.Error.Code.MAX_FILE_SIZE_VIOLATION, ex));
+      throw errorMapper.apply(Validation.ErrorCode.MAX_FILE_SIZE_VIOLATION);
     } catch (IOException ex) {
       log.error("Can not download file submitted", ex);
-      return Either.left(Validation.Error.of(Validation.Error.Code.IO_ERROR, ex));
+      throw errorMapper.apply(Validation.ErrorCode.IO_ERROR);
     }
   }
 
   /** Gets a validation by its key, if exists */
   @Override
-  public Either<Validation.Error, Validation> get(UUID key) {
-    return Option.of(validationMapper.get(key))
-        .toEither(Validation.Error.of(Validation.Error.Code.NOT_FOUND));
+  public Validation get(UUID key) {
+    return validationMapper.get(key);
   }
 
   /** Updates validation data. */
   @Override
-  public Either<Validation.Error, Validation> update(Validation validation, Principal principal) {
-    return get(validation.getKey())
-        .filterOrElse(
-            v -> canUpdate(v, principal),
-            v -> Validation.Error.of(Validation.Error.Code.AUTHORIZATION_ERROR))
-        .map(v -> updateAndGet(validation));
+  public Validation update(Validation validation) {
+    Validation validationTpUpdate = get(validation.getKey());
+    if (!canUpdate(validationTpUpdate)) {
+      throw errorMapper.apply(Validation.ErrorCode.AUTHORIZATION_ERROR);
+    }
+    return updateAndGet(validation);
   }
 
   /** Cancels a running validation. */
   @Override
-  public Either<Validation.Error, Validation> cancel(UUID key, Principal principal) {
-    return get(key)
-        .filterOrElse(
-            v -> canUpdate(v, principal),
-            v -> Validation.Error.of(Validation.Error.Code.AUTHORIZATION_ERROR))
-        .filterOrElse(
-            Validation::isExecuting,
-            v -> Validation.Error.of(Validation.Error.Code.VALIDATION_IS_NOT_EXECUTING))
-        .map(
-            v -> {
-              v.setStatus(Validation.Status.ABORTED);
-              return updateAndGet(v);
-            });
+  public Validation cancel(UUID key) {
+    Validation validation = get(key);
+    if (!canUpdate(validation)) {
+      throw errorMapper.apply(Validation.ErrorCode.AUTHORIZATION_ERROR);
+    }
+    if (!validation.isExecuting()) {
+      throw errorMapper.apply(Validation.ErrorCode.VALIDATION_IS_NOT_EXECUTING);
+    }
+    validation.setStatus(Status.ABORTED);
+    return updateAndGet(validation);
   }
 
   /** Paged result of validations of a an user. */
   @Override
-  public PagingResponse<Validation> list(
-      Pageable page,
-      Set<Validation.Status> status,
-      UUID installationKey,
-      String sourceId,
-      Principal principal) {
-    page = page == null ? new PagingRequest() : page;
-    long total = validationMapper.count(principal.getName(), status, installationKey, sourceId);
+  public PagingResponse<Validation> list(ValidationSearchRequest validationSearchRequest) {
+    GbifUserPrincipal principal = getPrincipal();
+    long total = validationMapper.count(principal.getUsername(), validationSearchRequest);
     return new PagingResponse<>(
-        page.getOffset(),
-        page.getLimit(),
+        validationSearchRequest.getOffset(),
+        validationSearchRequest.getLimit(),
         total,
-        validationMapper.list(page, principal.getName(), status, installationKey, sourceId));
+        validationMapper.list(principal.getUsername(), validationSearchRequest));
   }
 
   /** Can the authenticated user update the validation object. */
-  private boolean canUpdate(Validation validation, Principal principal) {
+  private boolean canUpdate(Validation validation) {
     return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
             .anyMatch(a -> a.getAuthority().equals(UserRoles.ADMIN_ROLE))
-        || validation.getUsername().equals(principal.getName());
+        || validation.getUsername().equals(getPrincipal().getUsername());
   }
 
   /** Persists an validation entity. */
   private Validation create(
-      UUID key,
-      DataFile dataFile,
-      String userName,
-      Validation.Status status,
-      ValidationRequest validationRequest) {
+      UUID key, DataFile dataFile, Validation.Status status, ValidationRequest validationRequest) {
     validationMapper.create(
         newValidationInstance(
             key,
             dataFile,
-            userName,
+            getPrincipal().getUsername(),
             status,
             validationRequest.getSourceId(),
             validationRequest.getInstallationKey(),
@@ -230,8 +209,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
   private Validation updateFailedValidation(UUID key, String errorMessage) {
     Validation validation =
         newValidationInstance(key, Validation.Status.FAILED, metricsFromError(errorMessage));
-    validation = updateAndGet(validation);
-    return validation;
+    return updateAndGet(validation);
   }
 
   /** Updates and gets the updated validation */

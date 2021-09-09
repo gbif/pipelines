@@ -11,7 +11,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
 
 @Data
 @Builder
@@ -101,23 +100,14 @@ public class Validation {
     return FINISHED_STATUSES.contains(status);
   }
 
-  @Builder
-  @Data
-  @AllArgsConstructor(staticName = "of")
-  @RequiredArgsConstructor(staticName = "of")
-  public static class Error {
-
-    public enum Code {
-      MAX_RUNNING_VALIDATIONS,
-      MAX_FILE_SIZE_VIOLATION,
-      AUTHORIZATION_ERROR,
-      NOT_FOUND,
-      IO_ERROR,
-      VALIDATION_IS_NOT_EXECUTING,
-      NOTIFICATION_EMAILS_MISSING
-    }
-
-    private final Code code;
-    private Throwable error;
+  public enum ErrorCode {
+    MAX_RUNNING_VALIDATIONS,
+    MAX_FILE_SIZE_VIOLATION,
+    AUTHORIZATION_ERROR,
+    NOT_FOUND,
+    IO_ERROR,
+    VALIDATION_IS_NOT_EXECUTING,
+    NOTIFICATION_EMAILS_MISSING,
+    WRONG_KEY_IN_REQUEST
   }
 }

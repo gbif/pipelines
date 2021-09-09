@@ -1,12 +1,13 @@
 package org.gbif.validator.ws.client;
 
 import java.io.File;
-import java.util.Set;
+import java.util.Map;
 import java.util.UUID;
-import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.ValidationRequest;
+import org.gbif.validator.api.ValidationSearchRequest;
+import org.gbif.validator.service.ValidationService;
 import org.gbif.ws.client.ClientBuilder;
 import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
 import org.springframework.cloud.openfeign.SpringQueryMap;
@@ -21,7 +22,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 
 @RequestMapping(value = "/validation", produces = MediaType.APPLICATION_JSON_VALUE)
-public interface ValidationWsClient {
+public interface ValidationWsClient extends ValidationService<File> {
 
   /** Uploads a file and starts the validation process. */
   @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
@@ -29,28 +30,29 @@ public interface ValidationWsClient {
 
   /** Uploads a file and starts the validation process. */
   @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-  Validation submitFile(
+  @Override
+  Validation validateFile(
       @RequestPart("file") File file, @SpringQueryMap ValidationRequest validationRequest);
 
   @PostMapping(
       path = "/url",
       consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-  Validation submitUrl(
+  @Override
+  Validation validateFileFromUrl(
       @RequestPart("fileUrl") String fileUrl, @SpringQueryMap ValidationRequest validationRequest);
 
-  @PostMapping(
-      path = "/url",
-      consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-  Validation submitUrl(@RequestParam("fileUrl") String fileUrl);
-
-  /** Lists the validations of an user. */
+  /** Lists the validations of a user. */
   @GetMapping
-  PagingResponse<Validation> list(
-      @SpringQueryMap Pageable page,
-      @RequestParam(value = "status", required = false) Set<Validation.Status> statuses);
+  PagingResponse<Validation> list(@RequestParam Map<String, Object> validationSearchRequest);
+
+  @Override
+  default PagingResponse<Validation> list(ValidationSearchRequest validationSearchRequest) {
+    return list(ClientValidationSearchRequest.toQueryMap(validationSearchRequest));
+  }
 
   /** Get a validation data. */
   @GetMapping(path = "/{key}")
+  @Override
   Validation get(@PathVariable("key") UUID key);
 
   /** Updates a validation data. */
@@ -58,10 +60,11 @@ public interface ValidationWsClient {
       method = RequestMethod.PUT,
       path = "/{key}",
       consumes = {MediaType.APPLICATION_JSON_VALUE})
-  void update(@PathVariable("key") UUID key, @RequestBody Validation validation);
+  Validation update(@PathVariable("key") UUID key, @RequestBody Validation validation);
 
-  default void update(Validation validation) {
-    update(validation.getKey(), validation);
+  @Override
+  default Validation update(Validation validation) {
+    return update(validation.getKey(), validation);
   }
 
   /** Cancel running validation. */
@@ -69,7 +72,8 @@ public interface ValidationWsClient {
       method = RequestMethod.PUT,
       path = "/{key}/cancel",
       consumes = {MediaType.APPLICATION_JSON_VALUE})
-  void cancel(@PathVariable("key") UUID key);
+  @Override
+  Validation cancel(@PathVariable("key") UUID key);
 
   /** Default factory method for the ValidationWsClient. */
   static ValidationWsClient getInstance(String url, String userName, String password) {
