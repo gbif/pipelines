@@ -108,15 +108,22 @@ public class MetricsCollectorCallback extends AbstractMessageCallback<PipelinesI
     Long coreLineCount = null;
     Map<String, Long> extLineCount = new HashMap<>();
 
+    String coreFileName = null;
+    Map<String, String> extFiles = new HashMap<>();
+
     if (message.getEndpointType() == EndpointType.DWC_ARCHIVE) {
       Archive archive = DwcaUtils.fromLocation(inputPath);
+      // Get core file name
+      coreFileName = archive.getCore().getLocationFile().getName();
       // Extract all terms
       coreTerms = DwcaUtils.getCoreTerms(archive);
       extenstionsTerms = DwcaUtils.getExtensionsTerms(archive);
       // Count files lines
       coreLineCount = countLines(archive.getCore().getLocationFile());
       for (ArchiveFile ext : archive.getExtensions()) {
-        extLineCount.put(ext.getRowType().qualifiedName(), countLines(ext.getLocationFile()));
+        String extName = ext.getRowType().qualifiedName();
+        extLineCount.put(extName, countLines(ext.getLocationFile()));
+        extFiles.put(extName, ext.getLocationFile().getName());
       }
     } else if (message.getEndpointType() == EndpointType.BIOCASE_XML_ARCHIVE) {
       List<File> files = XmlFilesReader.getInputFiles(inputPath.toFile());
@@ -139,10 +146,14 @@ public class MetricsCollectorCallback extends AbstractMessageCallback<PipelinesI
             .build()
             .collect();
 
-    // Set files count values
+    // Set core file name
+    metrics.getCore().setFileName(coreFileName);
+
+    // Set files count values and ext file names
     metrics.getCore().setFileCount(coreLineCount);
     for (Metrics.Extension ext : metrics.getExtensions()) {
       ext.setFileCount(extLineCount.get(ext.getRowType()));
+      ext.setFileName(extFiles.get(ext.getRowType()));
     }
 
     // Get saved metrics object and merge with the result

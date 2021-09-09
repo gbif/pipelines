@@ -1,25 +1,18 @@
 package org.gbif.pipelines.crawler.metrics;
 
-import static org.gbif.crawler.constants.PipelinesNodePaths.getPipelinesInfoPath;
-import static org.gbif.pipelines.estools.common.SettingsType.INDEXING;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.UUID;
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.CuratorFrameworkFactory;
-import org.apache.curator.retry.RetryOneTime;
-import org.apache.curator.test.TestingServer;
+
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.EndpointType;
+import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.messaging.api.messages.PipelinesIndexedMessage;
 import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
 import org.gbif.pipelines.common.utils.ZookeeperUtils;
@@ -29,7 +22,15 @@ import org.gbif.pipelines.estools.EsIndex;
 import org.gbif.pipelines.estools.model.IndexParams;
 import org.gbif.pipelines.estools.service.EsService;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
-import org.gbif.validator.ws.client.ValidationWsClient;
+import org.gbif.validator.api.Metrics.Core;
+import org.gbif.validator.api.Metrics.Core.IssueInfo;
+import org.gbif.validator.api.Metrics.Extension;
+import org.gbif.validator.api.Validation;
+
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.retry.RetryOneTime;
+import org.apache.curator.test.TestingServer;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -37,6 +38,12 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.mockito.Mockito;
+
+import static org.gbif.crawler.constants.PipelinesNodePaths.getPipelinesInfoPath;
+import static org.gbif.pipelines.estools.common.SettingsType.INDEXING;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class MetricsCollectorCallbackIT {
 
@@ -48,7 +55,6 @@ public class MetricsCollectorCallbackIT {
   private static TestingServer server;
   private static MessagePublisherStub publisher;
   private static PipelinesHistoryClient historyClient;
-  private static ValidationWsClient validationClient;
 
   @ClassRule public static final EsServer ES_SERVER = new EsServer();
 
@@ -72,7 +78,6 @@ public class MetricsCollectorCallbackIT {
     publisher = MessagePublisherStub.create();
 
     historyClient = Mockito.mock(PipelinesHistoryClient.class);
-    validationClient = Mockito.mock(ValidationWsClient.class);
   }
 
   @AfterClass
@@ -91,6 +96,7 @@ public class MetricsCollectorCallbackIT {
   public void testNormalCase() throws Exception {
     // State
     MetricsCollectorConfiguration config = createConfig();
+    ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
     MetricsCollectorCallback callback =
         new MetricsCollectorCallback(config, publisher, curator, historyClient, validationClient);
@@ -135,6 +141,34 @@ public class MetricsCollectorCallbackIT {
     assertTrue(checkExists(curator, crawlId, Fn.SUCCESSFUL.apply(LABEL)));
     assertEquals(0, publisher.getMessages().size());
 
+    Validation validation = validationClient.getValidation();
+
+    Core core = validation.getMetrics().getCore();
+    assertEquals("occurrence.txt", core.getFileName());
+    assertEquals(Long.valueOf(1534L), core.getFileCount());
+    assertEquals(Long.valueOf(1L), core.getIndexedCount());
+    assertEquals(235, core.getIndexedCoreTerms().size());
+    assertEquals(2, core.getOccurrenceIssues().size());
+
+    Optional<IssueInfo> randomIssue =
+        core.getOccurrenceIssues().stream()
+            .filter(x -> x.getIssue().equals("RANDOM_ISSUE"))
+            .findAny();
+    assertTrue(randomIssue.isPresent());
+    assertEquals(Long.valueOf(1), randomIssue.get().getCount());
+
+    Optional<IssueInfo> geodeticDatumAssumedWgs84Issue =
+        core.getOccurrenceIssues().stream()
+            .filter(x -> x.getIssue().equals(OccurrenceIssue.GEODETIC_DATUM_ASSUMED_WGS84.name()))
+            .findAny();
+    assertTrue(geodeticDatumAssumedWgs84Issue.isPresent());
+    assertEquals(Long.valueOf(1), geodeticDatumAssumedWgs84Issue.get().getCount());
+
+    assertEquals(1L, validation.getMetrics().getExtensions().size());
+
+    Extension extension = validation.getMetrics().getExtensions().get(0);
+    assertEquals("multimedia.txt", extension.getFileName());
+
     // Clean
     curator.delete().deletingChildrenIfNeeded().forPath(getPipelinesInfoPath(crawlId, LABEL, true));
   }
@@ -143,6 +177,7 @@ public class MetricsCollectorCallbackIT {
   public void testNormalSingleStepCase() {
     // State
     MetricsCollectorConfiguration config = createConfig();
+    ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
     MetricsCollectorCallback callback =
         new MetricsCollectorCallback(config, publisher, curator, historyClient, validationClient);
@@ -190,9 +225,10 @@ public class MetricsCollectorCallbackIT {
   }
 
   @Test
-  public void testFailedCase() throws Exception {
+  public void testFailedCase() {
     // State
     MetricsCollectorConfiguration config = createConfig();
+    ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
     MetricsCollectorCallback callback =
         new MetricsCollectorCallback(config, publisher, curator, historyClient, validationClient);
