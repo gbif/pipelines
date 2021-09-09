@@ -49,6 +49,7 @@ public class Metrics {
   @AllArgsConstructor
   @JsonDeserialize(builder = Core.CoreBuilder.class)
   public static class Core {
+    @Builder.Default private String fileName = null;
     @Builder.Default private Long fileCount = 0L;
     @Builder.Default private Long indexedCount = 0L;
 
@@ -76,6 +77,7 @@ public class Metrics {
       private String issue;
       @Builder.Default private Long count = null;
       @Builder.Default private List<IssueSample> samples = Collections.emptyList();
+      @Builder.Default private String issueCategory = null;
 
       @Data
       @Builder
@@ -95,8 +97,9 @@ public class Metrics {
   @AllArgsConstructor
   @JsonDeserialize(builder = Extension.ExtensionBuilder.class)
   public static class Extension {
-    @Builder.Default private String rowType = "";
+    @Builder.Default private String fileName = null;
     @Builder.Default private Long fileCount = null;
+    @Builder.Default private String rowType = null;
     @Builder.Default private Map<String, Long> extensionsTermsCounts = Collections.emptyMap();
   }
 
