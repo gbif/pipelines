@@ -1,5 +1,11 @@
 package org.gbif.pipelines.crawler.metrics;
 
+import static org.gbif.crawler.constants.PipelinesNodePaths.getPipelinesInfoPath;
+import static org.gbif.pipelines.estools.common.SettingsType.INDEXING;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -8,7 +14,10 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.UUID;
-
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.retry.RetryOneTime;
+import org.apache.curator.test.TestingServer;
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.EndpointType;
@@ -26,11 +35,6 @@ import org.gbif.validator.api.Metrics.Core;
 import org.gbif.validator.api.Metrics.Core.IssueInfo;
 import org.gbif.validator.api.Metrics.Extension;
 import org.gbif.validator.api.Validation;
-
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.CuratorFrameworkFactory;
-import org.apache.curator.retry.RetryOneTime;
-import org.apache.curator.test.TestingServer;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -38,12 +42,6 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.mockito.Mockito;
-
-import static org.gbif.crawler.constants.PipelinesNodePaths.getPipelinesInfoPath;
-import static org.gbif.pipelines.estools.common.SettingsType.INDEXING;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 public class MetricsCollectorCallbackIT {
 

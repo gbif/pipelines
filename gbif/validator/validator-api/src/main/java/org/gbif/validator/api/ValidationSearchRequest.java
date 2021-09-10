@@ -2,6 +2,7 @@ package org.gbif.validator.api;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -9,7 +10,6 @@ import javax.validation.constraints.Min;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.Singular;
 
 @Data
 @Builder
@@ -50,7 +50,6 @@ public class ValidationSearchRequest {
   /** Validation statuses. */
   private Set<Validation.Status> status;
 
-  @Singular("sortBy")
   private List<SortBy> sortBy;
 
   @Builder.Default
@@ -64,7 +63,8 @@ public class ValidationSearchRequest {
   public static class ValidationSearchRequestBuilder {
 
     public ValidationSearchRequestBuilder sortByCreated(SortOrder order) {
-      return sortBy(SortBy.builder().field("created").order(order).build());
+      return sortBy(
+          Collections.singletonList(SortBy.builder().field("created").order(order).build()));
     }
   }
 }

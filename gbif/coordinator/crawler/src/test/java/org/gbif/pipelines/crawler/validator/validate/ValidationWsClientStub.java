@@ -1,6 +1,7 @@
 package org.gbif.pipelines.crawler.validator.validate;
 
 import java.io.File;
+import java.util.Map;
 import java.util.UUID;
 import lombok.Builder;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -8,7 +9,6 @@ import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.Validation.Status;
 import org.gbif.validator.api.ValidationRequest;
 import org.gbif.validator.api.ValidationSearchRequest;
-import org.gbif.validator.ws.client.ClientValidationSearchRequest;
 import org.gbif.validator.ws.client.ValidationWsClient;
 
 @Builder
@@ -39,12 +39,12 @@ public class ValidationWsClientStub implements ValidationWsClient {
   }
 
   @Override
-  public PagingResponse<Validation> list(ValidationSearchRequest searchRequest) {
+  public PagingResponse<Validation> list(Map<String, Object> validationSearchRequest) {
     return null;
   }
 
   @Override
-  public PagingResponse<Validation> list(ClientValidationSearchRequest searchRequest) {
+  public PagingResponse<Validation> list(ValidationSearchRequest searchRequest) {
     return null;
   }
 

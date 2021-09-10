@@ -43,7 +43,7 @@ import org.gbif.validator.api.Metrics.Core.TermInfo;
  * The class collects all necessary metrics using ES API, there are 4 main queries. such as:
  *
  * <pre>
- * 1) Query total document count
+ * 1) Query total documents count
  * 2) Query core terms and return term, counts of raw and indexed terms
  * 3) Query extensions terms and return term, and raw terms count
  * 4) Query all issues and return issue value, and 5 terms samples
