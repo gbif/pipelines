@@ -8,7 +8,7 @@ import io.github.resilience4j.retry.IntervalFunction;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import java.io.IOException;
-import java.sql.Date;
+import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.Collections;
@@ -279,7 +279,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
           validation.setStatus(status);
         }
 
-        validation.setModified(new Date(ZonedDateTime.now().toEpochSecond()));
+        validation.setModified(Timestamp.valueOf(ZonedDateTime.now().toLocalDateTime()));
 
         Metrics metrics =
             Optional.ofNullable(validation.getMetrics()).orElse(Metrics.builder().build());
