@@ -2,7 +2,6 @@ package org.gbif.validator.ws;
 
 import org.gbif.registry.identity.service.UserSuretyDelegateImpl;
 import org.gbif.registry.persistence.config.MyBatisConfiguration;
-import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.actuate.autoconfigure.elasticsearch.ElasticSearchRestHealthContributorAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -32,7 +31,6 @@ import org.springframework.context.annotation.FilterType;
           type = FilterType.ASSIGNABLE_TYPE,
           classes = {UserSuretyDelegateImpl.class, MyBatisConfiguration.class})
     })
-@MapperScan("org.gbif.validator.persistence.mapper")
 public class ValidatorWsApplication {
 
   public static void main(String[] args) {
