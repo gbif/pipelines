@@ -1,5 +1,9 @@
 package org.gbif.validator.ws.resource;
 
+import static org.gbif.registry.security.UserRoles.APP_ROLE;
+import static org.gbif.registry.security.UserRoles.IPT_ROLE;
+import static org.gbif.registry.security.UserRoles.USER_ROLE;
+
 import java.util.UUID;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -12,6 +16,7 @@ import org.gbif.validator.api.ValidationSearchRequest;
 import org.gbif.validator.service.ErrorMapper;
 import org.gbif.validator.service.ValidationService;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,7 +35,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Slf4j
 @RestController
 @RequestMapping(value = "validation", produces = MediaType.APPLICATION_JSON_VALUE)
-// @Secured({USER_ROLE, APP_ROLE, IPT_ROLE})
+@Secured({USER_ROLE, APP_ROLE, IPT_ROLE})
 @RequiredArgsConstructor
 @Validated
 public class ValidationResource {

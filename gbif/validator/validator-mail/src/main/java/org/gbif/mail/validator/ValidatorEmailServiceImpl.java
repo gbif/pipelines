@@ -1,6 +1,7 @@
 package org.gbif.mail.validator;
 
-import io.vavr.control.Try;
+import freemarker.template.TemplateException;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.Locale;
 import java.util.Optional;
@@ -55,19 +56,23 @@ public class ValidatorEmailServiceImpl implements ValidatorEmailService {
             t ->
                 userHelperService
                     .getUser(validation.getUsername())
-                    .map(
-                        user ->
-                            Try.of(
-                                    () ->
-                                        templateProcessor.buildEmail(
-                                            t,
-                                            getNotificationAddresses(validation, user),
-                                            ValidatorTemplateDataModel.modelBuilder()
-                                                .validation(validation)
-                                                .portalUrl(portalUrl)
-                                                .build(),
-                                            getLocale(user, validation)))
-                                .get()));
+                    .map(user -> getBaseEmailModel(validation, t, user)));
+  }
+
+  /** Hides checked exceptions. */
+  private BaseEmailModel getBaseEmailModel(Validation validation, EmailType t, GbifUser user) {
+    try {
+      return templateProcessor.buildEmail(
+          t,
+          getNotificationAddresses(validation, user),
+          ValidatorTemplateDataModel.modelBuilder()
+              .validation(validation)
+              .portalUrl(portalUrl)
+              .build(),
+          getLocale(user, validation));
+    } catch (IOException | TemplateException ex) {
+      throw new RuntimeException(ex);
+    }
   }
 
   /** Gets the locale from the user or through the validation.installationKey */

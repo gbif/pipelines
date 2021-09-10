@@ -2,7 +2,7 @@ package org.gbif.validator.api;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -62,9 +62,23 @@ public class ValidationSearchRequest {
 
   public static class ValidationSearchRequestBuilder {
 
+    /** Adds a sort to the list of sortBy elements. */
+    private ValidationSearchRequestBuilder addSort(String fieldName, SortOrder order) {
+      if (sortBy == null) {
+        sortBy = new ArrayList<>();
+      }
+      sortBy.add(SortBy.builder().field(fieldName).order(order).build());
+      return this;
+    }
+
+    /** Sort by created date. */
     public ValidationSearchRequestBuilder sortByCreated(SortOrder order) {
-      return sortBy(
-          Collections.singletonList(SortBy.builder().field("created").order(order).build()));
+      return addSort("created", order);
+    }
+
+    /** Sort by key. */
+    public ValidationSearchRequestBuilder sortByKey(SortOrder order) {
+      return addSort("key", order);
     }
   }
 }
