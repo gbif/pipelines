@@ -3,7 +3,7 @@ package org.gbif.validator.api;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import java.sql.Timestamp;
+import java.util.Date;
 import java.util.EnumSet;
 import java.util.Set;
 import java.util.UUID;
@@ -49,10 +49,10 @@ public class Validation {
   @JsonIgnore private Set<String> notificationEmails;
 
   /** Timestamp when the validation was created. */
-  private Timestamp created;
+  private Date created;
 
   /** Last modified timestamp. */
-  private Timestamp modified;
+  private Date modified;
 
   /** User that triggered or owns the validation. */
   private String username;
