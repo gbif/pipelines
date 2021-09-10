@@ -19,18 +19,18 @@ import org.springframework.web.context.request.WebRequest;
 @UtilityClass
 public class ValidationRequestParams {
 
-  public int DEFAULT_LIMIT = 20;
+  public static final int DEFAULT_LIMIT = 20;
 
-  public static String INSTALLATION_KEY = "installationKey";
-  public static String SOURCE_ID = "sourceId";
-  public static String STATUS = "status";
-  public static String SORT_BY = "sortBy";
-  public static String NOTIFICATION_EMAIL = "notificationEmail";
-  public static String CREATED = "created";
-  public static String OFFSET = "offset";
-  public static String LIMIT = "limit";
+  public static final String INSTALLATION_KEY = "installationKey";
+  public static final String SOURCE_ID = "sourceId";
+  public static final String STATUS = "status";
+  public static final String SORT_BY = "sortBy";
+  public static final String NOTIFICATION_EMAIL = "notificationEmail";
+  public static final String CREATED = "created";
+  public static final String OFFSET = "offset";
+  public static final String LIMIT = "limit";
 
-  private static String SORT_BY_SEPARATOR = ":";
+  private static final String SORT_BY_SEPARATOR = ":";
 
   private static final Set<String> SORTABLES = Sets.newHashSet(INSTALLATION_KEY, CREATED);
 
