@@ -77,7 +77,7 @@ public class Metrics {
       private String issue;
       @Builder.Default private Long count = null;
       @Builder.Default private List<IssueSample> samples = Collections.emptyList();
-      @Builder.Default private String issueCategory = null;
+      @Builder.Default private EvaluationCategory issueCategory = null;
 
       @Data
       @Builder

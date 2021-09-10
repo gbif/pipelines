@@ -4,6 +4,7 @@ import static org.gbif.crawler.constants.PipelinesNodePaths.getPipelinesInfoPath
 import static org.gbif.pipelines.estools.common.SettingsType.INDEXING;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
@@ -31,6 +32,7 @@ import org.gbif.pipelines.estools.EsIndex;
 import org.gbif.pipelines.estools.model.IndexParams;
 import org.gbif.pipelines.estools.service.EsService;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
+import org.gbif.validator.api.EvaluationCategory;
 import org.gbif.validator.api.Metrics.Core;
 import org.gbif.validator.api.Metrics.Core.IssueInfo;
 import org.gbif.validator.api.Metrics.Extension;
@@ -154,6 +156,7 @@ public class MetricsCollectorCallbackIT {
             .findAny();
     assertTrue(randomIssue.isPresent());
     assertEquals(Long.valueOf(1), randomIssue.get().getCount());
+    assertNull(randomIssue.get().getIssueCategory());
 
     Optional<IssueInfo> geodeticDatumAssumedWgs84Issue =
         core.getOccurrenceIssues().stream()
@@ -161,6 +164,9 @@ public class MetricsCollectorCallbackIT {
             .findAny();
     assertTrue(geodeticDatumAssumedWgs84Issue.isPresent());
     assertEquals(Long.valueOf(1), geodeticDatumAssumedWgs84Issue.get().getCount());
+    assertEquals(
+        EvaluationCategory.OCC_INTERPRETATION_BASED,
+        geodeticDatumAssumedWgs84Issue.get().getIssueCategory());
 
     assertEquals(1L, validation.getMetrics().getExtensions().size());
 
