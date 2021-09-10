@@ -222,7 +222,7 @@
                     <method>GET</method>
                     <status>200</status>
                   </http>
-                  <time>120000</time>
+                  <time>180000</time>
                 </wait>
               </run>
             </image>
