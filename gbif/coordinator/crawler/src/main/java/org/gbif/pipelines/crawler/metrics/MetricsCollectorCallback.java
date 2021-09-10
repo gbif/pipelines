@@ -113,16 +113,17 @@ public class MetricsCollectorCallback extends AbstractMessageCallback<PipelinesI
 
     if (message.getEndpointType() == EndpointType.DWC_ARCHIVE) {
       Archive archive = DwcaUtils.fromLocation(inputPath);
+      ArchiveFile core = archive.getCore();
       // Get core file name
-      coreFileName = archive.getCore().getLocationFile().getName();
+      coreFileName = core.getLocationFile().getName();
       // Extract all terms
       coreTerms = DwcaUtils.getCoreTerms(archive);
       extenstionsTerms = DwcaUtils.getExtensionsTerms(archive);
       // Count files lines
-      coreLineCount = countLines(archive.getCore().getLocationFile());
+      coreLineCount = countLines(core.getLocationFile(), areHeaderLinesIncluded(core));
       for (ArchiveFile ext : archive.getExtensions()) {
         String extName = ext.getRowType().qualifiedName();
-        extLineCount.put(extName, countLines(ext.getLocationFile()));
+        extLineCount.put(extName, countLines(ext.getLocationFile(), areHeaderLinesIncluded(ext)));
         extFiles.put(extName, ext.getLocationFile().getName());
       }
     } else if (message.getEndpointType() == EndpointType.BIOCASE_XML_ARCHIVE) {
@@ -177,9 +178,14 @@ public class MetricsCollectorCallback extends AbstractMessageCallback<PipelinesI
     }
   }
 
+  /** Exclude header from counter */
+  private boolean areHeaderLinesIncluded(ArchiveFile arhiveFile) {
+    return arhiveFile.getIgnoreHeaderLines() != null && arhiveFile.getIgnoreHeaderLines() > 0;
+  }
+
   /** Efficient way of counting lines */
-  private long countLines(File file) {
-    long lines = -1; // Exclude header
+  private long countLines(File file, boolean areHeaderLinesIncluded) {
+    long lines = areHeaderLinesIncluded ? -1 : 0;
     try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
       while (reader.readLine() != null) {
         lines++;
