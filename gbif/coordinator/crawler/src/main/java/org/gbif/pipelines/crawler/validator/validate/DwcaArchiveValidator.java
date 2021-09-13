@@ -63,8 +63,10 @@ public class DwcaArchiveValidator {
     Metrics metrics = Metrics.builder().build();
     Optional<XmlSchemaValidatorResult> xmlSchemaValidatorResult = validateEmlSchema();
     if (xmlSchemaValidatorResult.isPresent()) {
-      if (xmlSchemaValidatorResult.get().isValid()) {
+      try {
         metrics = validateDwcaFile();
+      } catch (Exception ex) {
+        log.warn("Can't validate archvie {}", message.getDatasetUuid());
       }
       metrics.setXmlSchemaValidatorResult(xmlSchemaValidatorResult.get());
     }
