@@ -1,9 +1,5 @@
 package org.gbif.validator.ws.resource;
 
-import static org.gbif.registry.security.UserRoles.APP_ROLE;
-import static org.gbif.registry.security.UserRoles.IPT_ROLE;
-import static org.gbif.registry.security.UserRoles.USER_ROLE;
-
 import java.util.UUID;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -27,6 +23,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+
+import static org.gbif.registry.security.UserRoles.IPT_ROLE;
+import static org.gbif.registry.security.UserRoles.APP_ROLE;
+import static org.gbif.registry.security.UserRoles.USER_ROLE;
 
 /**
  * Validation resource services, it allows validating files (synchronous) and url (asynchronously).

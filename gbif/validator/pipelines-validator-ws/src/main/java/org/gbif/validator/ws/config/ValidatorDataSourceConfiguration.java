@@ -25,6 +25,7 @@ import org.gbif.validator.persistence.mapper.MetricsJsonTypeHandler;
 import org.gbif.validator.persistence.mapper.StringArraySetTypeHandler;
 import org.gbif.validator.persistence.mapper.ValidationMapper;
 import org.mybatis.spring.SqlSessionFactoryBean;
+import org.mybatis.spring.boot.autoconfigure.SpringBootVFS;
 import org.mybatis.spring.mapper.MapperFactoryBean;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -63,6 +64,7 @@ public class ValidatorDataSourceConfiguration {
       @Qualifier("validationDataSource") HikariDataSource dataSource) {
     SqlSessionFactoryBean sqlSession = new SqlSessionFactoryBean();
     sqlSession.setDataSource(dataSource);
+
     org.apache.ibatis.session.Configuration configuration =
         new org.apache.ibatis.session.Configuration();
     configuration.setMapUnderscoreToCamelCase(true);
@@ -83,7 +85,7 @@ public class ValidatorDataSourceConfiguration {
     configuration.getTypeAliasRegistry().registerAlias("Validation", Validation.class);
     configuration.getTypeAliasRegistry().registerAlias("Pageable", Pageable.class);
     configuration.getTypeAliasRegistry().registerAlias("UUID", UUID.class);
-
+    configuration.setVfsImpl(SpringBootVFS.class);
     sqlSession.setConfiguration(configuration);
 
     return sqlSession;
