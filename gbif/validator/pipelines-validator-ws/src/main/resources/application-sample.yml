@@ -23,6 +23,12 @@ registry:
       minimumIdle: 1
   ws:
     url: @registry.ws.url@
+
+jwt:
+  signingKey: @jwt.signingKey@
+  expiryTimeInMs: @jwt.expiryTimeInMs@
+  issuer: @jwt.issuer@
+
 gbif:
   ws:
     security:
