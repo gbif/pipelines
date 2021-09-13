@@ -96,7 +96,9 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
 
   private GbifUserPrincipal getPrincipal() {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    if (authentication != null && authentication.isAuthenticated()) {
+    if (authentication != null
+        && authentication.isAuthenticated()
+        && authentication.getPrincipal() instanceof GbifUserPrincipal) {
       return (GbifUserPrincipal) authentication.getPrincipal();
     }
     throw new SecurityException("User credentials not found");
@@ -135,15 +137,24 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
   /** Gets a validation by its key, if exists */
   @Override
   public Validation get(UUID key) {
-    return validationMapper.get(key);
+    Validation validation = validationMapper.get(key);
+    if (validation == null) {
+      throw errorMapper.apply(Validation.ErrorCode.NOT_FOUND);
+    }
+    if (!canAccess(validation)) {
+      throw errorMapper.apply(Validation.ErrorCode.AUTHORIZATION_ERROR);
+    }
+    return validation;
   }
 
   /** Updates validation data. */
   @Override
   public Validation update(Validation validation) {
-    Validation validationTpUpdate = get(validation.getKey());
-    if (!canUpdate(validationTpUpdate)) {
-      throw errorMapper.apply(Validation.ErrorCode.AUTHORIZATION_ERROR);
+    if (validation.getKey() != null) {
+      Optional.ofNullable(get(validation.getKey()))
+          .ifPresent(v -> log.info("Updating validation {}", validation.getKey()));
+    } else {
+      throw errorMapper.apply(Validation.ErrorCode.NOT_FOUND);
     }
     return updateAndGet(validation);
   }
@@ -152,9 +163,6 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
   @Override
   public Validation cancel(UUID key) {
     Validation validation = get(key);
-    if (!canUpdate(validation)) {
-      throw errorMapper.apply(Validation.ErrorCode.AUTHORIZATION_ERROR);
-    }
     if (!validation.isExecuting()) {
       throw errorMapper.apply(Validation.ErrorCode.VALIDATION_IS_NOT_EXECUTING);
     }
@@ -175,7 +183,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
   }
 
   /** Can the authenticated user update the validation object. */
-  private boolean canUpdate(Validation validation) {
+  private boolean canAccess(Validation validation) {
     return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
             .anyMatch(a -> a.getAuthority().equals(UserRoles.ADMIN_ROLE))
         || validation.getUsername().equals(getPrincipal().getUsername());
@@ -188,7 +196,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
         newValidationInstance(
             key,
             dataFile,
-            getPrincipal().getUsername(),
+            getPrincipal().getUsername(), // this will validate credentials
             status,
             validationRequest.getSourceId(),
             validationRequest.getInstallationKey(),

@@ -48,6 +48,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -204,6 +205,7 @@ public class RegistrySecurityConfiguration {
   }
 
   @Configuration
+  @EnableWebSecurity
   public static class ValidatorWebSecurity extends NoAuthWebSecurityConfigurer {
 
     private final InstallationIdentityFilter installationIdentityFilter;
