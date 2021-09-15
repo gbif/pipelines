@@ -13,8 +13,8 @@ public class CoreCsvConverter {
 
   private static final String RAW = "raw_";
 
-  private static final CsvConverter<IndexRecord> CONVERTER =
-      CsvConverter.<IndexRecord>create()
+  private static final TsvConverter<IndexRecord> CONVERTER =
+      TsvConverter.<IndexRecord>create()
           // DWC Terms
           .addKeyTermFn(DwcTerm.occurrenceID, ir -> Optional.of(ir.getId()))
           .addKeyTermFn(DwcTerm.catalogNumber, getString(DwcTerm.catalogNumber))
