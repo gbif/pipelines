@@ -24,20 +24,20 @@ fi
 if [[ "$(yq -V 2>&1)" =~ .*3.?.?.* ]]
 then
     function YQ_VERIFY() {
-        yq v "$1"
+        cat "$1" | yq v -
     }
     function YQ_NAVIGATE () {
-        OUT=$(yq r "$1" "$2")
+        OUT=$(cat "$1" | yq r - "$2")
         echo "$OUT"
     }
 else
     if [[ "$(yq -V 2>&1)" =~ .*4.?.?.* ]]
 then
     function YQ_VERIFY() {
-        yq e 'true' "$1" > /dev/null
+        cat "$1" | yq e 'true' - > /dev/null
     }
     function YQ_NAVIGATE () {
-        OUT=$(yq e ".$2" "$1")
+        OUT=$(cat "$1" | yq e ".$2" -)
         if [[ "$OUT" == "null" ]]; then OUT=""; fi
         echo "$OUT"
     }
@@ -173,7 +173,7 @@ if [[ $PROD = false && $no_colors = true ]];  then logConfig=$PWD/../pipelines/s
 if [[ $PROD = true &&  $no_colors = false ]]; then logConfig=$CONFIG_DIR/log4j-colorized.properties; fi
 if [[ $PROD = true &&  $no_colors = true ]];  then logConfig=$CONFIG_DIR/log4j.properties; fi
 
-# Let's reasing dr variable in order to allow multiple drs
+# Let's parse dr variable in order to allow multiple drs
 drs=("${dr[@]}")
 
 if ($debug); then
