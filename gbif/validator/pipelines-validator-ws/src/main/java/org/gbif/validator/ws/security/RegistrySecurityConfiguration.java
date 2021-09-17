@@ -15,6 +15,7 @@ import org.gbif.mybatis.type.LanguageTypeHandler;
 import org.gbif.mybatis.type.UriTypeHandler;
 import org.gbif.mybatis.type.UuidTypeHandler;
 import org.gbif.registry.identity.service.BasicUserSuretyDelegate;
+import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.identity.service.UserSuretyDelegate;
 import org.gbif.registry.identity.util.RegistryPasswordEncoder;
 import org.gbif.registry.persistence.mapper.CommentMapper;
@@ -33,10 +34,16 @@ import org.gbif.registry.persistence.mapper.surety.ChallengeCodeMapper;
 import org.gbif.registry.security.LegacyAuthorizationService;
 import org.gbif.registry.security.LegacyAuthorizationServiceImpl;
 import org.gbif.registry.security.RegistryUserDetailsService;
+import org.gbif.registry.security.jwt.JwtAuthenticateService;
+import org.gbif.registry.security.jwt.JwtConfiguration;
+import org.gbif.registry.security.jwt.JwtIssuanceService;
+import org.gbif.registry.security.jwt.JwtIssuanceServiceImpl;
+import org.gbif.registry.security.jwt.JwtRequestFilter;
 import org.gbif.registry.surety.ChallengeCodeManager;
 import org.gbif.registry.ws.client.InstallationClient;
 import org.gbif.ws.client.ClientBuilder;
 import org.gbif.ws.security.NoAuthWebSecurityConfigurer;
+import org.gbif.ws.server.filter.AppIdentityFilter;
 import org.gbif.ws.server.filter.IdentityFilter;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.mapper.MapperFactoryBean;
@@ -174,6 +181,31 @@ public class RegistrySecurityConfiguration {
   }
 
   @Bean
+  public JwtAuthenticateService jwtAuthenticateService(
+      JwtConfiguration jwtConfiguration, IdentityService identityService) {
+    return new JwtAuthenticateService(jwtConfiguration, identityService);
+  }
+
+  @Bean
+  public JwtRequestFilter jwtRequestFilter(
+      UserDetailsService userDetailsService,
+      JwtAuthenticateService jwtAuthenticateService,
+      JwtIssuanceService jwtIssuanceService) {
+    return new JwtRequestFilter(userDetailsService, jwtAuthenticateService, jwtIssuanceService);
+  }
+
+  @Bean
+  public JwtIssuanceService jwtIssuanceService(JwtConfiguration jwtConfiguration) {
+    return new JwtIssuanceServiceImpl(jwtConfiguration);
+  }
+
+  @Bean
+  @ConfigurationProperties(prefix = "jwt")
+  public JwtConfiguration jwtConfiguration() {
+    return new JwtConfiguration();
+  }
+
+  @Bean
   public PasswordEncoder passwordEncoder() {
     return new RegistryPasswordEncoder();
   }
@@ -224,6 +256,8 @@ public class RegistrySecurityConfiguration {
     protected void configure(HttpSecurity http) throws Exception {
       super.configure(http);
       http.addFilterAfter(installationIdentityFilter, IdentityFilter.class);
+      http.addFilterAfter(
+          getApplicationContext().getBean(JwtRequestFilter.class), AppIdentityFilter.class);
     }
   }
 }

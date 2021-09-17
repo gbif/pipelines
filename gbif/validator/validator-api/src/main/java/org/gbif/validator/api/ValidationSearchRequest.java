@@ -54,11 +54,11 @@ public class ValidationSearchRequest {
 
   @Builder.Default
   @Min(0)
-  private Long offset = 20L;
+  private Long offset = 0L;
 
   @Builder.Default
   @Min(0)
-  private Integer limit = 0;
+  private Integer limit = 20;
 
   public static class ValidationSearchRequestBuilder {
 
