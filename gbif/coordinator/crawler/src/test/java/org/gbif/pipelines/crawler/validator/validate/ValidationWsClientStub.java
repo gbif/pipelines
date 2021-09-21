@@ -68,4 +68,9 @@ public class ValidationWsClientStub implements ValidationWsClient {
     this.status = Status.ABORTED;
     return Validation.builder().key(key).status(Status.ABORTED).build();
   }
+
+  @Override
+  public void delete(UUID key) {
+    // NOTHING
+  }
 }

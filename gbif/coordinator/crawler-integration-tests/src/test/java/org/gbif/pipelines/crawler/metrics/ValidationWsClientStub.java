@@ -58,4 +58,9 @@ public class ValidationWsClientStub implements ValidationWsClient {
   public Validation cancel(UUID key) {
     return validation;
   }
+
+  @Override
+  public void delete(UUID key) {
+    // nothing
+  }
 }
