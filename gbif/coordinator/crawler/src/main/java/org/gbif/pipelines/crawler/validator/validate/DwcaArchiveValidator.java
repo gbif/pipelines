@@ -26,7 +26,6 @@ import org.gbif.pipelines.core.utils.DwcaUtils;
 import org.gbif.pipelines.crawler.validator.ArchiveValidatorConfiguration;
 import org.gbif.pipelines.validator.DwcaValidator;
 import org.gbif.validator.api.Metrics;
-import org.gbif.validator.api.Metrics.ArchiveValidationReport;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.XmlSchemaValidatorResult;
 import org.gbif.validator.ws.client.ValidationWsClient;

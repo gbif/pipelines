@@ -26,6 +26,7 @@ import org.elasticsearch.search.aggregations.metrics.ParsedTopHits;
 import org.elasticsearch.search.aggregations.metrics.ParsedValueCount;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.OccurrenceIssue;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
 import org.gbif.pipelines.validator.factory.ElasticsearchClientFactory;
@@ -34,12 +35,14 @@ import org.gbif.pipelines.validator.metircs.request.ExtensionTermCountRequestBui
 import org.gbif.pipelines.validator.metircs.request.OccurrenceIssuesRequestBuilder;
 import org.gbif.pipelines.validator.metircs.request.TermCountRequestBuilder;
 import org.gbif.pipelines.validator.metircs.request.TermCountRequestBuilder.TermCountRequest;
+import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.EvaluationCategory;
 import org.gbif.validator.api.EvaluationType;
 import org.gbif.validator.api.Metrics;
-import org.gbif.validator.api.Metrics.Core.IssueInfo;
-import org.gbif.validator.api.Metrics.Core.IssueInfo.IssueSample;
-import org.gbif.validator.api.Metrics.Core.TermInfo;
+import org.gbif.validator.api.Metrics.FileInfo;
+import org.gbif.validator.api.Metrics.IssueInfo;
+import org.gbif.validator.api.Metrics.IssueSample;
+import org.gbif.validator.api.Metrics.TermInfo;
 
 /**
  * The class collects all necessary metrics using ES API, there are 4 main queries. such as:
@@ -53,7 +56,7 @@ import org.gbif.validator.api.Metrics.Core.TermInfo;
  */
 @Slf4j
 @Builder
-public class MetricsCollector {
+public class IndexMetricsCollector {
 
   private final String[] esHost;
   private final Set<Term> coreTerms;
@@ -66,29 +69,34 @@ public class MetricsCollector {
   /** Collect all metrics using ES API */
   public Metrics collect() {
 
+    List<FileInfo> files = new ArrayList<>();
+
     // Collect core metrics
-    Metrics.Core core =
-        Metrics.Core.builder()
+    FileInfo core =
+        FileInfo.builder()
+            .rowType(DwcTerm.Occurrence.qualifiedName())
+            .fileType(DwcFileType.CORE)
             .indexedCount(queryDocCount())
-            .indexedCoreTerms(queryCoreTermsCount())
-            .occurrenceIssues(queryOccurrenceIssuesCount())
+            .terms(queryCoreTermsCount())
+            .issues(queryOccurrenceIssuesCount())
             .build();
+    files.add(core);
 
     // Collect extensions metrics
-    List<Metrics.Extension> extensions =
-        extensionsTerms.entrySet().stream()
-            .filter(es -> es.getKey() != null)
-            .map(
-                es -> {
-                  String extPrefix = extensionsPrefix + "." + es.getKey().getRowType();
-                  return Metrics.Extension.builder()
-                      .rowType(es.getKey().getRowType())
-                      .extensionsTermsCounts(queryExtTermsCount(extPrefix, es.getValue()))
-                      .build();
-                })
-            .collect(Collectors.toList());
+    extensionsTerms.entrySet().stream()
+        .filter(es -> es.getKey() != null)
+        .map(
+            es -> {
+              String extPrefix = extensionsPrefix + "." + es.getKey().getRowType();
+              return FileInfo.builder()
+                  .fileType(DwcFileType.EXTENSION)
+                  .rowType(es.getKey().getRowType())
+                  .terms(queryExtTermsCount(extPrefix, es.getValue()))
+                  .build();
+            })
+        .forEach(files::add);
 
-    return Metrics.builder().core(core).extensions(extensions).build();
+    return Metrics.builder().fileInfos(files).build();
   }
 
   /** Query indexed document count by datasetKey */
@@ -107,7 +115,7 @@ public class MetricsCollector {
   }
 
   /** Aggregate core terms and return term, counts of raw and indexed terms */
-  private Set<TermInfo> queryCoreTermsCount() {
+  private List<TermInfo> queryCoreTermsCount() {
 
     Function<Term, TermCountRequest> requestFn =
         term ->
@@ -119,7 +127,7 @@ public class MetricsCollector {
                 .build()
                 .getRequest();
 
-    Function<TermCountRequest, TermInfo> countFn =
+    Function<TermCountRequest, Metrics.TermInfo> countFn =
         tcr -> {
           try {
             Long rawCount =
@@ -135,7 +143,7 @@ public class MetricsCollector {
                       .getCount();
             }
 
-            return TermInfo.builder()
+            return Metrics.TermInfo.builder()
                 .term(tcr.getTerm().qualifiedName())
                 .rawIndexed(rawCount)
                 .interpretedIndexed(interpretedCount)
@@ -146,14 +154,14 @@ public class MetricsCollector {
           }
         };
 
-    return coreTerms.stream().parallel().map(requestFn).map(countFn).collect(Collectors.toSet());
+    return coreTerms.stream().parallel().map(requestFn).map(countFn).collect(Collectors.toList());
   }
 
   /** Aggregate extensions terms and return term, counts of raw terms */
-  private Map<String, Long> queryExtTermsCount(String prefix, Set<Term> terms) {
+  private List<TermInfo> queryExtTermsCount(String prefix, Set<Term> terms) {
 
     Function<Term, ExtTermCountRequest> requestFn =
-        (term) ->
+        term ->
             ExtensionTermCountRequestBuilder.builder()
                 .prefix(prefix)
                 .termValue(key.toString())
@@ -179,12 +187,18 @@ public class MetricsCollector {
     return terms.stream()
         .parallel()
         .map(requestFn)
-        .collect(Collectors.toMap(t -> t.getTerm().qualifiedName(), countFn));
+        .map(
+            x ->
+                TermInfo.builder()
+                    .term(x.getTerm().qualifiedName())
+                    .rawIndexed(countFn.apply(x))
+                    .build())
+        .collect(Collectors.toList());
   }
 
   /** Aggregate all issues and return 5 samples per issue */
   @SneakyThrows
-  private Set<IssueInfo> queryOccurrenceIssuesCount() {
+  private List<IssueInfo> queryOccurrenceIssuesCount() {
     SearchRequest request =
         OccurrenceIssuesRequestBuilder.builder()
             .termValue(key.toString())
@@ -199,7 +213,7 @@ public class MetricsCollector {
             .get(ISSUES_AGGREGATION);
 
     return ((ParsedStringTerms) aggregation)
-        .getBuckets().stream().map(this::collectIssueInfo).collect(Collectors.toSet());
+        .getBuckets().stream().map(this::collectIssueInfo).collect(Collectors.toList());
   }
 
   /** Process one issue bucket, get issue value, count and 5 samples of related data */

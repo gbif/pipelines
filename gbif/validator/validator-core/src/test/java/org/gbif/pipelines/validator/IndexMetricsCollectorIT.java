@@ -11,6 +11,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -25,15 +26,15 @@ import org.gbif.pipelines.estools.EsIndex;
 import org.gbif.pipelines.estools.model.IndexParams;
 import org.gbif.pipelines.estools.service.EsService;
 import org.gbif.validator.api.Metrics;
-import org.gbif.validator.api.Metrics.Core;
-import org.gbif.validator.api.Metrics.Core.IssueInfo;
-import org.gbif.validator.api.Metrics.Core.IssueInfo.IssueSample;
-import org.gbif.validator.api.Metrics.Core.TermInfo;
+import org.gbif.validator.api.Metrics.FileInfo;
+import org.gbif.validator.api.Metrics.IssueInfo;
+import org.gbif.validator.api.Metrics.IssueSample;
+import org.gbif.validator.api.Metrics.TermInfo;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-public class MetricsCollectorIT {
+public class IndexMetricsCollectorIT {
 
   // files for testing
   private static final Path MAPPINGS_PATH = Paths.get("mappings/verbatim-mapping.json");
@@ -102,7 +103,7 @@ public class MetricsCollectorIT {
             new HashSet<>(Arrays.asList(DwcTerm.measurementValue, DwcTerm.measurementType)));
 
     Metrics result =
-        MetricsCollector.builder()
+        IndexMetricsCollector.builder()
             .coreTerms(coreTerms)
             .extensionsTerms(extTerms)
             .key(UUID.fromString(datasetKey))
@@ -116,8 +117,13 @@ public class MetricsCollectorIT {
     // Should
 
     // Core
-    Core core = result.getCore();
-    Set<TermInfo> resCoreTerms = core.getIndexedCoreTerms();
+    assertEquals(2, result.getFileInfos().size());
+
+    Optional<FileInfo> coreOpt = getFileInfo(result, DwcTerm.Occurrence);
+    assertTrue(coreOpt.isPresent());
+
+    FileInfo core = coreOpt.get();
+    List<TermInfo> resCoreTerms = core.getTerms();
 
     assertEquals(Long.valueOf(3L), core.getIndexedCount());
 
@@ -160,7 +166,7 @@ public class MetricsCollectorIT {
     assertFalse(anyTerm.isPresent());
 
     // OccurrenceIssues
-    Set<IssueInfo> issues = core.getOccurrenceIssues();
+    List<IssueInfo> issues = core.getIssues();
     assertEquals(3, issues.size());
     assertIssueInfo(
         issues,
@@ -197,26 +203,49 @@ public class MetricsCollectorIT {
             .build());
 
     // Extensions
-    Metrics.Extension extension = result.getExtensions().get(0);
+    Optional<FileInfo> extensionOpt =
+        getFileInfo(result, Extension.MEASUREMENT_OR_FACT.getRowType());
+    assertTrue(extensionOpt.isPresent());
+    FileInfo extension = extensionOpt.get();
 
-    Map<String, Long> resExtTerms = extension.getExtensionsTermsCounts();
-    assertEquals(Long.valueOf(6L), resExtTerms.get(DwcTerm.measurementValue.qualifiedName()));
-    assertEquals(Long.valueOf(0L), resExtTerms.get(DwcTerm.measurementType.qualifiedName()));
-    assertNull(resExtTerms.get(DwcTerm.county.qualifiedName()));
+    Optional<TermInfo> measurementValueOpt = getTermInfo(extension, DwcTerm.measurementValue);
+    assertTrue(measurementValueOpt.isPresent());
+    assertEquals(Long.valueOf(6L), measurementValueOpt.get().getRawIndexed());
+
+    Optional<TermInfo> measurementTypeOpt = getTermInfo(extension, DwcTerm.measurementType);
+    assertTrue(measurementTypeOpt.isPresent());
+    assertEquals(Long.valueOf(0L), measurementTypeOpt.get().getRawIndexed());
+
+    Optional<TermInfo> countyOpt = getTermInfo(extension, DwcTerm.county);
+    assertFalse(countyOpt.isPresent());
   }
 
-  private void assertTermInfo(Set<TermInfo> set, TermInfo expected) {
+  private Optional<FileInfo> getFileInfo(Metrics metrics, String term) {
+    return metrics.getFileInfos().stream().filter(x -> x.getRowType().equals(term)).findAny();
+  }
+
+  private Optional<FileInfo> getFileInfo(Metrics metrics, Term term) {
+    return getFileInfo(metrics, term.qualifiedName());
+  }
+
+  private Optional<TermInfo> getTermInfo(FileInfo fileInfo, Term term) {
+    return fileInfo.getTerms().stream()
+        .filter(x -> x.getTerm().equals(term.qualifiedName()))
+        .findAny();
+  }
+
+  private void assertTermInfo(List<TermInfo> list, TermInfo expected) {
     Optional<TermInfo> anyTerm =
-        set.stream().filter(x -> x.getTerm().equalsIgnoreCase(expected.getTerm())).findAny();
+        list.stream().filter(x -> x.getTerm().equalsIgnoreCase(expected.getTerm())).findAny();
     assertTrue(anyTerm.isPresent());
     TermInfo info = anyTerm.get();
     assertEquals(expected.getRawIndexed(), info.getRawIndexed());
     assertEquals(expected.getInterpretedIndexed(), info.getInterpretedIndexed());
   }
 
-  private void assertIssueInfo(Set<IssueInfo> set, IssueInfo expected) {
+  private void assertIssueInfo(List<IssueInfo> list, IssueInfo expected) {
     Optional<IssueInfo> anyTerm =
-        set.stream().filter(x -> x.getIssue().equalsIgnoreCase(expected.getIssue())).findAny();
+        list.stream().filter(x -> x.getIssue().equalsIgnoreCase(expected.getIssue())).findAny();
     assertTrue(anyTerm.isPresent());
     IssueInfo info = anyTerm.get();
     assertEquals(expected.getCount(), info.getCount());
@@ -228,8 +257,12 @@ public class MetricsCollectorIT {
 
     for (IssueSample is : expected.getSamples()) {
       assertTrue(infoAsMap.containsKey(is.getRecordId()));
-      for (Entry<String, String> entry : is.getRelatedData().entrySet()) {
-        assertEquals(entry.getValue(), infoAsMap.get(is.getRecordId()).get(entry.getKey()));
+      if (is.getRelatedData() == null) {
+        assertNull(infoAsMap.get(is.getRecordId()).get(is.getRecordId()));
+      } else {
+        for (Entry<String, String> entry : is.getRelatedData().entrySet()) {
+          assertEquals(entry.getValue(), infoAsMap.get(is.getRecordId()).get(entry.getKey()));
+        }
       }
     }
   }
