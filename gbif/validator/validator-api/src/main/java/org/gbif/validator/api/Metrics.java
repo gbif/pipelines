@@ -4,15 +4,16 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Singular;
+import org.gbif.api.model.checklistbank.NameUsage;
+import org.gbif.api.model.checklistbank.VerbatimNameUsage;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.validator.api.Validation.Status;
 
@@ -23,11 +24,15 @@ import org.gbif.validator.api.Validation.Status;
 @JsonDeserialize(builder = Metrics.MetricsBuilder.class)
 public class Metrics {
 
-  @Singular private List<ValidationStep> stepTypes = new LinkedList<>();
+  @Builder.Default private List<ValidationStep> stepTypes = new ArrayList<>();
 
   @JsonProperty("files")
-  @Singular
-  private List<FileInfo> fileInfos;
+  @Builder.Default
+  private List<FileInfo> fileInfos = new ArrayList<>();
+
+  private String error;
+
+  private ChecklistValidationReport checklistValidationReport;
 
   @Data
   @Builder
@@ -74,6 +79,7 @@ public class Metrics {
     private String issue;
     private EvaluationCategory issueCategory;
     private Long count;
+    private String extra;
     @Builder.Default private List<IssueSample> samples = Collections.emptyList();
   }
 
@@ -85,6 +91,26 @@ public class Metrics {
   public static class IssueSample {
     private String recordId;
     private Map<String, String> relatedData = Collections.emptyMap();
+  }
+
+  @Data
+  @Builder
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @JsonDeserialize(builder = ChecklistValidationReport.ChecklistValidationReportBuilder.class)
+  public static class ChecklistValidationReport {
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @JsonDeserialize(builder = ChecklistValidationResult.ChecklistValidationResultBuilder.class)
+    public static class ChecklistValidationResult {
+      private NameUsage nameUsage;
+      private VerbatimNameUsage verbatimNameUsage;
+    }
+
+    private List<ChecklistValidationResult> results;
   }
 
   @Override

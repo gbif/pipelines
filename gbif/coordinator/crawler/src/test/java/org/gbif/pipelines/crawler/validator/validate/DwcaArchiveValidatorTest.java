@@ -1,12 +1,11 @@
 package org.gbif.pipelines.crawler.validator.validate;
 
+import static org.gbif.pipelines.crawler.validator.validate.DwcaArchiveValidator.EML_XML;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.net.URI;
 import java.util.UUID;
-import org.gbif.api.model.crawler.OccurrenceValidationReport;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
@@ -14,7 +13,9 @@ import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
 import org.gbif.common.messaging.api.messages.Platform;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
 import org.gbif.pipelines.crawler.validator.ArchiveValidatorConfiguration;
+import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.Metrics;
+import org.gbif.validator.api.Metrics.FileInfo;
 import org.gbif.validator.api.Validation.Status;
 import org.gbif.validator.ws.client.ValidationWsClient;
 import org.junit.Test;
@@ -46,14 +47,11 @@ public class DwcaArchiveValidatorTest {
 
     // Should
     Metrics metrics = validationClient.get(key).getMetrics();
-    assertTrue(metrics.getXmlSchemaValidatorResult().isValid());
-    assertTrue(metrics.getXmlSchemaValidatorResult().getErrors().isEmpty());
+    assertEquals(1, metrics.getFileInfos().size());
 
-    OccurrenceValidationReport report = metrics.getArchiveValidationReport().getOccurrenceReport();
-    assertTrue(report.isValid());
-    assertNull(report.getInvalidationReason());
-    assertEquals(1, report.getUniqueOccurrenceIds());
-    assertEquals(1, report.getCheckedRecords());
+    FileInfo info = metrics.getFileInfos().get(0);
+    assertEquals(DwcFileType.METADATA, info.getFileType());
+    assertEquals(EML_XML, info.getFileName());
   }
 
   @Test

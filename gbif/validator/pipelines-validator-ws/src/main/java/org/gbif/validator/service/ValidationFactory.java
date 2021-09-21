@@ -47,9 +47,6 @@ public class ValidationFactory {
   }
 
   static Metrics metricsFromError(String errorMessage) {
-    return Metrics.builder()
-        .archiveValidationReport(
-            Metrics.ArchiveValidationReport.builder().invalidationReason(errorMessage).build())
-        .build();
+    return Metrics.builder().error(errorMessage).build();
   }
 }

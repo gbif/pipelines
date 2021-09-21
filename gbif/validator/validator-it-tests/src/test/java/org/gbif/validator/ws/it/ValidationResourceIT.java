@@ -18,13 +18,17 @@ import javax.validation.ValidationException;
 import lombok.SneakyThrows;
 import org.gbif.api.model.checklistbank.NameUsage;
 import org.gbif.api.model.common.paging.PagingResponse;
-import org.gbif.api.model.crawler.OccurrenceValidationReport;
 import org.gbif.api.vocabulary.NameUsageIssue;
+import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.Metrics;
+import org.gbif.validator.api.Metrics.ChecklistValidationReport;
+import org.gbif.validator.api.Metrics.ChecklistValidationReport.ChecklistValidationResult;
+import org.gbif.validator.api.Metrics.FileInfo;
+import org.gbif.validator.api.Metrics.TermInfo;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.ValidationRequest;
 import org.gbif.validator.api.ValidationSearchRequest;
-import org.gbif.validator.api.XmlSchemaValidatorResult;
 import org.gbif.validator.ws.client.ValidationWsClient;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
@@ -211,27 +215,25 @@ public class ValidationResourceIT {
 
     Metrics metrics =
         Metrics.builder()
-            .core(Metrics.Core.builder().indexedCount(100L).build())
-            .extensions(
+            .fileInfos(
                 Collections.singletonList(
-                    Metrics.Extension.builder().rowType("occurrence").fileCount(1L).build()))
-            .archiveValidationReport(
-                Metrics.ArchiveValidationReport.builder()
-                    .occurrenceReport(
-                        new OccurrenceValidationReport(
-                            100, 100,
-                            0, 100,
-                            0, true))
-                    .build())
-            .xmlSchemaValidatorResult(
-                XmlSchemaValidatorResult.builder().errors(Collections.emptyList()).build())
+                    FileInfo.builder()
+                        .fileName("somename.txt")
+                        .fileType(DwcFileType.CORE)
+                        .rowType(DwcTerm.Occurrence.qualifiedName())
+                        .terms(
+                            Collections.singletonList(
+                                TermInfo.builder()
+                                    .term(DwcTerm.occurrenceStatus.qualifiedName())
+                                    .interpretedIndexed(1L)
+                                    .rawIndexed(1L)
+                                    .build()))
+                        .build()))
             .checklistValidationReport(
-                Metrics.ChecklistValidationReport.builder()
+                ChecklistValidationReport.builder()
                     .results(
                         Collections.singletonList(
-                            Metrics.ChecklistValidationReport.ChecklistValidationResult.builder()
-                                .nameUsage(nameUsage)
-                                .build()))
+                            ChecklistValidationResult.builder().nameUsage(nameUsage).build()))
                     .build())
             .build();
     validation.setMetrics(metrics);

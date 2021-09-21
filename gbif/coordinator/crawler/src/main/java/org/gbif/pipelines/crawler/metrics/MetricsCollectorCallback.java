@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -183,7 +184,11 @@ public class MetricsCollectorCallback extends AbstractMessageCallback<PipelinesI
       if (validationMetrics == null) {
         validation.setMetrics(metrics);
       } else {
-        validationMetrics.getFileInfos().addAll(metrics.getFileInfos());
+        int size = validationMetrics.getFileInfos().size() + metrics.getFileInfos().size();
+        List<FileInfo> infos = new ArrayList<>(size);
+        infos.addAll(validationMetrics.getFileInfos());
+        infos.addAll(metrics.getFileInfos());
+        validationMetrics.setFileInfos(infos);
       }
     }
   }
