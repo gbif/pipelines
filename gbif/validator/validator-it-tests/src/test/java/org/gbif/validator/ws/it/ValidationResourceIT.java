@@ -267,7 +267,6 @@ public class ValidationResourceIT {
             .anyMatch(v -> v.getKey().equals(persistedValidation.getKey())));
   }
 
-
   @Test
   public void deleteValidationIT() {
     File archive = readTestFileInputStream("/Archive.zip");
@@ -278,24 +277,24 @@ public class ValidationResourceIT {
     Validation persistedValidation = validationWsClient.get(validation.getKey());
     assertNotNull(persistedValidation);
 
-    //Delete the validation
+    // Delete the validation
     validationWsClient.delete(persistedValidation.getKey());
 
-    //Can get the validation but it is deleted
+    // Can get the validation but it is deleted
     Validation deletedValidation = validationWsClient.get(persistedValidation.getKey());
     assertNotNull(deletedValidation.getDeleted());
 
-    //Validation is not in the results
+    // Validation is not in the results
     PagingResponse<Validation> failedValidations =
-      validationWsClient.list(
-        ValidationSearchRequest.builder()
-          .offset(0L)
-          .limit(50)
-          .sortByCreated(ValidationSearchRequest.SortOrder.DESC)
-          .build());
+        validationWsClient.list(
+            ValidationSearchRequest.builder()
+                .offset(0L)
+                .limit(50)
+                .sortByCreated(ValidationSearchRequest.SortOrder.DESC)
+                .build());
     assertTrue(
-      failedValidations.getResults().stream()
-        .noneMatch(v -> v.getKey().equals(persistedValidation.getKey())));
+        failedValidations.getResults().stream()
+            .noneMatch(v -> v.getKey().equals(persistedValidation.getKey())));
   }
 
   @SneakyThrows

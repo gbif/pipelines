@@ -79,8 +79,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
       throw errorMapper.apply(error.get());
     }
     UUID key = UUID.randomUUID();
-    FileStoreManager.AsyncDataFileTask task =
-        fileStoreManager.uploadDataFile(file, key.toString());
+    FileStoreManager.AsyncDataFileTask task = fileStoreManager.uploadDataFile(file, key.toString());
     task.getTask()
         .whenCompleteAsync(
             (df, tr) -> {
@@ -173,7 +172,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
 
   @Override
   public void delete(UUID key) {
-    //A get is executed to check if the validation exists and current user has access
+    // A get is executed to check if the validation exists and current user has access
     validationMapper.delete(get(key).getKey());
     fileStoreManager.deleteIfExist(key.toString());
   }

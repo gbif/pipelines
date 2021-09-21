@@ -76,9 +76,7 @@ public interface ValidationWsClient extends ValidationService<File> {
   Validation cancel(@PathVariable("key") UUID key);
 
   /** Cancel running validation. */
-  @RequestMapping(
-    method = RequestMethod.DELETE,
-    path = "/{key}")
+  @RequestMapping(method = RequestMethod.DELETE, path = "/{key}")
   @Override
   void delete(@PathVariable("key") UUID key);
 
