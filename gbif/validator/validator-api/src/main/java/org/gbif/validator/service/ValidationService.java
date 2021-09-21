@@ -25,5 +25,7 @@ public interface ValidationService<MF> {
 
   Validation cancel(UUID key);
 
+  void delete(UUID key);
+
   PagingResponse<Validation> list(ValidationSearchRequest searchRequest);
 }

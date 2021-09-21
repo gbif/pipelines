@@ -26,7 +26,7 @@ import org.gbif.validator.api.ValidationSearchRequest;
 import org.gbif.validator.persistence.mapper.ValidationMapper;
 import org.gbif.validator.ws.file.DataFile;
 import org.gbif.validator.ws.file.FileSizeException;
-import org.gbif.validator.ws.file.UploadFileManager;
+import org.gbif.validator.ws.file.FileStoreManager;
 import org.gbif.ws.security.GbifUserPrincipal;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
@@ -39,7 +39,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 public class ValidationServiceImpl implements ValidationService<MultipartFile> {
 
-  private final UploadFileManager fileTransferManager;
+  private final FileStoreManager fileStoreManager;
 
   private final ValidationMapper validationMapper;
 
@@ -79,8 +79,8 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
       throw errorMapper.apply(error.get());
     }
     UUID key = UUID.randomUUID();
-    UploadFileManager.AsyncDataFileTask task =
-        fileTransferManager.uploadDataFile(file, key.toString());
+    FileStoreManager.AsyncDataFileTask task =
+        fileStoreManager.uploadDataFile(file, key.toString());
     task.getTask()
         .whenCompleteAsync(
             (df, tr) -> {
@@ -114,8 +114,8 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
       UUID key = UUID.randomUUID();
       String encodedFileURL = encode(fileURL);
       // this should also become asynchronous at some point
-      UploadFileManager.AsyncDownloadResult downloadResult =
-          fileTransferManager.downloadDataFile(
+      FileStoreManager.AsyncDownloadResult downloadResult =
+          fileStoreManager.downloadDataFile(
               encodedFileURL,
               key.toString(),
               resultDataFile -> update(key, resultDataFile, Validation.Status.SUBMITTED),
@@ -167,7 +167,15 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
       throw errorMapper.apply(Validation.ErrorCode.VALIDATION_IS_NOT_EXECUTING);
     }
     validation.setStatus(Status.ABORTED);
+    fileStoreManager.deleteIfExist(key.toString());
     return updateAndGet(validation);
+  }
+
+  @Override
+  public void delete(UUID key) {
+    //A get is executed to check if the validation exists and current user has access
+    validationMapper.delete(get(key).getKey());
+    fileStoreManager.deleteIfExist(key.toString());
   }
 
   /** Paged result of validations of a an user. */

@@ -18,6 +18,7 @@ import org.gbif.validator.service.ValidationService;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -70,6 +71,12 @@ public class ValidationResource {
   @PutMapping(path = "/{key}/cancel")
   public Validation cancel(@PathVariable UUID key) {
     return validationService.cancel(key);
+  }
+
+  /** Deletes a Validation. */
+  @DeleteMapping(path = "/{key}")
+  public void delete(@PathVariable UUID key) {
+    validationService.delete(key);
   }
 
   /** Gets the detail of Validation. */

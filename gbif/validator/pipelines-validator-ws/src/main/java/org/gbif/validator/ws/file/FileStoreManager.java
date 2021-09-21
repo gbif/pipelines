@@ -26,7 +26,7 @@ import org.springframework.web.multipart.MultipartFile;
  * required.
  */
 @Slf4j
-public class UploadFileManager {
+public class FileStoreManager {
 
   @Data
   @Builder
@@ -46,7 +46,7 @@ public class UploadFileManager {
 
   private final DownloadFileManager downloadFileManager;
 
-  public UploadFileManager(
+  public FileStoreManager(
       String workingDirectory, String storeDirectory, DownloadFileManager downloadFileManager)
       throws IOException {
     Path workingDirectory1 = Paths.get(workingDirectory);
@@ -143,6 +143,14 @@ public class UploadFileManager {
                         extractAndGetFileInfo(dataFilePath, destinationFolder, fileName)),
                 errorCallback))
         .build();
+  }
+
+  @SneakyThrows
+  public void deleteIfExist(String path) {
+    File file = getDestinationPath(path).toFile();
+    if (file.exists()) {
+      FileUtils.deleteDirectory(file);
+    }
   }
 
   @SneakyThrows

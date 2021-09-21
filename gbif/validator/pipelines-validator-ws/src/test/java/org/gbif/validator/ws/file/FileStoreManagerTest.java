@@ -18,9 +18,9 @@ import org.mockserver.integration.ClientAndServer;
 import org.mockserver.junit.jupiter.MockServerExtension;
 import org.springframework.mock.web.MockMultipartFile;
 
-/** {@link UploadFileManager} tests. */
+/** {@link FileStoreManager} tests. */
 @ExtendWith(MockServerExtension.class)
-public class UploadFileManagerTest extends DownloadFileBaseTest {
+public class FileStoreManagerTest extends DownloadFileBaseTest {
 
   // Directory used as temporary space to upload files
   @TempDir Path workingDirectory;
@@ -28,7 +28,7 @@ public class UploadFileManagerTest extends DownloadFileBaseTest {
   // Directory used as files store
   @TempDir Path storeDirectory;
 
-  public UploadFileManagerTest(ClientAndServer clientAndServer) {
+  public FileStoreManagerTest(ClientAndServer clientAndServer) {
     super(clientAndServer);
   }
 
@@ -54,14 +54,14 @@ public class UploadFileManagerTest extends DownloadFileBaseTest {
       // directory inside the storeDirectory in which file is upload
       UUID targetDirectory = UUID.randomUUID();
 
-      UploadFileManager uploadFileManager =
-          new UploadFileManager(
+      FileStoreManager fileStoreManager =
+          new FileStoreManager(
               workingDirectory.toString(),
               storeDirectory.toString(),
               ctx.getBean(DownloadFileManager.class));
 
-      UploadFileManager.AsyncDataFileTask task =
-          uploadFileManager.uploadDataFile(mockMultipartFile, targetDirectory.toString());
+      FileStoreManager.AsyncDataFileTask task =
+          fileStoreManager.uploadDataFile(mockMultipartFile, targetDirectory.toString());
 
       // Wait the task to finish
       DataFile dataFile = task.getTask().get();
@@ -79,16 +79,16 @@ public class UploadFileManagerTest extends DownloadFileBaseTest {
   @Test
   public void downloadZipFileTest() {
     // State
-    UploadFileManager uploadFileManager =
-        new UploadFileManager(
+    FileStoreManager fileStoreManager =
+        new FileStoreManager(
             workingDirectory.toString(),
             storeDirectory.toString(),
             ctx.getBean(DownloadFileManager.class));
     UUID key = UUID.randomUUID();
 
     // When
-    UploadFileManager.AsyncDownloadResult downloadResult =
-        uploadFileManager.downloadDataFile(
+    FileStoreManager.AsyncDownloadResult downloadResult =
+        fileStoreManager.downloadDataFile(
             testPath("/Archive.zip"), key.toString(), System.out::println, err -> fail());
 
     // Should

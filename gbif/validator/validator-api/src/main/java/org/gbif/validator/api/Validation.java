@@ -54,6 +54,9 @@ public class Validation {
   /** Last modified timestamp. */
   private Date modified;
 
+  /** Deleted timestamp. */
+  private Date deleted;
+
   /** User that triggered or owns the validation. */
   private String username;
 

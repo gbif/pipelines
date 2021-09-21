@@ -265,6 +265,37 @@ public class ValidationResourceIT {
             .anyMatch(v -> v.getKey().equals(persistedValidation.getKey())));
   }
 
+
+  @Test
+  public void deleteValidationIT() {
+    File archive = readTestFileInputStream("/Archive.zip");
+    Validation validation = validationWsClient.submitFile(archive);
+    assertNotNull(validation);
+
+    // Can the new validation be retrieved?
+    Validation persistedValidation = validationWsClient.get(validation.getKey());
+    assertNotNull(persistedValidation);
+
+    //Delete the validation
+    validationWsClient.delete(persistedValidation.getKey());
+
+    //Can get the validation but it is deleted
+    Validation deletedValidation = validationWsClient.get(persistedValidation.getKey());
+    assertNotNull(deletedValidation.getDeleted());
+
+    //Validation is not in the results
+    PagingResponse<Validation> failedValidations =
+      validationWsClient.list(
+        ValidationSearchRequest.builder()
+          .offset(0L)
+          .limit(50)
+          .sortByCreated(ValidationSearchRequest.SortOrder.DESC)
+          .build());
+    assertTrue(
+      failedValidations.getResults().stream()
+        .noneMatch(v -> v.getKey().equals(persistedValidation.getKey())));
+  }
+
   @SneakyThrows
   protected static File readTestFileInputStream(String file) {
     return new File(ValidationResourceIT.class.getResource(file).getFile());

@@ -10,7 +10,7 @@ import lombok.Data;
 import lombok.SneakyThrows;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
 import org.gbif.validator.ws.file.DownloadFileManager;
-import org.gbif.validator.ws.file.UploadFileManager;
+import org.gbif.validator.ws.file.FileStoreManager;
 import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -55,12 +55,12 @@ public class ValidatorWsConfiguration {
   }
 
   @Bean
-  public UploadFileManager uploadedFileManager(
+  public FileStoreManager uploadedFileManager(
       @Value("${upload.workingDirectory}") String uploadWorkingDirectory,
       @Value("${storePath}") String storePath,
       DownloadFileManager downloadFileManager)
       throws IOException {
-    return new UploadFileManager(uploadWorkingDirectory, storePath, downloadFileManager);
+    return new FileStoreManager(uploadWorkingDirectory, storePath, downloadFileManager);
   }
 
   @Bean("multipartResolver")
