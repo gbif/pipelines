@@ -48,6 +48,7 @@ import org.gbif.pipelines.common.utils.ZookeeperUtils;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.utils.file.properties.PropertiesUtil;
 import org.gbif.validator.api.Metrics;
+import org.gbif.validator.api.Metrics.ValidationStep;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.Validation.Status;
 import org.gbif.validator.ws.client.ValidationWsClient;
@@ -283,7 +284,21 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
 
         Metrics metrics =
             Optional.ofNullable(validation.getMetrics()).orElse(Metrics.builder().build());
-        metrics.addStepType(stepType, status);
+
+        boolean notSet = true;
+        for (ValidationStep step : metrics.getStepTypes()) {
+          if (step.getStepType() == stepType) {
+            step.setStatus(status);
+            notSet = false;
+            break;
+          }
+        }
+        if (notSet) {
+          metrics
+              .getStepTypes()
+              .add(ValidationStep.builder().stepType(stepType).status(status).build());
+        }
+
         validation.setMetrics(metrics);
 
         validationClient.update(message.getDatasetUuid(), validation);

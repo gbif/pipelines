@@ -1,6 +1,5 @@
 package org.gbif.pipelines.validator.checklists;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -28,8 +27,6 @@ public class ChecklistValidator {
   /**
    * The NormalizerConfiguration instance is used to run a single Normalizer each time this method
    * is executed.
-   *
-   * @throws IOException
    */
   public Metrics.ChecklistValidationReport evaluate(Path archivePath) {
 

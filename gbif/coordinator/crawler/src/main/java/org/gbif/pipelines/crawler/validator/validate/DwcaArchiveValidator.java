@@ -1,16 +1,24 @@
 package org.gbif.pipelines.crawler.validator.validate;
 
 import static org.gbif.pipelines.common.utils.PathUtil.buildDwcaInputPath;
+import static org.gbif.validator.api.EvaluationType.OCCURRENCE_NOT_UNIQUELY_IDENTIFIED;
+import static org.gbif.validator.api.EvaluationType.RECORD_NOT_UNIQUELY_IDENTIFIED;
+import static org.gbif.validator.api.EvaluationType.RECORD_REFERENTIAL_INTEGRITY_VIOLATION;
 
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.crawler.DwcaValidationReport;
+import org.gbif.api.model.crawler.GenericValidationReport;
 import org.gbif.api.model.crawler.OccurrenceValidationReport;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.EndpointType;
@@ -25,7 +33,11 @@ import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
 import org.gbif.pipelines.core.utils.DwcaUtils;
 import org.gbif.pipelines.crawler.validator.ArchiveValidatorConfiguration;
 import org.gbif.pipelines.validator.DwcaValidator;
-import org.gbif.validator.api.Metrics;
+import org.gbif.pipelines.validator.Validations;
+import org.gbif.validator.api.DwcFileType;
+import org.gbif.validator.api.EvaluationCategory;
+import org.gbif.validator.api.Metrics.FileInfo;
+import org.gbif.validator.api.Metrics.IssueInfo;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.XmlSchemaValidatorResult;
 import org.gbif.validator.ws.client.ValidationWsClient;
@@ -33,6 +45,8 @@ import org.gbif.validator.ws.client.ValidationWsClient;
 @Slf4j
 @Builder
 public class DwcaArchiveValidator {
+
+  protected static final String EML_XML = "eml.xml";
 
   private final ArchiveValidatorConfiguration config;
   private final ValidationWsClient validationClient;
@@ -59,59 +73,59 @@ public class DwcaArchiveValidator {
   }
 
   public void validate() {
-    Metrics metrics = Metrics.builder().build();
-    Optional<XmlSchemaValidatorResult> xmlSchemaValidatorResult = validateEmlSchema();
-    if (xmlSchemaValidatorResult.isPresent()) {
-      try {
-        metrics = validateDwcaFile();
-      } catch (Exception ex) {
-        log.warn("Can't validate archvie {}", message.getDatasetUuid());
-      }
-      metrics.setXmlSchemaValidatorResult(xmlSchemaValidatorResult.get());
-    }
     Validation validation = validationClient.get(message.getDatasetUuid());
-    merge(validation, metrics);
+    FileInfo emlFile = validateEmlSchema();
+    FileInfo occurrenceFile = validateDwcaFile();
+
+    Validations.mergeFileInfo(validation, emlFile);
+    Validations.mergeFileInfo(validation, occurrenceFile);
 
     log.info("Update validation key {}", message.getDatasetUuid());
     validationClient.update(validation);
   }
 
-  private void merge(Validation validation, Metrics metrics) {
-    if (validation != null && metrics != null) {
-      Metrics validationMetrics = validation.getMetrics();
-      if (validationMetrics == null) {
-        validation.setMetrics(metrics);
-      } else {
-        validationMetrics.setArchiveValidationReport(metrics.getArchiveValidationReport());
-        validationMetrics.setXmlSchemaValidatorResult(metrics.getXmlSchemaValidatorResult());
-      }
-    }
-  }
-
   @SneakyThrows
-  private Optional<XmlSchemaValidatorResult> validateEmlSchema() {
+  private FileInfo validateEmlSchema() {
     log.info("Running EML schema validation for {}", message.getDatasetUuid());
     Path inputPath =
-        buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid()).resolve("eml.xml");
+        buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid()).resolve(EML_XML);
 
     try {
       byte[] bytes = Files.readAllBytes(inputPath);
       String xmlDoc = new String(bytes, StandardCharsets.UTF_8);
-      return Optional.ofNullable(
-          schemaValidatorFactory.newValidatorFromDocument(xmlDoc).validate(xmlDoc));
+      XmlSchemaValidatorResult result =
+          schemaValidatorFactory.newValidatorFromDocument(xmlDoc).validate(xmlDoc);
+
+      List<IssueInfo> issueInfos = Collections.emptyList();
+      if (result != null) {
+        issueInfos =
+            result.getErrors().stream()
+                .map(
+                    x ->
+                        IssueInfo.builder()
+                            .issueCategory(EvaluationCategory.METADATA_CONTENT)
+                            .extra(x.getError())
+                            .build())
+                .collect(Collectors.toList());
+      }
+
+      return FileInfo.builder()
+          .fileType(DwcFileType.METADATA)
+          .fileName(EML_XML)
+          .issues(issueInfos)
+          .build();
+
     } catch (Exception ex) {
       throw new IllegalArgumentException(ex.getMessage(), ex);
     }
   }
 
-  private Metrics validateDwcaFile() {
+  private FileInfo validateDwcaFile() {
     log.info("Running DWCA validation for {}", message.getDatasetUuid());
     Path inputPath = buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid());
     Archive archive = DwcaUtils.fromLocation(inputPath);
 
     DatasetType datasetType = getDatasetType(archive);
-
-    Metrics.MetricsBuilder metrics = Metrics.builder();
 
     if (DatasetType.OCCURRENCE == datasetType) {
 
@@ -125,17 +139,52 @@ public class DwcaArchiveValidator {
               .build()
               .validate();
 
-      metrics.archiveValidationReport(
-          ArchiveValidationReport.builder()
-              .genericReport(report.getGenericReport())
-              .occurrenceReport(report.getOccurrenceReport())
-              .invalidationReason(report.getInvalidationReason())
-              .build());
-    } else if (DatasetType.CHECKLIST == datasetType) {
+      List<IssueInfo> issueInfos = new ArrayList<>();
+
+      // Generic report
+      GenericValidationReport genericReport = report.getGenericReport();
+      if (genericReport != null && !genericReport.isValid()) {
+        if (genericReport.getDuplicateIds().size() > 0) {
+          issueInfos.add(
+              IssueInfo.builder()
+                  .issueCategory(EvaluationCategory.RESOURCE_STRUCTURE)
+                  .issue(RECORD_NOT_UNIQUELY_IDENTIFIED.name())
+                  .extra(genericReport.getInvalidationReason())
+                  .build());
+        }
+        if (genericReport.getRowNumbersMissingId().size() > 0) {
+          issueInfos.add(
+              IssueInfo.builder()
+                  .issueCategory(EvaluationCategory.RESOURCE_STRUCTURE)
+                  .issue(RECORD_REFERENTIAL_INTEGRITY_VIOLATION.name())
+                  .extra(genericReport.getInvalidationReason())
+                  .build());
+        }
+      }
+
+      // Occurrence report
+      OccurrenceValidationReport occurrenceReport = report.getOccurrenceReport();
+      if (occurrenceReport != null && !occurrenceReport.isValid()) {
+        issueInfos.add(
+            IssueInfo.builder()
+                .issueCategory(EvaluationCategory.RESOURCE_STRUCTURE)
+                .issue(OCCURRENCE_NOT_UNIQUELY_IDENTIFIED.name())
+                .extra(occurrenceReport.getInvalidationReason())
+                .build());
+      }
+
+      if (issueInfos.isEmpty()) {
+        return null;
+      } else {
+        return FileInfo.builder().fileType(DwcFileType.CORE).issues(issueInfos).build();
+      }
+    }
+
+    if (DatasetType.CHECKLIST == datasetType) {
       sendChecklistValidatorMessage();
     }
 
-    return metrics.build();
+    return null;
   }
 
   @SneakyThrows

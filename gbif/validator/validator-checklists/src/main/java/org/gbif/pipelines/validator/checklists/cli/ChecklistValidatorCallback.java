@@ -12,6 +12,7 @@ import org.gbif.common.messaging.api.messages.PipelinesChecklistValidatorMessage
 import org.gbif.pipelines.validator.checklists.ChecklistValidator;
 import org.gbif.pipelines.validator.checklists.cli.config.ChecklistValidatorConfiguration;
 import org.gbif.validator.api.Metrics;
+import org.gbif.validator.api.Metrics.ValidationStep;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.ws.client.ValidationWsClient;
 import org.slf4j.Logger;
@@ -91,8 +92,11 @@ public class ChecklistValidatorCallback
     validation
         .getMetrics()
         .setStepTypes(
-            Collections.singletonMap(
-                StepType.VALIDATOR_VALIDATE_ARCHIVE, Validation.Status.FINISHED));
+            Collections.singletonList(
+                ValidationStep.builder()
+                    .stepType(StepType.VALIDATOR_VALIDATE_ARCHIVE)
+                    .status(Validation.Status.FINISHED)
+                    .build()));
     validation.setStatus(Validation.Status.FINISHED);
     validationClient.update(validation);
     LOG.info("Checklist validation finished: {}", validation.getKey());

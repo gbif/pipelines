@@ -153,7 +153,7 @@ public class MetricsCollectorCallbackIT {
     assertTrue(coreOpt.isPresent());
 
     FileInfo core = coreOpt.get();
-    assertEquals("occurrence.txt", core.getFileName());
+    assertEquals("verbatim.txt", core.getFileName());
     assertEquals(Long.valueOf(1534L), core.getCount());
     assertEquals(Long.valueOf(1L), core.getIndexedCount());
     assertEquals(235, core.getTerms().size());
@@ -179,7 +179,7 @@ public class MetricsCollectorCallbackIT {
     Optional<FileInfo> extOpt = getFileInfo(validation, Extension.MULTIMEDIA.getRowType());
     assertTrue(extOpt.isPresent());
 
-    FileInfo ext = coreOpt.get();
+    FileInfo ext = extOpt.get();
 
     assertEquals("multimedia.txt", ext.getFileName());
     assertEquals(DwcFileType.EXTENSION, ext.getFileType());
