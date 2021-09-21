@@ -26,13 +26,15 @@ import org.gbif.converters.utils.XmlFilesReader;
 import org.gbif.converters.utils.XmlTermExtractor;
 import org.gbif.dwc.Archive;
 import org.gbif.dwc.ArchiveFile;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.core.utils.DwcaUtils;
 import org.gbif.pipelines.crawler.PipelinesCallback;
 import org.gbif.pipelines.crawler.StepHandler;
-import org.gbif.pipelines.validator.MetricsCollector;
+import org.gbif.pipelines.validator.IndexMetricsCollector;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.api.Metrics;
+import org.gbif.validator.api.Metrics.FileInfo;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.Validation.Status;
 import org.gbif.validator.ws.client.ValidationWsClient;
@@ -106,9 +108,9 @@ public class MetricsCollectorCallback extends AbstractMessageCallback<PipelinesI
     Map<Extension, Set<Term>> extenstionsTerms = Collections.emptyMap();
 
     Long coreLineCount = null;
-    Map<String, Long> extLineCount = new HashMap<>();
-
     String coreFileName = null;
+
+    Map<String, Long> extLineCount = new HashMap<>();
     Map<String, String> extFiles = new HashMap<>();
 
     if (message.getEndpointType() == EndpointType.DWC_ARCHIVE) {
@@ -136,7 +138,7 @@ public class MetricsCollectorCallback extends AbstractMessageCallback<PipelinesI
 
     // Collect metrics from ES
     Metrics metrics =
-        MetricsCollector.builder()
+        IndexMetricsCollector.builder()
             .coreTerms(coreTerms)
             .extensionsTerms(extenstionsTerms)
             .key(message.getDatasetUuid())
@@ -148,32 +150,40 @@ public class MetricsCollectorCallback extends AbstractMessageCallback<PipelinesI
             .collect();
 
     // Set core file name
-    metrics.getCore().setFileName(coreFileName);
+    setFileInfo(metrics, DwcTerm.Occurrence.qualifiedName(), coreFileName, coreLineCount);
 
     // Set files count values and ext file names
-    metrics.getCore().setFileCount(coreLineCount);
-    for (Metrics.Extension ext : metrics.getExtensions()) {
-      ext.setFileCount(extLineCount.get(ext.getRowType()));
-      ext.setFileName(extFiles.get(ext.getRowType()));
-    }
+    extFiles.forEach(
+        (key, value) -> {
+          Long count = extLineCount.get(key);
+          setFileInfo(metrics, key, value, count);
+        });
 
     // Get saved metrics object and merge with the result
     Validation validation = validationClient.get(message.getDatasetUuid());
-    merge(validation, metrics);
+    mergeWithValidation(validation, metrics);
 
     log.info("Update validation key {}", message.getDatasetUuid());
     validationClient.update(validation);
   }
 
+  private void setFileInfo(Metrics metrics, String term, String fileName, Long count) {
+    for (FileInfo fileInfo : metrics.getFileInfos()) {
+      if (fileInfo.getRowType().equals(term)) {
+        fileInfo.setFileName(fileName);
+        fileInfo.setCount(count);
+      }
+    }
+  }
+
   /** Merge the validation response received from API and collected ES metrics */
-  private void merge(Validation validation, Metrics metrics) {
+  private void mergeWithValidation(Validation validation, Metrics metrics) {
     if (validation != null && metrics != null) {
       Metrics validationMetrics = validation.getMetrics();
       if (validationMetrics == null) {
         validation.setMetrics(metrics);
       } else {
-        validationMetrics.setCore(metrics.getCore());
-        validationMetrics.setExtensions(metrics.getExtensions());
+        validationMetrics.getFileInfos().addAll(metrics.getFileInfos());
       }
     }
   }
