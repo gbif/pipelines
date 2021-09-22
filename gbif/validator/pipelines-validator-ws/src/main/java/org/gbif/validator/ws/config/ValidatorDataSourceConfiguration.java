@@ -15,6 +15,7 @@
  */
 package org.gbif.validator.ws.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zaxxer.hikari.HikariDataSource;
 import java.util.UUID;
 import org.gbif.api.model.common.paging.Pageable;
@@ -61,7 +62,7 @@ public class ValidatorDataSourceConfiguration {
   @Bean(name = "validationSqlSessionFactory")
   @Primary
   public SqlSessionFactoryBean validationSqlSessionFactory(
-      @Qualifier("validationDataSource") HikariDataSource dataSource) {
+      @Qualifier("validationDataSource") HikariDataSource dataSource, ObjectMapper objectMapper) {
     SqlSessionFactoryBean sqlSession = new SqlSessionFactoryBean();
     sqlSession.setDataSource(dataSource);
 
@@ -73,10 +74,13 @@ public class ValidatorDataSourceConfiguration {
     configuration.getTypeHandlerRegistry().register(UUID.class, UuidTypeHandler.class);
     configuration.getTypeAliasRegistry().registerAlias("UuidTypeHandler", UuidTypeHandler.class);
 
-    configuration.getTypeHandlerRegistry().register(Metrics.class, MetricsJsonTypeHandler.class);
+    configuration
+        .getTypeHandlerRegistry()
+        .register(Metrics.class, new MetricsJsonTypeHandler(objectMapper));
     configuration
         .getTypeAliasRegistry()
         .registerAlias("MetricsJsonTypeHandler", MetricsJsonTypeHandler.class);
+
     configuration
         .getTypeAliasRegistry()
         .registerAlias("StringArraySetTypeHandler", StringArraySetTypeHandler.class);

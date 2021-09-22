@@ -1,7 +1,6 @@
 package org.gbif.validator.persistence.mapper;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -9,20 +8,18 @@ import java.sql.SQLException;
 import lombok.SneakyThrows;
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
-import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
 import org.postgresql.util.PGobject;
 
 /** Generic TypeHandler for Java types mapped to json data. */
 public abstract class JsonTypeHandler<T> extends BaseTypeHandler<T> {
 
-  private static final ObjectMapper MAPPER =
-      JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport()
-          .registerModule(new JavaTimeModule());
+  private final ObjectMapper mapper;
 
   private final Class<T> clazz;
 
-  public JsonTypeHandler(Class<T> clazz) {
+  public JsonTypeHandler(ObjectMapper mapper, Class<T> clazz) {
     this.clazz = clazz;
+    this.mapper = mapper;
   }
 
   @Override
@@ -31,7 +28,7 @@ public abstract class JsonTypeHandler<T> extends BaseTypeHandler<T> {
     if (ps != null) {
       PGobject ext = new PGobject();
       ext.setType("json");
-      ext.setValue(parameter != null ? MAPPER.writeValueAsString(parameter) : null);
+      ext.setValue(parameter != null ? mapper.writeValueAsString(parameter) : null);
       ps.setObject(i, ext);
     }
   }
@@ -55,7 +52,7 @@ public abstract class JsonTypeHandler<T> extends BaseTypeHandler<T> {
   @SneakyThrows
   private T readValue(String value) {
     if (value != null) {
-      return MAPPER.readValue(value, clazz);
+      return mapper.readValue(value, clazz);
     }
     return null;
   }
