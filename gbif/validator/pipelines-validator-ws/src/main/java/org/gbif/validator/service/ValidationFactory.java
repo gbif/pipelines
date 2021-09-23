@@ -1,10 +1,14 @@
 package org.gbif.validator.service;
 
+import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
 import lombok.experimental.UtilityClass;
+import org.gbif.api.model.pipelines.StepType;
 import org.gbif.validator.api.Metrics;
+import org.gbif.validator.api.Metrics.ValidationStep;
 import org.gbif.validator.api.Validation;
+import org.gbif.validator.api.Validation.Status;
 import org.gbif.validator.ws.file.DataFile;
 
 /** Utility class to create instances of API classes. */
@@ -29,6 +33,16 @@ public class ValidationFactory {
         .installationKey(installationKey)
         .sourceId(sourceId)
         .notificationEmails(notificationEmails)
+        .metrics(
+            Metrics.builder()
+                .stepTypes(
+                    Collections.singletonList(
+                        ValidationStep.builder()
+                            .stepType(StepType.VALIDATOR_UPLOAD_ARCHIVE)
+                            .status(Status.RUNNING)
+                            .executionOrder(StepType.VALIDATOR_UPLOAD_ARCHIVE.getExecutionOrder())
+                            .build()))
+                .build())
         .build();
   }
 
@@ -46,7 +60,9 @@ public class ValidationFactory {
     return Validation.builder().key(key).status(status).metrics(metrics).build();
   }
 
-  static Metrics metricsFromError(String errorMessage) {
-    return Metrics.builder().error(errorMessage).build();
+  static Metrics metricsSubmitError(String errorMessage) {
+    return Metrics.builder()
+        .stepTypes(Metrics.getUploadingSteps(Status.FAILED, errorMessage))
+        .build();
   }
 }

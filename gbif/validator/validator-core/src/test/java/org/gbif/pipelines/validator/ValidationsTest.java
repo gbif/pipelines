@@ -38,14 +38,12 @@ public class ValidationsTest {
 
     // Should
     assertEquals(1, validation.getMetrics().getFileInfos().size());
-    assertNull(validation.getMetrics().getError());
   }
 
   @Test
   public void emptyFileInfosTest() {
     // State
-    Validation validation =
-        Validation.builder().metrics(Metrics.builder().error("TEST").build()).build();
+    Validation validation = Validation.builder().metrics(Metrics.builder().build()).build();
     FileInfo fileInfo = FileInfo.builder().build();
 
     // When
@@ -53,7 +51,6 @@ public class ValidationsTest {
 
     // Should
     assertEquals(1, validation.getMetrics().getFileInfos().size());
-    assertEquals("TEST", validation.getMetrics().getError());
   }
 
   @Test
@@ -63,7 +60,6 @@ public class ValidationsTest {
         Validation.builder()
             .metrics(
                 Metrics.builder()
-                    .error("TEST")
                     .fileInfos(
                         Collections.singletonList(
                             FileInfo.builder()
@@ -86,7 +82,6 @@ public class ValidationsTest {
 
     // Should
     assertEquals(2, validation.getMetrics().getFileInfos().size());
-    assertEquals("TEST", validation.getMetrics().getError());
   }
 
   @Test
@@ -96,7 +91,6 @@ public class ValidationsTest {
         Validation.builder()
             .metrics(
                 Metrics.builder()
-                    .error("TEST")
                     .fileInfos(
                         Collections.singletonList(
                             FileInfo.builder()
@@ -121,7 +115,6 @@ public class ValidationsTest {
 
     // Should
     assertEquals(1, validation.getMetrics().getFileInfos().size());
-    assertEquals("TEST", validation.getMetrics().getError());
 
     FileInfo info = validation.getMetrics().getFileInfos().get(0);
     assertEquals("ONE", info.getFileName());
@@ -136,7 +129,6 @@ public class ValidationsTest {
         Validation.builder()
             .metrics(
                 Metrics.builder()
-                    .error("TEST")
                     .fileInfos(
                         Collections.singletonList(
                             FileInfo.builder()
@@ -161,7 +153,6 @@ public class ValidationsTest {
 
     // Should
     assertEquals(2, validation.getMetrics().getFileInfos().size());
-    assertEquals("TEST", validation.getMetrics().getError());
 
     assertEquals(1, validation.getMetrics().getFileInfos().get(0).getIssues().size());
     assertEquals(1, validation.getMetrics().getFileInfos().get(1).getIssues().size());
