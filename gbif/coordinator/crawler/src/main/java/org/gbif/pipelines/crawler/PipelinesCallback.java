@@ -285,18 +285,23 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
         Metrics metrics =
             Optional.ofNullable(validation.getMetrics()).orElse(Metrics.builder().build());
 
-        boolean notSet = true;
+        boolean addValidationType = true;
         for (ValidationStep step : metrics.getStepTypes()) {
           if (step.getStepType() == stepType) {
             step.setStatus(status);
-            notSet = false;
+            addValidationType = false;
             break;
           }
         }
-        if (notSet) {
+        if (addValidationType) {
           metrics
               .getStepTypes()
-              .add(ValidationStep.builder().stepType(stepType).status(status).build());
+              .add(
+                  ValidationStep.builder()
+                      .stepType(stepType)
+                      .status(status)
+                      .executionOrder(stepType.getExecutionOrder())
+                      .build());
         }
 
         validation.setMetrics(metrics);

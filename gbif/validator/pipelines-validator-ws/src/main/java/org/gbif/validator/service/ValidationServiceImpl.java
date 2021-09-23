@@ -217,13 +217,14 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
   private Validation update(UUID key, DataFile dataFile, Validation.Status status) {
     Validation validation = updateAndGet(newValidationInstance(key, dataFile, status));
     if (status == Status.SUBMITTED) {
-      // Sent RabbitMQ message
       Set<String> pipelinesSteps = getPipelineSteps(dataFile.getFileFormat());
-      notify(key, dataFile, pipelinesSteps);
 
       // Update steps
       validation.getMetrics().setStepTypes(Metrics.mapToValidationSteps(pipelinesSteps));
       update(validation);
+
+      // Sent RabbitMQ message
+      notify(key, dataFile, pipelinesSteps);
     }
     return validation;
   }
