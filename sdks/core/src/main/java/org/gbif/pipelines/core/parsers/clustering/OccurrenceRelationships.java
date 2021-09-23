@@ -102,20 +102,39 @@ public class OccurrenceRelationships {
 
   private static <T extends OccurrenceFeatures> void compareDates(
       OccurrenceFeatures o1, OccurrenceFeatures o2, RelationshipAssertion<T> assertion) {
+
+    // verbosely written with readability in mind
     if (equalsAndNotNull(o1.getYear(), o2.getYear())
         && equalsAndNotNull(o1.getMonth(), o2.getMonth())
         && equalsAndNotNull(o1.getDay(), o2.getDay())) {
       assertion.collect(SAME_DATE);
+
     } else if (equalsAndNotNull(o1.getEventDate(), o2.getEventDate())) {
       assertion.collect(SAME_DATE);
-    } else if (presentOnOneOnly(o1.getEventDate(), o2.getEventDate())) {
-      assertion.collect(NON_CONFLICTING_DATE);
+
     } else if (withinDays(o1, o2)) {
       // accommodate records 1 day apart for e.g. start and end day of an overnight trap, or a
       // timezone issue
       assertion.collect(APPROXIMATE_DATE);
+
     } else if (presentAndNotEquals(o1.getEventDate(), o2.getEventDate())) {
       assertion.collect(DIFFERENT_DATE);
+
+    } else if (allNull(
+        o1.getEventDate(),
+        o1.getDay(),
+        o1.getMonth(),
+        o1.getYear(),
+        o2.getEventDate(),
+        o2.getDay(),
+        o2.getMonth(),
+        o2.getYear())) {
+      // no date on either record
+      assertion.collect(NON_CONFLICTING_DATE);
+
+    } else if (presentOnOneOnly(o1.getEventDate(), o2.getEventDate())) {
+      // only one has a date (note that an eventDate is always materialised for a D/M/Y)
+      assertion.collect(NON_CONFLICTING_DATE);
     }
   }
 
@@ -151,8 +170,14 @@ public class OccurrenceRelationships {
     if (equalsAndNotNull(o1.getDecimalLatitude(), o2.getDecimalLatitude())
         && equalsAndNotNull(o1.getDecimalLongitude(), o2.getDecimalLongitude())) {
       assertion.collect(SAME_COORDINATES);
-    } else if (presentOnOneOnly(o1.getDecimalLatitude(), o2.getDecimalLatitude())
-        && presentOnOneOnly(o1.getDecimalLongitude(), o2.getDecimalLongitude())) {
+    } else if (allNull(
+            o1.getDecimalLatitude(),
+            o1.getDecimalLongitude(),
+            o2.getDecimalLatitude(),
+            o2.getDecimalLongitude())
+        || (presentOnOneOnly(o1.getDecimalLatitude(), o2.getDecimalLatitude())
+            && presentOnOneOnly(o1.getDecimalLongitude(), o2.getDecimalLongitude()))) {
+      // all null or null on one side
       assertion.collect(NON_CONFLICTING_COORDINATES);
     } else if (presentOnBoth(o1.getDecimalLatitude(), o2.getDecimalLatitude())
         && presentOnBoth(o1.getDecimalLongitude(), o2.getDecimalLongitude())) {
@@ -230,6 +255,10 @@ public class OccurrenceRelationships {
 
   static boolean presentOnOneOnly(Object o1, Object o2) {
     return (o1 == null && o2 != null) || (o1 != null && o2 == null);
+  }
+
+  static boolean allNull(Object... o1) {
+    return o1 == null || Arrays.stream(o1).allMatch(o -> o == null);
   }
 
   static boolean presentOnBoth(Object o1, Object o2) {
