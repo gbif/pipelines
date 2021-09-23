@@ -22,8 +22,6 @@ import org.gbif.api.vocabulary.NameUsageIssue;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.Metrics;
-import org.gbif.validator.api.Metrics.ChecklistValidationReport;
-import org.gbif.validator.api.Metrics.ChecklistValidationReport.ChecklistValidationResult;
 import org.gbif.validator.api.Metrics.FileInfo;
 import org.gbif.validator.api.Metrics.TermInfo;
 import org.gbif.validator.api.Validation;
@@ -229,12 +227,6 @@ public class ValidationResourceIT {
                                     .rawIndexed(1L)
                                     .build()))
                         .build()))
-            .checklistValidationReport(
-                ChecklistValidationReport.builder()
-                    .results(
-                        Collections.singletonList(
-                            ChecklistValidationResult.builder().nameUsage(nameUsage).build()))
-                    .build())
             .build();
     validation.setMetrics(metrics);
     validationWsClient.update(validation);

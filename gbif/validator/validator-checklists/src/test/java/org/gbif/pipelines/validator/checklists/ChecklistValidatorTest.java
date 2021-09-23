@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import org.gbif.checklistbank.cli.common.NeoConfiguration;
 import org.gbif.validator.api.Metrics;
 import org.junit.jupiter.api.Test;
@@ -21,12 +22,11 @@ public class ChecklistValidatorTest {
     neoConfiguration.neoRepository = folder.resolve("neo").toFile();
     ChecklistValidator checklistValidator = new ChecklistValidator(neoConfiguration);
     try {
-      Metrics.ChecklistValidationReport report =
+      List<Metrics.FileInfo> report =
           checklistValidator.evaluate(
               Paths.get(
                   ClassLoader.getSystemResource("checklists/00000001-c6af-11e2-9b88-00145eb45e9a/")
                       .getFile()));
-      assertEquals(20, report.getResults().size());
     } catch (Exception e) {
       fail(e.getMessage());
     }

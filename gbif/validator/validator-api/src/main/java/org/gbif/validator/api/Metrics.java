@@ -12,8 +12,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.gbif.api.model.checklistbank.NameUsage;
-import org.gbif.api.model.checklistbank.VerbatimNameUsage;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.validator.api.Validation.Status;
 
@@ -31,8 +29,6 @@ public class Metrics {
   private List<FileInfo> fileInfos = new ArrayList<>();
 
   private String error;
-
-  private ChecklistValidationReport checklistValidationReport;
 
   @Data
   @Builder
@@ -91,26 +87,6 @@ public class Metrics {
   public static class IssueSample {
     private String recordId;
     private Map<String, String> relatedData = Collections.emptyMap();
-  }
-
-  @Data
-  @Builder
-  @NoArgsConstructor
-  @AllArgsConstructor
-  @JsonDeserialize(builder = ChecklistValidationReport.ChecklistValidationReportBuilder.class)
-  public static class ChecklistValidationReport {
-
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @JsonDeserialize(builder = ChecklistValidationResult.ChecklistValidationResultBuilder.class)
-    public static class ChecklistValidationResult {
-      private NameUsage nameUsage;
-      private VerbatimNameUsage verbatimNameUsage;
-    }
-
-    private List<ChecklistValidationResult> results;
   }
 
   @Override

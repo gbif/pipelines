@@ -3,6 +3,7 @@ package org.gbif.pipelines.validator.checklists.cli;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.pipelines.StepType;
@@ -69,7 +70,7 @@ public class ChecklistValidatorCallback
   private void validateArchive(Validation validation) {
     try {
       LOG.info("Validating checklist archive: {}", validation.getKey());
-      Metrics.ChecklistValidationReport report =
+      List<Metrics.FileInfo> report =
           checklistValidator.evaluate(
               buildDwcaInputPath(config.archiveRepository, validation.getKey()));
       updateValidationFinished(validation, report);
@@ -86,9 +87,12 @@ public class ChecklistValidatorCallback
   }
 
   /** Updates the data of a successful validation */
-  private void updateValidationFinished(
-      Validation validation, Metrics.ChecklistValidationReport checklistValidationReport) {
-    validation.getMetrics().setChecklistValidationReport(checklistValidationReport);
+  private void updateValidationFinished(Validation validation, List<Metrics.FileInfo> report) {
+    if (validation.getMetrics().getFileInfos() == null) {
+      validation.getMetrics().setFileInfos(report);
+    } else {
+      validation.getMetrics().getFileInfos().addAll(report);
+    }
     validation
         .getMetrics()
         .setStepTypes(

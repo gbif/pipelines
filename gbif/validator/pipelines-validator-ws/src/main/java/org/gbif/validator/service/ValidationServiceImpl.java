@@ -191,9 +191,10 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
 
   /** Can the authenticated user update the validation object. */
   private boolean canAccess(Validation validation) {
-    return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
+    return SecurityContextHolder.getContext().getAuthentication() != null &&
+           (SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
             .anyMatch(a -> a.getAuthority().equals(UserRoles.ADMIN_ROLE))
-        || validation.getUsername().equals(getPrincipal().getUsername());
+        || validation.getUsername().equals(getPrincipal().getUsername()));
   }
 
   /** Persists an validation entity. */
