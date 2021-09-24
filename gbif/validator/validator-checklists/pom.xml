@@ -118,7 +118,6 @@
     <dependency>
       <groupId>org.gbif.checklistbank</groupId>
       <artifactId>checklistbank-cli</artifactId>
-      <classifier>shaded</classifier>
       <version>${gbif-checklistbank.version}</version>
       <exclusions>
         <exclusion>
