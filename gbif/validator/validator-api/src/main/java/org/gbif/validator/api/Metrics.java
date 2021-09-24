@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -38,6 +40,8 @@ public class Metrics {
   public static class ValidationStep {
     private StepType stepType;
     private Status status;
+    private String message;
+    private int executionOrder;
   }
 
   @Data
@@ -87,6 +91,38 @@ public class Metrics {
   public static class IssueSample {
     private String recordId;
     private Map<String, String> relatedData = Collections.emptyMap();
+  }
+
+  public static List<ValidationStep> mapToValidationSteps(Set<String> stepTypes) {
+
+    List<ValidationStep> collect =
+        stepTypes.stream()
+            .map(StepType::valueOf)
+            .filter(st -> st != StepType.VALIDATOR_UPLOAD_ARCHIVE)
+            .map(
+                st ->
+                    ValidationStep.builder()
+                        .executionOrder(st.getExecutionOrder())
+                        .stepType(st)
+                        .build())
+            .collect(Collectors.toList());
+
+    collect.add(
+        ValidationStep.builder()
+            .stepType(StepType.VALIDATOR_UPLOAD_ARCHIVE)
+            .status(Status.FINISHED)
+            .build());
+
+    return collect;
+  }
+
+  public static List<ValidationStep> getUploadingSteps(Status status, String message) {
+    return Collections.singletonList(
+        ValidationStep.builder()
+            .stepType(StepType.VALIDATOR_UPLOAD_ARCHIVE)
+            .status(status)
+            .message(message)
+            .build());
   }
 
   @Override

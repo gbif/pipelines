@@ -151,15 +151,19 @@ public class ChecklistValidator {
               return Metrics.IssueInfo.builder()
                   .issue(k)
                   .issueCategory(EvaluationCategory.CLB_INTERPRETATION_BASED)
-                  .count(0L)
+                  .count(1L)
+                  .samples(new ArrayList<>()) // Needs to be initialized here to avoid an empty
+                  // unmodifiable list
                   .build();
             }
-            if (v.getSamples().size() <= SAMPLE_SIZE) {
-              v.getSamples()
-                  .add(
-                      Metrics.IssueSample.builder()
-                          .relatedData(getRelatedData(issue, verbatimNameUsage))
-                          .build());
+            if (v.getSamples().size() < SAMPLE_SIZE) {
+              Metrics.IssueSample.IssueSampleBuilder builder =
+                  Metrics.IssueSample.builder()
+                      .relatedData(getRelatedData(issue, verbatimNameUsage));
+              if (verbatimNameUsage.hasCoreField(DwcTerm.taxonID)) {
+                builder.recordId(verbatimNameUsage.getCoreField(DwcTerm.taxonID));
+              }
+              v.getSamples().add(builder.build());
             }
             v.setCount(v.getCount() + 1);
             return v;

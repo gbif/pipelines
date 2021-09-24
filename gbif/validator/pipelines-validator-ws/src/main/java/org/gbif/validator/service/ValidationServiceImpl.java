@@ -1,13 +1,14 @@
 package org.gbif.validator.service;
 
 import static org.gbif.validator.service.EncodingUtil.encode;
-import static org.gbif.validator.service.ValidationFactory.metricsFromError;
+import static org.gbif.validator.service.ValidationFactory.metricsSubmitError;
 import static org.gbif.validator.service.ValidationFactory.newValidationInstance;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -19,6 +20,7 @@ import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.mail.validator.ValidatorEmailService;
 import org.gbif.registry.security.UserRoles;
 import org.gbif.validator.api.FileFormat;
+import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.Validation.Status;
 import org.gbif.validator.api.ValidationRequest;
@@ -191,10 +193,10 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
 
   /** Can the authenticated user update the validation object. */
   private boolean canAccess(Validation validation) {
-    return SecurityContextHolder.getContext().getAuthentication() != null &&
-           (SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
-            .anyMatch(a -> a.getAuthority().equals(UserRoles.ADMIN_ROLE))
-        || validation.getUsername().equals(getPrincipal().getUsername()));
+    return SecurityContextHolder.getContext().getAuthentication() != null
+        && (SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals(UserRoles.ADMIN_ROLE))
+            || validation.getUsername().equals(getPrincipal().getUsername()));
   }
 
   /** Persists an validation entity. */
@@ -216,7 +218,14 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
   private Validation update(UUID key, DataFile dataFile, Validation.Status status) {
     Validation validation = updateAndGet(newValidationInstance(key, dataFile, status));
     if (status == Status.SUBMITTED) {
-      notify(key, dataFile.getFileFormat());
+      Set<String> pipelinesSteps = getPipelineSteps(dataFile.getFileFormat());
+
+      // Update steps
+      validation.getMetrics().setStepTypes(Metrics.mapToValidationSteps(pipelinesSteps));
+      update(validation);
+
+      // Sent RabbitMQ message
+      notify(key, dataFile, pipelinesSteps);
     }
     return validation;
   }
@@ -224,7 +233,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
   /** Updates the status of a validation process. */
   private Validation updateFailedValidation(UUID key, String errorMessage) {
     Validation validation =
-        newValidationInstance(key, Validation.Status.FAILED, metricsFromError(errorMessage));
+        newValidationInstance(key, Validation.Status.FAILED, metricsSubmitError(errorMessage));
     return updateAndGet(validation);
   }
 
@@ -239,8 +248,19 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
 
   /** Notifies when the file is submitted. */
   @SneakyThrows
-  private void notify(UUID key, FileFormat fileFormat) {
+  private void notify(UUID key, DataFile dataFile, Set<String> pipelinesSteps) {
 
+    PipelinesArchiveValidatorMessage message = new PipelinesArchiveValidatorMessage();
+    message.setValidator(true);
+    message.setDatasetUuid(key);
+    message.setAttempt(1);
+    message.setExecutionId(1L);
+    message.setPipelineSteps(pipelinesSteps);
+    message.setFileFormat(dataFile.getFileFormat().name());
+    messagePublisher.send(message);
+  }
+
+  private Set<String> getPipelineSteps(FileFormat fileFormat) {
     String stepType;
     if (fileFormat == FileFormat.DWCA) {
       stepType = StepType.VALIDATOR_DWCA_TO_VERBATIM.name();
@@ -249,21 +269,12 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
     } else {
       throw new IllegalArgumentException("FileFormat is not supported - " + fileFormat);
     }
-
-    PipelinesArchiveValidatorMessage message = new PipelinesArchiveValidatorMessage();
-    message.setValidator(true);
-    message.setDatasetUuid(key);
-    message.setAttempt(1);
-    message.setExecutionId(1L);
-    message.setPipelineSteps(
-        new HashSet<>(
-            Arrays.asList(
-                StepType.VALIDATOR_VALIDATE_ARCHIVE.name(),
-                stepType,
-                StepType.VALIDATOR_VERBATIM_TO_INTERPRETED.name(),
-                StepType.VALIDATOR_INTERPRETED_TO_INDEX.name(),
-                StepType.VALIDATOR_COLLECT_METRICS.name())));
-    message.setFileFormat(fileFormat.name());
-    messagePublisher.send(message);
+    return new HashSet<>(
+        Arrays.asList(
+            StepType.VALIDATOR_VALIDATE_ARCHIVE.name(),
+            stepType,
+            StepType.VALIDATOR_VERBATIM_TO_INTERPRETED.name(),
+            StepType.VALIDATOR_INTERPRETED_TO_INDEX.name(),
+            StepType.VALIDATOR_COLLECT_METRICS.name()));
   }
 }
