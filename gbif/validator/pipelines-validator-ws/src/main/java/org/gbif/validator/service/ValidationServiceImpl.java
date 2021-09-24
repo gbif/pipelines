@@ -86,7 +86,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
         .whenCompleteAsync(
             (df, tr) -> {
               if (tr == null) {
-                update(key, df, Validation.Status.SUBMITTED);
+                updateAndNotifySubmitted(key, df);
               } else {
                 log.error(tr.getMessage(), tr);
                 updateFailedValidation(key, "Error during the file submitting");
@@ -119,7 +119,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
           fileStoreManager.downloadDataFile(
               encodedFileURL,
               key.toString(),
-              resultDataFile -> update(key, resultDataFile, Validation.Status.SUBMITTED),
+              resultDataFile -> updateAndNotifySubmitted(key, resultDataFile),
               err -> {
                 log.error("Error processing file", err);
                 updateFailedValidation(key, err.getMessage());
@@ -213,20 +213,23 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
     return validationMapper.get(key);
   }
 
-  /** Updates the data of a validation. */
-  private Validation update(UUID key, DataFile dataFile, Validation.Status status) {
-    Validation validation = updateAndGet(newValidationInstance(key, dataFile, status));
-    if (status == Status.SUBMITTED) {
-      Set<String> pipelinesSteps = getPipelineSteps(dataFile.getFileFormat());
+  /** Updates the data of a validation and send MQ message. */
+  private void updateAndNotifySubmitted(UUID key, DataFile dataFile) {
 
-      // Update steps
-      validation.getMetrics().setStepTypes(Metrics.mapToValidationSteps(pipelinesSteps));
-      update(validation);
+    Validation v =
+        Optional.ofNullable(validationMapper.get(key))
+            .orElse(newValidationInstance(key, dataFile, Status.SUBMITTED));
 
-      // Sent RabbitMQ message
-      notify(key, dataFile, pipelinesSteps);
-    }
-    return validation;
+    Set<String> pipelinesSteps = getPipelineSteps(dataFile.getFileFormat());
+
+    // Set future steps
+    v.getMetrics().setStepTypes(Metrics.mapToValidationSteps(pipelinesSteps));
+
+    // Update DB
+    updateAndGet(v);
+
+    // Sent RabbitMQ message
+    notify(key, dataFile, pipelinesSteps);
   }
 
   /** Updates the status of a validation process. */
