@@ -41,7 +41,6 @@ public interface ValidationMapper {
   /**
    * Paginates through validations, optionally filtered by username.
    *
-   * @param page paging parameters
    * @param username filter
    * @param searchRequest filter
    * @return a list of validation

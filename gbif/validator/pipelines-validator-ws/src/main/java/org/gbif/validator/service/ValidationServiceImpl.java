@@ -57,10 +57,15 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
   /** Asserts the user has not reached the maximum number of executing validations. */
   @Override
   public boolean reachedMaxRunningValidations(String userName) {
-    return (validationMapper.count(
-            userName,
-            ValidationSearchRequest.builder().status(Validation.executingStatuses()).build())
-        >= maxRunningValidationPerUser);
+    boolean isRechedMaximum =
+        validationMapper.count(
+                userName,
+                ValidationSearchRequest.builder().status(Validation.executingStatuses()).build())
+            >= maxRunningValidationPerUser;
+    if (isRechedMaximum) {
+      log.info("User {} reached maximum running validations", userName);
+    }
+    return isRechedMaximum;
   }
 
   public Optional<Validation.ErrorCode> validate(ValidationRequest validationRequest) {
@@ -80,13 +85,15 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
     if (error.isPresent()) {
       throw errorMapper.apply(error.get());
     }
+    log.info("Staring validation for the file {}", file.getName());
     UUID key = UUID.randomUUID();
     FileStoreManager.AsyncDataFileTask task = fileStoreManager.uploadDataFile(file, key.toString());
     task.getTask()
         .whenCompleteAsync(
             (df, tr) -> {
               if (tr == null) {
-                update(key, df, Validation.Status.SUBMITTED);
+                log.info("File has been uploded and decompressed, key {}", key);
+                updateAndNotifySubmitted(key, df);
               } else {
                 log.error(tr.getMessage(), tr);
                 updateFailedValidation(key, "Error during the file submitting");
@@ -112,6 +119,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
       if (error.isPresent()) {
         throw errorMapper.apply(error.get());
       }
+      log.info("Staring validation for the URL {}", fileURL);
       UUID key = UUID.randomUUID();
       String encodedFileURL = encode(fileURL);
       // this should also become asynchronous at some point
@@ -119,7 +127,11 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
           fileStoreManager.downloadDataFile(
               encodedFileURL,
               key.toString(),
-              resultDataFile -> update(key, resultDataFile, Validation.Status.SUBMITTED),
+              resultDataFile -> {
+                log.info(
+                    "File has been uploded and decompressed from URL {}, key {}", fileURL, key);
+                updateAndNotifySubmitted(key, resultDataFile);
+              },
               err -> {
                 log.error("Error processing file", err);
                 updateFailedValidation(key, err.getMessage());
@@ -167,6 +179,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
     if (!validation.isExecuting()) {
       throw errorMapper.apply(Validation.ErrorCode.VALIDATION_IS_NOT_EXECUTING);
     }
+    log.info("Cancel validation record for key {}", key);
     validation.setStatus(Status.ABORTED);
     fileStoreManager.deleteIfExist(key.toString());
     return updateAndGet(validation);
@@ -174,8 +187,10 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
 
   @Override
   public void delete(UUID key) {
+    UUID keyToDelete = get(key).getKey();
+    log.info("Delete validation record for key {}", key);
     // A get is executed to check if the validation exists and current user has access
-    validationMapper.delete(get(key).getKey());
+    validationMapper.delete(keyToDelete);
     fileStoreManager.deleteIfExist(key.toString());
   }
 
@@ -211,23 +226,28 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
             validationRequest.getSourceId(),
             validationRequest.getInstallationKey(),
             validationRequest.getNotificationEmail()));
+
+    log.info("Create validation record for key {}", key);
     return validationMapper.get(key);
   }
 
-  /** Updates the data of a validation. */
-  private Validation update(UUID key, DataFile dataFile, Validation.Status status) {
-    Validation validation = updateAndGet(newValidationInstance(key, dataFile, status));
-    if (status == Status.SUBMITTED) {
-      Set<String> pipelinesSteps = getPipelineSteps(dataFile.getFileFormat());
+  /** Updates the data of a validation and send MQ message. */
+  private void updateAndNotifySubmitted(UUID key, DataFile dataFile) {
 
-      // Update steps
-      validation.getMetrics().setStepTypes(Metrics.mapToValidationSteps(pipelinesSteps));
-      update(validation);
+    Validation v =
+        Optional.ofNullable(validationMapper.get(key))
+            .orElse(newValidationInstance(key, dataFile, Status.SUBMITTED));
 
-      // Sent RabbitMQ message
-      notify(key, dataFile, pipelinesSteps);
-    }
-    return validation;
+    Set<String> pipelinesSteps = getPipelineSteps(dataFile.getFileFormat());
+
+    // Set future steps
+    v.getMetrics().setStepTypes(Metrics.mapToValidationSteps(pipelinesSteps));
+
+    // Update DB
+    updateAndGet(v);
+
+    // Sent RabbitMQ message
+    notify(key, dataFile, pipelinesSteps);
   }
 
   /** Updates the status of a validation process. */
@@ -257,6 +277,8 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
     message.setExecutionId(1L);
     message.setPipelineSteps(pipelinesSteps);
     message.setFileFormat(dataFile.getFileFormat().name());
+
+    log.info("Send the MQ message to the validator queue for key - {}", key);
     messagePublisher.send(message);
   }
 

@@ -73,7 +73,7 @@ public class Validation {
   private Status status;
 
   /** Validation result. */
-  private Metrics metrics;
+  @Builder.Default private Metrics metrics = Metrics.builder().build();
 
   public static Set<Status> executingStatuses() {
     return EXECUTING_STATUSES;
