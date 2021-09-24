@@ -111,6 +111,7 @@ public class Metrics {
         ValidationStep.builder()
             .stepType(StepType.VALIDATOR_UPLOAD_ARCHIVE)
             .status(Status.FINISHED)
+            .executionOrder(StepType.VALIDATOR_UPLOAD_ARCHIVE.getExecutionOrder())
             .build());
 
     return collect;
