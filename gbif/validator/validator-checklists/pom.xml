@@ -72,17 +72,17 @@
   </build>
 
   <properties>
-    <amqp-client.version>4.8.0</amqp-client.version>
+    <amqp-client.version>3.1.4</amqp-client.version>
 
+    <!-- Match Checklistbank versions -->
     <gbif-cli.version>0.13</gbif-cli.version>
-
-    <guava.version>23.0</guava.version>
-
-    <jcommander.version>1.58</jcommander.version>
-    <jsr305.version>3.0.1</jsr305.version>
-    <logstash-encoder.version>4.11</logstash-encoder.version>
+    <guava.version>18.0</guava.version>
+    <jcommander.version>1.60</jcommander.version>
+    <jsr305.version>3.0.2</jsr305.version>
     <metainf-services.version>1.7</metainf-services.version>
     <validation-api.version>1.1.0.Final</validation-api.version>
+
+    <logstash-encoder.version>4.11</logstash-encoder.version>
     <yammer-metrics.version>2.2.0</yammer-metrics.version>
   </properties>
 

@@ -54,7 +54,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -239,7 +238,6 @@ public class RegistrySecurityConfiguration {
 
   @Configuration
   @EnableWebSecurity
-  @EnableGlobalMethodSecurity(prePostEnabled = true)
   public static class ValidatorWebSecurity extends NoAuthWebSecurityConfigurer {
 
     private final InstallationIdentityFilter installationIdentityFilter;
