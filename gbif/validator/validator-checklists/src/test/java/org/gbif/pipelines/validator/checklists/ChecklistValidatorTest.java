@@ -1,6 +1,7 @@
 package org.gbif.pipelines.validator.checklists;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.nio.file.Path;
@@ -35,6 +36,7 @@ public class ChecklistValidatorTest {
       // Metrics.FileInfo checks
       assertEquals(report.size(), 1);
       assertEquals(report.get(0).getCount(), 20);
+      assertEquals(report.get(0).getIndexedCount(), 20);
       assertEquals(report.get(0).getFileType(), DwcFileType.CORE);
       assertEquals(report.get(0).getRowType(), DwcTerm.Taxon.simpleName());
       assertEquals(report.get(0).getFileName(), "taxa.txt");
@@ -48,6 +50,8 @@ public class ChecklistValidatorTest {
       assertEquals(
           report.get(0).getIssues().get(0).getIssueCategory(),
           EvaluationCategory.CLB_INTERPRETATION_BASED);
+
+      assertFalse(report.get(0).getTerms().isEmpty());
     } catch (Exception e) {
       fail(e.getMessage());
     }

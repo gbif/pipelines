@@ -57,15 +57,15 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
   /** Asserts the user has not reached the maximum number of executing validations. */
   @Override
   public boolean reachedMaxRunningValidations(String userName) {
-    boolean isRechedMaximum =
+    boolean reachedMaximum =
         validationMapper.count(
                 userName,
                 ValidationSearchRequest.builder().status(Validation.executingStatuses()).build())
             >= maxRunningValidationPerUser;
-    if (isRechedMaximum) {
+    if (reachedMaximum) {
       log.info("User {} reached maximum running validations", userName);
     }
-    return isRechedMaximum;
+    return reachedMaximum;
   }
 
   public Optional<Validation.ErrorCode> validate(ValidationRequest validationRequest) {
@@ -92,7 +92,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
         .whenCompleteAsync(
             (df, tr) -> {
               if (tr == null) {
-                log.info("File has been uploded and decompressed, key {}", key);
+                log.info("File has been uploaded and decompressed, key {}", key);
                 updateAndNotifySubmitted(key, df);
               } else {
                 log.error(tr.getMessage(), tr);
