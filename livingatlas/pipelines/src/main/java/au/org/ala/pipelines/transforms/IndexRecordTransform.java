@@ -522,6 +522,12 @@ public class IndexRecordTransform implements Serializable, IndexFields {
                     .collect(Collectors.toList()));
       }
 
+      List<MultimediaIndexRecord> mir =
+          isr.getImageItems().stream()
+              .map(imageItem -> convertToMultimediaRecord(ur.getUuid(), imageItem))
+              .collect(Collectors.toList());
+      indexRecord.setMultimedia(mir);
+
       if (!multimedia.isEmpty()) {
         List<String> distinctList = new ArrayList<>(multimedia);
         indexRecord.getMultiValues().put(MULTIMEDIA, distinctList);
@@ -717,6 +723,25 @@ public class IndexRecordTransform implements Serializable, IndexFields {
         }
       }
     }
+  }
+
+  private static MultimediaIndexRecord convertToMultimediaRecord(String uuid, Image image) {
+    return MultimediaIndexRecord.newBuilder()
+        .setId(uuid)
+        .setAudience(image.getAudience())
+        .setContributor(image.getContributor())
+        .setCreated(image.getCreated())
+        .setCreator(image.getCreator())
+        .setFormat(image.getFormat())
+        .setDescription(image.getDescription())
+        .setTitle(image.getTitle())
+        .setIdentifier(image.getIdentifier())
+        .setLicense(image.getLicense())
+        .setPublisher(image.getPublisher())
+        .setRights(image.getRights())
+        .setRightsHolder(image.getRightsHolder())
+        .setReferences(image.getReferences())
+        .build();
   }
 
   private static void addGBIFTaxonomy(

@@ -199,6 +199,14 @@ solr:
   runner: SparkRunner
   zkHost: localhost:9983
 
+export:
+  appName: DwCA export for {datasetId}
+  inputPath: '{fsPath}/pipelines-data'
+  targetPath: '{fsPath}/pipelines-data'
+  allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
+  imageServicePath: "https://images.ala.org.au/image/proxyImageThumbnailLarge?imageId={0}"
+  runner: SparkRunner
+
 # class: au.org.ala.pipelines.beam.IndexRecordToSolrPipeline
 solrSchema:
   appName: SOLR Schema Sync
