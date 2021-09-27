@@ -165,7 +165,12 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
   public Validation update(Validation validation) {
     if (validation.getKey() != null) {
       Optional.ofNullable(get(validation.getKey()))
-          .ifPresent(v -> log.info("Updating validation {}", validation.getKey()));
+          .ifPresent(
+              v ->
+                  log.info(
+                      "Updating validation key {}, status {}",
+                      validation.getKey(),
+                      validation.getStatus()));
     } else {
       throw errorMapper.apply(Validation.ErrorCode.NOT_FOUND);
     }
@@ -261,7 +266,8 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
   private Validation updateAndGet(Validation validation) {
     validationMapper.update(validation);
     if (validation.hasFinished()) {
-      log.info("Validation {} finished with status {}", validation.getKey(), validation.getStatus());
+      log.info(
+          "Validation {} finished with status {}", validation.getKey(), validation.getStatus());
       emailService.sendEmailNotification(validation);
     }
     return validationMapper.get(validation.getKey());
