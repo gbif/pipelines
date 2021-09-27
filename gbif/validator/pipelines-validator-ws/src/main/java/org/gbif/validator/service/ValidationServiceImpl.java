@@ -261,6 +261,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
   private Validation updateAndGet(Validation validation) {
     validationMapper.update(validation);
     if (validation.hasFinished()) {
+      log.info("Validation {} finished with status {}", validation.getKey(), validation.getStatus());
       emailService.sendEmailNotification(validation);
     }
     return validationMapper.get(validation.getKey());
