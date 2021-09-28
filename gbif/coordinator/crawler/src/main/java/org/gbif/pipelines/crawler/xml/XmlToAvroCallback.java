@@ -91,7 +91,8 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
         .handleMessage();
   }
 
-  public Runnable createRunnable(UUID datasetId, String attempt, int expectedRecords) {
+  public Runnable createRunnable(
+      UUID datasetId, String attempt, int expectedRecords, boolean isValidator) {
     return () -> {
 
       // Build and checks existence of DwC Archive
@@ -121,6 +122,7 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
               .inputPath(inputPath)
               .outputPath(outputPath)
               .metaPath(metaPath)
+              .skipDeletion(isValidator)
               .convert();
 
       if (isConverted) {
@@ -141,7 +143,8 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
   public Runnable createRunnable(PipelinesXmlMessage message) {
     UUID datasetId = message.getDatasetUuid();
     String attempt = message.getAttempt().toString();
-    return createRunnable(datasetId, attempt, message.getTotalRecordCount());
+    boolean isValidator = message.isValidator() || config.validatorOnly;
+    return createRunnable(datasetId, attempt, message.getTotalRecordCount(), isValidator);
   }
 
   @Override

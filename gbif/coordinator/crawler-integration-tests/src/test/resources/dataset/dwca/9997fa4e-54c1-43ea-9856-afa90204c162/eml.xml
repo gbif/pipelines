@@ -1,0 +1,200 @@
+<eml:eml xmlns:eml="eml://ecoinformatics.org/eml-2.1.1"
+         xmlns:dc="http://purl.org/dc/terms/"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="eml://ecoinformatics.org/eml-2.1.1 http://rs.gbif.org/schema/eml-gbif-profile/1.1/eml.xsd"
+         packageId="78360224-5493-45fd-a9a0-c336557f09c3/v1.9" system="http://gbif.org" scope="system"
+         xml:lang="eng">
+
+<dataset>
+  <alternateIdentifier>78360224-5493-45fd-a9a0-c336557f09c3</alternateIdentifier>
+  <alternateIdentifier>https://gbif.vm.ntnu.no/ipt/resource?r=lepidurus-arcticus-survey_northeast-greenland_2013</alternateIdentifier>
+  <title xml:lang="eng">Lepidurus arcticus survey Northeast Greenland 2013</title>
+      <creator>
+    <individualName>
+        <givenName>Anders Gravbrøt</givenName>
+      <surName>Finstad</surName>
+    </individualName>
+    <organizationName>Norwegian University of Science and Technology, Department of Natural History</organizationName>
+    <positionName>Associate Professor</positionName>
+    <address>
+        <city>Trondheim</city>
+        <country>NO</country>
+    </address>
+    <electronicMailAddress>anders.finstad@ntnu.no</electronicMailAddress>
+          <userId directory="http://orcid.org/">0000-0003-4529-6266</userId>
+      </creator>
+      <creator>
+    <individualName>
+        <givenName>Ditte Katrine</givenName>
+      <surName>Hendrichsen</surName>
+    </individualName>
+    <organizationName>Noregian Institution for Nature Research</organizationName>
+    <positionName>Researcher</positionName>
+    <address>
+        <city>Trondheim</city>
+    </address>
+    <electronicMailAddress>Ditte.Hendrichsen@nina.no</electronicMailAddress>
+      </creator>
+      <creator>
+    <individualName>
+        <givenName>Erlend</givenName>
+      <surName>Nilsen</surName>
+    </individualName>
+    <organizationName>Norwegian Institute for Nature Research</organizationName>
+    <positionName>Senior Researcher</positionName>
+    <address>
+        <city>Trondheim</city>
+        <country>NO</country>
+    </address>
+    <electronicMailAddress>erlend.nilsen@nina.no</electronicMailAddress>
+          <userId directory="http://orcid.org/">0000-0002-5119-8331</userId>
+      </creator>
+      <metadataProvider>
+    <individualName>
+        <givenName>Anders Gravbrøt</givenName>
+      <surName>Finstad</surName>
+    </individualName>
+    <electronicMailAddress>anders.finstad@ntnu.no</electronicMailAddress>
+    <onlineUrl>http://www.ntnu.edu/employees/anders.finstad</onlineUrl>
+          <userId directory="http://orcid.org/">0000-0003-4529-6266</userId>
+      </metadataProvider>
+      <associatedParty>
+    <individualName>
+        <givenName>Anders Gravbrøt</givenName>
+      <surName>Finstad</surName>
+    </individualName>
+    <electronicMailAddress>anders.finstad@ntnu.no</electronicMailAddress>
+    <role>user</role>
+      </associatedParty>
+  <pubDate>
+      2019-08-20
+  </pubDate>
+  <language>eng</language>
+  <abstract>
+    <para>Small survey of Lepidurus arcticus (tadpole shrimp)occurrences and relative abundance (CPUE from standardized sweep-net survey) in ponds and lakes of the Zackenberg area, North-east Greenland July and August 2013. Includes both presence and absence information.</para>
+  </abstract>
+      <keywordSet>
+            <keyword>Samplingevent</keyword>
+        <keywordThesaurus>GBIF Dataset Type Vocabulary: http://rs.gbif.org/vocabulary/gbif/dataset_type.xml</keywordThesaurus>
+      </keywordSet>
+  <intellectualRights>
+    <para>To the extent possible under law, the publisher has waived all rights to these data and has dedicated them to the <ulink url="http://creativecommons.org/publicdomain/zero/1.0/legalcode"><citetitle>Public Domain (CC0 1.0)</citetitle></ulink>. Users may copy, modify, distribute and use the work, including for commercial purposes, without restriction.</para>
+  </intellectualRights>
+  <coverage>
+      <geographicCoverage>
+          <geographicDescription>Two main study areas: Zackenberg valley (close to the Zackenberg research station) and Lille Sødal (close to the Daneborg research station).</geographicDescription>
+        <boundingCoordinates>
+          <westBoundingCoordinate>-20.82</westBoundingCoordinate>
+          <eastBoundingCoordinate>-19.86</eastBoundingCoordinate>
+          <northBoundingCoordinate>74.53</northBoundingCoordinate>
+          <southBoundingCoordinate>74.3</southBoundingCoordinate>
+        </boundingCoordinates>
+      </geographicCoverage>
+          <temporalCoverage>
+              <rangeOfDates>
+                  <beginDate>
+                    <calendarDate>2013-07-19</calendarDate>
+                  </beginDate>
+                <endDate>
+                  <calendarDate>2013-08-11</calendarDate>
+                </endDate>
+              </rangeOfDates>
+          </temporalCoverage>
+          <taxonomicCoverage>
+              <generalTaxonomicCoverage>Lepidurus arcticus identified to species</generalTaxonomicCoverage>
+              <taxonomicClassification>
+                  <taxonRankName>species</taxonRankName>
+                <taxonRankValue>Lepidurus arcticus</taxonRankValue>
+                  <commonName>tadpole shrimp</commonName>
+              </taxonomicClassification>
+          </taxonomicCoverage>
+  </coverage>
+  <maintenance>
+    <description>
+      <para></para>
+    </description>
+    <maintenanceUpdateFrequency>notPlanned</maintenanceUpdateFrequency>
+  </maintenance>
+
+      <contact>
+    <individualName>
+        <givenName>Anders Gravbrøt</givenName>
+      <surName>Finstad</surName>
+    </individualName>
+    <organizationName>Norwegian University of Science and Technology, Department of Natural History</organizationName>
+    <positionName>Associate Professor</positionName>
+    <address>
+        <city>Trondheim</city>
+        <country>NO</country>
+    </address>
+    <electronicMailAddress>anders.finstad@ntnu.no</electronicMailAddress>
+          <userId directory="http://orcid.org/">0000-0003-4529-6266</userId>
+      </contact>
+  <methods>
+        <methodStep>
+          <description>
+            <para>Data entered on paper in field and transferred to MS xl spreadsheets. Converted to Darwin Core Archive format using the dplyr and tidyr libraries in R (https://github.com/andersfi/DwC).</para>
+          </description>
+        </methodStep>
+      <sampling>
+        <studyExtent>
+          <description>
+            <para>Lakes and ponds in the proximity of Zackenberg and Daneborg research stations North-east Greenland July-August 2013</para>
+          </description>
+        </studyExtent>
+        <samplingDescription>
+          <para>During the summer 2013 (July-August) a field campaign was conducted where 21 ponds / small lakes in the Zackenberg and Daneborg area North-east Greenland. Semi-quantitative samples of Lepidurus arcticus (using Z-sweeps) where taken several times each pond. The lakes and ponds ranged in size from 2500 to 147000 m2 and depth from 50 to &gt; 300 cm.</para>
+        </samplingDescription>
+      </sampling>
+  </methods>
+  <project >
+    <title>Trophic interactions, temperature and greening in a changing climate (C-13-4(13))</title>
+      <personnel>
+        <individualName>
+            <givenName>Anders Gravbrøt</givenName>
+          <surName>Finstad</surName>
+        </individualName>
+        <role>author</role>
+      </personnel>
+      <personnel>
+        <individualName>
+            <givenName>Ditte Katrine</givenName>
+          <surName>Hendrichsen</surName>
+        </individualName>
+        <role>author</role>
+      </personnel>
+      <personnel>
+        <individualName>
+            <givenName>Erlend</givenName>
+          <surName>Nilsen</surName>
+        </individualName>
+        <role>author</role>
+      </personnel>
+      <personnel>
+        <individualName>
+            <givenName>Niels Martin</givenName>
+          <surName>Schmidt</surName>
+        </individualName>
+        <role>author</role>
+      </personnel>
+      <funding>
+        <para>The research leading to these data has received funding for logistics from INTERACT(grant agreement 262693) under the European Union&apos;s Seventh Framework Programme to Anders G. Finstad and from the Zackenberg Research Operations. Researchers salary and indirect costs covered by the Norwegian institute for Nature Research.</para>
+      </funding>
+      <designDescription>
+        <description>
+          <para>Sweep net (diameter 45 cm) using 8 or more Z-sweeps at each location.</para>
+        </description>
+      </designDescription>
+  </project>
+</dataset>
+  <additionalMetadata>
+    <metadata>
+      <gbif>
+          <dateStamp>2015-10-11T07:46:23.242+00:00</dateStamp>
+          <hierarchyLevel>dataset</hierarchyLevel>
+            <citation>Finstad A G, Hendrichsen D K, Nilsen E (2019): Lepidurus arcticus survey Northeast Greenland 2013. v1.9. NTNU University Museum. Dataset/Samplingevent. https://gbif.vm.ntnu.no/ipt/resource?r=lepidurus-arcticus-survey_northeast-greenland_2013&amp;v=1.9</citation>
+          <dc:replaces>78360224-5493-45fd-a9a0-c336557f09c3/v1.9.xml</dc:replaces>
+      </gbif>
+    </metadata>
+  </additionalMetadata>
+</eml:eml>

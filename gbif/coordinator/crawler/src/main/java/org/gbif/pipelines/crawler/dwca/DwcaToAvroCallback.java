@@ -114,6 +114,7 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
           .inputPath(inputPath)
           .outputPath(outputPath)
           .metaPath(metaPath)
+          .skipDeletion(message.isValidator() || config.validatorOnly)
           .convert();
     };
   }

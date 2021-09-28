@@ -27,9 +27,9 @@ import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.messaging.api.messages.PipelinesIndexedMessage;
 import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.common.utils.ZookeeperUtils;
 import org.gbif.pipelines.crawler.MessagePublisherStub;
+import org.gbif.pipelines.crawler.ValidationWsClientStub;
 import org.gbif.pipelines.crawler.utils.EsServer;
 import org.gbif.pipelines.estools.EsIndex;
 import org.gbif.pipelines.estools.model.IndexParams;
@@ -39,7 +39,6 @@ import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.EvaluationCategory;
 import org.gbif.validator.api.Metrics.FileInfo;
 import org.gbif.validator.api.Metrics.IssueInfo;
-import org.gbif.validator.api.Metrics.TermInfo;
 import org.gbif.validator.api.Validation;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -149,7 +148,7 @@ public class MetricsCollectorCallbackIT {
 
     assertEquals(2, validation.getMetrics().getFileInfos().size());
 
-    Optional<FileInfo> coreOpt = getFileInfo(validation, DwcTerm.Occurrence);
+    Optional<FileInfo> coreOpt = validationClient.getFileInfo(DwcTerm.Occurrence);
     assertTrue(coreOpt.isPresent());
 
     FileInfo core = coreOpt.get();
@@ -176,7 +175,7 @@ public class MetricsCollectorCallbackIT {
         EvaluationCategory.OCC_INTERPRETATION_BASED,
         geodeticDatumAssumedWgs84Issue.get().getIssueCategory());
 
-    Optional<FileInfo> extOpt = getFileInfo(validation, Extension.MULTIMEDIA.getRowType());
+    Optional<FileInfo> extOpt = validationClient.getFileInfo(Extension.MULTIMEDIA.getRowType());
     assertTrue(extOpt.isPresent());
 
     FileInfo ext = extOpt.get();
@@ -302,21 +301,5 @@ public class MetricsCollectorCallbackIT {
 
   private boolean checkExists(CuratorFramework curator, String id, String path) {
     return ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(id, path, true));
-  }
-
-  private Optional<FileInfo> getFileInfo(Validation validation, String term) {
-    return validation.getMetrics().getFileInfos().stream()
-        .filter(x -> x.getRowType().equals(term))
-        .findAny();
-  }
-
-  private Optional<FileInfo> getFileInfo(Validation validation, Term term) {
-    return getFileInfo(validation, term.qualifiedName());
-  }
-
-  private Optional<TermInfo> getTermInfo(FileInfo fileInfo, Term term) {
-    return fileInfo.getTerms().stream()
-        .filter(x -> x.getTerm().equals(term.qualifiedName()))
-        .findAny();
   }
 }
