@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
@@ -21,6 +22,7 @@ import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
+import org.gbif.common.messaging.api.messages.PipelinesChecklistValidatorMessage;
 import org.gbif.common.messaging.api.messages.PipelinesIndexedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesMetricsCollectedMessage;
 import org.gbif.converters.utils.XmlFilesReader;
@@ -34,6 +36,7 @@ import org.gbif.pipelines.crawler.PipelinesCallback;
 import org.gbif.pipelines.crawler.StepHandler;
 import org.gbif.pipelines.validator.IndexMetricsCollector;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
+import org.gbif.validator.api.FileFormat;
 import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Metrics.FileInfo;
 import org.gbif.validator.api.Validation;
@@ -93,6 +96,7 @@ public class MetricsCollectorCallback extends AbstractMessageCallback<PipelinesI
           || message.getEndpointType() == EndpointType.BIOCASE_XML_ARCHIVE) {
         log.info("Collect {} metrics for {}", message.getEndpointType(), message.getDatasetUuid());
         collectMetrics(message);
+        collectChecklistsMetrics(message);
       } else {
         log.info("Endpoint type {} is not supported!", message.getEndpointType());
         Validation validation = validationClient.get(message.getDatasetUuid());
@@ -103,10 +107,36 @@ public class MetricsCollectorCallback extends AbstractMessageCallback<PipelinesI
   }
 
   @SneakyThrows
+  private void collectChecklistsMetrics(PipelinesIndexedMessage message) {
+    Path inputPath = buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid());
+    if (message.getEndpointType() == EndpointType.DWC_ARCHIVE) {
+      Archive archive = DwcaUtils.fromLocation(inputPath);
+      if (archive.getExtension(DwcTerm.Taxon) != null
+          || DwcTerm.Taxon == archive.getCore().getRowType()) {
+        PipelinesChecklistValidatorMessage checklistValidatorMessage =
+            new PipelinesChecklistValidatorMessage(
+                message.getDatasetUuid(),
+                message.getAttempt(),
+                message.getPipelineSteps(),
+                message.getExecutionId(),
+                FileFormat.DWCA.name());
+        publisher.sendAndReceive(
+            checklistValidatorMessage,
+            config.stepConfig.queueName,
+            PipelinesChecklistValidatorMessage.ROUTING_KEY,
+            true,
+            UUID.randomUUID().toString(),
+            config.checklistReplyQueue,
+            response -> log.info("Response received {}", response));
+      }
+    }
+  }
+
+  @SneakyThrows
   private void collectMetrics(PipelinesIndexedMessage message) {
     Path inputPath = buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid());
     Set<Term> coreTerms = Collections.emptySet();
-    Map<Extension, Set<Term>> extenstionsTerms = Collections.emptyMap();
+    Map<Extension, Set<Term>> extensionsTerms = Collections.emptyMap();
 
     Long coreLineCount = null;
     String coreFileName = null;
@@ -121,7 +151,7 @@ public class MetricsCollectorCallback extends AbstractMessageCallback<PipelinesI
       coreFileName = core.getLocationFile().getName();
       // Extract all terms
       coreTerms = DwcaUtils.getCoreTerms(archive);
-      extenstionsTerms = DwcaUtils.getExtensionsTerms(archive);
+      extensionsTerms = DwcaUtils.getExtensionsTerms(archive);
       // Count files lines
       coreLineCount = countLines(core.getLocationFile(), areHeaderLinesIncluded(core));
       for (ArchiveFile ext : archive.getExtensions()) {
@@ -134,14 +164,14 @@ public class MetricsCollectorCallback extends AbstractMessageCallback<PipelinesI
       // Extract all terms
       XmlTermExtractor extractor = XmlTermExtractor.extract(files);
       coreTerms = extractor.getCore();
-      extenstionsTerms = extractor.getExtenstionsTerms();
+      extensionsTerms = extractor.getExtenstionsTerms();
     }
 
     // Collect metrics from ES
     Metrics metrics =
         IndexMetricsCollector.builder()
             .coreTerms(coreTerms)
-            .extensionsTerms(extenstionsTerms)
+            .extensionsTerms(extensionsTerms)
             .key(message.getDatasetUuid())
             .index(config.indexName)
             .corePrefix(config.corePrefix)

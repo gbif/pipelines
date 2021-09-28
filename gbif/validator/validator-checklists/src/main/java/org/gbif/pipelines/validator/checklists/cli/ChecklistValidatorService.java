@@ -2,7 +2,9 @@ package org.gbif.pipelines.validator.checklists.cli;
 
 import com.google.common.util.concurrent.AbstractIdleService;
 import lombok.extern.slf4j.Slf4j;
+import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
+import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesChecklistValidatorMessage;
 import org.gbif.pipelines.validator.checklists.cli.config.ChecklistValidatorConfiguration;
 import org.gbif.pipelines.validator.checklists.cli.config.RegistryConfiguration;
@@ -19,6 +21,7 @@ public class ChecklistValidatorService extends AbstractIdleService {
 
   private final ChecklistValidatorConfiguration config;
   private MessageListener listener;
+  private MessagePublisher publisher;
 
   public ChecklistValidatorService(ChecklistValidatorConfiguration config) {
     this.config = config;
@@ -38,6 +41,7 @@ public class ChecklistValidatorService extends AbstractIdleService {
     log.info("Started pipelines-archive-validator service with parameters : {}", config);
     // Prefetch is one, since this is a long-running process.
     listener = new MessageListener(config.messaging.getConnectionParameters(), 1);
+    publisher = new DefaultMessagePublisher(config.messaging.getConnectionParameters());
 
     ValidationWsClient validationClient = createValidationWsClient(config.registry);
 
@@ -46,12 +50,13 @@ public class ChecklistValidatorService extends AbstractIdleService {
         config.queueName,
         routingKey,
         config.poolSize,
-        new ChecklistValidatorCallback(this.config, validationClient));
+        new ChecklistValidatorCallback(this.config, validationClient, publisher));
   }
 
   @Override
   protected void shutDown() {
     listener.close();
+    publisher.close();
     log.info("Stopping pipelines-pipelines-archive-validator service");
   }
 }

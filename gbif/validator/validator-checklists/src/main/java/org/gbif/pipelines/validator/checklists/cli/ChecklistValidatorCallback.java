@@ -2,18 +2,17 @@ package org.gbif.pipelines.validator.checklists.cli;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.gbif.api.model.pipelines.StepType;
 import org.gbif.checklistbank.cli.common.NeoConfiguration;
 import org.gbif.common.messaging.AbstractMessageCallback;
+import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesChecklistValidatorMessage;
 import org.gbif.pipelines.validator.checklists.ChecklistValidator;
 import org.gbif.pipelines.validator.checklists.cli.config.ChecklistValidatorConfiguration;
 import org.gbif.validator.api.Metrics;
-import org.gbif.validator.api.Metrics.ValidationStep;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.ws.client.ValidationWsClient;
 import org.slf4j.Logger;
@@ -29,12 +28,16 @@ public class ChecklistValidatorCallback
   private final ChecklistValidatorConfiguration config;
   private final ChecklistValidator checklistValidator;
   private final ValidationWsClient validationClient;
+  private final MessagePublisher messagePublisher;
 
   public ChecklistValidatorCallback(
-      ChecklistValidatorConfiguration config, ValidationWsClient validationClient) {
+      ChecklistValidatorConfiguration config,
+      ValidationWsClient validationClient,
+      MessagePublisher messagePublisher) {
     this.config = config;
     this.validationClient = validationClient;
     this.checklistValidator = new ChecklistValidator(toNeoConfiguration(config));
+    this.messagePublisher = messagePublisher;
   }
 
   /** Creates a NeoConfiguration from the pipeline configuration. */
@@ -57,10 +60,15 @@ public class ChecklistValidatorCallback
   }
 
   @Override
+  @SneakyThrows
   public void handleMessage(PipelinesChecklistValidatorMessage message) {
     Validation validation = validationClient.get(message.getDatasetUuid());
     if (validation != null) {
       validateArchive(validation);
+      // void send(Object message, String exchange, String routingKey, boolean persistent, String
+      // correlationId, String replyTo)
+      messagePublisher.replyToQueue(
+          Boolean.TRUE, true, getContext().getCorrelationId(), getContext().getReplyTo());
     } else {
       LOG.error("Checklist validation started: {}", message);
     }
@@ -93,15 +101,6 @@ public class ChecklistValidatorCallback
     } else {
       validation.getMetrics().getFileInfos().addAll(report);
     }
-    validation
-        .getMetrics()
-        .setStepTypes(
-            Collections.singletonList(
-                ValidationStep.builder()
-                    .stepType(StepType.VALIDATOR_VALIDATE_ARCHIVE)
-                    .status(Validation.Status.FINISHED)
-                    .build()));
-    validation.setStatus(Validation.Status.FINISHED);
     validationClient.update(validation);
     LOG.info("Checklist validation finished: {}", validation.getKey());
   }

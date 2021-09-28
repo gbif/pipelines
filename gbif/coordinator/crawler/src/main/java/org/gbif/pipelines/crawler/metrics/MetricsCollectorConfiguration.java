@@ -38,6 +38,9 @@ public class MetricsCollectorConfiguration implements BaseConfiguration {
   @Parameter(names = "--validator-only")
   public boolean validatorOnly = false;
 
+  @Parameter(names = "--validator-checklist-reply-queue")
+  public String checklistReplyQueue = "validation_checklist_result";
+
   @Override
   public String getHdfsSiteConfig() {
     return stepConfig.hdfsSiteConfig;
