@@ -1,6 +1,7 @@
 package org.gbif.pipelines.crawler.validator.validate;
 
 import static org.gbif.pipelines.common.utils.PathUtil.buildDwcaInputPath;
+import static org.gbif.validator.api.EvaluationCategory.RESOURCE_STRUCTURE;
 import static org.gbif.validator.api.EvaluationType.OCCURRENCE_NOT_UNIQUELY_IDENTIFIED;
 import static org.gbif.validator.api.EvaluationType.RECORD_NOT_UNIQUELY_IDENTIFIED;
 import static org.gbif.validator.api.EvaluationType.RECORD_REFERENTIAL_INTEGRITY_VIOLATION;
@@ -24,11 +25,11 @@ import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
-import org.gbif.common.messaging.api.messages.PipelinesChecklistValidatorMessage;
 import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
 import org.gbif.common.messaging.api.messages.Platform;
 import org.gbif.dwc.Archive;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.Term;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
 import org.gbif.pipelines.core.utils.DwcaUtils;
 import org.gbif.pipelines.crawler.validator.ArchiveValidatorConfiguration;
@@ -116,7 +117,16 @@ public class DwcaArchiveValidator {
           .build();
 
     } catch (Exception ex) {
-      throw new IllegalArgumentException(ex.getMessage(), ex);
+      return FileInfo.builder()
+          .fileType(DwcFileType.METADATA)
+          .fileName(EML_XML)
+          .issues(
+              Collections.singletonList(
+                  IssueInfo.builder()
+                      .issueCategory(RESOURCE_STRUCTURE)
+                      .extra(ex.getMessage())
+                      .build()))
+          .build();
     }
   }
 
@@ -125,85 +135,85 @@ public class DwcaArchiveValidator {
     Path inputPath = buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid());
     Archive archive = DwcaUtils.fromLocation(inputPath);
 
-    DatasetType datasetType = getDatasetType(archive);
+    DwcaValidationReport report =
+        DwcaValidator.builder()
+            .archive(archive)
+            .datasetKey(message.getDatasetUuid())
+            .datasetType(getDatasetType(archive))
+            .maxExampleErrors(config.maxExampleErrors)
+            .maxRecords(config.maxRecords)
+            .build()
+            .validate();
 
-    if (DatasetType.OCCURRENCE == datasetType) {
+    List<IssueInfo> issueInfos = new ArrayList<>();
 
-      DwcaValidationReport report =
-          DwcaValidator.builder()
-              .archive(archive)
-              .datasetKey(message.getDatasetUuid())
-              .datasetType(getDatasetType(archive))
-              .maxExampleErrors(config.maxExampleErrors)
-              .maxRecords(config.maxRecords)
-              .build()
-              .validate();
-
-      List<IssueInfo> issueInfos = new ArrayList<>();
-
-      // Generic report
-      GenericValidationReport genericReport = report.getGenericReport();
-      if (genericReport != null && !genericReport.isValid()) {
-        if (genericReport.getDuplicateIds().size() > 0) {
-          issueInfos.add(
-              IssueInfo.builder()
-                  .issueCategory(EvaluationCategory.RESOURCE_STRUCTURE)
-                  .issue(RECORD_NOT_UNIQUELY_IDENTIFIED.name())
-                  .extra(genericReport.getInvalidationReason())
-                  .build());
-        }
-        if (genericReport.getRowNumbersMissingId().size() > 0) {
-          issueInfos.add(
-              IssueInfo.builder()
-                  .issueCategory(EvaluationCategory.RESOURCE_STRUCTURE)
-                  .issue(RECORD_REFERENTIAL_INTEGRITY_VIOLATION.name())
-                  .extra(genericReport.getInvalidationReason())
-                  .build());
-        }
-      }
-
-      // Occurrence report
-      OccurrenceValidationReport occurrenceReport = report.getOccurrenceReport();
-      if (occurrenceReport != null && !occurrenceReport.isValid()) {
+    // Generic report
+    GenericValidationReport genericReport = report.getGenericReport();
+    if (genericReport != null && !genericReport.isValid()) {
+      if (genericReport.getDuplicateIds().size() > 0) {
         issueInfos.add(
             IssueInfo.builder()
-                .issueCategory(EvaluationCategory.RESOURCE_STRUCTURE)
-                .issue(OCCURRENCE_NOT_UNIQUELY_IDENTIFIED.name())
-                .extra(occurrenceReport.getInvalidationReason())
+                .issueCategory(RESOURCE_STRUCTURE)
+                .issue(RECORD_NOT_UNIQUELY_IDENTIFIED.name())
+                .extra(genericReport.getInvalidationReason())
                 .build());
       }
-
-      if (issueInfos.isEmpty()) {
-        return null;
-      } else {
-        return FileInfo.builder().fileType(DwcFileType.CORE).issues(issueInfos).build();
+      if (genericReport.getRowNumbersMissingId().size() > 0) {
+        issueInfos.add(
+            IssueInfo.builder()
+                .issueCategory(RESOURCE_STRUCTURE)
+                .issue(RECORD_REFERENTIAL_INTEGRITY_VIOLATION.name())
+                .extra(genericReport.getInvalidationReason())
+                .build());
       }
     }
 
-    if (DatasetType.CHECKLIST == datasetType) {
-      sendChecklistValidatorMessage();
+    // Occurrence report
+    OccurrenceValidationReport occurrenceReport = report.getOccurrenceReport();
+    if (occurrenceReport != null && !occurrenceReport.isValid()) {
+      issueInfos.add(
+          IssueInfo.builder()
+              .issueCategory(RESOURCE_STRUCTURE)
+              .issue(OCCURRENCE_NOT_UNIQUELY_IDENTIFIED.name())
+              .extra(occurrenceReport.getInvalidationReason())
+              .build());
     }
 
-    return null;
-  }
+    if (occurrenceReport == null) {
+      return null;
+    }
 
-  @SneakyThrows
-  private void sendChecklistValidatorMessage() {
-    PipelinesChecklistValidatorMessage checklistValidatorMessage =
-        new PipelinesChecklistValidatorMessage(
-            message.getDatasetUuid(),
-            message.getAttempt(),
-            message.getPipelineSteps(),
-            message.getExecutionId(),
-            message.getFileFormat());
-    publisher.send(checklistValidatorMessage);
+    String fileName;
+    DwcFileType dwcFileType;
+    if (archive.getCore().getRowType() == DwcTerm.Occurrence) {
+      fileName = archive.getCore().getLocationFile().getName();
+      dwcFileType = DwcFileType.CORE;
+    } else {
+      fileName = archive.getExtension(DwcTerm.Occurrence).getLocationFile().getName();
+      dwcFileType = DwcFileType.EXTENSION;
+    }
+
+    return FileInfo.builder()
+        .fileType(dwcFileType)
+        .rowType(DwcTerm.Occurrence.qualifiedName())
+        .fileName(fileName)
+        .issues(issueInfos)
+        .build();
   }
 
   /** Gets the dataset type from the Archive parameter. */
   private static DatasetType getDatasetType(Archive archive) {
-    return DwcTerm.Taxon == archive.getCore().getRowType()
-        ? DatasetType.CHECKLIST
-        : DatasetType.OCCURRENCE;
+    Term rowType = archive.getCore().getRowType();
+    if (rowType == DwcTerm.Occurrence) {
+      return DatasetType.OCCURRENCE;
+    }
+    if (rowType == DwcTerm.Event) {
+      return DatasetType.SAMPLING_EVENT;
+    }
+    if (rowType == DwcTerm.Taxon) {
+      return DatasetType.CHECKLIST;
+    }
+    throw new IllegalArgumentException("DatasetType is not valid");
   }
 
   /** Gets the dataset type form the current archive data. */
