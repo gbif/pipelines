@@ -91,7 +91,7 @@ public abstract class ConverterToVerbatim {
     Objects.requireNonNull(inputPath, "inputPath cannot be null");
     Objects.requireNonNull(outputPath, "outputPath cannot be null");
 
-    boolean isConverted = true;
+    boolean isConverted = false;
 
     // the fs has to be out of the try-catch block to avoid closing it, because the hdfs client
     // tries to reuse the
@@ -117,12 +117,12 @@ public abstract class ConverterToVerbatim {
       log.error("Failed performing conversion on {}", inputPath, e);
       throw new IllegalStateException("Failed performing conversion on " + inputPath, e);
     } finally {
-      if (skipDeletion) {
+      if (!skipDeletion) {
         isConverted = deleteAvroFileIfEmpty(fs, outputPath);
       }
     }
 
-    return isConverted;
+    return !isConverted;
   }
 
   private void createMetafile(FileSystem fs, Path metaPath, long numberOfRecords)

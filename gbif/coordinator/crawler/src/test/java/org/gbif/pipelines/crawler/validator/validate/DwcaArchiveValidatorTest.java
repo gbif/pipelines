@@ -47,11 +47,15 @@ public class DwcaArchiveValidatorTest {
 
     // Should
     Metrics metrics = validationClient.get(key).getMetrics();
-    assertEquals(1, metrics.getFileInfos().size());
+    assertEquals(2, metrics.getFileInfos().size());
 
-    FileInfo info = metrics.getFileInfos().get(0);
-    assertEquals(DwcFileType.METADATA, info.getFileType());
-    assertEquals(EML_XML, info.getFileName());
+    FileInfo metadata = metrics.getFileInfos().get(0);
+    assertEquals(DwcFileType.METADATA, metadata.getFileType());
+    assertEquals(EML_XML, metadata.getFileName());
+
+    FileInfo occurrence = metrics.getFileInfos().get(1);
+    assertEquals(DwcFileType.CORE, occurrence.getFileType());
+    assertEquals("occurrence.txt", occurrence.getFileName());
   }
 
   @Test

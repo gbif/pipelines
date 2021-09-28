@@ -93,7 +93,8 @@ public class AbcdToAvroCallback extends AbstractMessageCallback<PipelinesAbcdMes
     return callback.createRunnable(
         message.getDatasetUuid(),
         message.getAttempt().toString(),
-        XmlToAvroCallback.SKIP_RECORDS_CHECK);
+        XmlToAvroCallback.SKIP_RECORDS_CHECK,
+        message.isValidator() || config.validatorOnly);
   }
 
   @Override
