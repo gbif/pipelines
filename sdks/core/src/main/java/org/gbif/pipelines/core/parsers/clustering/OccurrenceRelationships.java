@@ -3,8 +3,10 @@ package org.gbif.pipelines.core.parsers.clustering;
 import static org.gbif.pipelines.core.parsers.clustering.RelationshipAssertion.FeatureAssertion.*;
 import static org.gbif.pipelines.core.parsers.clustering.RelationshipAssertion.FeatureAssertion.IDENTIFIERS_OVERLAP;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -13,9 +15,12 @@ import org.gbif.pipelines.core.parsers.clustering.RelationshipAssertion.FeatureA
 /** Generates relationship assertions for occurrence records. */
 public class OccurrenceRelationships {
   private static final String REGEX_IDENTIFIERS =
-      "[-.,_ :|/\\\\#%&]"; // chars to remove from identifiers
+      "[-.*,_ :|/\\\\#%&]"; // chars to remove from identifiers
 
   private static final int THRESHOLD_IN_DAYS = 1;
+
+  // A list of IDs that are excluded for comparison
+  private static final List<String> idOmitList = newIdOmitList();
 
   /** Will either generate an assertion with justification or return null. */
   public static <T extends OccurrenceFeatures> RelationshipAssertion<T> generate(T o1, T o2) {
@@ -208,7 +213,8 @@ public class OccurrenceRelationships {
     }
   }
 
-  private static <T extends OccurrenceFeatures> void compareIdentifiers(
+  @VisibleForTesting
+  static <T extends OccurrenceFeatures> void compareIdentifiers(
       OccurrenceFeatures o1, OccurrenceFeatures o2, RelationshipAssertion<T> assertion) {
     // ignore case and [-_., ] chars
     // otherCatalogNumbers is not parsed, but a good addition could be to explore that
@@ -225,20 +231,7 @@ public class OccurrenceRelationships {
             .collect(Collectors.toSet());
 
     intersection.retainAll(toMatch);
-
-    // See https://github.com/gbif/pipelines/issues/309
-    intersection.removeAll(
-        Arrays.asList(
-            null,
-            "",
-            "NOAPLICA",
-            "NA",
-            "[]",
-            "NODISPONIBLE",
-            "NODISPONIBL",
-            "NONUMBER",
-            "--",
-            "UNKNOWN"));
+    intersection.removeAll(idOmitList);
 
     if (!intersection.isEmpty()) {
       assertion.collect(IDENTIFIERS_OVERLAP);
@@ -271,5 +264,36 @@ public class OccurrenceRelationships {
       return n.length() == 0 ? null : n;
     }
     return null;
+  }
+
+  /** Creates a new exclusion list for IDs. See https://github.com/gbif/pipelines/issues/309. */
+  public static List<String> newIdOmitList() {
+    return Arrays.asList(
+        null,
+        "",
+        "[]",
+        "*",
+        "--",
+        normalizeID("NO APLICA"),
+        normalizeID("NA"),
+        normalizeID("NO DISPONIBLE"),
+        normalizeID("NO DISPONIBL"),
+        normalizeID("NO NUMBER"),
+        normalizeID("UNKNOWN"),
+        normalizeID("s.n."),
+        normalizeID("Unknown s.n."),
+        normalizeID("Unreadable s.n."),
+        normalizeID("se kommentar"),
+        normalizeID("inget id"),
+        normalizeID("x"),
+        normalizeID("Anonymous s.n."),
+        normalizeID("Collector Number: s.n."),
+        normalizeID("No Number"),
+        normalizeID("Anonymous"),
+        normalizeID("None"),
+        normalizeID("No Field Number"),
+        normalizeID("not recorded"),
+        normalizeID("s.l."),
+        normalizeID("s.c."));
   }
 }

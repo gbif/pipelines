@@ -259,6 +259,28 @@ public class OccurrenceRelationshipsTest {
   }
 
   @Test
+  public void testCompareOmittedIdentifiers() {
+    assertTrue(runCompareIdentifier("A1234", "A1234").justificationContains(IDENTIFIERS_OVERLAP));
+    assertTrue(
+        runCompareIdentifier("A1234", "A::_-*1234").justificationContains(IDENTIFIERS_OVERLAP));
+    assertFalse(
+        runCompareIdentifier("A1234", "AA:1234").justificationContains(IDENTIFIERS_OVERLAP));
+    assertFalse(runCompareIdentifier(null, "A1234").justificationContains(IDENTIFIERS_OVERLAP));
+    assertFalse(runCompareIdentifier("*", "A1234").justificationContains(IDENTIFIERS_OVERLAP));
+    assertFalse(runCompareIdentifier("s.n.", "A1234").justificationContains(IDENTIFIERS_OVERLAP));
+    assertFalse(runCompareIdentifier("s.n.", "S/N").justificationContains(IDENTIFIERS_OVERLAP));
+  }
+
+  /** Generates assertions for the comparison of two identifiers only. */
+  private RelationshipAssertion<OccurrenceFeatures> runCompareIdentifier(String id1, String id2) {
+    OccurrenceFeatures o1 = OccurrenceFeaturesPojo.builder().catalogNumber(id1).build();
+    OccurrenceFeatures o2 = OccurrenceFeaturesPojo.builder().catalogNumber(id2).build();
+    RelationshipAssertion<OccurrenceFeatures> assertions = new RelationshipAssertion<>(o1, o2);
+    OccurrenceRelationships.compareIdentifiers(o1, o2, assertions);
+    return assertions;
+  }
+
+  @Test
   public void allNull() {
     assertTrue(OccurrenceRelationships.allNull(null, null));
     assertTrue(OccurrenceRelationships.allNull(null));
