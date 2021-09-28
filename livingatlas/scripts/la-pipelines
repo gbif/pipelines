@@ -70,54 +70,54 @@ The $CMD can be executed to run all the ingress steps or only a few of them:
 
 Pipeline ingress steps:
 
-    ┌───── do-all ───────────────────────────────────────────────┐
-    │                                                            │
-dwca-avro --> interpret --> validate --> uuid --> image-sync ... │
-  --> image-load --> sds --> index --> sample --> jackknife --> solr
+    ┌───── do-all ───────────────────────────────────────────────────────┐
+    │                                                                    │
+dwca-avro --> interpret --> validate --> uuid --> sds --> image-load ... │
+                 --> image-sync --> index --> sample --> jackknife --> solr
 
 -  'dwca-avro' reads a Dwc-A and converts it to an verbatim.avro file;
 -  'interpret' reads verbatim.avro, interprets it and writes the interpreted data and the issues to Avro files;
--  'sds' runs the sensitive data checks;
 -  'validate' validates the identifiers for a dataset, checking for duplicate and empty keys;
 -  'uuid' mints UUID on new records and rematches to existing UUIDs for records loaded before;
--  'migrate' used for migration;
+-  'sds' runs the sensitive data checks;
 -  'image-load' pushes an export of multimedia AVRO files to the image service;
 -  'image-sync' retrieves details of images stored in image service for indexing purposes;
--  'sample' use the sampling service to retrieve values for points for the layers in the spatial service;
 -  'index' generates a AVRO records ready to be index to SOLR;
+-  'sample' use the sampling service to retrieve values for points for the layers in the spatial service;
 -  'jackknife' adds an aggregated jackknife AVRO for all datasets. Requires samping-avro. After running a full 'index' is required.
 -  'solr' reads index records in AVRO and submits them to SOLR;
--  'solr-sync' sync schema
+-  'solr-schema' sync schema
 -  'archive-list' dumps out a list of archives that can be ingested to '/tmp/dataset-archive-list.csv';
 -  'dataset-list' dumps out a list of datasets that have been ingested to '/tmp/dataset-counts.csv';
 -  'validation-report' dumps out a CSV list of datasets ready to be indexed to '/tmp/validation-report.csv';
 -  'clustering' clustering of occurrences;
 -  'prune-datasets' remove any datasets no longer registered in the collectory;
 -  'dwca-export' export a dwca archive;
+-  'migrate' used for migration;
 
 All the steps generate an output. If only the final output is desired, the intermediate outputs can be ignored.
 
 Usage:
-  $CMD [options] archive-list
-  $CMD [options] dataset-list
   $CMD [options] dwca-avro     (<dr>...|all)
   $CMD [options] interpret     (<dr>...|all)         $WHEREL
-  $CMD [options] sds           (<dr>...|all)         $WHEREL
   $CMD [options] validate      (<dr>...|all)         $WHERE
   $CMD [options] uuid          (<dr>...|all)         $WHERE
-  $CMD [options] migrate  (<dr>...|all)         $WHERE
-  $CMD [options] image-sync    (<dr>...|all)         $WHERE
+  $CMD [options] sds           (<dr>...|all)         $WHEREL
   $CMD [options] image-load    (<dr>...|all)         $WHERE
+  $CMD [options] image-sync    (<dr>...|all)         $WHERE
   $CMD [options] index         (<dr>...|all)         $WHEREL
   $CMD [options] sample        (<dr>...|all)         $WHERE
-  $CMD [options] jackknife     (all)                 $WHERE
   $CMD [options] clustering    (all)                 $WHERE
+  $CMD [options] jackknife     (all)                 $WHERE
   $CMD [options] solr          (<dr>...|all)         $WHERE
-  $CMD [options] solr-sync          (<dr>...|all)         $WHERE
+  $CMD [options] solr-schema   (<dr>...|all)         $WHERE
+  $CMD [options] archive-list
+  $CMD [options] dataset-list
   $CMD [options] prune-datasets
   $CMD [options] validation-report
-  $CMD [options] do-all        (<dr>...|all) $WHEREL
-  $CMD [options] dwca-export     (<dr>...|all)         $WHERE
+  $CMD [options] do-all        (<dr>...|all)         $WHEREL
+  $CMD [options] dwca-export   (<dr>...|all)         $WHERE
+  $CMD [options] migrate       (<dr>...|all)         $WHERE
   $CMD -h | --help
   $CMD -v | --version
 
@@ -842,38 +842,15 @@ if ($validate || $do_all); then
     do_step validate
 fi
 
-if ($dwca_export || $do_all); then
+if ($dwca_export); then
     do_step dwca_export
 fi
 
 if ($uuid || $do_all); then
     do_step uuid
 fi
-
-if ($migrate); then
-    do_step migrate
-fi
-
-if ($image_sync || $do_all); then
-  if [[ $drs != "all" ]] ; then
-      for d in "${drs[@]}"; do
-          image-sync $d $TYPE
-      done
-  else
-      while IFS=, read -r datasetID recordCount
-      do
-          log.info "Dataset = $datasetID and count = $recordCount"
-          if [ "$recordCount" -gt "50000" ]; then
-              if [ $USE_CLUSTER = true ]; then
-                  image-sync $datasetID spark-cluster
-              else
-                  image-sync $datasetID spark-embedded
-              fi
-          else
-              image-sync $datasetID spark-embedded
-          fi
-      done < /tmp/dataset-counts.csv
-  fi
+if ($sds || $do_all); then
+    do_step sds
 fi
 
 if ($image_load || $do_all); then
@@ -898,8 +875,26 @@ if ($image_load || $do_all); then
     fi
 fi
 
-if ($sds || $do_all); then
-    do_step sds
+if ($image_sync || $do_all); then
+  if [[ $drs != "all" ]] ; then
+      for d in "${drs[@]}"; do
+          image-sync $d $TYPE
+      done
+  else
+      while IFS=, read -r datasetID recordCount
+      do
+          log.info "Dataset = $datasetID and count = $recordCount"
+          if [ "$recordCount" -gt "50000" ]; then
+              if [ $USE_CLUSTER = true ]; then
+                  image-sync $datasetID spark-cluster
+              else
+                  image-sync $datasetID spark-embedded
+              fi
+          else
+              image-sync $datasetID spark-embedded
+          fi
+      done < /tmp/dataset-counts.csv
+  fi
 fi
 
 if ($index || $do_all); then
@@ -930,10 +925,13 @@ if ($solr || $do_all); then
   do_step_simple solr
 fi
 
-if ($solr_sync || $do_all); then
+if ($solr_schema || $do_all); then
   do_step_simple solr-sync
 fi
 
+if ($migrate); then
+    do_step migrate
+fi
 
 # All ended correctly, so untrap EXIT catch
 trap - EXIT
