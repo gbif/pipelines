@@ -122,7 +122,6 @@ public class MetricsCollectorCallback extends AbstractMessageCallback<PipelinesI
                 FileFormat.DWCA.name());
         publisher.sendAndReceive(
             checklistValidatorMessage,
-            config.stepConfig.queueName,
             PipelinesChecklistValidatorMessage.ROUTING_KEY,
             true,
             UUID.randomUUID().toString(),

@@ -9,14 +9,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
-import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.gbif.api.model.checklistbank.NameUsage;
 import org.gbif.api.model.checklistbank.VerbatimNameUsage;
 import org.gbif.api.vocabulary.NameUsageIssue;
 import org.gbif.checklistbank.cli.common.NeoConfiguration;
@@ -26,12 +23,12 @@ import org.gbif.dwc.Archive;
 import org.gbif.dwc.ArchiveFile;
 import org.gbif.dwc.DwcFiles;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.nub.lookup.straight.IdLookupPassThru;
 import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.EvaluationCategory;
 import org.gbif.validator.api.Metrics;
+import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
 
 /**
@@ -104,8 +101,7 @@ public class ChecklistValidator {
   }
 
   /** Executes the Checklistbank normalizer and collects all data using a BiConsumer. */
-  private void runNormalizer(
-      ArchiveFile archiveFile, BiConsumer<NameUsage, VerbatimNameUsage> collector) {
+  private void runNormalizer(ArchiveFile archiveFile, Consumer<NormalizedUsage> collector) {
     UUID key = UUID.randomUUID();
     try (UsageDao dao = UsageDao.create(configuration, key)) {
       Normalizer normalizer =
@@ -118,12 +114,19 @@ public class ChecklistValidator {
       normalizer.run(false);
       try (Transaction tx = dao.beginTx()) {
         // iterate over all node and collect their issues
-        dao.allNodes()
-            .forEach(
-                node ->
-                    collector.accept(dao.readUsage(node, false), dao.readVerbatim(node.getId())));
+        dao.allNodes().forEach(node -> collector.accept(readUsageData(dao, node)));
       }
     }
+  }
+
+  /** Collects usages data from the DAO object. */
+  private NormalizedUsage readUsageData(UsageDao usageDao, Node node) {
+    return NormalizedUsage.builder()
+        .nameUsage(usageDao.readUsage(node, true))
+        .verbatimNameUsage(usageDao.readVerbatim(node.getId()))
+        .parsedName(usageDao.readName(node.getId()))
+        .usageExtensions(usageDao.readExtensions(node.getId()))
+        .build();
   }
 
   /** Collect issues and graph data from the normalization result. */
@@ -145,9 +148,12 @@ public class ChecklistValidator {
     private Long usagesCount = 0L;
 
     /** Collects the IssueInfo from the NameUsage and VerbatimUsage. */
-    public void collectTermsInfo(NameUsage nameUsage, VerbatimNameUsage verbatimNameUsage) {
-      if (nameUsage.getIssues() != null) {
-        nameUsage.getIssues().forEach(issue -> addOrCreateIssueInfo(issue, verbatimNameUsage));
+    public void collectTermsInfo(NormalizedUsage normalizedUsage) {
+      if (normalizedUsage.getNameUsage().getIssues() != null) {
+        normalizedUsage
+            .getNameUsage()
+            .getIssues()
+            .forEach(issue -> addOrCreateIssueInfo(issue, normalizedUsage.getVerbatimNameUsage()));
       }
     }
 
@@ -180,10 +186,10 @@ public class ChecklistValidator {
     }
 
     /** Adds a new TermInfo or creates a new one to the termInfoMap. */
-    private void collect(NameUsage nameUsage, VerbatimNameUsage verbatimNameUsage) {
-      collectTermsInfo(nameUsage, verbatimNameUsage);
-      collectVerbatimNameUsage(verbatimNameUsage);
-      collectNameUsage(nameUsage);
+    private void collect(NormalizedUsage normalizedUsage) {
+      collectTermsInfo(normalizedUsage);
+      collectVerbatimNameUsage(normalizedUsage.getVerbatimNameUsage());
+      collectNameUsage(normalizedUsage);
       usagesCount = usagesCount + 1;
     }
 
@@ -210,8 +216,9 @@ public class ChecklistValidator {
     }
 
     /** Collects the TermsInfo data form a NameUsage */
-    private void collectNameUsage(NameUsage nameUsage) {
-      toTermMap(nameUsage)
+    private void collectNameUsage(NormalizedUsage normalizedUsage) {
+      normalizedUsage
+          .toTermMap()
           .forEach(
               (term, value) ->
                   termInfoMap.compute(
@@ -228,78 +235,6 @@ public class ChecklistValidator {
                           return v;
                         }
                       }));
-    }
-
-    /** Converts a NameUsage to a Map<Term,String>. */
-    private Map<Term, String> toTermMap(NameUsage nameUsage) {
-      Map<Term, String> termsMap = new HashMap<>();
-
-      Optional.ofNullable(nameUsage.getAccepted())
-          .ifPresent(v -> termsMap.put(DwcTerm.acceptedNameUsage, v));
-
-      Optional.ofNullable(nameUsage.getAuthorship())
-          .ifPresent(v -> termsMap.put(DwcTerm.scientificNameAuthorship, v));
-
-      Optional.ofNullable(nameUsage.getAccordingTo())
-          .ifPresent(v -> termsMap.put(DwcTerm.nameAccordingTo, v));
-
-      Optional.ofNullable(nameUsage.getCanonicalName())
-          .ifPresent(v -> termsMap.put(GbifTerm.canonicalName, v));
-
-      Optional.ofNullable(nameUsage.getNameType())
-          .ifPresent(v -> termsMap.put(GbifTerm.nameType, v.name()));
-
-      Optional.ofNullable(nameUsage.getPublishedIn())
-          .ifPresent(v -> termsMap.put(DwcTerm.namePublishedIn, v));
-
-      Optional.ofNullable(nameUsage.getTaxonID()).ifPresent(v -> termsMap.put(DwcTerm.taxonID, v));
-
-      Optional.ofNullable(nameUsage.getVernacularName())
-          .ifPresent(v -> termsMap.put(DwcTerm.vernacularName, v));
-
-      Optional.ofNullable(nameUsage.getTaxonomicStatus())
-          .ifPresent(v -> termsMap.put(DwcTerm.taxonomicStatus, v.name()));
-
-      Optional.ofNullable(nameUsage.getNomenclaturalStatus())
-          .ifPresent(v -> termsMap.put(DwcTerm.nomenclaturalStatus, toString(v)));
-
-      Optional.ofNullable(nameUsage.getKingdom()).ifPresent(v -> termsMap.put(DwcTerm.kingdom, v));
-
-      Optional.ofNullable(nameUsage.getPhylum()).ifPresent(v -> termsMap.put(DwcTerm.phylum, v));
-
-      Optional.ofNullable(nameUsage.getClazz()).ifPresent(v -> termsMap.put(DwcTerm.class_, v));
-
-      Optional.ofNullable(nameUsage.getOrder()).ifPresent(v -> termsMap.put(DwcTerm.order, v));
-
-      Optional.ofNullable(nameUsage.getFamily()).ifPresent(v -> termsMap.put(DwcTerm.family, v));
-
-      Optional.ofNullable(nameUsage.getGenus()).ifPresent(v -> termsMap.put(DwcTerm.genus, v));
-
-      Optional.ofNullable(nameUsage.getSubgenus())
-          .ifPresent(v -> termsMap.put(DwcTerm.subgenus, v));
-
-      Optional.ofNullable(nameUsage.getSpecies()).ifPresent(v -> termsMap.put(GbifTerm.species, v));
-
-      Optional.ofNullable(nameUsage.getRank())
-          .ifPresent(v -> termsMap.put(DwcTerm.taxonRank, v.name()));
-
-      Optional.ofNullable(nameUsage.getRemarks())
-          .ifPresent(v -> termsMap.put(DwcTerm.taxonRemarks, v));
-
-      Optional.ofNullable(nameUsage.getParent())
-          .ifPresent(v -> termsMap.put(DwcTerm.parentNameUsage, v));
-
-      Optional.ofNullable(nameUsage.getScientificName())
-          .ifPresent(v -> termsMap.put(DwcTerm.scientificName, v));
-
-      Optional.ofNullable(nameUsage.getBasionym())
-          .ifPresent(v -> termsMap.put(DwcTerm.originalNameUsage, v));
-
-      return termsMap;
-    }
-
-    private String toString(Set<? extends Enum<?>> enums) {
-      return enums.stream().map(Enum::name).collect(Collectors.joining(","));
     }
 
     /** Returns the list of IssuesInfo collected so far. */

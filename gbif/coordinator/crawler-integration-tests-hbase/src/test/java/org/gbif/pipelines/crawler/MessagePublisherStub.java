@@ -48,6 +48,18 @@ public class MessagePublisherStub implements MessagePublisher {
 
   @Override
   public <T> void sendAndReceive(
+      Message message,
+      String routingKey,
+      boolean persistent,
+      String correlationId,
+      String replyTo,
+      Consumer<T> consumer)
+      throws IOException {
+    // NOP
+  }
+
+  @Override
+  public <T> void sendAndReceive(
       Object message,
       String exchange,
       String routingKey,

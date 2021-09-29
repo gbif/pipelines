@@ -29,6 +29,16 @@ public class MessagePublisherMock implements MessagePublisher {
 
   @Override
   public <T> void sendAndReceive(
+      Message message,
+      String routingKey,
+      boolean persistent,
+      String correlationId,
+      String replyTo,
+      Consumer<T> consumer)
+      throws IOException {}
+
+  @Override
+  public <T> void sendAndReceive(
       Object message,
       String exchange,
       String routingKey,
