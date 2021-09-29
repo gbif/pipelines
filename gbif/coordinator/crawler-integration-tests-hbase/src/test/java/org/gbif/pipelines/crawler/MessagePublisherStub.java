@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
-
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gbif.common.messaging.api.Message;
@@ -43,21 +42,21 @@ public class MessagePublisherStub implements MessagePublisher {
 
   @Override
   public void replyToQueue(Object message, boolean persistent, String correlationId, String replyTo)
-    throws IOException {
+      throws IOException {
     // NOP
   }
 
   @Override
   public <T> void sendAndReceive(
-    Object message,
-    String exchange,
-    String routingKey,
-    boolean persistent,
-    String correlationId,
-    String replyTo,
-    Consumer<T> consumer)
-    throws IOException {
-    //NOP
+      Object message,
+      String exchange,
+      String routingKey,
+      boolean persistent,
+      String correlationId,
+      String replyTo,
+      Consumer<T> consumer)
+      throws IOException {
+    // NOP
   }
 
   @Override
