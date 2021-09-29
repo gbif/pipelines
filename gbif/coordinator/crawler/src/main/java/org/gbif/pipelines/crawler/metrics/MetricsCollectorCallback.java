@@ -8,7 +8,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -36,6 +35,7 @@ import org.gbif.pipelines.core.utils.DwcaUtils;
 import org.gbif.pipelines.crawler.PipelinesCallback;
 import org.gbif.pipelines.crawler.StepHandler;
 import org.gbif.pipelines.validator.IndexMetricsCollector;
+import org.gbif.pipelines.validator.Validations;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.api.FileFormat;
 import org.gbif.validator.api.Metrics;
@@ -215,11 +215,7 @@ public class MetricsCollectorCallback extends AbstractMessageCallback<PipelinesI
       if (validationMetrics == null) {
         validation.setMetrics(metrics);
       } else {
-        int size = validationMetrics.getFileInfos().size() + metrics.getFileInfos().size();
-        List<FileInfo> infos = new ArrayList<>(size);
-        infos.addAll(validationMetrics.getFileInfos());
-        infos.addAll(metrics.getFileInfos());
-        validationMetrics.setFileInfos(infos);
+        metrics.getFileInfos().forEach(fi -> Validations.mergeFileInfo(validation, fi));
       }
     }
   }

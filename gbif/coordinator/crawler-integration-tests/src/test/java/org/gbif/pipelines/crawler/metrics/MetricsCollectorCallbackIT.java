@@ -37,6 +37,7 @@ import org.gbif.pipelines.estools.service.EsService;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.EvaluationCategory;
+import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Metrics.FileInfo;
 import org.gbif.validator.api.Metrics.IssueInfo;
 import org.gbif.validator.api.Validation;
@@ -133,6 +134,23 @@ public class MetricsCollectorCallbackIT {
     EsService.indexDocument(ES_SERVER.getEsClient(), config.indexName, 1L, document);
     EsService.refreshIndex(ES_SERVER.getEsClient(), config.indexName);
 
+    validationClient.update(
+        Validation.builder()
+            .key(UUID.randomUUID())
+            .metrics(
+                Metrics.builder()
+                    .fileInfos(
+                        Collections.singletonList(
+                            FileInfo.builder()
+                                .fileName("verbatim.txt")
+                                .fileType(DwcFileType.CORE)
+                                .issues(
+                                    Collections.singletonList(
+                                        IssueInfo.builder().issue("OLD").count(999L).build()))
+                                .build()))
+                    .build())
+            .build());
+
     // When
     callback.handleMessage(message);
 
@@ -156,8 +174,14 @@ public class MetricsCollectorCallbackIT {
     assertEquals(Long.valueOf(1534L), core.getCount());
     assertEquals(Long.valueOf(1L), core.getIndexedCount());
     assertEquals(235, core.getTerms().size());
-    assertEquals(2, core.getIssues().size());
+    assertEquals(3, core.getIssues().size());
     assertEquals(DwcFileType.CORE, core.getFileType());
+
+    Optional<IssueInfo> oldIssue =
+        core.getIssues().stream().filter(x -> x.getIssue().equals("OLD")).findAny();
+    assertTrue(oldIssue.isPresent());
+    assertEquals(Long.valueOf(999), oldIssue.get().getCount());
+    assertNull(oldIssue.get().getIssueCategory());
 
     Optional<IssueInfo> randomIssue =
         core.getIssues().stream().filter(x -> x.getIssue().equals("RANDOM_ISSUE")).findAny();
