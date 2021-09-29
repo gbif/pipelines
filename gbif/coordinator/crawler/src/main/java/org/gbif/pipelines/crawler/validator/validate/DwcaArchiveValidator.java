@@ -150,7 +150,7 @@ public class DwcaArchiveValidator {
     // Generic report
     GenericValidationReport genericReport = report.getGenericReport();
     if (genericReport != null && !genericReport.isValid()) {
-      if (genericReport.getDuplicateIds().size() > 0) {
+      if (!genericReport.getDuplicateIds().isEmpty()) {
         issueInfos.add(
             IssueInfo.builder()
                 .issueCategory(RESOURCE_STRUCTURE)
@@ -158,7 +158,7 @@ public class DwcaArchiveValidator {
                 .extra(genericReport.getInvalidationReason())
                 .build());
       }
-      if (genericReport.getRowNumbersMissingId().size() > 0) {
+      if (!genericReport.getRowNumbersMissingId().isEmpty()) {
         issueInfos.add(
             IssueInfo.builder()
                 .issueCategory(RESOURCE_STRUCTURE)

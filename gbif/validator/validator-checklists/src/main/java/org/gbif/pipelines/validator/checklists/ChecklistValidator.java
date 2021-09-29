@@ -1,9 +1,11 @@
 package org.gbif.pipelines.validator.checklists;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -88,7 +90,7 @@ public class ChecklistValidator {
   /** Efficient way of counting lines */
   private long countLines(File file, boolean areHeaderLinesIncluded) {
     long lines = areHeaderLinesIncluded ? -1 : 0;
-    try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+    try (BufferedReader reader = Files.newBufferedReader(file.toPath(), UTF_8)) {
       while (reader.readLine() != null) {
         lines++;
       }

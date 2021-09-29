@@ -19,7 +19,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableAsync;
 
 /** {@link DownloadFileManager} tests. */
-public class DownloadFileBaseTest {
+public abstract class DownloadFileBaseTest {
 
   /** Test configuration, only for this test and enable async methods. */
   @Configuration

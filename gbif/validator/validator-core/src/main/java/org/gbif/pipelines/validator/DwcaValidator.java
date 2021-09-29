@@ -18,7 +18,7 @@ package org.gbif.pipelines.validator;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -66,7 +66,8 @@ import org.gbif.utils.file.ClosableIterator;
 public class DwcaValidator {
 
   // The mapping of dataset type to primary key term in the core
-  private static final Map<DatasetType, DwcTerm> DATASET_TYPE_CORE_ID = new HashMap<>(2);
+  private static final Map<DatasetType, DwcTerm> DATASET_TYPE_CORE_ID =
+      new EnumMap<>(DatasetType.class);
 
   static {
     DATASET_TYPE_CORE_ID.put(DatasetType.CHECKLIST, DwcTerm.taxonID);

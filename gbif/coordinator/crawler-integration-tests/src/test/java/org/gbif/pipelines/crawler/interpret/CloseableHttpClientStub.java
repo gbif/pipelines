@@ -1,5 +1,7 @@
 package org.gbif.pipelines.crawler.interpret;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,7 +30,7 @@ public class CloseableHttpClientStub extends CloseableHttpClient {
 
   @Override
   protected CloseableHttpResponse doExecute(
-      HttpHost httpHost, HttpRequest httpRequest, HttpContext httpContext) throws IOException {
+      HttpHost httpHost, HttpRequest httpRequest, HttpContext httpContext) {
     return null;
   }
 
@@ -46,10 +48,10 @@ public class CloseableHttpClientStub extends CloseableHttpClient {
   }
 
   @Override
-  public CloseableHttpResponse execute(HttpUriRequest request) throws IOException {
+  public CloseableHttpResponse execute(HttpUriRequest request) {
     return new CloseableHttpResponse() {
       @Override
-      public void close() throws IOException {}
+      public void close() {}
 
       @Override
       public StatusLine getStatusLine() {
@@ -115,12 +117,12 @@ public class CloseableHttpClientStub extends CloseableHttpClient {
           }
 
           @Override
-          public InputStream getContent() throws IOException, UnsupportedOperationException {
-            return new ByteArrayInputStream(jsonResponse.getBytes());
+          public InputStream getContent() throws UnsupportedOperationException {
+            return new ByteArrayInputStream(jsonResponse.getBytes(UTF_8));
           }
 
           @Override
-          public void writeTo(OutputStream outputStream) throws IOException {}
+          public void writeTo(OutputStream outputStream) {}
 
           @Override
           public boolean isStreaming() {
@@ -128,7 +130,7 @@ public class CloseableHttpClientStub extends CloseableHttpClient {
           }
 
           @Override
-          public void consumeContent() throws IOException {}
+          public void consumeContent() {}
         };
       }
 

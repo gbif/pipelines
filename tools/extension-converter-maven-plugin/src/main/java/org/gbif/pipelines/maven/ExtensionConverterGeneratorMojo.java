@@ -119,7 +119,7 @@ public class ExtensionConverterGeneratorMojo extends AbstractMojo {
     Template temp =
         new Template("table-converter", new StringReader(Templates.TABLE_CONVERTER), cfg);
 
-    Writer out = new OutputStreamWriter(new FileOutputStream(classPath.toFile()));
+    Writer out = new OutputStreamWriter(new FileOutputStream(classPath.toFile()), UTF_8);
     temp.process(extPojo, out);
 
     getLog().info("DWC extension java converter class is generated - " + classPath);

@@ -1,11 +1,12 @@
 package org.gbif.pipelines.crawler.metrics;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.gbif.pipelines.common.utils.PathUtil.buildDwcaInputPath;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -231,7 +232,7 @@ public class MetricsCollectorCallback extends AbstractMessageCallback<PipelinesI
   /** Efficient way of counting lines */
   private long countLines(File file, boolean areHeaderLinesIncluded) {
     long lines = areHeaderLinesIncluded ? -1 : 0;
-    try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+    try (BufferedReader reader = Files.newBufferedReader(file.toPath(), UTF_8)) {
       while (reader.readLine() != null) {
         lines++;
       }
