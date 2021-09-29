@@ -47,13 +47,13 @@ public class MessagePublisherStub implements MessagePublisher {
 
   @Override
   public <T> void sendAndReceive(
-      Object message,
-      String exchange,
-      String routingKey,
-      boolean persistent,
-      String correlationId,
-      String replyTo,
-      Consumer<T> consumer) {
+      Message message, String s, boolean b, String s1, String s2, Consumer<T> consumer) {
+    // NOP
+  }
+
+  @Override
+  public <T> void sendAndReceive(
+      Object o, String s, String s1, boolean b, String s2, String s3, Consumer<T> consumer) {
     // NOP
   }
 
