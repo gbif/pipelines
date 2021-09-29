@@ -272,48 +272,50 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
   }
 
   private void updateValidatorInfoStatus(Status status, boolean ignoreMainStatus) {
-    if (isValidator) {
-      Validation validation = validationClient.get(message.getDatasetUuid());
-      if (validation != null) {
+    if (!isValidator) {
+      return;
+    }
 
-        if (!ignoreMainStatus) {
-          validation.setStatus(status);
-        }
+    Validation validation = validationClient.get(message.getDatasetUuid());
+    if (validation == null) {
+      log.warn(
+          "Can't find validation data key {}, please check that record exists",
+          message.getDatasetUuid());
+      return;
+    }
 
-        validation.setModified(Timestamp.valueOf(ZonedDateTime.now().toLocalDateTime()));
+    if (!ignoreMainStatus) {
+      validation.setStatus(status);
+    }
 
-        Metrics metrics =
-            Optional.ofNullable(validation.getMetrics()).orElse(Metrics.builder().build());
+    validation.setModified(Timestamp.valueOf(ZonedDateTime.now().toLocalDateTime()));
 
-        boolean addValidationType = true;
-        for (ValidationStep step : metrics.getStepTypes()) {
-          if (step.getStepType() == stepType) {
-            step.setStatus(status);
-            addValidationType = false;
-            break;
-          }
-        }
-        if (addValidationType) {
-          metrics
-              .getStepTypes()
-              .add(
-                  ValidationStep.builder()
-                      .stepType(stepType)
-                      .status(status)
-                      .executionOrder(stepType.getExecutionOrder())
-                      .build());
-        }
+    Metrics metrics =
+        Optional.ofNullable(validation.getMetrics()).orElse(Metrics.builder().build());
 
-        validation.setMetrics(metrics);
-
-        validationClient.update(message.getDatasetUuid(), validation);
-
-      } else {
-        log.warn(
-            "Can't find validation data key {}, please check that record exists",
-            message.getDatasetUuid());
+    boolean addValidationType = true;
+    for (ValidationStep step : metrics.getStepTypes()) {
+      if (step.getStepType() == stepType) {
+        step.setStatus(status);
+        addValidationType = false;
+        break;
       }
     }
+
+    if (addValidationType) {
+      metrics
+          .getStepTypes()
+          .add(
+              ValidationStep.builder()
+                  .stepType(stepType)
+                  .status(status)
+                  .executionOrder(stepType.getExecutionOrder())
+                  .build());
+    }
+
+    validation.setMetrics(metrics);
+
+    validationClient.update(message.getDatasetUuid(), validation);
   }
 
   private Optional<TrackingInfo> trackPipelineStep() {

@@ -12,7 +12,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
@@ -96,10 +96,10 @@ public class MediaTypeAndFormatDetector {
   }
 
   private static boolean areAllFilesXml(List<Path> files) {
-    BiFunction<Path, String, Boolean> suffixFn = (p, s) -> p.toFile().toString().endsWith(s);
+    BiPredicate<Path, String> suffixFn = (p, s) -> p.toFile().toString().endsWith(s);
     return files.stream()
-        .filter(x -> !suffixFn.apply(x, ".zip"))
-        .allMatch(x -> suffixFn.apply(x, ".xml") || suffixFn.apply(x, ".response"));
+        .filter(x -> !suffixFn.test(x, ".zip"))
+        .allMatch(x -> suffixFn.test(x, ".xml") || suffixFn.test(x, ".response"));
   }
 
   /** Simple holder for mediaType and fileFormat */
