@@ -1,6 +1,5 @@
 package org.gbif.pipelines.crawler;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -41,8 +40,8 @@ public class MessagePublisherStub implements MessagePublisher {
   }
 
   @Override
-  public void replyToQueue(Object message, boolean persistent, String correlationId, String replyTo)
-      throws IOException {
+  public void replyToQueue(
+      Object message, boolean persistent, String correlationId, String replyTo) {
     // NOP
   }
 
@@ -54,8 +53,7 @@ public class MessagePublisherStub implements MessagePublisher {
       boolean persistent,
       String correlationId,
       String replyTo,
-      Consumer<T> consumer)
-      throws IOException {
+      Consumer<T> consumer) {
     // NOP
   }
 
