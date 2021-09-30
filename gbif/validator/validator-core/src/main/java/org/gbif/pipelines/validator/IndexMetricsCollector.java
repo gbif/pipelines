@@ -75,7 +75,6 @@ public class IndexMetricsCollector {
     FileInfo core =
         FileInfo.builder()
             .rowType(DwcTerm.Occurrence.qualifiedName())
-            .fileType(DwcFileType.CORE)
             .indexedCount(queryDocCount())
             .terms(queryCoreTermsCount())
             .issues(queryOccurrenceIssuesCount())

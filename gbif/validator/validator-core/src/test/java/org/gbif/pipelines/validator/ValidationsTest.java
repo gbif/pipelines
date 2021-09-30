@@ -105,7 +105,7 @@ public class ValidationsTest {
 
     FileInfo fileInfo =
         FileInfo.builder()
-            .fileName("TWO")
+            .fileName("ONE")
             .fileType(DwcFileType.CORE)
             .issues(Collections.singletonList(IssueInfo.builder().issue("TWO").build()))
             .build();

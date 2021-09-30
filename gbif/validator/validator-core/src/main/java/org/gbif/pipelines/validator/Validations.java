@@ -22,17 +22,17 @@ public class Validations {
       if (validation.getMetrics() == null) {
         validation.setMetrics(
             Metrics.builder().fileInfos(Collections.singletonList(fileInfo)).build());
-      } else if (fileInfo.getFileType() == null) {
+      } else if (fileInfo.getFileName() == null) {
         addFileInfo(validation, validation.getMetrics().getFileInfos(), fileInfo);
       } else {
         Optional<FileInfo> match =
             validation.getMetrics().getFileInfos().stream()
-                .filter(fi -> fi.getFileType() == fileInfo.getFileType())
+                .filter(fi -> fi.getFileName().equals(fileInfo.getFileName()))
                 .findAny();
 
         List<FileInfo> all =
             validation.getMetrics().getFileInfos().stream()
-                .filter(fi -> fi.getFileType() != fileInfo.getFileType())
+                .filter(fi -> !fi.getFileName().equals(fileInfo.getFileName()))
                 .collect(Collectors.toList());
 
         FileInfo merged;
