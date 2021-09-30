@@ -240,12 +240,12 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
 
     Validation v =
         Optional.ofNullable(validationMapper.get(key))
-            .orElse(newValidationInstance(key, dataFile, Status.SUBMITTED));
+            .orElse(newValidationInstance(key, dataFile, Status.QUEUED));
 
     Set<String> pipelinesSteps = getPipelineSteps(dataFile.getFileFormat());
 
     // Set future steps
-    v.setStatus(Status.SUBMITTED);
+    v.setStatus(Status.QUEUED);
     v.getMetrics().setStepTypes(Metrics.mapToValidationSteps(pipelinesSteps));
 
     // Update DB

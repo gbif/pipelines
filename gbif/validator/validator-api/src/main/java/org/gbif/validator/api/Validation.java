@@ -33,7 +33,8 @@ public class Validation {
     RUNNING,
     FINISHED,
     ABORTED,
-    FAILED
+    FAILED,
+    QUEUED
   }
 
   /** Validation key/identifier. */

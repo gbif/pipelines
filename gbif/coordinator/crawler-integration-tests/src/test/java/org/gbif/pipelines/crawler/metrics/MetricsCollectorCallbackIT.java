@@ -41,6 +41,7 @@ import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Metrics.FileInfo;
 import org.gbif.validator.api.Metrics.IssueInfo;
 import org.gbif.validator.api.Validation;
+import org.gbif.validator.api.Validation.Status;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -165,6 +166,7 @@ public class MetricsCollectorCallbackIT {
     Validation validation = validationClient.getValidation();
 
     assertEquals(2, validation.getMetrics().getFileInfos().size());
+    assertEquals(Status.QUEUED, validation.getStatus());
 
     Optional<FileInfo> coreOpt = validationClient.getFileInfo(DwcTerm.Occurrence);
     assertTrue(coreOpt.isPresent());
@@ -260,6 +262,11 @@ public class MetricsCollectorCallbackIT {
     assertFalse(checkExists(curator, crawlId, Fn.END_DATE.apply(LABEL)));
     assertFalse(checkExists(curator, crawlId, Fn.SUCCESSFUL.apply(LABEL)));
     assertEquals(0, publisher.getMessages().size());
+
+    Validation validation = validationClient.getValidation();
+
+    assertEquals(2, validation.getMetrics().getFileInfos().size());
+    assertEquals(Status.FINISHED, validation.getStatus());
   }
 
   @Test

@@ -1,7 +1,7 @@
 --
 --  validation
 --
-CREATE TYPE enum_validation_status AS ENUM ('DOWNLOADING','SUBMITTED', 'RUNNING', 'FINISHED', 'ABORTED', 'FAILED');
+CREATE TYPE enum_validation_status AS ENUM ('DOWNLOADING','SUBMITTED', 'RUNNING', 'FINISHED', 'ABORTED', 'FAILED', 'QUEUED');
 CREATE TYPE enum_validation_file_format AS ENUM ('DWCA', 'TABULAR', 'SPREADSHEET', 'XML');
 CREATE TABLE validation
 (

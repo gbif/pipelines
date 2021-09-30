@@ -177,7 +177,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
 
       String runnerZkPath = Fn.RUNNER.apply(stepType.getLabel());
       ZookeeperUtils.updateMonitoring(curator, datasetKey, runnerZkPath, getRunner(), isValidator);
-      updateValidatorInfoStatus(Status.RUNNING, false);
+      updateValidatorInfoStatus(Status.RUNNING, Status.RUNNING);
 
       log.info("Handler has been started, datasetKey - {}", datasetKey);
       runnable.run();
@@ -221,7 +221,8 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
       String validatorZkPath = getPipelinesInfoPath(datasetKey, isValidator);
       boolean ignoreMainStatus =
           isValidator && ZookeeperUtils.checkExists(curator, validatorZkPath);
-      updateValidatorInfoStatus(Status.FINISHED, ignoreMainStatus);
+      Status mainStatus = ignoreMainStatus ? Status.QUEUED : Status.FINISHED;
+      updateValidatorInfoStatus(Status.FINISHED, mainStatus);
 
     } catch (Exception ex) {
       String error = "Error for datasetKey - " + datasetKey + " : " + ex.getMessage();
@@ -238,7 +239,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
       trackingInfo.ifPresent(info -> updateTrackingStatus(info, PipelineStep.Status.FAILED));
 
       // update validator info
-      updateValidatorInfoStatus(Status.FAILED, false);
+      updateValidatorInfoStatus(Status.FAILED, Status.FAILED);
       deleteValidatorZkPath(datasetKey);
     }
 
@@ -271,7 +272,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
     }
   }
 
-  private void updateValidatorInfoStatus(Status status, boolean ignoreMainStatus) {
+  private void updateValidatorInfoStatus(Status status, Status mainStatus) {
     if (!isValidator) {
       return;
     }
@@ -284,9 +285,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
       return;
     }
 
-    if (!ignoreMainStatus) {
-      validation.setStatus(status);
-    }
+    validation.setStatus(mainStatus);
 
     validation.setModified(Timestamp.valueOf(ZonedDateTime.now().toLocalDateTime()));
 
