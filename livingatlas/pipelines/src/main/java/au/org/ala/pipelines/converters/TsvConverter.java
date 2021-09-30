@@ -14,27 +14,27 @@ import lombok.NoArgsConstructor;
 import org.gbif.dwc.terms.Term;
 
 @NoArgsConstructor(staticName = "create")
-public class CsvConverter<T> {
+public class TsvConverter<T> {
 
   private final List<KeyTermFn<T>> keyTermFnList = new LinkedList<>();
 
-  public final CsvConverter<T> addKeyTermFn(
+  public final TsvConverter<T> addKeyTermFn(
       String term, Function<T, Optional<String>> fn, String defaultValue) {
     keyTermFnList.add(KeyTermFn.create(term, fn, defaultValue));
     return this;
   }
 
-  public final CsvConverter<T> addKeyTermFn(
+  public final TsvConverter<T> addKeyTermFn(
       Term term, Function<T, Optional<String>> fn, String defaultValue) {
     return addKeyTermFn(term.qualifiedName(), fn, defaultValue);
   }
 
-  public final CsvConverter<T> addKeyTermFn(String term, Function<T, Optional<String>> fn) {
+  public final TsvConverter<T> addKeyTermFn(String term, Function<T, Optional<String>> fn) {
     keyTermFnList.add(KeyTermFn.create(term, fn, ""));
     return this;
   }
 
-  public final CsvConverter<T> addKeyTermFn(Term term, Function<T, Optional<String>> fn) {
+  public final TsvConverter<T> addKeyTermFn(Term term, Function<T, Optional<String>> fn) {
     return addKeyTermFn(term.qualifiedName(), fn);
   }
 
@@ -43,10 +43,11 @@ public class CsvConverter<T> {
     keyTermFnList.forEach(
         keyTermFn -> {
           String value = keyTermFn.getFn().apply(source).orElse(keyTermFn.getDefaultValue());
-          value = "\"" + value + "\"";
+          // replace any tabs within string values with single space
+          value = "\"" + value.replaceAll("\t", " ").replaceAll("\"", "") + "\"";
           resultMap.put(keyTermFn.getTerm(), value);
         });
-    return Strings.join(",", resultMap.values().toArray(new String[0]));
+    return Strings.join("\t", resultMap.values().toArray(new String[0]));
   }
 
   public List<String> getTerms() {

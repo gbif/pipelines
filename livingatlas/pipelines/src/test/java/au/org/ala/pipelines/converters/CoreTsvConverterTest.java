@@ -14,13 +14,13 @@ import org.gbif.pipelines.io.avro.*;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class CoreCsvConverterTest {
+public class CoreTsvConverterTest {
 
   @Test
   public void converterTest() {
     // Expected
     // tr = 1, br = 2, lr = 3, trx = 4, atxr = 5, aur = 6, ir = 7, asr = 8
-    String[] expectet = {
+    String[] expected = {
       // DWC Terms
       "\"aur_uuid\"", // DwcTerm.occurrenceID
       "\"raw_er_catalogNumber\"", // DwcTerm.catalogNumber
@@ -813,8 +813,17 @@ public class CoreCsvConverterTest {
             .build();
 
     TaxonProfile tp = TaxonProfile.newBuilder().setId(DwcTerm.occurrenceID.simpleName()).build();
+
+    Multimedia m1 =
+        Multimedia.newBuilder().setIdentifier("http://image.url/1").setLicense("CC-BY").build();
+    Multimedia m2 =
+        Multimedia.newBuilder().setIdentifier("http://image.url/2").setLicense("CC-BY-NC").build();
+
     MultimediaRecord mr =
-        MultimediaRecord.newBuilder().setId(DwcTerm.occurrenceID.simpleName()).build();
+        MultimediaRecord.newBuilder()
+            .setId(DwcTerm.occurrenceID.simpleName())
+            .setMultimediaItems(Arrays.asList(m1, m2))
+            .build();
 
     ALASensitivityRecord asr =
         ALASensitivityRecord.newBuilder()
@@ -839,13 +848,14 @@ public class CoreCsvConverterTest {
 
     // When
     String result = CoreCsvConverter.convert(source);
+    List<String> result2 = MultimediaCsvConverter.convert(source, "http://image/{0}");
 
     // Should
-    Assert.assertEquals(String.join(",", expectet), result);
+    Assert.assertEquals(String.join("\t", expected), result);
   }
 
   @Test
-  public void converterDefualtTest() {
+  public void converterDefaultTest() {
     // Expected
     // tr = 1, br = 2, lr = 3, trx = 4, atxr = 5, aur = 6, ir = 7, asr = 8
     String[] expected = {
@@ -1166,7 +1176,7 @@ public class CoreCsvConverterTest {
     String result = CoreCsvConverter.convert(source);
 
     // Should
-    Assert.assertEquals(String.join(",", expected), result);
+    Assert.assertEquals(String.join("\t", expected), result);
   }
 
   @Test

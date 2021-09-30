@@ -19,17 +19,17 @@ public class MultimediaCsvConverterTest {
   public void converterTest() {
     // Expected
     // tr = 1, br = 2, lr = 3, trx = 4, atxr = 5, aur = 6, ir = 7, asr = 8
-    String[] expectet = {
-      "\"aur_uuid\"", // id
-      "\"aur_uuid\"", // DwcTerm.identifier
-      "\"\"", // DcTerm.creator
-      "\"\"", // DcTerm.created
-      "\"\"", // DcTerm.title
-      "\"\"", // DcTerm.format
-      "\"br_license\"", // DcTerm.license
-      "\"\"", // DcTerm.rights
-      "\"\"", // DcTerm.rightsHolder
-      "\"br_References\"", // DcTerm.references
+    String[] expected = {
+      "\"aur_uuid\"", // DwcTerm.occurrenceID
+      "\"http://image/ir_Identifier\"", // DwcTerm.identifier
+      "\"ir_Creator\"", // DcTerm.creator
+      "\"ir_Created\"", // DcTerm.created
+      "\"ir_Title\"", // DcTerm.title
+      "\"ir_Format\"", // DcTerm.format
+      "\"ir_License\"", // DcTerm.license
+      "\"ir_Rights\"", // DcTerm.rights
+      "\"ir_RightsHolder\"", // DcTerm.rightsHolder
+      "\"ir_References\"", // DcTerm.references
     };
 
     // State
@@ -314,18 +314,15 @@ public class MultimediaCsvConverterTest {
             .setImageItems(
                 Collections.singletonList(
                     Image.newBuilder()
-                        .setCreated("ir_Image")
-                        .setAudience("ir_Audienc")
-                        .setCreator("ir_Creator")
-                        .setContributor("ir_Contributor")
-                        .setDatasetId("ir_DatasetId")
-                        .setLicense("ir_License")
-                        .setLatitude(77d)
-                        .setLongitude(777d)
-                        .setSpatial("ir_Spatial")
-                        .setTitle("ir_Title")
-                        .setRightsHolder("ir_RightsHolder")
                         .setIdentifier("ir_Identifier")
+                        .setCreator("ir_Creator")
+                        .setCreated("ir_Created")
+                        .setTitle("ir_Title")
+                        .setLicense("ir_License")
+                        .setFormat("ir_Format")
+                        .setRights("ir_Rights")
+                        .setRightsHolder("ir_RightsHolder")
+                        .setReferences("ir_References")
                         .build()))
             .build();
 
@@ -355,10 +352,11 @@ public class MultimediaCsvConverterTest {
             br, tr, lr, txr, atxr, er, aar, aur, ir, tp, asr, mr, lastLoadDate, lastProcessedDate);
 
     // When
-    String result = MultimediaCsvConverter.convert(source);
+    List<String> result = MultimediaCsvConverter.convert(source, "http://image/{0}");
 
     // Should
-    Assert.assertEquals(String.join(",", expectet), result);
+    Assert.assertEquals(1, result.size());
+    Assert.assertEquals(String.join("\t", expected), result.get(0));
   }
 
   @Test
@@ -367,7 +365,7 @@ public class MultimediaCsvConverterTest {
     // Expected
     List<String> expected = new LinkedList<>();
 
-    expected.add("id");
+    expected.add(DwcTerm.occurrenceID.qualifiedName());
     expected.add(DcTerm.identifier.qualifiedName());
     expected.add(DcTerm.creator.qualifiedName());
     expected.add(DcTerm.created.qualifiedName());
