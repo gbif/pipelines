@@ -176,6 +176,7 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
                 ALALocationInterpreter.verifyLocationInfo(
                     countryCentrePoints, stateProvinceCentrePoints, stateProvinceParser))
             .via(ALALocationInterpreter.validateStateProvince(stateProvinceParser))
+            .via(LocationInterpreter::interpretLocality)
             .get();
 
     result.ifPresent(r -> this.incCounter());
