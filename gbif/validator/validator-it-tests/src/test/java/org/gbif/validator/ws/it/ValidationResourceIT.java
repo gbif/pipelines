@@ -25,6 +25,7 @@ import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Metrics.FileInfo;
 import org.gbif.validator.api.Metrics.TermInfo;
 import org.gbif.validator.api.Validation;
+import org.gbif.validator.api.Validation.Status;
 import org.gbif.validator.api.ValidationRequest;
 import org.gbif.validator.api.ValidationSearchRequest;
 import org.gbif.validator.ws.client.ValidationWsClient;
@@ -147,7 +148,7 @@ public class ValidationResourceIT {
             ValidationSearchRequest.builder()
                 .offset(0L)
                 .limit(10)
-                .status(Collections.singleton(Validation.Status.SUBMITTED))
+                .status(Collections.singleton(Status.QUEUED))
                 .sortByCreated(ValidationSearchRequest.SortOrder.DESC)
                 .build());
     assertTrue(validations.getCount() > 0);
