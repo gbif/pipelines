@@ -22,7 +22,7 @@ import lombok.NoArgsConstructor;
 public class Validation {
 
   private static final EnumSet<Status> EXECUTING_STATUSES =
-      EnumSet.of(Status.SUBMITTED, Status.DOWNLOADING, Status.RUNNING);
+      EnumSet.of(Status.SUBMITTED, Status.DOWNLOADING, Status.RUNNING, Status.QUEUED);
 
   private static final EnumSet<Status> FINISHED_STATUSES =
       EnumSet.of(Status.FINISHED, Status.FAILED, Status.ABORTED);
