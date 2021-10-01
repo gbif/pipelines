@@ -103,6 +103,7 @@
     <commons-lang.version>2.6</commons-lang.version>
     <commons-io.version>2.5</commons-io.version>
     <commons-configuration.version>1.10</commons-configuration.version>
+    <xercesImpl.version>2.12.1</xercesImpl.version>
   </properties>
 
   <dependencies>
@@ -484,6 +485,12 @@
     <dependency>
       <groupId>io.github.resilience4j</groupId>
       <artifactId>resilience4j-retry</artifactId>
+    </dependency>
+    <!-- Fixes Archive validator java.lang.StackOverflowError -->
+    <dependency>
+      <groupId>xerces</groupId>
+      <artifactId>xercesImpl</artifactId>
+      <version>${xercesImpl.version}</version>
     </dependency>
 
     <!-- Test -->
