@@ -177,7 +177,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
 
       String runnerZkPath = Fn.RUNNER.apply(stepType.getLabel());
       ZookeeperUtils.updateMonitoring(curator, datasetKey, runnerZkPath, getRunner(), isValidator);
-      updateValidatorInfoStatus(Status.RUNNING, Status.RUNNING);
+      updateValidatorInfoStatus(Status.RUNNING);
 
       log.info("Handler has been started, datasetKey - {}", datasetKey);
       runnable.run();
@@ -218,11 +218,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
       // Change zookeeper counter for passed steps
       ZookeeperUtils.checkMonitoringById(curator, steps.size(), datasetKey, isValidator);
 
-      String validatorZkPath = getPipelinesInfoPath(datasetKey, isValidator);
-      boolean ignoreMainStatus =
-          isValidator && ZookeeperUtils.checkExists(curator, validatorZkPath);
-      Status mainStatus = ignoreMainStatus ? Status.QUEUED : Status.FINISHED;
-      updateValidatorInfoStatus(Status.FINISHED, mainStatus);
+      updateValidatorInfoStatus(Status.FINISHED);
 
     } catch (Exception ex) {
       String error = "Error for datasetKey - " + datasetKey + " : " + ex.getMessage();
@@ -239,7 +235,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
       trackingInfo.ifPresent(info -> updateTrackingStatus(info, PipelineStep.Status.FAILED));
 
       // update validator info
-      updateValidatorInfoStatus(Status.FAILED, Status.FAILED);
+      updateValidatorInfoStatus(Status.FAILED);
       deleteValidatorZkPath(datasetKey);
     }
 
@@ -272,7 +268,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
     }
   }
 
-  private void updateValidatorInfoStatus(Status status, Status mainStatus) {
+  private void updateValidatorInfoStatus(Status status) {
     if (!isValidator) {
       return;
     }
@@ -285,6 +281,16 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
       return;
     }
 
+    Status mainStatus = status;
+    if (mainStatus == Status.FINISHED) {
+      boolean isQueued =
+          validation.getMetrics().getStepTypes().stream()
+              .filter(x -> x.getStepType() != stepType)
+              .anyMatch(x -> x.getStatus() != Status.FINISHED);
+      if (isQueued) {
+        mainStatus = Status.QUEUED;
+      }
+    }
     validation.setStatus(mainStatus);
 
     validation.setModified(Timestamp.valueOf(ZonedDateTime.now().toLocalDateTime()));

@@ -40,6 +40,7 @@ import org.gbif.validator.api.EvaluationCategory;
 import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Metrics.FileInfo;
 import org.gbif.validator.api.Metrics.IssueInfo;
+import org.gbif.validator.api.Metrics.ValidationStep;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.Validation.Status;
 import org.junit.After;
@@ -140,6 +141,14 @@ public class MetricsCollectorCallbackIT {
             .key(UUID.randomUUID())
             .metrics(
                 Metrics.builder()
+                    .stepTypes(
+                        Arrays.asList(
+                            ValidationStep.builder()
+                                .stepType(StepType.VALIDATOR_COLLECT_METRICS)
+                                .build(),
+                            ValidationStep.builder()
+                                .stepType(StepType.VALIDATOR_VALIDATE_ARCHIVE)
+                                .build()))
                     .fileInfos(
                         Collections.singletonList(
                             FileInfo.builder()
