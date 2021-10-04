@@ -211,13 +211,16 @@ public class TermFrequencyCollector {
       Map<Extension, TermFrequency> from, Map<Extension, TermFrequency> to) {
     extensionsUnion(to, from)
         .forEach(
-            extension -> {
-              if (to.containsKey(extension)) {
-                to.get(extension).add(from.get(extension));
-              } else {
-                to.put(extension, from.get(extension));
-              }
-            });
+            extension ->
+                Optional.ofNullable(from.get(extension))
+                    .ifPresent(
+                        fromTf -> {
+                          if (to.get(extension) != null) {
+                            to.get(extension).add(fromTf);
+                          } else {
+                            to.put(extension, fromTf);
+                          }
+                        }));
     return this;
   }
 
