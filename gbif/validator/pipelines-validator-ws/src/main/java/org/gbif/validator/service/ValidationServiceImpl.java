@@ -246,6 +246,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
 
     // Set future steps
     v.setStatus(Status.QUEUED);
+    v.setFileFormat(dataFile.getFileFormat());
     v.getMetrics().setStepTypes(Metrics.mapToValidationSteps(pipelinesSteps));
 
     // Update DB
