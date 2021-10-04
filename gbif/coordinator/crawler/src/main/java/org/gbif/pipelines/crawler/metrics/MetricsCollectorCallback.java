@@ -49,6 +49,8 @@ import org.gbif.validator.ws.client.ValidationWsClient;
 public class MetricsCollectorCallback extends AbstractMessageCallback<PipelinesIndexedMessage>
     implements StepHandler<PipelinesIndexedMessage, PipelinesMetricsCollectedMessage> {
 
+  private static final StepType TYPE = StepType.VALIDATOR_COLLECT_METRICS;
+
   private final MetricsCollectorConfiguration config;
   private final MessagePublisher publisher;
   private final CuratorFramework curator;
@@ -75,7 +77,7 @@ public class MetricsCollectorCallback extends AbstractMessageCallback<PipelinesI
         .validationClient(validationClient)
         .config(config)
         .curator(curator)
-        .stepType(StepType.VALIDATOR_COLLECT_METRICS)
+        .stepType(TYPE)
         .isValidator(message.isValidator())
         .publisher(publisher)
         .message(message)
@@ -194,6 +196,9 @@ public class MetricsCollectorCallback extends AbstractMessageCallback<PipelinesI
     Validation validation = validationClient.get(message.getDatasetUuid());
     mergeWithValidation(validation, metrics);
 
+    // Set isIndexeable
+    validation.getMetrics().setIndexeable(isIndexeable(validation.getMetrics()));
+
     log.info("Update validation key {}", message.getDatasetUuid());
     validationClient.update(validation);
   }
@@ -235,5 +240,11 @@ public class MetricsCollectorCallback extends AbstractMessageCallback<PipelinesI
       log.error(ex.getMessage(), ex);
     }
     return lines;
+  }
+
+  private boolean isIndexeable(Metrics metrics) {
+    return metrics.getStepTypes().stream()
+        .filter(x -> x.getStepType() != TYPE)
+        .noneMatch(y -> y.getStatus() != Status.FINISHED);
   }
 }

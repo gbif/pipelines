@@ -176,6 +176,7 @@ public class MetricsCollectorCallbackIT {
 
     assertEquals(2, validation.getMetrics().getFileInfos().size());
     assertEquals(Status.QUEUED, validation.getStatus());
+    assertFalse(validation.getMetrics().isIndexeable());
 
     Optional<FileInfo> coreOpt = validationClient.getFileInfo(DwcTerm.Occurrence);
     assertTrue(coreOpt.isPresent());
@@ -276,6 +277,7 @@ public class MetricsCollectorCallbackIT {
 
     assertEquals(2, validation.getMetrics().getFileInfos().size());
     assertEquals(Status.FINISHED, validation.getStatus());
+    assertTrue(validation.getMetrics().isIndexeable());
   }
 
   @Test
