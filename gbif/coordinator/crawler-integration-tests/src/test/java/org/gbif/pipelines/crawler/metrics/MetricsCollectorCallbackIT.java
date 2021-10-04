@@ -201,7 +201,7 @@ public class MetricsCollectorCallbackIT {
             .findAny();
     assertTrue(randomIssue.isPresent());
     assertEquals(Long.valueOf(1), randomIssue.get().getCount());
-    assertNull(randomIssue.get().getIssueCategory());
+    assertEquals(EvaluationCategory.METADATA_CONTENT, randomIssue.get().getIssueCategory());
 
     Optional<IssueInfo> geodeticDatumAssumedWgs84Issue =
         core.getIssues().stream()
