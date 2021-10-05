@@ -21,8 +21,7 @@ import java.util.Set;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,13 +31,12 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 /** Allows to send {@link BaseEmailModel} */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MimeEmailSender implements EmailSender {
 
   public static final Marker NOTIFY_ADMIN = MarkerFactory.getMarker("NOTIFY_ADMIN");
-
-  private static final Logger LOG = LoggerFactory.getLogger(MimeEmailSender.class);
 
   private final JavaMailSender mailSender;
 
@@ -58,12 +56,12 @@ public class MimeEmailSender implements EmailSender {
   @Override
   public void send(BaseEmailModel emailModel) {
     if (emailModel == null) {
-      LOG.warn("Email model is null, skip email sending");
+      log.warn("Email model is null, skip email sending");
       return;
     }
 
     if (emailModel.getEmailAddresses().isEmpty() && bccAddresses.isEmpty()) {
-      LOG.warn("No valid notification addresses given for download");
+      log.warn("No valid notification addresses given for download");
       return;
     }
 
@@ -86,7 +84,7 @@ public class MimeEmailSender implements EmailSender {
 
       mailSender.send(msg);
     } catch (MessagingException e) {
-      LOG.error(
+      log.error(
           NOTIFY_ADMIN,
           "Sending of notification Mail for [{}] failed",
           emailModel.getEmailAddresses(),
