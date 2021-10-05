@@ -11,7 +11,7 @@ import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
 import org.gbif.pipelines.crawler.PipelinesCallback;
 import org.gbif.pipelines.crawler.StepHandler;
-import org.gbif.pipelines.crawler.validator.validate.ValidatorFactory;
+import org.gbif.pipelines.crawler.validator.validate.ArchiveValidatorFactory;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.ws.client.ValidationWsClient;
 
@@ -68,7 +68,7 @@ public class ArchiveValidatorCallback
   public Runnable createRunnable(PipelinesArchiveValidatorMessage message) {
     return () -> {
       log.info("Running validation for {}", message.getDatasetUuid());
-      ValidatorFactory.builder()
+      ArchiveValidatorFactory.builder()
           .validationClient(validationClient)
           .config(config)
           .message(message)
@@ -82,7 +82,7 @@ public class ArchiveValidatorCallback
   @SneakyThrows
   @Override
   public PipelineBasedMessage createOutgoingMessage(PipelinesArchiveValidatorMessage message) {
-    return ValidatorFactory.builder()
+    return ArchiveValidatorFactory.builder()
         .message(message)
         .config(config)
         .build()

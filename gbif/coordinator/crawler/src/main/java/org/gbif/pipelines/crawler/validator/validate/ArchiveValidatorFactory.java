@@ -8,7 +8,7 @@ import org.gbif.validator.api.FileFormat;
 import org.gbif.validator.ws.client.ValidationWsClient;
 
 @Builder
-public class ValidatorFactory {
+public class ArchiveValidatorFactory {
 
   private final ArchiveValidatorConfiguration config;
   private final ValidationWsClient validationClient;
