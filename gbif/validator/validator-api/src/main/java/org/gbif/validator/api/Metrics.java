@@ -38,35 +38,7 @@ public class Metrics {
   @JsonDeserialize(builder = ValidationStep.ValidationStepBuilder.class)
   public static class ValidationStep {
 
-    /** Specific Validation StepType to avoid gbif-api dependency. */
-    public enum StepType {
-      VALIDATOR_UPLOAD_ARCHIVE("validatorUploadArchive", 1),
-      VALIDATOR_VALIDATE_ARCHIVE("validatorValidateArchive", 2),
-      VALIDATOR_DWCA_TO_VERBATIM("validatorDwcaToVerbatim", 3),
-      VALIDATOR_XML_TO_VERBATIM("validatorXmlToVerbatim", 3),
-      VALIDATOR_ABCD_TO_VERBATIM("validatorAbcdToVerbatim", 4),
-      VALIDATOR_VERBATIM_TO_INTERPRETED("validatorVerbatimToInterpreted", 4),
-      VALIDATOR_INTERPRETED_TO_INDEX("validatorInterpretedToIndex", 5),
-      VALIDATOR_COLLECT_METRICS("validatorCollectMetrics", 6);
-
-      private String label;
-      private int executionOrder;
-
-      StepType(String label, int executionOrder) {
-        this.label = label;
-        this.executionOrder = executionOrder;
-      }
-
-      public int getExecutionOrder() {
-        return executionOrder;
-      }
-
-      public String getLabel() {
-        return label;
-      }
-    }
-
-    private StepType stepType;
+    private String stepType;
     private Status status;
     private String message;
     private int executionOrder;

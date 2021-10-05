@@ -39,7 +39,7 @@ public class ValidationFactory {
                 .stepTypes(
                     Collections.singletonList(
                         ValidationStep.builder()
-                            .stepType(Metrics.ValidationStep.StepType.VALIDATOR_UPLOAD_ARCHIVE)
+                            .stepType(StepType.VALIDATOR_UPLOAD_ARCHIVE.name())
                             .status(Status.RUNNING)
                             .executionOrder(StepType.VALIDATOR_UPLOAD_ARCHIVE.getExecutionOrder())
                             .build()))

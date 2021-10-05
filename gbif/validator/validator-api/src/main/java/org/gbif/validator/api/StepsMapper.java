@@ -6,6 +6,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
+import org.gbif.api.model.pipelines.StepType;
 
 @Slf4j
 @UtilityClass
@@ -16,22 +17,21 @@ public class StepsMapper {
 
     List<Metrics.ValidationStep> collect =
         stepTypes.stream()
-            .map(Metrics.ValidationStep.StepType::valueOf)
-            .filter(st -> st != Metrics.ValidationStep.StepType.VALIDATOR_UPLOAD_ARCHIVE)
+            .map(StepType::valueOf)
+            .filter(st -> st != StepType.VALIDATOR_UPLOAD_ARCHIVE)
             .map(
                 st ->
                     Metrics.ValidationStep.builder()
                         .executionOrder(st.getExecutionOrder())
-                        .stepType(st)
+                        .stepType(st.name())
                         .build())
             .collect(Collectors.toList());
 
     collect.add(
         Metrics.ValidationStep.builder()
-            .stepType(Metrics.ValidationStep.StepType.VALIDATOR_UPLOAD_ARCHIVE)
+            .stepType(StepType.VALIDATOR_UPLOAD_ARCHIVE.name())
             .status(Validation.Status.FINISHED)
-            .executionOrder(
-                Metrics.ValidationStep.StepType.VALIDATOR_UPLOAD_ARCHIVE.getExecutionOrder())
+            .executionOrder(StepType.VALIDATOR_UPLOAD_ARCHIVE.getExecutionOrder())
             .build());
 
     return collect;
@@ -45,7 +45,7 @@ public class StepsMapper {
       Validation.Status status, String message) {
     return Collections.singletonList(
         Metrics.ValidationStep.builder()
-            .stepType(Metrics.ValidationStep.StepType.VALIDATOR_UPLOAD_ARCHIVE)
+            .stepType(StepType.VALIDATOR_UPLOAD_ARCHIVE.name())
             .status(status)
             .message(message)
             .build());

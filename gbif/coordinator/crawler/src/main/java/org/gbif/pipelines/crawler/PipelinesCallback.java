@@ -288,7 +288,6 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
               .filter(
                   x ->
                       !x.getStepType()
-                          .name()
                           .equals(
                               stepType
                                   .name())) // Required to keep validation api separate to gbif-api
@@ -307,7 +306,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
     boolean addValidationType = true;
     for (ValidationStep step : metrics.getStepTypes()) {
       // Required to keep validation api separate to gbif-api
-      if (step.getStepType().name().equals(stepType.name())) {
+      if (step.getStepType().equals(stepType.name())) {
         step.setStatus(status);
         addValidationType = false;
         break;
@@ -319,9 +318,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
           .getStepTypes()
           .add(
               ValidationStep.builder()
-                  .stepType(
-                      ValidationStep.StepType.valueOf(
-                          stepType.name())) // Required to keep validation api separate to gbif-api
+                  .stepType(stepType.name())
                   .status(status)
                   .executionOrder(stepType.getExecutionOrder())
                   .build());
