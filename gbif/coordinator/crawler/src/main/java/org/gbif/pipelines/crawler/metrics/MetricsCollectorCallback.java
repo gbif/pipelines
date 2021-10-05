@@ -8,10 +8,12 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import lombok.SneakyThrows;
@@ -37,7 +39,9 @@ import org.gbif.pipelines.crawler.StepHandler;
 import org.gbif.pipelines.validator.IndexMetricsCollector;
 import org.gbif.pipelines.validator.Validations;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
+import org.gbif.validator.api.EvaluationType;
 import org.gbif.validator.api.FileFormat;
+import org.gbif.validator.api.IndexableRules;
 import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Metrics.FileInfo;
 import org.gbif.validator.api.Validation;
@@ -48,6 +52,8 @@ import org.gbif.validator.ws.client.ValidationWsClient;
 @Slf4j
 public class MetricsCollectorCallback extends AbstractMessageCallback<PipelinesIndexedMessage>
     implements StepHandler<PipelinesIndexedMessage, PipelinesMetricsCollectedMessage> {
+
+  private static final StepType TYPE = StepType.VALIDATOR_COLLECT_METRICS;
 
   private final MetricsCollectorConfiguration config;
   private final MessagePublisher publisher;
@@ -75,7 +81,7 @@ public class MetricsCollectorCallback extends AbstractMessageCallback<PipelinesI
         .validationClient(validationClient)
         .config(config)
         .curator(curator)
-        .stepType(StepType.VALIDATOR_COLLECT_METRICS)
+        .stepType(TYPE)
         .isValidator(message.isValidator())
         .publisher(publisher)
         .message(message)
@@ -194,6 +200,9 @@ public class MetricsCollectorCallback extends AbstractMessageCallback<PipelinesI
     Validation validation = validationClient.get(message.getDatasetUuid());
     mergeWithValidation(validation, metrics);
 
+    // Set isIndexable
+    validation.getMetrics().setIndexeable(isIndexable(validation.getMetrics()));
+
     log.info("Update validation key {}", message.getDatasetUuid());
     validationClient.update(validation);
   }
@@ -235,5 +244,30 @@ public class MetricsCollectorCallback extends AbstractMessageCallback<PipelinesI
       log.error(ex.getMessage(), ex);
     }
     return lines;
+  }
+
+  /** Check that all steps were completed(except current) and there is no non-indexable issue */
+  private boolean isIndexable(Metrics metrics) {
+    boolean finishedAllSteps =
+        metrics.getStepTypes().stream()
+            .filter(x -> !x.getStepType().name().equals(TYPE.name()))  //required to keep validation-api and gbif-api separate
+            .noneMatch(y -> y.getStatus() != Status.FINISHED);
+
+    boolean noNonIndexableIssue =
+        metrics.getFileInfos().stream()
+            .map(FileInfo::getIssues)
+            .flatMap(Collection::stream)
+            .map(
+                x -> {
+                  try {
+                    return EvaluationType.valueOf(x.getIssue());
+                  } catch (Exception ex) {
+                    return null;
+                  }
+                })
+            .filter(Objects::nonNull)
+            .allMatch(IndexableRules::isIndexable);
+
+    return finishedAllSteps && noNonIndexableIssue;
   }
 }

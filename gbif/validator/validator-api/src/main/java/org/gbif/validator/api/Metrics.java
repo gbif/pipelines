@@ -21,6 +21,8 @@ import org.gbif.validator.api.Validation.Status;
 @JsonDeserialize(builder = Metrics.MetricsBuilder.class)
 public class Metrics {
 
+  private boolean indexeable;
+
   @Builder.Default private List<ValidationStep> stepTypes = new ArrayList<>();
 
   @JsonProperty("files")

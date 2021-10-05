@@ -117,7 +117,7 @@ public class MetricsCollectorCallbackIT {
         "{\"datasetKey\":\""
             + DATASET_UUID
             + "\",\"maximumElevationInMeters\":2.2,\"issues\":"
-            + "[\"GEODETIC_DATUM_ASSUMED_WGS84\",\"RANDOM_ISSUE\"],\"verbatim\":{\"core\":"
+            + "[\"GEODETIC_DATUM_ASSUMED_WGS84\",\"LICENSE_MISSING_OR_UNKNOWN\"],\"verbatim\":{\"core\":"
             + "{\"http://rs.tdwg.org/dwc/terms/maximumElevationInMeters\":\"1150\","
             + "\"http://rs.tdwg.org/dwc/terms/organismID\":\"251\",\"http://rs.tdwg.org/dwc/terms/bed\":\"251\"},\"extensions\":"
             + "{\"http://rs.tdwg.org/dwc/terms/MeasurementOrFact\":[{\"http://rs.tdwg.org/dwc/terms/measurementValue\":"
@@ -175,6 +175,7 @@ public class MetricsCollectorCallbackIT {
 
     assertEquals(2, validation.getMetrics().getFileInfos().size());
     assertEquals(Status.QUEUED, validation.getStatus());
+    assertFalse(validation.getMetrics().isIndexeable());
 
     Optional<FileInfo> coreOpt = validationClient.getFileInfo(DwcTerm.Occurrence);
     assertTrue(coreOpt.isPresent());
@@ -194,10 +195,12 @@ public class MetricsCollectorCallbackIT {
     assertNull(oldIssue.get().getIssueCategory());
 
     Optional<IssueInfo> randomIssue =
-        core.getIssues().stream().filter(x -> x.getIssue().equals("RANDOM_ISSUE")).findAny();
+        core.getIssues().stream()
+            .filter(x -> x.getIssue().equals("LICENSE_MISSING_OR_UNKNOWN"))
+            .findAny();
     assertTrue(randomIssue.isPresent());
     assertEquals(Long.valueOf(1), randomIssue.get().getCount());
-    assertNull(randomIssue.get().getIssueCategory());
+    assertEquals(EvaluationCategory.METADATA_CONTENT, randomIssue.get().getIssueCategory());
 
     Optional<IssueInfo> geodeticDatumAssumedWgs84Issue =
         core.getIssues().stream()
@@ -276,6 +279,7 @@ public class MetricsCollectorCallbackIT {
 
     assertEquals(2, validation.getMetrics().getFileInfos().size());
     assertEquals(Status.FINISHED, validation.getStatus());
+    assertTrue(validation.getMetrics().isIndexeable());
   }
 
   @Test
