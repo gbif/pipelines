@@ -17,13 +17,14 @@ import org.gbif.validator.ws.client.ValidationWsClient;
 
 @Slf4j
 @Builder
-public class XmlArchiveValidator {
+public class XmlArchiveValidator implements ArchiveValidator {
 
   private final ArchiveValidatorConfiguration config;
   private final ValidationWsClient validationClient;
   private final SchemaValidatorFactory schemaValidatorFactory;
   private final PipelinesArchiveValidatorMessage message;
 
+  @Override
   @SneakyThrows
   public PipelinesXmlMessage createOutgoingMessage() {
     PipelinesXmlMessage m = new PipelinesXmlMessage();
@@ -39,7 +40,9 @@ public class XmlArchiveValidator {
     return m;
   }
 
+  @Override
   public void validate() {
+    log.info("Running XML validator");
     Metrics metrics = Metrics.builder().build();
 
     // TODO: Validate XML files
