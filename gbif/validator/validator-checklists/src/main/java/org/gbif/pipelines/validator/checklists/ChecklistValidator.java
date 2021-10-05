@@ -102,20 +102,20 @@ public class ChecklistValidator {
               extension ->
                   NAME_USAGES_RELATED_EXTENSIONS.contains(extension.getRowType().qualifiedName()))
           .map(
-              extension ->
-                  Metrics.FileInfo.builder()
-                      .rowType(extension.getRowType().qualifiedName())
-                      .count(
-                          countLines(
-                              extension.getLocationFile(),
-                              areHeaderLinesIncluded(archive.getCore())))
-                      .fileName(extension.getLocationFile().getName())
-                      .fileType(DwcFileType.EXTENSION)
-                      .terms(
-                          collector.getExtensionTermInfo(
-                              Extension.fromRowType(extension.getRowType().qualifiedName())))
-                      .indexedCount(collector.getUsagesCount())
-                      .build())
+              extension -> {
+                Extension nameUsageExtension =
+                    Extension.fromRowType(extension.getRowType().qualifiedName());
+                return Metrics.FileInfo.builder()
+                    .rowType(extension.getRowType().qualifiedName())
+                    .count(
+                        countLines(
+                            extension.getLocationFile(), areHeaderLinesIncluded(archive.getCore())))
+                    .fileName(extension.getLocationFile().getName())
+                    .fileType(DwcFileType.EXTENSION)
+                    .terms(collector.getExtensionTermInfo(nameUsageExtension))
+                    .indexedCount(collector.getInterpretedExtensionRowCount(nameUsageExtension))
+                    .build();
+              })
           .collect(Collectors.toList());
     }
     return Collections.emptyList();
@@ -221,6 +221,14 @@ public class ChecklistValidator {
     /** Total number of name usages processed. */
     public Long getUsagesCount() {
       return usagesCount;
+    }
+
+    public Long getVerbatimExtensionRowCount(Extension extension) {
+      return termFrequencyCollector.getVerbatimExtensionRowCount(extension);
+    }
+
+    public Long getInterpretedExtensionRowCount(Extension extension) {
+      return termFrequencyCollector.getInterpretedExtensionRowCount(extension);
     }
 
     private static Map<String, String> getRelatedData(

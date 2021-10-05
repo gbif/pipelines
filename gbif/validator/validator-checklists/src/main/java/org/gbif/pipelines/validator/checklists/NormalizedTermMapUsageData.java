@@ -27,8 +27,12 @@ public class NormalizedTermMapUsageData {
 
   private static Map<Term, String> interpretedTermMap(
       NormalizedNameUsageData normalizedNameUsageData) {
+
     Map<Term, String> termMap = toTermMap(normalizedNameUsageData.getNameUsage());
-    termMap.putAll(toTermMap(normalizedNameUsageData.getParsedName()));
+
+    if (normalizedNameUsageData.getParsedName() != null) {
+      termMap.putAll(toTermMap(normalizedNameUsageData.getParsedName()));
+    }
     return termMap;
   }
 

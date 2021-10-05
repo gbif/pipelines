@@ -2,8 +2,10 @@ package org.gbif.pipelines.validator.checklists.cli;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.checklistbank.cli.common.NeoConfiguration;
@@ -96,12 +98,24 @@ public class ChecklistValidatorCallback
 
   /** Updates the data of a successful validation */
   private void updateValidationFinished(Validation validation, List<Metrics.FileInfo> report) {
-    if (validation.getMetrics().getFileInfos() == null) {
-      validation.getMetrics().setFileInfos(report);
-    } else {
-      validation.getMetrics().getFileInfos().addAll(report);
-    }
+    validation
+        .getMetrics()
+        .setFileInfos(mergeFileInfoLists(validation.getMetrics().getFileInfos(), report));
     validationClient.update(validation);
     LOG.info("Checklist validation finished: {}", validation.getKey());
+  }
+
+  private List<Metrics.FileInfo> mergeFileInfoLists(
+      List<Metrics.FileInfo> from, List<Metrics.FileInfo> to) {
+    List<Metrics.FileInfo> result = new ArrayList<>();
+    result.addAll(to);
+    if (from != null) {
+      result.addAll(
+          from.stream()
+              .filter(
+                  fi -> to.stream().noneMatch(nfi -> nfi.getFileName().equals(fi.getFileName())))
+              .collect(Collectors.toList()));
+    }
+    return result;
   }
 }

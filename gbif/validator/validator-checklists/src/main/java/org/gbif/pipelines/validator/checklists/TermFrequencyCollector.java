@@ -104,9 +104,13 @@ public class TermFrequencyCollector {
 
   private final Map<Extension, TermFrequency> verbatimExtensionsTermsFrequency = new HashMap<>();
 
+  private final Map<Extension, Long> verbatimExtensionsRowCount = new HashMap<>();
+
   private final TermFrequency interpretedTermsFrequency = new TermFrequency();
 
   private final Map<Extension, TermFrequency> interpretedExtensionsTermsFrequency = new HashMap<>();
+
+  private final Map<Extension, Long> interpretedExtensionsRowCount = new HashMap<>();
 
   public TermFrequencyCollector verbatimTerms(Map<Term, ?> termsMap) {
     verbatimTermsFrequency.inc(termsMap);
@@ -117,7 +121,10 @@ public class TermFrequencyCollector {
       Map<Extension, List<Map<Term, T>>> verbatimExtensionsMap) {
     if (verbatimExtensionsMap != null) {
       verbatimExtensionsMap.forEach(
-          (k, v) -> verbatimExtensionsTermsFrequency.put(k, TermFrequency.of(v)));
+          (k, v) -> {
+            verbatimExtensionsTermsFrequency.put(k, TermFrequency.of(v));
+            verbatimExtensionsRowCount.put(k, (long) v.size());
+          });
     }
     return this;
   }
@@ -126,9 +133,20 @@ public class TermFrequencyCollector {
       Map<Extension, List<Map<Term, T>>> interpretedExtensionsMap) {
     if (interpretedExtensionsMap != null) {
       interpretedExtensionsMap.forEach(
-          (k, v) -> interpretedExtensionsTermsFrequency.put(k, TermFrequency.of(v)));
+          (k, v) -> {
+            interpretedExtensionsTermsFrequency.put(k, TermFrequency.of(v));
+            interpretedExtensionsRowCount.put(k, (long) v.size());
+          });
     }
     return this;
+  }
+
+  public Long getVerbatimExtensionRowCount(Extension extension) {
+    return Optional.ofNullable(verbatimExtensionsRowCount.get(extension)).orElse(0L);
+  }
+
+  public Long getInterpretedExtensionRowCount(Extension extension) {
+    return Optional.ofNullable(interpretedExtensionsRowCount.get(extension)).orElse(0L);
   }
 
   public TermFrequencyCollector interpretedTerms(Map<Term, ?> termsMap) {
@@ -195,13 +213,7 @@ public class TermFrequencyCollector {
             getVerbatimExtensionFrequency(extension).getTermsFrequency(),
             getInterpretedExtensionFrequency(extension).getTermsFrequency())
         .stream()
-        .map(
-            term ->
-                Metrics.TermInfo.builder()
-                    .term(term.qualifiedName())
-                    .rawIndexed(getVerbatimExtensionFrequency(extension, term))
-                    .interpretedIndexed(getInterpretedExtensionFrequency(extension, term))
-                    .build())
+        .map(term -> toExtensionTermInfo(extension, term))
         .collect(Collectors.toList());
   }
 

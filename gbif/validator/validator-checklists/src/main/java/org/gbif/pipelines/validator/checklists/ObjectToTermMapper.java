@@ -57,6 +57,7 @@ public class ObjectToTermMapper {
           .ifPresent(v -> termsMap.put(DwcTerm.taxonomicStatus, v.name()));
 
       Optional.ofNullable(nameUsage.getNomenclaturalStatus())
+          .filter(s -> !s.isEmpty())
           .ifPresent(v -> termsMap.put(DwcTerm.nomenclaturalStatus, toString(v)));
 
       Optional.ofNullable(nameUsage.getKingdom()).ifPresent(v -> termsMap.put(DwcTerm.kingdom, v));
