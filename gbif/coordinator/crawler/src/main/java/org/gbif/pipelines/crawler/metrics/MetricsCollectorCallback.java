@@ -250,11 +250,7 @@ public class MetricsCollectorCallback extends AbstractMessageCallback<PipelinesI
   private boolean isIndexable(Metrics metrics) {
     boolean finishedAllSteps =
         metrics.getStepTypes().stream()
-            .filter(
-                x ->
-                    !x.getStepType()
-                        .equals(
-                            TYPE.name())) // required to keep validation-api and gbif-api separate
+            .filter(x -> !x.getStepType().equals(TYPE.name()))
             .noneMatch(y -> y.getStatus() != Status.FINISHED);
 
     boolean noNonIndexableIssue =

@@ -23,7 +23,6 @@ import org.gbif.api.model.crawler.GenericValidationReport;
 import org.gbif.api.model.crawler.OccurrenceValidationReport;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.EndpointType;
-import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
 import org.gbif.common.messaging.api.messages.Platform;
@@ -45,7 +44,7 @@ import org.gbif.validator.ws.client.ValidationWsClient;
 
 @Slf4j
 @Builder
-public class DwcaArchiveValidator {
+public class DwcaArchiveValidator implements ArchiveValidator {
 
   protected static final String EML_XML = "eml.xml";
 
@@ -53,8 +52,8 @@ public class DwcaArchiveValidator {
   private final ValidationWsClient validationClient;
   private final SchemaValidatorFactory schemaValidatorFactory;
   private final PipelinesArchiveValidatorMessage message;
-  private final MessagePublisher publisher;
 
+  @Override
   @SneakyThrows
   public PipelinesDwcaMessage createOutgoingMessage() {
     PipelinesDwcaMessage m = new PipelinesDwcaMessage();
@@ -73,7 +72,9 @@ public class DwcaArchiveValidator {
     return m;
   }
 
+  @Override
   public void validate() {
+    log.info("Running DWCA validator");
     Validation validation = validationClient.get(message.getDatasetUuid());
     FileInfo emlFile = validateEmlSchema();
     FileInfo occurrenceFile = validateDwcaFile();

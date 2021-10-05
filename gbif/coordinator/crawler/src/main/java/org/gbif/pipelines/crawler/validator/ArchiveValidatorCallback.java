@@ -11,12 +11,8 @@ import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
 import org.gbif.pipelines.crawler.PipelinesCallback;
 import org.gbif.pipelines.crawler.StepHandler;
-import org.gbif.pipelines.crawler.validator.validate.DwcaArchiveValidator;
-import org.gbif.pipelines.crawler.validator.validate.XmlArchiveValidator;
+import org.gbif.pipelines.crawler.validator.validate.ArchiveValidatorFactory;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
-import org.gbif.validator.api.FileFormat;
-import org.gbif.validator.api.Validation;
-import org.gbif.validator.api.Validation.Status;
 import org.gbif.validator.ws.client.ValidationWsClient;
 
 /** Callback which is called when the {@link PipelinesArchiveValidatorMessage} is received. */
@@ -72,49 +68,25 @@ public class ArchiveValidatorCallback
   public Runnable createRunnable(PipelinesArchiveValidatorMessage message) {
     return () -> {
       log.info("Running validation for {}", message.getDatasetUuid());
-      if (message.getFileFormat().equals(FileFormat.DWCA.name())) {
-        DwcaArchiveValidator.builder()
-            .validationClient(validationClient)
-            .config(config)
-            .message(message)
-            .schemaValidatorFactory(schemaValidatorFactory)
-            .publisher(publisher)
-            .build()
-            .validate();
-      } else if (message.getFileFormat().equals(FileFormat.XML.name())) {
-        XmlArchiveValidator.builder()
-            .validationClient(validationClient)
-            .config(config)
-            .message(message)
-            .schemaValidatorFactory(schemaValidatorFactory)
-            .build()
-            .validate();
-      } else {
-        log.info("File format {} is not supported!", message.getFileFormat());
-        Validation validation = validationClient.get(message.getDatasetUuid());
-        validation.setStatus(Status.FAILED);
-        validationClient.update(validation);
-      }
+      ArchiveValidatorFactory.builder()
+          .validationClient(validationClient)
+          .config(config)
+          .message(message)
+          .schemaValidatorFactory(schemaValidatorFactory)
+          .build()
+          .create()
+          .validate();
     };
   }
 
   @SneakyThrows
   @Override
   public PipelineBasedMessage createOutgoingMessage(PipelinesArchiveValidatorMessage message) {
-    if (message.getFileFormat().equals(FileFormat.DWCA.name())) {
-      return DwcaArchiveValidator.builder()
-          .message(message)
-          .config(config)
-          .build()
-          .createOutgoingMessage();
-    } else if (message.getFileFormat().equals(FileFormat.XML.name())) {
-      return XmlArchiveValidator.builder()
-          .config(config)
-          .message(message)
-          .build()
-          .createOutgoingMessage();
-    }
-    throw new IllegalArgumentException(
-        "File format " + message.getFileFormat() + " is not supported");
+    return ArchiveValidatorFactory.builder()
+        .message(message)
+        .config(config)
+        .build()
+        .create()
+        .createOutgoingMessage();
   }
 }

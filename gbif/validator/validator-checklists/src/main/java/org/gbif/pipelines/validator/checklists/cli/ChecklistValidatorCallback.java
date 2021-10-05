@@ -17,15 +17,11 @@ import org.gbif.pipelines.validator.checklists.cli.config.ChecklistValidatorConf
 import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.ws.client.ValidationWsClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /** Callback which is called when the {@link PipelinesChecklistValidatorMessage} is received. */
 @Slf4j
 public class ChecklistValidatorCallback
     extends AbstractMessageCallback<PipelinesChecklistValidatorMessage> {
-
-  private static final Logger LOG = LoggerFactory.getLogger(ChecklistValidatorCallback.class);
 
   private final ChecklistValidatorConfiguration config;
   private final ChecklistValidator checklistValidator;
@@ -72,20 +68,20 @@ public class ChecklistValidatorCallback
       messagePublisher.replyToQueue(
           Boolean.TRUE, true, message.getCorrelationId(), message.getReplyTo());
     } else {
-      LOG.error("Checklist validation started: {}", message);
+      log.error("Checklist validation started: {}", message);
     }
   }
 
   /** Performs the validation and update of validation data. */
   private void validateArchive(Validation validation) {
     try {
-      LOG.info("Validating checklist archive: {}", validation.getKey());
+      log.info("Validating checklist archive: {}", validation.getKey());
       List<Metrics.FileInfo> report =
           checklistValidator.evaluate(
               buildDwcaInputPath(config.archiveRepository, validation.getKey()));
       updateValidationFinished(validation, report);
     } catch (Exception ex) {
-      LOG.error("Error validating checklist", ex);
+      log.error("Error validating checklist", ex);
       updateFailedValidation(validation);
     }
   }
@@ -102,7 +98,7 @@ public class ChecklistValidatorCallback
         .getMetrics()
         .setFileInfos(mergeFileInfoLists(validation.getMetrics().getFileInfos(), report));
     validationClient.update(validation);
-    LOG.info("Checklist validation finished: {}", validation.getKey());
+    log.info("Checklist validation finished: {}", validation.getKey());
   }
 
   private List<Metrics.FileInfo> mergeFileInfoLists(
