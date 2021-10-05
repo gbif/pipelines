@@ -38,6 +38,7 @@ public class Metrics {
   @JsonDeserialize(builder = ValidationStep.ValidationStepBuilder.class)
   public static class ValidationStep {
 
+    // Keep stepType as String to prevent a clash between validation-api and gbif-api StepType enums
     private String stepType;
     private Status status;
     private String message;
