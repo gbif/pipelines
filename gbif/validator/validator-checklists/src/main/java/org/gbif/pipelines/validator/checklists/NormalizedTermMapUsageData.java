@@ -82,9 +82,14 @@ public class NormalizedTermMapUsageData {
   }
 
   public static NormalizedTermMapUsageData of(NormalizedNameUsageData normalizedNameUsageData) {
-    return NormalizedTermMapUsageData.builder()
-        .verbatimNameUsage(normalizedNameUsageData.getVerbatimNameUsage().getFields())
-        .verbatimExtensions(normalizedNameUsageData.getVerbatimNameUsage().getExtensions())
+    NormalizedTermMapUsageData.NormalizedTermMapUsageDataBuilder builder =
+        NormalizedTermMapUsageData.builder();
+    if (normalizedNameUsageData.getVerbatimNameUsage() != null) {
+      builder
+          .verbatimNameUsage(normalizedNameUsageData.getVerbatimNameUsage().getFields())
+          .verbatimExtensions(normalizedNameUsageData.getVerbatimNameUsage().getExtensions());
+    }
+    return builder
         .interpretedNameUsage(interpretedTermMap(normalizedNameUsageData))
         .interpretedExtensions(interpretedExtensions(normalizedNameUsageData))
         .build();

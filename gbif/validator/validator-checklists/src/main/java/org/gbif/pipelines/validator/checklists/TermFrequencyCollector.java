@@ -37,26 +37,31 @@ public class TermFrequencyCollector {
     }
 
     public Long add(Term term, Long value) {
-      return termsFrequency.compute(term, (k, v) -> v == null ? 1L : v + value);
+      return termsFrequency.compute(
+          term, (k, v) -> v == null ? 1L : v + (value == null ? 0L : value));
     }
 
     public TermFrequency inc(Map<Term, ?> termsMap) {
-      termsMap.forEach(
-          (k, v) -> {
-            if (v != null) {
-              inc(k);
-            }
-          });
+      if (termsMap != null) {
+        termsMap.forEach(
+            (k, v) -> {
+              if (v != null) {
+                inc(k);
+              }
+            });
+      }
       return this;
     }
 
     public TermFrequency add(Map<Term, Long> termsFrequency) {
-      termsFrequency.forEach(
-          (k, v) -> {
-            if (v != null) {
-              add(k, v);
-            }
-          });
+      if (termsFrequency != null) {
+        termsFrequency.forEach(
+            (k, v) -> {
+              if (v != null) {
+                add(k, v);
+              }
+            });
+      }
       return this;
     }
 
@@ -65,12 +70,16 @@ public class TermFrequencyCollector {
     }
 
     public <T> TermFrequency inc(List<Map<Term, T>> termsMap) {
-      termsMap.forEach(this::inc);
+      if (termsMap != null) {
+        termsMap.forEach(this::inc);
+      }
       return this;
     }
 
     public <T> TermFrequency add(List<Map<Term, Long>> termsFrequencies) {
-      termsFrequencies.forEach(this::add);
+      if (termsFrequencies != null) {
+        termsFrequencies.forEach(this::add);
+      }
       return this;
     }
 
@@ -106,15 +115,19 @@ public class TermFrequencyCollector {
 
   public <T> TermFrequencyCollector verbatimExtensions(
       Map<Extension, List<Map<Term, T>>> verbatimExtensionsMap) {
-    verbatimExtensionsMap.forEach(
-        (k, v) -> verbatimExtensionsTermsFrequency.put(k, TermFrequency.of(v)));
+    if (verbatimExtensionsMap != null) {
+      verbatimExtensionsMap.forEach(
+          (k, v) -> verbatimExtensionsTermsFrequency.put(k, TermFrequency.of(v)));
+    }
     return this;
   }
 
   public <T> TermFrequencyCollector interpretedExtensions(
       Map<Extension, List<Map<Term, T>>> interpretedExtensionsMap) {
-    interpretedExtensionsMap.forEach(
-        (k, v) -> interpretedExtensionsTermsFrequency.put(k, TermFrequency.of(v)));
+    if (interpretedExtensionsMap != null) {
+      interpretedExtensionsMap.forEach(
+          (k, v) -> interpretedExtensionsTermsFrequency.put(k, TermFrequency.of(v)));
+    }
     return this;
   }
 
@@ -125,13 +138,17 @@ public class TermFrequencyCollector {
 
   /** Concat the key sets of both maps. */
   private Set<Term> termsUnion(Map<Term, ?> termsMap1, Map<Term, ?> termsMap2) {
-    return Stream.concat(termsMap1.keySet().stream(), termsMap2.keySet().stream())
+    return Stream.concat(
+            Optional.ofNullable(termsMap1).map(m -> m.keySet().stream()).orElse(Stream.empty()),
+            Optional.ofNullable(termsMap2).map(m -> m.keySet().stream()).orElse(Stream.empty()))
         .collect(Collectors.toSet());
   }
 
   /** Concat the key sets of both maps. */
   private Set<Extension> extensionsUnion(Map<Extension, ?> termsMap1, Map<Extension, ?> termsMap2) {
-    return Stream.concat(termsMap1.keySet().stream(), termsMap2.keySet().stream())
+    return Stream.concat(
+            Optional.ofNullable(termsMap1).map(m -> m.keySet().stream()).orElse(Stream.empty()),
+            Optional.ofNullable(termsMap2).map(m -> m.keySet().stream()).orElse(Stream.empty()))
         .collect(Collectors.toSet());
   }
 

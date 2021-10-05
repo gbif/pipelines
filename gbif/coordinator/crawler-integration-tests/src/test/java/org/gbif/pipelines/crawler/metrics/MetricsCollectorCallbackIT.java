@@ -20,7 +20,6 @@ import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.RetryOneTime;
 import org.apache.curator.test.TestingServer;
 import org.gbif.api.model.pipelines.StepRunner;
-import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.OccurrenceIssue;
@@ -53,7 +52,7 @@ import org.mockito.Mockito;
 
 public class MetricsCollectorCallbackIT {
 
-  private static final String LABEL = StepType.VALIDATOR_COLLECT_METRICS.getLabel();
+  private static final String LABEL = ValidationStep.StepType.VALIDATOR_COLLECT_METRICS.getLabel();
   private static final String DATASET_UUID = "9bed66b3-4caa-42bb-9c93-71d7ba109dad";
   private static final long EXECUTION_ID = 1L;
   private static final Path MAPPINGS_PATH = Paths.get("mappings/verbatim-mapping.json");
@@ -144,10 +143,10 @@ public class MetricsCollectorCallbackIT {
                     .stepTypes(
                         Arrays.asList(
                             ValidationStep.builder()
-                                .stepType(StepType.VALIDATOR_COLLECT_METRICS)
+                                .stepType(ValidationStep.StepType.VALIDATOR_COLLECT_METRICS)
                                 .build(),
                             ValidationStep.builder()
-                                .stepType(StepType.VALIDATOR_VALIDATE_ARCHIVE)
+                                .stepType(ValidationStep.StepType.VALIDATOR_VALIDATE_ARCHIVE)
                                 .build()))
                     .fileInfos(
                         Collections.singletonList(
@@ -236,7 +235,8 @@ public class MetricsCollectorCallbackIT {
     String crawlId = DATASET_UUID;
 
     PipelinesIndexedMessage message = createMessage(uuid, attempt);
-    message.setPipelineSteps(Collections.singleton(StepType.VALIDATOR_COLLECT_METRICS.name()));
+    message.setPipelineSteps(
+        Collections.singleton(ValidationStep.StepType.VALIDATOR_COLLECT_METRICS.name()));
 
     // Index document
     String document =
@@ -292,7 +292,8 @@ public class MetricsCollectorCallbackIT {
     String crawlId = DATASET_UUID;
 
     PipelinesIndexedMessage message = createMessage(uuid, attempt);
-    message.setPipelineSteps(Collections.singleton(StepType.VALIDATOR_COLLECT_METRICS.name()));
+    message.setPipelineSteps(
+        Collections.singleton(ValidationStep.StepType.VALIDATOR_COLLECT_METRICS.name()));
 
     // When
     callback.handleMessage(message);
@@ -317,8 +318,8 @@ public class MetricsCollectorCallbackIT {
     message.setPipelineSteps(
         new HashSet<>(
             Arrays.asList(
-                StepType.VALIDATOR_INTERPRETED_TO_INDEX.name(),
-                StepType.VALIDATOR_COLLECT_METRICS.name())));
+                ValidationStep.StepType.VALIDATOR_INTERPRETED_TO_INDEX.name(),
+                ValidationStep.StepType.VALIDATOR_COLLECT_METRICS.name())));
     return message;
   }
 

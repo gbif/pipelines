@@ -7,6 +7,7 @@ import lombok.experimental.UtilityClass;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Metrics.ValidationStep;
+import org.gbif.validator.api.StepsMapper;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.Validation.Status;
 import org.gbif.validator.ws.file.DataFile;
@@ -38,7 +39,7 @@ public class ValidationFactory {
                 .stepTypes(
                     Collections.singletonList(
                         ValidationStep.builder()
-                            .stepType(StepType.VALIDATOR_UPLOAD_ARCHIVE)
+                            .stepType(Metrics.ValidationStep.StepType.VALIDATOR_UPLOAD_ARCHIVE)
                             .status(Status.RUNNING)
                             .executionOrder(StepType.VALIDATOR_UPLOAD_ARCHIVE.getExecutionOrder())
                             .build()))
@@ -62,7 +63,7 @@ public class ValidationFactory {
 
   static Metrics metricsSubmitError(String errorMessage) {
     return Metrics.builder()
-        .stepTypes(Metrics.getUploadingSteps(Status.FAILED, errorMessage))
+        .stepTypes(StepsMapper.getUploadingSteps(Status.FAILED, errorMessage))
         .build();
   }
 }

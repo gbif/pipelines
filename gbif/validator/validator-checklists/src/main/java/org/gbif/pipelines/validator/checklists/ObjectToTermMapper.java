@@ -29,73 +29,74 @@ public class ObjectToTermMapper {
   /** Converts a NameUsage to a Map<Term,String>. */
   public static Map<Term, String> toTermMap(NameUsage nameUsage) {
     Map<Term, String> termsMap = new HashMap<>();
+    if (nameUsage != null) {
+      Optional.ofNullable(nameUsage.getAccepted())
+          .ifPresent(v -> termsMap.put(DwcTerm.acceptedNameUsage, v));
 
-    Optional.ofNullable(nameUsage.getAccepted())
-        .ifPresent(v -> termsMap.put(DwcTerm.acceptedNameUsage, v));
+      Optional.ofNullable(nameUsage.getAuthorship())
+          .ifPresent(v -> termsMap.put(DwcTerm.scientificNameAuthorship, v));
 
-    Optional.ofNullable(nameUsage.getAuthorship())
-        .ifPresent(v -> termsMap.put(DwcTerm.scientificNameAuthorship, v));
+      Optional.ofNullable(nameUsage.getAccordingTo())
+          .ifPresent(v -> termsMap.put(DwcTerm.nameAccordingTo, v));
 
-    Optional.ofNullable(nameUsage.getAccordingTo())
-        .ifPresent(v -> termsMap.put(DwcTerm.nameAccordingTo, v));
+      Optional.ofNullable(nameUsage.getCanonicalName())
+          .ifPresent(v -> termsMap.put(GbifTerm.canonicalName, v));
 
-    Optional.ofNullable(nameUsage.getCanonicalName())
-        .ifPresent(v -> termsMap.put(GbifTerm.canonicalName, v));
+      Optional.ofNullable(nameUsage.getNameType())
+          .ifPresent(v -> termsMap.put(GbifTerm.nameType, v.name()));
 
-    Optional.ofNullable(nameUsage.getNameType())
-        .ifPresent(v -> termsMap.put(GbifTerm.nameType, v.name()));
+      Optional.ofNullable(nameUsage.getPublishedIn())
+          .ifPresent(v -> termsMap.put(DwcTerm.namePublishedIn, v));
 
-    Optional.ofNullable(nameUsage.getPublishedIn())
-        .ifPresent(v -> termsMap.put(DwcTerm.namePublishedIn, v));
+      Optional.ofNullable(nameUsage.getTaxonID()).ifPresent(v -> termsMap.put(DwcTerm.taxonID, v));
 
-    Optional.ofNullable(nameUsage.getTaxonID()).ifPresent(v -> termsMap.put(DwcTerm.taxonID, v));
+      Optional.ofNullable(nameUsage.getVernacularName())
+          .ifPresent(v -> termsMap.put(DwcTerm.vernacularName, v));
 
-    Optional.ofNullable(nameUsage.getVernacularName())
-        .ifPresent(v -> termsMap.put(DwcTerm.vernacularName, v));
+      Optional.ofNullable(nameUsage.getTaxonomicStatus())
+          .ifPresent(v -> termsMap.put(DwcTerm.taxonomicStatus, v.name()));
 
-    Optional.ofNullable(nameUsage.getTaxonomicStatus())
-        .ifPresent(v -> termsMap.put(DwcTerm.taxonomicStatus, v.name()));
+      Optional.ofNullable(nameUsage.getNomenclaturalStatus())
+          .ifPresent(v -> termsMap.put(DwcTerm.nomenclaturalStatus, toString(v)));
 
-    Optional.ofNullable(nameUsage.getNomenclaturalStatus())
-        .ifPresent(v -> termsMap.put(DwcTerm.nomenclaturalStatus, toString(v)));
+      Optional.ofNullable(nameUsage.getKingdom()).ifPresent(v -> termsMap.put(DwcTerm.kingdom, v));
 
-    Optional.ofNullable(nameUsage.getKingdom()).ifPresent(v -> termsMap.put(DwcTerm.kingdom, v));
+      Optional.ofNullable(nameUsage.getPhylum()).ifPresent(v -> termsMap.put(DwcTerm.phylum, v));
 
-    Optional.ofNullable(nameUsage.getPhylum()).ifPresent(v -> termsMap.put(DwcTerm.phylum, v));
+      Optional.ofNullable(nameUsage.getClazz()).ifPresent(v -> termsMap.put(DwcTerm.class_, v));
 
-    Optional.ofNullable(nameUsage.getClazz()).ifPresent(v -> termsMap.put(DwcTerm.class_, v));
+      Optional.ofNullable(nameUsage.getOrder()).ifPresent(v -> termsMap.put(DwcTerm.order, v));
 
-    Optional.ofNullable(nameUsage.getOrder()).ifPresent(v -> termsMap.put(DwcTerm.order, v));
+      Optional.ofNullable(nameUsage.getFamily()).ifPresent(v -> termsMap.put(DwcTerm.family, v));
 
-    Optional.ofNullable(nameUsage.getFamily()).ifPresent(v -> termsMap.put(DwcTerm.family, v));
+      Optional.ofNullable(nameUsage.getGenus()).ifPresent(v -> termsMap.put(DwcTerm.genus, v));
 
-    Optional.ofNullable(nameUsage.getGenus()).ifPresent(v -> termsMap.put(DwcTerm.genus, v));
+      Optional.ofNullable(nameUsage.getSubgenus())
+          .ifPresent(v -> termsMap.put(DwcTerm.subgenus, v));
 
-    Optional.ofNullable(nameUsage.getSubgenus()).ifPresent(v -> termsMap.put(DwcTerm.subgenus, v));
+      Optional.ofNullable(nameUsage.getSpecies()).ifPresent(v -> termsMap.put(GbifTerm.species, v));
 
-    Optional.ofNullable(nameUsage.getSpecies()).ifPresent(v -> termsMap.put(GbifTerm.species, v));
+      Optional.ofNullable(nameUsage.getRank())
+          .ifPresent(v -> termsMap.put(DwcTerm.taxonRank, v.name()));
 
-    Optional.ofNullable(nameUsage.getRank())
-        .ifPresent(v -> termsMap.put(DwcTerm.taxonRank, v.name()));
+      Optional.ofNullable(nameUsage.getRemarks())
+          .ifPresent(v -> termsMap.put(DwcTerm.taxonRemarks, v));
 
-    Optional.ofNullable(nameUsage.getRemarks())
-        .ifPresent(v -> termsMap.put(DwcTerm.taxonRemarks, v));
+      Optional.ofNullable(nameUsage.getParent())
+          .ifPresent(v -> termsMap.put(DwcTerm.parentNameUsage, v));
 
-    Optional.ofNullable(nameUsage.getParent())
-        .ifPresent(v -> termsMap.put(DwcTerm.parentNameUsage, v));
+      Optional.ofNullable(nameUsage.getScientificName())
+          .ifPresent(v -> termsMap.put(DwcTerm.scientificName, v));
 
-    Optional.ofNullable(nameUsage.getScientificName())
-        .ifPresent(v -> termsMap.put(DwcTerm.scientificName, v));
+      Optional.ofNullable(nameUsage.getBasionym())
+          .ifPresent(v -> termsMap.put(DwcTerm.originalNameUsage, v));
 
-    Optional.ofNullable(nameUsage.getBasionym())
-        .ifPresent(v -> termsMap.put(DwcTerm.originalNameUsage, v));
+      Optional.ofNullable(nameUsage.getReferences())
+          .ifPresent(v -> termsMap.put(DcTerm.references, v.toString()));
 
-    Optional.ofNullable(nameUsage.getReferences())
-        .ifPresent(v -> termsMap.put(DcTerm.references, v.toString()));
-
-    Optional.ofNullable(nameUsage.getVernacularName())
-        .ifPresent(v -> termsMap.put(DwcTerm.vernacularName, v));
-
+      Optional.ofNullable(nameUsage.getVernacularName())
+          .ifPresent(v -> termsMap.put(DwcTerm.vernacularName, v));
+    }
     return termsMap;
   }
 

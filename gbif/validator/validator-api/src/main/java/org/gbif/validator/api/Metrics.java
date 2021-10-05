@@ -8,13 +8,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.gbif.api.model.pipelines.StepType;
 import org.gbif.validator.api.Validation.Status;
 
 @Data
@@ -38,6 +35,35 @@ public class Metrics {
   @AllArgsConstructor
   @JsonDeserialize(builder = ValidationStep.ValidationStepBuilder.class)
   public static class ValidationStep {
+
+    /** Specific Validation StepType to avoid gbif-api dependency. */
+    public enum StepType {
+      VALIDATOR_UPLOAD_ARCHIVE("validatorUploadArchive", 1),
+      VALIDATOR_VALIDATE_ARCHIVE("validatorValidateArchive", 2),
+      VALIDATOR_DWCA_TO_VERBATIM("validatorDwcaToVerbatim", 3),
+      VALIDATOR_XML_TO_VERBATIM("validatorXmlToVerbatim", 3),
+      VALIDATOR_ABCD_TO_VERBATIM("validatorAbcdToVerbatim", 4),
+      VALIDATOR_VERBATIM_TO_INTERPRETED("validatorVerbatimToInterpreted", 4),
+      VALIDATOR_INTERPRETED_TO_INDEX("validatorInterpretedToIndex", 5),
+      VALIDATOR_COLLECT_METRICS("validatorCollectMetrics", 6);
+
+      private String label;
+      private int executionOrder;
+
+      StepType(String label, int executionOrder) {
+        this.label = label;
+        this.executionOrder = executionOrder;
+      }
+
+      public int getExecutionOrder() {
+        return executionOrder;
+      }
+
+      public String getLabel() {
+        return label;
+      }
+    }
+
     private StepType stepType;
     private Status status;
     private String message;
@@ -91,39 +117,6 @@ public class Metrics {
   public static class IssueSample {
     private String recordId;
     private Map<String, String> relatedData = Collections.emptyMap();
-  }
-
-  public static List<ValidationStep> mapToValidationSteps(Set<String> stepTypes) {
-
-    List<ValidationStep> collect =
-        stepTypes.stream()
-            .map(StepType::valueOf)
-            .filter(st -> st != StepType.VALIDATOR_UPLOAD_ARCHIVE)
-            .map(
-                st ->
-                    ValidationStep.builder()
-                        .executionOrder(st.getExecutionOrder())
-                        .stepType(st)
-                        .build())
-            .collect(Collectors.toList());
-
-    collect.add(
-        ValidationStep.builder()
-            .stepType(StepType.VALIDATOR_UPLOAD_ARCHIVE)
-            .status(Status.FINISHED)
-            .executionOrder(StepType.VALIDATOR_UPLOAD_ARCHIVE.getExecutionOrder())
-            .build());
-
-    return collect;
-  }
-
-  public static List<ValidationStep> getUploadingSteps(Status status, String message) {
-    return Collections.singletonList(
-        ValidationStep.builder()
-            .stepType(StepType.VALIDATOR_UPLOAD_ARCHIVE)
-            .status(status)
-            .message(message)
-            .build());
   }
 
   @Override

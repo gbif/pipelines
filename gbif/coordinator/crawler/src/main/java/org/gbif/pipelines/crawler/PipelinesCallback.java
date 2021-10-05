@@ -285,7 +285,13 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
     if (mainStatus == Status.FINISHED) {
       boolean isQueued =
           validation.getMetrics().getStepTypes().stream()
-              .filter(x -> x.getStepType() != stepType)
+              .filter(
+                  x ->
+                      !x.getStepType()
+                          .name()
+                          .equals(
+                              stepType
+                                  .name())) // Required to keep validation api separate to gbif-api
               .anyMatch(x -> x.getStatus() != Status.FINISHED);
       if (isQueued) {
         mainStatus = Status.QUEUED;
@@ -300,7 +306,8 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
 
     boolean addValidationType = true;
     for (ValidationStep step : metrics.getStepTypes()) {
-      if (step.getStepType() == stepType) {
+      // Required to keep validation api separate to gbif-api
+      if (step.getStepType().name().equals(stepType.name())) {
         step.setStatus(status);
         addValidationType = false;
         break;
@@ -312,7 +319,9 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
           .getStepTypes()
           .add(
               ValidationStep.builder()
-                  .stepType(stepType)
+                  .stepType(
+                      ValidationStep.StepType.valueOf(
+                          stepType.name())) // Required to keep validation api separate to gbif-api
                   .status(status)
                   .executionOrder(stepType.getExecutionOrder())
                   .build());

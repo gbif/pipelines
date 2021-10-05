@@ -20,7 +20,7 @@ import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.mail.validator.ValidatorEmailService;
 import org.gbif.registry.security.UserRoles;
 import org.gbif.validator.api.FileFormat;
-import org.gbif.validator.api.Metrics;
+import org.gbif.validator.api.StepsMapper;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.Validation.Status;
 import org.gbif.validator.api.ValidationRequest;
@@ -246,7 +246,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
 
     // Set future steps
     v.setStatus(Status.QUEUED);
-    v.getMetrics().setStepTypes(Metrics.mapToValidationSteps(pipelinesSteps));
+    v.getMetrics().setStepTypes(StepsMapper.mapToValidationSteps(pipelinesSteps));
 
     // Update DB
     updateAndGet(v);

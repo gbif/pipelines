@@ -10,7 +10,12 @@ import org.gbif.pipelines.validator.checklists.cli.config.ChecklistValidatorConf
 import org.gbif.pipelines.validator.checklists.cli.config.RegistryConfiguration;
 import org.gbif.validator.ws.client.ValidationWsClient;
 import org.gbif.ws.client.ClientBuilder;
+import org.gbif.ws.client.ClientContract;
 import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
+import org.springframework.cloud.openfeign.annotation.PathVariableParameterProcessor;
+import org.springframework.cloud.openfeign.annotation.QueryMapParameterProcessor;
+import org.springframework.cloud.openfeign.annotation.RequestHeaderParameterProcessor;
+import org.springframework.cloud.openfeign.annotation.RequestParamParameterProcessor;
 
 /**
  * A service which listens to the {@link org.gbif.common.messaging.api.messages.PipelinesDwcaMessage
@@ -32,7 +37,15 @@ public class ChecklistValidatorService extends AbstractIdleService {
     return new ClientBuilder()
         .withUrl(registryConfiguration.wsUrl)
         .withCredentials(registryConfiguration.user, registryConfiguration.password)
-        .withObjectMapper(JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport())
+        .withObjectMapper(
+            JacksonJsonObjectMapperProvider.addBuilderSupport(
+                JacksonJsonObjectMapperProvider.getDefaultObjectMapper()))
+        .withClientContract(
+            ClientContract.withProcessors(
+                new PathVariableParameterProcessor(),
+                new RequestParamParameterProcessor(),
+                new RequestHeaderParameterProcessor(),
+                new QueryMapParameterProcessor()))
         .build(ValidationWsClient.class);
   }
 
