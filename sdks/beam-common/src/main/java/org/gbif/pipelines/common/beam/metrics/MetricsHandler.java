@@ -37,13 +37,7 @@ public class MetricsHandler {
         mr -> mr.getName().getName() + "Attempted: " + mr.getAttempted() + "\n";
 
     StringBuilder builder = new StringBuilder();
-    queryResults
-        .getCounters()
-        .forEach(
-            x -> {
-              String line = convert.apply(x);
-              builder.append(line);
-            });
+    queryResults.getCounters().forEach(x -> builder.append(convert.apply(x)));
 
     String result = builder.toString();
     log.info("Added pipeline metadata - {}", result.replace("\n", ", "));

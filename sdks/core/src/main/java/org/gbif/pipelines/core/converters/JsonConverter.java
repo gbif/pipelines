@@ -153,9 +153,9 @@ public class JsonConverter {
                                     }
                                     break;
                                   case ARRAY:
-                                    Collection values = (Collection) r;
+                                    Collection<?> values = (Collection<?>) r;
                                     if (!values.isEmpty()) {
-                                      addArrayNode(node, f, (Collection) r);
+                                      addArrayNode(node, f, (Collection<?>) r);
                                     }
                                     break;
                                   default:

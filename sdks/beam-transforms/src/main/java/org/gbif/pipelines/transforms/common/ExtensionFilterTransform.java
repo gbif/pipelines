@@ -57,13 +57,9 @@ public class ExtensionFilterTransform
   private ExtendedRecord filter(ExtendedRecord er) {
     Map<String, List<Map<String, String>>> extensions = new HashMap<>();
 
-    er.getExtensions()
-        .forEach(
-            (key, value) -> {
-              if (allowExtenstionsSet.contains(key)) {
-                extensions.put(key, value);
-              }
-            });
+    er.getExtensions().entrySet().stream()
+        .filter(es -> allowExtenstionsSet.contains(es.getKey()))
+        .forEach(es -> extensions.put(es.getKey(), es.getValue()));
 
     return ExtendedRecord.newBuilder()
         .setId(er.getId())
