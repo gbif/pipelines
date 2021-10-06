@@ -80,7 +80,7 @@
     <project.resources.sourceEncoding>${encoding}</project.resources.sourceEncoding>
 
     <!-- Tools-->
-    <lombok.version>1.18.18</lombok.version>
+    <lombok.version>1.18.20</lombok.version>
 
     <!-- GBIF libraries -->
     <gbif-parsers.version>0.54</gbif-parsers.version>

@@ -121,6 +121,62 @@
       <artifactId>guava</artifactId>
     </dependency>
 
+    <!-- This project -->
+    <dependency>
+      <groupId>org.gbif.pipelines</groupId>
+      <artifactId>eml-validator</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.pipelines</groupId>
+      <artifactId>validator-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.pipelines</groupId>
+      <artifactId>validator-mail</artifactId>
+    </dependency>
+
+    <!-- GBIF -->
+    <dependency>
+      <groupId>org.gbif</groupId>
+      <artifactId>gbif-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif</groupId>
+      <artifactId>gbif-common</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif</groupId>
+      <artifactId>gbif-common-ws</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.registry</groupId>
+      <artifactId>registry-persistence</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.registry</groupId>
+      <artifactId>registry-identity</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.registry</groupId>
+      <artifactId>registry-security</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.registry</groupId>
+      <artifactId>registry-surety</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.registry</groupId>
+      <artifactId>registry-ws-client</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif</groupId>
+      <artifactId>gbif-common-mybatis</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.common</groupId>
+      <artifactId>gbif-postal-service</artifactId>
+    </dependency>
+
     <!-- Spring dependencies -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -248,60 +304,6 @@
     <dependency>
       <groupId>com.zaxxer</groupId>
       <artifactId>HikariCP</artifactId>
-    </dependency>
-
-    <!-- GBIF -->
-    <dependency>
-      <groupId>org.gbif</groupId>
-      <artifactId>gbif-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif</groupId>
-      <artifactId>gbif-common</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif</groupId>
-      <artifactId>gbif-common-ws</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif.registry</groupId>
-      <artifactId>registry-persistence</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif.registry</groupId>
-      <artifactId>registry-identity</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif.registry</groupId>
-      <artifactId>registry-security</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif.registry</groupId>
-      <artifactId>registry-surety</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif.registry</groupId>
-      <artifactId>registry-ws-client</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif</groupId>
-      <artifactId>gbif-common-mybatis</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif.pipelines</groupId>
-      <artifactId>eml-validator</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif.pipelines</groupId>
-      <artifactId>validator-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif.pipelines</groupId>
-      <artifactId>validator-mail</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif.common</groupId>
-      <artifactId>gbif-postal-service</artifactId>
     </dependency>
 
     <!-- Xml-->

@@ -17,6 +17,18 @@ import org.gbif.validator.api.Validation;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class Validations {
 
+  /** Merge the validation response received from API and collected ES metrics */
+  public static void mergeWithValidation(Validation validation, Metrics metrics) {
+    if (validation != null && metrics != null) {
+      Metrics validationMetrics = validation.getMetrics();
+      if (validationMetrics == null) {
+        validation.setMetrics(metrics);
+      } else {
+        metrics.getFileInfos().forEach(fi -> Validations.mergeFileInfo(validation, fi));
+      }
+    }
+  }
+
   public static void mergeFileInfo(Validation validation, FileInfo fileInfo) {
     if (validation != null && fileInfo != null) {
       if (validation.getMetrics() == null) {
