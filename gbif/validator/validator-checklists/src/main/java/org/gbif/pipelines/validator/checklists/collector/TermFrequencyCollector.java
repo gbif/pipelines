@@ -22,7 +22,7 @@ public class TermFrequencyCollector {
   @Data
   public static class TermFrequency {
 
-    public static TermFrequency EMPTY = new TermFrequency();
+    public static final TermFrequency EMPTY = new TermFrequency();
 
     private final Map<Term, Long> termsFrequency;
 
@@ -78,7 +78,7 @@ public class TermFrequencyCollector {
       return this;
     }
 
-    public <T> TermFrequency add(List<Map<Term, Long>> termsFrequencies) {
+    public TermFrequency add(List<Map<Term, Long>> termsFrequencies) {
       if (termsFrequencies != null) {
         termsFrequencies.forEach(this::add);
       }
@@ -125,7 +125,8 @@ public class TermFrequencyCollector {
       verbatimExtensionsMap.forEach(
           (k, v) -> {
             verbatimExtensionsTermsFrequency.put(k, TermFrequency.of(v));
-            verbatimExtensionsRowCount.put(k, (long) v.size());
+            verbatimExtensionsRowCount.compute(
+                k, (ext, count) -> Optional.ofNullable(count).orElse(0L) + (long) v.size());
           });
     }
     return this;
@@ -137,7 +138,8 @@ public class TermFrequencyCollector {
       interpretedExtensionsMap.forEach(
           (k, v) -> {
             interpretedExtensionsTermsFrequency.put(k, TermFrequency.of(v));
-            interpretedExtensionsRowCount.put(k, (long) v.size());
+            interpretedExtensionsRowCount.compute(
+                k, (ext, count) -> Optional.ofNullable(count).orElse(0L) + (long) v.size());
           });
     }
     return this;
@@ -238,6 +240,28 @@ public class TermFrequencyCollector {
     return addExtensionFrequency(extensionTermFrequency, interpretedExtensionsTermsFrequency);
   }
 
+  private TermFrequencyCollector addVerbatimExtensionsCount(Map<Extension, Long> extensionsCount) {
+    return addExtensionsCount(verbatimExtensionsRowCount, extensionsCount);
+  }
+
+  private TermFrequencyCollector addInterpretedExtensionsCount(
+      Map<Extension, Long> extensionsCount) {
+    return addExtensionsCount(interpretedExtensionsRowCount, extensionsCount);
+  }
+
+  private TermFrequencyCollector addExtensionsCount(
+      Map<Extension, Long> fromExtensionsCount, Map<Extension, Long> toExtensionsCount) {
+    extensionsUnion(fromExtensionsCount, toExtensionsCount)
+        .forEach(
+            extension ->
+                fromExtensionsCount.compute(
+                    extension,
+                    (k, v) ->
+                        Optional.ofNullable(v).orElse(0L)
+                            + Optional.ofNullable(toExtensionsCount.get(extension)).orElse(0L)));
+    return this;
+  }
+
   private TermFrequencyCollector addExtensionFrequency(
       Map<Extension, TermFrequency> from, Map<Extension, TermFrequency> to) {
     extensionsUnion(to, from)
@@ -258,9 +282,10 @@ public class TermFrequencyCollector {
   public TermFrequencyCollector add(TermFrequencyCollector collector) {
     interpretedTermsFrequency.add(collector.interpretedTermsFrequency);
     verbatimTermsFrequency.add(collector.verbatimTermsFrequency);
-    addInterpretedExtensionFrequency(collector.interpretedExtensionsTermsFrequency);
-    addVerbatimExtensionFrequency(collector.verbatimExtensionsTermsFrequency);
-    return this;
+    return addInterpretedExtensionFrequency(collector.interpretedExtensionsTermsFrequency)
+        .addVerbatimExtensionFrequency(collector.verbatimExtensionsTermsFrequency)
+        .addInterpretedExtensionsCount(collector.interpretedExtensionsRowCount)
+        .addVerbatimExtensionsCount(collector.verbatimExtensionsRowCount);
   }
 
   public static TermFrequencyCollector of(NormalizedNameUsageData normalizedNameUsageData) {

@@ -1,11 +1,8 @@
 package org.gbif.pipelines.validator.checklists;
 
-import static org.gbif.pipelines.validator.checklists.ArchiveUtils.areHeaderLinesIncluded;
-import static org.gbif.pipelines.validator.checklists.ArchiveUtils.countLines;
-
-import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -38,20 +35,19 @@ import org.neo4j.graphdb.Transaction;
 public class ChecklistValidator {
 
   private static final Set<String> NAME_USAGES_RELATED_EXTENSIONS =
-      Sets.newHashSet(
-          Extension.DISTRIBUTION.getRowType(),
-          Extension.DESCRIPTION.getRowType(),
-          Extension.IDENTIFIER.getRowType(),
-          Extension.REFERENCE.getRowType(),
-          Extension.VERNACULAR_NAME.getRowType(),
-          Extension.TYPES_AND_SPECIMEN.getRowType(),
-          Extension.SPECIES_PROFILE.getRowType(),
-          Extension.MULTIMEDIA.getRowType(),
-          DwcTerm.Taxon.qualifiedName());
+      new HashSet<>(
+          Arrays.asList(
+              Extension.DISTRIBUTION.getRowType(),
+              Extension.DESCRIPTION.getRowType(),
+              Extension.IDENTIFIER.getRowType(),
+              Extension.REFERENCE.getRowType(),
+              Extension.VERNACULAR_NAME.getRowType(),
+              Extension.TYPES_AND_SPECIMEN.getRowType(),
+              Extension.SPECIES_PROFILE.getRowType(),
+              Extension.MULTIMEDIA.getRowType(),
+              DwcTerm.Taxon.qualifiedName()));
 
   private final NeoConfiguration configuration;
-
-  private Set<String> visitedUsages = new HashSet<>();
 
   /** @param neoConfiguration Neo4j configuration. */
   public ChecklistValidator(NeoConfiguration neoConfiguration) {
@@ -80,9 +76,7 @@ public class ChecklistValidator {
     results.add(
         Metrics.FileInfo.builder()
             .rowType(DwcTerm.Taxon.simpleName())
-            .count(
-                countLines(
-                    archive.getCore().getLocationFile(), areHeaderLinesIncluded(archive.getCore())))
+            .count(LineCounter.count(archive.getCore()))
             .fileName(archive.getCore().getLocationFile().getName())
             .fileType(DwcFileType.CORE)
             .issues(collector.getIssuesInfo())
@@ -106,9 +100,7 @@ public class ChecklistValidator {
                     Extension.fromRowType(extension.getRowType().qualifiedName());
                 return Metrics.FileInfo.builder()
                     .rowType(extension.getRowType().qualifiedName())
-                    .count(
-                        countLines(
-                            extension.getLocationFile(), areHeaderLinesIncluded(archive.getCore())))
+                    .count(LineCounter.count(extension))
                     .fileName(extension.getLocationFile().getName())
                     .fileType(DwcFileType.EXTENSION)
                     .terms(collector.getExtensionTermInfo(nameUsageExtension))

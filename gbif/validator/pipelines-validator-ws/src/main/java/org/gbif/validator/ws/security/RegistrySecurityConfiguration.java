@@ -42,6 +42,7 @@ import org.gbif.registry.security.jwt.JwtRequestFilter;
 import org.gbif.registry.surety.ChallengeCodeManager;
 import org.gbif.registry.ws.client.InstallationClient;
 import org.gbif.ws.client.ClientBuilder;
+import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
 import org.gbif.ws.security.NoAuthWebSecurityConfigurer;
 import org.gbif.ws.server.filter.AppIdentityFilter;
 import org.gbif.ws.server.filter.IdentityFilter;
@@ -227,12 +228,16 @@ public class RegistrySecurityConfiguration {
   @Bean
   public InstallationService installationService(@Value("${registry.ws.url}") String apiUrl) {
     ClientBuilder clientBuilder = new ClientBuilder();
+    clientBuilder.withObjectMapper(
+        JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport());
     return clientBuilder.withUrl(apiUrl).build(InstallationClient.class);
   }
 
   @Bean
   public OrganizationService organizationService(@Value("${registry.ws.url}") String apiUrl) {
     ClientBuilder clientBuilder = new ClientBuilder();
+    clientBuilder.withObjectMapper(
+        JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport());
     return clientBuilder.withUrl(apiUrl).build(OrganizationService.class);
   }
 

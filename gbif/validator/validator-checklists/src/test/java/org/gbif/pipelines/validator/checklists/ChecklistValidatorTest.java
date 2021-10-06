@@ -22,7 +22,7 @@ public class ChecklistValidatorTest {
   @TempDir static Path folder;
 
   @Test
-  public void testChecklistEvaluator() {
+  public void testChecklistValidator() {
     // State
     NeoConfiguration neoConfiguration = new NeoConfiguration();
     neoConfiguration.neoRepository = folder.resolve("neo").toFile();
@@ -33,7 +33,7 @@ public class ChecklistValidatorTest {
       List<Metrics.FileInfo> report =
           checklistValidator.evaluate(
               Paths.get(
-                  ClassLoader.getSystemResource("checklists/00000001-c6af-11e2-9b88-00145eb45e9a/")
+                  ClassLoader.getSystemResource("checklists/dwca-lista_vertebrados_huila_cam-v1.2/")
                       .getFile()));
 
       // Should

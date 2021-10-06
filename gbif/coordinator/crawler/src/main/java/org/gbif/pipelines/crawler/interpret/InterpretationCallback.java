@@ -309,7 +309,6 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
         config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig, path);
   }
 
-  // TODO: Integrate with latest Spring Registry
   @SneakyThrows
   private String getDefaultDateFormat(String datasetKey) {
     String url = config.stepConfig.registry.wsUrl + "/dataset/" + datasetKey + "/machineTag";

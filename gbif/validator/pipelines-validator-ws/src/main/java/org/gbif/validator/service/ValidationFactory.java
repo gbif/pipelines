@@ -7,7 +7,6 @@ import lombok.experimental.UtilityClass;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Metrics.ValidationStep;
-import org.gbif.validator.api.StepsMapper;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.Validation.Status;
 import org.gbif.validator.ws.file.DataFile;

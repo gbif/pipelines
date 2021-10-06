@@ -15,6 +15,7 @@ public class ServiceFactory {
     return new ClientBuilder()
         .withUrl(stepConfig.registry.wsUrl)
         .withCredentials(stepConfig.registry.user, stepConfig.registry.password)
+        .withObjectMapper(JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport())
         .withFormEncoder()
         .build(PipelinesHistoryClient.class);
   }

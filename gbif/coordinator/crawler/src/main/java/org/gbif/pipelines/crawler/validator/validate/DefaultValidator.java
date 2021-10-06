@@ -10,7 +10,7 @@ import org.gbif.validator.ws.client.ValidationWsClient;
 
 @Slf4j
 @Builder
-public class FailedValidator implements ArchiveValidator {
+public class DefaultValidator implements ArchiveValidator {
 
   private final ValidationWsClient validationClient;
   private final PipelinesArchiveValidatorMessage message;

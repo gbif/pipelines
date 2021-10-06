@@ -18,7 +18,7 @@ public class ArchiveValidatorFactory {
   public ArchiveValidator create() {
 
     // DWCA
-    if (message.getFileFormat().equals(FileFormat.DWCA.name())) {
+    if (FileFormat.DWCA.name().equals(message.getFileFormat())) {
       return DwcaArchiveValidator.builder()
           .validationClient(validationClient)
           .config(config)
@@ -28,7 +28,7 @@ public class ArchiveValidatorFactory {
     }
 
     // XML
-    if (message.getFileFormat().equals(FileFormat.XML.name())) {
+    if (FileFormat.XML.name().equals(message.getFileFormat())) {
       return XmlArchiveValidator.builder()
           .validationClient(validationClient)
           .config(config)
@@ -38,6 +38,6 @@ public class ArchiveValidatorFactory {
     }
 
     // Defualt
-    return FailedValidator.builder().validationClient(validationClient).message(message).build();
+    return DefaultValidator.builder().validationClient(validationClient).message(message).build();
   }
 }
