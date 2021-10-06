@@ -7,17 +7,14 @@ import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.gbif.api.model.checklistbank.VerbatimNameUsage;
 import org.gbif.api.vocabulary.Extension;
-import org.gbif.api.vocabulary.NameUsageIssue;
 import org.gbif.checklistbank.cli.common.NeoConfiguration;
 import org.gbif.checklistbank.cli.normalizer.Normalizer;
 import org.gbif.checklistbank.neo.UsageDao;
@@ -25,10 +22,10 @@ import org.gbif.dwc.Archive;
 import org.gbif.dwc.ArchiveFile;
 import org.gbif.dwc.DwcFiles;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwc.terms.Term;
 import org.gbif.nub.lookup.straight.IdLookupPassThru;
+import org.gbif.pipelines.validator.checklists.collector.ValidationDataCollector;
+import org.gbif.pipelines.validator.checklists.model.NormalizedNameUsageData;
 import org.gbif.validator.api.DwcFileType;
-import org.gbif.validator.api.EvaluationCategory;
 import org.gbif.validator.api.Metrics;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
@@ -53,6 +50,8 @@ public class ChecklistValidator {
           DwcTerm.Taxon.qualifiedName());
 
   private final NeoConfiguration configuration;
+
+  private Set<String> visitedUsages = new HashSet<>();
 
   /** @param neoConfiguration Neo4j configuration. */
   public ChecklistValidator(NeoConfiguration neoConfiguration) {
@@ -146,96 +145,5 @@ public class ChecklistValidator {
         .parsedName(usageDao.readName(node.getId()))
         .usageExtensions(usageDao.readExtensions(node.getId()))
         .build();
-  }
-
-  /** Utility class to collect and summarize information from NameUsages and VerbatimUsages. */
-  public static class ValidationDataCollector {
-
-    private static final int SAMPLE_SIZE = 5;
-
-    private final Map<String, Metrics.IssueInfo> issueInfoMap = new HashMap<>();
-
-    private Long usagesCount = 0L;
-
-    private final TermFrequencyCollector termFrequencyCollector = new TermFrequencyCollector();
-
-    /** Collects the IssueInfo from the NameUsage and VerbatimUsage. */
-    public void collectIssuesInfo(NormalizedNameUsageData normalizedNameUsageData) {
-      if (normalizedNameUsageData.getNameUsage().getIssues() != null) {
-        normalizedNameUsageData
-            .getNameUsage()
-            .getIssues()
-            .forEach(
-                issue ->
-                    addOrCreateIssueInfo(issue, normalizedNameUsageData.getVerbatimNameUsage()));
-      }
-    }
-
-    /** Adds a new IssueInfo or creates a new one to the issueInfoMap. */
-    private void addOrCreateIssueInfo(NameUsageIssue issue, VerbatimNameUsage verbatimNameUsage) {
-      issueInfoMap.compute(
-          issue.name(),
-          (k, v) -> {
-            if (v == null) {
-              return Metrics.IssueInfo.builder()
-                  .issue(k)
-                  .issueCategory(EvaluationCategory.CLB_INTERPRETATION_BASED)
-                  .count(1L)
-                  .samples(new ArrayList<>()) // Needs to be initialized here to avoid an empty
-                  // unmodifiable list
-                  .build();
-            }
-            if (v.getSamples().size() < SAMPLE_SIZE) {
-              Metrics.IssueSample.IssueSampleBuilder builder =
-                  Metrics.IssueSample.builder()
-                      .relatedData(getRelatedData(issue, verbatimNameUsage));
-              if (verbatimNameUsage.hasCoreField(DwcTerm.taxonID)) {
-                builder.recordId(verbatimNameUsage.getCoreField(DwcTerm.taxonID));
-              }
-              v.getSamples().add(builder.build());
-            }
-            v.setCount(v.getCount() + 1);
-            return v;
-          });
-    }
-
-    /** Adds a new TermInfo or creates a new one to the termInfoMap. */
-    private void collect(NormalizedNameUsageData normalizedNameUsageData) {
-      termFrequencyCollector.add(TermFrequencyCollector.of(normalizedNameUsageData));
-      collectIssuesInfo(normalizedNameUsageData);
-      usagesCount = usagesCount + 1;
-    }
-
-    public List<Metrics.IssueInfo> getIssuesInfo() {
-      return new ArrayList<>(this.issueInfoMap.values());
-    }
-
-    public List<Metrics.TermInfo> getTermInfo() {
-      return termFrequencyCollector.toTermsInfo();
-    }
-
-    public List<Metrics.TermInfo> getExtensionTermInfo(Extension extension) {
-      return termFrequencyCollector.toExtensionTermInfo(extension);
-    }
-
-    /** Total number of name usages processed. */
-    public Long getUsagesCount() {
-      return usagesCount;
-    }
-
-    public Long getVerbatimExtensionRowCount(Extension extension) {
-      return termFrequencyCollector.getVerbatimExtensionRowCount(extension);
-    }
-
-    public Long getInterpretedExtensionRowCount(Extension extension) {
-      return termFrequencyCollector.getInterpretedExtensionRowCount(extension);
-    }
-
-    private static Map<String, String> getRelatedData(
-        NameUsageIssue issue, VerbatimNameUsage verbatimNameUsage) {
-      return issue.getRelatedTerms().stream()
-          .filter(t -> verbatimNameUsage.getCoreField(t) != null)
-          .collect(Collectors.toMap(Term::simpleName, verbatimNameUsage::getCoreField));
-    }
   }
 }

@@ -1,4 +1,4 @@
-package org.gbif.pipelines.validator.checklists;
+package org.gbif.pipelines.validator.checklists.collector;
 
 import java.util.HashMap;
 import java.util.List;
@@ -11,6 +11,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.Term;
+import org.gbif.pipelines.validator.checklists.model.NormalizedNameUsageData;
+import org.gbif.pipelines.validator.checklists.model.NormalizedTermMapUsageData;
 import org.gbif.validator.api.Metrics;
 
 @Data

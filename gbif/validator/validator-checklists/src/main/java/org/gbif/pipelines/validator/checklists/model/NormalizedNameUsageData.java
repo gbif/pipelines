@@ -1,4 +1,4 @@
-package org.gbif.pipelines.validator.checklists;
+package org.gbif.pipelines.validator.checklists.model;
 
 import lombok.Builder;
 import lombok.Data;

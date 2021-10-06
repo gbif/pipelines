@@ -1,6 +1,6 @@
-package org.gbif.pipelines.validator.checklists;
+package org.gbif.pipelines.validator.checklists.model;
 
-import static org.gbif.pipelines.validator.checklists.ObjectToTermMapper.toTermMap;
+import static org.gbif.pipelines.validator.checklists.model.ObjectToTermMapper.toTermMap;
 
 import java.util.Collections;
 import java.util.HashMap;
