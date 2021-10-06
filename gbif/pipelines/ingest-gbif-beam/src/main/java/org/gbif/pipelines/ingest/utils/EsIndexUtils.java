@@ -4,11 +4,12 @@ import static org.gbif.pipelines.estools.service.EsService.swapIndexes;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -62,7 +63,7 @@ public class EsIndexUtils {
     String index = options.getEsIndexName();
     Objects.requireNonNull(index, "index are required");
     if (!index.startsWith(options.getDatasetId())) {
-      Set<String> aliases = Sets.newHashSet(options.getEsAlias());
+      Set<String> aliases = new HashSet<>(Arrays.asList(options.getEsAlias()));
 
       Objects.requireNonNull(aliases, "aliases are required");
 
@@ -105,7 +106,7 @@ public class EsIndexUtils {
   public static void swapIndex(EsIndexingPipelineOptions options, LockConfig lockConfig) {
     EsConfig config = EsConfig.from(options.getEsHosts());
 
-    Set<String> aliases = Sets.newHashSet(options.getEsAlias());
+    Set<String> aliases = new HashSet<>(Arrays.asList(options.getEsAlias()));
     String index = options.getEsIndexName();
 
     // Lock the index to avoid modifications and stop reads.
@@ -158,7 +159,7 @@ public class EsIndexUtils {
           () ->
               EsIndex.swapIndexInAliases(
                   config,
-                  Sets.newHashSet(options.getEsAlias()),
+                  new HashSet<>(Arrays.asList(options.getEsAlias())),
                   idxToAdd,
                   idxToRemove,
                   searchSettings);

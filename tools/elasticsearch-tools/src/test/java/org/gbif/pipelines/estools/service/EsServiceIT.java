@@ -10,7 +10,6 @@ import static org.junit.Assert.assertTrue;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Strings;
-import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -223,7 +222,7 @@ public class EsServiceIT extends EsApiIntegration {
             IndexParams.builder().indexName("idx3").settingsType(INDEXING).build());
     Set<String> initialIndexes = new HashSet<>(Arrays.asList(idx1, idx2, idx3));
 
-    Set<String> aliases = Sets.newHashSet(ALIAS_TEST, ANOTHER_ALIAS_TEST);
+    Set<String> aliases = new HashSet<>(Arrays.asList(ALIAS_TEST, ANOTHER_ALIAS_TEST));
     addIndexesToAliases(aliases, initialIndexes);
 
     String idx4 =

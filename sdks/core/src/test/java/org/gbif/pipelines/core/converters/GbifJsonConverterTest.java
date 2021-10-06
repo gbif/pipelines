@@ -3,7 +3,6 @@ package org.gbif.pipelines.core.converters;
 import static org.junit.Assert.*;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.ImmutableMap;
 import java.util.*;
 import org.gbif.api.model.collections.lookup.Match.MatchType;
 import org.gbif.api.vocabulary.*;
@@ -509,15 +508,12 @@ public class GbifJsonConverterTest {
             .setIucnRedListCategoryCode(ThreatStatus.CRITICALLY_ENDANGERED.getCode())
             .build();
 
+    Map<String, String> coreTerms = new HashMap<>(2);
+    coreTerms.put(DwcTerm.taxonID.qualifiedName(), "T1");
+    coreTerms.put(DwcTerm.scientificName.qualifiedName(), "Name");
+
     ExtendedRecord extendedRecord =
-        ExtendedRecord.newBuilder()
-            .setId("777")
-            .setCoreTerms(
-                new ImmutableMap.Builder<String, String>()
-                    .put(DwcTerm.taxonID.qualifiedName(), "T1")
-                    .put(DwcTerm.scientificName.qualifiedName(), "Name")
-                    .build())
-            .build();
+        ExtendedRecord.newBuilder().setId("777").setCoreTerms(coreTerms).build();
 
     // When
     String result = GbifJsonConverter.toStringPartialJson(extendedRecord, taxonRecord);

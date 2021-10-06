@@ -6,7 +6,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -108,7 +107,7 @@ public class HttpRequestBuilderTest {
     // State
     String alias1 = "alias1";
     String alias2 = "alias2";
-    Set<String> aliases = Sets.newHashSet(alias1, alias2);
+    Set<String> aliases = new HashSet<>(Arrays.asList(alias1, alias2));
     Set<String> idxToAdd = new HashSet<>(Arrays.asList("add1", "add2"));
     Set<String> idxToRemove = new HashSet<>(Arrays.asList("remove1", "remove2"));
 

@@ -1,11 +1,13 @@
 package org.gbif.validator.persistence.mapper;
 
-import com.google.common.collect.Sets;
 import java.sql.Array;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
@@ -37,19 +39,14 @@ public class StringArraySetTypeHandler extends BaseTypeHandler<Set<String>> {
 
   private Set<String> toSet(Array pgArray) throws SQLException {
     if (pgArray == null) {
-      return Sets.newHashSet();
+      return new HashSet<>();
     }
 
     String[] strings = (String[]) pgArray.getArray();
-    return containsOnlyNulls(strings) ? Sets.newHashSet() : Sets.newHashSet(strings);
+    return containsOnlyNulls(strings) ? new HashSet<>() : new HashSet<>(Arrays.asList(strings));
   }
 
   private boolean containsOnlyNulls(String[] strings) {
-    for (String s : strings) {
-      if (s != null) {
-        return false;
-      }
-    }
-    return true;
+    return Arrays.stream(strings).noneMatch(Objects::nonNull);
   }
 }
