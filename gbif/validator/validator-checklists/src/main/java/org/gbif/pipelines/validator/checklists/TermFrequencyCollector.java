@@ -20,7 +20,7 @@ public class TermFrequencyCollector {
   @Data
   public static class TermFrequency {
 
-    public static TermFrequency EMPTY = new TermFrequency();
+    public static final TermFrequency EMPTY = new TermFrequency();
 
     private final Map<Term, Long> termsFrequency;
 
@@ -76,7 +76,7 @@ public class TermFrequencyCollector {
       return this;
     }
 
-    public <T> TermFrequency add(List<Map<Term, Long>> termsFrequencies) {
+    public TermFrequency add(List<Map<Term, Long>> termsFrequencies) {
       if (termsFrequencies != null) {
         termsFrequencies.forEach(this::add);
       }
