@@ -37,7 +37,6 @@ import org.gbif.pipelines.validator.metircs.request.TermCountRequestBuilder;
 import org.gbif.pipelines.validator.metircs.request.TermCountRequestBuilder.TermCountRequest;
 import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.EvaluationCategory;
-import org.gbif.validator.api.EvaluationType;
 import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Metrics.FileInfo;
 import org.gbif.validator.api.Metrics.IssueInfo;
@@ -253,19 +252,11 @@ public class IndexMetricsCollector {
       issueSamples.add(IssueSample.builder().recordId(id).relatedData(relatedData).build());
     }
 
-    EvaluationCategory category = null;
-    try {
-      category = EvaluationType.valueOf(occurrenceIssueString).getCategory();
-    } catch (IllegalArgumentException ex) {
-      log.warn(
-          "Can't find enum EvaluationCategory for OccurrenceIssue - {}", occurrenceIssueString);
-    }
-
     return IssueInfo.builder()
         .issue(occurrenceIssueString)
         .count(bucket.getDocCount())
         .samples(issueSamples)
-        .issueCategory(category)
+        .issueCategory(EvaluationCategory.OCC_INTERPRETATION_BASED)
         .build();
   }
 }
