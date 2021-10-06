@@ -2,7 +2,7 @@ package org.gbif.pipelines.keygen.common;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
+import java.util.Arrays;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.gbif.dwc.terms.DcTerm;
@@ -93,7 +93,7 @@ public class TermUtils {
       ImmutableSet.copyOf(
           Iterables.concat(
               JAVA_PROPERTY_TERMS,
-              Lists.newArrayList(
+              Arrays.asList(
                   DwcTerm.decimalLatitude,
                   DwcTerm.decimalLongitude,
                   DwcTerm.verbatimLatitude,

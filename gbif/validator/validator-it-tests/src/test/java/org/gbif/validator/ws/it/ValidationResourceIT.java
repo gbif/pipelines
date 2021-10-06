@@ -7,12 +7,13 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.google.common.collect.Sets;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.UUID;
 import javax.validation.ValidationException;
 import lombok.SneakyThrows;
@@ -124,7 +125,7 @@ public class ValidationResourceIT {
     return ValidationRequest.builder()
         .installationKey(UUID.randomUUID())
         .sourceId(UUID.randomUUID().toString())
-        .notificationEmail(Sets.newHashSet("nobody@gbif.org", "test@gbif.org"))
+        .notificationEmail(new HashSet<>(Arrays.asList("nobody@gbif.org", "test@gbif.org")))
         .build();
   }
 
@@ -151,6 +152,7 @@ public class ValidationResourceIT {
                 .status(Collections.singleton(Status.QUEUED))
                 .sortByCreated(ValidationSearchRequest.SortOrder.DESC)
                 .build());
+    assertNotNull(validations.getCount());
     assertTrue(validations.getCount() > 0);
 
     PagingResponse<Validation> failedValidations =
@@ -197,7 +199,7 @@ public class ValidationResourceIT {
             validationWsClient.validateFileFromUrl(
                 testPath("/Archive.zip"),
                 ValidationRequest.builder()
-                    .notificationEmail(Sets.newHashSet("thisnotandEmail!gmail.com"))
+                    .notificationEmail(Collections.singleton("thisnotandEmail!gmail.com"))
                     .build()));
   }
 

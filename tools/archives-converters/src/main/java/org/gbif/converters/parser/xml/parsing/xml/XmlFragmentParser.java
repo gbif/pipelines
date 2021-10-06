@@ -16,13 +16,13 @@
 package org.gbif.converters.parser.xml.parsing.xml;
 
 import com.google.common.base.Strings;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -53,7 +53,7 @@ import org.xml.sax.SAXException;
 @Slf4j
 public class XmlFragmentParser {
 
-  private static final Map<OccurrenceSchemaType, RuleSet> RULE_SETS = Maps.newHashMap();
+  private static final Map<OccurrenceSchemaType, RuleSet> RULE_SETS = new HashMap<>();
 
   // static class, should never be instantiated
   private XmlFragmentParser() {}
@@ -173,14 +173,14 @@ public class XmlFragmentParser {
       OccurrenceSchemaType schemaType,
       boolean useTriplet,
       boolean useOccurrenceId) {
-    Set<IdentifierExtractionResult> results = Sets.newHashSet();
+    Set<IdentifierExtractionResult> results = new HashSet<>();
 
     // this is somewhat wasteful, but a whole separate stack of parsing to extract triplet seems
     // excessive
     List<RawOccurrenceRecord> records = parseRecord(xml, schemaType);
     if (records != null && !records.isEmpty()) {
       for (RawOccurrenceRecord record : records) {
-        Set<UniqueIdentifier> ids = Sets.newHashSet();
+        Set<UniqueIdentifier> ids = new HashSet<>();
 
         if (useTriplet) {
           Triplet triplet = null;

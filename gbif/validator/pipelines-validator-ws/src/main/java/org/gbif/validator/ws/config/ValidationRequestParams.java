@@ -1,8 +1,8 @@
 package org.gbif.validator.ws.config;
 
-import com.google.common.collect.Sets;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -32,7 +32,8 @@ public class ValidationRequestParams {
 
   private static final String SORT_BY_SEPARATOR = ":";
 
-  private static final Set<String> SORTABLES = Sets.newHashSet(INSTALLATION_KEY, CREATED);
+  private static final Set<String> SORTABLES =
+      new HashSet<>(Arrays.asList(INSTALLATION_KEY, CREATED));
 
   private static Optional<String> sorteable(String fieldName) {
     return SORTABLES.stream().filter(s -> s.equalsIgnoreCase(fieldName)).findFirst();
@@ -97,7 +98,8 @@ public class ValidationRequestParams {
   }
 
   public static Optional<Set<String>> getSetParam(WebRequest webRequest, String paramName) {
-    return Optional.ofNullable(webRequest.getParameterValues(paramName)).map(Sets::newHashSet);
+    return Optional.ofNullable(webRequest.getParameterValues(paramName))
+        .map(x -> new HashSet<>(Arrays.asList(x)));
   }
 
   public static <T> Optional<Set<T>> getSetParam(
