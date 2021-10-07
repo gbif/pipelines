@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -61,13 +63,23 @@ public class DwcaMetricsCollector implements MetricsCollector {
               message.getPipelineSteps(),
               message.getExecutionId(),
               FileFormat.DWCA.name());
+
+      CountDownLatch startSignal = new CountDownLatch(1);
+      log.info("Send checklist validation message and waiting for the respose...");
       publisher.sendAndReceive(
           checklistValidatorMessage,
           PipelinesChecklistValidatorMessage.ROUTING_KEY,
           true,
           UUID.randomUUID().toString(),
           config.checklistReplyQueue,
-          response -> log.info("Response received {}", response));
+          response -> {
+            startSignal.countDown();
+            log.info("Checklist validation has finished, the response is received - {}", response);
+          });
+      boolean await = startSignal.await(config.checklistTimeoutMin, TimeUnit.MINUTES);
+      if (!await) {
+        log.error("Checklist validation was cancelled by CountDownLatch timeout");
+      }
     }
   }
 

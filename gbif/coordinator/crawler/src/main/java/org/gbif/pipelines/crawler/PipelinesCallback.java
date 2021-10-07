@@ -281,16 +281,16 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
       return;
     }
 
-    Status mainStatus = status;
+    Status newStatus = status;
+    if (validation.hasFinished()) {
+      newStatus = validation.getStatus();
+    }
+
+    Status mainStatus = newStatus;
     if (mainStatus == Status.FINISHED) {
       boolean isQueued =
           validation.getMetrics().getStepTypes().stream()
-              .filter(
-                  x ->
-                      !x.getStepType()
-                          .equals(
-                              stepType
-                                  .name())) // Required to keep validation api separate to gbif-api
+              .filter(x -> !x.getStepType().equals(stepType.name()))
               .anyMatch(x -> x.getStatus() != Status.FINISHED);
       if (isQueued) {
         mainStatus = Status.QUEUED;
@@ -307,25 +307,25 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
     for (ValidationStep step : metrics.getStepTypes()) {
       // Required to keep validation api separate to gbif-api
       if (step.getStepType().equals(stepType.name())) {
-        step.setStatus(status);
+        step.setStatus(newStatus);
         addValidationType = false;
         break;
       }
     }
 
     if (addValidationType) {
-      metrics
-          .getStepTypes()
-          .add(
-              ValidationStep.builder()
-                  .stepType(stepType.name())
-                  .status(status)
-                  .executionOrder(stepType.getExecutionOrder())
-                  .build());
+      ValidationStep step =
+          ValidationStep.builder()
+              .stepType(stepType.name())
+              .status(newStatus)
+              .executionOrder(stepType.getExecutionOrder())
+              .build();
+      metrics.getStepTypes().add(step);
     }
 
     validation.setMetrics(metrics);
 
+    log.info("Validaton {} main state to {} and step state to {}", stepType, mainStatus, newStatus);
     validationClient.update(message.getDatasetUuid(), validation);
   }
 
