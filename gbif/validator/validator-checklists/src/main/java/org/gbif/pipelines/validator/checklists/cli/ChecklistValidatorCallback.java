@@ -97,7 +97,6 @@ public class ChecklistValidatorCallback
     validation
         .getMetrics()
         .setFileInfos(mergeFileInfoLists(validation.getMetrics().getFileInfos(), report));
-    log.info("Checklist validation finished: {}", validation);
     validationClient.update(validation);
     log.info("Checklist validation finished: {}", validation.getKey());
   }

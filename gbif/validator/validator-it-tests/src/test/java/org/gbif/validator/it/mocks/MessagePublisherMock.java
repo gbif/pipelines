@@ -35,7 +35,7 @@ public class MessagePublisherMock implements MessagePublisher {
       String correlationId,
       String replyTo,
       Consumer<T> consumer)
-      throws IOException {}
+      throws IOException, InterruptedException {}
 
   @Override
   public <T> void sendAndReceive(
@@ -46,7 +46,7 @@ public class MessagePublisherMock implements MessagePublisher {
       String correlationId,
       String replyTo,
       Consumer<T> consumer)
-      throws IOException {}
+      throws IOException, InterruptedException {}
 
   @Override
   public void close() {}
