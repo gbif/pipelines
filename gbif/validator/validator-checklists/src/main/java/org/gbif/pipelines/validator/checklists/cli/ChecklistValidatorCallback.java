@@ -2,8 +2,11 @@ package org.gbif.pipelines.validator.checklists.cli;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.Timestamp;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.SneakyThrows;
@@ -15,13 +18,18 @@ import org.gbif.common.messaging.api.messages.PipelinesChecklistValidatorMessage
 import org.gbif.pipelines.validator.checklists.ChecklistValidator;
 import org.gbif.pipelines.validator.checklists.cli.config.ChecklistValidatorConfiguration;
 import org.gbif.validator.api.Metrics;
+import org.gbif.validator.api.Metrics.ValidationStep;
 import org.gbif.validator.api.Validation;
+import org.gbif.validator.api.Validation.Status;
 import org.gbif.validator.ws.client.ValidationWsClient;
 
 /** Callback which is called when the {@link PipelinesChecklistValidatorMessage} is received. */
 @Slf4j
 public class ChecklistValidatorCallback
     extends AbstractMessageCallback<PipelinesChecklistValidatorMessage> {
+
+  // Use stepType as a String to keep validation api separate to gbif-api
+  private static final String STEP_TYPE = "VALIDATOR_COLLECT_METRICS";
 
   private final ChecklistValidatorConfiguration config;
   private final ChecklistValidator checklistValidator;
@@ -61,8 +69,12 @@ public class ChecklistValidatorCallback
   @SneakyThrows
   public void handleMessage(PipelinesChecklistValidatorMessage message) {
     Validation validation = validationClient.get(message.getDatasetUuid());
+
     if (validation != null) {
-      validateArchive(validation);
+      updateStatusToRunning(validation);
+      if (!validation.hasFinished()) {
+        validateArchive(validation);
+      }
       // void send(Object message, String exchange, String routingKey, boolean persistent, String
       // correlationId, String replyTo)
       messagePublisher.replyToQueue(
@@ -103,8 +115,7 @@ public class ChecklistValidatorCallback
 
   private static List<Metrics.FileInfo> mergeFileInfoLists(
       List<Metrics.FileInfo> from, List<Metrics.FileInfo> to) {
-    List<Metrics.FileInfo> result = new ArrayList<>();
-    result.addAll(to);
+    List<Metrics.FileInfo> result = new ArrayList<>(to);
     if (from != null) {
       result.addAll(
           from.stream()
@@ -113,5 +124,35 @@ public class ChecklistValidatorCallback
               .collect(Collectors.toList()));
     }
     return result;
+  }
+
+  /** Update status from QUEUED to RUNNING to display proper status */
+  public void updateStatusToRunning(Validation validation) {
+
+    // In case when validation was finihsed we need don't need to update the status
+    Status newStatus;
+    if (validation.hasFinished()) {
+      newStatus = validation.getStatus();
+    } else {
+      newStatus = Status.RUNNING;
+    }
+
+    validation.setStatus(newStatus);
+    validation.setModified(Timestamp.valueOf(ZonedDateTime.now().toLocalDateTime()));
+
+    Metrics metrics =
+        Optional.ofNullable(validation.getMetrics()).orElse(Metrics.builder().build());
+
+    for (ValidationStep step : metrics.getStepTypes()) {
+      if (step.getStepType().equals(STEP_TYPE)) {
+        step.setStatus(newStatus);
+        break;
+      }
+    }
+
+    validation.setMetrics(metrics);
+
+    log.info("Validaton {} change status to {} for {}", validation.getKey(), newStatus, STEP_TYPE);
+    validationClient.update(validation.getKey(), validation);
   }
 }

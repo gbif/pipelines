@@ -8,9 +8,7 @@ import io.github.resilience4j.retry.IntervalFunction;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import java.io.IOException;
-import java.sql.Timestamp;
 import java.time.Duration;
-import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -47,8 +45,6 @@ import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.common.utils.ZookeeperUtils;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.utils.file.properties.PropertiesUtil;
-import org.gbif.validator.api.Metrics;
-import org.gbif.validator.api.Metrics.ValidationStep;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.Validation.Status;
 import org.gbif.validator.ws.client.ValidationWsClient;
@@ -269,64 +265,9 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
   }
 
   private void updateValidatorInfoStatus(Status status) {
-    if (!isValidator) {
-      return;
+    if (isValidator) {
+      Validations.updateStatus(validationClient, message.getDatasetUuid(), stepType, status);
     }
-
-    Validation validation = validationClient.get(message.getDatasetUuid());
-    if (validation == null) {
-      log.warn(
-          "Can't find validation data key {}, please check that record exists",
-          message.getDatasetUuid());
-      return;
-    }
-
-    Status newStatus = status;
-    if (validation.hasFinished()) {
-      newStatus = validation.getStatus();
-    }
-
-    Status mainStatus = newStatus;
-    if (mainStatus == Status.FINISHED) {
-      boolean isQueued =
-          validation.getMetrics().getStepTypes().stream()
-              .filter(x -> !x.getStepType().equals(stepType.name()))
-              .anyMatch(x -> x.getStatus() != Status.FINISHED);
-      if (isQueued) {
-        mainStatus = Status.QUEUED;
-      }
-    }
-    validation.setStatus(mainStatus);
-
-    validation.setModified(Timestamp.valueOf(ZonedDateTime.now().toLocalDateTime()));
-
-    Metrics metrics =
-        Optional.ofNullable(validation.getMetrics()).orElse(Metrics.builder().build());
-
-    boolean addValidationType = true;
-    for (ValidationStep step : metrics.getStepTypes()) {
-      // Required to keep validation api separate to gbif-api
-      if (step.getStepType().equals(stepType.name())) {
-        step.setStatus(newStatus);
-        addValidationType = false;
-        break;
-      }
-    }
-
-    if (addValidationType) {
-      ValidationStep step =
-          ValidationStep.builder()
-              .stepType(stepType.name())
-              .status(newStatus)
-              .executionOrder(stepType.getExecutionOrder())
-              .build();
-      metrics.getStepTypes().add(step);
-    }
-
-    validation.setMetrics(metrics);
-
-    log.info("Validaton {} main state to {} and step state to {}", stepType, mainStatus, newStatus);
-    validationClient.update(message.getDatasetUuid(), validation);
   }
 
   private Optional<TrackingInfo> trackPipelineStep() {

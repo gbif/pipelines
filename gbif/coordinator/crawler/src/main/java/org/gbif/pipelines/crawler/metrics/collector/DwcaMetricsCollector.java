@@ -29,6 +29,7 @@ import org.gbif.validator.api.FileFormat;
 import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Metrics.FileInfo;
 import org.gbif.validator.api.Validation;
+import org.gbif.validator.api.Validation.Status;
 import org.gbif.validator.ws.client.ValidationWsClient;
 
 @Slf4j
@@ -61,6 +62,10 @@ public class DwcaMetricsCollector implements MetricsCollector {
               message.getPipelineSteps(),
               message.getExecutionId(),
               FileFormat.DWCA.name());
+
+      // Set status to QUEUED before sending the message
+      org.gbif.pipelines.crawler.Validations.updateStatus(
+          validationClient, message.getDatasetUuid(), stepType, Status.QUEUED);
 
       log.info("Send checklist validation message and waiting for the response...");
       publisher.sendAndReceive(
