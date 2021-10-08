@@ -1,6 +1,8 @@
 package org.gbif.pipelines.crawler.interpret;
 
-import static org.gbif.common.parsers.date.DateComponentOrdering.*;
+import static org.gbif.common.parsers.date.DateComponentOrdering.DMY_FORMATS;
+import static org.gbif.common.parsers.date.DateComponentOrdering.ISO_FORMATS;
+import static org.gbif.common.parsers.date.DateComponentOrdering.MDY_FORMATS;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -122,12 +124,17 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
               ? message.getExtraPath()
               : String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, verbatim);
 
+      String defaultDateFormat = null;
+      if (!config.validatorOnly && !message.isValidator()) {
+        defaultDateFormat = getDefaultDateFormat(datasetId);
+      }
+
       ProcessRunnerBuilderBuilder builder =
           ProcessRunnerBuilder.builder()
               .config(config)
               .message(message)
               .inputPath(path)
-              .defaultDateFormat(getDefaultDateFormat(datasetId));
+              .defaultDateFormat(defaultDateFormat);
 
       Predicate<StepRunner> runnerPr = sr -> config.processRunner.equalsIgnoreCase(sr.name());
 
