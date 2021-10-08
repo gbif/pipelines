@@ -2,7 +2,6 @@ package org.gbif.pipelines.crawler;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gbif.common.messaging.api.Message;
@@ -46,15 +45,13 @@ public class MessagePublisherStub implements MessagePublisher {
   }
 
   @Override
-  public <T> void sendAndReceive(
-      Message message, String s, boolean b, String s1, String s2, Consumer<T> consumer) {
-    // NOP
+  public <T> T sendAndReceive(Message message, String s, boolean b, String s1, String s2) {
+    return null;
   }
 
   @Override
-  public <T> void sendAndReceive(
-      Object o, String s, String s1, boolean b, String s2, String s3, Consumer<T> consumer) {
-    // NOP
+  public <T> T sendAndReceive(Object o, String s, String s1, boolean b, String s2, String s3) {
+    return null;
   }
 
   @Override

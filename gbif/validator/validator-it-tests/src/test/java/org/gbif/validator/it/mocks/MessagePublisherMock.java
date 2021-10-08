@@ -1,7 +1,6 @@
 package org.gbif.validator.it.mocks;
 
 import java.io.IOException;
-import java.util.function.Consumer;
 import org.gbif.common.messaging.api.Message;
 import org.gbif.common.messaging.api.MessagePublisher;
 
@@ -28,25 +27,23 @@ public class MessagePublisherMock implements MessagePublisher {
       throws IOException {}
 
   @Override
-  public <T> void sendAndReceive(
-      Message message,
-      String routingKey,
-      boolean persistent,
-      String correlationId,
-      String replyTo,
-      Consumer<T> consumer)
-      throws IOException, InterruptedException {}
+  public <T> T sendAndReceive(
+      Message message, String routingKey, boolean persistent, String correlationId, String replyTo)
+      throws IOException, InterruptedException {
+    return null;
+  }
 
   @Override
-  public <T> void sendAndReceive(
+  public <T> T sendAndReceive(
       Object message,
       String exchange,
       String routingKey,
       boolean persistent,
       String correlationId,
-      String replyTo,
-      Consumer<T> consumer)
-      throws IOException, InterruptedException {}
+      String replyTo)
+      throws IOException, InterruptedException {
+    return null;
+  }
 
   @Override
   public void close() {}

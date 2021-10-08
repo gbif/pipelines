@@ -63,15 +63,14 @@ public class DwcaMetricsCollector implements MetricsCollector {
               FileFormat.DWCA.name());
 
       log.info("Send checklist validation message and waiting for the response...");
-      publisher.sendAndReceive(
-          checklistValidatorMessage,
-          PipelinesChecklistValidatorMessage.ROUTING_KEY,
-          true,
-          UUID.randomUUID().toString(),
-          config.checklistReplyQueue,
-          response -> {
-            log.info("Checklist validation has finished, the response is received - {}", response);
-          });
+      Object response =
+          publisher.sendAndReceive(
+              checklistValidatorMessage,
+              PipelinesChecklistValidatorMessage.ROUTING_KEY,
+              true,
+              UUID.randomUUID().toString(),
+              config.checklistReplyQueue);
+      log.info("Checklist validation has finished, the response is received - {}", response);
     }
   }
 
