@@ -71,7 +71,7 @@ public class ChecklistValidatorCallback
     Validation validation = validationClient.get(message.getDatasetUuid());
 
     if (validation != null) {
-      updateStatusToRunning(validation);
+      validation = updateStatusToRunning(validation);
       if (!validation.hasFinished()) {
         validateArchive(validation);
       }
@@ -127,7 +127,7 @@ public class ChecklistValidatorCallback
   }
 
   /** Update status from QUEUED to RUNNING to display proper status */
-  public void updateStatusToRunning(Validation validation) {
+  public Validation updateStatusToRunning(Validation validation) {
 
     // In case when validation was finihsed we need don't need to update the status
     Status newStatus;
@@ -153,6 +153,6 @@ public class ChecklistValidatorCallback
     validation.setMetrics(metrics);
 
     log.info("Validaton {} change status to {} for {}", validation.getKey(), newStatus, STEP_TYPE);
-    validationClient.update(validation.getKey(), validation);
+    return validationClient.update(validation.getKey(), validation);
   }
 }
