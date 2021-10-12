@@ -82,6 +82,10 @@ public class Metrics {
     private Long count;
     private String extra;
     @Builder.Default private List<IssueSample> samples = Collections.emptyList();
+
+    public static IssueInfo create(EvaluationType type) {
+      return IssueInfo.builder().issue(type.name()).issueCategory(type.getCategory()).build();
+    }
   }
 
   @Data

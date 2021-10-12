@@ -194,6 +194,11 @@
         <artifactId>registry-ws-client</artifactId>
         <version>${registry.version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.gbif.registry</groupId>
+        <artifactId>registry-metadata</artifactId>
+        <version>${registry.version}</version>
+      </dependency>
 
       <!-- Spring dependencies -->
       <dependency>

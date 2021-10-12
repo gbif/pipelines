@@ -34,6 +34,7 @@ import org.gbif.pipelines.core.utils.DwcaUtils;
 import org.gbif.pipelines.crawler.validator.ArchiveValidatorConfiguration;
 import org.gbif.pipelines.validator.DwcaValidator;
 import org.gbif.pipelines.validator.Validations;
+import org.gbif.pipelines.validator.rules.BasicMetadataEvaluator;
 import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.EvaluationCategory;
 import org.gbif.validator.api.Metrics.FileInfo;
@@ -95,10 +96,14 @@ public class DwcaArchiveValidator implements ArchiveValidator {
     try {
       byte[] bytes = Files.readAllBytes(inputPath);
       String xmlDoc = new String(bytes, StandardCharsets.UTF_8);
+
+      // BasicMetadataEvaluator
+      List<IssueInfo> issueInfos = BasicMetadataEvaluator.evaluate(xmlDoc);
+
+      // TODO: REFACTOR!
       XmlSchemaValidatorResult result =
           schemaValidatorFactory.newValidatorFromDocument(xmlDoc).validate(xmlDoc);
 
-      List<IssueInfo> issueInfos = Collections.emptyList();
       if (result != null) {
         issueInfos =
             result.getErrors().stream()
