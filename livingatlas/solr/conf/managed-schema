@@ -712,6 +712,7 @@
   <copyField source="speciesSubgroup" dest="text"/>
   <copyField source="stateConservation" dest="text"/>
   <copyField source="stateProvince" dest="text"/>
+  <copyField source="taxonRemarks" dest="text"/>
   <copyField source="typeStatus" dest="text"/>
   <copyField source="vernacularName" dest="matched_name"/>
   <copyField source="vernacularName" dest="text"/>
