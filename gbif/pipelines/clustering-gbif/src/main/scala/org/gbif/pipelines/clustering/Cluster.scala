@@ -98,7 +98,8 @@ object Cluster {
             Option(r.getAs[String]("recordNumber")),
             Option(r.getAs[String]("catalogNumber")),
             Option(r.getAs[String]("otherCatalogNumbers")),
-            triplify(r) // ic:cc:cn format
+            triplify(r), // ic:cc:cn format
+            scopeCatalogNumber(r) // ic:cn format like ENA uses
           )
 
           // clean IDs

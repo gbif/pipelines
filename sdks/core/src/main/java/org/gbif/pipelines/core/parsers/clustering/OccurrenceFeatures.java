@@ -62,7 +62,8 @@ public interface OccurrenceFeatures {
             getRecordNumber(),
             getCatalogNumber(),
             getOtherCatalogNumbers(),
-            getTripleIdentifier())
+            getTripleIdentifier(),
+            getScopedIdentifier())
         .filter(Objects::nonNull)
         .collect(Collectors.toList());
   }
@@ -71,6 +72,16 @@ public interface OccurrenceFeatures {
   default String getTripleIdentifier() {
     String[] codes = {getInstitutionCode(), getCollectionCode(), getCatalogNumber()};
     if (Arrays.stream(codes).noneMatch(Objects::isNull)) {
+      return String.join(":", codes);
+    } else {
+      return null;
+    }
+  }
+
+  /** @return an identifier of form ic:cn when both are present */
+  default String getScopedIdentifier() {
+    String[] codes = {getInstitutionCode(), getCatalogNumber()};
+    if (!Arrays.stream(codes).anyMatch(Objects::isNull)) {
       return String.join(":", codes);
     } else {
       return null;
