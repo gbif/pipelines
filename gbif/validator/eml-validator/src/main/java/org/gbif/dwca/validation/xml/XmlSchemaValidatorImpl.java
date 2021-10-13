@@ -11,8 +11,9 @@ import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.dwca.validation.XmlSchemaValidator;
-import org.gbif.validator.api.XmlSchemaValidatorResult;
-import org.gbif.validator.api.XmlSchemaValidatorResult.XmlSchemaValidatorError;
+import org.gbif.validator.api.EvaluationType;
+import org.gbif.validator.api.Level;
+import org.gbif.validator.api.Metrics.IssueInfo;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
@@ -37,12 +38,10 @@ public class XmlSchemaValidatorImpl implements XmlSchemaValidator {
 
   @SneakyThrows
   @Override
-  public XmlSchemaValidatorResult validate(String document) {
+  public List<IssueInfo> validate(String document) {
     Validator validator = newValidator(schema);
     validator.validate(new StreamSource(new StringReader(document)));
-    return XmlSchemaValidatorResult.builder()
-        .errors(((CollectorErrorHandler) validator.getErrorHandler()).getErrors())
-        .build();
+    return ((CollectorErrorHandler) validator.getErrorHandler()).getErrors();
   }
 
   /**
@@ -52,33 +51,27 @@ public class XmlSchemaValidatorImpl implements XmlSchemaValidator {
   @Data
   public static class CollectorErrorHandler implements ErrorHandler {
 
-    private final List<XmlSchemaValidatorError> errors = new ArrayList<>();
+    private final List<IssueInfo> errors = new ArrayList<>();
 
     @Override
     public void warning(SAXParseException exception) {
       errors.add(
-          XmlSchemaValidatorError.builder()
-              .level(XmlSchemaValidatorError.Level.WARNING)
-              .error(exception.getMessage())
-              .build());
+          IssueInfo.create(
+              EvaluationType.EML_GBIF_SCHEMA, Level.WARNING.name(), exception.getMessage()));
     }
 
     @Override
     public void error(SAXParseException exception) {
       errors.add(
-          XmlSchemaValidatorError.builder()
-              .level(XmlSchemaValidatorError.Level.ERROR)
-              .error(exception.getMessage())
-              .build());
+          IssueInfo.create(
+              EvaluationType.EML_GBIF_SCHEMA, Level.ERROR.name(), exception.getMessage()));
     }
 
     @Override
     public void fatalError(SAXParseException exception) throws SAXException {
       errors.add(
-          XmlSchemaValidatorError.builder()
-              .level(XmlSchemaValidatorError.Level.FATAL)
-              .error(exception.getMessage())
-              .build());
+          IssueInfo.create(
+              EvaluationType.EML_GBIF_SCHEMA, Level.FATAL.name(), exception.getMessage()));
       throw exception;
     }
   }

@@ -1,8 +1,9 @@
 package org.gbif.dwca.validation;
 
-import org.gbif.validator.api.XmlSchemaValidatorResult;
+import java.util.List;
+import org.gbif.validator.api.Metrics.IssueInfo;
 
 public interface XmlSchemaValidator {
 
-  XmlSchemaValidatorResult validate(String document);
+  List<IssueInfo> validate(String document);
 }

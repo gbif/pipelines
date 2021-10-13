@@ -80,11 +80,23 @@ public class Metrics {
     private String issue;
     private EvaluationCategory issueCategory;
     private Long count;
-    private String extra;
+
     @Builder.Default private List<IssueSample> samples = Collections.emptyList();
 
     public static IssueInfo create(EvaluationType type) {
       return IssueInfo.builder().issue(type.name()).issueCategory(type.getCategory()).build();
+    }
+
+    public static IssueInfo create(EvaluationType type, String dataKey, String dataValue) {
+      return IssueInfo.builder()
+          .issue(type.name())
+          .issueCategory(type.getCategory())
+          .samples(
+              Collections.singletonList(
+                  IssueSample.builder()
+                      .relatedData(Collections.singletonMap(dataKey, dataValue))
+                      .build()))
+          .build();
     }
   }
 

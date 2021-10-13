@@ -15,6 +15,10 @@
  */
 package org.gbif.pipelines.validator;
 
+import static org.gbif.validator.api.EvaluationType.OCCURRENCE_NOT_UNIQUELY_IDENTIFIED;
+import static org.gbif.validator.api.EvaluationType.RECORD_NOT_UNIQUELY_IDENTIFIED;
+import static org.gbif.validator.api.EvaluationType.RECORD_REFERENTIAL_INTEGRITY_VIOLATION;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -38,6 +42,7 @@ import org.gbif.dwc.record.StarRecord;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.utils.file.ClosableIterator;
+import org.gbif.validator.api.Metrics.IssueInfo;
 
 /**
  * This performs the validity checking for DwC-A for the purposes <em>of deciding if the archive is
@@ -112,7 +117,7 @@ public class DwcaValidator {
    * @return a report with the counts of good, bad and missing identifiers
    */
   @SneakyThrows
-  public DwcaValidationReport validate() {
+  public DwcaValidationReport validateAsReport() {
     if (datasetType == DatasetType.OCCURRENCE) {
       return new DwcaValidationReport(datasetKey, validateOccurrenceCore());
     } else if (DATASET_TYPE_CORE_ID.containsKey(datasetType)) {
@@ -141,6 +146,31 @@ public class DwcaValidator {
       return new DwcaValidationReport(
           datasetKey, "Dataset type[" + datasetType + "] is not supported in indexing");
     }
+  }
+
+  public List<IssueInfo> validate() {
+    DwcaValidationReport report = validateAsReport();
+
+    List<IssueInfo> issueInfos = new ArrayList<>();
+
+    // Generic report
+    GenericValidationReport genericReport = report.getGenericReport();
+    if (genericReport != null && !genericReport.isValid()) {
+      if (!genericReport.getDuplicateIds().isEmpty()) {
+        issueInfos.add(IssueInfo.create(RECORD_NOT_UNIQUELY_IDENTIFIED));
+      }
+      if (!genericReport.getRowNumbersMissingId().isEmpty()) {
+        issueInfos.add(IssueInfo.create(RECORD_REFERENTIAL_INTEGRITY_VIOLATION));
+      }
+    }
+
+    // Occurrence report
+    OccurrenceValidationReport occurrenceReport = report.getOccurrenceReport();
+    if (occurrenceReport != null && !occurrenceReport.isValid()) {
+      issueInfos.add(IssueInfo.create(OCCURRENCE_NOT_UNIQUELY_IDENTIFIED));
+    }
+
+    return issueInfos;
   }
 
   /**

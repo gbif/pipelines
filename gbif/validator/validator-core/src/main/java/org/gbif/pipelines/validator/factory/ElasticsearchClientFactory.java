@@ -17,6 +17,7 @@ public class ElasticsearchClientFactory {
   private final RestHighLevelClient client;
 
   private ElasticsearchClientFactory(String[] esHosts) {
+    log.info("Create ES client");
     HttpHost[] hosts = Arrays.stream(esHosts).map(HttpHost::create).toArray(HttpHost[]::new);
     this.client = new RestHighLevelClient(RestClient.builder(hosts));
   }
@@ -35,6 +36,7 @@ public class ElasticsearchClientFactory {
   @SneakyThrows
   public void close() {
     if (client != null) {
+      log.info("Close ES client");
       client.close();
     }
   }

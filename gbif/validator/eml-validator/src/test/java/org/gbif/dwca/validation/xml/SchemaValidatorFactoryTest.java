@@ -47,8 +47,7 @@ public class SchemaValidatorFactoryTest {
         IllegalArgumentException.class,
         () -> {
           // Gets the test schema
-          XmlSchemaValidator emlSchemaValidator =
-              schemaValidatorFactory.newValidator(testPath(clientAndServer, "/notExist.xsd"));
+          schemaValidatorFactory.newValidator(testPath(clientAndServer, "/notExist.xsd"));
           // Should fail if next line is reached
           fail();
         });

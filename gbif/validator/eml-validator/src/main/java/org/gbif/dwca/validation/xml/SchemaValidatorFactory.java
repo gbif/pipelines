@@ -2,7 +2,9 @@ package org.gbif.dwca.validation.xml;
 
 import java.io.StringReader;
 import java.net.URI;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import javax.xml.XMLConstants;
@@ -15,6 +17,8 @@ import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.dwca.validation.XmlSchemaValidator;
+import org.gbif.validator.api.EvaluationType;
+import org.gbif.validator.api.Metrics.IssueInfo;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
@@ -63,6 +67,14 @@ public class SchemaValidatorFactory {
     return Optional.ofNullable(getSchema(xmlDocument))
         .map(this::newValidator)
         .orElseThrow(() -> new IllegalArgumentException("schemaLocation not found in document"));
+  }
+
+  public List<IssueInfo> validate(String xmlDocument) {
+    try {
+      return newValidatorFromDocument(xmlDocument).validate(xmlDocument);
+    } catch (Exception ex) {
+      return Collections.singletonList(IssueInfo.create(EvaluationType.EML_NOT_FOUND));
+    }
   }
 
   /**

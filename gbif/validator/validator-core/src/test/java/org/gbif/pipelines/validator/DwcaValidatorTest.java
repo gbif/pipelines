@@ -26,7 +26,7 @@ public class DwcaValidatorTest {
             .datasetType(DatasetType.OCCURRENCE)
             .archive(archive)
             .build()
-            .validate();
+            .validateAsReport();
 
     // Should
     assertEquals(100, report.getOccurrenceReport().getCheckedRecords());
@@ -59,7 +59,7 @@ public class DwcaValidatorTest {
             .datasetType(DatasetType.CHECKLIST)
             .archive(archive)
             .build()
-            .validate();
+            .validateAsReport();
 
     // Should
     assertEquals(100, report.getOccurrenceReport().getCheckedRecords());
@@ -91,7 +91,7 @@ public class DwcaValidatorTest {
             .datasetType(DatasetType.METADATA)
             .archive(archive)
             .build()
-            .validate();
+            .validateAsReport();
 
     // Should
     assertTrue(report.isValid());
@@ -109,7 +109,7 @@ public class DwcaValidatorTest {
             .datasetType(DatasetType.OCCURRENCE)
             .archive(archive)
             .build()
-            .validate();
+            .validateAsReport();
 
     // Should
     assertEquals(1000, report.getOccurrenceReport().getCheckedRecords());
@@ -141,7 +141,7 @@ public class DwcaValidatorTest {
             .datasetType(DatasetType.OCCURRENCE)
             .archive(archive)
             .build()
-            .validate();
+            .validateAsReport();
 
     // Should
     assertEquals(100, report.getOccurrenceReport().getCheckedRecords());
@@ -166,7 +166,7 @@ public class DwcaValidatorTest {
             .datasetType(DatasetType.OCCURRENCE)
             .archive(archive)
             .build()
-            .validate();
+            .validateAsReport();
 
     // Should
     assertEquals(100, report.getOccurrenceReport().getCheckedRecords());
@@ -191,7 +191,7 @@ public class DwcaValidatorTest {
             .datasetType(DatasetType.OCCURRENCE)
             .archive(archive)
             .build()
-            .validate();
+            .validateAsReport();
 
     // Should
     assertEquals(100, report.getOccurrenceReport().getCheckedRecords());
@@ -217,7 +217,7 @@ public class DwcaValidatorTest {
             .datasetType(DatasetType.OCCURRENCE)
             .archive(archive)
             .build()
-            .validate();
+            .validateAsReport();
 
     // Should
     assertEquals(100, report.getOccurrenceReport().getCheckedRecords());
@@ -244,7 +244,7 @@ public class DwcaValidatorTest {
             .datasetType(DatasetType.OCCURRENCE)
             .archive(archive)
             .build()
-            .validate();
+            .validateAsReport();
 
     // Should
     assertEquals(100, report.getOccurrenceReport().getCheckedRecords());
@@ -272,7 +272,7 @@ public class DwcaValidatorTest {
             .datasetType(DatasetType.OCCURRENCE)
             .archive(archive)
             .build()
-            .validate();
+            .validateAsReport();
 
     // Should
     assertEquals(100, report.getOccurrenceReport().getCheckedRecords());
@@ -298,7 +298,7 @@ public class DwcaValidatorTest {
             .datasetType(DatasetType.OCCURRENCE)
             .archive(archive)
             .build()
-            .validate();
+            .validateAsReport();
 
     // Should
     assertEquals(0, report.getOccurrenceReport().getCheckedRecords());
@@ -322,7 +322,7 @@ public class DwcaValidatorTest {
             .datasetType(DatasetType.CHECKLIST)
             .archive(archive)
             .build()
-            .validate();
+            .validateAsReport();
 
     // Should
     assertTrue("Validation failed: " + report.getInvalidationReason(), report.isValid());
@@ -343,7 +343,7 @@ public class DwcaValidatorTest {
             .datasetType(DatasetType.CHECKLIST)
             .archive(archive)
             .build()
-            .validate();
+            .validateAsReport();
 
     // Should
     assertTrue("Validation failed: " + report.getInvalidationReason(), report.isValid());
@@ -364,7 +364,7 @@ public class DwcaValidatorTest {
             .datasetType(DatasetType.CHECKLIST)
             .archive(archive)
             .build()
-            .validate();
+            .validateAsReport();
 
     // Should
     assertFalse("Validation succeeded", report.isValid());
@@ -385,7 +385,7 @@ public class DwcaValidatorTest {
             .datasetType(DatasetType.CHECKLIST)
             .archive(archive)
             .build()
-            .validate();
+            .validateAsReport();
 
     // Should
     assertFalse("Validation succeeded", report.isValid());

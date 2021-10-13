@@ -138,7 +138,7 @@ public class ArchiveValidatorCallbackIT {
     assertNull(meta.getCount());
     assertNull(meta.getIndexedCount());
     assertEquals(0, meta.getTerms().size());
-    assertEquals(2, meta.getIssues().size());
+    assertEquals(3, meta.getIssues().size());
     assertEquals(DwcFileType.METADATA, meta.getFileType());
 
     Optional<IssueInfo> randomIssue =
