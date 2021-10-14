@@ -90,12 +90,12 @@ public class ValidationResourceIT {
   /** Set expected responses for the ClientAndServer mock server. */
   private static void setExpectations() {
     clientAndServer
-        .when(HttpRequest.request().withMethod("GET").withPath("/Archive.zip"))
-        .respond(HttpResponse.response().withBody(readTestFile("/Archive.zip")));
+        .when(HttpRequest.request().withMethod("GET").withPath("/dwca/archive.zip"))
+        .respond(HttpResponse.response().withBody(readTestFile("/dwca/archive.zip")));
 
     // HEAD requests are used to check if a file is available
     clientAndServer
-        .when(HttpRequest.request().withMethod("HEAD").withPath("/Archive.zip"))
+        .when(HttpRequest.request().withMethod("HEAD").withPath("/dwca/archive.zip"))
         .respond(HttpResponse.response().withStatusCode(HttpStatusCode.OK_200.code()));
   }
 
@@ -131,7 +131,7 @@ public class ValidationResourceIT {
 
   @Test
   public void validationSubmitFileIT() {
-    File archive = readTestFileInputStream("/Archive.zip");
+    File archive = readTestFileInputStream("/dwca/submit-archive.zip");
     ValidationRequest validationRequest = testValidationRequest();
     Validation validation = validationWsClient.validateFile(archive, validationRequest);
     assertNotNull(validation);
@@ -169,7 +169,7 @@ public class ValidationResourceIT {
   public void validationSubmitUrlIT() {
     ValidationRequest validationRequest = testValidationRequest();
     Validation validation =
-        validationWsClient.validateFileFromUrl(testPath("/Archive.zip"), validationRequest);
+        validationWsClient.validateFileFromUrl(testPath("/dwca/archive.zip"), validationRequest);
     assertNotNull(validation);
     assertEquals(validationRequest.getInstallationKey(), validation.getInstallationKey());
     assertEquals(validationRequest.getSourceId(), validation.getSourceId());
@@ -184,7 +184,7 @@ public class ValidationResourceIT {
         IllegalArgumentException.class,
         () ->
             validationWsClient.validateFileFromUrl(
-                testPath("/Archive.zip"),
+                testPath("/dwca/archive.zip"),
                 ValidationRequest.builder()
                     .sourceId(UUID.randomUUID().toString())
                     .installationKey(UUID.randomUUID())
@@ -197,7 +197,7 @@ public class ValidationResourceIT {
         ValidationException.class,
         () ->
             validationWsClient.validateFileFromUrl(
-                testPath("/Archive.zip"),
+                testPath("/dwca/archive.zip"),
                 ValidationRequest.builder()
                     .notificationEmail(Collections.singleton("thisnotandEmail!gmail.com"))
                     .build()));
@@ -205,7 +205,7 @@ public class ValidationResourceIT {
 
   @Test
   public void validationUpdateIT() {
-    File archive = readTestFileInputStream("/Archive.zip");
+    File archive = readTestFileInputStream("/dwca/archive.zip");
     Validation validation = validationWsClient.submitFile(archive);
 
     validation.setStatus(Validation.Status.FINISHED);
@@ -240,7 +240,7 @@ public class ValidationResourceIT {
 
   @Test
   public void cancelValidationIT() {
-    File archive = readTestFileInputStream("/Archive.zip");
+    File archive = readTestFileInputStream("/dwca/cancel-archive.zip");
     Validation validation = validationWsClient.submitFile(archive);
     assertNotNull(validation);
 
@@ -264,7 +264,7 @@ public class ValidationResourceIT {
 
   @Test
   public void deleteValidationIT() {
-    File archive = readTestFileInputStream("/Archive.zip");
+    File archive = readTestFileInputStream("/dwca/archive.zip");
     Validation validation = validationWsClient.submitFile(archive);
     assertNotNull(validation);
 
