@@ -13,7 +13,7 @@ schemas:
 gbif:
   ws:
     security:
-      wrappedContent: false
+      wrapContent: false
 validation:
   datasource:
     hikari:
