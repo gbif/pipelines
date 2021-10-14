@@ -124,7 +124,7 @@
     <!-- This project -->
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
-      <artifactId>eml-validator</artifactId>
+      <artifactId>validator-eml</artifactId>
     </dependency>
     <dependency>
       <groupId>org.gbif.pipelines</groupId>

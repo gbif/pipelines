@@ -11,7 +11,7 @@
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>eml-validator</artifactId>
+  <artifactId>validator-eml</artifactId>
 
   <name>Pipelines :: GBIF :: Validator :: EML</name>
   <description>Library to perform validation of GBIF supported EML and other XML schemas</description>

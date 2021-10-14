@@ -24,7 +24,7 @@
     <module>validator-ws-client</module>
     <module>validator-it-tests</module>
     <module>validator-mail</module>
-    <module>eml-validator</module>
+    <module>validator-eml</module>
     <module>validator-checklists</module>
   </modules>
 
