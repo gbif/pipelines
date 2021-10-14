@@ -100,17 +100,6 @@ public class DwcaValidator {
   private final Set<String> uniqueTriplets = new HashSet<>();
 
   /**
-   * Produce a report for a metadata-only dataset.
-   *
-   * @return a "passed" report
-   */
-  public DwcaValidationReport validateMetadata() {
-    return new DwcaValidationReport(
-        datasetKey,
-        new GenericValidationReport(0, true, Collections.emptyList(), Collections.emptyList()));
-  }
-
-  /**
    * Produce a report with the counts of good and bad unique identifiers (triplets and occurrenceId)
    * in the archive.
    *
