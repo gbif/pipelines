@@ -15,9 +15,9 @@
   <name>Pipelines :: GBIF :: Coordinator</name>
 
   <modules>
-    <module>crawler</module>
-    <module>crawler-integration-tests</module>
-    <module>crawler-integration-tests-hbase</module>
+    <module>tasks</module>
+    <module>tasks-integration-tests</module>
+    <module>tasks-integration-tests-hbase</module>
   </modules>
 
 
