@@ -5,10 +5,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -97,7 +98,7 @@ public class HBaseLockingKeyServiceIT {
 
   @Test
   public void testNoContention() {
-    Set<String> uniqueIds = Sets.newHashSet();
+    Set<String> uniqueIds = new HashSet<>();
     uniqueIds.add(A);
     uniqueIds.add(B);
     uniqueIds.add(C);
@@ -127,7 +128,8 @@ public class HBaseLockingKeyServiceIT {
 
     // test: keygen attempt uses previous unique id and a new "occurrenceId", expects the existing
     // key to be returned
-    KeyLookupResult result = keyService.generateKey(ImmutableSet.of(triplet, "ABCD"), datasetKey);
+    KeyLookupResult result =
+        keyService.generateKey(new HashSet<>(Arrays.asList(triplet, "ABCD")), datasetKey);
     assertEquals(2, result.getKey());
     assertFalse(result.isCreated());
   }
@@ -136,7 +138,7 @@ public class HBaseLockingKeyServiceIT {
   public void testSimpleIdContig() {
     KeyLookupResult result = null;
     for (int i = 0; i < 1000; i++) {
-      Set<String> uniqueIds = ImmutableSet.of(String.valueOf(i));
+      Set<String> uniqueIds = Collections.singleton(String.valueOf(i));
       result = keyService.generateKey(uniqueIds, "boo");
     }
     assertEquals(1000, result.getKey());
@@ -146,7 +148,7 @@ public class HBaseLockingKeyServiceIT {
   public void testResumeCountAfterFailure() {
     KeyLookupResult result = null;
     for (int i = 0; i < 1001; i++) {
-      Set<String> uniqueIds = ImmutableSet.of(String.valueOf(i));
+      Set<String> uniqueIds = Collections.singleton(String.valueOf(i));
       result = keyService.generateKey(uniqueIds, "boo");
     }
     assertEquals(1001, result.getKey());
@@ -154,7 +156,7 @@ public class HBaseLockingKeyServiceIT {
     // first one claimed up to 2000, then "died". On restart we claim 2000 to 3000.
     HBaseLockingKeyService keyService2 = new HBaseLockingKeyService(CFG, connection);
     for (int i = 0; i < 5; i++) {
-      Set<String> uniqueIds = ImmutableSet.of("A" + i);
+      Set<String> uniqueIds = Collections.singleton("A" + i);
       result = keyService2.generateKey(uniqueIds, "boo");
     }
     assertEquals(2005, result.getKey());
@@ -181,7 +183,8 @@ public class HBaseLockingKeyServiceIT {
     }
 
     // test: 3rd keygen attempt uses both previous unique ids, expects a new key to be generated
-    KeyLookupResult result = keyService.generateKey(ImmutableSet.of("ABCD", "EFGH"), datasetKey);
+    KeyLookupResult result =
+        keyService.generateKey(new HashSet<>(Arrays.asList("ABCD", "EFGH")), datasetKey);
     assertEquals(1, result.getKey());
   }
 
@@ -212,7 +215,7 @@ public class HBaseLockingKeyServiceIT {
             + "|ABCD]=[1]["
             + datasetKey
             + "|EFGH]=[2]");
-    keyService.generateKey(ImmutableSet.of("ABCD", "EFGH"), datasetKey);
+    keyService.generateKey(new HashSet<>(Arrays.asList("ABCD", "EFGH")), datasetKey);
   }
 
   @Test
@@ -228,7 +231,7 @@ public class HBaseLockingKeyServiceIT {
       lookupTable.put(put);
     }
 
-    KeyLookupResult result = keyService.generateKey(ImmutableSet.of("ABCD"), datasetKey);
+    KeyLookupResult result = keyService.generateKey(Collections.singleton("ABCD"), datasetKey);
     assertEquals(1, result.getKey());
   }
 
@@ -248,14 +251,14 @@ public class HBaseLockingKeyServiceIT {
       lookupTable.put(put);
     }
 
-    KeyLookupResult result = keyService.generateKey(ImmutableSet.of("ABCD"), datasetKey);
+    KeyLookupResult result = keyService.generateKey(Collections.singleton("ABCD"), datasetKey);
     assertEquals(1, result.getKey());
   }
 
   @Test
   public void testThreadedIdContig() throws InterruptedException {
     // 5 threads concurrently allocated 1000 ids each, expect the next call to produce id 5001
-    List<Thread> threads = Lists.newArrayList();
+    List<Thread> threads = new ArrayList<>();
     for (int i = 0; i < 5; i++) {
       Thread thread = new Thread(new KeyRequester(1000, keyService, String.valueOf(i)));
       thread.start();
@@ -264,7 +267,7 @@ public class HBaseLockingKeyServiceIT {
     for (Thread thread : threads) {
       thread.join();
     }
-    KeyLookupResult result = keyService.generateKey(ImmutableSet.of("asdf"), "wqer");
+    KeyLookupResult result = keyService.generateKey(Collections.singleton("asdf"), "wqer");
     assertEquals(5001, result.getKey());
   }
 
@@ -283,7 +286,7 @@ public class HBaseLockingKeyServiceIT {
     @Override
     public void run() {
       for (int i = 0; i < keyCount; i++) {
-        Set<String> uniqueIds = ImmutableSet.of(name + i);
+        Set<String> uniqueIds = Collections.singleton(name + i);
         keyService.generateKey(uniqueIds, "boo");
       }
     }

@@ -21,7 +21,8 @@ import static org.gbif.pipelines.ingest.pipelines.utils.EsTestUtils.indexingPipe
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
-import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import org.gbif.pipelines.common.beam.options.EsIndexingPipelineOptions;
@@ -180,14 +181,14 @@ public class InterpretedToEsIndexExtendedPipelineIT {
     // 1. Index multiple datasets
     int attempt = 1;
     // index in default static
-    List<String> staticDatasets = ImmutableList.of(DATASET_TEST, DATASET_TEST_2, DATASET_TEST_3);
+    List<String> staticDatasets = Arrays.asList(DATASET_TEST, DATASET_TEST_2, DATASET_TEST_3);
     indexDatasets(ES_SERVER, staticDatasets, attempt, STATIC_IDX, ALIAS);
     // index in default dynamic
-    List<String> dynamicDatasets = ImmutableList.of(DATASET_TEST_4, DATASET_TEST_5, DATASET_TEST_6);
+    List<String> dynamicDatasets = Arrays.asList(DATASET_TEST_4, DATASET_TEST_5, DATASET_TEST_6);
     indexDatasets(ES_SERVER, dynamicDatasets, attempt, DYNAMIC_IDX, ALIAS);
     // index some independent datasets
     List<String> independentDatasets =
-        ImmutableList.of(DATASET_TEST_7, DATASET_TEST_8, DATASET_TEST_9);
+        Arrays.asList(DATASET_TEST_7, DATASET_TEST_8, DATASET_TEST_9);
     indexDatasets(ES_SERVER, independentDatasets, attempt, null, ALIAS);
 
     // Should
@@ -197,12 +198,10 @@ public class InterpretedToEsIndexExtendedPipelineIT {
     assertEquals(
         DEFAULT_REC_DATASET * 3, EsIndex.countDocuments(ES_SERVER.getEsConfig(), DYNAMIC_IDX));
 
-    List<String> allDatasets =
-        ImmutableList.<String>builder()
-            .addAll(staticDatasets)
-            .addAll(dynamicDatasets)
-            .addAll(independentDatasets)
-            .build();
+    List<String> allDatasets = new ArrayList<>();
+    allDatasets.addAll(staticDatasets);
+    allDatasets.addAll(dynamicDatasets);
+    allDatasets.addAll(independentDatasets);
 
     // assert number of records for each dataset, it should remain as in the beginning
     allDatasets.forEach(
@@ -215,10 +214,8 @@ public class InterpretedToEsIndexExtendedPipelineIT {
     // When
     // 2. Switch some datasets to other indexes without changing the number of records
     attempt++;
-    switchDatasetAndRecords(
-        ImmutableList.of(DATASET_TEST, DATASET_TEST_9), DYNAMIC_IDX, attempt, 0);
-    switchDatasetAndRecords(
-        ImmutableList.of(DATASET_TEST_4, DATASET_TEST_7), STATIC_IDX, attempt, 0);
+    switchDatasetAndRecords(Arrays.asList(DATASET_TEST, DATASET_TEST_9), DYNAMIC_IDX, attempt, 0);
+    switchDatasetAndRecords(Arrays.asList(DATASET_TEST_4, DATASET_TEST_7), STATIC_IDX, attempt, 0);
     switchDatasetAndRecords(DATASET_TEST_2, DATASET_TEST_2 + "_" + attempt, attempt, 0);
 
     // assert number of records for each dataset, it should remain as in the beginning
@@ -264,7 +261,12 @@ public class InterpretedToEsIndexExtendedPipelineIT {
 
           // When
           indexDatasets(
-              ES_SERVER, ImmutableList.of(datasetKey), attempt, targetIdx, ALIAS, recordsDataset);
+              ES_SERVER,
+              Collections.singletonList(datasetKey),
+              attempt,
+              targetIdx,
+              ALIAS,
+              recordsDataset);
 
           // Should
           assertEquals(

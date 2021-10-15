@@ -104,5 +104,6 @@ public class InterpretedToEsIndexExtendedPipeline {
     }
 
     EsIndexUtils.updateAlias(options, indices, config != null ? config.getIndexLock() : null);
+    EsIndexUtils.refreshIndex(options);
   }
 }

@@ -1,0 +1,92 @@
+<Unit>
+  <SourceInstitutionID>RMCA</SourceInstitutionID>
+  <SourceID>Entomology</SourceID>
+  <UnitID>16872</UnitID>
+  <Identifications>
+    <Identification>
+      <Result>
+        <TaxonIdentified>
+          <HigherTaxa>
+            <HigherTaxon>
+              <HigherTaxonName>Pieridae</HigherTaxonName>
+              <HigherTaxonRank>familia</HigherTaxonRank>
+            </HigherTaxon>
+          </HigherTaxa>
+          <ScientificName>
+            <FullScientificNameString>Appias (Glutophrissa) perlucens, (Butler, 1898)</FullScientificNameString>
+            <NameAtomised>
+              <Zoological>
+                <GenusOrMonomial>Appias</GenusOrMonomial>
+                <SpeciesEpithet>(Glutophrissa)</SpeciesEpithet>
+                <SubspeciesEpithet>perlucens</SubspeciesEpithet>
+                <AuthorTeamParenthesisAndYear>(Butler, 1898)</AuthorTeamParenthesisAndYear>
+              </Zoological>
+            </NameAtomised>
+          </ScientificName>
+        </TaxonIdentified>
+      </Result>
+    </Identification>
+  </Identifications>
+  <RecordBasis>PreservedSpecimen</RecordBasis>
+  <MultiMediaObjects>
+    <MultiMediaObject>
+      <Context>Photo from the RMCA collection (based on the corresponding taxa)</Context>
+    </MultiMediaObject>
+    <MultiMediaObject>
+      <Context>Photo from the RMCA collection (based on the corresponding taxa)</Context>
+    </MultiMediaObject>
+    <MultiMediaObject>
+      <Context>Photo from the RMCA collection (based on the corresponding taxa)</Context>
+    </MultiMediaObject>
+    <MultiMediaObject>
+      <Context>Photo from the RMCA collection (based on the corresponding taxa)</Context>
+    </MultiMediaObject>
+  </MultiMediaObjects>
+  <Gathering>
+    <Agents>
+      <GatheringAgent>
+        <Organisation>
+          <Name>
+            <Representation language="English/Dutch/French">
+              <Text>Musée royal Central Afrique</Text>
+            </Representation>
+          </Name>
+        </Organisation>
+        <Person>
+          <FullName>de Briey</FullName>
+        </Person>
+      </GatheringAgent>
+    </Agents>
+    <LocalityText>Ganda Sundi</LocalityText>
+    <Country>
+      <Name>Congo, Democratic Republic of</Name>
+    </Country>
+    <NamedAreas>
+      <NamedArea>
+        <AreaClass>"province"</AreaClass>
+        <AreaName>Mayumbe</AreaName>
+      </NamedArea>
+    </NamedAreas>
+    <SiteCoordinateSets>
+      <SiteCoordinates>
+        <CoordinatesLatLong>
+          <LongitudeDecimal>12.9</LongitudeDecimal>
+          <LatitudeDecimal>-4.78333333333</LatitudeDecimal>
+          <CoordinatesText>Lat:-4°47'0'' Long:12°54'0''</CoordinatesText>
+        </CoordinatesLatLong>
+      </SiteCoordinates>
+    </SiteCoordinateSets>
+  </Gathering>
+  <MeasurementsOrFacts>
+    <MeasurementOrFact>
+      <MeasurementOrFactAtomised>
+        <Method>count</Method>
+        <AppliesTo>Specimen count</AppliesTo>
+        <LowerValue>1,00</LowerValue>
+        <UnitOfMeasurement>ex.</UnitOfMeasurement>
+        <IsQuantitative>true</IsQuantitative>
+      </MeasurementOrFactAtomised>
+    </MeasurementOrFact>
+  </MeasurementsOrFacts>
+  <Sex>1,00 males and 0 females</Sex>
+</Unit>

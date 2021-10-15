@@ -1,7 +1,7 @@
 package org.gbif.converters.parser.xml.parsing.extendedrecord;
 
 import java.io.File;
-import java.util.List;
+import java.util.Collection;
 import java.util.concurrent.atomic.AtomicLong;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,28 +34,14 @@ public class ConverterTask implements Runnable {
     new OccurrenceParser()
         .parseFile(inputFile).stream()
             .map(XmlFragmentParser::parseRecord)
-            .forEach(this::appendRawOccurrenceRecords);
-  }
-
-  /**
-   * Converts list of {@link RawOccurrenceRecord} into list of {@link ExtendedRecord} and appends
-   * AVRO file
-   */
-  private void appendRawOccurrenceRecords(List<RawOccurrenceRecord> records) {
-    records.stream()
-        .map(ExtendedRecordConverter::from)
-        .filter(extendedRecord -> validator.isUnique(extendedRecord.getId()))
-        .forEach(this::appendExtendedRecord);
-  }
-
-  /**
-   * Converts {@link ExtendedRecord#getId} into id hash, appends AVRO file and counts the number of
-   * records
-   */
-  private void appendExtendedRecord(ExtendedRecord record) {
-    if (!record.getId().equals(ExtendedRecordConverter.getRecordIdError())) {
-      dataFileWriter.append(record);
-      counter.incrementAndGet();
-    }
+            .flatMap(Collection::stream)
+            .map(ExtendedRecordConverter::from)
+            .filter(er -> validator.isUnique(er.getId()))
+            .filter(er -> !er.getId().equals(ExtendedRecordConverter.getRecordIdError()))
+            .forEach(
+                er -> {
+                  dataFileWriter.append(er);
+                  counter.incrementAndGet();
+                });
   }
 }

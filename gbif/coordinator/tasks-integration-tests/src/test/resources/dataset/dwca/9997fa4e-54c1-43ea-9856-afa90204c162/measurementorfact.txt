@@ -1,0 +1,2 @@
+id	measurementType	measurementValue	measurementUnit	measurementMethod
+http://purl.org/nhmuio/id/d7199c68-1985-494e-8ad4-010d3328e779	perimeter	1100	meter	waking perimeter with GPS track-log

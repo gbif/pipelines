@@ -1,0 +1,20 @@
+<archive xmlns="http://rs.tdwg.org/dwc/text/" metadata="eml.xml">
+  <core encoding="utf-8" fieldsTerminatedBy="," linesTerminatedBy="\n" fieldsEnclosedBy="" ignoreHeaderLines="0" rowType="http://rs.tdwg.org/dwc/terms/Occurrence">
+    <files>
+      <location>data.txt</location>
+    </files>
+    <id index="0" />
+    <!-- calculated MD5 hash of all values -->
+    <field index="0" term="http://rs.tdwg.org/dwc/terms/occurrenceID" />
+    <field index="1" term="http://rs.tdwg.org/dwc/terms/decimalLatitude" />
+    <field index="2" term="http://rs.tdwg.org/dwc/terms/decimalLongitude" />
+    <field term="http://rs.tdwg.org/dwc/terms/geodeticDatum" default="EPSG:3035"/>
+    <field term="http://rs.tdwg.org/dwc/terms/coordinateUncertaintyInMeters" default="707"/>
+    <!--commented by purpose, we want to test "skipped" column-->
+    <!--<field index="3" term="http://rs.tdwg.org/dwc/terms/country" />-->
+    <field index="4" term="http://rs.tdwg.org/dwc/terms/scientificName"/>
+    <field term="http://rs.tdwg.org/dwc/terms/kingdom"       default="Plantae"/>
+    <field term="http://rs.tdwg.org/dwc/terms/basisOfRecord" default="OBSERVATION"/>
+  </core>
+</archive>
+ 

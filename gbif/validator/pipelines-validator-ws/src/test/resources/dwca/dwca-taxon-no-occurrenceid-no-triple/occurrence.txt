@@ -1,0 +1,2 @@
+id	language	institutionID	institutionCode	collectionCode	basisOfRecord	year	month	day	continent	country	locality	decimalLatitude	decimalLongitude	taxonID	scientificName	family	genus	scientificNameAuthorship	vernacularName
+urn:nmk:Acanthaceae:1	Luhya	NMK	NMK	EA	PreservedSpecimen	1996	12	2	Africa	Kenya	Kakamega Forest	0.2833333333	34.86666667	urn:nmk:Acanthaceae:1		Acanthaceae		Juss.	Isungusi

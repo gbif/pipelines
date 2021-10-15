@@ -1,4 +1,4 @@
-# GBIF Pipelines Crawler Coordinator
+# GBIF Pipelines Ingestion Tasks Coordinator
 
 ## Pipelines
-![pipelines crawler](crawler/docs/pipelines-crawler.png)
+![pipelines tasks](tasks/docs/pipelines-tasks.png)

@@ -68,6 +68,12 @@ public interface BasePipelineOptions extends PipelineOptions {
 
   void setTestMode(boolean testMode);
 
+  @Description("Use metadata ws calls, false can be usefull for valitador and etc")
+  @Default.Boolean(true)
+  boolean getUseMetadataWsCalls();
+
+  void setUseMetadataWsCalls(boolean useMetadataWsCalls);
+
   /** A {@link DefaultValueFactory} which locates a default directory. */
   class DefaultDirectoryFactory implements DefaultValueFactory<String> {
 

@@ -1,0 +1,2 @@
+id	taxonID	scientificName	family	genus	taxonRank	scientificNameAuthorship	vernacularName	language
+urn:nmk:Acanthaceae:1	urn:nmk:Acanthaceae:1		Acanthaceae			Juss.	Isungusi	Luhya

@@ -1,0 +1,68 @@
+{
+  "dynamic_templates": [
+    {
+      "verbatim_string": {
+        "path_match": "verbatim.*",
+        "match_mapping_type": "string",
+        "mapping": {
+          "type": "keyword"
+        }
+      }
+    },
+    {
+      "verbatim_boolean": {
+        "path_match": "verbatim.*",
+        "match_mapping_type": "boolean",
+        "mapping": {
+          "type": "keyword"
+        }
+      }
+    },
+    {
+      "verbatim_date": {
+        "path_match": "verbatim.*",
+        "match_mapping_type": "date",
+        "mapping": {
+          "type": "keyword"
+        }
+      }
+    },
+    {
+      "verbatim_double": {
+        "path_match": "verbatim.*",
+        "match_mapping_type": "double",
+        "mapping": {
+          "type": "keyword"
+        }
+      }
+    },
+    {
+      "verbatim_long": {
+        "path_match": "verbatim.*",
+        "match_mapping_type": "long",
+        "mapping": {
+          "type": "keyword"
+        }
+      }
+    }
+  ],
+  "properties": {
+    "datasetKey": {
+      "type": "keyword",
+      "normalizer": "lowercase_normalizer"
+    },
+    "maximumDepthInMeters": {"type": "double"},
+    "issues": {"type": "keyword"},
+    "verbatim": {
+      "type": "object",
+      "properties": {
+        "core": {
+          "type": "object"
+        },
+        "extensions": {
+          "type": "object"
+        }
+      }
+    }
+  }
+}

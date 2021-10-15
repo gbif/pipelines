@@ -10,13 +10,6 @@ public class EsClientTest {
   /** {@link Rule} requires this field to be public. */
   @Rule public ExpectedException thrown = ExpectedException.none();
 
-  @Test(expected = NullPointerException.class)
-  public void createClientFromNullConfigTest() {
-
-    // When
-    EsClient.from(null);
-  }
-
   @Test(expected = IllegalArgumentException.class)
   public void createClientFromEmptyHostsTest() {
 

@@ -64,12 +64,18 @@ public class IndexRequestConverter {
 
       metrics.incMetric(AVRO_TO_JSON_COUNT);
 
-      String docId =
-          esDocumentId.equals(GBIF_ID)
-              ? br.getGbifId().toString()
-              : json.get(esDocumentId).asText();
+      IndexRequest indexRequest = new IndexRequest(esIndexName).source(json.toString(), JSON);
 
-      return new IndexRequest(esIndexName).id(docId).source(json.toString(), JSON);
+      // Ignore gbifID as ES doc ID, useful for validator
+      if (esDocumentId != null && !esDocumentId.isEmpty()) {
+        String docId =
+            esDocumentId.equals(GBIF_ID)
+                ? br.getGbifId().toString()
+                : json.get(esDocumentId).asText();
+        indexRequest = indexRequest.id(docId);
+      }
+
+      return indexRequest;
     };
   }
 }

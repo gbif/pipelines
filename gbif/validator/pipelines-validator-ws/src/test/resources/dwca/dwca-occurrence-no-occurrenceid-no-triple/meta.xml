@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<archive xmlns="http://rs.tdwg.org/dwc/text/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <core encoding="UTF-8" fieldsEnclosedBy="&quot;" fieldsTerminatedBy="," linesTerminatedBy="&#xA;" ignoreHeaderLines="1" rowType="http://rs.tdwg.org/dwc/terms/Occurrence">
+        <files>
+            <location>occurrence.txt</location>
+        </files>
+        <id index="0"/>
+        <field index="1" term="http://rs.tdwg.org/dwc/terms/catalogNumber"/>
+        <field index="2" term="http://rs.tdwg.org/dwc/terms/basisOfRecord"/>
+        <field index="3" term="http://rs.tdwg.org/dwc/terms/collectionCode"/>
+        <field index="4" term="http://rs.tdwg.org/dwc/terms/typeStatus"/>
+        <field index="5" term="http://rs.tdwg.org/dwc/terms/genus"/>
+        <field index="6" term="http://rs.tdwg.org/dwc/terms/subgenus"/>
+        <field index="7" term="http://rs.tdwg.org/dwc/terms/specificEpithet"/>
+        <field index="8" term="http://rs.tdwg.org/dwc/terms/infraspecificEpithet"/>
+        <field index="9" term="http://rs.tdwg.org/dwc/terms/scientificName"/>
+    </core>
+</archive>

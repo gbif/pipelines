@@ -71,7 +71,7 @@ public interface OccurrenceFeatures {
   /** @return a triplet identifier of standard form ic:cc:cn when all triplets are present */
   default String getTripleIdentifier() {
     String[] codes = {getInstitutionCode(), getCollectionCode(), getCatalogNumber()};
-    if (!Arrays.stream(codes).anyMatch(Objects::isNull)) {
+    if (Arrays.stream(codes).noneMatch(Objects::isNull)) {
       return String.join(":", codes);
     } else {
       return null;

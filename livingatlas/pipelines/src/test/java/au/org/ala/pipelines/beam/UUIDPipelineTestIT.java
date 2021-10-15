@@ -56,8 +56,12 @@ public class UUIDPipelineTestIT {
   /**
    * Tests for UUID creation. This test simulates a dataset being:
    *
-   * <p>1) Loaded 2) Re-loaded 3) Re-loaded with records removed 4) Re-loaded with removed records
-   * being added back & UUID being preserved.
+   * <pre>
+   *   1) Loaded
+   *   2) Re-loaded
+   *   3) Re-loaded with records removed
+   *   4) Re-loaded with removed records being added back & UUID being preserved.
+   * </pre>
    */
   @Test
   public void testUuidsPipeline() throws Exception {

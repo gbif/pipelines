@@ -29,6 +29,8 @@ public abstract class ConverterToVerbatim {
   private Path outputPath;
   private Path metaPath;
 
+  private boolean skipDeletion = false;
+
   public ConverterToVerbatim hdfsSiteConfig(String hdfsSiteConfig) {
     this.hdfsSiteConfig = hdfsSiteConfig;
     return this;
@@ -79,12 +81,17 @@ public abstract class ConverterToVerbatim {
     return this;
   }
 
+  public ConverterToVerbatim skipDeletion(boolean skipDeletion) {
+    this.skipDeletion = skipDeletion;
+    return this;
+  }
+
   public boolean convert() {
 
     Objects.requireNonNull(inputPath, "inputPath cannot be null");
     Objects.requireNonNull(outputPath, "outputPath cannot be null");
 
-    boolean isConverted;
+    boolean isConverted = false;
 
     // the fs has to be out of the try-catch block to avoid closing it, because the hdfs client
     // tries to reuse the
@@ -110,7 +117,9 @@ public abstract class ConverterToVerbatim {
       log.error("Failed performing conversion on {}", inputPath, e);
       throw new IllegalStateException("Failed performing conversion on " + inputPath, e);
     } finally {
-      isConverted = deleteAvroFileIfEmpty(fs, outputPath);
+      if (!skipDeletion) {
+        isConverted = deleteAvroFileIfEmpty(fs, outputPath);
+      }
     }
 
     return !isConverted;
