@@ -350,7 +350,7 @@
       </dependency>
       <dependency>
         <groupId>org.gbif.pipelines</groupId>
-        <artifactId>pipelines-tasks-coordinator</artifactId>
+        <artifactId>tasks-coordinator-cli</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>

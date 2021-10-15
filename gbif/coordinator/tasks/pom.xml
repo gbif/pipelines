@@ -8,7 +8,7 @@
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>pipelines-tasks-coordinator</artifactId>
+  <artifactId>tasks-coordinator-cli</artifactId>
   <packaging>jar</packaging>
 
   <name>Pipelines :: GBIF :: CLI :: Tasks Coordinator</name>
