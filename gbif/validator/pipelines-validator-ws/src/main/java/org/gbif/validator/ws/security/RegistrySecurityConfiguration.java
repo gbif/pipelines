@@ -42,7 +42,6 @@ import org.gbif.ws.security.NoAuthWebSecurityConfigurer;
 import org.gbif.ws.server.filter.AppIdentityFilter;
 import org.gbif.ws.server.filter.IdentityFilter;
 import org.gbif.ws.server.filter.jwt.JwtFilter;
-
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.mapper.MapperFactoryBean;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -217,21 +216,22 @@ public class RegistrySecurityConfiguration {
   }
 
   @Bean
-  public JwtFilter jwtFilter(RestTemplate restTemplate, @Value("${registry.ws.url}") String gbifApiUrl) {
+  public JwtFilter jwtFilter(
+      RestTemplate restTemplate, @Value("${registry.ws.url}") String gbifApiUrl) {
     return new JwtFilter(restTemplate, gbifApiUrl);
   }
 
   @Bean
   public RestTemplate restTemplate(RestTemplateBuilder builder) {
     return builder
-      .setConnectTimeout(Duration.ofSeconds(30))
-      .setReadTimeout(Duration.ofSeconds(60))
-      .additionalInterceptors(
-        (request, body, execution) -> {
-          request.getHeaders().setContentType(MediaType.APPLICATION_JSON);
-          return execution.execute(request, body);
-        })
-      .build();
+        .setConnectTimeout(Duration.ofSeconds(30))
+        .setReadTimeout(Duration.ofSeconds(60))
+        .additionalInterceptors(
+            (request, body, execution) -> {
+              request.getHeaders().setContentType(MediaType.APPLICATION_JSON);
+              return execution.execute(request, body);
+            })
+        .build();
   }
 
   @Configuration
