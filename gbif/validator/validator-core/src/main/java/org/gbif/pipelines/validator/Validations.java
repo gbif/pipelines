@@ -68,11 +68,11 @@ public class Validations {
   }
 
   private static FileInfo mergeNonNullFields(FileInfo f1, FileInfo f2) {
-    String fileName = f1.getFileName() != null ? f1.getFileName() : f2.getFileName();
-    DwcFileType fileType = f1.getFileType() != null ? f1.getFileType() : f2.getFileType();
-    Long count = f1.getCount() != null ? f1.getCount() : f2.getCount();
-    Long indexedCount = f1.getIndexedCount() != null ? f1.getIndexedCount() : f2.getIndexedCount();
-    String rowType = f1.getRowType() != null ? f1.getRowType() : f2.getRowType();
+    String fileName = Optional.ofNullable(f1.getFileName()).orElse(f2.getFileName());
+    DwcFileType fileType = Optional.ofNullable(f1.getFileType()).orElse(f2.getFileType());
+    Long count = Optional.ofNullable(f1.getCount()).orElse(f2.getCount());
+    Long indexedCount = Optional.ofNullable(f1.getIndexedCount()).orElse(f2.getIndexedCount());
+    String rowType = Optional.ofNullable(f1.getRowType()).orElse(f2.getRowType());
 
     List<TermInfo> termInfos = new ArrayList<>(f1.getTerms().size() + f2.getTerms().size());
     termInfos.addAll(f1.getTerms());
