@@ -24,11 +24,6 @@ registry:
   ws:
     url: @registry.ws.url@
 
-jwt:
-  signingKey: @jwt.signingKey@
-  expiryTimeInMs: @jwt.expiryTimeInMs@
-  issuer: @jwt.issuer@
-
 gbif:
   ws:
     security:

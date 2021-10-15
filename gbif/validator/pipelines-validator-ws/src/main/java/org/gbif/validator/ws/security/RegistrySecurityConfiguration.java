@@ -2,6 +2,7 @@ package org.gbif.validator.ws.security;
 
 import com.zaxxer.hikari.HikariDataSource;
 import java.net.URI;
+import java.time.Duration;
 import java.util.Locale;
 import java.util.UUID;
 import lombok.SneakyThrows;
@@ -15,7 +16,6 @@ import org.gbif.mybatis.type.LanguageTypeHandler;
 import org.gbif.mybatis.type.UriTypeHandler;
 import org.gbif.mybatis.type.UuidTypeHandler;
 import org.gbif.registry.identity.service.BasicUserSuretyDelegate;
-import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.identity.service.UserSuretyDelegate;
 import org.gbif.registry.identity.util.RegistryPasswordEncoder;
 import org.gbif.registry.persistence.mapper.CommentMapper;
@@ -34,11 +34,6 @@ import org.gbif.registry.persistence.mapper.surety.ChallengeCodeMapper;
 import org.gbif.registry.security.LegacyAuthorizationService;
 import org.gbif.registry.security.LegacyAuthorizationServiceImpl;
 import org.gbif.registry.security.RegistryUserDetailsService;
-import org.gbif.registry.security.jwt.JwtAuthenticateService;
-import org.gbif.registry.security.jwt.JwtConfiguration;
-import org.gbif.registry.security.jwt.JwtIssuanceService;
-import org.gbif.registry.security.jwt.JwtIssuanceServiceImpl;
-import org.gbif.registry.security.jwt.JwtRequestFilter;
 import org.gbif.registry.surety.ChallengeCodeManager;
 import org.gbif.registry.ws.client.InstallationClient;
 import org.gbif.ws.client.ClientBuilder;
@@ -46,19 +41,24 @@ import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
 import org.gbif.ws.security.NoAuthWebSecurityConfigurer;
 import org.gbif.ws.server.filter.AppIdentityFilter;
 import org.gbif.ws.server.filter.IdentityFilter;
+import org.gbif.ws.server.filter.jwt.JwtFilter;
+
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.mapper.MapperFactoryBean;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.client.RestTemplate;
 
 /**
  * Configuration for all data sources, MyBatis mappers and services required by the Registry
@@ -182,31 +182,6 @@ public class RegistrySecurityConfiguration {
   }
 
   @Bean
-  public JwtAuthenticateService jwtAuthenticateService(
-      JwtConfiguration jwtConfiguration, IdentityService identityService) {
-    return new JwtAuthenticateService(jwtConfiguration, identityService);
-  }
-
-  @Bean
-  public JwtRequestFilter jwtRequestFilter(
-      UserDetailsService userDetailsService,
-      JwtAuthenticateService jwtAuthenticateService,
-      JwtIssuanceService jwtIssuanceService) {
-    return new JwtRequestFilter(userDetailsService, jwtAuthenticateService, jwtIssuanceService);
-  }
-
-  @Bean
-  public JwtIssuanceService jwtIssuanceService(JwtConfiguration jwtConfiguration) {
-    return new JwtIssuanceServiceImpl(jwtConfiguration);
-  }
-
-  @Bean
-  @ConfigurationProperties(prefix = "jwt")
-  public JwtConfiguration jwtConfiguration() {
-    return new JwtConfiguration();
-  }
-
-  @Bean
   public PasswordEncoder passwordEncoder() {
     return new RegistryPasswordEncoder();
   }
@@ -241,6 +216,24 @@ public class RegistrySecurityConfiguration {
     return clientBuilder.withUrl(apiUrl).build(OrganizationService.class);
   }
 
+  @Bean
+  public JwtFilter jwtFilter(RestTemplate restTemplate, @Value("${registry.ws.url}") String gbifApiUrl) {
+    return new JwtFilter(restTemplate, gbifApiUrl);
+  }
+
+  @Bean
+  public RestTemplate restTemplate(RestTemplateBuilder builder) {
+    return builder
+      .setConnectTimeout(Duration.ofSeconds(30))
+      .setReadTimeout(Duration.ofSeconds(60))
+      .additionalInterceptors(
+        (request, body, execution) -> {
+          request.getHeaders().setContentType(MediaType.APPLICATION_JSON);
+          return execution.execute(request, body);
+        })
+      .build();
+  }
+
   @Configuration
   @EnableWebSecurity
   public static class ValidatorWebSecurity extends NoAuthWebSecurityConfigurer {
@@ -262,7 +255,7 @@ public class RegistrySecurityConfiguration {
       super.configure(http);
       http.addFilterAfter(installationIdentityFilter, IdentityFilter.class);
       http.addFilterAfter(
-          getApplicationContext().getBean(JwtRequestFilter.class), AppIdentityFilter.class);
+          getApplicationContext().getBean(JwtFilter.class), AppIdentityFilter.class);
     }
   }
 }
