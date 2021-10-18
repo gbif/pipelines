@@ -108,6 +108,7 @@
 
     <geotools.version>20.5</geotools.version>
     <commons-lang3.version>3.10</commons-lang3.version>
+    <!-- Be carful when change the guava version, it can break XML parsing and etc at runtime -->
     <guava.version>20.0</guava.version>
     <!-- Guava version required by HBase libraries -->
     <guava.hbase.version>12.0.1</guava.hbase.version>
