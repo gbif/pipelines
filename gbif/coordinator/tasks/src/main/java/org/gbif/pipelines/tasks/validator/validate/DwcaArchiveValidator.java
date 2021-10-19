@@ -91,6 +91,17 @@ public class DwcaArchiveValidator implements ArchiveValidator {
     FileInfoBuilder fileInfoBuilder =
         FileInfo.builder().fileType(DwcFileType.METADATA).fileName(EML_XML);
 
+    if (!Files.exists(inputPath)) {
+      return fileInfoBuilder
+          .issues(
+              Collections.singletonList(
+                  IssueInfo.create(
+                      EvaluationType.EML_NOT_FOUND,
+                      Level.FATAL.name(),
+                      "meta.xml file was not found")))
+          .build();
+    }
+
     try {
       String xmlDoc = new String(Files.readAllBytes(inputPath), StandardCharsets.UTF_8);
 
@@ -107,7 +118,9 @@ public class DwcaArchiveValidator implements ArchiveValidator {
           .issues(
               Collections.singletonList(
                   IssueInfo.create(
-                      EvaluationType.EML_NOT_FOUND, Level.FATAL.name(), ex.getLocalizedMessage())))
+                      EvaluationType.EML_GBIF_SCHEMA,
+                      Level.FATAL.name(),
+                      ex.getLocalizedMessage())))
           .build();
     }
   }
