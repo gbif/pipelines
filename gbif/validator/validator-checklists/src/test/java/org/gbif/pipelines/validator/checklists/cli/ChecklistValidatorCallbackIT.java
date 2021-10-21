@@ -17,7 +17,7 @@ import org.gbif.validator.api.Metrics.FileInfo;
 import org.gbif.validator.api.Metrics.TermInfo;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.ws.client.ValidationWsClient;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class ChecklistValidatorCallbackIT {
 
