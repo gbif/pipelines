@@ -1,12 +1,18 @@
 package org.gbif.pipelines.validator.checklists.cli;
 
+import static org.gbif.validator.api.Metrics.builder;
+
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Timestamp;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.SneakyThrows;
@@ -18,6 +24,8 @@ import org.gbif.common.messaging.api.messages.PipelinesChecklistValidatorMessage
 import org.gbif.pipelines.validator.checklists.ChecklistValidator;
 import org.gbif.pipelines.validator.checklists.cli.config.ChecklistValidatorConfiguration;
 import org.gbif.validator.api.Metrics;
+import org.gbif.validator.api.Metrics.FileInfo;
+import org.gbif.validator.api.Metrics.TermInfo;
 import org.gbif.validator.api.Metrics.ValidationStep;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.Validation.Status;
@@ -88,7 +96,7 @@ public class ChecklistValidatorCallback
   private void validateArchive(Validation validation) {
     try {
       log.info("Validating checklist archive: {}", validation.getKey());
-      List<Metrics.FileInfo> report =
+      List<FileInfo> report =
           checklistValidator.evaluate(
               buildDwcaInputPath(config.archiveRepository, validation.getKey()));
       updateValidationFinished(validation, report);
@@ -105,24 +113,66 @@ public class ChecklistValidatorCallback
   }
 
   /** Updates the data of a successful validation */
-  private void updateValidationFinished(Validation validation, List<Metrics.FileInfo> report) {
+  private void updateValidationFinished(Validation validation, List<FileInfo> report) {
     validation
         .getMetrics()
-        .setFileInfos(mergeFileInfoLists(validation.getMetrics().getFileInfos(), report));
+        .setFileInfos(mergeFilesInfo(validation.getMetrics().getFileInfos(), report));
     validationClient.update(validation);
     log.info("Checklist validation finished: {}", validation.getKey());
   }
 
-  private static List<Metrics.FileInfo> mergeFileInfoLists(
-      List<Metrics.FileInfo> from, List<Metrics.FileInfo> to) {
-    List<Metrics.FileInfo> result = new ArrayList<>(to);
-    if (from != null) {
-      result.addAll(
-          from.stream()
-              .filter(
-                  fi -> to.stream().noneMatch(nfi -> nfi.getFileName().equals(fi.getFileName())))
-              .collect(Collectors.toList()));
-    }
+  private static List<FileInfo> mergeFilesInfo(List<FileInfo> from, List<FileInfo> to) {
+
+    // Find unique files info in both collections
+    Map<String, FileInfo> fromMap = new HashMap<>();
+    Optional.ofNullable(from).ifPresent(f -> f.forEach(x -> fromMap.put(x.getFileName(), x)));
+
+    Map<String, FileInfo> toMap = new HashMap<>();
+    Optional.ofNullable(to).ifPresent(f -> f.forEach(x -> toMap.put(x.getFileName(), x)));
+
+    List<FileInfo> fromUnique =
+        fromMap.entrySet().stream()
+            .filter(es -> !toMap.containsKey(es.getKey()))
+            .map(Entry::getValue)
+            .collect(Collectors.toList());
+
+    List<FileInfo> toUnique =
+        toMap.entrySet().stream()
+            .filter(es -> !fromMap.containsKey(es.getKey()))
+            .map(Entry::getValue)
+            .collect(Collectors.toList());
+
+    // Merge non-unique files where "to" file is the main
+    List<FileInfo> merged =
+        toMap.entrySet().stream()
+            .filter(es -> fromMap.containsKey(es.getKey()))
+            .map(
+                es -> {
+                  FileInfo toFile = es.getValue();
+                  FileInfo fromFile = fromMap.get(es.getKey());
+                  toFile.setTerms(mergeTermsInfo(fromFile.getTerms(), toFile.getTerms()));
+                  return toFile;
+                })
+            .collect(Collectors.toList());
+
+    List<FileInfo> result = new ArrayList<>(fromUnique.size() + toUnique.size() + merged.size());
+    result.addAll(fromUnique);
+    result.addAll(toUnique);
+    result.addAll(merged);
+
+    return result;
+  }
+
+  /** Merge TermInfo where "to" is the main file and add only unique values "from" object */
+  private static List<TermInfo> mergeTermsInfo(List<TermInfo> from, List<TermInfo> to) {
+
+    Set<String> toSet = to.stream().map(TermInfo::getTerm).collect(Collectors.toSet());
+    List<TermInfo> fitered =
+        from.stream().filter(x -> !toSet.contains(x.getTerm())).collect(Collectors.toList());
+
+    ArrayList<TermInfo> result = new ArrayList<>(to.size() + fitered.size());
+    result.addAll(to);
+    result.addAll(fitered);
     return result;
   }
 
@@ -140,8 +190,7 @@ public class ChecklistValidatorCallback
     validation.setStatus(newStatus);
     validation.setModified(Timestamp.valueOf(ZonedDateTime.now().toLocalDateTime()));
 
-    Metrics metrics =
-        Optional.ofNullable(validation.getMetrics()).orElse(Metrics.builder().build());
+    Metrics metrics = Optional.ofNullable(validation.getMetrics()).orElse(builder().build());
 
     for (ValidationStep step : metrics.getStepTypes()) {
       if (step.getStepType().equals(STEP_TYPE)) {

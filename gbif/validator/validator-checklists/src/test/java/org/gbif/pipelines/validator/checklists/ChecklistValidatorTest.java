@@ -42,7 +42,7 @@ public class ChecklistValidatorTest {
       assertEquals(20, report.get(0).getCount());
       assertEquals(20, report.get(0).getIndexedCount());
       assertEquals(DwcFileType.CORE, report.get(0).getFileType());
-      assertEquals(DwcTerm.Taxon.simpleName(), report.get(0).getRowType());
+      assertEquals(DwcTerm.Taxon.qualifiedName(), report.get(0).getRowType());
       assertEquals("taxa.txt", report.get(0).getFileName());
 
       // Metrics.IssueInfo checks

@@ -75,7 +75,7 @@ public class ChecklistValidator {
     List<Metrics.FileInfo> results = new ArrayList<>();
     results.add(
         Metrics.FileInfo.builder()
-            .rowType(DwcTerm.Taxon.simpleName())
+            .rowType(DwcTerm.Taxon.qualifiedName())
             .count(LineCounter.count(archive.getCore()))
             .fileName(archive.getCore().getLocationFile().getName())
             .fileType(DwcFileType.CORE)

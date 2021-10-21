@@ -1,0 +1,340 @@
+<eml:eml xmlns:eml="eml://ecoinformatics.org/eml-2.1.1"
+         xmlns:dc="http://purl.org/dc/terms/"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="eml://ecoinformatics.org/eml-2.1.1 http://rs.gbif.org/schema/eml-gbif-profile/1.1/eml.xsd"
+         packageId="69233277-0946-4931-8115-3b247a81a051/v1.1" system="http://gbif.org" scope="system"
+         xml:lang="eng">
+
+<dataset>
+  <alternateIdentifier>69233277-0946-4931-8115-3b247a81a051</alternateIdentifier>
+  <alternateIdentifier>https://cloud.gbif.org/griis/resource?r=griis-mauritius</alternateIdentifier>
+  <title xml:lang="eng">Global Register of Introduced and Invasive Species - Mauritius</title>
+      <creator>
+    <individualName>
+        <givenName>Vikash</givenName>
+      <surName>Tataya</surName>
+    </individualName>
+    <organizationName>Mauritius Wildlife Foundation</organizationName>
+    <positionName>Conservation Director, Mauritian Wildlife Foundation Co-Chair, Mascarene Islands Plant Specialist Group, Species Survival Commission, IUCN</positionName>
+    <address>
+        <country>MU</country>
+    </address>
+    <electronicMailAddress>vtatayah@mauritian-wildlife.org</electronicMailAddress>
+      </creator>
+      <creator>
+    <individualName>
+        <givenName>Lian Jenna</givenName>
+      <surName>Wong</surName>
+    </individualName>
+    <organizationName>Biodiversity Data Management Ltd</organizationName>
+    <positionName>Research Assistant</positionName>
+    <address>
+        <country>NZ</country>
+    </address>
+    <electronicMailAddress>biodivdatamgt@gmail.com</electronicMailAddress>
+      </creator>
+      <creator>
+    <individualName>
+        <givenName>Shyama</givenName>
+      <surName>Pagad</surName>
+    </individualName>
+    <organizationName>IUCN SSC Invasive Species Specialist Group (ISSG)</organizationName>
+    <positionName>Deputy Chair- Information</positionName>
+    <address>
+        <country>NZ</country>
+    </address>
+    <electronicMailAddress>s.pagad@auckland.ac.nz</electronicMailAddress>
+      </creator>
+      <metadataProvider>
+    <individualName>
+        <givenName>Shyama</givenName>
+      <surName>Pagad</surName>
+    </individualName>
+    <organizationName>IUCN SSC Invasive Species Specialist Group (ISSG)</organizationName>
+    <positionName>Deputy Chair- Information</positionName>
+    <address>
+        <country>NZ</country>
+    </address>
+    <electronicMailAddress>s.pagad@auckland.ac.nz</electronicMailAddress>
+      </metadataProvider>
+      <associatedParty>
+    <individualName>
+        <givenName>Shyama</givenName>
+      <surName>Pagad</surName>
+    </individualName>
+    <organizationName>IUCN SSC Invasive Species Specialist Group (ISSG)</organizationName>
+    <positionName>Deputy Chair- Information</positionName>
+    <address>
+        <country>NZ</country>
+    </address>
+    <electronicMailAddress>s.pagad@auckland.ac.nz</electronicMailAddress>
+    <role>user</role>
+      </associatedParty>
+  <pubDate>
+      2020-09-23
+  </pubDate>
+  <language>eng</language>
+  <abstract>
+    <para>The Global Register of Introduced and Invasive Species (GRIIS) presents validated and verified national checklists of introduced (alien) and invasive alien species at the country, territory, and associated island level. 
+
+Checklists are living entities, especially for biological invasions given the growing nature of the problem. GRIIS checklists are based on a published methodology and supported by the Integrated Publishing Tool that jointly enable ongoing improvements and updates to expand their taxonomic coverage and completeness. 
+
+Phase 1 of the project focused on developing validated and verified checklists of countries that are Party to the Convention on Biological Diversity (CBD). Phase 2 aimed to achieve global coverage including non-party countries and all overseas territories of countries, e.g. those of the Netherlands, France, and the United Kingdom. 
+
+All kingdoms of organisms occurring in all environments and systems are covered.
+
+Checklists are reviewed and verified by networks of country or species experts. Verified checklists/ species records, as well as those under review, are presented on the online GRIIS website (www.griis.org) in addition to being published through the GBIF Integrated Publishing Tool.</para>
+  </abstract>
+      <keywordSet>
+            <keyword>Checklist</keyword>
+        <keywordThesaurus>GBIF Dataset Type Vocabulary: http://rs.gbif.org/vocabulary/gbif/dataset_type.xml</keywordThesaurus>
+      </keywordSet>
+      <keywordSet>
+            <keyword>Inventorythematic</keyword>
+        <keywordThesaurus>GBIF Dataset Subtype Vocabulary: http://rs.gbif.org/vocabulary/gbif/dataset_subtype.xml</keywordThesaurus>
+      </keywordSet>
+      <keywordSet>
+            <keyword>Alien</keyword>
+        <keywordThesaurus>n/a</keywordThesaurus>
+      </keywordSet>
+      <keywordSet>
+            <keyword>Invasive</keyword>
+        <keywordThesaurus>n/a</keywordThesaurus>
+      </keywordSet>
+      <keywordSet>
+            <keyword>Validated and verified</keyword>
+        <keywordThesaurus>n/a</keywordThesaurus>
+      </keywordSet>
+      <keywordSet>
+            <keyword>country_MU</keyword>
+        <keywordThesaurus>n/a</keywordThesaurus>
+      </keywordSet>
+      <keywordSet>
+            <keyword>Checklist</keyword>
+        <keywordThesaurus>GBIF Dataset Type Vocabulary: http://rs.gbif.org/vocabulary/gbif/dataset_type_2015-07-10.xml</keywordThesaurus>
+      </keywordSet>
+  <additionalInfo>
+    <para>Versioning
+The GRIIS checklists are dynamic and reflect the latest known status of alien and invasive species presence and impacts. 
+
+The original versions of each country checklist (v1.0) undergo two potential types of updates: 
+1. Major updates: These happen when batches of new species or records become available, usually addressing multiple taxonomic groups simultaneously.  Each checklist is assigned a new version number after a major update (e.g. from v1.0 to v2.0). 
+2. Incremental updates: These are smaller ongoing updates involving the addition of new species or records based on new publications as well as taxonomic or other updates. Incremental updates to a checklist are associated with a subversion number, e.g. v1.1.
+The checklist version number is visible/available on the citation.</para>
+  </additionalInfo>
+  <intellectualRights>
+    <para>This work is licensed under a <ulink url="http://creativecommons.org/licenses/by/4.0/legalcode"><citetitle>Creative Commons Attribution (CC-BY) 4.0 License</citetitle></ulink>.</para>
+  </intellectualRights>
+  <distribution scope="document">
+    <online>
+      <url function="information">http://griis.org/</url>
+    </online>
+  </distribution>
+  <coverage>
+      <geographicCoverage>
+          <geographicDescription>This annotated checklist is of introduced (alien) and invasive alien species known to occur in Mauritius</geographicDescription>
+        <boundingCoordinates>
+          <westBoundingCoordinate>51.592</westBoundingCoordinate>
+          <eastBoundingCoordinate>67.939</eastBoundingCoordinate>
+          <northBoundingCoordinate>-16.13</northBoundingCoordinate>
+          <southBoundingCoordinate>-25.245</southBoundingCoordinate>
+        </boundingCoordinates>
+      </geographicCoverage>
+          <taxonomicCoverage>
+              <generalTaxonomicCoverage>Animalia, Bacteria, Chromista, Fungi, Plantae, Protozoa, Viruses</generalTaxonomicCoverage>
+              <taxonomicClassification>
+                  <taxonRankName>kingdom</taxonRankName>
+                <taxonRankValue>Animalia</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>kingdom</taxonRankName>
+                <taxonRankValue>Bacteria</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>kingdom</taxonRankName>
+                <taxonRankValue>Chromista</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>kingdom</taxonRankName>
+                <taxonRankValue>Fungi</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>kingdom</taxonRankName>
+                <taxonRankValue>Plantae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>kingdom</taxonRankName>
+                <taxonRankValue>Protozoa</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>kingdom</taxonRankName>
+                <taxonRankValue>Viruses</taxonRankValue>
+              </taxonomicClassification>
+          </taxonomicCoverage>
+  </coverage>
+  <purpose>
+    <para>The resource will be a support to countries to make progress to achieve Aichi Biodiversity Target 9 -in the development of their National Biodiversity Strategy and Action Plans, their National Invasive Alien Species Strategy and Action Plan, target setting and monitoring.</para>
+  </purpose>
+  <maintenance>
+    <description>
+      <para>Updates with any new data and any revisions of existing data will be made on a biannual basis</para>
+    </description>
+    <maintenanceUpdateFrequency>otherMaintenancePeriod</maintenanceUpdateFrequency>
+  </maintenance>
+
+      <contact>
+    <individualName>
+        <givenName>Shyama</givenName>
+      <surName>Pagad</surName>
+    </individualName>
+    <organizationName>IUCN SSC Invasive Species Specialist Group (ISSG)</organizationName>
+    <positionName>Deputy Chair- Information</positionName>
+    <address>
+        <country>NZ</country>
+    </address>
+    <electronicMailAddress>s.pagad@auckland.ac.nz</electronicMailAddress>
+      </contact>
+  <methods>
+        <methodStep>
+          <description>
+            <para>Data collation and categorization
+Data filtering and categorization/ classification 
+Taxonomic harmonization and normalization
+Data validation
+Data verification</para>
+          </description>
+        </methodStep>
+        <methodStep>
+          <description>
+            <para>The published methods underpinning GRIIS and each checklist are described in Pagad et al 2018.</para>
+          </description>
+        </methodStep>
+      <sampling>
+        <studyExtent>
+          <description>
+            <para>The geographic focus of this checklist is Mauritius</para>
+          </description>
+        </studyExtent>
+        <samplingDescription>
+          <para>This annotated checklist is focused on introduced (alien) and invasive species that are known to occur in Mauritius
+
+The International Union for Conservation of Nature, (IUCN) describes an Introduced/ Alien and Invasive alien species as follows:  
+
+An Introduced or Alien species means a species, subspecies, or lower taxon occurring outside of its natural range (past or present) and dispersal potential (i.e. outside the range it occupies naturally or could not occupy without direct or indirect introduction or care by humans) and includes any part, gametes or propagule of such species that might survive and subsequently reproduce. 
+
+An Invasive Alien Species is an alien species which becomes established in natural or semi-natural ecosystems or habitat, is an agent of change, and threatens native biological diversity.
+
+In GRIIS, species are recorded as having an impact (as &apos;yes&apos; under &apos;isInvasive&apos;) if there is evidence of the species negatively impacting biodiversity, and including species that are widespread, spreading rapidly or present in high abundance (Pagad et al. 2018). This usage is relevant to the purpose of GRIIS, and consistent with the concept of impact as formulated by Parker et al. (1999) and now widely used (e.g. Didham et al. 2005, Strayer et al. 2006, McGeoch et al. 2010, 2012, Vila et al. 2011), where impact is a function not only of the per capita effect of an individual organism, but is a combined function of the effect, abundance and range size of a species. Impact can of course be defined in different ways, driven by different objectives, such as its usage in EICAT where it is defined as a measurable change to the properties of an ecosystem caused by an alien taxon (Hawkins et al. 2015).</para>
+        </samplingDescription>
+      </sampling>
+      <qualityControl>
+        <description>
+          <para>The draft checklist is compiled by collating data and information through a comprehensive literature overview. Additional steps implemented to control the quality of the data are described below.
+
+Taxonomic harmonization and normalization using the GBIF taxonomic backbone
+To harmonize all species names across countries, species lists are subjected to a normalization process in which taxon rank and taxonomic status are identified and assigned. Spelling and other errors in assigning species authorship are also corrected.
+
+Data validation
+The Project Personnel complete a review and validate all the annotations, especially those on provenance and &apos;invasive&apos; status of the species based on evidence of impact.
+
+Data verification
+The checklist is submitted to a network of country editors for a review of both accuracy of records, annotations, and identification of any significant gaps in the data. Data verification is an iterative process and the activity for a particular version is declared complete on agreement of all relevant country editors (see versioning details below).
+
+One of the key tenets of the GRIIS project has been engagement with country editors in the verification process and as custodians of country checklists. While this has been possible in the majority of countries, for a small number of countries this engagement process has not succeeded in delivering a verified checklist. In these cases, the GRIIS Project Personnel have completed the validation of the species records but continue to work towards identifying country experts.</para>
+        </description>
+      </qualityControl>
+  </methods>
+  <project id="GRIIS">
+    <title>Global Register of Introduced and Invasive Species GRIIS</title>
+      <personnel>
+        <individualName>
+            <givenName>Shyama</givenName>
+          <surName>Pagad</surName>
+        </individualName>
+        <role></role>
+      </personnel>
+      <abstract>
+        <para>The Global Register of Introduced and Invasive Species (GRIIS) presents validated and verified checklists of introduced (alien) and invasive alien species at the country, territory level.  The development of the GRIIS resource is an initiative supported by the Secretariat of the Convention on Biological Diversity (CBD) and was originally implemented within the framework of the Global Invasive Alien Species Information Partnership (GIASIPartnership). The IUCN SSC Invasive Species Specialist Group (ISSG) is the project lead and includes a dedicated GRIIS unit. 
+
+The resource is designed to support national governments to make progress to achieve invasive alien species targets under the Convention on Biological Diversity and the Sustainable Development Goals; especially in the development of their National Biodiversity Strategy and Action Plans, their National Invasive Alien Species Strategy and Action Plan (NIASAP), target setting and monitoring.</para>
+      </abstract>
+      <funding>
+        <para>The GRIIS initiative was developed within the framework of the GIASIPartnership, with co-funding from the European Union through the Secretariat of the Convention on Biological Diversity. As coordinator of GIASIP, and on behalf of CBD Secretariat, GBIF has supported the development of GRIIS and its integration into the GBIF data infrastructure to ensure interoperability. In July 2019, GBIF provided direct funding from its core budget to support the completion of GRIIS lists for all countries, EU Overseas Territories and selected islands by March 2020.</para>
+      </funding>
+      <studyAreaDescription>
+        <descriptor name="generic"
+                    citableClassificationSystem="false">
+          <descriptorValue>GRIIS has global coverage, including overseas territories and regions. Where appropriate, sub-lists have been created for Oceanic Islands- for e.g. Soqotra of Yemen and the Juan Fernandez Islands of Chile. 
+
+Taxonomic coverage includes all kingdoms of organisms: Animalia, Bacteria, Chromista, Fungi, Plantae, Protozoa, Viruses.
+
+The annotations recorded in GRIIS include- Species name and authorship, synonyms if used and authorship, Higher taxonomy (kingdom, phylum, class, order and family), Environment/system in which the species occurs (terrestrial, freshwater, brackish, marine, host), provenance or origin of the species, invasive status of the alien species. The inclusion of additional annotations are planned, including the date of introduction or first record of the alien species, type of introduction (deliberate or accidental), pathways of introduction, impact mechanism and the global EICAT (Environmental Impact Classification of Alien Taxa) category assigned to the species.</descriptorValue>
+        </descriptor>
+      </studyAreaDescription>
+      <designDescription>
+        <description>
+          <para>The Global Register of Invasive Species (GRIS) was developed as a concept and prototype by the ISSG in 2006 as part of a project undertaken for the Defenders of Wildlife on the Regulation of Live Animal Imports into the United States. 
+
+Between 2011-2020, the concept was revisited and expanded by the ISSG to address Aichi Biodiversity Target 9 and support its achievement - with the development of the Global Register of Introduced and Invasive Species (GRIIS). GRIIS hosted by the ISSG compiles annotated and verified national checklists of introduced (alien) and invasive alien species. Development and population of the GRIIS was undertaken by the ISSG within the framework of activities of the Information Synthesis and Assessment Working Group of the Global Invasive Alien Species Information Partnership.
+
+The GRIIS checklist is an annotated species catalogue, or inventory, recorded from a country, an island, protected area, or area of high biodiversity value. Following GBIF&apos;s guide to best practices for publishing species checklists (Hanmer et al 2012), the GRIIS checklist includes taxonomic information in a standard way. The checklist is compiled by a team of experts and non-specialists including citizen scientists that have knowledge of species taxonomy, access to reliable and authoritative source information that can be validated and verified (for methods please see Pagad et al. 2018).  
+
+A summary of the process
+•	The ISSG GRIIS unit conducts a comprehensive review of authoritative and credible information sources and develops a draft annotated country checklist of introduced (alien) and invasive alien species. 
+•	Annotations include species name (accepted name and synonym if used by the source), higher taxonomy, environment/system in which the species occurs, biological status (provenance (alien or not) and invasiveness-based on evidence of impact), 
+•	Country editor/editors are identified and consulted for advice, including knowledge of additional key data sources 
+•	Draft checklists are submitted to country editors for a review of both accuracy of information and to identify any significant gaps. Revisions are implemented based on feedback. 
+•	Every species record includes a check (indication) if the status has been verified as such by country editors. In cases where ‘evidence of impact’ information is gathered from peer-reviewed literature or reports for the country in question, the species status is designated as &apos;verified&apos;.
+•	Names of the editors as well as the complete reference list of sources consulted is recorded.  Key references used to develop the GRIIS checklists are provided as part of the metadata. References for every species recorded are available on request.
+•	Incremental updates are implemented on an on-going basis. Bi-annual major updates are planned for all checklists. 
+
+Notes on the annotations
+•	Species names recorded from source information are referred to the GBIF taxonomic editor; if the source species name is a synonym, the accepted name is also recorded. This process contributes to the application of  a consistent taxonomy across all inventories. 
+•	Higher taxonomy - Kingdom, Phylum, Class, Order, Genus and Species with species authority. 
+•	Environment system – terrestrial / freshwater / brackish / marine/ host and combinations thereof
+•	Provenance - a) as recorded by the source information, b) as interpreted by the compiler - three options are applied alien, native/alien (if the species is native in a part of a country and alien in another part), provenance uncertain/cryptogenic 
+•	Invasiveness is based on evidence of impact
+
+Note: In cases where country editors have not been identified, the checklist is published after the GRIIS unit validates the checklist. The GRIIS team members are listed as originators of the checklist. The checklist is reviewed by country editors once they have been identified and the expert’s names are listed as originators of the checklist.</para>
+        </description>
+      </designDescription>
+  </project>
+</dataset>
+  <additionalMetadata>
+    <metadata>
+      <gbif>
+          <dateStamp>2018-11-18T15:54:40.518+00:00</dateStamp>
+          <hierarchyLevel>dataset</hierarchyLevel>
+            <citation>Tataya V, Wong L J, Pagad S (2020): Global Register of Introduced and Invasive Species - Mauritius. v1.1. Invasive Species Specialist Group ISSG. Dataset/Checklist. https://cloud.gbif.org/griis/resource?r=griis-mauritius&amp;v=1.1</citation>
+          <bibliography>
+                <citation>Hamer, M., Victor, J., Smith, G.F. (2012). Best Practice Guide for Compiling, Maintaining and Disseminating National Species Checklists, version 1.0, released in October 2012. Copenhagen: Global Biodiversity Information Facility, 40 pp, ISBN: 87-92020-48-8, Accessible at http://www.gbif.org/orc/?doc_id=4752.</citation>
+                <citation>Pagad S, Genovesi P, Carnevali L, Schigel D, McGeoch MA (2018) Introducing the Global Register of Introduced and Invasive Species. Scientific Data, 5, 170202.
+https://www.nature.com/articles/sdata2017202</citation>
+                <citation>Parker I, Simberloff D, Lonsdale W. et al. (1999) Impact: Toward a Framework for Understanding the Ecological Effects of Invaders. Biological Invasions 1, 3–19 (1999). https://doi.org/10.1023/A:1010034312781</citation>
+                <citation>Didham RK, Tylianakis JM, Hutchison MA, Ewers RM, Gemmell NJ. (2005) Are invasive species the drivers of ecological change? Trends Ecol Evol. 2005 Sep;20(9):470-4. Epub 2005 Jul 21.</citation>
+                <citation>Strayer DL, Eviner VT, Jeschke JM, Pace ML. (2006) Understanding the long-term effects of species invasions. Trends in Ecology &amp; Evolution 21(11):645-51</citation>
+                <citation>McGeoch MA, Butchart SHM, Spear D, Marais E. Kleynhans EJ, Symes A, Chanson J, Hoffmann M. (2010) Global indicators of biological invasion: species numbers, biodiversity impact and policy responses. Diversity and Distributions Volume16, Issue1 January 2010.</citation>
+                <citation>McGeoch, M.A., Spear, D., Kleynhans, E.J. &amp; Marais, E. 2012. Uncertainty in invasive alien species listing. Ecological Applications 22, 959-971. 10.1890/11-1252.1</citation>
+                <citation>Vilà M, Espinar JL, Hejda M, Hulme PE, Jarošík V, Maron JL, Pergl J, Schaffner U, Sun Y, Pyšek P. (2011) Ecological impacts of invasive alien plants: a meta‐analysis of their effects on species, communities and ecosystems. Ecology Letters Volume14, Issue7 July 2011 Pages 702-708</citation>
+                <citation>Hawkins CL, Bacher S, Essl F, Hulme PE, Jeschke JM, Kühn I, Kumschick S, Nentwig W, Pergl J, Pyšek P, Rabitsch W, Richardson DM, Vilà  M, Wilson JRU, Genovesi P, Blackburn TM. (2015) Framework and guidelines for implementing the proposed IUCN Environmental Impact Classification for Alien Taxa (EICAT) Diversity and Distributions Volume21, Issue11 November 2015 Pages 1360-1363</citation>
+                <citation>Baret, S., et al. (2013). Threats to paradise? Plant Invasions in protected areas of the Western Indian Ocean Islands. Plant invasions in protected areas, Springer: 423-447.</citation>
+                <citation>Davis, P. and M. Barnes (1991). &quot;The butterflies of Mauritius.&quot; Journal of Research on the Lepidoptera 30(3-4): 145-161.</citation>
+                <citation>de Boer, E. J., et al. (2013). &quot;Rapid succession of plant associations on the small ocean island of Mauritius at the onset of the Holocene.&quot; Quaternary Science Reviews 68: 114-125.</citation>
+                <citation>Fowler, S., et al. (1999). Biological control of weeds in Mauritius: past successes revisited and present challenges. Proceedings of the X international symposium on biological control of weeds, Citeseer.</citation>
+                <citation>Government of Mauritius	(2008).	National Invasive Alien Species Strategy for the Republic of Mauritius 2008-2017	</citation>
+                <citation>Kueffer, C. and P. Vos (2003). &quot;Woody invasive species: a regional assessment.&quot; Invasive Alien Species and Terrestrial Ecosystem Rehabilitation in Western Indian Ocean Island States: 22.</citation>
+                <citation>Kull Christian, A., et al. (2008). &quot;Invasive Australian acacias on western Indian Ocean islands: a historical and ecological perspective.&quot; African journal of ecology 46(4): 684-689.</citation>
+                <citation>Lindsay, S. (2002). &quot;Conservation of ferns in Mauritius: a small island with big problems.&quot; FERN GAZETTE 16(6/8): 470-470.</citation>
+                <citation>Mauremootoo, J., et al. (2019). &quot;Invasive species management in Mauritius: from the reactive to the proactive–the National Invasive Species Management Strategy and its implementation.&quot; Island invasives: scaling up to meet the challenge(62): 503.</citation>
+                <citation>Mauremootooa, M. J. and M. C. Towner-Mauremootoob (2002). &quot;Restoring paradise: alien species management for the restoration of terrestrial ecosystems in Mauritius and Rodrigues.&quot; Prevention and Management of Invasive Alien Species: 55.</citation>
+                <citation>Monty, M. F., et al. (2013). &quot;Invasive alien plants elicit reduced production of flowers and fruits in various native forest species on the tropical island of Mauritius (Mascarenes, Indian Ocean).&quot; Tropical Conservation Science 6(1): 35-49.</citation>
+                <citation>Moulton, M. P., et al. (1996). &quot;Passeriform introductions to the Mascarenes (Indian Ocean): An assessment of the role of competition.&quot; Ecologie 27(3): 143.</citation>
+                <citation>Russell, J. C., et al. (2016). &quot;Introduced mammals on western Indian Ocean islands.&quot; Global Ecology and Conservation 6: 132-144.</citation>
+                <citation>STRAHM, W. (2001). &quot;22 Invasive species in Mauritius: examining the past and charting the future.&quot; Invasive Species and Biodiversity Management 24: 325.</citation>
+                <citation>Virah-Sawmy, M., et al. (2009). &quot;Rapid degradation of a Mauritian rainforest following 60 years of plant invasion.&quot; Oryx 43(4): 599-607.</citation>
+          </bibliography>
+          <dc:replaces>69233277-0946-4931-8115-3b247a81a051/v1.1.xml</dc:replaces>
+      </gbif>
+    </metadata>
+  </additionalMetadata>
+</eml:eml>
