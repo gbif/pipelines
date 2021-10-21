@@ -135,59 +135,9 @@
         <version>${gbif-postal-service.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.gbif.registry</groupId>
-        <artifactId>registry-identity</artifactId>
-        <version>${registry.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.gbif.registry</groupId>
-            <artifactId>registry-mail</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-compress</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.gbif.registry</groupId>
-        <artifactId>registry-security</artifactId>
-        <version>${registry.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.gbif.registry</groupId>
-        <artifactId>registry-persistence</artifactId>
-        <version>${registry.version}</version>
-      </dependency>
-      <dependency>
         <groupId>org.gbif</groupId>
         <artifactId>gbif-common-mybatis</artifactId>
         <version>${gbif-common-mybatis.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.gbif.registry</groupId>
-        <artifactId>registry-surety</artifactId>
-        <version>${registry.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.gbif.registry</groupId>

@@ -150,22 +150,6 @@
     </dependency>
     <dependency>
       <groupId>org.gbif.registry</groupId>
-      <artifactId>registry-persistence</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif.registry</groupId>
-      <artifactId>registry-identity</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif.registry</groupId>
-      <artifactId>registry-security</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif.registry</groupId>
-      <artifactId>registry-surety</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif.registry</groupId>
       <artifactId>registry-ws-client</artifactId>
     </dependency>
     <dependency>

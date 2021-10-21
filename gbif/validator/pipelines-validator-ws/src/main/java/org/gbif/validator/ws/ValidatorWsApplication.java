@@ -1,7 +1,8 @@
 package org.gbif.validator.ws;
 
-import org.gbif.registry.identity.service.UserSuretyDelegateImpl;
 import org.gbif.registry.persistence.config.MyBatisConfiguration;
+import org.gbif.ws.security.AppKeySigningService;
+import org.gbif.ws.security.FileSystemKeyStore;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.actuate.autoconfigure.elasticsearch.ElasticSearchRestHealthContributorAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -18,18 +19,19 @@ import org.springframework.context.annotation.FilterType;
       "org.gbif.ws.server.filter",
       "org.gbif.ws.server.advice",
       "org.gbif.ws.server.mapper",
-      "org.gbif.registry.persistence",
       "org.gbif.validator.service",
       "org.gbif.mail",
       "org.gbif.validator.ws",
-      "org.gbif.ws.security",
-      "org.gbif.registry.identity",
-      "org.gbif.registry.surety"
+      "org.gbif.ws.security"
     },
     excludeFilters = {
       @ComponentScan.Filter(
           type = FilterType.ASSIGNABLE_TYPE,
-          classes = {UserSuretyDelegateImpl.class, MyBatisConfiguration.class})
+          classes = {
+            MyBatisConfiguration.class,
+            AppKeySigningService.class,
+            FileSystemKeyStore.class
+          })
     })
 public class ValidatorWsApplication {
 
