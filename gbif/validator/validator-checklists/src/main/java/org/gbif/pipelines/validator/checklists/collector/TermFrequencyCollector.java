@@ -40,7 +40,19 @@ public class TermFrequencyCollector {
 
     public Long add(Term term, Long value) {
       return termsFrequency.compute(
-          term, (k, v) -> v == null ? 1L : v + (value == null ? 0L : value));
+          term,
+          (k, v) -> {
+            if (v == null && value == null) {
+              return 0L;
+            }
+            if (v == null) {
+              return value;
+            }
+            if (value == null) {
+              return v;
+            }
+            return v + value;
+          });
     }
 
     public TermFrequency inc(Map<Term, ?> termsMap) {
@@ -49,6 +61,8 @@ public class TermFrequencyCollector {
             (k, v) -> {
               if (v != null) {
                 inc(k);
+              } else {
+                add(k, 0L);
               }
             });
       }

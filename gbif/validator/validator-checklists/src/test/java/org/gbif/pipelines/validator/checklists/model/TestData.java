@@ -53,10 +53,11 @@ public class TestData {
 
     // Verbatim extensions
     Map<Extension, List<Map<Term, String>>> extensions = new HashMap<>();
-    extensions.put(
-        Extension.DISTRIBUTION,
-        Collections.singletonList(
-            Collections.singletonMap(IucnTerm.iucnRedListCategory, "endangered")));
+    Map<Term, String> terms = new HashMap<>(2);
+    terms.put(IucnTerm.iucnRedListCategory, "endangered");
+    terms.put(DwcTerm.locationID, null);
+
+    extensions.put(Extension.DISTRIBUTION, Collections.singletonList(terms));
     verbatimNameUsage.setExtensions(extensions);
 
     return NormalizedNameUsageData.builder()

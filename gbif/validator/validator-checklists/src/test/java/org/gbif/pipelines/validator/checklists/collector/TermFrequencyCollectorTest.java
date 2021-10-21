@@ -4,19 +4,49 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.IucnTerm;
 import org.gbif.dwc.terms.Term;
+import org.gbif.pipelines.validator.checklists.collector.TermFrequencyCollector.TermFrequency;
 import org.gbif.pipelines.validator.checklists.model.NormalizedNameUsageData;
 import org.gbif.pipelines.validator.checklists.model.TestData;
 import org.gbif.validator.api.Metrics;
 import org.junit.Test;
 
 public class TermFrequencyCollectorTest {
+
+  @Test
+  public void termFrequencyOfTest() {
+    // State
+    Map<Term, String> termMapOne = new HashMap<>(3);
+    termMapOne.put(DwcTerm.locationID, null);
+    termMapOne.put(DwcTerm.occurrenceID, null);
+    termMapOne.put(DwcTerm.county, "county");
+    termMapOne.put(DwcTerm.eventDate, "eventDate");
+
+    Map<Term, String> termMapTwo = new HashMap<>(3);
+    termMapTwo.put(DwcTerm.locationID, null);
+    termMapTwo.put(DwcTerm.occurrenceID, null);
+    termMapTwo.put(DwcTerm.county, null);
+    termMapTwo.put(DwcTerm.eventDate, "eventDate");
+
+    // When
+    TermFrequency result = TermFrequency.of(Arrays.asList(termMapOne, termMapTwo));
+
+    // Should
+    assertEquals(4, result.getTermsFrequency().size());
+
+    assertEquals(Long.valueOf(0L), result.getFrequency(DwcTerm.locationID));
+    assertEquals(Long.valueOf(0L), result.getFrequency(DwcTerm.occurrenceID));
+    assertEquals(Long.valueOf(1L), result.getFrequency(DwcTerm.county));
+    assertEquals(Long.valueOf(2L), result.getFrequency(DwcTerm.eventDate));
+  }
 
   @Test
   public void termFrequencyCollectorTest() {
@@ -32,6 +62,16 @@ public class TermFrequencyCollectorTest {
     // Should
 
     // Extension test
+    assertEquals(2, distributionTermsInfo.size());
+
+    assertTrue(
+        distributionTermsInfo.stream()
+            .anyMatch(
+                ti ->
+                    ti.getRawIndexed() == 0
+                        && ti.getInterpretedIndexed() == 0
+                        && ti.getTerm().equals(DwcTerm.locationID.qualifiedName())));
+
     assertTrue(
         distributionTermsInfo.stream()
             .anyMatch(

@@ -72,11 +72,14 @@ public class DwcaArchiveValidator implements ArchiveValidator {
   public void validate() {
     log.info("Running DWCA validator");
     Validation validation = validationClient.get(message.getDatasetUuid());
-    FileInfo emlFile = validateEmlFile();
-    FileInfo occurrenceFile = validateDwcaFile();
 
+    // EML
+    FileInfo emlFile = validateEmlFile();
     Validations.mergeFileInfo(validation, emlFile);
-    Validations.mergeFileInfo(validation, occurrenceFile);
+
+    // Occurrence
+    validateOccurrenceFile()
+        .ifPresent(occurrenceFile -> Validations.mergeFileInfo(validation, occurrenceFile));
 
     log.info("Update validation key {}", message.getDatasetUuid());
     validationClient.update(validation);
@@ -90,6 +93,17 @@ public class DwcaArchiveValidator implements ArchiveValidator {
 
     FileInfoBuilder fileInfoBuilder =
         FileInfo.builder().fileType(DwcFileType.METADATA).fileName(EML_XML);
+
+    if (!Files.exists(inputPath)) {
+      return fileInfoBuilder
+          .issues(
+              Collections.singletonList(
+                  IssueInfo.create(
+                      EvaluationType.EML_NOT_FOUND,
+                      Level.FATAL.name(),
+                      "meta.xml file was not found")))
+          .build();
+    }
 
     try {
       String xmlDoc = new String(Files.readAllBytes(inputPath), StandardCharsets.UTF_8);
@@ -107,12 +121,14 @@ public class DwcaArchiveValidator implements ArchiveValidator {
           .issues(
               Collections.singletonList(
                   IssueInfo.create(
-                      EvaluationType.EML_NOT_FOUND, Level.FATAL.name(), ex.getLocalizedMessage())))
+                      EvaluationType.EML_GBIF_SCHEMA,
+                      Level.FATAL.name(),
+                      ex.getLocalizedMessage())))
           .build();
     }
   }
 
-  private FileInfo validateDwcaFile() {
+  private Optional<FileInfo> validateOccurrenceFile() {
     log.info("Running DWCA validation for {}", message.getDatasetUuid());
     Path inputPath = buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid());
     Archive archive = DwcaUtils.fromLocation(inputPath);
@@ -132,17 +148,22 @@ public class DwcaArchiveValidator implements ArchiveValidator {
     if (archive.getCore().getRowType() == DwcTerm.Occurrence) {
       fileName = archive.getCore().getLocationFile().getName();
       dwcFileType = DwcFileType.CORE;
-    } else {
+    } else if (archive.getExtension(DwcTerm.Occurrence) != null) {
       fileName = archive.getExtension(DwcTerm.Occurrence).getLocationFile().getName();
       dwcFileType = DwcFileType.EXTENSION;
+    } else {
+      return Optional.empty();
     }
 
-    return FileInfo.builder()
-        .fileType(dwcFileType)
-        .rowType(DwcTerm.Occurrence.qualifiedName())
-        .fileName(fileName)
-        .issues(issueInfos)
-        .build();
+    FileInfo fileInfo =
+        FileInfo.builder()
+            .fileType(dwcFileType)
+            .rowType(DwcTerm.Occurrence.qualifiedName())
+            .fileName(fileName)
+            .issues(issueInfos)
+            .build();
+
+    return Optional.of(fileInfo);
   }
 
   /** Gets the dataset type from the Archive parameter. */
