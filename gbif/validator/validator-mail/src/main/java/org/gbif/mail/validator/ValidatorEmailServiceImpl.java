@@ -9,10 +9,6 @@ import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.common.GbifUser;
-import org.gbif.api.model.registry.Installation;
-import org.gbif.api.model.registry.Organization;
-import org.gbif.api.service.registry.InstallationService;
-import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.mail.BaseEmailModel;
 import org.gbif.mail.EmailSender;
 import org.gbif.mail.EmailTemplateProcessor;
@@ -34,10 +30,6 @@ public class ValidatorEmailServiceImpl implements ValidatorEmailService {
   private final UserHelperService userHelperService;
 
   private final EmailSender emailSender;
-
-  private final InstallationService installationService;
-
-  private final OrganizationService organizationService;
 
   @Value("${gbif.portal.url}")
   private final String portalUrl;
@@ -79,15 +71,6 @@ public class ValidatorEmailServiceImpl implements ValidatorEmailService {
   private Locale getLocale(GbifUser user, Validation validation) {
     if (user != null) {
       return userHelperService.getUserLocaleOrDefault(user);
-    }
-    if (validation.getInstallationKey() != null) {
-      Installation installation = installationService.get(validation.getInstallationKey());
-      if (installation != null && installation.getOrganizationKey() != null) {
-        Organization organization = organizationService.get(installation.getOrganizationKey());
-        if (organization != null && organization.getLanguage() != null) {
-          return organization.getLanguage().getLocale();
-        }
-      }
     }
     return Locale.ENGLISH;
   }

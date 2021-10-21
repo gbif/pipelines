@@ -1,8 +1,8 @@
 package org.gbif.validator.ws.resource;
 
-import static org.gbif.registry.security.UserRoles.APP_ROLE;
-import static org.gbif.registry.security.UserRoles.IPT_ROLE;
-import static org.gbif.registry.security.UserRoles.USER_ROLE;
+import static org.gbif.ws.security.UserRoles.APP_ROLE;
+import static org.gbif.ws.security.UserRoles.IPT_ROLE;
+import static org.gbif.ws.security.UserRoles.USER_ROLE;
 
 import java.util.UUID;
 import javax.validation.Valid;

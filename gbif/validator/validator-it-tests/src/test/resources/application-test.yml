@@ -1,7 +1,4 @@
-appkeys:
-  file: @appkeys.testfile@
 testdb: true
-
 maxRunningValidationPerUser: 3
 
 schemas:
@@ -14,6 +11,9 @@ gbif:
   ws:
     security:
       wrapContent: false
+      appKey: gbif.validator
+      # generated random key
+      appSecret: 2b673f9de8b219aaa627b772f33cec190e0876509da3ae1b38018016e9
 validation:
   datasource:
     hikari:
