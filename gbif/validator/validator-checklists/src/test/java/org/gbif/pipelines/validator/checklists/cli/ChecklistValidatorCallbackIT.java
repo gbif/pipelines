@@ -1,7 +1,7 @@
 package org.gbif.pipelines.validator.checklists.cli;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Collections;
 import java.util.Optional;
@@ -17,7 +17,7 @@ import org.gbif.validator.api.Metrics.FileInfo;
 import org.gbif.validator.api.Metrics.TermInfo;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.ws.client.ValidationWsClient;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 
 public class ChecklistValidatorCallbackIT {
 
@@ -69,8 +69,8 @@ public class ChecklistValidatorCallbackIT {
     FileInfo taxon = taxonOpt.get();
     assertEquals(DwcFileType.CORE, taxon.getFileType());
     assertEquals(DwcTerm.Taxon.qualifiedName(), taxon.getRowType());
-    assertEquals(475L, taxon.getCount());
-    assertEquals(475L, taxon.getIndexedCount());
+    assertEquals(Long.valueOf(475L), taxon.getCount());
+    assertEquals(Long.valueOf(475L), taxon.getIndexedCount());
     assertEquals(15, taxon.getTerms().size());
     assertEquals(5, taxon.getIssues().size());
 
@@ -79,8 +79,8 @@ public class ChecklistValidatorCallbackIT {
     FileInfo speciesprofile = speciesprofileOpt.get();
     assertEquals(DwcFileType.EXTENSION, speciesprofile.getFileType());
     assertEquals("http://rs.gbif.org/terms/1.0/SpeciesProfile", speciesprofile.getRowType());
-    assertEquals(475L, speciesprofile.getCount());
-    assertEquals(475L, speciesprofile.getIndexedCount());
+    assertEquals(Long.valueOf(475L), speciesprofile.getCount());
+    assertEquals(Long.valueOf(475L), speciesprofile.getIndexedCount());
     assertEquals(2, speciesprofile.getTerms().size());
     assertEquals(0, speciesprofile.getIssues().size());
     assertTerm(DwcTerm.habitat, 475, 475, speciesprofile);
@@ -91,8 +91,8 @@ public class ChecklistValidatorCallbackIT {
     FileInfo distribution = distributionOpt.get();
     assertEquals(DwcFileType.EXTENSION, distribution.getFileType());
     assertEquals("http://rs.gbif.org/terms/1.0/Distribution", distribution.getRowType());
-    assertEquals(475L, distribution.getCount());
-    assertEquals(475L, distribution.getIndexedCount());
+    assertEquals(Long.valueOf(475L), distribution.getCount());
+    assertEquals(Long.valueOf(475L), distribution.getIndexedCount());
     assertEquals(4, distribution.getTerms().size());
     assertEquals(0, distribution.getIssues().size());
     assertTerm(DwcTerm.countryCode, 475, 475, distribution);
@@ -112,8 +112,8 @@ public class ChecklistValidatorCallbackIT {
         fileInfo.getTerms().stream().filter(x -> x.getTerm().equals(term)).findAny();
     assertTrue(termInfo.isPresent());
     TermInfo info = termInfo.get();
-    assertEquals(rawIndexed, info.getRawIndexed());
-    assertEquals(interpretedIndexed, info.getInterpretedIndexed());
+    assertEquals(Long.valueOf(rawIndexed), info.getRawIndexed());
+    assertEquals(Long.valueOf(interpretedIndexed), info.getInterpretedIndexed());
   }
 
   private void assertTerm(Term term, int rawIndexed, int interpretedIndexed, FileInfo fileInfo) {

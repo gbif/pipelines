@@ -1,8 +1,8 @@
 package org.gbif.pipelines.validator.checklists;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.fail;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -13,19 +13,19 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.EvaluationCategory;
 import org.gbif.validator.api.Metrics;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
+import org.junit.Test;
 
 /** Unit tests related to {@link org.gbif.pipelines.validator.checklists.ChecklistValidator}. */
 public class ChecklistValidatorTest {
 
-  @TempDir static Path folder;
-
   @Test
   public void testChecklistValidator() {
+
+    Path temp = Paths.get(getClass().getResource("/").getFile());
+
     // State
     NeoConfiguration neoConfiguration = new NeoConfiguration();
-    neoConfiguration.neoRepository = folder.resolve("neo").toFile();
+    neoConfiguration.neoRepository = temp.resolve("neo").toFile();
     ChecklistValidator checklistValidator = new ChecklistValidator(neoConfiguration);
     try {
 
@@ -39,15 +39,15 @@ public class ChecklistValidatorTest {
       // Should
       // Metrics.FileInfo checks
       assertEquals(1, report.size());
-      assertEquals(20, report.get(0).getCount());
-      assertEquals(20, report.get(0).getIndexedCount());
+      assertEquals(Long.valueOf(20), report.get(0).getCount());
+      assertEquals(Long.valueOf(20), report.get(0).getIndexedCount());
       assertEquals(DwcFileType.CORE, report.get(0).getFileType());
       assertEquals(DwcTerm.Taxon.qualifiedName(), report.get(0).getRowType());
       assertEquals("taxa.txt", report.get(0).getFileName());
 
       // Metrics.IssueInfo checks
       assertEquals(1, report.get(0).getIssues().size());
-      assertEquals(20, report.get(0).getIssues().get(0).getCount());
+      assertEquals(Long.valueOf(20), report.get(0).getIssues().get(0).getCount());
       assertEquals(
           NameUsageIssue.BACKBONE_MATCH_NONE.name(), report.get(0).getIssues().get(0).getIssue());
       assertEquals(5, report.get(0).getIssues().get(0).getSamples().size());

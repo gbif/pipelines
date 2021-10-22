@@ -17,7 +17,7 @@ import org.gbif.pipelines.validator.checklists.collector.TermFrequencyCollector.
 import org.gbif.pipelines.validator.checklists.model.NormalizedNameUsageData;
 import org.gbif.pipelines.validator.checklists.model.TestData;
 import org.gbif.validator.api.Metrics;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 
 public class TermFrequencyCollectorTest {
 
