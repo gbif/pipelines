@@ -5,3 +5,10 @@ indexLock:
   lockName: esTest
   sleepTimeMs: 100
   maxRetries: 5
+hdfsLock:
+  zkConnectionString: ToFill
+  namespace: test_hdfs_lock
+  lockingPath: /hdfs/
+  lockName: hdfsTest
+  sleepTimeMs: 100
+  maxRetries: 5

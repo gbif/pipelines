@@ -30,6 +30,7 @@ import org.gbif.pipelines.common.utils.ZookeeperUtils;
 import org.gbif.pipelines.estools.service.EsService;
 import org.gbif.pipelines.tasks.MessagePublisherStub;
 import org.gbif.pipelines.tasks.utils.EsServer;
+import org.gbif.pipelines.tasks.utils.ZkServer;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.ws.client.ValidationWsClient;
 import org.junit.After;
@@ -53,6 +54,8 @@ public class IndexingCallbackIT {
   private static CloseableHttpClient httpClient;
 
   @ClassRule public static final EsServer ES_SERVER = new EsServer();
+
+  @ClassRule public static final ZkServer ZK_SERVER = new ZkServer();
 
   @Before
   public void cleanIndexes() {
@@ -330,6 +333,9 @@ public class IndexingCallbackIT {
     config.stepConfig.coreSiteConfig = "";
     config.stepConfig.hdfsSiteConfig = "";
     config.pipelinesConfig = this.getClass().getClassLoader().getResource("lock.yaml").getPath();
+    config.stepConfig.zooKeeper.namespace = curator.getNamespace();
+    config.stepConfig.zooKeeper.connectionString = ZK_SERVER.getZkServer().getConnectString();
+
     config.stepConfig.repositoryPath =
         this.getClass().getClassLoader().getResource("data7/ingest").getPath();
     return config;
