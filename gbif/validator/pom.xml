@@ -85,6 +85,8 @@
 
     <!-- Plugin versions -->
     <spring-boot-maven-plugin.version>${spring-boot.version}</spring-boot-maven-plugin.version>
+    <junit-platform-surefire-provider.version>1.3.2</junit-platform-surefire-provider.version>
+    <maven-surefire-plugin-validator.version>2.22.2</maven-surefire-plugin-validator.version>
   </properties>
 
   <dependencyManagement>
