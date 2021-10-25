@@ -3,6 +3,9 @@ package org.gbif.validator.ws;
 import org.gbif.registry.persistence.config.MyBatisConfiguration;
 import org.gbif.ws.security.AppKeySigningService;
 import org.gbif.ws.security.FileSystemKeyStore;
+import org.gbif.ws.server.filter.AppIdentityFilter;
+import org.gbif.ws.server.filter.IdentityFilter;
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.actuate.autoconfigure.elasticsearch.ElasticSearchRestHealthContributorAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -22,7 +25,7 @@ import org.springframework.context.annotation.FilterType;
       "org.gbif.validator.service",
       "org.gbif.mail",
       "org.gbif.validator.ws",
-      "org.gbif.ws.security"
+      "org.gbif.ws.remoteauth"
     },
     excludeFilters = {
       @ComponentScan.Filter(
@@ -30,7 +33,9 @@ import org.springframework.context.annotation.FilterType;
           classes = {
             MyBatisConfiguration.class,
             AppKeySigningService.class,
-            FileSystemKeyStore.class
+            FileSystemKeyStore.class,
+            IdentityFilter.class,
+            AppIdentityFilter.class
           })
     })
 public class ValidatorWsApplication {
