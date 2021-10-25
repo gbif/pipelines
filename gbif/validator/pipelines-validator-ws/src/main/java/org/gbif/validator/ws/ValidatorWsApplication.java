@@ -5,7 +5,6 @@ import org.gbif.ws.security.AppKeySigningService;
 import org.gbif.ws.security.FileSystemKeyStore;
 import org.gbif.ws.server.filter.AppIdentityFilter;
 import org.gbif.ws.server.filter.IdentityFilter;
-
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.actuate.autoconfigure.elasticsearch.ElasticSearchRestHealthContributorAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

@@ -1,10 +1,9 @@
 package org.gbif.validator.ws.security;
 
 import java.time.Duration;
-
+import lombok.SneakyThrows;
 import org.gbif.ws.remoteauth.IdentityServiceClient;
 import org.gbif.ws.remoteauth.RemoteAuthWebSecurityConfigurer;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.ApplicationContext;
@@ -13,8 +12,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.web.client.RestTemplate;
-
-import lombok.SneakyThrows;
 
 /**
  * Configuration for all data sources, MyBatis mappers and services required by the Registry
