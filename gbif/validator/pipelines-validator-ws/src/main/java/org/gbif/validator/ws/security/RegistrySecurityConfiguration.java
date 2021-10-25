@@ -3,7 +3,9 @@ package org.gbif.validator.ws.security;
 import java.time.Duration;
 import lombok.SneakyThrows;
 import org.gbif.ws.remoteauth.IdentityServiceClient;
+import org.gbif.ws.remoteauth.RemoteAuthClient;
 import org.gbif.ws.remoteauth.RemoteAuthWebSecurityConfigurer;
+import org.gbif.ws.remoteauth.RestTemplateRemoteAuthClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.ApplicationContext;
@@ -43,13 +45,19 @@ public class RegistrySecurityConfiguration {
         .build();
   }
 
+  @Bean
+  public RemoteAuthClient remoteAuthClient(RestTemplate restTemplate) {
+    return new RestTemplateRemoteAuthClient(restTemplate);
+  }
+
   @Configuration
   @EnableWebSecurity
   public static class ValidatorWebSecurity extends RemoteAuthWebSecurityConfigurer {
 
     @SneakyThrows
-    public ValidatorWebSecurity(ApplicationContext applicationContext, RestTemplate restTemplate) {
-      super(applicationContext, restTemplate);
+    public ValidatorWebSecurity(
+        ApplicationContext applicationContext, RemoteAuthClient remoteAuthClient) {
+      super(applicationContext, remoteAuthClient);
     }
   }
 }

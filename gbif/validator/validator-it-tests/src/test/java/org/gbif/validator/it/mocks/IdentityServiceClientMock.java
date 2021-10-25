@@ -3,8 +3,8 @@ package org.gbif.validator.it.mocks;
 import lombok.Builder;
 import lombok.Data;
 import org.gbif.api.model.common.GbifUser;
+import org.gbif.ws.remoteauth.IdentityServiceClient;
 import org.gbif.ws.security.identity.model.LoggedUser;
-import org.gbif.ws.security.remote.IdentityServiceClient;
 
 @Data
 @Builder
@@ -20,11 +20,6 @@ public class IdentityServiceClientMock implements IdentityServiceClient {
 
   @Override
   public LoggedUser login(String credentials) {
-    return testUser;
-  }
-
-  @Override
-  public LoggedUser loginJwt(String credentials) {
     return testUser;
   }
 

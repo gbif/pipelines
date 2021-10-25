@@ -8,14 +8,16 @@ import org.gbif.mail.validator.ValidatorEmailService;
 import org.gbif.validator.it.EmbeddedPostgresServer;
 import org.gbif.validator.it.mocks.IdentityServiceClientMock;
 import org.gbif.validator.it.mocks.MessagePublisherMock;
+import org.gbif.validator.it.mocks.RemoteAuthClientMock;
 import org.gbif.validator.ws.config.ValidatorWsConfiguration;
 import org.gbif.validator.ws.file.DownloadFileManager;
 import org.gbif.validator.ws.security.RegistrySecurityConfiguration;
+import org.gbif.ws.remoteauth.IdentityServiceClient;
+import org.gbif.ws.remoteauth.RemoteAuthClient;
+import org.gbif.ws.remoteauth.RemoteAuthWebSecurityConfigurer;
 import org.gbif.ws.security.AppKeySigningService;
 import org.gbif.ws.security.FileSystemKeyStore;
 import org.gbif.ws.security.identity.model.LoggedUser;
-import org.gbif.ws.security.remote.IdentityServiceClient;
-import org.gbif.ws.security.remote.RemoteAuthWebSecurityConfigurer;
 import org.mockito.Mockito;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -98,6 +100,11 @@ public class ValidatorWsItConfiguration extends ValidatorWsConfiguration {
   }
 
   @Bean
+  public RemoteAuthClient remoteAuthClient() {
+    return RemoteAuthClientMock.builder().testUser(TEST_USER).build();
+  }
+
+  @Bean
   public EmbeddedPostgresServer embeddedPostgresServer() {
     return new EmbeddedPostgresServer(LIQUIBASE_MASTER_FILE);
   }
@@ -120,9 +127,8 @@ public class ValidatorWsItConfiguration extends ValidatorWsConfiguration {
   @Configuration
   public static class ValidatorWebSecurity extends RemoteAuthWebSecurityConfigurer {
 
-    public ValidatorWebSecurity(
-        ApplicationContext context, IdentityServiceClient identityServiceClient) {
-      super(context, identityServiceClient);
+    public ValidatorWebSecurity(ApplicationContext context, RemoteAuthClient remoteAuthClient) {
+      super(context, remoteAuthClient);
     }
   }
 }
