@@ -1,9 +1,9 @@
 package org.gbif.validator.api;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 
 /** Tests cases for ValidationRequest custom code added to its Builder sub-class. */
 public class ValidatorSearchRequestTest {
