@@ -18,6 +18,8 @@ import org.gbif.ws.remoteauth.RemoteAuthWebSecurityConfigurer;
 import org.gbif.ws.security.AppKeySigningService;
 import org.gbif.ws.security.FileSystemKeyStore;
 import org.gbif.ws.security.identity.model.LoggedUser;
+import org.gbif.ws.server.filter.AppIdentityFilter;
+import org.gbif.ws.server.filter.IdentityFilter;
 import org.mockito.Mockito;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -47,7 +49,7 @@ import org.springframework.test.context.ActiveProfiles;
       "org.gbif.ws.server.filter",
       "org.gbif.ws.server.advice",
       "org.gbif.ws.server.mapper",
-      "org.gbif.ws.security",
+      "org.gbif.ws.remoteauth",
       "org.gbif.validator.service",
       "org.gbif.validator.ws.resource",
       "org.gbif.validator.ws.config"
@@ -59,7 +61,9 @@ import org.springframework.test.context.ActiveProfiles;
             ValidatorWsConfiguration.class,
             RegistrySecurityConfiguration.class,
             AppKeySigningService.class,
-            FileSystemKeyStore.class
+            FileSystemKeyStore.class,
+            IdentityFilter.class,
+            AppIdentityFilter.class
           })
     })
 @ActiveProfiles("test")
