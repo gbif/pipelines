@@ -1,14 +1,16 @@
 package org.gbif.validator.it.mocks;
 
+import org.gbif.ws.remoteauth.LoggedUser;
+import org.gbif.ws.remoteauth.RemoteAuthClient;
+
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
+
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Builder;
 import lombok.Data;
 import lombok.SneakyThrows;
-import org.gbif.ws.remoteauth.RemoteAuthClient;
-import org.gbif.ws.security.identity.model.LoggedUser;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseEntity;
 
 @Data
 @Builder

@@ -1,7 +1,7 @@
 package org.gbif.validator.ws.it;
 
-import com.zaxxer.hikari.HikariDataSource;
 import java.util.Collections;
+
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.mail.validator.ValidatorEmailService;
@@ -13,13 +13,14 @@ import org.gbif.validator.ws.config.ValidatorWsConfiguration;
 import org.gbif.validator.ws.file.DownloadFileManager;
 import org.gbif.validator.ws.security.RegistrySecurityConfiguration;
 import org.gbif.ws.remoteauth.IdentityServiceClient;
+import org.gbif.ws.remoteauth.LoggedUser;
 import org.gbif.ws.remoteauth.RemoteAuthClient;
 import org.gbif.ws.remoteauth.RemoteAuthWebSecurityConfigurer;
 import org.gbif.ws.security.AppKeySigningService;
 import org.gbif.ws.security.FileSystemKeyStore;
-import org.gbif.ws.security.identity.model.LoggedUser;
 import org.gbif.ws.server.filter.AppIdentityFilter;
 import org.gbif.ws.server.filter.IdentityFilter;
+
 import org.mockito.Mockito;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -37,6 +38,8 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.test.context.ActiveProfiles;
+
+import com.zaxxer.hikari.HikariDataSource;
 
 @TestConfiguration
 @SpringBootApplication(exclude = {LiquibaseAutoConfiguration.class, FlywayAutoConfiguration.class})
