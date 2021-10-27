@@ -1,11 +1,10 @@
 package org.gbif.validator.it.mocks;
 
+import lombok.Builder;
+import lombok.Data;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.ws.remoteauth.IdentityServiceClient;
 import org.gbif.ws.remoteauth.LoggedUser;
-
-import lombok.Builder;
-import lombok.Data;
 
 @Data
 @Builder
