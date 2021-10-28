@@ -27,20 +27,13 @@ public class MessagePublisherMock implements MessagePublisher {
       throws IOException {}
 
   @Override
-  public <T> T sendAndReceive(
-      Message message, String routingKey, boolean persistent, String correlationId, String replyTo)
+  public <T> T sendAndReceive(Message message, String s, boolean b, String s1)
       throws IOException, InterruptedException {
     return null;
   }
 
   @Override
-  public <T> T sendAndReceive(
-      Object message,
-      String exchange,
-      String routingKey,
-      boolean persistent,
-      String correlationId,
-      String replyTo)
+  public <T> T sendAndReceive(Object o, String s, String s1, boolean b, String s2)
       throws IOException, InterruptedException {
     return null;
   }

@@ -72,8 +72,8 @@ public class DwcaMetricsCollector implements MetricsCollector {
           publisher.sendAndReceive(
               checklistValidatorMessage,
               PipelinesChecklistValidatorMessage.ROUTING_KEY,
-              true,
               UUID.randomUUID().toString(),
+              false,
               config.checklistReplyQueue);
       log.info("Checklist validation has finished, the response is received - {}", response);
     }
