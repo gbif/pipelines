@@ -1,6 +1,5 @@
 package org.gbif.pipelines.tasks;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;
@@ -46,14 +45,12 @@ public class MessagePublisherStub implements MessagePublisher {
   }
 
   @Override
-  public <T> T sendAndReceive(Message message, String s, boolean b, String s1)
-      throws IOException, InterruptedException {
+  public <T> T sendAndReceive(Message message, String s, boolean b, String s1) {
     return null;
   }
 
   @Override
-  public <T> T sendAndReceive(Object o, String s, String s1, boolean b, String s2)
-      throws IOException, InterruptedException {
+  public <T> T sendAndReceive(Object o, String s, String s1, boolean b, String s2) {
     return null;
   }
 

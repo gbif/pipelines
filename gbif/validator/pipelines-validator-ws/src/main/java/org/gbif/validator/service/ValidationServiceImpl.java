@@ -5,6 +5,9 @@ import static org.gbif.validator.service.ValidationFactory.metricsSubmitError;
 import static org.gbif.validator.service.ValidationFactory.newValidationInstance;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Optional;
@@ -15,9 +18,11 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.api.model.registry.Dataset;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.mail.validator.ValidatorEmailService;
+import org.gbif.registry.metadata.parse.DatasetParser;
 import org.gbif.validator.api.FileFormat;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.Validation.Status;
@@ -210,6 +215,11 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
         validationMapper.list(principal.getUsername(), validationSearchRequest));
   }
 
+  @Override
+  public Dataset getDataset(UUID key) {
+    return get(key).getDataset();
+  }
+
   /** Can the authenticated user update the validation object. */
   private boolean canAccess(Validation validation) {
     return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
@@ -247,12 +257,24 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
     v.setStatus(Status.QUEUED);
     v.setFileFormat(dataFile.getFileFormat());
     v.getMetrics().setStepTypes(StepsMapper.mapToValidationSteps(pipelinesSteps));
+    v.setDataset(readEml(dataFile.getFilePath()));
 
     // Update DB
     updateAndGet(v);
 
     // Sent RabbitMQ message
     notify(key, dataFile, pipelinesSteps);
+  }
+
+  private Dataset readEml(Path pathToArchive) {
+    try {
+      Path path = pathToArchive.resolve("eml.xml");
+      String eml = new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
+      return DatasetParser.build(eml.getBytes(StandardCharsets.UTF_8));
+    } catch (Exception ex) {
+      log.error("Can't parse eml file and convert to Dataset. {}", ex.getMessage());
+      return null;
+    }
   }
 
   /** Updates the status of a validation process. */

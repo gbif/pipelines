@@ -1,40 +1,36 @@
 package org.gbif.validator.it.mocks;
 
-import java.io.IOException;
 import org.gbif.common.messaging.api.Message;
 import org.gbif.common.messaging.api.MessagePublisher;
 
 public class MessagePublisherMock implements MessagePublisher {
 
   @Override
-  public void send(Message message) throws IOException {}
+  public void send(Message message) {}
 
   @Override
-  public void send(Message message, boolean persistent) throws IOException {}
+  public void send(Message message, boolean persistent) {}
 
   @Override
-  public void send(Message message, String exchange) throws IOException {}
+  public void send(Message message, String exchange) {}
 
   @Override
-  public void send(Object message, String exchange, String routingKey) throws IOException {}
+  public void send(Object message, String exchange, String routingKey) {}
 
   @Override
-  public void send(Object message, String exchange, String routingKey, boolean persistent)
-      throws IOException {}
+  public void send(Object message, String exchange, String routingKey, boolean persistent) {}
 
   @Override
-  public void replyToQueue(Object message, boolean persistent, String correlationId, String replyTo)
-      throws IOException {}
+  public void replyToQueue(
+      Object message, boolean persistent, String correlationId, String replyTo) {}
 
   @Override
-  public <T> T sendAndReceive(Message message, String s, boolean b, String s1)
-      throws IOException, InterruptedException {
+  public <T> T sendAndReceive(Message message, String s, boolean b, String s1) {
     return null;
   }
 
   @Override
-  public <T> T sendAndReceive(Object o, String s, String s1, boolean b, String s2)
-      throws IOException, InterruptedException {
+  public <T> T sendAndReceive(Object o, String s, String s1, boolean b, String s2) {
     return null;
   }
 

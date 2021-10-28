@@ -17,5 +17,6 @@ CREATE TABLE validation
   created timestamp with time zone NOT NULL DEFAULT now(),
   modified timestamp with time zone NOT NULL DEFAULT now(),
   deleted timestamp with time zone,
+  dataset json,
   metrics json
 );

@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.UUID;
 import lombok.Builder;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.registry.Dataset;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.Validation.Status;
 import org.gbif.validator.api.ValidationRequest;
@@ -15,7 +16,7 @@ import org.gbif.validator.ws.client.ValidationWsClient;
 public class ValidationWsClientStub implements ValidationWsClient {
 
   private final UUID key;
-  @Builder.Default private Validation validation = Validation.builder().build();
+  @Builder.Default private final Validation validation = Validation.builder().build();
   private Status status;
 
   @Override
@@ -67,6 +68,11 @@ public class ValidationWsClientStub implements ValidationWsClient {
   public Validation cancel(UUID key) {
     this.status = Status.ABORTED;
     return Validation.builder().key(key).status(Status.ABORTED).build();
+  }
+
+  @Override
+  public Dataset getDataset(UUID key) {
+    return null;
   }
 
   @Override
