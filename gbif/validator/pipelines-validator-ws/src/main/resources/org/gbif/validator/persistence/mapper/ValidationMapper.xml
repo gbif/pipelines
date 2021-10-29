@@ -12,6 +12,7 @@
     <result property="username" column="username"/>
     <result property="file" column="file"/>
     <result property="fileSize" column="file_size"/>
+    <result property="dataset" column="dataset" typeHandler="MetricsJsonTypeHandler"/>
     <result property="metrics" column="metrics" typeHandler="MetricsJsonTypeHandler"/>
     <result property="created" column="created"/>
     <result property="modified" column="modified"/>
@@ -42,6 +43,9 @@
     <if test="fileSize != null and fileSize > 0">
     file_size,
     </if>
+    <if test="dataset != null">
+      dataset,
+    </if>
     <if test="metrics != null">
     metrics,
     </if>
@@ -50,7 +54,7 @@
   </sql>
 
   <sql id="VALIDATION_FIELDS">
-    key, source_id, installation_key, notification_emails, status, file_format, username, file, file_size, metrics, created, modified, deleted
+    key, source_id, installation_key, notification_emails, status, file_format, username, file, file_size, dataset, metrics, created, modified, deleted
   </sql>
 
   <!--
@@ -67,6 +71,9 @@
     </if>
     <if test="fileSize != null and fileSize > 0">
     file_size = #{fileSize,jdbcType=BIGINT},
+    </if>
+    <if test="dataset != null">
+      dataset = #{dataset,jdbcType=OTHER},
     </if>
     <if test="metrics != null">
     metrics = #{metrics,jdbcType=OTHER},
@@ -98,6 +105,9 @@
     </if>
     <if test="fileSize != null and fileSize > 0">
     #{fileSize,jdbcType=BIGINT},
+    </if>
+    <if test="dataset != null">
+      #{dataset,jdbcType=OTHER},
     </if>
     <if test="metrics != null">
     #{metrics,jdbcType=OTHER},

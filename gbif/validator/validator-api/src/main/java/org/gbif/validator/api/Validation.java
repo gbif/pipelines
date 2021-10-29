@@ -11,6 +11,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.gbif.api.model.registry.Dataset;
 
 @Data
 @Builder
@@ -72,6 +73,9 @@ public class Validation {
 
   /** Validation status. */
   private Status status;
+
+  /** Dataset parsed from EML file */
+  @JsonIgnore private Dataset dataset;
 
   /** Validation result. */
   @Builder.Default private Metrics metrics = Metrics.builder().build();

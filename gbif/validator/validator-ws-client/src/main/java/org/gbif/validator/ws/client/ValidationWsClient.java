@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.Map;
 import java.util.UUID;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.registry.Dataset;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.ValidationRequest;
 import org.gbif.validator.api.ValidationSearchRequest;
@@ -79,6 +80,14 @@ public interface ValidationWsClient extends ValidationService<File> {
   @RequestMapping(method = RequestMethod.DELETE, path = "/{key}")
   @Override
   void delete(@PathVariable("key") UUID key);
+
+  /** Get EML as a json. */
+  @RequestMapping(
+      method = RequestMethod.GET,
+      path = "/{key}/eml",
+      consumes = {MediaType.APPLICATION_JSON_VALUE})
+  @Override
+  Dataset getDataset(@PathVariable("key") UUID key);
 
   /** Default factory method for the ValidationWsClient. */
   static ValidationWsClient getInstance(String url, String userName, String password) {

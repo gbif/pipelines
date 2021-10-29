@@ -2,6 +2,7 @@ package org.gbif.validator.service;
 
 import java.util.UUID;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.registry.Dataset;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.ValidationRequest;
 import org.gbif.validator.api.ValidationSearchRequest;
@@ -28,4 +29,6 @@ public interface ValidationService<MF> {
   void delete(UUID key);
 
   PagingResponse<Validation> list(ValidationSearchRequest searchRequest);
+
+  Dataset getDataset(UUID key);
 }

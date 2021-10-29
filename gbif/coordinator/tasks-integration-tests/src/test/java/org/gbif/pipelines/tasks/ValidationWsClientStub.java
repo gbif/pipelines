@@ -8,6 +8,7 @@ import java.util.UUID;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.registry.Dataset;
 import org.gbif.dwc.terms.Term;
 import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.Metrics.FileInfo;
@@ -66,6 +67,11 @@ public class ValidationWsClientStub implements ValidationWsClient {
   @Override
   public void delete(UUID key) {
     // nothing
+  }
+
+  @Override
+  public Dataset getDataset(UUID key) {
+    return null;
   }
 
   public Optional<FileInfo> getFileInfo(String term) {
