@@ -86,7 +86,7 @@ public class ChecklistValidatorCallback
       // void send(Object message, String exchange, String routingKey, boolean persistent, String
       // correlationId, String replyTo)
       messagePublisher.replyToQueue(
-          Boolean.TRUE, true, message.getCorrelationId(), message.getReplyTo());
+          Boolean.TRUE, false, message.getCorrelationId(), message.getReplyTo());
     } else {
       log.error("Checklist validation started: {}", message);
     }
