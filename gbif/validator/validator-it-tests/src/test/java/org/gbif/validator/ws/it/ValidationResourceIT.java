@@ -14,6 +14,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import javax.validation.ValidationException;
 import lombok.SneakyThrows;
@@ -144,12 +145,15 @@ public class ValidationResourceIT {
     Validation persistedValidation = validationWsClient.get(validation.getKey());
     assertNotNull(persistedValidation);
 
+    Set<Status> statuses = new HashSet<>();
+    statuses.add(Status.SUBMITTED);
+    statuses.add(Status.QUEUED);
     PagingResponse<Validation> validations =
         validationWsClient.list(
             ValidationSearchRequest.builder()
                 .offset(0L)
                 .limit(10)
-                .status(Collections.singleton(Status.QUEUED))
+                .status(statuses)
                 .sortByCreated(ValidationSearchRequest.SortOrder.DESC)
                 .build());
     assertNotNull(validations.getCount());
