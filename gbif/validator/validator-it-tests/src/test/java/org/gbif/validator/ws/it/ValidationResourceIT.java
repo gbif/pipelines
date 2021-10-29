@@ -14,8 +14,8 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import javax.validation.ValidationException;
 import lombok.SneakyThrows;
 import org.gbif.api.model.checklistbank.NameUsage;
@@ -131,10 +131,14 @@ public class ValidationResourceIT {
   }
 
   @Test
-  public void validationSubmitFileIT() {
+  public void validationSubmitFileIT() throws Exception {
     File archive = readTestFileInputStream("/archive.zip");
     ValidationRequest validationRequest = testValidationRequest();
     Validation validation = validationWsClient.validateFile(archive, validationRequest);
+
+    // Wait for internal async task
+    TimeUnit.SECONDS.sleep(3L);
+
     assertNotNull(validation);
     assertEquals(validationRequest.getInstallationKey(), validation.getInstallationKey());
     assertEquals(validationRequest.getSourceId(), validation.getSourceId());
@@ -144,16 +148,14 @@ public class ValidationResourceIT {
     // Can the new validation be retrieved?
     Validation persistedValidation = validationWsClient.get(validation.getKey());
     assertNotNull(persistedValidation);
+    assertNull(persistedValidation.getDataset());
 
-    Set<Status> statuses = new HashSet<>();
-    statuses.add(Status.SUBMITTED);
-    statuses.add(Status.QUEUED);
     PagingResponse<Validation> validations =
         validationWsClient.list(
             ValidationSearchRequest.builder()
                 .offset(0L)
                 .limit(10)
-                .status(statuses)
+                .status(Collections.singleton(Status.QUEUED))
                 .sortByCreated(ValidationSearchRequest.SortOrder.DESC)
                 .build());
     assertNotNull(validations.getCount());
