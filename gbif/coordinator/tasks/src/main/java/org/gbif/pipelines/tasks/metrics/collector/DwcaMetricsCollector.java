@@ -70,11 +70,11 @@ public class DwcaMetricsCollector implements MetricsCollector {
       log.info("Send checklist validation message and waiting for the response...");
       Object response =
           publisher.sendAndReceive(
-              checklistValidatorMessage,
-              PipelinesChecklistValidatorMessage.ROUTING_KEY,
-              UUID.randomUUID().toString(),
-              false,
-              config.checklistReplyQueue);
+              checklistValidatorMessage,  //message
+              config.checklistReplyQueue, //exchange
+              PipelinesChecklistValidatorMessage.ROUTING_KEY,  //routing key
+                          false, //persistent message
+              UUID.randomUUID().toString()); //correlationId
       log.info("Checklist validation has finished, the response is received - {}", response);
     }
   }
