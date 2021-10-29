@@ -10,6 +10,7 @@ import javax.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.registry.Dataset;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.ValidationRequest;
 import org.gbif.validator.api.ValidationSearchRequest;
@@ -89,6 +90,12 @@ public class ValidationResource {
       throw errorMapper.apply(Validation.ErrorCode.WRONG_KEY_IN_REQUEST);
     }
     return validationService.update(validation);
+  }
+
+  /** Get EML data */
+  @GetMapping(path = "/{key}/eml")
+  public Dataset getEml(@PathVariable UUID key) {
+    return validationService.getDataset(key);
   }
 
   /** Lists the validations of a user. */
