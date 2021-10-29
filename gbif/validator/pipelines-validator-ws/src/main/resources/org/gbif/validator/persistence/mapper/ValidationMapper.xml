@@ -12,7 +12,7 @@
     <result property="username" column="username"/>
     <result property="file" column="file"/>
     <result property="fileSize" column="file_size"/>
-    <result property="dataset" column="dataset" typeHandler="MetricsJsonTypeHandler"/>
+    <result property="dataset" column="dataset" typeHandler="DatasetJsonTypeHandler"/>
     <result property="metrics" column="metrics" typeHandler="MetricsJsonTypeHandler"/>
     <result property="created" column="created"/>
     <result property="modified" column="modified"/>
@@ -73,7 +73,7 @@
     file_size = #{fileSize,jdbcType=BIGINT},
     </if>
     <if test="dataset != null">
-      dataset = #{dataset,jdbcType=OTHER},
+    dataset = #{dataset,jdbcType=OTHER},
     </if>
     <if test="metrics != null">
     metrics = #{metrics,jdbcType=OTHER},
@@ -107,7 +107,7 @@
     #{fileSize,jdbcType=BIGINT},
     </if>
     <if test="dataset != null">
-      #{dataset,jdbcType=OTHER},
+    #{dataset,jdbcType=OTHER},
     </if>
     <if test="metrics != null">
     #{metrics,jdbcType=OTHER},

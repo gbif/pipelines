@@ -19,9 +19,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zaxxer.hikari.HikariDataSource;
 import java.util.UUID;
 import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.model.registry.Dataset;
 import org.gbif.mybatis.type.UuidTypeHandler;
 import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Validation;
+import org.gbif.validator.persistence.mapper.DatasetJsonTypeHandler;
 import org.gbif.validator.persistence.mapper.MetricsJsonTypeHandler;
 import org.gbif.validator.persistence.mapper.StringArraySetTypeHandler;
 import org.gbif.validator.persistence.mapper.ValidationMapper;
@@ -80,6 +82,13 @@ public class ValidatorDataSourceConfiguration {
     configuration
         .getTypeAliasRegistry()
         .registerAlias("MetricsJsonTypeHandler", MetricsJsonTypeHandler.class);
+
+    configuration
+        .getTypeHandlerRegistry()
+        .register(Dataset.class, new DatasetJsonTypeHandler(objectMapper));
+    configuration
+        .getTypeAliasRegistry()
+        .registerAlias("DatasetJsonTypeHandler", DatasetJsonTypeHandler.class);
 
     configuration
         .getTypeAliasRegistry()
