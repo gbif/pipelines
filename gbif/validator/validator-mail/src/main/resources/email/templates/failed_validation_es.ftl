@@ -10,7 +10,7 @@
 </p>
 
 <p style="padding: 0;margin-bottom: 20px;line-height: 1.65;">
-  Por más detalles, por favor consultar <a href="${portalUrl}es/validation/${validation.key}" style="color: #509E2F;text-decoration: none;">${portalUrl}es/validation/${validation.key}</a> <br>
+  Por más detalles, por favor consultar <a href="${portalUrl}es/tools/data-validator/${validation.key}" style="color: #509E2F;text-decoration: none;">${portalUrl}es/tools/data-validator/${validation.key}</a> <br>
   Consulte el estado de los servicios de GBIF en <a href="${portalUrl}es/health" style="color: #509E2F;text-decoration: none;">${portalUrl}health</a>, e intente de nuevo en unos minutos.
 </p>
 
