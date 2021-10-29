@@ -268,7 +268,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
 
   private Dataset readEml(Path pathToArchive) {
     try {
-      Path path = pathToArchive.resolve("eml.xml");
+      Path path = pathToArchive.getParent().resolve("eml.xml");
       String eml = new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
       return DatasetParser.build(eml.getBytes(StandardCharsets.UTF_8));
     } catch (Exception ex) {
