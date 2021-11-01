@@ -18,6 +18,7 @@ import org.gbif.ws.remoteauth.RemoteAuthClient;
 import org.gbif.ws.remoteauth.RemoteAuthWebSecurityConfigurer;
 import org.gbif.ws.security.AppKeySigningService;
 import org.gbif.ws.security.FileSystemKeyStore;
+import org.gbif.ws.security.GbifAuthenticationManagerImpl;
 import org.gbif.ws.server.filter.AppIdentityFilter;
 import org.gbif.ws.server.filter.IdentityFilter;
 import org.mockito.Mockito;
@@ -50,6 +51,7 @@ import org.springframework.test.context.ActiveProfiles;
       "org.gbif.ws.server.advice",
       "org.gbif.ws.server.mapper",
       "org.gbif.ws.remoteauth",
+      "org.gbif.ws.security",
       "org.gbif.validator.service",
       "org.gbif.validator.ws.resource",
       "org.gbif.validator.ws.config"
@@ -63,7 +65,8 @@ import org.springframework.test.context.ActiveProfiles;
             AppKeySigningService.class,
             FileSystemKeyStore.class,
             IdentityFilter.class,
-            AppIdentityFilter.class
+            AppIdentityFilter.class,
+            GbifAuthenticationManagerImpl.class
           })
     })
 @ActiveProfiles("test")
