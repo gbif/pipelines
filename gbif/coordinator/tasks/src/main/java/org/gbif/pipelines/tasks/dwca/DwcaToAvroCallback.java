@@ -77,11 +77,24 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
   @Override
   public boolean isMessageCorrect(PipelinesDwcaMessage message) {
     boolean isPlatformCorrect = Platform.PIPELINES.equivalent(message.getPlatform());
+    if (!isPlatformCorrect) {
+      log.info("Skipping the task, because of the platform {} is incorrect", message.getPlatform());
+    }
     boolean isMessageValid =
         message.getDatasetType() != null && message.getValidationReport().isValid();
+    if (!isMessageValid) {
+      log.info(
+          "Skipping the task, because of the message is not valid, data type is {}, validation report is valid = {}",
+          message.getDatasetType(),
+          message.getValidationReport().isValid());
+    }
     boolean isReportValid =
         message.getValidationReport().getOccurrenceReport() != null
             && message.getValidationReport().getOccurrenceReport().getCheckedRecords() > 0;
+    if (!isReportValid) {
+      log.info(
+          "Skipping the task, because of the validation report is missed or there are no records");
+    }
     return isPlatformCorrect && isMessageValid && isReportValid;
   }
 

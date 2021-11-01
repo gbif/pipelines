@@ -114,9 +114,14 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
     }
     if (message.getOnlyForStep() != null
         && !message.getOnlyForStep().equalsIgnoreCase(TYPE.name())) {
+      log.info("Skipping, because expected step is {}", message.getOnlyForStep());
       return false;
     }
-    return config.processRunner.equals(message.getRunner());
+    boolean isCorrectProcess = config.processRunner.equals(message.getRunner());
+    if (!isCorrectProcess) {
+      log.info("Skipping, because expected step is incorrect");
+    }
+    return isCorrectProcess;
   }
 
   private void runLocal(ProcessRunnerBuilderBuilder builder) {
