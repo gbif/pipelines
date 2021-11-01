@@ -7,6 +7,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+
+import org.gbif.api.util.validators.identifierschemes.WikidataValidator;
 import org.gbif.api.vocabulary.AgentIdentifierType;
 import org.gbif.datarepo.api.validation.identifierschemes.OrcidValidator;
 import org.gbif.datarepo.api.validation.identifierschemes.OtherValidator;

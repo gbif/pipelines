@@ -92,7 +92,6 @@
     <hbase-utils.version>0.12</hbase-utils.version>
     <gbif-wrangler.version>0.3</gbif-wrangler.version>
     <gbif-occurrence.version>0.168</gbif-occurrence.version>
-    <data-repo-api.version>1.2</data-repo-api.version>
     <vocabulary-lookup.version>0.42</vocabulary-lookup.version>
     <registry.version>3.69</registry.version>
     <gbif-common-ws.version>1.17-SNAPSHOT</gbif-common-ws.version>
@@ -488,11 +487,6 @@
         <groupId>org.gbif</groupId>
         <artifactId>gbif-wrangler</artifactId>
         <version>${gbif-wrangler.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.gbif.data</groupId>
-        <artifactId>data-repo-api</artifactId>
-        <version>${data-repo-api.version}</version>
       </dependency>
       <dependency>
         <groupId>org.gbif.vocabulary</groupId>
