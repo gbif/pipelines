@@ -103,9 +103,14 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
       throw new IllegalArgumentException("Runner can't be null or empty " + message);
     }
     if ((message.isValidator() || config.validatorOnly) && config.validatorListenAllMq) {
+      log.info("Running as a validator task");
       return true;
     }
-    return config.processRunner.equals(message.getRunner());
+    boolean isCorrectProcess = config.processRunner.equals(message.getRunner());
+    if (!isCorrectProcess) {
+      log.info("Skipping, because runner is incorrect");
+    }
+    return isCorrectProcess;
   }
 
   /**

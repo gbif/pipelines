@@ -95,6 +95,7 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
       throw new IllegalArgumentException("Runner can't be null or empty " + message);
     }
     if ((message.isValidator() || config.validatorOnly) && config.validatorListenAllMq) {
+      log.info("Running as a validator task");
       return true;
     }
     StepType type =
@@ -103,9 +104,14 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
             : StepType.INTERPRETED_TO_INDEX;
     if (message.getOnlyForStep() != null
         && !message.getOnlyForStep().equalsIgnoreCase(type.name())) {
+      log.info("Skipping, because expected step is {}", message.getOnlyForStep());
       return false;
     }
-    return config.processRunner.equals(message.getRunner());
+    boolean isCorrectProcess = config.processRunner.equals(message.getRunner());
+    if (!isCorrectProcess) {
+      log.info("Skipping, because runner is incorrect");
+    }
+    return isCorrectProcess;
   }
 
   /**

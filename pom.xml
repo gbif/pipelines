@@ -92,7 +92,6 @@
     <hbase-utils.version>0.12</hbase-utils.version>
     <gbif-wrangler.version>0.3</gbif-wrangler.version>
     <gbif-occurrence.version>0.168</gbif-occurrence.version>
-    <data-repo-api.version>1.2</data-repo-api.version>
     <vocabulary-lookup.version>0.42</vocabulary-lookup.version>
     <registry.version>3.69</registry.version>
     <gbif-common-ws.version>1.17-SNAPSHOT</gbif-common-ws.version>
@@ -100,7 +99,7 @@
 
     <!-- Common libraries -->
     <avro.version>1.8.2</avro.version>
-    <apache.beam.version>2.32.0</apache.beam.version>
+    <apache.beam.version>2.33.0</apache.beam.version>
     <hadoop.version>2.6.0-cdh5.16.2</hadoop.version>
     <hadoop-core.version>2.6.0-mr1-cdh5.16.2</hadoop-core.version>
     <hbase.version>1.2.0-cdh5.16.2</hbase.version>
@@ -488,11 +487,6 @@
         <groupId>org.gbif</groupId>
         <artifactId>gbif-wrangler</artifactId>
         <version>${gbif-wrangler.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.gbif.data</groupId>
-        <artifactId>data-repo-api</artifactId>
-        <version>${data-repo-api.version}</version>
       </dependency>
       <dependency>
         <groupId>org.gbif.vocabulary</groupId>

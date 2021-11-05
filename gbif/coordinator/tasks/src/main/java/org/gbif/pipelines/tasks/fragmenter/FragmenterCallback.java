@@ -134,8 +134,12 @@ public class FragmenterCallback extends AbstractMessageCallback<PipelinesInterpr
 
   @Override
   public boolean isMessageCorrect(PipelinesInterpretedMessage message) {
-    return message.getOnlyForStep() == null
-        || message.getOnlyForStep().equalsIgnoreCase(TYPE.name());
+    boolean isCorrect =
+        message.getOnlyForStep() == null || message.getOnlyForStep().equalsIgnoreCase(TYPE.name());
+    if (!isCorrect) {
+      log.info("Skipping, because expected step is {}", message.getOnlyForStep());
+    }
+    return isCorrect;
   }
 
   /** Create yaml file with total number of converted records */

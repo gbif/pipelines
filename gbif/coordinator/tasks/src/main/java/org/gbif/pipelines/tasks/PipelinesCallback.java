@@ -118,7 +118,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
       if (!handler.isMessageCorrect(message) || isValidatorAborted()) {
         deleteValidatorZkPath(datasetKey);
         log.info(
-            "Skip the message, please check that message is correct, runner or validation info, exit from handler");
+            "Skip the message, please check that message is correct/runner/validation info/etc, exit from handler");
         return;
       }
 

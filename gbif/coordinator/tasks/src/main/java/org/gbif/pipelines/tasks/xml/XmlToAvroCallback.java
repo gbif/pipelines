@@ -179,9 +179,19 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
 
   @Override
   public boolean isMessageCorrect(PipelinesXmlMessage message) {
-    return Platform.PIPELINES.equivalent(message.getPlatform())
-        && message.getTotalRecordCount() != 0
-        && message.getReason() == FinishReason.NORMAL;
+    boolean isPlatform = Platform.PIPELINES.equivalent(message.getPlatform());
+    if (!isPlatform) {
+      log.info("Skipping, because the platform is incorrect");
+    }
+    boolean isTotalCount = message.getTotalRecordCount() != 0;
+    if (!isTotalCount) {
+      log.info("Skipping, because total count of records is 0");
+    }
+    boolean isReason = message.getReason() == FinishReason.NORMAL;
+    if (!isReason) {
+      log.info("Skipping, because the reason is {}", message.getReason());
+    }
+    return isPlatform && isTotalCount && isReason;
   }
 
   @SneakyThrows
