@@ -1,6 +1,5 @@
 package org.gbif.validator.ws.security;
 
-import java.time.Duration;
 import lombok.SneakyThrows;
 import org.gbif.ws.remoteauth.IdentityServiceClient;
 import org.gbif.ws.remoteauth.RemoteAuthClient;
@@ -11,9 +10,7 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.web.client.RestTemplate;
 
 /**
  * Configuration for all data sources, MyBatis mappers and services required by the Registry
@@ -31,23 +28,9 @@ public class RegistrySecurityConfiguration {
   }
 
   @Bean
-  public RestTemplate restTemplate(
+  public RemoteAuthClient remoteAuthClient(
       RestTemplateBuilder builder, @Value("${registry.ws.url}") String gbifApiUrl) {
-    return builder
-        .setConnectTimeout(Duration.ofSeconds(30))
-        .setReadTimeout(Duration.ofSeconds(60))
-        .rootUri(gbifApiUrl)
-        .additionalInterceptors(
-            (request, body, execution) -> {
-              request.getHeaders().setContentType(MediaType.APPLICATION_JSON);
-              return execution.execute(request, body);
-            })
-        .build();
-  }
-
-  @Bean
-  public RemoteAuthClient remoteAuthClient(RestTemplate restTemplate) {
-    return new RestTemplateRemoteAuthClient(restTemplate);
+    return RestTemplateRemoteAuthClient.createInstance(builder, gbifApiUrl);
   }
 
   @Configuration
