@@ -64,8 +64,7 @@ public class DwcaExtensionOccurrenceRecord implements OccurrenceRecord {
     // overlay them with extension occ terms
     for (Term term : occurrenceExtension.terms()) {
       // do not overwrite values with a NULL.  It can be the case that e.g. Taxon core has values,
-      // while the extension
-      // declares the same terms, but provides no value.
+      // while the extension  declares the same terms, but provides no value.
       if (!StringUtils.isBlank(occurrenceExtension.value(term))) {
         data.put(term.simpleName(), occurrenceExtension.value(term));
       }
