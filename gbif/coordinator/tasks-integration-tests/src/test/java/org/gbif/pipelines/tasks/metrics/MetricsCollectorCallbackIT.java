@@ -144,10 +144,18 @@ public class MetricsCollectorCallbackIT {
                     .stepTypes(
                         Arrays.asList(
                             ValidationStep.builder()
-                                .stepType(StepType.VALIDATOR_COLLECT_METRICS.name())
+                                .stepType(StepType.VALIDATOR_DWCA_TO_VERBATIM.name())
+                                .executionOrder(
+                                    StepType.VALIDATOR_DWCA_TO_VERBATIM.getExecutionOrder())
                                 .build(),
                             ValidationStep.builder()
-                                .stepType(StepType.VALIDATOR_VALIDATE_ARCHIVE.name())
+                                .stepType(StepType.VALIDATOR_VERBATIM_TO_INTERPRETED.name())
+                                .executionOrder(999)
+                                .build(),
+                            ValidationStep.builder()
+                                .stepType(StepType.VALIDATOR_COLLECT_METRICS.name())
+                                .executionOrder(
+                                    StepType.VALIDATOR_COLLECT_METRICS.getExecutionOrder())
                                 .build()))
                     .fileInfos(
                         Collections.singletonList(
