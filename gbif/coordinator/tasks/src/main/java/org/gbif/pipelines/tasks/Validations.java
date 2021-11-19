@@ -27,6 +27,13 @@ public class Validations {
       return;
     }
 
+    // Mark all previous steps as FINISHED
+    for (ValidationStep step : validation.getMetrics().getStepTypes()) {
+      if (stepType.getExecutionOrder() > StepType.valueOf(step.getStepType()).getExecutionOrder()) {
+        step.setStatus(Status.FINISHED);
+      }
+    }
+
     Status newStatus = status;
     if (validation.hasFinished()) {
       newStatus = validation.getStatus();
