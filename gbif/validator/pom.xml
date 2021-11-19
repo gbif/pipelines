@@ -34,8 +34,8 @@
     <gbif-common-mybatis.version>1.1</gbif-common-mybatis.version>
 
     <!-- Checklists validation-->
-    <gbif-checklistbank.version>2.93</gbif-checklistbank.version>
-    <neo4j.version>3.3.5</neo4j.version>
+    <gbif-checklistbank.version>2.94</gbif-checklistbank.version>
+    <neo4j.version>3.5.29</neo4j.version>
     <neo4j-lucene.version>5.5.0</neo4j-lucene.version>
     <lucene-analyzers.version>5.4.1</lucene-analyzers.version>
 
