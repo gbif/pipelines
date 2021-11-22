@@ -5,13 +5,16 @@ import static org.gbif.pipelines.validator.metircs.request.OccurrenceIssuesReque
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
+import java.util.function.ToLongFunction;
 import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.SneakyThrows;
@@ -24,11 +27,10 @@ import org.elasticsearch.search.aggregations.bucket.terms.ParsedStringTerms;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms.Bucket;
 import org.elasticsearch.search.aggregations.metrics.ParsedTopHits;
 import org.elasticsearch.search.aggregations.metrics.ParsedValueCount;
-import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.OccurrenceIssue;
-import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
+import org.gbif.pipelines.common.pojo.FileNameTerm;
 import org.gbif.pipelines.validator.factory.ElasticsearchClientFactory;
 import org.gbif.pipelines.validator.metircs.request.ExtensionTermCountRequestBuilder;
 import org.gbif.pipelines.validator.metircs.request.ExtensionTermCountRequestBuilder.ExtTermCountRequest;
@@ -58,8 +60,8 @@ import org.gbif.validator.api.Metrics.TermInfo;
 public class IndexMetricsCollector {
 
   private final String[] esHost;
-  private final Set<Term> coreTerms;
-  private final Map<Extension, Set<Term>> extensionsTerms;
+  private final Map<FileNameTerm, Set<Term>> coreTerms;
+  private final Map<FileNameTerm, Set<Term>> extensionsTerms;
   private final UUID key;
   private final String index;
   private final String corePrefix;
@@ -71,9 +73,16 @@ public class IndexMetricsCollector {
     List<FileInfo> files = new ArrayList<>();
 
     // Collect core metrics
+    Entry<FileNameTerm, Set<Term>> coreEntery =
+        coreTerms.entrySet().stream()
+            .findFirst()
+            .orElseThrow(() -> new UnsupportedOperationException("Core file can't be empty"));
+
     FileInfo core =
         FileInfo.builder()
-            .rowType(DwcTerm.Occurrence.qualifiedName())
+            .fileType(DwcFileType.CORE)
+            .fileName(coreEntery.getKey().getFileName())
+            .rowType(coreEntery.getKey().getTermQualifiedName())
             .indexedCount(queryDocCount())
             .terms(queryCoreTermsCount())
             .issues(queryOccurrenceIssuesCount())
@@ -85,10 +94,11 @@ public class IndexMetricsCollector {
         .filter(es -> es.getKey() != null)
         .map(
             es -> {
-              String extPrefix = extensionsPrefix + "." + es.getKey().getRowType();
+              String extPrefix = extensionsPrefix + "." + es.getKey().getTermQualifiedName();
               return FileInfo.builder()
                   .fileType(DwcFileType.EXTENSION)
-                  .rowType(es.getKey().getRowType())
+                  .fileName(es.getKey().getFileName())
+                  .rowType(es.getKey().getTermQualifiedName())
                   .terms(queryExtTermsCount(extPrefix, es.getValue()))
                   .build();
             })
@@ -152,7 +162,12 @@ public class IndexMetricsCollector {
           }
         };
 
-    return coreTerms.stream().parallel().map(requestFn).map(countFn).collect(Collectors.toList());
+    return coreTerms.values().stream()
+        .flatMap(Collection::stream)
+        .parallel()
+        .map(requestFn)
+        .map(countFn)
+        .collect(Collectors.toList());
   }
 
   /** Aggregate extensions terms and return term, counts of raw terms */
@@ -168,7 +183,7 @@ public class IndexMetricsCollector {
                 .build()
                 .getRequest();
 
-    Function<ExtTermCountRequest, Long> countFn =
+    ToLongFunction<ExtTermCountRequest> countFn =
         extTermCountRequest -> {
           try {
             Aggregation aggregation =
@@ -189,7 +204,7 @@ public class IndexMetricsCollector {
             x ->
                 TermInfo.builder()
                     .term(x.getTerm().qualifiedName())
-                    .rawIndexed(countFn.apply(x))
+                    .rawIndexed(countFn.applyAsLong(x))
                     .build())
         .collect(Collectors.toList());
   }

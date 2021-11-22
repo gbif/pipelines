@@ -22,6 +22,7 @@ import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
+import org.gbif.pipelines.common.pojo.FileNameTerm;
 import org.gbif.pipelines.estools.EsIndex;
 import org.gbif.pipelines.estools.model.IndexParams;
 import org.gbif.pipelines.estools.service.EsService;
@@ -89,17 +90,19 @@ public class IndexMetricsCollectorIT {
     EsService.refreshIndex(ES_SERVER.getEsClient(), IDX_NAME);
 
     // When
-    Set<Term> coreTerms =
-        new HashSet<>(
-            Arrays.asList(
-                DwcTerm.maximumElevationInMeters,
-                DwcTerm.organismID,
-                DwcTerm.occurrenceID,
-                DwcTerm.bed));
-
-    Map<Extension, Set<Term>> extTerms =
+    Map<FileNameTerm, Set<Term>> coreTerms =
         Collections.singletonMap(
-            Extension.MEASUREMENT_OR_FACT,
+            FileNameTerm.create("file.txt", DwcTerm.Occurrence.qualifiedName()),
+            new HashSet<>(
+                Arrays.asList(
+                    DwcTerm.maximumElevationInMeters,
+                    DwcTerm.organismID,
+                    DwcTerm.occurrenceID,
+                    DwcTerm.bed)));
+
+    Map<FileNameTerm, Set<Term>> extTerms =
+        Collections.singletonMap(
+            FileNameTerm.create("ext.txt", Extension.MEASUREMENT_OR_FACT.getRowType()),
             new HashSet<>(Arrays.asList(DwcTerm.measurementValue, DwcTerm.measurementType)));
 
     Metrics result =

@@ -74,14 +74,14 @@ public class ValidationWsClientStub implements ValidationWsClient {
     return null;
   }
 
-  public Optional<FileInfo> getFileInfo(String term) {
+  public Optional<FileInfo> getFileInfo(DwcFileType type, String term) {
     return validation.getMetrics().getFileInfos().stream()
-        .filter(x -> term.equals(x.getRowType()))
+        .filter(x -> term.equals(x.getRowType()) && type == x.getFileType())
         .findAny();
   }
 
-  public Optional<FileInfo> getFileInfo(Term term) {
-    return getFileInfo(term.qualifiedName());
+  public Optional<FileInfo> getFileInfo(DwcFileType type, Term term) {
+    return getFileInfo(type, term.qualifiedName());
   }
 
   public Optional<FileInfo> getFileInfoByFileType(DwcFileType fileType) {

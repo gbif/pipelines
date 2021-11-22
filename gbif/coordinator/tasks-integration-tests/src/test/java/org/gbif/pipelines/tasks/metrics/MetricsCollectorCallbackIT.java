@@ -48,6 +48,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -182,26 +183,20 @@ public class MetricsCollectorCallbackIT {
 
     Validation validation = validationClient.getValidation();
 
-    assertEquals(2, validation.getMetrics().getFileInfos().size());
+    assertEquals(3, validation.getMetrics().getFileInfos().size());
     assertEquals(Status.QUEUED, validation.getStatus());
     assertFalse(validation.getMetrics().isIndexeable());
 
-    Optional<FileInfo> coreOpt = validationClient.getFileInfo(DwcTerm.Occurrence);
+    Optional<FileInfo> coreOpt = validationClient.getFileInfo(DwcFileType.CORE, DwcTerm.Occurrence);
     assertTrue(coreOpt.isPresent());
 
     FileInfo core = coreOpt.get();
-    assertEquals("verbatim.txt", core.getFileName());
+    assertEquals("occurrence.txt", core.getFileName());
     assertEquals(Long.valueOf(1534L), core.getCount());
     assertEquals(Long.valueOf(1L), core.getIndexedCount());
     assertEquals(235, core.getTerms().size());
-    assertEquals(3, core.getIssues().size());
+    assertEquals(2, core.getIssues().size());
     assertEquals(DwcFileType.CORE, core.getFileType());
-
-    Optional<IssueInfo> oldIssue =
-        core.getIssues().stream().filter(x -> x.getIssue().equals("OLD")).findAny();
-    assertTrue(oldIssue.isPresent());
-    assertEquals(Long.valueOf(999), oldIssue.get().getCount());
-    assertNull(oldIssue.get().getIssueCategory());
 
     Optional<IssueInfo> randomIssue =
         core.getIssues().stream()
@@ -220,7 +215,8 @@ public class MetricsCollectorCallbackIT {
         EvaluationCategory.OCC_INTERPRETATION_BASED,
         geodeticDatumAssumedWgs84Issue.get().getIssueCategory());
 
-    Optional<FileInfo> extOpt = validationClient.getFileInfo(Extension.MULTIMEDIA.getRowType());
+    Optional<FileInfo> extOpt =
+        validationClient.getFileInfo(DwcFileType.EXTENSION, Extension.MULTIMEDIA.getRowType());
     assertTrue(extOpt.isPresent());
 
     FileInfo ext = extOpt.get();
@@ -284,7 +280,7 @@ public class MetricsCollectorCallbackIT {
 
     Validation validation = validationClient.getValidation();
 
-    assertEquals(2, validation.getMetrics().getFileInfos().size());
+    assertEquals(3, validation.getMetrics().getFileInfos().size());
     assertEquals(Status.FINISHED, validation.getStatus());
     assertTrue(validation.getMetrics().isIndexeable());
   }
@@ -314,6 +310,145 @@ public class MetricsCollectorCallbackIT {
     assertFalse(checkExists(curator, crawlId, Fn.MQ_CLASS_NAME.apply(LABEL)));
     assertFalse(checkExists(curator, crawlId, Fn.MQ_MESSAGE.apply(LABEL)));
     assertTrue(publisher.getMessages().isEmpty());
+  }
+
+  @Ignore
+  @Test
+  public void testEventNormalCase() throws Exception {
+    // State
+    MetricsCollectorConfiguration config = createConfig();
+    ValidationWsClientStub validationClient = ValidationWsClientStub.create();
+
+    MetricsCollectorCallback callback =
+        new MetricsCollectorCallback(config, publisher, curator, historyClient, validationClient);
+
+    String datasetUuid = "9997fa4e-54c1-43ea-9856-afa90204c162";
+    UUID uuid = UUID.fromString(datasetUuid);
+    int attempt = 60;
+
+    PipelinesIndexedMessage message = createMessage(uuid, attempt);
+
+    // Index document
+    String document =
+        "{\"datasetKey\":\""
+            + datasetUuid
+            + "\",\"maximumElevationInMeters\":2.2,\"issues\":"
+            + "[\"GEODETIC_DATUM_ASSUMED_WGS84\",\"LICENSE_MISSING_OR_UNKNOWN\"],\"verbatim\":{\"core\":"
+            + "{\"http://rs.tdwg.org/dwc/terms/maximumElevationInMeters\":\"1150\","
+            + "\"http://rs.tdwg.org/dwc/terms/organismID\":\"251\",\"http://rs.tdwg.org/dwc/terms/bed\":\"251\"},\"extensions\":"
+            + "{\"http://rs.tdwg.org/dwc/terms/MeasurementOrFact\":[{\"http://rs.tdwg.org/dwc/terms/measurementValue\":"
+            + "\"1.7\"},{\"http://rs.tdwg.org/dwc/terms/measurementValue\":\"5.0\"},"
+            + "{\"http://rs.tdwg.org/dwc/terms/measurementValue\":\"5.83\"}]}}}";
+
+    EsIndex.createIndex(
+        ES_SERVER.getEsConfig(),
+        IndexParams.builder()
+            .indexName(config.indexName)
+            .settingsType(INDEXING)
+            .pathMappings(MAPPINGS_PATH)
+            .build());
+
+    EsService.indexDocument(ES_SERVER.getEsClient(), config.indexName, 1L, document);
+    EsService.refreshIndex(ES_SERVER.getEsClient(), config.indexName);
+
+    validationClient.update(
+        Validation.builder()
+            .key(UUID.randomUUID())
+            .metrics(
+                Metrics.builder()
+                    .stepTypes(
+                        Arrays.asList(
+                            ValidationStep.builder()
+                                .stepType(StepType.VALIDATOR_DWCA_TO_VERBATIM.name())
+                                .executionOrder(
+                                    StepType.VALIDATOR_DWCA_TO_VERBATIM.getExecutionOrder())
+                                .build(),
+                            ValidationStep.builder()
+                                .stepType(StepType.VALIDATOR_VERBATIM_TO_INTERPRETED.name())
+                                .executionOrder(999)
+                                .build(),
+                            ValidationStep.builder()
+                                .stepType(StepType.VALIDATOR_COLLECT_METRICS.name())
+                                .executionOrder(
+                                    StepType.VALIDATOR_COLLECT_METRICS.getExecutionOrder())
+                                .build()))
+                    .fileInfos(
+                        Collections.singletonList(
+                            FileInfo.builder()
+                                .fileName("verbatim.txt")
+                                .fileType(DwcFileType.CORE)
+                                .issues(
+                                    Collections.singletonList(
+                                        IssueInfo.builder().issue("OLD").count(999L).build()))
+                                .build()))
+                    .build())
+            .build());
+
+    // When
+    callback.handleMessage(message);
+
+    // Should
+    assertTrue(checkExists(curator, datasetUuid, LABEL));
+    assertTrue(checkExists(curator, datasetUuid, Fn.MQ_CLASS_NAME.apply(LABEL)));
+    assertTrue(checkExists(curator, datasetUuid, Fn.MQ_MESSAGE.apply(LABEL)));
+    assertTrue(checkExists(curator, datasetUuid, Fn.END_DATE.apply(LABEL)));
+    assertTrue(checkExists(curator, datasetUuid, Fn.SUCCESSFUL.apply(LABEL)));
+    assertEquals(0, publisher.getMessages().size());
+
+    Validation validation = validationClient.getValidation();
+
+    assertEquals(2, validation.getMetrics().getFileInfos().size());
+    assertEquals(Status.QUEUED, validation.getStatus());
+    assertFalse(validation.getMetrics().isIndexeable());
+
+    Optional<FileInfo> coreOpt = validationClient.getFileInfo(DwcFileType.CORE, DwcTerm.Occurrence);
+    assertTrue(coreOpt.isPresent());
+
+    FileInfo core = coreOpt.get();
+    assertEquals("verbatim.txt", core.getFileName());
+    assertEquals(Long.valueOf(1534L), core.getCount());
+    assertEquals(Long.valueOf(1L), core.getIndexedCount());
+    assertEquals(235, core.getTerms().size());
+    assertEquals(3, core.getIssues().size());
+    assertEquals(DwcFileType.CORE, core.getFileType());
+
+    Optional<IssueInfo> oldIssue =
+        core.getIssues().stream().filter(x -> x.getIssue().equals("OLD")).findAny();
+    assertTrue(oldIssue.isPresent());
+    assertEquals(Long.valueOf(999), oldIssue.get().getCount());
+    assertNull(oldIssue.get().getIssueCategory());
+
+    Optional<IssueInfo> randomIssue =
+        core.getIssues().stream()
+            .filter(x -> x.getIssue().equals("LICENSE_MISSING_OR_UNKNOWN"))
+            .findAny();
+    assertTrue(randomIssue.isPresent());
+    assertEquals(Long.valueOf(1), randomIssue.get().getCount());
+
+    Optional<IssueInfo> geodeticDatumAssumedWgs84Issue =
+        core.getIssues().stream()
+            .filter(x -> x.getIssue().equals(OccurrenceIssue.GEODETIC_DATUM_ASSUMED_WGS84.name()))
+            .findAny();
+    assertTrue(geodeticDatumAssumedWgs84Issue.isPresent());
+    assertEquals(Long.valueOf(1), geodeticDatumAssumedWgs84Issue.get().getCount());
+    assertEquals(
+        EvaluationCategory.OCC_INTERPRETATION_BASED,
+        geodeticDatumAssumedWgs84Issue.get().getIssueCategory());
+
+    Optional<FileInfo> extOpt =
+        validationClient.getFileInfo(DwcFileType.EXTENSION, Extension.MULTIMEDIA.getRowType());
+    assertTrue(extOpt.isPresent());
+
+    FileInfo ext = extOpt.get();
+
+    assertEquals("multimedia.txt", ext.getFileName());
+    assertEquals(DwcFileType.EXTENSION, ext.getFileType());
+
+    // Clean
+    curator
+        .delete()
+        .deletingChildrenIfNeeded()
+        .forPath(getPipelinesInfoPath(datasetUuid, LABEL, true));
   }
 
   private PipelinesIndexedMessage createMessage(UUID uuid, int attempt) {

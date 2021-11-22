@@ -3,7 +3,6 @@ package org.gbif.pipelines.tasks.metrics.collector;
 import static org.gbif.pipelines.common.utils.PathUtil.buildDwcaInputPath;
 
 import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -11,7 +10,6 @@ import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.pipelines.StepType;
-import org.gbif.api.vocabulary.Extension;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesChecklistValidatorMessage;
 import org.gbif.common.messaging.api.messages.PipelinesIndexedMessage;
@@ -19,6 +17,7 @@ import org.gbif.dwc.Archive;
 import org.gbif.dwc.ArchiveFile;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
+import org.gbif.pipelines.common.pojo.FileNameTerm;
 import org.gbif.pipelines.core.utils.DwcaUtils;
 import org.gbif.pipelines.tasks.metrics.MetricsCollectorConfiguration;
 import org.gbif.pipelines.validator.IndexMetricsCollector;
@@ -82,23 +81,13 @@ public class DwcaMetricsCollector implements MetricsCollector {
   private void collectMetrics(PipelinesIndexedMessage message) {
     Path inputPath = buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid());
 
-    Map<String, Long> extLineCount = new HashMap<>();
-    Map<String, String> extFiles = new HashMap<>();
-
     Archive archive = DwcaUtils.fromLocation(inputPath);
     ArchiveFile core = archive.getCore();
     // Get core file name
     String coreFileName = core.getLocationFile().getName();
     // Extract all terms
-    Set<Term> coreTerms = DwcaUtils.getCoreTerms(archive);
-    Map<Extension, Set<Term>> extensionsTerms = DwcaUtils.getExtensionsTerms(archive);
-    // Count files lines
-    Long coreLineCount = LineCounter.count(core);
-    for (ArchiveFile ext : archive.getExtensions()) {
-      String extName = ext.getRowType().qualifiedName();
-      extLineCount.put(extName, LineCounter.count(ext));
-      extFiles.put(extName, ext.getLocationFile().getName());
-    }
+    Map<FileNameTerm, Set<Term>> coreTerms = DwcaUtils.getCoreTerms(archive);
+    Map<FileNameTerm, Set<Term>> extensionsTerms = DwcaUtils.getExtensionsTerms(archive);
 
     // Collect metrics from ES
     Metrics metrics =
@@ -113,15 +102,13 @@ public class DwcaMetricsCollector implements MetricsCollector {
             .build()
             .collect();
 
-    // Set core file name
-    setFileInfo(metrics, DwcTerm.Occurrence.qualifiedName(), coreFileName, coreLineCount);
+    // Count core file lines
+    setFileInfo(metrics, coreFileName, LineCounter.count(core));
 
-    // Set files count values and ext file names
-    extFiles.forEach(
-        (key, value) -> {
-          Long count = extLineCount.get(key);
-          setFileInfo(metrics, key, value, count);
-        });
+    // Count extensions files lines
+    archive
+        .getExtensions()
+        .forEach(ext -> setFileInfo(metrics, ext.getTitle(), LineCounter.count(ext)));
 
     // Get saved metrics object and merge with the result
     Validation validation = validationClient.get(message.getDatasetUuid());
@@ -136,10 +123,9 @@ public class DwcaMetricsCollector implements MetricsCollector {
     validationClient.update(validation);
   }
 
-  private void setFileInfo(Metrics metrics, String term, String fileName, Long count) {
+  private void setFileInfo(Metrics metrics, String fileName, Long count) {
     for (FileInfo fileInfo : metrics.getFileInfos()) {
-      if (fileInfo.getRowType().equals(term)) {
-        fileInfo.setFileName(fileName);
+      if (fileInfo.getFileName().equals(fileName)) {
         fileInfo.setCount(count);
       }
     }

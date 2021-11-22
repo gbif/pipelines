@@ -13,7 +13,7 @@
   <packaging>jar</packaging>
 
   <name>Pipelines :: Sdks :: Variables</name>
-  <description>Simple class for string/enum variables</description>
+  <description>Simple class for string/enum variables/simple pojo containers</description>
 
   <dependencies>
     <!-- Tools -->

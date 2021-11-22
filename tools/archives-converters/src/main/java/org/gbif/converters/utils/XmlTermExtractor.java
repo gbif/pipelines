@@ -11,20 +11,21 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import org.gbif.api.vocabulary.Extension;
 import org.gbif.converters.parser.xml.OccurrenceParser;
 import org.gbif.converters.parser.xml.parsing.extendedrecord.ExtendedRecordConverter;
 import org.gbif.converters.parser.xml.parsing.xml.XmlFragmentParser;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.TermFactory;
+import org.gbif.pipelines.common.pojo.FileNameTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 @AllArgsConstructor
 @Getter
 public class XmlTermExtractor {
 
-  private final Set<Term> core;
-  private final Map<Extension, Set<Term>> extenstionsTerms;
+  private final Map<FileNameTerm, Set<Term>> core;
+  private final Map<FileNameTerm, Set<Term>> extenstionsTerms;
 
   public XmlTermExtractor extract(File file) {
     return extract(Collections.singletonList(file));
@@ -48,7 +49,7 @@ public class XmlTermExtractor {
             .flatMap(Collection::stream)
             .collect(Collectors.toSet());
 
-    Map<Extension, Set<Term>> extenstionsTerms = new HashMap<>();
+    Map<FileNameTerm, Set<Term>> extenstionsTerms = new HashMap<>();
     records.stream()
         .map(record -> record.getExtensions().entrySet())
         .flatMap(Collection::stream)
@@ -59,10 +60,14 @@ public class XmlTermExtractor {
                       .map(XmlTermExtractor::extractTerms)
                       .flatMap(Collection::stream)
                       .collect(Collectors.toSet());
-              extenstionsTerms.put(Extension.fromRowType(es.getKey()), extTerms);
+              extenstionsTerms.put(
+                  FileNameTerm.create(es.getKey() + ".file", es.getKey()), extTerms);
             });
 
-    return new XmlTermExtractor(collect, extenstionsTerms);
+    return new XmlTermExtractor(
+        Collections.singletonMap(
+            FileNameTerm.create("core.file", DwcTerm.Occurrence.qualifiedName()), collect),
+        extenstionsTerms);
   }
 
   private static Set<Term> extractTerms(Map<String, String> map) {
