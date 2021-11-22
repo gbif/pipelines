@@ -77,7 +77,7 @@
 
     <!-- Persistence-->
     <hikari.version>3.2.0</hikari.version>
-    <mybatis.version>3.5.1</mybatis.version>
+    <mybatis.version>3.5.6</mybatis.version>
 
     <!-- Logging -->
     <logstash-encoder.version>4.11</logstash-encoder.version>
