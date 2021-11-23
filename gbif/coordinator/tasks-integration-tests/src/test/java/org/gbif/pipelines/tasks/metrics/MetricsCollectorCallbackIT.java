@@ -4,7 +4,6 @@ import static org.gbif.crawler.constants.PipelinesNodePaths.getPipelinesInfoPath
 import static org.gbif.pipelines.estools.common.SettingsType.INDEXING;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
@@ -48,7 +47,6 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -312,7 +310,6 @@ public class MetricsCollectorCallbackIT {
     assertTrue(publisher.getMessages().isEmpty());
   }
 
-  @Ignore
   @Test
   public void testEventNormalCase() throws Exception {
     // State
@@ -375,8 +372,8 @@ public class MetricsCollectorCallbackIT {
                     .fileInfos(
                         Collections.singletonList(
                             FileInfo.builder()
-                                .fileName("verbatim.txt")
-                                .fileType(DwcFileType.CORE)
+                                .fileName("example.txt")
+                                .fileType(DwcFileType.EXTENSION)
                                 .issues(
                                     Collections.singletonList(
                                         IssueInfo.builder().issue("OLD").count(999L).build()))
@@ -397,52 +394,16 @@ public class MetricsCollectorCallbackIT {
 
     Validation validation = validationClient.getValidation();
 
-    assertEquals(2, validation.getMetrics().getFileInfos().size());
+    assertEquals(4, validation.getMetrics().getFileInfos().size());
     assertEquals(Status.QUEUED, validation.getStatus());
     assertFalse(validation.getMetrics().isIndexeable());
 
-    Optional<FileInfo> coreOpt = validationClient.getFileInfo(DwcFileType.CORE, DwcTerm.Occurrence);
+    Optional<FileInfo> coreOpt = validationClient.getFileInfo(DwcFileType.CORE, DwcTerm.Event);
     assertTrue(coreOpt.isPresent());
 
     FileInfo core = coreOpt.get();
-    assertEquals("verbatim.txt", core.getFileName());
-    assertEquals(Long.valueOf(1534L), core.getCount());
-    assertEquals(Long.valueOf(1L), core.getIndexedCount());
-    assertEquals(235, core.getTerms().size());
-    assertEquals(3, core.getIssues().size());
-    assertEquals(DwcFileType.CORE, core.getFileType());
-
-    Optional<IssueInfo> oldIssue =
-        core.getIssues().stream().filter(x -> x.getIssue().equals("OLD")).findAny();
-    assertTrue(oldIssue.isPresent());
-    assertEquals(Long.valueOf(999), oldIssue.get().getCount());
-    assertNull(oldIssue.get().getIssueCategory());
-
-    Optional<IssueInfo> randomIssue =
-        core.getIssues().stream()
-            .filter(x -> x.getIssue().equals("LICENSE_MISSING_OR_UNKNOWN"))
-            .findAny();
-    assertTrue(randomIssue.isPresent());
-    assertEquals(Long.valueOf(1), randomIssue.get().getCount());
-
-    Optional<IssueInfo> geodeticDatumAssumedWgs84Issue =
-        core.getIssues().stream()
-            .filter(x -> x.getIssue().equals(OccurrenceIssue.GEODETIC_DATUM_ASSUMED_WGS84.name()))
-            .findAny();
-    assertTrue(geodeticDatumAssumedWgs84Issue.isPresent());
-    assertEquals(Long.valueOf(1), geodeticDatumAssumedWgs84Issue.get().getCount());
-    assertEquals(
-        EvaluationCategory.OCC_INTERPRETATION_BASED,
-        geodeticDatumAssumedWgs84Issue.get().getIssueCategory());
-
-    Optional<FileInfo> extOpt =
-        validationClient.getFileInfo(DwcFileType.EXTENSION, Extension.MULTIMEDIA.getRowType());
-    assertTrue(extOpt.isPresent());
-
-    FileInfo ext = extOpt.get();
-
-    assertEquals("multimedia.txt", ext.getFileName());
-    assertEquals(DwcFileType.EXTENSION, ext.getFileType());
+    assertEquals("event.txt", core.getFileName());
+    assertEquals(Long.valueOf(30L), core.getCount());
 
     // Clean
     curator
