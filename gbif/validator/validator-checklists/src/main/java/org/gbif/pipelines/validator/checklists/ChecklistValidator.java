@@ -123,7 +123,7 @@ public class ChecklistValidator {
       normalizer.run(false);
       try (Transaction tx = dao.beginTx()) {
         // iterate over all node and collect their issues
-        dao.allNodes().forEach(node -> collector.collect(readUsageData(dao, node)));
+        dao.allNodes().stream().parallel().forEach(node -> collector.collect(readUsageData(dao, node)));
       }
     }
     return collector;
@@ -131,11 +131,13 @@ public class ChecklistValidator {
 
   /** Collects usages data from the DAO object. */
   private NormalizedNameUsageData readUsageData(UsageDao usageDao, Node node) {
-    return NormalizedNameUsageData.builder()
+    try (Transaction tx = usageDao.beginTx()) {
+      return NormalizedNameUsageData.builder()
         .nameUsage(usageDao.readUsage(node, true))
         .verbatimNameUsage(usageDao.readVerbatim(node.getId()))
         .parsedName(usageDao.readName(node.getId()))
         .usageExtensions(usageDao.readExtensions(node.getId()))
         .build();
+    }
   }
 }
