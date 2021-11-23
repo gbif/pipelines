@@ -24,8 +24,6 @@ import org.gbif.pipelines.validator.checklists.collector.ValidationDataCollector
 import org.gbif.pipelines.validator.checklists.model.NormalizedNameUsageData;
 import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.Metrics;
-import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Transaction;
 
 /**
  * Evaluates checklists using ChecklistBank Normalizer. Currently, no nub matching is done. Not
@@ -121,25 +119,19 @@ public class ChecklistValidator {
           Normalizer.create(
               key, dao, archive.getLocation(), new IdLookupPassThru(), configuration.batchSize);
       normalizer.run(false);
-      try (Transaction tx = dao.beginTx()) {
-        // iterate over all node and collect their issues
-        dao.allNodes().stream()
-            .parallel()
-            .forEach(node -> collector.collect(readUsageData(dao, node)));
-      }
+      // iterate over all node and collect their issues
+      dao.streamUsages().parallel().forEach(node -> collector.collect(readUsageData(node)));
     }
     return collector;
   }
 
   /** Collects usages data from the DAO object. */
-  private NormalizedNameUsageData readUsageData(UsageDao usageDao, Node node) {
-    try (Transaction tx = usageDao.beginTx()) {
-      return NormalizedNameUsageData.builder()
-          .nameUsage(usageDao.readUsage(node, true))
-          .verbatimNameUsage(usageDao.readVerbatim(node.getId()))
-          .parsedName(usageDao.readName(node.getId()))
-          .usageExtensions(usageDao.readExtensions(node.getId()))
-          .build();
-    }
+  private NormalizedNameUsageData readUsageData(UsageDao.FullUsage node) {
+    return NormalizedNameUsageData.builder()
+        .nameUsage(node.usage)
+        .verbatimNameUsage(node.verbatim)
+        .parsedName(node.name)
+        .usageExtensions(node.extensions)
+        .build();
   }
 }
