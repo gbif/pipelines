@@ -7,7 +7,6 @@ import static org.gbif.pipelines.validator.metircs.request.OccurrenceIssuesReque
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -121,8 +120,7 @@ public class IndexMetricsCollector {
             .fileName(eventEntery.getKey().getFileName())
             .rowType(eventEntery.getKey().getTermQualifiedName())
             .indexedCount(queryOccurrenceDocCount())
-            .terms(queryOccurrenceCoreTermsCount())
-            .issues(queryOccurrenceIssuesCount())
+            .terms(queryOccurrenceCoreTermsCount(eventEntery.getValue()))
             .build();
     return Optional.of(eventFile);
   }
@@ -159,7 +157,7 @@ public class IndexMetricsCollector {
             .fileName(occurrenceEntery.getKey().getFileName())
             .rowType(occurrenceEntery.getKey().getTermQualifiedName())
             .indexedCount(queryOccurrenceDocCount())
-            .terms(queryOccurrenceCoreTermsCount())
+            .terms(queryOccurrenceCoreTermsCount(occurrenceEntery.getValue()))
             .issues(queryOccurrenceIssuesCount())
             .build();
     return Optional.of(occurrence);
@@ -181,7 +179,7 @@ public class IndexMetricsCollector {
   }
 
   /** Aggregate occurrence terms and return term, counts of raw and indexed terms */
-  private List<TermInfo> queryOccurrenceCoreTermsCount() {
+  private List<TermInfo> queryOccurrenceCoreTermsCount(Set<Term> terms) {
 
     Function<Term, TermCountRequest> requestFn =
         term ->
@@ -220,12 +218,7 @@ public class IndexMetricsCollector {
           }
         };
 
-    return coreTerms.values().stream()
-        .flatMap(Collection::stream)
-        .parallel()
-        .map(requestFn)
-        .map(countFn)
-        .collect(Collectors.toList());
+    return terms.stream().parallel().map(requestFn).map(countFn).collect(Collectors.toList());
   }
 
   /** Aggregate all issues and return 5 samples per issue */
