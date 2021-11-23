@@ -1,5 +1,7 @@
 package org.gbif.pipelines.validator;
 
+import static org.gbif.dwc.terms.DwcTerm.Event;
+import static org.gbif.dwc.terms.DwcTerm.Occurrence;
 import static org.gbif.pipelines.validator.metircs.request.OccurrenceIssuesRequestBuilder.HITS_AGGREGATION;
 import static org.gbif.pipelines.validator.metircs.request.OccurrenceIssuesRequestBuilder.ISSUES_AGGREGATION;
 
@@ -11,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
@@ -72,26 +75,22 @@ public class IndexMetricsCollector {
 
     List<FileInfo> files = new ArrayList<>();
 
-    // Collect core metrics
-    Entry<FileNameTerm, Set<Term>> coreEntery =
-        coreTerms.entrySet().stream()
-            .findFirst()
-            .orElseThrow(() -> new UnsupportedOperationException("Core file can't be empty"));
+    // Collect metrics when core is event
+    collectEventInfo().ifPresent(files::add);
 
-    FileInfo core =
-        FileInfo.builder()
-            .fileType(DwcFileType.CORE)
-            .fileName(coreEntery.getKey().getFileName())
-            .rowType(coreEntery.getKey().getTermQualifiedName())
-            .indexedCount(queryDocCount())
-            .terms(queryCoreTermsCount())
-            .issues(queryOccurrenceIssuesCount())
-            .build();
-    files.add(core);
+    // Collect occurrence info
+    collectOccurrenceInfo().ifPresent(files::add);
 
-    // Collect extensions metrics
-    extensionsTerms.entrySet().stream()
+    // Collect extensions metrics except occurrence
+    files.addAll(collectExtensionsInfo());
+
+    return Metrics.builder().fileInfos(files).build();
+  }
+
+  private List<FileInfo> collectExtensionsInfo() {
+    return extensionsTerms.entrySet().stream()
         .filter(es -> es.getKey() != null)
+        .filter(es -> !es.getKey().getTermQualifiedName().equals(Occurrence.qualifiedName()))
         .map(
             es -> {
               String extPrefix = extensionsPrefix + "." + es.getKey().getTermQualifiedName();
@@ -102,14 +101,73 @@ public class IndexMetricsCollector {
                   .terms(queryExtTermsCount(extPrefix, es.getValue()))
                   .build();
             })
-        .forEach(files::add);
+        .collect(Collectors.toList());
+  }
 
-    return Metrics.builder().fileInfos(files).build();
+  private Optional<FileInfo> collectEventInfo() {
+    Entry<FileNameTerm, Set<Term>> eventEntery =
+        coreTerms.entrySet().stream()
+            .filter(x -> x.getKey().getTermQualifiedName().equals(Event.qualifiedName()))
+            .findFirst()
+            .orElse(null);
+
+    if (eventEntery == null) {
+      return Optional.empty();
+    }
+
+    FileInfo eventFile =
+        FileInfo.builder()
+            .fileType(DwcFileType.CORE)
+            .fileName(eventEntery.getKey().getFileName())
+            .rowType(eventEntery.getKey().getTermQualifiedName())
+            .indexedCount(queryOccurrenceDocCount())
+            .terms(queryOccurrenceCoreTermsCount())
+            .issues(queryOccurrenceIssuesCount())
+            .build();
+    return Optional.of(eventFile);
+  }
+
+  private Optional<FileInfo> collectOccurrenceInfo() {
+    Entry<FileNameTerm, Set<Term>> occurrenceEntery = null;
+    DwcFileType occurrenceDwcFileType = null;
+    if (coreTerms.keySet().stream()
+        .anyMatch(x -> x.getTermQualifiedName().equals(Occurrence.qualifiedName()))) {
+      occurrenceDwcFileType = DwcFileType.CORE;
+      occurrenceEntery =
+          coreTerms.entrySet().stream()
+              .filter(x -> x.getKey().getTermQualifiedName().equals(Occurrence.qualifiedName()))
+              .findFirst()
+              .orElse(null);
+    } else if (extensionsTerms.keySet().stream()
+        .anyMatch(x -> x.getTermQualifiedName().equals(Occurrence.qualifiedName()))) {
+      occurrenceDwcFileType = DwcFileType.EXTENSION;
+      occurrenceEntery =
+          extensionsTerms.entrySet().stream()
+              .filter(x -> x.getKey().getTermQualifiedName().equals(Occurrence.qualifiedName()))
+              .filter(x -> !x.getKey().getFileName().startsWith("verbatim"))
+              .findFirst()
+              .orElse(null);
+    }
+
+    if (occurrenceDwcFileType == null || occurrenceEntery == null) {
+      return Optional.empty();
+    }
+
+    FileInfo occurrence =
+        FileInfo.builder()
+            .fileType(occurrenceDwcFileType)
+            .fileName(occurrenceEntery.getKey().getFileName())
+            .rowType(occurrenceEntery.getKey().getTermQualifiedName())
+            .indexedCount(queryOccurrenceDocCount())
+            .terms(queryOccurrenceCoreTermsCount())
+            .issues(queryOccurrenceIssuesCount())
+            .build();
+    return Optional.of(occurrence);
   }
 
   /** Query indexed document count by datasetKey */
   @SneakyThrows
-  private Long queryDocCount() {
+  private Long queryOccurrenceDocCount() {
     TermCountRequest request =
         TermCountRequestBuilder.builder()
             .termValue(key.toString())
@@ -122,8 +180,8 @@ public class IndexMetricsCollector {
         .getCount();
   }
 
-  /** Aggregate core terms and return term, counts of raw and indexed terms */
-  private List<TermInfo> queryCoreTermsCount() {
+  /** Aggregate occurrence terms and return term, counts of raw and indexed terms */
+  private List<TermInfo> queryOccurrenceCoreTermsCount() {
 
     Function<Term, TermCountRequest> requestFn =
         term ->
@@ -170,6 +228,26 @@ public class IndexMetricsCollector {
         .collect(Collectors.toList());
   }
 
+  /** Aggregate all issues and return 5 samples per issue */
+  @SneakyThrows
+  private List<IssueInfo> queryOccurrenceIssuesCount() {
+    SearchRequest request =
+        OccurrenceIssuesRequestBuilder.builder()
+            .termValue(key.toString())
+            .indexName(index)
+            .build()
+            .getRequest();
+
+    Aggregation aggregation =
+        ElasticsearchClientFactory.getInstance(esHost)
+            .search(request, RequestOptions.DEFAULT)
+            .getAggregations()
+            .get(ISSUES_AGGREGATION);
+
+    return ((ParsedStringTerms) aggregation)
+        .getBuckets().stream().map(this::collectIssueInfo).collect(Collectors.toList());
+  }
+
   /** Aggregate extensions terms and return term, counts of raw terms */
   private List<TermInfo> queryExtTermsCount(String prefix, Set<Term> terms) {
 
@@ -207,26 +285,6 @@ public class IndexMetricsCollector {
                     .rawIndexed(countFn.applyAsLong(x))
                     .build())
         .collect(Collectors.toList());
-  }
-
-  /** Aggregate all issues and return 5 samples per issue */
-  @SneakyThrows
-  private List<IssueInfo> queryOccurrenceIssuesCount() {
-    SearchRequest request =
-        OccurrenceIssuesRequestBuilder.builder()
-            .termValue(key.toString())
-            .indexName(index)
-            .build()
-            .getRequest();
-
-    Aggregation aggregation =
-        ElasticsearchClientFactory.getInstance(esHost)
-            .search(request, RequestOptions.DEFAULT)
-            .getAggregations()
-            .get(ISSUES_AGGREGATION);
-
-    return ((ParsedStringTerms) aggregation)
-        .getBuckets().stream().map(this::collectIssueInfo).collect(Collectors.toList());
   }
 
   /** Process one issue bucket, get issue value, count and 5 samples of related data */
