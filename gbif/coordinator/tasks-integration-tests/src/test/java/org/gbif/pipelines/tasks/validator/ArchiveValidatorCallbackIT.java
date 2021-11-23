@@ -227,7 +227,8 @@ public class ArchiveValidatorCallbackIT {
     assertEquals(DwcFileType.METADATA, meta.getFileType());
 
     // Core
-    Optional<FileInfo> coreOpt = validationClient.getFileInfo(DwcFileType.EXTENSION, DwcTerm.Occurrence);
+    Optional<FileInfo> coreOpt =
+        validationClient.getFileInfo(DwcFileType.EXTENSION, DwcTerm.Occurrence);
     assertTrue(coreOpt.isPresent());
 
     FileInfo core = coreOpt.get();
@@ -305,7 +306,8 @@ public class ArchiveValidatorCallbackIT {
     assertEquals(DwcFileType.METADATA, meta.getFileType());
 
     // Core
-    Optional<FileInfo> coreOpt = validationClient.getFileInfo(DwcFileType.EXTENSION, DwcTerm.Occurrence);
+    Optional<FileInfo> coreOpt =
+        validationClient.getFileInfo(DwcFileType.EXTENSION, DwcTerm.Occurrence);
     assertTrue(coreOpt.isPresent());
 
     FileInfo core = coreOpt.get();
