@@ -8,7 +8,6 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.gbif.dwc.terms.Term;
 
 /**
  * Similir to _search API call
@@ -28,14 +27,11 @@ public class ExtensionTermCountRequestBuilder {
   private final String termValue;
   private final String prefix;
   private final String indexName;
-  private final Term term;
+  private final String term;
 
   public ExtTermCountRequest getRequest() {
 
-    String aggsField =
-        prefix == null || prefix.isEmpty()
-            ? term.qualifiedName()
-            : prefix + "." + term.qualifiedName();
+    String aggsField = prefix == null || prefix.isEmpty() ? term : prefix + "." + term;
 
     SearchRequest request =
         new SearchRequest()
@@ -52,7 +48,7 @@ public class ExtensionTermCountRequestBuilder {
   @Getter
   @AllArgsConstructor(staticName = "create")
   public static class ExtTermCountRequest {
-    private final Term term;
+    private final String term;
     private final SearchRequest searchRequest;
   }
 }

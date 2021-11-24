@@ -1,6 +1,7 @@
 package org.gbif.pipelines.core.utils;
 
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -14,6 +15,7 @@ import org.gbif.dwc.ArchiveFile;
 import org.gbif.dwc.DwcFiles;
 import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
+import org.gbif.pipelines.common.pojo.FileNameTerm;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class DwcaUtils {
@@ -77,16 +79,19 @@ public class DwcaUtils {
         .collect(Collectors.toSet());
   }
 
-  public static Set<Term> getCoreTerms(Archive archive) {
+  public static Map<FileNameTerm, Set<Term>> getCoreTerms(Archive archive) {
     archive.validate();
-    return archive.getCore().getTerms();
+    return Collections.singletonMap(
+        FileNameTerm.create(
+            archive.getCore().getTitle(), archive.getCore().getRowType().qualifiedName()),
+        archive.getCore().getTerms());
   }
 
-  public static Map<Extension, Set<Term>> getExtensionsTerms(Archive archive) {
+  public static Map<FileNameTerm, Set<Term>> getExtensionsTerms(Archive archive) {
     return archive.getExtensions().stream()
         .collect(
             Collectors.toMap(
-                af -> Extension.fromRowType(af.getRowType().qualifiedName()),
+                af -> FileNameTerm.create(af.getTitle(), af.getRowType().qualifiedName()),
                 ArchiveFile::getTerms,
                 (a, b) -> b));
   }

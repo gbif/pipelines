@@ -7,10 +7,11 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
-import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
+import org.gbif.pipelines.common.pojo.FileNameTerm;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -35,11 +36,15 @@ public class XmlTermExtractorTest {
     XmlTermExtractor extractor = XmlTermExtractor.extract(files);
 
     // Should
-    Set<Term> core = extractor.getCore();
+    Optional<Set<Term>> coreOpr = extractor.getCore().values().stream().findFirst();
+
+    assertTrue(coreOpr.isPresent());
+
+    Set<Term> core = coreOpr.get();
     assertEquals(12, core.size());
     assertTrue(core.contains(DwcTerm.collectionCode));
 
-    Map<Extension, Set<Term>> extenstionsTerms = extractor.getExtenstionsTerms();
+    Map<FileNameTerm, Set<Term>> extenstionsTerms = extractor.getExtenstionsTerms();
     assertTrue(extenstionsTerms.isEmpty());
   }
 }

@@ -4,24 +4,29 @@ import static org.gbif.pipelines.common.utils.PathUtil.buildDwcaInputPath;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.pipelines.StepType;
-import org.gbif.api.vocabulary.Extension;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesIndexedMessage;
 import org.gbif.converters.utils.XmlFilesReader;
 import org.gbif.converters.utils.XmlTermExtractor;
 import org.gbif.dwc.terms.Term;
+import org.gbif.pipelines.common.pojo.FileNameTerm;
 import org.gbif.pipelines.tasks.metrics.MetricsCollectorConfiguration;
 import org.gbif.pipelines.validator.IndexMetricsCollector;
 import org.gbif.pipelines.validator.Validations;
 import org.gbif.pipelines.validator.rules.IndexableRules;
+import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.Metrics;
+import org.gbif.validator.api.Metrics.FileInfo;
+import org.gbif.validator.api.Metrics.TermInfo;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.ws.client.ValidationWsClient;
 
@@ -48,15 +53,12 @@ public class XmlMetricsCollector implements MetricsCollector {
 
     List<File> files = XmlFilesReader.getInputFiles(inputPath.toFile());
     // Extract all terms
-    XmlTermExtractor extractor = XmlTermExtractor.extract(files);
-    Set<Term> coreTerms = extractor.getCore();
-    Map<Extension, Set<Term>> extensionsTerms = extractor.getExtenstionsTerms();
+    List<FileInfo> fileInfos = convertToFileInfo(files);
 
     // Collect metrics from ES
     Metrics metrics =
         IndexMetricsCollector.builder()
-            .coreTerms(coreTerms)
-            .extensionsTerms(extensionsTerms)
+            .fileInfos(fileInfos)
             .key(message.getDatasetUuid())
             .index(config.indexName)
             .corePrefix(config.corePrefix)
@@ -76,5 +78,51 @@ public class XmlMetricsCollector implements MetricsCollector {
 
     log.info("Update validation key {}", message.getDatasetUuid());
     validationClient.update(validation);
+  }
+
+  private List<FileInfo> convertToFileInfo(List<File> files) {
+    XmlTermExtractor extractor = XmlTermExtractor.extract(files);
+    Map<FileNameTerm, Set<Term>> coreTerms = extractor.getCore();
+    Map<FileNameTerm, Set<Term>> extensionsTerms = extractor.getExtenstionsTerms();
+
+    List<FileInfo> fileInfos = new ArrayList<>();
+
+    // Core file
+    coreTerms.forEach(
+        (key, value) -> {
+          List<TermInfo> termInfoList =
+              value.stream()
+                  .map(x -> TermInfo.builder().term(x.qualifiedName()).build())
+                  .collect(Collectors.toList());
+
+          FileInfo info =
+              FileInfo.builder()
+                  .fileName(key.getFileName())
+                  .rowType(key.getTermQualifiedName())
+                  .fileType(DwcFileType.CORE)
+                  .terms(termInfoList)
+                  .build();
+          fileInfos.add(info);
+        });
+
+    // Extension file
+    extensionsTerms.forEach(
+        (key, value) -> {
+          List<TermInfo> termInfoList =
+              value.stream()
+                  .map(x -> TermInfo.builder().term(x.qualifiedName()).build())
+                  .collect(Collectors.toList());
+
+          FileInfo info =
+              FileInfo.builder()
+                  .fileName(key.getFileName())
+                  .rowType(key.getTermQualifiedName())
+                  .fileType(DwcFileType.EXTENSION)
+                  .terms(termInfoList)
+                  .build();
+          fileInfos.add(info);
+        });
+
+    return fileInfos;
   }
 }

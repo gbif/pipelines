@@ -94,10 +94,8 @@ public abstract class ConverterToVerbatim {
     boolean isConverted = false;
 
     // the fs has to be out of the try-catch block to avoid closing it, because the hdfs client
-    // tries to reuse the
-    // same connection. So, when using multiple consumers, one consumer would close the connection
-    // that is being used
-    // by another consumer.
+    // tries to reuse the same connection. So, when using multiple consumers, one consumer would
+    // close the connection that is being used by another consumer.
     FileSystem fs = createParentDirectories(hdfsSiteConfig, coreSiteConfig, outputPath);
     try (BufferedOutputStream outputStream = new BufferedOutputStream(fs.create(outputPath));
         SyncDataFileWriter<ExtendedRecord> dataFileWriter =

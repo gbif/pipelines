@@ -94,7 +94,7 @@
     <gbif-occurrence.version>0.168</gbif-occurrence.version>
     <vocabulary-lookup.version>0.42</vocabulary-lookup.version>
     <registry.version>3.69</registry.version>
-    <gbif-common-ws.version>1.17-SNAPSHOT</gbif-common-ws.version>
+    <gbif-common-ws.version>1.18</gbif-common-ws.version>
     <gbif-postal-service.version>1.2-SNAPSHOT</gbif-postal-service.version>
 
     <!-- Common libraries -->

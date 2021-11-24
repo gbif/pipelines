@@ -8,14 +8,13 @@ import static org.junit.Assert.assertTrue;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.gbif.api.vocabulary.Extension;
@@ -25,6 +24,7 @@ import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.estools.EsIndex;
 import org.gbif.pipelines.estools.model.IndexParams;
 import org.gbif.pipelines.estools.service.EsService;
+import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Metrics.FileInfo;
 import org.gbif.validator.api.Metrics.IssueInfo;
@@ -89,23 +89,48 @@ public class IndexMetricsCollectorIT {
     EsService.refreshIndex(ES_SERVER.getEsClient(), IDX_NAME);
 
     // When
-    Set<Term> coreTerms =
-        new HashSet<>(
-            Arrays.asList(
-                DwcTerm.maximumElevationInMeters,
-                DwcTerm.organismID,
-                DwcTerm.occurrenceID,
-                DwcTerm.bed));
 
-    Map<Extension, Set<Term>> extTerms =
-        Collections.singletonMap(
-            Extension.MEASUREMENT_OR_FACT,
-            new HashSet<>(Arrays.asList(DwcTerm.measurementValue, DwcTerm.measurementType)));
+    // Occurrence
+    TermInfo maximumElevationInMeters =
+        TermInfo.builder()
+            .term(DwcTerm.maximumElevationInMeters.qualifiedName())
+            .rawIndexed(2L)
+            .build();
+    TermInfo organismID =
+        TermInfo.builder().term(DwcTerm.organismID.qualifiedName()).rawIndexed(2L).build();
+    TermInfo occurrenceID =
+        TermInfo.builder().term(DwcTerm.occurrenceID.qualifiedName()).rawIndexed(0L).build();
+    TermInfo bed = TermInfo.builder().term(DwcTerm.bed.qualifiedName()).rawIndexed(2L).build();
+
+    FileInfo occurrenceFileInfo =
+        FileInfo.builder()
+            .fileName("file.txt")
+            .fileType(DwcFileType.CORE)
+            .rowType(DwcTerm.Occurrence.qualifiedName())
+            .count(3L)
+            .terms(
+                new ArrayList<>(
+                    Arrays.asList(maximumElevationInMeters, organismID, occurrenceID, bed)))
+            .build();
+
+    // Extension
+    TermInfo measurementValue =
+        TermInfo.builder().term(DwcTerm.measurementValue.qualifiedName()).rawIndexed(6L).build();
+    TermInfo measurementType =
+        TermInfo.builder().term(DwcTerm.measurementType.qualifiedName()).rawIndexed(0L).build();
+
+    FileInfo extensionFileInfo =
+        FileInfo.builder()
+            .fileName("ext.txt")
+            .fileType(DwcFileType.CORE)
+            .rowType(Extension.MEASUREMENT_OR_FACT.getRowType())
+            .count(3L)
+            .terms(new ArrayList<>(Arrays.asList(measurementValue, measurementType)))
+            .build();
 
     Metrics result =
         IndexMetricsCollector.builder()
-            .coreTerms(coreTerms)
-            .extensionsTerms(extTerms)
+            .fileInfos(new ArrayList<>(Arrays.asList(occurrenceFileInfo, extensionFileInfo)))
             .key(UUID.fromString(datasetKey))
             .index(IDX_NAME)
             .corePrefix("verbatim.core")

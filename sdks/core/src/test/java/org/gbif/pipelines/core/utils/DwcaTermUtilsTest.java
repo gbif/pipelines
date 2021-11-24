@@ -6,12 +6,14 @@ import static org.junit.Assert.assertTrue;
 
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.Archive;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
+import org.gbif.pipelines.common.pojo.FileNameTerm;
 import org.junit.Test;
 
 public class DwcaTermUtilsTest {
@@ -49,9 +51,12 @@ public class DwcaTermUtilsTest {
 
     // When
     Archive archive = DwcaUtils.fromLocation(Paths.get(fileName));
-    Set<Term> result = DwcaUtils.getCoreTerms(archive);
+    Optional<Set<Term>> resultOpt = DwcaUtils.getCoreTerms(archive).values().stream().findFirst();
 
     // Should
+    assertTrue(resultOpt.isPresent());
+
+    Set<Term> result = resultOpt.get();
     assertEquals(6, result.size());
     assertTrue("dwc:family", result.contains(DwcTerm.family));
     assertTrue("dwc:institutionCode", result.contains(DwcTerm.institutionCode));
@@ -68,11 +73,14 @@ public class DwcaTermUtilsTest {
 
     // When
     Archive archive = DwcaUtils.fromLocation(Paths.get(fileName));
-    Map<Extension, Set<Term>> result = DwcaUtils.getExtensionsTerms(archive);
+    Map<FileNameTerm, Set<Term>> result = DwcaUtils.getExtensionsTerms(archive);
+
+    FileNameTerm fileNameTerm =
+        FileNameTerm.create("identifier.txt", Extension.IDENTIFIER.getRowType());
 
     // Should
     assertEquals(1, result.size());
-    assertTrue("IDENTIFIER", result.containsKey(Extension.IDENTIFIER));
-    assertTrue("dc:identifier", result.get(Extension.IDENTIFIER).contains(DcTerm.identifier));
+    assertTrue("IDENTIFIER", result.containsKey(fileNameTerm));
+    assertTrue("dc:identifier", result.get(fileNameTerm).contains(DcTerm.identifier));
   }
 }
