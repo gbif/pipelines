@@ -43,10 +43,10 @@ public class DwcaFileTermCounter {
                 term -> {
                   String value = record.value(term);
                   if (value == null || value.trim().isEmpty()) {
-                    termSizeMap.putIfAbsent(term, null);
+                    termSizeMap.putIfAbsent(term, 0L);
                   } else {
                     Long termCount = termSizeMap.get(term);
-                    if (termCount == null) {
+                    if (termCount == null || termCount == 0L) {
                       termSizeMap.put(term, 1L);
                     } else {
                       termSizeMap.put(term, termCount + 1);
