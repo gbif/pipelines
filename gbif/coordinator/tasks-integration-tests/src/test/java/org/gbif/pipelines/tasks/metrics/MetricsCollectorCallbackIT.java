@@ -278,7 +278,7 @@ public class MetricsCollectorCallbackIT {
 
     Validation validation = validationClient.getValidation();
 
-    assertEquals(2, validation.getMetrics().getFileInfos().size());
+    assertEquals(3, validation.getMetrics().getFileInfos().size());
     assertEquals(Status.FINISHED, validation.getStatus());
     assertTrue(validation.getMetrics().isIndexeable());
   }
