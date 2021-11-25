@@ -269,7 +269,7 @@ public class ValidationResourceIT {
   }
 
   @Test
-  public void deleteValidationIT() {
+  public void deleteValidationIT() throws Exception {
     File archive = readTestFileInputStream("/archive.zip");
     Validation validation = validationWsClient.submitFile(archive);
     assertNotNull(validation);
@@ -277,6 +277,9 @@ public class ValidationResourceIT {
     // Can the new validation be retrieved?
     Validation persistedValidation = validationWsClient.get(validation.getKey());
     assertNotNull(persistedValidation);
+
+    // Wait for internal async task
+    TimeUnit.SECONDS.sleep(3L);
 
     // Delete the validation
     validationWsClient.delete(persistedValidation.getKey());
