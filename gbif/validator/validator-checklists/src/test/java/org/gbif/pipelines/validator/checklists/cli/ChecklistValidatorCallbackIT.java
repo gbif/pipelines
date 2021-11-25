@@ -71,7 +71,7 @@ public class ChecklistValidatorCallbackIT {
     assertEquals(DwcTerm.Taxon.qualifiedName(), taxon.getRowType());
     assertEquals(Long.valueOf(475L), taxon.getCount());
     assertEquals(Long.valueOf(475L), taxon.getIndexedCount());
-    assertEquals(15, taxon.getTerms().size());
+    assertEquals(14, taxon.getTerms().size());
     assertEquals(5, taxon.getIssues().size());
 
     Optional<FileInfo> speciesprofileOpt = getFileInfoByName(result, "speciesprofile.txt");
