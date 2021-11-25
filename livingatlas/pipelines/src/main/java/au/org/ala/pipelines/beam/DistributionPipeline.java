@@ -56,20 +56,11 @@ public class DistributionPipeline {
 
   public static void run(DistributionPipelineOptions options) throws Exception {
 
-    FileSystem fs =
-        FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
-            .getFs(options.getTargetPath());
-    String outputPath =
-            PathBuilder.buildDatasetAttemptPath(options, "interpreted/distribution", false);
-    if (options.getDatasetId() == null || "all".equalsIgnoreCase(options.getDatasetId())) {
-      outputPath =
-              PathBuilder.buildPath(options.getAllDatasetsInputPath(), "distribution").toString();
-    }
+    //Create output path
+    // default: {fsPath}/pipelines-outlier
+    // or {fsPath}/pipelines-outlier/{datasetId}
+    String outputPath = ALAFsUtils.buildPathOutlierUsingTargetPath(options);
 
-    // delete previous runs
-    FsUtils.deleteIfExist(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), outputPath);
-
-    ALAFsUtils.createDirectory(fs, outputPath);
 
     log.info("Adding step 1: Collecting index records");
     Pipeline p = Pipeline.create(options);
@@ -89,13 +80,7 @@ public class DistributionPipeline {
                 distributionTransform.calculateOutlier())
             .apply("Flatten records", Flatten.iterables());
 
-    // kvRecords.apply( "Write to
-    // file",AvroIO.write(ALADistributionRecord.class).to(outputPath+"/interpreted").withoutSharding().withSuffix(".avro"));
-    kvRecords
-        .apply("to String", distributionTransform.flatToString())
-        .apply(
-            "Write to text",
-            TextIO.write().to(outputPath + "/interpreted").withoutSharding().withSuffix(".text"));
+     kvRecords.apply( "Write to file",AvroIO.write(ALADistributionRecord.class).to(outputPath+"/outliers").withoutSharding().withSuffix(".avro"));
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();

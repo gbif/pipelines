@@ -49,6 +49,8 @@ public class IndexRecordToSolrPipeline {
       JackKnifeOutlierRecord.newBuilder().setId(EMPTY).setItems(new ArrayList<>()).build();
   static final Relationships nullClustering =
       Relationships.newBuilder().setId(EMPTY).setRelationships(new ArrayList<>()).build();
+  static final ALADistributionRecord nullOutlier =
+          ALADistributionRecord.newBuilder().setId(EMPTY).build();
 
   public static void main(String[] args) throws Exception {
     VersionInfo.print();
@@ -94,6 +96,13 @@ public class IndexRecordToSolrPipeline {
       indexRecordsCollection = addClusteringInfo(options, pipeline, indexRecordsCollection);
     } else {
       log.info("Skipping adding clustering to the index");
+    }
+
+    if (options.getIncludeOutlier()) {
+      log.info("Adding outlier to the index");
+      indexRecordsCollection = addOutlierInfo(options, pipeline, indexRecordsCollection);
+    } else {
+      log.info("Skipping adding outlier to the index");
     }
 
     PCollection<KV<String, IndexRecord>> recordsWithoutCoordinates = null;
@@ -182,6 +191,8 @@ public class IndexRecordToSolrPipeline {
 
       writeToSolr(options, indexRecordsCollection, conn, schemaFields, dynamicFieldPrefixes);
     }
+
+
 
     log.info("Starting pipeline");
     pipeline.run(options).waitUntilFinish();
@@ -272,6 +283,26 @@ public class IndexRecordToSolrPipeline {
     // Add Jackknife information
     return indexRecordJoinClustering.apply(ParDo.of(addClusteringInfo()));
   }
+
+
+  private static PCollection<KV<String, IndexRecord>> addOutlierInfo(
+          SolrPipelineOptions options,
+          Pipeline pipeline,
+          PCollection<KV<String, IndexRecord>> indexRecords) {
+
+    // Load outlier records, keyed on ID
+    PCollection<KV<String, ALADistributionRecord>> outlierRecords =
+            loadOutlierRecords(options, pipeline);
+    PCollection<KV<String, KV<IndexRecord, ALADistributionRecord>>>
+      indexRecordJoinOurlier =
+            Join.leftOuterJoin(indexRecords, outlierRecords, nullOutlier);
+
+
+    // Add Jackknife information
+    return indexRecordJoinOurlier.apply(ParDo.of(addOutlierInfo()));
+  }
+
+
 
   private static void writeToSolr(
       SolrPipelineOptions options,
@@ -526,6 +557,28 @@ public class IndexRecordToSolrPipeline {
     };
   }
 
+  private static DoFn<KV<String, KV<IndexRecord, ALADistributionRecord>>, KV<String, IndexRecord>>
+  addOutlierInfo() {
+
+    return new DoFn<KV<String, KV<IndexRecord, ALADistributionRecord>>, KV<String, IndexRecord>>()  {
+      @ProcessElement
+      public void processElement(ProcessContext c) {
+
+        KV<String, KV<IndexRecord, ALADistributionRecord>> e = c.element();
+
+        IndexRecord indexRecord = e.getValue().getKey();
+        String id = indexRecord.getId();
+
+        ALADistributionRecord outlierRecord = e.getValue().getValue();
+
+        indexRecord.getDoubles().put(DISTANCE_TO_EDL, outlierRecord.getDistanceOutOfEDL());
+
+        c.output(KV.of(id, indexRecord));
+      }
+    };
+  }
+
+
   /** Load index records from AVRO. */
   private static PCollection<KV<String, IndexRecord>> loadIndexRecords(
       SolrPipelineOptions options, Pipeline p) {
@@ -591,5 +644,24 @@ public class IndexRecordToSolrPipeline {
                     return KV.of(input.getId(), input);
                   }
                 }));
+  }
+
+  private static PCollection<KV<String, ALADistributionRecord>> loadOutlierRecords(
+          SolrPipelineOptions options, Pipeline p) {
+    String path =
+            PathBuilder.buildPath(
+                            options.getAllDatasetsInputPath() + "/distribution/", "distribution*" + AVRO_EXTENSION)
+                    .toString();
+    log.info("Loading outlier from {}", path);
+
+    return p.apply(AvroIO.read(ALADistributionRecord.class).from(path))
+            .apply(
+                    MapElements.via(
+                            new SimpleFunction<ALADistributionRecord, KV<String, ALADistributionRecord>>() {
+                              @Override
+                              public KV<String, ALADistributionRecord> apply(ALADistributionRecord input) {
+                                return KV.of(input.getId(), input);
+                              }
+                            }));
   }
 }
