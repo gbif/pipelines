@@ -28,7 +28,6 @@ import org.junit.Test;
  * Complete pipeline tests that start with DwCAs and finish with the SOLR index. Includes all
  * current steps in processing.
  */
-@Ignore("Jenkins can't get the response and fails cause of timeout")
 public class CompleteIngestPipelineTestIT {
 
   MockWebServer server;
