@@ -25,6 +25,8 @@ registry:
     url: @registry.ws.url@
 
 gbif:
+  api:
+    url: @gbif.api.url@
   ws:
     security:
       wrappedContent: false
