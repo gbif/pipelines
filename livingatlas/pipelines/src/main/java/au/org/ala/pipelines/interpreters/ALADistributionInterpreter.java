@@ -12,7 +12,6 @@ import org.gbif.pipelines.core.parsers.common.ParsedField;
 import org.gbif.pipelines.io.avro.ALADistributionRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IndexRecord;
-import org.gbif.pipelines.io.avro.Record;
 
 /*
  * living atlases.
@@ -21,18 +20,18 @@ import org.gbif.pipelines.io.avro.Record;
 public class ALADistributionInterpreter {
 
   public static void interpretOccurrenceID(IndexRecord ir, ALADistributionRecord dr) {
-      dr.setOccurrenceID(ir.getId());
+    dr.setOccurrenceID(ir.getId());
   }
 
   public static void interpretLocation(IndexRecord ir, ALADistributionRecord dr) {
-      String latlng = ir.getLatLng();
-      String[] coordinates = latlng.split(",");
-      dr.setDecimalLatitude(Double.parseDouble(coordinates[0]));
-      dr.setDecimalLongitude(Double.parseDouble(coordinates[1]));
+    String latlng = ir.getLatLng();
+    String[] coordinates = latlng.split(",");
+    dr.setDecimalLatitude(Double.parseDouble(coordinates[0]));
+    dr.setDecimalLongitude(Double.parseDouble(coordinates[1]));
   }
 
   public static void interpretSpeciesId(IndexRecord ir, ALADistributionRecord dr) {
-      dr.setSpeciesID(ir.getTaxonID());
+    dr.setSpeciesID(ir.getTaxonID());
   }
 
   /*
