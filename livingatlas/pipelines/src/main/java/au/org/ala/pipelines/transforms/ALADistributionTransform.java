@@ -1,7 +1,7 @@
 package au.org.ala.pipelines.transforms;
 
-import au.org.ala.distribution.DistributionServiceImpl;
 import au.org.ala.distribution.DistributionLayer;
+import au.org.ala.distribution.DistributionServiceImpl;
 import au.org.ala.distribution.ExpertDistributionException;
 import au.org.ala.pipelines.common.ALARecordTypes;
 import au.org.ala.pipelines.interpreters.ALADistributionInterpreter;
@@ -48,46 +48,40 @@ public class ALADistributionTransform extends Transform<IndexRecord, ALADistribu
         .getOfNullable();
   }
 
-
-  /**
-   * Maps {@link ALADistributionRecord} to key value, where key is {@link
-   * ALADistributionRecord#getSpeciesID()}
-   */
-  public MapElements<ALADistributionRecord, KV<String, ALADistributionRecord>> toKv() {
-    return MapElements.into(new TypeDescriptor<KV<String, ALADistributionRecord>>() {})
-        .via((ALADistributionRecord dr) -> KV.of(dr.getSpeciesID(), dr));
+  public MapElements<IndexRecord, KV<String, IndexRecord>> toKv() {
+    return MapElements.into(new TypeDescriptor<KV<String, IndexRecord>>() {})
+        .via((IndexRecord ir) -> KV.of(ir.getTaxonID(), ir));
   }
 
-  public MapElements<KV<String, Iterable<ALADistributionRecord>>, Iterable<ALADistributionRecord>>
+  public MapElements<KV<String, Iterable<IndexRecord>>, Iterable<ALADistributionRecord>>
       calculateOutlier() {
     return MapElements.via(
-        (new SimpleFunction<
-            KV<String, Iterable<ALADistributionRecord>>, Iterable<ALADistributionRecord>>() {
+        (new SimpleFunction<KV<String, Iterable<IndexRecord>>, Iterable<ALADistributionRecord>>() {
           @Override
-          public Iterable<ALADistributionRecord> apply(
-              KV<String, Iterable<ALADistributionRecord>> input) {
+          public Iterable<ALADistributionRecord> apply(KV<String, Iterable<IndexRecord>> input) {
             String lsid = input.getKey();
-            Iterable<ALADistributionRecord> records = input.getValue();
-            Iterator<ALADistributionRecord> iter = records.iterator();
+            Iterable<IndexRecord> records = input.getValue();
+            Iterator<IndexRecord> iter = records.iterator();
+            List<ALADistributionRecord> outputs = new ArrayList();
 
             try {
-              DistributionServiceImpl distributionService = DistributionServiceImpl.init(spatialUrl);
+              DistributionServiceImpl distributionService =
+                  DistributionServiceImpl.init(spatialUrl);
               List<DistributionLayer> edl = distributionService.findLayersByLsid(lsid);
               // Available EDLD of this species
+              Map points = new HashMap();
+              while (iter.hasNext()) {
+                IndexRecord record = iter.next();
+                ALADistributionRecord dr = convertToDistribution(record);
+                outputs.add(dr);
+
+                Map point = new HashMap();
+                point.put("decimalLatitude", dr.getDecimalLatitude());
+                point.put("decimalLongitude", dr.getDecimalLongitude());
+                points.put(dr.getOccurrenceID(), point);
+              }
+
               if (edl.size() > 0) {
-                // Duplicate records because Transform does not allow change input
-                List<ALADistributionRecord> outputs = new ArrayList();
-                Map points = new HashMap();
-                while (iter.hasNext()) {
-                  ALADistributionRecord record = iter.next();
-                  outputs.add(copy(record));
-
-                  Map point = new HashMap();
-                  point.put("decimalLatitude", record.getDecimalLatitude());
-                  point.put("decimalLongitude", record.getDecimalLongitude());
-                  points.put(record.getOccurrenceID(), point);
-                }
-
                 Map<String, Double> results = distributionService.outliers(lsid, points);
                 Iterator<Map.Entry<String, Double>> iterator = results.entrySet().iterator();
                 while (iterator.hasNext()) {
@@ -96,7 +90,6 @@ public class ALADistributionTransform extends Transform<IndexRecord, ALADistribu
                       .filter(it -> it.getOccurrenceID().equalsIgnoreCase(entry.getKey()))
                       .forEach(it -> it.setDistanceOutOfEDL(entry.getValue()));
                 }
-                return outputs;
               }
 
             } catch (ExpertDistributionException e) {
@@ -106,7 +99,7 @@ public class ALADistributionTransform extends Transform<IndexRecord, ALADistribu
               throw new RuntimeException("Runtime error: " + e.getMessage());
             }
 
-            return records;
+            return outputs;
           }
         }));
   }
@@ -128,23 +121,30 @@ public class ALADistributionTransform extends Transform<IndexRecord, ALADistribu
    * @param record
    * @return
    */
-  private ALADistributionRecord copy(ALADistributionRecord record) {
-    ALADistributionRecord newRecord = new ALADistributionRecord();
-    newRecord.setId(record.getId());
-    newRecord.setOccurrenceID(record.getOccurrenceID());
-    newRecord.setDistanceOutOfEDL(0.0d);
-    newRecord.setDecimalLongitude(record.getDecimalLongitude());
-    newRecord.setDecimalLatitude(record.getDecimalLatitude());
-    newRecord.setSpeciesID(record.getSpeciesID());
-    IssueRecord ir =
-        IssueRecord.newBuilder().setIssueList(record.getIssues().getIssueList()).build();
-    newRecord.setIssues(ir);
+  private ALADistributionRecord convertToDistribution(IndexRecord record) {
+    ALADistributionRecord newRecord =
+        ALADistributionRecord.newBuilder()
+            .setId(record.getId())
+            .setOccurrenceID(record.getId())
+            .setDistanceOutOfEDL(0.0d)
+            .setSpeciesID(record.getTaxonID())
+            .build();
+
+    String latlng = record.getLatLng();
+    String[] coordinates = latlng.split(",");
+    newRecord.setDecimalLatitude(Double.parseDouble(coordinates[0]));
+    newRecord.setDecimalLongitude(Double.parseDouble(coordinates[1]));
+
     return newRecord;
   }
 
   private String convertRecordToString(ALADistributionRecord record) {
     return String.format(
         "occurrenceId:%s, lat:%f, lng:%f, speciesId:%s, distanceToEDL:%f",
-        record.getOccurrenceID(), record.getDecimalLatitude(), record.getDecimalLongitude(), record.getSpeciesID(), record.getDistanceOutOfEDL());
+        record.getOccurrenceID(),
+        record.getDecimalLatitude(),
+        record.getDecimalLongitude(),
+        record.getSpeciesID(),
+        record.getDistanceOutOfEDL());
   }
 }
