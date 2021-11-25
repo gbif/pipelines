@@ -1,5 +1,6 @@
 package org.gbif.validator.ws.client;
 
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -27,6 +28,16 @@ public class ClientValidationSearchRequest {
     }
     if (searchRequest.getStatus() != null) {
       queryParams.put("status", searchRequest.getStatus());
+    }
+    if (searchRequest.getFromDate() != null) {
+      queryParams.put(
+          "fromDate",
+          new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'").format(searchRequest.getFromDate()));
+    }
+    if (searchRequest.getToDate() != null) {
+      queryParams.put(
+          "toDate",
+          new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'").format(searchRequest.getToDate()));
     }
     if (searchRequest.getSortBy() != null) {
       queryParams.put(

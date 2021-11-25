@@ -29,7 +29,7 @@ public class RegistrySecurityConfiguration {
 
   @Bean
   public RemoteAuthClient remoteAuthClient(
-      RestTemplateBuilder builder, @Value("${registry.ws.url}") String gbifApiUrl) {
+      RestTemplateBuilder builder, @Value("${gbif.api.url}") String gbifApiUrl) {
     return RestTemplateRemoteAuthClient.createInstance(builder, gbifApiUrl);
   }
 

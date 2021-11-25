@@ -12,6 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.UUID;
@@ -169,6 +170,17 @@ public class ValidationResourceIT {
                 .status(Collections.singleton(Validation.Status.RUNNING))
                 .build());
     assertEquals(0, runningValidations.getCount());
+
+    Calendar aYearFromNow = Calendar.getInstance();
+    aYearFromNow.add(Calendar.YEAR, 1);
+    PagingResponse<Validation> aYearFromNowValidations =
+        validationWsClient.list(
+            ValidationSearchRequest.builder()
+                .offset(0L)
+                .limit(10)
+                .fromDate(aYearFromNow.getTime())
+                .build());
+    assertEquals(0, aYearFromNowValidations.getCount());
   }
 
   @Test

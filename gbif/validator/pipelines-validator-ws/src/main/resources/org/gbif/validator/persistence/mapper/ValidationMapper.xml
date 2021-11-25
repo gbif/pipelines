@@ -153,10 +153,10 @@
       AND username = #{username,jdbcType=OTHER}
     </if>
     <if test="searchRequest.installationKey != null" >
-      AND installation_key = #{installationKey,jdbcType=OTHER}
+      AND installation_key = #{searchRequest.installationKey,jdbcType=OTHER}
     </if>
     <if test="searchRequest.sourceId != null" >
-      AND source_id = #{sourceId,jdbcType=OTHER}
+      AND source_id = #{searchRequest.sourceId,jdbcType=OTHER}
     </if>
     <if test="searchRequest.status != null" >
       AND status IN
@@ -164,6 +164,9 @@
         #{status,jdbcType=OTHER}
       </foreach>
     </if>
+    <if test="searchRequest.fromDate != null" ><![CDATA[AND created >= #{searchRequest.fromDate,jdbcType=TIMESTAMP}]]></if>
+    <if test="searchRequest.toDate != null" ><![CDATA[AND created < #{searchRequest.toDate,jdbcType=TIMESTAMP}]]></if>
+
     <if test="searchRequest.sortBy != null and !searchRequest.sortBy.empty">
       ORDER BY
       <foreach item="sort" collection="searchRequest.sortBy" separator=",">
@@ -183,11 +186,13 @@
       AND username = #{username,jdbcType=OTHER}
     </if>
     <if test="searchRequest.installationKey != null" >
-      AND installation_key = #{installationKey,jdbcType=OTHER}
+      AND installation_key = #{searchRequest.installationKey,jdbcType=OTHER}
     </if>
     <if test="searchRequest.sourceId != null" >
-      AND source_id = #{sourceId,jdbcType=OTHER}
+      AND source_id = #{searchRequest.sourceId,jdbcType=OTHER}
     </if>
+    <if test="searchRequest.fromDate != null" ><![CDATA[AND created >= #{searchRequest.fromDate,jdbcType=TIMESTAMP}]]></if>
+    <if test="searchRequest.toDate != null" ><![CDATA[AND created < #{searchRequest.toDate,jdbcType=TIMESTAMP}]]></if>
     <if test="searchRequest.status != null" >
       AND status IN
       <foreach item="status" collection="searchRequest.status" separator="," open="(" close=")">

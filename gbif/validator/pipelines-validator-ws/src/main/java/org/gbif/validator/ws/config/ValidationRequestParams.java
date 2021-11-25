@@ -1,7 +1,12 @@
 package org.gbif.validator.ws.config;
 
+import java.text.MessageFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -13,11 +18,25 @@ import lombok.experimental.UtilityClass;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.ValidationRequest;
 import org.gbif.validator.api.ValidationSearchRequest;
+import org.gbif.ws.WebApplicationException;
 import org.gbif.ws.util.CommonWsUtils;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.context.request.WebRequest;
 
 @UtilityClass
 public class ValidationRequestParams {
+
+  private static final String YEAR_ONLY_FORMAT = "yyyy";
+  private static final String[] SUPPORTED_DATE_FORMATS =
+      new String[] {
+        "yyyy-MM-dd'T'HH:mm'Z'",
+        "yyyy/MM/dd'T'HH:mm'Z'",
+        "yyyy-MM-dd",
+        "yyyy/MM/dd",
+        "yyyy/MM",
+        "yyyy-MM",
+        YEAR_ONLY_FORMAT
+      };
 
   public static final int DEFAULT_LIMIT = 20;
 
@@ -27,6 +46,8 @@ public class ValidationRequestParams {
   public static final String SORT_BY = "sortBy";
   public static final String NOTIFICATION_EMAIL = "notificationEmail";
   public static final String CREATED = "created";
+  public static final String FROM_DATE = "fromDate";
+  public static final String TO_DATE = "toDate";
   public static final String OFFSET = "offset";
   public static final String LIMIT = "limit";
 
@@ -80,6 +101,14 @@ public class ValidationRequestParams {
     return getIntParam(webRequest, LIMIT).orElse(DEFAULT_LIMIT);
   }
 
+  public static Optional<Date> getFromDateParameter(WebRequest webRequest) {
+    return getDateParam(webRequest, FROM_DATE);
+  }
+
+  public static Optional<Date> getToDateParameter(WebRequest webRequest) {
+    return getDateParam(webRequest, TO_DATE);
+  }
+
   private static ValidationSearchRequest.SortBy parseSortBy(String sortBy) {
     String[] tokens = sortBy.split(SORT_BY_SEPARATOR);
     ValidationSearchRequest.SortBy.SortByBuilder builder = ValidationSearchRequest.SortBy.builder();
@@ -130,6 +159,40 @@ public class ValidationRequestParams {
     return getParam(webRequest, paramName, UUID::fromString);
   }
 
+  public static Optional<Date> getDateParam(WebRequest webRequest, String paramName) {
+    return getParam(webRequest, paramName, value -> tryDateParse(value, paramName));
+  }
+
+  /**
+   * Tries to parse the input using the supported formats. Adjust the date to the first or last day
+   * of the month depending on the param name.
+   */
+  private Date tryDateParse(String dateValue, String paramName) {
+    if (dateValue != null && !dateValue.isEmpty()) {
+      for (String dateFormat : SUPPORTED_DATE_FORMATS) {
+        try {
+          Date date = new SimpleDateFormat(dateFormat).parse(dateValue);
+          Calendar cal = Calendar.getInstance();
+          cal.setTime(date);
+          if (paramName.startsWith("from")) {
+            cal.set(Calendar.DAY_OF_MONTH, cal.getActualMinimum(Calendar.DAY_OF_MONTH));
+          } else if (paramName.startsWith("to")) {
+            if (YEAR_ONLY_FORMAT.equals(dateFormat)) {
+              cal.set(Calendar.MONTH, cal.getActualMaximum(Calendar.MONTH));
+            }
+            cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
+          }
+          return cal.getTime();
+        } catch (ParseException ex) {
+          // DO NOTHING
+        }
+      }
+    }
+    throw new WebApplicationException(
+        MessageFormat.format("Unaccepted parameter value {0} : {1}", paramName, dateValue),
+        HttpStatus.BAD_REQUEST);
+  }
+
   public ValidationRequest getValidationRequest(WebRequest webRequest) {
     ValidationRequest.ValidationRequestBuilder builder = ValidationRequest.builder();
 
@@ -147,6 +210,8 @@ public class ValidationRequestParams {
     getInstallationKeyParam(webRequest).ifPresent(builder::installationKey);
     getSourceIdParam(webRequest).ifPresent(builder::sourceId);
     getStatusParam(webRequest).ifPresent(builder::status);
+    getFromDateParameter(webRequest).ifPresent(builder::fromDate);
+    getToDateParameter(webRequest).ifPresent(builder::toDate);
     builder.offset(getOffsetParam(webRequest));
     builder.limit(getLimitParam(webRequest));
     builder.sortBy(getSortByParam(webRequest));
