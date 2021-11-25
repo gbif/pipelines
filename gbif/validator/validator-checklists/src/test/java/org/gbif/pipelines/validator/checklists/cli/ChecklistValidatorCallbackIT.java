@@ -71,20 +71,20 @@ public class ChecklistValidatorCallbackIT {
     assertEquals(DwcTerm.Taxon.qualifiedName(), taxon.getRowType());
     assertEquals(Long.valueOf(475L), taxon.getCount());
     assertEquals(Long.valueOf(475L), taxon.getIndexedCount());
-    assertEquals(15, taxon.getTerms().size());
+    assertEquals(14, taxon.getTerms().size());
     assertEquals(5, taxon.getIssues().size());
 
-    Optional<FileInfo> speciesprofileOpt = getFileInfoByName(result, "speciesprofile.txt");
-    assertTrue(speciesprofileOpt.isPresent());
-    FileInfo speciesprofile = speciesprofileOpt.get();
-    assertEquals(DwcFileType.EXTENSION, speciesprofile.getFileType());
-    assertEquals("http://rs.gbif.org/terms/1.0/SpeciesProfile", speciesprofile.getRowType());
-    assertEquals(Long.valueOf(475L), speciesprofile.getCount());
-    assertEquals(Long.valueOf(475L), speciesprofile.getIndexedCount());
-    assertEquals(2, speciesprofile.getTerms().size());
-    assertEquals(0, speciesprofile.getIssues().size());
-    assertTerm(DwcTerm.habitat, 475, 475, speciesprofile);
-    assertTerm("http://rs.gbif.org/terms/1.0/isInvasive", 80, 0, speciesprofile);
+    Optional<FileInfo> speciesProfileOpt = getFileInfoByName(result, "speciesprofile.txt");
+    assertTrue(speciesProfileOpt.isPresent());
+    FileInfo speciesProfile = speciesProfileOpt.get();
+    assertEquals(DwcFileType.EXTENSION, speciesProfile.getFileType());
+    assertEquals("http://rs.gbif.org/terms/1.0/SpeciesProfile", speciesProfile.getRowType());
+    assertEquals(Long.valueOf(475L), speciesProfile.getCount());
+    assertEquals(Long.valueOf(475L), speciesProfile.getIndexedCount());
+    assertEquals(2, speciesProfile.getTerms().size());
+    assertEquals(0, speciesProfile.getIssues().size());
+    assertTerm(DwcTerm.habitat, 475, 475, speciesProfile);
+    assertTerm("http://rs.gbif.org/terms/1.0/isInvasive", 80, 0, speciesProfile);
 
     Optional<FileInfo> distributionOpt = getFileInfoByName(result, "distribution.txt");
     assertTrue(distributionOpt.isPresent());

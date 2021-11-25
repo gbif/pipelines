@@ -68,9 +68,11 @@ public class ValidationDataCollector {
   public void collect(NormalizedNameUsageData normalizedNameUsageData) {
     if (normalizedNameUsageData.getNameUsage() != null
         && Origin.SOURCE == normalizedNameUsageData.getNameUsage().getOrigin()) {
-      termFrequencyCollector.add(TermFrequencyCollector.of(normalizedNameUsageData));
-      collectIssuesInfo(normalizedNameUsageData);
-      usagesCount = usagesCount + 1;
+      synchronized (this) {
+        termFrequencyCollector.add(TermFrequencyCollector.of(normalizedNameUsageData));
+        collectIssuesInfo(normalizedNameUsageData);
+        usagesCount = usagesCount + 1;
+      }
     }
   }
 
