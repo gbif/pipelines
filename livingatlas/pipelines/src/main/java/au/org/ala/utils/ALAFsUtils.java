@@ -71,6 +71,28 @@ public class ALAFsUtils {
     return PathBuilder.buildDatasetAttemptPath(options, "sampling", false);
   }
 
+  /** Build a path to outlier records. */
+  public static String buildPathOutlierUsingTargetPath(AllDatasetsPipelinesOptions options) throws IOException {
+    // default: {fsPath}/pipelines-outlier
+    FileSystem fs =
+            FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
+                    .getFs(options.getTargetPath());
+
+    String outputPath =  PathBuilder.buildPath(options.getTargetPath()).toString();
+
+    // {fsPath}/pipelines-outlier/{datasetId}
+    if (options.getDatasetId() != null && !"all".equalsIgnoreCase(options.getDatasetId())) {
+      outputPath =
+              PathBuilder.buildPath(outputPath, options.getDatasetId()).toString();
+    }
+    // delete previous runs
+    FsUtils.deleteIfExist(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), outputPath);
+    ALAFsUtils.createDirectory(fs, outputPath);
+
+    return outputPath;
+  }
+
+
   /**
    * Removes a directory with content if the folder exists
    *
