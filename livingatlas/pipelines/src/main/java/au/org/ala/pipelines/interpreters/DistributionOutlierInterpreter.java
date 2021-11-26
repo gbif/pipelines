@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.core.parsers.common.ParsedField;
-import org.gbif.pipelines.io.avro.ALADistributionRecord;
+import org.gbif.pipelines.io.avro.DistributionOutlierRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IndexRecord;
 
@@ -17,34 +17,34 @@ import org.gbif.pipelines.io.avro.IndexRecord;
  * living atlases.
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class ALADistributionInterpreter {
+public class DistributionOutlierInterpreter {
 
-  public static void interpretOccurrenceID(IndexRecord ir, ALADistributionRecord dr) {
+  public static void interpretOccurrenceID(IndexRecord ir, DistributionOutlierRecord dr) {
     dr.setOccurrenceID(ir.getId());
   }
 
-  public static void interpretLocation(IndexRecord ir, ALADistributionRecord dr) {
+  public static void interpretLocation(IndexRecord ir, DistributionOutlierRecord dr) {
     String latlng = ir.getLatLng();
     String[] coordinates = latlng.split(",");
     dr.setDecimalLatitude(Double.parseDouble(coordinates[0]));
     dr.setDecimalLongitude(Double.parseDouble(coordinates[1]));
   }
 
-  public static void interpretSpeciesId(IndexRecord ir, ALADistributionRecord dr) {
+  public static void interpretSpeciesId(IndexRecord ir, DistributionOutlierRecord dr) {
     dr.setSpeciesID(ir.getTaxonID());
   }
 
   /*
    * Interprete from verbatim
    */
-  public static void interpretOccurrenceID(ExtendedRecord er, ALADistributionRecord dr) {
+  public static void interpretOccurrenceID(ExtendedRecord er, DistributionOutlierRecord dr) {
     String value = extractNullAwareValue(er, DwcTerm.occurrenceID);
     if (!Strings.isNullOrEmpty(value)) {
       dr.setOccurrenceID(value);
     }
   }
 
-  public static void interpretLocation(ExtendedRecord er, ALADistributionRecord dr) {
+  public static void interpretLocation(ExtendedRecord er, DistributionOutlierRecord dr) {
     ParsedField<LatLng> parsedLatLon = CoordinatesParser.parseCoords(er);
     addIssue(dr, parsedLatLon.getIssues());
 
@@ -55,7 +55,7 @@ public class ALADistributionInterpreter {
     }
   }
 
-  public static void interpretSpeciesId(ExtendedRecord er, ALADistributionRecord dr) {
+  public static void interpretSpeciesId(ExtendedRecord er, DistributionOutlierRecord dr) {
     String value = extractNullAwareValue(er, DwcTerm.taxonConceptID);
     if (!Strings.isNullOrEmpty(value)) {
       dr.setSpeciesID(value);

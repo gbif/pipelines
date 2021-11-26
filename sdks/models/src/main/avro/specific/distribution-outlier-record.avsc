@@ -1,5 +1,5 @@
 {
-  "name":"ALADistributionRecord",
+  "name":"DistributionOutlierRecord",
   "namespace":"org.gbif.pipelines.io.avro",
   "type":"record",
   "doc":"ALA Expert Distribution Layer data information",

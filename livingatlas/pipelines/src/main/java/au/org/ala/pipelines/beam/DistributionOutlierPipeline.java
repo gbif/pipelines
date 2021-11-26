@@ -1,7 +1,7 @@
 package au.org.ala.pipelines.beam;
 
 import au.org.ala.pipelines.options.DistributionPipelineOptions;
-import au.org.ala.pipelines.transforms.ALADistributionTransform;
+import au.org.ala.pipelines.transforms.DistributionOutlierTransform;
 import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
@@ -11,14 +11,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.AvroIO;
-import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.transforms.*;
 import org.apache.beam.sdk.values.PCollection;
-import org.apache.hadoop.fs.FileSystem;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
-import org.gbif.pipelines.common.beam.utils.PathBuilder;
-import org.gbif.pipelines.core.factory.FileSystemFactory;
-import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.*;
 import org.slf4j.MDC;
 
@@ -37,7 +32,7 @@ import org.slf4j.MDC;
  */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class DistributionPipeline {
+public class DistributionOutlierPipeline {
 
   public static void main(String[] args) throws Exception {
     VersionInfo.print();
@@ -67,11 +62,11 @@ public class DistributionPipeline {
 
     PCollection<IndexRecord> indexRecords = ALAFsUtils.loadIndexRecords(options, p);
 
-    ALADistributionTransform distributionTransform =
-        new ALADistributionTransform(options.getBaseUrl());
+    DistributionOutlierTransform distributionTransform =
+        new DistributionOutlierTransform(options.getBaseUrl());
 
     log.info("Adding step 2: calculating outliers index");
-    PCollection<ALADistributionRecord> kvRecords =
+    PCollection<DistributionOutlierRecord> kvRecords =
         indexRecords
             .apply("Key by species", distributionTransform.toKv())
             .apply("Grouping by species", GroupByKey.create())
@@ -80,7 +75,7 @@ public class DistributionPipeline {
                 distributionTransform.calculateOutlier())
             .apply("Flatten records", Flatten.iterables());
 
-     kvRecords.apply( "Write to file",AvroIO.write(ALADistributionRecord.class).to(outputPath+"/outliers").withoutSharding().withSuffix(".avro"));
+     kvRecords.apply( "Write to file",AvroIO.write(DistributionOutlierRecord.class).to(outputPath+"/outliers").withoutSharding().withSuffix(".avro"));
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();

@@ -4,7 +4,7 @@ import au.org.ala.distribution.DistributionLayer;
 import au.org.ala.distribution.DistributionServiceImpl;
 import au.org.ala.distribution.ExpertDistributionException;
 import au.org.ala.pipelines.common.ALARecordTypes;
-import au.org.ala.pipelines.interpreters.ALADistributionInterpreter;
+import au.org.ala.pipelines.interpreters.DistributionOutlierInterpreter;
 import java.util.*;
 import java.util.stream.StreamSupport;
 import org.apache.beam.sdk.transforms.*;
@@ -14,15 +14,15 @@ import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.transforms.Transform;
 
-public class ALADistributionTransform extends Transform<IndexRecord, ALADistributionRecord> {
+public class DistributionOutlierTransform extends Transform<IndexRecord, DistributionOutlierRecord> {
 
   private String spatialUrl;
 
-  public ALADistributionTransform(String spatialUrl) {
+  public DistributionOutlierTransform(String spatialUrl) {
     super(
-        ALADistributionRecord.class,
+        DistributionOutlierRecord.class,
         ALARecordTypes.ALA_DISTRIBUTION,
-        ALADistributionTransform.class.getName(),
+        DistributionOutlierTransform.class.getName(),
         "alaDistributionCount");
     this.spatialUrl = spatialUrl;
   }
@@ -31,20 +31,20 @@ public class ALADistributionTransform extends Transform<IndexRecord, ALADistribu
   @Setup
   public void setup() {}
 
-  public ALADistributionTransform counterFn(SerializableConsumer<String> counterFn) {
+  public DistributionOutlierTransform counterFn(SerializableConsumer<String> counterFn) {
     setCounterFn(counterFn);
     return this;
   }
 
   @Override
-  public Optional<ALADistributionRecord> convert(IndexRecord source) {
-    ALADistributionRecord dr =
-        ALADistributionRecord.newBuilder().setId(source.getId()).setSpeciesID("").build();
+  public Optional<DistributionOutlierRecord> convert(IndexRecord source) {
+    DistributionOutlierRecord dr =
+        DistributionOutlierRecord.newBuilder().setId(source.getId()).setSpeciesID("").build();
     return Interpretation.from(source)
         .to(dr)
-        .via(ALADistributionInterpreter::interpretOccurrenceID)
-        .via(ALADistributionInterpreter::interpretLocation)
-        .via(ALADistributionInterpreter::interpretSpeciesId)
+        .via(DistributionOutlierInterpreter::interpretOccurrenceID)
+        .via(DistributionOutlierInterpreter::interpretLocation)
+        .via(DistributionOutlierInterpreter::interpretSpeciesId)
         .getOfNullable();
   }
 
@@ -53,16 +53,16 @@ public class ALADistributionTransform extends Transform<IndexRecord, ALADistribu
         .via((IndexRecord ir) -> KV.of(ir.getTaxonID(), ir));
   }
 
-  public MapElements<KV<String, Iterable<IndexRecord>>, Iterable<ALADistributionRecord>>
+  public MapElements<KV<String, Iterable<IndexRecord>>, Iterable<DistributionOutlierRecord>>
       calculateOutlier() {
     return MapElements.via(
-        (new SimpleFunction<KV<String, Iterable<IndexRecord>>, Iterable<ALADistributionRecord>>() {
+        (new SimpleFunction<KV<String, Iterable<IndexRecord>>, Iterable<DistributionOutlierRecord>>() {
           @Override
-          public Iterable<ALADistributionRecord> apply(KV<String, Iterable<IndexRecord>> input) {
+          public Iterable<DistributionOutlierRecord> apply(KV<String, Iterable<IndexRecord>> input) {
             String lsid = input.getKey();
             Iterable<IndexRecord> records = input.getValue();
             Iterator<IndexRecord> iter = records.iterator();
-            List<ALADistributionRecord> outputs = new ArrayList();
+            List<DistributionOutlierRecord> outputs = new ArrayList();
 
             try {
               DistributionServiceImpl distributionService =
@@ -72,7 +72,7 @@ public class ALADistributionTransform extends Transform<IndexRecord, ALADistribu
               Map points = new HashMap();
               while (iter.hasNext()) {
                 IndexRecord record = iter.next();
-                ALADistributionRecord dr = convertToDistribution(record);
+                DistributionOutlierRecord dr = convertToDistribution(record);
                 outputs.add(dr);
 
                 Map point = new HashMap();
@@ -105,13 +105,13 @@ public class ALADistributionTransform extends Transform<IndexRecord, ALADistribu
   }
 
   /**
-   * Stringify {@Link ALADistributionRecord}
+   * Stringify {@Link DistributionOutlierRecord}
    *
    * @return
    */
-  public MapElements<ALADistributionRecord, String> flatToString() {
+  public MapElements<DistributionOutlierRecord, String> flatToString() {
     return MapElements.into(new TypeDescriptor<String>() {})
-        .via((ALADistributionRecord dr) -> this.convertRecordToString(dr));
+        .via((DistributionOutlierRecord dr) -> this.convertRecordToString(dr));
   }
 
   /**
@@ -121,9 +121,9 @@ public class ALADistributionTransform extends Transform<IndexRecord, ALADistribu
    * @param record
    * @return
    */
-  private ALADistributionRecord convertToDistribution(IndexRecord record) {
-    ALADistributionRecord newRecord =
-        ALADistributionRecord.newBuilder()
+  private DistributionOutlierRecord convertToDistribution(IndexRecord record) {
+    DistributionOutlierRecord newRecord =
+        DistributionOutlierRecord.newBuilder()
             .setId(record.getId())
             .setOccurrenceID(record.getId())
             .setDistanceOutOfEDL(0.0d)
@@ -138,7 +138,7 @@ public class ALADistributionTransform extends Transform<IndexRecord, ALADistribu
     return newRecord;
   }
 
-  private String convertRecordToString(ALADistributionRecord record) {
+  private String convertRecordToString(DistributionOutlierRecord record) {
     return String.format(
         "occurrenceId:%s, lat:%f, lng:%f, speciesId:%s, distanceToEDL:%f",
         record.getOccurrenceID(),
