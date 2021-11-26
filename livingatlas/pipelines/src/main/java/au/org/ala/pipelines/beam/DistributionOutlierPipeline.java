@@ -1,6 +1,6 @@
 package au.org.ala.pipelines.beam;
 
-import au.org.ala.pipelines.options.DistributionPipelineOptions;
+import au.org.ala.pipelines.options.DistributionOutlierPipelineOptions;
 import au.org.ala.pipelines.transforms.DistributionOutlierTransform;
 import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.ALAFsUtils;
@@ -37,10 +37,10 @@ public class DistributionOutlierPipeline {
   public static void main(String[] args) throws Exception {
     VersionInfo.print();
     CombinedYamlConfiguration conf = new CombinedYamlConfiguration(args);
-    String[] combinedArgs = conf.toArgs("general", "distribution");
+    String[] combinedArgs = conf.toArgs("general", "outlier");
 
-    DistributionPipelineOptions options =
-        PipelinesOptionsFactory.create(DistributionPipelineOptions.class, combinedArgs);
+    DistributionOutlierPipelineOptions options =
+        PipelinesOptionsFactory.create(DistributionOutlierPipelineOptions.class, combinedArgs);
     MDC.put("datasetId", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
     MDC.put("step", "DISTRIBUTION");
@@ -49,13 +49,12 @@ public class DistributionOutlierPipeline {
     System.exit(0);
   }
 
-  public static void run(DistributionPipelineOptions options) throws Exception {
+  public static void run(DistributionOutlierPipelineOptions options) throws Exception {
 
-    //Create output path
+    // Create output path
     // default: {fsPath}/pipelines-outlier
     // or {fsPath}/pipelines-outlier/{datasetId}
     String outputPath = ALAFsUtils.buildPathOutlierUsingTargetPath(options);
-
 
     log.info("Adding step 1: Collecting index records");
     Pipeline p = Pipeline.create(options);
@@ -75,7 +74,12 @@ public class DistributionOutlierPipeline {
                 distributionTransform.calculateOutlier())
             .apply("Flatten records", Flatten.iterables());
 
-     kvRecords.apply( "Write to file",AvroIO.write(DistributionOutlierRecord.class).to(outputPath+"/outliers").withoutSharding().withSuffix(".avro"));
+    kvRecords.apply(
+        "Write to file",
+        AvroIO.write(DistributionOutlierRecord.class)
+            .to(outputPath + "/outliers")
+            .withoutSharding()
+            .withSuffix(".avro"));
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();

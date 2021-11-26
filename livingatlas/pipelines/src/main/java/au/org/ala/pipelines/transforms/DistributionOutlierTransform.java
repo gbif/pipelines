@@ -14,7 +14,8 @@ import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.transforms.Transform;
 
-public class DistributionOutlierTransform extends Transform<IndexRecord, DistributionOutlierRecord> {
+public class DistributionOutlierTransform
+    extends Transform<IndexRecord, DistributionOutlierRecord> {
 
   private String spatialUrl;
 
@@ -56,9 +57,11 @@ public class DistributionOutlierTransform extends Transform<IndexRecord, Distrib
   public MapElements<KV<String, Iterable<IndexRecord>>, Iterable<DistributionOutlierRecord>>
       calculateOutlier() {
     return MapElements.via(
-        (new SimpleFunction<KV<String, Iterable<IndexRecord>>, Iterable<DistributionOutlierRecord>>() {
+        (new SimpleFunction<
+            KV<String, Iterable<IndexRecord>>, Iterable<DistributionOutlierRecord>>() {
           @Override
-          public Iterable<DistributionOutlierRecord> apply(KV<String, Iterable<IndexRecord>> input) {
+          public Iterable<DistributionOutlierRecord> apply(
+              KV<String, Iterable<IndexRecord>> input) {
             String lsid = input.getKey();
             Iterable<IndexRecord> records = input.getValue();
             Iterator<IndexRecord> iter = records.iterator();

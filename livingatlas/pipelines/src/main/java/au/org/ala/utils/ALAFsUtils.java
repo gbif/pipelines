@@ -72,18 +72,18 @@ public class ALAFsUtils {
   }
 
   /** Build a path to outlier records. */
-  public static String buildPathOutlierUsingTargetPath(AllDatasetsPipelinesOptions options) throws IOException {
+  public static String buildPathOutlierUsingTargetPath(AllDatasetsPipelinesOptions options)
+      throws IOException {
     // default: {fsPath}/pipelines-outlier
     FileSystem fs =
-            FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
-                    .getFs(options.getTargetPath());
+        FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
+            .getFs(options.getTargetPath());
 
-    String outputPath =  PathBuilder.buildPath(options.getTargetPath()).toString();
+    String outputPath = PathBuilder.buildPath(options.getTargetPath()).toString();
 
     // {fsPath}/pipelines-outlier/{datasetId}
     if (options.getDatasetId() != null && !"all".equalsIgnoreCase(options.getDatasetId())) {
-      outputPath =
-              PathBuilder.buildPath(outputPath, options.getDatasetId()).toString();
+      outputPath = PathBuilder.buildPath(outputPath, options.getDatasetId()).toString();
     }
     // delete previous runs
     FsUtils.deleteIfExist(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), outputPath);
@@ -91,7 +91,6 @@ public class ALAFsUtils {
 
     return outputPath;
   }
-
 
   /**
    * Removes a directory with content if the folder exists

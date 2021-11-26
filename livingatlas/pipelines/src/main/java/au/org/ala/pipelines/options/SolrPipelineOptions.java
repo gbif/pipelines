@@ -68,7 +68,14 @@ public interface SolrPipelineOptions extends IndexingPipelineOptions {
   @Description("Path to clustering avro files")
   @Default.String("/data/pipelines-clustering")
   String getClusteringPath();
+
   void setClusteringPath(String clusteringPath);
+
+  @Description("Path to outlier avro files")
+  @Default.String("/data/pipelines-outlier")
+  String getOutlierPath();
+
+  void setOutlierPath(String outlierPath);
 
   @Description("Number of partitions to use")
   @Default.Integer(1)
