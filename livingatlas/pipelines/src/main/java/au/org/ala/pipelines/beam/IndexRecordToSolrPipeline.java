@@ -49,8 +49,8 @@ public class IndexRecordToSolrPipeline {
       JackKnifeOutlierRecord.newBuilder().setId(EMPTY).setItems(new ArrayList<>()).build();
   static final Relationships nullClustering =
       Relationships.newBuilder().setId(EMPTY).setRelationships(new ArrayList<>()).build();
-  static final ALADistributionRecord nullOutlier =
-          ALADistributionRecord.newBuilder().setId(EMPTY).build();
+  static final DistributionOutlierRecord nullOutlier =
+          DistributionOutlierRecord.newBuilder().setId(EMPTY).build();
 
   public static void main(String[] args) throws Exception {
     VersionInfo.print();
@@ -291,9 +291,9 @@ public class IndexRecordToSolrPipeline {
           PCollection<KV<String, IndexRecord>> indexRecords) {
 
     // Load outlier records, keyed on ID
-    PCollection<KV<String, ALADistributionRecord>> outlierRecords =
+    PCollection<KV<String, DistributionOutlierRecord>> outlierRecords =
             loadOutlierRecords(options, pipeline);
-    PCollection<KV<String, KV<IndexRecord, ALADistributionRecord>>>
+    PCollection<KV<String, KV<IndexRecord, DistributionOutlierRecord>>>
       indexRecordJoinOurlier =
             Join.leftOuterJoin(indexRecords, outlierRecords, nullOutlier);
 
@@ -557,19 +557,19 @@ public class IndexRecordToSolrPipeline {
     };
   }
 
-  private static DoFn<KV<String, KV<IndexRecord, ALADistributionRecord>>, KV<String, IndexRecord>>
+  private static DoFn<KV<String, KV<IndexRecord, DistributionOutlierRecord>>, KV<String, IndexRecord>>
   addOutlierInfo() {
 
-    return new DoFn<KV<String, KV<IndexRecord, ALADistributionRecord>>, KV<String, IndexRecord>>()  {
+    return new DoFn<KV<String, KV<IndexRecord, DistributionOutlierRecord>>, KV<String, IndexRecord>>()  {
       @ProcessElement
       public void processElement(ProcessContext c) {
 
-        KV<String, KV<IndexRecord, ALADistributionRecord>> e = c.element();
+        KV<String, KV<IndexRecord, DistributionOutlierRecord>> e = c.element();
 
         IndexRecord indexRecord = e.getValue().getKey();
         String id = indexRecord.getId();
 
-        ALADistributionRecord outlierRecord = e.getValue().getValue();
+        DistributionOutlierRecord outlierRecord = e.getValue().getValue();
 
         indexRecord.getDoubles().put(DISTANCE_TO_EDL, outlierRecord.getDistanceOutOfEDL());
 
@@ -646,7 +646,7 @@ public class IndexRecordToSolrPipeline {
                 }));
   }
 
-  private static PCollection<KV<String, ALADistributionRecord>> loadOutlierRecords(
+  private static PCollection<KV<String, DistributionOutlierRecord>> loadOutlierRecords(
           SolrPipelineOptions options, Pipeline p) {
     String path =
             PathBuilder.buildPath(
@@ -654,12 +654,12 @@ public class IndexRecordToSolrPipeline {
                     .toString();
     log.info("Loading outlier from {}", path);
 
-    return p.apply(AvroIO.read(ALADistributionRecord.class).from(path))
+    return p.apply(AvroIO.read(DistributionOutlierRecord.class).from(path))
             .apply(
                     MapElements.via(
-                            new SimpleFunction<ALADistributionRecord, KV<String, ALADistributionRecord>>() {
+                            new SimpleFunction<DistributionOutlierRecord, KV<String, DistributionOutlierRecord>>() {
                               @Override
-                              public KV<String, ALADistributionRecord> apply(ALADistributionRecord input) {
+                              public KV<String, DistributionOutlierRecord> apply(DistributionOutlierRecord input) {
                                 return KV.of(input.getId(), input);
                               }
                             }));
