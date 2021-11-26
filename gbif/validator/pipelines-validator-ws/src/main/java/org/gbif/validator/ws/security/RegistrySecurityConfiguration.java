@@ -1,6 +1,5 @@
 package org.gbif.validator.ws.security;
 
-import lombok.SneakyThrows;
 import org.gbif.ws.remoteauth.IdentityServiceClient;
 import org.gbif.ws.remoteauth.RemoteAuthClient;
 import org.gbif.ws.remoteauth.RemoteAuthWebSecurityConfigurer;
@@ -37,7 +36,6 @@ public class RegistrySecurityConfiguration {
   @EnableWebSecurity
   public static class ValidatorWebSecurity extends RemoteAuthWebSecurityConfigurer {
 
-    @SneakyThrows
     public ValidatorWebSecurity(
         ApplicationContext applicationContext, RemoteAuthClient remoteAuthClient) {
       super(applicationContext, remoteAuthClient);

@@ -1,7 +1,5 @@
 package org.gbif.pipelines.validator.checklists.cli;
 
-import static org.gbif.validator.api.Metrics.builder;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Timestamp;
@@ -190,7 +188,8 @@ public class ChecklistValidatorCallback
     validation.setStatus(newStatus);
     validation.setModified(Timestamp.valueOf(ZonedDateTime.now().toLocalDateTime()));
 
-    Metrics metrics = Optional.ofNullable(validation.getMetrics()).orElse(builder().build());
+    Metrics metrics =
+        Optional.ofNullable(validation.getMetrics()).orElse(Metrics.builder().build());
 
     for (ValidationStep step : metrics.getStepTypes()) {
       if (step.getStepType().equals(STEP_TYPE)) {
