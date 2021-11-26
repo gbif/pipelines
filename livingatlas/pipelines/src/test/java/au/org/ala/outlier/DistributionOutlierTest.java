@@ -1,7 +1,9 @@
-package au.org.ala.distribution;
+package au.org.ala.outlier;
 
 import static org.junit.Assert.*;
 
+import au.org.ala.distribution.DistributionLayer;
+import au.org.ala.distribution.DistributionServiceImpl;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,7 +13,7 @@ import org.junit.Test;
  * Tests ported from
  * https://github.com/AtlasOfLivingAustralia/biocache-store/blob/master/src/test/scala/au/org/ala/biocache/DistanceRangeParserTest.scala
  */
-public class DistributionTest {
+public class DistributionOutlierTest {
   String spatial_url = "http://devt.ala.org.au:8080/ws/";
   // String spatial_url = "https://spatial.ala.org.au/ws/";
 

@@ -50,7 +50,7 @@ public class IndexRecordToSolrPipeline {
   static final Relationships nullClustering =
       Relationships.newBuilder().setId(EMPTY).setRelationships(new ArrayList<>()).build();
   static final DistributionOutlierRecord nullOutlier =
-          DistributionOutlierRecord.newBuilder().setId(EMPTY).build();
+      DistributionOutlierRecord.newBuilder().setId(EMPTY).build();
 
   public static void main(String[] args) throws Exception {
     VersionInfo.print();
@@ -192,8 +192,6 @@ public class IndexRecordToSolrPipeline {
       writeToSolr(options, indexRecordsCollection, conn, schemaFields, dynamicFieldPrefixes);
     }
 
-
-
     log.info("Starting pipeline");
     pipeline.run(options).waitUntilFinish();
 
@@ -284,25 +282,20 @@ public class IndexRecordToSolrPipeline {
     return indexRecordJoinClustering.apply(ParDo.of(addClusteringInfo()));
   }
 
-
   private static PCollection<KV<String, IndexRecord>> addOutlierInfo(
-          SolrPipelineOptions options,
-          Pipeline pipeline,
-          PCollection<KV<String, IndexRecord>> indexRecords) {
+      SolrPipelineOptions options,
+      Pipeline pipeline,
+      PCollection<KV<String, IndexRecord>> indexRecords) {
 
     // Load outlier records, keyed on ID
     PCollection<KV<String, DistributionOutlierRecord>> outlierRecords =
-            loadOutlierRecords(options, pipeline);
-    PCollection<KV<String, KV<IndexRecord, DistributionOutlierRecord>>>
-      indexRecordJoinOurlier =
-            Join.leftOuterJoin(indexRecords, outlierRecords, nullOutlier);
-
+        loadOutlierRecords(options, pipeline);
+    PCollection<KV<String, KV<IndexRecord, DistributionOutlierRecord>>> indexRecordJoinOurlier =
+        Join.leftOuterJoin(indexRecords, outlierRecords, nullOutlier);
 
     // Add Jackknife information
     return indexRecordJoinOurlier.apply(ParDo.of(addOutlierInfo()));
   }
-
-
 
   private static void writeToSolr(
       SolrPipelineOptions options,
@@ -557,10 +550,12 @@ public class IndexRecordToSolrPipeline {
     };
   }
 
-  private static DoFn<KV<String, KV<IndexRecord, DistributionOutlierRecord>>, KV<String, IndexRecord>>
-  addOutlierInfo() {
+  private static DoFn<
+          KV<String, KV<IndexRecord, DistributionOutlierRecord>>, KV<String, IndexRecord>>
+      addOutlierInfo() {
 
-    return new DoFn<KV<String, KV<IndexRecord, DistributionOutlierRecord>>, KV<String, IndexRecord>>()  {
+    return new DoFn<
+        KV<String, KV<IndexRecord, DistributionOutlierRecord>>, KV<String, IndexRecord>>() {
       @ProcessElement
       public void processElement(ProcessContext c) {
 
@@ -577,7 +572,6 @@ public class IndexRecordToSolrPipeline {
       }
     };
   }
-
 
   /** Load index records from AVRO. */
   private static PCollection<KV<String, IndexRecord>> loadIndexRecords(
@@ -647,21 +641,20 @@ public class IndexRecordToSolrPipeline {
   }
 
   private static PCollection<KV<String, DistributionOutlierRecord>> loadOutlierRecords(
-          SolrPipelineOptions options, Pipeline p) {
-    String path =
-            PathBuilder.buildPath(
-                            options.getAllDatasetsInputPath() + "/distribution/", "distribution*" + AVRO_EXTENSION)
-                    .toString();
+      SolrPipelineOptions options, Pipeline p) {
+    String path = PathBuilder.buildPath(options.getOutlierPath(), "*" + AVRO_EXTENSION).toString();
     log.info("Loading outlier from {}", path);
 
     return p.apply(AvroIO.read(DistributionOutlierRecord.class).from(path))
-            .apply(
-                    MapElements.via(
-                            new SimpleFunction<DistributionOutlierRecord, KV<String, DistributionOutlierRecord>>() {
-                              @Override
-                              public KV<String, DistributionOutlierRecord> apply(DistributionOutlierRecord input) {
-                                return KV.of(input.getId(), input);
-                              }
-                            }));
+        .apply(
+            MapElements.via(
+                new SimpleFunction<
+                    DistributionOutlierRecord, KV<String, DistributionOutlierRecord>>() {
+                  @Override
+                  public KV<String, DistributionOutlierRecord> apply(
+                      DistributionOutlierRecord input) {
+                    return KV.of(input.getId(), input);
+                  }
+                }));
   }
 }
