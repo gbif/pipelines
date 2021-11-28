@@ -7,6 +7,7 @@ import au.org.ala.pipelines.common.ALARecordTypes;
 import au.org.ala.pipelines.interpreters.DistributionOutlierInterpreter;
 import java.util.*;
 import java.util.stream.StreamSupport;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.transforms.*;
 import org.apache.beam.sdk.values.*;
 import org.gbif.pipelines.core.functions.SerializableConsumer;
@@ -14,6 +15,7 @@ import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.transforms.Transform;
 
+@Slf4j
 public class DistributionOutlierTransform
     extends Transform<IndexRecord, DistributionOutlierRecord> {
 
@@ -71,11 +73,13 @@ public class DistributionOutlierTransform
               DistributionServiceImpl distributionService =
                   DistributionServiceImpl.init(spatialUrl);
               List<DistributionLayer> edl = distributionService.findLayersByLsid(lsid);
+              boolean hasEDL = edl.size() > 0 ? true : false;
+              double distanceToEDL = hasEDL ? 0 : -1; // 0 -inside, -1: no EDL
               // Available EDLD of this species
               Map points = new HashMap();
               while (iter.hasNext()) {
                 IndexRecord record = iter.next();
-                DistributionOutlierRecord dr = convertToDistribution(record);
+                DistributionOutlierRecord dr = convertToDistribution(record, distanceToEDL);
                 outputs.add(dr);
 
                 Map point = new HashMap();
@@ -84,7 +88,7 @@ public class DistributionOutlierTransform
                 points.put(dr.getOccurrenceID(), point);
               }
 
-              if (edl.size() > 0) {
+              if (hasEDL) {
                 Map<String, Double> results = distributionService.outliers(lsid, points);
                 Iterator<Map.Entry<String, Double>> iterator = results.entrySet().iterator();
                 while (iterator.hasNext()) {
@@ -96,8 +100,9 @@ public class DistributionOutlierTransform
               }
 
             } catch (ExpertDistributionException e) {
+              log.error(e.getMessage());
               throw new RuntimeException(
-                  "Expert distribution service returns error: " + e.getMessage());
+                  "Expert distribution service throws a runtime error, please check logs");
             } catch (Exception e) {
               throw new RuntimeException("Runtime error: " + e.getMessage());
             }
@@ -119,18 +124,19 @@ public class DistributionOutlierTransform
 
   /**
    * Only can be used when EDL exists - which means the record can only in/out EDL Force to reset
-   * distanceOutOfEDL 0 because Spatial EDL service only return distance of outlier records
+   * distanceOutOfEDL 0: inside edl, -1: no edl
    *
    * @param record
    * @return
    */
-  private DistributionOutlierRecord convertToDistribution(IndexRecord record) {
+  private DistributionOutlierRecord convertToDistribution(
+      IndexRecord record, double distanceToEDL) {
     DistributionOutlierRecord newRecord =
         DistributionOutlierRecord.newBuilder()
             .setId(record.getId())
             .setOccurrenceID(record.getId())
-            .setDistanceOutOfEDL(0.0d)
             .setSpeciesID(record.getTaxonID())
+            .setDistanceOutOfEDL(distanceToEDL)
             .build();
 
     String latlng = record.getLatLng();

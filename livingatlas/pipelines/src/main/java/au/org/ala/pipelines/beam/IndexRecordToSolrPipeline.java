@@ -560,15 +560,26 @@ public class IndexRecordToSolrPipeline {
       public void processElement(ProcessContext c) {
 
         KV<String, KV<IndexRecord, DistributionOutlierRecord>> e = c.element();
-
-        IndexRecord indexRecord = e.getValue().getKey();
-        String id = indexRecord.getId();
+        String id = e.getKey();
 
         DistributionOutlierRecord outlierRecord = e.getValue().getValue();
 
-        indexRecord.getDoubles().put(DISTANCE_TO_EDL, outlierRecord.getDistanceOutOfEDL());
+        IndexRecord indexRecord = e.getValue().getKey();
+        IndexRecord ouputIR =
+            IndexRecord.newBuilder()
+                .setId(indexRecord.getId())
+                .setTaxonID(indexRecord.getTaxonID())
+                .setLatLng(indexRecord.getLatLng())
+                .setMultiValues(indexRecord.getMultiValues())
+                .setDates(indexRecord.getDates())
+                .setLongs(indexRecord.getLongs())
+                .setBooleans(indexRecord.getBooleans())
+                .setInts(indexRecord.getInts())
+                .build();
 
-        c.output(KV.of(id, indexRecord));
+        ouputIR.getDoubles().put(DISTANCE_TO_EDL, outlierRecord.getDistanceOutOfEDL());
+
+        c.output(KV.of(id, ouputIR));
       }
     };
   }
