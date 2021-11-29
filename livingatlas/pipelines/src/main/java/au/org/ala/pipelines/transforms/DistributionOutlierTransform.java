@@ -104,6 +104,7 @@ public class DistributionOutlierTransform
               throw new RuntimeException(
                   "Expert distribution service throws a runtime error, please check logs");
             } catch (Exception e) {
+              log.error(e.getMessage());
               throw new RuntimeException("Runtime error: " + e.getMessage());
             }
 
@@ -123,7 +124,6 @@ public class DistributionOutlierTransform
   }
 
   /**
-   * Only can be used when EDL exists - which means the record can only in/out EDL Force to reset
    * distanceOutOfEDL 0: inside edl, -1: no edl
    *
    * @param record

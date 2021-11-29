@@ -84,6 +84,7 @@ dwca-avro --> interpret --> validate --> uuid --> sds --> image-load ... │
 -  'image-load' pushes an export of multimedia AVRO files to the image service;
 -  'image-sync' retrieves details of images stored in image service for indexing purposes;
 -  'index' generates a AVRO records ready to be index to SOLR;
+-  'outlier' generates a distance to expert distribution layer;
 -  'sample' use the sampling service to retrieve values for points for the layers in the spatial service;
 -  'jackknife' adds an aggregated jackknife AVRO for all datasets. Requires samping-avro. After running a full 'index' is required.
 -  'solr' reads index records in AVRO and submits them to SOLR;
@@ -110,6 +111,7 @@ Usage:
   $CMD [options] sample        (<dr>...|all)         $WHERE
   $CMD [options] clustering    (all)                 $WHERE
   $CMD [options] jackknife     (all)                 $WHERE
+  $CMD [options] outlier       (all)                 $WHERE
   $CMD [options] solr          (<dr>...|all)         $WHERE
   $CMD [options] solr-schema   (<dr>...|all)         $WHERE
   $CMD [options] archive-list
@@ -677,6 +679,25 @@ function clustering () {
     spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "add-clustering $dr"
 
     logStepEnd "Clustering" $dr $ltype $SECONDS
+}
+
+function outlier () {
+    local dr="*" ltype="$TYPE"
+    CLASS=au.org.ala.pipelines.beam.DistributionOutlierPipeline
+
+    logStepStart "Outlier" $dr
+    SECONDS=0
+
+    SH_ARGS=outlier-sh-args.local
+    java-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=outlier-sh-args.spark-embedded
+    spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=outlier-sh-args.spark-cluster
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "add-jackknife $dr"
+
+    logStepEnd "Outlier" $dr $ltype $SECONDS
 }
 
 function solr () {

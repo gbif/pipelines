@@ -22,13 +22,8 @@ import org.slf4j.MDC;
  *
  * <p>distanceOutOfELD: 0 -> inside of EDL, -1: -> No EDLs. >0 -> out of EDL
  *
- * <p>* --datasetId=0057a720-17c9-4658-971e-9578f3577cf5 * --attempt=1 * --runner=SparkRunner *
- * --targetPath=/some/path/to/output/ *
- * --inputPath=/some/path/to/output/0057a720-17c9-4658-971e-9578f3577cf5/1/verbatim.avro
- *
- * <p>java -jar /data/pipelines-data/avro-tools-1.11.0.jar tojson distribution-00000-of-00005.avro
- * >5.json java -jar /data/pipelines-data/avro-tools-1.11.0.jar fromjson --schema-file schema.avsc
- * ./verbatim.json > verbatim.avro
+ * <p>Example: java au.org.ala.pipelines.beam.DistributionOutlierPipeline
+ * --config=/data/la-pipelines/config/la-pipelines.yaml --fsPath=/data
  */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
