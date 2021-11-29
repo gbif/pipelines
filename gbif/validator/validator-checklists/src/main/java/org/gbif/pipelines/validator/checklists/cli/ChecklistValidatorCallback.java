@@ -1,5 +1,7 @@
 package org.gbif.pipelines.validator.checklists.cli;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Timestamp;
@@ -32,7 +34,7 @@ import org.gbif.validator.ws.client.ValidationWsClient;
 /** Callback which is called when the {@link PipelinesChecklistValidatorMessage} is received. */
 @Slf4j
 public class ChecklistValidatorCallback
-    extends AbstractMessageCallback<PipelinesChecklistValidatorMessage> {
+    extends AbstractMessageCallback<PipelinesChecklistValidatorMessage> implements Closeable {
 
   // Use stepType as a String to keep validation api separate to gbif-api
   private static final String STEP_TYPE = "VALIDATOR_COLLECT_METRICS";
@@ -42,24 +44,30 @@ public class ChecklistValidatorCallback
   private final ValidationWsClient validationClient;
   private final MessagePublisher messagePublisher;
 
+  @SneakyThrows
   public ChecklistValidatorCallback(
       ChecklistValidatorConfiguration config,
       ValidationWsClient validationClient,
       MessagePublisher messagePublisher) {
     this.config = config;
     this.validationClient = validationClient;
-    this.checklistValidator = new ChecklistValidator(toNeoConfiguration(config));
+
+    this.checklistValidator = new ChecklistValidator(toValidatorConfiguration(config));
     this.messagePublisher = messagePublisher;
   }
 
   /** Creates a NeoConfiguration from the pipeline configuration. */
-  private static NeoConfiguration toNeoConfiguration(ChecklistValidatorConfiguration config) {
+  private static ChecklistValidator.Configuration toValidatorConfiguration(
+      ChecklistValidatorConfiguration config) {
     NeoConfiguration neoConfiguration = new NeoConfiguration();
     neoConfiguration.mappedMemory = config.neoMappedMemory;
     neoConfiguration.neoRepository = config.neoRepository;
     neoConfiguration.port = config.neoPort;
     neoConfiguration.batchSize = config.neoBatchSize;
-    return neoConfiguration;
+    return ChecklistValidator.Configuration.builder()
+        .neoConfiguration(neoConfiguration)
+        .apiUrl(config.apiUrl)
+        .build();
   }
 
   /** Input path example - /mnt/auto/crawler/dwca/9bed66b3-4caa-42bb-9c93-71d7ba109dad */
@@ -165,12 +173,12 @@ public class ChecklistValidatorCallback
   private static List<TermInfo> mergeTermsInfo(List<TermInfo> from, List<TermInfo> to) {
 
     Set<String> toSet = to.stream().map(TermInfo::getTerm).collect(Collectors.toSet());
-    List<TermInfo> fitered =
+    List<TermInfo> filtered =
         from.stream().filter(x -> !toSet.contains(x.getTerm())).collect(Collectors.toList());
 
-    ArrayList<TermInfo> result = new ArrayList<>(to.size() + fitered.size());
+    ArrayList<TermInfo> result = new ArrayList<>(to.size() + filtered.size());
     result.addAll(to);
-    result.addAll(fitered);
+    result.addAll(filtered);
     return result;
   }
 
@@ -200,7 +208,12 @@ public class ChecklistValidatorCallback
 
     validation.setMetrics(metrics);
 
-    log.info("Validaton {} change status to {} for {}", validation.getKey(), newStatus, STEP_TYPE);
+    log.info("Validation {} change status to {} for {}", validation.getKey(), newStatus, STEP_TYPE);
     return validationClient.update(validation.getKey(), validation);
+  }
+
+  @Override
+  public void close() throws IOException {
+    checklistValidator.close();
   }
 }

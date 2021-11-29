@@ -1,5 +1,7 @@
 package org.gbif.pipelines.validator.checklists;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -9,6 +11,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import lombok.Builder;
+import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.vocabulary.Extension;
@@ -19,9 +23,11 @@ import org.gbif.dwc.Archive;
 import org.gbif.dwc.ArchiveFile;
 import org.gbif.dwc.DwcFiles;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.nub.lookup.straight.IdLookup;
 import org.gbif.nub.lookup.straight.IdLookupPassThru;
 import org.gbif.pipelines.validator.checklists.collector.ValidationDataCollector;
 import org.gbif.pipelines.validator.checklists.model.NormalizedNameUsageData;
+import org.gbif.pipelines.validator.checklists.ws.IdLookupClient;
 import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.Metrics;
 
@@ -30,7 +36,16 @@ import org.gbif.validator.api.Metrics;
  * Thread-Safe.
  */
 @Slf4j
-public class ChecklistValidator {
+public class ChecklistValidator implements Closeable {
+
+  @Data
+  @Builder
+  public static class Configuration {
+
+    private final NeoConfiguration neoConfiguration;
+
+    private final String apiUrl;
+  }
 
   private static final Set<String> NAME_USAGES_RELATED_EXTENSIONS =
       new HashSet<>(
@@ -45,12 +60,18 @@ public class ChecklistValidator {
               Extension.MULTIMEDIA.getRowType(),
               DwcTerm.Taxon.qualifiedName()));
 
-  private final NeoConfiguration configuration;
+  private final Configuration configuration;
+
+  private final IdLookup idLookup;
 
   /** @param neoConfiguration Neo4j configuration. */
-  public ChecklistValidator(NeoConfiguration neoConfiguration) {
+  public ChecklistValidator(Configuration configuration) {
     // use our own neo repository
-    this.configuration = neoConfiguration;
+    this.configuration = configuration;
+    idLookup =
+        configuration.apiUrl == null
+            ? new IdLookupPassThru()
+            : new IdLookupClient(configuration.apiUrl);
   }
 
   /**
@@ -65,6 +86,15 @@ public class ChecklistValidator {
       results.addAll(validateArchive(archive));
     }
     return results;
+  }
+
+  @Override
+  public void close() throws IOException {
+    try {
+      idLookup.close();
+    } catch (Exception ex) {
+      throw new RuntimeException(ex);
+    }
   }
 
   /** Validates a ArchiveFile that checklist data. */
@@ -114,10 +144,10 @@ public class ChecklistValidator {
   private ValidationDataCollector validate(Archive archive) {
     ValidationDataCollector collector = new ValidationDataCollector();
     UUID key = UUID.randomUUID();
-    try (UsageDao dao = UsageDao.create(configuration, key)) {
+    try (UsageDao dao = UsageDao.create(configuration.neoConfiguration, key)) {
       Normalizer normalizer =
           Normalizer.create(
-              key, dao, archive.getLocation(), new IdLookupPassThru(), configuration.batchSize);
+              key, dao, archive.getLocation(), idLookup, configuration.neoConfiguration.batchSize);
       normalizer.run(false);
       // iterate over all node and collect their issues
       dao.streamUsages().parallel().forEach(node -> collector.collect(readUsageData(node)));

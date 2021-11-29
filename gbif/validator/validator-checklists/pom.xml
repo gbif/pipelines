@@ -218,6 +218,20 @@
       <artifactId>amqp-client</artifactId>
       <version>${amqp-client.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.gbif</groupId>
+      <artifactId>gbif-common-ws</artifactId>
+    </dependency>
+
+    <!-- Spring dependencies -->
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-web</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.cloud</groupId>
+      <artifactId>spring-cloud-openfeign-core</artifactId>
+    </dependency>
 
     <!-- Jackson -->
     <dependency>

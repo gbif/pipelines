@@ -26,8 +26,12 @@ public class ChecklistValidatorTest {
     // State
     NeoConfiguration neoConfiguration = new NeoConfiguration();
     neoConfiguration.neoRepository = temp.resolve("neo").toFile();
-    ChecklistValidator checklistValidator = new ChecklistValidator(neoConfiguration);
-    try {
+
+    try (ChecklistValidator checklistValidator =
+        new ChecklistValidator(
+            ChecklistValidator.Configuration.builder()
+                .neoConfiguration(neoConfiguration)
+                .build())) {
 
       // When
       List<Metrics.FileInfo> report =
