@@ -1,14 +1,13 @@
 package org.gbif.validator.service;
 
 import java.time.LocalDate;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.common.messaging.api.MessagePublisher;
-import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
+import org.gbif.common.messaging.api.messages.PipelinesCleanerMessage;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.ValidationSearchRequest;
 import org.gbif.validator.persistence.mapper.ValidationMapper;
@@ -30,17 +29,16 @@ public class RetentionPolicyTask {
 
   @Scheduled(cron = "${retentionPolicy.cron}")
   public void cleanOutdatedData() {
+    log.info("Running retention policy cleaner task");
     getDatasetsUuidForDeletion().forEach(this::sendMessage);
   }
 
   @SneakyThrows
   private void sendMessage(Validation validation) {
-    PipelinesArchiveValidatorMessage message = new PipelinesArchiveValidatorMessage();
+    PipelinesCleanerMessage message = new PipelinesCleanerMessage();
     message.setValidator(true);
     message.setDatasetUuid(validation.getKey());
     message.setAttempt(1);
-    message.setExecutionId(1L);
-    message.setPipelineSteps(Collections.emptySet());
 
     log.info("Send the message to the validator cleaner queue for key - {}", validation.getKey());
     messagePublisher.send(message);

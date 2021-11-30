@@ -3,6 +3,7 @@ package org.gbif.pipelines.tasks.cleaner;
 import com.google.common.util.concurrent.AbstractIdleService;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.common.messaging.MessageListener;
+import org.gbif.common.messaging.api.messages.PipelinesCleanerMessage;
 import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.pipelines.tasks.ServiceFactory;
 import org.gbif.validator.ws.client.ValidationWsClient;
@@ -10,7 +11,8 @@ import org.gbif.validator.ws.client.ValidationWsClient;
 /**
  * Service for the {@link CleanerCommand}.
  *
- * <p>This service listens to {@link org.gbif.common.messaging.api.messages.PipelinesXmlMessage}.
+ * <p>This service listens to {@link
+ * org.gbif.common.messaging.api.messages.PipelinesCleanerMessage}.
  */
 @Slf4j
 public class CleanerService extends AbstractIdleService {
@@ -31,8 +33,11 @@ public class CleanerService extends AbstractIdleService {
     ValidationWsClient validationClient =
         ServiceFactory.createValidationWsClient(config.stepConfig);
 
+    String routingKey =
+        new PipelinesCleanerMessage().setValidator(config.validatorOnly).getRoutingKey();
+
     CleanerCallback callback = new CleanerCallback(config, validationClient);
-    listener.listen(c.queueName, c.poolSize, callback);
+    listener.listen(c.queueName, routingKey, c.poolSize, callback);
   }
 
   @Override

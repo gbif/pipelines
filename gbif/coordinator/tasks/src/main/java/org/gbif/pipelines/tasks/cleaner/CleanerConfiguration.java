@@ -30,4 +30,7 @@ public class CleanerConfiguration {
 
   @Parameter(names = "--hdfs-root-path")
   public String hdfsRootPath;
+
+  @Parameter(names = "--validator-only")
+  public boolean validatorOnly = false;
 }

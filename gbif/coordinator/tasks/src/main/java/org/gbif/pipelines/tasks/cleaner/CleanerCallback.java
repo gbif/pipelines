@@ -12,16 +12,16 @@ import java.util.UUID;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.common.messaging.AbstractMessageCallback;
-import org.gbif.common.messaging.api.messages.PipelinesMetricsCollectedMessage;
+import org.gbif.common.messaging.api.messages.PipelinesCleanerMessage;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.estools.EsIndex;
 import org.gbif.pipelines.estools.client.EsConfig;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.ws.client.ValidationWsClient;
 
-/** Call back which is called when the {@link PipelinesMetricsCollectedMessage} is received. */
+/** Call back which is called when the {@link PipelinesCleanerMessage} is received. */
 @Slf4j
-public class CleanerCallback extends AbstractMessageCallback<PipelinesMetricsCollectedMessage> {
+public class CleanerCallback extends AbstractMessageCallback<PipelinesCleanerMessage> {
 
   private final CleanerConfiguration config;
   private final ValidationWsClient validationClient;
@@ -32,7 +32,7 @@ public class CleanerCallback extends AbstractMessageCallback<PipelinesMetricsCol
   }
 
   @Override
-  public void handleMessage(PipelinesMetricsCollectedMessage message) {
+  public void handleMessage(PipelinesCleanerMessage message) {
 
     UUID datasetUuid = message.getDatasetUuid();
 

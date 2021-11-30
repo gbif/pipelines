@@ -11,7 +11,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.UUID;
-import org.gbif.common.messaging.api.messages.PipelinesMetricsCollectedMessage;
+import org.gbif.common.messaging.api.messages.PipelinesCleanerMessage;
 import org.gbif.pipelines.estools.EsIndex;
 import org.gbif.pipelines.estools.model.IndexParams;
 import org.gbif.pipelines.estools.service.EsService;
@@ -37,7 +37,7 @@ public class CleanerCallbackIT {
     // State
     String datasetUuid = "8a4934ac-7d7f-41d4-892c-f6b71bb777a3";
     CleanerConfiguration config = createConfig();
-    PipelinesMetricsCollectedMessage message = createMessage(datasetUuid);
+    PipelinesCleanerMessage message = createMessage(datasetUuid);
     ValidationWsClient validationClient = ValidationWsClientStub.create();
 
     // Index document
@@ -82,7 +82,7 @@ public class CleanerCallbackIT {
     // State
     String datasetUuid = "8a4934ac-7d7f-41d4-892c-f6b71bb777a3";
     CleanerConfiguration config = createConfig();
-    PipelinesMetricsCollectedMessage message = createMessage(datasetUuid);
+    PipelinesCleanerMessage message = createMessage(datasetUuid);
     ValidationWsClient validationClient = ValidationWsClientStub.create();
 
     // Index document
@@ -134,13 +134,11 @@ public class CleanerCallbackIT {
     assertNotNull(validationClient.get(UUID.fromString(datasetUuid)).getDeleted());
   }
 
-  private PipelinesMetricsCollectedMessage createMessage(String datasetUuid) {
-    PipelinesMetricsCollectedMessage message = new PipelinesMetricsCollectedMessage();
+  private PipelinesCleanerMessage createMessage(String datasetUuid) {
+    PipelinesCleanerMessage message = new PipelinesCleanerMessage();
     message.setDatasetUuid(UUID.fromString(datasetUuid));
     message.setAttempt(1);
-    message.setExecutionId(1L);
     message.setValidator(true);
-    message.setPipelineSteps(Collections.emptySet());
     return message;
   }
 
