@@ -18,6 +18,8 @@ import org.gbif.pipelines.estools.EsIndex;
 import org.gbif.pipelines.estools.client.EsConfig;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.ws.client.ValidationWsClient;
+import org.slf4j.MDC;
+import org.slf4j.MDC.MDCCloseable;
 
 /** Call back which is called when the {@link PipelinesCleanerMessage} is received. */
 @Slf4j
@@ -34,18 +36,22 @@ public class CleanerCallback extends AbstractMessageCallback<PipelinesCleanerMes
   @Override
   public void handleMessage(PipelinesCleanerMessage message) {
 
-    UUID datasetUuid = message.getDatasetUuid();
+    try (MDCCloseable mdc = MDC.putCloseable("datasetKey", message.getDatasetUuid().toString());
+        MDCCloseable mdc1 = MDC.putCloseable("attempt", message.getAttempt().toString())) {
 
-    log.info("Deleting index/records and files for {}", datasetUuid);
+      UUID datasetUuid = message.getDatasetUuid();
 
-    deleteFsData(datasetUuid);
-    deleteHdfsData(datasetUuid);
-    deleteEsData(datasetUuid);
-    markDataAsDeleted(datasetUuid);
+      log.info("Deleting index/records and files");
+
+      deleteFsData(datasetUuid);
+      deleteHdfsData(datasetUuid);
+      deleteEsData(datasetUuid);
+      markDataAsDeleted(datasetUuid);
+    }
   }
 
   private void deleteFsData(UUID datasetUuid) {
-    log.info("Delete file system data for dataset {}", datasetUuid);
+    log.info("Delete file system files");
     String pathToDelete = String.join("/", config.fsRootPath, datasetUuid.toString());
     boolean isDeleted = false;
 
@@ -56,27 +62,27 @@ public class CleanerCallback extends AbstractMessageCallback<PipelinesCleanerMes
       log.error(ex.getMessage(), ex);
     }
     if (isDeleted) {
-      log.info("Dataset {} was deleted successfully from FS!", datasetUuid);
+      log.info("Dataset files was deleted successfully from FS!");
     } else {
-      log.warn("Dataset {} wasn't deleted from FS!", datasetUuid);
+      log.warn("Dataset files was NOT deleted from FS!");
     }
   }
 
   private void deleteHdfsData(UUID datasetUuid) {
-    log.info("Delete HDFS data for dataset {}", datasetUuid);
+    log.info("Delete HDFS files");
     String pathToDelete = String.join("/", config.hdfsRootPath, datasetUuid.toString());
     boolean isDeleted =
         FsUtils.deleteIfExist(
             config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig, pathToDelete);
     if (isDeleted) {
-      log.info("Dataset {} was deleted successfully from HDFS!", datasetUuid);
+      log.info("Dataset files was deleted successfully from HDFS!");
     } else {
-      log.warn("Dataset {} wasn't deleted from HDFS!", datasetUuid);
+      log.warn("Dataset files was NOT deleted from HDFS!");
     }
   }
 
   private void deleteEsData(UUID datasetUuid) {
-    log.info("Delete elasticsearch index/documents for datasetUuid {}", datasetUuid);
+    log.info("Delete elasticsearch index/documents");
 
     EsConfig esConfig = EsConfig.from(config.esHosts);
 
@@ -96,9 +102,9 @@ public class CleanerCallback extends AbstractMessageCallback<PipelinesCleanerMes
         .forEach(idxName -> EsIndex.deleteIndex(esConfig, idxName));
 
     if (indices.isEmpty()) {
-      log.warn("Dataset {} wasn't deleted from elasticseach!", datasetUuid);
+      log.warn("Dataset index/records was NOT deleted from elasticseach!");
     } else {
-      log.info("Dataset {} was deleted successfully from elasticseach!", datasetUuid);
+      log.info("Dataset index/records was deleted successfully from elasticseach!");
     }
   }
 
