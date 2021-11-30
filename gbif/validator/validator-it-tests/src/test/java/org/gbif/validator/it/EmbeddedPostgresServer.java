@@ -25,14 +25,14 @@ public class EmbeddedPostgresServer implements InitializingBean, DisposableBean 
   }
 
   @Override
-  public void destroy() throws Exception {
+  public void destroy() {
     if (postgreSQLContainer != null) {
       postgreSQLContainer.stop();
     }
   }
 
   @Override
-  public void afterPropertiesSet() throws Exception {
+  public void afterPropertiesSet() {
     postgreSQLContainer = new PostgreSQLContainer("postgres:" + getPostgresVersion());
     postgreSQLContainer.withReuse(true);
     postgreSQLContainer.start();

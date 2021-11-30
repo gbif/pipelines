@@ -227,6 +227,18 @@ public class EsIndex {
   }
 
   /**
+   * Connects to Elasticsearch instance and given index
+   *
+   * @param config configuration of the ES instance.
+   * @param indexName name of the index to delete
+   */
+  public static void deleteIndex(EsConfig config, String indexName) {
+    try (EsClient esClient = EsClient.from(config)) {
+      EsService.deleteIndex(esClient, indexName);
+    }
+  }
+
+  /**
    * Finds the indexes in an alias where a given dataset is present. This method checks that the
    * aliases exist before querying ES.
    *
