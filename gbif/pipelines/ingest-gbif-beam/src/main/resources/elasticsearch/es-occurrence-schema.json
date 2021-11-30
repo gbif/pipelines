@@ -236,7 +236,7 @@
         "properties": {
           "acceptedUsage": {
             "properties": {
-              "key": {"type": "long", "index":  false },
+              "key": {"type": "long" },
               "name": {"type": "text", "index":  false, "boost": 100.0, "copy_to": "all"},
               "rank": {"type": "keyword", "index":  false}
             }
