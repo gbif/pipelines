@@ -41,7 +41,7 @@ public class ChecklistValidatorConfiguration {
 
   @Parameter(names = "--gbif-api-url")
   @PropertyName("gbif.api.url")
-  public String apiUrl;
+  public String gbifApiUrl;
 
   @Parameter(names = "--neo-batch-size")
   public int neoBatchSize = 10000;

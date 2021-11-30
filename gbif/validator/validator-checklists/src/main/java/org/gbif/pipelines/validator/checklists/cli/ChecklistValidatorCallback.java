@@ -66,7 +66,7 @@ public class ChecklistValidatorCallback
     neoConfiguration.batchSize = config.neoBatchSize;
     return ChecklistValidator.Configuration.builder()
         .neoConfiguration(neoConfiguration)
-        .apiUrl(config.apiUrl)
+        .apiUrl(config.gbifApiUrl)
         .build();
   }
 
