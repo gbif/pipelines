@@ -42,8 +42,7 @@ public class RetentionPolicyTask {
     message.setExecutionId(1L);
     message.setPipelineSteps(Collections.emptySet());
 
-    log.info(
-        "Send the message to the validator cleaner queue for key - {}", validation.getKey());
+    log.info("Send the message to the validator cleaner queue for key - {}", validation.getKey());
     messagePublisher.send(message);
   }
 
