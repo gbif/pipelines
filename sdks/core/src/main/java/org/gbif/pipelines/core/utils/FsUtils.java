@@ -14,6 +14,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -22,7 +23,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.permission.FsPermission;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
 
 /** Utility class to work with file system. */
@@ -125,19 +125,49 @@ public final class FsUtils {
   }
 
   /**
-   * Set permissions to directories and subdirectories(recursively).
+   * Set owner for directories and subdirectories(recursively).
    *
    * @param hdfsSiteConfig path to hdfs-site.xml config file
    * @param path to a directory/file
-   * @param unixSymbolicPermission – e.g. "-rw-rw-rw-"
+   * @param userName – e.g. "crap"
+   * @param groupName – e.g. "supergroup"
    */
-  public static void setPermission(
-      String hdfsSiteConfig, String coreSiteConfig, String path, String unixSymbolicPermission) {
+  public static void setOwner(
+      String hdfsSiteConfig,
+      String coreSiteConfig,
+      String path,
+      String userName,
+      String groupName) {
     FileSystem fs = getFileSystem(hdfsSiteConfig, coreSiteConfig, path);
     try {
-      fs.setPermission(new Path(path), FsPermission.valueOf(unixSymbolicPermission));
+
+      Consumer<Path> fn =
+          p -> {
+            try {
+              fs.setOwner(p, userName, groupName);
+            } catch (IOException e) {
+              log.warn("Can't change owner for folder/file - {}", path);
+            }
+          };
+
+      Path p = new Path(path);
+      if (fs.isDirectory(p)) {
+        // Files
+        RemoteIterator<LocatedFileStatus> iterator = fs.listFiles(p, true);
+        while (iterator.hasNext()) {
+          LocatedFileStatus fileStatus = iterator.next();
+          fn.accept(fileStatus.getPath());
+        }
+        // Directories
+        FileStatus[] fileStatuses = fs.listStatus(p);
+        for (FileStatus fst : fileStatuses) {
+          fn.accept(fst.getPath());
+        }
+      }
+      fn.accept(p);
+
     } catch (IOException e) {
-      log.warn("Can't change access delete folder/file - {}", path);
+      log.warn("Can't change permissions for folder/file - {}", path);
     }
   }
 
@@ -156,7 +186,7 @@ public final class FsUtils {
       Path[] paths = FileUtil.stat2Paths(status);
       for (Path path : paths) {
         boolean rename = fs.rename(path, new Path(targetPath, path.getName()));
-        log.info("File {} moved status - {}", path.toString(), rename);
+        log.info("File {} moved status - {}", path, rename);
       }
     } catch (IOException e) {
       log.warn("Can't move files using filter - {}, into path - {}", globFilter, targetPath);

@@ -359,11 +359,11 @@ public class VerbatimToInterpretedPipeline {
     PipelineResult result = p.run();
     result.waitUntilFinish();
 
-    log.info("Save metrics into the file and set file permissions");
+    log.info("Save metrics into the file and set files owner");
     MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
     String metadataPath =
         PathBuilder.buildDatasetAttemptPath(options, options.getMetaFileName(), false);
-    FsUtils.setPermission(hdfsSiteConfig, coreSiteConfig, metadataPath, "drwxrwxrwx");
+    FsUtils.setOwner(hdfsSiteConfig, coreSiteConfig, metadataPath, "crap", "supergroup");
 
     log.info("Deleting beam temporal folders");
     String tempPath = String.join("/", targetPath, datasetId, attempt.toString());
@@ -371,7 +371,7 @@ public class VerbatimToInterpretedPipeline {
 
     log.info("Set interpreted files permissions");
     String interpretedPath = PathBuilder.buildDatasetAttemptPath(options, DIRECTORY_NAME, false);
-    FsUtils.setPermission(hdfsSiteConfig, coreSiteConfig, interpretedPath, "drwxrwxrwx");
+    FsUtils.setOwner(hdfsSiteConfig, coreSiteConfig, interpretedPath, "crap", "supergroup");
 
     log.info("Pipeline has been finished");
   }
