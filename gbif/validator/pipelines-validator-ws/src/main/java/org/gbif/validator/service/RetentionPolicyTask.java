@@ -1,6 +1,7 @@
 package org.gbif.validator.service;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -45,8 +46,10 @@ public class RetentionPolicyTask {
   }
 
   private List<Validation> getDatasetsUuidForDeletion() {
-    LocalDate toDate = LocalDate.now().minusDays(keepDays);
-    return validationMapper.list(
-        null, ValidationSearchRequest.builder().toDate(new Date(toDate.toEpochDay())).build());
+    // Date set to the start of the day when the policy expires
+    Date toDate =
+        Date.from(
+            LocalDate.now().minusDays(keepDays).atStartOfDay(ZoneId.systemDefault()).toInstant());
+    return validationMapper.list(null, ValidationSearchRequest.builder().toDate(toDate).build());
   }
 }
