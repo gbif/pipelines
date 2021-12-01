@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.permission.FsPermission;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
 
 /** Utility class to work with file system. */
@@ -120,6 +121,23 @@ public final class FsUtils {
       deleteDirectoryByPrefix(fs, new Path(directoryPath), filePrefix);
     } catch (IOException e) {
       log.warn("Can't delete folder - {}, prefix - {}", directoryPath, filePrefix);
+    }
+  }
+
+  /**
+   * Set permissions to directories and subdirectories(recursively).
+   *
+   * @param hdfsSiteConfig path to hdfs-site.xml config file
+   * @param path to a directory/file
+   * @param unixSymbolicPermission – e.g. "-rw-rw-rw-"
+   */
+  public static void setPermission(
+      String hdfsSiteConfig, String coreSiteConfig, String path, String unixSymbolicPermission) {
+    FileSystem fs = getFileSystem(hdfsSiteConfig, coreSiteConfig, path);
+    try {
+      fs.setPermission(new Path(path), FsPermission.valueOf(unixSymbolicPermission));
+    } catch (IOException e) {
+      log.warn("Can't change access delete folder/file - {}", path);
     }
   }
 

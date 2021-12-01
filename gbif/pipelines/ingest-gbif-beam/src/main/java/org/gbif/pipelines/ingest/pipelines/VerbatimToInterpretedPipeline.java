@@ -1,6 +1,7 @@
 package org.gbif.pipelines.ingest.pipelines;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.DIRECTORY_NAME;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -358,11 +359,19 @@ public class VerbatimToInterpretedPipeline {
     PipelineResult result = p.run();
     result.waitUntilFinish();
 
+    log.info("Save metrics into the file and set file permissions");
     MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
+    String metadataPath =
+        PathBuilder.buildDatasetAttemptPath(options, options.getMetaFileName(), false);
+    FsUtils.setPermission(hdfsSiteConfig, coreSiteConfig, metadataPath, "drwxrwxrwx");
 
     log.info("Deleting beam temporal folders");
     String tempPath = String.join("/", targetPath, datasetId, attempt.toString());
     FsUtils.deleteDirectoryByPrefix(hdfsSiteConfig, coreSiteConfig, tempPath, ".temp-beam");
+
+    log.info("Set interpreted files permissions");
+    String interpretedPath = PathBuilder.buildDatasetAttemptPath(options, DIRECTORY_NAME, false);
+    FsUtils.setPermission(hdfsSiteConfig, coreSiteConfig, interpretedPath, "drwxrwxrwx");
 
     log.info("Pipeline has been finished");
   }
