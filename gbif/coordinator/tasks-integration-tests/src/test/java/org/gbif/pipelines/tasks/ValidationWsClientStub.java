@@ -2,6 +2,7 @@ package org.gbif.pipelines.tasks;
 
 import java.io.File;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -66,7 +67,7 @@ public class ValidationWsClientStub implements ValidationWsClient {
 
   @Override
   public void delete(UUID key) {
-    // nothing
+    validation.setDeleted(new Date());
   }
 
   @Override
