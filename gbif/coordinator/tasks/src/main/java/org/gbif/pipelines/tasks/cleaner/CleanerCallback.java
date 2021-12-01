@@ -108,10 +108,8 @@ public class CleanerCallback extends AbstractMessageCallback<PipelinesCleanerMes
     }
   }
 
-  private void markDataAsDeleted(UUID datasetUuid) {
-    log.info("Mark DB record as deleted for dataset {}", datasetUuid);
-    Validation validation = validationClient.get(datasetUuid);
-    validation.setDeleted(new Date());
-    validationClient.update(validation);
+  private void markDataAsDeleted(UUID validationKey) {
+    log.info("Mark DB record as deleted for validation {}", validationKey);
+    validationClient.delete(validationKey);
   }
 }
