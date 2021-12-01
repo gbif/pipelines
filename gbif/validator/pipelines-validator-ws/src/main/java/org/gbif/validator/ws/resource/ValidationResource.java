@@ -1,5 +1,6 @@
 package org.gbif.validator.ws.resource;
 
+import static org.gbif.ws.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.ws.security.UserRoles.APP_ROLE;
 import static org.gbif.ws.security.UserRoles.IPT_ROLE;
 import static org.gbif.ws.security.UserRoles.USER_ROLE;
@@ -37,7 +38,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Slf4j
 @RestController
 @RequestMapping(value = "validation", produces = MediaType.APPLICATION_JSON_VALUE)
-@Secured({USER_ROLE, APP_ROLE, IPT_ROLE})
+@Secured({USER_ROLE, APP_ROLE, IPT_ROLE, ADMIN_ROLE})
 @RequiredArgsConstructor
 @Validated
 public class ValidationResource {
