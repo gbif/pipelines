@@ -38,7 +38,7 @@ public class DistributionOutlierPipeline {
         PipelinesOptionsFactory.create(DistributionOutlierPipelineOptions.class, combinedArgs);
     MDC.put("datasetId", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
-    MDC.put("step", "DISTRIBUTION");
+    MDC.put("step", "OUTLIER");
     PipelinesOptionsFactory.registerHdfs(options);
     run(options);
     System.exit(0);
