@@ -140,20 +140,6 @@ public class DynamicPropertiesInterpreterTest {
   }
 
   @Test
-  public void lifeStageNullFnTest() {
-    // State
-    ExtendedRecord er = erDynamicPropertiesFn.apply("");
-    BasicRecord br = brFn.get();
-
-    // When
-    DynamicPropertiesInterpreter.interpretLifeStage(null).accept(er, br);
-
-    // Should
-    Assert.assertNull(br.getLifeStage());
-    Assert.assertTrue(br.getLifeStageLineage().isEmpty());
-  }
-
-  @Test
   public void lifeStageNotNullTest() {
     // State
     ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).build();

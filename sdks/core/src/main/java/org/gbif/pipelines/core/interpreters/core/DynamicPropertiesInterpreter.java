@@ -2,6 +2,7 @@ package org.gbif.pipelines.core.interpreters.core;
 
 import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareOptValue;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -17,6 +18,7 @@ import org.gbif.pipelines.core.parsers.vertnet.SexParser;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.vocabulary.lookup.LookupConcept;
+import org.gbif.vocabulary.lookup.VocabularyLookup;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class DynamicPropertiesInterpreter {
@@ -39,6 +41,15 @@ public class DynamicPropertiesInterpreter {
   }
 
   public static BiConsumer<ExtendedRecord, BasicRecord> interpretLifeStage(
+      VocabularyLookup lifeStageLookup) {
+    if (lifeStageLookup == null) {
+      return (extendedRecord, basicRecord) -> {};
+    }
+    return interpretLifeStage(lifeStageLookup::lookup);
+  }
+
+  @VisibleForTesting
+  protected static BiConsumer<ExtendedRecord, BasicRecord> interpretLifeStage(
       Function<String, Optional<LookupConcept>> vocabularyLookupFn) {
     return (er, br) -> {
       if (vocabularyLookupFn == null || br.getLifeStage() != null) {

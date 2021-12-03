@@ -538,23 +538,6 @@ public class BasicInterpreterTest {
   }
 
   @Test
-  public void lifeStageNullFnTest() {
-    // State
-    Map<String, String> coreMap = new HashMap<>(1);
-    coreMap.put(DwcTerm.lifeStage.qualifiedName(), "adult");
-    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
-
-    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
-
-    // When
-    BasicInterpreter.interpretLifeStage(null).accept(er, br);
-
-    // Should
-    Assert.assertNull(br.getLifeStage());
-    Assert.assertTrue(br.getLifeStageLineage().isEmpty());
-  }
-
-  @Test
   public void lifeStageNotNullTest() {
     // State
     Map<String, String> coreMap = new HashMap<>(1);

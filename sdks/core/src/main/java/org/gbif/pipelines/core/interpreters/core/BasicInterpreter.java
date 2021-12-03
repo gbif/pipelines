@@ -13,6 +13,7 @@ import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareOptValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import java.net.URI;
 import java.util.ArrayList;
@@ -55,6 +56,7 @@ import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.keygen.api.KeyLookupResult;
 import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
 import org.gbif.vocabulary.lookup.LookupConcept;
+import org.gbif.vocabulary.lookup.VocabularyLookup;
 
 /**
  * Interpreting function that receives a ExtendedRecord instance and applies an interpretation to
@@ -178,6 +180,16 @@ public class BasicInterpreter {
 
   /** {@link DwcTerm#lifeStage} interpretation. */
   public static BiConsumer<ExtendedRecord, BasicRecord> interpretLifeStage(
+      VocabularyLookup lifeStageLookup) {
+    if (lifeStageLookup == null) {
+      return (extendedRecord, basicRecord) -> {};
+    }
+    return interpretLifeStage(lifeStageLookup::lookup);
+  }
+
+  /** {@link DwcTerm#lifeStage} interpretation. */
+  @VisibleForTesting
+  protected static BiConsumer<ExtendedRecord, BasicRecord> interpretLifeStage(
       SerializableFunction<String, Optional<LookupConcept>> vocabularyLookupFn) {
     return (er, br) -> {
       if (vocabularyLookupFn == null) {
@@ -190,7 +202,7 @@ public class BasicInterpreter {
     };
   }
 
-  public static Consumer<LookupConcept> getLookupConceptConsumer(BasicRecord br) {
+  protected static Consumer<LookupConcept> getLookupConceptConsumer(BasicRecord br) {
     return c -> {
       br.setLifeStage(c.getConcept().getName());
 
