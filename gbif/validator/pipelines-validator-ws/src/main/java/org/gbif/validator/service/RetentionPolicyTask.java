@@ -50,6 +50,10 @@ public class RetentionPolicyTask {
     Date toDate =
         Date.from(
             LocalDate.now().minusDays(keepDays).atStartOfDay(ZoneId.systemDefault()).toInstant());
-    return validationMapper.list(null, ValidationSearchRequest.builder().toDate(toDate).build());
+    List<Validation> result =
+        validationMapper.list(null, ValidationSearchRequest.builder().toDate(toDate).build());
+
+    log.info("Validations to delete: {}", result.size());
+    return result;
   }
 }
