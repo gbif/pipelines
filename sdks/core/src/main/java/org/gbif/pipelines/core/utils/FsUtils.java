@@ -8,7 +8,11 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.base.Strings;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -21,8 +25,13 @@ import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
-import org.apache.hadoop.fs.*;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
+import org.apache.hadoop.fs.LocatedFileStatus;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.RemoteIterator;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
 
 /** Utility class to work with file system. */
@@ -299,5 +308,18 @@ public final class FsUtils {
         }
       }
     }
+  }
+
+  /**
+   * Check if the file exists
+   *
+   * @param hdfsSiteConfig HDFS config file
+   * @param filePath path to the file
+   */
+  @SneakyThrows
+  public static boolean fileExists(String hdfsSiteConfig, String coreSiteConfig, String filePath) {
+    FileSystem fs = FsUtils.getLocalFileSystem(hdfsSiteConfig, coreSiteConfig);
+    Path fPath = new Path(filePath);
+    return fs.exists(fPath);
   }
 }

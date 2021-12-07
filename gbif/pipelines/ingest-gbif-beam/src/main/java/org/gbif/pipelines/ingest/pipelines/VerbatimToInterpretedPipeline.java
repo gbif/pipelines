@@ -50,6 +50,7 @@ import org.gbif.pipelines.factory.OccurrenceStatusKvStoreFactory;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.transforms.common.CheckTransforms;
 import org.gbif.pipelines.transforms.common.ExtensionFilterTransform;
 import org.gbif.pipelines.transforms.common.FilterRecordsTransform;
 import org.gbif.pipelines.transforms.common.UniqueGbifIdTransform;
@@ -360,10 +361,14 @@ public class VerbatimToInterpretedPipeline {
     result.waitUntilFinish();
 
     log.info("Save metrics into the file and set files owner");
-    MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
     String metadataPath =
         PathBuilder.buildDatasetAttemptPath(options, options.getMetaFileName(), false);
-    FsUtils.setOwner(hdfsSiteConfig, coreSiteConfig, metadataPath, "crap", "supergroup");
+    if (!FsUtils.fileExists(hdfsSiteConfig, coreSiteConfig, metadataPath)
+        || CheckTransforms.checkRecordType(types, RecordType.BASIC)
+        || CheckTransforms.checkRecordType(types, RecordType.ALL)) {
+      MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
+      FsUtils.setOwner(hdfsSiteConfig, coreSiteConfig, metadataPath, "crap", "supergroup");
+    }
 
     log.info("Deleting beam temporal folders");
     String tempPath = String.join("/", targetPath, datasetId, attempt.toString());

@@ -30,6 +30,7 @@ import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.factory.ConfigFactory;
 import org.gbif.pipelines.core.factory.FileVocabularyFactory;
@@ -59,6 +60,7 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
+import org.gbif.pipelines.transforms.common.CheckTransforms;
 import org.gbif.pipelines.transforms.common.ExtensionFilterTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.GrscicollTransform;
@@ -442,7 +444,15 @@ public class VerbatimToInterpretedPipeline {
       Shutdown.doOnExit(basicTransform, locationTransform, taxonomyTransform, grscicollTransform);
     }
 
-    MetricsHandler.saveCountersToTargetPathFile(options, metrics.getMetricsResult());
+    log.info("Save metrics into the file and set files owner");
+    String metadataPath =
+        PathBuilder.buildDatasetAttemptPath(options, options.getMetaFileName(), false);
+    if (!FsUtils.fileExists(hdfsSiteConfig, coreSiteConfig, metadataPath)
+        || CheckTransforms.checkRecordType(types, RecordType.BASIC)
+        || CheckTransforms.checkRecordType(types, RecordType.ALL)) {
+      MetricsHandler.saveCountersToTargetPathFile(options, metrics.getMetricsResult());
+    }
+
     log.info("Pipeline has been finished - {}", LocalDateTime.now());
   }
 
