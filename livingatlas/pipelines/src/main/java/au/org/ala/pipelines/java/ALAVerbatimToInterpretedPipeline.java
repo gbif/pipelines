@@ -5,16 +5,33 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 
 import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.kvs.ALAPipelinesConfigFactory;
-import au.org.ala.kvs.cache.*;
+import au.org.ala.kvs.cache.ALAAttributionKVStoreFactory;
+import au.org.ala.kvs.cache.ALACollectionKVStoreFactory;
+import au.org.ala.kvs.cache.ALANameCheckKVStoreFactory;
+import au.org.ala.kvs.cache.ALANameMatchKVStoreFactory;
+import au.org.ala.kvs.cache.GeocodeKvStoreFactory;
+import au.org.ala.kvs.cache.RecordedByKVStoreFactory;
 import au.org.ala.kvs.client.ALACollectoryMetadata;
-import au.org.ala.pipelines.transforms.*;
+import au.org.ala.pipelines.transforms.ALAAttributionTransform;
+import au.org.ala.pipelines.transforms.ALABasicTransform;
+import au.org.ala.pipelines.transforms.ALADefaultValuesTransform;
+import au.org.ala.pipelines.transforms.ALAMetadataTransform;
+import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
+import au.org.ala.pipelines.transforms.ALATemporalTransform;
+import au.org.ala.pipelines.transforms.LocationTransform;
 import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationUtils;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -43,7 +60,14 @@ import org.gbif.pipelines.core.io.SyncDataFileWriter;
 import org.gbif.pipelines.core.io.SyncDataFileWriterBuilder;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.factory.OccurrenceStatusKvStoreFactory;
-import org.gbif.pipelines.io.avro.*;
+import org.gbif.pipelines.io.avro.ALAAttributionRecord;
+import org.gbif.pipelines.io.avro.ALAMetadataRecord;
+import org.gbif.pipelines.io.avro.ALATaxonRecord;
+import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MultimediaRecord;
+import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.transforms.Transform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
@@ -180,13 +204,13 @@ public class ALAVerbatimToInterpretedPipeline {
     // Core
     ALABasicTransform basicTransform =
         ALABasicTransform.builder()
-            .lifeStageLookupSupplier(
+            .fileVocabularyFactory(
                 config.getGbifConfig().getVocabularyConfig() != null
-                    ? FileVocabularyFactory.getInstanceSupplier(
-                        config.getGbifConfig(),
-                        options.getHdfsSiteConfig(),
-                        options.getCoreSiteConfig(),
-                        FileVocabularyFactory.VocabularyBackedTerm.LIFE_STAGE)
+                    ? FileVocabularyFactory.builder()
+                        .config(config.getGbifConfig())
+                        .hdfsSiteConfig(options.getHdfsSiteConfig())
+                        .coreSiteConfig(options.getCoreSiteConfig())
+                        .build()
                     : null)
             .recordedByKvStoreSupplier(RecordedByKVStoreFactory.getInstanceSupplier(config))
             .occStatusKvStoreSupplier(

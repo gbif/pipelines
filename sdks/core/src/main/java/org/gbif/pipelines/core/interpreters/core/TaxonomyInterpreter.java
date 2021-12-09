@@ -18,7 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.checklistbank.NameUsageMatch.MatchType;
 import org.gbif.api.vocabulary.Kingdom;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.species.SpeciesMatchRequest;
 import org.gbif.nameparser.NameParserGBIF;
@@ -83,7 +82,7 @@ public class TaxonomyInterpreter {
               .withSpecificEpithet(extractValue(er, DwcTerm.specificEpithet))
               .withInfraspecificEpithet(extractValue(er, DwcTerm.infraspecificEpithet))
               .withScientificNameAuthorship(extractValue(er, DwcTerm.scientificNameAuthorship))
-              .withGenericName(extractValue(er, GbifTerm.genericName))
+              .withGenericName(extractValue(er, DwcTerm.genericName))
               .build();
 
       NameUsageMatch usageMatch = null;

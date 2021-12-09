@@ -35,7 +35,6 @@ import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.factory.FileVocabularyFactory;
-import org.gbif.pipelines.core.factory.FileVocabularyFactory.VocabularyBackedTerm;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.core.pojo.ErBrContainer;
 import org.gbif.pipelines.core.utils.FsUtils;
@@ -190,16 +189,19 @@ public class VerbatimToInterpretedPipeline {
     // Core
     BasicTransform basicTransform =
         BasicTransform.builder()
-            .keygenServiceSupplier(KeygenServiceFactory.createSupplier(config, datasetId))
-            .lifeStageLookupSupplier(
-                FileVocabularyFactory.getInstanceSupplier(
-                    config, hdfsSiteConfig, coreSiteConfig, VocabularyBackedTerm.LIFE_STAGE))
-            .occStatusKvStoreSupplier(OccurrenceStatusKvStoreFactory.createSupplier(config))
+            .useDynamicPropertiesInterpretation(true)
             .isTripletValid(options.isTripletValid())
             .isOccurrenceIdValid(options.isOccurrenceIdValid())
             .useExtendedRecordId(options.isUseExtendedRecordId())
+            .occStatusKvStoreSupplier(OccurrenceStatusKvStoreFactory.createSupplier(config))
             .clusteringServiceSupplier(ClusteringServiceFactory.createSupplier(config))
-            .useDynamicPropertiesInterpretation(true)
+            .keygenServiceSupplier(KeygenServiceFactory.createSupplier(config, datasetId))
+            .fileVocabularyFactory(
+                FileVocabularyFactory.builder()
+                    .config(config)
+                    .hdfsSiteConfig(hdfsSiteConfig)
+                    .coreSiteConfig(coreSiteConfig)
+                    .build())
             .create();
 
     VerbatimTransform verbatimTransform = VerbatimTransform.create();

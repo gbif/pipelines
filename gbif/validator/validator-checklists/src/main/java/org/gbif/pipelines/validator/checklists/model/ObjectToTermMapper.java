@@ -122,7 +122,7 @@ public class ObjectToTermMapper {
 
     if (parsedName.isBinomial()) {
       Optional.ofNullable(parsedName.getGenusOrAbove())
-          .ifPresent(v -> termsMap.put(GbifTerm.genericName, v));
+          .ifPresent(v -> termsMap.put(DwcTerm.genericName, v));
     }
 
     return termsMap;

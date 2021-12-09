@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.io.Serializable;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.Term;
 
 @Data
 @NoArgsConstructor
@@ -17,4 +19,16 @@ public class VocabularyConfig implements Serializable {
 
   // name of the life stage vocabulary
   private String lifeStageVocabName;
+
+  // name of the life stage vocabulary
+  private String establishmentMeansVocabName;
+
+  public String getVocabularyFileName(Term term) {
+    if (term == DwcTerm.lifeStage) {
+      return lifeStageVocabName;
+    } else if (term == DwcTerm.establishmentMeans) {
+      return establishmentMeansVocabName;
+    }
+    return null;
+  }
 }

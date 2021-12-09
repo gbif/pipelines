@@ -123,7 +123,6 @@ public class BasicRecordTransformTest {
               ExtendedRecord record = ExtendedRecord.newBuilder().setId(x[0]).build();
               record.getCoreTerms().put(DwcTerm.basisOfRecord.qualifiedName(), x[1]);
               record.getCoreTerms().put(DwcTerm.sex.qualifiedName(), x[2]);
-              record.getCoreTerms().put(DwcTerm.establishmentMeans.qualifiedName(), x[3]);
               record.getCoreTerms().put(DwcTerm.typeStatus.qualifiedName(), x[4]);
               record.getCoreTerms().put(DwcTerm.individualCount.qualifiedName(), x[5]);
               record.getCoreTerms().put(DcTerm.references.qualifiedName(), x[6]);
@@ -141,7 +140,6 @@ public class BasicRecordTransformTest {
                     .setCreated(0L)
                     .setBasisOfRecord(x[1])
                     .setSex(x[2])
-                    .setEstablishmentMeans(x[3])
                     .setTypeStatus(x[4])
                     .setIndividualCount(Integer.valueOf(x[5]))
                     .setReferences(x[6])

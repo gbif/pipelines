@@ -4,16 +4,21 @@ import static java.util.Objects.requireNonNull;
 
 import java.io.FileNotFoundException;
 import java.io.InputStream;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+import java.util.HashMap;
+import java.util.Map;
+import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.Term;
+import org.gbif.dwc.terms.Terms;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.config.model.VocabularyConfig;
-import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.core.utils.FsUtils;
+import org.gbif.vocabulary.lookup.InMemoryVocabularyLookup;
+import org.gbif.vocabulary.lookup.InMemoryVocabularyLookup.InMemoryVocabularyLookupBuilder;
 import org.gbif.vocabulary.lookup.PreFilters;
 import org.gbif.vocabulary.lookup.VocabularyLookup;
 
@@ -22,8 +27,14 @@ import org.gbif.vocabulary.lookup.VocabularyLookup;
  * vocabulary.
  */
 @Slf4j
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder
 public class FileVocabularyFactory {
+
+  private final PipelinesConfig config;
+  private final String hdfsSiteConfig;
+  private final String coreSiteConfig;
+
+  @Builder.Default private Map<Term, VocabularyLookup> vocabularyLookupMap = new HashMap<>();
 
   /**
    * Creates instances of {@link VocabularyLookup} from a file containing an exported vocabulary.
@@ -35,36 +46,34 @@ public class FileVocabularyFactory {
    *   <li>LifeStage uses a {@link PreFilters#REMOVE_NUMERIC_PREFIX} filter. This filter removes all
    *       the number characters that are present at the beginning of the value.
    * </ul>
-   *
-   * @param config pipelines config that contains specific config for the vocabularies
-   * @param hdfsSiteConfig HDFS site config file
-   * @param coreSiteConfig HDFS core site config file
-   * @param vocabularyBackedTerm term that we are creating the vocabulary lookup instance for
-   * @return {@link SerializableSupplier} parameterized for {@link VocabularyLookup}
    */
-  public static SerializableSupplier<VocabularyLookup> getInstanceSupplier(
-      PipelinesConfig config,
-      String hdfsSiteConfig,
-      String coreSiteConfig,
-      VocabularyBackedTerm vocabularyBackedTerm) {
-    return () -> {
-      VocabularyConfig vocabularyConfig = requireNonNull(config.getVocabularyConfig());
+  @SneakyThrows
+  public void init() {
+    VocabularyConfig vocabularyConfig = requireNonNull(config.getVocabularyConfig());
+    String path = vocabularyConfig.getVocabulariesPath();
 
-      if (vocabularyBackedTerm == VocabularyBackedTerm.LIFE_STAGE) {
-        return VocabularyLookup.newBuilder()
-            .from(
-                readVocabularyFile(
-                    hdfsSiteConfig,
-                    coreSiteConfig,
-                    vocabularyConfig.getVocabulariesPath(),
-                    vocabularyConfig.getLifeStageVocabName()))
-            .withPrefilter(PreFilters.REMOVE_NUMERIC_PREFIX)
-            .build();
+    for (Term term : Terms.getVocabularyBackedTerms()) {
+      String fileName = vocabularyConfig.getVocabularyFileName(term);
+      try (InputStream is = readFile(hdfsSiteConfig, coreSiteConfig, path, fileName)) {
+        InMemoryVocabularyLookupBuilder builder = InMemoryVocabularyLookup.newBuilder().from(is);
+        if (term == DwcTerm.lifeStage) {
+          builder.withPrefilter(PreFilters.REMOVE_NUMERIC_PREFIX);
+        }
+
+        vocabularyLookupMap.put(term, builder.build());
       }
+    }
+  }
 
-      throw new IllegalArgumentException(
-          "Vocabulary-backed term not supported: " + vocabularyBackedTerm);
-    };
+  public void close() {
+    vocabularyLookupMap.values().forEach(VocabularyLookup::close);
+  }
+
+  public VocabularyLookup getVocabularyLookup(Term term) {
+    if (Terms.getVocabularyBackedTerms().contains(term)) {
+      return vocabularyLookupMap.get(term);
+    }
+    throw new IllegalArgumentException("Vocabulary-backed term not supported: " + term);
   }
 
   /**
@@ -78,7 +87,7 @@ public class FileVocabularyFactory {
    * @return {@link InputStream}
    */
   @SneakyThrows
-  private static InputStream readVocabularyFile(
+  private static InputStream readFile(
       String hdfsSiteConfig, String coreSiteConfig, String vocabulariesDir, String vocabularyName) {
     FileSystem fs = FsUtils.getFileSystem(hdfsSiteConfig, coreSiteConfig, vocabulariesDir);
     Path fPath = new Path(String.join(Path.SEPARATOR, vocabulariesDir, vocabularyName + ".json"));
@@ -88,10 +97,5 @@ public class FileVocabularyFactory {
     }
 
     throw new FileNotFoundException("The vocabulary file doesn't exist - " + fPath);
-  }
-
-  /** Enum with the terms that are backed by a vocabulary. */
-  public enum VocabularyBackedTerm {
-    LIFE_STAGE
   }
 }

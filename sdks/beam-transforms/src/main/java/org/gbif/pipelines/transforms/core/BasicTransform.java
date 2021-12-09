@@ -15,17 +15,18 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.api.vocabulary.OccurrenceStatus;
 import org.gbif.kvs.KeyValueStore;
+import org.gbif.pipelines.core.factory.FileVocabularyFactory;
 import org.gbif.pipelines.core.functions.SerializableConsumer;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.BasicInterpreter;
 import org.gbif.pipelines.core.interpreters.core.DynamicPropertiesInterpreter;
+import org.gbif.pipelines.core.interpreters.core.VocabularyInterpreter;
 import org.gbif.pipelines.core.parsers.clustering.ClusteringService;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.transforms.Transform;
-import org.gbif.vocabulary.lookup.VocabularyLookup;
 
 /**
  * Beam level transformations for the DWC Occurrence, reads an avro, writs an avro, maps from value
@@ -40,16 +41,17 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
   private final boolean useExtendedRecordId;
   private final BiConsumer<ExtendedRecord, BasicRecord> gbifIdFn;
   private final SerializableSupplier<HBaseLockingKeyService> keygenServiceSupplier;
-  private final SerializableSupplier<VocabularyLookup> lifeStageLookupSupplier;
   private final SerializableSupplier<KeyValueStore<String, OccurrenceStatus>>
       occStatusKvStoreSupplier;
   private final SerializableSupplier<ClusteringService> clusteringServiceSupplier;
+
+  private final FileVocabularyFactory fileVocabularyFactory;
 
   @Builder.Default private boolean useDynamicPropertiesInterpretation = false;
 
   private KeyValueStore<String, OccurrenceStatus> occStatusKvStore;
   private HBaseLockingKeyService keygenService;
-  private VocabularyLookup lifeStageLookup;
+
   private ClusteringService clusteringService;
 
   @Builder(buildMethodName = "create")
@@ -60,7 +62,7 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
       boolean useDynamicPropertiesInterpretation,
       BiConsumer<ExtendedRecord, BasicRecord> gbifIdFn,
       SerializableSupplier<HBaseLockingKeyService> keygenServiceSupplier,
-      SerializableSupplier<VocabularyLookup> lifeStageLookupSupplier,
+      FileVocabularyFactory fileVocabularyFactory,
       SerializableSupplier<KeyValueStore<String, OccurrenceStatus>> occStatusKvStoreSupplier,
       SerializableSupplier<ClusteringService> clusteringServiceSupplier) {
     super(BasicRecord.class, BASIC, BasicTransform.class.getName(), BASIC_RECORDS_COUNT);
@@ -71,7 +73,7 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
     this.gbifIdFn = gbifIdFn;
     this.keygenServiceSupplier = keygenServiceSupplier;
     this.occStatusKvStoreSupplier = occStatusKvStoreSupplier;
-    this.lifeStageLookupSupplier = lifeStageLookupSupplier;
+    this.fileVocabularyFactory = fileVocabularyFactory;
     this.clusteringServiceSupplier = clusteringServiceSupplier;
   }
 
@@ -106,8 +108,8 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
     if (occStatusKvStore == null && occStatusKvStoreSupplier != null) {
       occStatusKvStore = occStatusKvStoreSupplier.get();
     }
-    if (lifeStageLookupSupplier != null) {
-      lifeStageLookup = lifeStageLookupSupplier.get();
+    if (fileVocabularyFactory != null) {
+      fileVocabularyFactory.init();
     }
     if (clusteringServiceSupplier != null) {
       clusteringService = clusteringServiceSupplier.get();
@@ -127,8 +129,8 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
     if (keygenService != null) {
       keygenService.close();
     }
-    if (lifeStageLookup != null) {
-      lifeStageLookup.close();
+    if (fileVocabularyFactory != null) {
+      fileVocabularyFactory.close();
     }
   }
 
@@ -163,8 +165,6 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
             .via(BasicInterpreter::interpretBasisOfRecord)
             .via(BasicInterpreter::interpretTypifiedName)
             .via(BasicInterpreter::interpretSex)
-            .via(BasicInterpreter::interpretEstablishmentMeans)
-            .via(BasicInterpreter.interpretLifeStage(lifeStageLookup))
             .via(BasicInterpreter::interpretTypeStatus)
             .via(BasicInterpreter::interpretIndividualCount)
             .via(BasicInterpreter::interpretReferences)
@@ -177,12 +177,16 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
             .via(BasicInterpreter::interpretIdentifiedByIds)
             .via(BasicInterpreter::interpretRecordedByIds)
             .via(BasicInterpreter.interpretOccurrenceStatus(occStatusKvStore))
-            .via(BasicInterpreter.interpretIsClustered(clusteringService));
+            .via(BasicInterpreter.interpretIsClustered(clusteringService))
+            .via(VocabularyInterpreter.interpretEstablishmentMeans(fileVocabularyFactory))
+            .via(VocabularyInterpreter.interpretLifeStage(fileVocabularyFactory))
+            .via(VocabularyInterpreter.interpretPathway(fileVocabularyFactory))
+            .via(VocabularyInterpreter.interpretDegreeOfEstablishment(fileVocabularyFactory));
 
     if (useDynamicPropertiesInterpretation) {
       handler
           .via(DynamicPropertiesInterpreter::interpretSex)
-          .via(DynamicPropertiesInterpreter.interpretLifeStage(lifeStageLookup));
+          .via(DynamicPropertiesInterpreter.interpretLifeStage(fileVocabularyFactory));
     }
 
     return handler.getOfNullable();

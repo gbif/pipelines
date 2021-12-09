@@ -3,24 +3,21 @@ package org.gbif.pipelines.core.interpreters.core;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.gbif.api.vocabulary.AgentIdentifierType;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwc.terms.GbifTerm;
-import org.gbif.pipelines.core.functions.SerializableFunction;
+import org.gbif.pipelines.core.factory.FileVocabularyFactory;
+import org.gbif.pipelines.core.interpreters.MockVocabularyLookups;
 import org.gbif.pipelines.io.avro.AgentIdentifier;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.vocabulary.lookup.LookupConcept;
-import org.gbif.vocabulary.model.Concept;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -28,17 +25,12 @@ public class BasicInterpreterTest {
 
   private static final String ID = "777";
 
-  private final SerializableFunction<String, Optional<LookupConcept>> vocabularyLookupFn =
-      v -> {
-        if (v.equalsIgnoreCase("adult")) {
-          Concept concept = new Concept();
-          concept.setName("Adult");
-          LookupConcept lookupConcept = LookupConcept.of(concept, new ArrayList<>(1));
-
-          return Optional.of(lookupConcept);
-        }
-        return Optional.empty();
-      };
+  private final FileVocabularyFactory fileVocabularyFactory =
+      FileVocabularyFactory.builder()
+          .vocabularyLookupMap(
+              Collections.singletonMap(
+                  DwcTerm.lifeStage, new MockVocabularyLookups.LifeStageMockVocabularyLookup()))
+          .build();
 
   @Test
   public void interpretIndividaulCountTest() {
@@ -359,8 +351,8 @@ public class BasicInterpreterTest {
 
     // State
     Map<String, String> coreMap = new HashMap<>();
-    coreMap.put(GbifTerm.recordedByID.qualifiedName(), null);
-    coreMap.put(GbifTerm.identifiedByID.qualifiedName(), "");
+    coreMap.put(DwcTerm.recordedByID.qualifiedName(), null);
+    coreMap.put(DwcTerm.identifiedByID.qualifiedName(), "");
     ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
 
     BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
@@ -411,10 +403,10 @@ public class BasicInterpreterTest {
     // State
     Map<String, String> coreMap = new HashMap<>(2);
     coreMap.put(
-        GbifTerm.recordedByID.qualifiedName(),
+        DwcTerm.recordedByID.qualifiedName(),
         " https://orcid.org/0000-0002-0144-1997| https://orcid.org/0000-0002-0144-1997 | https://orcid.org/0000-0002-0144-1997|someid");
     coreMap.put(
-        GbifTerm.identifiedByID.qualifiedName(),
+        DwcTerm.identifiedByID.qualifiedName(),
         " https://orcid.org/0000-0002-0144-1997|https://orcid.org/0000-0002-0144-1997 |http://www.wikidata.org/entity/1997|http://www.somelink.org/id/idid");
     ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
 
@@ -484,74 +476,6 @@ public class BasicInterpreterTest {
     Assert.assertEquals("UNKNOWN", br.getBasisOfRecord());
     assertIssueSize(br, 1);
     assertIssue(OccurrenceIssue.BASIS_OF_RECORD_INVALID, br);
-  }
-
-  @Test
-  public void lifeStageEmptyValueTest() {
-    // State
-    Map<String, String> coreMap = new HashMap<>(1);
-    coreMap.put(DwcTerm.lifeStage.qualifiedName(), "");
-    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
-
-    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
-
-    // When
-    BasicInterpreter.interpretLifeStage(vocabularyLookupFn).accept(er, br);
-
-    // Should
-    Assert.assertNull(br.getLifeStage());
-    Assert.assertTrue(br.getLifeStageLineage().isEmpty());
-  }
-
-  @Test
-  public void lifeStageRandomValueTest() {
-    // State
-    Map<String, String> coreMap = new HashMap<>(1);
-    coreMap.put(DwcTerm.lifeStage.qualifiedName(), "adwadaw");
-    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
-
-    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
-
-    // When
-    BasicInterpreter.interpretLifeStage(vocabularyLookupFn).accept(er, br);
-
-    // Should
-    Assert.assertNull(br.getLifeStage());
-    Assert.assertTrue(br.getLifeStageLineage().isEmpty());
-  }
-
-  @Test
-  public void lifeStageAdultValueTest() {
-    // State
-    Map<String, String> coreMap = new HashMap<>(1);
-    coreMap.put(DwcTerm.lifeStage.qualifiedName(), "adult");
-    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
-
-    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
-
-    // When
-    BasicInterpreter.interpretLifeStage(vocabularyLookupFn).accept(er, br);
-
-    // Should
-    Assert.assertEquals("Adult", br.getLifeStage());
-    Assert.assertEquals("Adult", br.getLifeStageLineage().get(0));
-  }
-
-  @Test
-  public void lifeStageNotNullTest() {
-    // State
-    Map<String, String> coreMap = new HashMap<>(1);
-    coreMap.put(DwcTerm.lifeStage.qualifiedName(), "adwadaw");
-    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
-
-    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
-
-    // When
-    BasicInterpreter.interpretLifeStage(vocabularyLookupFn).accept(er, br);
-
-    // Should
-    Assert.assertNull(br.getLifeStage());
-    Assert.assertTrue(br.getLifeStageLineage().isEmpty());
   }
 
   private void assertIssueSize(BasicRecord br, int expectedSize) {

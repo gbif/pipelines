@@ -9,17 +9,13 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.OCCURRENCE_STATUS_UNPARSAB
 import static org.gbif.api.vocabulary.OccurrenceIssue.REFERENCES_URI_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.TYPE_STATUS_INVALID;
 import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
-import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareOptValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
@@ -30,7 +26,6 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.vocabulary.BasisOfRecord;
-import org.gbif.api.vocabulary.EstablishmentMeans;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.OccurrenceStatus;
 import org.gbif.api.vocabulary.Sex;
@@ -44,7 +39,6 @@ import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.kvs.KeyValueStore;
-import org.gbif.pipelines.core.functions.SerializableFunction;
 import org.gbif.pipelines.core.parsers.SimpleTypeParser;
 import org.gbif.pipelines.core.parsers.VocabularyParser;
 import org.gbif.pipelines.core.parsers.clustering.ClusteringService;
@@ -55,8 +49,6 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.keygen.api.KeyLookupResult;
 import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
-import org.gbif.vocabulary.lookup.LookupConcept;
-import org.gbif.vocabulary.lookup.VocabularyLookup;
 
 /**
  * Interpreting function that receives a ExtendedRecord instance and applies an interpretation to
@@ -176,57 +168,6 @@ public class BasicInterpreter {
         };
 
     VocabularyParser.typeStatusParser().map(er, fn);
-  }
-
-  /** {@link DwcTerm#lifeStage} interpretation. */
-  public static BiConsumer<ExtendedRecord, BasicRecord> interpretLifeStage(
-      VocabularyLookup lifeStageLookup) {
-    if (lifeStageLookup == null) {
-      return (extendedRecord, basicRecord) -> {};
-    }
-    return interpretLifeStage(lifeStageLookup::lookup);
-  }
-
-  /** {@link DwcTerm#lifeStage} interpretation. */
-  @VisibleForTesting
-  protected static BiConsumer<ExtendedRecord, BasicRecord> interpretLifeStage(
-      SerializableFunction<String, Optional<LookupConcept>> vocabularyLookupFn) {
-    return (er, br) -> {
-      if (vocabularyLookupFn == null) {
-        return;
-      }
-
-      extractNullAwareOptValue(er, DwcTerm.lifeStage)
-          .flatMap(vocabularyLookupFn)
-          .ifPresent(getLookupConceptConsumer(br));
-    };
-  }
-
-  protected static Consumer<LookupConcept> getLookupConceptConsumer(BasicRecord br) {
-    return c -> {
-      br.setLifeStage(c.getConcept().getName());
-
-      // we sort the parents starting from the top as in taxonomy
-      List<String> parents = c.getParents();
-      Collections.reverse(parents);
-      // add the concept itself
-      parents.add(c.getConcept().getName());
-      br.setLifeStageLineage(parents);
-    };
-  }
-
-  /** {@link DwcTerm#establishmentMeans} interpretation. */
-  public static void interpretEstablishmentMeans(ExtendedRecord er, BasicRecord br) {
-
-    Function<ParseResult<EstablishmentMeans>, BasicRecord> fn =
-        parseResult -> {
-          if (parseResult.isSuccessful()) {
-            br.setEstablishmentMeans(parseResult.getPayload().name());
-          }
-          return br;
-        };
-
-    VocabularyParser.establishmentMeansParser().map(er, fn);
   }
 
   /** {@link DwcTerm#sex} interpretation. */
@@ -359,7 +300,7 @@ public class BasicInterpreter {
 
   /** {@link GbifTerm#identifiedByID}. */
   public static void interpretIdentifiedByIds(ExtendedRecord er, BasicRecord br) {
-    extractOptValue(er, GbifTerm.identifiedByID)
+    extractOptValue(er, DwcTerm.identifiedByID)
         .filter(x -> !x.isEmpty())
         .map(AgentIdentifierParser::parse)
         .map(ArrayList::new)
@@ -368,7 +309,7 @@ public class BasicInterpreter {
 
   /** {@link GbifTerm#recordedByID} interpretation. */
   public static void interpretRecordedByIds(ExtendedRecord er, BasicRecord br) {
-    extractOptValue(er, GbifTerm.recordedByID)
+    extractOptValue(er, DwcTerm.recordedByID)
         .filter(x -> !x.isEmpty())
         .map(AgentIdentifierParser::parse)
         .map(ArrayList::new)
