@@ -7,35 +7,26 @@ import au.org.ala.distribution.DistributionServiceImpl;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.Test;
 
 public class DistributionOutlierTest {
-  String spatial_url = "http://devt.ala.org.au:8080/ws/";
-  // String spatial_url = "https://spatial.ala.org.au/ws/";
+  // String spatial_url = "http://devt.ala.org.au:8080/ws/";
+  String spatial_url = "https://spatial-test.ala.org.au/ws/";
+  String lsidGreyNurseShark =
+      "urn:lsid:biodiversity.org.au:afd.taxon:0c3e2403-05c4-4a43-8019-30e6d657a283";
 
-  public void getLayer() {
+  @Test
+  public void getMultiLayers() {
     DistributionServiceImpl impl = DistributionServiceImpl.init(spatial_url);
     try {
-      List<DistributionLayer> layers =
-          impl.findLayersByLsid(
-              "urn:lsid:biodiversity.org.au:afd.taxon:4f3a5260-4f39-4393-a644-4d05b1c45f9b");
+      List<DistributionLayer> layers = impl.findLayersByLsid(lsidGreyNurseShark);
       assertSame(1, layers.size());
     } catch (Exception e) {
       System.out.println(e.getMessage());
     }
   }
 
-  public void getMultiLayers() {
-    DistributionServiceImpl impl = DistributionServiceImpl.init(spatial_url);
-    try {
-      List<DistributionLayer> layers =
-          impl.findLayersByLsid(
-              "urn:lsid:biodiversity.org.au:afd.taxon:0c3e2403-05c4-4a43-8019-30e6d657a283");
-      assertSame(5, layers.size());
-    } catch (Exception e) {
-      System.out.println(e.getMessage());
-    }
-  }
-
+  @Test
   public void outliers() {
     DistributionServiceImpl impl = DistributionServiceImpl.init(spatial_url);
     try {
@@ -48,20 +39,18 @@ public class DistributionOutlierTest {
       points.put("2eb7cda9-f248-4e9e-89b7-44db7312e58a", inPoint);
 
       Map outPoint = new HashMap();
-      outPoint.put("decimalLatitude", -26.1);
+      outPoint.put("decimalLatitude", 26.1);
       outPoint.put("decimalLongitude", 127.5);
       points.put("6756a12e-d07c-4fc6-8637-a0036f0b76c9", outPoint);
 
-      Map<String, Double> results =
-          impl.outliers(
-              "urn:lsid:biodiversity.org.au:afd.taxon:4f3a5260-4f39-4393-a644-4d05b1c45f9b",
-              points);
+      Map<String, Double> results = impl.outliers(lsidGreyNurseShark, points);
       assertSame(1, results.size());
     } catch (Exception e) {
       e.printStackTrace();
     }
   }
 
+  @Test
   public void multiLayers() {
     DistributionServiceImpl impl = DistributionServiceImpl.init(spatial_url);
     try {

@@ -66,3 +66,7 @@ sample-avro:
 index:
     inputPath: hdfs://localhost:8020/pipelines-data
     zkHost: localhost:9983
+outlier:
+    inputPath: hdfs://localhost:8020/pipelines-data
+    targetPath: hdfs://localhost:8020/pipelines-outlier
+

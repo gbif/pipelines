@@ -111,7 +111,7 @@ Usage:
   $CMD [options] sample        (<dr>...|all)         $WHERE
   $CMD [options] clustering    (all)                 $WHERE
   $CMD [options] jackknife     (all)                 $WHERE
-  $CMD [options] outlier       (all)                 $WHERE
+  $CMD [options] outlier       (<dr>...|all)         $WHERE
   $CMD [options] solr          (<dr>...|all)         $WHERE
   $CMD [options] solr-schema   (<dr>...|all)         $WHERE
   $CMD [options] archive-list
@@ -135,12 +135,15 @@ Options:
 ----
 $CMD $VER
 License Apache-2.0
+License Apache-2.0
 EOF
 )"
 
 # Enable logging
+
 if ($debug) ; then verbosity=6; else verbosity=5; fi
 if [[ $PROD = true ]] ; then LIB_DIR=/usr/share/la-pipelines ; else LIB_DIR=. ; fi
+
 source $LIB_DIR/logging_lib.sh $verbosity $no_colors $dr
 
 STEP=Initial
@@ -682,7 +685,7 @@ function clustering () {
 }
 
 function outlier () {
-    local dr="*" ltype="$TYPE"
+    local dr="$1" ltype="$TYPE"
     CLASS=au.org.ala.pipelines.beam.DistributionOutlierPipeline
 
     logStepStart "Outlier" $dr
@@ -695,7 +698,7 @@ function outlier () {
     spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
 
     SH_ARGS=outlier-sh-args.spark-cluster
-    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "add-jackknife $dr"
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "add-outlier $dr"
 
     logStepEnd "Outlier" $dr $ltype $SECONDS
 }
@@ -941,6 +944,10 @@ if ($jackknife || $do_all); then
   else
     echo "WARN: 'jackknife' not run when 'dr' != 'all'"
   fi
+fi
+
+if ($outlier || $do_all); then
+  do_step_simple outlier
 fi
 
 if ($solr || $do_all); then
