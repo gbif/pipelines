@@ -31,3 +31,6 @@ extensionsAllowedForVerbatimSet:
   - http://rs.tdwg.org/dwc/terms/ResourceRelationship
 vocabularyConfig:
   lifeStageVocabName: LifeStage
+  degreeOfEstablishmentVocabName: DegreeOfEstablishment
+  establishmentMeansVocabName: EstablishmentMeans
+  pathwayVocabName: Pathway
