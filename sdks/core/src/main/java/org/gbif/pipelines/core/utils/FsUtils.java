@@ -318,7 +318,7 @@ public final class FsUtils {
    */
   @SneakyThrows
   public static boolean fileExists(String hdfsSiteConfig, String coreSiteConfig, String filePath) {
-    FileSystem fs = FsUtils.getLocalFileSystem(hdfsSiteConfig, coreSiteConfig);
+    FileSystem fs = FsUtils.getFileSystem(hdfsSiteConfig, coreSiteConfig, filePath);
     Path fPath = new Path(filePath);
     return fs.exists(fPath);
   }
