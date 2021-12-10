@@ -170,13 +170,13 @@ public class AudubonInterpreterTest {
             + "\"identificationQualifier\": null, \"vernacularName\": null, \"nameAccordingTo\": null, \"scientificNameId\": null, "
             + "\"otherScientificName\": null, \"identifiedBy\": null, \"dateIdentified\": null, \"taxonCount\": null, \"subjectPart\": null, "
             + "\"sex\": null, \"lifeStage\": null, \"subjectOrientation\": null, \"preparations\": null, \"temporal\": null, "
-            + "\"createDate\": \"2021-12-10\", \"timeOfDay\": null}], \"issues\": {\"issueList\": []}}";
+            + "\"createDate\": null, \"timeOfDay\": null}], \"issues\": {\"issueList\": [\"MULTIMEDIA_DATE_INVALID\"]}}";
 
     // State
     Map<String, List<Map<String, String>>> ext = new HashMap<>(1);
     Map<String, String> audubon = new HashMap<>(2);
     audubon.put("http://purl.org/dc/elements/1.1/type", "image");
-    audubon.put("http://ns.adobe.com/xap/1.0/CreateDate", "2021/12/10");
+    audubon.put("http://ns.adobe.com/xap/1.0/CreateDate", "not_a_date");
 
     ext.put("http://rs.tdwg.org/ac/terms/Multimedia", Collections.singletonList(audubon));
 
