@@ -104,7 +104,7 @@ public class CoreTsvConverterTest {
       "\"raw_er_disposition\"", // DwcTerm.disposition
       "\"raw_er_dynamicProperties\"", // DwcTerm.dynamicProperties
       "\"1111111\"", // DwcTerm.endDayOfYear
-      "\"br_establishmentMeans\"", // DwcTerm.establishmentMeans
+      "\"{concept: br_establishmentMeans, lineage: [br_establishmentMeans]}\"", // DwcTerm.establishmentMeans
       "\"raw_er_eventRemarks\"", // DwcTerm.eventRemarks
       "\"raw_er_eventTime\"", // DwcTerm.eventTime
       "\"raw_er_fieldNotes\"", // DwcTerm.fieldNotes
@@ -132,7 +132,7 @@ public class CoreTsvConverterTest {
       "\"raw_er_institutionID\"", // DwcTerm.institutionID
       "\"raw_er_island\"", // DwcTerm.island
       "\"raw_er_islandGroup\"", // DwcTerm.islandGroup
-      "\"br_lifeStage\"", // DwcTerm.lifeStage
+      "\"{concept: br_lifeStage, lineage: [br_lifeStageLineage]}\"", // DwcTerm.lifeStage
       "\"raw_er_locationAccordingTo\"", // DwcTerm.locationAccordingTo
       "\"raw_er_locationID\"", // DwcTerm.locationID
       "\"3.3333333333E10\"", // DwcTerm.maximumDistanceAboveSurfaceInMeters
