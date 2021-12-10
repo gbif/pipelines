@@ -3,7 +3,6 @@ package org.gbif.pipelines.core.interpreters.core;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,8 +12,6 @@ import org.gbif.api.vocabulary.AgentIdentifierType;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.core.factory.FileVocabularyFactory;
-import org.gbif.pipelines.core.interpreters.MockVocabularyLookups;
 import org.gbif.pipelines.io.avro.AgentIdentifier;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -24,13 +21,6 @@ import org.junit.Test;
 public class BasicInterpreterTest {
 
   private static final String ID = "777";
-
-  private final FileVocabularyFactory fileVocabularyFactory =
-      FileVocabularyFactory.builder()
-          .vocabularyLookupMap(
-              Collections.singletonMap(
-                  DwcTerm.lifeStage, new MockVocabularyLookups.LifeStageMockVocabularyLookup()))
-          .build();
 
   @Test
   public void interpretIndividaulCountTest() {

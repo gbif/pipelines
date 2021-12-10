@@ -15,7 +15,6 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.api.vocabulary.OccurrenceStatus;
 import org.gbif.kvs.KeyValueStore;
-import org.gbif.pipelines.core.factory.FileVocabularyFactory;
 import org.gbif.pipelines.core.functions.SerializableConsumer;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.core.interpreters.Interpretation;
@@ -23,6 +22,7 @@ import org.gbif.pipelines.core.interpreters.core.BasicInterpreter;
 import org.gbif.pipelines.core.interpreters.core.DynamicPropertiesInterpreter;
 import org.gbif.pipelines.core.interpreters.core.VocabularyInterpreter;
 import org.gbif.pipelines.core.parsers.clustering.ClusteringService;
+import org.gbif.pipelines.core.parsers.vocabulary.VocabularyService;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
@@ -44,15 +44,14 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
   private final SerializableSupplier<KeyValueStore<String, OccurrenceStatus>>
       occStatusKvStoreSupplier;
   private final SerializableSupplier<ClusteringService> clusteringServiceSupplier;
-
-  private final FileVocabularyFactory fileVocabularyFactory;
+  private final SerializableSupplier<VocabularyService> vocabularyServiceSupplier;
 
   @Builder.Default private boolean useDynamicPropertiesInterpretation = false;
 
   private KeyValueStore<String, OccurrenceStatus> occStatusKvStore;
   private HBaseLockingKeyService keygenService;
-
   private ClusteringService clusteringService;
+  private VocabularyService vocabularyService;
 
   @Builder(buildMethodName = "create")
   private BasicTransform(
@@ -62,7 +61,7 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
       boolean useDynamicPropertiesInterpretation,
       BiConsumer<ExtendedRecord, BasicRecord> gbifIdFn,
       SerializableSupplier<HBaseLockingKeyService> keygenServiceSupplier,
-      FileVocabularyFactory fileVocabularyFactory,
+      SerializableSupplier<VocabularyService> vocabularyServiceSupplier,
       SerializableSupplier<KeyValueStore<String, OccurrenceStatus>> occStatusKvStoreSupplier,
       SerializableSupplier<ClusteringService> clusteringServiceSupplier) {
     super(BasicRecord.class, BASIC, BasicTransform.class.getName(), BASIC_RECORDS_COUNT);
@@ -73,7 +72,7 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
     this.gbifIdFn = gbifIdFn;
     this.keygenServiceSupplier = keygenServiceSupplier;
     this.occStatusKvStoreSupplier = occStatusKvStoreSupplier;
-    this.fileVocabularyFactory = fileVocabularyFactory;
+    this.vocabularyServiceSupplier = vocabularyServiceSupplier;
     this.clusteringServiceSupplier = clusteringServiceSupplier;
   }
 
@@ -108,8 +107,8 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
     if (occStatusKvStore == null && occStatusKvStoreSupplier != null) {
       occStatusKvStore = occStatusKvStoreSupplier.get();
     }
-    if (fileVocabularyFactory != null) {
-      fileVocabularyFactory.init();
+    if (vocabularyService == null && vocabularyServiceSupplier != null) {
+      vocabularyService = vocabularyServiceSupplier.get();
     }
     if (clusteringServiceSupplier != null) {
       clusteringService = clusteringServiceSupplier.get();
@@ -129,8 +128,8 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
     if (keygenService != null) {
       keygenService.close();
     }
-    if (fileVocabularyFactory != null) {
-      fileVocabularyFactory.close();
+    if (vocabularyService != null) {
+      vocabularyService.close();
     }
   }
 
@@ -178,15 +177,15 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
             .via(BasicInterpreter::interpretRecordedByIds)
             .via(BasicInterpreter.interpretOccurrenceStatus(occStatusKvStore))
             .via(BasicInterpreter.interpretIsClustered(clusteringService))
-            .via(VocabularyInterpreter.interpretEstablishmentMeans(fileVocabularyFactory))
-            .via(VocabularyInterpreter.interpretLifeStage(fileVocabularyFactory))
-            .via(VocabularyInterpreter.interpretPathway(fileVocabularyFactory))
-            .via(VocabularyInterpreter.interpretDegreeOfEstablishment(fileVocabularyFactory));
+            .via(VocabularyInterpreter.interpretEstablishmentMeans(vocabularyService))
+            .via(VocabularyInterpreter.interpretLifeStage(vocabularyService))
+            .via(VocabularyInterpreter.interpretPathway(vocabularyService))
+            .via(VocabularyInterpreter.interpretDegreeOfEstablishment(vocabularyService));
 
     if (useDynamicPropertiesInterpretation) {
       handler
           .via(DynamicPropertiesInterpreter::interpretSex)
-          .via(DynamicPropertiesInterpreter.interpretLifeStage(fileVocabularyFactory));
+          .via(DynamicPropertiesInterpreter.interpretLifeStage(vocabularyService));
     }
 
     return handler.getOfNullable();

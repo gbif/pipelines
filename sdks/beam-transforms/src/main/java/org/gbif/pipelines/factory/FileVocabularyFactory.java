@@ -1,11 +1,11 @@
-package org.gbif.pipelines.core.factory;
+package org.gbif.pipelines.factory;
 
 import static java.util.Objects.requireNonNull;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.Serializable;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +16,9 @@ import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.Terms;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.config.model.VocabularyConfig;
+import org.gbif.pipelines.core.functions.SerializableSupplier;
+import org.gbif.pipelines.core.parsers.vocabulary.VocabularyService;
+import org.gbif.pipelines.core.parsers.vocabulary.VocabularyService.VocabularyServiceBuilder;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.vocabulary.lookup.InMemoryVocabularyLookup;
 import org.gbif.vocabulary.lookup.InMemoryVocabularyLookup.InMemoryVocabularyLookupBuilder;
@@ -28,13 +31,11 @@ import org.gbif.vocabulary.lookup.VocabularyLookup;
  */
 @Slf4j
 @Builder
-public class FileVocabularyFactory {
+public class FileVocabularyFactory implements Serializable {
 
   private final PipelinesConfig config;
   private final String hdfsSiteConfig;
   private final String coreSiteConfig;
-
-  @Builder.Default private Map<Term, VocabularyLookup> vocabularyLookupMap = new HashMap<>();
 
   /**
    * Creates instances of {@link VocabularyLookup} from a file containing an exported vocabulary.
@@ -47,33 +48,30 @@ public class FileVocabularyFactory {
    *       the number characters that are present at the beginning of the value.
    * </ul>
    */
-  @SneakyThrows
-  public void init() {
-    VocabularyConfig vocabularyConfig = requireNonNull(config.getVocabularyConfig());
-    String path = vocabularyConfig.getVocabulariesPath();
+  public SerializableSupplier<VocabularyService> getInstanceSupplier() {
 
-    for (Term term : Terms.getVocabularyBackedTerms()) {
-      String fileName = vocabularyConfig.getVocabularyFileName(term);
-      try (InputStream is = readFile(hdfsSiteConfig, coreSiteConfig, path, fileName)) {
-        InMemoryVocabularyLookupBuilder builder = InMemoryVocabularyLookup.newBuilder().from(is);
-        if (term == DwcTerm.lifeStage) {
-          builder.withPrefilter(PreFilters.REMOVE_NUMERIC_PREFIX);
+    return () -> {
+      VocabularyConfig vocabularyConfig = requireNonNull(config.getVocabularyConfig());
+      String path = vocabularyConfig.getVocabulariesPath();
+
+      VocabularyServiceBuilder serviceBuilder = VocabularyService.builder();
+
+      for (Term term : Terms.getVocabularyBackedTerms()) {
+        String fileName = vocabularyConfig.getVocabularyFileName(term);
+        try (InputStream is = readFile(hdfsSiteConfig, coreSiteConfig, path, fileName)) {
+          InMemoryVocabularyLookupBuilder builder = InMemoryVocabularyLookup.newBuilder().from(is);
+          if (term == DwcTerm.lifeStage) {
+            builder.withPrefilter(PreFilters.REMOVE_NUMERIC_PREFIX);
+          }
+
+          serviceBuilder.vocabularyLookup(term, builder.build());
+        } catch (IOException ex) {
+          throw new RuntimeException(ex);
         }
-
-        vocabularyLookupMap.put(term, builder.build());
       }
-    }
-  }
 
-  public void close() {
-    vocabularyLookupMap.values().forEach(VocabularyLookup::close);
-  }
-
-  public VocabularyLookup getVocabularyLookup(Term term) {
-    if (Terms.getVocabularyBackedTerms().contains(term)) {
-      return vocabularyLookupMap.get(term);
-    }
-    throw new IllegalArgumentException("Vocabulary-backed term not supported: " + term);
+      return serviceBuilder.build();
+    };
   }
 
   /**

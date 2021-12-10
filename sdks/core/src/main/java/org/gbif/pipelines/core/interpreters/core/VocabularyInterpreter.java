@@ -13,12 +13,11 @@ import lombok.NoArgsConstructor;
 import lombok.var;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
-import org.gbif.pipelines.core.factory.FileVocabularyFactory;
+import org.gbif.pipelines.core.parsers.vocabulary.VocabularyService;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.VocabularyConcept;
 import org.gbif.vocabulary.lookup.LookupConcept;
-import org.gbif.vocabulary.lookup.VocabularyLookup;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class VocabularyInterpreter {
@@ -35,26 +34,26 @@ public class VocabularyInterpreter {
 
   /** {@link DwcTerm#lifeStage} interpretation. */
   public static BiConsumer<ExtendedRecord, BasicRecord> interpretLifeStage(
-      FileVocabularyFactory fileVocabularyFactory) {
-    return interpretVocabulary(fileVocabularyFactory, DwcTerm.lifeStage);
+      VocabularyService vocabularyService) {
+    return interpretVocabulary(vocabularyService, DwcTerm.lifeStage);
   }
 
   /** {@link DwcTerm#establishmentMeans} interpretation. */
   public static BiConsumer<ExtendedRecord, BasicRecord> interpretEstablishmentMeans(
-      FileVocabularyFactory fileVocabularyFactory) {
-    return interpretVocabulary(fileVocabularyFactory, DwcTerm.establishmentMeans);
+      VocabularyService vocabularyService) {
+    return interpretVocabulary(vocabularyService, DwcTerm.establishmentMeans);
   }
 
   /** {@link DwcTerm#degreeOfEstablishment} interpretation. */
   public static BiConsumer<ExtendedRecord, BasicRecord> interpretDegreeOfEstablishment(
-      FileVocabularyFactory fileVocabularyFactory) {
-    return interpretVocabulary(fileVocabularyFactory, DwcTerm.degreeOfEstablishment);
+      VocabularyService vocabularyService) {
+    return interpretVocabulary(vocabularyService, DwcTerm.degreeOfEstablishment);
   }
 
   /** {@link DwcTerm#pathway} interpretation. */
   public static BiConsumer<ExtendedRecord, BasicRecord> interpretPathway(
-      FileVocabularyFactory fileVocabularyFactory) {
-    return interpretVocabulary(fileVocabularyFactory, DwcTerm.pathway);
+      VocabularyService vocabularyService) {
+    return interpretVocabulary(vocabularyService, DwcTerm.pathway);
   }
 
   /**
@@ -90,16 +89,13 @@ public class VocabularyInterpreter {
 
   /** {@link DwcTerm#lifeStage} interpretation. */
   private static BiConsumer<ExtendedRecord, BasicRecord> interpretVocabulary(
-      FileVocabularyFactory fileVocabularyFactory, Term term) {
+      VocabularyService vocabularyService, Term term) {
     return (er, br) -> {
-      if (fileVocabularyFactory != null) {
-        VocabularyLookup vocabularyLookup = fileVocabularyFactory.getVocabularyLookup(term);
-
-        if (vocabularyLookup != null) {
-          extractNullAwareOptValue(er, term)
-              .flatMap(vocabularyLookup::lookup)
-              .ifPresent(c -> setLookupConcept(br, term, c));
-        }
+      if (vocabularyService != null) {
+        vocabularyService
+            .get(term)
+            .flatMap(lookup -> extractNullAwareOptValue(er, term).flatMap(lookup::lookup))
+            .ifPresent(c -> setLookupConcept(br, term, c));
       }
     };
   }

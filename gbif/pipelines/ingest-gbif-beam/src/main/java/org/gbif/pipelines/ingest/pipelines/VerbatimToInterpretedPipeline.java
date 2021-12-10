@@ -34,12 +34,12 @@ import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
-import org.gbif.pipelines.core.factory.FileVocabularyFactory;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.core.pojo.ErBrContainer;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.core.ws.metadata.MetadataServiceClient;
 import org.gbif.pipelines.factory.ClusteringServiceFactory;
+import org.gbif.pipelines.factory.FileVocabularyFactory;
 import org.gbif.pipelines.factory.GeocodeKvStoreFactory;
 import org.gbif.pipelines.factory.GrscicollLookupKvStoreFactory;
 import org.gbif.pipelines.factory.KeygenServiceFactory;
@@ -196,12 +196,13 @@ public class VerbatimToInterpretedPipeline {
             .occStatusKvStoreSupplier(OccurrenceStatusKvStoreFactory.createSupplier(config))
             .clusteringServiceSupplier(ClusteringServiceFactory.createSupplier(config))
             .keygenServiceSupplier(KeygenServiceFactory.createSupplier(config, datasetId))
-            .fileVocabularyFactory(
+            .vocabularyServiceSupplier(
                 FileVocabularyFactory.builder()
                     .config(config)
                     .hdfsSiteConfig(hdfsSiteConfig)
                     .coreSiteConfig(coreSiteConfig)
-                    .build())
+                    .build()
+                    .getInstanceSupplier())
             .create();
 
     VerbatimTransform verbatimTransform = VerbatimTransform.create();

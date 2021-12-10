@@ -9,13 +9,12 @@ import lombok.NoArgsConstructor;
 import org.gbif.api.vocabulary.Sex;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.core.factory.FileVocabularyFactory;
 import org.gbif.pipelines.core.parsers.VocabularyParser;
 import org.gbif.pipelines.core.parsers.vertnet.LifeStageParser;
 import org.gbif.pipelines.core.parsers.vertnet.SexParser;
+import org.gbif.pipelines.core.parsers.vocabulary.VocabularyService;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.vocabulary.lookup.VocabularyLookup;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class DynamicPropertiesInterpreter {
@@ -38,18 +37,17 @@ public class DynamicPropertiesInterpreter {
   }
 
   public static BiConsumer<ExtendedRecord, BasicRecord> interpretLifeStage(
-      FileVocabularyFactory fileVocabularyFactory) {
+      VocabularyService vocabularyService) {
     return (er, br) -> {
-      VocabularyLookup vocabularyLookup =
-          fileVocabularyFactory.getVocabularyLookup(DwcTerm.lifeStage);
-
-      if (vocabularyLookup == null || br.getLifeStage() != null) {
-        return;
+      if (br.getLifeStage() == null) {
+        vocabularyService
+            .get(DwcTerm.lifeStage)
+            .flatMap(
+                lookup ->
+                    extractNullAwareOptValue(er, DwcTerm.dynamicProperties)
+                        .flatMap(v -> LifeStageParser.parse(v).flatMap(lookup::lookup)))
+            .ifPresent(c -> VocabularyInterpreter.setLookupConcept(br, DwcTerm.lifeStage, c));
       }
-
-      extractNullAwareOptValue(er, DwcTerm.dynamicProperties)
-          .flatMap(v -> LifeStageParser.parse(v).flatMap(vocabularyLookup::lookup))
-          .ifPresent(c -> VocabularyInterpreter.setLookupConcept(br, DwcTerm.lifeStage, c));
     };
   }
 }

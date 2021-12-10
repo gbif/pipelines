@@ -1,11 +1,10 @@
 package org.gbif.pipelines.core.interpreters.core;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.core.factory.FileVocabularyFactory;
 import org.gbif.pipelines.core.interpreters.MockVocabularyLookups;
+import org.gbif.pipelines.core.parsers.vocabulary.VocabularyService;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.junit.Assert;
@@ -15,11 +14,10 @@ public class VocabularyInterpreterTest {
 
   private static final String ID = "777";
 
-  private final FileVocabularyFactory fileVocabularyFactory =
-      FileVocabularyFactory.builder()
-          .vocabularyLookupMap(
-              Collections.singletonMap(
-                  DwcTerm.lifeStage, new MockVocabularyLookups.LifeStageMockVocabularyLookup()))
+  private final VocabularyService vocabularyService =
+      VocabularyService.builder()
+          .vocabularyLookup(
+              DwcTerm.lifeStage, new MockVocabularyLookups.LifeStageMockVocabularyLookup())
           .build();
 
   @Test
@@ -32,7 +30,7 @@ public class VocabularyInterpreterTest {
     BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
 
     // When
-    VocabularyInterpreter.interpretLifeStage(fileVocabularyFactory).accept(er, br);
+    VocabularyInterpreter.interpretLifeStage(vocabularyService).accept(er, br);
 
     // Should
     Assert.assertNull(br.getLifeStage());
@@ -48,7 +46,7 @@ public class VocabularyInterpreterTest {
     BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
 
     // When
-    VocabularyInterpreter.interpretLifeStage(fileVocabularyFactory).accept(er, br);
+    VocabularyInterpreter.interpretLifeStage(vocabularyService).accept(er, br);
 
     // Should
     Assert.assertNull(br.getLifeStage());
@@ -64,7 +62,7 @@ public class VocabularyInterpreterTest {
     BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
 
     // When
-    VocabularyInterpreter.interpretLifeStage(fileVocabularyFactory).accept(er, br);
+    VocabularyInterpreter.interpretLifeStage(vocabularyService).accept(er, br);
 
     // Should
     Assert.assertEquals("Adult", br.getLifeStage().getConcept());
@@ -81,7 +79,7 @@ public class VocabularyInterpreterTest {
     BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
 
     // When
-    VocabularyInterpreter.interpretLifeStage(fileVocabularyFactory).accept(er, br);
+    VocabularyInterpreter.interpretLifeStage(vocabularyService).accept(er, br);
 
     // Should
     Assert.assertNull(br.getLifeStage());

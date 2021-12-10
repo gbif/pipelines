@@ -5,8 +5,8 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.core.factory.FileVocabularyFactory;
 import org.gbif.pipelines.core.interpreters.MockVocabularyLookups;
+import org.gbif.pipelines.core.parsers.vocabulary.VocabularyService;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.junit.Assert;
@@ -28,11 +28,10 @@ public class DynamicPropertiesInterpreterTest {
 
   private final Supplier<BasicRecord> brFn = () -> BasicRecord.newBuilder().setId(ID).build();
 
-  private final FileVocabularyFactory fileVocabularyFactory =
-      FileVocabularyFactory.builder()
-          .vocabularyLookupMap(
-              Collections.singletonMap(
-                  DwcTerm.lifeStage, new MockVocabularyLookups.LifeStageMockVocabularyLookup()))
+  private final VocabularyService vocabularyService =
+      VocabularyService.builder()
+          .vocabularyLookup(
+              DwcTerm.lifeStage, new MockVocabularyLookups.LifeStageMockVocabularyLookup())
           .build();
 
   @Test
@@ -95,7 +94,7 @@ public class DynamicPropertiesInterpreterTest {
     BasicRecord br = brFn.get();
 
     // When
-    DynamicPropertiesInterpreter.interpretLifeStage(fileVocabularyFactory).accept(er, br);
+    DynamicPropertiesInterpreter.interpretLifeStage(vocabularyService).accept(er, br);
 
     // Should
     Assert.assertNull(br.getLifeStage());
@@ -108,7 +107,7 @@ public class DynamicPropertiesInterpreterTest {
     BasicRecord br = brFn.get();
 
     // When
-    DynamicPropertiesInterpreter.interpretLifeStage(fileVocabularyFactory).accept(er, br);
+    DynamicPropertiesInterpreter.interpretLifeStage(vocabularyService).accept(er, br);
 
     // Should
     Assert.assertNull(br.getLifeStage());
@@ -123,7 +122,7 @@ public class DynamicPropertiesInterpreterTest {
     BasicRecord br = brFn.get();
 
     // When
-    DynamicPropertiesInterpreter.interpretLifeStage(fileVocabularyFactory).accept(er, br);
+    DynamicPropertiesInterpreter.interpretLifeStage(vocabularyService).accept(er, br);
 
     // Should
     Assert.assertEquals("Adult", br.getLifeStage().getConcept());
@@ -138,7 +137,7 @@ public class DynamicPropertiesInterpreterTest {
     BasicRecord br = brFn.get();
 
     // When
-    DynamicPropertiesInterpreter.interpretLifeStage(fileVocabularyFactory).accept(er, br);
+    DynamicPropertiesInterpreter.interpretLifeStage(vocabularyService).accept(er, br);
 
     // Should
     Assert.assertNull(br.getLifeStage());

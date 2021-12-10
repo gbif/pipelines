@@ -33,7 +33,6 @@ import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.factory.ConfigFactory;
-import org.gbif.pipelines.core.factory.FileVocabularyFactory;
 import org.gbif.pipelines.core.functions.SerializableConsumer;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.core.io.AvroReader;
@@ -41,6 +40,7 @@ import org.gbif.pipelines.core.io.SyncDataFileWriter;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.core.ws.metadata.MetadataServiceClient;
 import org.gbif.pipelines.factory.ClusteringServiceFactory;
+import org.gbif.pipelines.factory.FileVocabularyFactory;
 import org.gbif.pipelines.factory.GeocodeKvStoreFactory;
 import org.gbif.pipelines.factory.GrscicollLookupKvStoreFactory;
 import org.gbif.pipelines.factory.KeygenServiceFactory;
@@ -220,12 +220,13 @@ public class VerbatimToInterpretedPipeline {
             .keygenServiceSupplier(KeygenServiceFactory.getInstanceSupplier(config, datasetId))
             .occStatusKvStoreSupplier(OccurrenceStatusKvStoreFactory.getInstanceSupplier(config))
             .clusteringServiceSupplier(ClusteringServiceFactory.getInstanceSupplier(config))
-            .fileVocabularyFactory(
+            .vocabularyServiceSupplier(
                 FileVocabularyFactory.builder()
                     .config(config)
                     .hdfsSiteConfig(hdfsSiteConfig)
                     .coreSiteConfig(coreSiteConfig)
-                    .build())
+                    .build()
+                    .getInstanceSupplier())
             .create()
             .counterFn(incMetricFn)
             .init();

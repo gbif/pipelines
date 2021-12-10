@@ -170,7 +170,7 @@ public class AudubonInterpreterTest {
             + "\"identificationQualifier\": null, \"vernacularName\": null, \"nameAccordingTo\": null, \"scientificNameId\": null, "
             + "\"otherScientificName\": null, \"identifiedBy\": null, \"dateIdentified\": null, \"taxonCount\": null, \"subjectPart\": null, "
             + "\"sex\": null, \"lifeStage\": null, \"subjectOrientation\": null, \"preparations\": null, \"temporal\": null, "
-            + "\"createDate\": null, \"timeOfDay\": null}], \"issues\": {\"issueList\": [\"MULTIMEDIA_DATE_INVALID\"]}}";
+            + "\"createDate\": \"2021-12-10\", \"timeOfDay\": null}], \"issues\": {\"issueList\": []}}";
 
     // State
     Map<String, List<Map<String, String>>> ext = new HashMap<>(1);
