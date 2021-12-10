@@ -167,6 +167,15 @@ sampling:
   allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
   runner: SparkRunner
 
+# Calculate distance to the expert distribution layers
+# class:au.org.ala.pipelines.beam.DistributionOutlierPipeline
+outlier:
+  appName: Expert distribution outliers for {datasetId}
+  baseUrl: https://spatial.ala.org.au/ws/
+  targetPath: &outlierTargetPath '{fsPath}/pipelines-outlier'
+  allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
+  runner: SparkRunner
+
 # class: au.org.ala.pipelines.beam.ALAInterpretedToSensitivePipeline
 sensitive:
   appName: Sensitive Data Processing for {datasetId}
@@ -192,6 +201,7 @@ solr:
   allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
   jackKnifePath: "{fsPath}/pipelines-jackknife"
   clusteringPath: "{fsPath}/pipelines-clustering"
+  outlierPath: *outlierTargetPath
   solrCollection: biocache
   includeSampling: false
   includeJackKnife: false

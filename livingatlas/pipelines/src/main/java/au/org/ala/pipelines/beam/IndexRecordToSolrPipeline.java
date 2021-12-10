@@ -653,7 +653,15 @@ public class IndexRecordToSolrPipeline {
 
   private static PCollection<KV<String, DistributionOutlierRecord>> loadOutlierRecords(
       SolrPipelineOptions options, Pipeline p) {
-    String path = PathBuilder.buildPath(options.getOutlierPath(), "*" + AVRO_EXTENSION).toString();
+
+    String dataResourceFolder = options.getDatasetId();
+    if (dataResourceFolder == null || "all".equalsIgnoreCase(dataResourceFolder)) {
+      dataResourceFolder = "all";
+    }
+
+    String path =
+        PathBuilder.buildPath(options.getOutlierPath(), dataResourceFolder, "*" + AVRO_EXTENSION)
+            .toString();
     log.info("Loading outlier from {}", path);
 
     return p.apply(AvroIO.read(DistributionOutlierRecord.class).from(path))

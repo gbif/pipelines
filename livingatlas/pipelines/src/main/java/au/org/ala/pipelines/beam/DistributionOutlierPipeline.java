@@ -24,6 +24,13 @@ import org.slf4j.MDC;
  *
  * <p>Example: java au.org.ala.pipelines.beam.DistributionOutlierPipeline
  * --config=/data/la-pipelines/config/la-pipelines.yaml --fsPath=/data
+ *
+ * <p>Running with Jar java
+ * -Dlog4j.configuration=file://../pipelines/src/main/resources/log4j-colorized.properties
+ * -Dlog4j.configurationFile=file://../pipelines/src/main/resources/log4j-colorized.properties -cp
+ * ../pipelines/target/pipelines-2.10.0-SNAPSHOT-shaded.jar
+ * au.org.ala.pipelines.beam.DistributionOutlierPipeline
+ * --config=/data/la-pipelines/config/la-pipelines.yaml,la-pipelines-local.yaml --fsPath=/data
  */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -69,12 +76,20 @@ public class DistributionOutlierPipeline {
                 distributionTransform.calculateOutlier())
             .apply("Flatten records", Flatten.iterables());
 
+    log.info("Adding step 3: writing to outliers");
+
     kvRecords.apply(
         "Write to file",
         AvroIO.write(DistributionOutlierRecord.class)
-            .to(outputPath + "/outliers")
+            .to(outputPath + "/outlier")
             .withoutSharding()
             .withSuffix(".avro"));
+
+    //    kvRecords
+    //        .apply("to String", distributionTransform.flatToString())
+    //        .apply(
+    //            "Write to text",
+    //            TextIO.write().to(outputPath+"/outlier").withoutSharding().withSuffix(".txt"));
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();
