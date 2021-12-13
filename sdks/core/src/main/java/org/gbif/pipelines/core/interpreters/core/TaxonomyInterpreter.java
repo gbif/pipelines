@@ -185,7 +185,8 @@ public class TaxonomyInterpreter {
             .setPhrase(pn.getPhrase())
             .setPhraseName(pn.isPhraseName())
             .setVoucher(pn.getVoucher())
-            .setNominatingParty(pn.getNominatingParty());
+            .setNominatingParty(pn.getNominatingParty())
+            .setNomenclaturalNote(pn.getNomenclaturalNote());
 
     // Nullable fields
     Optional.ofNullable(pn.getBasionymAuthorship())
