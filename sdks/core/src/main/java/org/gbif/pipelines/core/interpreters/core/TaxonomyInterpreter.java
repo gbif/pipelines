@@ -119,7 +119,8 @@ public class TaxonomyInterpreter {
             org.gbif.nameparser.api.ParsedName pn =
                 NAME_PARSER.parse(
                     usageMatch.getUsage().getName(),
-                    org.gbif.nameparser.api.Rank.valueOf(usageMatch.getUsage().getRank().name()), null);
+                    org.gbif.nameparser.api.Rank.valueOf(usageMatch.getUsage().getRank().name()),
+                    null);
             tr.setUsageParsedName(toParsedNameAvro(pn));
           }
         } catch (UnparsableNameException e) {
