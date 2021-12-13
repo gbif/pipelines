@@ -118,7 +118,6 @@
     <!-- Logging -->
     <slf4j.version>1.7.16</slf4j.version>
     <logback.version>1.2.3</logback.version>
-    <log4j.version>1.2.17</log4j.version>
     <logstash-gelf.version>1.11.2</logstash-gelf.version>
 
     <!-- ES version matches Beam version -->
@@ -661,11 +660,6 @@
         <groupId>ch.qos.logback</groupId>
         <artifactId>logback-classic</artifactId>
         <version>${logback.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>log4j</groupId>
-        <artifactId>log4j</artifactId>
-        <version>${log4j.version}</version>
       </dependency>
       <dependency>
         <groupId>biz.paluch.logging</groupId>
