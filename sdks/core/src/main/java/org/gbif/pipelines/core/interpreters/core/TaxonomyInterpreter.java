@@ -8,10 +8,13 @@ import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -166,7 +169,7 @@ public class TaxonomyInterpreter {
             .setCultivarEpithet(pn.getCultivarEpithet())
             .setDoubtful(pn.isDoubtful())
             .setGenus(pn.getGenus())
-            .setWarnings(pn.getWarnings())
+            .setWarnings(new ArrayList<>(pn.getWarnings()))
             .setUninomial(pn.getUninomial())
             .setUnparsed(pn.getUnparsed())
             .setTrinomial(pn.isTrinomial())
@@ -175,12 +178,14 @@ public class TaxonomyInterpreter {
             .setTerminalEpithet(pn.getTerminalEpithet())
             .setInfragenericEpithet(pn.getInfragenericEpithet())
             .setInfraspecificEpithet(pn.getInfraspecificEpithet())
-            .setNomenclaturalNotes(pn.getNomenclaturalNotes())
-            .setTaxonomicNote(pn.getTaxonomicNote())
-            .setStrain(pn.getStrain())
+            .setExtinct(pn.isExtinct())
+            .setPublishedIn(pn.getPublishedIn())
             .setSanctioningAuthor(pn.getSanctioningAuthor())
-            .setRemarks(pn.getRemarks())
-            .setSpecificEpithet(pn.getSpecificEpithet());
+            .setSpecificEpithet(pn.getSpecificEpithet())
+            .setPhrase(pn.getPhrase())
+            .setPhraseName(pn.isPhraseName())
+            .setVoucher(pn.getVoucher())
+            .setNominatingParty(pn.getNominatingParty());
 
     // Nullable fields
     Optional.ofNullable(pn.getBasionymAuthorship())
@@ -196,6 +201,12 @@ public class TaxonomyInterpreter {
     Optional.ofNullable(pn.getRank()).ifPresent(rank -> builder.setRank(Rank.valueOf(rank.name())));
     Optional.ofNullable(pn.getState())
         .ifPresent(state -> builder.setState(State.valueOf(state.name())));
+    Optional.ofNullable(pn.getEpithetQualifier())
+        .map(
+            eq ->
+                eq.entrySet().stream()
+                    .collect(Collectors.toMap(e -> e.getKey().name(), Map.Entry::getValue)))
+        .ifPresent(builder::setEpithetQualifier);
     return builder.build();
   }
 
