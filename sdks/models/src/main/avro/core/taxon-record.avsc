@@ -107,7 +107,7 @@
       {"name" : "infraspecificEpithet", "type" : [ "null", "string" ], "default" : null},
       {"name" : "nomenclaturalNote", "type" : [ "null", "string" ], "default" : null},
       {"name" : "notho", "type" : [ "null", {"type" : "enum", "name" : "NamePart", "doc" : "", "symbols" : [ "GENERIC", "INFRAGENERIC", "SPECIFIC", "INFRASPECIFIC" ]} ], "default" : null},
-      {"name" : "epithetQualifier", "type" : {"type" : "map", "values" : [ "null", "string" ], "default": null}},
+      {"name" : "epithetQualifier", "type" : {"type" : "map", "values" : [ "null", "string" ], "default": null}, "default": null},
       {"name" : "rank", "type" : ["null", "Rank"], "default" : null},
       {"name" : "sanctioningAuthor", "type" : [ "null", "string" ], "default" : null},
       {"name" : "specificEpithet", "type" : [ "null", "string" ], "default" : null},
