@@ -31,6 +31,7 @@ import org.gbif.pipelines.core.utils.ModelUtils;
 import org.gbif.pipelines.io.avro.Authorship;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.NamePart;
+import org.gbif.pipelines.io.avro.NameRank;
 import org.gbif.pipelines.io.avro.NameType;
 import org.gbif.pipelines.io.avro.NomCode;
 import org.gbif.pipelines.io.avro.ParsedName;
@@ -170,7 +171,6 @@ public class TaxonomyInterpreter {
             .setCultivarEpithet(pn.getCultivarEpithet())
             .setDoubtful(pn.isDoubtful())
             .setGenus(pn.getGenus())
-            .setWarnings(new ArrayList<>(pn.getWarnings()))
             .setUninomial(pn.getUninomial())
             .setUnparsed(pn.getUnparsed())
             .setTrinomial(pn.isTrinomial())
@@ -190,6 +190,8 @@ public class TaxonomyInterpreter {
             .setNomenclaturalNote(pn.getNomenclaturalNote());
 
     // Nullable fields
+    Optional.ofNullable(pn.getWarnings())
+        .ifPresent(w -> builder.setWarnings(new ArrayList<>(pn.getWarnings())));
     Optional.ofNullable(pn.getBasionymAuthorship())
         .ifPresent(authorship -> builder.setBasionymAuthorship(toAuthorshipAvro(authorship)));
     Optional.ofNullable(pn.getCombinationAuthorship())
@@ -200,7 +202,8 @@ public class TaxonomyInterpreter {
         .ifPresent(type -> builder.setType(NameType.valueOf(type.name())));
     Optional.ofNullable(pn.getNotho())
         .ifPresent(notho -> builder.setNotho(NamePart.valueOf(notho.name())));
-    Optional.ofNullable(pn.getRank()).ifPresent(rank -> builder.setRank(Rank.valueOf(rank.name())));
+    Optional.ofNullable(pn.getRank())
+        .ifPresent(rank -> builder.setRank(NameRank.valueOf(rank.name())));
     Optional.ofNullable(pn.getState())
         .ifPresent(state -> builder.setState(State.valueOf(state.name())));
     Optional.ofNullable(pn.getEpithetQualifier())
