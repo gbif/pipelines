@@ -192,7 +192,7 @@ public class BasicInterpreter {
           if (parseResult.isSuccessful()) {
             br.setBasisOfRecord(parseResult.getPayload().name());
           } else {
-            br.setBasisOfRecord(BasisOfRecord.UNKNOWN.name());
+            br.setBasisOfRecord(BasisOfRecord.OCCURRENCE.name());
             addIssue(br, BASIS_OF_RECORD_INVALID);
           }
           return br;
@@ -201,7 +201,7 @@ public class BasicInterpreter {
     VocabularyParser.basisOfRecordParser().map(er, fn);
 
     if (br.getBasisOfRecord() == null || br.getBasisOfRecord().isEmpty()) {
-      br.setBasisOfRecord(BasisOfRecord.UNKNOWN.name());
+      br.setBasisOfRecord(BasisOfRecord.OCCURRENCE.name());
       addIssue(br, BASIS_OF_RECORD_INVALID);
     }
   }

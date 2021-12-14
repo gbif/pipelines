@@ -90,7 +90,7 @@ public class BasicRecordTransformTest {
     BasicRecord expected =
         BasicRecord.newBuilder()
             .setId("777")
-            .setBasisOfRecord(BasisOfRecord.UNKNOWN.name())
+            .setBasisOfRecord(BasisOfRecord.OCCURRENCE.name())
             .setCreated(0L)
             .setLicense(License.UNSPECIFIED.name())
             .setIssues(
