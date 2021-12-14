@@ -24,6 +24,7 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.species.SpeciesMatchRequest;
 import org.gbif.nameparser.NameParserGBIF;
+import org.gbif.nameparser.NameParserGbifV1;
 import org.gbif.nameparser.api.NameParser;
 import org.gbif.nameparser.api.UnparsableNameException;
 import org.gbif.pipelines.core.parsers.taxonomy.TaxonRecordConverter;
@@ -120,7 +121,7 @@ public class TaxonomyInterpreter {
             org.gbif.nameparser.api.ParsedName pn =
                 NAME_PARSER.parse(
                     usageMatch.getUsage().getName(),
-                    org.gbif.nameparser.api.Rank.valueOf(usageMatch.getUsage().getRank().name()),
+                    NameParserGbifV1.fromGbif(usageMatch.getUsage().getRank()),
                     null);
             tr.setUsageParsedName(toParsedNameAvro(pn));
           }
