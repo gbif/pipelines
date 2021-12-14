@@ -15,6 +15,7 @@
   <name>Pipelines :: Living Atlas</name>
 
   <properties>
+    <!-- ITs get stuck, temporary set to skip:true -->
     <sonar.skip>true</sonar.skip>
   </properties>
 

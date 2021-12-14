@@ -71,6 +71,7 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
         <configuration>
+          <!-- ITs get stuck, temporary set to skip:true -->
           <skip>true</skip>
           <systemPropertyVariables>
             <pipelinesTestYamlConfigFile>target/test-classes/pipelines-maven.yaml</pipelinesTestYamlConfigFile>
@@ -172,6 +173,8 @@
           </execution>
         </executions>
         <configuration>
+          <!-- ITs get stuck, temporary set to skip:true -->
+          <skip>true</skip>
           <images>
             <image>
               <alias>solr8</alias>
