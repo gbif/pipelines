@@ -50,7 +50,7 @@ public class BasicRecordTransformTest {
       "0", "OBSERVATION", "MALE", "INTRODUCED", "HOLOTYPE", "2", "http://refs.com"
     };
     final String[] two = {
-      "1", "UNKNOWN", "HERMAPHRODITE", "INTRODUCED", "HAPANTOTYPE", "1", "http://refs.com"
+      "1", "OCCURRENCE", "HERMAPHRODITE", "INTRODUCED", "HAPANTOTYPE", "1", "http://refs.com"
     };
     final List<ExtendedRecord> records = createExtendedRecordList(one, two);
 

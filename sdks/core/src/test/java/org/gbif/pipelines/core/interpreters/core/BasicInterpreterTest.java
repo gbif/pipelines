@@ -444,7 +444,7 @@ public class BasicInterpreterTest {
     BasicInterpreter.interpretBasisOfRecord(er, br);
 
     // Should
-    Assert.assertEquals("UNKNOWN", br.getBasisOfRecord());
+    Assert.assertEquals("OCCURRENCE", br.getBasisOfRecord());
     assertIssueSize(br, 1);
     assertIssue(OccurrenceIssue.BASIS_OF_RECORD_INVALID, br);
   }
@@ -463,7 +463,7 @@ public class BasicInterpreterTest {
     BasicInterpreter.interpretBasisOfRecord(er, br);
 
     // Should
-    Assert.assertEquals("UNKNOWN", br.getBasisOfRecord());
+    Assert.assertEquals("OCCURRENCE", br.getBasisOfRecord());
     assertIssueSize(br, 1);
     assertIssue(OccurrenceIssue.BASIS_OF_RECORD_INVALID, br);
   }
