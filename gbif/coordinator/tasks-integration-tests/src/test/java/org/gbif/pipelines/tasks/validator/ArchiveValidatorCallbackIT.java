@@ -5,7 +5,6 @@ import static org.gbif.api.model.pipelines.StepType.VALIDATOR_VERBATIM_TO_INTERP
 import static org.gbif.crawler.constants.PipelinesNodePaths.getPipelinesInfoPath;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -488,7 +487,14 @@ public class ArchiveValidatorCallbackIT {
 
     // Should
     Validation validation = validationClient.getValidation();
-    assertNotNull(validation.getMetrics().getError());
+    Optional<FileInfo> occurrenceFile =
+        validation.getMetrics().getFileInfos().stream()
+            .filter(x -> x.getRowType() != null)
+            .filter(x -> x.getRowType().equals(DwcTerm.Occurrence.qualifiedName()))
+            .findFirst();
+
+    assertTrue(occurrenceFile.isPresent());
+    assertFalse(occurrenceFile.get().getIssues().isEmpty());
 
     assertFalse(checkExists(curator, crawlId, LABEL));
     assertFalse(checkExists(curator, crawlId, Fn.ERROR_MESSAGE.apply(LABEL)));

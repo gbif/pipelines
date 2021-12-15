@@ -74,25 +74,25 @@ public class DwcaArchiveValidator implements ArchiveValidator {
     log.info("Running DWCA validator");
     Validation validation = validationClient.get(message.getDatasetUuid());
 
-    try {
-      // EML
-      FileInfo emlFile = validateEmlFile();
-      Validations.mergeFileInfo(validation, emlFile);
+    // EML
+    FileInfo emlFile = validateEmlFile();
+    Validations.mergeFileInfo(validation, emlFile);
 
-      // Occurrence
-      validateOccurrenceFile()
-          .ifPresent(occurrenceFile -> Validations.mergeFileInfo(validation, occurrenceFile));
+    // Occurrence
+    validateOccurrenceFile()
+        .ifPresent(occurrenceFile -> Validations.mergeFileInfo(validation, occurrenceFile));
 
-      log.info("Update validation key {}", message.getDatasetUuid());
-      validationClient.update(validation);
+    log.info("Update validation key {}", message.getDatasetUuid());
+    validationClient.update(validation);
 
-    } catch (UnsupportedArchiveException ex) {
-      validation
-          .getMetrics()
-          .setError(ex.getClass().getSimpleName() + ": " + ex.getLocalizedMessage());
-      log.info("Update failed validation key {}", message.getDatasetUuid());
-      validationClient.update(validation);
-      throw ex;
+    boolean hasFatalIssues =
+        validation.getMetrics().getFileInfos().stream()
+            .flatMap(x -> x.getIssues().stream())
+            .flatMap(x -> x.getSamples().stream())
+            .flatMap(x -> x.getRelatedData().keySet().stream())
+            .anyMatch(x -> x.equals(Level.FATAL.name()));
+    if (hasFatalIssues) {
+      throw new IllegalArgumentException("Discovered fatal issue");
     }
   }
 
@@ -140,41 +140,46 @@ public class DwcaArchiveValidator implements ArchiveValidator {
   }
 
   private Optional<FileInfo> validateOccurrenceFile() {
-    log.info("Running DWCA validation for {}", message.getDatasetUuid());
-    Path inputPath = buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid());
-    Archive archive = DwcaUtils.fromLocation(inputPath);
 
-    List<IssueInfo> issueInfos =
-        DwcaValidator.builder()
-            .archive(archive)
-            .datasetKey(message.getDatasetUuid())
-            .datasetType(getDatasetType(archive))
-            .maxExampleErrors(config.maxExampleErrors)
-            .maxRecords(config.maxRecords)
-            .build()
-            .validate();
+    FileInfoBuilder fileInfoBuilder =
+        FileInfo.builder().rowType(DwcTerm.Occurrence.qualifiedName());
 
-    String fileName;
-    DwcFileType dwcFileType;
-    if (archive.getCore().getRowType() == DwcTerm.Occurrence) {
-      fileName = archive.getCore().getLocationFile().getName();
-      dwcFileType = DwcFileType.CORE;
-    } else if (archive.getExtension(DwcTerm.Occurrence) != null) {
-      fileName = archive.getExtension(DwcTerm.Occurrence).getLocationFile().getName();
-      dwcFileType = DwcFileType.EXTENSION;
-    } else {
-      return Optional.empty();
+    try {
+      log.info("Running DWCA validation for {}", message.getDatasetUuid());
+      Path inputPath = buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid());
+      Archive archive = DwcaUtils.fromLocation(inputPath);
+
+      List<IssueInfo> issueInfos =
+          DwcaValidator.builder()
+              .archive(archive)
+              .datasetKey(message.getDatasetUuid())
+              .datasetType(getDatasetType(archive))
+              .maxExampleErrors(config.maxExampleErrors)
+              .maxRecords(config.maxRecords)
+              .build()
+              .validate();
+
+      String fileName;
+      DwcFileType dwcFileType;
+      if (archive.getCore().getRowType() == DwcTerm.Occurrence) {
+        fileName = archive.getCore().getLocationFile().getName();
+        dwcFileType = DwcFileType.CORE;
+      } else if (archive.getExtension(DwcTerm.Occurrence) != null) {
+        fileName = archive.getExtension(DwcTerm.Occurrence).getLocationFile().getName();
+        dwcFileType = DwcFileType.EXTENSION;
+      } else {
+        return Optional.empty();
+      }
+
+      fileInfoBuilder.fileType(dwcFileType).fileName(fileName).issues(issueInfos).build();
+
+    } catch (UnsupportedArchiveException ex) {
+      fileInfoBuilder.issues(
+          Collections.singletonList(
+              IssueInfo.create(
+                  EvaluationType.UNHANDLED_ERROR, Level.FATAL.name(), ex.getLocalizedMessage())));
     }
-
-    FileInfo fileInfo =
-        FileInfo.builder()
-            .fileType(dwcFileType)
-            .rowType(DwcTerm.Occurrence.qualifiedName())
-            .fileName(fileName)
-            .issues(issueInfos)
-            .build();
-
-    return Optional.of(fileInfo);
+    return Optional.of(fileInfoBuilder.build());
   }
 
   /** Gets the dataset type from the Archive parameter. */
