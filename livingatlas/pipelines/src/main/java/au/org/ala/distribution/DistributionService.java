@@ -24,10 +24,4 @@ public interface DistributionService {
   @POST("distribution/outliers/{id}")
   Call<Map<String, Double>> outliers(
       @Path("id") String lsid, @Body Map<String, Map<String, Double>> points);
-
-  //  @FormUrlEncoded
-  //  @POST("distribution/outliers/{id}")
-  //  Call<DistributionRequest> outliers(@Path(value="id",encoded = true) String lsid,
-  // @Field("pointsJson") Map<String, Map<String, Double>> points);
-
 }

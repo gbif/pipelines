@@ -309,14 +309,10 @@ public class ALAFsUtils {
     if (dataResourceFolder == null || "all".equalsIgnoreCase(dataResourceFolder)) {
       dataResourceFolder = "*";
     }
-    return p.apply(
-        AvroIO.read(IndexRecord.class)
-            .from(
-                String.join(
-                    "/",
-                    options.getAllDatasetsInputPath(),
-                    "index-record",
-                    dataResourceFolder,
-                    "*.avro")));
+    String dataSource =
+        String.join(
+            "/", options.getAllDatasetsInputPath(), "index-record", dataResourceFolder, "*.avro");
+    log.info("Loading index records from: " + dataSource);
+    return p.apply(AvroIO.read(IndexRecord.class).from(dataSource));
   }
 }

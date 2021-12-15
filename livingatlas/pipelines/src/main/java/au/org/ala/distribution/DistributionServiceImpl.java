@@ -25,14 +25,17 @@ public class DistributionServiceImpl implements Serializable {
     service = retrofit.create(DistributionService.class);
   }
 
+  /**
+   * Init Distribution outlier service
+   *
+   * @param baseUrl Url of Spatial service
+   * @return
+   */
   public static DistributionServiceImpl init(String baseUrl) {
-    // set up sampling service
     return new DistributionServiceImpl(baseUrl);
   }
 
   public List<DistributionLayer> getLayers() throws IOException, ExpertDistributionException {
-    // Response<List<DistributionLayer>> response =
-    // distributionService.getLayersByLsid("urn:lsid:biodiversity.org.au:afd.taxon:4f3a5260-4f39-4393-a644-4d05b1c45f92", "false").execute();
     Response<List<au.org.ala.distribution.DistributionLayer>> response =
         service.getLayers().execute();
     int code = response.code();

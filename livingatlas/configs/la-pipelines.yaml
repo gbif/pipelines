@@ -172,7 +172,7 @@ sampling:
 outlier:
   appName: Expert distribution outliers for {datasetId}
   baseUrl: https://spatial.ala.org.au/ws/
-  targetPath: &outlierTargetPath '{fsPath}/pipelines-outlier'
+  targetPath: '{fsPath}/pipelines-outlier'
   allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
   runner: SparkRunner
 
@@ -201,7 +201,7 @@ solr:
   allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
   jackKnifePath: "{fsPath}/pipelines-jackknife"
   clusteringPath: "{fsPath}/pipelines-clustering"
-  outlierPath: *outlierTargetPath
+  outlierPath: '{fsPath}/pipelines-outlier'
   solrCollection: biocache
   includeSampling: false
   includeJackKnife: false

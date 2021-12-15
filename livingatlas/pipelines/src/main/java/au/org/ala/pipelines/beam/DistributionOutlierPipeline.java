@@ -11,8 +11,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.AvroIO;
+import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.transforms.*;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.commons.lang3.StringUtils;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.io.avro.*;
 import org.slf4j.MDC;
@@ -69,6 +71,13 @@ public class DistributionOutlierPipeline {
     log.info("Adding step 2: calculating outliers index");
     PCollection<DistributionOutlierRecord> kvRecords =
         indexRecords
+            .apply(
+                "Filter out records without id/species/taxon/location",
+                Filter.by(
+                    it ->
+                        !StringUtils.isEmpty(it.getTaxonID())
+                            && !StringUtils.isEmpty(it.getLatLng())
+                            && !StringUtils.isEmpty(it.getId())))
             .apply("Key by species", distributionTransform.toKv())
             .apply("Grouping by species", GroupByKey.create())
             .apply(
@@ -84,12 +93,14 @@ public class DistributionOutlierPipeline {
             .to(outputPath + "/outlier")
             .withoutSharding()
             .withSuffix(".avro"));
-
-    //    kvRecords
-    //        .apply("to String", distributionTransform.flatToString())
-    //        .apply(
-    //            "Write to text",
-    //            TextIO.write().to(outputPath+"/outlier").withoutSharding().withSuffix(".txt"));
+    // Checking purpose.
+    if (System.getenv("test") != null) {
+      kvRecords
+          .apply("to String", distributionTransform.flatToString())
+          .apply(
+              "Write to text",
+              TextIO.write().to(outputPath + "/outlier").withoutSharding().withSuffix(".txt"));
+    }
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();
