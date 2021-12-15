@@ -87,7 +87,9 @@ public class DwcaArchiveValidator implements ArchiveValidator {
       validationClient.update(validation);
 
     } catch (UnsupportedArchiveException ex) {
-      validation.getMetrics().setError(ex.getLocalizedMessage());
+      validation
+          .getMetrics()
+          .setError(ex.getClass().getSimpleName() + ": " + ex.getLocalizedMessage());
       log.info("Update failed validation key {}", message.getDatasetUuid());
       validationClient.update(validation);
       throw ex;
