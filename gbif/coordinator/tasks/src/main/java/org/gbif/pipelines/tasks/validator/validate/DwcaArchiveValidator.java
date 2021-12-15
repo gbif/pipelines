@@ -21,6 +21,7 @@ import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
 import org.gbif.common.messaging.api.messages.Platform;
 import org.gbif.dwc.Archive;
+import org.gbif.dwc.UnsupportedArchiveException;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
@@ -73,16 +74,24 @@ public class DwcaArchiveValidator implements ArchiveValidator {
     log.info("Running DWCA validator");
     Validation validation = validationClient.get(message.getDatasetUuid());
 
-    // EML
-    FileInfo emlFile = validateEmlFile();
-    Validations.mergeFileInfo(validation, emlFile);
+    try {
+      // EML
+      FileInfo emlFile = validateEmlFile();
+      Validations.mergeFileInfo(validation, emlFile);
 
-    // Occurrence
-    validateOccurrenceFile()
-        .ifPresent(occurrenceFile -> Validations.mergeFileInfo(validation, occurrenceFile));
+      // Occurrence
+      validateOccurrenceFile()
+          .ifPresent(occurrenceFile -> Validations.mergeFileInfo(validation, occurrenceFile));
 
-    log.info("Update validation key {}", message.getDatasetUuid());
-    validationClient.update(validation);
+      log.info("Update validation key {}", message.getDatasetUuid());
+      validationClient.update(validation);
+
+    } catch (UnsupportedArchiveException ex) {
+      validation.getMetrics().setError(ex.getLocalizedMessage());
+      log.info("Update failed validation key {}", message.getDatasetUuid());
+      validationClient.update(validation);
+      throw ex;
+    }
   }
 
   @SneakyThrows
