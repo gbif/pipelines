@@ -10,6 +10,7 @@ import java.util.stream.StreamSupport;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.transforms.*;
 import org.apache.beam.sdk.values.*;
+import org.apache.commons.lang3.StringUtils;
 import org.gbif.pipelines.core.functions.SerializableConsumer;
 import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.io.avro.*;
@@ -80,12 +81,13 @@ public class DistributionOutlierTransform
               while (iter.hasNext()) {
                 IndexRecord record = iter.next();
                 DistributionOutlierRecord dr = convertToDistribution(record, distanceToEDL);
-                outputs.add(dr);
-
-                Map point = new HashMap();
-                point.put("decimalLatitude", dr.getDecimalLatitude());
-                point.put("decimalLongitude", dr.getDecimalLongitude());
-                points.put(dr.getOccurrenceID(), point);
+                if (dr != null) {
+                  outputs.add(dr);
+                  Map point = new HashMap();
+                  point.put("decimalLatitude", dr.getDecimalLatitude());
+                  point.put("decimalLongitude", dr.getDecimalLongitude());
+                  points.put(dr.getId(), point);
+                }
               }
 
               if (hasEDL) {
@@ -94,7 +96,7 @@ public class DistributionOutlierTransform
                 while (iterator.hasNext()) {
                   Map.Entry<String, Double> entry = iterator.next();
                   StreamSupport.stream(outputs.spliterator(), false)
-                      .filter(it -> it.getOccurrenceID().equalsIgnoreCase(entry.getKey()))
+                      .filter(it -> it.getId().equalsIgnoreCase(entry.getKey()))
                       .forEach(it -> it.setDistanceOutOfEDL(entry.getValue()));
                 }
               }
@@ -131,26 +133,34 @@ public class DistributionOutlierTransform
    */
   private DistributionOutlierRecord convertToDistribution(
       IndexRecord record, double distanceToEDL) {
-    DistributionOutlierRecord newRecord =
-        DistributionOutlierRecord.newBuilder()
-            .setId(record.getId())
-            .setOccurrenceID(record.getId())
-            .setSpeciesID(record.getTaxonID())
-            .setDistanceOutOfEDL(distanceToEDL)
-            .build();
+    try {
+      if (!StringUtils.isEmpty(record.getId())
+          && !StringUtils.isEmpty(record.getTaxonID())
+          && !StringUtils.isEmpty(record.getLatLng())) {
+        DistributionOutlierRecord newRecord =
+            DistributionOutlierRecord.newBuilder()
+                .setId(record.getId())
+                .setSpeciesID(record.getTaxonID())
+                .setDistanceOutOfEDL(distanceToEDL)
+                .build();
 
-    String latlng = record.getLatLng();
-    String[] coordinates = latlng.split(",");
-    newRecord.setDecimalLatitude(Double.parseDouble(coordinates[0]));
-    newRecord.setDecimalLongitude(Double.parseDouble(coordinates[1]));
+        String latlng = record.getLatLng();
+        String[] coordinates = latlng.split(",");
+        newRecord.setDecimalLatitude(Double.parseDouble(coordinates[0]));
+        newRecord.setDecimalLongitude(Double.parseDouble(coordinates[1]));
 
-    return newRecord;
+        return newRecord;
+      }
+    } catch (Exception ex) {
+      log.debug(record.getId() + " does not have lat/lng or taxon. ignored..");
+    }
+    return null;
   }
 
   private String convertRecordToString(DistributionOutlierRecord record) {
     return String.format(
         "occurrenceId:%s, lat:%f, lng:%f, speciesId:%s, distanceToEDL:%f",
-        record.getOccurrenceID(),
+        record.getId(),
         record.getDecimalLatitude(),
         record.getDecimalLongitude(),
         record.getSpeciesID(),

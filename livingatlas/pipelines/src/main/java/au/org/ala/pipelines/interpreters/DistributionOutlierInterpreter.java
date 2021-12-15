@@ -20,7 +20,7 @@ import org.gbif.pipelines.io.avro.IndexRecord;
 public class DistributionOutlierInterpreter {
 
   public static void interpretOccurrenceID(IndexRecord ir, DistributionOutlierRecord dr) {
-    dr.setOccurrenceID(ir.getId());
+    dr.setId(ir.getId());
   }
 
   public static void interpretLocation(IndexRecord ir, DistributionOutlierRecord dr) {
@@ -40,7 +40,7 @@ public class DistributionOutlierInterpreter {
   public static void interpretOccurrenceID(ExtendedRecord er, DistributionOutlierRecord dr) {
     String value = extractNullAwareValue(er, DwcTerm.occurrenceID);
     if (!Strings.isNullOrEmpty(value)) {
-      dr.setOccurrenceID(value);
+      dr.setId(value);
     }
   }
 
