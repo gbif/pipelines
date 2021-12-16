@@ -3,7 +3,7 @@
         <resetJUL>true</resetJUL>
     </contextListener>
     <!-- Stop output INFO at start -->
-<!--    <statusListener class="ch.qos.logback.core.status.NopStatusListener" />-->
+    <statusListener class="ch.qos.logback.core.status.NopStatusListener" />
 
     <property name="defaultPattern" value="%-5level [%date{'yyyy-MM-dd HH:mm:ss,SSSZ'}] [%thread] %logger: %msg%n%xEx"/>
 

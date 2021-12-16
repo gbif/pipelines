@@ -36,7 +36,6 @@ import org.slf4j.MDC;
 public class DistributionOutlierPipeline {
 
   public static void main(String[] args) throws Exception {
-    log.debug("debug test");
     VersionInfo.print();
     CombinedYamlConfiguration conf = new CombinedYamlConfiguration(args);
     String[] combinedArgs = conf.toArgs("general", "outlier");
