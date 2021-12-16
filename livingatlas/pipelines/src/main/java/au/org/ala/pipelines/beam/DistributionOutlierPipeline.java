@@ -27,10 +27,7 @@ import org.slf4j.MDC;
  * <p>Example: java au.org.ala.pipelines.beam.DistributionOutlierPipeline
  * --config=/data/la-pipelines/config/la-pipelines.yaml --fsPath=/data
  *
- * <p>Running with Jar java
- * -Dlog4j.configuration=file://../pipelines/src/main/resources/log4j-colorized.properties
- * -Dlog4j.configurationFile=file://../pipelines/src/main/resources/log4j-colorized.properties -cp
- * ../pipelines/target/pipelines-2.10.0-SNAPSHOT-shaded.jar
+ * <p>Running with Jar java -cp ../pipelines/target/pipelines-2.10.0-SNAPSHOT-shaded.jar
  * au.org.ala.pipelines.beam.DistributionOutlierPipeline
  * --config=/data/la-pipelines/config/la-pipelines.yaml,la-pipelines-local.yaml --fsPath=/data
  */
@@ -39,6 +36,7 @@ import org.slf4j.MDC;
 public class DistributionOutlierPipeline {
 
   public static void main(String[] args) throws Exception {
+    log.debug("debug test");
     VersionInfo.print();
     CombinedYamlConfiguration conf = new CombinedYamlConfiguration(args);
     String[] combinedArgs = conf.toArgs("general", "outlier");

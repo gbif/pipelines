@@ -10,7 +10,6 @@ import java.util.stream.StreamSupport;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.transforms.*;
 import org.apache.beam.sdk.values.*;
-import org.apache.commons.lang3.StringUtils;
 import org.gbif.pipelines.core.functions.SerializableConsumer;
 import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.io.avro.*;
@@ -126,7 +125,9 @@ public class DistributionOutlierTransform
   }
 
   /**
-   * distanceOutOfEDL 0: inside edl, -1: no edl
+   * ID / Taxon ID / LatLng MUST be valid
+   *
+   * <p>distanceOutOfEDL 0: inside edl, -1: no edl
    *
    * @param record
    * @return
@@ -134,25 +135,21 @@ public class DistributionOutlierTransform
   private DistributionOutlierRecord convertToDistribution(
       IndexRecord record, double distanceToEDL) {
     try {
-      if (!StringUtils.isEmpty(record.getId())
-          && !StringUtils.isEmpty(record.getTaxonID())
-          && !StringUtils.isEmpty(record.getLatLng())) {
-        DistributionOutlierRecord newRecord =
-            DistributionOutlierRecord.newBuilder()
-                .setId(record.getId())
-                .setSpeciesID(record.getTaxonID())
-                .setDistanceOutOfEDL(distanceToEDL)
-                .build();
+      DistributionOutlierRecord newRecord =
+          DistributionOutlierRecord.newBuilder()
+              .setId(record.getId())
+              .setSpeciesID(record.getTaxonID())
+              .setDistanceOutOfEDL(distanceToEDL)
+              .build();
 
-        String latlng = record.getLatLng();
-        String[] coordinates = latlng.split(",");
-        newRecord.setDecimalLatitude(Double.parseDouble(coordinates[0]));
-        newRecord.setDecimalLongitude(Double.parseDouble(coordinates[1]));
+      String latlng = record.getLatLng();
+      String[] coordinates = latlng.split(",");
+      newRecord.setDecimalLatitude(Double.parseDouble(coordinates[0]));
+      newRecord.setDecimalLongitude(Double.parseDouble(coordinates[1]));
 
-        return newRecord;
-      }
+      return newRecord;
     } catch (Exception ex) {
-      log.debug(record.getId() + " does not have lat/lng or taxon. ignored..");
+      log.debug(record.getId() + " has incorrect lat/lng or taxon. ignored..");
     }
     return null;
   }

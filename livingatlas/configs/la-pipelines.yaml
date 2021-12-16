@@ -344,6 +344,18 @@ sampling-sh-args:
     executor-memory: 16G
     driver-memory: 4G
 
+outlier-sh-args:
+  local:
+    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
+  spark-embedded:
+    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
+  spark-cluster:
+    conf: spark.default.parallelism=144
+    num-executors: 8
+    executor-cores: 8
+    executor-memory: 16G
+    driver-memory: 4G
+
 sensitive-sh-args:
   spark-embedded:
     jvm: -Xmx8g -XX:+UseG1GC
