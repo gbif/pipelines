@@ -12,6 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.UUID;
@@ -100,7 +101,7 @@ public class ValidationResourceIT {
         .respond(HttpResponse.response().withStatusCode(HttpStatusCode.OK_200.code()));
   }
 
-  /** Creates a path to the a local MockServer url. */
+  /** Creates a path to a local MockServer url. */
   protected String testPath(String path) {
     return "http://127.0.0.1:" + clientAndServer.getPort() + path;
   }
@@ -161,14 +162,25 @@ public class ValidationResourceIT {
     assertNotNull(validations.getCount());
     assertTrue(validations.getCount() > 0);
 
-    PagingResponse<Validation> failedValidations =
+    PagingResponse<Validation> runningValidations =
         validationWsClient.list(
             ValidationSearchRequest.builder()
                 .offset(0L)
                 .limit(10)
                 .status(Collections.singleton(Validation.Status.RUNNING))
                 .build());
-    assertEquals(0, failedValidations.getCount());
+    assertEquals(0, runningValidations.getCount());
+
+    Calendar aYearFromNow = Calendar.getInstance();
+    aYearFromNow.add(Calendar.YEAR, 1);
+    PagingResponse<Validation> aYearFromNowValidations =
+        validationWsClient.list(
+            ValidationSearchRequest.builder()
+                .offset(0L)
+                .limit(10)
+                .fromDate(aYearFromNow.getTime())
+                .build());
+    assertEquals(0, aYearFromNowValidations.getCount());
   }
 
   @Test
@@ -256,7 +268,7 @@ public class ValidationResourceIT {
 
     validationWsClient.cancel(persistedValidation.getKey());
 
-    PagingResponse<Validation> failedValidations =
+    PagingResponse<Validation> validations =
         validationWsClient.list(
             ValidationSearchRequest.builder()
                 .offset(0L)
@@ -264,12 +276,12 @@ public class ValidationResourceIT {
                 .status(Validation.finishedStatuses())
                 .build());
     assertTrue(
-        failedValidations.getResults().stream()
+        validations.getResults().stream()
             .anyMatch(v -> v.getKey().equals(persistedValidation.getKey())));
   }
 
   @Test
-  public void deleteValidationIT() {
+  public void deleteValidationIT() throws Exception {
     File archive = readTestFileInputStream("/archive.zip");
     Validation validation = validationWsClient.submitFile(archive);
     assertNotNull(validation);
@@ -277,6 +289,9 @@ public class ValidationResourceIT {
     // Can the new validation be retrieved?
     Validation persistedValidation = validationWsClient.get(validation.getKey());
     assertNotNull(persistedValidation);
+
+    // Wait for internal async task
+    TimeUnit.SECONDS.sleep(3L);
 
     // Delete the validation
     validationWsClient.delete(persistedValidation.getKey());
@@ -286,7 +301,7 @@ public class ValidationResourceIT {
     assertNotNull(deletedValidation.getDeleted());
 
     // Validation is not in the results
-    PagingResponse<Validation> failedValidations =
+    PagingResponse<Validation> validations =
         validationWsClient.list(
             ValidationSearchRequest.builder()
                 .offset(0L)
@@ -294,7 +309,7 @@ public class ValidationResourceIT {
                 .sortByCreated(ValidationSearchRequest.SortOrder.DESC)
                 .build());
     assertTrue(
-        failedValidations.getResults().stream()
+        validations.getResults().stream()
             .noneMatch(v -> v.getKey().equals(persistedValidation.getKey())));
   }
 

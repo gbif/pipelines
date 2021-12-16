@@ -216,6 +216,9 @@
     "name" : "v_recordedby",
     "type" : [ "string", "null" ]
   }, {
+    "name" : "v_recordedbyid",
+    "type" : [ "string", "null" ]
+  }, {
     "name" : "v_individualcount",
     "type" : [ "string", "null" ]
   }, {
@@ -240,6 +243,15 @@
     "name" : "v_establishmentmeans",
     "type" : [ "string", "null" ]
   }, {
+    "name" : "v_degreeofestablishment",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "v_pathway",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "v_georeferenceverificationstatus",
+    "type" : [ "string", "null" ]
+  }, {
     "name" : "v_occurrencestatus",
     "type" : [ "string", "null" ]
   }, {
@@ -250,6 +262,9 @@
     "type" : [ "string", "null" ]
   }, {
     "name" : "v_associatedmedia",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "v_associatedoccurrences",
     "type" : [ "string", "null" ]
   }, {
     "name" : "v_associatedreferences",
@@ -274,9 +289,6 @@
     "type" : [ "string", "null" ]
   }, {
     "name" : "v_organismscope",
-    "type" : [ "string", "null" ]
-  }, {
-    "name" : "v_associatedoccurrences",
     "type" : [ "string", "null" ]
   }, {
     "name" : "v_associatedorganisms",
@@ -330,13 +342,13 @@
     "name" : "v_samplingprotocol",
     "type" : [ "string", "null" ]
   }, {
-    "name" : "v_samplingeffort",
-    "type" : [ "string", "null" ]
-  }, {
     "name" : "v_samplesizevalue",
     "type" : [ "string", "null" ]
   }, {
     "name" : "v_samplesizeunit",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "v_samplingeffort",
     "type" : [ "string", "null" ]
   }, {
     "name" : "v_fieldnotes",
@@ -394,6 +406,9 @@
     "type" : [ "string", "null" ]
   }, {
     "name" : "v_verbatimelevation",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "v_verticaldatum",
     "type" : [ "string", "null" ]
   }, {
     "name" : "v_minimumdepthinmeters",
@@ -471,9 +486,6 @@
     "name" : "v_georeferencesources",
     "type" : [ "string", "null" ]
   }, {
-    "name" : "v_georeferenceverificationstatus",
-    "type" : [ "string", "null" ]
-  }, {
     "name" : "v_georeferenceremarks",
     "type" : [ "string", "null" ]
   }, {
@@ -534,6 +546,9 @@
     "name" : "v_identificationid",
     "type" : [ "string", "null" ]
   }, {
+    "name" : "v_verbatimidentification",
+    "type" : [ "string", "null" ]
+  }, {
     "name" : "v_identificationqualifier",
     "type" : [ "string", "null" ]
   }, {
@@ -541,6 +556,9 @@
     "type" : [ "string", "null" ]
   }, {
     "name" : "v_identifiedby",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "v_identifiedbyid",
     "type" : [ "string", "null" ]
   }, {
     "name" : "v_dateidentified",
@@ -618,16 +636,28 @@
     "name" : "v_family",
     "type" : [ "string", "null" ]
   }, {
+    "name" : "v_subfamily",
+    "type" : [ "string", "null" ]
+  }, {
     "name" : "v_genus",
     "type" : [ "string", "null" ]
   }, {
+    "name" : "v_genericname",
+    "type" : [ "string", "null" ]
+  }, {
     "name" : "v_subgenus",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "v_infragenericepithet",
     "type" : [ "string", "null" ]
   }, {
     "name" : "v_specificepithet",
     "type" : [ "string", "null" ]
   }, {
     "name" : "v_infraspecificepithet",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "v_cultivarepithet",
     "type" : [ "string", "null" ]
   }, {
     "name" : "v_taxonrank",
@@ -652,12 +682,6 @@
     "type" : [ "string", "null" ]
   }, {
     "name" : "v_taxonremarks",
-    "type" : [ "string", "null" ]
-  }, {
-    "name" : "v_recordedbyid",
-    "type" : [ "string", "null" ]
-  }, {
-    "name" : "v_identifiedbyid",
     "type" : [ "string", "null" ]
   }, {
     "name" : "identifiercount",
@@ -693,14 +717,23 @@
     "name" : "programmeacronym",
     "type" : [ "string", "null" ]
   }, {
-    "name" : "hostingorganizationkey",
-    "type" : [ "string", "null" ]
-  }, {
     "name" : "collectionkey",
     "type" : [ "string", "null" ]
   }, {
     "name" : "institutionkey",
     "type" : [ "string", "null" ]
+  }, {
+    "name" : "hostingorganizationkey",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "isincluster",
+    "type" : [ "boolean", "null" ]
+  }, {
+    "name" : "dwcaextension",
+    "type" : [ {
+      "type" : "array",
+      "items" : [ "string", "null" ]
+    }, "null" ]
   }, {
     "name" : "abstract",
     "type" : [ "string", "null" ]
@@ -912,6 +945,12 @@
     "name" : "recordedby",
     "type" : [ "string", "null" ]
   }, {
+    "name" : "recordedbyid",
+    "type" : [ {
+      "type" : "array",
+      "items" : [ "string", "null" ]
+    }, "null" ]
+  }, {
     "name" : "individualcount",
     "type" : [ "int", "null" ]
   }, {
@@ -925,12 +964,19 @@
     "type" : [ "string", "null" ]
   }, {
     "name" : "lifestage",
-    "type" : [ "string", "null" ]
-  }, {
-    "name" : "lifestagelineage",
     "type" : [ {
-      "type" : "array",
-      "items" : [ "string", "null" ]
+      "type" : "record",
+      "name" : "LifeStage",
+      "fields" : [ {
+        "name" : "concept",
+        "type" : "string"
+      }, {
+        "name" : "lineage",
+        "type" : [ {
+          "type" : "array",
+          "items" : [ "string", "null" ]
+        }, "null" ]
+      } ]
     }, "null" ]
   }, {
     "name" : "reproductivecondition",
@@ -940,6 +986,54 @@
     "type" : [ "string", "null" ]
   }, {
     "name" : "establishmentmeans",
+    "type" : [ {
+      "type" : "record",
+      "name" : "EstablishmentMeans",
+      "fields" : [ {
+        "name" : "concept",
+        "type" : "string"
+      }, {
+        "name" : "lineage",
+        "type" : [ {
+          "type" : "array",
+          "items" : [ "string", "null" ]
+        }, "null" ]
+      } ]
+    }, "null" ]
+  }, {
+    "name" : "degreeofestablishment",
+    "type" : [ {
+      "type" : "record",
+      "name" : "DegreeOfEstablishment",
+      "fields" : [ {
+        "name" : "concept",
+        "type" : "string"
+      }, {
+        "name" : "lineage",
+        "type" : [ {
+          "type" : "array",
+          "items" : [ "string", "null" ]
+        }, "null" ]
+      } ]
+    }, "null" ]
+  }, {
+    "name" : "pathway",
+    "type" : [ {
+      "type" : "record",
+      "name" : "Pathway",
+      "fields" : [ {
+        "name" : "concept",
+        "type" : "string"
+      }, {
+        "name" : "lineage",
+        "type" : [ {
+          "type" : "array",
+          "items" : [ "string", "null" ]
+        }, "null" ]
+      } ]
+    }, "null" ]
+  }, {
+    "name" : "georeferenceverificationstatus",
     "type" : [ "string", "null" ]
   }, {
     "name" : "occurrencestatus",
@@ -949,6 +1043,9 @@
     "type" : [ "string", "null" ]
   }, {
     "name" : "disposition",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "associatedoccurrences",
     "type" : [ "string", "null" ]
   }, {
     "name" : "associatedreferences",
@@ -973,9 +1070,6 @@
     "type" : [ "string", "null" ]
   }, {
     "name" : "organismscope",
-    "type" : [ "string", "null" ]
-  }, {
-    "name" : "associatedoccurrences",
     "type" : [ "string", "null" ]
   }, {
     "name" : "associatedorganisms",
@@ -1029,13 +1123,13 @@
     "name" : "samplingprotocol",
     "type" : [ "string", "null" ]
   }, {
-    "name" : "samplingeffort",
-    "type" : [ "string", "null" ]
-  }, {
     "name" : "samplesizevalue",
     "type" : [ "double", "null" ]
   }, {
     "name" : "samplesizeunit",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "samplingeffort",
     "type" : [ "string", "null" ]
   }, {
     "name" : "fieldnotes",
@@ -1084,6 +1178,9 @@
     "type" : [ "string", "null" ]
   }, {
     "name" : "verbatimelevation",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "verticaldatum",
     "type" : [ "string", "null" ]
   }, {
     "name" : "verbatimdepth",
@@ -1141,9 +1238,6 @@
     "type" : [ "string", "null" ]
   }, {
     "name" : "georeferencesources",
-    "type" : [ "string", "null" ]
-  }, {
-    "name" : "georeferenceverificationstatus",
     "type" : [ "string", "null" ]
   }, {
     "name" : "georeferenceremarks",
@@ -1206,6 +1300,9 @@
     "name" : "identificationid",
     "type" : [ "string", "null" ]
   }, {
+    "name" : "verbatimidentification",
+    "type" : [ "string", "null" ]
+  }, {
     "name" : "identificationqualifier",
     "type" : [ "string", "null" ]
   }, {
@@ -1214,6 +1311,12 @@
   }, {
     "name" : "identifiedby",
     "type" : [ "string", "null" ]
+  }, {
+    "name" : "identifiedbyid",
+    "type" : [ {
+      "type" : "array",
+      "items" : [ "string", "null" ]
+    }, "null" ]
   }, {
     "name" : "dateidentified",
     "type" : [ "long", "null" ]
@@ -1290,16 +1393,28 @@
     "name" : "family",
     "type" : [ "string", "null" ]
   }, {
+    "name" : "subfamily",
+    "type" : [ "string", "null" ]
+  }, {
     "name" : "genus",
     "type" : [ "string", "null" ]
   }, {
+    "name" : "genericname",
+    "type" : [ "string", "null" ]
+  }, {
     "name" : "subgenus",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "infragenericepithet",
     "type" : [ "string", "null" ]
   }, {
     "name" : "specificepithet",
     "type" : [ "string", "null" ]
   }, {
     "name" : "infraspecificepithet",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "cultivarepithet",
     "type" : [ "string", "null" ]
   }, {
     "name" : "taxonrank",
@@ -1401,9 +1516,6 @@
     "name" : "species",
     "type" : [ "string", "null" ]
   }, {
-    "name" : "genericname",
-    "type" : [ "string", "null" ]
-  }, {
     "name" : "acceptedscientificname",
     "type" : [ "string", "null" ]
   }, {
@@ -1424,18 +1536,6 @@
   }, {
     "name" : "relativeorganismquantity",
     "type" : [ "double", "null" ]
-  }, {
-    "name" : "recordedbyid",
-    "type" : [ {
-      "type" : "array",
-      "items" : [ "string", "null" ]
-    }, "null" ]
-  }, {
-    "name" : "identifiedbyid",
-    "type" : [ {
-      "type" : "array",
-      "items" : [ "string", "null" ]
-    }, "null" ]
   }, {
     "name" : "level0gid",
     "type" : [ "string", "null" ]
@@ -1461,19 +1561,10 @@
     "name" : "level3name",
     "type" : [ "string", "null" ]
   }, {
-    "name" : "ext_multimedia",
-    "type" : [ "string", "null" ]
-  }, {
-    "name" : "isincluster",
-    "type" : [ "boolean", "null" ]
-  }, {
-    "name" : "dwcaextension",
-    "type" : [ {
-      "type" : "array",
-      "items" : [ "string", "null" ]
-    }, "null" ]
-  }, {
     "name" : "iucnredlistcategory",
     "type" : [ "string", "null" ]
-  }]
+  }, {
+    "name" : "ext_multimedia",
+    "type" : [ "string", "null" ]
+  } ]
 }

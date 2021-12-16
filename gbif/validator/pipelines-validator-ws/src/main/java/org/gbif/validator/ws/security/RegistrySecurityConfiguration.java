@@ -1,6 +1,5 @@
 package org.gbif.validator.ws.security;
 
-import lombok.SneakyThrows;
 import org.gbif.ws.remoteauth.IdentityServiceClient;
 import org.gbif.ws.remoteauth.RemoteAuthClient;
 import org.gbif.ws.remoteauth.RemoteAuthWebSecurityConfigurer;
@@ -21,7 +20,7 @@ public class RegistrySecurityConfiguration {
 
   @Bean
   public IdentityServiceClient identityServiceClient(
-      @Value("${registry.ws.url}") String gbifApiUrl,
+      @Value("${gbif.api.url}") String gbifApiUrl,
       @Value("${gbif.ws.security.appKey}") String appKey,
       @Value("${gbif.ws.security.appSecret}") String appSecret) {
     return IdentityServiceClient.getInstance(gbifApiUrl, appKey, appKey, appSecret);
@@ -29,7 +28,7 @@ public class RegistrySecurityConfiguration {
 
   @Bean
   public RemoteAuthClient remoteAuthClient(
-      RestTemplateBuilder builder, @Value("${registry.ws.url}") String gbifApiUrl) {
+      RestTemplateBuilder builder, @Value("${gbif.api.url}") String gbifApiUrl) {
     return RestTemplateRemoteAuthClient.createInstance(builder, gbifApiUrl);
   }
 
@@ -37,7 +36,6 @@ public class RegistrySecurityConfiguration {
   @EnableWebSecurity
   public static class ValidatorWebSecurity extends RemoteAuthWebSecurityConfigurer {
 
-    @SneakyThrows
     public ValidatorWebSecurity(
         ApplicationContext applicationContext, RemoteAuthClient remoteAuthClient) {
       super(applicationContext, remoteAuthClient);

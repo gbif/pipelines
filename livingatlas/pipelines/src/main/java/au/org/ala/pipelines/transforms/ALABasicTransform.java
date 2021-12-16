@@ -14,15 +14,14 @@ import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.api.vocabulary.OccurrenceStatus;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.core.functions.SerializableConsumer;
-import org.gbif.pipelines.core.functions.SerializableFunction;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.BasicInterpreter;
+import org.gbif.pipelines.core.interpreters.core.VocabularyInterpreter;
+import org.gbif.pipelines.core.parsers.vocabulary.VocabularyService;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.transforms.Transform;
-import org.gbif.vocabulary.lookup.LookupConcept;
-import org.gbif.vocabulary.lookup.VocabularyLookup;
 
 /**
  * Beam level transformations for the DWC Occurrence, reads an avro, writs an avro, maps from value
@@ -34,28 +33,22 @@ public class ALABasicTransform extends Transform<ExtendedRecord, BasicRecord> {
 
   private final SerializableSupplier<KeyValueStore<String, OccurrenceStatus>>
       occStatusKvStoreSupplier;
+  private final SerializableSupplier<KeyValueStore<String, List<String>>> recordedByKvStoreSupplier;
+  private final SerializableSupplier<VocabularyService> vocabularyServiceSupplier;
 
   private KeyValueStore<String, OccurrenceStatus> occStatusKvStore;
-
-  private final SerializableSupplier<KeyValueStore<String, List<String>>> recordedByKvStoreSupplier;
-
-  private final SerializableSupplier<VocabularyLookup> lifeStageLookupSupplier;
-
   private KeyValueStore<String, List<String>> recordedByKvStore;
-
-  private VocabularyLookup lifeStageLookup;
-
-  private SerializableFunction<String, Optional<LookupConcept>> lifeStageLookupFn;
+  private VocabularyService vocabularyService;
 
   @Builder(buildMethodName = "create")
   private ALABasicTransform(
       SerializableSupplier<KeyValueStore<String, OccurrenceStatus>> occStatusKvStoreSupplier,
       SerializableSupplier<KeyValueStore<String, List<String>>> recordedByKvStoreSupplier,
-      SerializableSupplier<VocabularyLookup> lifeStageLookupSupplier) {
+      SerializableSupplier<VocabularyService> vocabularyServiceSupplier) {
     super(BasicRecord.class, BASIC, ALABasicTransform.class.getName(), BASIC_RECORDS_COUNT);
     this.occStatusKvStoreSupplier = occStatusKvStoreSupplier;
     this.recordedByKvStoreSupplier = recordedByKvStoreSupplier;
-    this.lifeStageLookupSupplier = lifeStageLookupSupplier;
+    this.vocabularyServiceSupplier = vocabularyServiceSupplier;
   }
 
   /** Maps {@link BasicRecord} to key value, where key is {@link BasicRecord#getId} */
@@ -78,11 +71,8 @@ public class ALABasicTransform extends Transform<ExtendedRecord, BasicRecord> {
     if (recordedByKvStore == null && recordedByKvStoreSupplier != null) {
       recordedByKvStore = recordedByKvStoreSupplier.get();
     }
-    if (lifeStageLookupSupplier != null) {
-      lifeStageLookup = lifeStageLookupSupplier.get();
-      if (lifeStageLookup != null) {
-        lifeStageLookupFn = lifeStageLookup::lookup;
-      }
+    if (vocabularyService == null && vocabularyServiceSupplier != null) {
+      vocabularyService = vocabularyServiceSupplier.get();
     }
   }
 
@@ -107,8 +97,6 @@ public class ALABasicTransform extends Transform<ExtendedRecord, BasicRecord> {
         .via(BasicInterpreter::interpretBasisOfRecord)
         .via(BasicInterpreter::interpretTypifiedName)
         .via(BasicInterpreter::interpretSex)
-        .via(BasicInterpreter::interpretEstablishmentMeans)
-        .via(BasicInterpreter.interpretLifeStage(lifeStageLookupFn))
         .via(BasicInterpreter::interpretTypeStatus)
         .via(BasicInterpreter::interpretIndividualCount)
         .via(BasicInterpreter::interpretReferences)
@@ -120,6 +108,8 @@ public class ALABasicTransform extends Transform<ExtendedRecord, BasicRecord> {
         .via(BasicInterpreter::interpretIdentifiedByIds)
         .via(BasicInterpreter::interpretRecordedByIds)
         .via(BasicInterpreter.interpretOccurrenceStatus(occStatusKvStore))
+        .via(VocabularyInterpreter.interpretEstablishmentMeans(vocabularyService))
+        .via(VocabularyInterpreter.interpretLifeStage(vocabularyService))
         .via(ALABasicInterpreter::interpretLicense)
         .via(ALABasicInterpreter.interpretRecordedBy(recordedByKvStore))
         .getOfNullable();

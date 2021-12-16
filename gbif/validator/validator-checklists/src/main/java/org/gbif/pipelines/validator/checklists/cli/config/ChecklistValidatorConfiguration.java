@@ -7,6 +7,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import lombok.ToString;
+import org.gbif.cli.PropertyName;
 import org.gbif.common.messaging.config.MessagingConfiguration;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 
@@ -37,6 +38,10 @@ public class ChecklistValidatorConfiguration {
 
   @Parameter(names = "--neo-repository")
   public File neoRepository = new File("/tmp/neo");
+
+  @Parameter(names = "--gbif-api-url")
+  @PropertyName("gbif.api.url")
+  public String gbifApiUrl;
 
   @Parameter(names = "--neo-batch-size")
   public int neoBatchSize = 10000;

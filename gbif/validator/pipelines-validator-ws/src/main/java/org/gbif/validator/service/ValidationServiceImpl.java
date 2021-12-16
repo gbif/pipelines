@@ -223,7 +223,10 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
   /** Can the authenticated user update the validation object. */
   private boolean canAccess(Validation validation) {
     return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
-            .anyMatch(a -> a.getAuthority().equals(UserRoles.ADMIN_ROLE))
+            .anyMatch(
+                a ->
+                    a.getAuthority().equals(UserRoles.ADMIN_ROLE)
+                        || a.getAuthority().equals(UserRoles.APP_ROLE))
         || validation.getUsername().equals(getPrincipal().getUsername());
   }
 

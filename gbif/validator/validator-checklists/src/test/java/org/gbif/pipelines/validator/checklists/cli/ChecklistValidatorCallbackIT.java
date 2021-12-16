@@ -3,6 +3,8 @@ package org.gbif.pipelines.validator.checklists.cli;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.UUID;
@@ -22,11 +24,14 @@ import org.junit.Test;
 public class ChecklistValidatorCallbackIT {
 
   @Test
-  public void checklistTest() {
+  public void checklistTest() throws Exception {
+    // Temp dir
+    Path temp = Paths.get(getClass().getResource("/").getFile());
 
     // State
     ChecklistValidatorConfiguration config = new ChecklistValidatorConfiguration();
     config.archiveRepository = getClass().getResource("/dwca/").getFile();
+    config.neoRepository = temp.resolve("neo").toFile();
 
     ValidationWsClient validationClient = ValidationWsClientStub.create();
     MessagePublisher messagePublisher = MessagePublisherStub.create();
@@ -57,8 +62,9 @@ public class ChecklistValidatorCallbackIT {
             uuid, 1, Collections.singleton("VALIDATOR_COLLECT_METRICS"), 1L, "dwca");
 
     // When
-    new ChecklistValidatorCallback(config, validationClient, messagePublisher)
-        .handleMessage(message);
+    ChecklistValidatorCallback callback =
+        new ChecklistValidatorCallback(config, validationClient, messagePublisher);
+    callback.handleMessage(message);
 
     // Should
     Validation result = validationClient.get(uuid);
@@ -71,20 +77,20 @@ public class ChecklistValidatorCallbackIT {
     assertEquals(DwcTerm.Taxon.qualifiedName(), taxon.getRowType());
     assertEquals(Long.valueOf(475L), taxon.getCount());
     assertEquals(Long.valueOf(475L), taxon.getIndexedCount());
-    assertEquals(15, taxon.getTerms().size());
+    assertEquals(14, taxon.getTerms().size());
     assertEquals(5, taxon.getIssues().size());
 
-    Optional<FileInfo> speciesprofileOpt = getFileInfoByName(result, "speciesprofile.txt");
-    assertTrue(speciesprofileOpt.isPresent());
-    FileInfo speciesprofile = speciesprofileOpt.get();
-    assertEquals(DwcFileType.EXTENSION, speciesprofile.getFileType());
-    assertEquals("http://rs.gbif.org/terms/1.0/SpeciesProfile", speciesprofile.getRowType());
-    assertEquals(Long.valueOf(475L), speciesprofile.getCount());
-    assertEquals(Long.valueOf(475L), speciesprofile.getIndexedCount());
-    assertEquals(2, speciesprofile.getTerms().size());
-    assertEquals(0, speciesprofile.getIssues().size());
-    assertTerm(DwcTerm.habitat, 475, 475, speciesprofile);
-    assertTerm("http://rs.gbif.org/terms/1.0/isInvasive", 80, 0, speciesprofile);
+    Optional<FileInfo> speciesProfileOpt = getFileInfoByName(result, "speciesprofile.txt");
+    assertTrue(speciesProfileOpt.isPresent());
+    FileInfo speciesProfile = speciesProfileOpt.get();
+    assertEquals(DwcFileType.EXTENSION, speciesProfile.getFileType());
+    assertEquals("http://rs.gbif.org/terms/1.0/SpeciesProfile", speciesProfile.getRowType());
+    assertEquals(Long.valueOf(475L), speciesProfile.getCount());
+    assertEquals(Long.valueOf(475L), speciesProfile.getIndexedCount());
+    assertEquals(2, speciesProfile.getTerms().size());
+    assertEquals(0, speciesProfile.getIssues().size());
+    assertTerm(DwcTerm.habitat, 475, 475, speciesProfile);
+    assertTerm("http://rs.gbif.org/terms/1.0/isInvasive", 80, 0, speciesProfile);
 
     Optional<FileInfo> distributionOpt = getFileInfoByName(result, "distribution.txt");
     assertTrue(distributionOpt.isPresent());
@@ -99,6 +105,7 @@ public class ChecklistValidatorCallbackIT {
     assertTerm(DwcTerm.occurrenceStatus, 475, 475, distribution);
     assertTerm(DwcTerm.establishmentMeans, 475, 0, distribution);
     assertTerm(DwcTerm.locationID, 0, 0, distribution);
+    callback.close();
   }
 
   private Optional<FileInfo> getFileInfoByName(Validation validation, String name) {

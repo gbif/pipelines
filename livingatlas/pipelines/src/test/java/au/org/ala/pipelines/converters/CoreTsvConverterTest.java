@@ -9,8 +9,32 @@ import java.util.List;
 import java.util.Map;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwc.terms.GbifTerm;
-import org.gbif.pipelines.io.avro.*;
+import org.gbif.pipelines.io.avro.ALAAttributionRecord;
+import org.gbif.pipelines.io.avro.ALASensitivityRecord;
+import org.gbif.pipelines.io.avro.ALATaxonRecord;
+import org.gbif.pipelines.io.avro.ALAUUIDRecord;
+import org.gbif.pipelines.io.avro.AgentIdentifier;
+import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.Diagnostic;
+import org.gbif.pipelines.io.avro.EntityReference;
+import org.gbif.pipelines.io.avro.EventDate;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.Image;
+import org.gbif.pipelines.io.avro.ImageRecord;
+import org.gbif.pipelines.io.avro.IndexRecord;
+import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MatchType;
+import org.gbif.pipelines.io.avro.Multimedia;
+import org.gbif.pipelines.io.avro.MultimediaRecord;
+import org.gbif.pipelines.io.avro.Nomenclature;
+import org.gbif.pipelines.io.avro.ParsedName;
+import org.gbif.pipelines.io.avro.Rank;
+import org.gbif.pipelines.io.avro.RankedName;
+import org.gbif.pipelines.io.avro.Status;
+import org.gbif.pipelines.io.avro.TaxonProfile;
+import org.gbif.pipelines.io.avro.TaxonRecord;
+import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.VocabularyConcept;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -80,7 +104,7 @@ public class CoreTsvConverterTest {
       "\"raw_er_disposition\"", // DwcTerm.disposition
       "\"raw_er_dynamicProperties\"", // DwcTerm.dynamicProperties
       "\"1111111\"", // DwcTerm.endDayOfYear
-      "\"br_establishmentMeans\"", // DwcTerm.establishmentMeans
+      "\"{concept: br_establishmentMeans, lineage: [br_establishmentMeans]}\"", // DwcTerm.establishmentMeans
       "\"raw_er_eventRemarks\"", // DwcTerm.eventRemarks
       "\"raw_er_eventTime\"", // DwcTerm.eventTime
       "\"raw_er_fieldNotes\"", // DwcTerm.fieldNotes
@@ -108,7 +132,7 @@ public class CoreTsvConverterTest {
       "\"raw_er_institutionID\"", // DwcTerm.institutionID
       "\"raw_er_island\"", // DwcTerm.island
       "\"raw_er_islandGroup\"", // DwcTerm.islandGroup
-      "\"br_lifeStage\"", // DwcTerm.lifeStage
+      "\"{concept: br_lifeStage, lineage: [br_lifeStageLineage]}\"", // DwcTerm.lifeStage
       "\"raw_er_locationAccordingTo\"", // DwcTerm.locationAccordingTo
       "\"raw_er_locationID\"", // DwcTerm.locationID
       "\"3.3333333333E10\"", // DwcTerm.maximumDistanceAboveSurfaceInMeters
@@ -578,7 +602,7 @@ public class CoreTsvConverterTest {
     // Other Terms
     core.put("taxonRankID", "raw_er_taxonRankID");
     // GBIF Terms
-    core.put(GbifTerm.recordedByID.qualifiedName(), "raw_er_" + GbifTerm.recordedByID.simpleName());
+    core.put(DwcTerm.recordedByID.qualifiedName(), "raw_er_" + DwcTerm.recordedByID.simpleName());
 
     ExtendedRecord er =
         ExtendedRecord.newBuilder()
@@ -610,9 +634,16 @@ public class CoreTsvConverterTest {
             .setGbifId(22L)
             .setBasisOfRecord("br_basisOfRecord")
             .setSex("br_sex")
-            .setLifeStage("br_lifeStage")
-            .setLifeStageLineage(Collections.singletonList("br_lifeStageLineage"))
-            .setEstablishmentMeans("br_establishmentMeans")
+            .setLifeStage(
+                VocabularyConcept.newBuilder()
+                    .setConcept("br_lifeStage")
+                    .setLineage(Collections.singletonList("br_lifeStageLineage"))
+                    .build())
+            .setEstablishmentMeans(
+                VocabularyConcept.newBuilder()
+                    .setConcept("br_establishmentMeans")
+                    .setLineage(Collections.singletonList("br_establishmentMeans"))
+                    .build())
             .setIndividualCount(222)
             .setTypeStatus("br_typeStatus")
             .setTypifiedName("br_typifiedName")
@@ -1372,7 +1403,7 @@ public class CoreTsvConverterTest {
     // Other Terms
     expected.add("taxonRankID");
     // GBIF Terms
-    expected.add(GbifTerm.recordedByID.qualifiedName());
+    expected.add(DwcTerm.recordedByID.qualifiedName());
 
     // When
     List<String> result = CoreCsvConverter.getTerms();

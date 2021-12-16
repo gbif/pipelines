@@ -23,6 +23,7 @@ import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
+import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -229,7 +230,16 @@ public class InterpretedToEsIndexPipeline {
     PipelineResult result = p.run();
     result.waitUntilFinish();
 
+    log.info("Save metrics into the file and set files owner");
     MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
+    String metadataPath =
+        PathBuilder.buildDatasetAttemptPath(options, options.getMetaFileName(), false);
+    FsUtils.setOwner(
+        options.getHdfsSiteConfig(),
+        options.getCoreSiteConfig(),
+        metadataPath,
+        "crap",
+        "supergroup");
 
     log.info("Pipeline has been finished");
   }

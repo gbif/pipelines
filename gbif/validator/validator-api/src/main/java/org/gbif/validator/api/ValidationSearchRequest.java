@@ -3,6 +3,7 @@ package org.gbif.validator.api;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -10,6 +11,7 @@ import javax.validation.constraints.Min;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import org.gbif.api.annotation.PartialDate;
 
 @Data
 @Builder
@@ -49,6 +51,12 @@ public class ValidationSearchRequest {
 
   /** Validation statuses. */
   private Set<Validation.Status> status;
+
+  @PartialDate("fromDate")
+  private Date fromDate;
+
+  @PartialDate("toDate")
+  private Date toDate;
 
   private List<SortBy> sortBy;
 

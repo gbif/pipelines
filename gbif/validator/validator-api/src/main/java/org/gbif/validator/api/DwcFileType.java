@@ -7,7 +7,7 @@ public enum DwcFileType {
   CORE(true),
   EXTENSION(true);
 
-  boolean dataBased;
+  final boolean dataBased;
 
   DwcFileType(boolean dataBased) {
     this.dataBased = dataBased;

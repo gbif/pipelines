@@ -29,3 +29,6 @@ spring:
   http:
     multipart:
       enabled: true
+retentionPolicy:
+  keepDays: 14
+  cron: 0 0 * * * *

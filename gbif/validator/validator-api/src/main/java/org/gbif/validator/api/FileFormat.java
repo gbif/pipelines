@@ -7,7 +7,7 @@ public enum FileFormat {
   TABULAR(true),
   SPREADSHEET(false);
 
-  boolean tabularBased;
+  final boolean tabularBased;
 
   FileFormat(boolean tabularBased) {
     this.tabularBased = tabularBased;

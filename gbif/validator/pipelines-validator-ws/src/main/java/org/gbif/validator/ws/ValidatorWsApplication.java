@@ -12,6 +12,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication(exclude = {ElasticSearchRestHealthContributorAutoConfiguration.class})
 @EnableConfigurationProperties
@@ -40,6 +41,7 @@ import org.springframework.context.annotation.FilterType;
             GbifAuthenticationManagerImpl.class
           })
     })
+@EnableScheduling
 public class ValidatorWsApplication {
 
   public static void main(String[] args) {

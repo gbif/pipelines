@@ -16,8 +16,10 @@
       <!-- Message start -->
       <table style="margin: 0;padding: 0;border-collapse: collapse;width: 100% !important;">
         <tr>
-          <td align="center" style="margin: 0;padding: 10px 0;background: #509E2F;color: white;font-size:20px;font-weight: bold;">
-            <img src="cid:logo.png" width="300" height="114" alt="GBIF &ndash; Global Biodiversity Information Facility" style="margin: 0 auto;padding: 0;max-width: 100%;display: block;">
+          <td align="center" style="margin:0; padding:30px 55px; background:white; color:white; font-size:20px; font-weight:bold">
+            <div style="border-bottom:1px solid #dee2e6">
+              <img src="cid:logo.png" width="300" height="114" alt="GBIF &ndash; Global Biodiversity Information Facility" style="margin: 0 auto;padding: 0;max-width: 100%;display: block;">
+            </div>
           </td>
         </tr>
         <tr>

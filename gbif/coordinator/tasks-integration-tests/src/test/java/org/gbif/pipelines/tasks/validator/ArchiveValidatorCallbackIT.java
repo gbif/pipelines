@@ -451,6 +451,58 @@ public class ArchiveValidatorCallbackIT {
     assertTrue(publisher.getMessages().isEmpty());
   }
 
+  @Test
+  public void testFailedMissedFilesCase() {
+    // State
+    ArchiveValidatorConfiguration config = new ArchiveValidatorConfiguration();
+    config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
+    config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
+
+    ValidationWsClientStub validationClient = ValidationWsClientStub.create();
+
+    ArchiveValidatorCallback callback =
+        new ArchiveValidatorCallback(
+            config,
+            publisher,
+            curator,
+            historyClient,
+            validationClient,
+            new SchemaValidatorFactory());
+
+    UUID uuid = UUID.fromString("b578802e-f1ca-4e5b-acf8-4d45306e6b48");
+    int attempt = 1;
+    String crawlId = uuid.toString();
+
+    PipelinesArchiveValidatorMessage message =
+        new PipelinesArchiveValidatorMessage(
+            uuid,
+            attempt,
+            Collections.singleton(VALIDATOR_VALIDATE_ARCHIVE.name()),
+            EXECUTION_ID,
+            true,
+            FileFormat.DWCA.name());
+
+    // When
+    callback.handleMessage(message);
+
+    // Should
+    Validation validation = validationClient.getValidation();
+    Optional<FileInfo> occurrenceFile =
+        validation.getMetrics().getFileInfos().stream()
+            .filter(x -> x.getRowType() != null)
+            .filter(x -> x.getRowType().equals(DwcTerm.Occurrence.qualifiedName()))
+            .findFirst();
+
+    assertTrue(occurrenceFile.isPresent());
+    assertFalse(occurrenceFile.get().getIssues().isEmpty());
+
+    assertFalse(checkExists(curator, crawlId, LABEL));
+    assertFalse(checkExists(curator, crawlId, Fn.ERROR_MESSAGE.apply(LABEL)));
+    assertFalse(checkExists(curator, crawlId, Fn.MQ_CLASS_NAME.apply(LABEL)));
+    assertFalse(checkExists(curator, crawlId, Fn.MQ_MESSAGE.apply(LABEL)));
+    assertTrue(publisher.getMessages().isEmpty());
+  }
+
   private boolean checkExists(CuratorFramework curator, String id, String path) {
     return ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(id, path));
   }

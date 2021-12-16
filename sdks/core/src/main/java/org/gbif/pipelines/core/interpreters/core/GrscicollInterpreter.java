@@ -117,8 +117,7 @@ public class GrscicollInterpreter {
     BasisOfRecord bor = BasisOfRecord.valueOf(br.getBasisOfRecord());
     return bor == BasisOfRecord.PRESERVED_SPECIMEN
         || bor == BasisOfRecord.FOSSIL_SPECIMEN
-        || bor == BasisOfRecord.LIVING_SPECIMEN
-        || bor == BasisOfRecord.MATERIAL_SAMPLE;
+        || bor == BasisOfRecord.LIVING_SPECIMEN;
   }
 
   @VisibleForTesting

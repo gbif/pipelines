@@ -1,5 +1,6 @@
 package org.gbif.pipelines.validator.rules;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
@@ -14,7 +15,7 @@ public class BasicMetadataEvaluatorTest {
   public void allIssuesTest() throws Exception {
     // State
     String file = this.getClass().getResource("/dwca/eml-content-issues.xml").getFile();
-    String eml = new String(Files.readAllBytes(Paths.get(file)));
+    String eml = new String(Files.readAllBytes(Paths.get(file)), StandardCharsets.UTF_8);
     // When
     List<IssueInfo> result = BasicMetadataEvaluator.evaluate(eml);
 
