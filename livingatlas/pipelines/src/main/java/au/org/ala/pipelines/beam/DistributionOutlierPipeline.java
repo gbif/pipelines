@@ -50,6 +50,7 @@ public class DistributionOutlierPipeline {
   static String NEW_RECORD_COUNTER = "NewRecordCounter";
 
   public static void main(String[] args) throws Exception {
+    log.debug("debug test");
     VersionInfo.print();
     CombinedYamlConfiguration conf = new CombinedYamlConfiguration(args);
     String[] combinedArgs = conf.toArgs("general", "outlier");
