@@ -1,1 +1,4 @@
 # which filesystem to use: local or hdfs
+outlier:
+  baseUrl: https://spatial-test.ala.org.au/ws/
+  runner: DirectRunner
