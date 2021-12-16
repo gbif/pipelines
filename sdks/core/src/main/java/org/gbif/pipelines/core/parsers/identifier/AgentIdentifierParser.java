@@ -28,6 +28,7 @@ public class AgentIdentifierParser {
     }
     return Stream.of(raw.split(DELIMITER))
         .map(String::trim)
+        .filter(x -> !x.isEmpty())
         .map(AgentIdentifierParser::parseValue)
         .collect(Collectors.toSet());
   }

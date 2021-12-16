@@ -100,13 +100,13 @@ public class AgentIdentifierParserTest {
                 .build());
 
     // State
-    String raw = "https://www.wikidata.org/wiki/0000";
+    String raw = "| https://www.wikidata.org/wiki/0000";
 
     // When
     Set<AgentIdentifier> set = AgentIdentifierParser.parse(raw);
 
     // Should
-    assertFalse(set.isEmpty());
+    assertEquals(1, set.size());
     assertEquals(expected, set);
   }
 
