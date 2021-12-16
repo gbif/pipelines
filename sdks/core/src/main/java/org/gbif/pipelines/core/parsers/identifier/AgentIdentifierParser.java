@@ -20,7 +20,7 @@ public class AgentIdentifierParser {
   private static final WikidataValidator WIKIDATA_VALIDATOR = new WikidataValidator();
   private static final OtherValidator OTHER_VALIDATOR = new OtherValidator();
 
-  private static final String DELIMITER = "\\|";
+  private static final String DELIMITER = "[|,]";
 
   public static Set<AgentIdentifier> parse(String raw) {
     if (Strings.isNullOrEmpty(raw)) {
