@@ -576,8 +576,9 @@ public class IndexRecordToSolrPipeline {
                 .setBooleans(indexRecord.getBooleans())
                 .setInts(indexRecord.getInts())
                 .build();
-
-        ouputIR.getDoubles().put(DISTANCE_TO_EDL, outlierRecord.getDistanceOutOfEDL());
+        if (outlierRecord != null) {
+          ouputIR.getDoubles().put(DISTANCE_TO_EDL, outlierRecord.getDistanceOutOfEDL());
+        }
 
         c.output(KV.of(id, ouputIR));
       }
