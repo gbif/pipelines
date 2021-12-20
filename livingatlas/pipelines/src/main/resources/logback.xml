@@ -7,9 +7,6 @@
 
     <property name="defaultPattern" value="%-5level [%date{'yyyy-MM-dd HH:mm:ss,SSSZ'}] [%thread] %logger: %msg%n%xEx"/>
 
-    log4j.appender.console.layout.ConversionPattern=%d{dd-MMM} %color-black{%d{HH:mm:ss}} [%color-magenta{%X{step}}] [%color-blue{%X{datasetId}}] [%color{%p}] %color-cyan{%c{1}}: %color-blue{%m%n}
-
-
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>${defaultPattern}</pattern>

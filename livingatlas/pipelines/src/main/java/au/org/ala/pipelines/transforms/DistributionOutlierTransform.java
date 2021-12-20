@@ -76,20 +76,23 @@ public class DistributionOutlierTransform
               boolean hasEDL = edl.size() > 0 ? true : false;
               double distanceToEDL = hasEDL ? 0 : -1; // 0 -inside, -1: no EDL
               // Available EDLD of this species
-              Map points = new HashMap();
-              while (iter.hasNext()) {
-                IndexRecord record = iter.next();
-                DistributionOutlierRecord dr = convertToDistribution(record, distanceToEDL);
-                if (dr != null) {
-                  outputs.add(dr);
-                  Map point = new HashMap();
-                  point.put("decimalLatitude", dr.getDecimalLatitude());
-                  point.put("decimalLongitude", dr.getDecimalLongitude());
-                  points.put(dr.getId(), point);
-                }
-              }
 
               if (hasEDL) {
+                Map points = new HashMap();
+                while (iter.hasNext()) {
+                  IndexRecord record = iter.next();
+                  DistributionOutlierRecord dr = convertToDistribution(record, distanceToEDL);
+                  if (dr != null) {
+                    outputs.add(dr);
+                    Map point = new HashMap();
+                    point.put("decimalLatitude", dr.getDecimalLatitude());
+                    point.put("decimalLongitude", dr.getDecimalLongitude());
+                    points.put(dr.getId(), point);
+                  }
+                }
+
+                log.debug(
+                    String.format("Calculating %d records of the species %s", points.size(), lsid));
                 Map<String, Double> results = distributionService.outliers(lsid, points);
                 Iterator<Map.Entry<String, Double>> iterator = results.entrySet().iterator();
                 while (iterator.hasNext()) {
@@ -99,14 +102,16 @@ public class DistributionOutlierTransform
                       .forEach(it -> it.setDistanceOutOfEDL(entry.getValue()));
                 }
               }
-
             } catch (ExpertDistributionException e) {
+              log.error("Error in processing the species: " + lsid + " . Ignored");
               log.error(e.getMessage());
-              throw new RuntimeException(
-                  "Expert distribution service throws a runtime error, please check logs");
+              // throw new RuntimeException(
+              //  "Expert distribution service throws a runtime error, please check
+              // logs");
             } catch (Exception e) {
+              log.error("Error in processing the species: " + lsid + " . Ignored");
               log.error(e.getMessage());
-              throw new RuntimeException("Runtime error: " + e.getMessage());
+              // throw new RuntimeException("Runtime error: " + e.getMessage());
             }
 
             return outputs;
