@@ -12,6 +12,7 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
+import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.file.CodecFactory;
@@ -39,6 +40,7 @@ import org.gbif.validator.ws.client.ValidationWsClient;
 
 /** Call back which is called when the {@link PipelinesXmlMessage} is received. */
 @Slf4j
+@AllArgsConstructor
 public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessage>
     implements StepHandler<PipelinesXmlMessage, PipelinesVerbatimMessage> {
 
@@ -52,23 +54,6 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
   private final ValidationWsClient validationClient;
   private final ExecutorService executor;
   private final HttpClient httpClient;
-
-  public XmlToAvroCallback(
-      XmlToAvroConfiguration config,
-      MessagePublisher publisher,
-      CuratorFramework curator,
-      PipelinesHistoryClient historyClient,
-      ValidationWsClient validationClient,
-      ExecutorService executor,
-      HttpClient httpClient) {
-    this.config = config;
-    this.publisher = publisher;
-    this.curator = curator;
-    this.historyClient = historyClient;
-    this.validationClient = validationClient;
-    this.executor = executor;
-    this.httpClient = httpClient;
-  }
 
   @Override
   public void handleMessage(PipelinesXmlMessage message) {

@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.file.CodecFactory;
@@ -31,6 +32,7 @@ import org.gbif.validator.ws.client.ValidationWsClient;
 
 /** Callback which is called when the {@link PipelinesDwcaMessage} is received. */
 @Slf4j
+@AllArgsConstructor
 public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMessage>
     implements StepHandler<PipelinesDwcaMessage, PipelinesVerbatimMessage> {
 
@@ -39,19 +41,6 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
   private final CuratorFramework curator;
   private final PipelinesHistoryClient historyClient;
   private final ValidationWsClient validationClient;
-
-  public DwcaToAvroCallback(
-      DwcaToAvroConfiguration config,
-      MessagePublisher publisher,
-      CuratorFramework curator,
-      PipelinesHistoryClient historyClient,
-      ValidationWsClient validationClient) {
-    this.config = config;
-    this.publisher = publisher;
-    this.curator = curator;
-    this.historyClient = historyClient;
-    this.validationClient = validationClient;
-  }
 
   @Override
   public void handleMessage(PipelinesDwcaMessage message) {

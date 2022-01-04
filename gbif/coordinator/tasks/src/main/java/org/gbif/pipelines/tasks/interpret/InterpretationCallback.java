@@ -14,6 +14,7 @@ import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
@@ -42,6 +43,7 @@ import org.gbif.validator.ws.client.ValidationWsClient;
 
 /** Callback which is called when the {@link PipelinesVerbatimMessage} is received. */
 @Slf4j
+@AllArgsConstructor
 public class InterpretationCallback extends AbstractMessageCallback<PipelinesVerbatimMessage>
     implements StepHandler<PipelinesVerbatimMessage, PipelinesInterpretedMessage> {
 
@@ -54,23 +56,6 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
   private final ValidationWsClient validationClient;
   private final CloseableHttpClient httpClient;
   private final ExecutorService executor;
-
-  public InterpretationCallback(
-      InterpreterConfiguration config,
-      MessagePublisher publisher,
-      CuratorFramework curator,
-      PipelinesHistoryClient historyClient,
-      ValidationWsClient validationClient,
-      CloseableHttpClient httpClient,
-      ExecutorService executor) {
-    this.config = config;
-    this.publisher = publisher;
-    this.curator = curator;
-    this.historyClient = historyClient;
-    this.validationClient = validationClient;
-    this.httpClient = httpClient;
-    this.executor = executor;
-  }
 
   @Override
   public void handleMessage(PipelinesVerbatimMessage message) {

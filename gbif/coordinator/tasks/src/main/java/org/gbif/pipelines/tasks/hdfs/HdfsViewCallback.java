@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Predicate;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
 import org.gbif.api.model.pipelines.StepRunner;
@@ -28,6 +29,7 @@ import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 
 /** Callback which is called when the {@link PipelinesInterpretedMessage} is received. */
 @Slf4j
+@AllArgsConstructor
 public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpretedMessage>
     implements StepHandler<PipelinesInterpretedMessage, PipelinesHdfsViewBuiltMessage> {
 
@@ -38,19 +40,6 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
   private final CuratorFramework curator;
   private final PipelinesHistoryClient historyClient;
   private final ExecutorService executor;
-
-  public HdfsViewCallback(
-      HdfsViewConfiguration config,
-      MessagePublisher publisher,
-      CuratorFramework curator,
-      PipelinesHistoryClient historyClient,
-      ExecutorService executor) {
-    this.config = config;
-    this.publisher = publisher;
-    this.curator = curator;
-    this.historyClient = historyClient;
-    this.executor = executor;
-  }
 
   @Override
   public void handleMessage(PipelinesInterpretedMessage message) {

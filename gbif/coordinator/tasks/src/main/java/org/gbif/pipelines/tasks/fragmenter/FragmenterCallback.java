@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.hadoop.fs.FileSystem;
@@ -32,6 +33,7 @@ import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 
 /** Callback which is called when the {@link PipelinesInterpretedMessage} is received. */
 @Slf4j
+@AllArgsConstructor
 public class FragmenterCallback extends AbstractMessageCallback<PipelinesInterpretedMessage>
     implements StepHandler<PipelinesInterpretedMessage, PipelinesFragmenterMessage> {
 
@@ -44,23 +46,6 @@ public class FragmenterCallback extends AbstractMessageCallback<PipelinesInterpr
   private final ExecutorService executor;
   private final Connection hbaseConnection;
   private final KeygenConfig keygenConfig;
-
-  public FragmenterCallback(
-      FragmenterConfiguration config,
-      MessagePublisher publisher,
-      CuratorFramework curator,
-      PipelinesHistoryClient historyClient,
-      ExecutorService executor,
-      Connection hbaseConnection,
-      KeygenConfig keygenConfig) {
-    this.config = config;
-    this.publisher = publisher;
-    this.curator = curator;
-    this.historyClient = historyClient;
-    this.executor = executor;
-    this.hbaseConnection = hbaseConnection;
-    this.keygenConfig = keygenConfig;
-  }
 
   @Override
   public void handleMessage(PipelinesInterpretedMessage message) {

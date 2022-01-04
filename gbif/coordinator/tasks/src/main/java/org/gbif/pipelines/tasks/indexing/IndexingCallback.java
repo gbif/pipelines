@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Predicate;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.http.HttpResponse;
@@ -35,6 +36,7 @@ import org.gbif.validator.ws.client.ValidationWsClient;
 
 /** Callback which is called when the {@link PipelinesInterpretedMessage} is received. */
 @Slf4j
+@AllArgsConstructor
 public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpretedMessage>
     implements StepHandler<PipelinesInterpretedMessage, PipelinesIndexedMessage> {
 
@@ -47,23 +49,6 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
   private final PipelinesHistoryClient historyClient;
   private final ValidationWsClient validationClient;
   private final ExecutorService executor;
-
-  public IndexingCallback(
-      IndexingConfiguration config,
-      MessagePublisher publisher,
-      CuratorFramework curator,
-      HttpClient httpClient,
-      PipelinesHistoryClient historyClient,
-      ValidationWsClient validationClient,
-      ExecutorService executor) {
-    this.config = config;
-    this.publisher = publisher;
-    this.curator = curator;
-    this.httpClient = httpClient;
-    this.historyClient = historyClient;
-    this.validationClient = validationClient;
-    this.executor = executor;
-  }
 
   @Override
   public void handleMessage(PipelinesInterpretedMessage message) {
