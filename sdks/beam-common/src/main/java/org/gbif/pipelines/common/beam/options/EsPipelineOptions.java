@@ -87,4 +87,10 @@ public interface EsPipelineOptions extends PipelineOptions {
   String getEsDocumentId();
 
   void setEsDocumentId(String esDocumentId);
+
+  @Description("Limit number of pushing queries at the time")
+  @Default.Integer(-1)
+  Integer getBackPressure();
+
+  void setBackPressure(Integer backPressure);
 }

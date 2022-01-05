@@ -188,7 +188,8 @@ public class InterpretedToHdfsViewPipeline {
     String hdfsSiteConfig = options.getHdfsSiteConfig();
     String coreSiteConfig = options.getCoreSiteConfig();
     String datasetId = options.getDatasetId();
-    Integer attempt = options.getAttempt();    Set<String> types = options.getInterpretationTypes();
+    Integer attempt = options.getAttempt();
+    Set<String> types = options.getInterpretationTypes();
 
     Set<String> deleteTypes =
         RecordType.getAllTables().stream().map(RecordType::name).collect(Collectors.toSet());
