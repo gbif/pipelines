@@ -349,8 +349,10 @@ public class VerbatimToInterpretedPipeline {
       // Skip interpretation and use avro reader when partial intepretation is activated
       Function<ExtendedRecord, Optional<BasicRecord>> brFn;
       if (useBasicRecordWriteIO(types)) {
+        log.info("Interpreting BASIC records...");
         brFn = basicTransform::processElement;
       } else {
+        log.info("Skip BASIC interpretation and reading BASIC records from avro files...");
         basicWriter.close();
         basicInvalidWriter.close();
         Map<String, BasicRecord> basicRecordMap =
@@ -358,6 +360,7 @@ public class VerbatimToInterpretedPipeline {
         brFn = er -> Optional.ofNullable(basicRecordMap.get(er.getId()));
       }
 
+      log.info("Аiltering GBIF id duplicates");
       // Filter GBIF id duplicates
       UniqueGbifIdTransform gbifIdTransform =
           UniqueGbifIdTransform.builder()
@@ -366,6 +369,7 @@ public class VerbatimToInterpretedPipeline {
               .basicTransformFn(brFn)
               .useSyncMode(useSyncMode)
               .skipTransform(useErdId)
+              .counterFn(incMetricFn)
               .build()
               .run();
 
@@ -405,7 +409,7 @@ public class VerbatimToInterpretedPipeline {
             }
           };
 
-      log.info("Starting interpretation...");
+      log.info("Starting rest of interpretations...");
       // Run async writing for BasicRecords
       Stream<CompletableFuture<Void>> streamBr = Stream.empty();
       if (useBasicRecordWriteIO(types)) {
