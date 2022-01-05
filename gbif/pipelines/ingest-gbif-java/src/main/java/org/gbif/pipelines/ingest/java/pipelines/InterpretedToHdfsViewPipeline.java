@@ -183,13 +183,12 @@ public class InterpretedToHdfsViewPipeline {
 
     MDC.put("datasetKey", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
-    MDC.put("step", StepType.INTERPRETED_TO_INDEX.name());
+    MDC.put("step", StepType.HDFS_VIEW.name());
 
     String hdfsSiteConfig = options.getHdfsSiteConfig();
     String coreSiteConfig = options.getCoreSiteConfig();
     String datasetId = options.getDatasetId();
-    Integer attempt = options.getAttempt();
-    Set<String> types = options.getInterpretationTypes();
+    Integer attempt = options.getAttempt();    Set<String> types = options.getInterpretationTypes();
 
     Set<String> deleteTypes =
         RecordType.getAllTables().stream().map(RecordType::name).collect(Collectors.toSet());
