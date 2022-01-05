@@ -88,7 +88,7 @@ public class UniqueGbifIdTransform {
                   } else if (br.getGbifId() != null) {
                     filter(br);
                   } else {
-                    counterFn.accept(INVALID_GBIF_ID_COUNT);
+                    incMetrics(INVALID_GBIF_ID_COUNT);
                     brInvalidMap.put(br.getId(), br);
                     log.error("GBIF ID is null, occurrenceId - {}", br.getId());
                   }
@@ -103,17 +103,21 @@ public class UniqueGbifIdTransform {
       int compare =
           HashConverter.getSha1(br.getId()).compareTo(HashConverter.getSha1(record.getId()));
       if (compare < 0) {
-        counterFn.accept(IDENTICAL_GBIF_OBJECTS_COUNT);
+        incMetrics(IDENTICAL_GBIF_OBJECTS_COUNT);
         brMap.put(br.getGbifId().toString(), br);
         brInvalidMap.put(record.getId(), record);
       } else {
-        counterFn.accept(DUPLICATE_GBIF_IDS_COUNT);
+        incMetrics(DUPLICATE_GBIF_IDS_COUNT);
         brInvalidMap.put(br.getId(), br);
       }
       log.error("GBIF ID collision, gbifId - {}, occurrenceId - {}", br.getGbifId(), br.getId());
     } else {
-      counterFn.accept(UNIQUE_GBIF_IDS_COUNT);
+      incMetrics(UNIQUE_GBIF_IDS_COUNT);
       brMap.put(br.getGbifId().toString(), br);
     }
+  }
+
+  private void incMetrics(String metricName) {
+    Optional.ofNullable(counterFn).ifPresent(x -> x.accept(metricName));
   }
 }
