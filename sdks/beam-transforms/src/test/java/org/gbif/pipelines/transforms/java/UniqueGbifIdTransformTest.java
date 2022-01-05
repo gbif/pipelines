@@ -29,18 +29,6 @@ public class UniqueGbifIdTransformTest {
       BasicTransform.builder().gbifIdFn(gbifIdFn).useExtendedRecordId(true).create();
 
   @Test
-  public void rest() throws Exception {
-    Set<String> index =
-        new HashSet<>(Files.readAllLines(Paths.get("/Users/cgp440/Downloads/uat_index.csv")));
-    Set<String> push =
-        new HashSet<>(Files.readAllLines(Paths.get("/Users/cgp440/Downloads/uat_push.csv")));
-
-    push.removeAll(index);
-
-    push.forEach(System.out::println);
-  }
-
-  @Test
   public void skipFunctionTest() {
     // State
     final Map<String, ExtendedRecord> input = createErMap("1_1", "2_2", "3_3", "4_4");
