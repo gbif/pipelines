@@ -4,7 +4,7 @@ import static org.gbif.pipelines.validator.checklists.model.ObjectToTermMapper.t
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -13,9 +13,9 @@ import lombok.Data;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.Term;
 
+/** Object holder for the results of Checklists normalization. */
 @Data
 @Builder
-/** Object holder for the results of Checklists normalization. */
 public class NormalizedTermMapUsageData {
 
   private final Map<Term, String> verbatimNameUsage;
@@ -63,7 +63,7 @@ public class NormalizedTermMapUsageData {
 
     if (normalizedNameUsageData.getUsageExtensions() != null) {
 
-      Map<Extension, List<Map<Term, String>>> extensions = new HashMap<>();
+      Map<Extension, List<Map<Term, String>>> extensions = new EnumMap<>(Extension.class);
 
       collectInterpretedExtension(
           normalizedNameUsageData.getUsageExtensions().descriptions,
