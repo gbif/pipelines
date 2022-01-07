@@ -105,6 +105,7 @@ public class ElasticsearchWriter<T> {
       pushIntoEsFn.run();
 
       // Wait for all futures
+      log.info("Waiting for all threads to arrive...");
       phaser.arriveAndAwaitAdvance();
     }
   }
@@ -118,7 +119,7 @@ public class ElasticsearchWriter<T> {
       while (phaser.getUnarrivedParties() > backPressure) {
         log.info("Back pressure barrier: too many rows wainting...");
         try {
-          TimeUnit.MILLISECONDS.sleep(50L);
+          TimeUnit.MILLISECONDS.sleep(100L);
         } catch (InterruptedException ex) {
           log.warn("Back pressure barrier", ex);
           Thread.currentThread().interrupt();
