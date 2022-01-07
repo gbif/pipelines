@@ -75,21 +75,22 @@ public final class FsUtils {
     return fs;
   }
 
-  /** Removes temporal directory, before closing Main thread */
+  /** Removes temporal directory */
   public static void removeTmpDirectory(String path) {
-    Runnable runnable =
-        () -> {
-          File tmp = Paths.get(path).toFile();
-          if (tmp.exists()) {
-            try {
-              FileUtils.deleteDirectory(tmp);
-              log.info("temp directory {} deleted", tmp.getPath());
-            } catch (IOException e) {
-              log.error("Could not delete temp directory {}", tmp.getPath());
-            }
-          }
-        };
+    File tmp = Paths.get(path).toFile();
+    if (tmp.exists()) {
+      try {
+        FileUtils.deleteDirectory(tmp);
+        log.info("temp directory {} deleted", tmp.getPath());
+      } catch (IOException e) {
+        log.error("Could not delete temp directory {}", tmp.getPath());
+      }
+    }
+  }
 
+  /** Removes temporal directory, before closing Main thread */
+  public static void removeTmpDirectoryAfterShutdown(String path) {
+    Runnable runnable = () -> removeTmpDirectory(path);
     Runtime.getRuntime().addShutdownHook(new Thread(runnable));
   }
 

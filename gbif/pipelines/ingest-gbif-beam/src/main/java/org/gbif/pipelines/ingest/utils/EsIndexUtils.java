@@ -191,7 +191,8 @@ public class EsIndexUtils {
    * an update timeout
    */
   public static void refreshIndex(EsIndexingPipelineOptions options) {
-    EsService.refreshIndex(
-        EsClient.from(EsConfig.from(options.getEsHosts())), options.getEsIndexName());
+    try (EsClient esClient = EsClient.from(EsConfig.from(options.getEsHosts()))) {
+      EsService.refreshIndex(esClient, options.getEsIndexName());
+    }
   }
 }

@@ -107,6 +107,7 @@ public class ElasticsearchWriter<T> {
       // Wait for all futures
       log.info("Waiting for all threads to arrive...");
       phaser.arriveAndAwaitAdvance();
+      log.info("Writing data to ES has been finished");
     }
   }
 
