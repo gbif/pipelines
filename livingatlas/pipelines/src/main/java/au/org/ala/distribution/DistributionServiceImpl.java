@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import java.io.IOException;
 import java.io.Serializable;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -50,12 +52,14 @@ public class DistributionServiceImpl implements Serializable {
 
   public List<DistributionLayer> findLayersByLsid(String lsid)
       throws IOException, ExpertDistributionException {
+    lsid = URLEncoder.encode(lsid, StandardCharsets.UTF_8.toString());
     Response<List<DistributionLayer>> response = service.getLayersByLsid(lsid, "false").execute();
     int code = response.code();
     if (code >= 200 && code < 300) {
       List<au.org.ala.distribution.DistributionLayer> layers = response.body();
       return layers;
     } else {
+      log.error("Error in finding the expert distribution layer of " + lsid);
       errorHandler(code, response);
       return null;
     }
@@ -63,6 +67,7 @@ public class DistributionServiceImpl implements Serializable {
 
   public Map<String, Double> outliers(String lsid, Map<String, Map<String, Double>> points)
       throws IOException, ExpertDistributionException {
+    lsid = URLEncoder.encode(lsid, StandardCharsets.UTF_8.toString());
     Response<Map<String, Double>> response = service.outliers(lsid, points).execute();
     int code = response.code();
     if (code >= 200 && code < 300) {
