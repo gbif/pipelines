@@ -12,16 +12,21 @@ public interface DistributionService {
   @GET("distribution/")
   Call<List<DistributionLayer>> getLayers();
 
+  /**
+   * @param id the species id MUST be URLEncoded
+   * @param nowkt
+   * @return
+   */
   @GET("distribution/lsids/{id}")
   Call<List<DistributionLayer>> getLayersByLsid(
-      @Path("id") String id, @Query("nowkt") String nowkt);
+      @Path(value = "id") String id, @Query("nowkt") String nowkt);
 
   /**
-   * @param lsid
+   * @param id the species id MUST be URLEncoded
    * @param points Map<uuid, <decimalLatitude,decimalLongitude>>
    * @return
    */
   @POST("distribution/outliers/{id}")
   Call<Map<String, Double>> outliers(
-      @Path("id") String lsid, @Body Map<String, Map<String, Double>> points);
+      @Path(value = "id") String id, @Body Map<String, Map<String, Double>> points);
 }
