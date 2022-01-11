@@ -7,8 +7,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URI;
+import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -189,10 +190,15 @@ public class HdfsUtils {
     getSubDirList(hdfsSiteConfig, coreSiteConfig, filePath).stream()
         .filter(
             x ->
-                LocalDateTime.ofEpochSecond(x.getModificationTime(), 0, ZoneOffset.UTC)
+                LocalDateTime.ofInstant(
+                        Instant.ofEpochMilli(x.getModificationTime()), ZoneId.systemDefault())
                     .isBefore(date))
-        .map(y -> y.getPath().getName())
-        .forEach(z -> deleteDirectory(hdfsSiteConfig, coreSiteConfig, z));
+        .map(y -> y.getPath().toString())
+        .forEach(
+            z -> {
+              boolean deleted = deleteDirectory(hdfsSiteConfig, coreSiteConfig, z);
+              log.info("Tried to delete directory {}, is deleted? {}", z, deleted);
+            });
   }
 
   private static FileSystem getFileSystem(
