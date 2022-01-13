@@ -151,15 +151,15 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
     }
   }
 
-  /** Gets a validation by its key, if exists */
+  /**
+   * Gets a validation by its key, if exists. Access to a validation to all users
+   * gbif/portal-feedback#3844
+   */
   @Override
   public Validation get(UUID key) {
     Validation validation = validationMapper.get(key);
     if (validation == null) {
       throw errorMapper.apply(Validation.ErrorCode.NOT_FOUND);
-    }
-    if (!canAccess(validation)) {
-      throw errorMapper.apply(Validation.ErrorCode.AUTHORIZATION_ERROR);
     }
     return validation;
   }
