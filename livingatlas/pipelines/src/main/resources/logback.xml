@@ -51,15 +51,4 @@
     <root level="error">
         <appender-ref ref="CONSOLE"/>
     </root>
-
-    <!--    Passing external config with -Dlogback.configurationFile=xxxx   -->
-    <!--    Example:                                                        -->
-    <!--    <included>                                                      -->
-    <!--        <logger name="org.gbif" level="info" additivity="false">    -->
-    <!--            <appender-ref ref="CONSOLE"/>                           -->
-    <!--        </logger>                                                   -->
-    <!--    </included>                                                     -->
-
-    <include file="${logback.configurationFile}"/>
-
 </configuration>
