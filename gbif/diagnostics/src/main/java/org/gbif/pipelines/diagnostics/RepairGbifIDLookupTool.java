@@ -188,9 +188,11 @@ public class RepairGbifIDLookupTool {
       HBaseLockingKeyService keygenService, String triplet, String occurrenceId) {
     Map<String, Long> keysToDelete =
         deletionStrategyType.getKeysToDelete(keygenService, onlyCollisions, triplet, occurrenceId);
-    keysToDelete.forEach(
-        (key, value) -> log.info("Delete lookup key - {}, gbifID - {}", key, value));
-    if (!dryRun) {
+    if (!keysToDelete.isEmpty()) {
+      log.info("Use keys to request, triplet: {} and occurrenceId: {}", triplet, occurrenceId);
+      keysToDelete.forEach((k, v) -> log.info("Delete lookup key - {}, gbifID - {}", k, v));
+    }
+    if (!dryRun && !keysToDelete.isEmpty()) {
       keygenService.deleteKeyByUniques(keysToDelete.keySet());
     }
   }
