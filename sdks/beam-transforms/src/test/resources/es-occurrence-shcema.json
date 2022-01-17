@@ -22,6 +22,8 @@
         "sex": {"type": "text", "copy_to": "all"},
         "lifeStage": {"type":  "text", "copy_to": "all"},
         "establishmentMeans": {"type": "text", "copy_to": "all"},
+        "degreeOfEstablishment": {"type": "keyword", "copy_to": "all"},
+        "pathway": {"type": "keyword", "copy_to": "all"},
         "individualCount": {"type": "integer"},
         "typeStatus": {"type": "text", "copy_to": "all"},
         "references": {"type":"text", "copy_to": "all"},

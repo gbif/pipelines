@@ -1,5 +1,6 @@
 package au.org.ala.pipelines.beam;
 
+import static org.apache.beam.sdk.values.TypeDescriptors.strings;
 import static org.gbif.pipelines.common.beam.utils.PathBuilder.buildDatasetAttemptPath;
 import static org.gbif.pipelines.common.beam.utils.PathBuilder.buildPath;
 
@@ -7,7 +8,7 @@ import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.kvs.ALAPipelinesConfigFactory;
 import au.org.ala.pipelines.converters.CoreCsvConverter;
 import au.org.ala.pipelines.converters.MultimediaCsvConverter;
-import au.org.ala.pipelines.options.SolrPipelineOptions;
+import au.org.ala.pipelines.options.DwCAExportPipelineOptions;
 import au.org.ala.pipelines.util.DwcaMetaXml;
 import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.ALAFsUtils;
@@ -17,6 +18,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.URL;
+import java.util.List;
 import java.util.Scanner;
 import java.util.function.UnaryOperator;
 import lombok.SneakyThrows;
@@ -24,9 +26,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.TextIO;
+import org.apache.beam.sdk.transforms.Flatten;
 import org.apache.beam.sdk.transforms.MapElements;
+import org.apache.beam.sdk.transforms.SimpleFunction;
 import org.apache.beam.sdk.values.PCollection;
-import org.apache.beam.sdk.values.TypeDescriptors;
 import org.apache.hadoop.fs.FileSystem;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.core.utils.FsUtils;
@@ -39,9 +42,9 @@ public class IndexRecordToDwcaPipeline {
   public static void main(String[] args) throws Exception {
     MDC.put("step", "INDEX_RECORD_TO_DWCA");
     VersionInfo.print();
-    String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "solr");
-    SolrPipelineOptions options =
-        PipelinesOptionsFactory.create(SolrPipelineOptions.class, combinedArgs);
+    String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "export");
+    DwCAExportPipelineOptions options =
+        PipelinesOptionsFactory.create(DwCAExportPipelineOptions.class, combinedArgs);
     MDC.put("datasetId", options.getDatasetId() != null ? options.getDatasetId() : "ALL_RECORDS");
     options.setMetaFileName(ValidationUtils.VERBATIM_METRICS);
     PipelinesOptionsFactory.registerHdfs(options);
@@ -49,7 +52,7 @@ public class IndexRecordToDwcaPipeline {
   }
 
   @SneakyThrows
-  public static void run(SolrPipelineOptions options) {
+  public static void run(DwCAExportPipelineOptions options) {
 
     UnaryOperator<String> pathFn =
         fileName -> buildPath(buildDatasetAttemptPath(options, "dwca", false), fileName).toString();
@@ -62,18 +65,26 @@ public class IndexRecordToDwcaPipeline {
     indexRecordPCollection
         .apply(
             "Convert to core csv string",
-            MapElements.into(TypeDescriptors.strings()).via(CoreCsvConverter::convert))
+            MapElements.into(strings()).via(CoreCsvConverter::convert))
         .apply(
             "Write core csv file",
-            TextIO.write().to(pathFn.apply("occurrence")).withoutSharding().withSuffix(".csv"));
+            TextIO.write().to(pathFn.apply("occurrence")).withoutSharding().withSuffix(".tsv"));
+
+    final String formatPath = options.getImageServicePath();
 
     indexRecordPCollection
         .apply(
-            "Convert to image csv string",
-            MapElements.into(TypeDescriptors.strings()).via(MultimediaCsvConverter::convert))
+            MapElements.via(
+                new SimpleFunction<IndexRecord, List<String>>() {
+                  @Override
+                  public List<String> apply(IndexRecord indexRecord) {
+                    return MultimediaCsvConverter.convert(indexRecord, formatPath);
+                  }
+                }))
+        .apply(Flatten.iterables())
         .apply(
             "Write image csv file",
-            TextIO.write().to(pathFn.apply("image")).withoutSharding().withSuffix(".csv"));
+            TextIO.write().to(pathFn.apply("image")).withoutSharding().withSuffix(".tsv"));
 
     PipelineResult result = p.run();
     result.waitUntilFinish();
@@ -93,7 +104,7 @@ public class IndexRecordToDwcaPipeline {
   }
 
   @SneakyThrows
-  private static void writeEML(SolrPipelineOptions options, UnaryOperator<String> pathFn) {
+  private static void writeEML(DwCAExportPipelineOptions options, UnaryOperator<String> pathFn) {
     ALAPipelinesConfig config =
         ALAPipelinesConfigFactory.getInstance(
                 options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getProperties())

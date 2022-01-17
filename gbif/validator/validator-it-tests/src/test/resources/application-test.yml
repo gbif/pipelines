@@ -1,0 +1,34 @@
+testdb: true
+maxRunningValidationPerUser: 3
+
+schemas:
+  eml: http://rs.gbif.org/schema/eml-2.1.1/eml.xsd
+  emlGbifProfile: http://rs.gbif.org/schema/eml-gbif-profile/1.1/eml.xsd
+  dwcMeta:
+    - https://raw.githubusercontent.com/tdwg/dwc/9adb52a5389a29ba9483ea12a138cf781c6472e4/standard/documents/text/tdwg_dwc_text.xsd
+    - https://dwc.tdwg.org/text/tdwg_dwc_text.xsd
+gbif:
+  ws:
+    security:
+      wrapContent: false
+      appKey: gbif.validator
+      # generated random key
+      appSecret: 2b673f9de8b219aaa627b772f33cec190e0876509da3ae1b38018016e9
+validation:
+  datasource:
+    hikari:
+      idleTimeout: 60000
+      maximumPoolSize: 10
+      minimumIdle: 1
+spring:
+  application.name: pipelines-validator-ws
+  liquibase:
+    enabled: false
+  flyway:
+    enabled: false
+  http:
+    multipart:
+      enabled: true
+retentionPolicy:
+  keepDays: 14
+  cron: 0 0 * * * *

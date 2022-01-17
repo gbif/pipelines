@@ -22,6 +22,7 @@
       {"name": "publisher", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/publisher"},
       {"name": "audience", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/audience"},
       {"name": "license", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/license"},
+      {"name": "rights", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/rights"},
       {"name": "rightsHolder", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/rightsHolder"},
       {"name": "datasetId", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/datasetID"}
     ]

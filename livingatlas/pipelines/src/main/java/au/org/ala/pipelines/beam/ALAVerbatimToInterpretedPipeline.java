@@ -2,9 +2,20 @@ package au.org.ala.pipelines.beam;
 
 import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.kvs.ALAPipelinesConfigFactory;
-import au.org.ala.kvs.cache.*;
+import au.org.ala.kvs.cache.ALAAttributionKVStoreFactory;
+import au.org.ala.kvs.cache.ALACollectionKVStoreFactory;
+import au.org.ala.kvs.cache.ALANameCheckKVStoreFactory;
+import au.org.ala.kvs.cache.ALANameMatchKVStoreFactory;
+import au.org.ala.kvs.cache.GeocodeKvStoreFactory;
+import au.org.ala.kvs.cache.RecordedByKVStoreFactory;
 import au.org.ala.kvs.client.ALACollectoryMetadata;
-import au.org.ala.pipelines.transforms.*;
+import au.org.ala.pipelines.transforms.ALAAttributionTransform;
+import au.org.ala.pipelines.transforms.ALABasicTransform;
+import au.org.ala.pipelines.transforms.ALADefaultValuesTransform;
+import au.org.ala.pipelines.transforms.ALAMetadataTransform;
+import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
+import au.org.ala.pipelines.transforms.ALATemporalTransform;
+import au.org.ala.pipelines.transforms.LocationTransform;
 import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationUtils;
@@ -30,8 +41,8 @@ import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
-import org.gbif.pipelines.core.factory.FileVocabularyFactory;
 import org.gbif.pipelines.core.utils.FsUtils;
+import org.gbif.pipelines.factory.FileVocabularyFactory;
 import org.gbif.pipelines.factory.OccurrenceStatusKvStoreFactory;
 import org.gbif.pipelines.io.avro.ALAMetadataRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -162,13 +173,14 @@ public class ALAVerbatimToInterpretedPipeline {
 
     ALABasicTransform basicTransform =
         ALABasicTransform.builder()
-            .lifeStageLookupSupplier(
+            .vocabularyServiceSupplier(
                 config.getGbifConfig().getVocabularyConfig() != null
-                    ? FileVocabularyFactory.getInstanceSupplier(
-                        config.getGbifConfig(),
-                        hdfsSiteConfig,
-                        coreSiteConfig,
-                        FileVocabularyFactory.VocabularyBackedTerm.LIFE_STAGE)
+                    ? FileVocabularyFactory.builder()
+                        .config(config.getGbifConfig())
+                        .hdfsSiteConfig(hdfsSiteConfig)
+                        .coreSiteConfig(coreSiteConfig)
+                        .build()
+                        .getInstanceSupplier()
                     : null)
             .recordedByKvStoreSupplier(RecordedByKVStoreFactory.createSupplier(config))
             .occStatusKvStoreSupplier(

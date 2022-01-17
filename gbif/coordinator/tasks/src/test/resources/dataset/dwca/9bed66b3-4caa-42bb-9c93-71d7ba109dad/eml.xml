@@ -1,0 +1,316 @@
+<eml:eml xmlns:eml="eml://ecoinformatics.org/eml-2.1.1"
+         xmlns:dc="http://purl.org/dc/terms/"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="eml://ecoinformatics.org/eml-2.1.1 http://rs.gbif.org/schema/eml-gbif-profile/1.1/eml.xsd"
+         packageId="59c09090-7c74-43a7-8d90-d81ab2691eec/v1.1" system="http://gbif.org" scope="system"
+         xml:lang="eng">
+
+<dataset>
+  <alternateIdentifier>59c09090-7c74-43a7-8d90-d81ab2691eec</alternateIdentifier>
+  <alternateIdentifier>http://ipt.gbif.fr/resource?r=inrae_oir_g</alternateIdentifier>
+  <title xml:lang="eng">Phenology and biological traits of migrating river lamprey sampled by electrofishing in the Oir river (France).</title>
+      <creator>
+    <individualName>
+        <givenName>Julien</givenName>
+      <surName>Tremblay</surName>
+    </individualName>
+    <organizationName>INRAE, Pole OFB-INRAE-Agrocampus Ouest-UPPA pour la gestion des migrateurs amphihalins dans leur environnement, U3E, F-35042, Rennes, France.</organizationName>
+    <positionName>Researcher</positionName>
+    <address>
+        <deliveryPoint>65 rue de St Brieuc, CS 84215</deliveryPoint>
+        <city>Rennes</city>
+        <postalCode>35042</postalCode>
+        <country>FR</country>
+    </address>
+    <phone>+33 223485786</phone>
+    <electronicMailAddress>Julien.Tremblay@inrae.fr</electronicMailAddress>
+      </creator>
+      <creator>
+    <individualName>
+        <givenName>Frédéric</givenName>
+      <surName>Marchand</surName>
+    </individualName>
+    <organizationName>INRAE, Pole OFB-INRAE-Agrocampus Ouest-UPPA pour la gestion des migrateurs amphihalins dans leur environnement, U3E, F-35042, Rennes, France.</organizationName>
+    <positionName>Researcher</positionName>
+    <address>
+        <deliveryPoint>65 rue de St Brieuc, CS 84215</deliveryPoint>
+        <city>Rennes</city>
+        <postalCode>35042</postalCode>
+        <country>FR</country>
+    </address>
+    <phone>+33 223485786</phone>
+    <electronicMailAddress>frederic.marchand@inrae.fr</electronicMailAddress>
+      </creator>
+      <creator>
+    <individualName>
+        <givenName>Didier</givenName>
+      <surName>Azam</surName>
+    </individualName>
+    <organizationName>INRAE, Pole OFB-INRAE-Agrocampus Ouest-UPPA pour la gestion des migrateurs amphihalins dans leur environnement, U3E, F-35042, Rennes, France.</organizationName>
+    <positionName>Researcher</positionName>
+    <address>
+        <deliveryPoint>65 rue de St Brieuc, CS 84215</deliveryPoint>
+        <city>Rennes</city>
+        <postalCode>35042</postalCode>
+        <country>FR</country>
+    </address>
+    <phone>+33 223485786</phone>
+    <electronicMailAddress>Didier.Azam@inrae.fr</electronicMailAddress>
+      </creator>
+      <creator>
+    <individualName>
+        <givenName>Richard</givenName>
+      <surName>Delanoë</surName>
+    </individualName>
+    <organizationName>OFB DRED, INRAE U3E, Pôle AFB-INRAE-Agrocampus Ouest-UPPA pour la gestion des migrateurs amphihalins dans leur environnement</organizationName>
+    <positionName>Researcher</positionName>
+    <address>
+        <deliveryPoint>Le moulin de Cerisel</deliveryPoint>
+        <city>Ducey</city>
+        <postalCode>50220</postalCode>
+        <country>FR</country>
+    </address>
+    <phone>0688155198</phone>
+    <electronicMailAddress>richard.delanoe@ofb.gouv.fr</electronicMailAddress>
+      </creator>
+      <creator>
+    <individualName>
+        <givenName>Jean-Pierre</givenName>
+      <surName>Destouches</surName>
+    </individualName>
+    <organizationName>INRAE, Pole OFB-INRAE-Agrocampus Ouest-UPPA pour la gestion des migrateurs amphihalins dans leur environnement, U3E, F-35042, Rennes, France.</organizationName>
+    <positionName>Researcher</positionName>
+    <address>
+        <deliveryPoint>65 rue de St Brieuc, CS 84215</deliveryPoint>
+        <city>Rennes</city>
+        <postalCode>35042</postalCode>
+        <country>FR</country>
+    </address>
+    <phone>+33 223485786</phone>
+    <electronicMailAddress>Jean-Pierre.Destouches@inrae.fr</electronicMailAddress>
+      </creator>
+      <creator>
+    <individualName>
+        <givenName>Etienne</givenName>
+      <surName>Prévost</surName>
+    </individualName>
+    <organizationName>Université de Pau et des Pays de l’Adour, e2s-UPPA, INRAE, OFB, Agrocampus-Ouest, ECOBIOP, Pôle pour la gestion des migrateurs amphihalins dans leur environnement, Saint-Pée-sur-Nivelle, France</organizationName>
+    <positionName>Researcher</positionName>
+    <address>
+        <deliveryPoint>Aquapôle - Ibarron</deliveryPoint>
+        <city>St-Pée-sur-Nivelle</city>
+        <postalCode>64310</postalCode>
+        <country>FR</country>
+    </address>
+    <phone>+33559515983</phone>
+    <electronicMailAddress>Etienne.Prevost@inrae.fr</electronicMailAddress>
+      </creator>
+      <metadataProvider>
+    <individualName>
+        <givenName>Frédéric</givenName>
+      <surName>Marchand</surName>
+    </individualName>
+    <organizationName>INRAE, Pole OFB-INRAE-Agrocampus Ouest-UPPA pour la gestion des migrateurs amphihalins dans leur environnement, U3E, F-35042, Rennes, France.</organizationName>
+    <positionName>Researcher</positionName>
+    <address>
+        <deliveryPoint>65 rue de St Brieuc, CS 84215</deliveryPoint>
+        <city>Rennes</city>
+        <postalCode>35042</postalCode>
+        <country>FR</country>
+    </address>
+    <phone>+33 223485786</phone>
+    <electronicMailAddress>frederic.marchand@inrae.fr</electronicMailAddress>
+      </metadataProvider>
+      <associatedParty>
+    <individualName>
+        <givenName>Nadine</givenName>
+      <surName>Herrard</surName>
+    </individualName>
+    <organizationName>INRAE, Pole OFB-INRAE-Agrocampus Ouest-UPPA pour la gestion des migrateurs amphihalins dans leur environnement, U3E, F-35042, Rennes, France.</organizationName>
+    <positionName>Programmer</positionName>
+    <address>
+        <deliveryPoint>65 rue de St Brieuc, CS 84215</deliveryPoint>
+        <city>Rennes</city>
+        <postalCode>35042</postalCode>
+        <country>FR</country>
+    </address>
+    <phone>+33 223485786</phone>
+    <electronicMailAddress>Nadine.Herrard@inrae.fr</electronicMailAddress>
+    <role>programmer</role>
+      </associatedParty>
+      <associatedParty>
+    <individualName>
+      <surName>GBIF France</surName>
+    </individualName>
+    <organizationName>GBIF France</organizationName>
+    <positionName>IT support</positionName>
+    <address>
+        <deliveryPoint>MNHN Geologie CP48, 43 rue Buffon</deliveryPoint>
+        <city>Paris</city>
+        <postalCode>75005</postalCode>
+        <country>FR</country>
+    </address>
+    <phone>+33143798065</phone>
+    <electronicMailAddress>connexion@gbif.fr</electronicMailAddress>
+    <onlineUrl>http://www.gbif.fr</onlineUrl>
+    <role>distributor</role>
+      </associatedParty>
+  <pubDate>
+      2021-05-12
+  </pubDate>
+  <language>eng</language>
+  <abstract>
+    <para>Monitoring of the migration of adult river lampreys has been carried out every year between February and May on the downstream part of the river Oir since 2009. Electric fishing is carried out every 3-4 weeks in a short sector downstream from a dam that is difficult to access.  The data consist of abundance indices and biological traits measured on the fish sampled :Sex, length and weight. 
+The survey is carried out under the Research Observatory on Diadromes Fishes in Coastal Streamss (ERO DiaPFC) program. The data are stored in the database of the ERO. They are used to develop predictive models and tools for providing scientific advice to improve the management of this heritage species.</para>
+  </abstract>
+      <keywordSet>
+            <keyword>Occurrence</keyword>
+        <keywordThesaurus>GBIF Dataset Type Vocabulary: http://rs.gbif.org/vocabulary/gbif/dataset_type.xml</keywordThesaurus>
+      </keywordSet>
+      <keywordSet>
+            <keyword>Observation</keyword>
+        <keywordThesaurus>GBIF Dataset Subtype Vocabulary: http://rs.gbif.org/vocabulary/gbif/dataset_subtype.xml</keywordThesaurus>
+      </keywordSet>
+      <keywordSet>
+            <keyword>Population density</keyword>
+            <keyword>population distribution</keyword>
+            <keyword>catch effort</keyword>
+            <keyword>lamprey</keyword>
+        <keywordThesaurus>AGROVOC</keywordThesaurus>
+      </keywordSet>
+  <additionalInfo>
+    <para>This data set is intended to be updated annually</para>
+  </additionalInfo>
+  <intellectualRights>
+    <para>This work is licensed under a <ulink url="http://creativecommons.org/licenses/by/4.0/legalcode"><citetitle>Creative Commons Attribution (CC-BY) 4.0 License</citetitle></ulink>.</para>
+  </intellectualRights>
+  <distribution scope="document">
+    <online>
+      <url function="information">https://www6.inrae.fr/ore-pfc</url>
+    </online>
+  </distribution>
+  <coverage>
+      <geographicCoverage>
+          <geographicDescription>The Oir river in Normandy (France). http://services.sandre.eaufrance.fr/Courdo/Fiche/client/fiche_courdo.php?CdSandre=I9280600</geographicDescription>
+        <boundingCoordinates>
+          <westBoundingCoordinate>-1.29</westBoundingCoordinate>
+          <eastBoundingCoordinate>-1.1</eastBoundingCoordinate>
+          <northBoundingCoordinate>48.68</northBoundingCoordinate>
+          <southBoundingCoordinate>48.6</southBoundingCoordinate>
+        </boundingCoordinates>
+      </geographicCoverage>
+          <temporalCoverage>
+              <rangeOfDates>
+                  <beginDate>
+                    <calendarDate>2009-10-08</calendarDate>
+                  </beginDate>
+                <endDate>
+                  <calendarDate>2020-10-13</calendarDate>
+                </endDate>
+              </rangeOfDates>
+          </temporalCoverage>
+          <taxonomicCoverage>
+              <taxonomicClassification>
+                  <taxonRankName>species</taxonRankName>
+                <taxonRankValue>Lampetra planeri</taxonRankValue>
+                  <commonName>Lamproie de planer</commonName>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>species</taxonRankName>
+                <taxonRankValue>Lampetra fluviatilis</taxonRankValue>
+                  <commonName>Lamproie de rivière, Lamproie fluviatile</commonName>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>species</taxonRankName>
+                <taxonRankValue>Petromyzon marinus</taxonRankValue>
+                  <commonName>Lamproie marine</commonName>
+              </taxonomicClassification>
+          </taxonomicCoverage>
+  </coverage>
+  <purpose>
+    <para>Monitoring of adult lampreys on the Oir river</para>
+  </purpose>
+  <maintenance>
+    <description>
+      <para></para>
+    </description>
+    <maintenanceUpdateFrequency>unkown</maintenanceUpdateFrequency>
+  </maintenance>
+
+      <contact>
+    <individualName>
+        <givenName>Frédéric</givenName>
+      <surName>Marchand</surName>
+    </individualName>
+    <organizationName>INRAE, Pole OFB-INRAE-Agrocampus Ouest-UPPA pour la gestion des migrateurs amphihalins dans leur environnement, U3E, F-35042, Rennes, France.</organizationName>
+    <positionName>Researcher</positionName>
+    <address>
+        <deliveryPoint>65 rue de St Brieuc, CS 84215</deliveryPoint>
+        <city>Rennes</city>
+        <postalCode>35042</postalCode>
+        <country>FR</country>
+    </address>
+    <phone>+33 223485786</phone>
+    <electronicMailAddress>frederic.marchand@inrae.fr</electronicMailAddress>
+      </contact>
+  <methods>
+        <methodStep>
+          <description>
+            <para>Lampreys are caught by electrofishing during their migration. An obstacle that is difficult for the lampreys to cross concentrates them in a small area. Between 1 and 3 passages are made to estimate the population in place. Biometric measurement of the fish are recorded after their anesthesia with benzocaïne. The fish length is measured (1 millimeter precision), then weighed (0.2 g precision) and sexed. All the fish sampled are tagged then released in their original site.</para>
+          </description>
+        </methodStep>
+      <sampling>
+        <studyExtent>
+          <description>
+            <para>Oir river, CdSandre=I9280600 Latitude between 48.6840 and 48.5985; longitude between -1.2949 and -1. 0994 Source latitude and longitude : 48.6667 -1.1138 Last confluence point latitude and longitude : 48.6305 -1.2943 Oir river is located at the southern edge of Normandy. It is a tributary of the Sélune, a coastal stream flowing into the Bay of Mont Saint-Michel. The Oir is 21 km long, and has an average gradient of 11 ‰. Its drainage area is 87 km², dominated by sedimentary schist land and corneal including some granitic enclaves. The water pH is near neutral and of reasonably good quality but with high nitrate concentrations. Human activities and land use are mainly from agriculture. The upper Sélune is not accessible to migratory fish. They are blocked at fifteen kilometers from the sea by a dam. The Oir, with 12 km accessible to Atlantic salmon, is the main spawning and most productive tributary of the Sélune hydrographic network.</para>
+          </description>
+        </studyExtent>
+        <samplingDescription>
+          <para>In the Oir, sampling is conducted at 4 sites spread along the mainstem. The sites are visited once a year in autumn (end of September to early October).</para>
+        </samplingDescription>
+      </sampling>
+  </methods>
+  <project >
+    <title>Observatoire de Recherche en Environnement des poissons diadromes sur les Fleuves Côtiers - Ecological Research Observatory on Diadromous Fish in coastal streams</title>
+      <personnel>
+        <individualName>
+            <givenName>Etienne</givenName>
+          <surName>Prévost</surName>
+        </individualName>
+        <role>principalInvestigator</role>
+      </personnel>
+      <abstract>
+        <para>The Research Observatory on Diadromous Fish in Coastal Streams (ORE DiaPFC) is a research infrastructure steered by INRAE in partnership with OFB and part of the OFB-INRAE R&amp;D center. It’s focused on the study of the evolution of diadromous fish populations under the influence human induced environmental changes that affect these rivers (mainly climate and effects of agriculture). Diadromous species of primary interest are salmon (Salmo salar), trout (Salmo trutta), eel (Anguilla Anguilla), shads (Alosa sp.), and lampreys (Lampetra sp. and Petromyzon marinus). These species are threatened by the consequences of human activities. They are flagship species for the biodiversity of coastal streams. Nowadays, these streams are the main refuges for diadromous fish that have disappeared or dramatically declined on larger rivers. This ERO DiaPFC is a Research Infrastructure based on four coastal streams of the Atlantic and Channel coast of France: the Bresle and the Oir in Normandy, the Scorff in Brittany and the Nivelle in the Pays Basque. These four rivers are equipped with diadromous fish trapping facilities and are thoroughly and continuously surveyed from the mid 1980s. They are twinned with experimental ecology facilities located in Rennes (Brittany) and Saint-Pée-sur-Nivelle (Pays Basque). This set of facilities is complemented by individual-based eco-genetic simulators for in silico experimentation on virtual populations.</para>
+      </abstract>
+      <funding>
+        <para>- INRAE : French National Institute for Agricultural, Food en Environment Research - OFB : French Office for Biodiversity</para>
+      </funding>
+      <studyAreaDescription>
+        <descriptor name="generic"
+                    citableClassificationSystem="false">
+          <descriptorValue>ERO DiaPFC is a Research Infrastructure based on four coastal streams of the Atlantic and Channel coast of France: the Bresle and the Bresle and Oir in Normandy, the Scorff in Brittany and the Nivelle in the Pays Basque</descriptorValue>
+        </descriptor>
+      </studyAreaDescription>
+      <designDescription>
+        <description>
+          <para>The issue of &apos;Research Observatory on Diadromes Fish in Coastal Rivers (ORE DiaPFC) is to study the evolution of diadromous fish populations as a result of environmental changes (climate change and changes related to agriculture ) that affect these rivers.</para>
+        </description>
+      </designDescription>
+  </project>
+</dataset>
+  <additionalMetadata>
+    <metadata>
+      <gbif>
+          <dateStamp>2021-03-24T16:58:06.643+00:00</dateStamp>
+          <hierarchyLevel>dataset</hierarchyLevel>
+              <collection>
+                  <collectionIdentifier>https://colisa.fr/</collectionIdentifier>
+                <collectionName>Colisa - Collection of Ichtyological Samples</collectionName>
+              </collection>
+                <specimenPreservationMethod>dried</specimenPreservationMethod>
+                <specimenPreservationMethod>noTreatment</specimenPreservationMethod>
+          <dc:replaces>59c09090-7c74-43a7-8d90-d81ab2691eec/v1.1.xml</dc:replaces>
+      </gbif>
+    </metadata>
+  </additionalMetadata>
+</eml:eml>

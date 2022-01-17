@@ -4,6 +4,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.ARCHIVE_TO_ER
 
 import java.io.InputStream;
 import java.nio.channels.Channels;
+import java.util.Collection;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import org.apache.beam.sdk.io.FileSystems;
@@ -80,16 +81,15 @@ public class XmlIO extends PTransform<PBegin, PCollection<ExtendedRecord>> {
                   @Element ResourceId resourceId, OutputReceiver<ExtendedRecord> out) {
                 try (InputStream is = Channels.newInputStream(FileSystems.open(resourceId))) {
                   new OccurrenceParser()
-                      .parseStream(is)
-                      .forEach(
-                          rxo ->
-                              XmlFragmentParser.parseRecord(rxo).stream()
-                                  .map(ExtendedRecordConverter::from)
-                                  .forEach(
-                                      er -> {
-                                        xmlCount.inc();
-                                        out.output(er);
-                                      }));
+                      .parseStream(is).stream()
+                          .map(XmlFragmentParser::parseRecord)
+                          .flatMap(Collection::stream)
+                          .map(ExtendedRecordConverter::from)
+                          .forEach(
+                              er -> {
+                                xmlCount.inc();
+                                out.output(er);
+                              });
                 }
               }
             });

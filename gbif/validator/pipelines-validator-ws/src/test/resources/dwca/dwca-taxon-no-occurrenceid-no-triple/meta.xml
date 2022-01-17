@@ -1,0 +1,41 @@
+<archive xmlns="http://rs.tdwg.org/dwc/text/">
+  <core encoding="UTF-8" fieldsTerminatedBy="\t" linesTerminatedBy="\n" fieldsEnclosedBy="" ignoreHeaderLines="1" rowType="http://rs.tdwg.org/dwc/terms/Taxon">
+    <files>
+      <location>taxon.txt</location>
+    </files>
+    <id index="0" />
+    <field index="1" term="http://rs.tdwg.org/dwc/terms/taxonID"/>
+    <field index="2" term="http://rs.tdwg.org/dwc/terms/scientificName"/>
+    <field index="3" term="http://rs.tdwg.org/dwc/terms/family"/>
+    <field index="4" term="http://rs.tdwg.org/dwc/terms/genus"/>
+    <field index="5" term="http://rs.tdwg.org/dwc/terms/taxonRank"/>
+    <field index="6" term="http://rs.tdwg.org/dwc/terms/scientificNameAuthorship"/>
+    <field index="7" term="http://rs.tdwg.org/dwc/terms/vernacularName"/>
+    <field index="8" term="http://purl.org/dc/terms/language"/>
+  </core>
+  <extension encoding="UTF-8" fieldsTerminatedBy="\t" linesTerminatedBy="\n" fieldsEnclosedBy="" ignoreHeaderLines="1" rowType="http://rs.tdwg.org/dwc/terms/Occurrence">
+    <files>
+      <location>occurrence.txt</location>
+    </files>
+    <coreid index="0" />
+    <field index="1" term="http://purl.org/dc/terms/language"/>
+    <field index="2" term="http://rs.tdwg.org/dwc/terms/institutionID"/>
+    <field index="3" term="http://rs.tdwg.org/dwc/terms/institutionCode"/>
+    <field index="4" term="http://rs.tdwg.org/dwc/terms/collectionCode"/>
+    <field index="5" term="http://rs.tdwg.org/dwc/terms/basisOfRecord"/>
+    <field index="6" term="http://rs.tdwg.org/dwc/terms/year"/>
+    <field index="7" term="http://rs.tdwg.org/dwc/terms/month"/>
+    <field index="8" term="http://rs.tdwg.org/dwc/terms/day"/>
+    <field index="9" term="http://rs.tdwg.org/dwc/terms/continent"/>
+    <field index="10" term="http://rs.tdwg.org/dwc/terms/country"/>
+    <field index="11" term="http://rs.tdwg.org/dwc/terms/locality"/>
+    <field index="12" term="http://rs.tdwg.org/dwc/terms/decimalLatitude"/>
+    <field index="13" term="http://rs.tdwg.org/dwc/terms/decimalLongitude"/>
+    <field index="14" term="http://rs.tdwg.org/dwc/terms/taxonID"/>
+    <field index="15" term="http://rs.tdwg.org/dwc/terms/scientificName"/>
+    <field index="16" term="http://rs.tdwg.org/dwc/terms/family"/>
+    <field index="17" term="http://rs.tdwg.org/dwc/terms/genus"/>
+    <field index="18" term="http://rs.tdwg.org/dwc/terms/scientificNameAuthorship"/>
+    <field index="19" term="http://rs.tdwg.org/dwc/terms/vernacularName"/>
+  </extension>
+</archive>

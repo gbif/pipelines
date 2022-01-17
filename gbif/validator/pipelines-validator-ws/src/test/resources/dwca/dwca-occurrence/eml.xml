@@ -1,0 +1,181 @@
+<eml:eml xmlns:eml="eml://ecoinformatics.org/eml-2.1.1"
+         xmlns:dc="http://purl.org/dc/terms/"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="eml://ecoinformatics.org/eml-2.1.1 http://rs.gbif.org/schema/eml-gbif-profile/1.1/eml.xsd"
+         packageId="6eb0c925-06b4-4dec-a153-c4a28cb4eb9d/v12.2" system="http://gbif.org" scope="system"
+         xml:lang="eng">
+
+<dataset>
+  <alternateIdentifier>6eb0c925-06b4-4dec-a153-c4a28cb4eb9d</alternateIdentifier>
+  <alternateIdentifier>http://dx.doi.org/10.5886/txsd3at3</alternateIdentifier>
+  <alternateIdentifier>http://data.canadensys.net/ipt/resource?r=megachile_chomskyi</alternateIdentifier>
+  <title xml:lang="eng">Distribution Data for Megachile chomskyi</title>
+      <creator>
+    <individualName>
+        <givenName>Cory</givenName>
+      <surName>Sheffield</surName>
+    </individualName>
+    <organizationName>Royal Saskatchewan Museum</organizationName>
+    <positionName>Curator of Invertebrate Zoology</positionName>
+    <address>
+        <deliveryPoint>2340 Albert Street</deliveryPoint>
+        <city>Regina</city>
+        <administrativeArea>Saskatchewan</administrativeArea>
+        <postalCode>S4P 2V7</postalCode>
+        <country>CA</country>
+    </address>
+    <phone>306-787-2850</phone>
+    <electronicMailAddress>cory.sheffield@gov.sk.ca</electronicMailAddress>
+    <onlineUrl>http://www.royalsaskmuseum.ca/research-collections/biology/invertebrate-zoology-cory-sheffield</onlineUrl>
+      </creator>
+      <metadataProvider>
+    <individualName>
+        <givenName>David</givenName>
+      <surName>Shorthouse</surName>
+    </individualName>
+    <organizationName>Université de Montréal Biodiversity Centre / Canadensys</organizationName>
+    <positionName>Biodiversity Informatics Manager</positionName>
+    <address>
+        <deliveryPoint>4101 rue Sherbrooke est</deliveryPoint>
+        <city>Montréal</city>
+        <administrativeArea>Québec</administrativeArea>
+        <postalCode>H1X 2B2</postalCode>
+        <country>CA</country>
+    </address>
+    <phone>514-343-6111 82354</phone>
+    <electronicMailAddress>david.shorthouse@umontreal.ca</electronicMailAddress>
+      </metadataProvider>
+      <associatedParty>
+    <organizationName>Université de Montréal Biodiversity Centre / Canadensys</organizationName>
+    <address>
+        <deliveryPoint>4101 rue Sherbrooke est</deliveryPoint>
+        <city>Montréal</city>
+        <administrativeArea>Québec</administrativeArea>
+        <postalCode>H1X 2B2</postalCode>
+        <country>CA</country>
+    </address>
+    <phone>514-343-6111 82354</phone>
+    <onlineUrl>http://www.canadensys.net</onlineUrl>
+    <role>publisher</role>
+      </associatedParty>
+  <pubDate>
+      2016-02-15
+  </pubDate>
+  <language>eng</language>
+  <abstract>
+    <para>A new species of leafcutter bee, Megachile (Megachiloides) chomskyi, is described from Texas, United States.  Megachile chomskyi is one of the four known species of the oenotherae species group of Megachiloides, all members sharing the long tongue, and is most similar to M. (Megachiloides) amica Cresson.  Like other members of the oenotherae species group, this species probably shows oligolecty with Onagraceae (Evening-Primrose Family).  A diagnosis, full description of both sexes and a key to the species of the oenotherae species group are provided.</para>
+  </abstract>
+      <keywordSet>
+            <keyword>Megachile chomskyi</keyword>
+            <keyword>Canadensys</keyword>
+            <keyword>North America</keyword>
+            <keyword>Texas</keyword>
+            <keyword>specimens</keyword>
+            <keyword>types</keyword>
+            <keyword>holotype</keyword>
+            <keyword>paratype</keyword>
+        <keywordThesaurus>n/a</keywordThesaurus>
+      </keywordSet>
+      <keywordSet>
+            <keyword>Occurrence</keyword>
+        <keywordThesaurus>GBIF Dataset Type Vocabulary: http://rs.gbif.org/vocabulary/gbif/dataset_type.xml</keywordThesaurus>
+      </keywordSet>
+      <keywordSet>
+            <keyword>Specimen</keyword>
+        <keywordThesaurus>GBIF Dataset Subtype Vocabulary: http://rs.gbif.org/vocabulary/gbif/dataset_subtype.xml</keywordThesaurus>
+      </keywordSet>
+  <additionalInfo>
+    <para>Publication associated with this resource can be found at http://dx.doi.org/10.3897/zookeys.283.4674</para>
+  </additionalInfo>
+  <intellectualRights>
+    <para>To the extent possible under law, the publisher has waived all rights to these data and has dedicated them to the <ulink url="http://creativecommons.org/publicdomain/zero/1.0/legalcode"><citetitle>Public Domain (CC0 1.0)</citetitle></ulink>. Users may copy, modify, distribute and use the work, including for commercial purposes, without restriction.</para>
+  </intellectualRights>
+  <distribution scope="document">
+    <online>
+      <url function="information">http://data.canadensys.net/ipt/resource.do?r=megachile_chomskyi</url>
+    </online>
+  </distribution>
+  <coverage>
+      <geographicCoverage>
+          <geographicDescription>Extent of collection region for specimens of Megachile chomskyi</geographicDescription>
+        <boundingCoordinates>
+          <westBoundingCoordinate>-106.68</westBoundingCoordinate>
+          <eastBoundingCoordinate>-95.69</eastBoundingCoordinate>
+          <northBoundingCoordinate>33.11</northBoundingCoordinate>
+          <southBoundingCoordinate>26.34</southBoundingCoordinate>
+        </boundingCoordinates>
+      </geographicCoverage>
+          <taxonomicCoverage>
+              <taxonomicClassification>
+                  <taxonRankName>species</taxonRankName>
+                <taxonRankValue>Megachile chomskyi</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>genus</taxonRankName>
+                <taxonRankValue>Megachile</taxonRankValue>
+                  <commonName>leafcutter bees</commonName>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Megachilidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>order</taxonRankName>
+                <taxonRankValue>Hymenoptera</taxonRankValue>
+              </taxonomicClassification>
+          </taxonomicCoverage>
+  </coverage>
+  <maintenance>
+    <description>
+      <para></para>
+    </description>
+    <maintenanceUpdateFrequency>unkown</maintenanceUpdateFrequency>
+  </maintenance>
+
+      <contact>
+    <individualName>
+        <givenName>Cory</givenName>
+      <surName>Sheffield</surName>
+    </individualName>
+    <organizationName>Royal Saskatchewan Museum</organizationName>
+    <positionName>Curator of Invertebrate Zoology</positionName>
+    <address>
+        <deliveryPoint>2340 Albert Street</deliveryPoint>
+        <city>Regina</city>
+        <administrativeArea>Saskatchewan</administrativeArea>
+        <postalCode>S4P 2V7</postalCode>
+        <country>CA</country>
+    </address>
+    <phone>306-787-2850</phone>
+    <electronicMailAddress>cory.sheffield@gov.sk.ca</electronicMailAddress>
+    <onlineUrl>http://www.royalsaskmuseum.ca/research-collections/biology/invertebrate-zoology-cory-sheffield</onlineUrl>
+      </contact>
+</dataset>
+  <additionalMetadata>
+    <metadata>
+      <gbif>
+          <dateStamp>2013-03-05T05:25:33.548-05:00</dateStamp>
+          <hierarchyLevel>dataset</hierarchyLevel>
+            <citation identifier="doi:10.5886/txsd3at3">Distribution data for Megachile chomskyi. http://dx.doi.org/10.5886/txsd3at3 (accessed on [date]).</citation>
+          <bibliography>
+                <citation identifier="doi:10.3897/zookeys.283.4674">Sheffield, Cory S. 2013. A new species of Megachile Latreille subgenus Megachiloides (Hymenoptera, Megachilidae). ZooKeys 283: 43–58. http://dx.doi.org/10.3897/zookeys.283.4674</citation>
+          </bibliography>
+            <physical>
+              <objectName>GBIF data portal</objectName>
+              <characterEncoding>UTF-8</characterEncoding>
+              <dataFormat>
+                <externallyDefinedFormat>
+                  <formatName>HTML</formatName>
+                </externallyDefinedFormat>
+              </dataFormat>
+              <distribution>
+                <online>
+                  <url function="download">http://www.gbif.org/dataset/6eb0c925-06b4-4dec-a153-c4a28cb4eb9d</url>
+                </online>
+              </distribution>
+            </physical>
+          <dc:replaces>6eb0c925-06b4-4dec-a153-c4a28cb4eb9d/v12.2.xml</dc:replaces>
+      </gbif>
+    </metadata>
+  </additionalMetadata>
+</eml:eml>

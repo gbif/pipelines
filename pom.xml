@@ -10,7 +10,7 @@
 
   <groupId>org.gbif.pipelines</groupId>
   <artifactId>pipelines-parent</artifactId>
-  <version>2.9.9-SNAPSHOT</version>
+  <version>2.10.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <modules>
@@ -80,31 +80,34 @@
     <project.resources.sourceEncoding>${encoding}</project.resources.sourceEncoding>
 
     <!-- Tools-->
-    <lombok.version>1.18.18</lombok.version>
+    <lombok.version>1.18.20</lombok.version>
 
     <!-- GBIF libraries -->
-    <gbif-parsers.version>0.54</gbif-parsers.version>
-    <dwca-io.version>2.10</dwca-io.version>
-    <gbif-api.version>0.150</gbif-api.version>
-    <gbif-common.version>0.50</gbif-common.version>
-    <dwc-api.version>1.33</dwc-api.version>
-    <kvs.version>1.21</kvs.version>
+    <gbif-parsers.version>0.57</gbif-parsers.version>
+    <dwca-io.version>2.11</dwca-io.version>
+    <gbif-api.version>0.162</gbif-api.version>
+    <gbif-common.version>0.53</gbif-common.version>
+    <dwc-api.version>1.35</dwc-api.version>
+    <kvs.version>1.22</kvs.version>
     <hbase-utils.version>0.12</hbase-utils.version>
     <gbif-wrangler.version>0.3</gbif-wrangler.version>
-    <gbif-occurrence.version>0.157</gbif-occurrence.version>
-    <data-repo-api.version>1.2</data-repo-api.version>
-    <vocabulary-lookup.version>0.42</vocabulary-lookup.version>
+    <gbif-occurrence.version>0.173.1</gbif-occurrence.version>
+    <vocabulary-lookup.version>0.47</vocabulary-lookup.version>
+    <registry.version>3.73</registry.version>
+    <gbif-common-ws.version>1.18</gbif-common-ws.version>
+    <gbif-postal-service.version>1.2</gbif-postal-service.version>
 
     <!-- Common libraries -->
     <avro.version>1.8.2</avro.version>
-    <apache.beam.version>2.28.0</apache.beam.version>
+    <apache.beam.version>2.33.0</apache.beam.version>
     <hadoop.version>2.6.0-cdh5.16.2</hadoop.version>
     <hadoop-core.version>2.6.0-mr1-cdh5.16.2</hadoop-core.version>
     <hbase.version>1.2.0-cdh5.16.2</hbase.version>
     <curator.version>2.9.0</curator.version>
 
     <geotools.version>20.5</geotools.version>
-    <commons-lang3.version>3.4</commons-lang3.version>
+    <commons-lang3.version>3.10</commons-lang3.version>
+    <!-- Be carful when change the guava version, it can break XML parsing and etc at runtime -->
     <guava.version>20.0</guava.version>
     <!-- Guava version required by HBase libraries -->
     <guava.hbase.version>12.0.1</guava.hbase.version>
@@ -113,7 +116,7 @@
     <resilience4j.version>1.1.0</resilience4j.version>
 
     <!-- Logging -->
-    <slf4j.version>1.7.5</slf4j.version>
+    <slf4j.version>1.7.16</slf4j.version>
     <logback.version>1.2.3</logback.version>
     <log4j.version>1.2.17</log4j.version>
     <logstash-gelf.version>1.11.2</logstash-gelf.version>
@@ -150,7 +153,7 @@
     <hamcrest-java.version>2.0.0.0</hamcrest-java.version>
     <log4j-over-slf4j.version>1.7.16</log4j-over-slf4j.version>
     <zookeeper-version>3.4.5</zookeeper-version>
-    <testcontainers.elasticsearch.version>1.15.2</testcontainers.elasticsearch.version>
+    <testcontainers.elasticsearch.version>1.16.0</testcontainers.elasticsearch.version>
 
     <!-- Maven plugin -->
     <maven-plugin-api.version>3.5.4</maven-plugin-api.version>
@@ -175,9 +178,14 @@
     <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
     <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
     <sonar.jacoco.reportPaths>${jacoco.merged.output.file}</sonar.jacoco.reportPaths>
-    <sonar.exclusions>**/java-generated/**</sonar.exclusions>
-    <sonar.cpd.exclusions>**/java-generated/**</sonar.cpd.exclusions>
+    <sonar.exclusions>**/java-generated/**,**/*Stub.java</sonar.exclusions>
+    <sonar.cpd.exclusions>**/java-generated/**,**/*Stub.java</sonar.cpd.exclusions>
+    <sonar.coverage.exclusions>**/java-generated/**,**/*Stub.java</sonar.coverage.exclusions>
     <sonar.language>java</sonar.language>
+
+    <!-- Other -->
+    <main.basedir>${project.basedir}</main.basedir>
+    <release.tagNameBase>${project.artifactId}</release.tagNameBase>
 
     <!-- JaCoCo -->
     <coverage.dir>${project.basedir}/../target/coverage</coverage.dir>
@@ -342,7 +350,42 @@
       </dependency>
       <dependency>
         <groupId>org.gbif.pipelines</groupId>
-        <artifactId>crawler</artifactId>
+        <artifactId>tasks-coordinator-cli</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.pipelines</groupId>
+        <artifactId>validator-core</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.pipelines</groupId>
+        <artifactId>validator-checklists</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.pipelines</groupId>
+        <artifactId>validator-eml</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.pipelines</groupId>
+        <artifactId>pipelines-validator-ws</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.pipelines</groupId>
+        <artifactId>validator-ws-client</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.pipelines</groupId>
+        <artifactId>validator-api</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.pipelines</groupId>
+        <artifactId>validator-mail</artifactId>
         <version>${project.version}</version>
       </dependency>
 
@@ -444,11 +487,6 @@
         <groupId>org.gbif</groupId>
         <artifactId>gbif-wrangler</artifactId>
         <version>${gbif-wrangler.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.gbif.data</groupId>
-        <artifactId>data-repo-api</artifactId>
-        <version>${data-repo-api.version}</version>
       </dependency>
       <dependency>
         <groupId>org.gbif.vocabulary</groupId>
@@ -660,6 +698,11 @@
       <dependency>
         <groupId>org.elasticsearch.client</groupId>
         <artifactId>elasticsearch-rest-high-level-client</artifactId>
+        <version>${elasticsearch.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.elasticsearch</groupId>
+        <artifactId>elasticsearch</artifactId>
         <version>${elasticsearch.version}</version>
       </dependency>
       <dependency>
@@ -922,6 +965,12 @@
       <dependency>
         <groupId>org.testcontainers</groupId>
         <artifactId>elasticsearch</artifactId>
+        <version>${testcontainers.elasticsearch.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.testcontainers</groupId>
+        <artifactId>testcontainers</artifactId>
         <version>${testcontainers.elasticsearch.version}</version>
         <scope>test</scope>
       </dependency>

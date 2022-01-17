@@ -18,7 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.vocabulary.InterpretationRemark;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.core.utils.ModelUtils;
@@ -136,7 +135,7 @@ public class ALATaxonomyInterpreter {
       if (kvStore != null) {
         String genus = extractValue(er, DwcTerm.genus, defaults);
         if (genus == null) {
-          genus = extractValue(er, GbifTerm.genericName, defaults);
+          genus = extractValue(er, DwcTerm.genericName, defaults);
         }
         NameSearch matchRequest =
             NameSearch.builder()

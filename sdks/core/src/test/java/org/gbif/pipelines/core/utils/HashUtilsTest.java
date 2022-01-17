@@ -12,7 +12,7 @@ public class HashUtilsTest {
     String expected = "3521a4e173f1c42a18d431d128720dc60e430a73";
 
     // When
-    String result = HashUtils.getSha1(value);
+    String result = HashConverter.getSha1(value);
 
     // Should
     Assert.assertEquals(expected, result);
@@ -26,7 +26,7 @@ public class HashUtilsTest {
     String expected = "74cf926f4871c8f98acf392b098e406ab82765b5";
 
     // When
-    String result = HashUtils.getSha1(value1, value2);
+    String result = HashConverter.getSha1(value1, value2);
 
     // Should
     Assert.assertEquals(expected, result);

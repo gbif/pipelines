@@ -23,6 +23,7 @@ import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
+import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -212,18 +213,33 @@ public class InterpretedToEsIndexPipeline {
         ElasticsearchIO.ConnectionConfiguration.create(
             options.getEsHosts(), options.getEsIndexName(), "_doc");
 
-    jsonCollection.apply(
+    ElasticsearchIO.Write writeIO =
         ElasticsearchIO.write()
             .withConnectionConfiguration(esConfig)
             .withMaxBatchSizeBytes(options.getEsMaxBatchSizeBytes())
-            .withMaxBatchSize(options.getEsMaxBatchSize())
-            .withIdFn(input -> input.get(esDocumentId).asText()));
+            .withMaxBatchSize(options.getEsMaxBatchSize());
+
+    // Ignore gbifID as ES doc ID, useful for validator
+    if (esDocumentId != null && !esDocumentId.isEmpty()) {
+      writeIO = writeIO.withIdFn(input -> input.get(esDocumentId).asText());
+    }
+
+    jsonCollection.apply(writeIO);
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();
     result.waitUntilFinish();
 
+    log.info("Save metrics into the file and set files owner");
     MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
+    String metadataPath =
+        PathBuilder.buildDatasetAttemptPath(options, options.getMetaFileName(), false);
+    FsUtils.setOwner(
+        options.getHdfsSiteConfig(),
+        options.getCoreSiteConfig(),
+        metadataPath,
+        "crap",
+        "supergroup");
 
     log.info("Pipeline has been finished");
   }

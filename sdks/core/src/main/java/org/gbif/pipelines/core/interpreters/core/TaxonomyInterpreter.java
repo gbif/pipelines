@@ -8,20 +8,23 @@ import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.checklistbank.NameUsageMatch.MatchType;
 import org.gbif.api.vocabulary.Kingdom;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.species.SpeciesMatchRequest;
 import org.gbif.nameparser.NameParserGBIF;
+import org.gbif.nameparser.NameParserGbifV1;
 import org.gbif.nameparser.api.NameParser;
 import org.gbif.nameparser.api.UnparsableNameException;
 import org.gbif.pipelines.core.parsers.taxonomy.TaxonRecordConverter;
@@ -29,6 +32,7 @@ import org.gbif.pipelines.core.utils.ModelUtils;
 import org.gbif.pipelines.io.avro.Authorship;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.NamePart;
+import org.gbif.pipelines.io.avro.NameRank;
 import org.gbif.pipelines.io.avro.NameType;
 import org.gbif.pipelines.io.avro.NomCode;
 import org.gbif.pipelines.io.avro.ParsedName;
@@ -83,7 +87,7 @@ public class TaxonomyInterpreter {
               .withSpecificEpithet(extractValue(er, DwcTerm.specificEpithet))
               .withInfraspecificEpithet(extractValue(er, DwcTerm.infraspecificEpithet))
               .withScientificNameAuthorship(extractValue(er, DwcTerm.scientificNameAuthorship))
-              .withGenericName(extractValue(er, GbifTerm.genericName))
+              .withGenericName(extractValue(er, DwcTerm.genericName))
               .build();
 
       NameUsageMatch usageMatch = null;
@@ -117,7 +121,8 @@ public class TaxonomyInterpreter {
             org.gbif.nameparser.api.ParsedName pn =
                 NAME_PARSER.parse(
                     usageMatch.getUsage().getName(),
-                    org.gbif.nameparser.api.Rank.valueOf(usageMatch.getUsage().getRank().name()));
+                    NameParserGbifV1.fromGbif(usageMatch.getUsage().getRank()),
+                    null);
             tr.setUsageParsedName(toParsedNameAvro(pn));
           }
         } catch (UnparsableNameException e) {
@@ -167,7 +172,6 @@ public class TaxonomyInterpreter {
             .setCultivarEpithet(pn.getCultivarEpithet())
             .setDoubtful(pn.isDoubtful())
             .setGenus(pn.getGenus())
-            .setWarnings(pn.getWarnings())
             .setUninomial(pn.getUninomial())
             .setUnparsed(pn.getUnparsed())
             .setTrinomial(pn.isTrinomial())
@@ -176,14 +180,19 @@ public class TaxonomyInterpreter {
             .setTerminalEpithet(pn.getTerminalEpithet())
             .setInfragenericEpithet(pn.getInfragenericEpithet())
             .setInfraspecificEpithet(pn.getInfraspecificEpithet())
-            .setNomenclaturalNotes(pn.getNomenclaturalNotes())
-            .setTaxonomicNote(pn.getTaxonomicNote())
-            .setStrain(pn.getStrain())
+            .setExtinct(pn.isExtinct())
+            .setPublishedIn(pn.getPublishedIn())
             .setSanctioningAuthor(pn.getSanctioningAuthor())
-            .setRemarks(pn.getRemarks())
-            .setSpecificEpithet(pn.getSpecificEpithet());
+            .setSpecificEpithet(pn.getSpecificEpithet())
+            .setPhrase(pn.getPhrase())
+            .setPhraseName(pn.isPhraseName())
+            .setVoucher(pn.getVoucher())
+            .setNominatingParty(pn.getNominatingParty())
+            .setNomenclaturalNote(pn.getNomenclaturalNote());
 
     // Nullable fields
+    Optional.ofNullable(pn.getWarnings())
+        .ifPresent(w -> builder.setWarnings(new ArrayList<>(pn.getWarnings())));
     Optional.ofNullable(pn.getBasionymAuthorship())
         .ifPresent(authorship -> builder.setBasionymAuthorship(toAuthorshipAvro(authorship)));
     Optional.ofNullable(pn.getCombinationAuthorship())
@@ -194,9 +203,16 @@ public class TaxonomyInterpreter {
         .ifPresent(type -> builder.setType(NameType.valueOf(type.name())));
     Optional.ofNullable(pn.getNotho())
         .ifPresent(notho -> builder.setNotho(NamePart.valueOf(notho.name())));
-    Optional.ofNullable(pn.getRank()).ifPresent(rank -> builder.setRank(Rank.valueOf(rank.name())));
+    Optional.ofNullable(pn.getRank())
+        .ifPresent(rank -> builder.setRank(NameRank.valueOf(rank.name())));
     Optional.ofNullable(pn.getState())
         .ifPresent(state -> builder.setState(State.valueOf(state.name())));
+    Optional.ofNullable(pn.getEpithetQualifier())
+        .map(
+            eq ->
+                eq.entrySet().stream()
+                    .collect(Collectors.toMap(e -> e.getKey().name(), Map.Entry::getValue)))
+        .ifPresent(builder::setEpithetQualifier);
     return builder.build();
   }
 

@@ -1,11 +1,11 @@
 package org.gbif.pipelines.diagnostics.strategy;
 
-import java.util.Set;
+import java.util.Map;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 
 public interface DeletionStrategy {
 
-  Set<String> getKeysToDelete(
+  Map<String, Long> getKeysToDelete(
       HBaseLockingKeyService keygenService,
       boolean onlyCollisions,
       String triplet,
@@ -24,7 +24,7 @@ public interface DeletionStrategy {
       this.deletionStrategy = deletionStrategy;
     }
 
-    public Set<String> getKeysToDelete(
+    public Map<String, Long> getKeysToDelete(
         HBaseLockingKeyService keygenService,
         boolean onlyCollisions,
         String triplet,

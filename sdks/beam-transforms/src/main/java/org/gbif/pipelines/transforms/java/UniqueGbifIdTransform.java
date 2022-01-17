@@ -1,5 +1,10 @@
 package org.gbif.pipelines.transforms.java;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.DUPLICATE_GBIF_IDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.IDENTICAL_GBIF_OBJECTS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.INVALID_GBIF_ID_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.UNIQUE_GBIF_IDS_COUNT;
+
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -13,7 +18,8 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.gbif.pipelines.core.utils.HashUtils;
+import org.gbif.pipelines.core.functions.SerializableConsumer;
+import org.gbif.pipelines.core.utils.HashConverter;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
@@ -41,6 +47,8 @@ public class UniqueGbifIdTransform {
   @Builder.Default private boolean useSyncMode = true;
 
   @Builder.Default private boolean skipTransform = false;
+
+  private SerializableConsumer<String> counterFn;
 
   public UniqueGbifIdTransform run() {
     return useSyncMode ? runSync() : runAsync();
@@ -80,6 +88,7 @@ public class UniqueGbifIdTransform {
                   } else if (br.getGbifId() != null) {
                     filter(br);
                   } else {
+                    incMetrics(INVALID_GBIF_ID_COUNT);
                     brInvalidMap.put(br.getId(), br);
                     log.error("GBIF ID is null, occurrenceId - {}", br.getId());
                   }
@@ -91,16 +100,24 @@ public class UniqueGbifIdTransform {
   private void filter(BasicRecord br) {
     BasicRecord record = brMap.get(br.getGbifId().toString());
     if (record != null) {
-      int compare = HashUtils.getSha1(br.getId()).compareTo(HashUtils.getSha1(record.getId()));
+      int compare =
+          HashConverter.getSha1(br.getId()).compareTo(HashConverter.getSha1(record.getId()));
       if (compare < 0) {
+        incMetrics(IDENTICAL_GBIF_OBJECTS_COUNT);
         brMap.put(br.getGbifId().toString(), br);
         brInvalidMap.put(record.getId(), record);
       } else {
+        incMetrics(DUPLICATE_GBIF_IDS_COUNT);
         brInvalidMap.put(br.getId(), br);
       }
       log.error("GBIF ID collision, gbifId - {}, occurrenceId - {}", br.getGbifId(), br.getId());
     } else {
+      incMetrics(UNIQUE_GBIF_IDS_COUNT);
       brMap.put(br.getGbifId().toString(), br);
     }
+  }
+
+  private void incMetrics(String metricName) {
+    Optional.ofNullable(counterFn).ifPresent(x -> x.accept(metricName));
   }
 }

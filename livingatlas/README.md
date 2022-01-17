@@ -12,28 +12,21 @@ This module is to add functionality required by the Living Atlases to facilitate
 For details on the GBIF implementation, see the [pipelines github repository](https://github.com/gbif/pipelines).
 This project is focussed on extensions to that architecture to support use by the Living Atlases.
 
-![Pipelines](https://docs.google.com/drawings/d/e/2PACX-1vQhQSg5VFo2xRZfDhmvhKuNLUpyTOlW-t-m1fesJ2RElWorVPAEbnsZg_StJKh22mEcS4D28j_nPoTV/pub?w=960&h=720 "Pipelines") 
+![Pipelines](https://confluence.csiro.au/rest/gliffy/1.0/embeddedDiagrams/34f42b70-4936-4400-b0c4-01e4aeeb42c5.png"Pipelines") 
 
 Above is a representation of the data flow from source data in Darwin core archives supplied by data providers, to the API access to these data via the biocache-service component.
 
 Within the "Interpreted AVRO" box is a list of "transforms" each of which take the source data and produce an isolated output in a AVRO formatted file.
 
-[GBIF's pipelines](https://github.com/gbif/pipelines) already supports a number of core transforms for handling biodiversity occurrence data. The intention is to make us of these transforms "as-is" which effectively perform the very similar functionality to what is supported by the biocache-store project (ALA's current ingress library for occurrence data). 
+[GBIF's pipelines](https://github.com/gbif/pipelines) already supports a number of core transforms for handling biodiversity occurrence data. 
+The Living Atlas pipelines extensions make us of these transforms "as-is" where possible and extend existing transforms where required. 
 
-This list of transforms will need to be added to backfill some of the ingress requirements of the ALA. These transforms will make use of existing ALA services:
-
-* *ALA Taxonomy transform* - will make use of the existing **[ala-name-matching](https://github.com/AtlasOfLivingAustralia/ala-name-matching) library**
-* *Sensitive data* - will make use of existing services in https://lists.ala.org.au to retrieve sensitive species rules.
-* *Spatial layers* - will make use of existing services in https://spatial.ala.org.au/ws/ to retrieve sampled environmental and contextual values for geospatial points
-* *Species lists* - will make use of existing services in https://lists.ala.org.au to retrieve species lists.
-
-For information on how the architecture between [biocache-store](https://github.com/AtlasOfLivingAustralia/biocache-store) 
+For information on how the architecture between the legacy system [biocache-store](https://github.com/AtlasOfLivingAustralia/biocache-store) 
 and pipelines differ, [see this page](architectures.md).
 
 ## Dependent projects
 
-The pipelines work has necessitated some minor additional API additions and change 
-to the following components:
+The pipelines work has necessitated some minor additional API additions and change to the following components:
 
 ### biocache-service
 [pipelines branch](https://github.com/AtlasOfLivingAustralia/biocache-service/tree/epic/pipelines%2Fdevelop) 

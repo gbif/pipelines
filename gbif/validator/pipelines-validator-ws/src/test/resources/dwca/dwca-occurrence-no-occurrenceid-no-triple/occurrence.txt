@@ -1,0 +1,2 @@
+id,catalogNumber,basisOfRecord,collectionCode,typeStatus,genus,subgenus,specificEpithet,infraspecificEpithet,scientificName
+WAG.1920590@BRAHMS,WAG.1920590,Herbarium sheet,Botany,,Symphonia,,globulifera,,Symphonia globulifera L.f.

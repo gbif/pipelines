@@ -16,7 +16,11 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.ContentType;
 import org.apache.http.protocol.HTTP;
-import org.elasticsearch.client.*;
+import org.elasticsearch.client.Request;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.Response;
+import org.elasticsearch.client.ResponseException;
+import org.elasticsearch.client.RestClient;
 
 /**
  * Client to communicate with the ES server.
@@ -27,6 +31,10 @@ import org.elasticsearch.client.*;
 public class EsClient implements AutoCloseable {
 
   private final RestClient restClient;
+
+  private EsClient(RestClient restClient) {
+    this.restClient = restClient;
+  }
 
   private EsClient(EsConfig config) {
     Objects.requireNonNull(config);
@@ -43,6 +51,11 @@ public class EsClient implements AutoCloseable {
         RestClient.builder(hosts)
             .setRequestConfigCallback(b -> b.setConnectTimeout(180_000).setSocketTimeout(180_000))
             .build();
+  }
+
+  /** Creates a {@link EsClient} from a {@link RestClient} */
+  public static EsClient from(RestClient restClient) {
+    return new EsClient(restClient);
   }
 
   /**

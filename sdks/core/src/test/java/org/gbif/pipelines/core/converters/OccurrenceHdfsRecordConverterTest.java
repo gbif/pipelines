@@ -20,7 +20,6 @@ import org.gbif.api.vocabulary.BasisOfRecord;
 import org.gbif.api.vocabulary.Continent;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.EndpointType;
-import org.gbif.api.vocabulary.EstablishmentMeans;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.api.vocabulary.OccurrenceStatus;
@@ -29,10 +28,8 @@ import org.gbif.api.vocabulary.ThreatStatus;
 import org.gbif.api.vocabulary.TypeStatus;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
-import org.gbif.pipelines.core.utils.MediaSerDeserUtils;
-import org.gbif.pipelines.io.avro.*;
+import org.gbif.pipelines.core.utils.MediaSerDeser;
 import org.gbif.pipelines.io.avro.AgentIdentifier;
 import org.gbif.pipelines.io.avro.Authorship;
 import org.gbif.pipelines.io.avro.BasicRecord;
@@ -54,6 +51,7 @@ import org.gbif.pipelines.io.avro.RankedName;
 import org.gbif.pipelines.io.avro.State;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.VocabularyConcept;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.io.avro.grscicoll.Match;
 import org.junit.Assert;
@@ -83,8 +81,8 @@ public class OccurrenceHdfsRecordConverterTest {
     coreTerms.put(DwcTerm.organismQuantityType.simpleName(), "type");
     coreTerms.put(DwcTerm.recordedBy.simpleName(), "recordedBy");
     coreTerms.put(DwcTerm.identifiedBy.simpleName(), "identifiedBy");
-    coreTerms.put(GbifTerm.identifiedByID.simpleName(), "13123|21312");
-    coreTerms.put(GbifTerm.recordedByID.simpleName(), "53453|5785");
+    coreTerms.put(DwcTerm.identifiedByID.simpleName(), "13123|21312");
+    coreTerms.put(DwcTerm.recordedByID.simpleName(), "53453|5785");
     coreTerms.put(DwcTerm.occurrenceStatus.simpleName(), OccurrenceStatus.ABSENT.name());
     coreTerms.put(DwcTerm.individualCount.simpleName(), "0");
     coreTerms.put(DwcTerm.eventDate.simpleName(), "2000/2010");
@@ -255,7 +253,7 @@ public class OccurrenceHdfsRecordConverterTest {
 
     // Should
     // Testing de-serialization
-    List<Multimedia> media = MediaSerDeserUtils.fromJson(hdfsRecord.getExtMultimedia());
+    List<Multimedia> media = MediaSerDeser.fromJson(hdfsRecord.getExtMultimedia());
     Assert.assertEquals(media.get(0), multimedia);
     Assert.assertTrue(hdfsRecord.getMediatype().contains(MediaType.StillImage.name()));
     Assert.assertTrue(
@@ -270,11 +268,28 @@ public class OccurrenceHdfsRecordConverterTest {
     basicRecord.setBasisOfRecord(BasisOfRecord.HUMAN_OBSERVATION.name());
     basicRecord.setSex(Sex.HERMAPHRODITE.name());
     basicRecord.setIndividualCount(99);
-    basicRecord.setLifeStage("Tadpole");
-    basicRecord.setLifeStageLineage(Arrays.asList("Larva", "Tadpole"));
     basicRecord.setTypeStatus(TypeStatus.ALLOTYPE.name());
     basicRecord.setTypifiedName("noName");
-    basicRecord.setEstablishmentMeans(EstablishmentMeans.INVASIVE.name());
+    basicRecord.setLifeStage(
+        VocabularyConcept.newBuilder()
+            .setConcept("Tadpole")
+            .setLineage(Collections.singletonList("Larva"))
+            .build());
+    basicRecord.setEstablishmentMeans(
+        VocabularyConcept.newBuilder()
+            .setConcept("Bla")
+            .setLineage(Collections.singletonList("BlaBla"))
+            .build());
+    basicRecord.setPathway(
+        VocabularyConcept.newBuilder()
+            .setConcept("Bla1")
+            .setLineage(Collections.singletonList("BlaBla1"))
+            .build());
+    basicRecord.setDegreeOfEstablishment(
+        VocabularyConcept.newBuilder()
+            .setConcept("Bla2")
+            .setLineage(Collections.singletonList("BlaBla2"))
+            .build());
     basicRecord.setCreated(now);
     basicRecord.setGbifId(1L);
     basicRecord.setOrganismQuantity(2d);
@@ -293,11 +308,8 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals(BasisOfRecord.HUMAN_OBSERVATION.name(), hdfsRecord.getBasisofrecord());
     Assert.assertEquals(Sex.HERMAPHRODITE.name(), hdfsRecord.getSex());
     Assert.assertEquals(Integer.valueOf(99), hdfsRecord.getIndividualcount());
-    Assert.assertEquals("Tadpole", hdfsRecord.getLifestage());
-    Assert.assertEquals(Arrays.asList("Larva", "Tadpole"), hdfsRecord.getLifestagelineage());
     Assert.assertEquals(TypeStatus.ALLOTYPE.name(), hdfsRecord.getTypestatus());
     Assert.assertEquals("noName", hdfsRecord.getTypifiedname());
-    Assert.assertEquals(EstablishmentMeans.INVASIVE.name(), hdfsRecord.getEstablishmentmeans());
     Assert.assertEquals(Double.valueOf(2d), hdfsRecord.getOrganismquantity());
     Assert.assertEquals("type", hdfsRecord.getOrganismquantitytype());
     Assert.assertEquals("unit", hdfsRecord.getSamplesizeunit());
@@ -305,6 +317,14 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals(Double.valueOf(2d), hdfsRecord.getRelativeorganismquantity());
     Assert.assertNull(hdfsRecord.getLicense());
     Assert.assertTrue(hdfsRecord.getIsincluster());
+    Assert.assertEquals("Tadpole", hdfsRecord.getLifestage().getConcept());
+    Assert.assertEquals("Larva", hdfsRecord.getLifestage().getLineage().get(0));
+    Assert.assertEquals("Bla", hdfsRecord.getEstablishmentmeans().getConcept());
+    Assert.assertEquals("BlaBla", hdfsRecord.getEstablishmentmeans().getLineage().get(0));
+    Assert.assertEquals("Bla1", hdfsRecord.getPathway().getConcept());
+    Assert.assertEquals("BlaBla1", hdfsRecord.getPathway().getLineage().get(0));
+    Assert.assertEquals("Bla2", hdfsRecord.getDegreeofestablishment().getConcept());
+    Assert.assertEquals("BlaBla2", hdfsRecord.getDegreeofestablishment().getLineage().get(0));
   }
 
   @Test

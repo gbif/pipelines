@@ -9,7 +9,7 @@ import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
-import org.gbif.pipelines.core.utils.HashUtils;
+import org.gbif.pipelines.core.utils.HashConverter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
@@ -26,7 +26,7 @@ public class HashIdTransform extends DoFn<ExtendedRecord, ExtendedRecord> {
 
   @ProcessElement
   public void processElement(@Element ExtendedRecord er, OutputReceiver<ExtendedRecord> out) {
-    String id = HashUtils.getSha1(datasetId, er.getId());
+    String id = HashConverter.getSha1(datasetId, er.getId());
     out.output(ExtendedRecord.newBuilder(er).setId(id).build());
     counter.inc();
   }

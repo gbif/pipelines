@@ -11,7 +11,6 @@ import lombok.AllArgsConstructor;
 import org.gbif.api.vocabulary.BasisOfRecord;
 import org.gbif.api.vocabulary.Continent;
 import org.gbif.api.vocabulary.Country;
-import org.gbif.api.vocabulary.EstablishmentMeans;
 import org.gbif.api.vocabulary.Rank;
 import org.gbif.api.vocabulary.Sex;
 import org.gbif.api.vocabulary.TypeStatus;
@@ -53,11 +52,6 @@ public class VocabularyParser<T extends Enum<T>> {
   /** @return a sex parser. */
   public static VocabularyParser<Sex> sexParser() {
     return new VocabularyParser<>(SEX_PARSER, DwcTerm.sex);
-  }
-
-  /** @return a establishmentMeans parser. */
-  public static VocabularyParser<EstablishmentMeans> establishmentMeansParser() {
-    return new VocabularyParser<>(EST_PARSER, DwcTerm.establishmentMeans);
   }
 
   /** @return a type status parser. */

@@ -1,0 +1,51 @@
+<eml:eml xmlns:eml="eml://ecoinformatics.org/eml-2.1.1"
+         xmlns:dc="http://purl.org/dc/terms/"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="eml://ecoinformatics.org/eml-2.1.1 http://rs.gbif.org/schema/eml-gbif-profile/1.0.2/eml.xsd"
+         packageId="http://ipt-demo.gbif.org/resource.do?id=one_mil/v1" system="http://gbif.org" scope="system"
+         xml:lang="eng">
+
+<dataset>
+  <title xml:lang="eng">Tim 100 records</title>
+<creator>
+    <individualName>
+      <surName>Braak</surName>
+    </individualName>
+    <organizationName>GBIF</organizationName>
+</creator>
+<metadataProvider>
+    <individualName>
+      <surName>Braak</surName>
+    </individualName>
+    <organizationName>GBIF</organizationName>
+</metadataProvider>
+    <associatedParty>
+    <individualName>
+      <surName>Braak</surName>
+    </individualName>
+    <organizationName>GBIF</organizationName>
+    <role>user</role>
+    </associatedParty>
+<pubDate>
+      	2013-03-15
+</pubDate>
+<language>eng</language>
+<abstract>
+  <para>Tim 100 records</para>
+</abstract>
+  <contact>
+    <individualName>
+      <surName>Braak</surName>
+    </individualName>
+    <organizationName>GBIF</organizationName>
+  </contact>
+</dataset>
+  <additionalMetadata>
+    <metadata>
+      <gbif>
+          <dateStamp>2013-03-15T09:43:41.717+01:00</dateStamp>
+          <hierarchyLevel>dataset</hierarchyLevel>
+      </gbif>
+    </metadata>
+  </additionalMetadata>
+</eml:eml>

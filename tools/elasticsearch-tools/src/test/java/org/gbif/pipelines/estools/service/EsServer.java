@@ -52,12 +52,12 @@ public class EsServer extends ExternalResource {
 
   @Override
   protected void after() {
-    /*esClient.close();
+    esClient.close();
     try {
       restClient.close();
     } catch (IOException e) {
       log.error("Could not close rest client for testing", e);
-    }*/
+    }
   }
 
   private RestClient buildRestClient() {

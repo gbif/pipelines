@@ -100,13 +100,13 @@ public class AgentIdentifierParserTest {
                 .build());
 
     // State
-    String raw = "https://www.wikidata.org/wiki/0000";
+    String raw = "| https://www.wikidata.org/wiki/0000";
 
     // When
     Set<AgentIdentifier> set = AgentIdentifierParser.parse(raw);
 
     // Should
-    assertFalse(set.isEmpty());
+    assertEquals(1, set.size());
     assertEquals(expected, set);
   }
 
@@ -173,6 +173,32 @@ public class AgentIdentifierParserTest {
 
     // State
     String raw = "wikidata.org/wiki/0000| something|0000-0002-0144-1997";
+
+    // When
+    Set<AgentIdentifier> set = AgentIdentifierParser.parse(raw);
+
+    // Should
+    assertFalse(set.isEmpty());
+    assertEquals(expected, set);
+  }
+
+  @Test
+  public void parseMixedCommaTest() {
+    // Expected
+    Set<AgentIdentifier> expected =
+        Stream.of(
+                AgentIdentifier.newBuilder()
+                    .setType(AgentIdentifierType.WIKIDATA.name())
+                    .setValue("https://www.wikidata.org/wiki/0000")
+                    .build(),
+                AgentIdentifier.newBuilder()
+                    .setType(AgentIdentifierType.WIKIDATA.name())
+                    .setValue("https://www.wikidata.org/wiki/00001")
+                    .build())
+            .collect(Collectors.toSet());
+
+    // State
+    String raw = "https://www.wikidata.org/wiki/0000, | https://www.wikidata.org/wiki/00001";
 
     // When
     Set<AgentIdentifier> set = AgentIdentifierParser.parse(raw);

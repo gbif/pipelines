@@ -33,7 +33,10 @@ public class MetadataInterpreter {
   /** Gets information from GBIF API by datasetId */
   public static BiConsumer<String, MetadataRecord> interpret(MetadataServiceClient client) {
     return (datasetId, mdr) -> {
+
+      // Set required metadata properties
       mdr.setDatasetKey(datasetId);
+      mdr.setNetworkKeys(Collections.emptyList());
 
       if (client != null) {
 
@@ -56,8 +59,6 @@ public class MetadataInterpreter {
         if (networkList != null && !networkList.isEmpty()) {
           mdr.setNetworkKeys(
               networkList.stream().map(Network::getKey).collect(Collectors.toList()));
-        } else {
-          mdr.setNetworkKeys(Collections.emptyList());
         }
 
         Organization organization = client.getOrganization(dataset.getPublishingOrganizationKey());
@@ -112,7 +113,9 @@ public class MetadataInterpreter {
                   }
                 })
             .orElse(null);
-    return LicenseParser.getInstance().parseUriThenTitle(uri, null);
+    License license = LicenseParser.getInstance().parseUriThenTitle(uri, null);
+    // UNSPECIFIED must be mapped to null
+    return License.UNSPECIFIED == license ? null : license;
   }
 
   /** Gets the latest crawl attempt time, if exists. */

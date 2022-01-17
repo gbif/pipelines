@@ -704,6 +704,7 @@
   <copyField source="recordedBy" dest="text"/>
   <copyField source="identifiedBy" dest="text_identifiedBy"/>
   <copyField source="recordedBy" dest="text_recordedBy"/>
+  <copyField source="raw_recordedBy" dest="text_recordedBy"/>
   <copyField source="scientificName" dest="matched_name"/>
   <copyField source="scientificName" dest="text"/>
   <copyField source="species" dest="text"/>
@@ -711,6 +712,7 @@
   <copyField source="speciesSubgroup" dest="text"/>
   <copyField source="stateConservation" dest="text"/>
   <copyField source="stateProvince" dest="text"/>
+  <copyField source="taxonRemarks" dest="text"/>
   <copyField source="typeStatus" dest="text"/>
   <copyField source="vernacularName" dest="matched_name"/>
   <copyField source="vernacularName" dest="text"/>

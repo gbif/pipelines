@@ -2,10 +2,9 @@ package org.gbif.pipelines.transforms.converters;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.OCCURRENCE_EXT_COUNT;
 
-import java.util.List;
-import java.util.Map;
 import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
+import lombok.var;
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.DoFn;
@@ -47,8 +46,7 @@ public class OccurrenceExtensionTransform extends DoFn<ExtendedRecord, ExtendedR
   }
 
   public void convert(ExtendedRecord er, Consumer<ExtendedRecord> resultConsumer) {
-    List<Map<String, String>> occurrenceExts =
-        er.getExtensions().get(DwcTerm.Occurrence.qualifiedName());
+    var occurrenceExts = er.getExtensions().get(DwcTerm.Occurrence.qualifiedName());
 
     if (occurrenceExts != null) {
       if (occurrenceExts.isEmpty()) {
@@ -56,18 +54,16 @@ public class OccurrenceExtensionTransform extends DoFn<ExtendedRecord, ExtendedR
         // Fix for https://github.com/gbif/pipelines/issues/471
         log.warn("Event/Taxon core archive with empty occurrence extensions");
       } else {
-        Map<String, String> coreTerms = er.getCoreTerms();
-        occurrenceExts.forEach(
-            occurrence ->
-                OccurrenceExtensionConverter.convert(coreTerms, occurrence)
-                    .ifPresent(
-                        extEr -> {
-                          counterFn.accept(COUNTER_NAME);
-                          resultConsumer.accept(extEr);
-                        }));
+
+        OccurrenceExtensionConverter.convert(er)
+            .forEach(
+                extEr -> {
+                  counterFn.accept(COUNTER_NAME);
+                  resultConsumer.accept(extEr);
+                });
       }
-    } else if (DwcTerm.Occurrence.qualifiedName()
-        .equals(er.getCoreRowType())) { // Core type is Occurrence
+      // Core type is Occurrence
+    } else if (DwcTerm.Occurrence.qualifiedName().equals(er.getCoreRowType())) {
       resultConsumer.accept(er);
     } else {
       log.warn("Event/Taxon core archive with no extensions maybe? Is this possible?");

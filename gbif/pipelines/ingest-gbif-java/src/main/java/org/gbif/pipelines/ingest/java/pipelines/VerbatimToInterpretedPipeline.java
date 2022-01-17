@@ -30,10 +30,9 @@ import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.factory.ConfigFactory;
-import org.gbif.pipelines.core.factory.FileVocabularyFactory;
-import org.gbif.pipelines.core.factory.FileVocabularyFactory.VocabularyBackedTerm;
 import org.gbif.pipelines.core.functions.SerializableConsumer;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.core.io.AvroReader;
@@ -41,6 +40,7 @@ import org.gbif.pipelines.core.io.SyncDataFileWriter;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.core.ws.metadata.MetadataServiceClient;
 import org.gbif.pipelines.factory.ClusteringServiceFactory;
+import org.gbif.pipelines.factory.FileVocabularyFactory;
 import org.gbif.pipelines.factory.GeocodeKvStoreFactory;
 import org.gbif.pipelines.factory.GrscicollLookupKvStoreFactory;
 import org.gbif.pipelines.factory.KeygenServiceFactory;
@@ -59,6 +59,7 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
+import org.gbif.pipelines.transforms.common.CheckTransforms;
 import org.gbif.pipelines.transforms.common.ExtensionFilterTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.GrscicollTransform;
@@ -181,8 +182,11 @@ public class VerbatimToInterpretedPipeline {
     IngestMetrics metrics = IngestMetricsBuilder.createVerbatimToInterpretedMetrics();
     SerializableConsumer<String> incMetricFn = metrics::incMetric;
 
-    SerializableSupplier<MetadataServiceClient> metadataServiceClientSerializableSupplier =
-        MetadataServiceClientFactory.getInstanceSupplier(config);
+    SerializableSupplier<MetadataServiceClient> metadataServiceClientSerializableSupplier = null;
+    if (options.getUseMetadataWsCalls()) {
+      metadataServiceClientSerializableSupplier =
+          MetadataServiceClientFactory.getInstanceSupplier(config);
+    }
     SerializableSupplier<KeyValueStore<SpeciesMatchRequest, NameUsageMatch>>
         nameUsageMatchServiceSupplier = NameUsageMatchStoreFactory.getInstanceSupplier(config);
     SerializableSupplier<KeyValueStore<GrscicollLookupRequest, GrscicollLookupResponse>>
@@ -209,16 +213,20 @@ public class VerbatimToInterpretedPipeline {
 
     BasicTransform basicTransform =
         BasicTransform.builder()
-            .keygenServiceSupplier(KeygenServiceFactory.getInstanceSupplier(config, datasetId))
-            .lifeStageLookupSupplier(
-                FileVocabularyFactory.getInstanceSupplier(
-                    config, hdfsSiteConfig, coreSiteConfig, VocabularyBackedTerm.LIFE_STAGE))
-            .occStatusKvStoreSupplier(OccurrenceStatusKvStoreFactory.getInstanceSupplier(config))
+            .useDynamicPropertiesInterpretation(true)
             .isTripletValid(tripletValid)
             .isOccurrenceIdValid(occIdValid)
             .useExtendedRecordId(useErdId)
+            .keygenServiceSupplier(KeygenServiceFactory.getInstanceSupplier(config, datasetId))
+            .occStatusKvStoreSupplier(OccurrenceStatusKvStoreFactory.getInstanceSupplier(config))
             .clusteringServiceSupplier(ClusteringServiceFactory.getInstanceSupplier(config))
-            .useDynamicPropertiesInterpretation(true)
+            .vocabularyServiceSupplier(
+                FileVocabularyFactory.builder()
+                    .config(config)
+                    .hdfsSiteConfig(hdfsSiteConfig)
+                    .coreSiteConfig(coreSiteConfig)
+                    .build()
+                    .getInstanceSupplier())
             .create()
             .counterFn(incMetricFn)
             .init();
@@ -341,8 +349,10 @@ public class VerbatimToInterpretedPipeline {
       // Skip interpretation and use avro reader when partial intepretation is activated
       Function<ExtendedRecord, Optional<BasicRecord>> brFn;
       if (useBasicRecordWriteIO(types)) {
+        log.info("Interpreting BASIC records...");
         brFn = basicTransform::processElement;
       } else {
+        log.info("Skip BASIC interpretation and reading BASIC records from avro files...");
         basicWriter.close();
         basicInvalidWriter.close();
         Map<String, BasicRecord> basicRecordMap =
@@ -350,6 +360,7 @@ public class VerbatimToInterpretedPipeline {
         brFn = er -> Optional.ofNullable(basicRecordMap.get(er.getId()));
       }
 
+      log.info("Аiltering GBIF id duplicates");
       // Filter GBIF id duplicates
       UniqueGbifIdTransform gbifIdTransform =
           UniqueGbifIdTransform.builder()
@@ -358,6 +369,7 @@ public class VerbatimToInterpretedPipeline {
               .basicTransformFn(brFn)
               .useSyncMode(useSyncMode)
               .skipTransform(useErdId)
+              .counterFn(incMetricFn)
               .build()
               .run();
 
@@ -397,7 +409,7 @@ public class VerbatimToInterpretedPipeline {
             }
           };
 
-      log.info("Starting interpretation...");
+      log.info("Starting rest of interpretations...");
       // Run async writing for BasicRecords
       Stream<CompletableFuture<Void>> streamBr = Stream.empty();
       if (useBasicRecordWriteIO(types)) {
@@ -439,7 +451,15 @@ public class VerbatimToInterpretedPipeline {
       Shutdown.doOnExit(basicTransform, locationTransform, taxonomyTransform, grscicollTransform);
     }
 
-    MetricsHandler.saveCountersToTargetPathFile(options, metrics.getMetricsResult());
+    log.info("Save metrics into the file and set files owner");
+    String metadataPath =
+        PathBuilder.buildDatasetAttemptPath(options, options.getMetaFileName(), false);
+    if (!FsUtils.fileExists(hdfsSiteConfig, coreSiteConfig, metadataPath)
+        || CheckTransforms.checkRecordType(types, RecordType.BASIC)
+        || CheckTransforms.checkRecordType(types, RecordType.ALL)) {
+      MetricsHandler.saveCountersToTargetPathFile(options, metrics.getMetricsResult());
+    }
+
     log.info("Pipeline has been finished - {}", LocalDateTime.now());
   }
 

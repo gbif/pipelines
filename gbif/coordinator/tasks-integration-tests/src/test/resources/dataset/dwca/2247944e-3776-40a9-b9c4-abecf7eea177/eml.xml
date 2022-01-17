@@ -1,0 +1,745 @@
+<eml:eml xmlns:eml="eml://ecoinformatics.org/eml-2.1.1"
+         xmlns:dc="http://purl.org/dc/terms/"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="eml://ecoinformatics.org/eml-2.1.1 http://rs.gbif.org/schema/eml-gbif-profile/1.1/eml.xsd"
+         packageId="d8e8b1bf-0b56-4cc0-bf75-c9283fad4aa2/v1.1" system="http://gbif.org" scope="system"
+         xml:lang="eng">
+
+<dataset>
+  <alternateIdentifier>10.15472/7rocx4</alternateIdentifier>
+  <alternateIdentifier>d8e8b1bf-0b56-4cc0-bf75-c9283fad4aa2</alternateIdentifier>
+  <alternateIdentifier>https://ipt.biodiversidad.co/sibm/resource?r=fish_biodiversity_northern_islands_seaflower_biosphere_reserve_colombian_caribbean</alternateIdentifier>
+  <title xml:lang="eng">Fish biodiversity in three northern islands of the Seaflower Biosphere Reserve Colombian Caribbean</title>
+      <creator>
+    <individualName>
+        <givenName>Arturo</givenName>
+      <surName>Acero P.</surName>
+    </individualName>
+    <organizationName>Universidad Nacional de Colombia</organizationName>
+    <positionName>Investigador</positionName>
+    <address>
+        <deliveryPoint>Calle 25 No. 2-55, Playa Salguero,Santa Marta D.T.C.H., Colombia</deliveryPoint>
+        <city>Santa Marta</city>
+        <administrativeArea>Magdalena</administrativeArea>
+        <country>CO</country>
+    </address>
+      </creator>
+      <creator>
+    <individualName>
+        <givenName>Andrea</givenName>
+      <surName>Polanco F.</surName>
+    </individualName>
+    <organizationName>INVEMAR</organizationName>
+    <positionName>Investigador</positionName>
+    <address>
+        <deliveryPoint>Calle 25 No. 2-55, Playa Salguero,Santa Marta D.T.C.H., Colombia</deliveryPoint>
+        <city>Santa Marta</city>
+        <administrativeArea>Magdalena</administrativeArea>
+        <country>CO</country>
+    </address>
+    <electronicMailAddress>andrea.polanco@gmail.com</electronicMailAddress>
+      </creator>
+      <creator>
+    <individualName>
+        <givenName>Jose Julian</givenName>
+      <surName>Tavera</surName>
+    </individualName>
+    <organizationName>Universidad del Valle</organizationName>
+    <positionName>Investigador</positionName>
+    <address>
+        <city>Cali</city>
+        <administrativeArea>Valle del Cauca</administrativeArea>
+        <country>CO</country>
+    </address>
+      </creator>
+      <creator>
+    <individualName>
+        <givenName>Nacor</givenName>
+      <surName>Bolaños-Cubillos</surName>
+    </individualName>
+    <organizationName>Coralina</organizationName>
+    <positionName>Investigador</positionName>
+    <address>
+        <city>San Andrés Isla</city>
+        <administrativeArea>Archipiélago de San Andrés, Providencia y Santa Catalina</administrativeArea>
+        <country>CO</country>
+    </address>
+      </creator>
+      <metadataProvider>
+    <individualName>
+        <givenName>Andrea</givenName>
+      <surName>Polanco F.</surName>
+    </individualName>
+    <organizationName>INVEMAR</organizationName>
+    <positionName>Investigador</positionName>
+    <address>
+        <deliveryPoint>Calle 25 No. 2-55, Playa Salguero,Santa Marta D.T.C.H., Colombia</deliveryPoint>
+        <city>Santa Marta</city>
+        <administrativeArea>Magdalena</administrativeArea>
+        <country>CO</country>
+    </address>
+    <electronicMailAddress>andrea.polanco@gmail.com</electronicMailAddress>
+      </metadataProvider>
+      <associatedParty>
+    <individualName>
+        <givenName>Andrea</givenName>
+      <surName>Polanco F.</surName>
+    </individualName>
+    <organizationName>INVEMAR</organizationName>
+    <positionName>Investigador</positionName>
+    <address>
+        <deliveryPoint>Calle 25 No. 2-55, Playa Salguero,Santa Marta D.T.C.H., Colombia</deliveryPoint>
+        <city>Santa Marta</city>
+        <administrativeArea>Magdalena</administrativeArea>
+        <country>CO</country>
+    </address>
+    <electronicMailAddress>andrea.polanco@invemar.org.co</electronicMailAddress>
+    <role>author</role>
+      </associatedParty>
+      <associatedParty>
+    <individualName>
+        <givenName>Arturo</givenName>
+      <surName>Acero P.</surName>
+    </individualName>
+    <organizationName>Universidad Nacional de Colombia</organizationName>
+    <positionName>investigador</positionName>
+    <address>
+        <deliveryPoint>Calle 25 # 2-55, Playa Salguero, Rodadero Sur, Santa Marta</deliveryPoint>
+        <city>Santa Marta</city>
+        <administrativeArea>Magdalena</administrativeArea>
+        <country>CO</country>
+    </address>
+    <role>author</role>
+      </associatedParty>
+      <associatedParty>
+    <individualName>
+        <givenName>Jose Julian</givenName>
+      <surName>Tavera</surName>
+    </individualName>
+    <organizationName>Universidad del Valle</organizationName>
+    <positionName>Investigador</positionName>
+    <address>
+        <city>Cali</city>
+        <administrativeArea>Valle del Cauca</administrativeArea>
+        <country>CO</country>
+    </address>
+    <role>author</role>
+      </associatedParty>
+      <associatedParty>
+    <individualName>
+        <givenName>Nacor</givenName>
+      <surName>Bolaños-Cubillos</surName>
+    </individualName>
+    <organizationName>Coralina</organizationName>
+    <positionName>Investigador</positionName>
+    <address>
+        <city>San Andres Isla</city>
+        <administrativeArea>Archipielago de San Andres y Providencia</administrativeArea>
+        <country>CO</country>
+    </address>
+    <role>author</role>
+      </associatedParty>
+  <pubDate>
+      2019-05-08
+  </pubDate>
+  <language>eng</language>
+  <abstract>
+    <para>The dataset comprise a depurated inventory of the fish species reported from the northern area of the Reserva, that is the three islands Roncador, Serrana, Serranilla and Quitasueño, the larger and more western island, which has not been yet the official target of an expedition. The dataset include all the fish species seen during the expeditions carried upon between 2015 and 2017 to the islands plus the registers previously published in Bolaños-Cubillos et al. (2015), Polanco F. (2015) and Robertson &amp; Van Tassell (2015).</para>
+  </abstract>
+      <keywordSet>
+            <keyword>Checklist</keyword>
+        <keywordThesaurus>GBIF Dataset Type Vocabulary: http://rs.gbif.org/vocabulary/gbif/dataset_type.xml</keywordThesaurus>
+      </keywordSet>
+      <keywordSet>
+            <keyword>Fish species</keyword>
+        <keywordThesaurus>n/a</keywordThesaurus>
+      </keywordSet>
+      <keywordSet>
+            <keyword>New records</keyword>
+        <keywordThesaurus>n/a</keywordThesaurus>
+      </keywordSet>
+      <keywordSet>
+            <keyword>Actinopterygii</keyword>
+        <keywordThesaurus>n/a</keywordThesaurus>
+      </keywordSet>
+      <keywordSet>
+            <keyword>Chondrichthyes</keyword>
+        <keywordThesaurus>n/a</keywordThesaurus>
+      </keywordSet>
+      <keywordSet>
+            <keyword>Roncador</keyword>
+        <keywordThesaurus>n/a</keywordThesaurus>
+      </keywordSet>
+      <keywordSet>
+            <keyword>Serrana</keyword>
+        <keywordThesaurus>n/a</keywordThesaurus>
+      </keywordSet>
+      <keywordSet>
+            <keyword>Serranilla</keyword>
+        <keywordThesaurus>n/a</keywordThesaurus>
+      </keywordSet>
+  <additionalInfo>
+    <para>This dataset is described in a datareport published in Frontiers in Marine Science, section Marine Evolutionary Biology, Biogeography and Species Diversity. 
+in the following link: 
+https://www.frontiersin.org/articles/10.3389/fmars.2019.00113</para>
+  </additionalInfo>
+  <intellectualRights>
+    <para>This work is licensed under a <ulink url="http://creativecommons.org/licenses/by-nc/4.0/legalcode"><citetitle>Creative Commons Attribution Non Commercial (CC-BY-NC) 4.0 License</citetitle></ulink>.</para>
+  </intellectualRights>
+  <distribution scope="document">
+    <online>
+      <url function="information">https://www.frontiersin.org/articles/10.3389/fmars.2019.00113</url>
+    </online>
+  </distribution>
+  <coverage>
+      <geographicCoverage>
+          <geographicDescription>The San Andrés, Old Providence and Santa Catalina archipelago (Colombia) occupies an important, but relatively small, portion of the central western Caribbean Sea between 82 and 86 °W meridians and 12 and 16 °N parallels. The three main islands are populated by raizales, mainland Colombians, and foreigners, mainly traders. Small islands are kept under protection by organic members of the Colombian Navy. The archipelago includes about three fourths of the more than a hundred Colombian coral formations. Since 2014 the Colombian government (Comisión Colombiana del Océano, CCO) has been organizing an annual scientific expedition to the Reserve. So far three northern islands have been intensively sampled: Roncador (2015), Serrana (2016), and Serranilla (2017).</geographicDescription>
+        <boundingCoordinates>
+          <westBoundingCoordinate>-86</westBoundingCoordinate>
+          <eastBoundingCoordinate>-82</eastBoundingCoordinate>
+          <northBoundingCoordinate>16</northBoundingCoordinate>
+          <southBoundingCoordinate>12</southBoundingCoordinate>
+        </boundingCoordinates>
+      </geographicCoverage>
+          <taxonomicCoverage>
+              <generalTaxonomicCoverage>A total of 412 species are listed, included in 103 families and 233 genera.</generalTaxonomicCoverage>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Chimaeridae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Ginglymostomatidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Lamnidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Scyliorhinidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Triakidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Carcharhinidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Sphyrnidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Hexanchidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Squalidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Narcinidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Rhinobatidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>superfamily</taxonRankName>
+                <taxonRankValue>Rajidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Urotrygonidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Dasyatidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Myliobatidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Megalopidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Albulidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Congridae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Muraenidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Nettastomatidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Ophichthidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Chlopsidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Moringuidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>superfamily</taxonRankName>
+                <taxonRankValue>Clupeidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Engraulidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Argentinidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Synodontidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Chlorophthalmidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>superfamily</taxonRankName>
+                <taxonRankValue>Parazenidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Zeniontidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Grammicolepididae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Merlucciidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Polymixiidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Berycidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Trachichthyidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Holocentridae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Ophidiidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Apogonidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Gobiidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Aulostomidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Fistulariidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Syngnathidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Dactylopteridae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Callionymidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Mullidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Gempylidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Nomeidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Scombridae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Polynemidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>superfamily</taxonRankName>
+                <taxonRankValue>Sphyraenidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Carangidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Coryphaenidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Echeneidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Rachycentridae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Bothidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>superfamily</taxonRankName>
+                <taxonRankValue>Paralichthyidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Grammatidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Opistognathidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Pomacentridae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Atherinidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Belonidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Exocoetidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Hemiramphidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Mugilidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Gobiesocidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Blenniidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Chaenopsidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Labrisomidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Tripterygiidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Caproidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Gerreidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Haemulidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Lutjanidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Malacanthidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Pomacanthidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Priacanthidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Sciaenidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Uranoscopidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Labridae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Scaridae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Lobotidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Ephippidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Sparidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Chaetodontidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Antennariidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Ogcocephalidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Triacanthodidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Diodontidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Tetraodontidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Balistidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Monacanthidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Ostraciidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Acanthuridae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Acropomatidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Pempheridae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Cirrhitidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Kyphosidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Percophidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Serranidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Scorpaenidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Setarchidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Peristediidae</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                <taxonRankValue>Triglidae</taxonRankValue>
+              </taxonomicClassification>
+          </taxonomicCoverage>
+  </coverage>
+  <maintenance>
+    <description>
+      <para></para>
+    </description>
+    <maintenanceUpdateFrequency>asNeeded</maintenanceUpdateFrequency>
+  </maintenance>
+
+      <contact>
+    <individualName>
+        <givenName>Andrea</givenName>
+      <surName>Polanco F.</surName>
+    </individualName>
+    <organizationName>INVEMAR</organizationName>
+    <positionName>Autor</positionName>
+    <address>
+        <deliveryPoint>Calle 25 No. 2-55, Playa Salguero,Santa Marta D.T.C.H., Colombia</deliveryPoint>
+        <city>Santa Marta</city>
+        <administrativeArea>Magdalena</administrativeArea>
+        <country>CO</country>
+    </address>
+    <electronicMailAddress>andrea.polanco@gmail.com</electronicMailAddress>
+      </contact>
+      <contact>
+    <individualName>
+        <givenName>Erika</givenName>
+      <surName>Montoya-Cadavid</surName>
+    </individualName>
+    <organizationName>Invemar</organizationName>
+    <positionName>Administrador Contenidos IPT SiBM</positionName>
+    <address>
+        <deliveryPoint>Calle 25 No. 2-55, Playa Salguero,Santa Marta D.T.C.H., Colombia</deliveryPoint>
+        <city>Santa Marta</city>
+        <administrativeArea>Magdalena</administrativeArea>
+        <country>CO</country>
+    </address>
+    <electronicMailAddress>erika.montoya@invemar.org.co</electronicMailAddress>
+      </contact>
+      <contact>
+    <individualName>
+        <givenName>Julio</givenName>
+      <surName>Bohorquez</surName>
+    </individualName>
+    <organizationName>Invemar</organizationName>
+    <positionName>Custodio Bases de datos Invemar</positionName>
+    <address>
+        <deliveryPoint>Calle 25 No. 2-55, Playa Salguero,Santa Marta D.T.C.H., Colombia</deliveryPoint>
+        <city>Santa Marta</city>
+        <administrativeArea>Magdalena</administrativeArea>
+        <country>CO</country>
+    </address>
+    <electronicMailAddress>julio.bohorquez@invemar.org.co</electronicMailAddress>
+      </contact>
+  <methods>
+        <methodStep>
+          <description>
+            <para>The included dataset comprises a depurated inventory of the fish species reported from the northern area of the Reserva, that is the three islands already mentioned and Quitasueño, the larger and more western island, which has not been yet the official target of an expedition. The dataset include all the fish species seen during the expeditions carried upon between 2015 and 2017 to the islands of Roncador, Serrana, and Serranilla (Table 1) plus the reports previously published in Bolaños-Cubillos et al. (2015), Polanco F. (2015) and Robertson &amp; Van Tassell (2015).</para>
+          </description>
+        </methodStep>
+      <sampling>
+        <studyExtent>
+          <description>
+            <para>The San Andrés, Old Providence and Santa Catalina archipelago (Colombia) occupies an important, but relatively small, portion of the central western Caribbean Sea between 82 and 86 °W meridians and 12 and 16 °N parallels. The three main islands are populated by raizales, mainland Colombians, and foreigners, mainly traders. Small islands are kept under protection by organic members of the Colombian Navy. The archipelago includes about three fourths of the more than a hundred Colombian coral formations. Since 2014 the Colombian government (Comisión Colombiana del Océano, CCO) has been organizing an annual scientific expedition to the Reserve. So far three northern islands have been intensively sampled: Roncador (2015), Serrana (2016), and Serranilla (2017).</para>
+          </description>
+        </studyExtent>
+        <samplingDescription>
+          <para>The dataset entitled “Fish biodiversity in three northern islands of the Seaflower Biosphere Reserve (Colombian Caribbean)” is herewith reported. Dataset were compiled from 1) a peer reviewed paper (Bolaños-Cubillos et al., 2015) that published a baseline checklist of the fishes known from the Reserve, reporting a total of 653 fish species, distributed in 121 families. That original list was based on 28 papers and grey reports of the scientists that have worked on the islands fish biodiversity since 1944 as well as on unpublished data gathered by the authors in the last two decades. 2) Biological records unpublished and partially available at SIB Colombia, reporting some results of several projects developed during the Seaflower Expeditions 2015, 2016 and 2017 (Acero A. 2018; Acero et al. 2018; Polanco F. 2018) and 3) species found on the deep shelves and upper slopes of the islands of the Reserve and already reported by Robertson &amp; Van Tassell (2015) and Polanco F. (2015).
+During the expeditions organized by the CCO data were collected by scuba diving as well as snorkeling (total of 250 man-hours of underwater observation). Material collected or photographically recorded by other researchers and expedition members was used when pertinent. In the case of Serranilla, seven species come from videos taken by the project “Elasmobranch diversity and abundance estimates using baited remote underwater video stations” developed by team of researchers from the Colombia Azul Foundation, the Universidad de los Andes and the Florida International University.</para>
+        </samplingDescription>
+      </sampling>
+      <qualityControl>
+        <description>
+          <para>Scientific names follow the Catalog of Fishes (Eschmeyer et al., 2018) and the classification follows Eschmeyer et al. (2018) for cartilaginous fishes and Betancur-R. et al. (2017) for bony fishes.</para>
+        </description>
+      </qualityControl>
+  </methods>
+  <project id="Fish_biodiversity_RBSF_Colombia_Caribbean">
+    <title>Fish biodiversity in the Seaflower Biosphere Reserve (Colombian Caribbean)</title>
+      <personnel>
+        <individualName>
+            <givenName>Andrea</givenName>
+          <surName>Polanco F.</surName>
+        </individualName>
+        <role>author</role>
+      </personnel>
+      <abstract>
+        <para>The marine ecosystems of the Colombian archipelago of San Andrés, Providencia and Santa Catalina were declared by Unesco in 2000 as the Seaflower Biosphere Reserve, 180000 km2, due its high biodiversity and ecosystem richness. Colombian institutions have assumed the study and management of the biodiversity and ecosystem richness of that Caribbean area organizing an annual expedition to one of the different islands included in the Reserve. The aim of the project is inventory the fish biodiversity of the Seaflower Biosphere Reserve.</para>
+      </abstract>
+      <funding>
+        <para>This research was supported by Universidad Nacional de Colombia, Universidad del Valle, INVEMAR, Coralina and Comisión Colombiana del Océano through Colombia BIO – Colciencias project, agreement No. 341 of 2017 with the aim of join efforts to characterize the biodiversity in areas of scientific interest and with low biological information, for the strengthening of scientific collections and the generation of genetic information of Colombian biodiversity. Projects involved until now: “Biodiversidad íctica de la Isla Cayo Serrana durante la Expedición Seaflower 2016” – Seaflower Expedition 2016, Universidad Nacional de Colombia, Universidad dela Vallle, Coralina; “Biodiversidad íctica de la Isla Cayo Serranilla durante la Expedición Seaflower 2017” – Seaflower Expedition 2017, Universidad Nacional de Colombia, Universidad dela Vallle, INVEMAR, Coralina; “Evaluación física y biológica de las unidades ecológicas someras en la isla Cayo Serranilla de la Reserva de Biósfera – Seaflower” – Seaflower Expedition 2017, INVEMAR, Coralina.</para>
+      </funding>
+      <studyAreaDescription>
+        <descriptor name="generic"
+                    citableClassificationSystem="false">
+          <descriptorValue>The San Andrés, Old Providence and Santa Catalina archipelago (Colombia) occupies an important, but relatively small, portion of the central western Caribbean Sea between 82 and 86 °W meridians and 12 and 16 °N parallels. The three main islands are populated by raizales, mainland Colombians, and foreigners, mainly traders. Small islands are kept under protection by organic members of the Colombian Navy. The archipelago includes about three fourths of the more than a hundred Colombian coral formations.</descriptorValue>
+        </descriptor>
+      </studyAreaDescription>
+      <designDescription>
+        <description>
+          <para>During the expeditions organized by the CCO data are collected by scuba diving as well as snorkeling (total of 250 man-hours of underwater observation). Material collected or photographically recorded by other researchers and expedition members are used when pertinent.</para>
+        </description>
+      </designDescription>
+  </project>
+</dataset>
+  <additionalMetadata>
+    <metadata>
+      <gbif>
+          <dateStamp>2018-09-19T04:22:11.518-04:00</dateStamp>
+          <hierarchyLevel>dataset</hierarchyLevel>
+            <citation identifier="https://doi.org/10.15472/7rocx4">Acero P. A, Polanco F. A, Tavera J J, Bolaños-Cubillos N (2018): Fish biodiversity in three northern islands of the Seaflower Biosphere Reserve Colombian Caribbean. v1.1. Universidad Nacional de Colombia. Dataset/Checklist. https://doi.org/10.15472/7rocx4</citation>
+          <bibliography>
+                <citation>Betancur-R., R., E.O. Wiley, G. Arratia, A. Acero, N. Bailly, M. Miya, G. Lecointre &amp; G. Ortí. 2017. Phylogenetic classification of bony fishes. BMC Evolutionary Biology, https://doi.org/10.1186/s12862-017-0958-3</citation>
+                <citation>Bolaños-Cubillos, N., A. Abril, H. Bent Hooker, J.P. Caldas &amp; A. Acero P. 2015. Lista de peces conocidos del archipiélago de San Andrés, Providencia y Santa Catalina, Reserva de Biosfera Seaflower, Caribe occidental colombiano. Bol. Invest. Mar. Cost. 44 (1): 127-162.</citation>
+                <citation>Chasqui V., L., A. Polanco F., A. Acero P., P.A. Mejía-Falla, A.F. Navia, L.A. Zapata &amp; J.P. Caldas (Eds.). 2017. Libro rojo de peces marinos de Colombia. Serie Publicaciones Generales Invemar 93, Santa Marta. 552 p.</citation>
+                <citation identifier="http://researcharchive.calacademy.org/research/ichthyology/catalog/fishcatmain.asp">Eschmeyer, W. N., R. Fricke &amp; R. van der Laan (eds).  Catalog of fishes: Genera, species, references. (http://researcharchive.calacademy.org/research/ichthyology/catalog/fishcatmain.asp). Electronic version accessed 2018.</citation>
+                <citation>Polanco F., A. 2015. Dynamics of the continental slope demersal fish community in the Colombian Caribbean. Doctoral dissertation, Universidad Nacional de Colombia and Justus Liebig University Giessen, Germany, 189 p.</citation>
+                <citation identifier="http://biogeodb.stri.si.edu/caribbean/en/pages">Robertson, D.R. &amp; J. Van Tassell. 2015.Shorefishes of the Greater Caribbean: online information system. Version 1.0 Smithsonian Tropical Research Institute, Balboa, Panamá.</citation>
+                <citation identifier="https://doi.org/10.15472/awzfyz accessed via GBIF.org on 2018-08-14.">Acero A. 2018. Biodiversidad íctica de la Isla Cayo Serrana durante la Expedición Seaflower 2016 - Proyecto Colombia BIO. Version 2.4. Universidad Nacional de Colombia. Occurrence dataset</citation>
+                <citation identifier="https://ipt.biodiversidad.co/sibm/resource?r=fish_biodiversity_northern_islands_seaflower_biosphere_reserve_colombian_caribbean&amp;amp;v=1.0">Acero P. A, A, Polanco F., J.J. Tavera, N. Bolaños-Cubillos. 2018. Fish_biodiversity_in_three_northern_islands_of_the_Seaflower_Biosphere_Reserve_Colombian_Caribbean. v1. Universidad Nacional de Colombia. Dataset/Checklist.</citation>
+          </bibliography>
+          <resourceLogoUrl>https://s3.amazonaws.com/sib-resources/images/logos-socios/portal-sib/Logo-unal.png</resourceLogoUrl>
+            <formationPeriod>2015-presente</formationPeriod>
+          <dc:replaces>d8e8b1bf-0b56-4cc0-bf75-c9283fad4aa2/v1.1.xml</dc:replaces>
+      </gbif>
+    </metadata>
+  </additionalMetadata>
+</eml:eml>

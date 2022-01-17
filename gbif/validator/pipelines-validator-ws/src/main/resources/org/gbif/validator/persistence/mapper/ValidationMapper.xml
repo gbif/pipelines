@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.gbif.validator.persistence.mapper.ValidationMapper">
+  <!-- Auto-mapping and eager loading of sub resources  -->
+  <resultMap id="VALIDATION_MAP" type="org.gbif.validator.api.Validation" autoMapping="true">
+    <id property="key" column="key"/>
+    <result property="sourceId" column="source_id"/>
+    <result property="installationKey" column="installation_key"/>
+    <result property="notificationEmails" column="notification_emails" typeHandler="StringArraySetTypeHandler"/>
+    <result property="status" column="status"/>
+    <result property="fileFormat" column="file_format"/>
+    <result property="username" column="username"/>
+    <result property="file" column="file"/>
+    <result property="fileSize" column="file_size"/>
+    <result property="dataset" column="dataset" typeHandler="DatasetJsonTypeHandler"/>
+    <result property="metrics" column="metrics" typeHandler="MetricsJsonTypeHandler"/>
+    <result property="created" column="created"/>
+    <result property="modified" column="modified"/>
+    <result property="deleted" column="deleted"/>
+  </resultMap>
+
+  <sql id="WRITABLE_VALIDATION_FIELDS">
+    key,
+    status,
+    <if test="fileFormat != null">
+    file_format,
+    </if>
+    <if test="sourceId != null">
+    source_id,
+    </if>
+    <if test="installationKey != null">
+      installation_key,
+    </if>
+    <if test="notificationEmails != null">
+      notification_emails,
+    </if>
+    <if test="username != null">
+    username,
+    </if>
+    <if test="file != null">
+    file,
+    </if>
+    <if test="fileSize != null and fileSize > 0">
+    file_size,
+    </if>
+    <if test="dataset != null">
+      dataset,
+    </if>
+    <if test="metrics != null">
+    metrics,
+    </if>
+    created,
+    modified
+  </sql>
+
+  <sql id="VALIDATION_FIELDS">
+    key, source_id, installation_key, notification_emails, status, file_format, username, file, file_size, dataset, metrics, created, modified, deleted
+  </sql>
+
+  <!--
+    key, created and deleted are never changed
+   -->
+  <sql id="VALIDATION_UPDATE">
+    key = #{key,jdbcType=OTHER},
+    status = #{status,jdbcType=OTHER},
+    <if test="fileFormat != null">
+    file_format = #{fileFormat,jdbcType=OTHER},
+    </if>
+    <if test="file != null">
+    file = #{file,jdbcType=VARCHAR},
+    </if>
+    <if test="fileSize != null and fileSize > 0">
+    file_size = #{fileSize,jdbcType=BIGINT},
+    </if>
+    <if test="dataset != null">
+    dataset = #{dataset,jdbcType=OTHER},
+    </if>
+    <if test="metrics != null">
+    metrics = #{metrics,jdbcType=OTHER},
+    </if>
+    modified = now(),
+    deleted = null
+  </sql>
+
+  <sql id="WRITABLE_VALIDATION_FIELD_TYPES">
+    #{key,jdbcType=OTHER},
+    #{status,jdbcType=OTHER},
+    <if test="sourceId != null">
+    #{sourceId,jdbcType=OTHER},
+    </if>
+    <if test="installationKey != null">
+    #{installationKey,jdbcType=OTHER},
+    </if>
+    <if test="notificationEmails != null">
+    #{notificationEmails,jdbcType=OTHER,typeHandler=StringArraySetTypeHandler},
+    </if>
+    <if test="fileFormat != null">
+    #{fileFormat,jdbcType=OTHER},
+    </if>
+    <if test="username != null">
+    #{username,jdbcType=VARCHAR},
+    </if>
+    <if test="file != null">
+    #{file,jdbcType=VARCHAR},
+    </if>
+    <if test="fileSize != null and fileSize > 0">
+    #{fileSize,jdbcType=BIGINT},
+    </if>
+    <if test="dataset != null">
+    #{dataset,jdbcType=OTHER},
+    </if>
+    <if test="metrics != null">
+    #{metrics,jdbcType=OTHER},
+    </if>
+    now(),
+    now()
+  </sql>
+
+  <!--  Note: you can get entities which are deleted -->
+  <select id="get" resultMap="VALIDATION_MAP">
+    SELECT <include refid="VALIDATION_FIELDS"/>
+    FROM validation
+    WHERE key = #{key,jdbcType=OTHER}
+  </select>
+
+  <insert id="create" parameterType="org.gbif.validator.api.Validation">
+    INSERT INTO validation(<include refid="WRITABLE_VALIDATION_FIELDS"/>)
+    VALUES(<include refid="WRITABLE_VALIDATION_FIELD_TYPES"/>)
+  </insert>
+
+  <update id="update" parameterType="org.gbif.validator.api.Validation">
+    UPDATE validation
+    SET <include refid="VALIDATION_UPDATE"/>
+    WHERE key = #{key,jdbcType=OTHER}
+  </update>
+
+  <!-- For safety, should it be already deleted nothing is done -->
+  <update id="delete">
+    UPDATE validation
+    SET deleted = now()
+    WHERE key = #{key,jdbcType=OTHER} AND deleted IS NULL
+  </update>
+
+  <!--
+    Append safe ordering, omitting deleted entities
+    Sort order includes key, since created is not a unique sort order, so not robust
+  -->
+  <select id="list" resultType="org.gbif.validator.api.Validation"  resultMap="VALIDATION_MAP" parameterType="map">
+    SELECT <include refid="VALIDATION_FIELDS"/>
+    FROM validation
+    WHERE deleted IS NULL
+    <if test="username != null" >
+      AND username = #{username,jdbcType=OTHER}
+    </if>
+    <if test="searchRequest.installationKey != null" >
+      AND installation_key = #{searchRequest.installationKey,jdbcType=OTHER}
+    </if>
+    <if test="searchRequest.sourceId != null" >
+      AND source_id = #{searchRequest.sourceId,jdbcType=OTHER}
+    </if>
+    <if test="searchRequest.status != null" >
+      AND status IN
+      <foreach item="status" collection="searchRequest.status" separator="," open="(" close=")">
+        #{status,jdbcType=OTHER}
+      </foreach>
+    </if>
+    <if test="searchRequest.fromDate != null" ><![CDATA[AND created >= #{searchRequest.fromDate,jdbcType=TIMESTAMP}]]></if>
+    <if test="searchRequest.toDate != null" ><![CDATA[AND created < #{searchRequest.toDate,jdbcType=TIMESTAMP}]]></if>
+
+    <if test="searchRequest.sortBy != null and !searchRequest.sortBy.empty">
+      ORDER BY
+      <foreach item="sort" collection="searchRequest.sortBy" separator=",">
+        ${@org.gbif.validator.persistence.mapper.ColumnMapper@toColumnName(sort.field)} ${sort.order.name}
+      </foreach>
+    </if>
+    <if test="searchRequest.limit != null and searchRequest.offset != null" >
+      LIMIT #{searchRequest.limit} OFFSET #{searchRequest.offset}
+    </if>
+  </select>
+
+  <select id="count" resultType="Integer" parameterType="map">
+    SELECT COUNT(*)
+    FROM validation
+    WHERE deleted IS NULL
+    <if test="username != null" >
+      AND username = #{username,jdbcType=OTHER}
+    </if>
+    <if test="searchRequest.installationKey != null" >
+      AND installation_key = #{searchRequest.installationKey,jdbcType=OTHER}
+    </if>
+    <if test="searchRequest.sourceId != null" >
+      AND source_id = #{searchRequest.sourceId,jdbcType=OTHER}
+    </if>
+    <if test="searchRequest.fromDate != null" ><![CDATA[AND created >= #{searchRequest.fromDate,jdbcType=TIMESTAMP}]]></if>
+    <if test="searchRequest.toDate != null" ><![CDATA[AND created < #{searchRequest.toDate,jdbcType=TIMESTAMP}]]></if>
+    <if test="searchRequest.status != null" >
+      AND status IN
+      <foreach item="status" collection="searchRequest.status" separator="," open="(" close=")">
+        #{status,jdbcType=OTHER}
+      </foreach>
+    </if>
+  </select>
+
+</mapper>

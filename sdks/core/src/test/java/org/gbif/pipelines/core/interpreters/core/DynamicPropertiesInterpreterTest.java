@@ -1,16 +1,14 @@
 package org.gbif.pipelines.core.interpreters.core;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.core.interpreters.MockVocabularyLookups;
+import org.gbif.pipelines.core.parsers.vocabulary.VocabularyService;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.vocabulary.lookup.LookupConcept;
-import org.gbif.vocabulary.model.Concept;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -30,17 +28,11 @@ public class DynamicPropertiesInterpreterTest {
 
   private final Supplier<BasicRecord> brFn = () -> BasicRecord.newBuilder().setId(ID).build();
 
-  private final Function<String, Optional<LookupConcept>> vocabularyLookupFn =
-      v -> {
-        if (v.equalsIgnoreCase("adult")) {
-          Concept concept = new Concept();
-          concept.setName("Adult");
-          LookupConcept lookupConcept = LookupConcept.of(concept, new ArrayList<>(1));
-
-          return Optional.of(lookupConcept);
-        }
-        return Optional.empty();
-      };
+  private final VocabularyService vocabularyService =
+      VocabularyService.builder()
+          .vocabularyLookup(
+              DwcTerm.lifeStage, new MockVocabularyLookups.LifeStageMockVocabularyLookup())
+          .build();
 
   @Test
   public void sexFemaleValueTest() {
@@ -102,11 +94,10 @@ public class DynamicPropertiesInterpreterTest {
     BasicRecord br = brFn.get();
 
     // When
-    DynamicPropertiesInterpreter.interpretLifeStage(vocabularyLookupFn).accept(er, br);
+    DynamicPropertiesInterpreter.interpretLifeStage(vocabularyService).accept(er, br);
 
     // Should
     Assert.assertNull(br.getLifeStage());
-    Assert.assertTrue(br.getLifeStageLineage().isEmpty());
   }
 
   @Test
@@ -116,11 +107,10 @@ public class DynamicPropertiesInterpreterTest {
     BasicRecord br = brFn.get();
 
     // When
-    DynamicPropertiesInterpreter.interpretLifeStage(vocabularyLookupFn).accept(er, br);
+    DynamicPropertiesInterpreter.interpretLifeStage(vocabularyService).accept(er, br);
 
     // Should
     Assert.assertNull(br.getLifeStage());
-    Assert.assertTrue(br.getLifeStageLineage().isEmpty());
   }
 
   @Test
@@ -132,25 +122,11 @@ public class DynamicPropertiesInterpreterTest {
     BasicRecord br = brFn.get();
 
     // When
-    DynamicPropertiesInterpreter.interpretLifeStage(vocabularyLookupFn).accept(er, br);
+    DynamicPropertiesInterpreter.interpretLifeStage(vocabularyService).accept(er, br);
 
     // Should
-    Assert.assertEquals("Adult", br.getLifeStage());
-    Assert.assertEquals("Adult", br.getLifeStageLineage().get(0));
-  }
-
-  @Test
-  public void lifeStageNullFnTest() {
-    // State
-    ExtendedRecord er = erDynamicPropertiesFn.apply("");
-    BasicRecord br = brFn.get();
-
-    // When
-    DynamicPropertiesInterpreter.interpretLifeStage(null).accept(er, br);
-
-    // Should
-    Assert.assertNull(br.getLifeStage());
-    Assert.assertTrue(br.getLifeStageLineage().isEmpty());
+    Assert.assertEquals("Adult", br.getLifeStage().getConcept());
+    Assert.assertEquals("Adult", br.getLifeStage().getLineage().get(0));
   }
 
   @Test
@@ -161,9 +137,9 @@ public class DynamicPropertiesInterpreterTest {
     BasicRecord br = brFn.get();
 
     // When
-    DynamicPropertiesInterpreter.interpretLifeStage(vocabularyLookupFn).accept(er, br);
+    DynamicPropertiesInterpreter.interpretLifeStage(vocabularyService).accept(er, br);
 
     // Should
-    Assert.assertTrue(br.getLifeStageLineage().isEmpty());
+    Assert.assertNull(br.getLifeStage());
   }
 }

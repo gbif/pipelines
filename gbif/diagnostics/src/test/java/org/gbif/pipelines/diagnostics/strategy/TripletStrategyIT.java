@@ -1,7 +1,7 @@
 package org.gbif.pipelines.diagnostics.strategy;
 
 import java.io.IOException;
-import java.util.Set;
+import java.util.Map;
 import org.gbif.pipelines.diagnostics.common.HbaseServer;
 import org.gbif.pipelines.diagnostics.common.HbaseStore;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
@@ -47,12 +47,12 @@ public class TripletStrategyIT {
         new HBaseLockingKeyService(HbaseServer.CFG, HBASE_SERVER.getConnection(), datasetKey);
 
     // When
-    Set<String> keysToDelete =
+    Map<String, Long> keysToDelete =
         new TripletStrategy().getKeysToDelete(keygenService, false, triplet, occId);
 
     // Should
     Assert.assertEquals(1, keysToDelete.size());
-    Assert.assertTrue(keysToDelete.contains(triplet));
+    Assert.assertEquals(Long.valueOf(gbifId), keysToDelete.get(triplet));
   }
 
   @Test
@@ -68,7 +68,7 @@ public class TripletStrategyIT {
         new HBaseLockingKeyService(HbaseServer.CFG, HBASE_SERVER.getConnection(), datasetKey);
 
     // When
-    Set<String> keysToDelete =
+    Map<String, Long> keysToDelete =
         new TripletStrategy().getKeysToDelete(keygenService, false, triplet, occId);
 
     // Should
@@ -101,7 +101,7 @@ public class TripletStrategyIT {
         new HBaseLockingKeyService(HbaseServer.CFG, HBASE_SERVER.getConnection(), datasetKey);
 
     // When
-    Set<String> keysToDelete =
+    Map<String, Long> keysToDelete =
         new TripletStrategy().getKeysToDelete(keygenService, true, triplet, occId);
 
     // Should
@@ -134,11 +134,11 @@ public class TripletStrategyIT {
         new HBaseLockingKeyService(HbaseServer.CFG, HBASE_SERVER.getConnection(), datasetKey);
 
     // When
-    Set<String> keysToDelete =
+    Map<String, Long> keysToDelete =
         new TripletStrategy().getKeysToDelete(keygenService, true, triplet, occId);
 
     // Should
     Assert.assertEquals(1, keysToDelete.size());
-    Assert.assertTrue(keysToDelete.contains(triplet));
+    Assert.assertEquals(Long.valueOf(gbifId2), keysToDelete.get(triplet));
   }
 }

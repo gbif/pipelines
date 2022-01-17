@@ -5,7 +5,6 @@ import java.util.Optional;
 import java.util.function.Function;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.io.avro.IndexRecord;
 
@@ -13,8 +12,8 @@ public class CoreCsvConverter {
 
   private static final String RAW = "raw_";
 
-  private static final CsvConverter<IndexRecord> CONVERTER =
-      CsvConverter.<IndexRecord>create()
+  private static final TsvConverter<IndexRecord> CONVERTER =
+      TsvConverter.<IndexRecord>create()
           // DWC Terms
           .addKeyTermFn(DwcTerm.occurrenceID, ir -> Optional.of(ir.getId()))
           .addKeyTermFn(DwcTerm.catalogNumber, getString(DwcTerm.catalogNumber))
@@ -235,7 +234,7 @@ public class CoreCsvConverter {
           // Other Terms
           .addKeyTermFn("taxonRankID", getInt("taxonRankID"))
           // GBIF Terms
-          .addKeyTermFn(GbifTerm.recordedByID, getString(GbifTerm.recordedByID));
+          .addKeyTermFn(DwcTerm.recordedByID, getString(DwcTerm.recordedByID));
 
   public static String convert(IndexRecord indexRecord) {
     return CONVERTER.converter(indexRecord);

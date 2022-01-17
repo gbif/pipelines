@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<eml:eml xmlns:eml="eml://ecoinformatics.org/eml-2.1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="eml://ecoinformatics.org/eml-2.1.1 http://rs.gbif.org/schema/eml-gbif-profile/1.1/eml.xsd"
+         packageId="4fa7b334-ce0d-4e88-aaae-2e0c138d049e"  system="http://gbif.org" scope="system"
+         xml:lang="en">
+
+  <dataset>
+    <alternateIdentifier>10.15468/aomfnb</alternateIdentifier>
+    <alternateIdentifier>4fa7b334-ce0d-4e88-aaae-2e0c138d049e</alternateIdentifier>
+    <alternateIdentifier>CLOEODMETADATA.05192014.1</alternateIdentifier>
+    <alternateIdentifier>43</alternateIdentifier>
+    <title>EOD - eBird Observation Dataset</title>
+    <creator>
+      <individualName>
+        <givenName>Tim</givenName>          <surName>Levatich</surName>
+      </individualName>
+      <organizationName>Cornell Lab of Ornithology</organizationName><positionName>Database Administrator</positionName>    <address>
+      <deliveryPoint>Information Science, 159 Sapsucker Woods Road</deliveryPoint><city>Ithaca</city><administrativeArea>NY</administrativeArea><postalCode>14850</postalCode><country>UNITED_STATES</country>    </address>
+      <electronicMailAddress>tpl10@cornell.edu</electronicMailAddress><onlineUrl>http://ebird.org/</onlineUrl>    </creator>
+    <metadataProvider>
+      <individualName>
+        <givenName>Shawn</givenName>          <surName>Ligocki</surName>
+      </individualName>
+      <organizationName>Cornell Lab of Ornithology</organizationName><positionName>Data Engineer</positionName>    <address>
+      <deliveryPoint>Information Science, 159 Sapsucker Woods Road</deliveryPoint><city>Ithaca</city><administrativeArea>NY</administrativeArea><postalCode>14850</postalCode><country>UNITED_STATES</country>    </address>
+      <electronicMailAddress>sligocki@cornell.edu</electronicMailAddress><onlineUrl>http://ebird.org/</onlineUrl>    </metadataProvider>
+    <pubDate>
+      2020-06-29
+    </pubDate>
+    <language>ENGLISH</language>
+    <abstract>
+      <para>eBird is a collective enterprise that takes a novel approach to citizen science by developing cooperative partnerships among experts in a wide range of fields: population ecologists, conservation biologists, quantitative ecologists, statisticians, computer scientists, GIS and informatics specialists, application developers, and data administrators. Managed by the Cornell Lab of Ornithology eBird’s goal is to increase data quantity through participant recruitment and engagement globally, but also to quantify and control for data quality issues such as observer variability, imperfect detection of species, and both spatial and temporal bias in data collection. eBird data are openly available and used by a broad spectrum of students, teachers, scientists, NGOs, government agencies, land managers, and policy makers. The result is that eBird has become a major source of biodiversity data, increasing our knowledge of the dynamics of species distributions, and having a direct impact on the conservation of birds and their habitats.</para>
+    </abstract>
+    <keywordSet>
+      <keyword>Occurrence</keyword>
+      <keywordThesaurus>GBIF Dataset Type Vocabulary: http://rs.gbif.org/vocabulary/gbif/dataset_type.xml</keywordThesaurus>
+    </keywordSet>
+    <keywordSet>
+      <keyword>Observation</keyword>
+      <keywordThesaurus>GBIF Dataset Subtype Vocabulary: http://rs.gbif.org/vocabulary/gbif/dataset_subtype.xml</keywordThesaurus>
+    </keywordSet>
+    <additionalInfo>
+      <para>Data release annually.  These data are made available through the Cornell Lab of Ornithology at Cornell University. No warranty either expressed or implied is made regarding the accuracy of these data.</para>
+    </additionalInfo>
+    <intellectualRights>
+      <para>To the extent possible under law, the publisher has waived all rights to these data and has dedicated them to the <ulink url="http://creativecommons.org/publicdomain/zero/1.0/legalcode"><citetitle>Public Domain (CC0 1.0)</citetitle></ulink>. Users may copy, modify, distribute and use the work, including for commercial purposes, without restriction.</para>
+    </intellectualRights>
+    <coverage>
+      <geographicCoverage>
+        <geographicDescription>Worldwide</geographicDescription>
+        <boundingCoordinates>
+          <westBoundingCoordinate>-180</westBoundingCoordinate>
+          <eastBoundingCoordinate>180</eastBoundingCoordinate>
+          <northBoundingCoordinate>90</northBoundingCoordinate>
+          <southBoundingCoordinate>-90</southBoundingCoordinate>
+        </boundingCoordinates>
+      </geographicCoverage>
+      <temporalCoverage>
+        <rangeOfDates>
+          <beginDate>
+            <calendarDate>      1810-03-05
+            </calendarDate>
+          </beginDate>
+          <endDate>
+            <calendarDate>      2019-12-31
+            </calendarDate>
+          </endDate>
+        </rangeOfDates>
+      </temporalCoverage>
+      <taxonomicCoverage>
+        <generalTaxonomicCoverage>taxonomic authority: The Clements Checklist of Birds, Sixth Edition, August 2019 revision</generalTaxonomicCoverage>
+        <taxonomicClassification>
+          <taxonRankName>Class</taxonRankName>
+          <taxonRankValue>Aves</taxonRankValue>
+          <commonName>birds</commonName>
+        </taxonomicClassification>
+      </taxonomicCoverage>
+    </coverage>
+    <contact>
+      <individualName>
+        <givenName>Jeff</givenName>          <surName>Gerbracht</surName>
+      </individualName>
+      <organizationName>Cornell Lab of Ornithology</organizationName><positionName>Applications Leader for Information Science</positionName>    <address>
+      <deliveryPoint>Information Science, 159 Sapsucker Woods Road</deliveryPoint><city>Ithaca</city><administrativeArea>NY</administrativeArea><postalCode>14850</postalCode><country>UNITED_STATES</country>    </address>
+      <electronicMailAddress>jag73@cornell.edu</electronicMailAddress><onlineUrl>http://ebird.org/</onlineUrl>      </contact>
+
+  </dataset>
+
+  <additionalMetadata>
+    <metadata>
+      <gbif>
+        <dateStamp>2021-06-10T14:41:21Z</dateStamp>
+        <citation>Levatich T, Ligocki S (2020). EOD - eBird Observation Dataset. Cornell Lab of Ornithology. Occurrence dataset https://doi.org/10.15468/aomfnb accessed via GBIF.org on 2021-06-10.</citation>
+      </gbif>
+    </metadata>
+  </additionalMetadata>
+
+</eml:eml>

@@ -4,7 +4,7 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import java.io.File;
 import java.nio.file.Path;
-import java.util.Set;
+import java.util.Map;
 import java.util.UUID;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -24,6 +24,8 @@ import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
 @Slf4j
 @Builder
 public class RepairGbifIDLookupTool {
+
+  private long counter;
 
   @Parameter(names = "--dataset-key", description = "GBIF registry ID for the dataset")
   @NotNull
@@ -147,6 +149,8 @@ public class RepairGbifIDLookupTool {
     } else {
       runSingleLookup(keygenService);
     }
+
+    log.info("Finished. IDs with collisions: {}", counter);
   }
 
   private static void checkArguments(JCommander jc, boolean check, String message) {
@@ -186,12 +190,15 @@ public class RepairGbifIDLookupTool {
 
   private void deleteKeys(
       HBaseLockingKeyService keygenService, String triplet, String occurrenceId) {
-    Set<String> keysToDelete =
+    Map<String, Long> keysToDelete =
         deletionStrategyType.getKeysToDelete(keygenService, onlyCollisions, triplet, occurrenceId);
-    keysToDelete.forEach(k -> log.info("Delete lookup key - {}", k));
-    if (!dryRun) {
-      keygenService.deleteKeyByUniques(keysToDelete);
+    if (!keysToDelete.isEmpty()) {
+      log.info("Use keys to request, triplet: {} and occurrenceId: {}", triplet, occurrenceId);
+      keysToDelete.forEach((k, v) -> log.info("Delete lookup key - {}, gbifID - {}", k, v));
+      counter++;
     }
-    log.info("Lookup keys deleted");
+    if (!dryRun && !keysToDelete.isEmpty()) {
+      keygenService.deleteKeyByUniques(keysToDelete.keySet());
+    }
   }
 }

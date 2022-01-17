@@ -8,20 +8,30 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.base.Strings;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
-import org.apache.hadoop.fs.*;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
+import org.apache.hadoop.fs.LocatedFileStatus;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.RemoteIterator;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
 
 /** Utility class to work with file system. */
@@ -65,21 +75,22 @@ public final class FsUtils {
     return fs;
   }
 
-  /** Removes temporal directory, before closing Main thread */
+  /** Removes temporal directory */
   public static void removeTmpDirectory(String path) {
-    Runnable runnable =
-        () -> {
-          File tmp = Paths.get(path).toFile();
-          if (tmp.exists()) {
-            try {
-              FileUtils.deleteDirectory(tmp);
-              log.info("temp directory {} deleted", tmp.getPath());
-            } catch (IOException e) {
-              log.error("Could not delete temp directory {}", tmp.getPath());
-            }
-          }
-        };
+    File tmp = Paths.get(path).toFile();
+    if (tmp.exists()) {
+      try {
+        FileUtils.deleteDirectory(tmp);
+        log.info("temp directory {} deleted", tmp.getPath());
+      } catch (IOException e) {
+        log.error("Could not delete temp directory {}", tmp.getPath());
+      }
+    }
+  }
 
+  /** Removes temporal directory, before closing Main thread */
+  public static void removeTmpDirectoryAfterShutdown(String path) {
+    Runnable runnable = () -> removeTmpDirectory(path);
     Runtime.getRuntime().addShutdownHook(new Thread(runnable));
   }
 
@@ -124,6 +135,53 @@ public final class FsUtils {
   }
 
   /**
+   * Set owner for directories and subdirectories(recursively).
+   *
+   * @param hdfsSiteConfig path to hdfs-site.xml config file
+   * @param path to a directory/file
+   * @param userName – e.g. "crap"
+   * @param groupName – e.g. "supergroup"
+   */
+  public static void setOwner(
+      String hdfsSiteConfig,
+      String coreSiteConfig,
+      String path,
+      String userName,
+      String groupName) {
+    FileSystem fs = getFileSystem(hdfsSiteConfig, coreSiteConfig, path);
+    try {
+
+      Consumer<Path> fn =
+          p -> {
+            try {
+              fs.setOwner(p, userName, groupName);
+            } catch (IOException e) {
+              log.warn("Can't change owner for folder/file - {}", path);
+            }
+          };
+
+      Path p = new Path(path);
+      if (fs.isDirectory(p)) {
+        // Files
+        RemoteIterator<LocatedFileStatus> iterator = fs.listFiles(p, true);
+        while (iterator.hasNext()) {
+          LocatedFileStatus fileStatus = iterator.next();
+          fn.accept(fileStatus.getPath());
+        }
+        // Directories
+        FileStatus[] fileStatuses = fs.listStatus(p);
+        for (FileStatus fst : fileStatuses) {
+          fn.accept(fst.getPath());
+        }
+      }
+      fn.accept(p);
+
+    } catch (IOException e) {
+      log.warn("Can't change permissions for folder/file - {}", path);
+    }
+  }
+
+  /**
    * Moves a list files that match against a glob filter into a target directory.
    *
    * @param hdfsSiteConfig path to hdfs-site.xml config file
@@ -138,7 +196,7 @@ public final class FsUtils {
       Path[] paths = FileUtil.stat2Paths(status);
       for (Path path : paths) {
         boolean rename = fs.rename(path, new Path(targetPath, path.getName()));
-        log.info("File {} moved status - {}", path.toString(), rename);
+        log.info("File {} moved status - {}", path, rename);
       }
     } catch (IOException e) {
       log.warn("Can't move files using filter - {}, into path - {}", globFilter, targetPath);
@@ -251,5 +309,18 @@ public final class FsUtils {
         }
       }
     }
+  }
+
+  /**
+   * Check if the file exists
+   *
+   * @param hdfsSiteConfig HDFS config file
+   * @param filePath path to the file
+   */
+  @SneakyThrows
+  public static boolean fileExists(String hdfsSiteConfig, String coreSiteConfig, String filePath) {
+    FileSystem fs = FsUtils.getFileSystem(hdfsSiteConfig, coreSiteConfig, filePath);
+    Path fPath = new Path(filePath);
+    return fs.exists(fPath);
   }
 }

@@ -439,8 +439,11 @@ public class InterpretedToHdfsViewPipeline {
       }
     }
 
-    // Metrics
+    log.info("Save metrics into the file and set files owner");
     MetricsHandler.saveCountersToInputPathFile(options, result.metrics());
+    String metadataPath =
+        PathBuilder.buildDatasetAttemptPath(options, options.getMetaFileName(), true);
+    FsUtils.setOwner(hdfsSiteConfig, coreSiteConfig, metadataPath, "crap", "supergroup");
 
     log.info("Pipeline has been finished");
   }

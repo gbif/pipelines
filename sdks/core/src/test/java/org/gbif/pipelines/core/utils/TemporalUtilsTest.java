@@ -21,7 +21,7 @@ public class TemporalUtilsTest {
     Integer day = null;
 
     // When
-    Optional<TemporalAccessor> temporal = TemporalUtils.getTemporal(year, month, day);
+    Optional<TemporalAccessor> temporal = TemporalConverter.from(year, month, day);
 
     // Should
     assertFalse(temporal.isPresent());
@@ -35,7 +35,7 @@ public class TemporalUtilsTest {
     Integer day = 1;
 
     // When
-    Optional<TemporalAccessor> temporal = TemporalUtils.getTemporal(year, month, day);
+    Optional<TemporalAccessor> temporal = TemporalConverter.from(year, month, day);
 
     // Should
     assertFalse(temporal.isPresent());
@@ -49,7 +49,7 @@ public class TemporalUtilsTest {
     Integer day = 1;
 
     // When
-    Optional<TemporalAccessor> temporal = TemporalUtils.getTemporal(year, month, day);
+    Optional<TemporalAccessor> temporal = TemporalConverter.from(year, month, day);
 
     // Should
     assertFalse(temporal.isPresent());
@@ -67,7 +67,7 @@ public class TemporalUtilsTest {
     Year expected = Year.of(year);
 
     // When
-    Optional<TemporalAccessor> temporal = TemporalUtils.getTemporal(year, month, day);
+    Optional<TemporalAccessor> temporal = TemporalConverter.from(year, month, day);
 
     // Should
     assertTrue(temporal.isPresent());
@@ -86,7 +86,7 @@ public class TemporalUtilsTest {
     YearMonth expected = YearMonth.of(year, month);
 
     // When
-    Optional<TemporalAccessor> temporal = TemporalUtils.getTemporal(year, month, day);
+    Optional<TemporalAccessor> temporal = TemporalConverter.from(year, month, day);
 
     // Should
     assertTrue(temporal.isPresent());
@@ -105,7 +105,7 @@ public class TemporalUtilsTest {
     LocalDate expected = LocalDate.of(year, month, day);
 
     // When
-    Optional<TemporalAccessor> temporal = TemporalUtils.getTemporal(year, month, day);
+    Optional<TemporalAccessor> temporal = TemporalConverter.from(year, month, day);
 
     // Should
     assertTrue(temporal.isPresent());
@@ -124,7 +124,7 @@ public class TemporalUtilsTest {
     Year expected = Year.of(year);
 
     // When
-    Optional<TemporalAccessor> temporal = TemporalUtils.getTemporal(year, month, day);
+    Optional<TemporalAccessor> temporal = TemporalConverter.from(year, month, day);
 
     // Should
     assertTrue(temporal.isPresent());
@@ -139,7 +139,7 @@ public class TemporalUtilsTest {
     Integer month = 11;
     Integer day = 31;
     // When
-    Optional<TemporalAccessor> temporal = TemporalUtils.getTemporal(year, month, day);
+    Optional<TemporalAccessor> temporal = TemporalConverter.from(year, month, day);
 
     // Should
     assertFalse(temporal.isPresent());

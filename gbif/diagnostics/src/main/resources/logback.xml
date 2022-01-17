@@ -12,6 +12,9 @@
     </encoder>
   </appender>
 
+  <logger name="org.gbif.dwc.terms" level="WARN"/>
+  <logger name="org.apache.zookeeper" level="WARN"/>
+
   <root level="INFO">
     <appender-ref ref="CONSOLE"/>
   </root>

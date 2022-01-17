@@ -75,7 +75,7 @@ public class InterpretedToEsIndexExtendedPipeline {
 
     run(options, () -> InterpretedToEsIndexPipeline.run(options));
 
-    FsUtils.removeTmpDirectory(PathBuilder.getTempDir(options));
+    FsUtils.removeTmpDirectoryAfterShutdown(PathBuilder.getTempDir(options));
     log.info("Finished main indexing pipeline");
   }
 
@@ -104,5 +104,6 @@ public class InterpretedToEsIndexExtendedPipeline {
     }
 
     EsIndexUtils.updateAlias(options, indices, config != null ? config.getIndexLock() : null);
+    EsIndexUtils.refreshIndex(options);
   }
 }

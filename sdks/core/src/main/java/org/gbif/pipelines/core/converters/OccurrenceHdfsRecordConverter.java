@@ -21,18 +21,22 @@ import org.gbif.dwc.terms.TermFactory;
 import org.gbif.occurrence.common.TermUtils;
 import org.gbif.occurrence.download.hive.HiveColumns;
 import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
-import org.gbif.pipelines.core.utils.MediaSerDeserUtils;
-import org.gbif.pipelines.core.utils.TemporalUtils;
+import org.gbif.pipelines.core.utils.MediaSerDeser;
+import org.gbif.pipelines.core.utils.TemporalConverter;
 import org.gbif.pipelines.io.avro.AgentIdentifier;
 import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.DegreeOfEstablishment;
 import org.gbif.pipelines.io.avro.Diagnostic;
+import org.gbif.pipelines.io.avro.EstablishmentMeans;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IssueRecord;
+import org.gbif.pipelines.io.avro.LifeStage;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.Multimedia;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
+import org.gbif.pipelines.io.avro.Pathway;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
@@ -221,7 +225,7 @@ public class OccurrenceHdfsRecordConverter {
           .map(StringToDateFunctions.getStringToDateFn(true))
           .ifPresent(eventDate -> occurrenceHdfsRecord.setEventdate(eventDate.getTime()));
     } else {
-      TemporalUtils.getTemporal(
+      TemporalConverter.from(
               temporalRecord.getYear(), temporalRecord.getMonth(), temporalRecord.getDay())
           .map(StringToDateFunctions.getTemporalToDateFn())
           .ifPresent(eventDate -> occurrenceHdfsRecord.setEventdate(eventDate.getTime()));
@@ -360,10 +364,7 @@ public class OccurrenceHdfsRecordConverter {
       occurrenceHdfsRecord.setGbifid(basicRecord.getGbifId());
     }
     occurrenceHdfsRecord.setBasisofrecord(basicRecord.getBasisOfRecord());
-    occurrenceHdfsRecord.setEstablishmentmeans(basicRecord.getEstablishmentMeans());
     occurrenceHdfsRecord.setIndividualcount(basicRecord.getIndividualCount());
-    occurrenceHdfsRecord.setLifestage(basicRecord.getLifeStage());
-    occurrenceHdfsRecord.setLifestagelineage(basicRecord.getLifeStageLineage());
     occurrenceHdfsRecord.setReferences(basicRecord.getReferences());
     occurrenceHdfsRecord.setSex(basicRecord.getSex());
     occurrenceHdfsRecord.setTypestatus(basicRecord.getTypeStatus());
@@ -376,6 +377,44 @@ public class OccurrenceHdfsRecordConverter {
     occurrenceHdfsRecord.setOccurrencestatus(basicRecord.getOccurrenceStatus());
     occurrenceHdfsRecord.setIsincluster(basicRecord.getIsClustered());
 
+    // Vocabulary controlled
+    Optional.ofNullable(basicRecord.getEstablishmentMeans())
+        .ifPresent(
+            c ->
+                occurrenceHdfsRecord.setEstablishmentmeans(
+                    EstablishmentMeans.newBuilder()
+                        .setConcept(c.getConcept())
+                        .setLineage(c.getLineage())
+                        .build()));
+
+    Optional.ofNullable(basicRecord.getLifeStage())
+        .ifPresent(
+            c ->
+                occurrenceHdfsRecord.setLifestage(
+                    LifeStage.newBuilder()
+                        .setConcept(c.getConcept())
+                        .setLineage(c.getLineage())
+                        .build()));
+
+    Optional.ofNullable(basicRecord.getPathway())
+        .ifPresent(
+            c ->
+                occurrenceHdfsRecord.setPathway(
+                    Pathway.newBuilder()
+                        .setConcept(c.getConcept())
+                        .setLineage(c.getLineage())
+                        .build()));
+
+    Optional.ofNullable(basicRecord.getDegreeOfEstablishment())
+        .ifPresent(
+            c ->
+                occurrenceHdfsRecord.setDegreeofestablishment(
+                    DegreeOfEstablishment.newBuilder()
+                        .setConcept(c.getConcept())
+                        .setLineage(c.getLineage())
+                        .build()));
+
+    // Othes
     Optional.ofNullable(basicRecord.getRecordedByIds())
         .ifPresent(
             uis ->
@@ -547,7 +586,7 @@ public class OccurrenceHdfsRecordConverter {
             .map(TextNode::asText)
             .collect(Collectors.toList());
     occurrenceHdfsRecord.setExtMultimedia(
-        MediaSerDeserUtils.toJson(multimediaRecord.getMultimediaItems()));
+        MediaSerDeser.toJson(multimediaRecord.getMultimediaItems()));
 
     setCreatedIfGreater(occurrenceHdfsRecord, multimediaRecord.getCreated());
     occurrenceHdfsRecord.setMediatype(mediaTypes);

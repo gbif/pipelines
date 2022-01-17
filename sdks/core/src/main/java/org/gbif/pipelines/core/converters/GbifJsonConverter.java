@@ -37,8 +37,9 @@ import org.gbif.dwc.terms.GbifInternalTerm;
 import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.TermFactory;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
 import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
-import org.gbif.pipelines.core.utils.TemporalUtils;
+import org.gbif.pipelines.core.utils.TemporalConverter;
 import org.gbif.pipelines.io.avro.AmplificationRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.BlastResult;
@@ -76,10 +77,6 @@ import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 @Builder
 public class GbifJsonConverter {
 
-  private static final String ID = "id";
-  private static final String ISSUES = "issues";
-  private static final String CREATED_FIELD = "created";
-
   private static final Set<String> EXCLUDE_ALL =
       Collections.singleton(DwcTerm.footprintWKT.qualifiedName());
 
@@ -97,10 +94,10 @@ public class GbifJsonConverter {
 
   private final JsonConverter.JsonConverterBuilder builder =
       JsonConverter.builder()
-          .skipKey("decimalLatitude")
-          .skipKey("decimalLongitude")
-          .skipKey("machineTags")
-          .skipKey(CREATED_FIELD)
+          .skipKey(Indexing.DECIMAL_LATITUDE)
+          .skipKey(Indexing.DECIMAL_LONGITUDE)
+          .skipKey(Indexing.MACHINE_TAGS)
+          .skipKey(Indexing.CREATED)
           .converter(ExtendedRecord.class, getExtendedRecordConverter())
           .converter(LocationRecord.class, getLocationRecordConverter())
           .converter(TemporalRecord.class, getTemporalRecordConverter())
@@ -158,10 +155,10 @@ public class GbifJsonConverter {
   public ObjectNode toJson() {
     builder.records(records);
     if (skipId) {
-      builder.skipKey(ID);
+      builder.skipKey(Indexing.ID);
     }
     if (skipIssues) {
-      builder.skipKey(ISSUES);
+      builder.skipKey(Indexing.ISSUES);
     }
 
     ObjectNode mainNode = builder.build().toJson();
@@ -172,7 +169,7 @@ public class GbifJsonConverter {
 
     getMaxCreationDate(mainNode)
         .ifPresent(
-            createdDate -> mainNode.set(CREATED_FIELD, new TextNode(createdDate.toString())));
+            createdDate -> mainNode.set(Indexing.CREATED, new TextNode(createdDate.toString())));
 
     Optional.ofNullable(mainNode.get("lastCrawled"))
         .ifPresent(
@@ -185,13 +182,14 @@ public class GbifJsonConverter {
 
   /** Gets the maximum/latest created date of all the records. */
   private Optional<LocalDateTime> getMaxCreationDate(ObjectNode rootNode) {
-    return Optional.ofNullable(rootNode.get(CREATED_FIELD))
-        .map(created -> Optional.of(DATE_FN.apply(rootNode.get(CREATED_FIELD).asLong())))
+    return Optional.ofNullable(rootNode.get(Indexing.CREATED))
+        .map(created -> Optional.of(DATE_FN.apply(rootNode.get(Indexing.CREATED).asLong())))
         .orElseGet(
             () ->
                 records.stream()
-                    .filter(record -> Objects.nonNull(record.getSchema().getField(CREATED_FIELD)))
-                    .map(record -> record.get(CREATED_FIELD))
+                    .filter(
+                        record -> Objects.nonNull(record.getSchema().getField(Indexing.CREATED)))
+                    .map(record -> record.get(Indexing.CREATED))
                     .filter(Objects::nonNull)
                     .map(x -> DATE_FN.apply((Long) x))
                     .max(LocalDateTime::compareTo));
@@ -212,7 +210,7 @@ public class GbifJsonConverter {
             .collect(Collectors.toSet());
     ArrayNode issueArrayNodes = JsonConverter.createArrayNode();
     issues.forEach(issueArrayNodes::add);
-    mainNode.set(ISSUES, issueArrayNodes);
+    mainNode.set(Indexing.ISSUES, issueArrayNodes);
 
     // Not issues
     Set<String> notIssues =
@@ -250,7 +248,7 @@ public class GbifJsonConverter {
     return (jc, record) -> {
       ExtendedRecord er = (ExtendedRecord) record;
 
-      jc.addJsonTextFieldNoCheck(ID, er.getId());
+      jc.addJsonTextFieldNoCheck(Indexing.ID, er.getId());
 
       Map<String, String> core = er.getCoreTerms();
 
@@ -376,7 +374,7 @@ public class GbifJsonConverter {
       LocationRecord lr = (LocationRecord) record;
 
       if (!skipId) {
-        jc.addJsonTextFieldNoCheck(ID, lr.getId());
+        jc.addJsonTextFieldNoCheck(Indexing.ID, lr.getId());
       }
 
       if (lr.getDecimalLongitude() != null && lr.getDecimalLatitude() != null) {
@@ -430,7 +428,7 @@ public class GbifJsonConverter {
       TemporalRecord tr = (TemporalRecord) record;
 
       if (!skipId) {
-        jc.addJsonTextFieldNoCheck(ID, tr.getId());
+        jc.addJsonTextFieldNoCheck(Indexing.ID, tr.getId());
       }
 
       Optional<TemporalAccessor> tao;
@@ -439,7 +437,7 @@ public class GbifJsonConverter {
             Optional.ofNullable(tr.getEventDate().getGte())
                 .map(StringToDateFunctions.getStringToTemporalAccessor());
       } else {
-        tao = TemporalUtils.getTemporal(tr.getYear(), tr.getMonth(), tr.getDay());
+        tao = TemporalConverter.from(tr.getYear(), tr.getMonth(), tr.getDay());
       }
       tao.map(ta -> TemporalAccessorUtils.toEarliestLocalDateTime(ta, true))
           .ifPresent(d -> jc.addJsonTextFieldNoCheck("eventDateSingle", d.toString()));
@@ -491,7 +489,7 @@ public class GbifJsonConverter {
               .setIssues(null); // Issues are accumulated
 
       if (!skipId) {
-        jc.addJsonTextFieldNoCheck(ID, trOrg.getId());
+        jc.addJsonTextFieldNoCheck(Indexing.ID, trOrg.getId());
       }
 
       TaxonRecord tr = trBuilder.build();
@@ -569,7 +567,7 @@ public class GbifJsonConverter {
       LocationFeatureRecord asr = (LocationFeatureRecord) record;
 
       if (!skipId) {
-        jc.addJsonTextFieldNoCheck(ID, asr.getId());
+        jc.addJsonTextFieldNoCheck(Indexing.ID, asr.getId());
       }
 
       Optional.ofNullable(asr.getItems())
@@ -623,7 +621,7 @@ public class GbifJsonConverter {
       AmplificationRecord ar = (AmplificationRecord) record;
 
       if (!skipId) {
-        jc.addJsonTextFieldNoCheck(ID, ar.getId());
+        jc.addJsonTextFieldNoCheck(Indexing.ID, ar.getId());
       }
 
       List<ObjectNode> nodes =
@@ -674,7 +672,7 @@ public class GbifJsonConverter {
       MultimediaRecord mr = (MultimediaRecord) record;
 
       if (!skipId) {
-        jc.addJsonTextFieldNoCheck(ID, mr.getId());
+        jc.addJsonTextFieldNoCheck(Indexing.ID, mr.getId());
       }
 
       // multimedia items
@@ -777,7 +775,7 @@ public class GbifJsonConverter {
       GrscicollRecord gr = (GrscicollRecord) record;
 
       if (!skipId) {
-        jc.addJsonTextFieldNoCheck(ID, gr.getId());
+        jc.addJsonTextFieldNoCheck(Indexing.ID, gr.getId());
       }
 
       if (gr.getInstitutionMatch() != null) {

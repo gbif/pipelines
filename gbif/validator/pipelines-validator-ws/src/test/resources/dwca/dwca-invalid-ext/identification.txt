@@ -1,0 +1,2 @@
+id	identificationID	identifiedBy	dateIdentified	typeStatus	scientificName	scientificNameID	genus	specificEpithet	scientificNameAuthorship
+1	1	J.L. Neff	2005		"Megachile amica Cresson, 1872"		Megachile	amica	"Cresson, 1872"

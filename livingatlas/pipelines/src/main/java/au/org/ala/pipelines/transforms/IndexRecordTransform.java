@@ -27,7 +27,6 @@ import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.util.Strings;
 import org.apache.solr.common.SolrInputDocument;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.License;
@@ -523,6 +522,12 @@ public class IndexRecordTransform implements Serializable, IndexFields {
                     .collect(Collectors.toList()));
       }
 
+      List<MultimediaIndexRecord> mir =
+          isr.getImageItems().stream()
+              .map(imageItem -> convertToMultimediaRecord(ur.getUuid(), imageItem))
+              .collect(Collectors.toList());
+      indexRecord.setMultimedia(mir);
+
       if (!multimedia.isEmpty()) {
         List<String> distinctList = new ArrayList<>(multimedia);
         indexRecord.getMultiValues().put(MULTIMEDIA, distinctList);
@@ -626,7 +631,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
   private static void addTermSafely(
       IndexRecord.Builder indexRecord, Map<String, String> extension, DwcTerm dwcTerm) {
     String termValue = extension.get(dwcTerm.name());
-    if (Strings.isNotBlank(termValue)) {
+    if (isNotBlank(termValue)) {
       indexRecord.getStrings().put(dwcTerm.simpleName(), termValue);
     }
   }
@@ -634,7 +639,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
   private static void addTermSafely(
       IndexRecord.Builder indexRecord, Map<String, String> extension, String dwcTerm) {
     String termValue = extension.get(dwcTerm);
-    if (Strings.isNotBlank(termValue)) {
+    if (isNotBlank(termValue)) {
       String termToUse = dwcTerm;
       if (dwcTerm.startsWith("http")) {
         termToUse = dwcTerm.substring(dwcTerm.lastIndexOf("/") + 1);
@@ -689,17 +694,17 @@ public class IndexRecordTransform implements Serializable, IndexFields {
       if (conservationStatus.getRegion() != null) {
         if (conservationStatus.getRegion().equalsIgnoreCase(stateProvince)) {
 
-          if (Strings.isNotBlank(conservationStatus.getSourceStatus())) {
+          if (isNotBlank(conservationStatus.getSourceStatus())) {
             indexRecord
                 .getStrings()
                 .put(RAW_STATE_CONSERVATION, conservationStatus.getSourceStatus());
           }
-          if (Strings.isNotBlank(conservationStatus.getStatus())) {
+          if (isNotBlank(conservationStatus.getStatus())) {
             indexRecord.getStrings().put(STATE_CONSERVATION, conservationStatus.getStatus());
           }
         }
         if (conservationStatus.getRegion().equalsIgnoreCase(country)) {
-          if (Strings.isNotBlank(conservationStatus.getStatus())) {
+          if (isNotBlank(conservationStatus.getStatus())) {
             indexRecord.getStrings().put(COUNTRY_CONSERVATION, conservationStatus.getStatus());
           }
         }
@@ -718,6 +723,25 @@ public class IndexRecordTransform implements Serializable, IndexFields {
         }
       }
     }
+  }
+
+  private static MultimediaIndexRecord convertToMultimediaRecord(String uuid, Image image) {
+    return MultimediaIndexRecord.newBuilder()
+        .setId(uuid)
+        .setAudience(image.getAudience())
+        .setContributor(image.getContributor())
+        .setCreated(image.getCreated())
+        .setCreator(image.getCreator())
+        .setFormat(image.getFormat())
+        .setDescription(image.getDescription())
+        .setTitle(image.getTitle())
+        .setIdentifier(image.getIdentifier())
+        .setLicense(image.getLicense())
+        .setPublisher(image.getPublisher())
+        .setRights(image.getRights())
+        .setRightsHolder(image.getRightsHolder())
+        .setReferences(image.getReferences())
+        .build();
   }
 
   private static void addGBIFTaxonomy(
@@ -1036,5 +1060,9 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     }
 
     return doc;
+  }
+
+  private static boolean isNotBlank(String s) {
+    return s != null && s.trim().isEmpty();
   }
 }

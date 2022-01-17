@@ -74,7 +74,7 @@ public class DwcaReader implements Closeable {
       return false;
     }
     recordsReturned++;
-    if (recordsReturned % 10_000 == 0) {
+    if (recordsReturned % 100_000 == 0) {
       log.info("Read [{}] records", recordsReturned);
     }
 

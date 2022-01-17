@@ -1,17 +1,49 @@
 package org.gbif.pipelines.core.converters;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.ImmutableMap;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.gbif.api.model.collections.lookup.Match.MatchType;
-import org.gbif.api.vocabulary.*;
+import org.gbif.api.vocabulary.AgentIdentifierType;
+import org.gbif.api.vocabulary.Extension;
+import org.gbif.api.vocabulary.License;
+import org.gbif.api.vocabulary.OccurrenceIssue;
+import org.gbif.api.vocabulary.OccurrenceStatus;
+import org.gbif.api.vocabulary.ThreatStatus;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.io.avro.*;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
+import org.gbif.pipelines.io.avro.AgentIdentifier;
+import org.gbif.pipelines.io.avro.Amplification;
+import org.gbif.pipelines.io.avro.AmplificationRecord;
+import org.gbif.pipelines.io.avro.AudubonRecord;
+import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.BlastResult;
+import org.gbif.pipelines.io.avro.EventDate;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.GadmFeatures;
+import org.gbif.pipelines.io.avro.ImageRecord;
+import org.gbif.pipelines.io.avro.LocationFeatureRecord;
+import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MachineTag;
+import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.MediaType;
+import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.io.avro.Multimedia;
+import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.Rank;
+import org.gbif.pipelines.io.avro.RankedName;
+import org.gbif.pipelines.io.avro.TaxonRecord;
+import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.VocabularyConcept;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.io.avro.grscicoll.Match;
 import org.junit.Assert;
@@ -67,8 +99,26 @@ public class GbifJsonConverterTest {
             .setRelativeOrganismQuantity(0.001d)
             .setLicense(License.CC_BY_NC_4_0.name())
             .setOccurrenceStatus(OccurrenceStatus.PRESENT.name())
-            .setLifeStage("Tadpole")
-            .setLifeStageLineage(Arrays.asList("Larva", "Tadpole"))
+            .setLifeStage(
+                VocabularyConcept.newBuilder()
+                    .setConcept("bla1")
+                    .setLineage(Collections.singletonList("bla1_1"))
+                    .build())
+            .setPathway(
+                VocabularyConcept.newBuilder()
+                    .setConcept("bla2")
+                    .setLineage(Collections.singletonList("bla2_1"))
+                    .build())
+            .setEstablishmentMeans(
+                VocabularyConcept.newBuilder()
+                    .setConcept("bla3")
+                    .setLineage(Collections.singletonList("bla3_1"))
+                    .build())
+            .setDegreeOfEstablishment(
+                VocabularyConcept.newBuilder()
+                    .setConcept("bla4")
+                    .setLineage(Collections.singletonList("bla4_1"))
+                    .build())
             .setIsClustered(true)
             .setRecordedByIds(
                 Collections.singletonList(
@@ -155,29 +205,31 @@ public class GbifJsonConverterTest {
     // Should
     assertTrue(JsonValidationUtils.isValid(result.toString()));
 
-    assertEquals(mr.getDatasetKey(), result.path("datasetKey").asText());
-    assertEquals(mr.getCrawlId(), (Integer) result.path("crawlId").asInt());
-    assertEquals("CC_BY_NC_4_0", result.path("license").asText());
-    assertEquals(mr.getHostingOrganizationKey(), result.path("hostingOrganizationKey").asText());
-    assertEquals(mr.getId(), result.path("id").asText());
-    assertEquals("Jeremia garde ,à elfutsone", result.path("recordedBy").asText());
-    assertEquals("D2 R2", result.path("identifiedBy").asText());
-    assertEquals("2011-01-01T00:00", result.path("eventDateSingle").asText());
-    assertEquals("2011", result.path("year").asText());
-    assertEquals("1", result.path("month").asText());
-    assertEquals("1", result.path("day").asText());
-    assertEquals("{\"gte\":\"2011-01\",\"lte\":\"2018-01\"}", result.path("eventDate").toString());
-    assertEquals("1", result.path("startDayOfYear").asText());
-    assertEquals("{\"lon\":2.0,\"lat\":1.0}", result.path("coordinates").toString());
-    assertEquals("1.0", result.path("decimalLatitude").asText());
-    assertEquals("2.0", result.path("decimalLongitude").asText());
-    assertEquals("POINT (2.0 1.0)", result.path("scoordinates").asText());
-    assertEquals("Country", result.path("country").asText());
-    assertEquals("Code 1'2\"", result.path("countryCode").asText());
-    assertEquals("[68]", result.path("locality").asText());
-    assertTrue(result.path("isClustered").asBoolean());
+    assertEquals(mr.getDatasetKey(), result.path(Indexing.DATASET_KEY).asText());
+    assertEquals(mr.getCrawlId(), (Integer) result.path(Indexing.CRAWL_ID).asInt());
+    assertEquals("CC_BY_NC_4_0", result.path(Indexing.LICENSE).asText());
     assertEquals(
-        "http://rs.tdwg.org/ac/terms/Multimedia", result.path("extensions").get(0).asText());
+        mr.getHostingOrganizationKey(), result.path(Indexing.HOSTING_ORGANIZATION_KEY).asText());
+    assertEquals(mr.getId(), result.path(Indexing.ID).asText());
+    assertEquals("Jeremia garde ,à elfutsone", result.path(Indexing.RECORDED_BY).asText());
+    assertEquals("D2 R2", result.path(Indexing.IDENTIFIED_BY).asText());
+    assertEquals("2011-01-01T00:00", result.path(Indexing.EVENT_DATE_SINGLE).asText());
+    assertEquals("2011", result.path(Indexing.YEAR).asText());
+    assertEquals("1", result.path(Indexing.MONTH).asText());
+    assertEquals("1", result.path(Indexing.DAY).asText());
+    assertEquals(
+        "{\"gte\":\"2011-01\",\"lte\":\"2018-01\"}", result.path(Indexing.EVENT_DATE).toString());
+    assertEquals("1", result.path(Indexing.START_DAY_OF_YEAR).asText());
+    assertEquals("{\"lon\":2.0,\"lat\":1.0}", result.path(Indexing.COORDINATES).toString());
+    assertEquals("1.0", result.path(Indexing.DECIMAL_LATITUDE).asText());
+    assertEquals("2.0", result.path(Indexing.DECIMAL_LONGITUDE).asText());
+    assertEquals("POINT (2.0 1.0)", result.path(Indexing.SCOORDINATES).asText());
+    assertEquals("Country", result.path(Indexing.COUNTRY).asText());
+    assertEquals("Code 1'2\"", result.path(Indexing.COUNTRY_CODE).asText());
+    assertEquals("[68]", result.path(Indexing.LOCALITY).asText());
+    assertTrue(result.path(Indexing.IS_CLUSTERED).asBoolean());
+    assertEquals(
+        "http://rs.tdwg.org/ac/terms/Multimedia", result.path(Indexing.EXTENSIONS).get(0).asText());
 
     String expectedGadm =
         "{"
@@ -229,20 +281,29 @@ public class GbifJsonConverterTest {
     assertEquals(
         "[{\"type\":\"OTHER\",\"value\":\"someId\"}]", result.path("recordedByIds").toString());
     assertEquals("PRESENT", result.path("occurrenceStatus").asText());
-    assertEquals(br.getLifeStage(), result.path("lifeStage").asText());
-    String expectedLifeStageLineage = "[\"Larva\",\"Tadpole\"]";
-    assertEquals(expectedLifeStageLineage, result.path("lifeStageLineage").toString());
 
     assertEquals(institutionMatch.getKey(), result.path("institutionKey").asText());
     assertFalse(result.has("collectionKey"));
 
     String expectedIssues =
         "[\"BASIS_OF_RECORD_INVALID\",\"INSTITUTION_MATCH_FUZZY\",\"ZERO_COORDINATE\"]";
-    assertEquals(expectedIssues, result.path("issues").toString());
+    assertEquals(expectedIssues, result.path(Indexing.ISSUES).toString());
     assertEquals(
         OccurrenceIssue.values().length - expectedIssues.split(",").length,
-        result.path("notIssues").size());
-    assertEquals("2019-04-16T22:37:55.758", result.path("created").asText());
+        result.path(Indexing.NOT_ISSUES).size());
+    assertEquals("2019-04-16T22:37:55.758", result.path(Indexing.CREATED).asText());
+
+    // Vocabulary
+    assertEquals(
+        "{\"concept\":\"bla1\",\"lineage\":[\"bla1_1\"]}", result.path("lifeStage").toString());
+    assertEquals(
+        "{\"concept\":\"bla3\",\"lineage\":[\"bla3_1\"]}",
+        result.path("establishmentMeans").toString());
+    assertEquals(
+        "{\"concept\":\"bla2\",\"lineage\":[\"bla2_1\"]}", result.path("pathway").toString());
+    assertEquals(
+        "{\"concept\":\"bla4\",\"lineage\":[\"bla4_1\"]}",
+        result.path("degreeOfEstablishment").toString());
   }
 
   @Test
@@ -338,21 +399,22 @@ public class GbifJsonConverterTest {
 
     // Should
     assertTrue(JsonValidationUtils.isValid(result.toString()));
-    assertEquals(er.getId(), result.path("id").asText());
-    assertEquals("2011-01-01T00:00", result.path("eventDateSingle").asText());
-    assertEquals("2011", result.path("year").asText());
-    assertEquals("1", result.path("month").asText());
-    assertEquals("1", result.path("day").asText());
+    assertEquals(er.getId(), result.path(Indexing.ID).asText());
+    assertEquals("2011-01-01T00:00", result.path(Indexing.EVENT_DATE_SINGLE).asText());
+    assertEquals("2011", result.path(Indexing.YEAR).asText());
+    assertEquals("1", result.path(Indexing.MONTH).asText());
+    assertEquals("1", result.path(Indexing.DAY).asText());
     assertEquals(
-        "{\"gte\":\"2011-01-01\",\"lte\":\"2018-01-01\"}", result.path("eventDate").toString());
+        "{\"gte\":\"2011-01-01\",\"lte\":\"2018-01-01\"}",
+        result.path(Indexing.EVENT_DATE).toString());
     assertEquals("1", result.path("startDayOfYear").asText());
     assertEquals("{\"lon\":2.0,\"lat\":1.0}", result.path("coordinates").toString());
-    assertEquals("1.0", result.path("decimalLatitude").asText());
-    assertEquals("2.0", result.path("decimalLongitude").asText());
+    assertEquals("1.0", result.path(Indexing.DECIMAL_LATITUDE).asText());
+    assertEquals("2.0", result.path(Indexing.DECIMAL_LONGITUDE).asText());
     assertEquals("POINT (2.0 1.0)", result.path("scoordinates").asText());
     assertEquals("something{something}", result.path("continent").asText());
-    assertEquals("Country", result.path("country").asText());
-    assertEquals("Code 1'2\"", result.path("countryCode").asText());
+    assertEquals("Country", result.path(Indexing.COUNTRY).asText());
+    assertEquals("Code 1'2\"", result.path(Indexing.COUNTRY_CODE).asText());
 
     String expectedAll =
         "[\"Cr1\",\"{\\\"something\\\":1}{\\\"something\\\":1}\","
@@ -360,7 +422,7 @@ public class GbifJsonConverterTest {
             + "\"Lic1\",\"Tt1\",\"1\",\"Pub1\",\"-131.3\",\"Sp1\",\"not a date\",\"60.4\","
             + "\"jpeg\",\"Rh1\",\"Cont1\",\"Aud1\""
             + "]";
-    assertEquals(expectedAll, result.path("all").toString());
+    assertEquals(expectedAll, result.path(Indexing.ALL).toString());
 
     String expectedVerbatim =
         "{\"core\":{" // verbatim.core
@@ -405,7 +467,7 @@ public class GbifJsonConverterTest {
             + "\"http://purl.org/dc/terms/title\":\"Tt1\","
             + "\"http://www.w3.org/2003/01/geo/wgs84_pos#longitude\":\"-131.3\"},"
             + "{\"http://purl.org/dc/terms/created\":\"not a date\"}]}}"; // end v.m.I, v.e, v
-    assertEquals(expectedVerbatim, result.path("verbatim").toString());
+    assertEquals(expectedVerbatim, result.path(Indexing.VERBATIM).toString());
 
     String expectedGbifClassification =
         "{\"usage\":{\"key\":2,\"name\":\"Name2\",\"rank\":\"ABERRATION\"},"
@@ -418,16 +480,16 @@ public class GbifJsonConverterTest {
             + "\"aberration\":\"Name2\","
             + "\"classificationPath\":\"_1\","
             + "\"taxonKey\":[1,2]}";
-    assertEquals(expectedGbifClassification, result.path("gbifClassification").toString());
+    assertEquals(expectedGbifClassification, result.path(Indexing.GBIF_CLASSIFICATION).toString());
     assertEquals(
         "[{\"key\":\"data\",\"value\":\"value\"}]",
-        result.path("locationFeatureLayers").toString());
+        result.path(Indexing.LOCATION_FEATUE_LAYERS).toString());
 
     String expectedIssues = "[\"BASIS_OF_RECORD_INVALID\",\"ZERO_COORDINATE\"]";
-    assertEquals(expectedIssues, result.path("issues").toString());
+    assertEquals(expectedIssues, result.path(Indexing.ISSUES).toString());
     assertEquals(
         OccurrenceIssue.values().length - expectedIssues.split(",").length,
-        result.path("notIssues").size());
+        result.path(Indexing.NOT_ISSUES).size());
   }
 
   @Test
@@ -441,12 +503,12 @@ public class GbifJsonConverterTest {
 
     // Should
     assertTrue(JsonValidationUtils.isValid(result.toString()));
-    assertEquals(er.getId(), result.path("id").asText());
+    assertEquals(er.getId(), result.path(Indexing.ID).asText());
 
-    assertEquals(0, result.path("verbatim").path("core").size());
-    assertEquals(0, result.path("verbatim").path("extensions").size());
-    assertEquals(0, result.path("issues").size());
-    assertEquals(OccurrenceIssue.values().length, result.path("notIssues").size());
+    assertEquals(0, result.path(Indexing.VERBATIM).path(Indexing.CORE).size());
+    assertEquals(0, result.path(Indexing.VERBATIM).path(Indexing.EXTENSIONS).size());
+    assertEquals(0, result.path(Indexing.ISSUES).size());
+    assertEquals(OccurrenceIssue.values().length, result.path(Indexing.NOT_ISSUES).size());
   }
 
   @Test
@@ -458,8 +520,8 @@ public class GbifJsonConverterTest {
             + "\"id\":\"777\","
             + "\"extensions\":[],"
             + "\"all\":[\"T1\",\"Name\"],"
-            + "\"verbatim\":{\"core\":{\"http://rs.tdwg.org/dwc/terms/taxonID\":\"T1\","
-            + "\"http://rs.tdwg.org/dwc/terms/scientificName\":\"Name\"},"
+            + "\"verbatim\":{\"core\":{\"http://rs.tdwg.org/dwc/terms/scientificName\":\"Name\","
+            + "\"http://rs.tdwg.org/dwc/terms/taxonID\":\"T1\"},"
             + "\"extensions\":{}},"
             + "\"gbifClassification\":{\"taxonID\":\"T1\","
             + "\"verbatimScientificName\":\"Name\","
@@ -505,15 +567,12 @@ public class GbifJsonConverterTest {
             .setIucnRedListCategoryCode(ThreatStatus.CRITICALLY_ENDANGERED.getCode())
             .build();
 
+    Map<String, String> coreTerms = new HashMap<>(2);
+    coreTerms.put(DwcTerm.taxonID.qualifiedName(), "T1");
+    coreTerms.put(DwcTerm.scientificName.qualifiedName(), "Name");
+
     ExtendedRecord extendedRecord =
-        ExtendedRecord.newBuilder()
-            .setId("777")
-            .setCoreTerms(
-                new ImmutableMap.Builder<String, String>()
-                    .put(DwcTerm.taxonID.qualifiedName(), "T1")
-                    .put(DwcTerm.scientificName.qualifiedName(), "Name")
-                    .build())
-            .build();
+        ExtendedRecord.newBuilder().setId("777").setCoreTerms(coreTerms).build();
 
     // When
     String result = GbifJsonConverter.toStringPartialJson(extendedRecord, taxonRecord);
@@ -791,19 +850,20 @@ public class GbifJsonConverterTest {
 
     // Should
     assertTrue(JsonValidationUtils.isValid(result.toString()));
-    assertEquals(mdr.getId(), result.path("id").asText());
-    assertEquals(mdr.getDatasetKey(), result.path("datasetKey").asText());
-    assertEquals(mdr.getCrawlId(), (Integer) result.path("crawlId").asInt());
-    assertEquals("l", result.path("license").asText());
+    assertEquals(mdr.getId(), result.path(Indexing.ID).asText());
+    assertEquals(mdr.getDatasetKey(), result.path(Indexing.DATASET_KEY).asText());
+    assertEquals(mdr.getCrawlId(), (Integer) result.path(Indexing.CRAWL_ID).asInt());
+    assertEquals("l", result.path(Indexing.LICENSE).asText());
     assertEquals(
-        mdr.getDatasetPublishingCountry(), result.path("datasetPublishingCountry").asText());
-    assertEquals(0, result.path("issues").size());
-    assertEquals(0, result.path("gbifClassification").size());
-    assertEquals(0, result.path("measurementOrFactItems").size());
-    assertEquals(0, result.path("all").size());
-    assertEquals(0, result.path("verbatim").path("core").size());
-    assertEquals(0, result.path("verbatim").path("extensions").size());
-    assertEquals(OccurrenceIssue.values().length, result.path("notIssues").size());
+        mdr.getDatasetPublishingCountry(),
+        result.path(Indexing.DATASET_PUBLISHING_COUNTRY).asText());
+    assertEquals(0, result.path(Indexing.ISSUES).size());
+    assertEquals(0, result.path(Indexing.GBIF_CLASSIFICATION).size());
+    assertEquals(0, result.path(Indexing.MEASUREMENT_OR_FACT_ITEMS).size());
+    assertEquals(0, result.path(Indexing.ALL).size());
+    assertEquals(0, result.path(Indexing.VERBATIM).path(Indexing.CORE).size());
+    assertEquals(0, result.path(Indexing.VERBATIM).path(Indexing.EXTENSIONS).size());
+    assertEquals(OccurrenceIssue.values().length, result.path(Indexing.NOT_ISSUES).size());
   }
 
   @Test
@@ -859,11 +919,11 @@ public class GbifJsonConverterTest {
 
     // Should
     assertTrue(JsonValidationUtils.isValid(result.toString()));
-    assertEquals("2018-01-01T00:00", result.path("eventDateSingle").asText());
-    assertEquals("2018", result.path("year").asText());
-    assertEquals("2018", result.path("eventDate").path("gte").asText());
-    assertEquals("2020", result.path("eventDate").path("lte").asText());
-    assertFalse(result.has("month"));
-    assertFalse(result.has("day"));
+    assertEquals("2018-01-01T00:00", result.path(Indexing.EVENT_DATE_SINGLE).asText());
+    assertEquals("2018", result.path(Indexing.YEAR).asText());
+    assertEquals("2018", result.path(Indexing.EVENT_DATE).path(Indexing.GTE).asText());
+    assertEquals("2020", result.path(Indexing.EVENT_DATE).path(Indexing.LTE).asText());
+    assertFalse(result.has(Indexing.MONTH));
+    assertFalse(result.has(Indexing.DAY));
   }
 }
