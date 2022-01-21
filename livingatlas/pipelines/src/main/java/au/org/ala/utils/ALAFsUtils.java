@@ -72,11 +72,11 @@ public class ALAFsUtils {
   }
 
   /**
-   * Build a path to outlier records. {fsPath}/pipelines-outlier/{datasetId}
-   * {fsPath}/pipelines-outlier/all
+   * NOTE: It will delete the existing folder Build a path to outlier records.
+   * {fsPath}/pipelines-outlier/{datasetId} {fsPath}/pipelines-outlier/all
    */
-  public static String buildPathOutlierUsingTargetPath(AllDatasetsPipelinesOptions options)
-      throws IOException {
+  public static String buildPathOutlierUsingTargetPath(
+      AllDatasetsPipelinesOptions options, boolean delete) throws IOException {
     // default: {fsPath}/pipelines-outlier
     FileSystem fs =
         FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
@@ -92,8 +92,36 @@ public class ALAFsUtils {
       outputPath = PathBuilder.buildPath(outputPath, "all").toString();
     }
     // delete previous runs
-    FsUtils.deleteIfExist(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), outputPath);
-    ALAFsUtils.createDirectory(fs, outputPath);
+    if (delete)
+      FsUtils.deleteIfExist(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), outputPath);
+    else {
+      if (!exists(fs, outputPath)) ALAFsUtils.createDirectory(fs, outputPath);
+    }
+
+    return outputPath;
+  }
+
+  /**
+   * Get an output path to outlier records. {fsPath}/pipelines-outlier/{datasetId}
+   * {fsPath}/pipelines-outlier/all
+   */
+  public static String getOutlierTargetPath(AllDatasetsPipelinesOptions options)
+      throws IOException {
+    // default: {fsPath}/pipelines-outlier
+    FileSystem fs =
+        FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
+            .getFs(options.getTargetPath());
+
+    String outputPath = PathBuilder.buildPath(options.getTargetPath()).toString();
+
+    // {fsPath}/pipelines-outlier/{datasetId}
+    if (options.getDatasetId() != null && !"all".equalsIgnoreCase(options.getDatasetId())) {
+      outputPath = PathBuilder.buildPath(outputPath, options.getDatasetId()).toString();
+    } else {
+      // {fsPath}/pipelines-outlier/all
+      outputPath = PathBuilder.buildPath(outputPath, "all").toString();
+    }
+
     return outputPath;
   }
 
