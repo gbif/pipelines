@@ -69,7 +69,7 @@ public class DistributionOutlierTransform
             Iterable<IndexRecord> records = input.getValue();
             Iterator<IndexRecord> iter = records.iterator();
             List<DistributionOutlierRecord> outputs = new ArrayList();
-            Map points = new HashMap();
+
             try {
               DistributionServiceImpl distributionService =
                   DistributionServiceImpl.init(spatialUrl);
@@ -78,9 +78,10 @@ public class DistributionOutlierTransform
 
               boolean hasEDL = edl.size() > 0 ? true : false;
               double distanceToEDL = hasEDL ? 0 : -1; // 0 -inside, -1: no EDL
-              // Available EDLD of this species
+              // Available EDLs of this species
 
               if (hasEDL) {
+                Map points = new HashMap();
                 while (iter.hasNext()) {
                   IndexRecord record = iter.next();
                   DistributionOutlierRecord dr = convertToDistribution(record, distanceToEDL);
@@ -103,10 +104,17 @@ public class DistributionOutlierTransform
                       .filter(it -> it.getId().equalsIgnoreCase(entry.getKey()))
                       .forEach(it -> it.setDistanceOutOfEDL(entry.getValue()));
                 }
+              } else {
+                while (iter.hasNext()) {
+                  IndexRecord record = iter.next();
+                  DistributionOutlierRecord dr = convertToDistribution(record, distanceToEDL);
+                  if (dr != null) {
+                    outputs.add(dr);
+                  }
+                }
               }
             } catch (ExpertDistributionException e) {
               log.error("Error in processing the species: " + lsid + " . Ignored");
-              log.error("Points: " + points);
               log.error(e.getMessage());
             } catch (Exception e) {
               log.error("Runtime error in processing the species: " + lsid + " . Ignored");

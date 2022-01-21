@@ -87,13 +87,13 @@ public class DistributionOutlierTest {
       inPoint.put("decimalLongitude", 142.854663);
       points.put("e512c707-fe92-492c-b869-799c57388c45", inPoint);
 
-      //Map<String, Double> results = impl.outliers(URLEncoder.encode("urn:lsid:biodiversity.org.au:afd.taxon:0c3e2403-05c4-4a43-8019-30e6d657a283", StandardCharsets.UTF_8.toString()), points);
-      Map<String, Double> results = impl.outliers("https://id.biodiversity.org.au/node/apni/2908371", points);
+      // Map<String, Double> results =
+      // impl.outliers(URLEncoder.encode("urn:lsid:biodiversity.org.au:afd.taxon:0c3e2403-05c4-4a43-8019-30e6d657a283", StandardCharsets.UTF_8.toString()), points);
+      Map<String, Double> results =
+          impl.outliers("https://id.biodiversity.org.au/node/apni/2908371", points);
       assertSame(0, results.size());
     } catch (Exception e) {
       e.printStackTrace();
     }
   }
-
-
 }
