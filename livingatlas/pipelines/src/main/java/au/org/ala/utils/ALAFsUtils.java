@@ -126,7 +126,7 @@ public class ALAFsUtils {
   }
 
   /**
-   * Removes a directory with content if the folder exists
+   * Check if a directory exists and is not empty
    *
    * @param directoryPath path to some directory
    */
@@ -147,6 +147,32 @@ public class ALAFsUtils {
       return fs.listFiles(path, true).hasNext();
     } catch (IOException e) {
       log.error("Can't delete {} directory, cause - {}", directoryPath, e.getCause());
+      return false;
+    }
+  }
+
+  /**
+   * Check if avro files exist in the target folder
+   *
+   * @param directoryPath path to some directory
+   */
+  public static boolean hasAvro(FileSystem fs, String directoryPath, boolean recurse) {
+    Path path = PathBuilder.buildPath(directoryPath);
+    Path avroFilePath = PathBuilder.buildPath(directoryPath, "*.avro");
+    try {
+      if (fs.exists(path)) {
+        RemoteIterator<LocatedFileStatus> it = fs.listFiles(path, recurse);
+        while (it.hasNext()) {
+          LocatedFileStatus lfs = it.next();
+          if (lfs.getPath().getName().toLowerCase().endsWith(".avro")) {
+            return true;
+          }
+        }
+        return false;
+      } else {
+        return false;
+      }
+    } catch (IOException ex) {
       return false;
     }
   }

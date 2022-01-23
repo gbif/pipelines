@@ -102,7 +102,8 @@ public class DistributionOutlierTransform
                   Map.Entry<String, Double> entry = iterator.next();
                   StreamSupport.stream(outputs.spliterator(), false)
                       .filter(it -> it.getId().equalsIgnoreCase(entry.getKey()))
-                      .forEach(it -> it.setDistanceOutOfEDL(entry.getValue()));
+                      .findFirst()
+                      .ifPresent(it -> it.setDistanceOutOfEDL(entry.getValue()));
                 }
               } else {
                 while (iter.hasNext()) {
