@@ -246,15 +246,14 @@ public class DistributionOutlierPipeline {
             .getFs(outputPath);
 
     String outlierPath = ALAFsUtils.getOutlierTargetPath(options);
-    boolean hasOutlier = ALAFsUtils.existsAndNonEmpty(fs, outlierPath);
-
-    log.info("Has outlier records from previous runs? {}", hasOutlier);
+    boolean hasOutlier = ALAFsUtils.hasAvro(fs, outlierPath, false);
+    log.debug("Try to Load existing outliers from {}", outlierPath);
 
     if (hasOutlier) {
       String samplingPath = String.join("/", outlierPath, "*.avro");
-      log.debug("Loading existing outliers from {}", samplingPath);
       return p.apply(AvroIO.read(DistributionOutlierRecord.class).from(samplingPath));
     } else {
+      log.info("No existing outlier AVRO files under " + outlierPath);
       return p.apply(Create.empty(AvroCoder.of(DistributionOutlierRecord.class)));
     }
   }
