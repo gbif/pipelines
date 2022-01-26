@@ -18,6 +18,7 @@ import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.hadoop.hbase.exceptions.IllegalArgumentIOException;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -135,6 +136,8 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
         } else if (runnerPr.test(StepRunner.STANDALONE)) {
           runLocal(builder);
         }
+
+        runPostprocessValidation(message);
 
         log.info("Deleting old attempts directories");
         String pathToDelete = String.join("/", config.stepConfig.repositoryPath, datasetId);
@@ -266,27 +269,62 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
                 && message.getValidationResult().getNumberOfRecords() != null
             ? message.getValidationResult().getNumberOfRecords()
             : null;
-    String fileNumber =
-        HdfsUtils.getValueByKey(
+
+    Optional<Long> fileNumber =
+        HdfsUtils.getLongByKey(
             config.stepConfig.hdfsSiteConfig,
             config.stepConfig.coreSiteConfig,
             metaPath,
             Metrics.ARCHIVE_TO_ER_COUNT);
 
-    if (messageNumber == null && (fileNumber == null || fileNumber.isEmpty())) {
+    if (messageNumber == null && !fileNumber.isPresent()) {
       throw new IllegalArgumentException(
           "Please check archive-to-avro metadata yaml file or message records number, recordsNumber can't be null or empty!");
     }
 
     if (messageNumber == null) {
-      return Long.parseLong(fileNumber);
+      return fileNumber.get();
     }
 
-    if (fileNumber == null || fileNumber.isEmpty()) {
+    if (!fileNumber.isPresent() || messageNumber > fileNumber.get()) {
       return messageNumber;
     }
 
-    return messageNumber > Long.parseLong(fileNumber) ? messageNumber : Long.parseLong(fileNumber);
+    return fileNumber.get();
+  }
+
+  private void runPostprocessValidation(PipelinesVerbatimMessage message) throws IOException {
+    String datasetId = message.getDatasetUuid().toString();
+    String attempt = Integer.toString(message.getAttempt());
+    String metaFileName = config.metaFileName;
+    String metaPath =
+        String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, metaFileName);
+    log.info("Getting records number from the file - {}", metaPath);
+
+    Optional<Double> dublicateIdCount =
+        HdfsUtils.getDoubleByKey(
+            config.stepConfig.hdfsSiteConfig,
+            config.stepConfig.coreSiteConfig,
+            metaPath,
+            Metrics.DUPLICATE_GBIF_IDS_COUNT + "Attempted");
+
+    Optional<Double> uniqueIdCount =
+        HdfsUtils.getDoubleByKey(
+            config.stepConfig.hdfsSiteConfig,
+            config.stepConfig.coreSiteConfig,
+            metaPath,
+            Metrics.UNIQUE_GBIF_IDS_COUNT + "Attempted");
+
+    if (uniqueIdCount.isPresent() && dublicateIdCount.isPresent()) {
+      double duplicatePercent = dublicateIdCount.get() * 100 / uniqueIdCount.get();
+      double allowedPercent = Integer.valueOf(config.failIfDuplicateIdPercent).doubleValue();
+      if (duplicatePercent > allowedPercent) {
+        log.error(
+            "GBIF IDs hit maximum allowed threshold: allowed - {}%, duplicates - {}%",
+            allowedPercent, duplicatePercent);
+        throw new IllegalArgumentIOException("GBIF IDs hit maximum allowed threshold");
+      }
+    }
   }
 
   /** Checks if the directory exists */

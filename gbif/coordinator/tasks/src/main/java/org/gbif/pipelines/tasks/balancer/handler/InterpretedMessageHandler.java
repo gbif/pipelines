@@ -5,6 +5,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
+import java.util.Optional;
 import java.util.Set;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -125,8 +126,8 @@ public class InterpretedMessageHandler {
     String metaPath = String.join("/", repositoryPath, datasetId, attempt, metaFileName);
 
     Long messageNumber = message.getNumberOfRecords();
-    String fileNumber =
-        HdfsUtils.getValueByKey(
+    Optional<Long> fileNumber =
+        HdfsUtils.getLongByKey(
             stepConfig.hdfsSiteConfig,
             stepConfig.coreSiteConfig,
             metaPath,
@@ -136,26 +137,26 @@ public class InterpretedMessageHandler {
     if (!message.isValidator()) {
       Set<String> types = message.getInterpretTypes();
       boolean isCorrectType = types.contains(ALL.name()) || types.contains(BASIC.name());
-      boolean noFileRecords = fileNumber == null || Long.parseLong(fileNumber) == 0L;
+      boolean noFileRecords = !fileNumber.isPresent() || fileNumber.get() == 0L;
       if (isCorrectType && noFileRecords) {
         throw new IllegalArgumentException(
             "Basic records must be interpreted, but fileNumber is null or 0, please validate the archive!");
       }
     }
 
-    if (messageNumber == null && (fileNumber == null || fileNumber.isEmpty())) {
+    if (messageNumber == null && !fileNumber.isPresent()) {
       throw new IllegalArgumentException(
           "Please check archive-to-avro metadata yaml file or message records number, recordsNumber can't be null or empty!");
     }
 
     if (messageNumber == null) {
-      return Long.parseLong(fileNumber);
+      return fileNumber.get();
     }
 
-    if (fileNumber == null || fileNumber.isEmpty()) {
+    if (!fileNumber.isPresent() || messageNumber > fileNumber.get()) {
       return messageNumber;
     }
 
-    return messageNumber > Long.parseLong(fileNumber) ? messageNumber : Long.parseLong(fileNumber);
+    return fileNumber.get();
   }
 }

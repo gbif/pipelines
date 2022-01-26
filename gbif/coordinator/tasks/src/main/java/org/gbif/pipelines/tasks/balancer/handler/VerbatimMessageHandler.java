@@ -2,6 +2,7 @@ package org.gbif.pipelines.tasks.balancer.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
+import java.util.Optional;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
@@ -133,27 +134,27 @@ public class VerbatimMessageHandler {
                 && message.getValidationResult().getNumberOfRecords() != null
             ? message.getValidationResult().getNumberOfRecords()
             : null;
-    String fileNumber =
-        HdfsUtils.getValueByKey(
+    Optional<Long> fileNumber =
+        HdfsUtils.getLongByKey(
             stepConfig.hdfsSiteConfig,
             stepConfig.coreSiteConfig,
             metaPath,
             Metrics.ARCHIVE_TO_ER_COUNT);
 
-    if (messageNumber == null && (fileNumber == null || fileNumber.isEmpty())) {
+    if (messageNumber == null && !fileNumber.isPresent()) {
       throw new IllegalArgumentException(
           "Please check archive-to-avro metadata yaml file or message records number, recordsNumber can't be null or empty!");
     }
 
     if (messageNumber == null) {
-      return Long.parseLong(fileNumber);
+      return fileNumber.get();
     }
 
-    if (fileNumber == null || fileNumber.isEmpty()) {
+    if (!fileNumber.isPresent() || messageNumber > fileNumber.get()) {
       return messageNumber;
     }
 
-    return messageNumber > Long.parseLong(fileNumber) ? messageNumber : Long.parseLong(fileNumber);
+    return fileNumber.get();
   }
 
   /** Finds the latest attempt number in HDFS */

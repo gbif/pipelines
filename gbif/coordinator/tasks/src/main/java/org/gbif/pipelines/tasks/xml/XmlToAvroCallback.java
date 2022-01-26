@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import lombok.AllArgsConstructor;
@@ -189,26 +190,22 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
     String metaPath =
         String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, metaFileName);
     log.info("Getting records number from the file - {}", metaPath);
-    String fileNumber;
-    try {
-      fileNumber =
-          HdfsUtils.getValueByKey(
-              config.stepConfig.hdfsSiteConfig,
-              config.stepConfig.coreSiteConfig,
-              metaPath,
-              Metrics.ARCHIVE_TO_ER_COUNT);
-    } catch (IOException e) {
-      throw new IllegalArgumentException(e.getMessage(), e);
-    }
-    if (fileNumber == null || fileNumber.isEmpty()) {
+    Optional<Double> fileNumber =
+        HdfsUtils.getDoubleByKey(
+            config.stepConfig.hdfsSiteConfig,
+            config.stepConfig.coreSiteConfig,
+            metaPath,
+            Metrics.ARCHIVE_TO_ER_COUNT);
+
+    if (!fileNumber.isPresent()) {
       throw new IllegalArgumentException(
           "Please check archive-to-avro metadata yaml file or message records number, recordsNumber can't be null or empty!");
     }
-    double recordsNumber = Double.parseDouble(fileNumber);
+
     if (currentSize > 0) {
-      double persentage = recordsNumber * 100 / (double) currentSize;
+      double persentage = fileNumber.get() * 100 / currentSize;
       log.info("The dataset conversion from xml to avro got {}% of records", persentage);
-      if (persentage < 70d) {
+      if (persentage < config.failIfDropLessThanPercent) {
         throw new IllegalArgumentException(
             "Dataset - "
                 + datasetId

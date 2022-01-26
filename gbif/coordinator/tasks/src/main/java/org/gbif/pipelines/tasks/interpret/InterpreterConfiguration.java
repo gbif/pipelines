@@ -52,6 +52,9 @@ public class InterpreterConfiguration implements BaseConfiguration {
   @Parameter(names = "--use-beam-deprecated-read")
   public boolean useBeamDeprecatedRead = true;
 
+  @Parameter(names = "--fail-if-duplicate-id-percent")
+  public int failIfDuplicateIdPercent = 5;
+
   @Override
   public String getHdfsSiteConfig() {
     return stepConfig.hdfsSiteConfig;

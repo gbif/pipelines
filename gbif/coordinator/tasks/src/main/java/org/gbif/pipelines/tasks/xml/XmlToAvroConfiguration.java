@@ -50,6 +50,9 @@ public class XmlToAvroConfiguration implements BaseConfiguration {
   @Parameter(names = "--validator-only")
   public boolean validatorOnly = false;
 
+  @Parameter(names = "--fail-if-drop-more-than-percent")
+  public int failIfDropLessThanPercent = 75;
+
   @Override
   public String getHdfsSiteConfig() {
     return stepConfig.hdfsSiteConfig;

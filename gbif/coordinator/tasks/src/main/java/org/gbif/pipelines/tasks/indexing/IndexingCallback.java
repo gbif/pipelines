@@ -287,7 +287,7 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
                   / (double) config.indexConfig.recordsPerShard);
     }
 
-    double shards = (double) recordsNumber / (double) config.indexConfig.recordsPerShard;
+    double shards = recordsNumber / (double) config.indexConfig.recordsPerShard;
     shards = Math.max(shards, 1d);
     boolean isCeil = (shards - Math.floor(shards)) > 0.25d;
     return isCeil ? (int) Math.ceil(shards) : (int) Math.floor(shards);
@@ -305,27 +305,26 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
         String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, metaFileName);
 
     Long messageNumber = message.getNumberOfRecords();
-    String fileNumber =
-        HdfsUtils.getValueByKey(
+    Optional<Long> fileNumber =
+        HdfsUtils.getLongByKey(
             config.stepConfig.hdfsSiteConfig,
             config.stepConfig.coreSiteConfig,
             metaPath,
             Metrics.BASIC_RECORDS_COUNT + "Attempted");
 
-    if (messageNumber == null && (fileNumber == null || fileNumber.isEmpty())) {
+    if (messageNumber == null && !fileNumber.isPresent()) {
       throw new IllegalArgumentException(
           "Please check archive-to-avro metadata yaml file or message records number, recordsNumber can't be null or empty!");
     }
 
     if (messageNumber == null) {
-      return Long.parseLong(fileNumber);
+      return fileNumber.get();
     }
 
-    if (fileNumber == null || fileNumber.isEmpty()) {
+    if (!fileNumber.isPresent() || messageNumber > fileNumber.get()) {
       return messageNumber;
     }
-
-    return messageNumber > Long.parseLong(fileNumber) ? messageNumber : Long.parseLong(fileNumber);
+    return fileNumber.get();
   }
 
   /** Returns index name by index prefix where number of records is less than configured */
