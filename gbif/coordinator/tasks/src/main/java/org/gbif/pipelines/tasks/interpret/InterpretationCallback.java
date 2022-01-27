@@ -301,22 +301,22 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
         String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, metaFileName);
     log.info("Getting records number from the file - {}", metaPath);
 
-    Optional<Double> dublicateIdCount =
+    Optional<Double> invalidIdCount =
         HdfsUtils.getDoubleByKey(
             config.stepConfig.hdfsSiteConfig,
             config.stepConfig.coreSiteConfig,
             metaPath,
-            Metrics.DUPLICATE_GBIF_IDS_COUNT + "Attempted");
+            Metrics.INVALID_GBIF_ID_COUNT + "Attempted");
 
-    Optional<Double> uniqueIdCount =
+    Optional<Double> recordsCount =
         HdfsUtils.getDoubleByKey(
             config.stepConfig.hdfsSiteConfig,
             config.stepConfig.coreSiteConfig,
             metaPath,
-            Metrics.UNIQUE_GBIF_IDS_COUNT + "Attempted");
+            Metrics.BASIC_RECORDS_COUNT + "Attempted");
 
-    if (uniqueIdCount.isPresent() && dublicateIdCount.isPresent()) {
-      double duplicatePercent = dublicateIdCount.get() * 100 / uniqueIdCount.get();
+    if (recordsCount.isPresent() && invalidIdCount.isPresent()) {
+      double duplicatePercent = invalidIdCount.get() * 100 / recordsCount.get();
       double allowedPercent = config.failIfDuplicateIdPercent;
       if (duplicatePercent > allowedPercent) {
         log.error(
