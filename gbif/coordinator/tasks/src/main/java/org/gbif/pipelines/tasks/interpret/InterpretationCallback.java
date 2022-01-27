@@ -317,12 +317,16 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
 
     if (uniqueIdCount.isPresent() && dublicateIdCount.isPresent()) {
       double duplicatePercent = dublicateIdCount.get() * 100 / uniqueIdCount.get();
-      double allowedPercent = Integer.valueOf(config.failIfDuplicateIdPercent).doubleValue();
+      double allowedPercent = config.failIfDuplicateIdPercent;
       if (duplicatePercent > allowedPercent) {
         log.error(
             "GBIF IDs hit maximum allowed threshold: allowed - {}%, duplicates - {}%",
             allowedPercent, duplicatePercent);
         throw new IllegalArgumentIOException("GBIF IDs hit maximum allowed threshold");
+      } else {
+        log.warn(
+            "GBIF IDs current duplicates rate: allowed - {}%, duplicates - {}%",
+            allowedPercent, duplicatePercent);
       }
     }
   }
