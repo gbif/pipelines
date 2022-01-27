@@ -101,7 +101,7 @@
     <commons-lang.version>2.6</commons-lang.version>
     <commons-io.version>2.5</commons-io.version>
     <commons-configuration.version>1.10</commons-configuration.version>
-    <xercesImpl.version>2.12.1</xercesImpl.version>
+    <xercesImpl.version>2.12.2</xercesImpl.version>
   </properties>
 
   <dependencies>
