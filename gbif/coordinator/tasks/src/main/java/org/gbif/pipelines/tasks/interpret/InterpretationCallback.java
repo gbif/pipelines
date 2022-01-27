@@ -316,7 +316,8 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
             Metrics.BASIC_RECORDS_COUNT + "Attempted");
 
     if (recordsCount.isPresent() && invalidIdCount.isPresent()) {
-      double duplicatePercent = invalidIdCount.get() * 100 / recordsCount.get();
+      double duplicatePercent =
+          invalidIdCount.get() * 100 / (recordsCount.get() + invalidIdCount.get());
       double allowedPercent = config.failIfDuplicateIdPercent;
       if (duplicatePercent > allowedPercent) {
         log.error(
