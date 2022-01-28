@@ -131,7 +131,7 @@ public class InterpretedMessageHandler {
             stepConfig.hdfsSiteConfig,
             stepConfig.coreSiteConfig,
             metaPath,
-            Metrics.BASIC_RECORDS_COUNT + "Attempted");
+            Metrics.BASIC_RECORDS_COUNT + Metrics.ATTEMPTED);
 
     // Fail if fileNumber is null
     if (!message.isValidator()) {

@@ -264,6 +264,8 @@ public class PipelinesVariables {
     public static final String FRAGMENTER_COUNT = "fragmenterRecordsCount";
     // Specific
     public static final String LOCATION_FEATURE_RECORDS_COUNT = "locationFeatureRecordsCount";
+
+    public static final String ATTEMPTED = "Attempted";
   }
 
   @NoArgsConstructor(access = AccessLevel.PRIVATE)

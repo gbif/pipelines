@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Predicate;
+import java.util.function.ToDoubleFunction;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
@@ -301,33 +302,48 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
         String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, metaFileName);
     log.info("Getting records number from the file - {}", metaPath);
 
-    Optional<Double> invalidIdCount =
-        HdfsUtils.getDoubleByKey(
-            config.stepConfig.hdfsSiteConfig,
-            config.stepConfig.coreSiteConfig,
-            metaPath,
-            Metrics.INVALID_GBIF_ID_COUNT + "Attempted");
+    ToDoubleFunction<String> getMetricFn =
+        m -> {
+          try {
+            return HdfsUtils.getDoubleByKey(
+                    config.stepConfig.hdfsSiteConfig,
+                    config.stepConfig.coreSiteConfig,
+                    metaPath,
+                    m + Metrics.ATTEMPTED)
+                .orElse(0d);
+          } catch (IOException ex) {
+            throw new RuntimeException(ex);
+          }
+        };
 
-    Optional<Double> recordsCount =
-        HdfsUtils.getDoubleByKey(
-            config.stepConfig.hdfsSiteConfig,
-            config.stepConfig.coreSiteConfig,
-            metaPath,
-            Metrics.BASIC_RECORDS_COUNT + "Attempted");
+    double invalidIdCount = getMetricFn.applyAsDouble(Metrics.INVALID_GBIF_ID_COUNT);
+    double duplicateIdCount = getMetricFn.applyAsDouble(Metrics.DUPLICATE_GBIF_IDS_COUNT);
+    double uniqieIdCount = getMetricFn.applyAsDouble(Metrics.UNIQUE_GBIF_IDS_COUNT);
 
-    if (recordsCount.isPresent() && invalidIdCount.isPresent()) {
+    if (uniqieIdCount == 0d) {
+      log.error(
+          "Interpreted records {}, invalid records {}, duplicate  records {}",
+          uniqieIdCount,
+          invalidIdCount,
+          duplicateIdCount);
+      throw new IllegalArgumentIOException("No records with valid GBIF ID!");
+    }
+
+    if (invalidIdCount != 0d || duplicateIdCount != 0d) {
       double duplicatePercent =
-          invalidIdCount.get() * 100 / (recordsCount.get() + invalidIdCount.get());
-      double allowedPercent = config.failIfDuplicateIdPercent;
-      if (duplicatePercent > allowedPercent) {
+          (invalidIdCount + duplicateIdCount)
+              * 100
+              / (invalidIdCount + duplicateIdCount + uniqieIdCount);
+
+      if (duplicatePercent > config.failIfDuplicateIdPercent) {
         log.error(
             "GBIF IDs hit maximum allowed threshold: allowed - {}%, duplicates - {}%",
-            allowedPercent, duplicatePercent);
+            config.failIfDuplicateIdPercent, duplicatePercent);
         throw new IllegalArgumentIOException("GBIF IDs hit maximum allowed threshold");
       } else {
         log.warn(
             "GBIF IDs current duplicates rate: allowed - {}%, duplicates - {}%",
-            allowedPercent, duplicatePercent);
+            config.failIfDuplicateIdPercent, duplicatePercent);
       }
     }
   }
