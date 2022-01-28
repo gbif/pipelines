@@ -452,6 +452,10 @@ public class ImageServiceSyncPipeline {
         FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
             .getFs(options.getInputPath());
 
+    if (hdfsPath.startsWith("hdfs:///")) {
+      hdfsPath = hdfsPath.substring(7);
+    }
+
     fs.copyFromLocalFile(new Path(filePath), new Path(hdfsPath));
 
     // delete the original download to avoid clogging up the local file system

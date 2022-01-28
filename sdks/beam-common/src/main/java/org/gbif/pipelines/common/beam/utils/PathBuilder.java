@@ -16,7 +16,11 @@ public class PathBuilder {
 
   /** Build a {@link Path} from an array of string values using path separator. */
   public static Path buildPath(String... values) {
-    return new Path(String.join(Path.SEPARATOR, values));
+    String path = String.join(Path.SEPARATOR, values);
+    if (path.startsWith("hdfs:///")) {
+      path = path.substring(7);
+    }
+    return new Path(path);
   }
 
   /**
@@ -26,14 +30,14 @@ public class PathBuilder {
    */
   public static String buildDatasetAttemptPath(
       BasePipelineOptions options, String name, boolean isInput) {
-    return buildPath(
-            isInput ? options.getInputPath() : options.getTargetPath(),
-            options.getDatasetId() == null || "all".equalsIgnoreCase(options.getDatasetId())
-                ? "*"
-                : options.getDatasetId(),
-            options.getAttempt().toString(),
-            name.toLowerCase())
-        .toString();
+    return String.join(
+        Path.SEPARATOR,
+        isInput ? options.getInputPath() : options.getTargetPath(),
+        options.getDatasetId() == null || "all".equalsIgnoreCase(options.getDatasetId())
+            ? "*"
+            : options.getDatasetId(),
+        options.getAttempt().toString(),
+        name.toLowerCase());
   }
 
   /**

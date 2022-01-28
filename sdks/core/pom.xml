@@ -146,6 +146,11 @@
       <artifactId>vocabulary-lookup</artifactId>
       <classifier>shaded</classifier>
     </dependency>
+<!--    <dependency>-->
+<!--      <groupId>org.apache.hadoop</groupId>-->
+<!--      <artifactId>hadoop-aws</artifactId>-->
+<!--      <version>${hadoop.version}</version>-->
+<!--    </dependency>-->
 
     <!-- Geotools -->
     <dependency>

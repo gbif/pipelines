@@ -257,6 +257,18 @@ validation-report:
   checkSampling: true
   solrCollection: biocache
 
+dwca-avro-sh-args:
+  local:
+    jvm: -Xmx2g
+  spark-embedded:
+    jvm: -Xmx2g
+  spark-cluster:
+    conf: spark.default.parallelism=144
+    num-executors: 6
+    executor-cores: 8
+    executor-memory: 24G
+    driver-memory: 4G
+
 ### la-pipelines cli additional arguments, like JVM or spark command line arguments
 interpret-sh-args:
   local:

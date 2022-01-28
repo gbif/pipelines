@@ -18,9 +18,7 @@ public class FileSystemFactory {
 
   private final FileSystem localFs;
   private final FileSystem hdfsFs;
-
   private final String hdfsPrefix;
-  private final String s3Prefix = "s3://";
 
   private static final Object MUTEX = new Object();
 

@@ -34,10 +34,21 @@ public class SamplingUtils {
   public static Long samplingLastRan(SamplingPipelineOptions options, FileSystem fs)
       throws IOException {
     String samplingPath = getSampleAvroMetricPath(options);
+    // hack for EMR
+    if (samplingPath.startsWith("hdfs:///")) {
+      samplingPath = samplingPath.substring(7);
+    }
     Path metrics = new Path(samplingPath);
+
     if (fs.exists(metrics)) {
+      log.info(
+          "Sampling metrics at path {} accessible with last modified {}",
+          samplingPath,
+          fs.getFileStatus(metrics).getModificationTime());
       return fs.getFileStatus(metrics).getModificationTime();
     } else {
+      log.info("Sampling metrics at path {} not accessible", samplingPath);
+      log.info("Filesystem in use: " + fs);
       return -1L;
     }
   }
@@ -50,6 +61,10 @@ public class SamplingUtils {
     Map<String, Object> dataMap = new HashMap<>();
     dataMap.put("sampledRecords", counter);
     ALAFsUtils.deleteIfExist(fs, samplingPath);
+    if (samplingPath.startsWith("hdfs:///")) {
+      samplingPath = samplingPath.substring(7);
+    }
+
     FsUtils.createFile(fs, samplingPath, yaml.dump(dataMap));
   }
 

@@ -233,6 +233,11 @@ public class ALAFsUtils {
    * @param directoryPath path to some directory
    */
   public static boolean deleteIfExist(FileSystem fs, String directoryPath) {
+    // hack for EMR
+    if (directoryPath.startsWith("hdfs:///")) {
+      directoryPath = directoryPath.substring(7);
+    }
+
     Path path = new Path(directoryPath);
     try {
       return fs.exists(path) && fs.delete(path, true);
@@ -245,40 +250,56 @@ public class ALAFsUtils {
   /** Helper method to write/overwrite a file */
   public static WritableByteChannel createByteChannel(FileSystem fs, String path)
       throws IOException {
+    if (path.startsWith("hdfs:///")) path = path.substring(7);
+
     FSDataOutputStream stream = fs.create(new Path(path), true);
     return Channels.newChannel(stream);
   }
 
   /** Helper method to write/overwrite a file */
   public static OutputStream openOutputStream(FileSystem fs, String path) throws IOException {
+    if (path.startsWith("hdfs:///")) path = path.substring(7);
     return fs.create(new Path(path), true);
   }
 
   /** Helper method to write/overwrite a file */
   public static ReadableByteChannel openByteChannel(FileSystem fs, String path) throws IOException {
+    if (path.startsWith("hdfs:///")) path = path.substring(7);
     FSDataInputStream stream = fs.open(new Path(path));
     return Channels.newChannel(stream);
   }
 
   /** Helper method to write/overwrite a file */
   public static InputStream openInputStream(FileSystem fs, String path) throws IOException {
+    if (path.startsWith("hdfs:///")) path = path.substring(7);
     return fs.open(new Path(path));
   }
 
   /** Returns true if the supplied path exists. */
   public static boolean exists(FileSystem fs, String directoryPath) throws IOException {
+    if (directoryPath.startsWith("hdfs:///")) {
+      directoryPath = directoryPath.substring(7);
+    }
     Path path = new Path(directoryPath);
+    log.info("Using filesystem {} for path {}", fs.toString(), directoryPath);
     return fs.exists(path);
   }
 
   /** Returns true if the supplied path exists. */
   public static boolean createDirectory(FileSystem fs, String directoryPath) throws IOException {
+    if (directoryPath.startsWith("hdfs:///")) {
+      directoryPath = directoryPath.substring(7);
+    }
     return fs.mkdirs(new Path(directoryPath));
   }
 
   /** Retrieve a list of files in the supplied path. */
   public static Collection<String> listPaths(FileSystem fs, String directoryPath)
       throws IOException {
+
+    if (directoryPath.startsWith("hdfs:///")) {
+      directoryPath = directoryPath.substring(7);
+    }
 
     Path path = new Path(directoryPath);
     RemoteIterator<LocatedFileStatus> iterator = fs.listFiles(path, false);
@@ -310,6 +331,7 @@ public class ALAFsUtils {
   public static ALAPipelinesConfig readConfigFile(
       String hdfsSiteConfig, String coreSiteConfig, String filePath) {
     FileSystem fs = FsUtils.getLocalFileSystem(hdfsSiteConfig, coreSiteConfig);
+    log.info("Reading from filesystem - {}", fs);
     Path fPath = new Path(filePath);
     if (fs.exists(fPath)) {
       log.info("Reading properties path - {}", filePath);
@@ -370,6 +392,9 @@ public class ALAFsUtils {
     FileSystem fs = FileSystemFactory.getInstance(hdfsSiteConfig, coreSiteConfig).getFs(inputPath);
 
     log.info("List files in inputPath: {}", inputPath);
+    if (inputPath.startsWith("hdfs:///")) {
+      inputPath = inputPath.substring(7);
+    }
 
     Path path = new Path(inputPath);
     RemoteIterator<LocatedFileStatus> iterator = fs.listFiles(path, true);

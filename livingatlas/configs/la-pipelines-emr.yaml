@@ -1,0 +1,123 @@
+# which filesystem to use: local or hdfs
+run:
+  # where to run: local, spark-embedded or spark-cluster
+  platform: local
+  local:
+    # jar: we get the jar from our dev or production environment
+    sparkTmp: /data/spark-tmp
+    sparkMaster: ""
+    dwcaTmp: /data/dwca-tmp
+    dwcaImportDir: s3://ala-emr-test/dwca-imports
+  spark-embedded:
+    dwcaTmp: /data/dwca-tmp
+    dwcaImportDir: s3://ala-emr-test/dwca-imports
+    sparkTmp: /data/spark-tmp
+    sparkMaster: ""
+  spark-cluster:
+    dwcaTmp: /data/dwca-tmp
+    dwcaImportDir: s3://ala-emr-test/dwca-imports
+    jar: /tmp/la-pipelines.jar
+    sparkTmp: /data/spark-tmp
+    sparkMaster: spark://localhost:7077
+
+general:
+  attempt: 1
+  hdfsSiteConfig: /etc/hadoop/conf/hdfs-site.xml
+  coreSiteConfig: /etc/hadoop/conf/core-site.xml
+
+fs:
+  platform: local
+  local:
+    fsPath: /data
+  hdfs:
+    fsPath: hdfs://
+
+dwca-avro:
+  inputPath: /mnt/dwca-tmp/{datasetId}
+  tempLocation: /mnt/dwca-tmp/{datasetId}
+  targetPath: hdfs:///pipelines-data
+
+interpret:
+  appName: Interpretation for {datasetId}
+  inputPath: hdfs:///pipelines-data/{datasetId}/1/verbatim.avro
+  targetPath: hdfs:///pipelines-data/
+
+uuid:
+  inputPath: hdfs:///pipelines-data
+  targetPath: hdfs:///pipelines-data
+
+sensitive:
+  inputPath: hdfs:///pipelines-data
+  targetPath: hdfs:///pipelines-data
+
+images:
+  inputPath: hdfs:///pipelines-data
+  targetPath: hdfs:///pipelines-data
+
+speciesLists:
+  inputPath: hdfs:///pipelines-data
+  targetPath: hdfs:///pipelines-data
+  speciesAggregatesPath: hdfs:///pipelines-species
+
+index:
+  inputPath: hdfs:///pipelines-data
+  targetPath: hdfs:///pipelines-data
+  allDatasetsInputPath: hdfs:///pipelines-all-datasets
+
+solr:
+  inputPath: hdfs:///pipelines-data
+  targetPath: hdfs:///pipelines-data
+  allDatasetsInputPath: hdfs:///pipelines-all-datasets
+  jackKnifePath: hdfs:///pipelines-jackknife
+  clusteringPath: hdfs:///pipelines-clustering
+
+jackKnife:
+  jackKnifePath: hdfs:///pipelines-jackknife
+  allDatasetsInputPath: hdfs:///pipelines-all-datasets
+
+clustering:
+  clusteringPath: hdfs:///pipelines-clustering
+  allDatasetsInputPath: hdfs:///pipelines-all-datasets
+
+sampling:
+  inputPath: hdfs:///pipelines-data
+  allDatasetsInputPath: hdfs:///pipelines-all-datasets
+
+gbifConfig:
+  vocabularyConfig:
+    vocabulariesPath: /data/pipelines-vocabularies/
+    lifeStageVocabName: LifeStage
+    establishmentMeansVocabName: EstablishmentMeans
+    pathwayVocabName: Pathway
+    degreeOfEstablishmentVocabName: DegreeOfEstablishment
+
+# class: DumpArchiveList
+dataset-archive-list:
+  inputPath: 's3://ala-emr-test/dwca-imports'
+  targetPath: /tmp/dataset-archive-list.csv
+
+collectory:
+  wsUrl: https://collections-test.ala.org.au/ws/
+  timeoutSec: 70
+  retryConfig:
+    maxAttempts: 10
+    initialIntervalMillis: 10000
+  httpHeaders:
+    Authorization: add-a-api-key-here
+imageService:
+  wsUrl: https://images-test.ala.org.au/
+  httpHeaders:
+    apiKey: add-a-api-key-here
+
+alaNameMatch:
+  wsUrl: http://localhost:9179
+  timeoutSec: 70
+  retryConfig:
+    maxAttempts: 5
+    initialIntervalMillis: 5000
+
+interpret-sh-args:
+  local:
+    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
+  spark-embedded:
+    jvm: -Xmx4g -XX:+UseG1GC -Dspark.master=local[*]
