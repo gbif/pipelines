@@ -271,7 +271,9 @@ public class ALAFsUtils {
 
   /** Helper method to write/overwrite a file */
   public static InputStream openInputStream(FileSystem fs, String path) throws IOException {
-    if (path.startsWith("hdfs:///")) path = path.substring(7);
+    if (path.startsWith("hdfs:///")) {
+      path = path.substring(7);
+    }
     return fs.open(new Path(path));
   }
 

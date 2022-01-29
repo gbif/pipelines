@@ -17,9 +17,9 @@ public class PathBuilder {
   /** Build a {@link Path} from an array of string values using path separator. */
   public static Path buildPath(String... values) {
     String path = String.join(Path.SEPARATOR, values);
-    if (path.startsWith("hdfs:///")) {
-      path = path.substring(7);
-    }
+    //    if (path.startsWith("hdfs:///")) {
+    //      path = path.substring(7);
+    //    }
     return new Path(path);
   }
 
