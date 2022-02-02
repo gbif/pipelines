@@ -232,10 +232,13 @@ public class DistributionOutlierPipeline {
   }
 
   /**
-   * TODO: HDSF does not support file appending
-   *
+   * todo: hdfs may not support file expending
    * @param options
    * @param outputPath
+   * @param numAllRecords
+   * @param numExistingRecords
+   * @param numNewRecords
+   * @param targetFile
    */
   private static void writeWorkLogs(
       AllDatasetsPipelinesOptions options,
