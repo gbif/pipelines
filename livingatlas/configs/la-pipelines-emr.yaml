@@ -70,6 +70,7 @@ solr:
   allDatasetsInputPath: hdfs:///pipelines-all-datasets
   jackKnifePath: hdfs:///pipelines-jackknife
   clusteringPath: hdfs:///pipelines-clustering
+  outlierPath: hdfs:///pipelines-outlier
 
 jackKnife:
   jackKnifePath: hdfs:///pipelines-jackknife
@@ -82,6 +83,13 @@ clustering:
 sampling:
   inputPath: hdfs:///pipelines-data
   allDatasetsInputPath: hdfs:///pipelines-all-datasets
+
+# Calculate distance to the expert distribution layers
+# class:au.org.ala.pipelines.beam.DistributionOutlierPipeline
+outlier:
+  baseUrl: https://spatial-test.ala.org.au/ws/
+  targetPath: hdfs:///pipelines-outlier
+  allDatasetsInputPath: hdfs:////pipelines-all-datasets
 
 gbifConfig:
   vocabularyConfig:
@@ -104,10 +112,6 @@ collectory:
     initialIntervalMillis: 10000
   httpHeaders:
     Authorization: add-a-api-key-here
-imageService:
-  wsUrl: https://images-test.ala.org.au/
-  httpHeaders:
-    apiKey: add-a-api-key-here
 
 alaNameMatch:
   wsUrl: http://localhost:9179
@@ -115,9 +119,3 @@ alaNameMatch:
   retryConfig:
     maxAttempts: 5
     initialIntervalMillis: 5000
-
-interpret-sh-args:
-  local:
-    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
-  spark-embedded:
-    jvm: -Xmx4g -XX:+UseG1GC -Dspark.master=local[*]
