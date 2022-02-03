@@ -52,6 +52,9 @@ public class IndexingConfiguration implements BaseConfiguration {
   @Parameter(names = "--validator-listen-all-mq")
   public boolean validatorListenAllMq = true;
 
+  @Parameter(names = "--back-pressure")
+  public Integer backPressure;
+
   @Override
   public String getHdfsSiteConfig() {
     return stepConfig.hdfsSiteConfig;

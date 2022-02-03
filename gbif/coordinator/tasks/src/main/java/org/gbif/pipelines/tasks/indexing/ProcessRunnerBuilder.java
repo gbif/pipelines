@@ -107,6 +107,7 @@ final class ProcessRunnerBuilder {
     Optional.ofNullable(esShardsNumber).ifPresent(x -> command.add("--indexNumberShards=" + x));
     Optional.ofNullable(config.indexConfig.numberReplicas)
         .ifPresent(x -> command.add("--indexNumberReplicas=" + x));
+    Optional.ofNullable(config.backPressure).ifPresent(x -> command.add("--backPressure=" + x));
 
     if (config.esGeneratedIds) {
       command.add("--esDocumentId=");

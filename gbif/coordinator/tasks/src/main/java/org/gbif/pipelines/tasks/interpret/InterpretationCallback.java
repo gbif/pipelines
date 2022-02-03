@@ -13,10 +13,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Predicate;
+import java.util.function.ToDoubleFunction;
 import java.util.stream.Collectors;
+import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.hadoop.hbase.exceptions.IllegalArgumentIOException;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -42,6 +45,7 @@ import org.gbif.validator.ws.client.ValidationWsClient;
 
 /** Callback which is called when the {@link PipelinesVerbatimMessage} is received. */
 @Slf4j
+@AllArgsConstructor
 public class InterpretationCallback extends AbstractMessageCallback<PipelinesVerbatimMessage>
     implements StepHandler<PipelinesVerbatimMessage, PipelinesInterpretedMessage> {
 
@@ -54,23 +58,6 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
   private final ValidationWsClient validationClient;
   private final CloseableHttpClient httpClient;
   private final ExecutorService executor;
-
-  public InterpretationCallback(
-      InterpreterConfiguration config,
-      MessagePublisher publisher,
-      CuratorFramework curator,
-      PipelinesHistoryClient historyClient,
-      ValidationWsClient validationClient,
-      CloseableHttpClient httpClient,
-      ExecutorService executor) {
-    this.config = config;
-    this.publisher = publisher;
-    this.curator = curator;
-    this.historyClient = historyClient;
-    this.validationClient = validationClient;
-    this.httpClient = httpClient;
-    this.executor = executor;
-  }
 
   @Override
   public void handleMessage(PipelinesVerbatimMessage message) {
@@ -150,6 +137,8 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
         } else if (runnerPr.test(StepRunner.STANDALONE)) {
           runLocal(builder);
         }
+
+        runPostprocessValidation(message);
 
         log.info("Deleting old attempts directories");
         String pathToDelete = String.join("/", config.stepConfig.repositoryPath, datasetId);
@@ -281,27 +270,87 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
                 && message.getValidationResult().getNumberOfRecords() != null
             ? message.getValidationResult().getNumberOfRecords()
             : null;
-    String fileNumber =
-        HdfsUtils.getValueByKey(
+
+    Optional<Long> fileNumber =
+        HdfsUtils.getLongByKey(
             config.stepConfig.hdfsSiteConfig,
             config.stepConfig.coreSiteConfig,
             metaPath,
             Metrics.ARCHIVE_TO_ER_COUNT);
 
-    if (messageNumber == null && (fileNumber == null || fileNumber.isEmpty())) {
+    if (messageNumber == null && !fileNumber.isPresent()) {
       throw new IllegalArgumentException(
           "Please check archive-to-avro metadata yaml file or message records number, recordsNumber can't be null or empty!");
     }
 
     if (messageNumber == null) {
-      return Long.parseLong(fileNumber);
+      return fileNumber.get();
     }
 
-    if (fileNumber == null || fileNumber.isEmpty()) {
+    if (!fileNumber.isPresent() || messageNumber > fileNumber.get()) {
       return messageNumber;
     }
 
-    return messageNumber > Long.parseLong(fileNumber) ? messageNumber : Long.parseLong(fileNumber);
+    return fileNumber.get();
+  }
+
+  private void runPostprocessValidation(PipelinesVerbatimMessage message) throws IOException {
+    if (message.isValidator() || config.validatorOnly) {
+      log.info("Skip runPostprocessValidation for validator");
+      return;
+    }
+
+    String datasetId = message.getDatasetUuid().toString();
+    String attempt = Integer.toString(message.getAttempt());
+    String metaFileName = config.metaFileName;
+    String metaPath =
+        String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, metaFileName);
+    log.info("Getting records number from the file - {}", metaPath);
+
+    ToDoubleFunction<String> getMetricFn =
+        m -> {
+          try {
+            return HdfsUtils.getDoubleByKey(
+                    config.stepConfig.hdfsSiteConfig,
+                    config.stepConfig.coreSiteConfig,
+                    metaPath,
+                    m + Metrics.ATTEMPTED)
+                .orElse(0d);
+          } catch (IOException ex) {
+            throw new RuntimeException(ex);
+          }
+        };
+
+    double invalidIdCount = getMetricFn.applyAsDouble(Metrics.INVALID_GBIF_ID_COUNT);
+    double duplicateIdCount = getMetricFn.applyAsDouble(Metrics.DUPLICATE_GBIF_IDS_COUNT);
+    double uniqieIdCount = getMetricFn.applyAsDouble(Metrics.UNIQUE_GBIF_IDS_COUNT);
+
+    if (uniqieIdCount == 0d) {
+      log.error(
+          "Interpreted records {}, invalid records {}, duplicate  records {}",
+          uniqieIdCount,
+          invalidIdCount,
+          duplicateIdCount);
+      throw new IllegalArgumentIOException("No records with valid GBIF ID!");
+    }
+
+    if (invalidIdCount != 0d || duplicateIdCount != 0d) {
+      double duplicatePercent =
+          (invalidIdCount + duplicateIdCount)
+              * 100
+              / (invalidIdCount + duplicateIdCount + uniqieIdCount);
+
+      if (duplicatePercent > config.failIfDuplicateIdPercent) {
+        log.error(
+            "GBIF IDs hit maximum allowed threshold: allowed - {}%, duplicates - {}%",
+            config.failIfDuplicateIdPercent, duplicatePercent);
+        throw new IllegalArgumentIOException("GBIF IDs hit maximum allowed threshold");
+      } else {
+        log.warn(
+            "GBIF IDs current duplicates rate: allowed - {}%, duplicates - {}%",
+            config.failIfDuplicateIdPercent, duplicatePercent);
+      }
+    }
   }
 
   /** Checks if the directory exists */

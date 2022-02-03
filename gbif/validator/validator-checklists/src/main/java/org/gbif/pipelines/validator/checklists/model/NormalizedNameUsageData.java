@@ -7,9 +7,9 @@ import org.gbif.api.model.checklistbank.ParsedName;
 import org.gbif.api.model.checklistbank.VerbatimNameUsage;
 import org.gbif.checklistbank.model.UsageExtensions;
 
+/** Object holder for the results of Checklists normalization. */
 @Data
 @Builder
-/** Object holder for the results of Checklists normalization. */
 public class NormalizedNameUsageData {
 
   private final VerbatimNameUsage verbatimNameUsage;

@@ -180,6 +180,7 @@ public class InterpretedToEsIndexPipeline {
         .syncModeThreshold(options.getSyncThreshold())
         .indexRequestFn(indexRequestFn)
         .records(basicMapFeature.get().values())
+        .backPressure(options.getBackPressure())
         .build()
         .write();
 

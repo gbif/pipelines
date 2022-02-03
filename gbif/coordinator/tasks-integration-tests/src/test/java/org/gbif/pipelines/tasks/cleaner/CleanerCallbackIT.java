@@ -4,13 +4,20 @@ import static org.gbif.pipelines.estools.common.SettingsType.INDEXING;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.UUID;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.retry.RetryOneTime;
+import org.apache.curator.test.TestingServer;
+import org.apache.zookeeper.CreateMode;
 import org.gbif.common.messaging.api.messages.PipelinesCleanerMessage;
 import org.gbif.pipelines.estools.EsIndex;
 import org.gbif.pipelines.estools.model.IndexParams;
@@ -18,13 +25,36 @@ import org.gbif.pipelines.estools.service.EsService;
 import org.gbif.pipelines.tasks.ValidationWsClientStub;
 import org.gbif.pipelines.tasks.utils.EsServer;
 import org.gbif.validator.ws.client.ValidationWsClient;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
 public class CleanerCallbackIT {
 
   @ClassRule public static final EsServer ES_SERVER = new EsServer();
+  private static CuratorFramework curator;
+  private static TestingServer server;
+
+  @BeforeClass
+  public static void setUp() throws Exception {
+
+    server = new TestingServer();
+    curator =
+        CuratorFrameworkFactory.builder()
+            .connectString(server.getConnectString())
+            .namespace("crawler")
+            .retryPolicy(new RetryOneTime(1))
+            .build();
+    curator.start();
+  }
+
+  @AfterClass
+  public static void tearDown() throws IOException {
+    curator.close();
+    server.close();
+  }
 
   @Before
   public void cleanIndexes() {
@@ -32,7 +62,7 @@ public class CleanerCallbackIT {
   }
 
   @Test
-  public void cleanerDeleteEsRecordsTest() {
+  public void cleanerDeleteEsRecordsTest() throws Exception {
 
     // State
     String datasetUuid = "8a4934ac-7d7f-41d4-892c-f6b71bb777a3";
@@ -64,7 +94,7 @@ public class CleanerCallbackIT {
     EsService.refreshIndex(ES_SERVER.getEsClient(), config.esAliases[0]);
 
     // When
-    new CleanerCallback(config, validationClient).handleMessage(message);
+    new CleanerCallback(config, validationClient, curator).handleMessage(message);
 
     // Update deleted data available
     EsService.refreshIndex(ES_SERVER.getEsClient(), config.esAliases[0]);
@@ -74,10 +104,11 @@ public class CleanerCallbackIT {
     assertFalse(Files.exists(Paths.get(String.join("/", config.hdfsRootPath, datasetUuid))));
     assertEquals(0L, EsService.countIndexDocuments(ES_SERVER.getEsClient(), config.esAliases[0]));
     assertNotNull(validationClient.get(UUID.fromString(datasetUuid)).getDeleted());
+    assertNull(curator.checkExists().forPath("/validator/" + datasetUuid));
   }
 
   @Test
-  public void cleanerDeleteEsIndexTest() {
+  public void cleanerDeleteEsIndexTest() throws Exception {
 
     // State
     String datasetUuid = "8a4934ac-7d7f-41d4-892c-f6b71bb777a3";
@@ -124,14 +155,22 @@ public class CleanerCallbackIT {
         Collections.singleton(indexName),
         Collections.singleton(indexToSwap));
 
+    // Add ZK path
+    curator
+        .create()
+        .creatingParentsIfNeeded()
+        .withMode(CreateMode.EPHEMERAL)
+        .forPath("/validator/" + datasetUuid, "test".getBytes());
+
     // When
-    new CleanerCallback(config, validationClient).handleMessage(message);
+    new CleanerCallback(config, validationClient, curator).handleMessage(message);
 
     // Should
     assertFalse(Files.exists(Paths.get(String.join("/", config.fsRootPath, datasetUuid))));
     assertFalse(Files.exists(Paths.get(String.join("/", config.hdfsRootPath, datasetUuid))));
     assertFalse(EsService.existsIndex(ES_SERVER.getEsClient(), indexName));
     assertNotNull(validationClient.get(UUID.fromString(datasetUuid)).getDeleted());
+    assertNull(curator.checkExists().forPath("/validator/" + datasetUuid));
   }
 
   private PipelinesCleanerMessage createMessage(String datasetUuid) {

@@ -9,9 +9,12 @@ import java.util.Comparator;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Stream;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.curator.framework.CuratorFramework;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.messages.PipelinesCleanerMessage;
+import org.gbif.crawler.constants.PipelinesNodePaths;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.estools.EsIndex;
 import org.gbif.pipelines.estools.client.EsConfig;
@@ -21,15 +24,12 @@ import org.slf4j.MDC.MDCCloseable;
 
 /** Call back which is called when the {@link PipelinesCleanerMessage} is received. */
 @Slf4j
+@AllArgsConstructor
 public class CleanerCallback extends AbstractMessageCallback<PipelinesCleanerMessage> {
 
   private final CleanerConfiguration config;
   private final ValidationWsClient validationClient;
-
-  public CleanerCallback(CleanerConfiguration config, ValidationWsClient validationClient) {
-    this.config = config;
-    this.validationClient = validationClient;
-  }
+  private final CuratorFramework curator;
 
   @Override
   public void handleMessage(PipelinesCleanerMessage message) {
@@ -44,6 +44,7 @@ public class CleanerCallback extends AbstractMessageCallback<PipelinesCleanerMes
       deleteFsData(datasetUuid);
       deleteHdfsData(datasetUuid);
       deleteEsData(datasetUuid);
+      deleteZkPath(datasetUuid);
       markDataAsDeleted(datasetUuid);
     }
   }
@@ -103,6 +104,18 @@ public class CleanerCallback extends AbstractMessageCallback<PipelinesCleanerMes
       log.warn("Dataset index/records was NOT deleted from elasticseach!");
     } else {
       log.info("Dataset index/records was deleted successfully from elasticseach!");
+    }
+  }
+
+  private void deleteZkPath(UUID datasetUuid) {
+    log.info("Delete zookeeper path");
+    String path = PipelinesNodePaths.getPipelinesInfoPath(datasetUuid.toString(), true);
+    try {
+      if (curator.checkExists().forPath(path) != null) {
+        curator.delete().deletingChildrenIfNeeded().forPath(path);
+      }
+    } catch (Exception ex) {
+      log.error("Exception while deleteing zookeeper path {}. Exection: {}", path, ex);
     }
   }
 

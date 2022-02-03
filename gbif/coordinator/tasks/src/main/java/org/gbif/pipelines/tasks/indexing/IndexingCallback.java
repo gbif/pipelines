@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Predicate;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.http.HttpResponse;
@@ -35,6 +36,7 @@ import org.gbif.validator.ws.client.ValidationWsClient;
 
 /** Callback which is called when the {@link PipelinesInterpretedMessage} is received. */
 @Slf4j
+@AllArgsConstructor
 public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpretedMessage>
     implements StepHandler<PipelinesInterpretedMessage, PipelinesIndexedMessage> {
 
@@ -47,23 +49,6 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
   private final PipelinesHistoryClient historyClient;
   private final ValidationWsClient validationClient;
   private final ExecutorService executor;
-
-  public IndexingCallback(
-      IndexingConfiguration config,
-      MessagePublisher publisher,
-      CuratorFramework curator,
-      HttpClient httpClient,
-      PipelinesHistoryClient historyClient,
-      ValidationWsClient validationClient,
-      ExecutorService executor) {
-    this.config = config;
-    this.publisher = publisher;
-    this.curator = curator;
-    this.httpClient = httpClient;
-    this.historyClient = historyClient;
-    this.validationClient = validationClient;
-    this.executor = executor;
-  }
 
   @Override
   public void handleMessage(PipelinesInterpretedMessage message) {
@@ -302,7 +287,7 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
                   / (double) config.indexConfig.recordsPerShard);
     }
 
-    double shards = (double) recordsNumber / (double) config.indexConfig.recordsPerShard;
+    double shards = recordsNumber / (double) config.indexConfig.recordsPerShard;
     shards = Math.max(shards, 1d);
     boolean isCeil = (shards - Math.floor(shards)) > 0.25d;
     return isCeil ? (int) Math.ceil(shards) : (int) Math.floor(shards);
@@ -320,27 +305,26 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
         String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, metaFileName);
 
     Long messageNumber = message.getNumberOfRecords();
-    String fileNumber =
-        HdfsUtils.getValueByKey(
+    Optional<Long> fileNumber =
+        HdfsUtils.getLongByKey(
             config.stepConfig.hdfsSiteConfig,
             config.stepConfig.coreSiteConfig,
             metaPath,
-            Metrics.BASIC_RECORDS_COUNT + "Attempted");
+            Metrics.BASIC_RECORDS_COUNT + Metrics.ATTEMPTED);
 
-    if (messageNumber == null && (fileNumber == null || fileNumber.isEmpty())) {
+    if (messageNumber == null && !fileNumber.isPresent()) {
       throw new IllegalArgumentException(
           "Please check archive-to-avro metadata yaml file or message records number, recordsNumber can't be null or empty!");
     }
 
     if (messageNumber == null) {
-      return Long.parseLong(fileNumber);
+      return fileNumber.get();
     }
 
-    if (fileNumber == null || fileNumber.isEmpty()) {
+    if (!fileNumber.isPresent() || messageNumber > fileNumber.get()) {
       return messageNumber;
     }
-
-    return messageNumber > Long.parseLong(fileNumber) ? messageNumber : Long.parseLong(fileNumber);
+    return fileNumber.get();
   }
 
   /** Returns index name by index prefix where number of records is less than configured */

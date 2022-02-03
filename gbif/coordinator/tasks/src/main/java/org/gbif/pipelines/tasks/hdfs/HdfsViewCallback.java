@@ -5,9 +5,11 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 import com.google.common.base.Strings;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Predicate;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
 import org.gbif.api.model.pipelines.StepRunner;
@@ -28,6 +30,7 @@ import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 
 /** Callback which is called when the {@link PipelinesInterpretedMessage} is received. */
 @Slf4j
+@AllArgsConstructor
 public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpretedMessage>
     implements StepHandler<PipelinesInterpretedMessage, PipelinesHdfsViewBuiltMessage> {
 
@@ -38,19 +41,6 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
   private final CuratorFramework curator;
   private final PipelinesHistoryClient historyClient;
   private final ExecutorService executor;
-
-  public HdfsViewCallback(
-      HdfsViewConfiguration config,
-      MessagePublisher publisher,
-      CuratorFramework curator,
-      PipelinesHistoryClient historyClient,
-      ExecutorService executor) {
-    this.config = config;
-    this.publisher = publisher;
-    this.curator = curator;
-    this.historyClient = historyClient;
-    this.executor = executor;
-  }
 
   @Override
   public void handleMessage(PipelinesInterpretedMessage message) {
@@ -214,27 +204,27 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
         String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, metaFileName);
 
     Long messageNumber = message.getNumberOfRecords();
-    String fileNumber =
-        HdfsUtils.getValueByKey(
+    Optional<Long> fileNumber =
+        HdfsUtils.getLongByKey(
             config.stepConfig.hdfsSiteConfig,
             config.stepConfig.coreSiteConfig,
             metaPath,
-            Metrics.BASIC_RECORDS_COUNT + "Attempted");
+            Metrics.BASIC_RECORDS_COUNT + Metrics.ATTEMPTED);
 
-    if (messageNumber == null && (fileNumber == null || fileNumber.isEmpty())) {
+    if (messageNumber == null && !fileNumber.isPresent()) {
       throw new IllegalArgumentException(
           "Please check archive-to-avro metadata yaml file or message records number, recordsNumber can't be null or empty!");
     }
 
     if (messageNumber == null) {
-      return Long.parseLong(fileNumber);
+      return fileNumber.get();
     }
 
-    if (fileNumber == null || fileNumber.isEmpty()) {
+    if (!fileNumber.isPresent() || messageNumber > fileNumber.get()) {
       return messageNumber;
     }
 
-    return messageNumber > Long.parseLong(fileNumber) ? messageNumber : Long.parseLong(fileNumber);
+    return fileNumber.get();
   }
 
   private int computeNumberOfShards(PipelinesInterpretedMessage message) throws IOException {

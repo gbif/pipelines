@@ -1,5 +1,6 @@
 package org.gbif.pipelines.tasks.validator;
 
+import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
@@ -17,6 +18,7 @@ import org.gbif.validator.ws.client.ValidationWsClient;
 
 /** Callback which is called when the {@link PipelinesArchiveValidatorMessage} is received. */
 @Slf4j
+@AllArgsConstructor
 public class ArchiveValidatorCallback
     extends AbstractMessageCallback<PipelinesArchiveValidatorMessage>
     implements StepHandler<PipelinesArchiveValidatorMessage, PipelineBasedMessage> {
@@ -27,21 +29,6 @@ public class ArchiveValidatorCallback
   private final PipelinesHistoryClient historyClient;
   private final ValidationWsClient validationClient;
   private final SchemaValidatorFactory schemaValidatorFactory;
-
-  public ArchiveValidatorCallback(
-      ArchiveValidatorConfiguration config,
-      MessagePublisher publisher,
-      CuratorFramework curator,
-      PipelinesHistoryClient historyClient,
-      ValidationWsClient validationClient,
-      SchemaValidatorFactory schemaValidatorFactory) {
-    this.config = config;
-    this.publisher = publisher;
-    this.curator = curator;
-    this.historyClient = historyClient;
-    this.validationClient = validationClient;
-    this.schemaValidatorFactory = schemaValidatorFactory;
-  }
 
   @Override
   public void handleMessage(PipelinesArchiveValidatorMessage message) {

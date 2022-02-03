@@ -7,12 +7,14 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URI;
+import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -109,7 +111,7 @@ public class HdfsUtils {
    * @param filePath to a yaml file
    * @param key to value in yaml
    */
-  public static String getValueByKey(
+  public static Optional<String> getValueByKey(
       String hdfsSiteConfig, String coreSiteConfig, String filePath, String key)
       throws IOException {
     FileSystem fs = getFileSystem(hdfsSiteConfig, coreSiteConfig, filePath);
@@ -120,11 +122,36 @@ public class HdfsUtils {
             .map(x -> x.replace("\u0000", ""))
             .filter(y -> y.startsWith(key))
             .findFirst()
-            .map(z -> z.replace(key + ": ", ""))
-            .orElse("");
+            .map(z -> z.replace(key + ": ", ""));
       }
     }
-    return "";
+    return Optional.empty();
+  }
+
+  /**
+   * Reads a yaml file and returns long by key
+   *
+   * @param hdfsSiteConfig path to hdfs-site.xml config file
+   * @param filePath to a yaml file
+   * @param key to value in yaml
+   */
+  public static Optional<Long> getLongByKey(
+      String hdfsSiteConfig, String coreSiteConfig, String filePath, String key)
+      throws IOException {
+    return getValueByKey(hdfsSiteConfig, coreSiteConfig, filePath, key).map(Long::parseLong);
+  }
+
+  /**
+   * Reads a yaml file and returns double by key
+   *
+   * @param hdfsSiteConfig path to hdfs-site.xml config file
+   * @param filePath to a yaml file
+   * @param key to value in yaml
+   */
+  public static Optional<Double> getDoubleByKey(
+      String hdfsSiteConfig, String coreSiteConfig, String filePath, String key)
+      throws IOException {
+    return getValueByKey(hdfsSiteConfig, coreSiteConfig, filePath, key).map(Double::parseDouble);
   }
 
   /**
@@ -189,10 +216,15 @@ public class HdfsUtils {
     getSubDirList(hdfsSiteConfig, coreSiteConfig, filePath).stream()
         .filter(
             x ->
-                LocalDateTime.ofEpochSecond(x.getModificationTime(), 0, ZoneOffset.UTC)
+                LocalDateTime.ofInstant(
+                        Instant.ofEpochMilli(x.getModificationTime()), ZoneId.systemDefault())
                     .isBefore(date))
-        .map(y -> y.getPath().getName())
-        .forEach(z -> deleteDirectory(hdfsSiteConfig, coreSiteConfig, z));
+        .map(y -> y.getPath().toString())
+        .forEach(
+            z -> {
+              boolean deleted = deleteDirectory(hdfsSiteConfig, coreSiteConfig, z);
+              log.info("Tried to delete directory {}, is deleted? {}", z, deleted);
+            });
   }
 
   private static FileSystem getFileSystem(

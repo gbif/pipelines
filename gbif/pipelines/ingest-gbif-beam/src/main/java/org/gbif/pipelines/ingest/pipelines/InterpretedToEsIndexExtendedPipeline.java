@@ -75,7 +75,7 @@ public class InterpretedToEsIndexExtendedPipeline {
 
     run(options, () -> InterpretedToEsIndexPipeline.run(options));
 
-    FsUtils.removeTmpDirectory(PathBuilder.getTempDir(options));
+    FsUtils.removeTmpDirectoryAfterShutdown(PathBuilder.getTempDir(options));
     log.info("Finished main indexing pipeline");
   }
 
