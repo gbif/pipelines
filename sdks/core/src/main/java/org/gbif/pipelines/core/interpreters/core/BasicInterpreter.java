@@ -298,7 +298,7 @@ public class BasicInterpreter {
     br.setLicense(license);
   }
 
-  /** {@link GbifTerm#identifiedByID}. */
+  /** {@link DwcTerm#identifiedByID}. */
   public static void interpretIdentifiedByIds(ExtendedRecord er, BasicRecord br) {
     extractOptValue(er, DwcTerm.identifiedByID)
         .filter(x -> !x.isEmpty())
@@ -307,7 +307,7 @@ public class BasicInterpreter {
         .ifPresent(br::setIdentifiedByIds);
   }
 
-  /** {@link GbifTerm#recordedByID} interpretation. */
+  /** {@link DwcTerm#recordedByID} interpretation. */
   public static void interpretRecordedByIds(ExtendedRecord er, BasicRecord br) {
     extractOptValue(er, DwcTerm.recordedByID)
         .filter(x -> !x.isEmpty())

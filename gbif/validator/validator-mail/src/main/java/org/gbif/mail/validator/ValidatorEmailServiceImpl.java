@@ -19,10 +19,10 @@ import org.gbif.validator.api.Validation;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+/** Freemarker based email service to send notifications about the validation status. */
 @RequiredArgsConstructor
 @Slf4j
 @Service
-/** Freemarker based email service to send notifications about the validation status. */
 public class ValidatorEmailServiceImpl implements ValidatorEmailService {
 
   private final EmailTemplateProcessor templateProcessor = new FreemarkerEmailTemplateProcessor();
@@ -61,14 +61,14 @@ public class ValidatorEmailServiceImpl implements ValidatorEmailService {
               .validation(validation)
               .portalUrl(portalUrl)
               .build(),
-          getLocale(user, validation));
+          getLocale(user));
     } catch (IOException | TemplateException ex) {
       throw new RuntimeException(ex);
     }
   }
 
   /** Gets the locale from the user or through the validation.installationKey */
-  private Locale getLocale(GbifUser user, Validation validation) {
+  private Locale getLocale(GbifUser user) {
     if (user != null) {
       return userHelperService.getUserLocaleOrDefault(user);
     }

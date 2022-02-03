@@ -295,6 +295,11 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
   }
 
   private void runPostprocessValidation(PipelinesVerbatimMessage message) throws IOException {
+    if (message.isValidator() || config.validatorOnly) {
+      log.info("Skip runPostprocessValidation for validator");
+      return;
+    }
+
     String datasetId = message.getDatasetUuid().toString();
     String attempt = Integer.toString(message.getAttempt());
     String metaFileName = config.metaFileName;
