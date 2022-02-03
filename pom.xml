@@ -23,7 +23,7 @@
 
   <name>Pipelines :: Parent</name>
   <description>Ingestion platform to orchestrate the parsing and interpretation of biodiversity data</description>
-  <url>http://github.com/gbif/pipelines</url>
+  <url>https://github.com/gbif/pipelines</url>
 
   <scm>
     <connection>scm:git:git@github.com:gbif/pipelines.git</connection>
@@ -35,22 +35,22 @@
   <distributionManagement>
     <site>
       <id>gh-pages</id>
-      <url>http://gbif.github.io/pipelines/</url>
+      <url>https://gbif.github.io/pipelines/</url>
     </site>
     <repository>
       <id>gbif-release</id>
-      <url>http://repository.gbif.org/content/repositories/releases</url>
+      <url>https://repository.gbif.org/content/repositories/releases</url>
     </repository>
     <snapshotRepository>
       <id>gbif-deploy</id>
-      <url>http://repository.gbif.org/content/repositories/snapshots</url>
+      <url>https://repository.gbif.org/content/repositories/snapshots</url>
     </snapshotRepository>
   </distributionManagement>
 
   <repositories>
     <repository>
       <id>gbif-all</id>
-      <url>http://repository.gbif.org/content/groups/gbif</url>
+      <url>https://repository.gbif.org/content/groups/gbif</url>
     </repository>
     <repository>
       <id>ALA</id>

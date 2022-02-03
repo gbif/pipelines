@@ -171,7 +171,7 @@ sampling:
 # class:au.org.ala.pipelines.beam.DistributionOutlierPipeline
 outlier:
   appName: Expert distribution outliers for {datasetId}
-  baseUrl: https://spatial.ala.org.au/ws/
+  baseUrl: https://spatial-test.ala.org.au/ws/
   targetPath: '{fsPath}/pipelines-outlier'
   allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
   runner: SparkRunner
@@ -376,7 +376,7 @@ index-sh-args:
   spark-embedded:
     jvm: -Xmx8g -XX:+UseG1GC
   spark-cluster:
-    conf: spark.default.parallelism=500
+    conf: spark.default.parallelism=48
     num-executors: 6
     executor-cores: 8
     executor-memory: 20G
