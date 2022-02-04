@@ -33,7 +33,6 @@ import org.gbif.validator.ws.file.DataFile;
 import org.gbif.validator.ws.file.FileSizeException;
 import org.gbif.validator.ws.file.FileStoreManager;
 import org.gbif.ws.security.GbifUserPrincipal;
-import org.gbif.ws.security.UserRoles;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -220,16 +219,6 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
     return get(key).getDataset();
   }
 
-  /** Can the authenticated user update the validation object. */
-  private boolean canAccess(Validation validation) {
-    return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
-            .anyMatch(
-                a ->
-                    a.getAuthority().equals(UserRoles.ADMIN_ROLE)
-                        || a.getAuthority().equals(UserRoles.APP_ROLE))
-        || validation.getUsername().equals(getPrincipal().getUsername());
-  }
-
   /** Persists an validation entity. */
   private Validation create(
       UUID key, DataFile dataFile, Validation.Status status, ValidationRequest validationRequest) {
@@ -249,24 +238,27 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
 
   /** Updates the data of a validation and send MQ message. */
   private void updateAndNotifySubmitted(UUID key, DataFile dataFile) {
+    try {
+      Validation v =
+          Optional.ofNullable(validationMapper.get(key))
+              .orElse(newValidationInstance(key, dataFile, Status.QUEUED));
 
-    Validation v =
-        Optional.ofNullable(validationMapper.get(key))
-            .orElse(newValidationInstance(key, dataFile, Status.QUEUED));
+      Set<String> pipelinesSteps = getPipelineSteps(dataFile);
 
-    Set<String> pipelinesSteps = getPipelineSteps(dataFile.getFileFormat());
+      // Set future steps
+      v.setStatus(Status.QUEUED);
+      v.setFileFormat(dataFile.getFileFormat());
+      v.getMetrics().setStepTypes(StepsMapper.mapToValidationSteps(pipelinesSteps));
+      v.setDataset(readEml(dataFile.getFilePath()));
 
-    // Set future steps
-    v.setStatus(Status.QUEUED);
-    v.setFileFormat(dataFile.getFileFormat());
-    v.getMetrics().setStepTypes(StepsMapper.mapToValidationSteps(pipelinesSteps));
-    v.setDataset(readEml(dataFile.getFilePath()));
+      // Update DB
+      updateAndGet(v);
 
-    // Update DB
-    updateAndGet(v);
-
-    // Sent RabbitMQ message
-    notify(key, dataFile, pipelinesSteps);
+      // Sent RabbitMQ message
+      notify(key, dataFile, pipelinesSteps);
+    } catch (Exception ex) {
+      updateFailedValidation(key, ex.getMessage());
+    }
   }
 
   private Dataset readEml(Path pathToArchive) {
@@ -314,14 +306,17 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
     messagePublisher.send(message);
   }
 
-  private Set<String> getPipelineSteps(FileFormat fileFormat) {
+  private Set<String> getPipelineSteps(DataFile dataFile) {
     String stepType;
-    if (fileFormat == FileFormat.DWCA) {
+    if (dataFile.getFileFormat() == FileFormat.DWCA) {
       stepType = StepType.VALIDATOR_DWCA_TO_VERBATIM.name();
-    } else if (fileFormat == FileFormat.XML) {
+    } else if (dataFile.getFileFormat() == FileFormat.XML) {
       stepType = StepType.VALIDATOR_XML_TO_VERBATIM.name();
     } else {
-      throw new IllegalArgumentException("FileFormat is not supported - " + fileFormat);
+      throw new IllegalArgumentException(
+          dataFile.getFileFormat()
+              + " file format is not supported, file name: "
+              + dataFile.getSourceFileName());
     }
     return new HashSet<>(
         Arrays.asList(

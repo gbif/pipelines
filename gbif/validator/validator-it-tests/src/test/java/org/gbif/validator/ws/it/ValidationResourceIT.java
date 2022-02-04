@@ -184,6 +184,30 @@ public class ValidationResourceIT {
   }
 
   @Test
+  public void validationSubmitCsvFileIT() throws Exception {
+    File archive = readTestFileInputStream("/file.csv");
+    ValidationRequest validationRequest = testValidationRequest();
+    Validation validation = validationWsClient.validateFile(archive, validationRequest);
+
+    // Wait for internal async task
+    TimeUnit.SECONDS.sleep(3L);
+
+    assertNotNull(validation);
+    assertEquals(validationRequest.getInstallationKey(), validation.getInstallationKey());
+    assertEquals(validationRequest.getSourceId(), validation.getSourceId());
+    // Emails must not be exposed
+    assertNull(validation.getNotificationEmails());
+
+    // Can the new validation be retrieved?
+    Validation persistedValidation = validationWsClient.get(validation.getKey());
+    assertNotNull(persistedValidation);
+    assertNull(persistedValidation.getDataset());
+
+    assertEquals(Status.FAILED, persistedValidation.getStatus());
+    assertTrue(persistedValidation.failed());
+  }
+
+  @Test
   public void validationSubmitUrlIT() {
     ValidationRequest validationRequest = testValidationRequest();
     Validation validation =
