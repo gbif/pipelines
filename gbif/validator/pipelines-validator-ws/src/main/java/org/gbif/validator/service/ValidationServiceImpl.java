@@ -1,6 +1,7 @@
 package org.gbif.validator.service;
 
 import static org.gbif.validator.service.EncodingUtil.encode;
+import static org.gbif.validator.service.EncodingUtil.getRedirectedUrl;
 import static org.gbif.validator.service.ValidationFactory.metricsSubmitError;
 import static org.gbif.validator.service.ValidationFactory.newValidationInstance;
 
@@ -125,6 +126,10 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
       log.info("Staring validation for the URL {}", fileURL);
       UUID key = UUID.randomUUID();
       String encodedFileURL = encode(fileURL);
+      Optional<String> redirectedUrl = getRedirectedUrl(encodedFileURL);
+      if (redirectedUrl.isPresent()) {
+        encodedFileURL = redirectedUrl.get();
+      }
       // this should also become asynchronous at some point
       FileStoreManager.AsyncDownloadResult downloadResult =
           fileStoreManager.downloadDataFile(
