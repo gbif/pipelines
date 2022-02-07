@@ -6,5 +6,7 @@ public interface ArchiveValidator {
 
   PipelineBasedMessage createOutgoingMessage();
 
-  void validate();
+  default void validate() {
+    // NOP
+  }
 }

@@ -33,7 +33,15 @@ public class ArchiveValidatorFactory {
           .validationClient(validationClient)
           .config(config)
           .message(message)
-          .schemaValidatorFactory(schemaValidatorFactory)
+          .build();
+    }
+
+    // Tabular
+    if (FileFormat.TABULAR.name().equals(message.getFileFormat())) {
+      return TabularArchiveValidator.builder()
+          .validationClient(validationClient)
+          .config(config)
+          .message(message)
           .build();
     }
 
