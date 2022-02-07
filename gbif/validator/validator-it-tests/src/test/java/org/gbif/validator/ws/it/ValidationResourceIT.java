@@ -3,6 +3,7 @@ package org.gbif.validator.ws.it;
 import static org.gbif.validator.ws.it.ValidatorWsItConfiguration.TEST_USER;
 import static org.gbif.validator.ws.it.ValidatorWsItConfiguration.TEST_USER_PASSWORD;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -203,8 +204,8 @@ public class ValidationResourceIT {
     assertNotNull(persistedValidation);
     assertNull(persistedValidation.getDataset());
 
-    assertEquals(Status.FAILED, persistedValidation.getStatus());
-    assertTrue(persistedValidation.failed());
+    assertEquals(Status.QUEUED, persistedValidation.getStatus());
+    assertFalse(persistedValidation.failed());
   }
 
   @Test

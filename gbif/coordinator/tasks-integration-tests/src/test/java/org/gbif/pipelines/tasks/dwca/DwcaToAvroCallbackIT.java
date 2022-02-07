@@ -128,6 +128,53 @@ public class DwcaToAvroCallbackIT {
   }
 
   @Test
+  public void testCsvCase() throws Exception {
+    // State
+    DwcaToAvroConfiguration config = new DwcaToAvroConfiguration();
+    config.archiveRepository = getClass().getResource("/dataset/csv").getFile();
+    config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
+
+    DwcaToAvroCallback callback =
+        new DwcaToAvroCallback(config, publisher, curator, historyClient, validationClient);
+
+    UUID uuid = UUID.fromString("189136b2-3d94-4cc6-bd86-42c85b27cbb4");
+    int attempt = 2;
+    String crawlId = uuid.toString();
+
+    OccurrenceValidationReport report = new OccurrenceValidationReport(1, 1, 0, 1, 0, true);
+    DwcaValidationReport reason = new DwcaValidationReport(uuid, report);
+    PipelinesDwcaMessage message =
+        new PipelinesDwcaMessage(
+            uuid,
+            DatasetType.OCCURRENCE,
+            URI.create(DUMMY_URL),
+            attempt,
+            reason,
+            Collections.emptySet(),
+            EndpointType.DWC_ARCHIVE,
+            Platform.PIPELINES,
+            null,
+            null);
+
+    // When
+    callback.handleMessage(message);
+
+    // Should
+    Path path = Paths.get(config.stepConfig.repositoryPath + uuid + "/2/verbatim.avro");
+    assertTrue(path.toFile().exists());
+    assertTrue(Files.size(path) > 0L);
+    assertTrue(checkExists(curator, crawlId, DWCA_LABEL));
+    assertTrue(checkExists(curator, crawlId, Fn.SUCCESSFUL_MESSAGE.apply(DWCA_LABEL)));
+    assertTrue(checkExists(curator, crawlId, Fn.MQ_CLASS_NAME.apply(DWCA_LABEL)));
+    assertTrue(checkExists(curator, crawlId, Fn.MQ_MESSAGE.apply(DWCA_LABEL)));
+    assertEquals(1, publisher.getMessages().size());
+
+    // Clean
+    HdfsUtils.deleteDirectory(null, null, path.toString());
+    curator.delete().deletingChildrenIfNeeded().forPath(getPipelinesInfoPath(crawlId, DWCA_LABEL));
+  }
+
+  @Test
   public void testNormalSingleStepCase() throws Exception {
     // State
     DwcaToAvroConfiguration config = new DwcaToAvroConfiguration();
