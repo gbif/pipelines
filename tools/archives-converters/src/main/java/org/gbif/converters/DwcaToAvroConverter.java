@@ -1,15 +1,22 @@
 package org.gbif.converters;
 
+import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
+import java.util.stream.Stream;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.converters.converter.ConverterToVerbatim;
 import org.gbif.pipelines.core.converters.ExtendedRecordConverter;
 import org.gbif.pipelines.core.io.DwcaReader;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.utils.file.spreadsheet.CsvSpreadsheetConsumer;
+import org.gbif.utils.file.spreadsheet.ExcelXmlConverter;
 
 /** Converts DWC archive into {@link ExtendedRecord} AVRO file */
 @Slf4j
@@ -37,8 +44,12 @@ public class DwcaToAvroConverter extends ConverterToVerbatim {
   @Override
   protected long convert(Path inputPath, SyncDataFileWriter<ExtendedRecord> dataFileWriter)
       throws IOException {
-    DwcaReader reader = DwcaReader.fromLocation(inputPath.toString());
-    log.info("Exporting the DwC Archive to Avro started {}", inputPath);
+
+    Path realPath =
+        normalizeSpreadsheetPath(inputPath).map(this::convertFromSpreadsheet).orElse(inputPath);
+
+    DwcaReader reader = DwcaReader.fromLocation(realPath.toString());
+    log.info("Exporting the DwC Archive to Avro started {}", realPath);
 
     // Read all records
     while (reader.advance()) {
@@ -50,5 +61,24 @@ public class DwcaToAvroConverter extends ConverterToVerbatim {
     reader.close();
 
     return reader.getRecordsReturned();
+  }
+
+  @SneakyThrows
+  private Optional<Path> normalizeSpreadsheetPath(java.nio.file.Path path) {
+    try (Stream<Path> list = Files.list(path)) {
+      if (list.filter(x -> !x.toString().contains(".avro")).count() > 1) {
+        return Optional.empty();
+      }
+    }
+    try (Stream<java.nio.file.Path> list = Files.list(path)) {
+      return list.filter(x -> x.toString().endsWith(".xlsx")).findFirst();
+    }
+  }
+
+  @SneakyThrows
+  private java.nio.file.Path convertFromSpreadsheet(java.nio.file.Path path) {
+    java.nio.file.Path converted = path.resolveSibling("converted.csv");
+    ExcelXmlConverter.convert(path, new CsvSpreadsheetConsumer(new FileWriter(converted.toFile())));
+    return converted;
   }
 }

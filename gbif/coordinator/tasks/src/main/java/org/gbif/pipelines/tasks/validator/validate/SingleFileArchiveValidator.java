@@ -16,7 +16,7 @@ import org.gbif.validator.ws.client.ValidationWsClient;
 
 @Slf4j
 @Builder
-public class TabularArchiveValidator implements ArchiveValidator {
+public class SingleFileArchiveValidator implements ArchiveValidator {
 
   private final ArchiveValidatorConfiguration config;
   private final ValidationWsClient validationClient;

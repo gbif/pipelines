@@ -314,7 +314,8 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
   private Set<String> getPipelineSteps(DataFile dataFile) {
     String stepType;
     if (dataFile.getFileFormat() == FileFormat.DWCA
-        || dataFile.getFileFormat() == FileFormat.TABULAR) {
+        || dataFile.getFileFormat() == FileFormat.TABULAR
+        || dataFile.getFileFormat() == FileFormat.SPREADSHEET) {
       stepType = StepType.VALIDATOR_DWCA_TO_VERBATIM.name();
     } else if (dataFile.getFileFormat() == FileFormat.XML) {
       stepType = StepType.VALIDATOR_XML_TO_VERBATIM.name();
