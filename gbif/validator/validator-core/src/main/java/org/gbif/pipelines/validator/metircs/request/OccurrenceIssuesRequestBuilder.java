@@ -28,7 +28,7 @@ public class OccurrenceIssuesRequestBuilder {
   private final String termValue;
   private final String indexName;
   @Builder.Default private final int size = 0;
-  @Builder.Default private final int subSize = 5;
+  @Builder.Default private final int subSize = 10;
   @Builder.Default private final String termName = Indexing.DATASET_KEY;
   @Builder.Default private final String aggsField = Indexing.ISSUES;
   @Builder.Default private final String[] includeFields = {Indexing.ID, Indexing.VERBATIM};
