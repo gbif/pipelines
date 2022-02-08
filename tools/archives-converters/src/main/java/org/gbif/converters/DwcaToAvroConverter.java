@@ -71,7 +71,8 @@ public class DwcaToAvroConverter extends ConverterToVerbatim {
       }
     }
     try (Stream<java.nio.file.Path> list = Files.list(path)) {
-      return list.filter(x -> x.toString().endsWith(".xlsx")).findFirst();
+      return list.filter(x -> x.toString().endsWith(".xlsx") || x.toString().endsWith(".ods"))
+          .findFirst();
     }
   }
 
