@@ -101,4 +101,34 @@ public class DwcaToAvroConverterTest {
 
     Files.deleteIfExists(verbatim.toPath());
   }
+
+  @Test
+  public void odsConverterTest() throws Exception {
+
+    String inpPath = getClass().getResource("/dwca/ods").getFile();
+    String outPath = inpPath + "/verbatim.avro";
+
+    // When
+    DwcaToAvroConverter.create().inputPath(inpPath).outputPath(outPath).convert();
+
+    // Should
+    File verbatim = new File(outPath);
+    Assert.assertTrue(verbatim.exists());
+
+    int count = 0;
+    // Deserialize ExtendedRecord from disk
+    DatumReader<ExtendedRecord> datumReader = new SpecificDatumReader<>(ExtendedRecord.class);
+    try (DataFileReader<ExtendedRecord> dataFileReader =
+        new DataFileReader<>(verbatim, datumReader)) {
+      while (dataFileReader.hasNext()) {
+        count++;
+        ExtendedRecord record = dataFileReader.next();
+        Assert.assertNotNull(record);
+        Assert.assertNotNull(record.getId());
+      }
+    }
+    Assert.assertEquals(1, count);
+
+    Files.deleteIfExists(verbatim.toPath());
+  }
 }

@@ -5,12 +5,14 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.converters.converter.ConverterToVerbatim;
+import org.gbif.converters.converter.OdsConverter;
 import org.gbif.pipelines.core.converters.ExtendedRecordConverter;
 import org.gbif.pipelines.core.io.DwcaReader;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
@@ -79,7 +81,13 @@ public class DwcaToAvroConverter extends ConverterToVerbatim {
   @SneakyThrows
   private java.nio.file.Path convertFromSpreadsheet(java.nio.file.Path path) {
     java.nio.file.Path converted = path.resolveSibling("converted.csv");
-    ExcelXmlConverter.convert(path, new CsvSpreadsheetConsumer(new FileWriter(converted.toFile())));
+    Predicate<String> extFn = ext -> path.toString().endsWith(ext);
+    if (extFn.test(".xlsx") || extFn.test(".xls")) {
+      ExcelXmlConverter.convert(
+          path, new CsvSpreadsheetConsumer(new FileWriter(converted.toFile())));
+    } else if (extFn.test(".ods")) {
+      OdsConverter.convert(path, converted);
+    }
     return converted;
   }
 }
