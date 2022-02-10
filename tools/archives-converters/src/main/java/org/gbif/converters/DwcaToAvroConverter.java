@@ -12,7 +12,6 @@ import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.converters.converter.ConverterToVerbatim;
-import org.gbif.converters.converter.OdsConverter;
 import org.gbif.pipelines.core.converters.ExtendedRecordConverter;
 import org.gbif.pipelines.core.io.DwcaReader;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
@@ -85,8 +84,6 @@ public class DwcaToAvroConverter extends ConverterToVerbatim {
     if (extFn.test(".xlsx") || extFn.test(".xls")) {
       ExcelXmlConverter.convert(
           path, new CsvSpreadsheetConsumer(new FileWriter(converted.toFile())));
-    } else if (extFn.test(".ods")) {
-      OdsConverter.convert(path, converted);
     }
     return converted;
   }

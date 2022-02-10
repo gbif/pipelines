@@ -8,6 +8,7 @@ import org.apache.avro.io.DatumReader;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -102,6 +103,7 @@ public class DwcaToAvroConverterTest {
     Files.deleteIfExists(verbatim.toPath());
   }
 
+  @Ignore
   @Test
   public void odsConverterTest() throws Exception {
 
