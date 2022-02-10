@@ -67,17 +67,20 @@ public class IndexMetricsCollector {
   /** Collect all metrics using ES API */
   public Metrics collect() {
 
-    for (FileInfo fileInfo : fileInfos) {
-      if (fileInfo.getRowType().equals(Occurrence.qualifiedName())) {
-        collectOccurrnceInfo(fileInfo);
-      } else if (fileInfo.getRowType().equals(Event.qualifiedName())
-          && fileInfo.getFileType() == DwcFileType.CORE) {
-        collectEventInfo(fileInfo);
-      } else if (!fileInfo.getRowType().equals(Occurrence.qualifiedName())
-          && fileInfo.getFileType() == DwcFileType.EXTENSION) {
-        collectExtensionInfo(fileInfo);
-      }
-    }
+    fileInfos.stream()
+        .filter(f -> f.getRowType() != null)
+        .forEach(
+            fileInfo -> {
+              if (fileInfo.getRowType().equals(Occurrence.qualifiedName())) {
+                collectOccurrnceInfo(fileInfo);
+              } else if (fileInfo.getRowType().equals(Event.qualifiedName())
+                  && fileInfo.getFileType() == DwcFileType.CORE) {
+                collectEventInfo(fileInfo);
+              } else if (!fileInfo.getRowType().equals(Occurrence.qualifiedName())
+                  && fileInfo.getFileType() == DwcFileType.EXTENSION) {
+                collectExtensionInfo(fileInfo);
+              }
+            });
 
     return Metrics.builder().fileInfos(fileInfos).build();
   }
