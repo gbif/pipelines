@@ -906,8 +906,14 @@
     "name" : "collectionid",
     "type" : [ "string", "null" ]
   }, {
-    "name" : "datasetid",
+    "name" : "datasettitle",
     "type" : [ "string", "null" ]
+  }, {
+    "name" : "datasetid",
+    "type" : [ {
+      "type" : "array",
+      "items" : [ "string", "null" ]
+    }, "null" ]
   }, {
     "name" : "institutioncode",
     "type" : [ "string", "null" ]
@@ -916,7 +922,10 @@
     "type" : [ "string", "null" ]
   }, {
     "name" : "datasetname",
-    "type" : [ "string", "null" ]
+    "type" : [ {
+      "type" : "array",
+      "items" : [ "string", "null" ]
+    }, "null" ]
   }, {
     "name" : "ownerinstitutioncode",
     "type" : [ "string", "null" ]
@@ -943,7 +952,10 @@
     "type" : [ "string", "null" ]
   }, {
     "name" : "recordedby",
-    "type" : [ "string", "null" ]
+    "type" : [ {
+      "type" : "array",
+      "items" : [ "string", "null" ]
+    }, "null" ]
   }, {
     "name" : "recordedbyid",
     "type" : [ {
@@ -1040,7 +1052,10 @@
     "type" : [ "string", "null" ]
   }, {
     "name" : "preparations",
-    "type" : [ "string", "null" ]
+    "type" : [ {
+       "type" : "array",
+       "items" : [ "string", "null" ]
+     }, "null" ]
   }, {
     "name" : "disposition",
     "type" : [ "string", "null" ]
@@ -1058,7 +1073,10 @@
     "type" : [ "string", "null" ]
   }, {
     "name" : "othercatalognumbers",
-    "type" : [ "string", "null" ]
+     "type" : [ {
+       "type" : "array",
+       "items" : [ "string", "null" ]
+     }, "null" ]
   }, {
     "name" : "occurrenceremarks",
     "type" : [ "string", "null" ]
@@ -1121,7 +1139,10 @@
     "type" : [ "string", "null" ]
   }, {
     "name" : "samplingprotocol",
-    "type" : [ "string", "null" ]
+    "type" : [ {
+       "type" : "array",
+       "items" : [ "string", "null" ]
+     }, "null" ]
   }, {
     "name" : "samplesizevalue",
     "type" : [ "double", "null" ]
@@ -1307,10 +1328,16 @@
     "type" : [ "string", "null" ]
   }, {
     "name" : "typestatus",
-    "type" : [ "string", "null" ]
+    "type" : [ {
+      "type" : "array",
+      "items" : [ "string", "null" ]
+    }, "null" ]
   }, {
     "name" : "identifiedby",
-    "type" : [ "string", "null" ]
+    "type" : [ {
+      "type" : "array",
+      "items" : [ "string", "null" ]
+    }, "null" ]
   }, {
     "name" : "identifiedbyid",
     "type" : [ {

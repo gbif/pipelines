@@ -11,6 +11,7 @@ import java.util.stream.Stream;
 import org.gbif.api.vocabulary.AgentIdentifierType;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.OccurrenceIssue;
+import org.gbif.api.vocabulary.TypeStatus;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.AgentIdentifier;
 import org.gbif.pipelines.io.avro.BasicRecord;
@@ -466,6 +467,203 @@ public class BasicInterpreterTest {
     Assert.assertEquals("OCCURRENCE", br.getBasisOfRecord());
     assertIssueSize(br, 1);
     assertIssue(OccurrenceIssue.BASIS_OF_RECORD_INVALID, br);
+  }
+
+  @Test
+  public void interpretDatasetIDTest() {
+    final String id1 = "ID1";
+    final String id2 = "ID2";
+
+    // State
+    Map<String, String> coreMap = new HashMap<>(1);
+    coreMap.put(DwcTerm.datasetID.qualifiedName(), id1 + " | " + id2 + " | ");
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+
+    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
+
+    // When
+    BasicInterpreter.interpretDatasetID(er, br);
+
+    // Should
+    Assert.assertEquals(2, br.getDatasetID().size());
+    Assert.assertTrue(br.getDatasetID().contains(id1));
+    Assert.assertTrue(br.getDatasetID().contains(id2));
+    assertIssueSize(br, 0);
+  }
+
+  @Test
+  public void interpretDatasetNameTest() {
+    final String name1 = "name 1";
+    final String name2 = "name 2";
+
+    // State
+    Map<String, String> coreMap = new HashMap<>(1);
+    coreMap.put(DwcTerm.datasetName.qualifiedName(), name1 + " | " + name2 + " | ");
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+
+    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
+
+    // When
+    BasicInterpreter.interpretDatasetName(er, br);
+
+    // Should
+    Assert.assertEquals(2, br.getDatasetName().size());
+    Assert.assertTrue(br.getDatasetName().contains(name1));
+    Assert.assertTrue(br.getDatasetName().contains(name2));
+    assertIssueSize(br, 0);
+  }
+
+  @Test
+  public void interpretOtherCatalogNumbersTest() {
+    final String number1 = "111";
+    final String number2 = "22";
+
+    // State
+    Map<String, String> coreMap = new HashMap<>(1);
+    coreMap.put(DwcTerm.otherCatalogNumbers.qualifiedName(), number1 + " | " + number2 + " | ");
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+
+    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
+
+    // When
+    BasicInterpreter.interpretOtherCatalogNumbers(er, br);
+
+    // Should
+    Assert.assertEquals(2, br.getOtherCatalogNumbers().size());
+    Assert.assertTrue(br.getOtherCatalogNumbers().contains(number1));
+    Assert.assertTrue(br.getOtherCatalogNumbers().contains(number2));
+    assertIssueSize(br, 0);
+  }
+
+  @Test
+  public void interpretRecordedByTest() {
+    final String person1 = "person 1";
+    final String person2 = "person, 2";
+
+    // State
+    Map<String, String> coreMap = new HashMap<>(1);
+    coreMap.put(DwcTerm.recordedBy.qualifiedName(), person1 + " | " + person2 + " | ");
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+
+    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
+
+    // When
+    BasicInterpreter.interpretRecordedBy(er, br);
+
+    // Should
+    Assert.assertEquals(2, br.getRecordedBy().size());
+    Assert.assertTrue(br.getRecordedBy().contains(person1));
+    Assert.assertTrue(br.getRecordedBy().contains(person2));
+    assertIssueSize(br, 0);
+  }
+
+  @Test
+  public void interpretIdentifiedByTest() {
+    final String person1 = "person 1";
+    final String person2 = "person, 2";
+
+    // State
+    Map<String, String> coreMap = new HashMap<>(1);
+    coreMap.put(DwcTerm.identifiedBy.qualifiedName(), person1 + " | " + person2 + " | ");
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+
+    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
+
+    // When
+    BasicInterpreter.interpretIdentifiedBy(er, br);
+
+    // Should
+    Assert.assertEquals(2, br.getIdentifiedBy().size());
+    Assert.assertTrue(br.getIdentifiedBy().contains(person1));
+    Assert.assertTrue(br.getIdentifiedBy().contains(person2));
+    assertIssueSize(br, 0);
+  }
+
+  @Test
+  public void interpretPreparationsTest() {
+    final String prep1 = "prep 1";
+    final String prep2 = "prep 2";
+
+    // State
+    Map<String, String> coreMap = new HashMap<>(1);
+    coreMap.put(DwcTerm.preparations.qualifiedName(), prep1 + " | " + prep2 + " | ");
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+
+    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
+
+    // When
+    BasicInterpreter.interpretPreparations(er, br);
+
+    // Should
+    Assert.assertEquals(2, br.getPreparations().size());
+    Assert.assertTrue(br.getPreparations().contains(prep1));
+    Assert.assertTrue(br.getPreparations().contains(prep2));
+    assertIssueSize(br, 0);
+  }
+
+  @Test
+  public void interpretSamplingProtocolTest() {
+    final String sp1 = "protocol";
+    final String sp2 = "other protocol";
+
+    // State
+    Map<String, String> coreMap = new HashMap<>(1);
+    coreMap.put(DwcTerm.samplingProtocol.qualifiedName(), sp1 + " | " + sp2 + " | ");
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+
+    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
+
+    // When
+    BasicInterpreter.interpretSamplingProtocol(er, br);
+
+    // Should
+    Assert.assertEquals(2, br.getSamplingProtocol().size());
+    Assert.assertTrue(br.getSamplingProtocol().contains(sp1));
+    Assert.assertTrue(br.getSamplingProtocol().contains(sp2));
+    assertIssueSize(br, 0);
+  }
+
+  @Test
+  public void interpretTypeStatusTest() {
+    final String tp1 = TypeStatus.TYPE.name();
+    final String tp2 = TypeStatus.ALLOTYPE.name();
+
+    // State
+    Map<String, String> coreMap = new HashMap<>(1);
+    coreMap.put(DwcTerm.typeStatus.qualifiedName(), tp1 + " | " + tp2 + " | ");
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+
+    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
+
+    // When
+    BasicInterpreter.interpretTypeStatus(er, br);
+
+    // Should
+    Assert.assertEquals(2, br.getTypeStatus().size());
+    Assert.assertTrue(br.getTypeStatus().contains(tp1));
+    Assert.assertTrue(br.getTypeStatus().contains(tp2));
+    assertIssueSize(br, 0);
+  }
+
+  @Test
+  public void interpretTypeStatusPartiallyInvalidTest() {
+    final String tp1 = TypeStatus.TYPE.name();
+    final String tp2 = "foo";
+
+    // State
+    Map<String, String> coreMap = new HashMap<>(1);
+    coreMap.put(DwcTerm.typeStatus.qualifiedName(), tp1 + " | " + tp2 + " | ");
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+
+    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
+
+    // When
+    BasicInterpreter.interpretTypeStatus(er, br);
+
+    // Should
+    Assert.assertEquals(1, br.getTypeStatus().size());
+    Assert.assertEquals(tp1, br.getTypeStatus().get(0));
+    assertIssueSize(br, 1);
   }
 
   private void assertIssueSize(BasicRecord br, int expectedSize) {

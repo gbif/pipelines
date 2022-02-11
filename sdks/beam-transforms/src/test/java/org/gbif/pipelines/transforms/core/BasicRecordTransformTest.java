@@ -140,7 +140,7 @@ public class BasicRecordTransformTest {
                     .setCreated(0L)
                     .setBasisOfRecord(x[1])
                     .setSex(x[2])
-                    .setTypeStatus(x[4])
+                    .setTypeStatus(Collections.singletonList(x[4]))
                     .setIndividualCount(Integer.valueOf(x[5]))
                     .setReferences(x[6])
                     .setLicense(License.UNSPECIFIED.name())
