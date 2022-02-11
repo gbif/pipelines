@@ -201,4 +201,12 @@
     </if>
   </select>
 
+  <!-- For safety, should it be already deleted nothing is done -->
+  <select id="getRunningValidations" resultType="java.util.UUID" parameterType="java.util.Date">
+    SELECT key
+    FROM validation
+    WHERE status = 'RUNNING'
+    AND modified &lt; #{date,jdbcType=TIMESTAMP}
+  </select>
+
 </mapper>

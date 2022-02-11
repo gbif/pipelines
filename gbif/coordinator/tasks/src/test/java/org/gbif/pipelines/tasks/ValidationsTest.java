@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
@@ -173,6 +174,11 @@ public class ValidationsTest {
     @Override
     public Dataset getDataset(UUID key) {
       return null;
+    }
+
+    @Override
+    public List<UUID> getRunningValidations(int min) {
+      return Collections.emptyList();
     }
   }
 }

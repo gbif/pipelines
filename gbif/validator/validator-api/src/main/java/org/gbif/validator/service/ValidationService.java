@@ -1,5 +1,6 @@
 package org.gbif.validator.service;
 
+import java.util.List;
 import java.util.UUID;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
@@ -31,4 +32,6 @@ public interface ValidationService<MF> {
   PagingResponse<Validation> list(ValidationSearchRequest searchRequest);
 
   Dataset getDataset(UUID key);
+
+  List<UUID> getRunningValidations(int min);
 }

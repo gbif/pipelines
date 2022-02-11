@@ -9,8 +9,12 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -222,6 +226,12 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
   @Override
   public Dataset getDataset(UUID key) {
     return get(key).getDataset();
+  }
+
+  @Override
+  public List<UUID> getRunningValidations(int min) {
+    Date date = Date.from(Instant.now().minus(Duration.ofMinutes(min)));
+    return validationMapper.getRunningValidations(date);
   }
 
   /** Persists an validation entity. */

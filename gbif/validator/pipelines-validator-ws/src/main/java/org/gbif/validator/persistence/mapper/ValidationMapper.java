@@ -1,5 +1,6 @@
 package org.gbif.validator.persistence.mapper;
 
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import javax.annotation.Nullable;
@@ -59,4 +60,12 @@ public interface ValidationMapper {
   int count(
       @Nullable @Param("username") String username,
       @Nullable @Param("searchRequest") ValidationSearchRequest searchRequest);
+
+  /**
+   * Returns validation UUID running or queued for more than specified time in min
+   *
+   * @param date more than specified date
+   * @return list of UUID validations
+   */
+  List<UUID> getRunningValidations(@Param("date") Date date);
 }
