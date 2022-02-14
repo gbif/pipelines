@@ -1,13 +1,13 @@
 package org.gbif.pipelines.core.parsers;
 
-import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
-
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import org.gbif.api.vocabulary.BasisOfRecord;
 import org.gbif.api.vocabulary.Continent;
 import org.gbif.api.vocabulary.Country;
@@ -24,7 +24,13 @@ import org.gbif.common.parsers.TypeStatusParser;
 import org.gbif.common.parsers.core.EnumParser;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.core.utils.ModelUtils;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+
+import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
 
 /** Utility class that parses Enum based terms. */
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
@@ -123,5 +129,45 @@ public class VocabularyParser<T extends Enum<T>> {
   public <U> Optional<U> map(Map<String, String> terms, Function<ParseResult<T>, U> mapper) {
     return Optional.ofNullable(terms.get(term.qualifiedName()))
         .map(value -> mapper.apply(parser.parse(value)));
+  }
+
+  /**
+   * Runs a parsing method on a extended record and applies a list mapping function to the result.
+   *
+   * @param extendedRecord to be used as input
+   * @param mapper function mapper
+   */
+  public <U> Optional<U> mapList(
+      ExtendedRecord extendedRecord, Function<ParseResult<T>, U> mapper) {
+    return mapList(extendedRecord.getCoreTerms(), mapper);
+  }
+
+  /**
+   * Runs a parsing method on a map of a multivalue term and applies a mapping function to each of
+   * the values.
+   *
+   * @param terms to be used as input
+   * @param mapper function mapper
+   */
+  public <U> Optional<U> mapList(Map<String, String> terms, Function<ParseResult<T>, U> mapper) {
+    Optional<String> rawValue =
+        Optional.ofNullable(terms.get(term.qualifiedName())).filter(v -> !v.isEmpty());
+
+    if (!rawValue.isPresent()) {
+      return Optional.empty();
+    }
+
+    Set<String> values =
+        Stream.of(rawValue.get().split(ModelUtils.DEFAULT_SEPARATOR))
+            .map(String::trim)
+            .filter(v -> !v.isEmpty())
+            .collect(Collectors.toSet());
+
+    U result = null;
+    for (String v : values) {
+      result = mapper.apply(parser.parse(v));
+    }
+
+    return Optional.ofNullable(result);
   }
 }

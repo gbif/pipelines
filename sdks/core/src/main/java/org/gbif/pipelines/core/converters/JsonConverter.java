@@ -103,7 +103,7 @@ public class JsonConverter {
               || value.getClass().isPrimitive()
               || Primitives.isWrapperType(value.getClass())
               || UUID.class.isAssignableFrom(value.getClass())) {
-            arrayNode.add(value.toString());
+            arrayNode.add(getEscapedTextNode(value.toString()));
           }
         });
   }

@@ -1,18 +1,9 @@
 package org.gbif.pipelines.transforms.core;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Metrics.BASIC_RECORDS_COUNT;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.BASIC;
-import static org.gbif.pipelines.core.interpreters.core.BasicInterpreter.GBIF_ID_INVALID;
-import static org.gbif.pipelines.core.interpreters.core.BasicInterpreter.interpretCopyGbifId;
-
 import java.time.Instant;
 import java.util.Optional;
 import java.util.function.BiConsumer;
-import lombok.Builder;
-import lombok.SneakyThrows;
-import org.apache.beam.sdk.transforms.MapElements;
-import org.apache.beam.sdk.values.KV;
-import org.apache.beam.sdk.values.TypeDescriptor;
+
 import org.gbif.api.vocabulary.OccurrenceStatus;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.core.functions.SerializableConsumer;
@@ -27,6 +18,18 @@ import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.transforms.Transform;
+
+import org.apache.beam.sdk.transforms.MapElements;
+import org.apache.beam.sdk.values.KV;
+import org.apache.beam.sdk.values.TypeDescriptor;
+
+import lombok.Builder;
+import lombok.SneakyThrows;
+
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.BASIC_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.BASIC;
+import static org.gbif.pipelines.core.interpreters.core.BasicInterpreter.GBIF_ID_INVALID;
+import static org.gbif.pipelines.core.interpreters.core.BasicInterpreter.interpretCopyGbifId;
 
 /**
  * Beam level transformations for the DWC Occurrence, reads an avro, writs an avro, maps from value
@@ -180,7 +183,14 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
             .via(VocabularyInterpreter.interpretEstablishmentMeans(vocabularyService))
             .via(VocabularyInterpreter.interpretLifeStage(vocabularyService))
             .via(VocabularyInterpreter.interpretPathway(vocabularyService))
-            .via(VocabularyInterpreter.interpretDegreeOfEstablishment(vocabularyService));
+            .via(VocabularyInterpreter.interpretDegreeOfEstablishment(vocabularyService))
+            .via(BasicInterpreter::interpretDatasetID)
+            .via(BasicInterpreter::interpretDatasetName)
+            .via(BasicInterpreter::interpretOtherCatalogNumbers)
+            .via(BasicInterpreter::interpretRecordedBy)
+            .via(BasicInterpreter::interpretIdentifiedBy)
+            .via(BasicInterpreter::interpretPreparations)
+            .via(BasicInterpreter::interpretSamplingProtocol);
 
     if (useDynamicPropertiesInterpretation) {
       handler

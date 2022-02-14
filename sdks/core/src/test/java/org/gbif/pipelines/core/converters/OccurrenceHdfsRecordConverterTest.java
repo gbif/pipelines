@@ -1,7 +1,5 @@
 package org.gbif.pipelines.core.converters;
 
-import static org.junit.Assert.assertEquals;
-
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -14,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.UUID;
+
 import org.gbif.api.model.collections.lookup.Match.MatchType;
 import org.gbif.api.vocabulary.AgentIdentifierType;
 import org.gbif.api.vocabulary.BasisOfRecord;
@@ -54,14 +53,20 @@ import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.VocabularyConcept;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.io.avro.grscicoll.Match;
+
 import org.junit.Assert;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 public class OccurrenceHdfsRecordConverterTest {
 
   @Test
   public void extendedRecordMapperTest() {
     // State
+    final String multivalue1 = "multi 1";
+    final String multivalue2 = "multi 2";
+
     Map<String, String> coreTerms = new HashMap<>();
     coreTerms.put(DwcTerm.verbatimDepth.simpleName(), "1.0");
     coreTerms.put(DwcTerm.collectionCode.simpleName(), "C1");
@@ -79,13 +84,21 @@ public class OccurrenceHdfsRecordConverterTest {
     coreTerms.put(DwcTerm.sampleSizeValue.simpleName(), "value");
     coreTerms.put(DwcTerm.organismQuantity.simpleName(), "quantity");
     coreTerms.put(DwcTerm.organismQuantityType.simpleName(), "type");
-    coreTerms.put(DwcTerm.recordedBy.simpleName(), "recordedBy");
-    coreTerms.put(DwcTerm.identifiedBy.simpleName(), "identifiedBy");
     coreTerms.put(DwcTerm.identifiedByID.simpleName(), "13123|21312");
     coreTerms.put(DwcTerm.recordedByID.simpleName(), "53453|5785");
     coreTerms.put(DwcTerm.occurrenceStatus.simpleName(), OccurrenceStatus.ABSENT.name());
     coreTerms.put(DwcTerm.individualCount.simpleName(), "0");
     coreTerms.put(DwcTerm.eventDate.simpleName(), "2000/2010");
+    coreTerms.put(DwcTerm.datasetID.simpleName(), multivalue1 + "|" + multivalue2);
+    coreTerms.put(DwcTerm.datasetName.simpleName(), multivalue1 + "|" + multivalue2);
+    coreTerms.put(DwcTerm.otherCatalogNumbers.simpleName(), multivalue1 + "|" + multivalue2);
+    coreTerms.put(
+        DwcTerm.typeStatus.simpleName(),
+        TypeStatus.TYPE.name() + "|" + TypeStatus.TYPE_SPECIES.name());
+    coreTerms.put(DwcTerm.preparations.simpleName(), multivalue1 + "|" + multivalue2);
+    coreTerms.put(DwcTerm.samplingProtocol.simpleName(), multivalue1 + "|" + multivalue2);
+    coreTerms.put(DwcTerm.identifiedBy.simpleName(), multivalue1 + "|" + multivalue2);
+    coreTerms.put(DwcTerm.recordedBy.simpleName(), multivalue1 + "|" + multivalue2);
 
     Map<String, List<Map<String, String>>> extensions = new HashMap<>();
     extensions.put(
@@ -126,6 +139,14 @@ public class OccurrenceHdfsRecordConverterTest {
             .setIndividualCount(0)
             .setBasisOfRecord(BasisOfRecord.HUMAN_OBSERVATION.name())
             .setOccurrenceStatus(OccurrenceStatus.ABSENT.name())
+            .setDatasetID(Arrays.asList(multivalue1, multivalue2))
+            .setDatasetName(Arrays.asList(multivalue1, multivalue2))
+            .setOtherCatalogNumbers(Arrays.asList(multivalue1, multivalue2))
+            .setRecordedBy(Arrays.asList(multivalue1, multivalue2))
+            .setIdentifiedBy(Arrays.asList(multivalue1, multivalue2))
+            .setPreparations(Arrays.asList(multivalue1, multivalue2))
+            .setSamplingProtocol(Arrays.asList(multivalue1, multivalue2))
+            .setTypeStatus(Arrays.asList(TypeStatus.TYPE.name(), TypeStatus.TYPE_SPECIES.name()))
             .build();
 
     List<RankedName> classification = new ArrayList<>();
@@ -174,8 +195,6 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals("type", hdfsRecord.getVOrganismquantitytype());
     Assert.assertEquals("unit", hdfsRecord.getVSamplesizeunit());
     Assert.assertEquals("value", hdfsRecord.getVSamplesizevalue());
-    Assert.assertEquals("recordedBy", hdfsRecord.getVRecordedby());
-    Assert.assertEquals("identifiedBy", hdfsRecord.getIdentifiedby());
     Assert.assertEquals("13123|21312", hdfsRecord.getVIdentifiedbyid());
     Assert.assertEquals("53453|5785", hdfsRecord.getVRecordedbyid());
     Assert.assertEquals(OccurrenceStatus.ABSENT.name(), hdfsRecord.getVOccurrencestatus());
@@ -183,6 +202,26 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals("2000/2010", hdfsRecord.getVEventdate());
     Assert.assertEquals(
         ThreatStatus.CRITICALLY_ENDANGERED.getCode(), hdfsRecord.getIucnredlistcategory());
+    Assert.assertEquals(multivalue1 + "|" + multivalue2, hdfsRecord.getVDatasetid());
+    Assert.assertEquals(Arrays.asList(multivalue1, multivalue2), hdfsRecord.getDatasetid());
+    Assert.assertEquals(multivalue1 + "|" + multivalue2, hdfsRecord.getVDatasetname());
+    Assert.assertEquals(Arrays.asList(multivalue1, multivalue2), hdfsRecord.getDatasetname());
+    Assert.assertEquals(multivalue1 + "|" + multivalue2, hdfsRecord.getVOthercatalognumbers());
+    Assert.assertEquals(
+        Arrays.asList(multivalue1, multivalue2), hdfsRecord.getOthercatalognumbers());
+    Assert.assertEquals(multivalue1 + "|" + multivalue2, hdfsRecord.getVRecordedby());
+    Assert.assertEquals(Arrays.asList(multivalue1, multivalue2), hdfsRecord.getRecordedby());
+    Assert.assertEquals(multivalue1 + "|" + multivalue2, hdfsRecord.getVIdentifiedby());
+    Assert.assertEquals(Arrays.asList(multivalue1, multivalue2), hdfsRecord.getIdentifiedby());
+    Assert.assertEquals(multivalue1 + "|" + multivalue2, hdfsRecord.getVPreparations());
+    Assert.assertEquals(Arrays.asList(multivalue1, multivalue2), hdfsRecord.getPreparations());
+    Assert.assertEquals(multivalue1 + "|" + multivalue2, hdfsRecord.getVSamplingprotocol());
+    Assert.assertEquals(Arrays.asList(multivalue1, multivalue2), hdfsRecord.getSamplingprotocol());
+    Assert.assertEquals(
+        TypeStatus.TYPE.name() + "|" + TypeStatus.TYPE_SPECIES.name(), hdfsRecord.getVTypestatus());
+    Assert.assertEquals(
+        Arrays.asList(TypeStatus.TYPE.name(), TypeStatus.TYPE_SPECIES.name()),
+        hdfsRecord.getTypestatus());
 
     // Test fields names with reserved words
     Assert.assertEquals("CLASS", hdfsRecord.getClass$());
@@ -268,7 +307,7 @@ public class OccurrenceHdfsRecordConverterTest {
     basicRecord.setBasisOfRecord(BasisOfRecord.HUMAN_OBSERVATION.name());
     basicRecord.setSex(Sex.HERMAPHRODITE.name());
     basicRecord.setIndividualCount(99);
-    basicRecord.setTypeStatus(TypeStatus.ALLOTYPE.name());
+    basicRecord.setTypeStatus(Arrays.asList(TypeStatus.ALLOTYPE.name(), TypeStatus.TYPE.name()));
     basicRecord.setTypifiedName("noName");
     basicRecord.setLifeStage(
         VocabularyConcept.newBuilder()
@@ -308,7 +347,9 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals(BasisOfRecord.HUMAN_OBSERVATION.name(), hdfsRecord.getBasisofrecord());
     Assert.assertEquals(Sex.HERMAPHRODITE.name(), hdfsRecord.getSex());
     Assert.assertEquals(Integer.valueOf(99), hdfsRecord.getIndividualcount());
-    Assert.assertEquals(TypeStatus.ALLOTYPE.name(), hdfsRecord.getTypestatus());
+    Assert.assertEquals(
+        Arrays.asList(TypeStatus.ALLOTYPE.name(), TypeStatus.TYPE.name()),
+        hdfsRecord.getTypestatus());
     Assert.assertEquals("noName", hdfsRecord.getTypifiedname());
     Assert.assertEquals(Double.valueOf(2d), hdfsRecord.getOrganismquantity());
     Assert.assertEquals("type", hdfsRecord.getOrganismquantitytype());
@@ -499,6 +540,7 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals(installationKey, hdfsRecord.getInstallationkey());
     Assert.assertEquals(organizationKey, hdfsRecord.getPublishingorgkey());
     Assert.assertEquals(License.CC_BY_4_0.name(), hdfsRecord.getLicense());
+    Assert.assertEquals(metadataRecord.getDatasetTitle(), hdfsRecord.getDatasettitle());
   }
 
   @Test

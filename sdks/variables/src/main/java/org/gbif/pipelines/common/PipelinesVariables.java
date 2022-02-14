@@ -189,6 +189,12 @@ public class PipelinesVariables {
       public static final String START_DAY_OF_YEAR = "startDayOfYear";
       public static final String IDENTIFIED_BY = "identifiedBy";
       public static final String HOSTING_ORGANIZATION_KEY = "hostingOrganizationKey";
+      public static final String DATASET_ID = "datasetID";
+      public static final String DATASET_NAME = "datasetName";
+      public static final String OTHER_CATALOG_NUMBERS = "otherCatalogNumbers";
+      public static final String PREPARATIONS = "preparations";
+      public static final String SAMPLING_PROTOCOL = "samplingProtocol";
+      public static final String TYPE_STATUS = "typeStatus";
     }
   }
 

@@ -1,18 +1,13 @@
 package org.gbif.pipelines.core.converters;
 
-import com.fasterxml.jackson.databind.node.TextNode;
-import com.google.common.base.Strings;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import lombok.Builder;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.avro.Schema;
-import org.apache.avro.specific.SpecificRecordBase;
-import org.apache.commons.beanutils.PropertyUtils;
+import java.util.stream.Stream;
+
 import org.gbif.api.vocabulary.License;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
@@ -22,6 +17,7 @@ import org.gbif.occurrence.common.TermUtils;
 import org.gbif.occurrence.download.hive.HiveColumns;
 import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
 import org.gbif.pipelines.core.utils.MediaSerDeser;
+import org.gbif.pipelines.core.utils.ModelUtils;
 import org.gbif.pipelines.core.utils.TemporalConverter;
 import org.gbif.pipelines.io.avro.AgentIdentifier;
 import org.gbif.pipelines.io.avro.BasicRecord;
@@ -40,6 +36,15 @@ import org.gbif.pipelines.io.avro.Pathway;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
+
+import org.apache.avro.Schema;
+import org.apache.avro.specific.SpecificRecordBase;
+import org.apache.commons.beanutils.PropertyUtils;
+
+import com.fasterxml.jackson.databind.node.TextNode;
+import com.google.common.base.Strings;
+import lombok.Builder;
+import lombok.extern.slf4j.Slf4j;
 
 /** Utility class to convert interpreted and extended records into {@link OccurrenceHdfsRecord}. */
 @Slf4j
@@ -174,7 +179,7 @@ public class OccurrenceHdfsRecordConverter {
     }
     occurrenceHdfsRecord.setCrawlid(metadataRecord.getCrawlId());
     occurrenceHdfsRecord.setDatasetkey(metadataRecord.getDatasetKey());
-    occurrenceHdfsRecord.setDatasetname(metadataRecord.getDatasetTitle());
+    occurrenceHdfsRecord.setDatasettitle(metadataRecord.getDatasetTitle());
     occurrenceHdfsRecord.setInstallationkey(metadataRecord.getInstallationKey());
     occurrenceHdfsRecord.setProtocol(metadataRecord.getProtocol());
     occurrenceHdfsRecord.setNetworkkey(metadataRecord.getNetworkKeys());
@@ -367,7 +372,6 @@ public class OccurrenceHdfsRecordConverter {
     occurrenceHdfsRecord.setIndividualcount(basicRecord.getIndividualCount());
     occurrenceHdfsRecord.setReferences(basicRecord.getReferences());
     occurrenceHdfsRecord.setSex(basicRecord.getSex());
-    occurrenceHdfsRecord.setTypestatus(basicRecord.getTypeStatus());
     occurrenceHdfsRecord.setTypifiedname(basicRecord.getTypifiedName());
     occurrenceHdfsRecord.setOrganismquantity(basicRecord.getOrganismQuantity());
     occurrenceHdfsRecord.setOrganismquantitytype(basicRecord.getOrganismQuantityType());
@@ -376,6 +380,14 @@ public class OccurrenceHdfsRecordConverter {
     occurrenceHdfsRecord.setRelativeorganismquantity(basicRecord.getRelativeOrganismQuantity());
     occurrenceHdfsRecord.setOccurrencestatus(basicRecord.getOccurrenceStatus());
     occurrenceHdfsRecord.setIsincluster(basicRecord.getIsClustered());
+    occurrenceHdfsRecord.setDatasetid(basicRecord.getDatasetID());
+    occurrenceHdfsRecord.setDatasetname(basicRecord.getDatasetName());
+    occurrenceHdfsRecord.setOthercatalognumbers(basicRecord.getOtherCatalogNumbers());
+    occurrenceHdfsRecord.setRecordedby(basicRecord.getRecordedBy());
+    occurrenceHdfsRecord.setIdentifiedby(basicRecord.getIdentifiedBy());
+    occurrenceHdfsRecord.setPreparations(basicRecord.getPreparations());
+    occurrenceHdfsRecord.setSamplingprotocol(basicRecord.getSamplingProtocol());
+    occurrenceHdfsRecord.setTypestatus(basicRecord.getTypeStatus());
 
     // Vocabulary controlled
     Optional.ofNullable(basicRecord.getEstablishmentMeans())
