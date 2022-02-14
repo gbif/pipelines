@@ -5,6 +5,7 @@ import static org.gbif.ws.security.UserRoles.APP_ROLE;
 import static org.gbif.ws.security.UserRoles.IPT_ROLE;
 import static org.gbif.ws.security.UserRoles.USER_ROLE;
 
+import java.util.List;
 import java.util.UUID;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -103,5 +104,12 @@ public class ValidationResource {
   @GetMapping
   public PagingResponse<Validation> list(@Valid ValidationSearchRequest validationSearchRequest) {
     return validationService.list(validationSearchRequest);
+  }
+
+  /** Returns list of validations running for more than specified time in min. */
+  @Secured({ADMIN_ROLE})
+  @GetMapping(path = "/running")
+  public List<UUID> getRunningValidations(@RequestParam("min") int min) {
+    return validationService.getRunningValidations(min);
   }
 }

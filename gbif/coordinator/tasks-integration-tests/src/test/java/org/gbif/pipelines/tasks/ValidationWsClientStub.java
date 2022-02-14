@@ -3,6 +3,7 @@ package org.gbif.pipelines.tasks;
 import java.io.File;
 import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -73,6 +74,11 @@ public class ValidationWsClientStub implements ValidationWsClient {
   @Override
   public Dataset getDataset(UUID key) {
     return null;
+  }
+
+  @Override
+  public List<UUID> getRunningValidations(int min) {
+    return Collections.emptyList();
   }
 
   public Optional<FileInfo> getFileInfo(DwcFileType type, String term) {

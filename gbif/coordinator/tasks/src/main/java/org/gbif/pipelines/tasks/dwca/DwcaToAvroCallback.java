@@ -23,6 +23,7 @@ import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage.ValidationResult;
 import org.gbif.common.messaging.api.messages.Platform;
 import org.gbif.converters.DwcaToAvroConverter;
+import org.gbif.dwc.UnsupportedArchiveException;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.utils.DwcaUtils;
 import org.gbif.pipelines.tasks.PipelinesCallback;
@@ -144,7 +145,7 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
       interpretedTypes = DwcaUtils.getExtensionAsTerms(DwcaUtils.fromLocation(inputPath));
       interpretedTypes.addAll(getAllInterpretationAsString());
       interpretedTypes.remove(null);
-    } catch (IllegalStateException ex) {
+    } catch (IllegalStateException | UnsupportedArchiveException ex) {
       log.warn(ex.getMessage());
     }
 

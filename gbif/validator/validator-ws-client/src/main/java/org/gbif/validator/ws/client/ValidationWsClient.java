@@ -1,6 +1,7 @@
 package org.gbif.validator.ws.client;
 
 import java.io.File;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -88,6 +89,14 @@ public interface ValidationWsClient extends ValidationService<File> {
       consumes = {MediaType.APPLICATION_JSON_VALUE})
   @Override
   Dataset getDataset(@PathVariable("key") UUID key);
+
+  /** Get running validations uuids */
+  @RequestMapping(
+      method = RequestMethod.GET,
+      path = "/running",
+      consumes = {MediaType.APPLICATION_JSON_VALUE})
+  @Override
+  List<UUID> getRunningValidations(@RequestParam("min") int min);
 
   /** Default factory method for the ValidationWsClient. */
   static ValidationWsClient getInstance(String url, String userName, String password) {

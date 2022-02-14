@@ -3,6 +3,7 @@ package org.gbif.pipelines.validator;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -14,6 +15,7 @@ import org.gbif.dwc.terms.Term;
 import org.gbif.utils.file.ClosableIterator;
 import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.Metrics.FileInfo;
+import org.gbif.validator.api.Metrics.FileInfo.FileInfoBuilder;
 import org.gbif.validator.api.Metrics.TermInfo;
 
 @Slf4j
@@ -68,12 +70,16 @@ public class DwcaFileTermCounter {
                         .build())
             .collect(Collectors.toList());
 
-    return FileInfo.builder()
-        .count(fileCount)
-        .fileName(archiveFile.getTitle())
-        .fileType(fileType)
-        .rowType(archiveFile.getRowType().qualifiedName())
-        .terms(termInfoList)
-        .build();
+    FileInfoBuilder fileInfoBuilder =
+        FileInfo.builder()
+            .count(fileCount)
+            .fileName(archiveFile.getTitle())
+            .fileType(fileType)
+            .terms(termInfoList);
+
+    Optional.ofNullable(archiveFile.getRowType())
+        .ifPresent(t -> fileInfoBuilder.rowType(t.qualifiedName()));
+
+    return fileInfoBuilder.build();
   }
 }

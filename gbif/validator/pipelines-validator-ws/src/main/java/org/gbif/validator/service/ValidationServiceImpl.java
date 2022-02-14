@@ -9,8 +9,12 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -224,6 +228,12 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
     return get(key).getDataset();
   }
 
+  @Override
+  public List<UUID> getRunningValidations(int min) {
+    Date date = Date.from(Instant.now().minus(Duration.ofMinutes(min)));
+    return validationMapper.getRunningValidations(date);
+  }
+
   /** Persists an validation entity. */
   private Validation create(
       UUID key, DataFile dataFile, Validation.Status status, ValidationRequest validationRequest) {
@@ -314,7 +324,8 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
   private Set<String> getPipelineSteps(DataFile dataFile) {
     String stepType;
     if (dataFile.getFileFormat() == FileFormat.DWCA
-        || dataFile.getFileFormat() == FileFormat.TABULAR) {
+        || dataFile.getFileFormat() == FileFormat.TABULAR
+        || dataFile.getFileFormat() == FileFormat.SPREADSHEET) {
       stepType = StepType.VALIDATOR_DWCA_TO_VERBATIM.name();
     } else if (dataFile.getFileFormat() == FileFormat.XML) {
       stepType = StepType.VALIDATOR_XML_TO_VERBATIM.name();

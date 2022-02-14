@@ -166,7 +166,7 @@ public class AbcdToAvroCallbackIT {
   }
 
   @Test
-  public void testReasonNotNormalCase() {
+  public void testReasonFailCase() {
     // State
     int attempt = 60;
     XmlToAvroConfiguration config = new XmlToAvroConfiguration();

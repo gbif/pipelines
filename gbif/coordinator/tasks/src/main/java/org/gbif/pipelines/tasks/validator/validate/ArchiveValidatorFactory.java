@@ -36,9 +36,10 @@ public class ArchiveValidatorFactory {
           .build();
     }
 
-    // Tabular
-    if (FileFormat.TABULAR.name().equals(message.getFileFormat())) {
-      return TabularArchiveValidator.builder()
+    // Tabular or spreadsheet
+    if (FileFormat.TABULAR.name().equals(message.getFileFormat())
+        || FileFormat.SPREADSHEET.name().equals(message.getFileFormat())) {
+      return SingleFileArchiveValidator.builder()
           .validationClient(validationClient)
           .config(config)
           .message(message)
