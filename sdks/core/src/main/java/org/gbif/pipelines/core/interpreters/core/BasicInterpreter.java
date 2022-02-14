@@ -1,15 +1,31 @@
 package org.gbif.pipelines.core.interpreters.core;
 
+import static org.gbif.api.vocabulary.OccurrenceIssue.BASIS_OF_RECORD_INVALID;
+import static org.gbif.api.vocabulary.OccurrenceIssue.INDIVIDUAL_COUNT_CONFLICTS_WITH_OCCURRENCE_STATUS;
+import static org.gbif.api.vocabulary.OccurrenceIssue.INDIVIDUAL_COUNT_INVALID;
+import static org.gbif.api.vocabulary.OccurrenceIssue.OCCURRENCE_STATUS_INFERRED_FROM_BASIS_OF_RECORD;
+import static org.gbif.api.vocabulary.OccurrenceIssue.OCCURRENCE_STATUS_INFERRED_FROM_INDIVIDUAL_COUNT;
+import static org.gbif.api.vocabulary.OccurrenceIssue.OCCURRENCE_STATUS_UNPARSABLE;
+import static org.gbif.api.vocabulary.OccurrenceIssue.REFERENCES_URI_INVALID;
+import static org.gbif.api.vocabulary.OccurrenceIssue.TYPE_STATUS_INVALID;
+import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
+import static org.gbif.pipelines.core.utils.ModelUtils.extractOptListValue;
+import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
+import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
+
+import com.google.common.base.Strings;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
-
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.vocabulary.BasisOfRecord;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.OccurrenceStatus;
@@ -34,26 +50,6 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.keygen.api.KeyLookupResult;
 import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
-
-import org.apache.commons.lang3.StringUtils;
-
-import com.google.common.base.Strings;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
-import static org.gbif.api.vocabulary.OccurrenceIssue.BASIS_OF_RECORD_INVALID;
-import static org.gbif.api.vocabulary.OccurrenceIssue.INDIVIDUAL_COUNT_CONFLICTS_WITH_OCCURRENCE_STATUS;
-import static org.gbif.api.vocabulary.OccurrenceIssue.INDIVIDUAL_COUNT_INVALID;
-import static org.gbif.api.vocabulary.OccurrenceIssue.OCCURRENCE_STATUS_INFERRED_FROM_BASIS_OF_RECORD;
-import static org.gbif.api.vocabulary.OccurrenceIssue.OCCURRENCE_STATUS_INFERRED_FROM_INDIVIDUAL_COUNT;
-import static org.gbif.api.vocabulary.OccurrenceIssue.OCCURRENCE_STATUS_UNPARSABLE;
-import static org.gbif.api.vocabulary.OccurrenceIssue.REFERENCES_URI_INVALID;
-import static org.gbif.api.vocabulary.OccurrenceIssue.TYPE_STATUS_INVALID;
-import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
-import static org.gbif.pipelines.core.utils.ModelUtils.extractOptListValue;
-import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
-import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
 
 /**
  * Interpreting function that receives a ExtendedRecord instance and applies an interpretation to

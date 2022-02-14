@@ -6,15 +6,13 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.Issues;
-
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
 
 /** Helps to work with org.gbif.pipelines.io.avro models */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)

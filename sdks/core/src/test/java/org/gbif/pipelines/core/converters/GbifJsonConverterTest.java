@@ -1,12 +1,16 @@
 package org.gbif.pipelines.core.converters;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import org.gbif.api.model.collections.lookup.Match.MatchType;
 import org.gbif.api.vocabulary.AgentIdentifierType;
 import org.gbif.api.vocabulary.Extension;
@@ -43,15 +47,8 @@ import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.VocabularyConcept;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.io.avro.grscicoll.Match;
-
 import org.junit.Assert;
 import org.junit.Test;
-
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 public class GbifJsonConverterTest {
 
