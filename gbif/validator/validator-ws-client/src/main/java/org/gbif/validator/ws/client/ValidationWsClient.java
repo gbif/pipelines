@@ -93,7 +93,7 @@ public interface ValidationWsClient extends ValidationService<File> {
   /** Get running validations uuids */
   @RequestMapping(
       method = RequestMethod.GET,
-      path = "/getRunningValidations",
+      path = "/running",
       consumes = {MediaType.APPLICATION_JSON_VALUE})
   @Override
   List<UUID> getRunningValidations(@RequestParam("min") int min);

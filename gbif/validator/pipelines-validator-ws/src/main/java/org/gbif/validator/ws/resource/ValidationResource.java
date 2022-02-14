@@ -108,7 +108,7 @@ public class ValidationResource {
 
   /** Returns list of validations running for more than specified time in min. */
   @Secured({ADMIN_ROLE})
-  @GetMapping(path = "/getRunningValidations")
+  @GetMapping(path = "/running")
   public List<UUID> getRunningValidations(@RequestParam("min") int min) {
     return validationService.getRunningValidations(min);
   }
