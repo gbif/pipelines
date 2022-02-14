@@ -112,6 +112,12 @@ public class ALABasicTransform extends Transform<ExtendedRecord, BasicRecord> {
         .via(VocabularyInterpreter.interpretLifeStage(vocabularyService))
         .via(ALABasicInterpreter::interpretLicense)
         .via(ALABasicInterpreter.interpretRecordedBy(recordedByKvStore))
+        .via(BasicInterpreter::interpretDatasetID)
+        .via(BasicInterpreter::interpretDatasetName)
+        .via(BasicInterpreter::interpretOtherCatalogNumbers)
+        .via(BasicInterpreter::interpretIdentifiedBy)
+        .via(BasicInterpreter::interpretPreparations)
+        .via(BasicInterpreter::interpretSamplingProtocol)
         .getOfNullable();
   }
 }

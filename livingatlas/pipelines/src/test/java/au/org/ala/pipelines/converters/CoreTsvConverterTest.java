@@ -82,10 +82,10 @@ public class CoreTsvConverterTest {
       "\"11111\"", // DwcTerm.day
       "\"raw_er_eventDate\"", // DwcTerm.eventDate
       "\"raw_er_eventID\"", // DwcTerm.eventID
-      "\"raw_er_identifiedBy\"", // DwcTerm.identifiedBy
+      "\"br_identifiedBy\"", // DwcTerm.identifiedBy
       "\"raw_er_occurrenceRemarks\"", // DwcTerm.occurrenceRemarks
       "\"\"", // DwcTerm.dataGeneralizations
-      "\"raw_er_otherCatalogNumbers\"", // DwcTerm.otherCatalogNumbers
+      "\"br_otherCatalogNumbers\"", // DwcTerm.otherCatalogNumbers
       "\"raw_er_acceptedNameUsage\"", // DwcTerm.acceptedNameUsage
       "\"raw_er_acceptedNameUsageID\"", // DwcTerm.acceptedNameUsageID
       "\"\"", // DwcTerm.associatedOccurrences
@@ -98,8 +98,8 @@ public class CoreTsvConverterTest {
       "\"3.33333333333333E14\"", // DwcTerm.coordinatePrecision
       "\"lr_countryCode\"", // DwcTerm.countryCode
       "\"raw_er_county\"", // DwcTerm.county
-      "\"raw_er_datasetID\"", // DwcTerm.datasetID
-      "\"raw_er_datasetName\"", // DwcTerm.datasetName
+      "\"br_datasetID\"", // DwcTerm.datasetID
+      "\"br_datasetName\"", // DwcTerm.datasetName
       "\"2002\"", // DwcTerm.dateIdentified
       "\"raw_er_disposition\"", // DwcTerm.disposition
       "\"raw_er_dynamicProperties\"", // DwcTerm.dynamicProperties
@@ -162,7 +162,7 @@ public class CoreTsvConverterTest {
       "\"raw_er_parentNameUsage\"", // DwcTerm.parentNameUsage
       "\"raw_er_parentNameUsageID\"", // DwcTerm.parentNameUsageID
       "\"raw_er_pointRadiusSpatialFit\"", // DwcTerm.pointRadiusSpatialFit
-      "\"raw_er_preparations\"", // DwcTerm.preparations
+      "\"br_preparations\"", // DwcTerm.preparations
       "\"raw_er_previousIdentifications\"", // DwcTerm.previousIdentifications
       "\"raw_er_relatedResourceID\"", // DwcTerm.relatedResourceID
       "\"raw_er_relationshipAccordingTo\"", // DwcTerm.relationshipAccordingTo
@@ -174,7 +174,7 @@ public class CoreTsvConverterTest {
       "\"raw_er_resourceID\"", // DwcTerm.resourceID
       "\"raw_er_resourceRelationshipID\"", // DwcTerm.resourceRelationshipID
       "\"raw_er_samplingEffort\"", // DwcTerm.samplingEffort
-      "\"raw_er_samplingProtocol\"", // DwcTerm.samplingProtocol
+      "\"br_samplingProtocol\"", // DwcTerm.samplingProtocol
       "\"atxr_ScientificNameAuthorship\"", // DwcTerm.scientificNameAuthorship
       "\"raw_er_scientificNameID\"", // DwcTerm.scientificNameID
       "\"br_sex\"", // DwcTerm.sex
@@ -669,6 +669,12 @@ public class CoreTsvConverterTest {
             .setRecordedBy(Arrays.asList("br_recordedBy_1", "br_recordedBy_2"))
             .setOccurrenceStatus("br_occurrenceStatus")
             .setIsClustered(true)
+            .setDatasetID(Collections.singletonList("br_datasetID"))
+            .setDatasetName(Collections.singletonList("br_datasetName"))
+            .setOtherCatalogNumbers(Collections.singletonList("br_otherCatalogNumbers"))
+            .setIdentifiedBy(Collections.singletonList("br_identifiedBy"))
+            .setPreparations(Collections.singletonList("br_preparations"))
+            .setSamplingProtocol(Collections.singletonList("br_samplingProtocol"))
             .build();
 
     LocationRecord lr =
@@ -927,10 +933,10 @@ public class CoreTsvConverterTest {
       "\"\"", // DwcTerm.day
       "\"raw_er_eventDate\"", // DwcTerm.eventDate
       "\"raw_er_eventID\"", // DwcTerm.eventID
-      "\"raw_er_identifiedBy\"", // DwcTerm.identifiedBy
+      "\"\"", // DwcTerm.identifiedBy
       "\"raw_er_occurrenceRemarks\"", // DwcTerm.occurrenceRemarks
       "\"\"", // DwcTerm.dataGeneralizations
-      "\"raw_er_otherCatalogNumbers\"", // DwcTerm.otherCatalogNumbers
+      "\"\"", // DwcTerm.otherCatalogNumbers
       "\"\"", // DwcTerm.acceptedNameUsage
       "\"\"", // DwcTerm.acceptedNameUsageID
       "\"\"", // DwcTerm.associatedOccurrences
