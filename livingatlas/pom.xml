@@ -16,7 +16,7 @@
 
   <properties>
     <!-- ITs get stuck, temporary set to skip:true -->
-    <sonar.skip>true</sonar.skip>
+    <sonar.skip>false</sonar.skip>
   </properties>
 
   <modules>
