@@ -178,6 +178,7 @@ public class DistributionOutlierPipeline {
         "Write to file",
         AvroIO.write(DistributionOutlierRecord.class)
             .to(outputPath + "/outlier")
+            .withoutSharding()
             .withSuffix(".avro"));
 
     log.info("Running the pipeline");
