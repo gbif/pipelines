@@ -77,19 +77,20 @@ public class ALAFsUtils {
    */
   public static String buildPathOutlierUsingTargetPath(
       AllDatasetsPipelinesOptions options, boolean delete) throws IOException {
+
     // default: {fsPath}/pipelines-outlier
     FileSystem fs =
         FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
             .getFs(options.getTargetPath());
 
-    String outputPath = PathBuilder.buildPath(options.getTargetPath()).toString();
+    String outputPath = options.getTargetPath();
 
     // {fsPath}/pipelines-outlier/{datasetId}
     if (options.getDatasetId() != null && !"all".equalsIgnoreCase(options.getDatasetId())) {
-      outputPath = PathBuilder.buildPath(outputPath, options.getDatasetId()).toString();
+      outputPath = outputPath + "/" + options.getDatasetId();
     } else {
       // {fsPath}/pipelines-outlier/all
-      outputPath = PathBuilder.buildPath(outputPath, "all").toString();
+      outputPath = outputPath + "/" + "all";
     }
     // delete previous runs
     if (delete)
@@ -105,21 +106,16 @@ public class ALAFsUtils {
    * Get an output path to outlier records. {fsPath}/pipelines-outlier/{datasetId}
    * {fsPath}/pipelines-outlier/all
    */
-  public static String getOutlierTargetPath(AllDatasetsPipelinesOptions options)
-      throws IOException {
-    // default: {fsPath}/pipelines-outlier
-    FileSystem fs =
-        FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
-            .getFs(options.getTargetPath());
+  public static String getOutlierTargetPath(AllDatasetsPipelinesOptions options) {
 
-    String outputPath = PathBuilder.buildPath(options.getTargetPath()).toString();
+    String outputPath = options.getTargetPath();
 
     // {fsPath}/pipelines-outlier/{datasetId}
     if (options.getDatasetId() != null && !"all".equalsIgnoreCase(options.getDatasetId())) {
-      outputPath = PathBuilder.buildPath(outputPath, options.getDatasetId()).toString();
+      outputPath = PathBuilder.buildPath(outputPath, options.getDatasetId(), "*.avro").toString();
     } else {
       // {fsPath}/pipelines-outlier/all
-      outputPath = PathBuilder.buildPath(outputPath, "all").toString();
+      outputPath = PathBuilder.buildPath(outputPath, "all", "*.avro").toString();
     }
 
     return outputPath;

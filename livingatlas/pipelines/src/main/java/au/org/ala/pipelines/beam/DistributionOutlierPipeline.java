@@ -1,40 +1,30 @@
 package au.org.ala.pipelines.beam;
 
+import static org.apache.beam.sdk.extensions.joinlibrary.Join.leftOuterJoin;
+
 import au.org.ala.pipelines.options.AllDatasetsPipelinesOptions;
 import au.org.ala.pipelines.options.DistributionOutlierPipelineOptions;
 import au.org.ala.pipelines.transforms.DistributionOutlierTransform;
 import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
-import java.io.*;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
-import org.apache.beam.sdk.coders.AvroCoder;
 import org.apache.beam.sdk.io.AvroIO;
-import org.apache.beam.sdk.io.TextIO;
+import org.apache.beam.sdk.io.fs.EmptyMatchTreatment;
 import org.apache.beam.sdk.metrics.*;
 import org.apache.beam.sdk.transforms.*;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.PCollectionList;
 import org.apache.beam.sdk.values.TypeDescriptors;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IOUtils;
+import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
-import org.gbif.pipelines.core.factory.FileSystemFactory;
 import org.gbif.pipelines.io.avro.*;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.MDC;
 
 /**
@@ -74,19 +64,13 @@ public class DistributionOutlierPipeline {
 
   public static void run(DistributionOutlierPipelineOptions options) throws Exception {
 
-    Counter indexRecordCounter = Metrics.counter(IndexRecord.class, INDEX_RECORD_COUNTER);
-    Counter existingRecordCounter =
-        Metrics.counter(DistributionOutlierRecord.class, EXISTING_RECORD_COUNTER);
     Counter newRecordCounter = Metrics.counter(IndexRecord.class, NEW_RECORD_COUNTER);
+    Counter existingRecordCounter = Metrics.counter(IndexRecord.class, EXISTING_RECORD_COUNTER);
+    Counter indexRecordCounter = Metrics.counter(IndexRecord.class, INDEX_RECORD_COUNTER);
 
-    // Create output path
-    // default: {fsPath}/pipelines-outlier
-    // or {fsPath}/pipelines-outlier/{datasetId}
-    String outputPath = ALAFsUtils.buildPathOutlierUsingTargetPath(options, false);
-
-    log.info("Adding step 1: Collecting index records");
     Pipeline p = Pipeline.create(options);
 
+    log.info("Adding step 1: Read all index records");
     PCollection<IndexRecord> indexRecords =
         ALAFsUtils.loadIndexRecords(options, p)
             .apply(
@@ -95,50 +79,54 @@ public class DistributionOutlierPipeline {
                     it ->
                         !StringUtils.isEmpty(it.getTaxonID())
                             && !StringUtils.isEmpty(it.getLatLng())
-                            && !StringUtils.isEmpty(it.getId())))
-            .apply(
-                MapElements.via(
-                    new SimpleFunction<IndexRecord, IndexRecord>() {
-                      @Override
-                      public IndexRecord apply(IndexRecord input) {
-                        indexRecordCounter.inc();
-                        return input;
-                      }
-                    }));
+                            && !StringUtils.isEmpty(it.getId())));
+
+    if (options.isAddDebugCounts()) {
+      log.info("Adding step 1a: Adding idnex record count metric");
+      indexRecords
+          .apply(Count.globally())
+          .apply(
+              MapElements.via(
+                  new SimpleFunction<Long, Long>() {
+                    @Override
+                    public Long apply(Long input) {
+                      indexRecordCounter.inc(input);
+                      return input;
+                    }
+                  }));
+    }
 
     DistributionOutlierTransform distributionTransform =
         new DistributionOutlierTransform(options.getBaseUrl());
 
-    log.info("Adding step 2: Loading existing outliers records");
-    PCollection<DistributionOutlierRecord> existingOutliers =
-        loadExistingRecords(options, p, outputPath);
-    //Count existing records
-    existingOutliers.apply(
-        MapElements.via(
-            new SimpleFunction<DistributionOutlierRecord, DistributionOutlierRecord>() {
-              @Override
-              public DistributionOutlierRecord apply(DistributionOutlierRecord input) {
-                existingRecordCounter.inc();
-                return input;
-              }
-            }));
-
-    log.info("Adding step 3: Filtering out the records which already have outliers");
+    log.info("Adding step 2: Create UUID -> IndexRecords");
     PCollection<KV<String, IndexRecord>> kvIndexRecords =
         indexRecords.apply(
             WithKeys.<String, IndexRecord>of(it -> it.getId())
                 .withKeyType(TypeDescriptors.strings()));
 
+    log.info("Adding step 3: Loading existing outliers records");
+    PCollection<DistributionOutlierRecord> existingOutliers = loadExistingRecords(options, p);
+
+    if (options.isAddDebugCounts()) {
+      log.info("Adding step 3a: Adding existing record count metric");
+      existingOutliers
+          .apply(Count.globally())
+          .apply(
+              MapElements.via(
+                  new SimpleFunction<Long, Long>() {
+                    @Override
+                    public Long apply(Long input) {
+                      existingRecordCounter.inc(input);
+                      return input;
+                    }
+                  }));
+    }
+
+    log.info("Adding step 4: Create UUID -> Boolean");
     PCollection<KV<String, Boolean>> kvExistingOutliers =
         existingOutliers
-            .apply(
-                MapElements.via(
-                    new SimpleFunction<DistributionOutlierRecord, String>() {
-                      @Override
-                      public String apply(DistributionOutlierRecord input) {
-                        return input.getId();
-                      }
-                    }))
+            .apply(MapElements.into(TypeDescriptors.strings()).via(dor -> dor.getId()))
             .apply(Distinct.create())
             .apply(
                 MapElements.via(
@@ -149,9 +137,9 @@ public class DistributionOutlierPipeline {
                       }
                     }));
 
+    log.info("Adding step 5: Generate list of records not marked as distribution outliers");
     PCollection<IndexRecord> newAddedIndexRecords =
-        org.apache.beam.sdk.extensions.joinlibrary.Join.leftOuterJoin(
-                kvIndexRecords, kvExistingOutliers, false)
+        leftOuterJoin(kvIndexRecords, kvExistingOutliers, false)
             .apply(
                 Filter.by(
                     (SerializableFunction<KV<String, KV<IndexRecord, Boolean>>, Boolean>)
@@ -167,8 +155,7 @@ public class DistributionOutlierPipeline {
                       }
                     }));
 
-    log.info("Adding step 4: calculating outliers index");
-
+    log.info("Adding step 6: calculating outliers index");
     PCollection<DistributionOutlierRecord> kvRecords =
         newAddedIndexRecords
             .apply("Key by species", distributionTransform.toKv())
@@ -178,118 +165,38 @@ public class DistributionOutlierPipeline {
                 distributionTransform.calculateOutlier())
             .apply("Flatten records", Flatten.iterables());
 
-    DateFormat df = new SimpleDateFormat("yyyy-MM-dd-hh-mm-ss");
-    String ts = df.format(new Date());
+    log.info("Adding step 7: Join newly create DistributionOutlierRecord to existing ones");
+    PCollection<DistributionOutlierRecord> union =
+        PCollectionList.of(kvRecords).and(existingOutliers).apply(Flatten.pCollections());
 
-    String targetFile = outputPath + "/outlier_" + ts;
-    log.info("Adding step 5: writing to " + targetFile + ".avro");
-    kvRecords.apply(
+    // Create output path
+    // default: {fsPath}/pipelines-outlier
+    // or {fsPath}/pipelines-outlier/{datasetId}
+    String outputPath = ALAFsUtils.buildPathOutlierUsingTargetPath(options, false);
+    log.info("Adding step 8: Writing to " + outputPath + "/outlier-*.avro");
+    union.apply(
         "Write to file",
         AvroIO.write(DistributionOutlierRecord.class)
-            .to(targetFile)
-            .withoutSharding()
+            .to(outputPath + "/outlier")
             .withSuffix(".avro"));
-    // Checking purpose.
-    if (System.getenv("test") != null) {
-      kvRecords
-          .apply("to String", distributionTransform.flatToString())
-          .apply(
-              "Write to text", TextIO.write().to(targetFile).withoutSharding().withSuffix(".txt"));
-    }
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();
     result.waitUntilFinish();
 
-    writeWorkLogs(
-        options,
-        outputPath,
-        getMetricCount(result, INDEX_RECORD_COUNTER),
-        getMetricCount(result, EXISTING_RECORD_COUNTER),
-        getMetricCount(result, NEW_RECORD_COUNTER),
-        targetFile);
-  }
-
-  /**
-   * Read count from counter
-   *
-   * @param result Pipelines
-   * @param counterName
-   * @return
-   */
-  @NotNull
-  private static Double getMetricCount(PipelineResult result, String counterName) {
-    Iterator<MetricResult<Long>> iter =
-        result.metrics().queryMetrics(MetricsFilter.builder().build()).getCounters().iterator();
-    while (iter.hasNext()) {
-      MetricResult<Long> counter = iter.next();
-      if (counter.getName().getName().equalsIgnoreCase(counterName)) {
-        return counter.getAttempted().doubleValue();
-      }
-    }
-
-    return 0d;
-  }
-
-  /**
-   * todo: hdfs may not support file expending
-   * @param options
-   * @param outputPath
-   * @param numAllRecords
-   * @param numExistingRecords
-   * @param numNewRecords
-   * @param targetFile
-   */
-  private static void writeWorkLogs(
-      AllDatasetsPipelinesOptions options,
-      String outputPath,
-      double numAllRecords,
-      double numExistingRecords,
-      double numNewRecords,
-      String targetFile) {
-    try {
-      List<String> WORKLOGS = new ArrayList();
-      WORKLOGS.add("Output file: " + targetFile);
-      WORKLOGS.add("Total indexed records: " + numAllRecords);
-      WORKLOGS.add("Records which outlier distances have been calculated: " + numExistingRecords);
-      WORKLOGS.add("Records will be calculated: " + numNewRecords);
-
-      WORKLOGS.forEach(it -> log.info(it));
-      WORKLOGS.add("------------------------------------------------\r\n");
-
-      FileSystem fs =
-          FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
-              .getFs(outputPath);
-      FSDataOutputStream os = null;
-      if (fs.exists(new Path(outputPath + "/work_logs.txt"))) {
-        os = fs.append(new Path(outputPath + "/work_logs.txt"));
-      } else {
-        os = fs.create(new Path(outputPath + "/work_logs.txt"));
-      }
-      InputStream is = new ByteArrayInputStream(String.join("\r\n", WORKLOGS).getBytes());
-      IOUtils.copyBytes(is, os, 4096, true);
-    } catch (Exception e) {
-      log.warn("Cannot write work history, appending file may not supported? ignored! ");
-    }
+    log.info("Writing metrics.....");
+    MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
+    log.info("Writing metrics written.");
   }
 
   private static PCollection<DistributionOutlierRecord> loadExistingRecords(
-      AllDatasetsPipelinesOptions options, Pipeline p, String outputPath) throws IOException {
-
-    FileSystem fs =
-        FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
-            .getFs(outputPath);
+      AllDatasetsPipelinesOptions options, Pipeline p) {
 
     String outlierPath = ALAFsUtils.getOutlierTargetPath(options);
-    boolean hasOutlier = ALAFsUtils.hasAvro(fs, outlierPath, false);
-    log.debug("Try to Load existing outliers from {}", outlierPath);
-
-    if (hasOutlier) {
-      String samplingPath = String.join("/", outlierPath, "*.avro");
-      return p.apply(AvroIO.read(DistributionOutlierRecord.class).from(samplingPath));
-    } else {
-      log.info("No existing outlier AVRO files under " + outlierPath);
-      return p.apply(Create.empty(AvroCoder.of(DistributionOutlierRecord.class)));
-    }
+    log.info("Existing outlier cache path {}", outlierPath);
+    return p.apply(
+        AvroIO.read(DistributionOutlierRecord.class)
+            .from(outlierPath)
+            .withEmptyMatchTreatment(EmptyMatchTreatment.ALLOW));
   }
 }
