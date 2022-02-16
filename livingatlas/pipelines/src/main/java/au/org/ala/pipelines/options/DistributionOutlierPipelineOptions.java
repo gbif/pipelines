@@ -13,4 +13,10 @@ public interface DistributionOutlierPipelineOptions extends AllDatasetsPipelines
   String getBaseUrl();
 
   void setBaseUrl(String baseUrl);
+
+  @Description("Whether to add debug counts to processing")
+  @Default.Boolean(true)
+  boolean isAddDebugCounts();
+
+  void setAddDebugCounts(boolean addDebugCounts);
 }

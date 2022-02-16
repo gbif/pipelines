@@ -18,7 +18,7 @@ public interface IndexFields {
   String DATE_PRECISION = "datePrecision";
   String DECADE = "decade";
   String DEFAULT_VALUES_USED = "defaultValuesUsed";
-  String DISTANCE_TO_EDL = "distanceToEDL";
+  String DISTANCE_FROM_EXPERT_DISTRIBUTION = "distanceFromExpertDistribution";
   String DUPLICATE_JUSTIFICATION = "duplicateJustification";
   String DUPLICATE_STATUS = "duplicateStatus";
   String DUPLICATE_TYPE = "duplicateType";

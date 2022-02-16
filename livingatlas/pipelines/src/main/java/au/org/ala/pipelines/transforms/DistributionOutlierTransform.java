@@ -4,14 +4,12 @@ import au.org.ala.distribution.DistributionLayer;
 import au.org.ala.distribution.DistributionServiceImpl;
 import au.org.ala.distribution.ExpertDistributionException;
 import au.org.ala.pipelines.common.ALARecordTypes;
-import au.org.ala.pipelines.interpreters.DistributionOutlierInterpreter;
 import java.util.*;
 import java.util.stream.StreamSupport;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.transforms.*;
 import org.apache.beam.sdk.values.*;
 import org.gbif.pipelines.core.functions.SerializableConsumer;
-import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.transforms.Transform;
 
@@ -41,14 +39,17 @@ public class DistributionOutlierTransform
 
   @Override
   public Optional<DistributionOutlierRecord> convert(IndexRecord source) {
-    DistributionOutlierRecord dr =
-        DistributionOutlierRecord.newBuilder().setId(source.getId()).setSpeciesID("").build();
-    return Interpretation.from(source)
-        .to(dr)
-        .via(DistributionOutlierInterpreter::interpretOccurrenceID)
-        .via(DistributionOutlierInterpreter::interpretLocation)
-        .via(DistributionOutlierInterpreter::interpretSpeciesId)
-        .getOfNullable();
+
+    String latlng = source.getLatLng();
+    String[] coordinates = latlng.split(",");
+
+    return Optional.of(
+        DistributionOutlierRecord.newBuilder()
+            .setId(source.getId())
+            .setSpeciesID(source.getTaxonID())
+            .setDecimalLatitude(Double.parseDouble(coordinates[0]))
+            .setDecimalLongitude(Double.parseDouble(coordinates[1]))
+            .build());
   }
 
   public MapElements<IndexRecord, KV<String, IndexRecord>> toKv() {
@@ -56,6 +57,13 @@ public class DistributionOutlierTransform
         .via((IndexRecord ir) -> KV.of(ir.getTaxonID(), ir));
   }
 
+  /**
+   * MapElements
+   *
+   * <p>Takes KV of TaxonID -> Iterable<IndexRecord> and outputs Iterable<DistributionOutlierRecord>
+   *
+   * @return
+   */
   public MapElements<KV<String, Iterable<IndexRecord>>, Iterable<DistributionOutlierRecord>>
       calculateOutlier() {
     return MapElements.via(
@@ -78,24 +86,32 @@ public class DistributionOutlierTransform
 
               boolean hasEDL = edl.size() > 0 ? true : false;
               double distanceToEDL = hasEDL ? 0 : -1; // 0 -inside, -1: no EDL
-              // Available EDLs of this species
 
+              // Available EDLs of this species
               if (hasEDL) {
+
+                // create a map of UUID -> lat,lng
                 Map points = new HashMap();
+
                 while (iter.hasNext()) {
                   IndexRecord record = iter.next();
-                  DistributionOutlierRecord dr = convertToDistribution(record, distanceToEDL);
-                  if (dr != null) {
-                    outputs.add(dr);
+                  Optional<DistributionOutlierRecord> dr =
+                      convertToDistribution(record, distanceToEDL);
+                  if (dr.isPresent()) {
+                    outputs.add(dr.get());
                     Map point = new HashMap();
-                    point.put("decimalLatitude", dr.getDecimalLatitude());
-                    point.put("decimalLongitude", dr.getDecimalLongitude());
-                    points.put(dr.getId(), point);
+                    point.put("decimalLatitude", dr.get().getDecimalLatitude());
+                    point.put("decimalLongitude", dr.get().getDecimalLongitude());
+                    points.put(dr.get().getId(), point);
                   }
                 }
 
-                log.debug(
-                    String.format("Calculating %d records of the species %s", points.size(), lsid));
+                if (log.isDebugEnabled()) {
+                  log.debug(
+                      String.format(
+                          "Calculating %d records of the species %s", points.size(), lsid));
+                }
+
                 Map<String, Double> results = distributionService.outliers(lsid, points);
                 Iterator<Map.Entry<String, Double>> iterator = results.entrySet().iterator();
                 while (iterator.hasNext()) {
@@ -108,9 +124,10 @@ public class DistributionOutlierTransform
               } else {
                 while (iter.hasNext()) {
                   IndexRecord record = iter.next();
-                  DistributionOutlierRecord dr = convertToDistribution(record, distanceToEDL);
-                  if (dr != null) {
-                    outputs.add(dr);
+                  Optional<DistributionOutlierRecord> dr =
+                      convertToDistribution(record, distanceToEDL);
+                  if (dr.isPresent()) {
+                    outputs.add(dr.get());
                   }
                 }
               }
@@ -145,7 +162,7 @@ public class DistributionOutlierTransform
    * @param record
    * @return
    */
-  private DistributionOutlierRecord convertToDistribution(
+  private Optional<DistributionOutlierRecord> convertToDistribution(
       IndexRecord record, double distanceToEDL) {
     try {
       DistributionOutlierRecord newRecord =
@@ -160,11 +177,11 @@ public class DistributionOutlierTransform
       newRecord.setDecimalLatitude(Double.parseDouble(coordinates[0]));
       newRecord.setDecimalLongitude(Double.parseDouble(coordinates[1]));
 
-      return newRecord;
-    } catch (Exception ex) {
+      return Optional.of(newRecord);
+    } catch (NumberFormatException ex) {
       log.debug(record.getId() + " has incorrect lat/lng or taxon. ignored..");
     }
-    return null;
+    return Optional.empty();
   }
 
   private String convertRecordToString(DistributionOutlierRecord record) {

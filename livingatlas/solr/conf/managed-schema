@@ -441,7 +441,7 @@
   <field name="nameType"   type="string" docValues="true" indexed="true"/>
 
   <!-- ALA 'Data Quality' additional fields -->
-  <field name="distanceToEDL"   type="double" docValues="true" indexed="true"/>
+  <field name="distanceFromExpertDistribution" type="double" docValues="true" indexed="true"/>
 
   <!-- iNaturalist additions -->
   <field name="nick" type="string" docValues="true" indexed="true"/>
