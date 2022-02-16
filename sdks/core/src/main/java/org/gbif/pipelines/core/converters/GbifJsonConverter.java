@@ -259,11 +259,8 @@ public class GbifJsonConverter {
               Optional.ofNullable(core.get(t.qualifiedName()))
                   .ifPresent(r -> jc.addJsonTextFieldNoCheck(k, r));
 
-      fieldFn.accept(DwcTerm.recordedBy, "recordedBy");
-      fieldFn.accept(DwcTerm.identifiedBy, "identifiedBy");
       fieldFn.accept(DwcTerm.recordNumber, "recordNumber");
       fieldFn.accept(DwcTerm.organismID, "organismId");
-      fieldFn.accept(DwcTerm.samplingProtocol, "samplingProtocol");
       fieldFn.accept(DwcTerm.eventID, "eventId");
       fieldFn.accept(DwcTerm.parentEventID, "parentEventId");
       fieldFn.accept(DwcTerm.institutionCode, "institutionCode");
