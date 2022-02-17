@@ -44,7 +44,8 @@ public class FileSystemFactory {
       Configuration config = getHdfsConfiguration(hdfsSiteConfig);
       this.hdfsFs = FileSystem.get(URI.create(prefixToUse), config);
     } else {
-      throw new RuntimeException("XML config is provided, but fs name is not found");
+      this.hdfsFs = null;
+      this.hdfsPrefix = null;
     }
   }
 

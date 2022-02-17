@@ -57,7 +57,9 @@ if [[ $PROD = false ]]; then
   # grep with -P option doesnt work on Mac OSX - perl regex arent supported,
   VER=$(grep version ../pom.xml | grep -v '<?xml'| head -1 | sed 's/[[:space:]]//g' | sed -E 's/<[/]{0,1}version>//g')
 else
-  VER=$(dpkg-query --show -f '${Version}' la-pipelines)
+  if [ "$(grep -Ei 'debian|buntu|mint' /etc/*release)" ]; then
+    VER=$(dpkg-query --show -f '${Version}' la-pipelines)
+  fi
 fi
 
 WHEREL="[--local|--embedded|--cluster]"
@@ -422,7 +424,7 @@ function spark-cluster-pipeline() {
     if [[ $CONF = "--conf" ]] ; then CONF=""; fi
 
     if [[ $ltype = "spark-cluster" ]] ; then
-        $_D /data/spark/bin/spark-submit \
+        $_D /usr/bin/spark-submit \
             --name "$NAME" \
             $CONF \
             $(toArg $SH_ARGS num-executors) \
@@ -430,7 +432,6 @@ function spark-cluster-pipeline() {
             $(toArg $SH_ARGS executor-memory) \
             $(toArg $SH_ARGS driver-memory) \
             --class $CLASS \
-            --master $SPARK_MASTER \
             $PIPELINES_JAR \
             --datasetId=$dr \
             --config=$config $ARGS \
@@ -535,7 +536,7 @@ function image-load () {
 
     PRE=image-load-sh-args.spark-cluster
     if [[ $ltype = "spark-cluster" ]] ; then
-        $_D /data/spark/bin/spark-submit \
+        $_D /usr/bin/spark-submit \
             --name "image-load $dr" \
             $(toArg $PRE conf) \
             $(toArg $PRE num-executors) \
@@ -543,7 +544,6 @@ function image-load () {
             $(toArg $PRE executor-memory) \
             $(toArg $PRE driver-memory) \
             --class $CLASS \
-            --master $SPARK_MASTER \
             --driver-java-options "-Dlog4j.configuration=file:$CONFIG_DIR/log4j.properties" \
             $PIPELINES_JAR \
             --datasetId=$dr \
@@ -573,14 +573,13 @@ function image-sync () {
 
     PRE=image-sync-sh-args.spark-cluster
     if [[ $ltype = "spark-cluster" ]] ; then
-        $_D /data/spark/bin/spark-submit \
+        $_D /usr/bin/spark-submit \
             --name "Image-sync $dr" \
             $(toArg $PRE num-executors) \
             $(toArg $PRE executor-cores) \
             $(toArg $PRE executor-memory) \
             $(toArg $PRE driver-memory) \
             --class $CLASS \
-            --master $SPARK_MASTER \
             --driver-java-options "-Dlog4j.configuration=file:$CONFIG_DIR/log4j.properties" \
             $PIPELINES_JAR \
             --datasetId=$dr \
@@ -783,14 +782,13 @@ function dwca_export () {
 
     PRE=image-sync-sh-args.spark-cluster
     if [[ $ltype = "spark-cluster" ]] ; then
-        $_D /data/spark/bin/spark-submit \
+        $_D /usr/bin/spark-submit \
             --name "Dwca-export $dr" \
             $(toArg $PRE num-executors) \
             $(toArg $PRE executor-cores) \
             $(toArg $PRE executor-memory) \
             $(toArg $PRE driver-memory) \
             --class $CLASS \
-            --master $SPARK_MASTER \
             --driver-java-options "-Dlog4j.configuration=file:$CONFIG_DIR/log4j.properties" \
             $PIPELINES_JAR \
             --datasetId=$dr \

@@ -249,7 +249,11 @@ public final class FsUtils {
    */
   public static boolean deleteIfExist(
       String hdfsSiteConfig, String coreSiteConfig, String directoryPath) {
+
     FileSystem fs = getFileSystem(hdfsSiteConfig, coreSiteConfig, directoryPath);
+    if (directoryPath.startsWith("hdfs:///")) {
+      directoryPath = directoryPath.substring(7);
+    }
 
     Path path = new Path(directoryPath);
     try {

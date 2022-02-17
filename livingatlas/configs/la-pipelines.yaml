@@ -41,7 +41,7 @@ sds:
   wsUrl: http://localhost:9189
   timeoutSec: 70
 collectory:
-  wsUrl: https://collections.ala.org.au/ws/
+  wsUrl: https://collections-test.ala.org.au/ws/
   timeoutSec: 70
   retryConfig:
     maxAttempts: 10
@@ -80,8 +80,11 @@ geocodeConfig:
 
 gbifConfig:
   vocabularyConfig:
-    vocabulariesPath: /data/pipelines-vocabularies
+    vocabulariesPath: /data/pipelines-vocabularies/
     lifeStageVocabName: LifeStage
+    establishmentMeansVocabName: EstablishmentMeans
+    pathwayVocabName: Pathway
+    degreeOfEstablishmentVocabName: DegreeOfEstablishment
 
 #locationInfoConfig:
 #    countryNamesFile : /data/pipelines-data/resources/countries.txt
