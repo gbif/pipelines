@@ -1,19 +1,5 @@
 package org.gbif.pipelines.core.interpreters.core;
 
-import static org.gbif.api.model.Constants.EBIRD_DATASET_KEY;
-import static org.gbif.api.vocabulary.OccurrenceIssue.CONTINENT_INVALID;
-import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_INVALID;
-import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_OUT_OF_RANGE;
-import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_PRECISION_INVALID;
-import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_UNCERTAINTY_METERS_INVALID;
-import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_COORDINATE_MISMATCH;
-import static org.gbif.api.vocabulary.OccurrenceIssue.FOOTPRINT_SRS_INVALID;
-import static org.gbif.api.vocabulary.OccurrenceIssue.ZERO_COORDINATE;
-import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
-import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareOptValue;
-import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareValue;
-
-import com.google.common.base.Strings;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Objects;
@@ -22,9 +8,7 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
+
 import org.gbif.api.vocabulary.Continent;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.common.parsers.CountryParser;
@@ -48,7 +32,25 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.rest.client.geocode.GeocodeResponse;
+
+import org.apache.commons.lang3.StringUtils;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
+
+import com.google.common.base.Strings;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
+import static org.gbif.api.vocabulary.OccurrenceIssue.CONTINENT_INVALID;
+import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_INVALID;
+import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_OUT_OF_RANGE;
+import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_PRECISION_INVALID;
+import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_UNCERTAINTY_METERS_INVALID;
+import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_COORDINATE_MISMATCH;
+import static org.gbif.api.vocabulary.OccurrenceIssue.FOOTPRINT_SRS_INVALID;
+import static org.gbif.api.vocabulary.OccurrenceIssue.ZERO_COORDINATE;
+import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
+import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareOptValue;
+import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareValue;
 
 /** Interprets the location terms of a {@link ExtendedRecord}. */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -170,21 +172,18 @@ public class LocationInterpreter {
     }
   }
 
-  /** Interprets the publishing country for eBird dataset. */
+  /** Interprets the publishing country. */
   private static Optional<String> interpretPublishingCountry(ExtendedRecord er, MetadataRecord mr) {
-    // Special case for eBird, use the supplied publishing country.
-    if (EBIRD_DATASET_KEY.toString().equals(mr.getDatasetKey())) {
 
-      String verbatimPublishingCountryCode = extractNullAwareValue(er, GbifTerm.publishingCountry);
-      OccurrenceParseResult<Country> result =
-          new OccurrenceParseResult<>(COUNTRY_PARSER.parse(verbatimPublishingCountryCode));
+    String verbatimPublishingCountryCode = extractNullAwareValue(er, GbifTerm.publishingCountry);
+    OccurrenceParseResult<Country> result =
+        new OccurrenceParseResult<>(COUNTRY_PARSER.parse(verbatimPublishingCountryCode));
 
-      if (result.isSuccessful()) {
-        return Optional.of(result.getPayload().getIso2LetterCode());
-      }
+    if (result.isSuccessful()) {
+      return Optional.of(result.getPayload().getIso2LetterCode());
+    } else {
+      return Optional.ofNullable(mr.getDatasetPublishingCountry());
     }
-
-    return Optional.ofNullable(mr.getDatasetPublishingCountry());
   }
 
   /** {@link DwcTerm#continent} interpretation. */
