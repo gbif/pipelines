@@ -1,0 +1,1000 @@
+{
+  "metadata" : {
+    "createdDate" : "2021-06-01T12:55:18.601",
+    "version" : "1.0.3"
+  },
+  "vocabulary" : {
+    "key" : 1,
+    "name" : "LifeStage",
+    "label" : {
+      "en" : "Life stage"
+    },
+    "definition" : {
+      "en" : "A vocabulary to capture the broad stages that an organism passes through during its life cycle. This vocabulary was assembled based on the observed terms commonly used by the open data community, including those from citizen scientists."
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2020-07-13T11:52:18.276347",
+    "createdBy" : "mlopezg",
+    "modified" : "2020-07-13T11:52:18.276347",
+    "modifiedBy" : "MattBlissett",
+    "deleted" : null,
+    "namespace" : null
+  },
+  "concepts" : [ {
+    "key" : 8,
+    "name" : "Adult",
+    "label" : {
+      "en" : "Adult",
+      "es-ES" : "Adulto",
+      "nl-NL" : "Volwassen"
+    },
+    "definition" : {
+      "en" : "An adult is an organism that has reached sexual maturity"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-06-01T12:32:22.217118",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-06-01T12:32:22.217118",
+    "modifiedBy" : "MattBlissett",
+    "deleted" : null,
+    "vocabularyKey" : 1,
+    "parentKey" : null,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "A", "Ad", "Adultos", "adult unsexed", "adult female", "young adult", "Adult(s)", "\"adult", "Young-Adult", "adult breeding", "teneral", "a", "ad", "Adulta", "old", "Adulte", "ad.", "adult female - worker", "adult male", "Adulto", "adult non-breeding", "Postmetamorfico", "Young adult", "Adults", "old adult", "ovipositing female", "adullt" ],
+    "sameAsUris" : [ ]
+  }, {
+    "key" : 6,
+    "name" : "Juvenile",
+    "label" : {
+      "en" : "Juvenile",
+      "es-ES" : "Juvenil"
+    },
+    "definition" : {
+      "en" : "A juvenile is an individual organism that has not yet reached its adult form, sexual maturity or size"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-06-01T12:26:59.233787",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-06-01T12:26:59.233787",
+    "modifiedBy" : "MattBlissett",
+    "deleted" : null,
+    "vocabularyKey" : 1,
+    "parentKey" : null,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "Juv.", "Young", "Cría", "juveniel", "J", "Juv", "Juveniles", "infant", "cría", "jovem", "cub", "Juvenil", "calf", "juvenal", "juvenil(s)", "Smolt", "duckling", "\"juvenile", "Joven", "juvinile" ],
+    "sameAsUris" : [ ]
+  }, {
+    "key" : 39,
+    "name" : "Unknown",
+    "label" : {
+      "en" : "Unknown",
+      "nl-NL" : "Onbekend"
+    },
+    "definition" : {
+      "en" : "Unknown life stage"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-06-01T12:26:27.06409",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-06-01T12:26:27.06409",
+    "modifiedBy" : "MattBlissett",
+    "deleted" : null,
+    "vocabularyKey" : 1,
+    "parentKey" : null,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "2 adultos, 1 juvenil", "Undetermined", "Not recorded", "não informado", "Indeterminado", "1st calendar year", "Desconocido", "undefined", "Not Determined", "Life Stage Not Recorded", "1K+", "Indeterminante", "Indéterminé", "No se cuenta con el dato", "No determinado", "1K" ],
+    "sameAsUris" : [ ]
+  }, {
+    "key" : 7,
+    "name" : "Subadult",
+    "label" : {
+      "en" : "Subadult",
+      "es-ES" : "Subadulto"
+    },
+    "definition" : {
+      "en" : "A subadult is an organism that is not fully adult"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-06-01T12:24:35.842939",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-06-01T12:24:35.842939",
+    "modifiedBy" : "MattBlissett",
+    "deleted" : null,
+    "vocabularyKey" : 1,
+    "parentKey" : null,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "subimago", "Sub-adult", "Subadult", "Sub-Adult", "sub-adult", "subad", "subadult(s)", "Subadulto" ],
+    "sameAsUris" : [ ]
+  }, {
+    "key" : 5,
+    "name" : "Fledgling",
+    "label" : {
+      "en" : "Fledgling"
+    },
+    "definition" : {
+      "en" : "A fledgling is a young bird that has recently become capable of flight, but is still dependent upon parental care and feeding."
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-05-31T12:18:09.097011",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-05-31T12:18:09.097011",
+    "modifiedBy" : "MattBlissett",
+    "deleted" : null,
+    "vocabularyKey" : 1,
+    "parentKey" : 2,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ]
+  }, {
+    "key" : 4,
+    "name" : "Nestling",
+    "label" : {
+      "en" : "Nestling"
+    },
+    "definition" : {
+      "en" : "A nestling is a bird that is too young to leave its nest"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-05-31T11:58:25.267674",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-05-31T11:58:25.267674",
+    "modifiedBy" : "MattBlissett",
+    "deleted" : null,
+    "vocabularyKey" : 1,
+    "parentKey" : 2,
+    "alternativeLabels" : {
+      "en" : [ "Pullus" ]
+    },
+    "hiddenLabels" : [ "Pulli" ],
+    "sameAsUris" : [ ]
+  }, {
+    "key" : 22,
+    "name" : "Larva",
+    "label" : {
+      "en" : "Larva",
+      "es-ES" : "Larva"
+    },
+    "definition" : {
+      "en" : "A larva is a distinct juvenile form many animals undergo before metamorphosis into adults"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-03-19T08:43:19.919361",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-03-19T08:43:19.919361",
+    "modifiedBy" : "mgrosjean",
+    "deleted" : null,
+    "vocabularyKey" : 1,
+    "parentKey" : null,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "Larval", "Larve", "1st instar", "Larvae", "Larvas", "metacercaria" ],
+    "sameAsUris" : [ ]
+  }, {
+    "key" : 9,
+    "name" : "Seedling",
+    "label" : {
+      "en" : "Seedling",
+      "es-ES" : "Plántula"
+    },
+    "definition" : {
+      "en" : "A seedling is a young plant sporophyte developing out of a plant embryo from a seed"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2020-07-09T10:07:22.33361",
+    "createdBy" : "mlopezg",
+    "modified" : "2020-07-09T10:07:22.33361",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 1,
+    "parentKey" : null,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "sprouting" ],
+    "sameAsUris" : [ ]
+  }, {
+    "key" : 3,
+    "name" : "Hatchling",
+    "label" : {
+      "en" : "Hatchling",
+      "es-ES" : "Pichón"
+    },
+    "definition" : {
+      "en" : "A hatchling is a young bird that has recently come out of its egg"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2020-07-09T10:07:22.111554",
+    "createdBy" : "mlopezg",
+    "modified" : "2020-07-09T10:07:22.111554",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 1,
+    "parentKey" : 2,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "hatchlings" ],
+    "sameAsUris" : [ ]
+  }, {
+    "key" : 13,
+    "name" : "Immature",
+    "label" : {
+      "en" : "Immature",
+      "es-ES" : "Inmaduro"
+    },
+    "definition" : {
+      "en" : "Not fully developed"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2020-07-09T10:07:22.00552",
+    "createdBy" : "mlopezg",
+    "modified" : "2020-07-09T10:07:22.00552",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 1,
+    "parentKey" : null,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "Imm", "imm." ],
+    "sameAsUris" : [ ]
+  }, {
+    "key" : 31,
+    "name" : "Tadpole",
+    "label" : {
+      "en" : "Tadpole",
+      "es-ES" : "Renacuajo"
+    },
+    "definition" : {
+      "en" : "The tailed aquatic larva of an amphibian (frog, toad, newt, or salamander), breathing through gills and lacking legs until the later stages of its development."
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2020-07-09T10:07:20.213287",
+    "createdBy" : "mlopezg",
+    "modified" : "2020-07-09T10:07:20.213287",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 1,
+    "parentKey" : 22,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "Renacuajo", "Têtard", "Renacuajos", "Tadpoles" ],
+    "sameAsUris" : [ ]
+  }, {
+    "key" : 21,
+    "name" : "Pupa",
+    "label" : {
+      "en" : "Pupa",
+      "es-ES" : "Pupa"
+    },
+    "definition" : {
+      "en" : "A pupa is the life stage of some insects undergoing transformation between immature and mature stages"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2020-07-09T10:07:19.033746",
+    "createdBy" : "mlopezg",
+    "modified" : "2020-07-09T10:07:19.033746",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 1,
+    "parentKey" : null,
+    "alternativeLabels" : {
+      "en" : [ "Chrysalis" ],
+      "es-ES" : [ "Crisálida" ]
+    },
+    "hiddenLabels" : [ "Cocoon", "Pupae", "pupal case" ],
+    "sameAsUris" : [ ]
+  }, {
+    "key" : 23,
+    "name" : "Nymph",
+    "label" : {
+      "en" : "Nymph",
+      "es-ES" : "Ninfa"
+    },
+    "definition" : {
+      "en" : "A nymph is the immature form of some invertebrates, particularly insects, which undergoes gradual metamorphosis (hemimetabolism) before reaching its adult stage"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2020-07-09T10:07:18.728366",
+    "createdBy" : "mlopezg",
+    "modified" : "2020-07-09T10:07:18.728366",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 1,
+    "parentKey" : null,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "nymphs", "larva, nymph", "Ninfa", "Nymphe", "Larva/nymph" ],
+    "sameAsUris" : [ ]
+  }, {
+    "key" : 16,
+    "name" : "Neonate",
+    "label" : {
+      "en" : "Neonate",
+      "es-ES" : "Neonato"
+    },
+    "definition" : {
+      "en" : "A neonate is a newborn mammal"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2020-07-09T10:07:18.204757",
+    "createdBy" : "mlopezg",
+    "modified" : "2020-07-09T10:07:18.204757",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 1,
+    "parentKey" : null,
+    "alternativeLabels" : {
+      "en" : [ "Newborn" ]
+    },
+    "hiddenLabels" : [ "Neonato", "newborn", "natal" ],
+    "sameAsUris" : [ ]
+  }, {
+    "key" : 27,
+    "name" : "Nauplius",
+    "label" : {
+      "en" : "Nauplius",
+      "es-ES" : "Nauplio"
+    },
+    "definition" : {
+      "en" : "The first larval stage of many crustaceans, having an unsegmented body and a single eye."
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2020-07-09T10:07:17.881764",
+    "createdBy" : "mlopezg",
+    "modified" : "2020-07-09T10:07:17.881764",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 1,
+    "parentKey" : 22,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "Nauplii" ],
+    "sameAsUris" : [ ]
+  }, {
+    "key" : 24,
+    "name" : "Medusa",
+    "label" : {
+      "en" : "Medusa",
+      "es-ES" : "Medusa"
+    },
+    "definition" : {
+      "en" : "A medusa is a form of cnidarian in which the body is shaped like an umbrella"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2020-07-09T10:07:17.781508",
+    "createdBy" : "mlopezg",
+    "modified" : "2020-07-09T10:07:17.781508",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 1,
+    "parentKey" : null,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "medusae" ],
+    "sameAsUris" : [ ]
+  }, {
+    "key" : 12,
+    "name" : "Fruiting",
+    "label" : {
+      "en" : "Fruiting"
+    },
+    "definition" : {
+      "en" : "The process of a tree or other plant producing fruit"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2020-07-09T10:07:12.702829",
+    "createdBy" : "mlopezg",
+    "modified" : "2020-07-09T10:07:12.702829",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 1,
+    "parentKey" : null,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "fruiting body", "fruit-bearing", "Flowering and Fruiting", "Flor y Fruto", "Fruit", "Fruto", "fruits", "In fruit", "flowers & fruits" ],
+    "sameAsUris" : [ ]
+  }, {
+    "key" : 10,
+    "name" : "Flowering",
+    "label" : {
+      "en" : "Flowering",
+      "es-ES" : "Floración"
+    },
+    "definition" : {
+      "en" : "The flowering stage refers to the phase where plants produce their flower sets, vegetables, and fruits"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2020-07-09T10:07:11.508331",
+    "createdBy" : "mlopezg",
+    "modified" : "2020-07-09T10:07:11.508331",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 1,
+    "parentKey" : null,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "Flor", "Flower", "Flowers", "flower bud" ],
+    "sameAsUris" : [ ]
+  }, {
+    "key" : 17,
+    "name" : "Fetus",
+    "label" : {
+      "en" : "Fetus",
+      "es-ES" : "Feto"
+    },
+    "definition" : {
+      "en" : "A fetus is the unborn offspring of an animal that develops from an embryo"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2020-07-09T10:07:11.056892",
+    "createdBy" : "mlopezg",
+    "modified" : "2020-07-09T10:07:11.056892",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 1,
+    "parentKey" : null,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "Foetus" ],
+    "sameAsUris" : [ ]
+  }, {
+    "key" : 15,
+    "name" : "Embryo",
+    "label" : {
+      "en" : "Embryo",
+      "es-ES" : "Embrión"
+    },
+    "definition" : {
+      "en" : "An embryo refers to the early developmental stage of eukaryotic organisms following the fertilization of an egg (derived from a female) by sperm (derived from a male) as a method of sexual reproduction"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2020-07-09T10:07:10.95582",
+    "createdBy" : "mlopezg",
+    "modified" : "2020-07-09T10:07:10.95582",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 1,
+    "parentKey" : null,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "Embrión", "Embryos" ],
+    "sameAsUris" : [ ]
+  }, {
+    "key" : 1,
+    "name" : "Egg",
+    "label" : {
+      "en" : "Egg",
+      "es-ES" : "Huevo"
+    },
+    "definition" : {
+      "en" : "The egg is the organic vessel containing the zygote in which an embryo develops until it can survive on its own, at which point the animal hatches"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2020-07-09T10:07:10.76337",
+    "createdBy" : "mlopezg",
+    "modified" : "2020-07-09T10:07:10.76337",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 1,
+    "parentKey" : null,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "Huevo", "Eggs", "Huevos" ],
+    "sameAsUris" : [ ]
+  }, {
+    "key" : 20,
+    "name" : "Cyst",
+    "label" : {
+      "en" : "Cyst"
+    },
+    "definition" : {
+      "en" : "A cyst is a closed sac, having a distinct envelop and division compared with the nearby tissue"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2020-07-09T10:07:10.429014",
+    "createdBy" : "mlopezg",
+    "modified" : "2020-07-09T10:07:10.429014",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 1,
+    "parentKey" : null,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "cysts" ],
+    "sameAsUris" : [ ]
+  }, {
+    "key" : 38,
+    "name" : "Imago",
+    "label" : {
+      "en" : "Imago"
+    },
+    "definition" : {
+      "en" : "The imago is the last stage an insect attains during its metamorphosis, its process of growth and development"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2020-07-09T10:07:09.558167",
+    "createdBy" : "mlopezg",
+    "modified" : "2020-07-09T10:07:09.558167",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 1,
+    "parentKey" : null,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "Imago/adult", "imago: 1", "fresh imago", "imago/adult" ],
+    "sameAsUris" : [ ]
+  }, {
+    "key" : 37,
+    "name" : "Polyp",
+    "label" : {
+      "en" : "Polyp"
+    },
+    "definition" : {
+      "en" : "A solitary or colonial sedentary form of a coelenterate such as a sea anemone, typically having a columnar body with the mouth uppermost surrounded by a ring of tentacles. In some species, polyps are a phase in the life cycle which alternates with a medusoid phase."
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2020-07-09T10:06:57.641917",
+    "createdBy" : "mlopezg",
+    "modified" : "2020-07-09T10:06:57.641917",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 1,
+    "parentKey" : null,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ]
+  }, {
+    "key" : 36,
+    "name" : "Caterpillar",
+    "label" : {
+      "en" : "Caterpillar",
+      "es-ES" : "Oruga"
+    },
+    "definition" : {
+      "en" : "Caterpillars are the larval stage of members of the order Lepidoptera (the insect order comprising butterflies and moths)"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2020-07-09T10:06:57.508535",
+    "createdBy" : "mlopezg",
+    "modified" : "2020-07-09T10:06:57.508535",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 1,
+    "parentKey" : 22,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ]
+  }, {
+    "key" : 35,
+    "name" : "Veliger",
+    "label" : { },
+    "definition" : {
+      "en" : "The final larval stage of certain molluscs, having two ciliated flaps for swimming and feeding"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2020-07-09T10:06:57.386954",
+    "createdBy" : "mlopezg",
+    "modified" : "2020-07-09T10:06:57.386954",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 1,
+    "parentKey" : 22,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ]
+  }, {
+    "key" : 34,
+    "name" : "Cyprid",
+    "label" : {
+      "en" : "Cyprid"
+    },
+    "definition" : {
+      "en" : "The cyprid larva is the last larval stage before adulthood"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2020-07-09T10:06:57.276782",
+    "createdBy" : "mlopezg",
+    "modified" : "2020-07-09T10:06:57.276782",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 1,
+    "parentKey" : 22,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ]
+  }, {
+    "key" : 33,
+    "name" : "Megalopa",
+    "label" : {
+      "en" : "Megalopa",
+      "es-ES" : "Megalopa"
+    },
+    "definition" : {
+      "en" : "The final larval stage found in decapod crustaceans"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2020-07-09T10:06:57.157669",
+    "createdBy" : "mlopezg",
+    "modified" : "2020-07-09T10:06:57.157669",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 1,
+    "parentKey" : 22,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ]
+  }, {
+    "key" : 32,
+    "name" : "Zoea",
+    "label" : {
+      "en" : "Zoea",
+      "es-ES" : "Zoea"
+    },
+    "definition" : {
+      "en" : "A free-swimming planktonic larval form of many decapod crustaceans and especially crabs that has a relatively large cephalothorax, conspicuous eyes, and fringed antennae and mouthparts"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2020-07-09T10:06:57.040321",
+    "createdBy" : "mlopezg",
+    "modified" : "2020-07-09T10:06:57.040321",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 1,
+    "parentKey" : 22,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ]
+  }, {
+    "key" : 30,
+    "name" : "Furcilia",
+    "label" : {
+      "en" : "Furcilia",
+      "es-ES" : "Furcilia "
+    },
+    "definition" : {
+      "en" : "An intermediate larva of a euphausid in which eye development is nearly adult but biramous swimming appendages are retained"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2020-07-09T10:06:56.783203",
+    "createdBy" : "mlopezg",
+    "modified" : "2020-07-09T10:06:56.783203",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 1,
+    "parentKey" : 22,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ]
+  }, {
+    "key" : 29,
+    "name" : "Calyptopsis",
+    "label" : {
+      "en" : "Calyptopsis",
+      "es-ES" : "Caliptopsis"
+    },
+    "definition" : {
+      "en" : "Calyptopsis In Euphausiacea, one of the larval stage is called calyptopsis. It is similar to zoea larva in all respects except that the paired eyes are sessile i.e. not stalked"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2020-07-09T10:06:56.653398",
+    "createdBy" : "mlopezg",
+    "modified" : "2020-07-09T10:06:56.653398",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 1,
+    "parentKey" : 22,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ]
+  }, {
+    "key" : 28,
+    "name" : "Metanauplius",
+    "label" : {
+      "en" : "Metanauplius",
+      "es-ES" : "Metanauplio"
+    },
+    "definition" : {
+      "en" : "Metanauplius is an early larval stage of some crustaceans such as krill. It follows the nauplius stage"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2020-07-09T10:06:56.535816",
+    "createdBy" : "mlopezg",
+    "modified" : "2020-07-09T10:06:56.535816",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 1,
+    "parentKey" : 22,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ]
+  }, {
+    "key" : 26,
+    "name" : "Deutonymph",
+    "label" : {
+      "en" : "Deutonymph",
+      "es-ES" : "Deutoninfa"
+    },
+    "definition" : {
+      "en" : "A second larval form occurring in the development of most mites"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2020-07-09T10:06:56.299969",
+    "createdBy" : "mlopezg",
+    "modified" : "2020-07-09T10:06:56.299969",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 1,
+    "parentKey" : 22,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ]
+  }, {
+    "key" : 25,
+    "name" : "Eft",
+    "label" : {
+      "en" : "Eft"
+    },
+    "definition" : {
+      "en" : "The juvenile stage of a newt"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2020-07-09T10:06:56.177497",
+    "createdBy" : "mlopezg",
+    "modified" : "2020-07-09T10:06:56.177497",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 1,
+    "parentKey" : null,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ]
+  }, {
+    "key" : 19,
+    "name" : "Zygote",
+    "label" : {
+      "en" : "Zygote",
+      "es-ES" : "Cigoto"
+    },
+    "definition" : {
+      "en" : "A zygote is a eukaryotic cell formed by a fertilization event between two gametes"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2020-07-09T10:06:55.488179",
+    "createdBy" : "mlopezg",
+    "modified" : "2020-07-09T10:06:55.488179",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 1,
+    "parentKey" : null,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ]
+  }, {
+    "key" : 18,
+    "name" : "Gametophyte",
+    "label" : {
+      "en" : "Gametophyte",
+      "es-ES" : "Gametofito"
+    },
+    "definition" : {
+      "en" : "A gametophyte is one of the two alternating phases in the life cycle of plants and algae"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2020-07-09T10:06:55.378354",
+    "createdBy" : "mlopezg",
+    "modified" : "2020-07-09T10:06:55.378354",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 1,
+    "parentKey" : null,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ]
+  }, {
+    "key" : 14,
+    "name" : "Mature",
+    "label" : {
+      "en" : "Mature",
+      "es-ES" : "Maduro"
+    },
+    "definition" : {
+      "en" : "Fully developed physically"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2020-07-09T10:06:54.84365",
+    "createdBy" : "mlopezg",
+    "modified" : "2020-07-09T10:06:54.84365",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 1,
+    "parentKey" : null,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ]
+  }, {
+    "key" : 11,
+    "name" : "Vegetative",
+    "label" : {
+      "en" : "Vegetative",
+      "es-ES" : "Vegetativo"
+    },
+    "definition" : {
+      "en" : "Relating to or denoting reproduction or propagation achieved by asexual means, either naturally (budding, rhizomes, runners, bulbs, etc.) or artificially (grafting, layering, or taking cuttings)"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2020-07-09T10:06:54.493944",
+    "createdBy" : "mlopezg",
+    "modified" : "2020-07-09T10:06:54.493944",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 1,
+    "parentKey" : null,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ]
+  }, {
+    "key" : 2,
+    "name" : "Chick",
+    "label" : {
+      "en" : "Chick",
+      "es-ES" : "Polluelo"
+    },
+    "definition" : {
+      "en" : "A chick is a bird that has not yet reached adulthood"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2020-07-09T10:06:53.327955",
+    "createdBy" : "mlopezg",
+    "modified" : "2020-07-09T10:06:53.327955",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 1,
+    "parentKey" : null,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ]
+  } ]
+}

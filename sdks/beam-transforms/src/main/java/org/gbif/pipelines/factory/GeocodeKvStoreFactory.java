@@ -30,7 +30,6 @@ public class GeocodeKvStoreFactory {
     geocodeKvStore = GeocodeKvStore.create(kvStore, image);
   }
 
-  /* TODO Comment */
   public static KeyValueStore<LatLng, GeocodeResponse> getInstance(PipelinesConfig config) {
     if (instance == null) {
       synchronized (MUTEX) {

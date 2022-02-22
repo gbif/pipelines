@@ -1,9 +1,11 @@
 package org.gbif.pipelines.factory;
 
 import java.io.IOException;
+import java.util.Optional;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.apache.hadoop.hbase.client.Connection;
+import org.gbif.pipelines.core.config.model.KeygenConfig;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
@@ -53,7 +55,9 @@ public class KeygenServiceFactory {
   }
 
   private static String getZk(PipelinesConfig config) {
-    String zk = config.getKeygen().getZkConnectionString();
-    return zk == null || zk.isEmpty() ? config.getZkConnectionString() : zk;
+    return Optional.ofNullable(config.getKeygen())
+        .map(KeygenConfig::getZkConnectionString)
+        .filter(x -> !x.isEmpty())
+        .orElse(null);
   }
 }
