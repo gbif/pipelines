@@ -2,10 +2,19 @@
 
 echo "INFO: Start"
 
-./1-dwca-to-avro.sh
+IN=$1
+OUT=$2
 
-./2-interpretation.sh
+UUID=$(uuidgen)
+VERSION=$(cat ../pom.xml | grep '<version>' | cut -d'>' -f 2 | cut -d'<' -f 1)
 
-./3-indexing.sh
+echo "INFO: Use pipelines version: ${VERSION}, UUID: ${UUID}, input: ${IN}, output: ${OUT}"
+
+VERBATIM_OUT=${OUT}/${UUID}/verbatim.avro
+./1-dwca-to-avro.sh ${VERSION} ${IN} ${VERBATIM_OUT}
+
+./2-interpretation.sh ${VERSION}
+
+./3-indexing.sh ${VERSION}
 
 echo "INFO: End"

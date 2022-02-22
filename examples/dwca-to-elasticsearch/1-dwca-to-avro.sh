@@ -1,8 +1,9 @@
 #!/bin/bash -e
 
-echo "INFO: Running 1-dwca-to-avro.sh"
+VERSION=$1
+IN=$2
+OUT=$3
 
-IN=$1
-OUT=$2
+echo "INFO: Running 1-dwca-to-avro.sh. Version: ${VERSION}, input: ${IN}, output: ${OUT}"
 
-java -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005 -cp ../../tools/archives-converters/target/archives-converters-2.11.6-SNAPSHOT-shaded.jar org.gbif.converters.DwcaToAvroConverter ${IN} ${OUT}
+java -cp ../../tools/archives-converters/target/archives-converters-${VERSION}-shaded.jar org.gbif.converters.DwcaToAvroConverter ${IN} ${OUT}
