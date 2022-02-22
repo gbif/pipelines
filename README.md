@@ -87,7 +87,7 @@ The project is structured as:
         - [**ingest-gbif-fragmenter**](./gbif/pipelines/ingest-gbif-fragmenter) - Writes raw archive's data to HBase store
         - [**ingest-gbif-java**](./gbif/pipelines/ingest-gbif-java) - Main GBIF pipelines for ingestion of biodiversity data, Java version
     - [**validator**](./gbif/validator) - Main validator module
-- [**livingatlas**](./gbif) - Living atlas main module
+- [**livingatlas**](./livingatlas) - Living atlas main module
 - [**sdks**](./sdks) - Main module contains common classes, such as data models, data format interpretations, parsers, web services clients etc.
     - [**beam-common**](./sdks/beam-common) - Classes and API for using with Apache Beam
     - [**beam-transforms**](./sdks/beam-transforms) - Transformations for ingestion of biodiversity data
