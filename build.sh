@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-.buildSrc/mvnw clean verify package install -PextraArtifacts -PexampleArtifacts
+.buildSrc/mvnw spotless:apply clean package -DskipTests -DskipITs -T 1C -PextraArtifacts
