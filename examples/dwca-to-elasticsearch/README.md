@@ -27,3 +27,6 @@ where:
  - /path_to_arhive/dwca.zip - path to dwca archive
  - /output_directory/dwca-to-es - path to store mediator (avro, metrics, etc) files
  - http://ES_IP_NODE_1:9200,http://ES_IP_NODE_2:9200 - elasticseach hosts
+
+
+Check the created index http://ES_IP_NODE_1:9200/index_name_example/_search
