@@ -107,14 +107,16 @@ import org.slf4j.MDC;
  * or pass all parameters:
  *
  * java -cp target/ingest-gbif-java-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.java.pipelines.VerbatimToInterpretedPipeline \
- * --datasetId=4725681f-06af-4b1e-8fff-e31e266e0a8f \
+ * --runner=SparkRunner \
+ * --datasetId=${UUID} \
  * --attempt=1 \
  * --interpretationTypes=ALL \
- * --targetPath=/path \
- * --inputPath=/path/verbatim.avro \
- * --properties=/path/pipelines.properties \
- * --useExtendedRecordId=true
- * --skipRegisrtyCalls=true
+ * --targetPath=${OUT}\
+ * --inputPath=${IN} \
+ * --properties=configs/pipelines.yaml \
+ * --useExtendedRecordId=true \
+ * --useMetadataWsCalls=false \
+ * --metaFileName=verbatim-to-interpreted.yml
  *
  * }</pre>
  */

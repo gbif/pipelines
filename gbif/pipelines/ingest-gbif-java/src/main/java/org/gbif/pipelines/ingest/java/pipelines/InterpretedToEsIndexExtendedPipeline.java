@@ -43,16 +43,19 @@ import org.slf4j.MDC;
  * or pass all parameters:
  *
  * java -cp target/ingest-gbif-java-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.java.pipelines.InterpretedToEsIndexExtendedPipeline \
- *  --datasetId=4725681f-06af-4b1e-8fff-e31e266e0a8f \
- *  --attempt=1 \
- *  --inputPath=/path \
- *  --targetPath=/path \
- *  --esHosts=http://ADDRESS:9200,http://ADDRESS:9200,http://ADDRESS:9200 \
- *  --esIndexName=index_name \
- *  --esAlias=alias_name \
- *  --indexNumberShards=3 \
- *  --properties=/home/nvolik/Projects/GBIF/gbif-configuration/cli/dev/config/pipelines.properties \
- *  --esDocumentId=id
+ * --datasetId=${UUID} \
+ * --attempt=1 \
+ * --runner=SparkRunner \
+ * --metaFileName=interpreted-to-index.yml \
+ * --inputPath=${OUT} \
+ * --targetPath=${OUT} \
+ * --esSchemaPath=/gbif/pipelines/ingest-gbif-beam/src/main/resources/elasticsearch/es-occurrence-schema.json \
+ * --indexNumberShards=1 \
+ * --indexNumberReplicas=0 \
+ * --esDocumentId=id \
+ * --esAlias=alias_example \
+ * --esHosts=http://ADDRESS:9200,http://ADDRESS:9200,http://ADDRESS:9200 \
+ * --esIndexName=index_name_example \
  *
  * }</pre>
  */
