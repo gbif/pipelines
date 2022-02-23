@@ -58,6 +58,6 @@ public class KeygenServiceFactory {
     return Optional.ofNullable(config.getKeygen())
         .map(KeygenConfig::getZkConnectionString)
         .filter(x -> !x.isEmpty())
-        .orElse(null);
+        .orElse(config.getZkConnectionString());
   }
 }
