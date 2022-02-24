@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -210,20 +211,28 @@ public class HdfsUtils {
 
   /** Delete HDFS sub-directories where modification date is older than deleteAfterDays value */
   public static void deleteSubFolders(
-      String hdfsSiteConfig, String coreSiteConfig, String filePath, long deleteAfterDays)
+      String hdfsSiteConfig,
+      String coreSiteConfig,
+      String filePath,
+      long deleteAfterDays,
+      Set<String> exclude)
       throws IOException {
-    LocalDateTime date = LocalDateTime.now().minusDays(deleteAfterDays);
+
+    LocalDateTime limitDate = LocalDateTime.now().minusDays(deleteAfterDays);
+
     getSubDirList(hdfsSiteConfig, coreSiteConfig, filePath).stream()
+        .filter(x -> !exclude.contains(x.getPath().getName()))
         .filter(
-            x ->
+            fileStatus ->
                 LocalDateTime.ofInstant(
-                        Instant.ofEpochMilli(x.getModificationTime()), ZoneId.systemDefault())
-                    .isBefore(date))
-        .map(y -> y.getPath().toString())
+                        Instant.ofEpochMilli(fileStatus.getModificationTime()),
+                        ZoneId.systemDefault())
+                    .isBefore(limitDate))
+        .map(fileStatus -> fileStatus.getPath().toString())
         .forEach(
-            z -> {
-              boolean deleted = deleteDirectory(hdfsSiteConfig, coreSiteConfig, z);
-              log.info("Tried to delete directory {}, is deleted? {}", z, deleted);
+            attemptToDelete -> {
+              boolean deleted = deleteDirectory(hdfsSiteConfig, coreSiteConfig, attemptToDelete);
+              log.info("Tried to delete directory {}, is deleted? {}", attemptToDelete, deleted);
             });
   }
 
