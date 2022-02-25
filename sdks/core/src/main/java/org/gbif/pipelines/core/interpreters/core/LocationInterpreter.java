@@ -1,6 +1,5 @@
 package org.gbif.pipelines.core.interpreters.core;
 
-import static org.gbif.api.model.Constants.EBIRD_DATASET_KEY;
 import static org.gbif.api.vocabulary.OccurrenceIssue.CONTINENT_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_OUT_OF_RANGE;
@@ -170,20 +169,19 @@ public class LocationInterpreter {
     }
   }
 
-  /** Interprets the publishing country for eBird dataset. */
+  /** Interprets the publishing country. */
   private static Optional<String> interpretPublishingCountry(ExtendedRecord er, MetadataRecord mr) {
-    // Special case for eBird, use the supplied publishing country.
-    if (EBIRD_DATASET_KEY.toString().equals(mr.getDatasetKey())) {
 
-      String verbatimPublishingCountryCode = extractNullAwareValue(er, GbifTerm.publishingCountry);
+    Optional<String> verbatimPublishingCountryCode =
+        extractNullAwareOptValue(er, GbifTerm.publishingCountry);
+    if (verbatimPublishingCountryCode.isPresent()) {
       OccurrenceParseResult<Country> result =
-          new OccurrenceParseResult<>(COUNTRY_PARSER.parse(verbatimPublishingCountryCode));
+          new OccurrenceParseResult<>(COUNTRY_PARSER.parse(verbatimPublishingCountryCode.get()));
 
       if (result.isSuccessful()) {
         return Optional.of(result.getPayload().getIso2LetterCode());
       }
     }
-
     return Optional.ofNullable(mr.getDatasetPublishingCountry());
   }
 
