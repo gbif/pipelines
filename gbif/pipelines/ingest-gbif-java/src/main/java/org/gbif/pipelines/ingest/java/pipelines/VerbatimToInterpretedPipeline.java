@@ -59,6 +59,7 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
+import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.transforms.common.CheckTransforms;
 import org.gbif.pipelines.transforms.common.ExtensionFilterTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
@@ -106,14 +107,16 @@ import org.slf4j.MDC;
  * or pass all parameters:
  *
  * java -cp target/ingest-gbif-java-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.java.pipelines.VerbatimToInterpretedPipeline \
- * --datasetId=4725681f-06af-4b1e-8fff-e31e266e0a8f \
+ * --runner=SparkRunner \
+ * --datasetId=${UUID} \
  * --attempt=1 \
  * --interpretationTypes=ALL \
- * --targetPath=/path \
- * --inputPath=/path/verbatim.avro \
- * --properties=/path/pipelines.properties \
- * --useExtendedRecordId=true
- * --skipRegisrtyCalls=true
+ * --targetPath=${OUT}\
+ * --inputPath=${IN} \
+ * --properties=configs/pipelines.yaml \
+ * --useExtendedRecordId=true \
+ * --useMetadataWsCalls=false \
+ * --metaFileName=verbatim-to-interpreted.yml
  *
  * }</pre>
  */
@@ -182,10 +185,13 @@ public class VerbatimToInterpretedPipeline {
     IngestMetrics metrics = IngestMetricsBuilder.createVerbatimToInterpretedMetrics();
     SerializableConsumer<String> incMetricFn = metrics::incMetric;
 
-    SerializableSupplier<MetadataServiceClient> metadataServiceClientSerializableSupplier = null;
+    SerializableSupplier<MetadataServiceClient> metadataServiceClientSupplier = null;
     if (options.getUseMetadataWsCalls()) {
-      metadataServiceClientSerializableSupplier =
-          MetadataServiceClientFactory.getInstanceSupplier(config);
+      metadataServiceClientSupplier = MetadataServiceClientFactory.getInstanceSupplier(config);
+    }
+    SerializableSupplier<HBaseLockingKeyService> keyServiceSupplier = null;
+    if (!options.isUseExtendedRecordId()) {
+      keyServiceSupplier = KeygenServiceFactory.getInstanceSupplier(config, datasetId);
     }
     SerializableSupplier<KeyValueStore<SpeciesMatchRequest, NameUsageMatch>>
         nameUsageMatchServiceSupplier = NameUsageMatchStoreFactory.getInstanceSupplier(config);
@@ -194,7 +200,7 @@ public class VerbatimToInterpretedPipeline {
     SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> geocodeServiceSupplier =
         GeocodeKvStoreFactory.getInstanceSupplier(config);
     if (options.getTestMode()) {
-      metadataServiceClientSerializableSupplier = null;
+      metadataServiceClientSupplier = null;
       nameUsageMatchServiceSupplier = null;
       grscicollServiceSupplier = null;
       geocodeServiceSupplier = null;
@@ -204,7 +210,7 @@ public class VerbatimToInterpretedPipeline {
     // Core
     MetadataTransform metadataTransform =
         MetadataTransform.builder()
-            .clientSupplier(metadataServiceClientSerializableSupplier)
+            .clientSupplier(metadataServiceClientSupplier)
             .attempt(attempt)
             .endpointType(endPointType)
             .create()
@@ -217,7 +223,7 @@ public class VerbatimToInterpretedPipeline {
             .isTripletValid(tripletValid)
             .isOccurrenceIdValid(occIdValid)
             .useExtendedRecordId(useErdId)
-            .keygenServiceSupplier(KeygenServiceFactory.getInstanceSupplier(config, datasetId))
+            .keygenServiceSupplier(keyServiceSupplier)
             .occStatusKvStoreSupplier(OccurrenceStatusKvStoreFactory.getInstanceSupplier(config))
             .clusteringServiceSupplier(ClusteringServiceFactory.getInstanceSupplier(config))
             .vocabularyServiceSupplier(
@@ -292,7 +298,7 @@ public class VerbatimToInterpretedPipeline {
 
     DefaultValuesTransform defaultValuesTransform =
         DefaultValuesTransform.builder()
-            .clientSupplier(metadataServiceClientSerializableSupplier)
+            .clientSupplier(metadataServiceClientSupplier)
             .datasetId(datasetId)
             .create()
             .init();

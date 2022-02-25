@@ -71,17 +71,19 @@ import org.slf4j.MDC;
  * or pass all parameters:
  *
  * java -cp target/ingest-gbif-java-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.java.pipelines.InterpretedToEsIndexExtendedPipeline \
- * --datasetId=9f747cff-839f-4485-83a1-f10317a92a82 \
+ * --datasetId=${UUID} \
  * --attempt=1 \
- * --inputPath=/path \
- * --targetPath=/path \
- * --esHosts=http://ADDRESS:9200,http://ADDRESS:9200,http://ADDRESS:9200 \
- * --properties=/path/pipelines.properties \
- * --esIndexName=index_name \
- * --esAlias=index_alias \
+ * --runner=SparkRunner \
+ * --metaFileName=interpreted-to-index.yml \
+ * --inputPath=${OUT} \
+ * --targetPath=${OUT} \
+ * --esSchemaPath=/gbif/pipelines/ingest-gbif-beam/src/main/resources/elasticsearch/es-occurrence-schema.json \
  * --indexNumberShards=1 \
- * --esDocumentId=id
- *
+ * --indexNumberReplicas=0 \
+ * --esDocumentId=id \
+ * --esAlias=alias_example \
+ * --esHosts=http://ADDRESS:9200,http://ADDRESS:9200,http://ADDRESS:9200 \
+ * --esIndexName=index_name_example \
  * }</pre>
  */
 @Slf4j

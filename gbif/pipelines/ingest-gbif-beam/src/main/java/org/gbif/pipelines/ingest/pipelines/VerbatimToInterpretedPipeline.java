@@ -49,6 +49,7 @@ import org.gbif.pipelines.factory.OccurrenceStatusKvStoreFactory;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.transforms.common.CheckTransforms;
 import org.gbif.pipelines.transforms.common.ExtensionFilterTransform;
 import org.gbif.pipelines.transforms.common.FilterRecordsTransform;
@@ -160,10 +161,13 @@ public class VerbatimToInterpretedPipeline {
     Pipeline p = pipelinesFn.apply(options);
 
     // Init external clients - ws, kv caches, etc
-    SerializableSupplier<MetadataServiceClient> metadataServiceClientSerializableSupplier = null;
+    SerializableSupplier<MetadataServiceClient> metadataServiceClientSupplier = null;
     if (options.getUseMetadataWsCalls()) {
-      metadataServiceClientSerializableSupplier =
-          MetadataServiceClientFactory.createSupplier(config);
+      metadataServiceClientSupplier = MetadataServiceClientFactory.createSupplier(config);
+    }
+    SerializableSupplier<HBaseLockingKeyService> keyServiceSupplier = null;
+    if (!options.isUseExtendedRecordId()) {
+      keyServiceSupplier = KeygenServiceFactory.createSupplier(config, datasetId);
     }
     SerializableSupplier<KeyValueStore<SpeciesMatchRequest, NameUsageMatch>>
         nameUsageMatchServiceSupplier = NameUsageMatchStoreFactory.createSupplier(config);
@@ -172,7 +176,7 @@ public class VerbatimToInterpretedPipeline {
     SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> geocodeServiceSupplier =
         GeocodeKvStoreFactory.createSupplier(config);
     if (options.getTestMode()) {
-      metadataServiceClientSerializableSupplier = null;
+      metadataServiceClientSupplier = null;
       nameUsageMatchServiceSupplier = null;
       grscicollServiceSupplier = null;
       geocodeServiceSupplier = null;
@@ -181,7 +185,7 @@ public class VerbatimToInterpretedPipeline {
     // Metadata
     MetadataTransform metadataTransform =
         MetadataTransform.builder()
-            .clientSupplier(metadataServiceClientSerializableSupplier)
+            .clientSupplier(metadataServiceClientSupplier)
             .attempt(attempt)
             .endpointType(options.getEndPointType())
             .create();
@@ -195,7 +199,7 @@ public class VerbatimToInterpretedPipeline {
             .useExtendedRecordId(options.isUseExtendedRecordId())
             .occStatusKvStoreSupplier(OccurrenceStatusKvStoreFactory.createSupplier(config))
             .clusteringServiceSupplier(ClusteringServiceFactory.createSupplier(config))
-            .keygenServiceSupplier(KeygenServiceFactory.createSupplier(config, datasetId))
+            .keygenServiceSupplier(keyServiceSupplier)
             .vocabularyServiceSupplier(
                 FileVocabularyFactory.builder()
                     .config(config)
@@ -266,7 +270,7 @@ public class VerbatimToInterpretedPipeline {
                 .apply(
                     "Set default values",
                     DefaultValuesTransform.builder()
-                        .clientSupplier(metadataServiceClientSerializableSupplier)
+                        .clientSupplier(metadataServiceClientSupplier)
                         .datasetId(datasetId)
                         .create()
                         .interpret());

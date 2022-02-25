@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
@@ -146,7 +147,8 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
             config.stepConfig.hdfsSiteConfig,
             config.stepConfig.coreSiteConfig,
             pathToDelete,
-            config.deleteAfterDays);
+            config.deleteAfterDays,
+            Collections.singleton(attempt));
 
       } catch (Exception ex) {
         log.error(ex.getMessage(), ex);

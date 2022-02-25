@@ -74,26 +74,32 @@ The project is structured as:
 - [**.buildSrc**](./.buildSrc) - Tools for building the project
 - [**docs**](./docs) - Documents related to the project
 - [**examples**](./examples) - Examples of using project API and base classes
+    - [**dwca-to-elasticsearch**](./examples/dwca-to-elasticsearch) - Example how use pipelines, interprets DWCA into ES index
     - [**transform**](./examples/transform) - Transform example demonstrates how to create Apache Beam pipeline, create the new transformation and use it together with GBIF transforms and core classes
     - [**metrics**](./examples/metrics) - The example demonstrates how to create and send Apache Beam SparkRunner metrics to ELK and use the result for Kibana dashboards
-- [**gbif**](./gbif) - GBIF module
+- [**gbif**](./gbif) - GBIF main module
     - [**coordinator**](./gbif/coordinator) - The main module which controls the interpretation process, through RabbitMQ
+    - [**diagnostics**](./gbif/diagnostics) - Internal tool to fix GBIF identifiers collisions
     - [**keygen**](./gbif/keygen) - The library to generate GBIF identifiers, to support backward compatibility the codebase (with minimum changes) was copied from the occurrence/occurrence-persistence project
     - [**pipelines**](./gbif/pipelines) - Main pipelines module
         - [**export-gbif-hbase**](./gbif/pipelines/export-gbif-hbase) - The pipeline to export the verbatim data from the GBIF HBase tables and save as `ExtendedRecord` avro files
         - [**ingest-gbif-beam**](./gbif/pipelines/ingest-gbif-beam) - Main GBIF pipelines for ingestion of biodiversity data
         - [**ingest-gbif-fragmenter**](./gbif/pipelines/ingest-gbif-fragmenter) - Writes raw archive's data to HBase store
         - [**ingest-gbif-java**](./gbif/pipelines/ingest-gbif-java) - Main GBIF pipelines for ingestion of biodiversity data, Java version
+    - [**validator**](./gbif/validator) - Main validator module
+- [**livingatlas**](./livingatlas) - Living atlas main module
 - [**sdks**](./sdks) - Main module contains common classes, such as data models, data format interpretations, parsers, web services clients etc.
     - [**beam-common**](./sdks/beam-common) - Classes and API for using with Apache Beam
     - [**beam-transforms**](./sdks/beam-transforms) - Transformations for ingestion of biodiversity data
     - [**core**](./sdks/core) - Main API classes, such as data interpretations, converters, [DwCA](https://www.tdwg.org/standards/dwc/) reader etc.
     - [**models**](./sdks/models) - Data models represented in Avro binary format, generated from [Avro](https://avro.apache.org/docs/current/) schemas
-    - [**variables**](./sdks/variables) - Only static string variables
+    - [**variables**](./sdks/variables) - Simple static string variables
 - [**tools**](./tools) - Module for different independent tools
     - [**archives-converters**](./tools/archives-converters) - Converters from [DwCA/DWC 1.0/DWC 1.4](https://www.tdwg.org/standards/dwc/)/ABCD 1.2/ABCD 2.06 to *.[avro](https://avro.apache.org/docs/current/) format
     - [**elasticsearch-tools**](./tools/elasticsearch-tools) - Tool for creating/deleting/swapping Elasticsearch indexes
+    - [**extension-converter-maven-plugin**](./tools/extension-converter-maven-plugin) - Java code generator plugin for DWC extensions
     - [**pipelines-maven-plugin**](./tools/pipelines-maven-plugin) - Maven plugin adds new annotations and interface to [avro](https://avro.apache.org/docs/current/) generated classes
+    - [**xml-to-avsc-maven-plugin**](./tools/xml-to-avsc-maven-plugin) - AVRO schema generator plugin for DWC extensions
 
 # How to build the project
 
