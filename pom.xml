@@ -167,7 +167,7 @@
     <maven-clean-plugin.version>3.1.0</maven-clean-plugin.version>
     <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
     <maven-plugin-plugin.version>3.6.0</maven-plugin-plugin.version>
-    <maven-javadoc-plugin.version>3.0.1</maven-javadoc-plugin.version>
+    <maven-javadoc-plugin.version>3.2.0</maven-javadoc-plugin.version>
     <spotless-maven-plugin.version>2.0.1</spotless-maven-plugin.version>
     <io.fabric8.version>0.33.0</io.fabric8.version>
 
@@ -211,6 +211,10 @@
           <version>${maven-javadoc-plugin.version}</version>
           <configuration>
             <doclint>none</doclint>
+            <includeDependencySources>true</includeDependencySources>
+            <dependencySourceIncludes>
+              <dependencySourceInclude>org.gbif:*</dependencySourceInclude>
+            </dependencySourceIncludes>
           </configuration>
         </plugin>
         <plugin>
