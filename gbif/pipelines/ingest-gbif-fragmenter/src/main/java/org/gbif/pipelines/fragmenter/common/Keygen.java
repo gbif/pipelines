@@ -16,14 +16,31 @@ import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class Keygen {
 
-  private static final Long ERROR_KEY = -1L;
-
   /** Get or generate GBIF ID key */
-  public static Long getKey(
+  public static Optional<Long> getOrGenerateKey(
       HBaseLockingKeyService keygenService,
       boolean useTriplet,
       boolean useOccurrenceId,
       OccurrenceRecord record) {
+    return getOrGenerateKey(keygenService, useTriplet, useOccurrenceId, record, true);
+  }
+
+  /** Get GBIF ID key */
+  public static Optional<Long> getKey(
+      HBaseLockingKeyService keygenService,
+      boolean useTriplet,
+      boolean useOccurrenceId,
+      OccurrenceRecord record) {
+    return getOrGenerateKey(keygenService, useTriplet, useOccurrenceId, record, false);
+  }
+
+  /** General method to get or generate GBIF ID key */
+  private static Optional<Long> getOrGenerateKey(
+      HBaseLockingKeyService keygenService,
+      boolean useTriplet,
+      boolean useOccurrenceId,
+      OccurrenceRecord record,
+      boolean generateIfAbsent) {
 
     Set<String> uniqueStrings = new HashSet<>(2);
 
@@ -44,14 +61,14 @@ public class Keygen {
     }
 
     if (uniqueStrings.isEmpty()) {
-      return ERROR_KEY;
+      return Optional.empty();
     }
 
     KeyLookupResult keyResult = null;
     try {
       // Finds or generates key
       keyResult = keygenService.findKey(uniqueStrings);
-      if (keyResult == null) {
+      if (generateIfAbsent && keyResult == null) {
         log.error("GBIF ID wasn't found, generating a new key.");
         keyResult = keygenService.generateKey(uniqueStrings);
       }
@@ -59,16 +76,12 @@ public class Keygen {
       log.error(ex.getMessage(), ex);
     }
 
-    return Optional.ofNullable(keyResult).map(KeyLookupResult::getKey).orElse(ERROR_KEY);
+    return Optional.ofNullable(keyResult).map(KeyLookupResult::getKey);
   }
 
   public static String getSaltedKey(Long key) {
     long salt = key % 100;
     String result = salt + ":" + key;
     return salt >= 10 ? result : "0" + result;
-  }
-
-  public static Long getErrorKey() {
-    return ERROR_KEY;
   }
 }

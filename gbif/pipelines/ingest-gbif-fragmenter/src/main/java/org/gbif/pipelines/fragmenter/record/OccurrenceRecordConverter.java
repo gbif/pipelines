@@ -2,6 +2,7 @@ package org.gbif.pipelines.fragmenter.record;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
@@ -15,6 +16,8 @@ import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class OccurrenceRecordConverter {
 
+  private static final String ERROR_KEY = "-1";
+
   public static Map<String, String> convert(
       HBaseLockingKeyService keygenService,
       UniquenessValidator validator,
@@ -24,16 +27,16 @@ public class OccurrenceRecordConverter {
 
     Function<OccurrenceRecord, String> keyFn =
         ru -> {
-          Long key = Keygen.getErrorKey();
+          Optional<Long> key = Optional.empty();
           try {
-            key = Keygen.getKey(keygenService, useTriplet, useOccurrenceId, ru);
+            key = Keygen.getOrGenerateKey(keygenService, useTriplet, useOccurrenceId, ru);
           } catch (RuntimeException ex) {
             log.error(ex.getMessage(), ex);
           }
-          if (Keygen.getErrorKey().equals(key) || !validator.isUnique(key.toString())) {
-            return Keygen.getErrorKey().toString();
+          if (!key.isPresent() || !validator.isUnique(key.toString())) {
+            return ERROR_KEY;
           }
-          return Keygen.getSaltedKey(key);
+          return Keygen.getSaltedKey(key.get());
         };
 
     Function<OccurrenceRecord, String> valueFn = OccurrenceRecord::toStringRecord;
@@ -41,7 +44,7 @@ public class OccurrenceRecordConverter {
     Map<String, String> result =
         recordUnitList.stream().collect(Collectors.toMap(keyFn, valueFn, (s, s2) -> s));
 
-    result.remove(Keygen.getErrorKey().toString());
+    result.remove(ERROR_KEY);
     return result;
   }
 }
