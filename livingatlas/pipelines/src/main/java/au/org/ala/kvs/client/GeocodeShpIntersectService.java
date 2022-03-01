@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.rest.client.geocode.Location;
 
 /**
@@ -122,7 +123,7 @@ public class GeocodeShpIntersectService {
                   "%-32s%-48s", "geocodeConfig.stateProvince.nameField", "SHP field of state name");
       error += LINE_SEPARATOR + Strings.repeat("*", 128);
       log.error(error);
-      throw new RuntimeException(error);
+      throw new PipelinesException(error);
     }
   }
 

@@ -15,6 +15,7 @@ import org.gbif.mail.EmailTemplateProcessor;
 import org.gbif.mail.EmailType;
 import org.gbif.mail.FreemarkerEmailTemplateProcessor;
 import org.gbif.mail.UserHelperService;
+import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.validator.api.Validation;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -63,7 +64,7 @@ public class ValidatorEmailServiceImpl implements ValidatorEmailService {
               .build(),
           getLocale(user));
     } catch (IOException | TemplateException ex) {
-      throw new RuntimeException(ex);
+      throw new PipelinesException(ex);
     }
   }
 

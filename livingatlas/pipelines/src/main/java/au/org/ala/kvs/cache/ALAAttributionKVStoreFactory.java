@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.cache.KeyValueCache;
 import org.gbif.kvs.hbase.Command;
+import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
 
 /** Key value store factory for Attribution */
@@ -75,7 +76,7 @@ public class ALAAttributionKVStoreFactory {
                 //
               }
             }
-            throw new RuntimeException("Unable to retrieve metadata for " + key);
+            throw new PipelinesException("Unable to retrieve metadata for " + key);
           }
 
           @Override

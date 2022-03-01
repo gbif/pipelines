@@ -1,7 +1,6 @@
 package org.gbif.pipelines.validator.checklists;
 
 import java.io.Closeable;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -25,6 +24,7 @@ import org.gbif.dwc.DwcFiles;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.nub.lookup.straight.IdLookup;
 import org.gbif.nub.lookup.straight.IdLookupPassThru;
+import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.validator.checklists.collector.ValidationDataCollector;
 import org.gbif.pipelines.validator.checklists.model.NormalizedNameUsageData;
 import org.gbif.pipelines.validator.checklists.ws.IdLookupClient;
@@ -89,11 +89,11 @@ public class ChecklistValidator implements Closeable {
   }
 
   @Override
-  public void close() throws IOException {
+  public void close() {
     try {
       idLookup.close();
     } catch (Exception ex) {
-      throw new RuntimeException(ex);
+      throw new PipelinesException(ex);
     }
   }
 

@@ -15,6 +15,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.codehaus.plexus.util.FileUtils;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.common.beam.DwcaIO;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
@@ -85,7 +86,7 @@ public class ALADwcaToVerbatimPipeline {
       Path inputPathHdfs = new Path(inputPath);
 
       if (!fs.exists(inputPathHdfs)) {
-        throw new RuntimeException("Input file not available: " + inputPath);
+        throw new PipelinesException("Input file not available: " + inputPath);
       }
 
       String tmpInputDir = new File(options.getTempLocation()).getParent();

@@ -19,6 +19,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.gbif.dwc.terms.Term;
+import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
@@ -378,7 +379,7 @@ public class ValidationUtils {
                 datasetID, termList, source.getId());
 
         log.warn(errorMessage);
-        throw new RuntimeException(errorMessage);
+        throw new PipelinesException(errorMessage);
       } else {
         return "";
       }

@@ -47,6 +47,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.parsers.date.DateComponentOrdering;
+import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
@@ -248,7 +249,7 @@ public class ALAVerbatimToInterpretedPipeline {
     if (result.isPresent()) {
       mdr = result.get();
     } else {
-      throw new RuntimeException(
+      throw new PipelinesException(
           "Unable to retrieve metadata from collectory for datasetId:" + datasetId);
     }
 

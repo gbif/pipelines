@@ -5,6 +5,7 @@ import java.util.Optional;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.apache.hadoop.hbase.client.Connection;
+import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.core.config.model.KeygenConfig;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
@@ -35,7 +36,7 @@ public class KeygenServiceFactory {
       try {
         c = HbaseConnection.create(zk);
       } catch (IOException ex) {
-        throw new RuntimeException(ex);
+        throw new PipelinesException(ex);
       }
 
       return create(config, c, datasetId);

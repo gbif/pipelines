@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
@@ -43,10 +44,6 @@ public class GbifIdInterpreter {
   public static BiConsumer<ExtendedRecord, BasicRecord> interpretGbifId(
       HBaseLockingKeyService keygenService, boolean isTripletValid, boolean isOccurrenceIdValid) {
     return (er, br) -> {
-      if (keygenService == null) {
-        return;
-      }
-
       Optional<Long> gbifId =
           getOrGenerateGbifId(er, keygenService, isTripletValid, isOccurrenceIdValid, true);
       if (gbifId.isPresent()) {
@@ -60,14 +57,7 @@ public class GbifIdInterpreter {
   /** Gets existing GBIF id */
   public static Function<ExtendedRecord, Optional<Long>> findGbifId(
       HBaseLockingKeyService keygenService, boolean isTripletValid, boolean isOccurrenceIdValid) {
-    return er -> {
-      if (keygenService == null) {
-        log.error("keygenService is null");
-        return Optional.empty();
-      }
-
-      return getOrGenerateGbifId(er, keygenService, isTripletValid, isOccurrenceIdValid, false);
-    };
+    return er -> getOrGenerateGbifId(er, keygenService, isTripletValid, isOccurrenceIdValid, false);
   }
 
   /** Copies GBIF id from ExtendedRecord id */
@@ -88,7 +78,7 @@ public class GbifIdInterpreter {
       boolean generateIfAbsent) {
 
     if (keygenService == null) {
-      return Optional.empty();
+      throw new PipelinesException("keygenService can't be null!");
     }
 
     Set<String> uniqueStrings = new HashSet<>(2);

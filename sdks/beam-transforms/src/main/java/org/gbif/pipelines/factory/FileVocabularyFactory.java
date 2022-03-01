@@ -14,6 +14,7 @@ import org.apache.hadoop.fs.Path;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.Terms;
+import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.config.model.VocabularyConfig;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
@@ -66,7 +67,7 @@ public class FileVocabularyFactory implements Serializable {
 
           serviceBuilder.vocabularyLookup(term, builder.build());
         } catch (IOException ex) {
-          throw new RuntimeException(ex);
+          throw new PipelinesException(ex);
         }
       }
 
