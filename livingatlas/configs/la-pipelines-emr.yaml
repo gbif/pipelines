@@ -30,11 +30,11 @@ fs:
   local:
     fsPath: /data
   hdfs:
-    fsPath: hdfs://
+    fsPath: hdfs:///
 
 dwca-avro:
-  inputPath: /mnt/dwca-tmp/{datasetId}
-  tempLocation: /mnt/dwca-tmp/{datasetId}
+  inputPath: /data/biocache-load/{datasetId}
+  tempLocation: /data/biocache-load/{datasetId}
   targetPath: hdfs:///pipelines-data
 
 interpret:
@@ -119,3 +119,140 @@ alaNameMatch:
   retryConfig:
     maxAttempts: 5
     initialIntervalMillis: 5000
+
+
+### la-pipelines cli additional arguments, like JVM or spark command line arguments
+interpret-sh-args:
+  local:
+    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
+  spark-embedded:
+    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
+  spark-cluster:
+    conf: spark.default.parallelism=48
+    num-executors: 8
+    executor-cores: 8
+    executor-memory: 18G
+    driver-memory: 2G
+
+image-sync-sh-args:
+  local:
+    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
+  spark-embedded:
+    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
+  spark-cluster:
+    conf: spark.default.parallelism=48
+    num-executors: 8
+    executor-cores: 8
+    executor-memory: 18G
+    driver-memory: 2G
+
+image-load-sh-args:
+  local:
+    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
+  spark-embedded:
+    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
+  spark-cluster:
+    conf: spark.default.parallelism=48
+    num-executors: 8
+    executor-cores: 8
+    executor-memory: 18G
+    driver-memory: 2G
+
+uuid-sh-args:
+  local:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-embedded:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-cluster:
+    conf: spark.default.parallelism=48
+    num-executors: 8
+    executor-cores: 8
+    executor-memory: 18G
+    driver-memory: 2G
+
+sampling-sh-args:
+  local:
+    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
+  spark-embedded:
+    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
+  spark-cluster:
+    conf: spark.default.parallelism=48
+    num-executors: 8
+    executor-cores: 8
+    executor-memory: 18G
+    driver-memory: 2G
+
+outlier-sh-args:
+  local:
+    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
+  spark-embedded:
+    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
+  spark-cluster:
+    conf: spark.default.parallelism=48
+    num-executors: 8
+    executor-cores: 8
+    executor-memory: 18G
+    driver-memory: 2G
+
+sensitive-sh-args:
+  spark-embedded:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-cluster:
+    jvm: -Xmx8g -XX:+UseG1GC
+    conf: spark.default.parallelism=48
+    num-executors: 8
+    executor-cores: 8
+    executor-memory: 18G
+    driver-memory: 2G
+
+sample-sh-args:
+  local:
+    jvm: -Xmx8g -XX:+UseG1GC
+
+index-sh-args:
+  local:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-embedded:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-cluster:
+    conf: spark.default.parallelism=48
+    num-executors: 8
+    executor-cores: 8
+    executor-memory: 18G
+    driver-memory: 2G
+
+jackknife-sh-args:
+  local:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-embedded:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-cluster:
+    conf: spark.default.parallelism=48
+    num-executors: 8
+    executor-cores: 8
+    executor-memory: 18G
+    driver-memory: 2G
+
+clustering-sh-args:
+  local:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-embedded:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-cluster:
+    conf: spark.default.parallelism=48
+    num-executors: 8
+    executor-cores: 8
+    executor-memory: 18G
+    driver-memory: 2G
+
+solr-sh-args:
+  local:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-embedded:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-cluster:
+    conf: spark.default.parallelism=500
+    num-executors: 8
+    executor-cores: 8
+    executor-memory: 18G
+    driver-memory: 2G
