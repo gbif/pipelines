@@ -84,7 +84,7 @@ public class DistributionOutlierPipeline {
                             && !StringUtils.isEmpty(it.getId())));
 
     if (options.isAddDebugCounts()) {
-      log.info("Adding step 1a: Adding idnex record count metric");
+      log.info("Adding step 1a: Adding index record count metric");
       indexRecords
           .apply(Count.globally())
           .apply(
@@ -101,7 +101,7 @@ public class DistributionOutlierPipeline {
     DistributionOutlierTransform distributionTransform =
         new DistributionOutlierTransform(options.getBaseUrl());
 
-    log.info("Adding step 2: Create UUID -> IndexRecords");
+    log.info("Adding step 2: Create UUID -> IndexRecords for all records");
     PCollection<KV<String, IndexRecord>> kvIndexRecords =
         indexRecords.apply(
             WithKeys.<String, IndexRecord>of(it -> it.getId())
@@ -125,7 +125,7 @@ public class DistributionOutlierPipeline {
                   }));
     }
 
-    log.info("Adding step 4: Create UUID -> Boolean");
+    log.info("Adding step 4: Create UUID -> Boolean for exiting outlier records");
     PCollection<KV<String, Boolean>> kvExistingOutliers =
         existingOutliers
             .apply(MapElements.into(TypeDescriptors.strings()).via(dor -> dor.getId()))
@@ -157,7 +157,7 @@ public class DistributionOutlierPipeline {
                       }
                     }));
 
-    log.info("Adding step 6: calculating outliers index");
+    log.info("Adding step 6: calculating outliers index for those new records");
     PCollection<DistributionOutlierRecord> kvRecords =
         newAddedIndexRecords
             .apply("Key by species", distributionTransform.toKv())
@@ -179,6 +179,7 @@ public class DistributionOutlierPipeline {
         "Write to file",
         AvroIO.write(DistributionOutlierRecord.class)
             .to(outputPath + "/outlier_" + ts)
+            .withoutSharding()
             .withSuffix(".avro"));
 
     log.info("Running the pipeline");
