@@ -1,5 +1,5 @@
 /**
- * Represents the interpreted fields of terms related to temporal.
+ * Represents the interpreted fields of terms related to basic/common dwca fields.
  */
 [
   {
@@ -28,7 +28,6 @@
     "fields": [
       {"name": "id", "type": "string", "doc": "Pipelines identifier"},
       {"name": "created", "type": ["null", "long"], "default" : null, "doc":"The timestamp the record was created"},
-      {"name": "gbifId", "type": ["null", "long"], "default" : null, "doc": "GBIF internal identifier"},
       {"name": "basisOfRecord", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/basisOfRecord"},
       {"name": "sex", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/sex"},
       {"name": "lifeStage", "type": ["null", "VocabularyConcept"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/lifeStage"},

@@ -31,6 +31,7 @@ import org.gbif.pipelines.io.avro.BlastResult;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.GadmFeatures;
+import org.gbif.pipelines.io.avro.GbifIdRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationFeatureRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
@@ -92,10 +93,11 @@ public class GbifJsonConverterTest {
                     Collections.singletonList(Collections.singletonMap("k", "v"))))
             .build();
 
+    GbifIdRecord gir = GbifIdRecord.newBuilder().setGbifId(111L).build();
+
     BasicRecord br =
         BasicRecord.newBuilder()
             .setId("777")
-            .setGbifId(111L)
             .setOrganismQuantity(2d)
             .setOrganismQuantityType("OrganismQuantityType")
             .setSampleSizeUnit("SampleSizeUnit")
@@ -212,7 +214,7 @@ public class GbifJsonConverterTest {
     gr.getIssues().getIssueList().add(OccurrenceIssue.INSTITUTION_MATCH_FUZZY.name());
 
     // When
-    ObjectNode result = GbifJsonConverter.toJson(mr, er, tmr, lr, tr, br, gr);
+    ObjectNode result = GbifJsonConverter.toJson(mr, er, tmr, lr, tr, br, gr, gir);
 
     // Should
     assertTrue(JsonValidationUtils.isValid(result.toString()));

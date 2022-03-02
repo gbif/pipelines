@@ -114,12 +114,12 @@ public class AvroPostprocessMojo extends AbstractMojo {
         if (Files.deleteIfExists(path)) {
           Files.write(path, lines);
           if (Files.exists(path)) {
-            getLog().info("Modified - " + path.toString());
+            getLog().info("Modified - " + path);
           } else {
-            getLog().error("Can't create file - " + path.toString());
+            getLog().error("Can't create file - " + path);
           }
         } else {
-          getLog().error("Can't modify - " + path.toString());
+          getLog().error("Can't modify - " + path);
         }
       } catch (IOException ex) {
         throw new IllegalStateException(ex.getMessage(), ex);

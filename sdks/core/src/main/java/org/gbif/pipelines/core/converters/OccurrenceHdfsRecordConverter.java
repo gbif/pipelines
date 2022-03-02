@@ -29,6 +29,7 @@ import org.gbif.pipelines.io.avro.DegreeOfEstablishment;
 import org.gbif.pipelines.io.avro.Diagnostic;
 import org.gbif.pipelines.io.avro.EstablishmentMeans;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.GbifIdRecord;
 import org.gbif.pipelines.io.avro.IssueRecord;
 import org.gbif.pipelines.io.avro.LifeStage;
 import org.gbif.pipelines.io.avro.LocationRecord;
@@ -49,6 +50,7 @@ public class OccurrenceHdfsRecordConverter {
   private static final TermFactory TERM_FACTORY = TermFactory.instance();
 
   private final ExtendedRecord extendedRecord;
+  private final GbifIdRecord gbifIdRecord;
   private final BasicRecord basicRecord;
   private final LocationRecord locationRecord;
   private final TaxonRecord taxonRecord;
@@ -67,6 +69,7 @@ public class OccurrenceHdfsRecordConverter {
     occurrenceHdfsRecord.setIssue(new ArrayList<>());
 
     // Order is important
+    mapGbifIdRecord(occurrenceHdfsRecord);
     mapBasicRecord(occurrenceHdfsRecord);
     mapMetadataRecord(occurrenceHdfsRecord);
     mapTemporalRecord(occurrenceHdfsRecord);
@@ -81,8 +84,8 @@ public class OccurrenceHdfsRecordConverter {
     // used for "un-starring" a DWCA star record. However, we've exposed it as DcTerm.identifier for
     // a long time in
     // our public API v1, so we continue to do this.
-    if (extendedRecord != null && basicRecord != null) {
-      setIdentifier(basicRecord, extendedRecord, occurrenceHdfsRecord);
+    if (extendedRecord != null && gbifIdRecord != null) {
+      setIdentifier(gbifIdRecord, extendedRecord, occurrenceHdfsRecord);
     }
 
     return occurrenceHdfsRecord;
@@ -355,14 +358,24 @@ public class OccurrenceHdfsRecordConverter {
     addIssues(grscicollRecord.getIssues(), occurrenceHdfsRecord);
   }
 
+  /** Copies the {@link GbifIdRecord} data into the {@link OccurrenceHdfsRecord}. */
+  private void mapGbifIdRecord(OccurrenceHdfsRecord occurrenceHdfsRecord) {
+    if (gbifIdRecord == null) {
+      return;
+    }
+    if (Objects.nonNull(gbifIdRecord.getGbifId())) {
+      occurrenceHdfsRecord.setGbifid(gbifIdRecord.getGbifId());
+    }
+
+    addIssues(gbifIdRecord.getIssues(), occurrenceHdfsRecord);
+  }
+
   /** Copies the {@link BasicRecord} data into the {@link OccurrenceHdfsRecord}. */
   private void mapBasicRecord(OccurrenceHdfsRecord occurrenceHdfsRecord) {
     if (basicRecord == null) {
       return;
     }
-    if (Objects.nonNull(basicRecord.getGbifId())) {
-      occurrenceHdfsRecord.setGbifid(basicRecord.getGbifId());
-    }
+
     occurrenceHdfsRecord.setBasisofrecord(basicRecord.getBasisOfRecord());
     occurrenceHdfsRecord.setIndividualcount(basicRecord.getIndividualCount());
     occurrenceHdfsRecord.setReferences(basicRecord.getReferences());
@@ -453,7 +466,7 @@ public class OccurrenceHdfsRecordConverter {
    * for a long time in our public API v1, so we continue to do this.
    */
   private static void setIdentifier(
-      BasicRecord br, ExtendedRecord er, OccurrenceHdfsRecord occurrenceHdfsRecord) {
+      GbifIdRecord gr, ExtendedRecord er, OccurrenceHdfsRecord occurrenceHdfsRecord) {
 
     String institutionCode = er.getCoreTerms().get(DwcTerm.institutionCode.qualifiedName());
     String collectionCode = er.getCoreTerms().get(DwcTerm.collectionCode.qualifiedName());
@@ -462,14 +475,14 @@ public class OccurrenceHdfsRecordConverter {
     // id format following the convention of DwC (http://rs.tdwg.org/dwc/terms/#occurrenceID)
     String triplet =
         String.join(":", "urn:catalog", institutionCode, collectionCode, catalogNumber);
-    String gbifId = Optional.ofNullable(br.getGbifId()).map(Object::toString).orElse("");
+    String gbifId = Optional.ofNullable(gr.getGbifId()).map(Object::toString).orElse("");
 
     String occId = er.getCoreTerms().get(DwcTerm.occurrenceID.qualifiedName());
 
-    if (!br.getId().equals(gbifId)
-        && (!Strings.isNullOrEmpty(occId) || !br.getId().equals(triplet))) {
-      occurrenceHdfsRecord.setIdentifier(br.getId());
-      occurrenceHdfsRecord.setVIdentifier(br.getId());
+    if (!gr.getId().equals(gbifId)
+        && (!Strings.isNullOrEmpty(occId) || !gr.getId().equals(triplet))) {
+      occurrenceHdfsRecord.setIdentifier(gr.getId());
+      occurrenceHdfsRecord.setVIdentifier(gr.getId());
     }
   }
 

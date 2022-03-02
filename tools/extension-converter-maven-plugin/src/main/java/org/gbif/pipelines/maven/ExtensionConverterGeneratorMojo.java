@@ -154,7 +154,7 @@ public class ExtensionConverterGeneratorMojo extends AbstractMojo {
 
   /** Normalize name and retun result like - Normalizename */
   protected String normalizeName(String name) {
-    String replace = name.toLowerCase().trim().replaceAll("-", "").replaceAll("_", "");
+    String replace = name.toLowerCase().trim().replace("-", "").replace("_", "");
     return replace.substring(0, 1).toUpperCase() + replace.substring(1);
   }
 

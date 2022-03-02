@@ -35,6 +35,7 @@ import org.gbif.pipelines.io.avro.Authorship;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.GbifIdRecord;
 import org.gbif.pipelines.io.avro.IssueRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MediaType;
@@ -298,6 +299,22 @@ public class OccurrenceHdfsRecordConverterTest {
   }
 
   @Test
+  public void gbifIdRecordMapperTest() {
+    // State
+    long now = new Date().getTime();
+    GbifIdRecord gbifIdRecord = new GbifIdRecord();
+    gbifIdRecord.setCreated(now);
+    gbifIdRecord.setGbifId(1L);
+
+    // When
+    OccurrenceHdfsRecord hdfsRecord =
+        OccurrenceHdfsRecordConverter.builder().gbifIdRecord(gbifIdRecord).build().convert();
+
+    // Should
+    Assert.assertEquals(Long.valueOf(1L), hdfsRecord.getGbifid());
+  }
+
+  @Test
   public void basicRecordMapperTest() {
     // State
     long now = new Date().getTime();
@@ -328,7 +345,6 @@ public class OccurrenceHdfsRecordConverterTest {
             .setLineage(Collections.singletonList("BlaBla2"))
             .build());
     basicRecord.setCreated(now);
-    basicRecord.setGbifId(1L);
     basicRecord.setOrganismQuantity(2d);
     basicRecord.setOrganismQuantityType("type");
     basicRecord.setSampleSizeUnit("unit");

@@ -8,15 +8,14 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
-import java.util.function.Function;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesException;
-import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.GbifIdRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.keygen.api.KeyLookupResult;
 import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
@@ -28,43 +27,42 @@ public class GbifIdInterpreter {
   public static final String GBIF_ID_INVALID = "GBIF_ID_INVALID";
 
   /** Copies GBIF id from ExtendedRecord id or generates/gets existing GBIF id */
-  public static BiConsumer<ExtendedRecord, BasicRecord> interpretGbifId(
+  public static BiConsumer<ExtendedRecord, GbifIdRecord> interpretGbifId(
       HBaseLockingKeyService keygenService,
       boolean isTripletValid,
       boolean isOccurrenceIdValid,
       boolean useExtendedRecordId,
-      BiConsumer<ExtendedRecord, BasicRecord> gbifIdFn) {
+      boolean generateIdIfAbsent,
+      BiConsumer<ExtendedRecord, GbifIdRecord> gbifIdFn) {
     gbifIdFn = gbifIdFn == null ? interpretCopyGbifId() : gbifIdFn;
     return useExtendedRecordId
         ? gbifIdFn
-        : interpretGbifId(keygenService, isTripletValid, isOccurrenceIdValid);
+        : interpretGbifId(keygenService, isTripletValid, isOccurrenceIdValid, generateIdIfAbsent);
   }
 
   /** Generates or gets existing GBIF id */
-  public static BiConsumer<ExtendedRecord, BasicRecord> interpretGbifId(
-      HBaseLockingKeyService keygenService, boolean isTripletValid, boolean isOccurrenceIdValid) {
-    return (er, br) -> {
+  public static BiConsumer<ExtendedRecord, GbifIdRecord> interpretGbifId(
+      HBaseLockingKeyService keygenService,
+      boolean isTripletValid,
+      boolean isOccurrenceIdValid,
+      boolean generateIdIfAbsent) {
+    return (er, gr) -> {
       Optional<Long> gbifId =
-          getOrGenerateGbifId(er, keygenService, isTripletValid, isOccurrenceIdValid, true);
+          getOrGenerateGbifId(
+              er, keygenService, isTripletValid, isOccurrenceIdValid, generateIdIfAbsent);
       if (gbifId.isPresent()) {
-        br.setGbifId(gbifId.get());
+        gr.setGbifId(gbifId.get());
       } else {
-        addIssue(br, GBIF_ID_INVALID);
+        addIssue(gr, GBIF_ID_INVALID);
       }
     };
   }
 
-  /** Gets existing GBIF id */
-  public static Function<ExtendedRecord, Optional<Long>> findGbifId(
-      HBaseLockingKeyService keygenService, boolean isTripletValid, boolean isOccurrenceIdValid) {
-    return er -> getOrGenerateGbifId(er, keygenService, isTripletValid, isOccurrenceIdValid, false);
-  }
-
   /** Copies GBIF id from ExtendedRecord id */
-  public static BiConsumer<ExtendedRecord, BasicRecord> interpretCopyGbifId() {
-    return (er, br) -> {
+  public static BiConsumer<ExtendedRecord, GbifIdRecord> interpretCopyGbifId() {
+    return (er, gr) -> {
       if (StringUtils.isNumeric(er.getId())) {
-        br.setGbifId(Long.parseLong(er.getId()));
+        gr.setGbifId(Long.parseLong(er.getId()));
       }
     };
   }
@@ -75,7 +73,7 @@ public class GbifIdInterpreter {
       HBaseLockingKeyService keygenService,
       boolean isTripletValid,
       boolean isOccurrenceIdValid,
-      boolean generateIfAbsent) {
+      boolean generateIdIfAbsent) {
 
     if (keygenService == null) {
       throw new PipelinesException("keygenService can't be null!");
@@ -106,7 +104,7 @@ public class GbifIdInterpreter {
     try {
       // Finds or generates key
       KeyLookupResult keyResult = keygenService.findKey(uniqueStrings);
-      if (generateIfAbsent && keyResult == null) {
+      if (generateIdIfAbsent && keyResult == null) {
         keyResult = keygenService.generateKey(uniqueStrings);
       }
       return Optional.ofNullable(keyResult).map(KeyLookupResult::getKey);

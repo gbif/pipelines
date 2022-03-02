@@ -39,7 +39,6 @@ import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.core.parsers.SimpleTypeParser;
 import org.gbif.pipelines.core.parsers.VocabularyParser;
-import org.gbif.pipelines.core.parsers.clustering.ClusteringService;
 import org.gbif.pipelines.core.parsers.identifier.AgentIdentifierParser;
 import org.gbif.pipelines.core.utils.ModelUtils;
 import org.gbif.pipelines.io.avro.BasicRecord;
@@ -55,17 +54,6 @@ public class BasicInterpreter {
 
   private static final Parsable<String> TYPE_NAME_PARSER =
       org.gbif.common.parsers.TypifiedNameParser.getInstance();
-
-  public static Consumer<BasicRecord> interpretIsClustered(ClusteringService clusteringService) {
-    return br -> {
-      if (clusteringService != null) {
-        Long gbifId = br.getGbifId();
-        if (gbifId != null) {
-          br.setIsClustered(clusteringService.isClustered(gbifId));
-        }
-      }
-    };
-  }
 
   /** {@link DwcTerm#individualCount} interpretation. */
   public static void interpretIndividualCount(ExtendedRecord er, BasicRecord br) {
