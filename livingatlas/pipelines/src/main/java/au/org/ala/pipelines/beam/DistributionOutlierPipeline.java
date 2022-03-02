@@ -8,6 +8,9 @@ import au.org.ala.pipelines.transforms.DistributionOutlierTransform;
 import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +22,6 @@ import org.apache.beam.sdk.metrics.*;
 import org.apache.beam.sdk.transforms.*;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
-import org.apache.beam.sdk.values.PCollectionList;
 import org.apache.beam.sdk.values.TypeDescriptors;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
@@ -165,19 +167,18 @@ public class DistributionOutlierPipeline {
                 distributionTransform.calculateOutlier())
             .apply("Flatten records", Flatten.iterables());
 
-    log.info("Adding step 7: Join newly create DistributionOutlierRecord to existing ones");
-    PCollection<DistributionOutlierRecord> union =
-        PCollectionList.of(kvRecords).and(existingOutliers).apply(Flatten.pCollections());
+    DateFormat df = new SimpleDateFormat("yyyy-MM-dd-hh-mm-ss");
+    String ts = df.format(new Date());
 
     // Create output path
     // default: {fsPath}/pipelines-outlier
     // or {fsPath}/pipelines-outlier/{datasetId}
     String outputPath = ALAFsUtils.buildPathOutlierUsingTargetPath(options, false);
-    log.info("Adding step 8: Writing to " + outputPath + "/outlier-*.avro");
-    union.apply(
+    log.info("Adding step 8: Writing to " + outputPath + "/outlier_" + ts + "*.avro");
+    kvRecords.apply(
         "Write to file",
         AvroIO.write(DistributionOutlierRecord.class)
-            .to(outputPath + "/outlier")
+            .to(outputPath + "/outlier_" + ts)
             .withSuffix(".avro"));
 
     log.info("Running the pipeline");
