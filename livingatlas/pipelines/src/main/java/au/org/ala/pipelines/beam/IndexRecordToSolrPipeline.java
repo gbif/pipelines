@@ -542,6 +542,7 @@ public class IndexRecordToSolrPipeline {
                       .setInts(indexRecord.getInts())
                       .setStrings(stringsToPersist)
                       .setDoubles(doublesToPersist)
+                      .setDynamicProperties(indexRecord.getDynamicProperties())
                       .build();
 
               c.output(KV.of(indexRecord.getId(), ir));
@@ -563,26 +564,15 @@ public class IndexRecordToSolrPipeline {
         String id = e.getKey();
 
         DistributionOutlierRecord outlierRecord = e.getValue().getValue();
-
         IndexRecord indexRecord = e.getValue().getKey();
-        IndexRecord ouputIR =
-            IndexRecord.newBuilder()
-                .setId(indexRecord.getId())
-                .setTaxonID(indexRecord.getTaxonID())
-                .setLatLng(indexRecord.getLatLng())
-                .setMultiValues(indexRecord.getMultiValues())
-                .setDates(indexRecord.getDates())
-                .setLongs(indexRecord.getLongs())
-                .setBooleans(indexRecord.getBooleans())
-                .setInts(indexRecord.getInts())
-                .build();
+
         if (outlierRecord != null) {
-          ouputIR
+          indexRecord
               .getDoubles()
               .put(DISTANCE_FROM_EXPERT_DISTRIBUTION, outlierRecord.getDistanceOutOfEDL());
         }
 
-        c.output(KV.of(id, ouputIR));
+        c.output(KV.of(id, indexRecord));
       }
     };
   }
