@@ -266,6 +266,9 @@ fi
 # dwca-avro, sample and dump-datasize uses local_jar
 LOCAL_PIPELINES_JAR=$PIPELINES_JAR
 
+# path for the spark-submit script
+SPARK_SUBMIT_PATH=$(getConf run.spark-cluster.sparkSubmit)
+
 if [[ $USE_CLUSTER = true ]]; then PIPELINES_JAR=$(getConf run.spark-cluster.jar); fi
 
 for JAR in $LOCAL_PIPELINES_JAR; do
@@ -425,7 +428,7 @@ function spark-cluster-pipeline() {
     if [[ $CONF = "--conf" ]] ; then CONF=""; fi
 
     if [[ $ltype = "spark-cluster" ]] ; then
-        $_D /usr/bin/spark-submit \
+        $_D $SPARK_SUBMIT_PATH \
             --name "$NAME" \
             $CONF \
             $(toArg $SH_ARGS num-executors) \
@@ -537,7 +540,7 @@ function image-load () {
 
     PRE=image-load-sh-args.spark-cluster
     if [[ $ltype = "spark-cluster" ]] ; then
-        $_D /usr/bin/spark-submit \
+        $_D $SPARK_SUBMIT_PATH \
             --name "image-load $dr" \
             $(toArg $PRE conf) \
             $(toArg $PRE num-executors) \
@@ -574,7 +577,7 @@ function image-sync () {
 
     PRE=image-sync-sh-args.spark-cluster
     if [[ $ltype = "spark-cluster" ]] ; then
-        $_D /usr/bin/spark-submit \
+        $_D $SPARK_SUBMIT_PATH \
             --name "Image-sync $dr" \
             $(toArg $PRE num-executors) \
             $(toArg $PRE executor-cores) \
@@ -783,7 +786,7 @@ function dwca_export () {
 
     PRE=image-sync-sh-args.spark-cluster
     if [[ $ltype = "spark-cluster" ]] ; then
-        $_D /usr/bin/spark-submit \
+        $_D $SPARK_SUBMIT_PATH \
             --name "Dwca-export $dr" \
             $(toArg $PRE num-executors) \
             $(toArg $PRE executor-cores) \

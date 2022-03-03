@@ -30,6 +30,7 @@ public class ALADwcaToVerbatimPipeline {
     PipelinesOptionsFactory.registerHdfs(options);
     run(options);
   }
+
   public static void run(DwcaToVerbatimPipelineOptions options) throws IOException {
 
     MDC.put("datasetKey", options.getDatasetId());

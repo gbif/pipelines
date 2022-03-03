@@ -18,6 +18,7 @@ run:
     dwcaTmp: /data/dwca-tmp
     dwcaImportDir: /data/biocache-load
     jar: /usr/share/la-pipelines/la-pipelines.jar
+    sparkSubmit: /data/spark/bin/spark-submit
     sparkTmp: /data/spark-tmp
     sparkMaster: spark://localhost:7077
 
