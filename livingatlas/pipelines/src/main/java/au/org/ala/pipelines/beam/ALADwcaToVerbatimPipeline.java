@@ -30,36 +30,6 @@ public class ALADwcaToVerbatimPipeline {
     PipelinesOptionsFactory.registerHdfs(options);
     run(options);
   }
-
-  //  /**
-  //   * Run a load for the supplied dataset, creating a lock to prevent other load process loading
-  // the
-  //   * same archive.
-  //   */
-  //  private static void runWithLocking(DwcaToVerbatimPipelineOptions options) throws IOException {
-  //    // check for a lock file - if there isn't one, create one.
-  //
-  //    ALAFsUtils.deleteLockFile(options);
-  //
-  //    boolean okToProceed = ALAFsUtils.checkAndCreateLockFile(options);
-  //
-  //    if (okToProceed) {
-  //      MDC.put("datasetId", options.getDatasetId());
-  //      MDC.put("attempt", options.getAttempt().toString());
-  //      MDC.put("step", StepType.DWCA_TO_VERBATIM.name());
-  //      run(options);
-  //
-  //      if (options.isDeleteLockFileOnExit()) {
-  //        ALAFsUtils.deleteLockFile(options);
-  //      }
-  //
-  //    } else {
-  //      log.info(
-  //          "Dataset {} is locked. Will not attempt to loaded. Remove lockdir to proceed,",
-  //          options.getDatasetId());
-  //    }
-  //  }
-
   public static void run(DwcaToVerbatimPipelineOptions options) throws IOException {
 
     MDC.put("datasetKey", options.getDatasetId());
@@ -69,40 +39,6 @@ public class ALADwcaToVerbatimPipeline {
     log.info("Adding step 1: Options");
     String inputPath = options.getInputPath();
 
-    //    boolean originalInputIsHdfs = inputPath.startsWith("hdfs://") ||
-
-    // if inputPath is "hdfs://", then copy to local
-    //    if (originalInputIsHdfs) {
-    //
-    //      log.info("HDFS or S3 Input path: {}", inputPath);
-    //      FileSystem fs =
-    //          FileSystemFactory.getInstance(options.getHdfsSiteConfig(),
-    // options.getCoreSiteConfig())
-    //              .getFs(inputPath);
-    //
-    ////      Path inputPathHdfs = new Path(inputPath);
-    ////
-    ////      if (!fs.exists(inputPathHdfs)) {
-    ////        throw new RuntimeException("Input file not available: " + inputPath);
-    ////      }
-    //
-    //      //      String tmpInputDir = new File(options.getTempLocation()).getParent();
-    //
-    //      //      FileUtils.forceMkdir(new File(tmpInputDir));
-    //      String tmpLocalFilePath = options.getTempLocation() + "/" + options.getDatasetId() +
-    // ".zip";
-    //
-    //      log.info("Copy from HDFS or S3 to local FS: {}", tmpLocalFilePath);
-    //
-    //      Path tmpPath = new Path(tmpLocalFilePath);
-    //      fs.copyToLocalFile(false, inputPathHdfs, tmpPath, true);
-    //
-    //      log.info("Input file copied to path  {}", tmpLocalFilePath);
-    //      inputPath = tmpLocalFilePath;
-    //    } else {
-    //      log.info("Non-HDFS Input path: {}", inputPath);
-    //    }
-
     String targetPath =
         String.join(
             "/",
@@ -111,10 +47,6 @@ public class ALADwcaToVerbatimPipeline {
             options.getAttempt().toString(),
             "verbatim");
 
-    //
-    //
-    //        PathBuilder.buildDatasetAttemptPath(
-    //            options, PipelinesVariables.Pipeline.Conversion.FILE_NAME, false);
     String tmpPath = PathBuilder.getTempDir(options);
 
     log.info("Input path: {}", inputPath);
