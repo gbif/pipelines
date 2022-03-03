@@ -252,7 +252,6 @@ public final class FsUtils {
    */
   public static boolean deleteIfExist(
       String hdfsSiteConfig, String coreSiteConfig, String directoryPath) {
-
     FileSystem fs = getFileSystem(hdfsSiteConfig, coreSiteConfig, directoryPath);
     directoryPath = convertLocalHdfsPath(directoryPath);
 

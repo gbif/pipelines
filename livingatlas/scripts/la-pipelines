@@ -57,6 +57,7 @@ if [[ $PROD = false ]]; then
   # grep with -P option doesnt work on Mac OSX - perl regex arent supported,
   VER=$(grep version ../pom.xml | grep -v '<?xml'| head -1 | sed 's/[[:space:]]//g' | sed -E 's/<[/]{0,1}version>//g')
 else
+  # check we are on debian before running dpkg
   if [ "$(grep -Ei 'debian|buntu|mint' /etc/*release)" ]; then
     VER=$(dpkg-query --show -f '${Version}' la-pipelines)
   fi

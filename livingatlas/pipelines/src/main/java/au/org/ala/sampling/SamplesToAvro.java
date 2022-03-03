@@ -69,7 +69,6 @@ public class SamplesToAvro {
         String outputPath = LayerCrawler.getSampleAvroPath(options);
         DatumWriter<SampleRecord> datumWriter =
             new GenericDatumWriter<>(SampleRecord.getClassSchema());
-
         try (OutputStream output = fs.create(ALAFsUtils.createPath(outputPath));
             DataFileWriter<SampleRecord> dataFileWriter = new DataFileWriter<>(datumWriter)) {
           dataFileWriter.setCodec(BASE_CODEC);

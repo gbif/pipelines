@@ -7,15 +7,15 @@ run:
     sparkTmp: /data/spark-tmp
     sparkMaster: ""
     dwcaTmp: /data/dwca-tmp
-    dwcaImportDir: s3://ala-emr-test/dwca-imports
+    dwcaImportDir: /data/dwca-imports
   spark-embedded:
     dwcaTmp: /data/dwca-tmp
-    dwcaImportDir: s3://ala-emr-test/dwca-imports
+    dwcaImportDir: /data/dwca-imports
     sparkTmp: /data/spark-tmp
     sparkMaster: ""
   spark-cluster:
     dwcaTmp: /data/dwca-tmp
-    dwcaImportDir: s3://ala-emr-test/dwca-imports
+    dwcaImportDir: /data/dwca-imports
     jar: /usr/share/la-pipelines/la-pipelines.jar
     sparkTmp: /data/spark-tmp
     sparkMaster: spark://localhost:7077
