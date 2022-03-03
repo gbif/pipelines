@@ -34,11 +34,7 @@ public class SamplingUtils {
   public static Long samplingLastRan(SamplingPipelineOptions options, FileSystem fs)
       throws IOException {
     String samplingPath = getSampleAvroMetricPath(options);
-    // hack for EMR
-    if (samplingPath.startsWith("hdfs:///")) {
-      samplingPath = samplingPath.substring(7);
-    }
-    Path metrics = new Path(samplingPath);
+    Path metrics = ALAFsUtils.createPath(samplingPath);
 
     if (fs.exists(metrics)) {
       log.info(
@@ -61,9 +57,6 @@ public class SamplingUtils {
     Map<String, Object> dataMap = new HashMap<>();
     dataMap.put("sampledRecords", counter);
     ALAFsUtils.deleteIfExist(fs, samplingPath);
-    if (samplingPath.startsWith("hdfs:///")) {
-      samplingPath = samplingPath.substring(7);
-    }
 
     FsUtils.createFile(fs, samplingPath, yaml.dump(dataMap));
   }

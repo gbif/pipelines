@@ -54,11 +54,8 @@ public class SamplesToAvro {
       return;
     }
 
-    if (sampleCSVDownloadPath.startsWith("hdfs:///")) {
-      sampleCSVDownloadPath = sampleCSVDownloadPath.substring(7);
-    }
-
-    RemoteIterator<LocatedFileStatus> iter = fs.listFiles(new Path(sampleCSVDownloadPath), false);
+    RemoteIterator<LocatedFileStatus> iter =
+        fs.listFiles(ALAFsUtils.createPath(sampleCSVDownloadPath), false);
 
     while (iter.hasNext()) {
 
@@ -73,9 +70,7 @@ public class SamplesToAvro {
         DatumWriter<SampleRecord> datumWriter =
             new GenericDatumWriter<>(SampleRecord.getClassSchema());
 
-        if (outputPath.startsWith("hdfs:///")) outputPath = outputPath.substring(7);
-
-        try (OutputStream output = fs.create(new Path(outputPath));
+        try (OutputStream output = fs.create(ALAFsUtils.createPath(outputPath));
             DataFileWriter<SampleRecord> dataFileWriter = new DataFileWriter<>(datumWriter)) {
           dataFileWriter.setCodec(BASE_CODEC);
           dataFileWriter.create(SampleRecord.getClassSchema(), output);

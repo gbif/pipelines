@@ -1,5 +1,7 @@
 package au.org.ala.utils;
 
+import static org.gbif.pipelines.core.utils.FsUtils.convertLocalHdfsPath;
+
 import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.pipelines.options.AllDatasetsPipelinesOptions;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -32,6 +34,16 @@ import org.gbif.pipelines.io.avro.IndexRecord;
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ALAFsUtils {
+
+  /**
+   * Creates a path object, handling the case of an EMR style path.
+   *
+   * @param path
+   * @return
+   */
+  public static Path createPath(String path) {
+    return new Path(convertLocalHdfsPath(path));
+  }
 
   /**
    * Constructs the path for reading / writing identifiers. This is written outside of /interpreted
@@ -122,56 +134,6 @@ public class ALAFsUtils {
   }
 
   /**
-   * NOTE: It will delete the existing folder Build a path to outlier records.
-   * {fsPath}/pipelines-outlier/{datasetId} {fsPath}/pipelines-outlier/all
-   */
-  public static String buildPathOutlierUsingTargetPath(
-      AllDatasetsPipelinesOptions options, boolean delete) throws IOException {
-
-    // default: {fsPath}/pipelines-outlier
-    FileSystem fs =
-        FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
-            .getFs(options.getTargetPath());
-
-    String outputPath = options.getTargetPath();
-
-    // {fsPath}/pipelines-outlier/{datasetId}
-    if (options.getDatasetId() != null && !"all".equalsIgnoreCase(options.getDatasetId())) {
-      outputPath = outputPath + "/" + options.getDatasetId();
-    } else {
-      // {fsPath}/pipelines-outlier/all
-      outputPath = outputPath + "/" + "all";
-    }
-    // delete previous runs
-    if (delete)
-      FsUtils.deleteIfExist(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), outputPath);
-    else {
-      if (!exists(fs, outputPath)) ALAFsUtils.createDirectory(fs, outputPath);
-    }
-
-    return outputPath;
-  }
-
-  /**
-   * Get an output path to outlier records. {fsPath}/pipelines-outlier/{datasetId}
-   * {fsPath}/pipelines-outlier/all
-   */
-  public static String getOutlierTargetPath(AllDatasetsPipelinesOptions options) {
-
-    String outputPath = options.getTargetPath();
-
-    // {fsPath}/pipelines-outlier/{datasetId}
-    if (options.getDatasetId() != null && !"all".equalsIgnoreCase(options.getDatasetId())) {
-      outputPath = PathBuilder.buildPath(outputPath, options.getDatasetId(), "*.avro").toString();
-    } else {
-      // {fsPath}/pipelines-outlier/all
-      outputPath = PathBuilder.buildPath(outputPath, "all", "*.avro").toString();
-    }
-
-    return outputPath;
-  }
-
-  /**
    * Check if a directory exists and is not empty
    *
    * @param directoryPath path to some directory
@@ -198,43 +160,12 @@ public class ALAFsUtils {
   }
 
   /**
-   * Check if avro files exist in the target folder
-   *
-   * @param directoryPath path to some directory
-   */
-  public static boolean hasAvro(FileSystem fs, String directoryPath, boolean recurse) {
-    if (directoryPath.startsWith("hdfs:///")) directoryPath = directoryPath.substring(7);
-    Path path = PathBuilder.buildPath(directoryPath);
-    try {
-      if (fs.exists(path)) {
-        RemoteIterator<LocatedFileStatus> it = fs.listFiles(path, recurse);
-        while (it.hasNext()) {
-          LocatedFileStatus lfs = it.next();
-          if (lfs.getPath().getName().toLowerCase().endsWith(".avro")) {
-            return true;
-          }
-        }
-        return false;
-      } else {
-        return false;
-      }
-    } catch (IOException ex) {
-      return false;
-    }
-  }
-
-  /**
    * Removes a directory with content if the folder exists
    *
    * @param directoryPath path to some directory
    */
   public static boolean deleteIfExist(FileSystem fs, String directoryPath) {
-    // hack for EMR
-    if (directoryPath.startsWith("hdfs:///")) {
-      directoryPath = directoryPath.substring(7);
-    }
-
-    Path path = new Path(directoryPath);
+    Path path = createPath(directoryPath);
     try {
       return fs.exists(path) && fs.delete(path, true);
     } catch (IOException e) {
@@ -246,60 +177,43 @@ public class ALAFsUtils {
   /** Helper method to write/overwrite a file */
   public static WritableByteChannel createByteChannel(FileSystem fs, String path)
       throws IOException {
-    if (path.startsWith("hdfs:///")) path = path.substring(7);
-
-    FSDataOutputStream stream = fs.create(new Path(path), true);
+    FSDataOutputStream stream = fs.create(createPath(path), true);
     return Channels.newChannel(stream);
   }
 
   /** Helper method to write/overwrite a file */
   public static OutputStream openOutputStream(FileSystem fs, String path) throws IOException {
-    if (path.startsWith("hdfs:///")) path = path.substring(7);
-    return fs.create(new Path(path), true);
+    return fs.create(createPath(path), true);
   }
 
   /** Helper method to write/overwrite a file */
   public static ReadableByteChannel openByteChannel(FileSystem fs, String path) throws IOException {
-    if (path.startsWith("hdfs:///")) path = path.substring(7);
-    FSDataInputStream stream = fs.open(new Path(path));
+    FSDataInputStream stream = fs.open(createPath(path));
     return Channels.newChannel(stream);
   }
 
   /** Helper method to write/overwrite a file */
   public static InputStream openInputStream(FileSystem fs, String path) throws IOException {
-    if (path.startsWith("hdfs:///")) {
-      path = path.substring(7);
-    }
-    return fs.open(new Path(path));
+    return fs.open(createPath(path));
   }
 
   /** Returns true if the supplied path exists. */
   public static boolean exists(FileSystem fs, String directoryPath) throws IOException {
-    if (directoryPath.startsWith("hdfs:///")) {
-      directoryPath = directoryPath.substring(7);
-    }
-    Path path = new Path(directoryPath);
+    Path path = createPath(directoryPath);
     log.info("Using filesystem {} for path {}", fs.toString(), directoryPath);
     return fs.exists(path);
   }
 
   /** Returns true if the supplied path exists. */
   public static boolean createDirectory(FileSystem fs, String directoryPath) throws IOException {
-    if (directoryPath.startsWith("hdfs:///")) {
-      directoryPath = directoryPath.substring(7);
-    }
-    return fs.mkdirs(new Path(directoryPath));
+    return fs.mkdirs(createPath(directoryPath));
   }
 
   /** Retrieve a list of files in the supplied path. */
   public static Collection<String> listPaths(FileSystem fs, String directoryPath)
       throws IOException {
 
-    if (directoryPath.startsWith("hdfs:///")) {
-      directoryPath = directoryPath.substring(7);
-    }
-
-    Path path = new Path(directoryPath);
+    Path path = createPath(directoryPath);
     RemoteIterator<LocatedFileStatus> iterator = fs.listFiles(path, false);
     List<String> filePaths = new ArrayList<>();
     while (iterator.hasNext()) {
@@ -390,11 +304,7 @@ public class ALAFsUtils {
     FileSystem fs = FileSystemFactory.getInstance(hdfsSiteConfig, coreSiteConfig).getFs(inputPath);
 
     log.info("List files in inputPath: {}", inputPath);
-    if (inputPath.startsWith("hdfs:///")) {
-      inputPath = inputPath.substring(7);
-    }
-
-    Path path = new Path(inputPath);
+    Path path = createPath(inputPath);
     RemoteIterator<LocatedFileStatus> iterator = fs.listFiles(path, true);
 
     Map<Path, Long> filePathsWithSize = new HashMap<>();

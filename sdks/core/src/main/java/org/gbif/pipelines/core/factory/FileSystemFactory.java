@@ -7,6 +7,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
+import org.gbif.pipelines.core.utils.FsUtils;
 
 @Slf4j
 @SuppressWarnings("all")
@@ -20,34 +21,39 @@ public class FileSystemFactory {
   private final FileSystem hdfsFs;
 
   private final String hdfsPrefix;
-  private final String s3Prefix = "s3://";
 
   private static final Object MUTEX = new Object();
 
   @SneakyThrows
   private FileSystemFactory(String hdfsSiteConfig, String coreSiteConfig) {
+    if (!Strings.isNullOrEmpty(hdfsSiteConfig)) {
+
+      String hdfsPrefixToUse = getHdfsPrefix(hdfsSiteConfig);
+      String corePrefixToUse = getHdfsPrefix(coreSiteConfig);
+
+      String prefixToUse = null;
+      if (!DEFAULT_FS.equals(hdfsPrefixToUse)) {
+        prefixToUse = hdfsPrefixToUse;
+      } else if (!DEFAULT_FS.equals(corePrefixToUse)) {
+        prefixToUse = corePrefixToUse;
+      } else {
+        prefixToUse = hdfsPrefixToUse;
+      }
+
+      if (prefixToUse != null) {
+        this.hdfsPrefix = prefixToUse;
+        Configuration config = getHdfsConfiguration(hdfsSiteConfig);
+        this.hdfsFs = FileSystem.get(URI.create(prefixToUse), config);
+      } else {
+        throw new RuntimeException("XML config is provided, but fs name is not found");
+      }
+
+    } else {
+      this.hdfsPrefix = null;
+      this.hdfsFs = null;
+    }
 
     this.localFs = FileSystem.getLocal(new Configuration());
-
-    String hdfsPrefixToUse = getHdfsPrefix(hdfsSiteConfig);
-    String corePrefixToUse = getHdfsPrefix(coreSiteConfig);
-
-    String prefixToUse = null;
-    if (!DEFAULT_FS.equals(hdfsPrefixToUse)) {
-      prefixToUse = hdfsPrefixToUse;
-    } else if (!DEFAULT_FS.equals(corePrefixToUse)) {
-      prefixToUse = corePrefixToUse;
-    } else {
-      prefixToUse = hdfsPrefixToUse;
-    }
-
-    if (prefixToUse != null) {
-      this.hdfsPrefix = prefixToUse;
-      Configuration config = getHdfsConfiguration(hdfsSiteConfig);
-      this.hdfsFs = FileSystem.get(URI.create(prefixToUse), config);
-    } else {
-      throw new RuntimeException("XML config is provided, but fs name is not found");
-    }
   }
 
   public static FileSystemFactory getInstance(String hdfsSiteConfig, String coreSiteConfig) {
@@ -75,7 +81,10 @@ public class FileSystemFactory {
 
   public FileSystem getFs(String path) {
     if (path != null) {
-      if (path.startsWith("hdfs://")) {
+      // using startsWith to allow for EMR style paths of hdfs:///
+      if (hdfsPrefix != null && path.startsWith(hdfsPrefix)) {
+        return hdfsFs;
+      } else if (path.startsWith(FsUtils.HDFS_EMR_PREFIX)) {
         return hdfsFs;
       } else {
         return localFs;
