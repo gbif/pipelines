@@ -110,7 +110,7 @@ public final class FsUtils {
   /** Helper method to write/overwrite a file */
   public static void createFile(FileSystem fs, String path, String body) throws IOException {
     try (FSDataOutputStream stream = fs.create(new Path(path), true)) {
-      stream.writeChars(body);
+      stream.writeBytes(body);
     }
   }
 

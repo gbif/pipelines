@@ -49,6 +49,8 @@ public class IndexRecordToSolrPipeline {
       JackKnifeOutlierRecord.newBuilder().setId(EMPTY).setItems(new ArrayList<>()).build();
   static final Relationships nullClustering =
       Relationships.newBuilder().setId(EMPTY).setRelationships(new ArrayList<>()).build();
+  static final DistributionOutlierRecord nullOutlier =
+      DistributionOutlierRecord.newBuilder().setId(EMPTY).build();
 
   public static void main(String[] args) throws Exception {
     VersionInfo.print();
@@ -94,6 +96,13 @@ public class IndexRecordToSolrPipeline {
       indexRecordsCollection = addClusteringInfo(options, pipeline, indexRecordsCollection);
     } else {
       log.info("Skipping adding clustering to the index");
+    }
+
+    if (options.getIncludeOutlier()) {
+      log.info("Adding outlier to the index");
+      indexRecordsCollection = addOutlierInfo(options, pipeline, indexRecordsCollection);
+    } else {
+      log.info("Skipping adding outlier to the index");
     }
 
     PCollection<KV<String, IndexRecord>> recordsWithoutCoordinates = null;
@@ -271,6 +280,21 @@ public class IndexRecordToSolrPipeline {
 
     // Add Jackknife information
     return indexRecordJoinClustering.apply(ParDo.of(addClusteringInfo()));
+  }
+
+  private static PCollection<KV<String, IndexRecord>> addOutlierInfo(
+      SolrPipelineOptions options,
+      Pipeline pipeline,
+      PCollection<KV<String, IndexRecord>> indexRecords) {
+
+    // Load outlier records, keyed on ID
+    PCollection<KV<String, DistributionOutlierRecord>> outlierRecords =
+        loadOutlierRecords(options, pipeline);
+    PCollection<KV<String, KV<IndexRecord, DistributionOutlierRecord>>> indexRecordJoinOurlier =
+        Join.leftOuterJoin(indexRecords, outlierRecords, nullOutlier);
+
+    // Add Jackknife information
+    return indexRecordJoinOurlier.apply(ParDo.of(addOutlierInfo()));
   }
 
   private static void writeToSolr(
@@ -518,10 +542,37 @@ public class IndexRecordToSolrPipeline {
                       .setInts(indexRecord.getInts())
                       .setStrings(stringsToPersist)
                       .setDoubles(doublesToPersist)
+                      .setDynamicProperties(indexRecord.getDynamicProperties())
                       .build();
 
               c.output(KV.of(indexRecord.getId(), ir));
             });
+      }
+    };
+  }
+
+  private static DoFn<
+          KV<String, KV<IndexRecord, DistributionOutlierRecord>>, KV<String, IndexRecord>>
+      addOutlierInfo() {
+
+    return new DoFn<
+        KV<String, KV<IndexRecord, DistributionOutlierRecord>>, KV<String, IndexRecord>>() {
+      @ProcessElement
+      public void processElement(ProcessContext c) {
+
+        KV<String, KV<IndexRecord, DistributionOutlierRecord>> e = c.element();
+        String id = e.getKey();
+
+        DistributionOutlierRecord outlierRecord = e.getValue().getValue();
+        IndexRecord indexRecord = e.getValue().getKey();
+
+        if (outlierRecord != null) {
+          indexRecord
+              .getDoubles()
+              .put(DISTANCE_FROM_EXPERT_DISTRIBUTION, outlierRecord.getDistanceOutOfEDL());
+        }
+
+        c.output(KV.of(id, indexRecord));
       }
     };
   }
@@ -588,6 +639,32 @@ public class IndexRecordToSolrPipeline {
                 new SimpleFunction<Relationships, KV<String, Relationships>>() {
                   @Override
                   public KV<String, Relationships> apply(Relationships input) {
+                    return KV.of(input.getId(), input);
+                  }
+                }));
+  }
+
+  private static PCollection<KV<String, DistributionOutlierRecord>> loadOutlierRecords(
+      SolrPipelineOptions options, Pipeline p) {
+
+    String dataResourceFolder = options.getDatasetId();
+    if (dataResourceFolder == null || "all".equalsIgnoreCase(dataResourceFolder)) {
+      dataResourceFolder = "all";
+    }
+
+    String path =
+        PathBuilder.buildPath(options.getOutlierPath(), dataResourceFolder, "*" + AVRO_EXTENSION)
+            .toString();
+    log.info("Loading outlier from {}", path);
+
+    return p.apply(AvroIO.read(DistributionOutlierRecord.class).from(path))
+        .apply(
+            MapElements.via(
+                new SimpleFunction<
+                    DistributionOutlierRecord, KV<String, DistributionOutlierRecord>>() {
+                  @Override
+                  public KV<String, DistributionOutlierRecord> apply(
+                      DistributionOutlierRecord input) {
                     return KV.of(input.getId(), input);
                   }
                 }));

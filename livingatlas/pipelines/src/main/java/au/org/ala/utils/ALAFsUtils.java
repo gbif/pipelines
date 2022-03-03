@@ -72,7 +72,57 @@ public class ALAFsUtils {
   }
 
   /**
-   * Removes a directory with content if the folder exists
+   * NOTE: It will delete the existing folder Build a path to outlier records.
+   * {fsPath}/pipelines-outlier/{datasetId} {fsPath}/pipelines-outlier/all
+   */
+  public static String buildPathOutlierUsingTargetPath(
+      AllDatasetsPipelinesOptions options, boolean delete) throws IOException {
+
+    // default: {fsPath}/pipelines-outlier
+    FileSystem fs =
+        FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
+            .getFs(options.getTargetPath());
+
+    String outputPath = options.getTargetPath();
+
+    // {fsPath}/pipelines-outlier/{datasetId}
+    if (options.getDatasetId() != null && !"all".equalsIgnoreCase(options.getDatasetId())) {
+      outputPath = outputPath + "/" + options.getDatasetId();
+    } else {
+      // {fsPath}/pipelines-outlier/all
+      outputPath = outputPath + "/" + "all";
+    }
+    // delete previous runs
+    if (delete)
+      FsUtils.deleteIfExist(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), outputPath);
+    else {
+      if (!exists(fs, outputPath)) ALAFsUtils.createDirectory(fs, outputPath);
+    }
+
+    return outputPath;
+  }
+
+  /**
+   * Get an output path to outlier records. {fsPath}/pipelines-outlier/{datasetId}
+   * {fsPath}/pipelines-outlier/all
+   */
+  public static String getOutlierTargetPath(AllDatasetsPipelinesOptions options) {
+
+    String outputPath = options.getTargetPath();
+
+    // {fsPath}/pipelines-outlier/{datasetId}
+    if (options.getDatasetId() != null && !"all".equalsIgnoreCase(options.getDatasetId())) {
+      outputPath = PathBuilder.buildPath(outputPath, options.getDatasetId(), "*.avro").toString();
+    } else {
+      // {fsPath}/pipelines-outlier/all
+      outputPath = PathBuilder.buildPath(outputPath, "all", "*.avro").toString();
+    }
+
+    return outputPath;
+  }
+
+  /**
+   * Check if a directory exists and is not empty
    *
    * @param directoryPath path to some directory
    */
@@ -93,6 +143,32 @@ public class ALAFsUtils {
       return fs.listFiles(path, true).hasNext();
     } catch (IOException e) {
       log.error("Can't delete {} directory, cause - {}", directoryPath, e.getCause());
+      return false;
+    }
+  }
+
+  /**
+   * Check if avro files exist in the target folder
+   *
+   * @param directoryPath path to some directory
+   */
+  public static boolean hasAvro(FileSystem fs, String directoryPath, boolean recurse) {
+    Path path = PathBuilder.buildPath(directoryPath);
+    Path avroFilePath = PathBuilder.buildPath(directoryPath, "*.avro");
+    try {
+      if (fs.exists(path)) {
+        RemoteIterator<LocatedFileStatus> it = fs.listFiles(path, recurse);
+        while (it.hasNext()) {
+          LocatedFileStatus lfs = it.next();
+          if (lfs.getPath().getName().toLowerCase().endsWith(".avro")) {
+            return true;
+          }
+        }
+        return false;
+      } else {
+        return false;
+      }
+    } catch (IOException ex) {
       return false;
     }
   }
@@ -283,14 +359,10 @@ public class ALAFsUtils {
     if (dataResourceFolder == null || "all".equalsIgnoreCase(dataResourceFolder)) {
       dataResourceFolder = "*";
     }
-    return p.apply(
-        AvroIO.read(IndexRecord.class)
-            .from(
-                String.join(
-                    "/",
-                    options.getAllDatasetsInputPath(),
-                    "index-record",
-                    dataResourceFolder,
-                    "*.avro")));
+    String dataSource =
+        String.join(
+            "/", options.getAllDatasetsInputPath(), "index-record", dataResourceFolder, "*.avro");
+    log.info("Loading index records from: " + dataSource);
+    return p.apply(AvroIO.read(IndexRecord.class).from(dataSource));
   }
 }

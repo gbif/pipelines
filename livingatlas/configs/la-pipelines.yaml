@@ -167,6 +167,15 @@ sampling:
   allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
   runner: SparkRunner
 
+# Calculate distance to the expert distribution layers
+# class:au.org.ala.pipelines.beam.DistributionOutlierPipeline
+outlier:
+  appName: Expert distribution outliers for {datasetId}
+  baseUrl: https://spatial-test.ala.org.au/ws/
+  targetPath: '{fsPath}/pipelines-outlier'
+  allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
+  runner: SparkRunner
+
 # class: au.org.ala.pipelines.beam.ALAInterpretedToSensitivePipeline
 sensitive:
   appName: Sensitive Data Processing for {datasetId}
@@ -192,6 +201,7 @@ solr:
   allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
   jackKnifePath: "{fsPath}/pipelines-jackknife"
   clusteringPath: "{fsPath}/pipelines-clustering"
+  outlierPath: '{fsPath}/pipelines-outlier'
   solrCollection: biocache
   includeSampling: false
   includeJackKnife: false
@@ -334,6 +344,18 @@ sampling-sh-args:
     executor-memory: 16G
     driver-memory: 4G
 
+outlier-sh-args:
+  local:
+    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
+  spark-embedded:
+    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
+  spark-cluster:
+    conf: spark.default.parallelism=144
+    num-executors: 8
+    executor-cores: 8
+    executor-memory: 16G
+    driver-memory: 4G
+
 sensitive-sh-args:
   spark-embedded:
     jvm: -Xmx8g -XX:+UseG1GC
@@ -354,7 +376,7 @@ index-sh-args:
   spark-embedded:
     jvm: -Xmx8g -XX:+UseG1GC
   spark-cluster:
-    conf: spark.default.parallelism=500
+    conf: spark.default.parallelism=48
     num-executors: 6
     executor-cores: 8
     executor-memory: 20G
