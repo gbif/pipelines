@@ -18,7 +18,7 @@ public class DistributionOutlierTest {
     DistributionServiceImpl impl = DistributionServiceImpl.init(spatial_url);
     try {
       List<DistributionLayer> layers = impl.findLayersByLsid(lsidGreyNurseShark);
-      assertSame(5, layers.size());
+      assertSame(1, layers.size());
     } catch (Exception e) {
       System.out.println(e.getMessage());
     }
