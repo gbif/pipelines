@@ -2,10 +2,10 @@
   "name":"SampleRecord",
   "namespace":"org.gbif.pipelines.io.avro",
   "type":"record",
-  "doc":"ALA Index Record",
+  "doc":"ALA Sampling Record",
   "fields":[
     {"name": "latLng", "doc": "The ALA UUID for the record", "type" : ["null", "string"]},
-    {"name": "strings", "doc": "The core record terms", "default": {}, "type": {"type": "map", "values": "string"}},
-    {"name": "doubles", "doc": "The core record terms", "default": {}, "type": {"type": "map", "values": "double"}}
+    {"name": "strings", "doc": "The contextual samples", "default": {}, "type": {"type": "map", "values": "string"}},
+    {"name": "doubles", "doc": "The environmental samples", "default": {}, "type": {"type": "map", "values": "double"}}
   ]
 }

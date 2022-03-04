@@ -34,10 +34,17 @@ public class SamplingUtils {
   public static Long samplingLastRan(SamplingPipelineOptions options, FileSystem fs)
       throws IOException {
     String samplingPath = getSampleAvroMetricPath(options);
-    Path metrics = new Path(samplingPath);
+    Path metrics = ALAFsUtils.createPath(samplingPath);
+
     if (fs.exists(metrics)) {
+      log.info(
+          "Sampling metrics at path {} accessible with last modified {}",
+          samplingPath,
+          fs.getFileStatus(metrics).getModificationTime());
       return fs.getFileStatus(metrics).getModificationTime();
     } else {
+      log.info("Sampling metrics at path {} not accessible", samplingPath);
+      log.info("Filesystem in use: " + fs);
       return -1L;
     }
   }
@@ -50,6 +57,7 @@ public class SamplingUtils {
     Map<String, Object> dataMap = new HashMap<>();
     dataMap.put("sampledRecords", counter);
     ALAFsUtils.deleteIfExist(fs, samplingPath);
+
     FsUtils.createFile(fs, samplingPath, yaml.dump(dataMap));
   }
 
