@@ -55,6 +55,7 @@ public class PipelinesVariables {
         LOCATION,
         TAXONOMY,
         GRSCICOLL,
+        EVENT_CORE,
         // Extension types
         IMAGE,
         MULTIMEDIA,
@@ -227,6 +228,8 @@ public class PipelinesVariables {
     public static final String TAXON_RECORDS_COUNT = "taxonRecordsCount";
     public static final String GRSCICOLL_RECORDS_COUNT = "grscicollRecordsCount";
     public static final String VERBATIM_RECORDS_COUNT = "verbatimRecordsCount";
+    // Event core types
+    public static final String EVENT_CORE_RECORDS_COUNT = "eventCoreRecordsCount";
     // Extension types
     public static final String MULTIMEDIA_RECORDS_COUNT = "multimediaRecordsCount";
     public static final String IMAGE_RECORDS_COUNT = "imageRecordsCount";
