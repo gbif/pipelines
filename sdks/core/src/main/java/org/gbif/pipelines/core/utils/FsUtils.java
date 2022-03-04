@@ -271,9 +271,6 @@ public final class FsUtils {
    *
    * <p>new Path(hdfs:///mypath/123) will be interpreted as hdfs:/mypath/123 which will cause a
    * wrong FS exception.
-   *
-   * @param directoryPath
-   * @return
    */
   public static String convertLocalHdfsPath(String directoryPath) {
     if (directoryPath.startsWith(HDFS_EMR_PREFIX)) {
@@ -292,7 +289,7 @@ public final class FsUtils {
   @SneakyThrows
   public static <T> T readConfigFile(
       String hdfsSiteConfig, String coreSiteConfig, String filePath, Class<T> clazz) {
-    FileSystem fs = FsUtils.getLocalFileSystem(hdfsSiteConfig, coreSiteConfig);
+    FileSystem fs = FsUtils.getFileSystem(hdfsSiteConfig, coreSiteConfig, filePath);
     Path fPath = new Path(filePath);
     if (fs.exists(fPath)) {
       log.info("Reading properties path - {}", filePath);
