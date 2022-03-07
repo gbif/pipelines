@@ -48,7 +48,7 @@ import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
 import org.gbif.pipelines.transforms.common.FilterRecordsTransform;
 import org.gbif.pipelines.transforms.common.UniqueGbifIdTransform;
 import org.gbif.pipelines.transforms.common.UniqueIdTransform;
-import org.gbif.pipelines.transforms.converters.GbifJsonTransform;
+import org.gbif.pipelines.transforms.converters.OccurrenceJsonTransform;
 import org.gbif.pipelines.transforms.converters.OccurrenceExtensionTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.GrscicollTransform;
@@ -118,7 +118,7 @@ public class IngestMetricsBuilder {
    * org.gbif.pipelines.ingest.java.pipelines.InterpretedToEsIndexExtendedPipeline}
    */
   public static IngestMetrics createInterpretedToEsIndexMetrics() {
-    return IngestMetrics.create().addMetric(GbifJsonTransform.class, AVRO_TO_JSON_COUNT);
+    return IngestMetrics.create().addMetric(OccurrenceJsonTransform.class, AVRO_TO_JSON_COUNT);
   }
 
   /** {@link IngestMetrics} for hdfs tables */

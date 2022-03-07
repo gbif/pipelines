@@ -15,7 +15,7 @@ import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
 import org.gbif.pipelines.estools.service.EsService;
-import org.gbif.pipelines.ingest.pipelines.utils.EsServer;
+import org.gbif.pipelines.ingest.pipelines.utils.ElasticsearchServer;
 import org.gbif.pipelines.ingest.pipelines.utils.InterpretedAvroWriter;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
@@ -53,7 +53,7 @@ public class InterpretedToEsIndexPipelineIT {
 
   @Rule public final transient TestPipeline p = TestPipeline.create();
 
-  @ClassRule public static final EsServer ES_SERVER = new EsServer();
+  @ClassRule public static final ElasticsearchServer ES_SERVER = new ElasticsearchServer();
 
   @Before
   public void cleanIndexes() {

@@ -21,7 +21,7 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
 import org.gbif.pipelines.common.beam.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
-import org.gbif.pipelines.core.converters.GbifJsonConverter;
+import org.gbif.pipelines.core.converters.OccurrenceJsonConverter;
 import org.gbif.pipelines.io.avro.AmplificationRecord;
 import org.gbif.pipelines.transforms.extension.AmplificationTransform;
 import org.slf4j.MDC;
@@ -87,11 +87,11 @@ public class InterpretedToEsIndexAmpPipeline {
                     new DoFn<AmplificationRecord, String>() {
 
                       private final Counter counter =
-                          Metrics.counter(GbifJsonConverter.class, AVRO_TO_JSON_COUNT);
+                          Metrics.counter(OccurrenceJsonConverter.class, AVRO_TO_JSON_COUNT);
 
                       @ProcessElement
                       public void processElement(ProcessContext c) {
-                        String json = GbifJsonConverter.toStringPartialJson(c.element());
+                        String json = OccurrenceJsonConverter.toStringPartialJson(c.element());
                         c.output(json);
                         counter.inc();
                       }

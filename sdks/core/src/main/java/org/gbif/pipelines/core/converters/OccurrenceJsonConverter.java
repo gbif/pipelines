@@ -70,14 +70,14 @@ import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
  * TaxonRecord tr =  ...
  * MultimediaRecord mr =  ...
  * ExtendedRecord er =  ...
- * String result = GbifJsonConverter.toStringJson(br, tmr, lr, tr, mr, er);
+ * String result = OccurrenceJsonConverter.toStringJson(br, tmr, lr, tr, mr, er);
  *
  * }</pre>
  */
 @SuppressWarnings("FallThrough")
 @Slf4j
 @Builder
-public class GbifJsonConverter {
+public class OccurrenceJsonConverter {
 
   private static final Set<String> EXCLUDE_ALL =
       Collections.singleton(DwcTerm.footprintWKT.qualifiedName());
@@ -121,7 +121,7 @@ public class GbifJsonConverter {
    * the new ES record
    */
   public static ObjectNode toJson(SpecificRecordBase... records) {
-    return GbifJsonConverter.builder().records(Arrays.asList(records)).build().toJson();
+    return OccurrenceJsonConverter.builder().records(Arrays.asList(records)).build().toJson();
   }
 
   /**
@@ -129,7 +129,7 @@ public class GbifJsonConverter {
    * a partial ES record update
    */
   public static ObjectNode toPartialJson(SpecificRecordBase... records) {
-    return GbifJsonConverter.builder()
+    return OccurrenceJsonConverter.builder()
         .records(Arrays.asList(records))
         .skipId(false)
         .skipIssues(true)

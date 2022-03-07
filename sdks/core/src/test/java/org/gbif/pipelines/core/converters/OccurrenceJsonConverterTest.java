@@ -50,7 +50,7 @@ import org.gbif.pipelines.io.avro.grscicoll.Match;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class GbifJsonConverterTest {
+public class OccurrenceJsonConverterTest {
 
   @Test
   public void jsonFromSpecificRecordBaseTest() {
@@ -212,7 +212,7 @@ public class GbifJsonConverterTest {
     gr.getIssues().getIssueList().add(OccurrenceIssue.INSTITUTION_MATCH_FUZZY.name());
 
     // When
-    ObjectNode result = GbifJsonConverter.toJson(mr, er, tmr, lr, tr, br, gr);
+    ObjectNode result = OccurrenceJsonConverter.toJson(mr, er, tmr, lr, tr, br, gr);
 
     // Should
     assertTrue(JsonValidationUtils.isValid(result.toString()));
@@ -436,7 +436,7 @@ public class GbifJsonConverterTest {
             .build();
 
     // When
-    ObjectNode result = GbifJsonConverter.toJson(er, tmr, lr, tr, asr);
+    ObjectNode result = OccurrenceJsonConverter.toJson(er, tmr, lr, tr, asr);
 
     // Should
     assertTrue(JsonValidationUtils.isValid(result.toString()));
@@ -540,7 +540,7 @@ public class GbifJsonConverterTest {
     TemporalRecord tr = TemporalRecord.newBuilder().setId("777").build();
 
     // When
-    ObjectNode result = GbifJsonConverter.toJson(er, tr);
+    ObjectNode result = OccurrenceJsonConverter.toJson(er, tr);
 
     // Should
     assertTrue(JsonValidationUtils.isValid(result.toString()));
@@ -616,7 +616,7 @@ public class GbifJsonConverterTest {
         ExtendedRecord.newBuilder().setId("777").setCoreTerms(coreTerms).build();
 
     // When
-    String result = GbifJsonConverter.toStringPartialJson(extendedRecord, taxonRecord);
+    String result = OccurrenceJsonConverter.toStringPartialJson(extendedRecord, taxonRecord);
 
     // Should
     assertEquals(expected, result);
@@ -634,7 +634,7 @@ public class GbifJsonConverterTest {
     ExtendedRecord record = ExtendedRecord.newBuilder().setId("777").build();
 
     // When
-    String result = GbifJsonConverter.toStringPartialJson(record);
+    String result = OccurrenceJsonConverter.toStringPartialJson(record);
 
     // Should
     assertEquals(expected, result);
@@ -651,7 +651,7 @@ public class GbifJsonConverterTest {
     TemporalRecord record = TemporalRecord.newBuilder().setId("777").setCreated(0L).build();
 
     // When
-    String result = GbifJsonConverter.toStringPartialJson(record);
+    String result = OccurrenceJsonConverter.toStringPartialJson(record);
 
     // Should
     assertEquals(expected, result);
@@ -668,7 +668,7 @@ public class GbifJsonConverterTest {
     LocationRecord record = LocationRecord.newBuilder().setId("777").build();
 
     // When
-    String result = GbifJsonConverter.toStringPartialJson(record);
+    String result = OccurrenceJsonConverter.toStringPartialJson(record);
 
     // Should
     assertEquals(expected, result);
@@ -695,7 +695,7 @@ public class GbifJsonConverterTest {
             .build();
 
     // When
-    String result = GbifJsonConverter.toStringPartialJson(record);
+    String result = OccurrenceJsonConverter.toStringPartialJson(record);
 
     // Should
     assertEquals(expected, result);
@@ -714,7 +714,7 @@ public class GbifJsonConverterTest {
         AmplificationRecord.newBuilder().setId("777").setCreated(0L).build();
 
     // When
-    String result = GbifJsonConverter.toStringPartialJson(record);
+    String result = OccurrenceJsonConverter.toStringPartialJson(record);
 
     // Should
     assertEquals(expected, result);
@@ -731,7 +731,7 @@ public class GbifJsonConverterTest {
     MultimediaRecord record = MultimediaRecord.newBuilder().setId("777").build();
 
     // When
-    String result = GbifJsonConverter.toStringPartialJson(record);
+    String result = OccurrenceJsonConverter.toStringPartialJson(record);
 
     // Should
     assertEquals(expected, result);
@@ -756,7 +756,7 @@ public class GbifJsonConverterTest {
             .build();
 
     // When
-    String result = GbifJsonConverter.toStringPartialJson(record);
+    String result = OccurrenceJsonConverter.toStringPartialJson(record);
 
     // Should
     assertEquals(expected, result);
@@ -815,7 +815,7 @@ public class GbifJsonConverterTest {
             .build();
 
     // When
-    String result = GbifJsonConverter.toStringPartialJson(record);
+    String result = OccurrenceJsonConverter.toStringPartialJson(record);
 
     // Should
     assertEquals(expected, result);
@@ -855,7 +855,7 @@ public class GbifJsonConverterTest {
             .build();
 
     // When
-    String result = GbifJsonConverter.toStringPartialJson(multimediaRecord);
+    String result = OccurrenceJsonConverter.toStringPartialJson(multimediaRecord);
 
     // Should
     assertEquals(expected, result);
@@ -887,7 +887,7 @@ public class GbifJsonConverterTest {
 
     // When
     MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
-    ObjectNode result = GbifJsonConverter.toJson(mdr, br, tr, lr, txr, mmr, mfr, er);
+    ObjectNode result = OccurrenceJsonConverter.toJson(mdr, br, tr, lr, txr, mmr, mfr, er);
 
     // Should
     assertTrue(JsonValidationUtils.isValid(result.toString()));
@@ -937,7 +937,7 @@ public class GbifJsonConverterTest {
             .build();
 
     // When
-    String result = GbifJsonConverter.toStringPartialJson(record);
+    String result = OccurrenceJsonConverter.toStringPartialJson(record);
 
     // Should
     Assert.assertEquals(expected, result);
@@ -956,7 +956,7 @@ public class GbifJsonConverterTest {
             .build();
 
     // When
-    ObjectNode result = GbifJsonConverter.toJson(tmr);
+    ObjectNode result = OccurrenceJsonConverter.toJson(tmr);
 
     // Should
     assertTrue(JsonValidationUtils.isValid(result.toString()));

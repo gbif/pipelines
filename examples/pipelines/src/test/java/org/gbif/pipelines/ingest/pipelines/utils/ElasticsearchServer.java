@@ -21,7 +21,7 @@ import org.testcontainers.utility.DockerImageName;
  */
 @Slf4j
 @Getter
-public class EsServer extends ExternalResource {
+public class ElasticsearchServer extends ExternalResource {
 
   private ElasticsearchContainer embeddedElastic;
   private EsConfig esConfig;

@@ -11,7 +11,7 @@ import lombok.Builder;
 import lombok.NonNull;
 import org.elasticsearch.action.index.IndexRequest;
 import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
-import org.gbif.pipelines.core.converters.GbifJsonConverter;
+import org.gbif.pipelines.core.converters.OccurrenceJsonConverter;
 import org.gbif.pipelines.core.converters.MultimediaConverter;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
@@ -60,7 +60,7 @@ public class IndexRequestConverter {
       AudubonRecord ar = audubonMap.getOrDefault(k, AudubonRecord.newBuilder().setId(k).build());
 
       MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
-      ObjectNode json = GbifJsonConverter.toJson(metadata, br, tr, lr, txr, gr, mmr, er);
+      ObjectNode json = OccurrenceJsonConverter.toJson(metadata, br, tr, lr, txr, gr, mmr, er);
 
       metrics.incMetric(AVRO_TO_JSON_COUNT);
 
