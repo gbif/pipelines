@@ -10,6 +10,8 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
+
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.specific.SpecificDatumReader;
@@ -39,7 +41,7 @@ import org.junit.runners.JUnit4;
 public class VerbatimToInterpretedPipelineIT {
 
   private static final String ID = "777";
-  private static final String DATASET_KEY = "9bed66b3-4caa-42bb-9c93-71d7ba109dad";
+  private static final String DATASET_KEY = UUID.randomUUID().toString();
 
   @Rule public final transient TestPipeline p = TestPipeline.create();
 
@@ -49,7 +51,7 @@ public class VerbatimToInterpretedPipelineIT {
     // State
     String outputFile = getClass().getResource("/data7/ingest").getFile();
 
-    String attempt = "60";
+    String attempt = "1";
 
     String[] args = {
       "--datasetId=" + DATASET_KEY,
@@ -103,9 +105,9 @@ public class VerbatimToInterpretedPipelineIT {
 
     String interpretedOutput = String.join("/", outputFile, DATASET_KEY, attempt, "interpreted");
 
-    assertEquals(11, new File(interpretedOutput).listFiles().length);
+    assertEquals(3, new File(interpretedOutput).listFiles().length);
     assertFile(IdentifierRecord.class, interpretedOutput + "/identifier");
-    assertFile(EventCoreRecord.class, interpretedOutput + "/eventcore");
+    assertFile(EventCoreRecord.class, interpretedOutput + "/event_core");
     assertFile(ExtendedRecord.class, interpretedOutput + "/verbatim");
   }
 
@@ -124,6 +126,7 @@ public class VerbatimToInterpretedPipelineIT {
 
     DatumReader<T> ohrDatumReader = new SpecificDatumReader<>(clazz);
     try (DataFileReader<T> dataFileReader = new DataFileReader<>(file, ohrDatumReader)) {
+      Assert.assertTrue(dataFileReader.hasNext());
       while (dataFileReader.hasNext()) {
         T record = dataFileReader.next();
         Assert.assertNotNull(record);

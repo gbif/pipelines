@@ -4,6 +4,8 @@ import static org.junit.Assert.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
+
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.gbif.dwc.terms.DwcTerm;
@@ -49,14 +51,13 @@ public class InterpretedToEsIndexPipelineIT {
     // State
     String outputFile = getClass().getResource("/").getFile();
     String idxName = "interpretedtoesindexextendedpipelineit";
-
     String postfix = "777";
-
     String input = outputFile + "data3/ingest";
+    String datasetKey = UUID.randomUUID().toString();
 
     String[] argsWriter = {
-      "--datasetId=d596fccb-2319-42eb-b13b-986c932780ad",
-      "--attempt=147",
+      "--datasetId=" + datasetKey,
+      "--attempt=1",
       "--runner=SparkRunner",
       "--metaFileName=interpreted-to-index.yml",
       "--inputPath=" + input,
@@ -104,8 +105,8 @@ public class InterpretedToEsIndexPipelineIT {
 
     // When
     String[] args = {
-      "--datasetId=d596fccb-2319-42eb-b13b-986c932780ad",
-      "--attempt=147",
+      "--datasetId=" + datasetKey,
+      "--attempt=1",
       "--runner=TestSparkRunner",
       "--metaFileName=interpreted-to-index.yml",
       "--inputPath=" + input,
@@ -114,7 +115,9 @@ public class InterpretedToEsIndexPipelineIT {
       "--esIndexName=interpretedtoesindexextendedpipelineit",
       "--esAlias=occurrence_interpretedtoesindexextendedpipelineit",
       "--indexNumberShards=1",
-      "--indexNumberReplicas=0"
+      "--indexNumberReplicas=0",
+      "--esSchemaPath=elasticsearch/es-event-core-schema.json",
+      "--esDocumentId=internalId"
     };
     EsIndexingPipelineOptions options = PipelinesOptionsFactory.createIndexing(args);
     InterpretedToEsIndexPipeline.run(options, opt -> p);
