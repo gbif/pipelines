@@ -46,7 +46,7 @@ public class VerbatimToInterpretedPipelineIT {
   @Rule public final transient TestPipeline p = TestPipeline.create();
 
   @Test
-  public void pipelineAllSynchTest() throws Exception {
+  public void indexingPipelineTest() throws Exception {
 
     // State
     String outputFile = getClass().getResource("/data7/ingest").getFile();

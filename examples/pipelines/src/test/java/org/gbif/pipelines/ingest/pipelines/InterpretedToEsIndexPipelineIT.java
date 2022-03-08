@@ -46,7 +46,7 @@ public class InterpretedToEsIndexPipelineIT {
   }
 
   @Test
-  public void pipelineTest() throws Exception {
+  public void interpretationPipelineTest() throws Exception {
 
     // State
     String outputFile = getClass().getResource("/").getFile();
@@ -113,7 +113,7 @@ public class InterpretedToEsIndexPipelineIT {
       "--targetPath=" + input,
       "--esHosts=" + String.join(",", ES_SERVER.getEsConfig().getRawHosts()),
       "--esIndexName=interpretedtoesindexextendedpipelineit",
-      "--esAlias=occurrence_interpretedtoesindexextendedpipelineit",
+      "--esAlias=event_interpretedtoesindexextendedpipelineit",
       "--indexNumberShards=1",
       "--indexNumberReplicas=0",
       "--esSchemaPath=elasticsearch/es-event-core-schema.json",
