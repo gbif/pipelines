@@ -72,7 +72,7 @@ public class IngestMetricsBuilderTest {
     IngestMetrics metrics = IngestMetricsBuilder.createInterpretedToEsIndexMetrics();
 
     // When
-    metrics.incMetric(AVRO_TO_JSON_COUNT);
+    metrics.incMetric(OCCURRENCE_AVRO_TO_JSON_COUNT);
 
     MetricResults result = metrics.getMetricsResult();
 
@@ -84,6 +84,6 @@ public class IngestMetricsBuilderTest {
         .forEach(mr -> map.put(mr.getName().getName(), mr.getAttempted()));
 
     Assert.assertEquals(1, map.size());
-    Assert.assertEquals(Long.valueOf(1L), map.get(AVRO_TO_JSON_COUNT));
+    Assert.assertEquals(Long.valueOf(1L), map.get(OCCURRENCE_AVRO_TO_JSON_COUNT));
   }
 }

@@ -2,7 +2,6 @@ package org.gbif.pipelines.ingest.java.metrics;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AUDUBON_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_HDFS_COUNT;
-import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.BASIC_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.DUPLICATE_GBIF_IDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.DUPLICATE_IDS_COUNT;
@@ -15,6 +14,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.LOCATION_RECO
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMENT_OR_FACT_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.METADATA_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MULTIMEDIA_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.OCCURRENCE_AVRO_TO_JSON_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.TAXON_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.TEMPORAL_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.UNIQUE_GBIF_IDS_COUNT;
@@ -93,7 +93,7 @@ public class IngestMetricsBuilderTest {
     IngestMetrics metrics = IngestMetricsBuilder.createInterpretedToEsIndexMetrics();
 
     // When
-    metrics.incMetric(AVRO_TO_JSON_COUNT);
+    metrics.incMetric(OCCURRENCE_AVRO_TO_JSON_COUNT);
 
     MetricResults result = metrics.getMetricsResult();
 
@@ -105,7 +105,7 @@ public class IngestMetricsBuilderTest {
         .forEach(mr -> map.put(mr.getName().getName(), mr.getAttempted()));
 
     Assert.assertEquals(1, map.size());
-    Assert.assertEquals(Long.valueOf(1L), map.get(AVRO_TO_JSON_COUNT));
+    Assert.assertEquals(Long.valueOf(1L), map.get(OCCURRENCE_AVRO_TO_JSON_COUNT));
   }
 
   @Test

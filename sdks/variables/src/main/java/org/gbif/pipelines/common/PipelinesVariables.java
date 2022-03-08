@@ -49,6 +49,7 @@ public class PipelinesVariables {
         // Raw
         VERBATIM,
         // Core types
+        IDENTIFIER,
         METADATA,
         BASIC,
         TEMPORAL,
@@ -202,7 +203,8 @@ public class PipelinesVariables {
   @NoArgsConstructor(access = AccessLevel.PRIVATE)
   public static class Metrics {
 
-    public static final String AVRO_TO_JSON_COUNT = "avroToJsonCount";
+    public static final String EVENT_AVRO_TO_JSON_COUNT = "eventAvroToJsonCount";
+    public static final String OCCURRENCE_AVRO_TO_JSON_COUNT = "occurrenceAvroToJsonCount";
     public static final String ARCHIVE_TO_ER_COUNT = "archiveToErCount";
     public static final String AVRO_TO_HDFS_COUNT = "avroToHdfsCount";
 
@@ -264,14 +266,13 @@ public class PipelinesVariables {
         "extendedMeasurementOrFactTableRecordsCount";
     public static final String CHRONOMETRIC_AGE_TABLE_RECORDS_COUNT =
         "chronometricAgeTableRecordsCount";
-    public static final String CHRONOMETRIC_DATE_TABLE_RECORDS_COUNT =
-        "chronometricDateTableRecordsCount";
     public static final String REFERENCE_TABLE_RECORDS_COUNT = "referencesTableRecordsCount";
     public static final String IDENTIFIER_TABLE_RECORDS_COUNT = "identifierTableRecordsCount";
-    public static final String HDFS_VIEW_RECORDS_COUNT = "hdfsViewRecordsCount";
+
     // Fragmenter
     public static final String FRAGMENTER_COUNT = "fragmenterRecordsCount";
     // Specific
+    public static final String IDENTIFIER_RECORDS_COUNT = "identifierRecordsCount";
     public static final String LOCATION_FEATURE_RECORDS_COUNT = "locationFeatureRecordsCount";
 
     public static final String ATTEMPTED = "Attempted";

@@ -3,7 +3,6 @@ package org.gbif.pipelines.ingest.java.metrics;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AMPLIFICATION_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AUDUBON_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_HDFS_COUNT;
-import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.BASIC_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.CHRONOMETRIC_AGE_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.CLONING_TABLE_RECORDS_COUNT;
@@ -30,6 +29,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMENT_T
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMENT_TRIAL_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.METADATA_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MULTIMEDIA_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.OCCURRENCE_AVRO_TO_JSON_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.OCCURRENCE_EXT_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.PERMIT_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.PREPARATION_TABLE_RECORDS_COUNT;
@@ -48,8 +48,8 @@ import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
 import org.gbif.pipelines.transforms.common.FilterRecordsTransform;
 import org.gbif.pipelines.transforms.common.UniqueGbifIdTransform;
 import org.gbif.pipelines.transforms.common.UniqueIdTransform;
-import org.gbif.pipelines.transforms.converters.OccurrenceJsonTransform;
 import org.gbif.pipelines.transforms.converters.OccurrenceExtensionTransform;
+import org.gbif.pipelines.transforms.converters.OccurrenceJsonTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.GrscicollTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
@@ -118,7 +118,8 @@ public class IngestMetricsBuilder {
    * org.gbif.pipelines.ingest.java.pipelines.InterpretedToEsIndexExtendedPipeline}
    */
   public static IngestMetrics createInterpretedToEsIndexMetrics() {
-    return IngestMetrics.create().addMetric(OccurrenceJsonTransform.class, AVRO_TO_JSON_COUNT);
+    return IngestMetrics.create()
+        .addMetric(OccurrenceJsonTransform.class, OCCURRENCE_AVRO_TO_JSON_COUNT);
   }
 
   /** {@link IngestMetrics} for hdfs tables */

@@ -1,7 +1,7 @@
 package org.gbif.pipelines.ingest.java.transforms;
 
 import static org.elasticsearch.common.xcontent.XContentType.JSON;
-import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.OCCURRENCE_AVRO_TO_JSON_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing.GBIF_ID;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -11,8 +11,8 @@ import lombok.Builder;
 import lombok.NonNull;
 import org.elasticsearch.action.index.IndexRequest;
 import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
-import org.gbif.pipelines.core.converters.OccurrenceJsonConverter;
 import org.gbif.pipelines.core.converters.MultimediaConverter;
+import org.gbif.pipelines.core.converters.OccurrenceJsonConverter;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -62,7 +62,7 @@ public class IndexRequestConverter {
       MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
       ObjectNode json = OccurrenceJsonConverter.toJson(metadata, br, tr, lr, txr, gr, mmr, er);
 
-      metrics.incMetric(AVRO_TO_JSON_COUNT);
+      metrics.incMetric(OCCURRENCE_AVRO_TO_JSON_COUNT);
 
       IndexRequest indexRequest = new IndexRequest(esIndexName).source(json.toString(), JSON);
 

@@ -8,8 +8,8 @@ import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
 import org.gbif.pipelines.transforms.common.FilterRecordsTransform;
 import org.gbif.pipelines.transforms.common.UniqueGbifIdTransform;
 import org.gbif.pipelines.transforms.common.UniqueIdTransform;
-import org.gbif.pipelines.transforms.converters.OccurrenceJsonTransform;
 import org.gbif.pipelines.transforms.converters.OccurrenceExtensionTransform;
+import org.gbif.pipelines.transforms.converters.OccurrenceJsonTransform;
 import org.gbif.pipelines.transforms.core.*;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
@@ -39,6 +39,7 @@ public class IngestMetricsBuilder {
   }
 
   public static IngestMetrics createInterpretedToEsIndexMetrics() {
-    return IngestMetrics.create().addMetric(OccurrenceJsonTransform.class, AVRO_TO_JSON_COUNT);
+    return IngestMetrics.create()
+        .addMetric(OccurrenceJsonTransform.class, OCCURRENCE_AVRO_TO_JSON_COUNT);
   }
 }

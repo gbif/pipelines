@@ -1,10 +1,11 @@
 package org.gbif.pipelines.core.converters;
 
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.temporal.TemporalAccessor;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -14,52 +15,22 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.StringJoiner;
 import java.util.function.BiConsumer;
 import java.util.function.LongFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import org.gbif.api.vocabulary.Extension;
-import org.gbif.api.vocabulary.License;
-import org.gbif.api.vocabulary.OccurrenceIssue;
-import org.gbif.common.parsers.date.TemporalAccessorUtils;
-import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwc.terms.GbifInternalTerm;
-import org.gbif.dwc.terms.GbifTerm;
-import org.gbif.dwc.terms.Term;
-import org.gbif.dwc.terms.TermFactory;
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
-import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
-import org.gbif.pipelines.core.utils.ModelUtils;
-import org.gbif.pipelines.core.utils.TemporalConverter;
-import org.gbif.pipelines.io.avro.AmplificationRecord;
-import org.gbif.pipelines.io.avro.BasicRecord;
-import org.gbif.pipelines.io.avro.BlastResult;
-import org.gbif.pipelines.io.avro.EventCoreRecord;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.GadmFeatures;
-import org.gbif.pipelines.io.avro.Issues;
-import org.gbif.pipelines.io.avro.LocationFeatureRecord;
-import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.Multimedia;
-import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.RankedName;
-import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
-
-import org.apache.avro.specific.SpecificRecordBase;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.IntNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.TextNode;
-import com.google.common.base.Strings;
 import lombok.Builder;
 import lombok.Singular;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.avro.specific.SpecificRecordBase;
+import org.gbif.api.vocabulary.OccurrenceIssue;
+import org.gbif.dwc.terms.TermFactory;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
+import org.gbif.pipelines.core.utils.ModelUtils;
+import org.gbif.pipelines.io.avro.EventCoreRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
+import org.gbif.pipelines.io.avro.Issues;
 
 /**
  * Converter for objects to GBIF elasticsearch schema. You can pass any {@link SpecificRecordBase}
@@ -68,13 +39,10 @@ import lombok.extern.slf4j.Slf4j;
  * <pre>{@code
  * Usage example:
  *
- * BasicRecord br = ...
- * TemporalRecord tmr =  ...
- * LocationRecord lr =  ...
- * TaxonRecord tr =  ...
- * MultimediaRecord mr =  ...
- * ExtendedRecord er =  ...
- * String result = OccurrenceJsonConverter.toStringJson(br, tmr, lr, tr, mr, er);
+ * ExtendedRecord er = ...
+ * IdentifierRecord ir =  ...
+ * EventCoreRecord ecr =  ...
+ * String result = EventCoreJsonConverter.toStringJson(er, ir, ecr);
  *
  * }</pre>
  */
@@ -96,6 +64,7 @@ public class EventCoreJsonConverter {
           .skipKey(Indexing.MACHINE_TAGS)
           .skipKey(Indexing.CREATED)
           .converter(ExtendedRecord.class, getExtendedRecordConverter())
+          .converter(IdentifierRecord.class, geIdentifierRecordConverter())
           .converter(EventCoreRecord.class, geEventCoreRecordConverter());
 
   @Builder.Default private boolean skipIssues = false;
@@ -177,9 +146,8 @@ public class EventCoreJsonConverter {
         .orElseGet(
             () ->
                 records.stream()
-                    .filter(
-                        record -> Objects.nonNull(record.getSchema().getField(Indexing.CREATED)))
-                    .map(record -> record.get(Indexing.CREATED))
+                    .filter(r -> Objects.nonNull(r.getSchema().getField(Indexing.CREATED)))
+                    .map(r -> r.get(Indexing.CREATED))
                     .filter(Objects::nonNull)
                     .map(x -> DATE_FN.apply((Long) x))
                     .max(LocalDateTime::compareTo));
@@ -324,6 +292,29 @@ public class EventCoreJsonConverter {
    *
    * }</pre>
    */
+  private BiConsumer<JsonConverter, SpecificRecordBase> geIdentifierRecordConverter() {
+    return (jc, record) -> {
+      IdentifierRecord ir = (IdentifierRecord) record;
+
+      if (!skipId) {
+        jc.addJsonTextFieldNoCheck(Indexing.ID, ir.getId());
+      }
+
+      // Fields as a common view - "key": "value"
+      jc.addCommonFields(record);
+    };
+  }
+
+  /**
+   * String converter for {@link EventCoreRecord}, convert an object to specific string view
+   *
+   * <pre>{@code
+   * Result example:
+   *
+   *  //.....more fields
+   *
+   * }</pre>
+   */
   private BiConsumer<JsonConverter, SpecificRecordBase> geEventCoreRecordConverter() {
     return (jc, record) -> {
       EventCoreRecord ecr = (EventCoreRecord) record;
@@ -336,5 +327,4 @@ public class EventCoreJsonConverter {
       jc.addCommonFields(record);
     };
   }
-
 }

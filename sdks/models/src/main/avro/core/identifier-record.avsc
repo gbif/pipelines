@@ -4,7 +4,7 @@
   "type":"record",
   "doc":"Identifier mapping for ALA UUID or GBIF id",
   "fields":[
-    {"name": "recordId", "type": ["null", "string"]},
+    {"name": "id", "type": ["null", "string"],  "doc": "Archive record identifier"},
     {"name": "internalId", "type": ["null", "string"], "default" : null },
     {"name": "uniqueKey", "type": ["null", "string"], "default" : null },
     {"name": "firstLoaded", "type": ["null", "long"], "default" : null,

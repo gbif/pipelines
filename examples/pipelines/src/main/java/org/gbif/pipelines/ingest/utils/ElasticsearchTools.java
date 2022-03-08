@@ -1,5 +1,9 @@
 package org.gbif.pipelines.ingest.utils;
 
+import static org.gbif.pipelines.estools.service.EsService.swapIndexes;
+
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -10,7 +14,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.gbif.pipelines.common.beam.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.estools.client.EsClient;
 import org.gbif.pipelines.estools.client.EsConfig;
@@ -18,14 +24,6 @@ import org.gbif.pipelines.estools.model.IndexParams;
 import org.gbif.pipelines.estools.service.EsConstants.Field;
 import org.gbif.pipelines.estools.service.EsConstants.Indexing;
 import org.gbif.pipelines.estools.service.EsService;
-
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
-import static org.gbif.pipelines.estools.service.EsService.swapIndexes;
 
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)

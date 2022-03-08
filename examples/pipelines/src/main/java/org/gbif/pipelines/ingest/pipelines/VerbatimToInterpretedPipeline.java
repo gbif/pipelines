@@ -20,6 +20,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.transforms.common.UniqueIdTransform;
 import org.gbif.pipelines.transforms.core.EventCoreTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
+import org.gbif.pipelines.transforms.specific.IdentifierTransform;
 import org.slf4j.MDC;
 
 /**
@@ -28,6 +29,7 @@ import org.slf4j.MDC;
  * <pre>
  *    1) Reads verbatim.avro file
  *    2) Interprets and converts avro {@link org.gbif.pipelines.io.avro.ExtendedRecord} file to:
+ *      {@link org.gbif.pipelines.io.avro.IdentifierRecord},
  *      {@link org.gbif.pipelines.io.avro.EventCoreRecord},
  *      {@link org.gbif.pipelines.io.avro.ExtendedRecord}
  *    3) Writes data to independent files
@@ -85,14 +87,20 @@ public class VerbatimToInterpretedPipeline {
 
     // Used transforms
     EventCoreTransform eventCoreTransform = EventCoreTransform.builder().create();
+    IdentifierTransform identifierTransform = IdentifierTransform.builder().create();
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
 
     log.info("Creating beam pipeline");
 
     // Read raw records and filter duplicates
     PCollection<ExtendedRecord> uniqueRawRecords =
-        p.apply("Read ExtendedRecords", verbatimTransform.read(options.getInputPath()))
+        p.apply("Read verbatim", verbatimTransform.read(options.getInputPath()))
             .apply("Filter duplicates", UniqueIdTransform.create());
+
+    // Interpret identifiers and wite as avro files
+    uniqueRawRecords
+        .apply("Interpret identifiers", identifierTransform.interpret())
+        .apply("Write identifiers to avro", identifierTransform.write(pathFn));
 
     // Interpret event core records and wite as avro files
     uniqueRawRecords

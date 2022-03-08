@@ -1,6 +1,6 @@
 package org.gbif.pipelines.ingest.java.transforms;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.OCCURRENCE_AVRO_TO_JSON_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing.GBIF_ID;
 
 import java.util.Collections;
@@ -73,7 +73,7 @@ public class IndexRequestConverterTest {
         .forEach(mr -> map.put(mr.getName().getName(), mr.getAttempted()));
 
     Assert.assertEquals(1, map.size());
-    Assert.assertEquals(Long.valueOf(1L), map.get(AVRO_TO_JSON_COUNT));
+    Assert.assertEquals(Long.valueOf(1L), map.get(OCCURRENCE_AVRO_TO_JSON_COUNT));
   }
 
   @Test
@@ -122,6 +122,6 @@ public class IndexRequestConverterTest {
         .forEach(mr -> map.put(mr.getName().getName(), mr.getAttempted()));
 
     Assert.assertEquals(1, map.size());
-    Assert.assertEquals(Long.valueOf(1L), map.get(AVRO_TO_JSON_COUNT));
+    Assert.assertEquals(Long.valueOf(1L), map.get(OCCURRENCE_AVRO_TO_JSON_COUNT));
   }
 }

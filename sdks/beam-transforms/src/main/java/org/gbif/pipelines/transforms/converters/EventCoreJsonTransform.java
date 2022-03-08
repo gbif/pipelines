@@ -1,11 +1,10 @@
 package org.gbif.pipelines.transforms.converters;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.EVENT_AVRO_TO_JSON_COUNT;
+
 import java.io.Serializable;
-
-import org.gbif.pipelines.core.converters.OccurrenceJsonConverter;
-import org.gbif.pipelines.io.avro.EventCoreRecord;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-
+import lombok.Builder;
+import lombok.NonNull;
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.DoFn;
@@ -14,11 +13,10 @@ import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TupleTag;
-
-import lombok.Builder;
-import lombok.NonNull;
-
-import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
+import org.gbif.pipelines.core.converters.EventCoreJsonConverter;
+import org.gbif.pipelines.io.avro.EventCoreRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
 
 /**
  * Beam level transformation for the ES output json. The transformation consumes objects, which
@@ -30,35 +28,44 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_
  *
  * <pre>{@code
  * final TupleTag<ExtendedRecord> erTag = new TupleTag<ExtendedRecord>() {};
+ * final TupleTag<IdentifierRecord> irTag = new TupleTag<IdentifierRecord>() {};
  * final TupleTag<EventCoreRecord> ecrTag = new TupleTag<EventCoreRecord>() {};
  *
  * PCollection<KV<String, ExtendedRecord>> verbatimCollection = ...
  * PCollection<KV<String, EventCoreRecord>> eventCoreRecordCollection = ...
+ * PCollection<KV<String, IdentifierRecord>> identifierRecordCollection = ...
  *
  * SingleOutput<KV<String, CoGbkResult>, String> eventCoreJsonDoFn =
- *     EventCoreJsonTransform.create(erTag, ecrTag)
- *         .converter();
+ * EventCoreJsonTransform.builder()
+ *    .extendedRecordTag(verbatimTransform.getTag())
+ *    .identifierRecordTag(identifierTransform.getTag())
+ *    .eventCoreRecordTag(eventCoreTransform.getTag())
+ *    .build()
+ *    .converter();
  *
  * PCollection<String> jsonCollection =
- *     KeyedPCollectionTuple
- *         // Core
- *         .of(ecrTag, eventCoreRecordCollection)
- *         // Raw
- *         .and(erTag, verbatimCollection)
- *         // Apply
- *         .apply("Grouping objects", CoGroupByKey.create())
- *         .apply("Merging to json", eventCoreJsonDoFn);
+ *    KeyedPCollectionTuple
+ *    // Core
+ *    .of(eventCoreTransform.getTag(), eventCoreCollection)
+ *    // Internal
+ *    .and(identifierTransform.getTag(), identifierCollection)
+ *    // Raw
+ *    .and(verbatimTransform.getTag(), verbatimCollection)
+ *    // Apply
+ *    .apply("Grouping objects", CoGroupByKey.create())
+ *    .apply("Merging to json", eventCoreJsonDoFn);
  * }</pre>
  */
 @SuppressWarnings("ConstantConditions")
 @Builder
 public class EventCoreJsonTransform implements Serializable {
 
-  private static final long serialVersionUID = 1279313931024806170L;
+  private static final long serialVersionUID = 1279313941024805871L;
 
   // Core
   @NonNull private final TupleTag<ExtendedRecord> extendedRecordTag;
   @NonNull private final TupleTag<EventCoreRecord> eventCoreRecordTag;
+  @NonNull private final TupleTag<IdentifierRecord> identifierRecordTag;
 
   public SingleOutput<KV<String, CoGbkResult>, String> converter() {
 
@@ -66,7 +73,7 @@ public class EventCoreJsonTransform implements Serializable {
         new DoFn<KV<String, CoGbkResult>, String>() {
 
           private final Counter counter =
-              Metrics.counter(EventCoreJsonTransform.class, AVRO_TO_JSON_COUNT);
+              Metrics.counter(EventCoreJsonTransform.class, EVENT_AVRO_TO_JSON_COUNT);
 
           @ProcessElement
           public void processElement(ProcessContext c) {
@@ -76,9 +83,12 @@ public class EventCoreJsonTransform implements Serializable {
             // Core
             ExtendedRecord er =
                 v.getOnly(extendedRecordTag, ExtendedRecord.newBuilder().setId(k).build());
-            EventCoreRecord ecr = v.getOnly(eventCoreRecordTag, EventCoreRecord.newBuilder().setId(k).build());
+            EventCoreRecord ecr =
+                v.getOnly(eventCoreRecordTag, EventCoreRecord.newBuilder().setId(k).build());
+            IdentifierRecord ir =
+                v.getOnly(identifierRecordTag, IdentifierRecord.newBuilder().setId(k).build());
 
-            String json = OccurrenceJsonConverter.toStringJson(ecr, er);
+            String json = EventCoreJsonConverter.toStringJson(ecr, ir, er);
 
             c.output(json);
 

@@ -1,6 +1,6 @@
 package org.gbif.pipelines.ingest.pipelines;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.OCCURRENCE_AVRO_TO_JSON_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing.GBIF_ID;
 
@@ -87,7 +87,8 @@ public class InterpretedToEsIndexAmpPipeline {
                     new DoFn<AmplificationRecord, String>() {
 
                       private final Counter counter =
-                          Metrics.counter(OccurrenceJsonConverter.class, AVRO_TO_JSON_COUNT);
+                          Metrics.counter(
+                              OccurrenceJsonConverter.class, OCCURRENCE_AVRO_TO_JSON_COUNT);
 
                       @ProcessElement
                       public void processElement(ProcessContext c) {
