@@ -3,7 +3,7 @@ package au.org.ala.pipelines.transforms;
 import static au.org.ala.pipelines.beam.ALAUUIDMintingPipeline.REMOVED_PREFIX_MARKER;
 import static au.org.ala.pipelines.transforms.IndexValues.*;
 import static org.apache.avro.Schema.Type.UNION;
-import static org.gbif.pipelines.common.PipelinesVariables.Metrics.OCCURRENCE_AVRO_TO_JSON_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
 
 import au.org.ala.pipelines.interpreters.SensitiveDataInterpreter;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -770,7 +770,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
         new DoFn<KV<String, CoGbkResult>, IndexRecord>() {
 
           private final Counter counter =
-              Metrics.counter(IndexRecordTransform.class, OCCURRENCE_AVRO_TO_JSON_COUNT);
+              Metrics.counter(IndexRecordTransform.class, AVRO_TO_JSON_COUNT);
 
           @ProcessElement
           public void processElement(ProcessContext c) {

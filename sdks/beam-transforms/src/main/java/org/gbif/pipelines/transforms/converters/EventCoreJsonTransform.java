@@ -1,6 +1,6 @@
 package org.gbif.pipelines.transforms.converters;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Metrics.EVENT_AVRO_TO_JSON_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
 
 import java.io.Serializable;
 import lombok.Builder;
@@ -73,7 +73,7 @@ public class EventCoreJsonTransform implements Serializable {
         new DoFn<KV<String, CoGbkResult>, String>() {
 
           private final Counter counter =
-              Metrics.counter(EventCoreJsonTransform.class, EVENT_AVRO_TO_JSON_COUNT);
+              Metrics.counter(EventCoreJsonTransform.class, AVRO_TO_JSON_COUNT);
 
           @ProcessElement
           public void processElement(ProcessContext c) {

@@ -1,7 +1,7 @@
 package org.gbif.pipelines.ingest.java.transforms;
 
 import static org.elasticsearch.common.xcontent.XContentType.JSON;
-import static org.gbif.pipelines.common.PipelinesVariables.Metrics.OCCURRENCE_AVRO_TO_JSON_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing.GBIF_ID;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -62,7 +62,7 @@ public class IndexRequestConverter {
       MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
       ObjectNode json = OccurrenceJsonConverter.toJson(metadata, br, tr, lr, txr, gr, mmr, er);
 
-      metrics.incMetric(OCCURRENCE_AVRO_TO_JSON_COUNT);
+      metrics.incMetric(AVRO_TO_JSON_COUNT);
 
       IndexRequest indexRequest = new IndexRequest(esIndexName).source(json.toString(), JSON);
 

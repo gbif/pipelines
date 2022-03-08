@@ -39,7 +39,6 @@ public class IngestMetricsBuilder {
   }
 
   public static IngestMetrics createInterpretedToEsIndexMetrics() {
-    return IngestMetrics.create()
-        .addMetric(OccurrenceJsonTransform.class, OCCURRENCE_AVRO_TO_JSON_COUNT);
+    return IngestMetrics.create().addMetric(OccurrenceJsonTransform.class, AVRO_TO_JSON_COUNT);
   }
 }

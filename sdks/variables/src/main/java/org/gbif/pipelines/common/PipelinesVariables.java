@@ -203,8 +203,7 @@ public class PipelinesVariables {
   @NoArgsConstructor(access = AccessLevel.PRIVATE)
   public static class Metrics {
 
-    public static final String EVENT_AVRO_TO_JSON_COUNT = "eventAvroToJsonCount";
-    public static final String OCCURRENCE_AVRO_TO_JSON_COUNT = "occurrenceAvroToJsonCount";
+    public static final String AVRO_TO_JSON_COUNT = "avroToJsonCount";
     public static final String ARCHIVE_TO_ER_COUNT = "archiveToErCount";
     public static final String AVRO_TO_HDFS_COUNT = "avroToHdfsCount";
 

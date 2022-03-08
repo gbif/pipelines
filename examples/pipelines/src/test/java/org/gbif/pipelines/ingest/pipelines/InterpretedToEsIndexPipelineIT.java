@@ -2,13 +2,10 @@ package org.gbif.pipelines.ingest.pipelines;
 
 import static org.junit.Assert.*;
 
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.TestPipeline;
-import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.beam.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
@@ -17,26 +14,12 @@ import org.gbif.pipelines.core.io.SyncDataFileWriter;
 import org.gbif.pipelines.estools.service.EsService;
 import org.gbif.pipelines.ingest.pipelines.utils.ElasticsearchServer;
 import org.gbif.pipelines.ingest.pipelines.utils.InterpretedAvroWriter;
-import org.gbif.pipelines.io.avro.AudubonRecord;
-import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.ImageRecord;
-import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
-import org.gbif.pipelines.transforms.core.BasicTransform;
-import org.gbif.pipelines.transforms.core.GrscicollTransform;
-import org.gbif.pipelines.transforms.core.LocationTransform;
-import org.gbif.pipelines.transforms.core.TaxonomyTransform;
-import org.gbif.pipelines.transforms.core.TemporalTransform;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
+import org.gbif.pipelines.transforms.core.EventCoreTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
-import org.gbif.pipelines.transforms.extension.AudubonTransform;
-import org.gbif.pipelines.transforms.extension.ImageTransform;
-import org.gbif.pipelines.transforms.extension.MultimediaTransform;
-import org.gbif.pipelines.transforms.metadata.MetadataTransform;
+import org.gbif.pipelines.transforms.specific.IdentifierTransform;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -87,77 +70,36 @@ public class InterpretedToEsIndexPipelineIT {
     try (SyncDataFileWriter<ExtendedRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
             optionsWriter, VerbatimTransform.create(), postfix)) {
-      Map<String, String> ext1 = new HashMap<>();
-      ext1.put(DwcTerm.measurementID.qualifiedName(), "Id1");
-      ext1.put(DwcTerm.measurementType.qualifiedName(), "Type1");
-      ext1.put(DwcTerm.measurementValue.qualifiedName(), "1.5");
-      ext1.put(DwcTerm.measurementAccuracy.qualifiedName(), "Accurancy1");
-      ext1.put(DwcTerm.measurementUnit.qualifiedName(), "Unit1");
-      ext1.put(DwcTerm.measurementDeterminedBy.qualifiedName(), "By1");
-      ext1.put(DwcTerm.measurementMethod.qualifiedName(), "Method1");
-      ext1.put(DwcTerm.measurementRemarks.qualifiedName(), "Remarks1");
-      ext1.put(DwcTerm.measurementDeterminedDate.qualifiedName(), "2010/2011");
 
-      Map<String, List<Map<String, String>>> ext = new HashMap<>();
-      ext.put(Extension.MEASUREMENT_OR_FACT.getRowType(), Collections.singletonList(ext1));
+      Map<String, String> core = new HashMap<>();
+      core.put(DwcTerm.datasetID.qualifiedName(), "datasetID");
+      core.put(DwcTerm.institutionID.qualifiedName(), "institutionID");
+      core.put(DwcTerm.datasetName.qualifiedName(), "datasetName");
+      core.put(DwcTerm.eventID.qualifiedName(), "eventID");
+      core.put(DwcTerm.parentEventID.qualifiedName(), "parentEventID");
+      core.put(DwcTerm.samplingProtocol.qualifiedName(), "samplingProtocol");
 
       ExtendedRecord extendedRecord =
-          ExtendedRecord.newBuilder().setId(ID).setExtensions(ext).build();
+          ExtendedRecord.newBuilder()
+              .setId(ID)
+              .setCoreRowType(DwcTerm.Event.qualifiedName())
+              .setCoreTerms(core)
+              .build();
+
       writer.append(extendedRecord);
     }
-    try (SyncDataFileWriter<BasicRecord> writer =
+    try (SyncDataFileWriter<IdentifierRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
-            optionsWriter, BasicTransform.builder().create(), postfix)) {
-      BasicRecord basicRecord = BasicRecord.newBuilder().setId(ID).setGbifId(1L).build();
-      writer.append(basicRecord);
+            optionsWriter, IdentifierTransform.builder().create(), postfix)) {
+      IdentifierRecord identifierRecord =
+          IdentifierRecord.newBuilder().setId(ID).setInternalId(ID).build();
+      writer.append(identifierRecord);
     }
-    try (SyncDataFileWriter<MetadataRecord> writer =
+    try (SyncDataFileWriter<EventCoreRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
-            optionsWriter, MetadataTransform.builder().create(), postfix)) {
-      MetadataRecord metadataRecord = MetadataRecord.newBuilder().setId(ID).build();
-      writer.append(metadataRecord);
-    }
-    try (SyncDataFileWriter<TemporalRecord> writer =
-        InterpretedAvroWriter.createAvroWriter(
-            optionsWriter, TemporalTransform.builder().create(), postfix)) {
-      TemporalRecord temporalRecord = TemporalRecord.newBuilder().setId(ID).build();
-      writer.append(temporalRecord);
-    }
-    try (SyncDataFileWriter<LocationRecord> writer =
-        InterpretedAvroWriter.createAvroWriter(
-            optionsWriter, LocationTransform.builder().create(), postfix)) {
-      LocationRecord locationRecord = LocationRecord.newBuilder().setId(ID).build();
-      writer.append(locationRecord);
-    }
-    try (SyncDataFileWriter<TaxonRecord> writer =
-        InterpretedAvroWriter.createAvroWriter(
-            optionsWriter, TaxonomyTransform.builder().create(), postfix)) {
-      TaxonRecord taxonRecord = TaxonRecord.newBuilder().setId(ID).build();
-      writer.append(taxonRecord);
-    }
-    try (SyncDataFileWriter<GrscicollRecord> writer =
-        InterpretedAvroWriter.createAvroWriter(
-            optionsWriter, GrscicollTransform.builder().create(), postfix)) {
-      GrscicollRecord grscicollRecord = GrscicollRecord.newBuilder().setId(ID).build();
-      writer.append(grscicollRecord);
-    }
-    try (SyncDataFileWriter<MultimediaRecord> writer =
-        InterpretedAvroWriter.createAvroWriter(
-            optionsWriter, MultimediaTransform.builder().create(), postfix)) {
-      MultimediaRecord multimediaRecord = MultimediaRecord.newBuilder().setId(ID).build();
-      writer.append(multimediaRecord);
-    }
-    try (SyncDataFileWriter<ImageRecord> writer =
-        InterpretedAvroWriter.createAvroWriter(
-            optionsWriter, ImageTransform.builder().create(), postfix)) {
-      ImageRecord imageRecord = ImageRecord.newBuilder().setId(ID).build();
-      writer.append(imageRecord);
-    }
-    try (SyncDataFileWriter<AudubonRecord> writer =
-        InterpretedAvroWriter.createAvroWriter(
-            optionsWriter, AudubonTransform.builder().create(), postfix)) {
-      AudubonRecord audubonRecord = AudubonRecord.newBuilder().setId(ID).build();
-      writer.append(audubonRecord);
+            optionsWriter, EventCoreTransform.builder().create(), postfix)) {
+      EventCoreRecord eventCoreRecord = EventCoreRecord.newBuilder().setId(ID).build();
+      writer.append(eventCoreRecord);
     }
 
     // When

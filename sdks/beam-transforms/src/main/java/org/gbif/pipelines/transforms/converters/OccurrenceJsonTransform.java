@@ -1,6 +1,6 @@
 package org.gbif.pipelines.transforms.converters;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Metrics.OCCURRENCE_AVRO_TO_JSON_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
 
 import java.io.Serializable;
 import lombok.Builder;
@@ -98,7 +98,7 @@ public class OccurrenceJsonTransform implements Serializable {
         new DoFn<KV<String, CoGbkResult>, String>() {
 
           private final Counter counter =
-              Metrics.counter(OccurrenceJsonTransform.class, OCCURRENCE_AVRO_TO_JSON_COUNT);
+              Metrics.counter(OccurrenceJsonTransform.class, AVRO_TO_JSON_COUNT);
 
           @ProcessElement
           public void processElement(ProcessContext c) {
