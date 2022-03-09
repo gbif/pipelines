@@ -26,14 +26,14 @@ public class PathBuilder {
    */
   public static String buildDatasetAttemptPath(
       BasePipelineOptions options, String name, boolean isInput) {
-    return buildPath(
-            isInput ? options.getInputPath() : options.getTargetPath(),
-            options.getDatasetId() == null || "all".equalsIgnoreCase(options.getDatasetId())
-                ? "*"
-                : options.getDatasetId(),
-            options.getAttempt().toString(),
-            name.toLowerCase())
-        .toString();
+    return String.join(
+        Path.SEPARATOR,
+        isInput ? options.getInputPath() : options.getTargetPath(),
+        options.getDatasetId() == null || "all".equalsIgnoreCase(options.getDatasetId())
+            ? "*"
+            : options.getDatasetId(),
+        options.getAttempt().toString(),
+        name.toLowerCase());
   }
 
   /**

@@ -83,7 +83,7 @@ public class LayerCrawler {
 
     FileSystem fs =
         FsUtils.getFileSystem(
-            options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getTargetPath());
+            options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getInputPath());
 
     Instant batchStart = Instant.now();
 

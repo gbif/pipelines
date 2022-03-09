@@ -64,7 +64,7 @@ public class SamplingPipeline {
 
     FileSystem fs =
         FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
-            .getFs(options.getTargetPath());
+            .getFs(options.getInputPath());
 
     log.info("Checking for new layers in the system");
     SamplingService samplingService = SamplingUtils.initSamplingService(options.getBaseUrl());
@@ -136,12 +136,11 @@ public class SamplingPipeline {
 
     String outputPath = PathBuilder.buildDatasetAttemptPath(options, "latlng", false);
     if (options.getDatasetId() == null || "all".equalsIgnoreCase(options.getDatasetId())) {
-      outputPath = PathBuilder.buildPath(options.getAllDatasetsInputPath(), "latlng").toString();
+      outputPath = options.getAllDatasetsInputPath() + "/latlng";
     }
 
     // delete previous runs
-    FsUtils.deleteIfExist(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), outputPath);
-
+    ALAFsUtils.deleteIfExist(fs, outputPath);
     ALAFsUtils.createDirectory(fs, outputPath);
 
     nonSampledLatLng.apply(TextIO.write().to(outputPath + "/latlng.csv").withoutSharding());
