@@ -2,7 +2,7 @@
 
 VERSION=$1
 UUID=$2
-OUT=$3
+HDFS_PATH=$3
 ES_HOSTS=$4
 
 cd ../
@@ -31,8 +31,8 @@ sudo -u hdfs spark2-submit \
     --datasetId=${UUID} \
     --attempt=1 \
     --runner=SparkRunner \
-    --inputPath=${OUT} \
-    --targetPath=${OUT} \
+    --inputPath=${HDFS_PATH} \
+    --targetPath=${HDFS_PATH} \
     --metaFileName=interpreted-to-index.yml \
     --hdfsSiteConfig=/home/crap/config/hdfs-site.xml \
     --coreSiteConfig=/home/crap/config/core-site.xml \

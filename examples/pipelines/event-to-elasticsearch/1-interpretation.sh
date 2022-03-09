@@ -2,11 +2,12 @@
 
 VERSION=$1
 UUID=$2
-IN=$3
-OUT=$4
+HDFS_PATH=$3
+
+VERBATIM_PATH=${HDFS_PATH}/${UUID}/1/verbatim.avro
 
 echo
-echo "INFO: Running 2-interpretation.sh. Version: ${VERSION}, UUID: ${UUID}, input: ${IN}, output: ${OUT}"
+echo "INFO: Running 2-interpretation.sh. Version: ${VERSION}, UUID: ${UUID}, hdfs root path: ${HDFS_PATH}"
 echo
 
 sudo -u hdfs spark2-submit \
@@ -24,8 +25,8 @@ sudo -u hdfs spark2-submit \
     hdfs://ha-nn/pipelines/jars/examples-pipelines.jar \
     --datasetId=${UUID} \
     --attempt=1 \
-    --targetPath=${OUT} \
-    --inputPath=${IN} \
+    --targetPath=${HDFS_PATH} \
+    --inputPath=${VERBATIM_PATH} \
     --runner=SparkRunner \
     --metaFileName=verbatim-to-interpreted.yml \
     --avroCompressionType=snappy \
