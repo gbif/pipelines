@@ -11,9 +11,9 @@ VERSION=$(cat ../pom.xml | grep '<version>' | cut -d'>' -f 2 | cut -d'<' -f 1)
 
 echo "INFO: Use pipelines version: ${VERSION}, UUID: ${UUID}, hdfs root path: ${HDFS_PATH}"
 
-./2-interpretation.sh ${VERSION} ${UUID} ${OUT}
+./1-interpretation.sh ${VERSION} ${UUID} ${HDFS_PATH}
 
-./3-indexing.sh ${VERSION} ${UUID} ${OUT} ${ES_HOSTS}
+./2-indexing.sh ${VERSION} ${UUID} ${HDFS_PATH} ${ES_HOSTS}
 
 echo "INFO: End"
 echo

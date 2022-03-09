@@ -7,7 +7,7 @@ HDFS_PATH=$3
 VERBATIM_PATH=${HDFS_PATH}/${UUID}/1/verbatim.avro
 
 echo
-echo "INFO: Running 2-interpretation.sh. Version: ${VERSION}, UUID: ${UUID}, hdfs root path: ${HDFS_PATH}"
+echo "INFO: Running 1-interpretation.sh. Version: ${VERSION}, UUID: ${UUID}, hdfs root path: ${HDFS_PATH}"
 echo
 
 sudo -u hdfs spark2-submit \

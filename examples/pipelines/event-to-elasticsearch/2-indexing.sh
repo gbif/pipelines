@@ -5,14 +5,8 @@ UUID=$2
 HDFS_PATH=$3
 ES_HOSTS=$4
 
-cd ../
-ES_SCHEMA=$(pwd)/src/main/resources/elasticsearch/es-event-core-schema.json
-echo ${ES_SCHEMA}
-
-cd event-to-elasticsearch
-
 echo
-echo "INFO: Running 3-indexing.sh. Version: ${VERSION}, UUID: ${UUID}, input/output: ${OUT}"
+echo "INFO: Running 2-indexing.sh. Version: ${VERSION}, UUID: ${UUID}, hdfs root path: ${HDFS_PATH}"
 echo
 
 sudo -u hdfs spark2-submit \
@@ -38,7 +32,7 @@ sudo -u hdfs spark2-submit \
     --coreSiteConfig=/home/crap/config/core-site.xml \
     --esHosts=${ES_HOSTS} \
     --esIndexName=event_${UUID} \
-    --esSchemaPath=${ES_SCHEMA} \
+    --esSchemaPath=elasticsearch/es-event-core-schema.json \
     --esAlias=event \
     --indexNumberShards=1 \
     --indexNumberReplicas=0 \
