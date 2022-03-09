@@ -1,11 +1,5 @@
 package org.gbif.pipelines.core.converters;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.IntNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.TextNode;
-import com.google.common.base.Strings;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -25,10 +19,7 @@ import java.util.function.BiConsumer;
 import java.util.function.LongFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import lombok.Builder;
-import lombok.Singular;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.avro.specific.SpecificRecordBase;
+
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.OccurrenceIssue;
@@ -56,6 +47,18 @@ import org.gbif.pipelines.io.avro.RankedName;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
+
+import org.apache.avro.specific.SpecificRecordBase;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.IntNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
+import com.google.common.base.Strings;
+import lombok.Builder;
+import lombok.Singular;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Converter for objects to GBIF elasticsearch schema. You can pass any {@link SpecificRecordBase}
@@ -753,6 +756,20 @@ public class GbifJsonConverter {
           br.setLicense(license);
         }
       }
+
+      BiConsumer<List<String>, String> joinValuesSetter =
+          (values, fieldName) -> {
+            if (values != null && !values.isEmpty()) {
+              String joinedValues = String.join("|", values);
+              jc.addJsonTextFieldNoCheck(fieldName, joinedValues);
+            }
+          };
+
+      joinValuesSetter.accept(br.getRecordedBy(), Indexing.RECORDED_BY_JOINED);
+      joinValuesSetter.accept(br.getIdentifiedBy(), Indexing.IDENTIFIED_BY_JOINED);
+      joinValuesSetter.accept(br.getPreparations(), Indexing.PREPARATIONS_JOINED);
+      joinValuesSetter.accept(br.getSamplingProtocol(), Indexing.SAMPLING_PROTOCOL_JOINED);
+      joinValuesSetter.accept(br.getOtherCatalogNumbers(), Indexing.OTHER_CATALOG_NUMBERS_JOINED);
 
       // Add other fields
       jc.addCommonFields(br);
