@@ -5,7 +5,6 @@ import static org.junit.Assert.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.gbif.dwc.terms.DwcTerm;
