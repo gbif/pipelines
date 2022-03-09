@@ -24,6 +24,7 @@ public final class EsConstants {
     public static final String ALIAS = "alias";
     public static final String COUNT = "count";
     public static final String MAX_RESULT_WINDOW = "max_result_window";
+    public static final String UNASSIGNED_NODE_DELAY = "unassigned.node_left.delayed_timeout";
 
     public static final String INDEX_REFRESH_INTERVAL = Util.INDEX_PREFIX + Field.REFRESH_INTERVAL;
     public static final String INDEX_NUMBER_SHARDS = Util.INDEX_PREFIX + Field.NUMBER_SHARDS;
@@ -31,6 +32,8 @@ public final class EsConstants {
     public static final String INDEX_TRANSLOG_DURABILITY =
         Util.INDEX_PREFIX + Field.TRANSLOG + Util.JSON_CONCATENATOR + Field.DURABILITY;
     public static final String INDEX_MAX_RESULT_WINDOW = Util.INDEX_PREFIX + MAX_RESULT_WINDOW;
+    public static final String INDEX_UNASSIGNED_NODE_DELAY =
+        Util.INDEX_PREFIX + UNASSIGNED_NODE_DELAY;
 
     public static final String INDEX_ANALYSIS = "analysis";
   }
