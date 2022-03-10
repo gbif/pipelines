@@ -41,18 +41,20 @@ import org.slf4j.MDC;
 
 /**
  * Pipeline that joins index records with:
- * 1) sample data (environmental and contextual properties)
- * 2) jacknife environmental outlier information
- * 3) clustering (duplicate detection)
- * 4) expert distribution outlier information
- * and then indexes to SOLR.
  *
- * Jackknife, clustering and expert distribution are joined with IndexRecords in a single CoGroupByKey
- * as they are all using occurrenceIDs. These output are generated in other pipelines which are ran prior
- * to running this one.
+ * <ul>
+ *   <li>sample data (environmental and contextual properties)
+ *   <li>jackknife environmental outlier information
+ *   <li>clustering (duplicate detection)
+ *   <li>expert distribution outlier information and then indexes to SOLR.
+ * </ul>
  *
- * Sampling is joined to IndexRecords using a latitude_longitude string.
- * */
+ * <p>Jackknife, clustering and expert distribution are joined with IndexRecords in a single
+ * CoGroupByKey as they are all using occurrenceIDs. These output are generated in other pipelines
+ * which are run prior to running this one.
+ *
+ * <p>Sampling is joined to IndexRecords using a latitude_longitude string.
+ */
 @Slf4j
 public class IndexRecordToSolrPipeline {
 
@@ -128,20 +130,9 @@ public class IndexRecordToSolrPipeline {
       PCollection<KV<String, SampleRecord>> sampleRecords =
           loadSampleRecords(options, pipeline, numOfPartitions);
 
-      // partition into withCoordinates and withoutCoordinates...
-      PCollectionList<KV<String, IndexRecord>> partitions =
-          indexRecordsCollection.apply(
-              Partition.of(
-                  2,
-                  (Partition.PartitionFn<KV<String, IndexRecord>>)
-                      (elem, numPartitions) -> hasCoordinates(elem.getValue()) ? 0 : 1));
-
-      PCollection<KV<String, IndexRecord>> recordsWithCoordinates = partitions.get(0);
-      PCollection<IndexRecord> recordsWithoutCoordinates = partitions.get(1).apply(Values.create());
-
       // Convert to KV <LatLng, IndexRecord>
       PCollection<KV<String, IndexRecord>> indexRecordsKeyedLatng =
-          recordsWithCoordinates.apply(
+          indexRecordsCollection.apply(
               MapElements.via(
                   new SimpleFunction<KV<String, IndexRecord>, KV<String, IndexRecord>>() {
                     @Override
@@ -160,13 +151,12 @@ public class IndexRecordToSolrPipeline {
                     }
                   }));
 
-      // add sampling to records with coordinates
+      // add sampling to the records with coordinates
       readyToIndex = joinSampleRecord(indexRecordsKeyedLatng, sampleRecords);
       SolrIO.ConnectionConfiguration conn =
           SolrIO.ConnectionConfiguration.create(options.getZkHost());
 
       writeToSolr(options, readyToIndex, conn, schemaFields, dynamicFieldPrefixes);
-      writeToSolr(options, recordsWithoutCoordinates, conn, schemaFields, dynamicFieldPrefixes);
 
     } else {
       readyToIndex = indexRecordsCollection.apply(Values.create());
