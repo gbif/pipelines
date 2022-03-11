@@ -754,6 +754,20 @@ public class OccurrenceJsonConverter {
         }
       }
 
+      BiConsumer<List<String>, String> joinValuesSetter =
+          (values, fieldName) -> {
+            if (values != null && !values.isEmpty()) {
+              String joinedValues = String.join("|", values);
+              jc.addJsonTextFieldNoCheck(fieldName, joinedValues);
+            }
+          };
+
+      joinValuesSetter.accept(br.getRecordedBy(), Indexing.RECORDED_BY_JOINED);
+      joinValuesSetter.accept(br.getIdentifiedBy(), Indexing.IDENTIFIED_BY_JOINED);
+      joinValuesSetter.accept(br.getPreparations(), Indexing.PREPARATIONS_JOINED);
+      joinValuesSetter.accept(br.getSamplingProtocol(), Indexing.SAMPLING_PROTOCOL_JOINED);
+      joinValuesSetter.accept(br.getOtherCatalogNumbers(), Indexing.OTHER_CATALOG_NUMBERS_JOINED);
+
       // Add other fields
       jc.addCommonFields(br);
     };

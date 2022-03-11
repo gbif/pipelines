@@ -9,14 +9,14 @@ import org.apache.beam.sdk.options.PipelineOptions;
 /** Main pipeline options necessary for Elasticsearch index properties */
 public interface EsPipelineOptions extends PipelineOptions {
 
-  @Description("Target ES Max Batch Size bytes")
-  @Default.Long(8_388_608L) // 8mb
+  @Description("Target Elasticsearch Max Batch Size bytes")
+  @Default.Long(10_485_760L) // 10mb
   Long getEsMaxBatchSizeBytes();
 
   void setEsMaxBatchSizeBytes(Long batchSize);
 
-  @Description("Es max batch size")
-  @Default.Long(1_500L)
+  @Description("Elasticsearch max batch size")
+  @Default.Long(1_700L)
   long getEsMaxBatchSize();
 
   void setEsMaxBatchSize(long esBatchSize);
@@ -64,25 +64,31 @@ public interface EsPipelineOptions extends PipelineOptions {
 
   void setIndexNumberReplicas(Integer indexNumberReplicas);
 
-  @Description("ES empty delete index query timeout in seconds")
+  @Description("Elasticsearch empty delete index query timeout in seconds")
   @Default.Integer(5)
   Integer getSearchQueryTimeoutSec();
 
   void setSearchQueryTimeoutSec(Integer searchQueryTimeoutSec);
 
-  @Description("ES empty index query attempts")
+  @Description("Elasticsearch empty index query attempts")
   @Default.Integer(200)
   Integer getSearchQueryAttempts();
 
   void setSearchQueryAttempts(Integer searchQueryAttempts);
 
-  @Description("ES index max result window")
-  @Default.Integer(200000)
+  @Description("Elasticsearch index max result window")
+  @Default.Integer(200_000)
   Integer getIndexMaxResultWindow();
 
   void setIndexMaxResultWindow(Integer indexMaxResultWindow);
 
-  @Description("ES document id")
+  @Description("Elasticsearch unassigned node delay timeout")
+  @Default.String("5m")
+  String getUnassignedNodeDelay();
+
+  void setUnassignedNodeDelay(String unassignedNodeDelay);
+
+  @Description("Elasticsearch document id")
   @Default.String(GBIF_ID)
   String getEsDocumentId();
 

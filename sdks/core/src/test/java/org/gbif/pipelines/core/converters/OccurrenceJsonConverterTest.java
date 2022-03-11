@@ -248,17 +248,32 @@ public class OccurrenceJsonConverterTest {
         "[\"" + expectedMultivalue1 + "\",\"" + multivalue2 + "\"]",
         result.path(Indexing.OTHER_CATALOG_NUMBERS).toString());
     assertEquals(
+        "\"" + expectedMultivalue1 + "|" + multivalue2 + "\"",
+        result.path(Indexing.OTHER_CATALOG_NUMBERS_JOINED).toString());
+    assertEquals(
         "[\"" + expectedMultivalue1 + "\",\"" + multivalue2 + "\"]",
         result.path(Indexing.RECORDED_BY).toString());
+    assertEquals(
+        "\"" + expectedMultivalue1 + "|" + multivalue2 + "\"",
+        result.path(Indexing.RECORDED_BY_JOINED).toString());
     assertEquals(
         "[\"" + expectedMultivalue1 + "\",\"" + multivalue2 + "\"]",
         result.path(Indexing.IDENTIFIED_BY).toString());
     assertEquals(
+        "\"" + expectedMultivalue1 + "|" + multivalue2 + "\"",
+        result.path(Indexing.IDENTIFIED_BY_JOINED).toString());
+    assertEquals(
         "[\"" + expectedMultivalue1 + "\",\"" + multivalue2 + "\"]",
         result.path(Indexing.PREPARATIONS).toString());
     assertEquals(
+        "\"" + expectedMultivalue1 + "|" + multivalue2 + "\"",
+        result.path(Indexing.PREPARATIONS_JOINED).toString());
+    assertEquals(
         "[\"" + expectedMultivalue1 + "\",\"" + multivalue2 + "\"]",
         result.path(Indexing.SAMPLING_PROTOCOL).toString());
+    assertEquals(
+        "\"" + expectedMultivalue1 + "|" + multivalue2 + "\"",
+        result.path(Indexing.SAMPLING_PROTOCOL_JOINED).toString());
     assertEquals(
         "[\"" + TypeStatus.TYPE.name() + "\",\"" + TypeStatus.TYPE_SPECIES.name() + "\"]",
         result.path(Indexing.TYPE_STATUS).toString());
