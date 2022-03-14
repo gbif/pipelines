@@ -10,6 +10,11 @@ echo
 echo "INFO: Running 1-interpretation.sh. Version: ${VERSION}, UUID: ${UUID}, hdfs root path: ${HDFS_PATH}"
 echo
 
+cd ../
+JAR_PATH=$(pwd)/target/examples-pipelines-${VERSION}-shaded.jar
+echo ${JAR_PATH}
+cd event-to-elasticsearch
+
 sudo -u hdfs spark2-submit \
     --queue root.pipelines \
     --conf spark.executor.memoryOverhead=1280 \
@@ -22,7 +27,7 @@ sudo -u hdfs spark2-submit \
     --executor-cores 2 \
     --num-executors 3 \
     --driver-memory 1G \
-    hdfs://ha-nn/pipelines/jars/examples-pipelines.jar \
+    ${JAR_PATH} \
     --datasetId=${UUID} \
     --attempt=1 \
     --targetPath=${HDFS_PATH} \

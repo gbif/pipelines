@@ -9,6 +9,11 @@ echo
 echo "INFO: Running 2-indexing.sh. Version: ${VERSION}, UUID: ${UUID}, hdfs root path: ${HDFS_PATH}"
 echo
 
+cd ../
+JAR_PATH=$(pwd)/target/examples-pipelines-${VERSION}-shaded.jar
+echo ${JAR_PATH}
+cd event-to-elasticsearch
+
 sudo -u hdfs spark2-submit \
     --queue root.pipelines \
     --conf spark.executor.memoryOverhead=1280 \
@@ -21,7 +26,7 @@ sudo -u hdfs spark2-submit \
     --executor-cores 2 \
     --num-executors 2 \
     --driver-memory 1G \
-    hdfs://ha-nn/pipelines/jars/examples-pipelines.jar \
+    ${JAR_PATH} \
     --datasetId=${UUID} \
     --attempt=1 \
     --runner=SparkRunner \
