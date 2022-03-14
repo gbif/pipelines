@@ -94,8 +94,8 @@ public class OccurrenceJsonConverter {
   private static final LongFunction<LocalDateTime> DATE_FN =
       l -> LocalDateTime.ofInstant(Instant.ofEpochMilli(l), ZoneId.of("UTC"));
 
-  private final JsonConverter.JsonConverterBuilder builder =
-      JsonConverter.builder()
+  private final GenericJsonConverter.GenericJsonConverterBuilder builder =
+      GenericJsonConverter.builder()
           .skipKey(Indexing.DECIMAL_LATITUDE)
           .skipKey(Indexing.DECIMAL_LONGITUDE)
           .skipKey(Indexing.MACHINE_TAGS)
@@ -210,7 +210,7 @@ public class OccurrenceJsonConverter {
             .filter(Issues.class::isInstance)
             .flatMap(x -> ((Issues) x).getIssues().getIssueList().stream())
             .collect(Collectors.toSet());
-    ArrayNode issueArrayNodes = JsonConverter.createArrayNode();
+    ArrayNode issueArrayNodes = GenericJsonConverter.createArrayNode();
     issues.forEach(issueArrayNodes::add);
     mainNode.set(Indexing.ISSUES, issueArrayNodes);
 
@@ -221,7 +221,7 @@ public class OccurrenceJsonConverter {
             .filter(x -> !issues.contains(x))
             .collect(Collectors.toSet());
 
-    ArrayNode arrayNotIssuesNode = JsonConverter.createArrayNode();
+    ArrayNode arrayNotIssuesNode = GenericJsonConverter.createArrayNode();
     notIssues.forEach(arrayNotIssuesNode::add);
     mainNode.set("notIssues", arrayNotIssuesNode);
   }
@@ -246,7 +246,7 @@ public class OccurrenceJsonConverter {
    *
    * }</pre>
    */
-  private BiConsumer<JsonConverter, SpecificRecordBase> getExtendedRecordConverter() {
+  private BiConsumer<GenericJsonConverter, SpecificRecordBase> getExtendedRecordConverter() {
     return (jc, record) -> {
       ExtendedRecord er = (ExtendedRecord) record;
 
@@ -269,20 +269,20 @@ public class OccurrenceJsonConverter {
       fieldFn.accept(DwcTerm.occurrenceID, "occurrenceId");
 
       // Core
-      ObjectNode coreNode = JsonConverter.createObjectNode();
+      ObjectNode coreNode = GenericJsonConverter.createObjectNode();
       core.forEach(
           (k, v) -> Optional.ofNullable(v).ifPresent(x -> jc.addJsonRawField(coreNode, k, x)));
 
       // Extensions
-      ObjectNode extNode = JsonConverter.createObjectNode();
+      ObjectNode extNode = GenericJsonConverter.createObjectNode();
       Map<String, List<Map<String, String>>> ext = er.getExtensions();
       ext.forEach(
           (k, v) -> {
             if (v != null && !v.isEmpty()) {
-              ArrayNode extArrayNode = JsonConverter.createArrayNode();
+              ArrayNode extArrayNode = GenericJsonConverter.createArrayNode();
               v.forEach(
                   m -> {
-                    ObjectNode ns = JsonConverter.createObjectNode();
+                    ObjectNode ns = GenericJsonConverter.createObjectNode();
                     m.forEach(
                         (ks, vs) ->
                             Optional.ofNullable(vs)
@@ -295,14 +295,14 @@ public class OccurrenceJsonConverter {
           });
 
       // Has extensions
-      ArrayNode extNameNode = JsonConverter.createArrayNode();
+      ArrayNode extNameNode = GenericJsonConverter.createArrayNode();
       ext.entrySet().stream()
           .filter(e -> e.getValue() != null && !e.getValue().isEmpty())
           .forEach(x -> extNameNode.add(x.getKey()));
       jc.getMainNode().set("extensions", extNameNode);
 
       // Verbatim
-      ObjectNode verbatimNode = JsonConverter.createObjectNode();
+      ObjectNode verbatimNode = GenericJsonConverter.createObjectNode();
       verbatimNode.set("core", coreNode);
       verbatimNode.set("extensions", extNode);
 
@@ -330,7 +330,7 @@ public class OccurrenceJsonConverter {
       Set<TextNode> textNodeMap =
           allFieldValues.stream()
               .flatMap(v -> Stream.of(v.split(ModelUtils.DEFAULT_SEPARATOR)))
-              .map(JsonConverter::getEscapedTextNode)
+              .map(GenericJsonConverter::getEscapedTextNode)
               .collect(Collectors.toSet());
 
       jc.getMainNode().putArray("all").addAll(textNodeMap);
@@ -342,7 +342,7 @@ public class OccurrenceJsonConverter {
       ObjectNode classificationNode =
           jc.getMainNode().has("gbifClassification")
               ? (ObjectNode) jc.getMainNode().get("gbifClassification")
-              : JsonConverter.createObjectNode();
+              : GenericJsonConverter.createObjectNode();
       Optional.ofNullable(coreNode.get(DwcTerm.taxonID.qualifiedName()))
           .ifPresent(taxonID -> classificationNode.set(DwcTerm.taxonID.simpleName(), taxonID));
       Optional.ofNullable(coreNode.get(DwcTerm.scientificName.qualifiedName()))
@@ -369,7 +369,7 @@ public class OccurrenceJsonConverter {
    *
    * }</pre>
    */
-  private BiConsumer<JsonConverter, SpecificRecordBase> getLocationRecordConverter() {
+  private BiConsumer<GenericJsonConverter, SpecificRecordBase> getLocationRecordConverter() {
     return (jc, record) -> {
       LocationRecord lr = (LocationRecord) record;
 
@@ -378,7 +378,7 @@ public class OccurrenceJsonConverter {
       }
 
       if (lr.getDecimalLongitude() != null && lr.getDecimalLatitude() != null) {
-        ObjectNode node = JsonConverter.createObjectNode();
+        ObjectNode node = GenericJsonConverter.createObjectNode();
         node.put("lon", lr.getDecimalLongitude());
         node.put("lat", lr.getDecimalLatitude());
         // geo_point
@@ -398,7 +398,7 @@ public class OccurrenceJsonConverter {
       // All GADM GIDs as an array, for searching at multiple levels.
       if (lr.getGadm() != null) {
         GadmFeatures gadmFeatures = lr.getGadm();
-        ArrayNode arrayGadmGidNode = JsonConverter.createArrayNode();
+        ArrayNode arrayGadmGidNode = GenericJsonConverter.createArrayNode();
         Optional.ofNullable(gadmFeatures.getLevel0Gid()).ifPresent(arrayGadmGidNode::add);
         Optional.ofNullable(gadmFeatures.getLevel1Gid()).ifPresent(arrayGadmGidNode::add);
         Optional.ofNullable(gadmFeatures.getLevel2Gid()).ifPresent(arrayGadmGidNode::add);
@@ -406,7 +406,7 @@ public class OccurrenceJsonConverter {
         ObjectNode gadmNode =
             jc.getMainNode().has("gadm")
                 ? (ObjectNode) jc.getMainNode().get("gadm")
-                : JsonConverter.createObjectNode();
+                : GenericJsonConverter.createObjectNode();
         gadmNode.set("gids", arrayGadmGidNode);
       }
     };
@@ -423,7 +423,7 @@ public class OccurrenceJsonConverter {
    *
    * }</pre>
    */
-  private BiConsumer<JsonConverter, SpecificRecordBase> getTemporalRecordConverter() {
+  private BiConsumer<GenericJsonConverter, SpecificRecordBase> getTemporalRecordConverter() {
     return (jc, record) -> {
       TemporalRecord tr = (TemporalRecord) record;
 
@@ -473,7 +473,7 @@ public class OccurrenceJsonConverter {
    *
    * }</pre>
    */
-  private BiConsumer<JsonConverter, SpecificRecordBase> getTaxonomyRecordConverter() {
+  private BiConsumer<GenericJsonConverter, SpecificRecordBase> getTaxonomyRecordConverter() {
     return (jc, record) -> {
       TaxonRecord trOrg = (TaxonRecord) record;
       // Copy only the fields that are needed in the Index
@@ -498,7 +498,7 @@ public class OccurrenceJsonConverter {
       ObjectNode classificationNode =
           jc.getMainNode().has("gbifClassification")
               ? (ObjectNode) jc.getMainNode().get("gbifClassification")
-              : JsonConverter.createObjectNode();
+              : GenericJsonConverter.createObjectNode();
       jc.addCommonFields(tr, classificationNode);
       List<RankedName> classifications = tr.getClassification();
       Set<IntNode> taxonKey = new HashSet<>();
@@ -562,7 +562,7 @@ public class OccurrenceJsonConverter {
    *
    * }</pre>
    */
-  private BiConsumer<JsonConverter, SpecificRecordBase> getLocationFeatureRecordConverter() {
+  private BiConsumer<GenericJsonConverter, SpecificRecordBase> getLocationFeatureRecordConverter() {
     return (jc, record) -> {
       LocationFeatureRecord asr = (LocationFeatureRecord) record;
 
@@ -577,7 +577,7 @@ public class OccurrenceJsonConverter {
                 List<ObjectNode> nodes = new ArrayList<>(m.size());
                 m.forEach(
                     (k, v) -> {
-                      ObjectNode node = JsonConverter.createObjectNode();
+                      ObjectNode node = GenericJsonConverter.createObjectNode();
                       node.put("key", k);
                       node.put("value", v);
                       nodes.add(node);
@@ -616,7 +616,7 @@ public class OccurrenceJsonConverter {
    * }
    * }</pre>
    */
-  private BiConsumer<JsonConverter, SpecificRecordBase> getAmplificationRecordConverter() {
+  private BiConsumer<GenericJsonConverter, SpecificRecordBase> getAmplificationRecordConverter() {
     return (jc, record) -> {
       AmplificationRecord ar = (AmplificationRecord) record;
 
@@ -630,7 +630,7 @@ public class OccurrenceJsonConverter {
               .map(
                   x -> {
                     BlastResult blast = x.getBlastResult();
-                    ObjectNode node = JsonConverter.createObjectNode();
+                    ObjectNode node = GenericJsonConverter.createObjectNode();
                     jc.addCommonFields(blast, node);
                     return node;
                   })
@@ -667,7 +667,7 @@ public class OccurrenceJsonConverter {
    *
    * }</pre>
    */
-  private BiConsumer<JsonConverter, SpecificRecordBase> getMultimediaConverter() {
+  private BiConsumer<GenericJsonConverter, SpecificRecordBase> getMultimediaConverter() {
     return (jc, record) -> {
       MultimediaRecord mr = (MultimediaRecord) record;
 
@@ -681,7 +681,7 @@ public class OccurrenceJsonConverter {
             mr.getMultimediaItems().stream()
                 .map(
                     item -> {
-                      ObjectNode node = JsonConverter.createObjectNode();
+                      ObjectNode node = GenericJsonConverter.createObjectNode();
 
                       BiConsumer<String, String> addField =
                           (k, v) ->
@@ -739,7 +739,7 @@ public class OccurrenceJsonConverter {
    *
    * <p>gbif/portal-feedback#2423 Preserve record-level licences over dataset-level ones
    */
-  private BiConsumer<JsonConverter, SpecificRecordBase> getBasicRecordConverter() {
+  private BiConsumer<GenericJsonConverter, SpecificRecordBase> getBasicRecordConverter() {
     return (jc, record) -> {
       BasicRecord br = (BasicRecord) record;
 
@@ -784,7 +784,7 @@ public class OccurrenceJsonConverter {
    *
    * }</pre>
    */
-  private BiConsumer<JsonConverter, SpecificRecordBase> getGrscicollRecordConverter() {
+  private BiConsumer<GenericJsonConverter, SpecificRecordBase> getGrscicollRecordConverter() {
     return (jc, record) -> {
       GrscicollRecord gr = (GrscicollRecord) record;
 

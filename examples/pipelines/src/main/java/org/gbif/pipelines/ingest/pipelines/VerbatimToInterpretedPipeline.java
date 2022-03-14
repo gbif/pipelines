@@ -2,6 +2,7 @@ package org.gbif.pipelines.ingest.pipelines;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.Collections;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
@@ -17,6 +18,7 @@ import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.transforms.common.ExtensionFilterTransform;
 import org.gbif.pipelines.transforms.common.UniqueIdTransform;
 import org.gbif.pipelines.transforms.core.EventCoreTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
@@ -70,6 +72,9 @@ public class VerbatimToInterpretedPipeline {
     String targetPath = options.getTargetPath();
     String hdfsSiteConfig = options.getHdfsSiteConfig();
     String coreSiteConfig = options.getCoreSiteConfig();
+    // TODO: Read from config, do we need to read Occurrence and others?
+    Set<String> allowedExtensions =
+        Collections.singleton("http://rs.tdwg.org/dwc/terms/MeasurementOrFact");
 
     FsUtils.deleteInterpretIfExist(
         hdfsSiteConfig, coreSiteConfig, targetPath, datasetId, attempt, types);
@@ -95,7 +100,8 @@ public class VerbatimToInterpretedPipeline {
     // Read raw records and filter duplicates
     PCollection<ExtendedRecord> uniqueRawRecords =
         p.apply("Read verbatim", verbatimTransform.read(options.getInputPath()))
-            .apply("Filter duplicates", UniqueIdTransform.create());
+            .apply("Filter duplicates", UniqueIdTransform.create())
+            .apply("Filter extension", ExtensionFilterTransform.create(allowedExtensions));
 
     // Interpret identifiers and wite as avro files
     uniqueRawRecords

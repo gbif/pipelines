@@ -51,7 +51,7 @@ import org.apache.avro.specific.SpecificRecordBase;
 @SuppressWarnings("FallThrough")
 @Slf4j
 @Builder
-public class JsonConverter {
+public class GenericJsonConverter {
 
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
@@ -65,7 +65,8 @@ public class JsonConverter {
   private final ObjectNode mainNode = MAPPER.createObjectNode();
 
   @Singular
-  private Map<Class<? extends SpecificRecordBase>, BiConsumer<JsonConverter, SpecificRecordBase>>
+  private Map<
+          Class<? extends SpecificRecordBase>, BiConsumer<GenericJsonConverter, SpecificRecordBase>>
       converters;
 
   @Singular private List<SpecificRecordBase> records;
@@ -76,7 +77,8 @@ public class JsonConverter {
 
   public ObjectNode toJson() {
     for (SpecificRecordBase record : records) {
-      BiConsumer<JsonConverter, SpecificRecordBase> consumer = converters.get(record.getClass());
+      BiConsumer<GenericJsonConverter, SpecificRecordBase> consumer =
+          converters.get(record.getClass());
       if (consumer != null) {
         consumer.accept(this, record);
       } else {

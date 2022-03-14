@@ -49,7 +49,7 @@ import org.gbif.pipelines.io.avro.Issues;
 @SuppressWarnings("FallThrough")
 @Slf4j
 @Builder
-public class EventCoreJsonConverter {
+public class EventJsonConverter {
 
   private static final Set<String> EXCLUDE_ALL = Collections.emptySet();
   private static final Set<String> INCLUDE_EXT_ALL = Collections.emptySet();
@@ -59,8 +59,8 @@ public class EventCoreJsonConverter {
   private static final LongFunction<LocalDateTime> DATE_FN =
       l -> LocalDateTime.ofInstant(Instant.ofEpochMilli(l), ZoneId.of("UTC"));
 
-  private final JsonConverter.JsonConverterBuilder builder =
-      JsonConverter.builder()
+  private final GenericJsonConverter.GenericJsonConverterBuilder builder =
+      GenericJsonConverter.builder()
           .skipKey(Indexing.MACHINE_TAGS)
           .skipKey(Indexing.CREATED)
           .converter(ExtendedRecord.class, getExtendedRecordConverter())
@@ -78,7 +78,7 @@ public class EventCoreJsonConverter {
    * the new ES record
    */
   public static ObjectNode toJson(SpecificRecordBase... records) {
-    return EventCoreJsonConverter.builder().records(Arrays.asList(records)).build().toJson();
+    return EventJsonConverter.builder().records(Arrays.asList(records)).build().toJson();
   }
 
   /**
@@ -86,7 +86,7 @@ public class EventCoreJsonConverter {
    * a partial ES record update
    */
   public static ObjectNode toPartialJson(SpecificRecordBase... records) {
-    return EventCoreJsonConverter.builder()
+    return EventJsonConverter.builder()
         .records(Arrays.asList(records))
         .skipId(false)
         .skipIssues(true)
@@ -166,7 +166,7 @@ public class EventCoreJsonConverter {
             .filter(Issues.class::isInstance)
             .flatMap(x -> ((Issues) x).getIssues().getIssueList().stream())
             .collect(Collectors.toSet());
-    ArrayNode issueArrayNodes = JsonConverter.createArrayNode();
+    ArrayNode issueArrayNodes = GenericJsonConverter.createArrayNode();
     issues.forEach(issueArrayNodes::add);
     mainNode.set(Indexing.ISSUES, issueArrayNodes);
 
@@ -177,7 +177,7 @@ public class EventCoreJsonConverter {
             .filter(x -> !issues.contains(x))
             .collect(Collectors.toSet());
 
-    ArrayNode arrayNotIssuesNode = JsonConverter.createArrayNode();
+    ArrayNode arrayNotIssuesNode = GenericJsonConverter.createArrayNode();
     notIssues.forEach(arrayNotIssuesNode::add);
     mainNode.set("notIssues", arrayNotIssuesNode);
   }
@@ -202,7 +202,7 @@ public class EventCoreJsonConverter {
    *
    * }</pre>
    */
-  private BiConsumer<JsonConverter, SpecificRecordBase> getExtendedRecordConverter() {
+  private BiConsumer<GenericJsonConverter, SpecificRecordBase> getExtendedRecordConverter() {
     return (jc, record) -> {
       ExtendedRecord er = (ExtendedRecord) record;
 
@@ -211,20 +211,20 @@ public class EventCoreJsonConverter {
       Map<String, String> core = er.getCoreTerms();
 
       // Core
-      ObjectNode coreNode = JsonConverter.createObjectNode();
+      ObjectNode coreNode = GenericJsonConverter.createObjectNode();
       core.forEach(
           (k, v) -> Optional.ofNullable(v).ifPresent(x -> jc.addJsonRawField(coreNode, k, x)));
 
       // Extensions
-      ObjectNode extNode = JsonConverter.createObjectNode();
+      ObjectNode extNode = GenericJsonConverter.createObjectNode();
       Map<String, List<Map<String, String>>> ext = er.getExtensions();
       ext.forEach(
           (k, v) -> {
             if (v != null && !v.isEmpty()) {
-              ArrayNode extArrayNode = JsonConverter.createArrayNode();
+              ArrayNode extArrayNode = GenericJsonConverter.createArrayNode();
               v.forEach(
                   m -> {
-                    ObjectNode ns = JsonConverter.createObjectNode();
+                    ObjectNode ns = GenericJsonConverter.createObjectNode();
                     m.forEach(
                         (ks, vs) ->
                             Optional.ofNullable(vs)
@@ -237,14 +237,14 @@ public class EventCoreJsonConverter {
           });
 
       // Has extensions
-      ArrayNode extNameNode = JsonConverter.createArrayNode();
+      ArrayNode extNameNode = GenericJsonConverter.createArrayNode();
       ext.entrySet().stream()
           .filter(e -> e.getValue() != null && !e.getValue().isEmpty())
           .forEach(x -> extNameNode.add(x.getKey()));
       jc.getMainNode().set("extensions", extNameNode);
 
       // Verbatim
-      ObjectNode verbatimNode = JsonConverter.createObjectNode();
+      ObjectNode verbatimNode = GenericJsonConverter.createObjectNode();
       verbatimNode.set("core", coreNode);
       verbatimNode.set("extensions", extNode);
 
@@ -272,7 +272,7 @@ public class EventCoreJsonConverter {
       Set<TextNode> textNodeMap =
           allFieldValues.stream()
               .flatMap(v -> Stream.of(v.split(ModelUtils.DEFAULT_SEPARATOR)))
-              .map(JsonConverter::getEscapedTextNode)
+              .map(GenericJsonConverter::getEscapedTextNode)
               .collect(Collectors.toSet());
 
       jc.getMainNode().putArray("all").addAll(textNodeMap);
@@ -292,7 +292,7 @@ public class EventCoreJsonConverter {
    *
    * }</pre>
    */
-  private BiConsumer<JsonConverter, SpecificRecordBase> geIdentifierRecordConverter() {
+  private BiConsumer<GenericJsonConverter, SpecificRecordBase> geIdentifierRecordConverter() {
     return (jc, record) -> {
       IdentifierRecord ir = (IdentifierRecord) record;
 
@@ -315,7 +315,7 @@ public class EventCoreJsonConverter {
    *
    * }</pre>
    */
-  private BiConsumer<JsonConverter, SpecificRecordBase> geEventCoreRecordConverter() {
+  private BiConsumer<GenericJsonConverter, SpecificRecordBase> geEventCoreRecordConverter() {
     return (jc, record) -> {
       EventCoreRecord ecr = (EventCoreRecord) record;
 

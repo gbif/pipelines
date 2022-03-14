@@ -24,7 +24,7 @@ import org.gbif.pipelines.ingest.utils.ElasticsearchTools;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
-import org.gbif.pipelines.transforms.converters.EventCoreJsonTransform;
+import org.gbif.pipelines.transforms.converters.EventJsonTransform;
 import org.gbif.pipelines.transforms.core.EventCoreTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.specific.IdentifierTransform;
@@ -112,8 +112,8 @@ public class InterpretedToEsIndexPipeline {
             .apply("Map Event core to KV", eventCoreTransform.toKv());
 
     log.info("Adding step 3: Converting into a json object");
-    SingleOutput<KV<String, CoGbkResult>, String> eventCoreJsonDoFn =
-        EventCoreJsonTransform.builder()
+    SingleOutput<KV<String, CoGbkResult>, String> eventJsonDoFn =
+        EventJsonTransform.builder()
             .extendedRecordTag(verbatimTransform.getTag())
             .identifierRecordTag(identifierTransform.getTag())
             .eventCoreRecordTag(eventCoreTransform.getTag())
@@ -130,7 +130,7 @@ public class InterpretedToEsIndexPipeline {
             .and(verbatimTransform.getTag(), verbatimCollection)
             // Apply
             .apply("Grouping objects", CoGroupByKey.create())
-            .apply("Merging to json", eventCoreJsonDoFn);
+            .apply("Merging to json", eventJsonDoFn);
 
     log.info("Adding step 4: Elasticsearch indexing");
     ElasticsearchIO.ConnectionConfiguration esConfig =

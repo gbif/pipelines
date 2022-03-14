@@ -9,7 +9,7 @@ import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class JsonConverterTest {
+public class GenericJsonConverterTest {
 
   @Test
   public void createSimpleJsonFromSpecificRecordBase() {
@@ -50,7 +50,7 @@ public class JsonConverterTest {
 
     // When
     String result =
-        JsonConverter.builder()
+        GenericJsonConverter.builder()
             .record(extendedRecord)
             .record(temporalRecord)
             .record(locationRecord)

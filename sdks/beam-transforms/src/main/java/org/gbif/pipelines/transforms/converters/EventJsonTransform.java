@@ -13,7 +13,7 @@ import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TupleTag;
-import org.gbif.pipelines.core.converters.EventCoreJsonConverter;
+import org.gbif.pipelines.core.converters.EventJsonConverter;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
@@ -35,7 +35,7 @@ import org.gbif.pipelines.io.avro.IdentifierRecord;
  * PCollection<KV<String, EventCoreRecord>> eventCoreRecordCollection = ...
  * PCollection<KV<String, IdentifierRecord>> identifierRecordCollection = ...
  *
- * SingleOutput<KV<String, CoGbkResult>, String> eventCoreJsonDoFn =
+ * SingleOutput<KV<String, CoGbkResult>, String> eventJsonDoFn =
  * EventCoreJsonTransform.builder()
  *    .extendedRecordTag(verbatimTransform.getTag())
  *    .identifierRecordTag(identifierTransform.getTag())
@@ -53,12 +53,12 @@ import org.gbif.pipelines.io.avro.IdentifierRecord;
  *    .and(verbatimTransform.getTag(), verbatimCollection)
  *    // Apply
  *    .apply("Grouping objects", CoGroupByKey.create())
- *    .apply("Merging to json", eventCoreJsonDoFn);
+ *    .apply("Merging to json", eventJsonDoFn);
  * }</pre>
  */
 @SuppressWarnings("ConstantConditions")
 @Builder
-public class EventCoreJsonTransform implements Serializable {
+public class EventJsonTransform implements Serializable {
 
   private static final long serialVersionUID = 1279313941024805871L;
 
@@ -73,7 +73,7 @@ public class EventCoreJsonTransform implements Serializable {
         new DoFn<KV<String, CoGbkResult>, String>() {
 
           private final Counter counter =
-              Metrics.counter(EventCoreJsonTransform.class, AVRO_TO_JSON_COUNT);
+              Metrics.counter(EventJsonTransform.class, AVRO_TO_JSON_COUNT);
 
           @ProcessElement
           public void processElement(ProcessContext c) {
@@ -88,7 +88,7 @@ public class EventCoreJsonTransform implements Serializable {
             IdentifierRecord ir =
                 v.getOnly(identifierRecordTag, IdentifierRecord.newBuilder().setId(k).build());
 
-            String json = EventCoreJsonConverter.toStringJson(ecr, ir, er);
+            String json = EventJsonConverter.toStringJson(ecr, ir, er);
 
             c.output(json);
 
