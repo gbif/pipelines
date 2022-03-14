@@ -27,6 +27,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.date.TemporalAccessorUtils;
+import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.TermFactory;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
 import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
@@ -224,6 +226,15 @@ public class EventJsonConverter {
       jc.addJsonTextFieldNoCheck(Indexing.ID, er.getId());
 
       Map<String, String> core = er.getCoreTerms();
+
+      BiConsumer<Term, String> fieldFn =
+          (t, k) ->
+              Optional.ofNullable(core.get(t.qualifiedName()))
+                  .ifPresent(r -> jc.addJsonTextFieldNoCheck(k, r));
+
+      fieldFn.accept(DwcTerm.eventID, "eventId");
+      fieldFn.accept(DwcTerm.parentEventID, "parentEventId");
+      fieldFn.accept(DwcTerm.institutionCode, "institutionCode");
 
       // Core
       ObjectNode coreNode = GenericJsonConverter.createObjectNode();
