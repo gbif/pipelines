@@ -1,3 +1,5 @@
+gbifApi:
+  wsUrl: http://api.gbif.org
 geocode:
   wsCacheSizeMb: 128
   api:

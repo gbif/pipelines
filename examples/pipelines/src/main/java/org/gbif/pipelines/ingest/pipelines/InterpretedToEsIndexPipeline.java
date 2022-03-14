@@ -11,11 +11,13 @@ import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.elasticsearch.ElasticsearchIO;
 import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
+import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.transforms.join.CoGroupByKey;
 import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.PCollectionView;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
@@ -27,6 +29,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.transforms.converters.EventJsonTransform;
@@ -37,6 +40,7 @@ import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
+import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.gbif.pipelines.transforms.specific.IdentifierTransform;
 import org.slf4j.MDC;
 
@@ -102,6 +106,7 @@ public class InterpretedToEsIndexPipeline {
     Pipeline p = pipelinesFn.apply(options);
 
     log.info("Adding step 2: Creating transformations");
+    MetadataTransform metadataTransform = MetadataTransform.builder().create();
     // Core
     EventCoreTransform eventCoreTransform = EventCoreTransform.builder().create();
     IdentifierTransform identifierTransform = IdentifierTransform.builder().create();
@@ -115,6 +120,9 @@ public class InterpretedToEsIndexPipeline {
     ImageTransform imageTransform = ImageTransform.builder().create();
 
     log.info("Adding step 3: Creating beam pipeline");
+    PCollectionView<MetadataRecord> metadataView =
+        p.apply("Read Metadata", metadataTransform.read(pathFn))
+            .apply("Convert to view", View.asSingleton());
 
     PCollection<KV<String, ExtendedRecord>> verbatimCollection =
         p.apply("Read Verbatim", verbatimTransform.read(pathFn))
@@ -159,6 +167,7 @@ public class InterpretedToEsIndexPipeline {
             .multimediaRecordTag(multimediaTransform.getTag())
             .imageRecordTag(imageTransform.getTag())
             .audubonRecordTag(audubonTransform.getTag())
+            .metadataView(metadataView)
             .build()
             .converter();
 

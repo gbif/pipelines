@@ -11,7 +11,10 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
+import org.apache.beam.sdk.transforms.Create;
+import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.PCollectionView;
 import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
@@ -20,7 +23,9 @@ import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.factory.GeocodeKvStoreFactory;
+import org.gbif.pipelines.factory.MetadataServiceClientFactory;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.transforms.common.ExtensionFilterTransform;
 import org.gbif.pipelines.transforms.common.UniqueIdTransform;
 import org.gbif.pipelines.transforms.core.EventCoreTransform;
@@ -30,6 +35,7 @@ import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
+import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.gbif.pipelines.transforms.specific.IdentifierTransform;
 import org.slf4j.MDC;
 
@@ -105,15 +111,22 @@ public class VerbatimToInterpretedPipeline {
     Pipeline p = pipelinesFn.apply(options);
 
     // Used transforms
+    // Metadata
+    MetadataTransform metadataTransform =
+        MetadataTransform.builder()
+            .clientSupplier(MetadataServiceClientFactory.createSupplier(config))
+            .attempt(attempt)
+            .endpointType(options.getEndPointType())
+            .create();
     EventCoreTransform eventCoreTransform = EventCoreTransform.builder().create();
     IdentifierTransform identifierTransform = IdentifierTransform.builder().create();
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
-    // TODO: START, ALA uses the same LocationRecord but another Transform
+    // TODO START: ALA uses the same LocationRecord but another Transform
     LocationTransform locationTransform =
         LocationTransform.builder()
             .geocodeKvStoreSupplier(GeocodeKvStoreFactory.createSupplier(config))
             .create();
-    // TODO: END, ALA uses the same LocationRecord but another Transform
+    // TODO END: ALA uses the same LocationRecord but another Transform
     TemporalTransform temporalTransform =
         TemporalTransform.builder().orderings(dateComponentOrdering).create();
 
@@ -126,6 +139,20 @@ public class VerbatimToInterpretedPipeline {
         ImageTransform.builder().orderings(dateComponentOrdering).create();
 
     log.info("Creating beam pipeline");
+
+    // Metadata TODO START: Will ALA use it?
+    PCollection<MetadataRecord> metadataRecord =
+        p.apply("Create metadata collection", Create.of(options.getDatasetId()))
+            .apply("Interpret metadata", metadataTransform.interpret());
+
+    metadataRecord.apply("Write metadata to avro", metadataTransform.write(pathFn));
+
+    // Create View for the further usage
+    PCollectionView<MetadataRecord> metadataView =
+        metadataRecord.apply("Convert into view", View.asSingleton());
+
+    locationTransform.setMetadataView(metadataView);
+    // TODO END: Will ALA use it?
 
     // Read raw records and filter duplicates
     PCollection<ExtendedRecord> uniqueRawRecords =
@@ -149,7 +176,7 @@ public class VerbatimToInterpretedPipeline {
         .apply("Interpret temporal", temporalTransform.interpret())
         .apply("Write temporal to avro", temporalTransform.write(pathFn));
 
-    // TODO: START, DO WE NEED ALL MULTIMEDIA EXTENSIONS?
+    // TODO START: DO WE NEED ALL MULTIMEDIA EXTENSIONS?
     uniqueRawRecords
         .apply("Interpret multimedia", multimediaTransform.interpret())
         .apply("Write multimedia to avro", multimediaTransform.write(pathFn));
@@ -161,7 +188,7 @@ public class VerbatimToInterpretedPipeline {
     uniqueRawRecords
         .apply("Interpret image", imageTransform.interpret())
         .apply("Write image to avro", imageTransform.write(pathFn));
-    // TODO: END
+    // TODO END
 
     uniqueRawRecords
         .apply("Interpret location", locationTransform.interpret())

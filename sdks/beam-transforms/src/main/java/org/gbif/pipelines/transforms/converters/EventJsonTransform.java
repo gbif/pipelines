@@ -12,6 +12,7 @@ import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.values.KV;
+import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
 import org.gbif.pipelines.core.converters.EventJsonConverter;
 import org.gbif.pipelines.core.converters.MultimediaConverter;
@@ -21,6 +22,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 
@@ -79,6 +81,8 @@ public class EventJsonTransform implements Serializable {
   @NonNull private final TupleTag<ImageRecord> imageRecordTag;
   @NonNull private final TupleTag<AudubonRecord> audubonRecordTag;
 
+  @NonNull private final PCollectionView<MetadataRecord> metadataView;
+
   public SingleOutput<KV<String, CoGbkResult>, String> converter() {
 
     DoFn<KV<String, CoGbkResult>, String> fn =
@@ -93,6 +97,7 @@ public class EventJsonTransform implements Serializable {
             String k = c.element().getKey();
 
             // Core
+            MetadataRecord mdr = c.sideInput(metadataView);
             ExtendedRecord er =
                 v.getOnly(extendedRecordTag, ExtendedRecord.newBuilder().setId(k).build());
             EventCoreRecord ecr =
@@ -114,7 +119,7 @@ public class EventJsonTransform implements Serializable {
             MultimediaRecord mmr = MultimediaConverter.merge(mr, imr, ar);
 
             // Convert
-            String json = EventJsonConverter.toStringJson(ecr, ir, tr, lr, mmr, er);
+            String json = EventJsonConverter.toStringJson(mdr, ecr, ir, tr, lr, mmr, er);
 
             c.output(json);
 
