@@ -12,7 +12,7 @@ VERSION=$(cat ../pom.xml | grep '<version>' | cut -d'>' -f 2 | cut -d'<' -f 1)
 echo "INFO: Use pipelines version: ${VERSION}, UUID: ${UUID}, hdfs root path: ${HDFS_PATH}"
 
 echo "Copying pipelines.yaml to ${HDFS_PATH}/${UUID}/1/"
-sudo -u hdfs hdfs dfs -copyFromLocal configs/pipelines.yaml ${HDFS_PATH}/${UUID}/1/pipelines.yaml
+sudo -u hdfs hdfs dfs -copyFromLocal -f configs/pipelines.yaml ${HDFS_PATH}/${UUID}/1/pipelines.yaml
 
 ./1-interpretation.sh ${VERSION} ${UUID} ${HDFS_PATH}
 
