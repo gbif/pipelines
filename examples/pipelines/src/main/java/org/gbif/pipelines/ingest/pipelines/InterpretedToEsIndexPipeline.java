@@ -21,12 +21,22 @@ import org.gbif.pipelines.common.beam.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.ingest.utils.ElasticsearchTools;
+import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
+import org.gbif.pipelines.io.avro.ImageRecord;
+import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MultimediaRecord;
+import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.transforms.converters.EventJsonTransform;
 import org.gbif.pipelines.transforms.core.EventCoreTransform;
+import org.gbif.pipelines.transforms.core.LocationTransform;
+import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
+import org.gbif.pipelines.transforms.extension.AudubonTransform;
+import org.gbif.pipelines.transforms.extension.ImageTransform;
+import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.specific.IdentifierTransform;
 import org.slf4j.MDC;
 
@@ -96,6 +106,13 @@ public class InterpretedToEsIndexPipeline {
     EventCoreTransform eventCoreTransform = EventCoreTransform.builder().create();
     IdentifierTransform identifierTransform = IdentifierTransform.builder().create();
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
+    TemporalTransform temporalTransform = TemporalTransform.builder().create();
+    LocationTransform locationTransform = LocationTransform.builder().create();
+
+    // Extension
+    MultimediaTransform multimediaTransform = MultimediaTransform.builder().create();
+    AudubonTransform audubonTransform = AudubonTransform.builder().create();
+    ImageTransform imageTransform = ImageTransform.builder().create();
 
     log.info("Adding step 3: Creating beam pipeline");
 
@@ -111,12 +128,37 @@ public class InterpretedToEsIndexPipeline {
         p.apply("Read Event core", eventCoreTransform.read(pathFn))
             .apply("Map Event core to KV", eventCoreTransform.toKv());
 
+    PCollection<KV<String, TemporalRecord>> temporalCollection =
+        p.apply("Read Temporal", temporalTransform.read(pathFn))
+            .apply("Map Temporal to KV", temporalTransform.toKv());
+
+    PCollection<KV<String, LocationRecord>> locationCollection =
+        p.apply("Read Location", locationTransform.read(pathFn))
+            .apply("Map Location to KV", locationTransform.toKv());
+
+    PCollection<KV<String, MultimediaRecord>> multimediaCollection =
+        p.apply("Read Multimedia", multimediaTransform.read(pathFn))
+            .apply("Map Multimedia to KV", multimediaTransform.toKv());
+
+    PCollection<KV<String, ImageRecord>> imageCollection =
+        p.apply("Read Image", imageTransform.read(pathFn))
+            .apply("Map Image to KV", imageTransform.toKv());
+
+    PCollection<KV<String, AudubonRecord>> audubonCollection =
+        p.apply("Read Audubon", audubonTransform.read(pathFn))
+            .apply("Map Audubon to KV", audubonTransform.toKv());
+
     log.info("Adding step 3: Converting into a json object");
     SingleOutput<KV<String, CoGbkResult>, String> eventJsonDoFn =
         EventJsonTransform.builder()
             .extendedRecordTag(verbatimTransform.getTag())
             .identifierRecordTag(identifierTransform.getTag())
             .eventCoreRecordTag(eventCoreTransform.getTag())
+            .temporalRecordTag(temporalTransform.getTag())
+            .locationRecordTag(locationTransform.getTag())
+            .multimediaRecordTag(multimediaTransform.getTag())
+            .imageRecordTag(imageTransform.getTag())
+            .audubonRecordTag(audubonTransform.getTag())
             .build()
             .converter();
 
@@ -124,6 +166,12 @@ public class InterpretedToEsIndexPipeline {
         KeyedPCollectionTuple
             // Core
             .of(eventCoreTransform.getTag(), eventCoreCollection)
+            .and(temporalTransform.getTag(), temporalCollection)
+            .and(locationTransform.getTag(), locationCollection)
+            // Extension
+            .and(multimediaTransform.getTag(), multimediaCollection)
+            .and(imageTransform.getTag(), imageCollection)
+            .and(audubonTransform.getTag(), audubonCollection)
             // Internal
             .and(identifierTransform.getTag(), identifierCollection)
             // Raw

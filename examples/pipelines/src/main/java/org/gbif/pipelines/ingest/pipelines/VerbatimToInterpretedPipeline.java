@@ -2,7 +2,7 @@ package org.gbif.pipelines.ingest.pipelines;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
@@ -12,16 +12,24 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.values.PCollection;
+import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
+import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.utils.FsUtils;
+import org.gbif.pipelines.factory.GeocodeKvStoreFactory;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.transforms.common.ExtensionFilterTransform;
 import org.gbif.pipelines.transforms.common.UniqueIdTransform;
 import org.gbif.pipelines.transforms.core.EventCoreTransform;
+import org.gbif.pipelines.transforms.core.LocationTransform;
+import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
+import org.gbif.pipelines.transforms.extension.AudubonTransform;
+import org.gbif.pipelines.transforms.extension.ImageTransform;
+import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.specific.IdentifierTransform;
 import org.slf4j.MDC;
 
@@ -72,9 +80,15 @@ public class VerbatimToInterpretedPipeline {
     String targetPath = options.getTargetPath();
     String hdfsSiteConfig = options.getHdfsSiteConfig();
     String coreSiteConfig = options.getCoreSiteConfig();
-    // TODO: Read from config, do we need to read Occurrence and others?
-    Set<String> allowedExtensions =
-        Collections.singleton("http://rs.tdwg.org/dwc/terms/MeasurementOrFact");
+
+    PipelinesConfig config =
+        FsUtils.readConfigFile(
+            hdfsSiteConfig, coreSiteConfig, options.getProperties(), PipelinesConfig.class);
+
+    List<DateComponentOrdering> dateComponentOrdering =
+        options.getDefaultDateFormat() == null
+            ? config.getDefaultDateFormat()
+            : options.getDefaultDateFormat();
 
     FsUtils.deleteInterpretIfExist(
         hdfsSiteConfig, coreSiteConfig, targetPath, datasetId, attempt, types);
@@ -94,6 +108,22 @@ public class VerbatimToInterpretedPipeline {
     EventCoreTransform eventCoreTransform = EventCoreTransform.builder().create();
     IdentifierTransform identifierTransform = IdentifierTransform.builder().create();
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
+    // TODO: START, ALA uses the same LocationRecord but another Transform
+    LocationTransform locationTransform =
+        LocationTransform.builder()
+            .geocodeKvStoreSupplier(GeocodeKvStoreFactory.createSupplier(config))
+            .create();
+    // TODO: END, ALA uses the same LocationRecord but another Transform
+    TemporalTransform temporalTransform =
+        TemporalTransform.builder().orderings(dateComponentOrdering).create();
+
+    // Extension
+    MultimediaTransform multimediaTransform =
+        MultimediaTransform.builder().orderings(dateComponentOrdering).create();
+    AudubonTransform audubonTransform =
+        AudubonTransform.builder().orderings(dateComponentOrdering).create();
+    ImageTransform imageTransform =
+        ImageTransform.builder().orderings(dateComponentOrdering).create();
 
     log.info("Creating beam pipeline");
 
@@ -101,7 +131,9 @@ public class VerbatimToInterpretedPipeline {
     PCollection<ExtendedRecord> uniqueRawRecords =
         p.apply("Read verbatim", verbatimTransform.read(options.getInputPath()))
             .apply("Filter duplicates", UniqueIdTransform.create())
-            .apply("Filter extension", ExtensionFilterTransform.create(allowedExtensions));
+            .apply(
+                "Filter extension",
+                ExtensionFilterTransform.create(config.getExtensionsAllowedForVerbatimSet()));
 
     // Interpret identifiers and wite as avro files
     uniqueRawRecords
@@ -112,6 +144,28 @@ public class VerbatimToInterpretedPipeline {
     uniqueRawRecords
         .apply("Interpret event core", eventCoreTransform.interpret())
         .apply("Write event to avro", eventCoreTransform.write(pathFn));
+
+    uniqueRawRecords
+        .apply("Interpret temporal", temporalTransform.interpret())
+        .apply("Write temporal to avro", temporalTransform.write(pathFn));
+
+    // TODO: START, DO WE NEED ALL MULTIMEDIA EXTENSIONS?
+    uniqueRawRecords
+        .apply("Interpret multimedia", multimediaTransform.interpret())
+        .apply("Write multimedia to avro", multimediaTransform.write(pathFn));
+
+    uniqueRawRecords
+        .apply("Interpret audubon", audubonTransform.interpret())
+        .apply("Write audubon to avro", audubonTransform.write(pathFn));
+
+    uniqueRawRecords
+        .apply("Interpret image", imageTransform.interpret())
+        .apply("Write image to avro", imageTransform.write(pathFn));
+    // TODO: END
+
+    uniqueRawRecords
+        .apply("Interpret location", locationTransform.interpret())
+        .apply("Write location to avro", locationTransform.write(pathFn));
 
     // Wite filtered verbatim avro files
     uniqueRawRecords.apply("Write verbatim to avro", verbatimTransform.write(pathFn));

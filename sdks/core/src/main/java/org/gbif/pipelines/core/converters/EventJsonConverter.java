@@ -3,9 +3,11 @@ package org.gbif.pipelines.core.converters;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
+import com.google.common.base.Strings;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.temporal.TemporalAccessor;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -24,13 +26,21 @@ import lombok.Singular;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.gbif.api.vocabulary.OccurrenceIssue;
+import org.gbif.common.parsers.date.TemporalAccessorUtils;
 import org.gbif.dwc.terms.TermFactory;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
+import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
 import org.gbif.pipelines.core.utils.ModelUtils;
+import org.gbif.pipelines.core.utils.TemporalConverter;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.GadmFeatures;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.Issues;
+import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.Multimedia;
+import org.gbif.pipelines.io.avro.MultimediaRecord;
+import org.gbif.pipelines.io.avro.TemporalRecord;
 
 /**
  * Converter for objects to GBIF elasticsearch schema. You can pass any {@link SpecificRecordBase}
@@ -61,10 +71,15 @@ public class EventJsonConverter {
 
   private final GenericJsonConverter.GenericJsonConverterBuilder builder =
       GenericJsonConverter.builder()
+          .skipKey(Indexing.DECIMAL_LATITUDE)
+          .skipKey(Indexing.DECIMAL_LONGITUDE)
           .skipKey(Indexing.MACHINE_TAGS)
           .skipKey(Indexing.CREATED)
           .converter(ExtendedRecord.class, getExtendedRecordConverter())
           .converter(IdentifierRecord.class, geIdentifierRecordConverter())
+          .converter(LocationRecord.class, getLocationRecordConverter())
+          .converter(TemporalRecord.class, getTemporalRecordConverter())
+          .converter(MultimediaRecord.class, getMultimediaConverter())
           .converter(EventCoreRecord.class, geEventCoreRecordConverter());
 
   @Builder.Default private boolean skipIssues = false;
@@ -302,6 +317,190 @@ public class EventJsonConverter {
 
       // Fields as a common view - "key": "value"
       jc.addCommonFields(record);
+    };
+  }
+
+  /**
+   * String converter for {@link LocationRecord}, convert an object to specific string view
+   *
+   * <pre>{@code
+   * Result example:
+   *
+   * "location": {"lon": 10, "lat": 10},
+   * "continent": "NORTH_AMERICA",
+   * "waterBody": null,
+   *  //.....more fields
+   *
+   * }</pre>
+   */
+  private BiConsumer<GenericJsonConverter, SpecificRecordBase> getLocationRecordConverter() {
+    return (jc, record) -> {
+      LocationRecord lr = (LocationRecord) record;
+
+      if (!skipId) {
+        jc.addJsonTextFieldNoCheck(Indexing.ID, lr.getId());
+      }
+
+      if (lr.getDecimalLongitude() != null && lr.getDecimalLatitude() != null) {
+        ObjectNode node = GenericJsonConverter.createObjectNode();
+        node.put("lon", lr.getDecimalLongitude());
+        node.put("lat", lr.getDecimalLatitude());
+        // geo_point
+        jc.addJsonObject("coordinates", node);
+
+        jc.getMainNode().put("decimalLatitude", lr.getDecimalLatitude());
+        jc.getMainNode().put("decimalLongitude", lr.getDecimalLongitude());
+        // geo_shape
+        jc.addJsonTextFieldNoCheck(
+            "scoordinates",
+            "POINT (" + lr.getDecimalLongitude() + " " + lr.getDecimalLatitude() + ")");
+      }
+
+      // Fields as a common view - "key": "value"
+      jc.addCommonFields(record);
+
+      // All GADM GIDs as an array, for searching at multiple levels.
+      if (lr.getGadm() != null) {
+        GadmFeatures gadmFeatures = lr.getGadm();
+        ArrayNode arrayGadmGidNode = GenericJsonConverter.createArrayNode();
+        Optional.ofNullable(gadmFeatures.getLevel0Gid()).ifPresent(arrayGadmGidNode::add);
+        Optional.ofNullable(gadmFeatures.getLevel1Gid()).ifPresent(arrayGadmGidNode::add);
+        Optional.ofNullable(gadmFeatures.getLevel2Gid()).ifPresent(arrayGadmGidNode::add);
+        Optional.ofNullable(gadmFeatures.getLevel3Gid()).ifPresent(arrayGadmGidNode::add);
+        ObjectNode gadmNode =
+            jc.getMainNode().has("gadm")
+                ? (ObjectNode) jc.getMainNode().get("gadm")
+                : GenericJsonConverter.createObjectNode();
+        gadmNode.set("gids", arrayGadmGidNode);
+      }
+    };
+  }
+
+  /**
+   * String converter for {@link TemporalRecord}, convert an object to specific string view
+   *
+   * <pre>{@code
+   * Result example:
+   *
+   * "startDate": "10/10/2010",
+   *  //.....more fields
+   *
+   * }</pre>
+   */
+  private BiConsumer<GenericJsonConverter, SpecificRecordBase> getTemporalRecordConverter() {
+    return (jc, record) -> {
+      TemporalRecord tr = (TemporalRecord) record;
+
+      if (!skipId) {
+        jc.addJsonTextFieldNoCheck(Indexing.ID, tr.getId());
+      }
+
+      Optional<TemporalAccessor> tao;
+      if (tr.getEventDate() != null && tr.getEventDate().getGte() != null) {
+        tao =
+            Optional.ofNullable(tr.getEventDate().getGte())
+                .map(StringToDateFunctions.getStringToTemporalAccessor());
+      } else {
+        tao = TemporalConverter.from(tr.getYear(), tr.getMonth(), tr.getDay());
+      }
+      tao.map(ta -> TemporalAccessorUtils.toEarliestLocalDateTime(ta, true))
+          .ifPresent(d -> jc.addJsonTextFieldNoCheck("eventDateSingle", d.toString()));
+
+      // Fields as a common view - "key": "value"
+      jc.addCommonFields(record);
+    };
+  }
+
+  /**
+   * String converter for {@link MultimediaRecord}, convert an object to specific string view * *
+   *
+   * <pre>{@code
+   * Result example:
+   *
+   * {
+   *  "id": "777",
+   *  "multimediaItems": [
+   *    {
+   *      "type": "StillImage",
+   *      "format": "image/jpeg",
+   *      "identifier": "http://arctos.database.museum/media/10436011?open"
+   *     },
+   *     {
+   *      "type": "MovingImage",
+   *      "format": "video/mp4",
+   *      "identifier": "http://arctos.database.museum/media/10436025?open"
+   *      }
+   *  ],
+   *  "mediaTypes": [
+   *     "StillImage",
+   *     "MovingImage"
+   *  ]
+   *
+   * }</pre>
+   */
+  private BiConsumer<GenericJsonConverter, SpecificRecordBase> getMultimediaConverter() {
+    return (jc, record) -> {
+      MultimediaRecord mr = (MultimediaRecord) record;
+
+      if (!skipId) {
+        jc.addJsonTextFieldNoCheck(Indexing.ID, mr.getId());
+      }
+
+      // multimedia items
+      if (mr.getMultimediaItems() != null && !mr.getMultimediaItems().isEmpty()) {
+        List<ObjectNode> items =
+            mr.getMultimediaItems().stream()
+                .map(
+                    item -> {
+                      ObjectNode node = GenericJsonConverter.createObjectNode();
+
+                      BiConsumer<String, String> addField =
+                          (k, v) ->
+                              Optional.ofNullable(v)
+                                  .filter(f -> !f.isEmpty())
+                                  .ifPresent(r -> node.put(k, r));
+
+                      addField.accept("type", item.getType());
+                      addField.accept("format", item.getFormat());
+                      addField.accept("identifier", item.getIdentifier());
+                      addField.accept("audience", item.getAudience());
+                      addField.accept("contributor", item.getContributor());
+                      addField.accept("created", item.getCreated());
+                      addField.accept("creator", item.getCreator());
+                      addField.accept("description", item.getDescription());
+                      addField.accept("license", item.getLicense());
+                      addField.accept("publisher", item.getPublisher());
+                      addField.accept("references", item.getReferences());
+                      addField.accept("rightsHolder", item.getRightsHolder());
+                      addField.accept("source", item.getSource());
+                      addField.accept("title", item.getTitle());
+
+                      return node;
+                    })
+                .collect(Collectors.toList());
+
+        jc.addJsonArray("multimediaItems", items);
+
+        // media types
+        Set<TextNode> mediaTypes =
+            mr.getMultimediaItems().stream()
+                .filter(i -> !Strings.isNullOrEmpty(i.getType()))
+                .map(Multimedia::getType)
+                .map(TextNode::valueOf)
+                .collect(Collectors.toSet());
+
+        jc.addJsonArray("mediaTypes", mediaTypes);
+
+        // media licenses
+        Set<TextNode> mediaLicenses =
+            mr.getMultimediaItems().stream()
+                .filter(i -> !Strings.isNullOrEmpty(i.getLicense()))
+                .map(Multimedia::getLicense)
+                .map(TextNode::valueOf)
+                .collect(Collectors.toSet());
+
+        jc.addJsonArray("mediaLicenses", mediaLicenses);
+      }
     };
   }
 

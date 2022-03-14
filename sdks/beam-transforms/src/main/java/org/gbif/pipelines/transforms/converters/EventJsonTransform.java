@@ -14,9 +14,15 @@ import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TupleTag;
 import org.gbif.pipelines.core.converters.EventJsonConverter;
+import org.gbif.pipelines.core.converters.MultimediaConverter;
+import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
+import org.gbif.pipelines.io.avro.ImageRecord;
+import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MultimediaRecord;
+import org.gbif.pipelines.io.avro.TemporalRecord;
 
 /**
  * Beam level transformation for the ES output json. The transformation consumes objects, which
@@ -66,6 +72,12 @@ public class EventJsonTransform implements Serializable {
   @NonNull private final TupleTag<ExtendedRecord> extendedRecordTag;
   @NonNull private final TupleTag<EventCoreRecord> eventCoreRecordTag;
   @NonNull private final TupleTag<IdentifierRecord> identifierRecordTag;
+  @NonNull private final TupleTag<TemporalRecord> temporalRecordTag;
+  @NonNull private final TupleTag<LocationRecord> locationRecordTag;
+  // Extension
+  @NonNull private final TupleTag<MultimediaRecord> multimediaRecordTag;
+  @NonNull private final TupleTag<ImageRecord> imageRecordTag;
+  @NonNull private final TupleTag<AudubonRecord> audubonRecordTag;
 
   public SingleOutput<KV<String, CoGbkResult>, String> converter() {
 
@@ -87,8 +99,22 @@ public class EventJsonTransform implements Serializable {
                 v.getOnly(eventCoreRecordTag, EventCoreRecord.newBuilder().setId(k).build());
             IdentifierRecord ir =
                 v.getOnly(identifierRecordTag, IdentifierRecord.newBuilder().setId(k).build());
+            TemporalRecord tr =
+                v.getOnly(temporalRecordTag, TemporalRecord.newBuilder().setId(k).build());
+            LocationRecord lr =
+                v.getOnly(locationRecordTag, LocationRecord.newBuilder().setId(k).build());
 
-            String json = EventJsonConverter.toStringJson(ecr, ir, er);
+            // Extension
+            MultimediaRecord mr =
+                v.getOnly(multimediaRecordTag, MultimediaRecord.newBuilder().setId(k).build());
+            ImageRecord imr = v.getOnly(imageRecordTag, ImageRecord.newBuilder().setId(k).build());
+            AudubonRecord ar =
+                v.getOnly(audubonRecordTag, AudubonRecord.newBuilder().setId(k).build());
+
+            MultimediaRecord mmr = MultimediaConverter.merge(mr, imr, ar);
+
+            // Convert
+            String json = EventJsonConverter.toStringJson(ecr, ir, tr, lr, mmr, er);
 
             c.output(json);
 
