@@ -15,11 +15,23 @@ import org.gbif.pipelines.core.io.SyncDataFileWriter;
 import org.gbif.pipelines.estools.service.EsService;
 import org.gbif.pipelines.ingest.pipelines.utils.ElasticsearchServer;
 import org.gbif.pipelines.ingest.pipelines.utils.InterpretedAvroWriter;
+import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
+import org.gbif.pipelines.io.avro.ImageRecord;
+import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.io.avro.MultimediaRecord;
+import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.transforms.core.EventCoreTransform;
+import org.gbif.pipelines.transforms.core.LocationTransform;
+import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
+import org.gbif.pipelines.transforms.extension.AudubonTransform;
+import org.gbif.pipelines.transforms.extension.ImageTransform;
+import org.gbif.pipelines.transforms.extension.MultimediaTransform;
+import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.gbif.pipelines.transforms.specific.IdentifierTransform;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -100,6 +112,42 @@ public class InterpretedToEsIndexPipelineIT {
             optionsWriter, EventCoreTransform.builder().create(), postfix)) {
       EventCoreRecord eventCoreRecord = EventCoreRecord.newBuilder().setId(ID).build();
       writer.append(eventCoreRecord);
+    }
+    try (SyncDataFileWriter<MetadataRecord> writer =
+        InterpretedAvroWriter.createAvroWriter(
+            optionsWriter, MetadataTransform.builder().create(), postfix)) {
+      MetadataRecord metadataRecord = MetadataRecord.newBuilder().setId(ID).build();
+      writer.append(metadataRecord);
+    }
+    try (SyncDataFileWriter<TemporalRecord> writer =
+        InterpretedAvroWriter.createAvroWriter(
+            optionsWriter, TemporalTransform.builder().create(), postfix)) {
+      TemporalRecord temporalRecord = TemporalRecord.newBuilder().setId(ID).build();
+      writer.append(temporalRecord);
+    }
+    try (SyncDataFileWriter<LocationRecord> writer =
+        InterpretedAvroWriter.createAvroWriter(
+            optionsWriter, LocationTransform.builder().create(), postfix)) {
+      LocationRecord locationRecord = LocationRecord.newBuilder().setId(ID).build();
+      writer.append(locationRecord);
+    }
+    try (SyncDataFileWriter<MultimediaRecord> writer =
+        InterpretedAvroWriter.createAvroWriter(
+            optionsWriter, MultimediaTransform.builder().create(), postfix)) {
+      MultimediaRecord multimediaRecord = MultimediaRecord.newBuilder().setId(ID).build();
+      writer.append(multimediaRecord);
+    }
+    try (SyncDataFileWriter<ImageRecord> writer =
+        InterpretedAvroWriter.createAvroWriter(
+            optionsWriter, ImageTransform.builder().create(), postfix)) {
+      ImageRecord imageRecord = ImageRecord.newBuilder().setId(ID).build();
+      writer.append(imageRecord);
+    }
+    try (SyncDataFileWriter<AudubonRecord> writer =
+        InterpretedAvroWriter.createAvroWriter(
+            optionsWriter, AudubonTransform.builder().create(), postfix)) {
+      AudubonRecord audubonRecord = AudubonRecord.newBuilder().setId(ID).build();
+      writer.append(audubonRecord);
     }
 
     // When

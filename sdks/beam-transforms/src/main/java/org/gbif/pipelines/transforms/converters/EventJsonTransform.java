@@ -127,6 +127,6 @@ public class EventJsonTransform implements Serializable {
           }
         };
 
-    return ParDo.of(fn);
+    return ParDo.of(fn).withSideInputs(metadataView);
   }
 }
