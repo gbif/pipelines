@@ -12,6 +12,7 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.pipelines.core.functions.SerializableConsumer;
 import org.gbif.pipelines.core.interpreters.Interpretation;
+import org.gbif.pipelines.core.interpreters.core.EventCoreInterpreter;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.transforms.Transform;
@@ -73,13 +74,13 @@ public class EventCoreTransform extends Transform<ExtendedRecord, EventCoreRecor
                 .setCreated(Instant.now().toEpochMilli())
                 .build())
         .when(er -> !er.getCoreTerms().isEmpty())
-        .via(
-            (extendedRecord, eventCoreRecord) -> {
-              // TODO: DELETE ME!
-            })
-        // .via(EventCoreInterpreter::someInterpretation1)
-        // .via(EventCoreInterpreter::someInterpretation2)
-        // .via(EventCoreInterpreter::someInterpretation3)
+        .via(EventCoreInterpreter::interpretReferences)
+        .via(EventCoreInterpreter::interpretSamplingProtocol)
+        .via(EventCoreInterpreter::interpretSampleSizeUnit)
+        .via(EventCoreInterpreter::interpretSampleSizeValue)
+        .via(EventCoreInterpreter::interpretLicense)
+        .via(EventCoreInterpreter::interpretDatasetID)
+        .via(EventCoreInterpreter::interpretDatasetName)
         .getOfNullable();
   }
 }

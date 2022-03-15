@@ -1,5 +1,6 @@
 package org.gbif.pipelines.core.converters;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
@@ -25,6 +26,7 @@ import lombok.Builder;
 import lombok.Singular;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificRecordBase;
+import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.date.TemporalAccessorUtils;
 import org.gbif.dwc.terms.DwcTerm;
@@ -529,12 +531,29 @@ public class EventJsonConverter {
     return (jc, record) -> {
       EventCoreRecord ecr = (EventCoreRecord) record;
 
-      if (!skipId) {
-        jc.addJsonTextFieldNoCheck(Indexing.ID, ecr.getId());
+      // Use BasicRecord license insted of json node
+      JsonNode node = jc.getMainNode().get("license");
+      if (node != null) {
+        String license = node.asText();
+        if (ecr.getLicense() == null
+            || ecr.getLicense().equals(License.UNSPECIFIED.name())
+            || ecr.getLicense().equals(License.UNSUPPORTED.name())) {
+          ecr.setLicense(license);
+        }
       }
 
-      // Fields as a common view - "key": "value"
-      jc.addCommonFields(record);
+      BiConsumer<List<String>, String> joinValuesSetter =
+          (values, fieldName) -> {
+            if (values != null && !values.isEmpty()) {
+              String joinedValues = String.join("|", values);
+              jc.addJsonTextFieldNoCheck(fieldName, joinedValues);
+            }
+          };
+
+      joinValuesSetter.accept(ecr.getSamplingProtocol(), Indexing.SAMPLING_PROTOCOL_JOINED);
+
+      // Add other fields
+      jc.addCommonFields(ecr);
     };
   }
 }
