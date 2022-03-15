@@ -164,6 +164,18 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     skipKeys.add("recordedByIds"); // multi value field
     skipKeys.add("machineTags"); // TODO review content
 
+    // multi valued fields
+    skipKeys.add("identifiedByIds");
+    skipKeys.add("recordedByIds");
+    skipKeys.add(DwcTerm.typeStatus.simpleName());
+    skipKeys.add(DwcTerm.recordedBy.simpleName());
+    skipKeys.add(DwcTerm.identifiedBy.simpleName());
+    skipKeys.add(DwcTerm.preparations.simpleName());
+    skipKeys.add(DwcTerm.datasetID.simpleName());
+    skipKeys.add(DwcTerm.datasetName.simpleName());
+    skipKeys.add(DwcTerm.samplingProtocol.simpleName());
+    skipKeys.add(DwcTerm.otherCatalogNumbers.simpleName());
+
     IndexRecord.Builder indexRecord = IndexRecord.newBuilder().setId(ur.getUuid());
     indexRecord.setBooleans(new HashMap<>());
     indexRecord.setStrings(new HashMap<>());
@@ -218,24 +230,18 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     addToIndexRecord(br, indexRecord, skipKeys);
 
     if (br != null) {
-      if (br.getRecordedByIds() != null && br.getRecordedByIds().isEmpty()) {
-        indexRecord
-            .getMultiValues()
-            .put(
-                RECORDED_BY_ID,
-                br.getRecordedByIds().stream()
-                    .map(AgentIdentifier::getValue)
-                    .collect(Collectors.toList()));
-      }
-      if (br.getIdentifiedByIds() != null && br.getIdentifiedByIds().isEmpty()) {
-        indexRecord
-            .getMultiValues()
-            .put(
-                IDENTIFIED_BY_ID,
-                br.getRecordedByIds().stream()
-                    .map(AgentIdentifier::getValue)
-                    .collect(Collectors.toList()));
-      }
+      addTermWithAgentsSafely(
+          indexRecord, DwcTerm.recordedByID.simpleName(), br.getRecordedByIds());
+      addMultiValueTermSafely(indexRecord, DwcTerm.typeStatus.simpleName(), br.getRecordedBy());
+      addMultiValueTermSafely(indexRecord, DwcTerm.recordedBy.simpleName(), br.getRecordedBy());
+      addMultiValueTermSafely(indexRecord, DwcTerm.identifiedBy.simpleName(), br.getIdentifiedBy());
+      addMultiValueTermSafely(indexRecord, DwcTerm.preparations.simpleName(), br.getPreparations());
+      addMultiValueTermSafely(indexRecord, DwcTerm.datasetID.simpleName(), br.getDatasetID());
+      addMultiValueTermSafely(indexRecord, DwcTerm.datasetName.simpleName(), br.getDatasetName());
+      addMultiValueTermSafely(
+          indexRecord, DwcTerm.samplingProtocol.simpleName(), br.getSamplingProtocol());
+      addMultiValueTermSafely(
+          indexRecord, DwcTerm.otherCatalogNumbers.simpleName(), br.getOtherCatalogNumbers());
     }
 
     // add event date
@@ -612,7 +618,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
       // the flat SOLR schema will only allow for 1 identification per record
       Map<String, String> identification = identifications.get(0);
       addTermSafely(indexRecord, identification, DwcTerm.identificationID);
-      addTermSafely(indexRecord, identification, DwcTerm.identifiedBy);
+      addMultiValueTermSafely(indexRecord, identification, DwcTerm.identifiedBy);
       addTermSafely(indexRecord, identification, DwcTerm.identificationRemarks);
       addTermSafely(indexRecord, identification, DwcTerm.dateIdentified);
       addTermSafely(indexRecord, identification, DwcTerm.identificationQualifier);
@@ -628,11 +634,41 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     return indexRecord.build();
   }
 
+  private static void addTermWithAgentsSafely(
+      IndexRecord.Builder indexRecord, String field, List<AgentIdentifier> agents) {
+    if (agents != null && !agents.isEmpty()) {
+      indexRecord
+          .getMultiValues()
+          .put(field, agents.stream().map(AgentIdentifier::getValue).collect(Collectors.toList()));
+    }
+  }
+
+  private static void addMultiValueTermSafely(
+      IndexRecord.Builder indexRecord, String indexField, List<String> values) {
+    if (values != null && !values.isEmpty()) {
+      List<String> multiValuedField =
+          indexRecord.getMultiValues().getOrDefault(indexField, new ArrayList<>());
+      multiValuedField.addAll(values);
+      indexRecord.getMultiValues().put(indexField, multiValuedField);
+    }
+  }
+
   private static void addTermSafely(
       IndexRecord.Builder indexRecord, Map<String, String> extension, DwcTerm dwcTerm) {
     String termValue = extension.get(dwcTerm.name());
     if (isNotBlank(termValue)) {
       indexRecord.getStrings().put(dwcTerm.simpleName(), termValue);
+    }
+  }
+
+  private static void addMultiValueTermSafely(
+      IndexRecord.Builder indexRecord, Map<String, String> extension, DwcTerm dwcTerm) {
+    String termValue = extension.get(dwcTerm.name());
+    if (isNotBlank(termValue)) {
+      List<String> multiValuedField =
+          indexRecord.getMultiValues().getOrDefault(dwcTerm.simpleName(), new ArrayList<>());
+      multiValuedField.add(termValue);
+      indexRecord.getMultiValues().put(dwcTerm.simpleName(), multiValuedField);
     }
   }
 
@@ -953,7 +989,6 @@ public class IndexRecordTransform implements Serializable, IndexFields {
                               t -> {
                                 switch (t) {
                                   case BOOLEAN:
-                                    //
                                     builder.getBooleans().put(f.name(), (Boolean) r);
                                     break;
                                   case FLOAT:
