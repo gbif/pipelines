@@ -211,8 +211,40 @@ public class OccurrenceJsonConverterTest {
         GrscicollRecord.newBuilder().setId("1").setInstitutionMatch(institutionMatch).build();
     gr.getIssues().getIssueList().add(OccurrenceIssue.INSTITUTION_MATCH_FUZZY.name());
 
+    // State
+    Multimedia stillImage = new Multimedia();
+    stillImage.setType(MediaType.StillImage.name());
+    stillImage.setFormat("image/jpeg");
+    stillImage.setLicense("somelicense");
+
+    Multimedia movingImage = new Multimedia();
+    movingImage.setType(MediaType.MovingImage.name());
+    movingImage.setFormat("video/mp4");
+    movingImage.setLicense("somelicense");
+
+    MultimediaRecord mmr =
+        MultimediaRecord.newBuilder()
+            .setId("777")
+            .setMultimediaItems(Arrays.asList(stillImage, movingImage))
+            .build();
+
     // When
-    ObjectNode result = OccurrenceJsonConverter.toJson(mr, er, tmr, lr, tr, br, gr);
+    ObjectNode result = OccurrenceJsonConverter.toJson(mr, er, tmr, lr, tr, br, gr, mmr);
+    String result2 =
+        AvroOccurrenceJsonConverter.builder()
+            .basicRecord(br)
+            .metadataRecord(mr)
+            .extendedRecord(er)
+            .temporalRecord(tmr)
+            .locationRecord(lr)
+            .taxonRecord(tr)
+            .grscicollRecord(gr)
+            .multimediaRecord(mmr)
+            .build()
+            .convert()
+            .toString();
+
+    assertEquals(result.toString(), result2);
 
     // Should
     assertTrue(JsonValidationUtils.isValid(result.toString()));

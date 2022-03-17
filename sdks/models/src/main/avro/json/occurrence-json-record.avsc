@@ -198,7 +198,7 @@
       {"name":"eventDateSingle","type":["null","string"],"default":null,"doc":""},
       {"name":"issuess","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"notIssues","type":{"type":"array","items":"string"},"default":[],"doc":""},
-      {"name":"extensions","type":["null","string"],"default":null,"doc":""},
+      {"name":"extensions","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"gbifClassification","type":["null","GbifClassification"],"default":null,"doc":""},
       {"name":"mediaTypes","type":["null","string"],"default":null,"doc":""},
       {"name":"mediaLicenses","type":["null","string"],"default":null,"doc":""},
