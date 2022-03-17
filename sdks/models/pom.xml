@@ -63,7 +63,7 @@
               <testOutputDirectory>../demo/src/main/java/test/java-generated/</testOutputDirectory>
               <imports>
                 <import>${project.basedir}/src/main/avro/issue-record.avsc</import>
-                <import>${project.basedir}/src/main/avro/common-json-record.avsc</import>
+                <import>${project.basedir}/src/main/avro/json/common-json-record.avsc</import>
               </imports>
             </configuration>
           </execution>
