@@ -1,12 +1,13 @@
 package org.gbif.pipelines.core.converters;
 
-import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
-
-import java.util.List;
-import java.util.Map.Entry;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
-import lombok.Builder;
-import lombok.extern.slf4j.Slf4j;
+import java.util.stream.Stream;
+
+import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -16,10 +17,14 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
+import org.gbif.pipelines.io.avro.grscicoll.Match;
 import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
-import org.gbif.pipelines.io.avro.json.VerbatimRecord;
 
-@SuppressWarnings("FallThrough")
+import lombok.Builder;
+import lombok.extern.slf4j.Slf4j;
+
+import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
+
 @Slf4j
 @Builder
 public class AvroOccurrenceJsonConverter {
@@ -45,6 +50,7 @@ public class AvroOccurrenceJsonConverter {
     mapGrscicollRecord(builder);
     mapMultimediaRecord(builder);
     mapExtendedRecord(builder);
+    mapIssues(builder);
 
     return builder.build();
   }
@@ -52,7 +58,57 @@ public class AvroOccurrenceJsonConverter {
   private void mapMetadataRecord(OccurrenceJsonRecord.Builder builder) {}
 
   private void mapBasicRecord(OccurrenceJsonRecord.Builder builder) {
+
+    // Simple
     builder.setGbifId(basicRecord.getGbifId());
+    builder.setBasisOfRecord(basicRecord.getBasisOfRecord());
+    builder.setSex(basicRecord.getSex());
+    builder.setIndividualCount(basicRecord.getIndividualCount());
+    builder.setTypeStatus(basicRecord.getTypeStatus());
+    builder.setTypifiedName(basicRecord.getTypifiedName());
+    builder.setSampleSizeValue(basicRecord.getSampleSizeValue());
+    builder.setSampleSizeUnit(basicRecord.getSampleSizeUnit());
+    builder.setOrganismQuantity(basicRecord.getOrganismQuantity());
+    builder.setOrganismQuantityType(basicRecord.getOrganismQuantityType());
+    builder.setRelativeOrganismQuantity(basicRecord.getRelativeOrganismQuantity());
+    builder.setReferences(basicRecord.getReferences());
+    builder.setIdentifiedBy(basicRecord.getIdentifiedBy());
+    builder.setRecordedBy(basicRecord.getRecordedBy());
+    builder.setOccurrenceStatus(basicRecord.getOccurrenceStatus());
+    builder.setIsClustered(basicRecord.getIsClustered());
+    builder.setDatasetID(basicRecord.getDatasetID());
+    builder.setDatasetName(basicRecord.getDatasetName());
+    builder.setOtherCatalogNumbers(basicRecord.getOtherCatalogNumbers());
+    builder.setPreparations(basicRecord.getPreparations());
+    builder.setSamplingProtocol(basicRecord.getSamplingProtocol());
+
+    // Agent
+    builder.setIdentifiedByIds(JsonConverter.convertAgentList(basicRecord.getIdentifiedByIds()));
+    builder.setRecordedByIds(JsonConverter.convertAgentList(basicRecord.getRecordedByIds()));
+
+    // VocabularyConcept
+    JsonConverter.convertVocabularyConcept(basicRecord.getLifeStage())
+        .ifPresent(builder::setLifeStage);
+    JsonConverter.convertVocabularyConcept(basicRecord.getEstablishmentMeans())
+        .ifPresent(builder::setEstablishmentMeans);
+    JsonConverter.convertVocabularyConcept(basicRecord.getDegreeOfEstablishment())
+        .ifPresent(builder::setDegreeOfEstablishment);
+    JsonConverter.convertVocabularyConcept(basicRecord.getPathway()).ifPresent(builder::setPathway);
+
+    // License
+    JsonConverter.convertLicense(basicRecord.getLicense()).ifPresent(builder::setLicense);
+
+    // Multivalue fields
+    JsonConverter.convertToMultivalue(basicRecord.getRecordedBy())
+        .ifPresent(builder::setRecordedByJoined);
+    JsonConverter.convertToMultivalue(basicRecord.getIdentifiedBy())
+        .ifPresent(builder::setIdentifiedByJoined);
+    JsonConverter.convertToMultivalue(basicRecord.getPreparations())
+        .ifPresent(builder::setPreparationsJoined);
+    JsonConverter.convertToMultivalue(basicRecord.getSamplingProtocol())
+        .ifPresent(builder::setSamplingProtocolJoined);
+    JsonConverter.convertToMultivalue(basicRecord.getOtherCatalogNumbers())
+        .ifPresent(builder::setOtherCatalogNumbersJoined);
   }
 
   private void mapTemporalRecord(OccurrenceJsonRecord.Builder builder) {}
@@ -61,14 +117,27 @@ public class AvroOccurrenceJsonConverter {
 
   private void mapTaxonRecord(OccurrenceJsonRecord.Builder builder) {}
 
-  private void mapGrscicollRecord(OccurrenceJsonRecord.Builder builder) {}
+  private void mapGrscicollRecord(OccurrenceJsonRecord.Builder builder) {
+
+    Optional.ofNullable(grscicollRecord.getInstitutionMatch())
+        .map(Match::getKey)
+        .ifPresent(builder::setInstitutionKey);
+
+    Optional.ofNullable(grscicollRecord.getCollectionMatch())
+        .map(Match::getKey)
+        .ifPresent(builder::setCollectionKey);
+  }
 
   private void mapMultimediaRecord(OccurrenceJsonRecord.Builder builder) {}
 
   private void mapExtendedRecord(OccurrenceJsonRecord.Builder builder) {
 
     builder.setId(extendedRecord.getId());
+    builder.setAll(JsonConverter.convertAll(extendedRecord));
+    builder.setExtensions(JsonConverter.convertExtenstions(extendedRecord));
+    builder.setVerbatim(JsonConverter.convertVerbatimRecord(extendedRecord));
 
+    // Set raw as indexed
     extractOptValue(extendedRecord, DwcTerm.recordNumber).ifPresent(builder::setRecordNumber);
     extractOptValue(extendedRecord, DwcTerm.organismID).ifPresent(builder::setOrganismId);
     extractOptValue(extendedRecord, DwcTerm.eventID).ifPresent(builder::setEventId);
@@ -77,22 +146,27 @@ public class AvroOccurrenceJsonConverter {
     extractOptValue(extendedRecord, DwcTerm.collectionCode).ifPresent(builder::setCollectionCode);
     extractOptValue(extendedRecord, DwcTerm.catalogNumber).ifPresent(builder::setCatalogNumber);
     extractOptValue(extendedRecord, DwcTerm.occurrenceID).ifPresent(builder::setOccurrenceId);
+  }
 
-    // Set extensions list
-    List<String> extensions =
-        extendedRecord.getExtensions().entrySet().stream()
-            .filter(e -> e.getValue() != null && !e.getValue().isEmpty())
-            .map(Entry::getKey)
-            .distinct()
-            .collect(Collectors.toList());
-    builder.setExtensions(extensions);
+  private void mapIssues(OccurrenceJsonRecord.Builder builder) {
+    Set<String> issues =
+        Stream.of(
+                metadataRecord,
+                basicRecord,
+                temporalRecord,
+                locationRecord,
+                taxonRecord,
+                grscicollRecord,
+                multimediaRecord)
+            .flatMap(x -> x.getIssues().getIssueList().stream())
+            .collect(Collectors.toSet());
+    builder.setIssuess(new ArrayList<>(issues));
 
-    // Verbatim data
-    VerbatimRecord verbatimRecord =
-        VerbatimRecord.newBuilder()
-            .setCoreTerms(extendedRecord.getCoreTerms())
-            .setExtensions(extendedRecord.getExtensions())
-            .build();
-    builder.setVerbatim(verbatimRecord);
+    Set<String> notIssues =
+        Arrays.stream(OccurrenceIssue.values())
+            .map(Enum::name)
+            .filter(x -> !issues.contains(x))
+            .collect(Collectors.toSet());
+    builder.setNotIssues(new ArrayList<>(notIssues));
   }
 }
