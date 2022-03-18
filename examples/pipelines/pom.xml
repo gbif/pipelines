@@ -167,6 +167,11 @@
       <groupId>org.gbif.pipelines</groupId>
       <artifactId>keygen</artifactId>
     </dependency>
+    <dependency>
+      <groupId>au.org.ala</groupId>
+      <artifactId>pipelines</artifactId>
+      <version>2.11.9-SNAPSHOT</version>
+    </dependency>
 
     <!-- GBIF -->
     <dependency>
