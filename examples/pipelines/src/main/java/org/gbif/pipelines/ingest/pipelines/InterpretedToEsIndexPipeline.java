@@ -103,6 +103,7 @@ public class InterpretedToEsIndexPipeline {
     UnaryOperator<String> pathFn =
         t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
 
+    options.setAppName("Event indexing of " + options.getDatasetId());
     Pipeline p = pipelinesFn.apply(options);
 
     log.info("Adding step 2: Creating transformations");
