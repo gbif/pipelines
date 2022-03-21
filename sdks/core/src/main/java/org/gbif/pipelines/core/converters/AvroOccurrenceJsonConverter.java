@@ -1,13 +1,11 @@
 package org.gbif.pipelines.core.converters;
 
-import java.util.ArrayList;
+import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
+
 import java.util.Arrays;
 import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import org.gbif.api.vocabulary.OccurrenceIssue;
+import lombok.Builder;
+import lombok.extern.slf4j.Slf4j;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -19,11 +17,6 @@ import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.io.avro.grscicoll.Match;
 import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
-
-import lombok.Builder;
-import lombok.extern.slf4j.Slf4j;
-
-import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 
 @Slf4j
 @Builder
@@ -55,7 +48,21 @@ public class AvroOccurrenceJsonConverter {
     return builder.build();
   }
 
-  private void mapMetadataRecord(OccurrenceJsonRecord.Builder builder) {}
+  private void mapMetadataRecord(OccurrenceJsonRecord.Builder builder) {
+    builder.setCrawlId(metadataRecord.getCrawlId());
+    builder.setDatasetKey(metadataRecord.getDatasetKey());
+    builder.setDatasetTitle(metadataRecord.getDatasetTitle());
+    builder.setDatasetPublishingCountry(metadataRecord.getDatasetPublishingCountry());
+    builder.setEndorsingNodeKey(metadataRecord.getEndorsingNodeKey());
+    builder.setInstallationKey(metadataRecord.getInstallationKey());
+    builder.setHostingOrganizationKey(metadataRecord.getHostingOrganizationKey());
+    builder.setNetworkKeys(metadataRecord.getNetworkKeys());
+    builder.setProgrammeAcronym(metadataRecord.getProgrammeAcronym());
+    builder.setProjectId(metadataRecord.getProjectId());
+    builder.setProtocol(metadataRecord.getProtocol());
+    builder.setPublisherTitle(metadataRecord.getPublisherTitle());
+    builder.setPublishingOrganizationKey(metadataRecord.getPublishingOrganizationKey());
+  }
 
   private void mapBasicRecord(OccurrenceJsonRecord.Builder builder) {
 
@@ -149,24 +156,16 @@ public class AvroOccurrenceJsonConverter {
   }
 
   private void mapIssues(OccurrenceJsonRecord.Builder builder) {
-    Set<String> issues =
-        Stream.of(
-                metadataRecord,
-                basicRecord,
-                temporalRecord,
-                locationRecord,
-                taxonRecord,
-                grscicollRecord,
-                multimediaRecord)
-            .flatMap(x -> x.getIssues().getIssueList().stream())
-            .collect(Collectors.toSet());
-    builder.setIssuess(new ArrayList<>(issues));
-
-    Set<String> notIssues =
-        Arrays.stream(OccurrenceIssue.values())
-            .map(Enum::name)
-            .filter(x -> !issues.contains(x))
-            .collect(Collectors.toSet());
-    builder.setNotIssues(new ArrayList<>(notIssues));
+    JsonConverter.mapIssues(
+        Arrays.asList(
+            metadataRecord,
+            basicRecord,
+            temporalRecord,
+            locationRecord,
+            taxonRecord,
+            grscicollRecord,
+            multimediaRecord),
+        builder::setIssuess,
+        builder::setNotIssues);
   }
 }

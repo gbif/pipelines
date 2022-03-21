@@ -1,5 +1,6 @@
 package org.gbif.pipelines.core.converters;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -11,20 +12,21 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.License;
+import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.utils.ModelUtils;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.Issues;
 import org.gbif.pipelines.io.avro.json.AgentIdentifier;
 import org.gbif.pipelines.io.avro.json.VerbatimRecord;
 import org.gbif.pipelines.io.avro.json.VocabularyConcept;
-
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 class JsonConverter {
@@ -120,5 +122,21 @@ class JsonConverter {
             .setConcept(concepts.getConcept())
             .setLineage(concepts.getLineage())
             .build());
+  }
+
+  protected static void mapIssues(
+      List<Issues> records, Consumer<List<String>> issueFn, Consumer<List<String>> notIssueFn) {
+    Set<String> issues =
+        records.stream()
+            .flatMap(x -> x.getIssues().getIssueList().stream())
+            .collect(Collectors.toSet());
+    issueFn.accept(new ArrayList<>(issues));
+
+    Set<String> notIssues =
+        Arrays.stream(OccurrenceIssue.values())
+            .map(Enum::name)
+            .filter(x -> !issues.contains(x))
+            .collect(Collectors.toSet());
+    notIssueFn.accept(new ArrayList<>(notIssues));
   }
 }
