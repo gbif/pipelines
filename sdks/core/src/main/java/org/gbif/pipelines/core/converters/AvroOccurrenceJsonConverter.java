@@ -12,10 +12,13 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
+import org.gbif.pipelines.io.avro.Rank;
+import org.gbif.pipelines.io.avro.RankedName;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.io.avro.grscicoll.Match;
+import org.gbif.pipelines.io.avro.json.GbifClassification;
 import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
 
 @Slf4j
@@ -118,11 +121,121 @@ public class AvroOccurrenceJsonConverter {
         .ifPresent(builder::setOtherCatalogNumbersJoined);
   }
 
-  private void mapTemporalRecord(OccurrenceJsonRecord.Builder builder) {}
+  private void mapTemporalRecord(OccurrenceJsonRecord.Builder builder) {
 
-  private void mapLocationRecord(OccurrenceJsonRecord.Builder builder) {}
+    builder.setYear(temporalRecord.getYear());
+    builder.setMonth(temporalRecord.getMonth());
+    builder.setDay(temporalRecord.getDay());
+    builder.setStartDayOfYear(temporalRecord.getStartDayOfYear());
+    builder.setEndDayOfYear(temporalRecord.getEndDayOfYear());
+    builder.setModified(temporalRecord.getModified());
+    builder.setDateIdentified(temporalRecord.getDateIdentified());
 
-  private void mapTaxonRecord(OccurrenceJsonRecord.Builder builder) {}
+    JsonConverter.convertEventDate(temporalRecord.getEventDate()).ifPresent(builder::setEventDate);
+    JsonConverter.convertEventDateSingle(temporalRecord).ifPresent(builder::setEventDateSingle);
+  }
+
+  private void mapLocationRecord(OccurrenceJsonRecord.Builder builder) {
+
+    builder.setContinent(locationRecord.getContinent());
+    builder.setContinent(locationRecord.getContinent());
+    builder.setWaterBody(locationRecord.getWaterBody());
+    builder.setCountry(locationRecord.getCountry());
+    builder.setCountryCode(locationRecord.getCountryCode());
+    builder.setPublishingCountry(locationRecord.getPublishingCountry());
+    builder.setStateProvince(locationRecord.getStateProvince());
+    builder.setMinimumElevationInMeters(locationRecord.getMinimumElevationInMeters());
+    builder.setMaximumElevationInMeters(locationRecord.getMaximumElevationInMeters());
+    builder.setElevation(locationRecord.getElevation());
+    builder.setElevationAccuracy(locationRecord.getElevationAccuracy());
+    builder.setMinimumDepthInMeters(locationRecord.getMinimumDepthInMeters());
+    builder.setMaximumDepthInMeters(locationRecord.getMaximumDepthInMeters());
+    builder.setCoordinateUncertaintyInMeters(locationRecord.getCoordinateUncertaintyInMeters());
+    builder.setCoordinatePrecision(locationRecord.getCoordinatePrecision());
+    builder.setHasCoordinate(locationRecord.getHasCoordinate());
+    builder.setRepatriated(locationRecord.getRepatriated());
+    builder.setHasGeospatialIssue(locationRecord.getHasGeospatialIssue());
+    builder.setLocality(locationRecord.getLocality());
+    builder.setFootprintWKT(locationRecord.getFootprintWKT());
+
+    if (locationRecord.getDecimalLongitude() != null
+        && locationRecord.getDecimalLatitude() != null) {
+      builder.setDecimalLatitude(locationRecord.getDecimalLatitude());
+      builder.setDecimalLongitude(locationRecord.getDecimalLongitude());
+      // geo_point
+      builder.setCoordinates(
+          JsonConverter.convertCoordinates(
+              locationRecord.getDecimalLongitude(), locationRecord.getDecimalLatitude()));
+      // geo_shape
+      builder.setScoordinates(
+          JsonConverter.convertScoordinates(
+              locationRecord.getDecimalLongitude(), locationRecord.getDecimalLatitude()));
+    }
+
+    JsonConverter.convertGadm(locationRecord.getGadm()).ifPresent(builder::setGadm);
+  }
+
+  private void mapTaxonRecord(OccurrenceJsonRecord.Builder builder) {
+
+    GbifClassification.Builder gbifClassificationBuilder =
+        GbifClassification.newBuilder()
+            .setAcceptedUsage(JsonConverter.convertRankedName(taxonRecord.getAcceptedUsage()))
+            .setSynonym(taxonRecord.getSynonym())
+            .setUsage(JsonConverter.convertRankedName(taxonRecord.getUsage()))
+            .setUsageParsedName(JsonConverter.convertParsedName(taxonRecord.getUsageParsedName()))
+            .setIucnRedListCategoryCode(taxonRecord.getIucnRedListCategoryCode())
+            .setDiagnostics(JsonConverter.convertDiagnostic(taxonRecord.getDiagnostics()))
+            .setClassification(JsonConverter.convertRankedNames(taxonRecord.getClassification()))
+            .setTaxonKey(JsonConverter.convertTaxonKey(taxonRecord));
+
+    JsonConverter.convertGenericName(taxonRecord)
+        .ifPresent(gbifClassificationBuilder.getUsageParsedName()::setGenericName);
+
+    JsonConverter.convertClassificationPath(taxonRecord)
+        .ifPresent(gbifClassificationBuilder::setClassificationPath);
+
+    // Classification
+    if (taxonRecord.getClassification() != null && !taxonRecord.getClassification().isEmpty()) {
+      for (RankedName rankedName : taxonRecord.getClassification()) {
+        Rank rank = rankedName.getRank();
+        switch (rank) {
+          case KINGDOM:
+            gbifClassificationBuilder.setKingdom(rank.name());
+            gbifClassificationBuilder.setKingdomKey(rankedName.getKey());
+            break;
+          case PHYLUM:
+            gbifClassificationBuilder.setPhylum(rank.name());
+            gbifClassificationBuilder.setPhylumKey(rankedName.getKey());
+            break;
+          case CLASS:
+            gbifClassificationBuilder.setClass$(rank.name());
+            gbifClassificationBuilder.setClassKey(rankedName.getKey());
+            break;
+          case ORDER:
+            gbifClassificationBuilder.setOrder(rank.name());
+            gbifClassificationBuilder.setOrderKey(rankedName.getKey());
+            break;
+          case FAMILY:
+            gbifClassificationBuilder.setFamily(rank.name());
+            gbifClassificationBuilder.setFamilyKey(rankedName.getKey());
+            break;
+          case GENUS:
+            gbifClassificationBuilder.setGenus(rank.name());
+            gbifClassificationBuilder.setGenusKey(rankedName.getKey());
+            break;
+          case SPECIES:
+            gbifClassificationBuilder.setSpecies(rank.name());
+            gbifClassificationBuilder.setSpeciesKey(rankedName.getKey());
+            break;
+          default:
+            // NOP
+        }
+      }
+    }
+
+    // Set main GbifClassification
+    builder.setGbifClassification(gbifClassificationBuilder.build());
+  }
 
   private void mapGrscicollRecord(OccurrenceJsonRecord.Builder builder) {
 
@@ -135,7 +248,12 @@ public class AvroOccurrenceJsonConverter {
         .ifPresent(builder::setCollectionKey);
   }
 
-  private void mapMultimediaRecord(OccurrenceJsonRecord.Builder builder) {}
+  private void mapMultimediaRecord(OccurrenceJsonRecord.Builder builder) {
+
+    builder.setMultimediaItems(JsonConverter.convertMultimediaList(multimediaRecord));
+    builder.setMediaTypes(JsonConverter.convertMultimediaType(multimediaRecord));
+    builder.setMediaLicenses(JsonConverter.convertMultimediaLicense(multimediaRecord));
+  }
 
   private void mapExtendedRecord(OccurrenceJsonRecord.Builder builder) {
 

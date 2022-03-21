@@ -39,7 +39,8 @@
       {"name":"level0Name","type":["null","string"],"default":null,"doc":"http://rs.gbif.org/terms/gadm/3.0/level0Name"},
       {"name":"level1Name","type":["null","string"],"default":null,"doc":"http://rs.gbif.org/terms/gadm/3.0/level1Name"},
       {"name":"level2Name","type":["null","string"],"default":null,"doc":"http://rs.gbif.org/terms/gadm/3.0/level2Name"},
-      {"name":"level3Name","type":["null","string"],"default":null,"doc":"http://rs.gbif.org/terms/gadm/3.0/level3Name"}
+      {"name":"level3Name","type":["null","string"],"default":null,"doc":"http://rs.gbif.org/terms/gadm/3.0/level3Name"},
+      {"name":"gids","type":{"type":"array","items":"string"},"default":null,"doc":""}
     ]
   },
   {
@@ -59,6 +60,37 @@
     "fields":[
       {"name":"type","type":["null","string"]},
       {"name":"value","type":["null","string"]}
+    ]
+  },
+  {
+    "name":"Multimedia",
+    "namespace":"org.gbif.pipelines.io.avro.json",
+    "type":"record",
+    "fields":[
+      {"name": "type", "type":[ "null", "string"], "default":null, "doc": "http://purl.org/dc/terms/type"},
+      {"name": "format", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/format"},
+      {"name": "identifier", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/identifier"},
+      {"name": "audience", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/audience"},
+      {"name": "contributor", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/contributor"},
+      {"name": "created", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/created"},
+      {"name": "creator", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/creator"},
+      {"name": "description", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/description"},
+      {"name": "license", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/license"},
+      {"name": "publisher", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/publisher"},
+      {"name": "references", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/references"},
+      {"name": "rightsHolder", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/rightsHolder"},
+      {"name": "source", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/source"},
+      {"name": "title", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/title"},
+      {"name": "datasetId", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/datasetID"}
+    ]
+  },
+  {
+    "name":"Coordinates",
+    "namespace":"org.gbif.pipelines.io.avro.json",
+    "type":"record",
+    "fields":[
+      {"name":"lon","type":"double"},
+      {"name":"lat","type":"double"}
     ]
   }
 ]

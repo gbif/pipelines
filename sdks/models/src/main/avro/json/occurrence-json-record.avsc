@@ -11,17 +11,6 @@
     ]
   },
   {
-    "name":"Classification",
-    "namespace":"org.gbif.pipelines.io.avro.json",
-    "type":"record",
-    "fields":[
-      {"name":"key","type":["null","int"],"default":null,"doc":""},
-      {"name":"name","type":["null","string"],"default":null,"doc":""},
-      {"name":"rank","type":["null","string"],"default":null,"doc":""},
-      {"name":"synonym","type":["null","boolean"],"default":null}
-    ]
-  },
-  {
     "name":"Diagnostic",
     "namespace":"org.gbif.pipelines.io.avro.json",
     "type":"record",
@@ -76,7 +65,7 @@
     "doc":"GBIF taxonomy classification",
     "fields":[
       {"name":"acceptedUsage","type":["null","RankedName"],"default":null,"doc":""},
-      {"name":"classification","type":{ "type":"array","items":"Classification" },"default":[]},
+      {"name":"classification","type":{ "type":"array","items":"RankedName" },"default":[]},
       {"name":"classificationPath","type":["null","string"],"default":null,"doc":""},
       {"name":"diagnostics","type":["null","Diagnostic"],"default":null,"doc":""},
       {"name":"kingdom","type":["null","string"],"default":null,"doc":""},
@@ -95,7 +84,7 @@
       {"name":"speciesKey","type":["null","int"],"default":null,"doc":""},
       {"name":"synonym","type":["null","boolean"],"default":null,"doc":""},
       {"name":"taxonID","type":["null","string"],"default":null,"doc":""},
-      {"name":"taxonKey","type":{"type":"array","items":"string"},"default":[]},
+      {"name":"taxonKey","type":{"type":"array","items":"int"},"default":[]},
       {"name":"usage","type":["null","RankedName"],"default":null,"doc":""},
       {"name":"usageParsedName","type":["null","ParsedName"],"default":null,"doc":""},
       {"name":"verbatimScientificName","type":["null","string"],"default":null,"doc":""},
@@ -187,11 +176,15 @@
       {"name":"maximumDistanceAboveSurfaceInMeters","type":["null","double"],"default":null,"doc":""},
       {"name":"coordinateUncertaintyInMeters","type":["null","double"],"default":null,"doc":""},
       {"name":"coordinatePrecision","type":["null","double"],"default":null,"doc":""},
-      {"name":"coordinates","type":["null","string"],"default":null,"doc":""},
+      {"name":"coordinates","type":["null","Coordinates"],"default":null,"doc":""},
       {"name":"scoordinates","type":["null","string"],"default":null,"doc":""},
       {"name":"decimalLatitude","type":["null","double"],"default":null,"doc":""},
       {"name":"decimalLongitude","type":["null","double"],"default":null,"doc":""},
       {"name":"gadm","type":["null","GadmFeatures"],"default":null,"doc":""},
+      {"name":"hasCoordinate","type":["null","boolean"],"default":null,"doc":""},
+      {"name":"repatriated","type":["null","boolean"],"default":null,"doc":""},
+      {"name":"hasGeospatialIssue","type":["null","boolean"],"default":null,"doc":""},
+      {"name":"footprintWKT","type":["null","string"],"default":null,"doc":""},
       {"name":"year","type":["null","int"],"default":null,"doc":""},
       {"name":"month","type":["null","int"],"default":null,"doc":""},
       {"name":"day","type":["null","int"],"default":null,"doc":""},
@@ -205,9 +198,9 @@
       {"name":"notIssues","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"extensions","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"gbifClassification","type":["null","GbifClassification"],"default":null,"doc":""},
-      {"name":"mediaTypes","type":["null","string"],"default":null,"doc":""},
-      {"name":"mediaLicenses","type":["null","string"],"default":null,"doc":""},
-      {"name":"multimediaItems","type":["null","string"],"default":null,"doc":""},
+      {"name":"mediaTypes","type":{"type":"array","items":"string"},"default":null,"doc":""},
+      {"name":"mediaLicenses","type":{"type":"array","items":"string"},"default":null,"doc":""},
+      {"name":"multimediaItems","type":{"type":"array","items":"Multimedia"},"default":null,"doc":""},
       {"name":"verbatim","type":["null","VerbatimRecord"],"default":null,"doc":""}
     ]
   }

@@ -1,5 +1,8 @@
 package org.gbif.pipelines.core.converters;
 
+import com.google.common.base.Strings;
+import java.time.LocalDateTime;
+import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -20,11 +23,26 @@ import lombok.NoArgsConstructor;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.OccurrenceIssue;
+import org.gbif.common.parsers.date.TemporalAccessorUtils;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
 import org.gbif.pipelines.core.utils.ModelUtils;
+import org.gbif.pipelines.core.utils.TemporalConverter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.Issues;
+import org.gbif.pipelines.io.avro.Multimedia;
+import org.gbif.pipelines.io.avro.MultimediaRecord;
+import org.gbif.pipelines.io.avro.TaxonRecord;
+import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.json.AgentIdentifier;
+import org.gbif.pipelines.io.avro.json.Authorship;
+import org.gbif.pipelines.io.avro.json.Coordinates;
+import org.gbif.pipelines.io.avro.json.Diagnostic;
+import org.gbif.pipelines.io.avro.json.EventDate;
+import org.gbif.pipelines.io.avro.json.GadmFeatures;
+import org.gbif.pipelines.io.avro.json.ParsedName;
+import org.gbif.pipelines.io.avro.json.ParsedName.Builder;
+import org.gbif.pipelines.io.avro.json.RankedName;
 import org.gbif.pipelines.io.avro.json.VerbatimRecord;
 import org.gbif.pipelines.io.avro.json.VocabularyConcept;
 
@@ -138,5 +156,207 @@ class JsonConverter {
             .filter(x -> !issues.contains(x))
             .collect(Collectors.toSet());
     notIssueFn.accept(new ArrayList<>(notIssues));
+  }
+
+  public static List<String> convertMultimediaType(MultimediaRecord multimediaRecord) {
+    return multimediaRecord.getMultimediaItems().stream()
+        .map(Multimedia::getType)
+        .filter(type -> !Strings.isNullOrEmpty(type))
+        .distinct()
+        .collect(Collectors.toList());
+  }
+
+  public static List<String> convertMultimediaLicense(MultimediaRecord multimediaRecord) {
+    return multimediaRecord.getMultimediaItems().stream()
+        .map(Multimedia::getLicense)
+        .filter(license -> !Strings.isNullOrEmpty(license))
+        .distinct()
+        .collect(Collectors.toList());
+  }
+
+  public static List<org.gbif.pipelines.io.avro.json.Multimedia> convertMultimediaList(
+      MultimediaRecord multimediaRecord) {
+    return multimediaRecord.getMultimediaItems().stream()
+        .map(
+            m ->
+                org.gbif.pipelines.io.avro.json.Multimedia.newBuilder()
+                    .setType(m.getType())
+                    .setFormat(m.getFormat())
+                    .setIdentifier(m.getIdentifier())
+                    .setAudience(m.getAudience())
+                    .setContributor(m.getContributor())
+                    .setCreated(m.getCreated())
+                    .setCreator(m.getCreator())
+                    .setDescription(m.getDescription())
+                    .setLicense(m.getLicense())
+                    .setPublisher(m.getPublisher())
+                    .setReferences(m.getReferences())
+                    .setRightsHolder(m.getRightsHolder())
+                    .setSource(m.getSource())
+                    .setTitle(m.getTitle())
+                    .setDatasetId(m.getDatasetId())
+                    .build())
+        .collect(Collectors.toList());
+  }
+
+  public static Optional<EventDate> convertEventDate(
+      org.gbif.pipelines.io.avro.EventDate eventDate) {
+    return Optional.ofNullable(eventDate)
+        .map(ed -> EventDate.newBuilder().setGte(ed.getGte()).setLte(ed.getLte()).build());
+  }
+
+  public static Optional<String> convertEventDateSingle(TemporalRecord temporalRecord) {
+    Optional<TemporalAccessor> tao;
+    if (temporalRecord.getEventDate() != null && temporalRecord.getEventDate().getGte() != null) {
+      tao =
+          Optional.ofNullable(temporalRecord.getEventDate().getGte())
+              .map(StringToDateFunctions.getStringToTemporalAccessor());
+    } else {
+      tao =
+          TemporalConverter.from(
+              temporalRecord.getYear(), temporalRecord.getMonth(), temporalRecord.getDay());
+    }
+    return tao.map(ta -> TemporalAccessorUtils.toEarliestLocalDateTime(ta, true))
+        .map(LocalDateTime::toString);
+  }
+
+  public static String convertScoordinates(Double lon, Double lat) {
+    return "POINT (" + lon + " " + lat + ")";
+  }
+
+  public static Coordinates convertCoordinates(Double lon, Double lat) {
+    return Coordinates.newBuilder().setLat(lat).setLon(lon).build();
+  }
+
+  /** All GADM GIDs as an array, for searching at multiple levels. */
+  public static Optional<GadmFeatures> convertGadm(org.gbif.pipelines.io.avro.GadmFeatures gadm) {
+
+    if (gadm == null) {
+      return Optional.empty();
+    }
+
+    List<String> gids = new ArrayList<>(4);
+    Optional.ofNullable(gadm.getLevel0Gid()).ifPresent(gids::add);
+    Optional.ofNullable(gadm.getLevel1Gid()).ifPresent(gids::add);
+    Optional.ofNullable(gadm.getLevel2Gid()).ifPresent(gids::add);
+    Optional.ofNullable(gadm.getLevel3Gid()).ifPresent(gids::add);
+
+    GadmFeatures gadmFeatures =
+        GadmFeatures.newBuilder()
+            .setLevel0Gid(gadm.getLevel0Gid())
+            .setLevel0Name(gadm.getLevel0Name())
+            .setLevel1Gid(gadm.getLevel1Gid())
+            .setLevel1Name(gadm.getLevel1Name())
+            .setLevel2Gid(gadm.getLevel2Gid())
+            .setLevel2Name(gadm.getLevel2Name())
+            .setLevel3Gid(gadm.getLevel3Gid())
+            .setLevel3Name(gadm.getLevel3Name())
+            .setGids(gids)
+            .build();
+
+    return Optional.of(gadmFeatures);
+  }
+
+  public static RankedName convertRankedName(org.gbif.pipelines.io.avro.RankedName rankedName) {
+    return RankedName.newBuilder()
+        .setName(rankedName.getName())
+        .setRank(rankedName.getRank() != null ? rankedName.getRank().name() : null)
+        .setKey(rankedName.getKey())
+        .build();
+  }
+
+  public static List<RankedName> convertRankedNames(
+      List<org.gbif.pipelines.io.avro.RankedName> rankedNames) {
+    return rankedNames.stream().map(JsonConverter::convertRankedName).collect(Collectors.toList());
+  }
+
+  public static ParsedName convertParsedName(org.gbif.pipelines.io.avro.ParsedName parsedName) {
+    Builder builder =
+        ParsedName.newBuilder()
+            .setAbbreviated(parsedName.getAbbreviated())
+            .setAutonym(parsedName.getAutonym())
+            .setBinomial(parsedName.getBinomial())
+            .setCandidatus(parsedName.getCandidatus())
+            .setCode(parsedName.getCode() != null ? parsedName.getCode().name() : null)
+            .setDoubtful(parsedName.getDoubtful())
+            .setGenus(parsedName.getGenus())
+            .setIncomplete(parsedName.getIncomplete())
+            .setIndetermined(parsedName.getIndetermined())
+            .setInfraspecificEpithet(parsedName.getInfraspecificEpithet())
+            .setNotho(parsedName.getNotho() != null ? parsedName.getNotho().name() : null)
+            .setRank(parsedName.getRank() != null ? parsedName.getRank().name() : null)
+            .setSpecificEpithet(parsedName.getSpecificEpithet())
+            .setState(parsedName.getState() != null ? parsedName.getState().name() : null)
+            .setTerminalEpithet(parsedName.getTerminalEpithet())
+            .setTrinomial(parsedName.getTrinomial())
+            .setType(parsedName.getType() != null ? parsedName.getType().name() : null)
+            .setUninomial(parsedName.getUninomial());
+
+    convertAuthorship(parsedName.getBasionymAuthorship()).ifPresent(builder::setBasionymAuthorship);
+    convertAuthorship(parsedName.getCombinationAuthorship())
+        .ifPresent(builder::setCombinationAuthorship);
+
+    return builder.build();
+  }
+
+  public static Optional<Authorship> convertAuthorship(
+      org.gbif.pipelines.io.avro.Authorship authorship) {
+    return Optional.ofNullable(authorship)
+        .map(
+            a ->
+                Authorship.newBuilder()
+                    .setAuthors(a.getAuthors())
+                    .setExAuthors(a.getAuthors())
+                    .setEmpty(a.getEmpty())
+                    .setYear(a.getYear())
+                    .build());
+  }
+
+  public static Diagnostic convertDiagnostic(org.gbif.pipelines.io.avro.Diagnostic diagnostic) {
+    return Diagnostic.newBuilder()
+        .setMatchType(diagnostic.getMatchType() != null ? diagnostic.getMatchType().name() : null)
+        .setNote(diagnostic.getNote())
+        .setStatus(diagnostic.getStatus() != null ? diagnostic.getStatus().name() : null)
+        .build();
+  }
+
+  public static Optional<String> convertGenericName(TaxonRecord taxonRecord) {
+    return Optional.ofNullable(taxonRecord.getUsageParsedName())
+        .map(upn -> upn.getGenus() != null ? upn.getGenus() : upn.getUninomial());
+  }
+
+  /**
+   * Creates a set of fields" kingdomKey, phylumKey, classKey, etc for convenient aggregation/facets
+   */
+  public static Optional<String> convertClassificationPath(TaxonRecord taxonRecord) {
+    if (taxonRecord.getClassification() == null
+        || taxonRecord.getClassification().isEmpty()
+        || taxonRecord.getUsage() == null) {
+      return Optional.empty();
+    }
+
+    String pathJoiner =
+        taxonRecord.getClassification().stream()
+            .filter(rankedName -> taxonRecord.getUsage().getRank() != rankedName.getRank())
+            .map(rankedName -> rankedName.getKey().toString())
+            .collect(Collectors.joining("_"));
+
+    return Optional.of("_" + pathJoiner);
+  }
+
+  public static List<Integer> convertTaxonKey(TaxonRecord taxonRecord) {
+    if (taxonRecord.getClassification() == null || taxonRecord.getClassification().isEmpty()) {
+      return Collections.emptyList();
+    }
+
+    Set<Integer> taxonKey = new HashSet<>();
+
+    Optional.ofNullable(taxonRecord.getUsage()).ifPresent(s -> taxonKey.add(s.getKey()));
+    Optional.ofNullable(taxonRecord.getAcceptedUsage()).ifPresent(au -> taxonKey.add(au.getKey()));
+
+    taxonRecord.getClassification().stream()
+        .map(org.gbif.pipelines.io.avro.RankedName::getKey)
+        .forEach(taxonKey::add);
+    return new ArrayList<>(taxonKey);
   }
 }
