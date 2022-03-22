@@ -63,6 +63,9 @@ public class AvroPostprocessMojo extends AbstractMojo {
   @Parameter(property = "postprocess.defaultPackage", defaultValue = DEFAULT)
   private String defaultPackage;
 
+  @Parameter(property = "postprocess.skipPackage", defaultValue = "json")
+  private String skipPackage;
+
   @Override
   public void execute() throws MojoExecutionException {
 
@@ -71,7 +74,9 @@ public class AvroPostprocessMojo extends AbstractMojo {
       boolean interfaceRecordExist = createRecordInterface();
 
       if (!interfaceIssueExist && !interfaceRecordExist) {
-        searchClasses().forEach(this::modifyFile);
+        searchClasses().stream()
+            .filter(p -> !p.toString().contains(skipPackage))
+            .forEach(this::modifyFile);
       }
     }
   }

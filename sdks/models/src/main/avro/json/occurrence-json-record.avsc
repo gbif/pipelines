@@ -25,10 +25,11 @@
     "namespace":"org.gbif.pipelines.io.avro.json",
     "type":"record",
     "fields":[
-      {"name":"authors","type":[ "null", { "type":"array","items":"string"} ]},
-      {"name":"empty","type":["null","boolean"],"default":null,"doc":""},
-      {"name":"exAuthors","type":[ "null", {"type":"array","items":"string"} ]},
-      {"name":"year","type":[ "null","string" ]}]
+      {"name":"authors","type":{"type":"array","items":"string"},"default":[]},
+      {"name":"exAuthors","type":{"type":"array","items":"string"},"default":[]},
+      {"name":"empty","type":["null","boolean"],"default":null},
+      {"name":"year","type":[ "null","string" ],"default":null}
+    ]
   },
   {
     "name":"ParsedName",
@@ -194,7 +195,7 @@
       {"name":"modified","type":["null","string"],"default":null,"doc":""},
       {"name":"dateIdentified","type":["null","string"],"default":null,"doc":""},
       {"name":"eventDateSingle","type":["null","string"],"default":null,"doc":""},
-      {"name":"issuess","type":{"type":"array","items":"string"},"default":[],"doc":""},
+      {"name":"issues","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"notIssues","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"extensions","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"gbifClassification","type":["null","GbifClassification"],"default":null,"doc":""},

@@ -26,8 +26,10 @@ import org.gbif.pipelines.io.avro.AgentIdentifier;
 import org.gbif.pipelines.io.avro.Amplification;
 import org.gbif.pipelines.io.avro.AmplificationRecord;
 import org.gbif.pipelines.io.avro.AudubonRecord;
+import org.gbif.pipelines.io.avro.Authorship;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.BlastResult;
+import org.gbif.pipelines.io.avro.Diagnostic;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.GadmFeatures;
@@ -40,8 +42,15 @@ import org.gbif.pipelines.io.avro.MediaType;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.Multimedia;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
+import org.gbif.pipelines.io.avro.NamePart;
+import org.gbif.pipelines.io.avro.NameRank;
+import org.gbif.pipelines.io.avro.NameType;
+import org.gbif.pipelines.io.avro.NomCode;
+import org.gbif.pipelines.io.avro.ParsedName;
 import org.gbif.pipelines.io.avro.Rank;
 import org.gbif.pipelines.io.avro.RankedName;
+import org.gbif.pipelines.io.avro.State;
+import org.gbif.pipelines.io.avro.Status;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.VocabularyConcept;
@@ -55,7 +64,7 @@ public class OccurrenceJsonConverterTest {
   @Test
   public void jsonFromSpecificRecordBaseTest() {
     // State
-    final String multivalue1 = "mv\u001Eà1";
+    final String multivalue1 = "mv;à1";
     final String expectedMultivalue1 = "mv,à1";
     final String multivalue2 = "mv2";
 
@@ -64,14 +73,36 @@ public class OccurrenceJsonConverterTest {
     erMap.put("http://purl.org/dc/terms/remark", "{\"something\":1}{\"something\":1}");
     erMap.put(DwcTerm.recordedBy.qualifiedName(), multivalue1 + "|" + multivalue2);
     erMap.put(DwcTerm.footprintWKT.qualifiedName(), "footprintWKTfootprintWKTfootprintWKT");
+    erMap.put(DwcTerm.catalogNumber.qualifiedName(), "catalogNumber");
+    erMap.put(DwcTerm.collectionCode.qualifiedName(), "collectionCode");
+    erMap.put(DwcTerm.eventID.qualifiedName(), "eventId");
+    erMap.put(DwcTerm.recordNumber.qualifiedName(), "recordNumber");
+    erMap.put(DwcTerm.occurrenceID.qualifiedName(), "occurrenceID");
+    erMap.put(DwcTerm.organismID.qualifiedName(), "organismID");
+    erMap.put(DwcTerm.parentEventID.qualifiedName(), "parentEventId");
+    erMap.put(DwcTerm.institutionCode.qualifiedName(), "institutionCode");
+    erMap.put(DwcTerm.scientificName.qualifiedName(), "scientificName");
+    erMap.put(DwcTerm.taxonID.qualifiedName(), "taxonID");
+    erMap.put(DwcTerm.scientificName.qualifiedName(), "scientificName");
 
     MetadataRecord mr =
         MetadataRecord.newBuilder()
             .setId("777")
             .setCrawlId(1)
+            .setLastCrawled(1647941576L)
             .setDatasetKey("datatesKey")
             .setLicense(License.CC0_1_0.name())
             .setHostingOrganizationKey("hostOrgKey")
+            .setDatasetPublishingCountry("setDatasetPublishingCountry")
+            .setDatasetTitle("setDatasetTitle")
+            .setEndorsingNodeKey("setEndorsingNodeKey")
+            .setProgrammeAcronym("setProgrammeAcronym")
+            .setProjectId("setProjectId")
+            .setProtocol("setProtocol")
+            .setPublisherTitle("setPublisherTitle")
+            .setPublishingOrganizationKey("setPublishingOrganizationKey")
+            .setInstallationKey("setInstallationKey")
+            .setNetworkKeys(Collections.singletonList("setNetworkKeys"))
             .setMachineTags(
                 Collections.singletonList(
                     MachineTag.newBuilder()
@@ -96,6 +127,7 @@ public class OccurrenceJsonConverterTest {
         BasicRecord.newBuilder()
             .setId("777")
             .setGbifId(111L)
+            .setBasisOfRecord("setBasisOfRecord")
             .setOrganismQuantity(2d)
             .setOrganismQuantityType("OrganismQuantityType")
             .setSampleSizeUnit("SampleSizeUnit")
@@ -103,6 +135,10 @@ public class OccurrenceJsonConverterTest {
             .setRelativeOrganismQuantity(0.001d)
             .setLicense(License.CC_BY_NC_4_0.name())
             .setOccurrenceStatus(OccurrenceStatus.PRESENT.name())
+            .setSex("sex")
+            .setReferences("setReferences")
+            .setTypifiedName("setTypifiedName")
+            .setIndividualCount(10)
             .setLifeStage(
                 VocabularyConcept.newBuilder()
                     .setConcept("bla1")
@@ -155,6 +191,9 @@ public class OccurrenceJsonConverterTest {
             .setMonth(1)
             .setYear(2011)
             .setStartDayOfYear(1)
+            .setEndDayOfYear(365)
+            .setModified("11-11-2021")
+            .setDateIdentified("10-01-2020")
             .build();
     tmr.getIssues().getIssueList().add(OccurrenceIssue.ZERO_COORDINATE.name());
 
@@ -168,6 +207,25 @@ public class OccurrenceJsonConverterTest {
             .setDecimalLongitude(2d)
             .setContinent("something{something}")
             .setLocality("[68]")
+            .setCoordinatePrecision(2d)
+            .setCoordinateUncertaintyInMeters(3d)
+            .setDepth(4d)
+            .setDepthAccuracy(4d)
+            .setElevation(5d)
+            .setPublishingCountry("setPublishingCountry")
+            .setElevationAccuracy(5d)
+            .setFootprintWKT("setFootprintWKT")
+            .setHasCoordinate(true)
+            .setHasGeospatialIssue(false)
+            .setMaximumDepthInMeters(7d)
+            .setMaximumElevationInMeters(8d)
+            .setMaximumDistanceAboveSurfaceInMeters(9d)
+            .setMinimumDepthInMeters(7d)
+            .setMinimumElevationInMeters(8d)
+            .setMinimumDistanceAboveSurfaceInMeters(9d)
+            .setWaterBody("setWaterBody")
+            .setStateProvince("setStateProvince")
+            .setRepatriated(true)
             .setGadm(
                 GadmFeatures.newBuilder()
                     .setLevel0Gid("XAA_1")
@@ -176,21 +234,60 @@ public class OccurrenceJsonConverterTest {
                     .setLevel1Name("Countyshire")
                     .setLevel2Gid("XAA.1.2_1")
                     .setLevel2Name("Muni Cipality")
+                    .setLevel3Gid("XAA.1.3_1")
+                    .setLevel3Name("Level 3 Cipality")
                     .build())
             .build();
     lr.getIssues().getIssueList().add(OccurrenceIssue.BASIS_OF_RECORD_INVALID.name());
 
     List<RankedName> rankedNameList = new ArrayList<>();
+
     RankedName synonym =
         RankedName.newBuilder().setKey(10).setName("synonym").setRank(Rank.SPECIES).build();
     RankedName au =
         RankedName.newBuilder().setKey(11).setName("accepted usage").setRank(Rank.SPECIES).build();
-    RankedName name =
-        RankedName.newBuilder().setKey(1).setName("Name").setRank(Rank.CHEMOFORM).build();
+
+    RankedName name1 =
+        RankedName.newBuilder().setKey(1).setName("KINGDOM").setRank(Rank.KINGDOM).build();
     RankedName name2 =
-        RankedName.newBuilder().setKey(2).setName("Name2").setRank(Rank.ABERRATION).build();
-    rankedNameList.add(name);
+        RankedName.newBuilder().setKey(2).setName("PHYLUM").setRank(Rank.PHYLUM).build();
+    RankedName name3 =
+        RankedName.newBuilder().setKey(3).setName("CLASS").setRank(Rank.CLASS).build();
+    RankedName name4 =
+        RankedName.newBuilder().setKey(4).setName("ORDER").setRank(Rank.ORDER).build();
+    RankedName name5 =
+        RankedName.newBuilder().setKey(5).setName("FAMILY").setRank(Rank.FAMILY).build();
+    RankedName name6 =
+        RankedName.newBuilder().setKey(6).setName("GENUS").setRank(Rank.GENUS).build();
+    RankedName name7 =
+        RankedName.newBuilder().setKey(7).setName("SPECIES").setRank(Rank.SPECIES).build();
+
+    rankedNameList.add(name1);
     rankedNameList.add(name2);
+    rankedNameList.add(name3);
+    rankedNameList.add(name4);
+    rankedNameList.add(name5);
+    rankedNameList.add(name6);
+    rankedNameList.add(name7);
+
+    Diagnostic diagnostic =
+        Diagnostic.newBuilder()
+            .setStatus(Status.ACCEPTED)
+            .setConfidence(1)
+            .setMatchType(org.gbif.pipelines.io.avro.MatchType.EXACT)
+            .setNote("note")
+            .setLineage(Collections.singletonList("setLineage"))
+            .setAlternatives(
+                Collections.singletonList(
+                    TaxonRecord.newBuilder()
+                        .setId("888")
+                        .setAcceptedUsage(au)
+                        .setClassification(rankedNameList)
+                        .setUsage(synonym)
+                        .setSynonym(true)
+                        .setIucnRedListCategoryCode("setIucnRedListCategoryCode")
+                        .build()))
+            .build();
 
     TaxonRecord tr =
         TaxonRecord.newBuilder()
@@ -198,6 +295,44 @@ public class OccurrenceJsonConverterTest {
             .setAcceptedUsage(au)
             .setClassification(rankedNameList)
             .setUsage(synonym)
+            .setSynonym(true)
+            .setIucnRedListCategoryCode("setIucnRedListCategoryCode")
+            .setUsageParsedName(
+                ParsedName.newBuilder()
+                    .setGenus("setGenus")
+                    .setUninomial("setUninomial")
+                    .setAbbreviated(false)
+                    .setAutonym(false)
+                    .setBinomial(false)
+                    .setCandidatus(false)
+                    .setCode(NomCode.BACTERIAL)
+                    .setDoubtful(false)
+                    .setIncomplete(false)
+                    .setIndetermined(false)
+                    .setInfraspecificEpithet("infraspecificEpithet")
+                    .setRank(NameRank.ABERRATION)
+                    .setNotho(NamePart.GENERIC)
+                    .setSpecificEpithet("specificEpithet")
+                    .setState(State.COMPLETE)
+                    .setTerminalEpithet("terminalEpithet")
+                    .setTrinomial(false)
+                    .setType(NameType.HYBRID_FORMULA)
+                    .setBasionymAuthorship(
+                        Authorship.newBuilder()
+                            .setYear("2000")
+                            .setAuthors(Collections.singletonList("setBasionymAuthorship"))
+                            .setExAuthors(Collections.singletonList("setBasionymAuthorship"))
+                            .setEmpty(true)
+                            .build())
+                    .setCombinationAuthorship(
+                        Authorship.newBuilder()
+                            .setYear("2020")
+                            .setAuthors(Collections.singletonList("setCombinationAuthorship"))
+                            .setExAuthors(Collections.singletonList("setCombinationAuthorship"))
+                            .setEmpty(false)
+                            .build())
+                    .build())
+            .setDiagnostics(diagnostic)
             .build();
 
     // grscicoll
@@ -207,8 +342,18 @@ public class OccurrenceJsonConverterTest {
             .setMatchType(MatchType.FUZZY.name())
             .build();
 
+    Match collectionMatch =
+        Match.newBuilder()
+            .setKey("23123123123123122312313123123122312231")
+            .setMatchType(MatchType.EXACT.name())
+            .build();
+
     GrscicollRecord gr =
-        GrscicollRecord.newBuilder().setId("1").setInstitutionMatch(institutionMatch).build();
+        GrscicollRecord.newBuilder()
+            .setId("1")
+            .setInstitutionMatch(institutionMatch)
+            .setCollectionMatch(collectionMatch)
+            .build();
     gr.getIssues().getIssueList().add(OccurrenceIssue.INSTITUTION_MATCH_FUZZY.name());
 
     // State
@@ -216,11 +361,35 @@ public class OccurrenceJsonConverterTest {
     stillImage.setType(MediaType.StillImage.name());
     stillImage.setFormat("image/jpeg");
     stillImage.setLicense("somelicense");
+    stillImage.setIdentifier("identifier");
+    stillImage.setAudience("audience");
+    stillImage.setContributor("contributor");
+    stillImage.setCreated("created");
+    stillImage.setCreator("creator");
+    stillImage.setDescription("description");
+    stillImage.setPublisher("publisher");
+    stillImage.setReferences("references");
+    stillImage.setRightsHolder("rightsHolder");
+    stillImage.setSource("source");
+    stillImage.setTitle("title");
+    stillImage.setDatasetId("datasetId");
 
     Multimedia movingImage = new Multimedia();
     movingImage.setType(MediaType.MovingImage.name());
     movingImage.setFormat("video/mp4");
     movingImage.setLicense("somelicense");
+    movingImage.setIdentifier("identifier");
+    movingImage.setAudience("audience");
+    movingImage.setContributor("contributor");
+    movingImage.setCreated("created");
+    movingImage.setCreator("creator");
+    movingImage.setDescription("description");
+    movingImage.setPublisher("publisher");
+    movingImage.setReferences("references");
+    movingImage.setRightsHolder("rightsHolder");
+    movingImage.setSource("source");
+    movingImage.setTitle("title");
+    movingImage.setDatasetId("datasetId");
 
     MultimediaRecord mmr =
         MultimediaRecord.newBuilder()
@@ -232,14 +401,14 @@ public class OccurrenceJsonConverterTest {
     ObjectNode result = OccurrenceJsonConverter.toJson(mr, er, tmr, lr, tr, br, gr, mmr);
     String result2 =
         AvroOccurrenceJsonConverter.builder()
-            .basicRecord(br)
-            .metadataRecord(mr)
-            .extendedRecord(er)
-            .temporalRecord(tmr)
-            .locationRecord(lr)
-            .taxonRecord(tr)
-            .grscicollRecord(gr)
-            .multimediaRecord(mmr)
+            .basic(br)
+            .metadata(mr)
+            .verbatim(er)
+            .temporal(tmr)
+            .location(lr)
+            .taxon(tr)
+            .grscicoll(gr)
+            .multimedia(mmr)
             .build()
             .convert()
             .toString();

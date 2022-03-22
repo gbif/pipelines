@@ -131,7 +131,7 @@ class JsonConverter {
 
   protected static VerbatimRecord convertVerbatimRecord(ExtendedRecord extendedRecord) {
     return VerbatimRecord.newBuilder()
-        .setCoreTerms(extendedRecord.getCoreTerms())
+        .setCore(extendedRecord.getCoreTerms())
         .setExtensions(extendedRecord.getExtensions())
         .build();
   }

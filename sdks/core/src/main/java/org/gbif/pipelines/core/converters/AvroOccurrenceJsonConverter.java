@@ -25,14 +25,14 @@ import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
 @Builder
 public class AvroOccurrenceJsonConverter {
 
-  private final MetadataRecord metadataRecord;
-  private final BasicRecord basicRecord;
-  private final TemporalRecord temporalRecord;
-  private final LocationRecord locationRecord;
-  private final TaxonRecord taxonRecord;
-  private final GrscicollRecord grscicollRecord;
-  private final MultimediaRecord multimediaRecord;
-  private final ExtendedRecord extendedRecord;
+  private final MetadataRecord metadata;
+  private final BasicRecord basic;
+  private final TemporalRecord temporal;
+  private final LocationRecord location;
+  private final TaxonRecord taxon;
+  private final GrscicollRecord grscicoll;
+  private final MultimediaRecord multimedia;
+  private final ExtendedRecord verbatim;
 
   public OccurrenceJsonRecord convert() {
 
@@ -54,191 +54,189 @@ public class AvroOccurrenceJsonConverter {
   }
 
   private void mapMetadataRecord(OccurrenceJsonRecord.Builder builder) {
-    builder.setCrawlId(metadataRecord.getCrawlId());
-    builder.setDatasetKey(metadataRecord.getDatasetKey());
-    builder.setDatasetTitle(metadataRecord.getDatasetTitle());
-    builder.setDatasetPublishingCountry(metadataRecord.getDatasetPublishingCountry());
-    builder.setEndorsingNodeKey(metadataRecord.getEndorsingNodeKey());
-    builder.setInstallationKey(metadataRecord.getInstallationKey());
-    builder.setHostingOrganizationKey(metadataRecord.getHostingOrganizationKey());
-    builder.setNetworkKeys(metadataRecord.getNetworkKeys());
-    builder.setProgrammeAcronym(metadataRecord.getProgrammeAcronym());
-    builder.setProjectId(metadataRecord.getProjectId());
-    builder.setProtocol(metadataRecord.getProtocol());
-    builder.setPublisherTitle(metadataRecord.getPublisherTitle());
-    builder.setPublishingOrganizationKey(metadataRecord.getPublishingOrganizationKey());
+    builder
+        .setCrawlId(metadata.getCrawlId())
+        .setDatasetKey(metadata.getDatasetKey())
+        .setDatasetTitle(metadata.getDatasetTitle())
+        .setDatasetPublishingCountry(metadata.getDatasetPublishingCountry())
+        .setEndorsingNodeKey(metadata.getEndorsingNodeKey())
+        .setInstallationKey(metadata.getInstallationKey())
+        .setHostingOrganizationKey(metadata.getHostingOrganizationKey())
+        .setNetworkKeys(metadata.getNetworkKeys())
+        .setProgrammeAcronym(metadata.getProgrammeAcronym())
+        .setProjectId(metadata.getProjectId())
+        .setProtocol(metadata.getProtocol())
+        .setPublisherTitle(metadata.getPublisherTitle())
+        .setPublishingOrganizationKey(metadata.getPublishingOrganizationKey());
 
-    JsonConverter.convertToDate(metadataRecord.getLastCrawled()).ifPresent(builder::setLastCrawled);
+    JsonConverter.convertToDate(metadata.getLastCrawled()).ifPresent(builder::setLastCrawled);
   }
 
   private void mapBasicRecord(OccurrenceJsonRecord.Builder builder) {
 
     // Simple
-    builder.setGbifId(basicRecord.getGbifId());
-    builder.setBasisOfRecord(basicRecord.getBasisOfRecord());
-    builder.setSex(basicRecord.getSex());
-    builder.setIndividualCount(basicRecord.getIndividualCount());
-    builder.setTypeStatus(basicRecord.getTypeStatus());
-    builder.setTypifiedName(basicRecord.getTypifiedName());
-    builder.setSampleSizeValue(basicRecord.getSampleSizeValue());
-    builder.setSampleSizeUnit(basicRecord.getSampleSizeUnit());
-    builder.setOrganismQuantity(basicRecord.getOrganismQuantity());
-    builder.setOrganismQuantityType(basicRecord.getOrganismQuantityType());
-    builder.setRelativeOrganismQuantity(basicRecord.getRelativeOrganismQuantity());
-    builder.setReferences(basicRecord.getReferences());
-    builder.setIdentifiedBy(basicRecord.getIdentifiedBy());
-    builder.setRecordedBy(basicRecord.getRecordedBy());
-    builder.setOccurrenceStatus(basicRecord.getOccurrenceStatus());
-    builder.setIsClustered(basicRecord.getIsClustered());
-    builder.setDatasetID(basicRecord.getDatasetID());
-    builder.setDatasetName(basicRecord.getDatasetName());
-    builder.setOtherCatalogNumbers(basicRecord.getOtherCatalogNumbers());
-    builder.setPreparations(basicRecord.getPreparations());
-    builder.setSamplingProtocol(basicRecord.getSamplingProtocol());
+    builder.setGbifId(basic.getGbifId());
+    builder.setBasisOfRecord(basic.getBasisOfRecord());
+    builder.setSex(basic.getSex());
+    builder.setIndividualCount(basic.getIndividualCount());
+    builder.setTypeStatus(basic.getTypeStatus());
+    builder.setTypifiedName(basic.getTypifiedName());
+    builder.setSampleSizeValue(basic.getSampleSizeValue());
+    builder.setSampleSizeUnit(basic.getSampleSizeUnit());
+    builder.setOrganismQuantity(basic.getOrganismQuantity());
+    builder.setOrganismQuantityType(basic.getOrganismQuantityType());
+    builder.setRelativeOrganismQuantity(basic.getRelativeOrganismQuantity());
+    builder.setReferences(basic.getReferences());
+    builder.setIdentifiedBy(basic.getIdentifiedBy());
+    builder.setRecordedBy(basic.getRecordedBy());
+    builder.setOccurrenceStatus(basic.getOccurrenceStatus());
+    builder.setIsClustered(basic.getIsClustered());
+    builder.setDatasetID(basic.getDatasetID());
+    builder.setDatasetName(basic.getDatasetName());
+    builder.setOtherCatalogNumbers(basic.getOtherCatalogNumbers());
+    builder.setPreparations(basic.getPreparations());
+    builder.setSamplingProtocol(basic.getSamplingProtocol());
 
     // Agent
-    builder.setIdentifiedByIds(JsonConverter.convertAgentList(basicRecord.getIdentifiedByIds()));
-    builder.setRecordedByIds(JsonConverter.convertAgentList(basicRecord.getRecordedByIds()));
+    builder.setIdentifiedByIds(JsonConverter.convertAgentList(basic.getIdentifiedByIds()));
+    builder.setRecordedByIds(JsonConverter.convertAgentList(basic.getRecordedByIds()));
 
     // VocabularyConcept
-    JsonConverter.convertVocabularyConcept(basicRecord.getLifeStage())
-        .ifPresent(builder::setLifeStage);
-    JsonConverter.convertVocabularyConcept(basicRecord.getEstablishmentMeans())
+    JsonConverter.convertVocabularyConcept(basic.getLifeStage()).ifPresent(builder::setLifeStage);
+    JsonConverter.convertVocabularyConcept(basic.getEstablishmentMeans())
         .ifPresent(builder::setEstablishmentMeans);
-    JsonConverter.convertVocabularyConcept(basicRecord.getDegreeOfEstablishment())
+    JsonConverter.convertVocabularyConcept(basic.getDegreeOfEstablishment())
         .ifPresent(builder::setDegreeOfEstablishment);
-    JsonConverter.convertVocabularyConcept(basicRecord.getPathway()).ifPresent(builder::setPathway);
+    JsonConverter.convertVocabularyConcept(basic.getPathway()).ifPresent(builder::setPathway);
 
     // License
-    JsonConverter.convertLicense(basicRecord.getLicense()).ifPresent(builder::setLicense);
+    JsonConverter.convertLicense(basic.getLicense()).ifPresent(builder::setLicense);
 
     // Multivalue fields
-    JsonConverter.convertToMultivalue(basicRecord.getRecordedBy())
+    JsonConverter.convertToMultivalue(basic.getRecordedBy())
         .ifPresent(builder::setRecordedByJoined);
-    JsonConverter.convertToMultivalue(basicRecord.getIdentifiedBy())
+    JsonConverter.convertToMultivalue(basic.getIdentifiedBy())
         .ifPresent(builder::setIdentifiedByJoined);
-    JsonConverter.convertToMultivalue(basicRecord.getPreparations())
+    JsonConverter.convertToMultivalue(basic.getPreparations())
         .ifPresent(builder::setPreparationsJoined);
-    JsonConverter.convertToMultivalue(basicRecord.getSamplingProtocol())
+    JsonConverter.convertToMultivalue(basic.getSamplingProtocol())
         .ifPresent(builder::setSamplingProtocolJoined);
-    JsonConverter.convertToMultivalue(basicRecord.getOtherCatalogNumbers())
+    JsonConverter.convertToMultivalue(basic.getOtherCatalogNumbers())
         .ifPresent(builder::setOtherCatalogNumbersJoined);
   }
 
   private void mapTemporalRecord(OccurrenceJsonRecord.Builder builder) {
 
-    builder.setYear(temporalRecord.getYear());
-    builder.setMonth(temporalRecord.getMonth());
-    builder.setDay(temporalRecord.getDay());
-    builder.setStartDayOfYear(temporalRecord.getStartDayOfYear());
-    builder.setEndDayOfYear(temporalRecord.getEndDayOfYear());
-    builder.setModified(temporalRecord.getModified());
-    builder.setDateIdentified(temporalRecord.getDateIdentified());
+    builder
+        .setYear(temporal.getYear())
+        .setMonth(temporal.getMonth())
+        .setDay(temporal.getDay())
+        .setStartDayOfYear(temporal.getStartDayOfYear())
+        .setEndDayOfYear(temporal.getEndDayOfYear())
+        .setModified(temporal.getModified())
+        .setDateIdentified(temporal.getDateIdentified());
 
-    JsonConverter.convertEventDate(temporalRecord.getEventDate()).ifPresent(builder::setEventDate);
-    JsonConverter.convertEventDateSingle(temporalRecord).ifPresent(builder::setEventDateSingle);
+    JsonConverter.convertEventDate(temporal.getEventDate()).ifPresent(builder::setEventDate);
+    JsonConverter.convertEventDateSingle(temporal).ifPresent(builder::setEventDateSingle);
   }
 
   private void mapLocationRecord(OccurrenceJsonRecord.Builder builder) {
 
-    builder.setContinent(locationRecord.getContinent());
-    builder.setContinent(locationRecord.getContinent());
-    builder.setWaterBody(locationRecord.getWaterBody());
-    builder.setCountry(locationRecord.getCountry());
-    builder.setCountryCode(locationRecord.getCountryCode());
-    builder.setPublishingCountry(locationRecord.getPublishingCountry());
-    builder.setStateProvince(locationRecord.getStateProvince());
-    builder.setMinimumElevationInMeters(locationRecord.getMinimumElevationInMeters());
-    builder.setMaximumElevationInMeters(locationRecord.getMaximumElevationInMeters());
-    builder.setElevation(locationRecord.getElevation());
-    builder.setElevationAccuracy(locationRecord.getElevationAccuracy());
-    builder.setMinimumDepthInMeters(locationRecord.getMinimumDepthInMeters());
-    builder.setMaximumDepthInMeters(locationRecord.getMaximumDepthInMeters());
-    builder.setCoordinateUncertaintyInMeters(locationRecord.getCoordinateUncertaintyInMeters());
-    builder.setCoordinatePrecision(locationRecord.getCoordinatePrecision());
-    builder.setHasCoordinate(locationRecord.getHasCoordinate());
-    builder.setRepatriated(locationRecord.getRepatriated());
-    builder.setHasGeospatialIssue(locationRecord.getHasGeospatialIssue());
-    builder.setLocality(locationRecord.getLocality());
-    builder.setFootprintWKT(locationRecord.getFootprintWKT());
+    builder
+        .setContinent(location.getContinent())
+        .setWaterBody(location.getWaterBody())
+        .setCountry(location.getCountry())
+        .setCountryCode(location.getCountryCode())
+        .setPublishingCountry(location.getPublishingCountry())
+        .setStateProvince(location.getStateProvince())
+        .setMinimumElevationInMeters(location.getMinimumElevationInMeters())
+        .setMaximumElevationInMeters(location.getMaximumElevationInMeters())
+        .setElevation(location.getElevation())
+        .setElevationAccuracy(location.getElevationAccuracy())
+        .setDepth(location.getDepth())
+        .setDepthAccuracy(location.getDepthAccuracy())
+        .setMinimumDepthInMeters(location.getMinimumDepthInMeters())
+        .setMaximumDepthInMeters(location.getMaximumDepthInMeters())
+        .setMaximumDistanceAboveSurfaceInMeters(location.getMaximumDistanceAboveSurfaceInMeters())
+        .setMinimumDistanceAboveSurfaceInMeters(location.getMinimumDistanceAboveSurfaceInMeters())
+        .setCoordinateUncertaintyInMeters(location.getCoordinateUncertaintyInMeters())
+        .setCoordinatePrecision(location.getCoordinatePrecision())
+        .setHasCoordinate(location.getHasCoordinate())
+        .setRepatriated(location.getRepatriated())
+        .setHasGeospatialIssue(location.getHasGeospatialIssue())
+        .setLocality(location.getLocality())
+        .setFootprintWKT(location.getFootprintWKT());
 
-    if (locationRecord.getDecimalLongitude() != null
-        && locationRecord.getDecimalLatitude() != null) {
-      builder.setDecimalLatitude(locationRecord.getDecimalLatitude());
-      builder.setDecimalLongitude(locationRecord.getDecimalLongitude());
-      // geo_point
-      builder.setCoordinates(
-          JsonConverter.convertCoordinates(
-              locationRecord.getDecimalLongitude(), locationRecord.getDecimalLatitude()));
-      // geo_shape
-      builder.setScoordinates(
-          JsonConverter.convertScoordinates(
-              locationRecord.getDecimalLongitude(), locationRecord.getDecimalLatitude()));
+    if (location.getDecimalLongitude() != null && location.getDecimalLatitude() != null) {
+      builder
+          .setDecimalLatitude(location.getDecimalLatitude())
+          .setDecimalLongitude(location.getDecimalLongitude())
+          // geo_point
+          .setCoordinates(
+              JsonConverter.convertCoordinates(
+                  location.getDecimalLongitude(), location.getDecimalLatitude()))
+          // geo_shape
+          .setScoordinates(
+              JsonConverter.convertScoordinates(
+                  location.getDecimalLongitude(), location.getDecimalLatitude()));
     }
 
-    JsonConverter.convertGadm(locationRecord.getGadm()).ifPresent(builder::setGadm);
+    JsonConverter.convertGadm(location.getGadm()).ifPresent(builder::setGadm);
   }
 
   private void mapTaxonRecord(OccurrenceJsonRecord.Builder builder) {
 
-    GbifClassification.Builder gbifClassificationBuilder =
+    GbifClassification.Builder classificationBuilder =
         GbifClassification.newBuilder()
-            .setAcceptedUsage(JsonConverter.convertRankedName(taxonRecord.getAcceptedUsage()))
-            .setSynonym(taxonRecord.getSynonym())
-            .setUsage(JsonConverter.convertRankedName(taxonRecord.getUsage()))
-            .setIucnRedListCategoryCode(taxonRecord.getIucnRedListCategoryCode())
-            .setClassification(JsonConverter.convertRankedNames(taxonRecord.getClassification()))
-            .setTaxonKey(JsonConverter.convertTaxonKey(taxonRecord));
+            .setAcceptedUsage(JsonConverter.convertRankedName(taxon.getAcceptedUsage()))
+            .setSynonym(taxon.getSynonym())
+            .setUsage(JsonConverter.convertRankedName(taxon.getUsage()))
+            .setIucnRedListCategoryCode(taxon.getIucnRedListCategoryCode())
+            .setClassification(JsonConverter.convertRankedNames(taxon.getClassification()))
+            .setTaxonKey(JsonConverter.convertTaxonKey(taxon));
 
-    JsonConverter.convertDiagnostic(taxonRecord.getDiagnostics())
-        .ifPresent(gbifClassificationBuilder::setDiagnostics);
+    JsonConverter.convertDiagnostic(taxon.getDiagnostics())
+        .ifPresent(classificationBuilder::setDiagnostics);
 
-    JsonConverter.convertParsedName(taxonRecord.getUsageParsedName())
-        .ifPresent(gbifClassificationBuilder::setUsageParsedName);
+    JsonConverter.convertParsedName(taxon.getUsageParsedName())
+        .ifPresent(classificationBuilder::setUsageParsedName);
 
-    JsonConverter.convertGenericName(taxonRecord)
+    JsonConverter.convertGenericName(taxon)
         .ifPresent(
             genereicName -> {
-              if (gbifClassificationBuilder.getUsageParsedName() != null) {
-                gbifClassificationBuilder.getUsageParsedName().setGenericName(genereicName);
+              if (classificationBuilder.getUsageParsedName() != null) {
+                classificationBuilder.getUsageParsedName().setGenericName(genereicName);
               }
             });
 
-    JsonConverter.convertClassificationPath(taxonRecord)
-        .ifPresent(gbifClassificationBuilder::setClassificationPath);
+    JsonConverter.convertClassificationPath(taxon)
+        .ifPresent(classificationBuilder::setClassificationPath);
 
     // Classification
-    if (taxonRecord.getClassification() != null) {
-      for (RankedName rankedName : taxonRecord.getClassification()) {
+    if (taxon.getClassification() != null) {
+      for (RankedName rankedName : taxon.getClassification()) {
         Rank rank = rankedName.getRank();
         switch (rank) {
           case KINGDOM:
-            gbifClassificationBuilder.setKingdom(rank.name());
-            gbifClassificationBuilder.setKingdomKey(rankedName.getKey());
+            classificationBuilder.setKingdom(rank.name()).setKingdomKey(rankedName.getKey());
             break;
           case PHYLUM:
-            gbifClassificationBuilder.setPhylum(rank.name());
-            gbifClassificationBuilder.setPhylumKey(rankedName.getKey());
+            classificationBuilder.setPhylum(rank.name()).setPhylumKey(rankedName.getKey());
             break;
           case CLASS:
-            gbifClassificationBuilder.setClass$(rank.name());
-            gbifClassificationBuilder.setClassKey(rankedName.getKey());
+            classificationBuilder.setClass$(rank.name()).setClassKey(rankedName.getKey());
             break;
           case ORDER:
-            gbifClassificationBuilder.setOrder(rank.name());
-            gbifClassificationBuilder.setOrderKey(rankedName.getKey());
+            classificationBuilder.setOrder(rank.name()).setOrderKey(rankedName.getKey());
             break;
           case FAMILY:
-            gbifClassificationBuilder.setFamily(rank.name());
-            gbifClassificationBuilder.setFamilyKey(rankedName.getKey());
+            classificationBuilder.setFamily(rank.name()).setFamilyKey(rankedName.getKey());
             break;
           case GENUS:
-            gbifClassificationBuilder.setGenus(rank.name());
-            gbifClassificationBuilder.setGenusKey(rankedName.getKey());
+            classificationBuilder.setGenus(rank.name()).setGenusKey(rankedName.getKey());
             break;
           case SPECIES:
-            gbifClassificationBuilder.setSpecies(rank.name());
-            gbifClassificationBuilder.setSpeciesKey(rankedName.getKey());
+            classificationBuilder.setSpecies(rank.name()).setSpeciesKey(rankedName.getKey());
             break;
           default:
             // NOP
@@ -246,69 +244,62 @@ public class AvroOccurrenceJsonConverter {
       }
     }
 
+    // Raw to index classification
+    extractOptValue(verbatim, DwcTerm.taxonID).ifPresent(classificationBuilder::setTaxonID);
+    extractOptValue(verbatim, DwcTerm.scientificName)
+        .ifPresent(classificationBuilder::setVerbatimScientificName);
+
     // Set main GbifClassification
-    builder.setGbifClassification(gbifClassificationBuilder.build());
+    builder.setGbifClassification(classificationBuilder.build());
   }
 
   private void mapGrscicollRecord(OccurrenceJsonRecord.Builder builder) {
 
-    Optional.ofNullable(grscicollRecord.getInstitutionMatch())
+    Optional.ofNullable(grscicoll.getInstitutionMatch())
         .map(Match::getKey)
         .ifPresent(builder::setInstitutionKey);
 
-    Optional.ofNullable(grscicollRecord.getCollectionMatch())
+    Optional.ofNullable(grscicoll.getCollectionMatch())
         .map(Match::getKey)
         .ifPresent(builder::setCollectionKey);
   }
 
   private void mapMultimediaRecord(OccurrenceJsonRecord.Builder builder) {
-
-    builder.setMultimediaItems(JsonConverter.convertMultimediaList(multimediaRecord));
-    builder.setMediaTypes(JsonConverter.convertMultimediaType(multimediaRecord));
-    builder.setMediaLicenses(JsonConverter.convertMultimediaLicense(multimediaRecord));
+    builder
+        .setMultimediaItems(JsonConverter.convertMultimediaList(multimedia))
+        .setMediaTypes(JsonConverter.convertMultimediaType(multimedia))
+        .setMediaLicenses(JsonConverter.convertMultimediaLicense(multimedia));
   }
 
   private void mapExtendedRecord(OccurrenceJsonRecord.Builder builder) {
 
-    builder.setId(extendedRecord.getId());
-    builder.setAll(JsonConverter.convertFieldAll(extendedRecord));
-    builder.setExtensions(JsonConverter.convertExtenstions(extendedRecord));
-    builder.setVerbatim(JsonConverter.convertVerbatimRecord(extendedRecord));
+    builder
+        .setId(verbatim.getId())
+        .setAll(JsonConverter.convertFieldAll(verbatim))
+        .setExtensions(JsonConverter.convertExtenstions(verbatim))
+        .setVerbatim(JsonConverter.convertVerbatimRecord(verbatim));
 
     // Set raw as indexed
-    extractOptValue(extendedRecord, DwcTerm.recordNumber).ifPresent(builder::setRecordNumber);
-    extractOptValue(extendedRecord, DwcTerm.organismID).ifPresent(builder::setOrganismId);
-    extractOptValue(extendedRecord, DwcTerm.eventID).ifPresent(builder::setEventId);
-    extractOptValue(extendedRecord, DwcTerm.parentEventID).ifPresent(builder::setParentEventId);
-    extractOptValue(extendedRecord, DwcTerm.institutionCode).ifPresent(builder::setInstitutionCode);
-    extractOptValue(extendedRecord, DwcTerm.collectionCode).ifPresent(builder::setCollectionCode);
-    extractOptValue(extendedRecord, DwcTerm.catalogNumber).ifPresent(builder::setCatalogNumber);
-    extractOptValue(extendedRecord, DwcTerm.occurrenceID).ifPresent(builder::setOccurrenceId);
+    extractOptValue(verbatim, DwcTerm.recordNumber).ifPresent(builder::setRecordNumber);
+    extractOptValue(verbatim, DwcTerm.organismID).ifPresent(builder::setOrganismId);
+    extractOptValue(verbatim, DwcTerm.eventID).ifPresent(builder::setEventId);
+    extractOptValue(verbatim, DwcTerm.parentEventID).ifPresent(builder::setParentEventId);
+    extractOptValue(verbatim, DwcTerm.institutionCode).ifPresent(builder::setInstitutionCode);
+    extractOptValue(verbatim, DwcTerm.collectionCode).ifPresent(builder::setCollectionCode);
+    extractOptValue(verbatim, DwcTerm.catalogNumber).ifPresent(builder::setCatalogNumber);
+    extractOptValue(verbatim, DwcTerm.occurrenceID).ifPresent(builder::setOccurrenceId);
   }
 
   private void mapIssues(OccurrenceJsonRecord.Builder builder) {
     JsonConverter.mapIssues(
-        Arrays.asList(
-            metadataRecord,
-            basicRecord,
-            temporalRecord,
-            locationRecord,
-            taxonRecord,
-            grscicollRecord,
-            multimediaRecord),
-        builder::setIssuess,
+        Arrays.asList(metadata, basic, temporal, location, taxon, grscicoll, multimedia),
+        builder::setIssues,
         builder::setNotIssues);
   }
 
   private void mapCreated(OccurrenceJsonRecord.Builder builder) {
     JsonConverter.getMaxCreationDate(
-            metadataRecord,
-            basicRecord,
-            temporalRecord,
-            locationRecord,
-            taxonRecord,
-            grscicollRecord,
-            multimediaRecord)
+            metadata, basic, temporal, location, taxon, grscicoll, multimedia)
         .ifPresent(builder::setCreated);
   }
 }

@@ -6,7 +6,7 @@
     "type":"record",
     "doc":"A container for an extended DwC record (core plus extension data for a single record)",
     "fields":[
-      {"name":"coreTerms","doc":"The core record terms","default":{},"type":{"type":"map","values":"string"}},
+      {"name":"core","doc":"The core record terms","default":{},"type":{"type":"map","values":"string"}},
       {"name":"extensions","doc":"The extensions records","default":{},"type":{
         "type":"map","values":{
           "type":"array","doc":"The extension records","default":[],"items":{
