@@ -14,7 +14,7 @@ import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
-import org.gbif.pipelines.core.converters.EventJsonConverter;
+import org.gbif.pipelines.core.converters.DeprecatedEventJsonConverter;
 import org.gbif.pipelines.core.converters.MultimediaConverter;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
@@ -119,7 +119,7 @@ public class EventJsonTransform implements Serializable {
             MultimediaRecord mmr = MultimediaConverter.merge(mr, imr, ar);
 
             // Convert
-            String json = EventJsonConverter.toStringJson(mdr, ecr, ir, tr, lr, mmr, er);
+            String json = DeprecatedEventJsonConverter.toStringJson(mdr, ecr, ir, tr, lr, mmr, er);
 
             c.output(json);
 

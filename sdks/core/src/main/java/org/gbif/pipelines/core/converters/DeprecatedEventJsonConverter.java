@@ -2,7 +2,6 @@ package org.gbif.pipelines.core.converters;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.IntNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.base.Strings;
@@ -10,7 +9,6 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.TemporalAccessor;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -20,7 +18,6 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.StringJoiner;
 import java.util.function.BiConsumer;
 import java.util.function.LongFunction;
 import java.util.stream.Collectors;
@@ -29,33 +26,25 @@ import lombok.Builder;
 import lombok.Singular;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificRecordBase;
-import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.date.TemporalAccessorUtils;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwc.terms.GbifInternalTerm;
-import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.TermFactory;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
 import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
 import org.gbif.pipelines.core.utils.ModelUtils;
 import org.gbif.pipelines.core.utils.TemporalConverter;
-import org.gbif.pipelines.io.avro.AmplificationRecord;
-import org.gbif.pipelines.io.avro.BasicRecord;
-import org.gbif.pipelines.io.avro.BlastResult;
+import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.GadmFeatures;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.Issues;
-import org.gbif.pipelines.io.avro.LocationFeatureRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.Multimedia;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.RankedName;
-import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 
 /**
  * Converter for objects to GBIF elasticsearch schema. You can pass any {@link SpecificRecordBase}
@@ -64,13 +53,10 @@ import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
  * <pre>{@code
  * Usage example:
  *
- * BasicRecord br = ...
- * TemporalRecord tmr =  ...
- * LocationRecord lr =  ...
- * TaxonRecord tr =  ...
- * MultimediaRecord mr =  ...
- * ExtendedRecord er =  ...
- * String result = OccurrenceJsonConverter.toStringJson(br, tmr, lr, tr, mr, er);
+ * ExtendedRecord er = ...
+ * IdentifierRecord ir =  ...
+ * EventCoreRecord ecr =  ...
+ * String result = EventCoreJsonConverter.toStringJson(er, ir, ecr);
  *
  * }</pre>
  */
@@ -78,17 +64,10 @@ import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 @Slf4j
 @Builder
 @Deprecated
-public class DeprecatedOccurrenceJsonConverter {
+public class DeprecatedEventJsonConverter {
 
-  private static final Set<String> EXCLUDE_ALL =
-      Collections.singleton(DwcTerm.footprintWKT.qualifiedName());
-
-  private static final Set<String> INCLUDE_EXT_ALL =
-      new HashSet<>(
-          Arrays.asList(
-              Extension.MULTIMEDIA.getRowType(),
-              Extension.AUDUBON.getRowType(),
-              Extension.IMAGE.getRowType()));
+  private static final Set<String> EXCLUDE_ALL = Collections.emptySet();
+  private static final Set<String> INCLUDE_EXT_ALL = Collections.emptySet();
 
   private static final TermFactory TERM_FACTORY = TermFactory.instance();
 
@@ -102,14 +81,11 @@ public class DeprecatedOccurrenceJsonConverter {
           .skipKey(Indexing.MACHINE_TAGS)
           .skipKey(Indexing.CREATED)
           .converter(ExtendedRecord.class, getExtendedRecordConverter())
+          .converter(IdentifierRecord.class, geIdentifierRecordConverter())
           .converter(LocationRecord.class, getLocationRecordConverter())
           .converter(TemporalRecord.class, getTemporalRecordConverter())
-          .converter(TaxonRecord.class, getTaxonomyRecordConverter())
-          .converter(LocationFeatureRecord.class, getLocationFeatureRecordConverter())
-          .converter(AmplificationRecord.class, getAmplificationRecordConverter())
           .converter(MultimediaRecord.class, getMultimediaConverter())
-          .converter(BasicRecord.class, getBasicRecordConverter())
-          .converter(GrscicollRecord.class, getGrscicollRecordConverter());
+          .converter(EventCoreRecord.class, geEventCoreRecordConverter());
 
   @Builder.Default private boolean skipIssues = false;
 
@@ -122,10 +98,7 @@ public class DeprecatedOccurrenceJsonConverter {
    * the new ES record
    */
   public static ObjectNode toJson(SpecificRecordBase... records) {
-    return DeprecatedOccurrenceJsonConverter.builder()
-        .records(Arrays.asList(records))
-        .build()
-        .toJson();
+    return DeprecatedEventJsonConverter.builder().records(Arrays.asList(records)).build().toJson();
   }
 
   /**
@@ -133,7 +106,7 @@ public class DeprecatedOccurrenceJsonConverter {
    * a partial ES record update
    */
   public static ObjectNode toPartialJson(SpecificRecordBase... records) {
-    return DeprecatedOccurrenceJsonConverter.builder()
+    return DeprecatedEventJsonConverter.builder()
         .records(Arrays.asList(records))
         .skipId(false)
         .skipIssues(true)
@@ -193,9 +166,8 @@ public class DeprecatedOccurrenceJsonConverter {
         .orElseGet(
             () ->
                 records.stream()
-                    .filter(
-                        record -> Objects.nonNull(record.getSchema().getField(Indexing.CREATED)))
-                    .map(record -> record.get(Indexing.CREATED))
+                    .filter(r -> Objects.nonNull(r.getSchema().getField(Indexing.CREATED)))
+                    .map(r -> r.get(Indexing.CREATED))
                     .filter(Objects::nonNull)
                     .map(x -> DATE_FN.apply((Long) x))
                     .max(LocalDateTime::compareTo));
@@ -263,14 +235,9 @@ public class DeprecatedOccurrenceJsonConverter {
               Optional.ofNullable(core.get(t.qualifiedName()))
                   .ifPresent(r -> jc.addJsonTextFieldNoCheck(k, r));
 
-      fieldFn.accept(DwcTerm.recordNumber, "recordNumber");
-      fieldFn.accept(DwcTerm.organismID, "organismId");
       fieldFn.accept(DwcTerm.eventID, "eventId");
       fieldFn.accept(DwcTerm.parentEventID, "parentEventId");
       fieldFn.accept(DwcTerm.institutionCode, "institutionCode");
-      fieldFn.accept(DwcTerm.collectionCode, "collectionCode");
-      fieldFn.accept(DwcTerm.catalogNumber, "catalogNumber");
-      fieldFn.accept(DwcTerm.occurrenceID, "occurrenceId");
 
       // Core
       ObjectNode coreNode = GenericJsonConverter.createObjectNode();
@@ -341,22 +308,29 @@ public class DeprecatedOccurrenceJsonConverter {
 
       // Main node
       jc.getMainNode().set("verbatim", verbatimNode);
+    };
+  }
 
-      // Classification verbatim
-      ObjectNode classificationNode =
-          jc.getMainNode().has("gbifClassification")
-              ? (ObjectNode) jc.getMainNode().get("gbifClassification")
-              : GenericJsonConverter.createObjectNode();
-      Optional.ofNullable(coreNode.get(DwcTerm.taxonID.qualifiedName()))
-          .ifPresent(taxonID -> classificationNode.set(DwcTerm.taxonID.simpleName(), taxonID));
-      Optional.ofNullable(coreNode.get(DwcTerm.scientificName.qualifiedName()))
-          .ifPresent(
-              verbatimScientificName ->
-                  classificationNode.set(
-                      GbifTerm.verbatimScientificName.simpleName(), verbatimScientificName));
-      if (!jc.getMainNode().has("gbifClassification") && classificationNode.size() > 0) {
-        jc.addJsonObject("gbifClassification", classificationNode);
+  /**
+   * String converter for {@link EventCoreRecord}, convert an object to specific string view
+   *
+   * <pre>{@code
+   * Result example:
+   *
+   *  //.....more fields
+   *
+   * }</pre>
+   */
+  private BiConsumer<GenericJsonConverter, SpecificRecordBase> geIdentifierRecordConverter() {
+    return (jc, record) -> {
+      IdentifierRecord ir = (IdentifierRecord) record;
+
+      if (!skipId) {
+        jc.addJsonTextFieldNoCheck(Indexing.ID, ir.getId());
       }
+
+      // Fields as a common view - "key": "value"
+      jc.addCommonFields(record);
     };
   }
 
@@ -448,199 +422,6 @@ public class DeprecatedOccurrenceJsonConverter {
 
       // Fields as a common view - "key": "value"
       jc.addCommonFields(record);
-    };
-  }
-
-  /**
-   * String converter for {@link TaxonRecord}, convert an object to specific string view
-   *
-   * <pre>{@code
-   * Result example:
-   *
-   * "gbifKingdom": "Animalia",
-   *  //.....more fields
-   * "usage": {
-   *  "key": 2442896,
-   *  "name": "Actinemys marmorata (Baird & Girard, 1852)",
-   *  "rank": "SPECIES"
-   * },
-   * "classification": [
-   *  {
-   *    "key": 1,
-   *    "name": "Animalia",
-   *    "rank": "KINGDOM"
-   *  },
-   *  //.....more objects
-   * ],
-   * "acceptedUsage": null,
-   * //.....more fields
-   *
-   * }</pre>
-   */
-  private BiConsumer<GenericJsonConverter, SpecificRecordBase> getTaxonomyRecordConverter() {
-    return (jc, record) -> {
-      TaxonRecord trOrg = (TaxonRecord) record;
-      // Copy only the fields that are needed in the Index
-      TaxonRecord.Builder trBuilder =
-          TaxonRecord.newBuilder()
-              .setAcceptedUsage(trOrg.getAcceptedUsage())
-              .setClassification(trOrg.getClassification())
-              .setSynonym(trOrg.getSynonym())
-              .setUsage(trOrg.getUsage())
-              .setUsageParsedName(trOrg.getUsageParsedName())
-              .setDiagnostics(trOrg.getDiagnostics())
-              .setIucnRedListCategoryCode(trOrg.getIucnRedListCategoryCode())
-              .setIssues(null); // Issues are accumulated
-
-      if (!skipId) {
-        jc.addJsonTextFieldNoCheck(Indexing.ID, trOrg.getId());
-      }
-
-      TaxonRecord tr = trBuilder.build();
-
-      // Create a ObjectNode with the specific fields copied from the original record
-      ObjectNode classificationNode =
-          jc.getMainNode().has("gbifClassification")
-              ? (ObjectNode) jc.getMainNode().get("gbifClassification")
-              : GenericJsonConverter.createObjectNode();
-      jc.addCommonFields(tr, classificationNode);
-      List<RankedName> classifications = tr.getClassification();
-      Set<IntNode> taxonKey = new HashSet<>();
-
-      Optional.ofNullable(tr.getUsage()).ifPresent(s -> taxonKey.add(IntNode.valueOf(s.getKey())));
-      Optional.ofNullable(tr.getAcceptedUsage())
-          .ifPresent(au -> taxonKey.add(IntNode.valueOf(au.getKey())));
-
-      if (classifications != null && !classifications.isEmpty()) {
-        // Creates a set of fields" kingdomKey, phylumKey, classKey, etc for convenient
-        // aggregation/facets
-        StringJoiner pathJoiner = new StringJoiner("_");
-        classifications.forEach(
-            rankedName -> {
-              String lwRank = rankedName.getRank().name().toLowerCase();
-              classificationNode.put(lwRank + "Key", rankedName.getKey());
-              classificationNode.put(lwRank, rankedName.getName());
-              taxonKey.add(IntNode.valueOf(rankedName.getKey()));
-              if (Objects.nonNull(tr.getUsage())
-                  && tr.getUsage().getRank() != rankedName.getRank()) {
-                pathJoiner.add(rankedName.getKey().toString());
-              }
-            });
-        classificationNode.put("classificationPath", "_" + pathJoiner.toString());
-        // All key are concatenated to support a single taxonKey field
-        ArrayNode taxonKeyNode = classificationNode.putArray("taxonKey");
-        taxonKeyNode.addAll(taxonKey);
-      }
-
-      Optional.ofNullable(tr.getUsageParsedName())
-          .ifPresent(
-              pn -> { // Required by API V1
-                ObjectNode usageParsedNameNode =
-                    (ObjectNode) classificationNode.get("usageParsedName");
-                usageParsedNameNode.put(
-                    "genericName", pn.getGenus() != null ? pn.getGenus() : pn.getUninomial());
-              });
-
-      if (!jc.getMainNode().has("gbifClassification")) {
-        jc.addJsonObject("gbifClassification", classificationNode);
-      }
-    };
-  }
-
-  /**
-   * String converter for {@link LocationFeatureRecord}, convert an object to specific string view
-   *
-   * <pre>{@code
-   * Result example:
-   *
-   * "locationFeatureLayers": [
-   *     {
-   *      "key": "c22",
-   *      "value": "234"
-   *     },
-   *     {
-   *      "key": "c223",
-   *      "value": "34"
-   *     },
-   *   ]
-   *
-   * }</pre>
-   */
-  private BiConsumer<GenericJsonConverter, SpecificRecordBase> getLocationFeatureRecordConverter() {
-    return (jc, record) -> {
-      LocationFeatureRecord asr = (LocationFeatureRecord) record;
-
-      if (!skipId) {
-        jc.addJsonTextFieldNoCheck(Indexing.ID, asr.getId());
-      }
-
-      Optional.ofNullable(asr.getItems())
-          .filter(i -> !i.isEmpty())
-          .ifPresent(
-              m -> {
-                List<ObjectNode> nodes = new ArrayList<>(m.size());
-                m.forEach(
-                    (k, v) -> {
-                      ObjectNode node = GenericJsonConverter.createObjectNode();
-                      node.put("key", k);
-                      node.put("value", v);
-                      nodes.add(node);
-                    });
-                jc.addJsonArray("locationFeatureLayers", nodes);
-              });
-    };
-  }
-
-  /**
-   * String converter for {@link AmplificationRecord}, convert an object to specific string view
-   *
-   * <pre>{@code
-   * Result example:
-   *
-   * {
-   *  "id": "777",
-   *  "amplificationItems": [
-   *    {
-   *      "name": "n",
-   *      "identity": 3,
-   *      "appliedScientificName": "sn",
-   *      "matchType": "mt",
-   *      "bitScore": 1,
-   *      "expectValue": 2,
-   *      "querySequence": "qs",
-   *      "subjectSequence": "ss",
-   *      "qstart": 5,
-   *      "qend": 4,
-   *      "sstart": 8,
-   *      "send": 6,
-   *      "distanceToBestMatch": "dm",
-   *      "sequenceLength": 7
-   *    }
-   *  ]
-   * }
-   * }</pre>
-   */
-  private BiConsumer<GenericJsonConverter, SpecificRecordBase> getAmplificationRecordConverter() {
-    return (jc, record) -> {
-      AmplificationRecord ar = (AmplificationRecord) record;
-
-      if (!skipId) {
-        jc.addJsonTextFieldNoCheck(Indexing.ID, ar.getId());
-      }
-
-      List<ObjectNode> nodes =
-          ar.getAmplificationItems().stream()
-              .filter(x -> x.getBlastResult() != null && x.getBlastResult().getMatchType() != null)
-              .map(
-                  x -> {
-                    BlastResult blast = x.getBlastResult();
-                    ObjectNode node = GenericJsonConverter.createObjectNode();
-                    jc.addCommonFields(blast, node);
-                    return node;
-                  })
-              .collect(Collectors.toList());
-
-      jc.addJsonArray("amplificationItems", nodes);
     };
   }
 
@@ -738,23 +519,27 @@ public class DeprecatedOccurrenceJsonConverter {
   }
 
   /**
-   * String converter for {@link BasicRecord}, convert an object to specific string view. Copies all
-   * the value at the root node level.
+   * String converter for {@link EventCoreRecord}, convert an object to specific string view
    *
-   * <p>gbif/portal-feedback#2423 Preserve record-level licences over dataset-level ones
+   * <pre>{@code
+   * Result example:
+   *
+   *  //.....more fields
+   *
+   * }</pre>
    */
-  private BiConsumer<GenericJsonConverter, SpecificRecordBase> getBasicRecordConverter() {
+  private BiConsumer<GenericJsonConverter, SpecificRecordBase> geEventCoreRecordConverter() {
     return (jc, record) -> {
-      BasicRecord br = (BasicRecord) record;
+      EventCoreRecord ecr = (EventCoreRecord) record;
 
       // Use BasicRecord license insted of json node
       JsonNode node = jc.getMainNode().get("license");
       if (node != null) {
         String license = node.asText();
-        if (br.getLicense() == null
-            || br.getLicense().equals(License.UNSPECIFIED.name())
-            || br.getLicense().equals(License.UNSUPPORTED.name())) {
-          br.setLicense(license);
+        if (ecr.getLicense() == null
+            || ecr.getLicense().equals(License.UNSPECIFIED.name())
+            || ecr.getLicense().equals(License.UNSUPPORTED.name())) {
+          ecr.setLicense(license);
         }
       }
 
@@ -766,49 +551,10 @@ public class DeprecatedOccurrenceJsonConverter {
             }
           };
 
-      joinValuesSetter.accept(br.getRecordedBy(), Indexing.RECORDED_BY_JOINED);
-      joinValuesSetter.accept(br.getIdentifiedBy(), Indexing.IDENTIFIED_BY_JOINED);
-      joinValuesSetter.accept(br.getPreparations(), Indexing.PREPARATIONS_JOINED);
-      joinValuesSetter.accept(br.getSamplingProtocol(), Indexing.SAMPLING_PROTOCOL_JOINED);
-      joinValuesSetter.accept(br.getOtherCatalogNumbers(), Indexing.OTHER_CATALOG_NUMBERS_JOINED);
+      joinValuesSetter.accept(ecr.getSamplingProtocol(), Indexing.SAMPLING_PROTOCOL_JOINED);
 
       // Add other fields
-      jc.addCommonFields(br);
-    };
-  }
-
-  /**
-   * String converter for {@link GrscicollRecord}, convert an object to specific string view
-   *
-   * <pre>{@code
-   * Result example:
-   *
-   * "institutionKey": "04ec1770-6216-4c66-b9ea-c8087b8f563f",
-   * "collectionKey": "02d1e772-54ee-4767-b4b8-c35f0c7270ba",
-   *
-   * }</pre>
-   */
-  private BiConsumer<GenericJsonConverter, SpecificRecordBase> getGrscicollRecordConverter() {
-    return (jc, record) -> {
-      GrscicollRecord gr = (GrscicollRecord) record;
-
-      if (!skipId) {
-        jc.addJsonTextFieldNoCheck(Indexing.ID, gr.getId());
-      }
-
-      if (gr.getInstitutionMatch() != null) {
-        String institutionKey = gr.getInstitutionMatch().getKey();
-        if (institutionKey != null) {
-          jc.addJsonTextFieldNoCheck(GbifInternalTerm.institutionKey.simpleName(), institutionKey);
-        }
-      }
-
-      if (gr.getCollectionMatch() != null) {
-        String collectionKey = gr.getCollectionMatch().getKey();
-        if (collectionKey != null) {
-          jc.addJsonTextFieldNoCheck(GbifInternalTerm.collectionKey.simpleName(), collectionKey);
-        }
-      }
+      jc.addCommonFields(ecr);
     };
   }
 }

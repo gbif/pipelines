@@ -51,6 +51,7 @@ import org.apache.avro.specific.SpecificRecordBase;
 @SuppressWarnings("FallThrough")
 @Slf4j
 @Builder
+@Deprecated
 public class GenericJsonConverter {
 
   private static final ObjectMapper MAPPER = new ObjectMapper();
