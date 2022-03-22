@@ -398,9 +398,9 @@ public class OccurrenceJsonConverterTest {
             .build();
 
     // When
-    ObjectNode result = OccurrenceJsonConverter.toJson(mr, er, tmr, lr, tr, br, gr, mmr);
+    ObjectNode result = DeprecatedOccurrenceJsonConverter.toJson(mr, er, tmr, lr, tr, br, gr, mmr);
     String result2 =
-        AvroOccurrenceJsonConverter.builder()
+        OccurrenceJsonConverter.builder()
             .basic(br)
             .metadata(mr)
             .verbatim(er)
@@ -652,7 +652,7 @@ public class OccurrenceJsonConverterTest {
             .build();
 
     // When
-    ObjectNode result = OccurrenceJsonConverter.toJson(er, tmr, lr, tr, asr);
+    ObjectNode result = DeprecatedOccurrenceJsonConverter.toJson(er, tmr, lr, tr, asr);
 
     // Should
     assertTrue(JsonValidationUtils.isValid(result.toString()));
@@ -756,7 +756,7 @@ public class OccurrenceJsonConverterTest {
     TemporalRecord tr = TemporalRecord.newBuilder().setId("777").build();
 
     // When
-    ObjectNode result = OccurrenceJsonConverter.toJson(er, tr);
+    ObjectNode result = DeprecatedOccurrenceJsonConverter.toJson(er, tr);
 
     // Should
     assertTrue(JsonValidationUtils.isValid(result.toString()));
@@ -832,7 +832,8 @@ public class OccurrenceJsonConverterTest {
         ExtendedRecord.newBuilder().setId("777").setCoreTerms(coreTerms).build();
 
     // When
-    String result = OccurrenceJsonConverter.toStringPartialJson(extendedRecord, taxonRecord);
+    String result =
+        DeprecatedOccurrenceJsonConverter.toStringPartialJson(extendedRecord, taxonRecord);
 
     // Should
     assertEquals(expected, result);
@@ -850,7 +851,7 @@ public class OccurrenceJsonConverterTest {
     ExtendedRecord record = ExtendedRecord.newBuilder().setId("777").build();
 
     // When
-    String result = OccurrenceJsonConverter.toStringPartialJson(record);
+    String result = DeprecatedOccurrenceJsonConverter.toStringPartialJson(record);
 
     // Should
     assertEquals(expected, result);
@@ -867,7 +868,7 @@ public class OccurrenceJsonConverterTest {
     TemporalRecord record = TemporalRecord.newBuilder().setId("777").setCreated(0L).build();
 
     // When
-    String result = OccurrenceJsonConverter.toStringPartialJson(record);
+    String result = DeprecatedOccurrenceJsonConverter.toStringPartialJson(record);
 
     // Should
     assertEquals(expected, result);
@@ -884,7 +885,7 @@ public class OccurrenceJsonConverterTest {
     LocationRecord record = LocationRecord.newBuilder().setId("777").build();
 
     // When
-    String result = OccurrenceJsonConverter.toStringPartialJson(record);
+    String result = DeprecatedOccurrenceJsonConverter.toStringPartialJson(record);
 
     // Should
     assertEquals(expected, result);
@@ -911,7 +912,7 @@ public class OccurrenceJsonConverterTest {
             .build();
 
     // When
-    String result = OccurrenceJsonConverter.toStringPartialJson(record);
+    String result = DeprecatedOccurrenceJsonConverter.toStringPartialJson(record);
 
     // Should
     assertEquals(expected, result);
@@ -930,7 +931,7 @@ public class OccurrenceJsonConverterTest {
         AmplificationRecord.newBuilder().setId("777").setCreated(0L).build();
 
     // When
-    String result = OccurrenceJsonConverter.toStringPartialJson(record);
+    String result = DeprecatedOccurrenceJsonConverter.toStringPartialJson(record);
 
     // Should
     assertEquals(expected, result);
@@ -947,7 +948,7 @@ public class OccurrenceJsonConverterTest {
     MultimediaRecord record = MultimediaRecord.newBuilder().setId("777").build();
 
     // When
-    String result = OccurrenceJsonConverter.toStringPartialJson(record);
+    String result = DeprecatedOccurrenceJsonConverter.toStringPartialJson(record);
 
     // Should
     assertEquals(expected, result);
@@ -972,7 +973,7 @@ public class OccurrenceJsonConverterTest {
             .build();
 
     // When
-    String result = OccurrenceJsonConverter.toStringPartialJson(record);
+    String result = DeprecatedOccurrenceJsonConverter.toStringPartialJson(record);
 
     // Should
     assertEquals(expected, result);
@@ -1031,7 +1032,7 @@ public class OccurrenceJsonConverterTest {
             .build();
 
     // When
-    String result = OccurrenceJsonConverter.toStringPartialJson(record);
+    String result = DeprecatedOccurrenceJsonConverter.toStringPartialJson(record);
 
     // Should
     assertEquals(expected, result);
@@ -1071,7 +1072,7 @@ public class OccurrenceJsonConverterTest {
             .build();
 
     // When
-    String result = OccurrenceJsonConverter.toStringPartialJson(multimediaRecord);
+    String result = DeprecatedOccurrenceJsonConverter.toStringPartialJson(multimediaRecord);
 
     // Should
     assertEquals(expected, result);
@@ -1103,7 +1104,8 @@ public class OccurrenceJsonConverterTest {
 
     // When
     MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
-    ObjectNode result = OccurrenceJsonConverter.toJson(mdr, br, tr, lr, txr, mmr, mfr, er);
+    ObjectNode result =
+        DeprecatedOccurrenceJsonConverter.toJson(mdr, br, tr, lr, txr, mmr, mfr, er);
 
     // Should
     assertTrue(JsonValidationUtils.isValid(result.toString()));
@@ -1153,7 +1155,7 @@ public class OccurrenceJsonConverterTest {
             .build();
 
     // When
-    String result = OccurrenceJsonConverter.toStringPartialJson(record);
+    String result = DeprecatedOccurrenceJsonConverter.toStringPartialJson(record);
 
     // Should
     Assert.assertEquals(expected, result);
@@ -1172,7 +1174,7 @@ public class OccurrenceJsonConverterTest {
             .build();
 
     // When
-    ObjectNode result = OccurrenceJsonConverter.toJson(tmr);
+    ObjectNode result = DeprecatedOccurrenceJsonConverter.toJson(tmr);
 
     // Should
     assertTrue(JsonValidationUtils.isValid(result.toString()));

@@ -4,7 +4,6 @@ import static org.elasticsearch.common.xcontent.XContentType.JSON;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing.GBIF_ID;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.Map;
 import java.util.function.Function;
 import lombok.Builder;
@@ -23,6 +22,7 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
+import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
 
 @Builder
 public class IndexRequestConverter {
@@ -60,7 +60,18 @@ public class IndexRequestConverter {
       AudubonRecord ar = audubonMap.getOrDefault(k, AudubonRecord.newBuilder().setId(k).build());
 
       MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
-      ObjectNode json = OccurrenceJsonConverter.toJson(metadata, br, tr, lr, txr, gr, mmr, er);
+      OccurrenceJsonRecord json =
+          OccurrenceJsonConverter.builder()
+              .metadata(metadata)
+              .basic(br)
+              .temporal(tr)
+              .location(lr)
+              .taxon(txr)
+              .grscicoll(gr)
+              .multimedia(mmr)
+              .verbatim(er)
+              .build()
+              .convert();
 
       metrics.incMetric(AVRO_TO_JSON_COUNT);
 
@@ -71,7 +82,7 @@ public class IndexRequestConverter {
         String docId =
             esDocumentId.equals(GBIF_ID)
                 ? br.getGbifId().toString()
-                : json.get(esDocumentId).asText();
+                : json.get(esDocumentId).toString();
         indexRequest = indexRequest.id(docId);
       }
 

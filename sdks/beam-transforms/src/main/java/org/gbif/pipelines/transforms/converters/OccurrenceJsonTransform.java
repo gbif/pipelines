@@ -126,7 +126,19 @@ public class OccurrenceJsonTransform implements Serializable {
                 v.getOnly(audubonRecordTag, AudubonRecord.newBuilder().setId(k).build());
 
             MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
-            String json = OccurrenceJsonConverter.toStringJson(mdr, br, tr, lr, txr, gr, mmr, er);
+            String json =
+                OccurrenceJsonConverter.builder()
+                    .metadata(mdr)
+                    .basic(br)
+                    .temporal(tr)
+                    .location(lr)
+                    .taxon(txr)
+                    .grscicoll(gr)
+                    .multimedia(mmr)
+                    .verbatim(er)
+                    .build()
+                    .convert()
+                    .toString();
 
             c.output(json);
 

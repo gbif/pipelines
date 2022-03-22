@@ -392,10 +392,6 @@
         }
       },
 
-      "amplificationItems": {"type": "nested", "enabled": false},
-
-      "locationFeatureLayers":{"type": "nested"},
-
       "verbatim": {"type": "object", "enabled": false}
     }
 }
