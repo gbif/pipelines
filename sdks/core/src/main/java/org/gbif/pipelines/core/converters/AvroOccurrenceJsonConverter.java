@@ -38,6 +38,9 @@ public class AvroOccurrenceJsonConverter {
 
     OccurrenceJsonRecord.Builder builder = OccurrenceJsonRecord.newBuilder();
 
+    mapCreated(builder);
+    mapIssues(builder);
+
     mapMetadataRecord(builder);
     mapBasicRecord(builder);
     mapTemporalRecord(builder);
@@ -46,7 +49,6 @@ public class AvroOccurrenceJsonConverter {
     mapGrscicollRecord(builder);
     mapMultimediaRecord(builder);
     mapExtendedRecord(builder);
-    mapIssues(builder);
 
     return builder.build();
   }
@@ -65,6 +67,8 @@ public class AvroOccurrenceJsonConverter {
     builder.setProtocol(metadataRecord.getProtocol());
     builder.setPublisherTitle(metadataRecord.getPublisherTitle());
     builder.setPublishingOrganizationKey(metadataRecord.getPublishingOrganizationKey());
+
+    JsonConverter.convertToDate(metadataRecord.getLastCrawled()).ifPresent(builder::setLastCrawled);
   }
 
   private void mapBasicRecord(OccurrenceJsonRecord.Builder builder) {
@@ -182,20 +186,29 @@ public class AvroOccurrenceJsonConverter {
             .setAcceptedUsage(JsonConverter.convertRankedName(taxonRecord.getAcceptedUsage()))
             .setSynonym(taxonRecord.getSynonym())
             .setUsage(JsonConverter.convertRankedName(taxonRecord.getUsage()))
-            .setUsageParsedName(JsonConverter.convertParsedName(taxonRecord.getUsageParsedName()))
             .setIucnRedListCategoryCode(taxonRecord.getIucnRedListCategoryCode())
-            .setDiagnostics(JsonConverter.convertDiagnostic(taxonRecord.getDiagnostics()))
             .setClassification(JsonConverter.convertRankedNames(taxonRecord.getClassification()))
             .setTaxonKey(JsonConverter.convertTaxonKey(taxonRecord));
 
+    JsonConverter.convertDiagnostic(taxonRecord.getDiagnostics())
+        .ifPresent(gbifClassificationBuilder::setDiagnostics);
+
+    JsonConverter.convertParsedName(taxonRecord.getUsageParsedName())
+        .ifPresent(gbifClassificationBuilder::setUsageParsedName);
+
     JsonConverter.convertGenericName(taxonRecord)
-        .ifPresent(gbifClassificationBuilder.getUsageParsedName()::setGenericName);
+        .ifPresent(
+            genereicName -> {
+              if (gbifClassificationBuilder.getUsageParsedName() != null) {
+                gbifClassificationBuilder.getUsageParsedName().setGenericName(genereicName);
+              }
+            });
 
     JsonConverter.convertClassificationPath(taxonRecord)
         .ifPresent(gbifClassificationBuilder::setClassificationPath);
 
     // Classification
-    if (taxonRecord.getClassification() != null && !taxonRecord.getClassification().isEmpty()) {
+    if (taxonRecord.getClassification() != null) {
       for (RankedName rankedName : taxonRecord.getClassification()) {
         Rank rank = rankedName.getRank();
         switch (rank) {
@@ -258,7 +271,7 @@ public class AvroOccurrenceJsonConverter {
   private void mapExtendedRecord(OccurrenceJsonRecord.Builder builder) {
 
     builder.setId(extendedRecord.getId());
-    builder.setAll(JsonConverter.convertAll(extendedRecord));
+    builder.setAll(JsonConverter.convertFieldAll(extendedRecord));
     builder.setExtensions(JsonConverter.convertExtenstions(extendedRecord));
     builder.setVerbatim(JsonConverter.convertVerbatimRecord(extendedRecord));
 
@@ -285,5 +298,17 @@ public class AvroOccurrenceJsonConverter {
             multimediaRecord),
         builder::setIssuess,
         builder::setNotIssues);
+  }
+
+  private void mapCreated(OccurrenceJsonRecord.Builder builder) {
+    JsonConverter.getMaxCreationDate(
+            metadataRecord,
+            basicRecord,
+            temporalRecord,
+            locationRecord,
+            taxonRecord,
+            grscicollRecord,
+            multimediaRecord)
+        .ifPresent(builder::setCreated);
   }
 }

@@ -1,7 +1,9 @@
 package org.gbif.pipelines.core.converters;
 
 import com.google.common.base.Strings;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,15 +18,18 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.LongFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.apache.avro.specific.SpecificRecordBase;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.date.TemporalAccessorUtils;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
 import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
 import org.gbif.pipelines.core.utils.ModelUtils;
 import org.gbif.pipelines.core.utils.TemporalConverter;
@@ -66,6 +71,9 @@ class JsonConverter {
     CHAR_MAP.put('\u001f', ' ');
   }
 
+  private static final LongFunction<LocalDateTime> DATE_FN =
+      l -> LocalDateTime.ofInstant(Instant.ofEpochMilli(l), ZoneId.of("UTC"));
+
   protected static String getEscapedText(String value) {
     String v = value;
     for (Entry<Character, Character> rule : CHAR_MAP.entrySet()) {
@@ -74,7 +82,22 @@ class JsonConverter {
     return v;
   }
 
-  protected static List<String> convertAll(ExtendedRecord extendedRecord) {
+  /** Gets the maximum/latest created date of all the records. */
+  public static Optional<String> getMaxCreationDate(SpecificRecordBase... recordBases) {
+    return Arrays.stream(recordBases)
+        .filter(r -> Objects.nonNull(r.getSchema().getField(Indexing.CREATED)))
+        .map(r -> r.get(Indexing.CREATED))
+        .filter(Objects::nonNull)
+        .map(Long.class::cast)
+        .max(Long::compareTo)
+        .flatMap(JsonConverter::convertToDate);
+  }
+
+  public static Optional<String> convertToDate(Long epoch) {
+    return Optional.ofNullable(epoch).map(DATE_FN::apply).map(LocalDateTime::toString);
+  }
+
+  protected static List<String> convertFieldAll(ExtendedRecord extendedRecord) {
     Set<String> result = new HashSet<>();
 
     extendedRecord.getCoreTerms().entrySet().stream()
@@ -270,7 +293,13 @@ class JsonConverter {
     return rankedNames.stream().map(JsonConverter::convertRankedName).collect(Collectors.toList());
   }
 
-  public static ParsedName convertParsedName(org.gbif.pipelines.io.avro.ParsedName parsedName) {
+  public static Optional<ParsedName> convertParsedName(
+      org.gbif.pipelines.io.avro.ParsedName parsedName) {
+
+    if (parsedName == null) {
+      return Optional.empty();
+    }
+
     Builder builder =
         ParsedName.newBuilder()
             .setAbbreviated(parsedName.getAbbreviated())
@@ -296,7 +325,7 @@ class JsonConverter {
     convertAuthorship(parsedName.getCombinationAuthorship())
         .ifPresent(builder::setCombinationAuthorship);
 
-    return builder.build();
+    return Optional.of(builder.build());
   }
 
   public static Optional<Authorship> convertAuthorship(
@@ -312,12 +341,21 @@ class JsonConverter {
                     .build());
   }
 
-  public static Diagnostic convertDiagnostic(org.gbif.pipelines.io.avro.Diagnostic diagnostic) {
-    return Diagnostic.newBuilder()
-        .setMatchType(diagnostic.getMatchType() != null ? diagnostic.getMatchType().name() : null)
-        .setNote(diagnostic.getNote())
-        .setStatus(diagnostic.getStatus() != null ? diagnostic.getStatus().name() : null)
-        .build();
+  public static Optional<Diagnostic> convertDiagnostic(
+      org.gbif.pipelines.io.avro.Diagnostic diagnostic) {
+    if (diagnostic == null) {
+      return Optional.empty();
+    }
+
+    Diagnostic build =
+        Diagnostic.newBuilder()
+            .setMatchType(
+                diagnostic.getMatchType() != null ? diagnostic.getMatchType().name() : null)
+            .setNote(diagnostic.getNote())
+            .setStatus(diagnostic.getStatus() != null ? diagnostic.getStatus().name() : null)
+            .build();
+
+    return Optional.of(build);
   }
 
   public static Optional<String> convertGenericName(TaxonRecord taxonRecord) {
