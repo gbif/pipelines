@@ -410,8 +410,7 @@ public class OccurrenceJsonConverterTest {
             .grscicoll(gr)
             .multimedia(mmr)
             .build()
-            .convert()
-            .toString();
+            .toJson();
 
     assertEquals(result.toString(), result2);
 

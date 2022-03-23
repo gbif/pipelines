@@ -137,8 +137,7 @@ public class OccurrenceJsonTransform implements Serializable {
                     .multimedia(mmr)
                     .verbatim(er)
                     .build()
-                    .convert()
-                    .toString();
+                    .toJson();
 
             c.output(json);
 

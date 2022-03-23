@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
@@ -21,6 +22,7 @@ import org.gbif.pipelines.io.avro.json.EventJsonRecord;
 public class EventJsonConverter {
 
   private final MetadataRecord metadata;
+  private final IdentifierRecord identifier;
   private final EventCoreRecord eventCore;
   private final TemporalRecord temporal;
   private final LocationRecord location;
@@ -37,13 +39,18 @@ public class EventJsonConverter {
     mapIssues(builder);
 
     mapMetadataRecord(builder);
-    mapBasicRecord(builder);
+    mapIdentifierRecord(builder);
+    mapEventCoreRecord(builder);
     mapTemporalRecord(builder);
     mapLocationRecord(builder);
     mapMultimediaRecord(builder);
     mapExtendedRecord(builder);
 
     return builder.build();
+  }
+
+  public String toJson() {
+    return convert().toString();
   }
 
   private void mapMetadataRecord(EventJsonRecord.Builder builder) {
@@ -65,16 +72,23 @@ public class EventJsonConverter {
     JsonConverter.convertToDate(metadata.getLastCrawled()).ifPresent(builder::setLastCrawled);
   }
 
-  private void mapBasicRecord(EventJsonRecord.Builder builder) {
+  private void mapIdentifierRecord(EventJsonRecord.Builder builder) {
+    builder
+        .setInternalId(identifier.getInternalId())
+        .setFirstLoaded(identifier.getFirstLoaded())
+        .setUniqueKey(identifier.getUniqueKey());
+  }
+
+  private void mapEventCoreRecord(EventJsonRecord.Builder builder) {
 
     // Simple
-    builder.setInternalId(eventCore.getId());
-    builder.setSampleSizeValue(eventCore.getSampleSizeValue());
-    builder.setSampleSizeUnit(eventCore.getSampleSizeUnit());
-    builder.setReferences(eventCore.getReferences());
-    builder.setDatasetID(eventCore.getDatasetID());
-    builder.setDatasetName(eventCore.getDatasetName());
-    builder.setSamplingProtocol(eventCore.getSamplingProtocol());
+    builder
+        .setSampleSizeValue(eventCore.getSampleSizeValue())
+        .setSampleSizeUnit(eventCore.getSampleSizeUnit())
+        .setReferences(eventCore.getReferences())
+        .setDatasetID(eventCore.getDatasetID())
+        .setDatasetName(eventCore.getDatasetName())
+        .setSamplingProtocol(eventCore.getSamplingProtocol());
 
     // License
     JsonConverter.convertLicense(eventCore.getLicense()).ifPresent(builder::setLicense);

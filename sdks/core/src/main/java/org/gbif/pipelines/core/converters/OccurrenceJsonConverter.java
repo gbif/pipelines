@@ -53,6 +53,10 @@ public class OccurrenceJsonConverter {
     return builder.build();
   }
 
+  public String toJson() {
+    return convert().toString();
+  }
+
   private void mapMetadataRecord(OccurrenceJsonRecord.Builder builder) {
     builder
         .setCrawlId(metadata.getCrawlId())
