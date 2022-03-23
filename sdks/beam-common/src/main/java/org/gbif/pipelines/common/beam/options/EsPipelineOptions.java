@@ -43,6 +43,16 @@ public interface EsPipelineOptions extends PipelineOptions {
 
   void setEsSchemaPath(String esSchemaPath);
 
+  @Description("Name of the Elasticsearch user for basic auth")
+  String getEsUsername();
+
+  void setEsUsername(String esUsername);
+
+  @Description("Name of the Elasticsearch password for basic auth")
+  String getEsPassword();
+
+  void setEsPassword(String esPassword);
+
   @Description(
       "How often to perform a refresh operation, which makes recent changes to the index visible to search. Defaults to 30s")
   @Default.String("40s")

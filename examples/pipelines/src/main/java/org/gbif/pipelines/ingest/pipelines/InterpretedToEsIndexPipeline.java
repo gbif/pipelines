@@ -2,6 +2,7 @@ package org.gbif.pipelines.ingest.pipelines;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import lombok.AccessLevel;
@@ -191,9 +192,15 @@ public class InterpretedToEsIndexPipeline {
             .apply("Merging to json", eventJsonDoFn);
 
     log.info("Adding step 4: Elasticsearch indexing");
+
     ElasticsearchIO.ConnectionConfiguration esConfig =
         ElasticsearchIO.ConnectionConfiguration.create(
             options.getEsHosts(), options.getEsIndexName(), "_doc");
+
+    if (Objects.nonNull(options.getEsUsername()) && Objects.nonNull(options.getEsPassword())) {
+      esConfig =
+          esConfig.withUsername(options.getEsUsername()).withPassword(options.getEsPassword());
+    }
 
     ElasticsearchIO.Write writeIO =
         ElasticsearchIO.write()

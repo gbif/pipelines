@@ -31,7 +31,8 @@ public class ElasticsearchTools {
 
   /** Connects to Elasticsearch instance and creates an index, if index doesn't exist */
   public static void createIndexAndAliasForDefault(EsIndexingPipelineOptions options) {
-    EsConfig config = EsConfig.from(options.getEsHosts());
+    EsConfig config =
+        EsConfig.from(options.getEsUsername(), options.getEsPassword(), options.getEsHosts());
     IndexParams params = createIndexParams(options);
 
     log.info("Creating index from params: {}", params);

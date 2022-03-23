@@ -8,13 +8,14 @@ import java.util.Map;
 import java.util.Objects;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpHost;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.http.*;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.ContentType;
+import org.apache.http.message.BasicHeader;
 import org.apache.http.protocol.HTTP;
 import org.elasticsearch.client.Request;
 import org.elasticsearch.client.RequestOptions;
@@ -47,8 +48,20 @@ public class EsClient implements AutoCloseable {
       hosts[i] = new HttpHost(urlHost.getHost(), urlHost.getPort(), urlHost.getProtocol());
     }
 
+    Header[] headers = new Header[0];
+    if (Objects.nonNull(config.getUsername())) {
+      byte[] bytesEncoded =
+          Base64.encodeBase64((config.getUsername() + ":" + config.getPassword()).getBytes());
+      headers =
+          new Header[] {
+            new BasicHeader(HttpHeaders.AUTHORIZATION, "Basic " + new String(bytesEncoded))
+          };
+    }
+    ;
+
     restClient =
         RestClient.builder(hosts)
+            .setDefaultHeaders(headers)
             .setRequestConfigCallback(b -> b.setConnectTimeout(180_000).setSocketTimeout(180_000))
             .build();
   }
