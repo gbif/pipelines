@@ -226,25 +226,32 @@ public class OccurrenceJsonConverter {
         Rank rank = rankedName.getRank();
         switch (rank) {
           case KINGDOM:
-            classificationBuilder.setKingdom(rank.name()).setKingdomKey(rankedName.getKey());
+            classificationBuilder.setKingdom(rankedName.getName());
+            classificationBuilder.setKingdomKey(rankedName.getKey());
             break;
           case PHYLUM:
-            classificationBuilder.setPhylum(rank.name()).setPhylumKey(rankedName.getKey());
+            classificationBuilder.setPhylum(rankedName.getName());
+            classificationBuilder.setPhylumKey(rankedName.getKey());
             break;
           case CLASS:
-            classificationBuilder.setClass$(rank.name()).setClassKey(rankedName.getKey());
+            classificationBuilder.setClass$(rankedName.getName());
+            classificationBuilder.setClassKey(rankedName.getKey());
             break;
           case ORDER:
-            classificationBuilder.setOrder(rank.name()).setOrderKey(rankedName.getKey());
+            classificationBuilder.setOrder(rankedName.getName());
+            classificationBuilder.setOrderKey(rankedName.getKey());
             break;
           case FAMILY:
-            classificationBuilder.setFamily(rank.name()).setFamilyKey(rankedName.getKey());
+            classificationBuilder.setFamily(rankedName.getName());
+            classificationBuilder.setFamilyKey(rankedName.getKey());
             break;
           case GENUS:
-            classificationBuilder.setGenus(rank.name()).setGenusKey(rankedName.getKey());
+            classificationBuilder.setGenus(rankedName.getName());
+            classificationBuilder.setGenusKey(rankedName.getKey());
             break;
           case SPECIES:
-            classificationBuilder.setSpecies(rank.name()).setSpeciesKey(rankedName.getKey());
+            classificationBuilder.setSpecies(rankedName.getName());
+            classificationBuilder.setSpeciesKey(rankedName.getKey());
             break;
           default:
             // NOP
