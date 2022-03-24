@@ -89,6 +89,10 @@ public class AvroPostprocessMojo extends AbstractMojo {
     this.defaultPackage = defaultPackage;
   }
 
+  public void setSkipPackage(String skipPackage) {
+    this.skipPackage = skipPackage;
+  }
+
   /**
    * Modifies java class, adds Issues interface, Beam Avro and override annotation
    *

@@ -192,12 +192,15 @@ public class OccurrenceJsonConverter {
 
     GbifClassification.Builder classificationBuilder =
         GbifClassification.newBuilder()
-            .setAcceptedUsage(JsonConverter.convertRankedName(taxon.getAcceptedUsage()))
             .setSynonym(taxon.getSynonym())
-            .setUsage(JsonConverter.convertRankedName(taxon.getUsage()))
             .setIucnRedListCategoryCode(taxon.getIucnRedListCategoryCode())
             .setClassification(JsonConverter.convertRankedNames(taxon.getClassification()))
             .setTaxonKey(JsonConverter.convertTaxonKey(taxon));
+
+    JsonConverter.convertRankedName(taxon.getUsage()).ifPresent(classificationBuilder::setUsage);
+
+    JsonConverter.convertRankedName(taxon.getAcceptedUsage())
+        .ifPresent(classificationBuilder::setAcceptedUsage);
 
     JsonConverter.convertDiagnostic(taxon.getDiagnostics())
         .ifPresent(classificationBuilder::setDiagnostics);

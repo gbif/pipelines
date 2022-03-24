@@ -280,17 +280,25 @@ class JsonConverter {
     return Optional.of(gadmFeatures);
   }
 
-  public static RankedName convertRankedName(org.gbif.pipelines.io.avro.RankedName rankedName) {
-    return RankedName.newBuilder()
-        .setName(rankedName.getName())
-        .setRank(rankedName.getRank() != null ? rankedName.getRank().name() : null)
-        .setKey(rankedName.getKey())
-        .build();
+  public static Optional<RankedName> convertRankedName(
+      org.gbif.pipelines.io.avro.RankedName rankedName) {
+    return Optional.ofNullable(rankedName)
+        .map(
+            rn ->
+                RankedName.newBuilder()
+                    .setName(rn.getName())
+                    .setRank(rn.getRank() != null ? rn.getRank().name() : null)
+                    .setKey(rn.getKey())
+                    .build());
   }
 
   public static List<RankedName> convertRankedNames(
       List<org.gbif.pipelines.io.avro.RankedName> rankedNames) {
-    return rankedNames.stream().map(JsonConverter::convertRankedName).collect(Collectors.toList());
+    return rankedNames.stream()
+        .map(JsonConverter::convertRankedName)
+        .filter(Optional::isPresent)
+        .map(Optional::get)
+        .collect(Collectors.toList());
   }
 
   public static Optional<ParsedName> convertParsedName(

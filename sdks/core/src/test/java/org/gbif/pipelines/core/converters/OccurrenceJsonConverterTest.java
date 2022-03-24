@@ -552,4 +552,43 @@ public class OccurrenceJsonConverterTest {
         "{\"concept\":\"bla4\",\"lineage\":[\"bla4_1\"]}",
         result.path("degreeOfEstablishment").toString());
   }
+
+  @Test
+  public void converterEmptyRecordsTest() throws Exception {
+    // State
+    MetadataRecord mr = MetadataRecord.newBuilder().setId("777").build();
+
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("777").build();
+
+    BasicRecord br = BasicRecord.newBuilder().setId("777").setGbifId(1L).build();
+
+    TemporalRecord tmr = TemporalRecord.newBuilder().setId("777").build();
+
+    LocationRecord lr = LocationRecord.newBuilder().setId("777").build();
+
+    TaxonRecord tr = TaxonRecord.newBuilder().setId("777").build();
+
+    GrscicollRecord gr = GrscicollRecord.newBuilder().setId("777").build();
+
+    MultimediaRecord mmr = MultimediaRecord.newBuilder().setId("777").build();
+
+    // When
+    String json =
+        OccurrenceJsonConverter.builder()
+            .basic(br)
+            .metadata(mr)
+            .verbatim(er)
+            .temporal(tmr)
+            .location(lr)
+            .taxon(tr)
+            .grscicoll(gr)
+            .multimedia(mmr)
+            .build()
+            .toJson();
+
+    JsonNode result = MAPPER.readTree(json);
+
+    // Should
+    assertTrue(JsonValidationUtils.isValid(result.toString()));
+  }
 }
