@@ -9,7 +9,10 @@ import java.util.Objects;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
-import org.apache.http.*;
+import org.apache.http.Header;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpHeaders;
+import org.apache.http.HttpHost;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -57,7 +60,6 @@ public class EsClient implements AutoCloseable {
             new BasicHeader(HttpHeaders.AUTHORIZATION, "Basic " + new String(bytesEncoded))
           };
     }
-    ;
 
     restClient =
         RestClient.builder(hosts)
