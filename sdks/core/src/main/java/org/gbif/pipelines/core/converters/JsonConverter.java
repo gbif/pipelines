@@ -77,7 +77,7 @@ class JsonConverter {
   protected static String getEscapedText(String value) {
     String v = value;
     for (Entry<Character, Character> rule : CHAR_MAP.entrySet()) {
-      v = v.replace(rule.getKey(), rule.getValue());
+      v = v.trim().replace(rule.getKey(), rule.getValue());
     }
     return v;
   }
@@ -118,6 +118,7 @@ class JsonConverter {
     return result.stream()
         .flatMap(v -> Stream.of(v.split(ModelUtils.DEFAULT_SEPARATOR)))
         .map(JsonConverter::getEscapedText)
+        .filter(s -> !s.isEmpty())
         .collect(Collectors.toList());
   }
 
