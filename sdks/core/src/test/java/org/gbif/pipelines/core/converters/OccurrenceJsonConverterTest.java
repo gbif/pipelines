@@ -556,7 +556,7 @@ public class OccurrenceJsonConverterTest {
   @Test
   public void converterEmptyRecordsTest() throws Exception {
     // State
-    MetadataRecord mr = MetadataRecord.newBuilder().setId("777").build();
+    MetadataRecord mr = MetadataRecord.newBuilder().setLicense("setLicense").setId("777").build();
 
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("777").build();
 
@@ -590,5 +590,6 @@ public class OccurrenceJsonConverterTest {
 
     // Should
     assertTrue(JsonValidationUtils.isValid(result.toString()));
+    assertEquals("setLicense", result.get("license").asText());
   }
 }

@@ -67,6 +67,7 @@ public class OccurrenceJsonConverter {
         .setInstallationKey(metadata.getInstallationKey())
         .setHostingOrganizationKey(metadata.getHostingOrganizationKey())
         .setNetworkKeys(metadata.getNetworkKeys())
+        .setLicense(metadata.getLicense())
         .setProgrammeAcronym(metadata.getProgrammeAcronym())
         .setProjectId(metadata.getProjectId())
         .setProtocol(metadata.getProtocol())
