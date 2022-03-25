@@ -80,31 +80,33 @@ public class OccurrenceJsonConverter {
   private void mapBasicRecord(OccurrenceJsonRecord.Builder builder) {
 
     // Simple
-    builder.setGbifId(basic.getGbifId());
-    builder.setBasisOfRecord(basic.getBasisOfRecord());
-    builder.setSex(basic.getSex());
-    builder.setIndividualCount(basic.getIndividualCount());
-    builder.setTypeStatus(basic.getTypeStatus());
-    builder.setTypifiedName(basic.getTypifiedName());
-    builder.setSampleSizeValue(basic.getSampleSizeValue());
-    builder.setSampleSizeUnit(basic.getSampleSizeUnit());
-    builder.setOrganismQuantity(basic.getOrganismQuantity());
-    builder.setOrganismQuantityType(basic.getOrganismQuantityType());
-    builder.setRelativeOrganismQuantity(basic.getRelativeOrganismQuantity());
-    builder.setReferences(basic.getReferences());
-    builder.setIdentifiedBy(basic.getIdentifiedBy());
-    builder.setRecordedBy(basic.getRecordedBy());
-    builder.setOccurrenceStatus(basic.getOccurrenceStatus());
-    builder.setIsClustered(basic.getIsClustered());
-    builder.setDatasetID(basic.getDatasetID());
-    builder.setDatasetName(basic.getDatasetName());
-    builder.setOtherCatalogNumbers(basic.getOtherCatalogNumbers());
-    builder.setPreparations(basic.getPreparations());
-    builder.setSamplingProtocol(basic.getSamplingProtocol());
+    builder
+        .setGbifId(basic.getGbifId())
+        .setBasisOfRecord(basic.getBasisOfRecord())
+        .setSex(basic.getSex())
+        .setIndividualCount(basic.getIndividualCount())
+        .setTypeStatus(basic.getTypeStatus())
+        .setTypifiedName(basic.getTypifiedName())
+        .setSampleSizeValue(basic.getSampleSizeValue())
+        .setSampleSizeUnit(basic.getSampleSizeUnit())
+        .setOrganismQuantity(basic.getOrganismQuantity())
+        .setOrganismQuantityType(basic.getOrganismQuantityType())
+        .setRelativeOrganismQuantity(basic.getRelativeOrganismQuantity())
+        .setReferences(basic.getReferences())
+        .setIdentifiedBy(basic.getIdentifiedBy())
+        .setRecordedBy(basic.getRecordedBy())
+        .setOccurrenceStatus(basic.getOccurrenceStatus())
+        .setIsClustered(basic.getIsClustered())
+        .setDatasetID(basic.getDatasetID())
+        .setDatasetName(basic.getDatasetName())
+        .setOtherCatalogNumbers(basic.getOtherCatalogNumbers())
+        .setPreparations(basic.getPreparations())
+        .setSamplingProtocol(basic.getSamplingProtocol());
 
     // Agent
-    builder.setIdentifiedByIds(JsonConverter.convertAgentList(basic.getIdentifiedByIds()));
-    builder.setRecordedByIds(JsonConverter.convertAgentList(basic.getRecordedByIds()));
+    builder
+        .setIdentifiedByIds(JsonConverter.convertAgentList(basic.getIdentifiedByIds()))
+        .setRecordedByIds(JsonConverter.convertAgentList(basic.getRecordedByIds()));
 
     // VocabularyConcept
     JsonConverter.convertVocabularyConcept(basic.getLifeStage()).ifPresent(builder::setLifeStage);
@@ -172,18 +174,17 @@ public class OccurrenceJsonConverter {
         .setLocality(location.getLocality())
         .setFootprintWKT(location.getFootprintWKT());
 
-    if (location.getDecimalLongitude() != null && location.getDecimalLatitude() != null) {
+    // Coordinates
+    Double decimalLongitude = location.getDecimalLongitude();
+    Double decimalLatitude = location.getDecimalLatitude();
+    if (decimalLongitude != null && decimalLatitude != null) {
       builder
-          .setDecimalLatitude(location.getDecimalLatitude())
-          .setDecimalLongitude(location.getDecimalLongitude())
+          .setDecimalLatitude(decimalLatitude)
+          .setDecimalLongitude(decimalLongitude)
           // geo_point
-          .setCoordinates(
-              JsonConverter.convertCoordinates(
-                  location.getDecimalLongitude(), location.getDecimalLatitude()))
+          .setCoordinates(JsonConverter.convertCoordinates(decimalLongitude, decimalLatitude))
           // geo_shape
-          .setScoordinates(
-              JsonConverter.convertScoordinates(
-                  location.getDecimalLongitude(), location.getDecimalLatitude()));
+          .setScoordinates(JsonConverter.convertScoordinates(decimalLongitude, decimalLatitude));
     }
 
     JsonConverter.convertGadm(location.getGadm()).ifPresent(builder::setGadm);

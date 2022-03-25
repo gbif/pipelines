@@ -140,18 +140,17 @@ public class EventJsonConverter {
         .setLocality(location.getLocality())
         .setFootprintWKT(location.getFootprintWKT());
 
-    if (location.getDecimalLongitude() != null && location.getDecimalLatitude() != null) {
+    // Coordinates
+    Double decimalLongitude = location.getDecimalLongitude();
+    Double decimalLatitude = location.getDecimalLatitude();
+    if (decimalLongitude != null && decimalLatitude != null) {
       builder
-          .setDecimalLatitude(location.getDecimalLatitude())
-          .setDecimalLongitude(location.getDecimalLongitude())
+          .setDecimalLatitude(decimalLatitude)
+          .setDecimalLongitude(decimalLongitude)
           // geo_point
-          .setCoordinates(
-              JsonConverter.convertCoordinates(
-                  location.getDecimalLongitude(), location.getDecimalLatitude()))
+          .setCoordinates(JsonConverter.convertCoordinates(decimalLongitude, decimalLatitude))
           // geo_shape
-          .setScoordinates(
-              JsonConverter.convertScoordinates(
-                  location.getDecimalLongitude(), location.getDecimalLatitude()));
+          .setScoordinates(JsonConverter.convertScoordinates(decimalLongitude, decimalLatitude));
     }
 
     JsonConverter.convertGadm(location.getGadm()).ifPresent(builder::setGadm);
