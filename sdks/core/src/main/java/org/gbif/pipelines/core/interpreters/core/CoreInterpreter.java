@@ -8,7 +8,9 @@ import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
 
 import com.google.common.base.Strings;
 import java.net.URI;
+import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,68 +20,68 @@ import org.gbif.common.parsers.NumberParser;
 import org.gbif.common.parsers.UrlParser;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.Issues;
 
 /**
  * Interpreting function that receives a ExtendedRecord instance and applies an interpretation to
- * it. TODO: REFACTOR AND MERGE WITH BasicTransform
  */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class EventCoreInterpreter {
+public class CoreInterpreter {
 
   /** {@link DcTerm#references} interpretation. */
-  public static void interpretReferences(ExtendedRecord er, EventCoreRecord br) {
+  public static void interpretReferences(
+      ExtendedRecord er, Issues issues, Consumer<String> consumer) {
     String value = extractValue(er, DcTerm.references);
     if (!Strings.isNullOrEmpty(value)) {
       URI parseResult = UrlParser.parse(value);
       if (parseResult != null) {
-        br.setReferences(parseResult.toString());
+        consumer.accept(parseResult.toString());
       } else {
-        addIssue(br, REFERENCES_URI_INVALID);
+        addIssue(issues, REFERENCES_URI_INVALID);
       }
     }
   }
 
   /** {@link DwcTerm#sampleSizeValue} interpretation. */
-  public static void interpretSampleSizeValue(ExtendedRecord er, EventCoreRecord br) {
+  public static void interpretSampleSizeValue(ExtendedRecord er, Consumer<Double> consumer) {
     extractOptValue(er, DwcTerm.sampleSizeValue)
         .map(String::trim)
         .map(NumberParser::parseDouble)
         .filter(x -> !x.isInfinite() && !x.isNaN())
-        .ifPresent(br::setSampleSizeValue);
+        .ifPresent(consumer);
   }
 
   /** {@link DwcTerm#sampleSizeUnit} interpretation. */
-  public static void interpretSampleSizeUnit(ExtendedRecord er, EventCoreRecord br) {
-    extractOptValue(er, DwcTerm.sampleSizeUnit).map(String::trim).ifPresent(br::setSampleSizeUnit);
+  public static void interpretSampleSizeUnit(ExtendedRecord er, Consumer<String> consumer) {
+    extractOptValue(er, DwcTerm.sampleSizeUnit).map(String::trim).ifPresent(consumer);
   }
 
   /** {@link DcTerm#license} interpretation. */
-  public static void interpretLicense(ExtendedRecord er, EventCoreRecord br) {
+  public static void interpretLicense(ExtendedRecord er, Consumer<String> consumer) {
     String license =
         extractOptValue(er, DcTerm.license)
-            .map(EventCoreInterpreter::getLicense)
+            .map(CoreInterpreter::getLicense)
             .map(License::name)
             .orElse(License.UNSPECIFIED.name());
 
-    br.setLicense(license);
+    consumer.accept(license);
   }
 
   /** {@link DwcTerm#datasetID} interpretation. */
-  public static void interpretDatasetID(ExtendedRecord er, EventCoreRecord br) {
-    extractOptListValue(er, DwcTerm.datasetID).ifPresent(br::setDatasetID);
+  public static void interpretDatasetID(ExtendedRecord er, Consumer<List<String>> consumer) {
+    extractOptListValue(er, DwcTerm.datasetID).ifPresent(consumer);
   }
 
   /** {@link DwcTerm#datasetName} interpretation. */
-  public static void interpretDatasetName(ExtendedRecord er, EventCoreRecord br) {
-    extractOptListValue(er, DwcTerm.datasetName).ifPresent(br::setDatasetName);
+  public static void interpretDatasetName(ExtendedRecord er, Consumer<List<String>> consumer) {
+    extractOptListValue(er, DwcTerm.datasetName).ifPresent(consumer);
   }
 
   /** {@link DwcTerm#samplingProtocol} interpretation. */
-  public static void interpretSamplingProtocol(ExtendedRecord er, EventCoreRecord br) {
-    extractOptListValue(er, DwcTerm.samplingProtocol).ifPresent(br::setSamplingProtocol);
+  public static void interpretSamplingProtocol(ExtendedRecord er, Consumer<List<String>> consumer) {
+    extractOptListValue(er, DwcTerm.samplingProtocol).ifPresent(consumer);
   }
 
   /** Returns ENUM instead of url string */

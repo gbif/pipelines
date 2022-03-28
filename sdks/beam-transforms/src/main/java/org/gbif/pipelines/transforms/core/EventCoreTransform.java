@@ -12,7 +12,7 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.pipelines.core.functions.SerializableConsumer;
 import org.gbif.pipelines.core.interpreters.Interpretation;
-import org.gbif.pipelines.core.interpreters.core.EventCoreInterpreter;
+import org.gbif.pipelines.core.interpreters.core.CoreInterpreter;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.transforms.Transform;
@@ -74,13 +74,13 @@ public class EventCoreTransform extends Transform<ExtendedRecord, EventCoreRecor
                 .setCreated(Instant.now().toEpochMilli())
                 .build())
         .when(er -> !er.getCoreTerms().isEmpty())
-        .via(EventCoreInterpreter::interpretReferences)
-        .via(EventCoreInterpreter::interpretSamplingProtocol)
-        .via(EventCoreInterpreter::interpretSampleSizeUnit)
-        .via(EventCoreInterpreter::interpretSampleSizeValue)
-        .via(EventCoreInterpreter::interpretLicense)
-        .via(EventCoreInterpreter::interpretDatasetID)
-        .via(EventCoreInterpreter::interpretDatasetName)
+        .via((e, r) -> CoreInterpreter.interpretReferences(e, r, r::setReferences))
+        .via((e, r) -> CoreInterpreter.interpretSampleSizeUnit(e, r::setSampleSizeUnit))
+        .via((e, r) -> CoreInterpreter.interpretSampleSizeValue(e, r::setSampleSizeValue))
+        .via((e, r) -> CoreInterpreter.interpretLicense(e, r::setLicense))
+        .via((e, r) -> CoreInterpreter.interpretDatasetID(e, r::setDatasetID))
+        .via((e, r) -> CoreInterpreter.interpretDatasetName(e, r::setDatasetName))
+        .via((e, r) -> CoreInterpreter.interpretSamplingProtocol(e, r::setSamplingProtocol))
         .getOfNullable();
   }
 }
