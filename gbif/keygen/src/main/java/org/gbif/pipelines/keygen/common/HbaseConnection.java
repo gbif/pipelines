@@ -20,6 +20,7 @@ public class HbaseConnection {
     }
     Configuration hbaseConfig = HBaseConfiguration.create();
     hbaseConfig.set("hbase.zookeeper.quorum", hbaseZk);
+    hbaseConfig.set("zookeeper.session.timeout", "360000");
     return ConnectionFactory.createConnection(hbaseConfig);
   }
 
