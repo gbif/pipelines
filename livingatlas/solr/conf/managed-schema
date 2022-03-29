@@ -220,8 +220,8 @@
   <field name="countryCode" type="string" docValues="true" indexed="true"/>
   <field name="county" type="string" docValues="true" indexed="true"/>
   <field name="dataGeneralizations" type="string" docValues="true" indexed="true"/>
-  <field name="datasetID" type="string" docValues="true" indexed="true"/>
-  <field name="datasetName" type="string" docValues="true" indexed="true"/>
+  <field name="datasetID" type="string" docValues="true" indexed="true" multiValued="true" />
+  <field name="datasetName" type="string" docValues="true" indexed="true" multiValued="true"/>
   <field name="dateIdentified" type="string" docValues="true" indexed="true"/>
   <field name="datePrecision" type="string" docValues="true" indexed="true"/>
   <field name="day" type="int" docValues="true" indexed="true"/>
@@ -272,7 +272,7 @@
   <field name="identificationReferences" type="string" docValues="true" indexed="true"/>
   <field name="identificationRemarks" type="string" docValues="true" indexed="true"/>
   <field name="identificationVerificationStatus" type="string" docValues="true" indexed="true"/>
-  <field name="identifiedBy" type="string" docValues="true" indexed="true"/>
+  <field name="identifiedBy" type="string" docValues="true" indexed="true" multiValued="true"/>
   <field name="inCollection" type="string" docValues="true" indexed="true"/>
   <field name="inDataset" type="string" docValues="true" indexed="true"/>
   <field name="inDescribedPlace" type="string" docValues="true" indexed="true"/>
@@ -340,7 +340,7 @@
   <field name="organismScope"  type="string" docValues="true" indexed="true"/>
   <field name="originalNameUsage"  type="string" docValues="true" indexed="true"/>
   <field name="originalNameUsageID"  type="string" docValues="true" indexed="true"/>
-  <field name="otherCatalogNumbers"  type="string" docValues="true" indexed="true"/>
+  <field name="otherCatalogNumbers"  type="string" docValues="true" indexed="true" multiValued="true"/>
   <field name="outlierLayer" type="string" docValues="true" indexed="true" multiValued="true"/>
   <field name="outlierLayerCount" type="int" docValues="true" indexed="true" />
   <field name="ownerInstitutionCode"  type="string" docValues="true" indexed="true"/>
@@ -349,7 +349,7 @@
   <field name="parentNameUsageID"  type="string" docValues="true" indexed="true"/>
   <field name="phylum"  type="string" docValues="true" indexed="true"/>
   <field name="pointRadiusSpatialFit"  type="string" docValues="true" indexed="true"/>
-  <field name="preparations"  type="string" docValues="true" indexed="true"/>
+  <field name="preparations"  type="string" docValues="true" indexed="true" multiValued="true"/>
   <field name="previousIdentifications"  type="string" docValues="true" indexed="true"/>
   <field name="recordNumber"  type="string" docValues="true" indexed="true"/>
   <field name="recordedBy"  type="string" docValues="true" indexed="true" multiValued="true"/>
@@ -367,7 +367,7 @@
   <field name="sampleSizeUnit"  type="string" docValues="true" indexed="true"/>
   <field name="sampleSizeValue"  type="string" docValues="true" indexed="true"/>
   <field name="samplingEffort"  type="string" docValues="true" indexed="true"/>
-  <field name="samplingProtocol"  type="string" docValues="true" indexed="true"/>
+  <field name="samplingProtocol"  type="string" docValues="true" indexed="true" multiValued="true"/>
   <field name="scientificName"  type="string" docValues="true" indexed="true"/>
   <field name="scientificNameAuthorship"  type="string" docValues="true" indexed="true"/>
   <field name="scientificNameID"  type="string" docValues="true" indexed="true"/>
