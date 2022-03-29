@@ -15,6 +15,10 @@
   <name>Pipelines :: Tools :: Extension converter</name>
   <description>Maven plugin generates conveters java classes for raw extensions</description>
 
+  <properties>
+    <sonar.coverage.exclusions>**/Templates.java</sonar.coverage.exclusions>
+  </properties>
+
   <build>
     <plugins>
       <plugin>
