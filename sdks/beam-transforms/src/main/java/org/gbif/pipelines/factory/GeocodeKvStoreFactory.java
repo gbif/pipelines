@@ -86,7 +86,7 @@ public class GeocodeKvStoreFactory {
                     .withHBaseZk(zk)
                     .build())
             .withCacheCapacity(15_000L)
-            .withCacheExpiryTimeInSeconds(7200L)
+            .withCacheExpiryTimeInSeconds(config.getGeocode().getCacheExpiryTimeInSeconds())
             .build();
 
     return GeocodeKVStoreFactory.simpleGeocodeKVStore(geocodeKvStoreConfig, clientConfig);
