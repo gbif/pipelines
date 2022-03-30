@@ -106,8 +106,7 @@ public class EventJsonConverter {
         .setDay(temporal.getDay())
         .setStartDayOfYear(temporal.getStartDayOfYear())
         .setEndDayOfYear(temporal.getEndDayOfYear())
-        .setModified(temporal.getModified())
-        .setDateIdentified(temporal.getDateIdentified());
+        .setModified(temporal.getModified());
 
     JsonConverter.convertEventDate(temporal.getEventDate()).ifPresent(builder::setEventDate);
     JsonConverter.convertEventDateSingle(temporal).ifPresent(builder::setEventDateSingle);
@@ -124,10 +123,6 @@ public class EventJsonConverter {
         .setStateProvince(location.getStateProvince())
         .setMinimumElevationInMeters(location.getMinimumElevationInMeters())
         .setMaximumElevationInMeters(location.getMaximumElevationInMeters())
-        .setElevation(location.getElevation())
-        .setElevationAccuracy(location.getElevationAccuracy())
-        .setDepth(location.getDepth())
-        .setDepthAccuracy(location.getDepthAccuracy())
         .setMinimumDepthInMeters(location.getMinimumDepthInMeters())
         .setMaximumDepthInMeters(location.getMaximumDepthInMeters())
         .setMaximumDistanceAboveSurfaceInMeters(location.getMaximumDistanceAboveSurfaceInMeters())
@@ -175,6 +170,8 @@ public class EventJsonConverter {
     extractOptValue(verbatim, DwcTerm.eventID).ifPresent(builder::setEventId);
     extractOptValue(verbatim, DwcTerm.parentEventID).ifPresent(builder::setParentEventId);
     extractOptValue(verbatim, DwcTerm.institutionCode).ifPresent(builder::setInstitutionCode);
+    extractOptValue(verbatim, DwcTerm.verbatimDepth).ifPresent(builder::setVerbatimDepth);
+    extractOptValue(verbatim, DwcTerm.verbatimElevation).ifPresent(builder::setVerbatimElevation);
   }
 
   private void mapIssues(EventJsonRecord.Builder builder) {
