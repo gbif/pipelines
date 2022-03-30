@@ -3,8 +3,9 @@ package org.gbif.pipelines.ingest.pipelines;
 import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.kvs.cache.ALAAttributionKVStoreFactory;
 import au.org.ala.kvs.cache.GeocodeKvStoreFactory;
-import au.org.ala.pipelines.transforms.ALAMetadataTransform;
+import au.org.ala.pipelines.transforms.ALATemporalTransform;
 import au.org.ala.pipelines.transforms.LocationTransform;
+import au.org.ala.pipelines.transforms.MetadataTransform;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -17,21 +18,18 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.transforms.Create;
-import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.values.PCollection;
-import org.apache.beam.sdk.values.PCollectionView;
 import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.utils.FsUtils;
-import org.gbif.pipelines.io.avro.ALAMetadataRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.transforms.common.ExtensionFilterTransform;
 import org.gbif.pipelines.transforms.common.UniqueIdTransform;
 import org.gbif.pipelines.transforms.core.EventCoreTransform;
-import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
@@ -112,8 +110,8 @@ public class ALAVerbatimToInterpretedPipeline {
 
     // Used transforms
     // Metadata
-    ALAMetadataTransform metadataTransform =
-        ALAMetadataTransform.builder()
+    MetadataTransform metadataTransform =
+        MetadataTransform.builder()
             .dataResourceKvStoreSupplier(ALAAttributionKVStoreFactory.getInstanceSupplier(config))
             .datasetId(datasetId)
             .create();
@@ -131,8 +129,8 @@ public class ALAVerbatimToInterpretedPipeline {
             .create();
 
     // TODO END: ALA uses the same LocationRecord but another Transform
-    TemporalTransform temporalTransform =
-        TemporalTransform.builder().orderings(dateComponentOrdering).create();
+    ALATemporalTransform temporalTransform =
+        ALATemporalTransform.builder().orderings(dateComponentOrdering).create();
 
     // Extension
     MultimediaTransform multimediaTransform =
@@ -143,17 +141,12 @@ public class ALAVerbatimToInterpretedPipeline {
         ImageTransform.builder().orderings(dateComponentOrdering).create();
 
     log.info("Creating beam pipeline");
-
     // Metadata TODO START: Will ALA use it?
-    PCollection<ALAMetadataRecord> metadataRecord =
+    PCollection<MetadataRecord> metadataRecord =
         p.apply("Create metadata collection", Create.of(options.getDatasetId()))
             .apply("Interpret metadata", metadataTransform.interpret());
 
     metadataRecord.apply("Write metadata to avro", metadataTransform.write(pathFn));
-
-    // Create View for the further usage
-    PCollectionView<ALAMetadataRecord> metadataView =
-        metadataRecord.apply("Convert into view", View.asSingleton());
     // TODO END: Will ALA use it?
 
     // Read raw records and filter duplicates
