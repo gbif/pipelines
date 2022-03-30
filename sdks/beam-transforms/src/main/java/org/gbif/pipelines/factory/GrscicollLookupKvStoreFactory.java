@@ -78,6 +78,7 @@ public class GrscicollLookupKvStoreFactory {
                     .withHBaseZk(zk)
                     .build())
             .withCacheCapacity(15_000L)
+            .withCacheExpiryTimeInSeconds(180L)
             .build();
 
     return GrscicollLookupKVStoreFactory.simpleGrscicollLookupKVStore(
