@@ -26,4 +26,6 @@ public class KvConfig implements Serializable {
   private boolean restOnly = false;
 
   private WsConfig api;
+
+  private long cacheExpiryTimeInSeconds = 300L;
 }
