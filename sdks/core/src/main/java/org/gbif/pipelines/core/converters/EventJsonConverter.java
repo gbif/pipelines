@@ -73,10 +73,10 @@ public class EventJsonConverter {
   }
 
   private void mapIdentifierRecord(EventJsonRecord.Builder builder) {
-    builder
-        .setInternalId(identifier.getInternalId())
-        .setFirstLoaded(identifier.getFirstLoaded())
-        .setUniqueKey(identifier.getUniqueKey());
+    builder.setInternalId(identifier.getInternalId());
+    builder.setUniqueKey(identifier.getUniqueKey());
+
+    JsonConverter.convertToDate(identifier.getFirstLoaded()).ifPresent(builder::setFirstLoaded);
   }
 
   private void mapEventCoreRecord(EventJsonRecord.Builder builder) {

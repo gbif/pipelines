@@ -12,7 +12,7 @@
       {"name":"id","type":"string","default":null,"doc":""},
       {"name":"internalId","type":["null","string"],"default":null,"doc":""},
       {"name":"uniqueKey","type":["null","string"],"default":null,"doc":""},
-      {"name":"firstLoaded","type":["null","long"],"default":null,"doc":""},
+      {"name":"firstLoaded","type":["null","string"],"default":null,"doc":""},
       {"name":"lastCrawled","type":["null","string"],"default":null,"doc":""},
       {"name":"created","type":["null","string"],"default":null,"doc":""},
       {"name":"crawlId","type":["null","int"],"default":null,"doc":""},
@@ -81,6 +81,7 @@
       {"name":"mediaTypes","type":{"type":"array","items":"string"},"default":null,"doc":""},
       {"name":"mediaLicenses","type":{"type":"array","items":"string"},"default":null,"doc":""},
       {"name":"multimediaItems","type":{"type":"array","items":"Multimedia"},"default":null,"doc":""},
+      // Extra
       {"name":"issues","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"notIssues","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"extensions","type":{"type":"array","items":"string"},"default":[],"doc":""},
