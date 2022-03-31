@@ -126,7 +126,8 @@ public class SpeciesListDownloader {
             SyncCall.syncCall(service.downloadList(list.getDataResourceUid()));
 
         // File source, String encoding, String delimiter, Character quotes, Integer headerRows
-        try (CSVReader csvReader = new CSVReader(new InputStreamReader(responseBody.byteStream(), "UTF-8"), ',', '"', 0)) {
+        try (CSVReader csvReader =
+            new CSVReader(new InputStreamReader(responseBody.byteStream(), "UTF-8"), ',', '"', 0)) {
 
           List<String> columnHeaders = Arrays.asList(csvReader.readNext());
           int guidIdx = columnHeaders.indexOf("guid");
@@ -176,7 +177,7 @@ public class SpeciesListDownloader {
                         .setSourceStatus(sourceStatus)
                         .build();
                 dataFileWriter.append(speciesListRecord);
-                taxaRead ++;
+                taxaRead++;
               }
               currentLine = csvReader.readNext();
             }
