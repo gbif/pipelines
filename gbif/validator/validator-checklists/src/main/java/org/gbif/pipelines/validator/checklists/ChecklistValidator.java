@@ -64,7 +64,7 @@ public class ChecklistValidator implements Closeable {
 
   private final IdLookup idLookup;
 
-  /** @param neoConfiguration Neo4j configuration. */
+  /** @param configuration Neo4j configuration. */
   public ChecklistValidator(Configuration configuration) {
     // use our own neo repository
     this.configuration = configuration;
@@ -77,8 +77,7 @@ public class ChecklistValidator implements Closeable {
   /**
    * By using the Checklist Normalizer collects the issues for all Taxon file core or extensions.
    */
-  @SneakyThrows
-  public List<Metrics.FileInfo> evaluate(Path archivePath) {
+  public List<Metrics.FileInfo> evaluate(Path archivePath) throws IOException {
     Archive archive = DwcFiles.fromLocation(archivePath);
     List<Metrics.FileInfo> results = new ArrayList<>();
     ArchiveFile core = archive.getCore();
@@ -88,13 +87,10 @@ public class ChecklistValidator implements Closeable {
     return results;
   }
 
+  @SneakyThrows
   @Override
-  public void close() throws IOException {
-    try {
-      idLookup.close();
-    } catch (Exception ex) {
-      throw new RuntimeException(ex);
-    }
+  public void close() {
+    idLookup.close();
   }
 
   /** Validates a ArchiveFile that checklist data. */
