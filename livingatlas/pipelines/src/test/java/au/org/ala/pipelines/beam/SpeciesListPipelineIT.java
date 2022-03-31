@@ -47,6 +47,12 @@ public class SpeciesListPipelineIT {
             "/tmp/la-pipelines-test/species-lists/dr893/1/taxon_profiles/*.avro");
 
     assertTrue(tps.get("not-an-uuid-1").getSpeciesListID().contains("dr1"));
+    assertEquals(2, tps.get("not-an-uuid-1").getSpeciesListID().size());
+    assertEquals(1, tps.get("not-an-uuid-2").getSpeciesListID().size());
+
+    assertEquals(1, tps.get("not-an-uuid-3").getSpeciesListID().size());
+    assertEquals(1, tps.get("not-an-uuid-4").getSpeciesListID().size());
+
     assertEquals(
         "Endangered", tps.get("not-an-uuid-1").getConservationStatuses().get(0).getStatus());
   }
