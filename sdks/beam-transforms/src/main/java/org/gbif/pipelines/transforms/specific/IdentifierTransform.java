@@ -12,6 +12,7 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.pipelines.core.functions.SerializableConsumer;
 import org.gbif.pipelines.core.interpreters.Interpretation;
+import org.gbif.pipelines.core.interpreters.core.IdentifierInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.transforms.Transform;
@@ -20,13 +21,16 @@ import org.gbif.pipelines.transforms.Transform;
 @Slf4j
 public class IdentifierTransform extends Transform<ExtendedRecord, IdentifierRecord> {
 
+  private final String datasetKey;
+
   @Builder(buildMethodName = "create")
-  private IdentifierTransform() {
+  private IdentifierTransform(String datasetKey) {
     super(
         IdentifierRecord.class,
         IDENTIFIER,
         IdentifierTransform.class.getName(),
         IDENTIFIER_RECORDS_COUNT);
+    this.datasetKey = datasetKey;
   }
 
   /** Maps {@link IdentifierRecord} to key value, where key is {@link IdentifierRecord#getId()} */
@@ -60,14 +64,7 @@ public class IdentifierTransform extends Transform<ExtendedRecord, IdentifierRec
                     .setFirstLoaded(Instant.now().toEpochMilli())
                     .build())
         .when(er -> !er.getCoreTerms().isEmpty())
-        .via(
-            (extendedRecord, identifierRecord) -> {
-              // TODO: DELETE ME!
-              identifierRecord.setInternalId(extendedRecord.getId());
-            })
-        // .via(IdentifierInterpreter::someInterpretation1)
-        // .via(IdentifierInterpreter::someInterpretation2)
-        // .via(IdentifierInterpreter::someInterpretation3)
+        .via(IdentifierInterpreter.interpretInternalId(datasetKey))
         .getOfNullable();
   }
 }

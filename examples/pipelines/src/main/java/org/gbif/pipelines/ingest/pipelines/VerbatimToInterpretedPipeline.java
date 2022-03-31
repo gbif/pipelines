@@ -120,7 +120,8 @@ public class VerbatimToInterpretedPipeline {
             .endpointType(options.getEndPointType())
             .create();
     EventCoreTransform eventCoreTransform = EventCoreTransform.builder().create();
-    IdentifierTransform identifierTransform = IdentifierTransform.builder().create();
+    IdentifierTransform identifierTransform =
+        IdentifierTransform.builder().datasetKey(datasetId).create();
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     // TODO START: ALA uses the same LocationRecord but another Transform
     LocationTransform locationTransform =
