@@ -1,5 +1,6 @@
 package au.org.ala.specieslists;
 
+import au.com.bytecode.opencsv.CSVReader;
 import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.kvs.ALAPipelinesConfigFactory;
 import au.org.ala.pipelines.options.SpeciesLevelPipelineOptions;
@@ -8,6 +9,7 @@ import au.org.ala.pipelines.vocabulary.StateProvinceParser;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.WsUtils;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.List;
@@ -25,7 +27,6 @@ import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.SpeciesListRecord;
 import org.gbif.rest.client.retrofit.SyncCall;
-import org.gbif.utils.file.csv.CSVReader;
 import org.slf4j.MDC;
 import retrofit2.Call;
 
@@ -125,9 +126,9 @@ public class SpeciesListDownloader {
             SyncCall.syncCall(service.downloadList(list.getDataResourceUid()));
 
         // File source, String encoding, String delimiter, Character quotes, Integer headerRows
-        try (CSVReader csvReader = new CSVReader(responseBody.byteStream(), "UTF-8", ",", '"', 1)) {
+        try (CSVReader csvReader = new CSVReader(new InputStreamReader(responseBody.byteStream(), "UTF-8"), ',', '"', 0)) {
 
-          List<String> columnHeaders = Arrays.asList(csvReader.getHeader());
+          List<String> columnHeaders = Arrays.asList(csvReader.readNext());
           int guidIdx = columnHeaders.indexOf("guid");
           int statusIdx = columnHeaders.indexOf("status");
           int sourceStatusIdx = columnHeaders.indexOf("sourceStatus");
@@ -152,7 +153,8 @@ public class SpeciesListDownloader {
           }
 
           if (guidIdx > 0) {
-            String[] currentLine = csvReader.next();
+            String[] currentLine = csvReader.readNext();
+            int taxaRead = 0;
 
             // build up the map
             while (currentLine != null && currentLine.length == columnHeaders.size()) {
@@ -174,9 +176,11 @@ public class SpeciesListDownloader {
                         .setSourceStatus(sourceStatus)
                         .build();
                 dataFileWriter.append(speciesListRecord);
+                taxaRead ++;
               }
-              currentLine = csvReader.next();
+              currentLine = csvReader.readNext();
             }
+            log.info("List " + list.getDataResourceUid() + " has " + taxaRead + " taxa");
           } else {
             log.warn(
                 "List {} - {} does not supply a GUID column - hence this list will not be used",

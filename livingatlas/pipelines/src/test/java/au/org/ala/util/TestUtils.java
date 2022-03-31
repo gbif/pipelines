@@ -62,7 +62,7 @@ public class TestUtils {
               }
 
               // list download
-              if (request.getPath().startsWith("/speciesListItem/downloadList")) {
+              if (request.getPath().startsWith("/speciesListItem/downloadList/dr1")) {
 
                 Source source =
                     Okio.source(new File("src/test/resources/species-lists/test-list.csv"));
@@ -73,6 +73,33 @@ public class TestUtils {
                     .setHeader("Content-Disposition", "attachment;filename=test-list.csv")
                     .setResponseCode(200)
                     .setBody(buffer);
+              }
+
+              // list download
+              if (request.getPath().startsWith("/speciesListItem/downloadList/dr2")) {
+
+                Source source =
+                        Okio.source(new File("src/test/resources/species-lists/test-list2.csv"));
+                Buffer buffer = new Buffer();
+                buffer.writeAll(source);
+                return new MockResponse()
+                        .setHeader("contentType", "text/csv")
+                        .setHeader("Content-Disposition", "attachment;filename=test-list.csv")
+                        .setResponseCode(200)
+                        .setBody(buffer);
+              }
+
+              // list download
+              if (request.getPath().startsWith("/speciesListItem/downloadList/dr3")) {
+                Source source =
+                        Okio.source(new File("src/test/resources/species-lists/griis.csv"));
+                Buffer buffer = new Buffer();
+                buffer.writeAll(source);
+                return new MockResponse()
+                        .setHeader("contentType", "text/csv")
+                        .setHeader("Content-Disposition", "attachment;filename=test-list.csv")
+                        .setResponseCode(200)
+                        .setBody(buffer);
               }
             } catch (Exception e) {
               return new MockResponse().setResponseCode(500);
