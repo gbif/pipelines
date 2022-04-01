@@ -385,7 +385,7 @@
   <field name="taxonomicStatus"  type="string" docValues="true" indexed="true"/>
   <field name="toTaxon"  type="string" docValues="true" indexed="true"/>
   <field name="type"  type="string" docValues="true" indexed="true"/>
-  <field name="typeStatus"  type="string" docValues="true" indexed="true"/>
+  <field name="typeStatus"  type="string" docValues="true" indexed="true" multiValued="true" />
   <field name="verbatimCoordinateSystem"  type="string" docValues="true" indexed="true"/>
   <field name="verbatimCoordinates"  type="string" docValues="true" indexed="true" />
   <field name="verbatimDepth"  type="string" docValues="true" indexed="true"/>
