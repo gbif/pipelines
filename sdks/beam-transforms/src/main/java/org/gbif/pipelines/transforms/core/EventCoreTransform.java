@@ -11,8 +11,11 @@ import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.pipelines.core.functions.SerializableConsumer;
+import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.CoreInterpreter;
+import org.gbif.pipelines.core.interpreters.core.VocabularyInterpreter;
+import org.gbif.pipelines.core.parsers.vocabulary.VocabularyService;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.transforms.Transform;
@@ -25,13 +28,17 @@ import org.gbif.pipelines.transforms.Transform;
  */
 public class EventCoreTransform extends Transform<ExtendedRecord, EventCoreRecord> {
 
+  private final SerializableSupplier<VocabularyService> vocabularyServiceSupplier;
+  private VocabularyService vocabularyService;
+
   @Builder(buildMethodName = "create")
-  private EventCoreTransform() {
+  private EventCoreTransform(SerializableSupplier<VocabularyService> vocabularyServiceSupplier) {
     super(
         EventCoreRecord.class,
         EVENT_CORE,
         EventCoreTransform.class.getName(),
         EVENT_CORE_RECORDS_COUNT);
+    this.vocabularyServiceSupplier = vocabularyServiceSupplier;
   }
 
   /** Maps {@link EventCoreRecord} to key value, where key is {@link EventCoreRecord#getId} */
@@ -48,7 +55,9 @@ public class EventCoreTransform extends Transform<ExtendedRecord, EventCoreRecor
   /** Beam @Setup initializes resources */
   @Setup
   public void setup() {
-    // TODO: INIT RESOURCES OR DELETE THE METHOD
+    if (vocabularyService == null && vocabularyServiceSupplier != null) {
+      vocabularyService = vocabularyServiceSupplier.get();
+    }
   }
 
   /** Beam @Setup can be applied only to void method */
@@ -61,7 +70,9 @@ public class EventCoreTransform extends Transform<ExtendedRecord, EventCoreRecor
   @SneakyThrows
   @Teardown
   public void tearDown() {
-    // TODO: CLOSE RESOURCES OR DELETE THE METHOD
+    if (vocabularyService != null) {
+      vocabularyService.close();
+    }
   }
 
   @Override
@@ -74,6 +85,7 @@ public class EventCoreTransform extends Transform<ExtendedRecord, EventCoreRecor
                 .setCreated(Instant.now().toEpochMilli())
                 .build())
         .when(er -> !er.getCoreTerms().isEmpty())
+        .via(VocabularyInterpreter.interpretEventType(vocabularyService))
         .via((e, r) -> CoreInterpreter.interpretReferences(e, r, r::setReferences))
         .via((e, r) -> CoreInterpreter.interpretSampleSizeUnit(e, r::setSampleSizeUnit))
         .via((e, r) -> CoreInterpreter.interpretSampleSizeValue(e, r::setSampleSizeValue))

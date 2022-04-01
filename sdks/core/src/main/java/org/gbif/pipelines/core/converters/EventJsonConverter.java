@@ -90,6 +90,10 @@ public class EventJsonConverter {
         .setDatasetName(eventCore.getDatasetName())
         .setSamplingProtocol(eventCore.getSamplingProtocol());
 
+    // Vocabulary
+    JsonConverter.convertVocabularyConcept(eventCore.getEventType())
+        .ifPresent(builder::setEventType);
+
     // License
     JsonConverter.convertLicense(eventCore.getLicense()).ifPresent(builder::setLicense);
 

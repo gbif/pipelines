@@ -32,6 +32,7 @@
       {"name":"projectId","type":["null","string"],"default":null,"doc":""},
       {"name":"programmeAcronym","type":["null","string"],"default":null,"doc":""},
       // Record-level
+      {"name":"eventType","type":["null","VocabularyConcept"],"default":null,"doc":""},
       {"name":"references","type":["null","string"],"default":null,"doc":""},
       {"name":"institutionCode","type":["null","string"],"default":null,"doc":""},
       {"name":"datasetID","type":{"type":"array","items":"string"},"default":null,"doc":""},

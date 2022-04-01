@@ -22,6 +22,7 @@ import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.utils.FsUtils;
+import org.gbif.pipelines.factory.FileVocabularyFactory;
 import org.gbif.pipelines.factory.GeocodeKvStoreFactory;
 import org.gbif.pipelines.factory.MetadataServiceClientFactory;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -119,7 +120,16 @@ public class VerbatimToInterpretedPipeline {
             .attempt(attempt)
             .endpointType(options.getEndPointType())
             .create();
-    EventCoreTransform eventCoreTransform = EventCoreTransform.builder().create();
+    EventCoreTransform eventCoreTransform =
+        EventCoreTransform.builder()
+            .vocabularyServiceSupplier(
+                FileVocabularyFactory.builder()
+                    .config(config)
+                    .hdfsSiteConfig(hdfsSiteConfig)
+                    .coreSiteConfig(coreSiteConfig)
+                    .build()
+                    .getInstanceSupplier())
+            .create();
     IdentifierTransform identifierTransform =
         IdentifierTransform.builder().datasetKey(datasetId).create();
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
