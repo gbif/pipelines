@@ -12,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.config.model.VocabularyConfig;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
@@ -55,19 +54,22 @@ public class FileVocabularyFactory implements Serializable {
 
       VocabularyServiceBuilder serviceBuilder = VocabularyService.builder();
 
-      for (Term term : vocabularyConfig.getVocabulariesNames().keySet()) {
-        String fileName = vocabularyConfig.getVocabularyFileName(term);
-        try (InputStream is = readFile(hdfsSiteConfig, coreSiteConfig, path, fileName)) {
-          InMemoryVocabularyLookupBuilder builder = InMemoryVocabularyLookup.newBuilder().from(is);
-          if (term == DwcTerm.lifeStage) {
-            builder.withPrefilter(PreFilters.REMOVE_NUMERIC_PREFIX);
-          }
+      vocabularyConfig
+          .getVocabulariesNames()
+          .forEach(
+              (term, name) -> {
+                try (InputStream is = readFile(hdfsSiteConfig, coreSiteConfig, path, name)) {
+                  InMemoryVocabularyLookupBuilder builder =
+                      InMemoryVocabularyLookup.newBuilder().from(is);
+                  if (term == DwcTerm.lifeStage) {
+                    builder.withPrefilter(PreFilters.REMOVE_NUMERIC_PREFIX);
+                  }
 
-          serviceBuilder.vocabularyLookup(term, builder.build());
-        } catch (IOException ex) {
-          throw new RuntimeException(ex);
-        }
-      }
+                  serviceBuilder.vocabularyLookup(term, builder.build());
+                } catch (IOException ex) {
+                  throw new RuntimeException(ex);
+                }
+              });
 
       return serviceBuilder.build();
     };
