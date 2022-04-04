@@ -13,7 +13,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
-import org.gbif.dwc.terms.Terms;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.config.model.VocabularyConfig;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
@@ -56,7 +55,7 @@ public class FileVocabularyFactory implements Serializable {
 
       VocabularyServiceBuilder serviceBuilder = VocabularyService.builder();
 
-      for (Term term : Terms.getVocabularyBackedTerms()) {
+      for (Term term : vocabularyConfig.getVocabulariesNames().keySet()) {
         String fileName = vocabularyConfig.getVocabularyFileName(term);
         try (InputStream is = readFile(hdfsSiteConfig, coreSiteConfig, path, fileName)) {
           InMemoryVocabularyLookupBuilder builder = InMemoryVocabularyLookup.newBuilder().from(is);
