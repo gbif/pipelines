@@ -4,8 +4,11 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.DIRECTORY_NAME;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.ALL;
 
+import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.KeyDeserializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.base.Strings;
 import java.io.BufferedReader;
@@ -32,6 +35,8 @@ import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
+import org.gbif.dwc.terms.Term;
+import org.gbif.dwc.terms.TermFactory;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
 
 /** Utility class to work with file system. */
@@ -294,8 +299,21 @@ public final class FsUtils {
     if (fs.exists(fPath)) {
       log.info("Reading properties path - {}", filePath);
       try (BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(fPath), UTF_8))) {
+
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         mapper.configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true);
+
+        SimpleModule keyTermDeserializer = new SimpleModule();
+        keyTermDeserializer.addKeyDeserializer(
+            Term.class,
+            new KeyDeserializer() {
+              @Override
+              public Term deserializeKey(String value, DeserializationContext dc) {
+                return TermFactory.instance().findTerm(value);
+              }
+            });
+        mapper.registerModule(keyTermDeserializer);
+
         mapper.findAndRegisterModules();
         return mapper.readValue(br, clazz);
       }
