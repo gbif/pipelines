@@ -164,7 +164,11 @@ public class BasicInterpreter {
             if (br.getTypeStatus() == null) {
               br.setTypeStatus(new ArrayList<>());
             }
-            br.getTypeStatus().add(parseResult.getPayload().name());
+
+            String result = parseResult.getPayload().name();
+            if (!br.getTypeStatus().contains(result)) {
+              br.getTypeStatus().add(result);
+            }
           } else {
             addIssue(br, TYPE_STATUS_INVALID);
           }
