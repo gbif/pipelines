@@ -353,6 +353,7 @@
   <field name="previousIdentifications"  type="string" docValues="true" indexed="true"/>
   <field name="recordNumber"  type="string" docValues="true" indexed="true"/>
   <field name="recordedBy"  type="string" docValues="true" indexed="true" multiValued="true"/>
+  <field name="relativeOrganismQuantity"  type="double" docValues="true" indexed="true"/>
   <field name="references"  type="string" docValues="true" indexed="true"/>
   <field name="relatedResourceID"  type="string" docValues="true" indexed="true"/>
   <field name="relationshipAccordingTo"  type="string" docValues="true" indexed="true"/>
