@@ -92,5 +92,26 @@
       {"name":"lon","type":"double"},
       {"name":"lat","type":"double"}
     ]
+  },
+  {
+    "name":"MetadataJsonRecord",
+    "namespace":"org.gbif.pipelines.io.avro.json",
+    "type":"record",
+    "fields":[
+      {"name":"datasetKey","type":["null","string"],"default":null,"doc":""},
+      {"name":"datasetTitle","type":["null","string"],"default":null,"doc":""},
+      {"name":"installationKey","type":["null","string"],"default":null,"doc":""},
+      {"name":"hostingOrganizationKey","type":["null","string"],"default":null,"doc":""},
+      {"name":"endorsingNodeKey","type":["null","string"],"default":null,"doc":""},
+      {"name":"publisherTitle","type":["null","string"],"default":null,"doc":""},
+      {"name":"license","type":["null","string"],"default":null,"doc":""},
+      {"name":"protocol","type":["null","string"],"default":null,"doc":""},
+      {"name":"publishingCountry","type":["null","string"],"default":null,"doc":""},
+      {"name":"datasetPublishingCountry","type":["null","string"],"default":null,"doc":""},
+      {"name":"publishingOrganizationKey","type":["null","string"],"default":null,"doc":""},
+      {"name":"networkKeys","type":{"type":"array","items":"string"},"default":null,"doc":""},
+      {"name":"projectId","type":["null","string"],"default":null,"doc":""},
+      {"name":"programmeAcronym","type":["null","string"],"default":null,"doc":""}
+    ]
   }
 ]
