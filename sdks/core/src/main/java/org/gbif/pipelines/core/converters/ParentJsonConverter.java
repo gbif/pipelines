@@ -4,13 +4,16 @@ import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.TermFactory;
 import org.gbif.pipelines.core.utils.HashConverter;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -109,7 +112,11 @@ public class ParentJsonConverter {
   }
 
   private OccurrenceMapRecord convertToOccurrence(Map<String, String> occurrenceMap) {
-    return OccurrenceMapRecord.newBuilder().setCore(occurrenceMap).build();
+    HashMap<String, String> map = new HashMap<>(occurrenceMap.size());
+    for (Entry<String, String> entry : occurrenceMap.entrySet()) {
+      map.put(TermFactory.instance().findTerm(entry.getKey()).simpleName(), entry.getValue());
+    }
+    return OccurrenceMapRecord.newBuilder().setCore(map).build();
   }
 
   private EventJsonRecord.Builder convertToEvent() {
