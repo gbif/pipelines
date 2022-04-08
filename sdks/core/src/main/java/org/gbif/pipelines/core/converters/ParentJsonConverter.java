@@ -86,7 +86,7 @@ public class ParentJsonConverter {
                 verbatim.getId(),
                 occurrenceJsonRecord.getCore().get(DwcTerm.Occurrence.qualifiedName())))
         .setJoinRecordBuilder(
-            JoinRecord.newBuilder().setName("occurrence").setName(identifier.getInternalId()))
+            JoinRecord.newBuilder().setName("occurrence").setParent(identifier.getInternalId()))
         .setOccurrence(occurrenceJsonRecord)
         .build();
   }

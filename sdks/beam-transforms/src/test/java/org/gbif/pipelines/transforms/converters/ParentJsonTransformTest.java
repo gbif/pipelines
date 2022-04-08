@@ -62,7 +62,7 @@ public class ParentJsonTransformTest {
     final String multivalue1 = "mv;à1";
     final String multivalue2 = "mv2";
 
-    Map<String, String> erMap = new HashMap<>(5);
+    Map<String, String> erMap = new HashMap<>();
     erMap.put("http://rs.tdwg.org/dwc/terms/locality", "something:{something}");
     erMap.put("http://purl.org/dc/terms/remark", "{\"something\":1}{\"something\":1}");
     erMap.put(DwcTerm.recordedBy.qualifiedName(), multivalue1 + "|" + multivalue2);
@@ -106,15 +106,18 @@ public class ParentJsonTransformTest {
                         .build()))
             .build();
 
+    Map<String, List<Map<String, String>>> exts = new HashMap<>(2);
+    exts.put(DwcTerm.Occurrence.qualifiedName(), Collections.singletonList(erMap));
+    exts.put(
+        "http://rs.tdwg.org/ac/terms/Multimedia",
+        Collections.singletonList(Collections.singletonMap("k", "v")));
+
     ExtendedRecord er =
         ExtendedRecord.newBuilder()
             .setId("777")
             .setCoreRowType("core")
             .setCoreTerms(erMap)
-            .setExtensions(
-                Collections.singletonMap(
-                    "http://rs.tdwg.org/ac/terms/Multimedia",
-                    Collections.singletonList(Collections.singletonMap("k", "v"))))
+            .setExtensions(exts)
             .build();
 
     EventCoreRecord ecr = EventCoreRecord.newBuilder().setId("777").build();

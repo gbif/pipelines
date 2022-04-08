@@ -83,7 +83,7 @@ public class OccurrenceJsonTransformTest {
     final String multivalue1 = "mv;à1";
     final String multivalue2 = "mv2";
 
-    Map<String, String> erMap = new HashMap<>(5);
+    Map<String, String> erMap = new HashMap<>();
     erMap.put("http://rs.tdwg.org/dwc/terms/locality", "something:{something}");
     erMap.put("http://purl.org/dc/terms/remark", "{\"something\":1}{\"something\":1}");
     erMap.put(DwcTerm.recordedBy.qualifiedName(), multivalue1 + "|" + multivalue2);

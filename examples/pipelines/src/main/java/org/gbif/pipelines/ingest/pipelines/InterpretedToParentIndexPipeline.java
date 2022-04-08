@@ -3,6 +3,7 @@ package org.gbif.pipelines.ingest.pipelines;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import lombok.AccessLevel;
@@ -206,7 +207,12 @@ public class InterpretedToParentIndexPipeline {
         ElasticsearchIO.write()
             .withConnectionConfiguration(esConfig)
             .withMaxBatchSizeBytes(options.getEsMaxBatchSizeBytes())
-            .withRoutingFn(input -> input.get("joinRecord").get("parent").asText())
+            .withRoutingFn(
+                input ->
+                    Optional.of(input.get("joinRecord"))
+                        .filter(i -> i.hasNonNull("parent"))
+                        .map(i -> i.get("parent").asText())
+                        .orElse(input.get("internalId").asText()))
             .withMaxBatchSize(options.getEsMaxBatchSize());
 
     // Ignore gbifID as ES doc ID, useful for validator
