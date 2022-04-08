@@ -5,6 +5,7 @@ geocode:
   api:
     wsUrl: https://api.gbif.org/v1/
 extensionsAllowedForVerbatimSet:
+  - http://rs.tdwg.org/dwc/terms/Occurrence
   - http://rs.tdwg.org/ac/terms/Multimedia
   - http://data.ggbn.org/schemas/ggbn/terms/Amplification
   - http://data.ggbn.org/schemas/ggbn/terms/Cloning
@@ -28,3 +29,7 @@ extensionsAllowedForVerbatimSet:
   - http://rs.gbif.org/terms/1.0/Reference
   - http://rs.tdwg.org/dwc/terms/ResourceRelationship
   - http://rs.gbif.org/terms/1.0/DNADerivedData
+vocabularyConfig:
+  vocabulariesPath: hdfs://ha-nn/pipelines/vocabularies
+  vocabulariesNames:
+    http://rs.gbif.org/terms/1.0/eventType: eventType
