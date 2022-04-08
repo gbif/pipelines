@@ -36,9 +36,9 @@
       {"name":"crawlId","type":["null","int"],"default":null,"doc":""},
       // Metadata
       {"name":"metadata","type":["null","MetadataJsonRecord"],"default":null,"doc":""},
-      // Event,
+      // Event
       {"name":"event","type":["null","EventJsonRecord"],"default":null,"doc":""},
-      // Occurrence,
+      // Occurrence
       {"name":"occurrence","type":["null","OccurrenceMapRecord"],"default":null,"doc":""},
       // Raw
       {"name":"verbatim","type":["null","VerbatimRecord"],"default":null,"doc":""},
