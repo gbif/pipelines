@@ -11,13 +11,38 @@
       }
     },
     {
-      "occurrence": {
+      "occurrence_string": {
         "path_match": "occurrence.*",
-        "mapping": {
-          "type": "keyword",
-          "normalizer": "lowercase_normalizer",
-          "copy_to": "all"
-        }
+        "match_mapping_type": "string",
+        "mapping": {  "type": "keyword" }
+      }
+    },
+    {
+      "occurrence_boolean": {
+        "path_match": "occurrence.*",
+        "match_mapping_type": "boolean",
+        "mapping": { "type": "keyword" }
+      }
+    },
+    {
+      "occurrence_date": {
+        "path_match": "occurrence.*",
+        "match_mapping_type": "date",
+        "mapping": { "type": "keyword" }
+      }
+    },
+    {
+      "occurrence_double": {
+        "path_match": "occurrence.*",
+        "match_mapping_type": "double",
+        "mapping": { "type": "keyword" }
+      }
+    },
+    {
+      "occurrence_long": {
+        "path_match": "occurrence.*",
+        "match_mapping_type": "long",
+        "mapping": { "type": "keyword" }
       }
     }
   ],
