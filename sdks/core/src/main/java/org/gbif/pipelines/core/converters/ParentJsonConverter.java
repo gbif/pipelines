@@ -84,7 +84,7 @@ public class ParentJsonConverter {
             HashConverter.getSha1(
                 metadata.getDatasetKey(),
                 verbatim.getId(),
-                occurrenceJsonRecord.getCore().get(DwcTerm.Occurrence.qualifiedName())))
+                occurrenceJsonRecord.getCore().get(DwcTerm.occurrenceID.qualifiedName())))
         .setJoinRecordBuilder(
             JoinRecord.newBuilder().setName("occurrence").setParent(identifier.getInternalId()))
         .setOccurrence(occurrenceJsonRecord)

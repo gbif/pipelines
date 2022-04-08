@@ -16,7 +16,6 @@ import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.gbif.dwc.terms.DcTerm;
-import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation.Result;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation.TargetHandler;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
