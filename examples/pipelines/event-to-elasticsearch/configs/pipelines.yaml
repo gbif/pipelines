@@ -32,4 +32,4 @@ extensionsAllowedForVerbatimSet:
 vocabularyConfig:
   vocabulariesPath: hdfs://ha-nn/pipelines/vocabularies
   vocabulariesNames:
-    http://rs.gbif.org/terms/1.0/eventType: eventType
+    http://rs.gbif.org/terms/1.0/eventType: EventType
