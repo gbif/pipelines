@@ -212,8 +212,6 @@
     },
     "occurrence": {"type": "object"},
     "verbatim": {"type": "object", "enabled": false},
-    "joinRecord": { "type": "join", "relations": { "event": "occurrence" },
-    "eager_global_ordinals": false
-    }
+    "joinRecord": { "type": "join", "relations": { "event": "occurrence" }, "eager_global_ordinals": false}
   }
 }
