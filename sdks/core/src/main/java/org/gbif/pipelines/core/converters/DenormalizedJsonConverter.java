@@ -8,10 +8,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
+import lombok.var;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.TermFactory;
 import org.gbif.pipelines.core.utils.HashConverter;
@@ -32,7 +32,7 @@ import org.gbif.pipelines.io.avro.json.ParentJsonRecord;
 
 @Slf4j
 @Builder
-public class ParentJsonConverter {
+public class DenormalizedJsonConverter {
 
   private final MetadataRecord metadata;
   private final IdentifierRecord identifier;
@@ -46,24 +46,20 @@ public class ParentJsonConverter {
 
   public List<ParentJsonRecord> convertToParents() {
 
-    Integer arraySize =
-        Optional.of(verbatim.getExtensions())
-            .map(exts -> exts.get(DwcTerm.Occurrence.qualifiedName()))
-            .map(List::size)
-            .map(size -> size + 1)
-            .orElse(1);
+    List<ParentJsonRecord> result = new ArrayList<>();
 
-    List<ParentJsonRecord> result = new ArrayList<>(arraySize);
-    result.add(convertToParentEvent());
+    var extensions = verbatim.getExtensions();
 
-    Optional.of(verbatim.getExtensions())
-        .map(exts -> exts.get(DwcTerm.Occurrence.qualifiedName()))
-        .ifPresent(
-            l ->
-                l.stream()
-                    .map(this::convertToOccurrence)
-                    .map(this::convertToParentOccurrence)
-                    .forEach(result::add));
+    if (extensions != null
+        && extensions.get(DwcTerm.Occurrence.qualifiedName()) != null
+        && extensions.get(DwcTerm.Occurrence.qualifiedName()).size() > 0) {
+      extensions.get(DwcTerm.Occurrence.qualifiedName()).stream()
+          .map(this::convertToOccurrence)
+          .map(this::convertToParentOccurrence)
+          .forEach(result::add);
+    } else {
+      result.add(convertToParentEvent());
+    }
 
     return result;
   }
@@ -90,6 +86,7 @@ public class ParentJsonConverter {
                 occurrenceJsonRecord.getCore().get(DwcTerm.occurrenceID.simpleName())))
         .setJoinRecordBuilder(
             JoinRecord.newBuilder().setName("occurrence").setParent(identifier.getInternalId()))
+        .setEventBuilder(convertToEvent())
         .setOccurrence(occurrenceJsonRecord)
         .build();
   }
