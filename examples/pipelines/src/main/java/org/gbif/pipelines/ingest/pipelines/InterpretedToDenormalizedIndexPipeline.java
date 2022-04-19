@@ -34,7 +34,7 @@ import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.transforms.converters.ParentJsonTransform;
+import org.gbif.pipelines.transforms.converters.DenormalizedJsonTransform;
 import org.gbif.pipelines.transforms.core.EventCoreTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
@@ -161,7 +161,7 @@ public class InterpretedToDenormalizedIndexPipeline {
 
     log.info("Adding step 3: Converting into a json object");
     SingleOutput<KV<String, CoGbkResult>, String> eventJsonDoFn =
-        ParentJsonTransform.builder()
+        DenormalizedJsonTransform.builder()
             .extendedRecordTag(verbatimTransform.getTag())
             .identifierRecordTag(identifierTransform.getTag())
             .eventCoreRecordTag(eventCoreTransform.getTag())
