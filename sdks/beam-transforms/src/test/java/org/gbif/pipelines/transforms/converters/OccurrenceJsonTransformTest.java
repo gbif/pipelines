@@ -35,6 +35,7 @@ import org.gbif.pipelines.io.avro.Diagnostic;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.GadmFeatures;
+import org.gbif.pipelines.io.avro.GbifIdRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MachineTag;
@@ -65,6 +66,7 @@ import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
+import org.gbif.pipelines.transforms.specific.GbifIdTransform;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -138,10 +140,11 @@ public class OccurrenceJsonTransformTest {
                     Collections.singletonList(Collections.singletonMap("k", "v"))))
             .build();
 
+    GbifIdRecord id = GbifIdRecord.newBuilder().setId("777").setGbifId(111L).build();
+
     BasicRecord br =
         BasicRecord.newBuilder()
             .setId("777")
-            .setGbifId(111L)
             .setBasisOfRecord("setBasisOfRecord")
             .setOrganismQuantity(2d)
             .setOrganismQuantityType("OrganismQuantityType")
@@ -415,6 +418,7 @@ public class OccurrenceJsonTransformTest {
     // Core
     BasicTransform basicTransform = BasicTransform.builder().create();
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
+    GbifIdTransform gbifIdTransform = GbifIdTransform.builder().create();
     TemporalTransform temporalTransform = TemporalTransform.builder().create();
     TaxonomyTransform taxonomyTransform = TaxonomyTransform.builder().create();
     GrscicollTransform grscicollTransform = GrscicollTransform.builder().create();
@@ -432,6 +436,9 @@ public class OccurrenceJsonTransformTest {
     PCollection<KV<String, ExtendedRecord>> verbatimCollection =
         p.apply("Read Verbatim", Create.of(er))
             .apply("Map Verbatim to KV", verbatimTransform.toKv());
+
+    PCollection<KV<String, GbifIdRecord>> idCollection =
+        p.apply("Read GBIF ids", Create.of(id)).apply("Map GBIF ids to KV", gbifIdTransform.toKv());
 
     PCollection<KV<String, BasicRecord>> basicCollection =
         p.apply("Read Basic", Create.of(br)).apply("Map Basic to KV", basicTransform.toKv());
@@ -466,6 +473,7 @@ public class OccurrenceJsonTransformTest {
     SingleOutput<KV<String, CoGbkResult>, String> occurrenceJsonDoFn =
         OccurrenceJsonTransform.builder()
             .extendedRecordTag(verbatimTransform.getTag())
+            .gbifIdRecordTag(gbifIdTransform.getTag())
             .basicRecordTag(basicTransform.getTag())
             .temporalRecordTag(temporalTransform.getTag())
             .locationRecordTag(locationTransform.getTag())
@@ -482,6 +490,7 @@ public class OccurrenceJsonTransformTest {
         KeyedPCollectionTuple
             // Core
             .of(basicTransform.getTag(), basicCollection)
+            .and(gbifIdTransform.getTag(), idCollection)
             .and(temporalTransform.getTag(), temporalCollection)
             .and(locationTransform.getTag(), locationCollection)
             .and(taxonomyTransform.getTag(), taxonCollection)
@@ -500,6 +509,7 @@ public class OccurrenceJsonTransformTest {
     String json =
         OccurrenceJsonConverter.builder()
             .basic(br)
+            .gbifId(id)
             .metadata(mr)
             .verbatim(er)
             .temporal(tmr)

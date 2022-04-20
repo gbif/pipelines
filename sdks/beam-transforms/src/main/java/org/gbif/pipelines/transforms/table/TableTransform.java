@@ -19,8 +19,8 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TupleTag;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.InterpretationType;
-import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.GbifIdRecord;
 import org.gbif.pipelines.transforms.common.CheckTransforms;
 
 @SuppressWarnings("ConstantConditions")
@@ -33,11 +33,12 @@ public abstract class TableTransform<T extends SpecificRecordBase>
 
   @NonNull private final Class<T> clazz;
 
-  @NonNull private final SerializableBiFunction<BasicRecord, ExtendedRecord, Optional<T>> convertFn;
+  @NonNull
+  private final SerializableBiFunction<GbifIdRecord, ExtendedRecord, Optional<T>> convertFn;
 
   @NonNull private TupleTag<ExtendedRecord> extendedRecordTag;
 
-  @NonNull private TupleTag<BasicRecord> basicRecordTag;
+  @NonNull private TupleTag<GbifIdRecord> gbifIdRecordTag;
 
   @NonNull private String path;
 
@@ -52,7 +53,7 @@ public abstract class TableTransform<T extends SpecificRecordBase>
       InterpretationType recordType,
       String counterNamespace,
       String counterName,
-      SerializableBiFunction<BasicRecord, ExtendedRecord, Optional<T>> convertFn) {
+      SerializableBiFunction<GbifIdRecord, ExtendedRecord, Optional<T>> convertFn) {
     this.clazz = clazz;
     this.recordType = recordType;
     this.counter = Metrics.counter(counterNamespace, counterName);
@@ -64,8 +65,8 @@ public abstract class TableTransform<T extends SpecificRecordBase>
     return this;
   }
 
-  public TableTransform<T> setBasicRecordTag(TupleTag<BasicRecord> basicRecordTag) {
-    this.basicRecordTag = basicRecordTag;
+  public TableTransform<T> setGbifIdRecordTag(TupleTag<GbifIdRecord> gbifIdRecordTag) {
+    this.gbifIdRecordTag = gbifIdRecordTag;
     return this;
   }
 
@@ -122,13 +123,13 @@ public abstract class TableTransform<T extends SpecificRecordBase>
 
     ExtendedRecord er = v.getOnly(extendedRecordTag, ExtendedRecord.newBuilder().setId(k).build());
 
-    BasicRecord br = v.getOnly(basicRecordTag, BasicRecord.newBuilder().setId(k).build());
+    GbifIdRecord id = v.getOnly(gbifIdRecordTag);
 
     convertFn
-        .apply(br, er)
+        .apply(id, er)
         .ifPresent(
-            record -> {
-              c.output(record);
+            r -> {
+              c.output(r);
               counter.inc();
             });
   }

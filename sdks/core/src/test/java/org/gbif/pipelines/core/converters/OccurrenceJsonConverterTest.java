@@ -26,6 +26,7 @@ import org.gbif.pipelines.io.avro.Diagnostic;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.GadmFeatures;
+import org.gbif.pipelines.io.avro.GbifIdRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MachineTag;
 import org.gbif.pipelines.io.avro.MediaType;
@@ -114,10 +115,11 @@ public class OccurrenceJsonConverterTest {
                     Collections.singletonList(Collections.singletonMap("k", "v"))))
             .build();
 
+    GbifIdRecord id = GbifIdRecord.newBuilder().setId("777").setGbifId(111L).build();
+
     BasicRecord br =
         BasicRecord.newBuilder()
             .setId("777")
-            .setGbifId(111L)
             .setBasisOfRecord("setBasisOfRecord")
             .setOrganismQuantity(2d)
             .setOrganismQuantityType("OrganismQuantityType")
@@ -392,6 +394,7 @@ public class OccurrenceJsonConverterTest {
     String json =
         OccurrenceJsonConverter.builder()
             .basic(br)
+            .gbifId(id)
             .metadata(mr)
             .verbatim(er)
             .temporal(tmr)
@@ -560,7 +563,9 @@ public class OccurrenceJsonConverterTest {
 
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("777").build();
 
-    BasicRecord br = BasicRecord.newBuilder().setId("777").setGbifId(1L).build();
+    GbifIdRecord id = GbifIdRecord.newBuilder().setGbifId(1L).build();
+
+    BasicRecord br = BasicRecord.newBuilder().setId("777").build();
 
     TemporalRecord tmr = TemporalRecord.newBuilder().setId("777").build();
 
@@ -576,6 +581,7 @@ public class OccurrenceJsonConverterTest {
     String json =
         OccurrenceJsonConverter.builder()
             .basic(br)
+            .gbifId(id)
             .metadata(mr)
             .verbatim(er)
             .temporal(tmr)

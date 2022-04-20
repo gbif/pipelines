@@ -9,7 +9,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.transforms.core.BasicTransform;
+import org.gbif.pipelines.io.avro.GbifIdRecord;
+import org.gbif.pipelines.transforms.specific.GbifIdTransform;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -17,12 +18,12 @@ import org.junit.Test;
 public class UniqueGbifIdTransformTest {
 
   private static final String KEY = "KEY";
-  private final BiConsumer<ExtendedRecord, BasicRecord> gbifIdFn =
-      (er, br) ->
+  private final BiConsumer<ExtendedRecord, GbifIdRecord> gbifIdFn =
+      (er, id) ->
           Optional.ofNullable(er.getCoreTerms().get(KEY))
-              .ifPresent(x -> br.setGbifId(Long.valueOf(x)));
-  private final BasicTransform basicTransform =
-      BasicTransform.builder().gbifIdFn(gbifIdFn).useExtendedRecordId(true).create();
+              .ifPresent(x -> id.setGbifId(Long.valueOf(x)));
+  private final GbifIdTransform basicTransform =
+      GbifIdTransform.builder().gbifIdFn(gbifIdFn).useExtendedRecordId(true).create();
 
   @Test
   public void skipFunctionTest() {
@@ -34,13 +35,13 @@ public class UniqueGbifIdTransformTest {
     UniqueGbifIdTransform gbifIdTransform =
         UniqueGbifIdTransform.builder()
             .erMap(input)
-            .basicTransformFn(basicTransform::processElement)
+            .idTransformFn(basicTransform::processElement)
             .skipTransform(true)
             .build()
             .run();
 
-    Map<String, BasicRecord> brMap = gbifIdTransform.getBrMap();
-    Map<String, BasicRecord> brInvalidMap = gbifIdTransform.getBrInvalidMap();
+    Map<String, BasicRecord> brMap = gbifIdTransform.getIdMap();
+    Map<String, BasicRecord> brInvalidMap = gbifIdTransform.getIdInvalidMap();
 
     // Should
     Assert.assertEquals(expected.size(), brMap.size());
@@ -59,12 +60,12 @@ public class UniqueGbifIdTransformTest {
     UniqueGbifIdTransform gbifIdTransform =
         UniqueGbifIdTransform.builder()
             .erMap(input)
-            .basicTransformFn(basicTransform::processElement)
+            .idTransformFn(basicTransform::processElement)
             .build()
             .run();
 
-    Map<String, BasicRecord> brMap = gbifIdTransform.getBrMap();
-    Map<String, BasicRecord> brInvalidMap = gbifIdTransform.getBrInvalidMap();
+    Map<String, BasicRecord> brMap = gbifIdTransform.getIdMap();
+    Map<String, BasicRecord> brInvalidMap = gbifIdTransform.getIdInvalidMap();
 
     // Should
     Assert.assertEquals(expected.size(), brMap.size());
@@ -84,12 +85,12 @@ public class UniqueGbifIdTransformTest {
     UniqueGbifIdTransform gbifIdTransform =
         UniqueGbifIdTransform.builder()
             .erMap(input)
-            .basicTransformFn(basicTransform::processElement)
+            .idTransformFn(basicTransform::processElement)
             .build()
             .run();
 
-    Map<String, BasicRecord> brMap = gbifIdTransform.getBrMap();
-    Map<String, BasicRecord> brInvalidMap = gbifIdTransform.getBrInvalidMap();
+    Map<String, BasicRecord> brMap = gbifIdTransform.getIdMap();
+    Map<String, BasicRecord> brInvalidMap = gbifIdTransform.getIdInvalidMap();
 
     // Should
     Assert.assertEquals(expectedNormal.size(), brMap.size());
@@ -108,12 +109,12 @@ public class UniqueGbifIdTransformTest {
     UniqueGbifIdTransform gbifIdTransform =
         UniqueGbifIdTransform.builder()
             .erMap(input)
-            .basicTransformFn(basicTransform::processElement)
+            .idTransformFn(basicTransform::processElement)
             .build()
             .run();
 
-    Map<String, BasicRecord> brMap = gbifIdTransform.getBrMap();
-    Map<String, BasicRecord> brInvalidMap = gbifIdTransform.getBrInvalidMap();
+    Map<String, BasicRecord> brMap = gbifIdTransform.getIdMap();
+    Map<String, BasicRecord> brInvalidMap = gbifIdTransform.getIdInvalidMap();
 
     // Should
     Assert.assertEquals(0, brMap.size());
@@ -131,12 +132,12 @@ public class UniqueGbifIdTransformTest {
     UniqueGbifIdTransform gbifIdTransform =
         UniqueGbifIdTransform.builder()
             .erMap(input)
-            .basicTransformFn(basicTransform::processElement)
+            .idTransformFn(basicTransform::processElement)
             .build()
             .run();
 
-    Map<String, BasicRecord> brMap = gbifIdTransform.getBrMap();
-    Map<String, BasicRecord> brInvalidMap = gbifIdTransform.getBrInvalidMap();
+    Map<String, BasicRecord> brMap = gbifIdTransform.getIdMap();
+    Map<String, BasicRecord> brInvalidMap = gbifIdTransform.getIdInvalidMap();
 
     // Should
     Assert.assertEquals(expectedNormal.size(), brMap.size());
@@ -154,12 +155,12 @@ public class UniqueGbifIdTransformTest {
     UniqueGbifIdTransform gbifIdTransform =
         UniqueGbifIdTransform.builder()
             .erMap(input)
-            .basicTransformFn(basicTransform::processElement)
+            .idTransformFn(basicTransform::processElement)
             .build()
             .run();
 
-    Map<String, BasicRecord> brMap = gbifIdTransform.getBrMap();
-    Map<String, BasicRecord> brInvalidMap = gbifIdTransform.getBrInvalidMap();
+    Map<String, BasicRecord> brMap = gbifIdTransform.getIdMap();
+    Map<String, BasicRecord> brInvalidMap = gbifIdTransform.getIdInvalidMap();
 
     // Should
     Assert.assertEquals(0, brMap.size());
@@ -178,13 +179,13 @@ public class UniqueGbifIdTransformTest {
     UniqueGbifIdTransform gbifIdTransform =
         UniqueGbifIdTransform.builder()
             .erMap(input)
-            .basicTransformFn(basicTransform::processElement)
+            .idTransformFn(basicTransform::processElement)
             .useSyncMode(true)
             .build()
             .run();
 
-    Map<String, BasicRecord> brMap = gbifIdTransform.getBrMap();
-    Map<String, BasicRecord> brInvalidMap = gbifIdTransform.getBrInvalidMap();
+    Map<String, BasicRecord> brMap = gbifIdTransform.getIdMap();
+    Map<String, BasicRecord> brInvalidMap = gbifIdTransform.getIdInvalidMap();
 
     // Should
     Assert.assertEquals(expectedNormal.size(), brMap.size());
@@ -204,13 +205,13 @@ public class UniqueGbifIdTransformTest {
     UniqueGbifIdTransform gbifIdTransform =
         UniqueGbifIdTransform.builder()
             .erMap(input)
-            .basicTransformFn(basicTransform::processElement)
+            .idTransformFn(basicTransform::processElement)
             .useSyncMode(false)
             .build()
             .run();
 
-    Map<String, BasicRecord> brMap = gbifIdTransform.getBrMap();
-    Map<String, BasicRecord> brInvalidMap = gbifIdTransform.getBrInvalidMap();
+    Map<String, BasicRecord> brMap = gbifIdTransform.getIdMap();
+    Map<String, BasicRecord> brInvalidMap = gbifIdTransform.getIdInvalidMap();
 
     // Should
     Assert.assertEquals(expectedNormal.size(), brMap.size());

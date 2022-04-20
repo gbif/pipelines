@@ -372,7 +372,7 @@ public class VerbatimToInterpretedPipeline {
           UniqueGbifIdTransform.builder()
               .executor(executor)
               .erMap(erExtMap)
-              .basicTransformFn(brFn)
+              .idTransformFn(brFn)
               .useSyncMode(useSyncMode)
               .skipTransform(useErdId)
               .counterFn(incMetricFn)
@@ -382,9 +382,9 @@ public class VerbatimToInterpretedPipeline {
       // Create interpretation function
       Consumer<ExtendedRecord> interpretAllFn =
           er -> {
-            BasicRecord brInvalid = gbifIdTransform.getBrInvalidMap().get(er.getId());
+            BasicRecord brInvalid = gbifIdTransform.getIdInvalidMap().get(er.getId());
             if (brInvalid == null) {
-              BasicRecord br = gbifIdTransform.getErBrMap().get(er.getId());
+              BasicRecord br = gbifIdTransform.getErIdMap().get(er.getId());
 
               if (verbatimTransform.checkType(types)) {
                 verbatimWriter.append(er);
@@ -419,7 +419,7 @@ public class VerbatimToInterpretedPipeline {
       // Run async writing for BasicRecords
       Stream<CompletableFuture<Void>> streamBr = Stream.empty();
       if (useBasicRecordWriteIO(types)) {
-        Collection<BasicRecord> brCollection = gbifIdTransform.getBrMap().values();
+        Collection<BasicRecord> brCollection = gbifIdTransform.getIdMap().values();
         if (useSyncMode) {
           streamBr =
               Stream.of(

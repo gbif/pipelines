@@ -10,7 +10,6 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.TYPE_STATUS_INVALID;
 import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractOptListValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
-import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
 
 import com.google.common.base.Strings;
 import java.util.ArrayList;

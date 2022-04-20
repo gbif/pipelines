@@ -80,6 +80,7 @@ public class OccurrenceJsonTransform implements Serializable {
 
   // Core
   @NonNull private final TupleTag<ExtendedRecord> extendedRecordTag;
+  @NonNull private final TupleTag<GbifIdRecord> gbifIdRecordTag;
   @NonNull private final TupleTag<BasicRecord> basicRecordTag;
   @NonNull private final TupleTag<TemporalRecord> temporalRecordTag;
   @NonNull private final TupleTag<LocationRecord> locationRecordTag;
@@ -107,6 +108,7 @@ public class OccurrenceJsonTransform implements Serializable {
 
             // Core
             MetadataRecord mdr = c.sideInput(metadataView);
+            GbifIdRecord id = v.getOnly(gbifIdRecordTag);
             ExtendedRecord er =
                 v.getOnly(extendedRecordTag, ExtendedRecord.newBuilder().setId(k).build());
             BasicRecord br = v.getOnly(basicRecordTag, BasicRecord.newBuilder().setId(k).build());
@@ -129,6 +131,7 @@ public class OccurrenceJsonTransform implements Serializable {
             String json =
                 OccurrenceJsonConverter.builder()
                     .metadata(mdr)
+                    .gbifId(id)
                     .basic(br)
                     .temporal(tr)
                     .location(lr)

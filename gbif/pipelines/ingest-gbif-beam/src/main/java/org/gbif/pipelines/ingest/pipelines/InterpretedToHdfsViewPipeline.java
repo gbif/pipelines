@@ -34,6 +34,7 @@ import org.gbif.pipelines.ingest.utils.SharedLockUtils;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.GbifIdRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
@@ -52,6 +53,7 @@ import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
+import org.gbif.pipelines.transforms.specific.GbifIdTransform;
 import org.gbif.pipelines.transforms.table.AmplificationTableTransform;
 import org.gbif.pipelines.transforms.table.ChronometricAgeTableTransform;
 import org.gbif.pipelines.transforms.table.CloningTableTransform;
@@ -161,6 +163,7 @@ public class InterpretedToHdfsViewPipeline {
     log.info("Adding step 2: Reading AVROs");
     // Core
     BasicTransform basicTransform = BasicTransform.builder().create();
+    GbifIdTransform idTransform = GbifIdTransform.builder().create();
     MetadataTransform metadataTransform = MetadataTransform.builder().create();
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.builder().create();
@@ -176,6 +179,10 @@ public class InterpretedToHdfsViewPipeline {
     PCollectionView<MetadataRecord> metadataView =
         p.apply("Read Metadata", metadataTransform.read(interpretPathFn))
             .apply("Convert to view", View.asSingleton());
+
+    PCollection<KV<String, GbifIdRecord>> idCollection =
+        p.apply("Read GBIF ids", idTransform.read(pathFn))
+            .apply("Map GBIF ids to KV", idTransform.toKv());
 
     PCollection<KV<String, ExtendedRecord>> verbatimCollection =
         p.apply("Read Verbatim", verbatimTransform.read(interpretPathFn))
@@ -218,6 +225,7 @@ public class InterpretedToHdfsViewPipeline {
     OccurrenceHdfsRecordTransform hdfsRecordTransform =
         OccurrenceHdfsRecordTransform.builder()
             .extendedRecordTag(verbatimTransform.getTag())
+            .gbifIdRecordTag(idTransform.getTag())
             .basicRecordTag(basicTransform.getTag())
             .temporalRecordTag(temporalTransform.getTag())
             .locationRecordTag(locationTransform.getTag())
@@ -232,6 +240,7 @@ public class InterpretedToHdfsViewPipeline {
     KeyedPCollectionTuple
         // Core
         .of(basicTransform.getTag(), basicCollection)
+        .and(idTransform.getTag(), idCollection)
         .and(temporalTransform.getTag(), temporalCollection)
         .and(locationTransform.getTag(), locationCollection)
         .and(taxonomyTransform.getTag(), taxonCollection)
