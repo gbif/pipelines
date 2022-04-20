@@ -18,7 +18,7 @@ public interface ExportHBaseOptions extends HadoopFileSystemOptions {
   void setExportPath(String exportPath);
 
   @Description("Batch size of documents to be read from HBase")
-  @Default.Integer(10000)
+  @Default.Integer(10_000)
   int getBatchSize();
 
   void setBatchSize(int batchSize);

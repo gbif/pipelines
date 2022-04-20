@@ -1,6 +1,7 @@
 package org.gbif.pipelines.validator.checklists;
 
 import java.io.Closeable;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,7 +25,6 @@ import org.gbif.dwc.DwcFiles;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.nub.lookup.straight.IdLookup;
 import org.gbif.nub.lookup.straight.IdLookupPassThru;
-import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.validator.checklists.collector.ValidationDataCollector;
 import org.gbif.pipelines.validator.checklists.model.NormalizedNameUsageData;
 import org.gbif.pipelines.validator.checklists.ws.IdLookupClient;
@@ -64,7 +64,7 @@ public class ChecklistValidator implements Closeable {
 
   private final IdLookup idLookup;
 
-  /** @param neoConfiguration Neo4j configuration. */
+  /** @param configuration Neo4j configuration. */
   public ChecklistValidator(Configuration configuration) {
     // use our own neo repository
     this.configuration = configuration;
@@ -77,8 +77,7 @@ public class ChecklistValidator implements Closeable {
   /**
    * By using the Checklist Normalizer collects the issues for all Taxon file core or extensions.
    */
-  @SneakyThrows
-  public List<Metrics.FileInfo> evaluate(Path archivePath) {
+  public List<Metrics.FileInfo> evaluate(Path archivePath) throws IOException {
     Archive archive = DwcFiles.fromLocation(archivePath);
     List<Metrics.FileInfo> results = new ArrayList<>();
     ArchiveFile core = archive.getCore();
@@ -88,13 +87,10 @@ public class ChecklistValidator implements Closeable {
     return results;
   }
 
+  @SneakyThrows
   @Override
   public void close() {
-    try {
-      idLookup.close();
-    } catch (Exception ex) {
-      throw new PipelinesException(ex);
-    }
+    idLookup.close();
   }
 
   /** Validates a ArchiveFile that checklist data. */

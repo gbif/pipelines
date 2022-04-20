@@ -283,6 +283,8 @@ public class CoreCsvConverter {
   }
 
   private static Function<IndexRecord, Optional<String>> getMultivalue(Term term) {
-    return ir -> Optional.of(String.join("|", ir.getMultiValues().get(term.simpleName())));
+    return ir ->
+        Optional.ofNullable(ir.getMultiValues().get(term.simpleName()))
+            .map(x -> String.join("|", x));
   }
 }

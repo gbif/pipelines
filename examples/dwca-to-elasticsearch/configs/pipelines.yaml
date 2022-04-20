@@ -14,10 +14,11 @@ geocode:
     wsUrl: https://api.gbif.org/v1/
 vocabularyConfig:
   vocabulariesPath: configs
-  lifeStageVocabName: LifeStage
-  degreeOfEstablishmentVocabName: DegreeOfEstablishment
-  establishmentMeansVocabName: EstablishmentMeans
-  pathwayVocabName: Pathway
+  vocabulariesNames:
+    http://rs.tdwg.org/dwc/terms/degreeOfEstablishment: DegreeOfEstablishment
+    http://rs.tdwg.org/dwc/terms/lifeStage: LifeStage
+    http://rs.tdwg.org/dwc/terms/establishmentMeans: EstablishmentMeans
+    http://rs.tdwg.org/dwc/terms/pathway: Pathway
 extensionsAllowedForVerbatimSet:
   - http://rs.tdwg.org/dwc/terms/Occurrence
   - http://rs.tdwg.org/ac/terms/Multimedia

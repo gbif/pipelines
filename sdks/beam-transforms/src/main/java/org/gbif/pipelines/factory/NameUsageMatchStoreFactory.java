@@ -84,6 +84,7 @@ public class NameUsageMatchStoreFactory {
                     .withHBaseZk(zk)
                     .build())
             .withCacheCapacity(15_000L)
+            .withCacheExpiryTimeInSeconds(config.getNameUsageMatch().getCacheExpiryTimeInSeconds())
             .build();
 
     return NameUsageMatchKVStoreFactory.nameUsageMatchKVStore(matchConfig, clientConfiguration);

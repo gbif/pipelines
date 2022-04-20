@@ -14,8 +14,8 @@ import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
-import org.gbif.pipelines.core.converters.GbifJsonConverter;
 import org.gbif.pipelines.core.converters.MultimediaConverter;
+import org.gbif.pipelines.core.converters.OccurrenceJsonConverter;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 
@@ -49,8 +49,8 @@ import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
  * PCollection<KV<String, AudubonRecord>> audubonCollection = ...
  * PCollection<KV<String, MeasurementOrFactRecord>> measurementCollection = ...
  *
- * SingleOutput<KV<String, CoGbkResult>, String> gbifJsonDoFn =
- *     GbifJsonTransform.create(erTag, brTag, trTag, lrTag, txrTag, mrTag, irTag, arTag, mfrTag, metadataView)
+ * SingleOutput<KV<String, CoGbkResult>, String> occurrenceJsonDoFn =
+ *     OccurrenceJsonTransform.create(erTag, brTag, trTag, lrTag, txrTag, mrTag, irTag, arTag, mfrTag, metadataView)
  *         .converter();
  *
  * PCollection<String> jsonCollection =
@@ -69,12 +69,12 @@ import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
  *         .and(erTag, verbatimCollection)
  *         // Apply
  *         .apply("Grouping objects", CoGroupByKey.create())
- *         .apply("Merging to json", gbifJsonDoFn);
+ *         .apply("Merging to json", occurrenceJsonDoFn);
  * }</pre>
  */
 @SuppressWarnings("ConstantConditions")
 @Builder
-public class GbifJsonTransform implements Serializable {
+public class OccurrenceJsonTransform implements Serializable {
 
   private static final long serialVersionUID = 1279313931024806170L;
 
@@ -98,7 +98,7 @@ public class GbifJsonTransform implements Serializable {
         new DoFn<KV<String, CoGbkResult>, String>() {
 
           private final Counter counter =
-              Metrics.counter(GbifJsonTransform.class, AVRO_TO_JSON_COUNT);
+              Metrics.counter(OccurrenceJsonTransform.class, AVRO_TO_JSON_COUNT);
 
           @ProcessElement
           public void processElement(ProcessContext c) {
@@ -126,7 +126,18 @@ public class GbifJsonTransform implements Serializable {
                 v.getOnly(audubonRecordTag, AudubonRecord.newBuilder().setId(k).build());
 
             MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
-            String json = GbifJsonConverter.toStringJson(mdr, br, tr, lr, txr, gr, mmr, er);
+            String json =
+                OccurrenceJsonConverter.builder()
+                    .metadata(mdr)
+                    .basic(br)
+                    .temporal(tr)
+                    .location(lr)
+                    .taxon(txr)
+                    .grscicoll(gr)
+                    .multimedia(mmr)
+                    .verbatim(er)
+                    .build()
+                    .toJson();
 
             c.output(json);
 

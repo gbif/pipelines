@@ -1,0 +1,14 @@
+{
+  "name":"IdentifierRecord",
+  "namespace":"org.gbif.pipelines.io.avro",
+  "type":"record",
+  "doc":"Identifier mapping for ALA UUID or GBIF id",
+  "fields":[
+    {"name": "id", "type": ["null", "string"],  "doc": "Archive record identifier"},
+    {"name": "internalId", "type": ["null", "string"], "default" : null },
+    {"name": "uniqueKey", "type": ["null", "string"], "default" : null },
+    {"name": "firstLoaded", "type": ["null", "long"], "default" : null,
+      "doc": "Time the unique key was create was created to Epoch milli second"
+    }
+  ]
+}

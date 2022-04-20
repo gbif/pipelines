@@ -4,8 +4,11 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.DIRECTORY_NAME;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.ALL;
 
+import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.KeyDeserializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.base.Strings;
 import java.io.BufferedReader;
@@ -32,12 +35,16 @@ import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
+import org.gbif.dwc.terms.Term;
+import org.gbif.dwc.terms.TermFactory;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
 
 /** Utility class to work with file system. */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class FsUtils {
+
+  public static final String HDFS_EMR_PREFIX = "hdfs:///";
 
   /**
    * Reads Beam options from arguments or file.
@@ -109,8 +116,9 @@ public final class FsUtils {
 
   /** Helper method to write/overwrite a file */
   public static void createFile(FileSystem fs, String path, String body) throws IOException {
+    path = convertLocalHdfsPath(path);
     try (FSDataOutputStream stream = fs.create(new Path(path), true)) {
-      stream.writeChars(body);
+      stream.writeBytes(body);
     }
   }
 
@@ -250,6 +258,7 @@ public final class FsUtils {
   public static boolean deleteIfExist(
       String hdfsSiteConfig, String coreSiteConfig, String directoryPath) {
     FileSystem fs = getFileSystem(hdfsSiteConfig, coreSiteConfig, directoryPath);
+    directoryPath = convertLocalHdfsPath(directoryPath);
 
     Path path = new Path(directoryPath);
     try {
@@ -261,6 +270,22 @@ public final class FsUtils {
   }
 
   /**
+   * Convert EMR style path with hdfs:/// prefix to local path.
+   *
+   * <p>eg. hdfs:///mypath/123 to /mypath/123
+   *
+   * <p>new Path(hdfs:///mypath/123) will be interpreted as hdfs:/mypath/123 which will cause a
+   * wrong FS exception.
+   */
+  public static String convertLocalHdfsPath(String directoryPath) {
+    if (directoryPath.startsWith(HDFS_EMR_PREFIX)) {
+      // convert EMR style path hdfs:///mypath/123 to /mypath/123
+      directoryPath = directoryPath.substring(7);
+    }
+    return directoryPath;
+  }
+
+  /**
    * Read a properties file from HDFS/Local FS
    *
    * @param hdfsSiteConfig HDFS config file
@@ -269,13 +294,26 @@ public final class FsUtils {
   @SneakyThrows
   public static <T> T readConfigFile(
       String hdfsSiteConfig, String coreSiteConfig, String filePath, Class<T> clazz) {
-    FileSystem fs = FsUtils.getLocalFileSystem(hdfsSiteConfig, coreSiteConfig);
+    FileSystem fs = FsUtils.getFileSystem(hdfsSiteConfig, coreSiteConfig, filePath);
     Path fPath = new Path(filePath);
     if (fs.exists(fPath)) {
       log.info("Reading properties path - {}", filePath);
       try (BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(fPath), UTF_8))) {
+
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         mapper.configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true);
+
+        SimpleModule keyTermDeserializer = new SimpleModule();
+        keyTermDeserializer.addKeyDeserializer(
+            Term.class,
+            new KeyDeserializer() {
+              @Override
+              public Term deserializeKey(String value, DeserializationContext dc) {
+                return TermFactory.instance().findTerm(value);
+              }
+            });
+        mapper.registerModule(keyTermDeserializer);
+
         mapper.findAndRegisterModules();
         return mapper.readValue(br, clazz);
       }

@@ -7,11 +7,13 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Set;
 import org.gbif.common.parsers.date.DateComponentOrdering;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.config.model.ContentConfig;
 import org.gbif.pipelines.core.config.model.KeygenConfig;
 import org.gbif.pipelines.core.config.model.KvConfig;
 import org.gbif.pipelines.core.config.model.LockConfig;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.core.config.model.VocabularyConfig;
 import org.gbif.pipelines.core.config.model.WsConfig;
 import org.junit.Test;
 
@@ -114,5 +116,10 @@ public class ConfigFactoryTest {
     assertTrue(
         extensionsAllowedForVerbatimSet.contains(
             "http://data.ggbn.org/schemas/ggbn/terms/Amplification"));
+
+    VocabularyConfig vocabularyConfig = config.getVocabularyConfig();
+    assertEquals(
+        "degreeOfEstablishment",
+        vocabularyConfig.getVocabularyFileName(DwcTerm.degreeOfEstablishment));
   }
 }

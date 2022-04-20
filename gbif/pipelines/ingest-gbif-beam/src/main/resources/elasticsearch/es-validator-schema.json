@@ -108,6 +108,7 @@
           "verbatim": {"type": "keyword", "ignore_above": 1024}
         }
       },
+      "preparationsJoined": {"type": "keyword", "normalizer": "lowercase_normalizer"},
       "recordedByIds": {
         "type": "object",
         "properties": {
@@ -130,6 +131,7 @@
           "verbatim": {"type": "keyword", "ignore_above": 1024}
         }
       },
+      "recordedByJoined": {"type": "keyword", "normalizer": "lowercase_normalizer"},
       "identifiedBy": {
         "type": "text",
         "fields": {
@@ -138,6 +140,7 @@
           "verbatim": {"type": "keyword", "ignore_above": 1024}
         }
       },
+      "identifiedByJoined": {"type": "keyword", "normalizer": "lowercase_normalizer"},
       "recordNumber": {
         "type": "text",
         "fields": {
@@ -162,6 +165,7 @@
           "verbatim": {"type": "keyword", "ignore_above": 1024}
         }
       },
+      "samplingProtocolJoined": {"type": "keyword", "normalizer": "lowercase_normalizer"},
       "eventId": {
         "type": "text",
         "fields": {
@@ -235,6 +239,7 @@
           "verbatim": {"type": "keyword", "ignore_above": 1024}
         }
       },
+      "otherCatalogNumbersJoined": {"type": "keyword", "normalizer": "lowercase_normalizer"},
 
       "occurrenceStatus": {"type": "keyword", "copy_to": "all"},
 
@@ -411,10 +416,6 @@
           "license": {"type": "keyword"}
         }
       },
-
-      "amplificationItems": {"type": "nested", "enabled": false},
-
-      "locationFeatureLayers":{"type": "nested"},
 
       "verbatim": {
         "type": "object",

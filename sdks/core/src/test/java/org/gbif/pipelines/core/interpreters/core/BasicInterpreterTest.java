@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.gbif.api.vocabulary.AgentIdentifierType;
-import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.api.vocabulary.TypeStatus;
 import org.gbif.dwc.terms.DwcTerm;
@@ -79,40 +78,6 @@ public class BasicInterpreterTest {
   }
 
   @Test
-  public void interpretSampleSizeValueTest() {
-
-    // State
-    Map<String, String> coreMap = new HashMap<>();
-    coreMap.put(DwcTerm.sampleSizeValue.qualifiedName(), " value ");
-    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
-
-    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
-
-    // When
-    BasicInterpreter.interpretSampleSizeValue(er, br);
-
-    // Should
-    Assert.assertNull(br.getSampleSizeValue());
-  }
-
-  @Test
-  public void interpretSampleSizeUnitTest() {
-
-    // State
-    Map<String, String> coreMap = new HashMap<>();
-    coreMap.put(DwcTerm.sampleSizeUnit.qualifiedName(), " value ");
-    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
-
-    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
-
-    // When
-    BasicInterpreter.interpretSampleSizeUnit(er, br);
-
-    // Should
-    Assert.assertEquals("value", br.getSampleSizeUnit());
-  }
-
-  @Test
   public void interpretOrganismQuantityTest() {
 
     // State
@@ -144,197 +109,6 @@ public class BasicInterpreterTest {
 
     // Should
     Assert.assertEquals("value", br.getOrganismQuantityType());
-  }
-
-  @Test
-  public void interpretRelativeOrganismQuantityTest() {
-
-    // State
-    Map<String, String> coreMap = new HashMap<>();
-    coreMap.put(DwcTerm.sampleSizeValue.qualifiedName(), "2");
-    coreMap.put(DwcTerm.sampleSizeUnit.qualifiedName(), "some type ");
-    coreMap.put(DwcTerm.organismQuantity.qualifiedName(), "10");
-    coreMap.put(DwcTerm.organismQuantityType.qualifiedName(), " Some Type");
-    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
-
-    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
-
-    // When
-    BasicInterpreter.interpretOrganismQuantityType(er, br);
-    BasicInterpreter.interpretOrganismQuantity(er, br);
-    BasicInterpreter.interpretSampleSizeUnit(er, br);
-    BasicInterpreter.interpretSampleSizeValue(er, br);
-
-    BasicInterpreter.interpretRelativeOrganismQuantity(br);
-
-    // Should
-    Assert.assertEquals(Double.valueOf(5d), br.getRelativeOrganismQuantity());
-  }
-
-  @Test
-  public void interpretRelativeOrganismQuantityEmptySamplingTest() {
-
-    // State
-    Map<String, String> coreMap = new HashMap<>();
-    coreMap.put(DwcTerm.organismQuantity.qualifiedName(), "10");
-    coreMap.put(DwcTerm.organismQuantityType.qualifiedName(), " Some Type");
-    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
-
-    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
-
-    // When
-    BasicInterpreter.interpretOrganismQuantityType(er, br);
-    BasicInterpreter.interpretOrganismQuantity(er, br);
-    BasicInterpreter.interpretSampleSizeUnit(er, br);
-    BasicInterpreter.interpretSampleSizeValue(er, br);
-
-    BasicInterpreter.interpretRelativeOrganismQuantity(br);
-
-    // Should
-    Assert.assertNull(br.getRelativeOrganismQuantity());
-  }
-
-  @Test
-  public void interpretRelativeOrganismQuantityEmptyOrganismTest() {
-
-    // State
-    Map<String, String> coreMap = new HashMap<>();
-    coreMap.put(DwcTerm.sampleSizeValue.qualifiedName(), "2");
-    coreMap.put(DwcTerm.sampleSizeUnit.qualifiedName(), "some type ");
-    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
-
-    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
-
-    // When
-    BasicInterpreter.interpretOrganismQuantityType(er, br);
-    BasicInterpreter.interpretOrganismQuantity(er, br);
-    BasicInterpreter.interpretSampleSizeUnit(er, br);
-    BasicInterpreter.interpretSampleSizeValue(er, br);
-
-    BasicInterpreter.interpretRelativeOrganismQuantity(br);
-
-    // Should
-    Assert.assertNull(br.getRelativeOrganismQuantity());
-  }
-
-  @Test
-  public void interpretRelativeOrganismQuantityDiffTypesTest() {
-
-    // State
-    Map<String, String> coreMap = new HashMap<>();
-    coreMap.put(DwcTerm.sampleSizeValue.qualifiedName(), "2");
-    coreMap.put(DwcTerm.sampleSizeUnit.qualifiedName(), "another type ");
-    coreMap.put(DwcTerm.organismQuantity.qualifiedName(), "10");
-    coreMap.put(DwcTerm.organismQuantityType.qualifiedName(), " Some Type");
-    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
-
-    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
-
-    // When
-    BasicInterpreter.interpretOrganismQuantityType(er, br);
-    BasicInterpreter.interpretOrganismQuantity(er, br);
-    BasicInterpreter.interpretSampleSizeUnit(er, br);
-    BasicInterpreter.interpretSampleSizeValue(er, br);
-
-    BasicInterpreter.interpretRelativeOrganismQuantity(br);
-
-    // Should
-    Assert.assertNull(br.getRelativeOrganismQuantity());
-  }
-
-  @Test
-  public void interpretRelativeOrganismQuantityNanTest() {
-
-    // State
-    Map<String, String> coreMap = new HashMap<>();
-    coreMap.put(DwcTerm.sampleSizeValue.qualifiedName(), Double.valueOf("9E99999999").toString());
-    coreMap.put(DwcTerm.sampleSizeUnit.qualifiedName(), "another type ");
-    coreMap.put(DwcTerm.organismQuantity.qualifiedName(), "10");
-    coreMap.put(DwcTerm.organismQuantityType.qualifiedName(), " Some Type");
-    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
-
-    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
-
-    // When
-    BasicInterpreter.interpretOrganismQuantityType(er, br);
-    BasicInterpreter.interpretOrganismQuantity(er, br);
-    BasicInterpreter.interpretSampleSizeUnit(er, br);
-    BasicInterpreter.interpretSampleSizeValue(er, br);
-
-    BasicInterpreter.interpretRelativeOrganismQuantity(br);
-
-    // Should
-    Assert.assertNull(br.getRelativeOrganismQuantity());
-  }
-
-  @Test
-  public void interpretLicenseTest() {
-
-    // State
-    Map<String, String> coreMap = new HashMap<>();
-    coreMap.put(
-        "http://purl.org/dc/terms/license", "http://creativecommons.org/licenses/by-nc/4.0/");
-    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
-
-    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
-
-    // When
-    BasicInterpreter.interpretLicense(er, br);
-
-    // Should
-    Assert.assertEquals(License.CC_BY_NC_4_0.name(), br.getLicense());
-  }
-
-  @Test
-  public void interpretLicenseUnsupportedTest() {
-
-    // State
-    Map<String, String> coreMap = new HashMap<>();
-    coreMap.put(
-        "http://purl.org/dc/terms/license", "http://creativecommons.org/licenses/by-nc/5.0/");
-    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
-
-    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
-
-    // When
-    BasicInterpreter.interpretLicense(er, br);
-
-    // Should
-    Assert.assertEquals(License.UNSUPPORTED.name(), br.getLicense());
-  }
-
-  @Test
-  public void interpretLicenseEmptyTest() {
-
-    // State
-    Map<String, String> coreMap = new HashMap<>();
-    coreMap.put("http://purl.org/dc/terms/license", "");
-    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
-
-    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
-
-    // When
-    BasicInterpreter.interpretLicense(er, br);
-
-    // Should
-    Assert.assertEquals(License.UNSUPPORTED.name(), br.getLicense());
-  }
-
-  @Test
-  public void interpretLicenseNullTest() {
-
-    // State
-    Map<String, String> coreMap = new HashMap<>();
-    coreMap.put("http://purl.org/dc/terms/license", null);
-    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
-
-    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
-
-    // When
-    BasicInterpreter.interpretLicense(er, br);
-
-    // Should
-    Assert.assertEquals(License.UNSPECIFIED.name(), br.getLicense());
   }
 
   @Test
@@ -470,50 +244,6 @@ public class BasicInterpreterTest {
   }
 
   @Test
-  public void interpretDatasetIDTest() {
-    final String id1 = "ID1";
-    final String id2 = "ID2";
-
-    // State
-    Map<String, String> coreMap = new HashMap<>(1);
-    coreMap.put(DwcTerm.datasetID.qualifiedName(), id1 + " | " + id2 + " | ");
-    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
-
-    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
-
-    // When
-    BasicInterpreter.interpretDatasetID(er, br);
-
-    // Should
-    Assert.assertEquals(2, br.getDatasetID().size());
-    Assert.assertTrue(br.getDatasetID().contains(id1));
-    Assert.assertTrue(br.getDatasetID().contains(id2));
-    assertIssueSize(br, 0);
-  }
-
-  @Test
-  public void interpretDatasetNameTest() {
-    final String name1 = "name 1";
-    final String name2 = "name 2";
-
-    // State
-    Map<String, String> coreMap = new HashMap<>(1);
-    coreMap.put(DwcTerm.datasetName.qualifiedName(), name1 + " | " + name2 + " | ");
-    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
-
-    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
-
-    // When
-    BasicInterpreter.interpretDatasetName(er, br);
-
-    // Should
-    Assert.assertEquals(2, br.getDatasetName().size());
-    Assert.assertTrue(br.getDatasetName().contains(name1));
-    Assert.assertTrue(br.getDatasetName().contains(name2));
-    assertIssueSize(br, 0);
-  }
-
-  @Test
   public void interpretOtherCatalogNumbersTest() {
     final String number1 = "111";
     final String number2 = "22";
@@ -598,28 +328,6 @@ public class BasicInterpreterTest {
     Assert.assertEquals(2, br.getPreparations().size());
     Assert.assertTrue(br.getPreparations().contains(prep1));
     Assert.assertTrue(br.getPreparations().contains(prep2));
-    assertIssueSize(br, 0);
-  }
-
-  @Test
-  public void interpretSamplingProtocolTest() {
-    final String sp1 = "protocol";
-    final String sp2 = "other protocol";
-
-    // State
-    Map<String, String> coreMap = new HashMap<>(1);
-    coreMap.put(DwcTerm.samplingProtocol.qualifiedName(), sp1 + " | " + sp2 + " | ");
-    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
-
-    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
-
-    // When
-    BasicInterpreter.interpretSamplingProtocol(er, br);
-
-    // Should
-    Assert.assertEquals(2, br.getSamplingProtocol().size());
-    Assert.assertTrue(br.getSamplingProtocol().contains(sp1));
-    Assert.assertTrue(br.getSamplingProtocol().contains(sp2));
     assertIssueSize(br, 0);
   }
 

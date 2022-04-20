@@ -80,7 +80,6 @@ public class ChecklistValidatorCallback
   }
 
   @Override
-  @SneakyThrows
   public void handleMessage(PipelinesChecklistValidatorMessage message) {
     Validation validation = validationClient.get(message.getDatasetUuid());
 
@@ -91,8 +90,12 @@ public class ChecklistValidatorCallback
       }
       // void send(Object message, String exchange, String routingKey, boolean persistent, String
       // correlationId, String replyTo)
-      messagePublisher.replyToQueue(
-          Boolean.TRUE, false, message.getCorrelationId(), message.getReplyTo());
+      try {
+        messagePublisher.replyToQueue(
+            Boolean.TRUE, false, message.getCorrelationId(), message.getReplyTo());
+      } catch (IOException e) {
+        log.error("Can't replyToQueue {}, {}", message.getCorrelationId(), message.getReplyTo());
+      }
     } else {
       log.error("Checklist validation started: {}", message);
     }
@@ -213,7 +216,7 @@ public class ChecklistValidatorCallback
   }
 
   @Override
-  public void close() throws IOException {
+  public void close() {
     checklistValidator.close();
   }
 }

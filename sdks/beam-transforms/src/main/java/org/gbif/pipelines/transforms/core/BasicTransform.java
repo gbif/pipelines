@@ -16,6 +16,7 @@ import org.gbif.pipelines.core.functions.SerializableConsumer;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.BasicInterpreter;
+import org.gbif.pipelines.core.interpreters.core.CoreInterpreter;
 import org.gbif.pipelines.core.interpreters.core.DynamicPropertiesInterpreter;
 import org.gbif.pipelines.core.interpreters.core.VocabularyInterpreter;
 import org.gbif.pipelines.core.parsers.vocabulary.VocabularyService;
@@ -104,13 +105,13 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
             .via(BasicInterpreter::interpretSex)
             .via(BasicInterpreter::interpretTypeStatus)
             .via(BasicInterpreter::interpretIndividualCount)
-            .via(BasicInterpreter::interpretReferences)
+            .via((e, r) -> CoreInterpreter.interpretReferences(e, r, r::setReferences))
             .via(BasicInterpreter::interpretOrganismQuantity)
             .via(BasicInterpreter::interpretOrganismQuantityType)
-            .via(BasicInterpreter::interpretSampleSizeUnit)
-            .via(BasicInterpreter::interpretSampleSizeValue)
+            .via((e, r) -> CoreInterpreter.interpretSampleSizeUnit(e, r::setSampleSizeUnit))
+            .via((e, r) -> CoreInterpreter.interpretSampleSizeValue(e, r::setSampleSizeValue))
             .via(BasicInterpreter::interpretRelativeOrganismQuantity)
-            .via(BasicInterpreter::interpretLicense)
+            .via((e, r) -> CoreInterpreter.interpretLicense(e, r::setLicense))
             .via(BasicInterpreter::interpretIdentifiedByIds)
             .via(BasicInterpreter::interpretRecordedByIds)
             .via(BasicInterpreter.interpretOccurrenceStatus(occStatusKvStore))
@@ -118,13 +119,13 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
             .via(VocabularyInterpreter.interpretLifeStage(vocabularyService))
             .via(VocabularyInterpreter.interpretPathway(vocabularyService))
             .via(VocabularyInterpreter.interpretDegreeOfEstablishment(vocabularyService))
-            .via(BasicInterpreter::interpretDatasetID)
-            .via(BasicInterpreter::interpretDatasetName)
+            .via((e, r) -> CoreInterpreter.interpretDatasetID(e, r::setDatasetID))
+            .via((e, r) -> CoreInterpreter.interpretDatasetName(e, r::setDatasetName))
             .via(BasicInterpreter::interpretOtherCatalogNumbers)
             .via(BasicInterpreter::interpretRecordedBy)
             .via(BasicInterpreter::interpretIdentifiedBy)
             .via(BasicInterpreter::interpretPreparations)
-            .via(BasicInterpreter::interpretSamplingProtocol);
+            .via((e, r) -> CoreInterpreter.interpretSamplingProtocol(e, r::setSamplingProtocol));
 
     if (useDynamicPropertiesInterpretation) {
       handler

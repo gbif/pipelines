@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.gbif.pipelines.common.PipelinesException;
+import org.gbif.pipelines.core.utils.FsUtils;
 
 @Slf4j
 @SuppressWarnings("all")
@@ -53,7 +54,7 @@ public class FileSystemFactory {
       this.hdfsFs = null;
     }
 
-    this.localFs = FileSystem.get(getHdfsConfiguration(null));
+    this.localFs = FileSystem.getLocal(new Configuration());
   }
 
   public static FileSystemFactory getInstance(String hdfsSiteConfig, String coreSiteConfig) {
@@ -80,7 +81,18 @@ public class FileSystemFactory {
   }
 
   public FileSystem getFs(String path) {
-    return path != null && hdfsPrefix != null && path.startsWith(hdfsPrefix) ? hdfsFs : localFs;
+    if (path != null) {
+      // using startsWith to allow for EMR style paths of hdfs:///
+      if (hdfsPrefix != null && path.startsWith(hdfsPrefix)) {
+        return hdfsFs;
+      } else if (path.startsWith(FsUtils.HDFS_EMR_PREFIX)) {
+        return hdfsFs;
+      } else {
+        return localFs;
+      }
+    } else {
+      return localFs;
+    }
   }
 
   public FileSystem getLocalFs() {

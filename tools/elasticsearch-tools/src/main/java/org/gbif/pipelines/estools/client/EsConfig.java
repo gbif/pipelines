@@ -12,9 +12,12 @@ public class EsConfig {
 
   private final List<URL> hosts;
   private final String[] rawHosts;
+  private final String username;
+  private final String password;
 
-  private EsConfig(@NonNull String[] hostsAddresses) {
-
+  private EsConfig(@NonNull String[] hostsAddresses, String username, String password) {
+    this.username = username;
+    this.password = password;
     this.rawHosts = hostsAddresses;
     this.hosts =
         Arrays.stream(hostsAddresses)
@@ -36,7 +39,11 @@ public class EsConfig {
    * @return {@link EsConfig}.
    */
   public static EsConfig from(String... hostsAddresses) {
-    return new EsConfig(hostsAddresses);
+    return new EsConfig(hostsAddresses, null, null);
+  }
+
+  public static EsConfig from(String username, String password, String... hostsAddresses) {
+    return new EsConfig(hostsAddresses, username, password);
   }
 
   public List<URL> getHosts() {
@@ -45,5 +52,13 @@ public class EsConfig {
 
   public String[] getRawHosts() {
     return rawHosts;
+  }
+
+  public String getUsername() {
+    return username;
+  }
+
+  public String getPassword() {
+    return password;
   }
 }

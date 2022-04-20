@@ -7,3 +7,4 @@ livingatlas/pipelines/src/main/resources/log4j-colorized.properties data/la-pipe
 livingatlas/pipelines/src/main/resources/log4j.properties data/la-pipelines/config
 livingatlas/configs/la-pipelines.yaml data/la-pipelines/config
 livingatlas/pipelines/target/la-pipelines-local.yaml.sample data/la-pipelines/config
+livingatlas/pipelines/src/main/resources/logback.xml data/la-pipelines/config

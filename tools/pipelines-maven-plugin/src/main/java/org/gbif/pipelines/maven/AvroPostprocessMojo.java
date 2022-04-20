@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.maven.plugin.AbstractMojo;
-import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -56,6 +55,10 @@ public class AvroPostprocessMojo extends AbstractMojo {
   private static final String BEFORE = "@SuppressWarnings(\"all\")";
   private static final String INTER_BASE = "org.apache.avro.specific.SpecificRecord";
   private static final String INTER = INTER_BASE + " {";
+  private static final String ISSUES_BODY =
+      ";\npublic interface Issues {\n  org.gbif.pipelines.io.avro.IssueRecord getIssues();\n}";
+  private static final String RECORD_BODY =
+      ";\npublic interface Record {\n  java.lang.String getId();\n}";
 
   @Parameter(property = "postprocess.directory", defaultValue = DEFAULT)
   private String directory;
@@ -63,15 +66,20 @@ public class AvroPostprocessMojo extends AbstractMojo {
   @Parameter(property = "postprocess.defaultPackage", defaultValue = DEFAULT)
   private String defaultPackage;
 
+  @Parameter(property = "postprocess.skipPackage", defaultValue = "json")
+  private String skipPackage;
+
   @Override
-  public void execute() throws MojoExecutionException {
+  public void execute() {
 
     if (!DEFAULT.equals(directory) && !DEFAULT.equals(defaultPackage)) {
-      boolean interfaceIssueExist = createIssuesInterface();
-      boolean interfaceRecordExist = createRecordInterface();
+      boolean interfaceIssueExist = createInterface("/Issues.java", ISSUES_BODY);
+      boolean interfaceRecordExist = createInterface("/Record.java", RECORD_BODY);
 
       if (!interfaceIssueExist && !interfaceRecordExist) {
-        searchClasses().forEach(this::modifyFile);
+        searchClasses().stream()
+            .filter(p -> !p.toString().contains(skipPackage))
+            .forEach(this::modifyFile);
       }
     }
   }
@@ -82,6 +90,10 @@ public class AvroPostprocessMojo extends AbstractMojo {
 
   public void setDefaultPackage(String defaultPackage) {
     this.defaultPackage = defaultPackage;
+  }
+
+  public void setSkipPackage(String skipPackage) {
+    this.skipPackage = skipPackage;
   }
 
   /**
@@ -243,32 +255,10 @@ public class AvroPostprocessMojo extends AbstractMojo {
     }
   }
 
-  /** Creates Record.java interface in a defaultPackage directory */
-  private boolean createRecordInterface() {
-    String path = directory + defaultPackage.replaceAll("\\.", "/") + "/Record.java";
-    String clazz =
-        "package "
-            + defaultPackage
-            + ";\npublic interface Record {\n  java.lang.String getId();\n}";
-    try {
-      Path path1 = Paths.get(path);
-      boolean exists = path1.toFile().exists();
-      if (!exists) {
-        Files.write(path1, clazz.getBytes(UTF_8));
-      }
-      return exists;
-    } catch (IOException ex) {
-      throw new IllegalStateException(ex.getMessage(), ex);
-    }
-  }
-
-  /** Creates Issues.java interface in a defaultPackage directory */
-  private boolean createIssuesInterface() {
-    String path = directory + defaultPackage.replaceAll("\\.", "/") + "/Issues.java";
-    String clazz =
-        "package "
-            + defaultPackage
-            + ";\npublic interface Issues {\n  org.gbif.pipelines.io.avro.IssueRecord getIssues();\n}";
+  /** Creates an interface in a defaultPackage directory */
+  private boolean createInterface(String className, String body) {
+    String path = directory + defaultPackage.replaceAll("\\.", "/") + className;
+    String clazz = "package " + defaultPackage + body;
     try {
       Path path1 = Paths.get(path);
       boolean exists = path1.toFile().exists();

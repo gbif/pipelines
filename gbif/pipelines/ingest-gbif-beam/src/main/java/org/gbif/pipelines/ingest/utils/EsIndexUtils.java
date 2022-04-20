@@ -82,7 +82,7 @@ public class EsIndexUtils {
 
     boolean independentIndex = options.getEsIndexName().startsWith(options.getDatasetId());
 
-    Map<String, String> settings = new HashMap<>(5);
+    Map<String, String> settings = new HashMap<>(6);
     settings.put(
         Field.INDEX_REFRESH_INTERVAL,
         independentIndex ? Indexing.REFRESH_INTERVAL : options.getIndexRefreshInterval());
@@ -92,6 +92,7 @@ public class EsIndexUtils {
         independentIndex ? Indexing.NUMBER_REPLICAS : options.getIndexNumberReplicas().toString());
     settings.put(Field.INDEX_ANALYSIS, Indexing.ANALYSIS);
     settings.put(Field.INDEX_MAX_RESULT_WINDOW, options.getIndexMaxResultWindow().toString());
+    settings.put(Field.INDEX_UNASSIGNED_NODE_DELAY, options.getUnassignedNodeDelay());
 
     return IndexParams.builder()
         .indexName(options.getEsIndexName())

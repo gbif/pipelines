@@ -203,6 +203,8 @@ public class OccurrenceRelationshipsTest {
             .institutionCode("A")
             .collectionCode("B")
             .catalogNumber("C")
+            .decimalLatitude(1.0)
+            .decimalLongitude(1.0)
             .build();
 
     OccurrenceFeatures o2 =
@@ -232,6 +234,9 @@ public class OccurrenceRelationshipsTest {
             .institutionCode("A")
             .collectionCode("B")
             .catalogNumber("C")
+            .year(2000)
+            .month(1)
+            .day(1)
             .build();
 
     OccurrenceFeatures o2 =
@@ -240,6 +245,9 @@ public class OccurrenceRelationshipsTest {
             .datasetKey("2")
             .speciesKey("1")
             .catalogNumber("A:C")
+            .year(2000)
+            .month(1)
+            .day(1)
             .build();
 
     RelationshipAssertion<OccurrenceFeatures> assertion = OccurrenceRelationships.generate(o1, o2);

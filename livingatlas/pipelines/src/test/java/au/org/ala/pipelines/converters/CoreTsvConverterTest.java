@@ -184,7 +184,7 @@ public class CoreTsvConverterTest {
       "\"raw_er_taxonID\"", // DwcTerm.taxonID
       "\"raw_er_taxonomicStatus\"", // DwcTerm.taxonomicStatus
       "\"raw_er_taxonRemarks\"", // DwcTerm.taxonRemarks
-      "\"br_typeStatus\"", // DwcTerm.typeStatus
+      "\"br_recordedBy_1|br_recordedBy_2\"", // DwcTerm.recordedBy
       "\"raw_er_verbatimCoordinates\"", // DwcTerm.verbatimCoordinates
       "\"raw_er_verbatimCoordinateSystem\"", // DwcTerm.verbatimCoordinateSystem
       "\"raw_er_verbatimDepth\"", // DwcTerm.verbatimDepth
@@ -885,7 +885,6 @@ public class CoreTsvConverterTest {
 
     // When
     String result = CoreCsvConverter.convert(source);
-    List<String> result2 = MultimediaCsvConverter.convert(source, "http://image/{0}");
 
     // Should
     Assert.assertEquals(String.join("\t", expected), result);
