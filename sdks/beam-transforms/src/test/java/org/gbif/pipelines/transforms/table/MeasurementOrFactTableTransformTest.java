@@ -14,11 +14,11 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.GbifIdRecord;
 import org.gbif.pipelines.io.avro.extension.dwc.MeasurementOrFactTable;
-import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
+import org.gbif.pipelines.transforms.specific.GbifIdTransform;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -36,27 +36,27 @@ public class MeasurementOrFactTableTransformTest {
 
     // State
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("777").build();
-    BasicRecord br = BasicRecord.newBuilder().setId("777").setGbifId(777L).build();
+    GbifIdRecord id = GbifIdRecord.newBuilder().setId("777").setGbifId(777L).build();
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
-    BasicTransform basicTransform = BasicTransform.builder().create();
+    GbifIdTransform gbifIdTransform = GbifIdTransform.builder().create();
 
     MeasurementOrFactTableTransform transform =
         MeasurementOrFactTableTransform.builder()
             .extendedRecordTag(verbatimTransform.getTag())
-            .basicRecordTag(basicTransform.getTag())
+            .gbifIdRecordTag(gbifIdTransform.getTag())
             .build();
 
     // When
     PCollection<KV<String, ExtendedRecord>> verbatimCollection =
         p.apply("Create er", Create.of(er)).apply("KV er", verbatimTransform.toKv());
 
-    PCollection<KV<String, BasicRecord>> basicCollection =
-        p.apply("Create br", Create.of(br)).apply("KV br", basicTransform.toKv());
+    PCollection<KV<String, GbifIdRecord>> basicCollection =
+        p.apply("Create id", Create.of(id)).apply("KV id", gbifIdTransform.toKv());
 
     PCollection<MeasurementOrFactTable> result =
         KeyedPCollectionTuple
             // Core
-            .of(basicTransform.getTag(), basicCollection)
+            .of(gbifIdTransform.getTag(), basicCollection)
             .and(verbatimTransform.getTag(), verbatimCollection)
             // Apply
             .apply("Grouping objects", CoGroupByKey.create())
@@ -86,27 +86,27 @@ public class MeasurementOrFactTableTransformTest {
     ext.put(Extension.MEASUREMENT_OR_FACT.getRowType(), Collections.singletonList(ext1));
 
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("777").setExtensions(ext).build();
-    BasicRecord br = BasicRecord.newBuilder().setId("777").setGbifId(777L).build();
+    GbifIdRecord id = GbifIdRecord.newBuilder().setId("777").setGbifId(777L).build();
 
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
-    BasicTransform basicTransform = BasicTransform.builder().create();
+    GbifIdTransform gbifIdTransform = GbifIdTransform.builder().create();
     MeasurementOrFactTableTransform transform =
         MeasurementOrFactTableTransform.builder()
             .extendedRecordTag(verbatimTransform.getTag())
-            .basicRecordTag(basicTransform.getTag())
+            .gbifIdRecordTag(gbifIdTransform.getTag())
             .build();
 
     // When
     PCollection<KV<String, ExtendedRecord>> verbatimCollection =
         p.apply("Create er", Create.of(er)).apply("KV er", verbatimTransform.toKv());
 
-    PCollection<KV<String, BasicRecord>> basicCollection =
-        p.apply("Create br", Create.of(br)).apply("KV br", basicTransform.toKv());
+    PCollection<KV<String, GbifIdRecord>> basicCollection =
+        p.apply("Create id", Create.of(id)).apply("KV id", gbifIdTransform.toKv());
 
     PCollection<MeasurementOrFactTable> result =
         KeyedPCollectionTuple
             // Core
-            .of(basicTransform.getTag(), basicCollection)
+            .of(gbifIdTransform.getTag(), basicCollection)
             .and(verbatimTransform.getTag(), verbatimCollection)
             // Apply
             .apply("Grouping objects", CoGroupByKey.create())
