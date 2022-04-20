@@ -10,7 +10,7 @@
 
   <groupId>org.gbif.pipelines</groupId>
   <artifactId>pipelines-parent</artifactId>
-  <version>2.11.9-SNAPSHOT</version>
+  <version>2.11.10-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <modules>
@@ -88,7 +88,7 @@
     <gbif-api.version>0.164</gbif-api.version>
     <gbif-common.version>0.53</gbif-common.version>
     <dwc-api.version>1.35</dwc-api.version>
-    <kvs.version>1.23-SNAPSHOT</kvs.version>
+    <kvs.version>1.23</kvs.version>
     <hbase-utils.version>0.12</hbase-utils.version>
     <gbif-wrangler.version>0.3</gbif-wrangler.version>
     <gbif-occurrence.version>0.173.1</gbif-occurrence.version>
