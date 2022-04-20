@@ -174,7 +174,7 @@ public class OccurrenceHdfsRecordConverter {
     }
     occurrenceHdfsRecord.setCrawlid(metadataRecord.getCrawlId());
     occurrenceHdfsRecord.setDatasetkey(metadataRecord.getDatasetKey());
-    occurrenceHdfsRecord.setDatasetname(metadataRecord.getDatasetTitle());
+    occurrenceHdfsRecord.setDatasettitle(metadataRecord.getDatasetTitle());
     occurrenceHdfsRecord.setInstallationkey(metadataRecord.getInstallationKey());
     occurrenceHdfsRecord.setProtocol(metadataRecord.getProtocol());
     occurrenceHdfsRecord.setNetworkkey(metadataRecord.getNetworkKeys());
@@ -367,7 +367,6 @@ public class OccurrenceHdfsRecordConverter {
     occurrenceHdfsRecord.setIndividualcount(basicRecord.getIndividualCount());
     occurrenceHdfsRecord.setReferences(basicRecord.getReferences());
     occurrenceHdfsRecord.setSex(basicRecord.getSex());
-    occurrenceHdfsRecord.setTypestatus(basicRecord.getTypeStatus());
     occurrenceHdfsRecord.setTypifiedname(basicRecord.getTypifiedName());
     occurrenceHdfsRecord.setOrganismquantity(basicRecord.getOrganismQuantity());
     occurrenceHdfsRecord.setOrganismquantitytype(basicRecord.getOrganismQuantityType());
@@ -376,6 +375,14 @@ public class OccurrenceHdfsRecordConverter {
     occurrenceHdfsRecord.setRelativeorganismquantity(basicRecord.getRelativeOrganismQuantity());
     occurrenceHdfsRecord.setOccurrencestatus(basicRecord.getOccurrenceStatus());
     occurrenceHdfsRecord.setIsincluster(basicRecord.getIsClustered());
+    occurrenceHdfsRecord.setDatasetid(basicRecord.getDatasetID());
+    occurrenceHdfsRecord.setDatasetname(basicRecord.getDatasetName());
+    occurrenceHdfsRecord.setOthercatalognumbers(basicRecord.getOtherCatalogNumbers());
+    occurrenceHdfsRecord.setRecordedby(basicRecord.getRecordedBy());
+    occurrenceHdfsRecord.setIdentifiedby(basicRecord.getIdentifiedBy());
+    occurrenceHdfsRecord.setPreparations(basicRecord.getPreparations());
+    occurrenceHdfsRecord.setSamplingprotocol(basicRecord.getSamplingProtocol());
+    occurrenceHdfsRecord.setTypestatus(basicRecord.getTypeStatus());
 
     // Vocabulary controlled
     Optional.ofNullable(basicRecord.getEstablishmentMeans())

@@ -18,6 +18,7 @@ import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.api.vocabulary.OccurrenceStatus;
 import org.gbif.api.vocabulary.ThreatStatus;
+import org.gbif.api.vocabulary.TypeStatus;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
@@ -54,11 +55,14 @@ public class GbifJsonConverterTest {
   @Test
   public void jsonFromSpecificRecordBaseTest() {
     // State
+    final String multivalue1 = "mv\u001Eà1";
+    final String expectedMultivalue1 = "mv,à1";
+    final String multivalue2 = "mv2";
+
     Map<String, String> erMap = new HashMap<>(5);
     erMap.put("http://rs.tdwg.org/dwc/terms/locality", "something:{something}");
     erMap.put("http://purl.org/dc/terms/remark", "{\"something\":1}{\"something\":1}");
-    erMap.put(DwcTerm.recordedBy.qualifiedName(), "Jeremia garde \u001Eà elfutsone");
-    erMap.put(DwcTerm.identifiedBy.qualifiedName(), "D2\u001fR2");
+    erMap.put(DwcTerm.recordedBy.qualifiedName(), multivalue1 + "|" + multivalue2);
     erMap.put(DwcTerm.footprintWKT.qualifiedName(), "footprintWKTfootprintWKTfootprintWKT");
 
     MetadataRecord mr =
@@ -132,6 +136,14 @@ public class GbifJsonConverterTest {
                         .setType(AgentIdentifierType.OTHER.name())
                         .setValue("someId")
                         .build()))
+            .setDatasetID(Arrays.asList(multivalue1, multivalue2))
+            .setDatasetName(Arrays.asList(multivalue1, multivalue2))
+            .setOtherCatalogNumbers(Arrays.asList(multivalue1, multivalue2))
+            .setRecordedBy(Arrays.asList(multivalue1, multivalue2))
+            .setIdentifiedBy(Arrays.asList(multivalue1, multivalue2))
+            .setPreparations(Arrays.asList(multivalue1, multivalue2))
+            .setSamplingProtocol(Arrays.asList(multivalue1, multivalue2))
+            .setTypeStatus(Arrays.asList(TypeStatus.TYPE.name(), TypeStatus.TYPE_SPECIES.name()))
             .build();
 
     TemporalRecord tmr =
@@ -211,8 +223,6 @@ public class GbifJsonConverterTest {
     assertEquals(
         mr.getHostingOrganizationKey(), result.path(Indexing.HOSTING_ORGANIZATION_KEY).asText());
     assertEquals(mr.getId(), result.path(Indexing.ID).asText());
-    assertEquals("Jeremia garde ,à elfutsone", result.path(Indexing.RECORDED_BY).asText());
-    assertEquals("D2 R2", result.path(Indexing.IDENTIFIED_BY).asText());
     assertEquals("2011-01-01T00:00", result.path(Indexing.EVENT_DATE_SINGLE).asText());
     assertEquals("2011", result.path(Indexing.YEAR).asText());
     assertEquals("1", result.path(Indexing.MONTH).asText());
@@ -229,6 +239,45 @@ public class GbifJsonConverterTest {
     assertEquals("[68]", result.path(Indexing.LOCALITY).asText());
     assertTrue(result.path(Indexing.IS_CLUSTERED).asBoolean());
     assertEquals(
+        "[\"" + expectedMultivalue1 + "\",\"" + multivalue2 + "\"]",
+        result.path(Indexing.DATASET_ID).toString());
+    assertEquals(
+        "[\"" + expectedMultivalue1 + "\",\"" + multivalue2 + "\"]",
+        result.path(Indexing.DATASET_NAME).toString());
+    assertEquals(
+        "[\"" + expectedMultivalue1 + "\",\"" + multivalue2 + "\"]",
+        result.path(Indexing.OTHER_CATALOG_NUMBERS).toString());
+    assertEquals(
+        "\"" + expectedMultivalue1 + "|" + multivalue2 + "\"",
+        result.path(Indexing.OTHER_CATALOG_NUMBERS_JOINED).toString());
+    assertEquals(
+        "[\"" + expectedMultivalue1 + "\",\"" + multivalue2 + "\"]",
+        result.path(Indexing.RECORDED_BY).toString());
+    assertEquals(
+        "\"" + expectedMultivalue1 + "|" + multivalue2 + "\"",
+        result.path(Indexing.RECORDED_BY_JOINED).toString());
+    assertEquals(
+        "[\"" + expectedMultivalue1 + "\",\"" + multivalue2 + "\"]",
+        result.path(Indexing.IDENTIFIED_BY).toString());
+    assertEquals(
+        "\"" + expectedMultivalue1 + "|" + multivalue2 + "\"",
+        result.path(Indexing.IDENTIFIED_BY_JOINED).toString());
+    assertEquals(
+        "[\"" + expectedMultivalue1 + "\",\"" + multivalue2 + "\"]",
+        result.path(Indexing.PREPARATIONS).toString());
+    assertEquals(
+        "\"" + expectedMultivalue1 + "|" + multivalue2 + "\"",
+        result.path(Indexing.PREPARATIONS_JOINED).toString());
+    assertEquals(
+        "[\"" + expectedMultivalue1 + "\",\"" + multivalue2 + "\"]",
+        result.path(Indexing.SAMPLING_PROTOCOL).toString());
+    assertEquals(
+        "\"" + expectedMultivalue1 + "|" + multivalue2 + "\"",
+        result.path(Indexing.SAMPLING_PROTOCOL_JOINED).toString());
+    assertEquals(
+        "[\"" + TypeStatus.TYPE.name() + "\",\"" + TypeStatus.TYPE_SPECIES.name() + "\"]",
+        result.path(Indexing.TYPE_STATUS).toString());
+    assertEquals(
         "http://rs.tdwg.org/ac/terms/Multimedia", result.path(Indexing.EXTENSIONS).get(0).asText());
 
     String expectedGadm =
@@ -240,15 +289,22 @@ public class GbifJsonConverterTest {
     assertEquals(expectedGadm, result.path("gadm").toString());
 
     String expectedAll =
-        "[\"Jeremia garde ,à elfutsone\",\"{\\\"something\\\":1}{\\\"something\\\":1}\",\"v\",\"D2 R2\",\"something:{something}\"]";
+        "[\""
+            + expectedMultivalue1
+            + "\",\"{\\\"something\\\":1}{\\\"something\\\":1}\",\"v\",\""
+            + multivalue2
+            + "\",\"something:{something}\"]";
     assertEquals(expectedAll, result.path("all").toString());
 
     String expectedVerbatim =
         "{\"core\":"
-            + "{\"http://rs.tdwg.org/dwc/terms/identifiedBy\":\"D2 R2\","
-            + "\"http://rs.tdwg.org/dwc/terms/footprintWKT\":\"footprintWKTfootprintWKTfootprintWKT\","
+            + "{\"http://rs.tdwg.org/dwc/terms/footprintWKT\":\"footprintWKTfootprintWKTfootprintWKT\","
             + "\"http://purl.org/dc/terms/remark\":\"{\\\"something\\\":1}{\\\"something\\\":1}\","
-            + "\"http://rs.tdwg.org/dwc/terms/recordedBy\":\"Jeremia garde ,à elfutsone\","
+            + "\"http://rs.tdwg.org/dwc/terms/recordedBy\":\""
+            + expectedMultivalue1
+            + "|"
+            + multivalue2
+            + "\","
             + "\"http://rs.tdwg.org/dwc/terms/locality\":\"something:{something}\"},"
             + "\"extensions\":{\"http://rs.tdwg.org/ac/terms/Multimedia\":[{\"k\":\"v\"}]}}";
     assertEquals(expectedVerbatim, result.path("verbatim").toString());

@@ -162,7 +162,7 @@ public class MultimediaCsvConverterTest {
                     .setLineage(Collections.singletonList("br_establishmentMeans"))
                     .build())
             .setIndividualCount(222)
-            .setTypeStatus("br_typeStatus")
+            .setTypeStatus(Collections.singletonList("br_typeStatus"))
             .setTypifiedName("br_typifiedName")
             .setSampleSizeValue(222d)
             .setSampleSizeUnit("br_sampleSizeUnit")

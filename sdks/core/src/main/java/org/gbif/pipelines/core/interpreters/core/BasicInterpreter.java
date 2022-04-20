@@ -9,6 +9,7 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.OCCURRENCE_STATUS_UNPARSAB
 import static org.gbif.api.vocabulary.OccurrenceIssue.REFERENCES_URI_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.TYPE_STATUS_INVALID;
 import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
+import static org.gbif.pipelines.core.utils.ModelUtils.extractOptListValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
 
@@ -160,14 +161,21 @@ public class BasicInterpreter {
     Function<ParseResult<TypeStatus>, BasicRecord> fn =
         parseResult -> {
           if (parseResult.isSuccessful()) {
-            br.setTypeStatus(parseResult.getPayload().name());
+            if (br.getTypeStatus() == null) {
+              br.setTypeStatus(new ArrayList<>());
+            }
+
+            String result = parseResult.getPayload().name();
+            if (!br.getTypeStatus().contains(result)) {
+              br.getTypeStatus().add(result);
+            }
           } else {
             addIssue(br, TYPE_STATUS_INVALID);
           }
           return br;
         };
 
-    VocabularyParser.typeStatusParser().map(er, fn);
+    VocabularyParser.typeStatusParser().mapList(er, fn);
   }
 
   /** {@link DwcTerm#sex} interpretation. */
@@ -405,6 +413,41 @@ public class BasicInterpreter {
         }
       }
     };
+  }
+
+  /** {@link DwcTerm#datasetID} interpretation. */
+  public static void interpretDatasetID(ExtendedRecord er, BasicRecord br) {
+    extractOptListValue(er, DwcTerm.datasetID).ifPresent(br::setDatasetID);
+  }
+
+  /** {@link DwcTerm#datasetName} interpretation. */
+  public static void interpretDatasetName(ExtendedRecord er, BasicRecord br) {
+    extractOptListValue(er, DwcTerm.datasetName).ifPresent(br::setDatasetName);
+  }
+
+  /** {@link DwcTerm#otherCatalogNumbers} interpretation. */
+  public static void interpretOtherCatalogNumbers(ExtendedRecord er, BasicRecord br) {
+    extractOptListValue(er, DwcTerm.otherCatalogNumbers).ifPresent(br::setOtherCatalogNumbers);
+  }
+
+  /** {@link DwcTerm#recordedBy} interpretation. */
+  public static void interpretRecordedBy(ExtendedRecord er, BasicRecord br) {
+    extractOptListValue(er, DwcTerm.recordedBy).ifPresent(br::setRecordedBy);
+  }
+
+  /** {@link DwcTerm#identifiedBy} interpretation. */
+  public static void interpretIdentifiedBy(ExtendedRecord er, BasicRecord br) {
+    extractOptListValue(er, DwcTerm.identifiedBy).ifPresent(br::setIdentifiedBy);
+  }
+
+  /** {@link DwcTerm#preparations} interpretation. */
+  public static void interpretPreparations(ExtendedRecord er, BasicRecord br) {
+    extractOptListValue(er, DwcTerm.preparations).ifPresent(br::setPreparations);
+  }
+
+  /** {@link DwcTerm#samplingProtocol} interpretation. */
+  public static void interpretSamplingProtocol(ExtendedRecord er, BasicRecord br) {
+    extractOptListValue(er, DwcTerm.samplingProtocol).ifPresent(br::setSamplingProtocol);
   }
 
   /** Returns ENUM instead of url string */

@@ -54,7 +54,8 @@ public class SamplesToAvro {
       return;
     }
 
-    RemoteIterator<LocatedFileStatus> iter = fs.listFiles(new Path(sampleCSVDownloadPath), false);
+    RemoteIterator<LocatedFileStatus> iter =
+        fs.listFiles(ALAFsUtils.createPath(sampleCSVDownloadPath), false);
 
     while (iter.hasNext()) {
 
@@ -68,7 +69,7 @@ public class SamplesToAvro {
         String outputPath = LayerCrawler.getSampleAvroPath(options);
         DatumWriter<SampleRecord> datumWriter =
             new GenericDatumWriter<>(SampleRecord.getClassSchema());
-        try (OutputStream output = fs.create(new Path(outputPath));
+        try (OutputStream output = fs.create(ALAFsUtils.createPath(outputPath));
             DataFileWriter<SampleRecord> dataFileWriter = new DataFileWriter<>(datumWriter)) {
           dataFileWriter.setCodec(BASE_CODEC);
           dataFileWriter.create(SampleRecord.getClassSchema(), output);

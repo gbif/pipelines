@@ -32,7 +32,11 @@ public class DwcaToAvroConverter extends ConverterToVerbatim {
     String inputPath = args[0];
     String outputPath = args[1];
     boolean isFileCreated =
-        DwcaToAvroConverter.create().inputPath(inputPath).outputPath(outputPath).convert();
+        DwcaToAvroConverter.create()
+            .inputPath(inputPath)
+            .outputPath(outputPath)
+            .skipDeletion(true)
+            .convert();
     log.info("Verbatim avro file has been created - {}", isFileCreated);
   }
 
@@ -46,10 +50,27 @@ public class DwcaToAvroConverter extends ConverterToVerbatim {
   protected long convert(Path inputPath, SyncDataFileWriter<ExtendedRecord> dataFileWriter)
       throws IOException {
 
-    Path realPath =
-        normalizeSpreadsheetPath(inputPath).map(this::convertFromSpreadsheet).orElse(inputPath);
+    String realPath =
+        Optional.of(inputPath)
+            .filter(Files::isDirectory)
+            .flatMap(this::normalizeSpreadsheetPath)
+            .map(this::convertFromSpreadsheet)
+            .orElse(inputPath)
+            .toString();
 
-    DwcaReader reader = DwcaReader.fromLocation(realPath.toString());
+    DwcaReader reader;
+    if (inputPath.toString().endsWith(".zip") || inputPath.toString().endsWith(".dwca")) {
+      String tmp;
+      if (Files.isDirectory(inputPath)) {
+        tmp = inputPath.resolve("tmp").toString();
+      } else {
+        tmp = inputPath.getParent().resolve("tmp").toString();
+      }
+      reader = DwcaReader.fromCompressed(realPath, tmp);
+    } else {
+      reader = DwcaReader.fromLocation(realPath);
+    }
+
     log.info("Exporting the DwC Archive to Avro started {}", realPath);
 
     // Read all records

@@ -24,6 +24,7 @@ import java.util.StringJoiner;
 import java.util.function.BiConsumer;
 import java.util.function.LongFunction;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.Builder;
 import lombok.Singular;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +40,7 @@ import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.TermFactory;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
 import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
+import org.gbif.pipelines.core.utils.ModelUtils;
 import org.gbif.pipelines.core.utils.TemporalConverter;
 import org.gbif.pipelines.io.avro.AmplificationRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
@@ -257,11 +259,8 @@ public class GbifJsonConverter {
               Optional.ofNullable(core.get(t.qualifiedName()))
                   .ifPresent(r -> jc.addJsonTextFieldNoCheck(k, r));
 
-      fieldFn.accept(DwcTerm.recordedBy, "recordedBy");
-      fieldFn.accept(DwcTerm.identifiedBy, "identifiedBy");
       fieldFn.accept(DwcTerm.recordNumber, "recordNumber");
       fieldFn.accept(DwcTerm.organismID, "organismId");
-      fieldFn.accept(DwcTerm.samplingProtocol, "samplingProtocol");
       fieldFn.accept(DwcTerm.eventID, "eventId");
       fieldFn.accept(DwcTerm.parentEventID, "parentEventId");
       fieldFn.accept(DwcTerm.institutionCode, "institutionCode");
@@ -330,6 +329,7 @@ public class GbifJsonConverter {
 
       Set<TextNode> textNodeMap =
           allFieldValues.stream()
+              .flatMap(v -> Stream.of(v.split(ModelUtils.DEFAULT_SEPARATOR)))
               .map(JsonConverter::getEscapedTextNode)
               .collect(Collectors.toSet());
 
@@ -753,6 +753,20 @@ public class GbifJsonConverter {
           br.setLicense(license);
         }
       }
+
+      BiConsumer<List<String>, String> joinValuesSetter =
+          (values, fieldName) -> {
+            if (values != null && !values.isEmpty()) {
+              String joinedValues = String.join("|", values);
+              jc.addJsonTextFieldNoCheck(fieldName, joinedValues);
+            }
+          };
+
+      joinValuesSetter.accept(br.getRecordedBy(), Indexing.RECORDED_BY_JOINED);
+      joinValuesSetter.accept(br.getIdentifiedBy(), Indexing.IDENTIFIED_BY_JOINED);
+      joinValuesSetter.accept(br.getPreparations(), Indexing.PREPARATIONS_JOINED);
+      joinValuesSetter.accept(br.getSamplingProtocol(), Indexing.SAMPLING_PROTOCOL_JOINED);
+      joinValuesSetter.accept(br.getOtherCatalogNumbers(), Indexing.OTHER_CATALOG_NUMBERS_JOINED);
 
       // Add other fields
       jc.addCommonFields(br);

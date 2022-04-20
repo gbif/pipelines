@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.gbif.api.vocabulary.Extension;
@@ -15,6 +17,8 @@ import org.gbif.pipelines.io.avro.Issues;
 /** Helps to work with org.gbif.pipelines.io.avro models */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ModelUtils {
+
+  public static String DEFAULT_SEPARATOR = "\\|";
 
   public static String extractValue(ExtendedRecord er, Term term) {
     return er.getCoreTerms().get(term.qualifiedName());
@@ -37,6 +41,17 @@ public class ModelUtils {
 
   public static Optional<String> extractOptValue(ExtendedRecord er, Term term) {
     return Optional.ofNullable(extractValue(er, term));
+  }
+
+  public static Optional<List<String>> extractOptListValue(ExtendedRecord er, Term term) {
+    return extractOptValue(er, term)
+        .filter(x -> !x.isEmpty())
+        .map(
+            x ->
+                Stream.of(x.split(DEFAULT_SEPARATOR))
+                    .map(String::trim)
+                    .filter(v -> !v.isEmpty())
+                    .collect(Collectors.toList()));
   }
 
   public static boolean hasValue(ExtendedRecord er, Term term) {

@@ -36,7 +36,7 @@
       {"name": "degreeOfEstablishment", "type": ["null", "VocabularyConcept"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/degreeOfEstablishment"},
       {"name": "pathway", "type": ["null", "VocabularyConcept"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/pathway"},
       {"name": "individualCount", "type": ["null", "int"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/individualCount"},
-      {"name": "typeStatus", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/typeStatus"},
+      {"name": "typeStatus", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/dwc/terms/typeStatus"},
       {"name": "typifiedName", "type": ["null", "string"], "default" : null, "doc": "https://gbif.github.io/dwc-api/apidocs/org/gbif/dwc/terms/GbifTerm.html#typifiedName"},
       {"name": "sampleSizeValue", "type": ["null", "double"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/sampleSizeValue"},
       {"name": "sampleSizeUnit", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/sampleSizeUnit"},
@@ -46,10 +46,16 @@
       {"name": "references", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/references"},
       {"name": "license", "type":["null","string"], "default":null, "doc": "http://purl.org/dc/terms/license"},
       {"name": "identifiedByIds", "type": {"type" : "array", "items" : "AgentIdentifier"}, "default" : []},
+      {"name": "identifiedBy", "type": {"type" : "array", "items" : "string"}, "default" : []},
       {"name": "recordedByIds", "type": {"type" : "array", "items" : "AgentIdentifier"}, "default" : []},
       {"name": "recordedBy", "type": {"type" : "array", "items" : "string"}, "default" : []},
       {"name": "occurrenceStatus", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/occurrenceStatus"},
       {"name": "isClustered", "type": ["null", "boolean"], "default" : null},
+      {"name": "datasetID", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/dwc/terms/datasetID"},
+      {"name": "datasetName", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/dwc/terms/datasetName"},
+      {"name": "otherCatalogNumbers", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/dwc/terms/otherCatalogNumbers"},
+      {"name": "preparations", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/dwc/terms/preparations"},
+      {"name": "samplingProtocol", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/dwc/terms/samplingProtocol"},
       {"name": "issues", "type": "IssueRecord", "default":{}}
     ]
   }

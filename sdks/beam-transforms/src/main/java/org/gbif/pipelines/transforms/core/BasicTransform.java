@@ -180,7 +180,14 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
             .via(VocabularyInterpreter.interpretEstablishmentMeans(vocabularyService))
             .via(VocabularyInterpreter.interpretLifeStage(vocabularyService))
             .via(VocabularyInterpreter.interpretPathway(vocabularyService))
-            .via(VocabularyInterpreter.interpretDegreeOfEstablishment(vocabularyService));
+            .via(VocabularyInterpreter.interpretDegreeOfEstablishment(vocabularyService))
+            .via(BasicInterpreter::interpretDatasetID)
+            .via(BasicInterpreter::interpretDatasetName)
+            .via(BasicInterpreter::interpretOtherCatalogNumbers)
+            .via(BasicInterpreter::interpretRecordedBy)
+            .via(BasicInterpreter::interpretIdentifiedBy)
+            .via(BasicInterpreter::interpretPreparations)
+            .via(BasicInterpreter::interpretSamplingProtocol);
 
     if (useDynamicPropertiesInterpretation) {
       handler

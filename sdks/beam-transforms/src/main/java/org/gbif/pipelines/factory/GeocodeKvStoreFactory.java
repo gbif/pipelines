@@ -30,7 +30,6 @@ public class GeocodeKvStoreFactory {
     geocodeKvStore = GeocodeKvStore.create(kvStore, image);
   }
 
-  /* TODO Comment */
   public static KeyValueStore<LatLng, GeocodeResponse> getInstance(PipelinesConfig config) {
     if (instance == null) {
       synchronized (MUTEX) {
@@ -87,6 +86,7 @@ public class GeocodeKvStoreFactory {
                     .withHBaseZk(zk)
                     .build())
             .withCacheCapacity(15_000L)
+            .withCacheExpiryTimeInSeconds(config.getGeocode().getCacheExpiryTimeInSeconds())
             .build();
 
     return GeocodeKVStoreFactory.simpleGeocodeKVStore(geocodeKvStoreConfig, clientConfig);
