@@ -49,12 +49,14 @@ public class PipelinesVariables {
         // Raw
         VERBATIM,
         // Core types
+        IDENTIFIER,
         METADATA,
         BASIC,
         TEMPORAL,
         LOCATION,
         TAXONOMY,
         GRSCICOLL,
+        EVENT_CORE,
         // Extension types
         IMAGE,
         MULTIMEDIA,
@@ -232,6 +234,8 @@ public class PipelinesVariables {
     public static final String TAXON_RECORDS_COUNT = "taxonRecordsCount";
     public static final String GRSCICOLL_RECORDS_COUNT = "grscicollRecordsCount";
     public static final String VERBATIM_RECORDS_COUNT = "verbatimRecordsCount";
+    // Event core types
+    public static final String EVENT_CORE_RECORDS_COUNT = "eventCoreRecordsCount";
     // Extension types
     public static final String MULTIMEDIA_RECORDS_COUNT = "multimediaRecordsCount";
     public static final String IMAGE_RECORDS_COUNT = "imageRecordsCount";
@@ -266,14 +270,13 @@ public class PipelinesVariables {
         "extendedMeasurementOrFactTableRecordsCount";
     public static final String CHRONOMETRIC_AGE_TABLE_RECORDS_COUNT =
         "chronometricAgeTableRecordsCount";
-    public static final String CHRONOMETRIC_DATE_TABLE_RECORDS_COUNT =
-        "chronometricDateTableRecordsCount";
     public static final String REFERENCE_TABLE_RECORDS_COUNT = "referencesTableRecordsCount";
     public static final String IDENTIFIER_TABLE_RECORDS_COUNT = "identifierTableRecordsCount";
-    public static final String HDFS_VIEW_RECORDS_COUNT = "hdfsViewRecordsCount";
+
     // Fragmenter
     public static final String FRAGMENTER_COUNT = "fragmenterRecordsCount";
     // Specific
+    public static final String IDENTIFIER_RECORDS_COUNT = "identifierRecordsCount";
     public static final String LOCATION_FEATURE_RECORDS_COUNT = "locationFeatureRecordsCount";
 
     public static final String ATTEMPTED = "Attempted";

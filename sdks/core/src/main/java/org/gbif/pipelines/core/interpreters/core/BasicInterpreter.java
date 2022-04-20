@@ -6,7 +6,6 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.INDIVIDUAL_COUNT_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.OCCURRENCE_STATUS_INFERRED_FROM_BASIS_OF_RECORD;
 import static org.gbif.api.vocabulary.OccurrenceIssue.OCCURRENCE_STATUS_INFERRED_FROM_INDIVIDUAL_COUNT;
 import static org.gbif.api.vocabulary.OccurrenceIssue.OCCURRENCE_STATUS_UNPARSABLE;
-import static org.gbif.api.vocabulary.OccurrenceIssue.REFERENCES_URI_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.TYPE_STATUS_INVALID;
 import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractOptListValue;
@@ -14,7 +13,6 @@ import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
 
 import com.google.common.base.Strings;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Optional;
@@ -27,16 +25,12 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.vocabulary.BasisOfRecord;
-import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.OccurrenceStatus;
 import org.gbif.api.vocabulary.Sex;
 import org.gbif.api.vocabulary.TypeStatus;
-import org.gbif.common.parsers.LicenseParser;
 import org.gbif.common.parsers.NumberParser;
-import org.gbif.common.parsers.UrlParser;
 import org.gbif.common.parsers.core.Parsable;
 import org.gbif.common.parsers.core.ParseResult;
-import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.kvs.KeyValueStore;
@@ -214,19 +208,6 @@ public class BasicInterpreter {
     }
   }
 
-  /** {@link DcTerm#references} interpretation. */
-  public static void interpretReferences(ExtendedRecord er, BasicRecord br) {
-    String value = extractValue(er, DcTerm.references);
-    if (!Strings.isNullOrEmpty(value)) {
-      URI parseResult = UrlParser.parse(value);
-      if (parseResult != null) {
-        br.setReferences(parseResult.toString());
-      } else {
-        addIssue(br, REFERENCES_URI_INVALID);
-      }
-    }
-  }
-
   /** {@link GbifTerm#typifiedName} interpretation. */
   public static void interpretTypifiedName(ExtendedRecord er, BasicRecord br) {
     Optional<String> typifiedName = extractOptValue(er, GbifTerm.typifiedName);
@@ -244,20 +225,6 @@ public class BasicInterpreter {
                 }
               });
     }
-  }
-
-  /** {@link DwcTerm#sampleSizeValue} interpretation. */
-  public static void interpretSampleSizeValue(ExtendedRecord er, BasicRecord br) {
-    extractOptValue(er, DwcTerm.sampleSizeValue)
-        .map(String::trim)
-        .map(NumberParser::parseDouble)
-        .filter(x -> !x.isInfinite() && !x.isNaN())
-        .ifPresent(br::setSampleSizeValue);
-  }
-
-  /** {@link DwcTerm#sampleSizeUnit} interpretation. */
-  public static void interpretSampleSizeUnit(ExtendedRecord er, BasicRecord br) {
-    extractOptValue(er, DwcTerm.sampleSizeUnit).map(String::trim).ifPresent(br::setSampleSizeUnit);
   }
 
   /** {@link DwcTerm#organismQuantity} interpretation. */
@@ -293,17 +260,6 @@ public class BasicInterpreter {
         }
       }
     }
-  }
-
-  /** {@link DcTerm#license} interpretation. */
-  public static void interpretLicense(ExtendedRecord er, BasicRecord br) {
-    String license =
-        extractOptValue(er, DcTerm.license)
-            .map(BasicInterpreter::getLicense)
-            .map(License::name)
-            .orElse(License.UNSPECIFIED.name());
-
-    br.setLicense(license);
   }
 
   /** {@link DwcTerm#identifiedByID}. */
@@ -415,16 +371,6 @@ public class BasicInterpreter {
     };
   }
 
-  /** {@link DwcTerm#datasetID} interpretation. */
-  public static void interpretDatasetID(ExtendedRecord er, BasicRecord br) {
-    extractOptListValue(er, DwcTerm.datasetID).ifPresent(br::setDatasetID);
-  }
-
-  /** {@link DwcTerm#datasetName} interpretation. */
-  public static void interpretDatasetName(ExtendedRecord er, BasicRecord br) {
-    extractOptListValue(er, DwcTerm.datasetName).ifPresent(br::setDatasetName);
-  }
-
   /** {@link DwcTerm#otherCatalogNumbers} interpretation. */
   public static void interpretOtherCatalogNumbers(ExtendedRecord er, BasicRecord br) {
     extractOptListValue(er, DwcTerm.otherCatalogNumbers).ifPresent(br::setOtherCatalogNumbers);
@@ -443,28 +389,5 @@ public class BasicInterpreter {
   /** {@link DwcTerm#preparations} interpretation. */
   public static void interpretPreparations(ExtendedRecord er, BasicRecord br) {
     extractOptListValue(er, DwcTerm.preparations).ifPresent(br::setPreparations);
-  }
-
-  /** {@link DwcTerm#samplingProtocol} interpretation. */
-  public static void interpretSamplingProtocol(ExtendedRecord er, BasicRecord br) {
-    extractOptListValue(er, DwcTerm.samplingProtocol).ifPresent(br::setSamplingProtocol);
-  }
-
-  /** Returns ENUM instead of url string */
-  private static License getLicense(String url) {
-    URI uri =
-        Optional.ofNullable(url)
-            .map(
-                x -> {
-                  try {
-                    return URI.create(x);
-                  } catch (IllegalArgumentException ex) {
-                    return null;
-                  }
-                })
-            .orElse(null);
-    License license = LicenseParser.getInstance().parseUriThenTitle(uri, null);
-    // UNSPECIFIED must be mapped to null
-    return License.UNSPECIFIED == license ? null : license;
   }
 }

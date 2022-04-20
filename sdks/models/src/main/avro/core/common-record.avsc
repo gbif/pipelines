@@ -1,0 +1,14 @@
+/**
+ * Represents the interpreted fields of terms related to main/common/basic occurrence dwc terms.
+ */
+[
+  {
+    "name":"VocabularyConcept",
+    "namespace":"org.gbif.pipelines.io.avro",
+    "type":"record",
+    "fields":[
+      {"name": "concept", "type": ["null", "string"] },
+      {"name": "lineage", "type": {"type" : "array", "items" : "string"} }
+    ]
+  }
+]

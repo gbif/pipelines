@@ -18,7 +18,7 @@ import org.gbif.pipelines.io.avro.Issues;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ModelUtils {
 
-  public static String DEFAULT_SEPARATOR = "\\|";
+  public static final String DEFAULT_SEPARATOR = "\\|";
 
   public static String extractValue(ExtendedRecord er, Term term) {
     return er.getCoreTerms().get(term.qualifiedName());

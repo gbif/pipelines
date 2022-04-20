@@ -20,11 +20,40 @@ import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.io.avro.ALAAttributionRecord;
 import org.gbif.pipelines.io.avro.ALAMetadataRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.MetadataRecord;
 
 /** Attribution interpreter providing additional attribution information to records. */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ALAAttributionInterpreter {
+
+  public static Consumer<MetadataRecord> interpretDatasetKeyAsMetadataRecord(
+      String datasetId, KeyValueStore<String, ALACollectoryMetadata> dataResourceKvStore) {
+    return (mdr) -> {
+      if (dataResourceKvStore != null && datasetId != null) {
+        ALACollectoryMetadata m = dataResourceKvStore.get(datasetId);
+        if (m != null && !m.equals(ALACollectoryMetadata.EMPTY)) {
+          mdr.setDatasetKey(m.getUid());
+          mdr.setDatasetTitle(m.getName());
+          mdr.setLicense(m.getLicenseType());
+          if (m.getProvider() != null) {
+            mdr.setPublisherTitle(m.getProvider().getName());
+          }
+        } else {
+          if (dataResourceKvStore == null) {
+            throw new RuntimeException(
+                "Unable to retrieve connection parameters for dataset: "
+                    + datasetId
+                    + ", dataResourceKvStore is NULL");
+          }
+          if (datasetId == null) {
+            throw new RuntimeException(
+                "Unable to retrieve connection parameters. datasetId is NULL");
+          }
+        }
+      }
+    };
+  }
 
   public static Consumer<ALAMetadataRecord> interpretDatasetKey(
       String datasetId, KeyValueStore<String, ALACollectoryMetadata> dataResourceKvStore) {

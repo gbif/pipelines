@@ -28,7 +28,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 public class OccurrenceExtensionTransform extends DoFn<ExtendedRecord, ExtendedRecord> {
 
   private static final String COUNTER_NAME = OCCURRENCE_EXT_COUNT;
-  private final Counter counter = Metrics.counter(GbifJsonTransform.class, COUNTER_NAME);
+  private final Counter counter = Metrics.counter(OccurrenceJsonTransform.class, COUNTER_NAME);
 
   private SerializableConsumer<String> counterFn = v -> counter.inc();
 

@@ -1,0 +1,96 @@
+/** Represents the json object for indexing */
+[
+  {
+    "name":"VerbatimRecord",
+    "namespace":"org.gbif.pipelines.io.avro.json",
+    "type":"record",
+    "doc":"A container for an extended DwC record (core plus extension data for a single record)",
+    "fields":[
+      {"name":"core","doc":"The core record terms","default":{},"type":{"type":"map","values":"string"}},
+      {"name":"extensions","doc":"The extensions records","default":{},"type":{
+        "type":"map","values":{
+          "type":"array","doc":"The extension records","default":[],"items":{
+            "type":"map","doc":"The extension record terms","default":{},"values":["null","string"]
+          }
+        }
+      }
+      }
+    ]
+  },
+  {
+    "name":"VocabularyConcept",
+    "namespace":"org.gbif.pipelines.io.avro.json",
+    "type":"record",
+    "fields":[
+      {"name":"concept","type":["null","string"]},
+      {"name":"lineage","type":{"type":"array","items":"string"} }
+    ]
+  },
+  {
+    "name":"GadmFeatures",
+    "namespace":"org.gbif.pipelines.io.avro.json",
+    "type":"record",
+    "doc":"Models a set of GADM features at different levels.",
+    "fields":[
+      {"name":"level0Gid","type":["null","string"],"default":null,"doc":"http://rs.gbif.org/terms/gadm/3.0/level0Gid"},
+      {"name":"level1Gid","type":["null","string"],"default":null,"doc":"http://rs.gbif.org/terms/gadm/3.0/level1Gid"},
+      {"name":"level2Gid","type":["null","string"],"default":null,"doc":"http://rs.gbif.org/terms/gadm/3.0/level2Gid"},
+      {"name":"level3Gid","type":["null","string"],"default":null,"doc":"http://rs.gbif.org/terms/gadm/3.0/level3Gid"},
+      {"name":"level0Name","type":["null","string"],"default":null,"doc":"http://rs.gbif.org/terms/gadm/3.0/level0Name"},
+      {"name":"level1Name","type":["null","string"],"default":null,"doc":"http://rs.gbif.org/terms/gadm/3.0/level1Name"},
+      {"name":"level2Name","type":["null","string"],"default":null,"doc":"http://rs.gbif.org/terms/gadm/3.0/level2Name"},
+      {"name":"level3Name","type":["null","string"],"default":null,"doc":"http://rs.gbif.org/terms/gadm/3.0/level3Name"},
+      {"name":"gids","type":{"type":"array","items":"string"},"default":null,"doc":""}
+    ]
+  },
+  {
+    "name":"EventDate",
+    "namespace":"org.gbif.pipelines.io.avro.json",
+    "type":"record",
+    "doc":"http://rs.tdwg.org/dwc/terms/eventDate",
+    "fields":[
+      {"name":"gte","type":["null","string"],"default":null},
+      {"name":"lte","type":["null","string"],"default":null}
+    ]
+  },
+  {
+    "name":"AgentIdentifier",
+    "namespace":"org.gbif.pipelines.io.avro.json",
+    "type":"record",
+    "fields":[
+      {"name":"type","type":["null","string"]},
+      {"name":"value","type":["null","string"]}
+    ]
+  },
+  {
+    "name":"Multimedia",
+    "namespace":"org.gbif.pipelines.io.avro.json",
+    "type":"record",
+    "fields":[
+      {"name": "type", "type":[ "null", "string"], "default":null, "doc": "http://purl.org/dc/terms/type"},
+      {"name": "format", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/format"},
+      {"name": "identifier", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/identifier"},
+      {"name": "audience", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/audience"},
+      {"name": "contributor", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/contributor"},
+      {"name": "created", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/created"},
+      {"name": "creator", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/creator"},
+      {"name": "description", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/description"},
+      {"name": "license", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/license"},
+      {"name": "publisher", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/publisher"},
+      {"name": "references", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/references"},
+      {"name": "rightsHolder", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/rightsHolder"},
+      {"name": "source", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/source"},
+      {"name": "title", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/title"},
+      {"name": "datasetId", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/datasetID"}
+    ]
+  },
+  {
+    "name":"Coordinates",
+    "namespace":"org.gbif.pipelines.io.avro.json",
+    "type":"record",
+    "fields":[
+      {"name":"lon","type":"double"},
+      {"name":"lat","type":"double"}
+    ]
+  }
+]

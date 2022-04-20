@@ -34,7 +34,7 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
-import org.gbif.pipelines.transforms.converters.GbifJsonTransform;
+import org.gbif.pipelines.transforms.converters.OccurrenceJsonTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.GrscicollTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
@@ -175,8 +175,8 @@ public class InterpretedToEsIndexPipeline {
             .apply("Map Audubon to KV", audubonTransform.toKv());
 
     log.info("Adding step 3: Converting into a json object");
-    SingleOutput<KV<String, CoGbkResult>, String> gbifJsonDoFn =
-        GbifJsonTransform.builder()
+    SingleOutput<KV<String, CoGbkResult>, String> occurrenceJsonDoFn =
+        OccurrenceJsonTransform.builder()
             .extendedRecordTag(verbatimTransform.getTag())
             .basicRecordTag(basicTransform.getTag())
             .temporalRecordTag(temporalTransform.getTag())
@@ -206,7 +206,7 @@ public class InterpretedToEsIndexPipeline {
             .and(verbatimTransform.getTag(), verbatimCollection)
             // Apply
             .apply("Grouping objects", CoGroupByKey.create())
-            .apply("Merging to json", gbifJsonDoFn);
+            .apply("Merging to json", occurrenceJsonDoFn);
 
     log.info("Adding step 4: Elasticsearch indexing");
     ElasticsearchIO.ConnectionConfiguration esConfig =
