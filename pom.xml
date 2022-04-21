@@ -211,7 +211,7 @@
           <version>${maven-javadoc-plugin.version}</version>
           <configuration>
             <doclint>none</doclint>
-            <includeDependencySources>true</includeDependencySources>
+            <includeDependencySources>false</includeDependencySources>
             <dependencySourceIncludes>
               <dependencySourceInclude>org.gbif:*</dependencySourceInclude>
             </dependencySourceIncludes>
