@@ -1,0 +1,11 @@
+{
+  "name": "ClusteringRecord",
+  "namespace": "org.gbif.pipelines.io.avro",
+  "type": "record",
+  "fields": [
+    {"name": "id", "type": "string", "doc": "Pipelines identifier"},
+    {"name": "created", "type": ["null", "long"], "default" : null, "doc":"The timestamp the record was created"},
+    {"name": "isClustered", "type": ["null", "boolean"], "default" : false},
+    {"name": "issues", "type": "IssueRecord", "default":{}}
+  ]
+}

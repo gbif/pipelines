@@ -11,6 +11,7 @@ import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
 import org.gbif.pipelines.ingest.java.metrics.IngestMetricsBuilder;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.GbifIdRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
@@ -34,6 +35,7 @@ public class IndexRequestConverterTest {
     IngestMetrics metrics = IngestMetricsBuilder.createInterpretedToEsIndexMetrics();
     GbifIdRecord idRecord = GbifIdRecord.newBuilder().setId(ID).setGbifId(1L).build();
     BasicRecord basicRecord = BasicRecord.newBuilder().setId(ID).build();
+    ClusteringRecord clusteringRecord = ClusteringRecord.newBuilder().setId(ID).build();
     MetadataRecord metadataRecord = MetadataRecord.newBuilder().setId(ID).build();
     ExtendedRecord extendedRecord = ExtendedRecord.newBuilder().setId(ID).build();
     TemporalRecord temporalRecord = TemporalRecord.newBuilder().setId(ID).build();
@@ -52,6 +54,7 @@ public class IndexRequestConverterTest {
             .esIndexName("name")
             .esDocumentId(GBIF_ID)
             .verbatimMap(Collections.singletonMap(ID, extendedRecord))
+            .clusteringMap(Collections.singletonMap(ID, clusteringRecord))
             .temporalMap(Collections.singletonMap(ID, temporalRecord))
             .basicMap(Collections.singletonMap(ID, basicRecord))
             .locationMap(Collections.singletonMap(ID, locationRecord))
@@ -86,6 +89,7 @@ public class IndexRequestConverterTest {
     IngestMetrics metrics = IngestMetricsBuilder.createInterpretedToEsIndexMetrics();
     GbifIdRecord idRecord = GbifIdRecord.newBuilder().setId(ID).setGbifId(1L).build();
     BasicRecord basicRecord = BasicRecord.newBuilder().setId(ID).build();
+    ClusteringRecord clusteringRecord = ClusteringRecord.newBuilder().setId(ID).build();
     MetadataRecord metadataRecord = MetadataRecord.newBuilder().setId(ID).build();
     ExtendedRecord extendedRecord = ExtendedRecord.newBuilder().setId(ID).build();
     TemporalRecord temporalRecord = TemporalRecord.newBuilder().setId(ID).build();
@@ -104,6 +108,7 @@ public class IndexRequestConverterTest {
             .esIndexName("name")
             .verbatimMap(Collections.singletonMap(ID, extendedRecord))
             .temporalMap(Collections.singletonMap(ID, temporalRecord))
+            .clusteringMap(Collections.singletonMap(ID, clusteringRecord))
             .locationMap(Collections.singletonMap(ID, locationRecord))
             .basicMap(Collections.singletonMap(ID, basicRecord))
             .taxonMap(Collections.singletonMap(ID, taxonRecord))

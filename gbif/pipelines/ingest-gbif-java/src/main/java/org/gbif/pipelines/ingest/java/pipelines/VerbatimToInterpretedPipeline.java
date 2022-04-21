@@ -39,6 +39,7 @@ import org.gbif.pipelines.core.io.AvroReader;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.core.ws.metadata.MetadataServiceClient;
+import org.gbif.pipelines.factory.ClusteringServiceFactory;
 import org.gbif.pipelines.factory.FileVocabularyFactory;
 import org.gbif.pipelines.factory.GeocodeKvStoreFactory;
 import org.gbif.pipelines.factory.GrscicollLookupKvStoreFactory;
@@ -50,6 +51,7 @@ import org.gbif.pipelines.ingest.java.metrics.IngestMetricsBuilder;
 import org.gbif.pipelines.ingest.java.transforms.InterpretedAvroReader;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.GbifIdRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
@@ -75,6 +77,7 @@ import org.gbif.pipelines.transforms.java.DefaultValuesTransform;
 import org.gbif.pipelines.transforms.java.OccurrenceExtensionTransform;
 import org.gbif.pipelines.transforms.java.UniqueGbifIdTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
+import org.gbif.pipelines.transforms.specific.ClusteringTransform;
 import org.gbif.pipelines.transforms.specific.GbifIdTransform;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.gbif.rest.client.grscicoll.GrscicollLookupResponse;
@@ -228,6 +231,13 @@ public class VerbatimToInterpretedPipeline {
             .counterFn(incMetricFn)
             .init();
 
+    ClusteringTransform clusteringTransform =
+        ClusteringTransform.builder()
+            .clusteringServiceSupplier(ClusteringServiceFactory.getInstanceSupplier(config))
+            .create()
+            .counterFn(incMetricFn)
+            .init();
+
     BasicTransform basicTransform =
         BasicTransform.builder()
             .useDynamicPropertiesInterpretation(true)
@@ -315,6 +325,8 @@ public class VerbatimToInterpretedPipeline {
             createAvroWriter(options, metadataTransform, postfix);
         SyncDataFileWriter<GbifIdRecord> idWriter =
             createAvroWriter(options, idTransform, postfix);
+        SyncDataFileWriter<ClusteringRecord> clusteringWriter =
+            createAvroWriter(options, clusteringTransform, postfix);
         SyncDataFileWriter<GbifIdRecord> idInvalidWriter =
             createAvroWriter(options, idTransform, postfix, true);
         SyncDataFileWriter<BasicRecord> basicWriter =
@@ -395,6 +407,9 @@ public class VerbatimToInterpretedPipeline {
             if (idInvalid == null) {
               GbifIdRecord id = gbifIdTransform.getErIdMap().get(er.getId());
 
+              if (clusteringTransform.checkType(types)) {
+                clusteringTransform.processElement(id).ifPresent(clusteringWriter::append);
+              }
               if (verbatimTransform.checkType(types)) {
                 verbatimWriter.append(er);
               }

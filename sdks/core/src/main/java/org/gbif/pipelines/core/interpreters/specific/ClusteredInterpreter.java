@@ -5,7 +5,7 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.pipelines.core.parsers.clustering.ClusteringService;
-import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.GbifIdRecord;
 
 /**
@@ -16,13 +16,13 @@ import org.gbif.pipelines.io.avro.GbifIdRecord;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ClusteredInterpreter {
 
-  public static BiConsumer<GbifIdRecord, BasicRecord> interpretIsClustered(
+  public static BiConsumer<GbifIdRecord, ClusteringRecord> interpretIsClustered(
       ClusteringService clusteringService) {
-    return (gr, br) -> {
+    return (gr, cr) -> {
       if (clusteringService != null) {
         Long gbifId = gr.getGbifId();
         if (gbifId != null) {
-          br.setIsClustered(clusteringService.isClustered(gbifId));
+          cr.setIsClustered(clusteringService.isClustered(gbifId));
         }
       }
     };

@@ -23,6 +23,7 @@ import org.gbif.pipelines.ingest.java.metrics.IngestMetricsBuilder;
 import org.gbif.pipelines.ingest.java.transforms.IndexRequestConverter;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.GbifIdRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
@@ -42,6 +43,7 @@ import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
+import org.gbif.pipelines.transforms.specific.ClusteringTransform;
 import org.gbif.pipelines.transforms.specific.GbifIdTransform;
 import org.slf4j.MDC;
 
@@ -137,6 +139,9 @@ public class InterpretedToEsIndexPipeline {
     CompletableFuture<Map<String, GbifIdRecord>> idMapFeature =
         readAvroAsFuture(options, executor, GbifIdTransform.builder().create());
 
+    CompletableFuture<Map<String, ClusteringRecord>> clusteringMapFeature =
+        readAvroAsFuture(options, executor, ClusteringTransform.builder().create());
+
     CompletableFuture<Map<String, BasicRecord>> basicMapFeature =
         readAvroAsFuture(options, executor, BasicTransform.builder().create());
 
@@ -168,6 +173,7 @@ public class InterpretedToEsIndexPipeline {
             .esDocumentId(options.getEsDocumentId())
             .metadata(metadataMapFeature.get().values().iterator().next())
             .verbatimMap(verbatimMapFeature.get())
+            .clusteringMap(clusteringMapFeature.get())
             .basicMap(basicMapFeature.get())
             .temporalMap(temporalMapFeature.get())
             .locationMap(locationMapFeature.get())

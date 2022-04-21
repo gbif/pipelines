@@ -25,6 +25,7 @@ import org.gbif.pipelines.core.utils.MediaSerDeser;
 import org.gbif.pipelines.core.utils.TemporalConverter;
 import org.gbif.pipelines.io.avro.AgentIdentifier;
 import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.DegreeOfEstablishment;
 import org.gbif.pipelines.io.avro.Diagnostic;
 import org.gbif.pipelines.io.avro.EstablishmentMeans;
@@ -51,6 +52,7 @@ public class OccurrenceHdfsRecordConverter {
 
   private final ExtendedRecord extendedRecord;
   private final GbifIdRecord gbifIdRecord;
+  private final ClusteringRecord clusteringRecord;
   private final BasicRecord basicRecord;
   private final LocationRecord locationRecord;
   private final TaxonRecord taxonRecord;
@@ -70,6 +72,7 @@ public class OccurrenceHdfsRecordConverter {
 
     // Order is important
     mapGbifIdRecord(occurrenceHdfsRecord);
+    mapClusteringRecord(occurrenceHdfsRecord);
     mapBasicRecord(occurrenceHdfsRecord);
     mapMetadataRecord(occurrenceHdfsRecord);
     mapTemporalRecord(occurrenceHdfsRecord);
@@ -367,7 +370,19 @@ public class OccurrenceHdfsRecordConverter {
       occurrenceHdfsRecord.setGbifid(gbifIdRecord.getGbifId());
     }
 
+    setCreatedIfGreater(occurrenceHdfsRecord, gbifIdRecord.getCreated());
     addIssues(gbifIdRecord.getIssues(), occurrenceHdfsRecord);
+  }
+
+  /** Copies the {@link ClusteringRecord} data into the {@link OccurrenceHdfsRecord}. */
+  private void mapClusteringRecord(OccurrenceHdfsRecord occurrenceHdfsRecord) {
+    if (clusteringRecord == null) {
+      return;
+    }
+    occurrenceHdfsRecord.setIsincluster(clusteringRecord.getIsClustered());
+
+    setCreatedIfGreater(occurrenceHdfsRecord, clusteringRecord.getCreated());
+    addIssues(clusteringRecord.getIssues(), occurrenceHdfsRecord);
   }
 
   /** Copies the {@link BasicRecord} data into the {@link OccurrenceHdfsRecord}. */
@@ -387,7 +402,6 @@ public class OccurrenceHdfsRecordConverter {
     occurrenceHdfsRecord.setSamplesizevalue(basicRecord.getSampleSizeValue());
     occurrenceHdfsRecord.setRelativeorganismquantity(basicRecord.getRelativeOrganismQuantity());
     occurrenceHdfsRecord.setOccurrencestatus(basicRecord.getOccurrenceStatus());
-    occurrenceHdfsRecord.setIsincluster(basicRecord.getIsClustered());
     occurrenceHdfsRecord.setDatasetid(basicRecord.getDatasetID());
     occurrenceHdfsRecord.setDatasetname(basicRecord.getDatasetName());
     occurrenceHdfsRecord.setOthercatalognumbers(basicRecord.getOtherCatalogNumbers());

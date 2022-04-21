@@ -1,10 +1,22 @@
 package org.gbif.pipelines.transforms.converters;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
-
 import java.io.Serializable;
-import lombok.Builder;
-import lombok.NonNull;
+
+import org.gbif.pipelines.core.converters.MultimediaConverter;
+import org.gbif.pipelines.core.converters.OccurrenceJsonConverter;
+import org.gbif.pipelines.io.avro.AudubonRecord;
+import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.ClusteringRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.GbifIdRecord;
+import org.gbif.pipelines.io.avro.ImageRecord;
+import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.io.avro.MultimediaRecord;
+import org.gbif.pipelines.io.avro.TaxonRecord;
+import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
+
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.DoFn;
@@ -14,10 +26,11 @@ import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
-import org.gbif.pipelines.core.converters.MultimediaConverter;
-import org.gbif.pipelines.core.converters.OccurrenceJsonConverter;
-import org.gbif.pipelines.io.avro.*;
-import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
+
+import lombok.Builder;
+import lombok.NonNull;
+
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
 
 /**
  * Beam level transformation for the ES output json. The transformation consumes objects, which
@@ -76,11 +89,12 @@ import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 @Builder
 public class OccurrenceJsonTransform implements Serializable {
 
-  private static final long serialVersionUID = 1279313931024806170L;
+  private static final long serialVersionUID = 1279313931024806171L;
 
   // Core
   @NonNull private final TupleTag<ExtendedRecord> extendedRecordTag;
   @NonNull private final TupleTag<GbifIdRecord> gbifIdRecordTag;
+  @NonNull private final TupleTag<ClusteringRecord> clusteringRecordTag;
   @NonNull private final TupleTag<BasicRecord> basicRecordTag;
   @NonNull private final TupleTag<TemporalRecord> temporalRecordTag;
   @NonNull private final TupleTag<LocationRecord> locationRecordTag;
@@ -109,6 +123,8 @@ public class OccurrenceJsonTransform implements Serializable {
             // Core
             MetadataRecord mdr = c.sideInput(metadataView);
             GbifIdRecord id = v.getOnly(gbifIdRecordTag);
+            ClusteringRecord cr =
+                v.getOnly(clusteringRecordTag, ClusteringRecord.newBuilder().setId(k).build());
             ExtendedRecord er =
                 v.getOnly(extendedRecordTag, ExtendedRecord.newBuilder().setId(k).build());
             BasicRecord br = v.getOnly(basicRecordTag, BasicRecord.newBuilder().setId(k).build());
@@ -132,6 +148,7 @@ public class OccurrenceJsonTransform implements Serializable {
                 OccurrenceJsonConverter.builder()
                     .metadata(mdr)
                     .gbifId(id)
+                    .clustering(cr)
                     .basic(br)
                     .temporal(tr)
                     .location(lr)

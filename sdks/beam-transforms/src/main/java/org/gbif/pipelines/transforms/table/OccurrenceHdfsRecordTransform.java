@@ -1,25 +1,13 @@
 package org.gbif.pipelines.transforms.table;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_HDFS_COUNT;
-
 import java.io.Serializable;
-import lombok.Builder;
-import lombok.NonNull;
-import org.apache.beam.sdk.io.AvroIO;
-import org.apache.beam.sdk.metrics.Counter;
-import org.apache.beam.sdk.metrics.Metrics;
-import org.apache.beam.sdk.transforms.DoFn;
-import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
-import org.apache.beam.sdk.transforms.join.CoGbkResult;
-import org.apache.beam.sdk.values.KV;
-import org.apache.beam.sdk.values.PCollectionView;
-import org.apache.beam.sdk.values.TupleTag;
+
 import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.core.converters.MultimediaConverter;
 import org.gbif.pipelines.core.converters.OccurrenceHdfsRecordConverter;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.GbifIdRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
@@ -31,6 +19,22 @@ import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.transforms.Transform;
+
+import org.apache.beam.sdk.io.AvroIO;
+import org.apache.beam.sdk.metrics.Counter;
+import org.apache.beam.sdk.metrics.Metrics;
+import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
+import org.apache.beam.sdk.transforms.join.CoGbkResult;
+import org.apache.beam.sdk.values.KV;
+import org.apache.beam.sdk.values.PCollectionView;
+import org.apache.beam.sdk.values.TupleTag;
+
+import lombok.Builder;
+import lombok.NonNull;
+
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_HDFS_COUNT;
 
 /**
  * Beam level transformation for Occurrence HDFS Downloads Table. The transformation consumes
@@ -72,12 +76,13 @@ import org.gbif.pipelines.transforms.Transform;
 @Builder
 public class OccurrenceHdfsRecordTransform implements Serializable {
 
-  private static final long serialVersionUID = 4605359346756029671L;
+  private static final long serialVersionUID = 4605359346756029672L;
 
   // Core
   @NonNull private final TupleTag<ExtendedRecord> extendedRecordTag;
 
   @NonNull private final TupleTag<GbifIdRecord> gbifIdRecordTag;
+  @NonNull private final TupleTag<ClusteringRecord> clusteringRecordTag;
   @NonNull private final TupleTag<BasicRecord> basicRecordTag;
   @NonNull private final TupleTag<TemporalRecord> temporalRecordTag;
   @NonNull private final TupleTag<LocationRecord> locationRecordTag;
@@ -106,6 +111,8 @@ public class OccurrenceHdfsRecordTransform implements Serializable {
             // Core
             MetadataRecord mdr = c.sideInput(metadataView);
             GbifIdRecord id = v.getOnly(gbifIdRecordTag);
+            ClusteringRecord cr =
+                v.getOnly(clusteringRecordTag, ClusteringRecord.newBuilder().setId(k).build());
             ExtendedRecord er =
                 v.getOnly(extendedRecordTag, ExtendedRecord.newBuilder().setId(k).build());
             BasicRecord br = v.getOnly(basicRecordTag, BasicRecord.newBuilder().setId(k).build());
@@ -128,6 +135,7 @@ public class OccurrenceHdfsRecordTransform implements Serializable {
                 OccurrenceHdfsRecordConverter.builder()
                     .basicRecord(br)
                     .gbifIdRecord(id)
+                    .clusteringRecord(cr)
                     .metadataRecord(mdr)
                     .temporalRecord(tr)
                     .locationRecord(lr)

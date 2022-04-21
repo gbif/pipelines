@@ -33,6 +33,7 @@ import org.gbif.pipelines.ingest.utils.HdfsViewAvroUtils;
 import org.gbif.pipelines.ingest.utils.SharedLockUtils;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.GbifIdRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
@@ -53,6 +54,7 @@ import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
+import org.gbif.pipelines.transforms.specific.ClusteringTransform;
 import org.gbif.pipelines.transforms.specific.GbifIdTransform;
 import org.gbif.pipelines.transforms.table.AmplificationTableTransform;
 import org.gbif.pipelines.transforms.table.ChronometricAgeTableTransform;
@@ -164,6 +166,7 @@ public class InterpretedToHdfsViewPipeline {
     // Core
     BasicTransform basicTransform = BasicTransform.builder().create();
     GbifIdTransform idTransform = GbifIdTransform.builder().create();
+    ClusteringTransform clusteringTransform = ClusteringTransform.builder().create();
     MetadataTransform metadataTransform = MetadataTransform.builder().create();
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.builder().create();
@@ -183,6 +186,10 @@ public class InterpretedToHdfsViewPipeline {
     PCollection<KV<String, GbifIdRecord>> idCollection =
         p.apply("Read GBIF ids", idTransform.read(interpretPathFn))
             .apply("Map GBIF ids to KV", idTransform.toKv());
+
+    PCollection<KV<String, ClusteringRecord>> clusteringCollection =
+        p.apply("Read clustering", clusteringTransform.read(interpretPathFn))
+            .apply("Map clustering to KV", clusteringTransform.toKv());
 
     PCollection<KV<String, ExtendedRecord>> verbatimCollection =
         p.apply("Read Verbatim", verbatimTransform.read(interpretPathFn))
@@ -226,6 +233,7 @@ public class InterpretedToHdfsViewPipeline {
         OccurrenceHdfsRecordTransform.builder()
             .extendedRecordTag(verbatimTransform.getTag())
             .gbifIdRecordTag(idTransform.getTag())
+            .clusteringRecordTag(clusteringTransform.getTag())
             .basicRecordTag(basicTransform.getTag())
             .temporalRecordTag(temporalTransform.getTag())
             .locationRecordTag(locationTransform.getTag())
@@ -241,6 +249,7 @@ public class InterpretedToHdfsViewPipeline {
         // Core
         .of(basicTransform.getTag(), basicCollection)
         .and(idTransform.getTag(), idCollection)
+        .and(clusteringTransform.getTag(), clusteringCollection)
         .and(temporalTransform.getTag(), temporalCollection)
         .and(locationTransform.getTag(), locationCollection)
         .and(taxonomyTransform.getTag(), taxonCollection)
