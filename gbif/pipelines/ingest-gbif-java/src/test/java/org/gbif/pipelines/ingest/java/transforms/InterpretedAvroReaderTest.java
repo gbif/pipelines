@@ -31,13 +31,13 @@ public class InterpretedAvroReaderTest {
 
     try (SyncDataFileWriter<BasicRecord> writer =
         InterpretedAvroWriter.createAvroWriter(options, BasicTransform.builder().create(), "1")) {
-      BasicRecord basicRecord = BasicRecord.newBuilder().setId("777").setGbifId(1L).build();
+      BasicRecord basicRecord = BasicRecord.newBuilder().setId("777").build();
       writer.append(basicRecord);
     }
 
     try (SyncDataFileWriter<BasicRecord> writer =
         InterpretedAvroWriter.createAvroWriter(options, BasicTransform.builder().create(), "2")) {
-      BasicRecord basicRecord = BasicRecord.newBuilder().setId("888").setGbifId(2L).build();
+      BasicRecord basicRecord = BasicRecord.newBuilder().setId("888").build();
       writer.append(basicRecord);
     }
 

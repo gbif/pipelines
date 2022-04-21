@@ -631,7 +631,6 @@ public class CoreTsvConverterTest {
         BasicRecord.newBuilder()
             .setId(DwcTerm.occurrenceID.simpleName())
             .setCreated(2L)
-            .setGbifId(22L)
             .setBasisOfRecord("br_basisOfRecord")
             .setSex("br_sex")
             .setLifeStage(

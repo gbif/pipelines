@@ -35,10 +35,8 @@ import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
-import org.gbif.pipelines.core.pojo.ErBrContainer;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.core.ws.metadata.MetadataServiceClient;
-import org.gbif.pipelines.factory.ClusteringServiceFactory;
 import org.gbif.pipelines.factory.FileVocabularyFactory;
 import org.gbif.pipelines.factory.GeocodeKvStoreFactory;
 import org.gbif.pipelines.factory.GrscicollLookupKvStoreFactory;
@@ -46,8 +44,8 @@ import org.gbif.pipelines.factory.KeygenServiceFactory;
 import org.gbif.pipelines.factory.MetadataServiceClientFactory;
 import org.gbif.pipelines.factory.NameUsageMatchStoreFactory;
 import org.gbif.pipelines.factory.OccurrenceStatusKvStoreFactory;
-import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.GbifIdRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.transforms.common.CheckTransforms;
@@ -67,6 +65,7 @@ import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.DefaultValuesTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
+import org.gbif.pipelines.transforms.specific.GbifIdTransform;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.gbif.rest.client.grscicoll.GrscicollLookupResponse;
 import org.gbif.rest.client.species.NameUsageMatch;
@@ -190,16 +189,19 @@ public class VerbatimToInterpretedPipeline {
             .endpointType(options.getEndPointType())
             .create();
 
+    GbifIdTransform idTransform =
+        GbifIdTransform.builder()
+            .isTripletValid(options.isTripletValid())
+            .isOccurrenceIdValid(options.isOccurrenceIdValid())
+            .useExtendedRecordId(options.isUseExtendedRecordId())
+            .keygenServiceSupplier(keyServiceSupplier)
+            .create();
+
     // Core
     BasicTransform basicTransform =
         BasicTransform.builder()
             .useDynamicPropertiesInterpretation(true)
-            .isTripletValid(options.isTripletValid())
-            .isOccurrenceIdValid(options.isOccurrenceIdValid())
-            .useExtendedRecordId(options.isUseExtendedRecordId())
             .occStatusKvStoreSupplier(OccurrenceStatusKvStoreFactory.createSupplier(config))
-            .clusteringServiceSupplier(ClusteringServiceFactory.createSupplier(config))
-            .keygenServiceSupplier(keyServiceSupplier)
             .vocabularyServiceSupplier(
                 FileVocabularyFactory.builder()
                     .config(config)
@@ -234,7 +236,7 @@ public class VerbatimToInterpretedPipeline {
         ImageTransform.builder().orderings(dateComponentOrdering).create();
 
     // Extra
-    UniqueGbifIdTransform gbifIdTransform =
+    UniqueGbifIdTransform uniqueIdTransform =
         UniqueGbifIdTransform.create(options.isUseExtendedRecordId());
 
     log.info("Creating beam pipeline");
@@ -280,51 +282,52 @@ public class VerbatimToInterpretedPipeline {
         uniqueRecords.apply("Map verbatim to KV", verbatimTransform.toKv());
 
     // Process Basic record
-    PCollection<KV<String, BasicRecord>> uniqueBasicRecordsKv;
-    if (useBasicRecordWriteIO(types)) {
-      PCollectionTuple basicCollection =
+    PCollection<KV<String, GbifIdRecord>> uniqueGbifIdRecordsKv;
+    if (useGbifIdRecordWriteIO(types)) {
+      PCollectionTuple idCollection =
           uniqueRecords
-              .apply("Interpret basic", basicTransform.interpret())
-              .apply("Get invalid GBIF IDs", gbifIdTransform);
+              .apply("Interpret GBIF ids", idTransform.interpret())
+              .apply("Get invalid GBIF ids", uniqueIdTransform);
 
-      uniqueBasicRecordsKv =
-          basicCollection
-              .get(gbifIdTransform.getTag())
-              .apply("Map basic to KV", basicTransform.toKv());
+      uniqueGbifIdRecordsKv =
+          idCollection
+              .get(uniqueIdTransform.getTag())
+              .apply("Map GBIF ids to KV", idTransform.toKv());
 
       // Interpret and write all record types
-      basicCollection
-          .get(gbifIdTransform.getTag())
-          .apply("Write basic to avro", basicTransform.write(pathFn));
+      idCollection
+          .get(uniqueIdTransform.getTag())
+          .apply("Write GBIF ids to avro", idTransform.write(pathFn));
 
-      basicCollection
-          .get(gbifIdTransform.getInvalidTag())
-          .apply("Write invalid basic to avro", basicTransform.writeInvalid(pathFn));
+      idCollection
+          .get(uniqueIdTransform.getInvalidTag())
+          .apply("Write invalid GBIF ids to avro", idTransform.writeInvalid(pathFn));
     } else {
-      uniqueBasicRecordsKv =
-          p.apply("Read Basic records", basicTransform.read(interpretedPathFn))
-              .apply("Map to Basic record KV", basicTransform.toKv());
+      uniqueGbifIdRecordsKv =
+          p.apply("Read GBIF ids records", idTransform.read(interpretedPathFn))
+              .apply("Map to GBIF ids record KV", idTransform.toKv());
     }
 
     FilterRecordsTransform filterRecordsTransform =
-        FilterRecordsTransform.create(verbatimTransform.getTag(), basicTransform.getTag());
+        FilterRecordsTransform.create(verbatimTransform.getTag(), idTransform.getTag());
 
-    PCollection<ErBrContainer> filteredErBr =
+    PCollection<ExtendedRecord> filteredUniqueRecords =
         KeyedPCollectionTuple
             // Core
             .of(verbatimTransform.getTag(), uniqueRecordsKv)
-            .and(basicTransform.getTag(), uniqueBasicRecordsKv)
+            .and(idTransform.getTag(), uniqueGbifIdRecordsKv)
             // Apply
             .apply("Grouping objects", CoGroupByKey.create())
             .apply("Filter verbatim", filterRecordsTransform.filter());
 
-    PCollection<ExtendedRecord> filteredUniqueRecords =
-        filteredErBr.apply(
-            "Get the filtered extended records", filterRecordsTransform.extractExtendedRecords());
-
     filteredUniqueRecords
         .apply("Check verbatim transform condition", verbatimTransform.check(types))
         .apply("Write verbatim to avro", verbatimTransform.write(pathFn));
+
+    filteredUniqueRecords
+        .apply("Check basic transform condition", basicTransform.check(types))
+        .apply("Interpret basic", basicTransform.interpret())
+        .apply("Write basic to avro", basicTransform.write(pathFn));
 
     filteredUniqueRecords
         .apply("Check temporal transform condition", temporalTransform.check(types))
@@ -351,10 +354,8 @@ public class VerbatimToInterpretedPipeline {
         .apply("Interpret taxonomy", taxonomyTransform.interpret())
         .apply("Write taxon to avro", taxonomyTransform.write(pathFn));
 
-    filteredErBr
-        .apply(
-            "Check grscicoll transform condition",
-            grscicollTransform.check(types, ErBrContainer.class))
+    filteredUniqueRecords
+        .apply("Check grscicoll transform condition", grscicollTransform.check(types))
         .apply("Interpret grscicoll", grscicollTransform.interpret())
         .apply("Write grscicoll to avro", grscicollTransform.write(pathFn));
 
@@ -371,7 +372,7 @@ public class VerbatimToInterpretedPipeline {
     String metadataPath =
         PathBuilder.buildDatasetAttemptPath(options, options.getMetaFileName(), false);
     if (!FsUtils.fileExists(hdfsSiteConfig, coreSiteConfig, metadataPath)
-        || CheckTransforms.checkRecordType(types, RecordType.BASIC)
+        || CheckTransforms.checkRecordType(types, RecordType.GBIF_ID)
         || CheckTransforms.checkRecordType(types, RecordType.ALL)) {
       MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
       FsUtils.setOwner(hdfsSiteConfig, coreSiteConfig, metadataPath, "crap", "supergroup");
@@ -388,8 +389,8 @@ public class VerbatimToInterpretedPipeline {
     log.info("Pipeline has been finished");
   }
 
-  private static boolean useBasicRecordWriteIO(Set<String> types) {
-    return types.contains(RecordType.BASIC.name()) || types.contains(RecordType.ALL.name());
+  private static boolean useGbifIdRecordWriteIO(Set<String> types) {
+    return types.contains(RecordType.GBIF_ID.name()) || types.contains(RecordType.ALL.name());
   }
 
   private static boolean useMetadataRecordWriteIO(Set<String> types) {

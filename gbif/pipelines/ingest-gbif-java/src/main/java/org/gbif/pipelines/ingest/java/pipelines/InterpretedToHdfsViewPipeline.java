@@ -74,6 +74,7 @@ import org.gbif.pipelines.ingest.utils.SharedLockUtils;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.GbifIdRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
@@ -112,6 +113,7 @@ import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
+import org.gbif.pipelines.transforms.specific.GbifIdTransform;
 import org.gbif.wrangler.lock.Mutex;
 import org.slf4j.MDC;
 
@@ -216,6 +218,9 @@ public class InterpretedToHdfsViewPipeline {
     CompletableFuture<Map<String, ExtendedRecord>> verbatimMapFeature =
         readAvroAsFuture(options, executor, VerbatimTransform.create());
 
+    CompletableFuture<Map<String, GbifIdRecord>> idMapFeature =
+        readAvroAsFuture(options, executor, GbifIdTransform.builder().create());
+
     CompletableFuture<Map<String, BasicRecord>> basicMapFeature =
         readAvroAsFuture(options, executor, BasicTransform.builder().create());
 
@@ -240,14 +245,15 @@ public class InterpretedToHdfsViewPipeline {
     CompletableFuture<Map<String, AudubonRecord>> audubonMapFeature =
         readAvroAsFuture(options, executor, AudubonTransform.builder().create());
 
-    Map<String, BasicRecord> basicRecordMap = basicMapFeature.get();
+    Map<String, GbifIdRecord> idRecordMap = idMapFeature.get();
 
     // OccurrenceHdfsRecord
-    Function<BasicRecord, Optional<OccurrenceHdfsRecord>> occurrenceHdfsRecordFn =
+    Function<GbifIdRecord, Optional<OccurrenceHdfsRecord>> occurrenceHdfsRecordFn =
         OccurrenceHdfsRecordConverter.builder()
             .metrics(metrics)
             .metadata(metadataMapFeature.get().values().iterator().next())
             .verbatimMap(verbatimMapFeature.get())
+            .basicMap(basicMapFeature.get())
             .temporalMap(temporalMapFeature.get())
             .locationMap(locationMapFeature.get())
             .taxonMap(taxonMapFeature.get())
@@ -260,7 +266,7 @@ public class InterpretedToHdfsViewPipeline {
 
     TableRecordWriter.<OccurrenceHdfsRecord>builder()
         .recordFunction(occurrenceHdfsRecordFn)
-        .basicRecords(basicRecordMap.values())
+        .gbifIdRecords(idRecordMap.values())
         .targetPathFn(pathFn)
         .schema(OccurrenceHdfsRecord.getClassSchema())
         .executor(executor)
@@ -271,7 +277,7 @@ public class InterpretedToHdfsViewPipeline {
         .write();
 
     // MeasurementOrFactTable
-    Function<BasicRecord, Optional<MeasurementOrFactTable>> measurementOrFactFn =
+    Function<GbifIdRecord, Optional<MeasurementOrFactTable>> measurementOrFactFn =
         TableConverter.<MeasurementOrFactTable>builder()
             .metrics(metrics)
             .converterFn(MeasurementOrFactTableConverter::convert)
@@ -282,7 +288,7 @@ public class InterpretedToHdfsViewPipeline {
 
     TableRecordWriter.<MeasurementOrFactTable>builder()
         .recordFunction(measurementOrFactFn)
-        .basicRecords(basicRecordMap.values())
+        .gbifIdRecords(idRecordMap.values())
         .targetPathFn(pathFn)
         .schema(MeasurementOrFactTable.getClassSchema())
         .executor(executor)
@@ -293,7 +299,7 @@ public class InterpretedToHdfsViewPipeline {
         .write();
 
     // IdentificationTable
-    Function<BasicRecord, Optional<IdentificationTable>> identificationFn =
+    Function<GbifIdRecord, Optional<IdentificationTable>> identificationFn =
         TableConverter.<IdentificationTable>builder()
             .metrics(metrics)
             .converterFn(IdentificationTableConverter::convert)
@@ -304,7 +310,7 @@ public class InterpretedToHdfsViewPipeline {
 
     TableRecordWriter.<IdentificationTable>builder()
         .recordFunction(identificationFn)
-        .basicRecords(basicRecordMap.values())
+        .gbifIdRecords(idRecordMap.values())
         .targetPathFn(pathFn)
         .schema(IdentificationTable.getClassSchema())
         .executor(executor)
@@ -315,7 +321,7 @@ public class InterpretedToHdfsViewPipeline {
         .write();
 
     // ResourceRelationTable
-    Function<BasicRecord, Optional<ResourceRelationshipTable>> resourceRelationFn =
+    Function<GbifIdRecord, Optional<ResourceRelationshipTable>> resourceRelationFn =
         TableConverter.<ResourceRelationshipTable>builder()
             .metrics(metrics)
             .converterFn(ResourceRelationshipTableConverter::convert)
@@ -326,7 +332,7 @@ public class InterpretedToHdfsViewPipeline {
 
     TableRecordWriter.<ResourceRelationshipTable>builder()
         .recordFunction(resourceRelationFn)
-        .basicRecords(basicRecordMap.values())
+        .gbifIdRecords(idRecordMap.values())
         .targetPathFn(pathFn)
         .schema(ResourceRelationshipTable.getClassSchema())
         .executor(executor)
@@ -337,7 +343,7 @@ public class InterpretedToHdfsViewPipeline {
         .write();
 
     // AmplificationTable
-    Function<BasicRecord, Optional<AmplificationTable>> amplificationFn =
+    Function<GbifIdRecord, Optional<AmplificationTable>> amplificationFn =
         TableConverter.<AmplificationTable>builder()
             .metrics(metrics)
             .converterFn(AmplificationTableConverter::convert)
@@ -348,7 +354,7 @@ public class InterpretedToHdfsViewPipeline {
 
     TableRecordWriter.<AmplificationTable>builder()
         .recordFunction(amplificationFn)
-        .basicRecords(basicRecordMap.values())
+        .gbifIdRecords(idRecordMap.values())
         .targetPathFn(pathFn)
         .schema(AmplificationTable.getClassSchema())
         .executor(executor)
@@ -359,7 +365,7 @@ public class InterpretedToHdfsViewPipeline {
         .write();
 
     // CloningTable
-    Function<BasicRecord, Optional<CloningTable>> cloningFn =
+    Function<GbifIdRecord, Optional<CloningTable>> cloningFn =
         TableConverter.<CloningTable>builder()
             .metrics(metrics)
             .converterFn(CloningTableConverter::convert)
@@ -370,7 +376,7 @@ public class InterpretedToHdfsViewPipeline {
 
     TableRecordWriter.<CloningTable>builder()
         .recordFunction(cloningFn)
-        .basicRecords(basicRecordMap.values())
+        .gbifIdRecords(idRecordMap.values())
         .targetPathFn(pathFn)
         .schema(CloningTable.getClassSchema())
         .executor(executor)
@@ -381,7 +387,7 @@ public class InterpretedToHdfsViewPipeline {
         .write();
 
     // GelImageTable
-    Function<BasicRecord, Optional<GelImageTable>> gelImageFn =
+    Function<GbifIdRecord, Optional<GelImageTable>> gelImageFn =
         TableConverter.<GelImageTable>builder()
             .metrics(metrics)
             .converterFn(GelImageTableConverter::convert)
@@ -392,7 +398,7 @@ public class InterpretedToHdfsViewPipeline {
 
     TableRecordWriter.<GelImageTable>builder()
         .recordFunction(gelImageFn)
-        .basicRecords(basicRecordMap.values())
+        .gbifIdRecords(idRecordMap.values())
         .targetPathFn(pathFn)
         .schema(GelImageTable.getClassSchema())
         .executor(executor)
@@ -403,7 +409,7 @@ public class InterpretedToHdfsViewPipeline {
         .write();
 
     // LoanTable
-    Function<BasicRecord, Optional<LoanTable>> loanFn =
+    Function<GbifIdRecord, Optional<LoanTable>> loanFn =
         TableConverter.<LoanTable>builder()
             .metrics(metrics)
             .converterFn(LoanTableConverter::convert)
@@ -414,7 +420,7 @@ public class InterpretedToHdfsViewPipeline {
 
     TableRecordWriter.<LoanTable>builder()
         .recordFunction(loanFn)
-        .basicRecords(basicRecordMap.values())
+        .gbifIdRecords(idRecordMap.values())
         .targetPathFn(pathFn)
         .schema(LoanTable.getClassSchema())
         .executor(executor)
@@ -425,7 +431,7 @@ public class InterpretedToHdfsViewPipeline {
         .write();
 
     // MaterialSampleTable
-    Function<BasicRecord, Optional<MaterialSampleTable>> materialSampleFn =
+    Function<GbifIdRecord, Optional<MaterialSampleTable>> materialSampleFn =
         TableConverter.<MaterialSampleTable>builder()
             .metrics(metrics)
             .converterFn(MaterialSampleTableConverter::convert)
@@ -436,7 +442,7 @@ public class InterpretedToHdfsViewPipeline {
 
     TableRecordWriter.<MaterialSampleTable>builder()
         .recordFunction(materialSampleFn)
-        .basicRecords(basicRecordMap.values())
+        .gbifIdRecords(idRecordMap.values())
         .targetPathFn(pathFn)
         .schema(MaterialSampleTable.getClassSchema())
         .executor(executor)
@@ -447,7 +453,7 @@ public class InterpretedToHdfsViewPipeline {
         .write();
 
     // PermitTable
-    Function<BasicRecord, Optional<PermitTable>> permitFn =
+    Function<GbifIdRecord, Optional<PermitTable>> permitFn =
         TableConverter.<PermitTable>builder()
             .metrics(metrics)
             .converterFn(PermitTableConverter::convert)
@@ -458,7 +464,7 @@ public class InterpretedToHdfsViewPipeline {
 
     TableRecordWriter.<PermitTable>builder()
         .recordFunction(permitFn)
-        .basicRecords(basicRecordMap.values())
+        .gbifIdRecords(idRecordMap.values())
         .targetPathFn(pathFn)
         .schema(PermitTable.getClassSchema())
         .executor(executor)
@@ -469,7 +475,7 @@ public class InterpretedToHdfsViewPipeline {
         .write();
 
     // PreparationTable
-    Function<BasicRecord, Optional<PreparationTable>> preparationFn =
+    Function<GbifIdRecord, Optional<PreparationTable>> preparationFn =
         TableConverter.<PreparationTable>builder()
             .metrics(metrics)
             .converterFn(PreparationTableConverter::convert)
@@ -480,7 +486,7 @@ public class InterpretedToHdfsViewPipeline {
 
     TableRecordWriter.<PreparationTable>builder()
         .recordFunction(preparationFn)
-        .basicRecords(basicRecordMap.values())
+        .gbifIdRecords(idRecordMap.values())
         .targetPathFn(pathFn)
         .schema(PreparationTable.getClassSchema())
         .executor(executor)
@@ -491,7 +497,7 @@ public class InterpretedToHdfsViewPipeline {
         .write();
 
     // PreservationTable
-    Function<BasicRecord, Optional<PreservationTable>> preservationFn =
+    Function<GbifIdRecord, Optional<PreservationTable>> preservationFn =
         TableConverter.<PreservationTable>builder()
             .metrics(metrics)
             .converterFn(PreservationTableConverter::convert)
@@ -502,7 +508,7 @@ public class InterpretedToHdfsViewPipeline {
 
     TableRecordWriter.<PreservationTable>builder()
         .recordFunction(preservationFn)
-        .basicRecords(basicRecordMap.values())
+        .gbifIdRecords(idRecordMap.values())
         .targetPathFn(pathFn)
         .schema(PreservationTable.getClassSchema())
         .executor(executor)
@@ -513,7 +519,7 @@ public class InterpretedToHdfsViewPipeline {
         .write();
 
     // MeasurementScoreTable
-    Function<BasicRecord, Optional<GermplasmMeasurementScoreTable>> measurementScoreFn =
+    Function<GbifIdRecord, Optional<GermplasmMeasurementScoreTable>> measurementScoreFn =
         TableConverter.<GermplasmMeasurementScoreTable>builder()
             .metrics(metrics)
             .converterFn(GermplasmMeasurementScoreTableConverter::convert)
@@ -524,7 +530,7 @@ public class InterpretedToHdfsViewPipeline {
 
     TableRecordWriter.<GermplasmMeasurementScoreTable>builder()
         .recordFunction(measurementScoreFn)
-        .basicRecords(basicRecordMap.values())
+        .gbifIdRecords(idRecordMap.values())
         .targetPathFn(pathFn)
         .schema(GermplasmMeasurementScoreTable.getClassSchema())
         .executor(executor)
@@ -535,7 +541,7 @@ public class InterpretedToHdfsViewPipeline {
         .write();
 
     // MeasurementTraitTable
-    Function<BasicRecord, Optional<GermplasmMeasurementTraitTable>> measurementTraitFn =
+    Function<GbifIdRecord, Optional<GermplasmMeasurementTraitTable>> measurementTraitFn =
         TableConverter.<GermplasmMeasurementTraitTable>builder()
             .metrics(metrics)
             .converterFn(GermplasmMeasurementTraitTableConverter::convert)
@@ -546,7 +552,7 @@ public class InterpretedToHdfsViewPipeline {
 
     TableRecordWriter.<GermplasmMeasurementTraitTable>builder()
         .recordFunction(measurementTraitFn)
-        .basicRecords(basicRecordMap.values())
+        .gbifIdRecords(idRecordMap.values())
         .targetPathFn(pathFn)
         .schema(GermplasmMeasurementTraitTable.getClassSchema())
         .executor(executor)
@@ -557,7 +563,7 @@ public class InterpretedToHdfsViewPipeline {
         .write();
 
     // MeasurementTrialTable
-    Function<BasicRecord, Optional<GermplasmMeasurementTrialTable>> measurementTrialFn =
+    Function<GbifIdRecord, Optional<GermplasmMeasurementTrialTable>> measurementTrialFn =
         TableConverter.<GermplasmMeasurementTrialTable>builder()
             .metrics(metrics)
             .converterFn(GermplasmMeasurementTrialTableConverter::convert)
@@ -568,7 +574,7 @@ public class InterpretedToHdfsViewPipeline {
 
     TableRecordWriter.<GermplasmMeasurementTrialTable>builder()
         .recordFunction(measurementTrialFn)
-        .basicRecords(basicRecordMap.values())
+        .gbifIdRecords(idRecordMap.values())
         .targetPathFn(pathFn)
         .schema(GermplasmMeasurementTrialTable.getClassSchema())
         .executor(executor)
@@ -579,7 +585,7 @@ public class InterpretedToHdfsViewPipeline {
         .write();
 
     // GermplasmAccessionTable
-    Function<BasicRecord, Optional<GermplasmAccessionTable>> germplasmAccessionFn =
+    Function<GbifIdRecord, Optional<GermplasmAccessionTable>> germplasmAccessionFn =
         TableConverter.<GermplasmAccessionTable>builder()
             .metrics(metrics)
             .converterFn(GermplasmAccessionTableConverter::convert)
@@ -590,7 +596,7 @@ public class InterpretedToHdfsViewPipeline {
 
     TableRecordWriter.<GermplasmAccessionTable>builder()
         .recordFunction(germplasmAccessionFn)
-        .basicRecords(basicRecordMap.values())
+        .gbifIdRecords(idRecordMap.values())
         .targetPathFn(pathFn)
         .schema(GermplasmAccessionTable.getClassSchema())
         .executor(executor)
@@ -601,7 +607,7 @@ public class InterpretedToHdfsViewPipeline {
         .write();
 
     // ExtendedMeasurementOrFactTable
-    Function<BasicRecord, Optional<ExtendedMeasurementOrFactTable>> extendedMeasurementOrFactFn =
+    Function<GbifIdRecord, Optional<ExtendedMeasurementOrFactTable>> extendedMeasurementOrFactFn =
         TableConverter.<ExtendedMeasurementOrFactTable>builder()
             .metrics(metrics)
             .converterFn(ExtendedMeasurementOrFactTableConverter::convert)
@@ -612,7 +618,7 @@ public class InterpretedToHdfsViewPipeline {
 
     TableRecordWriter.<ExtendedMeasurementOrFactTable>builder()
         .recordFunction(extendedMeasurementOrFactFn)
-        .basicRecords(basicRecordMap.values())
+        .gbifIdRecords(idRecordMap.values())
         .targetPathFn(pathFn)
         .schema(ExtendedMeasurementOrFactTable.getClassSchema())
         .executor(executor)
@@ -623,7 +629,7 @@ public class InterpretedToHdfsViewPipeline {
         .write();
 
     // ChronometricAgeTable
-    Function<BasicRecord, Optional<ChronometricAgeTable>> chronometricAgeFn =
+    Function<GbifIdRecord, Optional<ChronometricAgeTable>> chronometricAgeFn =
         TableConverter.<ChronometricAgeTable>builder()
             .metrics(metrics)
             .converterFn(ChronometricAgeTableConverter::convert)
@@ -634,7 +640,7 @@ public class InterpretedToHdfsViewPipeline {
 
     TableRecordWriter.<ChronometricAgeTable>builder()
         .recordFunction(chronometricAgeFn)
-        .basicRecords(basicRecordMap.values())
+        .gbifIdRecords(idRecordMap.values())
         .targetPathFn(pathFn)
         .schema(ChronometricAgeTable.getClassSchema())
         .executor(executor)
@@ -645,7 +651,7 @@ public class InterpretedToHdfsViewPipeline {
         .write();
 
     // ReferencesTable
-    Function<BasicRecord, Optional<ReferenceTable>> referencesFn =
+    Function<GbifIdRecord, Optional<ReferenceTable>> referencesFn =
         TableConverter.<ReferenceTable>builder()
             .metrics(metrics)
             .converterFn(ReferenceTableConverter::convert)
@@ -656,7 +662,7 @@ public class InterpretedToHdfsViewPipeline {
 
     TableRecordWriter.<ReferenceTable>builder()
         .recordFunction(referencesFn)
-        .basicRecords(basicRecordMap.values())
+        .gbifIdRecords(idRecordMap.values())
         .targetPathFn(pathFn)
         .schema(ReferenceTable.getClassSchema())
         .executor(executor)
@@ -667,7 +673,7 @@ public class InterpretedToHdfsViewPipeline {
         .write();
 
     // IdentifierTable
-    Function<BasicRecord, Optional<IdentifierTable>> identifierFn =
+    Function<GbifIdRecord, Optional<IdentifierTable>> identifierFn =
         TableConverter.<IdentifierTable>builder()
             .metrics(metrics)
             .converterFn(IdentifierTableConverter::convert)
@@ -678,7 +684,7 @@ public class InterpretedToHdfsViewPipeline {
 
     TableRecordWriter.<IdentifierTable>builder()
         .recordFunction(identifierFn)
-        .basicRecords(basicRecordMap.values())
+        .gbifIdRecords(idRecordMap.values())
         .targetPathFn(pathFn)
         .schema(IdentifierTable.getClassSchema())
         .executor(executor)

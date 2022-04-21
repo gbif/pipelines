@@ -18,7 +18,7 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.Inte
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
-import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.GbifIdRecord;
 import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
 import org.junit.Assert;
 import org.junit.Test;
@@ -31,17 +31,17 @@ public class TableRecordWriterTest {
     // State
     Long gbifID = 777L;
 
-    BasicRecord basicRecord = BasicRecord.newBuilder().setId("1").setGbifId(gbifID).build();
-    BasicRecord skipBasicRecord = BasicRecord.newBuilder().setId("1").setGbifId(-gbifID).build();
-    List<BasicRecord> list = Arrays.asList(basicRecord, skipBasicRecord);
+    GbifIdRecord idRecord = GbifIdRecord.newBuilder().setId("1").setGbifId(gbifID).build();
+    GbifIdRecord skipIdRecord = GbifIdRecord.newBuilder().setId("1").setGbifId(-gbifID).build();
+    List<GbifIdRecord> list = Arrays.asList(idRecord, skipIdRecord);
 
-    Function<BasicRecord, Optional<OccurrenceHdfsRecord>> fn =
-        br -> {
-          if (br.getGbifId() < 0) {
+    Function<GbifIdRecord, Optional<OccurrenceHdfsRecord>> fn =
+        id -> {
+          if (id.getGbifId() < 0) {
             return Optional.empty();
           }
           OccurrenceHdfsRecord hdfsRecord = new OccurrenceHdfsRecord();
-          hdfsRecord.setGbifid(br.getGbifId());
+          hdfsRecord.setGbifid(id.getGbifId());
           return Optional.of(hdfsRecord);
         };
 
@@ -67,7 +67,7 @@ public class TableRecordWriterTest {
     // When
     TableRecordWriter.<OccurrenceHdfsRecord>builder()
         .recordFunction(fn)
-        .basicRecords(list)
+        .gbifIdRecords(list)
         .executor(Executors.newSingleThreadExecutor())
         .options(options)
         .targetPathFn(pathFn)
@@ -102,17 +102,17 @@ public class TableRecordWriterTest {
     // State
     Long gbifID = 777L;
 
-    BasicRecord basicRecord = BasicRecord.newBuilder().setId("1").setGbifId(gbifID).build();
-    BasicRecord skipBasicRecord = BasicRecord.newBuilder().setId("1").setGbifId(-gbifID).build();
-    List<BasicRecord> list = Arrays.asList(basicRecord, skipBasicRecord);
+    GbifIdRecord idRecord = GbifIdRecord.newBuilder().setId("1").setGbifId(gbifID).build();
+    GbifIdRecord skipIdRecord = GbifIdRecord.newBuilder().setId("1").setGbifId(-gbifID).build();
+    List<GbifIdRecord> list = Arrays.asList(idRecord, skipIdRecord);
 
-    Function<BasicRecord, Optional<OccurrenceHdfsRecord>> fn =
-        br -> {
-          if (br.getGbifId() < 0) {
+    Function<GbifIdRecord, Optional<OccurrenceHdfsRecord>> fn =
+        id -> {
+          if (id.getGbifId() < 0) {
             return Optional.empty();
           }
           OccurrenceHdfsRecord hdfsRecord = new OccurrenceHdfsRecord();
-          hdfsRecord.setGbifid(br.getGbifId());
+          hdfsRecord.setGbifid(id.getGbifId());
           return Optional.of(hdfsRecord);
         };
 
@@ -139,7 +139,7 @@ public class TableRecordWriterTest {
     // When
     TableRecordWriter.<OccurrenceHdfsRecord>builder()
         .recordFunction(fn)
-        .basicRecords(list)
+        .gbifIdRecords(list)
         .executor(Executors.newSingleThreadExecutor())
         .options(options)
         .targetPathFn(pathFn)

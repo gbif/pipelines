@@ -181,7 +181,7 @@ public class InterpretedToHdfsViewPipeline {
             .apply("Convert to view", View.asSingleton());
 
     PCollection<KV<String, GbifIdRecord>> idCollection =
-        p.apply("Read GBIF ids", idTransform.read(pathFn))
+        p.apply("Read GBIF ids", idTransform.read(interpretPathFn))
             .apply("Map GBIF ids to KV", idTransform.toKv());
 
     PCollection<KV<String, ExtendedRecord>> verbatimCollection =
@@ -267,7 +267,7 @@ public class InterpretedToHdfsViewPipeline {
 
     AmplificationTableTransform.builder()
         .extendedRecordTag(verbatimTransform.getTag())
-        .basicRecordTag(basicTransform.getTag())
+        .gbifIdRecordTag(idTransform.getTag())
         .numShards(numberOfShards)
         .path(pathFn.apply(AMPLIFICATION_TABLE))
         .types(types)
@@ -276,7 +276,7 @@ public class InterpretedToHdfsViewPipeline {
 
     IdentificationTableTransform.builder()
         .extendedRecordTag(verbatimTransform.getTag())
-        .basicRecordTag(basicTransform.getTag())
+        .gbifIdRecordTag(idTransform.getTag())
         .numShards(numberOfShards)
         .path(pathFn.apply(IDENTIFICATION_TABLE))
         .types(types)
@@ -285,7 +285,7 @@ public class InterpretedToHdfsViewPipeline {
 
     MeasurementOrFactTableTransform.builder()
         .extendedRecordTag(verbatimTransform.getTag())
-        .basicRecordTag(basicTransform.getTag())
+        .gbifIdRecordTag(idTransform.getTag())
         .numShards(numberOfShards)
         .path(pathFn.apply(MEASUREMENT_OR_FACT_TABLE))
         .types(types)
@@ -294,7 +294,7 @@ public class InterpretedToHdfsViewPipeline {
 
     ResourceRelationshipTableTransform.builder()
         .extendedRecordTag(verbatimTransform.getTag())
-        .basicRecordTag(basicTransform.getTag())
+        .gbifIdRecordTag(idTransform.getTag())
         .numShards(numberOfShards)
         .path(pathFn.apply(RESOURCE_RELATIONSHIP_TABLE))
         .types(types)
@@ -303,7 +303,7 @@ public class InterpretedToHdfsViewPipeline {
 
     CloningTableTransform.builder()
         .extendedRecordTag(verbatimTransform.getTag())
-        .basicRecordTag(basicTransform.getTag())
+        .gbifIdRecordTag(idTransform.getTag())
         .numShards(numberOfShards)
         .path(pathFn.apply(CLONING_TABLE))
         .types(types)
@@ -312,7 +312,7 @@ public class InterpretedToHdfsViewPipeline {
 
     GelImageTableTransform.builder()
         .extendedRecordTag(verbatimTransform.getTag())
-        .basicRecordTag(basicTransform.getTag())
+        .gbifIdRecordTag(idTransform.getTag())
         .numShards(numberOfShards)
         .path(pathFn.apply(GEL_IMAGE_TABLE))
         .types(types)
@@ -321,7 +321,7 @@ public class InterpretedToHdfsViewPipeline {
 
     LoanTableTransform.builder()
         .extendedRecordTag(verbatimTransform.getTag())
-        .basicRecordTag(basicTransform.getTag())
+        .gbifIdRecordTag(idTransform.getTag())
         .numShards(numberOfShards)
         .path(pathFn.apply(LOAN_TABLE))
         .types(types)
@@ -330,7 +330,7 @@ public class InterpretedToHdfsViewPipeline {
 
     MaterialSampleTableTransform.builder()
         .extendedRecordTag(verbatimTransform.getTag())
-        .basicRecordTag(basicTransform.getTag())
+        .gbifIdRecordTag(idTransform.getTag())
         .numShards(numberOfShards)
         .path(pathFn.apply(MATERIAL_SAMPLE_TABLE))
         .types(types)
@@ -339,7 +339,7 @@ public class InterpretedToHdfsViewPipeline {
 
     PermitTableTransform.builder()
         .extendedRecordTag(verbatimTransform.getTag())
-        .basicRecordTag(basicTransform.getTag())
+        .gbifIdRecordTag(idTransform.getTag())
         .numShards(numberOfShards)
         .path(pathFn.apply(PERMIT_TABLE))
         .types(types)
@@ -348,7 +348,7 @@ public class InterpretedToHdfsViewPipeline {
 
     PreparationTableTransform.builder()
         .extendedRecordTag(verbatimTransform.getTag())
-        .basicRecordTag(basicTransform.getTag())
+        .gbifIdRecordTag(idTransform.getTag())
         .numShards(numberOfShards)
         .path(pathFn.apply(PREPARATION_TABLE))
         .types(types)
@@ -357,7 +357,7 @@ public class InterpretedToHdfsViewPipeline {
 
     PreservationTableTransform.builder()
         .extendedRecordTag(verbatimTransform.getTag())
-        .basicRecordTag(basicTransform.getTag())
+        .gbifIdRecordTag(idTransform.getTag())
         .numShards(numberOfShards)
         .path(pathFn.apply(PRESERVATION_TABLE))
         .types(types)
@@ -366,7 +366,7 @@ public class InterpretedToHdfsViewPipeline {
 
     GermplasmMeasurementScoreTableTransform.builder()
         .extendedRecordTag(verbatimTransform.getTag())
-        .basicRecordTag(basicTransform.getTag())
+        .gbifIdRecordTag(idTransform.getTag())
         .numShards(numberOfShards)
         .path(pathFn.apply(GERMPLASM_MEASUREMENT_SCORE_TABLE))
         .types(types)
@@ -375,7 +375,7 @@ public class InterpretedToHdfsViewPipeline {
 
     GermplasmMeasurementTraitTableTransform.builder()
         .extendedRecordTag(verbatimTransform.getTag())
-        .basicRecordTag(basicTransform.getTag())
+        .gbifIdRecordTag(idTransform.getTag())
         .numShards(numberOfShards)
         .path(pathFn.apply(GERMPLASM_MEASUREMENT_TRAIT_TABLE))
         .types(types)
@@ -384,7 +384,7 @@ public class InterpretedToHdfsViewPipeline {
 
     GermplasmMeasurementTrialTableTransform.builder()
         .extendedRecordTag(verbatimTransform.getTag())
-        .basicRecordTag(basicTransform.getTag())
+        .gbifIdRecordTag(idTransform.getTag())
         .numShards(numberOfShards)
         .path(pathFn.apply(GERMPLASM_MEASUREMENT_TRIAL_TABLE))
         .types(types)
@@ -393,7 +393,7 @@ public class InterpretedToHdfsViewPipeline {
 
     GermplasmAccessionTableTransform.builder()
         .extendedRecordTag(verbatimTransform.getTag())
-        .basicRecordTag(basicTransform.getTag())
+        .gbifIdRecordTag(idTransform.getTag())
         .numShards(numberOfShards)
         .path(pathFn.apply(GERMPLASM_ACCESSION_TABLE))
         .types(types)
@@ -402,7 +402,7 @@ public class InterpretedToHdfsViewPipeline {
 
     ExtendedMeasurementOrFactTableTransform.builder()
         .extendedRecordTag(verbatimTransform.getTag())
-        .basicRecordTag(basicTransform.getTag())
+        .gbifIdRecordTag(idTransform.getTag())
         .numShards(numberOfShards)
         .path(pathFn.apply(EXTENDED_MEASUREMENT_OR_FACT_TABLE))
         .types(types)
@@ -411,7 +411,7 @@ public class InterpretedToHdfsViewPipeline {
 
     ChronometricAgeTableTransform.builder()
         .extendedRecordTag(verbatimTransform.getTag())
-        .basicRecordTag(basicTransform.getTag())
+        .gbifIdRecordTag(idTransform.getTag())
         .numShards(numberOfShards)
         .path(pathFn.apply(CHRONOMETRIC_AGE_TABLE))
         .types(types)
@@ -420,7 +420,7 @@ public class InterpretedToHdfsViewPipeline {
 
     ReferenceTableTransform.builder()
         .extendedRecordTag(verbatimTransform.getTag())
-        .basicRecordTag(basicTransform.getTag())
+        .gbifIdRecordTag(idTransform.getTag())
         .numShards(numberOfShards)
         .path(pathFn.apply(REFERENCE_TABLE))
         .types(types)
@@ -429,7 +429,7 @@ public class InterpretedToHdfsViewPipeline {
 
     IdentifierTableTransform.builder()
         .extendedRecordTag(verbatimTransform.getTag())
-        .basicRecordTag(basicTransform.getTag())
+        .gbifIdRecordTag(idTransform.getTag())
         .numShards(numberOfShards)
         .path(pathFn.apply(IDENTIFIER_TABLE))
         .types(types)

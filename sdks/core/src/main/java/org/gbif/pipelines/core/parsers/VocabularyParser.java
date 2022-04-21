@@ -14,13 +14,11 @@ import lombok.AllArgsConstructor;
 import org.gbif.api.vocabulary.BasisOfRecord;
 import org.gbif.api.vocabulary.Continent;
 import org.gbif.api.vocabulary.Country;
-import org.gbif.api.vocabulary.Rank;
 import org.gbif.api.vocabulary.Sex;
 import org.gbif.api.vocabulary.TypeStatus;
 import org.gbif.common.parsers.BasisOfRecordParser;
 import org.gbif.common.parsers.ContinentParser;
 import org.gbif.common.parsers.CountryParser;
-import org.gbif.common.parsers.EstablishmentMeansParser;
 import org.gbif.common.parsers.RankParser;
 import org.gbif.common.parsers.SexParser;
 import org.gbif.common.parsers.TypeStatusParser;
@@ -37,7 +35,6 @@ public class VocabularyParser<T extends Enum<T>> {
   private static final TypeStatusParser TYPE_PARSER = TypeStatusParser.getInstance();
   private static final BasisOfRecordParser BOR_PARSER = BasisOfRecordParser.getInstance();
   private static final SexParser SEX_PARSER = SexParser.getInstance();
-  private static final EstablishmentMeansParser EST_PARSER = EstablishmentMeansParser.getInstance();
   private static final CountryParser COUNTRY_PARSER = CountryParser.getInstance();
   private static final ContinentParser CONTINENT_PARSER = ContinentParser.getInstance();
   private static final RankParser RANK_PARSER = RankParser.getInstance();
@@ -76,16 +73,6 @@ public class VocabularyParser<T extends Enum<T>> {
   /** @return a continent parser. */
   public static VocabularyParser<Continent> continentParser() {
     return new VocabularyParser<>(CONTINENT_PARSER, DwcTerm.continent);
-  }
-
-  /** @return a type status parser. */
-  public static VocabularyParser<Rank> rankParser() {
-    return new VocabularyParser<>(RANK_PARSER, DwcTerm.taxonRank);
-  }
-
-  /** @return a type status parser. */
-  public static VocabularyParser<Rank> verbatimTaxonRankParser() {
-    return new VocabularyParser<>(RANK_PARSER, DwcTerm.verbatimTaxonRank);
   }
 
   /**

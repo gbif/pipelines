@@ -24,6 +24,7 @@ import org.gbif.pipelines.ingest.java.transforms.IndexRequestConverter;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.GbifIdRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
@@ -41,6 +42,7 @@ import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
+import org.gbif.pipelines.transforms.specific.GbifIdTransform;
 import org.slf4j.MDC;
 
 /**
@@ -132,6 +134,9 @@ public class InterpretedToEsIndexPipeline {
     CompletableFuture<Map<String, ExtendedRecord>> verbatimMapFeature =
         readAvroAsFuture(options, executor, VerbatimTransform.create());
 
+    CompletableFuture<Map<String, GbifIdRecord>> idMapFeature =
+        readAvroAsFuture(options, executor, GbifIdTransform.builder().create());
+
     CompletableFuture<Map<String, BasicRecord>> basicMapFeature =
         readAvroAsFuture(options, executor, BasicTransform.builder().create());
 
@@ -156,13 +161,14 @@ public class InterpretedToEsIndexPipeline {
     CompletableFuture<Map<String, AudubonRecord>> audubonMapFeature =
         readAvroAsFuture(options, executor, AudubonTransform.builder().create());
 
-    Function<BasicRecord, IndexRequest> indexRequestFn =
+    Function<GbifIdRecord, IndexRequest> indexRequestFn =
         IndexRequestConverter.builder()
             .metrics(metrics)
             .esIndexName(options.getEsIndexName())
             .esDocumentId(options.getEsDocumentId())
             .metadata(metadataMapFeature.get().values().iterator().next())
             .verbatimMap(verbatimMapFeature.get())
+            .basicMap(basicMapFeature.get())
             .temporalMap(temporalMapFeature.get())
             .locationMap(locationMapFeature.get())
             .taxonMap(taxonMapFeature.get())
@@ -174,14 +180,14 @@ public class InterpretedToEsIndexPipeline {
             .getFn();
 
     log.info("Pushing data into Elasticsearch");
-    ElasticsearchWriter.<BasicRecord>builder()
+    ElasticsearchWriter.<GbifIdRecord>builder()
         .esHosts(options.getEsHosts())
         .esMaxBatchSize(options.getEsMaxBatchSize())
         .esMaxBatchSizeBytes(options.getEsMaxBatchSizeBytes())
         .executor(executor)
         .syncModeThreshold(options.getSyncThreshold())
         .indexRequestFn(indexRequestFn)
-        .records(basicMapFeature.get().values())
+        .records(idMapFeature.get().values())
         .backPressure(options.getBackPressure())
         .build()
         .write();

@@ -22,10 +22,8 @@ public class InterpretedAvroWriterTest {
   public void writerTest() throws IOException {
 
     // State
-    Long gbifID = 777L;
-
     BasicTransform basicTransform = BasicTransform.builder().create();
-    BasicRecord basicRecord = BasicRecord.newBuilder().setId("1").setGbifId(gbifID).build();
+    BasicRecord basicRecord = BasicRecord.newBuilder().setId("1").build();
 
     String id = "id";
 
@@ -56,7 +54,7 @@ public class InterpretedAvroWriterTest {
       while (dataFileReader.hasNext()) {
         BasicRecord record = dataFileReader.next();
         Assert.assertNotNull(record);
-        Assert.assertEquals(gbifID, record.getGbifId());
+        Assert.assertEquals(basicRecord.getId(), record.getId());
       }
     }
 

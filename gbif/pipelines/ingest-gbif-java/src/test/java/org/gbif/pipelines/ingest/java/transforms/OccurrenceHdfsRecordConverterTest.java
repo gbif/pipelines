@@ -11,6 +11,7 @@ import org.gbif.pipelines.ingest.java.metrics.IngestMetricsBuilder;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.GbifIdRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
@@ -31,7 +32,8 @@ public class OccurrenceHdfsRecordConverterTest {
 
     // State
     IngestMetrics metrics = IngestMetricsBuilder.createInterpretedToHdfsViewMetrics();
-    BasicRecord basicRecord = BasicRecord.newBuilder().setId(ID).setGbifId(1L).build();
+    GbifIdRecord idRecord = GbifIdRecord.newBuilder().setId(ID).setGbifId(1L).build();
+    BasicRecord basicRecord = BasicRecord.newBuilder().setId(ID).build();
     MetadataRecord metadataRecord = MetadataRecord.newBuilder().setId(ID).build();
     ExtendedRecord extendedRecord = ExtendedRecord.newBuilder().setId(ID).build();
     TemporalRecord temporalRecord = TemporalRecord.newBuilder().setId(ID).build();
@@ -49,6 +51,7 @@ public class OccurrenceHdfsRecordConverterTest {
             .metadata(metadataRecord)
             .verbatimMap(Collections.singletonMap(ID, extendedRecord))
             .temporalMap(Collections.singletonMap(ID, temporalRecord))
+            .basicMap(Collections.singletonMap(ID, basicRecord))
             .locationMap(Collections.singletonMap(ID, locationRecord))
             .taxonMap(Collections.singletonMap(ID, taxonRecord))
             .grscicollMap(Collections.singletonMap(ID, grscicollRecord))
@@ -57,7 +60,7 @@ public class OccurrenceHdfsRecordConverterTest {
             .audubonMap(Collections.singletonMap(ID, audubonRecord))
             .build()
             .getFn()
-            .apply(basicRecord);
+            .apply(idRecord);
 
     // Should
     Assert.assertNotNull(hdfsRecord);

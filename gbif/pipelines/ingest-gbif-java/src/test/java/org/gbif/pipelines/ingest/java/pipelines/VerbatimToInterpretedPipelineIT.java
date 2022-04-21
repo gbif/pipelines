@@ -25,6 +25,7 @@ import org.gbif.pipelines.ingest.java.transforms.InterpretedAvroWriter;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.GbifIdRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
@@ -174,7 +175,8 @@ public class VerbatimToInterpretedPipelineIT {
     assertEquals(11, new File(interpretedOutput).listFiles().length);
     assertFile(AudubonRecord.class, interpretedOutput + "/audubon");
     assertFile(BasicRecord.class, interpretedOutput + "/basic");
-    assertFile(BasicRecord.class, interpretedOutput + "/basic_invalid");
+    assertFile(GbifIdRecord.class, interpretedOutput + "/gbif_id");
+    assertFile(GbifIdRecord.class, interpretedOutput + "/gbif_id_invalid");
     assertFile(GrscicollRecord.class, interpretedOutput + "/grscicoll");
     assertFile(ImageRecord.class, interpretedOutput + "/image");
     assertFile(LocationRecord.class, interpretedOutput + "/location");

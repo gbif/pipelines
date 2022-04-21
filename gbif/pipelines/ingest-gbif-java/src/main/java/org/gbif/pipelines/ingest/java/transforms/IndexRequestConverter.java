@@ -15,6 +15,7 @@ import org.gbif.pipelines.core.converters.OccurrenceJsonConverter;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.GbifIdRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
@@ -34,6 +35,7 @@ public class IndexRequestConverter {
 
   @NonNull private final MetadataRecord metadata;
   @NonNull private final Map<String, ExtendedRecord> verbatimMap;
+  @NonNull private final Map<String, BasicRecord> basicMap;
   @NonNull private final Map<String, TemporalRecord> temporalMap;
   @NonNull private final Map<String, LocationRecord> locationMap;
   @NonNull private final Map<String, TaxonRecord> taxonMap;
@@ -43,11 +45,12 @@ public class IndexRequestConverter {
   @NonNull private final Map<String, AudubonRecord> audubonMap;
 
   /** Join all records, convert into string json and IndexRequest for ES */
-  public Function<BasicRecord, IndexRequest> getFn() {
-    return br -> {
-      String k = br.getId();
+  public Function<GbifIdRecord, IndexRequest> getFn() {
+    return id -> {
+      String k = id.getId();
       // Core
       ExtendedRecord er = verbatimMap.getOrDefault(k, ExtendedRecord.newBuilder().setId(k).build());
+      BasicRecord br = basicMap.getOrDefault(k, BasicRecord.newBuilder().setId(k).build());
       TemporalRecord tr = temporalMap.getOrDefault(k, TemporalRecord.newBuilder().setId(k).build());
       LocationRecord lr = locationMap.getOrDefault(k, LocationRecord.newBuilder().setId(k).build());
       TaxonRecord txr = taxonMap.getOrDefault(k, TaxonRecord.newBuilder().setId(k).build());
@@ -63,6 +66,7 @@ public class IndexRequestConverter {
       OccurrenceJsonRecord json =
           OccurrenceJsonConverter.builder()
               .metadata(metadata)
+              .gbifId(id)
               .basic(br)
               .temporal(tr)
               .location(lr)
@@ -81,7 +85,7 @@ public class IndexRequestConverter {
       if (esDocumentId != null && !esDocumentId.isEmpty()) {
         String docId =
             esDocumentId.equals(GBIF_ID)
-                ? br.getGbifId().toString()
+                ? id.getGbifId().toString()
                 : json.get(esDocumentId).toString();
         indexRequest = indexRequest.id(docId);
       }
