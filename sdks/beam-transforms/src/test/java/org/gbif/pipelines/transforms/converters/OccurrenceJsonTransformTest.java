@@ -31,6 +31,7 @@ import org.gbif.pipelines.io.avro.AgentIdentifier;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.Authorship;
 import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.Diagnostic;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -66,6 +67,7 @@ import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
+import org.gbif.pipelines.transforms.specific.ClusteringTransform;
 import org.gbif.pipelines.transforms.specific.GbifIdTransform;
 import org.junit.Rule;
 import org.junit.Test;
@@ -142,6 +144,8 @@ public class OccurrenceJsonTransformTest {
 
     GbifIdRecord id = GbifIdRecord.newBuilder().setId("777").setGbifId(111L).build();
 
+    ClusteringRecord cr = ClusteringRecord.newBuilder().setId("777").setIsClustered(true).build();
+
     BasicRecord br =
         BasicRecord.newBuilder()
             .setId("777")
@@ -177,7 +181,6 @@ public class OccurrenceJsonTransformTest {
                     .setConcept("bla4")
                     .setLineage(Collections.singletonList("bla4_1"))
                     .build())
-            .setIsClustered(true)
             .setRecordedByIds(
                 Collections.singletonList(
                     AgentIdentifier.newBuilder()
@@ -419,6 +422,7 @@ public class OccurrenceJsonTransformTest {
     BasicTransform basicTransform = BasicTransform.builder().create();
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     GbifIdTransform gbifIdTransform = GbifIdTransform.builder().create();
+    ClusteringTransform clusteringTransform = ClusteringTransform.builder().create();
     TemporalTransform temporalTransform = TemporalTransform.builder().create();
     TaxonomyTransform taxonomyTransform = TaxonomyTransform.builder().create();
     GrscicollTransform grscicollTransform = GrscicollTransform.builder().create();
@@ -451,6 +455,10 @@ public class OccurrenceJsonTransformTest {
         p.apply("Read Location", Create.of(lr))
             .apply("Map Location to KV", locationTransform.toKv());
 
+    PCollection<KV<String, ClusteringRecord>> clusteringCollection =
+        p.apply("Read clustering", Create.of(cr))
+            .apply("Map clustering to KV", clusteringTransform.toKv());
+
     PCollection<KV<String, TaxonRecord>> taxonCollection =
         p.apply("Read Taxon", Create.of(tr)).apply("Map Taxon to KV", taxonomyTransform.toKv());
 
@@ -475,6 +483,7 @@ public class OccurrenceJsonTransformTest {
             .extendedRecordTag(verbatimTransform.getTag())
             .gbifIdRecordTag(gbifIdTransform.getTag())
             .basicRecordTag(basicTransform.getTag())
+            .clusteringRecordTag(clusteringTransform.getTag())
             .temporalRecordTag(temporalTransform.getTag())
             .locationRecordTag(locationTransform.getTag())
             .taxonRecordTag(taxonomyTransform.getTag())
@@ -491,6 +500,7 @@ public class OccurrenceJsonTransformTest {
             // Core
             .of(basicTransform.getTag(), basicCollection)
             .and(gbifIdTransform.getTag(), idCollection)
+            .and(clusteringTransform.getTag(), clusteringCollection)
             .and(temporalTransform.getTag(), temporalCollection)
             .and(locationTransform.getTag(), locationCollection)
             .and(taxonomyTransform.getTag(), taxonCollection)
@@ -510,6 +520,7 @@ public class OccurrenceJsonTransformTest {
         OccurrenceJsonConverter.builder()
             .basic(br)
             .gbifId(id)
+            .clustering(cr)
             .metadata(mr)
             .verbatim(er)
             .temporal(tmr)

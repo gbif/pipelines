@@ -667,7 +667,6 @@ public class CoreTsvConverterTest {
                         .build()))
             .setRecordedBy(Arrays.asList("br_recordedBy_1", "br_recordedBy_2"))
             .setOccurrenceStatus("br_occurrenceStatus")
-            .setIsClustered(true)
             .setDatasetID(Collections.singletonList("br_datasetID"))
             .setDatasetName(Collections.singletonList("br_datasetName"))
             .setOtherCatalogNumbers(Collections.singletonList("br_otherCatalogNumbers"))

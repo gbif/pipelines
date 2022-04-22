@@ -22,6 +22,7 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
 import org.gbif.pipelines.io.avro.AgentIdentifier;
 import org.gbif.pipelines.io.avro.Authorship;
 import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.Diagnostic;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -117,6 +118,8 @@ public class OccurrenceJsonConverterTest {
 
     GbifIdRecord id = GbifIdRecord.newBuilder().setId("777").setGbifId(111L).build();
 
+    ClusteringRecord cr = ClusteringRecord.newBuilder().setId("777").setIsClustered(true).build();
+
     BasicRecord br =
         BasicRecord.newBuilder()
             .setId("777")
@@ -152,7 +155,6 @@ public class OccurrenceJsonConverterTest {
                     .setConcept("bla4")
                     .setLineage(Collections.singletonList("bla4_1"))
                     .build())
-            .setIsClustered(true)
             .setRecordedByIds(
                 Collections.singletonList(
                     AgentIdentifier.newBuilder()
@@ -395,6 +397,7 @@ public class OccurrenceJsonConverterTest {
         OccurrenceJsonConverter.builder()
             .basic(br)
             .gbifId(id)
+            .clustering(cr)
             .metadata(mr)
             .verbatim(er)
             .temporal(tmr)
@@ -560,21 +563,14 @@ public class OccurrenceJsonConverterTest {
   public void converterEmptyRecordsTest() throws Exception {
     // State
     MetadataRecord mr = MetadataRecord.newBuilder().setLicense("setLicense").setId("777").build();
-
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("777").build();
-
+    ClusteringRecord cr = ClusteringRecord.newBuilder().setId("777").build();
     GbifIdRecord id = GbifIdRecord.newBuilder().setGbifId(1L).build();
-
     BasicRecord br = BasicRecord.newBuilder().setId("777").build();
-
     TemporalRecord tmr = TemporalRecord.newBuilder().setId("777").build();
-
     LocationRecord lr = LocationRecord.newBuilder().setId("777").build();
-
     TaxonRecord tr = TaxonRecord.newBuilder().setId("777").build();
-
     GrscicollRecord gr = GrscicollRecord.newBuilder().setId("777").build();
-
     MultimediaRecord mmr = MultimediaRecord.newBuilder().setId("777").build();
 
     // When
@@ -582,6 +578,7 @@ public class OccurrenceJsonConverterTest {
         OccurrenceJsonConverter.builder()
             .basic(br)
             .gbifId(id)
+            .clustering(cr)
             .metadata(mr)
             .verbatim(er)
             .temporal(tmr)

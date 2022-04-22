@@ -184,7 +184,6 @@ public class MultimediaCsvConverterTest {
                         .build()))
             .setRecordedBy(Arrays.asList("br_recordedBy_1", "br_recordedBy_2"))
             .setOccurrenceStatus("br_occurrenceStatus")
-            .setIsClustered(true)
             .build();
 
     LocationRecord lr =

@@ -1,8 +1,14 @@
 package org.gbif.pipelines.ingest.java.transforms;
 
+import static org.elasticsearch.common.xcontent.XContentType.JSON;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing.GBIF_ID;
+
 import java.util.Map;
 import java.util.function.Function;
-
+import lombok.Builder;
+import lombok.NonNull;
+import org.elasticsearch.action.index.IndexRequest;
 import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
 import org.gbif.pipelines.core.converters.MultimediaConverter;
 import org.gbif.pipelines.core.converters.OccurrenceJsonConverter;
@@ -19,15 +25,6 @@ import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
-
-import org.elasticsearch.action.index.IndexRequest;
-
-import lombok.Builder;
-import lombok.NonNull;
-
-import static org.elasticsearch.common.xcontent.XContentType.JSON;
-import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing.GBIF_ID;
 
 @Builder
 public class IndexRequestConverter {

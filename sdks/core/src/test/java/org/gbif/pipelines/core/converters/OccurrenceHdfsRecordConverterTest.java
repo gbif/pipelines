@@ -33,6 +33,7 @@ import org.gbif.pipelines.core.utils.MediaSerDeser;
 import org.gbif.pipelines.io.avro.AgentIdentifier;
 import org.gbif.pipelines.io.avro.Authorship;
 import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.GbifIdRecord;
@@ -315,6 +316,25 @@ public class OccurrenceHdfsRecordConverterTest {
   }
 
   @Test
+  public void clusterinRecordMapperTest() {
+    // State
+    long now = new Date().getTime();
+    ClusteringRecord clusteringRecord = new ClusteringRecord();
+    clusteringRecord.setIsClustered(true);
+    clusteringRecord.setCreated(now);
+
+    // When
+    OccurrenceHdfsRecord hdfsRecord =
+        OccurrenceHdfsRecordConverter.builder()
+            .clusteringRecord(clusteringRecord)
+            .build()
+            .convert();
+
+    // Should
+    Assert.assertEquals(Boolean.TRUE, hdfsRecord.getIsincluster());
+  }
+
+  @Test
   public void basicRecordMapperTest() {
     // State
     long now = new Date().getTime();
@@ -351,7 +371,6 @@ public class OccurrenceHdfsRecordConverterTest {
     basicRecord.setSampleSizeValue(2d);
     basicRecord.setRelativeOrganismQuantity(2d);
     basicRecord.setLicense(License.UNSPECIFIED.name());
-    basicRecord.setIsClustered(true);
 
     // When
     OccurrenceHdfsRecord hdfsRecord =

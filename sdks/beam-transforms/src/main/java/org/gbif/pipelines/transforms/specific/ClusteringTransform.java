@@ -1,8 +1,14 @@
 package org.gbif.pipelines.transforms.specific;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.CLUSTERING_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.CLUSTERING;
+
 import java.time.Instant;
 import java.util.Optional;
-
+import lombok.Builder;
+import org.apache.beam.sdk.transforms.MapElements;
+import org.apache.beam.sdk.values.KV;
+import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.pipelines.core.functions.SerializableConsumer;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.core.interpreters.Interpretation;
@@ -12,17 +18,9 @@ import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.GbifIdRecord;
 import org.gbif.pipelines.transforms.Transform;
 
-import org.apache.beam.sdk.transforms.MapElements;
-import org.apache.beam.sdk.values.KV;
-import org.apache.beam.sdk.values.TypeDescriptor;
-
-import lombok.Builder;
-
-import static org.gbif.pipelines.common.PipelinesVariables.Metrics.CLUSTERING_RECORDS_COUNT;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.CLUSTERING;
-
 /**
- * Use GBIF identifier from {@link GbifIdRecord} to get clustering value for {@link ClusteringRecord}.
+ * Use GBIF identifier from {@link GbifIdRecord} to get clustering value for {@link
+ * ClusteringRecord}.
  */
 public class ClusteringTransform extends Transform<GbifIdRecord, ClusteringRecord> {
 
