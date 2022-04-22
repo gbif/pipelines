@@ -10,7 +10,7 @@
 
   <groupId>org.gbif.pipelines</groupId>
   <artifactId>pipelines-parent</artifactId>
-  <version>2.11.10-SNAPSHOT</version>
+  <version>2.11.12-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <modules>
@@ -211,7 +211,7 @@
           <version>${maven-javadoc-plugin.version}</version>
           <configuration>
             <doclint>none</doclint>
-            <includeDependencySources>true</includeDependencySources>
+            <includeDependencySources>false</includeDependencySources>
             <dependencySourceIncludes>
               <dependencySourceInclude>org.gbif:*</dependencySourceInclude>
             </dependencySourceIncludes>
