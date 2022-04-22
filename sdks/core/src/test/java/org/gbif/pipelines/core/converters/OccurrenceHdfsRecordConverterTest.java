@@ -169,12 +169,15 @@ public class OccurrenceHdfsRecordConverterTest {
             .setEventDate(EventDate.newBuilder().setGte("2000").setLte("2010").build())
             .build();
 
+    GbifIdRecord gbifIdRecord = GbifIdRecord.newBuilder().setId("1").setGbifId(777L).build();
+
     // When
     OccurrenceHdfsRecord hdfsRecord =
         OccurrenceHdfsRecordConverter.builder()
             .basicRecord(basicRecord)
             .metadataRecord(metadataRecord)
             .taxonRecord(taxonRecord)
+            .gbifIdRecord(gbifIdRecord)
             .temporalRecord(temporalRecord)
             .extendedRecord(extendedRecord)
             .build()
@@ -390,7 +393,6 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals(Double.valueOf(2d), hdfsRecord.getSamplesizevalue());
     Assert.assertEquals(Double.valueOf(2d), hdfsRecord.getRelativeorganismquantity());
     Assert.assertNull(hdfsRecord.getLicense());
-    Assert.assertTrue(hdfsRecord.getIsincluster());
     Assert.assertEquals("Tadpole", hdfsRecord.getLifestage().getConcept());
     Assert.assertEquals("Larva", hdfsRecord.getLifestage().getLineage().get(0));
     Assert.assertEquals("Bla", hdfsRecord.getEstablishmentmeans().getConcept());

@@ -107,10 +107,6 @@ public class GbifIdTransform extends Transform<ExtendedRecord, GbifIdRecord> {
     GbifIdRecord gr =
         GbifIdRecord.newBuilder()
             .setId(source.getId())
-            .setGbifId(
-                useExtendedRecordId && source.getCoreTerms().isEmpty()
-                    ? Long.parseLong(source.getId())
-                    : null)
             .setCreated(Instant.now().toEpochMilli())
             .build();
 

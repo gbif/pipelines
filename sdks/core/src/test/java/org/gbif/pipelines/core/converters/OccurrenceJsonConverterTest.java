@@ -565,7 +565,7 @@ public class OccurrenceJsonConverterTest {
     MetadataRecord mr = MetadataRecord.newBuilder().setLicense("setLicense").setId("777").build();
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("777").build();
     ClusteringRecord cr = ClusteringRecord.newBuilder().setId("777").build();
-    GbifIdRecord id = GbifIdRecord.newBuilder().setGbifId(1L).build();
+    GbifIdRecord id = GbifIdRecord.newBuilder().setId("777").setGbifId(1L).build();
     BasicRecord br = BasicRecord.newBuilder().setId("777").build();
     TemporalRecord tmr = TemporalRecord.newBuilder().setId("777").build();
     LocationRecord lr = LocationRecord.newBuilder().setId("777").build();

@@ -122,8 +122,7 @@ public abstract class TableTransform<T extends SpecificRecordBase>
     String k = c.element().getKey();
 
     ExtendedRecord er = v.getOnly(extendedRecordTag, ExtendedRecord.newBuilder().setId(k).build());
-
-    GbifIdRecord id = v.getOnly(gbifIdRecordTag);
+    GbifIdRecord id = v.getOnly(gbifIdRecordTag, GbifIdRecord.newBuilder().setId(k).build());
 
     convertFn
         .apply(id, er)

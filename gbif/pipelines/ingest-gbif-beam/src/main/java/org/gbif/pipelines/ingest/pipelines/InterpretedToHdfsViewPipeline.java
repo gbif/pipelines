@@ -269,7 +269,7 @@ public class InterpretedToHdfsViewPipeline {
     PCollection<KV<String, CoGbkResult>> tableCollection =
         KeyedPCollectionTuple
             // Join
-            .of(basicTransform.getTag(), basicCollection)
+            .of(idTransform.getTag(), idCollection)
             .and(verbatimTransform.getTag(), verbatimCollection)
             // Apply
             .apply("Group table objects", CoGroupByKey.create());

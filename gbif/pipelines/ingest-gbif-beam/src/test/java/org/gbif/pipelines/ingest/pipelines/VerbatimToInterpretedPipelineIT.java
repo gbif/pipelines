@@ -26,7 +26,9 @@ import org.gbif.pipelines.core.io.SyncDataFileWriter;
 import org.gbif.pipelines.ingest.pipelines.utils.InterpretedAvroWriter;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.GbifIdRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
@@ -36,15 +38,18 @@ import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.junit.Assert;
+import org.junit.FixMethodOrder;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import org.junit.runners.MethodSorters;
 
 @SuppressWarnings("all")
 @RunWith(JUnit4.class)
 @Category(NeedsRunner.class)
+@FixMethodOrder(MethodSorters.JVM)
 public class VerbatimToInterpretedPipelineIT {
 
   private static final String ID = "777";
@@ -53,7 +58,7 @@ public class VerbatimToInterpretedPipelineIT {
   @Rule public final transient TestPipeline p = TestPipeline.create();
 
   @Test
-  public void pipelineAllSynchTest() throws Exception {
+  public void pipelineInterpretationTypesManyTest() throws Exception {
 
     // State
     String outputFile = getClass().getResource("/data7/ingest").getFile();
@@ -67,7 +72,7 @@ public class VerbatimToInterpretedPipelineIT {
       "--metaFileName=verbatim-to-interpreted.yml",
       "--inputPath=" + outputFile + "/" + DATASET_KEY + "/" + attempt + "/verbatim.avro",
       "--targetPath=" + outputFile,
-      "--interpretationTypes=TEMPORAL,LOCATION,GRSCICOLL,MULTIMEDIA,MEASUREMENT_OR_FACT_TABLE,BASIC,TAXONOMY,IMAGE,AMPLIFICATION,OCCURRENCE,VERBATIM,LOCATION_FEATURE,MEASUREMENT_OR_FACT,AUDUBON,METADATA",
+      "--interpretationTypes=GBIF_ID,CLUSTERING,TEMPORAL,LOCATION,GRSCICOLL,MULTIMEDIA,MEASUREMENT_OR_FACT_TABLE,BASIC,TAXONOMY,IMAGE,AMPLIFICATION,OCCURRENCE,VERBATIM,LOCATION_FEATURE,MEASUREMENT_OR_FACT,AUDUBON,METADATA",
       "--properties=" + outputFile + "/pipelines.yaml",
       "--testMode=true"
     };
@@ -77,7 +82,7 @@ public class VerbatimToInterpretedPipelineIT {
   }
 
   @Test
-  public void pipelineTaxonomySynchTest() throws Exception {
+  public void pipelineInterpretationTypesTaxonomyTest() throws Exception {
 
     // State
     String outputFile = getClass().getResource("/data7/ingest").getFile();
@@ -101,7 +106,7 @@ public class VerbatimToInterpretedPipelineIT {
   }
 
   @Test
-  public void pipelineAllAsynchTest() throws Exception {
+  public void pipelineInterpretationTypesAllTest() throws Exception {
 
     // State
     String outputFile = getClass().getResource("/data7/ingest").getFile();
@@ -181,10 +186,12 @@ public class VerbatimToInterpretedPipelineIT {
 
     String interpretedOutput = String.join("/", outputFile, DATASET_KEY, attempt, "interpreted");
 
-    assertEquals(11, new File(interpretedOutput).listFiles().length);
+    assertEquals(13, new File(interpretedOutput).listFiles().length);
     assertFile(AudubonRecord.class, interpretedOutput + "/audubon");
     assertFile(BasicRecord.class, interpretedOutput + "/basic");
-    assertFile(BasicRecord.class, interpretedOutput + "/basic_invalid");
+    assertFile(ClusteringRecord.class, interpretedOutput + "/clustering");
+    assertFile(GbifIdRecord.class, interpretedOutput + "/gbif_id");
+    assertFile(GbifIdRecord.class, interpretedOutput + "/gbif_id_invalid");
     assertFile(GrscicollRecord.class, interpretedOutput + "/grscicoll");
     assertFile(ImageRecord.class, interpretedOutput + "/image");
     assertFile(LocationRecord.class, interpretedOutput + "/location");
