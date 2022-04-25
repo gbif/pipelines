@@ -121,7 +121,7 @@ public class VerbatimToInterpretedPipelineIT {
       "--metaFileName=verbatim-to-interpreted.yml",
       "--inputPath=" + outputFile + "/" + DATASET_KEY + "/" + attempt + "/verbatim.avro",
       "--targetPath=" + outputFile,
-      "--interpretationTypes=GBIF_ID,TAXONOMY",
+      "--interpretationTypes=TAXONOMY",
       "--properties=" + outputFile + "/pipelines.yaml",
       "--testMode=true"
     };
