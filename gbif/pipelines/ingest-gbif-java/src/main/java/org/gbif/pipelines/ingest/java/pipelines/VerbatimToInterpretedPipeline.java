@@ -358,11 +358,11 @@ public class VerbatimToInterpretedPipeline {
 
         metadataWriter.append(mdr);
       } else {
-        metadataWriter.close();
         mdr =
             InterpretedAvroReader.readAvroUseTargetPath(options, metadataTransform)
                 .get(options.getDatasetId());
       }
+      metadataWriter.close();
 
       // Read DWCA and replace default values
       Map<String, ExtendedRecord> erMap =
