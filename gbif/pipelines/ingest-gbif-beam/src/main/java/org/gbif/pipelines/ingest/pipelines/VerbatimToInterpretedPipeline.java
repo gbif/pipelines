@@ -197,6 +197,7 @@ public class VerbatimToInterpretedPipeline {
             .isTripletValid(options.isTripletValid())
             .isOccurrenceIdValid(options.isOccurrenceIdValid())
             .useExtendedRecordId(options.isUseExtendedRecordId())
+            .generateIdIfAbsent(options.getGenerateIds())
             .keygenServiceSupplier(keyServiceSupplier)
             .create();
 

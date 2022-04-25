@@ -161,6 +161,7 @@ public class VerbatimToInterpretedPipeline {
     boolean tripletValid = options.isTripletValid();
     boolean occIdValid = options.isOccurrenceIdValid();
     boolean useErdId = options.isUseExtendedRecordId();
+    boolean generateIds = options.getGenerateIds();
     Set<String> types = options.getInterpretationTypes();
     String targetPath = options.getTargetPath();
     String endPointType = options.getEndPointType();
@@ -227,6 +228,7 @@ public class VerbatimToInterpretedPipeline {
             .isOccurrenceIdValid(occIdValid)
             .useExtendedRecordId(useErdId)
             .keygenServiceSupplier(keyServiceSupplier)
+            .generateIdIfAbsent(generateIds)
             .create()
             .counterFn(incMetricFn)
             .init();
