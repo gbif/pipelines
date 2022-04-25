@@ -500,7 +500,7 @@ public class VerbatimToInterpretedPipeline {
   }
 
   private static boolean useGbifIdWriteIO(Set<String> types) {
-    return types.contains(RecordType.GBIF_ID.name()) || types.contains(RecordType.ALL.name());
+    return types.contains(RecordType.IDENTIFIER.name()) || types.contains(RecordType.ALL.name());
   }
 
   private static boolean useMetadataRecordWriteIO(Set<String> types) {

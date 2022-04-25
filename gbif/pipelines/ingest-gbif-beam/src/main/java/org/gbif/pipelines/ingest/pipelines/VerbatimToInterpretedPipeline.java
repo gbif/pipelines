@@ -385,7 +385,7 @@ public class VerbatimToInterpretedPipeline {
     String metadataPath =
         PathBuilder.buildDatasetAttemptPath(options, options.getMetaFileName(), false);
     if (!FsUtils.fileExists(hdfsSiteConfig, coreSiteConfig, metadataPath)
-        || CheckTransforms.checkRecordType(types, RecordType.GBIF_ID)
+        || CheckTransforms.checkRecordType(types, RecordType.IDENTIFIER)
         || CheckTransforms.checkRecordType(types, RecordType.ALL)) {
       MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
       FsUtils.setOwner(hdfsSiteConfig, coreSiteConfig, metadataPath, "crap", "supergroup");
@@ -403,7 +403,7 @@ public class VerbatimToInterpretedPipeline {
   }
 
   private static boolean useGbifIdRecordWriteIO(Set<String> types) {
-    return types.contains(RecordType.GBIF_ID.name()) || types.contains(RecordType.ALL.name());
+    return types.contains(RecordType.IDENTIFIER.name()) || types.contains(RecordType.ALL.name());
   }
 
   private static boolean useMetadataRecordWriteIO(Set<String> types) {

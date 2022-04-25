@@ -72,7 +72,7 @@ public class VerbatimToInterpretedPipelineIT {
       "--metaFileName=verbatim-to-interpreted.yml",
       "--inputPath=" + outputFile + "/" + DATASET_KEY + "/" + attempt + "/verbatim.avro",
       "--targetPath=" + outputFile,
-      "--interpretationTypes=GBIF_ID,CLUSTERING,TEMPORAL,LOCATION,GRSCICOLL,MULTIMEDIA,MEASUREMENT_OR_FACT_TABLE,BASIC,TAXONOMY,IMAGE,AMPLIFICATION,OCCURRENCE,VERBATIM,LOCATION_FEATURE,MEASUREMENT_OR_FACT,AUDUBON,METADATA",
+      "--interpretationTypes=IDENTIFIER,CLUSTERING,TEMPORAL,LOCATION,GRSCICOLL,MULTIMEDIA,MEASUREMENT_OR_FACT_TABLE,BASIC,TAXONOMY,IMAGE,AMPLIFICATION,OCCURRENCE,VERBATIM,LOCATION_FEATURE,MEASUREMENT_OR_FACT,AUDUBON,METADATA",
       "--properties=" + outputFile + "/pipelines.yaml",
       "--testMode=true"
     };
@@ -190,8 +190,8 @@ public class VerbatimToInterpretedPipelineIT {
     assertFile(AudubonRecord.class, interpretedOutput + "/audubon");
     assertFile(BasicRecord.class, interpretedOutput + "/basic");
     assertFile(ClusteringRecord.class, interpretedOutput + "/clustering");
-    assertFile(GbifIdRecord.class, interpretedOutput + "/gbif_id");
-    assertFile(GbifIdRecord.class, interpretedOutput + "/gbif_id_invalid");
+    assertFile(GbifIdRecord.class, interpretedOutput + "/identifier");
+    assertFile(GbifIdRecord.class, interpretedOutput + "/identifier_invalid");
     assertFile(GrscicollRecord.class, interpretedOutput + "/grscicoll");
     assertFile(ImageRecord.class, interpretedOutput + "/image");
     assertFile(LocationRecord.class, interpretedOutput + "/location");

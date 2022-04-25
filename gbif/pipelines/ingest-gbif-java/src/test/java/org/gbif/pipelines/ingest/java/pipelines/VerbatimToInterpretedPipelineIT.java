@@ -181,8 +181,8 @@ public class VerbatimToInterpretedPipelineIT {
     assertFile(AudubonRecord.class, interpretedOutput + "/audubon");
     assertFile(BasicRecord.class, interpretedOutput + "/basic");
     assertFile(ClusteringRecord.class, interpretedOutput + "/clustering");
-    assertFile(GbifIdRecord.class, interpretedOutput + "/gbif_id");
-    assertFile(GbifIdRecord.class, interpretedOutput + "/gbif_id_invalid");
+    assertFile(GbifIdRecord.class, interpretedOutput + "/identifier");
+    assertFile(GbifIdRecord.class, interpretedOutput + "/identifier_invalid");
     assertFile(GrscicollRecord.class, interpretedOutput + "/grscicoll");
     assertFile(ImageRecord.class, interpretedOutput + "/image");
     assertFile(LocationRecord.class, interpretedOutput + "/location");

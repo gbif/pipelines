@@ -1,7 +1,7 @@
 package org.gbif.pipelines.transforms.specific;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.GBIF_ID_RECORDS_COUNT;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.GBIF_ID;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.IDENTIFIER;
 
 import java.time.Instant;
 import java.util.Optional;
@@ -45,7 +45,7 @@ public class GbifIdTransform extends Transform<ExtendedRecord, GbifIdRecord> {
       boolean generateIdIfAbsent,
       BiConsumer<ExtendedRecord, GbifIdRecord> gbifIdFn,
       SerializableSupplier<HBaseLockingKeyService> keygenServiceSupplier) {
-    super(GbifIdRecord.class, GBIF_ID, GbifIdTransform.class.getName(), GBIF_ID_RECORDS_COUNT);
+    super(GbifIdRecord.class, IDENTIFIER, GbifIdTransform.class.getName(), GBIF_ID_RECORDS_COUNT);
     this.isTripletValid = isTripletValid;
     this.isOccurrenceIdValid = isOccurrenceIdValid;
     this.useExtendedRecordId = useExtendedRecordId;

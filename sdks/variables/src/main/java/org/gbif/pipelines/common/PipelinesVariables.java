@@ -52,7 +52,6 @@ public class PipelinesVariables {
         IDENTIFIER,
         METADATA,
         BASIC,
-        GBIF_ID,
         CLUSTERING,
         TEMPORAL,
         LOCATION,
@@ -103,7 +102,7 @@ public class PipelinesVariables {
                   VERBATIM,
                   // Core types
                   METADATA,
-                  GBIF_ID,
+                  IDENTIFIER,
                   CLUSTERING,
                   BASIC,
                   TEMPORAL,
