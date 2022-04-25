@@ -103,6 +103,8 @@ public class PipelinesVariables {
                   VERBATIM,
                   // Core types
                   METADATA,
+                  GBIF_ID,
+                  CLUSTERING,
                   BASIC,
                   TEMPORAL,
                   LOCATION,
