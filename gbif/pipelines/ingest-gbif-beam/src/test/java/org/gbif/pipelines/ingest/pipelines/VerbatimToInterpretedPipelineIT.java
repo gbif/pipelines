@@ -82,30 +82,6 @@ public class VerbatimToInterpretedPipelineIT {
   }
 
   @Test
-  public void pipelineInterpretationTypesTaxonomyTest() throws Exception {
-
-    // State
-    String outputFile = getClass().getResource("/data7/ingest").getFile();
-
-    String attempt = "60";
-
-    String[] args = {
-      "--datasetId=" + DATASET_KEY,
-      "--attempt=" + attempt,
-      "--runner=SparkRunner",
-      "--metaFileName=verbatim-to-interpreted.yml",
-      "--inputPath=" + outputFile + "/" + DATASET_KEY + "/" + attempt + "/verbatim.avro",
-      "--targetPath=" + outputFile,
-      "--interpretationTypes=TAXONOMY",
-      "--properties=" + outputFile + "/pipelines.yaml",
-      "--testMode=true"
-    };
-
-    // When, Should
-    pipelineTest(args, attempt, outputFile);
-  }
-
-  @Test
   public void pipelineInterpretationTypesAllTest() throws Exception {
 
     // State
@@ -123,6 +99,30 @@ public class VerbatimToInterpretedPipelineIT {
       "--interpretationTypes=ALL",
       "--properties=" + outputFile + "/pipelines.yaml",
       "--syncThreshold=0",
+      "--testMode=true"
+    };
+
+    // When, Should
+    pipelineTest(args, attempt, outputFile);
+  }
+
+  @Test
+  public void pipelineInterpretationTypesTaxonomyTest() throws Exception {
+
+    // State
+    String outputFile = getClass().getResource("/data7/ingest").getFile();
+
+    String attempt = "60";
+
+    String[] args = {
+      "--datasetId=" + DATASET_KEY,
+      "--attempt=" + attempt,
+      "--runner=SparkRunner",
+      "--metaFileName=verbatim-to-interpreted.yml",
+      "--inputPath=" + outputFile + "/" + DATASET_KEY + "/" + attempt + "/verbatim.avro",
+      "--targetPath=" + outputFile,
+      "--interpretationTypes=GBIF_ID,TAXONOMY",
+      "--properties=" + outputFile + "/pipelines.yaml",
       "--testMode=true"
     };
 
