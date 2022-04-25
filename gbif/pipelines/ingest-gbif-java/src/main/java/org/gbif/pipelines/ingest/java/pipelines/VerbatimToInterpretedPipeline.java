@@ -357,7 +357,6 @@ public class VerbatimToInterpretedPipeline {
                 .orElseThrow(() -> new IllegalArgumentException("MetadataRecord can't be null"));
 
         metadataWriter.append(mdr);
-        metadataWriter.close();
       } else {
         metadataWriter.close();
         mdr =
