@@ -357,12 +357,13 @@ public class VerbatimToInterpretedPipeline {
                 .orElseThrow(() -> new IllegalArgumentException("MetadataRecord can't be null"));
 
         metadataWriter.append(mdr);
+        metadataWriter.close();
       } else {
+        metadataWriter.close();
         mdr =
             InterpretedAvroReader.readAvroUseTargetPath(options, metadataTransform)
                 .get(options.getDatasetId());
       }
-      metadataWriter.close();
 
       // Read DWCA and replace default values
       Map<String, ExtendedRecord> erMap =
