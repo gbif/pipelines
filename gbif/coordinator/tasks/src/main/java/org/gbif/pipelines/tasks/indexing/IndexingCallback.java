@@ -310,7 +310,7 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
             config.stepConfig.hdfsSiteConfig,
             config.stepConfig.coreSiteConfig,
             metaPath,
-            Metrics.GBIF_ID_RECORDS_COUNT + Metrics.ATTEMPTED);
+            Metrics.UNIQUE_GBIF_IDS_COUNT + Metrics.ATTEMPTED);
 
     if (messageNumber == null && !fileNumber.isPresent()) {
       throw new IllegalArgumentException(

@@ -131,7 +131,7 @@ public class InterpretedMessageHandler {
             stepConfig.hdfsSiteConfig,
             stepConfig.coreSiteConfig,
             metaPath,
-            Metrics.GBIF_ID_RECORDS_COUNT + Metrics.ATTEMPTED);
+            Metrics.UNIQUE_GBIF_IDS_COUNT + Metrics.ATTEMPTED);
 
     // Fail if fileNumber is null
     if (!message.isValidator()) {
