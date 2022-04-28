@@ -298,7 +298,9 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
   }
 
   private void runPostprocessValidation(PipelinesVerbatimMessage message) throws IOException {
-    if (message.isValidator() || config.validatorOnly) {
+    if (message.isValidator()
+        || config.validatorOnly
+        || Boolean.TRUE.equals(message.getValidationResult().isUseExtendedRecordId())) {
       log.info("Skip runPostprocessValidation for validator");
       return;
     }
