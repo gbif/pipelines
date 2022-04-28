@@ -491,7 +491,7 @@ public class VerbatimToInterpretedPipeline {
     String metadataPath =
         PathBuilder.buildDatasetAttemptPath(options, options.getMetaFileName(), false);
     if (!FsUtils.fileExists(hdfsSiteConfig, coreSiteConfig, metadataPath)
-        || CheckTransforms.checkRecordType(types, RecordType.BASIC)
+        || CheckTransforms.checkRecordType(types, RecordType.IDENTIFIER)
         || CheckTransforms.checkRecordType(types, RecordType.ALL)) {
       MetricsHandler.saveCountersToTargetPathFile(options, metrics.getMetricsResult());
     }

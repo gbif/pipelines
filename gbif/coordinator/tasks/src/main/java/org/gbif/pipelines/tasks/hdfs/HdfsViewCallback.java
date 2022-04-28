@@ -209,7 +209,7 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
             config.stepConfig.hdfsSiteConfig,
             config.stepConfig.coreSiteConfig,
             metaPath,
-            Metrics.BASIC_RECORDS_COUNT + Metrics.ATTEMPTED);
+            Metrics.GBIF_ID_RECORDS_COUNT + Metrics.ATTEMPTED);
 
     if (messageNumber == null && !fileNumber.isPresent()) {
       throw new IllegalArgumentException(

@@ -1,7 +1,7 @@
 package org.gbif.pipelines.tasks.balancer.handler;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.ALL;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.BASIC;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.IDENTIFIER;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
@@ -131,12 +131,12 @@ public class InterpretedMessageHandler {
             stepConfig.hdfsSiteConfig,
             stepConfig.coreSiteConfig,
             metaPath,
-            Metrics.BASIC_RECORDS_COUNT + Metrics.ATTEMPTED);
+            Metrics.GBIF_ID_RECORDS_COUNT + Metrics.ATTEMPTED);
 
     // Fail if fileNumber is null
     if (!message.isValidator()) {
       Set<String> types = message.getInterpretTypes();
-      boolean isCorrectType = types.contains(ALL.name()) || types.contains(BASIC.name());
+      boolean isCorrectType = types.contains(ALL.name()) || types.contains(IDENTIFIER.name());
       boolean noFileRecords = !fileNumber.isPresent() || fileNumber.get() == 0L;
       if (isCorrectType && noFileRecords) {
         throw new IllegalArgumentException(
