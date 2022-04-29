@@ -40,6 +40,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.gbif.dwc.terms.DcTerm;
+import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
@@ -402,7 +403,7 @@ public class ImageServiceSyncPipeline {
                 .setImageItems(ImmutableList.copyOf(recordIDImage.getValue()))
                 .build());
       } catch (Exception e) {
-        throw new RuntimeException(e.getMessage());
+        throw new PipelinesException(e.getMessage());
       }
     }
   }

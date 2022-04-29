@@ -10,20 +10,16 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.TYPE_STATUS_INVALID;
 import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractOptListValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
-import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
 
 import com.google.common.base.Strings;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.vocabulary.BasisOfRecord;
 import org.gbif.api.vocabulary.OccurrenceStatus;
 import org.gbif.api.vocabulary.Sex;
@@ -36,14 +32,10 @@ import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.core.parsers.SimpleTypeParser;
 import org.gbif.pipelines.core.parsers.VocabularyParser;
-import org.gbif.pipelines.core.parsers.clustering.ClusteringService;
 import org.gbif.pipelines.core.parsers.identifier.AgentIdentifierParser;
 import org.gbif.pipelines.core.utils.ModelUtils;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.keygen.HBaseLockingKeyService;
-import org.gbif.pipelines.keygen.api.KeyLookupResult;
-import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
 
 /**
  * Interpreting function that receives a ExtendedRecord instance and applies an interpretation to
@@ -53,86 +45,8 @@ import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class BasicInterpreter {
 
-  public static final String GBIF_ID_INVALID = "GBIF_ID_INVALID";
-
   private static final Parsable<String> TYPE_NAME_PARSER =
       org.gbif.common.parsers.TypifiedNameParser.getInstance();
-
-  /** Copies GBIF id from ExtendedRecord id or generates/gets existing GBIF id */
-  public static BiConsumer<ExtendedRecord, BasicRecord> interpretGbifId(
-      HBaseLockingKeyService keygenService,
-      boolean isTripletValid,
-      boolean isOccurrenceIdValid,
-      boolean useExtendedRecordId,
-      BiConsumer<ExtendedRecord, BasicRecord> gbifIdFn) {
-    gbifIdFn = gbifIdFn == null ? interpretCopyGbifId() : gbifIdFn;
-    return useExtendedRecordId
-        ? gbifIdFn
-        : interpretGbifId(keygenService, isTripletValid, isOccurrenceIdValid);
-  }
-
-  /** Generates or gets existing GBIF id */
-  public static BiConsumer<ExtendedRecord, BasicRecord> interpretGbifId(
-      HBaseLockingKeyService keygenService, boolean isTripletValid, boolean isOccurrenceIdValid) {
-    return (er, br) -> {
-      if (keygenService == null) {
-        return;
-      }
-
-      Set<String> uniqueStrings = new HashSet<>(2);
-
-      // Adds occurrenceId
-      if (isOccurrenceIdValid) {
-        String occurrenceId = extractValue(er, DwcTerm.occurrenceID);
-        if (!Strings.isNullOrEmpty(occurrenceId)) {
-          uniqueStrings.add(occurrenceId);
-        }
-      }
-
-      // Adds triplet
-      if (isTripletValid) {
-        String ic = extractValue(er, DwcTerm.institutionCode);
-        String cc = extractValue(er, DwcTerm.collectionCode);
-        String cn = extractValue(er, DwcTerm.catalogNumber);
-        OccurrenceKeyBuilder.buildKey(ic, cc, cn).ifPresent(uniqueStrings::add);
-      }
-
-      if (!uniqueStrings.isEmpty()) {
-        try {
-          KeyLookupResult key =
-              Optional.ofNullable(keygenService.findKey(uniqueStrings))
-                  .orElse(keygenService.generateKey(uniqueStrings));
-
-          br.setGbifId(key.getKey());
-        } catch (IllegalStateException ex) {
-          log.warn(ex.getMessage());
-          addIssue(br, GBIF_ID_INVALID);
-        }
-      } else {
-        addIssue(br, GBIF_ID_INVALID);
-      }
-    };
-  }
-
-  public static Consumer<BasicRecord> interpretIsClustered(ClusteringService clusteringService) {
-    return br -> {
-      if (clusteringService != null) {
-        Long gbifId = br.getGbifId();
-        if (gbifId != null) {
-          br.setIsClustered(clusteringService.isClustered(gbifId));
-        }
-      }
-    };
-  }
-
-  /** Copies GBIF id from ExtendedRecord id */
-  public static BiConsumer<ExtendedRecord, BasicRecord> interpretCopyGbifId() {
-    return (er, br) -> {
-      if (StringUtils.isNumeric(er.getId())) {
-        br.setGbifId(Long.parseLong(er.getId()));
-      }
-    };
-  }
 
   /** {@link DwcTerm#individualCount} interpretation. */
   public static void interpretIndividualCount(ExtendedRecord er, BasicRecord br) {

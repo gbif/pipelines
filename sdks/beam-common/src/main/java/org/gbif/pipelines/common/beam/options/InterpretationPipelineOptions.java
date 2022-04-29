@@ -82,6 +82,12 @@ public interface InterpretationPipelineOptions
 
   void setUseExtendedRecordId(boolean useExtendedRecordId);
 
+  @Description("Generate internal identifiers in case if they are new/updated/missed")
+  @Default.Boolean(true)
+  boolean getGenerateIds();
+
+  void setGenerateIds(boolean generateIds);
+
   @Description("Number of file shards")
   Integer getNumberOfShards();
 

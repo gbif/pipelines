@@ -20,7 +20,9 @@ import org.gbif.pipelines.core.converters.MultimediaConverter;
 import org.gbif.pipelines.core.converters.OccurrenceHdfsRecordConverter;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.GbifIdRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
@@ -71,10 +73,13 @@ import org.gbif.pipelines.transforms.Transform;
 @Builder
 public class OccurrenceHdfsRecordTransform implements Serializable {
 
-  private static final long serialVersionUID = 4605359346756029671L;
+  private static final long serialVersionUID = 4605359346756029672L;
 
   // Core
   @NonNull private final TupleTag<ExtendedRecord> extendedRecordTag;
+
+  @NonNull private final TupleTag<GbifIdRecord> gbifIdRecordTag;
+  @NonNull private final TupleTag<ClusteringRecord> clusteringRecordTag;
   @NonNull private final TupleTag<BasicRecord> basicRecordTag;
   @NonNull private final TupleTag<TemporalRecord> temporalRecordTag;
   @NonNull private final TupleTag<LocationRecord> locationRecordTag;
@@ -102,6 +107,9 @@ public class OccurrenceHdfsRecordTransform implements Serializable {
 
             // Core
             MetadataRecord mdr = c.sideInput(metadataView);
+            GbifIdRecord id = v.getOnly(gbifIdRecordTag);
+            ClusteringRecord cr =
+                v.getOnly(clusteringRecordTag, ClusteringRecord.newBuilder().setId(k).build());
             ExtendedRecord er =
                 v.getOnly(extendedRecordTag, ExtendedRecord.newBuilder().setId(k).build());
             BasicRecord br = v.getOnly(basicRecordTag, BasicRecord.newBuilder().setId(k).build());
@@ -123,6 +131,8 @@ public class OccurrenceHdfsRecordTransform implements Serializable {
             OccurrenceHdfsRecord record =
                 OccurrenceHdfsRecordConverter.builder()
                     .basicRecord(br)
+                    .gbifIdRecord(id)
+                    .clusteringRecord(cr)
                     .metadataRecord(mdr)
                     .temporalRecord(tr)
                     .locationRecord(lr)

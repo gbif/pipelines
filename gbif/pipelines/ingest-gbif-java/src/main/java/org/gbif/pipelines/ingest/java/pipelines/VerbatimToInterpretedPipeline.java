@@ -51,7 +51,9 @@ import org.gbif.pipelines.ingest.java.metrics.IngestMetricsBuilder;
 import org.gbif.pipelines.ingest.java.transforms.InterpretedAvroReader;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.GbifIdRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
@@ -75,6 +77,8 @@ import org.gbif.pipelines.transforms.java.DefaultValuesTransform;
 import org.gbif.pipelines.transforms.java.OccurrenceExtensionTransform;
 import org.gbif.pipelines.transforms.java.UniqueGbifIdTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
+import org.gbif.pipelines.transforms.specific.ClusteringTransform;
+import org.gbif.pipelines.transforms.specific.GbifIdTransform;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.gbif.rest.client.grscicoll.GrscicollLookupResponse;
 import org.gbif.rest.client.species.NameUsageMatch;
@@ -157,6 +161,7 @@ public class VerbatimToInterpretedPipeline {
     boolean tripletValid = options.isTripletValid();
     boolean occIdValid = options.isOccurrenceIdValid();
     boolean useErdId = options.isUseExtendedRecordId();
+    boolean generateIds = options.getGenerateIds();
     Set<String> types = options.getInterpretationTypes();
     String targetPath = options.getTargetPath();
     String endPointType = options.getEndPointType();
@@ -179,7 +184,7 @@ public class VerbatimToInterpretedPipeline {
     MDC.put("attempt", attempt.toString());
     MDC.put("step", StepType.VERBATIM_TO_INTERPRETED.name());
 
-    String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
+    String postfix = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
     log.info("Init metrics");
     IngestMetrics metrics = IngestMetricsBuilder.createVerbatimToInterpretedMetrics();
@@ -217,15 +222,28 @@ public class VerbatimToInterpretedPipeline {
             .counterFn(incMetricFn)
             .init();
 
-    BasicTransform basicTransform =
-        BasicTransform.builder()
-            .useDynamicPropertiesInterpretation(true)
+    GbifIdTransform idTransform =
+        GbifIdTransform.builder()
             .isTripletValid(tripletValid)
             .isOccurrenceIdValid(occIdValid)
             .useExtendedRecordId(useErdId)
             .keygenServiceSupplier(keyServiceSupplier)
-            .occStatusKvStoreSupplier(OccurrenceStatusKvStoreFactory.getInstanceSupplier(config))
+            .generateIdIfAbsent(generateIds)
+            .create()
+            .counterFn(incMetricFn)
+            .init();
+
+    ClusteringTransform clusteringTransform =
+        ClusteringTransform.builder()
             .clusteringServiceSupplier(ClusteringServiceFactory.getInstanceSupplier(config))
+            .create()
+            .counterFn(incMetricFn)
+            .init();
+
+    BasicTransform basicTransform =
+        BasicTransform.builder()
+            .useDynamicPropertiesInterpretation(true)
+            .occStatusKvStoreSupplier(OccurrenceStatusKvStoreFactory.getInstanceSupplier(config))
             .vocabularyServiceSupplier(
                 FileVocabularyFactory.builder()
                     .config(config)
@@ -304,27 +322,31 @@ public class VerbatimToInterpretedPipeline {
             .init();
 
     try (SyncDataFileWriter<ExtendedRecord> verbatimWriter =
-            createAvroWriter(options, verbatimTransform, id);
+            createAvroWriter(options, verbatimTransform, postfix);
         SyncDataFileWriter<MetadataRecord> metadataWriter =
-            createAvroWriter(options, metadataTransform, id);
+            createAvroWriter(options, metadataTransform, postfix);
+        SyncDataFileWriter<GbifIdRecord> idWriter =
+            createAvroWriter(options, idTransform, postfix);
+        SyncDataFileWriter<ClusteringRecord> clusteringWriter =
+            createAvroWriter(options, clusteringTransform, postfix);
+        SyncDataFileWriter<GbifIdRecord> idInvalidWriter =
+            createAvroWriter(options, idTransform, postfix, true);
         SyncDataFileWriter<BasicRecord> basicWriter =
-            createAvroWriter(options, basicTransform, id);
-        SyncDataFileWriter<BasicRecord> basicInvalidWriter =
-            createAvroWriter(options, basicTransform, id, true);
+            createAvroWriter(options, basicTransform, postfix);
         SyncDataFileWriter<TemporalRecord> temporalWriter =
-            createAvroWriter(options, temporalTransform, id);
+            createAvroWriter(options, temporalTransform, postfix);
         SyncDataFileWriter<MultimediaRecord> multimediaWriter =
-            createAvroWriter(options, multimediaTransform, id);
+            createAvroWriter(options, multimediaTransform, postfix);
         SyncDataFileWriter<ImageRecord> imageWriter =
-            createAvroWriter(options, imageTransform, id);
+            createAvroWriter(options, imageTransform, postfix);
         SyncDataFileWriter<AudubonRecord> audubonWriter =
-            createAvroWriter(options, audubonTransform, id);
+            createAvroWriter(options, audubonTransform, postfix);
         SyncDataFileWriter<TaxonRecord> taxonWriter =
-            createAvroWriter(options, taxonomyTransform, id);
+            createAvroWriter(options, taxonomyTransform, postfix);
         SyncDataFileWriter<GrscicollRecord> grscicollWriter =
-            createAvroWriter(options, grscicollTransform, id);
+            createAvroWriter(options, grscicollTransform, postfix);
         SyncDataFileWriter<LocationRecord> locationWriter =
-            createAvroWriter(options, locationTransform, id)) {
+            createAvroWriter(options, locationTransform, postfix)) {
 
       // Create or read MetadataRecord
       MetadataRecord mdr;
@@ -353,17 +375,17 @@ public class VerbatimToInterpretedPipeline {
       boolean useSyncMode = options.getSyncThreshold() > erExtMap.size();
 
       // Skip interpretation and use avro reader when partial intepretation is activated
-      Function<ExtendedRecord, Optional<BasicRecord>> brFn;
-      if (useBasicRecordWriteIO(types)) {
-        log.info("Interpreting BASIC records...");
-        brFn = basicTransform::processElement;
+      Function<ExtendedRecord, Optional<GbifIdRecord>> idFn;
+      if (useGbifIdWriteIO(types)) {
+        log.info("Interpreting GBIF IDs records...");
+        idFn = idTransform::processElement;
       } else {
-        log.info("Skip BASIC interpretation and reading BASIC records from avro files...");
-        basicWriter.close();
-        basicInvalidWriter.close();
-        Map<String, BasicRecord> basicRecordMap =
-            InterpretedAvroReader.readAvroUseTargetPath(options, basicTransform);
-        brFn = er -> Optional.ofNullable(basicRecordMap.get(er.getId()));
+        log.info("Skip GBIF IDs interpretation and reading GBIF IDs from avro files...");
+        idWriter.close();
+        idInvalidWriter.close();
+        Map<String, GbifIdRecord> idRecordMap =
+            InterpretedAvroReader.readAvroUseTargetPath(options, idTransform);
+        idFn = er -> Optional.ofNullable(idRecordMap.get(er.getId()));
       }
 
       log.info("Аiltering GBIF id duplicates");
@@ -372,7 +394,7 @@ public class VerbatimToInterpretedPipeline {
           UniqueGbifIdTransform.builder()
               .executor(executor)
               .erMap(erExtMap)
-              .basicTransformFn(brFn)
+              .idTransformFn(idFn)
               .useSyncMode(useSyncMode)
               .skipTransform(useErdId)
               .counterFn(incMetricFn)
@@ -382,12 +404,19 @@ public class VerbatimToInterpretedPipeline {
       // Create interpretation function
       Consumer<ExtendedRecord> interpretAllFn =
           er -> {
-            BasicRecord brInvalid = gbifIdTransform.getBrInvalidMap().get(er.getId());
-            if (brInvalid == null) {
-              BasicRecord br = gbifIdTransform.getErBrMap().get(er.getId());
+            GbifIdRecord idInvalid = gbifIdTransform.getIdInvalidMap().get(er.getId());
 
+            if (idInvalid == null) {
+              GbifIdRecord id = gbifIdTransform.getErIdMap().get(er.getId());
+
+              if (clusteringTransform.checkType(types)) {
+                clusteringTransform.processElement(id).ifPresent(clusteringWriter::append);
+              }
               if (verbatimTransform.checkType(types)) {
                 verbatimWriter.append(er);
+              }
+              if (basicTransform.checkType(types)) {
+                basicTransform.processElement(er).ifPresent(basicWriter::append);
               }
               if (temporalTransform.checkType(types)) {
                 temporalTransform.processElement(er).ifPresent(temporalWriter::append);
@@ -405,30 +434,30 @@ public class VerbatimToInterpretedPipeline {
                 taxonomyTransform.processElement(er).ifPresent(taxonWriter::append);
               }
               if (grscicollTransform.checkType(types)) {
-                grscicollTransform.processElement(er, br, mdr).ifPresent(grscicollWriter::append);
+                grscicollTransform.processElement(er, mdr).ifPresent(grscicollWriter::append);
               }
               if (locationTransform.checkType(types)) {
                 locationTransform.processElement(er, mdr).ifPresent(locationWriter::append);
               }
             } else {
-              basicInvalidWriter.append(brInvalid);
+              idInvalidWriter.append(idInvalid);
             }
           };
 
       log.info("Starting rest of interpretations...");
       // Run async writing for BasicRecords
       Stream<CompletableFuture<Void>> streamBr = Stream.empty();
-      if (useBasicRecordWriteIO(types)) {
-        Collection<BasicRecord> brCollection = gbifIdTransform.getBrMap().values();
+      if (useGbifIdWriteIO(types)) {
+        Collection<GbifIdRecord> idCollection = gbifIdTransform.getIdMap().values();
         if (useSyncMode) {
           streamBr =
               Stream.of(
                   CompletableFuture.runAsync(
-                      () -> brCollection.forEach(basicWriter::append), executor));
+                      () -> idCollection.forEach(idWriter::append), executor));
         } else {
           streamBr =
-              brCollection.stream()
-                  .map(v -> CompletableFuture.runAsync(() -> basicWriter.append(v), executor));
+              idCollection.stream()
+                  .map(v -> CompletableFuture.runAsync(() -> idWriter.append(v), executor));
         }
       }
 
@@ -454,14 +483,15 @@ public class VerbatimToInterpretedPipeline {
       log.error("Failed performing conversion on {}", e.getMessage());
       throw new IllegalStateException("Failed performing conversion on ", e);
     } finally {
-      Shutdown.doOnExit(basicTransform, locationTransform, taxonomyTransform, grscicollTransform);
+      Shutdown.doOnExit(
+          basicTransform, locationTransform, taxonomyTransform, grscicollTransform, idTransform);
     }
 
     log.info("Save metrics into the file and set files owner");
     String metadataPath =
         PathBuilder.buildDatasetAttemptPath(options, options.getMetaFileName(), false);
     if (!FsUtils.fileExists(hdfsSiteConfig, coreSiteConfig, metadataPath)
-        || CheckTransforms.checkRecordType(types, RecordType.BASIC)
+        || CheckTransforms.checkRecordType(types, RecordType.IDENTIFIER)
         || CheckTransforms.checkRecordType(types, RecordType.ALL)) {
       MetricsHandler.saveCountersToTargetPathFile(options, metrics.getMetricsResult());
     }
@@ -469,8 +499,8 @@ public class VerbatimToInterpretedPipeline {
     log.info("Pipeline has been finished - {}", LocalDateTime.now());
   }
 
-  private static boolean useBasicRecordWriteIO(Set<String> types) {
-    return types.contains(RecordType.BASIC.name()) || types.contains(RecordType.ALL.name());
+  private static boolean useGbifIdWriteIO(Set<String> types) {
+    return types.contains(RecordType.IDENTIFIER.name()) || types.contains(RecordType.ALL.name());
   }
 
   private static boolean useMetadataRecordWriteIO(Set<String> types) {
@@ -485,7 +515,11 @@ public class VerbatimToInterpretedPipeline {
 
     @SneakyThrows
     private Shutdown(
-        BasicTransform bTr, LocationTransform lTr, TaxonomyTransform tTr, GrscicollTransform gTr) {
+        BasicTransform bTr,
+        LocationTransform lTr,
+        TaxonomyTransform tTr,
+        GrscicollTransform gTr,
+        GbifIdTransform idTr) {
       Runnable shudownHook =
           () -> {
             log.info("Closing all resources");
@@ -493,17 +527,22 @@ public class VerbatimToInterpretedPipeline {
             lTr.tearDown();
             tTr.tearDown();
             gTr.tearDown();
+            idTr.tearDown();
             log.info("The resources were closed");
           };
       Runtime.getRuntime().addShutdownHook(new Thread(shudownHook));
     }
 
     public static void doOnExit(
-        BasicTransform bTr, LocationTransform lTr, TaxonomyTransform tTr, GrscicollTransform gTr) {
+        BasicTransform bTr,
+        LocationTransform lTr,
+        TaxonomyTransform tTr,
+        GrscicollTransform gTr,
+        GbifIdTransform idTr) {
       if (instance == null) {
         synchronized (MUTEX) {
           if (instance == null) {
-            instance = new Shutdown(bTr, lTr, tTr, gTr);
+            instance = new Shutdown(bTr, lTr, tTr, gTr, idTr);
           }
         }
       }

@@ -34,6 +34,7 @@ import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.TermFactory;
+import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.io.avro.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -877,9 +878,9 @@ public class IndexRecordTransform implements Serializable, IndexFields {
                 counter.inc();
               } else {
                 if (aar == null) {
-                  throw new RuntimeException("AAR missing for record ID " + ur.getId());
+                  throw new PipelinesException("AAR missing for record ID " + ur.getId());
                 } else {
-                  throw new RuntimeException(
+                  throw new PipelinesException(
                       "AAR is present, but data resource UID is null for"
                           + " ur.getId():"
                           + ur.getId()
@@ -893,10 +894,10 @@ public class IndexRecordTransform implements Serializable, IndexFields {
               if (!ur.getId().startsWith(REMOVED_PREFIX_MARKER)) {
                 if (ur != null) {
                   log.error("UUID missing for record ID " + ur.getId());
-                  throw new RuntimeException("UUID missing for record ID " + ur.getId());
+                  throw new PipelinesException("UUID missing for record ID " + ur.getId());
                 } else {
                   log.error("UUID missing and ER empty");
-                  throw new RuntimeException("UUID missing and ER empty");
+                  throw new PipelinesException("UUID missing and ER empty");
                 }
               }
             }

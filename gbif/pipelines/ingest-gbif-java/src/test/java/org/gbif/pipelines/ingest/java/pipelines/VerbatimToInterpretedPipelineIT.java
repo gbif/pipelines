@@ -24,7 +24,9 @@ import org.gbif.pipelines.core.io.SyncDataFileWriter;
 import org.gbif.pipelines.ingest.java.transforms.InterpretedAvroWriter;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.GbifIdRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
@@ -152,7 +154,11 @@ public class VerbatimToInterpretedPipelineIT {
       ext.put(Extension.MEASUREMENT_OR_FACT.getRowType(), Collections.singletonList(ext1));
 
       ExtendedRecord extendedRecord =
-          ExtendedRecord.newBuilder().setId(ID).setExtensions(ext).build();
+          ExtendedRecord.newBuilder()
+              .setId(ID)
+              .setCoreTerms(Collections.singletonMap("Key", "Value"))
+              .setExtensions(ext)
+              .build();
       writer.append(extendedRecord);
     }
     Path from =
@@ -171,10 +177,12 @@ public class VerbatimToInterpretedPipelineIT {
 
     String interpretedOutput = String.join("/", outputFile, DATASET_KEY, attempt, "interpreted");
 
-    assertEquals(11, new File(interpretedOutput).listFiles().length);
+    assertEquals(13, new File(interpretedOutput).listFiles().length);
     assertFile(AudubonRecord.class, interpretedOutput + "/audubon");
     assertFile(BasicRecord.class, interpretedOutput + "/basic");
-    assertFile(BasicRecord.class, interpretedOutput + "/basic_invalid");
+    assertFile(ClusteringRecord.class, interpretedOutput + "/clustering");
+    assertFile(GbifIdRecord.class, interpretedOutput + "/identifier");
+    assertFile(GbifIdRecord.class, interpretedOutput + "/identifier_invalid");
     assertFile(GrscicollRecord.class, interpretedOutput + "/grscicoll");
     assertFile(ImageRecord.class, interpretedOutput + "/image");
     assertFile(LocationRecord.class, interpretedOutput + "/location");

@@ -31,6 +31,7 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.common.parsers.date.DateComponentOrdering;
+import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
@@ -297,7 +298,9 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
   }
 
   private void runPostprocessValidation(PipelinesVerbatimMessage message) throws IOException {
-    if (message.isValidator() || config.validatorOnly) {
+    if (message.isValidator()
+        || config.validatorOnly
+        || Boolean.TRUE.equals(message.getValidationResult().isUseExtendedRecordId())) {
       log.info("Skip runPostprocessValidation for validator");
       return;
     }
@@ -319,7 +322,7 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
                     m + Metrics.ATTEMPTED)
                 .orElse(0d);
           } catch (IOException ex) {
-            throw new RuntimeException(ex);
+            throw new PipelinesException(ex);
           }
         };
 

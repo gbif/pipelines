@@ -13,13 +13,14 @@ import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.gbif.dwc.terms.Term;
+import org.gbif.pipelines.common.PipelinesException;
 
 public class ImagePipelineUtils {
 
   public static void validateHeaders(List<String> headers, List<String> requiredHeaders) {
     for (String hdr : requiredHeaders) {
       if (!headers.contains(hdr.toLowerCase(Locale.ROOT))) {
-        throw new RuntimeException("Missing header: " + hdr);
+        throw new PipelinesException("Missing header: " + hdr);
       }
     }
   }

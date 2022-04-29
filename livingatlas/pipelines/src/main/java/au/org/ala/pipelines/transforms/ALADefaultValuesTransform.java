@@ -14,6 +14,7 @@ import org.gbif.api.vocabulary.TagNamespace;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.TermFactory;
 import org.gbif.kvs.KeyValueStore;
+import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.transforms.metadata.DefaultValuesTransform;
@@ -83,7 +84,7 @@ public class ALADefaultValuesTransform
       return tags;
     } catch (Exception e) {
       log.error("Problem retrieving collectory data: " + e.getMessage(), e);
-      throw new RuntimeException(e.getMessage());
+      throw new PipelinesException(e.getMessage());
     }
   }
 

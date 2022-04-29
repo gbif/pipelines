@@ -22,6 +22,7 @@ import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.DatumWriter;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.io.AvroReader;
@@ -137,7 +138,7 @@ public class SpeciesListPipeline {
           .filter(taxonProfile -> taxonProfile != null && taxonProfile.getId() != null)
           .collect(Collectors.toMap(TaxonProfile::getId, taxon -> taxon));
     } catch (Exception e) {
-      throw new RuntimeException(e);
+      throw new PipelinesException(e);
     }
   }
 

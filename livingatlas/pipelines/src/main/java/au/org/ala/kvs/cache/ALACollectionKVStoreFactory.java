@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.cache.KeyValueCache;
 import org.gbif.kvs.hbase.Command;
+import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
 
 /** Key value store factory for Collection lookups */
@@ -47,7 +48,7 @@ public class ALACollectionKVStoreFactory {
             wsClient.close();
           } catch (Exception e) {
             log.error("Unable to close", e);
-            throw new RuntimeException(e);
+            throw new PipelinesException(e);
           }
         };
 

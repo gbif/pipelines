@@ -32,6 +32,7 @@ import org.apache.solr.client.solrj.request.schema.SchemaRequest;
 import org.apache.solr.client.solrj.response.schema.SchemaResponse;
 import org.apache.solr.common.SolrInputDocument;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.io.avro.*;
@@ -187,7 +188,7 @@ public class IndexRecordToSolrPipeline {
           .map(f -> f.get("name").toString())
           .collect(Collectors.toList());
     } catch (Exception e) {
-      throw new RuntimeException("Unable to retrieve schema fields: " + e.getMessage());
+      throw new PipelinesException("Unable to retrieve schema fields: " + e.getMessage());
     }
   }
 
@@ -203,7 +204,7 @@ public class IndexRecordToSolrPipeline {
           .map(f -> f.get("name").toString().replace("*", ""))
           .collect(Collectors.toList());
     } catch (Exception e) {
-      throw new RuntimeException("Unable to retrieve schema fields: " + e.getMessage());
+      throw new PipelinesException("Unable to retrieve schema fields: " + e.getMessage());
     }
   }
 

@@ -26,7 +26,9 @@ import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.GbifIdRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
@@ -45,6 +47,8 @@ import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
+import org.gbif.pipelines.transforms.specific.ClusteringTransform;
+import org.gbif.pipelines.transforms.specific.GbifIdTransform;
 import org.slf4j.MDC;
 
 /**
@@ -121,6 +125,8 @@ public class InterpretedToEsIndexPipeline {
     log.info("Adding step 2: Creating transformations");
     // Core
     BasicTransform basicTransform = BasicTransform.builder().create();
+    GbifIdTransform idTransform = GbifIdTransform.builder().create();
+    ClusteringTransform clusteringTransform = ClusteringTransform.builder().create();
     MetadataTransform metadataTransform = MetadataTransform.builder().create();
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.builder().create();
@@ -137,6 +143,14 @@ public class InterpretedToEsIndexPipeline {
     PCollectionView<MetadataRecord> metadataView =
         p.apply("Read Metadata", metadataTransform.read(pathFn))
             .apply("Convert to view", View.asSingleton());
+
+    PCollection<KV<String, GbifIdRecord>> idCollection =
+        p.apply("Read GBIF ids", idTransform.read(pathFn))
+            .apply("Map GBIF ids to KV", idTransform.toKv());
+
+    PCollection<KV<String, ClusteringRecord>> clusteringCollection =
+        p.apply("Read clustering", clusteringTransform.read(pathFn))
+            .apply("Map clustering to KV", clusteringTransform.toKv());
 
     PCollection<KV<String, ExtendedRecord>> verbatimCollection =
         p.apply("Read Verbatim", verbatimTransform.read(pathFn))
@@ -178,6 +192,8 @@ public class InterpretedToEsIndexPipeline {
     SingleOutput<KV<String, CoGbkResult>, String> occurrenceJsonDoFn =
         OccurrenceJsonTransform.builder()
             .extendedRecordTag(verbatimTransform.getTag())
+            .gbifIdRecordTag(idTransform.getTag())
+            .clusteringRecordTag(clusteringTransform.getTag())
             .basicRecordTag(basicTransform.getTag())
             .temporalRecordTag(temporalTransform.getTag())
             .locationRecordTag(locationTransform.getTag())
@@ -194,6 +210,8 @@ public class InterpretedToEsIndexPipeline {
         KeyedPCollectionTuple
             // Core
             .of(basicTransform.getTag(), basicCollection)
+            .and(idTransform.getTag(), idCollection)
+            .and(clusteringTransform.getTag(), clusteringCollection)
             .and(temporalTransform.getTag(), temporalCollection)
             .and(locationTransform.getTag(), locationCollection)
             .and(taxonomyTransform.getTag(), taxonCollection)

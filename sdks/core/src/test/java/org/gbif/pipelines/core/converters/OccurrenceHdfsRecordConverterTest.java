@@ -33,8 +33,10 @@ import org.gbif.pipelines.core.utils.MediaSerDeser;
 import org.gbif.pipelines.io.avro.AgentIdentifier;
 import org.gbif.pipelines.io.avro.Authorship;
 import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.GbifIdRecord;
 import org.gbif.pipelines.io.avro.IssueRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MediaType;
@@ -167,12 +169,15 @@ public class OccurrenceHdfsRecordConverterTest {
             .setEventDate(EventDate.newBuilder().setGte("2000").setLte("2010").build())
             .build();
 
+    GbifIdRecord gbifIdRecord = GbifIdRecord.newBuilder().setId("1").setGbifId(777L).build();
+
     // When
     OccurrenceHdfsRecord hdfsRecord =
         OccurrenceHdfsRecordConverter.builder()
             .basicRecord(basicRecord)
             .metadataRecord(metadataRecord)
             .taxonRecord(taxonRecord)
+            .gbifIdRecord(gbifIdRecord)
             .temporalRecord(temporalRecord)
             .extendedRecord(extendedRecord)
             .build()
@@ -298,6 +303,41 @@ public class OccurrenceHdfsRecordConverterTest {
   }
 
   @Test
+  public void gbifIdRecordMapperTest() {
+    // State
+    long now = new Date().getTime();
+    GbifIdRecord gbifIdRecord = new GbifIdRecord();
+    gbifIdRecord.setCreated(now);
+    gbifIdRecord.setGbifId(1L);
+
+    // When
+    OccurrenceHdfsRecord hdfsRecord =
+        OccurrenceHdfsRecordConverter.builder().gbifIdRecord(gbifIdRecord).build().convert();
+
+    // Should
+    Assert.assertEquals(Long.valueOf(1L), hdfsRecord.getGbifid());
+  }
+
+  @Test
+  public void clusterinRecordMapperTest() {
+    // State
+    long now = new Date().getTime();
+    ClusteringRecord clusteringRecord = new ClusteringRecord();
+    clusteringRecord.setIsClustered(true);
+    clusteringRecord.setCreated(now);
+
+    // When
+    OccurrenceHdfsRecord hdfsRecord =
+        OccurrenceHdfsRecordConverter.builder()
+            .clusteringRecord(clusteringRecord)
+            .build()
+            .convert();
+
+    // Should
+    Assert.assertEquals(Boolean.TRUE, hdfsRecord.getIsincluster());
+  }
+
+  @Test
   public void basicRecordMapperTest() {
     // State
     long now = new Date().getTime();
@@ -328,14 +368,12 @@ public class OccurrenceHdfsRecordConverterTest {
             .setLineage(Collections.singletonList("BlaBla2"))
             .build());
     basicRecord.setCreated(now);
-    basicRecord.setGbifId(1L);
     basicRecord.setOrganismQuantity(2d);
     basicRecord.setOrganismQuantityType("type");
     basicRecord.setSampleSizeUnit("unit");
     basicRecord.setSampleSizeValue(2d);
     basicRecord.setRelativeOrganismQuantity(2d);
     basicRecord.setLicense(License.UNSPECIFIED.name());
-    basicRecord.setIsClustered(true);
 
     // When
     OccurrenceHdfsRecord hdfsRecord =
@@ -355,7 +393,6 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals(Double.valueOf(2d), hdfsRecord.getSamplesizevalue());
     Assert.assertEquals(Double.valueOf(2d), hdfsRecord.getRelativeorganismquantity());
     Assert.assertNull(hdfsRecord.getLicense());
-    Assert.assertTrue(hdfsRecord.getIsincluster());
     Assert.assertEquals("Tadpole", hdfsRecord.getLifestage().getConcept());
     Assert.assertEquals("Larva", hdfsRecord.getLifestage().getLineage().get(0));
     Assert.assertEquals("Bla", hdfsRecord.getEstablishmentmeans().getConcept());

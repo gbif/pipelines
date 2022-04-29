@@ -22,8 +22,6 @@ import org.gbif.pipelines.core.functions.SerializableConsumer;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.GrscicollInterpreter;
-import org.gbif.pipelines.core.pojo.ErBrContainer;
-import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
@@ -31,7 +29,7 @@ import org.gbif.pipelines.transforms.Transform;
 import org.gbif.rest.client.grscicoll.GrscicollLookupResponse;
 
 @Slf4j
-public class GrscicollTransform extends Transform<ErBrContainer, GrscicollRecord> {
+public class GrscicollTransform extends Transform<ExtendedRecord, GrscicollRecord> {
 
   private final SerializableSupplier<KeyValueStore<GrscicollLookupRequest, GrscicollLookupResponse>>
       kvStoreSupplier;
@@ -65,7 +63,7 @@ public class GrscicollTransform extends Transform<ErBrContainer, GrscicollRecord
   }
 
   @Override
-  public SingleOutput<ErBrContainer, GrscicollRecord> interpret() {
+  public SingleOutput<ExtendedRecord, GrscicollRecord> interpret() {
     return ParDo.of(this).withSideInputs(metadataView);
   }
 
@@ -98,23 +96,18 @@ public class GrscicollTransform extends Transform<ErBrContainer, GrscicollRecord
   }
 
   @Override
-  public Optional<GrscicollRecord> convert(ErBrContainer source) {
+  public Optional<GrscicollRecord> convert(ExtendedRecord source) {
     throw new IllegalArgumentException("Method is not implemented!");
   }
 
   @Override
   @ProcessElement
   public void processElement(ProcessContext c) {
-    ErBrContainer v = c.element();
-
-    ExtendedRecord er = v.getEr();
-    BasicRecord br = v.getBr();
-
-    processElement(er, br, c.sideInput(metadataView)).ifPresent(c::output);
+    ExtendedRecord er = c.element();
+    processElement(er, c.sideInput(metadataView)).ifPresent(c::output);
   }
 
-  public Optional<GrscicollRecord> processElement(
-      ExtendedRecord source, BasicRecord br, MetadataRecord mdr) {
+  public Optional<GrscicollRecord> processElement(ExtendedRecord source, MetadataRecord mdr) {
     if (source == null) {
       return Optional.empty();
     }
@@ -122,7 +115,7 @@ public class GrscicollTransform extends Transform<ErBrContainer, GrscicollRecord
     return Interpretation.from(source)
         .to(GrscicollRecord.newBuilder().setCreated(Instant.now().toEpochMilli()).build())
         .when(er -> !er.getCoreTerms().isEmpty())
-        .via(GrscicollInterpreter.grscicollInterpreter(kvStore, mdr, br))
+        .via(GrscicollInterpreter.grscicollInterpreter(kvStore, mdr))
         .skipWhen(gr -> gr.getId() == null)
         .getOfNullable();
   }

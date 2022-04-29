@@ -7,6 +7,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
+import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.core.utils.FsUtils;
 
 @Slf4j
@@ -45,7 +46,7 @@ public class FileSystemFactory {
         Configuration config = getHdfsConfiguration(hdfsSiteConfig);
         this.hdfsFs = FileSystem.get(URI.create(prefixToUse), config);
       } else {
-        throw new RuntimeException("XML config is provided, but fs name is not found");
+        throw new PipelinesException("XML config is provided, but fs name is not found");
       }
 
     } else {

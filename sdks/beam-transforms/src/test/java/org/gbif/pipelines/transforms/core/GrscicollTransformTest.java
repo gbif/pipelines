@@ -5,30 +5,18 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import lombok.AllArgsConstructor;
-import lombok.NonNull;
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
-import org.apache.beam.sdk.transforms.DoFn;
-import org.apache.beam.sdk.transforms.MapElements;
-import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.View;
-import org.apache.beam.sdk.transforms.join.CoGbkResult;
-import org.apache.beam.sdk.transforms.join.CoGroupByKey;
-import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
-import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
-import org.apache.beam.sdk.values.TupleTag;
-import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.api.model.collections.lookup.Match.MatchType;
 import org.gbif.api.vocabulary.BasisOfRecord;
 import org.gbif.api.vocabulary.Country;
@@ -37,8 +25,6 @@ import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.grscicoll.GrscicollLookupRequest;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
-import org.gbif.pipelines.core.pojo.ErBrContainer;
-import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
@@ -70,36 +56,17 @@ public class GrscicollTransformTest {
           KeyValueStore<GrscicollLookupRequest, GrscicollLookupResponse>>
       KV_STORE = createKvStore();
 
-  @AllArgsConstructor(staticName = "create")
-  private static class ExtractCoGbkResult extends DoFn<KV<String, CoGbkResult>, ErBrContainer>
-      implements Serializable {
-
-    // Core
-    @NonNull private final TupleTag<ExtendedRecord> erTag;
-    @NonNull private final TupleTag<BasicRecord> brTag;
-
-    @ProcessElement
-    public void processElement(ProcessContext c) {
-      CoGbkResult v = c.element().getValue();
-      c.output(ErBrContainer.create(v.getOnly(erTag), v.getOnly(brTag)));
-    }
-  }
-
   @Rule public final transient TestPipeline p = TestPipeline.create();
 
   @Test
   public void whenSpecimenRecordThenRecordsFlag() {
     // State
-    final String[] verbatim = {"1", INSTITUTION_CODE, "", "", COLLECTION_CODE, ""};
-
-    BasicRecord basicRecord =
-        BasicRecord.newBuilder()
-            .setId("1")
-            .setBasisOfRecord(BasisOfRecord.PRESERVED_SPECIMEN.name())
-            .build();
+    final String[] verbatim = {
+      BasisOfRecord.PRESERVED_SPECIMEN.name(), "1", INSTITUTION_CODE, "", "", COLLECTION_CODE, ""
+    };
 
     // When
-    PCollection<GrscicollRecord> recordCollection = transformRecords(basicRecord, verbatim);
+    PCollection<GrscicollRecord> recordCollection = transformRecords(verbatim);
 
     // Should
     PAssert.that(recordCollection)
@@ -120,16 +87,12 @@ public class GrscicollTransformTest {
   @Test
   public void whenNonSpecimenRecordThenRecordsNotFlag() {
     // State
-    final String[] verbatim = {"1", INSTITUTION_CODE, "", "", COLLECTION_CODE, ""};
-
-    BasicRecord basicRecord =
-        BasicRecord.newBuilder()
-            .setId("1")
-            .setBasisOfRecord(BasisOfRecord.OBSERVATION.name())
-            .build();
+    final String[] verbatim = {
+      BasisOfRecord.OBSERVATION.name(), "1", INSTITUTION_CODE, "", "", COLLECTION_CODE, ""
+    };
 
     // When
-    PCollection<GrscicollRecord> recordCollection = transformRecords(basicRecord, verbatim);
+    PCollection<GrscicollRecord> recordCollection = transformRecords(verbatim);
 
     // Should
     PAssert.that(recordCollection)
@@ -150,16 +113,18 @@ public class GrscicollTransformTest {
   @Test
   public void whenInstitutionMatchNoneThenCollectionsSkipped() {
     // State
-    final String[] verbatim = {"1", FAKE_INSTITUTION_CODE, "", "", COLLECTION_CODE, ""};
-
-    BasicRecord basicRecord =
-        BasicRecord.newBuilder()
-            .setId("1")
-            .setBasisOfRecord(BasisOfRecord.PRESERVED_SPECIMEN.name())
-            .build();
+    final String[] verbatim = {
+      BasisOfRecord.PRESERVED_SPECIMEN.name(),
+      "1",
+      FAKE_INSTITUTION_CODE,
+      "",
+      "",
+      COLLECTION_CODE,
+      ""
+    };
 
     // When
-    PCollection<GrscicollRecord> recordCollection = transformRecords(basicRecord, verbatim);
+    PCollection<GrscicollRecord> recordCollection = transformRecords(verbatim);
 
     // Should
     PAssert.that(recordCollection)
@@ -177,8 +142,7 @@ public class GrscicollTransformTest {
     p.run();
   }
 
-  private PCollection<GrscicollRecord> transformRecords(
-      BasicRecord basicRecord, String... verbatimRecords) {
+  private PCollection<GrscicollRecord> transformRecords(String... verbatimRecords) {
 
     final MetadataRecord mdr =
         MetadataRecord.newBuilder()
@@ -193,36 +157,9 @@ public class GrscicollTransformTest {
         p.apply("Create test metadata", Create.of(mdr))
             .apply("Convert into view", View.asSingleton());
 
-    VerbatimTransform verbatimTransform = VerbatimTransform.create();
-    BasicTransform basicTransform = BasicTransform.builder().create();
+    PCollection<ExtendedRecord> extendedRecordsKv = p.apply("er", Create.of(records));
 
-    PCollection<KV<String, ExtendedRecord>> extendedRecordsKv =
-        p.apply("er", Create.of(records))
-            .apply(
-                "er to kv",
-                MapElements.into(new TypeDescriptor<KV<String, ExtendedRecord>>() {})
-                    .via((ExtendedRecord er) -> KV.of(er.getId(), er)));
-
-    PCollection<KV<String, BasicRecord>> basicRecordsKv =
-        p.apply("br", Create.of(basicRecord))
-            .apply(
-                "br to kv",
-                MapElements.into(new TypeDescriptor<KV<String, BasicRecord>>() {})
-                    .via((BasicRecord br) -> KV.of(br.getId(), br)));
-
-    PCollection<ErBrContainer> filteredErBr =
-        KeyedPCollectionTuple
-            // Core
-            .of(verbatimTransform.getTag(), extendedRecordsKv)
-            .and(basicTransform.getTag(), basicRecordsKv)
-            // Apply
-            .apply("Grouping objects", CoGroupByKey.create())
-            .apply(
-                "Extract CoGbkResult",
-                ParDo.of(
-                    new ExtractCoGbkResult(verbatimTransform.getTag(), basicTransform.getTag())));
-
-    return filteredErBr.apply(
+    return extendedRecordsKv.apply(
         "grscicoll transform",
         GrscicollTransform.builder()
             .kvStoreSupplier(KV_STORE)
@@ -236,13 +173,14 @@ public class GrscicollTransformTest {
     return Arrays.stream(records)
         .map(
             x -> {
-              ExtendedRecord record = ExtendedRecord.newBuilder().setId(x[0]).build();
+              ExtendedRecord record = ExtendedRecord.newBuilder().setId(x[1]).build();
               Map<String, String> terms = record.getCoreTerms();
-              terms.put(DwcTerm.institutionCode.qualifiedName(), x[1]);
-              terms.put(DwcTerm.institutionID.qualifiedName(), x[2]);
-              terms.put(DwcTerm.ownerInstitutionCode.qualifiedName(), x[3]);
-              terms.put(DwcTerm.collectionCode.qualifiedName(), x[4]);
-              terms.put(DwcTerm.collectionID.qualifiedName(), x[5]);
+              terms.put(DwcTerm.basisOfRecord.qualifiedName(), x[0]);
+              terms.put(DwcTerm.institutionCode.qualifiedName(), x[2]);
+              terms.put(DwcTerm.institutionID.qualifiedName(), x[3]);
+              terms.put(DwcTerm.ownerInstitutionCode.qualifiedName(), x[4]);
+              terms.put(DwcTerm.collectionCode.qualifiedName(), x[5]);
+              terms.put(DwcTerm.collectionID.qualifiedName(), x[6]);
               terms.put(
                   GbifTerm.publishingCountry.qualifiedName(),
                   metadataRecord.getDatasetPublishingCountry());

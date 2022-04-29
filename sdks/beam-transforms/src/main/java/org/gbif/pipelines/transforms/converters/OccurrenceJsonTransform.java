@@ -16,7 +16,17 @@ import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
 import org.gbif.pipelines.core.converters.MultimediaConverter;
 import org.gbif.pipelines.core.converters.OccurrenceJsonConverter;
-import org.gbif.pipelines.io.avro.*;
+import org.gbif.pipelines.io.avro.AudubonRecord;
+import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.ClusteringRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.GbifIdRecord;
+import org.gbif.pipelines.io.avro.ImageRecord;
+import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.io.avro.MultimediaRecord;
+import org.gbif.pipelines.io.avro.TaxonRecord;
+import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 
 /**
@@ -76,10 +86,12 @@ import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 @Builder
 public class OccurrenceJsonTransform implements Serializable {
 
-  private static final long serialVersionUID = 1279313931024806170L;
+  private static final long serialVersionUID = 1279313931024806171L;
 
   // Core
   @NonNull private final TupleTag<ExtendedRecord> extendedRecordTag;
+  @NonNull private final TupleTag<GbifIdRecord> gbifIdRecordTag;
+  @NonNull private final TupleTag<ClusteringRecord> clusteringRecordTag;
   @NonNull private final TupleTag<BasicRecord> basicRecordTag;
   @NonNull private final TupleTag<TemporalRecord> temporalRecordTag;
   @NonNull private final TupleTag<LocationRecord> locationRecordTag;
@@ -107,6 +119,9 @@ public class OccurrenceJsonTransform implements Serializable {
 
             // Core
             MetadataRecord mdr = c.sideInput(metadataView);
+            GbifIdRecord id = v.getOnly(gbifIdRecordTag);
+            ClusteringRecord cr =
+                v.getOnly(clusteringRecordTag, ClusteringRecord.newBuilder().setId(k).build());
             ExtendedRecord er =
                 v.getOnly(extendedRecordTag, ExtendedRecord.newBuilder().setId(k).build());
             BasicRecord br = v.getOnly(basicRecordTag, BasicRecord.newBuilder().setId(k).build());
@@ -129,6 +144,8 @@ public class OccurrenceJsonTransform implements Serializable {
             String json =
                 OccurrenceJsonConverter.builder()
                     .metadata(mdr)
+                    .gbifId(id)
+                    .clustering(cr)
                     .basic(br)
                     .temporal(tr)
                     .location(lr)

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Optional;
 import lombok.SneakyThrows;
 import org.apache.hadoop.hbase.client.Connection;
+import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.core.config.model.ClusteringRelationshipConfig;
 import org.gbif.pipelines.core.config.model.KeygenConfig;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
@@ -61,7 +62,7 @@ public class ClusteringServiceFactory {
       try {
         c = HbaseConnection.create(zk);
       } catch (IOException ex) {
-        throw new RuntimeException(ex);
+        throw new PipelinesException(ex);
       }
 
       return new ClusteringServiceFactory(c, config.getClusteringRelationshipConfig()).service;

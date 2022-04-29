@@ -23,6 +23,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
+import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.jetbrains.annotations.NotNull;
@@ -99,7 +100,7 @@ public class LayerCrawler {
       log.error(
           "LatLng export unavailable. Has LatLng export pipeline been ran ? Not available at path {}",
           latLngExportPath);
-      throw new RuntimeException(
+      throw new PipelinesException(
           "LatLng export unavailable. Has LatLng export pipeline been ran ? Not available:"
               + latLngExportPath);
     }
@@ -270,7 +271,7 @@ public class LayerCrawler {
 
       if (state.equals(ERROR_STATUS)) {
         log.error("Unable to download batch ID {}", batchId);
-        throw new RuntimeException(
+        throw new PipelinesException(
             "Unable to complete sampling for dataset. Check the status of sampling service for more details");
       }
     }

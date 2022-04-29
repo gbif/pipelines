@@ -11,7 +11,9 @@ import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
 import org.gbif.pipelines.core.converters.MultimediaConverter;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.GbifIdRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
@@ -28,6 +30,8 @@ public class OccurrenceHdfsRecordConverter {
 
   @NonNull private final MetadataRecord metadata;
   @NonNull private final Map<String, ExtendedRecord> verbatimMap;
+  @NonNull private final Map<String, ClusteringRecord> clusteringMap;
+  @NonNull private final Map<String, BasicRecord> basicMap;
   @NonNull private final Map<String, TemporalRecord> temporalMap;
   @NonNull private final Map<String, LocationRecord> locationMap;
   @NonNull private final Map<String, TaxonRecord> taxonMap;
@@ -37,11 +41,14 @@ public class OccurrenceHdfsRecordConverter {
   @NonNull private final Map<String, AudubonRecord> audubonMap;
 
   /** Join all records, convert into OccurrenceHdfsRecord and save as an avro file */
-  public Function<BasicRecord, Optional<OccurrenceHdfsRecord>> getFn() {
-    return br -> {
-      String k = br.getId();
+  public Function<GbifIdRecord, Optional<OccurrenceHdfsRecord>> getFn() {
+    return id -> {
+      String k = id.getId();
       // Core
       ExtendedRecord er = verbatimMap.getOrDefault(k, ExtendedRecord.newBuilder().setId(k).build());
+      BasicRecord br = basicMap.getOrDefault(k, BasicRecord.newBuilder().setId(k).build());
+      ClusteringRecord cr =
+          clusteringMap.getOrDefault(k, ClusteringRecord.newBuilder().setId(k).build());
       TemporalRecord tr = temporalMap.getOrDefault(k, TemporalRecord.newBuilder().setId(k).build());
       LocationRecord lr = locationMap.getOrDefault(k, LocationRecord.newBuilder().setId(k).build());
       TaxonRecord txr = taxonMap.getOrDefault(k, TaxonRecord.newBuilder().setId(k).build());
@@ -59,7 +66,9 @@ public class OccurrenceHdfsRecordConverter {
 
       OccurrenceHdfsRecord hdfsRecord =
           org.gbif.pipelines.core.converters.OccurrenceHdfsRecordConverter.builder()
+              .gbifIdRecord(id)
               .basicRecord(br)
+              .clusteringRecord(cr)
               .metadataRecord(metadata)
               .temporalRecord(tr)
               .locationRecord(lr)

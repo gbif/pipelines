@@ -22,10 +22,12 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
 import org.gbif.pipelines.io.avro.AgentIdentifier;
 import org.gbif.pipelines.io.avro.Authorship;
 import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.Diagnostic;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.GadmFeatures;
+import org.gbif.pipelines.io.avro.GbifIdRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MachineTag;
 import org.gbif.pipelines.io.avro.MediaType;
@@ -114,10 +116,13 @@ public class OccurrenceJsonConverterTest {
                     Collections.singletonList(Collections.singletonMap("k", "v"))))
             .build();
 
+    GbifIdRecord id = GbifIdRecord.newBuilder().setId("777").setGbifId(111L).build();
+
+    ClusteringRecord cr = ClusteringRecord.newBuilder().setId("777").setIsClustered(true).build();
+
     BasicRecord br =
         BasicRecord.newBuilder()
             .setId("777")
-            .setGbifId(111L)
             .setBasisOfRecord("setBasisOfRecord")
             .setOrganismQuantity(2d)
             .setOrganismQuantityType("OrganismQuantityType")
@@ -150,7 +155,6 @@ public class OccurrenceJsonConverterTest {
                     .setConcept("bla4")
                     .setLineage(Collections.singletonList("bla4_1"))
                     .build())
-            .setIsClustered(true)
             .setRecordedByIds(
                 Collections.singletonList(
                     AgentIdentifier.newBuilder()
@@ -392,6 +396,8 @@ public class OccurrenceJsonConverterTest {
     String json =
         OccurrenceJsonConverter.builder()
             .basic(br)
+            .gbifId(id)
+            .clustering(cr)
             .metadata(mr)
             .verbatim(er)
             .temporal(tmr)
@@ -557,25 +563,22 @@ public class OccurrenceJsonConverterTest {
   public void converterEmptyRecordsTest() throws Exception {
     // State
     MetadataRecord mr = MetadataRecord.newBuilder().setLicense("setLicense").setId("777").build();
-
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("777").build();
-
-    BasicRecord br = BasicRecord.newBuilder().setId("777").setGbifId(1L).build();
-
+    ClusteringRecord cr = ClusteringRecord.newBuilder().setId("777").build();
+    GbifIdRecord id = GbifIdRecord.newBuilder().setId("777").setGbifId(1L).build();
+    BasicRecord br = BasicRecord.newBuilder().setId("777").build();
     TemporalRecord tmr = TemporalRecord.newBuilder().setId("777").build();
-
     LocationRecord lr = LocationRecord.newBuilder().setId("777").build();
-
     TaxonRecord tr = TaxonRecord.newBuilder().setId("777").build();
-
     GrscicollRecord gr = GrscicollRecord.newBuilder().setId("777").build();
-
     MultimediaRecord mmr = MultimediaRecord.newBuilder().setId("777").build();
 
     // When
     String json =
         OccurrenceJsonConverter.builder()
             .basic(br)
+            .gbifId(id)
+            .clustering(cr)
             .metadata(mr)
             .verbatim(er)
             .temporal(tmr)

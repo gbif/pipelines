@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import lombok.SneakyThrows;
 import one.util.streamex.EntryStream;
+import org.gbif.pipelines.common.PipelinesException;
 import org.jetbrains.annotations.NotNull;
 import org.yaml.snakeyaml.Yaml;
 
@@ -32,7 +33,7 @@ public class CombinedYamlConfiguration {
     // Look for a config arg to find the yaml file paths that can be comma separated
     String config = this.mainArgs.get("config");
     if (config == null) {
-      throw new RuntimeException(
+      throw new PipelinesException(
           "The --config=\"some-config.yml,some-other.yml\" argument is missing");
     }
     String[] yamlConfigPaths = config.split(",");

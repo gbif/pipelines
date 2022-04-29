@@ -8,7 +8,9 @@ import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.GbifIdRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
@@ -26,6 +28,8 @@ import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
 public class OccurrenceJsonConverter {
 
   private final MetadataRecord metadata;
+  private final GbifIdRecord gbifId;
+  private final ClusteringRecord clustering;
   private final BasicRecord basic;
   private final TemporalRecord temporal;
   private final LocationRecord location;
@@ -42,6 +46,8 @@ public class OccurrenceJsonConverter {
     mapIssues(builder);
 
     mapMetadataRecord(builder);
+    mapGbifIdRecord(builder);
+    mapClusteringRecord(builder);
     mapBasicRecord(builder);
     mapTemporalRecord(builder);
     mapLocationRecord(builder);
@@ -77,11 +83,18 @@ public class OccurrenceJsonConverter {
     JsonConverter.convertToDate(metadata.getLastCrawled()).ifPresent(builder::setLastCrawled);
   }
 
+  private void mapGbifIdRecord(OccurrenceJsonRecord.Builder builder) {
+    builder.setGbifId(gbifId.getGbifId());
+  }
+
+  private void mapClusteringRecord(OccurrenceJsonRecord.Builder builder) {
+    builder.setIsClustered(clustering.getIsClustered());
+  }
+
   private void mapBasicRecord(OccurrenceJsonRecord.Builder builder) {
 
     // Simple
     builder
-        .setGbifId(basic.getGbifId())
         .setBasisOfRecord(basic.getBasisOfRecord())
         .setSex(basic.getSex())
         .setIndividualCount(basic.getIndividualCount())
@@ -96,7 +109,6 @@ public class OccurrenceJsonConverter {
         .setIdentifiedBy(basic.getIdentifiedBy())
         .setRecordedBy(basic.getRecordedBy())
         .setOccurrenceStatus(basic.getOccurrenceStatus())
-        .setIsClustered(basic.getIsClustered())
         .setDatasetID(basic.getDatasetID())
         .setDatasetName(basic.getDatasetName())
         .setOtherCatalogNumbers(basic.getOtherCatalogNumbers())
@@ -308,14 +320,15 @@ public class OccurrenceJsonConverter {
 
   private void mapIssues(OccurrenceJsonRecord.Builder builder) {
     JsonConverter.mapIssues(
-        Arrays.asList(metadata, basic, temporal, location, taxon, grscicoll, multimedia),
+        Arrays.asList(
+            metadata, gbifId, clustering, basic, temporal, location, taxon, grscicoll, multimedia),
         builder::setIssues,
         builder::setNotIssues);
   }
 
   private void mapCreated(OccurrenceJsonRecord.Builder builder) {
     JsonConverter.getMaxCreationDate(
-            metadata, basic, temporal, location, taxon, grscicoll, multimedia)
+            metadata, gbifId, clustering, basic, temporal, location, taxon, grscicoll, multimedia)
         .ifPresent(builder::setCreated);
   }
 }

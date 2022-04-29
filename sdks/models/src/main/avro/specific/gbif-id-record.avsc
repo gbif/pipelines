@@ -1,0 +1,15 @@
+/**
+ * Represents the file with GBIF identifiers
+ */
+{
+  "name": "GbifIdRecord",
+  "namespace": "org.gbif.pipelines.io.avro",
+  "type": "record",
+  "doc": "GBIF internal identifiers",
+  "fields": [
+    {"name": "id", "type": "string", "doc": "Pipelines identifier"},
+    {"name": "created", "type": ["null", "long"], "default" : null, "doc":"The timestamp the record was created"},
+    {"name": "gbifId", "type": ["null", "long"], "default" : null, "doc": "GBIF internal identifier"},
+    {"name": "issues", "type": "IssueRecord", "default":{}}
+  ]
+}

@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.directory.api.util.Strings;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.KeyValueStore;
+import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.io.avro.ALAAttributionRecord;
 import org.gbif.pipelines.io.avro.ALAMetadataRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -89,19 +90,17 @@ public class ALAAttributionInterpreter {
           }
 
         } else {
-          throw new RuntimeException(
+          throw new PipelinesException(
               "Unable to retrieve connection parameters for dataset: " + datasetId);
         }
       } else {
         if (dataResourceKvStore == null) {
-          throw new RuntimeException(
+          throw new PipelinesException(
               "Unable to retrieve connection parameters for dataset: "
                   + datasetId
                   + ", dataResourceKvStore is NULL");
         }
-        if (datasetId == null) {
-          throw new RuntimeException("Unable to retrieve connection parameters. datasetId is NULL");
-        }
+        throw new PipelinesException("Unable to retrieve connection parameters. datasetId is NULL");
       }
     };
   }

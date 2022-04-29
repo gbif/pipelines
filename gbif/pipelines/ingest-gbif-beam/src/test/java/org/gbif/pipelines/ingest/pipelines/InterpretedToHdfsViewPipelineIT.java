@@ -20,7 +20,9 @@ import org.gbif.pipelines.core.io.SyncDataFileWriter;
 import org.gbif.pipelines.ingest.pipelines.utils.InterpretedAvroWriter;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.GbifIdRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
@@ -42,6 +44,8 @@ import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
+import org.gbif.pipelines.transforms.specific.ClusteringTransform;
+import org.gbif.pipelines.transforms.specific.GbifIdTransform;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -103,10 +107,22 @@ public class InterpretedToHdfsViewPipelineIT {
           ExtendedRecord.newBuilder().setId(ID).setExtensions(ext).build();
       writer.append(extendedRecord);
     }
+    try (SyncDataFileWriter<GbifIdRecord> writer =
+        InterpretedAvroWriter.createAvroWriter(
+            optionsWriter, GbifIdTransform.builder().create(), postfix)) {
+      GbifIdRecord gbifIdRecord = GbifIdRecord.newBuilder().setId(ID).setGbifId(1L).build();
+      writer.append(gbifIdRecord);
+    }
+    try (SyncDataFileWriter<ClusteringRecord> writer =
+        InterpretedAvroWriter.createAvroWriter(
+            optionsWriter, ClusteringTransform.builder().create(), postfix)) {
+      ClusteringRecord clusteringRecord = ClusteringRecord.newBuilder().setId(ID).build();
+      writer.append(clusteringRecord);
+    }
     try (SyncDataFileWriter<BasicRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
             optionsWriter, BasicTransform.builder().create(), postfix)) {
-      BasicRecord basicRecord = BasicRecord.newBuilder().setId(ID).setGbifId(1L).build();
+      BasicRecord basicRecord = BasicRecord.newBuilder().setId(ID).build();
       writer.append(basicRecord);
     }
     try (SyncDataFileWriter<MetadataRecord> writer =
@@ -231,10 +247,22 @@ public class InterpretedToHdfsViewPipelineIT {
           ExtendedRecord.newBuilder().setId(ID).setExtensions(ext).build();
       writer.append(extendedRecord);
     }
+    try (SyncDataFileWriter<GbifIdRecord> writer =
+        InterpretedAvroWriter.createAvroWriter(
+            optionsWriter, GbifIdTransform.builder().create(), postfix)) {
+      GbifIdRecord gbifIdRecord = GbifIdRecord.newBuilder().setId(ID).setGbifId(1L).build();
+      writer.append(gbifIdRecord);
+    }
+    try (SyncDataFileWriter<ClusteringRecord> writer =
+        InterpretedAvroWriter.createAvroWriter(
+            optionsWriter, ClusteringTransform.builder().create(), postfix)) {
+      ClusteringRecord clusteringRecord = ClusteringRecord.newBuilder().setId(ID).build();
+      writer.append(clusteringRecord);
+    }
     try (SyncDataFileWriter<BasicRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
             optionsWriter, BasicTransform.builder().create(), postfix)) {
-      BasicRecord basicRecord = BasicRecord.newBuilder().setId(ID).setGbifId(1L).build();
+      BasicRecord basicRecord = BasicRecord.newBuilder().setId(ID).build();
       writer.append(basicRecord);
     }
     try (SyncDataFileWriter<MetadataRecord> writer =
