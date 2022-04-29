@@ -1,5 +1,7 @@
 package org.gbif.pipelines.core.interpreters.specific;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Identifier.GBIF_ID_ABSENT;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Identifier.GBIF_ID_INVALID;
 import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
 
@@ -23,8 +25,6 @@ import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class GbifIdInterpreter {
-
-  public static final String GBIF_ID_INVALID = "GBIF_ID_INVALID";
 
   /** Copies GBIF id from ExtendedRecord id or generates/gets existing GBIF id */
   public static BiConsumer<ExtendedRecord, GbifIdRecord> interpretGbifId(
@@ -52,6 +52,8 @@ public class GbifIdInterpreter {
               er, keygenService, isTripletValid, isOccurrenceIdValid, generateIdIfAbsent);
       if (gbifId.isPresent()) {
         gr.setGbifId(gbifId.get());
+      } else if (!generateIdIfAbsent) {
+        addIssue(gr, GBIF_ID_ABSENT);
       } else {
         addIssue(gr, GBIF_ID_INVALID);
       }

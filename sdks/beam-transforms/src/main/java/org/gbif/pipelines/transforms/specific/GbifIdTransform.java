@@ -1,6 +1,7 @@
 package org.gbif.pipelines.transforms.specific;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.GBIF_ID_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Identifier.GBIF_ID_INVALID;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.IDENTIFIER;
 
 import java.time.Instant;
@@ -66,9 +67,7 @@ public class GbifIdTransform extends Transform<ExtendedRecord, GbifIdRecord> {
         .via(
             (GbifIdRecord gr) -> {
               String key =
-                  Optional.ofNullable(gr.getGbifId())
-                      .map(Object::toString)
-                      .orElse(GbifIdInterpreter.GBIF_ID_INVALID);
+                  Optional.ofNullable(gr.getGbifId()).map(Object::toString).orElse(GBIF_ID_INVALID);
               return KV.of(key, gr);
             });
   }
