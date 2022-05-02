@@ -50,7 +50,8 @@ public class VerbatimToIdentifierPipeline {
     Integer attempt = options.getAttempt();
     Set<String> types = options.getInterpretationTypes();
     String targetPath = options.getTargetPath();
-    HdfsConfigs hdfsConfigs = HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig());
+    HdfsConfigs hdfsConfigs =
+        HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig());
 
     PipelinesConfig config =
         FsUtils.readConfigFile(hdfsConfigs, options.getProperties(), PipelinesConfig.class);

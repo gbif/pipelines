@@ -135,7 +135,8 @@ public class InterpretedToHdfsViewPipeline {
       InterpretationPipelineOptions options,
       Function<InterpretationPipelineOptions, Pipeline> pipelinesFn) {
 
-    HdfsConfigs hdfsConfigs = HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig());
+    HdfsConfigs hdfsConfigs =
+        HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig());
     String datasetId = options.getDatasetId();
     Integer attempt = options.getAttempt();
     Integer numberOfShards = options.getNumberOfShards();
@@ -153,7 +154,8 @@ public class InterpretedToHdfsViewPipeline {
     Set<String> deleteTypes =
         getAllTables().stream().map(RecordType::name).collect(Collectors.toSet());
     // Deletes the target path if it exists
-    FsUtils.deleteInterpretIfExist(hdfsConfigs, options.getInputPath(), datasetId, attempt, deleteTypes);
+    FsUtils.deleteInterpretIfExist(
+        hdfsConfigs, options.getInputPath(), datasetId, attempt, deleteTypes);
 
     log.info("Adding step 1: Options");
     UnaryOperator<String> interpretPathFn =

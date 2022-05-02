@@ -253,7 +253,8 @@ public class InterpretedToEsIndexPipeline {
     MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
     String metadataPath =
         PathBuilder.buildDatasetAttemptPath(options, options.getMetaFileName(), false);
-    FsUtils.setOwner(HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()),
+    FsUtils.setOwner(
+        HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()),
         metadataPath,
         "crap",
         "supergroup");
