@@ -12,7 +12,6 @@ import java.util.Map;
 import java.util.TreeMap;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
@@ -73,10 +72,9 @@ public class UniqueGbifIdTransform extends PTransform<PCollection<GbifIdRecord>,
     // Filter duplicate occurrenceIds, all groups where value size != 1
     return groupedCollection.apply(
         "Filtering duplicates",
-        ParDo.of(Filter.create()).withOutputTags(tag, TupleTagList.of(invalidTag)));
+        ParDo.of(new Filter()).withOutputTags(tag, TupleTagList.of(invalidTag)));
   }
 
-  @NoArgsConstructor(staticName = "create")
   private class Filter extends DoFn<KV<String, Iterable<GbifIdRecord>>, GbifIdRecord> {
 
     private final Counter uniqueCounter =

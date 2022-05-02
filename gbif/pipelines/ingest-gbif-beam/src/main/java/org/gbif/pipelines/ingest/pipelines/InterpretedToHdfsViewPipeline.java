@@ -28,6 +28,7 @@ import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.ingest.utils.HdfsViewAvroUtils;
 import org.gbif.pipelines.ingest.utils.SharedLockUtils;
@@ -134,8 +135,7 @@ public class InterpretedToHdfsViewPipeline {
       InterpretationPipelineOptions options,
       Function<InterpretationPipelineOptions, Pipeline> pipelinesFn) {
 
-    String hdfsSiteConfig = options.getHdfsSiteConfig();
-    String coreSiteConfig = options.getCoreSiteConfig();
+    HdfsConfigs hdfsConfigs = HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig());
     String datasetId = options.getDatasetId();
     Integer attempt = options.getAttempt();
     Integer numberOfShards = options.getNumberOfShards();
@@ -153,8 +153,7 @@ public class InterpretedToHdfsViewPipeline {
     Set<String> deleteTypes =
         getAllTables().stream().map(RecordType::name).collect(Collectors.toSet());
     // Deletes the target path if it exists
-    FsUtils.deleteInterpretIfExist(
-        hdfsSiteConfig, coreSiteConfig, options.getInputPath(), datasetId, attempt, deleteTypes);
+    FsUtils.deleteInterpretIfExist(hdfsConfigs, options.getInputPath(), datasetId, attempt, deleteTypes);
 
     log.info("Adding step 1: Options");
     UnaryOperator<String> interpretPathFn =
@@ -461,7 +460,7 @@ public class InterpretedToHdfsViewPipeline {
     MetricsHandler.saveCountersToInputPathFile(options, result.metrics());
     String metadataPath =
         PathBuilder.buildDatasetAttemptPath(options, options.getMetaFileName(), true);
-    FsUtils.setOwner(hdfsSiteConfig, coreSiteConfig, metadataPath, "crap", "supergroup");
+    FsUtils.setOwner(hdfsConfigs, metadataPath, "crap", "supergroup");
 
     log.info("Pipeline has been finished");
   }

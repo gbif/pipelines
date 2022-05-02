@@ -19,6 +19,7 @@ import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.factory.KeygenServiceFactory;
 import org.gbif.pipelines.transforms.common.GbifIdTupleTransform;
@@ -49,15 +50,12 @@ public class VerbatimToIdentifierPipeline {
     Integer attempt = options.getAttempt();
     Set<String> types = options.getInterpretationTypes();
     String targetPath = options.getTargetPath();
-    String hdfsSiteConfig = options.getHdfsSiteConfig();
-    String coreSiteConfig = options.getCoreSiteConfig();
+    HdfsConfigs hdfsConfigs = HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig());
 
     PipelinesConfig config =
-        FsUtils.readConfigFile(
-            hdfsSiteConfig, coreSiteConfig, options.getProperties(), PipelinesConfig.class);
+        FsUtils.readConfigFile(hdfsConfigs, options.getProperties(), PipelinesConfig.class);
 
-    FsUtils.deleteInterpretIfExist(
-        hdfsSiteConfig, coreSiteConfig, targetPath, datasetId, attempt, types);
+    FsUtils.deleteInterpretIfExist(hdfsConfigs, targetPath, datasetId, attempt, types);
 
     MDC.put("datasetKey", datasetId);
     MDC.put("attempt", attempt.toString());
@@ -102,7 +100,7 @@ public class VerbatimToIdentifierPipeline {
         .get(tupleTransform.getAbsentTag())
         .apply(
             "Write absent GBIF ids to avro",
-            idTransform.write(pathFn.apply(idTransform.getBaseName() + "_absent")));
+            idTransform.write(pathFn.apply(idTransform.getAbsentName())));
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();
@@ -111,18 +109,18 @@ public class VerbatimToIdentifierPipeline {
     log.info("Save metrics into the file and set files owner");
     String metadataPath =
         PathBuilder.buildDatasetAttemptPath(options, options.getMetaFileName(), false);
-    if (!FsUtils.fileExists(hdfsSiteConfig, coreSiteConfig, metadataPath)) {
+    if (!FsUtils.fileExists(hdfsConfigs, metadataPath)) {
       MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
-      FsUtils.setOwner(hdfsSiteConfig, coreSiteConfig, metadataPath, "crap", "supergroup");
+      FsUtils.setOwner(hdfsConfigs, metadataPath, "crap", "supergroup");
     }
 
     log.info("Deleting beam temporal folders");
     String tempPath = String.join("/", targetPath, datasetId, attempt.toString());
-    FsUtils.deleteDirectoryByPrefix(hdfsSiteConfig, coreSiteConfig, tempPath, ".temp-beam");
+    FsUtils.deleteDirectoryByPrefix(hdfsConfigs, tempPath, ".temp-beam");
 
     log.info("Set interpreted files permissions");
     String interpretedPath = PathBuilder.buildDatasetAttemptPath(options, DIRECTORY_NAME, false);
-    FsUtils.setOwner(hdfsSiteConfig, coreSiteConfig, interpretedPath, "crap", "supergroup");
+    FsUtils.setOwner(hdfsConfigs, interpretedPath, "crap", "supergroup");
 
     log.info("Pipeline has been finished");
   }

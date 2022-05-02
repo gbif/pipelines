@@ -2,9 +2,11 @@ package org.gbif.pipelines.ingest.pipelines;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.DIRECTORY_NAME;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.IDENTIFIER;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -15,11 +17,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.transforms.Create;
+import org.apache.beam.sdk.transforms.Flatten;
 import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.transforms.join.CoGroupByKey;
 import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.PCollectionList;
 import org.apache.beam.sdk.values.PCollectionTuple;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.gbif.api.model.pipelines.StepType;
@@ -35,6 +39,7 @@ import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.core.ws.metadata.MetadataServiceClient;
 import org.gbif.pipelines.factory.ClusteringServiceFactory;
@@ -67,6 +72,7 @@ import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.DefaultValuesTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.gbif.pipelines.transforms.specific.ClusteringTransform;
+import org.gbif.pipelines.transforms.specific.GbifIdAbsentTransform;
 import org.gbif.pipelines.transforms.specific.GbifIdTransform;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.gbif.rest.client.grscicoll.GrscicollLookupResponse;
@@ -131,30 +137,32 @@ public class VerbatimToInterpretedPipeline {
     Integer attempt = options.getAttempt();
     Set<String> types = options.getInterpretationTypes();
     String targetPath = options.getTargetPath();
-    String hdfsSiteConfig = options.getHdfsSiteConfig();
-    String coreSiteConfig = options.getCoreSiteConfig();
+    HdfsConfigs hdfsConfigs =
+        HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig());
+
+    MDC.put("datasetKey", datasetId);
+    MDC.put("attempt", attempt.toString());
+    MDC.put("step", StepType.VERBATIM_TO_INTERPRETED.name());
 
     PipelinesConfig config =
-        FsUtils.readConfigFile(
-            hdfsSiteConfig, coreSiteConfig, options.getProperties(), PipelinesConfig.class);
+        FsUtils.readConfigFile(hdfsConfigs, options.getProperties(), PipelinesConfig.class);
 
     List<DateComponentOrdering> dateComponentOrdering =
         options.getDefaultDateFormat() == null
             ? config.getDefaultDateFormat()
             : options.getDefaultDateFormat();
 
-    FsUtils.deleteInterpretIfExist(
-        hdfsSiteConfig, coreSiteConfig, targetPath, datasetId, attempt, types);
+    // Remove directories with avro files for expected interpretation, except IDENTIFIER
+    HashSet<String> deleteTypes = new HashSet<>(types);
+    deleteTypes.remove(IDENTIFIER.name());
+    FsUtils.deleteInterpretIfExist(hdfsConfigs, targetPath, datasetId, attempt, deleteTypes);
 
-    MDC.put("datasetKey", datasetId);
-    MDC.put("attempt", attempt.toString());
-    MDC.put("step", StepType.VERBATIM_TO_INTERPRETED.name());
-
+    // Path function for writing avro files
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
-
     UnaryOperator<String> pathFn =
         t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, id);
 
+    // Path function for reading avro files
     UnaryOperator<String> interpretedPathFn =
         t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
 
@@ -191,21 +199,22 @@ public class VerbatimToInterpretedPipeline {
             .endpointType(options.getEndPointType())
             .create();
 
-    // Core
-    GbifIdTransform idTransform =
-        GbifIdTransform.builder()
+    // Special/Specific
+    GbifIdAbsentTransform idAbsentTransform =
+        GbifIdAbsentTransform.builder()
             .isTripletValid(options.isTripletValid())
             .isOccurrenceIdValid(options.isOccurrenceIdValid())
-            .useExtendedRecordId(options.isUseExtendedRecordId())
-            .generateIdIfAbsent(options.getGenerateIds())
             .keygenServiceSupplier(keyServiceSupplier)
             .create();
+
+    GbifIdTransform idTransform = GbifIdTransform.builder().create();
 
     ClusteringTransform clusteringTransform =
         ClusteringTransform.builder()
             .clusteringServiceSupplier(ClusteringServiceFactory.createSupplier(config))
             .create();
 
+    // Core
     BasicTransform basicTransform =
         BasicTransform.builder()
             .useDynamicPropertiesInterpretation(true)
@@ -213,8 +222,7 @@ public class VerbatimToInterpretedPipeline {
             .vocabularyServiceSupplier(
                 FileVocabularyFactory.builder()
                     .config(config)
-                    .hdfsSiteConfig(hdfsSiteConfig)
-                    .coreSiteConfig(coreSiteConfig)
+                    .hdfsConfigs(hdfsConfigs)
                     .build()
                     .getInstanceSupplier())
             .create();
@@ -289,16 +297,31 @@ public class VerbatimToInterpretedPipeline {
     PCollection<KV<String, ExtendedRecord>> uniqueRecordsKv =
         uniqueRecords.apply("Map verbatim to KV", verbatimTransform.toKv());
 
-    // Process GBIF IDs record
-    PCollection<GbifIdRecord> uniqueGbifId;
-    PCollection<KV<String, GbifIdRecord>> uniqueGbifIdRecordsKv;
+    // Read all dry-run GBIF IDs records
+    PCollection<GbifIdRecord> uniqueGbifId =
+        metadataTransform.metadataOnly(types)
+            ? idAbsentTransform.emptyCollection(p)
+            : p.apply("Read GBIF ids records", idAbsentTransform.read(interpretedPathFn));
+
+    // Read and interpret absent/new GBIF IDs records
     if (useGbifIdRecordWriteIO(types)) {
+      PCollection<GbifIdRecord> absentGbifId =
+          p.apply(
+                  "Read absent GBIF ids records",
+                  idAbsentTransform.read(interpretedPathFn.apply(idTransform.getAbsentName())))
+              .apply("Interpret absent GBIF ids", idAbsentTransform.interpret());
+
+      // Merge GBIF ids collections
       PCollectionTuple idCollection =
-          uniqueRecords
-              .apply("Interpret GBIF ids", idTransform.interpret())
+          PCollectionList.of(uniqueGbifId)
+              .and(absentGbifId)
+              .apply(Flatten.pCollections())
               .apply("Get invalid GBIF ids", uniqueIdTransform);
 
       uniqueGbifId = idCollection.get(uniqueIdTransform.getTag());
+
+      FsUtils.deleteInterpretIfExist(
+          hdfsConfigs, targetPath, datasetId, attempt, idTransform.getAllNames());
 
       // Interpret and write all record types
       idCollection
@@ -308,20 +331,25 @@ public class VerbatimToInterpretedPipeline {
       idCollection
           .get(uniqueIdTransform.getInvalidTag())
           .apply("Write invalid GBIF ids to avro", idTransform.writeInvalid(pathFn));
-    } else {
-      uniqueGbifId = p.apply("Read GBIF ids records", idTransform.read(interpretedPathFn));
+
+      idAbsentTransform
+          .emptyCollection(p)
+          .apply(
+              "Write empty absent GBIF ids to avro",
+              idTransform.write(pathFn.apply(idTransform.getAbsentName())));
     }
-    uniqueGbifIdRecordsKv = uniqueGbifId.apply("Map to GBIF ids record KV", idTransform.toKv());
+    PCollection<KV<String, GbifIdRecord>> uniqueGbifIdRecordsKv =
+        uniqueGbifId.apply("Map to GBIF ids record KV", idTransform.toKv());
 
     // Filter records
     FilterRecordsTransform filterRecordsTransform =
-        FilterRecordsTransform.create(verbatimTransform.getTag(), idTransform.getTag());
+        FilterRecordsTransform.create(verbatimTransform.getTag(), idAbsentTransform.getTag());
 
     PCollection<ExtendedRecord> filteredUniqueRecords =
         KeyedPCollectionTuple
             // Core
             .of(verbatimTransform.getTag(), uniqueRecordsKv)
-            .and(idTransform.getTag(), uniqueGbifIdRecordsKv)
+            .and(idAbsentTransform.getTag(), uniqueGbifIdRecordsKv)
             // Apply
             .apply("Grouping objects", CoGroupByKey.create())
             .apply("Filter verbatim", filterRecordsTransform.filter());
@@ -384,20 +412,20 @@ public class VerbatimToInterpretedPipeline {
     log.info("Save metrics into the file and set files owner");
     String metadataPath =
         PathBuilder.buildDatasetAttemptPath(options, options.getMetaFileName(), false);
-    if (!FsUtils.fileExists(hdfsSiteConfig, coreSiteConfig, metadataPath)
+    if (!FsUtils.fileExists(hdfsConfigs, metadataPath)
         || CheckTransforms.checkRecordType(types, RecordType.IDENTIFIER)
         || CheckTransforms.checkRecordType(types, RecordType.ALL)) {
       MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
-      FsUtils.setOwner(hdfsSiteConfig, coreSiteConfig, metadataPath, "crap", "supergroup");
+      FsUtils.setOwner(hdfsConfigs, metadataPath, "crap", "supergroup");
     }
 
     log.info("Deleting beam temporal folders");
     String tempPath = String.join("/", targetPath, datasetId, attempt.toString());
-    FsUtils.deleteDirectoryByPrefix(hdfsSiteConfig, coreSiteConfig, tempPath, ".temp-beam");
+    FsUtils.deleteDirectoryByPrefix(hdfsConfigs, tempPath, ".temp-beam");
 
     log.info("Set interpreted files permissions");
     String interpretedPath = PathBuilder.buildDatasetAttemptPath(options, DIRECTORY_NAME, false);
-    FsUtils.setOwner(hdfsSiteConfig, coreSiteConfig, interpretedPath, "crap", "supergroup");
+    FsUtils.setOwner(hdfsConfigs, interpretedPath, "crap", "supergroup");
 
     log.info("Pipeline has been finished");
   }

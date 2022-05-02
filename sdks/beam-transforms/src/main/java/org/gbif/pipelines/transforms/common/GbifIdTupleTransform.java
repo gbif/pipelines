@@ -6,7 +6,6 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Identifier.G
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
@@ -34,10 +33,9 @@ public class GbifIdTupleTransform extends PTransform<PCollection<GbifIdRecord>, 
     // Convert from list to map where, key - occurrenceId, value - object instance and group by key
     return input.apply(
         "Filtering duplicates",
-        ParDo.of(Filter.create()).withOutputTags(tag, TupleTagList.of(absentTag)));
+        ParDo.of(new Filter()).withOutputTags(tag, TupleTagList.of(absentTag)));
   }
 
-  @NoArgsConstructor(staticName = "create")
   private class Filter extends DoFn<GbifIdRecord, GbifIdRecord> {
 
     private final Counter uniqueCounter =

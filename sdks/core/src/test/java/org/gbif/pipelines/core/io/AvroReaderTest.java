@@ -9,6 +9,7 @@ import java.util.Map;
 import lombok.SneakyThrows;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.junit.Assert;
@@ -16,9 +17,11 @@ import org.junit.Test;
 
 public class AvroReaderTest {
 
+  private final HdfsConfigs hdfsConfigs = HdfsConfigs.create(null, null);
+
   private final Path verbatimPath1 = new Path("target/verbatim1.avro");
   private final Path verbatimPath2 = new Path("target/verbatim2.avro");
-  private final FileSystem verbatimFs = FsUtils.createParentDirectories(null, null, verbatimPath1);
+  private final FileSystem verbatimFs = FsUtils.createParentDirectories(hdfsConfigs, verbatimPath1);
 
   @Test
   public void regularExtendedRecordsTest() throws IOException {
@@ -31,7 +34,7 @@ public class AvroReaderTest {
 
     // When
     Map<String, ExtendedRecord> result =
-        AvroReader.readRecords("", "", ExtendedRecord.class, verbatimPath1.toString());
+        AvroReader.readRecords(hdfsConfigs, ExtendedRecord.class, verbatimPath1.toString());
 
     // Should
     assertMap(result, expectedOne, expectedTwo, expectedThree);
@@ -56,7 +59,7 @@ public class AvroReaderTest {
     // When
     Map<String, ExtendedRecord> result =
         AvroReader.readRecords(
-            "", "", ExtendedRecord.class, new Path("target/verbatim*.avro").toString());
+            hdfsConfigs, ExtendedRecord.class, new Path("target/verbatim*.avro").toString());
 
     // Should
     assertMap(
@@ -78,7 +81,7 @@ public class AvroReaderTest {
 
     // When
     Map<String, ExtendedRecord> result =
-        AvroReader.readUniqueRecords("", "", ExtendedRecord.class, verbatimPath1.toString());
+        AvroReader.readUniqueRecords(hdfsConfigs, ExtendedRecord.class, verbatimPath1.toString());
 
     // Should
     assertMap(result, expectedOne, expectedTwo, expectedThree);
@@ -98,7 +101,7 @@ public class AvroReaderTest {
 
     // When
     Map<String, ExtendedRecord> result =
-        AvroReader.readUniqueRecords("", "", ExtendedRecord.class, verbatimPath1.toString());
+        AvroReader.readUniqueRecords(hdfsConfigs, ExtendedRecord.class, verbatimPath1.toString());
 
     // Should
     assertMap(result, expectedOne, expectedThree);
@@ -122,7 +125,7 @@ public class AvroReaderTest {
 
     // When
     Map<String, ExtendedRecord> result =
-        AvroReader.readUniqueRecords("", "", ExtendedRecord.class, verbatimPath1.toString());
+        AvroReader.readUniqueRecords(hdfsConfigs, ExtendedRecord.class, verbatimPath1.toString());
 
     // Should
     assertMap(result, expectedThree);
@@ -156,7 +159,7 @@ public class AvroReaderTest {
     // When
     Map<String, ExtendedRecord> result =
         AvroReader.readUniqueRecords(
-            "", "", ExtendedRecord.class, new Path("target/verbatim*.avro").toString());
+            hdfsConfigs, ExtendedRecord.class, new Path("target/verbatim*.avro").toString());
 
     // Should
     assertMap(result, expectedThree);
@@ -189,7 +192,7 @@ public class AvroReaderTest {
 
     // When
     Map<String, ExtendedRecord> result =
-        AvroReader.readUniqueRecords("", "", ExtendedRecord.class, verbatimPath1.toString());
+        AvroReader.readUniqueRecords(hdfsConfigs, ExtendedRecord.class, verbatimPath1.toString());
 
     // Should
     assertMap(result);

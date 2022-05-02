@@ -5,9 +5,13 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Identifier.G
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.IDENTIFIER;
 
 import java.time.Instant;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.SneakyThrows;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
@@ -29,6 +33,8 @@ import org.gbif.pipelines.transforms.Transform;
  */
 public class GbifIdTransform extends Transform<ExtendedRecord, GbifIdRecord> {
 
+  @Getter private final String absentName;
+  @Getter private final Set<String> allNames = new HashSet<>(3);
   private final boolean isTripletValid;
   private final boolean isOccurrenceIdValid;
   private final boolean useExtendedRecordId;
@@ -53,6 +59,8 @@ public class GbifIdTransform extends Transform<ExtendedRecord, GbifIdRecord> {
     this.generateIdIfAbsent = generateIdIfAbsent;
     this.gbifIdFn = gbifIdFn;
     this.keygenServiceSupplier = keygenServiceSupplier;
+    this.absentName = this.getBaseName() + "_absent";
+    allNames.addAll(Arrays.asList(this.getBaseName(), this.getBaseInvalidName(), absentName));
   }
 
   /** Maps {@link GbifIdRecord} to key value, where key is {@link GbifIdRecord#getId} */
