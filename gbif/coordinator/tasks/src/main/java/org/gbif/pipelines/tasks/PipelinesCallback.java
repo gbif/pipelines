@@ -78,8 +78,8 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
   @NonNull private final I message;
   @NonNull private final StepHandler<I, O> handler;
   private final ValidationWsClient validationClient;
-
   @Builder.Default private final boolean isValidator = false;
+  @Builder.Default private final boolean isEvents = false;
 
   static {
     try {
@@ -273,7 +273,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
   private Optional<TrackingInfo> trackPipelineStep() {
     try {
 
-      if (isValidator) {
+      if (isValidator || isEvents) {
         return Optional.empty();
       }
 

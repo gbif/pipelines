@@ -182,7 +182,8 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
         message.getEndpointType(),
         message.getValidationResult(),
         message.getInterpretTypes(),
-        message.isValidator() || config.validatorOnly);
+        message.isValidator() || config.validatorOnly,
+        message.getDatasetType());
   }
 
   private void runLocal(ProcessRunnerBuilderBuilder builder) {

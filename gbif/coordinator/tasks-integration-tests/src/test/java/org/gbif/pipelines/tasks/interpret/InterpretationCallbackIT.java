@@ -108,7 +108,8 @@ public class InterpretationCallbackIT {
             validationResult,
             null,
             EXECUTION_ID,
-            false);
+            false,
+            null);
 
     // When
     callback.handleMessage(message);
@@ -181,7 +182,8 @@ public class InterpretationCallbackIT {
             validationResult,
             null,
             EXECUTION_ID,
-            false);
+            false,
+            null);
 
     // When
     callback.handleMessage(message);

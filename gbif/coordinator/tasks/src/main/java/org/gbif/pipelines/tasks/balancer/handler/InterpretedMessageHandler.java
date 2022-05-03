@@ -61,7 +61,8 @@ public class InterpretedMessageHandler {
             m.getEndpointType(),
             m.getValidationResult(),
             m.getInterpretTypes(),
-            m.isValidator());
+            m.isValidator(),
+            m.getDatasetType());
 
     publisher.send(outputMessage);
 

@@ -167,7 +167,8 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
         validationResult,
         null,
         null,
-        message.isValidator() || config.validatorOnly);
+        message.isValidator() || config.validatorOnly,
+        message.getDatasetType());
   }
 
   /**

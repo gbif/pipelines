@@ -160,7 +160,8 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
         new ValidationResult(true, true, null, null),
         null,
         null,
-        message.isValidator() || config.validatorOnly);
+        message.isValidator() || config.validatorOnly,
+        null);
   }
 
   @Override

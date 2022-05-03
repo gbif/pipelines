@@ -67,7 +67,8 @@ public class VerbatimMessageHandler {
             result,
             m.getResetPrefix(),
             m.getExecutionId(),
-            m.isValidator());
+            m.isValidator(),
+            m.getDatasetType());
 
     publisher.send(outputMessage);
 

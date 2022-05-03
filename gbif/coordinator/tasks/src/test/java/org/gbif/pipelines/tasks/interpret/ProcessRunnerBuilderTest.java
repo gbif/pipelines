@@ -78,7 +78,8 @@ public class ProcessRunnerBuilderTest {
             new ValidationResult(true, true, true, null),
             null,
             EXECUTION_ID,
-            false);
+            false,
+            null);
 
     // Expected
     ProcessBuilder builder =
@@ -147,7 +148,8 @@ public class ProcessRunnerBuilderTest {
             new ValidationResult(true, true, true, null),
             null,
             EXECUTION_ID,
-            false);
+            false,
+            null);
 
     // Expected
     ProcessBuilder builder =
@@ -221,7 +223,8 @@ public class ProcessRunnerBuilderTest {
             null,
             null,
             EXECUTION_ID,
-            false);
+            false,
+            null);
 
     // Expected
     ProcessBuilder builder =
