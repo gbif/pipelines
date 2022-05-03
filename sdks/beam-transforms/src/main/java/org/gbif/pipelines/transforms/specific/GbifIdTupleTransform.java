@@ -1,4 +1,4 @@
-package org.gbif.pipelines.transforms.common;
+package org.gbif.pipelines.transforms.specific;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.ABSENT_GBIF_ID_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.UNIQUE_GBIF_IDS_COUNT;

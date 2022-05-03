@@ -53,7 +53,7 @@ import org.gbif.pipelines.factory.OccurrenceStatusKvStoreFactory;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.GbifIdRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.keygen.HBaseLockingKeyService;
+import org.gbif.pipelines.keygen.HBaseLockingKey;
 import org.gbif.pipelines.transforms.common.CheckTransforms;
 import org.gbif.pipelines.transforms.common.ExtensionFilterTransform;
 import org.gbif.pipelines.transforms.common.FilterRecordsTransform;
@@ -174,7 +174,7 @@ public class VerbatimToInterpretedPipeline {
     if (options.getUseMetadataWsCalls()) {
       metadataServiceClientSupplier = MetadataServiceClientFactory.createSupplier(config);
     }
-    SerializableSupplier<HBaseLockingKeyService> keyServiceSupplier = null;
+    SerializableSupplier<HBaseLockingKey> keyServiceSupplier = null;
     if (!options.isUseExtendedRecordId()) {
       keyServiceSupplier = KeygenServiceFactory.createSupplier(config, datasetId);
     }

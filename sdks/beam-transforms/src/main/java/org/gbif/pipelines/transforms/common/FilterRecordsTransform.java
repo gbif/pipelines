@@ -41,7 +41,7 @@ public class FilterRecordsTransform implements Serializable {
 
             ExtendedRecord er = v.getOnly(erTag, null);
             GbifIdRecord id = v.getOnly(idTag, null);
-            if (er != null && id != null && id.getCreated() != null) {
+            if (er != null && id != null && id.getGbifId() != null) {
               c.output(er);
               counter.inc();
             }

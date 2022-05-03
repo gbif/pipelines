@@ -22,11 +22,11 @@ import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.factory.KeygenServiceFactory;
-import org.gbif.pipelines.transforms.common.GbifIdTupleTransform;
 import org.gbif.pipelines.transforms.common.UniqueIdTransform;
 import org.gbif.pipelines.transforms.converters.OccurrenceExtensionTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.specific.GbifIdTransform;
+import org.gbif.pipelines.transforms.specific.GbifIdTupleTransform;
 import org.slf4j.MDC;
 
 @Slf4j

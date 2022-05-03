@@ -22,7 +22,7 @@ import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.core.interpreters.specific.GbifIdInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.GbifIdRecord;
-import org.gbif.pipelines.keygen.HBaseLockingKeyService;
+import org.gbif.pipelines.keygen.HBaseLockingKey;
 import org.gbif.pipelines.transforms.Transform;
 
 /**
@@ -40,9 +40,9 @@ public class GbifIdTransform extends Transform<ExtendedRecord, GbifIdRecord> {
   private final boolean useExtendedRecordId;
   private final boolean generateIdIfAbsent;
   private final BiConsumer<ExtendedRecord, GbifIdRecord> gbifIdFn;
-  private final SerializableSupplier<HBaseLockingKeyService> keygenServiceSupplier;
+  private final SerializableSupplier<HBaseLockingKey> keygenServiceSupplier;
 
-  private HBaseLockingKeyService keygenService;
+  private HBaseLockingKey keygenService;
 
   @Builder(buildMethodName = "create")
   private GbifIdTransform(
@@ -51,7 +51,7 @@ public class GbifIdTransform extends Transform<ExtendedRecord, GbifIdRecord> {
       boolean useExtendedRecordId,
       boolean generateIdIfAbsent,
       BiConsumer<ExtendedRecord, GbifIdRecord> gbifIdFn,
-      SerializableSupplier<HBaseLockingKeyService> keygenServiceSupplier) {
+      SerializableSupplier<HBaseLockingKey> keygenServiceSupplier) {
     super(GbifIdRecord.class, IDENTIFIER, GbifIdTransform.class.getName(), GBIF_ID_RECORDS_COUNT);
     this.isTripletValid = isTripletValid;
     this.isOccurrenceIdValid = isOccurrenceIdValid;

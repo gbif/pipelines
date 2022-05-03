@@ -17,7 +17,7 @@ import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.core.interpreters.specific.GbifIdInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.GbifIdRecord;
-import org.gbif.pipelines.keygen.HBaseLockingKeyService;
+import org.gbif.pipelines.keygen.HBaseLockingKey;
 import org.gbif.pipelines.transforms.Transform;
 
 /**
@@ -30,15 +30,15 @@ public class GbifIdAbsentTransform extends Transform<GbifIdRecord, GbifIdRecord>
 
   private final boolean isTripletValid;
   private final boolean isOccurrenceIdValid;
-  private final SerializableSupplier<HBaseLockingKeyService> keygenServiceSupplier;
+  private final SerializableSupplier<HBaseLockingKey> keygenServiceSupplier;
 
-  private HBaseLockingKeyService keygenService;
+  private HBaseLockingKey keygenService;
 
   @Builder(buildMethodName = "create")
   private GbifIdAbsentTransform(
       boolean isTripletValid,
       boolean isOccurrenceIdValid,
-      SerializableSupplier<HBaseLockingKeyService> keygenServiceSupplier) {
+      SerializableSupplier<HBaseLockingKey> keygenServiceSupplier) {
     super(
         GbifIdRecord.class,
         IDENTIFIER,

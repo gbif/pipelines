@@ -20,7 +20,7 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.GbifIdRecord;
-import org.gbif.pipelines.keygen.HBaseLockingKeyService;
+import org.gbif.pipelines.keygen.HBaseLockingKey;
 import org.gbif.pipelines.keygen.api.KeyLookupResult;
 import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
 
@@ -30,7 +30,7 @@ public class GbifIdInterpreter {
 
   /** Copies GBIF id from ExtendedRecord id or generates/gets existing GBIF id */
   public static BiConsumer<ExtendedRecord, GbifIdRecord> interpretGbifId(
-      HBaseLockingKeyService keygenService,
+      HBaseLockingKey keygenService,
       boolean isTripletValid,
       boolean isOccurrenceIdValid,
       boolean useExtendedRecordId,
@@ -44,7 +44,7 @@ public class GbifIdInterpreter {
 
   /** Generates or gets existing GBIF id */
   public static BiConsumer<ExtendedRecord, GbifIdRecord> interpretGbifId(
-      HBaseLockingKeyService keygenService,
+      HBaseLockingKey keygenService,
       boolean isTripletValid,
       boolean isOccurrenceIdValid,
       boolean generateIdIfAbsent) {
@@ -81,7 +81,7 @@ public class GbifIdInterpreter {
 
   /** Generates or gets existing GBIF id */
   public static Consumer<GbifIdRecord> interpretAbsentGbifId(
-      HBaseLockingKeyService keygenService, boolean isTripletValid, boolean isOccurrenceIdValid) {
+      HBaseLockingKey keygenService, boolean isTripletValid, boolean isOccurrenceIdValid) {
     return gr -> {
       Set<String> uniqueStrings = new HashSet<>(2);
 
@@ -116,7 +116,7 @@ public class GbifIdInterpreter {
 
   /** Generates or gets existing GBIF id */
   private static Optional<Long> getOrGenerateGbifId(
-      Set<String> uniqueStrings, HBaseLockingKeyService keygenService, boolean generateIdIfAbsent) {
+      Set<String> uniqueStrings, HBaseLockingKey keygenService, boolean generateIdIfAbsent) {
 
     if (keygenService == null) {
       throw new PipelinesException("keygenService can't be null!");
