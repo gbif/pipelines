@@ -89,8 +89,7 @@ final class ProcessRunnerBuilder {
         .add("--hdfsSiteConfig=" + Objects.requireNonNull(config.stepConfig.hdfsSiteConfig))
         .add("--coreSiteConfig=" + Objects.requireNonNull(config.stepConfig.coreSiteConfig))
         .add("--esHosts=" + Objects.requireNonNull(esHosts))
-        // TODO
-        //        .add("--properties=" + Objects.requireNonNull(config.pipelinesConfig))
+        .add("--properties=" + Objects.requireNonNull(config.pipelinesConfig))
         .add("--esIndexName=" + Objects.requireNonNull(esIndexName));
 
     Optional.ofNullable(esAlias).ifPresent(x -> command.add("--esAlias=" + x));

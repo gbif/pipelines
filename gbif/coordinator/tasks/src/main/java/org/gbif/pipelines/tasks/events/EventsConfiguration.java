@@ -1,5 +1,6 @@
 package org.gbif.pipelines.tasks.events;
 
+import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParametersDelegate;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -29,6 +30,11 @@ public class EventsConfiguration implements BaseConfiguration {
   // TODO
   //  @Parameter(names = "--meta-file-name")
   //  public String metaFileName = Pipeline.VERBATIM_TO_INTERPRETED + ".yml";
+
+  @Parameter(names = "--pipelines-config")
+  @Valid
+  @NotNull
+  public String pipelinesConfig;
 
   @ParametersDelegate @Valid @NotNull
   public IndexConfiguration indexConfig = new IndexConfiguration();
