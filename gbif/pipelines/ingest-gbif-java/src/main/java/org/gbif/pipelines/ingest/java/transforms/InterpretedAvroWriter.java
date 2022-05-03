@@ -13,6 +13,7 @@ import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
 import org.gbif.pipelines.core.io.SyncDataFileWriterBuilder;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.io.avro.Record;
 import org.gbif.pipelines.transforms.Transform;
 
@@ -31,7 +32,8 @@ public class InterpretedAvroWriter {
         PathBuilder.buildPathInterpretUsingTargetPath(options, baseName, id + AVRO_EXTENSION);
     Path path = new Path(pathString);
     FileSystem fs =
-        createParentDirectories(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), path);
+        createParentDirectories(
+            HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()), path);
     return SyncDataFileWriterBuilder.builder()
         .schema(transform.getAvroSchema())
         .codec(options.getAvroCompressionType())

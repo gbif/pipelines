@@ -17,6 +17,7 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
 import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.pipelines.common.utils.HdfsUtils;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.balancer.BalancerConfiguration;
 import org.gbif.pipelines.tasks.dwca.DwcaToAvroConfiguration;
 
@@ -103,9 +104,9 @@ public class VerbatimMessageHandler {
     String repositoryPath =
         message.isValidator() ? config.validatorRepositoryPath : stepConfig.repositoryPath;
     String verbatimPath = String.join("/", repositoryPath, datasetId, attempt, verbatim);
-    long fileSizeByte =
-        HdfsUtils.getFileSizeByte(
-            stepConfig.hdfsSiteConfig, stepConfig.coreSiteConfig, verbatimPath);
+    HdfsConfigs hdfsConfigs =
+        HdfsConfigs.create(stepConfig.hdfsSiteConfig, stepConfig.coreSiteConfig);
+    long fileSizeByte = HdfsUtils.getFileSizeByte(hdfsConfigs, verbatimPath);
     if (fileSizeByte > 0) {
       long switchFileSizeByte = config.switchFileSizeMb * 1024L * 1024L;
       runner = fileSizeByte > switchFileSizeByte ? StepRunner.DISTRIBUTED : StepRunner.STANDALONE;
@@ -134,12 +135,11 @@ public class VerbatimMessageHandler {
                 && message.getValidationResult().getNumberOfRecords() != null
             ? message.getValidationResult().getNumberOfRecords()
             : null;
+
+    HdfsConfigs hdfsConfigs =
+        HdfsConfigs.create(stepConfig.hdfsSiteConfig, stepConfig.coreSiteConfig);
     Optional<Long> fileNumber =
-        HdfsUtils.getLongByKey(
-            stepConfig.hdfsSiteConfig,
-            stepConfig.coreSiteConfig,
-            metaPath,
-            Metrics.ARCHIVE_TO_ER_COUNT);
+        HdfsUtils.getLongByKey(hdfsConfigs, metaPath, Metrics.ARCHIVE_TO_ER_COUNT);
 
     if (messageNumber == null && !fileNumber.isPresent()) {
       throw new IllegalArgumentException(
@@ -166,9 +166,11 @@ public class VerbatimMessageHandler {
     String repositoryPath =
         message.isValidator() ? config.validatorRepositoryPath : stepConfig.repositoryPath;
     String path = String.join("/", repositoryPath, datasetId);
+
     log.info("Parsing HDFS directory - {}", path);
-    return HdfsUtils.getSubDirList(stepConfig.hdfsSiteConfig, stepConfig.coreSiteConfig, path)
-        .stream()
+    HdfsConfigs hdfsConfigs =
+        HdfsConfigs.create(stepConfig.hdfsSiteConfig, stepConfig.coreSiteConfig);
+    return HdfsUtils.getSubDirList(hdfsConfigs, path).stream()
         .map(y -> y.getPath().getName())
         .filter(x -> x.chars().allMatch(Character::isDigit))
         .mapToInt(Integer::valueOf)

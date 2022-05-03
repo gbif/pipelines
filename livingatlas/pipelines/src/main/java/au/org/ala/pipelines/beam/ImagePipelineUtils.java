@@ -33,14 +33,7 @@ public class ImagePipelineUtils {
     return headers.indexOf(term.simpleName().toLowerCase(Locale.ROOT));
   }
 
-  /**
-   * Read the headers, returning them lowercased
-   *
-   * @param fs
-   * @param imageServiceExportPath
-   * @return
-   * @throws IOException
-   */
+  /** Read the headers, returning them lowercased */
   public static List<String> readHeadersLowerCased(FileSystem fs, String imageServiceExportPath)
       throws IOException {
 

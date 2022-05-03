@@ -33,6 +33,7 @@ import org.gbif.common.messaging.api.messages.Platform;
 import org.gbif.converters.XmlToAvroConverter;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.utils.HdfsUtils;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
 import org.gbif.pipelines.tasks.dwca.DwcaToAvroConfiguration;
@@ -97,14 +98,15 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
           buildOutputPath(
               config.stepConfig.repositoryPath, datasetId.toString(), attempt, config.metaFileName);
 
+      HdfsConfigs hdfsConfigs =
+          HdfsConfigs.create(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);
       // Run main conversion process
       boolean isConverted =
           XmlToAvroConverter.create()
               .executor(executor)
               .codecFactory(CodecFactory.fromString(config.avroConfig.compressionType))
               .syncInterval(config.avroConfig.syncInterval)
-              .hdfsSiteConfig(config.stepConfig.hdfsSiteConfig)
-              .coreSiteConfig(config.stepConfig.coreSiteConfig)
+              .hdfsConfigs(hdfsConfigs)
               .inputPath(inputPath)
               .outputPath(outputPath)
               .metaPath(metaPath)
@@ -190,12 +192,10 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
     String metaPath =
         String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, metaFileName);
     log.info("Getting records number from the file - {}", metaPath);
+    HdfsConfigs hdfsConfigs =
+        HdfsConfigs.create(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);
     Optional<Double> fileNumber =
-        HdfsUtils.getDoubleByKey(
-            config.stepConfig.hdfsSiteConfig,
-            config.stepConfig.coreSiteConfig,
-            metaPath,
-            Metrics.ARCHIVE_TO_ER_COUNT);
+        HdfsUtils.getDoubleByKey(hdfsConfigs, metaPath, Metrics.ARCHIVE_TO_ER_COUNT);
 
     if (!fileNumber.isPresent()) {
       throw new IllegalArgumentException(

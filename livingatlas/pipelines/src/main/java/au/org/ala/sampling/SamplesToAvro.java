@@ -15,6 +15,7 @@ import org.apache.avro.io.DatumWriter;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.*;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.SampleRecord;
 import org.slf4j.MDC;
@@ -43,7 +44,8 @@ public class SamplesToAvro {
     // get filesystem
     FileSystem fs =
         FsUtils.getFileSystem(
-            options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getInputPath());
+            HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()),
+            options.getInputPath());
 
     // Read CSV
     String sampleCSVDownloadPath = LayerCrawler.getSampleDownloadPath(options);

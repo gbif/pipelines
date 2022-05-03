@@ -27,6 +27,7 @@ import org.gbif.common.messaging.api.messages.Platform;
 import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.common.utils.ZookeeperUtils;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.MessagePublisherStub;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.ws.client.ValidationWsClient;
@@ -124,7 +125,7 @@ public class DwcaToAvroCallbackIT {
     assertEquals(1, publisher.getMessages().size());
 
     // Clean
-    HdfsUtils.deleteDirectory(null, null, path.toString());
+    HdfsUtils.deleteDirectory(HdfsConfigs.create(null, null), path.toString());
     curator.delete().deletingChildrenIfNeeded().forPath(getPipelinesInfoPath(crawlId, DWCA_LABEL));
   }
 
@@ -171,7 +172,7 @@ public class DwcaToAvroCallbackIT {
     assertEquals(1, publisher.getMessages().size());
 
     // Clean
-    HdfsUtils.deleteDirectory(null, null, path.toString());
+    HdfsUtils.deleteDirectory(HdfsConfigs.create(null, null), path.toString());
     curator.delete().deletingChildrenIfNeeded().forPath(getPipelinesInfoPath(crawlId, DWCA_LABEL));
   }
 
@@ -218,7 +219,7 @@ public class DwcaToAvroCallbackIT {
     assertEquals(1, publisher.getMessages().size());
 
     // Clean
-    HdfsUtils.deleteDirectory(null, null, path.toString());
+    HdfsUtils.deleteDirectory(HdfsConfigs.create(null, null), path.toString());
     curator.delete().deletingChildrenIfNeeded().forPath(getPipelinesInfoPath(crawlId, DWCA_LABEL));
   }
 
@@ -266,7 +267,7 @@ public class DwcaToAvroCallbackIT {
     assertEquals(1, publisher.getMessages().size());
 
     // Clean
-    HdfsUtils.deleteDirectory(null, null, path.toString());
+    HdfsUtils.deleteDirectory(HdfsConfigs.create(null, null), path.toString());
     curator.delete().deletingChildrenIfNeeded().forPath(getPipelinesInfoPath(crawlId, DWCA_LABEL));
   }
 
@@ -313,7 +314,7 @@ public class DwcaToAvroCallbackIT {
     assertEquals(1, publisher.getMessages().size());
 
     // Clean
-    HdfsUtils.deleteDirectory(null, null, path.toString());
+    HdfsUtils.deleteDirectory(HdfsConfigs.create(null, null), path.toString());
   }
 
   @Test

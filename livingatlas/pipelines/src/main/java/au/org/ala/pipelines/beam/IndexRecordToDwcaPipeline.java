@@ -32,6 +32,7 @@ import org.apache.beam.sdk.transforms.SimpleFunction;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.hadoop.fs.FileSystem;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.IndexRecord;
 import org.slf4j.MDC;
@@ -105,13 +106,11 @@ public class IndexRecordToDwcaPipeline {
 
   @SneakyThrows
   private static void writeEML(DwCAExportPipelineOptions options, UnaryOperator<String> pathFn) {
+    HdfsConfigs hdfsConfigs =
+        HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig());
     ALAPipelinesConfig config =
-        ALAPipelinesConfigFactory.getInstance(
-                options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getProperties())
-            .get();
-    FileSystem fs =
-        FsUtils.getFileSystem(
-            options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getInputPath());
+        ALAPipelinesConfigFactory.getInstance(hdfsConfigs, options.getProperties()).get();
+    FileSystem fs = FsUtils.getFileSystem(hdfsConfigs, options.getInputPath());
 
     String url = config.getCollectory().getWsUrl() + "/eml/" + options.getDatasetId();
     URL emlUrl = new URL(url);

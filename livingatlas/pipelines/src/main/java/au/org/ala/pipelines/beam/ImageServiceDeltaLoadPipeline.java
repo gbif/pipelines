@@ -47,6 +47,7 @@ import org.gbif.common.parsers.date.TemporalParser;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
@@ -86,17 +87,15 @@ public class ImageServiceDeltaLoadPipeline {
   public static void run(ImageServicePipelineOptions options)
       throws IOException, InterruptedException {
 
+    HdfsConfigs hdfsConfigs =
+        HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig());
     ALAPipelinesConfig config =
-        ALAPipelinesConfigFactory.getInstance(
-                options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getProperties())
-            .get();
+        ALAPipelinesConfigFactory.getInstance(hdfsConfigs, options.getProperties()).get();
 
     // create the image service
     ImageService service = WsUtils.createClient(config.getImageService(), ImageService.class);
 
-    FileSystem fs =
-        FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
-            .getFs(options.getInputPath());
+    FileSystem fs = FileSystemFactory.getInstance(hdfsConfigs).getFs(options.getInputPath());
 
     // create a zip file of multimedia/*.avro
     log.info("Building zip file to submit to image service");

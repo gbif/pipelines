@@ -25,6 +25,7 @@ import org.gbif.common.messaging.api.messages.PipelinesXmlMessage;
 import org.gbif.common.messaging.api.messages.Platform;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.common.utils.ZookeeperUtils;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.MessagePublisherStub;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.ws.client.ValidationWsClient;
@@ -120,7 +121,7 @@ public class XmlToAvroCallbackIT {
     assertEquals(1, publisher.getMessages().size());
 
     // Clean
-    HdfsUtils.deleteDirectory(null, null, path.toString());
+    HdfsUtils.deleteDirectory(HdfsConfigs.create(null, null), path.toString());
     curator.delete().deletingChildrenIfNeeded().forPath(getPipelinesInfoPath(crawlId, XML_LABEL));
   }
 
@@ -162,7 +163,7 @@ public class XmlToAvroCallbackIT {
     assertTrue(publisher.getMessages().isEmpty());
 
     // Clean
-    HdfsUtils.deleteDirectory(null, null, path.toString());
+    HdfsUtils.deleteDirectory(HdfsConfigs.create(null, null), path.toString());
     curator.delete().deletingChildrenIfNeeded().forPath(getPipelinesInfoPath(crawlId, XML_LABEL));
   }
 
@@ -203,7 +204,7 @@ public class XmlToAvroCallbackIT {
     assertTrue(publisher.getMessages().isEmpty());
 
     // Clean
-    HdfsUtils.deleteDirectory(null, null, path.toString());
+    HdfsUtils.deleteDirectory(HdfsConfigs.create(null, null), path.toString());
   }
 
   private boolean checkExists(CuratorFramework curator, String id, String path) {

@@ -21,6 +21,7 @@ import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.factory.FileVocabularyFactory;
 import org.gbif.pipelines.factory.GeocodeKvStoreFactory;
@@ -85,20 +86,18 @@ public class VerbatimToInterpretedPipeline {
     Integer attempt = options.getAttempt();
     Set<String> types = options.getInterpretationTypes();
     String targetPath = options.getTargetPath();
-    String hdfsSiteConfig = options.getHdfsSiteConfig();
-    String coreSiteConfig = options.getCoreSiteConfig();
+    HdfsConfigs hdfsConfigs =
+        HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig());
 
     PipelinesConfig config =
-        FsUtils.readConfigFile(
-            hdfsSiteConfig, coreSiteConfig, options.getProperties(), PipelinesConfig.class);
+        FsUtils.readConfigFile(hdfsConfigs, options.getProperties(), PipelinesConfig.class);
 
     List<DateComponentOrdering> dateComponentOrdering =
         options.getDefaultDateFormat() == null
             ? config.getDefaultDateFormat()
             : options.getDefaultDateFormat();
 
-    FsUtils.deleteInterpretIfExist(
-        hdfsSiteConfig, coreSiteConfig, targetPath, datasetId, attempt, types);
+    FsUtils.deleteInterpretIfExist(hdfsConfigs, targetPath, datasetId, attempt, types);
 
     MDC.put("datasetKey", datasetId);
     MDC.put("attempt", attempt.toString());
@@ -125,8 +124,7 @@ public class VerbatimToInterpretedPipeline {
             .vocabularyServiceSupplier(
                 FileVocabularyFactory.builder()
                     .config(config)
-                    .hdfsSiteConfig(hdfsSiteConfig)
-                    .coreSiteConfig(coreSiteConfig)
+                    .hdfsConfigs(hdfsConfigs)
                     .build()
                     .getInstanceSupplier())
             .create();
@@ -218,7 +216,7 @@ public class VerbatimToInterpretedPipeline {
 
     log.info("Deleting beam temporal folders");
     String tempPath = String.join("/", targetPath, datasetId, attempt.toString());
-    FsUtils.deleteDirectoryByPrefix(hdfsSiteConfig, coreSiteConfig, tempPath, ".temp-beam");
+    FsUtils.deleteDirectoryByPrefix(hdfsConfigs, tempPath, ".temp-beam");
 
     log.info("Pipeline has been finished");
   }

@@ -25,6 +25,7 @@ import org.gbif.common.messaging.api.messages.Platform;
 import org.gbif.converters.DwcaToAvroConverter;
 import org.gbif.dwc.UnsupportedArchiveException;
 import org.gbif.pipelines.common.utils.HdfsUtils;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.DwcaUtils;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
@@ -108,12 +109,13 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
           HdfsUtils.buildOutputPath(
               config.stepConfig.repositoryPath, datasetId.toString(), attempt, config.metaFileName);
 
+      HdfsConfigs hdfsConfigs =
+          HdfsConfigs.create(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);
       // Run main conversion process
       DwcaToAvroConverter.create()
           .codecFactory(CodecFactory.fromString(config.avroConfig.compressionType))
           .syncInterval(config.avroConfig.syncInterval)
-          .hdfsSiteConfig(config.stepConfig.hdfsSiteConfig)
-          .coreSiteConfig(config.stepConfig.coreSiteConfig)
+          .hdfsConfigs(hdfsConfigs)
           .inputPath(inputPath)
           .outputPath(outputPath)
           .metaPath(metaPath)

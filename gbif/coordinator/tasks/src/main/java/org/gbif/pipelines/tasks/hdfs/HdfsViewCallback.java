@@ -21,6 +21,7 @@ import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.utils.HdfsUtils;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.ingest.java.pipelines.InterpretedToHdfsViewPipeline;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
@@ -204,12 +205,11 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
         String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, metaFileName);
 
     Long messageNumber = message.getNumberOfRecords();
+    HdfsConfigs hdfsConfigs =
+        HdfsConfigs.create(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);
     Optional<Long> fileNumber =
         HdfsUtils.getLongByKey(
-            config.stepConfig.hdfsSiteConfig,
-            config.stepConfig.coreSiteConfig,
-            metaPath,
-            Metrics.UNIQUE_GBIF_IDS_COUNT + Metrics.ATTEMPTED);
+            hdfsConfigs, metaPath, Metrics.UNIQUE_GBIF_IDS_COUNT + Metrics.ATTEMPTED);
 
     if (messageNumber == null && !fileNumber.isPresent()) {
       throw new IllegalArgumentException(
@@ -232,9 +232,9 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
     String attempt = Integer.toString(message.getAttempt());
     String dirPath =
         String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, DIRECTORY_NAME);
-    long sizeByte =
-        HdfsUtils.getFileSizeByte(
-            config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig, dirPath);
+    HdfsConfigs hdfsConfigs =
+        HdfsConfigs.create(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);
+    long sizeByte = HdfsUtils.getFileSizeByte(hdfsConfigs, dirPath);
     if (sizeByte == -1d) {
       throw new IllegalArgumentException(
           "Please check interpretation source directory! - " + dirPath);

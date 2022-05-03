@@ -14,6 +14,7 @@ import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.factory.ConfigFactory;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.keygen.config.KeygenConfig;
 import org.gbif.pipelines.tasks.ServiceFactory;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
@@ -50,7 +51,7 @@ public class FragmenterService extends AbstractIdleService {
         ServiceFactory.createPipelinesHistoryClient(config.stepConfig);
 
     KeygenConfig keygenConfig =
-        readConfig(c.hdfsSiteConfig, c.coreSiteConfig, config.pipelinesConfig);
+        readConfig(HdfsConfigs.create(c.hdfsSiteConfig, c.coreSiteConfig), config.pipelinesConfig);
 
     FragmenterCallback callback =
         new FragmenterCallback(
@@ -74,12 +75,9 @@ public class FragmenterService extends AbstractIdleService {
     }
   }
 
-  private KeygenConfig readConfig(
-      String hdfsSiteConfig, String coreSiteConfig, String pipelinesConfig) {
+  private KeygenConfig readConfig(HdfsConfigs hdfsConfigs, String pipelinesConfig) {
     PipelinesConfig c =
-        ConfigFactory.getInstance(
-                hdfsSiteConfig, coreSiteConfig, pipelinesConfig, PipelinesConfig.class)
-            .get();
+        ConfigFactory.getInstance(hdfsConfigs, pipelinesConfig, PipelinesConfig.class).get();
 
     String zk = c.getKeygen().getZkConnectionString();
     zk = zk == null || zk.isEmpty() ? c.getZkConnectionString() : zk;

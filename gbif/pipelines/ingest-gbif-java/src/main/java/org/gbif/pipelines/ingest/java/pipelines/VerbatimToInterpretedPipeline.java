@@ -37,6 +37,7 @@ import org.gbif.pipelines.core.functions.SerializableConsumer;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.core.io.AvroReader;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.core.ws.metadata.MetadataServiceClient;
 import org.gbif.pipelines.factory.ClusteringServiceFactory;
@@ -165,11 +166,10 @@ public class VerbatimToInterpretedPipeline {
     Set<String> types = options.getInterpretationTypes();
     String targetPath = options.getTargetPath();
     String endPointType = options.getEndPointType();
-    String hdfsSiteConfig = options.getHdfsSiteConfig();
-    String coreSiteConfig = options.getCoreSiteConfig();
+    HdfsConfigs hdfsConfigs =
+        HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig());
     PipelinesConfig config =
-        ConfigFactory.getInstance(
-                hdfsSiteConfig, coreSiteConfig, options.getProperties(), PipelinesConfig.class)
+        ConfigFactory.getInstance(hdfsConfigs, options.getProperties(), PipelinesConfig.class)
             .get();
 
     List<DateComponentOrdering> dateComponentOrdering =
@@ -177,8 +177,7 @@ public class VerbatimToInterpretedPipeline {
             ? config.getDefaultDateFormat()
             : options.getDefaultDateFormat();
 
-    FsUtils.deleteInterpretIfExist(
-        hdfsSiteConfig, coreSiteConfig, targetPath, datasetId, attempt, types);
+    FsUtils.deleteInterpretIfExist(hdfsConfigs, targetPath, datasetId, attempt, types);
 
     MDC.put("datasetKey", datasetId);
     MDC.put("attempt", attempt.toString());
@@ -247,8 +246,7 @@ public class VerbatimToInterpretedPipeline {
             .vocabularyServiceSupplier(
                 FileVocabularyFactory.builder()
                     .config(config)
-                    .hdfsSiteConfig(hdfsSiteConfig)
-                    .coreSiteConfig(coreSiteConfig)
+                    .hdfsConfigs(hdfsConfigs)
                     .build()
                     .getInstanceSupplier())
             .create()
@@ -366,8 +364,7 @@ public class VerbatimToInterpretedPipeline {
 
       // Read DWCA and replace default values
       Map<String, ExtendedRecord> erMap =
-          AvroReader.readUniqueRecords(
-              hdfsSiteConfig, coreSiteConfig, ExtendedRecord.class, options.getInputPath());
+          AvroReader.readUniqueRecords(hdfsConfigs, ExtendedRecord.class, options.getInputPath());
       Map<String, ExtendedRecord> erExtMap = occExtensionTransform.transform(erMap);
       erExtMap = extensionFilterTransform.transform(erExtMap);
       defaultValuesTransform.replaceDefaultValues(erExtMap);
@@ -490,7 +487,7 @@ public class VerbatimToInterpretedPipeline {
     log.info("Save metrics into the file and set files owner");
     String metadataPath =
         PathBuilder.buildDatasetAttemptPath(options, options.getMetaFileName(), false);
-    if (!FsUtils.fileExists(hdfsSiteConfig, coreSiteConfig, metadataPath)
+    if (!FsUtils.fileExists(hdfsConfigs, metadataPath)
         || CheckTransforms.checkRecordType(types, RecordType.IDENTIFIER)
         || CheckTransforms.checkRecordType(types, RecordType.ALL)) {
       MetricsHandler.saveCountersToTargetPathFile(options, metrics.getMetricsResult());

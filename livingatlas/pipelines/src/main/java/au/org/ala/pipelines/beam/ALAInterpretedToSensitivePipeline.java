@@ -30,6 +30,7 @@ import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.transforms.core.LocationTransform;
@@ -55,7 +56,8 @@ public class ALAInterpretedToSensitivePipeline {
 
     ALAPipelinesConfig config =
         ALAPipelinesConfigFactory.getInstance(
-                options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getProperties())
+                HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()),
+                options.getProperties())
             .get();
 
     MDC.put("datasetId", options.getDatasetId());
@@ -156,6 +158,7 @@ public class ALAInterpretedToSensitivePipeline {
             "ala_sensitive_data");
 
     // delete output directories
-    FsUtils.deleteIfExist(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), path);
+    FsUtils.deleteIfExist(
+        HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()), path);
   }
 }

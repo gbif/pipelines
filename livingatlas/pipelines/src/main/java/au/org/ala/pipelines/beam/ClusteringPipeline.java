@@ -27,6 +27,7 @@ import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.core.parsers.clustering.OccurrenceFeatures;
 import org.gbif.pipelines.core.parsers.clustering.OccurrenceRelationships;
 import org.gbif.pipelines.core.parsers.clustering.RelationshipAssertion;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.*;
 import org.jetbrains.annotations.NotNull;
@@ -623,7 +624,8 @@ public class ClusteringPipeline {
     log.info("Clearing clustering path {}", options.getClusteringPath());
     FileSystem fs =
         FsUtils.getFileSystem(
-            options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getInputPath());
+            HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()),
+            options.getInputPath());
     ALAFsUtils.deleteIfExist(fs, options.getClusteringPath() + "/relationships");
     ALAFsUtils.deleteIfExist(fs, options.getClusteringPath() + "/relationships-debug");
     log.info("Cleared clustering path {}.", options.getClusteringPath());

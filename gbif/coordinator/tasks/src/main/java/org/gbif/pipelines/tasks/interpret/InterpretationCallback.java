@@ -37,6 +37,7 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation;
 import org.gbif.pipelines.common.utils.HdfsUtils;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.ingest.java.pipelines.VerbatimToInterpretedPipeline;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
@@ -144,12 +145,10 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
 
         log.info("Deleting old attempts directories");
         String pathToDelete = String.join("/", config.stepConfig.repositoryPath, datasetId);
+        HdfsConfigs hdfsConfigs =
+            HdfsConfigs.create(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);
         HdfsUtils.deleteSubFolders(
-            config.stepConfig.hdfsSiteConfig,
-            config.stepConfig.coreSiteConfig,
-            pathToDelete,
-            config.deleteAfterDays,
-            Collections.singleton(attempt));
+            hdfsConfigs, pathToDelete, config.deleteAfterDays, Collections.singleton(attempt));
 
       } catch (Exception ex) {
         log.error(ex.getMessage(), ex);
@@ -274,12 +273,10 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
             ? message.getValidationResult().getNumberOfRecords()
             : null;
 
+    HdfsConfigs hdfsConfigs =
+        HdfsConfigs.create(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);
     Optional<Long> fileNumber =
-        HdfsUtils.getLongByKey(
-            config.stepConfig.hdfsSiteConfig,
-            config.stepConfig.coreSiteConfig,
-            metaPath,
-            Metrics.ARCHIVE_TO_ER_COUNT);
+        HdfsUtils.getLongByKey(hdfsConfigs, metaPath, Metrics.ARCHIVE_TO_ER_COUNT);
 
     if (messageNumber == null && !fileNumber.isPresent()) {
       throw new IllegalArgumentException(
@@ -315,11 +312,10 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
     ToDoubleFunction<String> getMetricFn =
         m -> {
           try {
-            return HdfsUtils.getDoubleByKey(
-                    config.stepConfig.hdfsSiteConfig,
-                    config.stepConfig.coreSiteConfig,
-                    metaPath,
-                    m + Metrics.ATTEMPTED)
+            HdfsConfigs hdfsConfigs =
+                HdfsConfigs.create(
+                    config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);
+            return HdfsUtils.getDoubleByKey(hdfsConfigs, metaPath, m + Metrics.ATTEMPTED)
                 .orElse(0d);
           } catch (IOException ex) {
             throw new PipelinesException(ex);
@@ -371,8 +367,9 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
             attempt,
             Interpretation.DIRECTORY_NAME);
 
-    return HdfsUtils.exists(
-        config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig, path);
+    HdfsConfigs hdfsConfigs =
+        HdfsConfigs.create(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);
+    return HdfsUtils.exists(hdfsConfigs, path);
   }
 
   @SneakyThrows

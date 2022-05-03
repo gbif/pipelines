@@ -31,6 +31,7 @@ import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.UnknownTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.core.utils.ModelUtils;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -72,7 +73,8 @@ public class ALAUUIDValidationPipeline {
 
     ALAPipelinesConfig config =
         ALAPipelinesConfigFactory.getInstance(
-                options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getProperties())
+                HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()),
+                options.getProperties())
             .get();
 
     // create key value store for data resource metadata
@@ -180,7 +182,7 @@ public class ALAUUIDValidationPipeline {
       // add the invalid key records
       results = results.and(invalidKeyResults.setCoder(StringUtf8Coder.of()));
 
-      final boolean stripSpacesFinal = stripSpaces != null ? stripSpaces : false;
+      final boolean stripSpacesFinal = stripSpaces != null && stripSpaces;
       final Map<String, String> defaultValuesFinal =
           defaultValues != null ? defaultValues : Collections.emptyMap();
 
@@ -285,13 +287,15 @@ public class ALAUUIDValidationPipeline {
   }
 
   public static void deletePreviousValidation(UUIDPipelineOptions options) {
+    HdfsConfigs hdfsConfigs =
+        HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig());
     // delete output directory
     String dirPath = getValidationFilePath(options, VALIDATION_OUTPUT_DIR);
-    FsUtils.deleteIfExist(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), dirPath);
+    FsUtils.deleteIfExist(hdfsConfigs, dirPath);
 
     // delete report
     String filePath = getValidationFilePath(options, VALIDATION_REPORT_FILE);
-    FsUtils.deleteIfExist(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), filePath);
+    FsUtils.deleteIfExist(hdfsConfigs, filePath);
   }
 
   /**

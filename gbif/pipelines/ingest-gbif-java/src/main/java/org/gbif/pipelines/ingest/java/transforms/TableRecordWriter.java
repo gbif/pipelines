@@ -19,6 +19,7 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.Inte
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
 import org.gbif.pipelines.core.io.SyncDataFileWriterBuilder;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.io.avro.GbifIdRecord;
 import org.gbif.pipelines.transforms.common.CheckTransforms;
 
@@ -77,7 +78,8 @@ public class TableRecordWriter<T> {
   private SyncDataFileWriter<T> createWriter(InterpretationPipelineOptions options) {
     Path path = new Path(targetPathFn.apply(recordType));
     FileSystem verbatimFs =
-        createParentDirectories(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), path);
+        createParentDirectories(
+            HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()), path);
     return SyncDataFileWriterBuilder.builder()
         .schema(schema)
         .codec(options.getAvroCompressionType())
