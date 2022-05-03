@@ -174,7 +174,7 @@ public class VerbatimToInterpretedPipeline {
                 "Filter extension",
                 ExtensionFilterTransform.create(config.getExtensionsAllowedForVerbatimSet()));
 
-    // Interpret identifiers and wite as avro files
+    // Interpret identifiers and write as avro files
     uniqueRawRecords
         .apply("Interpret identifiers", identifierTransform.interpret())
         .apply("Write identifiers to avro", identifierTransform.write(pathFn));

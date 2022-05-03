@@ -32,7 +32,7 @@ public class OccurrenceExtensionConverter {
     Map<String, Map<String, List<Map<String, String>>>> occIdExtMap = collectExtensions(er);
 
     return er.getExtensions().get(DwcTerm.Occurrence.qualifiedName()).stream()
-        .map(occExt -> merge(coreTerms, occExt, occIdExtMap))
+        .map(occExt -> merge(er.getId(), coreTerms, occExt, occIdExtMap))
         .filter(Optional::isPresent)
         .map(Optional::get)
         .collect(Collectors.toList());
@@ -40,6 +40,7 @@ public class OccurrenceExtensionConverter {
 
   /** Merge all maps into ExtendedRecord object */
   private static Optional<ExtendedRecord> merge(
+      String coreId,
       Map<String, String> coreMap,
       Map<String, String> extCoreMap,
       Map<String, Map<String, List<Map<String, String>>>> occIdExtMap) {
@@ -48,6 +49,7 @@ public class OccurrenceExtensionConverter {
       ExtendedRecord extendedRecord = ExtendedRecord.newBuilder().setId(id).build();
       extendedRecord.getCoreTerms().putAll(coreMap);
       extendedRecord.getCoreTerms().putAll(extCoreMap);
+      extendedRecord.setParentCoreId(coreId);
       Optional.ofNullable(occIdExtMap.get(id)).ifPresent(extendedRecord::setExtensions);
       return Optional.of(extendedRecord);
     }
