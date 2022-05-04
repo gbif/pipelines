@@ -204,39 +204,30 @@ public class VerbatimToInterpretedPipeline {
           .apply("Write invalid GBIF IDs to avro", idTransform.writeInvalid(pathFn));
     } else if (useGbifIdReadIO(types)) {
       uniqueGbifId = p.apply("Read GBIF ids records", idTransform.read(interpretedPathFn));
-      if (!types.contains(IDENTIFIER_ABSENT.name())) {
-        uniqueGbifId =
-            uniqueGbifId
-                .apply("Filter unique GBIF ids", uniqueIdTransform)
-                .get(uniqueIdTransform.getTag());
-      }
     } else {
       uniqueGbifId = idAbsentTransform.emptyCollection(p);
     }
 
     // Read and interpret absent/new GBIF IDs records
     if (types.contains(IDENTIFIER_ABSENT.name())) {
-      PCollection<GbifIdRecord> absentGbifId =
+      PCollectionTuple absentTyple =
           p.apply(
                   "Read absent GBIF ids records",
                   idAbsentTransform.read(interpretedPathFn.apply(idTransform.getAbsentName())))
-              .apply("Interpret absent GBIF ids", idAbsentTransform.interpret());
+              .apply("Interpret absent GBIF ids", idAbsentTransform.interpret())
+              .apply("Filter absent GBIF ids", uniqueIdTransform);
 
-      // Merge GBIF ids collections
-      PCollectionTuple idCollection =
-          PCollectionList.of(uniqueGbifId)
-              .and(absentGbifId)
-              .apply(Flatten.pCollections())
-              .apply("Get invalid GBIF ids", uniqueIdTransform);
+      PCollection<GbifIdRecord> absentCreatedGbifIds = absentTyple.get(uniqueIdTransform.getTag());
 
-      uniqueGbifId = idCollection.get(uniqueIdTransform.getTag());
+      absentCreatedGbifIds.apply("Write GBIF ids to avro", idTransform.writeInvalid(pathFn));
 
-      // Interpret and write all record types
-      absentGbifId.apply("Write GBIF ids to avro", idTransform.write(pathFn));
-
-      idCollection
+      absentTyple
           .get(uniqueIdTransform.getInvalidTag())
           .apply("Write invalid GBIF ids to avro", idTransform.writeInvalid(pathFn));
+
+      // Merge GBIF ids collections
+      uniqueGbifId =
+          PCollectionList.of(uniqueGbifId).and(absentCreatedGbifIds).apply(Flatten.pCollections());
     }
 
     PCollection<ExtendedRecord> filteredUniqueRecords = uniqueRecords;
