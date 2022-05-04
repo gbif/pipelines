@@ -180,7 +180,6 @@ public class VerbatimToInterpretedPipeline {
         .apply("Interpret temporal", temporalTransform.interpret())
         .apply("Write temporal to avro", temporalTransform.write(pathFn));
 
-
     uniqueRawRecords
         .apply("Interpret multimedia", multimediaTransform.interpret())
         .apply("Write multimedia to avro", multimediaTransform.write(pathFn));
