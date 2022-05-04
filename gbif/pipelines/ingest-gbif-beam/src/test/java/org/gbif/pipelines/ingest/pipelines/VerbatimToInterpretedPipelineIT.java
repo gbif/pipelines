@@ -1,5 +1,8 @@
 package org.gbif.pipelines.ingest.pipelines;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.ALL;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.CLUSTERING;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.TAXONOMY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -37,6 +40,7 @@ import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
+import org.gbif.pipelines.transforms.specific.GbifIdTransform;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Rule;
@@ -58,7 +62,7 @@ public class VerbatimToInterpretedPipelineIT {
   @Rule public final transient TestPipeline p = TestPipeline.create();
 
   @Test
-  public void pipelineInterpretationTypesManyTest() throws Exception {
+  public void manyTypesInterpretationTest() throws Exception {
 
     // State
     String outputFile = getClass().getResource("/data7/ingest").getFile();
@@ -72,7 +76,49 @@ public class VerbatimToInterpretedPipelineIT {
       "--metaFileName=verbatim-to-interpreted.yml",
       "--inputPath=" + outputFile + "/" + DATASET_KEY + "/" + attempt + "/verbatim.avro",
       "--targetPath=" + outputFile,
-      "--interpretationTypes=IDENTIFIER,CLUSTERING,TEMPORAL,LOCATION,GRSCICOLL,MULTIMEDIA,MEASUREMENT_OR_FACT_TABLE,BASIC,TAXONOMY,IMAGE,AMPLIFICATION,OCCURRENCE,VERBATIM,LOCATION_FEATURE,MEASUREMENT_OR_FACT,AUDUBON,METADATA",
+      "--interpretationTypes=IDENTIFIER_ABSENT,CLUSTERING,TEMPORAL,LOCATION,GRSCICOLL,MULTIMEDIA,MEASUREMENT_OR_FACT_TABLE,BASIC,TAXONOMY,IMAGE,AMPLIFICATION,OCCURRENCE,VERBATIM,LOCATION_FEATURE,MEASUREMENT_OR_FACT,AUDUBON,METADATA",
+      "--properties=" + outputFile + "/pipelines.yaml",
+      "--testMode=true"
+    };
+
+    // Write GBIF_IDs
+    String postfix = "777";
+    InterpretationPipelineOptions optionsWriter =
+        PipelinesOptionsFactory.createInterpretation(args);
+    GbifIdTransform gbifIdTransform = GbifIdTransform.builder().create();
+    try (SyncDataFileWriter<GbifIdRecord> writer =
+        InterpretedAvroWriter.createAvroWriter(
+            optionsWriter, GbifIdTransform.builder().create(), postfix)) {
+      GbifIdRecord gbifIdRecord = GbifIdRecord.newBuilder().setId(ID).setGbifId(1L).build();
+      writer.append(gbifIdRecord);
+    }
+    try (SyncDataFileWriter<GbifIdRecord> writer =
+        InterpretedAvroWriter.createAvroWriter(
+            optionsWriter, gbifIdTransform, postfix, gbifIdTransform.getAbsentName())) {
+      GbifIdRecord gbifIdRecord = GbifIdRecord.newBuilder().setId(ID).build();
+      writer.append(gbifIdRecord);
+    }
+
+    // When, Should
+    pipelineTest(args, attempt, outputFile);
+  }
+
+  @Test
+  public void manyTypesWitoutAbsentInterpretationTest() throws Exception {
+
+    // State
+    String outputFile = getClass().getResource("/data7/ingest").getFile();
+
+    String attempt = "60";
+
+    String[] args = {
+      "--datasetId=" + DATASET_KEY,
+      "--attempt=" + attempt,
+      "--runner=SparkRunner",
+      "--metaFileName=verbatim-to-interpreted.yml",
+      "--inputPath=" + outputFile + "/" + DATASET_KEY + "/" + attempt + "/verbatim.avro",
+      "--targetPath=" + outputFile,
+      "--interpretationTypes=CLUSTERING,TEMPORAL,LOCATION,GRSCICOLL,MULTIMEDIA,MEASUREMENT_OR_FACT_TABLE,BASIC,TAXONOMY,IMAGE,AMPLIFICATION,OCCURRENCE,VERBATIM,LOCATION_FEATURE,MEASUREMENT_OR_FACT,AUDUBON,METADATA",
       "--properties=" + outputFile + "/pipelines.yaml",
       "--testMode=true"
     };
@@ -82,7 +128,7 @@ public class VerbatimToInterpretedPipelineIT {
   }
 
   @Test
-  public void pipelineInterpretationTypesAllTest() throws Exception {
+  public void allTypesInterpretationTest() throws Exception {
 
     // State
     String outputFile = getClass().getResource("/data7/ingest").getFile();
@@ -96,7 +142,7 @@ public class VerbatimToInterpretedPipelineIT {
       "--metaFileName=verbatim-to-interpreted.yml",
       "--inputPath=" + outputFile + "/" + DATASET_KEY + "/" + attempt + "/verbatim.avro",
       "--targetPath=" + outputFile,
-      "--interpretationTypes=ALL",
+      "--interpretationTypes=" + ALL,
       "--properties=" + outputFile + "/pipelines.yaml",
       "--syncThreshold=0",
       "--testMode=true"
@@ -107,7 +153,32 @@ public class VerbatimToInterpretedPipelineIT {
   }
 
   @Test
-  public void pipelineInterpretationTypesTaxonomyTest() throws Exception {
+  public void clusteringTypeInterpretationTest() throws Exception {
+
+    // State
+    String outputFile = getClass().getResource("/data7/ingest").getFile();
+
+    String attempt = "61";
+
+    String[] args = {
+      "--datasetId=" + DATASET_KEY,
+      "--attempt=" + attempt,
+      "--runner=SparkRunner",
+      "--metaFileName=verbatim-to-interpreted.yml",
+      "--inputPath=" + outputFile + "/" + DATASET_KEY + "/" + attempt + "/verbatim.avro",
+      "--targetPath=" + outputFile,
+      "--interpretationTypes=" + CLUSTERING,
+      "--properties=" + outputFile + "/pipelines.yaml",
+      "--syncThreshold=0",
+      "--testMode=true"
+    };
+
+    // When, Should
+    pipelineTest(args, attempt, outputFile);
+  }
+
+  @Test
+  public void taxonomyTypeInterpretationTest() throws Exception {
 
     // State
     String outputFile = getClass().getResource("/data7/ingest").getFile();
@@ -121,7 +192,7 @@ public class VerbatimToInterpretedPipelineIT {
       "--metaFileName=verbatim-to-interpreted.yml",
       "--inputPath=" + outputFile + "/" + DATASET_KEY + "/" + attempt + "/verbatim.avro",
       "--targetPath=" + outputFile,
-      "--interpretationTypes=TAXONOMY",
+      "--interpretationTypes=" + TAXONOMY,
       "--properties=" + outputFile + "/pipelines.yaml",
       "--testMode=true"
     };

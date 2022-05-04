@@ -3,6 +3,7 @@ package org.gbif.pipelines.ingest.pipelines.utils;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 import static org.gbif.pipelines.core.utils.FsUtils.createParentDirectories;
 
+import java.util.Optional;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
@@ -23,13 +24,10 @@ public class InterpretedAvroWriter {
   /** Create an AVRO file writer */
   @SneakyThrows
   public static <T extends SpecificRecordBase & Record> SyncDataFileWriter<T> createAvroWriter(
-      InterpretationPipelineOptions options,
-      Transform<?, T> transform,
-      String id,
-      boolean useInvalidName) {
-    String baseName = useInvalidName ? transform.getBaseInvalidName() : transform.getBaseName();
+      InterpretationPipelineOptions options, Transform<?, T> transform, String id, String useName) {
+    String name = Optional.ofNullable(useName).orElse(transform.getBaseName());
     String pathString =
-        PathBuilder.buildPathInterpretUsingTargetPath(options, baseName, id + AVRO_EXTENSION);
+        PathBuilder.buildPathInterpretUsingTargetPath(options, name, id + AVRO_EXTENSION);
     Path path = new Path(pathString);
     FileSystem fs =
         createParentDirectories(
@@ -45,6 +43,6 @@ public class InterpretedAvroWriter {
 
   public static <T extends SpecificRecordBase & Record> SyncDataFileWriter<T> createAvroWriter(
       InterpretationPipelineOptions options, Transform<?, T> transform, String id) {
-    return createAvroWriter(options, transform, id, false);
+    return createAvroWriter(options, transform, id, null);
   }
 }

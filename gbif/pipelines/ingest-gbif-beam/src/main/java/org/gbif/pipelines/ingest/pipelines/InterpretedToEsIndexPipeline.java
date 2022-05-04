@@ -111,8 +111,12 @@ public class InterpretedToEsIndexPipeline {
       EsIndexingPipelineOptions options,
       Function<EsIndexingPipelineOptions, Pipeline> pipelinesFn) {
 
-    MDC.put("datasetKey", options.getDatasetId());
-    MDC.put("attempt", options.getAttempt().toString());
+    String datasetId = options.getDatasetId();
+    Integer attempt = options.getAttempt();
+
+    options.setAppName(StepType.INTERPRETED_TO_INDEX.name() + "_" + datasetId + "_" + attempt);
+    MDC.put("datasetKey", datasetId);
+    MDC.put("attempt", attempt.toString());
     MDC.put("step", StepType.INTERPRETED_TO_INDEX.name());
 
     String esDocumentId = options.getEsDocumentId();

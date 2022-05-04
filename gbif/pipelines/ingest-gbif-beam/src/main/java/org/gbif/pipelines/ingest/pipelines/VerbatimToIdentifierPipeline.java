@@ -1,10 +1,10 @@
 package org.gbif.pipelines.ingest.pipelines;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.DIRECTORY_NAME;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.IDENTIFIER;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import lombok.AccessLevel;
@@ -13,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.values.PCollectionTuple;
-import org.gbif.api.model.pipelines.StepType;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
@@ -48,7 +47,6 @@ public class VerbatimToIdentifierPipeline {
 
     String datasetId = options.getDatasetId();
     Integer attempt = options.getAttempt();
-    Set<String> types = options.getInterpretationTypes();
     String targetPath = options.getTargetPath();
     HdfsConfigs hdfsConfigs =
         HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig());
@@ -56,11 +54,12 @@ public class VerbatimToIdentifierPipeline {
     PipelinesConfig config =
         FsUtils.readConfigFile(hdfsConfigs, options.getProperties(), PipelinesConfig.class);
 
-    FsUtils.deleteInterpretIfExist(hdfsConfigs, targetPath, datasetId, attempt, types);
+    FsUtils.deleteInterpretIfExist(hdfsConfigs, targetPath, datasetId, attempt, IDENTIFIER.name());
 
+    options.setAppName("VERBATIM_TO_IDENTIFIER" + "_" + datasetId + "_" + attempt);
     MDC.put("datasetKey", datasetId);
     MDC.put("attempt", attempt.toString());
-    MDC.put("step", StepType.VERBATIM_TO_INTERPRETED.name());
+    MDC.put("step", "VERBATIM_TO_IDENTIFIER");
 
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 

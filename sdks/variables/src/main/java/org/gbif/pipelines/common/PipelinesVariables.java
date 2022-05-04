@@ -50,6 +50,7 @@ public class PipelinesVariables {
         VERBATIM,
         // Core types
         IDENTIFIER,
+        IDENTIFIER_ABSENT,
         METADATA,
         BASIC,
         CLUSTERING,
