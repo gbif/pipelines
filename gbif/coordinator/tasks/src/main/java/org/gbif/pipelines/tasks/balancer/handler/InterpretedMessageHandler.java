@@ -11,8 +11,10 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.pipelines.StepRunner;
+import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
+import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
@@ -65,6 +67,25 @@ public class InterpretedMessageHandler {
             m.getDatasetType());
 
     publisher.send(outputMessage);
+
+    if (m.getDatasetType() == DatasetType.SAMPLING_EVENT) {
+      PipelinesEventsMessage eventsMessage =
+          new PipelinesEventsMessage(
+              m.getDatasetUuid(),
+              m.getAttempt(),
+              m.getPipelineSteps(),
+              m.getNumberOfRecords(),
+              m.getRunner(),
+              m.isRepeatAttempt(),
+              m.getResetPrefix(),
+              m.getOnlyForStep(),
+              m.getExecutionId(),
+              m.getEndpointType(),
+              m.getValidationResult(),
+              m.isValidator(),
+              m.getDatasetType());
+      publisher.send(eventsMessage);
+    }
 
     log.info("The message has been sent - {}", outputMessage);
   }

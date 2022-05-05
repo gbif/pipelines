@@ -24,6 +24,8 @@ public class PipelinesVariables {
     public static final String FRAGMENTER = "fragmenter";
     public static final String VALIDATOR = "validator";
     public static final String COLLECT_METRICS = "collect-metrics";
+    public static final String EVENTS_VERBATIM_TO_INTERPRETED = "events-verbatim-to-interpreted";
+    public static final String EVENTS_INTERPRETED_TO_INDEXING = "events-interpreted-to-indexing";
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static class Conversion {

@@ -1,50 +1,40 @@
-package org.gbif.pipelines.tasks.events;
+package org.gbif.pipelines.tasks.events.indexing;
 
 import com.google.common.util.concurrent.AbstractIdleService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
+import org.gbif.common.messaging.api.messages.PipelinesEventsInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.pipelines.common.configs.StepConfiguration;
 
 /** A service which listens to the {@link PipelinesInterpretedMessage } */
 @Slf4j
-public class EventsService extends AbstractIdleService {
+public class EventsIndexingService extends AbstractIdleService {
 
-  private final EventsConfiguration config;
+  private final EventsIndexingConfiguration config;
   private MessageListener listener;
   private MessagePublisher publisher;
   private CuratorFramework curator;
 
-  private CloseableHttpClient httpClient;
-
-  public EventsService(EventsConfiguration config) {
+  public EventsIndexingService(EventsIndexingConfiguration config) {
     this.config = config;
   }
 
   @Override
   protected void startUp() throws Exception {
-    log.info("Started pipelines-events service with parameters : {}", config);
+    log.info("Started pipelines-events-indexing service with parameters : {}", config);
     // Prefetch is one, since this is a long-running process.
     StepConfiguration c = config.stepConfig;
     listener = new MessageListener(c.messaging.getConnectionParameters(), 1);
     publisher = new DefaultMessagePublisher(c.messaging.getConnectionParameters());
     curator = c.zooKeeper.getCuratorFramework();
 
-    httpClient =
-        HttpClients.custom()
-            .setDefaultRequestConfig(
-                RequestConfig.custom().setConnectTimeout(60_000).setSocketTimeout(60_000).build())
-            .build();
+    EventsIndexingCallback callback = new EventsIndexingCallback(config, publisher, curator);
 
-    EventsCallback callback = new EventsCallback(config, publisher, curator, httpClient);
-
-    String routingKey = new PipelinesInterpretedMessage().getRoutingKey();
+    String routingKey = new PipelinesEventsInterpretedMessage().getRoutingKey();
     listener.listen(c.queueName, routingKey, c.poolSize, callback);
   }
 
@@ -53,6 +43,6 @@ public class EventsService extends AbstractIdleService {
     listener.close();
     publisher.close();
     curator.close();
-    log.info("Stopping pipelines-events service");
+    log.info("Stopping pipelines-events-indexing service");
   }
 }

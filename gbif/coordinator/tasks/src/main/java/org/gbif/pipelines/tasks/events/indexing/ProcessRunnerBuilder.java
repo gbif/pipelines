@@ -1,4 +1,4 @@
-package org.gbif.pipelines.tasks.events;
+package org.gbif.pipelines.tasks.events.indexing;
 
 import java.io.File;
 import java.util.Objects;
@@ -7,7 +7,7 @@ import java.util.StringJoiner;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
+import org.gbif.common.messaging.api.messages.PipelinesEventsInterpretedMessage;
 
 /** Class to build an instance of ProcessBuilder for direct or spark command */
 @SuppressWarnings("all")
@@ -17,15 +17,16 @@ final class ProcessRunnerBuilder {
 
   private static final String DELIMITER = " ";
 
-  @NonNull private EventsConfiguration config;
-  @NonNull private PipelinesInterpretedMessage message;
-  private String esAlias;
-  @NonNull private String esIndexName;
-  private Integer esShardsNumber;
+  @NonNull private EventsIndexingConfiguration config;
+  @NonNull private PipelinesEventsInterpretedMessage message;
   private int sparkParallelism;
   private int sparkExecutorNumbers;
   private String sparkExecutorMemory;
   private String sparkEventLogDir;
+
+  private String esAlias;
+  @NonNull private String esIndexName;
+  private Integer esShardsNumber;
 
   ProcessBuilder get() {
     return buildSpark();
@@ -89,10 +90,8 @@ final class ProcessRunnerBuilder {
         .add("--hdfsSiteConfig=" + Objects.requireNonNull(config.stepConfig.hdfsSiteConfig))
         .add("--coreSiteConfig=" + Objects.requireNonNull(config.stepConfig.coreSiteConfig))
         .add("--esHosts=" + Objects.requireNonNull(esHosts))
-        .add("--properties=" + Objects.requireNonNull(config.pipelinesConfig))
-        .add("--esIndexName=" + Objects.requireNonNull(esIndexName));
+        .add("--properties=" + Objects.requireNonNull(config.pipelinesConfig));
 
-    Optional.ofNullable(esAlias).ifPresent(x -> command.add("--esAlias=" + x));
     Optional.ofNullable(config.esConfig.maxBatchSizeBytes)
         .ifPresent(x -> command.add("--esMaxBatchSizeBytes=" + x));
     Optional.ofNullable(config.esConfig.maxBatchSize)
@@ -101,7 +100,6 @@ final class ProcessRunnerBuilder {
         .ifPresent(x -> command.add("--esSchemaPath=" + x));
     Optional.ofNullable(config.indexConfig.refreshInterval)
         .ifPresent(x -> command.add("--indexRefreshInterval=" + x));
-    Optional.ofNullable(esShardsNumber).ifPresent(x -> command.add("--indexNumberShards=" + x));
     Optional.ofNullable(config.indexConfig.numberReplicas)
         .ifPresent(x -> command.add("--indexNumberReplicas=" + x));
 

@@ -1,10 +1,11 @@
-package org.gbif.pipelines.tasks.events;
+package org.gbif.pipelines.tasks.events.indexing;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParametersDelegate;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.ToString;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.configs.AvroWriteConfiguration;
 import org.gbif.pipelines.common.configs.BaseConfiguration;
 import org.gbif.pipelines.common.configs.DistributedConfiguration;
@@ -15,7 +16,7 @@ import org.gbif.pipelines.common.configs.StepConfiguration;
 
 /** Configuration required to start Indexing Pipeline on provided dataset */
 @ToString
-public class EventsConfiguration implements BaseConfiguration {
+public class EventsIndexingConfiguration implements BaseConfiguration {
 
   @ParametersDelegate @Valid @NotNull public StepConfiguration stepConfig = new StepConfiguration();
 
@@ -27,9 +28,8 @@ public class EventsConfiguration implements BaseConfiguration {
   @ParametersDelegate @Valid @NotNull
   public ElasticsearchConfiguration esConfig = new ElasticsearchConfiguration();
 
-  // TODO
-  //  @Parameter(names = "--meta-file-name")
-  //  public String metaFileName = Pipeline.VERBATIM_TO_INTERPRETED + ".yml";
+  @Parameter(names = "--meta-file-name")
+  public String metaFileName = Pipeline.EVENTS_INTERPRETED_TO_INDEXING + ".yml";
 
   @Parameter(names = "--pipelines-config")
   @Valid
@@ -59,7 +59,6 @@ public class EventsConfiguration implements BaseConfiguration {
 
   @Override
   public String getMetaFileName() {
-    // TODO
-    return null;
+    return metaFileName;
   }
 }
