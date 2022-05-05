@@ -26,8 +26,7 @@ public class InterpretedAvroWriter {
       InterpretationPipelineOptions options,
       Transform<?, T> transform,
       String id,
-      boolean useInvalidName) {
-    String baseName = useInvalidName ? transform.getBaseInvalidName() : transform.getBaseName();
+      String baseName) {
     String pathString =
         PathBuilder.buildPathInterpretUsingTargetPath(options, baseName, id + AVRO_EXTENSION);
     Path path = new Path(pathString);
@@ -45,6 +44,6 @@ public class InterpretedAvroWriter {
 
   public static <T extends SpecificRecordBase & Record> SyncDataFileWriter<T> createAvroWriter(
       InterpretationPipelineOptions options, Transform<?, T> transform, String id) {
-    return createAvroWriter(options, transform, id, false);
+    return createAvroWriter(options, transform, id, transform.getBaseName());
   }
 }

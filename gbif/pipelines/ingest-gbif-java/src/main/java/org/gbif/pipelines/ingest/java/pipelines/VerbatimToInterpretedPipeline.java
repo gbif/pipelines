@@ -6,10 +6,8 @@ import static org.gbif.pipelines.ingest.java.transforms.InterpretedAvroWriter.cr
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -18,43 +16,27 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.AccessLevel;
 import lombok.Cleanup;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
-
 import org.gbif.api.model.pipelines.StepType;
-import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
-import org.gbif.pipelines.core.config.model.PipelinesConfig;
-import org.gbif.pipelines.core.factory.ConfigFactory;
 import org.gbif.pipelines.core.io.AvroReader;
-import org.gbif.pipelines.core.io.SyncDataFileWriter;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.ingest.java.pipelines.interpretation.Shutdown;
 import org.gbif.pipelines.ingest.java.pipelines.interpretation.TransformsFactory;
 import org.gbif.pipelines.ingest.java.transforms.InterpretedAvroReader;
-import org.gbif.pipelines.io.avro.AudubonRecord;
-import org.gbif.pipelines.io.avro.BasicRecord;
-import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.GbifIdRecord;
-import org.gbif.pipelines.io.avro.ImageRecord;
-import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
-import org.gbif.pipelines.transforms.common.CheckTransforms;
 import org.gbif.pipelines.transforms.common.ExtensionFilterTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.GrscicollTransform;
@@ -197,10 +179,12 @@ public class VerbatimToInterpretedPipeline {
 
         @Cleanup var metadataWriter = createAvroWriter(options, metadataTr, postfix);
         metadataWriter.append(mdr);
-      } else {
+      } else if (useMetadataRecordReadIO(types)) {
         mdr =
             InterpretedAvroReader.readAvroUseTargetPath(options, metadataTr)
                 .get(options.getDatasetId());
+      } else {
+        mdr = null;
       }
 
       // Read DWCA and replace default values
@@ -227,12 +211,8 @@ public class VerbatimToInterpretedPipeline {
           InterpretedAvroReader.readAvroUseTargetPath(options, gbifIdTr, gbifIdTr.getAbsentName())
               .forEach(
                   (k, v) -> {
-                    gbifIdAbsentTr
-                        .processElement(v)
-                        .ifPresent(
-                            x -> {
-                              absentIdRecordMap.put(k, x);
-                            });
+                    Consumer<GbifIdRecord> fn = gir -> absentIdRecordMap.put(k, gir);
+                    gbifIdAbsentTr.processElement(v).ifPresent(fn);
                   });
         }
 
@@ -259,98 +239,103 @@ public class VerbatimToInterpretedPipeline {
               .run();
 
       log.info("Starting rest of interpretations...");
-      // Run async writing for GbifId
-      Stream<CompletableFuture<Void>> streamIds = Stream.empty();
+
       if (useGbifIdWriteIO(types) || useAbsentGbifIdReadIO(types)) {
         FsUtils.deleteInterpretIfExist(
             hdfsConfigs, targetPath, datasetId, attempt, gbifIdTr.getAllNames());
+      }
 
-        Collection<GbifIdRecord> idCollection = gbifIdTransform.getIdMap().values();
-        @Cleanup var gbifIdWriter = createAvroWriter(options, gbifIdTr, postfix);
-        if (useSyncMode) {
-          streamIds =
-              Stream.of(
-                  CompletableFuture.runAsync(
-                      () -> idCollection.forEach(gbifIdWriter::append), executor));
-        } else {
-          streamIds =
-              idCollection.stream()
-                  .map(v -> CompletableFuture.runAsync(() -> gbifIdWriter.append(v), executor));
+      try (var gbifIdWriter = createAvroWriter(options, gbifIdTr, postfix);
+          var verbatimWriter = createAvroWriter(options, verbatimTr, postfix);
+          var clusteringWriter = createAvroWriter(options, clusteringTr, postfix);
+          var basicWriter = createAvroWriter(options, basicTr, postfix);
+          var temporalWriter = createAvroWriter(options, temporalTr, postfix);
+          var multimediaWriter = createAvroWriter(options, multimediaTr, postfix);
+          var imageWriter = createAvroWriter(options, imageTr, postfix);
+          var audubonWriter = createAvroWriter(options, audubonTr, postfix);
+          var taxonWriter = createAvroWriter(options, taxonomyTr, postfix);
+          var grscicollWriter = createAvroWriter(options, grscicollTr, postfix);
+          var locationWriter = createAvroWriter(options, locationTr, postfix);
+          var gbifIdInvalidWriter =
+              createAvroWriter(options, gbifIdTr, postfix, gbifIdTr.getBaseInvalidName())) {
+
+        // Create interpretation function
+        Consumer<ExtendedRecord> interpretAllFn =
+            er -> {
+              GbifIdRecord idInvalid = gbifIdTransform.getIdInvalidMap().get(er.getId());
+
+              if (idInvalid == null) {
+                GbifIdRecord id = gbifIdTransform.getErIdMap().get(er.getId());
+
+                if (clusteringTr.checkType(types)) {
+                  clusteringTr.processElement(id).ifPresent(clusteringWriter::append);
+                }
+                if (verbatimTr.checkType(types)) {
+                  verbatimWriter.append(er);
+                }
+                if (basicTr.checkType(types)) {
+                  basicTr.processElement(er).ifPresent(basicWriter::append);
+                }
+                if (temporalTr.checkType(types)) {
+                  temporalTr.processElement(er).ifPresent(temporalWriter::append);
+                }
+                if (multimediaTr.checkType(types)) {
+                  multimediaTr.processElement(er).ifPresent(multimediaWriter::append);
+                }
+                if (imageTr.checkType(types)) {
+                  imageTr.processElement(er).ifPresent(imageWriter::append);
+                }
+                if (audubonTr.checkType(types)) {
+                  audubonTr.processElement(er).ifPresent(audubonWriter::append);
+                }
+                if (taxonomyTr.checkType(types)) {
+                  taxonomyTr.processElement(er).ifPresent(taxonWriter::append);
+                }
+                if (grscicollTr.checkType(types)) {
+                  grscicollTr.processElement(er, mdr).ifPresent(grscicollWriter::append);
+                }
+                if (locationTr.checkType(types)) {
+                  locationTr.processElement(er, mdr).ifPresent(locationWriter::append);
+                }
+              } else {
+                gbifIdInvalidWriter.append(idInvalid);
+              }
+            };
+
+        // Run async writing for GbifId
+        Stream<CompletableFuture<Void>> streamIds = Stream.empty();
+        if (useGbifIdWriteIO(types) || useAbsentGbifIdReadIO(types)) {
+          Collection<GbifIdRecord> idCollection = gbifIdTransform.getIdMap().values();
+          if (useSyncMode) {
+            streamIds =
+                Stream.of(
+                    CompletableFuture.runAsync(
+                        () -> idCollection.forEach(gbifIdWriter::append), executor));
+          } else {
+            streamIds =
+                idCollection.stream()
+                    .map(v -> CompletableFuture.runAsync(() -> gbifIdWriter.append(v), executor));
+          }
         }
+
+        // Run async interpretation and writing for all records
+        Stream<CompletableFuture<Void>> streamAll;
+        Collection<ExtendedRecord> erCollection = erExtMap.values();
+        if (useSyncMode) {
+          streamAll =
+              Stream.of(
+                  CompletableFuture.runAsync(() -> erCollection.forEach(interpretAllFn), executor));
+        } else {
+          streamAll =
+              erCollection.stream()
+                  .map(v -> CompletableFuture.runAsync(() -> interpretAllFn.accept(v), executor));
+        }
+
+        // Wait for all features
+        CompletableFuture<?>[] futures =
+            Stream.concat(streamIds, streamAll).toArray(CompletableFuture[]::new);
+        CompletableFuture.allOf(futures).get();
       }
-
-      @Cleanup var verbatimWriter = createAvroWriter(options, verbatimTr, postfix);
-      @Cleanup var gbifIdInvalidWriter = createAvroWriter(options, gbifIdTr, postfix, true);
-      @Cleanup var clusteringWriter = createAvroWriter(options, clusteringTr, postfix);
-      @Cleanup var basicWriter = createAvroWriter(options, basicTr, postfix);
-      @Cleanup var temporalWriter = createAvroWriter(options, temporalTr, postfix);
-      @Cleanup var multimediaWriter = createAvroWriter(options, multimediaTr, postfix);
-      @Cleanup var imageWriter = createAvroWriter(options, imageTr, postfix);
-      @Cleanup var audubonWriter = createAvroWriter(options, audubonTr, postfix);
-      @Cleanup var taxonWriter = createAvroWriter(options, taxonomyTr, postfix);
-      @Cleanup var grscicollWriter = createAvroWriter(options, grscicollTr, postfix);
-      @Cleanup var locationWriter = createAvroWriter(options, locationTr, postfix);
-
-      // Create interpretation function
-      Consumer<ExtendedRecord> interpretAllFn =
-          er -> {
-            GbifIdRecord idInvalid = gbifIdTransform.getIdInvalidMap().get(er.getId());
-
-            if (idInvalid == null) {
-              GbifIdRecord id = gbifIdTransform.getErIdMap().get(er.getId());
-
-              if (clusteringTr.checkType(types)) {
-                clusteringTr.processElement(id).ifPresent(clusteringWriter::append);
-              }
-              if (verbatimTr.checkType(types)) {
-                verbatimWriter.append(er);
-              }
-              if (basicTr.checkType(types)) {
-                basicTr.processElement(er).ifPresent(basicWriter::append);
-              }
-              if (temporalTr.checkType(types)) {
-                temporalTr.processElement(er).ifPresent(temporalWriter::append);
-              }
-              if (multimediaTr.checkType(types)) {
-                multimediaTr.processElement(er).ifPresent(multimediaWriter::append);
-              }
-              if (imageTr.checkType(types)) {
-                imageTr.processElement(er).ifPresent(imageWriter::append);
-              }
-              if (audubonTr.checkType(types)) {
-                audubonTr.processElement(er).ifPresent(audubonWriter::append);
-              }
-              if (taxonomyTr.checkType(types)) {
-                taxonomyTr.processElement(er).ifPresent(taxonWriter::append);
-              }
-              if (grscicollTr.checkType(types)) {
-                grscicollTr.processElement(er, mdr).ifPresent(grscicollWriter::append);
-              }
-              if (locationTr.checkType(types)) {
-                locationTr.processElement(er, mdr).ifPresent(locationWriter::append);
-              }
-            } else {
-              gbifIdInvalidWriter.append(idInvalid);
-            }
-          };
-
-      // Run async interpretation and writing for all records
-      Stream<CompletableFuture<Void>> streamAll;
-      Collection<ExtendedRecord> erCollection = erExtMap.values();
-      if (useSyncMode) {
-        streamAll =
-            Stream.of(
-                CompletableFuture.runAsync(() -> erCollection.forEach(interpretAllFn), executor));
-      } else {
-        streamAll =
-            erCollection.stream()
-                .map(v -> CompletableFuture.runAsync(() -> interpretAllFn.accept(v), executor));
-      }
-
-      // Wait for all features
-      CompletableFuture<?>[] futures =
-          Stream.concat(streamIds, streamAll).toArray(CompletableFuture[]::new);
-      CompletableFuture.allOf(futures).get();
 
     } catch (Exception e) {
       log.error("Failed performing conversion on {}", e.getMessage());
@@ -380,5 +365,10 @@ public class VerbatimToInterpretedPipeline {
 
   private static boolean useMetadataRecordWriteIO(Set<String> types) {
     return types.contains(RecordType.METADATA.name()) || types.contains(RecordType.ALL.name());
+  }
+
+  private static boolean useMetadataRecordReadIO(Set<String> types) {
+    return types.contains(RecordType.LOCATION.name())
+        || types.contains(RecordType.GRSCICOLL.name());
   }
 }

@@ -87,8 +87,7 @@ public class VerbatimToInterpretedPipelineIT {
         PipelinesOptionsFactory.createInterpretation(args);
     GbifIdTransform gbifIdTransform = GbifIdTransform.builder().create();
     try (SyncDataFileWriter<GbifIdRecord> writer =
-        InterpretedAvroWriter.createAvroWriter(
-            optionsWriter, GbifIdTransform.builder().create(), postfix)) {
+        InterpretedAvroWriter.createAvroWriter(optionsWriter, gbifIdTransform, postfix)) {
       GbifIdRecord gbifIdRecord = GbifIdRecord.newBuilder().setId(ID).setGbifId(1L).build();
       writer.append(gbifIdRecord);
     }

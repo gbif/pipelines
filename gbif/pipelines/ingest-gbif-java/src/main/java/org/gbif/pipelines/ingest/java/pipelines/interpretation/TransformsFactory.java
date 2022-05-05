@@ -95,7 +95,8 @@ public class TransformsFactory {
         .isTripletValid(options.isTripletValid())
         .isOccurrenceIdValid(options.isOccurrenceIdValid())
         .keygenServiceSupplier(keyServiceSupplier)
-        .create();
+        .create()
+        .init();
   }
 
   public GbifIdTransform createGbifIdTransform() {

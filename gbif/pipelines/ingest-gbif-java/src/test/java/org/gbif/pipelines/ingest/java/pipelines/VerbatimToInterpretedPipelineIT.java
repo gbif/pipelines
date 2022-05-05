@@ -1,6 +1,7 @@
 package org.gbif.pipelines.ingest.java.pipelines;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.ALL;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.METADATA;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.TAXONOMY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -37,6 +38,7 @@ import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
+import org.gbif.pipelines.transforms.specific.GbifIdTransform;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -90,6 +92,16 @@ public class VerbatimToInterpretedPipelineIT {
       "--testMode=true"
     };
 
+    String postfix = "777";
+    InterpretationPipelineOptions optionsWriter =
+        PipelinesOptionsFactory.createInterpretation(args);
+    try (SyncDataFileWriter<GbifIdRecord> writer =
+        InterpretedAvroWriter.createAvroWriter(
+            optionsWriter, GbifIdTransform.builder().create(), postfix)) {
+      GbifIdRecord gbifIdRecord = GbifIdRecord.newBuilder().setId(ID).setGbifId(1L).build();
+      writer.append(gbifIdRecord);
+    }
+
     // When, Should
     pipelineTest(args, attempt, outputFile);
   }
@@ -114,6 +126,46 @@ public class VerbatimToInterpretedPipelineIT {
       "--syncThreshold=0",
       "--testMode=true"
     };
+
+    // When, Should
+    pipelineTest(args, attempt, outputFile);
+  }
+
+  @Test
+  public void pipelineManySynchTest() throws Exception {
+
+    // State
+    String outputFile = getClass().getResource("/data7/ingest").getFile();
+
+    String attempt = "99";
+
+    String[] args = {
+      "--datasetId=" + DATASET_KEY,
+      "--attempt=" + attempt,
+      "--runner=SparkRunner",
+      "--metaFileName=verbatim-to-interpreted.yml",
+      "--inputPath=" + outputFile + "/" + DATASET_KEY + "/" + attempt + "/verbatim.avro",
+      "--targetPath=" + outputFile,
+      "--interpretationTypes=IDENTIFIER_ABSENT,CLUSTERING,TEMPORAL,LOCATION,GRSCICOLL,MULTIMEDIA,MEASUREMENT_OR_FACT_TABLE,BASIC,TAXONOMY,IMAGE,AMPLIFICATION,OCCURRENCE,VERBATIM,LOCATION_FEATURE,MEASUREMENT_OR_FACT,AUDUBON,METADATA",
+      "--properties=" + outputFile + "/pipelines.yaml",
+      "--testMode=true"
+    };
+
+    String postfix = "777";
+    InterpretationPipelineOptions optionsWriter =
+        PipelinesOptionsFactory.createInterpretation(args);
+    GbifIdTransform transform = GbifIdTransform.builder().create();
+    try (SyncDataFileWriter<GbifIdRecord> writer =
+        InterpretedAvroWriter.createAvroWriter(optionsWriter, transform, postfix)) {
+      GbifIdRecord gbifIdRecord = GbifIdRecord.newBuilder().setId(ID).setGbifId(1L).build();
+      writer.append(gbifIdRecord);
+    }
+    try (SyncDataFileWriter<GbifIdRecord> writer =
+        InterpretedAvroWriter.createAvroWriter(
+            optionsWriter, transform, postfix, transform.getAbsentName())) {
+      GbifIdRecord gbifIdRecord = GbifIdRecord.newBuilder().setId(ID).build();
+      writer.append(gbifIdRecord);
+    }
 
     // When, Should
     pipelineTest(args, attempt, outputFile);
@@ -179,7 +231,6 @@ public class VerbatimToInterpretedPipelineIT {
 
     String interpretedOutput = String.join("/", outputFile, DATASET_KEY, attempt, "interpreted");
 
-    assertEquals(13, new File(interpretedOutput).listFiles().length);
     assertFile(AudubonRecord.class, interpretedOutput + "/audubon");
     assertFile(BasicRecord.class, interpretedOutput + "/basic");
     assertFile(ClusteringRecord.class, interpretedOutput + "/clustering");
@@ -188,11 +239,17 @@ public class VerbatimToInterpretedPipelineIT {
     assertFile(GrscicollRecord.class, interpretedOutput + "/grscicoll");
     assertFile(ImageRecord.class, interpretedOutput + "/image");
     assertFile(LocationRecord.class, interpretedOutput + "/location");
-    assertFile(MetadataRecord.class, interpretedOutput + "/metadata");
     assertFile(MultimediaRecord.class, interpretedOutput + "/multimedia");
     assertFile(TaxonRecord.class, interpretedOutput + "/taxonomy");
     assertFile(TemporalRecord.class, interpretedOutput + "/temporal");
     assertFile(ExtendedRecord.class, interpretedOutput + "/verbatim");
+    int expected = 12;
+    if (options.getInterpretationTypes().contains(METADATA.name())
+        || options.getInterpretationTypes().contains(ALL.name())) {
+      assertFile(MetadataRecord.class, interpretedOutput + "/metadata");
+      expected++;
+    }
+    assertEquals(expected, new File(interpretedOutput).listFiles().length);
   }
 
   private <T extends SpecificRecordBase> void assertFile(Class<T> clazz, String output)

@@ -1,7 +1,6 @@
 package org.gbif.pipelines.ingest.pipelines;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.DIRECTORY_NAME;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.IDENTIFIER;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -80,7 +79,8 @@ public class VerbatimToIdentifierPipeline {
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     GbifIdTupleTransform tupleTransform = GbifIdTupleTransform.create();
 
-    FsUtils.deleteInterpretIfExist(hdfsConfigs, targetPath, datasetId, attempt, idTransform.getAllNames());
+    FsUtils.deleteInterpretIfExist(
+        hdfsConfigs, targetPath, datasetId, attempt, idTransform.getAllNames());
 
     log.info("Creating beam pipeline");
 
