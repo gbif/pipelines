@@ -1,7 +1,5 @@
 package org.gbif.pipelines.ingest.pipelines;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
-
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -13,18 +11,25 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
+import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.gbif.common.parsers.date.DateComponentOrdering;
+import org.gbif.kvs.KeyValueStore;
+import org.gbif.kvs.geocode.LatLng;
+import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.core.utils.FsUtils;
+import org.gbif.pipelines.core.ws.metadata.MetadataServiceClient;
 import org.gbif.pipelines.factory.FileVocabularyFactory;
 import org.gbif.pipelines.factory.GeocodeKvStoreFactory;
+import org.gbif.pipelines.factory.MetadataServiceClientFactory;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.transforms.common.ExtensionFilterTransform;
@@ -38,6 +43,7 @@ import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.gbif.pipelines.transforms.specific.IdentifierTransform;
+import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.slf4j.MDC;
 
 /**
@@ -106,16 +112,31 @@ public class EventsVerbatimToInterpretedPipeline {
     UnaryOperator<String> pathFn =
         t -> PathBuilder.buildPathInterpretUsingTargetPath(options, "event/" + t, id);
 
-    UnaryOperator<String> attemptPathFn =
-        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
-
     log.info("Creating a pipeline from options");
     options.setAppName("Event interpretation of " + datasetId);
     Pipeline p = pipelinesFn.apply(options);
 
     // Used transforms
+    // Init external clients - ws, kv caches, etc
+    SerializableSupplier<MetadataServiceClient> metadataServiceClientSupplier = null;
+    if (options.getUseMetadataWsCalls()) {
+      metadataServiceClientSupplier = MetadataServiceClientFactory.createSupplier(config);
+    }
+
+    SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> geocodeServiceSupplier =
+        GeocodeKvStoreFactory.createSupplier(config);
+    if (options.getTestMode()) {
+      metadataServiceClientSupplier = null;
+      geocodeServiceSupplier = null;
+    }
+
     // Metadata
-    MetadataTransform metadataTransform = MetadataTransform.builder().create();
+    MetadataTransform metadataTransform =
+        MetadataTransform.builder()
+            .clientSupplier(metadataServiceClientSupplier)
+            .attempt(attempt)
+            .endpointType(options.getEndPointType())
+            .create();
 
     EventCoreTransform eventCoreTransform =
         EventCoreTransform.builder()
@@ -132,9 +153,7 @@ public class EventsVerbatimToInterpretedPipeline {
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     // TODO START: ALA uses the same LocationRecord but another Transform
     LocationTransform locationTransform =
-        LocationTransform.builder()
-            .geocodeKvStoreSupplier(GeocodeKvStoreFactory.createSupplier(config))
-            .create();
+        LocationTransform.builder().geocodeKvStoreSupplier(geocodeServiceSupplier).create();
     // TODO END: ALA uses the same LocationRecord but another Transform
     TemporalTransform temporalTransform =
         TemporalTransform.builder().orderings(dateComponentOrdering).create();
@@ -149,56 +168,67 @@ public class EventsVerbatimToInterpretedPipeline {
 
     log.info("Creating beam pipeline");
 
+    // Create and write metadata
+    PCollection<MetadataRecord> metadataRecord;
+    if (useMetadataRecordWriteIO(types)) {
+      metadataRecord =
+          p.apply("Create metadata collection", Create.of(options.getDatasetId()))
+              .apply("Interpret metadata", metadataTransform.interpret());
+
+      metadataRecord.apply("Write metadata to avro", metadataTransform.write(pathFn));
+    } else {
+      metadataRecord = p.apply("Read metadata record", metadataTransform.read(pathFn));
+    }
+
     // Metadata TODO START: Will ALA use it?
     PCollectionView<MetadataRecord> metadataView =
-        p.apply("Read Metadata", metadataTransform.read(attemptPathFn))
-            .apply("Convert to view", View.asSingleton());
+        metadataRecord.apply("Convert to event metadata view", View.asSingleton());
 
     locationTransform.setMetadataView(metadataView);
     // TODO END: Will ALA use it?
 
     // Read raw records and filter duplicates
     PCollection<ExtendedRecord> uniqueRawRecords =
-        p.apply("Read verbatim", verbatimTransform.read(options.getInputPath()))
-            .apply("Filter duplicates", UniqueIdTransform.create())
+        p.apply("Read event  verbatim", verbatimTransform.read(options.getInputPath()))
+            .apply("Filter event duplicates", UniqueIdTransform.create())
             .apply(
-                "Filter extension",
+                "Filter event extensions",
                 ExtensionFilterTransform.create(config.getExtensionsAllowedForVerbatimSet()));
 
     // Interpret identifiers and write as avro files
     uniqueRawRecords
-        .apply("Interpret identifiers", identifierTransform.interpret())
-        .apply("Write identifiers to avro", identifierTransform.write(pathFn));
+        .apply("Interpret event identifiers", identifierTransform.interpret())
+        .apply("Write event identifiers to avro", identifierTransform.write(pathFn));
 
     // Interpret event core records and write as avro files
     uniqueRawRecords
         .apply("Interpret event core", eventCoreTransform.interpret())
-        .apply("Write event to avro", eventCoreTransform.write(pathFn));
+        .apply("Write event core to avro", eventCoreTransform.write(pathFn));
 
     uniqueRawRecords
-        .apply("Interpret temporal", temporalTransform.interpret())
-        .apply("Write temporal to avro", temporalTransform.write(pathFn));
+        .apply("Interpret event temporal", temporalTransform.interpret())
+        .apply("Write event temporal to avro", temporalTransform.write(pathFn));
 
     // TODO START: DO WE NEED ALL MULTIMEDIA EXTENSIONS?
     uniqueRawRecords
-        .apply("Interpret multimedia", multimediaTransform.interpret())
-        .apply("Write multimedia to avro", multimediaTransform.write(pathFn));
+        .apply("Interpret event multimedia", multimediaTransform.interpret())
+        .apply("Write event multimedia to avro", multimediaTransform.write(pathFn));
 
     uniqueRawRecords
-        .apply("Interpret audubon", audubonTransform.interpret())
-        .apply("Write audubon to avro", audubonTransform.write(pathFn));
+        .apply("Interpret event audubon", audubonTransform.interpret())
+        .apply("Write event audubon to avro", audubonTransform.write(pathFn));
 
     uniqueRawRecords
-        .apply("Interpret image", imageTransform.interpret())
-        .apply("Write image to avro", imageTransform.write(pathFn));
+        .apply("Interpret event image", imageTransform.interpret())
+        .apply("Write event image to avro", imageTransform.write(pathFn));
     // TODO END
 
     uniqueRawRecords
-        .apply("Interpret location", locationTransform.interpret())
-        .apply("Write location to avro", locationTransform.write(pathFn));
+        .apply("Interpret event location", locationTransform.interpret())
+        .apply("Write event location to avro", locationTransform.write(pathFn));
 
     // Write filtered verbatim avro files
-    uniqueRawRecords.apply("Write verbatim to avro", verbatimTransform.write(pathFn));
+    uniqueRawRecords.apply("Write event verbatim to avro", verbatimTransform.write(pathFn));
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();
@@ -212,5 +242,10 @@ public class EventsVerbatimToInterpretedPipeline {
     FsUtils.deleteDirectoryByPrefix(hdfsSiteConfig, coreSiteConfig, tempPath, ".temp-beam");
 
     log.info("Pipeline has been finished");
+  }
+
+  private static boolean useMetadataRecordWriteIO(Set<String> types) {
+    return types.contains(PipelinesVariables.Pipeline.Interpretation.RecordType.METADATA.name())
+        || types.contains(PipelinesVariables.Pipeline.Interpretation.RecordType.ALL.name());
   }
 }

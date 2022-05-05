@@ -22,13 +22,11 @@ import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
 import org.gbif.pipelines.ingest.pipelines.utils.InterpretedAvroWriter;
-import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -36,7 +34,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @SuppressWarnings("all")
-@Ignore("TODO: FIX!")
 @RunWith(JUnit4.class)
 @Category(NeedsRunner.class)
 public class EventsVerbatimToInterpretedPipelineIT {
@@ -62,6 +59,8 @@ public class EventsVerbatimToInterpretedPipelineIT {
       "--inputPath=" + outputFile + "/" + DATASET_KEY + "/" + attempt + "/verbatim.avro",
       "--targetPath=" + outputFile,
       "--properties=" + outputFile + "/pipelines.yaml",
+      "--interpretationTypes=ALL",
+      "--syncThreshold=0",
       "--testMode=true"
     };
 
@@ -106,10 +105,10 @@ public class EventsVerbatimToInterpretedPipelineIT {
 
     String interpretedOutput = String.join("/", outputFile, DATASET_KEY, attempt, "interpreted");
 
-    assertEquals(3, new File(interpretedOutput).listFiles().length);
-    assertFile(IdentifierRecord.class, interpretedOutput + "/identifier");
-    assertFile(EventCoreRecord.class, interpretedOutput + "/event_core");
-    assertFile(ExtendedRecord.class, interpretedOutput + "/verbatim");
+    assertEquals(2, new File(interpretedOutput).listFiles().length);
+    assertFile(IdentifierRecord.class, interpretedOutput + "/event/identifier");
+    assertFile(ExtendedRecord.class, interpretedOutput + "/event/verbatim");
+    assertFile(ExtendedRecord.class, interpretedOutput + "/event/event_core");
   }
 
   private <T extends SpecificRecordBase> void assertFile(Class<T> clazz, String output)
