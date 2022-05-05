@@ -3,7 +3,6 @@ package org.gbif.pipelines.transforms.converters;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
 
 import java.io.Serializable;
-import java.util.List;
 import lombok.Builder;
 import lombok.NonNull;
 import org.apache.beam.sdk.metrics.Counter;
@@ -120,7 +119,7 @@ public class ParentJsonTransform implements Serializable {
             MultimediaRecord mmr = MultimediaConverter.merge(mr, imr, ar);
 
             // Convert and
-            List<String> jsons =
+            String json =
                 ParentJsonConverter.builder()
                     .metadata(mdr)
                     .eventCore(ecr)
@@ -130,13 +129,10 @@ public class ParentJsonTransform implements Serializable {
                     .multimedia(mmr)
                     .verbatim(er)
                     .build()
-                    .toJsons();
+                    .toJson();
 
-            jsons.forEach(
-                json -> {
-                  c.output(json);
-                  counter.inc();
-                });
+            c.output(json);
+            counter.inc();
           }
         };
 

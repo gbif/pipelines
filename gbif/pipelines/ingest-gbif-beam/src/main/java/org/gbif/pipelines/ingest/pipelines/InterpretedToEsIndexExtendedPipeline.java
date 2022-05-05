@@ -4,7 +4,7 @@ import java.util.Set;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.gbif.api.model.pipelines.StepType;
+import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.pipelines.common.beam.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
@@ -71,9 +71,16 @@ public class InterpretedToEsIndexExtendedPipeline {
   public static void run(EsIndexingPipelineOptions options) {
     MDC.put("datasetKey", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
-    MDC.put("step", StepType.INTERPRETED_TO_INDEX.name());
+    MDC.put("step", options.getStepType().name());
 
-    run(options, () -> InterpretedToEsIndexPipeline.run(options));
+    if (DatasetType.OCCURRENCE == options.getDatasetType()) {
+      run(options, () -> InterpretedToEsIndexPipeline.run(options));
+    } else if (DatasetType.SAMPLING_EVENT == options.getDatasetType()) {
+      run(options, () -> EventsInterpretedToIndexPipeline.run(options));
+    } else {
+      throw new IllegalArgumentException(
+          "DatasetType" + options.getDatasetType() + " nor recognized for this pipeline");
+    }
 
     FsUtils.removeTmpDirectoryAfterShutdown(PathBuilder.getTempDir(options));
     log.info("Finished main indexing pipeline");

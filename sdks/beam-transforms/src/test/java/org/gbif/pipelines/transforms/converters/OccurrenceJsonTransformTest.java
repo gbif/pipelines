@@ -58,6 +58,7 @@ import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.VocabularyConcept;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.io.avro.grscicoll.Match;
+import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.GrscicollTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
@@ -478,7 +479,7 @@ public class OccurrenceJsonTransformTest {
         p.apply("Read Audubon", Create.empty(new TypeDescriptor<AudubonRecord>() {}))
             .apply("Map Audubon to KV", audubonTransform.toKv());
 
-    SingleOutput<KV<String, CoGbkResult>, String> occurrenceJsonDoFn =
+    SingleOutput<KV<String, CoGbkResult>, OccurrenceJsonRecord> occurrenceJsonDoFn =
         OccurrenceJsonTransform.builder()
             .extendedRecordTag(verbatimTransform.getTag())
             .gbifIdRecordTag(gbifIdTransform.getTag())
@@ -495,7 +496,7 @@ public class OccurrenceJsonTransformTest {
             .build()
             .converter();
 
-    PCollection<String> jsonCollection =
+    PCollection<OccurrenceJsonRecord> jsonCollection =
         KeyedPCollectionTuple
             // Core
             .of(basicTransform.getTag(), basicCollection)
@@ -516,7 +517,7 @@ public class OccurrenceJsonTransformTest {
             .apply("Merging to json", occurrenceJsonDoFn);
 
     // Should
-    String json =
+    OccurrenceJsonRecord json =
         OccurrenceJsonConverter.builder()
             .basic(br)
             .gbifId(id)
@@ -529,7 +530,7 @@ public class OccurrenceJsonTransformTest {
             .grscicoll(gr)
             .multimedia(mmr)
             .build()
-            .toJson();
+            .convert();
 
     PAssert.that(jsonCollection).containsInAnyOrder(Collections.singletonList(json));
     p.run();

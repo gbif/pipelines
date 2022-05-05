@@ -71,8 +71,7 @@ public abstract class Transform<R, T extends SpecificRecordBase & Record> extend
   /**
    * Checks if list contains {@link InterpretationType}, else returns empty {@link PCollection<T>}.
    *
-   * <p>This method should be used only when the deafault {@link #check(Set)} doesn't fill the
-   * needs.
+   * <p>This method should be used only when the default {@link #check(Set)} doesn't fill the needs.
    */
   public <S> CheckTransforms<S> check(Set<String> types, Class<S> outputClass) {
     return CheckTransforms.create(outputClass, CheckTransforms.checkRecordType(types, recordType));

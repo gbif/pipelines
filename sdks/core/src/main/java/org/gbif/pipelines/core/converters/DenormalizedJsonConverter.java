@@ -4,16 +4,11 @@ import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
-import lombok.var;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwc.terms.TermFactory;
 import org.gbif.pipelines.core.utils.HashConverter;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -27,7 +22,7 @@ import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.io.avro.json.EventJsonRecord;
 import org.gbif.pipelines.io.avro.json.JoinRecord;
 import org.gbif.pipelines.io.avro.json.MetadataJsonRecord;
-import org.gbif.pipelines.io.avro.json.OccurrenceMapRecord;
+import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
 import org.gbif.pipelines.io.avro.json.ParentJsonRecord;
 
 @Slf4j
@@ -43,20 +38,13 @@ public class DenormalizedJsonConverter {
   private final GrscicollRecord grscicoll;
   private final MultimediaRecord multimedia;
   private final ExtendedRecord verbatim;
+  private OccurrenceJsonRecord occurrenceJsonRecord;
 
   public List<ParentJsonRecord> convertToParents() {
 
     List<ParentJsonRecord> result = new ArrayList<>();
-
-    var extensions = verbatim.getExtensions();
-
-    if (extensions != null
-        && extensions.get(DwcTerm.Occurrence.qualifiedName()) != null
-        && extensions.get(DwcTerm.Occurrence.qualifiedName()).size() > 0) {
-      extensions.get(DwcTerm.Occurrence.qualifiedName()).stream()
-          .map(this::convertToOccurrence)
-          .map(this::convertToParentOccurrence)
-          .forEach(result::add);
+    if (occurrenceJsonRecord != null) {
+      result.add(convertToParentOccurrence());
     } else {
       result.add(convertToParentEvent());
     }
@@ -76,14 +64,12 @@ public class DenormalizedJsonConverter {
         .build();
   }
 
-  private ParentJsonRecord convertToParentOccurrence(OccurrenceMapRecord occurrenceJsonRecord) {
+  private ParentJsonRecord convertToParentOccurrence() {
     return convertToParent()
         .setType("occurrence")
         .setInternalId(
             HashConverter.getSha1(
-                metadata.getDatasetKey(),
-                verbatim.getId(),
-                occurrenceJsonRecord.getCore().get(DwcTerm.occurrenceID.simpleName())))
+                metadata.getDatasetKey(), verbatim.getId(), occurrenceJsonRecord.getOccurrenceId()))
         .setJoinRecordBuilder(
             JoinRecord.newBuilder().setName("occurrence").setParent(identifier.getInternalId()))
         .setEventBuilder(convertToEvent())
@@ -106,14 +92,6 @@ public class DenormalizedJsonConverter {
     JsonConverter.convertToDate(metadata.getLastCrawled()).ifPresent(builder::setLastCrawled);
 
     return builder;
-  }
-
-  private OccurrenceMapRecord convertToOccurrence(Map<String, String> occurrenceMap) {
-    HashMap<String, String> map = new HashMap<>(occurrenceMap.size());
-    for (Entry<String, String> entry : occurrenceMap.entrySet()) {
-      map.put(TermFactory.instance().findTerm(entry.getKey()).simpleName(), entry.getValue());
-    }
-    return OccurrenceMapRecord.newBuilder().setCore(map).build();
   }
 
   private EventJsonRecord.Builder convertToEvent() {
@@ -232,7 +210,7 @@ public class DenormalizedJsonConverter {
   }
 
   private void mapExtendedRecord(EventJsonRecord.Builder builder) {
-    builder.setExtensions(JsonConverter.convertExtenstions(verbatim));
+    builder.setExtensions(JsonConverter.convertExtensions(verbatim));
 
     // Set raw as indexed
     extractOptValue(verbatim, DwcTerm.eventID).ifPresent(builder::setEventId);

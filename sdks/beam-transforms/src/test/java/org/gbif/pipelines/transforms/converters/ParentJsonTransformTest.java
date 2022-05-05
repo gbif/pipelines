@@ -310,7 +310,7 @@ public class ParentJsonTransformTest {
             .apply("Merging to json", eventJsonDoFn);
 
     // Should
-    List<String> jsons =
+    String json =
         ParentJsonConverter.builder()
             .metadata(mr)
             .eventCore(ecr)
@@ -320,9 +320,9 @@ public class ParentJsonTransformTest {
             .multimedia(mmr)
             .verbatim(er)
             .build()
-            .toJsons();
+            .toJson();
 
-    PAssert.that(jsonCollection).containsInAnyOrder(jsons);
+    PAssert.that(jsonCollection).containsInAnyOrder(json);
     p.run();
   }
 }

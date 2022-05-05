@@ -10,14 +10,6 @@
     ]
   },
   {
-    "name":"OccurrenceMapRecord",
-    "namespace":"org.gbif.pipelines.io.avro.json",
-    "type":"record",
-    "fields":[
-      {"name":"core","doc":"The core record terms","default":{},"type":{"type":"map","values":"string"}}
-    ]
-  },
-  {
     "name":"ParentJsonRecord",
     "namespace":"org.gbif.pipelines.io.avro.json",
     "type":"record",
@@ -39,7 +31,7 @@
       // Event
       {"name":"event","type":["null","EventJsonRecord"],"default":null,"doc":""},
       // Occurrence
-      {"name":"occurrence","type":["null","OccurrenceMapRecord"],"default":null,"doc":""},
+      {"name":"occurrence","type":["null","OccurrenceJsonRecord"],"default":null,"doc":""},
       // Raw
       {"name":"verbatim","type":["null","VerbatimRecord"],"default":null,"doc":""},
       // ES document join field type

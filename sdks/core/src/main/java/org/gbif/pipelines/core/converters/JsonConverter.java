@@ -122,7 +122,7 @@ class JsonConverter {
         .collect(Collectors.toList());
   }
 
-  protected static List<String> convertExtenstions(ExtendedRecord extendedRecord) {
+  protected static List<String> convertExtensions(ExtendedRecord extendedRecord) {
     return extendedRecord.getExtensions().entrySet().stream()
         .filter(e -> e.getValue() != null && !e.getValue().isEmpty())
         .map(Entry::getKey)
@@ -133,6 +133,7 @@ class JsonConverter {
   protected static VerbatimRecord convertVerbatimRecord(ExtendedRecord extendedRecord) {
     return VerbatimRecord.newBuilder()
         .setCore(extendedRecord.getCoreTerms())
+        .setParentCoreId(extendedRecord.getParentCoreId())
         .setExtensions(extendedRecord.getExtensions())
         .build();
   }

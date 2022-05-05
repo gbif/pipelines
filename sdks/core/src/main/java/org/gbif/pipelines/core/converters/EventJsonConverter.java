@@ -167,7 +167,7 @@ public class EventJsonConverter {
     builder
         .setId(verbatim.getId())
         .setAll(JsonConverter.convertFieldAll(verbatim))
-        .setExtensions(JsonConverter.convertExtenstions(verbatim))
+        .setExtensions(JsonConverter.convertExtensions(verbatim))
         .setVerbatim(JsonConverter.convertVerbatimRecord(verbatim));
 
     // Set raw as indexed
