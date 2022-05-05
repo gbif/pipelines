@@ -3,6 +3,7 @@ package org.gbif.pipelines.tasks.events.indexing;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.time.Instant;
+import java.util.Optional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
@@ -12,8 +13,13 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesEventsIndexedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesEventsInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
+import org.gbif.pipelines.common.PipelinesVariables.Events;
+import org.gbif.pipelines.common.PipelinesVariables.Metrics;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
+import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
+import org.gbif.pipelines.tasks.events.interpretation.EventsInterpretationConfiguration;
 
 /** Callback which is called when the {@link PipelinesEventsMessage} is received. */
 @Slf4j
@@ -56,9 +62,10 @@ public class EventsIndexingCallback
   public Runnable createRunnable(PipelinesEventsInterpretedMessage message) {
     return () -> {
       try {
+        long recordsNumber = getRecordNumber(message);
 
         String indexName = computeIndexName(message);
-        int numberOfShards = computeNumberOfShards();
+        int numberOfShards = computeNumberOfShards(recordsNumber);
 
         ProcessRunnerBuilder.ProcessRunnerBuilderBuilder builder =
             ProcessRunnerBuilder.builder()
@@ -69,7 +76,7 @@ public class EventsIndexingCallback
                 .esShardsNumber(numberOfShards);
 
         log.info("Start the process. Message - {}", message);
-        runDistributed(message, builder);
+        runDistributed(message, builder, recordsNumber);
       } catch (Exception ex) {
         log.error(ex.getMessage(), ex);
         throw new IllegalStateException(
@@ -95,12 +102,17 @@ public class EventsIndexingCallback
 
   private void runDistributed(
       PipelinesEventsInterpretedMessage message,
-      ProcessRunnerBuilder.ProcessRunnerBuilderBuilder builder)
+      ProcessRunnerBuilder.ProcessRunnerBuilderBuilder builder,
+      long recordsNumber)
       throws IOException, InterruptedException {
+    String datasetId = message.getDatasetUuid().toString();
+    String attempt = Integer.toString(message.getAttempt());
+    int sparkExecutorNumbers = computeSparkExecutorNumbers(recordsNumber);
+
     builder
-        .sparkParallelism(computeSparkParallelism())
-        .sparkExecutorMemory(computeSparkExecutorMemory(config.sparkConfig.executorCores))
-        .sparkExecutorNumbers(config.sparkConfig.executorCores);
+        .sparkParallelism(computeSparkParallelism(datasetId, attempt))
+        .sparkExecutorMemory(computeSparkExecutorMemory(sparkExecutorNumbers, recordsNumber))
+        .sparkExecutorNumbers(sparkExecutorNumbers);
 
     // Assembles a terminal java process and runs it
     int exitValue = builder.build().get().start().waitFor();
@@ -116,25 +128,42 @@ public class EventsIndexingCallback
    * Computes the number of thread for spark.default.parallelism, top limit is
    * config.sparkParallelismMax
    */
-  private int computeSparkParallelism() {
-    // TODO: refine this
-    int parallelism = 50;
-    if (parallelism < config.sparkConfig.parallelismMin) {
+  private int computeSparkParallelism(String datasetId, String attempt) throws IOException {
+    // Chooses a runner type by calculating number of files
+    String eventCore = RecordType.EVENT_CORE.name().toLowerCase();
+    String eventsPath =
+        String.join(
+            "/",
+            config.stepConfig.repositoryPath,
+            datasetId,
+            attempt,
+            Events.EVENTS_DIR,
+            Events.EVENTS_INTERPRETATION_DIR,
+            eventCore);
+    int count =
+        HdfsUtils.getFileCount(
+            config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig, eventsPath);
+    count *= 4;
+    if (count < config.sparkConfig.parallelismMin) {
       return config.sparkConfig.parallelismMin;
     }
-    if (parallelism > config.sparkConfig.parallelismMax) {
+    if (count > config.sparkConfig.parallelismMax) {
       return config.sparkConfig.parallelismMax;
     }
-    return parallelism;
+    return count;
   }
 
   /**
    * Computes the memory for executor in Gb, where min is config.sparkConfig.executorMemoryGbMin and
    * max is config.sparkConfig.executorMemoryGbMax
    */
-  private String computeSparkExecutorMemory(int sparkExecutorNumbers) {
-    // TODO: refine this
-    int size = sparkExecutorNumbers + 2;
+  private String computeSparkExecutorMemory(int sparkExecutorNumbers, long recordsNumber) {
+    int size =
+        (int)
+            Math.ceil(
+                (double) recordsNumber
+                    / (sparkExecutorNumbers * config.sparkConfig.recordsPerThread)
+                    * 1.6);
 
     if (size < config.sparkConfig.executorMemoryGbMin) {
       return config.sparkConfig.executorMemoryGbMin + "G";
@@ -143,6 +172,27 @@ public class EventsIndexingCallback
       return config.sparkConfig.executorMemoryGbMax + "G";
     }
     return size + "G";
+  }
+
+  /**
+   * Computes the numbers of executors, where min is config.sparkConfig.executorNumbersMin and max
+   * is config.sparkConfig.executorNumbersMax
+   *
+   * <p>500_000d is records per executor
+   */
+  private int computeSparkExecutorNumbers(long recordsNumber) {
+    int sparkExecutorNumbers =
+        (int)
+            Math.ceil(
+                (double) recordsNumber
+                    / (config.sparkConfig.executorCores * config.sparkConfig.recordsPerThread));
+    if (sparkExecutorNumbers < config.sparkConfig.executorNumbersMin) {
+      return config.sparkConfig.executorNumbersMin;
+    }
+    if (sparkExecutorNumbers > config.sparkConfig.executorNumbersMax) {
+      return config.sparkConfig.executorNumbersMax;
+    }
+    return sparkExecutorNumbers;
   }
 
   /** Computes the name for ES index. We always use an independent index for each dataset. */
@@ -156,8 +206,52 @@ public class EventsIndexingCallback
     return idxName;
   }
 
-  private int computeNumberOfShards() {
-    // TODO:
-    return 10;
+  private int computeNumberOfShards(long recordsNumber) {
+    double shards = recordsNumber / (double) config.indexConfig.recordsPerShard;
+    shards = Math.max(shards, 1d);
+    boolean isCeil = (shards - Math.floor(shards)) > 0.25d;
+    return isCeil ? (int) Math.ceil(shards) : (int) Math.floor(shards);
+  }
+
+  /**
+   * Reads number of records from a archive-to-avro metadata file, verbatim-to-interpreted contains
+   * attempted records count, which is not accurate enough
+   */
+  private long getRecordNumber(PipelinesEventsInterpretedMessage message) throws IOException {
+    String datasetId = message.getDatasetUuid().toString();
+    String attempt = Integer.toString(message.getAttempt());
+    String metaFileName = new EventsInterpretationConfiguration().metaFileName;
+    // TODO: double check if the path is correct
+    String metaPath =
+        String.join(
+            "/",
+            config.stepConfig.repositoryPath,
+            datasetId,
+            attempt,
+            Events.EVENTS_DIR,
+            metaFileName);
+
+    Long messageNumber = message.getNumberOfRecords();
+    // TODO: check what metric to read
+    Optional<Long> fileNumber =
+        HdfsUtils.getLongByKey(
+            config.stepConfig.hdfsSiteConfig,
+            config.stepConfig.coreSiteConfig,
+            metaPath,
+            Metrics.UNIQUE_GBIF_IDS_COUNT + Metrics.ATTEMPTED);
+
+    if (messageNumber == null && !fileNumber.isPresent()) {
+      throw new IllegalArgumentException(
+          "Please check archive-to-avro metadata yaml file or message records number, recordsNumber can't be null or empty!");
+    }
+
+    if (messageNumber == null) {
+      return fileNumber.get();
+    }
+
+    if (!fileNumber.isPresent() || messageNumber > fileNumber.get()) {
+      return messageNumber;
+    }
+    return fileNumber.get();
   }
 }
