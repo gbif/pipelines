@@ -54,8 +54,6 @@ public class VerbatimToIdentifierPipeline {
     PipelinesConfig config =
         FsUtils.readConfigFile(hdfsConfigs, options.getProperties(), PipelinesConfig.class);
 
-    FsUtils.deleteInterpretIfExist(hdfsConfigs, targetPath, datasetId, attempt, IDENTIFIER.name());
-
     options.setAppName("VERBATIM_TO_IDENTIFIER" + "_" + datasetId + "_" + attempt);
     MDC.put("datasetKey", datasetId);
     MDC.put("attempt", attempt.toString());
@@ -81,6 +79,8 @@ public class VerbatimToIdentifierPipeline {
 
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     GbifIdTupleTransform tupleTransform = GbifIdTupleTransform.create();
+
+    FsUtils.deleteInterpretIfExist(hdfsConfigs, targetPath, datasetId, attempt, idTransform.getAllNames());
 
     log.info("Creating beam pipeline");
 

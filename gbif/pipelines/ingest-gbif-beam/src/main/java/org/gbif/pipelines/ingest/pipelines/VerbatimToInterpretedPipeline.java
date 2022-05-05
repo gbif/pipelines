@@ -135,9 +135,7 @@ public class VerbatimToInterpretedPipeline {
     UnaryOperator<String> interpretedPathFn =
         t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
 
-    log.info("Creating a pipeline from options");
-    Pipeline p = pipelinesFn.apply(options);
-
+    log.info("Creating pipeline transforms");
     MetadataTransform metadataTransform = transformsFactory.createMetadataTransform();
     VerbatimTransform verbatimTransform = transformsFactory.createVerbatimTransform();
     GbifIdAbsentTransform idAbsentTransform = transformsFactory.createGbifIdAbsentTransform();
@@ -154,6 +152,7 @@ public class VerbatimToInterpretedPipeline {
     ImageTransform imageTransform = transformsFactory.createImageTransform();
 
     log.info("Creating beam pipeline");
+    Pipeline p = pipelinesFn.apply(options);
 
     // Create and write metadata
     PCollection<MetadataRecord> metadataRecord;

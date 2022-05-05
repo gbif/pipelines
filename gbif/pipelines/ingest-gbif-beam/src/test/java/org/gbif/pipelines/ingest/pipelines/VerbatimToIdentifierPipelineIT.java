@@ -1,9 +1,4 @@
-package org.gbif.pipelines.ingest.java.pipelines;
-
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.ALL;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.TAXONOMY;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+package org.gbif.pipelines.ingest.pipelines;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -14,16 +9,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.apache.avro.file.DataFileReader;
-import org.apache.avro.io.DatumReader;
-import org.apache.avro.specific.SpecificDatumReader;
-import org.apache.avro.specific.SpecificRecordBase;
+
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
-import org.gbif.pipelines.ingest.java.transforms.InterpretedAvroWriter;
+import org.gbif.pipelines.ingest.pipelines.utils.InterpretedAvroWriter;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
@@ -37,41 +29,43 @@ import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
+import org.gbif.pipelines.transforms.specific.GbifIdTransform;
+
+import org.apache.avro.file.DataFileReader;
+import org.apache.avro.io.DatumReader;
+import org.apache.avro.specific.SpecificDatumReader;
+import org.apache.avro.specific.SpecificRecordBase;
+import org.apache.beam.sdk.testing.NeedsRunner;
+import org.apache.beam.sdk.testing.TestPipeline;
 import org.junit.Assert;
+import org.junit.FixMethodOrder;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+import org.junit.runners.MethodSorters;
+
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.ALL;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.CLUSTERING;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.IDENTIFIER;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.TAXONOMY;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 @SuppressWarnings("all")
-public class VerbatimToInterpretedPipelineIT {
+@RunWith(JUnit4.class)
+@Category(NeedsRunner.class)
+@FixMethodOrder(MethodSorters.JVM)
+public class VerbatimToIdentifierPipelineIT {
 
   private static final String ID = "777";
   private static final String DATASET_KEY = "9bed66b3-4caa-42bb-9c93-71d7ba109dad";
 
-  @Test
-  public void pipelineAllSynchTest() throws Exception {
-
-    // State
-    String outputFile = getClass().getResource("/data7/ingest").getFile();
-
-    String attempt = "55";
-
-    String[] args = {
-      "--datasetId=" + DATASET_KEY,
-      "--attempt=" + attempt,
-      "--runner=SparkRunner",
-      "--metaFileName=verbatim-to-interpreted.yml",
-      "--inputPath=" + outputFile + "/" + DATASET_KEY + "/" + attempt + "/verbatim.avro",
-      "--targetPath=" + outputFile,
-      "--interpretationTypes=" + ALL,
-      "--properties=" + outputFile + "/pipelines.yaml",
-      "--testMode=true"
-    };
-
-    // When, Should
-    pipelineTest(args, attempt, outputFile);
-  }
+  @Rule public final transient TestPipeline p = TestPipeline.create();
 
   @Test
-  public void pipelineTaxonomySynchTest() throws Exception {
+  public void identifierInterpretationTest() throws Exception {
 
     // State
     String outputFile = getClass().getResource("/data7/ingest").getFile();
@@ -82,36 +76,11 @@ public class VerbatimToInterpretedPipelineIT {
       "--datasetId=" + DATASET_KEY,
       "--attempt=" + attempt,
       "--runner=SparkRunner",
-      "--metaFileName=verbatim-to-interpreted.yml",
+      "--metaFileName=verbatim-to-identifier.yml",
       "--inputPath=" + outputFile + "/" + DATASET_KEY + "/" + attempt + "/verbatim.avro",
       "--targetPath=" + outputFile,
-      "--interpretationTypes=" + TAXONOMY,
+      "--interpretationTypes=" + IDENTIFIER,
       "--properties=" + outputFile + "/pipelines.yaml",
-      "--testMode=true"
-    };
-
-    // When, Should
-    pipelineTest(args, attempt, outputFile);
-  }
-
-  @Test
-  public void pipelineAllAsynchTest() throws Exception {
-
-    // State
-    String outputFile = getClass().getResource("/data7/ingest").getFile();
-
-    String attempt = "71";
-
-    String[] args = {
-      "--datasetId=" + DATASET_KEY,
-      "--attempt=" + attempt,
-      "--runner=SparkRunner",
-      "--metaFileName=verbatim-to-interpreted.yml",
-      "--inputPath=" + outputFile + "/" + DATASET_KEY + "/" + attempt + "/verbatim.avro",
-      "--targetPath=" + outputFile,
-      "--interpretationTypes=" + ALL,
-      "--properties=" + outputFile + "/pipelines.yaml",
-      "--syncThreshold=0",
       "--testMode=true"
     };
 
@@ -156,11 +125,7 @@ public class VerbatimToInterpretedPipelineIT {
       ext.put(Extension.MEASUREMENT_OR_FACT.getRowType(), Collections.singletonList(ext1));
 
       ExtendedRecord extendedRecord =
-          ExtendedRecord.newBuilder()
-              .setId(ID)
-              .setCoreTerms(Collections.singletonMap("Key", "Value"))
-              .setExtensions(ext)
-              .build();
+          ExtendedRecord.newBuilder().setId(ID).setExtensions(ext).build();
       writer.append(extendedRecord);
     }
     Path from =
@@ -170,29 +135,23 @@ public class VerbatimToInterpretedPipelineIT {
     Files.move(from, to);
 
     // When
-    VerbatimToInterpretedPipeline.run(options);
+    VerbatimToIdentifierPipeline.run(options, opt -> p);
 
     // Shoud
     String metricsOutput =
-        String.join("/", outputFile, DATASET_KEY, attempt, "verbatim-to-interpreted.yml");
+        String.join("/", outputFile, DATASET_KEY, attempt, "verbatim-to-identifier.yml");
     assertTrue(Files.exists(Paths.get(metricsOutput)));
 
     String interpretedOutput = String.join("/", outputFile, DATASET_KEY, attempt, "interpreted");
 
-    assertEquals(13, new File(interpretedOutput).listFiles().length);
-    assertFile(AudubonRecord.class, interpretedOutput + "/audubon");
-    assertFile(BasicRecord.class, interpretedOutput + "/basic");
-    assertFile(ClusteringRecord.class, interpretedOutput + "/clustering");
+    long dirCount =
+        Arrays.stream(new File(interpretedOutput).listFiles())
+            .filter(x -> !x.getPath().contains("verbatim"))
+            .count();
+
+    assertEquals(2L, dirCount);
     assertFile(GbifIdRecord.class, interpretedOutput + "/identifier");
-    assertFile(GbifIdRecord.class, interpretedOutput + "/identifier_invalid");
-    assertFile(GrscicollRecord.class, interpretedOutput + "/grscicoll");
-    assertFile(ImageRecord.class, interpretedOutput + "/image");
-    assertFile(LocationRecord.class, interpretedOutput + "/location");
-    assertFile(MetadataRecord.class, interpretedOutput + "/metadata");
-    assertFile(MultimediaRecord.class, interpretedOutput + "/multimedia");
-    assertFile(TaxonRecord.class, interpretedOutput + "/taxonomy");
-    assertFile(TemporalRecord.class, interpretedOutput + "/temporal");
-    assertFile(ExtendedRecord.class, interpretedOutput + "/verbatim");
+    assertFile(GbifIdRecord.class, interpretedOutput + "/identifier_absent");
   }
 
   private <T extends SpecificRecordBase> void assertFile(Class<T> clazz, String output)
@@ -215,11 +174,7 @@ public class VerbatimToInterpretedPipelineIT {
         Assert.assertNotNull(record);
 
         String id = (String) record.get("id");
-        if (record instanceof MetadataRecord) {
-          Assert.assertEquals(DATASET_KEY, id);
-        } else {
-          Assert.assertEquals(ID, id);
-        }
+        Assert.assertEquals(ID, id);
       }
     }
   }

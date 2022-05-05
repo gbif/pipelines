@@ -39,9 +39,14 @@ public class InterpretedAvroReader {
   /** Read avro files and return as Map<ID, Clazz> */
   public static <T extends SpecificRecordBase & Record> Map<String, T> readAvroUseTargetPath(
       InterpretationPipelineOptions options, Transform<?, T> transform) {
+    return readAvroUseTargetPath(options, transform, transform.getBaseName());
+  }
+
+  /** Read avro files and return as Map<ID, Clazz> */
+  public static <T extends SpecificRecordBase & Record> Map<String, T> readAvroUseTargetPath(
+      InterpretationPipelineOptions options, Transform<?, T> transform, String dirName) {
     String path =
-        PathBuilder.buildPathInterpretUsingTargetPath(
-            options, transform.getBaseName(), "*" + AVRO_EXTENSION);
+        PathBuilder.buildPathInterpretUsingTargetPath(options, dirName, "*" + AVRO_EXTENSION);
     return AvroReader.readRecords(
         HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()),
         transform.getReturnClazz(),
