@@ -2,12 +2,15 @@ package org.gbif.pipelines.tasks.identifier;
 
 import com.google.common.util.concurrent.AbstractIdleService;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.concurrent.ExecutorService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+
+import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
@@ -53,7 +56,11 @@ public class IdentifierService extends AbstractIdleService {
         new IdentifierCallback(config, publisher, curator, historyClient, httpClient);
 
     String routingKey =
-        new PipelinesVerbatimMessage().setRunner(config.processRunner).getRoutingKey() + ".*";
+        new PipelinesVerbatimMessage()
+                .setPipelineSteps(Collections.singleton(StepType.VERBATIM_TO_IDENTIFIER.name()))
+                .setRunner(config.processRunner)
+                .getRoutingKey()
+            + ".*";
     listener.listen(c.queueName, routingKey, c.poolSize, callback);
   }
 
