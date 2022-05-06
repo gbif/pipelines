@@ -18,6 +18,7 @@ import org.apache.beam.sdk.values.PCollectionView;
 import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
+import org.gbif.kvs.species.SpeciesMatchRequest;
 import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
@@ -30,12 +31,14 @@ import org.gbif.pipelines.core.ws.metadata.MetadataServiceClient;
 import org.gbif.pipelines.factory.FileVocabularyFactory;
 import org.gbif.pipelines.factory.GeocodeKvStoreFactory;
 import org.gbif.pipelines.factory.MetadataServiceClientFactory;
+import org.gbif.pipelines.factory.NameUsageMatchStoreFactory;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.transforms.common.ExtensionFilterTransform;
 import org.gbif.pipelines.transforms.common.UniqueIdTransform;
 import org.gbif.pipelines.transforms.core.EventCoreTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
+import org.gbif.pipelines.transforms.core.TaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
@@ -44,6 +47,7 @@ import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.gbif.pipelines.transforms.specific.IdentifierTransform;
 import org.gbif.rest.client.geocode.GeocodeResponse;
+import org.gbif.rest.client.species.NameUsageMatch;
 import org.slf4j.MDC;
 
 /**
@@ -110,7 +114,7 @@ public class EventsVerbatimToInterpretedPipeline {
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
     UnaryOperator<String> pathFn =
-        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, "event/" + t, id);
+        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, id);
 
     log.info("Creating a pipeline from options");
     options.setAppName("Event interpretation of " + datasetId);
@@ -123,11 +127,15 @@ public class EventsVerbatimToInterpretedPipeline {
       metadataServiceClientSupplier = MetadataServiceClientFactory.createSupplier(config);
     }
 
+    SerializableSupplier<KeyValueStore<SpeciesMatchRequest, NameUsageMatch>>
+        nameUsageMatchServiceSupplier = NameUsageMatchStoreFactory.createSupplier(config);
+
     SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> geocodeServiceSupplier =
         GeocodeKvStoreFactory.createSupplier(config);
     if (options.getTestMode()) {
       metadataServiceClientSupplier = null;
       geocodeServiceSupplier = null;
+      nameUsageMatchServiceSupplier = null;
     }
 
     // Metadata
@@ -148,13 +156,20 @@ public class EventsVerbatimToInterpretedPipeline {
                     .build()
                     .getInstanceSupplier())
             .create();
+
     IdentifierTransform identifierTransform =
         IdentifierTransform.builder().datasetKey(datasetId).create();
+
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
+
     // TODO START: ALA uses the same LocationRecord but another Transform
     LocationTransform locationTransform =
         LocationTransform.builder().geocodeKvStoreSupplier(geocodeServiceSupplier).create();
     // TODO END: ALA uses the same LocationRecord but another Transform
+
+    TaxonomyTransform taxonomyTransform =
+        TaxonomyTransform.builder().kvStoreSupplier(nameUsageMatchServiceSupplier).create();
+
     TemporalTransform temporalTransform =
         TemporalTransform.builder().orderings(dateComponentOrdering).create();
 
@@ -208,6 +223,11 @@ public class EventsVerbatimToInterpretedPipeline {
     uniqueRawRecords
         .apply("Interpret event temporal", temporalTransform.interpret())
         .apply("Write event temporal to avro", temporalTransform.write(pathFn));
+
+    uniqueRawRecords
+        .apply("Check event taxonomy transform", taxonomyTransform.check(types))
+        .apply("Interpret event taxonomy", taxonomyTransform.interpret())
+        .apply("Write event taxon to avro", taxonomyTransform.write(pathFn));
 
     // TODO START: DO WE NEED ALL MULTIMEDIA EXTENSIONS?
     uniqueRawRecords

@@ -45,6 +45,7 @@ public class ParentJsonConverter {
     return convertToParent().toString();
   }
 
+  /** Converts to parent record based on an event record.*/
   private ParentJsonRecord convertToParentEvent() {
     return convertToParentRecord()
         .setType("event")
@@ -53,18 +54,22 @@ public class ParentJsonConverter {
         .build();
   }
 
+  /** Converts to a parent record based on an occurrence record.*/
   private ParentJsonRecord convertToParentOccurrence() {
-    return convertToParentRecord()
-        .setType("occurrence")
-        .setInternalId(
-            HashConverter.getSha1(
-                metadata.getDatasetKey(), verbatim.getId(), occurrenceJsonRecord.getOccurrenceId()))
-        .setJoinRecordBuilder(
-            JoinRecord.newBuilder().setName("occurrence").setParent(identifier.getInternalId()))
-        .setOccurrence(occurrenceJsonRecord)
-        .build();
+    return ParentJsonRecord.newBuilder()
+            .setType("occurrence")
+            .setId(occurrenceJsonRecord.getId())
+            .setInternalId(
+                HashConverter.getSha1(
+                  occurrenceJsonRecord.getDatasetKey(), occurrenceJsonRecord.getVerbatim().getParentCoreId(), occurrenceJsonRecord.getOccurrenceId()))
+            .setJoinRecordBuilder(
+                JoinRecord.newBuilder().setName("occurrence").setParent(HashConverter.getSha1(
+                  occurrenceJsonRecord.getDatasetKey(), occurrenceJsonRecord.getVerbatim().getParentCoreId())))
+            .setOccurrence(occurrenceJsonRecord)
+            .build();
   }
 
+  /** Converts to a parent record */
   private ParentJsonRecord.Builder convertToParentRecord() {
     ParentJsonRecord.Builder builder =
         ParentJsonRecord.newBuilder()

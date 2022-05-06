@@ -61,7 +61,8 @@ public class EventsVerbatimToInterpretedPipelineIT {
       "--properties=" + outputFile + "/pipelines.yaml",
       "--interpretationTypes=ALL",
       "--syncThreshold=0",
-      "--testMode=true"
+      "--testMode=true",
+      "--dwcCore=Event"
     };
 
     // State
@@ -90,7 +91,8 @@ public class EventsVerbatimToInterpretedPipelineIT {
       writer.append(extendedRecord);
     }
     Path from =
-        Paths.get(outputFile, DATASET_KEY, attempt, "interpreted/verbatim/interpret-777.avro");
+        Paths.get(
+            outputFile, DATASET_KEY, attempt, "interpreted/event/verbatim/interpret-777.avro");
     Path to = Paths.get(outputFile, DATASET_KEY, attempt, "verbatim.avro");
     Files.deleteIfExists(to);
     Files.move(from, to);
@@ -103,12 +105,13 @@ public class EventsVerbatimToInterpretedPipelineIT {
         String.join("/", outputFile, DATASET_KEY, attempt, "verbatim-to-interpreted.yml");
     assertTrue(Files.exists(Paths.get(metricsOutput)));
 
-    String interpretedOutput = String.join("/", outputFile, DATASET_KEY, attempt, "interpreted");
+    String interpretedOutput =
+        String.join("/", outputFile, DATASET_KEY, attempt, "interpreted", "event");
 
-    assertEquals(2, new File(interpretedOutput).listFiles().length);
-    assertFile(IdentifierRecord.class, interpretedOutput + "/event/identifier");
-    assertFile(ExtendedRecord.class, interpretedOutput + "/event/verbatim");
-    assertFile(ExtendedRecord.class, interpretedOutput + "/event/event_core");
+    assertEquals(10, new File(interpretedOutput).listFiles().length);
+    assertFile(IdentifierRecord.class, interpretedOutput + "/identifier");
+    assertFile(ExtendedRecord.class, interpretedOutput + "/verbatim");
+    assertFile(ExtendedRecord.class, interpretedOutput + "/event_core");
   }
 
   private <T extends SpecificRecordBase> void assertFile(Class<T> clazz, String output)

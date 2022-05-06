@@ -1,5 +1,7 @@
 package org.gbif.pipelines.common.beam.options;
 
+import org.gbif.dwc.terms.DwcTerm;
+
 import java.util.List;
 import java.util.Optional;
 import org.apache.beam.sdk.io.hdfs.HadoopFileSystemOptions;
@@ -73,6 +75,12 @@ public interface BasePipelineOptions extends PipelineOptions {
   boolean getUseMetadataWsCalls();
 
   void setUseMetadataWsCalls(boolean useMetadataWsCalls);
+
+  @Description("DwcTerm Core term")
+  @Default.Enum("Occurrence")
+  DwcTerm getDwcCore();
+
+  void setDwcCore(DwcTerm dwcCoreTerm);
 
   /** A {@link DefaultValueFactory} which locates a default directory. */
   class DefaultDirectoryFactory implements DefaultValueFactory<String> {

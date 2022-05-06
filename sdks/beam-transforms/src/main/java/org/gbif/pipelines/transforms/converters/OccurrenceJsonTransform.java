@@ -6,6 +6,8 @@ import java.io.Serializable;
 import java.util.function.UnaryOperator;
 import lombok.Builder;
 import lombok.NonNull;
+import lombok.SneakyThrows;
+import org.apache.avro.Schema;
 import org.apache.avro.file.CodecFactory;
 import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.metrics.Counter;
@@ -178,6 +180,14 @@ public class OccurrenceJsonTransform implements Serializable {
     return ParDo.of(fn).withSideInputs(metadataView);
   }
 
+  public static String getBaseName() {
+    return BASE_NAME;
+  }
+
+  public static Schema getAvroSchema() {
+    return OccurrenceJsonRecord.SCHEMA$;
+  }
+
   public static SingleOutput<OccurrenceJsonRecord, ParentJsonRecord> parentJsonRecordConverter() {
     DoFn<OccurrenceJsonRecord, ParentJsonRecord> fn =
         new DoFn<OccurrenceJsonRecord, ParentJsonRecord>() {
@@ -228,10 +238,10 @@ public class OccurrenceJsonTransform implements Serializable {
                                     c.element().getDatasetKey(),
                                     c.element().getVerbatim().getParentCoreId()))
                             .setUniqueKey(c.element().getOccurrenceId())
+                            .setId(c.element().getId())
                             .build())
                     .build()
-                    .convertToParent()
-                    .toString());
+                    .toJson());
             counter.inc();
           }
         };

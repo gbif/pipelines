@@ -25,6 +25,9 @@ import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
+import org.gbif.pipelines.io.avro.json.VerbatimRecord;
+import org.gbif.pipelines.transforms.converters.OccurrenceJsonTransform;
 import org.gbif.pipelines.transforms.core.EventCoreTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
@@ -62,9 +65,9 @@ public class EventsInterpretedToEsIndexPipelineIT {
 
     // State
     String outputFile = getClass().getResource("/").getFile();
-    String idxName = "interpretedtoesindexextendedpipelineit";
+    String idxName = "eventinterpretedtoesindexextendedpipelineit";
     String postfix = "777";
-    String input = outputFile + "data3/ingest";
+    String input = outputFile + "data3";
     String datasetKey = UUID.randomUUID().toString();
 
     String[] argsWriter = {
@@ -72,10 +75,11 @@ public class EventsInterpretedToEsIndexPipelineIT {
       "--attempt=1",
       "--runner=SparkRunner",
       "--metaFileName=interpreted-to-index.yml",
-      "--inputPath=" + input,
+      "--inputPath=" + input + "/" + datasetKey + "/1/",
       "--targetPath=" + input,
       "--numberOfShards=1",
-      "--interpretationTypes=ALL"
+      "--interpretationTypes=ALL",
+      "--dwcCore=Event"
     };
     InterpretationPipelineOptions optionsWriter =
         PipelinesOptionsFactory.createInterpretation(argsWriter);
@@ -96,6 +100,7 @@ public class EventsInterpretedToEsIndexPipelineIT {
           ExtendedRecord.newBuilder()
               .setId(ID)
               .setCoreRowType(DwcTerm.Event.qualifiedName())
+              .setParentCoreId(ID)
               .setCoreTerms(core)
               .build();
 
@@ -117,7 +122,8 @@ public class EventsInterpretedToEsIndexPipelineIT {
     try (SyncDataFileWriter<MetadataRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
             optionsWriter, MetadataTransform.builder().create(), postfix)) {
-      MetadataRecord metadataRecord = MetadataRecord.newBuilder().setId(ID).build();
+      MetadataRecord metadataRecord =
+          MetadataRecord.newBuilder().setId(ID).setDatasetKey(datasetKey).build();
       writer.append(metadataRecord);
     }
     try (SyncDataFileWriter<TemporalRecord> writer =
@@ -151,6 +157,23 @@ public class EventsInterpretedToEsIndexPipelineIT {
       writer.append(audubonRecord);
     }
 
+    optionsWriter.setDwcCore(DwcTerm.Occurrence);
+    try (SyncDataFileWriter<OccurrenceJsonRecord> writer =
+        InterpretedAvroWriter.createAvroWriter(
+            optionsWriter,
+            OccurrenceJsonTransform.getBaseName(),
+            OccurrenceJsonTransform.getAvroSchema(),
+            postfix)) {
+      OccurrenceJsonRecord occurrenceJsonRecord =
+          OccurrenceJsonRecord.newBuilder()
+              .setGbifId(Long.parseLong(ID))
+              .setId(ID)
+              .setDatasetKey(datasetKey)
+              .setVerbatim(VerbatimRecord.newBuilder().setParentCoreId(ID).build())
+              .build();
+      writer.append(occurrenceJsonRecord);
+    }
+
     // When
     String[] args = {
       "--datasetId=" + datasetKey,
@@ -160,12 +183,13 @@ public class EventsInterpretedToEsIndexPipelineIT {
       "--inputPath=" + input,
       "--targetPath=" + input,
       "--esHosts=" + String.join(",", ES_SERVER.getEsConfig().getRawHosts()),
-      "--esIndexName=interpretedtoesindexextendedpipelineit",
+      "--esIndexName=eventinterpretedtoesindexextendedpipelineit",
       "--esAlias=event_interpretedtoesindexextendedpipelineit",
       "--indexNumberShards=1",
       "--indexNumberReplicas=0",
       "--esSchemaPath=elasticsearch/es-event-core-schema.json",
-      "--esDocumentId=internalId"
+      "--esDocumentId=internalId",
+      "--dwcCore=Event"
     };
     EsIndexingPipelineOptions options = PipelinesOptionsFactory.createIndexing(args);
     EventsInterpretedToIndexPipeline.run(options, opt -> p);
@@ -174,6 +198,6 @@ public class EventsInterpretedToEsIndexPipelineIT {
 
     // Should
     assertTrue(EsService.existsIndex(ES_SERVER.getEsClient(), idxName));
-    assertEquals(1, EsService.countIndexDocuments(ES_SERVER.getEsClient(), idxName));
+    assertEquals(2, EsService.countIndexDocuments(ES_SERVER.getEsClient(), idxName));
   }
 }

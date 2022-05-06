@@ -22,6 +22,7 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionList;
 import org.apache.beam.sdk.values.PCollectionView;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
@@ -102,13 +103,13 @@ public class EventsInterpretedToIndexPipeline {
     String esDocumentId = options.getEsDocumentId();
 
     log.info("Adding step 1: Options");
-    UnaryOperator<String> attemptPathFn =
+    UnaryOperator<String> pathFn =
         t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
 
-    UnaryOperator<String> pathFn =
+    UnaryOperator<String> occurrencesPathFn =
         t ->
             PathBuilder.buildPathInterpretUsingTargetPath(
-                options, "event/" + t, "*" + AVRO_EXTENSION);
+                options, DwcTerm.Occurrence, t, "*" + AVRO_EXTENSION);
 
     options.setAppName("Event indexing of " + options.getDatasetId());
     Pipeline p = pipelinesFn.apply(options);
@@ -129,7 +130,7 @@ public class EventsInterpretedToIndexPipeline {
 
     log.info("Adding step 3: Creating beam pipeline");
     PCollectionView<MetadataRecord> metadataView =
-        p.apply("Read Metadata", metadataTransform.read(attemptPathFn))
+        p.apply("Read Metadata", metadataTransform.read(pathFn))
             .apply("Convert to view", View.asSingleton());
 
     PCollection<KV<String, ExtendedRecord>> verbatimCollection =
@@ -199,7 +200,7 @@ public class EventsInterpretedToIndexPipeline {
 
     // Read occurrences of this event
     PCollection<String> occurrenceJsonCollection =
-        p.apply(OccurrenceJsonTransform.Read.read(pathFn))
+        p.apply(OccurrenceJsonTransform.Read.read(occurrencesPathFn))
             .apply(OccurrenceJsonTransform.jsonParentRecordConverter());
 
     // Merge events and occurrences

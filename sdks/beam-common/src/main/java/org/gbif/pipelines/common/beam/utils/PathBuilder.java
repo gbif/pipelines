@@ -7,8 +7,12 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.Path;
+
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.common.beam.options.BasePipelineOptions;
+
+import java.util.Locale;
 
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -44,11 +48,28 @@ public class PathBuilder {
    */
   public static String buildPathInterpretUsingTargetPath(
       BasePipelineOptions options, String name, String uniqueId) {
-    return buildPath(
-            buildDatasetAttemptPath(options, DIRECTORY_NAME, false),
+    return buildPathInterpretUsingTargetPath(
+            options,
+            options.getDwcCore(),
             name,
-            PipelinesVariables.Pipeline.Interpretation.FILE_NAME + uniqueId)
-        .toString();
+            PipelinesVariables.Pipeline.Interpretation.FILE_NAME + uniqueId);
+  }
+
+
+  /**
+   * Uses pattern for path -
+   * "{targetPath}/{datasetId}/{attempt}/interpreted/{coreTerm.toLowercase}/{name}/interpret-{uniqueId}"
+   *  The core term path is empty if it is an occurrence.
+   * @return string path to interpretation
+   */
+  public static String buildPathInterpretUsingTargetPath(
+    BasePipelineOptions options, DwcTerm coreTerm, String name, String uniqueId) {
+    return buildPath(
+      buildDatasetAttemptPath(options, DIRECTORY_NAME, false),
+      DwcTerm.Event != coreTerm?  "" : DwcTerm.Event.name().toLowerCase(Locale.ROOT),
+      name,
+      PipelinesVariables.Pipeline.Interpretation.FILE_NAME + uniqueId)
+      .toString();
   }
 
   /**
