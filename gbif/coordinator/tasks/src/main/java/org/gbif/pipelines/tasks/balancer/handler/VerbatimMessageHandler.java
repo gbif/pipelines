@@ -1,5 +1,7 @@
 package org.gbif.pipelines.tasks.balancer.handler;
 
+import static org.gbif.pipelines.common.utils.ValidatorPredicate.isValidator;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.Optional;
@@ -67,8 +69,7 @@ public class VerbatimMessageHandler {
             m.getExtraPath(),
             result,
             m.getResetPrefix(),
-            m.getExecutionId(),
-            m.isValidator());
+            m.getExecutionId());
 
     publisher.send(outputMessage);
 
@@ -102,7 +103,9 @@ public class VerbatimMessageHandler {
     String verbatim = Conversion.FILE_NAME + Pipeline.AVRO_EXTENSION;
     StepConfiguration stepConfig = config.stepConfig;
     String repositoryPath =
-        message.isValidator() ? config.validatorRepositoryPath : stepConfig.repositoryPath;
+        isValidator(message.getPipelineSteps())
+            ? config.validatorRepositoryPath
+            : stepConfig.repositoryPath;
     String verbatimPath = String.join("/", repositoryPath, datasetId, attempt, verbatim);
     HdfsConfigs hdfsConfigs =
         HdfsConfigs.create(stepConfig.hdfsSiteConfig, stepConfig.coreSiteConfig);
@@ -126,7 +129,9 @@ public class VerbatimMessageHandler {
     String metaFileName = new DwcaToAvroConfiguration().metaFileName;
     StepConfiguration stepConfig = config.stepConfig;
     String repositoryPath =
-        message.isValidator() ? config.validatorRepositoryPath : stepConfig.repositoryPath;
+        isValidator(message.getPipelineSteps())
+            ? config.validatorRepositoryPath
+            : stepConfig.repositoryPath;
     String metaPath = String.join("/", repositoryPath, datasetId, attempt, metaFileName);
     log.info("Getting records number from the file - {}", metaPath);
 
@@ -164,7 +169,9 @@ public class VerbatimMessageHandler {
     String datasetId = message.getDatasetUuid().toString();
     StepConfiguration stepConfig = config.stepConfig;
     String repositoryPath =
-        message.isValidator() ? config.validatorRepositoryPath : stepConfig.repositoryPath;
+        isValidator(message.getPipelineSteps())
+            ? config.validatorRepositoryPath
+            : stepConfig.repositoryPath;
     String path = String.join("/", repositoryPath, datasetId);
 
     log.info("Parsing HDFS directory - {}", path);

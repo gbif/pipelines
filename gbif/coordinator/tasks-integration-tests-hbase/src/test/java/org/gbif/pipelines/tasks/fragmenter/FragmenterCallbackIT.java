@@ -113,8 +113,7 @@ public class FragmenterCallbackIT {
             null,
             endpointType,
             VALIDATION_RESULT,
-            Collections.singleton(OCCURRENCE.name()),
-            false);
+            Collections.singleton(OCCURRENCE.name()));
 
     FragmenterCallback callback =
         new FragmenterCallback(
@@ -174,8 +173,7 @@ public class FragmenterCallbackIT {
             null,
             endpointType,
             VALIDATION_RESULT,
-            Collections.singleton(OCCURRENCE.name()),
-            false);
+            Collections.singleton(OCCURRENCE.name()));
 
     FragmenterCallback callback =
         new FragmenterCallback(
@@ -235,8 +233,7 @@ public class FragmenterCallbackIT {
             null,
             endpointType,
             VALIDATION_RESULT,
-            Collections.singleton(OCCURRENCE.name()),
-            false);
+            Collections.singleton(OCCURRENCE.name()));
 
     FragmenterCallback callback =
         new FragmenterCallback(
@@ -294,8 +291,7 @@ public class FragmenterCallbackIT {
             null,
             endpointType,
             VALIDATION_RESULT,
-            Collections.singleton(OCCURRENCE.name()),
-            false);
+            Collections.singleton(OCCURRENCE.name()));
 
     FragmenterCallback callback =
         new FragmenterCallback(
@@ -345,8 +341,7 @@ public class FragmenterCallbackIT {
             null,
             endpointType,
             VALIDATION_RESULT,
-            Collections.singleton(OCCURRENCE.name()),
-            false);
+            Collections.singleton(OCCURRENCE.name()));
 
     FragmenterCallback callback =
         new FragmenterCallback(

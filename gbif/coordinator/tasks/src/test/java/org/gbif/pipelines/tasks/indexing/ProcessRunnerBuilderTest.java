@@ -78,8 +78,7 @@ public class ProcessRunnerBuilderTest {
             null,
             EndpointType.DWC_ARCHIVE,
             vr,
-            Collections.singleton(OCCURRENCE.name()),
-            false);
+            Collections.singleton(OCCURRENCE.name()));
 
     String indexName = "occurrence";
 
@@ -155,8 +154,7 @@ public class ProcessRunnerBuilderTest {
             null,
             EndpointType.DWC_ARCHIVE,
             vr,
-            Collections.singleton(OCCURRENCE.name()),
-            true);
+            Collections.singleton(OCCURRENCE.name()));
 
     String indexName = "occurrence";
 

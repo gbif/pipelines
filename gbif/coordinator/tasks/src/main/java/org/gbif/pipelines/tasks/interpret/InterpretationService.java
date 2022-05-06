@@ -2,6 +2,7 @@ package org.gbif.pipelines.tasks.interpret;
 
 import com.google.common.util.concurrent.AbstractIdleService;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import lombok.extern.slf4j.Slf4j;
@@ -9,6 +10,7 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
@@ -65,9 +67,11 @@ public class InterpretationService extends AbstractIdleService {
         new InterpretationCallback(
             config, publisher, curator, historyClient, validationClient, httpClient, executor);
 
+    PipelinesVerbatimMessage vm = new PipelinesVerbatimMessage();
+
     String routingKey;
-    PipelinesVerbatimMessage vm = new PipelinesVerbatimMessage().setValidator(config.validatorOnly);
     if (config.validatorOnly && config.validatorListenAllMq) {
+      vm.setPipelineSteps(Collections.singleton(StepType.VALIDATOR_VERBATIM_TO_INTERPRETED.name()));
       routingKey = vm.getRoutingKey() + ".*";
     } else {
       routingKey = vm.setRunner(config.processRunner).getRoutingKey();

@@ -206,7 +206,6 @@ public class HdfsViewCallbackIT {
     message.setEndpointType(EndpointType.DWC_ARCHIVE);
     message.setExecutionId(EXECUTION_ID);
     message.setNumberOfRecords(1L);
-    message.setValidator(false);
     message.setRunner(StepRunner.STANDALONE.name());
     message.setInterpretTypes(Collections.singleton("ALL"));
     message.setPipelineSteps(

@@ -2,6 +2,7 @@ package org.gbif.pipelines.tasks.balancer.handler;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.ALL;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.IDENTIFIER;
+import static org.gbif.pipelines.common.utils.ValidatorPredicate.isValidator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
@@ -61,8 +62,7 @@ public class InterpretedMessageHandler {
             m.getExecutionId(),
             m.getEndpointType(),
             m.getValidationResult(),
-            m.getInterpretTypes(),
-            m.isValidator());
+            m.getInterpretTypes());
 
     publisher.send(outputMessage);
 
@@ -96,7 +96,9 @@ public class InterpretedMessageHandler {
     String verbatim = Conversion.FILE_NAME + Pipeline.AVRO_EXTENSION;
     StepConfiguration stepConfig = config.stepConfig;
     String repositoryPath =
-        message.isValidator() ? config.validatorRepositoryPath : stepConfig.repositoryPath;
+        isValidator(message.getPipelineSteps())
+            ? config.validatorRepositoryPath
+            : stepConfig.repositoryPath;
     String verbatimPath = String.join("/", repositoryPath, datasetId, attempt, verbatim);
     HdfsConfigs hdfsConfigs =
         HdfsConfigs.create(stepConfig.hdfsSiteConfig, stepConfig.coreSiteConfig);
@@ -123,7 +125,9 @@ public class InterpretedMessageHandler {
     String metaFileName = new InterpreterConfiguration().metaFileName;
     StepConfiguration stepConfig = config.stepConfig;
     String repositoryPath =
-        message.isValidator() ? config.validatorRepositoryPath : stepConfig.repositoryPath;
+        isValidator(message.getPipelineSteps())
+            ? config.validatorRepositoryPath
+            : stepConfig.repositoryPath;
     String metaPath = String.join("/", repositoryPath, datasetId, attempt, metaFileName);
 
     Long messageNumber = message.getNumberOfRecords();
@@ -134,7 +138,7 @@ public class InterpretedMessageHandler {
             hdfsConfigs, metaPath, Metrics.UNIQUE_GBIF_IDS_COUNT + Metrics.ATTEMPTED);
 
     // Fail if fileNumber is null
-    if (!message.isValidator()) {
+    if (!isValidator(message.getPipelineSteps())) {
       Set<String> types = message.getInterpretTypes();
       boolean isCorrectType = types.contains(ALL.name()) || types.contains(IDENTIFIER.name());
       boolean noFileRecords = !fileNumber.isPresent() || fileNumber.get() == 0L;

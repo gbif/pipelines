@@ -1,7 +1,6 @@
 package org.gbif.pipelines.tasks.validator.validate;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import java.util.UUID;
 import org.gbif.api.model.crawler.FinishReason;
@@ -38,7 +37,6 @@ public class XmlArchiveValidatorTest {
     // Should
     assertEquals(key, result.getDatasetUuid());
     assertEquals(Integer.valueOf(1), result.getAttempt());
-    assertTrue(result.isValidator());
     assertEquals(message.getExecutionId(), result.getExecutionId());
     assertEquals(FinishReason.NORMAL, result.getReason());
     assertEquals(EndpointType.BIOCASE_XML_ARCHIVE, result.getEndpointType());

@@ -418,7 +418,6 @@ public class MetricsCollectorCallbackIT {
     message.setDatasetUuid(uuid);
     message.setAttempt(attempt);
     message.setExecutionId(EXECUTION_ID);
-    message.setValidator(true);
     message.setRunner(StepRunner.STANDALONE.name());
     message.setEndpointType(EndpointType.DWC_ARCHIVE);
     message.setPipelineSteps(

@@ -1,9 +1,8 @@
-package org.gbif.pipelines.tasks.interpret;
+package org.gbif.pipelines.tasks.identifier;
 
 import static org.gbif.common.parsers.date.DateComponentOrdering.DMY_FORMATS;
 import static org.gbif.common.parsers.date.DateComponentOrdering.ISO_FORMATS;
 import static org.gbif.common.parsers.date.DateComponentOrdering.MDY_FORMATS;
-import static org.gbif.pipelines.common.utils.ValidatorPredicate.isValidator;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,8 +12,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ExecutorService;
-import java.util.function.Predicate;
 import java.util.function.ToDoubleFunction;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
@@ -25,11 +22,9 @@ import org.apache.hadoop.hbase.exceptions.IllegalArgumentIOException;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
-import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.pipelines.common.PipelinesException;
@@ -39,43 +34,34 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
-import org.gbif.pipelines.ingest.java.pipelines.VerbatimToInterpretedPipeline;
 import org.gbif.pipelines.tasks.MachineTag;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
 import org.gbif.pipelines.tasks.dwca.DwcaToAvroConfiguration;
-import org.gbif.pipelines.tasks.interpret.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
+import org.gbif.pipelines.tasks.identifier.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
-import org.gbif.validator.ws.client.ValidationWsClient;
 
 /** Callback which is called when the {@link PipelinesVerbatimMessage} is received. */
 @Slf4j
 @AllArgsConstructor
-public class InterpretationCallback extends AbstractMessageCallback<PipelinesVerbatimMessage>
-    implements StepHandler<PipelinesVerbatimMessage, PipelinesInterpretedMessage> {
+public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbatimMessage>
+    implements StepHandler<PipelinesVerbatimMessage, PipelinesVerbatimMessage> {
 
   private static final ObjectMapper MAPPER = new ObjectMapper();
-  private final InterpreterConfiguration config;
+
+  private final IdentifierConfiguration config;
   private final MessagePublisher publisher;
   private final CuratorFramework curator;
   private final PipelinesHistoryClient historyClient;
-  private final ValidationWsClient validationClient;
   private final CloseableHttpClient httpClient;
-  private final ExecutorService executor;
 
   @Override
   public void handleMessage(PipelinesVerbatimMessage message) {
-    boolean isValidator = isValidator(message.getPipelineSteps(), config.validatorOnly);
-    StepType type =
-        isValidator ? StepType.VALIDATOR_VERBATIM_TO_INTERPRETED : StepType.VERBATIM_TO_INTERPRETED;
-
-    PipelinesCallback.<PipelinesVerbatimMessage, PipelinesInterpretedMessage>builder()
+    PipelinesCallback.<PipelinesVerbatimMessage, PipelinesVerbatimMessage>builder()
         .historyClient(historyClient)
-        .validationClient(validationClient)
         .config(config)
         .curator(curator)
-        .stepType(type)
-        .isValidator(isValidator)
+        .stepType(StepType.VERBATIM_TO_IDENTIFIER)
         .publisher(publisher)
         .message(message)
         .handler(this)
@@ -85,17 +71,12 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
 
   /**
    * Only correct messages can be handled, by now is only messages with the same runner as runner in
-   * service config {@link InterpreterConfiguration#processRunner}
+   * service config {@link IdentifierConfiguration#processRunner}
    */
   @Override
   public boolean isMessageCorrect(PipelinesVerbatimMessage message) {
     if (Strings.isNullOrEmpty(message.getRunner())) {
       throw new IllegalArgumentException("Runner can't be null or empty " + message);
-    }
-    if (isValidator(message.getPipelineSteps(), config.validatorOnly)
-        && config.validatorListenAllMq) {
-      log.info("Running as a validator task");
-      return true;
     }
     boolean isCorrectProcess = config.processRunner.equals(message.getRunner());
     if (!isCorrectProcess) {
@@ -120,10 +101,7 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
               ? message.getExtraPath()
               : String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, verbatim);
 
-      String defaultDateFormat = null;
-      if (!isValidator(message.getPipelineSteps(), config.validatorOnly)) {
-        defaultDateFormat = getDefaultDateFormat(datasetId);
-      }
+      String defaultDateFormat = getDefaultDateFormat(datasetId);
 
       ProcessRunnerBuilderBuilder builder =
           ProcessRunnerBuilder.builder()
@@ -132,15 +110,10 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
               .inputPath(path)
               .defaultDateFormat(defaultDateFormat);
 
-      Predicate<StepRunner> runnerPr = sr -> config.processRunner.equalsIgnoreCase(sr.name());
-
       log.info("Start the process. Message - {}", message);
       try {
-        if (runnerPr.test(StepRunner.DISTRIBUTED)) {
-          runDistributed(message, builder);
-        } else if (runnerPr.test(StepRunner.STANDALONE)) {
-          runLocal(builder);
-        }
+
+        runDistributed(message, builder);
 
         runPostprocessValidation(message);
 
@@ -160,32 +133,8 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
   }
 
   @Override
-  public PipelinesInterpretedMessage createOutgoingMessage(PipelinesVerbatimMessage message) {
-    Long recordsNumber = null;
-    if (message.getValidationResult() != null
-        && message.getValidationResult().getNumberOfRecords() != null) {
-      recordsNumber = message.getValidationResult().getNumberOfRecords();
-    }
-
-    boolean repeatAttempt = pathExists(message);
-
-    return new PipelinesInterpretedMessage(
-        message.getDatasetUuid(),
-        message.getAttempt(),
-        message.getPipelineSteps(),
-        recordsNumber,
-        null, // Set in balancer cli
-        repeatAttempt,
-        message.getResetPrefix(),
-        null,
-        null,
-        message.getEndpointType(),
-        message.getValidationResult(),
-        message.getInterpretTypes());
-  }
-
-  private void runLocal(ProcessRunnerBuilderBuilder builder) {
-    VerbatimToInterpretedPipeline.run(builder.build().buildOptions(), executor);
+  public PipelinesVerbatimMessage createOutgoingMessage(PipelinesVerbatimMessage message) {
+    return message;
   }
 
   private void runDistributed(PipelinesVerbatimMessage message, ProcessRunnerBuilderBuilder builder)
@@ -295,12 +244,6 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
   }
 
   private void runPostprocessValidation(PipelinesVerbatimMessage message) throws IOException {
-    if (isValidator(message.getPipelineSteps(), config.validatorOnly)
-        || Boolean.TRUE.equals(message.getValidationResult().isUseExtendedRecordId())) {
-      log.info("Skip runPostprocessValidation for validator");
-      return;
-    }
-
     String datasetId = message.getDatasetUuid().toString();
     String attempt = Integer.toString(message.getAttempt());
     String metaFileName = config.metaFileName;

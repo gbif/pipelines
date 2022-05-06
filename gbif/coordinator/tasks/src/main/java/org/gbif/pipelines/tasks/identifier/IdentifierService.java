@@ -1,80 +1,59 @@
-package org.gbif.pipelines.tasks.indexing;
+package org.gbif.pipelines.tasks.identifier;
 
 import com.google.common.util.concurrent.AbstractIdleService;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
-import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
+import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.pipelines.tasks.ServiceFactory;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
-import org.gbif.validator.ws.client.ValidationWsClient;
 
-/**
- * A service which listens to the {@link
- * org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage }
- */
+/** A service which listens to the {@link PipelinesVerbatimMessage } and perform interpretation */
 @Slf4j
-public class IndexingService extends AbstractIdleService {
+public class IdentifierService extends AbstractIdleService {
 
-  private final IndexingConfiguration config;
+  private final IdentifierConfiguration config;
   private MessageListener listener;
   private MessagePublisher publisher;
   private CuratorFramework curator;
   private CloseableHttpClient httpClient;
   private ExecutorService executor;
 
-  public IndexingService(IndexingConfiguration config) {
+  public IdentifierService(IdentifierConfiguration config) {
     this.config = config;
   }
 
   @Override
   protected void startUp() throws Exception {
-    log.info("Started pipelines-index-dataset service with parameters : {}", config);
+    log.info("Started pipelines-identifier dataset service with parameters : {}", config);
     // Prefetch is one, since this is a long-running process.
     StepConfiguration c = config.stepConfig;
     listener = new MessageListener(c.messaging.getConnectionParameters(), 1);
     publisher = new DefaultMessagePublisher(c.messaging.getConnectionParameters());
     curator = c.zooKeeper.getCuratorFramework();
-    executor =
-        config.standaloneNumberThreads == null
-            ? null
-            : Executors.newFixedThreadPool(config.standaloneNumberThreads);
+
+    PipelinesHistoryClient historyClient =
+        ServiceFactory.createPipelinesHistoryClient(config.stepConfig);
+
     httpClient =
         HttpClients.custom()
             .setDefaultRequestConfig(
                 RequestConfig.custom().setConnectTimeout(60_000).setSocketTimeout(60_000).build())
             .build();
 
-    PipelinesHistoryClient historyClient =
-        ServiceFactory.createPipelinesHistoryClient(config.stepConfig);
+    IdentifierCallback callback =
+        new IdentifierCallback(config, publisher, curator, historyClient, httpClient);
 
-    ValidationWsClient validationClient =
-        ServiceFactory.createValidationWsClient(config.stepConfig);
-
-    IndexingCallback callback =
-        new IndexingCallback(
-            config, publisher, curator, httpClient, historyClient, validationClient, executor);
-
-    PipelinesInterpretedMessage pm = new PipelinesInterpretedMessage();
-
-    String routingKey;
-    if (config.validatorOnly && config.validatorListenAllMq) {
-      pm.setPipelineSteps(Collections.singleton(StepType.VALIDATOR_INTERPRETED_TO_INDEX.name()));
-      routingKey = pm.getRoutingKey() + ".*";
-    } else {
-      routingKey = pm.setRunner(config.processRunner).getRoutingKey();
-    }
+    String routingKey =
+        new PipelinesVerbatimMessage().setRunner(config.processRunner).getRoutingKey();
     listener.listen(c.queueName, routingKey, c.poolSize, callback);
   }
 
@@ -89,6 +68,6 @@ public class IndexingService extends AbstractIdleService {
     } catch (IOException e) {
       log.error("Can't close ES http client connection");
     }
-    log.info("Stopping pipelines-index-dataset service");
+    log.info("Stopping pipelines-interpret-dataset service");
   }
 }

@@ -1,4 +1,4 @@
-package org.gbif.pipelines.tasks.interpret;
+package org.gbif.pipelines.tasks;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;

@@ -2,6 +2,7 @@ package org.gbif.pipelines.tasks.dwca;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.getAllInterpretationAsString;
 import static org.gbif.pipelines.common.utils.PathUtil.buildDwcaInputPath;
+import static org.gbif.pipelines.common.utils.ValidatorPredicate.*;
 
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -46,17 +47,17 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
 
   @Override
   public void handleMessage(PipelinesDwcaMessage message) {
-    StepType type =
-        message.isValidator() || config.validatorOnly
-            ? StepType.VALIDATOR_DWCA_TO_VERBATIM
-            : StepType.DWCA_TO_VERBATIM;
+
+    boolean isValidator = isValidator(message.getPipelineSteps(), config.validatorOnly);
+    StepType type = isValidator ? StepType.VALIDATOR_DWCA_TO_VERBATIM : StepType.DWCA_TO_VERBATIM;
+
     PipelinesCallback.<PipelinesDwcaMessage, PipelinesVerbatimMessage>builder()
         .historyClient(historyClient)
         .validationClient(validationClient)
         .config(config)
         .curator(curator)
         .stepType(type)
-        .isValidator(message.isValidator())
+        .isValidator(isValidator)
         .publisher(publisher)
         .message(message)
         .handler(this)
@@ -119,7 +120,7 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
           .inputPath(inputPath)
           .outputPath(outputPath)
           .metaPath(metaPath)
-          .skipDeletion(message.isValidator() || config.validatorOnly)
+          .skipDeletion(isValidator(message.getPipelineSteps(), config.validatorOnly))
           .convert();
     };
   }
@@ -168,8 +169,7 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
         null,
         validationResult,
         null,
-        null,
-        message.isValidator() || config.validatorOnly);
+        null);
   }
 
   /**

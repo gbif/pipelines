@@ -19,6 +19,7 @@ public class PipelinesVariables {
 
     public static final String ARCHIVE_TO_VERBATIM = "archive-to-verbatim";
     public static final String VERBATIM_TO_INTERPRETED = "verbatim-to-interpreted";
+    public static final String VERBATIM_TO_IDENTIFIER = "verbatim-to-identifier";
     public static final String INTERPRETED_TO_INDEX = "interpreted-to-index";
     public static final String INTERPRETED_TO_HDFS = "interpreted-to-hdfs";
     public static final String FRAGMENTER = "fragmenter";

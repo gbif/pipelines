@@ -24,6 +24,7 @@ import org.gbif.common.messaging.api.messages.PipelinesAbcdMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage.ValidationResult;
 import org.gbif.common.messaging.api.messages.PipelinesXmlMessage;
+import org.gbif.pipelines.common.utils.ValidatorPredicate;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
 import org.gbif.pipelines.tasks.xml.XmlToAvroCallback;
@@ -94,7 +95,7 @@ public class AbcdToAvroCallback extends AbstractMessageCallback<PipelinesAbcdMes
         message.getDatasetUuid(),
         message.getAttempt().toString(),
         XmlToAvroCallback.SKIP_RECORDS_CHECK,
-        message.isValidator() || config.validatorOnly);
+        ValidatorPredicate.isValidator(message.getPipelineSteps(), config.validatorOnly));
   }
 
   @Override
@@ -122,8 +123,7 @@ public class AbcdToAvroCallback extends AbstractMessageCallback<PipelinesAbcdMes
         null,
         new ValidationResult(true, true, null, null),
         null,
-        null,
-        message.isValidator() || config.validatorOnly);
+        null);
   }
 
   @Override

@@ -1,5 +1,7 @@
 package org.gbif.pipelines.tasks.indexing;
 
+import static org.gbif.pipelines.common.utils.ValidatorPredicate.*;
+
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
@@ -53,17 +55,16 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
 
   @Override
   public void handleMessage(PipelinesInterpretedMessage message) {
+    boolean isValidator = isValidator(message.getPipelineSteps(), config.validatorOnly);
     StepType type =
-        message.isValidator() || config.validatorOnly
-            ? StepType.VALIDATOR_INTERPRETED_TO_INDEX
-            : StepType.INTERPRETED_TO_INDEX;
+        isValidator ? StepType.VALIDATOR_INTERPRETED_TO_INDEX : StepType.INTERPRETED_TO_INDEX;
     PipelinesCallback.<PipelinesInterpretedMessage, PipelinesIndexedMessage>builder()
         .historyClient(historyClient)
         .validationClient(validationClient)
         .config(config)
         .curator(curator)
         .stepType(type)
-        .isValidator(message.isValidator())
+        .isValidator(isValidator)
         .publisher(publisher)
         .message(message)
         .handler(this)
@@ -80,14 +81,13 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
     if (Strings.isNullOrEmpty(message.getRunner())) {
       throw new IllegalArgumentException("Runner can't be null or empty " + message);
     }
-    if ((message.isValidator() || config.validatorOnly) && config.validatorListenAllMq) {
+    boolean isValidator = isValidator(message.getPipelineSteps(), config.validatorOnly);
+    if (isValidator && config.validatorListenAllMq) {
       log.info("Running as a validator task");
       return true;
     }
     StepType type =
-        message.isValidator() || config.validatorOnly
-            ? StepType.VALIDATOR_INTERPRETED_TO_INDEX
-            : StepType.INTERPRETED_TO_INDEX;
+        isValidator ? StepType.VALIDATOR_INTERPRETED_TO_INDEX : StepType.INTERPRETED_TO_INDEX;
     if (message.getOnlyForStep() != null
         && !message.getOnlyForStep().equalsIgnoreCase(type.name())) {
       log.info("Skipping, because expected step is {}", message.getOnlyForStep());
@@ -145,8 +145,7 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
         message.getPipelineSteps(),
         null, // Set in balancer cli
         null,
-        message.getEndpointType(),
-        message.isValidator() || config.validatorOnly);
+        message.getEndpointType());
   }
 
   private void runLocal(ProcessRunnerBuilderBuilder builder) {

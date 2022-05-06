@@ -37,8 +37,7 @@ public class PipelinesDwcaMessageHandler {
             m.getPipelineSteps(),
             m.getEndpointType(),
             m.getPlatform(),
-            m.getExecutionId(),
-            m.isValidator());
+            m.getExecutionId());
 
     publisher.send(outputMessage);
 

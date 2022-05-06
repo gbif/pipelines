@@ -1,5 +1,7 @@
 package org.gbif.pipelines.tasks.indexing;
 
+import static org.gbif.pipelines.common.utils.ValidatorPredicate.isValidator;
+
 import java.io.File;
 import java.util.Objects;
 import java.util.Optional;
@@ -113,7 +115,7 @@ final class ProcessRunnerBuilder {
       command.add("--esDocumentId=");
     }
 
-    if (message.isValidator() || config.validatorOnly) {
+    if (isValidator(message.getPipelineSteps(), config.validatorOnly)) {
       command.add("--esSchemaPath=elasticsearch/es-validator-schema.json");
     }
 

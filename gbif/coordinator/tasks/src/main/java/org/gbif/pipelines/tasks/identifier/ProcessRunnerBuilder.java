@@ -1,6 +1,4 @@
-package org.gbif.pipelines.tasks.interpret;
-
-import static org.gbif.pipelines.common.utils.ValidatorPredicate.isValidator;
+package org.gbif.pipelines.tasks.identifier;
 
 import java.io.File;
 import java.util.Objects;
@@ -20,7 +18,7 @@ final class ProcessRunnerBuilder {
 
   private static final String DELIMITER = " ";
 
-  private InterpreterConfiguration config;
+  private IdentifierConfiguration config;
   @NonNull private PipelinesVerbatimMessage message;
   private int sparkParallelism;
   private int sparkExecutorNumbers;
@@ -100,27 +98,16 @@ final class ProcessRunnerBuilder {
 
     Optional.ofNullable(defaultDateFormat).ifPresent(x -> command.add("--defaultDateFormat=" + x));
 
-    if (isValidator(message.getPipelineSteps(), config.validatorOnly)) {
-      command.add("--useMetadataWsCalls=false");
-    }
+    Optional.ofNullable(message.getValidationResult())
+        .ifPresent(
+            vr ->
+                command
+                    .add("--tripletValid=" + vr.isTripletValid())
+                    .add("--occurrenceIdValid=" + vr.isOccurrenceIdValid()));
 
-    if (config.skipGbifIds) {
-      command
-          .add("--tripletValid=false")
-          .add("--occurrenceIdValid=false")
-          .add("--useExtendedRecordId=true");
-    } else {
-      Optional.ofNullable(message.getValidationResult())
-          .ifPresent(
-              vr ->
-                  command
-                      .add("--tripletValid=" + vr.isTripletValid())
-                      .add("--occurrenceIdValid=" + vr.isOccurrenceIdValid()));
-
-      Optional.ofNullable(message.getValidationResult())
-          .flatMap(vr -> Optional.ofNullable(vr.isUseExtendedRecordId()))
-          .ifPresent(x -> command.add("--useExtendedRecordId=" + x));
-    }
+    Optional.ofNullable(message.getValidationResult())
+        .flatMap(vr -> Optional.ofNullable(vr.isUseExtendedRecordId()))
+        .ifPresent(x -> command.add("--useExtendedRecordId=" + x));
 
     if (config.useBeamDeprecatedRead) {
       command.add("--experiments=use_deprecated_read");

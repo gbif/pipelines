@@ -61,7 +61,6 @@ public class DwcaArchiveValidator implements ArchiveValidator {
         new DwcaValidationReport(
             message.getDatasetUuid(), new OccurrenceValidationReport(1, 1, 0, 1, 0, true)));
     m.setPipelineSteps(message.getPipelineSteps());
-    m.setValidator(config.validatorOnly);
     m.setExecutionId(message.getExecutionId());
     getDatasetType().ifPresent(m::setDatasetType);
     m.setEndpointType(EndpointType.DWC_ARCHIVE);
