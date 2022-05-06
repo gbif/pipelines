@@ -53,7 +53,7 @@ public class IdentifierService extends AbstractIdleService {
         new IdentifierCallback(config, publisher, curator, historyClient, httpClient);
 
     String routingKey =
-        new PipelinesVerbatimMessage().setRunner(config.processRunner).getRoutingKey();
+        new PipelinesVerbatimMessage().setRunner(config.processRunner).getRoutingKey() + ".*";
     listener.listen(c.queueName, routingKey, c.poolSize, callback);
   }
 
