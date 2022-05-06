@@ -1,5 +1,7 @@
 package org.gbif.pipelines.core.converters;
 
+import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
+
 import com.google.common.base.Strings;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -37,6 +39,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.Issues;
 import org.gbif.pipelines.io.avro.Multimedia;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
+import org.gbif.pipelines.io.avro.Rank;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.json.AgentIdentifier;
@@ -45,6 +48,7 @@ import org.gbif.pipelines.io.avro.json.Coordinates;
 import org.gbif.pipelines.io.avro.json.Diagnostic;
 import org.gbif.pipelines.io.avro.json.EventDate;
 import org.gbif.pipelines.io.avro.json.GadmFeatures;
+import org.gbif.pipelines.io.avro.json.GbifClassification;
 import org.gbif.pipelines.io.avro.json.ParsedName;
 import org.gbif.pipelines.io.avro.json.ParsedName.Builder;
 import org.gbif.pipelines.io.avro.json.RankedName;
@@ -373,6 +377,83 @@ class JsonConverter {
         .map(upn -> upn.getGenus() != null ? upn.getGenus() : upn.getUninomial());
   }
 
+  public static GbifClassification convertClassification(
+      ExtendedRecord verbatim, TaxonRecord taxon) {
+    GbifClassification.Builder classificationBuilder =
+        GbifClassification.newBuilder()
+            .setSynonym(taxon.getSynonym())
+            .setIucnRedListCategoryCode(taxon.getIucnRedListCategoryCode())
+            .setClassification(JsonConverter.convertRankedNames(taxon.getClassification()))
+            .setTaxonKey(JsonConverter.convertTaxonKey(taxon));
+
+    JsonConverter.convertRankedName(taxon.getUsage()).ifPresent(classificationBuilder::setUsage);
+
+    JsonConverter.convertRankedName(taxon.getAcceptedUsage())
+        .ifPresent(classificationBuilder::setAcceptedUsage);
+
+    JsonConverter.convertDiagnostic(taxon.getDiagnostics())
+        .ifPresent(classificationBuilder::setDiagnostics);
+
+    JsonConverter.convertParsedName(taxon.getUsageParsedName())
+        .ifPresent(classificationBuilder::setUsageParsedName);
+
+    JsonConverter.convertGenericName(taxon)
+        .ifPresent(
+            genericName -> {
+              if (classificationBuilder.getUsageParsedName() != null) {
+                classificationBuilder.getUsageParsedName().setGenericName(genericName);
+              }
+            });
+
+    JsonConverter.convertClassificationPath(taxon)
+        .ifPresent(classificationBuilder::setClassificationPath);
+
+    // Classification
+    if (taxon.getClassification() != null) {
+      for (org.gbif.pipelines.io.avro.RankedName rankedName : taxon.getClassification()) {
+        Rank rank = rankedName.getRank();
+        switch (rank) {
+          case KINGDOM:
+            classificationBuilder.setKingdom(rankedName.getName());
+            classificationBuilder.setKingdomKey(rankedName.getKey());
+            break;
+          case PHYLUM:
+            classificationBuilder.setPhylum(rankedName.getName());
+            classificationBuilder.setPhylumKey(rankedName.getKey());
+            break;
+          case CLASS:
+            classificationBuilder.setClass$(rankedName.getName());
+            classificationBuilder.setClassKey(rankedName.getKey());
+            break;
+          case ORDER:
+            classificationBuilder.setOrder(rankedName.getName());
+            classificationBuilder.setOrderKey(rankedName.getKey());
+            break;
+          case FAMILY:
+            classificationBuilder.setFamily(rankedName.getName());
+            classificationBuilder.setFamilyKey(rankedName.getKey());
+            break;
+          case GENUS:
+            classificationBuilder.setGenus(rankedName.getName());
+            classificationBuilder.setGenusKey(rankedName.getKey());
+            break;
+          case SPECIES:
+            classificationBuilder.setSpecies(rankedName.getName());
+            classificationBuilder.setSpeciesKey(rankedName.getKey());
+            break;
+          default:
+            // NOP
+        }
+      }
+    }
+
+    // Raw to index classification
+    extractOptValue(verbatim, DwcTerm.taxonID).ifPresent(classificationBuilder::setTaxonID);
+    extractOptValue(verbatim, DwcTerm.scientificName)
+        .ifPresent(classificationBuilder::setVerbatimScientificName);
+
+    return classificationBuilder.build();
+  }
   /**
    * Creates a set of fields" kingdomKey, phylumKey, classKey, etc for convenient aggregation/facets
    */

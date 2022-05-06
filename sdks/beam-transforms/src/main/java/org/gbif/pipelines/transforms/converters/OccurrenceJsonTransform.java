@@ -6,7 +6,6 @@ import java.io.Serializable;
 import java.util.function.UnaryOperator;
 import lombok.Builder;
 import lombok.NonNull;
-import lombok.SneakyThrows;
 import org.apache.avro.Schema;
 import org.apache.avro.file.CodecFactory;
 import org.apache.beam.sdk.io.AvroIO;

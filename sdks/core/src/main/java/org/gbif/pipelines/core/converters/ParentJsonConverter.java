@@ -45,7 +45,7 @@ public class ParentJsonConverter {
     return convertToParent().toString();
   }
 
-  /** Converts to parent record based on an event record.*/
+  /** Converts to parent record based on an event record. */
   private ParentJsonRecord convertToParentEvent() {
     return convertToParentRecord()
         .setType("event")
@@ -54,19 +54,25 @@ public class ParentJsonConverter {
         .build();
   }
 
-  /** Converts to a parent record based on an occurrence record.*/
+  /** Converts to a parent record based on an occurrence record. */
   private ParentJsonRecord convertToParentOccurrence() {
     return ParentJsonRecord.newBuilder()
-            .setType("occurrence")
-            .setId(occurrenceJsonRecord.getId())
-            .setInternalId(
-                HashConverter.getSha1(
-                  occurrenceJsonRecord.getDatasetKey(), occurrenceJsonRecord.getVerbatim().getParentCoreId(), occurrenceJsonRecord.getOccurrenceId()))
-            .setJoinRecordBuilder(
-                JoinRecord.newBuilder().setName("occurrence").setParent(HashConverter.getSha1(
-                  occurrenceJsonRecord.getDatasetKey(), occurrenceJsonRecord.getVerbatim().getParentCoreId())))
-            .setOccurrence(occurrenceJsonRecord)
-            .build();
+        .setType("occurrence")
+        .setId(occurrenceJsonRecord.getId())
+        .setInternalId(
+            HashConverter.getSha1(
+                occurrenceJsonRecord.getDatasetKey(),
+                occurrenceJsonRecord.getVerbatim().getParentCoreId(),
+                occurrenceJsonRecord.getOccurrenceId()))
+        .setJoinRecordBuilder(
+            JoinRecord.newBuilder()
+                .setName("occurrence")
+                .setParent(
+                    HashConverter.getSha1(
+                        occurrenceJsonRecord.getDatasetKey(),
+                        occurrenceJsonRecord.getVerbatim().getParentCoreId())))
+        .setOccurrence(occurrenceJsonRecord)
+        .build();
   }
 
   /** Converts to a parent record */
@@ -99,6 +105,7 @@ public class ParentJsonConverter {
     mapLocationRecord(builder);
     mapMultimediaRecord(builder);
     mapExtendedRecord(builder);
+    mapTaxonRecord(builder);
 
     return builder;
   }
@@ -193,6 +200,10 @@ public class ParentJsonConverter {
     }
 
     JsonConverter.convertGadm(location.getGadm()).ifPresent(builder::setGadm);
+  }
+
+  private void mapTaxonRecord(EventJsonRecord.Builder builder) {
+    builder.setGbifClassification(JsonConverter.convertClassification(verbatim, taxon));
   }
 
   private void mapMultimediaRecord(EventJsonRecord.Builder builder) {

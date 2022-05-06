@@ -14,13 +14,10 @@ import org.gbif.pipelines.io.avro.GbifIdRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.Rank;
-import org.gbif.pipelines.io.avro.RankedName;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.io.avro.grscicoll.Match;
-import org.gbif.pipelines.io.avro.json.GbifClassification;
 import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
 
 @Slf4j
@@ -203,82 +200,8 @@ public class OccurrenceJsonConverter {
   }
 
   private void mapTaxonRecord(OccurrenceJsonRecord.Builder builder) {
-
-    GbifClassification.Builder classificationBuilder =
-        GbifClassification.newBuilder()
-            .setSynonym(taxon.getSynonym())
-            .setIucnRedListCategoryCode(taxon.getIucnRedListCategoryCode())
-            .setClassification(JsonConverter.convertRankedNames(taxon.getClassification()))
-            .setTaxonKey(JsonConverter.convertTaxonKey(taxon));
-
-    JsonConverter.convertRankedName(taxon.getUsage()).ifPresent(classificationBuilder::setUsage);
-
-    JsonConverter.convertRankedName(taxon.getAcceptedUsage())
-        .ifPresent(classificationBuilder::setAcceptedUsage);
-
-    JsonConverter.convertDiagnostic(taxon.getDiagnostics())
-        .ifPresent(classificationBuilder::setDiagnostics);
-
-    JsonConverter.convertParsedName(taxon.getUsageParsedName())
-        .ifPresent(classificationBuilder::setUsageParsedName);
-
-    JsonConverter.convertGenericName(taxon)
-        .ifPresent(
-            genereicName -> {
-              if (classificationBuilder.getUsageParsedName() != null) {
-                classificationBuilder.getUsageParsedName().setGenericName(genereicName);
-              }
-            });
-
-    JsonConverter.convertClassificationPath(taxon)
-        .ifPresent(classificationBuilder::setClassificationPath);
-
-    // Classification
-    if (taxon.getClassification() != null) {
-      for (RankedName rankedName : taxon.getClassification()) {
-        Rank rank = rankedName.getRank();
-        switch (rank) {
-          case KINGDOM:
-            classificationBuilder.setKingdom(rankedName.getName());
-            classificationBuilder.setKingdomKey(rankedName.getKey());
-            break;
-          case PHYLUM:
-            classificationBuilder.setPhylum(rankedName.getName());
-            classificationBuilder.setPhylumKey(rankedName.getKey());
-            break;
-          case CLASS:
-            classificationBuilder.setClass$(rankedName.getName());
-            classificationBuilder.setClassKey(rankedName.getKey());
-            break;
-          case ORDER:
-            classificationBuilder.setOrder(rankedName.getName());
-            classificationBuilder.setOrderKey(rankedName.getKey());
-            break;
-          case FAMILY:
-            classificationBuilder.setFamily(rankedName.getName());
-            classificationBuilder.setFamilyKey(rankedName.getKey());
-            break;
-          case GENUS:
-            classificationBuilder.setGenus(rankedName.getName());
-            classificationBuilder.setGenusKey(rankedName.getKey());
-            break;
-          case SPECIES:
-            classificationBuilder.setSpecies(rankedName.getName());
-            classificationBuilder.setSpeciesKey(rankedName.getKey());
-            break;
-          default:
-            // NOP
-        }
-      }
-    }
-
-    // Raw to index classification
-    extractOptValue(verbatim, DwcTerm.taxonID).ifPresent(classificationBuilder::setTaxonID);
-    extractOptValue(verbatim, DwcTerm.scientificName)
-        .ifPresent(classificationBuilder::setVerbatimScientificName);
-
-    // Set main GbifClassification
-    builder.setGbifClassification(classificationBuilder.build());
+    // Set  GbifClassification
+    builder.setGbifClassification(JsonConverter.convertClassification(verbatim, taxon));
   }
 
   private void mapGrscicollRecord(OccurrenceJsonRecord.Builder builder) {

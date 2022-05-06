@@ -1,13 +1,12 @@
 package org.gbif.pipelines.common.beam.options;
 
-import org.gbif.dwc.terms.DwcTerm;
-
 import java.util.List;
 import java.util.Optional;
 import org.apache.beam.sdk.io.hdfs.HadoopFileSystemOptions;
 import org.apache.beam.sdk.options.*;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
+import org.gbif.dwc.terms.DwcTerm;
 
 /** Main pipeline options necessary for work with GBIF data and Apache Avro binary format */
 public interface BasePipelineOptions extends PipelineOptions {
