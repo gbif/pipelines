@@ -37,10 +37,6 @@ public class IdentifierConfiguration implements BaseConfiguration {
   @Parameter(names = "--standalone-number-threads")
   public Integer standaloneNumberThreads;
 
-  @Parameter(names = "--process-runner")
-  @NotNull
-  public String processRunner;
-
   @Parameter(names = "--use-beam-deprecated-read")
   public boolean useBeamDeprecatedRead = true;
 

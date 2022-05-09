@@ -71,20 +71,9 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
         .handleMessage();
   }
 
-  /**
-   * Only correct messages can be handled, by now is only messages with the same runner as runner in
-   * service config {@link IdentifierConfiguration#processRunner}
-   */
   @Override
   public boolean isMessageCorrect(PipelinesVerbatimMessage message) {
-    if (Strings.isNullOrEmpty(message.getRunner())) {
-      throw new IllegalArgumentException("Runner can't be null or empty " + message);
-    }
-    boolean isCorrectProcess = config.processRunner.equals(message.getRunner());
-    if (!isCorrectProcess) {
-      log.info("Skipping, because runner is incorrect");
-    }
-    return isCorrectProcess;
+    return true;
   }
 
   /**
