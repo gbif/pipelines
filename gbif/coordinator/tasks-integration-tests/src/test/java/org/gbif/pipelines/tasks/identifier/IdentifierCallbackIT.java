@@ -1,8 +1,8 @@
 package org.gbif.pipelines.tasks.identifier;
 
 import static org.gbif.api.model.pipelines.StepRunner.DISTRIBUTED;
-import static org.gbif.api.model.pipelines.StepRunner.STANDALONE;
 import static org.gbif.api.model.pipelines.StepType.VERBATIM_TO_IDENTIFIER;
+import static org.gbif.api.model.pipelines.StepType.VERBATIM_TO_INTERPRETED;
 import static org.gbif.crawler.constants.PipelinesNodePaths.getPipelinesInfoPath;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -78,7 +78,6 @@ public class IdentifierCallbackIT {
     // State
     IdentifierConfiguration config = new IdentifierConfiguration();
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/interpreted/").getFile();
-    config.processRunner = STANDALONE.name();
     config.pipelinesConfig = "pipelines.yaml";
 
     IdentifierCallback callback =
@@ -94,7 +93,7 @@ public class IdentifierCallbackIT {
             uuid,
             attempt,
             Collections.singleton(RecordType.ALL.name()),
-            Collections.singleton(VERBATIM_TO_IDENTIFIER.name()),
+            Collections.singleton(VERBATIM_TO_INTERPRETED.name()),
             DISTRIBUTED.name(),
             EndpointType.DWC_ARCHIVE,
             null,
@@ -122,7 +121,6 @@ public class IdentifierCallbackIT {
     // State
     IdentifierConfiguration config = new IdentifierConfiguration();
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/interpreted/").getFile();
-    config.processRunner = DISTRIBUTED.name();
     config.pipelinesConfig = "pipelines.yaml";
     config.stepConfig.coreSiteConfig = "";
     config.stepConfig.hdfsSiteConfig = "";

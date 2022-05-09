@@ -57,7 +57,6 @@ public class IdentifierService extends AbstractIdleService {
     String routingKey =
         new PipelinesVerbatimMessage()
                 .setPipelineSteps(Collections.singleton(StepType.VERBATIM_TO_IDENTIFIER.name()))
-                .setRunner(config.processRunner)
                 .getRoutingKey()
             + ".*";
     listener.listen(c.queueName, routingKey, c.poolSize, callback);

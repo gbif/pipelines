@@ -7,7 +7,6 @@ import java.util.StringJoiner;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 
 /** Class to build an instance of ProcessBuilder for direct or spark command */
@@ -28,10 +27,7 @@ final class ProcessRunnerBuilder {
   @NonNull private String inputPath;
 
   ProcessBuilder get() {
-    if (StepRunner.DISTRIBUTED.name().equals(config.processRunner)) {
-      return buildSpark();
-    }
-    throw new IllegalArgumentException("Wrong runner type - " + config.processRunner);
+    return buildSpark();
   }
 
   public String[] buildOptions() {

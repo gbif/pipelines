@@ -6,7 +6,6 @@ import static org.gbif.common.parsers.date.DateComponentOrdering.MDY_FORMATS;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Strings;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -73,6 +72,10 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
 
   @Override
   public boolean isMessageCorrect(PipelinesVerbatimMessage message) {
+    if (!message.getPipelineSteps().contains(StepType.VERBATIM_TO_IDENTIFIER.name())) {
+      log.error("The message doesn't contain VERBATIM_TO_IDENTIFIER type");
+      return false;
+    }
     return true;
   }
 
