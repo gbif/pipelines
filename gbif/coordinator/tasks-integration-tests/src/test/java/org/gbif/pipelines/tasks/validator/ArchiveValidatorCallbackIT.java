@@ -410,6 +410,7 @@ public class ArchiveValidatorCallbackIT {
     ArchiveValidatorConfiguration config = new ArchiveValidatorConfiguration();
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
+    config.validatorOnly = true;
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
@@ -451,6 +452,7 @@ public class ArchiveValidatorCallbackIT {
     ArchiveValidatorConfiguration config = new ArchiveValidatorConfiguration();
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
+    config.validatorOnly = true;
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
