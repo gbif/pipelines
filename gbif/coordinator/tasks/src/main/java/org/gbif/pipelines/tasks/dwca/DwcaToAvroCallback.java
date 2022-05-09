@@ -135,6 +135,7 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
           new HashSet<>(
               Arrays.asList(
                   StepType.DWCA_TO_VERBATIM.name(),
+                  StepType.VERBATIM_TO_IDENTIFIER.name(),
                   StepType.VERBATIM_TO_INTERPRETED.name(),
                   StepType.INTERPRETED_TO_INDEX.name(),
                   StepType.HDFS_VIEW.name(),

@@ -1,4 +1,4 @@
-package org.gbif.pipelines.tasks.interpret;
+package org.gbif.pipelines.tasks;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 

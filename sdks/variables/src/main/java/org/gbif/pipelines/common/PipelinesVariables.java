@@ -105,6 +105,7 @@ public class PipelinesVariables {
                   // Core types
                   METADATA,
                   IDENTIFIER,
+                  IDENTIFIER_ABSENT,
                   CLUSTERING,
                   BASIC,
                   TEMPORAL,

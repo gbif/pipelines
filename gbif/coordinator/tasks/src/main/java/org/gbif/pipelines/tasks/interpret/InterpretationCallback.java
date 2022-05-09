@@ -15,13 +15,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Predicate;
-import java.util.function.ToDoubleFunction;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.hadoop.hbase.exceptions.IllegalArgumentIOException;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -32,7 +30,6 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.common.parsers.date.DateComponentOrdering;
-import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
@@ -141,8 +138,6 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
         } else if (runnerPr.test(StepRunner.STANDALONE)) {
           runLocal(builder);
         }
-
-        runPostprocessValidation(message);
 
         log.info("Deleting old attempts directories");
         String pathToDelete = String.join("/", config.stepConfig.repositoryPath, datasetId);
@@ -292,65 +287,6 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
     }
 
     return fileNumber.get();
-  }
-
-  private void runPostprocessValidation(PipelinesVerbatimMessage message) throws IOException {
-    if (isValidator(message.getPipelineSteps(), config.validatorOnly)
-        || Boolean.TRUE.equals(message.getValidationResult().isUseExtendedRecordId())) {
-      log.info("Skip runPostprocessValidation for validator");
-      return;
-    }
-
-    String datasetId = message.getDatasetUuid().toString();
-    String attempt = Integer.toString(message.getAttempt());
-    String metaFileName = config.metaFileName;
-    String metaPath =
-        String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, metaFileName);
-    log.info("Getting records number from the file - {}", metaPath);
-
-    ToDoubleFunction<String> getMetricFn =
-        m -> {
-          try {
-            HdfsConfigs hdfsConfigs =
-                HdfsConfigs.create(
-                    config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);
-            return HdfsUtils.getDoubleByKey(hdfsConfigs, metaPath, m + Metrics.ATTEMPTED)
-                .orElse(0d);
-          } catch (IOException ex) {
-            throw new PipelinesException(ex);
-          }
-        };
-
-    double invalidIdCount = getMetricFn.applyAsDouble(Metrics.INVALID_GBIF_ID_COUNT);
-    double duplicateIdCount = getMetricFn.applyAsDouble(Metrics.DUPLICATE_GBIF_IDS_COUNT);
-    double uniqieIdCount = getMetricFn.applyAsDouble(Metrics.UNIQUE_GBIF_IDS_COUNT);
-
-    if (uniqieIdCount == 0d) {
-      log.error(
-          "Interpreted records {}, invalid records {}, duplicate  records {}",
-          uniqieIdCount,
-          invalidIdCount,
-          duplicateIdCount);
-      throw new IllegalArgumentIOException("No records with valid GBIF ID!");
-    }
-
-    if (invalidIdCount != 0d || duplicateIdCount != 0d) {
-      double duplicatePercent =
-          (invalidIdCount + duplicateIdCount)
-              * 100
-              / (invalidIdCount + duplicateIdCount + uniqieIdCount);
-
-      if (duplicatePercent > config.failIfDuplicateIdPercent) {
-        log.error(
-            "GBIF IDs hit maximum allowed threshold: allowed - {}%, duplicates - {}%",
-            config.failIfDuplicateIdPercent, duplicatePercent);
-        throw new IllegalArgumentIOException("GBIF IDs hit maximum allowed threshold");
-      } else {
-        log.warn(
-            "GBIF IDs current duplicates rate: allowed - {}%, duplicates - {}%",
-            config.failIfDuplicateIdPercent, duplicatePercent);
-      }
-    }
   }
 
   /** Checks if the directory exists */

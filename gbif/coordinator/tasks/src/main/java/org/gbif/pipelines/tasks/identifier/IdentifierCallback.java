@@ -10,8 +10,10 @@ import com.google.common.base.Strings;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.ToDoubleFunction;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
@@ -87,7 +89,7 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
 
   /**
    * Main message processing logic, creates a terminal java process, which runs
-   * verbatim-to-interpreted pipeline
+   * verbatim-to-identifier beam pipeline
    */
   @Override
   public Runnable createRunnable(PipelinesVerbatimMessage message) {
@@ -134,7 +136,21 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
 
   @Override
   public PipelinesVerbatimMessage createOutgoingMessage(PipelinesVerbatimMessage message) {
-    return message;
+
+    Set<String> pipelineSteps = new HashSet<>(message.getPipelineSteps());
+    pipelineSteps.remove(StepType.VERBATIM_TO_IDENTIFIER.name());
+
+    return new PipelinesVerbatimMessage(
+        message.getDatasetUuid(),
+        message.getAttempt(),
+        message.getInterpretTypes(),
+        pipelineSteps,
+        message.getRunner(),
+        message.getEndpointType(),
+        message.getExtraPath(),
+        message.getValidationResult(),
+        message.getResetPrefix(),
+        message.getExecutionId());
   }
 
   private void runDistributed(PipelinesVerbatimMessage message, ProcessRunnerBuilderBuilder builder)

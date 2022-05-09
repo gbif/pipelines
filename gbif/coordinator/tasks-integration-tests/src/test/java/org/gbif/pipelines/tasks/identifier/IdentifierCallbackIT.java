@@ -1,8 +1,8 @@
-package org.gbif.pipelines.tasks.interpret;
+package org.gbif.pipelines.tasks.identifier;
 
 import static org.gbif.api.model.pipelines.StepRunner.DISTRIBUTED;
 import static org.gbif.api.model.pipelines.StepRunner.STANDALONE;
-import static org.gbif.api.model.pipelines.StepType.VERBATIM_TO_INTERPRETED;
+import static org.gbif.api.model.pipelines.StepType.VERBATIM_TO_IDENTIFIER;
 import static org.gbif.crawler.constants.PipelinesNodePaths.getPipelinesInfoPath;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -13,8 +13,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.RetryOneTime;
@@ -29,23 +27,21 @@ import org.gbif.pipelines.common.utils.ZookeeperUtils;
 import org.gbif.pipelines.tasks.CloseableHttpClientStub;
 import org.gbif.pipelines.tasks.MessagePublisherStub;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
-import org.gbif.validator.ws.client.ValidationWsClient;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-public class InterpretationCallbackIT {
+public class IdentifierCallbackIT {
 
-  private static final String INTERPRETED_LABEL = VERBATIM_TO_INTERPRETED.getLabel();
+  private static final String INTERPRETED_LABEL = VERBATIM_TO_IDENTIFIER.getLabel();
   private static final String DATASET_UUID = "9bed66b3-4caa-42bb-9c93-71d7ba109dad";
   private static final long EXECUTION_ID = 1L;
   private static CuratorFramework curator;
   private static TestingServer server;
   private static MessagePublisherStub publisher;
   private static PipelinesHistoryClient historyClient;
-  private static ValidationWsClient validationClient;
 
   @BeforeClass
   public static void setUp() throws Exception {
@@ -62,7 +58,6 @@ public class InterpretationCallbackIT {
     publisher = MessagePublisherStub.create();
 
     historyClient = Mockito.mock(PipelinesHistoryClient.class);
-    validationClient = Mockito.mock(ValidationWsClient.class);
   }
 
   @AfterClass
@@ -81,16 +76,13 @@ public class InterpretationCallbackIT {
   public void testInvalidMessageRunner() {
 
     // State
-    InterpreterConfiguration config = new InterpreterConfiguration();
+    IdentifierConfiguration config = new IdentifierConfiguration();
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/interpreted/").getFile();
     config.processRunner = STANDALONE.name();
     config.pipelinesConfig = "pipelines.yaml";
 
-    ExecutorService executorService = Executors.newSingleThreadExecutor();
-
-    InterpretationCallback callback =
-        new InterpretationCallback(
-            config, publisher, curator, historyClient, validationClient, null, executorService);
+    IdentifierCallback callback =
+        new IdentifierCallback(config, publisher, curator, historyClient, null);
 
     UUID uuid = UUID.fromString(DATASET_UUID);
     int attempt = 60;
@@ -102,7 +94,7 @@ public class InterpretationCallbackIT {
             uuid,
             attempt,
             Collections.singleton(RecordType.ALL.name()),
-            Collections.singleton(VERBATIM_TO_INTERPRETED.name()),
+            Collections.singleton(VERBATIM_TO_IDENTIFIER.name()),
             DISTRIBUTED.name(),
             EndpointType.DWC_ARCHIVE,
             null,
@@ -128,7 +120,7 @@ public class InterpretationCallbackIT {
   public void testInvalidChildSystemProcess() throws Exception {
 
     // State
-    InterpreterConfiguration config = new InterpreterConfiguration();
+    IdentifierConfiguration config = new IdentifierConfiguration();
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/interpreted/").getFile();
     config.processRunner = DISTRIBUTED.name();
     config.pipelinesConfig = "pipelines.yaml";
@@ -151,18 +143,10 @@ public class InterpretationCallbackIT {
         "org.gbif.pipelines.ingest.pipelines.VerbatimToInterpretedPipeline";
     config.distributedConfig.jarPath = "a://b/a/c/ingest-gbif.jar";
 
-    ExecutorService executorService = Executors.newSingleThreadExecutor();
     CloseableHttpClient closeableHttpClient = new CloseableHttpClientStub(200, "[]");
 
-    InterpretationCallback callback =
-        new InterpretationCallback(
-            config,
-            publisher,
-            curator,
-            historyClient,
-            validationClient,
-            closeableHttpClient,
-            executorService);
+    IdentifierCallback callback =
+        new IdentifierCallback(config, publisher, curator, historyClient, closeableHttpClient);
 
     UUID uuid = UUID.fromString(DATASET_UUID);
     int attempt = 60;
@@ -174,7 +158,7 @@ public class InterpretationCallbackIT {
             uuid,
             attempt,
             Collections.singleton(RecordType.ALL.name()),
-            Collections.singleton(VERBATIM_TO_INTERPRETED.name()),
+            Collections.singleton(VERBATIM_TO_IDENTIFIER.name()),
             DISTRIBUTED.name(),
             EndpointType.DWC_ARCHIVE,
             null,
