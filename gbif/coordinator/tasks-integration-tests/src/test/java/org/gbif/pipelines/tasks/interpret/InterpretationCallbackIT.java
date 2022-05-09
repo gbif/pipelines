@@ -94,7 +94,7 @@ public class InterpretationCallbackIT {
     UUID uuid = UUID.fromString(DATASET_UUID);
     int attempt = 60;
     String crawlId = DATASET_UUID;
-    ValidationResult validationResult = new ValidationResult(true, true, false, 0L);
+    ValidationResult validationResult = new ValidationResult(true, true, false, 0L, null);
 
     PipelinesVerbatimMessage message =
         new PipelinesVerbatimMessage(
@@ -168,7 +168,7 @@ public class InterpretationCallbackIT {
     UUID uuid = UUID.fromString(DATASET_UUID);
     int attempt = 60;
     String crawlId = DATASET_UUID;
-    ValidationResult validationResult = new ValidationResult(true, true, false, 0L);
+    ValidationResult validationResult = new ValidationResult(true, true, false, 0L, null);
 
     PipelinesVerbatimMessage message =
         new PipelinesVerbatimMessage(

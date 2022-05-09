@@ -71,6 +71,7 @@ final class ProcessRunnerBuilder {
    * options
    */
   private String buildCommonOptions(StringJoiner command) {
+    String interpretationTypes = String.join(",", message.getInterpretTypes());
 
     // Common properties
     command
@@ -81,11 +82,13 @@ final class ProcessRunnerBuilder {
         .add("--targetPath=" + Objects.requireNonNull(config.stepConfig.repositoryPath))
         .add("--avroCompressionType=" + Objects.requireNonNull(config.avroConfig.compressionType))
         .add("--avroSyncInterval=" + config.avroConfig.syncInterval)
-        // TODO
-        //        .add("--metaFileName=" + Objects.requireNonNull(config.metaFileName))
+        .add("--metaFileName=" + Objects.requireNonNull(config.metaFileName))
         .add("--hdfsSiteConfig=" + Objects.requireNonNull(config.stepConfig.hdfsSiteConfig))
         .add("--coreSiteConfig=" + Objects.requireNonNull(config.stepConfig.coreSiteConfig))
-        .add("--properties=" + Objects.requireNonNull(config.pipelinesConfig));
+        .add("--properties=" + Objects.requireNonNull(config.pipelinesConfig))
+        .add("--endPointType=" + Objects.requireNonNull(message.getEndpointType()))
+        .add("--interpretationTypes=" + Objects.requireNonNull(interpretationTypes))
+        .add("--dwcCore=Event");
 
     return command.toString();
   }

@@ -15,6 +15,7 @@ import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
+import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
@@ -108,7 +109,7 @@ public class EventsVerbatimToInterpretedPipeline {
             : options.getDefaultDateFormat();
 
     MDC.put("datasetKey", datasetId);
-    MDC.put("step", "EVENTS"); // todo: replace with StepType.EVENTS
+    MDC.put("step", StepType.EVENTS_VERBATIM_TO_INTERPRETED.name());
     MDC.put("attempt", attempt.toString());
 
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));

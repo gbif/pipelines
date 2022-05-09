@@ -120,7 +120,7 @@ public class AbcdToAvroCallback extends AbstractMessageCallback<PipelinesAbcdMes
         null,
         message.getEndpointType(),
         null,
-        new ValidationResult(true, true, null, null),
+        new ValidationResult(true, true, null, null, null),
         null,
         null,
         message.isValidator() || config.validatorOnly,

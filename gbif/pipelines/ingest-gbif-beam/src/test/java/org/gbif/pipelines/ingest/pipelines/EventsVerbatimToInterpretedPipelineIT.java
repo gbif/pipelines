@@ -62,7 +62,7 @@ public class EventsVerbatimToInterpretedPipelineIT {
       "--interpretationTypes=ALL",
       "--syncThreshold=0",
       "--testMode=true",
-      "--dwcCore=Event"
+      "--=Event"
     };
 
     // State

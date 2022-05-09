@@ -46,7 +46,7 @@ public class IndexingConfiguration implements BaseConfiguration {
   @Parameter(names = "--validator-only")
   public boolean validatorOnly = false;
 
-  @Parameter(names = "--es-enerated-ids")
+  @Parameter(names = "--es-generated-ids")
   public boolean esGeneratedIds = false;
 
   @Parameter(names = "--validator-listen-all-mq")

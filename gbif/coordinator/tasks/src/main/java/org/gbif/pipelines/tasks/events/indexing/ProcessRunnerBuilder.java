@@ -85,12 +85,19 @@ final class ProcessRunnerBuilder {
         .add("--runner=SparkRunner")
         .add("--inputPath=" + Objects.requireNonNull(config.stepConfig.repositoryPath))
         .add("--targetPath=" + Objects.requireNonNull(config.stepConfig.repositoryPath))
-        // TODO
-        //        .add("--metaFileName=" + Objects.requireNonNull(config.metaFileName))
+        .add("--metaFileName=" + Objects.requireNonNull(config.metaFileName))
         .add("--hdfsSiteConfig=" + Objects.requireNonNull(config.stepConfig.hdfsSiteConfig))
         .add("--coreSiteConfig=" + Objects.requireNonNull(config.stepConfig.coreSiteConfig))
         .add("--esHosts=" + Objects.requireNonNull(esHosts))
-        .add("--properties=" + Objects.requireNonNull(config.pipelinesConfig));
+        .add("--properties=" + Objects.requireNonNull(config.pipelinesConfig))
+        .add("--esSchemaPath=elasticsearch/es-event-schema.json")
+        .add("--dwcCore=Event");
+
+    if (config.esGeneratedIds) {
+      command.add("--esDocumentId=");
+    } else {
+      command.add("--esDocumentId=internalId");
+    }
 
     Optional.ofNullable(config.esConfig.maxBatchSizeBytes)
         .ifPresent(x -> command.add("--esMaxBatchSizeBytes=" + x));

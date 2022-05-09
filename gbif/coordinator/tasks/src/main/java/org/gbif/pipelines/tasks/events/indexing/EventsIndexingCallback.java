@@ -15,6 +15,7 @@ import org.gbif.common.messaging.api.messages.PipelinesEventsInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
 import org.gbif.pipelines.common.PipelinesVariables.Events;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.tasks.PipelinesCallback;
@@ -50,8 +51,7 @@ public class EventsIndexingCallback
 
   @Override
   public boolean isMessageCorrect(PipelinesEventsInterpretedMessage message) {
-    // TODO:
-    return true;
+    return message.getNumberOfEventRecords() > 0;
   }
 
   /**
@@ -92,11 +92,9 @@ public class EventsIndexingCallback
         message.getDatasetUuid(),
         message.getAttempt(),
         message.getPipelineSteps(),
-        message.getNumberOfRecords(),
         message.getResetPrefix(),
         message.getExecutionId(),
-        message.getEndpointType(),
-        message.getValidationResult(),
+        message.getRunner(),
         message.isValidator());
   }
 
@@ -138,7 +136,7 @@ public class EventsIndexingCallback
             datasetId,
             attempt,
             Events.EVENTS_DIR,
-            Events.EVENTS_INTERPRETATION_DIR,
+            Interpretation.DIRECTORY_NAME,
             eventCore);
     int count =
         HdfsUtils.getFileCount(
@@ -231,7 +229,7 @@ public class EventsIndexingCallback
             Events.EVENTS_DIR,
             metaFileName);
 
-    Long messageNumber = message.getNumberOfRecords();
+    Long messageNumber = message.getNumberOfEventRecords();
     // TODO: check what metric to read
     Optional<Long> fileNumber =
         HdfsUtils.getLongByKey(

@@ -44,7 +44,8 @@ public class EventsInterpretationCallback extends AbstractMessageCallback<Pipeli
 
   @Override
   public boolean isMessageCorrect(PipelinesEventsMessage message) {
-    return message.getDatasetType() == DatasetType.SAMPLING_EVENT;
+    return message.getDatasetType() == DatasetType.SAMPLING_EVENT
+        && message.getNumberOfEventRecords() > 0;
   }
 
   /**
@@ -59,7 +60,7 @@ public class EventsInterpretationCallback extends AbstractMessageCallback<Pipeli
             ProcessRunnerBuilder.builder().config(config).message(message);
 
         log.info("Start the process. Message - {}", message);
-        runDistributed(builder);
+        runDistributed(builder, message);
 
         log.info("Deleting old attempts directories");
         String datasetId = message.getDatasetUuid().toString();
@@ -81,29 +82,31 @@ public class EventsInterpretationCallback extends AbstractMessageCallback<Pipeli
 
   @Override
   public PipelinesEventsInterpretedMessage createOutgoingMessage(PipelinesEventsMessage message) {
-    // TODO: get number of records from event metrics?
-
     boolean repeatAttempt = pathExists(message);
-
     return new PipelinesEventsInterpretedMessage(
         message.getDatasetUuid(),
         message.getAttempt(),
         message.getPipelineSteps(),
-        message.getNumberOfRecords(),
+        message.getNumberOfOccurrenceRecords(),
+        message.getNumberOfEventRecords(),
         message.getResetPrefix(),
         message.getExecutionId(),
         message.getEndpointType(),
         message.getValidationResult(),
+        message.getInterpretTypes(),
         repeatAttempt,
+        message.getRunner(),
         message.isValidator());
   }
 
-  private void runDistributed(ProcessRunnerBuilderBuilder builder)
+  private void runDistributed(ProcessRunnerBuilderBuilder builder, PipelinesEventsMessage message)
       throws IOException, InterruptedException {
+    int sparkExecutorNumbers = computeSparkExecutorNumbers(message.getNumberOfEventRecords());
+
     builder
-        .sparkParallelism(computeSparkParallelism())
-        .sparkExecutorMemory(computeSparkExecutorMemory(config.sparkConfig.executorCores))
-        .sparkExecutorNumbers(config.sparkConfig.executorCores);
+        .sparkParallelism(computeSparkParallelism(sparkExecutorNumbers))
+        .sparkExecutorMemory(computeSparkExecutorMemory(sparkExecutorNumbers))
+        .sparkExecutorNumbers(sparkExecutorNumbers);
 
     // Assembles a terminal java process and runs it
     int exitValue = builder.build().get().start().waitFor();
@@ -133,35 +136,52 @@ public class EventsInterpretationCallback extends AbstractMessageCallback<Pipeli
   }
 
   /**
-   * Computes the number of thread for spark.default.parallelism, top limit is
-   * config.sparkParallelismMax
+   * Compute the number of thread for spark.default.parallelism, top limit is
+   * config.sparkParallelismMax Remember YARN will create the same number of files
    */
-  private int computeSparkParallelism() {
-    // TODO: refine this
-    int parallelism = 50;
-    if (parallelism < config.sparkConfig.parallelismMin) {
+  private int computeSparkParallelism(int executorNumbers) {
+    int count = executorNumbers * config.sparkConfig.executorCores * 2;
+
+    if (count < config.sparkConfig.parallelismMin) {
       return config.sparkConfig.parallelismMin;
     }
-    if (parallelism > config.sparkConfig.parallelismMax) {
+    if (count > config.sparkConfig.parallelismMax) {
       return config.sparkConfig.parallelismMax;
     }
-    return parallelism;
+    return count;
   }
 
   /**
-   * Computes the memory for executor in Gb, where min is config.sparkConfig.executorMemoryGbMin and
-   * max is config.sparkConfig.executorMemoryGbMax
+   * Computes the memory for executor in Gb, where min is config.sparkExecutorMemoryGbMin and max is
+   * config.sparkExecutorMemoryGbMax
    */
   private String computeSparkExecutorMemory(int sparkExecutorNumbers) {
-    // TODO: refine this
-    int size = sparkExecutorNumbers + 2;
 
-    if (size < config.sparkConfig.executorMemoryGbMin) {
+    if (sparkExecutorNumbers < config.sparkConfig.executorMemoryGbMin) {
       return config.sparkConfig.executorMemoryGbMin + "G";
     }
-    if (size > config.sparkConfig.executorMemoryGbMax) {
+    if (sparkExecutorNumbers > config.sparkConfig.executorMemoryGbMax) {
       return config.sparkConfig.executorMemoryGbMax + "G";
     }
-    return size + "G";
+    return sparkExecutorNumbers + "G";
+  }
+
+  /**
+   * Computes the numbers of executors, where min is config.sparkConfig.executorNumbersMin and max
+   * is config.sparkConfig.executorNumbersMax
+   */
+  private int computeSparkExecutorNumbers(long recordsNumber) {
+    int sparkExecutorNumbers =
+        (int)
+            Math.ceil(
+                (double) recordsNumber
+                    / (config.sparkConfig.executorCores * config.sparkConfig.recordsPerThread));
+    if (sparkExecutorNumbers < config.sparkConfig.executorNumbersMin) {
+      return config.sparkConfig.executorNumbersMin;
+    }
+    if (sparkExecutorNumbers > config.sparkConfig.executorNumbersMax) {
+      return config.sparkConfig.executorNumbersMax;
+    }
+    return sparkExecutorNumbers;
   }
 }

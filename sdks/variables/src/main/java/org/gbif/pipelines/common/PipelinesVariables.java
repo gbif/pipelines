@@ -302,6 +302,5 @@ public class PipelinesVariables {
   @NoArgsConstructor(access = AccessLevel.PRIVATE)
   public static class Events {
     public static final String EVENTS_DIR = "event";
-    public static final String EVENTS_INTERPRETATION_DIR = "events";
   }
 }

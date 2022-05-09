@@ -39,6 +39,9 @@ public class EventsIndexingConfiguration implements BaseConfiguration {
   @ParametersDelegate @Valid @NotNull
   public IndexConfiguration indexConfig = new IndexConfiguration();
 
+  @Parameter(names = "--es-generated-ids")
+  public boolean esGeneratedIds = false;
+
   @ParametersDelegate @Valid @NotNull
   public AvroWriteConfiguration avroConfig = new AvroWriteConfiguration();
 
