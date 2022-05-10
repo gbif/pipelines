@@ -7,6 +7,7 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_PRECISION_INVAL
 import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_UNCERTAINTY_METERS_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_COORDINATE_MISMATCH;
 import static org.gbif.api.vocabulary.OccurrenceIssue.FOOTPRINT_SRS_INVALID;
+import static org.gbif.api.vocabulary.OccurrenceIssue.FOOTPRINT_WKT_MISMATCH;
 import static org.gbif.api.vocabulary.OccurrenceIssue.ZERO_COORDINATE;
 import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareOptValue;
@@ -23,6 +24,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.vocabulary.Continent;
 import org.gbif.api.vocabulary.Country;
@@ -38,6 +40,7 @@ import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.core.parsers.SimpleTypeParser;
 import org.gbif.pipelines.core.parsers.VocabularyParser;
 import org.gbif.pipelines.core.parsers.common.ParsedField;
+import org.gbif.pipelines.core.parsers.location.parser.CoordinateParseUtils;
 import org.gbif.pipelines.core.parsers.location.parser.FootprintWKTParser;
 import org.gbif.pipelines.core.parsers.location.parser.GadmParser;
 import org.gbif.pipelines.core.parsers.location.parser.LocationParser;
@@ -50,6 +53,7 @@ import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 /** Interprets the location terms of a {@link ExtendedRecord}. */
+@Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class LocationInterpreter {
 
@@ -169,6 +173,7 @@ public class LocationInterpreter {
               && Math.abs(lr.getDecimalLongitude() - latLng.getLongitude()) <= 0.000001) {
             // No conflict, but don't set the footprintWKT in the LocationRecord as it just
             // duplicates the coordinate.
+            log.debug("duplicates the coordinate.");
           } else {
             addIssue(lr, FOOTPRINT_WKT_MISMATCH);
           }
