@@ -7,7 +7,7 @@ package object clustering {
   val omitIds = List("NO APLICA", "NA", "[]", "NO DISPONIBLE", "NO DISPONIBL", "NO NUMBER", "--", "UNKNOWN")
 
   // SPECIMENS
-  val specimenBORs = List("PRESERVED_SPECIMEN", "MATERIAL_SAMPLE", "LIVING_SPECIMEN", "FOSSIL_SPECIMEN")
+  val specimenBORs = List("PRESERVED_SPECIMEN", "MATERIAL_SAMPLE", "LIVING_SPECIMEN", "FOSSIL_SPECIMEN", "MATERIAL_CITATION")
 
   // SQL to extract fields necessary for grouping for candidate pairs
   val SQL_OCCURRENCE = """

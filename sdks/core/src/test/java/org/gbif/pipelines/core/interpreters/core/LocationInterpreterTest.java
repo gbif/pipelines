@@ -394,4 +394,53 @@ public class LocationInterpreterTest {
     // Should
     assertEquals(expected, result);
   }
+
+  @Test
+  public void footprintTest() {
+
+    // State
+    ExtendedRecord source = ExtendedRecord.newBuilder().setId("1").build();
+    Map<String, String> coreMap = new HashMap<>();
+    coreMap.put(DwcTerm.footprintWKT.qualifiedName(), "POINT(-85.908333 15.958333)");
+    coreMap.put(DwcTerm.footprintSRS.qualifiedName(), "WGS84");
+    coreMap.put(DwcTerm.countryCode.qualifiedName(), "HN");
+    source.setCoreTerms(coreMap);
+
+    // When
+    LocationRecord result = interpret(source);
+    LocationInterpreter.interpretFootprintWKT(source, result);
+
+    // Should
+    assertEquals(15.958333d, result.getDecimalLatitude(), 0);
+    assertEquals(-85.908333d, result.getDecimalLongitude(), 0);
+    assertNull(result.getFootprintWKT());
+    assertEquals(0, result.getIssues().getIssueList().size());
+  }
+
+  @Test
+  public void footprintConflictTest() {
+
+    // State
+    ExtendedRecord source = ExtendedRecord.newBuilder().setId("1").build();
+    Map<String, String> coreMap = new HashMap<>();
+    coreMap.put(DwcTerm.decimalLatitude.qualifiedName(), "15.958333");
+    coreMap.put(DwcTerm.decimalLongitude.qualifiedName(), "-85.908333");
+    coreMap.put(DwcTerm.geodeticDatum.qualifiedName(), "WGS84");
+    coreMap.put(DwcTerm.footprintWKT.qualifiedName(), "POINT(-66.6 66.6)");
+    coreMap.put(DwcTerm.countryCode.qualifiedName(), "HN");
+    source.setCoreTerms(coreMap);
+
+    // When
+    LocationRecord result = interpret(source);
+    LocationInterpreter.interpretFootprintWKT(source, result);
+
+    // Should
+    assertEquals(15.958333d, result.getDecimalLatitude(), 0);
+    System.out.println(result.getIssues());
+    System.out.println(result.getCountry());
+    assertEquals(1, result.getIssues().getIssueList().size());
+    Assert.assertTrue(
+        result.getIssues().getIssueList().stream()
+            .anyMatch(issue -> issue.equals(FOOTPRINT_WKT_MISMATCH.name())));
+  }
 }
