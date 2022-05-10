@@ -95,8 +95,7 @@ public class EventsInterpretationCallback extends AbstractMessageCallback<Pipeli
         message.getValidationResult(),
         message.getInterpretTypes(),
         repeatAttempt,
-        message.getRunner(),
-        message.isValidator());
+        message.getRunner());
   }
 
   private void runDistributed(ProcessRunnerBuilderBuilder builder, PipelinesEventsMessage message)

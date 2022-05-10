@@ -114,7 +114,6 @@ public class FragmenterCallbackIT {
             endpointType,
             VALIDATION_RESULT,
             Collections.singleton(OCCURRENCE.name()),
-            false,
             null);
 
     FragmenterCallback callback =
@@ -177,7 +176,6 @@ public class FragmenterCallbackIT {
             endpointType,
             VALIDATION_RESULT,
             Collections.singleton(OCCURRENCE.name()),
-            false,
             null);
 
     FragmenterCallback callback =
@@ -240,7 +238,6 @@ public class FragmenterCallbackIT {
             endpointType,
             VALIDATION_RESULT,
             Collections.singleton(OCCURRENCE.name()),
-            false,
             null);
 
     FragmenterCallback callback =
@@ -301,7 +298,6 @@ public class FragmenterCallbackIT {
             endpointType,
             VALIDATION_RESULT,
             Collections.singleton(OCCURRENCE.name()),
-            false,
             null);
 
     FragmenterCallback callback =
@@ -354,7 +350,6 @@ public class FragmenterCallbackIT {
             endpointType,
             VALIDATION_RESULT,
             Collections.singleton(OCCURRENCE.name()),
-            false,
             null);
 
     FragmenterCallback callback =

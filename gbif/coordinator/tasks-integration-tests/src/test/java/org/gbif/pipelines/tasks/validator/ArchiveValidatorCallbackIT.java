@@ -110,7 +110,6 @@ public class ArchiveValidatorCallbackIT {
                 Arrays.asList(
                     VALIDATOR_VALIDATE_ARCHIVE.name(), VALIDATOR_VERBATIM_TO_INTERPRETED.name())),
             EXECUTION_ID,
-            false,
             FileFormat.DWCA.name());
 
     // When
@@ -194,7 +193,6 @@ public class ArchiveValidatorCallbackIT {
                 Arrays.asList(
                     VALIDATOR_VALIDATE_ARCHIVE.name(), VALIDATOR_VERBATIM_TO_INTERPRETED.name())),
             EXECUTION_ID,
-            false,
             FileFormat.DWCA.name());
 
     // When
@@ -273,7 +271,6 @@ public class ArchiveValidatorCallbackIT {
                 Arrays.asList(
                     VALIDATOR_VALIDATE_ARCHIVE.name(), VALIDATOR_VERBATIM_TO_INTERPRETED.name())),
             EXECUTION_ID,
-            false,
             FileFormat.DWCA.name());
 
     // When
@@ -350,7 +347,6 @@ public class ArchiveValidatorCallbackIT {
             attempt,
             Collections.singleton(VALIDATOR_VALIDATE_ARCHIVE.name()),
             EXECUTION_ID,
-            false,
             FileFormat.DWCA.name());
 
     // When
@@ -392,7 +388,6 @@ public class ArchiveValidatorCallbackIT {
             attempt,
             Collections.singleton(VALIDATOR_VALIDATE_ARCHIVE.name()),
             EXECUTION_ID,
-            false,
             FileFormat.DWCA.name());
 
     // When
@@ -415,6 +410,7 @@ public class ArchiveValidatorCallbackIT {
     ArchiveValidatorConfiguration config = new ArchiveValidatorConfiguration();
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
+    config.validatorOnly = true;
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
@@ -437,7 +433,6 @@ public class ArchiveValidatorCallbackIT {
             attempt,
             Collections.singleton(VALIDATOR_VALIDATE_ARCHIVE.name()),
             EXECUTION_ID,
-            true,
             FileFormat.DWCA.name());
 
     // When
@@ -457,6 +452,7 @@ public class ArchiveValidatorCallbackIT {
     ArchiveValidatorConfiguration config = new ArchiveValidatorConfiguration();
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
+    config.validatorOnly = true;
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
@@ -479,7 +475,6 @@ public class ArchiveValidatorCallbackIT {
             attempt,
             Collections.singleton(VALIDATOR_VALIDATE_ARCHIVE.name()),
             EXECUTION_ID,
-            true,
             FileFormat.DWCA.name());
 
     // When

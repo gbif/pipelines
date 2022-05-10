@@ -108,7 +108,6 @@ public class InterpretationCallbackIT {
             validationResult,
             null,
             EXECUTION_ID,
-            false,
             null);
 
     // When
@@ -182,7 +181,6 @@ public class InterpretationCallbackIT {
             validationResult,
             null,
             EXECUTION_ID,
-            false,
             null);
 
     // When

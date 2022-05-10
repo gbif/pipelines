@@ -104,8 +104,7 @@ public class XmlToAvroCallbackIT {
             Collections.emptySet(),
             EndpointType.BIOCASE_XML_ARCHIVE,
             Platform.PIPELINES,
-            EXECUTION_ID,
-            false);
+            EXECUTION_ID);
     String crawlId = DATASET_UUID.toString();
 
     // When
@@ -146,8 +145,7 @@ public class XmlToAvroCallbackIT {
             Collections.emptySet(),
             EndpointType.BIOCASE_XML_ARCHIVE,
             Platform.PIPELINES,
-            EXECUTION_ID,
-            false);
+            EXECUTION_ID);
     String crawlId = DATASET_UUID.toString();
 
     // When
@@ -188,8 +186,7 @@ public class XmlToAvroCallbackIT {
             Collections.emptySet(),
             EndpointType.BIOCASE_XML_ARCHIVE,
             Platform.PIPELINES,
-            EXECUTION_ID,
-            false);
+            EXECUTION_ID);
     String crawlId = datasetKey.toString();
 
     // When

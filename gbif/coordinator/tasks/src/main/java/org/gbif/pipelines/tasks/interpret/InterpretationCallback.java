@@ -3,6 +3,7 @@ package org.gbif.pipelines.tasks.interpret;
 import static org.gbif.common.parsers.date.DateComponentOrdering.DMY_FORMATS;
 import static org.gbif.common.parsers.date.DateComponentOrdering.ISO_FORMATS;
 import static org.gbif.common.parsers.date.DateComponentOrdering.MDY_FORMATS;
+import static org.gbif.pipelines.common.utils.ValidatorPredicate.isValidator;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -63,10 +64,9 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
 
   @Override
   public void handleMessage(PipelinesVerbatimMessage message) {
+    boolean isValidator = isValidator(message.getPipelineSteps(), config.validatorOnly);
     StepType type =
-        message.isValidator() || config.validatorOnly
-            ? StepType.VALIDATOR_VERBATIM_TO_INTERPRETED
-            : StepType.VERBATIM_TO_INTERPRETED;
+        isValidator ? StepType.VALIDATOR_VERBATIM_TO_INTERPRETED : StepType.VERBATIM_TO_INTERPRETED;
 
     PipelinesCallback.<PipelinesVerbatimMessage, PipelinesInterpretedMessage>builder()
         .historyClient(historyClient)
@@ -74,7 +74,7 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
         .config(config)
         .curator(curator)
         .stepType(type)
-        .isValidator(message.isValidator())
+        .isValidator(isValidator)
         .publisher(publisher)
         .message(message)
         .handler(this)
@@ -91,7 +91,8 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
     if (Strings.isNullOrEmpty(message.getRunner())) {
       throw new IllegalArgumentException("Runner can't be null or empty " + message);
     }
-    if ((message.isValidator() || config.validatorOnly) && config.validatorListenAllMq) {
+    if (isValidator(message.getPipelineSteps(), config.validatorOnly)
+        && config.validatorListenAllMq) {
       log.info("Running as a validator task");
       return true;
     }
@@ -119,7 +120,7 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
               : String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, verbatim);
 
       String defaultDateFormat = null;
-      if (!config.validatorOnly && !message.isValidator()) {
+      if (!isValidator(message.getPipelineSteps(), config.validatorOnly)) {
         defaultDateFormat = getDefaultDateFormat(datasetId);
       }
 
@@ -188,7 +189,6 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
         message.getEndpointType(),
         message.getValidationResult(),
         message.getInterpretTypes(),
-        message.isValidator() || config.validatorOnly,
         message.getDatasetType());
   }
 
@@ -305,8 +305,7 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
   }
 
   private void runPostprocessValidation(PipelinesVerbatimMessage message) throws IOException {
-    if (message.isValidator()
-        || config.validatorOnly
+    if (isValidator(message.getPipelineSteps(), config.validatorOnly)
         || Boolean.TRUE.equals(message.getValidationResult().isUseExtendedRecordId())) {
       log.info("Skip runPostprocessValidation for validator");
       return;

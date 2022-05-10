@@ -38,8 +38,7 @@ public class PipelinesIndexedMessageHandler {
             m.getPipelineSteps(),
             runner.name(),
             m.getExecutionId(),
-            m.getEndpointType(),
-            m.isValidator());
+            m.getEndpointType());
 
     publisher.send(outputMessage);
 

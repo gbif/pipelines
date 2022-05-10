@@ -38,7 +38,7 @@ public class ArchiveValidatorCallback
         .config(config)
         .curator(curator)
         .stepType(StepType.VALIDATOR_VALIDATE_ARCHIVE)
-        .isValidator(message.isValidator())
+        .isValidator(config.validatorOnly)
         .publisher(publisher)
         .message(message)
         .handler(this)

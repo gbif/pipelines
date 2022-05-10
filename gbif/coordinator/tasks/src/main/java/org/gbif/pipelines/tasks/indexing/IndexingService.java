@@ -2,6 +2,7 @@ package org.gbif.pipelines.tasks.indexing;
 
 import com.google.common.util.concurrent.AbstractIdleService;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import lombok.extern.slf4j.Slf4j;
@@ -9,6 +10,7 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
@@ -64,10 +66,11 @@ public class IndexingService extends AbstractIdleService {
         new IndexingCallback(
             config, publisher, curator, httpClient, historyClient, validationClient, executor);
 
+    PipelinesInterpretedMessage pm = new PipelinesInterpretedMessage();
+
     String routingKey;
-    PipelinesInterpretedMessage pm =
-        new PipelinesInterpretedMessage().setValidator(config.validatorOnly);
     if (config.validatorOnly && config.validatorListenAllMq) {
+      pm.setPipelineSteps(Collections.singleton(StepType.VALIDATOR_INTERPRETED_TO_INDEX.name()));
       routingKey = pm.getRoutingKey() + ".*";
     } else {
       routingKey = pm.setRunner(config.processRunner).getRoutingKey();

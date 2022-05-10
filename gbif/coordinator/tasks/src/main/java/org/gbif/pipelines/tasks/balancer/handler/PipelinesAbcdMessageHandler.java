@@ -35,8 +35,7 @@ public class PipelinesAbcdMessageHandler {
             m.isModified(),
             m.getPipelineSteps(),
             m.getEndpointType(),
-            m.getExecutionId(),
-            m.isValidator());
+            m.getExecutionId());
 
     publisher.send(outputMessage);
 

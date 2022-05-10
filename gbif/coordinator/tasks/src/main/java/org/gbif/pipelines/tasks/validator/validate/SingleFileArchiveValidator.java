@@ -33,7 +33,6 @@ public class SingleFileArchiveValidator implements ArchiveValidator {
         new DwcaValidationReport(
             message.getDatasetUuid(), new OccurrenceValidationReport(1, 1, 0, 1, 0, true)));
     m.setPipelineSteps(message.getPipelineSteps());
-    m.setValidator(config.validatorOnly);
     m.setExecutionId(message.getExecutionId());
     m.setDatasetType(DatasetType.OCCURRENCE);
     m.setEndpointType(EndpointType.DWC_ARCHIVE);

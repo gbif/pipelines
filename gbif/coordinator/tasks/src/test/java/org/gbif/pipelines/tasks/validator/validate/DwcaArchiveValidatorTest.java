@@ -2,7 +2,6 @@ package org.gbif.pipelines.tasks.validator.validate;
 
 import static org.gbif.pipelines.tasks.validator.validate.DwcaArchiveValidator.EML_XML;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import java.net.URI;
 import java.util.UUID;
@@ -83,7 +82,6 @@ public class DwcaArchiveValidatorTest {
     assertEquals(key, result.getDatasetUuid());
     assertEquals(Integer.valueOf(1), result.getAttempt());
     assertEquals(new URI(config.stepConfig.registry.wsUrl), result.getSource());
-    assertTrue(result.isValidator());
     assertEquals(message.getExecutionId(), result.getExecutionId());
     assertEquals(DatasetType.OCCURRENCE, result.getDatasetType());
     assertEquals(EndpointType.DWC_ARCHIVE, result.getEndpointType());

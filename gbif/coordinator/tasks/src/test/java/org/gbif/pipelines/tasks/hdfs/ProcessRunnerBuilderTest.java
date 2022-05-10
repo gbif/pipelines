@@ -78,7 +78,6 @@ public class ProcessRunnerBuilderTest {
             EndpointType.DWC_ARCHIVE,
             vr,
             Collections.singleton(OCCURRENCE.name()),
-            false,
             null);
 
     // Expected
@@ -154,7 +153,6 @@ public class ProcessRunnerBuilderTest {
             EndpointType.DWC_ARCHIVE,
             vr,
             Collections.singleton(OCCURRENCE.name()),
-            false,
             null);
 
     // Expected

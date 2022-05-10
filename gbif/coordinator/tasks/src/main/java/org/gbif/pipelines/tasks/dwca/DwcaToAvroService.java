@@ -1,8 +1,10 @@
 package org.gbif.pipelines.tasks.dwca;
 
 import com.google.common.util.concurrent.AbstractIdleService;
+import java.util.Collections;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
+import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
@@ -43,11 +45,14 @@ public class DwcaToAvroService extends AbstractIdleService {
     ValidationWsClient validationClient =
         ServiceFactory.createValidationWsClient(config.stepConfig);
 
-    String routingKey =
-        new PipelinesDwcaMessage().setValidator(config.validatorOnly).getRoutingKey();
+    PipelinesDwcaMessage message = new PipelinesDwcaMessage();
+    if (config.validatorOnly) {
+      message.setPipelineSteps(Collections.singleton(StepType.VALIDATOR_DWCA_TO_VERBATIM.name()));
+    }
+
     listener.listen(
         c.queueName,
-        routingKey,
+        message.getRoutingKey(),
         c.poolSize,
         new DwcaToAvroCallback(this.config, publisher, curator, historyClient, validationClient));
   }

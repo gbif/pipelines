@@ -36,7 +36,7 @@ public class MetricsCollectorCallback extends AbstractMessageCallback<PipelinesI
         .config(config)
         .curator(curator)
         .stepType(TYPE)
-        .isValidator(message.isValidator())
+        .isValidator(config.validatorOnly)
         .publisher(publisher)
         .message(message)
         .handler(this)

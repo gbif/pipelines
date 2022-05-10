@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
 import org.gbif.api.model.pipelines.StepRunner;
+import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage.ValidationResult;
@@ -80,7 +81,6 @@ public class ProcessRunnerBuilderTest {
             EndpointType.DWC_ARCHIVE,
             vr,
             Collections.singleton(OCCURRENCE.name()),
-            false,
             null);
 
     String indexName = "occurrence";
@@ -148,7 +148,7 @@ public class ProcessRunnerBuilderTest {
         new PipelinesInterpretedMessage(
             datasetId,
             attempt,
-            steps,
+            Collections.singleton(StepType.VALIDATOR_INTERPRETED_TO_INDEX.name()),
             100L,
             null,
             null,
@@ -158,8 +158,7 @@ public class ProcessRunnerBuilderTest {
             null,
             EndpointType.DWC_ARCHIVE,
             vr,
-            Collections.singleton(OCCURRENCE.name()),
-            true,
+            steps,
             null);
 
     String indexName = "occurrence";

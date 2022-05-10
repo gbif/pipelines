@@ -26,7 +26,6 @@ public class XmlArchiveValidator implements ArchiveValidator {
     PipelinesXmlMessage m = new PipelinesXmlMessage();
     m.setDatasetUuid(message.getDatasetUuid());
     m.setAttempt(message.getAttempt());
-    m.setValidator(config.validatorOnly);
     m.setPipelineSteps(message.getPipelineSteps());
     m.setEndpointType(EndpointType.BIOCASE_XML_ARCHIVE);
     m.setExecutionId(message.getExecutionId());

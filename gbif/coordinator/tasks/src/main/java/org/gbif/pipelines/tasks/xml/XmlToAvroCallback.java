@@ -3,6 +3,7 @@ package org.gbif.pipelines.tasks.xml;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.getAllInterpretationAsString;
 import static org.gbif.pipelines.common.utils.HdfsUtils.buildOutputPath;
 import static org.gbif.pipelines.common.utils.PathUtil.buildXmlInputPath;
+import static org.gbif.pipelines.common.utils.ValidatorPredicate.isValidator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
@@ -58,10 +59,10 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
 
   @Override
   public void handleMessage(PipelinesXmlMessage message) {
-    StepType type =
-        message.isValidator() || config.validatorOnly
-            ? StepType.VALIDATOR_XML_TO_VERBATIM
-            : StepType.XML_TO_VERBATIM;
+
+    boolean isValidator = isValidator(message.getPipelineSteps(), config.validatorOnly);
+
+    StepType type = isValidator ? StepType.VALIDATOR_XML_TO_VERBATIM : StepType.XML_TO_VERBATIM;
 
     PipelinesCallback.<PipelinesXmlMessage, PipelinesVerbatimMessage>builder()
         .historyClient(historyClient)
@@ -69,7 +70,7 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
         .config(config)
         .curator(curator)
         .stepType(type)
-        .isValidator(message.isValidator())
+        .isValidator(isValidator)
         .publisher(publisher)
         .message(message)
         .handler(this)
@@ -129,7 +130,7 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
   public Runnable createRunnable(PipelinesXmlMessage message) {
     UUID datasetId = message.getDatasetUuid();
     String attempt = message.getAttempt().toString();
-    boolean isValidator = message.isValidator() || config.validatorOnly;
+    boolean isValidator = isValidator(message.getPipelineSteps(), config.validatorOnly);
     return createRunnable(datasetId, attempt, message.getTotalRecordCount(), isValidator);
   }
 
@@ -160,7 +161,6 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
         new ValidationResult(true, true, null, null, null),
         null,
         null,
-        message.isValidator() || config.validatorOnly,
         null);
   }
 

@@ -1,5 +1,7 @@
 package org.gbif.pipelines.tasks.interpret;
 
+import static org.gbif.pipelines.common.utils.ValidatorPredicate.isValidator;
+
 import java.io.File;
 import java.util.Objects;
 import java.util.Optional;
@@ -98,7 +100,7 @@ final class ProcessRunnerBuilder {
 
     Optional.ofNullable(defaultDateFormat).ifPresent(x -> command.add("--defaultDateFormat=" + x));
 
-    if (message.isValidator() || config.validatorOnly) {
+    if (isValidator(message.getPipelineSteps(), config.validatorOnly)) {
       command.add("--useMetadataWsCalls=false");
     }
 

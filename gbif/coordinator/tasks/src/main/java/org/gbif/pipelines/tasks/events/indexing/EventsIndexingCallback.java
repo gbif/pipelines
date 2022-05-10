@@ -94,8 +94,7 @@ public class EventsIndexingCallback
         message.getPipelineSteps(),
         message.getResetPrefix(),
         message.getExecutionId(),
-        message.getRunner(),
-        message.isValidator());
+        message.getRunner());
   }
 
   private void runDistributed(

@@ -36,8 +36,7 @@ public class PipelinesXmlMessageHandler {
             m.getPipelineSteps(),
             m.getEndpointType(),
             m.getPlatform(),
-            m.getExecutionId(),
-            m.isValidator());
+            m.getExecutionId());
 
     publisher.send(outputMessage);
 

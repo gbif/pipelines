@@ -1,8 +1,10 @@
 package org.gbif.pipelines.tasks.validator;
 
 import com.google.common.util.concurrent.AbstractIdleService;
+import java.util.Collections;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
+import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
@@ -46,11 +48,14 @@ public class ArchiveValidatorService extends AbstractIdleService {
 
     SchemaValidatorFactory schemaValidatorFactory = new SchemaValidatorFactory();
 
-    String routingKey =
-        new PipelinesArchiveValidatorMessage().setValidator(config.validatorOnly).getRoutingKey();
+    PipelinesArchiveValidatorMessage message = new PipelinesArchiveValidatorMessage();
+    if (config.validatorOnly) {
+      message.setPipelineSteps(Collections.singleton(StepType.VALIDATOR_VALIDATE_ARCHIVE.name()));
+    }
+
     listener.listen(
         c.queueName,
-        routingKey,
+        message.getRoutingKey(),
         c.poolSize,
         new ArchiveValidatorCallback(
             this.config,

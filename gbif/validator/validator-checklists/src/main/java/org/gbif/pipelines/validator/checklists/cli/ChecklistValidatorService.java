@@ -58,7 +58,7 @@ public class ChecklistValidatorService extends AbstractIdleService {
 
     ValidationWsClient validationClient = createValidationWsClient(config.registry);
 
-    String routingKey = new PipelinesChecklistValidatorMessage().setValidator(true).getRoutingKey();
+    String routingKey = new PipelinesChecklistValidatorMessage().getRoutingKey();
     listener.listen(
         config.queueName,
         routingKey,

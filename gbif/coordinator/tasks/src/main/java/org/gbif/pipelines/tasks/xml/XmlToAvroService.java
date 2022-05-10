@@ -1,6 +1,7 @@
 package org.gbif.pipelines.tasks.xml;
 
 import com.google.common.util.concurrent.AbstractIdleService;
+import java.util.Collections;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import lombok.extern.slf4j.Slf4j;
@@ -8,6 +9,7 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.HttpClients;
+import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
@@ -60,13 +62,15 @@ public class XmlToAvroService extends AbstractIdleService {
                 RequestConfig.custom().setConnectTimeout(60_000).setSocketTimeout(60_000).build())
             .build();
 
-    String routingKey =
-        new PipelinesXmlMessage().setValidator(config.validatorOnly).getRoutingKey();
+    PipelinesXmlMessage message = new PipelinesXmlMessage();
+    if (config.validatorOnly) {
+      message.setPipelineSteps(Collections.singleton(StepType.VALIDATOR_XML_TO_VERBATIM.name()));
+    }
 
     XmlToAvroCallback callback =
         new XmlToAvroCallback(
             config, publisher, curator, historyClient, validationClient, executor, httpClient);
-    listener.listen(c.queueName, routingKey, c.poolSize, callback);
+    listener.listen(c.queueName, message.getRoutingKey(), c.poolSize, callback);
   }
 
   @Override
