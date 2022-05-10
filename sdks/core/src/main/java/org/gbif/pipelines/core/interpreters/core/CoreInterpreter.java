@@ -8,7 +8,9 @@ import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
 
 import com.google.common.base.Strings;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 import lombok.AccessLevel;
@@ -77,6 +79,30 @@ public class CoreInterpreter {
   /** {@link DwcTerm#datasetName} interpretation. */
   public static void interpretDatasetName(ExtendedRecord er, Consumer<List<String>> consumer) {
     extractOptListValue(er, DwcTerm.datasetName).ifPresent(consumer);
+  }
+
+  /** {@link DwcTerm#parentEventID} interpretation. */
+  public static void interpretParentEventIDs(
+      ExtendedRecord er,
+      Map<String, ExtendedRecord> erWithParents,
+      Consumer<List<String>> consumer) {
+    String parentEventID = extractValue(er, DwcTerm.parentEventID);
+
+    if (parentEventID == null) {
+      return;
+    }
+
+    // parent event IDs
+    List<String> parentEventIds = new ArrayList<>();
+    while (parentEventID != null) {
+      parentEventIds.add(parentEventID);
+      ExtendedRecord parent = erWithParents.get(parentEventID);
+      parentEventID = parent != null ? extractValue(parent, DwcTerm.parentEventID) : null;
+    }
+
+    if (!parentEventIds.isEmpty()) {
+      consumer.accept(parentEventIds);
+    }
   }
 
   /** {@link DwcTerm#samplingProtocol} interpretation. */

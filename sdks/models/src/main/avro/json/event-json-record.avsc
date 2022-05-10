@@ -16,6 +16,7 @@
       {"name":"lastCrawled","type":["null","string"],"default":null,"doc":""},
       {"name":"created","type":["null","string"],"default":null,"doc":""},
       {"name":"crawlId","type":["null","int"],"default":null,"doc":""},
+      {"name":"parentEventIds","type":{"type":"array","items":"string"},"default":null,"doc":""},
       // Metadata
       {"name":"datasetKey","type":["null","string"],"default":null,"doc":""},
       {"name":"datasetTitle","type":["null","string"],"default":null,"doc":""},

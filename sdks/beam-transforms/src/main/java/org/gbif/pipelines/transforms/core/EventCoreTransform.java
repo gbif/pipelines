@@ -4,11 +4,14 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.EVENT_CORE_RE
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.EVENT_CORE;
 
 import java.time.Instant;
+import java.util.Map;
 import java.util.Optional;
 import lombok.Builder;
+import lombok.Setter;
 import lombok.SneakyThrows;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
+import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.pipelines.core.functions.SerializableConsumer;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
@@ -30,6 +33,8 @@ public class EventCoreTransform extends Transform<ExtendedRecord, EventCoreRecor
 
   private final SerializableSupplier<VocabularyService> vocabularyServiceSupplier;
   private VocabularyService vocabularyService;
+
+  @Setter private PCollectionView<Map<String, ExtendedRecord>> erWithParentsView;
 
   @Builder(buildMethodName = "create")
   private EventCoreTransform(SerializableSupplier<VocabularyService> vocabularyServiceSupplier) {
@@ -77,7 +82,17 @@ public class EventCoreTransform extends Transform<ExtendedRecord, EventCoreRecor
 
   @Override
   public Optional<EventCoreRecord> convert(ExtendedRecord source) {
+    throw new IllegalArgumentException("Method is not implemented!");
+  }
 
+  @Override
+  @ProcessElement
+  public void processElement(ProcessContext c) {
+    processElement(c.element(), c.sideInput(erWithParentsView)).ifPresent(c::output);
+  }
+
+  public Optional<EventCoreRecord> processElement(
+      ExtendedRecord source, Map<String, ExtendedRecord> erWithParents) {
     return Interpretation.from(source)
         .to(
             EventCoreRecord.newBuilder()
@@ -93,6 +108,9 @@ public class EventCoreTransform extends Transform<ExtendedRecord, EventCoreRecor
         .via((e, r) -> CoreInterpreter.interpretDatasetID(e, r::setDatasetID))
         .via((e, r) -> CoreInterpreter.interpretDatasetName(e, r::setDatasetName))
         .via((e, r) -> CoreInterpreter.interpretSamplingProtocol(e, r::setSamplingProtocol))
+        .via(
+            (e, r) ->
+                CoreInterpreter.interpretParentEventIDs(e, erWithParents, r::setParentEventIds))
         .getOfNullable();
   }
 }

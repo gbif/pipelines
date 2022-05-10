@@ -1,8 +1,11 @@
 package org.gbif.pipelines.ingest.pipelines;
 
+import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
+
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
@@ -12,11 +15,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.transforms.Create;
+import org.apache.beam.sdk.transforms.Filter;
+import org.apache.beam.sdk.transforms.SerializableFunction;
 import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.parsers.date.DateComponentOrdering;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.kvs.species.SpeciesMatchRequest;
@@ -210,6 +216,18 @@ public class EventsVerbatimToInterpretedPipeline {
             .apply(
                 "Filter event extensions",
                 ExtensionFilterTransform.create(config.getExtensionsAllowedForVerbatimSet()));
+
+    // view with the records that have parents to find the hierarchy in the event core
+    // interpretation later
+    PCollectionView<Map<String, ExtendedRecord>> erWithParentEventsView =
+        uniqueRawRecords
+            .apply(
+                Filter.by(
+                    (SerializableFunction<ExtendedRecord, Boolean>)
+                        input -> extractOptValue(input, DwcTerm.parentEventID).isPresent()))
+            .apply(verbatimTransform.toKv())
+            .apply("View to find parents", View.asMap());
+    eventCoreTransform.setErWithParentsView(erWithParentEventsView);
 
     // Interpret identifiers and write as avro files
     uniqueRawRecords

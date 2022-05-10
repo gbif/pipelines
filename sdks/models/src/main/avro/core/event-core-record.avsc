@@ -5,6 +5,7 @@
   "doc": "Interpreted values at the event core record level",
   "fields": [
     {"name": "id", "type": "string", "doc": "Pipelines identifier"},
+    {"name": "parentEventIds","type":{"type":"array","items":"string"},"default":null,"doc":"http://rs.tdwg.org/dwc/terms/parentEventID"},
     {"name": "eventType", "type": ["null", "VocabularyConcept"], "default" : null, "doc": ""},
     {"name": "created", "type": ["null", "long"], "default" : null, "doc":"The timestamp the record was created"},
     {"name": "sampleSizeValue", "type": ["null", "double"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/sampleSizeValue"},

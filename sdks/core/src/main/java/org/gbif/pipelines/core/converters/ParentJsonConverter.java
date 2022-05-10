@@ -135,7 +135,8 @@ public class ParentJsonConverter {
         .setReferences(eventCore.getReferences())
         .setDatasetID(eventCore.getDatasetID())
         .setDatasetName(eventCore.getDatasetName())
-        .setSamplingProtocol(eventCore.getSamplingProtocol());
+        .setSamplingProtocol(eventCore.getSamplingProtocol())
+        .setParentEventIds(eventCore.getParentEventIds());
 
     // Vocabulary
     JsonConverter.convertVocabularyConcept(eventCore.getEventType())
