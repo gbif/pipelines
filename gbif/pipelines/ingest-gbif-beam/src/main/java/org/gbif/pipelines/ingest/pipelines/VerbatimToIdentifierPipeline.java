@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.values.PCollectionTuple;
+import org.gbif.api.model.pipelines.StepType;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
@@ -53,10 +54,9 @@ public class VerbatimToIdentifierPipeline {
     PipelinesConfig config =
         FsUtils.readConfigFile(hdfsConfigs, options.getProperties(), PipelinesConfig.class);
 
-    options.setAppName("VERBATIM_TO_IDENTIFIER" + "_" + datasetId + "_" + attempt);
     MDC.put("datasetKey", datasetId);
     MDC.put("attempt", attempt.toString());
-    MDC.put("step", "VERBATIM_TO_IDENTIFIER");
+    MDC.put("step", StepType.VERBATIM_TO_IDENTIFIER.name());
 
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 

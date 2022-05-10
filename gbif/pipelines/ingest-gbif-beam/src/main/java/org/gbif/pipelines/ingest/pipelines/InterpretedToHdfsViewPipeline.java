@@ -147,7 +147,6 @@ public class InterpretedToHdfsViewPipeline {
             PathBuilder.buildFilePathViewUsingInputPath(
                 options, st.name().toLowerCase(), datasetId + '_' + attempt);
 
-    options.setAppName(StepType.HDFS_VIEW.name() + "_" + datasetId + "_" + attempt);
     MDC.put("datasetKey", datasetId);
     MDC.put("attempt", attempt.toString());
     MDC.put("step", StepType.HDFS_VIEW.name());

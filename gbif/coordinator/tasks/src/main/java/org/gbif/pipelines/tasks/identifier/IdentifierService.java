@@ -3,7 +3,6 @@ package org.gbif.pipelines.tasks.identifier;
 import com.google.common.util.concurrent.AbstractIdleService;
 import java.io.IOException;
 import java.util.Collections;
-import java.util.concurrent.ExecutorService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.http.client.config.RequestConfig;
@@ -27,7 +26,6 @@ public class IdentifierService extends AbstractIdleService {
   private MessagePublisher publisher;
   private CuratorFramework curator;
   private CloseableHttpClient httpClient;
-  private ExecutorService executor;
 
   public IdentifierService(IdentifierConfiguration config) {
     this.config = config;
@@ -67,7 +65,6 @@ public class IdentifierService extends AbstractIdleService {
     listener.close();
     publisher.close();
     curator.close();
-    executor.shutdown();
     try {
       httpClient.close();
     } catch (IOException e) {

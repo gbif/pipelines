@@ -114,7 +114,6 @@ public class InterpretedToEsIndexPipeline {
     String datasetId = options.getDatasetId();
     Integer attempt = options.getAttempt();
 
-    options.setAppName(StepType.INTERPRETED_TO_INDEX.name() + "_" + datasetId + "_" + attempt);
     MDC.put("datasetKey", datasetId);
     MDC.put("attempt", attempt.toString());
     MDC.put("step", StepType.INTERPRETED_TO_INDEX.name());

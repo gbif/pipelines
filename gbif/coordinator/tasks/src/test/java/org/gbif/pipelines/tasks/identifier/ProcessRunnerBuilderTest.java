@@ -1,11 +1,10 @@
-package org.gbif.pipelines.tasks.interpret;
+package org.gbif.pipelines.tasks.identifier;
 
 import static org.junit.Assert.assertEquals;
 
 import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
-import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
@@ -34,17 +33,17 @@ public class ProcessRunnerBuilderTest {
   public void testSparkRunnerCommand() {
     // When
     String expected =
-        "spark2-submit --name=VERBATIM_TO_INTERPRETED_de7ffb5e-c07b-42dc-8a88-f67a4465fe3d_1 "
+        "spark2-submit --name=VERBATIM_TO_IDENTIFIER_de7ffb5e-c07b-42dc-8a88-f67a4465fe3d_1 "
             + "--conf spark.default.parallelism=1 --conf spark.executor.memoryOverhead=1 --conf spark.dynamicAllocation.enabled=false "
             + "--conf spark.yarn.am.waitTime=360s "
             + "--class org.gbif.Test --master yarn --deploy-mode cluster --executor-memory 1G --executor-cores 1 --num-executors 1 "
             + "--driver-memory 4G java.jar --datasetId=de7ffb5e-c07b-42dc-8a88-f67a4465fe3d --attempt=1 --interpretationTypes=ALL "
-            + "--runner=SparkRunner --targetPath=tmp --metaFileName=verbatim-to-interpreted.yml --inputPath=verbatim.avro "
+            + "--runner=SparkRunner --targetPath=tmp --metaFileName=verbatim-to-identifier.yml --inputPath=verbatim.avro "
             + "--avroCompressionType=SNAPPY --avroSyncInterval=1 --hdfsSiteConfig=hdfs.xml --coreSiteConfig=core.xml "
             + "--properties=/path/ws.config --endPointType=DWC_ARCHIVE --tripletValid=true --occurrenceIdValid=true --useExtendedRecordId=true "
             + "--experiments=use_deprecated_read";
 
-    InterpreterConfiguration config = new InterpreterConfiguration();
+    IdentifierConfiguration config = new IdentifierConfiguration();
     config.distributedConfig.jarPath = "java.jar";
     config.distributedConfig.mainClass = "org.gbif.Test";
     config.sparkConfig.executorMemoryGbMax = 10;
@@ -58,7 +57,6 @@ public class ProcessRunnerBuilderTest {
     config.pipelinesConfig = "/path/ws.config";
     config.sparkConfig.driverMemory = "4G";
     config.distributedConfig.deployMode = "cluster";
-    config.processRunner = StepRunner.DISTRIBUTED.name();
     config.stepConfig.repositoryPath = "tmp";
     config.stepConfig.coreSiteConfig = "core.xml";
     config.stepConfig.hdfsSiteConfig = "hdfs.xml";
@@ -66,76 +64,7 @@ public class ProcessRunnerBuilderTest {
     UUID datasetId = UUID.fromString("de7ffb5e-c07b-42dc-8a88-f67a4465fe3d");
     int attempt = 1;
     Set<String> types = Collections.singleton(RecordType.ALL.name());
-    Set<String> steps = Collections.singleton(StepType.VERBATIM_TO_INTERPRETED.name());
-    PipelinesVerbatimMessage message =
-        new PipelinesVerbatimMessage(
-            datasetId,
-            attempt,
-            types,
-            steps,
-            null,
-            EndpointType.DWC_ARCHIVE,
-            "something",
-            new ValidationResult(true, true, true, null),
-            null,
-            EXECUTION_ID);
-
-    // Expected
-    ProcessBuilder builder =
-        ProcessRunnerBuilder.builder()
-            .config(config)
-            .message(message)
-            .inputPath("verbatim.avro")
-            .sparkParallelism(1)
-            .sparkExecutorMemory("1G")
-            .sparkExecutorNumbers(1)
-            .build()
-            .get();
-
-    String result = builder.command().get(2);
-
-    // Should
-    assertEquals(expected, result);
-  }
-
-  @Test
-  public void testValidatorCommand() {
-    // When
-    String expected =
-        "spark2-submit --name=VALIDATOR_VERBATIM_TO_INTERPRETED_de7ffb5e-c07b-42dc-8a88-f67a4465fe3d_1 "
-            + "--conf spark.default.parallelism=1 --conf spark.executor.memoryOverhead=1 --conf spark.dynamicAllocation.enabled=false "
-            + "--conf spark.yarn.am.waitTime=360s "
-            + "--class org.gbif.Test --master yarn --deploy-mode cluster --executor-memory 1G --executor-cores 1 --num-executors 1 "
-            + "--driver-memory 4G java.jar --datasetId=de7ffb5e-c07b-42dc-8a88-f67a4465fe3d --attempt=1 --interpretationTypes=ALL "
-            + "--runner=SparkRunner --targetPath=tmp --metaFileName=verbatim-to-interpreted.yml --inputPath=verbatim.avro "
-            + "--avroCompressionType=SNAPPY --avroSyncInterval=1 --hdfsSiteConfig=hdfs.xml --coreSiteConfig=core.xml "
-            + "--properties=/path/ws.config --endPointType=DWC_ARCHIVE --useMetadataWsCalls=false --tripletValid=true "
-            + "--occurrenceIdValid=true --useExtendedRecordId=true --experiments=use_deprecated_read";
-
-    InterpreterConfiguration config = new InterpreterConfiguration();
-    config.distributedConfig.jarPath = "java.jar";
-    config.distributedConfig.mainClass = "org.gbif.Test";
-    config.sparkConfig.executorMemoryGbMax = 10;
-    config.sparkConfig.executorMemoryGbMin = 1;
-    config.sparkConfig.executorCores = 1;
-    config.sparkConfig.executorNumbersMin = 1;
-    config.sparkConfig.executorNumbersMax = 2;
-    config.sparkConfig.memoryOverhead = 1;
-    config.avroConfig.compressionType = "SNAPPY";
-    config.avroConfig.syncInterval = 1;
-    config.pipelinesConfig = "/path/ws.config";
-    config.sparkConfig.driverMemory = "4G";
-    config.distributedConfig.deployMode = "cluster";
-    config.processRunner = StepRunner.DISTRIBUTED.name();
-    config.stepConfig.repositoryPath = "tmp";
-    config.stepConfig.coreSiteConfig = "core.xml";
-    config.stepConfig.hdfsSiteConfig = "hdfs.xml";
-    config.validatorOnly = true;
-
-    UUID datasetId = UUID.fromString("de7ffb5e-c07b-42dc-8a88-f67a4465fe3d");
-    int attempt = 1;
-    Set<String> types = Collections.singleton(RecordType.ALL.name());
-    Set<String> steps = Collections.singleton(StepType.VALIDATOR_VERBATIM_TO_INTERPRETED.name());
+    Set<String> steps = Collections.singleton(StepType.VERBATIM_TO_IDENTIFIER.name());
     PipelinesVerbatimMessage message =
         new PipelinesVerbatimMessage(
             datasetId,
@@ -172,17 +101,17 @@ public class ProcessRunnerBuilderTest {
     // When
     String expected =
         "sudo -u user spark2-submit --conf spark.metrics.conf=metrics.properties --conf \"spark.driver.extraClassPath=logstash-gelf.jar\" "
-            + "--driver-java-options \"-Dlog4j.configuration=file:log4j.properties\" --queue pipelines --name=VERBATIM_TO_INTERPRETED_de7ffb5e-c07b-42dc-8a88-f67a4465fe3d_1 "
+            + "--driver-java-options \"-Dlog4j.configuration=file:log4j.properties\" --queue pipelines --name=VERBATIM_TO_IDENTIFIER_de7ffb5e-c07b-42dc-8a88-f67a4465fe3d_1 "
             + "--conf spark.default.parallelism=1 "
             + "--conf spark.executor.memoryOverhead=1 --conf spark.dynamicAllocation.enabled=false --conf spark.yarn.am.waitTime=360s "
             + "--class org.gbif.Test --master yarn "
             + "--deploy-mode cluster --executor-memory 1G --executor-cores 1 --num-executors 1 --driver-memory 4G java.jar "
             + "--datasetId=de7ffb5e-c07b-42dc-8a88-f67a4465fe3d --attempt=1 --interpretationTypes=ALL --runner=SparkRunner "
-            + "--targetPath=tmp --metaFileName=verbatim-to-interpreted.yml --inputPath=verbatim.avro --avroCompressionType=SNAPPY "
+            + "--targetPath=tmp --metaFileName=verbatim-to-identifier.yml --inputPath=verbatim.avro --avroCompressionType=SNAPPY "
             + "--avroSyncInterval=1 --hdfsSiteConfig=hdfs.xml --coreSiteConfig=core.xml --properties=/path/ws.config --endPointType=DWC_ARCHIVE "
             + "--experiments=use_deprecated_read";
 
-    InterpreterConfiguration config = new InterpreterConfiguration();
+    IdentifierConfiguration config = new IdentifierConfiguration();
     config.distributedConfig.jarPath = "java.jar";
     config.distributedConfig.mainClass = "org.gbif.Test";
     config.sparkConfig.executorMemoryGbMax = 10;
@@ -199,7 +128,6 @@ public class ProcessRunnerBuilderTest {
     config.distributedConfig.extraClassPath = "logstash-gelf.jar";
     config.distributedConfig.driverJavaOptions = "-Dlog4j.configuration=file:log4j.properties";
     config.distributedConfig.deployMode = "cluster";
-    config.processRunner = StepRunner.DISTRIBUTED.name();
     config.distributedConfig.yarnQueue = "pipelines";
     config.distributedConfig.otherUser = "user";
     config.stepConfig.hdfsSiteConfig = "hdfs.xml";
@@ -209,7 +137,7 @@ public class ProcessRunnerBuilderTest {
     UUID datasetId = UUID.fromString("de7ffb5e-c07b-42dc-8a88-f67a4465fe3d");
     int attempt = 1;
     Set<String> types = Collections.singleton(RecordType.ALL.name());
-    Set<String> steps = Collections.singleton(StepType.VERBATIM_TO_INTERPRETED.name());
+    Set<String> steps = Collections.singleton(StepType.VERBATIM_TO_IDENTIFIER.name());
     PipelinesVerbatimMessage message =
         new PipelinesVerbatimMessage(
             datasetId,
