@@ -7,6 +7,8 @@ import java.util.StringJoiner;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+
+import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.api.messages.PipelinesEventsInterpretedMessage;
 
 /** Class to build an instance of ProcessBuilder for direct or spark command */
@@ -54,6 +56,7 @@ final class ProcessRunnerBuilder {
     }
 
     joiner
+        .add("--name=" + getAppName())
         .add("--conf spark.default.parallelism=" + sparkParallelism)
         .add("--conf spark.executor.memoryOverhead=" + config.sparkConfig.memoryOverhead)
         .add("--conf spark.dynamicAllocation.enabled=false")
@@ -137,5 +140,10 @@ final class ProcessRunnerBuilder {
     builder.redirectOutput(new File("/dev/null"));
 
     return builder;
+  }
+
+  private String getAppName() {
+    String type = StepType.EVENTS_INTERPRETED_TO_INDEX.name();
+    return type + "_" + message.getDatasetUuid() + "_" + message.getAttempt();
   }
 }

@@ -46,11 +46,7 @@ public class PathBuilder {
    */
   public static String buildPathInterpretUsingTargetPath(
       BasePipelineOptions options, String name, String uniqueId) {
-    return buildPathInterpretUsingTargetPath(
-        options,
-        options.getDwcCore(),
-        name,
-        PipelinesVariables.Pipeline.Interpretation.FILE_NAME + uniqueId);
+    return buildPathInterpretUsingTargetPath(options, options.getDwcCore(), name, uniqueId);
   }
 
   /**
@@ -64,7 +60,7 @@ public class PathBuilder {
       BasePipelineOptions options, DwcTerm coreTerm, String name, String uniqueId) {
     return buildPath(
             buildDatasetAttemptPath(options, DIRECTORY_NAME, false),
-            DwcTerm.Event != coreTerm ? "" : DwcTerm.Event.name().toLowerCase(Locale.ROOT),
+            DwcTerm.Event != coreTerm ? "" : DwcTerm.Event.simpleName().toLowerCase(Locale.ROOT),
             name,
             PipelinesVariables.Pipeline.Interpretation.FILE_NAME + uniqueId)
         .toString();

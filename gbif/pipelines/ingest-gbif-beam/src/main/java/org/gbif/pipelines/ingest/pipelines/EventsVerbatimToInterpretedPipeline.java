@@ -124,7 +124,6 @@ public class EventsVerbatimToInterpretedPipeline {
         t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, id);
 
     log.info("Creating a pipeline from options");
-    options.setAppName("Event interpretation of " + datasetId);
     Pipeline p = pipelinesFn.apply(options);
 
     // Used transforms

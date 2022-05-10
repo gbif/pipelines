@@ -35,9 +35,12 @@ import org.gbif.pipelines.io.avro.MediaType;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.Multimedia;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
+import org.gbif.pipelines.io.avro.RankedName;
+import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.transforms.core.EventCoreTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
+import org.gbif.pipelines.transforms.core.TaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
@@ -188,6 +191,13 @@ public class ParentJsonTransformTest {
             .build();
     lr.getIssues().getIssueList().add(OccurrenceIssue.BASIS_OF_RECORD_INVALID.name());
 
+    TaxonRecord tr =
+        TaxonRecord.newBuilder()
+            .setId("777")
+            .setAcceptedUsage(RankedName.newBuilder().setName("name").build())
+            .setSynonym(true)
+            .build();
+
     // State
     Multimedia stillImage = new Multimedia();
     stillImage.setType(MediaType.StillImage.name());
@@ -235,6 +245,7 @@ public class ParentJsonTransformTest {
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.builder().create();
     LocationTransform locationTransform = LocationTransform.builder().create();
+    TaxonomyTransform taxonomyTransform = TaxonomyTransform.builder().create();
 
     // Extension
     MultimediaTransform multimediaTransform = MultimediaTransform.builder().create();
@@ -265,6 +276,10 @@ public class ParentJsonTransformTest {
         p.apply("Read Location", Create.of(lr))
             .apply("Map Location to KV", locationTransform.toKv());
 
+    PCollection<KV<String, TaxonRecord>> taxonCollection =
+        p.apply("Read Taxonomy", Create.of(tr))
+            .apply("Map Taxonomy to KV", taxonomyTransform.toKv());
+
     PCollection<KV<String, MultimediaRecord>> multimediaCollection =
         p.apply("Read Multimedia", Create.of(mmr))
             .apply("Map Multimedia to KV", multimediaTransform.toKv());
@@ -284,6 +299,7 @@ public class ParentJsonTransformTest {
             .eventCoreRecordTag(eventCoreTransform.getTag())
             .temporalRecordTag(temporalTransform.getTag())
             .locationRecordTag(locationTransform.getTag())
+            .taxonRecordTag(taxonomyTransform.getTag())
             .multimediaRecordTag(multimediaTransform.getTag())
             .imageRecordTag(imageTransform.getTag())
             .audubonRecordTag(audubonTransform.getTag())
@@ -297,6 +313,7 @@ public class ParentJsonTransformTest {
             .of(eventCoreTransform.getTag(), eventCoreCollection)
             .and(temporalTransform.getTag(), temporalCollection)
             .and(locationTransform.getTag(), locationCollection)
+            .and(taxonomyTransform.getTag(), taxonCollection)
             // Extension
             .and(multimediaTransform.getTag(), multimediaCollection)
             .and(imageTransform.getTag(), imageCollection)
@@ -317,6 +334,7 @@ public class ParentJsonTransformTest {
             .identifier(ir)
             .temporal(tmr)
             .location(lr)
+            .taxon(tr)
             .multimedia(mmr)
             .verbatim(er)
             .build()

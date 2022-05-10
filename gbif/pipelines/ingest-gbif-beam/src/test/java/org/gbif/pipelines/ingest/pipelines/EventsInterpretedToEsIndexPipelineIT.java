@@ -61,7 +61,7 @@ public class EventsInterpretedToEsIndexPipelineIT {
   }
 
   @Test
-  public void interpretationPipelineTest() throws Exception {
+  public void indexingPipelineTest() throws Exception {
 
     // State
     String outputFile = getClass().getResource("/").getFile();

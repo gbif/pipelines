@@ -10,6 +10,8 @@ import lombok.Builder;
 import lombok.Setter;
 import lombok.SneakyThrows;
 import org.apache.beam.sdk.transforms.MapElements;
+import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TypeDescriptor;
@@ -37,13 +39,16 @@ public class EventCoreTransform extends Transform<ExtendedRecord, EventCoreRecor
   @Setter private PCollectionView<Map<String, ExtendedRecord>> erWithParentsView;
 
   @Builder(buildMethodName = "create")
-  private EventCoreTransform(SerializableSupplier<VocabularyService> vocabularyServiceSupplier) {
+  private EventCoreTransform(
+      SerializableSupplier<VocabularyService> vocabularyServiceSupplier,
+      PCollectionView<Map<String, ExtendedRecord>> erWithParentsView) {
     super(
         EventCoreRecord.class,
         EVENT_CORE,
         EventCoreTransform.class.getName(),
         EVENT_CORE_RECORDS_COUNT);
     this.vocabularyServiceSupplier = vocabularyServiceSupplier;
+    this.erWithParentsView = erWithParentsView;
   }
 
   /** Maps {@link EventCoreRecord} to key value, where key is {@link EventCoreRecord#getId} */
@@ -83,6 +88,11 @@ public class EventCoreTransform extends Transform<ExtendedRecord, EventCoreRecor
   @Override
   public Optional<EventCoreRecord> convert(ExtendedRecord source) {
     throw new IllegalArgumentException("Method is not implemented!");
+  }
+
+  @Override
+  public SingleOutput<ExtendedRecord, EventCoreRecord> interpret() {
+    return ParDo.of(this).withSideInputs(erWithParentsView);
   }
 
   @Override

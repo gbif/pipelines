@@ -44,7 +44,7 @@ public class EventsVerbatimToInterpretedPipelineIT {
   @Rule public final transient TestPipeline p = TestPipeline.create();
 
   @Test
-  public void indexingPipelineTest() throws Exception {
+  public void interpretationPipelineTest() throws Exception {
 
     // State
     String outputFile = getClass().getResource("/data7/ingest").getFile();
@@ -62,7 +62,7 @@ public class EventsVerbatimToInterpretedPipelineIT {
       "--interpretationTypes=ALL",
       "--syncThreshold=0",
       "--testMode=true",
-      "--=Event"
+      "--dwcCore=Event"
     };
 
     // State

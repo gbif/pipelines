@@ -111,7 +111,6 @@ public class EventsInterpretedToIndexPipeline {
             PathBuilder.buildPathInterpretUsingTargetPath(
                 options, DwcTerm.Occurrence, t, "*" + AVRO_EXTENSION);
 
-    options.setAppName("Event indexing of " + options.getDatasetId());
     Pipeline p = pipelinesFn.apply(options);
 
     log.info("Adding step 2: Creating transformations");
