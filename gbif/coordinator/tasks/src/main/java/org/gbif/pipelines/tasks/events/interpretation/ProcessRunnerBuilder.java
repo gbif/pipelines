@@ -7,7 +7,6 @@ import java.util.StringJoiner;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
 
