@@ -141,8 +141,8 @@ public class EventsInterpretedToEsIndexPipelineIT {
       writer.append(locationRecord);
     }
     try (SyncDataFileWriter<TaxonRecord> writer =
-           InterpretedAvroWriter.createAvroWriter(
-             optionsWriter, TaxonomyTransform.builder().create(), postfix)) {
+        InterpretedAvroWriter.createAvroWriter(
+            optionsWriter, TaxonomyTransform.builder().create(), postfix)) {
       TaxonRecord taxonRecord = TaxonRecord.newBuilder().setId(ID).build();
       writer.append(taxonRecord);
     }
