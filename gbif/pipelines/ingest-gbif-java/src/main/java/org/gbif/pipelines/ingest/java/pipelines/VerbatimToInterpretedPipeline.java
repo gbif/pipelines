@@ -225,7 +225,7 @@ public class VerbatimToInterpretedPipeline {
             };
       }
 
-      log.info("Аiltering GBIF id duplicates");
+      log.info("Аltering GBIF id duplicates...");
       // Filter GBIF id duplicates
       UniqueGbifIdTransform gbifIdTransform =
           UniqueGbifIdTransform.builder()
