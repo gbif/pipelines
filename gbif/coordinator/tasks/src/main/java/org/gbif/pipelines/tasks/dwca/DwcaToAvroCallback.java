@@ -170,7 +170,8 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
         null,
         validationResult,
         null,
-        null);
+        null,
+        message.getPipelineSteps().contains(StepType.VERBATIM_TO_IDENTIFIER.name()));
   }
 
   /**

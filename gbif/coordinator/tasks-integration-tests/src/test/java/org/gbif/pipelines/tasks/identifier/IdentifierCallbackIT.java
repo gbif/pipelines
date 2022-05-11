@@ -99,7 +99,8 @@ public class IdentifierCallbackIT {
             null,
             validationResult,
             null,
-            EXECUTION_ID);
+            EXECUTION_ID,
+            true);
 
     // When
     callback.handleMessage(message);
@@ -162,7 +163,8 @@ public class IdentifierCallbackIT {
             null,
             validationResult,
             null,
-            EXECUTION_ID);
+            EXECUTION_ID,
+            true);
 
     // When
     callback.handleMessage(message);

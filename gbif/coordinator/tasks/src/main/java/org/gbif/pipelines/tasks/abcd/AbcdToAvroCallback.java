@@ -124,7 +124,8 @@ public class AbcdToAvroCallback extends AbstractMessageCallback<PipelinesAbcdMes
         null,
         new ValidationResult(true, true, null, null),
         null,
-        null);
+        null,
+        message.getPipelineSteps().contains(StepType.VERBATIM_TO_IDENTIFIER.name()));
   }
 
   @Override

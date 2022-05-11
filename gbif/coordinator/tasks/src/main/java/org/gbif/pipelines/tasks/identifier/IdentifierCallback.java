@@ -3,10 +3,8 @@ package org.gbif.pipelines.tasks.identifier;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import java.util.function.ToDoubleFunction;
 import lombok.AllArgsConstructor;
@@ -106,21 +104,18 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
 
   @Override
   public PipelinesVerbatimMessage createOutgoingMessage(PipelinesVerbatimMessage message) {
-
-    Set<String> pipelineSteps = new HashSet<>(message.getPipelineSteps());
-    pipelineSteps.remove(StepType.VERBATIM_TO_IDENTIFIER.name());
-
     return new PipelinesVerbatimMessage(
         message.getDatasetUuid(),
         message.getAttempt(),
         message.getInterpretTypes(),
-        pipelineSteps,
+        message.getPipelineSteps(),
         message.getRunner(),
         message.getEndpointType(),
         message.getExtraPath(),
         message.getValidationResult(),
         message.getResetPrefix(),
-        message.getExecutionId());
+        message.getExecutionId(),
+        false);
   }
 
   private void runDistributed(PipelinesVerbatimMessage message, ProcessRunnerBuilderBuilder builder)
