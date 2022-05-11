@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.apache.avro.file.DataFileReader;
@@ -64,9 +65,20 @@ public class EventsVerbatimToInterpretedPipelineIT {
       "--testMode=true",
       "--dwcCore=Event"
     };
-
     // State
     String pipelinesProperties = outputFile + "/pipelines.yaml";
+
+    // Add vocabulary
+    Path pipelinesPropertiesPath = Paths.get(pipelinesProperties);
+    List<String> lines = Files.readAllLines(pipelinesPropertiesPath);
+
+    boolean anyMatch = lines.stream().anyMatch(x -> x.startsWith("  vocabulariesPath"));
+
+    if (!anyMatch) {
+      String vocabulariesPath = "  vocabulariesPath: " + outputFile;
+      lines.add(vocabulariesPath);
+      Files.write(pipelinesPropertiesPath, lines);
+    }
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
 
     // Create varbatim.avro
