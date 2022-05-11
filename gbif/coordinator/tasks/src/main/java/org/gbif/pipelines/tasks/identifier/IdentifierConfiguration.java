@@ -40,11 +40,8 @@ public class IdentifierConfiguration implements BaseConfiguration {
   @Parameter(names = "--use-beam-deprecated-read")
   public boolean useBeamDeprecatedRead = true;
 
-  @Parameter(names = "--fail-if-duplicate-id-percent")
-  public int failIfDuplicateIdPercent = 5;
-
-  @Parameter(names = "--delete-after-days")
-  public long deleteAfterDays = 7L;
+  @Parameter(names = "--id-threshold-percent")
+  public double idThresholdPercent = 5;
 
   @Override
   public String getHdfsSiteConfig() {

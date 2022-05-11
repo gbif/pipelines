@@ -1,20 +1,14 @@
 package org.gbif.pipelines.tasks.identifier;
 
-import static org.gbif.common.parsers.date.DateComponentOrdering.DMY_FORMATS;
-import static org.gbif.common.parsers.date.DateComponentOrdering.ISO_FORMATS;
-import static org.gbif.common.parsers.date.DateComponentOrdering.MDY_FORMATS;
-
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.ToDoubleFunction;
-import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -27,12 +21,10 @@ import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
-import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.MachineTag;
@@ -95,28 +87,14 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
               ? message.getExtraPath()
               : String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, verbatim);
 
-      String defaultDateFormat = getDefaultDateFormat(datasetId);
-
       ProcessRunnerBuilderBuilder builder =
-          ProcessRunnerBuilder.builder()
-              .config(config)
-              .message(message)
-              .inputPath(path)
-              .defaultDateFormat(defaultDateFormat);
+          ProcessRunnerBuilder.builder().config(config).message(message).inputPath(path);
 
       log.info("Start the process. Message - {}", message);
       try {
 
         runDistributed(message, builder);
-
         runPostprocessValidation(message);
-
-        log.info("Deleting old attempts directories");
-        String pathToDelete = String.join("/", config.stepConfig.repositoryPath, datasetId);
-        HdfsConfigs hdfsConfigs =
-            HdfsConfigs.create(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);
-        HdfsUtils.deleteSubFolders(
-            hdfsConfigs, pathToDelete, config.deleteAfterDays, Collections.singleton(attempt));
 
       } catch (Exception ex) {
         log.error(ex.getMessage(), ex);
@@ -259,6 +237,8 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
         String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, metaFileName);
     log.info("Getting records number from the file - {}", metaPath);
 
+    Double threshold = getMachineTag(message.getDatasetUuid()).orElse(config.idThresholdPercent);
+
     ToDoubleFunction<String> getMetricFn =
         m -> {
           try {
@@ -291,39 +271,21 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
               * 100
               / (invalidIdCount + duplicateIdCount + uniqieIdCount);
 
-      if (duplicatePercent > config.failIfDuplicateIdPercent) {
+      if (duplicatePercent > threshold) {
         log.error(
             "GBIF IDs hit maximum allowed threshold: allowed - {}%, duplicates - {}%",
-            config.failIfDuplicateIdPercent, duplicatePercent);
+            threshold, duplicatePercent);
         throw new IllegalArgumentIOException("GBIF IDs hit maximum allowed threshold");
       } else {
         log.warn(
             "GBIF IDs current duplicates rate: allowed - {}%, duplicates - {}%",
-            config.failIfDuplicateIdPercent, duplicatePercent);
+            threshold, duplicatePercent);
       }
     }
   }
 
-  /** Checks if the directory exists */
   @SneakyThrows
-  private boolean pathExists(PipelinesVerbatimMessage message) {
-    String datasetId = message.getDatasetUuid().toString();
-    String attempt = Integer.toString(message.getAttempt());
-    String path =
-        String.join(
-            "/",
-            config.stepConfig.repositoryPath,
-            datasetId,
-            attempt,
-            Interpretation.DIRECTORY_NAME);
-
-    HdfsConfigs hdfsConfigs =
-        HdfsConfigs.create(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);
-    return HdfsUtils.exists(hdfsConfigs, path);
-  }
-
-  @SneakyThrows
-  private String getDefaultDateFormat(String datasetKey) {
+  private Optional<Double> getMachineTag(UUID datasetKey) {
     String url = config.stepConfig.registry.wsUrl + "/dataset/" + datasetKey + "/machineTag";
     HttpResponse response = httpClient.execute(new HttpGet(url));
     if (response.getStatusLine().getStatusCode() != 200) {
@@ -334,27 +296,10 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
         MAPPER.readValue(
             response.getEntity().getContent(), new TypeReference<List<MachineTag>>() {});
 
-    Optional<String> defaultDateFormat =
-        machineTags.stream()
-            .filter(x -> x.getName().equals("default_date_format"))
-            .map(MachineTag::getValue)
-            .findFirst();
-
-    if (!defaultDateFormat.isPresent()) {
-      return null;
-    } else if (defaultDateFormat.get().equals("ISO")) {
-      return Arrays.stream(ISO_FORMATS)
-          .map(DateComponentOrdering::name)
-          .collect(Collectors.joining(","));
-    } else if (defaultDateFormat.get().equals("DMY")) {
-      return Arrays.stream(DMY_FORMATS)
-          .map(DateComponentOrdering::name)
-          .collect(Collectors.joining(","));
-    } else if (defaultDateFormat.get().equals("MDY")) {
-      return Arrays.stream(MDY_FORMATS)
-          .map(DateComponentOrdering::name)
-          .collect(Collectors.joining(","));
-    }
-    return null;
+    return machineTags.stream()
+        .filter(x -> x.getName().equals("idThresholdPercent"))
+        .map(MachineTag::getValue)
+        .map(Double::parseDouble)
+        .findFirst();
   }
 }

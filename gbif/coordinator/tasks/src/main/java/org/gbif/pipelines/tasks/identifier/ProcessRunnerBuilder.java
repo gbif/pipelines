@@ -23,8 +23,6 @@ final class ProcessRunnerBuilder {
   private int sparkParallelism;
   private int sparkExecutorNumbers;
   private String sparkExecutorMemory;
-  private String sparkEventLogDir;
-  private String defaultDateFormat;
   @NonNull private String inputPath;
 
   ProcessBuilder get() {
@@ -93,8 +91,6 @@ final class ProcessRunnerBuilder {
         .add("--coreSiteConfig=" + Objects.requireNonNull(config.stepConfig.coreSiteConfig))
         .add("--properties=" + Objects.requireNonNull(config.pipelinesConfig))
         .add("--endPointType=" + Objects.requireNonNull(message.getEndpointType()));
-
-    Optional.ofNullable(defaultDateFormat).ifPresent(x -> command.add("--defaultDateFormat=" + x));
 
     Optional.ofNullable(message.getValidationResult())
         .ifPresent(
