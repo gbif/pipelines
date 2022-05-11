@@ -93,6 +93,7 @@ final class ProcessRunnerBuilder {
         .add("--esHosts=" + Objects.requireNonNull(esHosts))
         .add("--properties=" + Objects.requireNonNull(config.pipelinesConfig))
         .add("--esSchemaPath=elasticsearch/es-event-schema.json")
+        .add("--esIndexName=" + Objects.requireNonNull(esIndexName))
         .add("--dwcCore=Event");
 
     if (config.esGeneratedIds) {
@@ -101,12 +102,11 @@ final class ProcessRunnerBuilder {
       command.add("--esDocumentId=internalId");
     }
 
+    Optional.ofNullable(esAlias).ifPresent(x -> command.add("--esAlias=" + x));
     Optional.ofNullable(config.esConfig.maxBatchSizeBytes)
         .ifPresent(x -> command.add("--esMaxBatchSizeBytes=" + x));
     Optional.ofNullable(config.esConfig.maxBatchSize)
         .ifPresent(x -> command.add("--esMaxBatchSize=" + x));
-    Optional.ofNullable(config.esConfig.schemaPath)
-        .ifPresent(x -> command.add("--esSchemaPath=" + x));
     Optional.ofNullable(config.indexConfig.refreshInterval)
         .ifPresent(x -> command.add("--indexRefreshInterval=" + x));
     Optional.ofNullable(config.indexConfig.numberReplicas)

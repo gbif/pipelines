@@ -12,6 +12,8 @@ import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesEventsInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.tasks.PipelinesCallback;
@@ -56,15 +58,20 @@ public class EventsInterpretationCallback extends AbstractMessageCallback<Pipeli
   public Runnable createRunnable(PipelinesEventsMessage message) {
     return () -> {
       try {
+        String datasetId = message.getDatasetUuid().toString();
+        String attempt = Integer.toString(message.getAttempt());
+
+        String verbatim = Conversion.FILE_NAME + Pipeline.AVRO_EXTENSION;
+        String path =
+            String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, verbatim);
+
         ProcessRunnerBuilderBuilder builder =
-            ProcessRunnerBuilder.builder().config(config).message(message);
+            ProcessRunnerBuilder.builder().config(config).inputPath(path).message(message);
 
         log.info("Start the process. Message - {}", message);
         runDistributed(builder, message);
 
         log.info("Deleting old attempts directories");
-        String datasetId = message.getDatasetUuid().toString();
-        String attempt = Integer.toString(message.getAttempt());
         String pathToDelete = String.join("/", config.stepConfig.repositoryPath, datasetId);
         HdfsUtils.deleteSubFolders(
             config.stepConfig.hdfsSiteConfig,
@@ -92,7 +99,6 @@ public class EventsInterpretationCallback extends AbstractMessageCallback<Pipeli
         message.getResetPrefix(),
         message.getExecutionId(),
         message.getEndpointType(),
-        message.getValidationResult(),
         message.getInterpretTypes(),
         repeatAttempt,
         message.getRunner());
