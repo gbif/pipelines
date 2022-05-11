@@ -163,8 +163,7 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
         null,
         new ValidationResult(true, true, null, null),
         null,
-        null,
-        message.getPipelineSteps().contains(StepType.VERBATIM_TO_IDENTIFIER.name()));
+        null);
   }
 
   @Override
