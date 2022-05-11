@@ -243,7 +243,6 @@ public class EventsVerbatimToInterpretedPipeline {
         .apply("Write event temporal to avro", temporalTransform.write(pathFn));
 
     uniqueRawRecords
-        .apply("Check event taxonomy transform", taxonomyTransform.check(types))
         .apply("Interpret event taxonomy", taxonomyTransform.interpret())
         .apply("Write event taxon to avro", taxonomyTransform.write(pathFn));
 

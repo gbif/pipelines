@@ -25,6 +25,8 @@ final class ProcessRunnerBuilder {
   private String sparkExecutorMemory;
   private String sparkEventLogDir;
 
+  @NonNull private String inputPath;
+
   ProcessBuilder get() {
     return buildSpark();
   }
@@ -79,17 +81,17 @@ final class ProcessRunnerBuilder {
     command
         .add("--datasetId=" + Objects.requireNonNull(message.getDatasetUuid()))
         .add("--attempt=" + message.getAttempt())
+        .add("--interpretationTypes=" + Objects.requireNonNull(interpretationTypes))
         .add("--runner=SparkRunner")
-        .add("--inputPath=" + Objects.requireNonNull(config.stepConfig.repositoryPath))
         .add("--targetPath=" + Objects.requireNonNull(config.stepConfig.repositoryPath))
+        .add("--metaFileName=" + Objects.requireNonNull(config.metaFileName))
+        .add("--inputPath=" + Objects.requireNonNull(inputPath))
         .add("--avroCompressionType=" + Objects.requireNonNull(config.avroConfig.compressionType))
         .add("--avroSyncInterval=" + config.avroConfig.syncInterval)
-        .add("--metaFileName=" + Objects.requireNonNull(config.metaFileName))
         .add("--hdfsSiteConfig=" + Objects.requireNonNull(config.stepConfig.hdfsSiteConfig))
         .add("--coreSiteConfig=" + Objects.requireNonNull(config.stepConfig.coreSiteConfig))
         .add("--properties=" + Objects.requireNonNull(config.pipelinesConfig))
         .add("--endPointType=" + Objects.requireNonNull(message.getEndpointType()))
-        .add("--interpretationTypes=" + Objects.requireNonNull(interpretationTypes))
         .add("--dwcCore=Event");
 
     return command.toString();
