@@ -49,12 +49,7 @@ public class Keygen {
 
     KeyLookupResult keyResult = null;
     try {
-      // Finds or generates key
       keyResult = keygenService.findKey(uniqueStrings);
-      if (keyResult == null) {
-        log.error("GBIF ID wasn't found, generating a new key.");
-        keyResult = keygenService.generateKey(uniqueStrings);
-      }
     } catch (RuntimeException ex) {
       log.error(ex.getMessage(), ex);
     }
