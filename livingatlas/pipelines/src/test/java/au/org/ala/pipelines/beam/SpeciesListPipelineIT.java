@@ -14,6 +14,7 @@ import org.gbif.pipelines.common.beam.options.DwcaPipelineOptions;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.core.io.AvroReader;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.io.avro.TaxonProfile;
 import org.junit.After;
 import org.junit.Before;
@@ -41,8 +42,7 @@ public class SpeciesListPipelineIT {
 
     Map<String, TaxonProfile> tps =
         AvroReader.readRecords(
-            null,
-            null,
+            HdfsConfigs.create(null, null),
             TaxonProfile.class,
             "/tmp/la-pipelines-test/species-lists/dr893/1/taxon_profiles/*.avro");
 

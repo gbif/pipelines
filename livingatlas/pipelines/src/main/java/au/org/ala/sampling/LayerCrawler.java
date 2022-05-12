@@ -25,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
 import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.MDC;
@@ -84,7 +85,8 @@ public class LayerCrawler {
 
     FileSystem fs =
         FsUtils.getFileSystem(
-            options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getInputPath());
+            HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()),
+            options.getInputPath());
 
     Instant batchStart = Instant.now();
 

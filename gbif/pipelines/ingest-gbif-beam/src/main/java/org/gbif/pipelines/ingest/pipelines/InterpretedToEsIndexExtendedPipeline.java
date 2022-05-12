@@ -9,6 +9,7 @@ import org.gbif.pipelines.common.beam.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.ingest.utils.EsIndexUtils;
 import org.slf4j.MDC;
@@ -98,8 +99,7 @@ public class InterpretedToEsIndexExtendedPipeline {
     if (options.getProperties() != null) {
       config =
           FsUtils.readConfigFile(
-              options.getHdfsSiteConfig(),
-              options.getCoreSiteConfig(),
+              HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()),
               options.getProperties(),
               PipelinesConfig.class);
 

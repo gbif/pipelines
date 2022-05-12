@@ -64,6 +64,7 @@ import org.gbif.pipelines.core.converters.PreparationTableConverter;
 import org.gbif.pipelines.core.converters.PreservationTableConverter;
 import org.gbif.pipelines.core.converters.ReferenceTableConverter;
 import org.gbif.pipelines.core.converters.ResourceRelationshipTableConverter;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.ingest.java.metrics.IngestMetricsBuilder;
 import org.gbif.pipelines.ingest.java.transforms.OccurrenceHdfsRecordConverter;
@@ -189,8 +190,8 @@ public class InterpretedToHdfsViewPipeline {
     MDC.put("attempt", options.getAttempt().toString());
     MDC.put("step", StepType.HDFS_VIEW.name());
 
-    String hdfsSiteConfig = options.getHdfsSiteConfig();
-    String coreSiteConfig = options.getCoreSiteConfig();
+    HdfsConfigs hdfsConfigs =
+        HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig());
     String datasetId = options.getDatasetId();
     Integer attempt = options.getAttempt();
     Set<String> types = options.getInterpretationTypes();
@@ -200,7 +201,7 @@ public class InterpretedToHdfsViewPipeline {
 
     // Deletes the target path if it exists
     FsUtils.deleteInterpretIfExist(
-        hdfsSiteConfig, coreSiteConfig, options.getInputPath(), datasetId, attempt, deleteTypes);
+        hdfsConfigs, options.getInputPath(), datasetId, attempt, deleteTypes);
 
     Function<InterpretationType, String> pathFn =
         st -> {

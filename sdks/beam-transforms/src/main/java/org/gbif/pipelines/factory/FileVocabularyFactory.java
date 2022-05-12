@@ -18,6 +18,7 @@ import org.gbif.pipelines.core.config.model.VocabularyConfig;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.core.parsers.vocabulary.VocabularyService;
 import org.gbif.pipelines.core.parsers.vocabulary.VocabularyService.VocabularyServiceBuilder;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.vocabulary.lookup.InMemoryVocabularyLookup;
 import org.gbif.vocabulary.lookup.InMemoryVocabularyLookup.InMemoryVocabularyLookupBuilder;
@@ -33,8 +34,7 @@ import org.gbif.vocabulary.lookup.VocabularyLookup;
 public class FileVocabularyFactory implements Serializable {
 
   private final PipelinesConfig config;
-  private final String hdfsSiteConfig;
-  private final String coreSiteConfig;
+  private final HdfsConfigs hdfsConfigs;
 
   /**
    * Creates instances of {@link VocabularyLookup} from a file containing an exported vocabulary.
@@ -59,7 +59,7 @@ public class FileVocabularyFactory implements Serializable {
           .getVocabulariesNames()
           .forEach(
               (term, name) -> {
-                try (InputStream is = readFile(hdfsSiteConfig, coreSiteConfig, path, name)) {
+                try (InputStream is = readFile(hdfsConfigs, path, name)) {
                   InMemoryVocabularyLookupBuilder builder =
                       InMemoryVocabularyLookup.newBuilder().from(is);
                   if (term == DwcTerm.lifeStage) {
@@ -79,8 +79,7 @@ public class FileVocabularyFactory implements Serializable {
   /**
    * Reads a vocabulary file from HDFS/Local FS
    *
-   * @param hdfsSiteConfig HDFS site config file
-   * @param coreSiteConfig HDFS core site config file
+   * @param hdfsConfigs HDFS site and core site config file
    * @param vocabulariesDir dir where the vocabulary files are
    * @param vocabularyName name of the vocabulary. It has to be the same as the one used in the file
    *     name.
@@ -88,8 +87,8 @@ public class FileVocabularyFactory implements Serializable {
    */
   @SneakyThrows
   private static InputStream readFile(
-      String hdfsSiteConfig, String coreSiteConfig, String vocabulariesDir, String vocabularyName) {
-    FileSystem fs = FsUtils.getFileSystem(hdfsSiteConfig, coreSiteConfig, vocabulariesDir);
+      HdfsConfigs hdfsConfigs, String vocabulariesDir, String vocabularyName) {
+    FileSystem fs = FsUtils.getFileSystem(hdfsConfigs, vocabulariesDir);
     Path fPath = new Path(String.join(Path.SEPARATOR, vocabulariesDir, vocabularyName + ".json"));
     if (fs.exists(fPath)) {
       log.info("Reading vocabularies path - {}", fPath);

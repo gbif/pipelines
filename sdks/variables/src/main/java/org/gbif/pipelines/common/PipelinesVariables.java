@@ -19,6 +19,7 @@ public class PipelinesVariables {
 
     public static final String ARCHIVE_TO_VERBATIM = "archive-to-verbatim";
     public static final String VERBATIM_TO_INTERPRETED = "verbatim-to-interpreted";
+    public static final String VERBATIM_TO_IDENTIFIER = "verbatim-to-identifier";
     public static final String INTERPRETED_TO_INDEX = "interpreted-to-index";
     public static final String INTERPRETED_TO_HDFS = "interpreted-to-hdfs";
     public static final String FRAGMENTER = "fragmenter";
@@ -52,6 +53,7 @@ public class PipelinesVariables {
         VERBATIM,
         // Core types
         IDENTIFIER,
+        IDENTIFIER_ABSENT,
         METADATA,
         BASIC,
         CLUSTERING,
@@ -104,7 +106,7 @@ public class PipelinesVariables {
                   VERBATIM,
                   // Core types
                   METADATA,
-                  IDENTIFIER,
+                  IDENTIFIER_ABSENT,
                   CLUSTERING,
                   BASIC,
                   TEMPORAL,
@@ -208,6 +210,13 @@ public class PipelinesVariables {
       public static final String SAMPLING_PROTOCOL_JOINED = "samplingProtocolJoined";
       public static final String TYPE_STATUS = "typeStatus";
     }
+
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
+    public static class Identifier {
+      public static final String GBIF_ID_EMPTY = "GBIF_ID_EMPTY";
+      public static final String GBIF_ID_INVALID = "GBIF_ID_INVALID";
+      public static final String GBIF_ID_ABSENT = "GBIF_ID_ABSENT";
+    }
   }
 
   @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -216,20 +225,19 @@ public class PipelinesVariables {
     public static final String AVRO_TO_JSON_COUNT = "avroToJsonCount";
     public static final String ARCHIVE_TO_ER_COUNT = "archiveToErCount";
     public static final String AVRO_TO_HDFS_COUNT = "avroToHdfsCount";
-
-    public static final String UNIQUE_IDS_COUNT = "uniqueIdsCount";
-    public static final String DUPLICATE_IDS_COUNT = "duplicatedIdsCount";
-    public static final String IDENTICAL_OBJECTS_COUNT = "identicalObjectsCount";
-
+    // GBIF ID
     public static final String UNIQUE_GBIF_IDS_COUNT = "uniqueGbifIdsCount";
     public static final String DUPLICATE_GBIF_IDS_COUNT = "duplicatedGbifIdsCount";
     public static final String IDENTICAL_GBIF_OBJECTS_COUNT = "identicalGbifObjectsCount";
-
+    public static final String INVALID_GBIF_ID_COUNT = "invalidGbifIdCount";
+    public static final String ABSENT_GBIF_ID_COUNT = "absentGbifIdCount";
+    // Occurrence
+    public static final String UNIQUE_IDS_COUNT = "uniqueIdsCount";
+    public static final String DUPLICATE_IDS_COUNT = "duplicatedIdsCount";
+    public static final String IDENTICAL_OBJECTS_COUNT = "identicalObjectsCount";
     public static final String FILTER_ER_BASED_ON_GBIF_ID = "filterErBasedOnGbifIdCount";
-
     public static final String OCCURRENCE_EXT_COUNT = "occurrenceExtCount";
     public static final String HASH_ID_COUNT = "hashIdCount";
-    public static final String INVALID_GBIF_ID_COUNT = "invalidGbifIdCount";
     // Core types
     public static final String METADATA_RECORDS_COUNT = "metadataRecordsCount";
     public static final String DEFAULT_VALUES_RECORDS_COUNT = "defaultValuesRecordsCount";

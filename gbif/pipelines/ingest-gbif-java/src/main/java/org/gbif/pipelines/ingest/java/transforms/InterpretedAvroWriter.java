@@ -13,6 +13,7 @@ import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
 import org.gbif.pipelines.core.io.SyncDataFileWriterBuilder;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.io.avro.Record;
 import org.gbif.pipelines.transforms.Transform;
 
@@ -25,13 +26,13 @@ public class InterpretedAvroWriter {
       InterpretationPipelineOptions options,
       Transform<?, T> transform,
       String id,
-      boolean useInvalidName) {
-    String baseName = useInvalidName ? transform.getBaseInvalidName() : transform.getBaseName();
+      String baseName) {
     String pathString =
         PathBuilder.buildPathInterpretUsingTargetPath(options, baseName, id + AVRO_EXTENSION);
     Path path = new Path(pathString);
     FileSystem fs =
-        createParentDirectories(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), path);
+        createParentDirectories(
+            HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()), path);
     return SyncDataFileWriterBuilder.builder()
         .schema(transform.getAvroSchema())
         .codec(options.getAvroCompressionType())
@@ -43,6 +44,6 @@ public class InterpretedAvroWriter {
 
   public static <T extends SpecificRecordBase & Record> SyncDataFileWriter<T> createAvroWriter(
       InterpretationPipelineOptions options, Transform<?, T> transform, String id) {
-    return createAvroWriter(options, transform, id, false);
+    return createAvroWriter(options, transform, id, transform.getBaseName());
   }
 }

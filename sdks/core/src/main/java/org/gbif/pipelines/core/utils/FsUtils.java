@@ -19,6 +19,7 @@ import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -38,6 +39,7 @@ import org.apache.hadoop.fs.RemoteIterator;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.TermFactory;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 
 /** Utility class to work with file system. */
 @Slf4j
@@ -74,10 +76,8 @@ public final class FsUtils {
    * @return filesystem
    */
   @SneakyThrows
-  public static FileSystem createParentDirectories(
-      String hdfsSiteConfig, String coreSiteConfig, Path path) {
-    FileSystem fs =
-        FileSystemFactory.getInstance(hdfsSiteConfig, coreSiteConfig).getFs(path.toString());
+  public static FileSystem createParentDirectories(HdfsConfigs hdfsConfigs, Path path) {
+    FileSystem fs = FileSystemFactory.getInstance(hdfsConfigs).getFs(path.toString());
     fs.mkdirs(path.getParent());
     return fs;
   }
@@ -103,15 +103,14 @@ public final class FsUtils {
 
   /** Helper method to get file system based on provided configuration. */
   @SneakyThrows
-  public static FileSystem getFileSystem(
-      String hdfsSiteConfig, String coreSiteConfig, String path) {
-    return FileSystemFactory.getInstance(hdfsSiteConfig, coreSiteConfig).getFs(path);
+  public static FileSystem getFileSystem(HdfsConfigs hdfsConfigs, String path) {
+    return FileSystemFactory.getInstance(hdfsConfigs).getFs(path);
   }
 
   /** Helper method to get file system based on provided configuration. */
   @SneakyThrows
-  public static FileSystem getLocalFileSystem(String hdfsSiteConfig, String coreSiteConfig) {
-    return FileSystemFactory.getInstance(hdfsSiteConfig, coreSiteConfig).getLocalFs();
+  public static FileSystem getLocalFileSystem(HdfsConfigs hdfsConfigs) {
+    return FileSystemFactory.getInstance(hdfsConfigs).getLocalFs();
   }
 
   /** Helper method to write/overwrite a file */
@@ -128,13 +127,13 @@ public final class FsUtils {
    * <p>Example: all directories with '.temp-' prefix in directory
    * '89aad0bb-654f-483c-8711-2c00551033ae/3'
    *
-   * @param hdfsSiteConfig path to hdfs-site.xml config file
+   * @param hdfsConfigs path to hdfs-site.xml config file
    * @param directoryPath to a directory
    * @param filePrefix file name prefix
    */
   public static void deleteDirectoryByPrefix(
-      String hdfsSiteConfig, String coreSiteConfig, String directoryPath, String filePrefix) {
-    FileSystem fs = getFileSystem(hdfsSiteConfig, coreSiteConfig, directoryPath);
+      HdfsConfigs hdfsConfigs, String directoryPath, String filePrefix) {
+    FileSystem fs = getFileSystem(hdfsConfigs, directoryPath);
     try {
       deleteDirectoryByPrefix(fs, new Path(directoryPath), filePrefix);
     } catch (IOException e) {
@@ -145,18 +144,14 @@ public final class FsUtils {
   /**
    * Set owner for directories and subdirectories(recursively).
    *
-   * @param hdfsSiteConfig path to hdfs-site.xml config file
+   * @param hdfsConfigs path to hdfs-site.xml config file
    * @param path to a directory/file
    * @param userName – e.g. "crap"
    * @param groupName – e.g. "supergroup"
    */
   public static void setOwner(
-      String hdfsSiteConfig,
-      String coreSiteConfig,
-      String path,
-      String userName,
-      String groupName) {
-    FileSystem fs = getFileSystem(hdfsSiteConfig, coreSiteConfig, path);
+      HdfsConfigs hdfsConfigs, String path, String userName, String groupName) {
+    FileSystem fs = getFileSystem(hdfsConfigs, path);
     try {
 
       Consumer<Path> fn =
@@ -192,13 +187,12 @@ public final class FsUtils {
   /**
    * Moves a list files that match against a glob filter into a target directory.
    *
-   * @param hdfsSiteConfig path to hdfs-site.xml config file
+   * @param hdfsConfigs path to hdfs-site.xml config file
    * @param globFilter filter used to filter files and paths
    * @param targetPath target directory
    */
-  public static void moveDirectory(
-      String hdfsSiteConfig, String coreSiteConfig, String targetPath, String globFilter) {
-    FileSystem fs = getFileSystem(hdfsSiteConfig, coreSiteConfig, targetPath);
+  public static void moveDirectory(HdfsConfigs hdfsConfigs, String targetPath, String globFilter) {
+    FileSystem fs = getFileSystem(hdfsConfigs, targetPath);
     try {
       FileStatus[] status = fs.globStatus(new Path(globFilter));
       Path[] paths = FileUtil.stat2Paths(status);
@@ -214,12 +208,12 @@ public final class FsUtils {
   /**
    * Deletes a list files that match against a glob filter into a target directory.
    *
-   * @param hdfsSiteConfig path to hdfs-site.xml config file
+   * @param hdfsConfigs path to hdfs-site.xml config file
    * @param globFilter filter used to filter files and paths
    */
   public static void deleteByPattern(
-      String hdfsSiteConfig, String coreSiteConfig, String directoryPath, String globFilter) {
-    FileSystem fs = getFileSystem(hdfsSiteConfig, coreSiteConfig, directoryPath);
+      HdfsConfigs hdfsConfigs, String directoryPath, String globFilter) {
+    FileSystem fs = getFileSystem(hdfsConfigs, directoryPath);
     try {
       FileStatus[] status = fs.globStatus(new Path(globFilter));
       Path[] paths = FileUtil.stat2Paths(status);
@@ -252,12 +246,11 @@ public final class FsUtils {
   /**
    * Removes a directory with content if the folder exists
    *
-   * @param hdfsSiteConfig path to hdfs-site.xml config file
+   * @param hdfsConfigs path to hdfs-site.xml config file
    * @param directoryPath path to some directory
    */
-  public static boolean deleteIfExist(
-      String hdfsSiteConfig, String coreSiteConfig, String directoryPath) {
-    FileSystem fs = getFileSystem(hdfsSiteConfig, coreSiteConfig, directoryPath);
+  public static boolean deleteIfExist(HdfsConfigs hdfsConfigs, String directoryPath) {
+    FileSystem fs = getFileSystem(hdfsConfigs, directoryPath);
     directoryPath = convertLocalHdfsPath(directoryPath);
 
     Path path = new Path(directoryPath);
@@ -288,13 +281,12 @@ public final class FsUtils {
   /**
    * Read a properties file from HDFS/Local FS
    *
-   * @param hdfsSiteConfig HDFS config file
+   * @param hdfsConfigs HDFS config file
    * @param filePath properties file path
    */
   @SneakyThrows
-  public static <T> T readConfigFile(
-      String hdfsSiteConfig, String coreSiteConfig, String filePath, Class<T> clazz) {
-    FileSystem fs = FsUtils.getFileSystem(hdfsSiteConfig, coreSiteConfig, filePath);
+  public static <T> T readConfigFile(HdfsConfigs hdfsConfigs, String filePath, Class<T> clazz) {
+    FileSystem fs = FsUtils.getFileSystem(hdfsConfigs, filePath);
     Path fPath = new Path(filePath);
     if (fs.exists(fPath)) {
       log.info("Reading properties path - {}", filePath);
@@ -323,8 +315,7 @@ public final class FsUtils {
 
   /** Deletes directories if a dataset with the same attempt was interpreted before */
   public static void deleteInterpretIfExist(
-      String hdfsSiteConfig,
-      String coreSiteConfig,
+      HdfsConfigs hdfsConfigs,
       String basePath,
       String datasetId,
       Integer attempt,
@@ -335,29 +326,38 @@ public final class FsUtils {
 
       if (steps.contains(ALL.name())) {
         log.info("Delete interpretation directory - {}", path);
-        boolean isDeleted = deleteIfExist(hdfsSiteConfig, coreSiteConfig, path);
+        boolean isDeleted = deleteIfExist(hdfsConfigs, path);
         log.info("Delete interpretation directory - {}, deleted - {}", path, isDeleted);
       } else {
         for (String step : steps) {
           log.info("Delete {}/{} directory", path, step.toLowerCase());
           boolean isDeleted =
-              deleteIfExist(
-                  hdfsSiteConfig, coreSiteConfig, String.join("/", path, step.toLowerCase()));
+              deleteIfExist(hdfsConfigs, String.join("/", path, step.toLowerCase()));
           log.info("Delete interpretation directory - {}, deleted - {}", path, isDeleted);
         }
       }
     }
   }
 
+  public static void deleteInterpretIfExist(
+      HdfsConfigs hdfsConfigs,
+      String basePath,
+      String datasetId,
+      Integer attempt,
+      String... steps) {
+    HashSet<String> s = new HashSet<>(Arrays.asList(steps));
+    deleteInterpretIfExist(hdfsConfigs, basePath, datasetId, attempt, s);
+  }
+
   /**
    * Check if the file exists
    *
-   * @param hdfsSiteConfig HDFS config file
+   * @param hdfsConfigs HDFS config file
    * @param filePath path to the file
    */
   @SneakyThrows
-  public static boolean fileExists(String hdfsSiteConfig, String coreSiteConfig, String filePath) {
-    FileSystem fs = FsUtils.getFileSystem(hdfsSiteConfig, coreSiteConfig, filePath);
+  public static boolean fileExists(HdfsConfigs hdfsConfigs, String filePath) {
+    FileSystem fs = FsUtils.getFileSystem(hdfsConfigs, filePath);
     Path fPath = new Path(filePath);
     return fs.exists(fPath);
   }

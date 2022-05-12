@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import lombok.SneakyThrows;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 
 public class ALAPipelinesConfigFactory {
 
@@ -22,17 +23,16 @@ public class ALAPipelinesConfigFactory {
   }
 
   @SneakyThrows
-  private ALAPipelinesConfigFactory(
-      String hdfsSiteConfig, String coreSiteConfig, String propertiesPath) {
-    this.config = ALAFsUtils.readConfigFile(hdfsSiteConfig, coreSiteConfig, propertiesPath);
+  private ALAPipelinesConfigFactory(HdfsConfigs hdfsConfigs, String propertiesPath) {
+    this.config = ALAFsUtils.readConfigFile(hdfsConfigs, propertiesPath);
   }
 
   public static ALAPipelinesConfigFactory getInstance(
-      String hdfsSiteConfig, String coreSiteConfig, String propertiesPath) {
+      HdfsConfigs hdfsConfigs, String propertiesPath) {
     if (instance == null) {
       synchronized (MUTEX) {
         if (instance == null) {
-          instance = new ALAPipelinesConfigFactory(hdfsSiteConfig, coreSiteConfig, propertiesPath);
+          instance = new ALAPipelinesConfigFactory(hdfsConfigs, propertiesPath);
         }
       }
     }

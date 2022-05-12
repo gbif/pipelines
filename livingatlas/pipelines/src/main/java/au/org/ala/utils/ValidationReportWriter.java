@@ -20,6 +20,7 @@ import org.apache.solr.client.solrj.response.FacetField;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.params.MapSolrParams;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 
 /**
  * Generates 2 CSV reports based on the data within system:
@@ -110,7 +111,9 @@ public class ValidationReportWriter {
 
   public void run() throws IOException {
 
-    FileSystem fs = FileSystemFactory.getInstance(hdfsSiteConfig, coreSiteConfig).getFs(inputPath);
+    FileSystem fs =
+        FileSystemFactory.getInstance(HdfsConfigs.create(hdfsSiteConfig, coreSiteConfig))
+            .getFs(inputPath);
 
     final Map<String, Long> readyToIndexCounts = new HashMap<>();
 

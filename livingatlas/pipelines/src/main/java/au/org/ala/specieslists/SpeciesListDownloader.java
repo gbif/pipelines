@@ -24,6 +24,7 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.common.parsers.CountryParser;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.SpeciesListRecord;
 import org.gbif.rest.client.retrofit.SyncCall;
@@ -56,18 +57,16 @@ public class SpeciesListDownloader {
   public static void run(SpeciesLevelPipelineOptions options) throws IOException {
 
     // read config
+    HdfsConfigs hdfsConfigs =
+        HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig());
     ALAPipelinesConfig config =
-        ALAPipelinesConfigFactory.getInstance(
-                options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getProperties())
-            .get();
+        ALAPipelinesConfigFactory.getInstance(hdfsConfigs, options.getProperties()).get();
 
     final StateProvinceParser stateProvinceParser =
         StateProvinceParser.getInstance(config.getLocationInfoConfig().getStateProvinceNamesFile());
 
     // get filesystem
-    FileSystem fs =
-        FsUtils.getFileSystem(
-            options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getInputPath());
+    FileSystem fs = FsUtils.getFileSystem(hdfsConfigs, options.getInputPath());
 
     String outputPath = options.getSpeciesAggregatesPath() + options.getSpeciesListCachePath();
 

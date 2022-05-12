@@ -8,7 +8,6 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
 import lombok.Builder;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -35,7 +34,7 @@ public class GrscicollTransform extends Transform<ExtendedRecord, GrscicollRecor
       kvStoreSupplier;
   private KeyValueStore<GrscicollLookupRequest, GrscicollLookupResponse> kvStore;
 
-  @Setter private PCollectionView<MetadataRecord> metadataView;
+  private PCollectionView<MetadataRecord> metadataView;
 
   @Builder(buildMethodName = "create")
   private GrscicollTransform(
@@ -60,6 +59,12 @@ public class GrscicollTransform extends Transform<ExtendedRecord, GrscicollRecor
   public GrscicollTransform counterFn(SerializableConsumer<String> counterFn) {
     setCounterFn(counterFn);
     return this;
+  }
+
+  public SingleOutput<ExtendedRecord, GrscicollRecord> interpret(
+      PCollectionView<MetadataRecord> metadataView) {
+    this.metadataView = metadataView;
+    return interpret();
   }
 
   @Override

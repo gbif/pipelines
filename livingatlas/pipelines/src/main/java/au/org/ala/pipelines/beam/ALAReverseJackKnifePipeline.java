@@ -27,6 +27,7 @@ import org.apache.beam.sdk.values.*;
 import org.apache.commons.lang.StringUtils;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.IndexRecord;
 import org.gbif.pipelines.io.avro.JackKnifeModelRecord;
@@ -296,8 +297,7 @@ public class ALAReverseJackKnifePipeline {
     result.waitUntilFinish();
 
     MetricsHandler.saveCountersToFile(
-        options.getHdfsSiteConfig(),
-        options.getCoreSiteConfig(),
+        HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()),
         jackknifePath + "/metrics.yaml",
         result.metrics());
 
@@ -307,13 +307,12 @@ public class ALAReverseJackKnifePipeline {
   public static void deletePreviousValidation(
       JackKnifePipelineOptions options, String jackknifePath) {
     // delete output directories
-    FsUtils.deleteIfExist(
-        options.getHdfsSiteConfig(), options.getCoreSiteConfig(), jackknifePath + "/outliers");
-    FsUtils.deleteIfExist(
-        options.getHdfsSiteConfig(), options.getCoreSiteConfig(), jackknifePath + "/models");
+    HdfsConfigs hdfsConfigs =
+        HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig());
+    FsUtils.deleteIfExist(hdfsConfigs, jackknifePath + "/outliers");
+    FsUtils.deleteIfExist(hdfsConfigs, jackknifePath + "/models");
 
     // delete metrics
-    FsUtils.deleteIfExist(
-        options.getHdfsSiteConfig(), options.getCoreSiteConfig(), jackknifePath + "/metrics.yaml");
+    FsUtils.deleteIfExist(hdfsConfigs, jackknifePath + "/metrics.yaml");
   }
 }

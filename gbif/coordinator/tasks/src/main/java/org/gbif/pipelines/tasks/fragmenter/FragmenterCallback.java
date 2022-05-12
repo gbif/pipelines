@@ -22,6 +22,7 @@ import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.converters.converter.FsUtils;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.fragmenter.FragmentPersister;
 import org.gbif.pipelines.fragmenter.strategy.DwcaStrategy;
 import org.gbif.pipelines.fragmenter.strategy.Strategy;
@@ -133,9 +134,9 @@ public class FragmenterCallback extends AbstractMessageCallback<PipelinesInterpr
       org.apache.hadoop.fs.Path path =
           buildOutputPath(
               config.stepConfig.repositoryPath, datasetId, attempt, config.metaFileName);
-      FileSystem fs =
-          FileSystemFactory.getInstance(config.getHdfsSiteConfig(), config.getCoreSiteConfig())
-              .getFs(path.toString());
+      HdfsConfigs hdfsConfigs =
+          HdfsConfigs.create(config.getHdfsSiteConfig(), config.getCoreSiteConfig());
+      FileSystem fs = FileSystemFactory.getInstance(hdfsConfigs).getFs(path.toString());
       String info = Metrics.FRAGMENTER_COUNT + ": " + numberOfRecords + "\n";
       FsUtils.createFile(fs, path, info);
     } catch (IOException ex) {

@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.pipelines.core.io.AvroReader;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.io.avro.ALAUUIDRecord;
 
 /** Utilities for querying AVRO outputs */
@@ -13,7 +14,7 @@ public class AvroUtils {
   public static Map<String, String> readKeysForPath(String path) {
 
     Map<String, ALAUUIDRecord> records =
-        AvroReader.readRecords(null, null, ALAUUIDRecord.class, path);
+        AvroReader.readRecords(HdfsConfigs.create(null, null), ALAUUIDRecord.class, path);
     Map<String, String> uniqueKeyToUuid = new HashMap<>();
     for (Map.Entry<String, ALAUUIDRecord> record : records.entrySet()) {
       log.debug(record.getValue().getUniqueKey() + " -> " + record.getValue().getUuid());

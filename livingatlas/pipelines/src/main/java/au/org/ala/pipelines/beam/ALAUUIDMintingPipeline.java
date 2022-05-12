@@ -33,6 +33,7 @@ import org.gbif.dwc.terms.UnknownTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.*;
 import org.jetbrains.annotations.NotNull;
@@ -119,10 +120,10 @@ public class ALAUUIDMintingPipeline {
 
     Pipeline p = Pipeline.create(options);
 
+    HdfsConfigs hdfsConfigs =
+        HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig());
     ALAPipelinesConfig config =
-        ALAPipelinesConfigFactory.getInstance(
-                options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getProperties())
-            .get();
+        ALAPipelinesConfigFactory.getInstance(hdfsConfigs, options.getProperties()).get();
 
     // build the directory path for existing identifiers
     String alaRecordDirectoryPath =
@@ -149,7 +150,7 @@ public class ALAUUIDMintingPipeline {
     // construct unique list of darwin core terms
     List<String> uniqueTerms = collectoryMetadata.getConnectionParameters().getTermsForUniqueKey();
     Boolean stripSpaces = collectoryMetadata.getConnectionParameters().getStrip();
-    final boolean stripSpacesFinal = stripSpaces != null ? stripSpaces : false;
+    final boolean stripSpacesFinal = stripSpaces != null && stripSpaces;
     Map<String, String> defaultValues = collectoryMetadata.getDefaultDarwinCoreValues();
     final Map<String, String> defaultValuesFinal =
         defaultValues != null ? defaultValues : Collections.emptyMap();
@@ -211,9 +212,7 @@ public class ALAUUIDMintingPipeline {
     PCollection<KV<String, ALAUUIDRecord>> alaUuids;
 
     log.info("Transform 2: ALAUUIDRecord ur ->  <uniqueKey, uuid> (assume incomplete)");
-    FileSystem fs =
-        FsUtils.getFileSystem(
-            options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getInputPath());
+    FileSystem fs = FsUtils.getFileSystem(hdfsConfigs, options.getInputPath());
     Path path = new Path(alaRecordDirectoryPath);
 
     boolean initialLoad = !fs.exists(path);
@@ -309,13 +308,7 @@ public class ALAUUIDMintingPipeline {
     log.info("Writing metrics written.");
   }
 
-  /**
-   * Prune backups of UUIDs.
-   *
-   * @param options
-   * @param fs
-   * @throws Exception
-   */
+  /** Prune backups of UUIDs. */
   public static void pruneBackups(UUIDPipelineOptions options, FileSystem fs) throws Exception {
 
     String alaRecordDirectoryPath =

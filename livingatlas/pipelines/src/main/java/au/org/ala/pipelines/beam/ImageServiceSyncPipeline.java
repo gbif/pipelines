@@ -44,6 +44,7 @@ import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.rest.client.retrofit.SyncCall;
@@ -105,7 +106,8 @@ public class ImageServiceSyncPipeline {
     }
 
     FileSystem fs =
-        FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
+        FileSystemFactory.getInstance(
+                HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()))
             .getFs(options.getInputPath());
 
     // construct output directory path
@@ -157,7 +159,8 @@ public class ImageServiceSyncPipeline {
     Pipeline p = Pipeline.create(options);
 
     FileSystem fs =
-        FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
+        FileSystemFactory.getInstance(
+                HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()))
             .getFs(options.getInputPath());
 
     List<String> headers = readHeadersLowerCased(fs, imageMappingPath);
@@ -418,12 +421,12 @@ public class ImageServiceSyncPipeline {
   public static String downloadImageMapping(ImageServicePipelineOptions options)
       throws IOException {
 
+    HdfsConfigs hdfsConfigs =
+        HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig());
     String tmpDir = options.getTempLocation() != null ? options.getTempLocation() : "/tmp";
 
     ALAPipelinesConfig config =
-        ALAPipelinesConfigFactory.getInstance(
-                options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getProperties())
-            .get();
+        ALAPipelinesConfigFactory.getInstance(hdfsConfigs, options.getProperties()).get();
 
     // create the image service
     ImageService service = WsUtils.createClient(config.getImageService(), ImageService.class);
@@ -449,9 +452,7 @@ public class ImageServiceSyncPipeline {
             "images",
             "image-service-export",
             "export.csv.gz");
-    FileSystem fs =
-        FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
-            .getFs(options.getInputPath());
+    FileSystem fs = FileSystemFactory.getInstance(hdfsConfigs).getFs(options.getInputPath());
 
     fs.copyFromLocalFile(new Path(filePath), new Path(hdfsPath));
 

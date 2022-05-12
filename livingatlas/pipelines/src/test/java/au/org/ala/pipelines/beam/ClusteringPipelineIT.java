@@ -19,6 +19,7 @@ import org.apache.avro.io.DatumWriter;
 import org.apache.commons.io.FileUtils;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.core.io.AvroReader;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.io.avro.IndexRecord;
 import org.gbif.pipelines.io.avro.Relationships;
 import org.junit.Test;
@@ -55,8 +56,7 @@ public class ClusteringPipelineIT {
     // read relationships
     Map<String, Relationships> records =
         AvroReader.readRecords(
-            null,
-            null,
+            HdfsConfigs.create(null, null),
             Relationships.class,
             "/tmp/la-pipelines-test/clustering/clustering-output/relationships/*.avro");
 

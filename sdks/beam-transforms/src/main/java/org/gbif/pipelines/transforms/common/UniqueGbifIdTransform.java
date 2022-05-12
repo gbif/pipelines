@@ -17,6 +17,8 @@ import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.DoFn.ProcessContext;
+import org.apache.beam.sdk.transforms.DoFn.ProcessElement;
 import org.apache.beam.sdk.transforms.GroupByKey;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -70,87 +72,79 @@ public class UniqueGbifIdTransform extends PTransform<PCollection<GbifIdRecord>,
     // Filter duplicate occurrenceIds, all groups where value size != 1
     return groupedCollection.apply(
         "Filtering duplicates",
-        ParDo.of(
-                new DoFn<KV<String, Iterable<GbifIdRecord>>, GbifIdRecord>() {
-
-                  private final Counter uniqueCounter =
-                      Metrics.counter(UniqueGbifIdTransform.class, UNIQUE_GBIF_IDS_COUNT);
-                  private final Counter duplicateCounter =
-                      Metrics.counter(UniqueGbifIdTransform.class, DUPLICATE_GBIF_IDS_COUNT);
-                  private final Counter identicalCounter =
-                      Metrics.counter(UniqueGbifIdTransform.class, IDENTICAL_GBIF_OBJECTS_COUNT);
-                  private final Counter invalidCounter =
-                      Metrics.counter(UniqueGbifIdTransform.class, INVALID_GBIF_ID_COUNT);
-
-                  @ProcessElement
-                  public void processElement(ProcessContext c) {
-                    KV<String, Iterable<GbifIdRecord>> element = c.element();
-                    Iterator<GbifIdRecord> iterator = element.getValue().iterator();
-                    GbifIdRecord next = iterator.next();
-
-                    if (!iterator.hasNext()) {
-                      // No duplicates were found, but can be invalid GBIF id
-
-                      if (next.getGbifId() == null) {
-                        log.warn("GBIF ID DOESN'T EXIST - {}", next);
-                        invalidCounter.inc();
-                        c.output(invalidTag, next);
-                      } else {
-                        uniqueCounter.inc();
-                        c.output(tag, next);
-                      }
-
-                    } else {
-                      // Found duplicates, compare all duplicate records, maybe they are identical
-                      Map<String, GbifIdRecord> map = new TreeMap<>();
-                      map.put(HashConverter.getSha1(next.getId()), next);
-
-                      while (iterator.hasNext()) {
-                        GbifIdRecord gr = iterator.next();
-                        map.put(HashConverter.getSha1(gr.getId()), gr);
-                      }
-
-                      List<GbifIdRecord> records = new LinkedList<>(map.values());
-
-                      if (records.size() == 1 && records.get(0) == null) {
-                        log.warn("GBIF ID DOESN'T EXIST - {}", next);
-                        invalidCounter.inc();
-                        c.output(invalidTag, next);
-                      } else if (records.size() > 1) {
-
-                        int skip = -1;
-                        for (int x = 0; x < records.size(); x++) {
-                          if (records.get(x).getGbifId() != null) {
-                            skip = x;
-                            break;
-                          }
-                        }
-
-                        if (skip > -1) {
-                          c.output(tag, records.remove(skip));
-                        }
-                        records.forEach(x -> c.output(invalidTag, x));
-
-                      } else {
-                        c.output(tag, next);
-                        uniqueCounter.inc();
-                        identicalCounter.inc();
-                      }
-
-                      // Log duplicate and metric
-                      log.warn("gbifId = {}, duplicates were found", element.getKey());
-                      duplicateCounter.inc(map.size());
-                    }
-                  }
-                })
-            .withOutputTags(tag, TupleTagList.of(invalidTag)));
+        ParDo.of(new Filter()).withOutputTags(tag, TupleTagList.of(invalidTag)));
   }
 
-  public TupleTag<GbifIdRecord> getTag() {
-    return tag;
-  }
+  private class Filter extends DoFn<KV<String, Iterable<GbifIdRecord>>, GbifIdRecord> {
 
-  public TupleTag<GbifIdRecord> getInvalidTag() {
-    return invalidTag;
+    private final Counter uniqueCounter =
+        Metrics.counter(UniqueGbifIdTransform.class, UNIQUE_GBIF_IDS_COUNT);
+    private final Counter duplicateCounter =
+        Metrics.counter(UniqueGbifIdTransform.class, DUPLICATE_GBIF_IDS_COUNT);
+    private final Counter identicalCounter =
+        Metrics.counter(UniqueGbifIdTransform.class, IDENTICAL_GBIF_OBJECTS_COUNT);
+    private final Counter invalidCounter =
+        Metrics.counter(UniqueGbifIdTransform.class, INVALID_GBIF_ID_COUNT);
+
+    @ProcessElement
+    public void processElement(ProcessContext c) {
+      KV<String, Iterable<GbifIdRecord>> element = c.element();
+      Iterator<GbifIdRecord> iterator = element.getValue().iterator();
+      GbifIdRecord next = iterator.next();
+
+      if (!iterator.hasNext()) {
+        // No duplicates were found, but can be invalid GBIF id
+
+        if (next.getGbifId() == null) {
+          log.warn("GBIF ID DOESN'T EXIST - {}", next);
+          invalidCounter.inc();
+          c.output(invalidTag, next);
+        } else {
+          uniqueCounter.inc();
+          c.output(tag, next);
+        }
+
+      } else {
+        // Found duplicates, compare all duplicate records, maybe they are identical
+        Map<String, GbifIdRecord> map = new TreeMap<>();
+        map.put(HashConverter.getSha1(next.getId()), next);
+
+        while (iterator.hasNext()) {
+          GbifIdRecord gr = iterator.next();
+          map.put(HashConverter.getSha1(gr.getId()), gr);
+        }
+
+        List<GbifIdRecord> records = new LinkedList<>(map.values());
+
+        if (records.size() == 1 && records.get(0) == null) {
+          log.warn("GBIF ID DOESN'T EXIST - {}", next);
+          invalidCounter.inc();
+          c.output(invalidTag, next);
+        } else if (records.size() > 1) {
+
+          int skip = -1;
+          for (int x = 0; x < records.size(); x++) {
+            if (records.get(x).getGbifId() != null) {
+              skip = x;
+              break;
+            }
+          }
+
+          if (skip > -1) {
+            c.output(tag, records.remove(skip));
+          }
+          records.forEach(x -> c.output(invalidTag, x));
+
+        } else {
+          c.output(tag, next);
+          uniqueCounter.inc();
+          identicalCounter.inc();
+        }
+
+        // Log duplicate and metric
+        log.warn("gbifId = {}, duplicates were found", element.getKey());
+        duplicateCounter.inc(map.size());
+      }
+    }
   }
 }

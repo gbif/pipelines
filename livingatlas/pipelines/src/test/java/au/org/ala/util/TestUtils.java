@@ -17,13 +17,15 @@ import okio.Buffer;
 import okio.Okio;
 import okio.Source;
 import org.apache.commons.io.FileUtils;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 
 @Slf4j
 public class TestUtils {
 
   public static ALAPipelinesConfig getConfig() {
     String absolutePath = new File(getPipelinesConfigFile()).getAbsolutePath();
-    return ALAPipelinesConfigFactory.getInstance(null, null, absolutePath).get();
+    return ALAPipelinesConfigFactory.getInstance(HdfsConfigs.create(null, null), absolutePath)
+        .get();
   }
 
   public static String getPipelinesConfigFile() {

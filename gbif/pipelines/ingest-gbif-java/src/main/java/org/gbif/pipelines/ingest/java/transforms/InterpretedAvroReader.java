@@ -11,6 +11,7 @@ import org.apache.avro.specific.SpecificRecordBase;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.io.AvroReader;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.io.avro.Record;
 import org.gbif.pipelines.transforms.Transform;
 
@@ -29,8 +30,7 @@ public class InterpretedAvroReader {
     return CompletableFuture.supplyAsync(
         () ->
             AvroReader.readRecords(
-                options.getHdfsSiteConfig(),
-                options.getCoreSiteConfig(),
+                HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()),
                 transform.getReturnClazz(),
                 path),
         executor);
@@ -39,10 +39,17 @@ public class InterpretedAvroReader {
   /** Read avro files and return as Map<ID, Clazz> */
   public static <T extends SpecificRecordBase & Record> Map<String, T> readAvroUseTargetPath(
       InterpretationPipelineOptions options, Transform<?, T> transform) {
+    return readAvroUseTargetPath(options, transform, transform.getBaseName());
+  }
+
+  /** Read avro files and return as Map<ID, Clazz> */
+  public static <T extends SpecificRecordBase & Record> Map<String, T> readAvroUseTargetPath(
+      InterpretationPipelineOptions options, Transform<?, T> transform, String dirName) {
     String path =
-        PathBuilder.buildPathInterpretUsingTargetPath(
-            options, transform.getBaseName(), "*" + AVRO_EXTENSION);
+        PathBuilder.buildPathInterpretUsingTargetPath(options, dirName, "*" + AVRO_EXTENSION);
     return AvroReader.readRecords(
-        options.getHdfsSiteConfig(), options.getCoreSiteConfig(), transform.getReturnClazz(), path);
+        HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()),
+        transform.getReturnClazz(),
+        path);
   }
 }

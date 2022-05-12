@@ -15,13 +15,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Predicate;
-import java.util.function.ToDoubleFunction;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.hadoop.hbase.exceptions.IllegalArgumentIOException;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -32,13 +30,14 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.common.parsers.date.DateComponentOrdering;
-import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation;
 import org.gbif.pipelines.common.utils.HdfsUtils;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.ingest.java.pipelines.VerbatimToInterpretedPipeline;
+import org.gbif.pipelines.tasks.MachineTag;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
 import org.gbif.pipelines.tasks.dwca.DwcaToAvroConfiguration;
@@ -53,7 +52,6 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
     implements StepHandler<PipelinesVerbatimMessage, PipelinesInterpretedMessage> {
 
   private static final ObjectMapper MAPPER = new ObjectMapper();
-
   private final InterpreterConfiguration config;
   private final MessagePublisher publisher;
   private final CuratorFramework curator;
@@ -141,16 +139,12 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
           runLocal(builder);
         }
 
-        runPostprocessValidation(message);
-
         log.info("Deleting old attempts directories");
         String pathToDelete = String.join("/", config.stepConfig.repositoryPath, datasetId);
+        HdfsConfigs hdfsConfigs =
+            HdfsConfigs.create(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);
         HdfsUtils.deleteSubFolders(
-            config.stepConfig.hdfsSiteConfig,
-            config.stepConfig.coreSiteConfig,
-            pathToDelete,
-            config.deleteAfterDays,
-            Collections.singleton(attempt));
+            hdfsConfigs, pathToDelete, config.deleteAfterDays, Collections.singleton(attempt));
 
       } catch (Exception ex) {
         log.error(ex.getMessage(), ex);
@@ -281,12 +275,10 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
             ? message.getValidationResult().getNumberOfRecords()
             : null;
 
+    HdfsConfigs hdfsConfigs =
+        HdfsConfigs.create(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);
     Optional<Long> fileNumber =
-        HdfsUtils.getLongByKey(
-            config.stepConfig.hdfsSiteConfig,
-            config.stepConfig.coreSiteConfig,
-            metaPath,
-            Metrics.ARCHIVE_TO_ER_COUNT);
+        HdfsUtils.getLongByKey(hdfsConfigs, metaPath, Metrics.ARCHIVE_TO_ER_COUNT);
 
     if (messageNumber == null && !fileNumber.isPresent()) {
       throw new IllegalArgumentException(
@@ -377,8 +369,9 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
             attempt,
             Interpretation.DIRECTORY_NAME);
 
-    return HdfsUtils.exists(
-        config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig, path);
+    HdfsConfigs hdfsConfigs =
+        HdfsConfigs.create(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);
+    return HdfsUtils.exists(hdfsConfigs, path);
   }
 
   @SneakyThrows

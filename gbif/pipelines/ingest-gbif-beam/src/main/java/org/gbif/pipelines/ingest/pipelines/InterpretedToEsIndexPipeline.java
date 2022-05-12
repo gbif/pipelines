@@ -23,6 +23,7 @@ import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
@@ -111,8 +112,11 @@ public class InterpretedToEsIndexPipeline {
       EsIndexingPipelineOptions options,
       Function<EsIndexingPipelineOptions, Pipeline> pipelinesFn) {
 
-    MDC.put("datasetKey", options.getDatasetId());
-    MDC.put("attempt", options.getAttempt().toString());
+    String datasetId = options.getDatasetId();
+    Integer attempt = options.getAttempt();
+
+    MDC.put("datasetKey", datasetId);
+    MDC.put("attempt", attempt.toString());
     MDC.put("step", StepType.INTERPRETED_TO_INDEX.name());
 
     String esDocumentId = options.getEsDocumentId();
@@ -259,8 +263,7 @@ public class InterpretedToEsIndexPipeline {
     String metadataPath =
         PathBuilder.buildDatasetAttemptPath(options, options.getMetaFileName(), false);
     FsUtils.setOwner(
-        options.getHdfsSiteConfig(),
-        options.getCoreSiteConfig(),
+        HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()),
         metadataPath,
         "crap",
         "supergroup");

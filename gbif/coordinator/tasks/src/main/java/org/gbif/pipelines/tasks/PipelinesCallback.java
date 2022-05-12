@@ -43,6 +43,7 @@ import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
 import org.gbif.pipelines.common.configs.BaseConfiguration;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.common.utils.ZookeeperUtils;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.utils.file.properties.PropertiesUtil;
 import org.gbif.validator.api.Validation;
@@ -318,9 +319,9 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
     String path =
         HdfsUtils.buildOutputPathAsString(
             config.getRepositoryPath(), ti.datasetId, ti.attempt, config.getMetaFileName());
-    List<MetricInfo> metricInfos =
-        HdfsUtils.readMetricsFromMetaFile(
-            config.getHdfsSiteConfig(), config.getCoreSiteConfig(), path);
+    HdfsConfigs hdfsConfigs =
+        HdfsConfigs.create(config.getHdfsSiteConfig(), config.getCoreSiteConfig());
+    List<MetricInfo> metricInfos = HdfsUtils.readMetricsFromMetaFile(hdfsConfigs, path);
     PipelineStepParameters psp = new PipelineStepParameters(status, metricInfos);
     try {
       Runnable r =

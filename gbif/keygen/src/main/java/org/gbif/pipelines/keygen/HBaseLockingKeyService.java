@@ -45,7 +45,7 @@ import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
  * href="http://dev.gbif.org/code/snippet/CR-OCC-5">http://dev.gbif.org/code/snippet/CR-OCC-5</a>.
  */
 @Slf4j
-public class HBaseLockingKeyService implements Serializable {
+public class HBaseLockingKeyService implements HBaseLockingKey, Serializable {
 
   private static final long serialVersionUID = -3128096563237268386L;
 
@@ -99,7 +99,7 @@ public class HBaseLockingKeyService implements Serializable {
     this(cfg, connection, null);
   }
 
-  /** */
+  @Override
   public KeyLookupResult generateKey(Set<String> uniqueStrings, String scope) {
     Map<String, KeyStatus> statusMap =
         new TreeMap<>(); // required: predictable sorting for e.g. testing
@@ -258,6 +258,7 @@ public class HBaseLockingKeyService implements Serializable {
   }
 
   /** Retrieves or creates the key for the given record identifiers. */
+  @Override
   public KeyLookupResult generateKey(Set<String> uniqueStrings) {
     return generateKey(uniqueStrings, datasetId);
   }
@@ -285,7 +286,7 @@ public class HBaseLockingKeyService implements Serializable {
     return currentKey;
   }
 
-  /** */
+  @Override
   public KeyLookupResult findKey(Set<String> uniqueStrings, String scope) {
     checkNotNull(uniqueStrings, "uniqueStrings can't be null");
     checkNotNull(scope, "scope can't be null");
@@ -337,7 +338,7 @@ public class HBaseLockingKeyService implements Serializable {
     return result;
   }
 
-  /** */
+  @Override
   public KeyLookupResult findKey(Set<String> uniqueStrings) {
     return findKey(uniqueStrings, datasetId);
   }
@@ -455,6 +456,7 @@ public class HBaseLockingKeyService implements Serializable {
   }
 
   @SneakyThrows
+  @Override
   public void close() {
     if (connection != null) {
       connection.close();

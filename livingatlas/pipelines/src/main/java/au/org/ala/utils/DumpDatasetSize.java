@@ -15,6 +15,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.*;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.jetbrains.annotations.NotNull;
 
 @Parameters(separators = "=")
@@ -57,7 +58,9 @@ public class DumpDatasetSize {
   @SneakyThrows
   public void run() {
 
-    FileSystem fs = FileSystemFactory.getInstance(hdfsSiteConfig, coreSiteConfig).getFs(inputPath);
+    FileSystem fs =
+        FileSystemFactory.getInstance(HdfsConfigs.create(hdfsSiteConfig, coreSiteConfig))
+            .getFs(inputPath);
     Map<String, Long> counts = readDatasetCounts(fs, inputPath);
 
     // order by size descending

@@ -169,9 +169,9 @@ public class EventsInterpretedToEsIndexPipelineIT {
     try (SyncDataFileWriter<OccurrenceJsonRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
             optionsWriter,
-            OccurrenceJsonTransform.getBaseName(),
             OccurrenceJsonTransform.getAvroSchema(),
-            postfix)) {
+            ID,
+            OccurrenceJsonTransform.getBaseName())) {
       OccurrenceJsonRecord occurrenceJsonRecord =
           OccurrenceJsonRecord.newBuilder()
               .setGbifId(Long.parseLong(ID))

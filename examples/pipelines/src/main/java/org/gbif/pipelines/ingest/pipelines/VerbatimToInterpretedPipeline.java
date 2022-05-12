@@ -21,6 +21,7 @@ import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.factory.FileVocabularyFactory;
 import org.gbif.pipelines.factory.GeocodeKvStoreFactory;
@@ -85,20 +86,18 @@ public class VerbatimToInterpretedPipeline {
     Integer attempt = options.getAttempt();
     Set<String> types = options.getInterpretationTypes();
     String targetPath = options.getTargetPath();
-    String hdfsSiteConfig = options.getHdfsSiteConfig();
-    String coreSiteConfig = options.getCoreSiteConfig();
+    HdfsConfigs hdfsConfigs =
+        HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig());
 
     PipelinesConfig config =
-        FsUtils.readConfigFile(
-            hdfsSiteConfig, coreSiteConfig, options.getProperties(), PipelinesConfig.class);
+        FsUtils.readConfigFile(hdfsConfigs, options.getProperties(), PipelinesConfig.class);
 
     List<DateComponentOrdering> dateComponentOrdering =
         options.getDefaultDateFormat() == null
             ? config.getDefaultDateFormat()
             : options.getDefaultDateFormat();
 
-    FsUtils.deleteInterpretIfExist(
-        hdfsSiteConfig, coreSiteConfig, targetPath, datasetId, attempt, types);
+    FsUtils.deleteInterpretIfExist(hdfsConfigs, targetPath, datasetId, attempt, types);
 
     MDC.put("datasetKey", datasetId);
     MDC.put("attempt", attempt.toString());
@@ -125,20 +124,17 @@ public class VerbatimToInterpretedPipeline {
             .vocabularyServiceSupplier(
                 FileVocabularyFactory.builder()
                     .config(config)
-                    .hdfsSiteConfig(hdfsSiteConfig)
-                    .coreSiteConfig(coreSiteConfig)
+                    .hdfsConfigs(hdfsConfigs)
                     .build()
                     .getInstanceSupplier())
             .create();
     IdentifierTransform identifierTransform =
         IdentifierTransform.builder().datasetKey(datasetId).create();
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
-    // TODO START: ALA uses the same LocationRecord but another Transform
     LocationTransform locationTransform =
         LocationTransform.builder()
             .geocodeKvStoreSupplier(GeocodeKvStoreFactory.createSupplier(config))
             .create();
-    // TODO END: ALA uses the same LocationRecord but another Transform
     TemporalTransform temporalTransform =
         TemporalTransform.builder().orderings(dateComponentOrdering).create();
 
@@ -152,7 +148,6 @@ public class VerbatimToInterpretedPipeline {
 
     log.info("Creating beam pipeline");
 
-    // Metadata TODO START: Will ALA use it?
     PCollection<MetadataRecord> metadataRecord =
         p.apply("Create metadata collection", Create.of(options.getDatasetId()))
             .apply("Interpret metadata", metadataTransform.interpret());
@@ -162,9 +157,6 @@ public class VerbatimToInterpretedPipeline {
     // Create View for the further usage
     PCollectionView<MetadataRecord> metadataView =
         metadataRecord.apply("Convert into view", View.asSingleton());
-
-    locationTransform.setMetadataView(metadataView);
-    // TODO END: Will ALA use it?
 
     // Read raw records and filter duplicates
     PCollection<ExtendedRecord> uniqueRawRecords =
@@ -188,7 +180,6 @@ public class VerbatimToInterpretedPipeline {
         .apply("Interpret temporal", temporalTransform.interpret())
         .apply("Write temporal to avro", temporalTransform.write(pathFn));
 
-    // TODO START: DO WE NEED ALL MULTIMEDIA EXTENSIONS?
     uniqueRawRecords
         .apply("Interpret multimedia", multimediaTransform.interpret())
         .apply("Write multimedia to avro", multimediaTransform.write(pathFn));
@@ -200,10 +191,9 @@ public class VerbatimToInterpretedPipeline {
     uniqueRawRecords
         .apply("Interpret image", imageTransform.interpret())
         .apply("Write image to avro", imageTransform.write(pathFn));
-    // TODO END
 
     uniqueRawRecords
-        .apply("Interpret location", locationTransform.interpret())
+        .apply("Interpret location", locationTransform.interpret(metadataView))
         .apply("Write location to avro", locationTransform.write(pathFn));
 
     // Wite filtered verbatim avro files
@@ -218,7 +208,7 @@ public class VerbatimToInterpretedPipeline {
 
     log.info("Deleting beam temporal folders");
     String tempPath = String.join("/", targetPath, datasetId, attempt.toString());
-    FsUtils.deleteDirectoryByPrefix(hdfsSiteConfig, coreSiteConfig, tempPath, ".temp-beam");
+    FsUtils.deleteDirectoryByPrefix(hdfsConfigs, tempPath, ".temp-beam");
 
     log.info("Pipeline has been finished");
   }

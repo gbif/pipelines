@@ -1,11 +1,13 @@
 package org.gbif.pipelines.ingest.java.pipelines;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.IDENTIFIER_ABSENT;
 import static org.gbif.pipelines.ingest.java.transforms.InterpretedAvroWriter.createAvroWriter;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Collection;
-import java.util.List;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -16,53 +18,25 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import lombok.AccessLevel;
+import lombok.Cleanup;
 import lombok.NoArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import lombok.var;
 import org.gbif.api.model.pipelines.StepType;
-import org.gbif.common.parsers.date.DateComponentOrdering;
-import org.gbif.kvs.KeyValueStore;
-import org.gbif.kvs.geocode.LatLng;
-import org.gbif.kvs.grscicoll.GrscicollLookupRequest;
-import org.gbif.kvs.species.SpeciesMatchRequest;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
-import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
-import org.gbif.pipelines.core.config.model.PipelinesConfig;
-import org.gbif.pipelines.core.factory.ConfigFactory;
-import org.gbif.pipelines.core.functions.SerializableConsumer;
-import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.core.io.AvroReader;
-import org.gbif.pipelines.core.io.SyncDataFileWriter;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
-import org.gbif.pipelines.core.ws.metadata.MetadataServiceClient;
-import org.gbif.pipelines.factory.ClusteringServiceFactory;
-import org.gbif.pipelines.factory.FileVocabularyFactory;
-import org.gbif.pipelines.factory.GeocodeKvStoreFactory;
-import org.gbif.pipelines.factory.GrscicollLookupKvStoreFactory;
-import org.gbif.pipelines.factory.KeygenServiceFactory;
-import org.gbif.pipelines.factory.MetadataServiceClientFactory;
-import org.gbif.pipelines.factory.NameUsageMatchStoreFactory;
-import org.gbif.pipelines.factory.OccurrenceStatusKvStoreFactory;
-import org.gbif.pipelines.ingest.java.metrics.IngestMetricsBuilder;
+import org.gbif.pipelines.ingest.java.pipelines.interpretation.Shutdown;
+import org.gbif.pipelines.ingest.java.pipelines.interpretation.TransformsFactory;
 import org.gbif.pipelines.ingest.java.transforms.InterpretedAvroReader;
-import org.gbif.pipelines.io.avro.AudubonRecord;
-import org.gbif.pipelines.io.avro.BasicRecord;
-import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.GbifIdRecord;
-import org.gbif.pipelines.io.avro.ImageRecord;
-import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
-import org.gbif.pipelines.keygen.HBaseLockingKeyService;
-import org.gbif.pipelines.transforms.common.CheckTransforms;
 import org.gbif.pipelines.transforms.common.ExtensionFilterTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.GrscicollTransform;
@@ -78,10 +52,8 @@ import org.gbif.pipelines.transforms.java.OccurrenceExtensionTransform;
 import org.gbif.pipelines.transforms.java.UniqueGbifIdTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.gbif.pipelines.transforms.specific.ClusteringTransform;
+import org.gbif.pipelines.transforms.specific.GbifIdAbsentTransform;
 import org.gbif.pipelines.transforms.specific.GbifIdTransform;
-import org.gbif.rest.client.geocode.GeocodeResponse;
-import org.gbif.rest.client.grscicoll.GrscicollLookupResponse;
-import org.gbif.rest.client.species.NameUsageMatch;
 import org.slf4j.MDC;
 
 /**
@@ -155,30 +127,19 @@ public class VerbatimToInterpretedPipeline {
   public static void run(InterpretationPipelineOptions options, ExecutorService executor) {
 
     log.info("Pipeline has been started - {}", LocalDateTime.now());
+    TransformsFactory transformsFactory = TransformsFactory.create(options);
 
     String datasetId = options.getDatasetId();
     Integer attempt = options.getAttempt();
-    boolean tripletValid = options.isTripletValid();
-    boolean occIdValid = options.isOccurrenceIdValid();
-    boolean useErdId = options.isUseExtendedRecordId();
-    boolean generateIds = options.getGenerateIds();
     Set<String> types = options.getInterpretationTypes();
     String targetPath = options.getTargetPath();
-    String endPointType = options.getEndPointType();
-    String hdfsSiteConfig = options.getHdfsSiteConfig();
-    String coreSiteConfig = options.getCoreSiteConfig();
-    PipelinesConfig config =
-        ConfigFactory.getInstance(
-                hdfsSiteConfig, coreSiteConfig, options.getProperties(), PipelinesConfig.class)
-            .get();
+    HdfsConfigs hdfsConfigs =
+        HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig());
 
-    List<DateComponentOrdering> dateComponentOrdering =
-        options.getDefaultDateFormat() == null
-            ? config.getDefaultDateFormat()
-            : options.getDefaultDateFormat();
-
-    FsUtils.deleteInterpretIfExist(
-        hdfsSiteConfig, coreSiteConfig, targetPath, datasetId, attempt, types);
+    // Remove directories with avro files for expected interpretation, except IDENTIFIER
+    Set<String> deleteTypes = new HashSet<>(types);
+    deleteTypes.remove(IDENTIFIER_ABSENT.name());
+    FsUtils.deleteInterpretIfExist(hdfsConfigs, targetPath, datasetId, attempt, deleteTypes);
 
     MDC.put("datasetKey", datasetId);
     MDC.put("attempt", attempt.toString());
@@ -186,191 +147,52 @@ public class VerbatimToInterpretedPipeline {
 
     String postfix = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
-    log.info("Init metrics");
-    IngestMetrics metrics = IngestMetricsBuilder.createVerbatimToInterpretedMetrics();
-    SerializableConsumer<String> incMetricFn = metrics::incMetric;
-
-    SerializableSupplier<MetadataServiceClient> metadataServiceClientSupplier = null;
-    if (options.getUseMetadataWsCalls()) {
-      metadataServiceClientSupplier = MetadataServiceClientFactory.getInstanceSupplier(config);
-    }
-    SerializableSupplier<HBaseLockingKeyService> keyServiceSupplier = null;
-    if (!options.isUseExtendedRecordId()) {
-      keyServiceSupplier = KeygenServiceFactory.getInstanceSupplier(config, datasetId);
-    }
-    SerializableSupplier<KeyValueStore<SpeciesMatchRequest, NameUsageMatch>>
-        nameUsageMatchServiceSupplier = NameUsageMatchStoreFactory.getInstanceSupplier(config);
-    SerializableSupplier<KeyValueStore<GrscicollLookupRequest, GrscicollLookupResponse>>
-        grscicollServiceSupplier = GrscicollLookupKvStoreFactory.getInstanceSupplier(config);
-    SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> geocodeServiceSupplier =
-        GeocodeKvStoreFactory.getInstanceSupplier(config);
-    if (options.getTestMode()) {
-      metadataServiceClientSupplier = null;
-      nameUsageMatchServiceSupplier = null;
-      grscicollServiceSupplier = null;
-      geocodeServiceSupplier = null;
-    }
-
     log.info("Creating pipelines transforms");
     // Core
-    MetadataTransform metadataTransform =
-        MetadataTransform.builder()
-            .clientSupplier(metadataServiceClientSupplier)
-            .attempt(attempt)
-            .endpointType(endPointType)
-            .create()
-            .counterFn(incMetricFn)
-            .init();
+    MetadataTransform metadataTr = transformsFactory.createMetadataTransform();
+    GbifIdTransform gbifIdTr = transformsFactory.createGbifIdTransform();
+    GbifIdAbsentTransform gbifIdAbsentTr = transformsFactory.createGbifIdAbsentTransform();
+    ClusteringTransform clusteringTr = transformsFactory.createClusteringTransform();
+    BasicTransform basicTr = transformsFactory.createBasicTransform();
+    TaxonomyTransform taxonomyTr = transformsFactory.createTaxonomyTransform();
+    VerbatimTransform verbatimTr = transformsFactory.createVerbatimTransform();
+    GrscicollTransform grscicollTr = transformsFactory.createGrscicollTransform();
+    LocationTransform locationTr = transformsFactory.createLocationTransform();
+    TemporalTransform temporalTr = transformsFactory.createTemporalTransform();
+    MultimediaTransform multimediaTr = transformsFactory.createMultimediaTransform();
+    AudubonTransform audubonTr = transformsFactory.createAudubonTransform();
+    ImageTransform imageTr = transformsFactory.createImageTransform();
+    OccurrenceExtensionTransform occExtensionTr =
+        transformsFactory.createOccurrenceExtensionTransform();
+    ExtensionFilterTransform extensionFilterTr = transformsFactory.createExtensionFilterTransform();
+    DefaultValuesTransform defaultValuesTr = transformsFactory.createDefaultValuesTransform();
 
-    GbifIdTransform idTransform =
-        GbifIdTransform.builder()
-            .isTripletValid(tripletValid)
-            .isOccurrenceIdValid(occIdValid)
-            .useExtendedRecordId(useErdId)
-            .keygenServiceSupplier(keyServiceSupplier)
-            .generateIdIfAbsent(generateIds)
-            .create()
-            .counterFn(incMetricFn)
-            .init();
-
-    ClusteringTransform clusteringTransform =
-        ClusteringTransform.builder()
-            .clusteringServiceSupplier(ClusteringServiceFactory.getInstanceSupplier(config))
-            .create()
-            .counterFn(incMetricFn)
-            .init();
-
-    BasicTransform basicTransform =
-        BasicTransform.builder()
-            .useDynamicPropertiesInterpretation(true)
-            .occStatusKvStoreSupplier(OccurrenceStatusKvStoreFactory.getInstanceSupplier(config))
-            .vocabularyServiceSupplier(
-                FileVocabularyFactory.builder()
-                    .config(config)
-                    .hdfsSiteConfig(hdfsSiteConfig)
-                    .coreSiteConfig(coreSiteConfig)
-                    .build()
-                    .getInstanceSupplier())
-            .create()
-            .counterFn(incMetricFn)
-            .init();
-
-    TaxonomyTransform taxonomyTransform =
-        TaxonomyTransform.builder()
-            .kvStoreSupplier(nameUsageMatchServiceSupplier)
-            .create()
-            .counterFn(incMetricFn)
-            .init();
-
-    VerbatimTransform verbatimTransform = VerbatimTransform.create().counterFn(incMetricFn);
-
-    GrscicollTransform grscicollTransform =
-        GrscicollTransform.builder()
-            .kvStoreSupplier(grscicollServiceSupplier)
-            .create()
-            .counterFn(incMetricFn)
-            .init();
-
-    LocationTransform locationTransform =
-        LocationTransform.builder()
-            .geocodeKvStoreSupplier(geocodeServiceSupplier)
-            .create()
-            .counterFn(incMetricFn)
-            .init();
-
-    TemporalTransform temporalTransform =
-        TemporalTransform.builder()
-            .orderings(dateComponentOrdering)
-            .create()
-            .counterFn(incMetricFn)
-            .init();
-
-    // Extension
-    MultimediaTransform multimediaTransform =
-        MultimediaTransform.builder()
-            .orderings(dateComponentOrdering)
-            .create()
-            .counterFn(incMetricFn)
-            .init();
-
-    AudubonTransform audubonTransform =
-        AudubonTransform.builder()
-            .orderings(dateComponentOrdering)
-            .create()
-            .counterFn(incMetricFn)
-            .init();
-
-    ImageTransform imageTransform =
-        ImageTransform.builder()
-            .orderings(dateComponentOrdering)
-            .create()
-            .counterFn(incMetricFn)
-            .init();
-
-    // Extra
-    OccurrenceExtensionTransform occExtensionTransform =
-        OccurrenceExtensionTransform.create().counterFn(incMetricFn);
-
-    ExtensionFilterTransform extensionFilterTransform =
-        ExtensionFilterTransform.create(config.getExtensionsAllowedForVerbatimSet());
-
-    DefaultValuesTransform defaultValuesTransform =
-        DefaultValuesTransform.builder()
-            .clientSupplier(metadataServiceClientSupplier)
-            .datasetId(datasetId)
-            .create()
-            .init();
-
-    try (SyncDataFileWriter<ExtendedRecord> verbatimWriter =
-            createAvroWriter(options, verbatimTransform, postfix);
-        SyncDataFileWriter<MetadataRecord> metadataWriter =
-            createAvroWriter(options, metadataTransform, postfix);
-        SyncDataFileWriter<GbifIdRecord> idWriter =
-            createAvroWriter(options, idTransform, postfix);
-        SyncDataFileWriter<ClusteringRecord> clusteringWriter =
-            createAvroWriter(options, clusteringTransform, postfix);
-        SyncDataFileWriter<GbifIdRecord> idInvalidWriter =
-            createAvroWriter(options, idTransform, postfix, true);
-        SyncDataFileWriter<BasicRecord> basicWriter =
-            createAvroWriter(options, basicTransform, postfix);
-        SyncDataFileWriter<TemporalRecord> temporalWriter =
-            createAvroWriter(options, temporalTransform, postfix);
-        SyncDataFileWriter<MultimediaRecord> multimediaWriter =
-            createAvroWriter(options, multimediaTransform, postfix);
-        SyncDataFileWriter<ImageRecord> imageWriter =
-            createAvroWriter(options, imageTransform, postfix);
-        SyncDataFileWriter<AudubonRecord> audubonWriter =
-            createAvroWriter(options, audubonTransform, postfix);
-        SyncDataFileWriter<TaxonRecord> taxonWriter =
-            createAvroWriter(options, taxonomyTransform, postfix);
-        SyncDataFileWriter<GrscicollRecord> grscicollWriter =
-            createAvroWriter(options, grscicollTransform, postfix);
-        SyncDataFileWriter<LocationRecord> locationWriter =
-            createAvroWriter(options, locationTransform, postfix)) {
+    try {
 
       // Create or read MetadataRecord
       MetadataRecord mdr;
       if (useMetadataRecordWriteIO(types)) {
         mdr =
-            metadataTransform
+            metadataTr
                 .processElement(options.getDatasetId())
                 .orElseThrow(() -> new IllegalArgumentException("MetadataRecord can't be null"));
 
+        @Cleanup var metadataWriter = createAvroWriter(options, metadataTr, postfix);
         metadataWriter.append(mdr);
-      } else {
-        metadataWriter.close();
+      } else if (useMetadataRecordReadIO(types)) {
         mdr =
-            InterpretedAvroReader.readAvroUseTargetPath(options, metadataTransform)
+            InterpretedAvroReader.readAvroUseTargetPath(options, metadataTr)
                 .get(options.getDatasetId());
+      } else {
+        mdr = null;
       }
 
       // Read DWCA and replace default values
       Map<String, ExtendedRecord> erMap =
-          AvroReader.readUniqueRecords(
-              hdfsSiteConfig, coreSiteConfig, ExtendedRecord.class, options.getInputPath());
-      Map<String, ExtendedRecord> erExtMap = occExtensionTransform.transform(erMap);
-      erExtMap = extensionFilterTransform.transform(erExtMap);
-      defaultValuesTransform.replaceDefaultValues(erExtMap);
+          AvroReader.readUniqueRecords(hdfsConfigs, ExtendedRecord.class, options.getInputPath());
+      Map<String, ExtendedRecord> erExtMap = occExtensionTr.transform(erMap);
+      erExtMap = extensionFilterTr.transform(erExtMap);
+      defaultValuesTr.replaceDefaultValues(erExtMap);
 
       boolean useSyncMode = options.getSyncThreshold() > erExtMap.size();
 
@@ -378,17 +200,32 @@ public class VerbatimToInterpretedPipeline {
       Function<ExtendedRecord, Optional<GbifIdRecord>> idFn;
       if (useGbifIdWriteIO(types)) {
         log.info("Interpreting GBIF IDs records...");
-        idFn = idTransform::processElement;
+        idFn = gbifIdTr::processElement;
       } else {
         log.info("Skip GBIF IDs interpretation and reading GBIF IDs from avro files...");
-        idWriter.close();
-        idInvalidWriter.close();
         Map<String, GbifIdRecord> idRecordMap =
-            InterpretedAvroReader.readAvroUseTargetPath(options, idTransform);
-        idFn = er -> Optional.ofNullable(idRecordMap.get(er.getId()));
+            InterpretedAvroReader.readAvroUseTargetPath(options, gbifIdTr);
+        Map<String, GbifIdRecord> absentIdRecordMap = new HashMap<>();
+
+        if (useAbsentGbifIdReadIO(types)) {
+          InterpretedAvroReader.readAvroUseTargetPath(options, gbifIdTr, gbifIdTr.getAbsentName())
+              .forEach(
+                  (k, v) -> {
+                    Consumer<GbifIdRecord> fn = gir -> absentIdRecordMap.put(k, gir);
+                    gbifIdAbsentTr.processElement(v).ifPresent(fn);
+                  });
+        }
+
+        idFn =
+            er -> {
+              GbifIdRecord gbifIdRecord =
+                  Optional.ofNullable(idRecordMap.get(er.getId()))
+                      .orElse(absentIdRecordMap.get(er.getId()));
+              return Optional.ofNullable(gbifIdRecord);
+            };
       }
 
-      log.info("Аiltering GBIF id duplicates");
+      log.info("Аltering GBIF id duplicates...");
       // Filter GBIF id duplicates
       UniqueGbifIdTransform gbifIdTransform =
           UniqueGbifIdTransform.builder()
@@ -396,104 +233,123 @@ public class VerbatimToInterpretedPipeline {
               .erMap(erExtMap)
               .idTransformFn(idFn)
               .useSyncMode(useSyncMode)
-              .skipTransform(useErdId)
-              .counterFn(incMetricFn)
+              .skipTransform(options.isUseExtendedRecordId())
+              .counterFn(transformsFactory.getIncMetricFn())
               .build()
               .run();
 
-      // Create interpretation function
-      Consumer<ExtendedRecord> interpretAllFn =
-          er -> {
-            GbifIdRecord idInvalid = gbifIdTransform.getIdInvalidMap().get(er.getId());
-
-            if (idInvalid == null) {
-              GbifIdRecord id = gbifIdTransform.getErIdMap().get(er.getId());
-
-              if (clusteringTransform.checkType(types)) {
-                clusteringTransform.processElement(id).ifPresent(clusteringWriter::append);
-              }
-              if (verbatimTransform.checkType(types)) {
-                verbatimWriter.append(er);
-              }
-              if (basicTransform.checkType(types)) {
-                basicTransform.processElement(er).ifPresent(basicWriter::append);
-              }
-              if (temporalTransform.checkType(types)) {
-                temporalTransform.processElement(er).ifPresent(temporalWriter::append);
-              }
-              if (multimediaTransform.checkType(types)) {
-                multimediaTransform.processElement(er).ifPresent(multimediaWriter::append);
-              }
-              if (imageTransform.checkType(types)) {
-                imageTransform.processElement(er).ifPresent(imageWriter::append);
-              }
-              if (audubonTransform.checkType(types)) {
-                audubonTransform.processElement(er).ifPresent(audubonWriter::append);
-              }
-              if (taxonomyTransform.checkType(types)) {
-                taxonomyTransform.processElement(er).ifPresent(taxonWriter::append);
-              }
-              if (grscicollTransform.checkType(types)) {
-                grscicollTransform.processElement(er, mdr).ifPresent(grscicollWriter::append);
-              }
-              if (locationTransform.checkType(types)) {
-                locationTransform.processElement(er, mdr).ifPresent(locationWriter::append);
-              }
-            } else {
-              idInvalidWriter.append(idInvalid);
-            }
-          };
-
       log.info("Starting rest of interpretations...");
-      // Run async writing for BasicRecords
-      Stream<CompletableFuture<Void>> streamBr = Stream.empty();
-      if (useGbifIdWriteIO(types)) {
-        Collection<GbifIdRecord> idCollection = gbifIdTransform.getIdMap().values();
-        if (useSyncMode) {
-          streamBr =
-              Stream.of(
-                  CompletableFuture.runAsync(
-                      () -> idCollection.forEach(idWriter::append), executor));
-        } else {
-          streamBr =
-              idCollection.stream()
-                  .map(v -> CompletableFuture.runAsync(() -> idWriter.append(v), executor));
+
+      if (useGbifIdWriteIO(types) || useAbsentGbifIdReadIO(types)) {
+        FsUtils.deleteInterpretIfExist(
+            hdfsConfigs, targetPath, datasetId, attempt, gbifIdTr.getAllNames());
+      }
+
+      try (var gbifIdWriter = createAvroWriter(options, gbifIdTr, postfix);
+          var verbatimWriter = createAvroWriter(options, verbatimTr, postfix);
+          var clusteringWriter = createAvroWriter(options, clusteringTr, postfix);
+          var basicWriter = createAvroWriter(options, basicTr, postfix);
+          var temporalWriter = createAvroWriter(options, temporalTr, postfix);
+          var multimediaWriter = createAvroWriter(options, multimediaTr, postfix);
+          var imageWriter = createAvroWriter(options, imageTr, postfix);
+          var audubonWriter = createAvroWriter(options, audubonTr, postfix);
+          var taxonWriter = createAvroWriter(options, taxonomyTr, postfix);
+          var grscicollWriter = createAvroWriter(options, grscicollTr, postfix);
+          var locationWriter = createAvroWriter(options, locationTr, postfix);
+          var gbifIdInvalidWriter =
+              createAvroWriter(options, gbifIdTr, postfix, gbifIdTr.getBaseInvalidName())) {
+
+        // Create interpretation function
+        Consumer<ExtendedRecord> interpretAllFn =
+            er -> {
+              GbifIdRecord idInvalid = gbifIdTransform.getIdInvalidMap().get(er.getId());
+
+              if (idInvalid == null) {
+                GbifIdRecord id = gbifIdTransform.getErIdMap().get(er.getId());
+
+                if (clusteringTr.checkType(types)) {
+                  clusteringTr.processElement(id).ifPresent(clusteringWriter::append);
+                }
+                if (verbatimTr.checkType(types)) {
+                  verbatimWriter.append(er);
+                }
+                if (basicTr.checkType(types)) {
+                  basicTr.processElement(er).ifPresent(basicWriter::append);
+                }
+                if (temporalTr.checkType(types)) {
+                  temporalTr.processElement(er).ifPresent(temporalWriter::append);
+                }
+                if (multimediaTr.checkType(types)) {
+                  multimediaTr.processElement(er).ifPresent(multimediaWriter::append);
+                }
+                if (imageTr.checkType(types)) {
+                  imageTr.processElement(er).ifPresent(imageWriter::append);
+                }
+                if (audubonTr.checkType(types)) {
+                  audubonTr.processElement(er).ifPresent(audubonWriter::append);
+                }
+                if (taxonomyTr.checkType(types)) {
+                  taxonomyTr.processElement(er).ifPresent(taxonWriter::append);
+                }
+                if (grscicollTr.checkType(types)) {
+                  grscicollTr.processElement(er, mdr).ifPresent(grscicollWriter::append);
+                }
+                if (locationTr.checkType(types)) {
+                  locationTr.processElement(er, mdr).ifPresent(locationWriter::append);
+                }
+              } else {
+                gbifIdInvalidWriter.append(idInvalid);
+              }
+            };
+
+        // Run async writing for GbifId
+        Stream<CompletableFuture<Void>> streamIds = Stream.empty();
+        if (useGbifIdWriteIO(types) || useAbsentGbifIdReadIO(types)) {
+          Collection<GbifIdRecord> idCollection = gbifIdTransform.getIdMap().values();
+          if (useSyncMode) {
+            streamIds =
+                Stream.of(
+                    CompletableFuture.runAsync(
+                        () -> idCollection.forEach(gbifIdWriter::append), executor));
+          } else {
+            streamIds =
+                idCollection.stream()
+                    .map(v -> CompletableFuture.runAsync(() -> gbifIdWriter.append(v), executor));
+          }
         }
-      }
 
-      // Run async interpretation and writing for all records
-      Stream<CompletableFuture<Void>> streamAll;
-      Collection<ExtendedRecord> erCollection = erExtMap.values();
-      if (useSyncMode) {
-        streamAll =
-            Stream.of(
-                CompletableFuture.runAsync(() -> erCollection.forEach(interpretAllFn), executor));
-      } else {
-        streamAll =
-            erCollection.stream()
-                .map(v -> CompletableFuture.runAsync(() -> interpretAllFn.accept(v), executor));
-      }
+        // Run async interpretation and writing for all records
+        Stream<CompletableFuture<Void>> streamAll;
+        Collection<ExtendedRecord> erCollection = erExtMap.values();
+        if (useSyncMode) {
+          streamAll =
+              Stream.of(
+                  CompletableFuture.runAsync(() -> erCollection.forEach(interpretAllFn), executor));
+        } else {
+          streamAll =
+              erCollection.stream()
+                  .map(v -> CompletableFuture.runAsync(() -> interpretAllFn.accept(v), executor));
+        }
 
-      // Wait for all features
-      CompletableFuture<?>[] futures =
-          Stream.concat(streamBr, streamAll).toArray(CompletableFuture[]::new);
-      CompletableFuture.allOf(futures).get();
+        // Wait for all features
+        CompletableFuture<?>[] futures =
+            Stream.concat(streamIds, streamAll).toArray(CompletableFuture[]::new);
+        CompletableFuture.allOf(futures).get();
+      }
 
     } catch (Exception e) {
       log.error("Failed performing conversion on {}", e.getMessage());
       throw new IllegalStateException("Failed performing conversion on ", e);
     } finally {
-      Shutdown.doOnExit(
-          basicTransform, locationTransform, taxonomyTransform, grscicollTransform, idTransform);
+      Shutdown.doOnExit(basicTr, locationTr, taxonomyTr, grscicollTr, gbifIdTr);
     }
 
     log.info("Save metrics into the file and set files owner");
     String metadataPath =
         PathBuilder.buildDatasetAttemptPath(options, options.getMetaFileName(), false);
-    if (!FsUtils.fileExists(hdfsSiteConfig, coreSiteConfig, metadataPath)
-        || CheckTransforms.checkRecordType(types, RecordType.IDENTIFIER)
-        || CheckTransforms.checkRecordType(types, RecordType.ALL)) {
-      MetricsHandler.saveCountersToTargetPathFile(options, metrics.getMetricsResult());
+    if (!FsUtils.fileExists(hdfsConfigs, metadataPath) || useGbifIdWriteIO(types)) {
+      MetricsHandler.saveCountersToTargetPathFile(
+          options, transformsFactory.getMetrics().getMetricsResult());
     }
 
     log.info("Pipeline has been finished - {}", LocalDateTime.now());
@@ -503,49 +359,16 @@ public class VerbatimToInterpretedPipeline {
     return types.contains(RecordType.IDENTIFIER.name()) || types.contains(RecordType.ALL.name());
   }
 
+  private static boolean useAbsentGbifIdReadIO(Set<String> types) {
+    return types.contains(RecordType.IDENTIFIER_ABSENT.name());
+  }
+
   private static boolean useMetadataRecordWriteIO(Set<String> types) {
     return types.contains(RecordType.METADATA.name()) || types.contains(RecordType.ALL.name());
   }
 
-  /** Closes resources only one time, before JVM shuts down */
-  private static class Shutdown {
-
-    private static volatile Shutdown instance;
-    private static final Object MUTEX = new Object();
-
-    @SneakyThrows
-    private Shutdown(
-        BasicTransform bTr,
-        LocationTransform lTr,
-        TaxonomyTransform tTr,
-        GrscicollTransform gTr,
-        GbifIdTransform idTr) {
-      Runnable shudownHook =
-          () -> {
-            log.info("Closing all resources");
-            bTr.tearDown();
-            lTr.tearDown();
-            tTr.tearDown();
-            gTr.tearDown();
-            idTr.tearDown();
-            log.info("The resources were closed");
-          };
-      Runtime.getRuntime().addShutdownHook(new Thread(shudownHook));
-    }
-
-    public static void doOnExit(
-        BasicTransform bTr,
-        LocationTransform lTr,
-        TaxonomyTransform tTr,
-        GrscicollTransform gTr,
-        GbifIdTransform idTr) {
-      if (instance == null) {
-        synchronized (MUTEX) {
-          if (instance == null) {
-            instance = new Shutdown(bTr, lTr, tTr, gTr, idTr);
-          }
-        }
-      }
-    }
+  private static boolean useMetadataRecordReadIO(Set<String> types) {
+    return types.contains(RecordType.LOCATION.name())
+        || types.contains(RecordType.GRSCICOLL.name());
   }
 }

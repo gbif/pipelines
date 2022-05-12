@@ -1,12 +1,17 @@
 package org.gbif.pipelines.transforms.specific;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.GBIF_ID_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Identifier.GBIF_ID_INVALID;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.IDENTIFIER;
 
 import java.time.Instant;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.SneakyThrows;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
@@ -17,7 +22,7 @@ import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.core.interpreters.specific.GbifIdInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.GbifIdRecord;
-import org.gbif.pipelines.keygen.HBaseLockingKeyService;
+import org.gbif.pipelines.keygen.HBaseLockingKey;
 import org.gbif.pipelines.transforms.Transform;
 
 /**
@@ -28,14 +33,16 @@ import org.gbif.pipelines.transforms.Transform;
  */
 public class GbifIdTransform extends Transform<ExtendedRecord, GbifIdRecord> {
 
+  @Getter private final String absentName;
+  @Getter private final Set<String> allNames = new HashSet<>(3);
   private final boolean isTripletValid;
   private final boolean isOccurrenceIdValid;
   private final boolean useExtendedRecordId;
   private final boolean generateIdIfAbsent;
   private final BiConsumer<ExtendedRecord, GbifIdRecord> gbifIdFn;
-  private final SerializableSupplier<HBaseLockingKeyService> keygenServiceSupplier;
+  private final SerializableSupplier<HBaseLockingKey> keygenServiceSupplier;
 
-  private HBaseLockingKeyService keygenService;
+  private HBaseLockingKey keygenService;
 
   @Builder(buildMethodName = "create")
   private GbifIdTransform(
@@ -44,7 +51,7 @@ public class GbifIdTransform extends Transform<ExtendedRecord, GbifIdRecord> {
       boolean useExtendedRecordId,
       boolean generateIdIfAbsent,
       BiConsumer<ExtendedRecord, GbifIdRecord> gbifIdFn,
-      SerializableSupplier<HBaseLockingKeyService> keygenServiceSupplier) {
+      SerializableSupplier<HBaseLockingKey> keygenServiceSupplier) {
     super(GbifIdRecord.class, IDENTIFIER, GbifIdTransform.class.getName(), GBIF_ID_RECORDS_COUNT);
     this.isTripletValid = isTripletValid;
     this.isOccurrenceIdValid = isOccurrenceIdValid;
@@ -52,6 +59,8 @@ public class GbifIdTransform extends Transform<ExtendedRecord, GbifIdRecord> {
     this.generateIdIfAbsent = generateIdIfAbsent;
     this.gbifIdFn = gbifIdFn;
     this.keygenServiceSupplier = keygenServiceSupplier;
+    this.absentName = this.getBaseName() + "_absent";
+    allNames.addAll(Arrays.asList(this.getBaseName(), this.getBaseInvalidName(), absentName));
   }
 
   /** Maps {@link GbifIdRecord} to key value, where key is {@link GbifIdRecord#getId} */
@@ -66,9 +75,7 @@ public class GbifIdTransform extends Transform<ExtendedRecord, GbifIdRecord> {
         .via(
             (GbifIdRecord gr) -> {
               String key =
-                  Optional.ofNullable(gr.getGbifId())
-                      .map(Object::toString)
-                      .orElse(GbifIdInterpreter.GBIF_ID_INVALID);
+                  Optional.ofNullable(gr.getGbifId()).map(Object::toString).orElse(GBIF_ID_INVALID);
               return KV.of(key, gr);
             });
   }

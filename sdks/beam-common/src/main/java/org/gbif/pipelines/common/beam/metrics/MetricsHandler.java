@@ -15,6 +15,7 @@ import org.apache.hadoop.fs.Path;
 import org.gbif.pipelines.common.beam.options.BasePipelineOptions;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
 
 /**
@@ -49,14 +50,14 @@ public class MetricsHandler {
    * a yaml file and save it
    */
   public static void saveCountersToFile(
-      String hdfsSiteConfig, String coreSiteConfig, String path, MetricResults results) {
+      HdfsConfigs hdfsConfigs, String path, MetricResults results) {
 
     if (path != null && !path.isEmpty()) {
       log.info("Trying to write pipeline's metadata to a file - {}", path);
 
       String countersInfo = getCountersInfo(results);
 
-      FileSystem fs = FsUtils.getFileSystem(hdfsSiteConfig, coreSiteConfig, path);
+      FileSystem fs = FsUtils.getFileSystem(hdfsConfigs, path);
       try {
         FsUtils.createFile(fs, path, countersInfo);
         log.info("Metadata was written to a file - {}", path);
@@ -109,7 +110,8 @@ public class MetricsHandler {
       coreSiteConfig = o.getCoreSiteConfig();
     }
 
-    return FsUtils.getFileSystem(hdfsSiteConfig, coreSiteConfig, options.getInputPath());
+    return FsUtils.getFileSystem(
+        HdfsConfigs.create(hdfsSiteConfig, coreSiteConfig), options.getInputPath());
   }
 
   /**
@@ -136,7 +138,7 @@ public class MetricsHandler {
                 coreSiteConfig = o.getCoreSiteConfig();
               }
               MetricsHandler.saveCountersToFile(
-                  hdfsSiteConfig, coreSiteConfig, metadataPath, results);
+                  HdfsConfigs.create(hdfsSiteConfig, coreSiteConfig), metadataPath, results);
             });
   }
 }

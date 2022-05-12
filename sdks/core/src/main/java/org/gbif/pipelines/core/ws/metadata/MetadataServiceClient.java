@@ -73,7 +73,7 @@ public class MetadataServiceClient {
   }
 
   /**
-   * requests https://api.gbif.org/v1/organisation/{organisationId}
+   * requests https://api.gbif.org/v1/organization/{organisationId}
    *
    * @return organisation info for provided organisation id
    */

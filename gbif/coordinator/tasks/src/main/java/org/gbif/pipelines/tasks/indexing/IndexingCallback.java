@@ -28,6 +28,7 @@ import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.utils.HdfsUtils;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.ingest.java.pipelines.InterpretedToEsIndexExtendedPipeline;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
@@ -184,9 +185,10 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
     String basicPath =
         String.join(
             "/", config.stepConfig.repositoryPath, datasetId, attempt, directoryName, basic);
-    int count =
-        HdfsUtils.getFileCount(
-            config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig, basicPath);
+
+    HdfsConfigs hdfsConfigs =
+        HdfsConfigs.create(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);
+    int count = HdfsUtils.getFileCount(hdfsConfigs, basicPath);
     count *= 4;
     if (count < config.sparkConfig.parallelismMin) {
       return config.sparkConfig.parallelismMin;
@@ -304,12 +306,11 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
         String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, metaFileName);
 
     Long messageNumber = message.getNumberOfRecords();
+    HdfsConfigs hdfsConfigs =
+        HdfsConfigs.create(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);
     Optional<Long> fileNumber =
         HdfsUtils.getLongByKey(
-            config.stepConfig.hdfsSiteConfig,
-            config.stepConfig.coreSiteConfig,
-            metaPath,
-            Metrics.UNIQUE_GBIF_IDS_COUNT + Metrics.ATTEMPTED);
+            hdfsConfigs, metaPath, Metrics.UNIQUE_GBIF_IDS_COUNT + Metrics.ATTEMPTED);
 
     if (messageNumber == null && !fileNumber.isPresent()) {
       throw new IllegalArgumentException(

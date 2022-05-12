@@ -29,6 +29,7 @@ import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.common.utils.ZookeeperUtils;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.fragmenter.common.HbaseServer;
 import org.gbif.pipelines.tasks.MessagePublisherStub;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
@@ -385,12 +386,10 @@ public class FragmenterCallbackIT {
             datasetId.toString(),
             String.valueOf(attempt),
             config.metaFileName);
-    FileSystem fs =
-        FileSystemFactory.getInstance(config.getHdfsSiteConfig(), config.getCoreSiteConfig())
-            .getFs(path.toString());
-    List<MetricInfo> metricInfos =
-        HdfsUtils.readMetricsFromMetaFile(
-            config.getHdfsSiteConfig(), config.getCoreSiteConfig(), path.toString());
+    HdfsConfigs hdfsConfigs =
+        HdfsConfigs.create(config.getHdfsSiteConfig(), config.getCoreSiteConfig());
+    FileSystem fs = FileSystemFactory.getInstance(hdfsConfigs).getFs(path.toString());
+    List<MetricInfo> metricInfos = HdfsUtils.readMetricsFromMetaFile(hdfsConfigs, path.toString());
     assertTrue(fs.exists(path));
     assertEquals(1, metricInfos.size());
     assertEquals(String.valueOf(expSize), metricInfos.get(0).getValue());

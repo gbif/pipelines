@@ -15,6 +15,7 @@ import org.apache.curator.framework.CuratorFramework;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.messages.PipelinesCleanerMessage;
 import org.gbif.crawler.constants.PipelinesNodePaths;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.estools.EsIndex;
 import org.gbif.pipelines.estools.client.EsConfig;
@@ -70,9 +71,9 @@ public class CleanerCallback extends AbstractMessageCallback<PipelinesCleanerMes
   private void deleteHdfsData(UUID datasetUuid) {
     log.info("Delete HDFS files");
     String pathToDelete = String.join("/", config.hdfsRootPath, datasetUuid.toString());
-    boolean isDeleted =
-        FsUtils.deleteIfExist(
-            config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig, pathToDelete);
+    HdfsConfigs hdfsConfigs =
+        HdfsConfigs.create(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);
+    boolean isDeleted = FsUtils.deleteIfExist(hdfsConfigs, pathToDelete);
     if (isDeleted) {
       log.info("Dataset files was deleted successfully from HDFS!");
     } else {

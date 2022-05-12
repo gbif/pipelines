@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.Optional;
 import lombok.Builder;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -42,7 +41,7 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
   private final SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> geocodeKvStoreSupplier;
   private KeyValueStore<LatLng, GeocodeResponse> geocodeKvStore;
 
-  @Setter private PCollectionView<MetadataRecord> metadataView;
+  private PCollectionView<MetadataRecord> metadataView;
 
   @Builder(buildMethodName = "create")
   private LocationTransform(
@@ -63,6 +62,12 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
   public LocationTransform counterFn(SerializableConsumer<String> counterFn) {
     setCounterFn(counterFn);
     return this;
+  }
+
+  public SingleOutput<ExtendedRecord, LocationRecord> interpret(
+      PCollectionView<MetadataRecord> metadataView) {
+    this.metadataView = metadataView;
+    return interpret();
   }
 
   @Override

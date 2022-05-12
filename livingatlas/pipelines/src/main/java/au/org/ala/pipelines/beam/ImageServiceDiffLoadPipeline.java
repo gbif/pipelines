@@ -53,6 +53,7 @@ import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.io.avro.Multimedia;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
@@ -123,18 +124,17 @@ public class ImageServiceDiffLoadPipeline {
   public static void run(ImageServicePipelineOptions options)
       throws IOException, InterruptedException {
 
+    HdfsConfigs hdfsConfigs =
+        HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig());
+
     ALAPipelinesConfig config =
-        ALAPipelinesConfigFactory.getInstance(
-                options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getProperties())
-            .get();
+        ALAPipelinesConfigFactory.getInstance(hdfsConfigs, options.getProperties()).get();
 
     // create the image service
     ImageService service = WsUtils.createClient(config.getImageService(), ImageService.class);
     String imageServiceExportPath = ImageServiceSyncPipeline.downloadImageMapping(options);
 
-    FileSystem fs =
-        FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
-            .getFs(options.getInputPath());
+    FileSystem fs = FileSystemFactory.getInstance(hdfsConfigs).getFs(options.getInputPath());
 
     Pipeline p = Pipeline.create(options);
 

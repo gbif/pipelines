@@ -7,6 +7,7 @@ import java.io.FileWriter;
 import java.util.Map;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 
 @Parameters(separators = "=")
 @Slf4j
@@ -52,7 +53,7 @@ public class DumpArchiveList {
 
     // load all datasets - return a map of <datasetId -> datasetInputPath>
     Map<String, String> datasets =
-        ALAFsUtils.listAllDatasets(hdfsSiteConfig, coreSiteConfig, inputPath);
+        ALAFsUtils.listAllDatasets(HdfsConfigs.create(hdfsSiteConfig, coreSiteConfig), inputPath);
 
     // dump to file
     try (FileWriter fw = new FileWriter(targetPath)) {

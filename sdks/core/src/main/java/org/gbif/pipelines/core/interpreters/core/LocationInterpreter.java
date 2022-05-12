@@ -7,6 +7,7 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_PRECISION_INVAL
 import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_UNCERTAINTY_METERS_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_COORDINATE_MISMATCH;
 import static org.gbif.api.vocabulary.OccurrenceIssue.FOOTPRINT_SRS_INVALID;
+import static org.gbif.api.vocabulary.OccurrenceIssue.FOOTPRINT_WKT_MISMATCH;
 import static org.gbif.api.vocabulary.OccurrenceIssue.ZERO_COORDINATE;
 import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareOptValue;
@@ -23,6 +24,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.vocabulary.Continent;
 import org.gbif.api.vocabulary.Country;
@@ -38,6 +40,7 @@ import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.core.parsers.SimpleTypeParser;
 import org.gbif.pipelines.core.parsers.VocabularyParser;
 import org.gbif.pipelines.core.parsers.common.ParsedField;
+import org.gbif.pipelines.core.parsers.location.parser.CoordinateParseUtils;
 import org.gbif.pipelines.core.parsers.location.parser.FootprintWKTParser;
 import org.gbif.pipelines.core.parsers.location.parser.GadmParser;
 import org.gbif.pipelines.core.parsers.location.parser.LocationParser;
@@ -50,6 +53,7 @@ import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 /** Interprets the location terms of a {@link ExtendedRecord}. */
+@Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class LocationInterpreter {
 
@@ -131,8 +135,8 @@ public class LocationInterpreter {
   }
 
   /**
-   * Uses the interpreted DwcTerm#decimalLatitude} and {@link DwcTerm#decimalLongitude} terms to
-   * populate GADM administrative area GIDs.
+   * Uses the interpreted {@link DwcTerm#decimalLatitude} and {@link DwcTerm#decimalLongitude} terms
+   * to populate GADM administrative area GIDs.
    */
   public static BiConsumer<ExtendedRecord, LocationRecord> interpretGadm(
       KeyValueStore<LatLng, GeocodeResponse> geocodeKvStore) {
@@ -144,8 +148,8 @@ public class LocationInterpreter {
   }
 
   /**
-   * Uses the interpreted DwcTerm#footprintSRS} and {@link DwcTerm#footprintWKT} terms to populate
-   * the footprintWKT in WGS84 projection.
+   * Uses the interpreted {@link DwcTerm#footprintSRS} and {@link DwcTerm#footprintWKT} terms to
+   * populate the footprintWKT in WGS84 projection.
    */
   public static void interpretFootprintWKT(ExtendedRecord er, LocationRecord lr) {
     Optional<String> verbatimFootprintSRS = extractNullAwareOptValue(er, DwcTerm.footprintSRS);
@@ -156,16 +160,38 @@ public class LocationInterpreter {
       addIssue(lr, FOOTPRINT_SRS_INVALID);
     } else {
 
-      extractNullAwareOptValue(er, DwcTerm.footprintWKT)
-          .map(wkt -> FootprintWKTParser.parseFootprintWKT(footprintSRS, wkt))
-          .ifPresent(
-              result -> {
-                if (result.isSuccessful()) {
-                  lr.setFootprintWKT(result.getResult());
-                } else {
-                  addIssue(lr, result.getIssues());
-                }
-              });
+      Optional<String> verbatimFootprintWKT = extractNullAwareOptValue(er, DwcTerm.footprintWKT);
+      if (verbatimFootprintWKT.isPresent()) {
+        // If the footprint is a POINT(lng lat), it was already used by the LocationParser.
+        ParsedField<LatLng> parsedFootprint =
+            CoordinateParseUtils.parsePointFootprintWKT(verbatimFootprintWKT.get());
+
+        if (parsedFootprint.isSuccessful()) {
+          // Check for conflict with the interpreted coordinates
+          LatLng latLng = parsedFootprint.getResult();
+          if (Math.abs(lr.getDecimalLatitude() - latLng.getLatitude()) <= 0.000001
+              && Math.abs(lr.getDecimalLongitude() - latLng.getLongitude()) <= 0.000001) {
+            // No conflict, but don't set the footprintWKT in the LocationRecord as it just
+            // duplicates the coordinate.
+            log.debug("duplicates the coordinate.");
+          } else {
+            addIssue(lr, FOOTPRINT_WKT_MISMATCH);
+          }
+
+        } else {
+          // Footprint is not a valid POINT(lng lat).
+          verbatimFootprintWKT
+              .map(wkt -> FootprintWKTParser.parseFootprintWKT(footprintSRS, wkt))
+              .ifPresent(
+                  result -> {
+                    if (result.isSuccessful()) {
+                      lr.setFootprintWKT(result.getResult());
+                    } else {
+                      addIssue(lr, result.getIssues());
+                    }
+                  });
+        }
+      }
     }
   }
 

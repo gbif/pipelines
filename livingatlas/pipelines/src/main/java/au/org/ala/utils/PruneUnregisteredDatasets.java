@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 
 @Parameters(separators = "=")
 @Slf4j
@@ -55,7 +56,8 @@ public class PruneUnregisteredDatasets {
 
     ALAPipelinesConfig config =
         ALAPipelinesConfigFactory.getInstance(
-                options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getProperties())
+                HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()),
+                options.getProperties())
             .get();
 
     PruneUnregisteredDatasets m = new PruneUnregisteredDatasets();
@@ -74,7 +76,8 @@ public class PruneUnregisteredDatasets {
   public void run(ALAPipelinesConfig config) {
 
     ALACollectoryServiceClient wsClient = new ALACollectoryServiceClient(config.getCollectory());
-    FileSystem fs = FileSystemFactory.getInstance(hdfsSiteConfig, coreSiteConfig).getFs(inputPath);
+    HdfsConfigs hdfsConfigs = HdfsConfigs.create(hdfsSiteConfig, coreSiteConfig);
+    FileSystem fs = FileSystemFactory.getInstance(hdfsConfigs).getFs(inputPath);
 
     // get a list of all registered datasets
     List<String> uids =
@@ -83,8 +86,7 @@ public class PruneUnregisteredDatasets {
             .collect(Collectors.toList());
 
     // load all archives - return a map of <datasetId -> datasetInputPath>
-    Map<String, String> archives =
-        ALAFsUtils.listAllDatasets(hdfsSiteConfig, coreSiteConfig, dwcaImportPath);
+    Map<String, String> archives = ALAFsUtils.listAllDatasets(hdfsConfigs, dwcaImportPath);
 
     Map<String, Long> datasets = DumpDatasetSize.readDatasetCounts(fs, inputPath);
 

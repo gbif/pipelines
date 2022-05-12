@@ -29,6 +29,7 @@ import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.transforms.core.*;
 import org.gbif.pipelines.transforms.core.LocationTransform;
@@ -81,7 +82,8 @@ public class IndexRecordPipeline {
     }
 
     FileSystem fs =
-        FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
+        FileSystemFactory.getInstance(
+                HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()))
             .getFs(options.getInputPath());
 
     final long lastLoadedDate =

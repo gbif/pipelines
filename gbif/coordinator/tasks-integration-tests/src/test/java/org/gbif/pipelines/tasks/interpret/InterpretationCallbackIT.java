@@ -26,6 +26,7 @@ import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage.Validatio
 import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.utils.ZookeeperUtils;
+import org.gbif.pipelines.tasks.CloseableHttpClientStub;
 import org.gbif.pipelines.tasks.MessagePublisherStub;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.ws.client.ValidationWsClient;

@@ -9,6 +9,7 @@ import org.gbif.api.vocabulary.Extension;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
 
 @Slf4j
@@ -82,19 +83,19 @@ public class HdfsViewAvroUtils {
 
   private static void move(InterpretationPipelineOptions options, String from, String to) {
     String targetPath = options.getTargetPath();
+    HdfsConfigs hdfsConfigs =
+        HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig());
 
     String deletePath =
         PathBuilder.buildPath(targetPath, to, options.getDatasetId() + "_*").toString();
     log.info("Deleting avro files {}", deletePath);
-    FsUtils.deleteByPattern(
-        options.getHdfsSiteConfig(), options.getCoreSiteConfig(), targetPath, deletePath);
+    FsUtils.deleteByPattern(hdfsConfigs, targetPath, deletePath);
 
     String filter = PathBuilder.buildFilePathViewUsingInputPath(options, from, "*.avro");
 
     String movePath = PathBuilder.buildPath(targetPath, to).toString();
     log.info("Moving files with pattern {} to {}", filter, movePath);
-    FsUtils.moveDirectory(
-        options.getHdfsSiteConfig(), options.getCoreSiteConfig(), movePath, filter);
+    FsUtils.moveDirectory(hdfsConfigs, movePath, filter);
     log.info("Files moved to {} directory", movePath);
   }
 }
