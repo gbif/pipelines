@@ -308,6 +308,7 @@ public class VerbatimToInterpretedPipeline {
         PathBuilder.buildDatasetAttemptPath(options, options.getMetaFileName(), false);
     if (!FsUtils.fileExists(hdfsConfigs, metadataPath)
         || CheckTransforms.checkRecordType(types, RecordType.IDENTIFIER)
+        || CheckTransforms.checkRecordType(types, RecordType.IDENTIFIER_ABSENT)
         || CheckTransforms.checkRecordType(types, RecordType.ALL)) {
       MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
       FsUtils.setOwner(hdfsConfigs, metadataPath, "crap", "supergroup");

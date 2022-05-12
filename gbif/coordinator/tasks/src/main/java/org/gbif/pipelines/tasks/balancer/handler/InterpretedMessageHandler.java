@@ -1,13 +1,10 @@
 package org.gbif.pipelines.tasks.balancer.handler;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.ALL;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.IDENTIFIER;
 import static org.gbif.pipelines.common.utils.ValidatorPredicate.isValidator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.Optional;
-import java.util.Set;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +19,7 @@ import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.balancer.BalancerConfiguration;
-import org.gbif.pipelines.tasks.interpret.InterpreterConfiguration;
+import org.gbif.pipelines.tasks.identifier.IdentifierConfiguration;
 
 /**
  * Populates and sends the {@link PipelinesInterpretedMessage} message, the main method is {@link
@@ -122,7 +119,7 @@ public class InterpretedMessageHandler {
 
     String datasetId = message.getDatasetUuid().toString();
     String attempt = Integer.toString(message.getAttempt());
-    String metaFileName = new InterpreterConfiguration().metaFileName;
+    String metaFileName = new IdentifierConfiguration().metaFileName;
     StepConfiguration stepConfig = config.stepConfig;
     String repositoryPath =
         isValidator(message.getPipelineSteps())
@@ -134,17 +131,14 @@ public class InterpretedMessageHandler {
     HdfsConfigs hdfsConfigs =
         HdfsConfigs.create(stepConfig.hdfsSiteConfig, stepConfig.coreSiteConfig);
     Optional<Long> fileNumber =
-        HdfsUtils.getLongByKey(
-            hdfsConfigs, metaPath, Metrics.UNIQUE_GBIF_IDS_COUNT + Metrics.ATTEMPTED);
+        HdfsUtils.getLongByKey(hdfsConfigs, metaPath, Metrics.UNIQUE_IDS_COUNT + Metrics.ATTEMPTED);
 
     // Fail if fileNumber is null
     if (!isValidator(message.getPipelineSteps())) {
-      Set<String> types = message.getInterpretTypes();
-      boolean isCorrectType = types.contains(ALL.name()) || types.contains(IDENTIFIER.name());
       boolean noFileRecords = !fileNumber.isPresent() || fileNumber.get() == 0L;
-      if (isCorrectType && noFileRecords) {
+      if (message.getInterpretTypes().isEmpty() && noFileRecords) {
         throw new IllegalArgumentException(
-            "Basic records must be interpreted, but fileNumber is null or 0, please validate the archive!");
+            "IDs records must be interpreted, but fileNumber is null or 0, please validate the archive!");
       }
     }
 
