@@ -85,10 +85,16 @@ public class GbifIdAbsentTransformTest {
 
     // State
     String id = "777";
-    GbifIdRecord inGir = GbifIdRecord.newBuilder().setId(id).setOccurrenceId("occ").build();
+    GbifIdRecord inGir =
+        GbifIdRecord.newBuilder().setId(id).setOccurrenceId("occ").setTriplet("tr").build();
 
     // Expected
-    GbifIdRecord outGir = GbifIdRecord.newBuilder(inGir).setGbifId(Long.valueOf(id)).build();
+    GbifIdRecord outGir =
+        GbifIdRecord.newBuilder(inGir)
+            .setGbifId(Long.valueOf(id))
+            .setOccurrenceId("occ")
+            .setTriplet("tr")
+            .build();
 
     // When
     GbifIdAbsentTransform gbifIdTransform =

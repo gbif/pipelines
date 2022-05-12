@@ -56,6 +56,7 @@ public class GbifIdInterpreter {
         String occurrenceId = extractValue(er, DwcTerm.occurrenceID);
         if (!Strings.isNullOrEmpty(occurrenceId)) {
           uniqueStrings.add(occurrenceId);
+          gr.setOccurrenceId(occurrenceId);
         }
       }
 
@@ -64,7 +65,12 @@ public class GbifIdInterpreter {
         String ic = extractValue(er, DwcTerm.institutionCode);
         String cc = extractValue(er, DwcTerm.collectionCode);
         String cn = extractValue(er, DwcTerm.catalogNumber);
-        OccurrenceKeyBuilder.buildKey(ic, cc, cn).ifPresent(uniqueStrings::add);
+        OccurrenceKeyBuilder.buildKey(ic, cc, cn)
+            .ifPresent(
+                tr -> {
+                  uniqueStrings.add(tr);
+                  gr.setTriplet(tr);
+                });
       }
 
       Optional<Long> gbifId = getOrGenerateGbifId(uniqueStrings, keygenService, generateIdIfAbsent);
@@ -99,6 +105,7 @@ public class GbifIdInterpreter {
 
       if (gbifId.isPresent()) {
         gr.setGbifId(gbifId.get());
+        gr.getIssues().setIssueList(Collections.emptyList());
       } else {
         gr.getIssues().setIssueList(Collections.singletonList(GBIF_ID_INVALID));
       }

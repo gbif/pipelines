@@ -54,35 +54,26 @@ public class PostprocessValidation {
           }
         };
 
-    double invalidIdCount = getMetricFn.applyAsDouble(Metrics.INVALID_GBIF_ID_COUNT);
-    double duplicateIdCount = getMetricFn.applyAsDouble(Metrics.DUPLICATE_GBIF_IDS_COUNT);
-    double uniqieIdCount = getMetricFn.applyAsDouble(Metrics.UNIQUE_GBIF_IDS_COUNT);
+    double totalCount = getMetricFn.applyAsDouble(Metrics.GBIF_ID_RECORDS_COUNT);
     double absentIdCount = getMetricFn.applyAsDouble(Metrics.ABSENT_GBIF_ID_COUNT);
 
-    if (uniqieIdCount == 0d) {
-      log.error(
-          "Interpreted records {}, invalid records {}, duplicate  records {}",
-          uniqieIdCount,
-          invalidIdCount,
-          duplicateIdCount);
+    if (totalCount == 0d) {
+      log.error("Interpreted totalCount {}, invalid absentIdCount {}", totalCount, absentIdCount);
       throw new IllegalArgumentIOException("No records with valid GBIF ID!");
     }
 
-    if (invalidIdCount != 0d || duplicateIdCount != 0d) {
-      double duplicatePercent =
-          (invalidIdCount + duplicateIdCount)
-              * 100
-              / (invalidIdCount + duplicateIdCount + uniqieIdCount);
+    if (absentIdCount != 0d) {
+      double absentPercent = absentIdCount * 100 / totalCount;
 
-      if (duplicatePercent > threshold) {
+      if (absentPercent > threshold) {
         log.error(
             "GBIF IDs hit maximum allowed threshold: allowed - {}%, duplicates - {}%",
-            threshold, duplicatePercent);
+            threshold, absentPercent);
         throw new IllegalArgumentIOException("GBIF IDs hit maximum allowed threshold");
       } else {
         log.warn(
             "GBIF IDs current duplicates rate: allowed - {}%, duplicates - {}%",
-            threshold, duplicatePercent);
+            threshold, absentPercent);
       }
     }
   }
