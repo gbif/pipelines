@@ -88,6 +88,8 @@ public class InterpretedMessageHandler {
               m.getDatasetType());
 
       publisher.send(eventsMessage);
+
+      log.info("The events message has been sent - {}", eventsMessage);
     }
 
     log.info("The message has been sent - {}", outputMessage);
