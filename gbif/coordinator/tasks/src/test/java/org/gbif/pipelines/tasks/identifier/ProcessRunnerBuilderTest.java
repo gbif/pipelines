@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage.ValidationResult;
@@ -74,9 +75,10 @@ public class ProcessRunnerBuilderTest {
             null,
             EndpointType.DWC_ARCHIVE,
             "something",
-            new ValidationResult(true, true, true, null),
+            new ValidationResult(true, true, true, null, null),
             null,
-            EXECUTION_ID);
+            EXECUTION_ID,
+            DatasetType.OCCURRENCE);
 
     // Expected
     ProcessBuilder builder =
@@ -149,7 +151,8 @@ public class ProcessRunnerBuilderTest {
             null,
             null,
             null,
-            EXECUTION_ID);
+            EXECUTION_ID,
+            DatasetType.OCCURRENCE);
 
     // Expected
     ProcessBuilder builder =
