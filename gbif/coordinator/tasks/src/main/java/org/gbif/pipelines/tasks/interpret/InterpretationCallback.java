@@ -161,6 +161,7 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
         && message.getValidationResult().getNumberOfRecords() != null) {
       recordsNumber = message.getValidationResult().getNumberOfRecords();
     }
+
     Long eventRecordsNumber = null;
     if (message.getValidationResult() != null
         && message.getValidationResult().getNumberOfEventRecords() != null) {
@@ -168,7 +169,6 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
     }
 
     boolean repeatAttempt = pathExists(message);
-
     return new PipelinesInterpretedMessage(
         message.getDatasetUuid(),
         message.getAttempt(),
@@ -179,7 +179,7 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
         repeatAttempt,
         message.getResetPrefix(),
         null,
-        null,
+        message.getExecutionId(),
         message.getEndpointType(),
         message.getValidationResult(),
         message.getInterpretTypes(),
@@ -294,66 +294,6 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
     }
 
     return fileNumber.get();
-  }
-
-  private void runPostprocessValidation(PipelinesVerbatimMessage message) throws IOException {
-    if (isValidator(message.getPipelineSteps(), config.validatorOnly)
-        || Boolean.TRUE.equals(message.getValidationResult().isUseExtendedRecordId())) {
-      log.info("Skip runPostprocessValidation for validator");
-      return;
-    }
-
-    String datasetId = message.getDatasetUuid().toString();
-    String attempt = Integer.toString(message.getAttempt());
-    String metaFileName = config.metaFileName;
-    String metaPath =
-        String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, metaFileName);
-    log.info("Getting records number from the file - {}", metaPath);
-
-    ToDoubleFunction<String> getMetricFn =
-        m -> {
-          try {
-            return HdfsUtils.getDoubleByKey(
-                    config.stepConfig.hdfsSiteConfig,
-                    config.stepConfig.coreSiteConfig,
-                    metaPath,
-                    m + Metrics.ATTEMPTED)
-                .orElse(0d);
-          } catch (IOException ex) {
-            throw new PipelinesException(ex);
-          }
-        };
-
-    double invalidIdCount = getMetricFn.applyAsDouble(Metrics.INVALID_GBIF_ID_COUNT);
-    double duplicateIdCount = getMetricFn.applyAsDouble(Metrics.DUPLICATE_GBIF_IDS_COUNT);
-    double uniqieIdCount = getMetricFn.applyAsDouble(Metrics.UNIQUE_GBIF_IDS_COUNT);
-
-    if (uniqieIdCount == 0d) {
-      log.error(
-          "Interpreted records {}, invalid records {}, duplicate  records {}",
-          uniqieIdCount,
-          invalidIdCount,
-          duplicateIdCount);
-      throw new IllegalArgumentIOException("No records with valid GBIF ID!");
-    }
-
-    if (invalidIdCount != 0d || duplicateIdCount != 0d) {
-      double duplicatePercent =
-          (invalidIdCount + duplicateIdCount)
-              * 100
-              / (invalidIdCount + duplicateIdCount + uniqieIdCount);
-
-      if (duplicatePercent > config.failIfDuplicateIdPercent) {
-        log.error(
-            "GBIF IDs hit maximum allowed threshold: allowed - {}%, duplicates - {}%",
-            config.failIfDuplicateIdPercent, duplicatePercent);
-        throw new IllegalArgumentIOException("GBIF IDs hit maximum allowed threshold");
-      } else {
-        log.warn(
-            "GBIF IDs current duplicates rate: allowed - {}%, duplicates - {}%",
-            config.failIfDuplicateIdPercent, duplicatePercent);
-      }
-    }
   }
 
   /** Checks if the directory exists */

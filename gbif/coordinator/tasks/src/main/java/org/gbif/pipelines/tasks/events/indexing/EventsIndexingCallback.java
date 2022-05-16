@@ -1,10 +1,8 @@
 package org.gbif.pipelines.tasks.events.indexing;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Optional;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
 import org.gbif.api.model.pipelines.StepType;
@@ -18,22 +16,30 @@ import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.utils.HdfsUtils;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
 import org.gbif.pipelines.tasks.events.interpretation.EventsInterpretationConfiguration;
 
 /** Callback which is called when the {@link PipelinesEventsMessage} is received. */
 @Slf4j
-@AllArgsConstructor
 public class EventsIndexingCallback
     extends AbstractMessageCallback<PipelinesEventsInterpretedMessage>
     implements StepHandler<PipelinesEventsInterpretedMessage, PipelinesEventsIndexedMessage> {
 
-  private static final ObjectMapper MAPPER = new ObjectMapper();
-
   private final EventsIndexingConfiguration config;
   private final MessagePublisher publisher;
   private final CuratorFramework curator;
+  private final HdfsConfigs hdfsConfigs;
+
+  public EventsIndexingCallback(
+    EventsIndexingConfiguration config, MessagePublisher publisher, CuratorFramework curator
+  ) {
+    this.config = config;
+    this.publisher = publisher;
+    this.curator = curator;
+    hdfsConfigs = HdfsConfigs.create(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);
+  }
 
   @Override
   public void handleMessage(PipelinesEventsInterpretedMessage message) {
@@ -138,8 +144,7 @@ public class EventsIndexingCallback
             Interpretation.DIRECTORY_NAME,
             eventCore);
     int count =
-        HdfsUtils.getFileCount(
-            config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig, eventsPath);
+        HdfsUtils.getFileCount(hdfsConfigs, eventsPath);
     count *= 4;
     if (count < config.sparkConfig.parallelismMin) {
       return config.sparkConfig.parallelismMin;
@@ -232,8 +237,7 @@ public class EventsIndexingCallback
     // TODO: check what metric to read
     Optional<Long> fileNumber =
         HdfsUtils.getLongByKey(
-            config.stepConfig.hdfsSiteConfig,
-            config.stepConfig.coreSiteConfig,
+            hdfsConfigs,
             metaPath,
             Metrics.UNIQUE_GBIF_IDS_COUNT + Metrics.ATTEMPTED);
 

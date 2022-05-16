@@ -2,7 +2,6 @@ package org.gbif.pipelines.tasks.events.interpretation;
 
 import java.io.IOException;
 import java.util.Collections;
-import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
@@ -16,19 +15,29 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation;
 import org.gbif.pipelines.common.utils.HdfsUtils;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
 import org.gbif.pipelines.tasks.events.interpretation.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
 
 /** Callback which is called when the {@link PipelinesEventsMessage} is received. */
 @Slf4j
-@AllArgsConstructor
 public class EventsInterpretationCallback extends AbstractMessageCallback<PipelinesEventsMessage>
     implements StepHandler<PipelinesEventsMessage, PipelinesEventsInterpretedMessage> {
 
   private final EventsInterpretationConfiguration config;
   private final MessagePublisher publisher;
   private final CuratorFramework curator;
+  private final HdfsConfigs hdfsConfigs;
+
+  public EventsInterpretationCallback(
+    EventsInterpretationConfiguration config, MessagePublisher publisher, CuratorFramework curator
+  ) {
+    this.config = config;
+    this.publisher = publisher;
+    this.curator = curator;
+    hdfsConfigs = HdfsConfigs.create(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);
+  }
 
   @Override
   public void handleMessage(PipelinesEventsMessage message) {
@@ -74,8 +83,7 @@ public class EventsInterpretationCallback extends AbstractMessageCallback<Pipeli
         log.info("Deleting old attempts directories");
         String pathToDelete = String.join("/", config.stepConfig.repositoryPath, datasetId);
         HdfsUtils.deleteSubFolders(
-            config.stepConfig.hdfsSiteConfig,
-            config.stepConfig.coreSiteConfig,
+            hdfsConfigs,
             pathToDelete,
             config.deleteAfterDays,
             Collections.singleton(attempt));
@@ -136,8 +144,7 @@ public class EventsInterpretationCallback extends AbstractMessageCallback<Pipeli
             attempt,
             Interpretation.DIRECTORY_NAME);
 
-    return HdfsUtils.exists(
-        config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig, path);
+    return HdfsUtils.exists(hdfsConfigs, path);
   }
 
   /**
