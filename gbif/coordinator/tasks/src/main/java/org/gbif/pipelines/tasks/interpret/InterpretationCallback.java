@@ -167,12 +167,6 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
       eventRecordsNumber = message.getValidationResult().getNumberOfEventRecords();
     }
 
-    Long eventRecordsNumber = null;
-    if (message.getValidationResult() != null
-        && message.getValidationResult().getNumberOfEventRecords() != null) {
-      eventRecordsNumber = message.getValidationResult().getNumberOfEventRecords();
-    }
-
     boolean repeatAttempt = pathExists(message);
     return new PipelinesInterpretedMessage(
         message.getDatasetUuid(),
