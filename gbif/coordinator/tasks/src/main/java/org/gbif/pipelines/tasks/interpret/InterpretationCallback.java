@@ -161,6 +161,11 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
         && message.getValidationResult().getNumberOfRecords() != null) {
       recordsNumber = message.getValidationResult().getNumberOfRecords();
     }
+    Long eventRecordsNumber = null;
+    if (message.getValidationResult() != null
+        && message.getValidationResult().getNumberOfEventRecords() != null) {
+      eventRecordsNumber = message.getValidationResult().getNumberOfEventRecords();
+    }
 
     Long eventRecordsNumber = null;
     if (message.getValidationResult() != null

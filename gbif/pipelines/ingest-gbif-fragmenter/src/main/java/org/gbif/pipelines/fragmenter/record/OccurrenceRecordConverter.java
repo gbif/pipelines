@@ -20,13 +20,14 @@ public class OccurrenceRecordConverter {
       UniquenessValidator validator,
       boolean useTriplet,
       boolean useOccurrenceId,
+      boolean generateIfAbsent,
       List<OccurrenceRecord> recordUnitList) {
 
     Function<OccurrenceRecord, String> keyFn =
         ru -> {
           Long key = Keygen.getErrorKey();
           try {
-            key = Keygen.getKey(keygenService, useTriplet, useOccurrenceId, ru);
+            key = Keygen.getKey(keygenService, useTriplet, useOccurrenceId, generateIfAbsent, ru);
           } catch (RuntimeException ex) {
             log.error(ex.getMessage(), ex);
           }

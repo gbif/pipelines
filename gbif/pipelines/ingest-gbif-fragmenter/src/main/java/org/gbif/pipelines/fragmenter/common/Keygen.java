@@ -23,6 +23,7 @@ public class Keygen {
       HBaseLockingKeyService keygenService,
       boolean useTriplet,
       boolean useOccurrenceId,
+      boolean generateIfAbsent,
       OccurrenceRecord record) {
 
     Set<String> uniqueStrings = new HashSet<>(2);
@@ -49,7 +50,12 @@ public class Keygen {
 
     KeyLookupResult keyResult = null;
     try {
+      // Finds or generates key
       keyResult = keygenService.findKey(uniqueStrings);
+      if (keyResult == null && generateIfAbsent) {
+        log.error("GBIF ID wasn't found, generating a new key.");
+        keyResult = keygenService.generateKey(uniqueStrings);
+      }
     } catch (RuntimeException ex) {
       log.error(ex.getMessage(), ex);
     }

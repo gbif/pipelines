@@ -76,7 +76,7 @@ public class ProcessRunnerBuilderTest {
             null,
             EndpointType.DWC_ARCHIVE,
             "something",
-            new ValidationResult(true, true, true, null),
+            new ValidationResult(true, true, true, null, null),
             null,
             EXECUTION_ID,
             null);
@@ -146,7 +146,7 @@ public class ProcessRunnerBuilderTest {
             null,
             EndpointType.DWC_ARCHIVE,
             "something",
-            new ValidationResult(true, true, true, null),
+            new ValidationResult(true, true, true, null, null),
             null,
             EXECUTION_ID,
             null);

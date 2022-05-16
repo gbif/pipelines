@@ -172,7 +172,12 @@ public class GbifIdTransformTest {
             .build();
 
     // Expected
-    GbifIdRecord gir = GbifIdRecord.newBuilder().setId(id).setGbifId(Long.valueOf(id)).build();
+    GbifIdRecord gir =
+        GbifIdRecord.newBuilder()
+            .setId(id)
+            .setGbifId(Long.valueOf(id))
+            .setOccurrenceId("value")
+            .build();
 
     // When
     GbifIdTransform gbifIdTransform =
