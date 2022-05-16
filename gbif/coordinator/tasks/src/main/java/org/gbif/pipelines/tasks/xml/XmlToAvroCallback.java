@@ -25,6 +25,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.gbif.api.model.crawler.FinishReason;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
@@ -154,16 +155,17 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
     }
 
     return new PipelinesVerbatimMessage(
-        message.getDatasetUuid(),
-        message.getAttempt(),
-        getAllInterpretationAsString(),
-        message.getPipelineSteps(),
-        null,
-        message.getEndpointType(),
-        null,
-        new ValidationResult(true, true, null, null),
-        null,
-        null);
+      message.getDatasetUuid(),
+      message.getAttempt(),
+      getAllInterpretationAsString(),
+      message.getPipelineSteps(),
+      null,
+      message.getEndpointType(),
+      null,
+      new ValidationResult(true, true, false, null, null),
+      null,
+      message.getExecutionId(),
+      DatasetType.OCCURRENCE);
   }
 
   @Override
