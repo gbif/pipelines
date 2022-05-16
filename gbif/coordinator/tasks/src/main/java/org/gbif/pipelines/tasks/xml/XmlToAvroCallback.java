@@ -155,17 +155,17 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
     }
 
     return new PipelinesVerbatimMessage(
-      message.getDatasetUuid(),
-      message.getAttempt(),
-      getAllInterpretationAsString(),
-      message.getPipelineSteps(),
-      null,
-      message.getEndpointType(),
-      null,
-      new ValidationResult(true, true, false, null, null),
-      null,
-      message.getExecutionId(),
-      DatasetType.OCCURRENCE);
+        message.getDatasetUuid(),
+        message.getAttempt(),
+        getAllInterpretationAsString(),
+        message.getPipelineSteps(),
+        null,
+        message.getEndpointType(),
+        null,
+        new ValidationResult(true, true, false, null, null),
+        null,
+        message.getExecutionId(),
+        DatasetType.OCCURRENCE);
   }
 
   @Override

@@ -31,12 +31,14 @@ public class EventsInterpretationCallback extends AbstractMessageCallback<Pipeli
   private final HdfsConfigs hdfsConfigs;
 
   public EventsInterpretationCallback(
-    EventsInterpretationConfiguration config, MessagePublisher publisher, CuratorFramework curator
-  ) {
+      EventsInterpretationConfiguration config,
+      MessagePublisher publisher,
+      CuratorFramework curator) {
     this.config = config;
     this.publisher = publisher;
     this.curator = curator;
-    hdfsConfigs = HdfsConfigs.create(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);
+    hdfsConfigs =
+        HdfsConfigs.create(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);
   }
 
   @Override
@@ -83,10 +85,7 @@ public class EventsInterpretationCallback extends AbstractMessageCallback<Pipeli
         log.info("Deleting old attempts directories");
         String pathToDelete = String.join("/", config.stepConfig.repositoryPath, datasetId);
         HdfsUtils.deleteSubFolders(
-            hdfsConfigs,
-            pathToDelete,
-            config.deleteAfterDays,
-            Collections.singleton(attempt));
+            hdfsConfigs, pathToDelete, config.deleteAfterDays, Collections.singleton(attempt));
       } catch (Exception ex) {
         log.error(ex.getMessage(), ex);
         throw new IllegalStateException(

@@ -33,12 +33,12 @@ public class EventsIndexingCallback
   private final HdfsConfigs hdfsConfigs;
 
   public EventsIndexingCallback(
-    EventsIndexingConfiguration config, MessagePublisher publisher, CuratorFramework curator
-  ) {
+      EventsIndexingConfiguration config, MessagePublisher publisher, CuratorFramework curator) {
     this.config = config;
     this.publisher = publisher;
     this.curator = curator;
-    hdfsConfigs = HdfsConfigs.create(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);
+    hdfsConfigs =
+        HdfsConfigs.create(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);
   }
 
   @Override
@@ -143,8 +143,7 @@ public class EventsIndexingCallback
             Events.EVENTS_DIR,
             Interpretation.DIRECTORY_NAME,
             eventCore);
-    int count =
-        HdfsUtils.getFileCount(hdfsConfigs, eventsPath);
+    int count = HdfsUtils.getFileCount(hdfsConfigs, eventsPath);
     count *= 4;
     if (count < config.sparkConfig.parallelismMin) {
       return config.sparkConfig.parallelismMin;
@@ -237,9 +236,7 @@ public class EventsIndexingCallback
     // TODO: check what metric to read
     Optional<Long> fileNumber =
         HdfsUtils.getLongByKey(
-            hdfsConfigs,
-            metaPath,
-            Metrics.UNIQUE_GBIF_IDS_COUNT + Metrics.ATTEMPTED);
+            hdfsConfigs, metaPath, Metrics.UNIQUE_GBIF_IDS_COUNT + Metrics.ATTEMPTED);
 
     if (messageNumber == null && !fileNumber.isPresent()) {
       throw new IllegalArgumentException(

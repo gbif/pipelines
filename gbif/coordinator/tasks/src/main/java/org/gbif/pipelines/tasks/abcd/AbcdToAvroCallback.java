@@ -116,17 +116,17 @@ public class AbcdToAvroCallback extends AbstractMessageCallback<PipelinesAbcdMes
     }
 
     return new PipelinesVerbatimMessage(
-      message.getDatasetUuid(),
-      message.getAttempt(),
-      getAllInterpretationAsString(),
-      message.getPipelineSteps(),
-      null,
-      message.getEndpointType(),
-      null,
-      new ValidationResult(true, true, false, null, null),
-      null,
-      null,
-      DatasetType.OCCURRENCE);
+        message.getDatasetUuid(),
+        message.getAttempt(),
+        getAllInterpretationAsString(),
+        message.getPipelineSteps(),
+        null,
+        message.getEndpointType(),
+        null,
+        new ValidationResult(true, true, false, null, null),
+        null,
+        null,
+        DatasetType.OCCURRENCE);
   }
 
   @Override
