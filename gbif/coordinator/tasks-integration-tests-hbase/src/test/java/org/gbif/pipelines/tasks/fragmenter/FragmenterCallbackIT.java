@@ -47,7 +47,7 @@ public class FragmenterCallbackIT {
   private static final String REPO_PATH = "/dataset/";
   private static final String FRAGMENTER_LABEL = StepType.FRAGMENTER.getLabel();
   private static final ValidationResult VALIDATION_RESULT =
-      new ValidationResult(true, true, false, 0L);
+      new ValidationResult(true, true, false, 0L, null);
   private static CuratorFramework curator;
   private static TestingServer server;
   private static MessagePublisherStub publisher;
@@ -106,6 +106,7 @@ public class FragmenterCallbackIT {
             attempt,
             new HashSet<>(Arrays.asList(StepType.HDFS_VIEW.name(), StepType.FRAGMENTER.name())),
             (long) expSize,
+            null,
             StepRunner.STANDALONE.name(),
             true,
             null,
@@ -113,7 +114,8 @@ public class FragmenterCallbackIT {
             null,
             endpointType,
             VALIDATION_RESULT,
-            Collections.singleton(OCCURRENCE.name()));
+            Collections.singleton(OCCURRENCE.name()),
+            null);
 
     FragmenterCallback callback =
         new FragmenterCallback(
@@ -166,6 +168,7 @@ public class FragmenterCallbackIT {
             attempt,
             new HashSet<>(Arrays.asList(StepType.HDFS_VIEW.name(), StepType.FRAGMENTER.name())),
             (long) expSize,
+            null,
             StepRunner.DISTRIBUTED.name(),
             true,
             null,
@@ -173,7 +176,8 @@ public class FragmenterCallbackIT {
             null,
             endpointType,
             VALIDATION_RESULT,
-            Collections.singleton(OCCURRENCE.name()));
+            Collections.singleton(OCCURRENCE.name()),
+            null);
 
     FragmenterCallback callback =
         new FragmenterCallback(
@@ -226,6 +230,7 @@ public class FragmenterCallbackIT {
             attempt,
             new HashSet<>(Arrays.asList(StepType.HDFS_VIEW.name(), StepType.FRAGMENTER.name())),
             (long) expSize,
+            null,
             StepRunner.STANDALONE.name(),
             true,
             null,
@@ -233,7 +238,8 @@ public class FragmenterCallbackIT {
             null,
             endpointType,
             VALIDATION_RESULT,
-            Collections.singleton(OCCURRENCE.name()));
+            Collections.singleton(OCCURRENCE.name()),
+            null);
 
     FragmenterCallback callback =
         new FragmenterCallback(
@@ -284,6 +290,7 @@ public class FragmenterCallbackIT {
             attempt,
             Collections.singleton(StepType.HDFS_VIEW.name()),
             (long) expSize,
+            null,
             StepRunner.STANDALONE.name(),
             true,
             null,
@@ -291,7 +298,8 @@ public class FragmenterCallbackIT {
             null,
             endpointType,
             VALIDATION_RESULT,
-            Collections.singleton(OCCURRENCE.name()));
+            Collections.singleton(OCCURRENCE.name()),
+            null);
 
     FragmenterCallback callback =
         new FragmenterCallback(
@@ -334,6 +342,7 @@ public class FragmenterCallbackIT {
             attempt,
             Collections.singleton(StepType.HDFS_VIEW.name()),
             (long) expSize,
+            null,
             StepRunner.STANDALONE.name(),
             true,
             null,
@@ -341,7 +350,8 @@ public class FragmenterCallbackIT {
             null,
             endpointType,
             VALIDATION_RESULT,
-            Collections.singleton(OCCURRENCE.name()));
+            Collections.singleton(OCCURRENCE.name()),
+            null);
 
     FragmenterCallback callback =
         new FragmenterCallback(

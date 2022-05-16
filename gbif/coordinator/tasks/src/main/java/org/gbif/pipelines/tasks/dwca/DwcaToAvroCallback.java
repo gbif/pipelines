@@ -15,6 +15,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.file.CodecFactory;
 import org.apache.curator.framework.CuratorFramework;
+import org.gbif.api.model.crawler.GenericValidationReport;
 import org.gbif.api.model.crawler.OccurrenceValidationReport;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.AbstractMessageCallback;
@@ -156,9 +157,16 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
     // Common variables
     OccurrenceValidationReport report = message.getValidationReport().getOccurrenceReport();
     Long numberOfRecords = report == null ? null : (long) report.getCheckedRecords();
+    GenericValidationReport genericReport = message.getValidationReport().getGenericReport();
+    Long numberOfEventRecords =
+        genericReport == null ? null : (long) genericReport.getCheckedRecords();
     ValidationResult validationResult =
         new ValidationResult(
-            tripletsValid(report), occurrenceIdsValid(report), null, numberOfRecords);
+            tripletsValid(report),
+            occurrenceIdsValid(report),
+            null,
+            numberOfRecords,
+            numberOfEventRecords);
 
     return new PipelinesVerbatimMessage(
         message.getDatasetUuid(),
@@ -170,7 +178,8 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
         null,
         validationResult,
         null,
-        null);
+        null,
+        message.getDatasetType());
   }
 
   /**

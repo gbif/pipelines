@@ -70,13 +70,15 @@ public class ProcessRunnerBuilderTest {
             steps,
             null,
             null,
+            null,
             false,
             null,
             null,
             null,
             EndpointType.DWC_ARCHIVE,
             vr,
-            Collections.singleton(OCCURRENCE.name()));
+            Collections.singleton(OCCURRENCE.name()),
+            null);
 
     // Expected
     ProcessBuilder builder =
@@ -143,13 +145,15 @@ public class ProcessRunnerBuilderTest {
             steps,
             100L,
             null,
+            null,
             false,
             null,
             null,
             null,
             EndpointType.DWC_ARCHIVE,
             vr,
-            Collections.singleton(OCCURRENCE.name()));
+            Collections.singleton(OCCURRENCE.name()),
+            null);
 
     // Expected
     ProcessBuilder builder =

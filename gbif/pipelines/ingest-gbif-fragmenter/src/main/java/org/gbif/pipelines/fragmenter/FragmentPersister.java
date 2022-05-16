@@ -84,6 +84,8 @@ public class FragmentPersister {
 
   @Builder.Default private boolean useSyncMode = true;
 
+  @Builder.Default private boolean generateIdIfAbsent = false;
+
   @Builder.Default private ExecutorService executor = Executors.newSingleThreadExecutor();
 
   private Integer backPressure;
@@ -126,7 +128,7 @@ public class FragmentPersister {
           l -> {
             Map<String, String> map =
                 OccurrenceRecordConverter.convert(
-                    keygenService, validator, useTriplet, useOccurrenceId, l);
+                    keygenService, validator, useTriplet, useOccurrenceId, generateIdIfAbsent, l);
             HbaseStore.putRecords(table, datasetKey, attempt, endpointType, map);
 
             int recordsReturned = occurrenceCounter.addAndGet(map.size());

@@ -114,7 +114,8 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
         message.getExtraPath(),
         message.getValidationResult(),
         message.getResetPrefix(),
-        message.getExecutionId());
+        message.getExecutionId(),
+        message.getDatasetType());
   }
 
   private void runDistributed(PipelinesVerbatimMessage message, ProcessRunnerBuilderBuilder builder)

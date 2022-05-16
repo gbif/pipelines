@@ -161,6 +161,11 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
         && message.getValidationResult().getNumberOfRecords() != null) {
       recordsNumber = message.getValidationResult().getNumberOfRecords();
     }
+    Long eventRecordsNumber = null;
+    if (message.getValidationResult() != null
+        && message.getValidationResult().getNumberOfEventRecords() != null) {
+      eventRecordsNumber = message.getValidationResult().getNumberOfEventRecords();
+    }
 
     boolean repeatAttempt = pathExists(message);
 
@@ -169,6 +174,7 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
         message.getAttempt(),
         message.getPipelineSteps(),
         recordsNumber,
+        eventRecordsNumber,
         null, // Set in balancer cli
         repeatAttempt,
         message.getResetPrefix(),
@@ -176,7 +182,8 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
         null,
         message.getEndpointType(),
         message.getValidationResult(),
-        message.getInterpretTypes());
+        message.getInterpretTypes(),
+        message.getDatasetType());
   }
 
   private void runLocal(ProcessRunnerBuilderBuilder builder) {

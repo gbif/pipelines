@@ -73,13 +73,15 @@ public class ProcessRunnerBuilderTest {
             steps,
             null,
             null,
+            null,
             false,
             null,
             null,
             null,
             EndpointType.DWC_ARCHIVE,
             vr,
-            Collections.singleton(OCCURRENCE.name()));
+            Collections.singleton(OCCURRENCE.name()),
+            null);
 
     String indexName = "occurrence";
 
@@ -150,13 +152,15 @@ public class ProcessRunnerBuilderTest {
             Collections.singleton(StepType.VALIDATOR_INTERPRETED_TO_INDEX.name()),
             100L,
             null,
+            null,
             false,
             null,
             null,
             null,
             EndpointType.DWC_ARCHIVE,
             vr,
-            steps);
+            steps,
+            null);
 
     String indexName = "occurrence";
 

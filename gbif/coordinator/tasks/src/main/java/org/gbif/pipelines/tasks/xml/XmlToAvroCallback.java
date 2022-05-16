@@ -161,7 +161,8 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
         null,
         message.getEndpointType(),
         null,
-        new ValidationResult(true, true, null, null),
+        new ValidationResult(true, true, null, null, null),
+        null,
         null,
         null);
   }

@@ -52,6 +52,7 @@ public class InterpretedMessageHandler {
             m.getAttempt(),
             m.getPipelineSteps(),
             recordsNumber,
+            m.getNumberOfEventRecords(),
             runner,
             m.isRepeatAttempt(),
             m.getResetPrefix(),
@@ -59,7 +60,8 @@ public class InterpretedMessageHandler {
             m.getExecutionId(),
             m.getEndpointType(),
             m.getValidationResult(),
-            m.getInterpretTypes());
+            m.getInterpretTypes(),
+            m.getDatasetType());
 
     publisher.send(outputMessage);
 
