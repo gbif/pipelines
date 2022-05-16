@@ -103,6 +103,7 @@ public class FragmenterCallback extends AbstractMessageCallback<PipelinesInterpr
               .useSyncMode(useSync)
               .backPressure(config.backPressure)
               .batchSize(config.batchSize)
+              .generateIdIfAbsent(config.generateIdIfAbsent)
               .build()
               .persist();
 

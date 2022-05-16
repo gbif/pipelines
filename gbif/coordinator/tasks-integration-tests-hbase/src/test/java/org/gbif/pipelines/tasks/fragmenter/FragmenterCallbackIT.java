@@ -93,6 +93,7 @@ public class FragmenterCallbackIT {
     config.dwcaArchiveRepository = getClass().getResource(DWCA_INPUT_DATASET_DIR).getFile();
     config.stepConfig.repositoryPath = getClass().getResource(REPO_PATH).getFile();
     config.asyncThreshold = 1_000;
+    config.generateIdIfAbsent = true;
 
     UUID uuid = UUID.fromString(DWCA_DATASET_UUID);
     int attempt = 2;
@@ -155,6 +156,7 @@ public class FragmenterCallbackIT {
     config.xmlArchiveRepositoryAbcd = "abcd";
     config.xmlArchiveRepositoryXml = "xml";
     config.stepConfig.repositoryPath = getClass().getResource(REPO_PATH).getFile();
+    config.generateIdIfAbsent = true;
 
     UUID uuid = UUID.fromString("830c56c4-57bf-4858-9795-c1f8c7ff9b1e");
     int attempt = 61;
@@ -217,6 +219,7 @@ public class FragmenterCallbackIT {
     config.xmlArchiveRepositoryAbcd = "abcd";
     config.xmlArchiveRepositoryXml = "xml";
     config.stepConfig.repositoryPath = getClass().getResource(REPO_PATH).getFile();
+    config.generateIdIfAbsent = true;
 
     UUID uuid = UUID.fromString("7ef15372-1387-11e2-bb2e-00145eb45e9a");
     int attempt = 61;
@@ -277,6 +280,7 @@ public class FragmenterCallbackIT {
     config.hbaseFragmentsTable = HbaseServer.FRAGMENT_TABLE_NAME;
     config.dwcaArchiveRepository = getClass().getResource(DWCA_INPUT_DATASET_DIR).getFile();
     config.stepConfig.repositoryPath = getClass().getResource(REPO_PATH).getFile();
+    config.generateIdIfAbsent = true;
 
     UUID uuid = UUID.fromString(DWCA_DATASET_UUID);
     int attempt = 2;
@@ -329,6 +333,7 @@ public class FragmenterCallbackIT {
     config.hbaseFragmentsTable = HbaseServer.FRAGMENT_TABLE_NAME;
     config.dwcaArchiveRepository = getClass().getResource(DWCA_INPUT_DATASET_DIR).getFile();
     config.stepConfig.repositoryPath = getClass().getResource(REPO_PATH).getFile();
+    config.generateIdIfAbsent = true;
 
     UUID uuid = UUID.fromString(DWCA_DATASET_UUID);
     int attempt = 2;
