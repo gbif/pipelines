@@ -18,6 +18,7 @@ import org.apache.commons.io.filefilter.HiddenFileFilter;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.http.client.HttpClient;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesAbcdMessage;
@@ -115,16 +116,17 @@ public class AbcdToAvroCallback extends AbstractMessageCallback<PipelinesAbcdMes
     }
 
     return new PipelinesVerbatimMessage(
-        message.getDatasetUuid(),
-        message.getAttempt(),
-        getAllInterpretationAsString(),
-        message.getPipelineSteps(),
-        null,
-        message.getEndpointType(),
-        null,
-        new ValidationResult(true, true, null, null),
-        null,
-        null);
+      message.getDatasetUuid(),
+      message.getAttempt(),
+      getAllInterpretationAsString(),
+      message.getPipelineSteps(),
+      null,
+      message.getEndpointType(),
+      null,
+      new ValidationResult(true, true, false, null, null),
+      null,
+      null,
+      DatasetType.OCCURRENCE);
   }
 
   @Override
