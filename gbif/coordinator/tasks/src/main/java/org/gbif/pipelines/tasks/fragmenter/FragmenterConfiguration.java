@@ -60,6 +60,9 @@ public class FragmenterConfiguration implements BaseConfiguration {
   @Parameter(names = "--back-pressure")
   public Integer backPressure;
 
+  @Parameter(names = "--generate-id-if-absent")
+  public boolean generateIdIfAbsent = false;
+
   @Override
   public String getHdfsSiteConfig() {
     return stepConfig.hdfsSiteConfig;
