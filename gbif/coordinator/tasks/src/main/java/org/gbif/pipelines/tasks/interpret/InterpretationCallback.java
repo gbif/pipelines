@@ -156,14 +156,11 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
 
   @Override
   public PipelinesInterpretedMessage createOutgoingMessage(PipelinesVerbatimMessage message) {
+
     Long recordsNumber = null;
-    if (message.getValidationResult() != null
-        && message.getValidationResult().getNumberOfRecords() != null) {
-      recordsNumber = message.getValidationResult().getNumberOfRecords();
-    }
     Long eventRecordsNumber = null;
-    if (message.getValidationResult() != null
-        && message.getValidationResult().getNumberOfEventRecords() != null) {
+    if (message.getValidationResult() != null) {
+      recordsNumber = message.getValidationResult().getNumberOfRecords();
       eventRecordsNumber = message.getValidationResult().getNumberOfEventRecords();
     }
 
