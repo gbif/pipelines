@@ -227,13 +227,4 @@ public class CoordinateParseUtilsTest {
       assertTrue(pr.getIssues().contains(iss.name()));
     }
   }
-
-  @Test
-  public void parsePointFootprintWKTTest() {
-    ParsedField<LatLng> result = CoordinateParseUtils.parseLatLng("-43.9293", "+12.09");
-    System.out.println(result.getResult());
-
-    result = CoordinateParseUtils.parsePointFootprintWKT("POINT((12.09 -43.9293))");
-    System.out.println(result.getResult());
-  }
 }
