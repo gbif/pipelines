@@ -20,6 +20,7 @@ import org.gbif.common.messaging.api.messages.PipelinesHdfsViewBuiltMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
+import org.gbif.pipelines.common.interpretation.SparkSettings;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.ingest.java.pipelines.InterpretedToHdfsViewPipeline;
@@ -123,12 +124,14 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
       PipelinesInterpretedMessage message, ProcessRunnerBuilderBuilder builder)
       throws IOException, InterruptedException {
 
+    SparkSettings sparkSettings = SparkSettings.create(config.sparkConfig, config.stepConfig);
+
     long recordNumber = getRecordNumber(message);
-    int sparkExecutorNumbers = computeSparkExecutorNumbers(recordNumber);
+    int sparkExecutorNumbers = sparkSettings.computeExecutorNumbers(recordNumber);
 
     builder
-        .sparkParallelism(computeSparkParallelism(sparkExecutorNumbers))
-        .sparkExecutorMemory(computeSparkExecutorMemory(sparkExecutorNumbers))
+        .sparkParallelism(sparkSettings.computeParallelism(sparkExecutorNumbers))
+        .sparkExecutorMemory(sparkSettings.computeExecutorMemory(sparkExecutorNumbers))
         .sparkExecutorNumbers(sparkExecutorNumbers);
 
     // Assembles a terminal java process and runs it
@@ -139,58 +142,6 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
     } else {
       log.info("Process has been finished with exit value - {}", exitValue);
     }
-  }
-
-  /**
-   * Compute the number of thread for spark.default.parallelism, top limit is
-   * config.sparkParallelismMax Remember YARN will create the same number of files
-   */
-  private int computeSparkParallelism(int executorNumbers) {
-    int count = executorNumbers * config.sparkConfig.executorCores * 2;
-
-    if (count < config.sparkConfig.parallelismMin) {
-      return config.sparkConfig.parallelismMin;
-    }
-    if (count > config.sparkConfig.parallelismMax) {
-      return config.sparkConfig.parallelismMax;
-    }
-    return count;
-  }
-
-  /**
-   * Computes the memory for executor in Gb, where min is config.sparkConfig.executorMemoryGbMin and
-   * max is config.sparkConfig.executorMemoryGbMax
-   */
-  private String computeSparkExecutorMemory(int sparkExecutorNumbers) {
-
-    if (sparkExecutorNumbers < config.sparkConfig.executorMemoryGbMin) {
-      return config.sparkConfig.executorMemoryGbMin + "G";
-    }
-    if (sparkExecutorNumbers > config.sparkConfig.executorMemoryGbMax) {
-      return config.sparkConfig.executorMemoryGbMax + "G";
-    }
-    return sparkExecutorNumbers + "G";
-  }
-
-  /**
-   * Computes the numbers of executors, where min is config.sparkConfig.executorNumbersMin and max
-   * is config.sparkConfig.executorNumbersMax
-   */
-  private int computeSparkExecutorNumbers(long recordsNumber) {
-    int sparkExecutorNumbers =
-        (int)
-            Math.ceil(
-                recordsNumber
-                    / (config.sparkConfig.executorCores
-                        * config.sparkConfig.recordsPerThread
-                        * 1f));
-    if (sparkExecutorNumbers < config.sparkConfig.executorNumbersMin) {
-      return config.sparkConfig.executorNumbersMin;
-    }
-    if (sparkExecutorNumbers > config.sparkConfig.executorNumbersMax) {
-      return config.sparkConfig.executorNumbersMax;
-    }
-    return sparkExecutorNumbers;
   }
 
   /**
