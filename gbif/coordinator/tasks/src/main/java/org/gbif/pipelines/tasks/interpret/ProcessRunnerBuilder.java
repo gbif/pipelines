@@ -1,6 +1,6 @@
 package org.gbif.pipelines.tasks.interpret;
 
-import static org.gbif.pipelines.common.utils.ValidatorPredicate.isValidator;
+import static org.gbif.pipelines.common.ValidatorPredicate.isValidator;
 
 import java.io.File;
 import java.util.Objects;

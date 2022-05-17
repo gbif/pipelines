@@ -1,12 +1,10 @@
 package org.gbif.pipelines.tasks.xml;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.getAllInterpretationAsString;
+import static org.gbif.pipelines.common.ValidatorPredicate.isValidator;
 import static org.gbif.pipelines.common.utils.HdfsUtils.buildOutputPath;
 import static org.gbif.pipelines.common.utils.PathUtil.buildXmlInputPath;
-import static org.gbif.pipelines.common.utils.ValidatorPredicate.isValidator;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -19,10 +17,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.file.CodecFactory;
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpUriRequest;
 import org.gbif.api.model.crawler.FinishReason;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.DatasetType;
@@ -33,6 +28,7 @@ import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage.Validatio
 import org.gbif.common.messaging.api.messages.PipelinesXmlMessage;
 import org.gbif.common.messaging.api.messages.Platform;
 import org.gbif.converters.XmlToAvroConverter;
+import org.gbif.pipelines.common.GbifApi;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
@@ -49,7 +45,6 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
     implements StepHandler<PipelinesXmlMessage, PipelinesVerbatimMessage> {
 
   public static final int SKIP_RECORDS_CHECK = -1;
-  private static final ObjectMapper MAPPER = new ObjectMapper();
 
   private final XmlToAvroConfiguration config;
   private final MessagePublisher publisher;
@@ -190,7 +185,7 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
     if (expectedRecords == SKIP_RECORDS_CHECK || httpClient == null) {
       return;
     }
-    int currentSize = getIndexSize(config, httpClient, datasetId);
+    int currentSize = GbifApi.getIndexSize(httpClient, config.stepConfig.registry, datasetId);
     String metaFileName = new DwcaToAvroConfiguration().metaFileName;
     String metaPath =
         String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, metaFileName);
@@ -217,19 +212,5 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
                 + " the dataset conversion from xml to avro got less 80% of records");
       }
     }
-  }
-
-  /** Get number of record using Occurrence API */
-  private int getIndexSize(XmlToAvroConfiguration config, HttpClient httpClient, String datasetId)
-      throws IOException {
-    String url =
-        config.stepConfig.registry.wsUrl + "/occurrence/search?limit=0&datasetKey=" + datasetId;
-    HttpUriRequest httpGet = new HttpGet(url);
-    HttpResponse response = httpClient.execute(httpGet);
-    if (response.getStatusLine().getStatusCode() != 200) {
-      throw new IOException(
-          "Occurrence search API exception " + response.getStatusLine().getReasonPhrase());
-    }
-    return MAPPER.readTree(response.getEntity().getContent()).findValue("count").asInt();
   }
 }

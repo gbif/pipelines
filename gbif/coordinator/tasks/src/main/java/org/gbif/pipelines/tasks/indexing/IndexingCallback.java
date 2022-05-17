@@ -1,6 +1,6 @@
 package org.gbif.pipelines.tasks.indexing;
 
-import static org.gbif.pipelines.common.utils.ValidatorPredicate.isValidator;
+import static org.gbif.pipelines.common.ValidatorPredicate.isValidator;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;

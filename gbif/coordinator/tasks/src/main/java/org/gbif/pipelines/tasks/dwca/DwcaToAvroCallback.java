@@ -1,8 +1,8 @@
 package org.gbif.pipelines.tasks.dwca;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.getAllInterpretationAsString;
+import static org.gbif.pipelines.common.ValidatorPredicate.isValidator;
 import static org.gbif.pipelines.common.utils.PathUtil.buildDwcaInputPath;
-import static org.gbif.pipelines.common.utils.ValidatorPredicate.isValidator;
 
 import java.nio.file.Path;
 import java.util.Arrays;

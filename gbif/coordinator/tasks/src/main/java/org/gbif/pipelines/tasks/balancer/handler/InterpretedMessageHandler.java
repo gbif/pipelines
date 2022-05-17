@@ -1,6 +1,6 @@
 package org.gbif.pipelines.tasks.balancer.handler;
 
-import static org.gbif.pipelines.common.utils.ValidatorPredicate.isValidator;
+import static org.gbif.pipelines.common.ValidatorPredicate.isValidator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;

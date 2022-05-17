@@ -1,4 +1,4 @@
-package org.gbif.pipelines.common.utils;
+package org.gbif.pipelines.common;
 
 import java.util.Set;
 import lombok.AccessLevel;

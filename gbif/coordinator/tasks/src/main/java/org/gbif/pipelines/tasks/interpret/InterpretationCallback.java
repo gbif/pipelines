@@ -3,15 +3,13 @@ package org.gbif.pipelines.tasks.interpret;
 import static org.gbif.common.parsers.date.DateComponentOrdering.DMY_FORMATS;
 import static org.gbif.common.parsers.date.DateComponentOrdering.ISO_FORMATS;
 import static org.gbif.common.parsers.date.DateComponentOrdering.MDY_FORMATS;
-import static org.gbif.pipelines.common.utils.ValidatorPredicate.isValidator;
+import static org.gbif.pipelines.common.ValidatorPredicate.isValidator;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Predicate;
@@ -20,8 +18,6 @@ import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
@@ -30,6 +26,7 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.common.parsers.date.DateComponentOrdering;
+import org.gbif.pipelines.common.GbifApi;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
@@ -37,7 +34,6 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.ingest.java.pipelines.VerbatimToInterpretedPipeline;
-import org.gbif.pipelines.tasks.MachineTag;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
 import org.gbif.pipelines.tasks.dwca.DwcaToAvroConfiguration;
@@ -312,21 +308,10 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
 
   @SneakyThrows
   private String getDefaultDateFormat(String datasetKey) {
-    String url = config.stepConfig.registry.wsUrl + "/dataset/" + datasetKey + "/machineTag";
-    HttpResponse response = httpClient.execute(new HttpGet(url));
-    if (response.getStatusLine().getStatusCode() != 200) {
-      throw new IOException("GBIF API exception " + response.getStatusLine().getReasonPhrase());
-    }
-
-    List<MachineTag> machineTags =
-        MAPPER.readValue(
-            response.getEntity().getContent(), new TypeReference<List<MachineTag>>() {});
 
     Optional<String> defaultDateFormat =
-        machineTags.stream()
-            .filter(x -> x.getName().equals("default_date_format"))
-            .map(MachineTag::getValue)
-            .findFirst();
+        GbifApi.getMachineTagValue(
+            httpClient, config.stepConfig.registry, datasetKey, "default_date_format");
 
     if (!defaultDateFormat.isPresent()) {
       return null;
