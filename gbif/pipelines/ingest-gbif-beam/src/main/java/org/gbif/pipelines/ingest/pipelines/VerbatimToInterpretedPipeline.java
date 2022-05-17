@@ -68,7 +68,8 @@ import org.slf4j.MDC;
  *      {@link org.gbif.pipelines.io.avro.AudubonRecord},
  *      {@link org.gbif.pipelines.io.avro.TaxonRecord},
  *      {@link org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord},
- *      {@link org.gbif.pipelines.io.avro.LocationRecord}
+ *      {@link org.gbif.pipelines.io.avro.LocationRecord},
+ *      ...etc
  *    3) Writes data to independent files
  * </pre>
  *
@@ -112,13 +113,14 @@ public class VerbatimToInterpretedPipeline {
     Integer attempt = options.getAttempt();
     Set<String> types = options.getInterpretationTypes();
     String targetPath = options.getTargetPath();
-    HdfsConfigs hdfsConfigs =
-        HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig());
-    TransformsFactory transformsFactory = TransformsFactory.create(options);
 
     MDC.put("datasetKey", datasetId);
     MDC.put("attempt", attempt.toString());
     MDC.put("step", StepType.VERBATIM_TO_INTERPRETED.name());
+
+    HdfsConfigs hdfsConfigs =
+        HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig());
+    TransformsFactory transformsFactory = TransformsFactory.create(options);
 
     // Remove directories with avro files for expected interpretation, except IDENTIFIER
     Set<String> deleteTypes = new HashSet<>(types);

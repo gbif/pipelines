@@ -34,6 +34,7 @@ import org.gbif.pipelines.transforms.common.UniqueGbifIdTransform;
 import org.gbif.pipelines.transforms.common.UniqueIdTransform;
 import org.gbif.pipelines.transforms.converters.OccurrenceExtensionTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
+import org.gbif.pipelines.transforms.core.EventCoreTransform;
 import org.gbif.pipelines.transforms.core.GrscicollTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.TaxonomyTransform;
@@ -48,6 +49,7 @@ import org.gbif.pipelines.transforms.specific.ClusteringTransform;
 import org.gbif.pipelines.transforms.specific.GbifIdAbsentTransform;
 import org.gbif.pipelines.transforms.specific.GbifIdTransform;
 import org.gbif.pipelines.transforms.specific.GbifIdTransform.GbifIdTransformBuilder;
+import org.gbif.pipelines.transforms.specific.IdentifierTransform;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.gbif.rest.client.grscicoll.GrscicollLookupResponse;
 import org.gbif.rest.client.species.NameUsageMatch;
@@ -183,6 +185,21 @@ public class TransformsFactory {
       geocodeServiceSupplier = GeocodeKvStoreFactory.createSupplier(config);
     }
     return LocationTransform.builder().geocodeKvStoreSupplier(geocodeServiceSupplier).create();
+  }
+
+  public EventCoreTransform createEventCoreTransform() {
+    return EventCoreTransform.builder()
+        .vocabularyServiceSupplier(
+            FileVocabularyFactory.builder()
+                .config(config)
+                .hdfsConfigs(hdfsConfigs)
+                .build()
+                .getInstanceSupplier())
+        .create();
+  }
+
+  public IdentifierTransform createIdentifierTransform() {
+    return IdentifierTransform.builder().datasetKey(options.getDatasetId()).create();
   }
 
   public MultimediaTransform createMultimediaTransform() {

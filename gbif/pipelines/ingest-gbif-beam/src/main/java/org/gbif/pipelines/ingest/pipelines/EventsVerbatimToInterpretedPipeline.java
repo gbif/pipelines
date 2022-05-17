@@ -4,7 +4,6 @@ import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
@@ -21,29 +20,17 @@ import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.gbif.api.model.pipelines.StepType;
-import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.kvs.KeyValueStore;
-import org.gbif.kvs.geocode.LatLng;
-import org.gbif.kvs.species.SpeciesMatchRequest;
 import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
-import org.gbif.pipelines.core.config.model.PipelinesConfig;
-import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
-import org.gbif.pipelines.core.ws.metadata.MetadataServiceClient;
-import org.gbif.pipelines.factory.FileVocabularyFactory;
-import org.gbif.pipelines.factory.GeocodeKvStoreFactory;
-import org.gbif.pipelines.factory.MetadataServiceClientFactory;
-import org.gbif.pipelines.factory.NameUsageMatchStoreFactory;
+import org.gbif.pipelines.ingest.pipelines.interpretation.TransformsFactory;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.transforms.common.ExtensionFilterTransform;
-import org.gbif.pipelines.transforms.common.UniqueIdTransform;
 import org.gbif.pipelines.transforms.core.EventCoreTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.TaxonomyTransform;
@@ -54,8 +41,6 @@ import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.gbif.pipelines.transforms.specific.IdentifierTransform;
-import org.gbif.rest.client.geocode.GeocodeResponse;
-import org.gbif.rest.client.species.NameUsageMatch;
 import org.slf4j.MDC;
 
 /**
@@ -103,20 +88,14 @@ public class EventsVerbatimToInterpretedPipeline {
     Integer attempt = options.getAttempt();
     Set<String> types = options.getInterpretationTypes();
     String targetPath = options.getTargetPath();
-    HdfsConfigs hdfsConfigs =
-        HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig());
-
-    PipelinesConfig config =
-        FsUtils.readConfigFile(hdfsConfigs, options.getProperties(), PipelinesConfig.class);
-
-    List<DateComponentOrdering> dateComponentOrdering =
-        options.getDefaultDateFormat() == null
-            ? config.getDefaultDateFormat()
-            : options.getDefaultDateFormat();
 
     MDC.put("datasetKey", datasetId);
     MDC.put("step", StepType.EVENTS_VERBATIM_TO_INTERPRETED.name());
     MDC.put("attempt", attempt.toString());
+
+    HdfsConfigs hdfsConfigs =
+        HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig());
+    TransformsFactory transformsFactory = TransformsFactory.create(options);
 
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
@@ -127,65 +106,16 @@ public class EventsVerbatimToInterpretedPipeline {
     Pipeline p = pipelinesFn.apply(options);
 
     // Used transforms
-    // Init external clients - ws, kv caches, etc
-    SerializableSupplier<MetadataServiceClient> metadataServiceClientSupplier = null;
-    if (options.getUseMetadataWsCalls()) {
-      metadataServiceClientSupplier = MetadataServiceClientFactory.createSupplier(config);
-    }
-
-    SerializableSupplier<KeyValueStore<SpeciesMatchRequest, NameUsageMatch>>
-        nameUsageMatchServiceSupplier = NameUsageMatchStoreFactory.createSupplier(config);
-
-    SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> geocodeServiceSupplier =
-        GeocodeKvStoreFactory.createSupplier(config);
-    if (options.getTestMode()) {
-      metadataServiceClientSupplier = null;
-      geocodeServiceSupplier = null;
-      nameUsageMatchServiceSupplier = null;
-    }
-
-    // Metadata
-    MetadataTransform metadataTransform =
-        MetadataTransform.builder()
-            .clientSupplier(metadataServiceClientSupplier)
-            .attempt(attempt)
-            .endpointType(options.getEndPointType())
-            .create();
-
-    EventCoreTransform eventCoreTransform =
-        EventCoreTransform.builder()
-            .vocabularyServiceSupplier(
-                FileVocabularyFactory.builder()
-                    .config(config)
-                    .hdfsConfigs(hdfsConfigs)
-                    .build()
-                    .getInstanceSupplier())
-            .create();
-
-    IdentifierTransform identifierTransform =
-        IdentifierTransform.builder().datasetKey(datasetId).create();
-
-    VerbatimTransform verbatimTransform = VerbatimTransform.create();
-
-    // TODO START: ALA uses the same LocationRecord but another Transform
-    LocationTransform locationTransform =
-        LocationTransform.builder().geocodeKvStoreSupplier(geocodeServiceSupplier).create();
-    // TODO END: ALA uses the same LocationRecord but another Transform
-
-    TaxonomyTransform taxonomyTransform =
-        TaxonomyTransform.builder().kvStoreSupplier(nameUsageMatchServiceSupplier).create();
-
-    TemporalTransform temporalTransform =
-        TemporalTransform.builder().orderings(dateComponentOrdering).create();
-
-    // Extension
-    MultimediaTransform multimediaTransform =
-        MultimediaTransform.builder().orderings(dateComponentOrdering).create();
-    AudubonTransform audubonTransform =
-        AudubonTransform.builder().orderings(dateComponentOrdering).create();
-    ImageTransform imageTransform =
-        ImageTransform.builder().orderings(dateComponentOrdering).create();
-
+    MetadataTransform metadataTransform = transformsFactory.createMetadataTransform();
+    LocationTransform locationTransform = transformsFactory.createLocationTransform();
+    VerbatimTransform verbatimTransform = transformsFactory.createVerbatimTransform();
+    TemporalTransform temporalTransform = transformsFactory.createTemporalTransform();
+    TaxonomyTransform taxonomyTransform = transformsFactory.createTaxonomyTransform();
+    MultimediaTransform multimediaTransform = transformsFactory.createMultimediaTransform();
+    AudubonTransform audubonTransform = transformsFactory.createAudubonTransform();
+    ImageTransform imageTransform = transformsFactory.createImageTransform();
+    EventCoreTransform eventCoreTransform = transformsFactory.createEventCoreTransform();
+    IdentifierTransform identifierTransform = transformsFactory.createIdentifierTransform();
     log.info("Creating beam pipeline");
 
     // Create and write metadata
@@ -200,18 +130,14 @@ public class EventsVerbatimToInterpretedPipeline {
       metadataRecord = p.apply("Read metadata record", metadataTransform.read(pathFn));
     }
 
-    // Metadata TODO START: Will ALA use it?
     PCollectionView<MetadataRecord> metadataView =
         metadataRecord.apply("Convert to event metadata view", View.asSingleton());
-    // TODO END: Will ALA use it?
 
     // Read raw records and filter duplicates
     PCollection<ExtendedRecord> uniqueRawRecords =
         p.apply("Read event  verbatim", verbatimTransform.read(options.getInputPath()))
-            .apply("Filter event duplicates", UniqueIdTransform.create())
-            .apply(
-                "Filter event extensions",
-                ExtensionFilterTransform.create(config.getExtensionsAllowedForVerbatimSet()));
+            .apply("Filter event duplicates", transformsFactory.createUniqueIdTransform())
+            .apply("Filter event extensions", transformsFactory.createExtensionFilterTransform());
 
     // view with the records that have parents to find the hierarchy in the event core
     // interpretation later
@@ -243,7 +169,6 @@ public class EventsVerbatimToInterpretedPipeline {
         .apply("Interpret event taxonomy", taxonomyTransform.interpret())
         .apply("Write event taxon to avro", taxonomyTransform.write(pathFn));
 
-    // TODO START: DO WE NEED ALL MULTIMEDIA EXTENSIONS?
     uniqueRawRecords
         .apply("Interpret event multimedia", multimediaTransform.interpret())
         .apply("Write event multimedia to avro", multimediaTransform.write(pathFn));
@@ -255,7 +180,6 @@ public class EventsVerbatimToInterpretedPipeline {
     uniqueRawRecords
         .apply("Interpret event image", imageTransform.interpret())
         .apply("Write event image to avro", imageTransform.write(pathFn));
-    // TODO END
 
     uniqueRawRecords
         .apply("Interpret event location", locationTransform.interpret(metadataView))
