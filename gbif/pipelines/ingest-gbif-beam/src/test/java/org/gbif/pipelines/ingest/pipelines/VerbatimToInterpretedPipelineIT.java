@@ -122,6 +122,17 @@ public class VerbatimToInterpretedPipelineIT {
       "--testMode=true"
     };
 
+    // Write GBIF_IDs
+    String postfix = "777";
+    InterpretationPipelineOptions optionsWriter =
+        PipelinesOptionsFactory.createInterpretation(args);
+    GbifIdTransform gbifIdTransform = GbifIdTransform.builder().create();
+    try (SyncDataFileWriter<GbifIdRecord> writer =
+        InterpretedAvroWriter.createAvroWriter(optionsWriter, gbifIdTransform, postfix)) {
+      GbifIdRecord gbifIdRecord = GbifIdRecord.newBuilder().setId(ID).setGbifId(1L).build();
+      writer.append(gbifIdRecord);
+    }
+
     // When, Should
     pipelineTest(args, attempt, outputFile);
   }
