@@ -79,7 +79,7 @@ import org.slf4j.MDC;
  * --datasetId=${UUID} \
  * --attempt=1 \
  * --runner=SparkRunner \
- * --metaFileName=interpreted-to-index.yml \
+ * --metaFileName=occurrence-to-index.yml \
  * --inputPath=${OUT} \
  * --targetPath=${OUT} \
  * --esSchemaPath=/gbif/pipelines/ingest-gbif-beam/src/main/resources/elasticsearch/es-occurrence-schema.json \

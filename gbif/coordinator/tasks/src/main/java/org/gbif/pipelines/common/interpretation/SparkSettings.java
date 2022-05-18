@@ -10,7 +10,7 @@ import org.gbif.pipelines.common.configs.SparkConfiguration;
 import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
-import org.gbif.pipelines.tasks.dwca.DwcaToAvroConfiguration;
+import org.gbif.pipelines.tasks.verbatims.dwca.DwcaToAvroConfiguration;
 
 @Slf4j
 @AllArgsConstructor(staticName = "create")

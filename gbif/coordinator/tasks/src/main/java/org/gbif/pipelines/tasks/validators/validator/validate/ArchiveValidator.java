@@ -1,0 +1,12 @@
+package org.gbif.pipelines.tasks.validators.validator.validate;
+
+import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
+
+public interface ArchiveValidator {
+
+  PipelineBasedMessage createOutgoingMessage();
+
+  default void validate() {
+    // NOP
+  }
+}

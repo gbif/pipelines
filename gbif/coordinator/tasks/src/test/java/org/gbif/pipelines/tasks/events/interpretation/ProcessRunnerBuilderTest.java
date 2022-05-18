@@ -41,7 +41,7 @@ public class ProcessRunnerBuilderTest {
             + "--conf spark.yarn.am.waitTime=360s "
             + "--class org.gbif.Test --master yarn --deploy-mode cluster --executor-memory 1G --executor-cores 1 --num-executors 1 "
             + "--driver-memory 4G java.jar --datasetId=de7ffb5e-c07b-42dc-8a88-f67a4465fe3d --attempt=1 --interpretationTypes=ALL "
-            + "--runner=SparkRunner --targetPath=tmp --metaFileName=events-verbatim-to-interpreted.yml --inputPath=verbatim.avro "
+            + "--runner=SparkRunner --targetPath=tmp --metaFileName=verbatim-to-event.yml --inputPath=verbatim.avro "
             + "--avroCompressionType=SNAPPY --avroSyncInterval=1 --hdfsSiteConfig=hdfs.xml --coreSiteConfig=core.xml "
             + "--properties=/path/ws.config --endPointType=DWC_ARCHIVE --dwcCore=Event";
 

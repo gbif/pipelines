@@ -34,7 +34,7 @@ sudo -u hdfs spark2-submit \
     --inputPath=${VERBATIM_PATH} \
     --runner=SparkRunner \
     --properties=${HDFS_PATH}/${UUID}/1/pipelines.yaml \
-    --metaFileName=verbatim-to-interpreted.yml \
+    --metaFileName=verbatim-to-event.yml \
     --avroCompressionType=snappy \
     --avroSyncInterval=2097152 \
     --hdfsSiteConfig=/home/crap/config/hdfs-site.xml \

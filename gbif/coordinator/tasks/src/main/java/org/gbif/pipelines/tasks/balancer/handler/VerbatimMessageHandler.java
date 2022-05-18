@@ -21,7 +21,7 @@ import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.balancer.BalancerConfiguration;
-import org.gbif.pipelines.tasks.dwca.DwcaToAvroConfiguration;
+import org.gbif.pipelines.tasks.verbatims.dwca.DwcaToAvroConfiguration;
 
 /**
  * Populates and sends the {@link PipelinesVerbatimMessage} message, the main method is {@link

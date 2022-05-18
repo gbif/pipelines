@@ -29,7 +29,7 @@ public class EventsIndexingConfiguration implements BaseConfiguration {
   public ElasticsearchConfiguration esConfig = new ElasticsearchConfiguration();
 
   @Parameter(names = "--meta-file-name")
-  public String metaFileName = Pipeline.EVENTS_INTERPRETED_TO_INDEX + ".yml";
+  public String metaFileName = Pipeline.EVENT_TO_INDEX + ".yml";
 
   @Parameter(names = "--pipelines-config")
   @Valid

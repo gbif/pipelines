@@ -19,15 +19,15 @@ public class PipelinesVariables {
     public static final String ALL_AVRO = "*" + AVRO_EXTENSION;
 
     public static final String ARCHIVE_TO_VERBATIM = "archive-to-verbatim";
-    public static final String VERBATIM_TO_INTERPRETED = "verbatim-to-interpreted";
+    public static final String VERBATIM_TO_OCCURRENCE = "verbatim-to-occurrence";
     public static final String VERBATIM_TO_IDENTIFIER = "verbatim-to-identifier";
-    public static final String INTERPRETED_TO_INDEX = "interpreted-to-index";
-    public static final String INTERPRETED_TO_HDFS = "interpreted-to-hdfs";
+    public static final String OCCURRENCE_TO_INDEX = "occurrence-to-index";
+    public static final String OCCURRENCE_TO_HDFS = "occurrence-to-hdfs";
     public static final String FRAGMENTER = "fragmenter";
     public static final String VALIDATOR = "validator";
     public static final String COLLECT_METRICS = "collect-metrics";
-    public static final String EVENTS_VERBATIM_TO_INTERPRETED = "events-verbatim-to-interpreted";
-    public static final String EVENTS_INTERPRETED_TO_INDEX = "events-interpreted-to-index";
+    public static final String VERBATIM_TO_EVENT = "verbatim-to-event";
+    public static final String EVENT_TO_INDEX = "event-to-index";
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static class Conversion {

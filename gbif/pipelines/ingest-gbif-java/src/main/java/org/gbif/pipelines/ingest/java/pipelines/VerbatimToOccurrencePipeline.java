@@ -93,7 +93,7 @@ import org.slf4j.MDC;
  * --properties=configs/pipelines.yaml \
  * --useExtendedRecordId=true \
  * --useMetadataWsCalls=false \
- * --metaFileName=verbatim-to-interpreted.yml
+ * --metaFileName=verbatim-to-occurrence.yml
  *
  * }</pre>
  */

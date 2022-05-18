@@ -60,7 +60,7 @@ public class VerbatimToInterpretedPipelineIT {
       "--datasetId=" + DATASET_KEY,
       "--attempt=" + attempt,
       "--runner=SparkRunner",
-      "--metaFileName=verbatim-to-interpreted.yml",
+      "--metaFileName=verbatim-to-occurrence.yml",
       "--inputPath=" + outputFile + "/" + DATASET_KEY + "/" + attempt + "/verbatim.avro",
       "--targetPath=" + outputFile,
       "--properties=" + outputFile + "/pipelines.yaml",
@@ -104,7 +104,7 @@ public class VerbatimToInterpretedPipelineIT {
 
     // Shoud
     String metricsOutput =
-        String.join("/", outputFile, DATASET_KEY, attempt, "verbatim-to-interpreted.yml");
+        String.join("/", outputFile, DATASET_KEY, attempt, "verbatim-to-occurrence.yml");
     assertTrue(Files.exists(Paths.get(metricsOutput)));
 
     String interpretedOutput = String.join("/", outputFile, DATASET_KEY, attempt, "occurrence");

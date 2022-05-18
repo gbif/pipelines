@@ -19,4 +19,4 @@ java -XX:+PerfDisableSharedMem -XX:+UseConcMarkSweepGC -XX:CMSInitiatingOccupanc
   --properties=configs/pipelines.yaml \
   --useExtendedRecordId=true \
   --useMetadataWsCalls=false \
-  --metaFileName=verbatim-to-interpreted.yml
+  --metaFileName=verbatim-to-occurrence.yml

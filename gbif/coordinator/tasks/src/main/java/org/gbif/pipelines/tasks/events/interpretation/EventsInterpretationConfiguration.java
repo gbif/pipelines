@@ -24,7 +24,7 @@ public class EventsInterpretationConfiguration implements BaseConfiguration {
   public DistributedConfiguration distributedConfig = new DistributedConfiguration();
 
   @Parameter(names = "--meta-file-name")
-  public String metaFileName = Pipeline.EVENTS_VERBATIM_TO_INTERPRETED + ".yml";
+  public String metaFileName = Pipeline.VERBATIM_TO_EVENT + ".yml";
 
   @Parameter(names = "--pipelines-config")
   @Valid

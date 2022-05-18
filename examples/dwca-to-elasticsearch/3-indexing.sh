@@ -20,7 +20,7 @@ java -XX:+PerfDisableSharedMem -XX:+UseConcMarkSweepGC -XX:CMSInitiatingOccupanc
   --datasetId=${UUID} \
   --attempt=1 \
   --runner=SparkRunner \
-  --metaFileName=interpreted-to-index.yml \
+  --metaFileName=occurrence-to-index.yml \
   --inputPath=${OUT} \
   --targetPath=${OUT} \
   --esSchemaPath=${ES_SCHEMA} \

@@ -32,7 +32,7 @@ sudo -u hdfs spark2-submit \
     --runner=SparkRunner \
     --inputPath=${HDFS_PATH} \
     --targetPath=${HDFS_PATH} \
-    --metaFileName=interpreted-to-index.yml \
+    --metaFileName=event-to-index.yml \
     --hdfsSiteConfig=/home/crap/config/hdfs-site.xml \
     --coreSiteConfig=/home/crap/config/core-site.xml \
     --esHosts=${ES_HOSTS} \

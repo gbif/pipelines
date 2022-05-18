@@ -62,7 +62,7 @@ public class VerbatimToOccurrencePipelineIT {
       "--datasetId=" + DATASET_KEY,
       "--attempt=" + attempt,
       "--runner=SparkRunner",
-      "--metaFileName=verbatim-to-interpreted.yml",
+      "--metaFileName=verbatim-to-occurrence.yml",
       "--inputPath=" + outputFile + "/" + DATASET_KEY + "/" + attempt + "/verbatim.avro",
       "--targetPath=" + outputFile,
       "--interpretationTypes=" + ALL,
@@ -86,7 +86,7 @@ public class VerbatimToOccurrencePipelineIT {
       "--datasetId=" + DATASET_KEY,
       "--attempt=" + attempt,
       "--runner=SparkRunner",
-      "--metaFileName=verbatim-to-interpreted.yml",
+      "--metaFileName=verbatim-to-occurrence.yml",
       "--inputPath=" + outputFile + "/" + DATASET_KEY + "/" + attempt + "/verbatim.avro",
       "--targetPath=" + outputFile,
       "--interpretationTypes=" + TAXONOMY,
@@ -120,7 +120,7 @@ public class VerbatimToOccurrencePipelineIT {
       "--datasetId=" + DATASET_KEY,
       "--attempt=" + attempt,
       "--runner=SparkRunner",
-      "--metaFileName=verbatim-to-interpreted.yml",
+      "--metaFileName=verbatim-to-occurrence.yml",
       "--inputPath=" + outputFile + "/" + DATASET_KEY + "/" + attempt + "/verbatim.avro",
       "--targetPath=" + outputFile,
       "--interpretationTypes=" + ALL,
@@ -145,7 +145,7 @@ public class VerbatimToOccurrencePipelineIT {
       "--datasetId=" + DATASET_KEY,
       "--attempt=" + attempt,
       "--runner=SparkRunner",
-      "--metaFileName=verbatim-to-interpreted.yml",
+      "--metaFileName=verbatim-to-occurrence.yml",
       "--inputPath=" + outputFile + "/" + DATASET_KEY + "/" + attempt + "/verbatim.avro",
       "--targetPath=" + outputFile,
       "--interpretationTypes=IDENTIFIER_ABSENT,CLUSTERING,TEMPORAL,LOCATION,GRSCICOLL,MULTIMEDIA,MEASUREMENT_OR_FACT_TABLE,BASIC,TAXONOMY,IMAGE,AMPLIFICATION,OCCURRENCE,VERBATIM,LOCATION_FEATURE,MEASUREMENT_OR_FACT,AUDUBON,METADATA",
@@ -229,7 +229,7 @@ public class VerbatimToOccurrencePipelineIT {
 
     // Shoud
     String metricsOutput =
-        String.join("/", outputFile, DATASET_KEY, attempt, "verbatim-to-interpreted.yml");
+        String.join("/", outputFile, DATASET_KEY, attempt, "verbatim-to-occurrence.yml");
     assertTrue(Files.exists(Paths.get(metricsOutput)));
 
     String interpretedOutput = String.join("/", outputFile, DATASET_KEY, attempt, "occurrence");
