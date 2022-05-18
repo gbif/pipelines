@@ -14,6 +14,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.index.IndexRequest;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.EsIndexingPipelineOptions;
@@ -92,7 +93,9 @@ import org.slf4j.MDC;
  */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class InterpretedToEsIndexPipeline {
+public class OccurrenceToEsIndexPipeline {
+
+  private static final DwcTerm CORE_TERM = DwcTerm.Occurrence;
 
   public static void main(String[] args) {
     run(args);
@@ -131,40 +134,40 @@ public class InterpretedToEsIndexPipeline {
     log.info("Reading avro files...");
     // Reading all avro files in parallel
     CompletableFuture<Map<String, MetadataRecord>> metadataMapFeature =
-        readAvroAsFuture(options, executor, MetadataTransform.builder().create());
+        readAvroAsFuture(options, CORE_TERM, executor, MetadataTransform.builder().create());
 
     CompletableFuture<Map<String, ExtendedRecord>> verbatimMapFeature =
-        readAvroAsFuture(options, executor, VerbatimTransform.create());
+        readAvroAsFuture(options, CORE_TERM, executor, VerbatimTransform.create());
 
     CompletableFuture<Map<String, GbifIdRecord>> idMapFeature =
-        readAvroAsFuture(options, executor, GbifIdTransform.builder().create());
+        readAvroAsFuture(options, CORE_TERM, executor, GbifIdTransform.builder().create());
 
     CompletableFuture<Map<String, ClusteringRecord>> clusteringMapFeature =
-        readAvroAsFuture(options, executor, ClusteringTransform.builder().create());
+        readAvroAsFuture(options, CORE_TERM, executor, ClusteringTransform.builder().create());
 
     CompletableFuture<Map<String, BasicRecord>> basicMapFeature =
-        readAvroAsFuture(options, executor, BasicTransform.builder().create());
+        readAvroAsFuture(options, CORE_TERM, executor, BasicTransform.builder().create());
 
     CompletableFuture<Map<String, TemporalRecord>> temporalMapFeature =
-        readAvroAsFuture(options, executor, TemporalTransform.builder().create());
+        readAvroAsFuture(options, CORE_TERM, executor, TemporalTransform.builder().create());
 
     CompletableFuture<Map<String, LocationRecord>> locationMapFeature =
-        readAvroAsFuture(options, executor, LocationTransform.builder().create());
+        readAvroAsFuture(options, CORE_TERM, executor, LocationTransform.builder().create());
 
     CompletableFuture<Map<String, TaxonRecord>> taxonMapFeature =
-        readAvroAsFuture(options, executor, TaxonomyTransform.builder().create());
+        readAvroAsFuture(options, CORE_TERM, executor, TaxonomyTransform.builder().create());
 
     CompletableFuture<Map<String, GrscicollRecord>> grscicollMapFeature =
-        readAvroAsFuture(options, executor, GrscicollTransform.builder().create());
+        readAvroAsFuture(options, CORE_TERM, executor, GrscicollTransform.builder().create());
 
     CompletableFuture<Map<String, MultimediaRecord>> multimediaMapFeature =
-        readAvroAsFuture(options, executor, MultimediaTransform.builder().create());
+        readAvroAsFuture(options, CORE_TERM, executor, MultimediaTransform.builder().create());
 
     CompletableFuture<Map<String, ImageRecord>> imageMapFeature =
-        readAvroAsFuture(options, executor, ImageTransform.builder().create());
+        readAvroAsFuture(options, CORE_TERM, executor, ImageTransform.builder().create());
 
     CompletableFuture<Map<String, AudubonRecord>> audubonMapFeature =
-        readAvroAsFuture(options, executor, AudubonTransform.builder().create());
+        readAvroAsFuture(options, CORE_TERM, executor, AudubonTransform.builder().create());
 
     Function<GbifIdRecord, IndexRequest> indexRequestFn =
         IndexRequestConverter.builder()

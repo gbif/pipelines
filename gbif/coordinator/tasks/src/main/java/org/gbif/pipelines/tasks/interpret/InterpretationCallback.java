@@ -25,14 +25,14 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.common.parsers.date.DateComponentOrdering;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.GbifApi;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation;
 import org.gbif.pipelines.common.interpretation.SparkSettings;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
-import org.gbif.pipelines.ingest.java.pipelines.VerbatimToInterpretedPipeline;
+import org.gbif.pipelines.ingest.java.pipelines.VerbatimToOccurrencePipeline;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
 import org.gbif.pipelines.tasks.interpret.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
@@ -176,7 +176,7 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
   }
 
   private void runLocal(ProcessRunnerBuilderBuilder builder) {
-    VerbatimToInterpretedPipeline.run(builder.build().buildOptions(), executor);
+    VerbatimToOccurrencePipeline.run(builder.build().buildOptions(), executor);
   }
 
   private void runDistributed(PipelinesVerbatimMessage message, ProcessRunnerBuilderBuilder builder)
@@ -213,7 +213,7 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
             config.stepConfig.repositoryPath,
             datasetId,
             attempt,
-            Interpretation.DIRECTORY_NAME);
+            DwcTerm.Occurrence.simpleName().toLowerCase());
 
     HdfsConfigs hdfsConfigs =
         HdfsConfigs.create(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);

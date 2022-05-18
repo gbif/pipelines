@@ -1,6 +1,6 @@
 package org.gbif.pipelines.ingest.pipelines;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.ALL_AVRO;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.*;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.getAllTables;
 
@@ -22,6 +22,7 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.InterpretationType;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
@@ -120,7 +121,9 @@ import org.slf4j.MDC;
  */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class InterpretedToHdfsViewPipeline {
+public class OccurrenceToHdfsViewPipeline {
+
+  private static final DwcTerm CORE_TERM = DwcTerm.Occurrence;
 
   public static void main(String[] args) {
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
@@ -155,11 +158,11 @@ public class InterpretedToHdfsViewPipeline {
         getAllTables().stream().map(RecordType::name).collect(Collectors.toSet());
     // Deletes the target path if it exists
     FsUtils.deleteInterpretIfExist(
-        hdfsConfigs, options.getInputPath(), datasetId, attempt, deleteTypes);
+        hdfsConfigs, options.getInputPath(), datasetId, attempt, CORE_TERM, deleteTypes);
 
     log.info("Adding step 1: Options");
     UnaryOperator<String> interpretPathFn =
-        t -> PathBuilder.buildPathInterpretUsingInputPath(options, t, "*" + AVRO_EXTENSION);
+        t -> PathBuilder.buildPathInterpretUsingInputPath(options, CORE_TERM, t, ALL_AVRO);
 
     Pipeline p = pipelinesFn.apply(options);
 

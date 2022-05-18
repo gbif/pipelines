@@ -4,11 +4,14 @@ import java.text.MessageFormat;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.IndexRecord;
 import org.gbif.pipelines.io.avro.MultimediaIndexRecord;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class MultimediaCsvConverter {
 
   private static final TsvConverter<MultimediaIndexRecord> CONVERTER =
@@ -26,7 +29,7 @@ public class MultimediaCsvConverter {
 
   public static List<String> convert(IndexRecord indexRecord, String imageServiceUrlFormat) {
     return updateIdentifiers(indexRecord, imageServiceUrlFormat).getMultimedia().stream()
-        .map(ir -> CONVERTER.converter(ir))
+        .map(CONVERTER::converter)
         .collect(Collectors.toList());
   }
 

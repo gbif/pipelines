@@ -69,7 +69,7 @@ import org.slf4j.MDC;
  */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class EventsVerbatimToInterpretedPipeline {
+public class VerbatimToEventPipeline {
 
   public static void main(String[] args) {
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
@@ -100,7 +100,7 @@ public class EventsVerbatimToInterpretedPipeline {
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
     UnaryOperator<String> pathFn =
-        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, id);
+        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, DwcTerm.Event, t, id);
 
     log.info("Creating a pipeline from options");
     Pipeline p = pipelinesFn.apply(options);

@@ -16,6 +16,7 @@ public class PipelinesVariables {
   public static class Pipeline {
 
     public static final String AVRO_EXTENSION = ".avro";
+    public static final String ALL_AVRO = "*" + AVRO_EXTENSION;
 
     public static final String ARCHIVE_TO_VERBATIM = "archive-to-verbatim";
     public static final String VERBATIM_TO_INTERPRETED = "verbatim-to-interpreted";
@@ -37,7 +38,6 @@ public class PipelinesVariables {
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static class Interpretation {
 
-      public static final String DIRECTORY_NAME = "interpreted";
       public static final String FILE_NAME = "interpret-";
 
       public interface InterpretationType extends Serializable {

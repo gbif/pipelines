@@ -2,6 +2,7 @@ package au.org.ala.pipelines.beam;
 
 import static au.org.ala.pipelines.transforms.IndexFields.*;
 import static au.org.ala.pipelines.transforms.IndexValues.*;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.ALL_AVRO;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
 import au.org.ala.pipelines.options.AllDatasetsPipelinesOptions;
@@ -59,7 +60,8 @@ import org.slf4j.MDC;
 @Slf4j
 public class IndexRecordToSolrPipeline {
 
-  static final SampleRecord nullSampling = SampleRecord.newBuilder().setLatLng("NO_VALUE").build();
+  private static final SampleRecord nullSampling =
+      SampleRecord.newBuilder().setLatLng("NO_VALUE").build();
 
   public static final String EMPTY = "EMPTY";
   static final IndexRecord nullIndexRecord = IndexRecord.newBuilder().setId(EMPTY).build();
@@ -554,8 +556,7 @@ public class IndexRecordToSolrPipeline {
     }
 
     String jackknifePath =
-        PathBuilder.buildPath(options.getJackKnifePath(), "outliers", "*" + AVRO_EXTENSION)
-            .toString();
+        PathBuilder.buildPath(options.getJackKnifePath(), "outliers", ALL_AVRO).toString();
     log.info("Loading jackknife from {}", jackknifePath);
     return p.apply(AvroIO.read(JackKnifeOutlierRecord.class).from(jackknifePath))
         .apply(
@@ -605,8 +606,7 @@ public class IndexRecordToSolrPipeline {
     }
 
     String path =
-        PathBuilder.buildPath(options.getOutlierPath(), dataResourceFolder, "*" + AVRO_EXTENSION)
-            .toString();
+        PathBuilder.buildPath(options.getOutlierPath(), dataResourceFolder, ALL_AVRO).toString();
     log.info("Loading outlier from {}", path);
 
     return p.apply(AvroIO.read(DistributionOutlierRecord.class).from(path))

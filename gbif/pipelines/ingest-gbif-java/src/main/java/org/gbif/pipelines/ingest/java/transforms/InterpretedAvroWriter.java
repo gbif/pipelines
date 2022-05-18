@@ -9,6 +9,7 @@ import lombok.SneakyThrows;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
@@ -25,10 +26,11 @@ public class InterpretedAvroWriter {
   public static <T extends SpecificRecordBase & Record> SyncDataFileWriter<T> createAvroWriter(
       InterpretationPipelineOptions options,
       Transform<?, T> transform,
+      DwcTerm term,
       String id,
       String baseName) {
     String pathString =
-        PathBuilder.buildPathInterpretUsingTargetPath(options, baseName, id + AVRO_EXTENSION);
+        PathBuilder.buildPathInterpretUsingTargetPath(options, term, baseName, id + AVRO_EXTENSION);
     Path path = new Path(pathString);
     FileSystem fs =
         createParentDirectories(
@@ -43,7 +45,7 @@ public class InterpretedAvroWriter {
   }
 
   public static <T extends SpecificRecordBase & Record> SyncDataFileWriter<T> createAvroWriter(
-      InterpretationPipelineOptions options, Transform<?, T> transform, String id) {
-    return createAvroWriter(options, transform, id, transform.getBaseName());
+      InterpretationPipelineOptions options, Transform<?, T> transform, DwcTerm term, String id) {
+    return createAvroWriter(options, transform, term, id, transform.getBaseName());
   }
 }

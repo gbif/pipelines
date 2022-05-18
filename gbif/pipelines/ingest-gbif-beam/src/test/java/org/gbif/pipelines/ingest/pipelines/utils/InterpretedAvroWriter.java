@@ -11,6 +11,7 @@ import org.apache.avro.Schema;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
@@ -25,19 +26,28 @@ public class InterpretedAvroWriter {
   /** Create an AVRO file writer */
   @SneakyThrows
   public static <T extends SpecificRecordBase & Record> SyncDataFileWriter<T> createAvroWriter(
-      InterpretationPipelineOptions options, Transform<?, T> transform, String id, String useName) {
+      InterpretationPipelineOptions options,
+      Transform<?, T> transform,
+      DwcTerm coreTerm,
+      String id,
+      String useName) {
     return createAvroWriter(
         options,
         transform.getAvroSchema(),
+        coreTerm,
         id,
         Optional.ofNullable(useName).orElse(transform.getBaseName()));
   }
 
   @SneakyThrows
   public static <T extends SpecificRecordBase> SyncDataFileWriter<T> createAvroWriter(
-      InterpretationPipelineOptions options, Schema schema, String id, String name) {
+      InterpretationPipelineOptions options,
+      Schema schema,
+      DwcTerm coreTerm,
+      String id,
+      String name) {
     String pathString =
-        PathBuilder.buildPathInterpretUsingTargetPath(options, name, id + AVRO_EXTENSION);
+        PathBuilder.buildPathInterpretUsingTargetPath(options, coreTerm, name, id + AVRO_EXTENSION);
     Path path = new Path(pathString);
     FileSystem fs =
         createParentDirectories(
@@ -52,7 +62,10 @@ public class InterpretedAvroWriter {
   }
 
   public static <T extends SpecificRecordBase & Record> SyncDataFileWriter<T> createAvroWriter(
-      InterpretationPipelineOptions options, Transform<?, T> transform, String id) {
-    return createAvroWriter(options, transform, id, null);
+      InterpretationPipelineOptions options,
+      Transform<?, T> transform,
+      DwcTerm coreTerm,
+      String id) {
+    return createAvroWriter(options, transform, coreTerm, id, null);
   }
 }

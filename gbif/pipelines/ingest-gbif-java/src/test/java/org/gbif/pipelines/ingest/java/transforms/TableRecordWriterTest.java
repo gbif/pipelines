@@ -81,7 +81,7 @@ public class TableRecordWriterTest {
     File result =
         new File(
             outputFile
-                + "/d596fccb-2319-42eb-b13b-986c932780ad/146/interpreted/occurrence/d596fccb-2319-42eb-b13b-986c932780ad_146.avro");
+                + "/d596fccb-2319-42eb-b13b-986c932780ad/146/occurrence/occurrence/d596fccb-2319-42eb-b13b-986c932780ad_146.avro");
     DatumReader<OccurrenceHdfsRecord> datumReader =
         new SpecificDatumReader<>(OccurrenceHdfsRecord.class);
     try (DataFileReader<OccurrenceHdfsRecord> dataFileReader =
@@ -153,7 +153,7 @@ public class TableRecordWriterTest {
     File result =
         new File(
             outputFile
-                + "/d596fccb-2319-42eb-b13b-986c932780ad/146/interpreted/occurrence/d596fccb-2319-42eb-b13b-986c932780ad_146.avro");
+                + "/d596fccb-2319-42eb-b13b-986c932780ad/146/occurrence/occurrence/d596fccb-2319-42eb-b13b-986c932780ad_146.avro");
     DatumReader<OccurrenceHdfsRecord> datumReader =
         new SpecificDatumReader<>(OccurrenceHdfsRecord.class);
     try (DataFileReader<OccurrenceHdfsRecord> dataFileReader =

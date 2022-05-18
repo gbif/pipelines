@@ -1,6 +1,6 @@
 package au.org.ala.pipelines.beam;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.ALL_AVRO;
 
 import au.org.ala.images.BatchUploadResponse;
 import au.org.ala.images.ImageService;
@@ -44,6 +44,7 @@ import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.common.parsers.date.DateParsers;
 import org.gbif.common.parsers.date.TemporalAccessorUtils;
 import org.gbif.common.parsers.date.TemporalParser;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
@@ -68,6 +69,8 @@ import retrofit2.Call;
  */
 @Slf4j
 public class ImageServiceDeltaLoadPipeline {
+
+  private static final DwcTerm CORE_TERM = DwcTerm.Occurrence;
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
 
@@ -157,7 +160,7 @@ public class ImageServiceDeltaLoadPipeline {
     TemporalTransform temporalTransform = TemporalTransform.builder().create();
 
     UnaryOperator<String> pathFn =
-        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
+        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, CORE_TERM, t, ALL_AVRO);
 
     log.info("Reading multimedia for this dataset");
     PCollection<KV<String, MultimediaRecord>> pt1 =

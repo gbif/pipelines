@@ -1,9 +1,6 @@
 package org.gbif.pipelines.common.beam.utils;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.DIRECTORY_NAME;
-
 import com.google.common.base.Strings;
-import java.util.Locale;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,42 +37,29 @@ public class PathBuilder {
 
   /**
    * Uses pattern for path -
-   * "{targetPath}/{datasetId}/{attempt}/interpreted/{name}/interpret-{uniqueId}"
+   * "{targetPath}/{datasetId}/{attempt}/{coreTerm}/{name}/interpret-{uniqueId}" The core term path
+   * is empty if it is an occurrence.
    *
    * @return string path to interpretation
    */
   public static String buildPathInterpretUsingTargetPath(
-      BasePipelineOptions options, String name, String uniqueId) {
-    return buildPathInterpretUsingTargetPath(options, options.getDwcCore(), name, uniqueId);
-  }
-
-  /**
-   * Uses pattern for path -
-   * "{targetPath}/{datasetId}/{attempt}/interpreted/{coreTerm.toLowercase}/{name}/interpret-{uniqueId}"
-   * The core term path is empty if it is an occurrence.
-   *
-   * @return string path to interpretation
-   */
-  public static String buildPathInterpretUsingTargetPath(
-      BasePipelineOptions options, DwcTerm coreTerm, String name, String uniqueId) {
+      BasePipelineOptions options, DwcTerm core, String name, String uniqueId) {
     return buildPath(
-            buildDatasetAttemptPath(options, DIRECTORY_NAME, false),
-            DwcTerm.Event != coreTerm ? "" : DwcTerm.Event.simpleName().toLowerCase(Locale.ROOT),
+            buildDatasetAttemptPath(options, core.simpleName().toLowerCase(), false),
             name,
             PipelinesVariables.Pipeline.Interpretation.FILE_NAME + uniqueId)
         .toString();
   }
 
   /**
-   * Uses pattern for path -
-   * "{targetPath}/{datasetId}/{attempt}/interpreted/{name}/interpret-{uniqueId}"
+   * Uses pattern for path - "{targetPath}/{datasetId}/{attempt}/{core}/{name}/interpret-{uniqueId}"
    *
    * @return string path to interpretation
    */
   public static String buildPathInterpretUsingInputPath(
-      BasePipelineOptions options, String name, String uniqueId) {
+      BasePipelineOptions options, DwcTerm core, String name, String uniqueId) {
     return buildPath(
-            buildDatasetAttemptPath(options, DIRECTORY_NAME, true),
+            buildDatasetAttemptPath(options, core.simpleName().toLowerCase(), true),
             name,
             PipelinesVariables.Pipeline.Interpretation.FILE_NAME + uniqueId)
         .toString();
@@ -89,8 +73,8 @@ public class PathBuilder {
    */
   public static String buildFilePathViewUsingInputPath(
       BasePipelineOptions options, String type, String uniqueId) {
-    return buildPath(
-            buildDatasetAttemptPath(options, DIRECTORY_NAME, true), type.toLowerCase(), uniqueId)
+    String corePath = DwcTerm.Occurrence.simpleName().toLowerCase();
+    return buildPath(buildDatasetAttemptPath(options, corePath, true), type.toLowerCase(), uniqueId)
         .toString();
   }
 

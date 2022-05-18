@@ -22,6 +22,7 @@ import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.fs.FileSystem;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.beam.options.BasePipelineOptions;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
@@ -63,7 +64,9 @@ public class ALAFsUtils {
 
   public static String buildPathMultimediaUsingTargetPath(BasePipelineOptions options) {
     return PathBuilder.buildPath(
-            PathBuilder.buildDatasetAttemptPath(options, "interpreted", false), "multimedia")
+            PathBuilder.buildDatasetAttemptPath(
+                options, DwcTerm.Occurrence.simpleName().toLowerCase(), false),
+            "multimedia")
         .toString();
   }
 

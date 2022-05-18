@@ -107,7 +107,7 @@ public class DefaultValuesTestIT {
               "--attempt=1",
               "--runner=DirectRunner",
               "--targetPath=/tmp/la-pipelines-test/default-values",
-              "--inputPath=/tmp/la-pipelines-test/default-values/dr893/1/interpreted/verbatim/interpret-*",
+              "--inputPath=/tmp/la-pipelines-test/default-values/dr893/1/occurrence/verbatim/interpret-*",
               "--properties=" + TestUtils.getPipelinesConfigFile()
             });
 

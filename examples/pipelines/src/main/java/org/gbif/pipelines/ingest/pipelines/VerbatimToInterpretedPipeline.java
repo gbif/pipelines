@@ -16,6 +16,7 @@ import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.gbif.common.parsers.date.DateComponentOrdering;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
@@ -69,6 +70,8 @@ import org.slf4j.MDC;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class VerbatimToInterpretedPipeline {
 
+  private static final DwcTerm CORE_TERM = DwcTerm.Event;
+
   public static void main(String[] args) {
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
     run(options);
@@ -97,7 +100,7 @@ public class VerbatimToInterpretedPipeline {
             ? config.getDefaultDateFormat()
             : options.getDefaultDateFormat();
 
-    FsUtils.deleteInterpretIfExist(hdfsConfigs, targetPath, datasetId, attempt, types);
+    FsUtils.deleteInterpretIfExist(hdfsConfigs, targetPath, datasetId, attempt, CORE_TERM, types);
 
     MDC.put("datasetKey", datasetId);
     MDC.put("attempt", attempt.toString());
@@ -105,7 +108,7 @@ public class VerbatimToInterpretedPipeline {
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
     UnaryOperator<String> pathFn =
-        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, id);
+        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, CORE_TERM, t, id);
 
     log.info("Creating a pipeline from options");
     options.setAppName("Event interpretation of " + datasetId);

@@ -1,7 +1,7 @@
 package au.org.ala.pipelines.java;
 
 import static java.util.stream.Collectors.groupingBy;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.ALL_AVRO;
 
 import au.org.ala.pipelines.beam.IndexRecordPipeline;
 import au.org.ala.pipelines.options.SpeciesLevelPipelineOptions;
@@ -22,6 +22,7 @@ import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.DatumWriter;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
@@ -50,6 +51,8 @@ import org.gbif.pipelines.io.avro.TaxonProfile;
  */
 @Slf4j
 public class SpeciesListPipeline {
+
+  private static final DwcTerm CORE_TERM = DwcTerm.Occurrence;
 
   public static void main(String[] args) throws Exception {
     VersionInfo.print();
@@ -104,7 +107,7 @@ public class SpeciesListPipeline {
 
       log.info("Running species list pipeline for dataset {}", options.getDatasetId());
       UnaryOperator<String> pathFn =
-          t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
+          t -> PathBuilder.buildPathInterpretUsingTargetPath(options, CORE_TERM, t, ALL_AVRO);
 
       HdfsConfigs hdfsConfigs =
           HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig());

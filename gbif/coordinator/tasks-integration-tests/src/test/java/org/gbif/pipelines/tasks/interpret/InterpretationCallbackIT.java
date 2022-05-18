@@ -82,7 +82,7 @@ public class InterpretationCallbackIT {
 
     // State
     InterpreterConfiguration config = new InterpreterConfiguration();
-    config.stepConfig.repositoryPath = getClass().getResource("/dataset/interpreted/").getFile();
+    config.stepConfig.repositoryPath = getClass().getResource("/dataset/occurrence/").getFile();
     config.processRunner = STANDALONE.name();
     config.pipelinesConfig = "pipelines.yaml";
 
@@ -130,7 +130,7 @@ public class InterpretationCallbackIT {
 
     // State
     InterpreterConfiguration config = new InterpreterConfiguration();
-    config.stepConfig.repositoryPath = getClass().getResource("/dataset/interpreted/").getFile();
+    config.stepConfig.repositoryPath = getClass().getResource("/dataset/occurrence/").getFile();
     config.processRunner = DISTRIBUTED.name();
     config.pipelinesConfig = "pipelines.yaml";
     config.stepConfig.coreSiteConfig = "";

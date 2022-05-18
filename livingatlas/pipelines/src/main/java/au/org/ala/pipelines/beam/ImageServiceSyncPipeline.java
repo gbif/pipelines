@@ -2,7 +2,7 @@ package au.org.ala.pipelines.beam;
 
 import static au.org.ala.pipelines.beam.ImagePipelineUtils.*;
 import static au.org.ala.pipelines.beam.ImageServiceDiffLoadPipeline.IMAGEID;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.ALL_AVRO;
 
 import au.com.bytecode.opencsv.CSVParser;
 import au.org.ala.images.ImageService;
@@ -40,6 +40,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.gbif.dwc.terms.DcTerm;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
@@ -62,6 +63,8 @@ import retrofit2.Call;
  */
 @Slf4j
 public class ImageServiceSyncPipeline {
+
+  private static final DwcTerm CORE_TERM = DwcTerm.Occurrence;
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
 
@@ -128,7 +131,7 @@ public class ImageServiceSyncPipeline {
             options.getInputPath(),
             options.getDatasetId(),
             options.getAttempt().toString(),
-            "interpreted",
+            "occurrence",
             "multimedia");
 
     if (ALAFsUtils.exists(fs, multimedia)) {
@@ -216,7 +219,7 @@ public class ImageServiceSyncPipeline {
     // Read multimedia AVRO generated in previous interpretation step
     MultimediaTransform multimediaTransform = MultimediaTransform.builder().create();
     UnaryOperator<String> pathFn =
-        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
+        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, CORE_TERM, t, ALL_AVRO);
 
     // Transform multimedia AVRO to map [RecordID -> Multimedia]
     log.info("Reading multimedia for this dataset");

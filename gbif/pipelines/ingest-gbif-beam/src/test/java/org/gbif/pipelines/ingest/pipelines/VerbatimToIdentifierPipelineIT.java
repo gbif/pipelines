@@ -43,6 +43,8 @@ import org.junit.runners.MethodSorters;
 @FixMethodOrder(MethodSorters.JVM)
 public class VerbatimToIdentifierPipelineIT {
 
+  private static final DwcTerm CORE_TERM = DwcTerm.Occurrence;
+
   private static final String ID = "777";
   private static final String DATASET_KEY = "9bed66b3-4caa-42bb-9c93-71d7ba109dad";
 
@@ -93,7 +95,8 @@ public class VerbatimToIdentifierPipelineIT {
 
     // Create varbatim.avro
     try (SyncDataFileWriter<ExtendedRecord> writer =
-        InterpretedAvroWriter.createAvroWriter(options, VerbatimTransform.create(), ID)) {
+        InterpretedAvroWriter.createAvroWriter(
+            options, VerbatimTransform.create(), CORE_TERM, ID)) {
       Map<String, String> ext1 = new HashMap<>();
       ext1.put(DwcTerm.measurementID.qualifiedName(), "Id1");
       ext1.put(DwcTerm.measurementType.qualifiedName(), "Type1");
@@ -113,7 +116,7 @@ public class VerbatimToIdentifierPipelineIT {
       writer.append(extendedRecord);
     }
     Path from =
-        Paths.get(outputFile, DATASET_KEY, attempt, "interpreted/verbatim/interpret-777.avro");
+        Paths.get(outputFile, DATASET_KEY, attempt, "occurrence/verbatim/interpret-777.avro");
     Path to = Paths.get(outputFile, DATASET_KEY, attempt, "verbatim.avro");
     Files.deleteIfExists(to);
     Files.move(from, to);
@@ -126,7 +129,7 @@ public class VerbatimToIdentifierPipelineIT {
         String.join("/", outputFile, DATASET_KEY, attempt, "verbatim-to-identifier.yml");
     assertTrue(Files.exists(Paths.get(metricsOutput)));
 
-    String interpretedOutput = String.join("/", outputFile, DATASET_KEY, attempt, "interpreted");
+    String interpretedOutput = String.join("/", outputFile, DATASET_KEY, attempt, "occurrence");
 
     long dirCount =
         Arrays.stream(new File(interpretedOutput).listFiles())

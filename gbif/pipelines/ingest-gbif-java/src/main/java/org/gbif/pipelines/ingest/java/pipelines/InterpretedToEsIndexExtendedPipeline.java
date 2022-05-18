@@ -92,7 +92,7 @@ public class InterpretedToEsIndexExtendedPipeline {
     MDC.put("step", StepType.INTERPRETED_TO_INDEX.name());
 
     org.gbif.pipelines.ingest.pipelines.InterpretedToEsIndexExtendedPipeline.run(
-        options, () -> InterpretedToEsIndexPipeline.run(options, executor));
+        options, () -> OccurrenceToEsIndexPipeline.run(options, executor));
 
     FsUtils.removeTmpDirectory(PathBuilder.getTempDir(options));
     log.info("Finished main indexing pipeline");

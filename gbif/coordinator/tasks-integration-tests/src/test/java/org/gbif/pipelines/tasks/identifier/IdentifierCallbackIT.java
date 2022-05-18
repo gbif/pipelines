@@ -77,7 +77,7 @@ public class IdentifierCallbackIT {
 
     // State
     IdentifierConfiguration config = new IdentifierConfiguration();
-    config.stepConfig.repositoryPath = getClass().getResource("/dataset/interpreted/").getFile();
+    config.stepConfig.repositoryPath = getClass().getResource("/dataset/occurrence/").getFile();
     config.pipelinesConfig = "pipelines.yaml";
 
     IdentifierCallback callback =
@@ -121,7 +121,7 @@ public class IdentifierCallbackIT {
 
     // State
     IdentifierConfiguration config = new IdentifierConfiguration();
-    config.stepConfig.repositoryPath = getClass().getResource("/dataset/interpreted/").getFile();
+    config.stepConfig.repositoryPath = getClass().getResource("/dataset/occurrence/").getFile();
     config.pipelinesConfig = "pipelines.yaml";
     config.stepConfig.coreSiteConfig = "";
     config.stepConfig.hdfsSiteConfig = "";

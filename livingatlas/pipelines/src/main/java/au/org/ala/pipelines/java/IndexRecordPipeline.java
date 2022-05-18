@@ -1,6 +1,6 @@
 package au.org.ala.pipelines.java;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.ALL_AVRO;
 
 import au.org.ala.pipelines.common.ALARecordTypes;
 import au.org.ala.pipelines.options.IndexingPipelineOptions;
@@ -36,6 +36,7 @@ import org.apache.avro.io.DatumWriter;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
@@ -66,6 +67,8 @@ import org.slf4j.MDC;
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class IndexRecordPipeline {
+
+  private static final DwcTerm CORE_TERM = DwcTerm.Occurrence;
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
 
@@ -131,11 +134,11 @@ public class IndexRecordPipeline {
             ValidationUtils.INTERPRETATION_METRICS);
 
     UnaryOperator<String> pathFn =
-        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
+        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, CORE_TERM, t, ALL_AVRO);
     UnaryOperator<String> identifiersPathFn =
-        t -> ALAFsUtils.buildPathIdentifiersUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
+        t -> ALAFsUtils.buildPathIdentifiersUsingTargetPath(options, t, ALL_AVRO);
     UnaryOperator<String> imageServicePathFn =
-        t -> ALAFsUtils.buildPathImageServiceUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
+        t -> ALAFsUtils.buildPathImageServiceUsingTargetPath(options, t, ALL_AVRO);
 
     log.info("Creating transformations");
     // Core

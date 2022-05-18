@@ -1,7 +1,5 @@
 package org.gbif.pipelines.ingest.pipelines;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.DIRECTORY_NAME;
-
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.function.Function;
@@ -13,6 +11,7 @@ import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.values.PCollectionTuple;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
@@ -31,6 +30,8 @@ import org.slf4j.MDC;
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class VerbatimToIdentifierPipeline {
+
+  private static final DwcTerm CORE_TERM = DwcTerm.Occurrence;
 
   public static void main(String[] args) {
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
@@ -61,7 +62,7 @@ public class VerbatimToIdentifierPipeline {
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
     UnaryOperator<String> pathFn =
-        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, id);
+        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, CORE_TERM, t, id);
 
     log.info("Creating a pipeline from options");
     Pipeline p = pipelinesFn.apply(options);
@@ -80,7 +81,7 @@ public class VerbatimToIdentifierPipeline {
     GbifIdTupleTransform tupleTransform = GbifIdTupleTransform.create();
 
     FsUtils.deleteInterpretIfExist(
-        hdfsConfigs, targetPath, datasetId, attempt, idTransform.getAllNames());
+        hdfsConfigs, targetPath, datasetId, attempt, CORE_TERM, idTransform.getAllNames());
 
     log.info("Creating beam pipeline");
 
@@ -119,7 +120,8 @@ public class VerbatimToIdentifierPipeline {
     FsUtils.deleteDirectoryByPrefix(hdfsConfigs, tempPath, ".temp-beam");
 
     log.info("Set interpreted files permissions");
-    String interpretedPath = PathBuilder.buildDatasetAttemptPath(options, DIRECTORY_NAME, false);
+    String interpretedPath =
+        PathBuilder.buildDatasetAttemptPath(options, CORE_TERM.simpleName(), false);
     FsUtils.setOwner(hdfsConfigs, interpretedPath, "crap", "supergroup");
 
     log.info("Pipeline has been finished");

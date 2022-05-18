@@ -57,7 +57,7 @@ public class SensitiveDataPipelineTestIT {
     loadTestDataset("dr893", absolutePath + "/sensitive-data/dr893");
 
     File dr = new File(pipeline, "dr893/1");
-    File interpreted = new File(dr, "interpreted");
+    File interpreted = new File(dr, "occurrence");
     assertTrue(interpreted.exists());
     File ala_sensitive_data = new File(interpreted, "ala_sensitive_data");
     assertTrue(ala_sensitive_data.exists());

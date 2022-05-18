@@ -185,7 +185,7 @@ public class ALAUUIDMintingPipeline {
                             options.getTargetPath(),
                             options.getDatasetId().trim(),
                             options.getAttempt().toString(),
-                            "interpreted",
+                            "occurrence",
                             "verbatim",
                             "*.avro")))
             .apply(

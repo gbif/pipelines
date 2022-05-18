@@ -1,6 +1,6 @@
 package org.gbif.pipelines.ingest.pipelines;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.ALL_AVRO;
 
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
@@ -19,6 +19,7 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
@@ -37,7 +38,6 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
-import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
 import org.gbif.pipelines.transforms.converters.OccurrenceJsonTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.GrscicollTransform;
@@ -97,7 +97,7 @@ import org.slf4j.MDC;
  */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class InterpretedToEsIndexPipeline {
+public class OccurrenceToEsIndexPipeline {
 
   public static void main(String[] args) {
     EsIndexingPipelineOptions options = PipelinesOptionsFactory.createIndexing(args);
@@ -123,7 +123,8 @@ public class InterpretedToEsIndexPipeline {
 
     log.info("Adding step 1: Options");
     UnaryOperator<String> pathFn =
-        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
+        t ->
+            PathBuilder.buildPathInterpretUsingTargetPath(options, DwcTerm.Occurrence, t, ALL_AVRO);
 
     Pipeline p = pipelinesFn.apply(options);
 
@@ -194,7 +195,7 @@ public class InterpretedToEsIndexPipeline {
             .apply("Map Audubon to KV", audubonTransform.toKv());
 
     log.info("Adding step 3: Converting into a json object");
-    SingleOutput<KV<String, CoGbkResult>, OccurrenceJsonRecord> occurrenceJsonDoFn =
+    SingleOutput<KV<String, CoGbkResult>, String> occurrenceJsonDoFn =
         OccurrenceJsonTransform.builder()
             .extendedRecordTag(verbatimTransform.getTag())
             .gbifIdRecordTag(idTransform.getTag())
@@ -211,7 +212,7 @@ public class InterpretedToEsIndexPipeline {
             .build()
             .converter();
 
-    PCollection<OccurrenceJsonRecord> jsonCollection =
+    PCollection<String> jsonCollection =
         KeyedPCollectionTuple
             // Core
             .of(basicTransform.getTag(), basicCollection)
@@ -247,12 +248,7 @@ public class InterpretedToEsIndexPipeline {
       writeIO = writeIO.withIdFn(input -> input.get(esDocumentId).asText());
     }
 
-    // Converts Avro to String before indexing them into Elasticsearch
-    jsonCollection.apply(OccurrenceJsonTransform.jsonConverter()).apply(writeIO);
-
-    // Stores the Avro records for later use
-    jsonCollection.apply(
-        "Writing the Occurrence Records in Json", OccurrenceJsonTransform.Write.write(pathFn));
+    jsonCollection.apply(writeIO);
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();

@@ -18,9 +18,7 @@ import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 @Slf4j
 @Builder
 final class ProcessRunnerBuilder {
-
   private static final String DELIMITER = " ";
-
   private InterpreterConfiguration config;
   @NonNull private PipelinesVerbatimMessage message;
   private int sparkParallelism;

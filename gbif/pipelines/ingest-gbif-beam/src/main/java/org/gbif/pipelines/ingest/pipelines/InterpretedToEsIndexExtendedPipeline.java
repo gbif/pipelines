@@ -75,9 +75,9 @@ public class InterpretedToEsIndexExtendedPipeline {
     MDC.put("step", options.getStepType().name());
 
     if (DatasetType.OCCURRENCE == options.getDatasetType()) {
-      run(options, () -> InterpretedToEsIndexPipeline.run(options));
+      run(options, () -> OccurrenceToEsIndexPipeline.run(options));
     } else if (DatasetType.SAMPLING_EVENT == options.getDatasetType()) {
-      run(options, () -> EventsInterpretedToIndexPipeline.run(options));
+      run(options, () -> EventToEsIndexPipeline.run(options));
     } else {
       throw new IllegalArgumentException(
           "DatasetType" + options.getDatasetType() + " nor recognized for this pipeline");

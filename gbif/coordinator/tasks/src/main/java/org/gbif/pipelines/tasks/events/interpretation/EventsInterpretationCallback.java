@@ -11,9 +11,9 @@ import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesEventsInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation;
 import org.gbif.pipelines.common.interpretation.SparkSettings;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
@@ -146,7 +146,7 @@ public class EventsInterpretationCallback extends AbstractMessageCallback<Pipeli
             config.stepConfig.repositoryPath,
             datasetId,
             attempt,
-            Interpretation.DIRECTORY_NAME);
+            DwcTerm.Event.simpleName().toLowerCase());
 
     return HdfsUtils.exists(hdfsConfigs, path);
   }

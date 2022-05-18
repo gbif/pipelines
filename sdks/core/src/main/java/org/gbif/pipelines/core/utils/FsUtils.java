@@ -1,7 +1,6 @@
 package org.gbif.pipelines.core.utils;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.DIRECTORY_NAME;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.ALL;
 
 import com.fasterxml.jackson.databind.DeserializationContext;
@@ -36,6 +35,7 @@ import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.TermFactory;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
@@ -319,10 +319,13 @@ public final class FsUtils {
       String basePath,
       String datasetId,
       Integer attempt,
+      DwcTerm coreTerm,
       Set<String> steps) {
     if (steps != null && !steps.isEmpty()) {
 
-      String path = String.join("/", basePath, datasetId, attempt.toString(), DIRECTORY_NAME);
+      String path =
+          String.join(
+              "/", basePath, datasetId, attempt.toString(), coreTerm.simpleName().toLowerCase());
 
       if (steps.contains(ALL.name())) {
         log.info("Delete interpretation directory - {}", path);
@@ -344,9 +347,10 @@ public final class FsUtils {
       String basePath,
       String datasetId,
       Integer attempt,
+      DwcTerm coreTerm,
       String... steps) {
     HashSet<String> s = new HashSet<>(Arrays.asList(steps));
-    deleteInterpretIfExist(hdfsConfigs, basePath, datasetId, attempt, s);
+    deleteInterpretIfExist(hdfsConfigs, basePath, datasetId, attempt, coreTerm, s);
   }
 
   /**

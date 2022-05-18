@@ -13,7 +13,6 @@ import org.gbif.common.messaging.api.messages.PipelinesEventsInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
 import org.gbif.pipelines.common.PipelinesVariables.Events;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
@@ -135,14 +134,7 @@ public class EventsIndexingCallback
     // Chooses a runner type by calculating number of files
     String eventCore = RecordType.EVENT_CORE.name().toLowerCase();
     String eventsPath =
-        String.join(
-            "/",
-            config.stepConfig.repositoryPath,
-            datasetId,
-            attempt,
-            Events.EVENTS_DIR,
-            Interpretation.DIRECTORY_NAME,
-            eventCore);
+        String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, eventCore);
     int count = HdfsUtils.getFileCount(hdfsConfigs, eventsPath);
     count *= 4;
     if (count < config.sparkConfig.parallelismMin) {

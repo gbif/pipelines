@@ -24,8 +24,8 @@ import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesIndexedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
@@ -181,7 +181,7 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
   private int computeSparkParallelism(String datasetId, String attempt) throws IOException {
     // Chooses a runner type by calculating number of files
     String basic = RecordType.BASIC.name().toLowerCase();
-    String directoryName = Interpretation.DIRECTORY_NAME;
+    String directoryName = DwcTerm.Occurrence.simpleName().toLowerCase();
     String basicPath =
         String.join(
             "/", config.stepConfig.repositoryPath, datasetId, attempt, directoryName, basic);

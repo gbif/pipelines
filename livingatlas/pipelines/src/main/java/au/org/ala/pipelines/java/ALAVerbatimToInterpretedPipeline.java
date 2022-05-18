@@ -47,6 +47,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.parsers.date.DateComponentOrdering;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
@@ -118,6 +119,7 @@ import org.slf4j.MDC;
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ALAVerbatimToInterpretedPipeline {
+  private static final DwcTerm CORE_TERM = DwcTerm.Occurrence;
 
   public static void main(String[] args) throws IOException {
     VersionInfo.print();
@@ -182,7 +184,7 @@ public class ALAVerbatimToInterpretedPipeline {
             ? config.getGbifConfig().getDefaultDateFormat()
             : options.getDefaultDateFormat();
 
-    FsUtils.deleteInterpretIfExist(hdfsConfigs, targetPath, datasetId, attempt, types);
+    FsUtils.deleteInterpretIfExist(hdfsConfigs, targetPath, datasetId, attempt, CORE_TERM, types);
 
     MDC.put("datasetId", datasetId);
     MDC.put("attempt", attempt.toString());
@@ -369,7 +371,9 @@ public class ALAVerbatimToInterpretedPipeline {
   private static <T> SyncDataFileWriter<T> createWriter(
       InterpretationPipelineOptions options, Schema schema, Transform transform, String id) {
     UnaryOperator<String> pathFn =
-        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, id + AVRO_EXTENSION);
+        t ->
+            PathBuilder.buildPathInterpretUsingTargetPath(
+                options, CORE_TERM, t, id + AVRO_EXTENSION);
     Path path = new Path(pathFn.apply(transform.getBaseName()));
     FileSystem fs =
         FileSystemFactory.getInstance(HdfsConfigs.create(options.getHdfsSiteConfig(), null))

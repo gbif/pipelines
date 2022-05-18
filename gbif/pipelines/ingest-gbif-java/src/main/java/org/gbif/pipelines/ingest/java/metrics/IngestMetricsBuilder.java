@@ -45,6 +45,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.VERBATIM_RECO
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
+import org.gbif.pipelines.ingest.java.pipelines.VerbatimToOccurrencePipeline;
 import org.gbif.pipelines.transforms.common.FilterRecordsTransform;
 import org.gbif.pipelines.transforms.common.UniqueGbifIdTransform;
 import org.gbif.pipelines.transforms.common.UniqueIdTransform;
@@ -85,10 +86,7 @@ import org.gbif.pipelines.transforms.table.ResourceRelationshipTableTransform;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class IngestMetricsBuilder {
 
-  /**
-   * {@link IngestMetrics} for {@link
-   * org.gbif.pipelines.ingest.java.pipelines.VerbatimToInterpretedPipeline}
-   */
+  /** {@link IngestMetrics} for {@link VerbatimToOccurrencePipeline} */
   public static IngestMetrics createVerbatimToInterpretedMetrics() {
     return IngestMetrics.create()
         .addMetric(BasicTransform.class, BASIC_RECORDS_COUNT)

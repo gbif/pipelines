@@ -1,7 +1,6 @@
 package org.gbif.pipelines.ingest.pipelines;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.DIRECTORY_NAME;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.ALL_AVRO;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.IDENTIFIER_ABSENT;
 
 import java.time.LocalDateTime;
@@ -26,6 +25,7 @@ import org.apache.beam.sdk.values.PCollectionList;
 import org.apache.beam.sdk.values.PCollectionTuple;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
@@ -94,7 +94,9 @@ import org.slf4j.MDC;
  */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class VerbatimToInterpretedPipeline {
+public class VerbatimToOccurrencePipeline {
+
+  private static final DwcTerm CORE_TERM = DwcTerm.Occurrence;
 
   public static void main(String[] args) {
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
@@ -125,16 +127,17 @@ public class VerbatimToInterpretedPipeline {
     // Remove directories with avro files for expected interpretation, except IDENTIFIER
     Set<String> deleteTypes = new HashSet<>(types);
     deleteTypes.remove(IDENTIFIER_ABSENT.name());
-    FsUtils.deleteInterpretIfExist(hdfsConfigs, targetPath, datasetId, attempt, deleteTypes);
+    FsUtils.deleteInterpretIfExist(
+        hdfsConfigs, targetPath, datasetId, attempt, CORE_TERM, deleteTypes);
 
     // Path function for writing avro files
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
     UnaryOperator<String> pathFn =
-        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, id);
+        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, CORE_TERM, t, id);
 
     // Path function for reading avro files
     UnaryOperator<String> interpretedPathFn =
-        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
+        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, CORE_TERM, t, ALL_AVRO);
 
     log.info("Creating pipeline transforms");
     MetadataTransform metadataTransform = transformsFactory.createMetadataTransform();
@@ -318,14 +321,15 @@ public class VerbatimToInterpretedPipeline {
 
     // Delete absent GBIF IDs directory
     FsUtils.deleteInterpretIfExist(
-        hdfsConfigs, targetPath, datasetId, attempt, idTransform.getAbsentName());
+        hdfsConfigs, targetPath, datasetId, attempt, CORE_TERM, idTransform.getAbsentName());
 
     log.info("Deleting beam temporal folders");
     String tempPath = String.join("/", targetPath, datasetId, attempt.toString());
     FsUtils.deleteDirectoryByPrefix(hdfsConfigs, tempPath, ".temp-beam");
 
     log.info("Set interpreted files permissions");
-    String interpretedPath = PathBuilder.buildDatasetAttemptPath(options, DIRECTORY_NAME, false);
+    String interpretedPath =
+        PathBuilder.buildDatasetAttemptPath(options, CORE_TERM.simpleName(), false);
     FsUtils.setOwner(hdfsConfigs, interpretedPath, "crap", "supergroup");
 
     log.info("Pipeline has been finished");

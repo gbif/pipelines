@@ -1,13 +1,12 @@
 package org.gbif.pipelines.ingest.java.transforms;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.DIRECTORY_NAME;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.specific.SpecificDatumReader;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
@@ -18,6 +17,8 @@ import org.junit.Test;
 
 public class InterpretedAvroWriterTest {
 
+  private static final DwcTerm CORE_TERM = DwcTerm.Occurrence;
+
   @Test
   public void writerTest() throws IOException {
 
@@ -27,7 +28,8 @@ public class InterpretedAvroWriterTest {
 
     String id = "id";
 
-    String outputFile = getClass().getResource("/").getFile() + "/" + DIRECTORY_NAME;
+    String outputFile =
+        getClass().getResource("/").getFile() + "/" + CORE_TERM.simpleName().toLowerCase();
 
     String[] args = {
       "--datasetId=d596fccb-2319-42eb-b13b-986c932780ad",
@@ -40,7 +42,7 @@ public class InterpretedAvroWriterTest {
 
     // When
     try (SyncDataFileWriter<BasicRecord> writer =
-        InterpretedAvroWriter.createAvroWriter(options, basicTransform, id)) {
+        InterpretedAvroWriter.createAvroWriter(options, basicTransform, CORE_TERM, id)) {
       writer.append(basicRecord);
     }
 
@@ -48,7 +50,7 @@ public class InterpretedAvroWriterTest {
     File result =
         new File(
             outputFile
-                + "/d596fccb-2319-42eb-b13b-986c932780ad/146/interpreted/basic/interpret-id.avro");
+                + "/d596fccb-2319-42eb-b13b-986c932780ad/146/occurrence/basic/interpret-id.avro");
     DatumReader<BasicRecord> datumReader = new SpecificDatumReader<>(BasicRecord.class);
     try (DataFileReader<BasicRecord> dataFileReader = new DataFileReader<>(result, datumReader)) {
       while (dataFileReader.hasNext()) {

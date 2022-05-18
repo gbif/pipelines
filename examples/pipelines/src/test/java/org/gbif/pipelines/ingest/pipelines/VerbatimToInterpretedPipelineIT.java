@@ -41,6 +41,8 @@ import org.junit.runners.JUnit4;
 @Category(NeedsRunner.class)
 public class VerbatimToInterpretedPipelineIT {
 
+  private static final DwcTerm CORE_TERM = DwcTerm.Event;
+
   private static final String ID = "777";
   private static final String DATASET_KEY = UUID.randomUUID().toString();
 
@@ -71,7 +73,8 @@ public class VerbatimToInterpretedPipelineIT {
 
     // Create varbatim.avro
     try (SyncDataFileWriter<ExtendedRecord> writer =
-        InterpretedAvroWriter.createAvroWriter(options, VerbatimTransform.create(), ID)) {
+        InterpretedAvroWriter.createAvroWriter(
+            options, VerbatimTransform.create(), CORE_TERM, ID)) {
 
       Map<String, String> core = new HashMap<>();
       core.put(DwcTerm.datasetID.qualifiedName(), "datasetID");
@@ -91,7 +94,7 @@ public class VerbatimToInterpretedPipelineIT {
       writer.append(extendedRecord);
     }
     Path from =
-        Paths.get(outputFile, DATASET_KEY, attempt, "interpreted/verbatim/interpret-777.avro");
+        Paths.get(outputFile, DATASET_KEY, attempt, "occurrence/verbatim/interpret-777.avro");
     Path to = Paths.get(outputFile, DATASET_KEY, attempt, "verbatim.avro");
     Files.deleteIfExists(to);
     Files.move(from, to);
@@ -104,7 +107,7 @@ public class VerbatimToInterpretedPipelineIT {
         String.join("/", outputFile, DATASET_KEY, attempt, "verbatim-to-interpreted.yml");
     assertTrue(Files.exists(Paths.get(metricsOutput)));
 
-    String interpretedOutput = String.join("/", outputFile, DATASET_KEY, attempt, "interpreted");
+    String interpretedOutput = String.join("/", outputFile, DATASET_KEY, attempt, "occurrence");
 
     assertEquals(3, new File(interpretedOutput).listFiles().length);
     assertFile(IdentifierRecord.class, interpretedOutput + "/identifier");

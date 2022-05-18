@@ -1,7 +1,5 @@
 package org.gbif.pipelines.tasks.hdfs;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.DIRECTORY_NAME;
-
 import com.google.common.base.Strings;
 import java.io.IOException;
 import java.util.Collections;
@@ -18,12 +16,13 @@ import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesHdfsViewBuiltMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.interpretation.SparkSettings;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
-import org.gbif.pipelines.ingest.java.pipelines.InterpretedToHdfsViewPipeline;
+import org.gbif.pipelines.ingest.java.pipelines.OccurrenceToHdfsViewPipeline;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
 import org.gbif.pipelines.tasks.hdfs.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
@@ -117,7 +116,7 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
   }
 
   private void runLocal(ProcessRunnerBuilderBuilder builder) {
-    InterpretedToHdfsViewPipeline.run(builder.build().buildOptions(), executor);
+    OccurrenceToHdfsViewPipeline.run(builder.build().buildOptions(), executor);
   }
 
   private void runDistributed(
@@ -182,7 +181,12 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
     String datasetId = message.getDatasetUuid().toString();
     String attempt = Integer.toString(message.getAttempt());
     String dirPath =
-        String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, DIRECTORY_NAME);
+        String.join(
+            "/",
+            config.stepConfig.repositoryPath,
+            datasetId,
+            attempt,
+            DwcTerm.Occurrence.simpleName().toLowerCase());
     HdfsConfigs hdfsConfigs =
         HdfsConfigs.create(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);
     long sizeByte = HdfsUtils.getFileSizeByte(hdfsConfigs, dirPath);

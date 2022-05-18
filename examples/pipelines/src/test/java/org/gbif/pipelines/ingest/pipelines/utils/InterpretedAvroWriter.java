@@ -9,6 +9,7 @@ import lombok.SneakyThrows;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
@@ -25,11 +26,13 @@ public class InterpretedAvroWriter {
   public static <T extends SpecificRecordBase & Record> SyncDataFileWriter<T> createAvroWriter(
       InterpretationPipelineOptions options,
       Transform<?, T> transform,
+      DwcTerm coreTerm,
       String id,
       boolean useInvalidName) {
     String baseName = useInvalidName ? transform.getBaseInvalidName() : transform.getBaseName();
     String pathString =
-        PathBuilder.buildPathInterpretUsingTargetPath(options, baseName, id + AVRO_EXTENSION);
+        PathBuilder.buildPathInterpretUsingTargetPath(
+            options, coreTerm, baseName, id + AVRO_EXTENSION);
     Path path = new Path(pathString);
     HdfsConfigs hdfsConfigs =
         HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig());
@@ -44,7 +47,10 @@ public class InterpretedAvroWriter {
   }
 
   public static <T extends SpecificRecordBase & Record> SyncDataFileWriter<T> createAvroWriter(
-      InterpretationPipelineOptions options, Transform<?, T> transform, String id) {
-    return createAvroWriter(options, transform, id, false);
+      InterpretationPipelineOptions options,
+      Transform<?, T> transform,
+      DwcTerm coreTerm,
+      String id) {
+    return createAvroWriter(options, transform, coreTerm, id, false);
   }
 }
