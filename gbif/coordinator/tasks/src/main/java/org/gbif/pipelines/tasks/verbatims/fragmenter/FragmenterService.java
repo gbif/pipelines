@@ -39,7 +39,7 @@ public class FragmenterService extends AbstractIdleService {
 
   @Override
   protected void startUp() throws Exception {
-    log.info("Started pipelines-fragmenter service with parameters : {}", config);
+    log.info("Started pipelines-verbatim-fragmenter service with parameters : {}", config);
     // Prefetch is one, since this is a long-running process.
     StepConfiguration c = config.stepConfig;
     listener = new MessageListener(c.messaging.getConnectionParameters(), 1);
@@ -69,7 +69,7 @@ public class FragmenterService extends AbstractIdleService {
       curator.close();
       hbaseConnection.close();
       executor.shutdown();
-      log.info("Stopping pipelines-fragmenter service");
+      log.info("Stopping pipelines-verbatim-fragmenter service");
     } catch (IOException ex) {
       log.warn("Couldn't close some resources during the exit - {}", ex.getMessage());
     }

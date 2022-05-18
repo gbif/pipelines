@@ -15,7 +15,7 @@ public class IdentifierCommand extends ServiceCommand {
   private final IdentifierConfiguration config = new IdentifierConfiguration();
 
   public IdentifierCommand() {
-    super("pipelines-identifier");
+    super("pipelines-occurrence-identifier");
   }
 
   @Override

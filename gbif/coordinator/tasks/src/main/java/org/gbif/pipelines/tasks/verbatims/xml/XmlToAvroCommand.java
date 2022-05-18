@@ -12,7 +12,7 @@ public class XmlToAvroCommand extends ServiceCommand {
   private final XmlToAvroConfiguration configuration = new XmlToAvroConfiguration();
 
   public XmlToAvroCommand() {
-    super("pipelines-to-avro-from-xml");
+    super("pipelines-verbatim-to-avro-from-xml");
   }
 
   @Override

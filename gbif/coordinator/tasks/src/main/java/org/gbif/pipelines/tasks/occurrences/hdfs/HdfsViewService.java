@@ -32,7 +32,7 @@ public class HdfsViewService extends AbstractIdleService {
 
   @Override
   protected void startUp() throws Exception {
-    log.info("Started pipelines-hdfs-view service with parameters : {}", config);
+    log.info("Started pipelines-occurrence-hdfs-view service with parameters : {}", config);
     // Prefetch is one, since this is a long-running process.
     StepConfiguration c = config.stepConfig;
     listener = new MessageListener(c.messaging.getConnectionParameters(), 1);
@@ -60,6 +60,6 @@ public class HdfsViewService extends AbstractIdleService {
     publisher.close();
     curator.close();
     executor.shutdown();
-    log.info("Stopping pipelines-hdfs-view service");
+    log.info("Stopping pipelines-occurrence-hdfs-view service");
   }
 }

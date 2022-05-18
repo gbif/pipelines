@@ -32,7 +32,7 @@ public class DwcaToAvroService extends AbstractIdleService {
 
   @Override
   protected void startUp() throws Exception {
-    log.info("Started pipelines-to-avro-from-dwca service with parameters : {}", config);
+    log.info("Started pipelines-verbatim-to-avro-from-dwca service with parameters : {}", config);
     // Prefetch is one, since this is a long-running process.
     StepConfiguration c = config.stepConfig;
     listener = new MessageListener(c.messaging.getConnectionParameters(), 1);
@@ -62,6 +62,6 @@ public class DwcaToAvroService extends AbstractIdleService {
     publisher.close();
     listener.close();
     curator.close();
-    log.info("Stopping pipelines-to-avro-from-dwca service");
+    log.info("Stopping pipelines-verbatim-to-avro-from-dwca service");
   }
 }

@@ -15,7 +15,7 @@ public class HdfsViewCommand extends ServiceCommand {
   private final HdfsViewConfiguration config = new HdfsViewConfiguration();
 
   public HdfsViewCommand() {
-    super("pipelines-hdfs-view");
+    super("pipelines-occurrence-hdfs-view");
   }
 
   @Override

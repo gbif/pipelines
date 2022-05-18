@@ -16,7 +16,7 @@ public class FragmenterCommand extends ServiceCommand {
   private final FragmenterConfiguration config = new FragmenterConfiguration();
 
   public FragmenterCommand() {
-    super("pipelines-fragmenter");
+    super("pipelines-verbatim-fragmenter");
   }
 
   @Override

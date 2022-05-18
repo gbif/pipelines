@@ -16,7 +16,7 @@ public class EventsIndexingCommand extends ServiceCommand {
   private final EventsIndexingConfiguration config = new EventsIndexingConfiguration();
 
   public EventsIndexingCommand() {
-    super("pipelines-events-indexing");
+    super("pipelines-event-indexing");
   }
 
   @Override

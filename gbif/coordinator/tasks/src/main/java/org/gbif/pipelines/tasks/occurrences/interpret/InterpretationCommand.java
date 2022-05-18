@@ -16,7 +16,7 @@ public class InterpretationCommand extends ServiceCommand {
   private final InterpreterConfiguration config = new InterpreterConfiguration();
 
   public InterpretationCommand() {
-    super("pipelines-interpret-dataset");
+    super("pipelines-occurrence-interpretation");
   }
 
   @Override

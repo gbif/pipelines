@@ -33,7 +33,7 @@ public class IdentifierService extends AbstractIdleService {
 
   @Override
   protected void startUp() throws Exception {
-    log.info("Started pipelines-identifier dataset service with parameters : {}", config);
+    log.info("Started pipelines-occurrence-identifier dataset service with parameters : {}", config);
     // Prefetch is one, since this is a long-running process.
     StepConfiguration c = config.stepConfig;
     listener = new MessageListener(c.messaging.getConnectionParameters(), 1);
@@ -70,6 +70,6 @@ public class IdentifierService extends AbstractIdleService {
     } catch (IOException e) {
       log.error("Can't close ES http client connection");
     }
-    log.info("Stopping pipelines-interpret-dataset service");
+    log.info("Stopping pipelines-occurrence-identifier service");
   }
 }

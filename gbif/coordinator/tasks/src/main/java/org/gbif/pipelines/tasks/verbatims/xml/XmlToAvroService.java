@@ -39,7 +39,7 @@ public class XmlToAvroService extends AbstractIdleService {
 
   @Override
   protected void startUp() throws Exception {
-    log.info("Started pipelines-to-avro-from-xml service with parameters : {}", config);
+    log.info("Started pipelines-verbatim-to-avro-from-xml service with parameters : {}", config);
     // create the listener.
     StepConfiguration c = config.stepConfig;
     listener = new MessageListener(c.messaging.getConnectionParameters(), 1);
@@ -79,6 +79,6 @@ public class XmlToAvroService extends AbstractIdleService {
     listener.close();
     curator.close();
     executor.shutdown();
-    log.info("Stopping pipelines-to-avro-from-xml service");
+    log.info("Stopping pipelines-verbatim-to-avro-from-xml service");
   }
 }

@@ -25,7 +25,7 @@ public class EventsIndexingService extends AbstractIdleService {
 
   @Override
   protected void startUp() throws Exception {
-    log.info("Started pipelines-events-indexing service with parameters : {}", config);
+    log.info("Started pipelines-event-indexing service with parameters : {}", config);
     // Prefetch is one, since this is a long-running process.
     StepConfiguration c = config.stepConfig;
     listener = new MessageListener(c.messaging.getConnectionParameters(), 1);
@@ -43,6 +43,6 @@ public class EventsIndexingService extends AbstractIdleService {
     listener.close();
     publisher.close();
     curator.close();
-    log.info("Stopping pipelines-events-indexing service");
+    log.info("Stopping pipelines-event-indexing service");
   }
 }

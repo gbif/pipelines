@@ -16,7 +16,7 @@ public class EventsInterpretationCommand extends ServiceCommand {
   private final EventsInterpretationConfiguration config = new EventsInterpretationConfiguration();
 
   public EventsInterpretationCommand() {
-    super("pipelines-events-interpretation");
+    super("pipelines-event-interpretation");
   }
 
   @Override

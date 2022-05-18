@@ -40,7 +40,7 @@ public class IndexingService extends AbstractIdleService {
 
   @Override
   protected void startUp() throws Exception {
-    log.info("Started pipelines-index-dataset service with parameters : {}", config);
+    log.info("Started pipelines-occurrence-indexing service with parameters : {}", config);
     // Prefetch is one, since this is a long-running process.
     StepConfiguration c = config.stepConfig;
     listener = new MessageListener(c.messaging.getConnectionParameters(), 1);
@@ -89,6 +89,6 @@ public class IndexingService extends AbstractIdleService {
     } catch (IOException e) {
       log.error("Can't close ES http client connection");
     }
-    log.info("Stopping pipelines-index-dataset service");
+    log.info("Stopping pipelines-occurrence-indexing service");
   }
 }
