@@ -34,7 +34,7 @@ public class MetricsCollectorService extends AbstractIdleService {
 
   @Override
   protected void startUp() throws Exception {
-    log.info("Started pipelines-metrics-collector with parameters : {}", config);
+    log.info("Started pipelines-validator-metrics-collector with parameters : {}", config);
     // Prefetch is one, since this is a long-running process.
     StepConfiguration c = config.stepConfig;
     listener = new MessageListener(c.messaging.getConnectionParameters(), 1);
@@ -68,6 +68,6 @@ public class MetricsCollectorService extends AbstractIdleService {
     listener.close();
     curator.close();
     ElasticsearchClientFactory.getInstance().close();
-    log.info("Stopping pipelines-metrics-collector service");
+    log.info("Stopping pipelines-validator-metrics-collector service");
   }
 }

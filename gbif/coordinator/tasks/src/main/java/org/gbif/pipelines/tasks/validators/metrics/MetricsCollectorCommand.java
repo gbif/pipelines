@@ -16,7 +16,7 @@ public class MetricsCollectorCommand extends ServiceCommand {
   private final MetricsCollectorConfiguration config = new MetricsCollectorConfiguration();
 
   public MetricsCollectorCommand() {
-    super("pipelines-metrics-collector");
+    super("pipelines-validator-metrics-collector");
   }
 
   @Override

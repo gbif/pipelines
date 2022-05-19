@@ -33,7 +33,7 @@ public class ArchiveValidatorService extends AbstractIdleService {
 
   @Override
   protected void startUp() throws Exception {
-    log.info("Started pipelines-archive-validator service with parameters : {}", config);
+    log.info("Started pipelines-validator-archive-validator service with parameters : {}", config);
     // Prefetch is one, since this is a long-running process.
     StepConfiguration c = config.stepConfig;
     listener = new MessageListener(c.messaging.getConnectionParameters(), 1);
@@ -71,6 +71,6 @@ public class ArchiveValidatorService extends AbstractIdleService {
     publisher.close();
     listener.close();
     curator.close();
-    log.info("Stopping pipelines-pipelines-archive-validator service");
+    log.info("Stopping pipelines-pipelines-validator-archive-validator service");
   }
 }

@@ -15,7 +15,7 @@ public class CleanerCommand extends ServiceCommand {
   private final CleanerConfiguration configuration = new CleanerConfiguration();
 
   public CleanerCommand() {
-    super("pipelines-cleaner");
+    super("pipelines-validator-cleaner");
   }
 
   @Override

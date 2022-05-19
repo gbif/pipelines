@@ -16,7 +16,7 @@ public class ArchiveValidatorCommand extends ServiceCommand {
   private final ArchiveValidatorConfiguration config = new ArchiveValidatorConfiguration();
 
   public ArchiveValidatorCommand() {
-    super("pipelines-archive-validator");
+    super("pipelines-validator-archive-validator");
   }
 
   @Override

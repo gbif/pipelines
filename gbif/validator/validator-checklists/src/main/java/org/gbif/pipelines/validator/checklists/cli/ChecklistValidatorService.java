@@ -51,7 +51,7 @@ public class ChecklistValidatorService extends AbstractIdleService {
 
   @Override
   protected void startUp() throws Exception {
-    log.info("Started pipelines-archive-validator service with parameters : {}", config);
+    log.info("Started pipelines-validator-checklist-validator service with parameters : {}", config);
     // Prefetch is one, since this is a long-running process.
     listener = new MessageListener(config.messaging.getConnectionParameters(), 1);
     publisher = new DefaultMessagePublisher(config.messaging.getConnectionParameters());
@@ -70,6 +70,6 @@ public class ChecklistValidatorService extends AbstractIdleService {
   protected void shutDown() {
     listener.close();
     publisher.close();
-    log.info("Stopping pipelines-pipelines-archive-validator service");
+    log.info("Stopping pipelines-validator-checklist-validator service");
   }
 }

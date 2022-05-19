@@ -17,7 +17,7 @@ public class ChecklistValidatorCommand extends ServiceCommand {
   private final ChecklistValidatorConfiguration config = new ChecklistValidatorConfiguration();
 
   public ChecklistValidatorCommand() {
-    super("pipelines-checklist-validator");
+    super("pipelines-validator-checklist-validator");
   }
 
   @Override
