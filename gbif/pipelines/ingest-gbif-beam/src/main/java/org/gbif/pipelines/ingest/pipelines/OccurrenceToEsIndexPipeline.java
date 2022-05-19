@@ -5,6 +5,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.ALL_AVRO;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
@@ -128,109 +129,13 @@ public class OccurrenceToEsIndexPipeline {
 
     Pipeline p = pipelinesFn.apply(options);
 
-    log.info("Adding step 2: Creating transformations");
-    // Core
-    BasicTransform basicTransform = BasicTransform.builder().create();
-    GbifIdTransform idTransform = GbifIdTransform.builder().create();
-    ClusteringTransform clusteringTransform = ClusteringTransform.builder().create();
-    MetadataTransform metadataTransform = MetadataTransform.builder().create();
-    VerbatimTransform verbatimTransform = VerbatimTransform.create();
-    TemporalTransform temporalTransform = TemporalTransform.builder().create();
-    TaxonomyTransform taxonomyTransform = TaxonomyTransform.builder().create();
-    GrscicollTransform grscicollTransform = GrscicollTransform.builder().create();
-    LocationTransform locationTransform = LocationTransform.builder().create();
-
-    // Extension
-    MultimediaTransform multimediaTransform = MultimediaTransform.builder().create();
-    AudubonTransform audubonTransform = AudubonTransform.builder().create();
-    ImageTransform imageTransform = ImageTransform.builder().create();
-
-    log.info("Adding step 3: Creating beam pipeline");
-    PCollectionView<MetadataRecord> metadataView =
-        p.apply("Read Metadata", metadataTransform.read(pathFn))
-            .apply("Convert to view", View.asSingleton());
-
-    PCollection<KV<String, GbifIdRecord>> idCollection =
-        p.apply("Read GBIF ids", idTransform.read(pathFn))
-            .apply("Map GBIF ids to KV", idTransform.toKv());
-
-    PCollection<KV<String, ClusteringRecord>> clusteringCollection =
-        p.apply("Read clustering", clusteringTransform.read(pathFn))
-            .apply("Map clustering to KV", clusteringTransform.toKv());
-
-    PCollection<KV<String, ExtendedRecord>> verbatimCollection =
-        p.apply("Read Verbatim", verbatimTransform.read(pathFn))
-            .apply("Map Verbatim to KV", verbatimTransform.toKv());
-
-    PCollection<KV<String, BasicRecord>> basicCollection =
-        p.apply("Read Basic", basicTransform.read(pathFn))
-            .apply("Map Basic to KV", basicTransform.toKv());
-
-    PCollection<KV<String, TemporalRecord>> temporalCollection =
-        p.apply("Read Temporal", temporalTransform.read(pathFn))
-            .apply("Map Temporal to KV", temporalTransform.toKv());
-
-    PCollection<KV<String, LocationRecord>> locationCollection =
-        p.apply("Read Location", locationTransform.read(pathFn))
-            .apply("Map Location to KV", locationTransform.toKv());
-
-    PCollection<KV<String, TaxonRecord>> taxonCollection =
-        p.apply("Read Taxon", taxonomyTransform.read(pathFn))
-            .apply("Map Taxon to KV", taxonomyTransform.toKv());
-
-    PCollection<KV<String, GrscicollRecord>> grscicollCollection =
-        p.apply("Read Grscicoll", grscicollTransform.read(pathFn))
-            .apply("Map Grscicoll to KV", grscicollTransform.toKv());
-
-    PCollection<KV<String, MultimediaRecord>> multimediaCollection =
-        p.apply("Read Multimedia", multimediaTransform.read(pathFn))
-            .apply("Map Multimedia to KV", multimediaTransform.toKv());
-
-    PCollection<KV<String, ImageRecord>> imageCollection =
-        p.apply("Read Image", imageTransform.read(pathFn))
-            .apply("Map Image to KV", imageTransform.toKv());
-
-    PCollection<KV<String, AudubonRecord>> audubonCollection =
-        p.apply("Read Audubon", audubonTransform.read(pathFn))
-            .apply("Map Audubon to KV", audubonTransform.toKv());
-
-    log.info("Adding step 3: Converting into a json object");
-    SingleOutput<KV<String, CoGbkResult>, String> occurrenceJsonDoFn =
-        OccurrenceJsonTransform.builder()
-            .extendedRecordTag(verbatimTransform.getTag())
-            .gbifIdRecordTag(idTransform.getTag())
-            .clusteringRecordTag(clusteringTransform.getTag())
-            .basicRecordTag(basicTransform.getTag())
-            .temporalRecordTag(temporalTransform.getTag())
-            .locationRecordTag(locationTransform.getTag())
-            .taxonRecordTag(taxonomyTransform.getTag())
-            .grscicollRecordTag(grscicollTransform.getTag())
-            .multimediaRecordTag(multimediaTransform.getTag())
-            .imageRecordTag(imageTransform.getTag())
-            .audubonRecordTag(audubonTransform.getTag())
-            .metadataView(metadataView)
-            .build()
-            .converter();
-
     PCollection<String> jsonCollection =
-        KeyedPCollectionTuple
-            // Core
-            .of(basicTransform.getTag(), basicCollection)
-            .and(idTransform.getTag(), idCollection)
-            .and(clusteringTransform.getTag(), clusteringCollection)
-            .and(temporalTransform.getTag(), temporalCollection)
-            .and(locationTransform.getTag(), locationCollection)
-            .and(taxonomyTransform.getTag(), taxonCollection)
-            .and(grscicollTransform.getTag(), grscicollCollection)
-            // Extension
-            .and(multimediaTransform.getTag(), multimediaCollection)
-            .and(imageTransform.getTag(), imageCollection)
-            .and(audubonTransform.getTag(), audubonCollection)
-            // Raw
-            .and(verbatimTransform.getTag(), verbatimCollection)
-            // Apply
-            .apply("Grouping objects", CoGroupByKey.create())
-            .apply("Merging to json", occurrenceJsonDoFn);
+        IndexingTransform.builder()
+            .pipeline(p)
+            .pathFn(pathFn)
+            .asParentChildRecord(false)
+            .build()
+            .apply();
 
     log.info("Adding step 4: Elasticsearch indexing");
     ElasticsearchIO.ConnectionConfiguration esConfig =
@@ -265,5 +170,131 @@ public class OccurrenceToEsIndexPipeline {
         "supergroup");
 
     log.info("Pipeline has been finished");
+  }
+
+  @Builder
+  static class IndexingTransform {
+
+    private final Pipeline pipeline;
+    private final UnaryOperator<String> pathFn;
+
+    private final boolean asParentChildRecord;
+
+    PCollection<String> apply() {
+
+      log.info("Adding step: Creating transformations");
+      BasicTransform basicTransform = BasicTransform.builder().create();
+      GbifIdTransform idTransform = GbifIdTransform.builder().create();
+      ClusteringTransform clusteringTransform = ClusteringTransform.builder().create();
+      MetadataTransform metadataTransform = MetadataTransform.builder().create();
+      VerbatimTransform verbatimTransform = VerbatimTransform.create();
+      TemporalTransform temporalTransform = TemporalTransform.builder().create();
+      TaxonomyTransform taxonomyTransform = TaxonomyTransform.builder().create();
+      GrscicollTransform grscicollTransform = GrscicollTransform.builder().create();
+      LocationTransform locationTransform = LocationTransform.builder().create();
+
+      // Extension
+      MultimediaTransform multimediaTransform = MultimediaTransform.builder().create();
+      AudubonTransform audubonTransform = AudubonTransform.builder().create();
+      ImageTransform imageTransform = ImageTransform.builder().create();
+
+      PCollectionView<MetadataRecord> metadataView =
+          pipeline
+              .apply("Read occurrence Metadata", metadataTransform.read(pathFn))
+              .apply("Convert to occurrence view", View.asSingleton());
+
+      PCollection<KV<String, GbifIdRecord>> idCollection =
+          pipeline
+              .apply("Read occurrence GBIF ids", idTransform.read(pathFn))
+              .apply("Map occurrence GBIF ids to KV", idTransform.toKv());
+
+      PCollection<KV<String, ClusteringRecord>> clusteringCollection =
+          pipeline
+              .apply("Read occurrence clustering", clusteringTransform.read(pathFn))
+              .apply("Map occurrence clustering to KV", clusteringTransform.toKv());
+
+      PCollection<KV<String, ExtendedRecord>> verbatimCollection =
+          pipeline
+              .apply("Read occurrence Verbatim", verbatimTransform.read(pathFn))
+              .apply("Map occurrence Verbatim to KV", verbatimTransform.toKv());
+
+      PCollection<KV<String, BasicRecord>> basicCollection =
+          pipeline
+              .apply("Read occurrence Basic", basicTransform.read(pathFn))
+              .apply("Map occurrence Basic to KV", basicTransform.toKv());
+
+      PCollection<KV<String, TemporalRecord>> temporalCollection =
+          pipeline
+              .apply("Read occurrence Temporal", temporalTransform.read(pathFn))
+              .apply("Map occurrence Temporal to KV", temporalTransform.toKv());
+
+      PCollection<KV<String, LocationRecord>> locationCollection =
+          pipeline
+              .apply("Read occurrence Location", locationTransform.read(pathFn))
+              .apply("Map occurrence Location to KV", locationTransform.toKv());
+
+      PCollection<KV<String, TaxonRecord>> taxonCollection =
+          pipeline
+              .apply("Read occurrence Taxon", taxonomyTransform.read(pathFn))
+              .apply("Map occurrence Taxon to KV", taxonomyTransform.toKv());
+
+      PCollection<KV<String, GrscicollRecord>> grscicollCollection =
+          pipeline
+              .apply("Read occurrence Grscicoll", grscicollTransform.read(pathFn))
+              .apply("Map occurrence Grscicoll to KV", grscicollTransform.toKv());
+
+      PCollection<KV<String, MultimediaRecord>> multimediaCollection =
+          pipeline
+              .apply("Read occurrence Multimedia", multimediaTransform.read(pathFn))
+              .apply("Map occurrence Multimedia to KV", multimediaTransform.toKv());
+
+      PCollection<KV<String, ImageRecord>> imageCollection =
+          pipeline
+              .apply("Read occurrence Image", imageTransform.read(pathFn))
+              .apply("Map occurrence Image to KV", imageTransform.toKv());
+
+      PCollection<KV<String, AudubonRecord>> audubonCollection =
+          pipeline
+              .apply("Read occurrence Audubon", audubonTransform.read(pathFn))
+              .apply("Map occurrence Audubon to KV", audubonTransform.toKv());
+
+      log.info("Adding step: Converting into a occurrence json object");
+      SingleOutput<KV<String, CoGbkResult>, String> occurrenceJsonDoFn =
+          OccurrenceJsonTransform.builder()
+              .extendedRecordTag(verbatimTransform.getTag())
+              .gbifIdRecordTag(idTransform.getTag())
+              .clusteringRecordTag(clusteringTransform.getTag())
+              .basicRecordTag(basicTransform.getTag())
+              .temporalRecordTag(temporalTransform.getTag())
+              .locationRecordTag(locationTransform.getTag())
+              .taxonRecordTag(taxonomyTransform.getTag())
+              .grscicollRecordTag(grscicollTransform.getTag())
+              .multimediaRecordTag(multimediaTransform.getTag())
+              .imageRecordTag(imageTransform.getTag())
+              .audubonRecordTag(audubonTransform.getTag())
+              .metadataView(metadataView)
+              .asParentChildRecord(asParentChildRecord)
+              .build()
+              .converter();
+
+      return KeyedPCollectionTuple
+          // Core
+          .of(basicTransform.getTag(), basicCollection)
+          .and(idTransform.getTag(), idCollection)
+          .and(clusteringTransform.getTag(), clusteringCollection)
+          .and(temporalTransform.getTag(), temporalCollection)
+          .and(locationTransform.getTag(), locationCollection)
+          .and(taxonomyTransform.getTag(), taxonCollection)
+          .and(grscicollTransform.getTag(), grscicollCollection)
+          // Extension
+          .and(multimediaTransform.getTag(), multimediaCollection)
+          .and(imageTransform.getTag(), imageCollection)
+          .and(audubonTransform.getTag(), audubonCollection)
+          // Raw
+          .and(verbatimTransform.getTag(), verbatimCollection)
+          // Apply
+          .apply("Grouping occurrence objects", CoGroupByKey.create())
+          .apply("Merging to occurrence json", occurrenceJsonDoFn);
+    }
   }
 }
