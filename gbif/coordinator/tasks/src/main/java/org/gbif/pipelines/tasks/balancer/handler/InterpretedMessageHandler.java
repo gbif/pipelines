@@ -63,9 +63,10 @@ public class InterpretedMessageHandler {
             m.getEndpointType(),
             m.getValidationResult(),
             m.getInterpretTypes(),
-            m.getDatasetType());
+            DatasetType.OCCURRENCE);
 
     publisher.send(outputMessage);
+    log.info("The message has been sent - {}", outputMessage);
 
     if (m.getDatasetType() == DatasetType.SAMPLING_EVENT) {
       PipelinesEventsMessage eventsMessage =
@@ -83,14 +84,12 @@ public class InterpretedMessageHandler {
               m.getEndpointType(),
               m.getValidationResult(),
               m.getInterpretTypes(),
-              m.getDatasetType());
+              DatasetType.SAMPLING_EVENT);
 
       publisher.send(eventsMessage);
 
       log.info("The events message has been sent - {}", eventsMessage);
     }
-
-    log.info("The message has been sent - {}", outputMessage);
   }
 
   /**
