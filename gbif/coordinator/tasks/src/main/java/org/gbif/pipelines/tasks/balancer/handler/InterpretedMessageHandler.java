@@ -87,7 +87,6 @@ public class InterpretedMessageHandler {
               DatasetType.SAMPLING_EVENT);
 
       publisher.send(eventsMessage);
-
       log.info("The events message has been sent - {}", eventsMessage);
     }
   }

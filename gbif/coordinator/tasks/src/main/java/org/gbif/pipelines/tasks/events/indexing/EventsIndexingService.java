@@ -3,6 +3,9 @@ package org.gbif.pipelines.tasks.events.indexing;
 import com.google.common.util.concurrent.AbstractIdleService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
@@ -18,6 +21,7 @@ public class EventsIndexingService extends AbstractIdleService {
   private MessageListener listener;
   private MessagePublisher publisher;
   private CuratorFramework curator;
+  private CloseableHttpClient httpClient;
 
   public EventsIndexingService(EventsIndexingConfiguration config) {
     this.config = config;
@@ -31,8 +35,14 @@ public class EventsIndexingService extends AbstractIdleService {
     listener = new MessageListener(c.messaging.getConnectionParameters(), 1);
     publisher = new DefaultMessagePublisher(c.messaging.getConnectionParameters());
     curator = c.zooKeeper.getCuratorFramework();
+    httpClient =
+        HttpClients.custom()
+            .setDefaultRequestConfig(
+                RequestConfig.custom().setConnectTimeout(60_000).setSocketTimeout(60_000).build())
+            .build();
 
-    EventsIndexingCallback callback = new EventsIndexingCallback(config, publisher, curator);
+    EventsIndexingCallback callback =
+        new EventsIndexingCallback(config, publisher, curator, httpClient);
 
     String routingKey = new PipelinesEventsInterpretedMessage().getRoutingKey();
     listener.listen(c.queueName, routingKey, c.poolSize, callback);
