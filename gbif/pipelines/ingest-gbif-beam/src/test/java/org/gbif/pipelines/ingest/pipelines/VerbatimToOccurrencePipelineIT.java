@@ -53,7 +53,7 @@ import org.junit.runners.MethodSorters;
 @SuppressWarnings("all")
 @RunWith(JUnit4.class)
 @Category(NeedsRunner.class)
-@FixMethodOrder(MethodSorters.JVM)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class VerbatimToOccurrencePipelineIT {
 
   private static final DwcTerm CORE_TERM = DwcTerm.Occurrence;
