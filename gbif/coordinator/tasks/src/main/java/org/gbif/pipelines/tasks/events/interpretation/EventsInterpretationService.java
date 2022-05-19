@@ -3,6 +3,7 @@ package org.gbif.pipelines.tasks.events.interpretation;
 import com.google.common.util.concurrent.AbstractIdleService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
+import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
@@ -37,7 +38,10 @@ public class EventsInterpretationService extends AbstractIdleService {
     EventsInterpretationCallback callback =
         new EventsInterpretationCallback(config, publisher, curator);
 
-    String routingKey = new PipelinesEventsMessage().getRoutingKey();
+    PipelinesEventsMessage em = new PipelinesEventsMessage();
+    // we run all the events pipelines in distributed mode
+    String routingKey = em.setRunner(StepRunner.DISTRIBUTED.name()).getRoutingKey();
+
     listener.listen(c.queueName, routingKey, c.poolSize, callback);
   }
 
