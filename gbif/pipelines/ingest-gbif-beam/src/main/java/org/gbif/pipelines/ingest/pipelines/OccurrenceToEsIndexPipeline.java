@@ -177,26 +177,23 @@ public class OccurrenceToEsIndexPipeline {
 
     private final Pipeline pipeline;
     private final UnaryOperator<String> pathFn;
-
     private final boolean asParentChildRecord;
 
+    // Init transforms
+    private final BasicTransform basicTransform = BasicTransform.builder().create();
+    private final GbifIdTransform idTransform = GbifIdTransform.builder().create();
+    private final ClusteringTransform clusteringTransform = ClusteringTransform.builder().create();
+    private final MetadataTransform metadataTransform = MetadataTransform.builder().create();
+    private final VerbatimTransform verbatimTransform = VerbatimTransform.create();
+    private final TemporalTransform temporalTransform = TemporalTransform.builder().create();
+    private final TaxonomyTransform taxonomyTransform = TaxonomyTransform.builder().create();
+    private final GrscicollTransform grscicollTransform = GrscicollTransform.builder().create();
+    private final LocationTransform locationTransform = LocationTransform.builder().create();
+    private final MultimediaTransform multimediaTransform = MultimediaTransform.builder().create();
+    private final AudubonTransform audubonTransform = AudubonTransform.builder().create();
+    private final ImageTransform imageTransform = ImageTransform.builder().create();
+
     PCollection<String> apply() {
-
-      log.info("Adding step: Creating transformations");
-      BasicTransform basicTransform = BasicTransform.builder().create();
-      GbifIdTransform idTransform = GbifIdTransform.builder().create();
-      ClusteringTransform clusteringTransform = ClusteringTransform.builder().create();
-      MetadataTransform metadataTransform = MetadataTransform.builder().create();
-      VerbatimTransform verbatimTransform = VerbatimTransform.create();
-      TemporalTransform temporalTransform = TemporalTransform.builder().create();
-      TaxonomyTransform taxonomyTransform = TaxonomyTransform.builder().create();
-      GrscicollTransform grscicollTransform = GrscicollTransform.builder().create();
-      LocationTransform locationTransform = LocationTransform.builder().create();
-
-      // Extension
-      MultimediaTransform multimediaTransform = MultimediaTransform.builder().create();
-      AudubonTransform audubonTransform = AudubonTransform.builder().create();
-      ImageTransform imageTransform = ImageTransform.builder().create();
 
       PCollectionView<MetadataRecord> metadataView =
           pipeline
