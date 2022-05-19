@@ -29,6 +29,12 @@ public class PostprocessValidation {
   private final CloseableHttpClient httpClient;
 
   public void validate() throws IOException {
+    if (!getThresholdSkipTagValue()) {
+      validateThreshold();
+    }
+  }
+
+  private void validateThreshold() throws IOException {
     String datasetId = message.getDatasetUuid().toString();
     String attempt = Integer.toString(message.getAttempt());
     String metaFileName = config.metaFileName;
@@ -36,7 +42,7 @@ public class PostprocessValidation {
         String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, metaFileName);
     log.info("Getting records number from the file - {}", metaPath);
 
-    Double threshold = getMachineTagValue().orElse(config.idThresholdPercent);
+    Double threshold = getThresholdTagValue().orElse(config.idThresholdPercent);
 
     ToDoubleFunction<String> getMetricFn =
         m -> {
@@ -76,12 +82,22 @@ public class PostprocessValidation {
   }
 
   @SneakyThrows
-  private Optional<Double> getMachineTagValue() {
+  private Optional<Double> getThresholdTagValue() {
     RegistryConfiguration registryConfiguration = config.stepConfig.registry;
     String datasetKey = message.getDatasetUuid().toString();
     return GbifApi.getMachineTagValue(
             httpClient, registryConfiguration, datasetKey, "id_threshold_percent")
         .map(Double::parseDouble);
+  }
+
+  @SneakyThrows
+  private boolean getThresholdSkipTagValue() {
+    RegistryConfiguration registryConfiguration = config.stepConfig.registry;
+    String datasetKey = message.getDatasetUuid().toString();
+    return GbifApi.getMachineTagValue(
+            httpClient, registryConfiguration, datasetKey, "id_threshold_skip")
+        .map(Boolean::parseBoolean)
+        .orElse(Boolean.FALSE);
   }
 
   @SneakyThrows
