@@ -282,6 +282,7 @@ public class EventToEsIndexPipeline {
             .imageRecordTag(imageTransform.getTag())
             .audubonRecordTag(audubonTransform.getTag())
             .metadataView(occurrenceMetadataView)
+            .asParentChildRecord(true)
             .build()
             .converter();
 

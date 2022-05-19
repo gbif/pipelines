@@ -16,6 +16,7 @@ import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
 import org.gbif.pipelines.core.converters.MultimediaConverter;
 import org.gbif.pipelines.core.converters.OccurrenceJsonConverter;
+import org.gbif.pipelines.core.converters.ParentJsonConverter;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
@@ -104,6 +105,9 @@ public class OccurrenceJsonTransform implements Serializable {
 
   @NonNull private final PCollectionView<MetadataRecord> metadataView;
 
+  // Determines if the output record is a parent-child record
+  @Builder.Default private final boolean asParentChildRecord = false;
+
   public SingleOutput<KV<String, CoGbkResult>, String> converter() {
 
     DoFn<KV<String, CoGbkResult>, String> fn =
@@ -141,7 +145,7 @@ public class OccurrenceJsonTransform implements Serializable {
                 v.getOnly(audubonRecordTag, AudubonRecord.newBuilder().setId(k).build());
 
             MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
-            String json =
+            OccurrenceJsonConverter occurrenceJsonConverter =
                 OccurrenceJsonConverter.builder()
                     .metadata(mdr)
                     .gbifId(id)
@@ -153,10 +157,16 @@ public class OccurrenceJsonTransform implements Serializable {
                     .grscicoll(gr)
                     .multimedia(mmr)
                     .verbatim(er)
-                    .build()
-                    .toJson();
-
-            c.output(json);
+                    .build();
+            if (asParentChildRecord) {
+              c.output(
+                  ParentJsonConverter.builder()
+                      .occurrenceJsonRecord(occurrenceJsonConverter.convert())
+                      .build()
+                      .toJson());
+            } else {
+              c.output(occurrenceJsonConverter.toJson());
+            }
 
             counter.inc();
           }
