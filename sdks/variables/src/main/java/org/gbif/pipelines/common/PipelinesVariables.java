@@ -306,9 +306,4 @@ public class PipelinesVariables {
       public static final String LENGTH = "length";
     }
   }
-
-  @NoArgsConstructor(access = AccessLevel.PRIVATE)
-  public static class Events {
-    public static final String EVENTS_DIR = "event";
-  }
 }

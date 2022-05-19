@@ -1,17 +1,24 @@
 package org.gbif.pipelines.tasks.events.indexing;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpUriRequest;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesEventsIndexedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesEventsInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
-import org.gbif.pipelines.common.PipelinesVariables.Events;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.utils.HdfsUtils;
@@ -19,6 +26,7 @@ import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
 import org.gbif.pipelines.tasks.events.interpretation.EventsInterpretationConfiguration;
+import org.gbif.pipelines.tasks.occurrences.indexing.EsCatIndex;
 
 /** Callback which is called when the {@link PipelinesEventsMessage} is received. */
 @Slf4j
@@ -26,18 +34,24 @@ public class EventsIndexingCallback
     extends AbstractMessageCallback<PipelinesEventsInterpretedMessage>
     implements StepHandler<PipelinesEventsInterpretedMessage, PipelinesEventsIndexedMessage> {
 
+  private static final ObjectMapper MAPPER = new ObjectMapper();
   private final EventsIndexingConfiguration config;
   private final MessagePublisher publisher;
   private final CuratorFramework curator;
+  private final HttpClient httpClient;
   private final HdfsConfigs hdfsConfigs;
 
   public EventsIndexingCallback(
-      EventsIndexingConfiguration config, MessagePublisher publisher, CuratorFramework curator) {
+      EventsIndexingConfiguration config,
+      MessagePublisher publisher,
+      CuratorFramework curator,
+      HttpClient httpClient) {
     this.config = config;
     this.publisher = publisher;
     this.curator = curator;
     hdfsConfigs =
         HdfsConfigs.create(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);
+    this.httpClient = httpClient;
   }
 
   @Override
@@ -69,7 +83,7 @@ public class EventsIndexingCallback
       try {
         long recordsNumber = getRecordNumber(message);
 
-        String indexName = computeIndexName(message);
+        String indexName = computeIndexName(message, recordsNumber);
         int numberOfShards = computeNumberOfShards(recordsNumber);
 
         ProcessRunnerBuilder.ProcessRunnerBuilderBuilder builder =
@@ -188,13 +202,33 @@ public class EventsIndexingCallback
     return sparkExecutorNumbers;
   }
 
-  /** Computes the name for ES index. We always use an independent index for each dataset. */
-  private String computeIndexName(PipelinesEventsInterpretedMessage message) throws IOException {
-    // Independent index for datasets
+  /**
+   * Computes the name for ES index:
+   *
+   * <pre>
+   * Case 1 - Independent index for datasets where number of records more than config.indexIndepRecord
+   * Case 2 - Default static index name for datasets where last changed date more than config.indexDefStaticDateDurationDd
+   * Case 3 - Default dynamic index name for all other datasets
+   * </pre>
+   */
+  private String computeIndexName(PipelinesEventsInterpretedMessage message, long recordsNumber)
+      throws IOException {
+
     String datasetId = message.getDatasetUuid().toString();
-    String idxName =
-        datasetId + "_" + message.getAttempt() + "_" + config.indexConfig.occurrenceVersion;
-    idxName = idxName + "_" + Instant.now().toEpochMilli();
+
+    // Independent index for datasets where number of records more than config.indexIndepRecord
+    String idxName;
+
+    if (recordsNumber >= config.indexConfig.bigIndexIfRecordsMoreThan) {
+      idxName = datasetId + "_" + message.getAttempt() + "_" + config.indexConfig.occurrenceVersion;
+      idxName = idxName + "_" + Instant.now().toEpochMilli();
+      log.info("ES Index name - {}, recordsNumber - {}", idxName, recordsNumber);
+      return idxName;
+    }
+
+    // Default index name for all other datasets
+    String esPr = config.indexConfig.defaultPrefixName + "_" + config.indexConfig.occurrenceVersion;
+    idxName = getIndexName(esPr).orElse(esPr + "_" + Instant.now().toEpochMilli());
     log.info("ES Index name - {}", idxName);
     return idxName;
   }
@@ -214,14 +248,13 @@ public class EventsIndexingCallback
     String datasetId = message.getDatasetUuid().toString();
     String attempt = Integer.toString(message.getAttempt());
     String metaFileName = new EventsInterpretationConfiguration().metaFileName;
-    // TODO: double check if the path is correct
     String metaPath =
         String.join(
             "/",
             config.stepConfig.repositoryPath,
             datasetId,
             attempt,
-            Events.EVENTS_DIR,
+            DwcTerm.Event.simpleName().toLowerCase(),
             metaFileName);
 
     Long messageNumber = message.getNumberOfEventRecords();
@@ -243,5 +276,22 @@ public class EventsIndexingCallback
       return messageNumber;
     }
     return fileNumber.get();
+  }
+
+  /** Returns index name by index prefix where number of records is less than configured */
+  private Optional<String> getIndexName(String prefix) throws IOException {
+    String url = String.format(config.indexConfig.defaultSmallestIndexCatUrl, prefix);
+    HttpUriRequest httpGet = new HttpGet(url);
+    HttpResponse response = httpClient.execute(httpGet);
+    if (response.getStatusLine().getStatusCode() != 200) {
+      throw new IOException("ES _cat API exception " + response.getStatusLine().getReasonPhrase());
+    }
+    List<EsCatIndex> indices =
+        MAPPER.readValue(
+            response.getEntity().getContent(), new TypeReference<List<EsCatIndex>>() {});
+    if (!indices.isEmpty() && indices.get(0).getCount() <= config.indexConfig.defaultNewIfSize) {
+      return Optional.of(indices.get(0).getName());
+    }
+    return Optional.empty();
   }
 }
