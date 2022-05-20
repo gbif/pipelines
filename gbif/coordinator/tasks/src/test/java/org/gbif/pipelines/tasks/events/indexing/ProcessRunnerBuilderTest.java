@@ -38,7 +38,7 @@ public class ProcessRunnerBuilderTest {
             + "--datasetId=de7ffb5e-c07b-42dc-8a88-f67a4465fe3d --attempt=1 --runner=SparkRunner --inputPath=tmp --targetPath=tmp "
             + "--metaFileName=event-to-index.yml --hdfsSiteConfig=hdfs.xml --coreSiteConfig=core.xml "
             + "--esHosts=http://host.com:9300 --properties=/path/ws.config "
-            + "--esSchemaPath=elasticsearch/es-event-schema.json --esIndexName=events --dwcCore=Event --esDocumentId=internalId --esAlias=alias";
+            + "--esSchemaPath=elasticsearch/es-event-schema.json --esIndexName=events --datasetType=SAMPLING_EVENT --dwcCore=Event --esDocumentId=internalId --esAlias=alias";
 
     EventsIndexingConfiguration config = new EventsIndexingConfiguration();
     config.distributedConfig.jarPath = "java.jar";
