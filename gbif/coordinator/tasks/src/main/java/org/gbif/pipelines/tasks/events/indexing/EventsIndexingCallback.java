@@ -66,6 +66,7 @@ public class EventsIndexingCallback
         .curator(curator)
         .stepType(type)
         .publisher(publisher)
+        .historyClient(historyClient)
         .message(message)
         .handler(this)
         .build()
@@ -152,7 +153,13 @@ public class EventsIndexingCallback
     // Chooses a runner type by calculating number of files
     String eventCore = RecordType.EVENT_CORE.name().toLowerCase();
     String eventsPath =
-        String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, eventCore);
+        String.join(
+            "/",
+            config.stepConfig.repositoryPath,
+            datasetId,
+            attempt,
+            DwcTerm.Event.simpleName().toLowerCase(),
+            eventCore);
     int count = HdfsUtils.getFileCount(hdfsConfigs, eventsPath);
     count *= 4;
     if (count < config.sparkConfig.parallelismMin) {

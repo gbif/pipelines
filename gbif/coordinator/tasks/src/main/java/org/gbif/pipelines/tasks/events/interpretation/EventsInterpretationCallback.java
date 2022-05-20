@@ -54,6 +54,7 @@ public class EventsInterpretationCallback extends AbstractMessageCallback<Pipeli
         .curator(curator)
         .stepType(type)
         .publisher(publisher)
+        .historyClient(historyClient)
         .message(message)
         .handler(this)
         .build()
