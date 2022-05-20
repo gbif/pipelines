@@ -65,19 +65,24 @@ public class PostprocessValidation {
       throw new IllegalArgumentIOException("No records with valid GBIF ID!");
     }
 
-    if (absentIdCount != 0d && wasDatasetCrawledBefore()) {
-      double absentPercent = absentIdCount * 100 / totalCount;
-
+    double absentPercent = absentIdCount * 100 / totalCount;
+    boolean hasApiRecords = hasApiRecords();
+    if (absentPercent > 0d && hasApiRecords) {
       if (absentPercent > threshold) {
         log.error(
-            "GBIF IDs hit maximum allowed threshold: allowed - {}%, duplicates - {}%",
-            threshold, absentPercent);
-        throw new IllegalArgumentIOException("GBIF IDs hit maximum allowed threshold");
+            "GBIF IDs hit maximum allowed threshold: allowed - {}, duplicates - {}",
+            threshold,
+            absentPercent);
+        throw new PipelinesException("GBIF IDs hit maximum allowed threshold");
       } else {
         log.warn(
-            "GBIF IDs current duplicates rate: allowed - {}%, duplicates - {}%",
-            threshold, absentPercent);
+            "GBIF IDs current rate: allowed - {}%, duplicates - {}%", threshold, absentPercent);
       }
+    } else if (absentPercent == 100d) {
+      log.info("Skip IDs validation, dataset has no API records and all IDs are new");
+    } else if (absentPercent > 0d) {
+      log.error("Dataset has no API records, but some IDs aren't new, {}", absentPercent);
+      throw new PipelinesException("Dataset has no API records, but some IDs aren't new");
     }
   }
 
@@ -101,7 +106,7 @@ public class PostprocessValidation {
   }
 
   @SneakyThrows
-  private boolean wasDatasetCrawledBefore() {
+  private boolean hasApiRecords() {
     RegistryConfiguration registryConfiguration = config.stepConfig.registry;
     String datasetKey = message.getDatasetUuid().toString();
     return GbifApi.getIndexSize(httpClient, registryConfiguration, datasetKey) > 0;
