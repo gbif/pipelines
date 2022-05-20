@@ -27,6 +27,7 @@ import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
 import org.gbif.pipelines.tasks.events.interpretation.EventsInterpretationConfiguration;
 import org.gbif.pipelines.tasks.occurrences.indexing.EsCatIndex;
+import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 
 /** Callback which is called when the {@link PipelinesEventsMessage} is received. */
 @Slf4j
@@ -40,18 +41,21 @@ public class EventsIndexingCallback
   private final CuratorFramework curator;
   private final HttpClient httpClient;
   private final HdfsConfigs hdfsConfigs;
+  private final PipelinesHistoryClient historyClient;
 
   public EventsIndexingCallback(
       EventsIndexingConfiguration config,
       MessagePublisher publisher,
       CuratorFramework curator,
-      HttpClient httpClient) {
+      HttpClient httpClient,
+      PipelinesHistoryClient historyClient) {
     this.config = config;
     this.publisher = publisher;
     this.curator = curator;
     hdfsConfigs =
         HdfsConfigs.create(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);
     this.httpClient = httpClient;
+    this.historyClient = historyClient;
   }
 
   @Override

@@ -9,6 +9,8 @@ import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
 import org.gbif.pipelines.common.configs.StepConfiguration;
+import org.gbif.pipelines.tasks.ServiceFactory;
+import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 
 /**
  * A service which listens to the {@link PipelinesEventsMessage } to start the events
@@ -35,8 +37,11 @@ public class EventsInterpretationService extends AbstractIdleService {
     publisher = new DefaultMessagePublisher(c.messaging.getConnectionParameters());
     curator = c.zooKeeper.getCuratorFramework();
 
+    PipelinesHistoryClient historyClient =
+        ServiceFactory.createPipelinesHistoryClient(config.stepConfig);
+
     EventsInterpretationCallback callback =
-        new EventsInterpretationCallback(config, publisher, curator);
+        new EventsInterpretationCallback(config, publisher, curator, historyClient);
 
     PipelinesEventsMessage em = new PipelinesEventsMessage();
     // we run all the events pipelines in distributed mode

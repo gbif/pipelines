@@ -13,6 +13,8 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesEventsInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.pipelines.common.configs.StepConfiguration;
+import org.gbif.pipelines.tasks.ServiceFactory;
+import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 
 /** A service which listens to the {@link PipelinesInterpretedMessage } */
 @Slf4j
@@ -42,8 +44,11 @@ public class EventsIndexingService extends AbstractIdleService {
                 RequestConfig.custom().setConnectTimeout(60_000).setSocketTimeout(60_000).build())
             .build();
 
+    PipelinesHistoryClient historyClient =
+        ServiceFactory.createPipelinesHistoryClient(config.stepConfig);
+
     EventsIndexingCallback callback =
-        new EventsIndexingCallback(config, publisher, curator, httpClient);
+        new EventsIndexingCallback(config, publisher, curator, httpClient, historyClient);
 
     PipelinesEventsInterpretedMessage em = new PipelinesEventsInterpretedMessage();
     // we run all the events pipelines in distributed mode

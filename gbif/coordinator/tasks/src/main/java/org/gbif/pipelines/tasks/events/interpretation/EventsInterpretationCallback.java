@@ -20,6 +20,7 @@ import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
 import org.gbif.pipelines.tasks.events.interpretation.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
+import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 
 /** Callback which is called when the {@link PipelinesEventsMessage} is received. */
 @Slf4j
@@ -30,16 +31,19 @@ public class EventsInterpretationCallback extends AbstractMessageCallback<Pipeli
   private final MessagePublisher publisher;
   private final CuratorFramework curator;
   private final HdfsConfigs hdfsConfigs;
+  private final PipelinesHistoryClient historyClient;
 
   public EventsInterpretationCallback(
       EventsInterpretationConfiguration config,
       MessagePublisher publisher,
-      CuratorFramework curator) {
+      CuratorFramework curator,
+      PipelinesHistoryClient historyClient) {
     this.config = config;
     this.publisher = publisher;
     this.curator = curator;
     hdfsConfigs =
         HdfsConfigs.create(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);
+    this.historyClient = historyClient;
   }
 
   @Override
