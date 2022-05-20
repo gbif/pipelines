@@ -1,7 +1,6 @@
 package org.gbif.pipelines.tasks.events.interpretation;
 
 import java.io.IOException;
-import java.util.Collections;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
@@ -87,11 +86,6 @@ public class EventsInterpretationCallback extends AbstractMessageCallback<Pipeli
 
         log.info("Start the process. Message - {}", message);
         runDistributed(builder, message);
-
-        log.info("Deleting old attempts directories");
-        String pathToDelete = String.join("/", config.stepConfig.repositoryPath, datasetId);
-        HdfsUtils.deleteSubFolders(
-            hdfsConfigs, pathToDelete, config.deleteAfterDays, Collections.singleton(attempt));
       } catch (Exception ex) {
         log.error(ex.getMessage(), ex);
         throw new IllegalStateException(

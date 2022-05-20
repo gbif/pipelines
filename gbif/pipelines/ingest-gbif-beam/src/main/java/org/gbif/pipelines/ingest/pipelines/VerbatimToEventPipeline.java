@@ -1,9 +1,11 @@
 package org.gbif.pipelines.ingest.pipelines;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.IDENTIFIER_ABSENT;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
@@ -96,6 +98,12 @@ public class VerbatimToEventPipeline {
     HdfsConfigs hdfsConfigs =
         HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig());
     TransformsFactory transformsFactory = TransformsFactory.create(options);
+
+    // Remove directories with avro files for expected interpretation, except IDENTIFIER
+    Set<String> deleteTypes = new HashSet<>(types);
+    deleteTypes.remove(IDENTIFIER_ABSENT.name());
+    FsUtils.deleteInterpretIfExist(
+        hdfsConfigs, targetPath, datasetId, attempt, DwcTerm.Event, deleteTypes);
 
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 

@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +21,7 @@ import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
@@ -72,6 +74,9 @@ public class InterpretedMessageHandler {
     log.info("The message has been sent - {}", outputMessage);
 
     if (m.getDatasetType() == DatasetType.SAMPLING_EVENT) {
+      Set<String> interpretationTypes = new HashSet<>(m.getInterpretTypes());
+      interpretationTypes.add(RecordType.EVENT_CORE.name());
+
       PipelinesEventsMessage eventsMessage =
           new PipelinesEventsMessage(
               m.getDatasetUuid(),
@@ -89,7 +94,7 @@ public class InterpretedMessageHandler {
               m.getExecutionId(),
               m.getEndpointType(),
               m.getValidationResult(),
-              m.getInterpretTypes(),
+              interpretationTypes,
               DatasetType.SAMPLING_EVENT);
 
       publisher.send(eventsMessage);
