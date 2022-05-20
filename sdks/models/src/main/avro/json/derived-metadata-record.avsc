@@ -1,0 +1,17 @@
+/**
+ * Represents the inferred fields from sub elements.
+ */
+[
+  {
+    "name":"DerivedMetadataRecord",
+    "namespace":"org.gbif.pipelines.io.avro.json",
+    "type":"record",
+    "doc":"Derived metadata from associated elements",
+    "fields":[
+      {"name": "id","type":"string", "doc":"Pipelines identifier"},
+      {"name": "wktConvexHull","type":["null","string"],"default":null},
+      {"name": "temporalCoverage","type":["null","EventDate"],"default":null},
+      {"name": "taxonomicCoverage","type":{"type":"array","items":"GbifClassification"},"default":null,"doc":""}
+    ]
+  }
+]

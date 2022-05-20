@@ -12,8 +12,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.elasticsearch.ElasticsearchIO;
+import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.transforms.Flatten;
 import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
+import org.apache.beam.sdk.transforms.Values;
 import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.transforms.join.CoGroupByKey;
@@ -28,6 +30,7 @@ import org.gbif.pipelines.common.beam.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.io.avro.AudubonRecord;
+import org.gbif.pipelines.io.avro.json.DerivedMetadataRecord;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
@@ -38,6 +41,7 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.transforms.converters.ParentJsonTransform;
+import org.gbif.pipelines.transforms.core.ConvexHullFn;
 import org.gbif.pipelines.transforms.core.EventCoreTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.TaxonomyTransform;
@@ -152,6 +156,18 @@ public class EventToEsIndexPipeline {
     PCollection<KV<String, LocationRecord>> locationCollection =
         p.apply("Read Location", locationTransform.read(pathFn))
             .apply("Map Location to KV", locationTransform.toKv());
+
+    DerivedMetadataRecord derivedMetadataRecord = new DerivedMetadataRecord();
+    PCollection<KV<String, LocationRecord>> occurrenceLocationCollection =
+        p.apply("Read occurrence Location", locationTransform.read(occurrencesPathFn))
+            .apply("Map occurrence Location to KV", locationTransform.toKv());
+
+    PCollectionView<DerivedMetadataRecord> derivedMetadataRecordView =
+        occurrenceLocationCollection
+            .apply("Get occurrence location values", Values.create())
+            .apply(
+                "Calculate the WKT Convex Hull of all records",
+                Combine.globally(new ConvexHullFn(derivedMetadataRecord)).asSingletonView());
 
     PCollection<KV<String, TaxonRecord>> taxonCollection =
         p.apply("Read Taxon", taxonomyTransform.read(pathFn))

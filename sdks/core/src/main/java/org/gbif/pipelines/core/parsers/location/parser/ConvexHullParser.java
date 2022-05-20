@@ -16,13 +16,27 @@ import org.locationtech.jts.geom.GeometryFactory;
  * Hull</a>.
  */
 @UtilityClass
-public class ConvexHull {
+public class ConvexHullParser {
 
   /** Concatenates two arrays. */
   private static <T> T[] concat(T[] array1, T[] array2) {
     T[] both = Arrays.copyOf(array1, array1.length + array2.length);
     System.arraycopy(array2, 0, both, array1.length, array2.length);
     return both;
+  }
+
+  public org.locationtech.jts.algorithm.ConvexHull fromCoordinates(Coordinate[] coordinates) {
+    return new FromCoordinates().apply(Arrays.asList(coordinates));
+  }
+
+  public org.locationtech.jts.algorithm.ConvexHull fromCoordinates(
+      Collection<Coordinate> coordinates) {
+    return new FromCoordinates().apply(coordinates);
+  }
+
+  public Optional<org.locationtech.jts.algorithm.ConvexHull> fromConvexHulls(
+      Collection<org.locationtech.jts.algorithm.ConvexHull> convexHulls) {
+    return new FromConvexHulls().apply(convexHulls);
   }
 
   /**

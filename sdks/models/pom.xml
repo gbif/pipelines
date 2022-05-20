@@ -64,9 +64,12 @@
               <imports>
                 <import>${project.basedir}/src/main/avro/issue-record.avsc</import>
                 <import>${project.basedir}/src/main/avro/json/common-json-record.avsc</import>
+                <import>${project.basedir}/src/main/avro/json/derived-metadata-record.avsc</import>
                 <import>${project.basedir}/src/main/avro/json/event-json-record.avsc</import>
                 <import>${project.basedir}/src/main/avro/json/occurrence-json-record.avsc</import>
                 <import>${project.basedir}/src/main/avro/core/common-record.avsc</import>
+                <import>${project.basedir}/src/main/avro/core/temporal-record.avsc</import>
+                <import>${project.basedir}/src/main/avro/core/taxon-record.avsc</import>
               </imports>
             </configuration>
           </execution>
