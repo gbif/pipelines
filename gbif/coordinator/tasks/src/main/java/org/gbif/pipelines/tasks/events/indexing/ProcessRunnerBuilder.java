@@ -94,6 +94,7 @@ final class ProcessRunnerBuilder {
         .add("--properties=" + Objects.requireNonNull(config.pipelinesConfig))
         .add("--esSchemaPath=elasticsearch/es-event-schema.json")
         .add("--esIndexName=" + Objects.requireNonNull(esIndexName))
+        .add("--datasetType=SAMPLING_EVENT")
         .add("--dwcCore=Event");
 
     if (config.esGeneratedIds) {
