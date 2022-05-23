@@ -47,7 +47,11 @@ public class ParentJsonConverter {
 
   /** Converts to parent record based on an event record. */
   private ParentJsonRecord convertToParentEvent() {
-    return convertToParentRecord().setType("event").setEventBuilder(convertToEvent()).build();
+    return convertToParentRecord()
+        .setType("event")
+        .setJoinRecordBuilder(JoinRecord.newBuilder().setName("event"))
+        .setEventBuilder(convertToEvent())
+        .build();
   }
 
   /** Converts to a parent record based on an occurrence record. */

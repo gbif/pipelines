@@ -1,5 +1,6 @@
 package org.gbif.pipelines.ingest.pipelines;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.IDENTIFIER;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.IDENTIFIER_ABSENT;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 
@@ -101,6 +102,7 @@ public class VerbatimToEventPipeline {
 
     // Remove directories with avro files for expected interpretation, except IDENTIFIER
     Set<String> deleteTypes = new HashSet<>(types);
+    deleteTypes.add(IDENTIFIER.name());
     deleteTypes.remove(IDENTIFIER_ABSENT.name());
     FsUtils.deleteInterpretIfExist(
         hdfsConfigs, targetPath, datasetId, attempt, DwcTerm.Event, deleteTypes);
