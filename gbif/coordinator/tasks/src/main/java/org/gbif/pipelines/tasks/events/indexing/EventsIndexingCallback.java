@@ -265,14 +265,12 @@ public class EventsIndexingCallback
             config.stepConfig.repositoryPath,
             datasetId,
             attempt,
-            DwcTerm.Event.simpleName().toLowerCase(),
             metaFileName);
 
     Long messageNumber = message.getNumberOfEventRecords();
-    // TODO: check what metric to read
     Optional<Long> fileNumber =
         HdfsUtils.getLongByKey(
-            hdfsConfigs, metaPath, Metrics.UNIQUE_GBIF_IDS_COUNT + Metrics.ATTEMPTED);
+            hdfsConfigs, metaPath, Metrics.UNIQUE_IDS_COUNT + Metrics.ATTEMPTED);
 
     if (messageNumber == null && !fileNumber.isPresent()) {
       throw new IllegalArgumentException(
