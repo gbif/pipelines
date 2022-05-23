@@ -82,7 +82,12 @@ public class CoreInterpreter {
   }
 
   /** {@link DwcTerm#parentEventID} interpretation. */
-  public static void interpretParentEventIDs(
+  public static void interpretParentEventID(ExtendedRecord er, Consumer<String> consumer) {
+    extractOptValue(er, DwcTerm.parentEventID).ifPresent(consumer);
+  }
+
+  /** Interprets the hierarchy of {@link DwcTerm#parentEventID}. */
+  public static void interpretParentEventIDHierarchy(
       ExtendedRecord er,
       Map<String, ExtendedRecord> erWithParents,
       Consumer<List<String>> consumer) {

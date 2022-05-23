@@ -132,7 +132,8 @@ public class ParentJsonConverter {
         .setDatasetID(eventCore.getDatasetID())
         .setDatasetName(eventCore.getDatasetName())
         .setSamplingProtocol(eventCore.getSamplingProtocol())
-        .setParentEventIds(eventCore.getParentEventIds());
+        .setParentEventIds(eventCore.getParentEventIds())
+        .setParentEventId(eventCore.getParentEventID());
 
     // Vocabulary
     JsonConverter.convertVocabularyConcept(eventCore.getEventType())
@@ -215,7 +216,6 @@ public class ParentJsonConverter {
 
     // Set raw as indexed
     extractOptValue(verbatim, DwcTerm.eventID).ifPresent(builder::setEventId);
-    extractOptValue(verbatim, DwcTerm.parentEventID).ifPresent(builder::setParentEventId);
     extractOptValue(verbatim, DwcTerm.institutionCode).ifPresent(builder::setInstitutionCode);
     extractOptValue(verbatim, DwcTerm.verbatimDepth).ifPresent(builder::setVerbatimDepth);
     extractOptValue(verbatim, DwcTerm.verbatimElevation).ifPresent(builder::setVerbatimElevation);
