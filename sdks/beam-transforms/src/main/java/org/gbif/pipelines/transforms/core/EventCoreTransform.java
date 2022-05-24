@@ -36,12 +36,12 @@ public class EventCoreTransform extends Transform<ExtendedRecord, EventCoreRecor
   private final SerializableSupplier<VocabularyService> vocabularyServiceSupplier;
   private VocabularyService vocabularyService;
 
-  @Setter private PCollectionView<Map<String, ExtendedRecord>> erWithParentsView;
+  @Setter private PCollectionView<Map<String, String>> erWithParentsView;
 
   @Builder(buildMethodName = "create")
   private EventCoreTransform(
       SerializableSupplier<VocabularyService> vocabularyServiceSupplier,
-      PCollectionView<Map<String, ExtendedRecord>> erWithParentsView) {
+      PCollectionView<Map<String, String>> erWithParentsView) {
     super(
         EventCoreRecord.class,
         EVENT_CORE,
@@ -102,7 +102,7 @@ public class EventCoreTransform extends Transform<ExtendedRecord, EventCoreRecor
   }
 
   public Optional<EventCoreRecord> processElement(
-      ExtendedRecord source, Map<String, ExtendedRecord> erWithParents) {
+      ExtendedRecord source, Map<String, String> erWithParents) {
     return Interpretation.from(source)
         .to(
             EventCoreRecord.newBuilder()

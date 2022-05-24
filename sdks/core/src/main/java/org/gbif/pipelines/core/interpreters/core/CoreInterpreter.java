@@ -89,9 +89,7 @@ public class CoreInterpreter {
 
   /** Interprets the hierarchy of {@link DwcTerm#parentEventID}. */
   public static void interpretParentEventIDHierarchy(
-      ExtendedRecord er,
-      Map<String, ExtendedRecord> erWithParents,
-      Consumer<List<String>> consumer) {
+      ExtendedRecord er, Map<String, String> erWithParents, Consumer<List<String>> consumer) {
     String parentEventID = extractValue(er, DwcTerm.parentEventID);
 
     if (parentEventID == null) {
@@ -102,8 +100,7 @@ public class CoreInterpreter {
     List<String> parentEventIds = new ArrayList<>();
     while (parentEventID != null) {
       parentEventIds.add(parentEventID);
-      ExtendedRecord parent = erWithParents.get(parentEventID);
-      parentEventID = parent != null ? extractValue(parent, DwcTerm.parentEventID) : null;
+      parentEventID = erWithParents.get(parentEventID);
     }
 
     if (!parentEventIds.isEmpty()) {
