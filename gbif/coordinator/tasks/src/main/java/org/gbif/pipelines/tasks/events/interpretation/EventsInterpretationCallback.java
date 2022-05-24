@@ -14,17 +14,21 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
 import org.gbif.pipelines.common.interpretation.SparkSettings;
+import org.gbif.pipelines.common.process.ProcessRunnerBeamSettings;
+import org.gbif.pipelines.common.process.ProcessRunnerBuilder;
+import org.gbif.pipelines.common.process.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
-import org.gbif.pipelines.tasks.events.interpretation.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 
 /** Callback which is called when the {@link PipelinesEventsMessage} is received. */
 @Slf4j
 public class EventsInterpretationCallback extends AbstractMessageCallback<PipelinesEventsMessage>
     implements StepHandler<PipelinesEventsMessage, PipelinesEventsInterpretedMessage> {
+
+  private static final StepType TYPE = StepType.EVENTS_VERBATIM_TO_INTERPRETED;
 
   private final EventsInterpretationConfiguration config;
   private final MessagePublisher publisher;
@@ -47,11 +51,10 @@ public class EventsInterpretationCallback extends AbstractMessageCallback<Pipeli
 
   @Override
   public void handleMessage(PipelinesEventsMessage message) {
-    StepType type = StepType.EVENTS_VERBATIM_TO_INTERPRETED;
     PipelinesCallback.<PipelinesEventsMessage, PipelinesEventsInterpretedMessage>builder()
         .config(config)
         .curator(curator)
-        .stepType(type)
+        .stepType(TYPE)
         .publisher(publisher)
         .historyClient(historyClient)
         .message(message)
@@ -82,7 +85,11 @@ public class EventsInterpretationCallback extends AbstractMessageCallback<Pipeli
             String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, verbatim);
 
         ProcessRunnerBuilderBuilder builder =
-            ProcessRunnerBuilder.builder().config(config).inputPath(path).message(message);
+            ProcessRunnerBuilder.builder()
+                .distributedConfig(config.distributedConfig)
+                .sparkConfig(config.sparkConfig)
+                .sparkAppName(TYPE + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
+                .beamConfigFn(ProcessRunnerBeamSettings.eventInterpretation(config, message, path));
 
         log.info("Start the process. Message - {}", message);
         runDistributed(builder, message);

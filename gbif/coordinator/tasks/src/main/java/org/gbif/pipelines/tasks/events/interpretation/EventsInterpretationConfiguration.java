@@ -37,6 +37,9 @@ public class EventsInterpretationConfiguration implements BaseConfiguration {
   @ParametersDelegate @Valid @NotNull
   public AvroWriteConfiguration avroConfig = new AvroWriteConfiguration();
 
+  @Parameter(names = "--use-beam-deprecated-read")
+  public boolean useBeamDeprecatedRead = true;
+
   @Override
   public String getHdfsSiteConfig() {
     return stepConfig.hdfsSiteConfig;

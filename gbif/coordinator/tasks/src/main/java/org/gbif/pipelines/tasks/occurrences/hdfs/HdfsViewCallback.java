@@ -20,13 +20,15 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.interpretation.SparkSettings;
+import org.gbif.pipelines.common.process.ProcessRunnerBeamSettings;
+import org.gbif.pipelines.common.process.ProcessRunnerBuilder;
+import org.gbif.pipelines.common.process.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.ingest.java.pipelines.OccurrenceToHdfsViewPipeline;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
-import org.gbif.pipelines.tasks.occurrences.hdfs.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
-import org.gbif.pipelines.tasks.occurrences.interpret.InterpreterConfiguration;
+import org.gbif.pipelines.tasks.occurrences.interpretation.InterpreterConfiguration;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 
 /** Callback which is called when the {@link PipelinesInterpretedMessage} is received. */
@@ -66,11 +68,15 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
         // If there is one step only like metadata, we have to run OCCURRENCE steps
         message.setInterpretTypes(swapInterpretTypes(message.getInterpretTypes()));
 
+        int fileShards = computeNumberOfShards(message);
+
         ProcessRunnerBuilderBuilder builder =
             ProcessRunnerBuilder.builder()
-                .config(config)
-                .message(message)
-                .numberOfShards(computeNumberOfShards(message));
+                .distributedConfig(config.distributedConfig)
+                .sparkConfig(config.sparkConfig)
+                .sparkAppName(TYPE + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
+                .beamConfigFn(
+                    ProcessRunnerBeamSettings.occurrenceHdfsView(config, message, fileShards));
 
         Predicate<StepRunner> runnerPr = sr -> config.processRunner.equalsIgnoreCase(sr.name());
 

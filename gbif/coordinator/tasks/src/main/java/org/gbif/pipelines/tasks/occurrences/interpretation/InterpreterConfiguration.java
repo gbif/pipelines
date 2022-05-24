@@ -1,4 +1,4 @@
-package org.gbif.pipelines.tasks.occurrences.interpret;
+package org.gbif.pipelines.tasks.occurrences.interpretation;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParametersDelegate;

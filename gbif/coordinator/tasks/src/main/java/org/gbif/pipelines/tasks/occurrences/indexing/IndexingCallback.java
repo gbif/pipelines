@@ -27,13 +27,14 @@ import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
+import org.gbif.pipelines.common.process.ProcessRunnerBeamSettings;
+import org.gbif.pipelines.common.process.ProcessRunnerBuilder;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.ingest.java.pipelines.InterpretedToEsIndexExtendedPipeline;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
-import org.gbif.pipelines.tasks.occurrences.indexing.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
-import org.gbif.pipelines.tasks.occurrences.interpret.InterpreterConfiguration;
+import org.gbif.pipelines.tasks.occurrences.interpretation.InterpreterConfiguration;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.ws.client.ValidationWsClient;
 
@@ -56,14 +57,12 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
   @Override
   public void handleMessage(PipelinesInterpretedMessage message) {
     boolean isValidator = isValidator(message.getPipelineSteps(), config.validatorOnly);
-    StepType type =
-        isValidator ? StepType.VALIDATOR_INTERPRETED_TO_INDEX : StepType.INTERPRETED_TO_INDEX;
     PipelinesCallback.<PipelinesInterpretedMessage, PipelinesIndexedMessage>builder()
         .historyClient(historyClient)
         .validationClient(validationClient)
         .config(config)
         .curator(curator)
-        .stepType(type)
+        .stepType(getType(message))
         .isValidator(isValidator)
         .publisher(publisher)
         .message(message)
@@ -86,8 +85,7 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
       log.info("Running as a validator task");
       return true;
     }
-    StepType type =
-        isValidator ? StepType.VALIDATOR_INTERPRETED_TO_INDEX : StepType.INTERPRETED_TO_INDEX;
+    StepType type = getType(message);
     if (message.getOnlyForStep() != null
         && !message.getOnlyForStep().equalsIgnoreCase(type.name())) {
       log.info("Skipping, because expected step is {}", message.getOnlyForStep());
@@ -113,13 +111,15 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
         String indexName = computeIndexName(message, recordsNumber);
         int numberOfShards = computeNumberOfShards(indexName, recordsNumber);
 
-        ProcessRunnerBuilderBuilder builder =
+        ProcessRunnerBuilder.ProcessRunnerBuilderBuilder builder =
             ProcessRunnerBuilder.builder()
-                .config(config)
-                .message(message)
-                .esIndexName(indexName)
-                .esAlias(config.indexConfig.occurrenceAlias)
-                .esShardsNumber(numberOfShards);
+                .distributedConfig(config.distributedConfig)
+                .sparkConfig(config.sparkConfig)
+                .sparkAppName(
+                    getType(message) + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
+                .beamConfigFn(
+                    ProcessRunnerBeamSettings.occurreceIndexing(
+                        config, message, indexName, numberOfShards));
 
         Predicate<StepRunner> runnerPr = sr -> config.processRunner.equalsIgnoreCase(sr.name());
 
@@ -148,12 +148,14 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
         message.getEndpointType());
   }
 
-  private void runLocal(ProcessRunnerBuilderBuilder builder) {
+  private void runLocal(ProcessRunnerBuilder.ProcessRunnerBuilderBuilder builder) {
     InterpretedToEsIndexExtendedPipeline.run(builder.build().buildOptions(), executor);
   }
 
   private void runDistributed(
-      PipelinesInterpretedMessage message, ProcessRunnerBuilderBuilder builder, long recordsNumber)
+      PipelinesInterpretedMessage message,
+      ProcessRunnerBuilder.ProcessRunnerBuilderBuilder builder,
+      long recordsNumber)
       throws IOException, InterruptedException {
     String datasetId = message.getDatasetUuid().toString();
     String attempt = Integer.toString(message.getAttempt());
@@ -342,5 +344,10 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
       return Optional.of(indices.get(0).getName());
     }
     return Optional.empty();
+  }
+
+  private StepType getType(PipelinesInterpretedMessage message) {
+    boolean isValidator = isValidator(message.getPipelineSteps(), config.validatorOnly);
+    return isValidator ? StepType.VALIDATOR_INTERPRETED_TO_INDEX : StepType.INTERPRETED_TO_INDEX;
   }
 }

@@ -1,4 +1,4 @@
-package org.gbif.pipelines.tasks.occurrences.interpret;
+package org.gbif.pipelines.tasks.occurrences.interpretation;
 
 import com.google.common.util.concurrent.AbstractIdleService;
 import java.io.IOException;

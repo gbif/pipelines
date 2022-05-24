@@ -14,9 +14,11 @@ import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
 import org.gbif.pipelines.common.interpretation.SparkSettings;
+import org.gbif.pipelines.common.process.ProcessRunnerBeamSettings;
+import org.gbif.pipelines.common.process.ProcessRunnerBuilder;
+import org.gbif.pipelines.common.process.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
-import org.gbif.pipelines.tasks.occurrences.identifier.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
 import org.gbif.pipelines.tasks.occurrences.identifier.validation.PostprocessValidation;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 
@@ -25,6 +27,8 @@ import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 @AllArgsConstructor
 public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbatimMessage>
     implements StepHandler<PipelinesVerbatimMessage, PipelinesVerbatimMessage> {
+
+  private static final StepType TYPE = StepType.VERBATIM_TO_IDENTIFIER;
 
   private final IdentifierConfiguration config;
   private final MessagePublisher publisher;
@@ -38,7 +42,7 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
         .historyClient(historyClient)
         .config(config)
         .curator(curator)
-        .stepType(StepType.VERBATIM_TO_IDENTIFIER)
+        .stepType(TYPE)
         .publisher(publisher)
         .message(message)
         .handler(this)
@@ -48,7 +52,7 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
 
   @Override
   public boolean isMessageCorrect(PipelinesVerbatimMessage message) {
-    if (!message.getPipelineSteps().contains(StepType.VERBATIM_TO_IDENTIFIER.name())) {
+    if (!message.getPipelineSteps().contains(TYPE.name())) {
       log.error("The message doesn't contain VERBATIM_TO_IDENTIFIER type");
       return false;
     }
@@ -72,7 +76,12 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
               : String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, verbatim);
 
       ProcessRunnerBuilderBuilder builder =
-          ProcessRunnerBuilder.builder().config(config).message(message).inputPath(path);
+          ProcessRunnerBuilder.builder()
+              .distributedConfig(config.distributedConfig)
+              .sparkConfig(config.sparkConfig)
+              .sparkAppName(
+                  TYPE.name() + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
+              .beamConfigFn(ProcessRunnerBeamSettings.occurrenceIdentifier(config, message, path));
 
       log.info("Start the process. Message - {}", message);
       try {
@@ -98,7 +107,7 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
   public PipelinesVerbatimMessage createOutgoingMessage(PipelinesVerbatimMessage message) {
 
     Set<String> pipelineSteps = new HashSet<>(message.getPipelineSteps());
-    pipelineSteps.remove(StepType.VERBATIM_TO_IDENTIFIER.name());
+    pipelineSteps.remove(TYPE.name());
 
     return new PipelinesVerbatimMessage(
         message.getDatasetUuid(),
