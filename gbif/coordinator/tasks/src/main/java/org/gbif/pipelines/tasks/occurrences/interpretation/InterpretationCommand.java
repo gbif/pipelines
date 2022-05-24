@@ -1,4 +1,4 @@
-package org.gbif.pipelines.tasks.occurrences.interpret;
+package org.gbif.pipelines.tasks.occurrences.interpretation;
 
 import com.google.common.util.concurrent.Service;
 import org.gbif.cli.Command;

@@ -1,4 +1,4 @@
-package org.gbif.pipelines.tasks.occurrences.interpret;
+package org.gbif.pipelines.tasks.occurrences.interpretation;
 
 import static org.gbif.api.model.pipelines.StepRunner.DISTRIBUTED;
 import static org.gbif.api.model.pipelines.StepRunner.STANDALONE;

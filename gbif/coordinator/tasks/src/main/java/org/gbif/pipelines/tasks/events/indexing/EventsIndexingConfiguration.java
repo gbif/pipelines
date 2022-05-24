@@ -42,6 +42,9 @@ public class EventsIndexingConfiguration implements BaseConfiguration {
   @Parameter(names = "--es-generated-ids")
   public boolean esGeneratedIds = false;
 
+  @Parameter(names = "--use-beam-deprecated-read")
+  public boolean useBeamDeprecatedRead = true;
+
   @ParametersDelegate @Valid @NotNull
   public AvroWriteConfiguration avroConfig = new AvroWriteConfiguration();
 

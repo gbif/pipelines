@@ -1,4 +1,4 @@
-package org.gbif.pipelines.tasks.occurrences.interpret;
+package org.gbif.pipelines.tasks.occurrences.interpretation;
 
 import static org.gbif.common.parsers.date.DateComponentOrdering.DMY_FORMATS;
 import static org.gbif.common.parsers.date.DateComponentOrdering.ISO_FORMATS;
@@ -30,12 +30,13 @@ import org.gbif.pipelines.common.GbifApi;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
 import org.gbif.pipelines.common.interpretation.SparkSettings;
+import org.gbif.pipelines.common.process.ProcessRunnerBeamSettings;
+import org.gbif.pipelines.common.process.ProcessRunnerBuilder;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.ingest.java.pipelines.VerbatimToOccurrencePipeline;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
-import org.gbif.pipelines.tasks.occurrences.interpret.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.ws.client.ValidationWsClient;
 
@@ -56,15 +57,13 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
   @Override
   public void handleMessage(PipelinesVerbatimMessage message) {
     boolean isValidator = isValidator(message.getPipelineSteps(), config.validatorOnly);
-    StepType type =
-        isValidator ? StepType.VALIDATOR_VERBATIM_TO_INTERPRETED : StepType.VERBATIM_TO_INTERPRETED;
 
     PipelinesCallback.<PipelinesVerbatimMessage, PipelinesInterpretedMessage>builder()
         .historyClient(historyClient)
         .validationClient(validationClient)
         .config(config)
         .curator(curator)
-        .stepType(type)
+        .stepType(getType(message))
         .isValidator(isValidator)
         .publisher(publisher)
         .message(message)
@@ -115,12 +114,15 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
         defaultDateFormat = getDefaultDateFormat(datasetId);
       }
 
-      ProcessRunnerBuilderBuilder builder =
+      ProcessRunnerBuilder.ProcessRunnerBuilderBuilder builder =
           ProcessRunnerBuilder.builder()
-              .config(config)
-              .message(message)
-              .inputPath(path)
-              .defaultDateFormat(defaultDateFormat);
+              .distributedConfig(config.distributedConfig)
+              .sparkConfig(config.sparkConfig)
+              .sparkAppName(
+                  getType(message) + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
+              .beamConfigFn(
+                  ProcessRunnerBeamSettings.occurrenceInterpretation(
+                      config, message, path, defaultDateFormat));
 
       Predicate<StepRunner> runnerPr = sr -> config.processRunner.equalsIgnoreCase(sr.name());
 
@@ -175,11 +177,12 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
         message.getDatasetType());
   }
 
-  private void runLocal(ProcessRunnerBuilderBuilder builder) {
+  private void runLocal(ProcessRunnerBuilder.ProcessRunnerBuilderBuilder builder) {
     VerbatimToOccurrencePipeline.run(builder.build().buildOptions(), executor);
   }
 
-  private void runDistributed(PipelinesVerbatimMessage message, ProcessRunnerBuilderBuilder builder)
+  private void runDistributed(
+      PipelinesVerbatimMessage message, ProcessRunnerBuilder.ProcessRunnerBuilderBuilder builder)
       throws IOException, InterruptedException {
 
     SparkSettings sparkSettings = SparkSettings.create(config.sparkConfig, config.stepConfig);
@@ -243,5 +246,12 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
           .collect(Collectors.joining(","));
     }
     return null;
+  }
+
+  private StepType getType(PipelinesVerbatimMessage message) {
+    boolean isValidator = isValidator(message.getPipelineSteps(), config.validatorOnly);
+    return isValidator
+        ? StepType.VALIDATOR_VERBATIM_TO_INTERPRETED
+        : StepType.VERBATIM_TO_INTERPRETED;
   }
 }

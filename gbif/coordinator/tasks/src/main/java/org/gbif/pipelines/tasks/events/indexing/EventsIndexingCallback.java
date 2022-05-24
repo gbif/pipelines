@@ -21,6 +21,9 @@ import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
+import org.gbif.pipelines.common.process.ProcessRunnerBeamSettings;
+import org.gbif.pipelines.common.process.ProcessRunnerBuilder;
+import org.gbif.pipelines.common.process.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.PipelinesCallback;
@@ -35,6 +38,7 @@ public class EventsIndexingCallback
     extends AbstractMessageCallback<PipelinesEventsInterpretedMessage>
     implements StepHandler<PipelinesEventsInterpretedMessage, PipelinesEventsIndexedMessage> {
 
+  private static final StepType TYPE = StepType.EVENTS_INTERPRETED_TO_INDEX;
   private static final ObjectMapper MAPPER = new ObjectMapper();
   private final EventsIndexingConfiguration config;
   private final MessagePublisher publisher;
@@ -60,11 +64,10 @@ public class EventsIndexingCallback
 
   @Override
   public void handleMessage(PipelinesEventsInterpretedMessage message) {
-    StepType type = StepType.EVENTS_INTERPRETED_TO_INDEX;
     PipelinesCallback.<PipelinesEventsInterpretedMessage, PipelinesEventsIndexedMessage>builder()
         .config(config)
         .curator(curator)
-        .stepType(type)
+        .stepType(TYPE)
         .publisher(publisher)
         .historyClient(historyClient)
         .message(message)
@@ -91,13 +94,14 @@ public class EventsIndexingCallback
         String indexName = computeIndexName(message, recordsNumber);
         int numberOfShards = computeNumberOfShards(recordsNumber);
 
-        ProcessRunnerBuilder.ProcessRunnerBuilderBuilder builder =
+        ProcessRunnerBuilderBuilder builder =
             ProcessRunnerBuilder.builder()
-                .config(config)
-                .message(message)
-                .esIndexName(indexName)
-                .esAlias(config.indexConfig.occurrenceAlias)
-                .esShardsNumber(numberOfShards);
+                .distributedConfig(config.distributedConfig)
+                .sparkConfig(config.sparkConfig)
+                .sparkAppName(TYPE + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
+                .beamConfigFn(
+                    ProcessRunnerBeamSettings.eventIndexing(
+                        config, message, indexName, numberOfShards));
 
         log.info("Start the process. Message - {}", message);
         runDistributed(message, builder, recordsNumber);
@@ -123,7 +127,7 @@ public class EventsIndexingCallback
 
   private void runDistributed(
       PipelinesEventsInterpretedMessage message,
-      ProcessRunnerBuilder.ProcessRunnerBuilderBuilder builder,
+      ProcessRunnerBuilderBuilder builder,
       long recordsNumber)
       throws IOException, InterruptedException {
     String datasetId = message.getDatasetUuid().toString();
@@ -260,19 +264,11 @@ public class EventsIndexingCallback
     String attempt = Integer.toString(message.getAttempt());
     String metaFileName = new EventsInterpretationConfiguration().metaFileName;
     String metaPath =
-        String.join(
-            "/",
-            config.stepConfig.repositoryPath,
-            datasetId,
-            attempt,
-            DwcTerm.Event.simpleName().toLowerCase(),
-            metaFileName);
+        String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, metaFileName);
 
     Long messageNumber = message.getNumberOfEventRecords();
-    // TODO: check what metric to read
     Optional<Long> fileNumber =
-        HdfsUtils.getLongByKey(
-            hdfsConfigs, metaPath, Metrics.UNIQUE_GBIF_IDS_COUNT + Metrics.ATTEMPTED);
+        HdfsUtils.getLongByKey(hdfsConfigs, metaPath, Metrics.UNIQUE_IDS_COUNT + Metrics.ATTEMPTED);
 
     if (messageNumber == null && !fileNumber.isPresent()) {
       throw new IllegalArgumentException(
