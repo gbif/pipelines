@@ -6,6 +6,7 @@ import static org.junit.Assert.*;
 import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
+import lombok.AllArgsConstructor;
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.DatasetType;
@@ -15,7 +16,9 @@ import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage.ValidationResult;
+import org.gbif.pipelines.common.MainSparkSettings;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
+import org.gbif.pipelines.common.indexing.IndexSettings;
 import org.gbif.pipelines.tasks.events.indexing.EventsIndexingConfiguration;
 import org.gbif.pipelines.tasks.events.interpretation.EventsInterpretationConfiguration;
 import org.gbif.pipelines.tasks.occurrences.hdfs.HdfsViewConfiguration;
@@ -100,11 +103,10 @@ public class ProcessRunnerBuilderTest {
         ProcessRunnerBuilder.builder()
             .distributedConfig(config.distributedConfig)
             .sparkConfig(config.sparkConfig)
-            .sparkParallelism(1)
-            .sparkExecutorMemory("1G")
-            .sparkExecutorNumbers(1)
+            .sparkSettings(TestSparkSettings.create(1, "1G", 1))
             .sparkAppName("EVENTS_INTERPRETED_TO_INDEX_de7ffb5e-c07b-42dc-8a88-f67a4465fe3d_1")
-            .beamConfigFn(ProcessRunnerBeamSettings.eventIndexing(config, message, "events", 1))
+            .beamConfigFn(
+                BeamSettings.eventIndexing(config, message, IndexSettings.create("events", 1)))
             .build()
             .get();
 
@@ -178,12 +180,9 @@ public class ProcessRunnerBuilderTest {
         ProcessRunnerBuilder.builder()
             .distributedConfig(config.distributedConfig)
             .sparkConfig(config.sparkConfig)
-            .sparkParallelism(1)
-            .sparkExecutorMemory("1G")
-            .sparkExecutorNumbers(1)
+            .sparkSettings(TestSparkSettings.create(1, "1G", 1))
             .sparkAppName("EVENTS_VERBATIM_TO_INTERPRETED_de7ffb5e-c07b-42dc-8a88-f67a4465fe3d_1")
-            .beamConfigFn(
-                ProcessRunnerBeamSettings.eventInterpretation(config, message, "verbatim.avro"))
+            .beamConfigFn(BeamSettings.eventInterpretation(config, message, "verbatim.avro"))
             .build()
             .get();
 
@@ -250,11 +249,9 @@ public class ProcessRunnerBuilderTest {
         ProcessRunnerBuilder.builder()
             .distributedConfig(config.distributedConfig)
             .sparkConfig(config.sparkConfig)
-            .sparkParallelism(1)
-            .sparkExecutorMemory("1G")
-            .sparkExecutorNumbers(1)
+            .sparkSettings(TestSparkSettings.create(1, "1G", 1))
             .sparkAppName("HDFS_VIEW_de7ffb5e-c07b-42dc-8a88-f67a4465fe3d_1")
-            .beamConfigFn(ProcessRunnerBeamSettings.occurrenceHdfsView(config, message, 10))
+            .beamConfigFn(BeamSettings.occurrenceHdfsView(config, message, 10))
             .build()
             .get();
 
@@ -326,11 +323,9 @@ public class ProcessRunnerBuilderTest {
         ProcessRunnerBuilder.builder()
             .distributedConfig(config.distributedConfig)
             .sparkConfig(config.sparkConfig)
-            .sparkParallelism(1)
-            .sparkExecutorMemory("1G")
-            .sparkExecutorNumbers(1)
+            .sparkSettings(TestSparkSettings.create(1, "1G", 1))
             .sparkAppName("HDFS_VIEW_de7ffb5e-c07b-42dc-8a88-f67a4465fe3d_1")
-            .beamConfigFn(ProcessRunnerBeamSettings.occurrenceHdfsView(config, message, 10))
+            .beamConfigFn(BeamSettings.occurrenceHdfsView(config, message, 10))
             .build()
             .get();
 
@@ -395,12 +390,9 @@ public class ProcessRunnerBuilderTest {
         ProcessRunnerBuilder.builder()
             .distributedConfig(config.distributedConfig)
             .sparkConfig(config.sparkConfig)
-            .sparkParallelism(1)
-            .sparkExecutorMemory("1G")
-            .sparkExecutorNumbers(1)
+            .sparkSettings(TestSparkSettings.create(1, "1G", 1))
             .sparkAppName("VERBATIM_TO_IDENTIFIER_de7ffb5e-c07b-42dc-8a88-f67a4465fe3d_1")
-            .beamConfigFn(
-                ProcessRunnerBeamSettings.occurrenceIdentifier(config, message, "verbatim.avro"))
+            .beamConfigFn(BeamSettings.occurrenceIdentifier(config, message, "verbatim.avro"))
             .build()
             .get();
 
@@ -471,12 +463,9 @@ public class ProcessRunnerBuilderTest {
         ProcessRunnerBuilder.builder()
             .distributedConfig(config.distributedConfig)
             .sparkConfig(config.sparkConfig)
-            .sparkParallelism(1)
-            .sparkExecutorMemory("1G")
-            .sparkExecutorNumbers(1)
+            .sparkSettings(TestSparkSettings.create(1, "1G", 1))
             .sparkAppName("VERBATIM_TO_IDENTIFIER_de7ffb5e-c07b-42dc-8a88-f67a4465fe3d_1")
-            .beamConfigFn(
-                ProcessRunnerBeamSettings.occurrenceIdentifier(config, message, "verbatim.avro"))
+            .beamConfigFn(BeamSettings.occurrenceIdentifier(config, message, "verbatim.avro"))
             .build()
             .get();
 
@@ -547,12 +536,11 @@ public class ProcessRunnerBuilderTest {
         ProcessRunnerBuilder.builder()
             .distributedConfig(config.distributedConfig)
             .sparkConfig(config.sparkConfig)
-            .sparkParallelism(1)
-            .sparkExecutorMemory("1G")
-            .sparkExecutorNumbers(1)
+            .sparkSettings(TestSparkSettings.create(1, "1G", 1))
             .sparkAppName("VALIDATOR_INTERPRETED_TO_INDEX_de7ffb5e-c07b-42dc-8a88-f67a4465fe3d_1")
             .beamConfigFn(
-                ProcessRunnerBeamSettings.occurreceIndexing(config, message, indexName, null))
+                BeamSettings.occurreceIndexing(
+                    config, message, IndexSettings.create(indexName, null)))
             .build()
             .get();
 
@@ -629,12 +617,11 @@ public class ProcessRunnerBuilderTest {
         ProcessRunnerBuilder.builder()
             .distributedConfig(config.distributedConfig)
             .sparkConfig(config.sparkConfig)
-            .sparkParallelism(1)
-            .sparkExecutorMemory("1G")
-            .sparkExecutorNumbers(1)
+            .sparkSettings(TestSparkSettings.create(1, "1G", 1))
             .sparkAppName("VALIDATOR_INTERPRETED_TO_INDEX_de7ffb5e-c07b-42dc-8a88-f67a4465fe3d_1")
             .beamConfigFn(
-                ProcessRunnerBeamSettings.occurreceIndexing(config, message, indexName, null))
+                BeamSettings.occurreceIndexing(
+                    config, message, IndexSettings.create(indexName, null)))
             .build()
             .get();
 
@@ -700,13 +687,10 @@ public class ProcessRunnerBuilderTest {
         ProcessRunnerBuilder.builder()
             .distributedConfig(config.distributedConfig)
             .sparkConfig(config.sparkConfig)
-            .sparkParallelism(1)
-            .sparkExecutorMemory("1G")
-            .sparkExecutorNumbers(1)
+            .sparkSettings(TestSparkSettings.create(1, "1G", 1))
             .sparkAppName("VERBATIM_TO_INTERPRETED_de7ffb5e-c07b-42dc-8a88-f67a4465fe3d_1")
             .beamConfigFn(
-                ProcessRunnerBeamSettings.occurrenceInterpretation(
-                    config, message, "verbatim.avro", null))
+                BeamSettings.occurrenceInterpretation(config, message, "verbatim.avro", null))
             .build()
             .get();
 
@@ -773,14 +757,11 @@ public class ProcessRunnerBuilderTest {
         ProcessRunnerBuilder.builder()
             .distributedConfig(config.distributedConfig)
             .sparkConfig(config.sparkConfig)
-            .sparkParallelism(1)
-            .sparkExecutorMemory("1G")
-            .sparkExecutorNumbers(1)
+            .sparkSettings(TestSparkSettings.create(1, "1G", 1))
             .sparkAppName(
                 "VALIDATOR_VERBATIM_TO_INTERPRETED_de7ffb5e-c07b-42dc-8a88-f67a4465fe3d_1")
             .beamConfigFn(
-                ProcessRunnerBeamSettings.occurrenceInterpretation(
-                    config, message, "verbatim.avro", null))
+                BeamSettings.occurrenceInterpretation(config, message, "verbatim.avro", null))
             .build()
             .get();
 
@@ -852,13 +833,10 @@ public class ProcessRunnerBuilderTest {
         ProcessRunnerBuilder.builder()
             .distributedConfig(config.distributedConfig)
             .sparkConfig(config.sparkConfig)
-            .sparkParallelism(1)
-            .sparkExecutorMemory("1G")
-            .sparkExecutorNumbers(1)
+            .sparkSettings(TestSparkSettings.create(1, "1G", 1))
             .sparkAppName("VERBATIM_TO_INTERPRETED_de7ffb5e-c07b-42dc-8a88-f67a4465fe3d_1")
             .beamConfigFn(
-                ProcessRunnerBeamSettings.occurrenceInterpretation(
-                    config, message, "verbatim.avro", null))
+                BeamSettings.occurrenceInterpretation(config, message, "verbatim.avro", null))
             .build()
             .get();
 
@@ -866,5 +844,28 @@ public class ProcessRunnerBuilderTest {
 
     // Should
     assertEquals(expected, result);
+  }
+
+  @AllArgsConstructor(staticName = "create")
+  private static class TestSparkSettings implements MainSparkSettings {
+
+    private final int parallelism;
+    private final String executorMemory;
+    private final int executorNumbers;
+
+    @Override
+    public int getParallelism() {
+      return parallelism;
+    }
+
+    @Override
+    public String getExecutorMemory() {
+      return executorMemory;
+    }
+
+    @Override
+    public int getExecutorNumbers() {
+      return executorNumbers;
+    }
   }
 }

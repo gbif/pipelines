@@ -1,17 +1,10 @@
 package org.gbif.pipelines.tasks.events.indexing;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
-import java.time.Instant;
-import java.util.List;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpUriRequest;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
@@ -21,7 +14,9 @@ import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
-import org.gbif.pipelines.common.process.ProcessRunnerBeamSettings;
+import org.gbif.pipelines.common.indexing.IndexSettings;
+import org.gbif.pipelines.common.indexing.SparkSettings;
+import org.gbif.pipelines.common.process.BeamSettings;
 import org.gbif.pipelines.common.process.ProcessRunnerBuilder;
 import org.gbif.pipelines.common.process.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
 import org.gbif.pipelines.common.utils.HdfsUtils;
@@ -29,7 +24,6 @@ import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
 import org.gbif.pipelines.tasks.events.interpretation.EventsInterpretationConfiguration;
-import org.gbif.pipelines.tasks.occurrences.indexing.EsCatIndex;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 
 /** Callback which is called when the {@link PipelinesEventsMessage} is received. */
@@ -39,7 +33,7 @@ public class EventsIndexingCallback
     implements StepHandler<PipelinesEventsInterpretedMessage, PipelinesEventsIndexedMessage> {
 
   private static final StepType TYPE = StepType.EVENTS_INTERPRETED_TO_INDEX;
-  private static final ObjectMapper MAPPER = new ObjectMapper();
+
   private final EventsIndexingConfiguration config;
   private final MessagePublisher publisher;
   private final CuratorFramework curator;
@@ -91,17 +85,20 @@ public class EventsIndexingCallback
       try {
         long recordsNumber = getRecordNumber(message);
 
-        String indexName = computeIndexName(message, recordsNumber);
-        int numberOfShards = computeNumberOfShards(recordsNumber);
+        IndexSettings indexSettings =
+            IndexSettings.create(
+                config.indexConfig,
+                httpClient,
+                message.getDatasetUuid().toString(),
+                message.getAttempt(),
+                recordsNumber);
 
         ProcessRunnerBuilderBuilder builder =
             ProcessRunnerBuilder.builder()
                 .distributedConfig(config.distributedConfig)
                 .sparkConfig(config.sparkConfig)
                 .sparkAppName(TYPE + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
-                .beamConfigFn(
-                    ProcessRunnerBeamSettings.eventIndexing(
-                        config, message, indexName, numberOfShards));
+                .beamConfigFn(BeamSettings.eventIndexing(config, message, indexSettings));
 
         log.info("Start the process. Message - {}", message);
         runDistributed(message, builder, recordsNumber);
@@ -130,14 +127,20 @@ public class EventsIndexingCallback
       ProcessRunnerBuilderBuilder builder,
       long recordsNumber)
       throws IOException, InterruptedException {
-    String datasetId = message.getDatasetUuid().toString();
-    String attempt = Integer.toString(message.getAttempt());
-    int sparkExecutorNumbers = computeSparkExecutorNumbers(recordsNumber);
 
-    builder
-        .sparkParallelism(computeSparkParallelism(datasetId, attempt))
-        .sparkExecutorMemory(computeSparkExecutorMemory(sparkExecutorNumbers, recordsNumber))
-        .sparkExecutorNumbers(sparkExecutorNumbers);
+    String filePath =
+        String.join(
+            "/",
+            config.stepConfig.repositoryPath,
+            message.getDatasetUuid().toString(),
+            Integer.toString(message.getAttempt()),
+            DwcTerm.Event.simpleName().toLowerCase(),
+            RecordType.EVENT_CORE.name().toLowerCase());
+
+    SparkSettings sparkSettings =
+        SparkSettings.create(config.sparkConfig, config.stepConfig, filePath, recordsNumber);
+
+    builder.sparkSettings(sparkSettings);
 
     // Assembles a terminal java process and runs it
     int exitValue = builder.build().get().start().waitFor();
@@ -147,112 +150,6 @@ public class EventsIndexingCallback
     } else {
       log.info("Process has been finished with exit value - {}", exitValue);
     }
-  }
-
-  /**
-   * Computes the number of thread for spark.default.parallelism, top limit is
-   * config.sparkParallelismMax
-   */
-  private int computeSparkParallelism(String datasetId, String attempt) throws IOException {
-    // Chooses a runner type by calculating number of files
-    String eventCore = RecordType.EVENT_CORE.name().toLowerCase();
-    String eventsPath =
-        String.join(
-            "/",
-            config.stepConfig.repositoryPath,
-            datasetId,
-            attempt,
-            DwcTerm.Event.simpleName().toLowerCase(),
-            eventCore);
-    int count = HdfsUtils.getFileCount(hdfsConfigs, eventsPath);
-    count *= 4;
-    if (count < config.sparkConfig.parallelismMin) {
-      return config.sparkConfig.parallelismMin;
-    }
-    if (count > config.sparkConfig.parallelismMax) {
-      return config.sparkConfig.parallelismMax;
-    }
-    return count;
-  }
-
-  /**
-   * Computes the memory for executor in Gb, where min is config.sparkConfig.executorMemoryGbMin and
-   * max is config.sparkConfig.executorMemoryGbMax
-   */
-  private String computeSparkExecutorMemory(int sparkExecutorNumbers, long recordsNumber) {
-    int size =
-        (int)
-            Math.ceil(
-                (double) recordsNumber
-                    / (sparkExecutorNumbers * config.sparkConfig.recordsPerThread)
-                    * 1.6);
-
-    if (size < config.sparkConfig.executorMemoryGbMin) {
-      return config.sparkConfig.executorMemoryGbMin + "G";
-    }
-    if (size > config.sparkConfig.executorMemoryGbMax) {
-      return config.sparkConfig.executorMemoryGbMax + "G";
-    }
-    return size + "G";
-  }
-
-  /**
-   * Computes the numbers of executors, where min is config.sparkConfig.executorNumbersMin and max
-   * is config.sparkConfig.executorNumbersMax
-   *
-   * <p>500_000d is records per executor
-   */
-  private int computeSparkExecutorNumbers(long recordsNumber) {
-    int sparkExecutorNumbers =
-        (int)
-            Math.ceil(
-                (double) recordsNumber
-                    / (config.sparkConfig.executorCores * config.sparkConfig.recordsPerThread));
-    if (sparkExecutorNumbers < config.sparkConfig.executorNumbersMin) {
-      return config.sparkConfig.executorNumbersMin;
-    }
-    if (sparkExecutorNumbers > config.sparkConfig.executorNumbersMax) {
-      return config.sparkConfig.executorNumbersMax;
-    }
-    return sparkExecutorNumbers;
-  }
-
-  /**
-   * Computes the name for ES index:
-   *
-   * <pre>
-   * Case 1 - Independent index for datasets where number of records more than config.indexIndepRecord
-   * Case 2 - Default static index name for datasets where last changed date more than config.indexDefStaticDateDurationDd
-   * Case 3 - Default dynamic index name for all other datasets
-   * </pre>
-   */
-  private String computeIndexName(PipelinesEventsInterpretedMessage message, long recordsNumber)
-      throws IOException {
-
-    String datasetId = message.getDatasetUuid().toString();
-
-    // Independent index for datasets where number of records more than config.indexIndepRecord
-    String idxName;
-
-    if (recordsNumber >= config.indexConfig.bigIndexIfRecordsMoreThan) {
-      idxName = datasetId + "_" + message.getAttempt() + "_" + config.indexConfig.occurrenceVersion;
-      idxName = idxName + "_" + Instant.now().toEpochMilli();
-      log.info("ES Index name - {}, recordsNumber - {}", idxName, recordsNumber);
-      return idxName;
-    }
-
-    // Default index name for all other datasets
-    String esPr = config.indexConfig.defaultPrefixName + "_" + config.indexConfig.occurrenceVersion;
-    idxName = getIndexName(esPr).orElse(esPr + "_" + Instant.now().toEpochMilli());
-    log.info("ES Index name - {}", idxName);
-    return idxName;
-  }
-
-  private int computeNumberOfShards(long recordsNumber) {
-    double shards = recordsNumber / (double) config.indexConfig.recordsPerShard;
-    shards = Math.max(shards, 1d);
-    boolean isCeil = (shards - Math.floor(shards)) > 0.25d;
-    return isCeil ? (int) Math.ceil(shards) : (int) Math.floor(shards);
   }
 
   /**
@@ -283,22 +180,5 @@ public class EventsIndexingCallback
       return messageNumber;
     }
     return fileNumber.get();
-  }
-
-  /** Returns index name by index prefix where number of records is less than configured */
-  private Optional<String> getIndexName(String prefix) throws IOException {
-    String url = String.format(config.indexConfig.defaultSmallestIndexCatUrl, prefix);
-    HttpUriRequest httpGet = new HttpGet(url);
-    HttpResponse response = httpClient.execute(httpGet);
-    if (response.getStatusLine().getStatusCode() != 200) {
-      throw new IOException("ES _cat API exception " + response.getStatusLine().getReasonPhrase());
-    }
-    List<EsCatIndex> indices =
-        MAPPER.readValue(
-            response.getEntity().getContent(), new TypeReference<List<EsCatIndex>>() {});
-    if (!indices.isEmpty() && indices.get(0).getCount() <= config.indexConfig.defaultNewIfSize) {
-      return Optional.of(indices.get(0).getName());
-    }
-    return Optional.empty();
   }
 }

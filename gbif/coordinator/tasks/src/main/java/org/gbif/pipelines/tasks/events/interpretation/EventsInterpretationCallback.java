@@ -14,7 +14,7 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
 import org.gbif.pipelines.common.interpretation.SparkSettings;
-import org.gbif.pipelines.common.process.ProcessRunnerBeamSettings;
+import org.gbif.pipelines.common.process.BeamSettings;
 import org.gbif.pipelines.common.process.ProcessRunnerBuilder;
 import org.gbif.pipelines.common.process.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
 import org.gbif.pipelines.common.utils.HdfsUtils;
@@ -89,7 +89,7 @@ public class EventsInterpretationCallback extends AbstractMessageCallback<Pipeli
                 .distributedConfig(config.distributedConfig)
                 .sparkConfig(config.sparkConfig)
                 .sparkAppName(TYPE + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
-                .beamConfigFn(ProcessRunnerBeamSettings.eventInterpretation(config, message, path));
+                .beamConfigFn(BeamSettings.eventInterpretation(config, message, path));
 
         log.info("Start the process. Message - {}", message);
         runDistributed(builder, message);
@@ -121,15 +121,9 @@ public class EventsInterpretationCallback extends AbstractMessageCallback<Pipeli
   private void runDistributed(ProcessRunnerBuilderBuilder builder, PipelinesEventsMessage message)
       throws IOException, InterruptedException {
 
-    SparkSettings sparkSettings = SparkSettings.create(config.sparkConfig, config.stepConfig);
-
-    int sparkExecutorNumbers =
-        sparkSettings.computeExecutorNumbers(message.getNumberOfEventRecords());
-
-    builder
-        .sparkParallelism(sparkSettings.computeParallelism(sparkExecutorNumbers))
-        .sparkExecutorMemory(sparkSettings.computeExecutorMemory(sparkExecutorNumbers))
-        .sparkExecutorNumbers(sparkExecutorNumbers);
+    SparkSettings sparkSettings =
+        SparkSettings.create(config.sparkConfig, message.getNumberOfEventRecords());
+    builder.sparkSettings(sparkSettings);
 
     // Assembles a terminal java process and runs it
     int exitValue = builder.build().get().start().waitFor();
