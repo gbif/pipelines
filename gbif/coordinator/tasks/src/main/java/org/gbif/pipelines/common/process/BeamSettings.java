@@ -20,6 +20,7 @@ import org.gbif.pipelines.common.configs.AvroWriteConfiguration;
 import org.gbif.pipelines.common.configs.ElasticsearchConfiguration;
 import org.gbif.pipelines.common.configs.IndexConfiguration;
 import org.gbif.pipelines.common.configs.StepConfiguration;
+import org.gbif.pipelines.common.indexing.IndexSettings;
 import org.gbif.pipelines.tasks.events.indexing.EventsIndexingConfiguration;
 import org.gbif.pipelines.tasks.events.interpretation.EventsInterpretationConfiguration;
 import org.gbif.pipelines.tasks.occurrences.hdfs.HdfsViewConfiguration;
@@ -28,7 +29,7 @@ import org.gbif.pipelines.tasks.occurrences.indexing.IndexingConfiguration;
 import org.gbif.pipelines.tasks.occurrences.interpretation.InterpreterConfiguration;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class ProcessRunnerBeamSettings {
+public class BeamSettings {
 
   public static Consumer<StringJoiner> occurrenceInterpretation(
       InterpreterConfiguration config,
@@ -81,8 +82,7 @@ public class ProcessRunnerBeamSettings {
   public static Consumer<StringJoiner> occurreceIndexing(
       IndexingConfiguration config,
       PipelinesInterpretedMessage message,
-      String esIndexName,
-      Integer esShardsNumber) {
+      IndexSettings indexSettings) {
     return command -> {
       IndexingCommon.builder()
           .command(command)
@@ -93,8 +93,8 @@ public class ProcessRunnerBeamSettings {
           .indexConfig(config.indexConfig)
           .metaFileName(config.metaFileName)
           .pipelinesConfigPath(config.pipelinesConfig)
-          .esIndexName(esIndexName)
-          .esShardsNumber(esShardsNumber)
+          .esIndexName(indexSettings.getIndexName())
+          .esShardsNumber(indexSettings.getNumberOfShards())
           .useBeamDeprecatedRead(config.useBeamDeprecatedRead)
           .build()
           .addToStringBuilder();
@@ -188,8 +188,7 @@ public class ProcessRunnerBeamSettings {
   public static Consumer<StringJoiner> eventIndexing(
       EventsIndexingConfiguration config,
       PipelinesEventsInterpretedMessage message,
-      String esIndexName,
-      Integer esShardsNumber) {
+      IndexSettings indexSettings) {
     return command -> {
       IndexingCommon.builder()
           .command(command)
@@ -200,8 +199,8 @@ public class ProcessRunnerBeamSettings {
           .indexConfig(config.indexConfig)
           .metaFileName(config.metaFileName)
           .pipelinesConfigPath(config.pipelinesConfig)
-          .esIndexName(esIndexName)
-          .esShardsNumber(esShardsNumber)
+          .esIndexName(indexSettings.getIndexName())
+          .esShardsNumber(indexSettings.getNumberOfShards())
           .useBeamDeprecatedRead(config.useBeamDeprecatedRead)
           .build()
           .addToStringBuilder();
