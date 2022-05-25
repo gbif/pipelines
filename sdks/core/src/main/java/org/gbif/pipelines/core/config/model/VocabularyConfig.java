@@ -2,11 +2,14 @@ package org.gbif.pipelines.core.config.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.io.Serializable;
+import java.util.Optional;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 
+@Slf4j
 @Data
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -29,17 +32,17 @@ public class VocabularyConfig implements Serializable {
   // name of the degreeOfEstablishment vocabulary
   private String degreeOfEstablishmentVocabName;
 
-  public String getVocabularyFileName(Term term) {
+  public Optional<String> getVocabularyFileName(Term term) {
     if (term == DwcTerm.lifeStage) {
-      return lifeStageVocabName;
+      return Optional.of(lifeStageVocabName);
     } else if (term == DwcTerm.establishmentMeans) {
-      return establishmentMeansVocabName;
+      return Optional.of(establishmentMeansVocabName);
     } else if (term == DwcTerm.pathway) {
-      return pathwayVocabName;
+      return Optional.of(pathwayVocabName);
     } else if (term == DwcTerm.degreeOfEstablishment) {
-      return degreeOfEstablishmentVocabName;
+      return Optional.of(degreeOfEstablishmentVocabName);
     }
-    throw new IllegalArgumentException(
-        "Can't find associated vocabulary for term" + term.qualifiedName());
+    log.warn("Can't file mapping for the vocabulary term {}", term.qualifiedName());
+    return Optional.empty();
   }
 }

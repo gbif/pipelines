@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.util.Optional;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -57,16 +58,19 @@ public class FileVocabularyFactory implements Serializable {
       VocabularyServiceBuilder serviceBuilder = VocabularyService.builder();
 
       for (Term term : Terms.getVocabularyBackedTerms()) {
-        String fileName = vocabularyConfig.getVocabularyFileName(term);
-        try (InputStream is = readFile(hdfsSiteConfig, coreSiteConfig, path, fileName)) {
-          InMemoryVocabularyLookupBuilder builder = InMemoryVocabularyLookup.newBuilder().from(is);
-          if (term == DwcTerm.lifeStage) {
-            builder.withPrefilter(PreFilters.REMOVE_NUMERIC_PREFIX);
-          }
+        Optional<String> fileName = vocabularyConfig.getVocabularyFileName(term);
+        if (fileName.isPresent()) {
+          try (InputStream is = readFile(hdfsSiteConfig, coreSiteConfig, path, fileName.get())) {
+            InMemoryVocabularyLookupBuilder builder =
+                InMemoryVocabularyLookup.newBuilder().from(is);
+            if (term == DwcTerm.lifeStage) {
+              builder.withPrefilter(PreFilters.REMOVE_NUMERIC_PREFIX);
+            }
 
-          serviceBuilder.vocabularyLookup(term, builder.build());
-        } catch (IOException ex) {
-          throw new RuntimeException(ex);
+            serviceBuilder.vocabularyLookup(term, builder.build());
+          } catch (IOException ex) {
+            throw new RuntimeException(ex);
+          }
         }
       }
 
