@@ -92,20 +92,24 @@ object Cluster {
         // specimens often link by record identifiers, while occurrence data skews here greatly for little benefit
         val bor = Option(r.getAs[String]("basisOfRecord"))
         if (specimenBORs.contains(bor.getOrElse("ignore"))) {
-          val idsUsed = Set[Option[String]](
+          var idsUsed = Set[Option[String]](
             Option(r.getAs[String]("occurrenceID")),
             Option(r.getAs[String]("fieldNumber")),
             Option(r.getAs[String]("recordNumber")),
             Option(r.getAs[String]("catalogNumber")),
-            Option(r.getAs[String]("otherCatalogNumbers")),
             triplify(r), // ic:cc:cn format
             scopeCatalogNumber(r) // ic:cn format like ENA uses
           )
 
+          val other = Option(r.getAs[Seq[String]]("otherCatalogNumbers"))
+          if (!other.isEmpty && other.get.length>0) {
+            idsUsed ++= other.get.map(x => Option(x))
+          }
+
           // clean IDs
           val filteredIds = idsUsed.filter(s => {
             s match {
-              case Some(s) => !omitIds.contains(s.toUpperCase())
+              case Some(s) => s!=null && s.length>0 && !omitIds.contains(s.toUpperCase())
               case _ => false
             }
           })
@@ -138,8 +142,8 @@ object Cluster {
         val month = Option(r.getAs[Int]("month"))
         val day = Option(r.getAs[Int]("day"))
         val taxonKey = Option(r.getAs[Int]("taxonKey"))
-        val typeStatus = Option(r.getAs[Int]("typeStatus"))
-        val recordedBy = Option(r.getAs[String]("recordedBy"))
+        val typeStatus = Option(r.getAs[Seq[String]]("typeStatus"))
+        val recordedBy = Option(r.getAs[Seq[String]]("recordedBy"))
         if (!lat.isEmpty && !lng.isEmpty && !year.isEmpty && !month.isEmpty && !day.isEmpty) {
           records.append(
             Row(
@@ -150,22 +154,26 @@ object Cluster {
         }
         // any type record of a taxon is of interest
         if (!taxonKey.isEmpty && !typeStatus.isEmpty) {
-          records.append(
-            Row(
-              r.getAs[Long]("gbifId"),
-              r.getAs[String]("datasetKey"),
-              taxonKey.get + "|" + typeStatus.get
-            ))
+          typeStatus.get.foreach(t => {
+            records.append(
+              Row(
+                r.getAs[Long]("gbifId"),
+                r.getAs[String]("datasetKey"),
+                taxonKey.get + "|" + t
+              ))
+          })
         }
 
         // all similar species recorded by the same person within the same year is of interest (misses recordings over new year)
         if (!taxonKey.isEmpty && !year.isEmpty && !recordedBy.isEmpty) {
-          records.append(
-            Row(
-              r.getAs[Long]("gbifId"),
-              r.getAs[String]("datasetKey"),
-              taxonKey.get + "|" + year.get + "|" + recordedBy.get
-            ))
+          recordedBy.get.foreach(name => {
+            records.append(
+              Row(
+                r.getAs[Long]("gbifId"),
+                r.getAs[String]("datasetKey"),
+                taxonKey.get + "|" + year.get + "|" + name
+              ))
+          })
         }
 
         records
