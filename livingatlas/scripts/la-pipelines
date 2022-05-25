@@ -79,6 +79,7 @@ Pipeline ingress steps:
 dwca-avro --> interpret --> validate --> uuid --> sds --> image-load ... │
                  --> image-sync --> index --> sample --> jackknife --> solr
 
+-  'copy' downloads Dwc-A from collectory and copy it to local fs and optionally to hdfs (and an exclude list for 'all')
 -  'dwca-avro' reads a Dwc-A and converts it to an verbatim.avro file;
 -  'interpret' reads verbatim.avro, interprets it and writes the interpreted data and the issues to Avro files;
 -  'validate' validates the identifiers for a dataset, checking for duplicate and empty keys;
@@ -103,6 +104,7 @@ dwca-avro --> interpret --> validate --> uuid --> sds --> image-load ... │
 All the steps generate an output. If only the final output is desired, the intermediate outputs can be ignored.
 
 Usage:
+  $CMD [options] copy          (<dr>...|all) [--hdfs] [--exclude=<exc>]
   $CMD [options] dwca-avro     (<dr>...|all)
   $CMD [options] interpret     (<dr>...|all)         $WHEREL
   $CMD [options] validate      (<dr>...|all)         $WHERE
@@ -137,7 +139,6 @@ Options:
   -v --version         Show version.
 ----
 $CMD $VER
-License Apache-2.0
 License Apache-2.0
 EOF
 )"
@@ -302,6 +303,10 @@ FS_PATH_ARG="--fsPath=$FS_PATH"
 
 ARGS="$ARGS $FS_PATH_ARG"
 
+COLLECTORY_WS_URL=$(getConf collectory.wsUrl);
+COLLECTORY_WS_API_KEY=$(getConf collectory.httpHeaders.Authorization);
+COPY_DEST=$(getConf general.copyPath)
+
 # Uncomment this to debug log4j
 # if ( $debug) ; then EXTRA_JVM_CLI_ARGS="-Dlog4j.debug"; fi
 
@@ -348,6 +353,82 @@ function validation-report() {
     log.info "Creating validation report"
     java $EXTRA_JVM_CLI_ARGS -cp $LOCAL_PIPELINES_JAR au.org.ala.utils.ValidationReportWriter \
        --config=$config $ARGS
+}
+
+function copy () {
+  local dr=$1
+  local excludes=$2
+
+  if [[ " ${excludes[@]} " =~ " ${dr} " ]]; then
+    log.info "Skipping copy of $dr"
+  else
+    logStepStart "Copy" $dr
+    SECONDS=0
+
+    DR_URL=${COLLECTORY_WS_URL}dataResource/$dr\?api_key\=$COLLECTORY_WS_API_KEY
+    DR_CONN_URL=`curl -s -o - ${DR_URL} | yq -P e '.connectionParameters.url' -`
+    DR_DEST="$COPY_DEST/$dr"
+    if [[ ! -d "$DR_DEST" ]] ; then $_D mkdir -p $DR_DEST; fi
+    log.debug "Trying to copy $dr using ${DR_URL//[0-9]/X} and connection url $DR_CONN_URL into $DR_DEST/$dr.zip"
+    if [[ "$DR_URL" == http* ]]; then
+      # Try to resume previous download (continue if fails)
+      set +e
+      $_D curl -sLC - -o "$DR_DEST/$dr.zip" -f "$DR_CONN_URL"
+      set -e
+    # else, other types like sftp
+    else
+      log.warn "Skipping the download and copy of $dr. We tried ${DR_URL//[0-9]/X}"
+    fi
+    logStepEnd "Copy" $dr local $SECONDS
+  fi
+}
+
+function clean-dwca-in-hdfs () {
+  local dr=$1
+  local excludes=$2
+
+  logStepStart "Clean dwca in dfs" $dr
+  SECONDS=0
+
+  $_D /data/hadoop/bin/hdfs dfs -mkdir -p /dwca-exports
+  if [[ "$dr" == 'all' && $dry_run == 'false' ]]; then
+    IFS=',' read -ra excludes <<< "$exclude"
+    for f in `/data/hadoop/bin/hdfs dfs -ls -C /dwca-exports`
+    do
+      d=`echo $f | sed -e "s/\\/dwca-exports\\///"`
+      if [[ " ${excludes[@]} " =~ " ${d} " ]]; then
+        log.info "Skipping clean of $f"
+      else
+        log.info "Remove $f from dfs"
+        /data/hadoop/bin/hdfs dfs -rm -r -f $f
+      fi
+    done
+  else
+    $_D /data/hadoop/bin/hdfs dfs -rm -r -f $dr
+  fi
+  logStepEnd "Clean dwca in dfs" $dr local $SECONDS
+}
+
+function copy-to-hdfs () {
+  local dr=$1
+  local excludes=$2
+
+  logStepStart "Copy dwca to dfs" $dr
+  if [[ "$dr" == 'all' ]]; then
+    for dr in `ls /data/dwca-export`
+    do
+      f="/data/dwca-export/$dr"
+      if [[ " ${excludes[@]} " =~ " ${dr} " ]]; then
+        log.info "Skipping copy dwca $f to dfs"
+      else
+        log.info "Copy $f to dfs"
+        $_D /data/hadoop/bin/hdfs dfs -copyFromLocal -f $f /dwca-exports/
+      fi
+    done
+  else
+    $_D /data/hadoop/bin/hdfs dfs -copyFromLocal -f $dr /dwca-exports/
+  fi
+  logStepEnd "Copy dwca to dfs" $dr local $SECONDS
 }
 
 function dwca-avro () {
@@ -938,7 +1019,7 @@ if ($clustering || $do_all); then
   if [[ $2 = "all" ]] ; then
     do_step clustering
   else
-    echo "WARN: 'clustering' not run when 'dr' != 'all'"
+    log.warn "'clustering' not run when 'dr' != 'all'"
   fi
 fi
 
@@ -946,7 +1027,7 @@ if ($jackknife || $do_all); then
   if [[ $2 = "all" ]] ; then
     do_step jackknife
   else
-    echo "WARN: 'jackknife' not run when 'dr' != 'all'"
+    log.warn "'clustering' not run when 'dr' != 'all'"
   fi
 fi
 
@@ -964,6 +1045,26 @@ fi
 
 if ($migrate); then
     do_step migrate
+fi
+
+if ($copy); then
+  if [[ $2 = "all" ]] ; then
+    for d in $(curl -s -o - ${COLLECTORY_WS_URL}dataResource | yq -P e '.[].uid' -); do
+      copy $d $exclude
+    done
+    if ($hdfs); then
+      clean-dwca-in-hdfs "all" $exclude
+      copy-to-hdfs "all" $exclude
+    fi
+  else
+    for d in "${drs[@]}"; do
+      copy $d ""
+      if ($hdfs); then
+        clean-dwca-in-hdfs $d ""
+        copy-to-hdfs $d ""
+      fi
+    done
+  fi
 fi
 
 # All ended correctly, so untrap EXIT catch

@@ -112,6 +112,7 @@ general:
   hdfsSiteConfig: ""
   # Path to core-site-config.xml
   coreSiteConfig: ""
+  copyPath: "/data/dwca-export"
 
 # class: au.org.ala.pipelines.beam.ALADwcaToVerbatimPipeline
 dwca-avro:
