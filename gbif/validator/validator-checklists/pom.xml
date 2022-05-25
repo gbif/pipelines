@@ -79,7 +79,6 @@
     <jsr305.version>3.0.2</jsr305.version>
     <metainf-services.version>1.7</metainf-services.version>
     <validation-api.version>1.1.0.Final</validation-api.version>
-    <gbif-api.version>0.84</gbif-api.version>
 
     <logstash-encoder.version>4.11</logstash-encoder.version>
     <yammer-metrics.version>2.2.0</yammer-metrics.version>
