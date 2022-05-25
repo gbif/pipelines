@@ -14,7 +14,7 @@ Vcs-Git: https://github.com/gbif/pipelines.git
 
 Package: la-pipelines
 Architecture: all
-Depends: ${misc:Depends}, openjdk-8-jdk, ca-certificates, bash-completion
+Depends: ${misc:Depends}, openjdk-8-jdk, ca-certificates, bash-completion, curl
 Suggests: yq, docopts
 Description: Utility for data processing and indexing of biodiversity data
  This package contains the Pipelines Data ingress utility package from
