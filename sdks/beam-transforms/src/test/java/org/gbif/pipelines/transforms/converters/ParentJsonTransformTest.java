@@ -38,9 +38,13 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.RankedName;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.json.DerivedMetadataRecord;
+import org.gbif.pipelines.transforms.core.ConvexHullFn;
+import org.gbif.pipelines.transforms.core.DerivedMetadataTransform;
 import org.gbif.pipelines.transforms.core.EventCoreTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.TaxonomyTransform;
+import org.gbif.pipelines.transforms.core.TemporalCoverageFn;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
@@ -239,6 +243,8 @@ public class ParentJsonTransformTest {
             .setMultimediaItems(Arrays.asList(stillImage, movingImage))
             .build();
 
+    DerivedMetadataRecord dmr = DerivedMetadataRecord.newBuilder().setId("777").build();
+
     // Core
     EventCoreTransform eventCoreTransform = EventCoreTransform.builder().create();
     IdentifierTransform identifierTransform = IdentifierTransform.builder().create();
@@ -251,6 +257,14 @@ public class ParentJsonTransformTest {
     MultimediaTransform multimediaTransform = MultimediaTransform.builder().create();
     AudubonTransform audubonTransform = AudubonTransform.builder().create();
     ImageTransform imageTransform = ImageTransform.builder().create();
+
+    // Derived metadata
+    DerivedMetadataTransform derivedMetadataTransform =
+        DerivedMetadataTransform.builder()
+            .extendedRecordTag(verbatimTransform.getTag())
+            .convexHullTag(ConvexHullFn.tag())
+            .temporalCoverageTag(TemporalCoverageFn.tag())
+            .build();
 
     // When
     PCollectionView<MetadataRecord> metadataView =
@@ -292,6 +306,10 @@ public class ParentJsonTransformTest {
         p.apply("Read Audubon", Create.empty(new TypeDescriptor<AudubonRecord>() {}))
             .apply("Map Audubon to KV", audubonTransform.toKv());
 
+    PCollection<KV<String, DerivedMetadataRecord>> derivedMetadataCollection =
+        p.apply("Read DerivedMetadataRecord", Create.of(dmr))
+            .apply("Map DerivedMetadataRecord to KV", derivedMetadataTransform.toKv());
+
     SingleOutput<KV<String, CoGbkResult>, String> eventJsonDoFn =
         ParentJsonTransform.builder()
             .extendedRecordTag(verbatimTransform.getTag())
@@ -303,6 +321,7 @@ public class ParentJsonTransformTest {
             .multimediaRecordTag(multimediaTransform.getTag())
             .imageRecordTag(imageTransform.getTag())
             .audubonRecordTag(audubonTransform.getTag())
+            .derivedMetadataRecordTag(DerivedMetadataTransform.tag())
             .metadataView(metadataView)
             .build()
             .converter();
@@ -322,6 +341,8 @@ public class ParentJsonTransformTest {
             .and(identifierTransform.getTag(), identifierCollection)
             // Raw
             .and(verbatimTransform.getTag(), verbatimCollection)
+            // DerivedMetadata
+            .and(DerivedMetadataTransform.tag(), derivedMetadataCollection)
             // Apply
             .apply("Grouping objects", CoGroupByKey.create())
             .apply("Merging to json", eventJsonDoFn);
@@ -337,6 +358,7 @@ public class ParentJsonTransformTest {
             .taxon(tr)
             .multimedia(mmr)
             .verbatim(er)
+            .derivedMetadata(dmr)
             .build()
             .toJson();
 
