@@ -44,7 +44,7 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
   private PCollectionView<MetadataRecord> metadataView;
 
   @Builder(buildMethodName = "create")
-  private LocationTransform(
+  protected LocationTransform(
       SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> geocodeKvStoreSupplier,
       PCollectionView<MetadataRecord> metadataView) {
     super(
@@ -55,8 +55,17 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
 
   /** Maps {@link LocationRecord} to key value, where key is {@link LocationRecord#getId} */
   public MapElements<LocationRecord, KV<String, LocationRecord>> toKv() {
+    return asKv(false);
+  }
+
+  /** Maps {@link LocationRecord} to key value, where key is {@link LocationRecord#getParentId} */
+  public MapElements<LocationRecord, KV<String, LocationRecord>> toParentKv() {
+    return asKv(true);
+  }
+
+  private MapElements<LocationRecord, KV<String, LocationRecord>> asKv(boolean useParentId) {
     return MapElements.into(new TypeDescriptor<KV<String, LocationRecord>>() {})
-        .via((LocationRecord lr) -> KV.of(lr.getId(), lr));
+        .via((LocationRecord lr) -> KV.of(useParentId ? lr.getParentId() : lr.getId(), lr));
   }
 
   public LocationTransform counterFn(SerializableConsumer<String> counterFn) {
@@ -141,6 +150,7 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
         .via(LocationInterpreter::interpretCoordinateUncertaintyInMeters)
         .via(LocationInterpreter::interpretLocality)
         .via(LocationInterpreter::interpretFootprintWKT)
+        .via(LocationInterpreter::setParentId)
         .via(r -> this.incCounter())
         .getOfNullable();
   }

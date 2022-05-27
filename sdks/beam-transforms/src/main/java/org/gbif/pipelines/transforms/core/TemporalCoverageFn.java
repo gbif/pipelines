@@ -6,16 +6,19 @@ import java.util.Optional;
 import java.util.stream.StreamSupport;
 import lombok.Data;
 import org.apache.beam.sdk.transforms.Combine;
+import org.apache.beam.sdk.values.TupleTag;
 import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.io.avro.json.DerivedMetadataRecord;
 
+/**
+ * Beam combine function that extracts the max and min dates from EventDate records.
+ */
 @Data
 public class TemporalCoverageFn
-    extends Combine.CombineFn<TemporalRecord, TemporalCoverageFn.Accum, DerivedMetadataRecord> {
+    extends Combine.CombineFn<TemporalRecord, TemporalCoverageFn.Accum, EventDate> {
 
-  private final DerivedMetadataRecord derivedMetadataRecord;
+  private static final TupleTag<EventDate> TAG = new TupleTag<EventDate>() {};
 
   @Data
   public static class Accum implements Serializable {
@@ -25,9 +28,7 @@ public class TemporalCoverageFn
 
     public Accum acc(EventDate eventDate) {
       Optional.ofNullable(eventDate.getLte()).ifPresent(this::setMinDate);
-
       Optional.ofNullable(eventDate.getGte()).ifPresent(this::setMaxDate);
-
       return this;
     }
 
@@ -93,16 +94,11 @@ public class TemporalCoverageFn
   }
 
   @Override
-  public DerivedMetadataRecord extractOutput(Accum accumulator) {
-    accumulator
-        .toEventDate()
-        .map(
-            jEd ->
-                org.gbif.pipelines.io.avro.json.EventDate.newBuilder()
-                    .setLte(jEd.getLte())
-                    .setGte(jEd.getGte())
-                    .build())
-        .ifPresent(derivedMetadataRecord::setTemporalCoverage);
-    return derivedMetadataRecord;
+  public EventDate extractOutput(Accum accumulator) {
+    return accumulator.toEventDate().orElse(EventDate.newBuilder().build());
+  }
+
+  public static TupleTag<EventDate> tag() {
+    return TAG;
   }
 }

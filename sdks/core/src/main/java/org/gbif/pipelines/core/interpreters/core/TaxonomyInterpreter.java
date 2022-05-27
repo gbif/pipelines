@@ -142,6 +142,11 @@ public class TaxonomyInterpreter {
     };
   }
 
+  /** Sets the parentId field. */
+  public static void setParentId(ExtendedRecord er, TaxonRecord tr) {
+    Optional.ofNullable(er.getParentCoreId()).ifPresent(tr::setParentId);
+  }
+
   /**
    * To be able to return NONE, if response is FUZZY and higher taxa is null or empty Fix for
    * https://github.com/gbif/pipelines/issues/254

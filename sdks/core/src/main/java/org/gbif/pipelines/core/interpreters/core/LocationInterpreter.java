@@ -380,6 +380,11 @@ public class LocationInterpreter {
     }
   }
 
+  /** Sets the parentId field. */
+  public static void setParentId(ExtendedRecord er, LocationRecord lr) {
+    Optional.ofNullable(er.getParentCoreId()).ifPresent(lr::setParentId);
+  }
+
   private static String cleanName(String x) {
     x = StringUtils.normalizeSpace(x).trim();
     // if we get all upper names, Capitalize them

@@ -86,7 +86,7 @@ public class ParentJsonTransform implements Serializable {
 
   @NonNull private final PCollectionView<MetadataRecord> metadataView;
 
-  @NonNull private final PCollectionView<DerivedMetadataRecord> derivedMetadataView;
+  @NonNull private final TupleTag<DerivedMetadataRecord> derivedMetadataRecordTag;
 
   public SingleOutput<KV<String, CoGbkResult>, String> converter() {
 
@@ -125,7 +125,9 @@ public class ParentJsonTransform implements Serializable {
             MultimediaRecord mmr = MultimediaConverter.merge(mr, imr, ar);
 
             // Derived metadata
-            DerivedMetadataRecord dmr = c.sideInput(derivedMetadataView);
+            DerivedMetadataRecord dmr =
+                v.getOnly(
+                    derivedMetadataRecordTag, DerivedMetadataRecord.newBuilder().setId(k).build());
 
             // Convert and
             String json =

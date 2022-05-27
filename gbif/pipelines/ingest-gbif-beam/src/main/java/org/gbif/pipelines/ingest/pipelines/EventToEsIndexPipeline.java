@@ -13,9 +13,10 @@ import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.elasticsearch.ElasticsearchIO;
 import org.apache.beam.sdk.transforms.Combine;
+import org.apache.beam.sdk.transforms.Filter;
 import org.apache.beam.sdk.transforms.Flatten;
 import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
-import org.apache.beam.sdk.transforms.Values;
+import org.apache.beam.sdk.transforms.Sample;
 import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.transforms.join.CoGroupByKey;
@@ -31,6 +32,7 @@ import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
+import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
@@ -40,11 +42,14 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.json.DerivedMetadataRecord;
+import org.gbif.pipelines.transforms.common.NotNullOrEmptyFilter;
 import org.gbif.pipelines.transforms.converters.ParentJsonTransform;
 import org.gbif.pipelines.transforms.core.ConvexHullFn;
+import org.gbif.pipelines.transforms.core.DerivedMetadataTransform;
 import org.gbif.pipelines.transforms.core.EventCoreTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.TaxonomyTransform;
+import org.gbif.pipelines.transforms.core.TemporalCoverageFn;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
@@ -89,6 +94,8 @@ import org.slf4j.MDC;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class EventToEsIndexPipeline {
 
+  private static final int MAX_TAXON_PER_EVENTS = 1_000;
+
   public static void main(String[] args) {
     EsIndexingPipelineOptions options = PipelinesOptionsFactory.createIndexing(args);
     run(options);
@@ -125,6 +132,7 @@ public class EventToEsIndexPipeline {
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.builder().create();
     LocationTransform locationTransform = LocationTransform.builder().create();
+    LocationTransform parentLocationTransform = LocationTransform.builder().create();
     TaxonomyTransform taxonomyTransform = TaxonomyTransform.builder().create();
 
     // Extension
@@ -141,6 +149,13 @@ public class EventToEsIndexPipeline {
         p.apply("Read Verbatim", verbatimTransform.read(pathFn))
             .apply("Map Verbatim to KV", verbatimTransform.toKv());
 
+    PCollection<KV<String, ExtendedRecord>> eventOccurrenceVerbatimCollection =
+        p.apply("Read event occurrences verbatim", verbatimTransform.read(occurrencesPathFn))
+            .apply(
+                "Remove verbatim records with null parent ids",
+                Filter.by(NotNullOrEmptyFilter.of((ExtendedRecord er) -> er.getParentCoreId())))
+            .apply("Map event occurrences verbatim to KV", verbatimTransform.toParentKv());
+
     PCollection<KV<String, IdentifierRecord>> identifierCollection =
         p.apply("Read identifiers", identifierTransform.read(pathFn))
             .apply("Map identifiers to KV", identifierTransform.toKv());
@@ -153,25 +168,73 @@ public class EventToEsIndexPipeline {
         p.apply("Read Temporal", temporalTransform.read(pathFn))
             .apply("Map Temporal to KV", temporalTransform.toKv());
 
+    PCollection<KV<String, TemporalRecord>> eventOccurrenceTemporalCollection =
+        p.apply("Read occurrence event temporal records", temporalTransform.read(occurrencesPathFn))
+            .apply(
+                "Remove temporal records with null parent ids",
+                Filter.by(NotNullOrEmptyFilter.of((TemporalRecord tr) -> tr.getParentId())))
+            .apply("Map occurrence events temporal records to KV", temporalTransform.toParentKv());
+
+    PCollection<KV<String, EventDate>> temporalCoverageCollection =
+        PCollectionList.of(temporalCollection)
+            .and(eventOccurrenceTemporalCollection)
+            .apply("Joining temporal records", Flatten.pCollections())
+            .apply("Calculate the temporal coverage", Combine.perKey(new TemporalCoverageFn()));
+
     PCollection<KV<String, LocationRecord>> locationCollection =
         p.apply("Read Location", locationTransform.read(pathFn))
             .apply("Map Location to KV", locationTransform.toKv());
 
-    DerivedMetadataRecord derivedMetadataRecord = new DerivedMetadataRecord();
-    PCollection<KV<String, LocationRecord>> occurrenceLocationCollection =
-        p.apply("Read occurrence Location", locationTransform.read(occurrencesPathFn))
-            .apply("Map occurrence Location to KV", locationTransform.toKv());
-
-    PCollectionView<DerivedMetadataRecord> derivedMetadataRecordView =
-        occurrenceLocationCollection
-            .apply("Get occurrence location values", Values.create())
+    PCollection<KV<String, LocationRecord>> eventOccurrenceLocationCollection =
+        p.apply("Read occurrence events locations", parentLocationTransform.read(occurrencesPathFn))
             .apply(
-                "Calculate the WKT Convex Hull of all records",
-                Combine.globally(new ConvexHullFn(derivedMetadataRecord)).asSingletonView());
+                "Remove location records with null parent ids",
+                Filter.by(NotNullOrEmptyFilter.of((LocationRecord lr) -> lr.getParentId())))
+            .apply("Map occurrence events locations to KV", parentLocationTransform.toParentKv());
+
+    PCollection<KV<String, String>> convexHullCollection =
+        PCollectionList.of(locationCollection)
+            .and(eventOccurrenceLocationCollection)
+            .apply("Joining location records", Flatten.pCollections())
+            .apply(
+                "Calculate the WKT Convex Hull of all records", Combine.perKey(new ConvexHullFn()));
 
     PCollection<KV<String, TaxonRecord>> taxonCollection =
-        p.apply("Read Taxon", taxonomyTransform.read(pathFn))
-            .apply("Map Taxon to KV", taxonomyTransform.toKv());
+        p.apply("Read event taxon records", taxonomyTransform.read(pathFn))
+            .apply("Map event taxon records to KV", taxonomyTransform.toKv());
+
+    PCollection<KV<String, TaxonRecord>> eventOccurrencesTaxonCollection =
+        p.apply("Read event occurrences taxon records", taxonomyTransform.read(occurrencesPathFn))
+            .apply(
+                "Remove taxon records with null parent ids",
+                Filter.by(NotNullOrEmptyFilter.of((TaxonRecord tr) -> tr.getParentId())))
+            .apply("Map event occurrences taxon to KV", taxonomyTransform.toParentKv());
+
+    PCollection<KV<String, Iterable<TaxonRecord>>> eventTaxonClassification =
+        PCollectionList.of(taxonCollection)
+            .and(eventOccurrencesTaxonCollection)
+            .apply("Join event and occurrence taxon records", Flatten.pCollections())
+            .apply(
+                "Select a sample of taxon records", Sample.fixedSizePerKey(MAX_TAXON_PER_EVENTS));
+
+    PCollection<KV<String, DerivedMetadataRecord>> derivedMetadataRecordCollection =
+        KeyedPCollectionTuple.of(ConvexHullFn.tag(), convexHullCollection)
+            .and(TemporalCoverageFn.tag(), temporalCoverageCollection)
+            .and(DerivedMetadataTransform.iterableTaxonTupleTag(), eventTaxonClassification)
+            .and(
+                verbatimTransform.getTag(),
+                PCollectionList.of(eventOccurrenceVerbatimCollection)
+                    .and(verbatimCollection)
+                    .apply("Join event and occurrence verbatim records", Flatten.pCollections()))
+            .apply("Grouping derived metadata data", CoGroupByKey.create())
+            .apply(
+                "Creating derived metadata records",
+                DerivedMetadataTransform.builder()
+                    .convexHullTag(ConvexHullFn.tag())
+                    .temporalCoverageTag(TemporalCoverageFn.tag())
+                    .extendedRecordTag(verbatimTransform.getTag())
+                    .build()
+                    .converter());
 
     PCollection<KV<String, MultimediaRecord>> multimediaCollection =
         p.apply("Read Multimedia", multimediaTransform.read(pathFn))
@@ -197,6 +260,7 @@ public class EventToEsIndexPipeline {
             .multimediaRecordTag(multimediaTransform.getTag())
             .imageRecordTag(imageTransform.getTag())
             .audubonRecordTag(audubonTransform.getTag())
+            .derivedMetadataRecordTag(DerivedMetadataTransform.tag())
             .metadataView(metadataView)
             .build()
             .converter();
@@ -216,6 +280,8 @@ public class EventToEsIndexPipeline {
             .and(identifierTransform.getTag(), identifierCollection)
             // Raw
             .and(verbatimTransform.getTag(), verbatimCollection)
+            // Derived metadata
+            .and(DerivedMetadataTransform.tag(), derivedMetadataRecordCollection)
             // Apply
             .apply("Grouping objects", CoGroupByKey.create())
             .apply("Merging to json", eventJsonDoFn);
@@ -232,7 +298,7 @@ public class EventToEsIndexPipeline {
     PCollection<String> jsonCollection =
         PCollectionList.of(eventJsonCollection)
             .and(occurrenceJsonCollection)
-            .apply(Flatten.pCollections());
+            .apply("Join event and occurrence Json records", Flatten.pCollections());
 
     log.info("Adding step 6: Elasticsearch indexing");
     ElasticsearchIO.ConnectionConfiguration esConfig =

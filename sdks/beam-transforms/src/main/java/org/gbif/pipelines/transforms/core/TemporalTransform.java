@@ -56,10 +56,20 @@ public class TemporalTransform extends Transform<ExtendedRecord, TemporalRecord>
     }
   }
 
+  /** Maps {@link TemporalRecord} to key value, where key is {@link TemporalRecord#getParentId} */
+  public MapElements<TemporalRecord, KV<String, TemporalRecord>> asKv(boolean useParent) {
+    return MapElements.into(new TypeDescriptor<KV<String, TemporalRecord>>() {})
+        .via((TemporalRecord tr) -> KV.of(useParent ? tr.getParentId() : tr.getId(), tr));
+  }
+
   /** Maps {@link TemporalRecord} to key value, where key is {@link TemporalRecord#getId} */
   public MapElements<TemporalRecord, KV<String, TemporalRecord>> toKv() {
-    return MapElements.into(new TypeDescriptor<KV<String, TemporalRecord>>() {})
-        .via((TemporalRecord tr) -> KV.of(tr.getId(), tr));
+    return asKv(false);
+  }
+
+  /** Maps {@link TemporalRecord} to key value, where key is {@link TemporalRecord#getParentId} */
+  public MapElements<TemporalRecord, KV<String, TemporalRecord>> toParentKv() {
+    return asKv(true);
   }
 
   public TemporalTransform counterFn(SerializableConsumer<String> counterFn) {
@@ -86,6 +96,7 @@ public class TemporalTransform extends Transform<ExtendedRecord, TemporalRecord>
         .via(temporalInterpreter::interpretTemporal)
         .via(temporalInterpreter::interpretModified)
         .via(temporalInterpreter::interpretDateIdentified)
+        .via(TemporalInterpreter::setParentId)
         .getOfNullable();
   }
 }
