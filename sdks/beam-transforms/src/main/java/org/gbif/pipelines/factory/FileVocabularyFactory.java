@@ -66,11 +66,11 @@ public class FileVocabularyFactory implements Serializable {
                     builder.withPrefilter(PreFilters.REMOVE_NUMERIC_PREFIX);
                   }
 
-                  serviceBuilder.vocabularyLookup(term, builder.build());
-                } catch (IOException ex) {
-                  throw new PipelinesException(ex);
-                }
-              });
+          serviceBuilder.vocabularyLookup(term, builder.build());
+        } catch (IOException ex) {
+          throw new RuntimeException(ex);
+        }
+      }
 
       return serviceBuilder.build();
     };

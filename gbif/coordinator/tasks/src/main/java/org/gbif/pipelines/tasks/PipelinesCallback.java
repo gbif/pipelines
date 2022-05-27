@@ -235,6 +235,9 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
       // update validator info
       updateValidatorInfoStatus(Status.FAILED);
       deleteValidatorZkPath(datasetKey);
+
+      // Mark crawler as finished
+      ZookeeperUtils.markCrawlerAsFinished(curator, datasetKey);
     }
 
     log.info("Message handler ended - {}", message);
