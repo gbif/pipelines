@@ -28,13 +28,17 @@ public class PostprocessValidation {
   private final IdentifierConfiguration config;
   private final CloseableHttpClient httpClient;
 
-  public void validate() throws IOException {
-    if (!getThresholdSkipTagValue()) {
-      validateThreshold();
+  public IdentifierValidationResult validate() throws IOException {
+    if (useThresholdSkipTagValue()) {
+      String validatonMessage =
+          "Skip valiation because because of machine tag id_threshold_skip=true";
+      return IdentifierValidationResult.create(0d, 0d, true, validatonMessage);
+    } else {
+      return validateThreshold();
     }
   }
 
-  private void validateThreshold() throws IOException {
+  private IdentifierValidationResult validateThreshold() throws IOException {
     String datasetId = message.getDatasetUuid().toString();
     String attempt = Integer.toString(message.getAttempt());
     String metaFileName = config.metaFileName;
@@ -67,23 +71,28 @@ public class PostprocessValidation {
 
     double absentPercent = absentIdCount * 100 / totalCount;
     boolean hasApiRecords = hasApiRecords();
+    boolean isValid = true;
+    String validationMessage = "No identifiers issues";
     if (absentPercent > 0d && hasApiRecords) {
       if (absentPercent > threshold) {
-        log.error(
-            "GBIF IDs hit maximum allowed threshold: allowed - {}, duplicates - {}",
-            threshold,
-            absentPercent);
-        throw new PipelinesException("GBIF IDs hit maximum allowed threshold");
+        validationMessage =
+            String.format(
+                "GBIF IDs hit maximum allowed threshold: allowed - %f, duplicates - %f",
+                threshold, absentPercent);
+        isValid = false;
       } else {
-        log.warn(
-            "GBIF IDs current rate: allowed - {}%, duplicates - {}%", threshold, absentPercent);
+        validationMessage =
+            String.format(
+                "GBIF IDs current rate: allowed - %f, duplicates - %f", threshold, absentPercent);
       }
     } else if (absentPercent == 100d) {
-      log.info("Skip IDs validation, dataset has no API records and all IDs are new");
+      validationMessage = "Skip IDs validation, dataset has no API records and all IDs are new";
     } else if (absentPercent > 0d) {
-      log.error("Dataset has no API records, but some IDs aren't new, {}", absentPercent);
-      throw new PipelinesException("Dataset has no API records, but some IDs aren't new");
+      validationMessage =
+          String.format("Dataset has no API records, but some IDs aren't new, %f", absentPercent);
+      isValid = false;
     }
+    return IdentifierValidationResult.create(totalCount, absentIdCount, isValid, validationMessage);
   }
 
   @SneakyThrows
@@ -96,7 +105,7 @@ public class PostprocessValidation {
   }
 
   @SneakyThrows
-  private boolean getThresholdSkipTagValue() {
+  private boolean useThresholdSkipTagValue() {
     RegistryConfiguration registryConfiguration = config.stepConfig.registry;
     String datasetKey = message.getDatasetUuid().toString();
     return GbifApi.getMachineTagValue(

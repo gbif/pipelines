@@ -11,6 +11,7 @@ import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
+import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
 import org.gbif.pipelines.common.interpretation.RecordCountReader;
@@ -20,6 +21,7 @@ import org.gbif.pipelines.common.process.ProcessRunnerBuilder;
 import org.gbif.pipelines.common.process.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
+import org.gbif.pipelines.tasks.occurrences.identifier.validation.IdentifierValidationResult;
 import org.gbif.pipelines.tasks.occurrences.identifier.validation.PostprocessValidation;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 
@@ -89,16 +91,28 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
 
         runDistributed(message, builder);
 
-        PostprocessValidation.builder()
-            .httpClient(httpClient)
-            .message(message)
-            .config(config)
-            .build()
-            .validate();
+        IdentifierValidationResult validationResult =
+            PostprocessValidation.builder()
+                .httpClient(httpClient)
+                .message(message)
+                .config(config)
+                .build()
+                .validate();
+
+        if (validationResult.isResultValid()) {
+          log.info(validationResult.getValidationMessage());
+        } else {
+          historyClient.sendAbsentIndentifiersEmail(
+              message.getDatasetUuid(),
+              message.getAttempt(),
+              validationResult.getValidationMessage());
+          log.error(validationResult.getValidationMessage());
+          throw new PipelinesException(validationResult.getValidationMessage());
+        }
 
       } catch (Exception ex) {
         log.error(ex.getMessage(), ex);
-        throw new IllegalStateException(
+        throw new PipelinesException(
             "Failed interpretation on " + message.getDatasetUuid().toString(), ex);
       }
     };
