@@ -5,9 +5,7 @@ import lombok.Data;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.beam.sdk.transforms.SerializableFunction;
 
-/**
- * Beam function to filter Avro records that contain a non-null and not empty field.
- */
+/** Beam function to filter Avro records that contain a non-null and not empty field. */
 @Data
 @AllArgsConstructor(staticName = "of")
 public class NotNullOrEmptyFilter<T extends SpecificRecordBase>

@@ -11,9 +11,7 @@ import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 
-/**
- * Beam combine function that extracts the max and min dates from EventDate records.
- */
+/** Beam combine function that extracts the max and min dates from EventDate records. */
 @Data
 public class TemporalCoverageFn
     extends Combine.CombineFn<TemporalRecord, TemporalCoverageFn.Accum, EventDate> {

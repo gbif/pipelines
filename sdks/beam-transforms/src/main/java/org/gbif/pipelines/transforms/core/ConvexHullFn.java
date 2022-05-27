@@ -13,9 +13,7 @@ import org.gbif.pipelines.io.avro.LocationRecord;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.io.WKTWriter;
 
-/**
- * Beam that calculates a ConvexHull form all coordinates accumulated from location records.
- */
+/** Beam that calculates a ConvexHull form all coordinates accumulated from location records. */
 @Data
 public class ConvexHullFn extends Combine.CombineFn<LocationRecord, ConvexHullFn.Accum, String> {
 
