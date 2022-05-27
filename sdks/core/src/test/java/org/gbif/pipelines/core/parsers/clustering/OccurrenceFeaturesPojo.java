@@ -1,5 +1,6 @@
 package org.gbif.pipelines.core.parsers.clustering;
 
+import java.util.List;
 import lombok.Builder;
 
 /** A POJO implementation for simple tests. */
@@ -18,13 +19,13 @@ public class OccurrenceFeaturesPojo implements OccurrenceFeatures {
   private final String eventDate;
   private final String scientificName;
   private final String countryCode;
-  private final String typeStatus;
+  private final List<String> typeStatus;
   private final String occurrenceID;
-  private final String recordedBy;
+  private final List<String> recordedBy;
   private final String fieldNumber;
   private final String recordNumber;
   private final String catalogNumber;
-  private final String otherCatalogNumbers;
+  private final List<String> otherCatalogNumbers;
   private final String institutionCode;
   private final String collectionCode;
 
@@ -94,7 +95,7 @@ public class OccurrenceFeaturesPojo implements OccurrenceFeatures {
   }
 
   @Override
-  public String getTypeStatus() {
+  public List<String> getTypeStatus() {
     return typeStatus;
   }
 
@@ -104,7 +105,7 @@ public class OccurrenceFeaturesPojo implements OccurrenceFeatures {
   }
 
   @Override
-  public String getRecordedBy() {
+  public List<String> getRecordedBy() {
     return recordedBy;
   }
 
@@ -124,7 +125,7 @@ public class OccurrenceFeaturesPojo implements OccurrenceFeatures {
   }
 
   @Override
-  public String getOtherCatalogNumbers() {
+  public List<String> getOtherCatalogNumbers() {
     return otherCatalogNumbers;
   }
 

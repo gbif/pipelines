@@ -151,13 +151,13 @@ public class VerbatimToEventPipeline {
 
     // view with the records that have parents to find the hierarchy in the event core
     // interpretation later
-    PCollectionView<Map<String, ExtendedRecord>> erWithParentEventsView =
+    PCollectionView<Map<String, String>> erWithParentEventsView =
         uniqueRawRecords
             .apply(
                 Filter.by(
                     (SerializableFunction<ExtendedRecord, Boolean>)
                         input -> extractOptValue(input, DwcTerm.parentEventID).isPresent()))
-            .apply(verbatimTransform.toKv())
+            .apply(verbatimTransform.toParentEventsKv())
             .apply("View to find parents", View.asMap());
     eventCoreTransform.setErWithParentsView(erWithParentEventsView);
 

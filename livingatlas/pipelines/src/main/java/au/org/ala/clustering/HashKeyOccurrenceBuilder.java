@@ -1,5 +1,7 @@
 package au.org.ala.clustering;
 
+import java.util.List;
+
 /** Builder for {@link HashKeyOccurrence} */
 public final class HashKeyOccurrenceBuilder {
   String hashKey = null;
@@ -16,13 +18,13 @@ public final class HashKeyOccurrenceBuilder {
   String eventDate = null;
   String scientificName = null;
   String countryCode = null;
-  String typeStatus = null;
+  List<String> typeStatus = null;
   String occurrenceID = null;
-  String recordedBy = null;
+  List<String> recordedBy = null;
   String fieldNumber = null;
   String recordNumber = null;
   String catalogNumber = null;
-  String otherCatalogNumbers = null;
+  List<String> otherCatalogNumbers = null;
 
   private HashKeyOccurrenceBuilder() {}
 
@@ -100,7 +102,7 @@ public final class HashKeyOccurrenceBuilder {
     return this;
   }
 
-  public HashKeyOccurrenceBuilder withTypeStatus(String typeStatus) {
+  public HashKeyOccurrenceBuilder withTypeStatus(List<String> typeStatus) {
     this.typeStatus = typeStatus;
     return this;
   }
@@ -110,7 +112,7 @@ public final class HashKeyOccurrenceBuilder {
     return this;
   }
 
-  public HashKeyOccurrenceBuilder withRecordedBy(String recordedBy) {
+  public HashKeyOccurrenceBuilder withRecordedBy(List<String> recordedBy) {
     this.recordedBy = recordedBy;
     return this;
   }
@@ -130,7 +132,7 @@ public final class HashKeyOccurrenceBuilder {
     return this;
   }
 
-  public HashKeyOccurrenceBuilder withOtherCatalogNumbers(String otherCatalogNumbers) {
+  public HashKeyOccurrenceBuilder withOtherCatalogNumbers(List<String> otherCatalogNumbers) {
     this.otherCatalogNumbers = otherCatalogNumbers;
     return this;
   }

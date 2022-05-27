@@ -34,6 +34,8 @@ import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesAbcdMessage;
 import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
 import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
+import org.gbif.common.messaging.api.messages.PipelinesEventsInterpretedMessage;
+import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
 import org.gbif.common.messaging.api.messages.PipelinesIndexedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
@@ -233,6 +235,9 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
       // update validator info
       updateValidatorInfoStatus(Status.FAILED);
       deleteValidatorZkPath(datasetKey);
+
+      // Mark crawler as finished
+      ZookeeperUtils.markCrawlerAsFinished(curator, datasetKey);
     }
 
     log.info("Message handler ended - {}", message);
@@ -358,6 +363,12 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
     }
     if (message instanceof PipelinesVerbatimMessage) {
       return ((PipelinesVerbatimMessage) message).getRunner();
+    }
+    if (message instanceof PipelinesEventsMessage) {
+      return ((PipelinesEventsMessage) message).getRunner();
+    }
+    if (message instanceof PipelinesEventsInterpretedMessage) {
+      return ((PipelinesEventsInterpretedMessage) message).getRunner();
     }
     return StepRunner.UNKNOWN.name();
   }

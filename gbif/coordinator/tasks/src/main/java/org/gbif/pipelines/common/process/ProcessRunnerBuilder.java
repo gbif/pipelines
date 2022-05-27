@@ -8,6 +8,7 @@ import java.util.function.Consumer;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.gbif.pipelines.common.MainSparkSettings;
 import org.gbif.pipelines.common.configs.DistributedConfiguration;
 import org.gbif.pipelines.common.configs.SparkConfiguration;
 
@@ -22,9 +23,7 @@ public final class ProcessRunnerBuilder {
   @NonNull private DistributedConfiguration distributedConfig;
   @Builder.Default private Consumer<StringJoiner> beamConfigFn = j -> {};
   private String sparkAppName;
-  private int sparkParallelism;
-  private int sparkExecutorNumbers;
-  private String sparkExecutorMemory;
+  private MainSparkSettings sparkSettings;
 
   public ProcessBuilder get() {
     return buildSpark();
@@ -48,22 +47,22 @@ public final class ProcessRunnerBuilder {
         .ifPresent(x -> joiner.add("--driver-java-options \"" + x + "\""));
     Optional.ofNullable(distributedConfig.yarnQueue).ifPresent(x -> joiner.add("--queue " + x));
 
-    if (sparkParallelism < 1) {
+    if (sparkSettings.getParallelism() < 1) {
       throw new IllegalArgumentException("sparkParallelism can't be 0");
     }
 
     joiner
         .add("--name=" + sparkAppName)
-        .add("--conf spark.default.parallelism=" + sparkParallelism)
+        .add("--conf spark.default.parallelism=" + sparkSettings.getParallelism())
         .add("--conf spark.executor.memoryOverhead=" + sparkConfig.memoryOverhead)
         .add("--conf spark.dynamicAllocation.enabled=false")
         .add("--conf spark.yarn.am.waitTime=360s")
         .add("--class " + Objects.requireNonNull(distributedConfig.mainClass))
         .add("--master yarn")
         .add("--deploy-mode " + Objects.requireNonNull(distributedConfig.deployMode))
-        .add("--executor-memory " + Objects.requireNonNull(sparkExecutorMemory))
+        .add("--executor-memory " + Objects.requireNonNull(sparkSettings.getExecutorMemory()))
         .add("--executor-cores " + sparkConfig.executorCores)
-        .add("--num-executors " + sparkExecutorNumbers)
+        .add("--num-executors " + sparkSettings.getExecutorNumbers())
         .add("--driver-memory " + sparkConfig.driverMemory)
         .add(Objects.requireNonNull(distributedConfig.jarPath));
 

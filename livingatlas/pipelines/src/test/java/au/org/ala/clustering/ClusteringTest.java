@@ -2,6 +2,7 @@ package au.org.ala.clustering;
 
 import au.org.ala.pipelines.beam.ClusteringPipeline;
 import com.google.common.base.Splitter;
+import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.beam.sdk.values.KV;
@@ -70,7 +71,7 @@ public class ClusteringTest {
     Assert.assertNotEquals(kvs2.size(), 0);
   }
 
-  public HashKeyOccurrence createFromString(String str) {
+  private HashKeyOccurrence createFromString(String str) {
     String[] parts = Splitter.on(',').splitToList(str).toArray(new String[0]);
     return HashKeyOccurrenceBuilder.aHashKeyOccurrence()
         .withHashKey(parts[0])
@@ -87,13 +88,13 @@ public class ClusteringTest {
         .withMonth(Integer.valueOf(parts[11]))
         .withDay(Integer.valueOf(parts[12]))
         .withEventDate(parts[13])
-        .withTypeStatus(parts[14])
-        .withRecordedBy(parts[15])
+        .withTypeStatus(Lists.newArrayList(parts[14]))
+        .withRecordedBy(Lists.newArrayList(parts[15]))
         .withFieldNumber(parts[16])
         .withRecordNumber(parts[17])
         .withCatalogNumber(parts[18])
         .withOccurrenceID(parts[19])
-        .withOtherCatalogNumbers(parts[20])
+        .withOtherCatalogNumbers(Lists.newArrayList(parts[20]))
         .build();
   }
 }
