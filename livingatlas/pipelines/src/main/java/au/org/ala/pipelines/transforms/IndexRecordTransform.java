@@ -601,6 +601,11 @@ public class IndexRecordTransform implements Serializable, IndexFields {
             // we carry on indexing
             ObjectMapper om = new ObjectMapper();
             Map dynamicProperties = om.readValue(entry.getValue(), Map.class);
+
+            // ensure the dynamic properties are maps of string, string to avoid serialisation
+            // issues
+            dynamicProperties.replaceAll((s, c) -> c != null ? c.toString() : "");
+
             indexRecord.setDynamicProperties(dynamicProperties);
           } catch (Exception e) {
             // NOP
