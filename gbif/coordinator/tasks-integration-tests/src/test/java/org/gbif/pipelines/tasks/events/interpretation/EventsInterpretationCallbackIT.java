@@ -1,5 +1,11 @@
 package org.gbif.pipelines.tasks.events.interpretation;
 
+import static org.gbif.api.model.pipelines.StepType.EVENTS_INTERPRETED_TO_INDEX;
+import static org.gbif.api.model.pipelines.StepType.EVENTS_VERBATIM_TO_INTERPRETED;
+import static org.gbif.crawler.constants.PipelinesNodePaths.getPipelinesInfoPath;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -7,7 +13,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.UUID;
-
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.retry.RetryOneTime;
+import org.apache.curator.test.TestingServer;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
@@ -18,22 +27,11 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.Reco
 import org.gbif.pipelines.common.utils.ZookeeperUtils;
 import org.gbif.pipelines.tasks.MessagePublisherStub;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
-
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.CuratorFrameworkFactory;
-import org.apache.curator.retry.RetryOneTime;
-import org.apache.curator.test.TestingServer;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
-
-import static org.gbif.api.model.pipelines.StepType.EVENTS_INTERPRETED_TO_INDEX;
-import static org.gbif.api.model.pipelines.StepType.EVENTS_VERBATIM_TO_INTERPRETED;
-import static org.gbif.crawler.constants.PipelinesNodePaths.getPipelinesInfoPath;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 
 public class EventsInterpretationCallbackIT {
 

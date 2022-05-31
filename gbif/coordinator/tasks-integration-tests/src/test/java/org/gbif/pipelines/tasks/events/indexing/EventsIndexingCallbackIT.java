@@ -1,19 +1,13 @@
 package org.gbif.pipelines.tasks.events.indexing;
 
+import static org.gbif.api.model.pipelines.StepType.EVENTS_INTERPRETED_TO_INDEX;
+import static org.gbif.crawler.constants.PipelinesNodePaths.getPipelinesInfoPath;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.UUID;
-
-import org.gbif.api.vocabulary.EndpointType;
-import org.gbif.common.messaging.api.messages.PipelinesEventsInterpretedMessage;
-import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
-import org.gbif.pipelines.common.utils.ZookeeperUtils;
-import org.gbif.pipelines.tasks.MessagePublisherStub;
-import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
-
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.RetryOneTime;
@@ -21,17 +15,18 @@ import org.apache.curator.test.TestingServer;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.gbif.api.vocabulary.EndpointType;
+import org.gbif.common.messaging.api.messages.PipelinesEventsInterpretedMessage;
+import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
+import org.gbif.pipelines.common.utils.ZookeeperUtils;
+import org.gbif.pipelines.tasks.MessagePublisherStub;
+import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
-
-import static org.gbif.api.model.pipelines.StepType.EVENTS_INTERPRETED_TO_INDEX;
-import static org.gbif.crawler.constants.PipelinesNodePaths.getPipelinesInfoPath;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 public class EventsIndexingCallbackIT {
 
@@ -109,8 +104,7 @@ public class EventsIndexingCallbackIT {
 
     // Should
     assertFalse(checkExists(curator, crawlId, EVENTS_INDEXED_LABEL));
-    assertFalse(
-        checkExists(curator, crawlId, Fn.SUCCESSFUL_MESSAGE.apply(EVENTS_INDEXED_LABEL)));
+    assertFalse(checkExists(curator, crawlId, Fn.SUCCESSFUL_MESSAGE.apply(EVENTS_INDEXED_LABEL)));
     assertFalse(checkExists(curator, crawlId, Fn.MQ_CLASS_NAME.apply(EVENTS_INDEXED_LABEL)));
     assertFalse(checkExists(curator, crawlId, Fn.MQ_MESSAGE.apply(EVENTS_INDEXED_LABEL)));
     assertEquals(0, publisher.getMessages().size());
