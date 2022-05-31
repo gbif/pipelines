@@ -81,14 +81,22 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
           message.getDatasetType(),
           message.getValidationReport().isValid());
     }
-    boolean isReportValid =
-        message.getValidationReport().getOccurrenceReport() != null
-            && message.getValidationReport().getOccurrenceReport().getCheckedRecords() > 0;
+    boolean isReportValid = isReportValid(message);
     if (!isReportValid) {
       log.info(
           "Skipping the task, because of the validation report is missed or there are no records");
     }
     return isPlatformCorrect && isMessageValid && isReportValid;
+  }
+
+  private boolean isReportValid(PipelinesDwcaMessage message) {
+    boolean isValidOccurrenceReport =
+        message.getValidationReport().getOccurrenceReport() != null
+            && message.getValidationReport().getOccurrenceReport().getCheckedRecords() > 0;
+    boolean isValidGenericReport =
+        message.getValidationReport().getGenericReport() != null
+            && message.getValidationReport().getGenericReport().getCheckedRecords() > 0;
+    return isValidOccurrenceReport || isValidGenericReport;
   }
 
   /** Main message processing logic, converts a DwCA archive to an avro file. */
