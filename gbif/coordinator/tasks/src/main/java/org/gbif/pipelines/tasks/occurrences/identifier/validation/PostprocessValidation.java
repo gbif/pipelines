@@ -77,19 +77,21 @@ public class PostprocessValidation {
       if (absentPercent > threshold) {
         validationMessage =
             String.format(
-                "GBIF IDs hit maximum allowed threshold: allowed - %f, duplicates - %f",
-                threshold, absentPercent);
+                "GBIF IDs hit maximum allowed - %.0f%%, duplicates - %.0f%%, total records count %.0f, absent records count %.0f",
+                threshold, absentPercent, totalCount, absentIdCount);
         isValid = false;
       } else {
         validationMessage =
             String.format(
-                "GBIF IDs current rate: allowed - %f, duplicates - %f", threshold, absentPercent);
+                "GBIF IDs current rate: allowed - %.0f%%, duplicates - %.0f%%, total records count %.0f, absent records count %.0f",
+                threshold, absentPercent, totalCount, absentIdCount);
       }
     } else if (absentPercent == 100d) {
       validationMessage = "Skip IDs validation, dataset has no API records and all IDs are new";
     } else if (absentPercent > 0d) {
       validationMessage =
-          String.format("Dataset has no API records, but some IDs aren't new, %f", absentPercent);
+          String.format(
+              "Dataset has no API records, but some IDs aren't new - %.0f%%", absentPercent);
       isValid = false;
     }
     return IdentifierValidationResult.create(totalCount, absentIdCount, isValid, validationMessage);
