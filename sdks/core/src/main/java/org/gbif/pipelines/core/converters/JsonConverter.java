@@ -56,7 +56,7 @@ import org.gbif.pipelines.io.avro.json.VerbatimRecord;
 import org.gbif.pipelines.io.avro.json.VocabularyConcept;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-class JsonConverter {
+public class JsonConverter {
 
   private static final Set<String> EXCLUDE_ALL =
       Collections.singleton(DwcTerm.footprintWKT.qualifiedName());

@@ -120,4 +120,9 @@ public class TemporalInterpreter implements Serializable {
       addIssueSet(tr, parsed.getIssues());
     }
   }
+
+  /** Sets the parentId field. */
+  public static void setParentId(ExtendedRecord er, TemporalRecord tr) {
+    Optional.ofNullable(er.getParentCoreId()).ifPresent(tr::setParentId);
+  }
 }

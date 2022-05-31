@@ -26,6 +26,7 @@ import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.json.DerivedMetadataRecord;
 
 /**
  * Beam level transformation for the ES output json. The transformation consumes objects, which
@@ -85,6 +86,8 @@ public class ParentJsonTransform implements Serializable {
 
   @NonNull private final PCollectionView<MetadataRecord> metadataView;
 
+  @NonNull private final TupleTag<DerivedMetadataRecord> derivedMetadataRecordTag;
+
   public SingleOutput<KV<String, CoGbkResult>, String> converter() {
 
     DoFn<KV<String, CoGbkResult>, String> fn =
@@ -121,6 +124,11 @@ public class ParentJsonTransform implements Serializable {
 
             MultimediaRecord mmr = MultimediaConverter.merge(mr, imr, ar);
 
+            // Derived metadata
+            DerivedMetadataRecord dmr =
+                v.getOnly(
+                    derivedMetadataRecordTag, DerivedMetadataRecord.newBuilder().setId(k).build());
+
             // Convert and
             String json =
                 ParentJsonConverter.builder()
@@ -132,6 +140,7 @@ public class ParentJsonTransform implements Serializable {
                     .multimedia(mmr)
                     .verbatim(er)
                     .taxon(txr)
+                    .derivedMetadata(dmr)
                     .build()
                     .toJson();
 

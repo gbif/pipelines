@@ -16,6 +16,7 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
+import org.gbif.pipelines.io.avro.json.DerivedMetadataRecord;
 import org.gbif.pipelines.io.avro.json.EventJsonRecord;
 import org.gbif.pipelines.io.avro.json.JoinRecord;
 import org.gbif.pipelines.io.avro.json.MetadataJsonRecord;
@@ -35,6 +36,7 @@ public class ParentJsonConverter {
   private final GrscicollRecord grscicoll;
   private final MultimediaRecord multimedia;
   private final ExtendedRecord verbatim;
+  private final DerivedMetadataRecord derivedMetadata;
   private OccurrenceJsonRecord occurrenceJsonRecord;
 
   public ParentJsonRecord convertToParent() {
