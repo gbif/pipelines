@@ -4,19 +4,26 @@ import static org.gbif.pipelines.common.ValidatorPredicate.isValidator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.pipelines.StepRunner;
+import org.gbif.api.model.pipelines.StepType;
+import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
+import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage.ValidationResult;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
@@ -58,23 +65,53 @@ public class VerbatimMessageHandler {
       result.setNumberOfRecords(recordsNumber);
     }
 
-    PipelinesVerbatimMessage outputMessage =
-        new PipelinesVerbatimMessage(
-            m.getDatasetUuid(),
-            m.getAttempt(),
-            m.getInterpretTypes(),
-            m.getPipelineSteps(),
-            runner,
-            m.getEndpointType(),
-            m.getExtraPath(),
-            result,
-            m.getResetPrefix(),
-            m.getExecutionId(),
-            m.getDatasetType());
+    if (result.getNumberOfRecords() > 0) {
+      PipelinesVerbatimMessage outputMessage =
+          new PipelinesVerbatimMessage(
+              m.getDatasetUuid(),
+              m.getAttempt(),
+              m.getInterpretTypes(),
+              m.getPipelineSteps(),
+              runner,
+              m.getEndpointType(),
+              m.getExtraPath(),
+              result,
+              m.getResetPrefix(),
+              m.getExecutionId(),
+              m.getDatasetType());
 
-    publisher.send(outputMessage);
+      publisher.send(outputMessage);
+      log.info("The message has been sent - {}", outputMessage);
+    } else if (m.getDatasetType() == DatasetType.SAMPLING_EVENT
+        && result.getNumberOfEventRecords() > 0) {
+      Set<String> interpretationTypes = new HashSet<>(m.getInterpretTypes());
+      interpretationTypes.add(RecordType.EVENT_CORE.name());
 
-    log.info("The message has been sent - {}", outputMessage);
+      PipelinesEventsMessage eventsMessage =
+          new PipelinesEventsMessage(
+              m.getDatasetUuid(),
+              m.getAttempt(),
+              new HashSet<>(
+                  Arrays.asList(
+                      StepType.EVENTS_VERBATIM_TO_INTERPRETED.name(),
+                      StepType.EVENTS_INTERPRETED_TO_INDEX.name())),
+              result.getNumberOfEventRecords(),
+              recordsNumber,
+              StepRunner.DISTRIBUTED.name(),
+              false,
+              m.getResetPrefix(),
+              null,
+              m.getExecutionId(),
+              m.getEndpointType(),
+              m.getValidationResult(),
+              interpretationTypes,
+              DatasetType.SAMPLING_EVENT);
+
+      publisher.send(eventsMessage);
+      log.info("The events message has been sent - {}", eventsMessage);
+    } else {
+      log.info("Skipping dataset {}. No records found", m.getDatasetUuid());
+    }
   }
 
   /**
