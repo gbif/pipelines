@@ -2,6 +2,7 @@ package org.gbif.pipelines.common;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import lombok.AccessLevel;
@@ -22,7 +23,8 @@ public class GbifApi {
   @SneakyThrows
   public static int getIndexSize(
       HttpClient httpClient, RegistryConfiguration config, String datasetId) {
-    String url = config.wsUrl + "/occurrence/search?limit=0&datasetKey=" + datasetId;
+    int nano = LocalDateTime.now().getNano();
+    String url = config.wsUrl + "/occurrence/search?limit=0&datasetKey=" + datasetId + "&_" + nano;
     HttpResponse response = executeGet(httpClient, url);
     return MAPPER.readTree(response.getEntity().getContent()).findValue("count").asInt();
   }
