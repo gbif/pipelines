@@ -57,15 +57,44 @@ public class VerbatimMessageHandler {
       m.setAttempt(attempt);
     }
 
-    long recordsNumber = getRecordNumber(config, m);
-    String runner = computeRunner(config, m, recordsNumber).name();
+    // case of sampling event dataset without occurrences. We only run the events pipelines
+    if (m.getDatasetType() == DatasetType.SAMPLING_EVENT
+        && m.getValidationResult().getNumberOfRecords() == 0
+        && m.getValidationResult().getNumberOfEventRecords() > 0) {
+      Set<String> interpretationTypes = new HashSet<>(m.getInterpretTypes());
+      interpretationTypes.add(RecordType.EVENT_CORE.name());
 
-    ValidationResult result = m.getValidationResult();
-    if (result.getNumberOfRecords() == null) {
-      result.setNumberOfRecords(recordsNumber);
-    }
+      PipelinesEventsMessage eventsMessage =
+          new PipelinesEventsMessage(
+              m.getDatasetUuid(),
+              m.getAttempt(),
+              new HashSet<>(
+                  Arrays.asList(
+                      StepType.EVENTS_VERBATIM_TO_INTERPRETED.name(),
+                      StepType.EVENTS_INTERPRETED_TO_INDEX.name())),
+              m.getValidationResult().getNumberOfEventRecords(),
+              m.getValidationResult().getNumberOfRecords(),
+              StepRunner.DISTRIBUTED.name(),
+              false,
+              m.getResetPrefix(),
+              null,
+              m.getExecutionId(),
+              m.getEndpointType(),
+              m.getValidationResult(),
+              interpretationTypes,
+              DatasetType.SAMPLING_EVENT);
 
-    if (result.getNumberOfRecords() > 0) {
+      publisher.send(eventsMessage);
+      log.info("The events message has been sent - {}", eventsMessage);
+    } else {
+      long recordsNumber = getRecordNumber(config, m);
+      String runner = computeRunner(config, m, recordsNumber).name();
+
+      ValidationResult result = m.getValidationResult();
+      if (result.getNumberOfRecords() == null) {
+        result.setNumberOfRecords(recordsNumber);
+      }
+
       PipelinesVerbatimMessage outputMessage =
           new PipelinesVerbatimMessage(
               m.getDatasetUuid(),
@@ -82,35 +111,6 @@ public class VerbatimMessageHandler {
 
       publisher.send(outputMessage);
       log.info("The message has been sent - {}", outputMessage);
-    } else if (m.getDatasetType() == DatasetType.SAMPLING_EVENT
-        && result.getNumberOfEventRecords() > 0) {
-      Set<String> interpretationTypes = new HashSet<>(m.getInterpretTypes());
-      interpretationTypes.add(RecordType.EVENT_CORE.name());
-
-      PipelinesEventsMessage eventsMessage =
-          new PipelinesEventsMessage(
-              m.getDatasetUuid(),
-              m.getAttempt(),
-              new HashSet<>(
-                  Arrays.asList(
-                      StepType.EVENTS_VERBATIM_TO_INTERPRETED.name(),
-                      StepType.EVENTS_INTERPRETED_TO_INDEX.name())),
-              result.getNumberOfEventRecords(),
-              recordsNumber,
-              StepRunner.DISTRIBUTED.name(),
-              false,
-              m.getResetPrefix(),
-              null,
-              m.getExecutionId(),
-              m.getEndpointType(),
-              m.getValidationResult(),
-              interpretationTypes,
-              DatasetType.SAMPLING_EVENT);
-
-      publisher.send(eventsMessage);
-      log.info("The events message has been sent - {}", eventsMessage);
-    } else {
-      log.info("Skipping dataset {}. No records found", m.getDatasetUuid());
     }
   }
 
