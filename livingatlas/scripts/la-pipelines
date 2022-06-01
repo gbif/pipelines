@@ -404,7 +404,7 @@ function clean-dwca-in-hdfs () {
       fi
     done
   else
-    $_D /data/hadoop/bin/hdfs dfs -rm -r -f $dr
+    $_D /data/hadoop/bin/hdfs dfs -rm -r -f /dwca-exports/$dr
   fi
   logStepEnd "Clean dwca in dfs" $dr local $SECONDS
 }
@@ -417,7 +417,7 @@ function copy-to-hdfs () {
   if [[ "$dr" == 'all' ]]; then
     for dr in `ls /data/dwca-export`
     do
-      f="/data/dwca-export/$dr"
+      f="$COPY_DEST/$dr"
       if [[ " ${excludes[@]} " =~ " ${dr} " ]]; then
         log.info "Skipping copy dwca $f to dfs"
       else
@@ -426,7 +426,8 @@ function copy-to-hdfs () {
       fi
     done
   else
-    $_D /data/hadoop/bin/hdfs dfs -copyFromLocal -f $dr /dwca-exports/
+    f="$COPY_DEST/$dr"
+    $_D /data/hadoop/bin/hdfs dfs -copyFromLocal -f $f /dwca-exports/
   fi
   logStepEnd "Copy dwca to dfs" $dr local $SECONDS
 }
