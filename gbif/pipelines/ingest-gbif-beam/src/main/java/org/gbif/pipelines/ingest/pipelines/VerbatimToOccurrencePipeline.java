@@ -212,7 +212,11 @@ public class VerbatimToOccurrencePipeline {
     }
 
     // Read and interpret absent/new GBIF IDs records
-    if (types.contains(IDENTIFIER_ABSENT.name())) {
+    String identifierAbsentDir =
+        PathBuilder.buildDatasetAttemptPath(
+            options, CORE_TERM.simpleName() + "/" + idTransform.getAbsentName(), false);
+    if (types.contains(IDENTIFIER_ABSENT.name())
+        && FsUtils.fileExists(hdfsConfigs, identifierAbsentDir)) {
       PCollectionTuple absentTyple =
           p.apply(
                   "Read absent GBIF ids records",
