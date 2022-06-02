@@ -110,10 +110,8 @@ public class VerbatimToIdentifierPipeline {
     log.info("Save metrics into the file and set files owner");
     String metadataPath =
         PathBuilder.buildDatasetAttemptPath(options, options.getMetaFileName(), false);
-    if (!FsUtils.fileExists(hdfsConfigs, metadataPath)) {
-      MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
-      FsUtils.setOwner(hdfsConfigs, metadataPath, "crap", "supergroup");
-    }
+    MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
+    FsUtils.setOwner(hdfsConfigs, metadataPath, "crap", "supergroup");
 
     log.info("Deleting beam temporal folders");
     String tempPath = String.join("/", targetPath, datasetId, attempt.toString());
