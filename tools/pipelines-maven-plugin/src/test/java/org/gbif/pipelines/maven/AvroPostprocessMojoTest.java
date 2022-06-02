@@ -19,7 +19,6 @@ public class AvroPostprocessMojoTest {
     AvroPostprocessMojo mojo = new AvroPostprocessMojo();
     mojo.setDefaultPackage("org.gbif.pipelines.io.avro");
     mojo.setDirectory(path);
-    mojo.setSkipPackage("json");
     mojo.execute();
 
     // Should

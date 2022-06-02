@@ -50,7 +50,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 public class AvroPostprocessMojo extends AbstractMojo {
 
   private static final String DEFAULT = "-gbif";
-  private static final String ISSUE = "getIssues() {";
+  private static final String ISSUE = "IssueRecord getIssues() {";
   private static final String ID = "getId() {";
   private static final String BEFORE = "@SuppressWarnings(\"all\")";
   private static final String INTER_BASE = "org.apache.avro.specific.SpecificRecord";
@@ -66,9 +66,6 @@ public class AvroPostprocessMojo extends AbstractMojo {
   @Parameter(property = "postprocess.defaultPackage", defaultValue = DEFAULT)
   private String defaultPackage;
 
-  @Parameter(property = "postprocess.skipPackage", defaultValue = "json")
-  private String skipPackage;
-
   @Override
   public void execute() {
 
@@ -77,9 +74,7 @@ public class AvroPostprocessMojo extends AbstractMojo {
       boolean interfaceRecordExist = createInterface("/Record.java", RECORD_BODY);
 
       if (!interfaceIssueExist && !interfaceRecordExist) {
-        searchClasses().stream()
-            .filter(p -> !p.toString().contains(skipPackage))
-            .forEach(this::modifyFile);
+        searchClasses().forEach(this::modifyFile);
       }
     }
   }
@@ -90,10 +85,6 @@ public class AvroPostprocessMojo extends AbstractMojo {
 
   public void setDefaultPackage(String defaultPackage) {
     this.defaultPackage = defaultPackage;
-  }
-
-  public void setSkipPackage(String skipPackage) {
-    this.skipPackage = skipPackage;
   }
 
   /**
