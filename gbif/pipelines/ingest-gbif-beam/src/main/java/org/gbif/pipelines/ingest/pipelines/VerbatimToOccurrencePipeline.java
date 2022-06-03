@@ -320,7 +320,7 @@ public class VerbatimToOccurrencePipeline {
         || CheckTransforms.checkRecordType(types, RecordType.IDENTIFIER_ABSENT)
         || CheckTransforms.checkRecordType(types, RecordType.ALL)) {
       MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
-      FsUtils.setOwner(hdfsConfigs, metadataPath, "crap", "supergroup");
+      FsUtils.setOwnerToCrap(hdfsConfigs, metadataPath);
     }
 
     // Delete absent GBIF IDs directory
@@ -334,7 +334,7 @@ public class VerbatimToOccurrencePipeline {
     log.info("Set interpreted files permissions");
     String interpretedPath =
         PathBuilder.buildDatasetAttemptPath(options, CORE_TERM.simpleName(), false);
-    FsUtils.setOwner(hdfsConfigs, interpretedPath, "crap", "supergroup");
+    FsUtils.setOwnerToCrap(hdfsConfigs, interpretedPath);
 
     log.info("Pipeline has been finished");
   }

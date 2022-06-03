@@ -111,7 +111,7 @@ public class VerbatimToIdentifierPipeline {
     String metadataPath =
         PathBuilder.buildDatasetAttemptPath(options, options.getMetaFileName(), false);
     MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
-    FsUtils.setOwner(hdfsConfigs, metadataPath, "crap", "supergroup");
+    FsUtils.setOwnerToCrap(hdfsConfigs, metadataPath);
 
     log.info("Deleting beam temporal folders");
     String tempPath = String.join("/", targetPath, datasetId, attempt.toString());
@@ -120,7 +120,7 @@ public class VerbatimToIdentifierPipeline {
     log.info("Set interpreted files permissions");
     String interpretedPath =
         PathBuilder.buildDatasetAttemptPath(options, CORE_TERM.simpleName(), false);
-    FsUtils.setOwner(hdfsConfigs, interpretedPath, "crap", "supergroup");
+    FsUtils.setOwnerToCrap(hdfsConfigs, interpretedPath);
 
     log.info("Pipeline has been finished");
   }
