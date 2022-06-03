@@ -13,6 +13,7 @@ import org.apache.beam.runners.spark.translation.ValueAndCoderLazySerializable;
 import org.apache.beam.runners.spark.util.ByteArray;
 import org.apache.beam.sdk.transforms.windowing.PaneInfo;
 import org.apache.beam.sdk.values.KV;
+import org.apache.beam.sdk.values.Row;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.vendor.guava.v26_0_jre.com.google.common.collect.HashBasedTable;
 import org.apache.spark.serializer.GenericAvroSerializer;
@@ -90,6 +91,7 @@ public class SparkRunnerKryoRegistrator implements KryoRegistrator {
     kryo.register(StateAndTimers.class);
     kryo.register(TupleTag.class);
     kryo.register(WrappedArray.ofRef.class);
+    kryo.register(Row.class);
 
     try {
       kryo.register(
