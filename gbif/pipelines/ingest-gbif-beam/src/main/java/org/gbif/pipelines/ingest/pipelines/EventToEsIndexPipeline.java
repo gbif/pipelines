@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
+import org.apache.beam.sdk.coders.StringUtf8Coder;
 import org.apache.beam.sdk.io.elasticsearch.ElasticsearchIO;
 import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.transforms.Create;
@@ -24,7 +25,6 @@ import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.transforms.join.CoGroupByKey;
 import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.KV;
-import org.apache.beam.sdk.values.PBegin;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionList;
 import org.apache.beam.sdk.values.PCollectionView;
@@ -157,11 +157,11 @@ public class EventToEsIndexPipeline {
 
     log.info("Adding step 3: Creating beam pipeline");
     PCollectionView<MetadataRecord> metadataView =
-        p.apply("Read Metadata", metadataTransform.read(pathFn))
+        p.apply("Read Event Metadata", metadataTransform.read(pathFn))
             .apply("Convert to view", View.asSingleton());
 
     PCollection<KV<String, ExtendedRecord>> verbatimCollection =
-        p.apply("Read Verbatim", verbatimTransform.read(pathFn))
+        p.apply("Read Event Verbatim", verbatimTransform.read(pathFn))
             .apply("Map Verbatim to KV", verbatimTransform.toKv());
 
     PCollection<KV<String, ExtendedRecord>> eventOccurrenceVerbatimCollection =
@@ -172,7 +172,7 @@ public class EventToEsIndexPipeline {
             .apply("Map event occurrences verbatim to KV", verbatimTransform.toParentKv());
 
     PCollection<KV<String, IdentifierRecord>> identifierCollection =
-        p.apply("Read identifiers", identifierTransform.read(pathFn))
+        p.apply("Read Event identifiers", identifierTransform.read(pathFn))
             .apply("Map identifiers to KV", identifierTransform.toKv());
 
     PCollection<KV<String, EventCoreRecord>> eventCoreCollection =
@@ -180,7 +180,7 @@ public class EventToEsIndexPipeline {
             .apply("Map Event core to KV", eventCoreTransform.toKv());
 
     PCollection<KV<String, TemporalRecord>> temporalCollection =
-        p.apply("Read Temporal", temporalTransform.read(pathFn))
+        p.apply("Read Event Temporal", temporalTransform.read(pathFn))
             .apply("Map Temporal to KV", temporalTransform.toKv());
 
     PCollection<KV<String, TemporalRecord>> eventOccurrenceTemporalCollection =
@@ -203,7 +203,7 @@ public class EventToEsIndexPipeline {
             .apply("Calculate the temporal coverage", Combine.perKey(new TemporalCoverageFn()));
 
     PCollection<KV<String, LocationRecord>> locationCollection =
-        p.apply("Read Location", locationTransform.read(pathFn))
+        p.apply("Read Event Location", locationTransform.read(pathFn))
             .apply("Map Location to KV", locationTransform.toKv());
 
     PCollection<KV<String, LocationRecord>> eventOccurrenceLocationCollection =
@@ -251,7 +251,7 @@ public class EventToEsIndexPipeline {
     PCollection<KV<String, DerivedMetadataRecord>> derivedMetadataRecordCollection =
         datasetHasOccurrences
             ? DerivedMetadata.builder()
-                .p(p)
+                .pipeline(p)
                 .verbatimTransform(verbatimTransform)
                 .temporalTransform(temporalTransform)
                 .parentLocationTransform(parentLocationTransform)
@@ -263,18 +263,20 @@ public class EventToEsIndexPipeline {
                 .occurrencesPathFn(occurrencesPathFn)
                 .build()
                 .calculate()
-            : DerivedMetadataTransform.emptyKvCollection(p);
+            : p.apply(
+                "Create empty derivedMetadataRecordCollection",
+                Create.empty(new TypeDescriptor<KV<String, DerivedMetadataRecord>>() {}));
 
     PCollection<KV<String, MultimediaRecord>> multimediaCollection =
-        p.apply("Read Multimedia", multimediaTransform.read(pathFn))
+        p.apply("Read Event Multimedia", multimediaTransform.read(pathFn))
             .apply("Map Multimedia to KV", multimediaTransform.toKv());
 
     PCollection<KV<String, ImageRecord>> imageCollection =
-        p.apply("Read Image", imageTransform.read(pathFn))
+        p.apply("Read Event Image", imageTransform.read(pathFn))
             .apply("Map Image to KV", imageTransform.toKv());
 
     PCollection<KV<String, AudubonRecord>> audubonCollection =
-        p.apply("Read Audubon", audubonTransform.read(pathFn))
+        p.apply("Read Event Audubon", audubonTransform.read(pathFn))
             .apply("Map Audubon to KV", audubonTransform.toKv());
 
     log.info("Adding step 3: Converting into a json object");
@@ -323,7 +325,7 @@ public class EventToEsIndexPipeline {
                 .asParentChildRecord(true)
                 .build()
                 .apply()
-            : Create.empty(TypeDescriptor.of(String.class)).expand(PBegin.in(p));
+            : p.apply("Create empty occurrenceJsonCollection", Create.empty(StringUtf8Coder.of()));
 
     // Merge events and occurrences
     PCollection<String> jsonCollection =
@@ -372,7 +374,7 @@ public class EventToEsIndexPipeline {
 
   @Builder
   static class DerivedMetadata {
-    private final Pipeline p;
+    private final Pipeline pipeline;
     private final VerbatimTransform verbatimTransform;
     private final TemporalTransform temporalTransform;
     private final LocationTransform parentLocationTransform;
@@ -386,7 +388,8 @@ public class EventToEsIndexPipeline {
     PCollection<KV<String, DerivedMetadataRecord>> calculate() {
 
       PCollection<KV<String, TemporalRecord>> eventOccurrenceTemporalCollection =
-          p.apply(
+          pipeline
+              .apply(
                   "Read occurrence event temporal records",
                   temporalTransform.read(occurrencesPathFn))
               .apply(
@@ -402,14 +405,16 @@ public class EventToEsIndexPipeline {
               .apply("Calculate the temporal coverage", Combine.perKey(new TemporalCoverageFn()));
 
       PCollection<KV<String, ExtendedRecord>> eventOccurrenceVerbatimCollection =
-          p.apply("Read event occurrences verbatim", verbatimTransform.read(occurrencesPathFn))
+          pipeline
+              .apply("Read event occurrences verbatim", verbatimTransform.read(occurrencesPathFn))
               .apply(
                   "Remove verbatim records with null parent ids",
                   Filter.by(NotNullOrEmptyFilter.of((ExtendedRecord er) -> er.getParentCoreId())))
               .apply("Map event occurrences verbatim to KV", verbatimTransform.toParentKv());
 
       PCollection<KV<String, LocationRecord>> eventOccurrenceLocationCollection =
-          p.apply(
+          pipeline
+              .apply(
                   "Read occurrence events locations",
                   parentLocationTransform.read(occurrencesPathFn))
               .apply(
@@ -426,7 +431,9 @@ public class EventToEsIndexPipeline {
                   Combine.perKey(new ConvexHullFn()));
 
       PCollection<KV<String, TaxonRecord>> eventOccurrencesTaxonCollection =
-          p.apply("Read event occurrences taxon records", taxonomyTransform.read(occurrencesPathFn))
+          pipeline
+              .apply(
+                  "Read event occurrences taxon records", taxonomyTransform.read(occurrencesPathFn))
               .apply(
                   "Remove taxon records with null parent ids",
                   Filter.by(NotNullOrEmptyFilter.of((TaxonRecord tr) -> tr.getParentId())))
