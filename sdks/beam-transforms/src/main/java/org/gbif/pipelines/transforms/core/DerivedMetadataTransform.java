@@ -41,12 +41,12 @@ public class DerivedMetadataTransform implements Serializable {
     DoFn<KV<String, CoGbkResult>, KV<String, DerivedMetadataRecord>> fn =
         new DoFn<KV<String, CoGbkResult>, KV<String, DerivedMetadataRecord>>() {
 
-          ExtendedRecord getAssociatedVerbatim(
+          private ExtendedRecord getAssociatedVerbatim(
               TaxonRecord taxonRecord, List<ExtendedRecord> verbatimRecords) {
             return verbatimRecords.stream()
                 .filter(er -> er.getId().equals(taxonRecord.getId()))
                 .findFirst()
-                .get();
+                .orElse(null);
           }
 
           @ProcessElement

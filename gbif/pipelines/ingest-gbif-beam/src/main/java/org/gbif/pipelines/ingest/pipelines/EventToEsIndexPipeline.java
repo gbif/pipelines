@@ -295,7 +295,7 @@ public class EventToEsIndexPipeline {
       writeIO = writeIO.withIdFn(input -> input.get(esDocumentId).asText());
     }
 
-    jsonCollection.apply(writeIO);
+    jsonCollection.apply("Push records to ES", writeIO);
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();
@@ -329,7 +329,7 @@ public class EventToEsIndexPipeline {
                   temporalTransform.read(occurrencesPathFn))
               .apply(
                   "Remove temporal records with null parent ids",
-                  Filter.by(NotNullOrEmptyFilter.of((TemporalRecord tr) -> tr.getParentId())))
+                  Filter.by(NotNullOrEmptyFilter.of(TemporalRecord::getParentId)))
               .apply(
                   "Map occurrence events temporal records to KV", temporalTransform.toParentKv());
 
@@ -344,7 +344,7 @@ public class EventToEsIndexPipeline {
               .apply("Read event occurrences verbatim", verbatimTransform.read(occurrencesPathFn))
               .apply(
                   "Remove verbatim records with null parent ids",
-                  Filter.by(NotNullOrEmptyFilter.of((ExtendedRecord er) -> er.getParentCoreId())))
+                  Filter.by(NotNullOrEmptyFilter.of(ExtendedRecord::getParentCoreId)))
               .apply("Map event occurrences verbatim to KV", verbatimTransform.toParentKv());
 
       PCollection<KV<String, LocationRecord>> eventOccurrenceLocationCollection =
@@ -354,7 +354,7 @@ public class EventToEsIndexPipeline {
                   parentLocationTransform.read(occurrencesPathFn))
               .apply(
                   "Remove location records with null parent ids",
-                  Filter.by(NotNullOrEmptyFilter.of((LocationRecord lr) -> lr.getParentId())))
+                  Filter.by(NotNullOrEmptyFilter.of(LocationRecord::getParentId)))
               .apply("Map occurrence events locations to KV", parentLocationTransform.toParentKv());
 
       PCollection<KV<String, String>> convexHullCollection =
@@ -371,7 +371,7 @@ public class EventToEsIndexPipeline {
                   "Read event occurrences taxon records", taxonomyTransform.read(occurrencesPathFn))
               .apply(
                   "Remove taxon records with null parent ids",
-                  Filter.by(NotNullOrEmptyFilter.of((TaxonRecord tr) -> tr.getParentId())))
+                  Filter.by(NotNullOrEmptyFilter.of(TaxonRecord::getParentId)))
               .apply("Map event occurrences taxon to KV", taxonomyTransform.toParentKv());
 
       PCollection<KV<String, Iterable<TaxonRecord>>> eventTaxonClassification =
