@@ -28,6 +28,7 @@ import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
+import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.GbifIdRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
@@ -35,6 +36,8 @@ import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
+import org.gbif.pipelines.io.avro.Rank;
+import org.gbif.pipelines.io.avro.RankedName;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
@@ -68,6 +71,7 @@ public class EventToEsIndexPipelineIT {
   private static final DwcTerm OCCURRENCE_TERM = DwcTerm.Occurrence;
 
   private static final String ID = "777";
+  private static final String SUB_EVENT_ID = "888";
 
   @Rule public final transient TestPipeline p = TestPipeline.create();
 
@@ -107,23 +111,41 @@ public class EventToEsIndexPipelineIT {
         InterpretedAvroWriter.createAvroWriter(
             optionsWriter, VerbatimTransform.create(), EVENT_TERM, postfix)) {
 
-      Map<String, String> core = new HashMap<>();
-      core.put(DwcTerm.datasetID.qualifiedName(), "datasetID");
-      core.put(DwcTerm.institutionID.qualifiedName(), "institutionID");
-      core.put(DwcTerm.datasetName.qualifiedName(), "datasetName");
-      core.put(DwcTerm.eventID.qualifiedName(), "eventID");
-      core.put(DwcTerm.parentEventID.qualifiedName(), "parentEventID");
-      core.put(DwcTerm.samplingProtocol.qualifiedName(), "samplingProtocol");
+      Map<String, String> coreEvent1 = new HashMap<>();
+      coreEvent1.put(DwcTerm.datasetID.qualifiedName(), datasetKey);
+      coreEvent1.put(DwcTerm.institutionID.qualifiedName(), "institutionID");
+      coreEvent1.put(DwcTerm.datasetName.qualifiedName(), "datasetName");
+      coreEvent1.put(DwcTerm.eventID.qualifiedName(), ID);
+      coreEvent1.put(DwcTerm.parentEventID.qualifiedName(), "parentEventID");
+      coreEvent1.put(DwcTerm.samplingProtocol.qualifiedName(), "samplingProtocol");
 
       ExtendedRecord extendedRecord =
           ExtendedRecord.newBuilder()
               .setId(ID)
               .setCoreRowType(DwcTerm.Event.qualifiedName())
               .setParentCoreId(ID)
-              .setCoreTerms(core)
+              .setCoreTerms(coreEvent1)
               .build();
 
       writer.append(extendedRecord);
+
+      Map<String, String> coreEvent2 = new HashMap<>();
+      coreEvent2.put(DwcTerm.datasetID.qualifiedName(), datasetKey);
+      coreEvent2.put(DwcTerm.institutionID.qualifiedName(), "institutionID");
+      coreEvent2.put(DwcTerm.datasetName.qualifiedName(), "datasetName");
+      coreEvent2.put(DwcTerm.eventID.qualifiedName(), SUB_EVENT_ID);
+      coreEvent2.put(DwcTerm.parentEventID.qualifiedName(), "parentEventID");
+      coreEvent2.put(DwcTerm.samplingProtocol.qualifiedName(), "samplingProtocol");
+      coreEvent2.put(DwcTerm.parentEventID.qualifiedName(), ID);
+
+      ExtendedRecord subEventExtendedRecord =
+          ExtendedRecord.newBuilder()
+              .setId(SUB_EVENT_ID)
+              .setCoreRowType(DwcTerm.Event.qualifiedName())
+              .setParentCoreId(ID)
+              .setCoreTerms(coreEvent2)
+              .build();
+      writer.append(subEventExtendedRecord);
     }
     try (SyncDataFileWriter<IdentifierRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
@@ -131,12 +153,23 @@ public class EventToEsIndexPipelineIT {
       IdentifierRecord identifierRecord =
           IdentifierRecord.newBuilder().setId(ID).setInternalId(ID).build();
       writer.append(identifierRecord);
+      IdentifierRecord subEventIdentifierRecord =
+          IdentifierRecord.newBuilder().setId(SUB_EVENT_ID).setInternalId(SUB_EVENT_ID).build();
+      writer.append(subEventIdentifierRecord);
     }
     try (SyncDataFileWriter<EventCoreRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
             optionsWriter, EventCoreTransform.builder().create(), EVENT_TERM, postfix)) {
       EventCoreRecord eventCoreRecord = EventCoreRecord.newBuilder().setId(ID).build();
       writer.append(eventCoreRecord);
+
+      EventCoreRecord subEventCoreRecord =
+          EventCoreRecord.newBuilder()
+              .setId(SUB_EVENT_ID)
+              .setParentEventID(ID)
+              .setParentEventIds(Collections.singletonList(ID))
+              .build();
+      writer.append(subEventCoreRecord);
     }
     try (SyncDataFileWriter<MetadataRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
@@ -150,18 +183,50 @@ public class EventToEsIndexPipelineIT {
             optionsWriter, TemporalTransform.builder().create(), EVENT_TERM, postfix)) {
       TemporalRecord temporalRecord = TemporalRecord.newBuilder().setId(ID).build();
       writer.append(temporalRecord);
+
+      TemporalRecord temporalRecordSubEvent =
+          TemporalRecord.newBuilder()
+              .setId(SUB_EVENT_ID)
+              .setParentId(ID)
+              .setEventDate(
+                  EventDate.newBuilder().setGte("10-10-2019").setLte("10-10-2020").build())
+              .build();
+      writer.append(temporalRecordSubEvent);
     }
     try (SyncDataFileWriter<LocationRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
             optionsWriter, LocationTransform.builder().create(), EVENT_TERM, postfix)) {
       LocationRecord locationRecord = LocationRecord.newBuilder().setId(ID).build();
       writer.append(locationRecord);
+
+      LocationRecord locationRecordSubEvent =
+          LocationRecord.newBuilder()
+              .setId(SUB_EVENT_ID)
+              .setParentId(ID)
+              .setDecimalLatitude(90d)
+              .setDecimalLongitude(40d)
+              .build();
+      writer.append(locationRecordSubEvent);
     }
     try (SyncDataFileWriter<TaxonRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
             optionsWriter, TaxonomyTransform.builder().create(), EVENT_TERM, postfix)) {
       TaxonRecord taxonRecord = TaxonRecord.newBuilder().setId(ID).build();
       writer.append(taxonRecord);
+
+      TaxonRecord taxonRecordSubEvent =
+          TaxonRecord.newBuilder()
+              .setId(SUB_EVENT_ID)
+              .setParentId(ID)
+              .setClassification(
+                  Collections.singletonList(
+                      RankedName.newBuilder()
+                          .setRank(Rank.SPECIES)
+                          .setName("Puma concolor subsp. concolor")
+                          .setKey(7193927)
+                          .build()))
+              .build();
+      writer.append(taxonRecordSubEvent);
     }
     try (SyncDataFileWriter<MultimediaRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
@@ -205,6 +270,14 @@ public class EventToEsIndexPipelineIT {
       ExtendedRecord extendedRecord =
           ExtendedRecord.newBuilder().setId(ID).setParentCoreId(ID).setExtensions(ext).build();
       writer.append(extendedRecord);
+
+      ExtendedRecord subEventExtendedRecord =
+          ExtendedRecord.newBuilder()
+              .setId(SUB_EVENT_ID)
+              .setParentCoreId(ID)
+              .setExtensions(ext)
+              .build();
+      writer.append(subEventExtendedRecord);
     }
 
     Path occMetadataPath =
@@ -218,6 +291,10 @@ public class EventToEsIndexPipelineIT {
             optionsWriter, GbifIdTransform.builder().create(), OCCURRENCE_TERM, postfix)) {
       GbifIdRecord gbifIdRecord = GbifIdRecord.newBuilder().setId(ID).setGbifId(1L).build();
       writer.append(gbifIdRecord);
+
+      GbifIdRecord subEventGbifIdRecord =
+          GbifIdRecord.newBuilder().setId(SUB_EVENT_ID).setGbifId(2L).build();
+      writer.append(subEventGbifIdRecord);
     }
     try (SyncDataFileWriter<ClusteringRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
@@ -305,6 +382,6 @@ public class EventToEsIndexPipelineIT {
 
     // Should
     assertTrue(EsService.existsIndex(ES_SERVER.getEsClient(), idxName));
-    assertEquals(2, EsService.countIndexDocuments(ES_SERVER.getEsClient(), idxName));
+    assertEquals(3, EsService.countIndexDocuments(ES_SERVER.getEsClient(), idxName));
   }
 }

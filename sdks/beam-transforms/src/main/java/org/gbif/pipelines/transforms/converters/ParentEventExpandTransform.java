@@ -50,8 +50,8 @@ public class ParentEventExpandTransform<T extends SpecificRecordBase & Record>
           public void processElement(ProcessContext c) {
             CoGbkResult v = c.element().getValue();
             EventCoreRecord eventCoreRecord = v.getOnly(eventCoreRecordTupleTag);
-            T record = v.getOnly(recordTupleTag);
-            if (eventCoreRecord.getParentEventIds() != null) {
+            T record = v.getOnly(recordTupleTag, null);
+            if (eventCoreRecord.getParentEventIds() != null && record != null) {
               eventCoreRecord
                   .getParentEventIds()
                   .forEach(parentId -> c.output(Edge.of(parentId, record.getId(), record)));
