@@ -98,7 +98,7 @@ public class GbifIdInterpreter {
 
       // Adds triplet
       if (isTripletValid && !Strings.isNullOrEmpty(gr.getTriplet())) {
-        uniqueStrings.add(gr.getOccurrenceId());
+        uniqueStrings.add(gr.getTriplet());
       }
 
       Optional<Long> gbifId = getOrGenerateGbifId(uniqueStrings, keygenService, true);
