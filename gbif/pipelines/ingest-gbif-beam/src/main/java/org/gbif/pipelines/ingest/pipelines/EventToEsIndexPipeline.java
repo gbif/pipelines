@@ -2,6 +2,7 @@ package org.gbif.pipelines.ingest.pipelines;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.ALL_AVRO;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
@@ -43,6 +44,7 @@ import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.json.DerivedMetadataRecord;
 import org.gbif.pipelines.transforms.common.NotNullOrEmptyFilter;
+import org.gbif.pipelines.transforms.converters.ParentEventExpandTransform;
 import org.gbif.pipelines.transforms.converters.ParentJsonTransform;
 import org.gbif.pipelines.transforms.core.ConvexHullFn;
 import org.gbif.pipelines.transforms.core.DerivedMetadataTransform;
@@ -99,6 +101,12 @@ public class EventToEsIndexPipeline {
   public static void main(String[] args) {
     EsIndexingPipelineOptions options = PipelinesOptionsFactory.createIndexing(args);
     run(options);
+  }
+
+  public static class MemberOfUdf implements BeamSqlUdf {
+    public static boolean eval(String value, List<String> collection) {
+      return collection != null && !collection.isEmpty() && collection.contains(value);
+    }
   }
 
   public static void run(EsIndexingPipelineOptions options) {
@@ -175,9 +183,15 @@ public class EventToEsIndexPipeline {
                 Filter.by(NotNullOrEmptyFilter.of((TemporalRecord tr) -> tr.getParentId())))
             .apply("Map occurrence events temporal records to KV", temporalTransform.toParentKv());
 
+    // Creates a Map of all events and its sub events
+    PCollection<KV<String, TemporalRecord>> temporalRecordsOfSubEvents =
+        ParentEventExpandTransform.of(temporalTransform.getTag(), eventCoreTransform.getTag())
+            .toSubEventsRecords("Temporal", temporalCollection, eventCoreCollection);
+
     PCollection<KV<String, EventDate>> temporalCoverageCollection =
         PCollectionList.of(temporalCollection)
             .and(eventOccurrenceTemporalCollection)
+            .and(temporalRecordsOfSubEvents)
             .apply("Joining temporal records", Flatten.pCollections())
             .apply("Calculate the temporal coverage", Combine.perKey(new TemporalCoverageFn()));
 
@@ -192,9 +206,14 @@ public class EventToEsIndexPipeline {
                 Filter.by(NotNullOrEmptyFilter.of((LocationRecord lr) -> lr.getParentId())))
             .apply("Map occurrence events locations to KV", parentLocationTransform.toParentKv());
 
+    PCollection<KV<String, LocationRecord>> locationRecordsOfSubEvents =
+        ParentEventExpandTransform.of(locationTransform.getTag(), eventCoreTransform.getTag())
+            .toSubEventsRecords("Location", locationCollection, eventCoreCollection);
+
     PCollection<KV<String, String>> convexHullCollection =
         PCollectionList.of(locationCollection)
             .and(eventOccurrenceLocationCollection)
+            .and(locationRecordsOfSubEvents)
             .apply("Joining location records", Flatten.pCollections())
             .apply(
                 "Calculate the WKT Convex Hull of all records", Combine.perKey(new ConvexHullFn()));
@@ -210,9 +229,14 @@ public class EventToEsIndexPipeline {
                 Filter.by(NotNullOrEmptyFilter.of((TaxonRecord tr) -> tr.getParentId())))
             .apply("Map event occurrences taxon to KV", taxonomyTransform.toParentKv());
 
+    PCollection<KV<String, TaxonRecord>> taxonRecordsOfSubEvents =
+        ParentEventExpandTransform.of(taxonomyTransform.getTag(), eventCoreTransform.getTag())
+            .toSubEventsRecords("Taxon", taxonCollection, eventCoreCollection);
+
     PCollection<KV<String, Iterable<TaxonRecord>>> eventTaxonClassification =
         PCollectionList.of(taxonCollection)
             .and(eventOccurrencesTaxonCollection)
+            .and(taxonRecordsOfSubEvents)
             .apply("Join event and occurrence taxon records", Flatten.pCollections())
             .apply(
                 "Select a sample of taxon records", Sample.fixedSizePerKey(MAX_TAXON_PER_EVENTS));

@@ -222,7 +222,8 @@ public class EventToEsIndexPipelineIT {
     try (SyncDataFileWriter<MetadataRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
             optionsWriter, MetadataTransform.builder().create(), OCCURRENCE_TERM, postfix)) {
-      MetadataRecord metadataRecord = MetadataRecord.newBuilder().setId(ID).build();
+      MetadataRecord metadataRecord =
+          MetadataRecord.newBuilder().setId(ID).setDatasetKey(datasetKey).build();
       writer.append(metadataRecord);
     }
     try (SyncDataFileWriter<TemporalRecord> writer =
