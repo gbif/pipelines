@@ -327,9 +327,7 @@ public class EventToEsIndexPipeline {
     private final PCollection<KV<String, EventCoreRecord>> eventCoreCollection;
     private final UnaryOperator<String> occurrencesPathFn;
 
-    /**
-     * Calculates the simple Temporal Coverage of an Event.
-     */
+    /** Calculates the simple Temporal Coverage of an Event. */
     private PCollection<KV<String, EventDate>> temporalCoverage() {
       PCollection<KV<String, TemporalRecord>> eventOccurrenceTemporalCollection =
           pipeline
