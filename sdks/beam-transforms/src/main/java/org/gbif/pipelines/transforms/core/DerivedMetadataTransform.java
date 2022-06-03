@@ -7,15 +7,11 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import lombok.Builder;
 import lombok.NonNull;
-import org.apache.beam.sdk.Pipeline;
-import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.values.KV;
-import org.apache.beam.sdk.values.PBegin;
-import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.pipelines.core.converters.JsonConverter;
@@ -112,11 +108,5 @@ public class DerivedMetadataTransform implements Serializable {
   public MapElements<DerivedMetadataRecord, KV<String, DerivedMetadataRecord>> toKv() {
     return MapElements.into(new TypeDescriptor<KV<String, DerivedMetadataRecord>>() {})
         .via((DerivedMetadataRecord dmr) -> KV.of(dmr.getId(), dmr));
-  }
-
-  /** Create an empty collection of {@link PCollection <KV<String, DerivedMetadataRecord>>} */
-  public static PCollection<KV<String, DerivedMetadataRecord>> emptyKvCollection(Pipeline p) {
-    return Create.empty(new TypeDescriptor<KV<String, DerivedMetadataRecord>>() {})
-        .expand(PBegin.in(p));
   }
 }

@@ -3,6 +3,9 @@ package org.gbif.pipelines.ingest.pipelines;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -12,9 +15,11 @@ import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.common.beam.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
 import org.gbif.pipelines.estools.service.EsService;
 import org.gbif.pipelines.ingest.pipelines.utils.EsServer;
@@ -201,6 +206,13 @@ public class EventToEsIndexPipelineIT {
           ExtendedRecord.newBuilder().setId(ID).setParentCoreId(ID).setExtensions(ext).build();
       writer.append(extendedRecord);
     }
+
+    Path occMetadataPath =
+        Paths.get(
+            PathBuilder.buildDatasetAttemptPath(
+                optionsWriter, PipelinesVariables.Pipeline.VERBATIM_TO_OCCURRENCE + ".yml", false));
+    Files.createFile(occMetadataPath);
+
     try (SyncDataFileWriter<GbifIdRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
             optionsWriter, GbifIdTransform.builder().create(), OCCURRENCE_TERM, postfix)) {
