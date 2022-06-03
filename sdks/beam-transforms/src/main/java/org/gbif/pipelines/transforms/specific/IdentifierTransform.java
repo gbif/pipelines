@@ -44,16 +44,6 @@ public class IdentifierTransform extends Transform<ExtendedRecord, IdentifierRec
     return this;
   }
 
-  @Setup
-  public void setup() {
-    // TODO: INIT OR DELETE
-  }
-
-  @Teardown
-  public void tearDown() {
-    // TODO: TEARDOWN OR DELETE
-  }
-
   @Override
   public Optional<IdentifierRecord> convert(ExtendedRecord source) {
     return Interpretation.from(source)
