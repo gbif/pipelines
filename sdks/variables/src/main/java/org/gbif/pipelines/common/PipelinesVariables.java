@@ -39,6 +39,8 @@ public class PipelinesVariables {
     public static class Interpretation {
 
       public static final String FILE_NAME = "interpret-";
+      public static final String CRAP_USER = "crap";
+      public static final String USER_GROUP = "supergroup";
 
       public interface InterpretationType extends Serializable {
 

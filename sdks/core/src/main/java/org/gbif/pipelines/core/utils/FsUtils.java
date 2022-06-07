@@ -1,7 +1,9 @@
 package org.gbif.pipelines.core.utils;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.CRAP_USER;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.ALL;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.USER_GROUP;
 
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -139,6 +141,16 @@ public final class FsUtils {
     } catch (IOException e) {
       log.warn("Can't delete folder - {}, prefix - {}", directoryPath, filePrefix);
     }
+  }
+
+  /**
+   * Use crap as an owner for directories and subdirectories(recursively).
+   *
+   * @param hdfsConfigs path to hdfs-site.xml config file
+   * @param path to a directory/file
+   */
+  public static void setOwnerToCrap(HdfsConfigs hdfsConfigs, String path) {
+    setOwner(hdfsConfigs, path, CRAP_USER, USER_GROUP);
   }
 
   /**

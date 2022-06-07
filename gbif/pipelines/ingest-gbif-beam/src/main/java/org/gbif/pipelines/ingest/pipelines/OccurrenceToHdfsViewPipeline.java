@@ -465,7 +465,7 @@ public class OccurrenceToHdfsViewPipeline {
     MetricsHandler.saveCountersToInputPathFile(options, result.metrics());
     String metadataPath =
         PathBuilder.buildDatasetAttemptPath(options, options.getMetaFileName(), true);
-    FsUtils.setOwner(hdfsConfigs, metadataPath, "crap", "supergroup");
+    FsUtils.setOwnerToCrap(hdfsConfigs, metadataPath);
 
     log.info("Pipeline has been finished");
   }

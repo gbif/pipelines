@@ -74,6 +74,8 @@ import org.slf4j.MDC;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class VerbatimToEventPipeline {
 
+  private static final DwcTerm CORE_TERM = DwcTerm.Event;
+
   public static void main(String[] args) {
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
     run(options);
@@ -105,12 +107,12 @@ public class VerbatimToEventPipeline {
     deleteTypes.add(IDENTIFIER.name());
     deleteTypes.remove(IDENTIFIER_ABSENT.name());
     FsUtils.deleteInterpretIfExist(
-        hdfsConfigs, targetPath, datasetId, attempt, DwcTerm.Event, deleteTypes);
+        hdfsConfigs, targetPath, datasetId, attempt, CORE_TERM, deleteTypes);
 
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
     UnaryOperator<String> pathFn =
-        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, DwcTerm.Event, t, id);
+        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, CORE_TERM, t, id);
 
     log.info("Creating a pipeline from options");
     Pipeline p = pipelinesFn.apply(options);
@@ -203,11 +205,19 @@ public class VerbatimToEventPipeline {
     result.waitUntilFinish();
 
     log.info("Save metrics into the file and set files owner");
+    String metadataPath =
+        PathBuilder.buildDatasetAttemptPath(options, options.getMetaFileName(), false);
     MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
+    FsUtils.setOwnerToCrap(hdfsConfigs, metadataPath);
 
     log.info("Deleting beam temporal folders");
     String tempPath = String.join("/", targetPath, datasetId, attempt.toString());
     FsUtils.deleteDirectoryByPrefix(hdfsConfigs, tempPath, ".temp-beam");
+
+    log.info("Set interpreted files permissions");
+    String interpretedPath =
+        PathBuilder.buildDatasetAttemptPath(options, CORE_TERM.simpleName(), false);
+    FsUtils.setOwnerToCrap(hdfsConfigs, interpretedPath);
 
     log.info("Pipeline has been finished");
   }
