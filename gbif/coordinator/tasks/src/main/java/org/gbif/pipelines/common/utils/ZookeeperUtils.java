@@ -50,6 +50,8 @@ public class ZookeeperUtils {
         InterProcessMutex mutex = new InterProcessMutex(curator, path);
         mutex.acquire();
         int counter = getAsInteger(curator, crawlId, SIZE, isValidator).orElse(0) + 1;
+
+        log.info("Check zookeeper node, counter - {}, size - {}", counter, size);
         if (counter >= size) {
 
           log.info("Delete zookeeper node, crawlId - {}", crawlId);
