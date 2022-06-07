@@ -14,14 +14,14 @@ public class TemporalCoverageFnTest {
     // Tests an accumulator built from a collection of coordinates
     TemporalCoverageFn.Accum accum = new TemporalCoverageFn.Accum();
     accum
-        .acc(EventDate.newBuilder().setLte("2000-01-01").setGte("2021-01-01").build())
-        .acc(EventDate.newBuilder().setLte("2021-01-01").setGte("2021-02-01").build())
-        .acc(EventDate.newBuilder().setLte("2021-01-01").setGte("2022-03-01").build());
+        .acc(EventDate.newBuilder().setGte("2000-01-01").setLte("2021-01-01").build())
+        .acc(EventDate.newBuilder().setGte("2021-01-01").setLte("2021-02-01").build())
+        .acc(EventDate.newBuilder().setGte("2021-01-01").setLte("2022-03-01").build());
 
-    EventDate expected = EventDate.newBuilder().setLte("2000-01-01").setGte("2022-03-01").build();
+    EventDate expected = EventDate.newBuilder().setGte("2000-01-01").setLte("2022-03-01").build();
 
     Optional<EventDate> eventDate = accum.toEventDate();
     Assert.assertTrue(eventDate.isPresent());
-    Assert.assertEquals(eventDate.get(), expected);
+    Assert.assertEquals(expected, eventDate.get());
   }
 }

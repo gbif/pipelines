@@ -3,16 +3,24 @@ package org.gbif.pipelines.ingest.pipelines;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import lombok.SneakyThrows;
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.TestPipeline;
+import org.apache.commons.io.IOUtils;
+import org.elasticsearch.client.Response;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables;
@@ -24,6 +32,7 @@ import org.gbif.pipelines.core.io.SyncDataFileWriter;
 import org.gbif.pipelines.estools.service.EsService;
 import org.gbif.pipelines.ingest.pipelines.utils.EsServer;
 import org.gbif.pipelines.ingest.pipelines.utils.InterpretedAvroWriter;
+import org.gbif.pipelines.ingest.utils.SerDeSerUtils;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
@@ -41,6 +50,7 @@ import org.gbif.pipelines.io.avro.RankedName;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
+import org.gbif.pipelines.io.avro.json.ParentJsonRecord;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.EventCoreTransform;
 import org.gbif.pipelines.transforms.core.GrscicollTransform;
@@ -55,6 +65,7 @@ import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.gbif.pipelines.transforms.specific.ClusteringTransform;
 import org.gbif.pipelines.transforms.specific.GbifIdTransform;
 import org.gbif.pipelines.transforms.specific.IdentifierTransform;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -72,6 +83,7 @@ public class EventToEsIndexPipelineIT {
 
   private static final String ID = "777";
   private static final String SUB_EVENT_ID = "888";
+  private static final String SUB_EVENT_ID_2 = "999";
 
   @Rule public final transient TestPipeline p = TestPipeline.create();
 
@@ -80,6 +92,25 @@ public class EventToEsIndexPipelineIT {
   @Before
   public void cleanIndexes() {
     EsService.deleteAllIndexes(ES_SERVER.getEsClient());
+  }
+
+  private static ExtendedRecord testEventCoreRecord(String id, String parentId, String datasetKey) {
+    Map<String, String> coreEvent1 = new HashMap<>();
+    coreEvent1.put(DwcTerm.datasetID.qualifiedName(), datasetKey);
+    coreEvent1.put(DwcTerm.institutionID.qualifiedName(), "institutionID");
+    coreEvent1.put(DwcTerm.datasetName.qualifiedName(), "datasetName");
+    coreEvent1.put(DwcTerm.eventID.qualifiedName(), ID);
+    if (parentId == null) {
+      coreEvent1.put(DwcTerm.parentEventID.qualifiedName(), parentId);
+    }
+    coreEvent1.put(DwcTerm.samplingProtocol.qualifiedName(), "samplingProtocol");
+
+    return ExtendedRecord.newBuilder()
+        .setId(id)
+        .setCoreRowType(DwcTerm.Event.qualifiedName())
+        .setParentCoreId(parentId)
+        .setCoreTerms(coreEvent1)
+        .build();
   }
 
   @Test
@@ -111,41 +142,15 @@ public class EventToEsIndexPipelineIT {
         InterpretedAvroWriter.createAvroWriter(
             optionsWriter, VerbatimTransform.create(), EVENT_TERM, postfix)) {
 
-      Map<String, String> coreEvent1 = new HashMap<>();
-      coreEvent1.put(DwcTerm.datasetID.qualifiedName(), datasetKey);
-      coreEvent1.put(DwcTerm.institutionID.qualifiedName(), "institutionID");
-      coreEvent1.put(DwcTerm.datasetName.qualifiedName(), "datasetName");
-      coreEvent1.put(DwcTerm.eventID.qualifiedName(), ID);
-      coreEvent1.put(DwcTerm.parentEventID.qualifiedName(), "parentEventID");
-      coreEvent1.put(DwcTerm.samplingProtocol.qualifiedName(), "samplingProtocol");
-
-      ExtendedRecord extendedRecord =
-          ExtendedRecord.newBuilder()
-              .setId(ID)
-              .setCoreRowType(DwcTerm.Event.qualifiedName())
-              .setParentCoreId(ID)
-              .setCoreTerms(coreEvent1)
-              .build();
-
+      ExtendedRecord extendedRecord = testEventCoreRecord(ID, ID, datasetKey);
       writer.append(extendedRecord);
 
-      Map<String, String> coreEvent2 = new HashMap<>();
-      coreEvent2.put(DwcTerm.datasetID.qualifiedName(), datasetKey);
-      coreEvent2.put(DwcTerm.institutionID.qualifiedName(), "institutionID");
-      coreEvent2.put(DwcTerm.datasetName.qualifiedName(), "datasetName");
-      coreEvent2.put(DwcTerm.eventID.qualifiedName(), SUB_EVENT_ID);
-      coreEvent2.put(DwcTerm.parentEventID.qualifiedName(), "parentEventID");
-      coreEvent2.put(DwcTerm.samplingProtocol.qualifiedName(), "samplingProtocol");
-      coreEvent2.put(DwcTerm.parentEventID.qualifiedName(), ID);
-
-      ExtendedRecord subEventExtendedRecord =
-          ExtendedRecord.newBuilder()
-              .setId(SUB_EVENT_ID)
-              .setCoreRowType(DwcTerm.Event.qualifiedName())
-              .setParentCoreId(ID)
-              .setCoreTerms(coreEvent2)
-              .build();
+      ExtendedRecord subEventExtendedRecord = testEventCoreRecord(SUB_EVENT_ID, ID, datasetKey);
       writer.append(subEventExtendedRecord);
+
+      ExtendedRecord subEventExtendedRecord2 =
+          testEventCoreRecord(SUB_EVENT_ID_2, SUB_EVENT_ID, datasetKey);
+      writer.append(subEventExtendedRecord2);
     }
     try (SyncDataFileWriter<IdentifierRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
@@ -153,9 +158,14 @@ public class EventToEsIndexPipelineIT {
       IdentifierRecord identifierRecord =
           IdentifierRecord.newBuilder().setId(ID).setInternalId(ID).build();
       writer.append(identifierRecord);
+
       IdentifierRecord subEventIdentifierRecord =
           IdentifierRecord.newBuilder().setId(SUB_EVENT_ID).setInternalId(SUB_EVENT_ID).build();
       writer.append(subEventIdentifierRecord);
+
+      IdentifierRecord subEventIdentifierRecord2 =
+          IdentifierRecord.newBuilder().setId(SUB_EVENT_ID_2).setInternalId(SUB_EVENT_ID_2).build();
+      writer.append(subEventIdentifierRecord2);
     }
     try (SyncDataFileWriter<EventCoreRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
@@ -170,7 +180,16 @@ public class EventToEsIndexPipelineIT {
               .setParentEventIds(Collections.singletonList(ID))
               .build();
       writer.append(subEventCoreRecord);
+
+      EventCoreRecord subEventCoreRecord2 =
+          EventCoreRecord.newBuilder()
+              .setId(SUB_EVENT_ID_2)
+              .setParentEventID(SUB_EVENT_ID)
+              .setParentEventIds(Arrays.asList(ID, SUB_EVENT_ID))
+              .build();
+      writer.append(subEventCoreRecord2);
     }
+
     try (SyncDataFileWriter<MetadataRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
             optionsWriter, MetadataTransform.builder().create(), EVENT_TERM, postfix)) {
@@ -189,9 +208,18 @@ public class EventToEsIndexPipelineIT {
               .setId(SUB_EVENT_ID)
               .setParentId(ID)
               .setEventDate(
-                  EventDate.newBuilder().setGte("10-10-2019").setLte("10-10-2020").build())
+                  EventDate.newBuilder().setGte("2017-10-10").setLte("2020-10-10").build())
               .build();
       writer.append(temporalRecordSubEvent);
+
+      TemporalRecord temporalRecordSubEvent2 =
+          TemporalRecord.newBuilder()
+              .setId(SUB_EVENT_ID_2)
+              .setParentId(SUB_EVENT_ID)
+              .setEventDate(
+                  EventDate.newBuilder().setGte("2019-10-10").setLte("2021-10-10").build())
+              .build();
+      writer.append(temporalRecordSubEvent2);
     }
     try (SyncDataFileWriter<LocationRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
@@ -203,15 +231,36 @@ public class EventToEsIndexPipelineIT {
           LocationRecord.newBuilder()
               .setId(SUB_EVENT_ID)
               .setParentId(ID)
-              .setDecimalLatitude(90d)
-              .setDecimalLongitude(40d)
+              .setDecimalLatitude(10d)
+              .setDecimalLongitude(5d)
+              .setHasCoordinate(Boolean.TRUE)
               .build();
       writer.append(locationRecordSubEvent);
+
+      LocationRecord locationRecordSubEvent2 =
+          LocationRecord.newBuilder()
+              .setId(SUB_EVENT_ID_2)
+              .setParentId(SUB_EVENT_ID)
+              .setDecimalLatitude(5d)
+              .setDecimalLongitude(15d)
+              .setHasCoordinate(Boolean.TRUE)
+              .build();
+      writer.append(locationRecordSubEvent2);
     }
     try (SyncDataFileWriter<TaxonRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
             optionsWriter, TaxonomyTransform.builder().create(), EVENT_TERM, postfix)) {
-      TaxonRecord taxonRecord = TaxonRecord.newBuilder().setId(ID).build();
+      TaxonRecord taxonRecord =
+          TaxonRecord.newBuilder()
+              .setId(ID)
+              .setClassification(
+                  Collections.singletonList(
+                      RankedName.newBuilder()
+                          .setRank(Rank.SPECIES)
+                          .setName("Puma concolor subsp. coryi (Bangs, 1899)")
+                          .setKey(6164600)
+                          .build()))
+              .build();
       writer.append(taxonRecord);
 
       TaxonRecord taxonRecordSubEvent =
@@ -227,6 +276,20 @@ public class EventToEsIndexPipelineIT {
                           .build()))
               .build();
       writer.append(taxonRecordSubEvent);
+
+      TaxonRecord taxonRecordSubEvent2 =
+          TaxonRecord.newBuilder()
+              .setId(SUB_EVENT_ID_2)
+              .setParentId(SUB_EVENT_ID)
+              .setClassification(
+                  Collections.singletonList(
+                      RankedName.newBuilder()
+                          .setRank(Rank.SPECIES)
+                          .setName("Puma concolor (Linnaeus, 1771)")
+                          .setKey(2435099)
+                          .build()))
+              .build();
+      writer.append(taxonRecordSubEvent2);
     }
     try (SyncDataFileWriter<MultimediaRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
@@ -382,6 +445,68 @@ public class EventToEsIndexPipelineIT {
 
     // Should
     assertTrue(EsService.existsIndex(ES_SERVER.getEsClient(), idxName));
-    assertEquals(3, EsService.countIndexDocuments(ES_SERVER.getEsClient(), idxName));
+    assertEquals(4, EsService.countIndexDocuments(ES_SERVER.getEsClient(), idxName));
+
+    ParentJsonRecord eventRecord = getResult(idxName, ID, "event");
+    assertRootParenJsonRecordResponse(eventRecord);
+  }
+
+  /**
+   * Executes an Elasticsearch query, retrieves the first result and returns it as ParentJsonRecord.
+   */
+  @SneakyThrows
+  private ParentJsonRecord getResult(String idxName, String id, String type) {
+    Response response =
+        EsService.executeQuery(
+            ES_SERVER.getEsClient(),
+            idxName,
+            "{\n"
+                + "  \"query\": {\n"
+                + "    \"bool\" : {\n"
+                + "      \"must\" : [\n"
+                + "        {\n"
+                + "          \"term\": {\n"
+                + "            \"id\": \""
+                + id
+                + "\"\n"
+                + "          }\n"
+                + "        },\n"
+                + "        {\n"
+                + "          \"term\": {\n"
+                + "            \"type\": \""
+                + type
+                + "\"\n"
+                + "          }\n"
+                + "        }\n"
+                + "      ]\n"
+                + "    }\n"
+                + "  }\n"
+                + "}");
+    ObjectMapper mapper = SerDeSerUtils.objectMapper();
+    ArrayNode results =
+        (ArrayNode)
+            mapper
+                .readValue(
+                    IOUtils.toString(response.getEntity().getContent(), StandardCharsets.UTF_8),
+                    JsonNode.class)
+                .get("hits")
+                .get("hits");
+    return mapper.treeToValue(results.get(0).get("_source"), ParentJsonRecord.class);
+  }
+
+  /** Asserts the Parent Event Record by checking the expected nested data. */
+  private void assertRootParenJsonRecordResponse(ParentJsonRecord record) {
+    // Assert temporal coverage
+    Assert.assertNotNull(record.getDerivedMetadata().getTemporalCoverage());
+    Assert.assertEquals(record.getDerivedMetadata().getTemporalCoverage().getGte(), "2017-10-10");
+    Assert.assertEquals(record.getDerivedMetadata().getTemporalCoverage().getLte(), "2021-10-10");
+
+    // Assert geographic coverage/convex hull
+    Assert.assertNotNull(record.getDerivedMetadata().getWktConvexHull());
+    Assert.assertEquals(record.getDerivedMetadata().getWktConvexHull(), "LINESTRING (5 10, 15 5)");
+
+    // Assert taxonomic coverage
+    Assert.assertNotNull(record.getDerivedMetadata().getTaxonomicCoverage());
+    Assert.assertEquals(2, record.getDerivedMetadata().getTaxonomicCoverage().size());
   }
 }
