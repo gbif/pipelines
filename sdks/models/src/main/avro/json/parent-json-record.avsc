@@ -28,6 +28,8 @@
       {"name":"crawlId","type":["null","int"],"default":null,"doc":""},
       // Metadata
       {"name":"metadata","type":["null","MetadataJsonRecord"],"default":null,"doc":""},
+      // DerivedMetadata
+      {"name":"derivedMetadata","type":["null","DerivedMetadataRecord"],"default":null,"doc":""},
       // Event
       {"name":"event","type":["null","EventJsonRecord"],"default":null,"doc":""},
       // Occurrence
