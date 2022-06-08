@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +29,6 @@ import org.gbif.dwc.Archive;
 import org.gbif.dwc.UnsupportedArchiveException;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
-import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.DwcaUtils;
@@ -142,26 +142,30 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
   public PipelinesVerbatimMessage createOutgoingMessage(PipelinesDwcaMessage message) {
     Objects.requireNonNull(message.getEndpointType(), "endpointType can't be NULL!");
 
-    Set<String> interpretedTypes;
+    Set<String> interpretedTypes = config.interpretTypes;
+    Consumer<HashSet<String>> occurrenceFn =
+        hs -> {
+          hs.add(StepType.DWCA_TO_VERBATIM.name());
+          hs.add(StepType.VERBATIM_TO_IDENTIFIER.name());
+          hs.add(StepType.VERBATIM_TO_INTERPRETED.name());
+          hs.add(StepType.INTERPRETED_TO_INDEX.name());
+          hs.add(StepType.HDFS_VIEW.name());
+          hs.add(StepType.FRAGMENTER.name());
+        };
+
+    HashSet<String> steps = new HashSet<>();
     try {
       Path inputPath = buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid());
       Archive archive = DwcaUtils.fromLocation(inputPath);
 
       if (message.getPipelineSteps().isEmpty()) {
 
-        HashSet<String> steps = new HashSet<>();
-
         Term coreType = archive.getCore().getRowType();
         boolean hasOccExt =
             archive.getExtensions().stream().anyMatch(x -> x.getRowType() == DwcTerm.Occurrence);
 
         if (coreType == DwcTerm.Occurrence || hasOccExt) {
-          steps.add(StepType.DWCA_TO_VERBATIM.name());
-          steps.add(StepType.VERBATIM_TO_IDENTIFIER.name());
-          steps.add(StepType.VERBATIM_TO_INTERPRETED.name());
-          steps.add(StepType.INTERPRETED_TO_INDEX.name());
-          steps.add(StepType.HDFS_VIEW.name());
-          steps.add(StepType.FRAGMENTER.name());
+          occurrenceFn.accept(steps);
         }
         if (coreType == DwcTerm.Event) {
           steps.add(StepType.EVENTS_VERBATIM_TO_INTERPRETED.name());
@@ -176,7 +180,9 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
       interpretedTypes.addAll(getAllInterpretationAsString());
       interpretedTypes.remove(null);
     } catch (IllegalStateException | UnsupportedArchiveException ex) {
-      throw new PipelinesException(ex);
+      occurrenceFn.accept(steps);
+      message.setPipelineSteps(steps);
+      log.warn(ex.getMessage(), ex);
     }
 
     // Common variables
