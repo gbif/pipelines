@@ -25,8 +25,8 @@ public class TemporalCoverageFn
     private String maxDate;
 
     public Accum acc(EventDate eventDate) {
-      Optional.ofNullable(eventDate.getLte()).ifPresent(this::setMinDate);
-      Optional.ofNullable(eventDate.getGte()).ifPresent(this::setMaxDate);
+      Optional.ofNullable(eventDate.getGte()).ifPresent(this::setMinDate);
+      Optional.ofNullable(eventDate.getLte()).ifPresent(this::setMaxDate);
       return this;
     }
 
@@ -66,8 +66,8 @@ public class TemporalCoverageFn
 
     private EventDate getEventDate() {
       EventDate.Builder evenDate = EventDate.newBuilder();
-      Optional.ofNullable(minDate).ifPresent(evenDate::setLte);
-      Optional.ofNullable(maxDate).ifPresent(evenDate::setGte);
+      Optional.ofNullable(minDate).ifPresent(evenDate::setGte);
+      Optional.ofNullable(maxDate).ifPresent(evenDate::setLte);
       return evenDate.build();
     }
   }

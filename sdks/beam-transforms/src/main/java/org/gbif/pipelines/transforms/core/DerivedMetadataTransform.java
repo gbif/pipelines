@@ -3,6 +3,7 @@ package org.gbif.pipelines.transforms.core;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import lombok.Builder;
@@ -73,7 +74,7 @@ public class DerivedMetadataTransform implements Serializable {
               builder.setWktConvexHull(convexHull);
             }
 
-            if (temporalCoverage.getGte() == null && temporalCoverage.getLte() == null) {
+            if (temporalCoverage.getGte() != null || temporalCoverage.getLte() != null) {
               builder.setTemporalCoverageBuilder(
                   org.gbif.pipelines.io.avro.json.EventDate.newBuilder()
                       .setGte(temporalCoverage.getGte())
@@ -84,8 +85,10 @@ public class DerivedMetadataTransform implements Serializable {
                 classifications.stream()
                     .map(
                         tr ->
-                            JsonConverter.convertClassification(
-                                getAssociatedVerbatim(tr, verbatimRecords), tr))
+                            Optional.ofNullable(getAssociatedVerbatim(tr, verbatimRecords))
+                                .map(vr -> JsonConverter.convertClassification(vr, tr)))
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
                     .collect(Collectors.toList()));
             c.output(KV.of(key, builder.build()));
           }

@@ -28,7 +28,6 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionList;
 import org.apache.beam.sdk.values.PCollectionView;
-import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
@@ -185,26 +184,22 @@ public class EventToEsIndexPipeline {
             .apply("Map event taxon records to KV", taxonomyTransform.toKv());
 
     PCollection<KV<String, DerivedMetadataRecord>> derivedMetadataRecordCollection =
-        datasetHasOccurrences
-            ? DerivedMetadata.builder()
-                .pipeline(p)
-                .verbatimTransform(verbatimTransform)
-                .temporalTransform(temporalTransform)
-                .parentLocationTransform(parentLocationTransform)
-                .taxonomyTransform(taxonomyTransform)
-                .locationTransform(locationTransform)
-                .eventCoreTransform(eventCoreTransform)
-                .verbatimCollection(verbatimCollection)
-                .temporalCollection(temporalCollection)
-                .locationCollection(locationCollection)
-                .taxonCollection(taxonCollection)
-                .eventCoreCollection(eventCoreCollection)
-                .occurrencesPathFn(occurrencesPathFn)
-                .build()
-                .calculate()
-            : p.apply(
-                "Create empty derivedMetadataRecordCollection",
-                Create.empty(new TypeDescriptor<KV<String, DerivedMetadataRecord>>() {}));
+        DerivedMetadata.builder()
+            .pipeline(p)
+            .verbatimTransform(verbatimTransform)
+            .temporalTransform(temporalTransform)
+            .parentLocationTransform(parentLocationTransform)
+            .taxonomyTransform(taxonomyTransform)
+            .locationTransform(locationTransform)
+            .eventCoreTransform(eventCoreTransform)
+            .verbatimCollection(verbatimCollection)
+            .temporalCollection(temporalCollection)
+            .locationCollection(locationCollection)
+            .taxonCollection(taxonCollection)
+            .eventCoreCollection(eventCoreCollection)
+            .occurrencesPathFn(occurrencesPathFn)
+            .build()
+            .calculate();
 
     PCollection<KV<String, MultimediaRecord>> multimediaCollection =
         p.apply("Read Event Multimedia", multimediaTransform.read(pathFn))

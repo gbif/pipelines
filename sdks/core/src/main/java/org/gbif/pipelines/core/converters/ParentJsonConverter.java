@@ -88,6 +88,7 @@ public class ParentJsonConverter {
             .setMetadataBuilder(mapMetadataJsonRecord());
 
     mapCreated(builder);
+    mapDerivedMetadata(builder);
 
     JsonConverter.convertToDate(identifier.getFirstLoaded()).ifPresent(builder::setFirstLoaded);
     JsonConverter.convertToDate(metadata.getLastCrawled()).ifPresent(builder::setLastCrawled);
@@ -237,5 +238,9 @@ public class ParentJsonConverter {
   private void mapCreated(ParentJsonRecord.Builder builder) {
     JsonConverter.getMaxCreationDate(metadata, eventCore, temporal, location, multimedia)
         .ifPresent(builder::setCreated);
+  }
+
+  private void mapDerivedMetadata(ParentJsonRecord.Builder builder) {
+    builder.setDerivedMetadata(derivedMetadata);
   }
 }
