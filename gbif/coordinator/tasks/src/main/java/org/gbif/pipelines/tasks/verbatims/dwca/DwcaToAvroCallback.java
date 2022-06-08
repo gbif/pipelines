@@ -142,7 +142,7 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
   public PipelinesVerbatimMessage createOutgoingMessage(PipelinesDwcaMessage message) {
     Objects.requireNonNull(message.getEndpointType(), "endpointType can't be NULL!");
 
-    Set<String> interpretedTypes = config.interpretTypes;
+    Set<String> interpretedTypes;
     try {
       Path inputPath = buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid());
       Archive archive = DwcaUtils.fromLocation(inputPath);
