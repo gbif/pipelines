@@ -317,10 +317,7 @@ public class EventToEsIndexPipelineIT {
     }
     try (SyncDataFileWriter<MeasurementOrFactRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
-            optionsWriter,
-            MeasurementOrFactTransform.builder().create(),
-            EVENT_TERM,
-            postfix)) {
+            optionsWriter, MeasurementOrFactTransform.builder().create(), EVENT_TERM, postfix)) {
       MeasurementOrFactRecord mofRecord = MeasurementOrFactRecord.newBuilder().setId(ID).build();
       writer.append(mofRecord);
     }
