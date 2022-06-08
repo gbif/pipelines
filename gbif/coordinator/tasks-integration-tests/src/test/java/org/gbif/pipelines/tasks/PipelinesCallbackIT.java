@@ -15,6 +15,7 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
@@ -88,7 +89,7 @@ public class PipelinesCallbackIT {
                 StepType.VERBATIM_TO_INTERPRETED.name(),
                 StepType.INTERPRETED_TO_INDEX.name(),
                 StepType.HDFS_VIEW.name()));
-    PipelineBasedMessage incomingMessage = createMessage(datasetKey, attempt, pipelineSteps);
+    PipelineBasedMessage incomingMessage = TestMessage.create(datasetKey, attempt, pipelineSteps);
 
     // When
     PipelinesCallback.builder()
@@ -157,7 +158,9 @@ public class PipelinesCallbackIT {
                 StepType.VERBATIM_TO_INTERPRETED.name(),
                 StepType.INTERPRETED_TO_INDEX.name(),
                 StepType.HDFS_VIEW.name()));
-    PipelineBasedMessage incomingMessage = createMessage(datasetKey, attempt, pipelineSteps);
+    PipelineBasedMessage incomingMessage = TestMessage.create(datasetKey, attempt, pipelineSteps);
+
+    updateMonitoring(crawlId, SIZE, String.valueOf(2));
 
     // When
     PipelinesCallback.builder()
@@ -198,7 +201,7 @@ public class PipelinesCallbackIT {
     String crawlId = datasetKey.toString();
     StepType nextStepName = StepType.DWCA_TO_VERBATIM;
     Set<String> pipelineSteps = Collections.singleton(StepType.DWCA_TO_VERBATIM.name());
-    PipelineBasedMessage incomingMessage = createMessage(datasetKey, attempt, pipelineSteps);
+    PipelineBasedMessage incomingMessage = TestMessage.create(datasetKey, attempt, pipelineSteps);
 
     // When
     PipelinesCallback.builder()
@@ -237,7 +240,7 @@ public class PipelinesCallbackIT {
                 StepType.VERBATIM_TO_INTERPRETED.name(),
                 StepType.INTERPRETED_TO_INDEX.name(),
                 StepType.HDFS_VIEW.name()));
-    PipelineBasedMessage incomingMessage = createMessage(datasetKey, attempt, pipelineSteps);
+    PipelineBasedMessage incomingMessage = TestMessage.create(datasetKey, attempt, pipelineSteps);
 
     // When
     PipelinesCallback.builder()
@@ -282,8 +285,8 @@ public class PipelinesCallbackIT {
     String crawlId = datasetKey.toString();
     StepType nextStepName = StepType.DWCA_TO_VERBATIM;
     Set<String> pipelineSteps = Collections.singleton(StepType.DWCA_TO_VERBATIM.name());
-    PipelineBasedMessage incomingMessage = createMessage(datasetKey, attempt, pipelineSteps);
-    updateMonitoring(crawlId, SIZE, String.valueOf(4));
+    PipelineBasedMessage incomingMessage = TestMessage.create(datasetKey, attempt, pipelineSteps);
+    updateMonitoring(crawlId, SIZE, String.valueOf(1));
 
     String crawlInfoPath = CrawlerNodePaths.getCrawlInfoPath(datasetKey, PROCESS_STATE_OCCURRENCE);
     updateMonitoring(crawlInfoPath, "RUNNING");
@@ -326,9 +329,7 @@ public class PipelinesCallbackIT {
                 StepType.VERBATIM_TO_INTERPRETED.name(),
                 StepType.INTERPRETED_TO_INDEX.name(),
                 StepType.HDFS_VIEW.name()));
-    PipelineBasedMessage incomingMessage = createMessage(datasetKey, attempt, pipelineSteps);
-
-    updateMonitoring(crawlId, SIZE, String.valueOf(2));
+    PipelineBasedMessage incomingMessage = TestMessage.create(datasetKey, attempt, pipelineSteps);
 
     // When
     PipelinesCallback.builder()
@@ -361,39 +362,42 @@ public class PipelinesCallbackIT {
     Assert.assertNotNull(PipelinesCallback.getPipelinesVersion());
   }
 
-  private static PipelineBasedMessage createMessage(
-      UUID datasetKey, Integer attempt, Set<String> pipelineSteps) {
-    return new PipelineBasedMessage() {
-      @Override
-      public Integer getAttempt() {
-        return attempt;
-      }
+  @AllArgsConstructor(staticName = "create")
+  private static class TestMessage implements PipelineBasedMessage {
 
-      @Override
-      public Set<String> getPipelineSteps() {
-        return pipelineSteps;
-      }
+    private final UUID datasetKey;
+    private final Integer attempt;
+    private final Set<String> pipelineSteps;
 
-      @Override
-      public Long getExecutionId() {
-        return EXECUTION_ID;
-      }
+    @Override
+    public Integer getAttempt() {
+      return attempt;
+    }
 
-      @Override
-      public void setExecutionId(Long executionId) {
-        // do nothing
-      }
+    @Override
+    public Set<String> getPipelineSteps() {
+      return pipelineSteps;
+    }
 
-      @Override
-      public UUID getDatasetUuid() {
-        return datasetKey;
-      }
+    @Override
+    public Long getExecutionId() {
+      return EXECUTION_ID;
+    }
 
-      @Override
-      public String getRoutingKey() {
-        return "";
-      }
-    };
+    @Override
+    public void setExecutionId(Long executionId) {
+      // do nothing
+    }
+
+    @Override
+    public UUID getDatasetUuid() {
+      return datasetKey;
+    }
+
+    @Override
+    public String getRoutingKey() {
+      return "";
+    }
   }
 
   /**
@@ -507,7 +511,7 @@ public class PipelinesCallbackIT {
                   StepType.VERBATIM_TO_INTERPRETED.name(),
                   StepType.INTERPRETED_TO_INDEX.name(),
                   StepType.HDFS_VIEW.name()));
-      return createMessage(datasetKey, attempt, pipelineSteps);
+      return TestMessage.create(datasetKey, attempt, pipelineSteps);
     }
 
     @Override
@@ -536,7 +540,7 @@ public class PipelinesCallbackIT {
                   StepType.VERBATIM_TO_INTERPRETED.name(),
                   StepType.INTERPRETED_TO_INDEX.name(),
                   StepType.HDFS_VIEW.name()));
-      return createMessage(datasetKey, attempt, pipelineSteps);
+      return TestMessage.create(datasetKey, attempt, pipelineSteps);
     }
 
     @Override
