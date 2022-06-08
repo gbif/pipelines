@@ -22,6 +22,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
@@ -83,10 +84,9 @@ public class ParentJsonTransform implements Serializable {
   @NonNull private final TupleTag<MultimediaRecord> multimediaRecordTag;
   @NonNull private final TupleTag<ImageRecord> imageRecordTag;
   @NonNull private final TupleTag<AudubonRecord> audubonRecordTag;
-
   @NonNull private final PCollectionView<MetadataRecord> metadataView;
-
   @NonNull private final TupleTag<DerivedMetadataRecord> derivedMetadataRecordTag;
+  @NonNull private final TupleTag<MeasurementOrFactRecord> measurementOrFactRecordTag;
 
   public SingleOutput<KV<String, CoGbkResult>, String> converter() {
 
@@ -121,6 +121,10 @@ public class ParentJsonTransform implements Serializable {
             ImageRecord imr = v.getOnly(imageRecordTag, ImageRecord.newBuilder().setId(k).build());
             AudubonRecord ar =
                 v.getOnly(audubonRecordTag, AudubonRecord.newBuilder().setId(k).build());
+            MeasurementOrFactRecord mofr =
+                v.getOnly(
+                    measurementOrFactRecordTag,
+                    MeasurementOrFactRecord.newBuilder().setId(k).build());
 
             MultimediaRecord mmr = MultimediaConverter.merge(mr, imr, ar);
 
@@ -141,6 +145,7 @@ public class ParentJsonTransform implements Serializable {
                     .verbatim(er)
                     .taxon(txr)
                     .derivedMetadata(dmr)
+                    .measurementOrFactRecord(mofr)
                     .build()
                     .toJson();
 

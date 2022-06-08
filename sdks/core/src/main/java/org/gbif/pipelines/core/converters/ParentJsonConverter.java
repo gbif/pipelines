@@ -3,6 +3,9 @@ package org.gbif.pipelines.core.converters;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.dwc.terms.DwcTerm;
@@ -11,6 +14,8 @@ import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MeasurementOrFact;
+import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
@@ -21,6 +26,7 @@ import org.gbif.pipelines.io.avro.json.EventJsonRecord;
 import org.gbif.pipelines.io.avro.json.JoinRecord;
 import org.gbif.pipelines.io.avro.json.MetadataJsonRecord;
 import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
+import org.gbif.pipelines.io.avro.json.Parent;
 import org.gbif.pipelines.io.avro.json.ParentJsonRecord;
 
 @Slf4j
@@ -38,6 +44,7 @@ public class ParentJsonConverter {
   private final ExtendedRecord verbatim;
   private final DerivedMetadataRecord derivedMetadata;
   private OccurrenceJsonRecord occurrenceJsonRecord;
+  private MeasurementOrFactRecord measurementOrFactRecord;
 
   public ParentJsonRecord convertToParent() {
     return (occurrenceJsonRecord != null) ? convertToParentOccurrence() : convertToParentEvent();
@@ -109,6 +116,7 @@ public class ParentJsonConverter {
     mapMultimediaRecord(builder);
     mapExtendedRecord(builder);
     mapTaxonRecord(builder);
+    mapMeasurementOrFactRecord(builder);
 
     return builder;
   }
@@ -139,7 +147,7 @@ public class ParentJsonConverter {
         .setDatasetID(eventCore.getDatasetID())
         .setDatasetName(eventCore.getDatasetName())
         .setSamplingProtocol(eventCore.getSamplingProtocol())
-        .setParentEventIds(eventCore.getParentEventIds())
+        .setParentsLineage(convertParents(eventCore.getParentsLineage()))
         .setParentEventId(eventCore.getParentEventID());
 
     // Vocabulary
@@ -218,6 +226,17 @@ public class ParentJsonConverter {
         .setMediaLicenses(JsonConverter.convertMultimediaLicense(multimedia));
   }
 
+  private void mapMeasurementOrFactRecord(EventJsonRecord.Builder builder) {
+    builder.setMeasurementOrFactMethods(
+        measurementOrFactRecord.getMeasurementOrFactItems().stream()
+            .map(MeasurementOrFact::getMeasurementMethod)
+            .collect(Collectors.toList()));
+    builder.setMeasurementOrFactTypes(
+        measurementOrFactRecord.getMeasurementOrFactItems().stream()
+            .map(MeasurementOrFact::getMeasurementType)
+            .collect(Collectors.toList()));
+  }
+
   private void mapExtendedRecord(EventJsonRecord.Builder builder) {
     builder.setExtensions(JsonConverter.convertExtensions(verbatim));
 
@@ -242,5 +261,15 @@ public class ParentJsonConverter {
 
   private void mapDerivedMetadata(ParentJsonRecord.Builder builder) {
     builder.setDerivedMetadata(derivedMetadata);
+  }
+
+  protected static List<Parent> convertParents(List<org.gbif.pipelines.io.avro.Parent> parents) {
+    if (parents == null) {
+      return Collections.emptyList();
+    }
+
+    return parents.stream()
+        .map(p -> Parent.newBuilder().setId(p.getId()).setEventType(p.getEventType()).build())
+        .collect(Collectors.toList());
   }
 }

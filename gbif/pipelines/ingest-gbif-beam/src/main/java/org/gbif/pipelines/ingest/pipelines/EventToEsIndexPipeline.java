@@ -43,6 +43,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
@@ -61,6 +62,7 @@ import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
+import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.gbif.pipelines.transforms.specific.IdentifierTransform;
@@ -148,6 +150,8 @@ public class EventToEsIndexPipeline {
     LocationTransform locationTransform = LocationTransform.builder().create();
     LocationTransform parentLocationTransform = LocationTransform.builder().create();
     TaxonomyTransform taxonomyTransform = TaxonomyTransform.builder().create();
+    MeasurementOrFactTransform measurementOrFactTransform =
+        MeasurementOrFactTransform.builder().create();
 
     // Extension
     MultimediaTransform multimediaTransform = MultimediaTransform.builder().create();
@@ -213,6 +217,10 @@ public class EventToEsIndexPipeline {
         p.apply("Read Event Audubon", audubonTransform.read(pathFn))
             .apply("Map Audubon to KV", audubonTransform.toKv());
 
+    PCollection<KV<String, MeasurementOrFactRecord>> measurementOrFactCollection =
+        p.apply("Read event measurementOrFact records", measurementOrFactTransform.read(pathFn))
+            .apply("Map event measurementOrFact records to KV", measurementOrFactTransform.toKv());
+
     log.info("Adding step 3: Converting into a json object");
     SingleOutput<KV<String, CoGbkResult>, String> eventJsonDoFn =
         ParentJsonTransform.builder()
@@ -226,6 +234,7 @@ public class EventToEsIndexPipeline {
             .imageRecordTag(imageTransform.getTag())
             .audubonRecordTag(audubonTransform.getTag())
             .derivedMetadataRecordTag(DerivedMetadataTransform.tag())
+            .measurementOrFactRecordTag(measurementOrFactTransform.getTag())
             .metadataView(metadataView)
             .build()
             .converter();
@@ -241,6 +250,7 @@ public class EventToEsIndexPipeline {
             .and(multimediaTransform.getTag(), multimediaCollection)
             .and(imageTransform.getTag(), imageCollection)
             .and(audubonTransform.getTag(), audubonCollection)
+            .and(measurementOrFactTransform.getTag(), measurementOrFactCollection)
             // Internal
             .and(identifierTransform.getTag(), identifierCollection)
             // Raw

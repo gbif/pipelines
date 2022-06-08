@@ -43,8 +43,10 @@ import org.gbif.pipelines.io.avro.GbifIdRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
+import org.gbif.pipelines.io.avro.Parent;
 import org.gbif.pipelines.io.avro.Rank;
 import org.gbif.pipelines.io.avro.RankedName;
 import org.gbif.pipelines.io.avro.TaxonRecord;
@@ -60,6 +62,7 @@ import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
+import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.gbif.pipelines.transforms.specific.ClusteringTransform;
@@ -177,7 +180,7 @@ public class EventToEsIndexPipelineIT {
           EventCoreRecord.newBuilder()
               .setId(SUB_EVENT_ID)
               .setParentEventID(ID)
-              .setParentEventIds(Collections.singletonList(ID))
+              .setParentsLineage(Collections.singletonList(Parent.newBuilder().setId(ID).build()))
               .build();
       writer.append(subEventCoreRecord);
 
@@ -185,7 +188,10 @@ public class EventToEsIndexPipelineIT {
           EventCoreRecord.newBuilder()
               .setId(SUB_EVENT_ID_2)
               .setParentEventID(SUB_EVENT_ID)
-              .setParentEventIds(Arrays.asList(ID, SUB_EVENT_ID))
+              .setParentsLineage(
+                  Arrays.asList(
+                      Parent.newBuilder().setId(ID).build(),
+                      Parent.newBuilder().setId(SUB_EVENT_ID).build()))
               .build();
       writer.append(subEventCoreRecord2);
     }
@@ -308,6 +314,12 @@ public class EventToEsIndexPipelineIT {
             optionsWriter, AudubonTransform.builder().create(), EVENT_TERM, postfix)) {
       AudubonRecord audubonRecord = AudubonRecord.newBuilder().setId(ID).build();
       writer.append(audubonRecord);
+    }
+    try (SyncDataFileWriter<MeasurementOrFactRecord> writer =
+        InterpretedAvroWriter.createAvroWriter(
+            optionsWriter, MeasurementOrFactTransform.builder().create(), EVENT_TERM, postfix)) {
+      MeasurementOrFactRecord mofRecord = MeasurementOrFactRecord.newBuilder().setId(ID).build();
+      writer.append(mofRecord);
     }
 
     optionsWriter.setDwcCore(DwcTerm.Occurrence);
