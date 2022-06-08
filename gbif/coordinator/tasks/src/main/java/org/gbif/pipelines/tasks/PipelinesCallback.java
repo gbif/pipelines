@@ -110,12 +110,13 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
   public void handleMessage() {
 
     String datasetKey = message.getDatasetUuid().toString();
-    O outgoingMessage = handler.createOutgoingMessage(message);
     Optional<TrackingInfo> trackingInfo = Optional.empty();
 
     try (MDCCloseable mdc = MDC.putCloseable("datasetKey", datasetKey);
         MDCCloseable mdc1 = MDC.putCloseable("attempt", message.getAttempt().toString());
         MDCCloseable mdc2 = MDC.putCloseable("step", stepType.name())) {
+
+      O outgoingMessage = handler.createOutgoingMessage(message);
 
       if (!handler.isMessageCorrect(message) || isValidatorAborted()) {
         deleteValidatorZkPath(datasetKey);

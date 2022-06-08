@@ -5,7 +5,6 @@ import static org.gbif.pipelines.common.ValidatorPredicate.isValidator;
 import static org.gbif.pipelines.common.utils.PathUtil.buildDwcaInputPath;
 
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -25,7 +24,11 @@ import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage.ValidationResult;
 import org.gbif.common.messaging.api.messages.Platform;
 import org.gbif.converters.DwcaToAvroConverter;
+import org.gbif.dwc.Archive;
 import org.gbif.dwc.UnsupportedArchiveException;
+import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.Term;
+import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.DwcaUtils;
@@ -139,27 +142,41 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
   public PipelinesVerbatimMessage createOutgoingMessage(PipelinesDwcaMessage message) {
     Objects.requireNonNull(message.getEndpointType(), "endpointType can't be NULL!");
 
-    if (message.getPipelineSteps().isEmpty()) {
-      message.setPipelineSteps(
-          new HashSet<>(
-              Arrays.asList(
-                  StepType.DWCA_TO_VERBATIM.name(),
-                  StepType.VERBATIM_TO_IDENTIFIER.name(),
-                  StepType.VERBATIM_TO_INTERPRETED.name(),
-                  StepType.INTERPRETED_TO_INDEX.name(),
-                  StepType.HDFS_VIEW.name(),
-                  StepType.FRAGMENTER.name())));
-    }
-
-    // Calculates and checks existence of DwC Archive
     Set<String> interpretedTypes = config.interpretTypes;
     try {
       Path inputPath = buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid());
-      interpretedTypes = DwcaUtils.getExtensionAsTerms(DwcaUtils.fromLocation(inputPath));
+      Archive archive = DwcaUtils.fromLocation(inputPath);
+
+      if (message.getPipelineSteps().isEmpty()) {
+
+        HashSet<String> steps = new HashSet<>();
+
+        Term coreType = archive.getCore().getRowType();
+        boolean hasOccExt =
+            archive.getExtensions().stream().anyMatch(x -> x.getRowType() == DwcTerm.Occurrence);
+
+        if (coreType == DwcTerm.Occurrence || hasOccExt) {
+          steps.add(StepType.DWCA_TO_VERBATIM.name());
+          steps.add(StepType.VERBATIM_TO_IDENTIFIER.name());
+          steps.add(StepType.VERBATIM_TO_INTERPRETED.name());
+          steps.add(StepType.INTERPRETED_TO_INDEX.name());
+          steps.add(StepType.HDFS_VIEW.name());
+          steps.add(StepType.FRAGMENTER.name());
+        }
+        if (coreType == DwcTerm.Event) {
+          steps.add(StepType.EVENTS_VERBATIM_TO_INTERPRETED.name());
+          steps.add(StepType.EVENTS_INTERPRETED_TO_INDEX.name());
+        }
+
+        message.setPipelineSteps(steps);
+      }
+
+      // Calculates and checks existence of DwC Archive
+      interpretedTypes = DwcaUtils.getExtensionAsTerms(archive);
       interpretedTypes.addAll(getAllInterpretationAsString());
       interpretedTypes.remove(null);
     } catch (IllegalStateException | UnsupportedArchiveException ex) {
-      log.warn(ex.getMessage());
+      throw new PipelinesException(ex);
     }
 
     // Common variables
