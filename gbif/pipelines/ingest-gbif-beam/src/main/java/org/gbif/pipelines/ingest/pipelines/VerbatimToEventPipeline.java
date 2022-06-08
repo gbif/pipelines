@@ -41,6 +41,7 @@ import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
+import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.gbif.pipelines.transforms.specific.IdentifierTransform;
@@ -128,6 +129,8 @@ public class VerbatimToEventPipeline {
     ImageTransform imageTransform = transformsFactory.createImageTransform();
     EventCoreTransform eventCoreTransform = transformsFactory.createEventCoreTransform();
     IdentifierTransform identifierTransform = transformsFactory.createIdentifierTransform();
+    MeasurementOrFactTransform measurementOrFactTransform =
+        transformsFactory.createMeasurementOrFactTransform();
     log.info("Creating beam pipeline");
 
     // Create and write metadata
@@ -153,7 +156,7 @@ public class VerbatimToEventPipeline {
 
     // view with the records that have parents to find the hierarchy in the event core
     // interpretation later
-    PCollectionView<Map<String, String>> erWithParentEventsView =
+    PCollectionView<Map<String, Map<String, String>>> erWithParentEventsView =
         uniqueRawRecords
             .apply(
                 Filter.by(
@@ -196,6 +199,10 @@ public class VerbatimToEventPipeline {
     uniqueRawRecords
         .apply("Interpret event location", locationTransform.interpret(metadataView))
         .apply("Write event location to avro", locationTransform.write(pathFn));
+
+    uniqueRawRecords
+        .apply("Interpret event measurementOrFact", measurementOrFactTransform.interpret())
+        .apply("Write event measurementOrFact to avro", measurementOrFactTransform.write(pathFn));
 
     // Write filtered verbatim avro files
     uniqueRawRecords.apply("Write event verbatim to avro", verbatimTransform.write(pathFn));

@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +19,7 @@ import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.TestPipeline;
+import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
@@ -96,11 +98,26 @@ public class VerbatimToEventPipelineIT {
       core.put(DwcTerm.parentEventID.qualifiedName(), "parentEventID");
       core.put(DwcTerm.samplingProtocol.qualifiedName(), "samplingProtocol");
 
+      Map<String, String> ext1 = new HashMap<>();
+      ext1.put(DwcTerm.measurementID.qualifiedName(), "Id1");
+      ext1.put(DwcTerm.measurementType.qualifiedName(), "Type1");
+      ext1.put(DwcTerm.measurementValue.qualifiedName(), "1.5");
+      ext1.put(DwcTerm.measurementAccuracy.qualifiedName(), "Accurancy1");
+      ext1.put(DwcTerm.measurementUnit.qualifiedName(), "Unit1");
+      ext1.put(DwcTerm.measurementDeterminedBy.qualifiedName(), "By1");
+      ext1.put(DwcTerm.measurementMethod.qualifiedName(), "Method1");
+      ext1.put(DwcTerm.measurementRemarks.qualifiedName(), "Remarks1");
+      ext1.put(DwcTerm.measurementDeterminedDate.qualifiedName(), "2010/2011");
+
+      Map<String, List<Map<String, String>>> ext = new HashMap<>();
+      ext.put(Extension.MEASUREMENT_OR_FACT.getRowType(), Collections.singletonList(ext1));
+
       ExtendedRecord extendedRecord =
           ExtendedRecord.newBuilder()
               .setId(ID)
               .setCoreRowType(DwcTerm.Event.qualifiedName())
               .setCoreTerms(core)
+              .setExtensions(ext)
               .build();
 
       writer.append(extendedRecord);
@@ -120,10 +137,11 @@ public class VerbatimToEventPipelineIT {
 
     String interpretedOutput = String.join("/", outputFile, DATASET_KEY, attempt, "event");
 
-    assertEquals(10, new File(interpretedOutput).listFiles().length);
+    assertEquals(11, new File(interpretedOutput).listFiles().length);
     assertFile(IdentifierRecord.class, interpretedOutput + "/identifier");
     assertFile(ExtendedRecord.class, interpretedOutput + "/verbatim");
     assertFile(ExtendedRecord.class, interpretedOutput + "/event_core");
+    assertFile(ExtendedRecord.class, interpretedOutput + "/measurement_or_fact");
   }
 
   private <T extends SpecificRecordBase> void assertFile(Class<T> clazz, String output)

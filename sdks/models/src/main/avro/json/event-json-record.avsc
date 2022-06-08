@@ -1,6 +1,15 @@
 /** Represents the event json object for indexing */
 [
   {
+    "name" : "Parent",
+    "namespace" : "org.gbif.pipelines.io.avro.json",
+    "type" : "record",
+    "fields" : [
+      {"name": "id", "type": ["null", "string"], "default" : null, "doc":""},
+      {"name": "eventType", "type": ["null", "string"], "default" : null, "doc": ""}
+    ]
+  },
+  {
     "name":"EventJsonRecord",
     "namespace":"org.gbif.pipelines.io.avro.json",
     "type":"record",
@@ -16,7 +25,7 @@
       {"name":"lastCrawled","type":["null","string"],"default":null,"doc":""},
       {"name":"created","type":["null","string"],"default":null,"doc":""},
       {"name":"crawlId","type":["null","int"],"default":null,"doc":""},
-      {"name":"parentEventIds","type":{"type":"array","items":"string"},"default":null,"doc":""},
+      {"name": "parentsLineage", "type": {"type" : "array", "items" : "Parent"}, "default" : [], "doc":""},
       // Metadata
       {"name":"datasetKey","type":["null","string"],"default":null,"doc":""},
       {"name":"datasetTitle","type":["null","string"],"default":null,"doc":""},
@@ -87,6 +96,9 @@
       {"name":"mediaTypes","type":{"type":"array","items":"string"},"default":null,"doc":""},
       {"name":"mediaLicenses","type":{"type":"array","items":"string"},"default":null,"doc":""},
       {"name":"multimediaItems","type":{"type":"array","items":"Multimedia"},"default":null,"doc":""},
+      // MeasurementOrFact
+      {"name":"measurementOrFactTypes","type":{"type":"array","items":"string"},"default":null,"doc":""},
+      {"name":"measurementOrFactMethods","type":{"type":"array","items":"string"},"default":null,"doc":""},
       // Extra
       {"name":"issues","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"notIssues","type":{"type":"array","items":"string"},"default":[],"doc":""},
