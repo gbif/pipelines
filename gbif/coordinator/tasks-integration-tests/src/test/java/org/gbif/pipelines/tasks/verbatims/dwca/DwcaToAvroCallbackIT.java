@@ -125,7 +125,9 @@ public class DwcaToAvroCallbackIT {
 
     // Clean
     HdfsUtils.deleteDirectory(HdfsConfigs.create(null, null), path.toString());
-    curator.delete().deletingChildrenIfNeeded().forPath(getPipelinesInfoPath(crawlId, DWCA_LABEL));
+    if (checkExists(curator, crawlId, null)) {
+      curator.delete().deletingChildrenIfNeeded().forPath(getPipelinesInfoPath(crawlId, null));
+    }
   }
 
   @Test
@@ -171,7 +173,9 @@ public class DwcaToAvroCallbackIT {
 
     // Clean
     HdfsUtils.deleteDirectory(HdfsConfigs.create(null, null), path.toString());
-    curator.delete().deletingChildrenIfNeeded().forPath(getPipelinesInfoPath(crawlId, DWCA_LABEL));
+    if (checkExists(curator, crawlId, null)) {
+      curator.delete().deletingChildrenIfNeeded().forPath(getPipelinesInfoPath(crawlId, null));
+    }
   }
 
   @Test
@@ -217,7 +221,9 @@ public class DwcaToAvroCallbackIT {
 
     // Clean
     HdfsUtils.deleteDirectory(HdfsConfigs.create(null, null), path.toString());
-    curator.delete().deletingChildrenIfNeeded().forPath(getPipelinesInfoPath(crawlId, DWCA_LABEL));
+    if (checkExists(curator, crawlId, null)) {
+      curator.delete().deletingChildrenIfNeeded().forPath(getPipelinesInfoPath(crawlId, null));
+    }
   }
 
   @Ignore
@@ -264,7 +270,9 @@ public class DwcaToAvroCallbackIT {
 
     // Clean
     HdfsUtils.deleteDirectory(HdfsConfigs.create(null, null), path.toString());
-    curator.delete().deletingChildrenIfNeeded().forPath(getPipelinesInfoPath(crawlId, DWCA_LABEL));
+    if (checkExists(curator, crawlId, null)) {
+      curator.delete().deletingChildrenIfNeeded().forPath(getPipelinesInfoPath(crawlId, null));
+    }
   }
 
   @Test
@@ -310,6 +318,9 @@ public class DwcaToAvroCallbackIT {
 
     // Clean
     HdfsUtils.deleteDirectory(HdfsConfigs.create(null, null), path.toString());
+    if (checkExists(curator, crawlId, null)) {
+      curator.delete().deletingChildrenIfNeeded().forPath(getPipelinesInfoPath(crawlId, null));
+    }
   }
 
   @Test
@@ -348,12 +359,12 @@ public class DwcaToAvroCallbackIT {
     assertFalse(path.toFile().exists());
     assertTrue(checkExists(curator, crawlId, DWCA_LABEL));
     assertTrue(checkExists(curator, crawlId, Fn.ERROR_MESSAGE.apply(DWCA_LABEL)));
-    assertTrue(checkExists(curator, crawlId, Fn.MQ_CLASS_NAME.apply(DWCA_LABEL)));
-    assertTrue(checkExists(curator, crawlId, Fn.MQ_MESSAGE.apply(DWCA_LABEL)));
     assertTrue(publisher.getMessages().isEmpty());
 
     // Clean
-    curator.delete().deletingChildrenIfNeeded().forPath(getPipelinesInfoPath(crawlId, DWCA_LABEL));
+    if (checkExists(curator, crawlId, null)) {
+      curator.delete().deletingChildrenIfNeeded().forPath(getPipelinesInfoPath(crawlId, null));
+    }
   }
 
   @Test
