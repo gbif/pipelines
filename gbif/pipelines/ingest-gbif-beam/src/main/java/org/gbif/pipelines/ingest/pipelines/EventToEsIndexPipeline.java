@@ -347,7 +347,8 @@ public class EventToEsIndexPipeline {
 
       // Creates a Map of all events and its sub events
       PCollection<KV<String, TemporalRecord>> temporalRecordsOfSubEvents =
-          ParentEventExpandTransform.of(temporalTransform.getTag(), eventCoreTransform.getTag())
+          ParentEventExpandTransform.createTemporalTransform(
+                  temporalTransform.getTag(), eventCoreTransform.getTag())
               .toSubEventsRecords("Temporal", temporalCollection, eventCoreCollection);
 
       return PCollectionList.of(temporalCollection)
@@ -369,7 +370,8 @@ public class EventToEsIndexPipeline {
               .apply("Map occurrence events locations to KV", parentLocationTransform.toParentKv());
 
       PCollection<KV<String, LocationRecord>> locationRecordsOfSubEvents =
-          ParentEventExpandTransform.of(locationTransform.getTag(), eventCoreTransform.getTag())
+          ParentEventExpandTransform.createLocationTransform(
+                  locationTransform.getTag(), eventCoreTransform.getTag())
               .toSubEventsRecords("Location", locationCollection, eventCoreCollection);
 
       return PCollectionList.of(locationCollection)
@@ -391,7 +393,8 @@ public class EventToEsIndexPipeline {
               .apply("Map event occurrences taxon to KV", taxonomyTransform.toParentKv());
 
       PCollection<KV<String, TaxonRecord>> taxonRecordsOfSubEvents =
-          ParentEventExpandTransform.of(taxonomyTransform.getTag(), eventCoreTransform.getTag())
+          ParentEventExpandTransform.createTaxonTransform(
+                  taxonomyTransform.getTag(), eventCoreTransform.getTag())
               .toSubEventsRecords("Taxon", taxonCollection, eventCoreCollection);
 
       return PCollectionList.of(taxonCollection)

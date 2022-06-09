@@ -15,15 +15,65 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
+import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.Record;
+import org.gbif.pipelines.io.avro.TaxonRecord;
+import org.gbif.pipelines.io.avro.TemporalRecord;
 
 /**
  * Emits a list of Edge records for each parent id in the list EventCoreRecord.getParentEventIds.
  */
 @Data
 @AllArgsConstructor(staticName = "of")
-public class ParentEventExpandTransform<T extends SpecificRecordBase & Record>
+public abstract class ParentEventExpandTransform<T extends SpecificRecordBase & Record>
     implements Serializable {
+
+  /** Location parent transform. */
+  public static class LocationParentEventExpandTransform
+      extends ParentEventExpandTransform<LocationRecord> {
+
+    public LocationParentEventExpandTransform(
+        TupleTag<LocationRecord> recordTupleTag,
+        TupleTag<EventCoreRecord> eventCoreRecordTupleTag) {
+      super(recordTupleTag, eventCoreRecordTupleTag);
+    }
+  }
+
+  /** Temporal parent transform. */
+  public static class TemporalParentEventExpandTransform
+      extends ParentEventExpandTransform<TemporalRecord> {
+
+    public TemporalParentEventExpandTransform(
+        TupleTag<TemporalRecord> recordTupleTag,
+        TupleTag<EventCoreRecord> eventCoreRecordTupleTag) {
+      super(recordTupleTag, eventCoreRecordTupleTag);
+    }
+  }
+
+  /** Taxon parent transform. */
+  public static class TaxonParentEventExpandTransform
+      extends ParentEventExpandTransform<TaxonRecord> {
+
+    public TaxonParentEventExpandTransform(
+        TupleTag<TaxonRecord> recordTupleTag, TupleTag<EventCoreRecord> eventCoreRecordTupleTag) {
+      super(recordTupleTag, eventCoreRecordTupleTag);
+    }
+  }
+
+  public static TaxonParentEventExpandTransform createTaxonTransform(
+      TupleTag<TaxonRecord> recordTupleTag, TupleTag<EventCoreRecord> eventCoreRecordTupleTag) {
+    return new TaxonParentEventExpandTransform(recordTupleTag, eventCoreRecordTupleTag);
+  }
+
+  public static LocationParentEventExpandTransform createLocationTransform(
+      TupleTag<LocationRecord> recordTupleTag, TupleTag<EventCoreRecord> eventCoreRecordTupleTag) {
+    return new LocationParentEventExpandTransform(recordTupleTag, eventCoreRecordTupleTag);
+  }
+
+  public static TemporalParentEventExpandTransform createTemporalTransform(
+      TupleTag<TemporalRecord> recordTupleTag, TupleTag<EventCoreRecord> eventCoreRecordTupleTag) {
+    return new TemporalParentEventExpandTransform(recordTupleTag, eventCoreRecordTupleTag);
+  }
 
   /**
    * Graph edge to simplify the traversal of parent -> child relations.
