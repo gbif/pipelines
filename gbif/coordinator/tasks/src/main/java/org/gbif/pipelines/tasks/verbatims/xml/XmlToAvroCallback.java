@@ -1,6 +1,7 @@
 package org.gbif.pipelines.tasks.verbatims.xml;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.getAllInterpretationAsString;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.getAllValidatorInterpretationAsString;
 import static org.gbif.pipelines.common.ValidatorPredicate.isValidator;
 import static org.gbif.pipelines.common.utils.HdfsUtils.buildOutputPath;
 import static org.gbif.pipelines.common.utils.PathUtil.buildXmlInputPath;
@@ -10,6 +11,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import lombok.AllArgsConstructor;
@@ -149,10 +151,15 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
                   StepType.FRAGMENTER.name())));
     }
 
+    Set<String> allInterpretationAsString =
+        isValidator(message.getPipelineSteps(), config.validatorOnly)
+            ? getAllValidatorInterpretationAsString()
+            : getAllInterpretationAsString();
+
     return new PipelinesVerbatimMessage(
         message.getDatasetUuid(),
         message.getAttempt(),
-        getAllInterpretationAsString(),
+        allInterpretationAsString,
         message.getPipelineSteps(),
         null,
         message.getEndpointType(),

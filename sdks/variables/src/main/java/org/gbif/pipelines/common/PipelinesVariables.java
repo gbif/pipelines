@@ -130,6 +130,13 @@ public class PipelinesVariables {
           return getAllInterpretation().stream().map(RecordType::name).collect(Collectors.toSet());
         }
 
+        public static Set<String> getAllValidatorInterpretationAsString() {
+          Set<String> set = getAllInterpretationAsString();
+          set.add(IDENTIFIER.name());
+          set.remove(IDENTIFIER_ABSENT.name());
+          return set;
+        }
+
         public static Set<RecordType> getAllTables() {
           return new HashSet<>(
               Arrays.asList(

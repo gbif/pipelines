@@ -1,6 +1,7 @@
 package org.gbif.pipelines.tasks.verbatims.dwca;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.getAllInterpretationAsString;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.getAllValidatorInterpretationAsString;
 import static org.gbif.pipelines.common.ValidatorPredicate.isValidator;
 import static org.gbif.pipelines.common.utils.PathUtil.buildDwcaInputPath;
 
@@ -176,8 +177,13 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
       }
 
       // Calculates and checks existence of DwC Archive
+      Set<String> allInterpretationAsString =
+          isValidator(message.getPipelineSteps(), config.validatorOnly)
+              ? getAllValidatorInterpretationAsString()
+              : getAllInterpretationAsString();
+
       interpretedTypes = DwcaUtils.getExtensionAsTerms(archive);
-      interpretedTypes.addAll(getAllInterpretationAsString());
+      interpretedTypes.addAll(allInterpretationAsString);
       interpretedTypes.remove(null);
     } catch (IllegalStateException | UnsupportedArchiveException ex) {
       occurrenceFn.accept(steps);

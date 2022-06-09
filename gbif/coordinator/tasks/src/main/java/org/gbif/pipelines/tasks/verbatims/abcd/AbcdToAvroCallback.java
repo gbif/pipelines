@@ -1,6 +1,8 @@
 package org.gbif.pipelines.tasks.verbatims.abcd;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.getAllInterpretationAsString;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.getAllValidatorInterpretationAsString;
+import static org.gbif.pipelines.common.ValidatorPredicate.isValidator;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -10,6 +12,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -115,10 +118,15 @@ public class AbcdToAvroCallback extends AbstractMessageCallback<PipelinesAbcdMes
                   StepType.FRAGMENTER.name())));
     }
 
+    Set<String> allInterpretationAsString =
+        isValidator(message.getPipelineSteps(), config.validatorOnly)
+            ? getAllValidatorInterpretationAsString()
+            : getAllInterpretationAsString();
+
     return new PipelinesVerbatimMessage(
         message.getDatasetUuid(),
         message.getAttempt(),
-        getAllInterpretationAsString(),
+        allInterpretationAsString,
         message.getPipelineSteps(),
         null,
         message.getEndpointType(),
