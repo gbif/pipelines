@@ -31,6 +31,8 @@ import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MachineTag;
+import org.gbif.pipelines.io.avro.MeasurementOrFact;
+import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.MediaType;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.Multimedia;
@@ -49,6 +51,7 @@ import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
+import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.specific.IdentifierTransform;
 import org.junit.Rule;
@@ -245,6 +248,17 @@ public class ParentJsonTransformTest {
 
     DerivedMetadataRecord dmr = DerivedMetadataRecord.newBuilder().setId("777").build();
 
+    MeasurementOrFactRecord mofr =
+        MeasurementOrFactRecord.newBuilder()
+            .setId("777")
+            .setMeasurementOrFactItems(
+                Collections.singletonList(
+                    MeasurementOrFact.newBuilder()
+                        .setMeasurementType("sampling")
+                        .setMeasurementMethod("sample")
+                        .build()))
+            .build();
+
     // Core
     EventCoreTransform eventCoreTransform = EventCoreTransform.builder().create();
     IdentifierTransform identifierTransform = IdentifierTransform.builder().create();
@@ -257,6 +271,8 @@ public class ParentJsonTransformTest {
     MultimediaTransform multimediaTransform = MultimediaTransform.builder().create();
     AudubonTransform audubonTransform = AudubonTransform.builder().create();
     ImageTransform imageTransform = ImageTransform.builder().create();
+    MeasurementOrFactTransform measurementOrFactTransform =
+        MeasurementOrFactTransform.builder().create();
 
     // Derived metadata
     DerivedMetadataTransform derivedMetadataTransform =
@@ -310,6 +326,10 @@ public class ParentJsonTransformTest {
         p.apply("Read DerivedMetadataRecord", Create.of(dmr))
             .apply("Map DerivedMetadataRecord to KV", derivedMetadataTransform.toKv());
 
+    PCollection<KV<String, MeasurementOrFactRecord>> measurementOrFactCollection =
+        p.apply("Read MeasurementOrFactRecord", Create.of(mofr))
+            .apply("Map MeasurementOrFactRecord to KV", measurementOrFactTransform.toKv());
+
     SingleOutput<KV<String, CoGbkResult>, String> eventJsonDoFn =
         ParentJsonTransform.builder()
             .extendedRecordTag(verbatimTransform.getTag())
@@ -322,6 +342,7 @@ public class ParentJsonTransformTest {
             .imageRecordTag(imageTransform.getTag())
             .audubonRecordTag(audubonTransform.getTag())
             .derivedMetadataRecordTag(DerivedMetadataTransform.tag())
+            .measurementOrFactRecordTag(measurementOrFactTransform.getTag())
             .metadataView(metadataView)
             .build()
             .converter();
@@ -337,6 +358,7 @@ public class ParentJsonTransformTest {
             .and(multimediaTransform.getTag(), multimediaCollection)
             .and(imageTransform.getTag(), imageCollection)
             .and(audubonTransform.getTag(), audubonCollection)
+            .and(measurementOrFactTransform.getTag(), measurementOrFactCollection)
             // Internal
             .and(identifierTransform.getTag(), identifierCollection)
             // Raw
@@ -359,6 +381,7 @@ public class ParentJsonTransformTest {
             .multimedia(mmr)
             .verbatim(er)
             .derivedMetadata(dmr)
+            .measurementOrFactRecord(mofr)
             .build()
             .toJson();
 
