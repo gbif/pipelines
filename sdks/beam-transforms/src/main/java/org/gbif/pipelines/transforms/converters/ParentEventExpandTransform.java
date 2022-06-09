@@ -25,7 +25,7 @@ import org.gbif.pipelines.io.avro.TemporalRecord;
  */
 @Data
 @AllArgsConstructor(staticName = "of")
-public abstract class ParentEventExpandTransform<T extends SpecificRecordBase & Record>
+public class ParentEventExpandTransform<T extends SpecificRecordBase & Record>
     implements Serializable {
 
   /** Location parent transform. */
