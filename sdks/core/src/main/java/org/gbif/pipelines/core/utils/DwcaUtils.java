@@ -69,6 +69,11 @@ public class DwcaUtils {
   }
 
   @SneakyThrows
+  public static Archive fromLocationSkipValidation(Path path) {
+    return DwcFiles.fromLocationSkipValidation(path);
+  }
+
+  @SneakyThrows
   public static Archive fromCompressed(Path path, Path workingDir) {
     return DwcFiles.fromCompressed(path, workingDir);
   }

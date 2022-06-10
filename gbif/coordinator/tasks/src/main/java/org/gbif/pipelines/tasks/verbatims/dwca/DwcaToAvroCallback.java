@@ -156,8 +156,13 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
 
     HashSet<String> steps = new HashSet<>();
     try {
+      boolean isValidator = isValidator(message.getPipelineSteps(), config.validatorOnly);
+
       Path inputPath = buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid());
-      Archive archive = DwcaUtils.fromLocation(inputPath);
+      Archive archive =
+          isValidator
+              ? DwcaUtils.fromLocationSkipValidation(inputPath)
+              : DwcaUtils.fromLocation(inputPath);
 
       if (message.getPipelineSteps().isEmpty()) {
 
@@ -178,9 +183,7 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
 
       // Calculates and checks existence of DwC Archive
       Set<String> allInterpretationAsString =
-          isValidator(message.getPipelineSteps(), config.validatorOnly)
-              ? getAllValidatorInterpretationAsString()
-              : getAllInterpretationAsString();
+          isValidator ? getAllValidatorInterpretationAsString() : getAllInterpretationAsString();
 
       interpretedTypes = DwcaUtils.getExtensionAsTerms(archive);
       interpretedTypes.addAll(allInterpretationAsString);
