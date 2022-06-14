@@ -1,12 +1,13 @@
 package org.gbif.pipelines.ingest.pipelines;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.*;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.EVENT;
 
 import java.util.function.Function;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.io.avro.AudubonRecord;
@@ -60,16 +61,16 @@ import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
  */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class OccurrenceToHdfsViewPipeline {
+public class EventToHdfsViewPipeline {
 
   public static void main(String[] args) {
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
-    HdfsViewPipeline.run(options, OCCURRENCE);
+    HdfsViewPipeline.run(options, RecordType.EVENT);
   }
 
   public static void run(
       InterpretationPipelineOptions options,
       Function<InterpretationPipelineOptions, Pipeline> pipelinesFn) {
-    HdfsViewPipeline.run(options, pipelinesFn, OCCURRENCE);
+    HdfsViewPipeline.run(options, pipelinesFn, EVENT);
   }
 }

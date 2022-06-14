@@ -52,7 +52,7 @@ import org.gbif.pipelines.io.avro.TaxonProfile;
 @Slf4j
 public class SpeciesListPipeline {
 
-  private static final DwcTerm CORE_TERM = DwcTerm.Occurrence;
+  private static final DwcTerm coreTerm = DwcTerm.Occurrence;
 
   public static void main(String[] args) throws Exception {
     VersionInfo.print();
@@ -107,7 +107,7 @@ public class SpeciesListPipeline {
 
       log.info("Running species list pipeline for dataset {}", options.getDatasetId());
       UnaryOperator<String> pathFn =
-          t -> PathBuilder.buildPathInterpretUsingTargetPath(options, CORE_TERM, t, ALL_AVRO);
+          t -> PathBuilder.buildPathInterpretUsingTargetPath(options, coreTerm, t, ALL_AVRO);
 
       HdfsConfigs hdfsConfigs =
           HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig());

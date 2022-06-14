@@ -45,7 +45,7 @@ import org.junit.runners.JUnit4;
 @Category(NeedsRunner.class)
 public class InterpretedToEsIndexPipelineIT {
 
-  private static final DwcTerm CORE_TERM = DwcTerm.Event;
+  private static final DwcTerm coreTerm = DwcTerm.Event;
 
   private static final String ID = "777";
 
@@ -83,7 +83,7 @@ public class InterpretedToEsIndexPipelineIT {
 
     try (SyncDataFileWriter<ExtendedRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
-            optionsWriter, VerbatimTransform.create(), CORE_TERM, postfix)) {
+            optionsWriter, VerbatimTransform.create(), coreTerm, postfix)) {
 
       Map<String, String> core = new HashMap<>();
       core.put(DwcTerm.datasetID.qualifiedName(), "datasetID");
@@ -104,50 +104,50 @@ public class InterpretedToEsIndexPipelineIT {
     }
     try (SyncDataFileWriter<IdentifierRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
-            optionsWriter, IdentifierTransform.builder().create(), CORE_TERM, postfix)) {
+            optionsWriter, IdentifierTransform.builder().create(), coreTerm, postfix)) {
       IdentifierRecord identifierRecord =
           IdentifierRecord.newBuilder().setId(ID).setInternalId(ID).build();
       writer.append(identifierRecord);
     }
     try (SyncDataFileWriter<EventCoreRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
-            optionsWriter, EventCoreTransform.builder().create(), CORE_TERM, postfix)) {
+            optionsWriter, EventCoreTransform.builder().create(), coreTerm, postfix)) {
       EventCoreRecord eventCoreRecord = EventCoreRecord.newBuilder().setId(ID).build();
       writer.append(eventCoreRecord);
     }
     try (SyncDataFileWriter<MetadataRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
-            optionsWriter, MetadataTransform.builder().create(), CORE_TERM, postfix)) {
+            optionsWriter, MetadataTransform.builder().create(), coreTerm, postfix)) {
       MetadataRecord metadataRecord = MetadataRecord.newBuilder().setId(ID).build();
       writer.append(metadataRecord);
     }
     try (SyncDataFileWriter<TemporalRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
-            optionsWriter, TemporalTransform.builder().create(), CORE_TERM, postfix)) {
+            optionsWriter, TemporalTransform.builder().create(), coreTerm, postfix)) {
       TemporalRecord temporalRecord = TemporalRecord.newBuilder().setId(ID).build();
       writer.append(temporalRecord);
     }
     try (SyncDataFileWriter<LocationRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
-            optionsWriter, LocationTransform.builder().create(), CORE_TERM, postfix)) {
+            optionsWriter, LocationTransform.builder().create(), coreTerm, postfix)) {
       LocationRecord locationRecord = LocationRecord.newBuilder().setId(ID).build();
       writer.append(locationRecord);
     }
     try (SyncDataFileWriter<MultimediaRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
-            optionsWriter, MultimediaTransform.builder().create(), CORE_TERM, postfix)) {
+            optionsWriter, MultimediaTransform.builder().create(), coreTerm, postfix)) {
       MultimediaRecord multimediaRecord = MultimediaRecord.newBuilder().setId(ID).build();
       writer.append(multimediaRecord);
     }
     try (SyncDataFileWriter<ImageRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
-            optionsWriter, ImageTransform.builder().create(), CORE_TERM, postfix)) {
+            optionsWriter, ImageTransform.builder().create(), coreTerm, postfix)) {
       ImageRecord imageRecord = ImageRecord.newBuilder().setId(ID).build();
       writer.append(imageRecord);
     }
     try (SyncDataFileWriter<AudubonRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
-            optionsWriter, AudubonTransform.builder().create(), CORE_TERM, postfix)) {
+            optionsWriter, AudubonTransform.builder().create(), coreTerm, postfix)) {
       AudubonRecord audubonRecord = AudubonRecord.newBuilder().setId(ID).build();
       writer.append(audubonRecord);
     }

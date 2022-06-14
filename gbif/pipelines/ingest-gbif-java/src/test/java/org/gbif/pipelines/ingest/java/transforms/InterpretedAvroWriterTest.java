@@ -17,7 +17,7 @@ import org.junit.Test;
 
 public class InterpretedAvroWriterTest {
 
-  private static final DwcTerm CORE_TERM = DwcTerm.Occurrence;
+  private static final DwcTerm coreTerm = DwcTerm.Occurrence;
 
   @Test
   public void writerTest() throws IOException {
@@ -29,7 +29,7 @@ public class InterpretedAvroWriterTest {
     String id = "id";
 
     String outputFile =
-        getClass().getResource("/").getFile() + "/" + CORE_TERM.simpleName().toLowerCase();
+        getClass().getResource("/").getFile() + "/" + coreTerm.simpleName().toLowerCase();
 
     String[] args = {
       "--datasetId=d596fccb-2319-42eb-b13b-986c932780ad",
@@ -42,7 +42,7 @@ public class InterpretedAvroWriterTest {
 
     // When
     try (SyncDataFileWriter<BasicRecord> writer =
-        InterpretedAvroWriter.createAvroWriter(options, basicTransform, CORE_TERM, id)) {
+        InterpretedAvroWriter.createAvroWriter(options, basicTransform, coreTerm, id)) {
       writer.append(basicRecord);
     }
 

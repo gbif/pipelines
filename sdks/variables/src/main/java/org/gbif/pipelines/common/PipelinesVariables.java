@@ -7,6 +7,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.gbif.dwc.terms.DwcTerm;
 
 /** Simple class with constants, general idea to have clean jar with constant only */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -63,7 +64,7 @@ public class PipelinesVariables {
         LOCATION,
         TAXONOMY,
         GRSCICOLL,
-        EVENT_CORE,
+        EVENT,
         // Extension types
         IMAGE,
         MULTIMEDIA,
@@ -96,6 +97,13 @@ public class PipelinesVariables {
         CHRONOMETRIC_DATE_TABLE,
         REFERENCE_TABLE,
         IDENTIFIER_TABLE;
+
+        public DwcTerm getCoreTerm() {
+          if (EVENT == this) {
+            return DwcTerm.Event;
+          }
+          return DwcTerm.Occurrence;
+        }
 
         @Override
         public String all() {

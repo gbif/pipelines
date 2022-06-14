@@ -75,7 +75,7 @@ public class InterpretedMessageHandler {
 
     if (m.getDatasetType() == DatasetType.SAMPLING_EVENT) {
       Set<String> interpretationTypes = new HashSet<>(m.getInterpretTypes());
-      interpretationTypes.add(RecordType.EVENT_CORE.name());
+      interpretationTypes.add(RecordType.EVENT.name());
 
       PipelinesEventsMessage eventsMessage =
           new PipelinesEventsMessage(

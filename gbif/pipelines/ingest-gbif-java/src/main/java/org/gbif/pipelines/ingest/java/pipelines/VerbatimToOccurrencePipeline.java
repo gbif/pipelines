@@ -102,7 +102,7 @@ import org.slf4j.MDC;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class VerbatimToOccurrencePipeline {
 
-  private static final DwcTerm CORE_TERM = DwcTerm.Occurrence;
+  private static final DwcTerm coreTerm = DwcTerm.Occurrence;
 
   public static void main(String[] args) {
     run(args);
@@ -143,7 +143,7 @@ public class VerbatimToOccurrencePipeline {
     Set<String> deleteTypes = new HashSet<>(types);
     deleteTypes.remove(IDENTIFIER_ABSENT.name());
     FsUtils.deleteInterpretIfExist(
-        hdfsConfigs, targetPath, datasetId, attempt, CORE_TERM, deleteTypes);
+        hdfsConfigs, targetPath, datasetId, attempt, coreTerm, deleteTypes);
 
     MDC.put("datasetKey", datasetId);
     MDC.put("attempt", attempt.toString());
@@ -186,7 +186,7 @@ public class VerbatimToOccurrencePipeline {
         metadataWriter.append(mdr);
       } else if (useMetadataRecordReadIO(types)) {
         mdr =
-            InterpretedAvroReader.readAvroUseTargetPath(options, CORE_TERM, metadataTr)
+            InterpretedAvroReader.readAvroUseTargetPath(options, coreTerm, metadataTr)
                 .get(options.getDatasetId());
       } else {
         mdr = null;
@@ -209,12 +209,12 @@ public class VerbatimToOccurrencePipeline {
       } else {
         log.info("Skip GBIF IDs interpretation and reading GBIF IDs from avro files...");
         Map<String, GbifIdRecord> idRecordMap =
-            InterpretedAvroReader.readAvroUseTargetPath(options, CORE_TERM, gbifIdTr);
+            InterpretedAvroReader.readAvroUseTargetPath(options, coreTerm, gbifIdTr);
         Map<String, GbifIdRecord> absentIdRecordMap = new HashMap<>();
 
         if (useAbsentGbifIdReadIO(types)) {
           InterpretedAvroReader.readAvroUseTargetPath(
-                  options, gbifIdTr, CORE_TERM, gbifIdTr.getAbsentName())
+                  options, gbifIdTr, coreTerm, gbifIdTr.getAbsentName())
               .forEach(
                   (k, v) -> {
                     Consumer<GbifIdRecord> fn = gir -> absentIdRecordMap.put(k, gir);
@@ -248,23 +248,23 @@ public class VerbatimToOccurrencePipeline {
 
       if (useGbifIdWriteIO(types) || useAbsentGbifIdReadIO(types)) {
         FsUtils.deleteInterpretIfExist(
-            hdfsConfigs, targetPath, datasetId, attempt, CORE_TERM, gbifIdTr.getAllNames());
+            hdfsConfigs, targetPath, datasetId, attempt, coreTerm, gbifIdTr.getAllNames());
       }
 
-      try (var gbifIdWriter = createAvroWriter(options, gbifIdTr, CORE_TERM, postfix);
-          var verbatimWriter = createAvroWriter(options, verbatimTr, CORE_TERM, postfix);
-          var clusteringWriter = createAvroWriter(options, clusteringTr, CORE_TERM, postfix);
-          var basicWriter = createAvroWriter(options, basicTr, CORE_TERM, postfix);
-          var temporalWriter = createAvroWriter(options, temporalTr, CORE_TERM, postfix);
-          var multimediaWriter = createAvroWriter(options, multimediaTr, CORE_TERM, postfix);
-          var imageWriter = createAvroWriter(options, imageTr, CORE_TERM, postfix);
-          var audubonWriter = createAvroWriter(options, audubonTr, CORE_TERM, postfix);
-          var taxonWriter = createAvroWriter(options, taxonomyTr, CORE_TERM, postfix);
-          var grscicollWriter = createAvroWriter(options, grscicollTr, CORE_TERM, postfix);
-          var locationWriter = createAvroWriter(options, locationTr, CORE_TERM, postfix);
+      try (var gbifIdWriter = createAvroWriter(options, gbifIdTr, coreTerm, postfix);
+          var verbatimWriter = createAvroWriter(options, verbatimTr, coreTerm, postfix);
+          var clusteringWriter = createAvroWriter(options, clusteringTr, coreTerm, postfix);
+          var basicWriter = createAvroWriter(options, basicTr, coreTerm, postfix);
+          var temporalWriter = createAvroWriter(options, temporalTr, coreTerm, postfix);
+          var multimediaWriter = createAvroWriter(options, multimediaTr, coreTerm, postfix);
+          var imageWriter = createAvroWriter(options, imageTr, coreTerm, postfix);
+          var audubonWriter = createAvroWriter(options, audubonTr, coreTerm, postfix);
+          var taxonWriter = createAvroWriter(options, taxonomyTr, coreTerm, postfix);
+          var grscicollWriter = createAvroWriter(options, grscicollTr, coreTerm, postfix);
+          var locationWriter = createAvroWriter(options, locationTr, coreTerm, postfix);
           var gbifIdInvalidWriter =
               createAvroWriter(
-                  options, gbifIdTr, CORE_TERM, postfix, gbifIdTr.getBaseInvalidName())) {
+                  options, gbifIdTr, coreTerm, postfix, gbifIdTr.getBaseInvalidName())) {
 
         // Create interpretation function
         Consumer<ExtendedRecord> interpretAllFn =

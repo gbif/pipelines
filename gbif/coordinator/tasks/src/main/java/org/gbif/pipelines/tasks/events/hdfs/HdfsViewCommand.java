@@ -1,4 +1,4 @@
-package org.gbif.pipelines.tasks.occurrences.hdfs;
+package org.gbif.pipelines.tasks.events.hdfs;
 
 import com.google.common.util.concurrent.Service;
 import java.util.concurrent.ExecutorService;
@@ -6,8 +6,8 @@ import org.apache.curator.framework.CuratorFramework;
 import org.gbif.cli.Command;
 import org.gbif.cli.service.ServiceCommand;
 import org.gbif.common.messaging.api.MessagePublisher;
-import org.gbif.common.messaging.api.messages.PipelinesHdfsViewBuiltMessage;
-import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
+import org.gbif.common.messaging.api.messages.PipelinesEventsHdfsViewBuiltMessage;
+import org.gbif.common.messaging.api.messages.PipelinesEventsInterpretedMessage;
 import org.gbif.pipelines.common.hdfs.HdfsViewConfiguration;
 import org.gbif.pipelines.common.hdfs.HdfsViewService;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
@@ -23,12 +23,13 @@ public class HdfsViewCommand extends ServiceCommand {
   private final HdfsViewConfiguration config = new HdfsViewConfiguration();
 
   public HdfsViewCommand() {
-    super("pipelines-occurrence-hdfs-view");
+    super("pipelines-events-hdfs-view");
   }
 
   @Override
   protected Service getService() {
-    return new HdfsViewService<PipelinesInterpretedMessage, PipelinesHdfsViewBuiltMessage>(
+    return new HdfsViewService<
+        PipelinesEventsInterpretedMessage, PipelinesEventsHdfsViewBuiltMessage>(
         config, HdfsViewCommand::createCallBack);
   }
 
@@ -37,12 +38,13 @@ public class HdfsViewCommand extends ServiceCommand {
     return config;
   }
 
-  public static OccurrenceHdfsViewCallback createCallBack(
+  public static EventsOccurrenceHdfsViewCallback createCallBack(
       HdfsViewConfiguration config,
       MessagePublisher publisher,
       CuratorFramework curator,
       PipelinesHistoryClient historyClient,
       ExecutorService executor) {
-    return new OccurrenceHdfsViewCallback(config, publisher, curator, historyClient, executor);
+    return new EventsOccurrenceHdfsViewCallback(
+        config, publisher, curator, historyClient, executor);
   }
 }

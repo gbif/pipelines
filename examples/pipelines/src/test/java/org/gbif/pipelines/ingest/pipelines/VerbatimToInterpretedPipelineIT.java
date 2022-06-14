@@ -41,7 +41,7 @@ import org.junit.runners.JUnit4;
 @Category(NeedsRunner.class)
 public class VerbatimToInterpretedPipelineIT {
 
-  private static final DwcTerm CORE_TERM = DwcTerm.Event;
+  private static final DwcTerm coreTerm = DwcTerm.Event;
 
   private static final String ID = "777";
   private static final String DATASET_KEY = UUID.randomUUID().toString();
@@ -73,8 +73,7 @@ public class VerbatimToInterpretedPipelineIT {
 
     // Create varbatim.avro
     try (SyncDataFileWriter<ExtendedRecord> writer =
-        InterpretedAvroWriter.createAvroWriter(
-            options, VerbatimTransform.create(), CORE_TERM, ID)) {
+        InterpretedAvroWriter.createAvroWriter(options, VerbatimTransform.create(), coreTerm, ID)) {
 
       Map<String, String> core = new HashMap<>();
       core.put(DwcTerm.datasetID.qualifiedName(), "datasetID");

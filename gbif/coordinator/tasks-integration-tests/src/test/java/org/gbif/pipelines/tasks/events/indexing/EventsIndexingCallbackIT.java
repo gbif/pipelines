@@ -95,7 +95,7 @@ public class EventsIndexingCallbackIT {
             null,
             EXECUTION_ID,
             EndpointType.DWC_ARCHIVE,
-            Collections.singleton(RecordType.EVENT_CORE.name()),
+            Collections.singleton(RecordType.EVENT.name()),
             false,
             null);
 

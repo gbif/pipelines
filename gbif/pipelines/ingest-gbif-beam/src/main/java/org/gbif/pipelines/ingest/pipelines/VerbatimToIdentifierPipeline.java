@@ -31,7 +31,7 @@ import org.slf4j.MDC;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class VerbatimToIdentifierPipeline {
 
-  private static final DwcTerm CORE_TERM = DwcTerm.Occurrence;
+  private static final DwcTerm coreTerm = DwcTerm.Occurrence;
 
   public static void main(String[] args) {
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
@@ -62,7 +62,7 @@ public class VerbatimToIdentifierPipeline {
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
     UnaryOperator<String> pathFn =
-        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, CORE_TERM, t, id);
+        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, coreTerm, t, id);
 
     log.info("Creating a pipeline from options");
     Pipeline p = pipelinesFn.apply(options);
@@ -81,7 +81,7 @@ public class VerbatimToIdentifierPipeline {
     GbifIdTupleTransform tupleTransform = GbifIdTupleTransform.create();
 
     FsUtils.deleteInterpretIfExist(
-        hdfsConfigs, targetPath, datasetId, attempt, CORE_TERM, idTransform.getAllNames());
+        hdfsConfigs, targetPath, datasetId, attempt, coreTerm, idTransform.getAllNames());
 
     log.info("Creating beam pipeline");
 
@@ -119,7 +119,7 @@ public class VerbatimToIdentifierPipeline {
 
     log.info("Set interpreted files permissions");
     String interpretedPath =
-        PathBuilder.buildDatasetAttemptPath(options, CORE_TERM.simpleName(), false);
+        PathBuilder.buildDatasetAttemptPath(options, coreTerm.simpleName(), false);
     FsUtils.setOwnerToCrap(hdfsConfigs, interpretedPath);
 
     log.info("Pipeline has been finished");

@@ -12,6 +12,7 @@ import org.gbif.pipelines.core.converters.MultimediaConverter;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
+import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.GbifIdRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
@@ -39,6 +40,7 @@ public class OccurrenceHdfsRecordConverter {
   @NonNull private final Map<String, MultimediaRecord> multimediaMap;
   @NonNull private final Map<String, ImageRecord> imageMap;
   @NonNull private final Map<String, AudubonRecord> audubonMap;
+  private Map<String, EventCoreRecord> eventCoreRecordMap;
 
   /** Join all records, convert into OccurrenceHdfsRecord and save as an avro file */
   public Function<GbifIdRecord, Optional<OccurrenceHdfsRecord>> getFn() {
@@ -64,22 +66,27 @@ public class OccurrenceHdfsRecordConverter {
 
       metrics.incMetric(AVRO_TO_HDFS_COUNT);
 
-      OccurrenceHdfsRecord hdfsRecord =
-          org.gbif.pipelines.core.converters.OccurrenceHdfsRecordConverter.builder()
-              .gbifIdRecord(id)
-              .basicRecord(br)
-              .clusteringRecord(cr)
-              .metadataRecord(metadata)
-              .temporalRecord(tr)
-              .locationRecord(lr)
-              .taxonRecord(txr)
-              .grscicollRecord(gr)
-              .multimediaRecord(mmr)
-              .extendedRecord(er)
-              .build()
-              .convert();
+      org.gbif.pipelines.core.converters.OccurrenceHdfsRecordConverter
+              .OccurrenceHdfsRecordConverterBuilder
+          hdfsRecord =
+              org.gbif.pipelines.core.converters.OccurrenceHdfsRecordConverter.builder()
+                  .gbifIdRecord(id)
+                  .basicRecord(br)
+                  .clusteringRecord(cr)
+                  .metadataRecord(metadata)
+                  .temporalRecord(tr)
+                  .locationRecord(lr)
+                  .taxonRecord(txr)
+                  .grscicollRecord(gr)
+                  .multimediaRecord(mmr)
+                  .extendedRecord(er);
 
-      return Optional.of(hdfsRecord);
+      if (eventCoreRecordMap != null) {
+        hdfsRecord.eventCoreRecord(
+            eventCoreRecordMap.getOrDefault(k, EventCoreRecord.newBuilder().setId(k).build()));
+      }
+
+      return Optional.of(hdfsRecord.build().convert());
     };
   }
 }

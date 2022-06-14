@@ -99,7 +99,7 @@ import org.slf4j.MDC;
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ALAVerbatimToInterpretedPipeline {
-  private static final DwcTerm CORE_TERM = DwcTerm.Occurrence;
+  private static final DwcTerm coreTerm = DwcTerm.Occurrence;
 
   public static void main(String[] args) throws IOException {
     VersionInfo.print();
@@ -137,7 +137,7 @@ public class ALAVerbatimToInterpretedPipeline {
     log.info("hdfsSiteConfig = " + hdfsConfigs.getHdfsSiteConfig());
     log.info("coreSiteConfig = " + hdfsConfigs.getCoreSiteConfig());
 
-    FsUtils.deleteInterpretIfExist(hdfsConfigs, targetPath, datasetId, attempt, CORE_TERM, types);
+    FsUtils.deleteInterpretIfExist(hdfsConfigs, targetPath, datasetId, attempt, coreTerm, types);
 
     ALAPipelinesConfig config =
         ALAPipelinesConfigFactory.getInstance(hdfsConfigs, options.getProperties()).get();
@@ -150,7 +150,7 @@ public class ALAVerbatimToInterpretedPipeline {
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
     UnaryOperator<String> pathFn =
-        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, CORE_TERM, t, id);
+        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, coreTerm, t, id);
 
     log.info("Creating a pipeline from options");
 

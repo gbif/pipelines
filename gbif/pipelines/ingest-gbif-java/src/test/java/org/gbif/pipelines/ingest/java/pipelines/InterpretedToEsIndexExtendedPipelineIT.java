@@ -45,7 +45,7 @@ import org.junit.Test;
 
 public class InterpretedToEsIndexExtendedPipelineIT {
 
-  private static final DwcTerm CORE_TERM = DwcTerm.Occurrence;
+  private static final DwcTerm coreTerm = DwcTerm.Occurrence;
 
   private static final String ID = "777";
 
@@ -84,7 +84,7 @@ public class InterpretedToEsIndexExtendedPipelineIT {
 
     try (SyncDataFileWriter<ExtendedRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
-            optionsWriter, VerbatimTransform.create(), CORE_TERM, postfix)) {
+            optionsWriter, VerbatimTransform.create(), coreTerm, postfix)) {
       Map<String, String> ext1 = new HashMap<>();
       ext1.put(DwcTerm.measurementID.qualifiedName(), "Id1");
       ext1.put(DwcTerm.measurementType.qualifiedName(), "Type1");
@@ -105,67 +105,67 @@ public class InterpretedToEsIndexExtendedPipelineIT {
     }
     try (SyncDataFileWriter<GbifIdRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
-            optionsWriter, GbifIdTransform.builder().create(), CORE_TERM, postfix)) {
+            optionsWriter, GbifIdTransform.builder().create(), coreTerm, postfix)) {
       GbifIdRecord gbifIdRecord = GbifIdRecord.newBuilder().setId(ID).setGbifId(1L).build();
       writer.append(gbifIdRecord);
     }
     try (SyncDataFileWriter<BasicRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
-            optionsWriter, BasicTransform.builder().create(), CORE_TERM, postfix)) {
+            optionsWriter, BasicTransform.builder().create(), coreTerm, postfix)) {
       BasicRecord basicRecord = BasicRecord.newBuilder().setId(ID).build();
       writer.append(basicRecord);
     }
     try (SyncDataFileWriter<ClusteringRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
-            optionsWriter, ClusteringTransform.builder().create(), CORE_TERM, postfix)) {
+            optionsWriter, ClusteringTransform.builder().create(), coreTerm, postfix)) {
       ClusteringRecord clusteringRecord = ClusteringRecord.newBuilder().setId(ID).build();
       writer.append(clusteringRecord);
     }
     try (SyncDataFileWriter<MetadataRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
-            optionsWriter, MetadataTransform.builder().create(), CORE_TERM, postfix)) {
+            optionsWriter, MetadataTransform.builder().create(), coreTerm, postfix)) {
       MetadataRecord metadataRecord = MetadataRecord.newBuilder().setId(ID).build();
       writer.append(metadataRecord);
     }
     try (SyncDataFileWriter<TemporalRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
-            optionsWriter, TemporalTransform.builder().create(), CORE_TERM, postfix)) {
+            optionsWriter, TemporalTransform.builder().create(), coreTerm, postfix)) {
       TemporalRecord temporalRecord = TemporalRecord.newBuilder().setId(ID).build();
       writer.append(temporalRecord);
     }
     try (SyncDataFileWriter<LocationRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
-            optionsWriter, LocationTransform.builder().create(), CORE_TERM, postfix)) {
+            optionsWriter, LocationTransform.builder().create(), coreTerm, postfix)) {
       LocationRecord locationRecord = LocationRecord.newBuilder().setId(ID).build();
       writer.append(locationRecord);
     }
     try (SyncDataFileWriter<TaxonRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
-            optionsWriter, TaxonomyTransform.builder().create(), CORE_TERM, postfix)) {
+            optionsWriter, TaxonomyTransform.builder().create(), coreTerm, postfix)) {
       TaxonRecord taxonRecord = TaxonRecord.newBuilder().setId(ID).build();
       writer.append(taxonRecord);
     }
     try (SyncDataFileWriter<GrscicollRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
-            optionsWriter, GrscicollTransform.builder().create(), CORE_TERM, postfix)) {
+            optionsWriter, GrscicollTransform.builder().create(), coreTerm, postfix)) {
       GrscicollRecord grscicollRecord = GrscicollRecord.newBuilder().setId(ID).build();
       writer.append(grscicollRecord);
     }
     try (SyncDataFileWriter<MultimediaRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
-            optionsWriter, MultimediaTransform.builder().create(), CORE_TERM, postfix)) {
+            optionsWriter, MultimediaTransform.builder().create(), coreTerm, postfix)) {
       MultimediaRecord multimediaRecord = MultimediaRecord.newBuilder().setId(ID).build();
       writer.append(multimediaRecord);
     }
     try (SyncDataFileWriter<ImageRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
-            optionsWriter, ImageTransform.builder().create(), CORE_TERM, postfix)) {
+            optionsWriter, ImageTransform.builder().create(), coreTerm, postfix)) {
       ImageRecord imageRecord = ImageRecord.newBuilder().setId(ID).build();
       writer.append(imageRecord);
     }
     try (SyncDataFileWriter<AudubonRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
-            optionsWriter, AudubonTransform.builder().create(), CORE_TERM, postfix)) {
+            optionsWriter, AudubonTransform.builder().create(), coreTerm, postfix)) {
       AudubonRecord audubonRecord = AudubonRecord.newBuilder().setId(ID).build();
       writer.append(audubonRecord);
     }

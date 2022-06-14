@@ -82,7 +82,7 @@ import org.slf4j.MDC;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class InterpretedToParentIndexPipeline {
 
-  private static final DwcTerm CORE_TERM = DwcTerm.Event;
+  private static final DwcTerm coreTerm = DwcTerm.Event;
 
   public static void main(String[] args) {
     EsIndexingPipelineOptions options = PipelinesOptionsFactory.createIndexing(args);
@@ -106,7 +106,7 @@ public class InterpretedToParentIndexPipeline {
 
     log.info("Adding step 1: Options");
     UnaryOperator<String> pathFn =
-        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, CORE_TERM, t, ALL_AVRO);
+        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, coreTerm, t, ALL_AVRO);
 
     options.setAppName("Event indexing of " + options.getDatasetId());
     Pipeline p = pipelinesFn.apply(options);

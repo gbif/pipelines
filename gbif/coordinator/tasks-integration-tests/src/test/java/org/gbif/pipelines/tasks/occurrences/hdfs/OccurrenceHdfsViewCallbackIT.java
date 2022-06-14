@@ -25,6 +25,7 @@ import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
+import org.gbif.pipelines.common.hdfs.HdfsViewConfiguration;
 import org.gbif.pipelines.common.utils.ZookeeperUtils;
 import org.gbif.pipelines.tasks.MessagePublisherStub;
 import org.gbif.pipelines.tasks.utils.ZkServer;
@@ -36,7 +37,7 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-public class HdfsViewCallbackIT {
+public class OccurrenceHdfsViewCallbackIT {
 
   private static final String LABEL = StepType.HDFS_VIEW.getLabel();
   private static final String DATASET_UUID = "9bed66b3-4caa-42bb-9c93-71d7ba109dad";
@@ -84,8 +85,8 @@ public class HdfsViewCallbackIT {
 
     ExecutorService executor = Executors.newSingleThreadExecutor();
 
-    HdfsViewCallback callback =
-        new HdfsViewCallback(config, publisher, curator, historyClient, executor);
+    OccurrenceHdfsViewCallback callback =
+        new OccurrenceHdfsViewCallback(config, publisher, curator, historyClient, executor);
 
     UUID uuid = UUID.fromString(DATASET_UUID);
     int attempt = 60;
@@ -163,8 +164,8 @@ public class HdfsViewCallbackIT {
 
     ExecutorService executor = Executors.newSingleThreadExecutor();
 
-    HdfsViewCallback callback =
-        new HdfsViewCallback(config, publisher, curator, historyClient, executor);
+    OccurrenceHdfsViewCallback callback =
+        new OccurrenceHdfsViewCallback(config, publisher, curator, historyClient, executor);
 
     PipelinesInterpretedMessage message = createMessage(uuid, attempt);
     message.setPipelineSteps(Collections.singleton(StepType.INTERPRETED_TO_INDEX.name()));
@@ -186,8 +187,8 @@ public class HdfsViewCallbackIT {
     HdfsViewConfiguration config = createConfig();
     ExecutorService executor = Executors.newSingleThreadExecutor();
 
-    HdfsViewCallback callback =
-        new HdfsViewCallback(config, publisher, curator, historyClient, executor);
+    OccurrenceHdfsViewCallback callback =
+        new OccurrenceHdfsViewCallback(config, publisher, curator, historyClient, executor);
 
     PipelinesInterpretedMessage message = createMessage(uuid, attempt);
     message.setOnlyForStep(StepType.HDFS_VIEW.name()); // Wrong type

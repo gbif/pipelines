@@ -11,6 +11,7 @@ import org.gbif.pipelines.ingest.java.metrics.IngestMetricsBuilder;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
+import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.GbifIdRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
@@ -45,6 +46,7 @@ public class OccurrenceHdfsRecordConverterTest {
     MultimediaRecord multimediaRecord = MultimediaRecord.newBuilder().setId(ID).build();
     ImageRecord imageRecord = ImageRecord.newBuilder().setId(ID).build();
     AudubonRecord audubonRecord = AudubonRecord.newBuilder().setId(ID).build();
+    EventCoreRecord eventCoreRecord = EventCoreRecord.newBuilder().setId(ID).build();
 
     // When
     Optional<OccurrenceHdfsRecord> hdfsRecord =
@@ -61,6 +63,7 @@ public class OccurrenceHdfsRecordConverterTest {
             .multimediaMap(Collections.singletonMap(ID, multimediaRecord))
             .imageMap(Collections.singletonMap(ID, imageRecord))
             .audubonMap(Collections.singletonMap(ID, audubonRecord))
+            .eventCoreRecordMap(Collections.singletonMap(ID, eventCoreRecord))
             .build()
             .getFn()
             .apply(idRecord);

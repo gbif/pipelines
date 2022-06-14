@@ -1,10 +1,11 @@
-package org.gbif.pipelines.tasks.occurrences.hdfs;
+package org.gbif.pipelines.common.hdfs;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParametersDelegate;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.ToString;
+import org.gbif.api.model.pipelines.StepType;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.configs.BaseConfiguration;
 import org.gbif.pipelines.common.configs.DistributedConfiguration;
@@ -49,6 +50,13 @@ public class HdfsViewConfiguration implements BaseConfiguration {
 
   @Parameter(names = "--use-beam-deprecated-read")
   public boolean useBeamDeprecatedRead = true;
+
+  @Parameter(names = "--step-type")
+  public StepType stepType = StepType.HDFS_VIEW;
+
+  @Parameter(names = "--record-type")
+  public Pipeline.Interpretation.RecordType recordType =
+      Pipeline.Interpretation.RecordType.OCCURRENCE;
 
   @Override
   public String getHdfsSiteConfig() {

@@ -135,7 +135,7 @@ public class EventsIndexingCallback
             message.getDatasetUuid().toString(),
             Integer.toString(message.getAttempt()),
             DwcTerm.Event.simpleName().toLowerCase(),
-            RecordType.EVENT_CORE.name().toLowerCase());
+            RecordType.EVENT.name().toLowerCase());
 
     SparkSettings sparkSettings =
         SparkSettings.create(config.sparkConfig, config.stepConfig, filePath, recordsNumber);

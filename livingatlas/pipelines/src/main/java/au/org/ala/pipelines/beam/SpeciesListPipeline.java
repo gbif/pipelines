@@ -47,7 +47,7 @@ import org.gbif.pipelines.io.avro.*;
 @Slf4j
 public class SpeciesListPipeline {
 
-  private static final DwcTerm CORE_TERM = DwcTerm.Occurrence;
+  private static final DwcTerm coreTerm = DwcTerm.Occurrence;
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
 
@@ -100,7 +100,7 @@ public class SpeciesListPipeline {
 
     log.info("Running species list pipeline for dataset {}", options.getDatasetId());
     UnaryOperator<String> pathFn =
-        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, CORE_TERM, t, ALL_AVRO);
+        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, coreTerm, t, ALL_AVRO);
 
     // now lets start the pipelines
     PCollection<SpeciesListRecord> speciesLists =
