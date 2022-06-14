@@ -688,6 +688,8 @@
   <copyField source="dataResourceName" dest="text"/>
   <copyField source="dataResourceUid" dest="text"/>
   <copyField source="eventID" dest="text"/>
+  <copyField source="parentEventID" dest="text"/>
+  <copyField source="datesetName" dest="text"/>
   <copyField source="family" dest="text"/>
   <copyField source="genus" dest="text"/>
   <copyField source="id" dest="text"/>
