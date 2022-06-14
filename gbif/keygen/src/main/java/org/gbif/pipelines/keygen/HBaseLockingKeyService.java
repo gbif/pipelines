@@ -6,9 +6,11 @@ import com.google.common.annotations.VisibleForTesting;
 import java.io.Serializable;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeMap;
@@ -47,7 +49,7 @@ import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
 @Slf4j
 public class HBaseLockingKeyService implements HBaseLockingKey, Serializable {
 
-  private static final long serialVersionUID = -3128096563237268386L;
+  private static final long serialVersionUID = -3128096563237268387L;
 
   private static final long WAIT_BEFORE_RETRY_MS = 250; // wait when collision
   private static final int WAIT_SKEW = 100; // randomises wait to reduce races
@@ -341,6 +343,32 @@ public class HBaseLockingKeyService implements HBaseLockingKey, Serializable {
   @Override
   public KeyLookupResult findKey(Set<String> uniqueStrings) {
     return findKey(uniqueStrings, datasetId);
+  }
+
+  @Override
+  public Optional<KeyLookupResult> migrate(String oldLookupKey, String newLookupKey, String scope) {
+    KeyLookupResult existingKey = findKey(Collections.singleton(oldLookupKey), scope);
+    if (existingKey != null) {
+      OccurrenceKeyBuilder.buildKeys(Collections.singleton(newLookupKey), scope)
+          .forEach(
+              lookupKey ->
+                  lookupTableStore.putLongString(
+                      lookupKey,
+                      Columns.LOOKUP_KEY_COLUMN,
+                      existingKey.getKey(),
+                      Columns.LOOKUP_STATUS_COLUMN,
+                      KeyStatus.ALLOCATED.toString()));
+      deleteKeyByUniques(Collections.singleton(oldLookupKey), scope);
+      return Optional.of(existingKey);
+    } else {
+      log.warn("Can't find GBIF ID for datasetKey {}, occurrenceID {}", scope, oldLookupKey);
+      return Optional.empty();
+    }
+  }
+
+  @Override
+  public Optional<KeyLookupResult> migrate(String oldLookupKey, String newLookupKey) {
+    return migrate(oldLookupKey, newLookupKey, datasetId);
   }
 
   @SneakyThrows

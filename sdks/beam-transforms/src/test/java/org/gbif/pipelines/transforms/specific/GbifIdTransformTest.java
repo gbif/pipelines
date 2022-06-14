@@ -5,6 +5,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Identifier.G
 import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
 
 import java.util.Collections;
+import java.util.Optional;
 import java.util.Set;
 import lombok.AllArgsConstructor;
 import org.apache.beam.sdk.testing.NeedsRunner;
@@ -64,6 +65,17 @@ public class GbifIdTransformTest {
     @Override
     public KeyLookupResult findKey(Set<String> uniqueStrings) {
       return generateKey(uniqueStrings, scope);
+    }
+
+    @Override
+    public Optional<KeyLookupResult> migrate(
+        String oldLookupKey, String newLookupKey, String scope) {
+      return Optional.empty();
+    }
+
+    @Override
+    public Optional<KeyLookupResult> migrate(String oldLookupKey, String newLookupKey) {
+      return Optional.empty();
     }
 
     @Override

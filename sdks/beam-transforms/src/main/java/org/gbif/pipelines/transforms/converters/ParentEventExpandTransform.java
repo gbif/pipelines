@@ -1,9 +1,11 @@
 package org.gbif.pipelines.transforms.converters;
 
 import java.io.Serializable;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.apache.avro.specific.SpecificRecordBase;
+import org.apache.beam.sdk.coders.AvroCoder;
+import org.apache.beam.sdk.coders.KvCoder;
+import org.apache.beam.sdk.coders.StringUtf8Coder;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -14,6 +16,8 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TypeDescriptor;
+import org.gbif.pipelines.common.beam.coders.EdgeCoder;
+import org.gbif.pipelines.core.pojo.Edge;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.Record;
@@ -24,7 +28,6 @@ import org.gbif.pipelines.io.avro.TemporalRecord;
  * Emits a list of Edge records for each parent id in the list EventCoreRecord.getParentEventIds.
  */
 @Data
-@AllArgsConstructor(staticName = "of")
 public class ParentEventExpandTransform<T extends SpecificRecordBase & Record>
     implements Serializable {
 
@@ -35,7 +38,7 @@ public class ParentEventExpandTransform<T extends SpecificRecordBase & Record>
     public LocationParentEventExpandTransform(
         TupleTag<LocationRecord> recordTupleTag,
         TupleTag<EventCoreRecord> eventCoreRecordTupleTag) {
-      super(recordTupleTag, eventCoreRecordTupleTag);
+      super(recordTupleTag, eventCoreRecordTupleTag, LocationRecord.class);
     }
   }
 
@@ -46,7 +49,7 @@ public class ParentEventExpandTransform<T extends SpecificRecordBase & Record>
     public TemporalParentEventExpandTransform(
         TupleTag<TemporalRecord> recordTupleTag,
         TupleTag<EventCoreRecord> eventCoreRecordTupleTag) {
-      super(recordTupleTag, eventCoreRecordTupleTag);
+      super(recordTupleTag, eventCoreRecordTupleTag, TemporalRecord.class);
     }
   }
 
@@ -56,7 +59,7 @@ public class ParentEventExpandTransform<T extends SpecificRecordBase & Record>
 
     public TaxonParentEventExpandTransform(
         TupleTag<TaxonRecord> recordTupleTag, TupleTag<EventCoreRecord> eventCoreRecordTupleTag) {
-      super(recordTupleTag, eventCoreRecordTupleTag);
+      super(recordTupleTag, eventCoreRecordTupleTag, TaxonRecord.class);
     }
   }
 
@@ -75,23 +78,20 @@ public class ParentEventExpandTransform<T extends SpecificRecordBase & Record>
     return new TemporalParentEventExpandTransform(recordTupleTag, eventCoreRecordTupleTag);
   }
 
-  /**
-   * Graph edge to simplify the traversal of parent -> child relations.
-   *
-   * @param <E> content of the relation between fromId to toId
-   */
-  @Data
-  @AllArgsConstructor(staticName = "of")
-  public static class Edge<E> implements Serializable {
-
-    private String fromId;
-    private String toId;
-    private E record;
-  }
-
   private final TupleTag<T> recordTupleTag;
 
   private final TupleTag<EventCoreRecord> eventCoreRecordTupleTag;
+
+  private final EdgeCoder<T> edgeCoder;
+
+  public ParentEventExpandTransform(
+      TupleTag<T> recordTupleTag,
+      TupleTag<EventCoreRecord> eventCoreRecordTupleTag,
+      Class<T> recordClass) {
+    this.recordTupleTag = recordTupleTag;
+    this.eventCoreRecordTupleTag = eventCoreRecordTupleTag;
+    this.edgeCoder = EdgeCoder.of(AvroCoder.of(recordClass));
+  }
 
   public ParDo.SingleOutput<KV<String, CoGbkResult>, Edge<T>> converter() {
     return ParDo.of(
@@ -113,7 +113,7 @@ public class ParentEventExpandTransform<T extends SpecificRecordBase & Record>
   /** Creates a KV.of(Edge.fromId,T). */
   public MapElements<Edge<T>, KV<String, T>> asKv() {
     return MapElements.into(new TypeDescriptor<KV<String, T>>() {})
-        .via((Edge<T> e) -> KV.of(e.fromId, e.record));
+        .via((Edge<T> e) -> KV.of(e.getFromId(), e.getRecord()));
   }
 
   public PCollection<KV<String, T>> toSubEventsRecords(
@@ -124,6 +124,8 @@ public class ParentEventExpandTransform<T extends SpecificRecordBase & Record>
         .and(recordTupleTag, recordPCollection)
         .apply("Grouping " + recordName + " and event records", CoGroupByKey.create())
         .apply("Collects " + recordName + " records in graph edges", converter())
-        .apply("Converts the edge to parentId -> " + recordName + " record", asKv());
+        .setCoder(edgeCoder)
+        .apply("Converts the edge to parentId -> " + recordName + " record", asKv())
+        .setCoder(KvCoder.of(StringUtf8Coder.of(), edgeCoder.getRecordCoder()));
   }
 }

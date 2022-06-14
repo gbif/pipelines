@@ -158,17 +158,17 @@
     <testcontainers.elasticsearch.version>1.17.2</testcontainers.elasticsearch.version>
 
     <!-- Maven plugin -->
-    <maven-plugin-api.version>3.5.4</maven-plugin-api.version>
-    <maven-plugin-annotations.version>3.5.2</maven-plugin-annotations.version>
+    <maven-plugin-api.version>3.8.6</maven-plugin-api.version>
+    <maven-plugin-annotations.version>3.6.4</maven-plugin-annotations.version>
 
     <!-- Plugins -->
-    <build-helper-maven.version>3.0.0</build-helper-maven.version>
-    <maven-shade-plugin.version>3.2.1</maven-shade-plugin.version>
-    <maven-clean-plugin.version>3.1.0</maven-clean-plugin.version>
-    <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
-    <maven-plugin-plugin.version>3.6.0</maven-plugin-plugin.version>
-    <maven-javadoc-plugin.version>3.2.0</maven-javadoc-plugin.version>
-    <spotless-maven-plugin.version>2.0.1</spotless-maven-plugin.version>
+    <build-helper-maven.version>3.3.0</build-helper-maven.version>
+    <maven-shade-plugin.version>3.3.0</maven-shade-plugin.version>
+    <maven-clean-plugin.version>3.2.0</maven-clean-plugin.version>
+    <maven-compiler-plugin.version>3.10.1</maven-compiler-plugin.version>
+    <maven-plugin-plugin.version>3.6.4</maven-plugin-plugin.version>
+    <maven-javadoc-plugin.version>3.4.0</maven-javadoc-plugin.version>
+    <spotless-maven-plugin.version>2.22.8</spotless-maven-plugin.version>
     <io.fabric8.version>0.33.0</io.fabric8.version>
 
     <!-- Checkstyle -->
@@ -240,6 +240,11 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
+          <configuration>
+            <compilerArgs>
+              <arg>-XepDisableAllChecks</arg>
+            </compilerArgs>
+          </configuration>
         </plugin>
         <plugin>
           <groupId>org.jacoco</groupId>
