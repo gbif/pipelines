@@ -26,7 +26,7 @@ public class Keygen {
       boolean generateIfAbsent,
       OccurrenceRecord record) {
 
-    Set<String> uniqueStrings = new HashSet<>(2);
+    Set<String> uniqueStrings = new HashSet<>(1);
 
     // Adds occurrenceId
     if (useOccurrenceId) {
@@ -36,8 +36,8 @@ public class Keygen {
       }
     }
 
-    // Adds triplet
-    if (useTriplet) {
+    // Adds triplet, if useTriplet and useOccurrenceId is false, or occurrenceId is null
+    if (useTriplet && uniqueStrings.isEmpty()) {
       String ic = record.getInstitutionCode();
       String cc = record.getCollectionCode();
       String cn = record.getCatalogNumber();

@@ -89,15 +89,15 @@ public class GbifIdInterpreter {
   public static Consumer<GbifIdRecord> interpretAbsentGbifId(
       HBaseLockingKey keygenService, boolean isTripletValid, boolean isOccurrenceIdValid) {
     return gr -> {
-      Set<String> uniqueStrings = new HashSet<>(2);
+      Set<String> uniqueStrings = new HashSet<>(1);
 
       // Adds occurrenceId
       if (isOccurrenceIdValid && !Strings.isNullOrEmpty(gr.getOccurrenceId())) {
         uniqueStrings.add(gr.getOccurrenceId());
       }
 
-      // Adds triplet
-      if (isTripletValid && !Strings.isNullOrEmpty(gr.getTriplet())) {
+      // Adds triplet, if isTripletValid and isOccurrenceIdValid is false, or occurrenceId is null
+      if (isTripletValid && !Strings.isNullOrEmpty(gr.getTriplet()) && uniqueStrings.isEmpty()) {
         uniqueStrings.add(gr.getTriplet());
       }
 
