@@ -415,31 +415,45 @@ public class JsonConverter {
         switch (rank) {
           case KINGDOM:
             classificationBuilder.setKingdom(rankedName.getName());
-            classificationBuilder.setKingdomKey(rankedName.getKey());
+            Optional.ofNullable(rankedName.getKey())
+                .map(String::valueOf)
+                .ifPresent(classificationBuilder::setKingdomKey);
             break;
           case PHYLUM:
             classificationBuilder.setPhylum(rankedName.getName());
-            classificationBuilder.setPhylumKey(rankedName.getKey());
+            Optional.ofNullable(rankedName.getKey())
+                .map(String::valueOf)
+                .ifPresent(classificationBuilder::setPhylumKey);
             break;
           case CLASS:
             classificationBuilder.setClass$(rankedName.getName());
-            classificationBuilder.setClassKey(rankedName.getKey());
+            Optional.ofNullable(rankedName.getKey())
+                .map(String::valueOf)
+                .ifPresent(classificationBuilder::setClassKey);
             break;
           case ORDER:
             classificationBuilder.setOrder(rankedName.getName());
-            classificationBuilder.setOrderKey(rankedName.getKey());
+            Optional.ofNullable(rankedName.getKey())
+                .map(String::valueOf)
+                .ifPresent(classificationBuilder::setOrderKey);
             break;
           case FAMILY:
             classificationBuilder.setFamily(rankedName.getName());
-            classificationBuilder.setFamilyKey(rankedName.getKey());
+            Optional.ofNullable(rankedName.getKey())
+                .map(String::valueOf)
+                .ifPresent(classificationBuilder::setFamilyKey);
             break;
           case GENUS:
             classificationBuilder.setGenus(rankedName.getName());
-            classificationBuilder.setGenusKey(rankedName.getKey());
+            Optional.ofNullable(rankedName.getKey())
+                .map(String::valueOf)
+                .ifPresent(classificationBuilder::setGenusKey);
             break;
           case SPECIES:
             classificationBuilder.setSpecies(rankedName.getName());
-            classificationBuilder.setSpeciesKey(rankedName.getKey());
+            Optional.ofNullable(rankedName.getKey())
+                .map(String::valueOf)
+                .ifPresent(classificationBuilder::setSpeciesKey);
             break;
           default:
             // NOP
@@ -473,7 +487,7 @@ public class JsonConverter {
     return Optional.of("_" + pathJoiner);
   }
 
-  public static List<Integer> convertTaxonKey(TaxonRecord taxonRecord) {
+  public static List<String> convertTaxonKey(TaxonRecord taxonRecord) {
     if (taxonRecord.getClassification() == null || taxonRecord.getClassification().isEmpty()) {
       return Collections.emptyList();
     }
@@ -486,6 +500,7 @@ public class JsonConverter {
     taxonRecord.getClassification().stream()
         .map(org.gbif.pipelines.io.avro.RankedName::getKey)
         .forEach(taxonKey::add);
-    return new ArrayList<>(taxonKey);
+
+    return taxonKey.stream().map(String::valueOf).collect(Collectors.toList());
   }
 }
