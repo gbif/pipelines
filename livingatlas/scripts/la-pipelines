@@ -305,7 +305,7 @@ ARGS="$ARGS $FS_PATH_ARG"
 
 COLLECTORY_WS_URL=$(getConf collectory.wsUrl);
 COLLECTORY_WS_API_KEY=$(getConf collectory.httpHeaders.Authorization);
-COPY_DEST=$(getConf general.copyPath)
+COPY_DEST=$(getConf copy.copyPath)
 
 # Uncomment this to debug log4j
 # if ( $debug) ; then EXTRA_JVM_CLI_ARGS="-Dlog4j.debug"; fi
