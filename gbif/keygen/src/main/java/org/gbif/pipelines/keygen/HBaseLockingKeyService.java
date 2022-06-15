@@ -6,7 +6,6 @@ import com.google.common.annotations.VisibleForTesting;
 import java.io.Serializable;
 import java.security.SecureRandom;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -243,12 +242,7 @@ public class HBaseLockingKeyService implements HBaseLockingKey, Serializable {
     // write the key and update status to ALLOCATED
     for (Map.Entry<String, KeyStatus> entry : statusMap.entrySet()) {
       if (entry.getValue() == KeyStatus.ALLOCATING) {
-        lookupTableStore.putLongString(
-            entry.getKey(),
-            Columns.LOOKUP_KEY_COLUMN,
-            key,
-            Columns.LOOKUP_STATUS_COLUMN,
-            KeyStatus.ALLOCATED.toString());
+        putKey(entry.getKey(), key);
       }
     }
 
@@ -289,11 +283,11 @@ public class HBaseLockingKeyService implements HBaseLockingKey, Serializable {
   }
 
   @Override
-  public KeyLookupResult findKey(Set<String> uniqueStrings, String scope) {
+  public Optional<KeyLookupResult> findKey(Set<String> uniqueStrings, String scope) {
     checkNotNull(uniqueStrings, "uniqueStrings can't be null");
     checkNotNull(scope, "scope can't be null");
     if (uniqueStrings.isEmpty()) {
-      return null;
+      return Optional.empty();
     }
 
     Set<String> lookupKeys = OccurrenceKeyBuilder.buildKeys(uniqueStrings, scope);
@@ -337,38 +331,11 @@ public class HBaseLockingKeyService implements HBaseLockingKey, Serializable {
       result = new KeyLookupResult(resultKey, false);
     }
 
-    return result;
+    return Optional.ofNullable(result);
   }
 
-  @Override
-  public KeyLookupResult findKey(Set<String> uniqueStrings) {
+  public Optional<KeyLookupResult> findKey(Set<String> uniqueStrings) {
     return findKey(uniqueStrings, datasetId);
-  }
-
-  @Override
-  public Optional<KeyLookupResult> migrate(String oldLookupKey, String newLookupKey, String scope) {
-    KeyLookupResult existingKey = findKey(Collections.singleton(oldLookupKey), scope);
-    if (existingKey != null) {
-      OccurrenceKeyBuilder.buildKeys(Collections.singleton(newLookupKey), scope)
-          .forEach(
-              lookupKey ->
-                  lookupTableStore.putLongString(
-                      lookupKey,
-                      Columns.LOOKUP_KEY_COLUMN,
-                      existingKey.getKey(),
-                      Columns.LOOKUP_STATUS_COLUMN,
-                      KeyStatus.ALLOCATED.toString()));
-      deleteKeyByUniques(Collections.singleton(oldLookupKey), scope);
-      return Optional.of(existingKey);
-    } else {
-      log.warn("Can't find GBIF ID for datasetKey {}, occurrenceID {}", scope, oldLookupKey);
-      return Optional.empty();
-    }
-  }
-
-  @Override
-  public Optional<KeyLookupResult> migrate(String oldLookupKey, String newLookupKey) {
-    return migrate(oldLookupKey, newLookupKey, datasetId);
   }
 
   @SneakyThrows
@@ -481,6 +448,15 @@ public class HBaseLockingKeyService implements HBaseLockingKey, Serializable {
   public void deleteKeyByUniques(Set<String> uniqueStrings) {
     deleteKeyByUniques(uniqueStrings, datasetId);
     log.info("Lookup keys deleted: {}", String.join(",", uniqueStrings));
+  }
+
+  public void putKey(String lookupKey, long gbifId) {
+    lookupTableStore.putLongString(
+        lookupKey,
+        Columns.LOOKUP_KEY_COLUMN,
+        gbifId,
+        Columns.LOOKUP_STATUS_COLUMN,
+        KeyStatus.ALLOCATED.toString());
   }
 
   @SneakyThrows

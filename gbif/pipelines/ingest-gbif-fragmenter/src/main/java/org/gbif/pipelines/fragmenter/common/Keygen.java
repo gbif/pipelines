@@ -48,19 +48,19 @@ public class Keygen {
       return ERROR_KEY;
     }
 
-    KeyLookupResult keyResult = null;
+    Optional<KeyLookupResult> keyResult = Optional.empty();
     try {
       // Finds or generates key
       keyResult = keygenService.findKey(uniqueStrings);
-      if (keyResult == null && generateIfAbsent) {
+      if (!keyResult.isPresent() && generateIfAbsent) {
         log.error("GBIF ID wasn't found, generating a new key.");
-        keyResult = keygenService.generateKey(uniqueStrings);
+        keyResult = Optional.of(keygenService.generateKey(uniqueStrings));
       }
     } catch (RuntimeException ex) {
       log.error(ex.getMessage(), ex);
     }
 
-    return Optional.ofNullable(keyResult).map(KeyLookupResult::getKey).orElse(ERROR_KEY);
+    return keyResult.map(KeyLookupResult::getKey).orElse(ERROR_KEY);
   }
 
   public static String getSaltedKey(Long key) {

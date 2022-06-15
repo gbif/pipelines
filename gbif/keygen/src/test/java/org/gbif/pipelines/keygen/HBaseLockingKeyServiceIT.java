@@ -3,7 +3,6 @@ package org.gbif.pipelines.keygen;
 import static org.gbif.pipelines.keygen.HBaseLockingKeyService.NUMBER_OF_BUCKETS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
@@ -108,9 +107,10 @@ public class HBaseLockingKeyServiceIT {
     assertEquals(1, result.getKey());
     assertTrue(result.isCreated());
 
-    KeyLookupResult result2 = keyService.findKey(uniqueIds, "boo");
-    assertEquals(1, result2.getKey());
-    assertFalse(result2.isCreated());
+    Optional<KeyLookupResult> result2 = keyService.findKey(uniqueIds, "boo");
+    assertTrue(result2.isPresent());
+    assertEquals(1, result2.get().getKey());
+    assertFalse(result2.get().isCreated());
   }
 
   @Test
@@ -271,44 +271,6 @@ public class HBaseLockingKeyServiceIT {
     }
     KeyLookupResult result = keyService.generateKey(Collections.singleton("asdf"), "wqer");
     assertEquals(5001, result.getKey());
-  }
-
-  @Test
-  public void testLookupKeyMigration() {
-    // State
-    String datasetKey = UUID.randomUUID().toString();
-    String oldOccurrenceId = "oldOccurrenceId";
-    String newOccurrenceId = "newOccurrenceId";
-
-    // When
-    KeyLookupResult oldKey =
-        keyService.generateKey(Collections.singleton(oldOccurrenceId), datasetKey);
-    Optional<KeyLookupResult> migratedKey =
-        keyService.migrate(oldOccurrenceId, newOccurrenceId, datasetKey);
-    KeyLookupResult newKey = keyService.findKey(Collections.singleton(newOccurrenceId), datasetKey);
-    KeyLookupResult oldExpiriedKey =
-        keyService.findKey(Collections.singleton(oldOccurrenceId), datasetKey);
-
-    // Should
-    assertTrue(migratedKey.isPresent());
-    assertEquals(oldKey.getKey(), migratedKey.get().getKey());
-    assertEquals(oldKey.getKey(), newKey.getKey());
-    assertNull(oldExpiriedKey);
-  }
-
-  @Test
-  public void testNullLookupKeyMigration() {
-    // State
-    String datasetKey = UUID.randomUUID().toString();
-    String oldOccurrenceId = "oldOccurrenceId";
-    String newOccurrenceId = "newOccurrenceId";
-
-    // When
-    Optional<KeyLookupResult> migratedKey =
-        keyService.migrate(oldOccurrenceId, newOccurrenceId, datasetKey);
-
-    // Should
-    assertFalse(migratedKey.isPresent());
   }
 
   private static class KeyRequester implements Runnable {
