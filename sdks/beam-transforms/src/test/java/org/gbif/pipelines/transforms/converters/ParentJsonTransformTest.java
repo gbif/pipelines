@@ -21,7 +21,7 @@ import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.core.converters.ParentJsonConverter;
+import org.gbif.pipelines.core.converters.specific.GbifParentJsonConverter;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.EventDate;
@@ -371,7 +371,7 @@ public class ParentJsonTransformTest {
 
     // Should
     String json =
-        ParentJsonConverter.builder()
+        GbifParentJsonConverter.builder()
             .metadata(mr)
             .eventCore(ecr)
             .identifier(ir)
