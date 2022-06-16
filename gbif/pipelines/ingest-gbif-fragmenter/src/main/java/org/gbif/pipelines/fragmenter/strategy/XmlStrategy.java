@@ -13,8 +13,8 @@ import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import org.gbif.converters.parser.xml.OccurrenceParser;
 import org.gbif.converters.parser.xml.parsing.extendedrecord.ParserFileUtils;
-import org.gbif.pipelines.fragmenter.record.OccurrenceRecord;
 import org.gbif.pipelines.fragmenter.record.XmlOccurrenceRecord;
+import org.gbif.pipelines.keygen.OccurrenceRecord;
 
 /** Processing strategy for XML based archives */
 @NoArgsConstructor(staticName = "create")

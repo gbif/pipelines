@@ -8,8 +8,9 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.converters.parser.xml.parsing.validators.UniquenessValidator;
-import org.gbif.pipelines.fragmenter.common.Keygen;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
+import org.gbif.pipelines.keygen.Keygen;
+import org.gbif.pipelines.keygen.OccurrenceRecord;
 
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)

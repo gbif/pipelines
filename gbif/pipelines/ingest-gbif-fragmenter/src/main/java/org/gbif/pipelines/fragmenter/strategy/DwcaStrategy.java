@@ -16,7 +16,7 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.fragmenter.common.StarRecordCopy;
 import org.gbif.pipelines.fragmenter.record.DwcaExtensionOccurrenceRecord;
 import org.gbif.pipelines.fragmenter.record.DwcaOccurrenceRecord;
-import org.gbif.pipelines.fragmenter.record.OccurrenceRecord;
+import org.gbif.pipelines.keygen.OccurrenceRecord;
 import org.gbif.utils.file.ClosableIterator;
 
 /** Processing strategy for DWCA archives */

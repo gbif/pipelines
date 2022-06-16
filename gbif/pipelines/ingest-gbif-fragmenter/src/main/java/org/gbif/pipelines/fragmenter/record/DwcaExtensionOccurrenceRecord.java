@@ -3,6 +3,7 @@ package org.gbif.pipelines.fragmenter.record;
 import com.google.common.base.Strings;
 import java.io.IOException;
 import java.util.Map;
+import java.util.Optional;
 import java.util.TreeMap;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
@@ -13,6 +14,8 @@ import org.codehaus.jackson.map.SerializationConfig;
 import org.gbif.dwc.record.Record;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
+import org.gbif.pipelines.keygen.OccurrenceRecord;
+import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
 
 @Slf4j
 @AllArgsConstructor(staticName = "create")
@@ -30,23 +33,20 @@ public class DwcaExtensionOccurrenceRecord implements OccurrenceRecord {
   @NonNull private final Record occurrenceExtension;
 
   @Override
-  public String getInstitutionCode() {
-    return getTerm(DwcTerm.institutionCode);
+  public Optional<String> getTriplet() {
+    String ic = getTerm(DwcTerm.institutionCode);
+    String cc = getTerm(DwcTerm.collectionCode);
+    String cn = getTerm(DwcTerm.catalogNumber);
+    return OccurrenceKeyBuilder.buildKey(ic, cc, cn);
   }
 
   @Override
-  public String getCollectionCode() {
-    return getTerm(DwcTerm.collectionCode);
-  }
-
-  @Override
-  public String getCatalogNumber() {
-    return getTerm(DwcTerm.catalogNumber);
-  }
-
-  @Override
-  public String getOccurrenceId() {
-    return getTerm(DwcTerm.occurrenceID);
+  public Optional<String> getOccurrenceId() {
+    String term = getTerm(DwcTerm.occurrenceID);
+    if (term == null || term.isEmpty()) {
+      return Optional.empty();
+    }
+    return Optional.of(term);
   }
 
   @Override
