@@ -38,4 +38,9 @@ public class OccurrenceHdfsViewCallback
       ExecutorService executor) {
     return new OccurrenceHdfsViewCallback(config, publisher, curator, historyClient, executor);
   }
+
+  @Override
+  public String routingKey() {
+    return PipelinesHdfsViewBuiltMessage.ROUTING_KEY;
+  }
 }

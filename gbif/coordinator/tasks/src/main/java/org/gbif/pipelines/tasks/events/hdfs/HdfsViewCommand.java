@@ -6,8 +6,6 @@ import org.apache.curator.framework.CuratorFramework;
 import org.gbif.cli.Command;
 import org.gbif.cli.service.ServiceCommand;
 import org.gbif.common.messaging.api.MessagePublisher;
-import org.gbif.common.messaging.api.messages.PipelinesEventsHdfsViewBuiltMessage;
-import org.gbif.common.messaging.api.messages.PipelinesEventsInterpretedMessage;
 import org.gbif.pipelines.common.hdfs.HdfsViewConfiguration;
 import org.gbif.pipelines.common.hdfs.HdfsViewService;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
@@ -15,7 +13,8 @@ import org.kohsuke.MetaInfServices;
 
 /**
  * Entry class for cli command, to start service to process Hdfs View This command starts a service
- * which listens to the {@link org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage }
+ * which listens to the {@link
+ * org.gbif.common.messaging.api.messages.PipelinesEventsInterpretedMessage }
  */
 @MetaInfServices(Command.class)
 public class HdfsViewCommand extends ServiceCommand {
@@ -28,9 +27,7 @@ public class HdfsViewCommand extends ServiceCommand {
 
   @Override
   protected Service getService() {
-    return new HdfsViewService<
-        PipelinesEventsInterpretedMessage, PipelinesEventsHdfsViewBuiltMessage>(
-        config, HdfsViewCommand::createCallBack);
+    return new HdfsViewService<>(config, HdfsViewCommand::createCallBack);
   }
 
   @Override

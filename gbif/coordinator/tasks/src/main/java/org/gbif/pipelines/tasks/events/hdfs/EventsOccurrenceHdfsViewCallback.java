@@ -9,6 +9,7 @@ import org.gbif.pipelines.common.hdfs.HdfsViewCallback;
 import org.gbif.pipelines.common.hdfs.HdfsViewConfiguration;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 
+/** Events HDFS View Callback. */
 public class EventsOccurrenceHdfsViewCallback
     extends HdfsViewCallback<
         PipelinesEventsInterpretedMessage, PipelinesEventsHdfsViewBuiltMessage> {
@@ -27,5 +28,10 @@ public class EventsOccurrenceHdfsViewCallback
       PipelinesEventsInterpretedMessage message) {
     return new PipelinesEventsHdfsViewBuiltMessage(
         message.getDatasetUuid(), message.getAttempt(), message.getPipelineSteps());
+  }
+
+  @Override
+  public String routingKey() {
+    return PipelinesEventsHdfsViewBuiltMessage.ROUTING_KEY;
   }
 }

@@ -12,6 +12,7 @@ import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
@@ -47,22 +48,31 @@ import org.gbif.pipelines.transforms.specific.GbifIdTransform;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class OccurrenceToHdfsViewPipelineIT {
-
-  private static final DwcTerm coreTerm = DwcTerm.Occurrence;
+public class HdfsViewPipelineIT {
 
   private static final String ID = "777";
 
   @Test
-  public void pipelineAllTest() throws Exception {
+  public void pipelineOccurrenceAllTest() throws Exception {
+    hdfsPipelineTest("data0", PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE);
+  }
+
+  @Test
+  public void pipelineEventAllTest() throws Exception {
+    hdfsPipelineTest("data1", PipelinesVariables.Pipeline.Interpretation.RecordType.EVENT);
+  }
+
+  public void hdfsPipelineTest(
+      String rootTestFolder, PipelinesVariables.Pipeline.Interpretation.RecordType recordType)
+      throws Exception {
 
     // State
     String outputFile = getClass().getResource("/").getFile();
 
     String postfix = "777";
 
-    String input = outputFile + "data0/ingest";
-    String output = outputFile + "data0/hdfsview";
+    String input = outputFile + rootTestFolder + "/ingest";
+    String output = outputFile + rootTestFolder + "/hdfsview";
 
     String[] argsWriter = {
       "--datasetId=d596fccb-2319-42eb-b13b-986c932780ad",
@@ -72,15 +82,18 @@ public class OccurrenceToHdfsViewPipelineIT {
       "--inputPath=" + output,
       "--targetPath=" + input,
       "--numberOfShards=1",
-      "--interpretationTypes=OCCURRENCE,MEASUREMENT_OR_FACT_TABLE,EXTENDED_MEASUREMENT_OR_FACT_TABLE,GERMPLASM_MEASUREMENT_TRIAL_TABLE",
-      "--testMode=true"
+      "--interpretationTypes="
+          + recordType.name()
+          + ",MEASUREMENT_OR_FACT_TABLE,EXTENDED_MEASUREMENT_OR_FACT_TABLE,GERMPLASM_MEASUREMENT_TRIAL_TABLE",
+      "--testMode=true",
+      "--coreRecordType=" + recordType.name()
     };
     InterpretationPipelineOptions optionsWriter =
         PipelinesOptionsFactory.createInterpretation(argsWriter);
-
+    DwcTerm coreTerm = recordType.getCoreTerm();
     try (SyncDataFileWriter<ExtendedRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
-            optionsWriter, VerbatimTransform.create(), coreTerm, postfix)) {
+            optionsWriter, VerbatimTransform.create(), recordType.getCoreTerm(), postfix)) {
       Map<String, String> ext1 = new HashMap<>();
       ext1.put(DwcTerm.measurementID.qualifiedName(), "Id1");
       ext1.put(DwcTerm.measurementType.qualifiedName(), "Type1");
@@ -175,16 +188,25 @@ public class OccurrenceToHdfsViewPipelineIT {
       "--inputPath=" + input,
       "--targetPath=" + output,
       "--numberOfShards=1",
-      "--interpretationTypes=OCCURRENCE,MEASUREMENT_OR_FACT_TABLE,EXTENDED_MEASUREMENT_OR_FACT_TABLE,GERMPLASM_MEASUREMENT_TRIAL_TABLE",
-      "--testMode=true"
+      "--interpretationTypes="
+          + recordType.name()
+          + ",MEASUREMENT_OR_FACT_TABLE,EXTENDED_MEASUREMENT_OR_FACT_TABLE,GERMPLASM_MEASUREMENT_TRIAL_TABLE",
+      "--testMode=true",
+      "--coreRecordType=" + recordType.name()
     };
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
-    OccurrenceToHdfsViewPipeline.run(options);
+    HdfsViewPipeline.run(options);
 
     Function<String, String> outputFn =
-        s -> output + "/" + s + "/d596fccb-2319-42eb-b13b-986c932780ad_147.avro";
+        s ->
+            output
+                + "/"
+                + options.getCoreRecordType().name().toLowerCase()
+                + "/"
+                + s
+                + "/d596fccb-2319-42eb-b13b-986c932780ad_147.avro";
 
-    assertFile(OccurrenceHdfsRecord.class, outputFn.apply("occurrence"));
+    assertFile(OccurrenceHdfsRecord.class, outputFn.apply(recordType.name().toLowerCase()));
     assertFile(MeasurementOrFactTable.class, outputFn.apply("measurementorfacttable"));
     assertFile(
         ExtendedMeasurementOrFactTable.class, outputFn.apply("extendedmeasurementorfacttable"));
@@ -196,14 +218,26 @@ public class OccurrenceToHdfsViewPipelineIT {
 
   @Test
   public void pipelineOccurrenceTest() throws Exception {
+    singleHdfsPipelineTest(
+        "data2", PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE);
+  }
+
+  @Test
+  public void pipelineEventTest() throws Exception {
+    singleHdfsPipelineTest("data3", PipelinesVariables.Pipeline.Interpretation.RecordType.EVENT);
+  }
+
+  public void singleHdfsPipelineTest(
+      String rootTestFolder, PipelinesVariables.Pipeline.Interpretation.RecordType recordType)
+      throws Exception {
 
     // State
     String outputFile = getClass().getResource("/").getFile();
 
     String postfix = "777";
 
-    String input = outputFile + "data1/ingest";
-    String output = outputFile + "data1/hdfsview";
+    String input = outputFile + rootTestFolder + "/ingest";
+    String output = outputFile + rootTestFolder + "/hdfsview";
 
     String[] argsWriter = {
       "--datasetId=d596fccb-2319-42eb-b13b-986c932780ad",
@@ -213,11 +247,13 @@ public class OccurrenceToHdfsViewPipelineIT {
       "--inputPath=" + output,
       "--targetPath=" + input,
       "--numberOfShards=1",
-      "--interpretationTypes=OCCURRENCE",
-      "--testMode=true"
+      "--interpretationTypes=" + recordType.name(),
+      "--testMode=true",
+      "--coreRecordType=" + recordType.name()
     };
     InterpretationPipelineOptions optionsWriter =
         PipelinesOptionsFactory.createInterpretation(argsWriter);
+    DwcTerm coreTerm = optionsWriter.getCoreRecordType().getCoreTerm();
 
     try (SyncDataFileWriter<ExtendedRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
@@ -316,16 +352,23 @@ public class OccurrenceToHdfsViewPipelineIT {
       "--inputPath=" + input,
       "--targetPath=" + output,
       "--numberOfShards=1",
-      "--interpretationTypes=OCCURRENCE",
-      "--testMode=true"
+      "--interpretationTypes=" + recordType.name(),
+      "--testMode=true",
+      "--coreRecordType=" + recordType.name()
     };
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
-    OccurrenceToHdfsViewPipeline.run(options);
+    HdfsViewPipeline.run(options);
 
     Function<String, String> outputFn =
-        s -> output + "/" + s + "/d596fccb-2319-42eb-b13b-986c932780ad_147.avro";
+        s ->
+            output
+                + "/"
+                + options.getCoreRecordType().name().toLowerCase()
+                + "/"
+                + s
+                + "/d596fccb-2319-42eb-b13b-986c932780ad_147.avro";
 
-    assertFile(OccurrenceHdfsRecord.class, outputFn.apply("occurrence"));
+    assertFile(OccurrenceHdfsRecord.class, outputFn.apply(recordType.name().toLowerCase()));
     assertFileExistFalse(outputFn.apply("measurementorfacttable"));
     assertFileExistFalse(outputFn.apply("extendedmeasurementorfacttable"));
     assertFileExistFalse(outputFn.apply("germplasmmeasurementtrialtable"));

@@ -34,7 +34,6 @@ import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesAbcdMessage;
 import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
 import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
-import org.gbif.common.messaging.api.messages.PipelinesExecutionMessage;
 import org.gbif.common.messaging.api.messages.PipelinesXmlMessage;
 import org.gbif.crawler.constants.CrawlerNodePaths;
 import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
@@ -352,10 +351,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
         || message instanceof PipelinesDwcaMessage) {
       return StepRunner.STANDALONE.name();
     }
-    if (message instanceof PipelinesExecutionMessage) {
-      return ((PipelinesExecutionMessage) message).getRunner();
-    }
-    return StepRunner.UNKNOWN.name();
+    return message.getRunner();
   }
 
   @AllArgsConstructor

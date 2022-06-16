@@ -161,7 +161,7 @@ import org.slf4j.MDC;
  */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class OccurrenceToHdfsViewPipeline {
+public class HdfsViewPipeline {
 
   public static void main(String[] args) {
     run(args);
@@ -175,7 +175,7 @@ public class OccurrenceToHdfsViewPipeline {
   public static void run(InterpretationPipelineOptions options) {
     ExecutorService executor = Executors.newWorkStealingPool();
     try {
-      run(options, OCCURRENCE, executor);
+      run(options, executor);
     } finally {
       executor.shutdown();
     }
@@ -183,17 +183,29 @@ public class OccurrenceToHdfsViewPipeline {
 
   public static void run(String[] args, ExecutorService executor) {
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
-    run(options, OCCURRENCE, executor);
+    run(options, executor);
+  }
+
+  private static StepType getStepType(RecordType recordType) {
+    if (EVENT == recordType) {
+      return StepType.EVENTS_HDFS_VIEW;
+    }
+
+    if (OCCURRENCE == recordType) {
+      return StepType.HDFS_VIEW;
+    }
+
+    throw new IllegalArgumentException("Record type not supported:" + recordType);
   }
 
   @SneakyThrows
-  public static void run(
-      InterpretationPipelineOptions options, RecordType recordType, ExecutorService executor) {
+  public static void run(InterpretationPipelineOptions options, ExecutorService executor) {
 
     MDC.put("datasetKey", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
-    MDC.put("step", StepType.HDFS_VIEW.name());
+    MDC.put("step", getStepType(options.getCoreRecordType()).name());
 
+    RecordType recordType = options.getCoreRecordType();
     DwcTerm coreTerm = recordType.getCoreTerm();
     HdfsConfigs hdfsConfigs =
         HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig());
@@ -211,7 +223,8 @@ public class OccurrenceToHdfsViewPipeline {
     Function<InterpretationType, String> pathFn =
         st -> {
           String id = datasetId + '_' + attempt + AVRO_EXTENSION;
-          return PathBuilder.buildFilePathViewUsingInputPath(options, st.name().toLowerCase(), id);
+          return PathBuilder.buildFilePathViewUsingInputPath(
+              options, recordType, st.name().toLowerCase(), id);
         };
 
     log.info("Init metrics");
@@ -287,8 +300,8 @@ public class OccurrenceToHdfsViewPipeline {
         .schema(OccurrenceHdfsRecord.getClassSchema())
         .executor(executor)
         .options(options)
-        .types(Collections.singleton(OCCURRENCE.name()))
-        .recordType(OCCURRENCE)
+        .types(Collections.singleton(recordType.name()))
+        .recordType(recordType)
         .build()
         .write();
 

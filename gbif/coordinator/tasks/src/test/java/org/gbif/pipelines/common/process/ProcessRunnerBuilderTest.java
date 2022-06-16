@@ -18,10 +18,10 @@ import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage.ValidationResult;
 import org.gbif.pipelines.common.MainSparkSettings;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
+import org.gbif.pipelines.common.hdfs.HdfsViewConfiguration;
 import org.gbif.pipelines.common.indexing.IndexSettings;
 import org.gbif.pipelines.tasks.events.indexing.EventsIndexingConfiguration;
 import org.gbif.pipelines.tasks.events.interpretation.EventsInterpretationConfiguration;
-import org.gbif.pipelines.tasks.occurrences.hdfs.HdfsViewConfiguration;
 import org.gbif.pipelines.tasks.occurrences.identifier.IdentifierConfiguration;
 import org.gbif.pipelines.tasks.occurrences.indexing.IndexingConfiguration;
 import org.gbif.pipelines.tasks.occurrences.interpretation.InterpreterConfiguration;
@@ -92,6 +92,7 @@ public class ProcessRunnerBuilderTest {
             100L,
             100L,
             null,
+            StepRunner.STANDALONE.name(),
             null,
             EndpointType.DWC_ARCHIVE,
             null,

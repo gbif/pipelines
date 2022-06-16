@@ -15,7 +15,6 @@ import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretationMessage;
-import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
@@ -25,13 +24,13 @@ import org.gbif.pipelines.common.process.ProcessRunnerBuilder;
 import org.gbif.pipelines.common.process.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
-import org.gbif.pipelines.ingest.java.pipelines.OccurrenceToHdfsViewPipeline;
+import org.gbif.pipelines.ingest.java.pipelines.HdfsViewPipeline;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
 import org.gbif.pipelines.tasks.occurrences.interpretation.InterpreterConfiguration;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 
-/** Callback which is called when the {@link PipelinesInterpretedMessage} is received. */
+/** Callback which is called when an instance {@link PipelinesInterpretationMessage} is received. */
 @Slf4j
 @AllArgsConstructor
 public abstract class HdfsViewCallback<
@@ -64,7 +63,7 @@ public abstract class HdfsViewCallback<
     return () -> {
       try {
 
-        // If there is one step only like metadata, we have to run OCCURRENCE steps
+        // If there is one step only like metadata, we have to run pipelines steps
         message.setInterpretTypes(swapInterpretTypes(message.getInterpretTypes()));
 
         int fileShards = computeNumberOfShards(message);
@@ -96,6 +95,8 @@ public abstract class HdfsViewCallback<
   @Override
   public abstract B createOutgoingMessage(I message);
 
+  public abstract String routingKey();
+
   /**
    * Only correct messages can be handled, by now is only messages with the same runner as runner in
    * service config {@link HdfsViewConfiguration#processRunner}
@@ -118,7 +119,7 @@ public abstract class HdfsViewCallback<
   }
 
   private void runLocal(ProcessRunnerBuilderBuilder builder) {
-    OccurrenceToHdfsViewPipeline.run(builder.build().buildOptions(), executor);
+    HdfsViewPipeline.run(builder.build().buildOptions(), executor);
   }
 
   private void runDistributed(I message, ProcessRunnerBuilderBuilder builder)

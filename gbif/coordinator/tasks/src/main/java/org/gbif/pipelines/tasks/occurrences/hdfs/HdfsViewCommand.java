@@ -6,8 +6,6 @@ import org.apache.curator.framework.CuratorFramework;
 import org.gbif.cli.Command;
 import org.gbif.cli.service.ServiceCommand;
 import org.gbif.common.messaging.api.MessagePublisher;
-import org.gbif.common.messaging.api.messages.PipelinesHdfsViewBuiltMessage;
-import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.pipelines.common.hdfs.HdfsViewConfiguration;
 import org.gbif.pipelines.common.hdfs.HdfsViewService;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
@@ -28,8 +26,7 @@ public class HdfsViewCommand extends ServiceCommand {
 
   @Override
   protected Service getService() {
-    return new HdfsViewService<PipelinesInterpretedMessage, PipelinesHdfsViewBuiltMessage>(
-        config, HdfsViewCommand::createCallBack);
+    return new HdfsViewService<>(config, HdfsViewCommand::createCallBack);
   }
 
   @Override
