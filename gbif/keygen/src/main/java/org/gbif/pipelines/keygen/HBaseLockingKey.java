@@ -10,13 +10,9 @@ public interface HBaseLockingKey {
 
   KeyLookupResult generateKey(Set<String> uniqueStrings);
 
-  KeyLookupResult findKey(Set<String> uniqueStrings, String scope);
+  Optional<KeyLookupResult> findKey(Set<String> uniqueStrings, String scope);
 
-  KeyLookupResult findKey(Set<String> uniqueStrings);
-
-  Optional<KeyLookupResult> migrate(String oldLookupKey, String newLookupKey, String scope);
-
-  Optional<KeyLookupResult> migrate(String oldLookupKey, String newLookupKey);
+  Optional<KeyLookupResult> findKey(Set<String> uniqueStrings);
 
   void close();
 }

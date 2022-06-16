@@ -58,24 +58,13 @@ public class GbifIdTransformTest {
     }
 
     @Override
-    public KeyLookupResult findKey(Set<String> uniqueStrings, String scope) {
-      return generateKey(uniqueStrings, scope);
+    public Optional<KeyLookupResult> findKey(Set<String> uniqueStrings, String scope) {
+      return Optional.of(generateKey(uniqueStrings, scope));
     }
 
     @Override
-    public KeyLookupResult findKey(Set<String> uniqueStrings) {
-      return generateKey(uniqueStrings, scope);
-    }
-
-    @Override
-    public Optional<KeyLookupResult> migrate(
-        String oldLookupKey, String newLookupKey, String scope) {
-      return Optional.empty();
-    }
-
-    @Override
-    public Optional<KeyLookupResult> migrate(String oldLookupKey, String newLookupKey) {
-      return Optional.empty();
+    public Optional<KeyLookupResult> findKey(Set<String> uniqueStrings) {
+      return Optional.of(generateKey(uniqueStrings, scope));
     }
 
     @Override

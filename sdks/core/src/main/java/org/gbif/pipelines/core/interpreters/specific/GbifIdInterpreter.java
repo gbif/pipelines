@@ -135,11 +135,11 @@ public class GbifIdInterpreter {
 
     try {
       // Finds or generates key
-      KeyLookupResult keyResult = keygenService.findKey(uniqueStrings);
-      if (generateIdIfAbsent && keyResult == null) {
-        keyResult = keygenService.generateKey(uniqueStrings);
+      Optional<KeyLookupResult> keyResult = keygenService.findKey(uniqueStrings);
+      if (generateIdIfAbsent && !keyResult.isPresent()) {
+        keyResult = Optional.of(keygenService.generateKey(uniqueStrings));
       }
-      return Optional.ofNullable(keyResult).map(KeyLookupResult::getKey);
+      return keyResult.map(KeyLookupResult::getKey);
 
     } catch (IllegalStateException ex) {
       log.warn(ex.getMessage());
