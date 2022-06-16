@@ -97,6 +97,31 @@
       <scope>test</scope>
     </dependency>
 
+    <dependency>
+      <groupId>org.gbif.crawler</groupId>
+      <artifactId>crawler-coordinator</artifactId>
+      <version>${gbif-crawler.version}</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.elasticsearch.client</groupId>
+          <artifactId>elasticsearch-rest-high-level-client</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.common</groupId>
+      <artifactId>gbif-postal-service</artifactId>
+      <version>${gbif-postal-service.version}</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>jackson-datatype-guava</artifactId>
+          <groupId>com.fasterxml.jackson</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
   </dependencies>
 
 </project>

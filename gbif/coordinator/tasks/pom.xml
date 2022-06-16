@@ -84,7 +84,6 @@
     <gbif-cli.version>0.14</gbif-cli.version>
     <gbif-httputils.version>0.12</gbif-httputils.version>
     <gbif-wrangler.version>0.3</gbif-wrangler.version>
-    <gbif-crawler.version>1.14-SNAPSHOT</gbif-crawler.version>
 
     <guice.version>4.2.3</guice.version>
     <!-- Match the GBIF http-client! -->

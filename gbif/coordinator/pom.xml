@@ -14,6 +14,10 @@
 
   <name>Pipelines :: GBIF :: Coordinator</name>
 
+  <properties>
+    <gbif-crawler.version>1.14-SNAPSHOT</gbif-crawler.version>
+  </properties>
+
   <modules>
     <module>tasks</module>
     <module>tasks-integration-tests</module>
