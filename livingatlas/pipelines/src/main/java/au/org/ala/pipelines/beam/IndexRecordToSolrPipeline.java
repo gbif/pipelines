@@ -5,6 +5,7 @@ import static au.org.ala.pipelines.transforms.IndexValues.*;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.ALL_AVRO;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
+import au.org.ala.pipelines.common.SolrFieldSchema;
 import au.org.ala.pipelines.options.AllDatasetsPipelinesOptions;
 import au.org.ala.pipelines.options.SolrPipelineOptions;
 import au.org.ala.pipelines.transforms.IndexFields;
@@ -89,7 +90,7 @@ public class IndexRecordToSolrPipeline {
 
   public static void run(SolrPipelineOptions options) {
 
-    final List<String> schemaFields = getSchemaFields(options);
+    final Map<String, SolrFieldSchema> schemaFields = getSchemaFields(options);
     final List<String> dynamicFieldPrefixes = getSchemaDynamicFieldPrefixes(options);
     final int numOfPartitions = options.getNumOfPartitions();
 
@@ -180,15 +181,20 @@ public class IndexRecordToSolrPipeline {
   }
 
   @NotNull
-  private static List<String> getSchemaFields(SolrPipelineOptions options) {
+  private static Map<String, SolrFieldSchema> getSchemaFields(SolrPipelineOptions options) {
     try (CloudSolrClient client =
         new CloudSolrClient.Builder(ImmutableList.of(options.getZkHost()), Optional.empty())
             .build()) {
       SchemaRequest.Fields fields = new SchemaRequest.Fields();
       SchemaResponse.FieldsResponse response = fields.process(client, options.getSolrCollection());
-      return response.getFields().stream()
-          .map(f -> f.get("name").toString())
-          .collect(Collectors.toList());
+      Map<String, SolrFieldSchema> schema = new HashMap<String, SolrFieldSchema>();
+      for (Map<String, Object> field : response.getFields()) {
+        schema.put(
+            (String) field.get("name"),
+            new SolrFieldSchema(
+                (String) field.get("type"), (boolean) field.getOrDefault("multiValued", false)));
+      }
+      return schema;
     } catch (Exception e) {
       throw new PipelinesException("Unable to retrieve schema fields: " + e.getMessage());
     }
@@ -232,7 +238,7 @@ public class IndexRecordToSolrPipeline {
       SolrPipelineOptions options,
       PCollection<IndexRecord> indexRecords,
       SolrIO.ConnectionConfiguration conn,
-      final List<String> schemaFields,
+      final Map<String, SolrFieldSchema> schemaFields,
       final List<String> dynamicFieldPrefixes) {
 
     if (options.getOutputAvroToFilePath() == null) {
