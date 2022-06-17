@@ -41,10 +41,14 @@ public class Keygen {
 
     // Adds triplet, if useTriplet and useOccurrenceId is false, or occurrenceId is null
     if (useTriplet) {
-      record
-          .getTriplet()
-          .filter(t -> keygenService.findKey(Collections.singleton(t)).isPresent())
-          .ifPresent(uniqueStrings::add);
+      if (uniqueStrings.isEmpty()) {
+        record.getTriplet().ifPresent(uniqueStrings::add);
+      } else {
+        record
+            .getTriplet()
+            .filter(t -> keygenService.findKey(Collections.singleton(t)).isPresent())
+            .ifPresent(uniqueStrings::add);
+      }
     }
 
     if (uniqueStrings.isEmpty()) {
