@@ -53,8 +53,8 @@
       // Event
       {"name":"samplingProtocol","type":{"type":"array","items":"string"},"default":null,"doc":""},
       {"name":"samplingProtocolJoined","type":["null","string"],"default":null,"doc":""},
-      {"name":"eventId","type":["null","string"],"default":null,"doc":""},
-      {"name":"parentEventId","type":["null","string"],"default":null,"doc":""},
+      {"name":"eventID","type":["null","string"],"default":null,"doc":""},
+      {"name":"parentEventID","type":["null","string"],"default":null,"doc":""},
       {"name":"sampleSizeUnit","type":["null","string"],"default":null,"doc":""},
       {"name":"sampleSizeValue","type":["null","double"],"default":null,"doc":""},
       {"name":"year","type":["null","int"],"default":null,"doc":""},
@@ -64,6 +64,7 @@
       {"name":"eventDateSingle","type":["null","string"],"default":null,"doc":""},
       {"name":"startDayOfYear","type":["null","int"],"default":null,"doc":""},
       {"name":"endDayOfYear","type":["null","int"],"default":null,"doc":""},
+      {"name": "locationID", "type": ["null", "string"], "default" : null, "doc": ""},
       // Location
       {"name":"locality","type":["null","string"],"default":null,"doc":""},
       {"name":"continent","type":["null","string"],"default":null,"doc":""},

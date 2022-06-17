@@ -1,16 +1,13 @@
-package org.gbif.pipelines.fragmenter.common;
+package org.gbif.pipelines.keygen;
 
-import com.google.common.base.Strings;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.gbif.pipelines.fragmenter.record.OccurrenceRecord;
-import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.keygen.api.KeyLookupResult;
-import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
 
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -20,47 +17,57 @@ public class Keygen {
 
   /** Get or generate GBIF ID key */
   public static Long getKey(
-      HBaseLockingKeyService keygenService,
+      HBaseLockingKey keygenService,
       boolean useTriplet,
       boolean useOccurrenceId,
       boolean generateIfAbsent,
       OccurrenceRecord record) {
 
-    Set<String> uniqueStrings = new HashSet<>(1);
+    Set<String> uniqueStrings = new HashSet<>(2);
 
     // Adds occurrenceId
     if (useOccurrenceId) {
-      String occurrenceId = record.getOccurrenceId();
-      if (!Strings.isNullOrEmpty(occurrenceId)) {
-        uniqueStrings.add(occurrenceId);
+      Optional<String> occurrenceId = record.getOccurrenceId();
+      if (occurrenceId.isPresent()) {
+        Optional<KeyLookupResult> keyForOccurrence =
+            keygenService.findKey(Collections.singleton(occurrenceId.get()));
+        if (keyForOccurrence.isPresent()) {
+          return keyForOccurrence.get().getKey();
+        } else {
+          uniqueStrings.add(occurrenceId.get());
+        }
       }
     }
 
     // Adds triplet, if useTriplet and useOccurrenceId is false, or occurrenceId is null
-    if (useTriplet && uniqueStrings.isEmpty()) {
-      String ic = record.getInstitutionCode();
-      String cc = record.getCollectionCode();
-      String cn = record.getCatalogNumber();
-      OccurrenceKeyBuilder.buildKey(ic, cc, cn).ifPresent(uniqueStrings::add);
+    if (useTriplet) {
+      if (uniqueStrings.isEmpty()) {
+        record.getTriplet().ifPresent(uniqueStrings::add);
+      } else {
+        record
+            .getTriplet()
+            .filter(t -> keygenService.findKey(Collections.singleton(t)).isPresent())
+            .ifPresent(uniqueStrings::add);
+      }
     }
 
     if (uniqueStrings.isEmpty()) {
       return ERROR_KEY;
     }
 
-    KeyLookupResult keyResult = null;
+    Optional<KeyLookupResult> keyResult = Optional.empty();
     try {
       // Finds or generates key
       keyResult = keygenService.findKey(uniqueStrings);
-      if (keyResult == null && generateIfAbsent) {
+      if (!keyResult.isPresent() && generateIfAbsent) {
         log.error("GBIF ID wasn't found, generating a new key.");
-        keyResult = keygenService.generateKey(uniqueStrings);
+        keyResult = Optional.of(keygenService.generateKey(uniqueStrings));
       }
     } catch (RuntimeException ex) {
       log.error(ex.getMessage(), ex);
     }
 
-    return Optional.ofNullable(keyResult).map(KeyLookupResult::getKey).orElse(ERROR_KEY);
+    return keyResult.map(KeyLookupResult::getKey).orElse(ERROR_KEY);
   }
 
   public static String getSaltedKey(Long key) {

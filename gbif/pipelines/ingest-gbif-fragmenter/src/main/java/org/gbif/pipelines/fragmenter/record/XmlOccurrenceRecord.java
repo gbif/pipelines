@@ -6,6 +6,8 @@ import org.gbif.converters.parser.xml.model.IdentifierRecord;
 import org.gbif.converters.parser.xml.model.RawOccurrenceRecord;
 import org.gbif.converters.parser.xml.parsing.RawXmlOccurrence;
 import org.gbif.converters.parser.xml.parsing.xml.XmlFragmentParser;
+import org.gbif.pipelines.keygen.OccurrenceRecord;
+import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
 
 @Slf4j
 public class XmlOccurrenceRecord implements OccurrenceRecord {
@@ -39,29 +41,21 @@ public class XmlOccurrenceRecord implements OccurrenceRecord {
   }
 
   @Override
-  public String getInstitutionCode() {
-    return rawOccurrence.getInstitutionCode();
-  }
-
-  @Override
-  public String getCollectionCode() {
-    return rawOccurrence.getCollectionCode();
-  }
-
-  @Override
-  public String getCatalogNumber() {
-    return rawOccurrence.getCatalogueNumber();
-  }
-
-  @Override
-  public String getOccurrenceId() {
+  public Optional<String> getOccurrenceId() {
     if (rawOccurrence.getIdentifierRecords() == null) {
-      return null;
+      return Optional.empty();
     }
     return rawOccurrence.getIdentifierRecords().stream()
         .filter(ir -> ir.getIdentifierType() == IdentifierRecord.OCCURRENCE_ID_TYPE)
         .map(IdentifierRecord::getIdentifier)
-        .findFirst()
-        .orElse(null);
+        .findFirst();
+  }
+
+  @Override
+  public Optional<String> getTriplet() {
+    String ic = rawOccurrence.getInstitutionCode();
+    String cc = rawOccurrence.getCollectionCode();
+    String cn = rawOccurrence.getCatalogueNumber();
+    return OccurrenceKeyBuilder.buildKey(ic, cc, cn);
   }
 }
