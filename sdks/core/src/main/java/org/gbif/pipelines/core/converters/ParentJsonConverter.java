@@ -68,7 +68,7 @@ public abstract class ParentJsonConverter {
         .setId(occurrenceJsonRecord.getId())
         .setInternalId(
             HashConverter.getSha1(
-                occurrenceJsonRecord.getDatasetKey(),
+                metadata.getDatasetKey(),
                 occurrenceJsonRecord.getVerbatim().getParentCoreId(),
                 occurrenceJsonRecord.getOccurrenceId()))
         .setJoinRecordBuilder(
@@ -76,9 +76,10 @@ public abstract class ParentJsonConverter {
                 .setName("occurrence")
                 .setParent(
                     HashConverter.getSha1(
-                        occurrenceJsonRecord.getDatasetKey(),
+                        metadata.getDatasetKey(),
                         occurrenceJsonRecord.getVerbatim().getParentCoreId())))
         .setOccurrence(occurrenceJsonRecord)
+        .setMetadataBuilder(mapMetadataJsonRecord())
         .build();
   }
 
@@ -146,7 +147,8 @@ public abstract class ParentJsonConverter {
         .setDatasetName(eventCore.getDatasetName())
         .setSamplingProtocol(eventCore.getSamplingProtocol())
         .setParentsLineage(convertParents(eventCore.getParentsLineage()))
-        .setParentEventId(eventCore.getParentEventID());
+        .setParentEventID(eventCore.getParentEventID())
+        .setLocationID(eventCore.getLocationID());
 
     // Vocabulary
     JsonConverter.convertVocabularyConcept(eventCore.getEventType())
@@ -237,7 +239,7 @@ public abstract class ParentJsonConverter {
     builder.setExtensions(JsonConverter.convertExtensions(verbatim));
 
     // Set raw as indexed
-    extractOptValue(verbatim, DwcTerm.eventID).ifPresent(builder::setEventId);
+    extractOptValue(verbatim, DwcTerm.eventID).ifPresent(builder::setEventID);
     extractOptValue(verbatim, DwcTerm.institutionCode).ifPresent(builder::setInstitutionCode);
     extractOptValue(verbatim, DwcTerm.verbatimDepth).ifPresent(builder::setVerbatimDepth);
     extractOptValue(verbatim, DwcTerm.verbatimElevation).ifPresent(builder::setVerbatimElevation);
