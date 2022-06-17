@@ -162,6 +162,7 @@ public class OccurrenceJsonTransform implements Serializable {
               c.output(
                   GbifParentJsonConverter.builder()
                       .occurrenceJsonRecord(occurrenceJsonConverter.convert())
+                      .metadata(mdr)
                       .build()
                       .toJson());
             } else {
