@@ -1,12 +1,13 @@
 package org.gbif.pipelines.tasks.balancer;
 
+import org.gbif.pipelines.common.configs.StepConfiguration;
+
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParametersDelegate;
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import lombok.ToString;
-import org.gbif.pipelines.common.configs.StepConfiguration;
 
 /** Configuration required to start Balancer service */
 @ToString
@@ -31,4 +32,7 @@ public class BalancerConfiguration {
 
   @Parameter(names = "--validator-repository-path")
   public String validatorRepositoryPath;
+
+  @Parameter(names = "--events-enabled")
+  public boolean eventsEnabled = false;
 }
