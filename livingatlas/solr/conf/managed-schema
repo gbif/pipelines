@@ -506,6 +506,7 @@
   <field name="matched_name"           type="string"  multiValued="true" indexed="true" stored="false" />
   <field name="text_recordedBy"        type="textgen" multiValued="true" indexed="true" stored="false" />
   <field name="text_identifiedBy"      type="textgen" multiValued="true" indexed="true" stored="false" />
+  <field name="text_datasetName" type="textgen" multiValued="true" indexed="true" stored="false"/>
 
   <!-- occurrenceDetails needs to be remapped on export -->
   <!-- see https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/236 -->
@@ -690,6 +691,7 @@
   <copyField source="eventID" dest="text"/>
   <copyField source="parentEventID" dest="text"/>
   <copyField source="datesetName" dest="text"/>
+  <copyField source="datesetName" dest="text_datasetName"/>
   <copyField source="family" dest="text"/>
   <copyField source="genus" dest="text"/>
   <copyField source="id" dest="text"/>
