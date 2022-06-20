@@ -7,6 +7,7 @@ import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
 
 import com.google.common.base.Strings;
 import java.util.Collections;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import lombok.AccessLevel;
@@ -70,11 +71,11 @@ public class GbifIdInterpreter {
                 });
       }
 
-      Long gbifId =
+      Optional<Long> gbifId =
           Keygen.getKey(
               keygenService, isTripletValid, isOccurrenceIdValid, generateIdIfAbsent, occRecords);
-      if (gbifId != null && !gbifId.equals(Keygen.getErrorKey())) {
-        gr.setGbifId(gbifId);
+      if (gbifId.isPresent() && !Keygen.getErrorKey().equals(gbifId.get())) {
+        gr.setGbifId(gbifId.get());
       } else if (!generateIdIfAbsent) {
         addIssue(gr, GBIF_ID_ABSENT);
       } else {
@@ -99,11 +100,11 @@ public class GbifIdInterpreter {
         occRecords.setTriplet(gr.getTriplet());
       }
 
-      Long gbifId =
+      Optional<Long> gbifId =
           Keygen.getKey(keygenService, isTripletValid, isOccurrenceIdValid, true, occRecords);
 
-      if (gbifId != null && !gbifId.equals(Keygen.getErrorKey())) {
-        gr.setGbifId(gbifId);
+      if (gbifId.isPresent() && !Keygen.getErrorKey().equals(gbifId.get())) {
+        gr.setGbifId(gbifId.get());
         gr.getIssues().setIssueList(Collections.emptyList());
       } else {
         gr.getIssues().setIssueList(Collections.singletonList(GBIF_ID_INVALID));

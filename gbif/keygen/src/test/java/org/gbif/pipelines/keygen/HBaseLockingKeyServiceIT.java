@@ -15,87 +15,16 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import org.apache.hadoop.hbase.HBaseTestingUtility;
 import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.client.Connection;
-import org.apache.hadoop.hbase.client.ConnectionFactory;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.gbif.pipelines.keygen.api.KeyLookupResult;
-import org.gbif.pipelines.keygen.config.KeygenConfig;
 import org.gbif.pipelines.keygen.hbase.Columns;
 import org.gbif.pipelines.keygen.hbase.HBaseStore;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
-public class HBaseLockingKeyServiceIT {
-
-  private static final String A = "a";
-  private static final String B = "b";
-  private static final String C = "c";
-
-  private static final KeygenConfig CFG =
-      KeygenConfig.builder()
-          .zkConnectionString(null)
-          .occurrenceTable("test_occurrence")
-          .lookupTable("test_occurrence_lookup")
-          .counterTable("test_occurrence_counter")
-          .create();
-
-  private static final byte[] LOOKUP_TABLE = Bytes.toBytes(CFG.getLookupTable());
-  private static final String CF_NAME = "o";
-  private static final byte[] CF = Bytes.toBytes(CF_NAME);
-  private static final byte[] COUNTER_TABLE = Bytes.toBytes(CFG.getCounterTable());
-  private static final String COUNTER_CF_NAME = "o";
-  private static final byte[] COUNTER_CF = Bytes.toBytes(COUNTER_CF_NAME);
-  private static final byte[] OCCURRENCE_TABLE = Bytes.toBytes(CFG.getOccurrenceTable());
-
-  private static Connection connection = null;
-  private static final HBaseTestingUtility TEST_UTIL = new HBaseTestingUtility();
-  private HBaseLockingKeyService keyService;
-
-  @Rule public ExpectedException exception = ExpectedException.none();
-
-  @BeforeClass
-  public static void beforeClass() throws Exception {
-    TEST_UTIL.getConfiguration().setInt("hbase.master.port", HBaseTestingUtility.randomFreePort());
-    TEST_UTIL
-        .getConfiguration()
-        .setInt("hbase.master.info.port", HBaseTestingUtility.randomFreePort());
-    TEST_UTIL
-        .getConfiguration()
-        .setInt("hbase.regionserver.port", HBaseTestingUtility.randomFreePort());
-    TEST_UTIL
-        .getConfiguration()
-        .setInt("hbase.regionserver.info.port", HBaseTestingUtility.randomFreePort());
-    TEST_UTIL.startMiniCluster(1);
-    TEST_UTIL.createTable(LOOKUP_TABLE, CF);
-    TEST_UTIL.createTable(COUNTER_TABLE, COUNTER_CF);
-    TEST_UTIL.createTable(OCCURRENCE_TABLE, CF);
-    connection = ConnectionFactory.createConnection(TEST_UTIL.getConfiguration());
-  }
-
-  @Before
-  public void before() throws IOException {
-    TEST_UTIL.truncateTable(LOOKUP_TABLE);
-    TEST_UTIL.truncateTable(COUNTER_TABLE);
-    TEST_UTIL.truncateTable(OCCURRENCE_TABLE);
-
-    keyService = new HBaseLockingKeyService(CFG, connection);
-  }
-
-  @AfterClass
-  public static void afterClass() throws Exception {
-    TEST_UTIL.shutdownMiniCluster();
-    if (connection != null) {
-      connection.close();
-    }
-  }
+public class HBaseLockingKeyServiceIT extends HBaseIT {
 
   @Test
   public void testNoContention() {
