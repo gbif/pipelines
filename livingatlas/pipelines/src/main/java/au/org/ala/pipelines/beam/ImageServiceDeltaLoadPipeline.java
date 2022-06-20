@@ -160,7 +160,7 @@ public class ImageServiceDeltaLoadPipeline {
     TemporalTransform temporalTransform = TemporalTransform.builder().create();
 
     UnaryOperator<String> pathFn =
-        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, coreTerm, t, ALL_AVRO);
+        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, CORE_TERM, t, ALL_AVRO);
 
     log.info("Reading multimedia for this dataset");
     PCollection<KV<String, MultimediaRecord>> pt1 =

@@ -99,7 +99,7 @@ public class VerbatimToOccurrencePipelineIT {
         PipelinesOptionsFactory.createInterpretation(args);
     try (SyncDataFileWriter<GbifIdRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
-            optionsWriter, GbifIdTransform.builder().create(), coreTerm, postfix)) {
+            optionsWriter, GbifIdTransform.builder().create(), CORE_TERM, postfix)) {
       GbifIdRecord gbifIdRecord = GbifIdRecord.newBuilder().setId(ID).setGbifId(1L).build();
       writer.append(gbifIdRecord);
     }
@@ -158,13 +158,13 @@ public class VerbatimToOccurrencePipelineIT {
         PipelinesOptionsFactory.createInterpretation(args);
     GbifIdTransform transform = GbifIdTransform.builder().create();
     try (SyncDataFileWriter<GbifIdRecord> writer =
-        InterpretedAvroWriter.createAvroWriter(optionsWriter, transform, coreTerm, postfix)) {
+        InterpretedAvroWriter.createAvroWriter(optionsWriter, transform, CORE_TERM, postfix)) {
       GbifIdRecord gbifIdRecord = GbifIdRecord.newBuilder().setId(ID).setGbifId(1L).build();
       writer.append(gbifIdRecord);
     }
     try (SyncDataFileWriter<GbifIdRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
-            optionsWriter, transform, coreTerm, postfix, transform.getAbsentName())) {
+            optionsWriter, transform, CORE_TERM, postfix, transform.getAbsentName())) {
       GbifIdRecord gbifIdRecord = GbifIdRecord.newBuilder().setId(ID).build();
       writer.append(gbifIdRecord);
     }
@@ -194,7 +194,8 @@ public class VerbatimToOccurrencePipelineIT {
 
     // Create varbatim.avro
     try (SyncDataFileWriter<ExtendedRecord> writer =
-        InterpretedAvroWriter.createAvroWriter(options, VerbatimTransform.create(), coreTerm, ID)) {
+        InterpretedAvroWriter.createAvroWriter(
+            options, VerbatimTransform.create(), CORE_TERM, ID)) {
       Map<String, String> ext1 = new HashMap<>();
       ext1.put(DwcTerm.measurementID.qualifiedName(), "Id1");
       ext1.put(DwcTerm.measurementType.qualifiedName(), "Type1");

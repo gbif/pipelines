@@ -100,7 +100,7 @@ public class SpeciesListPipeline {
 
     log.info("Running species list pipeline for dataset {}", options.getDatasetId());
     UnaryOperator<String> pathFn =
-        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, coreTerm, t, ALL_AVRO);
+        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, CORE_TERM, t, ALL_AVRO);
 
     // now lets start the pipelines
     PCollection<SpeciesListRecord> speciesLists =

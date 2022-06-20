@@ -89,13 +89,14 @@ public class VerbatimToOccurrencePipelineIT {
         PipelinesOptionsFactory.createInterpretation(args);
     GbifIdTransform gbifIdTransform = GbifIdTransform.builder().create();
     try (SyncDataFileWriter<GbifIdRecord> writer =
-        InterpretedAvroWriter.createAvroWriter(optionsWriter, gbifIdTransform, coreTerm, postfix)) {
+        InterpretedAvroWriter.createAvroWriter(
+            optionsWriter, gbifIdTransform, CORE_TERM, postfix)) {
       GbifIdRecord gbifIdRecord = GbifIdRecord.newBuilder().setId(ID).setGbifId(1L).build();
       writer.append(gbifIdRecord);
     }
     try (SyncDataFileWriter<GbifIdRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
-            optionsWriter, gbifIdTransform, coreTerm, postfix, gbifIdTransform.getAbsentName())) {
+            optionsWriter, gbifIdTransform, CORE_TERM, postfix, gbifIdTransform.getAbsentName())) {
       GbifIdRecord gbifIdRecord = GbifIdRecord.newBuilder().setId(ID).build();
       writer.append(gbifIdRecord);
     }
@@ -130,7 +131,8 @@ public class VerbatimToOccurrencePipelineIT {
         PipelinesOptionsFactory.createInterpretation(args);
     GbifIdTransform gbifIdTransform = GbifIdTransform.builder().create();
     try (SyncDataFileWriter<GbifIdRecord> writer =
-        InterpretedAvroWriter.createAvroWriter(optionsWriter, gbifIdTransform, coreTerm, postfix)) {
+        InterpretedAvroWriter.createAvroWriter(
+            optionsWriter, gbifIdTransform, CORE_TERM, postfix)) {
       GbifIdRecord gbifIdRecord = GbifIdRecord.newBuilder().setId(ID).setGbifId(1L).build();
       writer.append(gbifIdRecord);
     }
@@ -234,7 +236,8 @@ public class VerbatimToOccurrencePipelineIT {
 
     // Create varbatim.avro
     try (SyncDataFileWriter<ExtendedRecord> writer =
-        InterpretedAvroWriter.createAvroWriter(options, VerbatimTransform.create(), coreTerm, ID)) {
+        InterpretedAvroWriter.createAvroWriter(
+            options, VerbatimTransform.create(), CORE_TERM, ID)) {
       Map<String, String> ext1 = new HashMap<>();
       ext1.put(DwcTerm.measurementID.qualifiedName(), "Id1");
       ext1.put(DwcTerm.measurementType.qualifiedName(), "Type1");

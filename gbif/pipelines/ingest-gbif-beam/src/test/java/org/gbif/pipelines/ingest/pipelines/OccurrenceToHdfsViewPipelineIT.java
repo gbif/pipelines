@@ -18,6 +18,7 @@ import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
+import org.gbif.pipelines.core.utils.HdfsViewUtils;
 import org.gbif.pipelines.ingest.pipelines.utils.InterpretedAvroWriter;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
@@ -223,7 +224,7 @@ public class OccurrenceToHdfsViewPipelineIT {
   public void pipelineHDFSTest(PipelinesVariables.Pipeline.Interpretation.RecordType recordType)
       throws Exception {
 
-    DwcTerm coreTerm = recordType.getCoreTerm();
+    DwcTerm coreTerm = HdfsViewUtils.getCoreTerm(recordType);
 
     // State
     String outputFile = getClass().getResource("/").getFile();

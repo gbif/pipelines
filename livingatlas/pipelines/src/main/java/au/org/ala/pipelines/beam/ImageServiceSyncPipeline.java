@@ -219,7 +219,7 @@ public class ImageServiceSyncPipeline {
     // Read multimedia AVRO generated in previous interpretation step
     MultimediaTransform multimediaTransform = MultimediaTransform.builder().create();
     UnaryOperator<String> pathFn =
-        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, coreTerm, t, ALL_AVRO);
+        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, CORE_TERM, t, ALL_AVRO);
 
     // Transform multimedia AVRO to map [RecordID -> Multimedia]
     log.info("Reading multimedia for this dataset");

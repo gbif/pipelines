@@ -41,7 +41,6 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TypeDescriptors;
-import org.gbif.api.model.pipelines.StepType;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
@@ -49,6 +48,7 @@ import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
+import org.gbif.pipelines.core.utils.HdfsViewUtils;
 import org.gbif.pipelines.ingest.utils.HdfsViewAvroUtils;
 import org.gbif.pipelines.ingest.utils.SharedLockUtils;
 import org.gbif.pipelines.io.avro.AudubonRecord;
@@ -158,7 +158,7 @@ public class HdfsViewPipeline {
     Integer attempt = options.getAttempt();
     Integer numberOfShards = options.getNumberOfShards();
     Set<String> types = options.getInterpretationTypes();
-    DwcTerm coreTerm = recordType.getCoreTerm();
+    DwcTerm coreTerm = HdfsViewUtils.getCoreTerm(recordType);
 
     SerializableFunction<RecordType, String> pathFn =
         st ->
@@ -167,7 +167,7 @@ public class HdfsViewPipeline {
 
     MDC.put("datasetKey", datasetId);
     MDC.put("attempt", attempt.toString());
-    MDC.put("step", StepType.HDFS_VIEW.name());
+    MDC.put("step", HdfsViewUtils.getSepType(recordType).name());
 
     Set<String> deleteTypes =
         getAllTables().stream().map(RecordType::name).collect(Collectors.toSet());

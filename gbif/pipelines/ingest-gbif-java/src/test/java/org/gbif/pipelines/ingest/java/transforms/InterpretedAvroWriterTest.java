@@ -29,7 +29,7 @@ public class InterpretedAvroWriterTest {
     String id = "id";
 
     String outputFile =
-        getClass().getResource("/").getFile() + "/" + coreTerm.simpleName().toLowerCase();
+        getClass().getResource("/").getFile() + "/" + CORE_TERM.simpleName().toLowerCase();
 
     String[] args = {
       "--datasetId=d596fccb-2319-42eb-b13b-986c932780ad",
@@ -42,7 +42,7 @@ public class InterpretedAvroWriterTest {
 
     // When
     try (SyncDataFileWriter<BasicRecord> writer =
-        InterpretedAvroWriter.createAvroWriter(options, basicTransform, coreTerm, id)) {
+        InterpretedAvroWriter.createAvroWriter(options, basicTransform, CORE_TERM, id)) {
       writer.append(basicRecord);
     }
 

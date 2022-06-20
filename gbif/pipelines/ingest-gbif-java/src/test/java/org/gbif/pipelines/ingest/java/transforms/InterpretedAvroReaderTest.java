@@ -34,14 +34,14 @@ public class InterpretedAvroReaderTest {
 
     try (SyncDataFileWriter<BasicRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
-            options, BasicTransform.builder().create(), coreTerm, "1")) {
+            options, BasicTransform.builder().create(), CORE_TERM, "1")) {
       BasicRecord basicRecord = BasicRecord.newBuilder().setId("777").build();
       writer.append(basicRecord);
     }
 
     try (SyncDataFileWriter<BasicRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
-            options, BasicTransform.builder().create(), coreTerm, "2")) {
+            options, BasicTransform.builder().create(), CORE_TERM, "2")) {
       BasicRecord basicRecord = BasicRecord.newBuilder().setId("888").build();
       writer.append(basicRecord);
     }
@@ -50,7 +50,7 @@ public class InterpretedAvroReaderTest {
     CompletableFuture<Map<String, BasicRecord>> result =
         InterpretedAvroReader.readAvroAsFuture(
             options,
-            coreTerm,
+            CORE_TERM,
             Executors.newSingleThreadExecutor(),
             BasicTransform.builder().create());
     Map<String, BasicRecord> map = result.get();

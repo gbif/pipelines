@@ -137,7 +137,7 @@ public class ALAVerbatimToInterpretedPipeline {
     log.info("hdfsSiteConfig = " + hdfsConfigs.getHdfsSiteConfig());
     log.info("coreSiteConfig = " + hdfsConfigs.getCoreSiteConfig());
 
-    FsUtils.deleteInterpretIfExist(hdfsConfigs, targetPath, datasetId, attempt, coreTerm, types);
+    FsUtils.deleteInterpretIfExist(hdfsConfigs, targetPath, datasetId, attempt, CORE_TERM, types);
 
     ALAPipelinesConfig config =
         ALAPipelinesConfigFactory.getInstance(hdfsConfigs, options.getProperties()).get();
@@ -150,7 +150,7 @@ public class ALAVerbatimToInterpretedPipeline {
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
     UnaryOperator<String> pathFn =
-        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, coreTerm, t, id);
+        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, CORE_TERM, t, id);
 
     log.info("Creating a pipeline from options");
 

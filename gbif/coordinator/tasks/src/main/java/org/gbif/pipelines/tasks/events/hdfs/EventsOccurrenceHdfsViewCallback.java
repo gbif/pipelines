@@ -32,6 +32,8 @@ public class EventsOccurrenceHdfsViewCallback
 
   @Override
   public String routingKey() {
-    return PipelinesEventsHdfsViewBuiltMessage.ROUTING_KEY;
+    return new PipelinesEventsHdfsViewBuiltMessage()
+        .setRunner(config.processRunner)
+        .getRoutingKey();
   }
 }

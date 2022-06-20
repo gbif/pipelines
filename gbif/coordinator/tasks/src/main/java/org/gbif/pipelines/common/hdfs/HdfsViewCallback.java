@@ -37,7 +37,7 @@ public abstract class HdfsViewCallback<
         I extends PipelinesInterpretationMessage, B extends PipelineBasedMessage>
     extends AbstractMessageCallback<I> implements StepHandler<I, B> {
 
-  private final HdfsViewConfiguration config;
+  protected final HdfsViewConfiguration config;
   private final MessagePublisher publisher;
   private final CuratorFramework curator;
   private final PipelinesHistoryClient historyClient;

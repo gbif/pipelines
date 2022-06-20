@@ -184,7 +184,7 @@ public class ALAVerbatimToInterpretedPipeline {
             ? config.getGbifConfig().getDefaultDateFormat()
             : options.getDefaultDateFormat();
 
-    FsUtils.deleteInterpretIfExist(hdfsConfigs, targetPath, datasetId, attempt, coreTerm, types);
+    FsUtils.deleteInterpretIfExist(hdfsConfigs, targetPath, datasetId, attempt, CORE_TERM, types);
 
     MDC.put("datasetId", datasetId);
     MDC.put("attempt", attempt.toString());
@@ -373,7 +373,7 @@ public class ALAVerbatimToInterpretedPipeline {
     UnaryOperator<String> pathFn =
         t ->
             PathBuilder.buildPathInterpretUsingTargetPath(
-                options, coreTerm, t, id + AVRO_EXTENSION);
+                options, CORE_TERM, t, id + AVRO_EXTENSION);
     Path path = new Path(pathFn.apply(transform.getBaseName()));
     FileSystem fs =
         FileSystemFactory.getInstance(HdfsConfigs.create(options.getHdfsSiteConfig(), null))

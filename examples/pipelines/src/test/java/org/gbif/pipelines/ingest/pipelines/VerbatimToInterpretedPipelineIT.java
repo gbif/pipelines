@@ -73,7 +73,8 @@ public class VerbatimToInterpretedPipelineIT {
 
     // Create varbatim.avro
     try (SyncDataFileWriter<ExtendedRecord> writer =
-        InterpretedAvroWriter.createAvroWriter(options, VerbatimTransform.create(), coreTerm, ID)) {
+        InterpretedAvroWriter.createAvroWriter(
+            options, VerbatimTransform.create(), CORE_TERM, ID)) {
 
       Map<String, String> core = new HashMap<>();
       core.put(DwcTerm.datasetID.qualifiedName(), "datasetID");

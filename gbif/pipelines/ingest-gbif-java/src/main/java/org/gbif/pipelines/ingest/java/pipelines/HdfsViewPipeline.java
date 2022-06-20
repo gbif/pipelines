@@ -67,6 +67,7 @@ import org.gbif.pipelines.core.converters.ReferenceTableConverter;
 import org.gbif.pipelines.core.converters.ResourceRelationshipTableConverter;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
+import org.gbif.pipelines.core.utils.HdfsViewUtils;
 import org.gbif.pipelines.ingest.java.metrics.IngestMetricsBuilder;
 import org.gbif.pipelines.ingest.java.transforms.OccurrenceHdfsRecordConverter;
 import org.gbif.pipelines.ingest.java.transforms.TableConverter;
@@ -206,7 +207,7 @@ public class HdfsViewPipeline {
     MDC.put("step", getStepType(options.getCoreRecordType()).name());
 
     RecordType recordType = options.getCoreRecordType();
-    DwcTerm coreTerm = recordType.getCoreTerm();
+    DwcTerm coreTerm = HdfsViewUtils.getCoreTerm(recordType);
     HdfsConfigs hdfsConfigs =
         HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig());
     String datasetId = options.getDatasetId();

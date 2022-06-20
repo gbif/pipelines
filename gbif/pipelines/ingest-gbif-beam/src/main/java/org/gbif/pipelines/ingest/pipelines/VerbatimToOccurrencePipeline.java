@@ -128,16 +128,16 @@ public class VerbatimToOccurrencePipeline {
     Set<String> deleteTypes = new HashSet<>(types);
     deleteTypes.remove(IDENTIFIER_ABSENT.name());
     FsUtils.deleteInterpretIfExist(
-        hdfsConfigs, targetPath, datasetId, attempt, coreTerm, deleteTypes);
+        hdfsConfigs, targetPath, datasetId, attempt, CORE_TERM, deleteTypes);
 
     // Path function for writing avro files
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
     UnaryOperator<String> pathFn =
-        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, coreTerm, t, id);
+        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, CORE_TERM, t, id);
 
     // Path function for reading avro files
     UnaryOperator<String> interpretedPathFn =
-        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, coreTerm, t, ALL_AVRO);
+        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, CORE_TERM, t, ALL_AVRO);
 
     log.info("Creating pipeline transforms");
     MetadataTransform metadataTransform = transformsFactory.createMetadataTransform();
@@ -214,7 +214,7 @@ public class VerbatimToOccurrencePipeline {
     // Read and interpret absent/new GBIF IDs records
     String identifierAbsentDir =
         PathBuilder.buildDatasetAttemptPath(
-            options, coreTerm.simpleName() + "/" + idTransform.getAbsentName(), false);
+            options, CORE_TERM.simpleName() + "/" + idTransform.getAbsentName(), false);
     if (types.contains(IDENTIFIER_ABSENT.name())
         && FsUtils.fileExists(hdfsConfigs, identifierAbsentDir)) {
       PCollectionTuple absentTyple =
@@ -325,7 +325,7 @@ public class VerbatimToOccurrencePipeline {
 
     // Delete absent GBIF IDs directory
     FsUtils.deleteInterpretIfExist(
-        hdfsConfigs, targetPath, datasetId, attempt, coreTerm, idTransform.getAbsentName());
+        hdfsConfigs, targetPath, datasetId, attempt, CORE_TERM, idTransform.getAbsentName());
 
     log.info("Deleting beam temporal folders");
     String tempPath = String.join("/", targetPath, datasetId, attempt.toString());
@@ -333,7 +333,7 @@ public class VerbatimToOccurrencePipeline {
 
     log.info("Set interpreted files permissions");
     String interpretedPath =
-        PathBuilder.buildDatasetAttemptPath(options, coreTerm.simpleName(), false);
+        PathBuilder.buildDatasetAttemptPath(options, CORE_TERM.simpleName(), false);
     FsUtils.setOwnerToCrap(hdfsConfigs, interpretedPath);
 
     log.info("Pipeline has been finished");

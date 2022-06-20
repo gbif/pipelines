@@ -108,12 +108,12 @@ public class VerbatimToEventPipeline {
     deleteTypes.add(IDENTIFIER.name());
     deleteTypes.remove(IDENTIFIER_ABSENT.name());
     FsUtils.deleteInterpretIfExist(
-        hdfsConfigs, targetPath, datasetId, attempt, coreTerm, deleteTypes);
+        hdfsConfigs, targetPath, datasetId, attempt, CORE_TERM, deleteTypes);
 
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
     UnaryOperator<String> pathFn =
-        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, coreTerm, t, id);
+        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, CORE_TERM, t, id);
 
     log.info("Creating a pipeline from options");
     Pipeline p = pipelinesFn.apply(options);
@@ -223,7 +223,7 @@ public class VerbatimToEventPipeline {
 
     log.info("Set interpreted files permissions");
     String interpretedPath =
-        PathBuilder.buildDatasetAttemptPath(options, coreTerm.simpleName(), false);
+        PathBuilder.buildDatasetAttemptPath(options, CORE_TERM.simpleName(), false);
     FsUtils.setOwnerToCrap(hdfsConfigs, interpretedPath);
 
     log.info("Pipeline has been finished");
