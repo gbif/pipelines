@@ -45,12 +45,21 @@ FIELD_NAME=$field_name
 TABLE_NAME=$LAYER_NAME
 P=postgres
 DB=$P
+timer=3
 
 function stop() {
   set +e
   docker stop $CNT_NAME >/dev/null 2>&1
   docker rm $CNT_NAME >/dev/null 2>&1
   set -e
+}
+
+function check_pg() {
+  until docker exec -i $CNT_NAME runuser -l $P -c 'pg_isready' 2>/dev/null; do
+    log.info "Postgres is unavailable - sleeping for $timer seconds"
+    sleep $timer
+  done
+  log.info "Postgres available"
 }
 
 stop
@@ -76,20 +85,26 @@ log.info ">>> Convert shape file into sql"
 
 docker exec -i $CNT_NAME shp2pgsql -d -i -I -s 4326 -W ISO-8859-1 /data/pipelines-shp/$LAYER_NAME.shp $LAYER_NAME > /tmp/$LAYER_NAME.sql
 
-timer=3
-until docker exec -i $CNT_NAME runuser -l $P -c 'pg_isready' 2>/dev/null; do
-  >&2 log.info "Postgres is unavailable - sleeping for $timer seconds"
+check_pg
+
+until docker exec -i $CNT_NAME psql -U $P -d $DB -c 'SELECT PostGIS_version();' >/dev/null 2>&1; do
+  log.info "Postgis is unavailable - sleeping for $timer seconds"
   sleep $timer
 done
 
-until docker exec -i $CNT_NAME psql -U $P -d $DB -c 'SELECT PostGIS_version();' 2>/dev/null; do
-  >&2 log.info "Postgis is unavailable - sleeping for $timer seconds"
-  sleep $timer
-done
+log.info "Postgis available"
+
+sleep 10
+
+check_pg
 
 log.info ">>> Load resulting sql layer in postgres"
 
-docker exec -i -u postgres $CNT_NAME psql -U $P -d $DB < /tmp/$LAYER_NAME.sql
+# Removing DropGeometry as always fails
+sed '/DropGeometry/d' /tmp/$LAYER_NAME.sql > /tmp/$LAYER_NAME.tmp
+mv /tmp/$LAYER_NAME.tmp /tmp/$LAYER_NAME.sql
+
+docker exec -i -u postgres $CNT_NAME psql -U $P -d $DB < /tmp/$LAYER_NAME.sql > /dev/null
 
 log.info ">>> Removing $TABLE_NAME.png bitmap if exists"
 
