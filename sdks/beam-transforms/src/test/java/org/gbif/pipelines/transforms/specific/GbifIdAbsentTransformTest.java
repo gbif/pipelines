@@ -3,6 +3,7 @@ package org.gbif.pipelines.transforms.specific;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Identifier.GBIF_ID_INVALID;
 import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
 
+import java.util.Optional;
 import java.util.Set;
 import lombok.AllArgsConstructor;
 import org.apache.beam.sdk.testing.NeedsRunner;
@@ -41,13 +42,13 @@ public class GbifIdAbsentTransformTest {
     }
 
     @Override
-    public KeyLookupResult findKey(Set<String> uniqueStrings, String scope) {
-      return generateKey(uniqueStrings, scope);
+    public Optional<KeyLookupResult> findKey(Set<String> uniqueStrings, String scope) {
+      return Optional.of(generateKey(uniqueStrings, scope));
     }
 
     @Override
-    public KeyLookupResult findKey(Set<String> uniqueStrings) {
-      return generateKey(uniqueStrings, scope);
+    public Optional<KeyLookupResult> findKey(Set<String> uniqueStrings) {
+      return Optional.of(generateKey(uniqueStrings, scope));
     }
 
     @Override

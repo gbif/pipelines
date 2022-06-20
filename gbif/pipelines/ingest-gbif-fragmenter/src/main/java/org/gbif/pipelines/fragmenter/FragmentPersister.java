@@ -25,12 +25,12 @@ import org.apache.hadoop.hbase.client.Table;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.converters.parser.xml.parsing.validators.UniquenessValidator;
 import org.gbif.pipelines.fragmenter.common.HbaseStore;
-import org.gbif.pipelines.fragmenter.record.OccurrenceRecord;
 import org.gbif.pipelines.fragmenter.record.OccurrenceRecordConverter;
 import org.gbif.pipelines.fragmenter.strategy.DwcaStrategy;
 import org.gbif.pipelines.fragmenter.strategy.Strategy;
 import org.gbif.pipelines.fragmenter.strategy.XmlStrategy;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
+import org.gbif.pipelines.keygen.OccurrenceRecord;
 import org.gbif.pipelines.keygen.common.HbaseConnectionFactory;
 import org.gbif.pipelines.keygen.config.KeygenConfig;
 

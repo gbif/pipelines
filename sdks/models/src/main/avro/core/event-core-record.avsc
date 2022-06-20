@@ -26,6 +26,7 @@
       {"name": "datasetName", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/dwc/terms/datasetName"},
       {"name": "samplingProtocol", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/dwc/terms/samplingProtocol"},
       {"name": "parentsLineage", "type": {"type" : "array", "items" : "Parent"}, "default" : [], "doc":""},
+      {"name": "locationID", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/locationID"},
       {"name": "issues", "type": "IssueRecord", "default":{}}
     ]
   }

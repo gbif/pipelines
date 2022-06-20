@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -106,9 +107,10 @@ public class HBaseLockingKeyServiceIT {
     assertEquals(1, result.getKey());
     assertTrue(result.isCreated());
 
-    KeyLookupResult result2 = keyService.findKey(uniqueIds, "boo");
-    assertEquals(1, result2.getKey());
-    assertFalse(result2.isCreated());
+    Optional<KeyLookupResult> result2 = keyService.findKey(uniqueIds, "boo");
+    assertTrue(result2.isPresent());
+    assertEquals(1, result2.get().getKey());
+    assertFalse(result2.get().isCreated());
   }
 
   @Test

@@ -7,9 +7,6 @@ import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
 
 import com.google.common.base.Strings;
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import lombok.AccessLevel;
@@ -17,11 +14,11 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.GbifIdRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKey;
-import org.gbif.pipelines.keygen.api.KeyLookupResult;
+import org.gbif.pipelines.keygen.Keygen;
+import org.gbif.pipelines.keygen.SimpleOccurrenceRecord;
 import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
 
 @Slf4j
@@ -49,13 +46,13 @@ public class GbifIdInterpreter {
       boolean isOccurrenceIdValid,
       boolean generateIdIfAbsent) {
     return (er, gr) -> {
-      Set<String> uniqueStrings = new HashSet<>(2);
+      SimpleOccurrenceRecord occRecords = SimpleOccurrenceRecord.create();
 
       // Adds occurrenceId
       if (isOccurrenceIdValid) {
         String occurrenceId = extractValue(er, DwcTerm.occurrenceID);
         if (!Strings.isNullOrEmpty(occurrenceId)) {
-          uniqueStrings.add(occurrenceId);
+          occRecords.setOccurrenceId(occurrenceId);
           gr.setOccurrenceId(occurrenceId);
         }
       }
@@ -68,15 +65,16 @@ public class GbifIdInterpreter {
         OccurrenceKeyBuilder.buildKey(ic, cc, cn)
             .ifPresent(
                 tr -> {
-                  uniqueStrings.add(tr);
+                  occRecords.setTriplet(tr);
                   gr.setTriplet(tr);
                 });
       }
 
-      Optional<Long> gbifId = getOrGenerateGbifId(uniqueStrings, keygenService, generateIdIfAbsent);
-
-      if (gbifId.isPresent()) {
-        gr.setGbifId(gbifId.get());
+      Long gbifId =
+          Keygen.getKey(
+              keygenService, isTripletValid, isOccurrenceIdValid, generateIdIfAbsent, occRecords);
+      if (gbifId != null && !gbifId.equals(Keygen.getErrorKey())) {
+        gr.setGbifId(gbifId);
       } else if (!generateIdIfAbsent) {
         addIssue(gr, GBIF_ID_ABSENT);
       } else {
@@ -89,22 +87,23 @@ public class GbifIdInterpreter {
   public static Consumer<GbifIdRecord> interpretAbsentGbifId(
       HBaseLockingKey keygenService, boolean isTripletValid, boolean isOccurrenceIdValid) {
     return gr -> {
-      Set<String> uniqueStrings = new HashSet<>(2);
+      SimpleOccurrenceRecord occRecords = SimpleOccurrenceRecord.create();
 
       // Adds occurrenceId
       if (isOccurrenceIdValid && !Strings.isNullOrEmpty(gr.getOccurrenceId())) {
-        uniqueStrings.add(gr.getOccurrenceId());
+        occRecords.setOccurrenceId(gr.getOccurrenceId());
       }
 
-      // Adds triplet
+      // Adds triplet, if isTripletValid and isOccurrenceIdValid is false, or occurrenceId is null
       if (isTripletValid && !Strings.isNullOrEmpty(gr.getTriplet())) {
-        uniqueStrings.add(gr.getTriplet());
+        occRecords.setTriplet(gr.getTriplet());
       }
 
-      Optional<Long> gbifId = getOrGenerateGbifId(uniqueStrings, keygenService, true);
+      Long gbifId =
+          Keygen.getKey(keygenService, isTripletValid, isOccurrenceIdValid, true, occRecords);
 
-      if (gbifId.isPresent()) {
-        gr.setGbifId(gbifId.get());
+      if (gbifId != null && !gbifId.equals(Keygen.getErrorKey())) {
+        gr.setGbifId(gbifId);
         gr.getIssues().setIssueList(Collections.emptyList());
       } else {
         gr.getIssues().setIssueList(Collections.singletonList(GBIF_ID_INVALID));
@@ -119,31 +118,5 @@ public class GbifIdInterpreter {
         gr.setGbifId(Long.parseLong(er.getId()));
       }
     };
-  }
-
-  /** Generates or gets existing GBIF id */
-  private static Optional<Long> getOrGenerateGbifId(
-      Set<String> uniqueStrings, HBaseLockingKey keygenService, boolean generateIdIfAbsent) {
-
-    if (keygenService == null) {
-      throw new PipelinesException("keygenService can't be null!");
-    }
-
-    if (uniqueStrings.isEmpty()) {
-      return Optional.empty();
-    }
-
-    try {
-      // Finds or generates key
-      KeyLookupResult keyResult = keygenService.findKey(uniqueStrings);
-      if (generateIdIfAbsent && keyResult == null) {
-        keyResult = keygenService.generateKey(uniqueStrings);
-      }
-      return Optional.ofNullable(keyResult).map(KeyLookupResult::getKey);
-
-    } catch (IllegalStateException ex) {
-      log.warn(ex.getMessage());
-      return Optional.empty();
-    }
   }
 }

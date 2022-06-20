@@ -126,6 +126,11 @@ public class CoreInterpreter {
     extractOptListValue(er, DwcTerm.samplingProtocol).ifPresent(consumer);
   }
 
+  /** {@link DwcTerm#locationID} interpretation. */
+  public static void interpretLocationID(ExtendedRecord er, Consumer<String> consumer) {
+    extractOptValue(er, DwcTerm.locationID).ifPresent(consumer);
+  }
+
   /** Returns ENUM instead of url string */
   private static License getLicense(String url) {
     URI uri =

@@ -213,8 +213,8 @@ public class DenormalizedJsonConverter {
     builder.setExtensions(JsonConverter.convertExtensions(verbatim));
 
     // Set raw as indexed
-    extractOptValue(verbatim, DwcTerm.eventID).ifPresent(builder::setEventId);
-    extractOptValue(verbatim, DwcTerm.parentEventID).ifPresent(builder::setParentEventId);
+    extractOptValue(verbatim, DwcTerm.eventID).ifPresent(builder::setEventID);
+    extractOptValue(verbatim, DwcTerm.parentEventID).ifPresent(builder::setParentEventID);
     extractOptValue(verbatim, DwcTerm.institutionCode).ifPresent(builder::setInstitutionCode);
     extractOptValue(verbatim, DwcTerm.verbatimDepth).ifPresent(builder::setVerbatimDepth);
     extractOptValue(verbatim, DwcTerm.verbatimElevation).ifPresent(builder::setVerbatimElevation);

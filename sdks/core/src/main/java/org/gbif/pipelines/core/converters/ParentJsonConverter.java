@@ -6,7 +6,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
-import lombok.Builder;
+import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.utils.HashConverter;
@@ -18,7 +18,6 @@ import org.gbif.pipelines.io.avro.MeasurementOrFact;
 import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.io.avro.json.DerivedMetadataRecord;
@@ -30,21 +29,20 @@ import org.gbif.pipelines.io.avro.json.Parent;
 import org.gbif.pipelines.io.avro.json.ParentJsonRecord;
 
 @Slf4j
-@Builder
-public class ParentJsonConverter {
+@SuperBuilder
+public abstract class ParentJsonConverter {
 
-  private final MetadataRecord metadata;
-  private final IdentifierRecord identifier;
-  private final EventCoreRecord eventCore;
-  private final TemporalRecord temporal;
-  private final LocationRecord location;
-  private final TaxonRecord taxon;
-  private final GrscicollRecord grscicoll;
-  private final MultimediaRecord multimedia;
-  private final ExtendedRecord verbatim;
-  private final DerivedMetadataRecord derivedMetadata;
-  private OccurrenceJsonRecord occurrenceJsonRecord;
-  private MeasurementOrFactRecord measurementOrFactRecord;
+  protected final MetadataRecord metadata;
+  protected final IdentifierRecord identifier;
+  protected final EventCoreRecord eventCore;
+  protected final TemporalRecord temporal;
+  protected final LocationRecord location;
+  protected final GrscicollRecord grscicoll;
+  protected final MultimediaRecord multimedia;
+  protected final ExtendedRecord verbatim;
+  protected final DerivedMetadataRecord derivedMetadata;
+  protected OccurrenceJsonRecord occurrenceJsonRecord;
+  protected MeasurementOrFactRecord measurementOrFactRecord;
 
   public ParentJsonRecord convertToParent() {
     return (occurrenceJsonRecord != null) ? convertToParentOccurrence() : convertToParentEvent();
@@ -70,7 +68,7 @@ public class ParentJsonConverter {
         .setId(occurrenceJsonRecord.getId())
         .setInternalId(
             HashConverter.getSha1(
-                occurrenceJsonRecord.getDatasetKey(),
+                metadata.getDatasetKey(),
                 occurrenceJsonRecord.getVerbatim().getParentCoreId(),
                 occurrenceJsonRecord.getOccurrenceId()))
         .setJoinRecordBuilder(
@@ -78,9 +76,10 @@ public class ParentJsonConverter {
                 .setName("occurrence")
                 .setParent(
                     HashConverter.getSha1(
-                        occurrenceJsonRecord.getDatasetKey(),
+                        metadata.getDatasetKey(),
                         occurrenceJsonRecord.getVerbatim().getParentCoreId())))
         .setOccurrence(occurrenceJsonRecord)
+        .setMetadataBuilder(mapMetadataJsonRecord())
         .build();
   }
 
@@ -148,7 +147,8 @@ public class ParentJsonConverter {
         .setDatasetName(eventCore.getDatasetName())
         .setSamplingProtocol(eventCore.getSamplingProtocol())
         .setParentsLineage(convertParents(eventCore.getParentsLineage()))
-        .setParentEventId(eventCore.getParentEventID());
+        .setParentEventID(eventCore.getParentEventID())
+        .setLocationID(eventCore.getLocationID());
 
     // Vocabulary
     JsonConverter.convertVocabularyConcept(eventCore.getEventType())
@@ -215,9 +215,7 @@ public class ParentJsonConverter {
     JsonConverter.convertGadm(location.getGadm()).ifPresent(builder::setGadm);
   }
 
-  private void mapTaxonRecord(EventJsonRecord.Builder builder) {
-    builder.setGbifClassification(JsonConverter.convertClassification(verbatim, taxon));
-  }
+  protected abstract void mapTaxonRecord(EventJsonRecord.Builder builder);
 
   private void mapMultimediaRecord(EventJsonRecord.Builder builder) {
     builder
@@ -241,7 +239,7 @@ public class ParentJsonConverter {
     builder.setExtensions(JsonConverter.convertExtensions(verbatim));
 
     // Set raw as indexed
-    extractOptValue(verbatim, DwcTerm.eventID).ifPresent(builder::setEventId);
+    extractOptValue(verbatim, DwcTerm.eventID).ifPresent(builder::setEventID);
     extractOptValue(verbatim, DwcTerm.institutionCode).ifPresent(builder::setInstitutionCode);
     extractOptValue(verbatim, DwcTerm.verbatimDepth).ifPresent(builder::setVerbatimDepth);
     extractOptValue(verbatim, DwcTerm.verbatimElevation).ifPresent(builder::setVerbatimElevation);
