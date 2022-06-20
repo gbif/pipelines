@@ -31,7 +31,7 @@ import org.slf4j.MDC;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class VerbatimToIdentifierPipeline {
 
-  private static final DwcTerm coreTerm = DwcTerm.Occurrence;
+  private static final DwcTerm CORE_TERM = DwcTerm.Occurrence;
 
   public static void main(String[] args) {
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);

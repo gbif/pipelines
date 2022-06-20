@@ -53,7 +53,7 @@ import org.junit.runners.JUnit4;
 @Category(NeedsRunner.class)
 public class OccurrenceToEsIndexPipelineIT {
 
-  private static final DwcTerm coreTerm = DwcTerm.Occurrence;
+  private static final DwcTerm CORE_TERM = DwcTerm.Occurrence;
 
   private static final String ID = "777";
 

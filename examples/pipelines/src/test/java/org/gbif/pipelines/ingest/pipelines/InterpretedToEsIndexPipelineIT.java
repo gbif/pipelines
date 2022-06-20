@@ -45,7 +45,7 @@ import org.junit.runners.JUnit4;
 @Category(NeedsRunner.class)
 public class InterpretedToEsIndexPipelineIT {
 
-  private static final DwcTerm coreTerm = DwcTerm.Event;
+  private static final DwcTerm CORE_TERM = DwcTerm.Event;
 
   private static final String ID = "777";
 

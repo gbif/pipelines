@@ -70,7 +70,7 @@ import org.slf4j.MDC;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class VerbatimToInterpretedPipeline {
 
-  private static final DwcTerm coreTerm = DwcTerm.Event;
+  private static final DwcTerm CORE_TERM = DwcTerm.Event;
 
   public static void main(String[] args) {
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);

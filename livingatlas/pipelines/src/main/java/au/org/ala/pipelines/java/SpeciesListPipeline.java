@@ -52,7 +52,7 @@ import org.gbif.pipelines.io.avro.TaxonProfile;
 @Slf4j
 public class SpeciesListPipeline {
 
-  private static final DwcTerm coreTerm = DwcTerm.Occurrence;
+  private static final DwcTerm CORE_TERM = DwcTerm.Occurrence;
 
   public static void main(String[] args) throws Exception {
     VersionInfo.print();

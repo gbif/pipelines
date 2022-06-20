@@ -119,7 +119,7 @@ import org.slf4j.MDC;
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ALAVerbatimToInterpretedPipeline {
-  private static final DwcTerm coreTerm = DwcTerm.Occurrence;
+  private static final DwcTerm CORE_TERM = DwcTerm.Occurrence;
 
   public static void main(String[] args) throws IOException {
     VersionInfo.print();

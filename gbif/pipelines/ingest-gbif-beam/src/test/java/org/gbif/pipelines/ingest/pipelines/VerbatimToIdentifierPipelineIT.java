@@ -43,7 +43,7 @@ import org.junit.runners.MethodSorters;
 @FixMethodOrder(MethodSorters.JVM)
 public class VerbatimToIdentifierPipelineIT {
 
-  private static final DwcTerm coreTerm = DwcTerm.Occurrence;
+  private static final DwcTerm CORE_TERM = DwcTerm.Occurrence;
 
   private static final String ID = "777";
   private static final String DATASET_KEY = "9bed66b3-4caa-42bb-9c93-71d7ba109dad";

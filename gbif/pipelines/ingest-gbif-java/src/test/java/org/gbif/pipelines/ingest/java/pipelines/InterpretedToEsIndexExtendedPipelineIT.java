@@ -45,7 +45,7 @@ import org.junit.Test;
 
 public class InterpretedToEsIndexExtendedPipelineIT {
 
-  private static final DwcTerm coreTerm = DwcTerm.Occurrence;
+  private static final DwcTerm CORE_TERM = DwcTerm.Occurrence;
 
   private static final String ID = "777";
 

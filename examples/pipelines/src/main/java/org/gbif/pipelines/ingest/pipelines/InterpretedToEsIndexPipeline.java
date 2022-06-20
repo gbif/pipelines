@@ -81,7 +81,7 @@ import org.slf4j.MDC;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class InterpretedToEsIndexPipeline {
 
-  private static final DwcTerm coreTerm = DwcTerm.Event;
+  private static final DwcTerm CORE_TERM = DwcTerm.Event;
 
   public static void main(String[] args) {
     EsIndexingPipelineOptions options = PipelinesOptionsFactory.createIndexing(args);

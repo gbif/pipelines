@@ -17,7 +17,7 @@ import org.junit.Test;
 
 public class InterpretedAvroWriterTest {
 
-  private static final DwcTerm coreTerm = DwcTerm.Occurrence;
+  private static final DwcTerm CORE_TERM = DwcTerm.Occurrence;
 
   @Test
   public void writerTest() throws IOException {

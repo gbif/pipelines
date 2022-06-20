@@ -68,7 +68,7 @@ import org.slf4j.MDC;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class IndexRecordPipeline {
 
-  private static final DwcTerm coreTerm = DwcTerm.Occurrence;
+  private static final DwcTerm CORE_TERM = DwcTerm.Occurrence;
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
 
