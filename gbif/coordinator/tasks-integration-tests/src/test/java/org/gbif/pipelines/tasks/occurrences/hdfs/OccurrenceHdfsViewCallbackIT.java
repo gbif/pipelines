@@ -25,6 +25,7 @@ import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
+import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.common.hdfs.HdfsViewConfiguration;
 import org.gbif.pipelines.common.utils.ZookeeperUtils;
 import org.gbif.pipelines.tasks.MessagePublisherStub;
@@ -120,6 +121,11 @@ public class OccurrenceHdfsViewCallbackIT {
             Files.exists(
                 Paths.get(
                     config.repositoryTargetPath
+                        + "/"
+                        + PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE
+                            .name()
+                            .toLowerCase()
+                        + "/"
                         + "/"
                         + str
                         + "/"
@@ -232,6 +238,7 @@ public class OccurrenceHdfsViewCallbackIT {
     config.pipelinesConfig = this.getClass().getClassLoader().getResource("lock.yaml").getPath();
     config.repositoryTargetPath =
         this.getClass().getClassLoader().getResource("data7/ingest").getPath();
+    config.recordType = PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE;
     return config;
   }
 
