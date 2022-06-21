@@ -5,6 +5,7 @@ import static org.gbif.pipelines.core.parsers.clustering.RelationshipAssertion.F
 
 import com.google.common.annotations.VisibleForTesting;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -46,17 +47,42 @@ public class OccurrenceRelationships {
     }
 
     // fact combinations that are of interest as assertions
-    FeatureAssertion[][] passConditions = {
-      {SAME_ACCEPTED_SPECIES, SAME_COORDINATES, SAME_DATE},
-      {SAME_ACCEPTED_SPECIES, WITHIN_200m, SAME_DATE}, // accommodate 3 decimal place roundings
-      {SAME_ACCEPTED_SPECIES, SAME_COORDINATES, NON_CONFLICTING_DATE, IDENTIFIERS_OVERLAP},
-      {SAME_ACCEPTED_SPECIES, WITHIN_200m, NON_CONFLICTING_DATE, IDENTIFIERS_OVERLAP},
-      {SAME_ACCEPTED_SPECIES, WITHIN_2Km, SAME_DATE, IDENTIFIERS_OVERLAP},
-      {SAME_ACCEPTED_SPECIES, WITHIN_2Km, NON_CONFLICTING_DATE, IDENTIFIERS_OVERLAP},
-      {SAME_ACCEPTED_SPECIES, NON_CONFLICTING_COORDINATES, SAME_DATE, IDENTIFIERS_OVERLAP},
-      {SAME_ACCEPTED_SPECIES, SAME_COORDINATES, APPROXIMATE_DATE, SAME_RECORDER_NAME},
-      {SAME_ACCEPTED_SPECIES, WITHIN_2Km, APPROXIMATE_DATE, SAME_RECORDER_NAME},
-    };
+    List<FeatureAssertion[]> passConditions =
+        new ArrayList<>(
+            Arrays.asList(
+                new FeatureAssertion[][] {
+                  {SAME_ACCEPTED_SPECIES, SAME_COORDINATES, SAME_DATE},
+                  {SAME_ACCEPTED_SPECIES, WITHIN_200m, SAME_DATE},
+                  {
+                    SAME_ACCEPTED_SPECIES,
+                    SAME_COORDINATES,
+                    NON_CONFLICTING_DATE,
+                    IDENTIFIERS_OVERLAP
+                  },
+                  {SAME_ACCEPTED_SPECIES, WITHIN_200m, NON_CONFLICTING_DATE, IDENTIFIERS_OVERLAP},
+                  {SAME_ACCEPTED_SPECIES, WITHIN_2Km, SAME_DATE, IDENTIFIERS_OVERLAP},
+                  {SAME_ACCEPTED_SPECIES, WITHIN_2Km, NON_CONFLICTING_DATE, IDENTIFIERS_OVERLAP},
+                  {
+                    SAME_ACCEPTED_SPECIES,
+                    NON_CONFLICTING_COORDINATES,
+                    SAME_DATE,
+                    IDENTIFIERS_OVERLAP
+                  },
+                  {SAME_ACCEPTED_SPECIES, SAME_COORDINATES, APPROXIMATE_DATE, SAME_RECORDER_NAME},
+                  {SAME_ACCEPTED_SPECIES, WITHIN_2Km, APPROXIMATE_DATE, SAME_RECORDER_NAME},
+                }));
+
+    // Accommodate sparse data from sequence repositories
+    // see https://github.com/gbif/pipelines/issues/733
+    if (o1.isFromSequenceRepository() || o2.isFromSequenceRepository()) {
+      passConditions.add(
+          new FeatureAssertion[] {
+            SAME_ACCEPTED_SPECIES,
+            NON_CONFLICTING_COORDINATES,
+            NON_CONFLICTING_DATE,
+            IDENTIFIERS_OVERLAP
+          });
+    }
 
     // always exclude things on different location or date
     if (assertion.justificationDoesNotContain(DIFFERENT_DATE, DIFFERENT_COUNTRY)) {

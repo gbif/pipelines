@@ -23,6 +23,16 @@ import scala.collection.Seq;
  * of a SQL select a.*,b.* from a join b).
  */
 public class RowOccurrenceFeatures implements OccurrenceFeatures {
+
+  // Dataset keys are considered reliable over time
+  private static final List<String> SEQUENCE_REPOSITORY_KEYS =
+      Arrays.asList(
+          "d8cd16ba-bb74-4420-821e-083f2bac17c2", // INSDC sequences
+          "393b8c26-e4e0-4dd0-a218-93fc074ebf4e", // INSDC host organisms
+          "583d91fe-bbc0-4b4a-afe1-801f88263016", // INSDC environmental samples
+          "040c5662-da76-4782-a48e-cdea1892d14c" // iBOL
+          );
+
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
   static {
@@ -226,6 +236,11 @@ public class RowOccurrenceFeatures implements OccurrenceFeatures {
   @Override
   public String getCollectionCode() {
     return get("collectionCode");
+  }
+
+  @Override
+  public boolean isFromSequenceRepository() {
+    return SEQUENCE_REPOSITORY_KEYS.contains(getDatasetKey().toLowerCase());
   }
 
   List<String> listOrNull(String field) {
