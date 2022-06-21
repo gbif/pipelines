@@ -57,7 +57,7 @@
             "verbatim": {"type": "keyword", "ignore_above": 1024}
           }
         },
-        "eventId": {
+        "eventID": {
           "type": "text",
           "fields": {
             "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
@@ -65,7 +65,7 @@
             "verbatim": {"type": "keyword", "ignore_above": 1024}
           }
         },
-        "parentEventId": {
+        "parentEventID": {
           "type": "text",
           "fields": {
             "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
@@ -73,7 +73,15 @@
             "verbatim": {"type": "keyword", "ignore_above": 1024}
           }
         },
-        "parentEventIds": {
+        "parentsLineage": {
+          "type": "text",
+          "fields": {
+            "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
+            "keyword": {"type": "keyword", "normalizer": "lowercase_normalizer", "ignore_above": 1024},
+            "verbatim": {"type": "keyword", "ignore_above": 1024}
+          }
+        },
+        "locationID": {
           "type": "text",
           "fields": {
             "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},

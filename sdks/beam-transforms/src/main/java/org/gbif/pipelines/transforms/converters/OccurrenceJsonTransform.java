@@ -16,7 +16,7 @@ import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
 import org.gbif.pipelines.core.converters.MultimediaConverter;
 import org.gbif.pipelines.core.converters.OccurrenceJsonConverter;
-import org.gbif.pipelines.core.converters.ParentJsonConverter;
+import org.gbif.pipelines.core.converters.specific.GbifParentJsonConverter;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
@@ -160,8 +160,9 @@ public class OccurrenceJsonTransform implements Serializable {
                     .build();
             if (asParentChildRecord) {
               c.output(
-                  ParentJsonConverter.builder()
+                  GbifParentJsonConverter.builder()
                       .occurrenceJsonRecord(occurrenceJsonConverter.convert())
+                      .metadata(mdr)
                       .build()
                       .toJson());
             } else {

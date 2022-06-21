@@ -28,6 +28,7 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionList;
 import org.apache.beam.sdk.values.PCollectionView;
+import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
@@ -202,6 +203,7 @@ public class EventToEsIndexPipeline {
             .taxonCollection(taxonCollection)
             .eventCoreCollection(eventCoreCollection)
             .occurrencesPathFn(occurrencesPathFn)
+            .datasetHasOccurrences(datasetHasOccurrences)
             .build()
             .calculate();
 
@@ -331,19 +333,25 @@ public class EventToEsIndexPipeline {
     private final PCollection<KV<String, TaxonRecord>> taxonCollection;
     private final PCollection<KV<String, EventCoreRecord>> eventCoreCollection;
     private final UnaryOperator<String> occurrencesPathFn;
+    private final boolean datasetHasOccurrences;
 
     /** Calculates the simple Temporal Coverage of an Event. */
     private PCollection<KV<String, EventDate>> temporalCoverage() {
       PCollection<KV<String, TemporalRecord>> eventOccurrenceTemporalCollection =
-          pipeline
-              .apply(
-                  "Read occurrence event temporal records",
-                  temporalTransform.read(occurrencesPathFn))
-              .apply(
-                  "Remove temporal records with null parent ids",
-                  Filter.by(NotNullOrEmptyFilter.of(TemporalRecord::getParentId)))
-              .apply(
-                  "Map occurrence events temporal records to KV", temporalTransform.toParentKv());
+          datasetHasOccurrences
+              ? pipeline
+                  .apply(
+                      "Read occurrence event temporal records",
+                      temporalTransform.read(occurrencesPathFn))
+                  .apply(
+                      "Remove temporal records with null parent ids",
+                      Filter.by(NotNullOrEmptyFilter.of(TemporalRecord::getParentId)))
+                  .apply(
+                      "Map occurrence events temporal records to KV",
+                      temporalTransform.toParentKv())
+              : pipeline.apply(
+                  "Create empty eventOccurrenceTemporalCollection",
+                  Create.empty(new TypeDescriptor<KV<String, TemporalRecord>>() {}));
 
       // Creates a Map of all events and its sub events
       PCollection<KV<String, TemporalRecord>> temporalRecordsOfSubEvents =
@@ -360,14 +368,19 @@ public class EventToEsIndexPipeline {
 
     private PCollection<KV<String, String>> convexHull() {
       PCollection<KV<String, LocationRecord>> eventOccurrenceLocationCollection =
-          pipeline
-              .apply(
-                  "Read occurrence events locations",
-                  parentLocationTransform.read(occurrencesPathFn))
-              .apply(
-                  "Remove location records with null parent ids",
-                  Filter.by(NotNullOrEmptyFilter.of(LocationRecord::getParentId)))
-              .apply("Map occurrence events locations to KV", parentLocationTransform.toParentKv());
+          datasetHasOccurrences
+              ? pipeline
+                  .apply(
+                      "Read occurrence events locations",
+                      parentLocationTransform.read(occurrencesPathFn))
+                  .apply(
+                      "Remove location records with null parent ids",
+                      Filter.by(NotNullOrEmptyFilter.of(LocationRecord::getParentId)))
+                  .apply(
+                      "Map occurrence events locations to KV", parentLocationTransform.toParentKv())
+              : pipeline.apply(
+                  "Create empty eventOccurrenceLocationCollection",
+                  Create.empty(new TypeDescriptor<KV<String, LocationRecord>>() {}));
 
       PCollection<KV<String, LocationRecord>> locationRecordsOfSubEvents =
           ParentEventExpandTransform.createLocationTransform(
@@ -384,13 +397,18 @@ public class EventToEsIndexPipeline {
 
     private PCollection<KV<String, Iterable<TaxonRecord>>> taxonomicCoverage() {
       PCollection<KV<String, TaxonRecord>> eventOccurrencesTaxonCollection =
-          pipeline
-              .apply(
-                  "Read event occurrences taxon records", taxonomyTransform.read(occurrencesPathFn))
-              .apply(
-                  "Remove taxon records with null parent ids",
-                  Filter.by(NotNullOrEmptyFilter.of(TaxonRecord::getParentId)))
-              .apply("Map event occurrences taxon to KV", taxonomyTransform.toParentKv());
+          datasetHasOccurrences
+              ? pipeline
+                  .apply(
+                      "Read event occurrences taxon records",
+                      taxonomyTransform.read(occurrencesPathFn))
+                  .apply(
+                      "Remove taxon records with null parent ids",
+                      Filter.by(NotNullOrEmptyFilter.of(TaxonRecord::getParentId)))
+                  .apply("Map event occurrences taxon to KV", taxonomyTransform.toParentKv())
+              : pipeline.apply(
+                  "Create empty eventOccurrencesTaxonCollection",
+                  Create.empty(new TypeDescriptor<KV<String, TaxonRecord>>() {}));
 
       PCollection<KV<String, TaxonRecord>> taxonRecordsOfSubEvents =
           ParentEventExpandTransform.createTaxonTransform(
@@ -407,12 +425,18 @@ public class EventToEsIndexPipeline {
     PCollection<KV<String, DerivedMetadataRecord>> calculate() {
 
       PCollection<KV<String, ExtendedRecord>> eventOccurrenceVerbatimCollection =
-          pipeline
-              .apply("Read event occurrences verbatim", verbatimTransform.read(occurrencesPathFn))
-              .apply(
-                  "Remove verbatim records with null parent ids",
-                  Filter.by(NotNullOrEmptyFilter.of((ExtendedRecord er) -> er.getParentCoreId())))
-              .apply("Map event occurrences verbatim to KV", verbatimTransform.toParentKv());
+          datasetHasOccurrences
+              ? pipeline
+                  .apply(
+                      "Read event occurrences verbatim", verbatimTransform.read(occurrencesPathFn))
+                  .apply(
+                      "Remove verbatim records with null parent ids",
+                      Filter.by(
+                          NotNullOrEmptyFilter.of((ExtendedRecord er) -> er.getParentCoreId())))
+                  .apply("Map event occurrences verbatim to KV", verbatimTransform.toParentKv())
+              : pipeline.apply(
+                  "Create empty eventOccurrenceVerbatimCollection",
+                  Create.empty(new TypeDescriptor<KV<String, ExtendedRecord>>() {}));
 
       return KeyedPCollectionTuple.of(ConvexHullFn.tag(), convexHull())
           .and(TemporalCoverageFn.tag(), temporalCoverage())

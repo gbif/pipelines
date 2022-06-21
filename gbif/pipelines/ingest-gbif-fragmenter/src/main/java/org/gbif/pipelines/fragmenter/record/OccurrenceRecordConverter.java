@@ -2,14 +2,16 @@ package org.gbif.pipelines.fragmenter.record;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.converters.parser.xml.parsing.validators.UniquenessValidator;
-import org.gbif.pipelines.fragmenter.common.Keygen;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
+import org.gbif.pipelines.keygen.Keygen;
+import org.gbif.pipelines.keygen.OccurrenceRecord;
 
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -25,16 +27,18 @@ public class OccurrenceRecordConverter {
 
     Function<OccurrenceRecord, String> keyFn =
         ru -> {
-          Long key = Keygen.getErrorKey();
+          Optional<Long> key = Optional.of(Keygen.getErrorKey());
           try {
             key = Keygen.getKey(keygenService, useTriplet, useOccurrenceId, generateIfAbsent, ru);
           } catch (RuntimeException ex) {
             log.error(ex.getMessage(), ex);
           }
-          if (Keygen.getErrorKey().equals(key) || !validator.isUnique(key.toString())) {
+          if (!key.isPresent()
+              || Keygen.getErrorKey().equals(key.get())
+              || !validator.isUnique(key.toString())) {
             return Keygen.getErrorKey().toString();
           }
-          return Keygen.getSaltedKey(key);
+          return Keygen.getSaltedKey(key.get());
         };
 
     Function<OccurrenceRecord, String> valueFn = OccurrenceRecord::toStringRecord;
