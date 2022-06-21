@@ -162,9 +162,6 @@ public class AvroReader {
   private static List<Path> parseWildcardPath(FileSystem fs, String path) {
     if (path.contains("*")) {
       Path pp = new Path(path).getParent();
-      if (!fs.exists(pp)) {
-        return Collections.emptyList();
-      }
       RemoteIterator<LocatedFileStatus> files = fs.listFiles(pp, false);
       List<Path> paths = new ArrayList<>();
       while (files.hasNext()) {

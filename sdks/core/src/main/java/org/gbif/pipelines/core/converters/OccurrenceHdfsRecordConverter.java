@@ -453,7 +453,7 @@ public class OccurrenceHdfsRecordConverter {
                         .setLineage(c.getLineage())
                         .build()));
 
-    // Othes
+    // Others
     Optional.ofNullable(basicRecord.getRecordedByIds())
         .ifPresent(
             uis ->

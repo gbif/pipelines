@@ -270,13 +270,9 @@ public class HdfsViewPipeline {
     CompletableFuture<Map<String, AudubonRecord>> audubonMapFeature =
         readAvroAsFuture(options, coreTerm, executor, AudubonTransform.builder().create());
 
-    CompletableFuture<Map<String, EventCoreRecord>> eventCoreMapFeature =
-        readAvroAsFuture(options, coreTerm, executor, EventCoreTransform.builder().create());
-
     Map<String, GbifIdRecord> idRecordMap = idMapFeature.get();
 
-    // OccurrenceHdfsRecord
-    Function<GbifIdRecord, Optional<OccurrenceHdfsRecord>> occurrenceHdfsRecordFn =
+    OccurrenceHdfsRecordConverter.OccurrenceHdfsRecordConverterBuilder builder =
         OccurrenceHdfsRecordConverter.builder()
             .metrics(metrics)
             .metadata(metadataMapFeature.get().values().iterator().next())
@@ -289,10 +285,17 @@ public class HdfsViewPipeline {
             .grscicollMap(grscicollMapFeature.get())
             .multimediaMap(multimediaMapFeature.get())
             .imageMap(imageMapFeature.get())
-            .audubonMap(audubonMapFeature.get())
-            .eventCoreRecordMap(eventCoreMapFeature.get())
-            .build()
-            .getFn();
+            .audubonMap(audubonMapFeature.get());
+
+    if (RecordType.EVENT == recordType) {
+      CompletableFuture<Map<String, EventCoreRecord>> eventCoreMapFeature =
+          readAvroAsFuture(options, coreTerm, executor, EventCoreTransform.builder().create());
+      builder.eventCoreRecordMap(eventCoreMapFeature.get());
+    }
+
+    // OccurrenceHdfsRecord
+    Function<GbifIdRecord, Optional<OccurrenceHdfsRecord>> occurrenceHdfsRecordFn =
+        builder.build().getFn();
 
     TableRecordWriter.<OccurrenceHdfsRecord>builder()
         .recordFunction(occurrenceHdfsRecordFn)

@@ -26,7 +26,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.transforms.Transform;
 
 /**
- * Beam level transformations for the DWC Event, reads an avro, writs an avro, maps from value to
+ * Beam level transformations for the DWC Event, reads an avro, writes an avro, maps from value to
  * keyValue and transforms form {@link ExtendedRecord} to {@link EventCoreRecord}.
  *
  * @see <a href="https://dwc.tdwg.org/terms/#event"/>
