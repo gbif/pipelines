@@ -28,7 +28,7 @@ LA-Pipelines bitmap generation utility.
 The $CMD generates bitmaps from shapefiles to minimize spatial web service calls in la-pipelines
 
 Usage:
-  $CMD <layers_dir> <layer_name> <field_name> [--expose] [--nostop]
+  $CMD <layers_dir> <layer_name> <field_name> [--expose] [--nostop] [--memory=<mem>]
 
 Options:
   -h --help            Show this help.
@@ -72,6 +72,12 @@ else
   PORTS=""
 fi
 
+if [[ -n $memory ]]; then
+  JAVA_OPTS="-Xmx$memory"
+else
+  JAVA_OPTS=""
+fi
+
 docker run \
   --interactive --tty -d \
   --volume "$LAYERS_DIR":/data/pipelines-shp \
@@ -112,7 +118,7 @@ rm -f /data/pipelines-shp/$TABLE_NAME.png
 
 log.info ">>> Generating bitmap from sql table $TABLE_NAME"
 
-docker exec -i $CNT_NAME /usr/lib/jvm/jdk8u332-b09-jre/bin/java -Durl=jdbc:postgresql://127.0.0.1 -Ddb=$DB -Duser=$P -Dpassword=$P -jar /usr/local/lib/la-pipelines-bitmap.jar $TABLE_NAME $FIELD_NAME /data/pipelines-shp/
+docker exec -i $CNT_NAME /usr/lib/jvm/jdk8u332-b09-jre/bin/java $JAVA_OPTS -Durl=jdbc:postgresql://127.0.0.1 -Ddb=$DB -Duser=$P -Dpassword=$P -jar /usr/local/lib/la-pipelines-bitmap.jar $TABLE_NAME $FIELD_NAME /data/pipelines-shp/
 
 log.info ">>> Bitmap generated in $LAYERS_DIR/$TABLE_NAME.png"
 
