@@ -4,13 +4,24 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.UUID;
 import org.gbif.pipelines.keygen.api.KeyLookupResult;
+import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 
-public class HbaseKeyMigratorIT extends HBaseIT {
+public class HbaseKeyMigratorIT {
+
+  /** {@link ClassRule} requires this field to be public. */
+  @ClassRule public static final HbaseServer HBASE_SERVER = new HbaseServer();
+
+  @Before
+  public void before() throws IOException {
+    HBASE_SERVER.truncateTable();
+  }
 
   @Test
   public void testLookupKeyMigration() {
@@ -20,7 +31,7 @@ public class HbaseKeyMigratorIT extends HBaseIT {
     String newOccurrenceId = "newOccurrenceId";
 
     KeyLookupResult oldKey =
-        keyService.generateKey(Collections.singleton(oldOccurrenceId), datasetKey);
+        HBASE_SERVER.keyService.generateKey(Collections.singleton(oldOccurrenceId), datasetKey);
 
     // When
     Optional<KeyLookupResult> migratedKey =
@@ -29,16 +40,16 @@ public class HbaseKeyMigratorIT extends HBaseIT {
             .toDatasetKey(datasetKey)
             .oldLookupKey(oldOccurrenceId)
             .newLookupKey(newOccurrenceId)
-            .keyService(keyService)
+            .keyService(HBASE_SERVER.keyService)
             .deleteKeys(false)
             .build()
             .migrate();
 
     // Should
     Optional<KeyLookupResult> newKey =
-        keyService.findKey(Collections.singleton(newOccurrenceId), datasetKey);
+        HBASE_SERVER.keyService.findKey(Collections.singleton(newOccurrenceId), datasetKey);
     Optional<KeyLookupResult> oldExpiriedKey =
-        keyService.findKey(Collections.singleton(oldOccurrenceId), datasetKey);
+        HBASE_SERVER.keyService.findKey(Collections.singleton(oldOccurrenceId), datasetKey);
 
     assertTrue(migratedKey.isPresent());
     assertEquals(oldKey.getKey(), migratedKey.get().getKey());
@@ -61,7 +72,7 @@ public class HbaseKeyMigratorIT extends HBaseIT {
             .toDatasetKey(datasetKey)
             .oldLookupKey(oldOccurrenceId)
             .newLookupKey(newOccurrenceId)
-            .keyService(keyService)
+            .keyService(HBASE_SERVER.keyService)
             .build()
             .migrate();
 
@@ -76,8 +87,8 @@ public class HbaseKeyMigratorIT extends HBaseIT {
     String oldOccurrenceId = "oldOccurrenceId";
     String newOccurrenceId = "newOccurrenceId";
 
-    keyService.generateKey(Collections.singleton(oldOccurrenceId), datasetKey);
-    keyService.generateKey(Collections.singleton(newOccurrenceId), datasetKey);
+    HBASE_SERVER.keyService.generateKey(Collections.singleton(oldOccurrenceId), datasetKey);
+    HBASE_SERVER.keyService.generateKey(Collections.singleton(newOccurrenceId), datasetKey);
 
     // When
     Optional<KeyLookupResult> migratedKey =
@@ -86,7 +97,7 @@ public class HbaseKeyMigratorIT extends HBaseIT {
             .toDatasetKey(datasetKey)
             .oldLookupKey(oldOccurrenceId)
             .newLookupKey(newOccurrenceId)
-            .keyService(keyService)
+            .keyService(HBASE_SERVER.keyService)
             .deleteKeys(false)
             .build()
             .migrate();
@@ -103,8 +114,8 @@ public class HbaseKeyMigratorIT extends HBaseIT {
     String newOccurrenceId = "newOccurrenceId";
 
     KeyLookupResult oldKey =
-        keyService.generateKey(Collections.singleton(oldOccurrenceId), datasetKey);
-    keyService.generateKey(Collections.singleton(newOccurrenceId), datasetKey);
+        HBASE_SERVER.keyService.generateKey(Collections.singleton(oldOccurrenceId), datasetKey);
+    HBASE_SERVER.keyService.generateKey(Collections.singleton(newOccurrenceId), datasetKey);
 
     // When
     Optional<KeyLookupResult> migratedKey =
@@ -113,16 +124,16 @@ public class HbaseKeyMigratorIT extends HBaseIT {
             .toDatasetKey(datasetKey)
             .oldLookupKey(oldOccurrenceId)
             .newLookupKey(newOccurrenceId)
-            .keyService(keyService)
+            .keyService(HBASE_SERVER.keyService)
             .deleteKeys(true)
             .build()
             .migrate();
 
     // Should
     Optional<KeyLookupResult> newKey =
-        keyService.findKey(Collections.singleton(newOccurrenceId), datasetKey);
+        HBASE_SERVER.keyService.findKey(Collections.singleton(newOccurrenceId), datasetKey);
     Optional<KeyLookupResult> oldExpiriedKey =
-        keyService.findKey(Collections.singleton(oldOccurrenceId), datasetKey);
+        HBASE_SERVER.keyService.findKey(Collections.singleton(oldOccurrenceId), datasetKey);
 
     assertTrue(migratedKey.isPresent());
     assertEquals(oldKey.getKey(), migratedKey.get().getKey());
