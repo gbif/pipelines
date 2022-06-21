@@ -67,6 +67,56 @@ public class KeygenIT extends HBaseIT {
   }
 
   @Test
+  public void testOccurrenceTripletChange() {
+
+    // State
+    String occurrenceId = "occurrenceId";
+    String triplet = "triplet";
+    String newTriplet = "newTriplet";
+
+    // When
+
+    // Generate key for triplet
+    SimpleOccurrenceRecord tripletOnlyRecord = SimpleOccurrenceRecord.create();
+    tripletOnlyRecord.setTriplet(triplet);
+    Optional<Long> tripletKey = Keygen.getKey(keyService, true, true, true, tripletOnlyRecord);
+
+    // Relink occurrence to triplet key
+    SimpleOccurrenceRecord occurrenceRecord = SimpleOccurrenceRecord.create();
+    occurrenceRecord.setOccurrenceId(occurrenceId);
+    occurrenceRecord.setTriplet(triplet);
+    Optional<Long> relinkKey = Keygen.getKey(keyService, true, true, false, occurrenceRecord);
+
+    // Get key by occurrenceId
+    SimpleOccurrenceRecord occurrenceOnlyRecord = SimpleOccurrenceRecord.create();
+    occurrenceOnlyRecord.setOccurrenceId(occurrenceId);
+    Optional<Long> occurrenceIdKey = Keygen.getKey(keyService, true, true, false, occurrenceOnlyRecord);
+
+    // The key is the same because it linked to occurrenceId
+    SimpleOccurrenceRecord newOccurrenceRecord = SimpleOccurrenceRecord.create();
+    newOccurrenceRecord.setOccurrenceId(occurrenceId);
+    newOccurrenceRecord.setTriplet(newTriplet);
+    Optional<Long> sameOccurrenceIdKey = Keygen.getKey(keyService, true, true, false, newOccurrenceRecord);
+
+    // Use only triplet to check the key
+    SimpleOccurrenceRecord newTripletRecord = SimpleOccurrenceRecord.create();
+    newTripletRecord.setTriplet(newTriplet);
+    Optional<Long> newTripletKey = Keygen.getKey(keyService, true, true, false, newTripletRecord);
+
+    // Should
+    assertFalse(newTripletKey.isPresent());
+
+    assertTrue(tripletKey.isPresent());
+    assertTrue(relinkKey.isPresent());
+    assertTrue(occurrenceIdKey.isPresent());
+    assertTrue(sameOccurrenceIdKey.isPresent());
+
+    assertEquals(tripletKey.get(), relinkKey.get());
+    assertEquals(relinkKey.get(), occurrenceIdKey.get());
+    assertEquals(occurrenceIdKey.get(), sameOccurrenceIdKey.get());
+  }
+
+  @Test
   public void testExistingOccurrenceTripletKey() {
 
     // State
