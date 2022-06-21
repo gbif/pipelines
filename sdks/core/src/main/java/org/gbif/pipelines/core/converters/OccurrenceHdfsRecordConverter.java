@@ -576,7 +576,7 @@ public class OccurrenceHdfsRecordConverter {
                     pl ->
                         ParentEventGbifId.newBuilder()
                             .setId(pl.getId())
-                            .setEventType(pl.getEventType())
+                            .setEventtype(pl.getEventType())
                             .build())
                 .collect(Collectors.toList()));
       }

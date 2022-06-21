@@ -748,7 +748,7 @@
           "name" : "id",
           "type" : "string"
         }, {
-          "name" : "eventType",
+          "name" : "eventtype",
           "type" : [ "null", "string" ],
           "default" : null
         } ]
