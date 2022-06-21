@@ -50,7 +50,8 @@ public class KeygenIT extends HBaseIT {
     // Get key by occurrenceId
     SimpleOccurrenceRecord occurrenceOnlyRecord = SimpleOccurrenceRecord.create();
     occurrenceOnlyRecord.setOccurrenceId(occurrenceId);
-    Optional<Long> occurrenceIdKey = Keygen.getKey(keyService, true, true, false, occurrenceOnlyRecord);
+    Optional<Long> occurrenceIdKey =
+        Keygen.getKey(keyService, true, true, false, occurrenceOnlyRecord);
 
     // Get key by triplet
     SimpleOccurrenceRecord tripletOnlyRecord = SimpleOccurrenceRecord.create();
@@ -90,13 +91,15 @@ public class KeygenIT extends HBaseIT {
     // Get key by occurrenceId
     SimpleOccurrenceRecord occurrenceOnlyRecord = SimpleOccurrenceRecord.create();
     occurrenceOnlyRecord.setOccurrenceId(occurrenceId);
-    Optional<Long> occurrenceIdKey = Keygen.getKey(keyService, true, true, false, occurrenceOnlyRecord);
+    Optional<Long> occurrenceIdKey =
+        Keygen.getKey(keyService, true, true, false, occurrenceOnlyRecord);
 
     // The key is the same because it linked to occurrenceId
     SimpleOccurrenceRecord newOccurrenceRecord = SimpleOccurrenceRecord.create();
     newOccurrenceRecord.setOccurrenceId(occurrenceId);
     newOccurrenceRecord.setTriplet(newTriplet);
-    Optional<Long> sameOccurrenceIdKey = Keygen.getKey(keyService, true, true, false, newOccurrenceRecord);
+    Optional<Long> sameOccurrenceIdKey =
+        Keygen.getKey(keyService, true, true, false, newOccurrenceRecord);
 
     // Use only triplet to check the key
     SimpleOccurrenceRecord newTripletRecord = SimpleOccurrenceRecord.create();
