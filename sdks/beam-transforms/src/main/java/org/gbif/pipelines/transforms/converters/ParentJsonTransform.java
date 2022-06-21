@@ -15,7 +15,7 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
 import org.gbif.pipelines.core.converters.MultimediaConverter;
-import org.gbif.pipelines.core.converters.ParentJsonConverter;
+import org.gbif.pipelines.core.converters.specific.GbifParentJsonConverter;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -135,7 +135,7 @@ public class ParentJsonTransform implements Serializable {
 
             // Convert and
             String json =
-                ParentJsonConverter.builder()
+                GbifParentJsonConverter.builder()
                     .metadata(mdr)
                     .eventCore(ecr)
                     .identifier(ir)
