@@ -29,6 +29,8 @@ public class OccurrenceFeaturesPojo implements OccurrenceFeatures {
   private final String institutionCode;
   private final String collectionCode;
 
+  private final boolean isFromSequenceRepository;
+
   @Override
   public String getId() {
     return id;
@@ -137,5 +139,10 @@ public class OccurrenceFeaturesPojo implements OccurrenceFeatures {
   @Override
   public String getCollectionCode() {
     return collectionCode;
+  }
+
+  @Override
+  public boolean isFromSequenceRepository() {
+    return isFromSequenceRepository;
   }
 }
