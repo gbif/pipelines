@@ -1,15 +1,16 @@
-package org.gbif.pipelines.diagnostics.migration;
+package org.gbif.pipelines.diagnostics;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.beust.jcommander.Parameter;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Optional;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.NonNull;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.keygen.HbaseKeyMigrator;
@@ -17,19 +18,39 @@ import org.gbif.pipelines.keygen.api.KeyLookupResult;
 
 @Slf4j
 @Builder
-public class IdentifiersFileMigrator {
+public class IdentifiersMigratorTool implements Tool {
 
-  @NonNull private final String filePath;
-  @Builder.Default private final String splitter = ",";
-  @Builder.Default private final boolean deleteKeys = false;
-  @Builder.Default private final boolean skipIssues = false;
-  @NonNull private final String fromDatasetKey;
-  @NonNull private final String toDatasetKey;
+  @Parameter(names = "--tool")
+  public CliTool tool;
 
-  @NonNull private final HBaseLockingKeyService keygenService;
+  @Parameter(names = "--file-path")
+  @NotNull
+  public String filePath;
 
-  @SneakyThrows
-  public void migrateIdentifiers() {
+  @Parameter(names = "--splitter")
+  @Builder.Default
+  public String splitter = ",";
+
+  @Parameter(names = "--delete-keys")
+  @Builder.Default
+  public boolean deleteKeys = false;
+
+  @Parameter(names = "--skip-issues")
+  @Builder.Default
+  public boolean skipIssues = false;
+
+  @Parameter(names = "--from-dataset-key")
+  @NotNull
+  public String fromDatasetKey;
+
+  @Parameter(names = "--to-dataset-key")
+  @NotNull
+  public String toDatasetKey;
+
+  @NonNull public HBaseLockingKeyService keygenService;
+
+  @Override
+  public void run() {
 
     try (BufferedReader reader = Files.newBufferedReader(Paths.get(filePath), UTF_8)) {
 

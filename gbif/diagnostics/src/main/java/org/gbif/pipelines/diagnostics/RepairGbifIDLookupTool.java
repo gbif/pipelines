@@ -23,9 +23,12 @@ import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
 
 @Slf4j
 @Builder
-public class RepairGbifIDLookupTool {
+public class RepairGbifIDLookupTool implements Tool {
 
   private long counter;
+
+  @Parameter(names = "--tool")
+  public CliTool tool;
 
   @Parameter(names = "--dataset-key", description = "GBIF registry ID for the dataset")
   @NotNull
@@ -92,19 +95,16 @@ public class RepairGbifIDLookupTool {
 
   @Builder.Default public Connection connection = null;
 
-  public static void main(String... argv) {
-    RepairGbifIDLookupTool main = RepairGbifIDLookupTool.builder().build();
-    JCommander jc = JCommander.newBuilder().addObject(main).build();
-    jc.parse(argv);
-    if (main.help) {
-      jc.usage();
-      System.exit(0);
-    }
+  @Override
+  public boolean getHelp() {
+    return help;
+  }
 
-    boolean useTriple = main.tripletLookupKey != null && !main.tripletLookupKey.isEmpty();
-    boolean useOccurrenceId =
-        main.occurrenceIdLookupKey != null && !main.occurrenceIdLookupKey.isEmpty();
-    boolean useDwcaDirectory = main.dwcaSource != null && main.dwcaSource.exists();
+  @Override
+  public void check(JCommander jc) {
+    boolean useTriple = tripletLookupKey != null && !tripletLookupKey.isEmpty();
+    boolean useOccurrenceId = occurrenceIdLookupKey != null && !occurrenceIdLookupKey.isEmpty();
+    boolean useDwcaDirectory = dwcaSource != null && dwcaSource.exists();
 
     checkArguments(
         jc,
@@ -116,15 +116,14 @@ public class RepairGbifIDLookupTool {
         useDwcaDirectory && (useTriple || useOccurrenceId),
         "Lookup source can't be dwca and triplet/occurrenceId");
 
-    checkArguments(jc, main.deletionStrategyType == null, "--deletion-strategy can't be null");
-    checkArguments(jc, main.lookupTable == null, "--lookup-table can't be null");
-    checkArguments(jc, main.counterTable == null, "--counter-table can't be null");
-    checkArguments(jc, main.occurrenceTable == null, "--occurrence-table can't be null");
-    checkArguments(jc, main.zkConnection == null, "--zookeeper connection can't be null");
-
-    main.run();
+    checkArguments(jc, deletionStrategyType == null, "--deletion-strategy can't be null");
+    checkArguments(jc, lookupTable == null, "--lookup-table can't be null");
+    checkArguments(jc, counterTable == null, "--counter-table can't be null");
+    checkArguments(jc, occurrenceTable == null, "--occurrence-table can't be null");
+    checkArguments(jc, zkConnection == null, "--zookeeper connection can't be null");
   }
 
+  @Override
   public void run() {
     log.info(
         "Running diagnostic tool for - {}, using deletion strategy - {}",
