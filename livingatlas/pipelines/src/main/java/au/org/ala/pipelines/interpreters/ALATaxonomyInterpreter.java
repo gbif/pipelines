@@ -139,6 +139,7 @@ public class ALATaxonomyInterpreter {
         }
         NameSearch matchRequest =
             NameSearch.builder()
+                .taxonID(extractValue(er, DwcTerm.taxonID, defaults))
                 .kingdom(extractValue(er, DwcTerm.kingdom, defaults))
                 .phylum(extractValue(er, DwcTerm.phylum, defaults))
                 .clazz(extractValue(er, DwcTerm.class_, defaults))
