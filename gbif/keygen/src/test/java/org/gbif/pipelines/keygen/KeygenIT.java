@@ -190,4 +190,21 @@ public class KeygenIT {
     assertEquals(Long.valueOf(expected.getKey()), relinkKey.get());
     assertEquals(occurrenceKey.get(), relinkKey.get());
   }
+
+  @Test
+  public void testNewTripletKeyOnly() {
+
+    // State
+    String triplet = "triplet";
+
+    SimpleOccurrenceRecord occurrenceRecord = SimpleOccurrenceRecord.create();
+    occurrenceRecord.setTriplet(triplet);
+
+    // When
+    Optional<Long> key =
+        Keygen.getKey(HBASE_SERVER.keyService, true, false, true, occurrenceRecord);
+
+    // Should
+    assertTrue(key.isPresent());
+  }
 }
