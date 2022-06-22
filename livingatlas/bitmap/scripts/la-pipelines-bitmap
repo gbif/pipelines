@@ -10,7 +10,7 @@ FIND_DOCOPTS=$(which docopts)
 
 if [[ -z $FIND_DOCOPTS ]]
 then
-    echo "ERROR: Please install docopts https://github.com/docopt/docopts an copy it in your PATH"
+    echo "ERROR: Please install docopts https://github.com/docopt/docopts and copy it in your PATH"
     exit 1
 fi
 
