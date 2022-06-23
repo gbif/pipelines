@@ -240,6 +240,7 @@ public class EventToEsIndexPipelineIT {
               .setDecimalLatitude(10d)
               .setDecimalLongitude(5d)
               .setHasCoordinate(Boolean.TRUE)
+              .setCountryCode("DK")
               .build();
       writer.append(locationRecordSubEvent);
 
@@ -461,6 +462,9 @@ public class EventToEsIndexPipelineIT {
 
     ParentJsonRecord eventRecord = getResult(idxName, ID, "event");
     assertRootParenJsonRecordResponse(eventRecord);
+
+    ParentJsonRecord eventRecordSub2 = getResult(idxName, SUB_EVENT_ID_2, "event");
+    assertEquals("DK", eventRecordSub2.getLocationInherited().getCountryCode());
   }
 
   /**

@@ -1,0 +1,18 @@
+/**
+ * Represents the inherited location fields from parent events.
+ */
+[
+  {
+    "name":"LocationInheritedRecord",
+    "namespace":"org.gbif.pipelines.io.avro.json",
+    "type":"record",
+    "doc":"Location inherited fiedls from parent events",
+    "fields":[
+      {"name": "id","type":"string", "doc":"Pipelines identifier"},
+      {"name": "countryCode","type":["null","string"],"default":null},
+      {"name": "stateProvince","type":["null","string"],"default":null},
+      {"name": "decimalLatitude","type":["null","double"],"default":null},
+      {"name": "decimalLongitude","type":["null","double"],"default":null}
+    ]
+  }
+]

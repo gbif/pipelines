@@ -23,6 +23,7 @@ import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.io.avro.json.DerivedMetadataRecord;
 import org.gbif.pipelines.io.avro.json.EventJsonRecord;
 import org.gbif.pipelines.io.avro.json.JoinRecord;
+import org.gbif.pipelines.io.avro.json.LocationInheritedRecord;
 import org.gbif.pipelines.io.avro.json.MetadataJsonRecord;
 import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
 import org.gbif.pipelines.io.avro.json.Parent;
@@ -41,6 +42,8 @@ public abstract class ParentJsonConverter {
   protected final MultimediaRecord multimedia;
   protected final ExtendedRecord verbatim;
   protected final DerivedMetadataRecord derivedMetadata;
+
+  protected final LocationInheritedRecord locationInheritedRecord;
   protected OccurrenceJsonRecord occurrenceJsonRecord;
   protected MeasurementOrFactRecord measurementOrFactRecord;
 
@@ -95,6 +98,7 @@ public abstract class ParentJsonConverter {
 
     mapCreated(builder);
     mapDerivedMetadata(builder);
+    mapLocationInheritedFields(builder);
 
     JsonConverter.convertToDate(identifier.getFirstLoaded()).ifPresent(builder::setFirstLoaded);
     JsonConverter.convertToDate(metadata.getLastCrawled()).ifPresent(builder::setLastCrawled);
@@ -259,6 +263,10 @@ public abstract class ParentJsonConverter {
 
   private void mapDerivedMetadata(ParentJsonRecord.Builder builder) {
     builder.setDerivedMetadata(derivedMetadata);
+  }
+
+  private void mapLocationInheritedFields(ParentJsonRecord.Builder builder) {
+    builder.setLocationInherited(locationInheritedRecord);
   }
 
   protected static List<Parent> convertParents(List<org.gbif.pipelines.io.avro.Parent> parents) {

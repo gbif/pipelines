@@ -28,6 +28,7 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.json.DerivedMetadataRecord;
+import org.gbif.pipelines.io.avro.json.LocationInheritedRecord;
 
 /**
  * Beam level transformation for the ES output json. The transformation consumes objects, which
@@ -88,6 +89,8 @@ public class ParentJsonTransform implements Serializable {
   @NonNull private final TupleTag<DerivedMetadataRecord> derivedMetadataRecordTag;
   @NonNull private final TupleTag<MeasurementOrFactRecord> measurementOrFactRecordTag;
 
+  @NonNull private final TupleTag<LocationInheritedRecord> locationInheritedRecordTag;
+
   public SingleOutput<KV<String, CoGbkResult>, String> converter() {
 
     DoFn<KV<String, CoGbkResult>, String> fn =
@@ -133,6 +136,12 @@ public class ParentJsonTransform implements Serializable {
                 v.getOnly(
                     derivedMetadataRecordTag, DerivedMetadataRecord.newBuilder().setId(k).build());
 
+            // Inherited location fields
+            LocationInheritedRecord lir =
+                v.getOnly(
+                    locationInheritedRecordTag,
+                    LocationInheritedRecord.newBuilder().setId(k).build());
+
             // Convert and
             String json =
                 GbifParentJsonConverter.builder()
@@ -145,6 +154,7 @@ public class ParentJsonTransform implements Serializable {
                     .verbatim(er)
                     .taxon(txr)
                     .derivedMetadata(dmr)
+                    .locationInheritedRecord(lir)
                     .measurementOrFactRecord(mofr)
                     .build()
                     .toJson();

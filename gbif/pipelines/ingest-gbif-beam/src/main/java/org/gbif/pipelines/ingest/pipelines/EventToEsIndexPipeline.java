@@ -1,34 +1,10 @@
 package org.gbif.pipelines.ingest.pipelines;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.ALL_AVRO;
-
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.beam.sdk.Pipeline;
-import org.apache.beam.sdk.PipelineResult;
-import org.apache.beam.sdk.coders.StringUtf8Coder;
-import org.apache.beam.sdk.io.elasticsearch.ElasticsearchIO;
-import org.apache.beam.sdk.transforms.Combine;
-import org.apache.beam.sdk.transforms.Create;
-import org.apache.beam.sdk.transforms.Filter;
-import org.apache.beam.sdk.transforms.Flatten;
-import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
-import org.apache.beam.sdk.transforms.Sample;
-import org.apache.beam.sdk.transforms.View;
-import org.apache.beam.sdk.transforms.join.CoGbkResult;
-import org.apache.beam.sdk.transforms.join.CoGroupByKey;
-import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
-import org.apache.beam.sdk.values.KV;
-import org.apache.beam.sdk.values.PCollection;
-import org.apache.beam.sdk.values.PCollectionList;
-import org.apache.beam.sdk.values.PCollectionView;
-import org.apache.beam.sdk.values.TypeDescriptor;
+
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
@@ -50,12 +26,14 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.json.DerivedMetadataRecord;
+import org.gbif.pipelines.io.avro.json.LocationInheritedRecord;
 import org.gbif.pipelines.transforms.common.NotNullOrEmptyFilter;
 import org.gbif.pipelines.transforms.converters.ParentEventExpandTransform;
 import org.gbif.pipelines.transforms.converters.ParentJsonTransform;
 import org.gbif.pipelines.transforms.core.ConvexHullFn;
 import org.gbif.pipelines.transforms.core.DerivedMetadataTransform;
 import org.gbif.pipelines.transforms.core.EventCoreTransform;
+import org.gbif.pipelines.transforms.core.LocationInheritedFieldsFn;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.TaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalCoverageFn;
@@ -67,7 +45,35 @@ import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.gbif.pipelines.transforms.specific.IdentifierTransform;
+
+import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.PipelineResult;
+import org.apache.beam.sdk.coders.StringUtf8Coder;
+import org.apache.beam.sdk.io.elasticsearch.ElasticsearchIO;
+import org.apache.beam.sdk.transforms.Combine;
+import org.apache.beam.sdk.transforms.Create;
+import org.apache.beam.sdk.transforms.Filter;
+import org.apache.beam.sdk.transforms.Flatten;
+import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
+import org.apache.beam.sdk.transforms.Sample;
+import org.apache.beam.sdk.transforms.View;
+import org.apache.beam.sdk.transforms.join.CoGbkResult;
+import org.apache.beam.sdk.transforms.join.CoGroupByKey;
+import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
+import org.apache.beam.sdk.values.KV;
+import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.PCollectionList;
+import org.apache.beam.sdk.values.PCollectionView;
+import org.apache.beam.sdk.values.TupleTag;
+import org.apache.beam.sdk.values.TypeDescriptor;
 import org.slf4j.MDC;
+
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.ALL_AVRO;
 
 /**
  * Pipeline sequence:
@@ -188,6 +194,16 @@ public class EventToEsIndexPipeline {
         p.apply("Read event taxon records", taxonomyTransform.read(pathFn))
             .apply("Map event taxon records to KV", taxonomyTransform.toKv());
 
+    PCollection<KV<String, LocationInheritedRecord>> locationInheritedRecords =
+        InheritedFields.builder()
+            .pipeline(p)
+            .locationCollection(locationCollection)
+            .locationTransform(locationTransform)
+            .eventCoreCollection(eventCoreCollection)
+            .eventCoreTransform(eventCoreTransform)
+            .build()
+            .inheritLocationFields();
+
     PCollection<KV<String, DerivedMetadataRecord>> derivedMetadataRecordCollection =
         DerivedMetadata.builder()
             .pipeline(p)
@@ -237,6 +253,7 @@ public class EventToEsIndexPipeline {
             .audubonRecordTag(audubonTransform.getTag())
             .derivedMetadataRecordTag(DerivedMetadataTransform.tag())
             .measurementOrFactRecordTag(measurementOrFactTransform.getTag())
+            .locationInheritedRecordTag(InheritedFields.LIR_TAG)
             .metadataView(metadataView)
             .build()
             .converter();
@@ -259,6 +276,7 @@ public class EventToEsIndexPipeline {
             .and(verbatimTransform.getTag(), verbatimCollection)
             // Derived metadata
             .and(DerivedMetadataTransform.tag(), derivedMetadataRecordCollection)
+            .and(InheritedFields.LIR_TAG, locationInheritedRecords)
             // Apply
             .apply("Grouping objects", CoGroupByKey.create())
             .apply("Merging to json", eventJsonDoFn);
@@ -455,6 +473,35 @@ public class EventToEsIndexPipeline {
                   .extendedRecordTag(verbatimTransform.getTag())
                   .build()
                   .converter());
+    }
+  }
+
+  @Builder
+  static class InheritedFields {
+
+    private static final TupleTag<LocationInheritedRecord> LIR_TAG =
+        new TupleTag<LocationInheritedRecord>() {};
+
+    private final Pipeline pipeline;
+    private final TemporalTransform temporalTransform;
+    private final EventCoreTransform eventCoreTransform;
+    private final LocationTransform locationTransform;
+    private final PCollection<KV<String, TemporalRecord>> temporalCollection;
+    private final PCollection<KV<String, LocationRecord>> locationCollection;
+    private final PCollection<KV<String, EventCoreRecord>> eventCoreCollection;
+
+    PCollection<KV<String, LocationInheritedRecord>> inheritLocationFields() {
+      PCollection<KV<String, LocationRecord>> locationRecordsOfSubEvents =
+          ParentEventExpandTransform.createLocationTransform(
+                  locationTransform.getTag(), eventCoreTransform.getTag())
+              .toSubEventsRecordsFromLeaf("Location", locationCollection, eventCoreCollection);
+
+      return PCollectionList.of(locationCollection)
+          .and(locationRecordsOfSubEvents)
+          .apply("Joining location records for inheritance", Flatten.pCollections())
+          .apply(
+              "Inherit location fields of all records",
+              Combine.perKey(new LocationInheritedFieldsFn()));
     }
   }
 }
