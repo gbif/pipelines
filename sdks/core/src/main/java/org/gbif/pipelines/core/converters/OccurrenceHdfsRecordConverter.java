@@ -29,6 +29,8 @@ import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.DegreeOfEstablishment;
 import org.gbif.pipelines.io.avro.Diagnostic;
 import org.gbif.pipelines.io.avro.EstablishmentMeans;
+import org.gbif.pipelines.io.avro.EventCoreRecord;
+import org.gbif.pipelines.io.avro.EventType;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.GbifIdRecord;
 import org.gbif.pipelines.io.avro.IssueRecord;
@@ -38,6 +40,7 @@ import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.Multimedia;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
+import org.gbif.pipelines.io.avro.ParentEventGbifId;
 import org.gbif.pipelines.io.avro.Pathway;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
@@ -60,6 +63,7 @@ public class OccurrenceHdfsRecordConverter {
   private final TemporalRecord temporalRecord;
   private final MetadataRecord metadataRecord;
   private final MultimediaRecord multimediaRecord;
+  private EventCoreRecord eventCoreRecord;
 
   /**
    * Collects data from {@link SpecificRecordBase} instances into a {@link OccurrenceHdfsRecord}.
@@ -81,6 +85,7 @@ public class OccurrenceHdfsRecordConverter {
     mapGrscicollRecord(occurrenceHdfsRecord);
     mapMultimediaRecord(occurrenceHdfsRecord);
     mapExtendedRecord(occurrenceHdfsRecord);
+    mapEventCoreRecord(occurrenceHdfsRecord);
 
     // The id (the <id> reference in the DWCA meta.xml) is an identifier local to the DWCA, and
     // could only have been
@@ -448,7 +453,7 @@ public class OccurrenceHdfsRecordConverter {
                         .setLineage(c.getLineage())
                         .build()));
 
-    // Othes
+    // Others
     Optional.ofNullable(basicRecord.getRecordedByIds())
         .ifPresent(
             uis ->
@@ -558,6 +563,31 @@ public class OccurrenceHdfsRecordConverter {
             .map(Entry::getKey)
             .collect(Collectors.toList());
     occurrenceHdfsRecord.setDwcaextension(extensions);
+  }
+
+  /** Copies the {@link EventCoreRecord} data into the {@link OccurrenceHdfsRecord}. */
+  private void mapEventCoreRecord(OccurrenceHdfsRecord occurrenceHdfsRecord) {
+    if (eventCoreRecord != null) {
+
+      if (eventCoreRecord.getParentsLineage() != null) {
+        occurrenceHdfsRecord.setParenteventgbifid(
+            eventCoreRecord.getParentsLineage().stream()
+                .map(
+                    pl ->
+                        ParentEventGbifId.newBuilder()
+                            .setId(pl.getId())
+                            .setEventtype(pl.getEventType())
+                            .build())
+                .collect(Collectors.toList()));
+      }
+      if (eventCoreRecord.getEventType() != null) {
+        occurrenceHdfsRecord.setEventtype(
+            EventType.newBuilder()
+                .setConcept(eventCoreRecord.getEventType().getConcept())
+                .setLineage(eventCoreRecord.getEventType().getLineage())
+                .build());
+      }
+    }
   }
 
   private void mapTerm(String k, String v, OccurrenceHdfsRecord occurrenceHdfsRecord) {

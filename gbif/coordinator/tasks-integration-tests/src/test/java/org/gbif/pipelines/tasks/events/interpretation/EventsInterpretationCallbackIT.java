@@ -101,7 +101,7 @@ public class EventsInterpretationCallbackIT {
             EXECUTION_ID,
             EndpointType.DWC_ARCHIVE,
             validationResult,
-            Collections.singleton(RecordType.EVENT_CORE.name()),
+            Collections.singleton(RecordType.EVENT.name()),
             DatasetType.SAMPLING_EVENT);
 
     // When

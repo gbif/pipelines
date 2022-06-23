@@ -65,7 +65,7 @@ public class VerbatimMessageHandler {
         && m.getValidationResult().getNumberOfEventRecords() != null
         && m.getValidationResult().getNumberOfEventRecords() > 0) {
       Set<String> interpretationTypes = new HashSet<>(m.getInterpretTypes());
-      interpretationTypes.add(RecordType.EVENT_CORE.name());
+      interpretationTypes.add(RecordType.EVENT.name());
 
       PipelinesEventsMessage eventsMessage =
           new PipelinesEventsMessage(

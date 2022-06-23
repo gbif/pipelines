@@ -140,7 +140,7 @@ public class VerbatimToEventPipelineIT {
     assertEquals(11, new File(interpretedOutput).listFiles().length);
     assertFile(IdentifierRecord.class, interpretedOutput + "/identifier");
     assertFile(ExtendedRecord.class, interpretedOutput + "/verbatim");
-    assertFile(ExtendedRecord.class, interpretedOutput + "/event_core");
+    assertFile(ExtendedRecord.class, interpretedOutput + "/event");
     assertFile(ExtendedRecord.class, interpretedOutput + "/measurement_or_fact");
   }
 

@@ -34,11 +34,6 @@ import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesAbcdMessage;
 import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
 import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
-import org.gbif.common.messaging.api.messages.PipelinesEventsInterpretedMessage;
-import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
-import org.gbif.common.messaging.api.messages.PipelinesIndexedMessage;
-import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
-import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.common.messaging.api.messages.PipelinesXmlMessage;
 import org.gbif.crawler.constants.CrawlerNodePaths;
 import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
@@ -356,22 +351,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
         || message instanceof PipelinesDwcaMessage) {
       return StepRunner.STANDALONE.name();
     }
-    if (message instanceof PipelinesIndexedMessage) {
-      return ((PipelinesIndexedMessage) message).getRunner();
-    }
-    if (message instanceof PipelinesInterpretedMessage) {
-      return ((PipelinesInterpretedMessage) message).getRunner();
-    }
-    if (message instanceof PipelinesVerbatimMessage) {
-      return ((PipelinesVerbatimMessage) message).getRunner();
-    }
-    if (message instanceof PipelinesEventsMessage) {
-      return ((PipelinesEventsMessage) message).getRunner();
-    }
-    if (message instanceof PipelinesEventsInterpretedMessage) {
-      return ((PipelinesEventsInterpretedMessage) message).getRunner();
-    }
-    return StepRunner.UNKNOWN.name();
+    return message.getRunner();
   }
 
   @AllArgsConstructor

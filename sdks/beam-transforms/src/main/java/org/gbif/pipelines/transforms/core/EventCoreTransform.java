@@ -1,7 +1,7 @@
 package org.gbif.pipelines.transforms.core;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.EVENT_CORE_RECORDS_COUNT;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.EVENT_CORE;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.EVENT;
 
 import java.time.Instant;
 import java.util.Map;
@@ -26,7 +26,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.transforms.Transform;
 
 /**
- * Beam level transformations for the DWC Event, reads an avro, writs an avro, maps from value to
+ * Beam level transformations for the DWC Event, reads an avro, writes an avro, maps from value to
  * keyValue and transforms form {@link ExtendedRecord} to {@link EventCoreRecord}.
  *
  * @see <a href="https://dwc.tdwg.org/terms/#event"/>
@@ -43,10 +43,7 @@ public class EventCoreTransform extends Transform<ExtendedRecord, EventCoreRecor
       SerializableSupplier<VocabularyService> vocabularyServiceSupplier,
       PCollectionView<Map<String, Map<String, String>>> erWithParentsView) {
     super(
-        EventCoreRecord.class,
-        EVENT_CORE,
-        EventCoreTransform.class.getName(),
-        EVENT_CORE_RECORDS_COUNT);
+        EventCoreRecord.class, EVENT, EventCoreTransform.class.getName(), EVENT_CORE_RECORDS_COUNT);
     this.vocabularyServiceSupplier = vocabularyServiceSupplier;
     this.erWithParentsView = erWithParentsView;
   }

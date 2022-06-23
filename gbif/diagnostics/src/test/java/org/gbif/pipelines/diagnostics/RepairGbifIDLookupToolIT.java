@@ -36,11 +36,13 @@ public class RepairGbifIDLookupToolIT {
       HbaseServer.CFG.getLookupTable(),
       "--deletion-strategy",
       "BOTH",
-      "--only-collisions"
+      "--only-collisions",
+      "--tool",
+      "REPAIR"
     };
 
     // When
-    RepairGbifIDLookupTool.main(args);
+    MainTool.main(args);
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -64,7 +66,7 @@ public class RepairGbifIDLookupToolIT {
     };
 
     // When
-    RepairGbifIDLookupTool.main(args);
+    MainTool.main(args);
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -84,7 +86,7 @@ public class RepairGbifIDLookupToolIT {
     };
 
     // When
-    RepairGbifIDLookupTool.main(args);
+    MainTool.main(args);
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -104,7 +106,7 @@ public class RepairGbifIDLookupToolIT {
     };
 
     // When
-    RepairGbifIDLookupTool.main(args);
+    MainTool.main(args);
   }
 
   @Test

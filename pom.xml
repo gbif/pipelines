@@ -87,7 +87,7 @@
     <dwca-io.version>2.12</dwca-io.version>
     <gbif-api.version>0.167-SNAPSHOT</gbif-api.version>
     <gbif-common.version>0.53</gbif-common.version>
-    <dwc-api.version>1.36</dwc-api.version>
+    <dwc-api.version>1.37-SNAPSHOT</dwc-api.version>
     <kvs.version>1.23</kvs.version>
     <hbase-utils.version>0.12</hbase-utils.version>
     <gbif-wrangler.version>0.3</gbif-wrangler.version>
@@ -763,6 +763,11 @@
         <artifactId>jackson-datatype-jsr310</artifactId>
         <version>${jackson.version}</version>
       </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.dataformat</groupId>
+        <artifactId>jackson-dataformat-yaml</artifactId>
+        <version>${jackson.version}</version>
+      </dependency>
 
       <!-- Http clients -->
       <dependency>
@@ -903,6 +908,7 @@
         <groupId>org.apache.maven</groupId>
         <artifactId>maven-plugin-api</artifactId>
         <version>${maven-plugin-api.version}</version>
+        <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>org.apache.maven.plugin-tools</groupId>

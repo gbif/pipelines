@@ -307,6 +307,31 @@ public class OccurrenceRelationshipsTest {
     assertFalse(runCompareIdentifier("s.n.", "S/N").justificationContains(IDENTIFIERS_OVERLAP));
   }
 
+  /** Test relaxed rules when record originates from a sequence repository */
+  @Test
+  public void testSequenceRepositories() {
+    OccurrenceFeatures o1 =
+        OccurrenceFeaturesPojo.builder().id("1").speciesKey("212").catalogNumber("ABC").build();
+
+    OccurrenceFeatures o2 =
+        OccurrenceFeaturesPojo.builder().id("2").speciesKey("212").catalogNumber("ABC").build();
+
+    OccurrenceFeatures o3 =
+        OccurrenceFeaturesPojo.builder()
+            .id("2")
+            .datasetKey("2")
+            .speciesKey("212")
+            .catalogNumber("ABC")
+            .isFromSequenceRepository(true) // should relax rules
+            .build();
+
+    RelationshipAssertion<OccurrenceFeatures> assertion = OccurrenceRelationships.generate(o1, o2);
+    assertNull(assertion);
+    assertion = OccurrenceRelationships.generate(o1, o3);
+    assertNotNull(assertion);
+    assertTrue(assertion.justificationContainsAll(SAME_ACCEPTED_SPECIES, IDENTIFIERS_OVERLAP));
+  }
+
   /** Generates assertions for the comparison of two identifiers only. */
   private RelationshipAssertion<OccurrenceFeatures> runCompareIdentifier(String id1, String id2) {
     OccurrenceFeatures o1 = OccurrenceFeaturesPojo.builder().catalogNumber(id1).build();

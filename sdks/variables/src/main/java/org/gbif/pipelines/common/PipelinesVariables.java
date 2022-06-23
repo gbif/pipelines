@@ -63,7 +63,7 @@ public class PipelinesVariables {
         LOCATION,
         TAXONOMY,
         GRSCICOLL,
-        EVENT_CORE,
+        EVENT,
         // Extension types
         IMAGE,
         MULTIMEDIA,

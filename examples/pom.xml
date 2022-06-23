@@ -18,7 +18,6 @@
   <modules>
     <module>transform</module>
     <module>metrics</module>
-    <module>pipelines</module>
   </modules>
 
 </project>

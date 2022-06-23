@@ -15,6 +15,7 @@ import org.apache.curator.test.TestingServer;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.messages.PipelinesEventsInterpretedMessage;
 import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
@@ -93,9 +94,10 @@ public class EventsIndexingCallbackIT {
             0L,
             0L,
             null,
+            StepRunner.DISTRIBUTED.name(),
             EXECUTION_ID,
             EndpointType.DWC_ARCHIVE,
-            Collections.singleton(RecordType.EVENT_CORE.name()),
+            Collections.singleton(RecordType.EVENT.name()),
             false,
             null);
 

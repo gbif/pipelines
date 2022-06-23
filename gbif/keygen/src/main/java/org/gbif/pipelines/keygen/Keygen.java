@@ -16,7 +16,7 @@ public class Keygen {
   private static final Long ERROR_KEY = -1L;
 
   /** Get or generate GBIF ID key */
-  public static Long getKey(
+  public static Optional<Long> getKey(
       HBaseLockingKey keygenService,
       boolean useTriplet,
       boolean useOccurrenceId,
@@ -32,7 +32,7 @@ public class Keygen {
         Optional<KeyLookupResult> keyForOccurrence =
             keygenService.findKey(Collections.singleton(occurrenceId.get()));
         if (keyForOccurrence.isPresent()) {
-          return keyForOccurrence.get().getKey();
+          return Optional.of(keyForOccurrence.get().getKey());
         } else {
           uniqueStrings.add(occurrenceId.get());
         }
@@ -52,10 +52,10 @@ public class Keygen {
     }
 
     if (uniqueStrings.isEmpty()) {
-      return ERROR_KEY;
+      return Optional.of(ERROR_KEY);
     }
 
-    Optional<KeyLookupResult> keyResult = Optional.empty();
+    Optional<KeyLookupResult> keyResult;
     try {
       // Finds or generates key
       keyResult = keygenService.findKey(uniqueStrings);
@@ -65,9 +65,10 @@ public class Keygen {
       }
     } catch (RuntimeException ex) {
       log.error(ex.getMessage(), ex);
+      return Optional.of(ERROR_KEY);
     }
 
-    return keyResult.map(KeyLookupResult::getKey).orElse(ERROR_KEY);
+    return keyResult.map(KeyLookupResult::getKey);
   }
 
   public static String getSaltedKey(Long key) {

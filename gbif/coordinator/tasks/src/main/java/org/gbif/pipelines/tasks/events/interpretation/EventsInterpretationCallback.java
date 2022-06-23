@@ -111,6 +111,7 @@ public class EventsInterpretationCallback extends AbstractMessageCallback<Pipeli
         message.getNumberOfOccurrenceRecords(),
         message.getNumberOfEventRecords(),
         message.getResetPrefix(),
+        message.getOnlyForStep(),
         message.getExecutionId(),
         message.getEndpointType(),
         message.getInterpretTypes(),

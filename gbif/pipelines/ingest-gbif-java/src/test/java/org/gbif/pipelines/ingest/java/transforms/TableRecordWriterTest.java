@@ -14,6 +14,7 @@ import java.util.function.Function;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.specific.SpecificDatumReader;
+import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.InterpretationType;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
@@ -61,7 +62,11 @@ public class TableRecordWriterTest {
     Function<InterpretationType, String> pathFn =
         st -> {
           String id = options.getDatasetId() + '_' + options.getAttempt() + AVRO_EXTENSION;
-          return PathBuilder.buildFilePathViewUsingInputPath(options, st.name().toLowerCase(), id);
+          return PathBuilder.buildFilePathViewUsingInputPath(
+              options,
+              PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE,
+              st.name().toLowerCase(),
+              id);
         };
 
     // When
@@ -133,7 +138,11 @@ public class TableRecordWriterTest {
     Function<InterpretationType, String> pathFn =
         st -> {
           String id = options.getDatasetId() + '_' + options.getAttempt() + AVRO_EXTENSION;
-          return PathBuilder.buildFilePathViewUsingInputPath(options, st.name().toLowerCase(), id);
+          return PathBuilder.buildFilePathViewUsingInputPath(
+              options,
+              PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE,
+              st.name().toLowerCase(),
+              id);
         };
 
     // When

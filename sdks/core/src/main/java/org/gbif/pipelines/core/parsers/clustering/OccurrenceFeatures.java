@@ -91,4 +91,16 @@ public interface OccurrenceFeatures {
       return null;
     }
   }
+
+  /**
+   * Allows implementations to declare that the record originates from a sequence repository.
+   * Default behaviour is false, meaning that consumers may receive false negatives. This hook was
+   * introduced to allow a relaxation of the rules to accommodate the sparse metadata seen in
+   * repositories like NCBI.
+   *
+   * @see <a href="https://github.com/gbif/pipelines/issues/733">Pipelines issue 733</a>
+   */
+  default boolean isFromSequenceRepository() {
+    return false;
+  }
 }

@@ -14,6 +14,7 @@ import static org.junit.Assert.assertTrue;
 import com.google.common.collect.Lists;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
@@ -90,6 +91,8 @@ public class OccurrenceRelationshipsSparkTest extends BaseSparkTest {
 
   @Test
   public void testSimpleAssertions() {
+    String datasetKey = UUID.randomUUID().toString();
+
     OccurrenceFeatures o1 =
         new RowOccurrenceFeatures(
             new RowBuilder()
@@ -101,6 +104,7 @@ public class OccurrenceRelationshipsSparkTest extends BaseSparkTest {
                 .with("year", 1978)
                 .with("month", 12)
                 .with("day", 21)
+                .with("datasetKey", datasetKey)
                 .buildWithSchema());
 
     OccurrenceFeatures o2 =
@@ -114,6 +118,7 @@ public class OccurrenceRelationshipsSparkTest extends BaseSparkTest {
                 .with("year", 1978)
                 .with("month", 12)
                 .with("day", 21)
+                .with("datasetKey", datasetKey)
                 .buildWithSchema());
 
     RelationshipAssertion<OccurrenceFeatures> assertion = OccurrenceRelationships.generate(o1, o2);
@@ -125,6 +130,8 @@ public class OccurrenceRelationshipsSparkTest extends BaseSparkTest {
   /** Real data from records 2332470913, 2571156410 which should cluster. */
   @Test
   public void testCortinarius() {
+    String datasetKey = UUID.randomUUID().toString();
+
     OccurrenceFeatures o1 =
         new RowOccurrenceFeatures(
             new RowBuilder()
@@ -138,6 +145,7 @@ public class OccurrenceRelationshipsSparkTest extends BaseSparkTest {
                 .with("month", 6)
                 .with("day", 11)
                 .with("eventDate", "2016-06-11T00:00:00")
+                .with("datasetKey", datasetKey)
                 .buildWithSchema());
 
     OccurrenceFeatures o2 =
@@ -153,6 +161,7 @@ public class OccurrenceRelationshipsSparkTest extends BaseSparkTest {
                 .with("month", 6)
                 .with("day", 11)
                 .with("eventDate", "2016-06-11T00:00:00")
+                .with("datasetKey", datasetKey)
                 .buildWithSchema());
 
     RelationshipAssertion<OccurrenceFeatures> assertion = OccurrenceRelationships.generate(o1, o2);
@@ -194,6 +203,7 @@ public class OccurrenceRelationshipsSparkTest extends BaseSparkTest {
   // https://github.com/gbif/occurrence/issues/177
   @Test
   public void testDayApart() {
+    String datasetKey = UUID.randomUUID().toString();
     // real records where a trap set one evening and visited the next day is shared twice using
     // different
     // days
@@ -209,6 +219,7 @@ public class OccurrenceRelationshipsSparkTest extends BaseSparkTest {
                 .with("day", 1) // day trap set
                 .with("countryCode", "DK")
                 .with("recordedBy", Lists.newArrayList("Donald Hobern"))
+                .with("datasetKey", datasetKey)
                 .buildWithSchema());
 
     OccurrenceFeatures o2 =
@@ -223,6 +234,7 @@ public class OccurrenceRelationshipsSparkTest extends BaseSparkTest {
                 .with("day", 2) // day collected
                 .with("countryCode", "DK")
                 .with("recordedBy", Lists.newArrayList("Donald Hobern"))
+                .with("datasetKey", datasetKey)
                 .buildWithSchema());
 
     RelationshipAssertion<OccurrenceFeatures> assertion = OccurrenceRelationships.generate(o1, o2);
@@ -235,6 +247,8 @@ public class OccurrenceRelationshipsSparkTest extends BaseSparkTest {
   // test 3 decimal place rounding example clusters
   @Test
   public void test3DP() {
+    String datasetKey = UUID.randomUUID().toString();
+
     // real records of Seigler & Miller
     OccurrenceFeatures o1 =
         new RowOccurrenceFeatures(
@@ -247,6 +261,7 @@ public class OccurrenceRelationshipsSparkTest extends BaseSparkTest {
                 .with("month", 5)
                 .with("day", 26)
                 .with("recordedBy", Lists.newArrayList("D. S. Seigler", "J. T. Miller"))
+                .with("datasetKey", datasetKey)
                 .buildWithSchema());
 
     OccurrenceFeatures o2 =
@@ -261,6 +276,7 @@ public class OccurrenceRelationshipsSparkTest extends BaseSparkTest {
                 .with("day", 26)
                 .with(
                     "recordedBy", Lists.newArrayList("Seigler", "J. T. Miller")) // Miller overlaps
+                .with("datasetKey", datasetKey)
                 .buildWithSchema());
 
     RelationshipAssertion<OccurrenceFeatures> assertion = OccurrenceRelationships.generate(o1, o2);
@@ -283,6 +299,8 @@ public class OccurrenceRelationshipsSparkTest extends BaseSparkTest {
   /** Test to simply verify that a Spark dataset row operates the same as the isolated Row tests. */
   @Test
   public void testWithSpark() {
+    String datasetKey = UUID.randomUUID().toString();
+
     List<Row> rows =
         Arrays.asList(
             new RowBuilder()
@@ -294,6 +312,7 @@ public class OccurrenceRelationshipsSparkTest extends BaseSparkTest {
                 .with("year", 1978)
                 .with("month", 12)
                 .with("day", 21)
+                .with("datasetKey", datasetKey)
                 .buildSchemaless(),
             new RowBuilder()
                 .with("occurrenceID", "2")
@@ -304,6 +323,7 @@ public class OccurrenceRelationshipsSparkTest extends BaseSparkTest {
                 .with("year", 1978)
                 .with("month", 12)
                 .with("day", 21)
+                .with("datasetKey", datasetKey)
                 .buildSchemaless());
     final Dataset<Row> data = sqlContext.createDataFrame(rows, SCHEMA);
     List<Row> rowData = data.collectAsList();
