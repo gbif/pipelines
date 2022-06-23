@@ -16,7 +16,27 @@ public class MainToolIT {
       HbaseServer.CFG.getLookupTable(),
       "--deletion-strategy",
       "BOTH",
-      "--only-collisions",
+      "--only-collisions"
+    };
+
+    // When
+    MainTool.main(args);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void toolKeyTest() {
+    // State
+    String[] args = {
+      "--file-path",
+      "/test",
+      "--from-dataset",
+      "from",
+      "--to-dataset",
+      "to",
+      "--tool",
+      "MIGRATOR",
+      "--lookup-table",
+      HbaseServer.CFG.getLookupTable()
     };
 
     // When

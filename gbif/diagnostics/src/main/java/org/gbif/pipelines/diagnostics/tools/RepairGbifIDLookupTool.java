@@ -1,4 +1,4 @@
-package org.gbif.pipelines.diagnostics;
+package org.gbif.pipelines.diagnostics.tools;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
@@ -15,10 +15,9 @@ import org.gbif.dwc.Archive;
 import org.gbif.dwc.DwcFiles;
 import org.gbif.dwc.record.Record;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.diagnostics.common.KeygenServiceFactory;
 import org.gbif.pipelines.diagnostics.strategy.DeletionStrategy.DeletionStrategyType;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
-import org.gbif.pipelines.keygen.common.HbaseConnectionFactory;
-import org.gbif.pipelines.keygen.config.KeygenConfig;
 import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
 
 @Slf4j
@@ -130,23 +129,29 @@ public class RepairGbifIDLookupTool implements Tool {
         dwcaSource,
         deletionStrategyType);
 
-    KeygenConfig cfg =
-        KeygenConfig.builder()
-            .zkConnectionString(zkConnection)
-            .lookupTable(lookupTable)
-            .counterTable(counterTable)
-            .occurrenceTable(occurrenceTable)
-            .create();
+    HBaseLockingKeyService keygenService = null;
 
-    if (connection == null) {
-      connection = HbaseConnectionFactory.getInstance(zkConnection).getConnection();
-    }
-    HBaseLockingKeyService keygenService = new HBaseLockingKeyService(cfg, connection, datasetKey);
+    try {
+      keygenService =
+          KeygenServiceFactory.builder()
+              .zkConnection(zkConnection)
+              .lookupTable(lookupTable)
+              .counterTable(counterTable)
+              .occurrenceTable(occurrenceTable)
+              .connection(connection)
+              .datasetKey(datasetKey)
+              .build()
+              .create();
 
-    if (dwcaSource != null) {
-      runDwca(keygenService);
-    } else {
-      runSingleLookup(keygenService);
+      if (dwcaSource != null) {
+        runDwca(keygenService);
+      } else {
+        runSingleLookup(keygenService);
+      }
+    } finally {
+      if (keygenService != null && connection == null) {
+        keygenService.close();
+      }
     }
 
     log.info("Finished. IDs with collisions: {}", counter);

@@ -1,4 +1,4 @@
-package org.gbif.pipelines.diagnostics;
+package org.gbif.pipelines.diagnostics.tools;
 
 import com.beust.jcommander.Parameter;
 import java.io.File;
@@ -46,6 +46,15 @@ public class RecordIDsByCrawlAttemptTool implements Tool {
 
   @Parameter(names = "--occurrenceID")
   public String occurrenceID;
+
+  @Parameter(names = "--help", description = "Display help information", order = 4)
+  @Builder.Default
+  public boolean help = false;
+
+  @Override
+  public boolean getHelp() {
+    return help;
+  }
 
   @Override
   public void run() {

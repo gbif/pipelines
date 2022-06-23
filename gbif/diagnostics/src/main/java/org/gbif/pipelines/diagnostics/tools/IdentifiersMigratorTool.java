@@ -1,4 +1,4 @@
-package org.gbif.pipelines.diagnostics;
+package org.gbif.pipelines.diagnostics.tools;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -10,8 +10,9 @@ import java.nio.file.Paths;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
-import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.hadoop.hbase.client.Connection;
+import org.gbif.pipelines.diagnostics.common.KeygenServiceFactory;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.keygen.HbaseKeyMigrator;
 import org.gbif.pipelines.keygen.api.KeyLookupResult;
@@ -39,20 +40,56 @@ public class IdentifiersMigratorTool implements Tool {
   @Builder.Default
   public boolean skipIssues = false;
 
-  @Parameter(names = "--from-dataset-key")
+  @Parameter(names = "--from-dataset")
   @NotNull
   public String fromDatasetKey;
 
-  @Parameter(names = "--to-dataset-key")
+  @Parameter(names = "--to-dataset")
   @NotNull
   public String toDatasetKey;
 
-  @NonNull public HBaseLockingKeyService keygenService;
+  @Parameter(names = "--zk-connection", description = "Zookeeper connection")
+  public String zkConnection;
+
+  @Parameter(names = "--lookup-table", description = "Hbase occurrence lookup table")
+  @NotNull
+  public String lookupTable;
+
+  @Parameter(names = "--counter-table", description = "Hbase counter lookup table")
+  @NotNull
+  public String counterTable;
+
+  @Parameter(names = "--occurrence-table", description = "Hbase occurrence table")
+  @NotNull
+  public String occurrenceTable;
+
+  @Parameter(names = "--help", description = "Display help information", order = 4)
+  @Builder.Default
+  public boolean help = false;
+
+  @Builder.Default public Connection connection = null;
+
+  @Override
+  public boolean getHelp() {
+    return help;
+  }
 
   @Override
   public void run() {
 
+    HBaseLockingKeyService keygenService = null;
+
     try (BufferedReader reader = Files.newBufferedReader(Paths.get(filePath), UTF_8)) {
+
+      keygenService =
+          KeygenServiceFactory.builder()
+              .zkConnection(zkConnection)
+              .lookupTable(lookupTable)
+              .counterTable(counterTable)
+              .occurrenceTable(occurrenceTable)
+              .connection(connection)
+              .build()
+              .create();
 
       long lineCounter = 0;
 
@@ -91,6 +128,10 @@ public class IdentifiersMigratorTool implements Tool {
       log.info("Finished. Read {} lines", lineCounter);
     } catch (IOException ex) {
       log.error(ex.getMessage(), ex);
+    } finally {
+      if (keygenService != null && connection == null) {
+        keygenService.close();
+      }
     }
   }
 }

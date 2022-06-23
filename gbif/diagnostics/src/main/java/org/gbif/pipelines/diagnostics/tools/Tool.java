@@ -1,4 +1,4 @@
-package org.gbif.pipelines.diagnostics;
+package org.gbif.pipelines.diagnostics.tools;
 
 import com.beust.jcommander.JCommander;
 

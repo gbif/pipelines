@@ -44,6 +44,7 @@ public class HbaseServer extends ExternalResource {
   public void truncateTable() throws IOException {
     log.info("Trancate the table");
     TEST_UTIL.truncateTable(LOOKUP_TABLE);
+    connection = ConnectionFactory.createConnection(TEST_UTIL.getConfiguration());
     keyService = new HBaseLockingKeyService(CFG, connection);
   }
 

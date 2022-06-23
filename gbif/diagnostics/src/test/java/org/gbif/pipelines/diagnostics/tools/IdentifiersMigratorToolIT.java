@@ -1,4 +1,4 @@
-package org.gbif.pipelines.diagnostics;
+package org.gbif.pipelines.diagnostics.tools;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -37,7 +37,10 @@ public class IdentifiersMigratorToolIT {
         .toDatasetKey(datasetKey)
         .fromDatasetKey(datasetKey)
         .filePath(file)
-        .keygenService(HBASE_SERVER.getKeyService())
+        .lookupTable(HbaseServer.CFG.getLookupTable())
+        .counterTable(HbaseServer.CFG.getCounterTable())
+        .occurrenceTable(HbaseServer.CFG.getOccurrenceTable())
+        .connection(HBASE_SERVER.getConnection())
         .build()
         .run();
 
@@ -74,7 +77,10 @@ public class IdentifiersMigratorToolIT {
         .toDatasetKey(datasetKey)
         .fromDatasetKey(datasetKey)
         .filePath(file)
-        .keygenService(HBASE_SERVER.getKeyService())
+        .lookupTable(HbaseServer.CFG.getLookupTable())
+        .counterTable(HbaseServer.CFG.getCounterTable())
+        .occurrenceTable(HbaseServer.CFG.getOccurrenceTable())
+        .connection(HBASE_SERVER.getConnection())
         .build()
         .run();
 
@@ -116,7 +122,10 @@ public class IdentifiersMigratorToolIT {
         .toDatasetKey(datasetKey)
         .fromDatasetKey(datasetKey)
         .filePath(file)
-        .keygenService(HBASE_SERVER.getKeyService())
+        .lookupTable(HbaseServer.CFG.getLookupTable())
+        .counterTable(HbaseServer.CFG.getCounterTable())
+        .occurrenceTable(HbaseServer.CFG.getOccurrenceTable())
+        .connection(HBASE_SERVER.getConnection())
         .build()
         .run();
 
@@ -161,7 +170,10 @@ public class IdentifiersMigratorToolIT {
         .fromDatasetKey(datasetKey)
         .toDatasetKey(newDatasetKey)
         .filePath(file)
-        .keygenService(HBASE_SERVER.getKeyService())
+        .lookupTable(HbaseServer.CFG.getLookupTable())
+        .counterTable(HbaseServer.CFG.getCounterTable())
+        .occurrenceTable(HbaseServer.CFG.getOccurrenceTable())
+        .connection(HBASE_SERVER.getConnection())
         .build()
         .run();
 
@@ -214,7 +226,10 @@ public class IdentifiersMigratorToolIT {
         .fromDatasetKey(datasetKey)
         .toDatasetKey(newDatasetKey)
         .filePath(file)
-        .keygenService(HBASE_SERVER.getKeyService())
+        .lookupTable(HbaseServer.CFG.getLookupTable())
+        .counterTable(HbaseServer.CFG.getCounterTable())
+        .occurrenceTable(HbaseServer.CFG.getOccurrenceTable())
+        .connection(HBASE_SERVER.getConnection())
         .build()
         .run();
 
@@ -263,7 +278,10 @@ public class IdentifiersMigratorToolIT {
         .fromDatasetKey(datasetKey)
         .toDatasetKey(newDatasetKey)
         .filePath(file)
-        .keygenService(HBASE_SERVER.getKeyService())
+        .lookupTable(HbaseServer.CFG.getLookupTable())
+        .counterTable(HbaseServer.CFG.getCounterTable())
+        .occurrenceTable(HbaseServer.CFG.getOccurrenceTable())
+        .connection(HBASE_SERVER.getConnection())
         .build()
         .run();
 
