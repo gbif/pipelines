@@ -691,8 +691,8 @@
   <copyField source="dataProviderName" dest="text"/>
   <copyField source="dataResourceName" dest="text"/>
   <copyField source="dataResourceUid" dest="text"/>
-  <copyField source="datesetName" dest="text"/>
-  <copyField source="datesetName" dest="text_datasetName"/>
+  <copyField source="datasetName" dest="text"/>
+  <copyField source="datasetName" dest="text_datasetName"/>
   <copyField source="eventID" dest="text_eventID"/>
   <copyField source="family" dest="text"/>
   <copyField source="fieldNumber" dest="text_fieldNumber"/>
