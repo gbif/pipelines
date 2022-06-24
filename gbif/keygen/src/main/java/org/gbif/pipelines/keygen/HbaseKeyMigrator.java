@@ -54,6 +54,12 @@ public class HbaseKeyMigrator {
       OccurrenceKeyBuilder.buildKeys(newLkSet, toDatasetKey)
           .forEach(lookupKey -> keyService.putKey(lookupKey, oldKeyFromDataset.get().getKey()));
 
+      log.info(
+          "Migrate GBIF_ID {} from {} to {}",
+          oldKeyFromDataset.get().getKey(),
+          oldLookupKey,
+          newLookupKey);
+
       return oldKeyFromDataset;
     } else {
       log.error(
