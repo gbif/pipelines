@@ -1,6 +1,8 @@
 package org.gbif.pipelines.diagnostics;
 
+import com.beust.jcommander.ParameterException;
 import org.gbif.pipelines.diagnostics.common.HbaseServer;
+import org.junit.Assert;
 import org.junit.Test;
 
 public class MainToolIT {
@@ -23,7 +25,7 @@ public class MainToolIT {
     MainTool.main(args);
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void toolKeyTest() {
     // State
     String[] args = {
@@ -35,6 +37,29 @@ public class MainToolIT {
       "to",
       "--tool",
       "MIGRATOR",
+      "--lookup-table",
+      HbaseServer.CFG.getLookupTable()
+    };
+
+    // When
+    MainTool.main(args);
+
+    //
+    Assert.assertTrue(true);
+  }
+
+  @Test(expected = ParameterException.class)
+  public void wrongToolKeyTest() {
+    // State
+    String[] args = {
+      "--file-path",
+      "/test",
+      "--from-dataset",
+      "from",
+      "--to-dataset",
+      "to",
+      "--tool",
+      "RANDOM",
       "--lookup-table",
       HbaseServer.CFG.getLookupTable()
     };

@@ -6,9 +6,6 @@ import java.util.Arrays;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
-import org.gbif.pipelines.diagnostics.tools.IdentifiersMigratorTool;
-import org.gbif.pipelines.diagnostics.tools.RecordIDsByCrawlAttemptTool;
-import org.gbif.pipelines.diagnostics.tools.RepairGbifIDLookupTool;
 import org.gbif.pipelines.diagnostics.tools.Tool;
 
 @Slf4j
@@ -35,29 +32,14 @@ public class MainTool {
   public static void main(String... argv) {
 
     MainTool main = MainTool.builder().build();
-    int index = Arrays.binarySearch(argv, "--tool", String::compareTo);
+    int index = Arrays.asList(argv).indexOf("--tool");
     String[] mainArgv = {};
     if (index >= 0) {
       mainArgv = Arrays.copyOfRange(argv, index, index + 2);
     }
     main.check(parseArgs(main, mainArgv));
 
-    Tool t;
-    switch (main.tool) {
-      case LOOKUP:
-        t = RecordIDsByCrawlAttemptTool.builder().build();
-        break;
-      case REPAIR:
-        t = RepairGbifIDLookupTool.builder().build();
-        break;
-      case MIGRATOR:
-        t = IdentifiersMigratorTool.builder().build();
-        break;
-      default:
-        throw new IllegalArgumentException(
-            "Can't parse --tool key, use LOOKUP, REPAIR or MIGRATOR");
-    }
-
+    Tool t = main.tool.getTool();
     t.run(parseArgs(t, argv));
   }
 
