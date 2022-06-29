@@ -4,16 +4,21 @@ import au.org.ala.pipelines.options.DwcaToVerbatimPipelineOptions;
 import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationUtils;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
+import org.apache.commons.io.FileUtils;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.pipelines.common.beam.DwcaIO;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
+import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.slf4j.MDC;
 
@@ -39,6 +44,37 @@ public class ALADwcaToVerbatimPipeline {
 
     log.info("Adding step 1: Options");
     String inputPath = options.getInputPath();
+
+    boolean originalInputIsHdfs = inputPath.startsWith("hdfs://");
+
+    // if inputPath is "hdfs://", then copy to local
+    if (originalInputIsHdfs) {
+
+      log.info("HDFS Input path: {}", inputPath);
+      FileSystem fs =
+          FsUtils.getFileSystem(
+              options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getInputPath());
+
+      Path inputPathHdfs = new Path(inputPath);
+
+      if (!fs.exists(inputPathHdfs)) {
+        throw new RuntimeException("Input file not available: " + inputPath);
+      }
+
+      String tmpInputDir = new File(options.getTempLocation()).getParent();
+
+      FileUtils.forceMkdir(new File(tmpInputDir));
+      String tmpLocalFilePath = tmpInputDir + "/" + options.getDatasetId() + ".zip";
+
+      log.info("Copy from HDFS to local FS: {}", tmpLocalFilePath);
+
+      Path tmpPath = new Path(tmpLocalFilePath);
+      fs.copyToLocalFile(false, inputPathHdfs, tmpPath, true);
+
+      inputPath = tmpLocalFilePath;
+    } else {
+      log.info("Non-HDFS Input path: {}", inputPath);
+    }
 
     String targetPath =
         String.join(
