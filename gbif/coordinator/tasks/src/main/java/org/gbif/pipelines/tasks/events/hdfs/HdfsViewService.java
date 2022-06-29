@@ -11,8 +11,9 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesEventsHdfsViewBuiltMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretationMessage;
 import org.gbif.pipelines.common.configs.StepConfiguration;
+import org.gbif.pipelines.common.hdfs.CommonHdfsViewCallback;
+import org.gbif.pipelines.common.hdfs.HdfsViewConfiguration;
 import org.gbif.pipelines.tasks.ServiceFactory;
-import org.gbif.pipelines.tasks.occurrences.hdfs.HdfsViewConfiguration;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 
 /** A service which listens to the {@link PipelinesInterpretationMessage } */
@@ -50,7 +51,14 @@ public class HdfsViewService extends AbstractIdleService {
         new PipelinesEventsHdfsViewBuiltMessage().setRunner(config.processRunner).getRoutingKey();
 
     HdfsViewCallback callback =
-        new HdfsViewCallback(config, publisher, curator, historyClient, executor);
+        HdfsViewCallback.builder()
+            .config(config)
+            .publisher(publisher)
+            .curator(curator)
+            .historyClient(historyClient)
+            .commonHdfsViewCallback(CommonHdfsViewCallback.create(config, executor))
+            .build();
+
     listener.listen(c.queueName, routingKey, c.poolSize, callback);
   }
 

@@ -26,6 +26,8 @@ import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
 import org.gbif.pipelines.common.PipelinesVariables;
+import org.gbif.pipelines.common.hdfs.CommonHdfsViewCallback;
+import org.gbif.pipelines.common.hdfs.HdfsViewConfiguration;
 import org.gbif.pipelines.common.utils.ZookeeperUtils;
 import org.gbif.pipelines.tasks.MessagePublisherStub;
 import org.gbif.pipelines.tasks.utils.ZkServer;
@@ -86,7 +88,13 @@ public class HdfsViewCallbackIT {
     ExecutorService executor = Executors.newSingleThreadExecutor();
 
     HdfsViewCallback callback =
-        new HdfsViewCallback(config, publisher, curator, historyClient, executor);
+        HdfsViewCallback.builder()
+            .config(config)
+            .publisher(publisher)
+            .curator(curator)
+            .historyClient(historyClient)
+            .commonHdfsViewCallback(CommonHdfsViewCallback.create(config, executor))
+            .build();
 
     UUID uuid = UUID.fromString(DATASET_UUID);
     int attempt = 60;
@@ -170,7 +178,13 @@ public class HdfsViewCallbackIT {
     ExecutorService executor = Executors.newSingleThreadExecutor();
 
     HdfsViewCallback callback =
-        new HdfsViewCallback(config, publisher, curator, historyClient, executor);
+        HdfsViewCallback.builder()
+            .config(config)
+            .publisher(publisher)
+            .curator(curator)
+            .historyClient(historyClient)
+            .commonHdfsViewCallback(CommonHdfsViewCallback.create(config, executor))
+            .build();
 
     PipelinesInterpretedMessage message = createMessage(uuid, attempt);
     message.setPipelineSteps(Collections.singleton(StepType.INTERPRETED_TO_INDEX.name()));
@@ -193,7 +207,13 @@ public class HdfsViewCallbackIT {
     ExecutorService executor = Executors.newSingleThreadExecutor();
 
     HdfsViewCallback callback =
-        new HdfsViewCallback(config, publisher, curator, historyClient, executor);
+        HdfsViewCallback.builder()
+            .config(config)
+            .publisher(publisher)
+            .curator(curator)
+            .historyClient(historyClient)
+            .commonHdfsViewCallback(CommonHdfsViewCallback.create(config, executor))
+            .build();
 
     PipelinesInterpretedMessage message = createMessage(uuid, attempt);
     message.setOnlyForStep(StepType.HDFS_VIEW.name()); // Wrong type
