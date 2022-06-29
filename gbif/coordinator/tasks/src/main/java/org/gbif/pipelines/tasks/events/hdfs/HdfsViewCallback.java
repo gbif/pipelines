@@ -1,4 +1,4 @@
-package org.gbif.pipelines.common.hdfs;
+package org.gbif.pipelines.tasks.events.hdfs;
 
 import com.google.common.base.Strings;
 import java.io.IOException;
@@ -13,7 +13,8 @@ import org.apache.curator.framework.CuratorFramework;
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
-import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
+import org.gbif.common.messaging.api.messages.PipelinesEventsHdfsViewBuiltMessage;
+import org.gbif.common.messaging.api.messages.PipelinesEventsInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretationMessage;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
@@ -27,15 +28,15 @@ import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.ingest.java.pipelines.HdfsViewPipeline;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
+import org.gbif.pipelines.tasks.occurrences.hdfs.HdfsViewConfiguration;
 import org.gbif.pipelines.tasks.occurrences.interpretation.InterpreterConfiguration;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 
 /** Callback which is called when an instance {@link PipelinesInterpretationMessage} is received. */
 @Slf4j
 @AllArgsConstructor
-public abstract class HdfsViewCallback<
-        I extends PipelinesInterpretationMessage, B extends PipelineBasedMessage>
-    extends AbstractMessageCallback<I> implements StepHandler<I, B> {
+public class HdfsViewCallback extends AbstractMessageCallback<PipelinesEventsInterpretedMessage>
+    implements StepHandler<PipelinesEventsInterpretedMessage, PipelinesEventsHdfsViewBuiltMessage> {
 
   protected final HdfsViewConfiguration config;
   private final MessagePublisher publisher;
@@ -44,8 +45,9 @@ public abstract class HdfsViewCallback<
   private final ExecutorService executor;
 
   @Override
-  public void handleMessage(I message) {
-    PipelinesCallback.<I, B>builder()
+  public void handleMessage(PipelinesEventsInterpretedMessage message) {
+    PipelinesCallback
+        .<PipelinesEventsInterpretedMessage, PipelinesEventsHdfsViewBuiltMessage>builder()
         .historyClient(historyClient)
         .config(config)
         .curator(curator)
@@ -59,7 +61,7 @@ public abstract class HdfsViewCallback<
 
   /** Main message processing logic, creates a terminal java process, which runs */
   @Override
-  public Runnable createRunnable(I message) {
+  public Runnable createRunnable(PipelinesEventsInterpretedMessage message) {
     return () -> {
       try {
 
@@ -93,16 +95,18 @@ public abstract class HdfsViewCallback<
   }
 
   @Override
-  public abstract B createOutgoingMessage(I message);
-
-  public abstract String routingKey();
+  public PipelinesEventsHdfsViewBuiltMessage createOutgoingMessage(
+      PipelinesEventsInterpretedMessage message) {
+    return new PipelinesEventsHdfsViewBuiltMessage(
+        message.getDatasetUuid(), message.getAttempt(), message.getPipelineSteps());
+  }
 
   /**
    * Only correct messages can be handled, by now is only messages with the same runner as runner in
    * service config {@link HdfsViewConfiguration#processRunner}
    */
   @Override
-  public boolean isMessageCorrect(I message) {
+  public boolean isMessageCorrect(PipelinesEventsInterpretedMessage message) {
     if (Strings.isNullOrEmpty(message.getRunner())) {
       throw new IllegalArgumentException("Runner can't be null or empty " + message);
     }
@@ -122,7 +126,8 @@ public abstract class HdfsViewCallback<
     HdfsViewPipeline.run(builder.build().buildOptions(), executor);
   }
 
-  private void runDistributed(I message, ProcessRunnerBuilderBuilder builder)
+  private void runDistributed(
+      PipelinesEventsInterpretedMessage message, ProcessRunnerBuilderBuilder builder)
       throws IOException, InterruptedException {
 
     long recordsNumber = getRecordNumber(message);
@@ -144,7 +149,7 @@ public abstract class HdfsViewCallback<
    * Reads number of records from an archive-to-avro metadata file, verbatim-to-interpreted contains
    * attempted records count, which is not accurate enough
    */
-  private long getRecordNumber(I message) throws IOException {
+  private long getRecordNumber(PipelinesEventsInterpretedMessage message) throws IOException {
     String datasetId = message.getDatasetUuid().toString();
     String attempt = Integer.toString(message.getAttempt());
     String metaFileName = new InterpreterConfiguration().metaFileName;
@@ -174,7 +179,7 @@ public abstract class HdfsViewCallback<
     return fileNumber.get();
   }
 
-  private int computeNumberOfShards(I message) throws IOException {
+  private int computeNumberOfShards(PipelinesEventsInterpretedMessage message) throws IOException {
     String datasetId = message.getDatasetUuid().toString();
     String attempt = Integer.toString(message.getAttempt());
     String dirPath =
