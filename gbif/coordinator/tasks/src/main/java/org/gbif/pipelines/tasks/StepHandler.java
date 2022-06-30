@@ -1,6 +1,7 @@
 package org.gbif.pipelines.tasks;
 
 import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
+import org.gbif.pipelines.common.PipelinesException;
 
 public interface StepHandler<I extends PipelineBasedMessage, O extends PipelineBasedMessage> {
 
@@ -11,4 +12,8 @@ public interface StepHandler<I extends PipelineBasedMessage, O extends PipelineB
   }
 
   boolean isMessageCorrect(I message);
+
+  default String getRouting() {
+    throw new PipelinesException("MQ routing key is not specified");
+  }
 }

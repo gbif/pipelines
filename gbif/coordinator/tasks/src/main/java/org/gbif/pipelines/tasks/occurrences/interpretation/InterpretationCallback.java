@@ -73,6 +73,20 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
         .handleMessage();
   }
 
+  @Override
+  public String getRouting() {
+    PipelinesVerbatimMessage vm = new PipelinesVerbatimMessage();
+
+    String routingKey;
+    if (config.validatorOnly && config.validatorListenAllMq) {
+      vm.setPipelineSteps(Collections.singleton(StepType.VALIDATOR_VERBATIM_TO_INTERPRETED.name()));
+      routingKey = vm.getRoutingKey() + ".*";
+    } else {
+      routingKey = vm.setRunner(config.processRunner).getRoutingKey();
+    }
+    return routingKey;
+  }
+
   /**
    * Only correct messages can be handled, by now is only messages with the same runner as runner in
    * service config {@link InterpreterConfiguration#processRunner}

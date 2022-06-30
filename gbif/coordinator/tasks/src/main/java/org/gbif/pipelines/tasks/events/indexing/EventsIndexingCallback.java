@@ -5,6 +5,7 @@ import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.http.client.HttpClient;
+import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
@@ -68,6 +69,14 @@ public class EventsIndexingCallback
         .handler(this)
         .build()
         .handleMessage();
+  }
+
+  /** Run all the events pipelines in distributed mode */
+  @Override
+  public String getRouting() {
+    return new PipelinesEventsInterpretedMessage()
+        .setRunner(StepRunner.DISTRIBUTED.name())
+        .getRoutingKey();
   }
 
   @Override

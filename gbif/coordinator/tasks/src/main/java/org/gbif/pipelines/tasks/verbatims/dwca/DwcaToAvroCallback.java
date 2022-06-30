@@ -6,6 +6,7 @@ import static org.gbif.pipelines.common.ValidatorPredicate.isValidator;
 import static org.gbif.pipelines.common.utils.PathUtil.buildDwcaInputPath;
 
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -68,6 +69,15 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
         .handler(this)
         .build()
         .handleMessage();
+  }
+
+  @Override
+  public String getRouting() {
+    PipelinesDwcaMessage message = new PipelinesDwcaMessage();
+    if (config.validatorOnly) {
+      message.setPipelineSteps(Collections.singleton(StepType.VALIDATOR_DWCA_TO_VERBATIM.name()));
+    }
+    return message.getRoutingKey();
   }
 
   /** Only correct messages can be handled, by now is only OCCURRENCE type messages */

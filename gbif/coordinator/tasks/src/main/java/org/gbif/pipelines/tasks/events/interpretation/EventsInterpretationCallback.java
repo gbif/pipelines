@@ -4,6 +4,7 @@ import java.io.IOException;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
+import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.common.messaging.AbstractMessageCallback;
@@ -61,6 +62,12 @@ public class EventsInterpretationCallback extends AbstractMessageCallback<Pipeli
         .handler(this)
         .build()
         .handleMessage();
+  }
+
+  /** Run all the events pipelines in distributed mode */
+  @Override
+  public String getRouting() {
+    return new PipelinesEventsMessage().setRunner(StepRunner.DISTRIBUTED.name()).getRoutingKey();
   }
 
   @Override

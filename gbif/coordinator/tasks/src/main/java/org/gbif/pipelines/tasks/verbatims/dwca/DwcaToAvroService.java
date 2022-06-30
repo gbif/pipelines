@@ -1,14 +1,11 @@
 package org.gbif.pipelines.tasks.verbatims.dwca;
 
 import com.google.common.util.concurrent.AbstractIdleService;
-import java.util.Collections;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
-import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
-import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
 import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.pipelines.tasks.ServiceFactory;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
@@ -45,16 +42,10 @@ public class DwcaToAvroService extends AbstractIdleService {
     ValidationWsClient validationClient =
         ServiceFactory.createValidationWsClient(config.stepConfig);
 
-    PipelinesDwcaMessage message = new PipelinesDwcaMessage();
-    if (config.validatorOnly) {
-      message.setPipelineSteps(Collections.singleton(StepType.VALIDATOR_DWCA_TO_VERBATIM.name()));
-    }
+    DwcaToAvroCallback callback =
+        new DwcaToAvroCallback(this.config, publisher, curator, historyClient, validationClient);
 
-    listener.listen(
-        c.queueName,
-        message.getRoutingKey(),
-        c.poolSize,
-        new DwcaToAvroCallback(this.config, publisher, curator, historyClient, validationClient));
+    listener.listen(c.queueName, callback.getRouting(), c.poolSize, callback);
   }
 
   @Override

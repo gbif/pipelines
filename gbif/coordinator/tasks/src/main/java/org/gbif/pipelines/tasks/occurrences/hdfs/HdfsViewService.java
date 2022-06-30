@@ -8,7 +8,6 @@ import org.apache.curator.framework.CuratorFramework;
 import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
-import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.pipelines.common.hdfs.CommonHdfsViewCallback;
 import org.gbif.pipelines.common.hdfs.HdfsViewConfiguration;
@@ -58,9 +57,7 @@ public class HdfsViewService extends AbstractIdleService {
             .commonHdfsViewCallback(CommonHdfsViewCallback.create(config, executor))
             .build();
 
-    String routingKey =
-        new PipelinesInterpretedMessage().setRunner(config.processRunner).getRoutingKey();
-    listener.listen(c.queueName, routingKey, c.poolSize, callback);
+    listener.listen(c.queueName, callback.getRouting(), c.poolSize, callback);
   }
 
   @Override
