@@ -1,10 +1,11 @@
-package org.gbif.pipelines.diagnostics;
+package org.gbif.pipelines.diagnostics.tools;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Optional;
+import org.gbif.pipelines.diagnostics.MainTool;
 import org.gbif.pipelines.diagnostics.common.HbaseServer;
 import org.gbif.pipelines.diagnostics.strategy.DeletionStrategy.DeletionStrategyType;
 import org.gbif.pipelines.diagnostics.strategy.LookupKeyUtils;
@@ -36,11 +37,13 @@ public class RepairGbifIDLookupToolIT {
       HbaseServer.CFG.getLookupTable(),
       "--deletion-strategy",
       "BOTH",
-      "--only-collisions"
+      "--only-collisions",
+      "--tool",
+      "REPAIR"
     };
 
     // When
-    RepairGbifIDLookupTool.main(args);
+    MainTool.main(args);
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -64,7 +67,7 @@ public class RepairGbifIDLookupToolIT {
     };
 
     // When
-    RepairGbifIDLookupTool.main(args);
+    MainTool.main(args);
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -84,7 +87,7 @@ public class RepairGbifIDLookupToolIT {
     };
 
     // When
-    RepairGbifIDLookupTool.main(args);
+    MainTool.main(args);
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -104,7 +107,7 @@ public class RepairGbifIDLookupToolIT {
     };
 
     // When
-    RepairGbifIDLookupTool.main(args);
+    MainTool.main(args);
   }
 
   @Test

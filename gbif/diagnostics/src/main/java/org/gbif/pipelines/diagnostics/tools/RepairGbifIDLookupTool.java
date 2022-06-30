@@ -1,4 +1,4 @@
-package org.gbif.pipelines.diagnostics;
+package org.gbif.pipelines.diagnostics.tools;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
@@ -15,17 +15,19 @@ import org.gbif.dwc.Archive;
 import org.gbif.dwc.DwcFiles;
 import org.gbif.dwc.record.Record;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.diagnostics.common.KeygenServiceFactory;
 import org.gbif.pipelines.diagnostics.strategy.DeletionStrategy.DeletionStrategyType;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
-import org.gbif.pipelines.keygen.common.HbaseConnectionFactory;
-import org.gbif.pipelines.keygen.config.KeygenConfig;
 import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
 
 @Slf4j
 @Builder
-public class RepairGbifIDLookupTool {
+public class RepairGbifIDLookupTool implements Tool {
 
   private long counter;
+
+  @Parameter(names = "--tool")
+  public CliTool tool;
 
   @Parameter(names = "--dataset-key", description = "GBIF registry ID for the dataset")
   @NotNull
@@ -92,19 +94,16 @@ public class RepairGbifIDLookupTool {
 
   @Builder.Default public Connection connection = null;
 
-  public static void main(String... argv) {
-    RepairGbifIDLookupTool main = RepairGbifIDLookupTool.builder().build();
-    JCommander jc = JCommander.newBuilder().addObject(main).build();
-    jc.parse(argv);
-    if (main.help) {
-      jc.usage();
-      System.exit(0);
-    }
+  @Override
+  public boolean getHelp() {
+    return help;
+  }
 
-    boolean useTriple = main.tripletLookupKey != null && !main.tripletLookupKey.isEmpty();
-    boolean useOccurrenceId =
-        main.occurrenceIdLookupKey != null && !main.occurrenceIdLookupKey.isEmpty();
-    boolean useDwcaDirectory = main.dwcaSource != null && main.dwcaSource.exists();
+  @Override
+  public void check(JCommander jc) {
+    boolean useTriple = tripletLookupKey != null && !tripletLookupKey.isEmpty();
+    boolean useOccurrenceId = occurrenceIdLookupKey != null && !occurrenceIdLookupKey.isEmpty();
+    boolean useDwcaDirectory = dwcaSource != null && dwcaSource.exists();
 
     checkArguments(
         jc,
@@ -116,38 +115,43 @@ public class RepairGbifIDLookupTool {
         useDwcaDirectory && (useTriple || useOccurrenceId),
         "Lookup source can't be dwca and triplet/occurrenceId");
 
-    checkArguments(jc, main.deletionStrategyType == null, "--deletion-strategy can't be null");
-    checkArguments(jc, main.lookupTable == null, "--lookup-table can't be null");
-    checkArguments(jc, main.counterTable == null, "--counter-table can't be null");
-    checkArguments(jc, main.occurrenceTable == null, "--occurrence-table can't be null");
-    checkArguments(jc, main.zkConnection == null, "--zookeeper connection can't be null");
-
-    main.run();
+    checkArguments(jc, deletionStrategyType == null, "--deletion-strategy can't be null");
+    checkArguments(jc, lookupTable == null, "--lookup-table can't be null");
+    checkArguments(jc, counterTable == null, "--counter-table can't be null");
+    checkArguments(jc, occurrenceTable == null, "--occurrence-table can't be null");
+    checkArguments(jc, zkConnection == null, "--zookeeper connection can't be null");
   }
 
+  @Override
   public void run() {
     log.info(
         "Running diagnostic tool for - {}, using deletion strategy - {}",
         dwcaSource,
         deletionStrategyType);
 
-    KeygenConfig cfg =
-        KeygenConfig.builder()
-            .zkConnectionString(zkConnection)
-            .lookupTable(lookupTable)
-            .counterTable(counterTable)
-            .occurrenceTable(occurrenceTable)
-            .create();
+    HBaseLockingKeyService keygenService = null;
 
-    if (connection == null) {
-      connection = HbaseConnectionFactory.getInstance(zkConnection).getConnection();
-    }
-    HBaseLockingKeyService keygenService = new HBaseLockingKeyService(cfg, connection, datasetKey);
+    try {
+      keygenService =
+          KeygenServiceFactory.builder()
+              .zkConnection(zkConnection)
+              .lookupTable(lookupTable)
+              .counterTable(counterTable)
+              .occurrenceTable(occurrenceTable)
+              .connection(connection)
+              .datasetKey(datasetKey)
+              .build()
+              .create();
 
-    if (dwcaSource != null) {
-      runDwca(keygenService);
-    } else {
-      runSingleLookup(keygenService);
+      if (dwcaSource != null) {
+        runDwca(keygenService);
+      } else {
+        runSingleLookup(keygenService);
+      }
+    } finally {
+      if (keygenService != null && connection == null) {
+        keygenService.close();
+      }
     }
 
     log.info("Finished. IDs with collisions: {}", counter);

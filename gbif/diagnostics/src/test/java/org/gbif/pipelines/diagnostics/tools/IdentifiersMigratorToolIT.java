@@ -1,4 +1,4 @@
-package org.gbif.pipelines.diagnostics.migration;
+package org.gbif.pipelines.diagnostics.tools;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -11,7 +11,7 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-public class IdentifiersFileMigratorIT {
+public class IdentifiersMigratorToolIT {
 
   /** {@link ClassRule} requires this field to be public. */
   @ClassRule public static final HbaseServer HBASE_SERVER = new HbaseServer();
@@ -33,13 +33,16 @@ public class IdentifiersFileMigratorIT {
     String new2Occurrence = "new2";
 
     // When
-    IdentifiersFileMigrator.builder()
+    IdentifiersMigratorTool.builder()
         .toDatasetKey(datasetKey)
         .fromDatasetKey(datasetKey)
         .filePath(file)
-        .keygenService(HBASE_SERVER.getKeyService())
+        .lookupTable(HbaseServer.CFG.getLookupTable())
+        .counterTable(HbaseServer.CFG.getCounterTable())
+        .occurrenceTable(HbaseServer.CFG.getOccurrenceTable())
+        .connection(HBASE_SERVER.getConnection())
         .build()
-        .migrateIdentifiers();
+        .run();
 
     // Should
     Optional<KeyLookupResult> old1Key =
@@ -69,14 +72,17 @@ public class IdentifiersFileMigratorIT {
     String new2Occurrence = "new2";
 
     // When
-    IdentifiersFileMigrator.builder()
+    IdentifiersMigratorTool.builder()
         .deleteKeys(true)
         .toDatasetKey(datasetKey)
         .fromDatasetKey(datasetKey)
         .filePath(file)
-        .keygenService(HBASE_SERVER.getKeyService())
+        .lookupTable(HbaseServer.CFG.getLookupTable())
+        .counterTable(HbaseServer.CFG.getCounterTable())
+        .occurrenceTable(HbaseServer.CFG.getOccurrenceTable())
+        .connection(HBASE_SERVER.getConnection())
         .build()
-        .migrateIdentifiers();
+        .run();
 
     // Should
     Optional<KeyLookupResult> old1Key =
@@ -111,14 +117,17 @@ public class IdentifiersFileMigratorIT {
         HBASE_SERVER.getKeyService().generateKey(Collections.singleton(old2Occurrence), datasetKey);
 
     // When
-    IdentifiersFileMigrator.builder()
+    IdentifiersMigratorTool.builder()
         .deleteKeys(true)
         .toDatasetKey(datasetKey)
         .fromDatasetKey(datasetKey)
         .filePath(file)
-        .keygenService(HBASE_SERVER.getKeyService())
+        .lookupTable(HbaseServer.CFG.getLookupTable())
+        .counterTable(HbaseServer.CFG.getCounterTable())
+        .occurrenceTable(HbaseServer.CFG.getOccurrenceTable())
+        .connection(HBASE_SERVER.getConnection())
         .build()
-        .migrateIdentifiers();
+        .run();
 
     // Should
     Optional<KeyLookupResult> old1DeletedKey =
@@ -156,14 +165,17 @@ public class IdentifiersFileMigratorIT {
         HBASE_SERVER.getKeyService().generateKey(Collections.singleton(old2Occurrence), datasetKey);
 
     // When
-    IdentifiersFileMigrator.builder()
+    IdentifiersMigratorTool.builder()
         .deleteKeys(true)
         .fromDatasetKey(datasetKey)
         .toDatasetKey(newDatasetKey)
         .filePath(file)
-        .keygenService(HBASE_SERVER.getKeyService())
+        .lookupTable(HbaseServer.CFG.getLookupTable())
+        .counterTable(HbaseServer.CFG.getCounterTable())
+        .occurrenceTable(HbaseServer.CFG.getOccurrenceTable())
+        .connection(HBASE_SERVER.getConnection())
         .build()
-        .migrateIdentifiers();
+        .run();
 
     // Should
     Optional<KeyLookupResult> old1DeletedKey =
@@ -208,15 +220,18 @@ public class IdentifiersFileMigratorIT {
             .generateKey(Collections.singleton(new2Occurrence), newDatasetKey);
 
     // When
-    IdentifiersFileMigrator.builder()
+    IdentifiersMigratorTool.builder()
         .deleteKeys(false)
         .skipIssues(true)
         .fromDatasetKey(datasetKey)
         .toDatasetKey(newDatasetKey)
         .filePath(file)
-        .keygenService(HBASE_SERVER.getKeyService())
+        .lookupTable(HbaseServer.CFG.getLookupTable())
+        .counterTable(HbaseServer.CFG.getCounterTable())
+        .occurrenceTable(HbaseServer.CFG.getOccurrenceTable())
+        .connection(HBASE_SERVER.getConnection())
         .build()
-        .migrateIdentifiers();
+        .run();
 
     // Should
     Optional<KeyLookupResult> old1DeletedKey =
@@ -257,15 +272,18 @@ public class IdentifiersFileMigratorIT {
     HBASE_SERVER.getKeyService().generateKey(Collections.singleton(new2Occurrence), newDatasetKey);
 
     // When
-    IdentifiersFileMigrator.builder()
+    IdentifiersMigratorTool.builder()
         .deleteKeys(true)
         .skipIssues(true)
         .fromDatasetKey(datasetKey)
         .toDatasetKey(newDatasetKey)
         .filePath(file)
-        .keygenService(HBASE_SERVER.getKeyService())
+        .lookupTable(HbaseServer.CFG.getLookupTable())
+        .counterTable(HbaseServer.CFG.getCounterTable())
+        .occurrenceTable(HbaseServer.CFG.getOccurrenceTable())
+        .connection(HBASE_SERVER.getConnection())
         .build()
-        .migrateIdentifiers();
+        .run();
 
     // Should
     Optional<KeyLookupResult> old1DeletedKey =
