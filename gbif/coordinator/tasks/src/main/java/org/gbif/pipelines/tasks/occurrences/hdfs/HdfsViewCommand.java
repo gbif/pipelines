@@ -1,14 +1,9 @@
 package org.gbif.pipelines.tasks.occurrences.hdfs;
 
 import com.google.common.util.concurrent.Service;
-import java.util.concurrent.ExecutorService;
-import org.apache.curator.framework.CuratorFramework;
 import org.gbif.cli.Command;
 import org.gbif.cli.service.ServiceCommand;
-import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.pipelines.common.hdfs.HdfsViewConfiguration;
-import org.gbif.pipelines.common.hdfs.HdfsViewService;
-import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.kohsuke.MetaInfServices;
 
 /**
@@ -26,20 +21,11 @@ public class HdfsViewCommand extends ServiceCommand {
 
   @Override
   protected Service getService() {
-    return new HdfsViewService<>(config, HdfsViewCommand::createCallBack);
+    return new HdfsViewService(config);
   }
 
   @Override
   protected Object getConfigurationObject() {
     return config;
-  }
-
-  public static OccurrenceHdfsViewCallback createCallBack(
-      HdfsViewConfiguration config,
-      MessagePublisher publisher,
-      CuratorFramework curator,
-      PipelinesHistoryClient historyClient,
-      ExecutorService executor) {
-    return new OccurrenceHdfsViewCallback(config, publisher, curator, historyClient, executor);
   }
 }

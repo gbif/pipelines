@@ -1,4 +1,4 @@
-package org.gbif.pipelines.common.hdfs;
+package org.gbif.pipelines.tasks.events.hdfs;
 
 import com.google.common.util.concurrent.AbstractIdleService;
 import java.util.concurrent.ExecutorService;
@@ -8,28 +8,26 @@ import org.apache.curator.framework.CuratorFramework;
 import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
-import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
+import org.gbif.common.messaging.api.messages.PipelinesEventsHdfsViewBuiltMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretationMessage;
 import org.gbif.pipelines.common.configs.StepConfiguration;
+import org.gbif.pipelines.common.hdfs.CommonHdfsViewCallback;
+import org.gbif.pipelines.common.hdfs.HdfsViewConfiguration;
 import org.gbif.pipelines.tasks.ServiceFactory;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 
 /** A service which listens to the {@link PipelinesInterpretationMessage } */
 @Slf4j
-public class HdfsViewService<
-        I extends PipelinesInterpretationMessage, B extends PipelineBasedMessage>
-    extends AbstractIdleService {
+public class HdfsViewService extends AbstractIdleService {
 
   private final HdfsViewConfiguration config;
-  private final HdfsCallbackFactory<I, B> callbackFactory;
   private MessageListener listener;
   private MessagePublisher publisher;
   private CuratorFramework curator;
   private ExecutorService executor;
 
-  public HdfsViewService(HdfsViewConfiguration config, HdfsCallbackFactory<I, B> callbackFactory) {
+  public HdfsViewService(HdfsViewConfiguration config) {
     this.config = config;
-    this.callbackFactory = callbackFactory;
   }
 
   @Override
@@ -49,10 +47,19 @@ public class HdfsViewService<
     PipelinesHistoryClient historyClient =
         ServiceFactory.createPipelinesHistoryClient(config.stepConfig);
 
-    HdfsViewCallback<I, B> callback =
-        callbackFactory.createCallBack(config, publisher, curator, historyClient, executor);
+    String routingKey =
+        new PipelinesEventsHdfsViewBuiltMessage().setRunner(config.processRunner).getRoutingKey();
 
-    listener.listen(c.queueName, callback.routingKey(), c.poolSize, callback);
+    HdfsViewCallback callback =
+        HdfsViewCallback.builder()
+            .config(config)
+            .publisher(publisher)
+            .curator(curator)
+            .historyClient(historyClient)
+            .commonHdfsViewCallback(CommonHdfsViewCallback.create(config, executor))
+            .build();
+
+    listener.listen(c.queueName, routingKey, c.poolSize, callback);
   }
 
   @Override
