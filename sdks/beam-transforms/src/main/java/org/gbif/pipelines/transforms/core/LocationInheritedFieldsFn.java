@@ -6,14 +6,11 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.StreamSupport;
-
-import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.json.LocationInheritedRecord;
-
+import lombok.Data;
 import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.values.TupleTag;
-
-import lombok.Data;
+import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.json.LocationInheritedRecord;
 
 @Data
 public class LocationInheritedFieldsFn
@@ -27,30 +24,24 @@ public class LocationInheritedFieldsFn
   public static class Accum implements Serializable {
 
     private Map<String, LocationRecord> recordsMap = new HashMap<>();
-    private Set<String> recordsWithChidlren = new HashSet<>();
+    private Set<String> recordsWithChildren = new HashSet<>();
 
     public Accum acc(Set<LocationRecord> records) {
-      records.forEach(
-          r -> {
-            recordsMap.put(r.getId(), r);
-            if (r.getParentId() != null) {
-              recordsWithChidlren.add(r.getParentId());
-            }
-          });
+      records.forEach(this::acc);
       return this;
     }
 
     public Accum acc(LocationRecord r) {
       recordsMap.put(r.getId(), r);
       if (r.getParentId() != null) {
-        recordsWithChidlren.add(r.getParentId());
+        recordsWithChildren.add(r.getParentId());
       }
       return this;
     }
 
     public LocationInheritedRecord toLeafChild() {
       Set<String> allRecords = new HashSet<>(recordsMap.keySet());
-      allRecords.removeAll(recordsWithChidlren);
+      allRecords.removeAll(recordsWithChildren);
       LocationRecord leaf = recordsMap.get(allRecords.iterator().next());
       return setParentValue(
               LocationInheritedRecord.newBuilder().setId(leaf.getId()),

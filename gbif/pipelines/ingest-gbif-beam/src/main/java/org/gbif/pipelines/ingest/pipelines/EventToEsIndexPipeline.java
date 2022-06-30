@@ -1,16 +1,43 @@
 package org.gbif.pipelines.ingest.pipelines;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.ALL_AVRO;
+
+import java.io.Serializable;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
-
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.PipelineResult;
+import org.apache.beam.sdk.coders.StringUtf8Coder;
+import org.apache.beam.sdk.io.elasticsearch.ElasticsearchIO;
+import org.apache.beam.sdk.transforms.Combine;
+import org.apache.beam.sdk.transforms.Create;
+import org.apache.beam.sdk.transforms.Filter;
+import org.apache.beam.sdk.transforms.Flatten;
+import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
+import org.apache.beam.sdk.transforms.Sample;
+import org.apache.beam.sdk.transforms.View;
+import org.apache.beam.sdk.transforms.join.CoGbkResult;
+import org.apache.beam.sdk.transforms.join.CoGroupByKey;
+import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
+import org.apache.beam.sdk.values.KV;
+import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.PCollectionList;
+import org.apache.beam.sdk.values.PCollectionView;
+import org.apache.beam.sdk.values.TupleTag;
+import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
+import org.gbif.pipelines.core.pojo.Edge;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.AudubonRecord;
@@ -45,35 +72,7 @@ import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.gbif.pipelines.transforms.specific.IdentifierTransform;
-
-import org.apache.beam.sdk.Pipeline;
-import org.apache.beam.sdk.PipelineResult;
-import org.apache.beam.sdk.coders.StringUtf8Coder;
-import org.apache.beam.sdk.io.elasticsearch.ElasticsearchIO;
-import org.apache.beam.sdk.transforms.Combine;
-import org.apache.beam.sdk.transforms.Create;
-import org.apache.beam.sdk.transforms.Filter;
-import org.apache.beam.sdk.transforms.Flatten;
-import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
-import org.apache.beam.sdk.transforms.Sample;
-import org.apache.beam.sdk.transforms.View;
-import org.apache.beam.sdk.transforms.join.CoGbkResult;
-import org.apache.beam.sdk.transforms.join.CoGroupByKey;
-import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
-import org.apache.beam.sdk.values.KV;
-import org.apache.beam.sdk.values.PCollection;
-import org.apache.beam.sdk.values.PCollectionList;
-import org.apache.beam.sdk.values.PCollectionView;
-import org.apache.beam.sdk.values.TupleTag;
-import org.apache.beam.sdk.values.TypeDescriptor;
 import org.slf4j.MDC;
-
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.ALL_AVRO;
 
 /**
  * Pipeline sequence:
@@ -374,7 +373,7 @@ public class EventToEsIndexPipeline {
       // Creates a Map of all events and its sub events
       PCollection<KV<String, TemporalRecord>> temporalRecordsOfSubEvents =
           ParentEventExpandTransform.createTemporalTransform(
-                  temporalTransform.getTag(), eventCoreTransform.getTag())
+                  temporalTransform.getTag(), eventCoreTransform.getTag(), temporalTransform.getEdgeTag())
               .toSubEventsRecords("Temporal", temporalCollection, eventCoreCollection);
 
       return PCollectionList.of(temporalCollection)
@@ -402,7 +401,7 @@ public class EventToEsIndexPipeline {
 
       PCollection<KV<String, LocationRecord>> locationRecordsOfSubEvents =
           ParentEventExpandTransform.createLocationTransform(
-                  locationTransform.getTag(), eventCoreTransform.getTag())
+                  locationTransform.getTag(), eventCoreTransform.getTag(), locationTransform.getEdgeTag())
               .toSubEventsRecords("Location", locationCollection, eventCoreCollection);
 
       return PCollectionList.of(locationCollection)
@@ -430,7 +429,7 @@ public class EventToEsIndexPipeline {
 
       PCollection<KV<String, TaxonRecord>> taxonRecordsOfSubEvents =
           ParentEventExpandTransform.createTaxonTransform(
-                  taxonomyTransform.getTag(), eventCoreTransform.getTag())
+                  taxonomyTransform.getTag(), eventCoreTransform.getTag(), taxonomyTransform.getEdgeTag())
               .toSubEventsRecords("Taxon", taxonCollection, eventCoreCollection);
 
       return PCollectionList.of(taxonCollection)
@@ -477,7 +476,7 @@ public class EventToEsIndexPipeline {
   }
 
   @Builder
-  static class InheritedFields {
+  static class InheritedFields implements Serializable {
 
     private static final TupleTag<LocationInheritedRecord> LIR_TAG =
         new TupleTag<LocationInheritedRecord>() {};
@@ -493,7 +492,7 @@ public class EventToEsIndexPipeline {
     PCollection<KV<String, LocationInheritedRecord>> inheritLocationFields() {
       PCollection<KV<String, LocationRecord>> locationRecordsOfSubEvents =
           ParentEventExpandTransform.createLocationTransform(
-                  locationTransform.getTag(), eventCoreTransform.getTag())
+                  locationTransform.getTag(), eventCoreTransform.getTag(), locationTransform.getEdgeTag())
               .toSubEventsRecordsFromLeaf("Location", locationCollection, eventCoreCollection);
 
       return PCollectionList.of(locationCollection)

@@ -438,7 +438,7 @@ public class EventToEsIndexPipelineIT {
     String[] args = {
       "--datasetId=" + datasetKey,
       "--attempt=1",
-      "--runner=TestSparkRunner",
+      "--runner=SparkRunner",
       "--metaFileName=occurrence-to-index.yml",
       "--inputPath=" + input,
       "--targetPath=" + input,
