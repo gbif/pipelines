@@ -12,6 +12,8 @@ import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.*;
+import java.time.temporal.TemporalAccessor;
 import java.util.*;
 import java.util.stream.Collectors;
 import lombok.NonNull;
@@ -30,10 +32,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.solr.common.SolrInputDocument;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.License;
+import org.gbif.common.parsers.core.OccurrenceParseResult;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.TermFactory;
+import org.gbif.pipelines.core.parsers.temporal.TemporalParser;
 import org.gbif.pipelines.io.avro.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -48,8 +52,6 @@ public class IndexRecordTransform implements Serializable, IndexFields {
   private static final TermFactory TERM_FACTORY = TermFactory.instance();
   public static final String ISSUES = "issues";
   public static final String CLASSS = "classs";
-  public static final int YYYY_DD_MM_FORMAT_LENGTH = 10;
-  public static final int YYYY_MM_DDTHH_mm_ss_Z_LENGTH = 22;
   public static final String RAW_PREFIX = "raw_";
 
   // Core
@@ -232,7 +234,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     if (br != null) {
       addTermWithAgentsSafely(
           indexRecord, DwcTerm.recordedByID.simpleName(), br.getRecordedByIds());
-      addMultiValueTermSafely(indexRecord, DwcTerm.typeStatus.simpleName(), br.getRecordedBy());
+      addMultiValueTermSafely(indexRecord, DwcTerm.typeStatus.simpleName(), br.getTypeStatus());
       addMultiValueTermSafely(indexRecord, DwcTerm.recordedBy.simpleName(), br.getRecordedBy());
       addMultiValueTermSafely(indexRecord, DwcTerm.identifiedBy.simpleName(), br.getIdentifiedBy());
       addMultiValueTermSafely(indexRecord, DwcTerm.preparations.simpleName(), br.getPreparations());
@@ -245,37 +247,18 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     }
 
     // add event date
-    try {
-      if (tr.getEventDate() != null
-          && tr.getEventDate().getGte() != null
-          && (tr.getEventDate().getGte().length() == YYYY_DD_MM_FORMAT_LENGTH
-              || tr.getEventDate().getGte().length() == YYYY_MM_DDTHH_mm_ss_Z_LENGTH)) {
-        // Event dates come through interpretation 2 format
-        // 1) yyyy-MM-dd
-        // 2) yyyy-MM-ddTHH:mm:ssXXX e.g. 2019-09-13T13:35+10:00
-        Date date = null;
-        if (tr.getEventDate().getGte().length() == YYYY_MM_DDTHH_mm_ss_Z_LENGTH) {
-          SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mmXXX");
-          date = sdf.parse(tr.getEventDate().getGte());
-        } else {
-          SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-          date = sdf.parse(tr.getEventDate().getGte());
-        }
+    if (tr.getEventDate() != null) {
 
-        indexRecord.getDates().put(DwcTerm.eventDate.simpleName(), date.getTime());
-
-        // eventDateEnd
-        if (tr.getEventDate().getLte() != null) {
-          indexRecord
-              .getDates()
-              .put(
-                  EVENT_DATE_END,
-                  new SimpleDateFormat("yyyy-MM-dd").parse(tr.getEventDate().getLte()).getTime());
-        }
+      Long date = parseInterpretedDate(tr.getEventDate().getGte());
+      if (date != null) {
+        indexRecord.getDates().put(DwcTerm.eventDate.simpleName(), date);
       }
-    } catch (ParseException e) {
-      log.error(
-          "Un-parsable date produced by downstream interpretation " + tr.getEventDate().getGte());
+
+      // eventDateEnd
+      Long endDate = parseInterpretedDate(tr.getEventDate().getLte());
+      if (endDate != null) {
+        indexRecord.getDates().put(EVENT_DATE_END, endDate);
+      }
     }
 
     if (tr.getDatePrecision() != null) {
@@ -632,6 +615,45 @@ public class IndexRecordTransform implements Serializable, IndexFields {
       addTermSafely(indexRecord, loan, LOAN_IDENTIFIER_TERM);
     }
     return indexRecord.build();
+  }
+
+  /**
+   * Event dates come through interpretation 3 formats 1) yyyy-MM-dd 2) yyyy-MM-ddTHH:mm:ssXXX e.g.
+   * 2019-09-13T13:35+10:00 3) yyyy-MM-dd'T'HH:mm:ss.SSSZ e.g. 2022-06-15T00:02:11.396Z
+   *
+   * @param dateString
+   * @return
+   * @throws ParseException
+   */
+  private static Long parseInterpretedDate(String dateString) {
+
+    if (dateString == null) {
+      return null;
+    }
+
+    try {
+      TemporalParser temporalParser = TemporalParser.create();
+      OccurrenceParseResult<TemporalAccessor> r = temporalParser.parseRecordedDate(dateString);
+
+      // FIXME  - im sure there is a better way to do this
+      if (r.getPayload() instanceof LocalDateTime) {
+        LocalDateTime ldt = ((LocalDateTime) r.getPayload());
+        return ldt.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+      } else if (r.getPayload() instanceof LocalDate) {
+        LocalDate ldt = ((LocalDate) r.getPayload());
+        ZoneId zoneId = ZoneId.systemDefault();
+        return ldt.atStartOfDay(zoneId).toEpochSecond() * 1000;
+      } else if (r.getPayload() instanceof OffsetDateTime) {
+        OffsetDateTime ldt = ((OffsetDateTime) r.getPayload());
+        return ldt.toInstant().toEpochMilli();
+      } else if (r.getPayload() instanceof ZonedDateTime) {
+        ZonedDateTime ldt = ((ZonedDateTime) r.getPayload());
+        return ldt.toInstant().toEpochMilli();
+      }
+    } catch (Exception e) {
+      log.error("Un-parsable date produced by downstream interpretation " + dateString);
+    }
+    return null;
   }
 
   private static void addTermWithAgentsSafely(
