@@ -30,6 +30,7 @@ import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
+import org.gbif.pipelines.io.avro.grscicoll.Match;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.EventCoreTransform;
 import org.gbif.pipelines.transforms.core.GrscicollTransform;
@@ -73,15 +74,26 @@ public class OccurrenceHdfsRecordTransformTest {
     ext.put(Extension.MEASUREMENT_OR_FACT.getRowType(), Collections.singletonList(ext1));
 
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("777").setExtensions(ext).build();
-    GbifIdRecord id = GbifIdRecord.newBuilder().setId("777").setGbifId(777L).build();
-    MetadataRecord mr = MetadataRecord.newBuilder().setId("777").build();
-    BasicRecord br = BasicRecord.newBuilder().setId("777").build();
-    ClusteringRecord cr = ClusteringRecord.newBuilder().setId("777").build();
-    TemporalRecord tr = TemporalRecord.newBuilder().setId("777").build();
-    TaxonRecord txr = TaxonRecord.newBuilder().setId("777").build();
-    GrscicollRecord gr = GrscicollRecord.newBuilder().setId("777").build();
-    LocationRecord lr = LocationRecord.newBuilder().setId("777").build();
-    EventCoreRecord ecr = EventCoreRecord.newBuilder().setId("777").build();
+    GbifIdRecord id =
+        GbifIdRecord.newBuilder().setId("777").setGbifId(777L).setTriplet("setTriplet").build();
+    MetadataRecord mr =
+        MetadataRecord.newBuilder().setId("777").setDatasetTitle("setDatasetTitle").build();
+    BasicRecord br =
+        BasicRecord.newBuilder()
+            .setId("777")
+            .setDatasetName(Collections.singletonList("setDatasetName"))
+            .build();
+    ClusteringRecord cr = ClusteringRecord.newBuilder().setId("777").setIsClustered(true).build();
+    TemporalRecord tr = TemporalRecord.newBuilder().setId("777").setDay(25).build();
+    TaxonRecord txr = TaxonRecord.newBuilder().setId("777").setParentId("setParentId").build();
+    GrscicollRecord gr =
+        GrscicollRecord.newBuilder()
+            .setId("777")
+            .setCollectionMatch(Match.newBuilder().setKey("setCollectionMatchKey").build())
+            .build();
+    LocationRecord lr = LocationRecord.newBuilder().setId("777").setCountry("setCountry").build();
+    EventCoreRecord ecr =
+        EventCoreRecord.newBuilder().setId("777").setParentEventID("setParentEventID").build();
     MultimediaRecord mmr = MultimediaRecord.newBuilder().setId("777").build();
     AudubonRecord aur = AudubonRecord.newBuilder().setId("777").build();
     ImageRecord imr = ImageRecord.newBuilder().setId("777").build();
@@ -184,10 +196,10 @@ public class OccurrenceHdfsRecordTransformTest {
     OccurrenceHdfsRecord expected = new OccurrenceHdfsRecord();
     expected.setGbifid(777L);
     expected.setDatasetid(Collections.emptyList());
-    expected.setDatasetname(Collections.emptyList());
+    expected.setDatasetname(Collections.singletonList("setDatasetName"));
     expected.setDwcaextension(
         Collections.singletonList("http://rs.tdwg.org/dwc/terms/MeasurementOrFact"));
-    expected.setIsincluster(false);
+    expected.setIsincluster(true);
     expected.setIdentifiedby(Collections.emptyList());
     expected.setIdentifiedbyid(Collections.emptyList());
     expected.setIssue(Collections.emptyList());
@@ -200,6 +212,9 @@ public class OccurrenceHdfsRecordTransformTest {
     expected.setParenteventgbifid(Collections.emptyList());
     expected.setTypestatus(Collections.emptyList());
     expected.setSamplingprotocol(Collections.emptyList());
+    expected.setCollectionkey("setCollectionMatchKey");
+    expected.setDatasettitle("setDatasetTitle");
+    expected.setDay(25);
 
     PAssert.that(result).containsInAnyOrder(expected);
     p.run();

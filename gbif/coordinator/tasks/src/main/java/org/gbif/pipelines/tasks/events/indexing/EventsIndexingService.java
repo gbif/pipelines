@@ -6,11 +6,9 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
-import org.gbif.common.messaging.api.messages.PipelinesEventsInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.pipelines.tasks.ServiceFactory;
@@ -50,11 +48,7 @@ public class EventsIndexingService extends AbstractIdleService {
     EventsIndexingCallback callback =
         new EventsIndexingCallback(config, publisher, curator, httpClient, historyClient);
 
-    PipelinesEventsInterpretedMessage em = new PipelinesEventsInterpretedMessage();
-    // we run all the events pipelines in distributed mode
-    String routingKey = em.setRunner(StepRunner.DISTRIBUTED.name()).getRoutingKey();
-
-    listener.listen(c.queueName, routingKey, c.poolSize, callback);
+    listener.listen(c.queueName, callback.getRouting(), c.poolSize, callback);
   }
 
   @Override

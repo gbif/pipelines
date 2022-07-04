@@ -8,6 +8,7 @@ import static org.gbif.pipelines.common.utils.PathUtil.buildXmlInputPath;
 
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
@@ -75,6 +76,15 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
         .handler(this)
         .build()
         .handleMessage();
+  }
+
+  @Override
+  public String getRouting() {
+    PipelinesXmlMessage message = new PipelinesXmlMessage();
+    if (config.validatorOnly) {
+      message.setPipelineSteps(Collections.singleton(StepType.VALIDATOR_XML_TO_VERBATIM.name()));
+    }
+    return message.getRoutingKey();
   }
 
   public Runnable createRunnable(

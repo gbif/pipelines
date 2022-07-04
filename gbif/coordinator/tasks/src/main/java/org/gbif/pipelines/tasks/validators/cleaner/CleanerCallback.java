@@ -50,6 +50,10 @@ public class CleanerCallback extends AbstractMessageCallback<PipelinesCleanerMes
     }
   }
 
+  public String getRouting() {
+    return new PipelinesCleanerMessage().setValidator(config.validatorOnly).getRoutingKey();
+  }
+
   private void deleteFsData(UUID datasetUuid) {
     log.info("Delete file system files");
     String pathToDelete = String.join("/", config.fsRootPath, datasetUuid.toString());

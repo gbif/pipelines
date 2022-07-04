@@ -63,6 +63,11 @@ public class FragmenterCallback extends AbstractMessageCallback<PipelinesInterpr
   }
 
   @Override
+  public String getRouting() {
+    return new PipelinesInterpretedMessage().getRoutingKey() + ".*";
+  }
+
+  @Override
   public Runnable createRunnable(PipelinesInterpretedMessage message) {
     return () -> {
       UUID datasetId = message.getDatasetUuid();

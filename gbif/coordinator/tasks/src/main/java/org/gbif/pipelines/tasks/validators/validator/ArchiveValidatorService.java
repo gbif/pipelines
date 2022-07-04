@@ -1,14 +1,11 @@
 package org.gbif.pipelines.tasks.validators.validator;
 
 import com.google.common.util.concurrent.AbstractIdleService;
-import java.util.Collections;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
-import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
-import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
 import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.pipelines.tasks.ServiceFactory;
@@ -48,22 +45,16 @@ public class ArchiveValidatorService extends AbstractIdleService {
 
     SchemaValidatorFactory schemaValidatorFactory = new SchemaValidatorFactory();
 
-    PipelinesArchiveValidatorMessage message = new PipelinesArchiveValidatorMessage();
-    if (config.validatorOnly) {
-      message.setPipelineSteps(Collections.singleton(StepType.VALIDATOR_VALIDATE_ARCHIVE.name()));
-    }
-
-    listener.listen(
-        c.queueName,
-        message.getRoutingKey(),
-        c.poolSize,
+    ArchiveValidatorCallback callback =
         new ArchiveValidatorCallback(
             this.config,
             publisher,
             curator,
             historyClient,
             validationClient,
-            schemaValidatorFactory));
+            schemaValidatorFactory);
+
+    listener.listen(c.queueName, callback.getRouting(), c.poolSize, callback);
   }
 
   @Override

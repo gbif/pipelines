@@ -40,6 +40,11 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
         .handleMessage();
   }
 
+  @Override
+  public String getRouting() {
+    return new PipelinesInterpretedMessage().setRunner(config.processRunner).getRoutingKey();
+  }
+
   /** Main message processing logic, creates a terminal java process, which runs */
   @Override
   public Runnable createRunnable(PipelinesInterpretedMessage message) {
