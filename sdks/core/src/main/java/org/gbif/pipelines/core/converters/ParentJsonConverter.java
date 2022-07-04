@@ -21,6 +21,7 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.io.avro.json.DerivedMetadataRecord;
+import org.gbif.pipelines.io.avro.json.EventInheritedRecord;
 import org.gbif.pipelines.io.avro.json.EventJsonRecord;
 import org.gbif.pipelines.io.avro.json.JoinRecord;
 import org.gbif.pipelines.io.avro.json.LocationInheritedRecord;
@@ -28,6 +29,7 @@ import org.gbif.pipelines.io.avro.json.MetadataJsonRecord;
 import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
 import org.gbif.pipelines.io.avro.json.Parent;
 import org.gbif.pipelines.io.avro.json.ParentJsonRecord;
+import org.gbif.pipelines.io.avro.json.TemporalInheritedRecord;
 
 @Slf4j
 @SuperBuilder
@@ -44,6 +46,8 @@ public abstract class ParentJsonConverter {
   protected final DerivedMetadataRecord derivedMetadata;
 
   protected final LocationInheritedRecord locationInheritedRecord;
+  protected final TemporalInheritedRecord temporalInheritedRecord;
+  protected final EventInheritedRecord eventInheritedRecord;
   protected OccurrenceJsonRecord occurrenceJsonRecord;
   protected MeasurementOrFactRecord measurementOrFactRecord;
 
@@ -99,6 +103,8 @@ public abstract class ParentJsonConverter {
     mapCreated(builder);
     mapDerivedMetadata(builder);
     mapLocationInheritedFields(builder);
+    mapTemporalInheritedFields(builder);
+    mapEventInheritedFields(builder);
 
     JsonConverter.convertToDate(identifier.getFirstLoaded()).ifPresent(builder::setFirstLoaded);
     JsonConverter.convertToDate(metadata.getLastCrawled()).ifPresent(builder::setLastCrawled);
@@ -267,6 +273,14 @@ public abstract class ParentJsonConverter {
 
   private void mapLocationInheritedFields(ParentJsonRecord.Builder builder) {
     builder.setLocationInherited(locationInheritedRecord);
+  }
+
+  private void mapTemporalInheritedFields(ParentJsonRecord.Builder builder) {
+    builder.setTemporalInherited(temporalInheritedRecord);
+  }
+
+  private void mapEventInheritedFields(ParentJsonRecord.Builder builder) {
+    builder.setEventInherited(eventInheritedRecord);
   }
 
   protected static List<Parent> convertParents(List<org.gbif.pipelines.io.avro.Parent> parents) {

@@ -60,24 +60,35 @@ public class ParentEventExpandTransform<T extends SpecificRecordBase & Record>
       extends ParentEventExpandTransform<TaxonRecord> {
 
     public TaxonParentEventExpandTransform(
-        TupleTag<TaxonRecord> recordTupleTag, TupleTag<EventCoreRecord> eventCoreRecordTupleTag, TupleTag<Edge<TaxonRecord>> edgeTupleTag) {
+        TupleTag<TaxonRecord> recordTupleTag,
+        TupleTag<EventCoreRecord> eventCoreRecordTupleTag,
+        TupleTag<Edge<TaxonRecord>> edgeTupleTag) {
       super(recordTupleTag, eventCoreRecordTupleTag, edgeTupleTag, TaxonRecord.class);
     }
   }
 
   public static TaxonParentEventExpandTransform createTaxonTransform(
-      TupleTag<TaxonRecord> recordTupleTag, TupleTag<EventCoreRecord> eventCoreRecordTupleTag, TupleTag<Edge<TaxonRecord>> edgeTupleTag) {
-    return new TaxonParentEventExpandTransform(recordTupleTag, eventCoreRecordTupleTag, edgeTupleTag);
+      TupleTag<TaxonRecord> recordTupleTag,
+      TupleTag<EventCoreRecord> eventCoreRecordTupleTag,
+      TupleTag<Edge<TaxonRecord>> edgeTupleTag) {
+    return new TaxonParentEventExpandTransform(
+        recordTupleTag, eventCoreRecordTupleTag, edgeTupleTag);
   }
 
   public static LocationParentEventExpandTransform createLocationTransform(
-      TupleTag<LocationRecord> recordTupleTag, TupleTag<EventCoreRecord> eventCoreRecordTupleTag, TupleTag<Edge<LocationRecord>> edgeTupleTag) {
-    return new LocationParentEventExpandTransform(recordTupleTag, eventCoreRecordTupleTag, edgeTupleTag);
+      TupleTag<LocationRecord> recordTupleTag,
+      TupleTag<EventCoreRecord> eventCoreRecordTupleTag,
+      TupleTag<Edge<LocationRecord>> edgeTupleTag) {
+    return new LocationParentEventExpandTransform(
+        recordTupleTag, eventCoreRecordTupleTag, edgeTupleTag);
   }
 
   public static TemporalParentEventExpandTransform createTemporalTransform(
-      TupleTag<TemporalRecord> recordTupleTag, TupleTag<EventCoreRecord> eventCoreRecordTupleTag, TupleTag<Edge<TemporalRecord>> edgeTupleTag) {
-    return new TemporalParentEventExpandTransform(recordTupleTag, eventCoreRecordTupleTag, edgeTupleTag);
+      TupleTag<TemporalRecord> recordTupleTag,
+      TupleTag<EventCoreRecord> eventCoreRecordTupleTag,
+      TupleTag<Edge<TemporalRecord>> edgeTupleTag) {
+    return new TemporalParentEventExpandTransform(
+        recordTupleTag, eventCoreRecordTupleTag, edgeTupleTag);
   }
 
   private final TupleTag<T> recordTupleTag;
@@ -118,36 +129,41 @@ public class ParentEventExpandTransform<T extends SpecificRecordBase & Record>
 
   public ParDo.SingleOutput<KV<String, CoGbkResult>, Edge<T>> edgeConverter() {
     return ParDo.of(
-      new DoFn<KV<String, CoGbkResult>, Edge<T>>() {
-        @DoFn.ProcessElement
-        public void processElement(ProcessContext c) {
-          CoGbkResult v = c.element().getValue();
-          Iterable<Edge<T>> edges = v.getAll(edgeTupleTag);
-          edges.forEach(edge -> {
-            T record = v.getOnly(recordTupleTag, null);
-            c.output(Edge.of(edge.getFromId(), edge.getToId(), record));
-          });
-
-        }
-      });
+        new DoFn<KV<String, CoGbkResult>, Edge<T>>() {
+          @DoFn.ProcessElement
+          public void processElement(ProcessContext c) {
+            CoGbkResult v = c.element().getValue();
+            Iterable<Edge<T>> edges = v.getAll(edgeTupleTag);
+            edges.forEach(
+                edge -> {
+                  T record = v.getOnly(recordTupleTag, null);
+                  c.output(Edge.of(edge.getFromId(), edge.getToId(), record));
+                });
+          }
+        });
   }
 
-  public ParDo.SingleOutput<KV<String, CoGbkResult>, KV<String,Edge<T>>> parentToChildEdgeConverter() {
+  public ParDo.SingleOutput<KV<String, CoGbkResult>, KV<String, Edge<T>>>
+      parentToChildEdgeConverter() {
     return ParDo.of(
-      new DoFn<KV<String, CoGbkResult>, KV<String,Edge<T>>>() {
-        @DoFn.ProcessElement
-        public void processElement(ProcessContext c) {
-          CoGbkResult v = c.element().getValue();
-          EventCoreRecord eventCoreRecord = v.getOnly(eventCoreRecordTupleTag);
-          T record = v.getOnly(recordTupleTag, null);
-          if (eventCoreRecord.getParentsLineage() != null && record != null) {
-            eventCoreRecord
-              .getParentsLineage()
-              .forEach(parent -> c.output(KV.of(parent.getId(),
-                                                Edge.of(record.getId(), parent.getId(), record))));
+        new DoFn<KV<String, CoGbkResult>, KV<String, Edge<T>>>() {
+          @DoFn.ProcessElement
+          public void processElement(ProcessContext c) {
+            CoGbkResult v = c.element().getValue();
+            EventCoreRecord eventCoreRecord = v.getOnly(eventCoreRecordTupleTag);
+            T record = v.getOnly(recordTupleTag, null);
+            if (eventCoreRecord.getParentsLineage() != null && record != null) {
+              eventCoreRecord
+                  .getParentsLineage()
+                  .forEach(
+                      parent ->
+                          c.output(
+                              KV.of(
+                                  parent.getId(),
+                                  Edge.of(record.getId(), parent.getId(), record))));
+            }
           }
-        }
-      });
+        });
   }
 
   /** Creates a KV.of(Edge.fromId,T). */
@@ -174,19 +190,21 @@ public class ParentEventExpandTransform<T extends SpecificRecordBase & Record>
       PCollection<KV<String, T>> recordPCollection,
       PCollection<KV<String, EventCoreRecord>> eventCoreRecordPCollection) {
     PCollection<KV<String, Edge<T>>> edges =
-     KeyedPCollectionTuple.of(eventCoreRecordTupleTag, eventCoreRecordPCollection)
-        .and(recordTupleTag, recordPCollection)
-        .apply("Grouping " + recordName + " and event records from parent", CoGroupByKey.create())
-        .apply("Collects " + recordName + " records in graph edges from parent", parentToChildEdgeConverter())
-        .setCoder(KvCoder.of(StringUtf8Coder.of(), edgeCoder));
+        KeyedPCollectionTuple.of(eventCoreRecordTupleTag, eventCoreRecordPCollection)
+            .and(recordTupleTag, recordPCollection)
+            .apply(
+                "Grouping " + recordName + " and event records from parent", CoGroupByKey.create())
+            .apply(
+                "Collects " + recordName + " records in graph edges from parent",
+                parentToChildEdgeConverter())
+            .setCoder(KvCoder.of(StringUtf8Coder.of(), edgeCoder));
 
-    return KeyedPCollectionTuple
-           .of(edgeTupleTag, edges)
-           .and(recordTupleTag, recordPCollection)
-           .apply("Grouping parents " + recordName + " records", CoGroupByKey.create())
-           .apply("Collects parents " + recordName + " records in graph edges", edgeConverter())
-           .setCoder(edgeCoder)
-           .apply("Converts the edge to parentId -> " + recordName + " (child) record", asKv(true))
-           .setCoder(KvCoder.of(StringUtf8Coder.of(), edgeCoder.getRecordCoder()));
+    return KeyedPCollectionTuple.of(edgeTupleTag, edges)
+        .and(recordTupleTag, recordPCollection)
+        .apply("Grouping parents " + recordName + " records", CoGroupByKey.create())
+        .apply("Collects parents " + recordName + " records in graph edges", edgeConverter())
+        .setCoder(edgeCoder)
+        .apply("Converts the edge to parentId -> " + recordName + " (child) record", asKv(true))
+        .setCoder(KvCoder.of(StringUtf8Coder.of(), edgeCoder.getRecordCoder()));
   }
 }

@@ -13,14 +13,19 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
+import org.apache.beam.sdk.coders.AvroCoder;
+import org.apache.beam.sdk.coders.KvCoder;
 import org.apache.beam.sdk.coders.StringUtf8Coder;
 import org.apache.beam.sdk.io.elasticsearch.ElasticsearchIO;
 import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.transforms.Create;
+import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.Filter;
 import org.apache.beam.sdk.transforms.Flatten;
+import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
 import org.apache.beam.sdk.transforms.Sample;
+import org.apache.beam.sdk.transforms.Values;
 import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.transforms.join.CoGroupByKey;
@@ -33,6 +38,7 @@ import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables;
+import org.gbif.pipelines.common.beam.coders.EdgeCoder;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
@@ -53,17 +59,21 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.json.DerivedMetadataRecord;
+import org.gbif.pipelines.io.avro.json.EventInheritedRecord;
 import org.gbif.pipelines.io.avro.json.LocationInheritedRecord;
+import org.gbif.pipelines.io.avro.json.TemporalInheritedRecord;
 import org.gbif.pipelines.transforms.common.NotNullOrEmptyFilter;
 import org.gbif.pipelines.transforms.converters.ParentEventExpandTransform;
 import org.gbif.pipelines.transforms.converters.ParentJsonTransform;
 import org.gbif.pipelines.transforms.core.ConvexHullFn;
 import org.gbif.pipelines.transforms.core.DerivedMetadataTransform;
 import org.gbif.pipelines.transforms.core.EventCoreTransform;
+import org.gbif.pipelines.transforms.core.EventInheritedFieldsFn;
 import org.gbif.pipelines.transforms.core.LocationInheritedFieldsFn;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.TaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalCoverageFn;
+import org.gbif.pipelines.transforms.core.TemporalInheritedFieldsFn;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
@@ -193,15 +203,24 @@ public class EventToEsIndexPipeline {
         p.apply("Read event taxon records", taxonomyTransform.read(pathFn))
             .apply("Map event taxon records to KV", taxonomyTransform.toKv());
 
-    PCollection<KV<String, LocationInheritedRecord>> locationInheritedRecords =
+    InheritedFields inheritedFields =
         InheritedFields.builder()
-            .pipeline(p)
             .locationCollection(locationCollection)
             .locationTransform(locationTransform)
+            .temporalCollection(temporalCollection)
+            .temporalTransform(temporalTransform)
             .eventCoreCollection(eventCoreCollection)
             .eventCoreTransform(eventCoreTransform)
-            .build()
-            .inheritLocationFields();
+            .build();
+
+    PCollection<KV<String, LocationInheritedRecord>> locationInheritedRecords =
+        inheritedFields.inheritLocationFields();
+
+    PCollection<KV<String, TemporalInheritedRecord>> temporalInheritedRecords =
+        inheritedFields.inheritTemporalFields();
+
+    PCollection<KV<String, EventInheritedRecord>> eventInheritedRecords =
+        inheritedFields.inheritEventFields();
 
     PCollection<KV<String, DerivedMetadataRecord>> derivedMetadataRecordCollection =
         DerivedMetadata.builder()
@@ -253,6 +272,8 @@ public class EventToEsIndexPipeline {
             .derivedMetadataRecordTag(DerivedMetadataTransform.tag())
             .measurementOrFactRecordTag(measurementOrFactTransform.getTag())
             .locationInheritedRecordTag(InheritedFields.LIR_TAG)
+            .temporalInheritedRecordTag(InheritedFields.TIR_TAG)
+            .eventInheritedRecordTag(InheritedFields.EIR_TAG)
             .metadataView(metadataView)
             .build()
             .converter();
@@ -276,6 +297,8 @@ public class EventToEsIndexPipeline {
             // Derived metadata
             .and(DerivedMetadataTransform.tag(), derivedMetadataRecordCollection)
             .and(InheritedFields.LIR_TAG, locationInheritedRecords)
+            .and(InheritedFields.TIR_TAG, temporalInheritedRecords)
+            .and(InheritedFields.EIR_TAG, eventInheritedRecords)
             // Apply
             .apply("Grouping objects", CoGroupByKey.create())
             .apply("Merging to json", eventJsonDoFn);
@@ -373,7 +396,9 @@ public class EventToEsIndexPipeline {
       // Creates a Map of all events and its sub events
       PCollection<KV<String, TemporalRecord>> temporalRecordsOfSubEvents =
           ParentEventExpandTransform.createTemporalTransform(
-                  temporalTransform.getTag(), eventCoreTransform.getTag(), temporalTransform.getEdgeTag())
+                  temporalTransform.getTag(),
+                  eventCoreTransform.getTag(),
+                  temporalTransform.getEdgeTag())
               .toSubEventsRecords("Temporal", temporalCollection, eventCoreCollection);
 
       return PCollectionList.of(temporalCollection)
@@ -401,7 +426,9 @@ public class EventToEsIndexPipeline {
 
       PCollection<KV<String, LocationRecord>> locationRecordsOfSubEvents =
           ParentEventExpandTransform.createLocationTransform(
-                  locationTransform.getTag(), eventCoreTransform.getTag(), locationTransform.getEdgeTag())
+                  locationTransform.getTag(),
+                  eventCoreTransform.getTag(),
+                  locationTransform.getEdgeTag())
               .toSubEventsRecords("Location", locationCollection, eventCoreCollection);
 
       return PCollectionList.of(locationCollection)
@@ -429,7 +456,9 @@ public class EventToEsIndexPipeline {
 
       PCollection<KV<String, TaxonRecord>> taxonRecordsOfSubEvents =
           ParentEventExpandTransform.createTaxonTransform(
-                  taxonomyTransform.getTag(), eventCoreTransform.getTag(), taxonomyTransform.getEdgeTag())
+                  taxonomyTransform.getTag(),
+                  eventCoreTransform.getTag(),
+                  taxonomyTransform.getEdgeTag())
               .toSubEventsRecords("Taxon", taxonCollection, eventCoreCollection);
 
       return PCollectionList.of(taxonCollection)
@@ -477,22 +506,28 @@ public class EventToEsIndexPipeline {
 
   @Builder
   static class InheritedFields implements Serializable {
-
     private static final TupleTag<LocationInheritedRecord> LIR_TAG =
         new TupleTag<LocationInheritedRecord>() {};
 
-    private final Pipeline pipeline;
+    private static final TupleTag<TemporalInheritedRecord> TIR_TAG =
+        new TupleTag<TemporalInheritedRecord>() {};
+
+    private static final TupleTag<EventInheritedRecord> EIR_TAG =
+        new TupleTag<EventInheritedRecord>() {};
+
     private final TemporalTransform temporalTransform;
     private final EventCoreTransform eventCoreTransform;
     private final LocationTransform locationTransform;
-    private final PCollection<KV<String, TemporalRecord>> temporalCollection;
-    private final PCollection<KV<String, LocationRecord>> locationCollection;
-    private final PCollection<KV<String, EventCoreRecord>> eventCoreCollection;
+    private final transient PCollection<KV<String, TemporalRecord>> temporalCollection;
+    private final transient PCollection<KV<String, LocationRecord>> locationCollection;
+    private final transient PCollection<KV<String, EventCoreRecord>> eventCoreCollection;
 
     PCollection<KV<String, LocationInheritedRecord>> inheritLocationFields() {
       PCollection<KV<String, LocationRecord>> locationRecordsOfSubEvents =
           ParentEventExpandTransform.createLocationTransform(
-                  locationTransform.getTag(), eventCoreTransform.getTag(), locationTransform.getEdgeTag())
+                  locationTransform.getTag(),
+                  eventCoreTransform.getTag(),
+                  locationTransform.getEdgeTag())
               .toSubEventsRecordsFromLeaf("Location", locationCollection, eventCoreCollection);
 
       return PCollectionList.of(locationCollection)
@@ -501,6 +536,88 @@ public class EventToEsIndexPipeline {
           .apply(
               "Inherit location fields of all records",
               Combine.perKey(new LocationInheritedFieldsFn()));
+    }
+
+    PCollection<KV<String, TemporalInheritedRecord>> inheritTemporalFields() {
+      PCollection<KV<String, TemporalRecord>> temporalRecordsOfSubEvents =
+          ParentEventExpandTransform.createTemporalTransform(
+                  temporalTransform.getTag(),
+                  eventCoreTransform.getTag(),
+                  temporalTransform.getEdgeTag())
+              .toSubEventsRecordsFromLeaf("Temporal", temporalCollection, eventCoreCollection);
+
+      return PCollectionList.of(temporalCollection)
+          .and(temporalRecordsOfSubEvents)
+          .apply("Joining temporal records for inheritance", Flatten.pCollections())
+          .apply(
+              "Inherit temporal fields of all records",
+              Combine.perKey(new TemporalInheritedFieldsFn()));
+    }
+
+    PCollection<KV<String, EventInheritedRecord>> inheritEventFields() {
+      PCollection<KV<String, Edge<EventCoreRecord>>> parentEdgeEvents =
+          eventCoreCollection
+              // Collection of EventCoreRecord
+              .apply("Get EventCoreRecord values", Values.create())
+              // Collection of KV<ParentId,Edge.of(ParentId,EventCoreRecord.id, EventCoreRecord)
+              .apply("Group by child and parent", childToParentEdgeConverter())
+              .setCoder(
+                  KvCoder.of(
+                      StringUtf8Coder.of(), EdgeCoder.of(AvroCoder.of(EventCoreRecord.class))));
+
+      return KeyedPCollectionTuple.of(eventCoreTransform.getTag(), eventCoreCollection)
+          .and(eventCoreTransform.getEdgeTag(), parentEdgeEvents)
+          // Join EventCore collections with parents
+          .apply("Join events with parent collections", CoGroupByKey.<String>create())
+          // Extract the parents only
+          .apply("Extract the parents only", childToParentConverter(eventCoreTransform))
+          .apply("Extract parent features", Combine.perKey(new EventInheritedFieldsFn()))
+          .setCoder(KvCoder.of(StringUtf8Coder.of(), AvroCoder.of(EventInheritedRecord.class)));
+    }
+
+    public ParDo.SingleOutput<EventCoreRecord, KV<String, Edge<EventCoreRecord>>>
+        childToParentEdgeConverter() {
+      DoFn<EventCoreRecord, KV<String, Edge<EventCoreRecord>>> fn =
+          new DoFn<EventCoreRecord, KV<String, Edge<EventCoreRecord>>>() {
+            @DoFn.ProcessElement
+            public void processElement(ProcessContext c) {
+              EventCoreRecord eventCoreRecord = c.element();
+              c.output(
+                  KV.of(
+                      eventCoreRecord.getId(),
+                      Edge.of(eventCoreRecord.getId(), eventCoreRecord.getId(), eventCoreRecord)));
+              if (eventCoreRecord.getParentsLineage() != null) {
+                eventCoreRecord
+                    .getParentsLineage()
+                    .forEach(
+                        parent ->
+                            c.output(
+                                KV.of(
+                                    parent.getId(),
+                                    Edge.of(
+                                        parent.getId(),
+                                        eventCoreRecord.getId(),
+                                        eventCoreRecord))));
+              }
+            }
+          };
+      return ParDo.of(fn);
+    }
+
+    public ParDo.SingleOutput<KV<String, CoGbkResult>, KV<String, EventCoreRecord>>
+        childToParentConverter(EventCoreTransform eventCoreTransform) {
+      DoFn<KV<String, CoGbkResult>, KV<String, EventCoreRecord>> fn =
+          new DoFn<KV<String, CoGbkResult>, KV<String, EventCoreRecord>>() {
+            @DoFn.ProcessElement
+            public void processElement(ProcessContext c) {
+              CoGbkResult result = c.element().getValue();
+              EventCoreRecord eventCoreRecord = result.getOnly(eventCoreTransform.getTag());
+              Iterable<Edge<EventCoreRecord>> children =
+                  result.getAll(eventCoreTransform.getEdgeTag());
+              children.forEach(child -> c.output(KV.of(child.getToId(), eventCoreRecord)));
+            }
+          };
+      return ParDo.of(fn);
     }
   }
 }

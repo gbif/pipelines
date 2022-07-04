@@ -6,7 +6,7 @@
     "name":"LocationInheritedRecord",
     "namespace":"org.gbif.pipelines.io.avro.json",
     "type":"record",
-    "doc":"Location inherited fiedls from parent events",
+    "doc":"Location inherited fields from parent events",
     "fields":[
       {"name": "id","type":"string", "doc":"Pipelines identifier"},
       {"name": "countryCode","type":["null","string"],"default":null},

@@ -20,7 +20,6 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.Inte
 import org.gbif.pipelines.core.functions.SerializableConsumer;
 import org.gbif.pipelines.core.pojo.Edge;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.Record;
 import org.gbif.pipelines.transforms.common.CheckTransforms;
 

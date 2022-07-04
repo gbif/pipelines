@@ -45,56 +45,41 @@ public class LocationInheritedFieldsFn
       LocationRecord leaf = recordsMap.get(allRecords.iterator().next());
       return setParentValue(
               LocationInheritedRecord.newBuilder().setId(leaf.getId()),
-              recordsMap.get(leaf.getParentId()),
-              true)
+              recordsMap.get(leaf.getParentId()))
           .build();
+    }
+
+    private LocationInheritedRecord.Builder setParentValue(
+        LocationInheritedRecord.Builder locationInherited, LocationRecord parent) {
+      return setParentValue(locationInherited, parent, false);
     }
 
     private LocationInheritedRecord.Builder setParentValue(
         LocationInheritedRecord.Builder locationInherited,
         LocationRecord parent,
-        boolean pendingNullFields) {
+        boolean assigned) {
 
-      if (!pendingNullFields || parent == null) {
+      if (assigned || parent == null) {
         return locationInherited;
       }
 
-      pendingNullFields = false;
-
-      if (locationInherited.getCountryCode() == null) {
-        if (parent.getCountryCode() != null) {
-          locationInherited.setCountryCode(parent.getCountryCode());
-        } else {
-          pendingNullFields = true;
-        }
+      if (parent.getCountryCode() != null) {
+        locationInherited.setCountryCode(parent.getCountryCode());
+        assigned = true;
       }
 
-      if (locationInherited.getStateProvince() == null) {
-        if (parent.getStateProvince() != null) {
-          locationInherited.setStateProvince(parent.getStateProvince());
-        } else {
-          pendingNullFields = true;
-        }
+      if (parent.getStateProvince() != null) {
+        locationInherited.setStateProvince(parent.getStateProvince());
+        assigned = true;
       }
 
-      if (locationInherited.getDecimalLatitude() == null) {
-        if (parent.getDecimalLatitude() != null) {
-          locationInherited.setDecimalLatitude(parent.getDecimalLatitude());
-        } else {
-          pendingNullFields = true;
-        }
+      if (parent.getHasCoordinate() != null && parent.getHasCoordinate()) {
+        locationInherited.setDecimalLatitude(parent.getDecimalLatitude());
+        locationInherited.setDecimalLongitude(parent.getDecimalLongitude());
+        assigned = true;
       }
 
-      if (locationInherited.getDecimalLongitude() == null) {
-        if (parent.getDecimalLongitude() != null) {
-          locationInherited.setDecimalLongitude(parent.getDecimalLongitude());
-        } else {
-          pendingNullFields = true;
-        }
-      }
-
-      return setParentValue(
-          locationInherited, recordsMap.get(parent.getParentId()), pendingNullFields);
+      return setParentValue(locationInherited, recordsMap.get(parent.getParentId()), assigned);
     }
   }
 
