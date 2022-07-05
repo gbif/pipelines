@@ -167,9 +167,9 @@ public class ParentEventExpandTransform<T extends SpecificRecordBase & Record>
   }
 
   /** Creates a KV.of(Edge.fromId,T). */
-  public MapElements<Edge<T>, KV<String, T>> asKv(boolean topToBottom) {
+  public MapElements<Edge<T>, KV<String, T>> asKv() {
     return MapElements.into(new TypeDescriptor<KV<String, T>>() {})
-        .via((Edge<T> e) -> KV.of(topToBottom ? e.getFromId() : e.getToId(), e.getRecord()));
+        .via((Edge<T> e) -> KV.of(e.getFromId(), e.getRecord()));
   }
 
   public PCollection<KV<String, T>> toSubEventsRecords(
@@ -181,7 +181,7 @@ public class ParentEventExpandTransform<T extends SpecificRecordBase & Record>
         .apply("Grouping " + recordName + " and event records", CoGroupByKey.create())
         .apply("Collects " + recordName + " records in graph edges", converter())
         .setCoder(edgeCoder)
-        .apply("Converts the edge to parentId -> " + recordName + " record", asKv(true))
+        .apply("Converts the edge to parentId -> " + recordName + " record", asKv())
         .setCoder(KvCoder.of(StringUtf8Coder.of(), edgeCoder.getRecordCoder()));
   }
 
@@ -204,7 +204,7 @@ public class ParentEventExpandTransform<T extends SpecificRecordBase & Record>
         .apply("Grouping parents " + recordName + " records", CoGroupByKey.create())
         .apply("Collects parents " + recordName + " records in graph edges", edgeConverter())
         .setCoder(edgeCoder)
-        .apply("Converts the edge to parentId -> " + recordName + " (child) record", asKv(true))
+        .apply("Converts the edge to parentId -> " + recordName + " (child) record", asKv())
         .setCoder(KvCoder.of(StringUtf8Coder.of(), edgeCoder.getRecordCoder()));
   }
 }
