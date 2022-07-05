@@ -1,9 +1,11 @@
 package org.gbif.pipelines.transforms.core;
 
 import java.io.Serializable;
+import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.StreamSupport;
 import lombok.Data;
@@ -32,47 +34,44 @@ public class TemporalInheritedFieldsFn
 
     public Accum acc(TemporalRecord r) {
       recordsMap.put(r.getId(), r);
-      if (r.getParentId() != null) {
-        recordsWithChildren.add(r.getParentId());
-      }
+      Optional.ofNullable(r.getParentId()).ifPresent(recordsWithChildren::add);
       return this;
     }
 
-    public TemporalInheritedRecord toLeafChild() {
-      Set<String> allRecords = new HashSet<>(recordsMap.keySet());
+    private TemporalRecord getLeafChild() {
+      ArrayDeque<String> allRecords = new ArrayDeque<>(recordsMap.keySet());
       allRecords.removeAll(recordsWithChildren);
-      TemporalRecord leaf = recordsMap.get(allRecords.iterator().next());
+      return recordsMap.get(allRecords.peek());
+    }
+
+    public TemporalInheritedRecord toLeafChild() {
+      return setParentValue(getLeafChild()).build();
+    }
+
+    private TemporalInheritedRecord.Builder setParentValue(TemporalRecord leaf) {
       return setParentValue(
-              TemporalInheritedRecord.newBuilder().setId(leaf.getId()),
-              recordsMap.get(leaf.getParentId()))
-          .build();
+          TemporalInheritedRecord.newBuilder().setId(leaf.getId()), leaf.getParentId(), false);
     }
 
     private TemporalInheritedRecord.Builder setParentValue(
-        TemporalInheritedRecord.Builder temporalInherited, TemporalRecord parent) {
-      return setParentValue(temporalInherited, parent, false);
-    }
-
-    private TemporalInheritedRecord.Builder setParentValue(
-        TemporalInheritedRecord.Builder temporalInherited,
-        TemporalRecord parent,
-        boolean assigned) {
-
-      if (assigned || parent == null) {
-        return temporalInherited;
+        TemporalInheritedRecord.Builder builder, String parentId, boolean assigned) {
+      if (assigned || parentId == null) {
+        return builder;
       }
 
+      TemporalRecord parent = recordsMap.get(parentId);
+
       if (parent.getYear() != null) {
-        temporalInherited.setYear(parent.getYear());
+        builder.setYear(parent.getYear());
         assigned = true;
       }
 
       if (parent.getMonth() != null) {
-        temporalInherited.setMonth(parent.getMonth());
+        builder.setMonth(parent.getMonth());
         assigned = true;
       }
 
-      return setParentValue(temporalInherited, recordsMap.get(parent.getParentId()), assigned);
+      return setParentValue(builder, parent.getParentId(), assigned);
     }
   }
 

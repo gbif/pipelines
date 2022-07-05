@@ -1,9 +1,11 @@
 package org.gbif.pipelines.transforms.core;
 
 import java.io.Serializable;
+import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.StreamSupport;
 import lombok.Data;
@@ -33,35 +35,33 @@ public class LocationInheritedFieldsFn
 
     public Accum acc(LocationRecord r) {
       recordsMap.put(r.getId(), r);
-      if (r.getParentId() != null) {
-        recordsWithChildren.add(r.getParentId());
-      }
+      Optional.ofNullable(r.getParentId()).ifPresent(recordsWithChildren::add);
       return this;
     }
 
-    public LocationInheritedRecord toLeafChild() {
-      Set<String> allRecords = new HashSet<>(recordsMap.keySet());
+    private LocationRecord getLeafChild() {
+      ArrayDeque<String> allRecords = new ArrayDeque<>(recordsMap.keySet());
       allRecords.removeAll(recordsWithChildren);
-      LocationRecord leaf = recordsMap.get(allRecords.iterator().next());
+      return recordsMap.get(allRecords.peek());
+    }
+
+    public LocationInheritedRecord toLeafChild() {
+      return setParentValue(getLeafChild()).build();
+    }
+
+    private LocationInheritedRecord.Builder setParentValue(LocationRecord leaf) {
       return setParentValue(
-              LocationInheritedRecord.newBuilder().setId(leaf.getId()),
-              recordsMap.get(leaf.getParentId()))
-          .build();
+          LocationInheritedRecord.newBuilder().setId(leaf.getId()), leaf.getParentId(), false);
     }
 
     private LocationInheritedRecord.Builder setParentValue(
-        LocationInheritedRecord.Builder locationInherited, LocationRecord parent) {
-      return setParentValue(locationInherited, parent, false);
-    }
+        LocationInheritedRecord.Builder locationInherited, String parentId, boolean assigned) {
 
-    private LocationInheritedRecord.Builder setParentValue(
-        LocationInheritedRecord.Builder locationInherited,
-        LocationRecord parent,
-        boolean assigned) {
-
-      if (assigned || parent == null) {
+      if (assigned || parentId == null) {
         return locationInherited;
       }
+
+      LocationRecord parent = recordsMap.get(parentId);
 
       if (parent.getCountryCode() != null) {
         locationInherited.setCountryCode(parent.getCountryCode());
@@ -79,7 +79,7 @@ public class LocationInheritedFieldsFn
         assigned = true;
       }
 
-      return setParentValue(locationInherited, recordsMap.get(parent.getParentId()), assigned);
+      return setParentValue(locationInherited, parent.getParentId(), assigned);
     }
   }
 

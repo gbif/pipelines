@@ -1,11 +1,12 @@
 package org.gbif.pipelines.transforms.core;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.ArrayDeque;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import lombok.Data;
 import org.apache.beam.sdk.transforms.Combine;
@@ -22,7 +23,7 @@ public class EventInheritedFieldsFn
   @Data
   public static class Accum implements Serializable {
 
-    private List<EventCoreRecord> parents = new ArrayList<>();
+    private ArrayDeque<EventCoreRecord> parents = new ArrayDeque<>();
 
     public Accum acc(Set<EventCoreRecord> records) {
       records.forEach(this::acc);
@@ -30,39 +31,43 @@ public class EventInheritedFieldsFn
     }
 
     public Accum acc(EventCoreRecord r) {
-      parents.add(r);
+      parents.push(r);
       return this;
     }
 
     private List<String> getEventTypes() {
-      List<String> eventTypes = new ArrayList<>();
-      parents.forEach(
-          p -> {
-            if (p.getEventType() != null && p.getEventType().getConcept() != null) {
-              eventTypes.add(p.getEventType().getConcept());
-            }
-          });
-      return eventTypes;
+      return parents.stream()
+          .filter(p -> p.getEventType() != null && p.getEventType().getConcept() != null)
+          .map(ecr -> ecr.getEventType().getConcept())
+          .collect(Collectors.toList());
+    }
+
+    private EventInheritedRecord getLeafRecord() {
+      EventCoreRecord leaf = parents.peek();
+      return setParentValue(EventInheritedRecord.newBuilder().setId(leaf.getId())).build();
     }
 
     public EventInheritedRecord toLeafChild() {
-      EventCoreRecord leaf = parents.iterator().next();
-      EventInheritedRecord inheritedRecord =
-          setParentValue(EventInheritedRecord.newBuilder().setId(leaf.getId())).build();
+      EventInheritedRecord inheritedRecord = getLeafRecord();
       List<String> eventTypes = getEventTypes();
       if (!eventTypes.isEmpty()) {
-        inheritedRecord.setEventType(getEventTypes());
+        inheritedRecord.setEventType(eventTypes);
       }
       return inheritedRecord;
     }
 
+    private Optional<String> getFirstParentLocationId() {
+      return parents.stream()
+          .filter(p -> p.getLocationID() != null)
+          .findFirst()
+          .map(EventCoreRecord::getLocationID);
+    }
+
     private EventInheritedRecord.Builder setParentValue(
         EventInheritedRecord.Builder eventInherited) {
-      Collections.reverse(parents);
-      for (EventCoreRecord parent : parents) {
-        if (parent.getLocationID() != null) {
-          return eventInherited.setLocationID(parent.getLocationID());
-        }
+      Optional<String> locationId = getFirstParentLocationId();
+      if (locationId.isPresent()) {
+        return eventInherited.setLocationID(locationId.get());
       }
       return eventInherited;
     }
