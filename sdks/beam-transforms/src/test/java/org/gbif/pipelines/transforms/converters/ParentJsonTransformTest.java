@@ -1,23 +1,12 @@
 package org.gbif.pipelines.transforms.converters;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.apache.beam.sdk.testing.NeedsRunner;
-import org.apache.beam.sdk.testing.PAssert;
-import org.apache.beam.sdk.testing.TestPipeline;
-import org.apache.beam.sdk.transforms.Create;
-import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
-import org.apache.beam.sdk.transforms.View;
-import org.apache.beam.sdk.transforms.join.CoGbkResult;
-import org.apache.beam.sdk.transforms.join.CoGroupByKey;
-import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
-import org.apache.beam.sdk.values.KV;
-import org.apache.beam.sdk.values.PCollection;
-import org.apache.beam.sdk.values.PCollectionView;
-import org.apache.beam.sdk.values.TypeDescriptor;
+
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
@@ -41,6 +30,9 @@ import org.gbif.pipelines.io.avro.RankedName;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.json.DerivedMetadataRecord;
+import org.gbif.pipelines.io.avro.json.EventInheritedRecord;
+import org.gbif.pipelines.io.avro.json.LocationInheritedRecord;
+import org.gbif.pipelines.io.avro.json.TemporalInheritedRecord;
 import org.gbif.pipelines.transforms.core.ConvexHullFn;
 import org.gbif.pipelines.transforms.core.DerivedMetadataTransform;
 import org.gbif.pipelines.transforms.core.EventCoreTransform;
@@ -54,6 +46,25 @@ import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.specific.IdentifierTransform;
+
+import org.apache.beam.sdk.coders.AvroCoder;
+import org.apache.beam.sdk.coders.KvCoder;
+import org.apache.beam.sdk.coders.StringUtf8Coder;
+import org.apache.beam.sdk.testing.NeedsRunner;
+import org.apache.beam.sdk.testing.PAssert;
+import org.apache.beam.sdk.testing.TestPipeline;
+import org.apache.beam.sdk.transforms.Create;
+import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
+import org.apache.beam.sdk.transforms.View;
+import org.apache.beam.sdk.transforms.WithKeys;
+import org.apache.beam.sdk.transforms.join.CoGbkResult;
+import org.apache.beam.sdk.transforms.join.CoGroupByKey;
+import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
+import org.apache.beam.sdk.values.KV;
+import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.PCollectionView;
+import org.apache.beam.sdk.values.TupleTag;
+import org.apache.beam.sdk.values.TypeDescriptor;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -247,6 +258,9 @@ public class ParentJsonTransformTest {
             .build();
 
     DerivedMetadataRecord dmr = DerivedMetadataRecord.newBuilder().setId("777").build();
+    LocationInheritedRecord lir = LocationInheritedRecord.newBuilder().setId("777").build();
+    TemporalInheritedRecord tir = TemporalInheritedRecord.newBuilder().setId("777").build();
+    EventInheritedRecord eir = EventInheritedRecord.newBuilder().setId("777").build();
 
     MeasurementOrFactRecord mofr =
         MeasurementOrFactRecord.newBuilder()
@@ -326,6 +340,23 @@ public class ParentJsonTransformTest {
         p.apply("Read DerivedMetadataRecord", Create.of(dmr))
             .apply("Map DerivedMetadataRecord to KV", derivedMetadataTransform.toKv());
 
+    PCollection<KV<String, LocationInheritedRecord>> locationInheritedCollection =
+        p.apply("Read LocationInheritedRecord", Create.of(lir))
+            .apply("Map LocationInheritedRecord to KV", WithKeys.of(LocationInheritedRecord::getId))
+            .setCoder(
+                KvCoder.of(StringUtf8Coder.of(), AvroCoder.of(LocationInheritedRecord.class)));
+
+    PCollection<KV<String, TemporalInheritedRecord>> temporalInheritedCollection =
+        p.apply("Read TemporalInheritedRecord", Create.of(tir))
+            .apply("Map TemporalInheritedRecord to KV", WithKeys.of(TemporalInheritedRecord::getId))
+            .setCoder(
+                KvCoder.of(StringUtf8Coder.of(), AvroCoder.of(TemporalInheritedRecord.class)));
+
+    PCollection<KV<String, EventInheritedRecord>> eventInheritedCollection =
+        p.apply("Read EventInheritedRecord", Create.of(eir))
+            .apply("Map EventInheritedRecord to KV", WithKeys.of(EventInheritedRecord::getId))
+            .setCoder(KvCoder.of(StringUtf8Coder.of(), AvroCoder.of(EventInheritedRecord.class)));
+
     PCollection<KV<String, MeasurementOrFactRecord>> measurementOrFactCollection =
         p.apply("Read MeasurementOrFactRecord", Create.of(mofr))
             .apply("Map MeasurementOrFactRecord to KV", measurementOrFactTransform.toKv());
@@ -343,6 +374,9 @@ public class ParentJsonTransformTest {
             .audubonRecordTag(audubonTransform.getTag())
             .derivedMetadataRecordTag(DerivedMetadataTransform.tag())
             .measurementOrFactRecordTag(measurementOrFactTransform.getTag())
+            .locationInheritedRecordTag(InheritedFieldsTest.LIR_TAG)
+            .temporalInheritedRecordTag(InheritedFieldsTest.TIR_TAG)
+            .eventInheritedRecordTag(InheritedFieldsTest.EIR_TAG)
             .metadataView(metadataView)
             .build()
             .converter();
@@ -365,6 +399,9 @@ public class ParentJsonTransformTest {
             .and(verbatimTransform.getTag(), verbatimCollection)
             // DerivedMetadata
             .and(DerivedMetadataTransform.tag(), derivedMetadataCollection)
+            .and(InheritedFieldsTest.LIR_TAG, locationInheritedCollection)
+            .and(InheritedFieldsTest.TIR_TAG, temporalInheritedCollection)
+            .and(InheritedFieldsTest.EIR_TAG, eventInheritedCollection)
             // Apply
             .apply("Grouping objects", CoGroupByKey.create())
             .apply("Merging to json", eventJsonDoFn);
@@ -382,10 +419,23 @@ public class ParentJsonTransformTest {
             .verbatim(er)
             .derivedMetadata(dmr)
             .measurementOrFactRecord(mofr)
+            .locationInheritedRecord(lir)
+            .temporalInheritedRecord(tir)
+            .eventInheritedRecord(eir)
             .build()
             .toJson();
 
     PAssert.that(jsonCollection).containsInAnyOrder(json);
     p.run();
+  }
+
+  static class InheritedFieldsTest implements Serializable {
+    static final TupleTag<LocationInheritedRecord> LIR_TAG =
+        new TupleTag<LocationInheritedRecord>() {};
+
+    static final TupleTag<TemporalInheritedRecord> TIR_TAG =
+        new TupleTag<TemporalInheritedRecord>() {};
+
+    static final TupleTag<EventInheritedRecord> EIR_TAG = new TupleTag<EventInheritedRecord>() {};
   }
 }
