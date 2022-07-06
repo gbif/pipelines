@@ -70,6 +70,9 @@
                 <import>${project.basedir}/src/main/avro/core/common-record.avsc</import>
                 <import>${project.basedir}/src/main/avro/core/temporal-record.avsc</import>
                 <import>${project.basedir}/src/main/avro/core/taxon-record.avsc</import>
+                <import>${project.basedir}/src/main/avro/core/temporal-inherited-record.avsc</import>
+                <import>${project.basedir}/src/main/avro/core/location-inherited-record.avsc</import>
+                <import>${project.basedir}/src/main/avro/core/event-inherited-record.avsc</import>
               </imports>
             </configuration>
           </execution>
