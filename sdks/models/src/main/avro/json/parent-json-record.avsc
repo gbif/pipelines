@@ -30,6 +30,12 @@
       {"name":"metadata","type":["null","MetadataJsonRecord"],"default":null,"doc":""},
       // DerivedMetadata
       {"name":"derivedMetadata","type":["null","DerivedMetadataRecord"],"default":null,"doc":""},
+      // LocationInherited
+      {"name":"locationInherited","type":["null","LocationInheritedRecord"],"default":null,"doc":""},
+      // TemporalInherited
+      {"name":"temporalInherited","type":["null","TemporalInheritedRecord"],"default":null,"doc":""},
+      // EventInherited
+      {"name":"eventInherited","type":["null","EventInheritedRecord"],"default":null,"doc":""},
       // Event
       {"name":"event","type":["null","EventJsonRecord"],"default":null,"doc":""},
       // Occurrence

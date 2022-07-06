@@ -16,4 +16,8 @@ public class Edge<E> implements Serializable {
   private String fromId;
   private String toId;
   private E record;
+
+  public static <E> Edge<E> of(String fromId, String toId) {
+    return of(fromId, toId, null);
+  }
 }

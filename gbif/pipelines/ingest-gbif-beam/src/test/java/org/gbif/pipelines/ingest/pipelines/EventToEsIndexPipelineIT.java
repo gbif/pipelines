@@ -51,6 +51,7 @@ import org.gbif.pipelines.io.avro.Rank;
 import org.gbif.pipelines.io.avro.RankedName;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.VocabularyConcept;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.io.avro.json.ParentJsonRecord;
 import org.gbif.pipelines.transforms.core.BasicTransform;
@@ -173,14 +174,21 @@ public class EventToEsIndexPipelineIT {
     try (SyncDataFileWriter<EventCoreRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
             optionsWriter, EventCoreTransform.builder().create(), EVENT_TERM, postfix)) {
-      EventCoreRecord eventCoreRecord = EventCoreRecord.newBuilder().setId(ID).build();
+      EventCoreRecord eventCoreRecord =
+          EventCoreRecord.newBuilder().setId(ID).setLocationID("L0").build();
       writer.append(eventCoreRecord);
 
       EventCoreRecord subEventCoreRecord =
           EventCoreRecord.newBuilder()
               .setId(SUB_EVENT_ID)
+              .setEventType(
+                  VocabularyConcept.newBuilder()
+                      .setConcept("survey")
+                      .setLineage(Collections.emptyList())
+                      .build())
               .setParentEventID(ID)
               .setParentsLineage(Collections.singletonList(Parent.newBuilder().setId(ID).build()))
+              .setLocationID("L1")
               .build();
       writer.append(subEventCoreRecord);
 
@@ -215,6 +223,8 @@ public class EventToEsIndexPipelineIT {
               .setParentId(ID)
               .setEventDate(
                   EventDate.newBuilder().setGte("2017-10-10").setLte("2020-10-10").build())
+              .setMonth(10)
+              .setYear(2017)
               .build();
       writer.append(temporalRecordSubEvent);
 
@@ -240,6 +250,7 @@ public class EventToEsIndexPipelineIT {
               .setDecimalLatitude(10d)
               .setDecimalLongitude(5d)
               .setHasCoordinate(Boolean.TRUE)
+              .setCountryCode("DK")
               .build();
       writer.append(locationRecordSubEvent);
 
@@ -437,7 +448,7 @@ public class EventToEsIndexPipelineIT {
     String[] args = {
       "--datasetId=" + datasetKey,
       "--attempt=1",
-      "--runner=TestSparkRunner",
+      "--runner=SparkRunner",
       "--metaFileName=occurrence-to-index.yml",
       "--inputPath=" + input,
       "--targetPath=" + input,
@@ -461,6 +472,14 @@ public class EventToEsIndexPipelineIT {
 
     ParentJsonRecord eventRecord = getResult(idxName, ID, "event");
     assertRootParenJsonRecordResponse(eventRecord);
+
+    ParentJsonRecord eventRecordSub2 = getResult(idxName, SUB_EVENT_ID_2, "event");
+    assertEquals("DK", eventRecordSub2.getLocationInherited().getCountryCode());
+    assertEquals(new Integer(10), eventRecordSub2.getTemporalInherited().getMonth());
+    assertEquals(new Integer(2017), eventRecordSub2.getTemporalInherited().getYear());
+    assertEquals(
+        Collections.singletonList("survey"), eventRecordSub2.getEventInherited().getEventType());
+    assertEquals("L1", eventRecordSub2.getEventInherited().getLocationID());
   }
 
   /**
