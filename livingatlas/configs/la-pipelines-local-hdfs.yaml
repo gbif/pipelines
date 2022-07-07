@@ -23,6 +23,8 @@ run:
         sparkTmp: /data/spark-tmp
         sparkMaster: spark://localhost:7077
 
+defaultDateFormat: DMYT,DMY
+
 collectory:
     wsUrl: https://collections.ala.org.au
     timeoutSec: 70

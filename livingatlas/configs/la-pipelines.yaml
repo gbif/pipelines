@@ -81,6 +81,8 @@ geocodeConfig:
     path: /data/pipelines-shp/gadm0
     field: FEATURE
 
+defaultDateFormat: DMYT,DMY
+
 gbifConfig:
   vocabularyConfig:
     vocabulariesPath: /data/pipelines-vocabularies/

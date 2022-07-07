@@ -3,16 +3,18 @@ package au.org.ala.pipelines.interpreters;
 import static org.gbif.pipelines.core.utils.ModelUtils.*;
 
 import au.org.ala.pipelines.vocabulary.ALAOccurrenceIssue;
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAccessor;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+import java.util.List;
+import lombok.Builder;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.common.parsers.core.ParseResult;
-import org.gbif.common.parsers.date.DateParsers;
+import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.common.parsers.date.TemporalAccessorUtils;
-import org.gbif.common.parsers.date.TemporalParser;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.core.functions.SerializableFunction;
+import org.gbif.pipelines.core.parsers.temporal.TemporalParser;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 
@@ -20,8 +22,7 @@ import org.gbif.pipelines.io.avro.TemporalRecord;
  * Extensions to {@link org.gbif.pipelines.core.interpreters.core.TemporalInterpreter} for living
  * atlases.
  */
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class ALATemporalInterpreter {
+public class ALATemporalInterpreter implements Serializable {
 
   public static final String DAY_RANGE_PRECISION = "DAY_RANGE";
   public static final String MONTH_RANGE_PRECISION = "MONTH_RANGE";
@@ -30,15 +31,25 @@ public class ALATemporalInterpreter {
   public static final String DAY_PRECISION = "DAY";
   public static final String MONTH_PRECISION = "MONTH";
   public static final String YEAR_PRECISION = "YEAR";
-
   protected static final LocalDate MIN_LOCAL_DATE = LocalDate.of(1600, 1, 1);
+
+  private final TemporalParser temporalParser;
+  private final SerializableFunction<String, String> preprocessDateFn;
+
+  @Builder(buildMethodName = "create")
+  private ALATemporalInterpreter(
+      List<DateComponentOrdering> orderings,
+      SerializableFunction<String, String> preprocessDateFn) {
+    this.preprocessDateFn = preprocessDateFn;
+    this.temporalParser = TemporalParser.create(orderings);
+  }
 
   /**
    * Code copied from GBIF. Add an extra assertion
    *
    * <p>Raise Missing_COLLECTION_DATE ASSERTION
    */
-  public static void checkRecordDateQuality(ExtendedRecord er, TemporalRecord tr) {
+  public void checkRecordDateQuality(ExtendedRecord er, TemporalRecord tr) {
     final String year = extractValue(er, DwcTerm.year);
     final String month = extractValue(er, DwcTerm.month);
     final String day = extractValue(er, DwcTerm.day);
@@ -65,13 +76,13 @@ public class ALATemporalInterpreter {
   }
 
   /** All verification process require TemporalInterpreter.interpretTemporal has been called. */
-  public static void checkDateIdentified(ExtendedRecord er, TemporalRecord tr) {
+  public void checkDateIdentified(ExtendedRecord er, TemporalRecord tr) {
     if (tr.getEventDate() != null && tr.getDateIdentified() != null) {
-      TemporalParser temporalParser = DateParsers.defaultTemporalParser();
+
       ParseResult<TemporalAccessor> parsedIdentifiedResult =
-          temporalParser.parse(tr.getDateIdentified());
+          temporalParser.parseRecordedDate(tr.getDateIdentified());
       ParseResult<TemporalAccessor> parsedEventDateResult =
-          temporalParser.parse(tr.getEventDate().getGte());
+          temporalParser.parseRecordedDate(tr.getEventDate().getGte());
 
       if (parsedEventDateResult.isSuccessful()
           && parsedIdentifiedResult.isSuccessful()
@@ -83,13 +94,12 @@ public class ALATemporalInterpreter {
   }
 
   /** All verification process require TemporalInterpreter.interpretTemporal has been called. */
-  public static void checkGeoreferencedDate(ExtendedRecord er, TemporalRecord tr) {
+  public void checkGeoreferencedDate(ExtendedRecord er, TemporalRecord tr) {
     if (tr.getEventDate() != null && hasValue(er, DwcTerm.georeferencedDate)) {
-      TemporalParser temporalParser = DateParsers.defaultTemporalParser();
       ParseResult<TemporalAccessor> parsedGeoreferencedResult =
-          temporalParser.parse(extractValue(er, DwcTerm.georeferencedDate));
+          temporalParser.parseRecordedDate(extractValue(er, DwcTerm.georeferencedDate));
       ParseResult<TemporalAccessor> parsedEventDateResult =
-          temporalParser.parse(tr.getEventDate().getGte());
+          temporalParser.parseRecordedDate(tr.getEventDate().getGte());
 
       if (parsedEventDateResult.isSuccessful()
           && parsedGeoreferencedResult.isSuccessful()
