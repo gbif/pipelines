@@ -9,14 +9,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.StreamSupport;
-
-import org.gbif.pipelines.io.avro.EventCoreRecord;
-import org.gbif.pipelines.io.avro.json.EventInheritedRecord;
-
+import lombok.Data;
 import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.values.TupleTag;
-
-import lombok.Data;
+import org.gbif.pipelines.io.avro.EventCoreRecord;
+import org.gbif.pipelines.io.avro.json.EventInheritedRecord;
 
 @Data
 public class EventInheritedFieldsFn
