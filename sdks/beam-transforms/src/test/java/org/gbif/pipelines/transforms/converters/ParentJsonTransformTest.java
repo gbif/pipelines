@@ -1,6 +1,5 @@
 package org.gbif.pipelines.transforms.converters;
 
-import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -22,7 +21,6 @@ import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
-import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.OccurrenceIssue;
@@ -53,6 +51,7 @@ import org.gbif.pipelines.io.avro.json.TemporalInheritedRecord;
 import org.gbif.pipelines.transforms.core.ConvexHullFn;
 import org.gbif.pipelines.transforms.core.DerivedMetadataTransform;
 import org.gbif.pipelines.transforms.core.EventCoreTransform;
+import org.gbif.pipelines.transforms.core.InheritedFieldsTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.TaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalCoverageFn;
@@ -372,9 +371,9 @@ public class ParentJsonTransformTest {
             .audubonRecordTag(audubonTransform.getTag())
             .derivedMetadataRecordTag(DerivedMetadataTransform.tag())
             .measurementOrFactRecordTag(measurementOrFactTransform.getTag())
-            .locationInheritedRecordTag(InheritedFieldsTest.LIR_TAG)
-            .temporalInheritedRecordTag(InheritedFieldsTest.TIR_TAG)
-            .eventInheritedRecordTag(InheritedFieldsTest.EIR_TAG)
+            .locationInheritedRecordTag(InheritedFieldsTransform.LIR_TAG)
+            .temporalInheritedRecordTag(InheritedFieldsTransform.TIR_TAG)
+            .eventInheritedRecordTag(InheritedFieldsTransform.EIR_TAG)
             .metadataView(metadataView)
             .build()
             .converter();
@@ -397,9 +396,9 @@ public class ParentJsonTransformTest {
             .and(verbatimTransform.getTag(), verbatimCollection)
             // DerivedMetadata
             .and(DerivedMetadataTransform.tag(), derivedMetadataCollection)
-            .and(InheritedFieldsTest.LIR_TAG, locationInheritedCollection)
-            .and(InheritedFieldsTest.TIR_TAG, temporalInheritedCollection)
-            .and(InheritedFieldsTest.EIR_TAG, eventInheritedCollection)
+            .and(InheritedFieldsTransform.LIR_TAG, locationInheritedCollection)
+            .and(InheritedFieldsTransform.TIR_TAG, temporalInheritedCollection)
+            .and(InheritedFieldsTransform.EIR_TAG, eventInheritedCollection)
             // Apply
             .apply("Grouping objects", CoGroupByKey.create())
             .apply("Merging to json", eventJsonDoFn);
@@ -425,15 +424,5 @@ public class ParentJsonTransformTest {
 
     PAssert.that(jsonCollection).containsInAnyOrder(json);
     p.run();
-  }
-
-  static class InheritedFieldsTest implements Serializable {
-    static final TupleTag<LocationInheritedRecord> LIR_TAG =
-        new TupleTag<LocationInheritedRecord>() {};
-
-    static final TupleTag<TemporalInheritedRecord> TIR_TAG =
-        new TupleTag<TemporalInheritedRecord>() {};
-
-    static final TupleTag<EventInheritedRecord> EIR_TAG = new TupleTag<EventInheritedRecord>() {};
   }
 }

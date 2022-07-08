@@ -2,17 +2,23 @@ package org.gbif.pipelines.transforms.core;
 
 import java.io.Serializable;
 import java.util.ArrayDeque;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
-import lombok.Data;
-import org.apache.beam.sdk.transforms.Combine;
-import org.apache.beam.sdk.values.TupleTag;
+
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.json.EventInheritedRecord;
+
+import org.apache.beam.sdk.transforms.Combine;
+import org.apache.beam.sdk.values.TupleTag;
+
+import lombok.Data;
 
 @Data
 public class EventInheritedFieldsFn
@@ -23,28 +29,39 @@ public class EventInheritedFieldsFn
   @Data
   public static class Accum implements Serializable {
 
-    private ArrayDeque<EventCoreRecord> parents = new ArrayDeque<>();
+    private Map<String, EventInheritedFields> recordsMap = new HashMap<>();
+    private Set<String> recordsWithChildren = new HashSet<>();
 
     public Accum acc(Set<EventCoreRecord> records) {
+      records.forEach(r -> acc(EventInheritedFields.from(r)));
+      return this;
+    }
+
+    public Accum accInheritedFields(Set<EventInheritedFields> records) {
       records.forEach(this::acc);
       return this;
     }
 
-    public Accum acc(EventCoreRecord r) {
-      parents.push(r);
+    public Accum acc(EventInheritedFields r) {
+      recordsMap.put(r.getId(), r);
+      Optional.ofNullable(r.getParentEventID()).ifPresent(recordsWithChildren::add);
       return this;
     }
 
     private List<String> getEventTypes() {
-      return parents.stream()
-          .filter(p -> p.getEventType() != null && p.getEventType().getConcept() != null)
-          .map(ecr -> ecr.getEventType().getConcept())
+      return recordsMap.values().stream()
+          .map(EventInheritedFields::getEventType)
+          .filter(Objects::nonNull)
           .collect(Collectors.toList());
     }
 
     private EventInheritedRecord getLeafRecord() {
-      EventCoreRecord leaf = parents.peek();
-      return setParentValue(EventInheritedRecord.newBuilder().setId(leaf.getId())).build();
+      ArrayDeque<String> allRecords = new ArrayDeque<>(recordsMap.keySet());
+      allRecords.removeAll(recordsWithChildren);
+      EventInheritedFields leaf = recordsMap.get(allRecords.peek());
+      return setParentValue(
+              EventInheritedRecord.newBuilder().setId(leaf.getId()), leaf.getParentEventID(), false)
+          .build();
     }
 
     public EventInheritedRecord toLeafChild() {
@@ -56,20 +73,20 @@ public class EventInheritedFieldsFn
       return inheritedRecord;
     }
 
-    private Optional<String> getFirstParentLocationId() {
-      return parents.stream()
-          .filter(p -> p.getLocationID() != null)
-          .findFirst()
-          .map(EventCoreRecord::getLocationID);
-    }
-
     private EventInheritedRecord.Builder setParentValue(
-        EventInheritedRecord.Builder eventInherited) {
-      Optional<String> locationId = getFirstParentLocationId();
-      if (locationId.isPresent()) {
-        return eventInherited.setLocationID(locationId.get());
+        EventInheritedRecord.Builder builder, String parentId, boolean assigned) {
+      if (assigned || parentId == null) {
+        return builder;
       }
-      return eventInherited;
+
+      EventInheritedFields parent = recordsMap.get(parentId);
+
+      if (parent.getLocationID() != null) {
+        builder.setLocationID(parent.getLocationID());
+        assigned = true;
+      }
+
+      return setParentValue(builder, parent.getParentEventID(), assigned);
     }
   }
 
@@ -80,7 +97,7 @@ public class EventInheritedFieldsFn
 
   @Override
   public Accum addInput(Accum mutableAccumulator, EventCoreRecord input) {
-    return mutableAccumulator.acc(input);
+    return mutableAccumulator.acc(EventInheritedFields.from(input));
   }
 
   @Override
@@ -90,8 +107,8 @@ public class EventInheritedFieldsFn
             new Accum(),
             (acc1, acc2) ->
                 new Accum()
-                    .acc(new HashSet<>(acc1.getParents()))
-                    .acc(new HashSet<>(acc2.getParents())));
+                    .accInheritedFields(new HashSet<>(acc1.getRecordsMap().values()))
+                    .accInheritedFields(new HashSet<>(acc2.getRecordsMap().values())));
   }
 
   @Override
@@ -101,5 +118,25 @@ public class EventInheritedFieldsFn
 
   public static TupleTag<EventCoreRecord> tag() {
     return TAG;
+  }
+
+  @Data
+  public static class EventInheritedFields implements Serializable {
+
+    private String id;
+    private String parentEventID;
+    private String locationID;
+    private String eventType;
+
+    public static EventInheritedFields from(EventCoreRecord eventCoreRecord) {
+      EventInheritedFields eif = new EventInheritedFields();
+      eif.id = eventCoreRecord.getId();
+      eif.parentEventID = eventCoreRecord.getParentEventID();
+      eif.locationID = eventCoreRecord.getLocationID();
+      if (eventCoreRecord.getEventType() != null) {
+        eif.eventType = eventCoreRecord.getEventType().getConcept();
+      }
+      return eif;
+    }
   }
 }

@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.StreamSupport;
 import lombok.Data;
+import lombok.Getter;
 import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.values.TupleTag;
 import org.gbif.pipelines.io.avro.LocationRecord;
@@ -25,21 +26,26 @@ public class LocationInheritedFieldsFn
   @Data
   public static class Accum implements Serializable {
 
-    private Map<String, LocationRecord> recordsMap = new HashMap<>();
+    private Map<String, LocationInheritedFields> recordsMap = new HashMap<>();
     private Set<String> recordsWithChildren = new HashSet<>();
 
     public Accum acc(Set<LocationRecord> records) {
+      records.stream().map(LocationInheritedFields::from).forEach(this::acc);
+      return this;
+    }
+
+    public Accum accInheritedFields(Set<LocationInheritedFields> records) {
       records.forEach(this::acc);
       return this;
     }
 
-    public Accum acc(LocationRecord r) {
+    public Accum acc(LocationInheritedFields r) {
       recordsMap.put(r.getId(), r);
       Optional.ofNullable(r.getParentId()).ifPresent(recordsWithChildren::add);
       return this;
     }
 
-    private LocationRecord getLeafChild() {
+    private LocationInheritedFields getLeafChild() {
       ArrayDeque<String> allRecords = new ArrayDeque<>(recordsMap.keySet());
       allRecords.removeAll(recordsWithChildren);
       return recordsMap.get(allRecords.peek());
@@ -49,7 +55,7 @@ public class LocationInheritedFieldsFn
       return setParentValue(getLeafChild()).build();
     }
 
-    private LocationInheritedRecord.Builder setParentValue(LocationRecord leaf) {
+    private LocationInheritedRecord.Builder setParentValue(LocationInheritedFields leaf) {
       return setParentValue(
           LocationInheritedRecord.newBuilder().setId(leaf.getId()), leaf.getParentId(), false);
     }
@@ -61,7 +67,7 @@ public class LocationInheritedFieldsFn
         return locationInherited;
       }
 
-      LocationRecord parent = recordsMap.get(parentId);
+      LocationInheritedFields parent = recordsMap.get(parentId);
 
       if (parent.getCountryCode() != null) {
         locationInherited.setCountryCode(parent.getCountryCode());
@@ -90,7 +96,7 @@ public class LocationInheritedFieldsFn
 
   @Override
   public Accum addInput(Accum mutableAccumulator, LocationRecord input) {
-    return mutableAccumulator.acc(input);
+    return mutableAccumulator.acc(LocationInheritedFields.from(input));
   }
 
   @Override
@@ -100,8 +106,8 @@ public class LocationInheritedFieldsFn
             new Accum(),
             (acc1, acc2) ->
                 new Accum()
-                    .acc(new HashSet<>(acc1.getRecordsMap().values()))
-                    .acc(new HashSet<>(acc2.getRecordsMap().values())));
+                    .accInheritedFields(new HashSet<>(acc1.getRecordsMap().values()))
+                    .accInheritedFields(new HashSet<>(acc2.getRecordsMap().values())));
   }
 
   @Override
@@ -111,5 +117,30 @@ public class LocationInheritedFieldsFn
 
   public static TupleTag<LocationInheritedRecord> tag() {
     return TAG;
+  }
+
+  @Data
+  public static class LocationInheritedFields implements Serializable {
+
+    private String id;
+    private String parentId;
+    private String countryCode;
+    private String stateProvince;
+
+    private Boolean hasCoordinate;
+    private Double decimalLatitude;
+    private Double decimalLongitude;
+
+    public static LocationInheritedFields from(LocationRecord locationRecord) {
+      LocationInheritedFields lif = new LocationInheritedFields();
+      lif.id = locationRecord.getId();
+      lif.parentId = locationRecord.getParentId();
+      lif.countryCode = locationRecord.getCountryCode();
+      lif.stateProvince = locationRecord.getStateProvince();
+      lif.decimalLatitude = locationRecord.getDecimalLatitude();
+      lif.decimalLongitude = locationRecord.getDecimalLongitude();
+      lif.hasCoordinate = locationRecord.getHasCoordinate();
+      return lif;
+    }
   }
 }
