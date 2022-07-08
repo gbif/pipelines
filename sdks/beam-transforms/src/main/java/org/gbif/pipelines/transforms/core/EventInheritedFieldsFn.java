@@ -9,11 +9,14 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.StreamSupport;
-import lombok.Data;
-import org.apache.beam.sdk.transforms.Combine;
-import org.apache.beam.sdk.values.TupleTag;
+
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.json.EventInheritedRecord;
+
+import org.apache.beam.sdk.transforms.Combine;
+import org.apache.beam.sdk.values.TupleTag;
+
+import lombok.Data;
 
 @Data
 public class EventInheritedFieldsFn
@@ -43,7 +46,7 @@ public class EventInheritedFieldsFn
       return this;
     }
 
-    private EventInheritedRecord getLeafRecord() {
+    public EventInheritedRecord toLeafChild() {
       ArrayDeque<String> allRecords = new ArrayDeque<>(recordsMap.keySet());
       allRecords.removeAll(recordsWithChildren);
       EventInheritedFields leaf = recordsMap.get(allRecords.peek());
@@ -52,11 +55,6 @@ public class EventInheritedFieldsFn
               leaf.getParentEventID(),
               false)
           .build();
-    }
-
-    public EventInheritedRecord toLeafChild() {
-      EventInheritedRecord inheritedRecord = getLeafRecord();
-      return inheritedRecord;
     }
 
     private EventInheritedRecord.Builder setParentValue(
@@ -72,7 +70,9 @@ public class EventInheritedFieldsFn
         assigned = true;
       }
 
-      builder.getEventType().add(parent.getEventType());
+      if (parent.getEventType() != null) {
+        builder.getEventType().add(parent.getEventType());
+      }
 
       return setParentValue(builder, parent.getParentEventID(), assigned);
     }
