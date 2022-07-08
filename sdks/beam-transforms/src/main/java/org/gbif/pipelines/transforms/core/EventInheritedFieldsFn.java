@@ -2,14 +2,12 @@ package org.gbif.pipelines.transforms.core;
 
 import java.io.Serializable;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import lombok.Data;
 import org.apache.beam.sdk.transforms.Combine;
@@ -45,43 +43,36 @@ public class EventInheritedFieldsFn
       return this;
     }
 
-    private List<String> getEventTypes() {
-      return recordsMap.values().stream()
-          .map(EventInheritedFields::getEventType)
-          .filter(Objects::nonNull)
-          .collect(Collectors.toList());
-    }
-
     private EventInheritedRecord getLeafRecord() {
       ArrayDeque<String> allRecords = new ArrayDeque<>(recordsMap.keySet());
       allRecords.removeAll(recordsWithChildren);
       EventInheritedFields leaf = recordsMap.get(allRecords.peek());
       return setParentValue(
-              EventInheritedRecord.newBuilder().setId(leaf.getId()), leaf.getParentEventID(), false)
+              EventInheritedRecord.newBuilder().setId(leaf.getId()).setEventType(new ArrayList<>()),
+              leaf.getParentEventID(),
+              false)
           .build();
     }
 
     public EventInheritedRecord toLeafChild() {
       EventInheritedRecord inheritedRecord = getLeafRecord();
-      List<String> eventTypes = getEventTypes();
-      if (!eventTypes.isEmpty()) {
-        inheritedRecord.setEventType(eventTypes);
-      }
       return inheritedRecord;
     }
 
     private EventInheritedRecord.Builder setParentValue(
         EventInheritedRecord.Builder builder, String parentId, boolean assigned) {
-      if (assigned || parentId == null) {
+      if (parentId == null) {
         return builder;
       }
 
       EventInheritedFields parent = recordsMap.get(parentId);
 
-      if (parent.getLocationID() != null) {
+      if (!assigned && parent.getLocationID() != null) {
         builder.setLocationID(parent.getLocationID());
         assigned = true;
       }
+
+      builder.getEventType().add(parent.getEventType());
 
       return setParentValue(builder, parent.getParentEventID(), assigned);
     }

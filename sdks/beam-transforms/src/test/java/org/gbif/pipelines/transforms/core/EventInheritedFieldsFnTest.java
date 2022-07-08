@@ -38,6 +38,7 @@ public class EventInheritedFieldsFnTest {
         EventCoreRecord.newBuilder()
             .setId("2")
             .setLocationID("L2")
+            .setParentEventID("1")
             .setParentsLineage(
                 Collections.singletonList(
                     Parent.newBuilder().setId("1").setEventType("survey").build()))
@@ -54,6 +55,7 @@ public class EventInheritedFieldsFnTest {
         accum2,
         EventCoreRecord.newBuilder()
             .setId("3")
+            .setParentEventID("2")
             .setParentsLineage(
                 Collections.singletonList(
                     Parent.newBuilder().setId("2").setEventType("sampling").build()))
