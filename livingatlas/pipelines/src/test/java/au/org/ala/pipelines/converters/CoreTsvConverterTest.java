@@ -184,7 +184,7 @@ public class CoreTsvConverterTest {
       "\"raw_er_taxonID\"", // DwcTerm.taxonID
       "\"raw_er_taxonomicStatus\"", // DwcTerm.taxonomicStatus
       "\"raw_er_taxonRemarks\"", // DwcTerm.taxonRemarks
-      "\"br_recordedBy_1|br_recordedBy_2\"", // DwcTerm.recordedBy
+      "\"br_typeStatus\"", // DwcTerm.typeStatus
       "\"raw_er_verbatimCoordinates\"", // DwcTerm.verbatimCoordinates
       "\"raw_er_verbatimCoordinateSystem\"", // DwcTerm.verbatimCoordinateSystem
       "\"raw_er_verbatimDepth\"", // DwcTerm.verbatimDepth
@@ -1210,6 +1210,9 @@ public class CoreTsvConverterTest {
 
     // When
     String result = CoreCsvConverter.convert(source);
+
+    System.out.println("### EXPECTED " + String.join("\t", expected));
+    System.out.println("##### RESULT " + result);
 
     // Should
     Assert.assertEquals(String.join("\t", expected), result);
