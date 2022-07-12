@@ -734,6 +734,9 @@ public class HdfsViewPipeline {
     } else {
       SharedLockUtils.doHdfsPrefixLock(options, action);
     }
+    // Delete root directory of table records
+    FsUtils.deleteIfExist(
+        hdfsConfigs, PathBuilder.buildFilePathViewUsingInputPath(options, recordType));
 
     MetricsHandler.saveCountersToInputPathFile(options, metrics.getMetricsResult());
     log.info("Pipeline has been finished - {}", LocalDateTime.now());

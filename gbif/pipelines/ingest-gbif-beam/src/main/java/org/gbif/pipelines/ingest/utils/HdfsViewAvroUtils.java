@@ -95,10 +95,13 @@ public class HdfsViewAvroUtils {
   }
 
   private static void moveAll(InterpretationPipelineOptions options) {
-    move(options, OCCURRENCE);
-    move(options, EVENT);
-    moveTables(options, OCCURRENCE);
-    moveTables(options, EVENT);
+    if (options.getCoreRecordType() == OCCURRENCE) {
+      move(options, OCCURRENCE);
+      moveTables(options, OCCURRENCE);
+    } else if (options.getCoreRecordType() == EVENT) {
+      move(options, EVENT);
+      moveTables(options, EVENT);
+    }
   }
 
   private static void move(InterpretationPipelineOptions options, RecordType recordType) {

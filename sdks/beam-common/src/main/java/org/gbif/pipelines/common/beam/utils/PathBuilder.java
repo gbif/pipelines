@@ -1,5 +1,8 @@
 package org.gbif.pipelines.common.beam.utils;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.EVENT;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE;
+
 import com.google.common.base.Strings;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -76,9 +79,30 @@ public class PathBuilder {
       PipelinesVariables.Pipeline.Interpretation.RecordType recordType,
       String type,
       String uniqueId) {
-    String corePath = recordType.name().toLowerCase();
-    return buildPath(buildDatasetAttemptPath(options, corePath, true), type.toLowerCase(), uniqueId)
+    return buildPath(
+            buildDatasetAttemptPath(options, recordTypeViewPath(recordType), true),
+            type.toLowerCase(),
+            uniqueId)
         .toString();
+  }
+
+  /**
+   * Builds the target base path of a hdfs view.
+   *
+   * @param options options pipeline options
+   * @return path to the directory where the occurrence hdfs view is stored
+   */
+  public static String buildFilePathViewUsingInputPath(
+      BasePipelineOptions options,
+      PipelinesVariables.Pipeline.Interpretation.RecordType recordType) {
+    return buildDatasetAttemptPath(options, recordTypeViewPath(recordType), true);
+  }
+
+  /** HDFS View of a RecordType. */
+  public static String recordTypeViewPath(
+      PipelinesVariables.Pipeline.Interpretation.RecordType recordType) {
+    return recordType.name().toLowerCase()
+        + (recordType == OCCURRENCE || recordType == EVENT ? "_table" : "");
   }
 
   /**
