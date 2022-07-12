@@ -187,7 +187,7 @@ public class AlaTemporalInterpreterTest {
     temporalInterpreter.interpretDateIdentified(er, tr);
     temporalInterpreter.interpretModified(er, tr);
 
-    assertEquals("1999-03-02", tr.getEventDate().getGte());
+    assertEquals("1980-02-02", tr.getEventDate().getGte());
 
     ALATemporalInterpreter alaTemporalInterpreter =
         ALATemporalInterpreter.builder()
