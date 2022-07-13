@@ -74,7 +74,8 @@ public class VerbatimMessageHandler {
               new HashSet<>(
                   Arrays.asList(
                       StepType.EVENTS_VERBATIM_TO_INTERPRETED.name(),
-                      StepType.EVENTS_INTERPRETED_TO_INDEX.name())),
+                      StepType.EVENTS_INTERPRETED_TO_INDEX.name(),
+                      StepType.EVENTS_HDFS_VIEW.name())),
               m.getValidationResult().getNumberOfEventRecords(),
               m.getValidationResult().getNumberOfRecords(),
               StepRunner.DISTRIBUTED.name(),
