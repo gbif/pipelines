@@ -492,7 +492,7 @@ public class HdfsViewPipeline {
     log.info("Save metrics into the file and set files owner");
     // Delete root directory of table records
     FsUtils.deleteIfExist(
-      hdfsConfigs, PathBuilder.buildFilePathViewUsingInputPath(options, recordType));
+        hdfsConfigs, PathBuilder.buildFilePathViewUsingInputPath(options, recordType));
 
     MetricsHandler.saveCountersToInputPathFile(options, result.metrics());
     String metadataPath =
