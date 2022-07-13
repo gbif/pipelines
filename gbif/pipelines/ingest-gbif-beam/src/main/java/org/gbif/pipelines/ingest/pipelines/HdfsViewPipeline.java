@@ -217,8 +217,13 @@ public class HdfsViewPipeline {
             .apply("Map Verbatim to KV", verbatimTransform.toKv());
 
     PCollection<KV<String, BasicRecord>> basicCollection =
-        p.apply("Read Basic", basicTransform.read(interpretPathFn))
-            .apply("Map Basic to KV", basicTransform.toKv());
+        coreTerm == DwcTerm.Event
+            ? p.apply(
+                Create.empty(
+                    TypeDescriptors.kvs(
+                        TypeDescriptors.strings(), basicTransform.getOutputTypeDescriptor())))
+            : p.apply("Read Basic", basicTransform.read(interpretPathFn))
+                .apply("Map Basic to KV", basicTransform.toKv());
 
     PCollection<KV<String, TemporalRecord>> temporalCollection =
         p.apply("Read Temporal", temporalTransform.read(interpretPathFn))

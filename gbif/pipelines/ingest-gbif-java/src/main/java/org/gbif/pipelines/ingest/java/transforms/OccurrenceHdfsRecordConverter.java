@@ -32,7 +32,7 @@ public class OccurrenceHdfsRecordConverter {
   @NonNull private final MetadataRecord metadata;
   @NonNull private final Map<String, ExtendedRecord> verbatimMap;
   @NonNull private final Map<String, ClusteringRecord> clusteringMap;
-  @NonNull private final Map<String, BasicRecord> basicMap;
+  private Map<String, BasicRecord> basicMap;
   @NonNull private final Map<String, TemporalRecord> temporalMap;
   @NonNull private final Map<String, LocationRecord> locationMap;
   @NonNull private final Map<String, TaxonRecord> taxonMap;
@@ -48,7 +48,6 @@ public class OccurrenceHdfsRecordConverter {
       String k = id.getId();
       // Core
       ExtendedRecord er = verbatimMap.getOrDefault(k, ExtendedRecord.newBuilder().setId(k).build());
-      BasicRecord br = basicMap.getOrDefault(k, BasicRecord.newBuilder().setId(k).build());
       ClusteringRecord cr =
           clusteringMap.getOrDefault(k, ClusteringRecord.newBuilder().setId(k).build());
       TemporalRecord tr = temporalMap.getOrDefault(k, TemporalRecord.newBuilder().setId(k).build());
@@ -71,7 +70,6 @@ public class OccurrenceHdfsRecordConverter {
           hdfsRecord =
               org.gbif.pipelines.core.converters.OccurrenceHdfsRecordConverter.builder()
                   .gbifIdRecord(id)
-                  .basicRecord(br)
                   .clusteringRecord(cr)
                   .metadataRecord(metadata)
                   .temporalRecord(tr)
@@ -80,6 +78,10 @@ public class OccurrenceHdfsRecordConverter {
                   .grscicollRecord(gr)
                   .multimediaRecord(mmr)
                   .extendedRecord(er);
+
+      if (basicMap != null) {
+        hdfsRecord.basicRecord(basicMap.getOrDefault(k, BasicRecord.newBuilder().setId(k).build()));
+      }
 
       if (eventCoreRecordMap != null) {
         hdfsRecord.eventCoreRecord(

@@ -278,7 +278,6 @@ public class HdfsViewPipeline {
             .metadata(metadataMapFeature.get().values().iterator().next())
             .verbatimMap(verbatimMapFeature.get())
             .clusteringMap(clusteringMapFeature.get())
-            .basicMap(basicMapFeature.get())
             .temporalMap(temporalMapFeature.get())
             .locationMap(locationMapFeature.get())
             .taxonMap(taxonMapFeature.get())
@@ -286,6 +285,10 @@ public class HdfsViewPipeline {
             .multimediaMap(multimediaMapFeature.get())
             .imageMap(imageMapFeature.get())
             .audubonMap(audubonMapFeature.get());
+
+    if (OCCURRENCE == recordType) {
+      builder.basicMap(basicMapFeature.get());
+    }
 
     if (RecordType.EVENT == recordType) {
       CompletableFuture<Map<String, EventCoreRecord>> eventCoreMapFeature =
