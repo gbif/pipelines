@@ -9,11 +9,13 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.StreamSupport;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.values.TupleTag;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.json.LocationInheritedRecord;
 
+@Slf4j
 @Data
 public class LocationInheritedFieldsFn
     extends Combine.CombineFn<
@@ -29,7 +31,7 @@ public class LocationInheritedFieldsFn
     private Set<String> recordsWithChildren = new HashSet<>();
 
     public Accum acc(Set<LocationRecord> records) {
-      records.stream().map(LocationInheritedFields::from).forEach(this::acc);
+      records.forEach(r -> acc(LocationInheritedFields.from(r)));
       return this;
     }
 
@@ -47,16 +49,30 @@ public class LocationInheritedFieldsFn
     private LocationInheritedFields getLeafChild() {
       ArrayDeque<String> allRecords = new ArrayDeque<>(recordsMap.keySet());
       allRecords.removeAll(recordsWithChildren);
+
+      log.warn("LEAF: ");
+      log.warn("ALL: ");
+      allRecords.forEach(r -> log.warn(r));
+      log.warn("WITH CHILDREN: ");
+      recordsWithChildren.forEach(r -> log.warn(r));
+
       return recordsMap.get(allRecords.peek());
     }
 
     public LocationInheritedRecord toLeafChild() {
+      log.warn("TO LEAF");
       return setParentValue(getLeafChild()).build();
     }
 
     private LocationInheritedRecord.Builder setParentValue(LocationInheritedFields leaf) {
-      return setParentValue(
-          LocationInheritedRecord.newBuilder().setId(leaf.getId()), leaf.getParentId(), false);
+      LocationInheritedRecord.Builder builder =
+          LocationInheritedRecord.newBuilder().setId(leaf.getId());
+
+      if (leaf.allFieldsNull()) {
+        builder = setParentValue(builder, leaf.getParentId(), false);
+      }
+
+      return builder;
     }
 
     private LocationInheritedRecord.Builder setParentValue(
@@ -95,6 +111,7 @@ public class LocationInheritedFieldsFn
 
   @Override
   public Accum addInput(Accum mutableAccumulator, LocationRecord input) {
+    log.warn("Add input {}", input.getId());
     return mutableAccumulator.acc(LocationInheritedFields.from(input));
   }
 
@@ -119,18 +136,17 @@ public class LocationInheritedFieldsFn
   }
 
   @Data
-  public static class LocationInheritedFields implements Serializable {
+  static class LocationInheritedFields implements Serializable {
 
     private String id;
     private String parentId;
     private String countryCode;
     private String stateProvince;
-
     private Boolean hasCoordinate;
     private Double decimalLatitude;
     private Double decimalLongitude;
 
-    public static LocationInheritedFields from(LocationRecord locationRecord) {
+    static LocationInheritedFields from(LocationRecord locationRecord) {
       LocationInheritedFields lif = new LocationInheritedFields();
       lif.id = locationRecord.getId();
       lif.parentId = locationRecord.getParentId();
@@ -140,6 +156,13 @@ public class LocationInheritedFieldsFn
       lif.decimalLongitude = locationRecord.getDecimalLongitude();
       lif.hasCoordinate = locationRecord.getHasCoordinate();
       return lif;
+    }
+
+    boolean allFieldsNull() {
+      return countryCode == null
+          && stateProvince == null
+          && decimalLatitude == null
+          && decimalLongitude == null;
     }
   }
 }

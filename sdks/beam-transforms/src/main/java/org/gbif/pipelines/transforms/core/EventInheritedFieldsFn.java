@@ -50,7 +50,7 @@ public class EventInheritedFieldsFn
       return setParentValue(
               EventInheritedRecord.newBuilder().setId(leaf.getId()).setEventType(new ArrayList<>()),
               leaf.getParentEventID(),
-              false)
+              leaf.locationID != null)
           .build();
     }
 
@@ -106,14 +106,14 @@ public class EventInheritedFieldsFn
   }
 
   @Data
-  public static class EventInheritedFields implements Serializable {
+  static class EventInheritedFields implements Serializable {
 
     private String id;
     private String parentEventID;
     private String locationID;
     private String eventType;
 
-    public static EventInheritedFields from(EventCoreRecord eventCoreRecord) {
+    static EventInheritedFields from(EventCoreRecord eventCoreRecord) {
       EventInheritedFields eif = new EventInheritedFields();
       eif.id = eventCoreRecord.getId();
       eif.parentEventID = eventCoreRecord.getParentEventID();

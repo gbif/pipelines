@@ -28,7 +28,7 @@ public class TemporalInheritedFieldsFn
     private Set<String> recordsWithChildren = new HashSet<>();
 
     public Accum acc(Set<TemporalRecord> records) {
-      records.stream().map(TemporalInheritedFields::from).forEach(this::acc);
+      records.forEach(r -> acc(TemporalInheritedFields.from(r)));
       return this;
     }
 
@@ -54,8 +54,14 @@ public class TemporalInheritedFieldsFn
     }
 
     private TemporalInheritedRecord.Builder setParentValue(TemporalInheritedFields leaf) {
-      return setParentValue(
-          TemporalInheritedRecord.newBuilder().setId(leaf.getId()), leaf.getParentId(), false);
+      TemporalInheritedRecord.Builder builder =
+          TemporalInheritedRecord.newBuilder().setId(leaf.getId());
+
+      if (leaf.allFieldsNull()) {
+        builder = setParentValue(builder, leaf.getParentId(), false);
+      }
+
+      return builder;
     }
 
     private TemporalInheritedRecord.Builder setParentValue(
@@ -111,20 +117,24 @@ public class TemporalInheritedFieldsFn
   }
 
   @Data
-  public static class TemporalInheritedFields implements Serializable {
+  static class TemporalInheritedFields implements Serializable {
 
     private String id;
     private String parentId;
     private Integer year;
     private Integer month;
 
-    public static TemporalInheritedFields from(TemporalRecord temporalRecord) {
+    static TemporalInheritedFields from(TemporalRecord temporalRecord) {
       TemporalInheritedFields tif = new TemporalInheritedFields();
       tif.id = temporalRecord.getId();
       tif.parentId = temporalRecord.getParentId();
       tif.year = temporalRecord.getYear();
       tif.month = temporalRecord.getMonth();
       return tif;
+    }
+
+    boolean allFieldsNull() {
+      return year == null && month == null;
     }
   }
 }

@@ -152,6 +152,8 @@ public class ParentEventExpandTransform<T extends SpecificRecordBase & Record>
             CoGbkResult v = c.element().getValue();
             EventCoreRecord eventCoreRecord = v.getOnly(eventCoreRecordTupleTag);
             T record = v.getOnly(recordTupleTag, null);
+            c.output(
+                KV.of(eventCoreRecord.getId(), Edge.of(record.getId(), record.getId(), record)));
             if (eventCoreRecord.getParentsLineage() != null && record != null) {
               eventCoreRecord
                   .getParentsLineage()

@@ -258,9 +258,6 @@ public class EventToEsIndexPipelineIT {
           LocationRecord.newBuilder()
               .setId(SUB_EVENT_ID_2)
               .setParentId(SUB_EVENT_ID)
-              .setDecimalLatitude(5d)
-              .setDecimalLongitude(15d)
-              .setHasCoordinate(Boolean.TRUE)
               .build();
       writer.append(locationRecordSubEvent2);
     }
@@ -475,6 +472,7 @@ public class EventToEsIndexPipelineIT {
 
     ParentJsonRecord eventRecordSub2 = getResult(idxName, SUB_EVENT_ID_2, "event");
     assertEquals("DK", eventRecordSub2.getLocationInherited().getCountryCode());
+    assertEquals(SUB_EVENT_ID_2, eventRecordSub2.getTemporalInherited().getId());
     assertEquals(new Integer(10), eventRecordSub2.getTemporalInherited().getMonth());
     assertEquals(new Integer(2017), eventRecordSub2.getTemporalInherited().getYear());
     assertEquals(
@@ -529,12 +527,12 @@ public class EventToEsIndexPipelineIT {
   private void assertRootParenJsonRecordResponse(ParentJsonRecord record) {
     // Assert temporal coverage
     Assert.assertNotNull(record.getDerivedMetadata().getTemporalCoverage());
-    Assert.assertEquals(record.getDerivedMetadata().getTemporalCoverage().getGte(), "2017-10-10");
-    Assert.assertEquals(record.getDerivedMetadata().getTemporalCoverage().getLte(), "2021-10-10");
+    Assert.assertEquals("2017-10-10", record.getDerivedMetadata().getTemporalCoverage().getGte());
+    Assert.assertEquals("2021-10-10", record.getDerivedMetadata().getTemporalCoverage().getLte());
 
     // Assert geographic coverage/convex hull
     Assert.assertNotNull(record.getDerivedMetadata().getWktConvexHull());
-    Assert.assertEquals(record.getDerivedMetadata().getWktConvexHull(), "LINESTRING (5 10, 15 5)");
+    Assert.assertEquals("POINT (5 10)", record.getDerivedMetadata().getWktConvexHull());
 
     // Assert taxonomic coverage
     Assert.assertNotNull(record.getDerivedMetadata().getTaxonomicCoverage());
