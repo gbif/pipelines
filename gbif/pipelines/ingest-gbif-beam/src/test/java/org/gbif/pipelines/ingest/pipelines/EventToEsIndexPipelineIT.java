@@ -255,10 +255,7 @@ public class EventToEsIndexPipelineIT {
       writer.append(locationRecordSubEvent);
 
       LocationRecord locationRecordSubEvent2 =
-          LocationRecord.newBuilder()
-              .setId(SUB_EVENT_ID_2)
-              .setParentId(SUB_EVENT_ID)
-              .build();
+          LocationRecord.newBuilder().setId(SUB_EVENT_ID_2).setParentId(SUB_EVENT_ID).build();
       writer.append(locationRecordSubEvent2);
     }
     try (SyncDataFileWriter<TaxonRecord> writer =
