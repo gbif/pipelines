@@ -75,7 +75,7 @@
         },
         "parentsLineage": {
           "type": "object",
-          "fields": {
+          "properties": {
             "id": {"type": "keyword"},
             "eventType": {"type": "keyword"}
           }
