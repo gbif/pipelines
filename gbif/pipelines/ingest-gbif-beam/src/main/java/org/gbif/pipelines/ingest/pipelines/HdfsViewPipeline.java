@@ -211,6 +211,7 @@ public class HdfsViewPipeline {
     PCollection<KV<String, ClusteringRecord>> clusteringCollection =
         coreTerm == DwcTerm.Event
             ? p.apply(
+                "Empty event records",
                 Create.empty(
                     TypeDescriptors.kvs(
                         TypeDescriptors.strings(), clusteringTransform.getOutputTypeDescriptor())))
@@ -224,6 +225,7 @@ public class HdfsViewPipeline {
     PCollection<KV<String, BasicRecord>> basicCollection =
         coreTerm == DwcTerm.Event
             ? p.apply(
+                "Empty basic records",
                 Create.empty(
                     TypeDescriptors.kvs(
                         TypeDescriptors.strings(), basicTransform.getOutputTypeDescriptor())))
@@ -245,6 +247,7 @@ public class HdfsViewPipeline {
     PCollection<KV<String, GrscicollRecord>> grscicollCollection =
         coreTerm == DwcTerm.Event
             ? p.apply(
+                "Empty Grscicoll records",
                 Create.empty(
                     TypeDescriptors.kvs(
                         TypeDescriptors.strings(), grscicollTransform.getOutputTypeDescriptor())))
