@@ -184,6 +184,7 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
           occurrenceFn.accept(steps);
         }
         if (coreType == DwcTerm.Event) {
+          steps.add(StepType.DWCA_TO_VERBATIM.name());
           steps.add(StepType.EVENTS_VERBATIM_TO_INTERPRETED.name());
           steps.add(StepType.EVENTS_INTERPRETED_TO_INDEX.name());
           steps.add(StepType.EVENTS_HDFS_VIEW.name());
