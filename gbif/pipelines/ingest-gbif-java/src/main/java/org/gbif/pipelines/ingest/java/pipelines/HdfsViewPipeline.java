@@ -277,17 +277,18 @@ public class HdfsViewPipeline {
             .metrics(metrics)
             .metadata(metadataMapFeature.get().values().iterator().next())
             .verbatimMap(verbatimMapFeature.get())
-            .clusteringMap(clusteringMapFeature.get())
             .temporalMap(temporalMapFeature.get())
             .locationMap(locationMapFeature.get())
             .taxonMap(taxonMapFeature.get())
-            .grscicollMap(grscicollMapFeature.get())
             .multimediaMap(multimediaMapFeature.get())
             .imageMap(imageMapFeature.get())
             .audubonMap(audubonMapFeature.get());
 
     if (OCCURRENCE == recordType) {
-      builder.basicMap(basicMapFeature.get());
+      builder
+          .basicMap(basicMapFeature.get())
+          .grscicollMap(grscicollMapFeature.get())
+          .clusteringMap(clusteringMapFeature.get());
     }
 
     if (RecordType.EVENT == recordType) {

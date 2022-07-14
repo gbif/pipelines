@@ -44,6 +44,7 @@ import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
+import org.gbif.pipelines.transforms.specific.GbifEventIdTransform;
 import org.gbif.pipelines.transforms.specific.IdentifierTransform;
 import org.slf4j.MDC;
 
@@ -131,6 +132,8 @@ public class VerbatimToEventPipeline {
     IdentifierTransform identifierTransform = transformsFactory.createIdentifierTransform();
     MeasurementOrFactTransform measurementOrFactTransform =
         transformsFactory.createMeasurementOrFactTransform();
+    GbifEventIdTransform idTransform = GbifEventIdTransform.builder().create();
+
     log.info("Creating beam pipeline");
 
     // Create and write metadata
@@ -206,6 +209,10 @@ public class VerbatimToEventPipeline {
 
     // Write filtered verbatim avro files
     uniqueRawRecords.apply("Write event verbatim to avro", verbatimTransform.write(pathFn));
+
+    uniqueRawRecords
+        .apply("Generate GbifIdRecords for events", idTransform.interpret())
+        .apply("Write Gbif Event Id Recprds", idTransform.write(pathFn));
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();
