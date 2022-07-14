@@ -31,12 +31,12 @@ public class OccurrenceHdfsRecordConverter {
 
   @NonNull private final MetadataRecord metadata;
   @NonNull private final Map<String, ExtendedRecord> verbatimMap;
-  @NonNull private final Map<String, ClusteringRecord> clusteringMap;
+  private Map<String, ClusteringRecord> clusteringMap;
   private Map<String, BasicRecord> basicMap;
   @NonNull private final Map<String, TemporalRecord> temporalMap;
   @NonNull private final Map<String, LocationRecord> locationMap;
   @NonNull private final Map<String, TaxonRecord> taxonMap;
-  @NonNull private final Map<String, GrscicollRecord> grscicollMap;
+  private Map<String, GrscicollRecord> grscicollMap;
   @NonNull private final Map<String, MultimediaRecord> multimediaMap;
   @NonNull private final Map<String, ImageRecord> imageMap;
   @NonNull private final Map<String, AudubonRecord> audubonMap;
@@ -48,13 +48,10 @@ public class OccurrenceHdfsRecordConverter {
       String k = id.getId();
       // Core
       ExtendedRecord er = verbatimMap.getOrDefault(k, ExtendedRecord.newBuilder().setId(k).build());
-      ClusteringRecord cr =
-          clusteringMap.getOrDefault(k, ClusteringRecord.newBuilder().setId(k).build());
       TemporalRecord tr = temporalMap.getOrDefault(k, TemporalRecord.newBuilder().setId(k).build());
       LocationRecord lr = locationMap.getOrDefault(k, LocationRecord.newBuilder().setId(k).build());
       TaxonRecord txr = taxonMap.getOrDefault(k, TaxonRecord.newBuilder().setId(k).build());
-      GrscicollRecord gr =
-          grscicollMap.getOrDefault(k, GrscicollRecord.newBuilder().setId(k).build());
+
       // Extension
       MultimediaRecord mr =
           multimediaMap.getOrDefault(k, MultimediaRecord.newBuilder().setId(k).build());
@@ -70,23 +67,36 @@ public class OccurrenceHdfsRecordConverter {
           hdfsRecord =
               org.gbif.pipelines.core.converters.OccurrenceHdfsRecordConverter.builder()
                   .gbifIdRecord(id)
-                  .clusteringRecord(cr)
                   .metadataRecord(metadata)
                   .temporalRecord(tr)
                   .locationRecord(lr)
                   .taxonRecord(txr)
-                  .grscicollRecord(gr)
                   .multimediaRecord(mmr)
                   .extendedRecord(er);
 
-      if (basicMap != null) {
-        hdfsRecord.basicRecord(basicMap.getOrDefault(k, BasicRecord.newBuilder().setId(k).build()));
-      }
+      Optional.ofNullable(basicMap)
+          .ifPresent(
+              bm ->
+                  hdfsRecord.basicRecord(
+                      bm.getOrDefault(k, BasicRecord.newBuilder().setId(k).build())));
 
-      if (eventCoreRecordMap != null) {
-        hdfsRecord.eventCoreRecord(
-            eventCoreRecordMap.getOrDefault(k, EventCoreRecord.newBuilder().setId(k).build()));
-      }
+      Optional.ofNullable(clusteringMap)
+          .ifPresent(
+              cm ->
+                  hdfsRecord.clusteringRecord(
+                      cm.getOrDefault(k, ClusteringRecord.newBuilder().setId(k).build())));
+
+      Optional.ofNullable(grscicollMap)
+          .ifPresent(
+              gm ->
+                  hdfsRecord.grscicollRecord(
+                      gm.getOrDefault(k, GrscicollRecord.newBuilder().setId(k).build())));
+
+      Optional.ofNullable(eventCoreRecordMap)
+          .ifPresent(
+              em ->
+                  hdfsRecord.eventCoreRecord(
+                      em.getOrDefault(k, EventCoreRecord.newBuilder().setId(k).build())));
 
       return Optional.of(hdfsRecord.build().convert());
     };
