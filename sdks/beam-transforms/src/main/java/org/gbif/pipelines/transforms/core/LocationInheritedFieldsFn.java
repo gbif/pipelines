@@ -9,13 +9,11 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.StreamSupport;
 import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.values.TupleTag;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.json.LocationInheritedRecord;
 
-@Slf4j
 @Data
 public class LocationInheritedFieldsFn
     extends Combine.CombineFn<
@@ -49,18 +47,10 @@ public class LocationInheritedFieldsFn
     private LocationInheritedFields getLeafChild() {
       ArrayDeque<String> allRecords = new ArrayDeque<>(recordsMap.keySet());
       allRecords.removeAll(recordsWithChildren);
-
-      log.warn("LEAF: ");
-      log.warn("ALL: ");
-      allRecords.forEach(r -> log.warn(r));
-      log.warn("WITH CHILDREN: ");
-      recordsWithChildren.forEach(r -> log.warn(r));
-
       return recordsMap.get(allRecords.peek());
     }
 
     public LocationInheritedRecord toLeafChild() {
-      log.warn("TO LEAF");
       return setParentValue(getLeafChild()).build();
     }
 
@@ -111,7 +101,6 @@ public class LocationInheritedFieldsFn
 
   @Override
   public Accum addInput(Accum mutableAccumulator, LocationRecord input) {
-    log.warn("Add input {}", input.getId());
     return mutableAccumulator.acc(LocationInheritedFields.from(input));
   }
 
