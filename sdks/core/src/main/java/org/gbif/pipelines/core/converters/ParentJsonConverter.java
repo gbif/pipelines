@@ -59,7 +59,7 @@ public abstract class ParentJsonConverter {
 
   @SneakyThrows
   public String toJson() {
-    return SerDeFactory.writerNonNulls().writeValueAsString(convertToParent());
+    return SerDeFactory.avroWriterNonNulls().writeValueAsString(convertToParent());
   }
 
   /** Converts to parent record based on an event record. */
