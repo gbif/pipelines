@@ -137,7 +137,7 @@ public class VerbatimToEventPipelineIT {
 
     String interpretedOutput = String.join("/", outputFile, DATASET_KEY, attempt, "event");
 
-    assertEquals(11, new File(interpretedOutput).listFiles().length);
+    assertEquals(12, new File(interpretedOutput).listFiles().length);
     assertFile(IdentifierRecord.class, interpretedOutput + "/identifier");
     assertFile(ExtendedRecord.class, interpretedOutput + "/verbatim");
     assertFile(ExtendedRecord.class, interpretedOutput + "/event");
