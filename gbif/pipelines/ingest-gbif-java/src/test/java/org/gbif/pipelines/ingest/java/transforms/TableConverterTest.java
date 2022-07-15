@@ -52,7 +52,7 @@ public class TableConverterTest {
     // Should
     Assert.assertNotNull(measurementOrFactTable);
     Assert.assertTrue(measurementOrFactTable.isPresent());
-    Assert.assertEquals(Long.valueOf(1L), measurementOrFactTable.get().getGbifid());
+    Assert.assertEquals("1", measurementOrFactTable.get().getGbifid());
 
     Map<String, Long> map = new HashMap<>();
     metrics

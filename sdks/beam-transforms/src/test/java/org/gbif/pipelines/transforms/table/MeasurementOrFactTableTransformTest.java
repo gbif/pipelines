@@ -115,7 +115,7 @@ public class MeasurementOrFactTableTransformTest {
     // Should
     MeasurementOrFactTable expected =
         MeasurementOrFactTable.newBuilder()
-            .setGbifid(777L)
+            .setGbifid("777")
             .setVMeasurementid("Id1")
             .setVMeasurementtype("Type1")
             .setVMeasurementvalue("1.5")

@@ -212,7 +212,7 @@ public class VerbatimToEventPipeline {
 
     uniqueRawRecords
         .apply("Generate GbifIdRecords for events", idTransform.interpret())
-        .apply("Write Gbif Event Id Recprds", idTransform.write(pathFn));
+        .apply("Write Gbif Event Id Records", idTransform.write(pathFn));
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();

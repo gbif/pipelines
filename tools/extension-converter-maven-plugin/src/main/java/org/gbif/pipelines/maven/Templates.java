@@ -55,7 +55,7 @@ public class Templates {
           + "      return Optional.empty();\n"
           + "    }\n"
           + "    ${tableName} table =\n"
-          + "        ${tableName}.newBuilder().setGbifid(gr.getGbifId()).build();\n"
+          + "        ${tableName}.newBuilder().setGbifid(Optional.ofNullable(gr.getGbifId()).map(Object::toString).orElse(gr.getId())).build();\n"
           + "\n"
           + "    return VERBATIM_HANDLER\n"
           + "        .apply(table)\n"

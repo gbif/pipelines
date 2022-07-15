@@ -333,8 +333,15 @@ public class HdfsViewPipelineIT {
         T record = dataFileReader.next();
         Assert.assertNotNull(record);
 
-        Long gbifid = (Long) record.get("gbifid");
-        Assert.assertEquals(Long.valueOf(1L), gbifid);
+        Object gbifid = record.get("gbifid");
+        if (gbifid instanceof Long) {
+          Assert.assertEquals(1L, record.get("gbifid"));
+        }
+
+        if (gbifid instanceof String) {
+          Assert.assertEquals("1", record.get("gbifid"));
+        }
+
       }
     }
   }
