@@ -44,7 +44,7 @@ public class MeasurementOrFactTableConverterTest {
 
     // Should
     Assert.assertTrue(result.isPresent());
-    Assert.assertEquals(Long.valueOf(777L), result.get().getGbifid());
+    Assert.assertEquals("777", result.get().getGbifid());
     // Verbatim
     Assert.assertEquals("Id1", result.get().getVMeasurementid());
     Assert.assertEquals("Type1", result.get().getVMeasurementtype());
