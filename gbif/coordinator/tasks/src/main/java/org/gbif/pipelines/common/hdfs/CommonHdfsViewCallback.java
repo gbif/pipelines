@@ -151,7 +151,9 @@ public class CommonHdfsViewCallback {
             config.stepConfig.repositoryPath,
             datasetId,
             attempt,
-            DwcTerm.Occurrence.simpleName().toLowerCase());
+            config.recordType == RecordType.EVENT
+                ? DwcTerm.Event.simpleName().toLowerCase()
+                : DwcTerm.Occurrence.simpleName().toLowerCase());
     HdfsConfigs hdfsConfigs =
         HdfsConfigs.create(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);
     long sizeByte = HdfsUtils.getFileSizeByte(hdfsConfigs, dirPath);
