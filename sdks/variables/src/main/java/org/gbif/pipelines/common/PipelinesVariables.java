@@ -55,6 +55,7 @@ public class PipelinesVariables {
         VERBATIM,
         // Core types
         IDENTIFIER,
+        EVENT_IDENTIFIER,
         IDENTIFIER_ABSENT,
         METADATA,
         BASIC,

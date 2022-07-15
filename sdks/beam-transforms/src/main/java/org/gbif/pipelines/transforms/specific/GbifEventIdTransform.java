@@ -2,7 +2,7 @@ package org.gbif.pipelines.transforms.specific;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.GBIF_ID_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Identifier.GBIF_ID_INVALID;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.IDENTIFIER;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.EVENT_IDENTIFIER;
 
 import java.time.Instant;
 import java.util.Optional;
@@ -29,7 +29,7 @@ public class GbifEventIdTransform extends Transform<ExtendedRecord, GbifIdRecord
   private GbifEventIdTransform() {
     super(
         GbifIdRecord.class,
-        IDENTIFIER,
+        EVENT_IDENTIFIER,
         GbifEventIdTransform.class.getName(),
         GBIF_ID_RECORDS_COUNT);
   }
