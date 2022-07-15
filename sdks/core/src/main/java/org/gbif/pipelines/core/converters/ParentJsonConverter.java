@@ -1,10 +1,14 @@
 package org.gbif.pipelines.core.converters;
 
+import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
-
+import lombok.SneakyThrows;
+import lombok.experimental.SuperBuilder;
+import lombok.extern.slf4j.Slf4j;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.factory.SerDeFactory;
 import org.gbif.pipelines.core.utils.HashConverter;
@@ -28,12 +32,6 @@ import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
 import org.gbif.pipelines.io.avro.json.Parent;
 import org.gbif.pipelines.io.avro.json.ParentJsonRecord;
 import org.gbif.pipelines.io.avro.json.TemporalInheritedRecord;
-
-import lombok.SneakyThrows;
-import lombok.experimental.SuperBuilder;
-import lombok.extern.slf4j.Slf4j;
-
-import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 
 @Slf4j
 @SuperBuilder
