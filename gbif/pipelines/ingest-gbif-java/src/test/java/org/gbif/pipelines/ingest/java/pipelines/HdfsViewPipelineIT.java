@@ -341,7 +341,6 @@ public class HdfsViewPipelineIT {
         if (gbifid instanceof String) {
           Assert.assertEquals("1", record.get("gbifid"));
         }
-
       }
     }
   }

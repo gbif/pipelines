@@ -394,10 +394,10 @@ public class OccurrenceToHdfsViewPipelineIT {
         Assert.assertNotNull(record);
 
         Object gbifid = record.get("gbifid");
-        if(gbifid instanceof Long){
+        if (gbifid instanceof Long) {
           Assert.assertEquals(1L, gbifid);
         }
-        if(gbifid instanceof String){
+        if (gbifid instanceof String) {
           Assert.assertEquals("1", gbifid);
         }
       }
