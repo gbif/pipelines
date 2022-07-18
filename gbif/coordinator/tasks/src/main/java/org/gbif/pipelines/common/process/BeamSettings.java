@@ -17,6 +17,7 @@ import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretationMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.configs.AvroWriteConfiguration;
 import org.gbif.pipelines.common.configs.ElasticsearchConfiguration;
 import org.gbif.pipelines.common.configs.IndexConfiguration;
@@ -160,6 +161,10 @@ public class BeamSettings {
 
       if (config.useBeamDeprecatedRead) {
         command.add("--experiments=use_deprecated_read");
+      }
+
+      if (config.recordType == RecordType.EVENT) {
+        command.add("--coreRecordType=EVENT");
       }
     };
   }
