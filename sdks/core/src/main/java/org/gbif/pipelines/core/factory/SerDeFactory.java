@@ -12,7 +12,7 @@ public class SerDeFactory {
   private static final ObjectWriter AVRO_WRITER_NON_NULLS =
       new ObjectMapper()
           .registerModule(new AvroModule())
-          .setSerializationInclusion(Include.NON_NULL)
+          .setSerializationInclusion(Include.NON_EMPTY)
           .writer();
 
   public static ObjectWriter avroWriterNonNulls() {

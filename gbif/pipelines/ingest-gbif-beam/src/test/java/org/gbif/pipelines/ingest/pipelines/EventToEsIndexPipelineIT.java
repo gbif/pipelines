@@ -522,6 +522,8 @@ public class EventToEsIndexPipelineIT {
 
   /** Asserts the Parent Event Record by checking the expected nested data. */
   private void assertRootParenJsonRecordResponse(ParentJsonRecord record) {
+    Assert.assertNotNull(record.getInternalId());
+
     // Assert temporal coverage
     Assert.assertNotNull(record.getDerivedMetadata().getTemporalCoverage());
     Assert.assertEquals("2017-10-10", record.getDerivedMetadata().getTemporalCoverage().getGte());
