@@ -64,8 +64,8 @@ public class OccurrenceHdfsRecordConverterTest {
   @Test
   public void extendedRecordMapperTest() {
     // State
-    final String multivalue1 = "multi 1";
-    final String multivalue2 = "multi 2";
+    final String multiValue1 = "multi 1";
+    final String multiValue2 = "multi 2";
 
     Map<String, String> coreTerms = new HashMap<>();
     coreTerms.put(DwcTerm.verbatimDepth.simpleName(), "1.0");
@@ -89,16 +89,16 @@ public class OccurrenceHdfsRecordConverterTest {
     coreTerms.put(DwcTerm.occurrenceStatus.simpleName(), OccurrenceStatus.ABSENT.name());
     coreTerms.put(DwcTerm.individualCount.simpleName(), "0");
     coreTerms.put(DwcTerm.eventDate.simpleName(), "2000/2010");
-    coreTerms.put(DwcTerm.datasetID.simpleName(), multivalue1 + "|" + multivalue2);
-    coreTerms.put(DwcTerm.datasetName.simpleName(), multivalue1 + "|" + multivalue2);
-    coreTerms.put(DwcTerm.otherCatalogNumbers.simpleName(), multivalue1 + "|" + multivalue2);
+    coreTerms.put(DwcTerm.datasetID.simpleName(), multiValue1 + "|" + multiValue2);
+    coreTerms.put(DwcTerm.datasetName.simpleName(), multiValue1 + "|" + multiValue2);
+    coreTerms.put(DwcTerm.otherCatalogNumbers.simpleName(), multiValue1 + "|" + multiValue2);
     coreTerms.put(
         DwcTerm.typeStatus.simpleName(),
         TypeStatus.TYPE.name() + "|" + TypeStatus.TYPE_SPECIES.name());
-    coreTerms.put(DwcTerm.preparations.simpleName(), multivalue1 + "|" + multivalue2);
-    coreTerms.put(DwcTerm.samplingProtocol.simpleName(), multivalue1 + "|" + multivalue2);
-    coreTerms.put(DwcTerm.identifiedBy.simpleName(), multivalue1 + "|" + multivalue2);
-    coreTerms.put(DwcTerm.recordedBy.simpleName(), multivalue1 + "|" + multivalue2);
+    coreTerms.put(DwcTerm.preparations.simpleName(), multiValue1 + "|" + multiValue2);
+    coreTerms.put(DwcTerm.samplingProtocol.simpleName(), multiValue1 + "|" + multiValue2);
+    coreTerms.put(DwcTerm.identifiedBy.simpleName(), multiValue1 + "|" + multiValue2);
+    coreTerms.put(DwcTerm.recordedBy.simpleName(), multiValue1 + "|" + multiValue2);
 
     Map<String, List<Map<String, String>>> extensions = new HashMap<>();
     extensions.put(
@@ -139,13 +139,13 @@ public class OccurrenceHdfsRecordConverterTest {
             .setIndividualCount(0)
             .setBasisOfRecord(BasisOfRecord.HUMAN_OBSERVATION.name())
             .setOccurrenceStatus(OccurrenceStatus.ABSENT.name())
-            .setDatasetID(Arrays.asList(multivalue1, multivalue2))
-            .setDatasetName(Arrays.asList(multivalue1, multivalue2))
-            .setOtherCatalogNumbers(Arrays.asList(multivalue1, multivalue2))
-            .setRecordedBy(Arrays.asList(multivalue1, multivalue2))
-            .setIdentifiedBy(Arrays.asList(multivalue1, multivalue2))
-            .setPreparations(Arrays.asList(multivalue1, multivalue2))
-            .setSamplingProtocol(Arrays.asList(multivalue1, multivalue2))
+            .setDatasetID(Arrays.asList(multiValue1, multiValue2))
+            .setDatasetName(Arrays.asList(multiValue1, multiValue2))
+            .setOtherCatalogNumbers(Arrays.asList(multiValue1, multiValue2))
+            .setRecordedBy(Arrays.asList(multiValue1, multiValue2))
+            .setIdentifiedBy(Arrays.asList(multiValue1, multiValue2))
+            .setPreparations(Arrays.asList(multiValue1, multiValue2))
+            .setSamplingProtocol(Arrays.asList(multiValue1, multiValue2))
             .setTypeStatus(Arrays.asList(TypeStatus.TYPE.name(), TypeStatus.TYPE_SPECIES.name()))
             .build();
 
@@ -205,21 +205,21 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals("2000/2010", hdfsRecord.getVEventdate());
     Assert.assertEquals(
         ThreatStatus.CRITICALLY_ENDANGERED.getCode(), hdfsRecord.getIucnredlistcategory());
-    Assert.assertEquals(multivalue1 + "|" + multivalue2, hdfsRecord.getVDatasetid());
-    Assert.assertEquals(Arrays.asList(multivalue1, multivalue2), hdfsRecord.getDatasetid());
-    Assert.assertEquals(multivalue1 + "|" + multivalue2, hdfsRecord.getVDatasetname());
-    Assert.assertEquals(Arrays.asList(multivalue1, multivalue2), hdfsRecord.getDatasetname());
-    Assert.assertEquals(multivalue1 + "|" + multivalue2, hdfsRecord.getVOthercatalognumbers());
+    Assert.assertEquals(multiValue1 + "|" + multiValue2, hdfsRecord.getVDatasetid());
+    Assert.assertEquals(Arrays.asList(multiValue1, multiValue2), hdfsRecord.getDatasetid());
+    Assert.assertEquals(multiValue1 + "|" + multiValue2, hdfsRecord.getVDatasetname());
+    Assert.assertEquals(Arrays.asList(multiValue1, multiValue2), hdfsRecord.getDatasetname());
+    Assert.assertEquals(multiValue1 + "|" + multiValue2, hdfsRecord.getVOthercatalognumbers());
     Assert.assertEquals(
-        Arrays.asList(multivalue1, multivalue2), hdfsRecord.getOthercatalognumbers());
-    Assert.assertEquals(multivalue1 + "|" + multivalue2, hdfsRecord.getVRecordedby());
-    Assert.assertEquals(Arrays.asList(multivalue1, multivalue2), hdfsRecord.getRecordedby());
-    Assert.assertEquals(multivalue1 + "|" + multivalue2, hdfsRecord.getVIdentifiedby());
-    Assert.assertEquals(Arrays.asList(multivalue1, multivalue2), hdfsRecord.getIdentifiedby());
-    Assert.assertEquals(multivalue1 + "|" + multivalue2, hdfsRecord.getVPreparations());
-    Assert.assertEquals(Arrays.asList(multivalue1, multivalue2), hdfsRecord.getPreparations());
-    Assert.assertEquals(multivalue1 + "|" + multivalue2, hdfsRecord.getVSamplingprotocol());
-    Assert.assertEquals(Arrays.asList(multivalue1, multivalue2), hdfsRecord.getSamplingprotocol());
+        Arrays.asList(multiValue1, multiValue2), hdfsRecord.getOthercatalognumbers());
+    Assert.assertEquals(multiValue1 + "|" + multiValue2, hdfsRecord.getVRecordedby());
+    Assert.assertEquals(Arrays.asList(multiValue1, multiValue2), hdfsRecord.getRecordedby());
+    Assert.assertEquals(multiValue1 + "|" + multiValue2, hdfsRecord.getVIdentifiedby());
+    Assert.assertEquals(Arrays.asList(multiValue1, multiValue2), hdfsRecord.getIdentifiedby());
+    Assert.assertEquals(multiValue1 + "|" + multiValue2, hdfsRecord.getVPreparations());
+    Assert.assertEquals(Arrays.asList(multiValue1, multiValue2), hdfsRecord.getPreparations());
+    Assert.assertEquals(multiValue1 + "|" + multiValue2, hdfsRecord.getVSamplingprotocol());
+    Assert.assertEquals(Arrays.asList(multiValue1, multiValue2), hdfsRecord.getSamplingprotocol());
     Assert.assertEquals(
         TypeStatus.TYPE.name() + "|" + TypeStatus.TYPE_SPECIES.name(), hdfsRecord.getVTypestatus());
     Assert.assertEquals(
@@ -315,7 +315,7 @@ public class OccurrenceHdfsRecordConverterTest {
         OccurrenceHdfsRecordConverter.builder().gbifIdRecord(gbifIdRecord).build().convert();
 
     // Should
-    Assert.assertEquals(Long.valueOf(1L), hdfsRecord.getGbifid());
+    Assert.assertEquals("1", hdfsRecord.getGbifid());
   }
 
   @Test
