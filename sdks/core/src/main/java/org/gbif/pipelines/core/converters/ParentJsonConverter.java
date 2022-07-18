@@ -46,7 +46,6 @@ public abstract class ParentJsonConverter {
   protected final MultimediaRecord multimedia;
   protected final ExtendedRecord verbatim;
   protected final DerivedMetadataRecord derivedMetadata;
-
   protected final LocationInheritedRecord locationInheritedRecord;
   protected final TemporalInheritedRecord temporalInheritedRecord;
   protected final EventInheritedRecord eventInheritedRecord;
