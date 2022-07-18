@@ -372,7 +372,7 @@ public class OccurrenceHdfsRecordConverter {
       return;
     }
     if (Objects.nonNull(gbifIdRecord.getGbifId())) {
-      occurrenceHdfsRecord.setGbifid(gbifIdRecord.getGbifId());
+      occurrenceHdfsRecord.setGbifid(gbifIdRecord.getGbifId().toString());
     }
 
     setCreatedIfGreater(occurrenceHdfsRecord, gbifIdRecord.getCreated());
@@ -568,7 +568,7 @@ public class OccurrenceHdfsRecordConverter {
   /** Copies the {@link EventCoreRecord} data into the {@link OccurrenceHdfsRecord}. */
   private void mapEventCoreRecord(OccurrenceHdfsRecord occurrenceHdfsRecord) {
     if (eventCoreRecord != null) {
-
+      occurrenceHdfsRecord.setGbifid(eventCoreRecord.getId());
       if (eventCoreRecord.getParentsLineage() != null) {
         occurrenceHdfsRecord.setParenteventgbifid(
             eventCoreRecord.getParentsLineage().stream()
