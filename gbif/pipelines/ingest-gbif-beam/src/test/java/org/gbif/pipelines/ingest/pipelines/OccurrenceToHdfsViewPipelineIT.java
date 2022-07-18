@@ -201,12 +201,22 @@ public class OccurrenceToHdfsViewPipelineIT {
                 + s
                 + "/d596fccb-2319-42eb-b13b-986c932780ad_147-00000-of-00001.avro";
 
-    assertFile(OccurrenceHdfsRecord.class, outputFn.apply("occurrence"));
-    assertFile(MeasurementOrFactTable.class, outputFn.apply("measurementorfacttable"));
     assertFile(
-        ExtendedMeasurementOrFactTable.class, outputFn.apply("extendedmeasurementorfacttable"));
+        OccurrenceHdfsRecord.class,
+        outputFn.apply("occurrence"),
+        PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE);
     assertFile(
-        GermplasmMeasurementTrialTable.class, outputFn.apply("germplasmmeasurementtrialtable"));
+        MeasurementOrFactTable.class,
+        outputFn.apply("measurementorfacttable"),
+        PipelinesVariables.Pipeline.Interpretation.RecordType.MEASUREMENT_OR_FACT_TABLE);
+    assertFile(
+        ExtendedMeasurementOrFactTable.class,
+        outputFn.apply("extendedmeasurementorfacttable"),
+        PipelinesVariables.Pipeline.Interpretation.RecordType.EXTENDED_MEASUREMENT_OR_FACT_TABLE);
+    assertFile(
+        GermplasmMeasurementTrialTable.class,
+        outputFn.apply("germplasmmeasurementtrialtable"),
+        PipelinesVariables.Pipeline.Interpretation.RecordType.GERMPLASM_MEASUREMENT_TRAIT_TABLE);
     assertFileExistFalse(outputFn.apply("permittable"));
     assertFileExistFalse(outputFn.apply("loantable"));
   }
@@ -372,7 +382,8 @@ public class OccurrenceToHdfsViewPipelineIT {
                 + s
                 + "/d596fccb-2319-42eb-b13b-986c932780ad_147-00000-of-00001.avro";
 
-    assertFile(OccurrenceHdfsRecord.class, outputFn.apply(recordType.name().toLowerCase()));
+    assertFile(
+        OccurrenceHdfsRecord.class, outputFn.apply(recordType.name().toLowerCase()), recordType);
     assertFileExistFalse(outputFn.apply("measurementorfacttable"));
     assertFileExistFalse(outputFn.apply("extendedmeasurementorfacttable"));
     assertFileExistFalse(outputFn.apply("germplasmmeasurementtrialtable"));
@@ -384,7 +395,10 @@ public class OccurrenceToHdfsViewPipelineIT {
     Assert.assertFalse(new File(output).exists());
   }
 
-  private <T extends SpecificRecordBase> void assertFile(Class<T> clazz, String output)
+  private <T extends SpecificRecordBase> void assertFile(
+      Class<T> clazz,
+      String output,
+      PipelinesVariables.Pipeline.Interpretation.RecordType recordType)
       throws Exception {
     File file = new File(output);
     DatumReader<T> ohrDatumReader = new SpecificDatumReader<>(clazz);
@@ -395,12 +409,18 @@ public class OccurrenceToHdfsViewPipelineIT {
 
         Object gbifid = record.get("gbifid");
         if (gbifid instanceof Long) {
-          Assert.assertEquals(1L, gbifid);
+          Assert.assertEquals(isCoreType(recordType) ? Long.parseLong(ID) : 1L, gbifid);
         }
         if (gbifid instanceof String) {
-          Assert.assertEquals("1", gbifid);
+          Assert.assertEquals(isCoreType(recordType) ? ID : "1", gbifid);
         }
       }
     }
+  }
+
+  private static boolean isCoreType(
+      PipelinesVariables.Pipeline.Interpretation.RecordType recordType) {
+    return recordType == PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE
+        || recordType == PipelinesVariables.Pipeline.Interpretation.RecordType.EVENT;
   }
 }
