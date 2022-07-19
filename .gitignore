@@ -21,8 +21,10 @@ examples/dwca-to-elasticsearch/configs/*.json
 # la-pipelines debian package
 livingatlas/debian/*.debhelper
 livingatlas/debian/*.debhelper.log
+livingatlas/debian/debhelper-build-stamp
 livingatlas/debian/*.buildinfo
 livingatlas/debian/*.substvars
 livingatlas/debian/files
 livingatlas/debian/la-pipelines
+livingatlas/debian/la-pipelines-migration/
 livingatlas/debian/maven-repo-local/
