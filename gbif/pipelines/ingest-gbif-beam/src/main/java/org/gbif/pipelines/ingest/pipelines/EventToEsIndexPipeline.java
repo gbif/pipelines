@@ -382,11 +382,11 @@ public class EventToEsIndexPipeline {
                       "Read occurrence event temporal records",
                       temporalTransform.read(occurrencesPathFn))
                   .apply(
-                      "Remove temporal records with null parent ids",
-                      Filter.by(NotNullOrEmptyFilter.of(TemporalRecord::getParentId)))
+                      "Remove temporal records with null core ids",
+                      Filter.by(NotNullOrEmptyFilter.of(TemporalRecord::getCoreId)))
                   .apply(
                       "Map occurrence events temporal records to KV",
-                      temporalTransform.toParentKv())
+                      temporalTransform.toCoreIdKv())
               : pipeline.apply(
                   "Create empty eventOccurrenceTemporalCollection",
                   Create.empty(new TypeDescriptor<KV<String, TemporalRecord>>() {}));
@@ -414,10 +414,10 @@ public class EventToEsIndexPipeline {
                       "Read occurrence events locations",
                       parentLocationTransform.read(occurrencesPathFn))
                   .apply(
-                      "Remove location records with null parent ids",
-                      Filter.by(NotNullOrEmptyFilter.of(LocationRecord::getParentId)))
+                      "Remove location records with null core ids",
+                      Filter.by(NotNullOrEmptyFilter.of(LocationRecord::getCoreId)))
                   .apply(
-                      "Map occurrence events locations to KV", parentLocationTransform.toParentKv())
+                      "Map occurrence events locations to KV", parentLocationTransform.toCoreIdKv())
               : pipeline.apply(
                   "Create empty eventOccurrenceLocationCollection",
                   Create.empty(new TypeDescriptor<KV<String, LocationRecord>>() {}));
@@ -445,9 +445,9 @@ public class EventToEsIndexPipeline {
                       "Read event occurrences taxon records",
                       taxonomyTransform.read(occurrencesPathFn))
                   .apply(
-                      "Remove taxon records with null parent ids",
-                      Filter.by(NotNullOrEmptyFilter.of(TaxonRecord::getParentId)))
-                  .apply("Map event occurrences taxon to KV", taxonomyTransform.toParentKv())
+                      "Remove taxon records with null core ids",
+                      Filter.by(NotNullOrEmptyFilter.of(TaxonRecord::getCoreId)))
+                  .apply("Map event occurrences taxon to KV", taxonomyTransform.toCoreIdKv())
               : pipeline.apply(
                   "Create empty eventOccurrencesTaxonCollection",
                   Create.empty(new TypeDescriptor<KV<String, TaxonRecord>>() {}));

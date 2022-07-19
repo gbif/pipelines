@@ -85,7 +85,7 @@ public class OccurrenceHdfsRecordTransformTest {
             .build();
     ClusteringRecord cr = ClusteringRecord.newBuilder().setId("777").setIsClustered(true).build();
     TemporalRecord tr = TemporalRecord.newBuilder().setId("777").setDay(25).build();
-    TaxonRecord txr = TaxonRecord.newBuilder().setId("777").setParentId("setParentId").build();
+    TaxonRecord txr = TaxonRecord.newBuilder().setId("777").setCoreId("setCoreId").build();
     GrscicollRecord gr =
         GrscicollRecord.newBuilder()
             .setId("777")

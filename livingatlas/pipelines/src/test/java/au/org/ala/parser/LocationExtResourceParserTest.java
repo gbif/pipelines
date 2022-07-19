@@ -2,9 +2,6 @@ package au.org.ala.parser;
 
 import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.kvs.LocationInfoConfig;
-import au.org.ala.pipelines.vocabulary.CentrePoints;
-import au.org.ala.pipelines.vocabulary.CountryCentrePoints;
-import au.org.ala.pipelines.vocabulary.StateProvinceCentrePoints;
 import au.org.ala.pipelines.vocabulary.StateProvinceParser;
 import java.io.File;
 import java.io.FileNotFoundException;

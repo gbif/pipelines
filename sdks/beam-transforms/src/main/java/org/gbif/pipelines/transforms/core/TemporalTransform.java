@@ -56,10 +56,10 @@ public class TemporalTransform extends Transform<ExtendedRecord, TemporalRecord>
     }
   }
 
-  /** Maps {@link TemporalRecord} to key value, where key is {@link TemporalRecord#getParentId} */
-  public MapElements<TemporalRecord, KV<String, TemporalRecord>> asKv(boolean useParent) {
+  /** Maps {@link TemporalRecord} to key value, where key is {@link TemporalRecord#getCoreId} */
+  public MapElements<TemporalRecord, KV<String, TemporalRecord>> asKv(boolean useCoreId) {
     return MapElements.into(new TypeDescriptor<KV<String, TemporalRecord>>() {})
-        .via((TemporalRecord tr) -> KV.of(useParent ? tr.getParentId() : tr.getId(), tr));
+        .via((TemporalRecord tr) -> KV.of(useCoreId ? tr.getCoreId() : tr.getId(), tr));
   }
 
   /** Maps {@link TemporalRecord} to key value, where key is {@link TemporalRecord#getId} */
@@ -67,8 +67,8 @@ public class TemporalTransform extends Transform<ExtendedRecord, TemporalRecord>
     return asKv(false);
   }
 
-  /** Maps {@link TemporalRecord} to key value, where key is {@link TemporalRecord#getParentId} */
-  public MapElements<TemporalRecord, KV<String, TemporalRecord>> toParentKv() {
+  /** Maps {@link TemporalRecord} to key value, where key is {@link TemporalRecord#getCoreId} */
+  public MapElements<TemporalRecord, KV<String, TemporalRecord>> toCoreIdKv() {
     return asKv(true);
   }
 
@@ -96,7 +96,8 @@ public class TemporalTransform extends Transform<ExtendedRecord, TemporalRecord>
         .via(temporalInterpreter::interpretTemporal)
         .via(temporalInterpreter::interpretModified)
         .via(temporalInterpreter::interpretDateIdentified)
-        .via(TemporalInterpreter::setParentId)
+        .via(TemporalInterpreter::setCoreId)
+        .via(TemporalInterpreter::setParentEventId)
         .getOfNullable();
   }
 }

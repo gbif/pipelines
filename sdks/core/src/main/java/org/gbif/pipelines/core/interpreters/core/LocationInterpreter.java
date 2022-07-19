@@ -12,6 +12,7 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.ZERO_COORDINATE;
 import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareOptValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareValue;
+import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 
 import com.google.common.base.Strings;
 import java.util.Arrays;
@@ -380,9 +381,14 @@ public class LocationInterpreter {
     }
   }
 
-  /** Sets the parentId field. */
-  public static void setParentId(ExtendedRecord er, LocationRecord lr) {
-    Optional.ofNullable(er.getParentCoreId()).ifPresent(lr::setParentId);
+  /** Sets the coreId field. */
+  public static void setCoreId(ExtendedRecord er, LocationRecord lr) {
+    Optional.ofNullable(er.getParentCoreId()).ifPresent(lr::setCoreId);
+  }
+
+  /** Sets the parentEventId field. */
+  public static void setParentEventId(ExtendedRecord er, LocationRecord lr) {
+    extractOptValue(er, DwcTerm.parentEventID).ifPresent(lr::setParentId);
   }
 
   private static String cleanName(String x) {

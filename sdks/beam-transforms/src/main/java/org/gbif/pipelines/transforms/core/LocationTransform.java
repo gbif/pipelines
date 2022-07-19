@@ -58,14 +58,14 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
     return asKv(false);
   }
 
-  /** Maps {@link LocationRecord} to key value, where key is {@link LocationRecord#getParentId} */
-  public MapElements<LocationRecord, KV<String, LocationRecord>> toParentKv() {
+  /** Maps {@link LocationRecord} to key value, where key is {@link LocationRecord#getCoreId} */
+  public MapElements<LocationRecord, KV<String, LocationRecord>> toCoreIdKv() {
     return asKv(true);
   }
 
-  private MapElements<LocationRecord, KV<String, LocationRecord>> asKv(boolean useParentId) {
+  private MapElements<LocationRecord, KV<String, LocationRecord>> asKv(boolean useCoreId) {
     return MapElements.into(new TypeDescriptor<KV<String, LocationRecord>>() {})
-        .via((LocationRecord lr) -> KV.of(useParentId ? lr.getParentId() : lr.getId(), lr));
+        .via((LocationRecord lr) -> KV.of(useCoreId ? lr.getCoreId() : lr.getId(), lr));
   }
 
   public LocationTransform counterFn(SerializableConsumer<String> counterFn) {
@@ -150,7 +150,8 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
         .via(LocationInterpreter::interpretCoordinateUncertaintyInMeters)
         .via(LocationInterpreter::interpretLocality)
         .via(LocationInterpreter::interpretFootprintWKT)
-        .via(LocationInterpreter::setParentId)
+        .via(LocationInterpreter::setCoreId)
+        .via(LocationInterpreter::setParentEventId)
         .via(r -> this.incCounter())
         .getOfNullable();
   }

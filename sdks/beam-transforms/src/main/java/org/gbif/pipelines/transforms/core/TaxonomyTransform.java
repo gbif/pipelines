@@ -46,9 +46,9 @@ public class TaxonomyTransform extends Transform<ExtendedRecord, TaxonRecord> {
   }
 
   /** Maps {@link TaxonRecord} to key value, where key is {@link TaxonRecord#getId} */
-  public MapElements<TaxonRecord, KV<String, TaxonRecord>> asKv(boolean useParent) {
+  public MapElements<TaxonRecord, KV<String, TaxonRecord>> asKv(boolean useCoreId) {
     return MapElements.into(new TypeDescriptor<KV<String, TaxonRecord>>() {})
-        .via((TaxonRecord tr) -> KV.of(useParent ? tr.getParentId() : tr.getId(), tr));
+        .via((TaxonRecord tr) -> KV.of(useCoreId ? tr.getCoreId() : tr.getId(), tr));
   }
 
   /** Maps {@link TaxonRecord} to key value, where key is {@link TaxonRecord#getId} */
@@ -56,8 +56,8 @@ public class TaxonomyTransform extends Transform<ExtendedRecord, TaxonRecord> {
     return asKv(false);
   }
 
-  /** Maps {@link TaxonRecord} to key value, where key is {@link TaxonRecord#getParentId} */
-  public MapElements<TaxonRecord, KV<String, TaxonRecord>> toParentKv() {
+  /** Maps {@link TaxonRecord} to key value, where key is {@link TaxonRecord#getCoreId} */
+  public MapElements<TaxonRecord, KV<String, TaxonRecord>> toCoreIdKv() {
     return asKv(true);
   }
 
@@ -100,7 +100,8 @@ public class TaxonomyTransform extends Transform<ExtendedRecord, TaxonRecord> {
         .to(TaxonRecord.newBuilder().setCreated(Instant.now().toEpochMilli()).build())
         .when(er -> !er.getCoreTerms().isEmpty())
         .via(TaxonomyInterpreter.taxonomyInterpreter(kvStore))
-        .via(TaxonomyInterpreter::setParentId)
+        .via(TaxonomyInterpreter::setCoreId)
+        .via(TaxonomyInterpreter::setParentEventId)
         .skipWhen(tr -> tr.getId() == null)
         .getOfNullable();
   }
