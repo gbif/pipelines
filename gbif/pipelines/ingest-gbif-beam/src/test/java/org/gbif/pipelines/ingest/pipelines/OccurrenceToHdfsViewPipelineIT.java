@@ -406,14 +406,7 @@ public class OccurrenceToHdfsViewPipelineIT {
       while (dataFileReader.hasNext()) {
         T record = dataFileReader.next();
         Assert.assertNotNull(record);
-
-        Object gbifid = record.get("gbifid");
-        if (gbifid instanceof Long) {
-          Assert.assertEquals(isCoreType(recordType) ? Long.parseLong(ID) : 1L, gbifid);
-        }
-        if (gbifid instanceof String) {
-          Assert.assertEquals(isCoreType(recordType) ? ID : "1", gbifid);
-        }
+        Assert.assertEquals(isCoreType(recordType) ? ID : "1", record.get("gbifid"));
       }
     }
   }
