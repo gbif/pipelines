@@ -22,3 +22,13 @@ Description: Utility for data processing and indexing of biodiversity data
  .
  This package contains the la-pipelines utility. The aim of this utility is
  the replacement to biocache-store for data ingress.
+
+Package: la-pipelines-migration
+Architecture: all
+Depends: ${misc:Depends}, openjdk-8-jdk
+Description: Utility for data processing and indexing of biodiversity data
+ This package contains the Pipelines Data ingress utility package from
+ GBIF and Living Atlases.
+ .
+ This package contains the la-pipelines migration utility. The aim of this
+ utility is to help in the migration from biocache-store.
