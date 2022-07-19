@@ -1,0 +1,2 @@
+# https://www.debian.org/doc/manuals/maint-guide/dother.en.html#install
+livingatlas/pipelines/target/la-pipelines-migration.jar usr/share/la-pipelines/
