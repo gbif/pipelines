@@ -60,7 +60,7 @@ public class OccurrenceJsonConverter {
 
   @SneakyThrows
   public String toJson() {
-    return SerDeFactory.avroWriterNonNulls().writeValueAsString(convert());
+    return SerDeFactory.avroMapperNonNulls().writeValueAsString(convert());
   }
 
   private void mapMetadataRecord(OccurrenceJsonRecord.Builder builder) {

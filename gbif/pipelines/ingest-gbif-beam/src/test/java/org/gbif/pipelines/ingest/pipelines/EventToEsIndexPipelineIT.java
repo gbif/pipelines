@@ -28,11 +28,11 @@ import org.gbif.pipelines.common.beam.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
+import org.gbif.pipelines.core.factory.SerDeFactory;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
 import org.gbif.pipelines.estools.service.EsService;
 import org.gbif.pipelines.ingest.pipelines.utils.EsServer;
 import org.gbif.pipelines.ingest.pipelines.utils.InterpretedAvroWriter;
-import org.gbif.pipelines.ingest.utils.SerDeSerUtils;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
@@ -508,7 +508,7 @@ public class EventToEsIndexPipelineIT {
                 + "    }\n"
                 + "  }\n"
                 + "}");
-    ObjectMapper mapper = SerDeSerUtils.objectMapper();
+    ObjectMapper mapper = SerDeFactory.avroMapperNonNulls();
     ArrayNode results =
         (ArrayNode)
             mapper

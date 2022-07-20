@@ -58,7 +58,7 @@ public abstract class ParentJsonConverter {
 
   @SneakyThrows
   public String toJson() {
-    return SerDeFactory.avroWriterNonNulls().writeValueAsString(convertToParent());
+    return SerDeFactory.avroMapperNonNulls().writeValueAsString(convertToParent());
   }
 
   /** Converts to parent record based on an event record. */
