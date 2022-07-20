@@ -8,17 +8,15 @@ import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.kvs.LocationInfoConfig;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class StateProvinceVocabTest {
-  @Ignore
+
   @Test
   public void testStateProvinceWithClasspathResource() throws IOException {
     ALAPipelinesConfig alaConfig = new ALAPipelinesConfig();
     LocationInfoConfig locationInfoConfig = new LocationInfoConfig();
     alaConfig.setLocationInfoConfig(locationInfoConfig);
-    locationInfoConfig.setStateProvinceNamesFile("/stateProvinces.tsv");
 
     assertEquals(
         "Australian Capital Territory",
