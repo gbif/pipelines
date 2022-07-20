@@ -499,7 +499,7 @@ public class OccurrenceJsonConverterTest {
             + "\"http://rs.tdwg.org/dwc/terms/catalogNumber\":\"catalogNumber\",\"http://rs.tdwg.org/dwc/terms/footprintWKT\":"
             + "\"footprintWKTfootprintWKTfootprintWKT\",\"http://rs.tdwg.org/dwc/terms/institutionCode\":\"institutionCode\","
             + "\"http://rs.tdwg.org/dwc/terms/recordedBy\":\"mv;à1|mv2\",\"http://rs.tdwg.org/dwc/terms/scientificName\":"
-            + "\"scientificName\"},\"parentCoreId\":null,\"extensions\":{\"http://rs.tdwg.org/ac/terms/Multimedia\":[{\"k\":\"v\"}]}}";
+            + "\"scientificName\"},\"extensions\":{\"http://rs.tdwg.org/ac/terms/Multimedia\":[{\"k\":\"v\"}]}}";
     assertEquals(expectedVerbatim, result.path("verbatim").toString());
 
     String expectedGbifClassification =
@@ -509,7 +509,7 @@ public class OccurrenceJsonConverterTest {
             + "{\"key\":5,\"name\":\"FAMILY\",\"rank\":\"FAMILY\"},{\"key\":6,\"name\":\"GENUS\",\"rank\":\"GENUS\"},"
             + "{\"key\":7,\"name\":\"SPECIES\",\"rank\":\"SPECIES\"}],\"classificationPath\":\"_1_2_3_4_5_6\",\"diagnostics\":"
             + "{\"matchType\":\"EXACT\",\"note\":\"note\",\"status\":\"ACCEPTED\"},\"kingdom\":\"KINGDOM\","
-            + "\"kingdomKey\":\"1\",\"phylum\":\"PHYLUM\",\"phylumKey\":\"2\",\"class\":\"CLASS\",\"classKey\":\"3\",\"order\":"
+            + "\"kingdomKey\":\"1\",\"phylum\":\"PHYLUM\",\"phylumKey\":\"2\",\"classKey\":\"3\",\"order\":"
             + "\"ORDER\",\"orderKey\":\"4\",\"family\":\"FAMILY\",\"familyKey\":\"5\",\"genus\":\"GENUS\",\"genusKey\":\"6\","
             + "\"species\":\"SPECIES\",\"speciesKey\":\"7\",\"synonym\":true,\"taxonID\":\"taxonID\","
             + "\"taxonKey\":[\"1\",\"2\",\"3\",\"4\",\"5\",\"6\",\"7\",\"10\",\"11\"],"
@@ -522,7 +522,7 @@ public class OccurrenceJsonConverterTest {
             + "\"infraspecificEpithet\":\"infraspecificEpithet\",\"notho\":\"GENERIC\",\"rank\":\"ABERRATION\","
             + "\"specificEpithet\":\"specificEpithet\",\"state\":\"COMPLETE\",\"terminalEpithet\":\"terminalEpithet\","
             + "\"trinomial\":false,\"type\":\"HYBRID_FORMULA\",\"uninomial\":\"setUninomial\"},\"verbatimScientificName\":"
-            + "\"scientificName\",\"iucnRedListCategoryCode\":\"setIucnRedListCategoryCode\"}";
+            + "\"scientificName\",\"iucnRedListCategoryCode\":\"setIucnRedListCategoryCode\",\"class\":\"CLASS\"}";
     assertEquals(expectedGbifClassification, result.path("gbifClassification").toString());
 
     assertEquals("111", result.path("gbifId").asText());
