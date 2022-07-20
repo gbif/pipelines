@@ -8,7 +8,7 @@
     "type":"record",
     "doc":"Location inherited fields from parent events",
     "fields":[
-      {"name": "id","type":"string", "doc":"Pipelines identifier"},
+      {"name": "id","type":["null", "string"], "default":null, "doc":"Pipelines identifier"},
       {"name": "countryCode","type":["null","string"],"default":null},
       {"name": "stateProvince","type":["null","string"],"default":null},
       {"name": "decimalLatitude","type":["null","double"],"default":null},

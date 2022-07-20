@@ -47,11 +47,22 @@ public class EventInheritedFieldsFn
       ArrayDeque<String> allRecords = new ArrayDeque<>(recordsMap.keySet());
       allRecords.removeAll(recordsWithChildren);
       EventInheritedFields leaf = recordsMap.get(allRecords.peek());
-      return setParentValue(
-              EventInheritedRecord.newBuilder().setId(leaf.getId()).setEventType(new ArrayList<>()),
-              leaf.getParentEventID(),
-              leaf.locationID != null)
-          .build();
+
+      EventInheritedRecord eventInheritedRecord =
+          setParentValue(
+                  EventInheritedRecord.newBuilder()
+                      .setId(leaf.getId())
+                      .setEventType(new ArrayList<>()),
+                  leaf.getParentEventID(),
+                  leaf.locationID != null)
+              .build();
+
+      if (eventInheritedRecord.getLocationID() == null
+          && eventInheritedRecord.getEventType().isEmpty()) {
+        return EventInheritedRecord.newBuilder().build();
+      }
+
+      return eventInheritedRecord;
     }
 
     private EventInheritedRecord.Builder setParentValue(

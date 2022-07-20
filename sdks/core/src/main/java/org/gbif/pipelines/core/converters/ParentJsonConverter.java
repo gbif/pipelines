@@ -65,8 +65,8 @@ public abstract class ParentJsonConverter {
   private ParentJsonRecord convertToParentEvent() {
     return convertToParentRecord()
         .setType("event")
-        .setJoinRecordBuilder(JoinRecord.newBuilder().setName("event"))
         .setEventBuilder(convertToEvent())
+        .setAll(JsonConverter.convertFieldAll(verbatim))
         .build();
   }
 
@@ -89,6 +89,7 @@ public abstract class ParentJsonConverter {
                         occurrenceJsonRecord.getVerbatim().getParentCoreId())))
         .setOccurrence(occurrenceJsonRecord)
         .setMetadataBuilder(mapMetadataJsonRecord())
+        .setAll(occurrenceJsonRecord.getAll())
         .build();
   }
 
@@ -274,15 +275,21 @@ public abstract class ParentJsonConverter {
   }
 
   private void mapLocationInheritedFields(ParentJsonRecord.Builder builder) {
-    builder.setLocationInherited(locationInheritedRecord);
+    if (locationInheritedRecord.getId() != null) {
+      builder.setLocationInherited(locationInheritedRecord);
+    }
   }
 
   private void mapTemporalInheritedFields(ParentJsonRecord.Builder builder) {
-    builder.setTemporalInherited(temporalInheritedRecord);
+    if (temporalInheritedRecord.getId() != null) {
+      builder.setTemporalInherited(temporalInheritedRecord);
+    }
   }
 
   private void mapEventInheritedFields(ParentJsonRecord.Builder builder) {
-    builder.setEventInherited(eventInheritedRecord);
+    if (eventInheritedRecord.getId() != null) {
+      builder.setEventInherited(eventInheritedRecord);
+    }
   }
 
   protected static List<Parent> convertParents(List<org.gbif.pipelines.io.avro.Parent> parents) {

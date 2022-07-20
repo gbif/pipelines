@@ -50,24 +50,28 @@ public class TemporalInheritedFieldsFn
     }
 
     public TemporalInheritedRecord toLeafChild() {
-      return setParentValue(getLeafChild()).build();
+      return inheritFields(getLeafChild());
     }
 
-    private TemporalInheritedRecord.Builder setParentValue(TemporalInheritedFields leaf) {
-      TemporalInheritedRecord.Builder builder =
-          TemporalInheritedRecord.newBuilder().setId(leaf.getId());
+    private TemporalInheritedRecord inheritFields(TemporalInheritedFields leaf) {
+      TemporalInheritedRecord.Builder builder = TemporalInheritedRecord.newBuilder();
 
       if (leaf.allFieldsNull()) {
-        builder = setParentValue(builder, leaf.getParentId(), false);
+        boolean assignedInheritedFields = setParentValues(builder, leaf.getParentId(), false);
+
+        if (assignedInheritedFields) {
+          builder.setId(leaf.getId());
+        }
       }
 
-      return builder;
+      return builder.build();
     }
 
-    private TemporalInheritedRecord.Builder setParentValue(
+    private boolean setParentValues(
         TemporalInheritedRecord.Builder builder, String parentId, boolean assigned) {
+
       if (assigned || parentId == null) {
-        return builder;
+        return assigned;
       }
 
       TemporalInheritedFields parent = recordsMap.get(parentId);
@@ -82,7 +86,7 @@ public class TemporalInheritedFieldsFn
         assigned = true;
       }
 
-      return setParentValue(builder, parent.getParentId(), assigned);
+      return setParentValues(builder, parent.getParentId(), assigned);
     }
   }
 

@@ -51,46 +51,49 @@ public class LocationInheritedFieldsFn
     }
 
     public LocationInheritedRecord toLeafChild() {
-      return setParentValue(getLeafChild()).build();
+      return inheritFields(getLeafChild());
     }
 
-    private LocationInheritedRecord.Builder setParentValue(LocationInheritedFields leaf) {
-      LocationInheritedRecord.Builder builder =
-          LocationInheritedRecord.newBuilder().setId(leaf.getId());
+    private LocationInheritedRecord inheritFields(LocationInheritedFields leaf) {
+      LocationInheritedRecord.Builder builder = LocationInheritedRecord.newBuilder();
 
       if (leaf.allFieldsNull()) {
-        builder = setParentValue(builder, leaf.getParentId(), false);
+        boolean assignedInheritedFields = setParentValues(builder, leaf.getParentId(), false);
+
+        if (assignedInheritedFields) {
+          builder.setId(leaf.getId());
+        }
       }
 
-      return builder;
+      return builder.build();
     }
 
-    private LocationInheritedRecord.Builder setParentValue(
-        LocationInheritedRecord.Builder locationInherited, String parentId, boolean assigned) {
+    private boolean setParentValues(
+        LocationInheritedRecord.Builder builder, String parentId, boolean assigned) {
 
       if (assigned || parentId == null) {
-        return locationInherited;
+        return assigned;
       }
 
       LocationInheritedFields parent = recordsMap.get(parentId);
 
       if (parent.getCountryCode() != null) {
-        locationInherited.setCountryCode(parent.getCountryCode());
+        builder.setCountryCode(parent.getCountryCode());
         assigned = true;
       }
 
       if (parent.getStateProvince() != null) {
-        locationInherited.setStateProvince(parent.getStateProvince());
+        builder.setStateProvince(parent.getStateProvince());
         assigned = true;
       }
 
       if (parent.getHasCoordinate() != null && parent.getHasCoordinate()) {
-        locationInherited.setDecimalLatitude(parent.getDecimalLatitude());
-        locationInherited.setDecimalLongitude(parent.getDecimalLongitude());
+        builder.setDecimalLatitude(parent.getDecimalLatitude());
+        builder.setDecimalLongitude(parent.getDecimalLongitude());
         assigned = true;
       }
 
-      return setParentValue(locationInherited, parent.getParentId(), assigned);
+      return setParentValues(builder, parent.getParentId(), assigned);
     }
   }
 

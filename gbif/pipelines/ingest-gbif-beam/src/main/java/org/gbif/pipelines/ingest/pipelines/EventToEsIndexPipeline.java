@@ -333,7 +333,9 @@ public class EventToEsIndexPipeline {
             .withMaxBatchSizeBytes(options.getEsMaxBatchSizeBytes())
             .withRoutingFn(
                 input ->
-                    Optional.of(input.get("joinRecord"))
+                    Optional.of(input)
+                        .filter(i -> i.hasNonNull("joinRecord"))
+                        .map(i -> i.get("joinRecord"))
                         .filter(i -> i.hasNonNull("parent"))
                         .map(i -> i.get("parent").asText())
                         .orElse(input.get("internalId").asText()))
