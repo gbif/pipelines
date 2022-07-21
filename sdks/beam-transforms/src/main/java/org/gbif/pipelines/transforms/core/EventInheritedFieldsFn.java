@@ -2,17 +2,19 @@ package org.gbif.pipelines.transforms.core;
 
 import java.io.Serializable;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import lombok.Data;
 import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.values.TupleTag;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
+import org.gbif.pipelines.io.avro.Parent;
 import org.gbif.pipelines.io.avro.json.EventInheritedRecord;
 
 @Data
@@ -52,7 +54,7 @@ public class EventInheritedFieldsFn
           setParentValue(
                   EventInheritedRecord.newBuilder()
                       .setId(leaf.getId())
-                      .setEventType(new ArrayList<>()),
+                      .setEventType(leaf.getEventTypes()),
                   leaf.getParentEventID(),
                   leaf.locationID != null)
               .build();
@@ -67,20 +69,16 @@ public class EventInheritedFieldsFn
 
     private EventInheritedRecord.Builder setParentValue(
         EventInheritedRecord.Builder builder, String parentId, boolean assigned) {
-      if (parentId == null) {
+      if (assigned || parentId == null) {
         return builder;
       }
 
       EventInheritedFields parent = recordsMap.get(parentId);
 
-      if (!assigned && parent.getLocationID() != null) {
+      if (parent.getLocationID() != null) {
         builder.setLocationID(parent.getLocationID());
         builder.setInheritedFrom(parent.getId());
         assigned = true;
-      }
-
-      if (parent.getEventType() != null) {
-        builder.getEventType().add(parent.getEventType());
       }
 
       return setParentValue(builder, parent.getParentEventID(), assigned);
@@ -123,16 +121,17 @@ public class EventInheritedFieldsFn
     private String id;
     private String parentEventID;
     private String locationID;
-    private String eventType;
+    private List<String> eventTypes;
 
     static EventInheritedFields from(EventCoreRecord eventCoreRecord) {
       EventInheritedFields eif = new EventInheritedFields();
       eif.id = eventCoreRecord.getId();
       eif.parentEventID = eventCoreRecord.getParentEventID();
       eif.locationID = eventCoreRecord.getLocationID();
-      if (eventCoreRecord.getEventType() != null) {
-        eif.eventType = eventCoreRecord.getEventType().getConcept();
-      }
+      eif.eventTypes =
+          eventCoreRecord.getParentsLineage().stream()
+              .map(Parent::getEventType)
+              .collect(Collectors.toList());
       return eif;
     }
   }
