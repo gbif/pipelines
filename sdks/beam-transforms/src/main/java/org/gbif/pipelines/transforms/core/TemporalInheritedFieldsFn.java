@@ -86,6 +86,10 @@ public class TemporalInheritedFieldsFn
         assigned = true;
       }
 
+      if (assigned) {
+        builder.setInheritedFrom(parent.getId());
+      }
+
       return setParentValues(builder, parent.getParentId(), assigned);
     }
   }

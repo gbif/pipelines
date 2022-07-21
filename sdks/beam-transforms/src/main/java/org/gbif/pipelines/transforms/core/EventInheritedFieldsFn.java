@@ -75,6 +75,7 @@ public class EventInheritedFieldsFn
 
       if (!assigned && parent.getLocationID() != null) {
         builder.setLocationID(parent.getLocationID());
+        builder.setInheritedFrom(parent.getId());
         assigned = true;
       }
 

@@ -9,6 +9,7 @@
     "doc":"Location inherited fields from parent events",
     "fields":[
       {"name": "id","type":["null", "string"], "default":null, "doc":"Pipelines identifier"},
+      {"name": "inheritedFrom", "type": ["null", "string"], "default":null, "doc":"Id of the parent whose fields are inherited"},
       {"name": "countryCode","type":["null","string"],"default":null},
       {"name": "stateProvince","type":["null","string"],"default":null},
       {"name": "decimalLatitude","type":["null","double"],"default":null},
