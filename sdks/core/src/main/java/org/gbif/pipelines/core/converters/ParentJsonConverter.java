@@ -58,21 +58,35 @@ public abstract class ParentJsonConverter {
 
   @SneakyThrows
   public String toJson() {
-    return SerDeFactory.avroMapperNonNulls().writeValueAsString(convertToParent());
+    return SerDeFactory.avroEventsMapperNonNulls().writeValueAsString(convertToParent());
   }
 
   /** Converts to parent record based on an event record. */
   private ParentJsonRecord convertToParentEvent() {
-    return convertToParentRecord()
-        .setType("event")
-        .setEventBuilder(convertToEvent())
-        .setAll(JsonConverter.convertFieldAll(verbatim))
-        .build();
+    ParentJsonRecord.Builder builder =
+        convertToParentRecord()
+            .setId(verbatim.getId())
+            .setInternalId(identifier.getInternalId())
+            .setUniqueKey(identifier.getUniqueKey())
+            .setType("event")
+            .setEventBuilder(convertToEvent())
+            .setAll(JsonConverter.convertFieldAll(verbatim))
+            .setVerbatim(JsonConverter.convertVerbatimRecord(verbatim));
+
+    mapCreated(builder);
+    mapDerivedMetadata(builder);
+    mapLocationInheritedFields(builder);
+    mapTemporalInheritedFields(builder);
+    mapEventInheritedFields(builder);
+
+    JsonConverter.convertToDate(identifier.getFirstLoaded()).ifPresent(builder::setFirstLoaded);
+
+    return builder.build();
   }
 
   /** Converts to a parent record based on an occurrence record. */
   private ParentJsonRecord convertToParentOccurrence() {
-    return ParentJsonRecord.newBuilder()
+    return convertToParentRecord()
         .setType("occurrence")
         .setId(occurrenceJsonRecord.getId())
         .setInternalId(
@@ -88,8 +102,9 @@ public abstract class ParentJsonConverter {
                         metadata.getDatasetKey(),
                         occurrenceJsonRecord.getVerbatim().getParentCoreId())))
         .setOccurrence(occurrenceJsonRecord)
-        .setMetadataBuilder(mapMetadataJsonRecord())
         .setAll(occurrenceJsonRecord.getAll())
+        .setVerbatim(occurrenceJsonRecord.getVerbatim())
+        .setCreated(occurrenceJsonRecord.getCreated())
         .build();
   }
 
@@ -97,19 +112,9 @@ public abstract class ParentJsonConverter {
   private ParentJsonRecord.Builder convertToParentRecord() {
     ParentJsonRecord.Builder builder =
         ParentJsonRecord.newBuilder()
-            .setId(verbatim.getId())
             .setCrawlId(metadata.getCrawlId())
-            .setInternalId(identifier.getInternalId())
-            .setUniqueKey(identifier.getUniqueKey())
             .setMetadataBuilder(mapMetadataJsonRecord());
 
-    mapCreated(builder);
-    mapDerivedMetadata(builder);
-    mapLocationInheritedFields(builder);
-    mapTemporalInheritedFields(builder);
-    mapEventInheritedFields(builder);
-
-    JsonConverter.convertToDate(identifier.getFirstLoaded()).ifPresent(builder::setFirstLoaded);
     JsonConverter.convertToDate(metadata.getLastCrawled()).ifPresent(builder::setLastCrawled);
 
     return builder;

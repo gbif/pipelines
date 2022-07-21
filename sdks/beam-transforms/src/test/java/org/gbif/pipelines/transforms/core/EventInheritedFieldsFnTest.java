@@ -57,8 +57,9 @@ public class EventInheritedFieldsFnTest {
             .setId("3")
             .setParentEventID("2")
             .setParentsLineage(
-                Collections.singletonList(
-                    Parent.newBuilder().setId("2").setEventType("sampling").build()))
+                Arrays.asList(
+                    Parent.newBuilder().setId("2").setEventType("sampling").build(),
+                    Parent.newBuilder().setId("1").setEventType("survey").build()))
             .build());
 
     // Merge

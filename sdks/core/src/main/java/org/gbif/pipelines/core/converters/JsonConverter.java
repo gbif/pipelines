@@ -89,6 +89,7 @@ public class JsonConverter {
   /** Gets the maximum/latest created date of all the records. */
   public static Optional<String> getMaxCreationDate(SpecificRecordBase... recordBases) {
     return Arrays.stream(recordBases)
+        .filter(Objects::nonNull)
         .filter(r -> Objects.nonNull(r.getSchema().getField(Indexing.CREATED)))
         .map(r -> r.get(Indexing.CREATED))
         .filter(Objects::nonNull)

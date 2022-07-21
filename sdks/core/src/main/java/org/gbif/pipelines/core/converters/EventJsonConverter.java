@@ -37,9 +37,6 @@ public class EventJsonConverter {
 
     mapCreated(builder);
     mapIssues(builder);
-
-    mapMetadataRecord(builder);
-    mapIdentifierRecord(builder);
     mapEventCoreRecord(builder);
     mapTemporalRecord(builder);
     mapLocationRecord(builder);
@@ -51,32 +48,6 @@ public class EventJsonConverter {
 
   public String toJson() {
     return convert().toString();
-  }
-
-  private void mapMetadataRecord(EventJsonRecord.Builder builder) {
-    builder
-        .setCrawlId(metadata.getCrawlId())
-        .setDatasetKey(metadata.getDatasetKey())
-        .setDatasetTitle(metadata.getDatasetTitle())
-        .setDatasetPublishingCountry(metadata.getDatasetPublishingCountry())
-        .setEndorsingNodeKey(metadata.getEndorsingNodeKey())
-        .setInstallationKey(metadata.getInstallationKey())
-        .setHostingOrganizationKey(metadata.getHostingOrganizationKey())
-        .setNetworkKeys(metadata.getNetworkKeys())
-        .setProgrammeAcronym(metadata.getProgrammeAcronym())
-        .setProjectId(metadata.getProjectId())
-        .setProtocol(metadata.getProtocol())
-        .setPublisherTitle(metadata.getPublisherTitle())
-        .setPublishingOrganizationKey(metadata.getPublishingOrganizationKey());
-
-    JsonConverter.convertToDate(metadata.getLastCrawled()).ifPresent(builder::setLastCrawled);
-  }
-
-  private void mapIdentifierRecord(EventJsonRecord.Builder builder) {
-    builder.setInternalId(identifier.getInternalId());
-    builder.setUniqueKey(identifier.getUniqueKey());
-
-    JsonConverter.convertToDate(identifier.getFirstLoaded()).ifPresent(builder::setFirstLoaded);
   }
 
   private void mapEventCoreRecord(EventJsonRecord.Builder builder) {
@@ -164,11 +135,7 @@ public class EventJsonConverter {
 
   private void mapExtendedRecord(EventJsonRecord.Builder builder) {
 
-    builder
-        .setId(verbatim.getId())
-        .setAll(JsonConverter.convertFieldAll(verbatim))
-        .setExtensions(JsonConverter.convertExtensions(verbatim))
-        .setVerbatim(JsonConverter.convertVerbatimRecord(verbatim));
+    builder.setId(verbatim.getId()).setExtensions(JsonConverter.convertExtensions(verbatim));
 
     // Set raw as indexed
     extractOptValue(verbatim, DwcTerm.eventID).ifPresent(builder::setEventID);

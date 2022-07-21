@@ -51,7 +51,7 @@ public class EventInheritedFieldsFn
       EventInheritedFields leaf = recordsMap.get(allRecords.peek());
 
       EventInheritedRecord eventInheritedRecord =
-          setParentValue(
+          setParentValues(
                   EventInheritedRecord.newBuilder()
                       .setId(leaf.getId())
                       .setEventType(leaf.getEventTypes()),
@@ -60,14 +60,15 @@ public class EventInheritedFieldsFn
               .build();
 
       if (eventInheritedRecord.getLocationID() == null
-          && eventInheritedRecord.getEventType().isEmpty()) {
+          && (eventInheritedRecord.getEventType() == null
+              || eventInheritedRecord.getEventType().isEmpty())) {
         return EventInheritedRecord.newBuilder().build();
       }
 
       return eventInheritedRecord;
     }
 
-    private EventInheritedRecord.Builder setParentValue(
+    private EventInheritedRecord.Builder setParentValues(
         EventInheritedRecord.Builder builder, String parentId, boolean assigned) {
       if (assigned || parentId == null) {
         return builder;
@@ -81,7 +82,7 @@ public class EventInheritedFieldsFn
         assigned = true;
       }
 
-      return setParentValue(builder, parent.getParentEventID(), assigned);
+      return setParentValues(builder, parent.getParentEventID(), assigned);
     }
   }
 
@@ -128,10 +129,15 @@ public class EventInheritedFieldsFn
       eif.id = eventCoreRecord.getId();
       eif.parentEventID = eventCoreRecord.getParentEventID();
       eif.locationID = eventCoreRecord.getLocationID();
-      eif.eventTypes =
-          eventCoreRecord.getParentsLineage().stream()
-              .map(Parent::getEventType)
-              .collect(Collectors.toList());
+
+      if (eventCoreRecord.getParentsLineage() != null
+          && !eventCoreRecord.getParentsLineage().isEmpty()) {
+        eif.eventTypes =
+            eventCoreRecord.getParentsLineage().stream()
+                .filter(p -> p.getEventType() != null)
+                .map(Parent::getEventType)
+                .collect(Collectors.toList());
+      }
       return eif;
     }
   }

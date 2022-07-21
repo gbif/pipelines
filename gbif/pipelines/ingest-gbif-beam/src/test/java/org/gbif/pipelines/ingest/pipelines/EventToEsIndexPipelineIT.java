@@ -199,7 +199,7 @@ public class EventToEsIndexPipelineIT {
               .setParentsLineage(
                   Arrays.asList(
                       Parent.newBuilder().setId(ID).build(),
-                      Parent.newBuilder().setId(SUB_EVENT_ID).build()))
+                      Parent.newBuilder().setId(SUB_EVENT_ID).setEventType("survey").build()))
               .build();
       writer.append(subEventCoreRecord2);
     }
