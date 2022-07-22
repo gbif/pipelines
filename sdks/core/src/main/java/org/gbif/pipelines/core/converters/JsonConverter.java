@@ -103,6 +103,11 @@ public class JsonConverter {
   }
 
   protected static List<String> convertFieldAll(ExtendedRecord extendedRecord) {
+    return convertFieldAll(extendedRecord, true);
+  }
+
+  protected static List<String> convertFieldAll(
+      ExtendedRecord extendedRecord, boolean includeExtensions) {
     Set<String> result = new HashSet<>();
 
     extendedRecord.getCoreTerms().entrySet().stream()
@@ -111,14 +116,16 @@ public class JsonConverter {
         .map(Entry::getValue)
         .forEach(result::add);
 
-    extendedRecord.getExtensions().entrySet().stream()
-        .filter(kv -> INCLUDE_EXT_ALL.contains(kv.getKey()))
-        .map(Entry::getValue)
-        .filter(Objects::nonNull)
-        .flatMap(Collection::stream)
-        .flatMap(map -> map.values().stream())
-        .filter(Objects::nonNull)
-        .forEach(result::add);
+    if (includeExtensions) {
+      extendedRecord.getExtensions().entrySet().stream()
+          .filter(kv -> INCLUDE_EXT_ALL.contains(kv.getKey()))
+          .map(Entry::getValue)
+          .filter(Objects::nonNull)
+          .flatMap(Collection::stream)
+          .flatMap(map -> map.values().stream())
+          .filter(Objects::nonNull)
+          .forEach(result::add);
+    }
 
     return result.stream()
         .flatMap(v -> Stream.of(v.split(ModelUtils.DEFAULT_SEPARATOR)))
@@ -140,6 +147,13 @@ public class JsonConverter {
         .setCore(extendedRecord.getCoreTerms())
         .setParentCoreId(extendedRecord.getParentCoreId())
         .setExtensions(extendedRecord.getExtensions())
+        .build();
+  }
+
+  protected static VerbatimRecord convertVerbatimCoreRecord(ExtendedRecord extendedRecord) {
+    return VerbatimRecord.newBuilder()
+        .setCore(extendedRecord.getCoreTerms())
+        .setParentCoreId(extendedRecord.getParentCoreId())
         .build();
   }
 

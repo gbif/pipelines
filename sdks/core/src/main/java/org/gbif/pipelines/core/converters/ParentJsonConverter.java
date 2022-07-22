@@ -70,8 +70,8 @@ public abstract class ParentJsonConverter {
             .setUniqueKey(identifier.getUniqueKey())
             .setType("event")
             .setEventBuilder(convertToEvent())
-            .setAll(JsonConverter.convertFieldAll(verbatim))
-            .setVerbatim(JsonConverter.convertVerbatimRecord(verbatim));
+            .setAll(JsonConverter.convertFieldAll(verbatim, false))
+            .setVerbatim(JsonConverter.convertVerbatimCoreRecord(verbatim));
 
     mapCreated(builder);
     mapDerivedMetadata(builder);
