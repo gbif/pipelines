@@ -112,7 +112,7 @@ public class EventToEsIndexPipelineIT {
     return ExtendedRecord.newBuilder()
         .setId(id)
         .setCoreRowType(DwcTerm.Event.qualifiedName())
-        .setParentCoreId(parentId)
+        .setCoreId(parentId)
         .setCoreTerms(coreEvent1)
         .build();
   }
@@ -348,15 +348,11 @@ public class EventToEsIndexPipelineIT {
       ext.put(Extension.MEASUREMENT_OR_FACT.getRowType(), Collections.singletonList(ext1));
 
       ExtendedRecord extendedRecord =
-          ExtendedRecord.newBuilder().setId(ID).setParentCoreId(ID).setExtensions(ext).build();
+          ExtendedRecord.newBuilder().setId(ID).setCoreId(ID).setExtensions(ext).build();
       writer.append(extendedRecord);
 
       ExtendedRecord subEventExtendedRecord =
-          ExtendedRecord.newBuilder()
-              .setId(SUB_EVENT_ID)
-              .setParentCoreId(ID)
-              .setExtensions(ext)
-              .build();
+          ExtendedRecord.newBuilder().setId(SUB_EVENT_ID).setCoreId(ID).setExtensions(ext).build();
       writer.append(subEventExtendedRecord);
     }
 

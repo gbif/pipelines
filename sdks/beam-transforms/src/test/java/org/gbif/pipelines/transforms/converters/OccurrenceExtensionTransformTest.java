@@ -180,8 +180,7 @@ public class OccurrenceExtensionTransformTest {
     p.run();
   }
 
-  private List<ExtendedRecord> createCollection(
-      String parentCoreId, boolean isExt, String... idName) {
+  private List<ExtendedRecord> createCollection(String coreId, boolean isExt, String... idName) {
     return Arrays.stream(idName)
         .map(
             x -> {
@@ -195,10 +194,7 @@ public class OccurrenceExtensionTransformTest {
               }
 
               ExtendedRecord.Builder builder =
-                  ExtendedRecord.newBuilder()
-                      .setParentCoreId(parentCoreId)
-                      .setId(array[0])
-                      .setCoreTerms(core);
+                  ExtendedRecord.newBuilder().setCoreId(coreId).setId(array[0]).setCoreTerms(core);
 
               if (isExt && array.length == 4) {
                 Map<String, String> ext = new HashMap<>(32);

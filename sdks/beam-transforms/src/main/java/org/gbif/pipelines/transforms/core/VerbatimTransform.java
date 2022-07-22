@@ -39,11 +39,11 @@ public class VerbatimTransform extends Transform<ExtendedRecord, ExtendedRecord>
 
   /**
    * Maps {@link ExtendedRecord} to key value, where key is {@link ExtendedRecord#getId} or {@link
-   * ExtendedRecord#getParentCoreId}
+   * ExtendedRecord#getCoreId}
    */
   private MapElements<ExtendedRecord, KV<String, ExtendedRecord>> asKv(boolean useParent) {
     return MapElements.into(new TypeDescriptor<KV<String, ExtendedRecord>>() {})
-        .via((ExtendedRecord er) -> KV.of(useParent ? er.getParentCoreId() : er.getId(), er));
+        .via((ExtendedRecord er) -> KV.of(useParent ? er.getCoreId() : er.getId(), er));
   }
 
   /** Maps {@link ExtendedRecord} to key value, where key is {@link ExtendedRecord#getId} */
@@ -51,9 +51,7 @@ public class VerbatimTransform extends Transform<ExtendedRecord, ExtendedRecord>
     return asKv(false);
   }
 
-  /**
-   * Maps {@link ExtendedRecord} to key value, where key is {@link ExtendedRecord#getParentCoreId}
-   */
+  /** Maps {@link ExtendedRecord} to key value, where key is {@link ExtendedRecord#getCoreId} */
   public MapElements<ExtendedRecord, KV<String, ExtendedRecord>> toParentKv() {
     return asKv(true);
   }

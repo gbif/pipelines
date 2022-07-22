@@ -477,8 +477,7 @@ public class EventToEsIndexPipeline {
                       "Read event occurrences verbatim", verbatimTransform.read(occurrencesPathFn))
                   .apply(
                       "Remove verbatim records with null parent ids",
-                      Filter.by(
-                          NotNullOrEmptyFilter.of((ExtendedRecord er) -> er.getParentCoreId())))
+                      Filter.by(NotNullOrEmptyFilter.of((ExtendedRecord er) -> er.getCoreId())))
                   .apply("Map event occurrences verbatim to KV", verbatimTransform.toParentKv())
               : pipeline.apply(
                   "Create empty eventOccurrenceVerbatimCollection",

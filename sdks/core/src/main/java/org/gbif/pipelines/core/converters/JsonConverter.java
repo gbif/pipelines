@@ -145,7 +145,7 @@ public class JsonConverter {
   protected static VerbatimRecord convertVerbatimRecord(ExtendedRecord extendedRecord) {
     return VerbatimRecord.newBuilder()
         .setCore(extendedRecord.getCoreTerms())
-        .setParentCoreId(extendedRecord.getParentCoreId())
+        .setCoreId(extendedRecord.getCoreId())
         .setExtensions(extendedRecord.getExtensions())
         .build();
   }
@@ -153,7 +153,7 @@ public class JsonConverter {
   protected static VerbatimRecord convertVerbatimCoreRecord(ExtendedRecord extendedRecord) {
     return VerbatimRecord.newBuilder()
         .setCore(extendedRecord.getCoreTerms())
-        .setParentCoreId(extendedRecord.getParentCoreId())
+        .setCoreId(extendedRecord.getCoreId())
         .build();
   }
 

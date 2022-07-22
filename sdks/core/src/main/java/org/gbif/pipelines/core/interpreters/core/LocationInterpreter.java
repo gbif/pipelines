@@ -383,7 +383,7 @@ public class LocationInterpreter {
 
   /** Sets the coreId field. */
   public static void setCoreId(ExtendedRecord er, LocationRecord lr) {
-    Optional.ofNullable(er.getParentCoreId()).ifPresent(lr::setCoreId);
+    Optional.ofNullable(er.getCoreId()).ifPresent(lr::setCoreId);
   }
 
   /** Sets the parentEventId field. */

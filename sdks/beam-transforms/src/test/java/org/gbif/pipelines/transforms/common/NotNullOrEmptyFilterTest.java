@@ -16,14 +16,14 @@ public class NotNullOrEmptyFilterTest {
 
     // Test records
     ExtendedRecord withParentCoredId =
-        ExtendedRecord.newBuilder().setId("1").setParentCoreId("1").build();
+        ExtendedRecord.newBuilder().setId("1").setCoreId("1").build();
     ExtendedRecord withOutParentCoredId = ExtendedRecord.newBuilder().setId("1").build();
     List<ExtendedRecord> verbatimRecords = Arrays.asList(withParentCoredId, withOutParentCoredId);
 
     // Filter using Beam function
     Optional<ExtendedRecord> filteredRecord =
         verbatimRecords.stream()
-            .filter(vr -> NotNullOrEmptyFilter.of(ExtendedRecord::getParentCoreId).apply(vr))
+            .filter(vr -> NotNullOrEmptyFilter.of(ExtendedRecord::getCoreId).apply(vr))
             .findFirst();
 
     // The expected records is retrieve after being filtered

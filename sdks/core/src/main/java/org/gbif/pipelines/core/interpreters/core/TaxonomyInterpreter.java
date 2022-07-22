@@ -145,7 +145,7 @@ public class TaxonomyInterpreter {
 
   /** Sets the coreId field. */
   public static void setCoreId(ExtendedRecord er, TaxonRecord tr) {
-    Optional.ofNullable(er.getParentCoreId()).ifPresent(tr::setCoreId);
+    Optional.ofNullable(er.getCoreId()).ifPresent(tr::setCoreId);
   }
 
   /** Sets the parentEventId field. */

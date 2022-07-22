@@ -92,15 +92,14 @@ public abstract class ParentJsonConverter {
         .setInternalId(
             HashConverter.getSha1(
                 metadata.getDatasetKey(),
-                occurrenceJsonRecord.getVerbatim().getParentCoreId(),
+                occurrenceJsonRecord.getVerbatim().getCoreId(),
                 occurrenceJsonRecord.getOccurrenceId()))
         .setJoinRecordBuilder(
             JoinRecord.newBuilder()
                 .setName("occurrence")
                 .setParent(
                     HashConverter.getSha1(
-                        metadata.getDatasetKey(),
-                        occurrenceJsonRecord.getVerbatim().getParentCoreId())))
+                        metadata.getDatasetKey(), occurrenceJsonRecord.getVerbatim().getCoreId())))
         .setOccurrence(occurrenceJsonRecord)
         .setAll(occurrenceJsonRecord.getAll())
         .setVerbatim(occurrenceJsonRecord.getVerbatim())
