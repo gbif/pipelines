@@ -2,7 +2,6 @@ package org.gbif.pipelines.ingest.pipelines;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.IDENTIFIER;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.IDENTIFIER_ABSENT;
-import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -17,8 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.transforms.Create;
-import org.apache.beam.sdk.transforms.Filter;
-import org.apache.beam.sdk.transforms.SerializableFunction;
 import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
@@ -161,10 +158,6 @@ public class VerbatimToEventPipeline {
     // interpretation later
     PCollectionView<Map<String, Map<String, String>>> erWithParentEventsView =
         uniqueRawRecords
-            .apply(
-                Filter.by(
-                    (SerializableFunction<ExtendedRecord, Boolean>)
-                        input -> extractOptValue(input, DwcTerm.parentEventID).isPresent()))
             .apply(verbatimTransform.toParentEventsKv())
             .apply("View to find parents", View.asMap());
     eventCoreTransform.setErWithParentsView(erWithParentEventsView);
