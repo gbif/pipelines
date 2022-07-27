@@ -182,7 +182,6 @@ public class VerbatimToEventPipelineIT {
     for (File file : files) {
       try (DataFileReader<EventCoreRecord> dataFileReader =
           new DataFileReader<>(file, ohrDatumReader)) {
-        Assert.assertTrue(dataFileReader.hasNext());
         while (dataFileReader.hasNext()) {
           EventCoreRecord record = dataFileReader.next();
           Assert.assertNotNull(record);
