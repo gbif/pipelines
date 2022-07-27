@@ -60,7 +60,9 @@ public final class EsConstants {
     public static final String NUMBER_REPLICAS = "0";
     public static final String ANALYSIS =
         "{\"normalizer\":{\"lowercase_normalizer\":{\"type\":\"custom\",\"char_filter\":[],\"filter\":[\"lowercase\"]}},"
-            + "\"analyzer\": {\"lowercase_analyzer\": {\"filter\": [\"lowercase\"],\"tokenizer\": \"keyword\",\"type\": \"custom\",\"char_filter\": []}}}";
+            + "\"analyzer\": {\"lowercase_analyzer\": {\"filter\": [\"lowercase\"],\"tokenizer\": \"keyword\",\"type\": \"custom\",\"char_filter\": []}},"
+            + "\"normalizer\":{\"lowercase_ascii_folding_normalizer\":{\"type\":\"custom\",\"char_filter\":[],\"filter\":[\"lowercase\", \"asciifolding\"]}},"
+            + "\"analyzer\": {\"lowercase_ascii_folding_analyzer\": {\"filter\": [\"lowercase\", \"asciifolding\"],\"tokenizer\": \"keyword\",\"type\": \"custom\",\"char_filter\": []}}}";
     private static final Map<String, String> DEFAULT_INDEXING_SETTINGS = new HashMap<>(5);
 
     static {
