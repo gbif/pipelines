@@ -137,7 +137,9 @@ public class ParentEventExpandTransform<T extends SpecificRecordBase & Record>
             edges.forEach(
                 edge -> {
                   T record = v.getOnly(recordTupleTag, null);
-                  c.output(Edge.of(edge.getFromId(), edge.getToId(), record));
+                  if (record != null) {
+                    c.output(Edge.of(edge.getFromId(), edge.getToId(), record));
+                  }
                 });
           }
         });
