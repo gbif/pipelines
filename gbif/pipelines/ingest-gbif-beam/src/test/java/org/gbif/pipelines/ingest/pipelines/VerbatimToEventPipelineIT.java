@@ -202,26 +202,27 @@ public class VerbatimToEventPipelineIT {
 
     Assert.assertTrue(Files.exists(Paths.get(output)));
 
-    File file =
+    List<File> files =
         Arrays.stream(new File(output).listFiles())
             .filter(x -> x.toString().endsWith(".avro"))
-            .findFirst()
-            .get();
+            .collect(Collectors.toList());
 
-    Assert.assertTrue(file.exists());
+    Assert.assertTrue(files.size() > 0);
 
-    DatumReader<T> ohrDatumReader = new SpecificDatumReader<>(clazz);
-    try (DataFileReader<T> dataFileReader = new DataFileReader<>(file, ohrDatumReader)) {
-      Assert.assertTrue(dataFileReader.hasNext());
-      while (dataFileReader.hasNext()) {
-        T record = dataFileReader.next();
-        Assert.assertNotNull(record);
+    for (File file : files) {
+      Assert.assertTrue(file.exists());
+      DatumReader<T> ohrDatumReader = new SpecificDatumReader<>(clazz);
+      try (DataFileReader<T> dataFileReader = new DataFileReader<>(file, ohrDatumReader)) {
+        while (dataFileReader.hasNext()) {
+          T record = dataFileReader.next();
+          Assert.assertNotNull(record);
 
-        String id = (String) record.get("id");
-        if (record instanceof MetadataRecord) {
-          Assert.assertEquals(DATASET_KEY, id);
-        } else {
-          Assert.assertTrue(id.equals(ID) || id.equals(ID2));
+          String id = (String) record.get("id");
+          if (record instanceof MetadataRecord) {
+            Assert.assertEquals(DATASET_KEY, id);
+          } else {
+            Assert.assertTrue(id.equals(ID) || id.equals(ID2));
+          }
         }
       }
     }
