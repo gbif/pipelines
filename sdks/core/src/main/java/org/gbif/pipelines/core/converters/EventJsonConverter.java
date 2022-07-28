@@ -66,7 +66,8 @@ public class EventJsonConverter {
         .ifPresent(builder::setEventType);
 
     // License
-    JsonConverter.convertLicense(eventCore.getLicense()).ifPresent(builder::setLicense);
+    builder.setLicense(
+        JsonConverter.convertLicense(eventCore.getLicense()).orElse(metadata.getLicense()));
 
     // Multivalue fields
     JsonConverter.convertToMultivalue(eventCore.getSamplingProtocol())
