@@ -105,8 +105,12 @@ public class CoreInterpreter {
       // parent event IDs
       List<Parent> parents = new ArrayList<>();
       while (parentEventID != null) {
-        Map<String, String> parentValues =
-            erWithParents.getOrDefault(parentEventID, new HashMap<>());
+        Map<String, String> parentValues = erWithParents.get(parentEventID);
+
+        if (parentValues == null) {
+          // case when there is no event with that parentEventID
+          break;
+        }
 
         Parent.Builder parentBuilder = Parent.newBuilder().setId(parentEventID);
         VocabularyInterpreter.interpretVocabulary(
