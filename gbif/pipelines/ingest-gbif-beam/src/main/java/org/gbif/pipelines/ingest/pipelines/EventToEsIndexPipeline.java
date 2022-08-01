@@ -116,7 +116,8 @@ import org.slf4j.MDC;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class EventToEsIndexPipeline {
 
-  private static final int MAX_TAXON_PER_EVENTS = 1_000;
+  // constrained until we figure out our needs and we can summarize it
+  private static final int MAX_TAXON_PER_EVENTS = 50;
 
   public static void main(String[] args) {
     EsIndexingPipelineOptions options = PipelinesOptionsFactory.createIndexing(args);

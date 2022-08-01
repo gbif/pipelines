@@ -68,6 +68,8 @@ public class JsonConverter {
               Extension.AUDUBON.getRowType(),
               Extension.IMAGE.getRowType()));
 
+  private static final String OCCURRENCE_EXT = "http://rs.tdwg.org/dwc/terms/Occurrence";
+
   private static final Map<Character, Character> CHAR_MAP = new HashMap<>(2);
 
   static {
@@ -143,18 +145,27 @@ public class JsonConverter {
   }
 
   protected static VerbatimRecord convertVerbatimRecord(ExtendedRecord extendedRecord) {
+    return convertVerbatimRecord(extendedRecord, Collections.emptyList());
+  }
+
+  protected static VerbatimRecord convertVerbatimRecord(
+      ExtendedRecord extendedRecord, List<String> excludeExtensions) {
     return VerbatimRecord.newBuilder()
         .setCore(extendedRecord.getCoreTerms())
         .setCoreId(extendedRecord.getCoreId())
-        .setExtensions(extendedRecord.getExtensions())
+        .setExtensions(filterExtensions(extendedRecord.getExtensions(), excludeExtensions))
         .build();
   }
 
-  protected static VerbatimRecord convertVerbatimCoreRecord(ExtendedRecord extendedRecord) {
-    return VerbatimRecord.newBuilder()
-        .setCore(extendedRecord.getCoreTerms())
-        .setCoreId(extendedRecord.getCoreId())
-        .build();
+  protected static VerbatimRecord convertVerbatimEventRecord(ExtendedRecord extendedRecord) {
+    return convertVerbatimRecord(extendedRecord, Collections.singletonList(OCCURRENCE_EXT));
+  }
+
+  private static Map<String, List<Map<String, String>>> filterExtensions(
+      Map<String, List<Map<String, String>>> exts, List<String> excludedExtensions) {
+    return exts.entrySet().stream()
+        .filter(e -> !excludedExtensions.contains(e.getKey()))
+        .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
   }
 
   protected static Optional<String> convertToMultivalue(List<String> list) {

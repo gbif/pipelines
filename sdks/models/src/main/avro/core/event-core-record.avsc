@@ -5,7 +5,8 @@
     "type" : "record",
     "fields" : [
       {"name": "id", "type": ["null", "string"], "default" : null, "doc":""},
-      {"name": "eventType", "type": ["null", "string"], "default" : null, "doc": ""}
+      {"name": "eventType", "type": ["null", "string"], "default" : null, "doc": ""},
+      {"name": "order", "type": ["null", "int"], "default" : null, "doc": "Order starting from the event to the top parent"}
     ]
   },
   {

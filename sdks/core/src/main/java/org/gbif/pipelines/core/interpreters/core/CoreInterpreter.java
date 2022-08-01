@@ -103,6 +103,7 @@ public class CoreInterpreter {
 
       // parent event IDs
       List<Parent> parents = new ArrayList<>();
+      int order = 1;
       while (parentEventID != null) {
         Map<String, String> parentValues = erWithParents.get(parentEventID);
 
@@ -115,6 +116,7 @@ public class CoreInterpreter {
         VocabularyInterpreter.interpretVocabulary(
                 GbifTerm.eventType, parentValues.get(GbifTerm.eventType.name()), vocabularyService)
             .ifPresent(c -> parentBuilder.setEventType(c.getConcept()));
+        parentBuilder.setOrder(order++);
         parents.add(parentBuilder.build());
 
         parentEventID = parentValues.get(DwcTerm.parentEventID.name());

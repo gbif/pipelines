@@ -193,6 +193,7 @@ public class VerbatimToEventPipelineIT {
     EventCoreRecord record2 = recordsMap.get(ID2);
     Assert.assertEquals(1, record2.getParentsLineage().size());
     Assert.assertEquals(ID, record2.getParentsLineage().get(0).getId());
+    Assert.assertEquals(1, record2.getParentsLineage().get(0).getOrder().intValue());
     Assert.assertNotNull(record2.getParentsLineage().get(0).getEventType());
   }
 
