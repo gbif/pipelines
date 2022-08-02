@@ -183,7 +183,7 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
         if (coreType == DwcTerm.Occurrence || hasOccExt) {
           occurrenceFn.accept(steps);
         }
-        if (coreType == DwcTerm.Event) {
+        if (coreType == DwcTerm.Event && config.addEventSteps) {
           steps.add(StepType.DWCA_TO_VERBATIM.name());
           steps.add(StepType.EVENTS_VERBATIM_TO_INTERPRETED.name());
           steps.add(StepType.EVENTS_INTERPRETED_TO_INDEX.name());
