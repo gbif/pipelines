@@ -54,7 +54,7 @@ nohup spark2-submit --class org.gbif.pipelines.clustering.Cluster  \
   --conf spark.dynamicAllocation.enabled=false \
   --conf spark.sql.shuffle.partitions=1000 \
   --executor-memory 128G --driver-memory 4G \
-  clustering-gbif-2.12.0-SNAPSHOT.jar \
+  clustering-gbif-2.12.2-SNAPSHOT.jar \
   --hive-db prod_h \
   --hive-table-hashed occurrence_clustering_hashed \
   --hive-table-candidates occurrence_clustering_candidates \
