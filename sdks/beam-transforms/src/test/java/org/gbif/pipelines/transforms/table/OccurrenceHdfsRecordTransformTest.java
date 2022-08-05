@@ -194,7 +194,8 @@ public class OccurrenceHdfsRecordTransformTest {
 
     // Should
     OccurrenceHdfsRecord expected = new OccurrenceHdfsRecord();
-    expected.setGbifid("777");
+    expected.setGbifid(777L);
+    // expected.setGbifid("777");
     expected.setDatasetid(Collections.emptyList());
     expected.setDatasetname(Collections.singletonList("setDatasetName"));
     expected.setDwcaextension(

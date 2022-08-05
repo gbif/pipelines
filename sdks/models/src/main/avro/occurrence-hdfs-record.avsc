@@ -4,7 +4,7 @@
   "namespace" : "org.gbif.pipelines.io.avro",
   "fields" : [ {
     "name" : "gbifid",
-    "type" : "string"
+    "type" : "long"
   }, {
     "name" : "v_abstract",
     "type" : [ "string", "null" ]

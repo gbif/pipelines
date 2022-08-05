@@ -42,7 +42,8 @@ public class TableRecordWriterTest {
             return Optional.empty();
           }
           OccurrenceHdfsRecord hdfsRecord = new OccurrenceHdfsRecord();
-          hdfsRecord.setGbifid(id.getGbifId().toString());
+          // hdfsRecord.setGbifid(id.getGbifId().toString());
+          hdfsRecord.setGbifid(id.getGbifId());
           return Optional.of(hdfsRecord);
         };
 
@@ -117,7 +118,8 @@ public class TableRecordWriterTest {
             return Optional.empty();
           }
           OccurrenceHdfsRecord hdfsRecord = new OccurrenceHdfsRecord();
-          hdfsRecord.setGbifid(id.getGbifId().toString());
+          // hdfsRecord.setGbifid(id.getGbifId().toString());
+          hdfsRecord.setGbifid(id.getGbifId());
           return Optional.of(hdfsRecord);
         };
 
