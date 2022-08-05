@@ -95,7 +95,7 @@ public class TableRecordWriterTest {
       while (dataFileReader.hasNext()) {
         OccurrenceHdfsRecord record = dataFileReader.next();
         Assert.assertNotNull(record);
-        Assert.assertEquals(gbifID.toString(), record.getGbifid());
+        Assert.assertEquals(Long.valueOf(gbifID.toString()), record.getGbifid());
       }
     }
 
@@ -172,7 +172,7 @@ public class TableRecordWriterTest {
       while (dataFileReader.hasNext()) {
         OccurrenceHdfsRecord record = dataFileReader.next();
         Assert.assertNotNull(record);
-        Assert.assertEquals(gbifID.toString(), record.getGbifid());
+        Assert.assertEquals(Long.valueOf(gbifID.toString()), record.getGbifid());
       }
     }
 
