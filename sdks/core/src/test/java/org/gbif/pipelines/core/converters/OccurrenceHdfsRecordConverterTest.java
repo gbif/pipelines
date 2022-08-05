@@ -315,7 +315,7 @@ public class OccurrenceHdfsRecordConverterTest {
         OccurrenceHdfsRecordConverter.builder().gbifIdRecord(gbifIdRecord).build().convert();
 
     // Should
-    Assert.assertEquals("1", hdfsRecord.getGbifid());
+    Assert.assertEquals(Long.valueOf(1L), hdfsRecord.getGbifid());
   }
 
   @Test
