@@ -735,26 +735,6 @@
       "items" : [ "string", "null" ]
     }, "null" ]
   }, {
-    "name" : "datasettitle",
-    "type" : [ "string", "null" ]
-  }, {
-    "name" : "parenteventgbifid",
-    "type" : [ {
-      "type" : "array",
-      "items" : [ {
-        "type" : "record",
-        "name" : "ParentEventGbifId",
-        "fields" : [ {
-          "name" : "id",
-          "type" : "string"
-        }, {
-          "name" : "eventtype",
-          "type" : [ "null", "string" ],
-          "default" : null
-        } ]
-      }, "null" ]
-    }, "null" ]
-  }, {
     "name" : "abstract",
     "type" : [ "string", "null" ]
   }, {
@@ -926,6 +906,9 @@
     "name" : "collectionid",
     "type" : [ "string", "null" ]
   }, {
+    "name" : "datasettitle",
+    "type" : [ "string", "null" ]
+  }, {
     "name" : "datasetid",
     "type" : [ {
       "type" : "array",
@@ -1070,9 +1053,9 @@
   }, {
     "name" : "preparations",
     "type" : [ {
-      "type" : "array",
-      "items" : [ "string", "null" ]
-    }, "null" ]
+       "type" : "array",
+       "items" : [ "string", "null" ]
+     }, "null" ]
   }, {
     "name" : "disposition",
     "type" : [ "string", "null" ]
@@ -1090,10 +1073,10 @@
     "type" : [ "string", "null" ]
   }, {
     "name" : "othercatalognumbers",
-    "type" : [ {
-      "type" : "array",
-      "items" : [ "string", "null" ]
-    }, "null" ]
+     "type" : [ {
+       "type" : "array",
+       "items" : [ "string", "null" ]
+     }, "null" ]
   }, {
     "name" : "occurrenceremarks",
     "type" : [ "string", "null" ]
@@ -1157,9 +1140,9 @@
   }, {
     "name" : "samplingprotocol",
     "type" : [ {
-      "type" : "array",
-      "items" : [ "string", "null" ]
-    }, "null" ]
+       "type" : "array",
+       "items" : [ "string", "null" ]
+     }, "null" ]
   }, {
     "name" : "samplesizevalue",
     "type" : [ "double", "null" ]
@@ -1607,22 +1590,6 @@
   }, {
     "name" : "iucnredlistcategory",
     "type" : [ "string", "null" ]
-  }, {
-    "name" : "eventtype",
-    "type" : [ {
-      "type" : "record",
-      "name" : "EventType",
-      "fields" : [ {
-        "name" : "concept",
-        "type" : "string"
-      }, {
-        "name" : "lineage",
-        "type" : [ {
-          "type" : "array",
-          "items" : [ "string", "null" ]
-        }, "null" ]
-      } ]
-    }, "null" ]
   }, {
     "name" : "ext_multimedia",
     "type" : [ "string", "null" ]
