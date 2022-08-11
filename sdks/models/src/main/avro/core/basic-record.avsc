@@ -1,5 +1,5 @@
 /**
- * Represents the interpreted fields of terms related to temporal.
+ * Represents the interpreted fields of terms related to main/common/basic occurrence dwc terms.
  */
 [
   {
@@ -12,15 +12,6 @@
     ]
   },
   {
-    "name":"VocabularyConcept",
-    "namespace":"org.gbif.pipelines.io.avro",
-    "type":"record",
-    "fields":[
-      {"name": "concept", "type": ["null", "string"] },
-      {"name": "lineage", "type": {"type" : "array", "items" : "string"} }
-    ]
-  },
-  {
     "name": "BasicRecord",
     "namespace": "org.gbif.pipelines.io.avro",
     "type": "record",
@@ -28,7 +19,6 @@
     "fields": [
       {"name": "id", "type": "string", "doc": "Pipelines identifier"},
       {"name": "created", "type": ["null", "long"], "default" : null, "doc":"The timestamp the record was created"},
-      {"name": "gbifId", "type": ["null", "long"], "default" : null, "doc": "GBIF internal identifier"},
       {"name": "basisOfRecord", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/basisOfRecord"},
       {"name": "sex", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/sex"},
       {"name": "lifeStage", "type": ["null", "VocabularyConcept"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/lifeStage"},
@@ -50,7 +40,6 @@
       {"name": "recordedByIds", "type": {"type" : "array", "items" : "AgentIdentifier"}, "default" : []},
       {"name": "recordedBy", "type": {"type" : "array", "items" : "string"}, "default" : []},
       {"name": "occurrenceStatus", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/occurrenceStatus"},
-      {"name": "isClustered", "type": ["null", "boolean"], "default" : null},
       {"name": "datasetID", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/dwc/terms/datasetID"},
       {"name": "datasetName", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/dwc/terms/datasetName"},
       {"name": "otherCatalogNumbers", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/dwc/terms/otherCatalogNumbers"},

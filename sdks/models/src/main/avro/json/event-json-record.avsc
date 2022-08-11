@@ -1,0 +1,89 @@
+/** Represents the event json object for indexing */
+[
+  {
+    "name" : "Parent",
+    "namespace" : "org.gbif.pipelines.io.avro.json",
+    "type" : "record",
+    "fields" : [
+      {"name": "id", "type": ["null", "string"], "default" : null, "doc":""},
+      {"name": "eventType", "type": ["null", "string"], "default" : null, "doc": ""}
+    ]
+  },
+  {
+    "name":"EventJsonRecord",
+    "namespace":"org.gbif.pipelines.io.avro.json",
+    "type":"record",
+    "doc":"Additional information",
+    "fields":[
+      // Internal
+      {"name":"id","type":"string","default":null,"doc":""},
+      {"name":"created","type":["null","string"],"default":null,"doc":""},
+      {"name": "parentsLineage", "type": {"type" : "array", "items" : "Parent"}, "default" : [], "doc":""},
+      {"name":"license","type":["null","string"],"default":null,"doc":""},
+      //Derived metadata
+      {"name":"derivedMetadata","type":["null","DerivedMetadataRecord"],"default":null,"doc":""},
+      // Record-level
+      {"name":"eventType","type":["null","VocabularyConcept"],"default":null,"doc":""},
+      {"name":"references","type":["null","string"],"default":null,"doc":""},
+      {"name":"institutionCode","type":["null","string"],"default":null,"doc":""},
+      {"name":"datasetID","type":{"type":"array","items":"string"},"default":null,"doc":""},
+      {"name":"datasetName","type":{"type":"array","items":"string"},"default":null,"doc":""},
+      {"name":"modified","type":["null","string"],"default":null,"doc":""},
+      // Event
+      {"name":"samplingProtocol","type":{"type":"array","items":"string"},"default":null,"doc":""},
+      {"name":"samplingProtocolJoined","type":["null","string"],"default":null,"doc":""},
+      {"name":"eventID","type":["null","string"],"default":null,"doc":""},
+      {"name":"parentEventID","type":["null","string"],"default":null,"doc":""},
+      {"name":"sampleSizeUnit","type":["null","string"],"default":null,"doc":""},
+      {"name":"sampleSizeValue","type":["null","double"],"default":null,"doc":""},
+      {"name":"year","type":["null","int"],"default":null,"doc":""},
+      {"name":"month","type":["null","int"],"default":null,"doc":""},
+      {"name":"day","type":["null","int"],"default":null,"doc":""},
+      {"name":"eventDate","type":["null","EventDate"],"default":null,"doc":""},
+      {"name":"eventDateSingle","type":["null","string"],"default":null,"doc":""},
+      {"name":"startDayOfYear","type":["null","int"],"default":null,"doc":""},
+      {"name":"endDayOfYear","type":["null","int"],"default":null,"doc":""},
+      {"name": "locationID", "type": ["null", "string"], "default" : null, "doc": ""},
+      // Location
+      {"name":"locality","type":["null","string"],"default":null,"doc":""},
+      {"name":"continent","type":["null","string"],"default":null,"doc":""},
+      {"name":"waterBody","type":["null","string"],"default":null,"doc":""},
+      {"name":"countryCode","type":["null","string"],"default":null,"doc":""},
+      {"name":"country","type":["null","string"],"default":null,"doc":""},
+      {"name":"stateProvince","type":["null","string"],"default":null,"doc":""},
+      {"name":"minimumElevationInMeters","type":["null","double"],"default":null,"doc":""},
+      {"name":"maximumElevationInMeters","type":["null","double"],"default":null,"doc":""},
+      {"name":"verbatimElevation","type":["null","string"],"default":null,"doc":""},
+      {"name":"minimumDepthInMeters","type":["null","double"],"default":null,"doc":""},
+      {"name":"maximumDepthInMeters","type":["null","double"],"default":null,"doc":""},
+      {"name":"verbatimDepth","type":["null","string"],"default":null,"doc":""},
+      {"name":"minimumDistanceAboveSurfaceInMeters","type":["null","double"],"default":null,"doc":""},
+      {"name":"maximumDistanceAboveSurfaceInMeters","type":["null","double"],"default":null,"doc":""},
+      {"name":"coordinateUncertaintyInMeters","type":["null","double"],"default":null,"doc":""},
+      {"name":"coordinatePrecision","type":["null","double"],"default":null,"doc":""},
+      {"name":"coordinates","type":["null","Coordinates"],"default":null,"doc":""},
+      {"name":"scoordinates","type":["null","string"],"default":null,"doc":""},
+      {"name":"decimalLatitude","type":["null","double"],"default":null,"doc":""},
+      {"name":"decimalLongitude","type":["null","double"],"default":null,"doc":""},
+      {"name":"gadm","type":["null","GadmFeatures"],"default":null,"doc":""},
+      {"name":"hasCoordinate","type":["null","boolean"],"default":null,"doc":""},
+      {"name":"repatriated","type":["null","boolean"],"default":null,"doc":""},
+      {"name":"hasGeospatialIssue","type":["null","boolean"],"default":null,"doc":""},
+      {"name":"footprintWKT","type":["null","string"],"default":null,"doc":""},
+      {"name":"publishingCountry","type":["null","string"],"default":null,"doc":""},
+      //Taxonomy
+      {"name":"gbifClassification","type":["null","GbifClassification"],"default":null,"doc":""},
+      // Multimedia
+      {"name":"mediaTypes","type":{"type":"array","items":"string"},"default":null,"doc":""},
+      {"name":"mediaLicenses","type":{"type":"array","items":"string"},"default":null,"doc":""},
+      {"name":"multimediaItems","type":{"type":"array","items":"Multimedia"},"default":null,"doc":""},
+      // MeasurementOrFact
+      {"name":"measurementOrFactTypes","type":{"type":"array","items":"string"},"default":null,"doc":""},
+      {"name":"measurementOrFactMethods","type":{"type":"array","items":"string"},"default":null,"doc":""},
+      // Extra
+      {"name":"issues","type":{"type":"array","items":"string"},"default":[],"doc":""},
+      {"name":"notIssues","type":{"type":"array","items":"string"},"default":[],"doc":""},
+      {"name":"extensions","type":{"type":"array","items":"string"},"default":[],"doc":""}
+    ]
+  }
+]

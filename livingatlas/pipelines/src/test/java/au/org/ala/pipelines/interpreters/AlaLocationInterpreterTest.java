@@ -17,6 +17,7 @@ import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
+import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.core.interpreters.core.LocationInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
@@ -48,7 +49,7 @@ public class AlaLocationInterpreterTest {
               alaConfig.getLocationInfoConfig().getStateProvinceNamesFile());
     } catch (Exception e) {
       log.error(e.getMessage(), e);
-      throw new RuntimeException(e.getMessage());
+      throw new PipelinesException(e.getMessage());
     }
   }
 

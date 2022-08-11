@@ -6,6 +6,7 @@ import org.apache.beam.sdk.io.hdfs.HadoopFileSystemOptions;
 import org.apache.beam.sdk.options.*;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
+import org.gbif.dwc.terms.DwcTerm;
 
 /** Main pipeline options necessary for work with GBIF data and Apache Avro binary format */
 public interface BasePipelineOptions extends PipelineOptions {
@@ -73,6 +74,12 @@ public interface BasePipelineOptions extends PipelineOptions {
   boolean getUseMetadataWsCalls();
 
   void setUseMetadataWsCalls(boolean useMetadataWsCalls);
+
+  @Description("DwcTerm Core term")
+  @Default.Enum("Occurrence")
+  DwcTerm getDwcCore();
+
+  void setDwcCore(DwcTerm dwcCoreTerm);
 
   /** A {@link DefaultValueFactory} which locates a default directory. */
   class DefaultDirectoryFactory implements DefaultValueFactory<String> {

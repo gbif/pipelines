@@ -1,6 +1,7 @@
 package org.gbif.pipelines.core.interpreters.core;
 
 import static org.gbif.pipelines.core.utils.ModelUtils.addIssueSet;
+import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.hasValue;
 
@@ -119,5 +120,15 @@ public class TemporalInterpreter implements Serializable {
 
       addIssueSet(tr, parsed.getIssues());
     }
+  }
+
+  /** Sets the coreId field. */
+  public static void setCoreId(ExtendedRecord er, TemporalRecord tr) {
+    Optional.ofNullable(er.getCoreId()).ifPresent(tr::setCoreId);
+  }
+
+  /** Sets the parentEventId field. */
+  public static void setParentEventId(ExtendedRecord er, TemporalRecord tr) {
+    extractOptValue(er, DwcTerm.parentEventID).ifPresent(tr::setParentId);
   }
 }

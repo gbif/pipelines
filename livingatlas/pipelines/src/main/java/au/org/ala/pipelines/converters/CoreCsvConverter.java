@@ -3,11 +3,14 @@ package au.org.ala.pipelines.converters;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.io.avro.IndexRecord;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class CoreCsvConverter {
 
   private static final String RAW = "raw_";

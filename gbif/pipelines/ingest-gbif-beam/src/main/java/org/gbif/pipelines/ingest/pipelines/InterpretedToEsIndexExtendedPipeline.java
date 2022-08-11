@@ -4,11 +4,12 @@ import java.util.Set;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.gbif.api.model.pipelines.StepType;
+import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.pipelines.common.beam.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.ingest.utils.EsIndexUtils;
 import org.slf4j.MDC;
@@ -71,9 +72,16 @@ public class InterpretedToEsIndexExtendedPipeline {
   public static void run(EsIndexingPipelineOptions options) {
     MDC.put("datasetKey", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
-    MDC.put("step", StepType.INTERPRETED_TO_INDEX.name());
+    MDC.put("step", options.getStepType().name());
 
-    run(options, () -> InterpretedToEsIndexPipeline.run(options));
+    if (DatasetType.OCCURRENCE == options.getDatasetType()) {
+      run(options, () -> OccurrenceToEsIndexPipeline.run(options));
+    } else if (DatasetType.SAMPLING_EVENT == options.getDatasetType()) {
+      run(options, () -> EventToEsIndexPipeline.run(options));
+    } else {
+      throw new IllegalArgumentException(
+          "DatasetType" + options.getDatasetType() + " nor recognized for this pipeline");
+    }
 
     FsUtils.removeTmpDirectoryAfterShutdown(PathBuilder.getTempDir(options));
     log.info("Finished main indexing pipeline");
@@ -91,8 +99,7 @@ public class InterpretedToEsIndexExtendedPipeline {
     if (options.getProperties() != null) {
       config =
           FsUtils.readConfigFile(
-              options.getHdfsSiteConfig(),
-              options.getCoreSiteConfig(),
+              HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()),
               options.getProperties(),
               PipelinesConfig.class);
 

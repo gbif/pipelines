@@ -30,6 +30,8 @@ fs:
   hdfs:
     fsPath: hdfs://localhost:8020
 
+copy:
+  copyPath: "/data/dwca-export"
 recordedByConfig:
   cacheSizeMb: 64
 alaNameMatch:
@@ -82,10 +84,11 @@ geocodeConfig:
 gbifConfig:
   vocabularyConfig:
     vocabulariesPath: /data/pipelines-vocabularies/
-    lifeStageVocabName: LifeStage
-    establishmentMeansVocabName: EstablishmentMeans
-    pathwayVocabName: Pathway
-    degreeOfEstablishmentVocabName: DegreeOfEstablishment
+    vocabulariesNames:
+      http://rs.tdwg.org/dwc/terms/degreeOfEstablishment: DegreeOfEstablishment
+      http://rs.tdwg.org/dwc/terms/lifeStage: LifeStage
+      http://rs.tdwg.org/dwc/terms/establishmentMeans: EstablishmentMeans
+      http://rs.tdwg.org/dwc/terms/pathway: Pathway
 
 #locationInfoConfig:
 #    countryNamesFile : /data/pipelines-data/resources/countries.txt

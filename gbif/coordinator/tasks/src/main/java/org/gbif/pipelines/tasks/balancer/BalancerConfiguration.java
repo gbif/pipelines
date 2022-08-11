@@ -31,4 +31,7 @@ public class BalancerConfiguration {
 
   @Parameter(names = "--validator-repository-path")
   public String validatorRepositoryPath;
+
+  @Parameter(names = "--events-enabled")
+  public boolean eventsEnabled = false;
 }

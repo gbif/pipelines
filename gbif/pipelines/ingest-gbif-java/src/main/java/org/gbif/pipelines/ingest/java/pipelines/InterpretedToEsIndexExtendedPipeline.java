@@ -46,7 +46,7 @@ import org.slf4j.MDC;
  * --datasetId=${UUID} \
  * --attempt=1 \
  * --runner=SparkRunner \
- * --metaFileName=interpreted-to-index.yml \
+ * --metaFileName=occurrence-to-index.yml \
  * --inputPath=${OUT} \
  * --targetPath=${OUT} \
  * --esSchemaPath=/gbif/pipelines/ingest-gbif-beam/src/main/resources/elasticsearch/es-occurrence-schema.json \
@@ -92,7 +92,7 @@ public class InterpretedToEsIndexExtendedPipeline {
     MDC.put("step", StepType.INTERPRETED_TO_INDEX.name());
 
     org.gbif.pipelines.ingest.pipelines.InterpretedToEsIndexExtendedPipeline.run(
-        options, () -> InterpretedToEsIndexPipeline.run(options, executor));
+        options, () -> OccurrenceToEsIndexPipeline.run(options, executor));
 
     FsUtils.removeTmpDirectory(PathBuilder.getTempDir(options));
     log.info("Finished main indexing pipeline");

@@ -1,12 +1,14 @@
 package org.gbif.pipelines.common.beam.utils;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.DIRECTORY_NAME;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.EVENT;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE;
 
 import com.google.common.base.Strings;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.Path;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.common.beam.options.BasePipelineOptions;
 
@@ -38,29 +40,29 @@ public class PathBuilder {
 
   /**
    * Uses pattern for path -
-   * "{targetPath}/{datasetId}/{attempt}/interpreted/{name}/interpret-{uniqueId}"
+   * "{targetPath}/{datasetId}/{attempt}/{coreTerm}/{name}/interpret-{uniqueId}" The core term path
+   * is empty if it is an occurrence.
    *
    * @return string path to interpretation
    */
   public static String buildPathInterpretUsingTargetPath(
-      BasePipelineOptions options, String name, String uniqueId) {
+      BasePipelineOptions options, DwcTerm core, String name, String uniqueId) {
     return buildPath(
-            buildDatasetAttemptPath(options, DIRECTORY_NAME, false),
+            buildDatasetAttemptPath(options, core.simpleName().toLowerCase(), false),
             name,
             PipelinesVariables.Pipeline.Interpretation.FILE_NAME + uniqueId)
         .toString();
   }
 
   /**
-   * Uses pattern for path -
-   * "{targetPath}/{datasetId}/{attempt}/interpreted/{name}/interpret-{uniqueId}"
+   * Uses pattern for path - "{targetPath}/{datasetId}/{attempt}/{core}/{name}/interpret-{uniqueId}"
    *
    * @return string path to interpretation
    */
   public static String buildPathInterpretUsingInputPath(
-      BasePipelineOptions options, String name, String uniqueId) {
+      BasePipelineOptions options, DwcTerm core, String name, String uniqueId) {
     return buildPath(
-            buildDatasetAttemptPath(options, DIRECTORY_NAME, true),
+            buildDatasetAttemptPath(options, core.simpleName().toLowerCase(), true),
             name,
             PipelinesVariables.Pipeline.Interpretation.FILE_NAME + uniqueId)
         .toString();
@@ -73,10 +75,34 @@ public class PathBuilder {
    * @return path to the directory where the occurrence hdfs view is stored
    */
   public static String buildFilePathViewUsingInputPath(
-      BasePipelineOptions options, String type, String uniqueId) {
+      BasePipelineOptions options,
+      PipelinesVariables.Pipeline.Interpretation.RecordType recordType,
+      String type,
+      String uniqueId) {
     return buildPath(
-            buildDatasetAttemptPath(options, DIRECTORY_NAME, true), type.toLowerCase(), uniqueId)
+            buildDatasetAttemptPath(options, recordTypeViewPath(recordType), true),
+            type.toLowerCase(),
+            uniqueId)
         .toString();
+  }
+
+  /**
+   * Builds the target base path of a hdfs view.
+   *
+   * @param options options pipeline options
+   * @return path to the directory where the occurrence hdfs view is stored
+   */
+  public static String buildFilePathViewUsingInputPath(
+      BasePipelineOptions options,
+      PipelinesVariables.Pipeline.Interpretation.RecordType recordType) {
+    return buildDatasetAttemptPath(options, recordTypeViewPath(recordType), true);
+  }
+
+  /** HDFS View of a RecordType. */
+  public static String recordTypeViewPath(
+      PipelinesVariables.Pipeline.Interpretation.RecordType recordType) {
+    return recordType.name().toLowerCase()
+        + (recordType == OCCURRENCE || recordType == EVENT ? "_table" : "");
   }
 
   /**

@@ -1,7 +1,7 @@
 package au.org.ala.pipelines.java;
 
 import static java.util.stream.Collectors.groupingBy;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.ALL_AVRO;
 
 import au.org.ala.pipelines.beam.IndexRecordPipeline;
 import au.org.ala.pipelines.options.SpeciesLevelPipelineOptions;
@@ -22,9 +22,12 @@ import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.DatumWriter;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.io.AvroReader;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.ALATaxonRecord;
 import org.gbif.pipelines.io.avro.SpeciesListRecord;
@@ -48,6 +51,8 @@ import org.gbif.pipelines.io.avro.TaxonProfile;
  */
 @Slf4j
 public class SpeciesListPipeline {
+
+  private static final DwcTerm CORE_TERM = DwcTerm.Occurrence;
 
   public static void main(String[] args) throws Exception {
     VersionInfo.print();
@@ -76,7 +81,8 @@ public class SpeciesListPipeline {
     // get filesystem
     FileSystem fs =
         FsUtils.getFileSystem(
-            options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getInputPath());
+            HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()),
+            options.getInputPath());
 
     DatumWriter<TaxonProfile> datumWriter = new GenericDatumWriter<>(TaxonProfile.getClassSchema());
     try (OutputStream output = fs.create(new Path(avroPath));
@@ -101,12 +107,14 @@ public class SpeciesListPipeline {
 
       log.info("Running species list pipeline for dataset {}", options.getDatasetId());
       UnaryOperator<String> pathFn =
-          t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
+          t -> PathBuilder.buildPathInterpretUsingTargetPath(options, CORE_TERM, t, ALL_AVRO);
+
+      HdfsConfigs hdfsConfigs =
+          HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig());
 
       List<SpeciesListRecord> speciesListRecords =
           AvroReader.readObjects(
-              options.getHdfsSiteConfig(),
-              options.getCoreSiteConfig(),
+              hdfsConfigs,
               SpeciesListRecord.class,
               options.getSpeciesAggregatesPath() + options.getSpeciesListCachePath());
 
@@ -116,8 +124,7 @@ public class SpeciesListPipeline {
 
       List<ALATaxonRecord> alaTaxonRecords =
           AvroReader.readObjects(
-              options.getHdfsSiteConfig(),
-              options.getCoreSiteConfig(),
+              hdfsConfigs,
               ALATaxonRecord.class,
               pathFn.apply(ALATaxonomyTransform.builder().create().getBaseName()));
 
@@ -137,7 +144,7 @@ public class SpeciesListPipeline {
           .filter(taxonProfile -> taxonProfile != null && taxonProfile.getId() != null)
           .collect(Collectors.toMap(TaxonProfile::getId, taxon -> taxon));
     } catch (Exception e) {
-      throw new RuntimeException(e);
+      throw new PipelinesException(e);
     }
   }
 

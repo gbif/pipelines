@@ -51,3 +51,6 @@ defaultDateFormat:
 extensionsAllowedForVerbatimSet:
   - http://rs.tdwg.org/ac/terms/Multimedia
   - http://data.ggbn.org/schemas/ggbn/terms/Amplification
+vocabularyConfig:
+  vocabulariesNames:
+    http://rs.tdwg.org/dwc/terms/degreeOfEstablishment: degreeOfEstablishment

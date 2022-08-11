@@ -19,9 +19,11 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.gbif.dwc.terms.Term;
+import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.ModelUtils;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.jetbrains.annotations.NotNull;
@@ -70,7 +72,8 @@ public class ValidationUtils {
     }
 
     FileSystem fs =
-        FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
+        FileSystemFactory.getInstance(
+                HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()))
             .getFs(options.getInputPath());
 
     return checkReadyForIndexing(
@@ -131,7 +134,8 @@ public class ValidationUtils {
   /** Checks a dataset can be indexed. */
   public static boolean isInterpretationAvailable(InterpretationPipelineOptions options) {
     FileSystem fs =
-        FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
+        FileSystemFactory.getInstance(
+                HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()))
             .getFs(options.getInputPath());
 
     return isInterpretationAvailable(
@@ -152,7 +156,8 @@ public class ValidationUtils {
   public static ValidationResult checkValidationFile(InterpretationPipelineOptions options) {
 
     FileSystem fs =
-        FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
+        FileSystemFactory.getInstance(
+                HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()))
             .getFs(options.getInputPath());
 
     return checkValidationFile(
@@ -232,7 +237,8 @@ public class ValidationUtils {
    */
   public static Long getDuplicateKeyCount(UUIDPipelineOptions options) throws Exception {
     FileSystem fs =
-        FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
+        FileSystemFactory.getInstance(
+                HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()))
             .getFs(options.getInputPath());
     String validateFilePath = getValidationFilePath(options);
     Path metrics = new Path(validateFilePath);
@@ -258,7 +264,8 @@ public class ValidationUtils {
   public static Long getInvalidRecordCount(UUIDPipelineOptions options) {
 
     FileSystem fs =
-        FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
+        FileSystemFactory.getInstance(
+                HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()))
             .getFs(options.getInputPath());
     String validateFilePath = getValidationFilePath(options);
     Path metrics = new Path(validateFilePath);
@@ -378,7 +385,7 @@ public class ValidationUtils {
                 datasetID, termList, source.getId());
 
         log.warn(errorMessage);
-        throw new RuntimeException(errorMessage);
+        throw new PipelinesException(errorMessage);
       } else {
         return "";
       }
@@ -422,14 +429,14 @@ public class ValidationUtils {
   /**
    * Checks that verbatim avro is present using the inputPath value of options.
    *
-   * @param options
    * @return true if verbatim avro is available
    */
   public static boolean isVerbatimAvroAvailable(InterpretationPipelineOptions options) {
     boolean verbatimAvroAvailable = false;
     try {
       FileSystem fs =
-          FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
+          FileSystemFactory.getInstance(
+                  HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()))
               .getFs(options.getInputPath());
       verbatimAvroAvailable = ALAFsUtils.exists(fs, options.getInputPath());
     } catch (Exception e) {
@@ -441,7 +448,6 @@ public class ValidationUtils {
   /**
    * Checks that verbatim avro is present using the inputPath value of options.
    *
-   * @param options
    * @return true if verbatim avro is available
    */
   public static boolean isInterpretedMultimediaAvroAvailable(
@@ -449,7 +455,8 @@ public class ValidationUtils {
     boolean multimediaAvroAvailable = false;
     try {
       FileSystem fs =
-          FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
+          FileSystemFactory.getInstance(
+                  HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()))
               .getFs(options.getInputPath());
 
       String path = PathBuilder.buildDatasetAttemptPath(options, "multimedia", true);

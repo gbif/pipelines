@@ -34,15 +34,14 @@ import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesAbcdMessage;
 import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
 import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
-import org.gbif.common.messaging.api.messages.PipelinesIndexedMessage;
-import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
-import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
+import org.gbif.common.messaging.api.messages.PipelinesRunnerMessage;
 import org.gbif.common.messaging.api.messages.PipelinesXmlMessage;
 import org.gbif.crawler.constants.CrawlerNodePaths;
 import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
 import org.gbif.pipelines.common.configs.BaseConfiguration;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.common.utils.ZookeeperUtils;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.utils.file.properties.PropertiesUtil;
 import org.gbif.validator.api.Validation;
@@ -78,7 +77,6 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
   @NonNull private final I message;
   @NonNull private final StepHandler<I, O> handler;
   private final ValidationWsClient validationClient;
-
   @Builder.Default private final boolean isValidator = false;
 
   static {
@@ -108,12 +106,13 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
   public void handleMessage() {
 
     String datasetKey = message.getDatasetUuid().toString();
-    O outgoingMessage = handler.createOutgoingMessage(message);
     Optional<TrackingInfo> trackingInfo = Optional.empty();
 
     try (MDCCloseable mdc = MDC.putCloseable("datasetKey", datasetKey);
         MDCCloseable mdc1 = MDC.putCloseable("attempt", message.getAttempt().toString());
         MDCCloseable mdc2 = MDC.putCloseable("step", stepType.name())) {
+
+      O outgoingMessage = handler.createOutgoingMessage(message);
 
       if (!handler.isMessageCorrect(message) || isValidatorAborted()) {
         deleteValidatorZkPath(datasetKey);
@@ -322,9 +321,9 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
     String path =
         HdfsUtils.buildOutputPathAsString(
             config.getRepositoryPath(), ti.datasetId, ti.attempt, config.getMetaFileName());
-    List<MetricInfo> metricInfos =
-        HdfsUtils.readMetricsFromMetaFile(
-            config.getHdfsSiteConfig(), config.getCoreSiteConfig(), path);
+    HdfsConfigs hdfsConfigs =
+        HdfsConfigs.create(config.getHdfsSiteConfig(), config.getCoreSiteConfig());
+    List<MetricInfo> metricInfos = HdfsUtils.readMetricsFromMetaFile(hdfsConfigs, path);
     PipelineStepParameters psp = new PipelineStepParameters(status, metricInfos);
     try {
       Runnable r =
@@ -353,14 +352,8 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
         || message instanceof PipelinesDwcaMessage) {
       return StepRunner.STANDALONE.name();
     }
-    if (message instanceof PipelinesIndexedMessage) {
-      return ((PipelinesIndexedMessage) message).getRunner();
-    }
-    if (message instanceof PipelinesInterpretedMessage) {
-      return ((PipelinesInterpretedMessage) message).getRunner();
-    }
-    if (message instanceof PipelinesVerbatimMessage) {
-      return ((PipelinesVerbatimMessage) message).getRunner();
+    if (message instanceof PipelinesRunnerMessage) {
+      return ((PipelinesRunnerMessage) message).getRunner();
     }
     return StepRunner.UNKNOWN.name();
   }

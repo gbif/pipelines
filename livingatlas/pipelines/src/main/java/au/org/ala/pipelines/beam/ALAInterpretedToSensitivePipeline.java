@@ -1,7 +1,6 @@
 package au.org.ala.pipelines.beam;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.DIRECTORY_NAME;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.ALL_AVRO;
 
 import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.kvs.ALAPipelinesConfigFactory;
@@ -26,10 +25,12 @@ import org.apache.beam.sdk.transforms.join.CoGroupByKey;
 import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.transforms.core.LocationTransform;
@@ -55,7 +56,8 @@ public class ALAInterpretedToSensitivePipeline {
 
     ALAPipelinesConfig config =
         ALAPipelinesConfigFactory.getInstance(
-                options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getProperties())
+                HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()),
+                options.getProperties())
             .get();
 
     MDC.put("datasetId", options.getDatasetId());
@@ -75,9 +77,10 @@ public class ALAInterpretedToSensitivePipeline {
     log.info("Adding step 1: Options");
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
     UnaryOperator<String> inputPathFn =
-        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
+        t ->
+            PathBuilder.buildPathInterpretUsingTargetPath(options, DwcTerm.Occurrence, t, ALL_AVRO);
     UnaryOperator<String> outputPathFn =
-        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, id);
+        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, DwcTerm.Occurrence, t, id);
 
     Pipeline p = Pipeline.create(options);
 
@@ -152,10 +155,11 @@ public class ALAInterpretedToSensitivePipeline {
             options.getInputPath(),
             options.getDatasetId(),
             options.getAttempt().toString(),
-            DIRECTORY_NAME,
+            DwcTerm.Occurrence.simpleName().toLowerCase(),
             "ala_sensitive_data");
 
     // delete output directories
-    FsUtils.deleteIfExist(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), path);
+    FsUtils.deleteIfExist(
+        HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()), path);
   }
 }

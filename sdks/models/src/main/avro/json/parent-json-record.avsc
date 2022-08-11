@@ -1,0 +1,49 @@
+/** Represents the main json object for dwca record indexing */
+[
+  {
+    "name":"JoinRecord",
+    "namespace":"org.gbif.pipelines.io.avro.json",
+    "type":"record",
+    "fields":[
+      {"name":"name","type":["null","string"],"default":null,"doc":""},
+      {"name":"parent","type":["null","string"],"default":null,"doc":""}
+    ]
+  },
+  {
+    "name":"ParentJsonRecord",
+    "namespace":"org.gbif.pipelines.io.avro.json",
+    "type":"record",
+    "doc":"Additional information",
+    "fields":[
+      // Full-text search field
+      {"name":"all","type":{"type":"array","items":"string"},"default":[]},
+      // Internal
+      {"name":"type","type":"string","default":null,"doc":""},
+      {"name":"id","type":"string","default":null,"doc":""},
+      {"name":"internalId","type":["null","string"],"default":null,"doc":""},
+      {"name":"uniqueKey","type":["null","string"],"default":null,"doc":""},
+      {"name":"firstLoaded","type":["null","string"],"default":null,"doc":""},
+      {"name":"lastCrawled","type":["null","string"],"default":null,"doc":""},
+      {"name":"created","type":["null","string"],"default":null,"doc":""},
+      {"name":"crawlId","type":["null","int"],"default":null,"doc":""},
+      // Metadata
+      {"name":"metadata","type":["null","MetadataJsonRecord"],"default":null,"doc":""},
+      // DerivedMetadata
+      {"name":"derivedMetadata","type":["null","DerivedMetadataRecord"],"default":null,"doc":""},
+      // LocationInherited
+      {"name":"locationInherited","type":["null","LocationInheritedRecord"],"default":null,"doc":""},
+      // TemporalInherited
+      {"name":"temporalInherited","type":["null","TemporalInheritedRecord"],"default":null,"doc":""},
+      // EventInherited
+      {"name":"eventInherited","type":["null","EventInheritedRecord"],"default":null,"doc":""},
+      // Event
+      {"name":"event","type":["null","EventJsonRecord"],"default":null,"doc":""},
+      // Occurrence
+      {"name":"occurrence","type":["null","OccurrenceJsonRecord"],"default":null,"doc":""},
+      // Raw
+      {"name":"verbatim","type":["null","VerbatimRecord"],"default":null,"doc":""},
+      // ES document join field type
+      {"name":"joinRecord","type":["null","JoinRecord"],"default":null,"doc":""}
+    ]
+  }
+]

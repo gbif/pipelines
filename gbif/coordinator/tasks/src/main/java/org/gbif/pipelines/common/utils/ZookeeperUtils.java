@@ -49,8 +49,9 @@ public class ZookeeperUtils {
       if (checkExists(curator, path)) {
         InterProcessMutex mutex = new InterProcessMutex(curator, path);
         mutex.acquire();
-        int counter = getAsInteger(curator, crawlId, SIZE, isValidator).orElse(0) + 1;
-        if (counter >= size) {
+        int counter = getAsInteger(curator, crawlId, SIZE, isValidator).orElse(size) - 1;
+
+        if (counter <= 0) {
 
           log.info("Delete zookeeper node, crawlId - {}", crawlId);
           curator.delete().deletingChildrenIfNeeded().forPath(path);
@@ -58,6 +59,7 @@ public class ZookeeperUtils {
           markCrawlerAsFinished(curator, crawlId);
 
         } else {
+          log.info("Update zookeeper node counter - {}", counter);
           updateMonitoring(curator, crawlId, SIZE, Integer.toString(counter), isValidator);
         }
         mutex.release();

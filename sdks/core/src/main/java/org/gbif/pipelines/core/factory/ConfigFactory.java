@@ -2,6 +2,7 @@ package org.gbif.pipelines.core.factory;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
 
 @Slf4j
@@ -15,17 +16,16 @@ public class ConfigFactory<T> {
   private static final Object MUTEX = new Object();
 
   @SneakyThrows
-  private ConfigFactory(
-      String hdfsSiteConfig, String coreCiteConfig, String propertiesPath, Class<T> clazz) {
-    this.config = FsUtils.readConfigFile(hdfsSiteConfig, coreCiteConfig, propertiesPath, clazz);
+  private ConfigFactory(HdfsConfigs hdfsConfigs, String propertiesPath, Class<T> clazz) {
+    this.config = FsUtils.readConfigFile(hdfsConfigs, propertiesPath, clazz);
   }
 
   public static <T> ConfigFactory<T> getInstance(
-      String hdfsSiteConfig, String coreCiteConfig, String propertiesPath, Class<T> clazz) {
+      HdfsConfigs hdfsConfigs, String propertiesPath, Class<T> clazz) {
     if (instance == null) {
       synchronized (MUTEX) {
         if (instance == null) {
-          instance = new ConfigFactory(hdfsSiteConfig, coreCiteConfig, propertiesPath, clazz);
+          instance = new ConfigFactory(hdfsConfigs, propertiesPath, clazz);
         }
       }
     }

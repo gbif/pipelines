@@ -84,7 +84,7 @@ public class XmlToAvscGeneratorMojo extends AbstractMojo {
     // Convert into an avro schema
     List<Schema.Field> fields = new ArrayList<>(ext.getProperties().size() + 1);
     // Add gbifID
-    fields.add(createSchemaField("gbifid", Type.LONG, "GBIF internal identifier", false));
+    fields.add(createSchemaField("gbifid", Type.STRING, "GBIF internal identifier", false));
     // Add RAW fields
     ext.getProperties().stream()
         .map(p -> createSchemaField("v_" + normalizeFieldName(p.getName()), p.getQualname()))

@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.Optional;
 import lombok.Builder;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -42,10 +41,10 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
   private final SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> geocodeKvStoreSupplier;
   private KeyValueStore<LatLng, GeocodeResponse> geocodeKvStore;
 
-  @Setter private PCollectionView<MetadataRecord> metadataView;
+  private PCollectionView<MetadataRecord> metadataView;
 
   @Builder(buildMethodName = "create")
-  private LocationTransform(
+  protected LocationTransform(
       SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> geocodeKvStoreSupplier,
       PCollectionView<MetadataRecord> metadataView) {
     super(
@@ -56,13 +55,28 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
 
   /** Maps {@link LocationRecord} to key value, where key is {@link LocationRecord#getId} */
   public MapElements<LocationRecord, KV<String, LocationRecord>> toKv() {
+    return asKv(false);
+  }
+
+  /** Maps {@link LocationRecord} to key value, where key is {@link LocationRecord#getCoreId} */
+  public MapElements<LocationRecord, KV<String, LocationRecord>> toCoreIdKv() {
+    return asKv(true);
+  }
+
+  private MapElements<LocationRecord, KV<String, LocationRecord>> asKv(boolean useCoreId) {
     return MapElements.into(new TypeDescriptor<KV<String, LocationRecord>>() {})
-        .via((LocationRecord lr) -> KV.of(lr.getId(), lr));
+        .via((LocationRecord lr) -> KV.of(useCoreId ? lr.getCoreId() : lr.getId(), lr));
   }
 
   public LocationTransform counterFn(SerializableConsumer<String> counterFn) {
     setCounterFn(counterFn);
     return this;
+  }
+
+  public SingleOutput<ExtendedRecord, LocationRecord> interpret(
+      PCollectionView<MetadataRecord> metadataView) {
+    this.metadataView = metadataView;
+    return interpret();
   }
 
   @Override
@@ -136,6 +150,8 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
         .via(LocationInterpreter::interpretCoordinateUncertaintyInMeters)
         .via(LocationInterpreter::interpretLocality)
         .via(LocationInterpreter::interpretFootprintWKT)
+        .via(LocationInterpreter::setCoreId)
+        .via(LocationInterpreter::setParentEventId)
         .via(r -> this.incCounter())
         .getOfNullable();
   }

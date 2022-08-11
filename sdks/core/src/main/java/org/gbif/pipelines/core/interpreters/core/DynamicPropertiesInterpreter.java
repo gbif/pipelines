@@ -46,7 +46,8 @@ public class DynamicPropertiesInterpreter {
                 lookup ->
                     extractNullAwareOptValue(er, DwcTerm.dynamicProperties)
                         .flatMap(v -> LifeStageParser.parse(v).flatMap(lookup::lookup)))
-            .ifPresent(c -> VocabularyInterpreter.setLookupConcept(br, DwcTerm.lifeStage, c));
+            .map(VocabularyInterpreter::getConcept)
+            .ifPresent(br::setLifeStage);
       }
     };
   }

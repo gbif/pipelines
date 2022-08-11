@@ -9,10 +9,12 @@ import lombok.SneakyThrows;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
 import org.gbif.pipelines.core.io.SyncDataFileWriterBuilder;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.io.avro.Record;
 import org.gbif.pipelines.transforms.Transform;
 
@@ -24,14 +26,15 @@ public class InterpretedAvroWriter {
   public static <T extends SpecificRecordBase & Record> SyncDataFileWriter<T> createAvroWriter(
       InterpretationPipelineOptions options,
       Transform<?, T> transform,
+      DwcTerm term,
       String id,
-      boolean useInvalidName) {
-    String baseName = useInvalidName ? transform.getBaseInvalidName() : transform.getBaseName();
+      String baseName) {
     String pathString =
-        PathBuilder.buildPathInterpretUsingTargetPath(options, baseName, id + AVRO_EXTENSION);
+        PathBuilder.buildPathInterpretUsingTargetPath(options, term, baseName, id + AVRO_EXTENSION);
     Path path = new Path(pathString);
     FileSystem fs =
-        createParentDirectories(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), path);
+        createParentDirectories(
+            HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()), path);
     return SyncDataFileWriterBuilder.builder()
         .schema(transform.getAvroSchema())
         .codec(options.getAvroCompressionType())
@@ -42,7 +45,7 @@ public class InterpretedAvroWriter {
   }
 
   public static <T extends SpecificRecordBase & Record> SyncDataFileWriter<T> createAvroWriter(
-      InterpretationPipelineOptions options, Transform<?, T> transform, String id) {
-    return createAvroWriter(options, transform, id, false);
+      InterpretationPipelineOptions options, Transform<?, T> transform, DwcTerm term, String id) {
+    return createAvroWriter(options, transform, term, id, transform.getBaseName());
   }
 }

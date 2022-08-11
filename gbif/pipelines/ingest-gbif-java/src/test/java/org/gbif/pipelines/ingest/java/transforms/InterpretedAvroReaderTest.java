@@ -3,6 +3,7 @@ package org.gbif.pipelines.ingest.java.transforms;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
@@ -12,6 +13,8 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class InterpretedAvroReaderTest {
+
+  private static final DwcTerm CORE_TERM = DwcTerm.Occurrence;
 
   @Test
   public void readerTest() throws Exception {
@@ -30,21 +33,26 @@ public class InterpretedAvroReaderTest {
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
 
     try (SyncDataFileWriter<BasicRecord> writer =
-        InterpretedAvroWriter.createAvroWriter(options, BasicTransform.builder().create(), "1")) {
-      BasicRecord basicRecord = BasicRecord.newBuilder().setId("777").setGbifId(1L).build();
+        InterpretedAvroWriter.createAvroWriter(
+            options, BasicTransform.builder().create(), CORE_TERM, "1")) {
+      BasicRecord basicRecord = BasicRecord.newBuilder().setId("777").build();
       writer.append(basicRecord);
     }
 
     try (SyncDataFileWriter<BasicRecord> writer =
-        InterpretedAvroWriter.createAvroWriter(options, BasicTransform.builder().create(), "2")) {
-      BasicRecord basicRecord = BasicRecord.newBuilder().setId("888").setGbifId(2L).build();
+        InterpretedAvroWriter.createAvroWriter(
+            options, BasicTransform.builder().create(), CORE_TERM, "2")) {
+      BasicRecord basicRecord = BasicRecord.newBuilder().setId("888").build();
       writer.append(basicRecord);
     }
 
     // When
     CompletableFuture<Map<String, BasicRecord>> result =
         InterpretedAvroReader.readAvroAsFuture(
-            options, Executors.newSingleThreadExecutor(), BasicTransform.builder().create());
+            options,
+            CORE_TERM,
+            Executors.newSingleThreadExecutor(),
+            BasicTransform.builder().create());
     Map<String, BasicRecord> map = result.get();
 
     // Should

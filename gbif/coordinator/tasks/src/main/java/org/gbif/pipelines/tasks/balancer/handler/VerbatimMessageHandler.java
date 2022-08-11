@@ -1,24 +1,32 @@
 package org.gbif.pipelines.tasks.balancer.handler;
 
+import static org.gbif.pipelines.common.ValidatorPredicate.isValidator;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.pipelines.StepRunner;
+import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
+import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage.ValidationResult;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.pipelines.common.utils.HdfsUtils;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.balancer.BalancerConfiguration;
-import org.gbif.pipelines.tasks.dwca.DwcaToAvroConfiguration;
+import org.gbif.pipelines.tasks.verbatims.dwca.DwcaToAvroConfiguration;
 
 /**
  * Populates and sends the {@link PipelinesVerbatimMessage} message, the main method is {@link
@@ -47,31 +55,62 @@ public class VerbatimMessageHandler {
       m.setAttempt(attempt);
     }
 
-    long recordsNumber = getRecordNumber(config, m);
-    String runner = computeRunner(config, m, recordsNumber).name();
+    // case of sampling event dataset without occurrences. We only run the events pipelines
+    if (config.eventsEnabled
+        && m.getDatasetType() == DatasetType.SAMPLING_EVENT
+        && (m.getValidationResult().getNumberOfRecords() == null
+            || m.getValidationResult().getNumberOfRecords() == 0)
+        && m.getValidationResult().getNumberOfEventRecords() != null
+        && m.getValidationResult().getNumberOfEventRecords() > 0) {
+      Set<String> interpretationTypes = new HashSet<>(m.getInterpretTypes());
+      interpretationTypes.add(RecordType.EVENT.name());
+      interpretationTypes.remove(RecordType.OCCURRENCE.name());
 
-    ValidationResult result = m.getValidationResult();
-    if (result.getNumberOfRecords() == null) {
-      result.setNumberOfRecords(recordsNumber);
+      PipelinesEventsMessage eventsMessage =
+          new PipelinesEventsMessage(
+              m.getDatasetUuid(),
+              m.getAttempt(),
+              m.getPipelineSteps(),
+              m.getValidationResult().getNumberOfEventRecords(),
+              m.getValidationResult().getNumberOfRecords(),
+              StepRunner.DISTRIBUTED.name(),
+              false,
+              m.getResetPrefix(),
+              null,
+              m.getExecutionId(),
+              m.getEndpointType(),
+              m.getValidationResult(),
+              interpretationTypes,
+              DatasetType.SAMPLING_EVENT);
+
+      publisher.send(eventsMessage);
+      log.info("The events message has been sent - {}", eventsMessage);
+    } else {
+      long recordsNumber = getRecordNumber(config, m);
+      String runner = computeRunner(config, m, recordsNumber).name();
+
+      ValidationResult result = m.getValidationResult();
+      if (result.getNumberOfRecords() == null) {
+        result.setNumberOfRecords(recordsNumber);
+      }
+
+      PipelinesVerbatimMessage outputMessage =
+          new PipelinesVerbatimMessage(
+              m.getDatasetUuid(),
+              m.getAttempt(),
+              m.getInterpretTypes(),
+              m.getPipelineSteps(),
+              runner,
+              m.getEndpointType(),
+              m.getExtraPath(),
+              result,
+              m.getResetPrefix(),
+              m.getExecutionId(),
+              m.getDatasetType());
+
+      publisher.send(outputMessage);
+      log.info("The message has been sent - {}", outputMessage);
     }
-
-    PipelinesVerbatimMessage outputMessage =
-        new PipelinesVerbatimMessage(
-            m.getDatasetUuid(),
-            m.getAttempt(),
-            m.getInterpretTypes(),
-            m.getPipelineSteps(),
-            runner,
-            m.getEndpointType(),
-            m.getExtraPath(),
-            result,
-            m.getResetPrefix(),
-            m.getExecutionId(),
-            m.isValidator());
-
-    publisher.send(outputMessage);
-
-    log.info("The message has been sent - {}", outputMessage);
   }
 
   /**
@@ -101,11 +140,13 @@ public class VerbatimMessageHandler {
     String verbatim = Conversion.FILE_NAME + Pipeline.AVRO_EXTENSION;
     StepConfiguration stepConfig = config.stepConfig;
     String repositoryPath =
-        message.isValidator() ? config.validatorRepositoryPath : stepConfig.repositoryPath;
+        isValidator(message.getPipelineSteps())
+            ? config.validatorRepositoryPath
+            : stepConfig.repositoryPath;
     String verbatimPath = String.join("/", repositoryPath, datasetId, attempt, verbatim);
-    long fileSizeByte =
-        HdfsUtils.getFileSizeByte(
-            stepConfig.hdfsSiteConfig, stepConfig.coreSiteConfig, verbatimPath);
+    HdfsConfigs hdfsConfigs =
+        HdfsConfigs.create(stepConfig.hdfsSiteConfig, stepConfig.coreSiteConfig);
+    long fileSizeByte = HdfsUtils.getFileSizeByte(hdfsConfigs, verbatimPath);
     if (fileSizeByte > 0) {
       long switchFileSizeByte = config.switchFileSizeMb * 1024L * 1024L;
       runner = fileSizeByte > switchFileSizeByte ? StepRunner.DISTRIBUTED : StepRunner.STANDALONE;
@@ -125,7 +166,9 @@ public class VerbatimMessageHandler {
     String metaFileName = new DwcaToAvroConfiguration().metaFileName;
     StepConfiguration stepConfig = config.stepConfig;
     String repositoryPath =
-        message.isValidator() ? config.validatorRepositoryPath : stepConfig.repositoryPath;
+        isValidator(message.getPipelineSteps())
+            ? config.validatorRepositoryPath
+            : stepConfig.repositoryPath;
     String metaPath = String.join("/", repositoryPath, datasetId, attempt, metaFileName);
     log.info("Getting records number from the file - {}", metaPath);
 
@@ -134,12 +177,11 @@ public class VerbatimMessageHandler {
                 && message.getValidationResult().getNumberOfRecords() != null
             ? message.getValidationResult().getNumberOfRecords()
             : null;
+
+    HdfsConfigs hdfsConfigs =
+        HdfsConfigs.create(stepConfig.hdfsSiteConfig, stepConfig.coreSiteConfig);
     Optional<Long> fileNumber =
-        HdfsUtils.getLongByKey(
-            stepConfig.hdfsSiteConfig,
-            stepConfig.coreSiteConfig,
-            metaPath,
-            Metrics.ARCHIVE_TO_ER_COUNT);
+        HdfsUtils.getLongByKey(hdfsConfigs, metaPath, Metrics.ARCHIVE_TO_ER_COUNT);
 
     if (messageNumber == null && !fileNumber.isPresent()) {
       throw new IllegalArgumentException(
@@ -164,11 +206,15 @@ public class VerbatimMessageHandler {
     String datasetId = message.getDatasetUuid().toString();
     StepConfiguration stepConfig = config.stepConfig;
     String repositoryPath =
-        message.isValidator() ? config.validatorRepositoryPath : stepConfig.repositoryPath;
+        isValidator(message.getPipelineSteps())
+            ? config.validatorRepositoryPath
+            : stepConfig.repositoryPath;
     String path = String.join("/", repositoryPath, datasetId);
+
     log.info("Parsing HDFS directory - {}", path);
-    return HdfsUtils.getSubDirList(stepConfig.hdfsSiteConfig, stepConfig.coreSiteConfig, path)
-        .stream()
+    HdfsConfigs hdfsConfigs =
+        HdfsConfigs.create(stepConfig.hdfsSiteConfig, stepConfig.coreSiteConfig);
+    return HdfsUtils.getSubDirList(hdfsConfigs, path).stream()
         .map(y -> y.getPath().getName())
         .filter(x -> x.chars().allMatch(Character::isDigit))
         .mapToInt(Integer::valueOf)

@@ -1,6 +1,6 @@
 package au.org.ala.pipelines.java;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.ALL_AVRO;
 
 import au.org.ala.pipelines.common.ALARecordTypes;
 import au.org.ala.pipelines.options.IndexingPipelineOptions;
@@ -36,11 +36,13 @@ import org.apache.avro.io.DatumWriter;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.io.AvroReader;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.transforms.core.*;
@@ -65,6 +67,8 @@ import org.slf4j.MDC;
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class IndexRecordPipeline {
+
+  private static final DwcTerm CORE_TERM = DwcTerm.Occurrence;
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
 
@@ -109,10 +113,10 @@ public class IndexRecordPipeline {
       return;
     }
 
+    HdfsConfigs hdfsConfigs =
+        HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig());
     // get filesystem
-    FileSystem fs =
-        FsUtils.getFileSystem(
-            options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getInputPath());
+    FileSystem fs = FsUtils.getFileSystem(hdfsConfigs, options.getInputPath());
 
     final long lastLoadedDate =
         ValidationUtils.metricsModificationTime(
@@ -130,14 +134,11 @@ public class IndexRecordPipeline {
             ValidationUtils.INTERPRETATION_METRICS);
 
     UnaryOperator<String> pathFn =
-        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
+        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, CORE_TERM, t, ALL_AVRO);
     UnaryOperator<String> identifiersPathFn =
-        t -> ALAFsUtils.buildPathIdentifiersUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
+        t -> ALAFsUtils.buildPathIdentifiersUsingTargetPath(options, t, ALL_AVRO);
     UnaryOperator<String> imageServicePathFn =
-        t -> ALAFsUtils.buildPathImageServiceUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
-
-    String hdfsSiteConfig = options.getHdfsSiteConfig();
-    String coreSiteConfig = options.getCoreSiteConfig();
+        t -> ALAFsUtils.buildPathImageServiceUsingTargetPath(options, t, ALL_AVRO);
 
     log.info("Creating transformations");
     // Core
@@ -166,8 +167,7 @@ public class IndexRecordPipeline {
         CompletableFuture.supplyAsync(
             () ->
                 AvroReader.readRecords(
-                    hdfsSiteConfig,
-                    coreSiteConfig,
+                    hdfsConfigs,
                     ExtendedRecord.class,
                     pathFn.apply(verbatimTransform.getBaseName())),
             executor);
@@ -176,18 +176,14 @@ public class IndexRecordPipeline {
         CompletableFuture.supplyAsync(
             () ->
                 AvroReader.readRecords(
-                    hdfsSiteConfig,
-                    coreSiteConfig,
-                    BasicRecord.class,
-                    pathFn.apply(basicTransform.getBaseName())),
+                    hdfsConfigs, BasicRecord.class, pathFn.apply(basicTransform.getBaseName())),
             executor);
 
     CompletableFuture<Map<String, TemporalRecord>> temporalMapFeature =
         CompletableFuture.supplyAsync(
             () ->
                 AvroReader.readRecords(
-                    hdfsSiteConfig,
-                    coreSiteConfig,
+                    hdfsConfigs,
                     TemporalRecord.class,
                     pathFn.apply(temporalTransform.getBaseName())),
             executor);
@@ -196,8 +192,7 @@ public class IndexRecordPipeline {
         CompletableFuture.supplyAsync(
             () ->
                 AvroReader.readRecords(
-                    hdfsSiteConfig,
-                    coreSiteConfig,
+                    hdfsConfigs,
                     LocationRecord.class,
                     pathFn.apply(locationTransform.getBaseName())),
             executor);
@@ -206,8 +201,7 @@ public class IndexRecordPipeline {
         CompletableFuture.supplyAsync(
             () ->
                 AvroReader.readRecords(
-                    hdfsSiteConfig,
-                    coreSiteConfig,
+                    hdfsConfigs,
                     MultimediaRecord.class,
                     pathFn.apply(multimediaTransform.getBaseName())),
             executor);
@@ -219,8 +213,7 @@ public class IndexRecordPipeline {
           CompletableFuture.supplyAsync(
               () ->
                   AvroReader.readRecords(
-                      hdfsSiteConfig,
-                      coreSiteConfig,
+                      hdfsConfigs,
                       TaxonRecord.class,
                       pathFn.apply(taxonomyTransform.getBaseName())),
               executor);
@@ -239,8 +232,7 @@ public class IndexRecordPipeline {
         CompletableFuture.supplyAsync(
             () ->
                 AvroReader.readRecords(
-                    hdfsSiteConfig,
-                    coreSiteConfig,
+                    hdfsConfigs,
                     ALAUUIDRecord.class,
                     identifiersPathFn.apply(ALARecordTypes.ALA_UUID.name().toLowerCase())),
             executor);
@@ -249,8 +241,7 @@ public class IndexRecordPipeline {
         CompletableFuture.supplyAsync(
             () ->
                 AvroReader.readRecords(
-                    hdfsSiteConfig,
-                    coreSiteConfig,
+                    hdfsConfigs,
                     ALATaxonRecord.class,
                     pathFn.apply(alaTaxonomyTransform.getBaseName())),
             executor);
@@ -259,8 +250,7 @@ public class IndexRecordPipeline {
         CompletableFuture.supplyAsync(
             () ->
                 AvroReader.readRecords(
-                    hdfsSiteConfig,
-                    coreSiteConfig,
+                    hdfsConfigs,
                     ALAAttributionRecord.class,
                     pathFn.apply(alaAttributionTransform.getBaseName())),
             executor);
@@ -269,8 +259,7 @@ public class IndexRecordPipeline {
         CompletableFuture.supplyAsync(
             () ->
                 AvroReader.readRecords(
-                    hdfsSiteConfig,
-                    coreSiteConfig,
+                    hdfsConfigs,
                     ALASensitivityRecord.class,
                     pathFn.apply(sensitiveTransform.getBaseName())),
             executor);
@@ -279,10 +268,7 @@ public class IndexRecordPipeline {
         CompletableFuture.supplyAsync(
             () ->
                 AvroReader.readRecords(
-                    hdfsSiteConfig,
-                    coreSiteConfig,
-                    ImageRecord.class,
-                    imageServicePathFn.apply("image-record")),
+                    hdfsConfigs, ImageRecord.class, imageServicePathFn.apply("image-record")),
             executor);
 
     CompletableFuture<Map<String, TaxonProfile>> taxonProfileMapFeature = null;

@@ -22,11 +22,13 @@ import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.fs.FileSystem;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.beam.options.BasePipelineOptions;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.IndexRecord;
 
@@ -62,7 +64,9 @@ public class ALAFsUtils {
 
   public static String buildPathMultimediaUsingTargetPath(BasePipelineOptions options) {
     return PathBuilder.buildPath(
-            PathBuilder.buildDatasetAttemptPath(options, "interpreted", false), "multimedia")
+            PathBuilder.buildDatasetAttemptPath(
+                options, DwcTerm.Occurrence.simpleName().toLowerCase(), false),
+            "multimedia")
         .toString();
   }
 
@@ -91,9 +95,9 @@ public class ALAFsUtils {
       AllDatasetsPipelinesOptions options, boolean delete) throws IOException {
 
     // default: {fsPath}/pipelines-outlier
-    FileSystem fs =
-        FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
-            .getFs(options.getTargetPath());
+    HdfsConfigs hdfsConfigs =
+        HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig());
+    FileSystem fs = FileSystemFactory.getInstance(hdfsConfigs).getFs(options.getTargetPath());
 
     String outputPath = options.getTargetPath();
 
@@ -105,8 +109,7 @@ public class ALAFsUtils {
       outputPath = outputPath + "/" + "all";
     }
     // delete previous runs
-    if (delete)
-      FsUtils.deleteIfExist(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), outputPath);
+    if (delete) FsUtils.deleteIfExist(hdfsConfigs, outputPath);
     else {
       if (!exists(fs, outputPath)) ALAFsUtils.createDirectory(fs, outputPath);
     }
@@ -229,20 +232,20 @@ public class ALAFsUtils {
         PathBuilder.buildDatasetAttemptPath(options, options.getMetaFileName(), false);
     FileSystem fs =
         FsUtils.getFileSystem(
-            options.getHdfsSiteConfig(), options.getCoreSiteConfig(), metadataPath);
+            HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()),
+            metadataPath);
     deleteIfExist(fs, metadataPath);
   }
 
   /**
    * Read a properties file from HDFS/Local FS
    *
-   * @param hdfsSiteConfig HDFS config file
+   * @param hdfsConfigs HDFS config file
    * @param filePath properties file path
    */
   @SneakyThrows
-  public static ALAPipelinesConfig readConfigFile(
-      String hdfsSiteConfig, String coreSiteConfig, String filePath) {
-    FileSystem fs = FsUtils.getLocalFileSystem(hdfsSiteConfig, coreSiteConfig);
+  public static ALAPipelinesConfig readConfigFile(HdfsConfigs hdfsConfigs, String filePath) {
+    FileSystem fs = FsUtils.getLocalFileSystem(hdfsConfigs);
     log.info("Reading from filesystem - {}", fs);
     Path fPath = new Path(filePath);
     if (fs.exists(fPath)) {
@@ -264,7 +267,8 @@ public class ALAFsUtils {
   public static boolean checkAndCreateLockFile(InterpretationPipelineOptions options)
       throws IOException {
     FileSystem fs =
-        FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
+        FileSystemFactory.getInstance(
+                HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()))
             .getFs(options.getInputPath());
 
     Path path = new Path(options.getInputPath() + ".lockdir");
@@ -289,7 +293,8 @@ public class ALAFsUtils {
     String lockFilePath = options.getInputPath() + ".lockdir";
 
     log.info("Attempting to delete lock file {}", lockFilePath);
-    FsUtils.deleteIfExist(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), lockFilePath);
+    FsUtils.deleteIfExist(
+        HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()), lockFilePath);
   }
 
   /**
@@ -298,10 +303,10 @@ public class ALAFsUtils {
    *
    * @return a Map of datasetId -> filePath, with zip files sorted by size, largest to smallest.
    */
-  public static Map<String, String> listAllDatasets(
-      String hdfsSiteConfig, String coreSiteConfig, String inputPath) throws IOException {
+  public static Map<String, String> listAllDatasets(HdfsConfigs hdfsConfigs, String inputPath)
+      throws IOException {
 
-    FileSystem fs = FileSystemFactory.getInstance(hdfsSiteConfig, coreSiteConfig).getFs(inputPath);
+    FileSystem fs = FileSystemFactory.getInstance(hdfsConfigs).getFs(inputPath);
 
     log.info("List files in inputPath: {}", inputPath);
     Path path = createPath(inputPath);

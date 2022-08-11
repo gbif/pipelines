@@ -13,6 +13,7 @@ import org.gbif.pipelines.common.beam.options.DwcaPipelineOptions;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.core.io.AvroReader;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.io.avro.ALASensitivityRecord;
 import org.junit.After;
 import org.junit.Before;
@@ -56,7 +57,7 @@ public class SensitiveDataPipelineTestIT {
     loadTestDataset("dr893", absolutePath + "/sensitive-data/dr893");
 
     File dr = new File(pipeline, "dr893/1");
-    File interpreted = new File(dr, "interpreted");
+    File interpreted = new File(dr, "occurrence");
     assertTrue(interpreted.exists());
     File ala_sensitive_data = new File(interpreted, "ala_sensitive_data");
     assertTrue(ala_sensitive_data.exists());
@@ -64,7 +65,9 @@ public class SensitiveDataPipelineTestIT {
     // Check correctly stated sensitivity
     Map<String, ALASensitivityRecord> sds =
         AvroReader.readRecords(
-            null, null, ALASensitivityRecord.class, ala_sensitive_data.getPath() + "/*.avro");
+            HdfsConfigs.create(null, null),
+            ALASensitivityRecord.class,
+            ala_sensitive_data.getPath() + "/*.avro");
     ALASensitivityRecord sds1 = sds.get("not-an-uuid-1");
     assertNotNull(sds1);
     assertTrue(sds1.getIsSensitive());

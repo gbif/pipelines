@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.cache.KeyValueCache;
 import org.gbif.kvs.hbase.Command;
+import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.core.config.model.WsConfig;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
 
@@ -62,7 +63,7 @@ public class ALANameCheckKVStoreFactory {
             wsClient.close();
           } catch (Exception e) {
             log.error("Unable to close", e);
-            throw new RuntimeException("Unable to close");
+            throw new PipelinesException("Unable to close");
           }
         };
 
@@ -84,7 +85,7 @@ public class ALANameCheckKVStoreFactory {
               return nameMatchService.check(key, rank);
             } catch (Exception ex) {
               log.error("Error contacting the species match service", ex);
-              throw new RuntimeException(ex);
+              throw new PipelinesException(ex);
             }
           }
 

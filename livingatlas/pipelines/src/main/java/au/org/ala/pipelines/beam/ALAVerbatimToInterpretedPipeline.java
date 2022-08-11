@@ -37,10 +37,12 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.parsers.date.DateComponentOrdering;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.factory.FileVocabularyFactory;
 import org.gbif.pipelines.factory.OccurrenceStatusKvStoreFactory;
@@ -97,6 +99,7 @@ import org.slf4j.MDC;
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ALAVerbatimToInterpretedPipeline {
+  private static final DwcTerm CORE_TERM = DwcTerm.Occurrence;
 
   public static void main(String[] args) throws IOException {
     VersionInfo.print();
@@ -128,19 +131,16 @@ public class ALAVerbatimToInterpretedPipeline {
     Set<String> types = options.getInterpretationTypes();
 
     String targetPath = options.getTargetPath();
-    String hdfsSiteConfig = options.getHdfsSiteConfig();
-    String coreSiteConfig = options.getCoreSiteConfig();
+    HdfsConfigs hdfsConfigs =
+        HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig());
 
-    log.info("hdfsSiteConfig = " + hdfsSiteConfig);
-    log.info("coreSiteConfig = " + coreSiteConfig);
+    log.info("hdfsSiteConfig = " + hdfsConfigs.getHdfsSiteConfig());
+    log.info("coreSiteConfig = " + hdfsConfigs.getCoreSiteConfig());
 
-    FsUtils.deleteInterpretIfExist(
-        hdfsSiteConfig, coreSiteConfig, targetPath, datasetId, attempt, types);
+    FsUtils.deleteInterpretIfExist(hdfsConfigs, targetPath, datasetId, attempt, CORE_TERM, types);
 
     ALAPipelinesConfig config =
-        ALAPipelinesConfigFactory.getInstance(
-                options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getProperties())
-            .get();
+        ALAPipelinesConfigFactory.getInstance(hdfsConfigs, options.getProperties()).get();
 
     List<DateComponentOrdering> dateComponentOrdering =
         options.getDefaultDateFormat() == null
@@ -150,7 +150,7 @@ public class ALAVerbatimToInterpretedPipeline {
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
     UnaryOperator<String> pathFn =
-        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, id);
+        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, CORE_TERM, t, id);
 
     log.info("Creating a pipeline from options");
 
@@ -177,8 +177,7 @@ public class ALAVerbatimToInterpretedPipeline {
                 config.getGbifConfig().getVocabularyConfig() != null
                     ? FileVocabularyFactory.builder()
                         .config(config.getGbifConfig())
-                        .hdfsSiteConfig(hdfsSiteConfig)
-                        .coreSiteConfig(coreSiteConfig)
+                        .hdfsConfigs(hdfsConfigs)
                         .build()
                         .getInstanceSupplier()
                     : null)
@@ -292,7 +291,7 @@ public class ALAVerbatimToInterpretedPipeline {
 
     log.info("Deleting beam temporal folders");
     String tempPath = String.join("/", targetPath, datasetId, attempt.toString());
-    FsUtils.deleteDirectoryByPrefix(hdfsSiteConfig, coreSiteConfig, tempPath, ".temp-beam");
+    FsUtils.deleteDirectoryByPrefix(hdfsConfigs, tempPath, ".temp-beam");
 
     log.info("Pipeline has been finished");
   }

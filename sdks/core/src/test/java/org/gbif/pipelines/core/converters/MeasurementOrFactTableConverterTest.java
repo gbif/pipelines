@@ -7,8 +7,8 @@ import java.util.Map;
 import java.util.Optional;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.GbifIdRecord;
 import org.gbif.pipelines.io.avro.extension.dwc.MeasurementOrFactTable;
 import org.junit.Assert;
 import org.junit.Test;
@@ -36,15 +36,15 @@ public class MeasurementOrFactTableConverterTest {
     ExtendedRecord extendedRecord =
         ExtendedRecord.newBuilder().setId("id").setExtensions(ext).build();
 
-    BasicRecord basicRecord = BasicRecord.newBuilder().setId("777").setGbifId(777L).build();
+    GbifIdRecord gbifIdRecord = GbifIdRecord.newBuilder().setId("777").setGbifId(777L).build();
 
     // When
     Optional<MeasurementOrFactTable> result =
-        MeasurementOrFactTableConverter.convert(basicRecord, extendedRecord);
+        MeasurementOrFactTableConverter.convert(gbifIdRecord, extendedRecord);
 
     // Should
     Assert.assertTrue(result.isPresent());
-    Assert.assertEquals(Long.valueOf(777L), result.get().getGbifid());
+    Assert.assertEquals("777", result.get().getGbifid());
     // Verbatim
     Assert.assertEquals("Id1", result.get().getVMeasurementid());
     Assert.assertEquals("Type1", result.get().getVMeasurementtype());
@@ -73,11 +73,11 @@ public class MeasurementOrFactTableConverterTest {
     // State
     ExtendedRecord extendedRecord = ExtendedRecord.newBuilder().setId("id").build();
 
-    BasicRecord basicRecord = BasicRecord.newBuilder().setId("777").setGbifId(777L).build();
+    GbifIdRecord gbifIdRecord = GbifIdRecord.newBuilder().setId("777").setGbifId(777L).build();
 
     // When
     Optional<MeasurementOrFactTable> result =
-        MeasurementOrFactTableConverter.convert(basicRecord, extendedRecord);
+        MeasurementOrFactTableConverter.convert(gbifIdRecord, extendedRecord);
 
     // Should
     Assert.assertFalse(result.isPresent());
@@ -86,11 +86,11 @@ public class MeasurementOrFactTableConverterTest {
   @Test
   public void basicRecordNullTest() {
     // State
-    BasicRecord basicRecord = BasicRecord.newBuilder().setId("777").setGbifId(777L).build();
+    GbifIdRecord gbifIdRecord = GbifIdRecord.newBuilder().setId("777").setGbifId(777L).build();
 
     // When
     Optional<MeasurementOrFactTable> result =
-        MeasurementOrFactTableConverter.convert(basicRecord, null);
+        MeasurementOrFactTableConverter.convert(gbifIdRecord, null);
 
     // Should
     Assert.assertFalse(result.isPresent());

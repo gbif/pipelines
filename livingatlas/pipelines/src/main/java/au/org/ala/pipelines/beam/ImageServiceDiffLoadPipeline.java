@@ -3,7 +3,7 @@ package au.org.ala.pipelines.beam;
 import static au.org.ala.pipelines.beam.ImagePipelineUtils.indexOf;
 import static au.org.ala.pipelines.beam.ImagePipelineUtils.readHeadersLowerCased;
 import static au.org.ala.pipelines.beam.ImagePipelineUtils.validateHeaders;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.ALL_AVRO;
 
 import au.com.bytecode.opencsv.CSVParser;
 import au.org.ala.images.BatchUploadResponse;
@@ -49,9 +49,12 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.RemoteIterator;
 import org.gbif.dwc.terms.DcTerm;
+import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.io.avro.Multimedia;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
@@ -122,24 +125,23 @@ public class ImageServiceDiffLoadPipeline {
   public static void run(ImageServicePipelineOptions options)
       throws IOException, InterruptedException {
 
+    HdfsConfigs hdfsConfigs =
+        HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig());
+
     ALAPipelinesConfig config =
-        ALAPipelinesConfigFactory.getInstance(
-                options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getProperties())
-            .get();
+        ALAPipelinesConfigFactory.getInstance(hdfsConfigs, options.getProperties()).get();
 
     // create the image service
     ImageService service = WsUtils.createClient(config.getImageService(), ImageService.class);
     String imageServiceExportPath = ImageServiceSyncPipeline.downloadImageMapping(options);
 
-    FileSystem fs =
-        FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
-            .getFs(options.getInputPath());
+    FileSystem fs = FileSystemFactory.getInstance(hdfsConfigs).getFs(options.getInputPath());
 
     Pipeline p = Pipeline.create(options);
 
     List<String> headers = readHeadersLowerCased(fs, imageServiceExportPath);
     if (headers.size() < REQUIRED_HEADERS.size()) {
-      throw new RuntimeException(
+      throw new PipelinesException(
           "Invalid number of fields in CSV less than required. "
               + "Expected: "
               + REQUIRED_HEADERS.size()
@@ -237,7 +239,8 @@ public class ImageServiceDiffLoadPipeline {
     log.info("Reading multimedia for this dataset");
     MultimediaTransform multimediaTransform = MultimediaTransform.builder().create();
     UnaryOperator<String> pathFn =
-        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
+        t ->
+            PathBuilder.buildPathInterpretUsingTargetPath(options, DwcTerm.Occurrence, t, ALL_AVRO);
 
     PCollection<KV<String, Multimedia>> multimediaItems =
         p.apply(multimediaTransform.read(pathFn))

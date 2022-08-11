@@ -20,8 +20,8 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.pipelines.core.functions.SerializableConsumer;
 import org.gbif.pipelines.core.utils.HashConverter;
-import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.GbifIdRecord;
 
 /**
  * Splits collection into two: 1 - normal collection with regular GBIF ids 2 - contains invalid
@@ -33,12 +33,12 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 @SuppressWarnings("all")
 public class UniqueGbifIdTransform {
 
-  private final Map<String, BasicRecord> brMap = new ConcurrentHashMap<>();
-  private final Map<String, BasicRecord> brInvalidMap = new ConcurrentHashMap<>();
+  private final Map<String, GbifIdRecord> idMap = new ConcurrentHashMap<>();
+  private final Map<String, GbifIdRecord> idInvalidMap = new ConcurrentHashMap<>();
   // keyed by the ExtendedRecord ID
-  private final Map<String, BasicRecord> erBrMap = new ConcurrentHashMap<>();
+  private final Map<String, GbifIdRecord> erIdMap = new ConcurrentHashMap<>();
 
-  @NonNull private Function<ExtendedRecord, Optional<BasicRecord>> basicTransformFn;
+  @NonNull private Function<ExtendedRecord, Optional<GbifIdRecord>> idTransformFn;
 
   @NonNull private Map<String, ExtendedRecord> erMap;
 
@@ -57,14 +57,14 @@ public class UniqueGbifIdTransform {
   @SneakyThrows
   private UniqueGbifIdTransform runAsync() {
     // Filter GBIF id duplicates
-    Consumer<ExtendedRecord> interpretBrFn = filterByGbifId();
+    Consumer<ExtendedRecord> interpretIdFn = filterByGbifId();
 
     // Run async
-    CompletableFuture<?>[] brFutures =
+    CompletableFuture<?>[] idFutures =
         erMap.values().stream()
-            .map(v -> CompletableFuture.runAsync(() -> interpretBrFn.accept(v), executor))
+            .map(v -> CompletableFuture.runAsync(() -> interpretIdFn.accept(v), executor))
             .toArray(CompletableFuture[]::new);
-    CompletableFuture.allOf(brFutures).get();
+    CompletableFuture.allOf(idFutures).get();
 
     return this;
   }
@@ -79,41 +79,41 @@ public class UniqueGbifIdTransform {
   /** Process GBIF id duplicates */
   private Consumer<ExtendedRecord> filterByGbifId() {
     return er ->
-        basicTransformFn
+        idTransformFn
             .apply(er)
             .ifPresent(
-                br -> {
+                id -> {
                   if (skipTransform) {
-                    brMap.put(br.getId(), br);
-                  } else if (br.getGbifId() != null) {
-                    filter(br);
+                    idMap.put(id.getId(), id);
+                  } else if (id.getGbifId() != null) {
+                    filter(id);
                   } else {
                     incMetrics(INVALID_GBIF_ID_COUNT);
-                    brInvalidMap.put(br.getId(), br);
-                    log.error("GBIF ID is null, occurrenceId - {}", br.getId());
+                    idInvalidMap.put(id.getId(), id);
+                    log.error("GBIF ID is null, occurrenceId - {}", id.getId());
                   }
-                  erBrMap.put(er.getId(), br);
+                  erIdMap.put(er.getId(), id);
                 });
   }
 
   /** Filter GBIF id duplicates if it is exist */
-  private void filter(BasicRecord br) {
-    BasicRecord record = brMap.get(br.getGbifId().toString());
+  private void filter(GbifIdRecord id) {
+    GbifIdRecord record = idMap.get(id.getGbifId().toString());
     if (record != null) {
       int compare =
-          HashConverter.getSha1(br.getId()).compareTo(HashConverter.getSha1(record.getId()));
+          HashConverter.getSha1(id.getId()).compareTo(HashConverter.getSha1(record.getId()));
       if (compare < 0) {
         incMetrics(IDENTICAL_GBIF_OBJECTS_COUNT);
-        brMap.put(br.getGbifId().toString(), br);
-        brInvalidMap.put(record.getId(), record);
+        idMap.put(id.getGbifId().toString(), id);
+        idInvalidMap.put(record.getId(), record);
       } else {
         incMetrics(DUPLICATE_GBIF_IDS_COUNT);
-        brInvalidMap.put(br.getId(), br);
+        idInvalidMap.put(id.getId(), id);
       }
-      log.error("GBIF ID collision, gbifId - {}, occurrenceId - {}", br.getGbifId(), br.getId());
+      log.error("GBIF ID collision, gbifId - {}, occurrenceId - {}", id.getGbifId(), id.getId());
     } else {
       incMetrics(UNIQUE_GBIF_IDS_COUNT);
-      brMap.put(br.getGbifId().toString(), br);
+      idMap.put(id.getGbifId().toString(), id);
     }
   }
 

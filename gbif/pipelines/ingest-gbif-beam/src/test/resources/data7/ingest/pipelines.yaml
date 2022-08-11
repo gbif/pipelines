@@ -30,7 +30,9 @@ extensionsAllowedForVerbatimSet:
   - http://rs.gbif.org/terms/1.0/Reference
   - http://rs.tdwg.org/dwc/terms/ResourceRelationship
 vocabularyConfig:
-  lifeStageVocabName: LifeStage
-  degreeOfEstablishmentVocabName: DegreeOfEstablishment
-  establishmentMeansVocabName: EstablishmentMeans
-  pathwayVocabName: Pathway
+  vocabulariesNames:
+    http://rs.tdwg.org/dwc/terms/degreeOfEstablishment: DegreeOfEstablishment
+    http://rs.tdwg.org/dwc/terms/lifeStage: LifeStage
+    http://rs.tdwg.org/dwc/terms/establishmentMeans: EstablishmentMeans
+    http://rs.tdwg.org/dwc/terms/pathway: Pathway
+    http://rs.gbif.org/terms/1.0/eventType: EventType

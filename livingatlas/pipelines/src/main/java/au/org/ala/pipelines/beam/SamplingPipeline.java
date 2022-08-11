@@ -13,6 +13,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
@@ -27,6 +28,7 @@ import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.IndexRecord;
 import org.gbif.pipelines.io.avro.SampleRecord;
@@ -62,9 +64,9 @@ public class SamplingPipeline {
 
   public static void run(SamplingPipelineOptions options) throws Exception {
 
-    FileSystem fs =
-        FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
-            .getFs(options.getInputPath());
+    HdfsConfigs hdfsConfigs =
+        HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig());
+    FileSystem fs = FileSystemFactory.getInstance(hdfsConfigs).getFs(options.getInputPath());
 
     log.info("Checking for new layers in the system");
     SamplingService samplingService = SamplingUtils.initSamplingService(options.getBaseUrl());
@@ -77,8 +79,7 @@ public class SamplingPipeline {
         String samplingDir = SamplingUtils.getSamplingDirectoryPath(options);
         log.info(
             "New layers are available. Deleting current sampling cache to enable full refresh");
-        FsUtils.deleteIfExist(
-            options.getHdfsSiteConfig(), options.getCoreSiteConfig(), samplingDir);
+        FsUtils.deleteIfExist(hdfsConfigs, samplingDir);
       } else {
         log.warn(
             "New layers are available. You have configured deleteSamplingForNewLayers {}",
@@ -155,16 +156,13 @@ public class SamplingPipeline {
   /**
    * Return sample records as a collection. Returns an empty collection if no sampling records
    * found.
-   *
-   * @param options
-   * @param p
-   * @return
    */
   private static PCollection<SampleRecord> loadSampleRecords(
       AllDatasetsPipelinesOptions options, Pipeline p) {
 
     FileSystem fs =
-        FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
+        FileSystemFactory.getInstance(
+                HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()))
             .getFs(options.getAllDatasetsInputPath());
 
     String samplingDir = ALAFsUtils.buildPathSamplingUsingTargetPath(options);
@@ -181,9 +179,9 @@ public class SamplingPipeline {
     }
   }
 
+  @SneakyThrows
   public static boolean newLayersAddedSinceLastSample(
-      SamplingService samplingService, SamplingPipelineOptions options, FileSystem fs)
-      throws Exception {
+      SamplingService samplingService, SamplingPipelineOptions options, FileSystem fs) {
 
     Long lastSamplingTime = SamplingUtils.samplingLastRan(options, fs);
 

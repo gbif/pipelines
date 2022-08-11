@@ -4,6 +4,7 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.TAXON_MATCH_FUZZY;
 import static org.gbif.api.vocabulary.OccurrenceIssue.TAXON_MATCH_HIGHERRANK;
 import static org.gbif.api.vocabulary.OccurrenceIssue.TAXON_MATCH_NONE;
 import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
+import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -140,6 +141,16 @@ public class TaxonomyInterpreter {
 
       tr.setId(er.getId());
     };
+  }
+
+  /** Sets the coreId field. */
+  public static void setCoreId(ExtendedRecord er, TaxonRecord tr) {
+    Optional.ofNullable(er.getCoreId()).ifPresent(tr::setCoreId);
+  }
+
+  /** Sets the parentEventId field. */
+  public static void setParentEventId(ExtendedRecord er, TaxonRecord tr) {
+    extractOptValue(er, DwcTerm.parentEventID).ifPresent(tr::setParentId);
   }
 
   /**

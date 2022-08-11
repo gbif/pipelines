@@ -6,20 +6,19 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
-import java.util.Optional;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwc.terms.Term;
-import org.gbif.dwc.terms.Terms;
+import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.config.model.VocabularyConfig;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.core.parsers.vocabulary.VocabularyService;
 import org.gbif.pipelines.core.parsers.vocabulary.VocabularyService.VocabularyServiceBuilder;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.vocabulary.lookup.InMemoryVocabularyLookup;
 import org.gbif.vocabulary.lookup.InMemoryVocabularyLookup.InMemoryVocabularyLookupBuilder;
@@ -35,8 +34,7 @@ import org.gbif.vocabulary.lookup.VocabularyLookup;
 public class FileVocabularyFactory implements Serializable {
 
   private final PipelinesConfig config;
-  private final String hdfsSiteConfig;
-  private final String coreSiteConfig;
+  private final HdfsConfigs hdfsConfigs;
 
   /**
    * Creates instances of {@link VocabularyLookup} from a file containing an exported vocabulary.
@@ -57,22 +55,22 @@ public class FileVocabularyFactory implements Serializable {
 
       VocabularyServiceBuilder serviceBuilder = VocabularyService.builder();
 
-      for (Term term : Terms.getVocabularyBackedTerms()) {
-        Optional<String> fileName = vocabularyConfig.getVocabularyFileName(term);
-        if (fileName.isPresent()) {
-          try (InputStream is = readFile(hdfsSiteConfig, coreSiteConfig, path, fileName.get())) {
-            InMemoryVocabularyLookupBuilder builder =
-                InMemoryVocabularyLookup.newBuilder().from(is);
-            if (term == DwcTerm.lifeStage) {
-              builder.withPrefilter(PreFilters.REMOVE_NUMERIC_PREFIX);
-            }
+      vocabularyConfig
+          .getVocabulariesNames()
+          .forEach(
+              (term, name) -> {
+                try (InputStream is = readFile(hdfsConfigs, path, name)) {
+                  InMemoryVocabularyLookupBuilder builder =
+                      InMemoryVocabularyLookup.newBuilder().from(is);
+                  if (term == DwcTerm.lifeStage) {
+                    builder.withPrefilter(PreFilters.REMOVE_NUMERIC_PREFIX);
+                  }
 
-            serviceBuilder.vocabularyLookup(term, builder.build());
-          } catch (IOException ex) {
-            throw new RuntimeException(ex);
-          }
-        }
-      }
+                  serviceBuilder.vocabularyLookup(term, builder.build());
+                } catch (IOException ex) {
+                  throw new PipelinesException(ex);
+                }
+              });
 
       return serviceBuilder.build();
     };
@@ -81,8 +79,7 @@ public class FileVocabularyFactory implements Serializable {
   /**
    * Reads a vocabulary file from HDFS/Local FS
    *
-   * @param hdfsSiteConfig HDFS site config file
-   * @param coreSiteConfig HDFS core site config file
+   * @param hdfsConfigs HDFS site and core site config file
    * @param vocabulariesDir dir where the vocabulary files are
    * @param vocabularyName name of the vocabulary. It has to be the same as the one used in the file
    *     name.
@@ -90,8 +87,8 @@ public class FileVocabularyFactory implements Serializable {
    */
   @SneakyThrows
   private static InputStream readFile(
-      String hdfsSiteConfig, String coreSiteConfig, String vocabulariesDir, String vocabularyName) {
-    FileSystem fs = FsUtils.getFileSystem(hdfsSiteConfig, coreSiteConfig, vocabulariesDir);
+      HdfsConfigs hdfsConfigs, String vocabulariesDir, String vocabularyName) {
+    FileSystem fs = FsUtils.getFileSystem(hdfsConfigs, vocabulariesDir);
     Path fPath = new Path(String.join(Path.SEPARATOR, vocabulariesDir, vocabularyName + ".json"));
     if (fs.exists(fPath)) {
       log.info("Reading vocabularies path - {}", fPath);

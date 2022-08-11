@@ -12,6 +12,7 @@ import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.core.config.model.LockConfig;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.wrangler.lock.Mutex;
 import org.gbif.wrangler.lock.zookeeper.ZookeeperSharedReadWriteMutex;
@@ -99,8 +100,7 @@ public class SharedLockUtils {
   public static void doHdfsPrefixLock(InterpretationPipelineOptions options, Mutex.Action action) {
     PipelinesConfig config =
         FsUtils.readConfigFile(
-            options.getHdfsSiteConfig(),
-            options.getCoreSiteConfig(),
+            HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()),
             options.getProperties(),
             PipelinesConfig.class);
 

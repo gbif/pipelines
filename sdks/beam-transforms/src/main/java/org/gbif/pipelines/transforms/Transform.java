@@ -18,6 +18,7 @@ import org.apache.beam.sdk.values.TupleTag;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.InterpretationType;
 import org.gbif.pipelines.core.functions.SerializableConsumer;
+import org.gbif.pipelines.core.pojo.Edge;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.Record;
 import org.gbif.pipelines.transforms.common.CheckTransforms;
@@ -33,6 +34,7 @@ public abstract class Transform<R, T extends SpecificRecordBase & Record> extend
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
 
   private final TupleTag<T> tag = new TupleTag<T>() {};
+  private final TupleTag<Edge<T>> edgeTag = new TupleTag<Edge<T>>() {};
   private final InterpretationType recordType;
   private final String baseName;
   private final String baseInvalidName;
@@ -71,8 +73,7 @@ public abstract class Transform<R, T extends SpecificRecordBase & Record> extend
   /**
    * Checks if list contains {@link InterpretationType}, else returns empty {@link PCollection<T>}.
    *
-   * <p>This method should be used only when the deafault {@link #check(Set)} doesn't fill the
-   * needs.
+   * <p>This method should be used only when the default {@link #check(Set)} doesn't fill the needs.
    */
   public <S> CheckTransforms<S> check(Set<String> types, Class<S> outputClass) {
     return CheckTransforms.create(outputClass, CheckTransforms.checkRecordType(types, recordType));
@@ -167,6 +168,10 @@ public abstract class Transform<R, T extends SpecificRecordBase & Record> extend
   /** @return TupleTag required for grouping */
   public TupleTag<T> getTag() {
     return tag;
+  }
+
+  public TupleTag<Edge<T>> getEdgeTag() {
+    return edgeTag;
   }
 
   public Class<T> getReturnClazz() {

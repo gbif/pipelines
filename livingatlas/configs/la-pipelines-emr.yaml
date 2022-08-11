@@ -96,10 +96,11 @@ outlier:
 gbifConfig:
   vocabularyConfig:
     vocabulariesPath: /data/pipelines-vocabularies/
-    lifeStageVocabName: LifeStage
-    establishmentMeansVocabName: EstablishmentMeans
-    pathwayVocabName: Pathway
-    degreeOfEstablishmentVocabName: DegreeOfEstablishment
+    vocabulariesNames:
+      http://rs.tdwg.org/dwc/terms/degreeOfEstablishment: DegreeOfEstablishment
+      http://rs.tdwg.org/dwc/terms/lifeStage: LifeStage
+      http://rs.tdwg.org/dwc/terms/establishmentMeans: EstablishmentMeans
+      http://rs.tdwg.org/dwc/terms/pathway: Pathway
 
 # class: DumpArchiveList
 dataset-archive-list:

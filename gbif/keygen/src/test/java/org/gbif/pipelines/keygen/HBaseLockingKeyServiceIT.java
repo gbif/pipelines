@@ -11,104 +11,49 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import org.apache.hadoop.hbase.HBaseTestingUtility;
 import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.client.Connection;
-import org.apache.hadoop.hbase.client.ConnectionFactory;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.gbif.pipelines.keygen.api.KeyLookupResult;
-import org.gbif.pipelines.keygen.config.KeygenConfig;
 import org.gbif.pipelines.keygen.hbase.Columns;
 import org.gbif.pipelines.keygen.hbase.HBaseStore;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 public class HBaseLockingKeyServiceIT {
 
-  private static final String A = "a";
-  private static final String B = "b";
-  private static final String C = "c";
-
-  private static final KeygenConfig CFG =
-      KeygenConfig.builder()
-          .zkConnectionString(null)
-          .occurrenceTable("test_occurrence")
-          .lookupTable("test_occurrence_lookup")
-          .counterTable("test_occurrence_counter")
-          .create();
-
-  private static final byte[] LOOKUP_TABLE = Bytes.toBytes(CFG.getLookupTable());
-  private static final String CF_NAME = "o";
-  private static final byte[] CF = Bytes.toBytes(CF_NAME);
-  private static final byte[] COUNTER_TABLE = Bytes.toBytes(CFG.getCounterTable());
-  private static final String COUNTER_CF_NAME = "o";
-  private static final byte[] COUNTER_CF = Bytes.toBytes(COUNTER_CF_NAME);
-  private static final byte[] OCCURRENCE_TABLE = Bytes.toBytes(CFG.getOccurrenceTable());
-
-  private static Connection connection = null;
-  private static final HBaseTestingUtility TEST_UTIL = new HBaseTestingUtility();
-  private HBaseLockingKeyService keyService;
-
-  @Rule public ExpectedException exception = ExpectedException.none();
-
-  @BeforeClass
-  public static void beforeClass() throws Exception {
-    TEST_UTIL.getConfiguration().setInt("hbase.master.port", HBaseTestingUtility.randomFreePort());
-    TEST_UTIL
-        .getConfiguration()
-        .setInt("hbase.master.info.port", HBaseTestingUtility.randomFreePort());
-    TEST_UTIL
-        .getConfiguration()
-        .setInt("hbase.regionserver.port", HBaseTestingUtility.randomFreePort());
-    TEST_UTIL
-        .getConfiguration()
-        .setInt("hbase.regionserver.info.port", HBaseTestingUtility.randomFreePort());
-    TEST_UTIL.startMiniCluster(1);
-    TEST_UTIL.createTable(LOOKUP_TABLE, CF);
-    TEST_UTIL.createTable(COUNTER_TABLE, COUNTER_CF);
-    TEST_UTIL.createTable(OCCURRENCE_TABLE, CF);
-    connection = ConnectionFactory.createConnection(TEST_UTIL.getConfiguration());
-  }
+  /** {@link ClassRule} requires this field to be public. */
+  @ClassRule public static final HbaseServer HBASE_SERVER = new HbaseServer();
 
   @Before
   public void before() throws IOException {
-    TEST_UTIL.truncateTable(LOOKUP_TABLE);
-    TEST_UTIL.truncateTable(COUNTER_TABLE);
-    TEST_UTIL.truncateTable(OCCURRENCE_TABLE);
-
-    keyService = new HBaseLockingKeyService(CFG, connection);
+    HBASE_SERVER.truncateTable();
   }
 
-  @AfterClass
-  public static void afterClass() throws Exception {
-    TEST_UTIL.shutdownMiniCluster();
-    if (connection != null) {
-      connection.close();
-    }
-  }
+  @Rule public ExpectedException exception = ExpectedException.none();
 
   @Test
   public void testNoContention() {
     Set<String> uniqueIds = new HashSet<>();
-    uniqueIds.add(A);
-    uniqueIds.add(B);
-    uniqueIds.add(C);
-    KeyLookupResult result = keyService.generateKey(uniqueIds, "boo");
+    uniqueIds.add(HbaseServer.A);
+    uniqueIds.add(HbaseServer.B);
+    uniqueIds.add(HbaseServer.C);
+    KeyLookupResult result = HBASE_SERVER.keyService.generateKey(uniqueIds, "boo");
     assertEquals(1, result.getKey());
     assertTrue(result.isCreated());
 
-    KeyLookupResult result2 = keyService.findKey(uniqueIds, "boo");
-    assertEquals(1, result2.getKey());
-    assertFalse(result2.isCreated());
+    Optional<KeyLookupResult> result2 = HBASE_SERVER.keyService.findKey(uniqueIds, "boo");
+    assertTrue(result2.isPresent());
+    assertEquals(1, result2.get().getKey());
+    assertFalse(result2.get().isCreated());
   }
 
   @Test
@@ -120,16 +65,19 @@ public class HBaseLockingKeyServiceIT {
 
     byte[] lookupKey1 = HBaseStore.saltKey(datasetKey + "|" + triplet, NUMBER_OF_BUCKETS);
     Put put = new Put(lookupKey1);
-    put.addColumn(CF, Bytes.toBytes(Columns.LOOKUP_STATUS_COLUMN), Bytes.toBytes("ALLOCATED"));
-    put.addColumn(CF, Bytes.toBytes(Columns.LOOKUP_KEY_COLUMN), Bytes.toBytes(2L));
-    try (Table lookupTable = connection.getTable(TableName.valueOf(LOOKUP_TABLE))) {
+    put.addColumn(
+        HbaseServer.CF, Bytes.toBytes(Columns.LOOKUP_STATUS_COLUMN), Bytes.toBytes("ALLOCATED"));
+    put.addColumn(HbaseServer.CF, Bytes.toBytes(Columns.LOOKUP_KEY_COLUMN), Bytes.toBytes(2L));
+    try (Table lookupTable =
+        HBASE_SERVER.connection.getTable(TableName.valueOf(HbaseServer.LOOKUP_TABLE))) {
       lookupTable.put(put);
     }
 
     // test: keygen attempt uses previous unique id and a new "occurrenceId", expects the existing
     // key to be returned
     KeyLookupResult result =
-        keyService.generateKey(new HashSet<>(Arrays.asList(triplet, "ABCD")), datasetKey);
+        HBASE_SERVER.keyService.generateKey(
+            new HashSet<>(Arrays.asList(triplet, "ABCD")), datasetKey);
     assertEquals(2, result.getKey());
     assertFalse(result.isCreated());
   }
@@ -139,7 +87,7 @@ public class HBaseLockingKeyServiceIT {
     KeyLookupResult result = null;
     for (int i = 0; i < 1000; i++) {
       Set<String> uniqueIds = Collections.singleton(String.valueOf(i));
-      result = keyService.generateKey(uniqueIds, "boo");
+      result = HBASE_SERVER.keyService.generateKey(uniqueIds, "boo");
     }
     assertEquals(1000, result.getKey());
   }
@@ -149,12 +97,13 @@ public class HBaseLockingKeyServiceIT {
     KeyLookupResult result = null;
     for (int i = 0; i < 1001; i++) {
       Set<String> uniqueIds = Collections.singleton(String.valueOf(i));
-      result = keyService.generateKey(uniqueIds, "boo");
+      result = HBASE_SERVER.keyService.generateKey(uniqueIds, "boo");
     }
     assertEquals(1001, result.getKey());
 
     // first one claimed up to 2000, then "died". On restart we claim 2000 to 3000.
-    HBaseLockingKeyService keyService2 = new HBaseLockingKeyService(CFG, connection);
+    HBaseLockingKeyService keyService2 =
+        new HBaseLockingKeyService(HbaseServer.CFG, HBASE_SERVER.connection);
     for (int i = 0; i < 5; i++) {
       Set<String> uniqueIds = Collections.singleton("A" + i);
       result = keyService2.generateKey(uniqueIds, "boo");
@@ -170,21 +119,23 @@ public class HBaseLockingKeyServiceIT {
     byte[] lock1 = Bytes.toBytes(UUID.randomUUID().toString());
     byte[] lookupKey1 = Bytes.toBytes(datasetKey + "|ABCD");
     Put put = new Put(lookupKey1);
-    put.addColumn(CF, Bytes.toBytes(Columns.LOOKUP_LOCK_COLUMN), 0, lock1);
-    put.addColumn(CF, Bytes.toBytes(Columns.LOOKUP_KEY_COLUMN), Bytes.toBytes(2L));
-    try (Table lookupTable = connection.getTable(TableName.valueOf(LOOKUP_TABLE))) {
+    put.addColumn(HbaseServer.CF, Bytes.toBytes(Columns.LOOKUP_LOCK_COLUMN), 0, lock1);
+    put.addColumn(HbaseServer.CF, Bytes.toBytes(Columns.LOOKUP_KEY_COLUMN), Bytes.toBytes(2L));
+    try (Table lookupTable =
+        HBASE_SERVER.connection.getTable(TableName.valueOf(HbaseServer.LOOKUP_TABLE))) {
       lookupTable.put(put);
       byte[] lock2 = Bytes.toBytes(UUID.randomUUID().toString());
       byte[] lookupKey2 = Bytes.toBytes(datasetKey + "|EFGH");
       put = new Put(lookupKey2);
-      put.addColumn(CF, Bytes.toBytes(Columns.LOOKUP_LOCK_COLUMN), 0, lock2);
-      put.addColumn(CF, Bytes.toBytes(Columns.LOOKUP_KEY_COLUMN), Bytes.toBytes(3L));
+      put.addColumn(HbaseServer.CF, Bytes.toBytes(Columns.LOOKUP_LOCK_COLUMN), 0, lock2);
+      put.addColumn(HbaseServer.CF, Bytes.toBytes(Columns.LOOKUP_KEY_COLUMN), Bytes.toBytes(3L));
       lookupTable.put(put);
     }
 
     // test: 3rd keygen attempt uses both previous unique ids, expects a new key to be generated
     KeyLookupResult result =
-        keyService.generateKey(new HashSet<>(Arrays.asList("ABCD", "EFGH")), datasetKey);
+        HBASE_SERVER.keyService.generateKey(
+            new HashSet<>(Arrays.asList("ABCD", "EFGH")), datasetKey);
     assertEquals(1, result.getKey());
   }
 
@@ -196,15 +147,18 @@ public class HBaseLockingKeyServiceIT {
 
     byte[] lookupKey1 = HBaseStore.saltKey(datasetKey + "|ABCD", NUMBER_OF_BUCKETS);
     Put put = new Put(lookupKey1);
-    put.addColumn(CF, Bytes.toBytes(Columns.LOOKUP_STATUS_COLUMN), Bytes.toBytes("ALLOCATED"));
-    put.addColumn(CF, Bytes.toBytes(Columns.LOOKUP_KEY_COLUMN), Bytes.toBytes(1L));
-    try (Table lookupTable = connection.getTable(TableName.valueOf(LOOKUP_TABLE))) {
+    put.addColumn(
+        HbaseServer.CF, Bytes.toBytes(Columns.LOOKUP_STATUS_COLUMN), Bytes.toBytes("ALLOCATED"));
+    put.addColumn(HbaseServer.CF, Bytes.toBytes(Columns.LOOKUP_KEY_COLUMN), Bytes.toBytes(1L));
+    try (Table lookupTable =
+        HBASE_SERVER.connection.getTable(TableName.valueOf(HbaseServer.LOOKUP_TABLE))) {
       lookupTable.put(put);
 
       byte[] lookupKey2 = HBaseStore.saltKey(datasetKey + "|EFGH", NUMBER_OF_BUCKETS);
       put = new Put(lookupKey2);
-      put.addColumn(CF, Bytes.toBytes(Columns.LOOKUP_STATUS_COLUMN), Bytes.toBytes("ALLOCATED"));
-      put.addColumn(CF, Bytes.toBytes(Columns.LOOKUP_KEY_COLUMN), Bytes.toBytes(2L));
+      put.addColumn(
+          HbaseServer.CF, Bytes.toBytes(Columns.LOOKUP_STATUS_COLUMN), Bytes.toBytes("ALLOCATED"));
+      put.addColumn(HbaseServer.CF, Bytes.toBytes(Columns.LOOKUP_KEY_COLUMN), Bytes.toBytes(2L));
       lookupTable.put(put);
     }
     // test: gen id for one occ with both lookupkeys
@@ -215,7 +169,7 @@ public class HBaseLockingKeyServiceIT {
             + "|ABCD]=[1]["
             + datasetKey
             + "|EFGH]=[2]");
-    keyService.generateKey(new HashSet<>(Arrays.asList("ABCD", "EFGH")), datasetKey);
+    HBASE_SERVER.keyService.generateKey(new HashSet<>(Arrays.asList("ABCD", "EFGH")), datasetKey);
   }
 
   @Test
@@ -226,12 +180,14 @@ public class HBaseLockingKeyServiceIT {
     byte[] lookupKey = Bytes.toBytes(datasetKey + "|ABCD");
     byte[] lock = Bytes.toBytes(UUID.randomUUID().toString());
     Put put = new Put(lookupKey);
-    put.addColumn(CF, Bytes.toBytes(Columns.LOOKUP_LOCK_COLUMN), 0, lock);
-    try (Table lookupTable = connection.getTable(TableName.valueOf(LOOKUP_TABLE))) {
+    put.addColumn(HbaseServer.CF, Bytes.toBytes(Columns.LOOKUP_LOCK_COLUMN), 0, lock);
+    try (Table lookupTable =
+        HBASE_SERVER.connection.getTable(TableName.valueOf(HbaseServer.LOOKUP_TABLE))) {
       lookupTable.put(put);
     }
 
-    KeyLookupResult result = keyService.generateKey(Collections.singleton("ABCD"), datasetKey);
+    KeyLookupResult result =
+        HBASE_SERVER.keyService.generateKey(Collections.singleton("ABCD"), datasetKey);
     assertEquals(1, result.getKey());
   }
 
@@ -246,12 +202,14 @@ public class HBaseLockingKeyServiceIT {
     byte[] lookupKey = Bytes.toBytes(datasetKey + "|ABCD");
     byte[] lock = Bytes.toBytes(UUID.randomUUID().toString());
     Put put = new Put(lookupKey);
-    put.addColumn(CF, Bytes.toBytes(Columns.LOOKUP_LOCK_COLUMN), ts, lock);
-    try (Table lookupTable = connection.getTable(TableName.valueOf(LOOKUP_TABLE))) {
+    put.addColumn(HbaseServer.CF, Bytes.toBytes(Columns.LOOKUP_LOCK_COLUMN), ts, lock);
+    try (Table lookupTable =
+        HBASE_SERVER.connection.getTable(TableName.valueOf(HbaseServer.LOOKUP_TABLE))) {
       lookupTable.put(put);
     }
 
-    KeyLookupResult result = keyService.generateKey(Collections.singleton("ABCD"), datasetKey);
+    KeyLookupResult result =
+        HBASE_SERVER.keyService.generateKey(Collections.singleton("ABCD"), datasetKey);
     assertEquals(1, result.getKey());
   }
 
@@ -260,14 +218,16 @@ public class HBaseLockingKeyServiceIT {
     // 5 threads concurrently allocated 1000 ids each, expect the next call to produce id 5001
     List<Thread> threads = new ArrayList<>();
     for (int i = 0; i < 5; i++) {
-      Thread thread = new Thread(new KeyRequester(1000, keyService, String.valueOf(i)));
+      Thread thread =
+          new Thread(new KeyRequester(1000, HBASE_SERVER.keyService, String.valueOf(i)));
       thread.start();
       threads.add(thread);
     }
     for (Thread thread : threads) {
       thread.join();
     }
-    KeyLookupResult result = keyService.generateKey(Collections.singleton("asdf"), "wqer");
+    KeyLookupResult result =
+        HBASE_SERVER.keyService.generateKey(Collections.singleton("asdf"), "wqer");
     assertEquals(5001, result.getKey());
   }
 

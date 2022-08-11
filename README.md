@@ -47,7 +47,7 @@ This is depicted below:
 During interpretation the verbatim data is parsed, normalised and tested against quality control procedures.
 
 To enable extensibility data is interpreted into separate [`avro`](https://avro.apache.org/docs/current/) files where a separate file per category of information is used.  Many interpretations such as `date / time` formatting are common to all deployments, but not all.
-For example, in the [GBIF.org](https://www.gbif.org) deployment the scientific identification is normalised to the GBIF backbone taxonomy and stored in `/interpreted/taxonomy/interpreted*.avro` which might not be applicable to everyone.
+For example, in the [GBIF.org](https://www.gbif.org) deployment the scientific identification is normalised to the GBIF backbone taxonomy and stored in `/occurrence/taxonomy/interpreted*.avro` which might not be applicable to everyone.
 Separating categories allows for extensibility for custom deployments in a reasonably modular fashion.
 
 Interpretation is depicted below:

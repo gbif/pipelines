@@ -1,0 +1,210 @@
+/** Represents the json object for indexing */
+[
+  {
+    "name":"VerbatimRecord",
+    "namespace":"org.gbif.pipelines.io.avro.json",
+    "type":"record",
+    "doc":"A container for an extended DwC record (core plus extension data for a single record)",
+    "fields":[
+      {"name":"core","doc":"The core record terms","default":{},"type":{"type":"map","values":"string"}},
+      {"name": "coreId", "type":  [ "null", "string" ],  "default" : null, "doc":"Core id if this record is produced from an extension"},
+      {"name":"extensions","doc":"The extensions records","default":{},"type":{
+        "type":"map","values":{
+          "type":"array","doc":"The extension records","default":[],"items":{
+            "type":"map","doc":"The extension record terms","default":{},"values":["null","string"]
+          }
+        }
+      }
+      }
+    ]
+  },
+  {
+    "name":"VocabularyConcept",
+    "namespace":"org.gbif.pipelines.io.avro.json",
+    "type":"record",
+    "fields":[
+      {"name":"concept","type":["null","string"]},
+      {"name":"lineage","type":{"type":"array","items":"string"} }
+    ]
+  },
+  {
+    "name":"GadmFeatures",
+    "namespace":"org.gbif.pipelines.io.avro.json",
+    "type":"record",
+    "doc":"Models a set of GADM features at different levels.",
+    "fields":[
+      {"name":"level0Gid","type":["null","string"],"default":null,"doc":"http://rs.gbif.org/terms/gadm/3.0/level0Gid"},
+      {"name":"level1Gid","type":["null","string"],"default":null,"doc":"http://rs.gbif.org/terms/gadm/3.0/level1Gid"},
+      {"name":"level2Gid","type":["null","string"],"default":null,"doc":"http://rs.gbif.org/terms/gadm/3.0/level2Gid"},
+      {"name":"level3Gid","type":["null","string"],"default":null,"doc":"http://rs.gbif.org/terms/gadm/3.0/level3Gid"},
+      {"name":"level0Name","type":["null","string"],"default":null,"doc":"http://rs.gbif.org/terms/gadm/3.0/level0Name"},
+      {"name":"level1Name","type":["null","string"],"default":null,"doc":"http://rs.gbif.org/terms/gadm/3.0/level1Name"},
+      {"name":"level2Name","type":["null","string"],"default":null,"doc":"http://rs.gbif.org/terms/gadm/3.0/level2Name"},
+      {"name":"level3Name","type":["null","string"],"default":null,"doc":"http://rs.gbif.org/terms/gadm/3.0/level3Name"},
+      {"name":"gids","type":{"type":"array","items":"string"},"default":null,"doc":""}
+    ]
+  },
+  {
+    "name":"EventDate",
+    "namespace":"org.gbif.pipelines.io.avro.json",
+    "type":"record",
+    "doc":"http://rs.tdwg.org/dwc/terms/eventDate",
+    "fields":[
+      {"name":"gte","type":["null","string"],"default":null},
+      {"name":"lte","type":["null","string"],"default":null}
+    ]
+  },
+  {
+    "name":"AgentIdentifier",
+    "namespace":"org.gbif.pipelines.io.avro.json",
+    "type":"record",
+    "fields":[
+      {"name":"type","type":["null","string"]},
+      {"name":"value","type":["null","string"]}
+    ]
+  },
+  {
+    "name":"Multimedia",
+    "namespace":"org.gbif.pipelines.io.avro.json",
+    "type":"record",
+    "fields":[
+      {"name": "type", "type":[ "null", "string"], "default":null, "doc": "http://purl.org/dc/terms/type"},
+      {"name": "format", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/format"},
+      {"name": "identifier", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/identifier"},
+      {"name": "audience", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/audience"},
+      {"name": "contributor", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/contributor"},
+      {"name": "created", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/created"},
+      {"name": "creator", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/creator"},
+      {"name": "description", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/description"},
+      {"name": "license", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/license"},
+      {"name": "publisher", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/publisher"},
+      {"name": "references", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/references"},
+      {"name": "rightsHolder", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/rightsHolder"},
+      {"name": "source", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/source"},
+      {"name": "title", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/title"},
+      {"name": "datasetId", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/datasetID"}
+    ]
+  },
+  {
+    "name":"Coordinates",
+    "namespace":"org.gbif.pipelines.io.avro.json",
+    "type":"record",
+    "fields":[
+      {"name":"lon","type":"double"},
+      {"name":"lat","type":"double"}
+    ]
+  },
+  {
+    "name":"MetadataJsonRecord",
+    "namespace":"org.gbif.pipelines.io.avro.json",
+    "type":"record",
+    "fields":[
+      {"name":"datasetKey","type":["null","string"],"default":null,"doc":""},
+      {"name":"datasetTitle","type":["null","string"],"default":null,"doc":""},
+      {"name":"installationKey","type":["null","string"],"default":null,"doc":""},
+      {"name":"hostingOrganizationKey","type":["null","string"],"default":null,"doc":""},
+      {"name":"endorsingNodeKey","type":["null","string"],"default":null,"doc":""},
+      {"name":"publisherTitle","type":["null","string"],"default":null,"doc":""},
+      {"name":"license","type":["null","string"],"default":null,"doc":""},
+      {"name":"protocol","type":["null","string"],"default":null,"doc":""},
+      {"name":"publishingCountry","type":["null","string"],"default":null,"doc":""},
+      {"name":"datasetPublishingCountry","type":["null","string"],"default":null,"doc":""},
+      {"name":"publishingOrganizationKey","type":["null","string"],"default":null,"doc":""},
+      {"name":"networkKeys","type":{"type":"array","items":"string"},"default":null,"doc":""},
+      {"name":"projectId","type":["null","string"],"default":null,"doc":""},
+      {"name":"programmeAcronym","type":["null","string"],"default":null,"doc":""}
+    ]
+  },
+  {
+    "name":"RankedName",
+    "namespace":"org.gbif.pipelines.io.avro.json",
+    "type":"record",
+    "fields":[
+      {"name":"key","type":["null","int"],"default":null,"doc":""},
+      {"name":"name","type":["null","string"],"default":null,"doc":""},
+      {"name":"rank","type":["null","string"],"default":null}
+    ]
+  },
+  {
+    "name":"Diagnostic",
+    "namespace":"org.gbif.pipelines.io.avro.json",
+    "type":"record",
+    "fields":[
+      {"name":"matchType","type":["null","string"],"default":null,"doc":""},
+      {"name":"note","type":["null","string"],"default":null,"doc":""},
+      {"name":"status","type":["null","string"],"default":null}
+    ]
+  },
+  {
+    "name":"Authorship",
+    "namespace":"org.gbif.pipelines.io.avro.json",
+    "type":"record",
+    "fields":[
+      {"name":"authors","type":{"type":"array","items":"string"},"default":[]},
+      {"name":"exAuthors","type":{"type":"array","items":"string"},"default":[]},
+      {"name":"empty","type":["null","boolean"],"default":null},
+      {"name":"year","type":[ "null","string" ],"default":null}
+    ]
+  },
+  {
+    "name":"ParsedName",
+    "namespace":"org.gbif.pipelines.io.avro.json",
+    "type":"record",
+    "fields":[
+      {"name":"abbreviated","type":["null","boolean"],"default":null,"doc":""},
+      {"name":"autonym","type":["null","boolean"],"default":null,"doc":""},
+      {"name":"basionymAuthorship","type":[ "null","Authorship"],"default":null,"doc":""},
+      {"name":"binomial","type":["null","boolean"],"default":null,"doc":""},
+      {"name":"candidatus","type":["null","boolean"],"default":null,"doc":""},
+      {"name":"code","type":["null","string"],"default":null,"doc":""},
+      {"name":"combinationAuthorship","type":[ "null","Authorship" ],"default":null,"doc":""},
+      {"name":"doubtful","type":["null","boolean"],"default":null,"doc":""},
+      {"name":"genericName","type":["null","string"],"default":null,"doc":""},
+      {"name":"genus","type":[ "null","string" ],"default":null,"doc":""},
+      {"name":"incomplete","type":["null","boolean"],"default":null,"doc":""},
+      {"name":"indetermined","type":["null","boolean"],"default":null,"doc":""},
+      {"name":"infraspecificEpithet","type":[ "null","string" ],"default":null,"doc":""},
+      {"name":"notho","type":[ "null","string" ],"default":null,"doc":""},
+      {"name":"rank","type":[ "null","string" ],"default":null,"doc":""},
+      {"name":"specificEpithet","type":[ "null","string" ],"default":null,"doc":""},
+      {"name":"state","type":[ "null","string" ],"default":null,"doc":""},
+      {"name":"terminalEpithet","type":[ "null","string" ],"default":null,"doc":""},
+      {"name":"trinomial","type":["null","boolean"],"default":null,"doc":""},
+      {"name":"type","type":[ "null","string" ],"default":null,"doc":""},
+      {"name":"uninomial","type":[ "null","string" ],"default":null}
+    ]
+  },
+  {
+    "name":"GbifClassification",
+    "namespace":"org.gbif.pipelines.io.avro.json",
+    "type":"record",
+    "doc":"GBIF taxonomy classification",
+    "fields":[
+      {"name":"acceptedUsage","type":["null","RankedName"],"default":null,"doc":""},
+      {"name":"classification","type":{ "type":"array","items":"RankedName" },"default":[]},
+      {"name":"classificationPath","type":["null","string"],"default":null,"doc":""},
+      {"name":"diagnostics","type":["null","Diagnostic"],"default":null,"doc":""},
+      {"name":"kingdom","type":["null","string"],"default":null,"doc":""},
+      {"name":"kingdomKey","type":["null","string"],"default":null,"doc":""},
+      {"name":"phylum","type":["null","string"],"default":null,"doc":""},
+      {"name":"phylumKey","type":["null","string"],"default":null,"doc":""},
+      {"name":"class","type":["null","string"],"default":null,"doc":""},
+      {"name":"classKey","type":["null","string"],"default":null,"doc":""},
+      {"name":"order","type":["null","string"],"default":null,"doc":""},
+      {"name":"orderKey","type":["null","string"],"default":null,"doc":""},
+      {"name":"family","type":["null","string"],"default":null,"doc":""},
+      {"name":"familyKey","type":["null","string"],"default":null,"doc":""},
+      {"name":"genus","type":["null","string"],"default":null,"doc":""},
+      {"name":"genusKey","type":["null","string"],"default":null,"doc":""},
+      {"name":"species","type":["null","string"],"default":null,"doc":""},
+      {"name":"speciesKey","type":["null","string"],"default":null,"doc":""},
+      {"name":"synonym","type":["null","boolean"],"default":null,"doc":""},
+      {"name":"taxonID","type":["null","string"],"default":null,"doc":""},
+      {"name":"taxonKey","type":{"type":"array","items":"string"},"default":[]},
+      {"name":"usage","type":["null","RankedName"],"default":null,"doc":""},
+      {"name":"usageParsedName","type":["null","ParsedName"],"default":null,"doc":""},
+      {"name":"verbatimScientificName","type":["null","string"],"default":null,"doc":""},
+      {"name":"iucnRedListCategoryCode","type":["null","string"],"default":null,"doc":""}
+    ]
+  }
+]

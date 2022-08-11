@@ -8,8 +8,8 @@ import lombok.NonNull;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.beam.sdk.transforms.SerializableBiFunction;
 import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
-import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.GbifIdRecord;
 
 @Builder
 public class TableConverter<T extends SpecificRecordBase> {
@@ -21,16 +21,16 @@ public class TableConverter<T extends SpecificRecordBase> {
   @NonNull private final Map<String, ExtendedRecord> verbatimMap;
 
   @NonNull
-  private final SerializableBiFunction<BasicRecord, ExtendedRecord, Optional<T>> converterFn;
+  private final SerializableBiFunction<GbifIdRecord, ExtendedRecord, Optional<T>> converterFn;
 
   /** Join all records, convert into OccurrenceHdfsRecord and save as an avro file */
-  public Function<BasicRecord, Optional<T>> getFn() {
-    return br -> {
-      String k = br.getId();
+  public Function<GbifIdRecord, Optional<T>> getFn() {
+    return id -> {
+      String k = id.getId();
       // Core
       ExtendedRecord er = verbatimMap.getOrDefault(k, ExtendedRecord.newBuilder().setId(k).build());
 
-      Optional<T> table = converterFn.apply(br, er);
+      Optional<T> table = converterFn.apply(id, er);
 
       table.ifPresent(x -> metrics.incMetric(counterName));
 

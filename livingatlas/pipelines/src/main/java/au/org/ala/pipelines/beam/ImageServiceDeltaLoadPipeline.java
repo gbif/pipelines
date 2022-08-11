@@ -1,6 +1,6 @@
 package au.org.ala.pipelines.beam;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.ALL_AVRO;
 
 import au.org.ala.images.BatchUploadResponse;
 import au.org.ala.images.ImageService;
@@ -44,9 +44,11 @@ import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.common.parsers.date.DateParsers;
 import org.gbif.common.parsers.date.TemporalAccessorUtils;
 import org.gbif.common.parsers.date.TemporalParser;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
@@ -68,6 +70,8 @@ import retrofit2.Call;
 @Slf4j
 public class ImageServiceDeltaLoadPipeline {
 
+  private static final DwcTerm CORE_TERM = DwcTerm.Occurrence;
+
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
 
   public static void main(String[] args) throws Exception {
@@ -86,17 +90,15 @@ public class ImageServiceDeltaLoadPipeline {
   public static void run(ImageServicePipelineOptions options)
       throws IOException, InterruptedException {
 
+    HdfsConfigs hdfsConfigs =
+        HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig());
     ALAPipelinesConfig config =
-        ALAPipelinesConfigFactory.getInstance(
-                options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getProperties())
-            .get();
+        ALAPipelinesConfigFactory.getInstance(hdfsConfigs, options.getProperties()).get();
 
     // create the image service
     ImageService service = WsUtils.createClient(config.getImageService(), ImageService.class);
 
-    FileSystem fs =
-        FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
-            .getFs(options.getInputPath());
+    FileSystem fs = FileSystemFactory.getInstance(hdfsConfigs).getFs(options.getInputPath());
 
     // create a zip file of multimedia/*.avro
     log.info("Building zip file to submit to image service");
@@ -158,7 +160,7 @@ public class ImageServiceDeltaLoadPipeline {
     TemporalTransform temporalTransform = TemporalTransform.builder().create();
 
     UnaryOperator<String> pathFn =
-        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
+        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, CORE_TERM, t, ALL_AVRO);
 
     log.info("Reading multimedia for this dataset");
     PCollection<KV<String, MultimediaRecord>> pt1 =

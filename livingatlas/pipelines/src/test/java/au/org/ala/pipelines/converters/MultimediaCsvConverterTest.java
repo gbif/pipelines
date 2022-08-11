@@ -148,7 +148,6 @@ public class MultimediaCsvConverterTest {
         BasicRecord.newBuilder()
             .setId(DwcTerm.occurrenceID.simpleName())
             .setCreated(2L)
-            .setGbifId(22L)
             .setBasisOfRecord("br_basisOfRecord")
             .setSex("br_sex")
             .setLifeStage(
@@ -185,7 +184,6 @@ public class MultimediaCsvConverterTest {
                         .build()))
             .setRecordedBy(Arrays.asList("br_recordedBy_1", "br_recordedBy_2"))
             .setOccurrenceStatus("br_occurrenceStatus")
-            .setIsClustered(true)
             .build();
 
     LocationRecord lr =

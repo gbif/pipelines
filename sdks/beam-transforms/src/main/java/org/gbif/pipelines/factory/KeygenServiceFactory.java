@@ -5,9 +5,11 @@ import java.util.Optional;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.apache.hadoop.hbase.client.Connection;
+import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.core.config.model.KeygenConfig;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
+import org.gbif.pipelines.keygen.HBaseLockingKey;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.keygen.common.HbaseConnection;
 import org.gbif.pipelines.keygen.common.HbaseConnectionFactory;
@@ -15,7 +17,7 @@ import org.gbif.pipelines.keygen.common.HbaseConnectionFactory;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class KeygenServiceFactory {
 
-  public static SerializableSupplier<HBaseLockingKeyService> getInstanceSupplier(
+  public static SerializableSupplier<HBaseLockingKey> getInstanceSupplier(
       PipelinesConfig config, String datasetId) {
     return () -> {
       String zk = getZk(config);
@@ -26,7 +28,7 @@ public class KeygenServiceFactory {
     };
   }
 
-  public static SerializableSupplier<HBaseLockingKeyService> createSupplier(
+  public static SerializableSupplier<HBaseLockingKey> createSupplier(
       PipelinesConfig config, String datasetId) {
     return () -> {
       String zk = getZk(config);
@@ -35,15 +37,14 @@ public class KeygenServiceFactory {
       try {
         c = HbaseConnection.create(zk);
       } catch (IOException ex) {
-        throw new RuntimeException(ex);
+        throw new PipelinesException(ex);
       }
 
       return create(config, c, datasetId);
     };
   }
 
-  private static HBaseLockingKeyService create(
-      PipelinesConfig config, Connection c, String datasetId) {
+  private static HBaseLockingKey create(PipelinesConfig config, Connection c, String datasetId) {
     org.gbif.pipelines.keygen.config.KeygenConfig keygenConfig =
         org.gbif.pipelines.keygen.config.KeygenConfig.builder()
             .counterTable(config.getKeygen().getCounterTable())

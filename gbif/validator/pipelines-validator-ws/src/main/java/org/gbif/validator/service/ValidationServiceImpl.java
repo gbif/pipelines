@@ -310,7 +310,6 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
   private void notify(UUID key, DataFile dataFile, Set<String> pipelinesSteps) {
 
     PipelinesArchiveValidatorMessage message = new PipelinesArchiveValidatorMessage();
-    message.setValidator(true);
     message.setDatasetUuid(key);
     message.setAttempt(1);
     message.setExecutionId(1L);

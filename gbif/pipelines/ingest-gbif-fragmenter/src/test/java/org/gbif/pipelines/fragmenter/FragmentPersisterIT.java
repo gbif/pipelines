@@ -54,6 +54,7 @@ public class FragmentPersisterIT {
             .datasetKey(datasetKey)
             .attempt(attempt)
             .endpointType(endpointType)
+            .generateIdIfAbsent(true)
             .hbaseConnection(HBASE_SERVER.getConnection())
             .build()
             .persist();
@@ -83,6 +84,7 @@ public class FragmentPersisterIT {
             .datasetKey(datasetKey)
             .attempt(attempt)
             .endpointType(endpointType)
+            .generateIdIfAbsent(true)
             .hbaseConnection(HBASE_SERVER.getConnection())
             .build()
             .persist();
@@ -115,6 +117,7 @@ public class FragmentPersisterIT {
             .executor(Executors.newSingleThreadExecutor())
             .hbaseConnection(HBASE_SERVER.getConnection())
             .useSyncMode(false)
+            .generateIdIfAbsent(true)
             .build()
             .persist();
 
@@ -146,6 +149,7 @@ public class FragmentPersisterIT {
             .endpointType(EndpointType.BIOCASE_XML_ARCHIVE)
             .hbaseConnection(HBASE_SERVER.getConnection())
             .executor(Executors.newSingleThreadExecutor())
+            .generateIdIfAbsent(true)
             .build()
             .persist();
 
@@ -160,6 +164,7 @@ public class FragmentPersisterIT {
             .attempt(attemptSecond)
             .endpointType(endpointType)
             .hbaseConnection(HBASE_SERVER.getConnection())
+            .generateIdIfAbsent(true)
             .build()
             .persist();
 
@@ -193,6 +198,7 @@ public class FragmentPersisterIT {
             .hbaseConnection(HBASE_SERVER.getConnection())
             .executor(Executors.newSingleThreadExecutor())
             .useSyncMode(false)
+            .generateIdIfAbsent(true)
             .build()
             .persist();
 
@@ -209,6 +215,7 @@ public class FragmentPersisterIT {
             .batchSize(2)
             .hbaseConnection(HBASE_SERVER.getConnection())
             .useSyncMode(false)
+            .generateIdIfAbsent(true)
             .build()
             .persist();
 
@@ -239,6 +246,7 @@ public class FragmentPersisterIT {
             .attempt(attempt)
             .endpointType(endpointType)
             .hbaseConnection(HBASE_SERVER.getConnection())
+            .generateIdIfAbsent(true)
             .build()
             .persist();
 
@@ -269,6 +277,7 @@ public class FragmentPersisterIT {
             .endpointType(endpointType)
             .executor(Executors.newSingleThreadExecutor())
             .hbaseConnection(HBASE_SERVER.getConnection())
+            .generateIdIfAbsent(true)
             .useSyncMode(false)
             .build()
             .persist();
@@ -299,6 +308,7 @@ public class FragmentPersisterIT {
             .attempt(attempt)
             .endpointType(endpointType)
             .hbaseConnection(HBASE_SERVER.getConnection())
+            .generateIdIfAbsent(true)
             .build()
             .persist();
 
@@ -331,6 +341,7 @@ public class FragmentPersisterIT {
             .hbaseConnection(HBASE_SERVER.getConnection())
             .useSyncMode(false)
             .backPressure(5)
+            .generateIdIfAbsent(true)
             .build()
             .persist();
 
@@ -360,6 +371,7 @@ public class FragmentPersisterIT {
             .attempt(attempt)
             .endpointType(endpointType)
             .hbaseConnection(HBASE_SERVER.getConnection())
+            .generateIdIfAbsent(true)
             .build()
             .persist();
 
@@ -390,6 +402,7 @@ public class FragmentPersisterIT {
             .endpointType(endpointType)
             .hbaseConnection(HBASE_SERVER.getConnection())
             .useSyncMode(false)
+            .generateIdIfAbsent(true)
             .build()
             .persist();
 
@@ -421,6 +434,7 @@ public class FragmentPersisterIT {
             .endpointType(EndpointType.DWC_ARCHIVE)
             .backPressure(5)
             .hbaseConnection(HBASE_SERVER.getConnection())
+            .generateIdIfAbsent(true)
             .build()
             .persist();
 
@@ -436,6 +450,7 @@ public class FragmentPersisterIT {
             .endpointType(endpointType)
             .batchSize(1)
             .hbaseConnection(HBASE_SERVER.getConnection())
+            .generateIdIfAbsent(true)
             .build()
             .persist();
 
@@ -469,6 +484,7 @@ public class FragmentPersisterIT {
             .hbaseConnection(HBASE_SERVER.getConnection())
             .executor(Executors.newSingleThreadExecutor())
             .useSyncMode(false)
+            .generateIdIfAbsent(true)
             .build()
             .persist();
 
@@ -486,6 +502,7 @@ public class FragmentPersisterIT {
             .backPressure(1)
             .batchSize(1)
             .useSyncMode(false)
+            .generateIdIfAbsent(true)
             .build()
             .persist();
 

@@ -127,6 +127,8 @@
     "doc" : "A taxonomic record",
     "fields" : [
       {"name" : "id", "type" : ["null", "string"], "default" : null, "doc":"Pipelines identifier"},
+      {"name": "coreId","type":["null","string"],"default":null, "doc":"Id of the core record when this record belongs to an extension"},
+      {"name": "parentId","type":["null","string"],"default":null, "doc":"Id of the parent record if applies"},
       {"name": "created", "type": ["null", "long"], "default" : null, "doc":"The timestamp the record was created"},
       {"name" : "synonym", "type" : ["null", "boolean"], "default" : null},
       {"name" : "usage", "type" : ["null", "RankedName"], "default" : null},

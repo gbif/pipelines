@@ -5,6 +5,7 @@ import static org.gbif.pipelines.core.parsers.clustering.RelationshipAssertion.F
 
 import com.google.common.annotations.VisibleForTesting;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -46,17 +47,42 @@ public class OccurrenceRelationships {
     }
 
     // fact combinations that are of interest as assertions
-    FeatureAssertion[][] passConditions = {
-      {SAME_ACCEPTED_SPECIES, SAME_COORDINATES, SAME_DATE},
-      {SAME_ACCEPTED_SPECIES, WITHIN_200m, SAME_DATE}, // accommodate 3 decimal place roundings
-      {SAME_ACCEPTED_SPECIES, SAME_COORDINATES, NON_CONFLICTING_DATE, IDENTIFIERS_OVERLAP},
-      {SAME_ACCEPTED_SPECIES, WITHIN_200m, NON_CONFLICTING_DATE, IDENTIFIERS_OVERLAP},
-      {SAME_ACCEPTED_SPECIES, WITHIN_2Km, SAME_DATE, IDENTIFIERS_OVERLAP},
-      {SAME_ACCEPTED_SPECIES, WITHIN_2Km, NON_CONFLICTING_DATE, IDENTIFIERS_OVERLAP},
-      {SAME_ACCEPTED_SPECIES, NON_CONFLICTING_COORDINATES, SAME_DATE, IDENTIFIERS_OVERLAP},
-      {SAME_ACCEPTED_SPECIES, SAME_COORDINATES, APPROXIMATE_DATE, SAME_RECORDER_NAME},
-      {SAME_ACCEPTED_SPECIES, WITHIN_2Km, APPROXIMATE_DATE, SAME_RECORDER_NAME},
-    };
+    List<FeatureAssertion[]> passConditions =
+        new ArrayList<>(
+            Arrays.asList(
+                new FeatureAssertion[][] {
+                  {SAME_ACCEPTED_SPECIES, SAME_COORDINATES, SAME_DATE},
+                  {SAME_ACCEPTED_SPECIES, WITHIN_200m, SAME_DATE},
+                  {
+                    SAME_ACCEPTED_SPECIES,
+                    SAME_COORDINATES,
+                    NON_CONFLICTING_DATE,
+                    IDENTIFIERS_OVERLAP
+                  },
+                  {SAME_ACCEPTED_SPECIES, WITHIN_200m, NON_CONFLICTING_DATE, IDENTIFIERS_OVERLAP},
+                  {SAME_ACCEPTED_SPECIES, WITHIN_2Km, SAME_DATE, IDENTIFIERS_OVERLAP},
+                  {SAME_ACCEPTED_SPECIES, WITHIN_2Km, NON_CONFLICTING_DATE, IDENTIFIERS_OVERLAP},
+                  {
+                    SAME_ACCEPTED_SPECIES,
+                    NON_CONFLICTING_COORDINATES,
+                    SAME_DATE,
+                    IDENTIFIERS_OVERLAP
+                  },
+                  {SAME_ACCEPTED_SPECIES, SAME_COORDINATES, APPROXIMATE_DATE, SAME_RECORDER_NAME},
+                  {SAME_ACCEPTED_SPECIES, WITHIN_2Km, APPROXIMATE_DATE, SAME_RECORDER_NAME},
+                }));
+
+    // Accommodate sparse data from sequence repositories
+    // see https://github.com/gbif/pipelines/issues/733
+    if (o1.isFromSequenceRepository() || o2.isFromSequenceRepository()) {
+      passConditions.add(
+          new FeatureAssertion[] {
+            SAME_ACCEPTED_SPECIES,
+            NON_CONFLICTING_COORDINATES,
+            NON_CONFLICTING_DATE,
+            IDENTIFIERS_OVERLAP
+          });
+    }
 
     // always exclude things on different location or date
     if (assertion.justificationDoesNotContain(DIFFERENT_DATE, DIFFERENT_COUNTRY)) {
@@ -78,8 +104,8 @@ public class OccurrenceRelationships {
   private static <T extends OccurrenceFeatures> void assertSameSpecimen(
       OccurrenceFeatures o1, OccurrenceFeatures o2, RelationshipAssertion<T> assertion) {
     if (equalsAndNotNull(o1.getTaxonKey(), o2.getTaxonKey())
-        && equalsAndNotNull(o1.getTypeStatus(), o2.getTypeStatus())
-        && o1.getTypeStatus().equalsIgnoreCase("HOLOTYPE")) {
+        && containsIgnoreCase(o1.getTypeStatus(), "HOLOTYPE")
+        && containsIgnoreCase(o2.getTypeStatus(), "HOLOTYPE")) {
       assertion.collect(SAME_SPECIMEN);
     }
   }
@@ -87,7 +113,8 @@ public class OccurrenceRelationships {
   private static <T extends OccurrenceFeatures> void assertTypification(
       OccurrenceFeatures o1, OccurrenceFeatures o2, RelationshipAssertion<T> assertion) {
     if (equalsAndNotNull(o1.getScientificName(), o2.getScientificName())
-        && presentOnBoth(o1.getTypeStatus(), o2.getTypeStatus())) {
+        && notEmpty(o1.getTypeStatus())
+        && notEmpty(o2.getTypeStatus())) {
       assertion.collect(TYPIFICATION_RELATION);
     }
   }
@@ -158,8 +185,8 @@ public class OccurrenceRelationships {
 
   private static <T extends OccurrenceFeatures> void compareCollectors(
       OccurrenceFeatures o1, OccurrenceFeatures o2, RelationshipAssertion<T> assertion) {
-    if (equalsAndNotNull(o1.getRecordedBy(), o2.getRecordedBy())) {
-      // this could be improved with parsing and similarity checks
+    if (intersectWithValues(o1.getRecordedBy(), o2.getRecordedBy())) {
+      // this could be improved with similarity checks
       assertion.collect(SAME_RECORDER_NAME);
     }
   }
@@ -250,6 +277,25 @@ public class OccurrenceRelationships {
 
   static boolean presentOnBoth(Object o1, Object o2) {
     return o1 != null && o2 != null;
+  }
+
+  static boolean intersectWithValues(List<String> o1, List<String> o2) {
+    if (o1 != null && o2 != null) {
+      return !o1.stream()
+          .distinct()
+          .filter(v -> containsIgnoreCase(o2, v))
+          .collect(Collectors.toSet())
+          .isEmpty();
+    }
+    return false;
+  }
+
+  static boolean containsIgnoreCase(List<String> list, String value) {
+    return list != null && list.stream().anyMatch(value::equalsIgnoreCase);
+  }
+
+  static boolean notEmpty(List<?> list) {
+    return list != null && !list.isEmpty();
   }
 
   public static String normalizeID(String id) {

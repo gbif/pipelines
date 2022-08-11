@@ -1,0 +1,18 @@
+/**
+ * Represents the inherited temporal fields from parent events.
+ */
+[
+  {
+    "name": "TemporalInheritedRecord",
+    "namespace": "org.gbif.pipelines.io.avro.json",
+    "type": "record",
+    "doc": "Temporal inherited fields from parent event.",
+    "fields": [
+      {"name": "id", "type": ["null", "string"], "default":null, "doc":"Pipelines identifier"},
+      {"name": "inheritedFrom", "type": ["null", "string"], "default":null, "doc":"Id of the parent whose fields are inherited"},
+      {"name": "year", "type": ["null", "int"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/year"},
+      {"name": "month", "type": ["null", "int"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/month"},
+      {"name": "day", "type": ["null", "int"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/day"}
+    ]
+  }
+]

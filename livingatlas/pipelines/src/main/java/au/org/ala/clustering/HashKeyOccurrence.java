@@ -1,5 +1,6 @@
 package au.org.ala.clustering;
 
+import java.util.List;
 import org.apache.beam.sdk.coders.DefaultCoder;
 import org.apache.beam.sdk.schemas.JavaBeanSchema;
 import org.apache.beam.sdk.schemas.SchemaCoder;
@@ -26,13 +27,13 @@ public class HashKeyOccurrence implements OccurrenceFeatures {
   @Nullable String eventDate = null;
   @Nullable String scientificName = null;
   @Nullable String countryCode = null;
-  @Nullable String typeStatus = null;
+  @Nullable List<String> typeStatus = null;
   @Nullable String occurrenceID = null;
-  @Nullable String recordedBy = null;
+  @Nullable List<String> recordedBy = null;
   @Nullable String fieldNumber = null;
   @Nullable String recordNumber = null;
   @Nullable String catalogNumber = null;
-  @Nullable String otherCatalogNumbers = null;
+  @Nullable List<String> otherCatalogNumbers = null;
   @Nullable String institutionCode = null;
   @Nullable String collectionCode = null;
 
@@ -162,11 +163,11 @@ public class HashKeyOccurrence implements OccurrenceFeatures {
   }
 
   @Override
-  public @Nullable String getTypeStatus() {
+  public @Nullable List<String> getTypeStatus() {
     return typeStatus;
   }
 
-  public void setTypeStatus(@Nullable String typeStatus) {
+  public void setTypeStatus(@Nullable List<String> typeStatus) {
     this.typeStatus = typeStatus;
   }
 
@@ -180,11 +181,11 @@ public class HashKeyOccurrence implements OccurrenceFeatures {
   }
 
   @Override
-  public @Nullable String getRecordedBy() {
+  public @Nullable List<String> getRecordedBy() {
     return recordedBy;
   }
 
-  public void setRecordedBy(@Nullable String recordedBy) {
+  public void setRecordedBy(@Nullable List<String> recordedBy) {
     this.recordedBy = recordedBy;
   }
 
@@ -216,11 +217,11 @@ public class HashKeyOccurrence implements OccurrenceFeatures {
   }
 
   @Override
-  public @Nullable String getOtherCatalogNumbers() {
+  public @Nullable List<String> getOtherCatalogNumbers() {
     return otherCatalogNumbers;
   }
 
-  public void setOtherCatalogNumbers(@Nullable String otherCatalogNumbers) {
+  public void setOtherCatalogNumbers(@Nullable List<String> otherCatalogNumbers) {
     this.otherCatalogNumbers = otherCatalogNumbers;
   }
 

@@ -86,6 +86,7 @@ public class OccurrenceExtensionTransformTest {
 
     final List<ExtendedRecord> expected =
         createCollection(
+            coreId,
             true,
             extId + "_" + somethingCore + "_" + somethingCoreExt + "_" + somethingExt,
             ext2Id + "_" + somethingCore + "_" + somethingCoreExt + "_" + somethingExt,
@@ -141,7 +142,7 @@ public class OccurrenceExtensionTransformTest {
 
     ExtendedRecord er = ExtendedRecord.newBuilder().setId(id).setCoreTerms(ext).build();
 
-    final List<ExtendedRecord> expected = createCollection(false, id + "_" + somethingCore);
+    final List<ExtendedRecord> expected = createCollection(null, false, id + "_" + somethingCore);
 
     // When
     PCollection<ExtendedRecord> result =
@@ -179,7 +180,7 @@ public class OccurrenceExtensionTransformTest {
     p.run();
   }
 
-  private List<ExtendedRecord> createCollection(boolean isExt, String... idName) {
+  private List<ExtendedRecord> createCollection(String coreId, boolean isExt, String... idName) {
     return Arrays.stream(idName)
         .map(
             x -> {
@@ -193,7 +194,7 @@ public class OccurrenceExtensionTransformTest {
               }
 
               ExtendedRecord.Builder builder =
-                  ExtendedRecord.newBuilder().setId(array[0]).setCoreTerms(core);
+                  ExtendedRecord.newBuilder().setCoreId(coreId).setId(array[0]).setCoreTerms(core);
 
               if (isExt && array.length == 4) {
                 Map<String, String> ext = new HashMap<>(32);

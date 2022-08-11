@@ -2,8 +2,10 @@ package au.org.ala.pipelines.beam;
 
 import static au.org.ala.pipelines.transforms.IndexFields.*;
 import static au.org.ala.pipelines.transforms.IndexValues.*;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.ALL_AVRO;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
+import au.org.ala.pipelines.common.SolrFieldSchema;
 import au.org.ala.pipelines.options.AllDatasetsPipelinesOptions;
 import au.org.ala.pipelines.options.SolrPipelineOptions;
 import au.org.ala.pipelines.transforms.IndexFields;
@@ -32,6 +34,7 @@ import org.apache.solr.client.solrj.request.schema.SchemaRequest;
 import org.apache.solr.client.solrj.response.schema.SchemaResponse;
 import org.apache.solr.common.SolrInputDocument;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.io.avro.*;
@@ -58,7 +61,8 @@ import org.slf4j.MDC;
 @Slf4j
 public class IndexRecordToSolrPipeline {
 
-  static final SampleRecord nullSampling = SampleRecord.newBuilder().setLatLng("NO_VALUE").build();
+  private static final SampleRecord nullSampling =
+      SampleRecord.newBuilder().setLatLng("NO_VALUE").build();
 
   public static final String EMPTY = "EMPTY";
   static final IndexRecord nullIndexRecord = IndexRecord.newBuilder().setId(EMPTY).build();
@@ -86,7 +90,7 @@ public class IndexRecordToSolrPipeline {
 
   public static void run(SolrPipelineOptions options) {
 
-    final List<String> schemaFields = getSchemaFields(options);
+    final Map<String, SolrFieldSchema> schemaFields = getSchemaFields(options);
     final List<String> dynamicFieldPrefixes = getSchemaDynamicFieldPrefixes(options);
     final int numOfPartitions = options.getNumOfPartitions();
 
@@ -177,17 +181,22 @@ public class IndexRecordToSolrPipeline {
   }
 
   @NotNull
-  private static List<String> getSchemaFields(SolrPipelineOptions options) {
+  private static Map<String, SolrFieldSchema> getSchemaFields(SolrPipelineOptions options) {
     try (CloudSolrClient client =
         new CloudSolrClient.Builder(ImmutableList.of(options.getZkHost()), Optional.empty())
             .build()) {
       SchemaRequest.Fields fields = new SchemaRequest.Fields();
       SchemaResponse.FieldsResponse response = fields.process(client, options.getSolrCollection());
-      return response.getFields().stream()
-          .map(f -> f.get("name").toString())
-          .collect(Collectors.toList());
+      Map<String, SolrFieldSchema> schema = new HashMap<String, SolrFieldSchema>();
+      for (Map<String, Object> field : response.getFields()) {
+        schema.put(
+            (String) field.get("name"),
+            new SolrFieldSchema(
+                (String) field.get("type"), (boolean) field.getOrDefault("multiValued", false)));
+      }
+      return schema;
     } catch (Exception e) {
-      throw new RuntimeException("Unable to retrieve schema fields: " + e.getMessage());
+      throw new PipelinesException("Unable to retrieve schema fields: " + e.getMessage());
     }
   }
 
@@ -203,7 +212,7 @@ public class IndexRecordToSolrPipeline {
           .map(f -> f.get("name").toString().replace("*", ""))
           .collect(Collectors.toList());
     } catch (Exception e) {
-      throw new RuntimeException("Unable to retrieve schema fields: " + e.getMessage());
+      throw new PipelinesException("Unable to retrieve schema fields: " + e.getMessage());
     }
   }
 
@@ -229,7 +238,7 @@ public class IndexRecordToSolrPipeline {
       SolrPipelineOptions options,
       PCollection<IndexRecord> indexRecords,
       SolrIO.ConnectionConfiguration conn,
-      final List<String> schemaFields,
+      final Map<String, SolrFieldSchema> schemaFields,
       final List<String> dynamicFieldPrefixes) {
 
     if (options.getOutputAvroToFilePath() == null) {
@@ -553,8 +562,7 @@ public class IndexRecordToSolrPipeline {
     }
 
     String jackknifePath =
-        PathBuilder.buildPath(options.getJackKnifePath(), "outliers", "*" + AVRO_EXTENSION)
-            .toString();
+        PathBuilder.buildPath(options.getJackKnifePath(), "outliers", ALL_AVRO).toString();
     log.info("Loading jackknife from {}", jackknifePath);
     return p.apply(AvroIO.read(JackKnifeOutlierRecord.class).from(jackknifePath))
         .apply(
@@ -604,8 +612,7 @@ public class IndexRecordToSolrPipeline {
     }
 
     String path =
-        PathBuilder.buildPath(options.getOutlierPath(), dataResourceFolder, "*" + AVRO_EXTENSION)
-            .toString();
+        PathBuilder.buildPath(options.getOutlierPath(), dataResourceFolder, ALL_AVRO).toString();
     log.info("Loading outlier from {}", path);
 
     return p.apply(AvroIO.read(DistributionOutlierRecord.class).from(path))

@@ -13,6 +13,7 @@ import org.apache.avro.io.DatumReader;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.hadoop.fs.*;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.Record;
 
@@ -29,8 +30,8 @@ public class AvroReader {
    *     multiple files
    */
   public static <T extends Record> Map<String, T> readUniqueRecords(
-      String hdfsSiteConfig, String coreSiteConfig, Class<T> clazz, String path) {
-    FileSystem fs = FsUtils.getFileSystem(hdfsSiteConfig, coreSiteConfig, path);
+      HdfsConfigs hdfsConfigs, Class<T> clazz, String path) {
+    FileSystem fs = FsUtils.getFileSystem(hdfsConfigs, path);
     List<Path> paths = parseWildcardPath(fs, path);
     return readUniqueRecords(fs, clazz, paths);
   }
@@ -43,8 +44,8 @@ public class AvroReader {
    *     multiple files
    */
   public static <T extends Record> Map<String, T> readRecords(
-      String hdfsSiteConfig, String coreSiteConfig, Class<T> clazz, String path) {
-    FileSystem fs = FsUtils.getFileSystem(hdfsSiteConfig, coreSiteConfig, path);
+      HdfsConfigs hdfsConfigs, Class<T> clazz, String path) {
+    FileSystem fs = FsUtils.getFileSystem(hdfsConfigs, path);
     List<Path> paths = parseWildcardPath(fs, path);
     return readRecords(fs, clazz, paths);
   }
@@ -57,8 +58,8 @@ public class AvroReader {
    *     multiple files
    */
   public static <T extends SpecificRecordBase> List<T> readObjects(
-      String hdfsSiteConfig, String coreSiteConfig, Class<T> clazz, String path) {
-    FileSystem fs = FsUtils.getFileSystem(hdfsSiteConfig, coreSiteConfig, path);
+      HdfsConfigs hdfsConfigs, Class<T> clazz, String path) {
+    FileSystem fs = FsUtils.getFileSystem(hdfsConfigs, path);
     List<Path> paths = parseWildcardPath(fs, path);
     return readObjects(fs, clazz, paths);
   }

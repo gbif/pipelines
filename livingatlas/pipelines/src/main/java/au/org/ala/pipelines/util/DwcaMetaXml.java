@@ -17,6 +17,7 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import org.apache.hadoop.fs.FileSystem;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
 
 @Builder(buildMethodName = "create")
@@ -61,7 +62,8 @@ public class DwcaMetaXml {
     if (hdfsSiteConfig == null || hdfsSiteConfig.isEmpty()) {
       out = new OutputStreamWriter(new FileOutputStream(pathToWrite));
     } else {
-      FileSystem fs = FsUtils.getFileSystem(hdfsSiteConfig, coreSiteConfig, pathToWrite);
+      FileSystem fs =
+          FsUtils.getFileSystem(HdfsConfigs.create(hdfsSiteConfig, coreSiteConfig), pathToWrite);
       out = new OutputStreamWriter(ALAFsUtils.openOutputStream(fs, pathToWrite));
     }
 

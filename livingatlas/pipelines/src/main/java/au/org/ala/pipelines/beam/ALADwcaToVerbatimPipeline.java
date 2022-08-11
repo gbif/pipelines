@@ -18,7 +18,8 @@ import org.gbif.pipelines.common.beam.DwcaIO;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
-import org.gbif.pipelines.core.utils.FsUtils;
+import org.gbif.pipelines.core.factory.FileSystemFactory;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.slf4j.MDC;
 
@@ -52,8 +53,9 @@ public class ALADwcaToVerbatimPipeline {
 
       log.info("HDFS Input path: {}", inputPath);
       FileSystem fs =
-          FsUtils.getFileSystem(
-              options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getInputPath());
+          FileSystemFactory.getInstance(
+                  HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()))
+              .getFs(options.getInputPath());
 
       Path inputPathHdfs = new Path(inputPath);
 

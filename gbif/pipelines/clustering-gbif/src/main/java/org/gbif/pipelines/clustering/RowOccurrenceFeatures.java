@@ -4,10 +4,18 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.module.scala.DefaultScalaModule;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.spark.sql.Row;
 import org.gbif.pipelines.core.parsers.clustering.OccurrenceFeatures;
+import scala.collection.JavaConverters;
+import scala.collection.Seq;
 
 /**
  * A wrapper around a Spark row giving exposing the terms necessary for clustering. This allows
@@ -15,6 +23,16 @@ import org.gbif.pipelines.core.parsers.clustering.OccurrenceFeatures;
  * of a SQL select a.*,b.* from a join b).
  */
 public class RowOccurrenceFeatures implements OccurrenceFeatures {
+
+  // Dataset keys are considered reliable over time
+  private static final List<String> SEQUENCE_REPOSITORY_KEYS =
+      Arrays.asList(
+          "d8cd16ba-bb74-4420-821e-083f2bac17c2", // INSDC sequences
+          "393b8c26-e4e0-4dd0-a218-93fc074ebf4e", // INSDC host organisms
+          "583d91fe-bbc0-4b4a-afe1-801f88263016", // INSDC environmental samples
+          "040c5662-da76-4782-a48e-cdea1892d14c" // iBOL
+          );
+
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
   static {
@@ -176,8 +194,8 @@ public class RowOccurrenceFeatures implements OccurrenceFeatures {
   }
 
   @Override
-  public String getTypeStatus() {
-    return get("typeStatus");
+  public List<String> getTypeStatus() {
+    return listOrNull("typeStatus");
   }
 
   @Override
@@ -186,8 +204,8 @@ public class RowOccurrenceFeatures implements OccurrenceFeatures {
   }
 
   @Override
-  public String getRecordedBy() {
-    return get("recordedBy");
+  public List<String> getRecordedBy() {
+    return listOrNull("recordedBy");
   }
 
   @Override
@@ -206,8 +224,8 @@ public class RowOccurrenceFeatures implements OccurrenceFeatures {
   }
 
   @Override
-  public String getOtherCatalogNumbers() {
-    return get("otherCatalogNumbers");
+  public List<String> getOtherCatalogNumbers() {
+    return listOrNull("otherCatalogNumbers");
   }
 
   @Override
@@ -218,5 +236,23 @@ public class RowOccurrenceFeatures implements OccurrenceFeatures {
   @Override
   public String getCollectionCode() {
     return get("collectionCode");
+  }
+
+  @Override
+  public boolean isFromSequenceRepository() {
+    return SEQUENCE_REPOSITORY_KEYS.contains(getDatasetKey().toLowerCase());
+  }
+
+  List<String> listOrNull(String field) {
+    Object o = get(field);
+    // what follows exists only to simply testing (List) and Spark using Hive (Seq) integrations
+    if (o == null) return null;
+    else if (o instanceof Seq) {
+      return JavaConverters.seqAsJavaListConverter((Seq<String>) o).asJava();
+    } else if (o instanceof List) {
+      return (List<String>) o;
+    } else {
+      throw new IllegalArgumentException("Expected a Seq or List for " + field);
+    }
   }
 }

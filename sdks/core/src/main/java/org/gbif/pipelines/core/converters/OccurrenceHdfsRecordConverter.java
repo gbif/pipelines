@@ -25,10 +25,13 @@ import org.gbif.pipelines.core.utils.MediaSerDeser;
 import org.gbif.pipelines.core.utils.TemporalConverter;
 import org.gbif.pipelines.io.avro.AgentIdentifier;
 import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.DegreeOfEstablishment;
 import org.gbif.pipelines.io.avro.Diagnostic;
 import org.gbif.pipelines.io.avro.EstablishmentMeans;
+import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.GbifIdRecord;
 import org.gbif.pipelines.io.avro.IssueRecord;
 import org.gbif.pipelines.io.avro.LifeStage;
 import org.gbif.pipelines.io.avro.LocationRecord;
@@ -49,6 +52,8 @@ public class OccurrenceHdfsRecordConverter {
   private static final TermFactory TERM_FACTORY = TermFactory.instance();
 
   private final ExtendedRecord extendedRecord;
+  private final GbifIdRecord gbifIdRecord;
+  private final ClusteringRecord clusteringRecord;
   private final BasicRecord basicRecord;
   private final LocationRecord locationRecord;
   private final TaxonRecord taxonRecord;
@@ -56,6 +61,7 @@ public class OccurrenceHdfsRecordConverter {
   private final TemporalRecord temporalRecord;
   private final MetadataRecord metadataRecord;
   private final MultimediaRecord multimediaRecord;
+  private EventCoreRecord eventCoreRecord;
 
   /**
    * Collects data from {@link SpecificRecordBase} instances into a {@link OccurrenceHdfsRecord}.
@@ -67,6 +73,8 @@ public class OccurrenceHdfsRecordConverter {
     occurrenceHdfsRecord.setIssue(new ArrayList<>());
 
     // Order is important
+    mapGbifIdRecord(occurrenceHdfsRecord);
+    mapClusteringRecord(occurrenceHdfsRecord);
     mapBasicRecord(occurrenceHdfsRecord);
     mapMetadataRecord(occurrenceHdfsRecord);
     mapTemporalRecord(occurrenceHdfsRecord);
@@ -75,14 +83,15 @@ public class OccurrenceHdfsRecordConverter {
     mapGrscicollRecord(occurrenceHdfsRecord);
     mapMultimediaRecord(occurrenceHdfsRecord);
     mapExtendedRecord(occurrenceHdfsRecord);
+    mapEventCoreRecord(occurrenceHdfsRecord);
 
     // The id (the <id> reference in the DWCA meta.xml) is an identifier local to the DWCA, and
     // could only have been
     // used for "un-starring" a DWCA star record. However, we've exposed it as DcTerm.identifier for
     // a long time in
     // our public API v1, so we continue to do this.
-    if (extendedRecord != null && basicRecord != null) {
-      setIdentifier(basicRecord, extendedRecord, occurrenceHdfsRecord);
+    if (extendedRecord != null && gbifIdRecord != null) {
+      setIdentifier(gbifIdRecord, extendedRecord, occurrenceHdfsRecord);
     }
 
     return occurrenceHdfsRecord;
@@ -355,14 +364,37 @@ public class OccurrenceHdfsRecordConverter {
     addIssues(grscicollRecord.getIssues(), occurrenceHdfsRecord);
   }
 
+  /** Copies the {@link GbifIdRecord} data into the {@link OccurrenceHdfsRecord}. */
+  private void mapGbifIdRecord(OccurrenceHdfsRecord occurrenceHdfsRecord) {
+    if (gbifIdRecord == null) {
+      return;
+    }
+    if (Objects.nonNull(gbifIdRecord.getGbifId())) {
+      occurrenceHdfsRecord.setGbifid(gbifIdRecord.getGbifId());
+      // occurrenceHdfsRecord.setGbifid(gbifIdRecord.getGbifId().toString());
+    }
+
+    setCreatedIfGreater(occurrenceHdfsRecord, gbifIdRecord.getCreated());
+    addIssues(gbifIdRecord.getIssues(), occurrenceHdfsRecord);
+  }
+
+  /** Copies the {@link ClusteringRecord} data into the {@link OccurrenceHdfsRecord}. */
+  private void mapClusteringRecord(OccurrenceHdfsRecord occurrenceHdfsRecord) {
+    if (clusteringRecord == null) {
+      return;
+    }
+    occurrenceHdfsRecord.setIsincluster(clusteringRecord.getIsClustered());
+
+    setCreatedIfGreater(occurrenceHdfsRecord, clusteringRecord.getCreated());
+    addIssues(clusteringRecord.getIssues(), occurrenceHdfsRecord);
+  }
+
   /** Copies the {@link BasicRecord} data into the {@link OccurrenceHdfsRecord}. */
   private void mapBasicRecord(OccurrenceHdfsRecord occurrenceHdfsRecord) {
     if (basicRecord == null) {
       return;
     }
-    if (Objects.nonNull(basicRecord.getGbifId())) {
-      occurrenceHdfsRecord.setGbifid(basicRecord.getGbifId());
-    }
+
     occurrenceHdfsRecord.setBasisofrecord(basicRecord.getBasisOfRecord());
     occurrenceHdfsRecord.setIndividualcount(basicRecord.getIndividualCount());
     occurrenceHdfsRecord.setReferences(basicRecord.getReferences());
@@ -374,7 +406,6 @@ public class OccurrenceHdfsRecordConverter {
     occurrenceHdfsRecord.setSamplesizevalue(basicRecord.getSampleSizeValue());
     occurrenceHdfsRecord.setRelativeorganismquantity(basicRecord.getRelativeOrganismQuantity());
     occurrenceHdfsRecord.setOccurrencestatus(basicRecord.getOccurrenceStatus());
-    occurrenceHdfsRecord.setIsincluster(basicRecord.getIsClustered());
     occurrenceHdfsRecord.setDatasetid(basicRecord.getDatasetID());
     occurrenceHdfsRecord.setDatasetname(basicRecord.getDatasetName());
     occurrenceHdfsRecord.setOthercatalognumbers(basicRecord.getOtherCatalogNumbers());
@@ -421,7 +452,7 @@ public class OccurrenceHdfsRecordConverter {
                         .setLineage(c.getLineage())
                         .build()));
 
-    // Othes
+    // Others
     Optional.ofNullable(basicRecord.getRecordedByIds())
         .ifPresent(
             uis ->
@@ -453,7 +484,7 @@ public class OccurrenceHdfsRecordConverter {
    * for a long time in our public API v1, so we continue to do this.
    */
   private static void setIdentifier(
-      BasicRecord br, ExtendedRecord er, OccurrenceHdfsRecord occurrenceHdfsRecord) {
+      GbifIdRecord gr, ExtendedRecord er, OccurrenceHdfsRecord occurrenceHdfsRecord) {
 
     String institutionCode = er.getCoreTerms().get(DwcTerm.institutionCode.qualifiedName());
     String collectionCode = er.getCoreTerms().get(DwcTerm.collectionCode.qualifiedName());
@@ -462,14 +493,14 @@ public class OccurrenceHdfsRecordConverter {
     // id format following the convention of DwC (http://rs.tdwg.org/dwc/terms/#occurrenceID)
     String triplet =
         String.join(":", "urn:catalog", institutionCode, collectionCode, catalogNumber);
-    String gbifId = Optional.ofNullable(br.getGbifId()).map(Object::toString).orElse("");
+    String gbifId = Optional.ofNullable(gr.getGbifId()).map(Object::toString).orElse("");
 
     String occId = er.getCoreTerms().get(DwcTerm.occurrenceID.qualifiedName());
 
-    if (!br.getId().equals(gbifId)
-        && (!Strings.isNullOrEmpty(occId) || !br.getId().equals(triplet))) {
-      occurrenceHdfsRecord.setIdentifier(br.getId());
-      occurrenceHdfsRecord.setVIdentifier(br.getId());
+    if (!gr.getId().equals(gbifId)
+        && (!Strings.isNullOrEmpty(occId) || !gr.getId().equals(triplet))) {
+      occurrenceHdfsRecord.setIdentifier(gr.getId());
+      occurrenceHdfsRecord.setVIdentifier(gr.getId());
     }
   }
 
@@ -531,6 +562,31 @@ public class OccurrenceHdfsRecordConverter {
             .map(Entry::getKey)
             .collect(Collectors.toList());
     occurrenceHdfsRecord.setDwcaextension(extensions);
+  }
+
+  /** Copies the {@link EventCoreRecord} data into the {@link OccurrenceHdfsRecord}. */
+  private void mapEventCoreRecord(OccurrenceHdfsRecord occurrenceHdfsRecord) {
+    //    if (eventCoreRecord != null) {
+    //       occurrenceHdfsRecord.setGbifid(eventCoreRecord.getId());
+    //      if (eventCoreRecord.getParentsLineage() != null) {
+    //        occurrenceHdfsRecord.setParenteventgbifid(
+    //            eventCoreRecord.getParentsLineage().stream()
+    //                .map(
+    //                    pl ->
+    //                        ParentEventGbifId.newBuilder()
+    //                            .setId(pl.getId())
+    //                            .setEventtype(pl.getEventType())
+    //                            .build())
+    //                .collect(Collectors.toList()));
+    //      }
+    //      if (eventCoreRecord.getEventType() != null) {
+    //        occurrenceHdfsRecord.setEventtype(
+    //            EventType.newBuilder()
+    //                .setConcept(eventCoreRecord.getEventType().getConcept())
+    //                .setLineage(eventCoreRecord.getEventType().getLineage())
+    //                .build());
+    //      }
+    //    }
   }
 
   private void mapTerm(String k, String v, OccurrenceHdfsRecord occurrenceHdfsRecord) {

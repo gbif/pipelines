@@ -14,11 +14,12 @@ import java.util.function.Function;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.specific.SpecificDatumReader;
+import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.InterpretationType;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
-import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.GbifIdRecord;
 import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
 import org.junit.Assert;
 import org.junit.Test;
@@ -31,17 +32,18 @@ public class TableRecordWriterTest {
     // State
     Long gbifID = 777L;
 
-    BasicRecord basicRecord = BasicRecord.newBuilder().setId("1").setGbifId(gbifID).build();
-    BasicRecord skipBasicRecord = BasicRecord.newBuilder().setId("1").setGbifId(-gbifID).build();
-    List<BasicRecord> list = Arrays.asList(basicRecord, skipBasicRecord);
+    GbifIdRecord idRecord = GbifIdRecord.newBuilder().setId("1").setGbifId(gbifID).build();
+    GbifIdRecord skipIdRecord = GbifIdRecord.newBuilder().setId("1").setGbifId(-gbifID).build();
+    List<GbifIdRecord> list = Arrays.asList(idRecord, skipIdRecord);
 
-    Function<BasicRecord, Optional<OccurrenceHdfsRecord>> fn =
-        br -> {
-          if (br.getGbifId() < 0) {
+    Function<GbifIdRecord, Optional<OccurrenceHdfsRecord>> fn =
+        id -> {
+          if (id.getGbifId() < 0) {
             return Optional.empty();
           }
           OccurrenceHdfsRecord hdfsRecord = new OccurrenceHdfsRecord();
-          hdfsRecord.setGbifid(br.getGbifId());
+          // hdfsRecord.setGbifid(id.getGbifId().toString());
+          hdfsRecord.setGbifid(id.getGbifId());
           return Optional.of(hdfsRecord);
         };
 
@@ -61,13 +63,17 @@ public class TableRecordWriterTest {
     Function<InterpretationType, String> pathFn =
         st -> {
           String id = options.getDatasetId() + '_' + options.getAttempt() + AVRO_EXTENSION;
-          return PathBuilder.buildFilePathViewUsingInputPath(options, st.name().toLowerCase(), id);
+          return PathBuilder.buildFilePathViewUsingInputPath(
+              options,
+              PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE,
+              st.name().toLowerCase(),
+              id);
         };
 
     // When
     TableRecordWriter.<OccurrenceHdfsRecord>builder()
         .recordFunction(fn)
-        .basicRecords(list)
+        .gbifIdRecords(list)
         .executor(Executors.newSingleThreadExecutor())
         .options(options)
         .targetPathFn(pathFn)
@@ -81,7 +87,7 @@ public class TableRecordWriterTest {
     File result =
         new File(
             outputFile
-                + "/d596fccb-2319-42eb-b13b-986c932780ad/146/interpreted/occurrence/d596fccb-2319-42eb-b13b-986c932780ad_146.avro");
+                + "/d596fccb-2319-42eb-b13b-986c932780ad/146/occurrence_table/occurrence/d596fccb-2319-42eb-b13b-986c932780ad_146.avro");
     DatumReader<OccurrenceHdfsRecord> datumReader =
         new SpecificDatumReader<>(OccurrenceHdfsRecord.class);
     try (DataFileReader<OccurrenceHdfsRecord> dataFileReader =
@@ -89,7 +95,7 @@ public class TableRecordWriterTest {
       while (dataFileReader.hasNext()) {
         OccurrenceHdfsRecord record = dataFileReader.next();
         Assert.assertNotNull(record);
-        Assert.assertEquals(gbifID, record.getGbifid());
+        Assert.assertEquals(Long.valueOf(gbifID.toString()), record.getGbifid());
       }
     }
 
@@ -102,17 +108,18 @@ public class TableRecordWriterTest {
     // State
     Long gbifID = 777L;
 
-    BasicRecord basicRecord = BasicRecord.newBuilder().setId("1").setGbifId(gbifID).build();
-    BasicRecord skipBasicRecord = BasicRecord.newBuilder().setId("1").setGbifId(-gbifID).build();
-    List<BasicRecord> list = Arrays.asList(basicRecord, skipBasicRecord);
+    GbifIdRecord idRecord = GbifIdRecord.newBuilder().setId("1").setGbifId(gbifID).build();
+    GbifIdRecord skipIdRecord = GbifIdRecord.newBuilder().setId("1").setGbifId(-gbifID).build();
+    List<GbifIdRecord> list = Arrays.asList(idRecord, skipIdRecord);
 
-    Function<BasicRecord, Optional<OccurrenceHdfsRecord>> fn =
-        br -> {
-          if (br.getGbifId() < 0) {
+    Function<GbifIdRecord, Optional<OccurrenceHdfsRecord>> fn =
+        id -> {
+          if (id.getGbifId() < 0) {
             return Optional.empty();
           }
           OccurrenceHdfsRecord hdfsRecord = new OccurrenceHdfsRecord();
-          hdfsRecord.setGbifid(br.getGbifId());
+          // hdfsRecord.setGbifid(id.getGbifId().toString());
+          hdfsRecord.setGbifid(id.getGbifId());
           return Optional.of(hdfsRecord);
         };
 
@@ -133,13 +140,17 @@ public class TableRecordWriterTest {
     Function<InterpretationType, String> pathFn =
         st -> {
           String id = options.getDatasetId() + '_' + options.getAttempt() + AVRO_EXTENSION;
-          return PathBuilder.buildFilePathViewUsingInputPath(options, st.name().toLowerCase(), id);
+          return PathBuilder.buildFilePathViewUsingInputPath(
+              options,
+              PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE,
+              st.name().toLowerCase(),
+              id);
         };
 
     // When
     TableRecordWriter.<OccurrenceHdfsRecord>builder()
         .recordFunction(fn)
-        .basicRecords(list)
+        .gbifIdRecords(list)
         .executor(Executors.newSingleThreadExecutor())
         .options(options)
         .targetPathFn(pathFn)
@@ -153,7 +164,7 @@ public class TableRecordWriterTest {
     File result =
         new File(
             outputFile
-                + "/d596fccb-2319-42eb-b13b-986c932780ad/146/interpreted/occurrence/d596fccb-2319-42eb-b13b-986c932780ad_146.avro");
+                + "/d596fccb-2319-42eb-b13b-986c932780ad/146/occurrence_table/occurrence/d596fccb-2319-42eb-b13b-986c932780ad_146.avro");
     DatumReader<OccurrenceHdfsRecord> datumReader =
         new SpecificDatumReader<>(OccurrenceHdfsRecord.class);
     try (DataFileReader<OccurrenceHdfsRecord> dataFileReader =
@@ -161,7 +172,7 @@ public class TableRecordWriterTest {
       while (dataFileReader.hasNext()) {
         OccurrenceHdfsRecord record = dataFileReader.next();
         Assert.assertNotNull(record);
-        Assert.assertEquals(gbifID, record.getGbifid());
+        Assert.assertEquals(Long.valueOf(gbifID.toString()), record.getGbifid());
       }
     }
 

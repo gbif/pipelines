@@ -7,8 +7,8 @@ import java.util.Set;
 import lombok.Builder;
 import org.apache.beam.sdk.values.TupleTag;
 import org.gbif.pipelines.core.converters.PreservationTableConverter;
-import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.GbifIdRecord;
 import org.gbif.pipelines.io.avro.extension.ggbn.PreservationTable;
 
 public class PreservationTableTransform extends TableTransform<PreservationTable> {
@@ -16,7 +16,7 @@ public class PreservationTableTransform extends TableTransform<PreservationTable
   @Builder
   public PreservationTableTransform(
       TupleTag<ExtendedRecord> extendedRecordTag,
-      TupleTag<BasicRecord> basicRecordTag,
+      TupleTag<GbifIdRecord> gbifIdRecordTag,
       String path,
       Integer numShards,
       Set<String> types) {
@@ -27,7 +27,7 @@ public class PreservationTableTransform extends TableTransform<PreservationTable
         PRESERVATION_TABLE_RECORDS_COUNT,
         PreservationTableConverter::convert);
     this.setExtendedRecordTag(extendedRecordTag)
-        .setBasicRecordTag(basicRecordTag)
+        .setGbifIdRecordTag(gbifIdRecordTag)
         .setPath(path)
         .setNumShards(numShards)
         .setTypes(types);

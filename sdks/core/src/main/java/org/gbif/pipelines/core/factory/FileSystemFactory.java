@@ -7,6 +7,8 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
+import org.gbif.pipelines.common.PipelinesException;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
 
 @Slf4j
@@ -25,11 +27,11 @@ public class FileSystemFactory {
   private static final Object MUTEX = new Object();
 
   @SneakyThrows
-  private FileSystemFactory(String hdfsSiteConfig, String coreSiteConfig) {
-    if (!Strings.isNullOrEmpty(hdfsSiteConfig)) {
+  private FileSystemFactory(HdfsConfigs hdfsConfigs) {
+    if (!Strings.isNullOrEmpty(hdfsConfigs.getHdfsSiteConfig())) {
 
-      String hdfsPrefixToUse = getHdfsPrefix(hdfsSiteConfig);
-      String corePrefixToUse = getHdfsPrefix(coreSiteConfig);
+      String hdfsPrefixToUse = getHdfsPrefix(hdfsConfigs.getHdfsSiteConfig());
+      String corePrefixToUse = getHdfsPrefix(hdfsConfigs.getCoreSiteConfig());
 
       String prefixToUse = null;
       if (!DEFAULT_FS.equals(hdfsPrefixToUse)) {
@@ -42,10 +44,10 @@ public class FileSystemFactory {
 
       if (prefixToUse != null) {
         this.hdfsPrefix = prefixToUse;
-        Configuration config = getHdfsConfiguration(hdfsSiteConfig);
+        Configuration config = getHdfsConfiguration(hdfsConfigs.getHdfsSiteConfig());
         this.hdfsFs = FileSystem.get(URI.create(prefixToUse), config);
       } else {
-        throw new RuntimeException("XML config is provided, but fs name is not found");
+        throw new PipelinesException("XML config is provided, but fs name is not found");
       }
 
     } else {
@@ -56,27 +58,19 @@ public class FileSystemFactory {
     this.localFs = FileSystem.getLocal(new Configuration());
   }
 
-  public static FileSystemFactory getInstance(String hdfsSiteConfig, String coreSiteConfig) {
+  public static FileSystemFactory getInstance(HdfsConfigs hdfsConfigs) {
     if (instance == null) {
       synchronized (MUTEX) {
         if (instance == null) {
-          instance = new FileSystemFactory(hdfsSiteConfig, coreSiteConfig);
+          instance = new FileSystemFactory(hdfsConfigs);
         }
       }
     }
     return instance;
   }
 
-  public static FileSystemFactory getInstance(String hdfsSiteConfig) {
-    return getInstance(hdfsSiteConfig, null);
-  }
-
-  public static FileSystemFactory create(String hdfsSiteConfig, String coreSiteConfig) {
-    return new FileSystemFactory(hdfsSiteConfig, coreSiteConfig);
-  }
-
-  public static FileSystemFactory create(String hdfsSiteConfig) {
-    return create(hdfsSiteConfig, null);
+  public static FileSystemFactory create(HdfsConfigs hdfsConfigs) {
+    return new FileSystemFactory(hdfsConfigs);
   }
 
   public FileSystem getFs(String path) {

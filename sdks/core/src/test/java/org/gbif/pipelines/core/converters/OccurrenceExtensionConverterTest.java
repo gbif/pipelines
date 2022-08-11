@@ -45,7 +45,7 @@ public class OccurrenceExtensionConverterTest {
     exts.put(ResourceRelationship.qualifiedName(), Arrays.asList(extMap, extMap));
 
     ExtendedRecord extendedRecord =
-        ExtendedRecord.newBuilder().setId("id").setCoreTerms(coreMap).setExtensions(exts).build();
+        ExtendedRecord.newBuilder().setId(idCore).setCoreTerms(coreMap).setExtensions(exts).build();
 
     // When
     List<ExtendedRecord> result = OccurrenceExtensionConverter.convert(extendedRecord);
@@ -67,5 +67,8 @@ public class OccurrenceExtensionConverterTest {
         2, erResult.getExtensions().get(ResourceRelationship.qualifiedName()).size());
     Assert.assertEquals(
         2, erResult.getExtensions().get(ResourceRelationship.qualifiedName()).get(0).size());
+
+    // coreId has the id reported in the Core
+    Assert.assertEquals(idCore, erResult.getCoreId());
   }
 }

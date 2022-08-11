@@ -34,8 +34,10 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.UnknownTerm;
 import org.gbif.kvs.KeyValueStore;
+import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.ModelUtils;
 import org.gbif.pipelines.io.avro.ALAUUIDRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -103,7 +105,8 @@ public class UUIDMigrationPipeline {
 
     ALAPipelinesConfig config =
         ALAPipelinesConfigFactory.getInstance(
-                options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getProperties())
+                HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()),
+                options.getProperties())
             .get();
 
     // create key value store for data resource metadata
@@ -345,7 +348,7 @@ public class UUIDMigrationPipeline {
                 datasetID, termList, source.getId());
 
         log.warn(errorMessage);
-        throw new RuntimeException(errorMessage);
+        throw new PipelinesException(errorMessage);
       } else {
         return "";
       }

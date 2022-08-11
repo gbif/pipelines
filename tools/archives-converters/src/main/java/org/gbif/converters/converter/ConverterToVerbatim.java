@@ -15,13 +15,13 @@ import org.apache.hadoop.fs.Path;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
 import org.gbif.pipelines.core.io.SyncDataFileWriterBuilder;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 @Slf4j
 public abstract class ConverterToVerbatim {
 
-  private String hdfsSiteConfig;
-  private String coreSiteConfig;
+  private HdfsConfigs hdfsConfigs = HdfsConfigs.create(null, null);
   private int syncInterval = 2 * 1024 * 1024;
   private CodecFactory codecFactory = CodecFactory.snappyCodec();
 
@@ -31,13 +31,8 @@ public abstract class ConverterToVerbatim {
 
   private boolean skipDeletion = false;
 
-  public ConverterToVerbatim hdfsSiteConfig(String hdfsSiteConfig) {
-    this.hdfsSiteConfig = hdfsSiteConfig;
-    return this;
-  }
-
-  public ConverterToVerbatim coreSiteConfig(String coreSiteConfig) {
-    this.coreSiteConfig = coreSiteConfig;
+  public ConverterToVerbatim hdfsConfigs(HdfsConfigs hdfsConfigs) {
+    this.hdfsConfigs = hdfsConfigs;
     return this;
   }
 
@@ -96,7 +91,7 @@ public abstract class ConverterToVerbatim {
     // the fs has to be out of the try-catch block to avoid closing it, because the hdfs client
     // tries to reuse the same connection. So, when using multiple consumers, one consumer would
     // close the connection that is being used by another consumer.
-    FileSystem fs = createParentDirectories(hdfsSiteConfig, coreSiteConfig, outputPath);
+    FileSystem fs = createParentDirectories(hdfsConfigs, outputPath);
     try (BufferedOutputStream outputStream = new BufferedOutputStream(fs.create(outputPath));
         SyncDataFileWriter<ExtendedRecord> dataFileWriter =
             SyncDataFileWriterBuilder.builder()

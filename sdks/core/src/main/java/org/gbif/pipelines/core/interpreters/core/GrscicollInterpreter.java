@@ -8,6 +8,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,11 +16,12 @@ import org.gbif.api.model.collections.lookup.Match.MatchType;
 import org.gbif.api.model.collections.lookup.Match.Status;
 import org.gbif.api.vocabulary.BasisOfRecord;
 import org.gbif.api.vocabulary.OccurrenceIssue;
+import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.grscicoll.GrscicollLookupRequest;
 import org.gbif.pipelines.core.converters.GrscicollRecordConverter;
-import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.core.parsers.VocabularyParser;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
@@ -31,11 +33,9 @@ import org.gbif.rest.client.grscicoll.GrscicollLookupResponse.Match;
 public class GrscicollInterpreter {
 
   public static BiConsumer<ExtendedRecord, GrscicollRecord> grscicollInterpreter(
-      KeyValueStore<GrscicollLookupRequest, GrscicollLookupResponse> kvStore,
-      MetadataRecord mdr,
-      BasicRecord br) {
+      KeyValueStore<GrscicollLookupRequest, GrscicollLookupResponse> kvStore, MetadataRecord mdr) {
     return (er, gr) -> {
-      if (kvStore == null || mdr == null || br == null) {
+      if (kvStore == null || mdr == null) {
         return;
       }
 
@@ -75,7 +75,7 @@ public class GrscicollInterpreter {
 
       gr.setId(er.getId());
 
-      boolean isSpecimen = isSpecimenRecord(br);
+      boolean isSpecimen = isSpecimenRecord(er);
       Consumer<OccurrenceIssue> flagRecord =
           i -> {
             // we only flag records that are specimens
@@ -113,8 +113,20 @@ public class GrscicollInterpreter {
     };
   }
 
-  private static boolean isSpecimenRecord(BasicRecord br) {
-    BasisOfRecord bor = BasisOfRecord.valueOf(br.getBasisOfRecord());
+  private static boolean isSpecimenRecord(ExtendedRecord er) {
+
+    Function<ParseResult<BasisOfRecord>, BasisOfRecord> fn =
+        parseResult -> {
+          if (parseResult.isSuccessful()) {
+            return parseResult.getPayload();
+          } else {
+            return BasisOfRecord.OCCURRENCE;
+          }
+        };
+
+    BasisOfRecord bor =
+        VocabularyParser.basisOfRecordParser().map(er, fn).orElse(BasisOfRecord.OCCURRENCE);
+
     return bor == BasisOfRecord.PRESERVED_SPECIMEN
         || bor == BasisOfRecord.FOSSIL_SPECIMEN
         || bor == BasisOfRecord.LIVING_SPECIMEN;

@@ -16,14 +16,18 @@ public class PipelinesVariables {
   public static class Pipeline {
 
     public static final String AVRO_EXTENSION = ".avro";
+    public static final String ALL_AVRO = "*" + AVRO_EXTENSION;
 
     public static final String ARCHIVE_TO_VERBATIM = "archive-to-verbatim";
-    public static final String VERBATIM_TO_INTERPRETED = "verbatim-to-interpreted";
-    public static final String INTERPRETED_TO_INDEX = "interpreted-to-index";
-    public static final String INTERPRETED_TO_HDFS = "interpreted-to-hdfs";
+    public static final String VERBATIM_TO_OCCURRENCE = "verbatim-to-occurrence";
+    public static final String VERBATIM_TO_IDENTIFIER = "verbatim-to-identifier";
+    public static final String OCCURRENCE_TO_INDEX = "occurrence-to-index";
+    public static final String OCCURRENCE_TO_HDFS = "occurrence-to-hdfs";
     public static final String FRAGMENTER = "fragmenter";
     public static final String VALIDATOR = "validator";
     public static final String COLLECT_METRICS = "collect-metrics";
+    public static final String VERBATIM_TO_EVENT = "verbatim-to-event";
+    public static final String EVENT_TO_INDEX = "event-to-index";
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static class Conversion {
@@ -34,8 +38,9 @@ public class PipelinesVariables {
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static class Interpretation {
 
-      public static final String DIRECTORY_NAME = "interpreted";
       public static final String FILE_NAME = "interpret-";
+      public static final String CRAP_USER = "crap";
+      public static final String USER_GROUP = "supergroup";
 
       public interface InterpretationType extends Serializable {
 
@@ -49,12 +54,17 @@ public class PipelinesVariables {
         // Raw
         VERBATIM,
         // Core types
+        IDENTIFIER,
+        EVENT_IDENTIFIER,
+        IDENTIFIER_ABSENT,
         METADATA,
         BASIC,
+        CLUSTERING,
         TEMPORAL,
         LOCATION,
         TAXONOMY,
         GRSCICOLL,
+        EVENT,
         // Extension types
         IMAGE,
         MULTIMEDIA,
@@ -99,6 +109,8 @@ public class PipelinesVariables {
                   VERBATIM,
                   // Core types
                   METADATA,
+                  IDENTIFIER_ABSENT,
+                  CLUSTERING,
                   BASIC,
                   TEMPORAL,
                   LOCATION,
@@ -117,6 +129,13 @@ public class PipelinesVariables {
 
         public static Set<String> getAllInterpretationAsString() {
           return getAllInterpretation().stream().map(RecordType::name).collect(Collectors.toSet());
+        }
+
+        public static Set<String> getAllValidatorInterpretationAsString() {
+          Set<String> set = getAllInterpretationAsString();
+          set.add(IDENTIFIER.name());
+          set.remove(IDENTIFIER_ABSENT.name());
+          return set;
         }
 
         public static Set<RecordType> getAllTables() {
@@ -201,37 +220,49 @@ public class PipelinesVariables {
       public static final String SAMPLING_PROTOCOL_JOINED = "samplingProtocolJoined";
       public static final String TYPE_STATUS = "typeStatus";
     }
+
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
+    public static class Identifier {
+      public static final String GBIF_ID_EMPTY = "GBIF_ID_EMPTY";
+      public static final String GBIF_ID_INVALID = "GBIF_ID_INVALID";
+      public static final String GBIF_ID_ABSENT = "GBIF_ID_ABSENT";
+    }
   }
 
   @NoArgsConstructor(access = AccessLevel.PRIVATE)
   public static class Metrics {
 
     public static final String AVRO_TO_JSON_COUNT = "avroToJsonCount";
+
+    public static final String EVENTS_AVRO_TO_JSON_COUNT = "eventsAvroToJsonCount";
     public static final String ARCHIVE_TO_ER_COUNT = "archiveToErCount";
     public static final String AVRO_TO_HDFS_COUNT = "avroToHdfsCount";
-
-    public static final String UNIQUE_IDS_COUNT = "uniqueIdsCount";
-    public static final String DUPLICATE_IDS_COUNT = "duplicatedIdsCount";
-    public static final String IDENTICAL_OBJECTS_COUNT = "identicalObjectsCount";
-
+    // GBIF ID
     public static final String UNIQUE_GBIF_IDS_COUNT = "uniqueGbifIdsCount";
     public static final String DUPLICATE_GBIF_IDS_COUNT = "duplicatedGbifIdsCount";
     public static final String IDENTICAL_GBIF_OBJECTS_COUNT = "identicalGbifObjectsCount";
-
+    public static final String INVALID_GBIF_ID_COUNT = "invalidGbifIdCount";
+    public static final String ABSENT_GBIF_ID_COUNT = "absentGbifIdCount";
+    // Occurrence
+    public static final String UNIQUE_IDS_COUNT = "uniqueIdsCount";
+    public static final String DUPLICATE_IDS_COUNT = "duplicatedIdsCount";
+    public static final String IDENTICAL_OBJECTS_COUNT = "identicalObjectsCount";
     public static final String FILTER_ER_BASED_ON_GBIF_ID = "filterErBasedOnGbifIdCount";
-
     public static final String OCCURRENCE_EXT_COUNT = "occurrenceExtCount";
     public static final String HASH_ID_COUNT = "hashIdCount";
-    public static final String INVALID_GBIF_ID_COUNT = "invalidGbifIdCount";
     // Core types
     public static final String METADATA_RECORDS_COUNT = "metadataRecordsCount";
     public static final String DEFAULT_VALUES_RECORDS_COUNT = "defaultValuesRecordsCount";
     public static final String BASIC_RECORDS_COUNT = "basicRecordsCount";
+    public static final String GBIF_ID_RECORDS_COUNT = "gbifIdRecordsCount";
+    public static final String CLUSTERING_RECORDS_COUNT = "clusteringRecordsCount";
     public static final String TEMPORAL_RECORDS_COUNT = "temporalRecordsCount";
     public static final String LOCATION_RECORDS_COUNT = "locationRecordsCount";
     public static final String TAXON_RECORDS_COUNT = "taxonRecordsCount";
     public static final String GRSCICOLL_RECORDS_COUNT = "grscicollRecordsCount";
     public static final String VERBATIM_RECORDS_COUNT = "verbatimRecordsCount";
+    // Event core types
+    public static final String EVENT_CORE_RECORDS_COUNT = "eventCoreRecordsCount";
     // Extension types
     public static final String MULTIMEDIA_RECORDS_COUNT = "multimediaRecordsCount";
     public static final String IMAGE_RECORDS_COUNT = "imageRecordsCount";
@@ -266,14 +297,13 @@ public class PipelinesVariables {
         "extendedMeasurementOrFactTableRecordsCount";
     public static final String CHRONOMETRIC_AGE_TABLE_RECORDS_COUNT =
         "chronometricAgeTableRecordsCount";
-    public static final String CHRONOMETRIC_DATE_TABLE_RECORDS_COUNT =
-        "chronometricDateTableRecordsCount";
     public static final String REFERENCE_TABLE_RECORDS_COUNT = "referencesTableRecordsCount";
     public static final String IDENTIFIER_TABLE_RECORDS_COUNT = "identifierTableRecordsCount";
-    public static final String HDFS_VIEW_RECORDS_COUNT = "hdfsViewRecordsCount";
+
     // Fragmenter
     public static final String FRAGMENTER_COUNT = "fragmenterRecordsCount";
     // Specific
+    public static final String IDENTIFIER_RECORDS_COUNT = "identifierRecordsCount";
     public static final String LOCATION_FEATURE_RECORDS_COUNT = "locationFeatureRecordsCount";
 
     public static final String ATTEMPTED = "Attempted";
