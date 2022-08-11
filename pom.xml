@@ -85,9 +85,9 @@
     <!-- GBIF libraries -->
     <gbif-parsers.version>0.58</gbif-parsers.version>
     <dwca-io.version>2.12</dwca-io.version>
-    <gbif-api.version>0.168</gbif-api.version>
+    <gbif-api.version>0.169</gbif-api.version>
     <gbif-common.version>0.53</gbif-common.version>
-    <dwc-api.version>1.37-SNAPSHOT</dwc-api.version>
+    <dwc-api.version>1.37</dwc-api.version>
     <kvs.version>1.23</kvs.version>
     <hbase-utils.version>0.12</hbase-utils.version>
     <gbif-wrangler.version>0.3</gbif-wrangler.version>
@@ -95,7 +95,7 @@
     <vocabulary-lookup.version>0.47</vocabulary-lookup.version>
     <registry.version>3.84</registry.version>
     <gbif-common-ws.version>1.18</gbif-common-ws.version>
-    <gbif-postal-service.version>1.5-SNAPSHOT</gbif-postal-service.version>
+    <gbif-postal-service.version>1.5</gbif-postal-service.version>
     <gbif-common-spreadsheet.version>0.2</gbif-common-spreadsheet.version>
 
     <!-- Common libraries -->

@@ -241,6 +241,7 @@
       },
       "otherCatalogNumbersJoined": {"type": "keyword", "normalizer": "lowercase_normalizer"},
 
+
       "occurrenceStatus": {"type": "keyword", "copy_to": "all"},
 
       "organismQuantity": {"type": "double"},
@@ -327,8 +328,7 @@
             "properties": {
               "key": {"type": "long"},
               "name": {"type": "text", "boost": 90.0, "copy_to": "all"},
-              "rank": {"type": "keyword"},
-              "synonym": {"type": "boolean"}
+              "rank": {"type": "keyword"}
             }
           },
           "classificationPath": {"type": "keyword"},
