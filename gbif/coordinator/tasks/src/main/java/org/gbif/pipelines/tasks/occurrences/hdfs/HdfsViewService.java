@@ -12,7 +12,6 @@ import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.pipelines.common.hdfs.CommonHdfsViewCallback;
 import org.gbif.pipelines.common.hdfs.HdfsViewConfiguration;
 import org.gbif.pipelines.tasks.ServiceFactory;
-import org.gbif.pipelines.tasks.events.hdfs.HdfsViewCallback;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 
 /**
