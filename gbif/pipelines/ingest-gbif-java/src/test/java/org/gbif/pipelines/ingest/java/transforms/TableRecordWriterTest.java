@@ -42,8 +42,7 @@ public class TableRecordWriterTest {
             return Optional.empty();
           }
           OccurrenceHdfsRecord hdfsRecord = new OccurrenceHdfsRecord();
-          // hdfsRecord.setGbifid(id.getGbifId().toString());
-          hdfsRecord.setGbifid(id.getGbifId());
+          hdfsRecord.setGbifid(id.getGbifId().toString());
           return Optional.of(hdfsRecord);
         };
 
@@ -95,7 +94,7 @@ public class TableRecordWriterTest {
       while (dataFileReader.hasNext()) {
         OccurrenceHdfsRecord record = dataFileReader.next();
         Assert.assertNotNull(record);
-        Assert.assertEquals(Long.valueOf(gbifID.toString()), record.getGbifid());
+        Assert.assertEquals(gbifID.toString(), record.getGbifid());
       }
     }
 
@@ -118,8 +117,7 @@ public class TableRecordWriterTest {
             return Optional.empty();
           }
           OccurrenceHdfsRecord hdfsRecord = new OccurrenceHdfsRecord();
-          // hdfsRecord.setGbifid(id.getGbifId().toString());
-          hdfsRecord.setGbifid(id.getGbifId());
+          hdfsRecord.setGbifid(id.getGbifId().toString());
           return Optional.of(hdfsRecord);
         };
 
@@ -172,7 +170,7 @@ public class TableRecordWriterTest {
       while (dataFileReader.hasNext()) {
         OccurrenceHdfsRecord record = dataFileReader.next();
         Assert.assertNotNull(record);
-        Assert.assertEquals(Long.valueOf(gbifID.toString()), record.getGbifid());
+        Assert.assertEquals(gbifID.toString(), record.getGbifid());
       }
     }
 
