@@ -24,27 +24,32 @@ public class IdentifiersMigratorTool implements Tool {
   @Parameter(names = "--tool")
   public CliTool tool;
 
-  @Parameter(names = "--file-path")
+  @Parameter(
+      names = "--file-path",
+      description =
+          "Path to the csv file with 2 columns, without header, where first column si existing/old lookp key, second is new lookup key for gbif id")
   @NotNull
   public String filePath;
 
-  @Parameter(names = "--splitter")
+  @Parameter(names = "--splitter", description = "File splitter, default is , (comma)")
   @Builder.Default
   public String splitter = ",";
 
-  @Parameter(names = "--delete-keys")
+  @Parameter(
+      names = "--delete-keys",
+      description = "Delete existing/possible keys for new lookup keys")
   @Builder.Default
   public boolean deleteKeys = false;
 
-  @Parameter(names = "--skip-issues")
+  @Parameter(names = "--skip-issues", description = "Continue the process when issue occurs")
   @Builder.Default
   public boolean skipIssues = false;
 
-  @Parameter(names = "--from-dataset")
+  @Parameter(names = "--from-dataset", description = "Zookeeper connection")
   @NotNull
   public String fromDatasetKey;
 
-  @Parameter(names = "--to-dataset")
+  @Parameter(names = "--to-dataset", description = "Zookeeper connection")
   @NotNull
   public String toDatasetKey;
 
@@ -113,7 +118,7 @@ public class IdentifiersMigratorTool implements Tool {
                   .migrate();
 
           if (!skipIssues && !migratedKey.isPresent()) {
-            log.warn("If you want to skip issues, please set skipIssues=true");
+            log.warn("If you want to skip issues, please use flag --skip-issues");
             break;
           }
         } else {

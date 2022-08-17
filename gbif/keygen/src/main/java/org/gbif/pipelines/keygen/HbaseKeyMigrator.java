@@ -62,8 +62,7 @@ public class HbaseKeyMigrator {
 
       return oldKeyFromDataset;
     } else {
-      log.error(
-          "Can't find GBIF ID for datasetKey {}, occurrenceID {}", toDatasetKey, oldLookupKey);
+      log.error("Can't find GBIF ID for datasetKey {}, lookup key {}", toDatasetKey, oldLookupKey);
       return Optional.empty();
     }
   }
