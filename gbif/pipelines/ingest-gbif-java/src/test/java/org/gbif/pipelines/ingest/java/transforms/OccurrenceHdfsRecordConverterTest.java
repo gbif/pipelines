@@ -71,7 +71,7 @@ public class OccurrenceHdfsRecordConverterTest {
     // Should
     Assert.assertNotNull(hdfsRecord);
     Assert.assertTrue(hdfsRecord.isPresent());
-    Assert.assertEquals(Long.valueOf(1L), hdfsRecord.get().getGbifid());
+    Assert.assertEquals(ID, hdfsRecord.get().getGbifid());
 
     Map<String, Long> map = new HashMap<>();
     metrics

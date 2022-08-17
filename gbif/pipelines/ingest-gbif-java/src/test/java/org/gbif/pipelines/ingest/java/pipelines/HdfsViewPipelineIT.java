@@ -51,20 +51,17 @@ import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.gbif.pipelines.transforms.specific.ClusteringTransform;
 import org.gbif.pipelines.transforms.specific.GbifIdTransform;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class HdfsViewPipelineIT {
 
   private static final String ID = "777";
 
-  @Ignore
   @Test
   public void pipelineOccurrenceAllTest() throws Exception {
     hdfsPipelineTest("data0", PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE);
   }
 
-  @Ignore
   @Test
   public void pipelineEventAllTest() throws Exception {
     hdfsPipelineTest("data1", PipelinesVariables.Pipeline.Interpretation.RecordType.EVENT);
@@ -150,7 +147,6 @@ public class HdfsViewPipelineIT {
         "data2", PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE);
   }
 
-  @Ignore
   @Test
   public void pipelineEventTest() throws Exception {
     singleHdfsPipelineTest("data3", PipelinesVariables.Pipeline.Interpretation.RecordType.EVENT);
@@ -349,7 +345,7 @@ public class HdfsViewPipelineIT {
         T record = dataFileReader.next();
         Assert.assertNotNull(record);
         Assert.assertEquals(
-            recordType == PipelinesVariables.Pipeline.Interpretation.RecordType.EVENT ? "777" : 1L,
+            recordType == PipelinesVariables.Pipeline.Interpretation.RecordType.EVENT ? "777" : "1",
             record.get("gbifid"));
       }
     }
