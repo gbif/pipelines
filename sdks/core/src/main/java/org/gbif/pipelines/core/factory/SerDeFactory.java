@@ -14,6 +14,11 @@ import org.gbif.pipelines.io.avro.json.VerbatimRecord;
 @UtilityClass
 public class SerDeFactory {
 
+  private static final ObjectMapper AVRO_MAPPER =
+      new ObjectMapper()
+          .addMixIn(GbifClassification.class, GbifClassificationMixin.class)
+          .registerModule(new AvroModule());
+
   private static final ObjectMapper AVRO_MAPPER_NON_NULLS =
       new ObjectMapper()
           .addMixIn(GbifClassification.class, GbifClassificationMixin.class)
@@ -26,6 +31,10 @@ public class SerDeFactory {
           .addMixIn(OccurrenceJsonRecord.class, OccurrenceJsonRecordEventMixin.class)
           .registerModule(new AvroModule())
           .setSerializationInclusion(Include.NON_EMPTY);
+
+  public static ObjectMapper avroMapperWithNulls() {
+    return AVRO_MAPPER;
+  }
 
   public static ObjectMapper avroMapperNonNulls() {
     return AVRO_MAPPER_NON_NULLS;

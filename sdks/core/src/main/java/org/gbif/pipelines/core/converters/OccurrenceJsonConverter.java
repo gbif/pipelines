@@ -5,8 +5,10 @@ import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 import java.util.Arrays;
 import java.util.Optional;
 import lombok.Builder;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.core.factory.SerDeFactory;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -56,8 +58,9 @@ public class OccurrenceJsonConverter {
     return builder.build();
   }
 
-  public String toJson() {
-    return convert().toString();
+  @SneakyThrows
+  public String toJsonWithNulls() {
+    return SerDeFactory.avroMapperWithNulls().writeValueAsString(convert());
   }
 
   private void mapMetadataRecord(OccurrenceJsonRecord.Builder builder) {
