@@ -65,7 +65,7 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
   @Override
   public boolean isMessageCorrect(PipelinesVerbatimMessage message) {
     if (!message.getPipelineSteps().contains(TYPE.name())) {
-      log.error("The message doesn't contain VERBATIM_TO_IDENTIFIER type");
+      log.error("The message doesn't contain {} type", TYPE);
       return false;
     }
     return true;
