@@ -20,6 +20,7 @@ import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.factory.KeygenServiceFactory;
+import org.gbif.pipelines.transforms.common.UniqueGbifIdTransform;
 import org.gbif.pipelines.transforms.common.UniqueIdTransform;
 import org.gbif.pipelines.transforms.converters.OccurrenceExtensionTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
@@ -79,6 +80,8 @@ public class VerbatimToIdentifierPipeline {
 
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     GbifIdTupleTransform tupleTransform = GbifIdTupleTransform.create();
+    UniqueGbifIdTransform uniqueIdTransform =
+        UniqueGbifIdTransform.create(options.isUseExtendedRecordId());
 
     FsUtils.deleteInterpretIfExist(
         hdfsConfigs, targetPath, datasetId, attempt, CORE_TERM, idTransform.getAllNames());
@@ -93,9 +96,18 @@ public class VerbatimToIdentifierPipeline {
             .apply("Get tuple GBIF ids", tupleTransform);
 
     // Interpret and write all record types
-    idCollection
-        .get(tupleTransform.getTag())
+    PCollectionTuple idsTuple =
+        idCollection
+            .get(tupleTransform.getTag())
+            .apply("Filter unique GBIF ids", uniqueIdTransform);
+
+    idsTuple
+        .get(uniqueIdTransform.getTag())
         .apply("Write GBIF ids to avro", idTransform.write(pathFn));
+
+    idsTuple
+        .get(uniqueIdTransform.getInvalidTag())
+        .apply("Write invalid GBIF IDs to avro", idTransform.writeInvalid(pathFn));
 
     idCollection
         .get(tupleTransform.getAbsentTag())

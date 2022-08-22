@@ -136,9 +136,10 @@ public class VerbatimToIdentifierPipelineIT {
             .filter(x -> !x.getPath().contains("verbatim"))
             .count();
 
-    assertEquals(2L, dirCount);
+    assertEquals(3L, dirCount);
     assertFile(GbifIdRecord.class, interpretedOutput + "/identifier");
     assertFile(GbifIdRecord.class, interpretedOutput + "/identifier_absent");
+    assertFile(GbifIdRecord.class, interpretedOutput + "/identifier_invalid");
   }
 
   private <T extends SpecificRecordBase> void assertFile(Class<T> clazz, String output)
