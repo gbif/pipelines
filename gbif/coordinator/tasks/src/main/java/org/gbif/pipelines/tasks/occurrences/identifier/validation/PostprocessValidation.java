@@ -30,7 +30,7 @@ public class PostprocessValidation {
   private final CloseableHttpClient httpClient;
 
   public IdentifierValidationResult validate() throws IOException {
-    if (useThresholdSkipTagValue() && ignoreChecklists()) {
+    if (useThresholdSkipTagValue() || ignoreChecklists()) {
       String validatonMessage =
           "Skip valiation because because of machine tag id_threshold_skip=true";
       return IdentifierValidationResult.create(0d, 0d, true, validatonMessage);
