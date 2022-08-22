@@ -1,7 +1,7 @@
 package org.gbif.pipelines.transforms.specific;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.ABSENT_GBIF_ID_COUNT;
-import static org.gbif.pipelines.common.PipelinesVariables.Metrics.UNIQUE_GBIF_IDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.FILTERED_GBIF_IDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Identifier.GBIF_ID_ABSENT;
 
 import lombok.AllArgsConstructor;
@@ -38,8 +38,8 @@ public class GbifIdTupleTransform extends PTransform<PCollection<GbifIdRecord>, 
 
   private class Filter extends DoFn<GbifIdRecord, GbifIdRecord> {
 
-    private final Counter uniqueCounter =
-        Metrics.counter(GbifIdTupleTransform.class, UNIQUE_GBIF_IDS_COUNT);
+    private final Counter filteredCounter =
+        Metrics.counter(GbifIdTupleTransform.class, FILTERED_GBIF_IDS_COUNT);
     private final Counter absentCounter =
         Metrics.counter(GbifIdTupleTransform.class, ABSENT_GBIF_ID_COUNT);
 
@@ -53,7 +53,7 @@ public class GbifIdTupleTransform extends PTransform<PCollection<GbifIdRecord>, 
           absentCounter.inc();
         } else {
           c.output(tag, gbifIdRecord);
-          uniqueCounter.inc();
+          filteredCounter.inc();
         }
       }
     }
