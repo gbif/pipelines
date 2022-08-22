@@ -110,7 +110,10 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
     boolean isValidGenericReport =
         message.getValidationReport().getGenericReport() != null
             && message.getValidationReport().getGenericReport().getCheckedRecords() > 0;
-    return isValidOccurrenceReport || isValidGenericReport;
+    if (config.addEventSteps) {
+      return isValidOccurrenceReport || isValidGenericReport;
+    }
+    return isValidOccurrenceReport;
   }
 
   /** Main message processing logic, converts a DwCA archive to an avro file. */

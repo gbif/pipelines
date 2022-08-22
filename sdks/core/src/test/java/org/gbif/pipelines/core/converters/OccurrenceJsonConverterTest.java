@@ -406,7 +406,7 @@ public class OccurrenceJsonConverterTest {
             .grscicoll(gr)
             .multimedia(mmr)
             .build()
-            .toJson();
+            .toJsonWithNulls();
 
     JsonNode result = MAPPER.readTree(json);
 
@@ -499,7 +499,7 @@ public class OccurrenceJsonConverterTest {
             + "\"http://rs.tdwg.org/dwc/terms/catalogNumber\":\"catalogNumber\",\"http://rs.tdwg.org/dwc/terms/footprintWKT\":"
             + "\"footprintWKTfootprintWKTfootprintWKT\",\"http://rs.tdwg.org/dwc/terms/institutionCode\":\"institutionCode\","
             + "\"http://rs.tdwg.org/dwc/terms/recordedBy\":\"mv;à1|mv2\",\"http://rs.tdwg.org/dwc/terms/scientificName\":"
-            + "\"scientificName\"},\"extensions\":{\"http://rs.tdwg.org/ac/terms/Multimedia\":[{\"k\":\"v\"}]}}";
+            + "\"scientificName\"},\"coreId\":null,\"extensions\":{\"http://rs.tdwg.org/ac/terms/Multimedia\":[{\"k\":\"v\"}]}}";
     assertEquals(expectedVerbatim, result.path("verbatim").toString());
 
     String expectedGbifClassification =
@@ -588,7 +588,7 @@ public class OccurrenceJsonConverterTest {
             .grscicoll(gr)
             .multimedia(mmr)
             .build()
-            .toJson();
+            .toJsonWithNulls();
 
     JsonNode result = MAPPER.readTree(json);
 
