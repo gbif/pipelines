@@ -106,14 +106,14 @@ public class OccurrenceJsonConverter {
         .setOrganismQuantityType(basic.getOrganismQuantityType())
         .setRelativeOrganismQuantity(basic.getRelativeOrganismQuantity())
         .setReferences(basic.getReferences())
-        .setIdentifiedBy(basic.getIdentifiedBy())
-        .setRecordedBy(basic.getRecordedBy())
         .setOccurrenceStatus(basic.getOccurrenceStatus())
-        .setDatasetID(basic.getDatasetID())
-        .setDatasetName(basic.getDatasetName())
-        .setOtherCatalogNumbers(basic.getOtherCatalogNumbers())
-        .setPreparations(basic.getPreparations())
-        .setSamplingProtocol(basic.getSamplingProtocol());
+        .setIdentifiedBy(JsonConverter.getEscapedList(basic.getIdentifiedBy()))
+        .setRecordedBy(JsonConverter.getEscapedList(basic.getRecordedBy()))
+        .setDatasetID(JsonConverter.getEscapedList(basic.getDatasetID()))
+        .setDatasetName(JsonConverter.getEscapedList(basic.getDatasetName()))
+        .setOtherCatalogNumbers(JsonConverter.getEscapedList(basic.getOtherCatalogNumbers()))
+        .setPreparations(JsonConverter.getEscapedList(basic.getPreparations()))
+        .setSamplingProtocol(JsonConverter.getEscapedList(basic.getSamplingProtocol()));
 
     // Agent
     builder

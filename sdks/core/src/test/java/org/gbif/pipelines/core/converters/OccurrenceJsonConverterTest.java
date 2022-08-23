@@ -172,7 +172,7 @@ public class OccurrenceJsonConverterTest {
             .setOtherCatalogNumbers(Arrays.asList(multivalue1, multivalue2))
             .setRecordedBy(Arrays.asList(multivalue1, multivalue2))
             .setIdentifiedBy(Arrays.asList(multivalue1, multivalue2))
-            .setPreparations(Arrays.asList(multivalue1, multivalue2))
+            .setPreparations(Arrays.asList(multivalue1, "\u001E" + multivalue2))
             .setSamplingProtocol(Arrays.asList(multivalue1, multivalue2))
             .setTypeStatus(Arrays.asList(TypeStatus.TYPE.name(), TypeStatus.TYPE_SPECIES.name()))
             .build();
@@ -462,7 +462,7 @@ public class OccurrenceJsonConverterTest {
         "[\"" + expectedMultivalue1 + "\",\"" + multivalue2 + "\"]",
         result.path(Indexing.PREPARATIONS).toString());
     assertEquals(
-        "\"" + expectedMultivalue1 + "|" + multivalue2 + "\"",
+        "\"" + expectedMultivalue1 + "|," + multivalue2 + "\"",
         result.path(Indexing.PREPARATIONS_JOINED).toString());
     assertEquals(
         "[\"" + expectedMultivalue1 + "\",\"" + multivalue2 + "\"]",
