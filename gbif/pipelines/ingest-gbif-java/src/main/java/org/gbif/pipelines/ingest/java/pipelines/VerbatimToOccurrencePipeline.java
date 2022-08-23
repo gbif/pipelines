@@ -274,6 +274,15 @@ public class VerbatimToOccurrencePipeline {
               if (idInvalid == null) {
                 GbifIdRecord id = gbifIdTransform.getErIdMap().get(er.getId());
 
+                // Can be null if there are GBIF id collisstions and identifiers stage dropped
+                // duplicates
+                if (id == null) {
+                  log.warn(
+                      "OccurrenceID {} doesn't have correlated GBIF id (identifiers stage dropped duplicates)",
+                      er.getId());
+                  return;
+                }
+
                 if (clusteringTr.checkType(types)) {
                   clusteringTr.processElement(id).ifPresent(clusteringWriter::append);
                 }
