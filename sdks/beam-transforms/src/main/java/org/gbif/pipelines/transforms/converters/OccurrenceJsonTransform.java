@@ -166,7 +166,8 @@ public class OccurrenceJsonTransform implements Serializable {
                       .build()
                       .toJson());
             } else {
-              c.output(occurrenceJsonConverter.toJson());
+              // Occurrence index clients (GraphQL) rely on exinsting fields null vaules
+              c.output(occurrenceJsonConverter.toJsonWithNulls());
             }
 
             counter.inc();

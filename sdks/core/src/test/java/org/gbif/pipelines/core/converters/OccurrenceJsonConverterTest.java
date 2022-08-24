@@ -172,7 +172,7 @@ public class OccurrenceJsonConverterTest {
             .setOtherCatalogNumbers(Arrays.asList(multivalue1, multivalue2))
             .setRecordedBy(Arrays.asList(multivalue1, multivalue2))
             .setIdentifiedBy(Arrays.asList(multivalue1, multivalue2))
-            .setPreparations(Arrays.asList(multivalue1, multivalue2))
+            .setPreparations(Arrays.asList(multivalue1, "\u001E" + multivalue2))
             .setSamplingProtocol(Arrays.asList(multivalue1, multivalue2))
             .setTypeStatus(Arrays.asList(TypeStatus.TYPE.name(), TypeStatus.TYPE_SPECIES.name()))
             .build();
@@ -406,7 +406,7 @@ public class OccurrenceJsonConverterTest {
             .grscicoll(gr)
             .multimedia(mmr)
             .build()
-            .toJson();
+            .toJsonWithNulls();
 
     JsonNode result = MAPPER.readTree(json);
 
@@ -462,7 +462,7 @@ public class OccurrenceJsonConverterTest {
         "[\"" + expectedMultivalue1 + "\",\"" + multivalue2 + "\"]",
         result.path(Indexing.PREPARATIONS).toString());
     assertEquals(
-        "\"" + expectedMultivalue1 + "|" + multivalue2 + "\"",
+        "\"" + expectedMultivalue1 + "|," + multivalue2 + "\"",
         result.path(Indexing.PREPARATIONS_JOINED).toString());
     assertEquals(
         "[\"" + expectedMultivalue1 + "\",\"" + multivalue2 + "\"]",
@@ -499,7 +499,7 @@ public class OccurrenceJsonConverterTest {
             + "\"http://rs.tdwg.org/dwc/terms/catalogNumber\":\"catalogNumber\",\"http://rs.tdwg.org/dwc/terms/footprintWKT\":"
             + "\"footprintWKTfootprintWKTfootprintWKT\",\"http://rs.tdwg.org/dwc/terms/institutionCode\":\"institutionCode\","
             + "\"http://rs.tdwg.org/dwc/terms/recordedBy\":\"mv;à1|mv2\",\"http://rs.tdwg.org/dwc/terms/scientificName\":"
-            + "\"scientificName\"},\"extensions\":{\"http://rs.tdwg.org/ac/terms/Multimedia\":[{\"k\":\"v\"}]}}";
+            + "\"scientificName\"},\"coreId\":null,\"extensions\":{\"http://rs.tdwg.org/ac/terms/Multimedia\":[{\"k\":\"v\"}]}}";
     assertEquals(expectedVerbatim, result.path("verbatim").toString());
 
     String expectedGbifClassification =
@@ -588,7 +588,7 @@ public class OccurrenceJsonConverterTest {
             .grscicoll(gr)
             .multimedia(mmr)
             .build()
-            .toJson();
+            .toJsonWithNulls();
 
     JsonNode result = MAPPER.readTree(json);
 

@@ -199,9 +199,7 @@ public class VerbatimToOccurrencePipeline {
               .apply("Lookup GBIF IDs records", idTransform.interpret())
               .apply("Filter unique GBIF ids", uniqueIdTransform);
       uniqueGbifId = idsTuple.get(uniqueIdTransform.getTag());
-      idsTuple
-          .get(uniqueIdTransform.getTag())
-          .apply("Write GBIF IDs to avro", idTransform.write(pathFn));
+      uniqueGbifId.apply("Write GBIF IDs to avro", idTransform.write(pathFn));
       idsTuple
           .get(uniqueIdTransform.getInvalidTag())
           .apply("Write invalid GBIF IDs to avro", idTransform.writeInvalid(pathFn));

@@ -43,6 +43,9 @@ public class IdentifierConfiguration implements BaseConfiguration {
   @Parameter(names = "--id-threshold-percent")
   public double idThresholdPercent = 5;
 
+  @Parameter(names = "--ignore-checklists")
+  public boolean ignoreChecklists = true;
+
   @Override
   public String getHdfsSiteConfig() {
     return stepConfig.hdfsSiteConfig;

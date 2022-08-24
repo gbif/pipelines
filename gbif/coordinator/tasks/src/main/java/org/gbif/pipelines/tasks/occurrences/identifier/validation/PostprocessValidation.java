@@ -9,6 +9,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.hbase.exceptions.IllegalArgumentIOException;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.pipelines.common.GbifApi;
 import org.gbif.pipelines.common.PipelinesException;
@@ -29,7 +30,7 @@ public class PostprocessValidation {
   private final CloseableHttpClient httpClient;
 
   public IdentifierValidationResult validate() throws IOException {
-    if (useThresholdSkipTagValue()) {
+    if (useThresholdSkipTagValue() || ignoreChecklists()) {
       String validatonMessage =
           "Skip valiation because because of machine tag id_threshold_skip=true";
       return IdentifierValidationResult.create(0d, 0d, true, validatonMessage);
@@ -114,6 +115,10 @@ public class PostprocessValidation {
             httpClient, registryConfiguration, datasetKey, "id_threshold_skip")
         .map(Boolean::parseBoolean)
         .orElse(Boolean.FALSE);
+  }
+
+  private boolean ignoreChecklists() {
+    return config.ignoreChecklists && message.getDatasetType() == DatasetType.CHECKLIST;
   }
 
   @SneakyThrows

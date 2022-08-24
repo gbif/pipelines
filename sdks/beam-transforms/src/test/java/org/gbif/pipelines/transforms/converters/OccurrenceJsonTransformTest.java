@@ -529,7 +529,7 @@ public class OccurrenceJsonTransformTest {
             .grscicoll(gr)
             .multimedia(mmr)
             .build()
-            .toJson();
+            .toJsonWithNulls();
 
     PAssert.that(jsonCollection).containsInAnyOrder(Collections.singletonList(json));
     p.run();

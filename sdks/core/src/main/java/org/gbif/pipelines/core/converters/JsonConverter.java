@@ -169,7 +169,13 @@ public class JsonConverter {
   }
 
   protected static Optional<String> convertToMultivalue(List<String> list) {
-    return list != null && !list.isEmpty() ? Optional.of(String.join("|", list)) : Optional.empty();
+    return list != null && !list.isEmpty()
+        ? Optional.of(getEscapedText(String.join("|", list)))
+        : Optional.empty();
+  }
+
+  public static List<String> getEscapedList(List<String> list) {
+    return list.stream().map(JsonConverter::getEscapedText).collect(Collectors.toList());
   }
 
   protected static Optional<String> convertLicense(String license) {
