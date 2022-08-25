@@ -4,8 +4,10 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_COORDINATE_MISMATC
 import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_DERIVED_FROM_COORDINATES;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -29,6 +31,9 @@ public class LocationMatcher {
 
   // Antarctica: "Territories south of 60° south latitude"
   private static final double ANTARCTICA_LATITUDE = -60d;
+
+  private static final Set<String> LAYERS_FILTER_SET =
+      new HashSet<>(Arrays.asList("Political", "EEZ", "PoliticalEEZ"));
 
   private final LatLng latLng;
   private final Country country;
@@ -118,7 +123,7 @@ public class LocationMatcher {
       if (geocodeResponse != null && !geocodeResponse.getLocations().isEmpty()) {
         return Optional.of(
             geocodeResponse.getLocations().stream()
-                .filter(l -> l.getType().equals("Political") || l.getType().equals("EEZ"))
+                .filter(l -> LAYERS_FILTER_SET.contains(l.getType()))
                 .sorted(Comparator.comparingDouble(Location::getDistance))
                 .map(Location::getIsoCountryCode2Digit)
                 .map(Country::fromIsoCode)
