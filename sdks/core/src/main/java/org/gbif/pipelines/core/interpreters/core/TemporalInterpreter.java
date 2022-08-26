@@ -34,7 +34,7 @@ public class TemporalInterpreter implements Serializable {
   private static final long serialVersionUID = 410232939831224196L;
 
   private static final LocalDate MIN_EPOCH_LOCAL_DATE = LocalDate.ofEpochDay(0);
-  private static final LocalDate MIN_LOCAL_DATE = LocalDate.of(1600, 1, 1);
+  private static final LocalDate MIN_LOCAL_DATE = LocalDate.of(1500, 1, 1);
 
   private final TemporalRangeParser temporalRangeParser;
   private final TemporalParser temporalParser;
