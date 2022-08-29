@@ -43,7 +43,7 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesEventsInt
 
   @Override
   public String getRouting() {
-    return new PipelinesEventsInterpretedMessage().setRunner(config.processRunner).getRoutingKey();
+    return new PipelinesEventsInterpretedMessage().setRunner("*").getRoutingKey();
   }
 
   /** Main message processing logic, creates a terminal java process, which runs */
