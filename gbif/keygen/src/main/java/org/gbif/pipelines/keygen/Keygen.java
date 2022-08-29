@@ -60,7 +60,8 @@ public class Keygen {
       // Finds or generates key
       keyResult = keygenService.findKey(uniqueStrings);
       if (!keyResult.isPresent() && generateIfAbsent) {
-        log.error("GBIF ID wasn't found, generating a new key.");
+        log.info(
+            "GBIF ID wasn't found, generating a new key for {}", String.join(",", uniqueStrings));
         keyResult = Optional.of(keygenService.generateKey(uniqueStrings));
       }
     } catch (RuntimeException ex) {
