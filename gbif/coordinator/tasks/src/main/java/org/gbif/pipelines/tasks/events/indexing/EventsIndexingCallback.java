@@ -24,6 +24,7 @@ import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
 import org.gbif.pipelines.tasks.events.interpretation.EventsInterpretationConfiguration;
+import org.gbif.pipelines.tasks.occurrences.interpretation.InterpreterConfiguration;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 
 /** Callback which is called when the {@link PipelinesEventsMessage} is received. */
@@ -158,24 +159,39 @@ public class EventsIndexingCallback
     }
   }
 
+  /** Sum of event and occurrence records */
+  private long getRecordNumber(PipelinesEventsInterpretedMessage message) throws IOException {
+    long eventRecords =
+        getRecordNumber(
+            message,
+            new EventsInterpretationConfiguration().metaFileName,
+            message.getNumberOfEventRecords());
+    long occurrenceRecords =
+        getRecordNumber(
+            message,
+            new InterpreterConfiguration().metaFileName,
+            message.getNumberOfOccurrenceRecords());
+    return occurrenceRecords + eventRecords;
+  }
+
   /**
-   * Reads number of records from a archive-to-avro metadata file, verbatim-to-interpreted contains
+   * Reads number of records from an archive-to-avro metadata file, verbatim-to-interpreted contains
    * attempted records count, which is not accurate enough
    */
-  private long getRecordNumber(PipelinesEventsInterpretedMessage message) throws IOException {
+  private long getRecordNumber(
+      PipelinesEventsInterpretedMessage message, String metaFileName, Long messageNumber)
+      throws IOException {
     String datasetId = message.getDatasetUuid().toString();
     String attempt = Integer.toString(message.getAttempt());
-    String metaFileName = new EventsInterpretationConfiguration().metaFileName;
     String metaPath =
         String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, metaFileName);
 
-    Long messageNumber = message.getNumberOfEventRecords();
     Optional<Long> fileNumber =
         HdfsUtils.getLongByKey(hdfsConfigs, metaPath, Metrics.UNIQUE_IDS_COUNT + Metrics.ATTEMPTED);
 
     if (messageNumber == null && !fileNumber.isPresent()) {
       throw new IllegalArgumentException(
-          "Please check archive-to-avro metadata yaml file or message records number, recordsNumber can't be null or empty!");
+          "Please check metadata yaml file or message records number, recordsNumber can't be null or empty!");
     }
 
     if (messageNumber == null) {
