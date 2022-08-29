@@ -203,7 +203,7 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
   }
 
   /**
-   * Reads number of records from a archive-to-avro metadata file, verbatim-to-interpreted contains
+   * Reads number of records from an archive-to-avro metadata file, verbatim-to-interpreted contains
    * attempted records count, which is not accurate enough
    */
   private long getRecordNumber(PipelinesInterpretedMessage message) throws IOException {
