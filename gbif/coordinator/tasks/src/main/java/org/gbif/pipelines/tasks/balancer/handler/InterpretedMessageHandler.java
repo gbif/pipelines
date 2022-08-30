@@ -146,7 +146,7 @@ public class InterpretedMessageHandler {
   }
 
   /**
-   * Reads number of records from a archive-to-avro metadata file, verbatim-to-interpreted contains
+   * Reads number of records from an archive-to-avro metadata file, verbatim-to-interpreted contains
    * attempted records count, which is not accurate enough
    */
   private static long getRecordNumber(
@@ -166,7 +166,8 @@ public class InterpretedMessageHandler {
     HdfsConfigs hdfsConfigs =
         HdfsConfigs.create(stepConfig.hdfsSiteConfig, stepConfig.coreSiteConfig);
     Optional<Long> fileNumber =
-        HdfsUtils.getLongByKey(hdfsConfigs, metaPath, Metrics.UNIQUE_IDS_COUNT + Metrics.ATTEMPTED);
+        HdfsUtils.getLongByKey(
+            hdfsConfigs, metaPath, Metrics.UNIQUE_GBIF_IDS_COUNT + Metrics.ATTEMPTED);
 
     // Fail if fileNumber is null
     if (!isValidator(message.getPipelineSteps())) {

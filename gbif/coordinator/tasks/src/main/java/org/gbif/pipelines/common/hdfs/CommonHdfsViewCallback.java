@@ -10,7 +10,9 @@ import java.util.function.Predicate;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.pipelines.StepRunner;
+import org.gbif.common.messaging.api.messages.PipelinesEventsInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretationMessage;
+import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
@@ -94,6 +96,7 @@ public class CommonHdfsViewCallback {
       throws IOException, InterruptedException {
 
     long recordsNumber = getRecordNumber(message);
+    log.info("Calculate job's settings based on {} records", recordsNumber);
     SparkSettings sparkSettings = SparkSettings.create(config.sparkConfig, recordsNumber);
 
     builder.sparkSettings(sparkSettings);
@@ -119,7 +122,13 @@ public class CommonHdfsViewCallback {
     String metaPath =
         String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, metaFileName);
 
-    Long messageNumber = message.getNumberOfInterpretationRecords();
+    Long messageNumber = null;
+    if (message instanceof PipelinesInterpretedMessage) {
+      messageNumber = ((PipelinesInterpretedMessage) message).getNumberOfRecords();
+    } else if (message instanceof PipelinesEventsInterpretedMessage) {
+      messageNumber = ((PipelinesEventsInterpretedMessage) message).getNumberOfEventRecords();
+    }
+
     HdfsConfigs hdfsConfigs =
         HdfsConfigs.create(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);
     Optional<Long> fileNumber =
