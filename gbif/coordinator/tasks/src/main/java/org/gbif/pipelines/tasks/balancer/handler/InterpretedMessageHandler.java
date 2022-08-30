@@ -179,14 +179,14 @@ public class InterpretedMessageHandler {
 
     if (messageNumber == null && !fileNumber.isPresent()) {
       throw new IllegalArgumentException(
-          "Please check archive-to-avro metadata yaml file or message records number, recordsNumber can't be null or empty!");
+          "Please check metadata yaml file or message records number, recordsNumber can't be null or empty!");
     }
 
     if (messageNumber == null) {
       return fileNumber.get();
     }
 
-    if (!fileNumber.isPresent() || messageNumber > fileNumber.get()) {
+    if (!fileNumber.isPresent() || messageNumber < fileNumber.get()) {
       return messageNumber;
     }
 
