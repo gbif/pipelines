@@ -166,8 +166,7 @@ public class InterpretedMessageHandler {
     HdfsConfigs hdfsConfigs =
         HdfsConfigs.create(stepConfig.hdfsSiteConfig, stepConfig.coreSiteConfig);
     Optional<Long> fileNumber =
-        HdfsUtils.getLongByKey(
-            hdfsConfigs, metaPath, Metrics.UNIQUE_GBIF_IDS_COUNT + Metrics.ATTEMPTED);
+        HdfsUtils.getLongByKey(hdfsConfigs, metaPath, Metrics.UNIQUE_IDS_COUNT + Metrics.ATTEMPTED);
 
     // Fail if fileNumber is null
     if (!isValidator(message.getPipelineSteps())) {
