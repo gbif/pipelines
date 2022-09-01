@@ -1,5 +1,9 @@
 package org.gbif.pipelines.ingest.pipelines;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.ALL_AVRO;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.BASIC;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.EVENT;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.EVENT_IDENTIFIER;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.IDENTIFIER;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.IDENTIFIER_ABSENT;
 
@@ -21,7 +25,7 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.common.PipelinesVariables;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
@@ -90,7 +94,7 @@ public class VerbatimToEventPipeline {
 
     String datasetId = options.getDatasetId();
     Integer attempt = options.getAttempt();
-    Set<String> types = options.getInterpretationTypes();
+    Set<String> types = getEventTypes(options.getInterpretationTypes());
     String targetPath = options.getTargetPath();
 
     MDC.put("datasetKey", datasetId);
@@ -101,17 +105,17 @@ public class VerbatimToEventPipeline {
         HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig());
     TransformsFactory transformsFactory = TransformsFactory.create(options);
 
-    // Remove directories with avro files for expected interpretation, except IDENTIFIER
-    Set<String> deleteTypes = new HashSet<>(types);
-    deleteTypes.add(IDENTIFIER.name());
-    deleteTypes.remove(IDENTIFIER_ABSENT.name());
-    FsUtils.deleteInterpretIfExist(
-        hdfsConfigs, targetPath, datasetId, attempt, CORE_TERM, deleteTypes);
+    FsUtils.deleteInterpretIfExist(hdfsConfigs, targetPath, datasetId, attempt, CORE_TERM, types);
 
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
+    // Path to write
     UnaryOperator<String> pathFn =
         t -> PathBuilder.buildPathInterpretUsingTargetPath(options, CORE_TERM, t, id);
+
+    // Path function for reading avro files
+    UnaryOperator<String> interpretedPathFn =
+        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, CORE_TERM, t, ALL_AVRO);
 
     log.info("Creating a pipeline from options");
     Pipeline p = pipelinesFn.apply(options);
@@ -142,7 +146,7 @@ public class VerbatimToEventPipeline {
 
       metadataRecord.apply("Write metadata to avro", metadataTransform.write(pathFn));
     } else {
-      metadataRecord = p.apply("Read metadata record", metadataTransform.read(pathFn));
+      metadataRecord = p.apply("Read metadata record", metadataTransform.read(interpretedPathFn));
     }
 
     PCollectionView<MetadataRecord> metadataView =
@@ -162,46 +166,53 @@ public class VerbatimToEventPipeline {
             .apply("View to find parents", View.asMap());
     eventCoreTransform.setErWithParentsView(erWithParentEventsView);
 
-    // Interpret identifiers and write as avro files
     uniqueRawRecords
         .apply("Interpret event identifiers", identifierTransform.interpret())
         .apply("Write event identifiers to avro", identifierTransform.write(pathFn));
 
-    // Interpret event core records and write as avro files
     uniqueRawRecords
+        .apply("Check event core transform", eventCoreTransform.check(types))
         .apply("Interpret event core", eventCoreTransform.interpret())
         .apply("Write event core to avro", eventCoreTransform.write(pathFn));
 
     uniqueRawRecords
+        .apply("Check event temporal transform", temporalTransform.check(types))
         .apply("Interpret event temporal", temporalTransform.interpret())
         .apply("Write event temporal to avro", temporalTransform.write(pathFn));
 
     uniqueRawRecords
+        .apply("Check event taxonomy transform", taxonomyTransform.check(types))
         .apply("Interpret event taxonomy", taxonomyTransform.interpret())
         .apply("Write event taxon to avro", taxonomyTransform.write(pathFn));
 
     uniqueRawRecords
+        .apply("Check event multimedia transform", multimediaTransform.check(types))
         .apply("Interpret event multimedia", multimediaTransform.interpret())
         .apply("Write event multimedia to avro", multimediaTransform.write(pathFn));
 
     uniqueRawRecords
+        .apply("Check event audubon transform", audubonTransform.check(types))
         .apply("Interpret event audubon", audubonTransform.interpret())
         .apply("Write event audubon to avro", audubonTransform.write(pathFn));
 
     uniqueRawRecords
+        .apply("Check event image transform", imageTransform.check(types))
         .apply("Interpret event image", imageTransform.interpret())
         .apply("Write event image to avro", imageTransform.write(pathFn));
 
     uniqueRawRecords
+        .apply("Check location transform", locationTransform.check(types))
         .apply("Interpret event location", locationTransform.interpret(metadataView))
         .apply("Write event location to avro", locationTransform.write(pathFn));
 
     uniqueRawRecords
+        .apply("Check event measurementOrFact", measurementOrFactTransform.check(types))
         .apply("Interpret event measurementOrFact", measurementOrFactTransform.interpret())
         .apply("Write event measurementOrFact to avro", measurementOrFactTransform.write(pathFn));
 
-    // Write filtered verbatim avro files
-    uniqueRawRecords.apply("Write event verbatim to avro", verbatimTransform.write(pathFn));
+    uniqueRawRecords
+        .apply("Check event verbatim transform", verbatimTransform.check(types))
+        .apply("Write event verbatim to avro", verbatimTransform.write(pathFn));
 
     uniqueRawRecords
         .apply("Generate GbifIdRecords for events", idTransform.interpret())
@@ -229,8 +240,19 @@ public class VerbatimToEventPipeline {
     log.info("Pipeline has been finished");
   }
 
+  /** Remove directories with avro files for expected interpretation, except IDENTIFIER */
+  private static Set<String> getEventTypes(Set<String> types) {
+    Set<String> resultTypes = new HashSet<>(types);
+    if (types.contains(BASIC.name())) {
+      resultTypes.add(EVENT.name());
+    }
+    resultTypes.add(IDENTIFIER.name());
+    resultTypes.add(EVENT_IDENTIFIER.name());
+    resultTypes.remove(IDENTIFIER_ABSENT.name());
+    return resultTypes;
+  }
+
   private static boolean useMetadataRecordWriteIO(Set<String> types) {
-    return types.contains(PipelinesVariables.Pipeline.Interpretation.RecordType.METADATA.name())
-        || types.contains(PipelinesVariables.Pipeline.Interpretation.RecordType.ALL.name());
+    return types.contains(RecordType.METADATA.name()) || types.contains(RecordType.ALL.name());
   }
 }
