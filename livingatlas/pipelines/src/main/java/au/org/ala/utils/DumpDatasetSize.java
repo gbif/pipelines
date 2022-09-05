@@ -81,15 +81,20 @@ public class DumpDatasetSize {
       throws IOException {
     Map<String, Long> counts = new HashMap<>();
     FileStatus[] fileStatuses = fs.listStatus(new Path(inputPath));
+    log.info("Datasets counts from {}", inputPath);
     for (FileStatus fileStatus : fileStatuses) {
       if (fileStatus.isDirectory()) {
-
         String datasetID =
             fileStatus
                 .getPath()
                 .toString()
                 .substring(fileStatus.getPath().toString().lastIndexOf('/') + 1);
-        counts.put(datasetID, ValidationUtils.readVerbatimCount(fs, inputPath, datasetID, 1));
+        try {
+          counts.put(datasetID, ValidationUtils.readVerbatimCount(fs, inputPath, datasetID, 1));
+        } catch (Exception e) {
+          log.error("Dataset count of {} failed", datasetID);
+          throw (e);
+        }
       }
     }
     return counts;
