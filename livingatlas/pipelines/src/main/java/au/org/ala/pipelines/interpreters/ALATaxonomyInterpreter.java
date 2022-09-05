@@ -124,7 +124,8 @@ public class ALATaxonomyInterpreter {
    */
   public static BiConsumer<ExtendedRecord, ALATaxonRecord> alaTaxonomyInterpreter(
       final ALACollectoryMetadata dataResource,
-      final KeyValueStore<NameSearch, NameUsageMatch> kvStore) {
+      final KeyValueStore<NameSearch, NameUsageMatch> kvStore,
+      final Boolean matchOnTaxonID) {
     final Map<String, List<String>> hints = dataResource == null ? null : dataResource.getHintMap();
     final Map<String, String> defaults =
         dataResource == null ? null : dataResource.getDefaultDarwinCoreValues();
@@ -137,8 +138,12 @@ public class ALATaxonomyInterpreter {
         if (genus == null) {
           genus = extractValue(er, DwcTerm.genericName, defaults);
         }
+        NameSearch.NameSearchBuilder builder = NameSearch.builder();
+        if (matchOnTaxonID) {
+          builder.taxonID(extractValue(er, DwcTerm.taxonID, defaults));
+        }
         NameSearch matchRequest =
-            NameSearch.builder()
+            builder
                 .kingdom(extractValue(er, DwcTerm.kingdom, defaults))
                 .phylum(extractValue(er, DwcTerm.phylum, defaults))
                 .clazz(extractValue(er, DwcTerm.class_, defaults))

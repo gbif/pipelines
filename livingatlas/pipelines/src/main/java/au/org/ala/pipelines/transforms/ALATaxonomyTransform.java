@@ -2,6 +2,7 @@ package au.org.ala.pipelines.transforms;
 
 import static au.org.ala.pipelines.common.ALARecordTypes.ALA_TAXONOMY;
 
+import au.org.ala.kvs.ALANameMatchConfig;
 import au.org.ala.kvs.client.ALACollectoryMetadata;
 import au.org.ala.names.ws.api.NameSearch;
 import au.org.ala.names.ws.api.NameUsageMatch;
@@ -46,6 +47,7 @@ public class ALATaxonomyTransform extends Transform<ExtendedRecord, ALATaxonReco
   private KeyValueStore<String, ALACollectoryMetadata> dataResourceStore;
   private final SerializableSupplier<KeyValueStore<String, ALACollectoryMetadata>>
       dataResourceStoreSupplier;
+  private final ALANameMatchConfig alaNameMatchConfig;
 
   @Builder(buildMethodName = "create")
   private ALATaxonomyTransform(
@@ -55,8 +57,8 @@ public class ALATaxonomyTransform extends Transform<ExtendedRecord, ALATaxonReco
       KeyValueStore<String, Boolean> kingdomCheckStore,
       SerializableSupplier<KeyValueStore<String, Boolean>> kingdomCheckStoreSupplier,
       KeyValueStore<String, ALACollectoryMetadata> dataResourceStore,
-      SerializableSupplier<KeyValueStore<String, ALACollectoryMetadata>>
-          dataResourceStoreSupplier) {
+      SerializableSupplier<KeyValueStore<String, ALACollectoryMetadata>> dataResourceStoreSupplier,
+      ALANameMatchConfig alaNameMatchConfig) {
     super(
         ALATaxonRecord.class,
         ALA_TAXONOMY,
@@ -69,6 +71,7 @@ public class ALATaxonomyTransform extends Transform<ExtendedRecord, ALATaxonReco
     this.kingdomCheckStoreSupplier = kingdomCheckStoreSupplier;
     this.dataResourceStore = dataResourceStore;
     this.dataResourceStoreSupplier = dataResourceStoreSupplier;
+    this.alaNameMatchConfig = alaNameMatchConfig;
   }
 
   /** Maps {@link ALATaxonRecord} to key value, where key is {@link TaxonRecord#getId} */
@@ -144,7 +147,8 @@ public class ALATaxonomyTransform extends Transform<ExtendedRecord, ALATaxonReco
     BiConsumer<ExtendedRecord, ALATaxonRecord> sourceCheck =
         ALATaxonomyInterpreter.alaSourceQualityChecks(dataResource, kingdomCheckStore);
     BiConsumer<ExtendedRecord, ALATaxonRecord> interpret =
-        ALATaxonomyInterpreter.alaTaxonomyInterpreter(dataResource, nameMatchStore);
+        ALATaxonomyInterpreter.alaTaxonomyInterpreter(
+            dataResource, nameMatchStore, alaNameMatchConfig.getMatchOnTaxonID());
     BiConsumer<ExtendedRecord, ALATaxonRecord> resultCheck =
         ALATaxonomyInterpreter.alaResultQualityChecks(dataResource);
     Interpretation.from(source)

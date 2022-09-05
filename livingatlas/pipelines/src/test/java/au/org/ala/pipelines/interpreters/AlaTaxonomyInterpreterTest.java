@@ -97,6 +97,21 @@ public class AlaTaxonomyInterpreterTest {
             .issues(Collections.singletonList("noIssue"))
             .build();
     this.nameMap.put(search, match);
+    // TaxonID lookup
+    search = NameSearch.builder().kingdom("Plantae").taxonID("1234").hints(hintMap).build();
+    match =
+        NameUsageMatch.builder()
+            .success(true)
+            .taxonConceptID("https://id.biodiversity.org.au/taxon/apni/51286863")
+            .kingdom("Plantae")
+            .scientificName("Acacia dealbata")
+            .family("Fabaceae")
+            .rank("SPECIES")
+            .matchType("exactMatch")
+            .nameType("SCIENTIFIC")
+            .issues(Collections.singletonList("noIssue"))
+            .build();
+    this.nameMap.put(search, match);
 
     // Full lookup
     search =
@@ -179,7 +194,8 @@ public class AlaTaxonomyInterpreterTest {
     map.put(DwcTerm.scientificName.qualifiedName(), "Acacia dealbata");
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
     ALATaxonRecord atr = ALATaxonRecord.newBuilder().setId("1").build();
-    ALATaxonomyInterpreter.alaTaxonomyInterpreter(this.dataResource, this.lookup).accept(er, atr);
+    ALATaxonomyInterpreter.alaTaxonomyInterpreter(this.dataResource, this.lookup, false)
+        .accept(er, atr);
     assertEquals("https://id.biodiversity.org.au/taxon/apni/51286863", atr.getTaxonConceptID());
     assertEquals("Acacia dealbata", atr.getScientificName());
     assertEquals("Fabaceae", atr.getFamily());
@@ -197,7 +213,8 @@ public class AlaTaxonomyInterpreterTest {
     map.put(DwcTerm.kingdom.qualifiedName(), "Plantae");
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
     ALATaxonRecord atr = ALATaxonRecord.newBuilder().setId("1").build();
-    ALATaxonomyInterpreter.alaTaxonomyInterpreter(this.dataResource, this.lookup).accept(er, atr);
+    ALATaxonomyInterpreter.alaTaxonomyInterpreter(this.dataResource, this.lookup, false)
+        .accept(er, atr);
     assertEquals("https://id.biodiversity.org.au/taxon/apni/51286863", atr.getTaxonConceptID());
     assertEquals("Acacia dealbata", atr.getScientificName());
     assertEquals("Fabaceae", atr.getFamily());
@@ -215,7 +232,8 @@ public class AlaTaxonomyInterpreterTest {
     map.put(DwcTerm.family.qualifiedName(), "MACROPODIDAE");
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
     ALATaxonRecord atr = ALATaxonRecord.newBuilder().setId("1").build();
-    ALATaxonomyInterpreter.alaTaxonomyInterpreter(this.dataResource, this.lookup).accept(er, atr);
+    ALATaxonomyInterpreter.alaTaxonomyInterpreter(this.dataResource, this.lookup, false)
+        .accept(er, atr);
     assertEquals(
         "urn:lsid:biodiversity.org.au:afd.taxon:e6aff6af-ff36-4ad5-95f2-2dfdcca8caff",
         atr.getTaxonConceptID());
@@ -280,7 +298,25 @@ public class AlaTaxonomyInterpreterTest {
     map.put(DwcTerm.vernacularName.qualifiedName(), "Alpine Wattle");
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
     ALATaxonRecord atr = ALATaxonRecord.newBuilder().setId("1").build();
-    ALATaxonomyInterpreter.alaTaxonomyInterpreter(this.dataResource, this.lookup).accept(er, atr);
+    ALATaxonomyInterpreter.alaTaxonomyInterpreter(this.dataResource, this.lookup, false)
+        .accept(er, atr);
+    assertEquals("https://id.biodiversity.org.au/taxon/apni/51286863", atr.getTaxonConceptID());
+    assertEquals("Acacia dealbata", atr.getScientificName());
+    assertEquals("Fabaceae", atr.getFamily());
+    assertEquals("Plantae", atr.getKingdom());
+    assertEquals("exactMatch", atr.getMatchType());
+    assertEquals("SCIENTIFIC", atr.getNameType());
+    assertTrue(atr.getIssues().getIssueList().isEmpty());
+  }
+
+  @Test
+  public void testMatchOnTaxonID() {
+    Map<String, String> map = new HashMap<>();
+    map.put(DwcTerm.taxonID.qualifiedName(), "1234");
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
+    ALATaxonRecord atr = ALATaxonRecord.newBuilder().setId("1").build();
+    ALATaxonomyInterpreter.alaTaxonomyInterpreter(this.dataResource, this.lookup, true)
+        .accept(er, atr);
     assertEquals("https://id.biodiversity.org.au/taxon/apni/51286863", atr.getTaxonConceptID());
     assertEquals("Acacia dealbata", atr.getScientificName());
     assertEquals("Fabaceae", atr.getFamily());
@@ -296,7 +332,8 @@ public class AlaTaxonomyInterpreterTest {
     map.put(DwcTerm.scientificName.qualifiedName(), "Vombatus ursinus");
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
     ALATaxonRecord atr = ALATaxonRecord.newBuilder().setId("1").build();
-    ALATaxonomyInterpreter.alaTaxonomyInterpreter(this.dataResource, this.lookup).accept(er, atr);
+    ALATaxonomyInterpreter.alaTaxonomyInterpreter(this.dataResource, this.lookup, false)
+        .accept(er, atr);
     assertNull(atr.getTaxonConceptID());
     assertNull(atr.getMatchType());
     assertFalse(atr.getIssues().getIssueList().contains("noMatch"));
@@ -310,7 +347,8 @@ public class AlaTaxonomyInterpreterTest {
     map.put(DwcTerm.kingdom.qualifiedName(), "Animalia");
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
     ALATaxonRecord atr = ALATaxonRecord.newBuilder().setId("1").build();
-    ALATaxonomyInterpreter.alaTaxonomyInterpreter(this.dataResource, this.lookup).accept(er, atr);
+    ALATaxonomyInterpreter.alaTaxonomyInterpreter(this.dataResource, this.lookup, false)
+        .accept(er, atr);
     assertNull(atr.getTaxonConceptID());
     assertNull(atr.getMatchType());
     assertFalse(atr.getIssues().getIssueList().contains("noMatch"));
@@ -379,7 +417,8 @@ public class AlaTaxonomyInterpreterTest {
     map.put(DwcTerm.scientificName.qualifiedName(), "Acacia dealbata");
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
     ALATaxonRecord atr = ALATaxonRecord.newBuilder().setId("1").build();
-    ALATaxonomyInterpreter.alaTaxonomyInterpreter(this.dataResource, this.lookup).accept(er, atr);
+    ALATaxonomyInterpreter.alaTaxonomyInterpreter(this.dataResource, this.lookup, false)
+        .accept(er, atr);
     ALATaxonomyInterpreter.alaResultQualityChecks(this.dataResource).accept(er, atr);
     assertEquals(Collections.emptyList(), atr.getIssues().getIssueList());
   }
@@ -389,7 +428,8 @@ public class AlaTaxonomyInterpreterTest {
     Map<String, String> map = new HashMap<>();
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
     ALATaxonRecord atr = ALATaxonRecord.newBuilder().setId("1").build();
-    ALATaxonomyInterpreter.alaTaxonomyInterpreter(this.dataResource, this.lookup).accept(er, atr);
+    ALATaxonomyInterpreter.alaTaxonomyInterpreter(this.dataResource, this.lookup, false)
+        .accept(er, atr);
     ALATaxonomyInterpreter.alaResultQualityChecks(this.dataResource).accept(er, atr);
     assertEquals(
         Collections.singletonList(ALAOccurrenceIssue.TAXON_DEFAULT_MATCH.name()),

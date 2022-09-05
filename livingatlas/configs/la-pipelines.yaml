@@ -90,6 +90,9 @@ gbifConfig:
       http://rs.tdwg.org/dwc/terms/establishmentMeans: EstablishmentMeans
       http://rs.tdwg.org/dwc/terms/pathway: Pathway
 
+alaNameMatchConfig:
+  matchOnTaxonID: true
+
 #locationInfoConfig:
 #    countryNamesFile : /data/pipelines-data/resources/countries.txt
 #    countryCentrePointsFile : /data/pipelines-data/resources/countryCentrePoints.txt

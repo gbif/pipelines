@@ -1,5 +1,6 @@
 package au.org.ala.pipelines.beam;
 
+import au.org.ala.kvs.ALANameMatchConfig;
 import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.kvs.ALAPipelinesConfigFactory;
 import au.org.ala.kvs.cache.ALAAttributionKVStoreFactory;
@@ -218,6 +219,10 @@ public class ALAVerbatimToInterpretedPipeline {
             .kingdomCheckStoreSupplier(
                 ALANameCheckKVStoreFactory.getInstanceSupplier("kingdom", config))
             .dataResourceStoreSupplier(ALAAttributionKVStoreFactory.getInstanceSupplier(config))
+            .alaNameMatchConfig(
+                config.getAlaNameMatchConfig() != null
+                    ? config.getAlaNameMatchConfig()
+                    : new ALANameMatchConfig())
             .create();
 
     // ALA specific - Location
