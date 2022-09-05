@@ -22,9 +22,7 @@ import au.org.ala.utils.ValidationUtils;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.function.UnaryOperator;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -103,7 +101,8 @@ public class ALAVerbatimToInterpretedPipeline {
 
   public static void main(String[] args) throws IOException {
     VersionInfo.print();
-    String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "interpret");
+    String[] combinedArgs =
+        new CombinedYamlConfiguration(args).toArgs("general", "interpret");
     InterpretationPipelineOptions options =
         PipelinesOptionsFactory.createInterpretation(combinedArgs);
     options.setMetaFileName(ValidationUtils.INTERPRETATION_METRICS);
@@ -145,7 +144,7 @@ public class ALAVerbatimToInterpretedPipeline {
     List<DateComponentOrdering> dateComponentOrdering =
         options.getDefaultDateFormat() == null
             ? config.getGbifConfig().getDefaultDateFormat()
-            : options.getDefaultDateFormat();
+            : Arrays.asList(DateComponentOrdering.DMY_FORMATS);
 
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 

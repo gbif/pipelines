@@ -19,6 +19,7 @@ public class ALATemporalTransform extends Transform<ExtendedRecord, TemporalReco
   private final SerializableFunction<String, String> preprocessDateFn;
   private final List<DateComponentOrdering> orderings;
   private TemporalInterpreter temporalInterpreter;
+  private ALATemporalInterpreter alaTemporalInterpreter;
 
   @Builder(buildMethodName = "create")
   private ALATemporalTransform(
@@ -43,6 +44,13 @@ public class ALATemporalTransform extends Transform<ExtendedRecord, TemporalReco
               .preprocessDateFn(preprocessDateFn)
               .create();
     }
+    if (alaTemporalInterpreter == null) {
+      alaTemporalInterpreter =
+          ALATemporalInterpreter.builder()
+              .orderings(orderings)
+              .preprocessDateFn(preprocessDateFn)
+              .create();
+    }
   }
 
   public ALATemporalTransform counterFn(SerializableConsumer<String> counterFn) {
@@ -59,9 +67,9 @@ public class ALATemporalTransform extends Transform<ExtendedRecord, TemporalReco
         .via(temporalInterpreter::interpretTemporal)
         .via(temporalInterpreter::interpretModified)
         .via(temporalInterpreter::interpretDateIdentified)
-        .via(ALATemporalInterpreter::checkRecordDateQuality)
-        .via(ALATemporalInterpreter::checkDateIdentified)
-        .via(ALATemporalInterpreter::checkGeoreferencedDate)
+        .via(alaTemporalInterpreter::checkRecordDateQuality)
+        .via(alaTemporalInterpreter::checkDateIdentified)
+        .via(alaTemporalInterpreter::checkGeoreferencedDate)
         .via(ALATemporalInterpreter::checkDatePrecision)
         .getOfNullable();
   }
