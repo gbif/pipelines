@@ -234,6 +234,10 @@ test:
   zkHost: localhost:9983
   solrAdminHost: localhost:8983
 
+defaultDateFormat:
+  - DMYT
+  - DMY
+
 root-test: 1
 
 unicode-test: Лорем ипсум долор сит амет, дуо еа прима семпер

@@ -42,6 +42,7 @@ interpret:
   appName: Interpretation for {datasetId}
   inputPath: hdfs:///pipelines-data/{datasetId}/1/verbatim.avro
   targetPath: hdfs:///pipelines-data/
+  defaultDateFormat: DMYT,DMY
 
 uuid:
   inputPath: hdfs:///pipelines-data
