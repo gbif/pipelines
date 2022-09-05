@@ -33,6 +33,7 @@ override_dh_auto_clean:
 override_dh_auto_install:
 #	install don't allow to rename files (like wars), so we copy here the file we want to install with the package
 	cp $(CURDIR)/livingatlas/pipelines/target/pipelines-$(CURVERSION)-shaded.jar $(DESTDIR)/la-pipelines.jar
+	cp $(CURDIR)/livingatlas/migration/target/migration-$(CURVERSION)-shaded.jar $(DESTDIR)/la-pipelines-migration.jar
 	cp $(CURDIR)/livingatlas/scripts/la-pipelines-bash-completion.sh $(DESTDIR)/la-pipelines
 	cp $(CURDIR)/livingatlas/configs/la-pipelines-local.yaml $(DESTDIR)/la-pipelines-local.yaml.sample
 	dh_auto_install
