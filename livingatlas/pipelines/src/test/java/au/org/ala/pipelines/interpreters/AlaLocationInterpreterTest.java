@@ -102,7 +102,7 @@ public class AlaLocationInterpreterTest {
     // Have to run
     LocationInterpreter.interpretDepth(er, lr);
 
-    LocationInterpreter.interpretContinent(er, lr);
+    LocationInterpreter.interpretContinent(new KeyValueTestStoreStub<>()).accept(er, lr);
     LocationInterpreter.interpretWaterBody(er, lr);
     LocationInterpreter.interpretMinimumElevationInMeters(er, lr);
     LocationInterpreter.interpretMaximumElevationInMeters(er, lr);

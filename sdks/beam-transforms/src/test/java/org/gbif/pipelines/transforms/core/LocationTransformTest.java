@@ -17,6 +17,7 @@ import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
+import org.gbif.api.vocabulary.Continent;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
@@ -53,7 +54,7 @@ public class LocationTransformTest {
 
   @Rule public final transient TestPipeline p = TestPipeline.create();
 
-  private static GeocodeResponse toGeocodeResponse(Country country) {
+  private static GeocodeResponse toGeocodeResponse(Country country, Continent continent) {
     List<Location> locations = new ArrayList<>();
 
     if (country != null) {
@@ -113,6 +114,15 @@ public class LocationTransformTest {
       locations.add(gadm2);
     }
 
+    if (continent != null) {
+      Location continentLoc = new Location();
+      continentLoc.setType("Continent");
+      continentLoc.setDistance(0.0d);
+      continentLoc.setId(continent.name());
+      continentLoc.setName(continent.getTitle());
+      locations.add(continentLoc);
+    }
+
     return new GeocodeResponse(locations);
   }
 
@@ -152,9 +162,9 @@ public class LocationTransformTest {
 
     // State
     KeyValueTestStoreStub<LatLng, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
-    kvStore.put(new LatLng(56.26d, 9.51d), toGeocodeResponse(Country.DENMARK));
-    kvStore.put(new LatLng(36.21d, 138.25d), toGeocodeResponse(Country.JAPAN));
-    kvStore.put(new LatLng(88.21d, -32.01d), toGeocodeResponse(null));
+    kvStore.put(new LatLng(56.26d, 9.51d), toGeocodeResponse(Country.DENMARK, Continent.EUROPE));
+    kvStore.put(new LatLng(36.21d, 138.25d), toGeocodeResponse(Country.JAPAN, Continent.ASIA));
+    kvStore.put(new LatLng(88.21d, -32.01d), toGeocodeResponse(null, null));
     SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> geocodeKvStore =
         () -> GeocodeKvStore.create(kvStore);
 
