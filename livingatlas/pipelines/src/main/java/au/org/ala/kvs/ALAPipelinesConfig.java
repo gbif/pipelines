@@ -15,6 +15,7 @@ public class ALAPipelinesConfig implements Serializable {
   GeocodeShpConfig geocodeConfig;
   LocationInfoConfig locationInfoConfig;
   RecordedByConfig recordedByConfig;
+  ALANameMatchConfig alaNameMatchConfig;
 
   // ALA specific
   private WsConfig collectory;
