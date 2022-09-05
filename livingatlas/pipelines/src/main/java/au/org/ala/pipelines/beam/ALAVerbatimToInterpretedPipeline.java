@@ -102,8 +102,7 @@ public class ALAVerbatimToInterpretedPipeline {
 
   public static void main(String[] args) throws IOException {
     VersionInfo.print();
-    String[] combinedArgs =
-        new CombinedYamlConfiguration(args).toArgs("general", "interpret");
+    String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "interpret");
     InterpretationPipelineOptions options =
         PipelinesOptionsFactory.createInterpretation(combinedArgs);
     options.setMetaFileName(ValidationUtils.INTERPRETATION_METRICS);
