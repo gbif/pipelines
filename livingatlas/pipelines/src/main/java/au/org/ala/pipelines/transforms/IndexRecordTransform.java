@@ -172,6 +172,9 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     skipKeys.add("identifiedByIds"); // multi value field
     skipKeys.add("recordedByIds"); // multi value field
     skipKeys.add("machineTags"); // TODO review content
+    skipKeys.add(
+        "establishmentMeans"); // GBIF treats it as a JSON, but ALA needs a String which is defined
+    // in the latest DWC
 
     // multi valued fields
     skipKeys.add("identifiedByIds");
@@ -239,6 +242,8 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     addToIndexRecord(br, indexRecord, skipKeys);
 
     if (br != null) {
+      addEstablishmentValueSafely(
+          indexRecord, DwcTerm.establishmentMeans.simpleName(), br.getEstablishmentMeans());
       addTermWithAgentsSafely(
           indexRecord, DwcTerm.recordedByID.simpleName(), br.getRecordedByIds());
       addMultiValueTermSafely(indexRecord, DwcTerm.typeStatus.simpleName(), br.getTypeStatus());
@@ -687,6 +692,13 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     }
   }
 
+  private static void addEstablishmentValueSafely(
+      IndexRecord.Builder indexRecord, String field, VocabularyConcept establishmentMeans) {
+    if (establishmentMeans != null) {
+      indexRecord.getStrings().put(field, establishmentMeans.getConcept());
+    }
+  }
+
   private static void addTermSafely(
       IndexRecord.Builder indexRecord, Map<String, String> extension, DwcTerm dwcTerm) {
     String termValue = extension.get(dwcTerm.name());
@@ -848,7 +860,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
             String k = c.element().getKey();
 
             // ALA specific
-            ALAUUIDRecord ur = v.getOnly(urTag, null);
+            ALAUUIDRecord ur = v.getAll(urTag).iterator().next();
 
             if (ur != null && !ur.getId().startsWith(REMOVED_PREFIX_MARKER)) {
 
