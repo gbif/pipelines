@@ -567,7 +567,7 @@ public class OccurrenceHdfsRecordConverter {
 
   /** Copies the {@link EventCoreRecord} data into the {@link OccurrenceHdfsRecord}. */
   private void mapEventCoreRecord(OccurrenceHdfsRecord occurrenceHdfsRecord) {
-    if (eventCoreRecord != null) {
+    if (eventCoreRecord != null && eventCoreRecord.getCreated() != null) {
       occurrenceHdfsRecord.setGbifid(eventCoreRecord.getId());
       if (eventCoreRecord.getParentsLineage() != null) {
         occurrenceHdfsRecord.setParenteventgbifid(
