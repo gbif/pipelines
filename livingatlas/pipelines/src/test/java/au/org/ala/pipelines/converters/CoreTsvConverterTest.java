@@ -104,7 +104,7 @@ public class CoreTsvConverterTest {
       "\"raw_er_disposition\"", // DwcTerm.disposition
       "\"raw_er_dynamicProperties\"", // DwcTerm.dynamicProperties
       "\"1111111\"", // DwcTerm.endDayOfYear
-      "\"{concept: br_establishmentMeans, lineage: [br_establishmentMeans]}\"", // DwcTerm.establishmentMeans
+      "\"br_establishmentMeans\"", // DwcTerm.establishmentMeans
       "\"raw_er_eventRemarks\"", // DwcTerm.eventRemarks
       "\"raw_er_eventTime\"", // DwcTerm.eventTime
       "\"raw_er_fieldNotes\"", // DwcTerm.fieldNotes
