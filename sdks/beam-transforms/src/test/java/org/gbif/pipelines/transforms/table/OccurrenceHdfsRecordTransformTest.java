@@ -1,6 +1,7 @@
 package org.gbif.pipelines.transforms.table;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -97,7 +98,7 @@ public class OccurrenceHdfsRecordTransformTest {
             .build();
     LocationRecord lr = LocationRecord.newBuilder().setId("777").setCountry("setCountry").build();
     EventCoreRecord ecr =
-        EventCoreRecord.newBuilder().setId("777").setParentEventID("setParentEventID").build();
+        EventCoreRecord.newBuilder().setId("777").setParentEventID("setParentEventID").setCreated(new Date().getTime()).build();
     MultimediaRecord mmr = MultimediaRecord.newBuilder().setId("777").build();
     AudubonRecord aur = AudubonRecord.newBuilder().setId("777").build();
     ImageRecord imr = ImageRecord.newBuilder().setId("777").build();
