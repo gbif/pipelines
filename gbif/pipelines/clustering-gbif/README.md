@@ -47,17 +47,19 @@ drop table occurrence_clustering_candidates;
 drop table occurrence_relationships;
 ```
 
-Run the job (In production this configuration takes 1.7 hours with 1.6B records)
+Run the job (In production this configuration takes 2.6 hours with ~2.3B records)
 ```
-nohup spark2-submit --class org.gbif.pipelines.clustering.Cluster  \
-  --master yarn --num-executors 40 --executor-cores 12 \
+nohup sudo -u hdfs spark2-submit --class org.gbif.pipelines.clustering.Cluster \
+  --master yarn --num-executors 100 \
+  --executor-cores 6 \
   --conf spark.dynamicAllocation.enabled=false \
   --conf spark.sql.shuffle.partitions=1000 \
-  --executor-memory 128G --driver-memory 4G \
-  clustering-gbif-2.12.2-SNAPSHOT.jar \
+  --executor-memory 64G \
+  --driver-memory 4G \
+  clustering-gbif-2.12.0-SNAPSHOT.jar \
   --hive-db prod_h \
   --hive-table-hashed occurrence_clustering_hashed \
-  --hive-table-candidates occurrence_clustering_candidates \
+  --hive-table-candidates occurrence_clustering_candidates  \
   --hive-table-relationships occurrence_relationships \
   --hbase-table occurrence_relationships_experimental \
   --hbase-regions 100 \
