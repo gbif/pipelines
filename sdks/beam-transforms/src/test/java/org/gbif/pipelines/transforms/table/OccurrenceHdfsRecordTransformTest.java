@@ -98,7 +98,11 @@ public class OccurrenceHdfsRecordTransformTest {
             .build();
     LocationRecord lr = LocationRecord.newBuilder().setId("777").setCountry("setCountry").build();
     EventCoreRecord ecr =
-        EventCoreRecord.newBuilder().setId("777").setParentEventID("setParentEventID").setCreated(new Date().getTime()).build();
+        EventCoreRecord.newBuilder()
+            .setId("777")
+            .setParentEventID("setParentEventID")
+            .setCreated(new Date().getTime())
+            .build();
     MultimediaRecord mmr = MultimediaRecord.newBuilder().setId("777").build();
     AudubonRecord aur = AudubonRecord.newBuilder().setId("777").build();
     ImageRecord imr = ImageRecord.newBuilder().setId("777").build();
