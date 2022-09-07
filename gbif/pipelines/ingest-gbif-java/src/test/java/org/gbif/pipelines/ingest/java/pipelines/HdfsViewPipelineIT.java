@@ -24,7 +24,7 @@ import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.GbifIdRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
@@ -243,11 +243,12 @@ public class HdfsViewPipelineIT {
           ExtendedRecord.newBuilder().setId(ID).setExtensions(ext).build();
       writer.append(extendedRecord);
     }
-    try (SyncDataFileWriter<GbifIdRecord> writer =
+    try (SyncDataFileWriter<IdentifierRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
             optionsWriter, GbifIdTransform.builder().create(), coreTerm, postfix)) {
-      GbifIdRecord gbifIdRecord = GbifIdRecord.newBuilder().setId(ID).setGbifId(1L).build();
-      writer.append(gbifIdRecord);
+      IdentifierRecord identifierRecord =
+          IdentifierRecord.newBuilder().setId(ID).setInternalId("1").build();
+      writer.append(identifierRecord);
     }
     try (SyncDataFileWriter<BasicRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
@@ -344,9 +345,7 @@ public class HdfsViewPipelineIT {
       while (dataFileReader.hasNext()) {
         T record = dataFileReader.next();
         Assert.assertNotNull(record);
-        Assert.assertEquals(
-            recordType == PipelinesVariables.Pipeline.Interpretation.RecordType.EVENT ? "777" : "1",
-            record.get("gbifid"));
+        Assert.assertEquals("1", record.get("gbifid"));
       }
     }
   }

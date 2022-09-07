@@ -15,14 +15,14 @@ import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.core.interpreters.specific.ClusteredInterpreter;
 import org.gbif.pipelines.core.parsers.clustering.ClusteringService;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
-import org.gbif.pipelines.io.avro.GbifIdRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.transforms.Transform;
 
 /**
- * Use GBIF identifier from {@link GbifIdRecord} to get clustering value for {@link
+ * Use GBIF identifier from {@link IdentifierRecord} to get clustering value for {@link
  * ClusteringRecord}.
  */
-public class ClusteringTransform extends Transform<GbifIdRecord, ClusteringRecord> {
+public class ClusteringTransform extends Transform<IdentifierRecord, ClusteringRecord> {
 
   private final SerializableSupplier<ClusteringService> clusteringServiceSupplier;
 
@@ -64,16 +64,16 @@ public class ClusteringTransform extends Transform<GbifIdRecord, ClusteringRecor
   }
 
   @Override
-  public Optional<ClusteringRecord> convert(GbifIdRecord source) {
+  public Optional<ClusteringRecord> convert(IdentifierRecord source) {
 
     return Interpretation.from(source)
         .to(
-            gr ->
+            ir ->
                 ClusteringRecord.newBuilder()
-                    .setId(gr.getId())
+                    .setId(ir.getId())
                     .setCreated(Instant.now().toEpochMilli())
                     .build())
-        .when(gr -> gr.getGbifId() != null)
+        .when(ir -> ir.getInternalId() != null)
         .via(ClusteredInterpreter.interpretIsClustered(clusteringService))
         .getOfNullable();
   }

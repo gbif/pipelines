@@ -11,7 +11,7 @@ import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.values.PCollection;
-import org.gbif.pipelines.io.avro.GbifIdRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKey;
 import org.gbif.pipelines.keygen.api.KeyLookupResult;
 import org.junit.Rule;
@@ -60,11 +60,11 @@ public class GbifIdAbsentTransformTest {
 
     // State
     String id = "777";
-    GbifIdRecord inGir = GbifIdRecord.newBuilder().setId(id).build();
+    IdentifierRecord inIr = IdentifierRecord.newBuilder().setId(id).build();
 
     // Expected
-    GbifIdRecord outGir = GbifIdRecord.newBuilder().setId(id).build();
-    addIssue(outGir, GBIF_ID_INVALID);
+    IdentifierRecord outIr = IdentifierRecord.newBuilder().setId(id).build();
+    addIssue(outIr, GBIF_ID_INVALID);
 
     // When
     GbifIdAbsentTransform gbifIdTransform =
@@ -72,12 +72,12 @@ public class GbifIdAbsentTransformTest {
             .keygenServiceSupplier(() -> HBaseLockingKeyServiceStub.create(id))
             .create();
 
-    PCollection<GbifIdRecord> girCollection =
-        p.apply("Read GbifIdRecord", Create.of(inGir))
+    PCollection<IdentifierRecord> girCollection =
+        p.apply("Read IdentifierRecord", Create.of(inIr))
             .apply("Interpret IDs", gbifIdTransform.interpret());
 
     // Should
-    PAssert.that(girCollection).containsInAnyOrder(outGir);
+    PAssert.that(girCollection).containsInAnyOrder(outIr);
     p.run();
   }
 
@@ -86,15 +86,15 @@ public class GbifIdAbsentTransformTest {
 
     // State
     String id = "777";
-    GbifIdRecord inGir =
-        GbifIdRecord.newBuilder().setId(id).setOccurrenceId("occ").setTriplet("tr").build();
+    IdentifierRecord inGir =
+        IdentifierRecord.newBuilder().setId(id).setUniqueKey("occ").setAssociatedKey("tr").build();
 
     // Expected
-    GbifIdRecord outGir =
-        GbifIdRecord.newBuilder(inGir)
-            .setGbifId(Long.valueOf(id))
-            .setOccurrenceId("occ")
-            .setTriplet("tr")
+    IdentifierRecord outGir =
+        IdentifierRecord.newBuilder(inGir)
+            .setInternalId(id)
+            .setUniqueKey("occ")
+            .setAssociatedKey("tr")
             .build();
 
     // When
@@ -104,8 +104,8 @@ public class GbifIdAbsentTransformTest {
             .keygenServiceSupplier(() -> HBaseLockingKeyServiceStub.create(id))
             .create();
 
-    PCollection<GbifIdRecord> girCollection =
-        p.apply("Read GbifIdRecord", Create.of(inGir))
+    PCollection<IdentifierRecord> girCollection =
+        p.apply("Read IdentifierRecord", Create.of(inGir))
             .apply("Interpret IDs", gbifIdTransform.interpret());
 
     // Should

@@ -13,7 +13,7 @@ import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.GbifIdRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
@@ -33,7 +33,7 @@ public class IndexRequestConverterTest {
 
     // State
     IngestMetrics metrics = IngestMetricsBuilder.createInterpretedToEsIndexMetrics();
-    GbifIdRecord idRecord = GbifIdRecord.newBuilder().setId(ID).setGbifId(1L).build();
+    IdentifierRecord idRecord = IdentifierRecord.newBuilder().setId(ID).setInternalId("1").build();
     BasicRecord basicRecord = BasicRecord.newBuilder().setId(ID).build();
     ClusteringRecord clusteringRecord = ClusteringRecord.newBuilder().setId(ID).build();
     MetadataRecord metadataRecord = MetadataRecord.newBuilder().setId(ID).build();
@@ -87,7 +87,7 @@ public class IndexRequestConverterTest {
 
     // State
     IngestMetrics metrics = IngestMetricsBuilder.createInterpretedToEsIndexMetrics();
-    GbifIdRecord idRecord = GbifIdRecord.newBuilder().setId(ID).setGbifId(1L).build();
+    IdentifierRecord idRecord = IdentifierRecord.newBuilder().setId(ID).setInternalId("1").build();
     BasicRecord basicRecord = BasicRecord.newBuilder().setId(ID).build();
     ClusteringRecord clusteringRecord = ClusteringRecord.newBuilder().setId(ID).build();
     MetadataRecord metadataRecord = MetadataRecord.newBuilder().setId(ID).build();

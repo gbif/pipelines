@@ -9,7 +9,7 @@ import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
-import org.gbif.pipelines.io.avro.GbifIdRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -25,13 +25,13 @@ public class UniqueGbifIdTransformTest {
   @Test
   public void skipTransformTest() {
     // State
-    final List<GbifIdRecord> input = createCollection("1_1", "2_2", "3_3", "4_4", "5_5", "6_6");
+    final List<IdentifierRecord> input = createCollection("1_1", "2_2", "3_3", "4_4", "5_5", "6_6");
 
     // When
     UniqueGbifIdTransform transform = UniqueGbifIdTransform.create(true);
     PCollectionTuple tuple = p.apply(Create.of(input)).apply(transform);
-    PCollection<GbifIdRecord> normal = tuple.get(transform.getTag());
-    PCollection<GbifIdRecord> invalid = tuple.get(transform.getInvalidTag());
+    PCollection<IdentifierRecord> normal = tuple.get(transform.getTag());
+    PCollection<IdentifierRecord> invalid = tuple.get(transform.getInvalidTag());
 
     // Should
     PAssert.that(normal).containsInAnyOrder(input);
@@ -42,13 +42,13 @@ public class UniqueGbifIdTransformTest {
   @Test
   public void emptyGbifIdTest() {
     // State
-    final List<GbifIdRecord> input = createCollection("1");
+    final List<IdentifierRecord> input = createCollection("1");
 
     // When
     UniqueGbifIdTransform transform = UniqueGbifIdTransform.create();
     PCollectionTuple tuple = p.apply(Create.of(input)).apply(transform);
-    PCollection<GbifIdRecord> normal = tuple.get(transform.getTag());
-    PCollection<GbifIdRecord> invalid = tuple.get(transform.getInvalidTag());
+    PCollection<IdentifierRecord> normal = tuple.get(transform.getTag());
+    PCollection<IdentifierRecord> invalid = tuple.get(transform.getInvalidTag());
 
     // Should
     PAssert.that(invalid).containsInAnyOrder(input);
@@ -59,14 +59,15 @@ public class UniqueGbifIdTransformTest {
   @Test
   public void withoutDuplicatesTest() {
     // State
-    final List<GbifIdRecord> input = createCollection("1_1", "2_2", "3_3", "4_4", "5_5", "6_6");
-    final List<GbifIdRecord> expected = createCollection("1_1", "2_2", "3_3", "4_4", "5_5", "6_6");
+    final List<IdentifierRecord> input = createCollection("1_1", "2_2", "3_3", "4_4", "5_5", "6_6");
+    final List<IdentifierRecord> expected =
+        createCollection("1_1", "2_2", "3_3", "4_4", "5_5", "6_6");
 
     // When
     UniqueGbifIdTransform transform = UniqueGbifIdTransform.create();
     PCollectionTuple tuple = p.apply(Create.of(input)).apply(transform);
-    PCollection<GbifIdRecord> normal = tuple.get(transform.getTag());
-    PCollection<GbifIdRecord> invalid = tuple.get(transform.getInvalidTag());
+    PCollection<IdentifierRecord> normal = tuple.get(transform.getTag());
+    PCollection<IdentifierRecord> invalid = tuple.get(transform.getInvalidTag());
 
     // Should
     PAssert.that(normal).containsInAnyOrder(expected);
@@ -77,15 +78,16 @@ public class UniqueGbifIdTransformTest {
   @Test
   public void allDuplicatesTest() {
     // State
-    final List<GbifIdRecord> input = createCollection("1_1", "2_1", "3_1", "4_1", "5_1", "6_1");
-    final List<GbifIdRecord> expectedNormal = createCollection("4_1"); // Has lowest SHA1 hash
-    final List<GbifIdRecord> expectedInvalid = createCollection("1_1", "2_1", "3_1", "5_1", "6_1");
+    final List<IdentifierRecord> input = createCollection("1_1", "2_1", "3_1", "4_1", "5_1", "6_1");
+    final List<IdentifierRecord> expectedNormal = createCollection("4_1"); // Has lowest SHA1 hash
+    final List<IdentifierRecord> expectedInvalid =
+        createCollection("1_1", "2_1", "3_1", "5_1", "6_1");
 
     // When
     UniqueGbifIdTransform transform = UniqueGbifIdTransform.create();
     PCollectionTuple tuple = p.apply(Create.of(input)).apply(transform);
-    PCollection<GbifIdRecord> normal = tuple.get(transform.getTag());
-    PCollection<GbifIdRecord> invalid = tuple.get(transform.getInvalidTag());
+    PCollection<IdentifierRecord> normal = tuple.get(transform.getTag());
+    PCollection<IdentifierRecord> invalid = tuple.get(transform.getInvalidTag());
 
     // Should
     PAssert.that(normal).containsInAnyOrder(expectedNormal);
@@ -96,14 +98,14 @@ public class UniqueGbifIdTransformTest {
   @Test
   public void noGbifIdTest() {
     // State
-    final List<GbifIdRecord> input = createCollection("1", "2", "3", "4", "5", "6");
-    final List<GbifIdRecord> expectedInvalid = createCollection("1", "2", "3", "4", "5", "6");
+    final List<IdentifierRecord> input = createCollection("1", "2", "3", "4", "5", "6");
+    final List<IdentifierRecord> expectedInvalid = createCollection("1", "2", "3", "4", "5", "6");
 
     // When
     UniqueGbifIdTransform transform = UniqueGbifIdTransform.create();
     PCollectionTuple tuple = p.apply(Create.of(input)).apply(transform);
-    PCollection<GbifIdRecord> normal = tuple.get(transform.getTag());
-    PCollection<GbifIdRecord> invalid = tuple.get(transform.getInvalidTag());
+    PCollection<IdentifierRecord> normal = tuple.get(transform.getTag());
+    PCollection<IdentifierRecord> invalid = tuple.get(transform.getInvalidTag());
 
     // Should
     PAssert.that(normal).empty();
@@ -114,14 +116,14 @@ public class UniqueGbifIdTransformTest {
   @Test
   public void allEqualTest() {
     // State
-    final List<GbifIdRecord> input = createCollection("1_1", "1_1", "1_1", "1_1", "1_1", "1_1");
-    final List<GbifIdRecord> expected = createCollection("1_1");
+    final List<IdentifierRecord> input = createCollection("1_1", "1_1", "1_1", "1_1", "1_1", "1_1");
+    final List<IdentifierRecord> expected = createCollection("1_1");
 
     // When
     UniqueGbifIdTransform transform = UniqueGbifIdTransform.create();
     PCollectionTuple tuple = p.apply(Create.of(input)).apply(transform);
-    PCollection<GbifIdRecord> normal = tuple.get(transform.getTag());
-    PCollection<GbifIdRecord> invalid = tuple.get(transform.getInvalidTag());
+    PCollection<IdentifierRecord> normal = tuple.get(transform.getTag());
+    PCollection<IdentifierRecord> invalid = tuple.get(transform.getInvalidTag());
 
     // Should
     PAssert.that(normal).containsInAnyOrder(expected);
@@ -132,14 +134,14 @@ public class UniqueGbifIdTransformTest {
   @Test
   public void oneValueTest() {
     // Statet
-    final List<GbifIdRecord> input = createCollection("1_1");
-    final List<GbifIdRecord> expected = createCollection("1_1");
+    final List<IdentifierRecord> input = createCollection("1_1");
+    final List<IdentifierRecord> expected = createCollection("1_1");
 
     // When
     UniqueGbifIdTransform transform = UniqueGbifIdTransform.create();
     PCollectionTuple tuple = p.apply(Create.of(input)).apply(transform);
-    PCollection<GbifIdRecord> normal = tuple.get(transform.getTag());
-    PCollection<GbifIdRecord> invalid = tuple.get(transform.getInvalidTag());
+    PCollection<IdentifierRecord> normal = tuple.get(transform.getTag());
+    PCollection<IdentifierRecord> invalid = tuple.get(transform.getInvalidTag());
 
     // Should
     PAssert.that(normal).containsInAnyOrder(expected);
@@ -150,14 +152,14 @@ public class UniqueGbifIdTransformTest {
   @Test
   public void oneWithoutGbifIdValueTest() {
     // State
-    final List<GbifIdRecord> input = createCollection("1");
-    final List<GbifIdRecord> expected = createCollection("1");
+    final List<IdentifierRecord> input = createCollection("1");
+    final List<IdentifierRecord> expected = createCollection("1");
 
     // When
     UniqueGbifIdTransform transform = UniqueGbifIdTransform.create();
     PCollectionTuple tuple = p.apply(Create.of(input)).apply(transform);
-    PCollection<GbifIdRecord> normal = tuple.get(transform.getTag());
-    PCollection<GbifIdRecord> invalid = tuple.get(transform.getInvalidTag());
+    PCollection<IdentifierRecord> normal = tuple.get(transform.getTag());
+    PCollection<IdentifierRecord> invalid = tuple.get(transform.getInvalidTag());
 
     // Should
     PAssert.that(normal).empty();
@@ -168,15 +170,16 @@ public class UniqueGbifIdTransformTest {
   @Test
   public void mixedValuesTest() {
     // State
-    final List<GbifIdRecord> input = createCollection("1", "1_1", "2_2", "3_3", "4_1", "5", "6_6");
-    final List<GbifIdRecord> expected = createCollection("2_2", "3_3", "4_1", "6_6");
-    final List<GbifIdRecord> expectedInvalid = createCollection("1", "1_1", "5");
+    final List<IdentifierRecord> input =
+        createCollection("1", "1_1", "2_2", "3_3", "4_1", "5", "6_6");
+    final List<IdentifierRecord> expected = createCollection("2_2", "3_3", "4_1", "6_6");
+    final List<IdentifierRecord> expectedInvalid = createCollection("1", "1_1", "5");
 
     // When
     UniqueGbifIdTransform transform = UniqueGbifIdTransform.create();
     PCollectionTuple tuple = p.apply(Create.of(input)).apply(transform);
-    PCollection<GbifIdRecord> normal = tuple.get(transform.getTag());
-    PCollection<GbifIdRecord> invalid = tuple.get(transform.getInvalidTag());
+    PCollection<IdentifierRecord> normal = tuple.get(transform.getTag());
+    PCollection<IdentifierRecord> invalid = tuple.get(transform.getInvalidTag());
 
     // Should
     PAssert.that(normal).containsInAnyOrder(expected);
@@ -184,14 +187,14 @@ public class UniqueGbifIdTransformTest {
     p.run();
   }
 
-  private List<GbifIdRecord> createCollection(String... idName) {
+  private List<IdentifierRecord> createCollection(String... idName) {
     return Arrays.stream(idName)
         .map(
             x -> {
               String[] array = x.split("_");
-              return GbifIdRecord.newBuilder()
+              return IdentifierRecord.newBuilder()
                   .setId(array[0])
-                  .setGbifId(array.length > 1 ? Long.valueOf(array[1]) : null)
+                  .setInternalId(array.length > 1 ? array[1] : null)
                   .build();
             })
         .collect(Collectors.toList());

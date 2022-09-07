@@ -14,7 +14,7 @@ import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.GbifIdRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
@@ -43,7 +43,7 @@ public class OccurrenceHdfsRecordConverter {
   private Map<String, EventCoreRecord> eventCoreRecordMap;
 
   /** Join all records, convert into OccurrenceHdfsRecord and save as an avro file */
-  public Function<GbifIdRecord, Optional<OccurrenceHdfsRecord>> getFn() {
+  public Function<IdentifierRecord, Optional<OccurrenceHdfsRecord>> getFn() {
     return id -> {
       String k = id.getId();
       // Core
@@ -66,7 +66,7 @@ public class OccurrenceHdfsRecordConverter {
               .OccurrenceHdfsRecordConverterBuilder
           hdfsRecord =
               org.gbif.pipelines.core.converters.OccurrenceHdfsRecordConverter.builder()
-                  .gbifIdRecord(id)
+                  .identifierRecord(id)
                   .metadataRecord(metadata)
                   .temporalRecord(tr)
                   .locationRecord(lr)

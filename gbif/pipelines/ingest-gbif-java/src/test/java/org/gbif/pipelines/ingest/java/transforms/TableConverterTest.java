@@ -13,7 +13,7 @@ import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
 import org.gbif.pipelines.core.converters.MeasurementOrFactTableConverter;
 import org.gbif.pipelines.ingest.java.metrics.IngestMetricsBuilder;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.GbifIdRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.extension.dwc.MeasurementOrFactTable;
 import org.junit.Assert;
 import org.junit.Test;
@@ -27,7 +27,7 @@ public class TableConverterTest {
 
     // State
     IngestMetrics metrics = IngestMetricsBuilder.createInterpretedToHdfsViewMetrics();
-    GbifIdRecord idRecord = GbifIdRecord.newBuilder().setId(ID).setGbifId(1L).build();
+    IdentifierRecord idRecord = IdentifierRecord.newBuilder().setId(ID).setInternalId("1").build();
 
     Map<String, String> ext1 = new HashMap<>();
     ext1.put(DwcTerm.measurementID.qualifiedName(), "Id1");

@@ -12,7 +12,7 @@ import org.gbif.pipelines.core.factory.SerDeFactory;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.GbifIdRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
@@ -27,7 +27,7 @@ import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
 public class OccurrenceJsonConverter {
 
   private final MetadataRecord metadata;
-  private final GbifIdRecord gbifId;
+  private final IdentifierRecord identifier;
   private final ClusteringRecord clustering;
   private final BasicRecord basic;
   private final TemporalRecord temporal;
@@ -45,7 +45,7 @@ public class OccurrenceJsonConverter {
     mapIssues(builder);
 
     mapMetadataRecord(builder);
-    mapGbifIdRecord(builder);
+    mapIdentifierRecord(builder);
     mapClusteringRecord(builder);
     mapBasicRecord(builder);
     mapTemporalRecord(builder);
@@ -83,8 +83,8 @@ public class OccurrenceJsonConverter {
     JsonConverter.convertToDate(metadata.getLastCrawled()).ifPresent(builder::setLastCrawled);
   }
 
-  private void mapGbifIdRecord(OccurrenceJsonRecord.Builder builder) {
-    builder.setGbifId(gbifId.getGbifId());
+  private void mapIdentifierRecord(OccurrenceJsonRecord.Builder builder) {
+    builder.setGbifId(Long.parseLong(identifier.getInternalId()));
   }
 
   private void mapClusteringRecord(OccurrenceJsonRecord.Builder builder) {
@@ -247,14 +247,30 @@ public class OccurrenceJsonConverter {
   private void mapIssues(OccurrenceJsonRecord.Builder builder) {
     JsonConverter.mapIssues(
         Arrays.asList(
-            metadata, gbifId, clustering, basic, temporal, location, taxon, grscicoll, multimedia),
+            metadata,
+            identifier,
+            clustering,
+            basic,
+            temporal,
+            location,
+            taxon,
+            grscicoll,
+            multimedia),
         builder::setIssues,
         builder::setNotIssues);
   }
 
   private void mapCreated(OccurrenceJsonRecord.Builder builder) {
     JsonConverter.getMaxCreationDate(
-            metadata, gbifId, clustering, basic, temporal, location, taxon, grscicoll, multimedia)
+            metadata,
+            identifier,
+            clustering,
+            basic,
+            temporal,
+            location,
+            taxon,
+            grscicoll,
+            multimedia)
         .ifPresent(builder::setCreated);
   }
 }

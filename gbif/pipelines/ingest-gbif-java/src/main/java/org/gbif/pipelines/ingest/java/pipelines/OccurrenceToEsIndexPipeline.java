@@ -26,7 +26,7 @@ import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.GbifIdRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
@@ -139,7 +139,7 @@ public class OccurrenceToEsIndexPipeline {
     CompletableFuture<Map<String, ExtendedRecord>> verbatimMapFeature =
         readAvroAsFuture(options, CORE_TERM, executor, VerbatimTransform.create());
 
-    CompletableFuture<Map<String, GbifIdRecord>> idMapFeature =
+    CompletableFuture<Map<String, IdentifierRecord>> idMapFeature =
         readAvroAsFuture(options, CORE_TERM, executor, GbifIdTransform.builder().create());
 
     CompletableFuture<Map<String, ClusteringRecord>> clusteringMapFeature =
@@ -169,7 +169,7 @@ public class OccurrenceToEsIndexPipeline {
     CompletableFuture<Map<String, AudubonRecord>> audubonMapFeature =
         readAvroAsFuture(options, CORE_TERM, executor, AudubonTransform.builder().create());
 
-    Function<GbifIdRecord, IndexRequest> indexRequestFn =
+    Function<IdentifierRecord, IndexRequest> indexRequestFn =
         IndexRequestConverter.builder()
             .metrics(metrics)
             .esIndexName(options.getEsIndexName())
@@ -189,7 +189,7 @@ public class OccurrenceToEsIndexPipeline {
             .getFn();
 
     log.info("Pushing data into Elasticsearch");
-    ElasticsearchWriter.<GbifIdRecord>builder()
+    ElasticsearchWriter.<IdentifierRecord>builder()
         .esHosts(options.getEsHosts())
         .esMaxBatchSize(options.getEsMaxBatchSize())
         .esMaxBatchSizeBytes(options.getEsMaxBatchSizeBytes())

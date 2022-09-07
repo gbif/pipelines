@@ -8,7 +8,7 @@ import java.util.Optional;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.GbifIdRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.extension.dwc.MeasurementOrFactTable;
 import org.junit.Assert;
 import org.junit.Test;
@@ -36,11 +36,12 @@ public class MeasurementOrFactTableConverterTest {
     ExtendedRecord extendedRecord =
         ExtendedRecord.newBuilder().setId("id").setExtensions(ext).build();
 
-    GbifIdRecord gbifIdRecord = GbifIdRecord.newBuilder().setId("777").setGbifId(777L).build();
+    IdentifierRecord identifierRecord =
+        IdentifierRecord.newBuilder().setId("777").setInternalId("777").build();
 
     // When
     Optional<MeasurementOrFactTable> result =
-        MeasurementOrFactTableConverter.convert(gbifIdRecord, extendedRecord);
+        MeasurementOrFactTableConverter.convert(identifierRecord, extendedRecord);
 
     // Should
     Assert.assertTrue(result.isPresent());
@@ -73,11 +74,12 @@ public class MeasurementOrFactTableConverterTest {
     // State
     ExtendedRecord extendedRecord = ExtendedRecord.newBuilder().setId("id").build();
 
-    GbifIdRecord gbifIdRecord = GbifIdRecord.newBuilder().setId("777").setGbifId(777L).build();
+    IdentifierRecord identifierRecord =
+        IdentifierRecord.newBuilder().setId("777").setInternalId("777").build();
 
     // When
     Optional<MeasurementOrFactTable> result =
-        MeasurementOrFactTableConverter.convert(gbifIdRecord, extendedRecord);
+        MeasurementOrFactTableConverter.convert(identifierRecord, extendedRecord);
 
     // Should
     Assert.assertFalse(result.isPresent());
@@ -86,11 +88,12 @@ public class MeasurementOrFactTableConverterTest {
   @Test
   public void basicRecordNullTest() {
     // State
-    GbifIdRecord gbifIdRecord = GbifIdRecord.newBuilder().setId("777").setGbifId(777L).build();
+    IdentifierRecord identifierRecord =
+        IdentifierRecord.newBuilder().setId("777").setInternalId("777").build();
 
     // When
     Optional<MeasurementOrFactTable> result =
-        MeasurementOrFactTableConverter.convert(gbifIdRecord, null);
+        MeasurementOrFactTableConverter.convert(identifierRecord, null);
 
     // Should
     Assert.assertFalse(result.isPresent());

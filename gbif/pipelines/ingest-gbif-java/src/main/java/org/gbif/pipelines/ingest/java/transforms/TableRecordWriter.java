@@ -20,15 +20,15 @@ import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
 import org.gbif.pipelines.core.io.SyncDataFileWriterBuilder;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
-import org.gbif.pipelines.io.avro.GbifIdRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.transforms.common.CheckTransforms;
 
 @Builder
 public class TableRecordWriter<T> {
 
   @NonNull private final InterpretationPipelineOptions options;
-  @NonNull private final Collection<GbifIdRecord> gbifIdRecords;
-  @NonNull private final Function<GbifIdRecord, Optional<T>> recordFunction;
+  @NonNull private final Collection<IdentifierRecord> identifierRecords;
+  @NonNull private final Function<IdentifierRecord, Optional<T>> recordFunction;
   @NonNull private final Function<InterpretationType, String> targetPathFn;
   @NonNull private final Schema schema;
   @NonNull private final ExecutorService executor;
@@ -39,7 +39,7 @@ public class TableRecordWriter<T> {
   public void write() {
     if (CheckTransforms.checkRecordType(types, recordType)) {
       try (SyncDataFileWriter<T> writer = createWriter(options)) {
-        boolean useSyncMode = options.getSyncThreshold() > gbifIdRecords.size();
+        boolean useSyncMode = options.getSyncThreshold() > identifierRecords.size();
         if (useSyncMode) {
           syncWrite(writer);
         } else {
@@ -51,7 +51,7 @@ public class TableRecordWriter<T> {
   }
 
   private CompletableFuture<?>[] asyncWrite(SyncDataFileWriter<T> writer) {
-    return gbifIdRecords.stream()
+    return identifierRecords.stream()
         .map(
             id -> {
               Optional<T> t = recordFunction.apply(id);
@@ -66,7 +66,7 @@ public class TableRecordWriter<T> {
   }
 
   private void syncWrite(SyncDataFileWriter<T> writer) {
-    gbifIdRecords.stream()
+    identifierRecords.stream()
         .map(recordFunction)
         .filter(Optional::isPresent)
         .map(Optional::get)

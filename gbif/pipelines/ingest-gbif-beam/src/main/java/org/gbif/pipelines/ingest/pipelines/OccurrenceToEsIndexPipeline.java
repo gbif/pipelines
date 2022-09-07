@@ -31,7 +31,7 @@ import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.GbifIdRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
@@ -200,7 +200,7 @@ public class OccurrenceToEsIndexPipeline {
               .apply("Read occurrence Metadata", metadataTransform.read(pathFn))
               .apply("Convert to occurrence view", View.asSingleton());
 
-      PCollection<KV<String, GbifIdRecord>> idCollection =
+      PCollection<KV<String, IdentifierRecord>> idCollection =
           pipeline
               .apply("Read occurrence GBIF ids", idTransform.read(pathFn))
               .apply("Map occurrence GBIF ids to KV", idTransform.toKv());
@@ -259,7 +259,7 @@ public class OccurrenceToEsIndexPipeline {
       SingleOutput<KV<String, CoGbkResult>, String> occurrenceJsonDoFn =
           OccurrenceJsonTransform.builder()
               .extendedRecordTag(verbatimTransform.getTag())
-              .gbifIdRecordTag(idTransform.getTag())
+              .identifierRecordTag(idTransform.getTag())
               .clusteringRecordTag(clusteringTransform.getTag())
               .basicRecordTag(basicTransform.getTag())
               .temporalRecordTag(temporalTransform.getTag())

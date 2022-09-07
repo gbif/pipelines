@@ -16,19 +16,20 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TupleTagList;
-import org.gbif.pipelines.io.avro.GbifIdRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
 
 @Slf4j
 @Getter
 @AllArgsConstructor(staticName = "create")
-public class GbifIdTupleTransform extends PTransform<PCollection<GbifIdRecord>, PCollectionTuple> {
+public class GbifIdTupleTransform
+    extends PTransform<PCollection<IdentifierRecord>, PCollectionTuple> {
 
-  private final TupleTag<GbifIdRecord> tag = new TupleTag<GbifIdRecord>() {};
+  private final TupleTag<IdentifierRecord> tag = new TupleTag<IdentifierRecord>() {};
 
-  private final TupleTag<GbifIdRecord> absentTag = new TupleTag<GbifIdRecord>() {};
+  private final TupleTag<IdentifierRecord> absentTag = new TupleTag<IdentifierRecord>() {};
 
   @Override
-  public PCollectionTuple expand(PCollection<GbifIdRecord> input) {
+  public PCollectionTuple expand(PCollection<IdentifierRecord> input) {
 
     // Convert from list to map where, key - occurrenceId, value - object instance and group by key
     return input.apply(
@@ -36,7 +37,7 @@ public class GbifIdTupleTransform extends PTransform<PCollection<GbifIdRecord>, 
         ParDo.of(new Filter()).withOutputTags(tag, TupleTagList.of(absentTag)));
   }
 
-  private class Filter extends DoFn<GbifIdRecord, GbifIdRecord> {
+  private class Filter extends DoFn<IdentifierRecord, IdentifierRecord> {
 
     private final Counter filteredCounter =
         Metrics.counter(GbifIdTupleTransform.class, FILTERED_GBIF_IDS_COUNT);
@@ -45,14 +46,13 @@ public class GbifIdTupleTransform extends PTransform<PCollection<GbifIdRecord>, 
 
     @ProcessElement
     public void processElement(ProcessContext c) {
-      GbifIdRecord gbifIdRecord = c.element();
-      if (gbifIdRecord != null) {
-        if (gbifIdRecord.getGbifId() == null
-            && gbifIdRecord.getIssues().getIssueList().contains(GBIF_ID_ABSENT)) {
-          c.output(absentTag, gbifIdRecord);
+      IdentifierRecord ir = c.element();
+      if (ir != null) {
+        if (ir.getInternalId() == null && ir.getIssues().getIssueList().contains(GBIF_ID_ABSENT)) {
+          c.output(absentTag, ir);
           absentCounter.inc();
         } else {
-          c.output(tag, gbifIdRecord);
+          c.output(tag, ir);
           filteredCounter.inc();
         }
       }

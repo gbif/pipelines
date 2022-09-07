@@ -16,7 +16,7 @@ import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.GbifIdRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
@@ -47,7 +47,7 @@ public class IndexRequestConverter {
   @NonNull private final Map<String, AudubonRecord> audubonMap;
 
   /** Join all records, convert into string json and IndexRequest for ES */
-  public Function<GbifIdRecord, IndexRequest> getFn() {
+  public Function<IdentifierRecord, IndexRequest> getFn() {
     return id -> {
       String k = id.getId();
       // Core
@@ -70,7 +70,7 @@ public class IndexRequestConverter {
       OccurrenceJsonRecord json =
           OccurrenceJsonConverter.builder()
               .metadata(metadata)
-              .gbifId(id)
+              .identifier(id)
               .clustering(cr)
               .basic(br)
               .temporal(tr)
@@ -89,9 +89,7 @@ public class IndexRequestConverter {
       // Ignore gbifID as ES doc ID, useful for validator
       if (esDocumentId != null && !esDocumentId.isEmpty()) {
         String docId =
-            esDocumentId.equals(GBIF_ID)
-                ? id.getGbifId().toString()
-                : json.get(esDocumentId).toString();
+            esDocumentId.equals(GBIF_ID) ? id.getInternalId() : json.get(esDocumentId).toString();
         indexRequest = indexRequest.id(docId);
       }
 

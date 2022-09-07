@@ -26,7 +26,7 @@ import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
 import org.gbif.pipelines.ingest.pipelines.utils.InterpretedAvroWriter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.GbifIdRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
@@ -137,9 +137,9 @@ public class VerbatimToIdentifierPipelineIT {
             .count();
 
     assertEquals(3L, dirCount);
-    assertFile(GbifIdRecord.class, interpretedOutput + "/identifier");
-    assertFile(GbifIdRecord.class, interpretedOutput + "/identifier_absent");
-    assertFile(GbifIdRecord.class, interpretedOutput + "/identifier_invalid");
+    assertFile(IdentifierRecord.class, interpretedOutput + "/identifier");
+    assertFile(IdentifierRecord.class, interpretedOutput + "/identifier_absent");
+    assertFile(IdentifierRecord.class, interpretedOutput + "/identifier_invalid");
   }
 
   private <T extends SpecificRecordBase> void assertFile(Class<T> clazz, String output)

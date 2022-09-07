@@ -8,7 +8,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.GbifIdRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.transforms.specific.GbifIdTransform;
 import org.junit.Assert;
 import org.junit.Test;
@@ -17,18 +17,17 @@ import org.junit.Test;
 public class UniqueGbifIdTransformTest {
 
   private static final String KEY = "KEY";
-  private final BiConsumer<ExtendedRecord, GbifIdRecord> gbifIdFn =
+  private final BiConsumer<ExtendedRecord, IdentifierRecord> idFn =
       (er, id) ->
-          Optional.ofNullable(er.getCoreTerms().get(KEY))
-              .ifPresent(x -> id.setGbifId(Long.valueOf(x)));
+          Optional.ofNullable(er.getCoreTerms().get(KEY)).ifPresent(x -> id.setInternalId(x));
   private final GbifIdTransform basicTransform =
-      GbifIdTransform.builder().gbifIdFn(gbifIdFn).useExtendedRecordId(true).create();
+      GbifIdTransform.builder().gbifIdFn(idFn).useExtendedRecordId(true).create();
 
   @Test
   public void skipFunctionTest() {
     // State
     final Map<String, ExtendedRecord> input = createErMap("1_1", "2_2", "3_3", "4_4");
-    final Map<String, GbifIdRecord> expected = createIdMap("1_1", "2_2", "3_3", "4_4");
+    final Map<String, IdentifierRecord> expected = createIdMap("1_1", "2_2", "3_3", "4_4");
 
     // When
     UniqueGbifIdTransform gbifIdTransform =
@@ -39,8 +38,8 @@ public class UniqueGbifIdTransformTest {
             .build()
             .run();
 
-    Map<String, GbifIdRecord> idMap = gbifIdTransform.getIdMap();
-    Map<String, GbifIdRecord> idInvalidMap = gbifIdTransform.getIdInvalidMap();
+    Map<String, IdentifierRecord> idMap = gbifIdTransform.getIdMap();
+    Map<String, IdentifierRecord> idInvalidMap = gbifIdTransform.getIdInvalidMap();
 
     // Should
     Assert.assertEquals(expected.size(), idMap.size());
@@ -52,7 +51,7 @@ public class UniqueGbifIdTransformTest {
   public void withoutDuplicatesTest() {
     // State
     final Map<String, ExtendedRecord> input = createErMap("1_1", "2_2", "3_3", "4_4", "5_5", "6_6");
-    final Map<String, GbifIdRecord> expected =
+    final Map<String, IdentifierRecord> expected =
         createGbifIdMap("1_1", "2_2", "3_3", "4_4", "5_5", "6_6");
 
     // When
@@ -63,8 +62,8 @@ public class UniqueGbifIdTransformTest {
             .build()
             .run();
 
-    Map<String, GbifIdRecord> idMap = gbifIdTransform.getIdMap();
-    Map<String, GbifIdRecord> idInvalidMap = gbifIdTransform.getIdInvalidMap();
+    Map<String, IdentifierRecord> idMap = gbifIdTransform.getIdMap();
+    Map<String, IdentifierRecord> idInvalidMap = gbifIdTransform.getIdInvalidMap();
 
     // Should
     Assert.assertEquals(expected.size(), idMap.size());
@@ -76,8 +75,8 @@ public class UniqueGbifIdTransformTest {
   public void allDuplicatesTest() {
     // State
     final Map<String, ExtendedRecord> input = createErMap("1_1", "2_1", "3_1", "4_1", "5_1", "6_1");
-    final Map<String, GbifIdRecord> expectedNormal = createGbifIdMap("4_1");
-    final Map<String, GbifIdRecord> expectedInvalid =
+    final Map<String, IdentifierRecord> expectedNormal = createGbifIdMap("4_1");
+    final Map<String, IdentifierRecord> expectedInvalid =
         createIdMap("1_1", "2_1", "3_1", "5_1", "6_1");
 
     // When
@@ -88,8 +87,8 @@ public class UniqueGbifIdTransformTest {
             .build()
             .run();
 
-    Map<String, GbifIdRecord> idMap = gbifIdTransform.getIdMap();
-    Map<String, GbifIdRecord> idInvalidMap = gbifIdTransform.getIdInvalidMap();
+    Map<String, IdentifierRecord> idMap = gbifIdTransform.getIdMap();
+    Map<String, IdentifierRecord> idInvalidMap = gbifIdTransform.getIdInvalidMap();
 
     // Should
     Assert.assertEquals(expectedNormal.size(), idMap.size());
@@ -102,7 +101,7 @@ public class UniqueGbifIdTransformTest {
   public void noGbifIdTest() {
     // State
     final Map<String, ExtendedRecord> input = createErMap("1", "2", "3", "4", "5", "6");
-    final Map<String, GbifIdRecord> expectedInvalid = createIdMap("1", "2", "3", "4", "5", "6");
+    final Map<String, IdentifierRecord> expectedInvalid = createIdMap("1", "2", "3", "4", "5", "6");
 
     // When
     UniqueGbifIdTransform gbifIdTransform =
@@ -112,8 +111,8 @@ public class UniqueGbifIdTransformTest {
             .build()
             .run();
 
-    Map<String, GbifIdRecord> idMap = gbifIdTransform.getIdMap();
-    Map<String, GbifIdRecord> idInvalidMap = gbifIdTransform.getIdInvalidMap();
+    Map<String, IdentifierRecord> idMap = gbifIdTransform.getIdMap();
+    Map<String, IdentifierRecord> idInvalidMap = gbifIdTransform.getIdInvalidMap();
 
     // Should
     Assert.assertEquals(0, idMap.size());
@@ -125,7 +124,7 @@ public class UniqueGbifIdTransformTest {
   public void oneValueTest() {
     // State
     final Map<String, ExtendedRecord> input = createErMap("1_1");
-    final Map<String, GbifIdRecord> expectedNormal = createGbifIdMap("1_1");
+    final Map<String, IdentifierRecord> expectedNormal = createGbifIdMap("1_1");
 
     // When
     UniqueGbifIdTransform gbifIdTransform =
@@ -135,8 +134,8 @@ public class UniqueGbifIdTransformTest {
             .build()
             .run();
 
-    Map<String, GbifIdRecord> idMap = gbifIdTransform.getIdMap();
-    Map<String, GbifIdRecord> idInvalidMap = gbifIdTransform.getIdInvalidMap();
+    Map<String, IdentifierRecord> idMap = gbifIdTransform.getIdMap();
+    Map<String, IdentifierRecord> idInvalidMap = gbifIdTransform.getIdInvalidMap();
 
     // Should
     Assert.assertEquals(expectedNormal.size(), idMap.size());
@@ -148,7 +147,7 @@ public class UniqueGbifIdTransformTest {
   public void oneWithoutGbifIdValueTest() {
     // State
     final Map<String, ExtendedRecord> input = createErMap("1");
-    final Map<String, GbifIdRecord> expectedInvalid = createIdMap("1");
+    final Map<String, IdentifierRecord> expectedInvalid = createIdMap("1");
 
     // When
     UniqueGbifIdTransform gbifIdTransform =
@@ -158,8 +157,8 @@ public class UniqueGbifIdTransformTest {
             .build()
             .run();
 
-    Map<String, GbifIdRecord> idMap = gbifIdTransform.getIdMap();
-    Map<String, GbifIdRecord> idInvalidMap = gbifIdTransform.getIdInvalidMap();
+    Map<String, IdentifierRecord> idMap = gbifIdTransform.getIdMap();
+    Map<String, IdentifierRecord> idInvalidMap = gbifIdTransform.getIdInvalidMap();
 
     // Should
     Assert.assertEquals(0, idMap.size());
@@ -171,8 +170,9 @@ public class UniqueGbifIdTransformTest {
   public void mixedValuesSyncTest() {
     // State
     final Map<String, ExtendedRecord> input = createErMap("1", "2_2", "3_3", "4_1", "5", "6_6");
-    final Map<String, GbifIdRecord> expectedNormal = createGbifIdMap("2_2", "3_3", "4_1", "6_6");
-    final Map<String, GbifIdRecord> expectedInvalid = createIdMap("1", "5");
+    final Map<String, IdentifierRecord> expectedNormal =
+        createGbifIdMap("2_2", "3_3", "4_1", "6_6");
+    final Map<String, IdentifierRecord> expectedInvalid = createIdMap("1", "5");
 
     // When
     UniqueGbifIdTransform gbifIdTransform =
@@ -183,8 +183,8 @@ public class UniqueGbifIdTransformTest {
             .build()
             .run();
 
-    Map<String, GbifIdRecord> idMap = gbifIdTransform.getIdMap();
-    Map<String, GbifIdRecord> idInvalidMap = gbifIdTransform.getIdInvalidMap();
+    Map<String, IdentifierRecord> idMap = gbifIdTransform.getIdMap();
+    Map<String, IdentifierRecord> idInvalidMap = gbifIdTransform.getIdInvalidMap();
 
     // Should
     Assert.assertEquals(expectedNormal.size(), idMap.size());
@@ -197,8 +197,9 @@ public class UniqueGbifIdTransformTest {
   public void mixedValuesAsyncTest() {
     // State
     final Map<String, ExtendedRecord> input = createErMap("1", "2_2", "3_3", "4_1", "5", "6_6");
-    final Map<String, GbifIdRecord> expectedNormal = createGbifIdMap("2_2", "3_3", "4_1", "6_6");
-    final Map<String, GbifIdRecord> expectedInvalid = createIdMap("1", "5");
+    final Map<String, IdentifierRecord> expectedNormal =
+        createGbifIdMap("2_2", "3_3", "4_1", "6_6");
+    final Map<String, IdentifierRecord> expectedInvalid = createIdMap("1", "5");
 
     // When
     UniqueGbifIdTransform gbifIdTransform =
@@ -209,8 +210,8 @@ public class UniqueGbifIdTransformTest {
             .build()
             .run();
 
-    Map<String, GbifIdRecord> idMap = gbifIdTransform.getIdMap();
-    Map<String, GbifIdRecord> idInvalidMap = gbifIdTransform.getIdInvalidMap();
+    Map<String, IdentifierRecord> idMap = gbifIdTransform.getIdMap();
+    Map<String, IdentifierRecord> idInvalidMap = gbifIdTransform.getIdInvalidMap();
 
     // Should
     Assert.assertEquals(expectedNormal.size(), idMap.size());
@@ -219,13 +220,14 @@ public class UniqueGbifIdTransformTest {
     assertMap(expectedInvalid, idInvalidMap);
   }
 
-  private static <K> void assertMap(Map<K, GbifIdRecord> expected, Map<K, GbifIdRecord> result) {
+  private static <K> void assertMap(
+      Map<K, IdentifierRecord> expected, Map<K, IdentifierRecord> result) {
     expected.forEach(
         (k, v) -> {
-          GbifIdRecord record = result.get(k);
+          IdentifierRecord record = result.get(k);
           Assert.assertNotNull(record);
           Assert.assertEquals(v.getId(), record.getId());
-          Assert.assertEquals(v.getGbifId(), record.getGbifId());
+          Assert.assertEquals(v.getInternalId(), record.getInternalId());
         });
   }
 
@@ -242,29 +244,29 @@ public class UniqueGbifIdTransformTest {
         .collect(Collectors.toMap(ExtendedRecord::getId, Function.identity()));
   }
 
-  private Map<String, GbifIdRecord> createGbifIdMap(String... idName) {
+  private Map<String, IdentifierRecord> createGbifIdMap(String... idName) {
     return Arrays.stream(idName)
         .map(
             x -> {
               String[] array = x.split("_");
-              return GbifIdRecord.newBuilder()
+              return IdentifierRecord.newBuilder()
                   .setId(array[0])
-                  .setGbifId(array.length > 1 ? Long.valueOf(array[1]) : null)
+                  .setInternalId(array.length > 1 ? array[1] : null)
                   .build();
             })
-        .collect(Collectors.toMap(id -> id.getGbifId().toString(), Function.identity()));
+        .collect(Collectors.toMap(id -> id.getInternalId().toString(), Function.identity()));
   }
 
-  private Map<String, GbifIdRecord> createIdMap(String... idName) {
+  private Map<String, IdentifierRecord> createIdMap(String... idName) {
     return Arrays.stream(idName)
         .map(
             x -> {
               String[] array = x.split("_");
-              return GbifIdRecord.newBuilder()
+              return IdentifierRecord.newBuilder()
                   .setId(array[0])
-                  .setGbifId(array.length > 1 ? Long.valueOf(array[1]) : null)
+                  .setInternalId(array.length > 1 ? array[1] : null)
                   .build();
             })
-        .collect(Collectors.toMap(GbifIdRecord::getId, Function.identity()));
+        .collect(Collectors.toMap(IdentifierRecord::getId, Function.identity()));
   }
 }

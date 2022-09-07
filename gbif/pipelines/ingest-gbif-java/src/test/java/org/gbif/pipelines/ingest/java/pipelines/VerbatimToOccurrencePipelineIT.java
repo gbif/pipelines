@@ -29,7 +29,7 @@ import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.GbifIdRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
@@ -97,11 +97,12 @@ public class VerbatimToOccurrencePipelineIT {
     String postfix = "777";
     InterpretationPipelineOptions optionsWriter =
         PipelinesOptionsFactory.createInterpretation(args);
-    try (SyncDataFileWriter<GbifIdRecord> writer =
+    try (SyncDataFileWriter<IdentifierRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
             optionsWriter, GbifIdTransform.builder().create(), CORE_TERM, postfix)) {
-      GbifIdRecord gbifIdRecord = GbifIdRecord.newBuilder().setId(ID).setGbifId(1L).build();
-      writer.append(gbifIdRecord);
+      IdentifierRecord identifierRecord =
+          IdentifierRecord.newBuilder().setId(ID).setInternalId("1").build();
+      writer.append(identifierRecord);
     }
 
     // When, Should
@@ -157,16 +158,17 @@ public class VerbatimToOccurrencePipelineIT {
     InterpretationPipelineOptions optionsWriter =
         PipelinesOptionsFactory.createInterpretation(args);
     GbifIdTransform transform = GbifIdTransform.builder().create();
-    try (SyncDataFileWriter<GbifIdRecord> writer =
+    try (SyncDataFileWriter<IdentifierRecord> writer =
         InterpretedAvroWriter.createAvroWriter(optionsWriter, transform, CORE_TERM, postfix)) {
-      GbifIdRecord gbifIdRecord = GbifIdRecord.newBuilder().setId(ID).setGbifId(1L).build();
-      writer.append(gbifIdRecord);
+      IdentifierRecord identifierRecord =
+          IdentifierRecord.newBuilder().setId(ID).setInternalId("1").build();
+      writer.append(identifierRecord);
     }
-    try (SyncDataFileWriter<GbifIdRecord> writer =
+    try (SyncDataFileWriter<IdentifierRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
             optionsWriter, transform, CORE_TERM, postfix, transform.getAbsentName())) {
-      GbifIdRecord gbifIdRecord = GbifIdRecord.newBuilder().setId(ID).build();
-      writer.append(gbifIdRecord);
+      IdentifierRecord identifierRecord = IdentifierRecord.newBuilder().setId(ID).build();
+      writer.append(identifierRecord);
     }
 
     // When, Should
@@ -237,8 +239,8 @@ public class VerbatimToOccurrencePipelineIT {
     assertFile(AudubonRecord.class, interpretedOutput + "/audubon");
     assertFile(BasicRecord.class, interpretedOutput + "/basic");
     assertFile(ClusteringRecord.class, interpretedOutput + "/clustering");
-    assertFile(GbifIdRecord.class, interpretedOutput + "/identifier");
-    assertFile(GbifIdRecord.class, interpretedOutput + "/identifier_invalid");
+    assertFile(IdentifierRecord.class, interpretedOutput + "/identifier");
+    assertFile(IdentifierRecord.class, interpretedOutput + "/identifier_invalid");
     assertFile(GrscicollRecord.class, interpretedOutput + "/grscicoll");
     assertFile(ImageRecord.class, interpretedOutput + "/image");
     assertFile(LocationRecord.class, interpretedOutput + "/location");

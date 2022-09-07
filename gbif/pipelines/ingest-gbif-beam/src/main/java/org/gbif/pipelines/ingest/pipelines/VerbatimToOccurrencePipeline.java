@@ -35,7 +35,7 @@ import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.ingest.pipelines.interpretation.TransformsFactory;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.GbifIdRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.transforms.common.CheckTransforms;
 import org.gbif.pipelines.transforms.common.UniqueGbifIdTransform;
@@ -192,7 +192,7 @@ public class VerbatimToOccurrencePipeline {
     }
 
     // Read all dry-run GBIF IDs records
-    PCollection<GbifIdRecord> uniqueGbifId;
+    PCollection<IdentifierRecord> uniqueGbifId;
     if (useGbifIdRecordWriteIO(types)) {
       PCollectionTuple idsTuple =
           uniqueRecords
@@ -222,7 +222,8 @@ public class VerbatimToOccurrencePipeline {
               .apply("Interpret absent GBIF ids", idAbsentTransform.interpret())
               .apply("Filter absent GBIF ids", uniqueIdTransform);
 
-      PCollection<GbifIdRecord> absentCreatedGbifIds = absentTyple.get(uniqueIdTransform.getTag());
+      PCollection<IdentifierRecord> absentCreatedGbifIds =
+          absentTyple.get(uniqueIdTransform.getTag());
 
       absentCreatedGbifIds.apply("Write GBIF ids to avro", idTransform.write(pathFn));
 
@@ -238,7 +239,7 @@ public class VerbatimToOccurrencePipeline {
     PCollection<ExtendedRecord> filteredUniqueRecords = uniqueRecords;
     if (useExtendedRecordWriteIO(types)) {
       // Filter record with identical identifiers
-      PCollection<KV<String, GbifIdRecord>> uniqueGbifIdRecordsKv =
+      PCollection<KV<String, IdentifierRecord>> uniqueGbifIdRecordsKv =
           uniqueGbifId.apply("Map to GBIF ids record KV", idTransform.toKv());
       PCollection<KV<String, ExtendedRecord>> uniqueRecordsKv =
           uniqueRecords.apply("Map verbatim to KV", verbatimTransform.toKv());
@@ -262,7 +263,7 @@ public class VerbatimToOccurrencePipeline {
     uniqueGbifId
         .apply(
             "Check clustering transform condition",
-            clusteringTransform.check(types, GbifIdRecord.class))
+            clusteringTransform.check(types, IdentifierRecord.class))
         .apply("Interpret clustering", clusteringTransform.interpret())
         .apply("Write clustering to avro", clusteringTransform.write(pathFn));
 

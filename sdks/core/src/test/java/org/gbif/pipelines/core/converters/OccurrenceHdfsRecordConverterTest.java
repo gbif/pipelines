@@ -37,7 +37,7 @@ import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.GbifIdRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.IssueRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
@@ -169,7 +169,8 @@ public class OccurrenceHdfsRecordConverterTest {
             .setEventDate(EventDate.newBuilder().setGte("2000").setLte("2010").build())
             .build();
 
-    GbifIdRecord gbifIdRecord = GbifIdRecord.newBuilder().setId("1").setGbifId(777L).build();
+    IdentifierRecord identifierRecord =
+        IdentifierRecord.newBuilder().setId("1").setInternalId("777").build();
 
     // When
     OccurrenceHdfsRecord hdfsRecord =
@@ -177,7 +178,7 @@ public class OccurrenceHdfsRecordConverterTest {
             .basicRecord(basicRecord)
             .metadataRecord(metadataRecord)
             .taxonRecord(taxonRecord)
-            .gbifIdRecord(gbifIdRecord)
+            .identifierRecord(identifierRecord)
             .temporalRecord(temporalRecord)
             .extendedRecord(extendedRecord)
             .build()
@@ -306,13 +307,16 @@ public class OccurrenceHdfsRecordConverterTest {
   public void gbifIdRecordMapperTest() {
     // State
     long now = new Date().getTime();
-    GbifIdRecord gbifIdRecord = new GbifIdRecord();
-    gbifIdRecord.setCreated(now);
-    gbifIdRecord.setGbifId(1L);
+    IdentifierRecord identifierRecord = new IdentifierRecord();
+    identifierRecord.setFirstLoaded(now);
+    identifierRecord.setInternalId("1");
 
     // When
     OccurrenceHdfsRecord hdfsRecord =
-        OccurrenceHdfsRecordConverter.builder().gbifIdRecord(gbifIdRecord).build().convert();
+        OccurrenceHdfsRecordConverter.builder()
+            .identifierRecord(identifierRecord)
+            .build()
+            .convert();
 
     // Should
     Assert.assertEquals("1", hdfsRecord.getGbifid());
