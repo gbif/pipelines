@@ -20,7 +20,7 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TupleTag;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.InterpretationType;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.GbifIdRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.transforms.common.CheckTransforms;
 
 @SuppressWarnings("ConstantConditions")
@@ -34,11 +34,11 @@ public abstract class TableTransform<T extends SpecificRecordBase>
   @NonNull private final Class<T> clazz;
 
   @NonNull
-  private final SerializableBiFunction<GbifIdRecord, ExtendedRecord, Optional<T>> convertFn;
+  private final SerializableBiFunction<IdentifierRecord, ExtendedRecord, Optional<T>> convertFn;
 
   @NonNull private TupleTag<ExtendedRecord> extendedRecordTag;
 
-  @NonNull private TupleTag<GbifIdRecord> gbifIdRecordTag;
+  @NonNull private TupleTag<IdentifierRecord> identifierRecordTag;
 
   @NonNull private String path;
 
@@ -53,7 +53,7 @@ public abstract class TableTransform<T extends SpecificRecordBase>
       InterpretationType recordType,
       String counterNamespace,
       String counterName,
-      SerializableBiFunction<GbifIdRecord, ExtendedRecord, Optional<T>> convertFn) {
+      SerializableBiFunction<IdentifierRecord, ExtendedRecord, Optional<T>> convertFn) {
     this.clazz = clazz;
     this.recordType = recordType;
     this.counter = Metrics.counter(counterNamespace, counterName);
@@ -65,8 +65,8 @@ public abstract class TableTransform<T extends SpecificRecordBase>
     return this;
   }
 
-  public TableTransform<T> setGbifIdRecordTag(TupleTag<GbifIdRecord> gbifIdRecordTag) {
-    this.gbifIdRecordTag = gbifIdRecordTag;
+  public TableTransform<T> setIdentifierRecordTag(TupleTag<IdentifierRecord> identifierRecordTag) {
+    this.identifierRecordTag = identifierRecordTag;
     return this;
   }
 
@@ -122,7 +122,8 @@ public abstract class TableTransform<T extends SpecificRecordBase>
     String k = c.element().getKey();
 
     ExtendedRecord er = v.getOnly(extendedRecordTag, ExtendedRecord.newBuilder().setId(k).build());
-    GbifIdRecord id = v.getOnly(gbifIdRecordTag, GbifIdRecord.newBuilder().setId(k).build());
+    IdentifierRecord id =
+        v.getOnly(identifierRecordTag, IdentifierRecord.newBuilder().setId(k).build());
 
     convertFn
         .apply(id, er)

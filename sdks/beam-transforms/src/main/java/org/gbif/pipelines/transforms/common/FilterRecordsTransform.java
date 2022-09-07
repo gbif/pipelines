@@ -14,7 +14,7 @@ import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TupleTag;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.GbifIdRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
 
 /** Filter uses invalid BasicRecord collection as a source to find and skip ExtendedRecord record */
 @AllArgsConstructor(staticName = "create")
@@ -24,9 +24,9 @@ public class FilterRecordsTransform implements Serializable {
 
   // Core
   @NonNull private final TupleTag<ExtendedRecord> erTag;
-  @NonNull private final TupleTag<GbifIdRecord> idTag;
+  @NonNull private final TupleTag<IdentifierRecord> idTag;
 
-  /** Filters the records by discarding the results that have an invalid {@link GbifIdRecord} */
+  /** Filters the records by discarding the results that have an invalid {@link IdentifierRecord} */
   public SingleOutput<KV<String, CoGbkResult>, ExtendedRecord> filter() {
 
     DoFn<KV<String, CoGbkResult>, ExtendedRecord> fn =
@@ -40,8 +40,8 @@ public class FilterRecordsTransform implements Serializable {
             CoGbkResult v = c.element().getValue();
 
             ExtendedRecord er = v.getOnly(erTag, null);
-            GbifIdRecord id = v.getOnly(idTag, null);
-            if (er != null && id != null && id.getGbifId() != null) {
+            IdentifierRecord id = v.getOnly(idTag, null);
+            if (er != null && id != null && id.getInternalId() != null) {
               c.output(er);
               counter.inc();
             }

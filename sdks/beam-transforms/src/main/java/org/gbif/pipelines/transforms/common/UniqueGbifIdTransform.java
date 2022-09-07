@@ -30,7 +30,7 @@ import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TupleTagList;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.pipelines.core.utils.HashConverter;
-import org.gbif.pipelines.io.avro.GbifIdRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.transforms.specific.GbifIdTransform;
 
 /**
@@ -40,10 +40,11 @@ import org.gbif.pipelines.transforms.specific.GbifIdTransform;
 @Slf4j
 @Getter
 @AllArgsConstructor(staticName = "create")
-public class UniqueGbifIdTransform extends PTransform<PCollection<GbifIdRecord>, PCollectionTuple> {
+public class UniqueGbifIdTransform
+    extends PTransform<PCollection<IdentifierRecord>, PCollectionTuple> {
 
-  private final TupleTag<GbifIdRecord> tag = new TupleTag<GbifIdRecord>() {};
-  private final TupleTag<GbifIdRecord> invalidTag = new TupleTag<GbifIdRecord>() {};
+  private final TupleTag<IdentifierRecord> tag = new TupleTag<IdentifierRecord>() {};
+  private final TupleTag<IdentifierRecord> invalidTag = new TupleTag<IdentifierRecord>() {};
 
   // Skip transform dynamically
   private final boolean skipTransform;
@@ -53,18 +54,18 @@ public class UniqueGbifIdTransform extends PTransform<PCollection<GbifIdRecord>,
   }
 
   @Override
-  public PCollectionTuple expand(PCollection<GbifIdRecord> input) {
+  public PCollectionTuple expand(PCollection<IdentifierRecord> input) {
 
     if (skipTransform) {
       return PCollectionTuple.of(tag, input)
           .and(
               invalidTag,
-              Create.empty(TypeDescriptor.of(GbifIdRecord.class))
+              Create.empty(TypeDescriptor.of(IdentifierRecord.class))
                   .expand(PBegin.in(input.getPipeline())));
     }
 
     // Convert from list to map where, key - occurrenceId, value - object instance and group by key
-    PCollection<KV<String, Iterable<GbifIdRecord>>> groupedCollection =
+    PCollection<KV<String, Iterable<IdentifierRecord>>> groupedCollection =
         input
             .apply("Mapping to KV", GbifIdTransform.builder().create().toGbifIdKv())
             .apply("Grouping by gbifId", GroupByKey.create());
@@ -75,7 +76,7 @@ public class UniqueGbifIdTransform extends PTransform<PCollection<GbifIdRecord>,
         ParDo.of(new Filter()).withOutputTags(tag, TupleTagList.of(invalidTag)));
   }
 
-  private class Filter extends DoFn<KV<String, Iterable<GbifIdRecord>>, GbifIdRecord> {
+  private class Filter extends DoFn<KV<String, Iterable<IdentifierRecord>>, IdentifierRecord> {
 
     private final Counter uniqueCounter =
         Metrics.counter(UniqueGbifIdTransform.class, UNIQUE_GBIF_IDS_COUNT);
@@ -88,14 +89,14 @@ public class UniqueGbifIdTransform extends PTransform<PCollection<GbifIdRecord>,
 
     @ProcessElement
     public void processElement(ProcessContext c) {
-      KV<String, Iterable<GbifIdRecord>> element = c.element();
-      Iterator<GbifIdRecord> iterator = element.getValue().iterator();
-      GbifIdRecord next = iterator.next();
+      KV<String, Iterable<IdentifierRecord>> element = c.element();
+      Iterator<IdentifierRecord> iterator = element.getValue().iterator();
+      IdentifierRecord next = iterator.next();
 
       if (!iterator.hasNext()) {
         // No duplicates were found, but can be invalid GBIF id
 
-        if (next.getGbifId() == null) {
+        if (next.getInternalId() == null) {
           log.warn("GBIF ID DOESN'T EXIST - {}", next);
           invalidCounter.inc();
           c.output(invalidTag, next);
@@ -106,15 +107,15 @@ public class UniqueGbifIdTransform extends PTransform<PCollection<GbifIdRecord>,
 
       } else {
         // Found duplicates, compare all duplicate records, maybe they are identical
-        Map<String, GbifIdRecord> map = new TreeMap<>();
+        Map<String, IdentifierRecord> map = new TreeMap<>();
         map.put(HashConverter.getSha1(next.getId()), next);
 
         while (iterator.hasNext()) {
-          GbifIdRecord gr = iterator.next();
-          map.put(HashConverter.getSha1(gr.getId()), gr);
+          IdentifierRecord ir = iterator.next();
+          map.put(HashConverter.getSha1(ir.getId()), ir);
         }
 
-        List<GbifIdRecord> records = new LinkedList<>(map.values());
+        List<IdentifierRecord> records = new LinkedList<>(map.values());
 
         if (records.size() == 1 && records.get(0) == null) {
           log.warn("GBIF ID DOESN'T EXIST - {}", next);
@@ -124,7 +125,7 @@ public class UniqueGbifIdTransform extends PTransform<PCollection<GbifIdRecord>,
 
           int skip = -1;
           for (int x = 0; x < records.size(); x++) {
-            if (records.get(x).getGbifId() != null) {
+            if (records.get(x).getInternalId() != null) {
               skip = x;
               break;
             }

@@ -13,7 +13,7 @@ import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.GbifIdRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
@@ -34,7 +34,7 @@ public class OccurrenceHdfsRecordConverterTest {
 
     // State
     IngestMetrics metrics = IngestMetricsBuilder.createInterpretedToHdfsViewMetrics();
-    GbifIdRecord idRecord = GbifIdRecord.newBuilder().setId(ID).setGbifId(1L).build();
+    IdentifierRecord idRecord = IdentifierRecord.newBuilder().setId(ID).setInternalId(ID).build();
     BasicRecord basicRecord = BasicRecord.newBuilder().setId(ID).build();
     ClusteringRecord clusteringRecord = ClusteringRecord.newBuilder().setId(ID).build();
     MetadataRecord metadataRecord = MetadataRecord.newBuilder().setId(ID).build();

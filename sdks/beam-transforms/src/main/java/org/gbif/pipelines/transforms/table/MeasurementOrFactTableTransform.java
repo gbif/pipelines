@@ -8,7 +8,7 @@ import lombok.Builder;
 import org.apache.beam.sdk.values.TupleTag;
 import org.gbif.pipelines.core.converters.MeasurementOrFactTableConverter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.GbifIdRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.extension.dwc.MeasurementOrFactTable;
 
 public class MeasurementOrFactTableTransform extends TableTransform<MeasurementOrFactTable> {
@@ -16,7 +16,7 @@ public class MeasurementOrFactTableTransform extends TableTransform<MeasurementO
   @Builder
   public MeasurementOrFactTableTransform(
       TupleTag<ExtendedRecord> extendedRecordTag,
-      TupleTag<GbifIdRecord> gbifIdRecordTag,
+      TupleTag<IdentifierRecord> identifierRecordTag,
       String path,
       Integer numShards,
       Set<String> types) {
@@ -27,7 +27,7 @@ public class MeasurementOrFactTableTransform extends TableTransform<MeasurementO
         MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT,
         MeasurementOrFactTableConverter::convert);
     this.setExtendedRecordTag(extendedRecordTag)
-        .setGbifIdRecordTag(gbifIdRecordTag)
+        .setIdentifierRecordTag(identifierRecordTag)
         .setPath(path)
         .setNumShards(numShards)
         .setTypes(types);

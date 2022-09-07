@@ -6,9 +6,9 @@
   "fields":[
     {"name": "id", "type": ["null", "string"],  "doc": "Archive record identifier"},
     {"name": "internalId", "type": ["null", "string"], "default" : null },
-    {"name": "uniqueKey", "type": ["null", "string"], "default" : null },
-    {"name": "firstLoaded", "type": ["null", "long"], "default" : null,
-      "doc": "Time the unique key was create was created to Epoch milli second"
-    }
+    {"name": "uniqueKey", "type": ["null", "string"], "default" : null, "doc": "Fx. occurrenceID" },
+    {"name": "associatedKey", "type": ["null", "string"], "default" : null, "doc": "Fx. triplet" },
+    {"name": "firstLoaded", "type": ["null", "long"], "default" : null, "doc": "Time the unique key was create was created to Epoch milli second" },
+    {"name": "issues", "type": "IssueRecord", "default":{}}
   ]
 }

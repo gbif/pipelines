@@ -8,7 +8,7 @@ import lombok.Builder;
 import org.apache.beam.sdk.values.TupleTag;
 import org.gbif.pipelines.core.converters.GermplasmMeasurementTraitTableConverter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.GbifIdRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.extension.germplasm.GermplasmMeasurementTraitTable;
 
 public class GermplasmMeasurementTraitTableTransform
@@ -17,7 +17,7 @@ public class GermplasmMeasurementTraitTableTransform
   @Builder
   public GermplasmMeasurementTraitTableTransform(
       TupleTag<ExtendedRecord> extendedRecordTag,
-      TupleTag<GbifIdRecord> gbifIdRecordTag,
+      TupleTag<IdentifierRecord> identifierRecordTag,
       String path,
       Integer numShards,
       Set<String> types) {
@@ -28,7 +28,7 @@ public class GermplasmMeasurementTraitTableTransform
         MEASUREMENT_TRAIT_TABLE_RECORDS_COUNT,
         GermplasmMeasurementTraitTableConverter::convert);
     this.setExtendedRecordTag(extendedRecordTag)
-        .setGbifIdRecordTag(gbifIdRecordTag)
+        .setIdentifierRecordTag(identifierRecordTag)
         .setPath(path)
         .setNumShards(numShards)
         .setTypes(types);

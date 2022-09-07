@@ -36,7 +36,7 @@ import org.gbif.pipelines.ingest.java.pipelines.interpretation.Shutdown;
 import org.gbif.pipelines.ingest.java.pipelines.interpretation.TransformsFactory;
 import org.gbif.pipelines.ingest.java.transforms.InterpretedAvroReader;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.GbifIdRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.transforms.common.ExtensionFilterTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
@@ -202,32 +202,32 @@ public class VerbatimToOccurrencePipeline {
       boolean useSyncMode = options.getSyncThreshold() > erExtMap.size();
 
       // Skip interpretation and use avro reader when partial intepretation is activated
-      Function<ExtendedRecord, Optional<GbifIdRecord>> idFn;
+      Function<ExtendedRecord, Optional<IdentifierRecord>> idFn;
       if (useGbifIdWriteIO(types)) {
         log.info("Interpreting GBIF IDs records...");
         idFn = gbifIdTr::processElement;
       } else {
         log.info("Skip GBIF IDs interpretation and reading GBIF IDs from avro files...");
-        Map<String, GbifIdRecord> idRecordMap =
+        Map<String, IdentifierRecord> idRecordMap =
             InterpretedAvroReader.readAvroUseTargetPath(options, CORE_TERM, gbifIdTr);
-        Map<String, GbifIdRecord> absentIdRecordMap = new HashMap<>();
+        Map<String, IdentifierRecord> absentIdRecordMap = new HashMap<>();
 
         if (useAbsentGbifIdReadIO(types)) {
           InterpretedAvroReader.readAvroUseTargetPath(
                   options, gbifIdTr, CORE_TERM, gbifIdTr.getAbsentName())
               .forEach(
                   (k, v) -> {
-                    Consumer<GbifIdRecord> fn = gir -> absentIdRecordMap.put(k, gir);
+                    Consumer<IdentifierRecord> fn = ir -> absentIdRecordMap.put(k, ir);
                     gbifIdAbsentTr.processElement(v).ifPresent(fn);
                   });
         }
 
         idFn =
             er -> {
-              GbifIdRecord gbifIdRecord =
+              IdentifierRecord ir =
                   Optional.ofNullable(idRecordMap.get(er.getId()))
                       .orElse(absentIdRecordMap.get(er.getId()));
-              return Optional.ofNullable(gbifIdRecord);
+              return Optional.ofNullable(ir);
             };
       }
 
@@ -269,10 +269,10 @@ public class VerbatimToOccurrencePipeline {
         // Create interpretation function
         Consumer<ExtendedRecord> interpretAllFn =
             er -> {
-              GbifIdRecord idInvalid = gbifIdTransform.getIdInvalidMap().get(er.getId());
+              IdentifierRecord idInvalid = gbifIdTransform.getIdInvalidMap().get(er.getId());
 
               if (idInvalid == null) {
-                GbifIdRecord id = gbifIdTransform.getErIdMap().get(er.getId());
+                IdentifierRecord id = gbifIdTransform.getErIdMap().get(er.getId());
 
                 // Can be null if there are GBIF id collisstions and identifiers stage dropped
                 // duplicates
@@ -321,7 +321,7 @@ public class VerbatimToOccurrencePipeline {
         // Run async writing for GbifId
         Stream<CompletableFuture<Void>> streamIds = Stream.empty();
         if (useGbifIdWriteIO(types) || useAbsentGbifIdReadIO(types)) {
-          Collection<GbifIdRecord> idCollection = gbifIdTransform.getIdMap().values();
+          Collection<IdentifierRecord> idCollection = gbifIdTransform.getIdMap().values();
           if (useSyncMode) {
             streamIds =
                 Stream.of(

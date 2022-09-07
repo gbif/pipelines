@@ -36,7 +36,7 @@ import org.gbif.pipelines.io.avro.Diagnostic;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.GadmFeatures;
-import org.gbif.pipelines.io.avro.GbifIdRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MachineTag;
@@ -142,7 +142,7 @@ public class OccurrenceJsonTransformTest {
                     Collections.singletonList(Collections.singletonMap("k", "v"))))
             .build();
 
-    GbifIdRecord id = GbifIdRecord.newBuilder().setId("777").setGbifId(111L).build();
+    IdentifierRecord id = IdentifierRecord.newBuilder().setId("777").setInternalId("111").build();
 
     ClusteringRecord cr = ClusteringRecord.newBuilder().setId("777").setIsClustered(true).build();
 
@@ -441,7 +441,7 @@ public class OccurrenceJsonTransformTest {
         p.apply("Read Verbatim", Create.of(er))
             .apply("Map Verbatim to KV", verbatimTransform.toKv());
 
-    PCollection<KV<String, GbifIdRecord>> idCollection =
+    PCollection<KV<String, IdentifierRecord>> idCollection =
         p.apply("Read GBIF ids", Create.of(id)).apply("Map GBIF ids to KV", gbifIdTransform.toKv());
 
     PCollection<KV<String, BasicRecord>> basicCollection =
@@ -481,7 +481,7 @@ public class OccurrenceJsonTransformTest {
     SingleOutput<KV<String, CoGbkResult>, String> occurrenceJsonDoFn =
         OccurrenceJsonTransform.builder()
             .extendedRecordTag(verbatimTransform.getTag())
-            .gbifIdRecordTag(gbifIdTransform.getTag())
+            .identifierRecordTag(gbifIdTransform.getTag())
             .basicRecordTag(basicTransform.getTag())
             .clusteringRecordTag(clusteringTransform.getTag())
             .temporalRecordTag(temporalTransform.getTag())
@@ -519,7 +519,7 @@ public class OccurrenceJsonTransformTest {
     String json =
         OccurrenceJsonConverter.builder()
             .basic(br)
-            .gbifId(id)
+            .identifier(id)
             .clustering(cr)
             .metadata(mr)
             .verbatim(er)

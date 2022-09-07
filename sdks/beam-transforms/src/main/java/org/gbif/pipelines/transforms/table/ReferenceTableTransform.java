@@ -8,7 +8,7 @@ import lombok.Builder;
 import org.apache.beam.sdk.values.TupleTag;
 import org.gbif.pipelines.core.converters.ReferenceTableConverter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.GbifIdRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.extension.gbif.ReferenceTable;
 
 public class ReferenceTableTransform extends TableTransform<ReferenceTable> {
@@ -16,7 +16,7 @@ public class ReferenceTableTransform extends TableTransform<ReferenceTable> {
   @Builder
   public ReferenceTableTransform(
       TupleTag<ExtendedRecord> extendedRecordTag,
-      TupleTag<GbifIdRecord> gbifIdRecordTag,
+      TupleTag<IdentifierRecord> identifierRecordTag,
       String path,
       Integer numShards,
       Set<String> types) {
@@ -27,7 +27,7 @@ public class ReferenceTableTransform extends TableTransform<ReferenceTable> {
         REFERENCE_TABLE_RECORDS_COUNT,
         ReferenceTableConverter::convert);
     this.setExtendedRecordTag(extendedRecordTag)
-        .setGbifIdRecordTag(gbifIdRecordTag)
+        .setIdentifierRecordTag(identifierRecordTag)
         .setPath(path)
         .setNumShards(numShards)
         .setTypes(types);

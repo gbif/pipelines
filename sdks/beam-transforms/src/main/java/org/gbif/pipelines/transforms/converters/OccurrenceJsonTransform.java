@@ -21,7 +21,7 @@ import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.GbifIdRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
@@ -87,11 +87,11 @@ import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 @Builder
 public class OccurrenceJsonTransform implements Serializable {
 
-  private static final long serialVersionUID = 1279313931024806171L;
+  private static final long serialVersionUID = 1279313931024806172L;
 
   // Core
   @NonNull private final TupleTag<ExtendedRecord> extendedRecordTag;
-  @NonNull private final TupleTag<GbifIdRecord> gbifIdRecordTag;
+  @NonNull private final TupleTag<IdentifierRecord> identifierRecordTag;
   @NonNull private final TupleTag<ClusteringRecord> clusteringRecordTag;
   @NonNull private final TupleTag<BasicRecord> basicRecordTag;
   @NonNull private final TupleTag<TemporalRecord> temporalRecordTag;
@@ -123,7 +123,7 @@ public class OccurrenceJsonTransform implements Serializable {
 
             // Core
             MetadataRecord mdr = c.sideInput(metadataView);
-            GbifIdRecord id = v.getOnly(gbifIdRecordTag);
+            IdentifierRecord id = v.getOnly(identifierRecordTag);
             ClusteringRecord cr =
                 v.getOnly(clusteringRecordTag, ClusteringRecord.newBuilder().setId(k).build());
             ExtendedRecord er =
@@ -148,7 +148,7 @@ public class OccurrenceJsonTransform implements Serializable {
             OccurrenceJsonConverter occurrenceJsonConverter =
                 OccurrenceJsonConverter.builder()
                     .metadata(mdr)
-                    .gbifId(id)
+                    .identifier(id)
                     .clustering(cr)
                     .basic(br)
                     .temporal(tr)

@@ -16,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.GbifIdRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKey;
 import org.gbif.pipelines.keygen.Keygen;
 import org.gbif.pipelines.keygen.SimpleOccurrenceRecord;
@@ -27,13 +27,13 @@ import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
 public class GbifIdInterpreter {
 
   /** Copies GBIF id from ExtendedRecord id or generates/gets existing GBIF id */
-  public static BiConsumer<ExtendedRecord, GbifIdRecord> interpretGbifId(
+  public static BiConsumer<ExtendedRecord, IdentifierRecord> interpretGbifId(
       HBaseLockingKey keygenService,
       boolean isTripletValid,
       boolean isOccurrenceIdValid,
       boolean useExtendedRecordId,
       boolean generateIdIfAbsent,
-      BiConsumer<ExtendedRecord, GbifIdRecord> gbifIdFn) {
+      BiConsumer<ExtendedRecord, IdentifierRecord> gbifIdFn) {
     gbifIdFn = gbifIdFn == null ? interpretCopyGbifId() : gbifIdFn;
     return useExtendedRecordId
         ? gbifIdFn
@@ -41,12 +41,12 @@ public class GbifIdInterpreter {
   }
 
   /** Generates or gets existing GBIF id */
-  public static BiConsumer<ExtendedRecord, GbifIdRecord> interpretGbifId(
+  public static BiConsumer<ExtendedRecord, IdentifierRecord> interpretGbifId(
       HBaseLockingKey keygenService,
       boolean isTripletValid,
       boolean isOccurrenceIdValid,
       boolean generateIdIfAbsent) {
-    return (er, gr) -> {
+    return (er, ir) -> {
       SimpleOccurrenceRecord occRecords = SimpleOccurrenceRecord.create();
 
       // Adds occurrenceId
@@ -54,7 +54,7 @@ public class GbifIdInterpreter {
         String occurrenceId = extractValue(er, DwcTerm.occurrenceID);
         if (!Strings.isNullOrEmpty(occurrenceId)) {
           occRecords.setOccurrenceId(occurrenceId);
-          gr.setOccurrenceId(occurrenceId);
+          ir.setUniqueKey(occurrenceId);
         }
       }
 
@@ -67,7 +67,7 @@ public class GbifIdInterpreter {
             .ifPresent(
                 tr -> {
                   occRecords.setTriplet(tr);
-                  gr.setTriplet(tr);
+                  ir.setAssociatedKey(tr);
                 });
       }
 
@@ -75,48 +75,48 @@ public class GbifIdInterpreter {
           Keygen.getKey(
               keygenService, isTripletValid, isOccurrenceIdValid, generateIdIfAbsent, occRecords);
       if (gbifId.isPresent() && !Keygen.getErrorKey().equals(gbifId.get())) {
-        gr.setGbifId(gbifId.get());
+        ir.setInternalId(gbifId.get().toString());
       } else if (!generateIdIfAbsent) {
-        addIssue(gr, GBIF_ID_ABSENT);
+        addIssue(ir, GBIF_ID_ABSENT);
       } else {
-        addIssue(gr, GBIF_ID_INVALID);
+        addIssue(ir, GBIF_ID_INVALID);
       }
     };
   }
 
   /** Generates or gets existing GBIF id */
-  public static Consumer<GbifIdRecord> interpretAbsentGbifId(
+  public static Consumer<IdentifierRecord> interpretAbsentGbifId(
       HBaseLockingKey keygenService, boolean isTripletValid, boolean isOccurrenceIdValid) {
-    return gr -> {
+    return ir -> {
       SimpleOccurrenceRecord occRecords = SimpleOccurrenceRecord.create();
 
       // Adds occurrenceId
-      if (isOccurrenceIdValid && !Strings.isNullOrEmpty(gr.getOccurrenceId())) {
-        occRecords.setOccurrenceId(gr.getOccurrenceId());
+      if (isOccurrenceIdValid && !Strings.isNullOrEmpty(ir.getUniqueKey())) {
+        occRecords.setOccurrenceId(ir.getUniqueKey());
       }
 
       // Adds triplet, if isTripletValid and isOccurrenceIdValid is false, or occurrenceId is null
-      if (isTripletValid && !Strings.isNullOrEmpty(gr.getTriplet())) {
-        occRecords.setTriplet(gr.getTriplet());
+      if (isTripletValid && !Strings.isNullOrEmpty(ir.getAssociatedKey())) {
+        occRecords.setTriplet(ir.getAssociatedKey());
       }
 
       Optional<Long> gbifId =
           Keygen.getKey(keygenService, isTripletValid, isOccurrenceIdValid, true, occRecords);
 
       if (gbifId.isPresent() && !Keygen.getErrorKey().equals(gbifId.get())) {
-        gr.setGbifId(gbifId.get());
-        gr.getIssues().setIssueList(Collections.emptyList());
+        ir.setInternalId(gbifId.get().toString());
+        ir.getIssues().setIssueList(Collections.emptyList());
       } else {
-        gr.getIssues().setIssueList(Collections.singletonList(GBIF_ID_INVALID));
+        ir.getIssues().setIssueList(Collections.singletonList(GBIF_ID_INVALID));
       }
     };
   }
 
   /** Copies GBIF id from ExtendedRecord id */
-  public static BiConsumer<ExtendedRecord, GbifIdRecord> interpretCopyGbifId() {
+  public static BiConsumer<ExtendedRecord, IdentifierRecord> interpretCopyGbifId() {
     return (er, gr) -> {
       if (StringUtils.isNumeric(er.getId())) {
-        gr.setGbifId(Long.parseLong(er.getId()));
+        gr.setInternalId(er.getId());
       }
     };
   }

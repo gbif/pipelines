@@ -9,7 +9,7 @@ import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.beam.sdk.transforms.SerializableBiFunction;
 import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.GbifIdRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
 
 @Builder
 public class TableConverter<T extends SpecificRecordBase> {
@@ -21,10 +21,10 @@ public class TableConverter<T extends SpecificRecordBase> {
   @NonNull private final Map<String, ExtendedRecord> verbatimMap;
 
   @NonNull
-  private final SerializableBiFunction<GbifIdRecord, ExtendedRecord, Optional<T>> converterFn;
+  private final SerializableBiFunction<IdentifierRecord, ExtendedRecord, Optional<T>> converterFn;
 
   /** Join all records, convert into OccurrenceHdfsRecord and save as an avro file */
-  public Function<GbifIdRecord, Optional<T>> getFn() {
+  public Function<IdentifierRecord, Optional<T>> getFn() {
     return id -> {
       String k = id.getId();
       // Core

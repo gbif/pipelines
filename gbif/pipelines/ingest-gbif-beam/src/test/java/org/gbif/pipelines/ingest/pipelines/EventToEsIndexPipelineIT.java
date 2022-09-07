@@ -39,7 +39,6 @@ import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.GbifIdRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
@@ -362,14 +361,15 @@ public class EventToEsIndexPipelineIT {
                 optionsWriter, PipelinesVariables.Pipeline.VERBATIM_TO_OCCURRENCE + ".yml", false));
     Files.createFile(occMetadataPath);
 
-    try (SyncDataFileWriter<GbifIdRecord> writer =
+    try (SyncDataFileWriter<IdentifierRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
             optionsWriter, GbifIdTransform.builder().create(), OCCURRENCE_TERM, postfix)) {
-      GbifIdRecord gbifIdRecord = GbifIdRecord.newBuilder().setId(ID).setGbifId(1L).build();
-      writer.append(gbifIdRecord);
+      IdentifierRecord identifierRecord =
+          IdentifierRecord.newBuilder().setId(ID).setInternalId("1").build();
+      writer.append(identifierRecord);
 
-      GbifIdRecord subEventGbifIdRecord =
-          GbifIdRecord.newBuilder().setId(SUB_EVENT_ID).setGbifId(2L).build();
+      IdentifierRecord subEventGbifIdRecord =
+          IdentifierRecord.newBuilder().setId(SUB_EVENT_ID).setInternalId("2").build();
       writer.append(subEventGbifIdRecord);
     }
     try (SyncDataFileWriter<ClusteringRecord> writer =

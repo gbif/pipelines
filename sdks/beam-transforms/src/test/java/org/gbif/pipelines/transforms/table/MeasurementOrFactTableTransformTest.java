@@ -15,7 +15,7 @@ import org.apache.beam.sdk.values.PCollection;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.GbifIdRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.extension.dwc.MeasurementOrFactTable;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.specific.GbifIdTransform;
@@ -36,21 +36,21 @@ public class MeasurementOrFactTableTransformTest {
 
     // State
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("777").build();
-    GbifIdRecord id = GbifIdRecord.newBuilder().setId("777").setGbifId(777L).build();
+    IdentifierRecord id = IdentifierRecord.newBuilder().setId("777").setInternalId("777").build();
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     GbifIdTransform gbifIdTransform = GbifIdTransform.builder().create();
 
     MeasurementOrFactTableTransform transform =
         MeasurementOrFactTableTransform.builder()
             .extendedRecordTag(verbatimTransform.getTag())
-            .gbifIdRecordTag(gbifIdTransform.getTag())
+            .identifierRecordTag(gbifIdTransform.getTag())
             .build();
 
     // When
     PCollection<KV<String, ExtendedRecord>> verbatimCollection =
         p.apply("Create er", Create.of(er)).apply("KV er", verbatimTransform.toKv());
 
-    PCollection<KV<String, GbifIdRecord>> basicCollection =
+    PCollection<KV<String, IdentifierRecord>> basicCollection =
         p.apply("Create id", Create.of(id)).apply("KV id", gbifIdTransform.toKv());
 
     PCollection<MeasurementOrFactTable> result =
@@ -86,21 +86,21 @@ public class MeasurementOrFactTableTransformTest {
     ext.put(Extension.MEASUREMENT_OR_FACT.getRowType(), Collections.singletonList(ext1));
 
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("777").setExtensions(ext).build();
-    GbifIdRecord id = GbifIdRecord.newBuilder().setId("777").setGbifId(777L).build();
+    IdentifierRecord id = IdentifierRecord.newBuilder().setId("777").setInternalId("777").build();
 
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     GbifIdTransform gbifIdTransform = GbifIdTransform.builder().create();
     MeasurementOrFactTableTransform transform =
         MeasurementOrFactTableTransform.builder()
             .extendedRecordTag(verbatimTransform.getTag())
-            .gbifIdRecordTag(gbifIdTransform.getTag())
+            .identifierRecordTag(gbifIdTransform.getTag())
             .build();
 
     // When
     PCollection<KV<String, ExtendedRecord>> verbatimCollection =
         p.apply("Create er", Create.of(er)).apply("KV er", verbatimTransform.toKv());
 
-    PCollection<KV<String, GbifIdRecord>> basicCollection =
+    PCollection<KV<String, IdentifierRecord>> basicCollection =
         p.apply("Create id", Create.of(id)).apply("KV id", gbifIdTransform.toKv());
 
     PCollection<MeasurementOrFactTable> result =
