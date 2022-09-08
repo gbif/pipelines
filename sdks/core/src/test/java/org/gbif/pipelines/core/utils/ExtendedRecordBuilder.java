@@ -18,6 +18,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
  */
 public class ExtendedRecordBuilder {
 
+  private String continent;
   private String country;
   private String countryCode;
   private String decimalLatitude;
@@ -49,6 +50,11 @@ public class ExtendedRecordBuilder {
 
   public static MultimediaExtensionBuilder createMultimediaExtensionBuilder() {
     return new MultimediaExtensionBuilder();
+  }
+
+  public ExtendedRecordBuilder continent(String continent) {
+    this.continent = continent;
+    return this;
   }
 
   public ExtendedRecordBuilder country(String country) {
@@ -173,6 +179,7 @@ public class ExtendedRecordBuilder {
   public ExtendedRecord build() {
     Map<String, String> terms = new HashMap<>();
 
+    addToMap(terms, DwcTerm.continent, continent);
     addToMap(terms, DwcTerm.country, country);
     addToMap(terms, DwcTerm.countryCode, countryCode);
     addToMap(terms, DwcTerm.decimalLatitude, decimalLatitude);
