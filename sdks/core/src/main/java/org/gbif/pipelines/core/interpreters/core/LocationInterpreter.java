@@ -1,6 +1,5 @@
 package org.gbif.pipelines.core.interpreters.core;
 
-import static org.gbif.api.vocabulary.OccurrenceIssue.CONTINENT_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_OUT_OF_RANGE;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_PRECISION_INVALID;
@@ -22,7 +21,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,8 +37,8 @@ import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.core.parsers.SimpleTypeParser;
-import org.gbif.pipelines.core.parsers.VocabularyParser;
 import org.gbif.pipelines.core.parsers.common.ParsedField;
+import org.gbif.pipelines.core.parsers.location.parser.ContinentParser;
 import org.gbif.pipelines.core.parsers.location.parser.CoordinateParseUtils;
 import org.gbif.pipelines.core.parsers.location.parser.FootprintWKTParser;
 import org.gbif.pipelines.core.parsers.location.parser.GadmParser;
@@ -213,17 +211,21 @@ public class LocationInterpreter {
   }
 
   /** {@link DwcTerm#continent} interpretation. */
-  public static void interpretContinent(ExtendedRecord er, LocationRecord lr) {
-    Function<ParseResult<Continent>, LocationRecord> fn =
-        parseResult -> {
-          if (parseResult.isSuccessful()) {
-            lr.setContinent(parseResult.getPayload().name());
+  public static BiConsumer<ExtendedRecord, LocationRecord> interpretContinent(
+      KeyValueStore<LatLng, GeocodeResponse> geocodeKvStore) {
+    return (er, lr) -> {
+      if (geocodeKvStore != null && Boolean.TRUE.equals(lr.getHasCoordinate())) {
+        ParsedField<Continent> c = ContinentParser.parseContinent(er, lr, geocodeKvStore);
+        if (c.isSuccessful()) {
+          if (c.getResult() == null) {
+            lr.setContinent(null); // Marine occurrence
           } else {
-            addIssue(lr, CONTINENT_INVALID);
+            lr.setContinent(c.getResult().name());
           }
-          return lr;
-        };
-    VocabularyParser.continentParser().map(er, fn);
+          lr.getIssues().getIssueList().addAll(c.getIssues());
+        }
+      }
+    };
   }
 
   /** {@link DwcTerm#waterBody} interpretation. */
