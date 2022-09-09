@@ -9,12 +9,10 @@ import org.geotools.geometry.jts.JTS;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.operation.transform.IdentityTransform;
 import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.WKTReader;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.MathTransform;
-import org.opengis.referencing.operation.TransformException;
 
 /** Parser for the Dwc Terms related to the footprintWKT. */
 @Slf4j
@@ -49,7 +47,7 @@ public class FootprintWKTParser {
           .result(JTS.transform(geometry, transform).toText())
           .successful(true)
           .build();
-    } catch (FactoryException | ParseException | TransformException | IllegalArgumentException ex) {
+    } catch (Exception ex) {
       return ParsedField.fail(OccurrenceIssue.FOOTPRINT_WKT_INVALID.name());
     }
   }
