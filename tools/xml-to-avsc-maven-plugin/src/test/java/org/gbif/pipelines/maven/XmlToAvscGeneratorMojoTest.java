@@ -23,12 +23,13 @@ public class XmlToAvscGeneratorMojoTest {
     mojo.execute();
 
     // Should
-    Path result = Paths.get(path, "measurement-or-fact-table.avsc");
+    Path result = Paths.get(path, "identification-table.avsc");
     Assert.assertTrue(Files.exists(result));
 
     Schema schema = new Schema.Parser().parse(result.toFile());
-    Assert.assertEquals("MeasurementOrFactTable", schema.getName());
+    Assert.assertEquals("IdentificationTable", schema.getName());
     Assert.assertEquals("org.gbif.pipelines.io.avro.dwc", schema.getNamespace());
-    Assert.assertEquals(19, schema.getFields().size());
+    Assert.assertEquals(77, schema.getFields().size());
+    Assert.assertNotNull(schema.getField("order_"));
   }
 }

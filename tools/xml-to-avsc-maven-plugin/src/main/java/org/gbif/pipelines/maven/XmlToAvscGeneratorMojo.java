@@ -9,9 +9,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.avro.JsonProperties;
 import org.apache.avro.Schema;
@@ -30,6 +32,9 @@ import org.gbif.dwc.xml.SAXUtils;
 
 @Mojo(name = "avroschemageneration", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
 public class XmlToAvscGeneratorMojo extends AbstractMojo {
+
+  private static final Set<String> RESERVED_WORDS =
+      new HashSet<>(Arrays.asList("date", "order", "format", "group"));
 
   @Parameter(property = "avroschemageneration.pathToWrite")
   private String pathToWrite;
@@ -51,7 +56,7 @@ public class XmlToAvscGeneratorMojo extends AbstractMojo {
       for (Entry<Extension, String> extension : extensions.entrySet()) {
 
         try {
-          String name = normalizeClassNmae(extension.getKey().name());
+          String name = normalizeClassName(extension.getKey().name());
           URL url = new URL(extension.getValue());
 
           Path path = Paths.get(pathToWrite, normalizeFileName(name));
@@ -115,7 +120,7 @@ public class XmlToAvscGeneratorMojo extends AbstractMojo {
     return createSchemaField(name, Type.STRING, doc, true);
   }
 
-  private String normalizeClassNmae(String name) {
+  private String normalizeClassName(String name) {
     return Arrays.stream(name.split("_"))
             .map(String::toLowerCase)
             .map(x -> x.substring(0, 1).toUpperCase() + x.substring(1))
@@ -124,7 +129,11 @@ public class XmlToAvscGeneratorMojo extends AbstractMojo {
   }
 
   private String normalizeFieldName(String name) {
-    return name.toLowerCase().trim().replace("-", "").replaceAll("_", "");
+    String normalizedNamed = name.toLowerCase().trim().replace("-", "").replaceAll("_", "");
+    if (RESERVED_WORDS.contains(normalizedNamed)) {
+      return normalizedNamed + '_';
+    }
+    return normalizedNamed;
   }
 
   private String normalizeFileName(String name) {
