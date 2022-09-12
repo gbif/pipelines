@@ -98,13 +98,13 @@ public class UniqueGbifIdTransform {
 
   /** Filter GBIF id duplicates if it is exist */
   private void filter(IdentifierRecord id) {
-    IdentifierRecord record = idMap.get(id.getInternalId().toString());
+    IdentifierRecord record = idMap.get(id.getInternalId());
     if (record != null) {
       int compare =
           HashConverter.getSha1(id.getId()).compareTo(HashConverter.getSha1(record.getId()));
       if (compare < 0) {
         incMetrics(IDENTICAL_GBIF_OBJECTS_COUNT);
-        idMap.put(id.getInternalId().toString(), id);
+        idMap.put(id.getInternalId(), id);
         idInvalidMap.put(record.getId(), record);
       } else {
         incMetrics(DUPLICATE_GBIF_IDS_COUNT);
@@ -114,7 +114,7 @@ public class UniqueGbifIdTransform {
           "GBIF ID collision, gbifId - {}, occurrenceId - {}", id.getInternalId(), id.getId());
     } else {
       incMetrics(UNIQUE_GBIF_IDS_COUNT);
-      idMap.put(id.getInternalId().toString(), id);
+      idMap.put(id.getInternalId(), id);
     }
   }
 

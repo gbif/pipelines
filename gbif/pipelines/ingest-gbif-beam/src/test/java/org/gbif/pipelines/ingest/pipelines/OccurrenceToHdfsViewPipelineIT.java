@@ -134,7 +134,8 @@ public class OccurrenceToHdfsViewPipelineIT {
     try (SyncDataFileWriter<MetadataRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
             optionsWriter, MetadataTransform.builder().create(), coreTerm, postfix)) {
-      MetadataRecord metadataRecord = MetadataRecord.newBuilder().setId(ID).build();
+      MetadataRecord metadataRecord =
+          MetadataRecord.newBuilder().setId(ID).setDatasetKey("dataset_key").build();
       writer.append(metadataRecord);
     }
     try (SyncDataFileWriter<TemporalRecord> writer =
