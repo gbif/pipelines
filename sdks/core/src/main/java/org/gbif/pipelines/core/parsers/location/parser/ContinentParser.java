@@ -100,13 +100,16 @@ public class ContinentParser {
     if (latLng.isValid()) {
       GeocodeResponse geocodeResponse = geocodeKvStore.get(latLng);
       if (geocodeResponse != null && !geocodeResponse.getLocations().isEmpty()) {
-        return Optional.of(
+        List<Continent> continents =
             geocodeResponse.getLocations().stream()
                 .filter(l -> "Continent".equals(l.getType()))
                 .sorted(Comparator.comparingDouble(Location::getDistance))
                 .map(Location::getId)
                 .map(Continent::fromString)
-                .collect(Collectors.toList()));
+                .collect(Collectors.toList());
+        if (!continents.isEmpty()) {
+          return Optional.of(continents);
+        }
       }
     }
     return Optional.empty();

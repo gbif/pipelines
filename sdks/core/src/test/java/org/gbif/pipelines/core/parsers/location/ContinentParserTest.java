@@ -2,8 +2,10 @@ package org.gbif.pipelines.core.parsers.location;
 
 import static org.gbif.api.vocabulary.OccurrenceIssue.*;
 
+import java.util.Arrays;
 import java.util.Collections;
 import org.gbif.api.vocabulary.Continent;
+import org.gbif.api.vocabulary.Country;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.core.parsers.common.ParsedField;
@@ -24,16 +26,30 @@ public class ContinentParserTest {
 
   static {
     KeyValueTestStore testStore = new KeyValueTestStore();
-    testStore.put(new LatLng(38.7, 29.6), toGeocodeResponse(Continent.ASIA));
+    testStore.put(new LatLng(38.7, 29.6), toGeocodeResponse(Continent.ASIA, Country.TURKEY));
+    testStore.put(new LatLng(30.0, -20.0), toGeocodeResponse(Country.SPAIN));
 
     GEOCODE_KV_STORE = GeocodeKvStore.create(testStore);
   }
 
-  private static GeocodeResponse toGeocodeResponse(Continent continent) {
+  private static GeocodeResponse toGeocodeResponse(Continent continent, Country country) {
     Location location = new Location();
     location.setType("Continent");
     location.setDistance(0.0d);
     location.setId(continent.name());
+
+    Location countryLocation = new Location();
+    countryLocation.setType("Political");
+    countryLocation.setDistance(0.0d);
+    countryLocation.setIsoCountryCode2Digit(country.getIso2LetterCode());
+    return new GeocodeResponse(Arrays.asList(location, countryLocation));
+  }
+
+  private static GeocodeResponse toGeocodeResponse(Country country) {
+    Location location = new Location();
+    location.setType("Political");
+    location.setDistance(0.0d);
+    location.setIsoCountryCode2Digit(country.getIso2LetterCode());
     return new GeocodeResponse(Collections.singletonList(location));
   }
 
@@ -214,7 +230,7 @@ public class ContinentParserTest {
         LocationRecord.newBuilder()
             .setId(TEST_ID)
             .setDecimalLatitude(30.0)
-            .setDecimalLongitude(-38.0)
+            .setDecimalLongitude(-20.0)
             .build();
 
     // When
@@ -237,7 +253,7 @@ public class ContinentParserTest {
         LocationRecord.newBuilder()
             .setId(TEST_ID)
             .setDecimalLatitude(30.0)
-            .setDecimalLongitude(-38.0)
+            .setDecimalLongitude(-20.0)
             .build();
 
     // When
