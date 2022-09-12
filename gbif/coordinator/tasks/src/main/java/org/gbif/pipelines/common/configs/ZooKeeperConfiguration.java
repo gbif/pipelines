@@ -30,12 +30,20 @@ public class ZooKeeperConfiguration {
   @Parameter(
       names = "--zk-sleep-time",
       description = "Initial amount of time to wait between retries in ms")
-  @Min(1)
-  public int baseSleepTime = 1000;
+  @Min(1_000)
+  public int baseSleepTime = 3_000;
 
   @Parameter(names = "--zk-max-retries", description = "Max number of times to retry")
-  @Min(1)
-  public int maxRetries = 10;
+  @Min(5)
+  public int maxRetries = 20;
+
+  @Parameter(names = "--zk-session-timeout", description = "Curator session timeout")
+  @Min(60_000)
+  public int sessionTimeout = 120_000;
+
+  @Parameter(names = "--zk-connection-timeout", description = "Curator connection timeout")
+  @Min(15_000)
+  public int connectionTimeout = 30_000;
 
   /**
    * This method returns a connection object to ZooKeeper with the provided settings and creates and
@@ -51,6 +59,8 @@ public class ZooKeeperConfiguration {
             .namespace(namespace)
             .retryPolicy(new ExponentialBackoffRetry(baseSleepTime, maxRetries))
             .connectString(connectionString)
+            .sessionTimeoutMs(sessionTimeout)
+            .connectionTimeoutMs(connectionTimeout)
             .build();
 
     curator.start();
