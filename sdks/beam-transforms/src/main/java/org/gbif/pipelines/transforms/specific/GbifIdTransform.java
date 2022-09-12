@@ -78,10 +78,7 @@ public class GbifIdTransform extends Transform<ExtendedRecord, IdentifierRecord>
     return MapElements.into(new TypeDescriptor<KV<String, IdentifierRecord>>() {})
         .via(
             (IdentifierRecord ir) -> {
-              String key =
-                  Optional.ofNullable(ir.getInternalId())
-                      .map(Object::toString)
-                      .orElse(GBIF_ID_INVALID);
+              String key = Optional.ofNullable(ir.getInternalId()).orElse(GBIF_ID_INVALID);
               return KV.of(key, ir);
             });
   }

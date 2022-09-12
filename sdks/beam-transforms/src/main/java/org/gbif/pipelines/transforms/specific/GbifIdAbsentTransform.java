@@ -85,7 +85,7 @@ public class GbifIdAbsentTransform extends Transform<IdentifierRecord, Identifie
   public Optional<IdentifierRecord> convert(IdentifierRecord source) {
     return Interpretation.from(source)
         .to(IdentifierRecord.newBuilder(source).build())
-        .when(gid -> gid.getInternalId() == null)
+        .when(ir -> ir.getInternalId() == null)
         .via(
             GbifIdInterpreter.interpretAbsentGbifId(
                 keygenService, isTripletValid, isOccurrenceIdValid))
