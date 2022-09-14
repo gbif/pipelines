@@ -7,8 +7,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
 import org.apache.avro.file.DataFileReader;
@@ -38,14 +38,14 @@ public class TableRecordWriterTest {
         IdentifierRecord.newBuilder().setId("1").setInternalId("-" + gbifID).build();
     List<IdentifierRecord> list = Arrays.asList(idRecord, skipIdRecord);
 
-    Function<IdentifierRecord, Optional<OccurrenceHdfsRecord>> fn =
+    Function<IdentifierRecord, List<OccurrenceHdfsRecord>> fn =
         id -> {
           if (id.getInternalId().startsWith("-")) {
-            return Optional.empty();
+            return Collections.emptyList();
           }
           OccurrenceHdfsRecord hdfsRecord = new OccurrenceHdfsRecord();
           hdfsRecord.setGbifid(id.getInternalId());
-          return Optional.of(hdfsRecord);
+          return Collections.singletonList(hdfsRecord);
         };
 
     String outputFile = getClass().getResource("/hdfsview/occurrence/").getFile();
@@ -115,14 +115,14 @@ public class TableRecordWriterTest {
         IdentifierRecord.newBuilder().setId("1").setInternalId("-" + gbifID).build();
     List<IdentifierRecord> list = Arrays.asList(idRecord, skipIdRecord);
 
-    Function<IdentifierRecord, Optional<OccurrenceHdfsRecord>> fn =
+    Function<IdentifierRecord, List<OccurrenceHdfsRecord>> fn =
         id -> {
           if (id.getInternalId().startsWith("-")) {
-            return Optional.empty();
+            return Collections.emptyList();
           }
           OccurrenceHdfsRecord hdfsRecord = new OccurrenceHdfsRecord();
           hdfsRecord.setGbifid(id.getInternalId());
-          return Optional.of(hdfsRecord);
+          return Collections.singletonList(hdfsRecord);
         };
 
     String outputFile = getClass().getResource("/hdfsview/occurrence/").getFile();

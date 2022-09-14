@@ -1,7 +1,7 @@
 package org.gbif.pipelines.ingest.java.transforms;
 
+import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Function;
 import lombok.Builder;
 import lombok.NonNull;
@@ -24,18 +24,18 @@ public class TableConverter<T extends SpecificRecordBase> {
 
   @NonNull private final Map<String, ExtendedRecord> verbatimMap;
 
-  @NonNull private final SerializableFunction<ErIdrMdrContainer, Optional<T>> converterFn;
+  @NonNull private final SerializableFunction<ErIdrMdrContainer, List<T>> converterFn;
 
   /** Join all records, convert into OccurrenceHdfsRecord and save as an avro file */
-  public Function<IdentifierRecord, Optional<T>> getFn() {
+  public Function<IdentifierRecord, List<T>> getFn() {
     return id -> {
       String k = id.getId();
       // Core
       ExtendedRecord er = verbatimMap.getOrDefault(k, ExtendedRecord.newBuilder().setId(k).build());
 
-      Optional<T> table = converterFn.apply(ErIdrMdrContainer.create(er, id, metadataRecord));
+      List<T> table = converterFn.apply(ErIdrMdrContainer.create(er, id, metadataRecord));
 
-      table.ifPresent(x -> metrics.incMetric(counterName));
+      table.forEach(x -> metrics.incMetric(counterName));
 
       return table;
     };

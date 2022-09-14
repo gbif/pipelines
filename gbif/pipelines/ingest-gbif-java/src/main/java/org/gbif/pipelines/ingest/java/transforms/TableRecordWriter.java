@@ -3,8 +3,7 @@ package org.gbif.pipelines.ingest.java.transforms;
 import static org.gbif.pipelines.core.utils.FsUtils.createParentDirectories;
 
 import java.util.Collection;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -28,7 +27,7 @@ public class TableRecordWriter<T> {
 
   @NonNull private final InterpretationPipelineOptions options;
   @NonNull private final Collection<IdentifierRecord> identifierRecords;
-  @NonNull private final Function<IdentifierRecord, Optional<T>> recordFunction;
+  @NonNull private final Function<IdentifierRecord, List<T>> recordFunction;
   @NonNull private final Function<InterpretationType, String> targetPathFn;
   @NonNull private final Schema schema;
   @NonNull private final ExecutorService executor;
@@ -52,25 +51,14 @@ public class TableRecordWriter<T> {
 
   private CompletableFuture<?>[] asyncWrite(SyncDataFileWriter<T> writer) {
     return identifierRecords.stream()
-        .map(
-            id -> {
-              Optional<T> t = recordFunction.apply(id);
-              if (t.isPresent()) {
-                Runnable runnable = () -> writer.append(t.get());
-                return CompletableFuture.runAsync(runnable, executor);
-              }
-              return null;
-            })
-        .filter(Objects::nonNull)
+        .map(recordFunction)
+        .flatMap(List::stream)
+        .map(r -> CompletableFuture.runAsync(() -> writer.append(r), executor))
         .toArray(CompletableFuture[]::new);
   }
 
   private void syncWrite(SyncDataFileWriter<T> writer) {
-    identifierRecords.stream()
-        .map(recordFunction)
-        .filter(Optional::isPresent)
-        .map(Optional::get)
-        .forEach(writer::append);
+    identifierRecords.stream().map(recordFunction).flatMap(List::stream).forEach(writer::append);
   }
 
   /** Create an AVRO file writer */

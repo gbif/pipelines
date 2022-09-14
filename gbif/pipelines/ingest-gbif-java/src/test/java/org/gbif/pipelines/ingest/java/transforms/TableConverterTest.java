@@ -6,7 +6,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
@@ -42,7 +41,7 @@ public class TableConverterTest {
         ExtendedRecord.newBuilder().setId(ID).setExtensions(ext).build();
 
     // When
-    Optional<MeasurementOrFactTable> measurementOrFactTable =
+    List<MeasurementOrFactTable> measurementOrFactTable =
         TableConverter.<MeasurementOrFactTable>builder()
             .metrics(metrics)
             .metadataRecord(metadataRecord)
@@ -55,8 +54,8 @@ public class TableConverterTest {
 
     // Should
     Assert.assertNotNull(measurementOrFactTable);
-    Assert.assertTrue(measurementOrFactTable.isPresent());
-    Assert.assertEquals("1", measurementOrFactTable.get().getGbifid());
+    Assert.assertFalse(measurementOrFactTable.isEmpty());
+    Assert.assertEquals("1", measurementOrFactTable.get(0).getGbifid());
 
     Map<String, Long> map = new HashMap<>();
     metrics
