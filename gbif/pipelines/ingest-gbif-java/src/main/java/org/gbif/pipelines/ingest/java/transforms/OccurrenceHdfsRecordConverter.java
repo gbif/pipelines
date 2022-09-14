@@ -2,6 +2,8 @@ package org.gbif.pipelines.ingest.java.transforms;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_HDFS_COUNT;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -42,63 +44,65 @@ public class OccurrenceHdfsRecordConverter {
   @NonNull private final Map<String, AudubonRecord> audubonMap;
   private Map<String, EventCoreRecord> eventCoreRecordMap;
 
+  public Function<IdentifierRecord, List<OccurrenceHdfsRecord>> getFn() {
+    return id -> Collections.singletonList(convert(id));
+  }
+
   /** Join all records, convert into OccurrenceHdfsRecord and save as an avro file */
-  public Function<IdentifierRecord, Optional<OccurrenceHdfsRecord>> getFn() {
-    return id -> {
-      String k = id.getId();
-      // Core
-      ExtendedRecord er = verbatimMap.getOrDefault(k, ExtendedRecord.newBuilder().setId(k).build());
-      TemporalRecord tr = temporalMap.getOrDefault(k, TemporalRecord.newBuilder().setId(k).build());
-      LocationRecord lr = locationMap.getOrDefault(k, LocationRecord.newBuilder().setId(k).build());
-      TaxonRecord txr = taxonMap.getOrDefault(k, TaxonRecord.newBuilder().setId(k).build());
+  public OccurrenceHdfsRecord convert(IdentifierRecord idr) {
+    String k = idr.getId();
+    // Core
+    ExtendedRecord er = verbatimMap.getOrDefault(k, ExtendedRecord.newBuilder().setId(k).build());
+    TemporalRecord tr = temporalMap.getOrDefault(k, TemporalRecord.newBuilder().setId(k).build());
+    LocationRecord lr = locationMap.getOrDefault(k, LocationRecord.newBuilder().setId(k).build());
+    TaxonRecord txr = taxonMap.getOrDefault(k, TaxonRecord.newBuilder().setId(k).build());
 
-      // Extension
-      MultimediaRecord mr =
-          multimediaMap.getOrDefault(k, MultimediaRecord.newBuilder().setId(k).build());
-      ImageRecord ir = imageMap.getOrDefault(k, ImageRecord.newBuilder().setId(k).build());
-      AudubonRecord ar = audubonMap.getOrDefault(k, AudubonRecord.newBuilder().setId(k).build());
+    // Extension
+    MultimediaRecord mr =
+        multimediaMap.getOrDefault(k, MultimediaRecord.newBuilder().setId(k).build());
+    ImageRecord ir = imageMap.getOrDefault(k, ImageRecord.newBuilder().setId(k).build());
+    AudubonRecord ar = audubonMap.getOrDefault(k, AudubonRecord.newBuilder().setId(k).build());
 
-      MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
+    MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
 
-      metrics.incMetric(AVRO_TO_HDFS_COUNT);
+    metrics.incMetric(AVRO_TO_HDFS_COUNT);
 
-      org.gbif.pipelines.core.converters.OccurrenceHdfsRecordConverter
-              .OccurrenceHdfsRecordConverterBuilder
-          hdfsRecord =
-              org.gbif.pipelines.core.converters.OccurrenceHdfsRecordConverter.builder()
-                  .identifierRecord(id)
-                  .metadataRecord(metadata)
-                  .temporalRecord(tr)
-                  .locationRecord(lr)
-                  .taxonRecord(txr)
-                  .multimediaRecord(mmr)
-                  .extendedRecord(er);
+    org.gbif.pipelines.core.converters.OccurrenceHdfsRecordConverter
+            .OccurrenceHdfsRecordConverterBuilder
+        hdfsRecord =
+            org.gbif.pipelines.core.converters.OccurrenceHdfsRecordConverter.builder()
+                .identifierRecord(idr)
+                .metadataRecord(metadata)
+                .temporalRecord(tr)
+                .locationRecord(lr)
+                .taxonRecord(txr)
+                .multimediaRecord(mmr)
+                .extendedRecord(er);
 
-      Optional.ofNullable(basicMap)
-          .ifPresent(
-              bm ->
-                  hdfsRecord.basicRecord(
-                      bm.getOrDefault(k, BasicRecord.newBuilder().setId(k).build())));
+    Optional.ofNullable(basicMap)
+        .ifPresent(
+            bm ->
+                hdfsRecord.basicRecord(
+                    bm.getOrDefault(k, BasicRecord.newBuilder().setId(k).build())));
 
-      Optional.ofNullable(clusteringMap)
-          .ifPresent(
-              cm ->
-                  hdfsRecord.clusteringRecord(
-                      cm.getOrDefault(k, ClusteringRecord.newBuilder().setId(k).build())));
+    Optional.ofNullable(clusteringMap)
+        .ifPresent(
+            cm ->
+                hdfsRecord.clusteringRecord(
+                    cm.getOrDefault(k, ClusteringRecord.newBuilder().setId(k).build())));
 
-      Optional.ofNullable(grscicollMap)
-          .ifPresent(
-              gm ->
-                  hdfsRecord.grscicollRecord(
-                      gm.getOrDefault(k, GrscicollRecord.newBuilder().setId(k).build())));
+    Optional.ofNullable(grscicollMap)
+        .ifPresent(
+            gm ->
+                hdfsRecord.grscicollRecord(
+                    gm.getOrDefault(k, GrscicollRecord.newBuilder().setId(k).build())));
 
-      Optional.ofNullable(eventCoreRecordMap)
-          .ifPresent(
-              em ->
-                  hdfsRecord.eventCoreRecord(
-                      em.getOrDefault(k, EventCoreRecord.newBuilder().setId(k).build())));
+    Optional.ofNullable(eventCoreRecordMap)
+        .ifPresent(
+            em ->
+                hdfsRecord.eventCoreRecord(
+                    em.getOrDefault(k, EventCoreRecord.newBuilder().setId(k).build())));
 
-      return Optional.of(hdfsRecord.build().convert());
-    };
+    return hdfsRecord.build().convert();
   }
 }

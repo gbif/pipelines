@@ -25,8 +25,8 @@ import static org.gbif.pipelines.ingest.java.transforms.InterpretedAvroReader.re
 
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -273,7 +273,7 @@ public class HdfsViewPipeline {
     Map<String, IdentifierRecord> idRecordMap = idMapFeature.get();
     MetadataRecord metadataRecord = metadataMapFeature.get().values().iterator().next();
 
-    OccurrenceHdfsRecordConverter.OccurrenceHdfsRecordConverterBuilder builder =
+    OccurrenceHdfsRecordConverter.OccurrenceHdfsRecordConverterBuilder occurrenceBuilder =
         OccurrenceHdfsRecordConverter.builder()
             .metrics(metrics)
             .metadata(metadataRecord)
@@ -286,7 +286,7 @@ public class HdfsViewPipeline {
             .audubonMap(audubonMapFeature.get());
 
     if (OCCURRENCE == recordType) {
-      builder
+      occurrenceBuilder
           .basicMap(basicMapFeature.get())
           .grscicollMap(grscicollMapFeature.get())
           .clusteringMap(clusteringMapFeature.get());
@@ -295,15 +295,12 @@ public class HdfsViewPipeline {
     if (RecordType.EVENT == recordType) {
       CompletableFuture<Map<String, EventCoreRecord>> eventCoreMapFeature =
           readAvroAsFuture(options, coreTerm, executor, EventCoreTransform.builder().create());
-      builder.eventCoreRecordMap(eventCoreMapFeature.get());
+      occurrenceBuilder.eventCoreRecordMap(eventCoreMapFeature.get());
     }
 
     // OccurrenceHdfsRecord
-    Function<IdentifierRecord, Optional<OccurrenceHdfsRecord>> occurrenceHdfsRecordFn =
-        builder.build().getFn();
-
     TableRecordWriter.<OccurrenceHdfsRecord>builder()
-        .recordFunction(occurrenceHdfsRecordFn)
+        .recordFunction(occurrenceBuilder.build().getFn())
         .identifierRecords(idRecordMap.values())
         .targetPathFn(pathFn)
         .schema(OccurrenceHdfsRecord.getClassSchema())
@@ -315,7 +312,7 @@ public class HdfsViewPipeline {
         .write();
 
     // MeasurementOrFactTable
-    Function<IdentifierRecord, Optional<MeasurementOrFactTable>> measurementOrFactFn =
+    Function<IdentifierRecord, List<MeasurementOrFactTable>> measurementOrFactFn =
         TableConverter.<MeasurementOrFactTable>builder()
             .metrics(metrics)
             .converterFn(MeasurementOrFactTableConverter::convert)
@@ -338,7 +335,7 @@ public class HdfsViewPipeline {
         .write();
 
     // IdentificationTable
-    Function<IdentifierRecord, Optional<IdentificationTable>> identificationFn =
+    Function<IdentifierRecord, List<IdentificationTable>> identificationFn =
         TableConverter.<IdentificationTable>builder()
             .metrics(metrics)
             .converterFn(IdentificationTableConverter::convert)
@@ -361,7 +358,7 @@ public class HdfsViewPipeline {
         .write();
 
     // ResourceRelationTable
-    Function<IdentifierRecord, Optional<ResourceRelationshipTable>> resourceRelationFn =
+    Function<IdentifierRecord, List<ResourceRelationshipTable>> resourceRelationFn =
         TableConverter.<ResourceRelationshipTable>builder()
             .metrics(metrics)
             .converterFn(ResourceRelationshipTableConverter::convert)
@@ -384,7 +381,7 @@ public class HdfsViewPipeline {
         .write();
 
     // AmplificationTable
-    Function<IdentifierRecord, Optional<AmplificationTable>> amplificationFn =
+    Function<IdentifierRecord, List<AmplificationTable>> amplificationFn =
         TableConverter.<AmplificationTable>builder()
             .metrics(metrics)
             .converterFn(AmplificationTableConverter::convert)
@@ -407,7 +404,7 @@ public class HdfsViewPipeline {
         .write();
 
     // CloningTable
-    Function<IdentifierRecord, Optional<CloningTable>> cloningFn =
+    Function<IdentifierRecord, List<CloningTable>> cloningFn =
         TableConverter.<CloningTable>builder()
             .metrics(metrics)
             .converterFn(CloningTableConverter::convert)
@@ -430,7 +427,7 @@ public class HdfsViewPipeline {
         .write();
 
     // GelImageTable
-    Function<IdentifierRecord, Optional<GelImageTable>> gelImageFn =
+    Function<IdentifierRecord, List<GelImageTable>> gelImageFn =
         TableConverter.<GelImageTable>builder()
             .metrics(metrics)
             .converterFn(GelImageTableConverter::convert)
@@ -453,7 +450,7 @@ public class HdfsViewPipeline {
         .write();
 
     // LoanTable
-    Function<IdentifierRecord, Optional<LoanTable>> loanFn =
+    Function<IdentifierRecord, List<LoanTable>> loanFn =
         TableConverter.<LoanTable>builder()
             .metrics(metrics)
             .converterFn(LoanTableConverter::convert)
@@ -476,7 +473,7 @@ public class HdfsViewPipeline {
         .write();
 
     // MaterialSampleTable
-    Function<IdentifierRecord, Optional<MaterialSampleTable>> materialSampleFn =
+    Function<IdentifierRecord, List<MaterialSampleTable>> materialSampleFn =
         TableConverter.<MaterialSampleTable>builder()
             .metrics(metrics)
             .converterFn(MaterialSampleTableConverter::convert)
@@ -499,7 +496,7 @@ public class HdfsViewPipeline {
         .write();
 
     // PermitTable
-    Function<IdentifierRecord, Optional<PermitTable>> permitFn =
+    Function<IdentifierRecord, List<PermitTable>> permitFn =
         TableConverter.<PermitTable>builder()
             .metrics(metrics)
             .converterFn(PermitTableConverter::convert)
@@ -522,7 +519,7 @@ public class HdfsViewPipeline {
         .write();
 
     // PreparationTable
-    Function<IdentifierRecord, Optional<PreparationTable>> preparationFn =
+    Function<IdentifierRecord, List<PreparationTable>> preparationFn =
         TableConverter.<PreparationTable>builder()
             .metrics(metrics)
             .converterFn(PreparationTableConverter::convert)
@@ -545,7 +542,7 @@ public class HdfsViewPipeline {
         .write();
 
     // PreservationTable
-    Function<IdentifierRecord, Optional<PreservationTable>> preservationFn =
+    Function<IdentifierRecord, List<PreservationTable>> preservationFn =
         TableConverter.<PreservationTable>builder()
             .metrics(metrics)
             .converterFn(PreservationTableConverter::convert)
@@ -568,7 +565,7 @@ public class HdfsViewPipeline {
         .write();
 
     // MeasurementScoreTable
-    Function<IdentifierRecord, Optional<GermplasmMeasurementScoreTable>> measurementScoreFn =
+    Function<IdentifierRecord, List<GermplasmMeasurementScoreTable>> measurementScoreFn =
         TableConverter.<GermplasmMeasurementScoreTable>builder()
             .metrics(metrics)
             .converterFn(GermplasmMeasurementScoreTableConverter::convert)
@@ -591,7 +588,7 @@ public class HdfsViewPipeline {
         .write();
 
     // MeasurementTraitTable
-    Function<IdentifierRecord, Optional<GermplasmMeasurementTraitTable>> measurementTraitFn =
+    Function<IdentifierRecord, List<GermplasmMeasurementTraitTable>> measurementTraitFn =
         TableConverter.<GermplasmMeasurementTraitTable>builder()
             .metrics(metrics)
             .converterFn(GermplasmMeasurementTraitTableConverter::convert)
@@ -614,7 +611,7 @@ public class HdfsViewPipeline {
         .write();
 
     // MeasurementTrialTable
-    Function<IdentifierRecord, Optional<GermplasmMeasurementTrialTable>> measurementTrialFn =
+    Function<IdentifierRecord, List<GermplasmMeasurementTrialTable>> measurementTrialFn =
         TableConverter.<GermplasmMeasurementTrialTable>builder()
             .metrics(metrics)
             .converterFn(GermplasmMeasurementTrialTableConverter::convert)
@@ -637,7 +634,7 @@ public class HdfsViewPipeline {
         .write();
 
     // GermplasmAccessionTable
-    Function<IdentifierRecord, Optional<GermplasmAccessionTable>> germplasmAccessionFn =
+    Function<IdentifierRecord, List<GermplasmAccessionTable>> germplasmAccessionFn =
         TableConverter.<GermplasmAccessionTable>builder()
             .metrics(metrics)
             .converterFn(GermplasmAccessionTableConverter::convert)
@@ -660,16 +657,15 @@ public class HdfsViewPipeline {
         .write();
 
     // ExtendedMeasurementOrFactTable
-    Function<IdentifierRecord, Optional<ExtendedMeasurementOrFactTable>>
-        extendedMeasurementOrFactFn =
-            TableConverter.<ExtendedMeasurementOrFactTable>builder()
-                .metrics(metrics)
-                .converterFn(ExtendedMeasurementOrFactTableConverter::convert)
-                .metadataRecord(metadataRecord)
-                .counterName(EXTENDED_MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT)
-                .verbatimMap(verbatimMapFeature.get())
-                .build()
-                .getFn();
+    Function<IdentifierRecord, List<ExtendedMeasurementOrFactTable>> extendedMeasurementOrFactFn =
+        TableConverter.<ExtendedMeasurementOrFactTable>builder()
+            .metrics(metrics)
+            .converterFn(ExtendedMeasurementOrFactTableConverter::convert)
+            .metadataRecord(metadataRecord)
+            .counterName(EXTENDED_MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT)
+            .verbatimMap(verbatimMapFeature.get())
+            .build()
+            .getFn();
 
     TableRecordWriter.<ExtendedMeasurementOrFactTable>builder()
         .recordFunction(extendedMeasurementOrFactFn)
@@ -684,7 +680,7 @@ public class HdfsViewPipeline {
         .write();
 
     // ChronometricAgeTable
-    Function<IdentifierRecord, Optional<ChronometricAgeTable>> chronometricAgeFn =
+    Function<IdentifierRecord, List<ChronometricAgeTable>> chronometricAgeFn =
         TableConverter.<ChronometricAgeTable>builder()
             .metrics(metrics)
             .converterFn(ChronometricAgeTableConverter::convert)
@@ -707,7 +703,7 @@ public class HdfsViewPipeline {
         .write();
 
     // ReferencesTable
-    Function<IdentifierRecord, Optional<ReferenceTable>> referencesFn =
+    Function<IdentifierRecord, List<ReferenceTable>> referencesFn =
         TableConverter.<ReferenceTable>builder()
             .metrics(metrics)
             .converterFn(ReferenceTableConverter::convert)
@@ -730,7 +726,7 @@ public class HdfsViewPipeline {
         .write();
 
     // IdentifierTable
-    Function<IdentifierRecord, Optional<IdentifierTable>> identifierFn =
+    Function<IdentifierRecord, List<IdentifierTable>> identifierFn =
         TableConverter.<IdentifierTable>builder()
             .metrics(metrics)
             .converterFn(IdentifierTableConverter::convert)

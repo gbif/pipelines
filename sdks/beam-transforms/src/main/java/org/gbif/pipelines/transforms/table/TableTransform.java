@@ -2,6 +2,7 @@ package org.gbif.pipelines.transforms.table;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import lombok.NonNull;
@@ -36,7 +37,7 @@ public abstract class TableTransform<T extends SpecificRecordBase>
 
   @NonNull private final Class<T> clazz;
 
-  @NonNull private final SerializableFunction<ErIdrMdrContainer, Optional<T>> convertFn;
+  @NonNull private final SerializableFunction<ErIdrMdrContainer, List<T>> convertFn;
 
   @NonNull private TupleTag<ExtendedRecord> extendedRecordTag;
 
@@ -57,7 +58,7 @@ public abstract class TableTransform<T extends SpecificRecordBase>
       InterpretationType recordType,
       String counterNamespace,
       String counterName,
-      SerializableFunction<ErIdrMdrContainer, Optional<T>> convertFn) {
+      SerializableFunction<ErIdrMdrContainer, List<T>> convertFn) {
     this.clazz = clazz;
     this.recordType = recordType;
     this.counter = Metrics.counter(counterNamespace, counterName);
@@ -137,7 +138,7 @@ public abstract class TableTransform<T extends SpecificRecordBase>
 
     convertFn
         .apply(ErIdrMdrContainer.create(er, id, mdr))
-        .ifPresent(
+        .forEach(
             r -> {
               c.output(r);
               counter.inc();
