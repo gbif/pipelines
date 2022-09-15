@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -26,12 +27,16 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.digester.ThesaurusHandlingRule;
 import org.gbif.dwc.extensions.ExtensionFactory;
+import org.gbif.dwc.extensions.ExtensionProperty;
 import org.gbif.dwc.extensions.VocabulariesManager;
 import org.gbif.dwc.extensions.Vocabulary;
+import org.gbif.dwc.terms.TermFactory;
 import org.gbif.dwc.xml.SAXUtils;
 
 @Mojo(name = "avroschemageneration", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
 public class XmlToAvscGeneratorMojo extends AbstractMojo {
+
+  private static final TermFactory TERM_FACTORY = TermFactory.instance();
 
   private static final Set<String> RESERVED_WORDS =
       new HashSet<>(Arrays.asList("date", "order", "format", "group"));
@@ -49,9 +54,6 @@ public class XmlToAvscGeneratorMojo extends AbstractMojo {
       Files.createDirectories(Paths.get(pathToWrite));
 
       Map<Extension, String> extensions = Extension.availableExtensionResources();
-      extensions.remove(Extension.AUDUBON);
-      extensions.remove(Extension.IMAGE);
-      extensions.remove(Extension.MULTIMEDIA);
 
       for (Entry<Extension, String> extension : extensions.entrySet()) {
 
@@ -88,21 +90,42 @@ public class XmlToAvscGeneratorMojo extends AbstractMojo {
 
     // Convert into an avro schema
     List<Schema.Field> fields = new ArrayList<>(ext.getProperties().size() + 1);
+
+    Map<String, Integer> duplicatesMap = new HashMap<>();
+    ext.getProperties()
+        .forEach(
+            x -> {
+              if (duplicatesMap.containsKey(x.getName())) {
+                duplicatesMap.computeIfPresent(x.getName(), (s, i) -> ++i);
+              } else {
+                duplicatesMap.put(x.getName(), 1);
+              }
+            });
+
     // Add gbifID and datasetKey fields
-    fields.add(createSchemaField("gbifid", Type.STRING, "GBIF internal identifier", false));
-    fields.add(
-        createSchemaField("datasetkey", Type.STRING, "GBIF registry dataset identifier", false));
-    // Add RAW fields
-    ext.getProperties().stream()
-        .map(p -> createSchemaField("v_" + normalizeFieldName(p.getName()), p.getQualname()))
-        .forEach(fields::add);
-    // Add fields
-    ext.getProperties().stream()
-        .map(p -> createSchemaField(normalizeFieldName(p.getName()), p.getQualname()))
-        .forEach(fields::add);
+    fields.add(createField("gbifid", Type.STRING, "GBIF internal identifier", false));
+    fields.add(createField("datasetkey", Type.STRING, "GBIF registry dataset identifier", false));
+
+    // Add terms from xml schema
+    for (ExtensionProperty ep : ext.getProperties()) {
+
+      String extFieldName = ep.getName();
+      if (duplicatesMap.get(extFieldName) > 1) {
+        extFieldName = TERM_FACTORY.findTerm(ep.qualifiedName()).prefixedName();
+      }
+
+      String fName = normalizeFieldName(extFieldName);
+      // Add fields
+      fields.add(createField(fName, ep.getQualname()));
+      // Add RAW fields
+      fields.add(createField("v_" + fName, ep.getQualname()));
+    }
 
     String[] extraNamespace =
-        url.toString().replaceAll("http://rs.gbif.org/extension/", "").split("/");
+        url.toString()
+            .replaceAll("http://rs.gbif.org/extension/", "")
+            .replaceAll("https://rs.gbif.org/extension/", "")
+            .split("/");
 
     String doc = "Avro Schema of Hive Table for " + name;
     String fullNamespace = namespace + "." + extraNamespace[0];
@@ -118,8 +141,8 @@ public class XmlToAvscGeneratorMojo extends AbstractMojo {
     Files.write(path, schema.getBytes(UTF_8));
   }
 
-  private Schema.Field createSchemaField(String name, String doc) {
-    return createSchemaField(name, Type.STRING, doc, true);
+  private Schema.Field createField(String name, String doc) {
+    return createField(name, Type.STRING, doc, true);
   }
 
   private String normalizeClassName(String name) {
@@ -131,9 +154,13 @@ public class XmlToAvscGeneratorMojo extends AbstractMojo {
   }
 
   private String normalizeFieldName(String name) {
-    String normalizedNamed = name.toLowerCase().trim().replace("-", "").replaceAll("_", "");
+    String normalizedNamed =
+        name.toLowerCase().trim().replace("-", "").replace("_", "").replace(":", "_");
     if (RESERVED_WORDS.contains(normalizedNamed)) {
       return normalizedNamed + '_';
+    }
+    if (Character.isDigit(normalizedNamed.charAt(0))) {
+      return '_' + normalizedNamed;
     }
     return normalizedNamed;
   }
@@ -146,8 +173,7 @@ public class XmlToAvscGeneratorMojo extends AbstractMojo {
     return result + ".avsc";
   }
 
-  private Schema.Field createSchemaField(
-      String name, Schema.Type type, String doc, boolean isNull) {
+  private Schema.Field createField(String name, Schema.Type type, String doc, boolean isNull) {
 
     Schema schema;
     if (isNull) {
