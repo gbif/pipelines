@@ -15,6 +15,7 @@ import org.apache.beam.sdk.testing.TestPipeline;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
@@ -33,6 +34,7 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.extension.ac.AudubonTable;
 import org.gbif.pipelines.io.avro.extension.dwc.MeasurementOrFactTable;
 import org.gbif.pipelines.io.avro.extension.germplasm.GermplasmMeasurementTrialTable;
 import org.gbif.pipelines.io.avro.extension.obis.ExtendedMeasurementOrFactTable;
@@ -85,7 +87,7 @@ public class OccurrenceToHdfsViewPipelineIT {
       "--inputPath=" + output,
       "--targetPath=" + input,
       "--numberOfShards=1",
-      "--interpretationTypes=OCCURRENCE,MEASUREMENT_OR_FACT_TABLE,EXTENDED_MEASUREMENT_OR_FACT_TABLE,GERMPLASM_MEASUREMENT_TRIAL_TABLE",
+      "--interpretationTypes=OCCURRENCE,MEASUREMENT_OR_FACT_TABLE,EXTENDED_MEASUREMENT_OR_FACT_TABLE,GERMPLASM_MEASUREMENT_TRIAL_TABLE,AUDUBON_TABLE",
       "--properties=" + outputFile + "/lock.yaml"
     };
     InterpretationPipelineOptions optionsWriter =
@@ -190,7 +192,7 @@ public class OccurrenceToHdfsViewPipelineIT {
       "--inputPath=" + input,
       "--targetPath=" + output,
       "--numberOfShards=1",
-      "--interpretationTypes=OCCURRENCE,MEASUREMENT_OR_FACT_TABLE,EXTENDED_MEASUREMENT_OR_FACT_TABLE,GERMPLASM_MEASUREMENT_TRIAL_TABLE",
+      "--interpretationTypes=OCCURRENCE,MEASUREMENT_OR_FACT_TABLE,EXTENDED_MEASUREMENT_OR_FACT_TABLE,GERMPLASM_MEASUREMENT_TRIAL_TABLE,AUDUBON_TABLE",
       "--testMode=true"
     };
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
@@ -205,20 +207,20 @@ public class OccurrenceToHdfsViewPipelineIT {
 
     assertFile(
         OccurrenceHdfsRecord.class,
-        outputFn.apply("occurrence"),
-        PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE);
+        outputFn.apply("occurrence")
+        );
     assertFile(
         MeasurementOrFactTable.class,
-        outputFn.apply("measurementorfacttable"),
-        PipelinesVariables.Pipeline.Interpretation.RecordType.MEASUREMENT_OR_FACT_TABLE);
+        outputFn.apply("measurementorfacttable"));
     assertFile(
         ExtendedMeasurementOrFactTable.class,
-        outputFn.apply("extendedmeasurementorfacttable"),
-        PipelinesVariables.Pipeline.Interpretation.RecordType.EXTENDED_MEASUREMENT_OR_FACT_TABLE);
+        outputFn.apply("extendedmeasurementorfacttable"));
     assertFile(
         GermplasmMeasurementTrialTable.class,
-        outputFn.apply("germplasmmeasurementtrialtable"),
-        PipelinesVariables.Pipeline.Interpretation.RecordType.GERMPLASM_MEASUREMENT_TRAIT_TABLE);
+        outputFn.apply("germplasmmeasurementtrialtable"));
+    assertFile(
+        AudubonTable.class,
+        outputFn.apply("audubontable"));
     assertFileExistFalse(outputFn.apply("permittable"));
     assertFileExistFalse(outputFn.apply("loantable"));
   }
@@ -386,7 +388,7 @@ public class OccurrenceToHdfsViewPipelineIT {
                 + "/d596fccb-2319-42eb-b13b-986c932780ad_147-00000-of-00001.avro";
 
     assertFile(
-        OccurrenceHdfsRecord.class, outputFn.apply(recordType.name().toLowerCase()), recordType);
+        OccurrenceHdfsRecord.class, outputFn.apply(recordType.name().toLowerCase()));
     assertFileExistFalse(outputFn.apply("measurementorfacttable"));
     assertFileExistFalse(outputFn.apply("extendedmeasurementorfacttable"));
     assertFileExistFalse(outputFn.apply("germplasmmeasurementtrialtable"));
@@ -400,8 +402,7 @@ public class OccurrenceToHdfsViewPipelineIT {
 
   private <T extends SpecificRecordBase> void assertFile(
       Class<T> clazz,
-      String output,
-      PipelinesVariables.Pipeline.Interpretation.RecordType recordType)
+      String output)
       throws Exception {
     File file = new File(output);
     DatumReader<T> ohrDatumReader = new SpecificDatumReader<>(clazz);

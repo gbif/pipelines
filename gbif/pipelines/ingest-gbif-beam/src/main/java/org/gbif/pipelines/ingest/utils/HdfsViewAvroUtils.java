@@ -92,6 +92,10 @@ public class HdfsViewAvroUtils {
         Extension.CHRONOMETRIC_DATE);
     move(options, interpretationType, RecordType.REFERENCE_TABLE, Extension.REFERENCE);
     move(options, interpretationType, RecordType.IDENTIFIER_TABLE, Extension.IDENTIFIER);
+    move(options, interpretationType, RecordType.AUDUBON_TABLE, Extension.AUDUBON);
+    move(options, interpretationType, RecordType.IMAGE_TABLE, Extension.IMAGE);
+    move(options, interpretationType, RecordType.MULTIMEDIA_TABLE, Extension.MULTIMEDIA);
+    move(options, interpretationType, RecordType.DNA_DERIVED_DATA_TABLE, Extension.DNA_DERIVED_DATA);
   }
 
   private static void moveAll(InterpretationPipelineOptions options) {
@@ -115,7 +119,7 @@ public class HdfsViewAvroUtils {
       RecordType extensionRecordType,
       Extension extension) {
     String from = extensionRecordType.name().toLowerCase();
-    String to = extension.name().toLowerCase().replaceAll("_", "") + "table";
+    String to = extension.name().toLowerCase().replace("_", "") + "table";
     move(options, recordType, from, to);
   }
 
