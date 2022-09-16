@@ -15,7 +15,6 @@ import org.apache.beam.sdk.testing.TestPipeline;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables;
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
@@ -205,22 +204,13 @@ public class OccurrenceToHdfsViewPipelineIT {
                 + s
                 + "/d596fccb-2319-42eb-b13b-986c932780ad_147-00000-of-00001.avro";
 
+    assertFile(OccurrenceHdfsRecord.class, outputFn.apply("occurrence"));
+    assertFile(MeasurementOrFactTable.class, outputFn.apply("measurementorfacttable"));
     assertFile(
-        OccurrenceHdfsRecord.class,
-        outputFn.apply("occurrence")
-        );
+        ExtendedMeasurementOrFactTable.class, outputFn.apply("extendedmeasurementorfacttable"));
     assertFile(
-        MeasurementOrFactTable.class,
-        outputFn.apply("measurementorfacttable"));
-    assertFile(
-        ExtendedMeasurementOrFactTable.class,
-        outputFn.apply("extendedmeasurementorfacttable"));
-    assertFile(
-        GermplasmMeasurementTrialTable.class,
-        outputFn.apply("germplasmmeasurementtrialtable"));
-    assertFile(
-        AudubonTable.class,
-        outputFn.apply("audubontable"));
+        GermplasmMeasurementTrialTable.class, outputFn.apply("germplasmmeasurementtrialtable"));
+    assertFile(AudubonTable.class, outputFn.apply("audubontable"));
     assertFileExistFalse(outputFn.apply("permittable"));
     assertFileExistFalse(outputFn.apply("loantable"));
   }
@@ -387,8 +377,7 @@ public class OccurrenceToHdfsViewPipelineIT {
                 + s
                 + "/d596fccb-2319-42eb-b13b-986c932780ad_147-00000-of-00001.avro";
 
-    assertFile(
-        OccurrenceHdfsRecord.class, outputFn.apply(recordType.name().toLowerCase()));
+    assertFile(OccurrenceHdfsRecord.class, outputFn.apply(recordType.name().toLowerCase()));
     assertFileExistFalse(outputFn.apply("measurementorfacttable"));
     assertFileExistFalse(outputFn.apply("extendedmeasurementorfacttable"));
     assertFileExistFalse(outputFn.apply("germplasmmeasurementtrialtable"));
@@ -400,9 +389,7 @@ public class OccurrenceToHdfsViewPipelineIT {
     Assert.assertFalse(new File(output).exists());
   }
 
-  private <T extends SpecificRecordBase> void assertFile(
-      Class<T> clazz,
-      String output)
+  private <T extends SpecificRecordBase> void assertFile(Class<T> clazz, String output)
       throws Exception {
     File file = new File(output);
     DatumReader<T> ohrDatumReader = new SpecificDatumReader<>(clazz);

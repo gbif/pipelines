@@ -95,7 +95,8 @@ public class HdfsViewAvroUtils {
     move(options, interpretationType, RecordType.AUDUBON_TABLE, Extension.AUDUBON);
     move(options, interpretationType, RecordType.IMAGE_TABLE, Extension.IMAGE);
     move(options, interpretationType, RecordType.MULTIMEDIA_TABLE, Extension.MULTIMEDIA);
-    move(options, interpretationType, RecordType.DNA_DERIVED_DATA_TABLE, Extension.DNA_DERIVED_DATA);
+    move(
+        options, interpretationType, RecordType.DNA_DERIVED_DATA_TABLE, Extension.DNA_DERIVED_DATA);
   }
 
   private static void moveAll(InterpretationPipelineOptions options) {
