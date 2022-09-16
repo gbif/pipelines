@@ -1,19 +1,23 @@
 package org.gbif.pipelines.ingest.java.pipelines;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AMPLIFICATION_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AUDUBON_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.CHRONOMETRIC_AGE_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.CLONING_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.DNA_DERIVED_DATA_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.EXTENDED_MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.GEL_IMAGE_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.GERMPLASM_ACCESSION_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.IDENTIFICATION_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.IDENTIFIER_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.IMAGE_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.LOAN_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MATERIAL_SAMPLE_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMENT_SCORE_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMENT_TRAIT_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMENT_TRIAL_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MULTIMEDIA_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.PERMIT_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.PREPARATION_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.PRESERVATION_TABLE_RECORDS_COUNT;
@@ -47,8 +51,10 @@ import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.converters.AmplificationTableConverter;
+import org.gbif.pipelines.core.converters.AudubonTableConverter;
 import org.gbif.pipelines.core.converters.ChronometricAgeTableConverter;
 import org.gbif.pipelines.core.converters.CloningTableConverter;
+import org.gbif.pipelines.core.converters.DnaDerivedDataTableConverter;
 import org.gbif.pipelines.core.converters.ExtendedMeasurementOrFactTableConverter;
 import org.gbif.pipelines.core.converters.GelImageTableConverter;
 import org.gbif.pipelines.core.converters.GermplasmAccessionTableConverter;
@@ -57,9 +63,11 @@ import org.gbif.pipelines.core.converters.GermplasmMeasurementTraitTableConverte
 import org.gbif.pipelines.core.converters.GermplasmMeasurementTrialTableConverter;
 import org.gbif.pipelines.core.converters.IdentificationTableConverter;
 import org.gbif.pipelines.core.converters.IdentifierTableConverter;
+import org.gbif.pipelines.core.converters.ImageTableConverter;
 import org.gbif.pipelines.core.converters.LoanTableConverter;
 import org.gbif.pipelines.core.converters.MaterialSampleTableConverter;
 import org.gbif.pipelines.core.converters.MeasurementOrFactTableConverter;
+import org.gbif.pipelines.core.converters.MultimediaTableConverter;
 import org.gbif.pipelines.core.converters.PermitTableConverter;
 import org.gbif.pipelines.core.converters.PreparationTableConverter;
 import org.gbif.pipelines.core.converters.PreservationTableConverter;
@@ -88,11 +96,15 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.extension.ac.AudubonTable;
 import org.gbif.pipelines.io.avro.extension.dwc.ChronometricAgeTable;
 import org.gbif.pipelines.io.avro.extension.dwc.IdentificationTable;
 import org.gbif.pipelines.io.avro.extension.dwc.MeasurementOrFactTable;
 import org.gbif.pipelines.io.avro.extension.dwc.ResourceRelationshipTable;
+import org.gbif.pipelines.io.avro.extension.gbif.DnaDerivedDataTable;
 import org.gbif.pipelines.io.avro.extension.gbif.IdentifierTable;
+import org.gbif.pipelines.io.avro.extension.gbif.ImageTable;
+import org.gbif.pipelines.io.avro.extension.gbif.MultimediaTable;
 import org.gbif.pipelines.io.avro.extension.gbif.ReferenceTable;
 import org.gbif.pipelines.io.avro.extension.germplasm.GermplasmAccessionTable;
 import org.gbif.pipelines.io.avro.extension.germplasm.GermplasmMeasurementScoreTable;
@@ -744,6 +756,98 @@ public class HdfsViewPipeline {
         .executor(executor)
         .options(options)
         .recordType(IDENTIFIER_TABLE)
+        .types(types)
+        .build()
+        .write();
+
+    // DnaDerivedDataTable
+    Function<IdentifierRecord, List<DnaDerivedDataTable>> dnaDerivedDataFn =
+        TableConverter.<DnaDerivedDataTable>builder()
+            .metrics(metrics)
+            .converterFn(DnaDerivedDataTableConverter::convert)
+            .metadataRecord(metadataRecord)
+            .counterName(DNA_DERIVED_DATA_TABLE_RECORDS_COUNT)
+            .verbatimMap(verbatimMapFeature.get())
+            .build()
+            .getFn();
+
+    TableRecordWriter.<DnaDerivedDataTable>builder()
+        .recordFunction(dnaDerivedDataFn)
+        .identifierRecords(idRecordMap.values())
+        .targetPathFn(pathFn)
+        .schema(DnaDerivedDataTable.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .recordType(DNA_DERIVED_DATA_TABLE)
+        .types(types)
+        .build()
+        .write();
+
+    // AudubonTable
+    Function<IdentifierRecord, List<AudubonTable>> audubonFn =
+        TableConverter.<AudubonTable>builder()
+            .metrics(metrics)
+            .converterFn(AudubonTableConverter::convert)
+            .metadataRecord(metadataRecord)
+            .counterName(AUDUBON_TABLE_RECORDS_COUNT)
+            .verbatimMap(verbatimMapFeature.get())
+            .build()
+            .getFn();
+
+    TableRecordWriter.<AudubonTable>builder()
+        .recordFunction(audubonFn)
+        .identifierRecords(idRecordMap.values())
+        .targetPathFn(pathFn)
+        .schema(AudubonTable.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .recordType(AUDUBON_TABLE)
+        .types(types)
+        .build()
+        .write();
+
+    // ImageTable
+    Function<IdentifierRecord, List<ImageTable>> imageFn =
+        TableConverter.<ImageTable>builder()
+            .metrics(metrics)
+            .converterFn(ImageTableConverter::convert)
+            .metadataRecord(metadataRecord)
+            .counterName(IMAGE_TABLE_RECORDS_COUNT)
+            .verbatimMap(verbatimMapFeature.get())
+            .build()
+            .getFn();
+
+    TableRecordWriter.<ImageTable>builder()
+        .recordFunction(imageFn)
+        .identifierRecords(idRecordMap.values())
+        .targetPathFn(pathFn)
+        .schema(ImageTable.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .recordType(IMAGE_TABLE)
+        .types(types)
+        .build()
+        .write();
+
+    // MultimediaTable
+    Function<IdentifierRecord, List<MultimediaTable>> multimediaFn =
+        TableConverter.<MultimediaTable>builder()
+            .metrics(metrics)
+            .converterFn(MultimediaTableConverter::convert)
+            .metadataRecord(metadataRecord)
+            .counterName(MULTIMEDIA_TABLE_RECORDS_COUNT)
+            .verbatimMap(verbatimMapFeature.get())
+            .build()
+            .getFn();
+
+    TableRecordWriter.<MultimediaTable>builder()
+        .recordFunction(multimediaFn)
+        .identifierRecords(idRecordMap.values())
+        .targetPathFn(pathFn)
+        .schema(MultimediaTable.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .recordType(MULTIMEDIA_TABLE)
         .types(types)
         .build()
         .write();

@@ -61,6 +61,11 @@ public class DwcaUtils {
         Extension.CHRONOMETRIC_DATE.getRowType(), RecordType.CHRONOMETRIC_DATE_TABLE.name());
     EXTENSION_TYPE_MAP.put(Extension.REFERENCE.getRowType(), RecordType.REFERENCE_TABLE.name());
     EXTENSION_TYPE_MAP.put(Extension.IDENTIFIER.getRowType(), RecordType.IDENTIFIER_TABLE.name());
+    EXTENSION_TYPE_MAP.put(Extension.AUDUBON.getRowType(), RecordType.AUDUBON_TABLE.name());
+    EXTENSION_TYPE_MAP.put(Extension.IMAGE.getRowType(), RecordType.IMAGE_TABLE.name());
+    EXTENSION_TYPE_MAP.put(Extension.MULTIMEDIA.getRowType(), RecordType.MULTIMEDIA_TABLE.name());
+    EXTENSION_TYPE_MAP.put(
+        Extension.DNA_DERIVED_DATA.getRowType(), RecordType.DNA_DERIVED_DATA_TABLE.name());
   }
 
   @SneakyThrows

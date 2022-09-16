@@ -2,8 +2,10 @@ package org.gbif.pipelines.ingest.pipelines;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.ALL_AVRO;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.AMPLIFICATION_TABLE;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.AUDUBON_TABLE;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.CHRONOMETRIC_AGE_TABLE;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.CLONING_TABLE;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.DNA_DERIVED_DATA_TABLE;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.EXTENDED_MEASUREMENT_OR_FACT_TABLE;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.GEL_IMAGE_TABLE;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.GERMPLASM_ACCESSION_TABLE;
@@ -12,9 +14,11 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.GERMPLASM_MEASUREMENT_TRIAL_TABLE;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.IDENTIFICATION_TABLE;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.IDENTIFIER_TABLE;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.IMAGE_TABLE;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.LOAN_TABLE;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.MATERIAL_SAMPLE_TABLE;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.MEASUREMENT_OR_FACT_TABLE;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.MULTIMEDIA_TABLE;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.PERMIT_TABLE;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.PREPARATION_TABLE;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.PRESERVATION_TABLE;
@@ -79,8 +83,10 @@ import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.gbif.pipelines.transforms.specific.ClusteringTransform;
 import org.gbif.pipelines.transforms.specific.GbifIdTransform;
 import org.gbif.pipelines.transforms.table.AmplificationTableTransform;
+import org.gbif.pipelines.transforms.table.AudubonTableTransform;
 import org.gbif.pipelines.transforms.table.ChronometricAgeTableTransform;
 import org.gbif.pipelines.transforms.table.CloningTableTransform;
+import org.gbif.pipelines.transforms.table.DnaDerivedDataTableTransform;
 import org.gbif.pipelines.transforms.table.ExtendedMeasurementOrFactTableTransform;
 import org.gbif.pipelines.transforms.table.GelImageTableTransform;
 import org.gbif.pipelines.transforms.table.GermplasmAccessionTableTransform;
@@ -89,9 +95,11 @@ import org.gbif.pipelines.transforms.table.GermplasmMeasurementTraitTableTransfo
 import org.gbif.pipelines.transforms.table.GermplasmMeasurementTrialTableTransform;
 import org.gbif.pipelines.transforms.table.IdentificationTableTransform;
 import org.gbif.pipelines.transforms.table.IdentifierTableTransform;
+import org.gbif.pipelines.transforms.table.ImageTableTransform;
 import org.gbif.pipelines.transforms.table.LoanTableTransform;
 import org.gbif.pipelines.transforms.table.MaterialSampleTableTransform;
 import org.gbif.pipelines.transforms.table.MeasurementOrFactTableTransform;
+import org.gbif.pipelines.transforms.table.MultimediaTableTransform;
 import org.gbif.pipelines.transforms.table.OccurrenceHdfsRecordTransform;
 import org.gbif.pipelines.transforms.table.PermitTableTransform;
 import org.gbif.pipelines.transforms.table.PreparationTableTransform;
@@ -510,6 +518,46 @@ public class HdfsViewPipeline {
         .metadataView(metadataView)
         .numShards(numberOfShards)
         .path(pathFn.apply(IDENTIFIER_TABLE))
+        .types(types)
+        .build()
+        .write(tableCollection);
+
+    DnaDerivedDataTableTransform.builder()
+        .extendedRecordTag(verbatimTransform.getTag())
+        .identifierRecordTag(idTransform.getTag())
+        .metadataView(metadataView)
+        .numShards(numberOfShards)
+        .path(pathFn.apply(DNA_DERIVED_DATA_TABLE))
+        .types(types)
+        .build()
+        .write(tableCollection);
+
+    AudubonTableTransform.builder()
+        .extendedRecordTag(verbatimTransform.getTag())
+        .identifierRecordTag(idTransform.getTag())
+        .metadataView(metadataView)
+        .numShards(numberOfShards)
+        .path(pathFn.apply(AUDUBON_TABLE))
+        .types(types)
+        .build()
+        .write(tableCollection);
+
+    MultimediaTableTransform.builder()
+        .extendedRecordTag(verbatimTransform.getTag())
+        .identifierRecordTag(idTransform.getTag())
+        .metadataView(metadataView)
+        .numShards(numberOfShards)
+        .path(pathFn.apply(MULTIMEDIA_TABLE))
+        .types(types)
+        .build()
+        .write(tableCollection);
+
+    ImageTableTransform.builder()
+        .extendedRecordTag(verbatimTransform.getTag())
+        .identifierRecordTag(idTransform.getTag())
+        .metadataView(metadataView)
+        .numShards(numberOfShards)
+        .path(pathFn.apply(IMAGE_TABLE))
         .types(types)
         .build()
         .write(tableCollection);
