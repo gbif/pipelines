@@ -96,7 +96,11 @@ public class PipelinesVariables {
         CHRONOMETRIC_AGE_TABLE,
         CHRONOMETRIC_DATE_TABLE,
         REFERENCE_TABLE,
-        IDENTIFIER_TABLE;
+        IDENTIFIER_TABLE,
+        AUDUBON_TABLE,
+        IMAGE_TABLE,
+        MULTIMEDIA_TABLE,
+        DNA_DERIVED_DATA_TABLE;
 
         @Override
         public String all() {
@@ -161,7 +165,11 @@ public class PipelinesVariables {
                   CHRONOMETRIC_AGE_TABLE,
                   CHRONOMETRIC_DATE_TABLE,
                   REFERENCE_TABLE,
-                  IDENTIFIER_TABLE));
+                  IDENTIFIER_TABLE,
+                  AUDUBON_TABLE,
+                  IMAGE_TABLE,
+                  MULTIMEDIA_TABLE,
+                  DNA_DERIVED_DATA_TABLE));
         }
       }
     }
@@ -300,6 +308,11 @@ public class PipelinesVariables {
         "chronometricAgeTableRecordsCount";
     public static final String REFERENCE_TABLE_RECORDS_COUNT = "referencesTableRecordsCount";
     public static final String IDENTIFIER_TABLE_RECORDS_COUNT = "identifierTableRecordsCount";
+    public static final String AUDUBON_TABLE_RECORDS_COUNT = "audubonTableRecordsCount";
+    public static final String IMAGE_TABLE_RECORDS_COUNT = "imageTableRecordsCount";
+    public static final String MULTIMEDIA_TABLE_RECORDS_COUNT = "multimediaTableRecordsCount";
+    public static final String DNA_DERIVED_DATA_TABLE_RECORDS_COUNT =
+        "dnaDerivedDataTableRecordsCount";
 
     // Fragmenter
     public static final String FRAGMENTER_COUNT = "fragmenterRecordsCount";

@@ -1,9 +1,9 @@
 package org.gbif.pipelines.factory;
 
 import java.awt.image.BufferedImage;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import javax.imageio.ImageIO;
@@ -52,7 +52,7 @@ public class BufferedImageFactory {
         return ImageIO.read(is);
       }
     } else {
-      try (InputStream is = new FileInputStream(filePath)) {
+      try (InputStream is = Files.newInputStream(path)) {
         return ImageIO.read(is);
       } catch (Exception e) {
         log.error(e.getMessage(), e);
