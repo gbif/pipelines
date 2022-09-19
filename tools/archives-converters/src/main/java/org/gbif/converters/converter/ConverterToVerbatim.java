@@ -21,7 +21,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 @Slf4j
 public abstract class ConverterToVerbatim {
 
-  private HdfsConfigs hdfsConfigs = HdfsConfigs.create(null, null);
+  private HdfsConfigs hdfsConfigs = HdfsConfigs.nullConfig();
   private int syncInterval = 2 * 1024 * 1024;
   private CodecFactory codecFactory = CodecFactory.snappyCodec();
 

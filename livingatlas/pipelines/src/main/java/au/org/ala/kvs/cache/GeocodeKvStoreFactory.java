@@ -9,6 +9,7 @@ import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.core.parsers.location.GeocodeKvStore;
 import org.gbif.pipelines.core.parsers.location.cache.BinaryBitmapLookup;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.factory.BufferedImageFactory;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.gbif.rest.client.geocode.Location;
@@ -37,8 +38,11 @@ public class GeocodeKvStoreFactory {
 
   @SneakyThrows
   private GeocodeKvStoreFactory(ALAPipelinesConfig config) {
+
+    HdfsConfigs hdfsConfigs = HdfsConfigs.nullConfig();
+
     BufferedImage image =
-        BufferedImageFactory.getInstance(config.getGbifConfig().getImageCachePath());
+        BufferedImageFactory.getInstance(hdfsConfigs, config.getGbifConfig().getImageCachePath());
     KeyValueStore<LatLng, GeocodeResponse> countryStore =
         CountryKeyValueStore.create(config.getGeocodeConfig());
 
@@ -51,7 +55,7 @@ public class GeocodeKvStoreFactory {
     // Try to load from image file which has the same name of the SHP file
     BufferedImage stateCacheImage =
         BufferedImageFactory.loadImageFile(
-            config.getGeocodeConfig().getStateProvince().getPath() + BITMAP_EXT);
+            hdfsConfigs, config.getGeocodeConfig().getStateProvince().getPath() + BITMAP_EXT);
 
     // missEqualsFail=false because not every point will be in a stateProvince
     this.stateProvinceKvStore =
@@ -60,7 +64,7 @@ public class GeocodeKvStoreFactory {
     // Try to load from image file which has the same name of the SHP file
     BufferedImage biomeCacheImage =
         BufferedImageFactory.loadImageFile(
-            config.getGeocodeConfig().getBiome().getPath() + BITMAP_EXT);
+            hdfsConfigs, config.getGeocodeConfig().getBiome().getPath() + BITMAP_EXT);
 
     this.biomeKvStore =
         new KeyValueStore<LatLng, GeocodeResponse>() {

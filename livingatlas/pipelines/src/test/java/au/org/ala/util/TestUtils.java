@@ -24,8 +24,7 @@ public class TestUtils {
 
   public static ALAPipelinesConfig getConfig() {
     String absolutePath = new File(getPipelinesConfigFile()).getAbsolutePath();
-    return ALAPipelinesConfigFactory.getInstance(HdfsConfigs.create(null, null), absolutePath)
-        .get();
+    return ALAPipelinesConfigFactory.getInstance(HdfsConfigs.nullConfig(), absolutePath).get();
   }
 
   public static String getPipelinesConfigFile() {

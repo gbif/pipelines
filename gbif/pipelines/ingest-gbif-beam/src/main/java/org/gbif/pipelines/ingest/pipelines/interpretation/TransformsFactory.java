@@ -183,7 +183,7 @@ public class TransformsFactory {
   public LocationTransform createLocationTransform() {
     SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> geocodeServiceSupplier = null;
     if (!options.getTestMode()) {
-      geocodeServiceSupplier = GeocodeKvStoreFactory.createSupplier(config);
+      geocodeServiceSupplier = GeocodeKvStoreFactory.createSupplier(hdfsConfigs, config);
     }
     return LocationTransform.builder().geocodeKvStoreSupplier(geocodeServiceSupplier).create();
   }

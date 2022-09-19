@@ -42,7 +42,7 @@ public class SpeciesListPipelineIT {
 
     Map<String, TaxonProfile> tps =
         AvroReader.readRecords(
-            HdfsConfigs.create(null, null),
+            HdfsConfigs.nullConfig(),
             TaxonProfile.class,
             "/tmp/la-pipelines-test/species-lists/dr893/1/taxon_profiles/*.avro");
 

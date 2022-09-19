@@ -120,7 +120,7 @@ public class XmlToAvroCallbackIT {
     assertEquals(1, publisher.getMessages().size());
 
     // Clean
-    HdfsUtils.deleteDirectory(HdfsConfigs.create(null, null), path.toString());
+    HdfsUtils.deleteDirectory(HdfsConfigs.nullConfig(), path.toString());
     curator.delete().deletingChildrenIfNeeded().forPath(getPipelinesInfoPath(crawlId, XML_LABEL));
   }
 
@@ -161,7 +161,7 @@ public class XmlToAvroCallbackIT {
     assertTrue(publisher.getMessages().isEmpty());
 
     // Clean
-    HdfsUtils.deleteDirectory(HdfsConfigs.create(null, null), path.toString());
+    HdfsUtils.deleteDirectory(HdfsConfigs.nullConfig(), path.toString());
     curator.delete().deletingChildrenIfNeeded().forPath(getPipelinesInfoPath(crawlId, XML_LABEL));
   }
 
@@ -201,7 +201,7 @@ public class XmlToAvroCallbackIT {
     assertTrue(publisher.getMessages().isEmpty());
 
     // Clean
-    HdfsUtils.deleteDirectory(HdfsConfigs.create(null, null), path.toString());
+    HdfsUtils.deleteDirectory(HdfsConfigs.nullConfig(), path.toString());
   }
 
   private boolean checkExists(CuratorFramework curator, String id, String path) {

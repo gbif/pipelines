@@ -17,7 +17,7 @@ import org.junit.Test;
 
 public class AvroReaderTest {
 
-  private final HdfsConfigs hdfsConfigs = HdfsConfigs.create(null, null);
+  private final HdfsConfigs hdfsConfigs = HdfsConfigs.nullConfig();
 
   private final Path verbatimPath1 = new Path("target/verbatim1.avro");
   private final Path verbatimPath2 = new Path("target/verbatim2.avro");

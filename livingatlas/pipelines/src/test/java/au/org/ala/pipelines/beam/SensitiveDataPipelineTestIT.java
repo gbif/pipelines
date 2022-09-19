@@ -65,7 +65,7 @@ public class SensitiveDataPipelineTestIT {
     // Check correctly stated sensitivity
     Map<String, ALASensitivityRecord> sds =
         AvroReader.readRecords(
-            HdfsConfigs.create(null, null),
+            HdfsConfigs.nullConfig(),
             ALASensitivityRecord.class,
             ala_sensitive_data.getPath() + "/*.avro");
     ALASensitivityRecord sds1 = sds.get("not-an-uuid-1");

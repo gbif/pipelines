@@ -56,7 +56,7 @@ public class ClusteringPipelineIT {
     // read relationships
     Map<String, Relationships> records =
         AvroReader.readRecords(
-            HdfsConfigs.create(null, null),
+            HdfsConfigs.nullConfig(),
             Relationships.class,
             "/tmp/la-pipelines-test/clustering/clustering-output/relationships/*.avro");
 
