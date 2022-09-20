@@ -124,7 +124,7 @@ public class DwcaToAvroCallbackIT {
     assertEquals(1, publisher.getMessages().size());
 
     // Clean
-    HdfsUtils.deleteDirectory(HdfsConfigs.create(null, null), path.toString());
+    HdfsUtils.deleteDirectory(HdfsConfigs.nullConfig(), path.toString());
     if (checkExists(curator, crawlId, null)) {
       curator.delete().deletingChildrenIfNeeded().forPath(getPipelinesInfoPath(crawlId, null));
     }
@@ -172,7 +172,7 @@ public class DwcaToAvroCallbackIT {
     assertEquals(1, publisher.getMessages().size());
 
     // Clean
-    HdfsUtils.deleteDirectory(HdfsConfigs.create(null, null), path.toString());
+    HdfsUtils.deleteDirectory(HdfsConfigs.nullConfig(), path.toString());
     if (checkExists(curator, crawlId, null)) {
       curator.delete().deletingChildrenIfNeeded().forPath(getPipelinesInfoPath(crawlId, null));
     }
@@ -220,7 +220,7 @@ public class DwcaToAvroCallbackIT {
     assertEquals(1, publisher.getMessages().size());
 
     // Clean
-    HdfsUtils.deleteDirectory(HdfsConfigs.create(null, null), path.toString());
+    HdfsUtils.deleteDirectory(HdfsConfigs.nullConfig(), path.toString());
     if (checkExists(curator, crawlId, null)) {
       curator.delete().deletingChildrenIfNeeded().forPath(getPipelinesInfoPath(crawlId, null));
     }
@@ -269,7 +269,7 @@ public class DwcaToAvroCallbackIT {
     assertEquals(1, publisher.getMessages().size());
 
     // Clean
-    HdfsUtils.deleteDirectory(HdfsConfigs.create(null, null), path.toString());
+    HdfsUtils.deleteDirectory(HdfsConfigs.nullConfig(), path.toString());
     if (checkExists(curator, crawlId, null)) {
       curator.delete().deletingChildrenIfNeeded().forPath(getPipelinesInfoPath(crawlId, null));
     }
@@ -317,7 +317,7 @@ public class DwcaToAvroCallbackIT {
     assertEquals(1, publisher.getMessages().size());
 
     // Clean
-    HdfsUtils.deleteDirectory(HdfsConfigs.create(null, null), path.toString());
+    HdfsUtils.deleteDirectory(HdfsConfigs.nullConfig(), path.toString());
     if (checkExists(curator, crawlId, null)) {
       curator.delete().deletingChildrenIfNeeded().forPath(getPipelinesInfoPath(crawlId, null));
     }

@@ -12,4 +12,8 @@ public class HdfsConfigs implements Serializable {
 
   private final String hdfsSiteConfig;
   private final String coreSiteConfig;
+
+  public static HdfsConfigs nullConfig() {
+    return HdfsConfigs.create(null, null);
+  }
 }
