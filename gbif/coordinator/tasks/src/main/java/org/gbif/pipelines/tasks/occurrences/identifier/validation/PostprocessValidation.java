@@ -3,7 +3,7 @@ package org.gbif.pipelines.tasks.occurrences.identifier.validation;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.Optional;
-import java.util.function.ToDoubleFunction;
+import java.util.function.ToLongFunction;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -49,42 +49,43 @@ public class PostprocessValidation {
 
     Double threshold = getThresholdTagValue().orElse(config.idThresholdPercent);
 
-    ToDoubleFunction<String> getMetricFn =
+    ToLongFunction<String> getMetricFn =
         m -> {
           try {
             HdfsConfigs hdfsConfigs =
                 HdfsConfigs.create(
                     config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);
-            return HdfsUtils.getDoubleByKey(hdfsConfigs, metaPath, m + Metrics.ATTEMPTED)
-                .orElse(0d);
+            return HdfsUtils.getLongByKey(hdfsConfigs, metaPath, m + Metrics.ATTEMPTED).orElse(0L);
           } catch (IOException ex) {
             throw new PipelinesException(ex);
           }
         };
 
-    double totalCount = getMetricFn.applyAsDouble(Metrics.GBIF_ID_RECORDS_COUNT);
-    double absentIdCount = getMetricFn.applyAsDouble(Metrics.ABSENT_GBIF_ID_COUNT);
+    long totalCount = getMetricFn.applyAsLong(Metrics.GBIF_ID_RECORDS_COUNT);
+    long absentIdCount = getMetricFn.applyAsLong(Metrics.ABSENT_GBIF_ID_COUNT);
+    long existingCount = getMetricFn.applyAsLong(Metrics.UNIQUE_GBIF_IDS_COUNT);
 
     if (totalCount == 0d) {
       log.error("Interpreted totalCount {}, invalid absentIdCount {}", totalCount, absentIdCount);
       throw new IllegalArgumentIOException("No records with valid GBIF ID!");
     }
 
-    double absentPercent = absentIdCount * 100 / totalCount;
-    boolean hasApiRecords = hasApiRecords();
+    double absentPercent = (double) absentIdCount * 100 / totalCount;
+    long apiRecords = getApiRecords();
+
     boolean isValid = true;
     String validationMessage = "No identifiers issues";
-    if (absentPercent > 0d && hasApiRecords) {
-      if (absentPercent > threshold) {
+    if (absentPercent > 0d && apiRecords > 0) {
+      if (absentPercent > threshold && existingCount != apiRecords) {
         validationMessage =
             String.format(
-                "GBIF IDs hit maximum allowed - %.0f%%, duplicates - %.0f%%, total records count %.0f, absent records count %.0f",
+                "GBIF IDs hit maximum allowed - %.0f%%, duplicates - %.0f%%, total records count %d, absent records count %d",
                 threshold, absentPercent, totalCount, absentIdCount);
         isValid = false;
       } else {
         validationMessage =
             String.format(
-                "GBIF IDs current rate: allowed - %.0f%%, duplicates - %.0f%%, total records count %.0f, absent records count %.0f",
+                "GBIF IDs current rate: allowed - %.0f%%, duplicates - %.0f%%, total records count %d, absent records count %d",
                 threshold, absentPercent, totalCount, absentIdCount);
       }
     } else if (absentPercent == 100d) {
@@ -122,9 +123,9 @@ public class PostprocessValidation {
   }
 
   @SneakyThrows
-  private boolean hasApiRecords() {
+  private long getApiRecords() {
     RegistryConfiguration registryConfiguration = config.stepConfig.registry;
     String datasetKey = message.getDatasetUuid().toString();
-    return GbifApi.getIndexSize(httpClient, registryConfiguration, datasetKey) > 0;
+    return GbifApi.getIndexSize(httpClient, registryConfiguration, datasetKey);
   }
 }

@@ -21,12 +21,12 @@ public class GbifApi {
 
   /** Get number of record using Occurrence API */
   @SneakyThrows
-  public static int getIndexSize(
+  public static long getIndexSize(
       HttpClient httpClient, RegistryConfiguration config, String datasetId) {
     int nano = LocalDateTime.now().getNano();
     String url = config.wsUrl + "/occurrence/search?limit=0&datasetKey=" + datasetId + "&_" + nano;
     HttpResponse response = executeGet(httpClient, url);
-    return MAPPER.readTree(response.getEntity().getContent()).findValue("count").asInt();
+    return MAPPER.readTree(response.getEntity().getContent()).findValue("count").asLong();
   }
 
   @SneakyThrows

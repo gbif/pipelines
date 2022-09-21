@@ -202,7 +202,7 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
     if (expectedRecords == SKIP_RECORDS_CHECK || httpClient == null) {
       return;
     }
-    int currentSize = GbifApi.getIndexSize(httpClient, config.stepConfig.registry, datasetId);
+    long currentSize = GbifApi.getIndexSize(httpClient, config.stepConfig.registry, datasetId);
     String metaFileName = new DwcaToAvroConfiguration().metaFileName;
     String metaPath =
         String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, metaFileName);
