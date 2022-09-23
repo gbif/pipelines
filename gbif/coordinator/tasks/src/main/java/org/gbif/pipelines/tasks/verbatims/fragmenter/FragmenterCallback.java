@@ -92,6 +92,8 @@ public class FragmenterCallback extends AbstractMessageCallback<PipelinesInterpr
 
       boolean useSync = message.getNumberOfRecords() < config.asyncThreshold;
 
+      log.info("Running fragmenter in asych mode: {} ...", useSync);
+
       long result =
           FragmentPersister.builder()
               .strategy(strategy)

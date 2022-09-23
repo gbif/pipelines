@@ -1,5 +1,7 @@
 package org.gbif.pipelines.fragmenter.common;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.io.IOException;
 import java.time.Instant;
 import java.util.HashMap;
@@ -18,8 +20,6 @@ import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.pipelines.common.PipelinesException;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
