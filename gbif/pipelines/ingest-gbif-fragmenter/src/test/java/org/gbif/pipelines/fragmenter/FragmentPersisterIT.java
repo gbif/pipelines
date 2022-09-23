@@ -21,6 +21,8 @@ public class FragmentPersisterIT {
   @ClassRule public static final HbaseServer HBASE_SERVER = new HbaseServer();
 
   private final Path regularDwca = Paths.get(getClass().getResource("/dwca/regular").getFile());
+  private final Path regularUpdatedDwca =
+      Paths.get(getClass().getResource("/dwca/regular-updated").getFile());
   private final Path regularZipDwca =
       Paths.get(getClass().getResource("/dwca/dwca.dwca").getFile());
   private final Path occurrenceAsExtensionDwca =
@@ -146,7 +148,7 @@ public class FragmentPersisterIT {
             .useOccurrenceId(true)
             .datasetKey(datasetKey)
             .attempt(attemptFirst)
-            .endpointType(EndpointType.BIOCASE_XML_ARCHIVE)
+            .endpointType(endpointType)
             .hbaseConnection(HBASE_SERVER.getConnection())
             .executor(Executors.newSingleThreadExecutor())
             .generateIdIfAbsent(true)
@@ -157,7 +159,7 @@ public class FragmentPersisterIT {
         FragmentPersister.dwcaBuilder()
             .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
             .keygenConfig(HbaseServer.CFG)
-            .pathToArchive(regularDwca)
+            .pathToArchive(regularUpdatedDwca)
             .useTriplet(false)
             .useOccurrenceId(true)
             .datasetKey(datasetKey)
@@ -170,9 +172,14 @@ public class FragmentPersisterIT {
 
     // Should
     Assert.assertEquals(expSize, resultFirst);
-    Assert.assertEquals(expSize, resultSecond);
-    TableAssert.assertTableDateUpdated(
-        HBASE_SERVER.getConnection(), expSize, datasetKey, attemptSecond, endpointType);
+    Assert.assertEquals(3, resultSecond); // Only 3 records are new
+    TableAssert.assertTable(
+        HBASE_SERVER.getConnection(),
+        expSize,
+        datasetKey,
+        attemptFirst,
+        attemptSecond,
+        endpointType);
   }
 
   @Test
@@ -194,7 +201,7 @@ public class FragmentPersisterIT {
             .useOccurrenceId(true)
             .datasetKey(datasetKey)
             .attempt(attemptFirst)
-            .endpointType(EndpointType.BIOCASE_XML_ARCHIVE)
+            .endpointType(endpointType)
             .hbaseConnection(HBASE_SERVER.getConnection())
             .executor(Executors.newSingleThreadExecutor())
             .useSyncMode(false)
@@ -206,7 +213,7 @@ public class FragmentPersisterIT {
         FragmentPersister.dwcaBuilder()
             .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
             .keygenConfig(HbaseServer.CFG)
-            .pathToArchive(regularDwca)
+            .pathToArchive(regularUpdatedDwca)
             .useTriplet(false)
             .useOccurrenceId(true)
             .datasetKey(datasetKey)
@@ -221,9 +228,14 @@ public class FragmentPersisterIT {
 
     // Should
     Assert.assertEquals(expSize, resultFirst);
-    Assert.assertEquals(expSize, resultSecond);
-    TableAssert.assertTableDateUpdated(
-        HBASE_SERVER.getConnection(), expSize, datasetKey, attemptSecond, endpointType);
+    Assert.assertEquals(3, resultSecond); // Only 3 records are new
+    TableAssert.assertTable(
+        HBASE_SERVER.getConnection(),
+        expSize,
+        datasetKey,
+        attemptFirst,
+        attemptSecond,
+        endpointType);
   }
 
   @Test
@@ -431,7 +443,7 @@ public class FragmentPersisterIT {
             .useOccurrenceId(true)
             .datasetKey(datasetKey)
             .attempt(attemptFirst)
-            .endpointType(EndpointType.DWC_ARCHIVE)
+            .endpointType(endpointType)
             .backPressure(5)
             .hbaseConnection(HBASE_SERVER.getConnection())
             .generateIdIfAbsent(true)
@@ -456,9 +468,13 @@ public class FragmentPersisterIT {
 
     // Should
     Assert.assertEquals(expSize, resultFirst);
-    Assert.assertEquals(expSize, resultSecond);
-    TableAssert.assertTableDateUpdated(
-        HBASE_SERVER.getConnection(), expSize, datasetKey, attemptSecond, endpointType);
+    Assert.assertEquals(0, resultSecond); // Data mustn't be updated
+    TableAssert.assertTable(
+        HBASE_SERVER.getConnection(),
+        expSize,
+        datasetKey,
+        attemptFirst,
+        EndpointType.BIOCASE_XML_ARCHIVE);
   }
 
   @Test
@@ -480,7 +496,7 @@ public class FragmentPersisterIT {
             .useOccurrenceId(true)
             .datasetKey(datasetKey)
             .attempt(attemptFirst)
-            .endpointType(EndpointType.DWC_ARCHIVE)
+            .endpointType(endpointType)
             .hbaseConnection(HBASE_SERVER.getConnection())
             .executor(Executors.newSingleThreadExecutor())
             .useSyncMode(false)
@@ -508,8 +524,12 @@ public class FragmentPersisterIT {
 
     // Should
     Assert.assertEquals(expSize, resultFirst);
-    Assert.assertEquals(expSize, resultSecond);
-    TableAssert.assertTableDateUpdated(
-        HBASE_SERVER.getConnection(), expSize, datasetKey, attemptSecond, endpointType);
+    Assert.assertEquals(0, resultSecond); // Data mustn't be updated
+    TableAssert.assertTable(
+        HBASE_SERVER.getConnection(),
+        expSize,
+        datasetKey,
+        attemptFirst,
+        EndpointType.BIOCASE_XML_ARCHIVE);
   }
 }

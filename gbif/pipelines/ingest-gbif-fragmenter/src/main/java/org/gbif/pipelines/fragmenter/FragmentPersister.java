@@ -25,6 +25,7 @@ import org.apache.hadoop.hbase.client.Table;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.converters.parser.xml.parsing.validators.UniquenessValidator;
 import org.gbif.pipelines.fragmenter.common.HbaseStore;
+import org.gbif.pipelines.fragmenter.common.RawRecord;
 import org.gbif.pipelines.fragmenter.record.OccurrenceRecordConverter;
 import org.gbif.pipelines.fragmenter.strategy.DwcaStrategy;
 import org.gbif.pipelines.fragmenter.strategy.Strategy;
@@ -126,15 +127,21 @@ public class FragmentPersister {
       // Main function receives batch and puts it into HBase table
       Consumer<List<OccurrenceRecord>> hbaseBulkFn =
           l -> {
-            Map<String, String> map =
+            Map<String, RawRecord> map =
                 OccurrenceRecordConverter.convert(
                     keygenService, validator, useTriplet, useOccurrenceId, generateIdIfAbsent, l);
-            HbaseStore.putRecords(table, datasetKey, attempt, endpointType, map);
 
-            int recordsReturned = occurrenceCounter.addAndGet(map.size());
-            if (recordsReturned % 10_000 == 0) {
-              log.info("{}_{}: Pushed [{}] records", datasetKey, attempt, recordsReturned);
+            map = HbaseStore.filterRecordsByHash(table, map);
+
+            if (!map.isEmpty()) {
+              HbaseStore.putRecords(table, datasetKey, attempt, endpointType, map);
+
+              int recordsReturned = occurrenceCounter.addAndGet(map.size());
+              if (recordsReturned % 10_000 == 0) {
+                log.info("{}_{}: Pushed [{}] records", datasetKey, attempt, recordsReturned);
+              }
             }
+
             phaser.arriveAndDeregister();
           };
 

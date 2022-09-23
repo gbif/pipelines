@@ -9,6 +9,7 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.converters.parser.xml.parsing.validators.UniquenessValidator;
+import org.gbif.pipelines.fragmenter.common.RawRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.keygen.Keygen;
 import org.gbif.pipelines.keygen.OccurrenceRecord;
@@ -17,7 +18,7 @@ import org.gbif.pipelines.keygen.OccurrenceRecord;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class OccurrenceRecordConverter {
 
-  public static Map<String, String> convert(
+  public static Map<String, RawRecord> convert(
       HBaseLockingKeyService keygenService,
       UniquenessValidator validator,
       boolean useTriplet,
@@ -41,9 +42,9 @@ public class OccurrenceRecordConverter {
           return Keygen.getSaltedKey(key.get());
         };
 
-    Function<OccurrenceRecord, String> valueFn = OccurrenceRecord::toStringRecord;
+    Function<OccurrenceRecord, RawRecord> valueFn = occ -> RawRecord.create(occ.toStringRecord());
 
-    Map<String, String> result =
+    Map<String, RawRecord> result =
         recordUnitList.stream().collect(Collectors.toMap(keyFn, valueFn, (s, s2) -> s));
 
     result.remove(Keygen.getErrorKey().toString());
