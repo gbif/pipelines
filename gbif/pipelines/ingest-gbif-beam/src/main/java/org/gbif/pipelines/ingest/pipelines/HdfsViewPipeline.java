@@ -49,6 +49,7 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
+import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
@@ -151,14 +152,18 @@ import org.slf4j.MDC;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class HdfsViewPipeline {
 
-  public static void run(InterpretationPipelineOptions options, RecordType recordType) {
-    run(options, Pipeline::create, recordType);
+  public static void main(String[] args) {
+    InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
+    HdfsViewPipeline.run(options);
+  }
+
+  public static void run(InterpretationPipelineOptions options) {
+    run(options, Pipeline::create);
   }
 
   public static void run(
       InterpretationPipelineOptions options,
-      Function<InterpretationPipelineOptions, Pipeline> pipelinesFn,
-      RecordType recordType) {
+      Function<InterpretationPipelineOptions, Pipeline> pipelinesFn) {
 
     HdfsConfigs hdfsConfigs =
         HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig());
@@ -166,6 +171,7 @@ public class HdfsViewPipeline {
     Integer attempt = options.getAttempt();
     Integer numberOfShards = options.getNumberOfShards();
     Set<String> types = options.getInterpretationTypes();
+    RecordType recordType = options.getCoreRecordType();
     DwcTerm coreTerm = HdfsViewUtils.getCoreTerm(recordType);
 
     SerializableFunction<RecordType, String> pathFn =
