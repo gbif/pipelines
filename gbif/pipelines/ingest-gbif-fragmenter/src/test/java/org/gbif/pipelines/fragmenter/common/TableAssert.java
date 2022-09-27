@@ -25,17 +25,6 @@ import org.junit.Assert;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class TableAssert {
 
-  public static void assertTableDateUpdated(
-      Connection connection,
-      int expectedSize,
-      String expectedDatasetKey,
-      Integer expectedAttempt,
-      EndpointType expectedEndpointType)
-      throws IOException {
-    assertTable(
-        connection, expectedSize, expectedDatasetKey, expectedAttempt, expectedEndpointType, true);
-  }
-
   public static void assertTable(
       Connection connection,
       int expectedSize,
@@ -44,16 +33,21 @@ public class TableAssert {
       EndpointType expectedEndpointType)
       throws IOException {
     assertTable(
-        connection, expectedSize, expectedDatasetKey, expectedAttempt, expectedEndpointType, false);
+        connection,
+        expectedSize,
+        expectedDatasetKey,
+        expectedAttempt,
+        expectedAttempt,
+        expectedEndpointType);
   }
 
-  private static void assertTable(
+  public static void assertTable(
       Connection connection,
       int expectedSize,
       String expectedDatasetKey,
       Integer expectedAttempt,
-      EndpointType expectedEndpointType,
-      boolean useDateUpdated)
+      Integer expectedUpdatedAttempt,
+      EndpointType expectedEndpointType)
       throws IOException {
     TableName tableName = TableName.valueOf(HbaseServer.FRAGMENT_TABLE_NAME);
     try (Table table = connection.getTable(tableName);
@@ -81,16 +75,17 @@ public class TableAssert {
         long updatedLong = updatedValue.getLong();
 
         Assert.assertEquals(expectedDatasetKey, datasetString);
-        Assert.assertEquals(expectedAttempt, attemptInt);
+        if (expectedAttempt.equals(attemptInt)) {
+          Assert.assertEquals(expectedAttempt, attemptInt);
+          Assert.assertEquals(updatedLong, createdLong);
+        } else {
+          Assert.assertEquals(expectedUpdatedAttempt, attemptInt);
+          Assert.assertNotEquals(updatedLong, createdLong);
+        }
+
         Assert.assertEquals(expectedEndpointType.name(), protocolString);
         Assert.assertNotNull(recordString);
         Assert.assertTrue(recordString.length() > 0);
-
-        if (useDateUpdated) {
-          Assert.assertNotEquals(updatedLong, createdLong);
-        } else {
-          Assert.assertEquals(updatedLong, createdLong);
-        }
 
         counter++;
       }

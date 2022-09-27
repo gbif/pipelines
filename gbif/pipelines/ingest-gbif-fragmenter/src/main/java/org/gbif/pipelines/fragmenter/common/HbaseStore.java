@@ -1,11 +1,14 @@
 package org.gbif.pipelines.fragmenter.common;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.io.IOException;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -16,6 +19,7 @@ import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.gbif.api.vocabulary.EndpointType;
+import org.gbif.pipelines.common.PipelinesException;
 
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -30,6 +34,7 @@ public class HbaseStore {
   private static final byte[] RQ_BYTES = Bytes.toBytes("record");
   private static final byte[] DCQ_BYTES = Bytes.toBytes("dateCreated");
   private static final byte[] DUQ_BYTES = Bytes.toBytes("dateUpdated");
+  private static final byte[] HVQ_BYTES = Bytes.toBytes("hashValue");
 
   @SneakyThrows
   public static void putRecords(
@@ -37,7 +42,7 @@ public class HbaseStore {
       String datasetKey,
       Integer attempt,
       EndpointType endpointType,
-      Map<String, String> fragmentsMap) {
+      Map<String, RawRecord> fragmentsMap) {
 
     Map<String, Long> dateMap = getCreatedDateMap(table, fragmentsMap);
 
@@ -57,8 +62,33 @@ public class HbaseStore {
     table.put(putList);
   }
 
-  private static Map<String, Long> getCreatedDateMap(Table table, Map<String, String> fragmentsMap)
-      throws IOException {
+  @SneakyThrows
+  public static Map<String, RawRecord> filterRecordsByHash(
+      Table table, Map<String, RawRecord> fragmentsMap) {
+
+    BiPredicate<String, RawRecord> prFn =
+        (key, raw) -> {
+          try {
+            Get get = createHashValueGet(key);
+            byte[] value = table.get(get).value();
+            if (value != null) {
+              return !raw.getHashValue().equals(new String(value, UTF_8));
+            }
+            return true;
+          } catch (IOException ex) {
+            throw new PipelinesException(ex);
+          }
+        };
+
+    return fragmentsMap
+        .entrySet()
+        .parallelStream()
+        .filter(es -> prFn.test(es.getKey(), es.getValue()))
+        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (x, y) -> y));
+  }
+
+  private static Map<String, Long> getCreatedDateMap(
+      Table table, Map<String, RawRecord> fragmentsMap) throws IOException {
 
     Map<String, Long> createdDateMap = new HashMap<>();
 
@@ -78,7 +108,7 @@ public class HbaseStore {
       Integer attempt,
       String protocol,
       String key,
-      String record,
+      RawRecord rawRecord,
       Long created) {
     long timestampUpdated = Instant.now().toEpochMilli();
     long timestampCreated = Optional.ofNullable(created).orElse(timestampUpdated);
@@ -91,13 +121,20 @@ public class HbaseStore {
 
     put.addColumn(FF_BYTES, DCQ_BYTES, Bytes.toBytes(timestampCreated));
     put.addColumn(FF_BYTES, DUQ_BYTES, Bytes.toBytes(timestampUpdated));
-    put.addColumn(FF_BYTES, RQ_BYTES, Bytes.toBytes(record));
+    put.addColumn(FF_BYTES, RQ_BYTES, Bytes.toBytes(rawRecord.getRecord()));
+    put.addColumn(FF_BYTES, HVQ_BYTES, Bytes.toBytes(rawRecord.getHashValue()));
     return put;
   }
 
   private static Get createCreatedDateGet(String key) {
     Get get = new Get(Bytes.toBytes(key));
     get.addColumn(FF_BYTES, DCQ_BYTES);
+    return get;
+  }
+
+  private static Get createHashValueGet(String key) {
+    Get get = new Get(Bytes.toBytes(key));
+    get.addColumn(FF_BYTES, HVQ_BYTES);
     return get;
   }
 
@@ -127,5 +164,9 @@ public class HbaseStore {
 
   public static byte[] getDateUpdatedQualifier() {
     return DUQ_BYTES;
+  }
+
+  public static byte[] getHashValueQualifier() {
+    return HVQ_BYTES;
   }
 }
