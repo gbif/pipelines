@@ -307,6 +307,9 @@ COLLECTORY_WS_URL=$(getConf collectory.wsUrl);
 COLLECTORY_WS_API_KEY=$(getConf collectory.httpHeaders.Authorization);
 COPY_DEST=$(getConf copy.copyPath)
 
+# Split exclude list of drs
+IFS=',' read -ra excludes <<< "$exclude"
+
 # Uncomment this to debug log4j
 # if ( $debug) ; then EXTRA_JVM_CLI_ARGS="-Dlog4j.debug"; fi
 
@@ -357,9 +360,8 @@ function validation-report() {
 
 function copy () {
   local dr=$1
-  local excludes=$2
 
-  if [[ " ${excludes[@]} " =~ " ${dr} " ]]; then
+  if [[ " ${excludes[*]} " =~ " ${dr} " ]]; then
     log.info "Skipping copy of $dr"
   else
     logStepStart "Copy" $dr
@@ -379,24 +381,28 @@ function copy () {
     else
       log.warn "Skipping the download and copy of $dr. We tried ${DR_URL//[0-9]/X}"
     fi
+    if [[ $(file -b --mime-type "$DR_DEST/$dr.zip") != 'application/zip'* ]]
+    then
+        log.warn "Downloaded archive of $dr is not a zip. Cleaning it"
+        $_D rm "$DR_DEST/$dr.zip" || true
+        $_D rmdir "$DR_DEST" || true
+    fi
     logStepEnd "Copy" $dr local $SECONDS
   fi
 }
 
 function clean-dwca-in-hdfs () {
   local dr=$1
-  local excludes=$2
 
   logStepStart "Clean dwca in dfs" $dr
   SECONDS=0
 
   $_D /data/hadoop/bin/hdfs dfs -mkdir -p /dwca-exports
   if [[ "$dr" == 'all' && $dry_run == 'false' ]]; then
-    IFS=',' read -ra excludes <<< "$exclude"
     for f in `/data/hadoop/bin/hdfs dfs -ls -C /dwca-exports`
     do
       d=`echo $f | sed -e "s/\\/dwca-exports\\///"`
-      if [[ " ${excludes[@]} " =~ " ${d} " ]]; then
+      if [[ " ${excludes[*]} " =~ " ${d} " ]]; then
         log.info "Skipping clean of $f"
       else
         log.info "Remove $f from dfs"
@@ -411,14 +417,13 @@ function clean-dwca-in-hdfs () {
 
 function copy-to-hdfs () {
   local dr=$1
-  local excludes=$2
 
   logStepStart "Copy dwca to dfs" $dr
   if [[ "$dr" == 'all' ]]; then
     for dr in `ls /data/dwca-export`
     do
       f="$COPY_DEST/$dr"
-      if [[ " ${excludes[@]} " =~ " ${dr} " ]]; then
+      if [[ " ${excludes[*]} " =~ " ${dr} " ]]; then
         log.info "Skipping copy dwca $f to dfs"
       else
         log.info "Copy $f to dfs"
@@ -1051,18 +1056,18 @@ fi
 if ($copy); then
   if [[ $2 = "all" ]] ; then
     for d in $(curl -s -o - ${COLLECTORY_WS_URL}dataResource | yq -P e '.[].uid' -); do
-      copy $d $exclude
+      copy $d
     done
     if ($hdfs); then
-      clean-dwca-in-hdfs "all" $exclude
-      copy-to-hdfs "all" $exclude
+      clean-dwca-in-hdfs "all"
+      copy-to-hdfs "all"
     fi
   else
     for d in "${drs[@]}"; do
       copy $d ""
       if ($hdfs); then
-        clean-dwca-in-hdfs $d ""
-        copy-to-hdfs $d ""
+        clean-dwca-in-hdfs $d
+        copy-to-hdfs $d
       fi
     done
   fi
