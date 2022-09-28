@@ -361,11 +361,11 @@ public class HdfsViewPipelineIT {
       "--targetPath=" + output,
       "--numberOfShards=1",
       "--interpretationTypes=" + recordType.name(),
-      "--coreRecordType=" + recordType.name(),
       "--testMode=true"
     };
 
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
+    options.setCoreRecordType(recordType);
 
     HdfsViewPipeline.run(options, opt -> p);
 
