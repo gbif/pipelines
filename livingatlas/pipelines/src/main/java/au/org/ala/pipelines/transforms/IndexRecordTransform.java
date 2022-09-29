@@ -1194,6 +1194,6 @@ public class IndexRecordTransform implements Serializable, IndexFields {
   }
 
   private static boolean isNotBlank(String s) {
-    return s != null && s.trim().isEmpty();
+    return s != null && !s.trim().isEmpty();
   }
 }
