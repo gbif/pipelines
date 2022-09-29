@@ -523,6 +523,7 @@ function spark-cluster-pipeline() {
             $(toArg $SH_ARGS executor-memory) \
             $(toArg $SH_ARGS driver-memory) \
             --class $CLASS \
+            --master $SPARK_MASTER \
             $PIPELINES_JAR \
             --datasetId=$dr \
             --config=$config $ARGS \
@@ -609,74 +610,39 @@ function migrate () {
 }
 
 function image-load () {
-    dr=$1
-    ltype=$2
+    local dr="$1" ltype="$2"
     CLASS=au.org.ala.pipelines.beam.ImageServiceDiffLoadPipeline
 
     logStepStart "Image-load" $dr
     SECONDS=0
 
-    PRE=image-load-sh-args.spark-embedded
-    if [[ $ltype = "spark-embedded" || $ltype = "local" ]] ; then
-        $_D java $EXTRA_JVM_CLI_ARGS \
-            $(getConf $PRE.jvm)  \
-            -cp $PIPELINES_JAR $CLASS \
-            --datasetId=$dr \
-            --config=$config $ARGS
-    fi
+    SH_ARGS=image-load-sh-args.local
+    java-pipeline $ltype $SH_ARGS $CLASS $dr
 
-    PRE=image-load-sh-args.spark-cluster
-    if [[ $ltype = "spark-cluster" ]] ; then
-        $_D $SPARK_SUBMIT_PATH \
-            --name "image-load $dr" \
-            $(toArg $PRE conf) \
-            $(toArg $PRE num-executors) \
-            $(toArg $PRE executor-cores) \
-            $(toArg $PRE executor-memory) \
-            $(toArg $PRE driver-memory) \
-            --class $CLASS \
-            --driver-java-options "-Dlog4j.configuration=file:$CONFIG_DIR/log4j.properties" \
-            $PIPELINES_JAR \
-            --datasetId=$dr \
-            --config=$config $ARGS
-            # TODO set here an optional colorized log4j properties
-    fi
+    SH_ARGS=image-load-sh-args.spark-embedded
+    spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=image-load-sh-args.spark-cluster
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "image-load $dr"
 
     logStepEnd "Image-load" $dr $ltype $SECONDS
 }
 
 function image-sync () {
-    dr=$1
-    ltype=$2
+    local dr="$1" ltype="$2"
     CLASS=au.org.ala.pipelines.beam.ImageServiceSyncPipeline
 
     logStepStart "Image-sync" $dr
     SECONDS=0
 
-    PRE=image-sync-sh-args.spark-embedded
-    if [[ $ltype = "spark-embedded" || $ltype = "local" ]] ; then
-        $_D java $EXTRA_JVM_CLI_ARGS \
-            $(getConf $PRE.jvm)  \
-            -cp $PIPELINES_JAR $CLASS \
-            --datasetId=$dr \
-            --config=$config $ARGS
-    fi
+    SH_ARGS=image-sync-sh-args.local
+    java-pipeline $ltype $SH_ARGS $CLASS $dr
 
-    PRE=image-sync-sh-args.spark-cluster
-    if [[ $ltype = "spark-cluster" ]] ; then
-        $_D $SPARK_SUBMIT_PATH \
-            --name "Image-sync $dr" \
-            $(toArg $PRE num-executors) \
-            $(toArg $PRE executor-cores) \
-            $(toArg $PRE executor-memory) \
-            $(toArg $PRE driver-memory) \
-            --class $CLASS \
-            --driver-java-options "-Dlog4j.configuration=file:$CONFIG_DIR/log4j.properties" \
-            $PIPELINES_JAR \
-            --datasetId=$dr \
-            --config=$config $ARGS
-            # TODO set here an optional colorized log4j properties
-    fi
+    SH_ARGS=image-sync-sh-args.spark-embedded
+    spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=image-sync-sh-args.spark-cluster
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "image-sync $dr"
 
     logStepEnd "Image-sync" $dr $ltype $SECONDS
 }
@@ -855,37 +821,23 @@ function index () {
 }
 
 function dwca_export () {
-    dr=$1
-    ltype=$2
+    local dr="$1" ltype="$2"
     CLASS=au.org.ala.pipelines.beam.IndexRecordToDwcaPipeline
 
     logStepStart "Dwca-export" $dr
     SECONDS=0
 
-    PRE=image-sync-sh-args.spark-embedded
-    if [[ $ltype = "spark-embedded" || $ltype = "local" ]] ; then
-        $_D java $EXTRA_JVM_CLI_ARGS \
-            $(getConf $PRE.jvm)  \
-            -cp $PIPELINES_JAR $CLASS \
-            --datasetId=$dr \
-            --config=$config $ARGS
-    fi
+    SH_ARGS=export-sh-args.local
+    CLASS=au.org.ala.pipelines.java.IndexRecordPipeline
+    java-pipeline $ltype $SH_ARGS $CLASS $dr
 
-    PRE=image-sync-sh-args.spark-cluster
-    if [[ $ltype = "spark-cluster" ]] ; then
-        $_D $SPARK_SUBMIT_PATH \
-            --name "Dwca-export $dr" \
-            $(toArg $PRE num-executors) \
-            $(toArg $PRE executor-cores) \
-            $(toArg $PRE executor-memory) \
-            $(toArg $PRE driver-memory) \
-            --class $CLASS \
-            --driver-java-options "-Dlog4j.configuration=file:$CONFIG_DIR/log4j.properties" \
-            $PIPELINES_JAR \
-            --datasetId=$dr \
-            --config=$config $ARGS
-            # TODO set here an optional colorized log4j properties
-    fi
+    SH_ARGS=export-sh-args.spark-embedded
+    CLASS=au.org.ala.pipelines.beam.IndexRecordPipeline
+    spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=export-sh-args.spark-cluster
+    CLASS=au.org.ala.pipelines.beam.IndexRecordPipeline
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "Dwca-export $dr"
 
     logStepEnd "Dwca-export" $dr $ltype $SECONDS
 }
