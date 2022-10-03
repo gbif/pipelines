@@ -50,6 +50,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.transforms.converters.OccurrenceExtensionTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
+import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.DefaultValuesTransform;
 import org.slf4j.MDC;
@@ -194,6 +195,10 @@ public class ALAVerbatimToInterpretedPipeline {
     MultimediaTransform multimediaTransform =
         MultimediaTransform.builder().orderings(dateComponentOrdering).create();
 
+    // Extension
+    MeasurementOrFactTransform measurementOrFactTransform =
+        MeasurementOrFactTransform.builder().create();
+
     // Create and write metadata
     PCollection<ALAMetadataRecord> metadataRecord =
         p.apply("Create metadata collection", Create.of(options.getDatasetId()))
@@ -285,6 +290,11 @@ public class ALAVerbatimToInterpretedPipeline {
         .apply("Check location transform condition", locationTransform.check(types))
         .apply("Interpret location", locationTransform.interpret())
         .apply("Write location to avro", locationTransform.write(pathFn));
+
+    uniqueRecords
+        .apply("Check location transform condition", measurementOrFactTransform.check(types))
+        .apply("Interpret location", measurementOrFactTransform.interpret())
+        .apply("Write location to avro", measurementOrFactTransform.write(pathFn));
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();

@@ -24,6 +24,7 @@
       {"name":"derivedMetadata","type":["null","DerivedMetadataRecord"],"default":null,"doc":""},
       // Record-level
       {"name":"eventType","type":["null","VocabularyConcept"],"default":null,"doc":""},
+      {"name":"eventName","type":["null","string"],"default":null,"doc":""},
       {"name":"references","type":["null","string"],"default":null,"doc":""},
       {"name":"institutionCode","type":["null","string"],"default":null,"doc":""},
       {"name":"datasetID","type":{"type":"array","items":"string"},"default":null,"doc":""},
@@ -71,7 +72,7 @@
       {"name":"hasGeospatialIssue","type":["null","boolean"],"default":null,"doc":""},
       {"name":"footprintWKT","type":["null","string"],"default":null,"doc":""},
       {"name":"publishingCountry","type":["null","string"],"default":null,"doc":""},
-      //Taxonomy
+      // Taxonomy
       {"name":"gbifClassification","type":["null","GbifClassification"],"default":null,"doc":""},
       // Multimedia
       {"name":"mediaTypes","type":{"type":"array","items":"string"},"default":null,"doc":""},
@@ -80,10 +81,21 @@
       // MeasurementOrFact
       {"name":"measurementOrFactTypes","type":{"type":"array","items":"string"},"default":null,"doc":""},
       {"name":"measurementOrFactMethods","type":{"type":"array","items":"string"},"default":null,"doc":""},
+      {"name":"measurementOrFactCount","type":["null","int"],"default":null,"doc":""},
       // Extra
       {"name":"issues","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"notIssues","type":{"type":"array","items":"string"},"default":[],"doc":""},
-      {"name":"extensions","type":{"type":"array","items":"string"},"default":[],"doc":""}
+      {"name":"extensions","type":{"type":"array","items":"string"},"default":[],"doc":""},
+      {"name":"verbatim","type":["null","VerbatimRecord"],"default":null,"doc":""},
+      // Aggregations
+      {"name":"occurrenceCount","type":["null","int"],"default":null,"doc":""},
+      // Denormalised event info
+      {"name":"eventHierarchy","type":{"type":"array","items":"string"},"default":[],"doc":""},
+      {"name":"eventTypeHierarchy","type":{"type":"array","items":"string"},"default":[],"doc":""},
+      {"name":"eventHierarchyJoined","type":["null","string"],"default":null,"doc":""},
+      {"name":"eventTypeHierarchyJoined","type":["null","string"],"default":null,"doc":""},
+      {"name":"eventHierarchyLevels","type":["null","int"],"default":null,"doc":""},
+      {"name":"measurementOrFacts","type":{"type":"array","items":"org.gbif.pipelines.io.avro.json.MeasurementOrFactJsonRecord"},"default":[],"doc":""}
     ]
   }
 ]

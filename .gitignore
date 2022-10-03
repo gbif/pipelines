@@ -28,3 +28,5 @@ livingatlas/debian/files
 livingatlas/debian/la-pipelines
 livingatlas/debian/la-pipelines-migration/
 livingatlas/debian/maven-repo-local/
+dependency-reduced-pom.xml
+/**/dependency-reduced-pom.xml

@@ -121,7 +121,7 @@ public class ALAInterpretedToSensitivePipeline {
 
     PCollection<KV<String, ALATaxonRecord>> inputAlaTaxonCollection =
         p.apply("Read Taxon", alaTaxonomyTransform.read(inputPathFn))
-            .apply("Map Taxon to KV", alaTaxonomyTransform.toKv());
+            .apply("Map Taxon to KV", alaTaxonomyTransform.toCoreIdKv());
 
     KeyedPCollectionTuple<String> inputTuples =
         KeyedPCollectionTuple
