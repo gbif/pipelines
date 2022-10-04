@@ -161,10 +161,10 @@ public class DwcaArchiveValidator implements ArchiveValidator {
       String fileName;
       DwcFileType dwcFileType;
       if (archive.getCore().getRowType() == DwcTerm.Occurrence) {
-        fileName = archive.getCore().getLocationFile().getName();
+        fileName = archive.getCore().getFirstLocationFile().getName();
         dwcFileType = DwcFileType.CORE;
       } else if (archive.getExtension(DwcTerm.Occurrence) != null) {
-        fileName = archive.getExtension(DwcTerm.Occurrence).getLocationFile().getName();
+        fileName = archive.getExtension(DwcTerm.Occurrence).getFirstLocationFile().getName();
         dwcFileType = DwcFileType.EXTENSION;
       } else {
         return Optional.empty();

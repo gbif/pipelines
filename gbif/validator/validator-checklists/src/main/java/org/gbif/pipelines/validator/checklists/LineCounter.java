@@ -6,6 +6,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Optional;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,24 +16,19 @@ import org.gbif.dwc.ArchiveFile;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class LineCounter {
 
-  public static long count(ArchiveFile arhiveFile) {
-    return countLines(arhiveFile.getLocationFile(), areHeaderLinesIncluded(arhiveFile));
-  }
-
-  /** Exclude header from counter */
-  private static boolean areHeaderLinesIncluded(ArchiveFile arhiveFile) {
-    return arhiveFile.getIgnoreHeaderLines() != null && arhiveFile.getIgnoreHeaderLines() > 0;
-  }
-
   /** Efficient way of counting lines */
-  private static long countLines(File file, boolean areHeaderLinesIncluded) {
-    long lines = areHeaderLinesIncluded ? -1 : 0;
-    try (BufferedReader reader = Files.newBufferedReader(file.toPath(), UTF_8)) {
-      while (reader.readLine() != null) {
-        lines++;
+  public static long count(ArchiveFile arhiveFile) {
+    long lines = 0;
+    long header = Optional.ofNullable(arhiveFile.getIgnoreHeaderLines()).orElse(0);
+    for (File file : arhiveFile.getLocationFiles()) {
+      try (BufferedReader reader = Files.newBufferedReader(file.toPath(), UTF_8)) {
+        while (reader.readLine() != null) {
+          lines++;
+        }
+        lines = lines - header;
+      } catch (IOException ex) {
+        log.error(ex.getMessage(), ex);
       }
-    } catch (IOException ex) {
-      log.error(ex.getMessage(), ex);
     }
     return lines;
   }
