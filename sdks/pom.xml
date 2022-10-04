@@ -28,6 +28,7 @@
     <module>maven-extension-avsc-schema-generator</module>
     <module>models</module>
     <module>variables</module>
+    <module>sdks-integration-tests</module>
   </modules>
 
 </project>

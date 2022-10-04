@@ -20,6 +20,7 @@ import org.elasticsearch.client.Request;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.RestClient;
+import org.gbif.pipelines.EsServer;
 import org.gbif.pipelines.estools.service.EsConstants.Constant;
 import org.gbif.pipelines.estools.service.EsConstants.Field;
 import org.gbif.pipelines.estools.service.EsConstants.Indexing;
@@ -101,7 +102,7 @@ public abstract class EsApiIntegration {
           assertTrue(indexesFoundInAlias.contains(idxAdded));
         });
 
-    // the other indexes shoudn't exist
+    // the other indexes shouldn't exist
     for (String removed : idxRemoved) {
       assertFalse(EsService.existsIndex(ES_SERVER.getEsClient(), removed));
     }
