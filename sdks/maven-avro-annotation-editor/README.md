@@ -11,7 +11,7 @@ avro-namespace - the namespace used in Avro schemas
 <!-- Change generated avros, add GBIF features -->
 <plugin>
 <groupId>org.gbif.pipelines</groupId>
-<artifactId>pipelines-maven-plugin</artifactId>
+<artifactId>maven-avro-annotation-editor</artifactId>
 <executions>
   <execution>
     <goals>
