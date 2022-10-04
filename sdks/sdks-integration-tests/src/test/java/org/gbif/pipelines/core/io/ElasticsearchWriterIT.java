@@ -1,11 +1,5 @@
 package org.gbif.pipelines.core.io;
 
-import static org.elasticsearch.common.xcontent.XContentType.JSON;
-import static org.gbif.pipelines.estools.common.SettingsType.INDEXING;
-import static org.gbif.pipelines.estools.service.EsService.buildEndpoint;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -20,9 +14,13 @@ import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.client.Request;
 import org.elasticsearch.client.RestClient;
+import org.elasticsearch.common.xcontent.XContentType;
+import org.gbif.pipelines.EsServer;
+import org.gbif.pipelines.estools.common.SettingsType;
 import org.gbif.pipelines.estools.model.IndexParams;
 import org.gbif.pipelines.estools.service.EsService;
 import org.gbif.pipelines.io.avro.BasicRecord;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -63,8 +61,8 @@ public class ElasticsearchWriterIT {
     EsService.refreshIndex(ES_SERVER.getEsClient(), idxName);
 
     // Should
-    assertTrue(EsService.existsIndex(ES_SERVER.getEsClient(), idxName));
-    assertEquals(
+    Assert.assertTrue(EsService.existsIndex(ES_SERVER.getEsClient(), idxName));
+    Assert.assertEquals(
         basicRecordList.size(), EsService.countIndexDocuments(ES_SERVER.getEsClient(), idxName));
   }
 
@@ -90,8 +88,8 @@ public class ElasticsearchWriterIT {
     EsService.refreshIndex(ES_SERVER.getEsClient(), idxName);
 
     // Should
-    assertTrue(EsService.existsIndex(ES_SERVER.getEsClient(), idxName));
-    assertEquals(
+    Assert.assertTrue(EsService.existsIndex(ES_SERVER.getEsClient(), idxName));
+    Assert.assertEquals(
         basicRecordList.size(), EsService.countIndexDocuments(ES_SERVER.getEsClient(), idxName));
   }
 
@@ -117,8 +115,8 @@ public class ElasticsearchWriterIT {
     EsService.refreshIndex(ES_SERVER.getEsClient(), idxName);
 
     // Should
-    assertTrue(EsService.existsIndex(ES_SERVER.getEsClient(), idxName));
-    assertEquals(
+    Assert.assertTrue(EsService.existsIndex(ES_SERVER.getEsClient(), idxName));
+    Assert.assertEquals(
         basicRecordList.size(), EsService.countIndexDocuments(ES_SERVER.getEsClient(), idxName));
   }
 
@@ -144,8 +142,8 @@ public class ElasticsearchWriterIT {
     EsService.refreshIndex(ES_SERVER.getEsClient(), idxName);
 
     // Should
-    assertTrue(EsService.existsIndex(ES_SERVER.getEsClient(), idxName));
-    assertEquals(
+    Assert.assertTrue(EsService.existsIndex(ES_SERVER.getEsClient(), idxName));
+    Assert.assertEquals(
         basicRecordList.size(), EsService.countIndexDocuments(ES_SERVER.getEsClient(), idxName));
   }
 
@@ -172,8 +170,8 @@ public class ElasticsearchWriterIT {
     EsService.refreshIndex(ES_SERVER.getEsClient(), idxName);
 
     // Should
-    assertTrue(EsService.existsIndex(ES_SERVER.getEsClient(), idxName));
-    assertEquals(
+    Assert.assertTrue(EsService.existsIndex(ES_SERVER.getEsClient(), idxName));
+    Assert.assertEquals(
         basicRecordList.size(), EsService.countIndexDocuments(ES_SERVER.getEsClient(), idxName));
   }
 
@@ -200,8 +198,8 @@ public class ElasticsearchWriterIT {
     EsService.refreshIndex(ES_SERVER.getEsClient(), idxName);
 
     // Should
-    assertTrue(EsService.existsIndex(ES_SERVER.getEsClient(), idxName));
-    assertEquals(
+    Assert.assertTrue(EsService.existsIndex(ES_SERVER.getEsClient(), idxName));
+    Assert.assertEquals(
         basicRecordList.size(), EsService.countIndexDocuments(ES_SERVER.getEsClient(), idxName));
   }
 
@@ -227,8 +225,8 @@ public class ElasticsearchWriterIT {
     EsService.refreshIndex(ES_SERVER.getEsClient(), idxName);
 
     // Should
-    assertTrue(EsService.existsIndex(ES_SERVER.getEsClient(), idxName));
-    assertEquals(
+    Assert.assertTrue(EsService.existsIndex(ES_SERVER.getEsClient(), idxName));
+    Assert.assertEquals(
         basicRecordList.size(), EsService.countIndexDocuments(ES_SERVER.getEsClient(), idxName));
   }
 
@@ -254,8 +252,8 @@ public class ElasticsearchWriterIT {
     EsService.refreshIndex(ES_SERVER.getEsClient(), idxName);
 
     // Should
-    assertTrue(EsService.existsIndex(ES_SERVER.getEsClient(), idxName));
-    assertEquals(
+    Assert.assertTrue(EsService.existsIndex(ES_SERVER.getEsClient(), idxName));
+    Assert.assertEquals(
         basicRecordList.size(), EsService.countIndexDocuments(ES_SERVER.getEsClient(), idxName));
   }
 
@@ -281,8 +279,8 @@ public class ElasticsearchWriterIT {
     EsService.refreshIndex(ES_SERVER.getEsClient(), idxName);
 
     // Should
-    assertTrue(EsService.existsIndex(ES_SERVER.getEsClient(), idxName));
-    assertEquals(
+    Assert.assertTrue(EsService.existsIndex(ES_SERVER.getEsClient(), idxName));
+    Assert.assertEquals(
         basicRecordList.size(), EsService.countIndexDocuments(ES_SERVER.getEsClient(), idxName));
   }
 
@@ -297,7 +295,7 @@ public class ElasticsearchWriterIT {
     return br -> {
       String k = br.getId();
       String dummyJson = "{\"test\": \"text\"}";
-      return new IndexRequest(idxName).id(k).source(dummyJson, JSON);
+      return new IndexRequest(idxName).id(k).source(dummyJson, XContentType.JSON);
     };
   }
 
@@ -308,10 +306,10 @@ public class ElasticsearchWriterIT {
             ES_SERVER.getEsClient(),
             IndexParams.builder()
                 .indexName(idxName)
-                .settingsType(INDEXING)
+                .settingsType(SettingsType.INDEXING)
                 .pathMappings(mappingPath)
                 .build());
-    String endpoint = buildEndpoint(idx, "_mapping");
+    String endpoint = EsService.buildEndpoint(idx, "_mapping");
     try {
       RestClient client = ES_SERVER.getRestClient();
       client.performRequest(new Request(HttpGet.METHOD_NAME, endpoint));

@@ -15,33 +15,6 @@
   <name>Pipelines :: Tools :: Elasticsearch tools</name>
   <description>Tool for creating/deleting/swapping Elasticsearch indexes</description>
 
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-failsafe-plugin</artifactId>
-      </plugin>
-    </plugins>
-    <!-- Copy pom.xml value to test resources maven.properties -->
-    <resources>
-      <resource>
-        <directory>src/test/resources</directory>
-        <targetPath>../test-classes/</targetPath>
-        <filtering>true</filtering>
-        <includes>
-          <include>*.properties</include>
-        </includes>
-      </resource>
-      <resource>
-        <directory>src/main/resources</directory>
-        <filtering>true</filtering>
-        <includes>
-          <include>*.properties</include>
-        </includes>
-      </resource>
-    </resources>
-  </build>
-
   <dependencies>
 
     <!-- Tools -->
@@ -88,11 +61,6 @@
     <dependency>
       <groupId>org.hamcrest</groupId>
       <artifactId>hamcrest-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.testcontainers</groupId>
-      <artifactId>elasticsearch</artifactId>
-      <scope>test</scope>
     </dependency>
 
   </dependencies>

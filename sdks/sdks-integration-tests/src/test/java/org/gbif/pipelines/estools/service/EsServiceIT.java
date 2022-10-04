@@ -44,7 +44,7 @@ public class EsServiceIT extends EsApiIntegration {
 
   @Before
   public void cleanIndexes() {
-    EsService.deleteIndex(ES_SERVER.getEsClient(), "id*");
+    EsService.deleteIndex(EsApiIntegration.ES_SERVER.getEsClient(), "id*");
   }
 
   @Test
@@ -53,11 +53,13 @@ public class EsServiceIT extends EsApiIntegration {
     // When
     String idx =
         EsService.createIndex(
-            ES_SERVER.getEsClient(),
+            EsApiIntegration.ES_SERVER.getEsClient(),
             IndexParams.builder().indexName("idx").settingsType(INDEXING).build());
 
     Response response =
-        ES_SERVER.getRestClient().performRequest(new Request(HttpGet.METHOD_NAME, "/" + idx));
+        EsApiIntegration.ES_SERVER
+            .getRestClient()
+            .performRequest(new Request(HttpGet.METHOD_NAME, "/" + idx));
 
     // Should
     assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
@@ -69,18 +71,18 @@ public class EsServiceIT extends EsApiIntegration {
     // When
     String idx =
         EsService.createIndex(
-            ES_SERVER.getEsClient(),
+            EsApiIntegration.ES_SERVER.getEsClient(),
             IndexParams.builder()
                 .indexName("idx-settings")
                 .settingsType(INDEXING)
-                .pathMappings(TEST_MAPPINGS_PATH)
+                .pathMappings(EsApiIntegration.TEST_MAPPINGS_PATH)
                 .build());
 
-    JsonNode mappings = getMappingsFromIndex(idx).path(idx).path(Field.MAPPINGS);
+    JsonNode mappings = EsApiIntegration.getMappingsFromIndex(idx).path(idx).path(Field.MAPPINGS);
 
     // Should
-    assertTrue(EsService.existsIndex(ES_SERVER.getEsClient(), idx));
-    assertIndexingSettings(idx);
+    assertTrue(EsService.existsIndex(EsApiIntegration.ES_SERVER.getEsClient(), idx));
+    EsApiIntegration.assertIndexingSettings(idx);
     assertTrue(mappings.path("properties").has("test"));
     assertEquals("text", mappings.path("properties").path("test").get("type").asText());
   }
@@ -91,19 +93,19 @@ public class EsServiceIT extends EsApiIntegration {
     // When
     String idx =
         EsService.createIndex(
-            ES_SERVER.getEsClient(),
+            EsApiIntegration.ES_SERVER.getEsClient(),
             IndexParams.builder().indexName("idx-settings").settingsType(INDEXING).build());
 
     // Should
-    assertTrue(EsService.existsIndex(ES_SERVER.getEsClient(), idx));
-    assertIndexingSettings(idx);
+    assertTrue(EsService.existsIndex(EsApiIntegration.ES_SERVER.getEsClient(), idx));
+    EsApiIntegration.assertIndexingSettings(idx);
 
     // When
     EsService.updateIndexSettings(
-        ES_SERVER.getEsClient(), idx, Searching.getDefaultSearchSettings());
+        EsApiIntegration.ES_SERVER.getEsClient(), idx, Searching.getDefaultSearchSettings());
 
     // Should
-    assertSearchSettings(idx);
+    EsApiIntegration.assertSearchSettings(idx);
   }
 
   @Test(expected = ResponseException.class)
@@ -111,7 +113,9 @@ public class EsServiceIT extends EsApiIntegration {
 
     // When
     EsService.updateIndexSettings(
-        ES_SERVER.getEsClient(), "fake-index", Indexing.getDefaultIndexingSettings());
+        EsApiIntegration.ES_SERVER.getEsClient(),
+        "fake-index",
+        Indexing.getDefaultIndexingSettings());
 
     // Should
     thrown.expectMessage(CoreMatchers.containsString("Error updating index"));
@@ -122,7 +126,7 @@ public class EsServiceIT extends EsApiIntegration {
 
     // When
     EsService.createIndex(
-        ES_SERVER.getEsClient(),
+        EsApiIntegration.ES_SERVER.getEsClient(),
         IndexParams.builder().indexName("UPPERCASE").settingsType(INDEXING).build());
 
     // Should
@@ -134,12 +138,12 @@ public class EsServiceIT extends EsApiIntegration {
 
     // State
     EsService.createIndex(
-        ES_SERVER.getEsClient(),
+        EsApiIntegration.ES_SERVER.getEsClient(),
         IndexParams.builder().indexName("idx").settingsType(INDEXING).build());
 
     // When
     EsService.createIndex(
-        ES_SERVER.getEsClient(),
+        EsApiIntegration.ES_SERVER.getEsClient(),
         IndexParams.builder().indexName("idx").settingsType(INDEXING).build());
 
     // Should
@@ -152,32 +156,33 @@ public class EsServiceIT extends EsApiIntegration {
     // State
     String idx1 =
         EsService.createIndex(
-            ES_SERVER.getEsClient(),
+            EsApiIntegration.ES_SERVER.getEsClient(),
             IndexParams.builder().indexName("idx1").settingsType(INDEXING).build());
     String idx2 =
         EsService.createIndex(
-            ES_SERVER.getEsClient(),
+            EsApiIntegration.ES_SERVER.getEsClient(),
             IndexParams.builder().indexName("idx2").settingsType(INDEXING).build());
     String idx3 =
         EsService.createIndex(
-            ES_SERVER.getEsClient(),
+            EsApiIntegration.ES_SERVER.getEsClient(),
             IndexParams.builder().indexName("idx3").settingsType(INDEXING).build());
     Set<String> initialIndexes = new HashSet<>(Arrays.asList(idx1, idx2, idx3));
 
-    addIndexesToAlias(ALIAS_TEST, initialIndexes);
+    EsApiIntegration.addIndexesToAlias(ALIAS_TEST, initialIndexes);
 
     String idx4 =
         EsService.createIndex(
-            ES_SERVER.getEsClient(),
+            EsApiIntegration.ES_SERVER.getEsClient(),
             IndexParams.builder().indexName("idx4").settingsType(INDEXING).build());
     String idx5 =
         EsService.createIndex(
-            ES_SERVER.getEsClient(),
+            EsApiIntegration.ES_SERVER.getEsClient(),
             IndexParams.builder().indexName("idx5").settingsType(INDEXING).build());
 
     // When
     Set<String> indexes =
-        EsService.getIndexesByAliasAndIndexPattern(ES_SERVER.getEsClient(), "idx*", ALIAS_TEST);
+        EsService.getIndexesByAliasAndIndexPattern(
+            EsApiIntegration.ES_SERVER.getEsClient(), "idx*", ALIAS_TEST);
 
     // Should
     assertEquals(3, indexes.size());
@@ -185,23 +190,23 @@ public class EsServiceIT extends EsApiIntegration {
 
     // When
     EsService.swapIndexes(
-        ES_SERVER.getEsClient(),
+        EsApiIntegration.ES_SERVER.getEsClient(),
         Collections.singleton(ALIAS_TEST),
         Collections.singleton(idx4),
         initialIndexes);
 
     // Should
-    assertSwapResults(idx4, "idx*", ALIAS_TEST, initialIndexes);
+    EsApiIntegration.assertSwapResults(idx4, "idx*", ALIAS_TEST, initialIndexes);
 
     // When
     EsService.swapIndexes(
-        ES_SERVER.getEsClient(),
+        EsApiIntegration.ES_SERVER.getEsClient(),
         Collections.singleton(ALIAS_TEST),
         Collections.singleton(idx5),
         Collections.singleton(idx4));
 
     // Should
-    assertSwapResults(idx5, "idx*", ALIAS_TEST, Collections.singleton(idx4));
+    EsApiIntegration.assertSwapResults(idx5, "idx*", ALIAS_TEST, Collections.singleton(idx4));
   }
 
   @Test
@@ -210,33 +215,34 @@ public class EsServiceIT extends EsApiIntegration {
     // State
     String idx1 =
         EsService.createIndex(
-            ES_SERVER.getEsClient(),
+            EsApiIntegration.ES_SERVER.getEsClient(),
             IndexParams.builder().indexName("idx1").settingsType(INDEXING).build());
     String idx2 =
         EsService.createIndex(
-            ES_SERVER.getEsClient(),
+            EsApiIntegration.ES_SERVER.getEsClient(),
             IndexParams.builder().indexName("idx2").settingsType(INDEXING).build());
     String idx3 =
         EsService.createIndex(
-            ES_SERVER.getEsClient(),
+            EsApiIntegration.ES_SERVER.getEsClient(),
             IndexParams.builder().indexName("idx3").settingsType(INDEXING).build());
     Set<String> initialIndexes = new HashSet<>(Arrays.asList(idx1, idx2, idx3));
 
     Set<String> aliases = new HashSet<>(Arrays.asList(ALIAS_TEST, ANOTHER_ALIAS_TEST));
-    addIndexesToAliases(aliases, initialIndexes);
+    EsApiIntegration.addIndexesToAliases(aliases, initialIndexes);
 
     String idx4 =
         EsService.createIndex(
-            ES_SERVER.getEsClient(),
+            EsApiIntegration.ES_SERVER.getEsClient(),
             IndexParams.builder().indexName("idx4").settingsType(INDEXING).build());
     String idx5 =
         EsService.createIndex(
-            ES_SERVER.getEsClient(),
+            EsApiIntegration.ES_SERVER.getEsClient(),
             IndexParams.builder().indexName("idx5").settingsType(INDEXING).build());
 
     // When
     Set<String> indexes =
-        EsService.getIndexesByAliasAndIndexPattern(ES_SERVER.getEsClient(), "idx*", aliases);
+        EsService.getIndexesByAliasAndIndexPattern(
+            EsApiIntegration.ES_SERVER.getEsClient(), "idx*", aliases);
 
     // Should
     assertEquals(3, indexes.size());
@@ -244,17 +250,23 @@ public class EsServiceIT extends EsApiIntegration {
 
     // When
     EsService.swapIndexes(
-        ES_SERVER.getEsClient(), aliases, Collections.singleton(idx4), initialIndexes);
+        EsApiIntegration.ES_SERVER.getEsClient(),
+        aliases,
+        Collections.singleton(idx4),
+        initialIndexes);
 
     // Should
-    assertSwapResults(idx4, "idx*", aliases, initialIndexes);
+    EsApiIntegration.assertSwapResults(idx4, "idx*", aliases, initialIndexes);
 
     // When
     EsService.swapIndexes(
-        ES_SERVER.getEsClient(), aliases, Collections.singleton(idx5), Collections.singleton(idx4));
+        EsApiIntegration.ES_SERVER.getEsClient(),
+        aliases,
+        Collections.singleton(idx5),
+        Collections.singleton(idx4));
 
     // Should
-    assertSwapResults(idx5, "idx*", aliases, Collections.singleton(idx4));
+    EsApiIntegration.assertSwapResults(idx5, "idx*", aliases, Collections.singleton(idx4));
   }
 
   @Test
@@ -262,7 +274,8 @@ public class EsServiceIT extends EsApiIntegration {
 
     // When
     Set<String> idx =
-        EsService.getIndexesByAliasAndIndexPattern(ES_SERVER.getEsClient(), "idx*", "fake-alias");
+        EsService.getIndexesByAliasAndIndexPattern(
+            EsApiIntegration.ES_SERVER.getEsClient(), "idx*", "fake-alias");
 
     // Should
     assertTrue(idx.isEmpty());
@@ -274,18 +287,18 @@ public class EsServiceIT extends EsApiIntegration {
     // State
     String idx1 =
         EsService.createIndex(
-            ES_SERVER.getEsClient(),
+            EsApiIntegration.ES_SERVER.getEsClient(),
             IndexParams.builder().indexName("idx1").settingsType(INDEXING).build());
 
     // When
     EsService.swapIndexes(
-        ES_SERVER.getEsClient(),
+        EsApiIntegration.ES_SERVER.getEsClient(),
         Collections.singleton(ALIAS_TEST),
         Collections.singleton(idx1),
         Collections.emptySet());
 
     // Should
-    assertSwapResults(idx1, "idx*", ALIAS_TEST, Collections.emptySet());
+    EsApiIntegration.assertSwapResults(idx1, "idx*", ALIAS_TEST, Collections.emptySet());
   }
 
   @Test(expected = ResponseException.class)
@@ -293,7 +306,7 @@ public class EsServiceIT extends EsApiIntegration {
 
     // When
     EsService.swapIndexes(
-        ES_SERVER.getEsClient(),
+        EsApiIntegration.ES_SERVER.getEsClient(),
         Collections.singleton("fake-alias"),
         Collections.singleton("fake-index"),
         Collections.emptySet());
@@ -308,11 +321,11 @@ public class EsServiceIT extends EsApiIntegration {
     // When
     String idx =
         EsService.createIndex(
-            ES_SERVER.getEsClient(),
+            EsApiIntegration.ES_SERVER.getEsClient(),
             IndexParams.builder().indexName("idx_1").settingsType(SEARCH).build());
 
     // Should
-    assertEquals(0L, EsService.countIndexDocuments(ES_SERVER.getEsClient(), idx));
+    assertEquals(0L, EsService.countIndexDocuments(EsApiIntegration.ES_SERVER.getEsClient(), idx));
   }
 
   /**
@@ -325,42 +338,46 @@ public class EsServiceIT extends EsApiIntegration {
     // State
     String idx =
         EsService.createIndex(
-            ES_SERVER.getEsClient(),
-            IndexParams.builder().indexName("idx_1").pathMappings(TEST_MAPPINGS_PATH).build());
+            EsApiIntegration.ES_SERVER.getEsClient(),
+            IndexParams.builder()
+                .indexName("idx_1")
+                .pathMappings(EsApiIntegration.TEST_MAPPINGS_PATH)
+                .build());
 
     // When
     // index some documents
     long n = 3;
     String document = "{\"test\" : \"test value\"}";
     for (int i = 1; i <= n; i++) {
-      EsService.indexDocument(ES_SERVER.getEsClient(), idx, i, document);
+      EsService.indexDocument(EsApiIntegration.ES_SERVER.getEsClient(), idx, i, document);
     }
 
     // Should
     // they shouldn't be searchable yet.
-    assertEquals(0, EsService.countIndexDocuments(ES_SERVER.getEsClient(), idx));
+    assertEquals(0, EsService.countIndexDocuments(EsApiIntegration.ES_SERVER.getEsClient(), idx));
 
     // When
     // refresh the index to make all the documents searchable.
-    EsService.refreshIndex(ES_SERVER.getEsClient(), idx);
+    EsService.refreshIndex(EsApiIntegration.ES_SERVER.getEsClient(), idx);
 
     // Should
-    assertEquals(n, EsService.countIndexDocuments(ES_SERVER.getEsClient(), idx));
+    assertEquals(n, EsService.countIndexDocuments(EsApiIntegration.ES_SERVER.getEsClient(), idx));
 
     // When
     // delete last document
-    EsService.deleteDocument(ES_SERVER.getEsClient(), idx, n);
-    EsService.refreshIndex(ES_SERVER.getEsClient(), idx);
+    EsService.deleteDocument(EsApiIntegration.ES_SERVER.getEsClient(), idx, n);
+    EsService.refreshIndex(EsApiIntegration.ES_SERVER.getEsClient(), idx);
 
     // Should
-    assertEquals(n - 1, EsService.countIndexDocuments(ES_SERVER.getEsClient(), idx));
+    assertEquals(
+        n - 1, EsService.countIndexDocuments(EsApiIntegration.ES_SERVER.getEsClient(), idx));
   }
 
   @Test(expected = ResponseException.class)
   public void countMissingIndexTest() {
 
     // When
-    EsService.countIndexDocuments(ES_SERVER.getEsClient(), "fake");
+    EsService.countIndexDocuments(EsApiIntegration.ES_SERVER.getEsClient(), "fake");
 
     // Should
     thrown.expectMessage(CoreMatchers.containsString("no such index"));
@@ -372,11 +389,11 @@ public class EsServiceIT extends EsApiIntegration {
     // State
     String idx1 =
         EsService.createIndex(
-            ES_SERVER.getEsClient(),
+            EsApiIntegration.ES_SERVER.getEsClient(),
             IndexParams.builder().indexName("idx1").settingsType(INDEXING).build());
 
     // When
-    boolean exists = EsService.existsIndex(ES_SERVER.getEsClient(), idx1);
+    boolean exists = EsService.existsIndex(EsApiIntegration.ES_SERVER.getEsClient(), idx1);
 
     // Should
     assertTrue(exists);
@@ -386,7 +403,7 @@ public class EsServiceIT extends EsApiIntegration {
   public void existsMissingIndexTest() {
 
     // When
-    boolean exists = EsService.existsIndex(ES_SERVER.getEsClient(), "missing");
+    boolean exists = EsService.existsIndex(EsApiIntegration.ES_SERVER.getEsClient(), "missing");
 
     // Should
     assertFalse(exists);
@@ -398,23 +415,23 @@ public class EsServiceIT extends EsApiIntegration {
     // When
     String idx1 =
         EsService.createIndex(
-            ES_SERVER.getEsClient(),
+            EsApiIntegration.ES_SERVER.getEsClient(),
             IndexParams.builder().indexName("idx1").settingsType(INDEXING).build());
     String idx2 =
         EsService.createIndex(
-            ES_SERVER.getEsClient(),
+            EsApiIntegration.ES_SERVER.getEsClient(),
             IndexParams.builder().indexName("idx2").settingsType(INDEXING).build());
 
     // Should
-    assertTrue(EsService.existsIndex(ES_SERVER.getEsClient(), idx1));
-    assertTrue(EsService.existsIndex(ES_SERVER.getEsClient(), idx2));
+    assertTrue(EsService.existsIndex(EsApiIntegration.ES_SERVER.getEsClient(), idx1));
+    assertTrue(EsService.existsIndex(EsApiIntegration.ES_SERVER.getEsClient(), idx2));
 
     // When
-    EsService.deleteAllIndexes(ES_SERVER.getEsClient());
+    EsService.deleteAllIndexes(EsApiIntegration.ES_SERVER.getEsClient());
 
     // Should
-    assertFalse(EsService.existsIndex(ES_SERVER.getEsClient(), idx1));
-    assertFalse(EsService.existsIndex(ES_SERVER.getEsClient(), idx2));
+    assertFalse(EsService.existsIndex(EsApiIntegration.ES_SERVER.getEsClient(), idx1));
+    assertFalse(EsService.existsIndex(EsApiIntegration.ES_SERVER.getEsClient(), idx2));
   }
 
   @Test
@@ -423,11 +440,11 @@ public class EsServiceIT extends EsApiIntegration {
     // State
     String idx1 =
         EsService.createIndex(
-            ES_SERVER.getEsClient(),
+            EsApiIntegration.ES_SERVER.getEsClient(),
             IndexParams.builder().indexName("idx1").settingsType(INDEXING).build());
     String idx2 =
         EsService.createIndex(
-            ES_SERVER.getEsClient(),
+            EsApiIntegration.ES_SERVER.getEsClient(),
             IndexParams.builder().indexName("idx2").settingsType(INDEXING).build());
     Set<String> indexes = new HashSet<>();
     indexes.add(idx1);
@@ -436,7 +453,7 @@ public class EsServiceIT extends EsApiIntegration {
     // we create another empty index to check that it's discarded
     String idx3 =
         EsService.createIndex(
-            ES_SERVER.getEsClient(),
+            EsApiIntegration.ES_SERVER.getEsClient(),
             IndexParams.builder().indexName("idx3").settingsType(INDEXING).build());
 
     // index some documents
@@ -444,17 +461,21 @@ public class EsServiceIT extends EsApiIntegration {
     String document = "{\"datasetKey\" : \"" + datasetKey + "\"}";
 
     for (String index : indexes) {
-      EsService.indexDocument(ES_SERVER.getEsClient(), index, 1, document);
-      EsService.refreshIndex(ES_SERVER.getEsClient(), index);
+      EsService.indexDocument(EsApiIntegration.ES_SERVER.getEsClient(), index, 1, document);
+      EsService.refreshIndex(EsApiIntegration.ES_SERVER.getEsClient(), index);
     }
 
     final String alias = "alias1";
     EsService.swapIndexes(
-        ES_SERVER.getEsClient(), Collections.singleton(alias), indexes, Collections.emptySet());
+        EsApiIntegration.ES_SERVER.getEsClient(),
+        Collections.singleton(alias),
+        indexes,
+        Collections.emptySet());
 
     // When
     Set<String> indexesFound =
-        EsService.findDatasetIndexesInAlias(ES_SERVER.getEsClient(), alias, datasetKey);
+        EsService.findDatasetIndexesInAlias(
+            EsApiIntegration.ES_SERVER.getEsClient(), alias, datasetKey);
 
     // Should
     assertEquals(2, indexesFound.size());
@@ -463,7 +484,8 @@ public class EsServiceIT extends EsApiIntegration {
 
     // When
     indexesFound =
-        EsService.findDatasetIndexesInAlias(ES_SERVER.getEsClient(), alias, "fakeDataset");
+        EsService.findDatasetIndexesInAlias(
+            EsApiIntegration.ES_SERVER.getEsClient(), alias, "fakeDataset");
 
     // State
     assertTrue(indexesFound.isEmpty());
@@ -475,18 +497,22 @@ public class EsServiceIT extends EsApiIntegration {
     // State
     String idx1 =
         EsService.createIndex(
-            ES_SERVER.getEsClient(),
+            EsApiIntegration.ES_SERVER.getEsClient(),
             IndexParams.builder().indexName("idx").settingsType(SEARCH).build());
 
     // index some documents
     final String datasetKey = "82ceb6ba-f762-11e1-a439-00145eb45e9a";
     String document = "{\"datasetKey\" : \"" + datasetKey + "\"}";
     IntStream.range(1, 4)
-        .forEach(i -> EsService.indexDocument(ES_SERVER.getEsClient(), idx1, i, document));
+        .forEach(
+            i ->
+                EsService.indexDocument(
+                    EsApiIntegration.ES_SERVER.getEsClient(), idx1, i, document));
 
     // When
     String query = String.format(DELETE_BY_DATASET_QUERY, datasetKey);
-    String taskId = EsService.deleteRecordsByQuery(ES_SERVER.getEsClient(), idx1, query);
+    String taskId =
+        EsService.deleteRecordsByQuery(EsApiIntegration.ES_SERVER.getEsClient(), idx1, query);
 
     // Should
     assertFalse(Strings.isNullOrEmpty(taskId));
@@ -498,20 +524,25 @@ public class EsServiceIT extends EsApiIntegration {
     // State
     String idx1 =
         EsService.createIndex(
-            ES_SERVER.getEsClient(),
+            EsApiIntegration.ES_SERVER.getEsClient(),
             IndexParams.builder().indexName("idx1").settingsType(SEARCH).build());
 
     // index some documents
     final String datasetKey = "82ceb6ba-f762-11e1-a439-00145eb45e9a";
     String document = "{\"datasetKey\" : \"" + datasetKey + "\"}";
     IntStream.range(1, 6)
-        .forEach(i -> EsService.indexDocument(ES_SERVER.getEsClient(), idx1, i, document));
-    EsService.refreshIndex(ES_SERVER.getEsClient(), idx1);
+        .forEach(
+            i ->
+                EsService.indexDocument(
+                    EsApiIntegration.ES_SERVER.getEsClient(), idx1, i, document));
+    EsService.refreshIndex(EsApiIntegration.ES_SERVER.getEsClient(), idx1);
 
     // When
     String query = String.format(DELETE_BY_DATASET_QUERY, datasetKey);
-    String taskId = EsService.deleteRecordsByQuery(ES_SERVER.getEsClient(), idx1, query);
-    DeleteByQueryTask task = EsService.getDeletedByQueryTask(ES_SERVER.getEsClient(), taskId);
+    String taskId =
+        EsService.deleteRecordsByQuery(EsApiIntegration.ES_SERVER.getEsClient(), idx1, query);
+    DeleteByQueryTask task =
+        EsService.getDeletedByQueryTask(EsApiIntegration.ES_SERVER.getEsClient(), taskId);
 
     // Should
     assertNotNull(task);
@@ -519,7 +550,7 @@ public class EsServiceIT extends EsApiIntegration {
 
     // When
     TimeUnit.SECONDS.sleep(1);
-    task = EsService.getDeletedByQueryTask(ES_SERVER.getEsClient(), taskId);
+    task = EsService.getDeletedByQueryTask(EsApiIntegration.ES_SERVER.getEsClient(), taskId);
     assertTrue(task.isCompleted());
     assertEquals(5, task.getRecordsDeleted());
   }
