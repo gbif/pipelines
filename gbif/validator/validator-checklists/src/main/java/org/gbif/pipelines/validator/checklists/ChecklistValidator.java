@@ -125,7 +125,7 @@ public class ChecklistValidator implements Closeable {
                 return Metrics.FileInfo.builder()
                     .rowType(extension.getRowType().qualifiedName())
                     .count(LineCounter.count(extension))
-                    .fileName(archive.getCore().getFirstLocationFile().getName())
+                    .fileName(extension.getFirstLocationFile().getName())
                     .fileType(DwcFileType.EXTENSION)
                     .terms(collector.getExtensionTermInfo(nameUsageExtension))
                     .indexedCount(collector.getInterpretedExtensionRowCount(nameUsageExtension))
