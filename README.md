@@ -99,7 +99,7 @@ The project is structured as:
     - [**elasticsearch-tools**](./tools/elasticsearch-tools) - Tool for creating/deleting/swapping Elasticsearch indexes
     - [**extension-converter-maven-plugin**](./tools/extension-converter-maven-plugin) - Java code generator plugin for DWC extensions
     - [**pipelines-maven-plugin**](./tools/pipelines-maven-plugin) - Maven plugin adds new annotations and interface to [avro](https://avro.apache.org/docs/current/) generated classes
-    - [**xml-to-avsc-maven-plugin**](./tools/xml-to-avsc-maven-plugin) - AVRO schema generator plugin for DWC extensions
+    - [**maven-plugin-extension-xml-to-avsc**](./tools/maven-plugin-extension-xml-to-avsc) - AVRO schema generator plugin for DWC extensions
 
 # How to build the project
 

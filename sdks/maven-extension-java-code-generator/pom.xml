@@ -4,16 +4,16 @@
 
   <parent>
     <groupId>org.gbif.pipelines</groupId>
-    <artifactId>tools</artifactId>
-    <version>2.13.0-SNAPSHOT</version>
+    <artifactId>sdks</artifactId>
+    <version>2.14.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>extension-converter-maven-plugin</artifactId>
+  <artifactId>maven-extension-java-code-generator</artifactId>
   <packaging>maven-plugin</packaging>
 
-  <name>Pipelines :: Tools :: Extension converter</name>
-  <description>Maven plugin generates conveters java classes for raw extensions</description>
+  <name>Pipelines :: Sdks :: Maven plugin - Java code generator</name>
+  <description>Maven plugin generates java classes for raw extensions conveters</description>
 
   <properties>
     <sonar.coverage.exclusions>**/Templates.java</sonar.coverage.exclusions>
