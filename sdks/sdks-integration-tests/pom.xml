@@ -21,10 +21,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
-        <configuration>
-          <forkCount>2</forkCount>
-          <reuseForks>false</reuseForks>
-        </configuration>
       </plugin>
     </plugins>
     <!-- Copy pom.xml value to test resources maven.properties -->
