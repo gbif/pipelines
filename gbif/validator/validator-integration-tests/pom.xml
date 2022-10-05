@@ -9,7 +9,7 @@
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>validator-it-tests</artifactId>
+  <artifactId>validator-integration-tests</artifactId>
 
   <name>Pipelines :: GBIF :: Validator :: Integration Tests</name>
   <description>Integration tests for validation web services and clients</description>
