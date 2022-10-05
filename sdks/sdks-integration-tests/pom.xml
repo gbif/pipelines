@@ -14,13 +14,17 @@
   <artifactId>sdks-integration-tests</artifactId>
   <packaging>jar</packaging>
 
-  <name>Pipelines :: Sdks :: Sdks IT</name>
+  <name>Pipelines :: Sdks :: Integration Tests</name>
 
   <build>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
+        <configuration>
+          <forkCount>3</forkCount>
+          <reuseForks>true</reuseForks>
+        </configuration>
       </plugin>
     </plugins>
     <!-- Copy pom.xml value to test resources maven.properties -->

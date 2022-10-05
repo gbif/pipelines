@@ -88,7 +88,7 @@
     <dwc-api.version>1.37</dwc-api.version>
     <kvs.version>1.23</kvs.version>
     <hbase-utils.version>0.12</hbase-utils.version>
-    <gbif-wrangler.version>0.3</gbif-wrangler.version>
+    <gbif-wrangler.version>0.4</gbif-wrangler.version>
     <gbif-occurrence.version>0.173.1</gbif-occurrence.version>
     <vocabulary-lookup.version>0.47</vocabulary-lookup.version>
     <registry.version>3.84</registry.version>
@@ -153,7 +153,7 @@
     <hamcrest-java.version>2.0.0.0</hamcrest-java.version>
     <log4j-over-slf4j.version>1.7.16</log4j-over-slf4j.version>
     <zookeeper-version>3.4.5</zookeeper-version>
-    <testcontainers.elasticsearch.version>1.17.2</testcontainers.elasticsearch.version>
+    <testcontainers.elasticsearch.version>1.17.5</testcontainers.elasticsearch.version>
 
     <!-- Maven plugin -->
     <maven-plugin-api.version>3.8.6</maven-plugin-api.version>

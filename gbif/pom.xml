@@ -20,6 +20,7 @@
     <module>keygen</module>
     <module>pipelines</module>
     <module>validator</module>
+    <module>gbif-integration-tests</module>
   </modules>
 
 </project>
