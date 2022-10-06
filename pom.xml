@@ -88,7 +88,7 @@
     <dwc-api.version>1.37</dwc-api.version>
     <kvs.version>1.23</kvs.version>
     <hbase-utils.version>0.12</hbase-utils.version>
-    <gbif-wrangler.version>0.4</gbif-wrangler.version>
+    <gbif-wrangler.version>0.3</gbif-wrangler.version>
     <gbif-occurrence.version>0.173.1</gbif-occurrence.version>
     <vocabulary-lookup.version>0.47</vocabulary-lookup.version>
     <registry.version>3.84</registry.version>
