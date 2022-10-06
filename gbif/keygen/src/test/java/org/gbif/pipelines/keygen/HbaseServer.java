@@ -5,6 +5,7 @@ import java.util.UUID;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.curator.test.TestingServer;
 import org.apache.hadoop.hbase.HBaseTestingUtility;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.ConnectionFactory;
@@ -40,6 +41,8 @@ public class HbaseServer extends ExternalResource {
 
   HBaseLockingKeyService keyService;
 
+  private TestingServer zkServer;
+
   public void truncateTable() throws IOException {
     log.info("Trancate the table");
     TEST_UTIL.truncateTable(LOOKUP_TABLE);
@@ -51,6 +54,9 @@ public class HbaseServer extends ExternalResource {
 
   @Override
   protected void before() throws Exception {
+    zkServer = new TestingServer(true);
+    CFG.setZkConnectionString(zkServer.getConnectString());
+
     TEST_UTIL.getConfiguration().setInt("hbase.master.port", HBaseTestingUtility.randomFreePort());
     TEST_UTIL
         .getConfiguration()
@@ -61,7 +67,7 @@ public class HbaseServer extends ExternalResource {
     TEST_UTIL
         .getConfiguration()
         .setInt("hbase.regionserver.info.port", HBaseTestingUtility.randomFreePort());
-    TEST_UTIL.startMiniCluster(1);
+    TEST_UTIL.startMiniCluster(2);
     TEST_UTIL.createTable(LOOKUP_TABLE, CF);
     TEST_UTIL.createTable(COUNTER_TABLE, COUNTER_CF);
     TEST_UTIL.createTable(OCCURRENCE_TABLE, CF);
@@ -74,6 +80,12 @@ public class HbaseServer extends ExternalResource {
     TEST_UTIL.shutdownMiniCluster();
     if (connection != null) {
       connection.close();
+    }
+    try {
+      zkServer.stop();
+      zkServer.close();
+    } catch (IOException e) {
+      log.error("Could not close zk server for testing", e);
     }
   }
 }
