@@ -2,6 +2,7 @@ package org.gbif.pipelines.keygen;
 
 import java.io.IOException;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -37,11 +38,28 @@ public class HbaseServer extends ExternalResource {
 
   private static final HBaseTestingUtility TEST_UTIL = new HBaseTestingUtility();
 
-  Connection connection;
-
-  HBaseLockingKeyService keyService;
+  private static final Object MUTEX = new Object();
+  private static volatile HbaseServer instance;
+  private static final AtomicInteger COUNTER = new AtomicInteger(0);
 
   private TestingServer zkServer;
+  Connection connection;
+  HBaseLockingKeyService keyService;
+
+  public static HbaseServer getInstance() {
+    if (instance == null) {
+      synchronized (MUTEX) {
+        if (instance == null) {
+          instance = new HbaseServer();
+        }
+      }
+    }
+    return instance;
+  }
+
+  public String getZKString() {
+    return zkServer.getConnectString();
+  }
 
   public void truncateTable() throws IOException {
     log.info("Trancate the table");
@@ -54,38 +72,46 @@ public class HbaseServer extends ExternalResource {
 
   @Override
   protected void before() throws Exception {
-    zkServer = new TestingServer(true);
-    CFG.setZkConnectionString(zkServer.getConnectString());
+    if (COUNTER.get() == 0) {
+      zkServer = new TestingServer(true);
+      CFG.setZkConnectionString(zkServer.getConnectString());
 
-    TEST_UTIL.getConfiguration().setInt("hbase.master.port", HBaseTestingUtility.randomFreePort());
-    TEST_UTIL
-        .getConfiguration()
-        .setInt("hbase.master.info.port", HBaseTestingUtility.randomFreePort());
-    TEST_UTIL
-        .getConfiguration()
-        .setInt("hbase.regionserver.port", HBaseTestingUtility.randomFreePort());
-    TEST_UTIL
-        .getConfiguration()
-        .setInt("hbase.regionserver.info.port", HBaseTestingUtility.randomFreePort());
-    TEST_UTIL.startMiniCluster(2);
-    TEST_UTIL.createTable(LOOKUP_TABLE, CF);
-    TEST_UTIL.createTable(COUNTER_TABLE, COUNTER_CF);
-    TEST_UTIL.createTable(OCCURRENCE_TABLE, CF);
-    connection = ConnectionFactory.createConnection(TEST_UTIL.getConfiguration());
+      TEST_UTIL
+          .getConfiguration()
+          .setInt("hbase.master.port", HBaseTestingUtility.randomFreePort());
+      TEST_UTIL
+          .getConfiguration()
+          .setInt("hbase.master.info.port", HBaseTestingUtility.randomFreePort());
+      TEST_UTIL
+          .getConfiguration()
+          .setInt("hbase.regionserver.port", HBaseTestingUtility.randomFreePort());
+      TEST_UTIL
+          .getConfiguration()
+          .setInt("hbase.regionserver.info.port", HBaseTestingUtility.randomFreePort());
+      TEST_UTIL
+          .getConfiguration()
+          .setStrings("hbase.zookeeper.quorum", zkServer.getConnectString());
+      TEST_UTIL.startMiniCluster(2);
+      TEST_UTIL.createTable(LOOKUP_TABLE, CF);
+      TEST_UTIL.createTable(COUNTER_TABLE, COUNTER_CF);
+      TEST_UTIL.createTable(OCCURRENCE_TABLE, CF);
+      connection = ConnectionFactory.createConnection(TEST_UTIL.getConfiguration());
+    }
+    COUNTER.addAndGet(1);
   }
 
   @SneakyThrows
   @Override
   protected void after() {
-    TEST_UTIL.shutdownMiniCluster();
-    if (connection != null) {
-      connection.close();
-    }
-    try {
-      zkServer.stop();
-      zkServer.close();
-    } catch (IOException e) {
-      log.error("Could not close zk server for testing", e);
+    if (COUNTER.addAndGet(-1) == 0) {
+      TEST_UTIL.shutdownMiniCluster();
+      if (connection != null) {
+        connection.close();
+      }
+      if (zkServer != null) {
+        zkServer.stop();
+        zkServer.close();
+      }
     }
   }
 }
