@@ -37,8 +37,11 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-import org.mockito.Mockito;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnitRunner;
 
+@RunWith(MockitoJUnitRunner.class)
 public class FragmenterCallbackIT {
 
   private static final String DWCA_DATASET_UUID = "9bed66b3-4caa-42bb-9c93-71d7ba109dad";
@@ -50,7 +53,7 @@ public class FragmenterCallbackIT {
   private static CuratorFramework curator;
   private static TestingServer server;
   private static MessagePublisherStub publisher;
-  private static PipelinesHistoryClient client;
+  @Mock private PipelinesHistoryClient client;
 
   @ClassRule public static final HbaseServer HBASE_SERVER = new HbaseServer();
 
@@ -67,8 +70,6 @@ public class FragmenterCallbackIT {
     curator.start();
 
     publisher = MessagePublisherStub.create();
-
-    client = Mockito.mock(PipelinesHistoryClient.class);
   }
 
   @AfterClass
