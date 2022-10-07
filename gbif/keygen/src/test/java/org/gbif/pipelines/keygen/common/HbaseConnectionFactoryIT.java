@@ -4,19 +4,28 @@ import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 import org.apache.hadoop.hbase.client.Connection;
+import org.gbif.pipelines.keygen.HbaseServer;
 import org.junit.Assert;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 public class HbaseConnectionFactoryIT {
 
+  @ClassRule public static final HbaseServer HBASE_SERVER = HbaseServer.getInstance();
+
   private final Supplier<CompletableFuture<Connection>> connectionAsyncSupplier =
-      () -> CompletableFuture.supplyAsync(HbaseConnectionFactory.getInstance()::getConnection);
+      () ->
+          CompletableFuture.supplyAsync(
+              HbaseConnectionFactory.getInstance(HBASE_SERVER.getZKString())::getConnection);
 
   @Test
   public void instanceTest() throws IOException {
+
     // When
-    Connection conn1 = HbaseConnectionFactory.getInstance().getConnection();
-    Connection conn2 = HbaseConnectionFactory.getInstance().getConnection();
+    Connection conn1 =
+        HbaseConnectionFactory.getInstance(HBASE_SERVER.getZKString()).getConnection();
+    Connection conn2 =
+        HbaseConnectionFactory.getInstance(HBASE_SERVER.getZKString()).getConnection();
 
     // Should
     Assert.assertSame(conn1, conn2);
@@ -28,12 +37,15 @@ public class HbaseConnectionFactoryIT {
   @Test
   public void closeInstanceTest() throws IOException {
     // When
-    Connection conn1 = HbaseConnectionFactory.getInstance().getConnection();
-    Connection conn2 = HbaseConnectionFactory.getInstance().getConnection();
+    Connection conn1 =
+        HbaseConnectionFactory.getInstance(HBASE_SERVER.getZKString()).getConnection();
+    Connection conn2 =
+        HbaseConnectionFactory.getInstance(HBASE_SERVER.getZKString()).getConnection();
 
     conn1.close();
 
-    Connection conn3 = HbaseConnectionFactory.getInstance().getConnection();
+    Connection conn3 =
+        HbaseConnectionFactory.getInstance(HBASE_SERVER.getZKString()).getConnection();
 
     // Should
     Assert.assertTrue(conn1.isClosed());

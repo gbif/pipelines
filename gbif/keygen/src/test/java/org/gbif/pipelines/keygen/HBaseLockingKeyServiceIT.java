@@ -31,7 +31,7 @@ import org.junit.rules.ExpectedException;
 public class HBaseLockingKeyServiceIT {
 
   /** {@link ClassRule} requires this field to be public. */
-  @ClassRule public static final HbaseServer HBASE_SERVER = new HbaseServer();
+  @ClassRule public static final HbaseServer HBASE_SERVER = HbaseServer.getInstance();
 
   @Before
   public void before() throws IOException {

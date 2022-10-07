@@ -1,9 +1,11 @@
 package org.gbif.pipelines.diagnostics.common;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.curator.test.TestingServer;
 import org.apache.hadoop.hbase.HBaseTestingUtility;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.ConnectionFactory;
@@ -36,52 +38,85 @@ public class HbaseServer extends ExternalResource {
 
   private static final HBaseTestingUtility TEST_UTIL = new HBaseTestingUtility();
 
+  private static final Object MUTEX = new Object();
+  private static volatile HbaseServer instance;
+
+  private static final AtomicInteger COUNTER = new AtomicInteger(0);
+
   private HBaseStore<String> lookupTableStore = null;
   private Connection connection = null;
-
+  private TestingServer zkServer;
   HBaseLockingKeyService keyService;
+
+  public static HbaseServer getInstance() {
+    if (instance == null) {
+      synchronized (MUTEX) {
+        if (instance == null) {
+          instance = new HbaseServer();
+        }
+      }
+    }
+    return instance;
+  }
 
   public void truncateTable() throws IOException {
     log.info("Trancate the table");
     TEST_UTIL.truncateTable(LOOKUP_TABLE);
-    connection = ConnectionFactory.createConnection(TEST_UTIL.getConfiguration());
+
     keyService = new HBaseLockingKeyService(CFG, connection);
   }
 
   @Override
   protected void before() throws Exception {
-    log.info("Create hbase mini-cluster");
-    TEST_UTIL.getConfiguration().setInt("hbase.master.port", HBaseTestingUtility.randomFreePort());
-    TEST_UTIL
-        .getConfiguration()
-        .setInt("hbase.master.info.port", HBaseTestingUtility.randomFreePort());
-    TEST_UTIL
-        .getConfiguration()
-        .setInt("hbase.regionserver.port", HBaseTestingUtility.randomFreePort());
-    TEST_UTIL
-        .getConfiguration()
-        .setInt("hbase.regionserver.info.port", HBaseTestingUtility.randomFreePort());
-    TEST_UTIL.startMiniCluster(1);
-    TEST_UTIL.createTable(LOOKUP_TABLE, CF);
-    TEST_UTIL.createTable(COUNTER_TABLE, COUNTER_CF);
-    TEST_UTIL.createTable(OCCURRENCE_TABLE, CF);
-    connection = ConnectionFactory.createConnection(TEST_UTIL.getConfiguration());
+    if (COUNTER.get() == 0) {
+      zkServer = new TestingServer(true);
+      CFG.setZkConnectionString(zkServer.getConnectString());
 
-    lookupTableStore =
-        new HBaseStore<>(
-            CFG.getLookupTable(),
-            Columns.OCCURRENCE_COLUMN_FAMILY,
-            connection,
-            HBaseLockingKeyService.NUMBER_OF_BUCKETS);
+      log.info("Create hbase mini-cluster");
+      TEST_UTIL
+          .getConfiguration()
+          .setInt("hbase.master.port", HBaseTestingUtility.randomFreePort());
+      TEST_UTIL
+          .getConfiguration()
+          .setInt("hbase.master.info.port", HBaseTestingUtility.randomFreePort());
+      TEST_UTIL
+          .getConfiguration()
+          .setInt("hbase.regionserver.port", HBaseTestingUtility.randomFreePort());
+      TEST_UTIL
+          .getConfiguration()
+          .setInt("hbase.regionserver.info.port", HBaseTestingUtility.randomFreePort());
+      TEST_UTIL
+          .getConfiguration()
+          .setStrings("hbase.zookeeper.quorum", zkServer.getConnectString());
+      TEST_UTIL.startMiniCluster(2);
+      TEST_UTIL.createTable(LOOKUP_TABLE, CF);
+      TEST_UTIL.createTable(COUNTER_TABLE, COUNTER_CF);
+      TEST_UTIL.createTable(OCCURRENCE_TABLE, CF);
+      connection = ConnectionFactory.createConnection(TEST_UTIL.getConfiguration());
+
+      lookupTableStore =
+          new HBaseStore<>(
+              CFG.getLookupTable(),
+              Columns.OCCURRENCE_COLUMN_FAMILY,
+              connection,
+              HBaseLockingKeyService.NUMBER_OF_BUCKETS);
+    }
+    COUNTER.addAndGet(1);
   }
 
   @SneakyThrows
   @Override
   protected void after() {
-    log.info("Shut down hbase mini-cluster");
-    TEST_UTIL.shutdownMiniCluster();
-    if (connection != null) {
-      connection.close();
+    if (COUNTER.addAndGet(-1) == 0) {
+      log.info("Shut down hbase mini-cluster");
+      TEST_UTIL.shutdownMiniCluster();
+      if (connection != null) {
+        connection.close();
+      }
+      if (zkServer != null) {
+        zkServer.stop();
+        zkServer.close();
+      }
     }
   }
 }
