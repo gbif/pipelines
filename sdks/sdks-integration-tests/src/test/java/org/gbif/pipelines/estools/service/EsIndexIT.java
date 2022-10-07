@@ -256,7 +256,7 @@ public class EsIndexIT extends EsApiIntegration {
     String id = "find-dataset-indexes-in-aliases-test";
 
     // create index
-    final String datasetKey = "82ceb6ba-f762-11e1-a439-00145eb45e9a";
+    final String datasetKey = "6aae644c-59e7-4f9e-9622-2ee9835cb689";
     String idx1 =
         EsIndex.createIndex(
             EsApiIntegration.ES_SERVER.getEsConfig(),
@@ -268,11 +268,11 @@ public class EsIndexIT extends EsApiIntegration {
     EsService.refreshIndex(EsApiIntegration.ES_SERVER.getEsClient(), idx1);
 
     // add index to aliases
-    final String alias1 = "alias1";
+    final String alias1 = "alias10";
     EsIndex.swapIndexInAliases(
         EsApiIntegration.ES_SERVER.getEsConfig(), Collections.singleton(alias1), idx1);
 
-    final String alias2 = "alias2";
+    final String alias2 = "alias20";
     EsIndex.swapIndexInAliases(
         EsApiIntegration.ES_SERVER.getEsConfig(), Collections.singleton(alias2), idx1);
 
