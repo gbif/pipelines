@@ -95,9 +95,6 @@ import org.slf4j.MDC;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ALAEventToEsIndexPipeline {
 
-  // constrained until we figure out our needs and we can summarize it
-  private static final int MAX_TAXON_PER_EVENTS = 50;
-
   public static void main(String[] args) throws IOException {
     String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "elastic");
     EsIndexingPipelineOptions options = PipelinesOptionsFactory.createIndexing(combinedArgs);
@@ -335,15 +332,10 @@ public class ALAEventToEsIndexPipeline {
     ALAEventToSearchAvroPipeline.run(options);
 
     log.info("Running the pipeline");
-    try {
-      PipelineResult result = p.run();
-      result.waitUntilFinish();
-      log.info("Save metrics into the file and set files owner");
-      MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
-    } catch (Exception e) {
-      log.error("Exception thrown", e);
-      e.printStackTrace();
-    }
+    PipelineResult result = p.run();
+    result.waitUntilFinish();
+    log.info("Save metrics into the file and set files owner");
+    MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
 
     log.info("Pipeline has been finished");
   }

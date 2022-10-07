@@ -860,7 +860,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
             String k = c.element().getKey();
 
             // ALA specific
-            ALAUUIDRecord ur = v.getAll(urTag).iterator().next();
+            ALAUUIDRecord ur = v.getOnly(urTag, null);
 
             if (ur != null && !ur.getId().startsWith(REMOVED_PREFIX_MARKER)) {
 
@@ -936,14 +936,9 @@ public class IndexRecordTransform implements Serializable, IndexFields {
                 }
               }
             } else {
-              if (!ur.getId().startsWith(REMOVED_PREFIX_MARKER)) {
-                if (ur != null) {
-                  log.error("UUID missing for record ID " + ur.getId());
-                  throw new PipelinesException("UUID missing for record ID " + ur.getId());
-                } else {
-                  log.error("UUID missing and ER empty");
-                  throw new PipelinesException("UUID missing and ER empty");
-                }
+              if (ur != null && !ur.getId().startsWith(REMOVED_PREFIX_MARKER)) {
+                log.error("UUID missing and ER empty");
+                throw new PipelinesException("UUID missing and ER empty");
               }
             }
           }

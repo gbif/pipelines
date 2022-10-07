@@ -154,7 +154,8 @@ public class ALAVerbatimToEventPipeline {
                     ? config.getAlaNameMatchConfig()
                     : new ALANameMatchConfig())
             .create();
-    ALATemporalTransform temporalTransform = ALATemporalTransform.builder().create();
+    ALATemporalTransform temporalTransform =
+        ALATemporalTransform.builder().orderings(dateComponentOrdering).create();
     MultimediaTransform multimediaTransform = transformsFactory.createMultimediaTransform();
     AudubonTransform audubonTransform = transformsFactory.createAudubonTransform();
     ImageTransform imageTransform = transformsFactory.createImageTransform();
@@ -172,11 +173,18 @@ public class ALAVerbatimToEventPipeline {
         MeasurementOrFactTransform.builder().create();
     log.info("Creating beam pipeline");
 
-    PCollection<ALAMetadataRecord> metadataRecord =
-        p.apply("Create metadata collection", Create.of(options.getDatasetId()))
-            .apply("Interpret metadata", metadataTransform.interpret());
+    PCollectionView<ALAMetadataRecord> metadataView;
+    if (useMetadataRecordWriteIO(types)) {
+      PCollection<ALAMetadataRecord> metadataRecord =
+          p.apply("Create metadata collection", Create.of(options.getDatasetId()))
+              .apply("Interpret metadata", metadataTransform.interpret());
 
-    metadataRecord.apply("Write metadata to avro", metadataTransform.write(pathFn));
+      metadataRecord.apply("Write metadata to avro", metadataTransform.write(pathFn));
+    } else {
+      PCollection<ALAMetadataRecord> metadataRecord =
+          p.apply("Read metadata record", metadataTransform.read(pathFn));
+      metadataView = metadataRecord.apply("Convert to event metadata view", View.asSingleton());
+    }
 
     // Read raw records and filter duplicates
     PCollection<ExtendedRecord> uniqueRawRecords =

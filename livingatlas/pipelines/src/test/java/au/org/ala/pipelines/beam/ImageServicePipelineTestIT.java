@@ -1,34 +1,28 @@
 package au.org.ala.pipelines.beam;
 
 import au.org.ala.pipelines.options.ImageServicePipelineOptions;
+import au.org.ala.util.IntegrationTestUtils;
 import au.org.ala.util.TestUtils;
 import au.org.ala.utils.ValidationUtils;
 import java.io.File;
 import java.io.IOException;
-import okhttp3.mockwebserver.MockWebServer;
 import org.apache.commons.io.FileUtils;
 import org.gbif.pipelines.common.beam.options.DwcaPipelineOptions;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 public class ImageServicePipelineTestIT {
 
-  MockWebServer server;
-
-  @After
-  public void teardown() throws Exception {
-    server.shutdown();
-  }
+  IntegrationTestUtils itUtils;
 
   @Before
   public void setup() throws Exception {
     // clear up previous test runs
+    itUtils = IntegrationTestUtils.getInstance();
+    itUtils.setup();
     FileUtils.deleteQuietly(new File("/tmp/la-pipelines-test/image-service"));
-    server = TestUtils.createMockCollectory();
-    server.start(3939);
   }
 
   /** Test the generation of UUIDs for datasets that are use non-DwC terms for unique key terms */
@@ -72,7 +66,7 @@ public class ImageServicePipelineTestIT {
                   + "/"
                   + datasetID
                   + "/1/verbatim.avro",
-              "--properties=" + TestUtils.getPipelinesConfigFile(),
+              "--properties=" + itUtils.getPropertiesFilePath(),
               "--useExtendedRecordId=true"
             });
     ALAVerbatimToInterpretedPipeline.run(interpretationOptions);
@@ -87,7 +81,7 @@ public class ImageServicePipelineTestIT {
               "--metaFileName=" + ValidationUtils.IMAGE_SERVICE_METRICS,
               "--targetPath=/tmp/la-pipelines-test/" + testDir,
               "--inputPath=/tmp/la-pipelines-test/" + testDir,
-              "--properties=" + TestUtils.getPipelinesConfigFile()
+              "--properties=" + itUtils.getPropertiesFilePath()
             });
 
     String absolutePath = new File("src/test/resources").getAbsolutePath();

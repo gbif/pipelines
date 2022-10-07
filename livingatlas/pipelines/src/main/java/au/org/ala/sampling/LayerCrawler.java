@@ -1,5 +1,7 @@
 package au.org.ala.sampling;
 
+import au.org.ala.kvs.ALAPipelinesConfig;
+import au.org.ala.kvs.ALAPipelinesConfigFactory;
 import au.org.ala.pipelines.options.AllDatasetsPipelinesOptions;
 import au.org.ala.pipelines.options.SamplingPipelineOptions;
 import au.org.ala.utils.ALAFsUtils;
@@ -40,16 +42,15 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 @Slf4j
 public class LayerCrawler {
 
-  private static Integer batchSize;
-  private static Integer batchStatusSleepTime;
-  private static Integer downloadRetries;
   public static final String UNKNOWN_STATUS = "unknown";
   public static final String FINISHED_STATUS = "finished";
   public static final String ERROR_STATUS = "error";
 
-  private final SamplingService service;
+  private SamplingService service;
 
-  private static Retrofit retrofit;
+  private Retrofit retrofit;
+
+  ALAPipelinesConfig config;
 
   public static void main(String[] args) throws Exception {
     CombinedYamlConfiguration conf = new CombinedYamlConfiguration(args);
@@ -60,28 +61,31 @@ public class LayerCrawler {
     MDC.put("attempt", options.getAttempt().toString());
     MDC.put("step", "SAMPLING");
 
-    init(options);
-    run(options);
+    LayerCrawler layerCrawler = new LayerCrawler();
+    layerCrawler.run(options);
     // FIXME: Issue logged here: https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/105
     System.exit(0);
   }
 
-  public static void init(SamplingPipelineOptions options) {
+  public void run(SamplingPipelineOptions options) throws Exception {
+
+    config =
+        ALAPipelinesConfigFactory.getInstance(
+                HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()),
+                options.getInputPath())
+            .get();
+
     MDC.put("step", "SAMPLING");
-    String baseUrl = options.getBaseUrl();
-    batchSize = options.getBatchSize();
-    batchStatusSleepTime = options.getBatchStatusSleepTime();
-    downloadRetries = options.getDownloadRetries();
-    log.info("Using {} service", baseUrl);
     retrofit =
         new Retrofit.Builder()
-            .baseUrl(baseUrl)
+            .baseUrl(config.getSamplingService().getWsUrl())
             .addConverterFactory(JacksonConverterFactory.create())
             .validateEagerly(true)
             .build();
-  }
 
-  public static void run(SamplingPipelineOptions options) throws Exception {
+    log.info("Initialising crawler....");
+    service = retrofit.create(SamplingService.class);
+    log.info("Initialised.");
 
     FileSystem fs =
         FsUtils.getFileSystem(
@@ -89,9 +93,6 @@ public class LayerCrawler {
             options.getInputPath());
 
     Instant batchStart = Instant.now();
-
-    // list file in directory
-    LayerCrawler lc = new LayerCrawler();
 
     // (re)create sampling output directories
     String sampleDownloadPath = getSampleDownloadPath(options);
@@ -108,11 +109,11 @@ public class LayerCrawler {
     }
 
     Collection<String> latLngFiles = ALAFsUtils.listPaths(fs, latLngExportPath);
-    String layerList = lc.getRequiredLayers();
+    String layerList = getRequiredLayers();
 
     log.info("Running sampling using lat lng files: {} ", latLngFiles.size());
     for (String inputFile : latLngFiles) {
-      lc.crawl(fs, layerList, inputFile, sampleDownloadPath);
+      crawl(fs, layerList, inputFile, sampleDownloadPath);
     }
 
     log.info("Finished layer sampling. Downloads in CSV directory: {}", sampleDownloadPath);
@@ -180,11 +181,7 @@ public class LayerCrawler {
         + ".avro";
   }
 
-  public LayerCrawler() {
-    log.info("Initialising crawler....");
-    this.service = retrofit.create(SamplingService.class);
-    log.info("Initialised.");
-  }
+  public LayerCrawler() {}
 
   public String getRequiredLayers() throws IOException {
 
@@ -209,7 +206,7 @@ public class LayerCrawler {
     InputStream inputStream = ALAFsUtils.openInputStream(fs, inputFilePath);
     Collection<List<String>> partitioned;
     try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
-      partitioned = partition(reader.lines(), batchSize);
+      partitioned = partition(reader.lines(), config.getSamplingService().getBatchSize());
     }
 
     for (List<String> partition : partitioned) {
@@ -239,7 +236,7 @@ public class LayerCrawler {
             Duration.between(batchStart, batchCurrentTime).getSeconds());
 
         if (!state.equals(FINISHED_STATUS)) {
-          TimeUnit.MILLISECONDS.sleep(batchStatusSleepTime);
+          TimeUnit.MILLISECONDS.sleep(config.getSamplingService().getBatchStatusSleepTime());
         } else {
           log.info("Downloading sampling batch {}", batchId);
 
@@ -286,7 +283,7 @@ public class LayerCrawler {
       String batchId,
       SamplingService.BatchStatus batchStatus) {
 
-    for (int i = 0; i < downloadRetries; i++) {
+    for (int i = 0; i < config.getSamplingService().getDownloadRetries(); i++) {
 
       try {
         try (ReadableByteChannel inputChannel =

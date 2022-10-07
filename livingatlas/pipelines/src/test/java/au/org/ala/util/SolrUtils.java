@@ -1,12 +1,10 @@
 package au.org.ala.util;
 
-import au.org.ala.utils.CombinedYamlConfiguration;
 import java.io.*;
 import java.net.URI;
 import java.nio.file.*;
 import java.nio.file.FileSystem;
 import java.util.*;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 import okio.BufferedSink;
@@ -36,21 +34,11 @@ public class SolrUtils {
   public static final String BIOCACHE_CONFIG_SET = "biocache_test";
 
   public static List<String> getZkHosts() throws Exception {
-    return Arrays.stream(loadConfProperty("zkHost").split(",")).collect(Collectors.toList());
+    return Arrays.asList("localhost:" + System.getProperty("ZK_PORT"));
   }
 
   public static String getHttpHost() throws Exception {
-    return loadConfProperty("solrAdminHost");
-  }
-
-  private static String loadConfProperty(String propertyName) throws Exception {
-
-    // the config location is override in the pom file for maven test runs
-    CombinedYamlConfiguration testConf =
-        new CombinedYamlConfiguration("--config=" + TestUtils.getPipelinesConfigFile());
-
-    Map<String, String> testConfMap = (Map<String, String>) testConf.get("test");
-    return testConfMap.get(propertyName);
+    return "localhost:" + System.getProperty("SOLR_PORT");
   }
 
   public static void setupIndex() throws Exception {

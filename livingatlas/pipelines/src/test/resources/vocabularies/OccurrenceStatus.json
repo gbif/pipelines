@@ -1,0 +1,81 @@
+{
+  "metadata" : {
+    "createdDate" : "2022-04-25T16:02:05.652",
+    "version" : null
+  },
+  "vocabulary" : {
+    "key" : 2,
+    "name" : "OccurrenceStatus",
+    "label" : {
+      "en" : "Occurrence status"
+    },
+    "definition" : {
+      "en" : "A statement about the presence or absence of a Taxon at a Location."
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2020-07-15T08:22:47.067248",
+    "createdBy" : "mlopezg",
+    "modified" : "2020-07-15T08:22:47.067248",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "namespace" : null
+  },
+  "concepts" : [ {
+    "key" : 40,
+    "name" : "Present",
+    "label" : {
+      "en" : "Present",
+      "es-ES" : "Presente",
+      "fr-FR" : "Présent"
+    },
+    "definition" : { },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2020-07-15T08:19:04.777513",
+    "createdBy" : "mlopezg",
+    "modified" : "2020-07-15T08:19:04.777513",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 2,
+    "parentKey" : null,
+    "alternativeLabels" : {
+      "en" : [ "reported", "collected", "presence" ]
+    },
+    "hiddenLabels" : [ "episodic", "frequente", "ephemeral", "occasional", "complet", "extant", "native non-endemic", "rare", "casual", "raro", "outbreak", "stocked", "unclear breeding certaint", "adventive", "treated", "observed in breeding season", "probably breeding", "very plentiful", "abundant", "endemic", "very very abundant", "летящие", "rara", "песня, голос", "abundante", "poco común", "визуально", "possibly breeding", "locally abundant", "very common", "muy común", "very abundant", "frequent", "irregular", "presente en el area", "confirmed present", "alien", "uncommon", "común", "common", "native", "vagrant", "locally common", "established", "fairly common", "dominant", "locally established", "confirmed breeding", "average cover: 1-5% maximum cover: 1-5%", "possible breeding", "native endemic", "plentiful", "pair", "p", "probable breeding", "infested", "pouco abundante", "attacked", "infrequent", "muito abundante" ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 41,
+    "name" : "Absent",
+    "label" : {
+      "en" : "Absent",
+      "es-ES" : "Ausente"
+    },
+    "definition" : { },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2020-07-15T07:51:40.898037",
+    "createdBy" : "mlopezg",
+    "modified" : "2020-07-15T07:51:40.898037",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 2,
+    "parentKey" : null,
+    "alternativeLabels" : {
+      "fr-FR" : [ "non observé" ]
+    },
+    "hiddenLabels" : [ "extirpated" ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  } ]
+}
