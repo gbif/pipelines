@@ -15,8 +15,9 @@ import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
 import org.gbif.pipelines.estools.service.EsService;
-import org.gbif.pipelines.ingest.pipelines.utils.EsServer;
-import org.gbif.pipelines.ingest.pipelines.utils.InterpretedAvroWriter;
+import org.gbif.pipelines.ingest.utils.EsServer;
+import org.gbif.pipelines.ingest.utils.InterpretedAvroWriter;
+import org.gbif.pipelines.ingest.utils.ZkServer;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
@@ -61,6 +62,8 @@ public class OccurrenceToEsIndexPipelineIT {
 
   @ClassRule public static final EsServer ES_SERVER = new EsServer();
 
+  @ClassRule public static final ZkServer ZK_SERVER = ZkServer.getInstance();
+
   @Before
   public void cleanIndexes() {
     EsService.deleteAllIndexes(ES_SERVER.getEsClient());
@@ -71,7 +74,7 @@ public class OccurrenceToEsIndexPipelineIT {
 
     // State
     String outputFile = getClass().getResource("/").getFile();
-    String idxName = "interpretedtoesindexextendedpipelineit";
+    String idxName = "beam-interpretedtoesindexextendedpipelineit";
 
     String postfix = "777";
 
@@ -188,8 +191,8 @@ public class OccurrenceToEsIndexPipelineIT {
       "--inputPath=" + input,
       "--targetPath=" + input,
       "--esHosts=" + String.join(",", ES_SERVER.getEsConfig().getRawHosts()),
-      "--esIndexName=interpretedtoesindexextendedpipelineit",
-      "--esAlias=occurrence_interpretedtoesindexextendedpipelineit",
+      "--esIndexName=beam-interpretedtoesindexextendedpipelineit",
+      "--esAlias=beam_occurrence_interpretedtoesindexextendedpipelineit",
       "--indexNumberShards=1",
       "--indexNumberReplicas=0"
     };

@@ -31,8 +31,9 @@ import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.factory.SerDeFactory;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
 import org.gbif.pipelines.estools.service.EsService;
-import org.gbif.pipelines.ingest.pipelines.utils.EsServer;
-import org.gbif.pipelines.ingest.pipelines.utils.InterpretedAvroWriter;
+import org.gbif.pipelines.ingest.utils.EsServer;
+import org.gbif.pipelines.ingest.utils.InterpretedAvroWriter;
+import org.gbif.pipelines.ingest.utils.ZkServer;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
@@ -69,7 +70,6 @@ import org.gbif.pipelines.transforms.specific.ClusteringTransform;
 import org.gbif.pipelines.transforms.specific.GbifIdTransform;
 import org.gbif.pipelines.transforms.specific.IdentifierTransform;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -92,10 +92,7 @@ public class EventToEsIndexPipelineIT {
 
   @ClassRule public static final EsServer ES_SERVER = new EsServer();
 
-  @Before
-  public void cleanIndexes() {
-    EsService.deleteAllIndexes(ES_SERVER.getEsClient());
-  }
+  @ClassRule public static final ZkServer ZK_SERVER = ZkServer.getInstance();
 
   private static ExtendedRecord testEventCoreRecord(String id, String parentId, String datasetKey) {
     Map<String, String> coreEvent1 = new HashMap<>();

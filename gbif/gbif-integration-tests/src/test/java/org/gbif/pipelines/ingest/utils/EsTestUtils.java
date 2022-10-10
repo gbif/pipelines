@@ -1,4 +1,4 @@
-package org.gbif.pipelines.ingest.pipelines.utils;
+package org.gbif.pipelines.ingest.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
@@ -28,10 +28,6 @@ public class EsTestUtils {
   public static final String DATASET_TEST_7 = "902c8fe7-8f38-45b0-854e-c324fed36303";
   public static final String DATASET_TEST_8 = "7e3ec3b3-de71-4389-b3ea-71d0cae64631";
   public static final String DATASET_TEST_9 = "758478a0-f762-11e1-a439-00145eb45e9a";
-
-  public static final String ALIAS = "alias";
-  public static final String STATIC_IDX = "def-static";
-  public static final String DYNAMIC_IDX = "def-dynamic";
   public static final String MATCH_QUERY = "{\"query\":{\"match\":{\"%s\":\"%s\"}}}";
   // default number of records per dataset
   public static final int DEFAULT_REC_DATASET = 10;
@@ -42,7 +38,10 @@ public class EsTestUtils {
   public static EsIndexingPipelineOptions createPipelineOptions(
       EsServer server, String datasetKey, String idxName, String alias, int attempt) {
     String propertiesPath =
-        Thread.currentThread().getContextClassLoader().getResource("lock.yaml").getPath();
+        Thread.currentThread()
+            .getContextClassLoader()
+            .getResource("data7/ingest/pipelines.yaml")
+            .getPath();
     String[] args = {
       "--esIndexName=" + idxName,
       "--datasetId=" + datasetKey,

@@ -1,4 +1,4 @@
-package org.gbif.pipelines.ingest.pipelines.utils;
+package org.gbif.pipelines.ingest.utils;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 import static org.gbif.pipelines.core.utils.FsUtils.createParentDirectories;

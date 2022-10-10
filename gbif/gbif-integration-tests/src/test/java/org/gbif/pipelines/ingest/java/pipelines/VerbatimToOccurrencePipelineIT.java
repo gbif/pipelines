@@ -25,6 +25,7 @@ import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
 import org.gbif.pipelines.ingest.java.transforms.InterpretedAvroWriter;
+import org.gbif.pipelines.ingest.utils.ZkServer;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
@@ -40,6 +41,7 @@ import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.specific.GbifIdTransform;
 import org.junit.Assert;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 @SuppressWarnings("all")
@@ -48,7 +50,9 @@ public class VerbatimToOccurrencePipelineIT {
   private static final DwcTerm CORE_TERM = DwcTerm.Occurrence;
 
   private static final String ID = "777";
-  private static final String DATASET_KEY = "9bed66b3-4caa-42bb-9c93-71d7ba109dad";
+  private static final String DATASET_KEY = "992cca75-cc1a-4bea-8f4f-6615e550504a";
+
+  @ClassRule public static final ZkServer ZK_SERVER = ZkServer.getInstance();
 
   @Test
   public void pipelineAllSynchTest() throws Exception {
