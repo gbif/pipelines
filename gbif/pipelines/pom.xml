@@ -16,7 +16,6 @@
   <description>Apache Beam pipelines</description>
 
   <modules>
-    <module>export-gbif-hbase</module>
     <module>ingest-gbif-fragmenter</module>
     <module>ingest-gbif-beam</module>
     <module>ingest-gbif-java</module>

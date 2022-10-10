@@ -51,7 +51,7 @@ public class InterpretedToEsIndexExtendedPipelineIT {
   private static final String ID = "777";
 
   /** {@link ClassRule} requires this field to be public. */
-  @ClassRule public static final EsServer ES_SERVER = new EsServer();
+  @ClassRule public static final EsServer ES_SERVER = EsServer.getInstance();
 
   @ClassRule public static final ZkServer ZK_SERVER = ZkServer.getInstance();
 

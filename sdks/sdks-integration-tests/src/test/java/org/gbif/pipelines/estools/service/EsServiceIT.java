@@ -508,13 +508,12 @@ public class EsServiceIT extends EsApiIntegration {
     indexes.add(idx2);
 
     // we create another empty index to check that it's discarded
-    String idx3 =
-        EsService.createIndex(
-            EsApiIntegration.ES_SERVER.getEsClient(),
-            IndexParams.builder()
-                .indexName("find-dataset-indexes-in-alias-test-3")
-                .settingsType(INDEXING)
-                .build());
+    EsService.createIndex(
+        EsApiIntegration.ES_SERVER.getEsClient(),
+        IndexParams.builder()
+            .indexName("find-dataset-indexes-in-alias-test-3")
+            .settingsType(INDEXING)
+            .build());
 
     // index some documents
     final String datasetKey = "82ceb6ba-f762-11e1-a439-00145eb45e9a";
@@ -525,7 +524,7 @@ public class EsServiceIT extends EsApiIntegration {
       EsService.refreshIndex(EsApiIntegration.ES_SERVER.getEsClient(), index);
     }
 
-    final String alias = "alias1";
+    final String alias = "alias-find-dataset-indexes-in-alias";
     EsService.swapIndexes(
         EsApiIntegration.ES_SERVER.getEsClient(),
         Collections.singleton(alias),

@@ -35,7 +35,7 @@ import org.junit.ClassRule;
 public abstract class EsApiIntegration {
 
   /** {@link ClassRule} requires this field to be public. */
-  @ClassRule public static final EsServer ES_SERVER = new EsServer();
+  @ClassRule public static final EsServer ES_SERVER = EsServer.getInstance();
 
   // files for testing
   static final Path TEST_MAPPINGS_PATH = Paths.get("mappings/simple-mapping.json");

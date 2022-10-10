@@ -3,6 +3,7 @@ package org.gbif.pipelines;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicInteger;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpHost;
@@ -23,41 +24,60 @@ import org.testcontainers.utility.DockerImageName;
 @Getter
 public class EsServer extends ExternalResource {
 
+  private static final Object MUTEX = new Object();
+  private static volatile EsServer instance;
+  private static final AtomicInteger COUNTER = new AtomicInteger(0);
+
   private ElasticsearchContainer embeddedElastic;
   private EsConfig esConfig;
   private RestClient restClient;
   private EsClient esClient;
 
+  public static EsServer getInstance() {
+    if (instance == null) {
+      synchronized (MUTEX) {
+        if (instance == null) {
+          instance = new EsServer();
+        }
+      }
+    }
+    return instance;
+  }
+
   @Override
   protected void before() throws Throwable {
-    embeddedElastic =
-        new ElasticsearchContainer(
-                DockerImageName.parse("docker.elastic.co/elasticsearch/elasticsearch-oss")
-                    .withTag(getEsVersion()))
-            .withReuse(true);
+    if (COUNTER.get() == 0) {
+      embeddedElastic =
+          new ElasticsearchContainer(
+                  DockerImageName.parse("docker.elastic.co/elasticsearch/elasticsearch-oss")
+                      .withTag(getEsVersion()))
+              .withReuse(true);
 
-    embeddedElastic.start();
+      embeddedElastic.start();
 
-    esConfig = EsConfig.from(getServerAddress());
-    restClient = buildRestClient();
-    esClient = EsClient.from(esConfig);
+      esConfig = EsConfig.from(getServerAddress());
+      restClient = buildRestClient();
+      esClient = EsClient.from(esConfig);
 
-    // Fix for https://github.com/gbif/pipelines/issues/568
-    esClient.performPutRequest(
-        "/_cluster/settings",
-        Collections.emptyMap(),
-        new NStringEntity(
-            "{\"persistent\":{\"cluster.routing.allocation.disk.threshold_enabled\":false}}"));
+      // Fix for https://github.com/gbif/pipelines/issues/568
+      esClient.performPutRequest(
+          "/_cluster/settings",
+          Collections.emptyMap(),
+          new NStringEntity(
+              "{\"persistent\":{\"cluster.routing.allocation.disk.threshold_enabled\":false}}"));
+    }
   }
 
   @Override
   protected void after() {
-    embeddedElastic.stop();
-    esClient.close();
-    try {
-      restClient.close();
-    } catch (IOException e) {
-      log.error("Could not close rest client for testing", e);
+    if (COUNTER.addAndGet(-1) == 0) {
+      embeddedElastic.stop();
+      esClient.close();
+      try {
+        restClient.close();
+      } catch (IOException e) {
+        log.error("Could not close rest client for testing", e);
+      }
     }
   }
 

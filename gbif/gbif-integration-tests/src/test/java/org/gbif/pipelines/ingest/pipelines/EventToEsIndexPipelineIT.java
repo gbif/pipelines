@@ -90,7 +90,7 @@ public class EventToEsIndexPipelineIT {
 
   @Rule public final transient TestPipeline p = TestPipeline.create();
 
-  @ClassRule public static final EsServer ES_SERVER = new EsServer();
+  @ClassRule public static final EsServer ES_SERVER = EsServer.getInstance();
 
   @ClassRule public static final ZkServer ZK_SERVER = ZkServer.getInstance();
 

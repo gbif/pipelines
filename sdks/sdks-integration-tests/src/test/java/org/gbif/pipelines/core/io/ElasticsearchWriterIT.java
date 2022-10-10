@@ -32,7 +32,7 @@ public class ElasticsearchWriterIT {
   private static final Path WRONG_MAPPINGS_PATH = Paths.get("mappings/wrong-mapping.json");
 
   /** {@link ClassRule} requires this field to be public. */
-  @ClassRule public static final EsServer ES_SERVER = new EsServer();
+  @ClassRule public static final EsServer ES_SERVER = EsServer.getInstance();
 
   @Before
   public void cleanIndexes() {
