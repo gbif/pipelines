@@ -24,11 +24,13 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
-import org.gbif.pipelines.ingest.pipelines.utils.InterpretedAvroWriter;
+import org.gbif.pipelines.ingest.utils.InterpretedAvroWriter;
+import org.gbif.pipelines.ingest.utils.ZkServer;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.junit.Assert;
+import org.junit.ClassRule;
 import org.junit.FixMethodOrder;
 import org.junit.Rule;
 import org.junit.Test;
@@ -46,9 +48,11 @@ public class VerbatimToIdentifierPipelineIT {
   private static final DwcTerm CORE_TERM = DwcTerm.Occurrence;
 
   private static final String ID = "777";
-  private static final String DATASET_KEY = "9bed66b3-4caa-42bb-9c93-71d7ba109dad";
+  private static final String DATASET_KEY = "4fd440cc-cd4c-468c-ac2f-5aff1d6b6679";
 
   @Rule public final transient TestPipeline p = TestPipeline.create();
+
+  @ClassRule public static final ZkServer ZK_SERVER = ZkServer.getInstance();
 
   @Test
   public void identifierInterpretationTest() throws Exception {
@@ -70,13 +74,6 @@ public class VerbatimToIdentifierPipelineIT {
       "--testMode=true"
     };
 
-    // When, Should
-    pipelineTest(args, attempt, outputFile);
-  }
-
-  private void pipelineTest(String[] args, String attempt, String outputFile) throws Exception {
-
-    // State
     String pipelinesProperties = outputFile + "/pipelines.yaml";
 
     // Add vocabulary

@@ -10,11 +10,10 @@ import java.util.List;
 import org.gbif.pipelines.common.beam.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.estools.EsIndex;
 import org.gbif.pipelines.estools.service.EsService;
-import org.gbif.pipelines.ingest.pipelines.utils.EsServer;
-import org.gbif.pipelines.ingest.pipelines.utils.EsTestUtils;
-import org.gbif.pipelines.ingest.pipelines.utils.ZkServer;
+import org.gbif.pipelines.ingest.utils.EsServer;
+import org.gbif.pipelines.ingest.utils.EsTestUtils;
+import org.gbif.pipelines.ingest.utils.ZkServer;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 
@@ -26,12 +25,7 @@ public class InterpretedToEsIndexExtendedPipelineIT {
 
   @ClassRule public static final EsServer ES_SERVER = new EsServer();
 
-  @ClassRule public static final ZkServer ZK_SERVER = new ZkServer();
-
-  @Before
-  public void cleanIndexes() {
-    EsService.deleteAllIndexes(ES_SERVER.getEsClient());
-  }
+  @ClassRule public static final ZkServer ZK_SERVER = ZkServer.getInstance();
 
   /**
    * Tests the following cases:
@@ -45,9 +39,10 @@ public class InterpretedToEsIndexExtendedPipelineIT {
   public void reindexingDatasetInSameDefaultIndexTest() {
 
     // State
+    String defIndex = "def-reindexing-dataset-in-same-default-index-test";
+    String alias = "alias-reindexing-dataset-in-same-default-index-test";
     EsIndexingPipelineOptions options =
-        EsTestUtils.createPipelineOptions(
-            ES_SERVER, EsTestUtils.DATASET_TEST, EsTestUtils.STATIC_IDX, EsTestUtils.ALIAS, 1);
+        EsTestUtils.createPipelineOptions(ES_SERVER, EsTestUtils.DATASET_TEST, defIndex, alias, 1);
     // 1. Index the dataset for the first time
     InterpretedToEsIndexExtendedPipeline.run(
         options,
@@ -129,13 +124,10 @@ public class InterpretedToEsIndexExtendedPipelineIT {
   @Test
   public void swappingIndependentIndexesTest() {
     // State
+    String alias = "alias-swapping-independent-indexes-test";
     EsIndexingPipelineOptions options =
         EsTestUtils.createPipelineOptions(
-            ES_SERVER,
-            EsTestUtils.DATASET_TEST,
-            EsTestUtils.DATASET_TEST + "_" + 1,
-            EsTestUtils.ALIAS,
-            1);
+            ES_SERVER, EsTestUtils.DATASET_TEST, EsTestUtils.DATASET_TEST + "_" + 1, alias, 1);
     // 1. Index the dataset for the first time in independent index
     InterpretedToEsIndexExtendedPipeline.run(
         options,
@@ -151,8 +143,7 @@ public class InterpretedToEsIndexExtendedPipelineIT {
 
     // Should
     Assert.assertEquals(
-        EsTestUtils.DEFAULT_REC_DATASET,
-        EsIndex.countDocuments(ES_SERVER.getEsConfig(), EsTestUtils.ALIAS));
+        EsTestUtils.DEFAULT_REC_DATASET, EsIndex.countDocuments(ES_SERVER.getEsConfig(), alias));
     Assert.assertEquals(
         EsTestUtils.DEFAULT_REC_DATASET,
         EsIndex.countDocuments(ES_SERVER.getEsConfig(), options.getEsIndexName()));
@@ -167,8 +158,7 @@ public class InterpretedToEsIndexExtendedPipelineIT {
 
     // Should
     Assert.assertEquals(
-        EsTestUtils.DEFAULT_REC_DATASET,
-        EsIndex.countDocuments(ES_SERVER.getEsConfig(), EsTestUtils.ALIAS));
+        EsTestUtils.DEFAULT_REC_DATASET, EsIndex.countDocuments(ES_SERVER.getEsConfig(), alias));
     Assert.assertEquals(
         EsTestUtils.DEFAULT_REC_DATASET,
         EsIndex.countDocuments(ES_SERVER.getEsConfig(), options.getEsIndexName()));
@@ -184,34 +174,35 @@ public class InterpretedToEsIndexExtendedPipelineIT {
     // When
     // 1. Index multiple datasets
     int attempt = 1;
+    String defIndex = "def-switching-index-test";
+    String dynIndex = "dyn-switching-index-test";
+    String alias = "alias-switching-index-test";
     // index in default static
     List<String> staticDatasets =
         Arrays.asList(
             EsTestUtils.DATASET_TEST, EsTestUtils.DATASET_TEST_2, EsTestUtils.DATASET_TEST_3);
-    EsTestUtils.indexDatasets(
-        ES_SERVER, staticDatasets, attempt, EsTestUtils.STATIC_IDX, EsTestUtils.ALIAS);
+    EsTestUtils.indexDatasets(ES_SERVER, staticDatasets, attempt, defIndex, alias);
     // index in default dynamic
     List<String> dynamicDatasets =
         Arrays.asList(
             EsTestUtils.DATASET_TEST_4, EsTestUtils.DATASET_TEST_5, EsTestUtils.DATASET_TEST_6);
-    EsTestUtils.indexDatasets(
-        ES_SERVER, dynamicDatasets, attempt, EsTestUtils.DYNAMIC_IDX, EsTestUtils.ALIAS);
+    EsTestUtils.indexDatasets(ES_SERVER, dynamicDatasets, attempt, dynIndex, alias);
     // index some independent datasets
     List<String> independentDatasets =
         Arrays.asList(
             EsTestUtils.DATASET_TEST_7, EsTestUtils.DATASET_TEST_8, EsTestUtils.DATASET_TEST_9);
-    EsTestUtils.indexDatasets(ES_SERVER, independentDatasets, attempt, null, EsTestUtils.ALIAS);
+    EsTestUtils.indexDatasets(ES_SERVER, independentDatasets, attempt, null, alias);
 
     // Should
     Assert.assertEquals(
         EsTestUtils.DEFAULT_REC_DATASET * 9,
-        EsIndex.countDocuments(ES_SERVER.getEsConfig(), EsTestUtils.ALIAS));
+        EsIndex.countDocuments(ES_SERVER.getEsConfig(), alias));
     Assert.assertEquals(
         EsTestUtils.DEFAULT_REC_DATASET * 3,
-        EsIndex.countDocuments(ES_SERVER.getEsConfig(), EsTestUtils.STATIC_IDX));
+        EsIndex.countDocuments(ES_SERVER.getEsConfig(), defIndex));
     Assert.assertEquals(
         EsTestUtils.DEFAULT_REC_DATASET * 3,
-        EsIndex.countDocuments(ES_SERVER.getEsConfig(), EsTestUtils.DYNAMIC_IDX));
+        EsIndex.countDocuments(ES_SERVER.getEsConfig(), dynIndex));
 
     List<String> allDatasets = new ArrayList<>();
     allDatasets.addAll(staticDatasets);
@@ -224,25 +215,25 @@ public class InterpretedToEsIndexExtendedPipelineIT {
             Assert.assertEquals(
                 EsTestUtils.DEFAULT_REC_DATASET,
                 EsTestUtils.countDocumentsFromQuery(
-                    ES_SERVER,
-                    EsTestUtils.ALIAS,
-                    String.format(EsTestUtils.MATCH_QUERY, "datasetKey", d))));
+                    ES_SERVER, alias, String.format(EsTestUtils.MATCH_QUERY, "datasetKey", d))));
 
     // When
     // 2. Switch some datasets to other indexes without changing the number of records
     attempt++;
     switchDatasetAndRecords(
         Arrays.asList(EsTestUtils.DATASET_TEST, EsTestUtils.DATASET_TEST_9),
-        EsTestUtils.DYNAMIC_IDX,
+        dynIndex,
+        alias,
         attempt,
         0);
     switchDatasetAndRecords(
         Arrays.asList(EsTestUtils.DATASET_TEST_4, EsTestUtils.DATASET_TEST_7),
-        EsTestUtils.STATIC_IDX,
+        defIndex,
+        alias,
         attempt,
         0);
     switchDatasetAndRecords(
-        EsTestUtils.DATASET_TEST_2, EsTestUtils.DATASET_TEST_2 + "_" + attempt, attempt, 0);
+        EsTestUtils.DATASET_TEST_2, EsTestUtils.DATASET_TEST_2 + "_" + attempt, alias, attempt, 0);
 
     // assert number of records for each dataset, it should remain as in the beginning
     allDatasets.forEach(
@@ -250,32 +241,29 @@ public class InterpretedToEsIndexExtendedPipelineIT {
             Assert.assertEquals(
                 EsTestUtils.DEFAULT_REC_DATASET,
                 EsTestUtils.countDocumentsFromQuery(
-                    ES_SERVER,
-                    EsTestUtils.ALIAS,
-                    String.format(EsTestUtils.MATCH_QUERY, "datasetKey", d))));
+                    ES_SERVER, alias, String.format(EsTestUtils.MATCH_QUERY, "datasetKey", d))));
 
     // 3. Switch some datasets again but adding and deleting records.
     attempt++;
-    switchDatasetAndRecords(EsTestUtils.DATASET_TEST, EsTestUtils.STATIC_IDX, attempt, 5);
+    switchDatasetAndRecords(EsTestUtils.DATASET_TEST, defIndex, alias, attempt, 5);
     switchDatasetAndRecords(
-        EsTestUtils.DATASET_TEST_3, EsTestUtils.DATASET_TEST_3 + "_" + attempt, attempt, 2);
-    switchDatasetAndRecords(EsTestUtils.DATASET_TEST_4, EsTestUtils.DYNAMIC_IDX, attempt, -7);
-    switchDatasetAndRecords(EsTestUtils.DATASET_TEST_8, EsTestUtils.DYNAMIC_IDX, attempt, -1);
+        EsTestUtils.DATASET_TEST_3, EsTestUtils.DATASET_TEST_3 + "_" + attempt, alias, attempt, 2);
+    switchDatasetAndRecords(EsTestUtils.DATASET_TEST_4, dynIndex, alias, attempt, -7);
+    switchDatasetAndRecords(EsTestUtils.DATASET_TEST_8, dynIndex, alias, attempt, -1);
   }
 
   private void switchDatasetAndRecords(
-      List<String> datasets, String targetIdx, int attempt, int diffRecords) {
+      List<String> datasets, String targetIdx, String alias, int attempt, int diffRecords) {
     datasets.forEach(
         datasetKey -> {
           // there should be only one source index
           String sourceIdx =
               EsIndex.findDatasetIndexesInAliases(
-                      ES_SERVER.getEsConfig(), new String[] {EsTestUtils.ALIAS}, datasetKey)
+                      ES_SERVER.getEsConfig(), new String[] {alias}, datasetKey)
                   .iterator()
                   .next();
 
-          final long previousCountAlias =
-              EsIndex.countDocuments(ES_SERVER.getEsConfig(), EsTestUtils.ALIAS);
+          final long previousCountAlias = EsIndex.countDocuments(ES_SERVER.getEsConfig(), alias);
           final long previousSourceCount =
               !sourceIdx.startsWith(datasetKey)
                   ? EsIndex.countDocuments(ES_SERVER.getEsConfig(), sourceIdx)
@@ -287,7 +275,7 @@ public class InterpretedToEsIndexExtendedPipelineIT {
           final long previousRecordsDataset =
               EsTestUtils.countDocumentsFromQuery(
                   ES_SERVER,
-                  EsTestUtils.ALIAS,
+                  alias,
                   String.format(EsTestUtils.MATCH_QUERY, "datasetKey", datasetKey));
           final long recordsDataset = previousRecordsDataset + diffRecords;
 
@@ -297,13 +285,13 @@ public class InterpretedToEsIndexExtendedPipelineIT {
               Collections.singletonList(datasetKey),
               attempt,
               targetIdx,
-              EsTestUtils.ALIAS,
+              alias,
               recordsDataset);
 
           // Should
           assertEquals(
               previousCountAlias + diffRecords,
-              EsIndex.countDocuments(ES_SERVER.getEsConfig(), EsTestUtils.ALIAS));
+              EsIndex.countDocuments(ES_SERVER.getEsConfig(), alias));
           assertEquals(
               previousTargetCount + recordsDataset,
               EsIndex.countDocuments(ES_SERVER.getEsConfig(), targetIdx));
@@ -319,13 +307,14 @@ public class InterpretedToEsIndexExtendedPipelineIT {
               recordsDataset,
               EsTestUtils.countDocumentsFromQuery(
                   ES_SERVER,
-                  EsTestUtils.ALIAS,
+                  alias,
                   String.format(EsTestUtils.MATCH_QUERY, "datasetKey", datasetKey)));
         });
   }
 
   private void switchDatasetAndRecords(
-      String datasetKey, String targetIdx, int attempt, int diffRecords) {
-    switchDatasetAndRecords(Collections.singletonList(datasetKey), targetIdx, attempt, diffRecords);
+      String datasetKey, String targetIdx, String alias, int attempt, int diffRecords) {
+    switchDatasetAndRecords(
+        Collections.singletonList(datasetKey), targetIdx, alias, attempt, diffRecords);
   }
 }

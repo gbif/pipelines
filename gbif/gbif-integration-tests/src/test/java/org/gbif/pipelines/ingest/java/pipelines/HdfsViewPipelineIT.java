@@ -19,6 +19,7 @@ import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
 import org.gbif.pipelines.core.utils.HdfsViewUtils;
 import org.gbif.pipelines.ingest.java.transforms.InterpretedAvroWriter;
+import org.gbif.pipelines.ingest.utils.ZkServer;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
@@ -51,11 +52,14 @@ import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.gbif.pipelines.transforms.specific.ClusteringTransform;
 import org.gbif.pipelines.transforms.specific.GbifIdTransform;
 import org.junit.Assert;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 public class HdfsViewPipelineIT {
 
   private static final String ID = "777";
+
+  @ClassRule public static final ZkServer ZK_SERVER = ZkServer.getInstance();
 
   @Test
   public void pipelineOccurrenceAllTest() throws Exception {
@@ -90,8 +94,7 @@ public class HdfsViewPipelineIT {
       "--interpretationTypes="
           + recordType.name()
           + ",MEASUREMENT_OR_FACT_TABLE,EXTENDED_MEASUREMENT_OR_FACT_TABLE,GERMPLASM_MEASUREMENT_TRIAL_TABLE",
-      "--testMode=true",
-      "--coreRecordType=" + recordType.name()
+      "--testMode=true"
     };
 
     prepareTestData(argsWriter, postfix, recordType);
@@ -108,10 +111,12 @@ public class HdfsViewPipelineIT {
       "--interpretationTypes="
           + recordType.name()
           + ",MEASUREMENT_OR_FACT_TABLE,EXTENDED_MEASUREMENT_OR_FACT_TABLE,GERMPLASM_MEASUREMENT_TRIAL_TABLE",
-      "--testMode=true",
-      "--coreRecordType=" + recordType.name()
+      "--testMode=true"
     };
+
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
+    options.setCoreRecordType(recordType); // avoid cph bug
+
     HdfsViewPipeline.run(options);
 
     Function<String, String> outputFn =
@@ -165,8 +170,7 @@ public class HdfsViewPipelineIT {
       "--targetPath=" + input,
       "--numberOfShards=1",
       "--interpretationTypes=" + recordType.name(),
-      "--testMode=true",
-      "--coreRecordType=" + recordType.name()
+      "--testMode=true"
     };
 
     prepareTestData(argsWriter, postfix, recordType);
@@ -181,10 +185,12 @@ public class HdfsViewPipelineIT {
       "--targetPath=" + output,
       "--numberOfShards=1",
       "--interpretationTypes=" + recordType.name(),
-      "--testMode=true",
-      "--coreRecordType=" + recordType.name()
+      "--testMode=true"
     };
+
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
+    options.setCoreRecordType(recordType); // avoid cph bug
+
     HdfsViewPipeline.run(options);
 
     Function<String, String> outputFn =
@@ -209,8 +215,11 @@ public class HdfsViewPipelineIT {
       String[] argsWriter,
       String postfix,
       PipelinesVariables.Pipeline.Interpretation.RecordType recordType) {
+
     InterpretationPipelineOptions optionsWriter =
         PipelinesOptionsFactory.createInterpretation(argsWriter);
+    optionsWriter.setCoreRecordType(recordType); // avoid cph bug
+
     DwcTerm coreTerm = HdfsViewUtils.getCoreTerm(optionsWriter.getCoreRecordType());
 
     try (SyncDataFileWriter<ExtendedRecord> writer =

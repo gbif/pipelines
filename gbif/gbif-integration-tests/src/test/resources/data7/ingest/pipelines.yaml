@@ -1,4 +1,4 @@
-zkConnectionString:
+zkConnectionString: ToFill
 gbifApi:
   wsUrl:
 keygen:
@@ -36,3 +36,9 @@ vocabularyConfig:
     http://rs.tdwg.org/dwc/terms/establishmentMeans: EstablishmentMeans
     http://rs.tdwg.org/dwc/terms/pathway: Pathway
     http://rs.gbif.org/terms/1.0/eventType: EventType
+indexLock:
+  namespace: test_index_lock
+  lockingPath: /indices/
+  lockName: esTest
+  sleepTimeMs: 100
+  maxRetries: 5

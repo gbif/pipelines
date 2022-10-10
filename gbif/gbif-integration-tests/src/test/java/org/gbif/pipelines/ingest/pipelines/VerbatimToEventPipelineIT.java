@@ -26,7 +26,8 @@ import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
-import org.gbif.pipelines.ingest.pipelines.utils.InterpretedAvroWriter;
+import org.gbif.pipelines.ingest.utils.InterpretedAvroWriter;
+import org.gbif.pipelines.ingest.utils.ZkServer;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
@@ -34,6 +35,7 @@ import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.junit.Assert;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -52,6 +54,8 @@ public class VerbatimToEventPipelineIT {
   private static final String DATASET_KEY = UUID.randomUUID().toString();
 
   @Rule public final transient TestPipeline p = TestPipeline.create();
+
+  @ClassRule public static final ZkServer ZK_SERVER = ZkServer.getInstance();
 
   @Test
   public void interpretationPipelineTest() throws Exception {

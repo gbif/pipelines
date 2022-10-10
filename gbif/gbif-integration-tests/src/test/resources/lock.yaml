@@ -1,7 +1,0 @@
-indexLock:
-  zkConnectionString: ToFill
-  namespace: test_index_lock
-  lockingPath: /indices/
-  lockName: esTest
-  sleepTimeMs: 100
-  maxRetries: 5
