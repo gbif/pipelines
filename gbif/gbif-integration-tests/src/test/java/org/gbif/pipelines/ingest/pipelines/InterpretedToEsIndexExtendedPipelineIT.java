@@ -23,7 +23,7 @@ import org.junit.Test;
  */
 public class InterpretedToEsIndexExtendedPipelineIT {
 
-  @ClassRule public static final EsServer ES_SERVER = new EsServer();
+  @ClassRule public static final EsServer ES_SERVER = EsServer.getInstance();
 
   @ClassRule public static final ZkServer ZK_SERVER = ZkServer.getInstance();
 

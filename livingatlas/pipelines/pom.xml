@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
@@ -78,80 +79,6 @@
           </systemPropertyVariables>
         </configuration>
       </plugin>
-      <!-- Shade the project into an uber jar to send to Spark -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-shade-plugin</artifactId>
-        <configuration>
-          <createDependencyReducedPom>true</createDependencyReducedPom>
-          <filters>
-            <filter>
-              <artifact>*:*</artifact>
-              <excludes>
-                <exclude>module-info.class</exclude>
-                <exclude>META-INF/*.SF</exclude>
-                <exclude>META-INF/*.DSA</exclude>
-                <exclude>META-INF/*.RSA</exclude>
-              </excludes>
-            </filter>
-          </filters>
-        </configuration>
-        <executions>
-          <execution>
-            <phase>package</phase>
-            <goals>
-              <goal>shade</goal>
-            </goals>
-            <configuration>
-              <shadedArtifactAttached>true</shadedArtifactAttached>
-              <shadedClassifierName>shaded</shadedClassifierName>
-              <transformers>
-                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
-                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                  <mainClass>org.gbif.pipelines.ingest.pipelines.DwcaToVerbatimPipeline</mainClass>
-                </transformer>
-                <!-- append default configs -->
-                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-                  <resource>reference.conf</resource>
-                </transformer>
-              </transformers>
-              <relocations>
-                <!-- Transient from core: conflicts with Beam on Spark -->
-                <relocation>
-                  <pattern>com.fasterxml.jackson</pattern>
-                  <shadedPattern>j213.com.fasterxml.jackson</shadedPattern>
-                </relocation>
-                <relocation>
-                  <pattern>okhttp3</pattern>
-                  <shadedPattern>o115.okhttp3</shadedPattern>
-                </relocation>
-                <relocation>
-                  <pattern>okio</pattern>
-                  <shadedPattern>o113.okio</shadedPattern>
-                </relocation>
-                <relocation>
-                  <pattern>retrofit2</pattern>
-                  <shadedPattern>r240.retrofit2</shadedPattern>
-                </relocation>
-                <!-- Transient from elastic search Beam: conflicts with hive-jdbc-1.1.0-cdh5.12.1-standalone.jar -->
-                <relocation>
-                  <pattern>org.apache.http</pattern>
-                  <shadedPattern>hc45.org.apache.http</shadedPattern>
-                </relocation>
-                <!-- Transient from core: conflicts with Hadoop on Spark -->
-                <relocation>
-                  <pattern>org.hsqldb</pattern>
-                  <shadedPattern>h228.org.hsqldb</shadedPattern>
-                </relocation>
-                <relocation>
-                  <pattern>com.google.common</pattern>
-                  <shadedPattern>g20.com.google.common</shadedPattern>
-                </relocation>
-              </relocations>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
       <plugin>
         <groupId>io.fabric8</groupId>
         <artifactId>docker-maven-plugin</artifactId>
@@ -190,7 +117,7 @@
                   <SOLR_HOST>localhost</SOLR_HOST>
                 </env>
                 <entrypoint>
-                  <shell>solr start -c -f  -p ${solr8.http.port}</shell>
+                  <shell>solr start -c -f -p ${solr8.http.port}</shell>
                 </entrypoint>
               </run>
             </image>
@@ -920,9 +847,9 @@
       </exclusions>
     </dependency>
     <dependency>
-        <groupId>org.checkerframework</groupId>
-        <artifactId>checker-qual</artifactId>
-        <version>${checker-qual.version}</version>
+      <groupId>org.checkerframework</groupId>
+      <artifactId>checker-qual</artifactId>
+      <version>${checker-qual.version}</version>
     </dependency>
 
     <dependency>
@@ -930,4 +857,88 @@
       <artifactId>freemarker</artifactId>
     </dependency>
   </dependencies>
+
+  <profiles>
+  <profile>
+  <id>livingatlasArtifacts</id>
+    <build>
+      <plugins>
+        <!-- Shade the project into an uber jar to send to Spark -->
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-shade-plugin</artifactId>
+          <configuration>
+            <createDependencyReducedPom>true</createDependencyReducedPom>
+            <filters>
+              <filter>
+                <artifact>*:*</artifact>
+                <excludes>
+                  <exclude>module-info.class</exclude>
+                  <exclude>META-INF/*.SF</exclude>
+                  <exclude>META-INF/*.DSA</exclude>
+                  <exclude>META-INF/*.RSA</exclude>
+                </excludes>
+              </filter>
+            </filters>
+          </configuration>
+          <executions>
+            <execution>
+              <phase>package</phase>
+              <goals>
+                <goal>shade</goal>
+              </goals>
+              <configuration>
+                <shadedArtifactAttached>true</shadedArtifactAttached>
+                <shadedClassifierName>shaded</shadedClassifierName>
+                <transformers>
+                  <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                  <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                    <mainClass>org.gbif.pipelines.ingest.pipelines.DwcaToVerbatimPipeline</mainClass>
+                  </transformer>
+                  <!-- append default configs -->
+                  <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                    <resource>reference.conf</resource>
+                  </transformer>
+                </transformers>
+                <relocations>
+                  <!-- Transient from core: conflicts with Beam on Spark -->
+                  <relocation>
+                    <pattern>com.fasterxml.jackson</pattern>
+                    <shadedPattern>j213.com.fasterxml.jackson</shadedPattern>
+                  </relocation>
+                  <relocation>
+                    <pattern>okhttp3</pattern>
+                    <shadedPattern>o115.okhttp3</shadedPattern>
+                  </relocation>
+                  <relocation>
+                    <pattern>okio</pattern>
+                    <shadedPattern>o113.okio</shadedPattern>
+                  </relocation>
+                  <relocation>
+                    <pattern>retrofit2</pattern>
+                    <shadedPattern>r240.retrofit2</shadedPattern>
+                  </relocation>
+                  <!-- Transient from elastic search Beam: conflicts with hive-jdbc-1.1.0-cdh5.12.1-standalone.jar -->
+                  <relocation>
+                    <pattern>org.apache.http</pattern>
+                    <shadedPattern>hc45.org.apache.http</shadedPattern>
+                  </relocation>
+                  <!-- Transient from core: conflicts with Hadoop on Spark -->
+                  <relocation>
+                    <pattern>org.hsqldb</pattern>
+                    <shadedPattern>h228.org.hsqldb</shadedPattern>
+                  </relocation>
+                  <relocation>
+                    <pattern>com.google.common</pattern>
+                    <shadedPattern>g20.com.google.common</shadedPattern>
+                  </relocation>
+                </relocations>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
+      </plugins>
+    </build>
+  </profile>
+  </profiles>
 </project>

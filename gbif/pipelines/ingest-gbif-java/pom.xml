@@ -15,33 +15,6 @@
   <name>Pipelines :: GBIF :: Pipelines :: Ingest-GBIF Java version</name>
   <description>Java based pipelines for ingestion biodiversity data</description>
 
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-failsafe-plugin</artifactId>
-      </plugin>
-    </plugins>
-    <!-- Copy pom.xml value to test resources maven.properties -->
-    <resources>
-      <resource>
-        <directory>src/test/resources</directory>
-        <targetPath>../test-classes/</targetPath>
-        <filtering>true</filtering>
-        <includes>
-          <include>*.properties</include>
-        </includes>
-      </resource>
-      <resource>
-        <directory>src/main/resources</directory>
-        <filtering>true</filtering>
-        <includes>
-          <include>*.properties</include>
-        </includes>
-      </resource>
-    </resources>
-  </build>
-
   <dependencies>
 
     <!-- Tools -->
