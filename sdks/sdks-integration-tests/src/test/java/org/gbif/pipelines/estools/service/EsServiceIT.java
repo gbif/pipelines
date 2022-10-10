@@ -28,7 +28,6 @@ import org.gbif.pipelines.estools.service.EsConstants.Field;
 import org.gbif.pipelines.estools.service.EsConstants.Indexing;
 import org.gbif.pipelines.estools.service.EsConstants.Searching;
 import org.hamcrest.CoreMatchers;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -222,10 +221,7 @@ public class EsServiceIT extends EsApiIntegration {
 
     // Should
     EsApiIntegration.assertSwapResults(
-        idx5,
-        "get-indexes-by-alias-and-swap-index-test-*",
-        alias,
-        Collections.singleton(idx4));
+        idx5, "get-indexes-by-alias-and-swap-index-test-*", alias, Collections.singleton(idx4));
   }
 
   @Test
@@ -344,8 +340,7 @@ public class EsServiceIT extends EsApiIntegration {
         Collections.emptySet());
 
     // Should
-    EsApiIntegration.assertSwapResults(
-        idx1, "swap-empty-alias-*", alias, Collections.emptySet());
+    EsApiIntegration.assertSwapResults(idx1, "swap-empty-alias-*", alias, Collections.emptySet());
   }
 
   @Test(expected = ResponseException.class)
