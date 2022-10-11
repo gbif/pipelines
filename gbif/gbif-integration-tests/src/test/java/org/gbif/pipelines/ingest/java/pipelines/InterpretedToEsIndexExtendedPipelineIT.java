@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.beam.options.EsIndexingPipelineOptions;
@@ -63,12 +64,13 @@ public class InterpretedToEsIndexExtendedPipelineIT {
     String idxName = "java-interpretedtoesindexextendedpipelineit";
     String aliasName = "java_occurrence_interpretedtoesindexextendedpipelineit";
 
+    String datasetKey = UUID.randomUUID().toString();
     String postfix = "777";
 
     String input = outputFile + "data3/ingest";
 
     String[] argsWriter = {
-      "--datasetId=d596fccb-2319-42eb-b13b-986c932780ad",
+      "--datasetId=" + datasetKey,
       "--attempt=147",
       "--runner=SparkRunner",
       "--metaFileName=occurrence-to-index.yml",
@@ -171,7 +173,7 @@ public class InterpretedToEsIndexExtendedPipelineIT {
 
     // When
     String[] args = {
-      "--datasetId=d596fccb-2319-42eb-b13b-986c932780ad",
+      "--datasetId=" + datasetKey,
       "--attempt=147",
       "--runner=SparkRunner",
       "--metaFileName=occurrence-to-index.yml",

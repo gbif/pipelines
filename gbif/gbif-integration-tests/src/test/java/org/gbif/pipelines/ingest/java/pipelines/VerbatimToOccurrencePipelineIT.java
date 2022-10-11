@@ -15,6 +15,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.specific.SpecificDatumReader;
@@ -50,7 +51,6 @@ public class VerbatimToOccurrencePipelineIT {
   private static final DwcTerm CORE_TERM = DwcTerm.Occurrence;
 
   private static final String ID = "777";
-  private static final String DATASET_KEY = "992cca75-cc1a-4bea-8f4f-6615e550504a";
 
   @ClassRule public static final ZkServer ZK_SERVER = ZkServer.getInstance();
 
@@ -60,14 +60,15 @@ public class VerbatimToOccurrencePipelineIT {
     // State
     String outputFile = getClass().getResource("/data7/ingest").getFile();
 
+    String datasetKey = UUID.randomUUID().toString();
     String attempt = "55";
 
     String[] args = {
-      "--datasetId=" + DATASET_KEY,
+      "--datasetId=" + datasetKey,
       "--attempt=" + attempt,
       "--runner=SparkRunner",
       "--metaFileName=verbatim-to-occurrence.yml",
-      "--inputPath=" + outputFile + "/" + DATASET_KEY + "/" + attempt + "/verbatim.avro",
+      "--inputPath=" + outputFile + "/" + datasetKey + "/" + attempt + "/verbatim.avro",
       "--targetPath=" + outputFile,
       "--interpretationTypes=" + ALL,
       "--properties=" + outputFile + "/pipelines.yaml",
@@ -84,14 +85,15 @@ public class VerbatimToOccurrencePipelineIT {
     // State
     String outputFile = getClass().getResource("/data7/ingest").getFile();
 
+    String datasetKey = UUID.randomUUID().toString();
     String attempt = "77";
 
     String[] args = {
-      "--datasetId=" + DATASET_KEY,
+      "--datasetId=" + datasetKey,
       "--attempt=" + attempt,
       "--runner=SparkRunner",
       "--metaFileName=verbatim-to-occurrence.yml",
-      "--inputPath=" + outputFile + "/" + DATASET_KEY + "/" + attempt + "/verbatim.avro",
+      "--inputPath=" + outputFile + "/" + datasetKey + "/" + attempt + "/verbatim.avro",
       "--targetPath=" + outputFile,
       "--interpretationTypes=" + TAXONOMY,
       "--properties=" + outputFile + "/pipelines.yaml",
@@ -119,14 +121,15 @@ public class VerbatimToOccurrencePipelineIT {
     // State
     String outputFile = getClass().getResource("/data7/ingest").getFile();
 
+    String datasetKey = UUID.randomUUID().toString();
     String attempt = "71";
 
     String[] args = {
-      "--datasetId=" + DATASET_KEY,
+      "--datasetId=" + datasetKey,
       "--attempt=" + attempt,
       "--runner=SparkRunner",
       "--metaFileName=verbatim-to-occurrence.yml",
-      "--inputPath=" + outputFile + "/" + DATASET_KEY + "/" + attempt + "/verbatim.avro",
+      "--inputPath=" + outputFile + "/" + datasetKey + "/" + attempt + "/verbatim.avro",
       "--targetPath=" + outputFile,
       "--interpretationTypes=" + ALL,
       "--properties=" + outputFile + "/pipelines.yaml",
@@ -144,14 +147,15 @@ public class VerbatimToOccurrencePipelineIT {
     // State
     String outputFile = getClass().getResource("/data7/ingest").getFile();
 
+    String datasetKey = UUID.randomUUID().toString();
     String attempt = "99";
 
     String[] args = {
-      "--datasetId=" + DATASET_KEY,
+      "--datasetId=" + datasetKey,
       "--attempt=" + attempt,
       "--runner=SparkRunner",
       "--metaFileName=verbatim-to-occurrence.yml",
-      "--inputPath=" + outputFile + "/" + DATASET_KEY + "/" + attempt + "/verbatim.avro",
+      "--inputPath=" + outputFile + "/" + datasetKey + "/" + attempt + "/verbatim.avro",
       "--targetPath=" + outputFile,
       "--interpretationTypes=IDENTIFIER_ABSENT,CLUSTERING,TEMPORAL,LOCATION,GRSCICOLL,MULTIMEDIA,MEASUREMENT_OR_FACT_TABLE,BASIC,TAXONOMY,IMAGE,AMPLIFICATION,OCCURRENCE,VERBATIM,LOCATION_FEATURE,MEASUREMENT_OR_FACT,AUDUBON,METADATA",
       "--properties=" + outputFile + "/pipelines.yaml",
@@ -197,6 +201,7 @@ public class VerbatimToOccurrencePipelineIT {
     }
 
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
+    String datasetKey = options.getDatasetId();
 
     // Create varbatim.avro
     try (SyncDataFileWriter<ExtendedRecord> writer =
@@ -225,8 +230,8 @@ public class VerbatimToOccurrencePipelineIT {
       writer.append(extendedRecord);
     }
     Path from =
-        Paths.get(outputFile, DATASET_KEY, attempt, "occurrence/verbatim/interpret-777.avro");
-    Path to = Paths.get(outputFile, DATASET_KEY, attempt, "verbatim.avro");
+        Paths.get(outputFile, datasetKey, attempt, "occurrence/verbatim/interpret-777.avro");
+    Path to = Paths.get(outputFile, datasetKey, attempt, "verbatim.avro");
     Files.deleteIfExists(to);
     Files.move(from, to);
 
@@ -235,10 +240,10 @@ public class VerbatimToOccurrencePipelineIT {
 
     // Shoud
     String metricsOutput =
-        String.join("/", outputFile, DATASET_KEY, attempt, "verbatim-to-occurrence.yml");
+        String.join("/", outputFile, datasetKey, attempt, "verbatim-to-occurrence.yml");
     assertTrue(Files.exists(Paths.get(metricsOutput)));
 
-    String interpretedOutput = String.join("/", outputFile, DATASET_KEY, attempt, "occurrence");
+    String interpretedOutput = String.join("/", outputFile, datasetKey, attempt, "occurrence");
 
     assertFile(AudubonRecord.class, interpretedOutput + "/audubon");
     assertFile(BasicRecord.class, interpretedOutput + "/basic");
@@ -282,7 +287,7 @@ public class VerbatimToOccurrencePipelineIT {
 
         String id = (String) record.get("id");
         if (record instanceof MetadataRecord) {
-          Assert.assertEquals(DATASET_KEY, id);
+          Assert.assertNotEquals(ID, id);
         } else {
           Assert.assertEquals(ID, id);
         }

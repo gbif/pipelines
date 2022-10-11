@@ -13,6 +13,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.specific.SpecificDatumReader;
@@ -46,9 +47,7 @@ import org.junit.runners.MethodSorters;
 public class VerbatimToIdentifierPipelineIT {
 
   private static final DwcTerm CORE_TERM = DwcTerm.Occurrence;
-
   private static final String ID = "777";
-  private static final String DATASET_KEY = "4fd440cc-cd4c-468c-ac2f-5aff1d6b6679";
 
   @Rule public final transient TestPipeline p = TestPipeline.create();
 
@@ -60,14 +59,15 @@ public class VerbatimToIdentifierPipelineIT {
     // State
     String outputFile = getClass().getResource("/data7/ingest").getFile();
 
+    String datasetKey = UUID.randomUUID().toString();
     String attempt = "77";
 
     String[] args = {
-      "--datasetId=" + DATASET_KEY,
+      "--datasetId=" + datasetKey,
       "--attempt=" + attempt,
       "--runner=SparkRunner",
       "--metaFileName=verbatim-to-identifier.yml",
-      "--inputPath=" + outputFile + "/" + DATASET_KEY + "/" + attempt + "/verbatim.avro",
+      "--inputPath=" + outputFile + "/" + datasetKey + "/" + attempt + "/verbatim.avro",
       "--targetPath=" + outputFile,
       "--interpretationTypes=" + IDENTIFIER,
       "--properties=" + outputFile + "/pipelines.yaml",
@@ -113,8 +113,8 @@ public class VerbatimToIdentifierPipelineIT {
       writer.append(extendedRecord);
     }
     Path from =
-        Paths.get(outputFile, DATASET_KEY, attempt, "occurrence/verbatim/interpret-777.avro");
-    Path to = Paths.get(outputFile, DATASET_KEY, attempt, "verbatim.avro");
+        Paths.get(outputFile, datasetKey, attempt, "occurrence/verbatim/interpret-777.avro");
+    Path to = Paths.get(outputFile, datasetKey, attempt, "verbatim.avro");
     Files.deleteIfExists(to);
     Files.move(from, to);
 
@@ -123,10 +123,10 @@ public class VerbatimToIdentifierPipelineIT {
 
     // Shoud
     String metricsOutput =
-        String.join("/", outputFile, DATASET_KEY, attempt, "verbatim-to-identifier.yml");
+        String.join("/", outputFile, datasetKey, attempt, "verbatim-to-identifier.yml");
     assertTrue(Files.exists(Paths.get(metricsOutput)));
 
-    String interpretedOutput = String.join("/", outputFile, DATASET_KEY, attempt, "occurrence");
+    String interpretedOutput = String.join("/", outputFile, datasetKey, attempt, "occurrence");
 
     long dirCount =
         Arrays.stream(new File(interpretedOutput).listFiles())

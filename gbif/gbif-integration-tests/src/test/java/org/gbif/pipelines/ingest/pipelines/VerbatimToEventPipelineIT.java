@@ -51,7 +51,6 @@ public class VerbatimToEventPipelineIT {
 
   private static final String ID = "777";
   private static final String ID2 = "888";
-  private static final String DATASET_KEY = UUID.randomUUID().toString();
 
   @Rule public final transient TestPipeline p = TestPipeline.create();
 
@@ -63,14 +62,15 @@ public class VerbatimToEventPipelineIT {
     // State
     String outputFile = getClass().getResource("/data7/ingest").getFile();
 
+    String datasetKey = UUID.randomUUID().toString();
     String attempt = "1";
 
     String[] args = {
-      "--datasetId=" + DATASET_KEY,
+      "--datasetId=" + datasetKey,
       "--attempt=" + attempt,
       "--runner=SparkRunner",
       "--metaFileName=verbatim-to-occurrence.yml",
-      "--inputPath=" + outputFile + "/" + DATASET_KEY + "/" + attempt + "/verbatim.avro",
+      "--inputPath=" + outputFile + "/" + datasetKey + "/" + attempt + "/verbatim.avro",
       "--targetPath=" + outputFile,
       "--properties=" + outputFile + "/pipelines.yaml",
       "--interpretationTypes=ALL",
@@ -147,8 +147,8 @@ public class VerbatimToEventPipelineIT {
               .build();
       writer.append(extendedRecord2);
     }
-    Path from = Paths.get(outputFile, DATASET_KEY, attempt, "event/verbatim/interpret-777.avro");
-    Path to = Paths.get(outputFile, DATASET_KEY, attempt, "verbatim.avro");
+    Path from = Paths.get(outputFile, datasetKey, attempt, "event/verbatim/interpret-777.avro");
+    Path to = Paths.get(outputFile, datasetKey, attempt, "verbatim.avro");
     Files.deleteIfExists(to);
     Files.move(from, to);
 
@@ -157,10 +157,10 @@ public class VerbatimToEventPipelineIT {
 
     // Shoud
     String metricsOutput =
-        String.join("/", outputFile, DATASET_KEY, attempt, "verbatim-to-occurrence.yml");
+        String.join("/", outputFile, datasetKey, attempt, "verbatim-to-occurrence.yml");
     assertTrue(Files.exists(Paths.get(metricsOutput)));
 
-    String interpretedOutput = String.join("/", outputFile, DATASET_KEY, attempt, "event");
+    String interpretedOutput = String.join("/", outputFile, datasetKey, attempt, "event");
 
     assertEquals(11, new File(interpretedOutput).listFiles().length);
     assertFile(IdentifierRecord.class, interpretedOutput + "/identifier");
@@ -223,7 +223,7 @@ public class VerbatimToEventPipelineIT {
 
           String id = (String) record.get("id");
           if (record instanceof MetadataRecord) {
-            Assert.assertEquals(DATASET_KEY, id);
+            Assert.assertNotEquals(ID, id);
           } else {
             Assert.assertTrue(id.equals(ID) || id.equals(ID2));
           }
