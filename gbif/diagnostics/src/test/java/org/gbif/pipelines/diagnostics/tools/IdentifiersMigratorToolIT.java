@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.UUID;
-import org.gbif.pipelines.diagnostics.common.HbaseServer;
+import org.gbif.pipelines.diagnostics.resources.HbaseServer;
 import org.gbif.pipelines.keygen.api.KeyLookupResult;
 import org.junit.Assert;
 import org.junit.Before;

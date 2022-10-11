@@ -1,4 +1,4 @@
-package org.gbif.pipelines.ingest.utils;
+package org.gbif.pipelines.tasks.resources;
 
 import java.io.IOException;
 import java.util.Collections;

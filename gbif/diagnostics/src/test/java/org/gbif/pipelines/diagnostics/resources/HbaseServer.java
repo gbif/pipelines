@@ -1,4 +1,4 @@
-package org.gbif.pipelines.diagnostics.common;
+package org.gbif.pipelines.diagnostics.resources;
 
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;

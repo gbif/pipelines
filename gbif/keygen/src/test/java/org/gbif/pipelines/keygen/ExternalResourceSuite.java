@@ -13,6 +13,6 @@ import org.junit.runners.Suite.SuiteClasses;
   KeygenIT.class,
   HbaseConnectionFactoryIT.class
 })
-public class HbaseSuite {
+public class ExternalResourceSuite {
   @ClassRule public static final HbaseServer HBASE_SERVER = HbaseServer.getInstance();
 }

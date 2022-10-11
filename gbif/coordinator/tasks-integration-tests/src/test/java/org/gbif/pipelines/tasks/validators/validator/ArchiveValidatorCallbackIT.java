@@ -18,7 +18,7 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
 import org.gbif.pipelines.tasks.MessagePublisherStub;
 import org.gbif.pipelines.tasks.ValidationWsClientStub;
-import org.gbif.pipelines.tasks.utils.CuratorServer;
+import org.gbif.pipelines.tasks.resources.CuratorServer;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.EvaluationCategory;
@@ -36,7 +36,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class ArchiveValidatorCallbackIT {
 
-  @ClassRule public static final CuratorServer CURATOR_SERVER = new CuratorServer();
+  @ClassRule public static final CuratorServer CURATOR_SERVER = CuratorServer.getInstance();
   private static final String LABEL = VALIDATOR_VALIDATE_ARCHIVE.getLabel();
   private static final String DATASET_OCCURRENCR_UUID = "9bed66b3-4caa-42bb-9c93-71d7ba109dad";
   private static final String DATASET_SAMPLING_UUID = "9997fa4e-54c1-43ea-9856-afa90204c162";

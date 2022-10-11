@@ -10,6 +10,6 @@ import org.junit.runners.Suite.SuiteClasses;
 
 @RunWith(Suite.class)
 @SuiteClasses({ElasticsearchWriterIT.class, EsIndexIT.class, EsServiceIT.class})
-public class EsSuite {
+public class ExternalResourceSuite {
   @ClassRule public static final EsServer ES_SERVER = EsServer.getInstance();
 }
