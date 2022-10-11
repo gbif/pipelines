@@ -24,12 +24,6 @@
         <version>2.4</version>
       </extension>
     </extensions>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-failsafe-plugin</artifactId>
-      </plugin>
-    </plugins>
   </build>
 
   <properties>
@@ -275,6 +269,17 @@
   </dependencies>
 
   <profiles>
+    <profile>
+      <id>runAllITs</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-failsafe-plugin</artifactId>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
     <profile>
       <id>gbifArtifacts</id>
       <build>

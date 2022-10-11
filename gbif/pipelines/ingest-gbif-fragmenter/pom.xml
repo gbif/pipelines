@@ -118,7 +118,7 @@
 
   <profiles>
     <profile>
-      <id>prod</id>
+      <id>runAllITs</id>
       <build>
         <plugins>
           <plugin>
