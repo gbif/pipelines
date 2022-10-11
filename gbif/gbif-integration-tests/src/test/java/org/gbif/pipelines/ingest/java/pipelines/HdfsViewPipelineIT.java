@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 import lombok.SneakyThrows;
 import org.apache.avro.file.DataFileReader;
@@ -77,6 +78,7 @@ public class HdfsViewPipelineIT {
 
     // State
     String outputFile = getClass().getResource("/").getFile();
+    String datasetKey = UUID.randomUUID().toString();
 
     String postfix = "777";
 
@@ -84,7 +86,7 @@ public class HdfsViewPipelineIT {
     String output = outputFile + rootTestFolder + "/hdfsview";
 
     String[] argsWriter = {
-      "--datasetId=d596fccb-2319-42eb-b13b-986c932780ad",
+      "--datasetId=" + datasetKey,
       "--attempt=147",
       "--runner=SparkRunner",
       "--metaFileName=occurrence-to-hdfs.yml",
@@ -101,7 +103,7 @@ public class HdfsViewPipelineIT {
 
     // When
     String[] args = {
-      "--datasetId=d596fccb-2319-42eb-b13b-986c932780ad",
+      "--datasetId=" + datasetKey,
       "--attempt=147",
       "--runner=SparkRunner",
       "--metaFileName=occurrence-to-hdfs.yml",
@@ -126,7 +128,9 @@ public class HdfsViewPipelineIT {
                 + options.getCoreRecordType().name().toLowerCase()
                 + "/"
                 + s
-                + "/d596fccb-2319-42eb-b13b-986c932780ad_147.avro";
+                + "/"
+                + datasetKey
+                + "_147.avro";
 
     assertFile(OccurrenceHdfsRecord.class, outputFn.apply(recordType.name().toLowerCase()));
     assertFile(MeasurementOrFactTable.class, outputFn.apply("measurementorfacttable"));
@@ -156,13 +160,14 @@ public class HdfsViewPipelineIT {
     // State
     String outputFile = getClass().getResource("/").getFile();
 
+    String datasetKey = UUID.randomUUID().toString();
     String postfix = "777";
 
     String input = outputFile + rootTestFolder + "/ingest";
     String output = outputFile + rootTestFolder + "/hdfsview";
 
     String[] argsWriter = {
-      "--datasetId=d596fccb-2319-42eb-b13b-986c932780ad",
+      "--datasetId=" + datasetKey,
       "--attempt=147",
       "--runner=SparkRunner",
       "--metaFileName=occurrence-to-hdfs.yml",
@@ -177,7 +182,7 @@ public class HdfsViewPipelineIT {
 
     // When
     String[] args = {
-      "--datasetId=d596fccb-2319-42eb-b13b-986c932780ad",
+      "--datasetId=" + datasetKey,
       "--attempt=147",
       "--runner=SparkRunner",
       "--metaFileName=occurrence-to-hdfs.yml",
@@ -200,7 +205,9 @@ public class HdfsViewPipelineIT {
                 + options.getCoreRecordType().name().toLowerCase()
                 + "/"
                 + s
-                + "/d596fccb-2319-42eb-b13b-986c932780ad_147.avro";
+                + "/"
+                + datasetKey
+                + "_147.avro";
 
     assertFile(OccurrenceHdfsRecord.class, outputFn.apply(recordType.name().toLowerCase()));
     assertFileExistFalse(outputFn.apply("measurementorfacttable"));

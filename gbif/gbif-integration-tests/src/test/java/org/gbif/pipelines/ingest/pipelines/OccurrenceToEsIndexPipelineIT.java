@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.gbif.api.vocabulary.Extension;
@@ -42,7 +43,6 @@ import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.gbif.pipelines.transforms.specific.ClusteringTransform;
 import org.gbif.pipelines.transforms.specific.GbifIdTransform;
-import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -64,11 +64,6 @@ public class OccurrenceToEsIndexPipelineIT {
 
   @ClassRule public static final ZkServer ZK_SERVER = ZkServer.getInstance();
 
-  @Before
-  public void cleanIndexes() {
-    EsService.deleteAllIndexes(ES_SERVER.getEsClient());
-  }
-
   @Test
   public void pipelineTest() throws Exception {
 
@@ -76,12 +71,13 @@ public class OccurrenceToEsIndexPipelineIT {
     String outputFile = getClass().getResource("/").getFile();
     String idxName = "beam-interpretedtoesindexextendedpipelineit";
 
+    String datasetKey = UUID.randomUUID().toString();
     String postfix = "777";
 
     String input = outputFile + "data3/ingest";
 
     String[] argsWriter = {
-      "--datasetId=d596fccb-2319-42eb-b13b-986c932780ad",
+      "--datasetId=" + datasetKey,
       "--attempt=147",
       "--runner=SparkRunner",
       "--metaFileName=occurrence-to-index.yml",
@@ -184,7 +180,7 @@ public class OccurrenceToEsIndexPipelineIT {
 
     // When
     String[] args = {
-      "--datasetId=d596fccb-2319-42eb-b13b-986c932780ad",
+      "--datasetId=" + datasetKey,
       "--attempt=147",
       "--runner=TestSparkRunner",
       "--metaFileName=occurrence-to-index.yml",
