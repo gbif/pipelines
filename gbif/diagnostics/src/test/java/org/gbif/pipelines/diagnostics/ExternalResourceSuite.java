@@ -1,6 +1,6 @@
 package org.gbif.pipelines.diagnostics;
 
-import org.gbif.pipelines.diagnostics.common.HbaseServer;
+import org.gbif.pipelines.diagnostics.resources.HbaseServer;
 import org.gbif.pipelines.diagnostics.strategy.BothStrategyIT;
 import org.gbif.pipelines.diagnostics.strategy.MaxStrategyIT;
 import org.gbif.pipelines.diagnostics.strategy.MinStrategyIT;
@@ -23,6 +23,6 @@ import org.junit.runners.Suite.SuiteClasses;
   IdentifiersMigratorToolIT.class,
   RepairGbifIDLookupToolIT.class
 })
-public class HbaseSuite {
+public class ExternalResourceSuite {
   @ClassRule public static final HbaseServer HBASE_SERVER = HbaseServer.getInstance();
 }

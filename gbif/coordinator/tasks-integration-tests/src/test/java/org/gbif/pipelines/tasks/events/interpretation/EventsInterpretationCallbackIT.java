@@ -19,7 +19,7 @@ import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.tasks.MessagePublisherStub;
-import org.gbif.pipelines.tasks.utils.CuratorServer;
+import org.gbif.pipelines.tasks.resources.CuratorServer;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -30,7 +30,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class EventsInterpretationCallbackIT {
 
-  @ClassRule public static final CuratorServer CURATOR_SERVER = new CuratorServer();
+  @ClassRule public static final CuratorServer CURATOR_SERVER = CuratorServer.getInstance();
   private static final String EVENTS_INTERPRETED_LABEL = EVENTS_VERBATIM_TO_INTERPRETED.getLabel();
   private static final String DATASET_UUID = "9bed66b3-4caa-42bb-9c93-71d7ba109dad";
   private static final long EXECUTION_ID = 1L;

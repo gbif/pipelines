@@ -19,30 +19,6 @@
     <jcommander.version>1.78</jcommander.version>
   </properties>
 
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-failsafe-plugin</artifactId>
-        <configuration>
-          <forkCount>2</forkCount>
-          <reuseForks>true</reuseForks>
-        </configuration>
-      </plugin>
-    </plugins>
-    <resources>
-      <resource>
-        <directory>src/test/resources</directory>
-        <targetPath>../test-classes/</targetPath>
-        <filtering>true</filtering>
-      </resource>
-      <resource>
-        <directory>src/main/resources</directory>
-        <filtering>true</filtering>
-      </resource>
-    </resources>
-  </build>
-
   <dependencies>
 
     <!-- Tools -->
@@ -162,6 +138,32 @@
   </dependencies>
 
   <profiles>
+    <profile>
+      <id>prod</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-failsafe-plugin</artifactId>
+            <configuration>
+              <forkCount>2</forkCount>
+              <reuseForks>true</reuseForks>
+            </configuration>
+          </plugin>
+        </plugins>
+        <resources>
+          <resource>
+            <directory>src/test/resources</directory>
+            <targetPath>../test-classes/</targetPath>
+            <filtering>true</filtering>
+          </resource>
+          <resource>
+            <directory>src/main/resources</directory>
+            <filtering>true</filtering>
+          </resource>
+        </resources>
+      </build>
+    </profile>
     <profile>
       <id>extraArtifacts</id>
       <build>

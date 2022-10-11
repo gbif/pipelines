@@ -2,8 +2,8 @@ package org.gbif.pipelines.diagnostics.strategy;
 
 import java.io.IOException;
 import java.util.Map;
-import org.gbif.pipelines.diagnostics.common.HbaseServer;
-import org.gbif.pipelines.diagnostics.common.HbaseStore;
+import org.gbif.pipelines.diagnostics.resources.HbaseServer;
+import org.gbif.pipelines.diagnostics.resources.HbaseStore;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
 import org.junit.Assert;

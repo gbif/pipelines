@@ -23,7 +23,7 @@ import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
 import org.gbif.crawler.constants.CrawlerNodePaths;
 import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
 import org.gbif.pipelines.common.configs.BaseConfiguration;
-import org.gbif.pipelines.tasks.utils.CuratorServer;
+import org.gbif.pipelines.tasks.resources.CuratorServer;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.junit.Assert;
 import org.junit.ClassRule;
@@ -35,7 +35,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class PipelinesCallbackIT {
 
-  @ClassRule public static final CuratorServer CURATOR_SERVER = new CuratorServer();
+  @ClassRule public static final CuratorServer CURATOR_SERVER = CuratorServer.getInstance();
   private static final Long EXECUTION_ID = 1L;
   @Mock private PipelinesHistoryClient historyClient;
   @Mock private MessagePublisher mockPublisher;

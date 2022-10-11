@@ -1,4 +1,4 @@
-package org.gbif.pipelines.tasks.utils;
+package org.gbif.pipelines.tasks.resources;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Paths;
+import java.util.concurrent.atomic.AtomicInteger;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.test.TestingServer;
@@ -25,23 +26,43 @@ import org.junit.rules.ExternalResource;
 @Getter
 public class ZkServer extends ExternalResource {
 
+  private static final Object MUTEX = new Object();
+  private static volatile ZkServer instance;
+  private static final AtomicInteger COUNTER = new AtomicInteger(0);
+
   private TestingServer zkServer;
 
   public static final String LOCK_PROPERTIES_PATH = "lock.yaml";
 
+  public static ZkServer getInstance() {
+    if (instance == null) {
+      synchronized (MUTEX) {
+        if (instance == null) {
+          instance = new ZkServer();
+        }
+      }
+    }
+    return instance;
+  }
+
   @Override
   protected void before() throws Throwable {
-    zkServer = new TestingServer(true);
-    updateLockProperties();
+    if (COUNTER.get() == 0) {
+      zkServer = new TestingServer(true);
+      updateLockProperties();
+    }
+    COUNTER.addAndGet(1);
   }
 
   @Override
   protected void after() {
-    try {
-      zkServer.stop();
-      zkServer.close();
-    } catch (IOException e) {
-      log.error("Could not close zk server for testing", e);
+    if (COUNTER.addAndGet(-1) == 0) {
+      try {
+        zkServer.stop();
+        zkServer.close();
+      } catch (IOException e) {
+        log.error("Could not close zk server for testing", e);
+      }
     }
   }
 

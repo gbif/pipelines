@@ -27,8 +27,8 @@ import org.gbif.pipelines.estools.model.IndexParams;
 import org.gbif.pipelines.estools.service.EsService;
 import org.gbif.pipelines.tasks.MessagePublisherStub;
 import org.gbif.pipelines.tasks.ValidationWsClientStub;
-import org.gbif.pipelines.tasks.utils.CuratorServer;
-import org.gbif.pipelines.tasks.utils.EsServer;
+import org.gbif.pipelines.tasks.resources.CuratorServer;
+import org.gbif.pipelines.tasks.resources.EsServer;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.EvaluationCategory;
@@ -39,7 +39,6 @@ import org.gbif.validator.api.Metrics.ValidationStep;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.Validation.Status;
 import org.junit.After;
-import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -49,20 +48,15 @@ import org.mockito.junit.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class MetricsCollectorCallbackIT {
 
-  @ClassRule public static final EsServer ES_SERVER = new EsServer();
+  @ClassRule public static final EsServer ES_SERVER = EsServer.getInstance();
 
-  @ClassRule public static final CuratorServer CURATOR_SERVER = new CuratorServer();
+  @ClassRule public static final CuratorServer CURATOR_SERVER = CuratorServer.getInstance();
   private static final String LABEL = StepType.VALIDATOR_COLLECT_METRICS.getLabel();
   private static final String DATASET_UUID = "9bed66b3-4caa-42bb-9c93-71d7ba109dad";
   private static final long EXECUTION_ID = 1L;
   private static final Path MAPPINGS_PATH = Paths.get("mappings/verbatim-mapping.json");
   private static final MessagePublisherStub PUBLISHER = MessagePublisherStub.create();
   @Mock private PipelinesHistoryClient historyClient;
-
-  @Before
-  public void cleanIndexes() {
-    EsService.deleteAllIndexes(ES_SERVER.getEsClient());
-  }
 
   @After
   public void after() {
@@ -72,7 +66,7 @@ public class MetricsCollectorCallbackIT {
   @Test
   public void testNormalCase() throws Exception {
     // State
-    MetricsCollectorConfiguration config = createConfig();
+    MetricsCollectorConfiguration config = createConfig("test-normal-case");
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
     MetricsCollectorCallback callback =
@@ -206,7 +200,7 @@ public class MetricsCollectorCallbackIT {
   @Test
   public void testNormalSingleStepCase() {
     // State
-    MetricsCollectorConfiguration config = createConfig();
+    MetricsCollectorConfiguration config = createConfig("test-normal-single-step-case");
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
     MetricsCollectorCallback callback =
@@ -264,7 +258,7 @@ public class MetricsCollectorCallbackIT {
   @Test
   public void testFailedCase() {
     // State
-    MetricsCollectorConfiguration config = createConfig();
+    MetricsCollectorConfiguration config = createConfig("test-failed-case");
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
     MetricsCollectorCallback callback =
@@ -292,7 +286,7 @@ public class MetricsCollectorCallbackIT {
   @Test
   public void testEventNormalCase() throws Exception {
     // State
-    MetricsCollectorConfiguration config = createConfig();
+    MetricsCollectorConfiguration config = createConfig("test-event-normal-case");
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
     MetricsCollectorCallback callback =
@@ -409,7 +403,7 @@ public class MetricsCollectorCallbackIT {
     return message;
   }
 
-  private MetricsCollectorConfiguration createConfig() {
+  private MetricsCollectorConfiguration createConfig(String idxName) {
     MetricsCollectorConfiguration config = new MetricsCollectorConfiguration();
     // Main
     config.archiveRepository =
@@ -423,6 +417,7 @@ public class MetricsCollectorCallbackIT {
         this.getClass().getClassLoader().getResource("data7/ingest").getPath();
     config.stepConfig.coreSiteConfig = "";
     config.stepConfig.hdfsSiteConfig = "";
+    config.indexName = idxName;
     return config;
   }
 

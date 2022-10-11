@@ -7,8 +7,8 @@ import org.gbif.pipelines.ingest.pipelines.OccurrenceToEsIndexPipelineIT;
 import org.gbif.pipelines.ingest.pipelines.VerbatimToEventPipelineIT;
 import org.gbif.pipelines.ingest.pipelines.VerbatimToIdentifierPipelineIT;
 import org.gbif.pipelines.ingest.pipelines.VerbatimToOccurrencePipelineIT;
-import org.gbif.pipelines.ingest.utils.EsServer;
-import org.gbif.pipelines.ingest.utils.ZkServer;
+import org.gbif.pipelines.ingest.resources.EsServer;
+import org.gbif.pipelines.ingest.resources.ZkServer;
 import org.junit.ClassRule;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
@@ -29,7 +29,7 @@ import org.junit.runners.Suite.SuiteClasses;
   VerbatimToIdentifierPipelineIT.class,
   VerbatimToOccurrencePipelineIT.class
 })
-public class EsZkSuite {
+public class ExternalResource {
   @ClassRule public static final EsServer ES_SERVER = EsServer.getInstance();
   @ClassRule public static final ZkServer ZK_SERVER = ZkServer.getInstance();
 }

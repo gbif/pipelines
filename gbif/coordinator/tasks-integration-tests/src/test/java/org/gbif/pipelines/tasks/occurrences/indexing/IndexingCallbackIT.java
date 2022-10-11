@@ -20,15 +20,13 @@ import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
-import org.gbif.pipelines.estools.service.EsService;
 import org.gbif.pipelines.tasks.MessagePublisherStub;
-import org.gbif.pipelines.tasks.utils.CuratorServer;
-import org.gbif.pipelines.tasks.utils.EsServer;
-import org.gbif.pipelines.tasks.utils.ZkServer;
+import org.gbif.pipelines.tasks.resources.CuratorServer;
+import org.gbif.pipelines.tasks.resources.EsServer;
+import org.gbif.pipelines.tasks.resources.ZkServer;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.ws.client.ValidationWsClient;
 import org.junit.After;
-import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -38,9 +36,9 @@ import org.mockito.junit.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class IndexingCallbackIT {
 
-  @ClassRule public static final CuratorServer CURATOR_SERVER = new CuratorServer();
-  @ClassRule public static final EsServer ES_SERVER = new EsServer();
-  @ClassRule public static final ZkServer ZK_SERVER = new ZkServer();
+  @ClassRule public static final CuratorServer CURATOR_SERVER = CuratorServer.getInstance();
+  @ClassRule public static final EsServer ES_SERVER = EsServer.getInstance();
+  @ClassRule public static final ZkServer ZK_SERVER = ZkServer.getInstance();
   private static final String LABEL = StepType.INTERPRETED_TO_INDEX.getLabel();
   private static final String DATASET_UUID = "9bed66b3-4caa-42bb-9c93-71d7ba109dad";
   private static final long EXECUTION_ID = 1L;
@@ -52,11 +50,6 @@ public class IndexingCallbackIT {
           .setDefaultRequestConfig(
               RequestConfig.custom().setConnectTimeout(10_000).setSocketTimeout(10_000).build())
           .build();
-
-  @Before
-  public void cleanIndexes() {
-    EsService.deleteAllIndexes(ES_SERVER.getEsClient());
-  }
 
   @After
   public void after() {

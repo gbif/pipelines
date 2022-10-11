@@ -18,8 +18,8 @@ import org.gbif.pipelines.estools.EsIndex;
 import org.gbif.pipelines.estools.model.IndexParams;
 import org.gbif.pipelines.estools.service.EsService;
 import org.gbif.pipelines.tasks.ValidationWsClientStub;
-import org.gbif.pipelines.tasks.utils.CuratorServer;
-import org.gbif.pipelines.tasks.utils.EsServer;
+import org.gbif.pipelines.tasks.resources.CuratorServer;
+import org.gbif.pipelines.tasks.resources.EsServer;
 import org.gbif.validator.ws.client.ValidationWsClient;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -27,8 +27,8 @@ import org.junit.Test;
 
 public class CleanerCallbackIT {
 
-  @ClassRule public static final EsServer ES_SERVER = new EsServer();
-  @ClassRule public static final CuratorServer CURATOR_SERVER = new CuratorServer();
+  @ClassRule public static final EsServer ES_SERVER = EsServer.getInstance();
+  @ClassRule public static final CuratorServer CURATOR_SERVER = CuratorServer.getInstance();
 
   @Before
   public void cleanIndexes() {

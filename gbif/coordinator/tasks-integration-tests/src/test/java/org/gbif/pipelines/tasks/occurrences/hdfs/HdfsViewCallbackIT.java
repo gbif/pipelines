@@ -23,8 +23,8 @@ import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.common.hdfs.CommonHdfsViewCallback;
 import org.gbif.pipelines.common.hdfs.HdfsViewConfiguration;
 import org.gbif.pipelines.tasks.MessagePublisherStub;
-import org.gbif.pipelines.tasks.utils.CuratorServer;
-import org.gbif.pipelines.tasks.utils.ZkServer;
+import org.gbif.pipelines.tasks.resources.CuratorServer;
+import org.gbif.pipelines.tasks.resources.ZkServer;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.junit.After;
 import org.junit.ClassRule;
@@ -36,8 +36,8 @@ import org.mockito.junit.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class HdfsViewCallbackIT {
 
-  @ClassRule public static final ZkServer ZK_SERVER = new ZkServer();
-  @ClassRule public static final CuratorServer CURATOR_SERVER = new CuratorServer();
+  @ClassRule public static final ZkServer ZK_SERVER = ZkServer.getInstance();
+  @ClassRule public static final CuratorServer CURATOR_SERVER = CuratorServer.getInstance();
   private static final String LABEL = StepType.HDFS_VIEW.getLabel();
   private static final String DATASET_UUID = "9bed66b3-4caa-42bb-9c93-71d7ba109dad";
   private static final long EXECUTION_ID = 1L;

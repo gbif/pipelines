@@ -14,6 +14,7 @@ import org.elasticsearch.client.Response;
 import org.gbif.pipelines.common.beam.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.estools.service.EsService;
 import org.gbif.pipelines.ingest.pipelines.InterpretedToEsIndexExtendedPipeline;
+import org.gbif.pipelines.ingest.resources.EsServer;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class EsTestUtils {

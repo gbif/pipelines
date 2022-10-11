@@ -1,4 +1,4 @@
-package org.gbif.pipelines.ingest.utils;
+package org.gbif.pipelines.ingest.resources;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;

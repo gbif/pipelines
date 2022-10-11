@@ -1,7 +1,7 @@
 package org.gbif.pipelines.diagnostics;
 
 import com.beust.jcommander.ParameterException;
-import org.gbif.pipelines.diagnostics.common.HbaseServer;
+import org.gbif.pipelines.diagnostics.resources.HbaseServer;
 import org.junit.Assert;
 import org.junit.Test;
 

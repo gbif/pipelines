@@ -18,17 +18,14 @@
   </description>
 
   <modules>
-    <module>archives-converters</module>
     <module>beam-common</module>
     <module>beam-transforms</module>
     <module>core</module>
-    <module>elasticsearch-tools</module>
-    <module>maven-avro-annotation-editor</module>
-    <module>maven-extension-java-code-generator</module>
-    <module>maven-extension-avsc-schema-generator</module>
     <module>models</module>
-    <module>variables</module>
+    <module>plugins</module>
     <module>sdks-integration-tests</module>
+    <module>tools</module>
+    <module>variables</module>
   </modules>
 
 </project>

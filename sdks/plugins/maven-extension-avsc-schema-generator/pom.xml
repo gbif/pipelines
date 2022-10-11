@@ -9,15 +9,11 @@
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>maven-extension-java-code-generator</artifactId>
+  <artifactId>maven-extension-avsc-schema-generator</artifactId>
   <packaging>maven-plugin</packaging>
 
-  <name>Pipelines :: Sdks :: Maven plugin - Java code generator</name>
-  <description>Maven plugin generates java classes for raw extensions conveters</description>
-
-  <properties>
-    <sonar.coverage.exclusions>**/Templates.java</sonar.coverage.exclusions>
-  </properties>
+  <name>Pipelines :: Sdks :: Plugins :: Maven AVSC schema generator</name>
+  <description>Maven plugin generates avro schemas based on DWC XML extensions</description>
 
   <build>
     <plugins>
@@ -26,7 +22,7 @@
         <artifactId>maven-plugin-plugin</artifactId>
         <executions>
           <execution>
-            <id>extensiongeneration</id>
+            <id>avroschemageneration</id>
             <phase>generate-sources</phase>
           </execution>
         </executions>
@@ -56,8 +52,8 @@
     </dependency>
 
     <dependency>
-      <groupId>org.freemarker</groupId>
-      <artifactId>freemarker</artifactId>
+      <groupId>org.apache.avro</groupId>
+      <artifactId>avro</artifactId>
     </dependency>
 
     <!-- Test -->
@@ -68,4 +64,3 @@
   </dependencies>
 
 </project>
-
