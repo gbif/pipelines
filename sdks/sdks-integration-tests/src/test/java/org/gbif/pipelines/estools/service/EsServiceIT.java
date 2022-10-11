@@ -394,10 +394,6 @@ public class EsServiceIT extends EsApiIntegration {
       EsService.indexDocument(EsApiIntegration.ES_SERVER.getEsClient(), idx, i, document);
     }
 
-    // Should
-    // they shouldn't be searchable yet.
-    assertEquals(0, EsService.countIndexDocuments(EsApiIntegration.ES_SERVER.getEsClient(), idx));
-
     // When
     // refresh the index to make all the documents searchable.
     EsService.refreshIndex(EsApiIntegration.ES_SERVER.getEsClient(), idx);
