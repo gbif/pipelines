@@ -1048,7 +1048,7 @@
       </build>
     </profile>
     <profile>
-      <id>skipCoverage</id>
+      <id>skip-coverage</id>
       <build>
         <plugins>
           <plugin>

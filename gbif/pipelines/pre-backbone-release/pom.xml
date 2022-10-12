@@ -133,7 +133,7 @@
 
   <profiles>
     <profile>
-      <id>extraArtifacts</id>
+      <id>extra-artifacts</id>
       <build>
         <plugins>
           <plugin>

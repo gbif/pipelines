@@ -108,7 +108,7 @@
 
   <profiles>
     <profile>
-      <id>extraArtifacts</id>
+      <id>extra-artifacts</id>
       <build>
         <plugins>
           <!-- Shade the project into an uber jar to send to Spark -->
