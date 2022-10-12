@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import org.gbif.pipelines.common.beam.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.estools.EsIndex;
 import org.gbif.pipelines.estools.service.EsService;
@@ -39,10 +40,11 @@ public class InterpretedToEsIndexExtendedPipelineIT {
   public void reindexingDatasetInSameDefaultIndexTest() {
 
     // State
+    String datasetKey = UUID.randomUUID().toString();
     String defIndex = "def-reindexing-dataset-in-same-default-index-test";
     String alias = "alias-reindexing-dataset-in-same-default-index-test";
     EsIndexingPipelineOptions options =
-        EsTestUtils.createPipelineOptions(ES_SERVER, EsTestUtils.DATASET_TEST, defIndex, alias, 1);
+        EsTestUtils.createPipelineOptions(ES_SERVER, datasetKey, defIndex, alias, 1);
     // 1. Index the dataset for the first time
     InterpretedToEsIndexExtendedPipeline.run(
         options,
@@ -64,7 +66,7 @@ public class InterpretedToEsIndexExtendedPipelineIT {
         EsTestUtils.countDocumentsFromQuery(
             ES_SERVER,
             options.getEsIndexName(),
-            String.format(EsTestUtils.MATCH_QUERY, "datasetKey", EsTestUtils.DATASET_TEST)));
+            String.format(EsTestUtils.MATCH_QUERY, "datasetKey", datasetKey)));
     Assert.assertEquals(
         0,
         EsTestUtils.countDocumentsFromQuery(
@@ -123,11 +125,12 @@ public class InterpretedToEsIndexExtendedPipelineIT {
    */
   @Test
   public void swappingIndependentIndexesTest() {
+
     // State
+    String datasetKey = UUID.randomUUID().toString();
     String alias = "alias-swapping-independent-indexes-test";
     EsIndexingPipelineOptions options =
-        EsTestUtils.createPipelineOptions(
-            ES_SERVER, EsTestUtils.DATASET_TEST, EsTestUtils.DATASET_TEST + "_" + 1, alias, 1);
+        EsTestUtils.createPipelineOptions(ES_SERVER, datasetKey, datasetKey + "_" + 1, alias, 1);
     // 1. Index the dataset for the first time in independent index
     InterpretedToEsIndexExtendedPipeline.run(
         options,
@@ -136,7 +139,7 @@ public class InterpretedToEsIndexExtendedPipelineIT {
     // When
     // 2. Reindex in independent index with new attempt
     options.setAttempt(2);
-    options.setEsIndexName(EsTestUtils.DATASET_TEST + "_" + 2);
+    options.setEsIndexName(datasetKey + "_" + 2);
     InterpretedToEsIndexExtendedPipeline.run(
         options,
         EsTestUtils.indexingPipeline(ES_SERVER, options, EsTestUtils.DEFAULT_REC_DATASET, "first"));
@@ -151,7 +154,7 @@ public class InterpretedToEsIndexExtendedPipelineIT {
     // When
     // 3. Reindex again in independent index with new attempt
     options.setAttempt(3);
-    options.setEsIndexName(EsTestUtils.DATASET_TEST + "_" + 3);
+    options.setEsIndexName(datasetKey + "_" + 3);
     InterpretedToEsIndexExtendedPipeline.run(
         options,
         EsTestUtils.indexingPipeline(ES_SERVER, options, EsTestUtils.DEFAULT_REC_DATASET, "first"));
@@ -173,24 +176,27 @@ public class InterpretedToEsIndexExtendedPipelineIT {
   public void switchingIndexTest() {
     // When
     // 1. Index multiple datasets
+    String datasetKey = UUID.randomUUID().toString();
+    String datasetKey2 = UUID.randomUUID().toString();
+    String datasetKey3 = UUID.randomUUID().toString();
+    String datasetKey4 = UUID.randomUUID().toString();
+    String datasetKey5 = UUID.randomUUID().toString();
+    String datasetKey6 = UUID.randomUUID().toString();
+    String datasetKey7 = UUID.randomUUID().toString();
+    String datasetKey8 = UUID.randomUUID().toString();
+    String datasetKey9 = UUID.randomUUID().toString();
     int attempt = 1;
     String defIndex = "def-switching-index-test";
     String dynIndex = "dyn-switching-index-test";
     String alias = "alias-switching-index-test";
     // index in default static
-    List<String> staticDatasets =
-        Arrays.asList(
-            EsTestUtils.DATASET_TEST, EsTestUtils.DATASET_TEST_2, EsTestUtils.DATASET_TEST_3);
+    List<String> staticDatasets = Arrays.asList(datasetKey, datasetKey2, datasetKey3);
     EsTestUtils.indexDatasets(ES_SERVER, staticDatasets, attempt, defIndex, alias);
     // index in default dynamic
-    List<String> dynamicDatasets =
-        Arrays.asList(
-            EsTestUtils.DATASET_TEST_4, EsTestUtils.DATASET_TEST_5, EsTestUtils.DATASET_TEST_6);
+    List<String> dynamicDatasets = Arrays.asList(datasetKey4, datasetKey5, datasetKey6);
     EsTestUtils.indexDatasets(ES_SERVER, dynamicDatasets, attempt, dynIndex, alias);
     // index some independent datasets
-    List<String> independentDatasets =
-        Arrays.asList(
-            EsTestUtils.DATASET_TEST_7, EsTestUtils.DATASET_TEST_8, EsTestUtils.DATASET_TEST_9);
+    List<String> independentDatasets = Arrays.asList(datasetKey7, datasetKey8, datasetKey9);
     EsTestUtils.indexDatasets(ES_SERVER, independentDatasets, attempt, null, alias);
 
     // Should
@@ -220,20 +226,9 @@ public class InterpretedToEsIndexExtendedPipelineIT {
     // When
     // 2. Switch some datasets to other indexes without changing the number of records
     attempt++;
-    switchDatasetAndRecords(
-        Arrays.asList(EsTestUtils.DATASET_TEST, EsTestUtils.DATASET_TEST_9),
-        dynIndex,
-        alias,
-        attempt,
-        0);
-    switchDatasetAndRecords(
-        Arrays.asList(EsTestUtils.DATASET_TEST_4, EsTestUtils.DATASET_TEST_7),
-        defIndex,
-        alias,
-        attempt,
-        0);
-    switchDatasetAndRecords(
-        EsTestUtils.DATASET_TEST_2, EsTestUtils.DATASET_TEST_2 + "_" + attempt, alias, attempt, 0);
+    switchDatasetAndRecords(Arrays.asList(datasetKey, datasetKey9), dynIndex, alias, attempt, 0);
+    switchDatasetAndRecords(Arrays.asList(datasetKey4, datasetKey7), defIndex, alias, attempt, 0);
+    switchDatasetAndRecords(datasetKey2, datasetKey2 + "_" + attempt, alias, attempt, 0);
 
     // assert number of records for each dataset, it should remain as in the beginning
     allDatasets.forEach(
@@ -245,11 +240,10 @@ public class InterpretedToEsIndexExtendedPipelineIT {
 
     // 3. Switch some datasets again but adding and deleting records.
     attempt++;
-    switchDatasetAndRecords(EsTestUtils.DATASET_TEST, defIndex, alias, attempt, 5);
-    switchDatasetAndRecords(
-        EsTestUtils.DATASET_TEST_3, EsTestUtils.DATASET_TEST_3 + "_" + attempt, alias, attempt, 2);
-    switchDatasetAndRecords(EsTestUtils.DATASET_TEST_4, dynIndex, alias, attempt, -7);
-    switchDatasetAndRecords(EsTestUtils.DATASET_TEST_8, dynIndex, alias, attempt, -1);
+    switchDatasetAndRecords(datasetKey, defIndex, alias, attempt, 5);
+    switchDatasetAndRecords(datasetKey3, datasetKey3 + "_" + attempt, alias, attempt, 2);
+    switchDatasetAndRecords(datasetKey4, dynIndex, alias, attempt, -7);
+    switchDatasetAndRecords(datasetKey8, dynIndex, alias, attempt, -1);
   }
 
   private void switchDatasetAndRecords(
