@@ -29,7 +29,7 @@ import org.junit.runners.Suite.SuiteClasses;
   VerbatimToIdentifierPipelineIT.class,
   VerbatimToOccurrencePipelineIT.class
 })
-public class ExternalResource {
+public class ExternalResourceSuite {
   @ClassRule public static final EsServer ES_SERVER = EsServer.getInstance();
   @ClassRule public static final ZkServer ZK_SERVER = ZkServer.getInstance();
 }
