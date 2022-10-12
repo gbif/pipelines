@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-.buildSrc/mvnw spotless:apply clean install -DskipTests -DskipITs -T 1C -PgbifArtifacts -PlivingatlasArtifacts -PextraArtifacts
+.buildSrc/mvnw spotless:apply clean verify -P gbif-artifacts,livingatlas-artifacts,extra-artifacts

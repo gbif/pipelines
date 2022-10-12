@@ -11,7 +11,7 @@
   <artifactId>tasks-coordinator-cli</artifactId>
   <packaging>jar</packaging>
 
-  <name>Pipelines :: GBIF :: CLI :: Tasks Coordinator</name>
+  <name>Pipelines :: GBIF :: Coordinator :: Tasks</name>
 
   <build>
     <extensions>
