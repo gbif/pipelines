@@ -20,6 +20,19 @@
     <mockito.version>2.8.9</mockito.version>
   </properties>
 
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <configuration>
+          <forkCount>2</forkCount>
+          <reuseForks>true</reuseForks>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
   <dependencies>
 
     <!-- Tools -->
@@ -113,15 +126,14 @@
 
   <profiles>
     <profile>
-      <id>run-all-it</id>
+      <id>skip-release-it</id>
       <build>
         <plugins>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-failsafe-plugin</artifactId>
             <configuration>
-              <forkCount>2</forkCount>
-              <reuseForks>true</reuseForks>
+              <skip>true</skip>
             </configuration>
           </plugin>
         </plugins>

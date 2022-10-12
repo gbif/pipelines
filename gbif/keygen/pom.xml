@@ -22,6 +22,30 @@
     <guava.hbase.version>12.0.1</guava.hbase.version>
   </properties>
 
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <configuration>
+          <forkCount>2</forkCount>
+          <reuseForks>true</reuseForks>
+        </configuration>
+      </plugin>
+    </plugins>
+    <resources>
+      <resource>
+        <directory>src/test/resources</directory>
+        <targetPath>../test-classes/</targetPath>
+        <filtering>true</filtering>
+      </resource>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+      </resource>
+    </resources>
+  </build>
+
   <dependencies>
 
     <!-- Tools -->
@@ -101,29 +125,17 @@
 
   <profiles>
     <profile>
-      <id>run-all-it</id>
+      <id>skip-release-it</id>
       <build>
         <plugins>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-failsafe-plugin</artifactId>
             <configuration>
-              <forkCount>2</forkCount>
-              <reuseForks>true</reuseForks>
+              <skip>true</skip>
             </configuration>
           </plugin>
         </plugins>
-        <resources>
-          <resource>
-            <directory>src/test/resources</directory>
-            <targetPath>../test-classes/</targetPath>
-            <filtering>true</filtering>
-          </resource>
-          <resource>
-            <directory>src/main/resources</directory>
-            <filtering>true</filtering>
-          </resource>
-        </resources>
       </build>
     </profile>
   </profiles>
