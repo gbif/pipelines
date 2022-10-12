@@ -118,7 +118,7 @@
 
   <profiles>
     <profile>
-      <id>runAllITs</id>
+      <id>run-all-it</id>
       <build>
         <plugins>
           <plugin>

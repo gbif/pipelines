@@ -860,7 +860,7 @@
 
   <profiles>
   <profile>
-  <id>livingatlasArtifacts</id>
+  <id>livingatlas-artifacts</id>
     <build>
       <plugins>
         <!-- Shade the project into an uber jar to send to Spark -->

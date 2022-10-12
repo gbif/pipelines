@@ -69,7 +69,7 @@
 
   <profiles>
     <profile>
-      <id>livingatlasArtifacts</id>
+      <id>livingatlas-artifacts</id>
       <build>
         <plugins>
           <plugin>

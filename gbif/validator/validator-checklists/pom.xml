@@ -270,7 +270,7 @@
 
   <profiles>
     <profile>
-      <id>runAllITs</id>
+      <id>run-all-it</id>
       <build>
         <plugins>
           <plugin>
@@ -281,7 +281,7 @@
       </build>
     </profile>
     <profile>
-      <id>gbifArtifacts</id>
+      <id>gbif-artifacts</id>
       <build>
         <plugins>
           <plugin>
