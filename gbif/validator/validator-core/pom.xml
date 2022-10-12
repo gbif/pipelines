@@ -15,6 +15,15 @@
   <name>Pipelines :: GBIF :: Validator :: Core</name>
   <description>The library to validate and collect validator metrics from ES</description>
 
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </build>
+
   <dependencies>
 
     <!-- Tools -->
@@ -129,12 +138,15 @@
 
   <profiles>
     <profile>
-      <id>run-all-it</id>
+      <id>skip-release-it</id>
       <build>
         <plugins>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-failsafe-plugin</artifactId>
+            <configuration>
+              <skip>true</skip>
+            </configuration>
           </plugin>
         </plugins>
         <!-- Copy pom.xml value to test resources maven.properties -->

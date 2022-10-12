@@ -18,6 +18,34 @@
     <postgres.version>11.11</postgres.version>
   </properties>
 
+  <build>
+    <testResources>
+      <testResource>
+        <directory>src/test/resources</directory>
+        <filtering>false</filtering>
+      </testResource>
+      <testResource>
+        <directory>src/test/resources</directory>
+        <filtering>true</filtering>
+        <includes>
+          <include>**/application-test.yml</include>
+          <include>**/maven.properties</include>
+        </includes>
+      </testResource>
+    </testResources>
+    <plugins>
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+        <version>${spring-boot-maven-plugin.version}</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </build>
+
   <dependencies>
     <!-- Utilities -->
     <dependency>
@@ -189,31 +217,15 @@
 
   <profiles>
     <profile>
-      <id>run-all-it</id>
+      <id>skip-release-it</id>
       <build>
-        <testResources>
-          <testResource>
-            <directory>src/test/resources</directory>
-            <filtering>false</filtering>
-          </testResource>
-          <testResource>
-            <directory>src/test/resources</directory>
-            <filtering>true</filtering>
-            <includes>
-              <include>**/application-test.yml</include>
-              <include>**/maven.properties</include>
-            </includes>
-          </testResource>
-        </testResources>
         <plugins>
-          <plugin>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-maven-plugin</artifactId>
-            <version>${spring-boot-maven-plugin.version}</version>
-          </plugin>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-failsafe-plugin</artifactId>
+            <configuration>
+              <skip>true</skip>
+            </configuration>
           </plugin>
         </plugins>
       </build>

@@ -24,6 +24,12 @@
         <version>2.4</version>
       </extension>
     </extensions>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+      </plugin>
+    </plugins>
   </build>
 
   <properties>
@@ -270,12 +276,15 @@
 
   <profiles>
     <profile>
-      <id>run-all-it</id>
+      <id>skip-release-it</id>
       <build>
         <plugins>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-failsafe-plugin</artifactId>
+            <configuration>
+              <skip>true</skip>
+            </configuration>
           </plugin>
         </plugins>
       </build>
