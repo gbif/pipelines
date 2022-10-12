@@ -4,22 +4,20 @@
 
   <parent>
     <groupId>org.gbif.pipelines</groupId>
-    <artifactId>gbif</artifactId>
+    <artifactId>ingestion</artifactId>
     <version>2.14.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>keygen</artifactId>
+  <artifactId>ingest-gbif-fragmenter</artifactId>
   <packaging>jar</packaging>
 
-  <name>Pipelines :: GBIF :: Keygen</name>
-  <description>The library to generate GBIF identifier, to support backward compatibility, the codebase (with minimum
-    changes) was copied from occurrence/occurrence-persistence project
-  </description>
+  <name>Pipelines :: GBIF :: Ingestion :: Ingest-GBIF Fragmenter</name>
+  <description>Uploads fragments (raw records) from archives into Hbase table.</description>
 
   <properties>
-    <!-- Guava version required by HBase libraries -->
-    <guava.hbase.version>12.0.1</guava.hbase.version>
+    <maven-jar-plugin.version>3.2.0</maven-jar-plugin.version>
+    <xerces.version>2.11.0</xerces.version>
   </properties>
 
   <build>
@@ -27,41 +25,51 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
-        <configuration>
-          <forkCount>2</forkCount>
-          <reuseForks>true</reuseForks>
-        </configuration>
       </plugin>
     </plugins>
-    <resources>
-      <resource>
-        <directory>src/test/resources</directory>
-        <targetPath>../test-classes/</targetPath>
-        <filtering>true</filtering>
-      </resource>
-      <resource>
-        <directory>src/main/resources</directory>
-        <filtering>true</filtering>
-      </resource>
-    </resources>
   </build>
 
   <dependencies>
-
     <!-- Tools -->
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
     </dependency>
 
-    <!-- GBIF -->
+    <!-- This project -->
     <dependency>
-      <groupId>org.gbif</groupId>
-      <artifactId>dwc-api</artifactId>
+      <groupId>org.gbif.pipelines</groupId>
+      <artifactId>variables</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.gbif</groupId>
-      <artifactId>gbif-api</artifactId>
+      <groupId>org.gbif.pipelines</groupId>
+      <artifactId>keygen</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.pipelines</groupId>
+      <artifactId>archives-converters</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.hadoop</groupId>
+          <artifactId>hadoop-hdfs</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.elasticsearch.client</groupId>
+          <artifactId>elasticsearch-rest-high-level-client</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.hadoop</groupId>
+          <artifactId>hadoop-common</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.gbif.pipelines</groupId>
+          <artifactId>parsers</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.gbif.occurrence</groupId>
+          <artifactId>occurrence-hdfs-table</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <!-- HBase -->
@@ -97,6 +105,10 @@
 
     <!-- Test -->
     <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase-testing-util</artifactId>
     </dependency>
@@ -105,19 +117,9 @@
       <artifactId>hadoop-minicluster</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.curator</groupId>
-      <artifactId>curator-framework</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.curator</groupId>
-      <artifactId>curator-test</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.curator</groupId>
-      <artifactId>curator-client</artifactId>
-      <version>${curator.version}</version>
+      <groupId>xerces</groupId>
+      <artifactId>xercesImpl</artifactId>
+      <version>${xerces.version}</version>
       <scope>test</scope>
     </dependency>
 

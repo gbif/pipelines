@@ -4,15 +4,15 @@
 
   <parent>
     <groupId>org.gbif.pipelines</groupId>
-    <artifactId>sdks</artifactId>
+    <artifactId>sdks-tools</artifactId>
     <version>2.14.0-SNAPSHOT</version>
-    <relativePath>./pom.xml</relativePath>
+    <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>archives-converters</artifactId>
   <packaging>jar</packaging>
 
-  <name>Pipelines :: Sdks :: Archives converters</name>
+  <name>Pipelines :: Sdks :: Tools :: Archives converters</name>
   <description>Converters from DwCA/DWC 1.0/DWC 1.4/ABCD 1.2/ABCD 2.06 to *.avro format</description>
 
   <dependencies>

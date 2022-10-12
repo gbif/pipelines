@@ -11,7 +11,7 @@
   <artifactId>tasks-integration-tests-hbase</artifactId>
   <packaging>jar</packaging>
 
-  <name>Pipelines :: GBIF :: CLI :: Tasks Coordinator IT HBase</name>
+  <name>Pipelines :: GBIF :: Coordinator :: Tasks IT HBase</name>
 
   <properties>
     <curator.version>4.0.1</curator.version>

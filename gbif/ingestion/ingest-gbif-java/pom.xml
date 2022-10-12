@@ -4,44 +4,16 @@
 
   <parent>
     <groupId>org.gbif.pipelines</groupId>
-    <artifactId>gbif</artifactId>
+    <artifactId>ingestion</artifactId>
     <version>2.14.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>diagnostics</artifactId>
+  <artifactId>ingest-gbif-java</artifactId>
   <packaging>jar</packaging>
 
-  <name>Pipelines :: GBIF :: Diagnostics</name>
-  <description>Utilities to support helpdesk investigations</description>
-
-  <properties>
-    <jcommander.version>1.78</jcommander.version>
-  </properties>
-
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-failsafe-plugin</artifactId>
-        <configuration>
-          <forkCount>2</forkCount>
-          <reuseForks>true</reuseForks>
-        </configuration>
-      </plugin>
-    </plugins>
-    <resources>
-      <resource>
-        <directory>src/test/resources</directory>
-        <targetPath>../test-classes/</targetPath>
-        <filtering>true</filtering>
-      </resource>
-      <resource>
-        <directory>src/main/resources</directory>
-        <filtering>true</filtering>
-      </resource>
-    </resources>
-  </build>
+  <name>Pipelines :: GBIF :: Ingestion :: Ingest-GBIF Java version</name>
+  <description>Java based pipelines for ingestion biodiversity data</description>
 
   <dependencies>
 
@@ -54,54 +26,22 @@
     <!-- This project -->
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
-      <artifactId>keygen</artifactId>
-    </dependency>
-
-    <!-- GBIF -->
-    <dependency>
-      <groupId>org.gbif</groupId>
-      <artifactId>dwca-io</artifactId>
-    </dependency>
-
-    <!-- Other -->
-    <dependency>
-      <groupId>com.beust</groupId>
-      <artifactId>jcommander</artifactId>
-      <version>${jcommander.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.google.guava</groupId>
-      <artifactId>guava</artifactId>
-      <version>${guava.hbase.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.zookeeper</groupId>
-      <artifactId>zookeeper</artifactId>
-      <scope>compile</scope>
+      <artifactId>ingest-gbif-beam</artifactId>
       <exclusions>
         <exclusion>
-          <artifactId>log4j</artifactId>
-          <groupId>log4j</groupId>
+          <groupId>ch.qos.logback</groupId>
+          <artifactId>logback-classic</artifactId>
         </exclusion>
         <exclusion>
-          <artifactId>slf4j-log4j12</artifactId>
           <groupId>org.slf4j</groupId>
+          <artifactId>log4j-over-slf4j</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
 
-    <!-- HBase -->
     <dependency>
-      <groupId>org.gbif</groupId>
-      <artifactId>hbase-utils</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase-client</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase-common</artifactId>
+      <groupId>org.elasticsearch.client</groupId>
+      <artifactId>elasticsearch-rest-high-level-client</artifactId>
     </dependency>
 
     <!-- Hadoop -->
@@ -109,11 +49,35 @@
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-hdfs</artifactId>
       <scope>compile</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>io.netty</groupId>
+          <artifactId>netty</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>io.netty</groupId>
+          <artifactId>netty-all</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>log4j</groupId>
+          <artifactId>log4j</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-core</artifactId>
       <scope>compile</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>io.netty</groupId>
+          <artifactId>netty</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-log4j12</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
@@ -128,11 +92,11 @@
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
-      <artifactId>log4j-over-slf4j</artifactId>
+      <artifactId>slf4j-log4j12</artifactId>
     </dependency>
     <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>
+      <groupId>biz.paluch.logging</groupId>
+      <artifactId>logstash-gelf</artifactId>
     </dependency>
 
     <!-- Test -->
@@ -141,41 +105,14 @@
       <artifactId>junit</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase-testing-util</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-minicluster</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.curator</groupId>
-      <artifactId>curator-framework</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.curator</groupId>
-      <artifactId>curator-test</artifactId>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>elasticsearch</artifactId>
       <scope>test</scope>
     </dependency>
 
   </dependencies>
 
   <profiles>
-    <profile>
-      <id>skip-release-it</id>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-failsafe-plugin</artifactId>
-            <configuration>
-              <skip>true</skip>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
     <profile>
       <id>extra-artifacts</id>
       <build>
@@ -209,9 +146,25 @@
                   <transformers>
                     <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
                     <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                      <mainClass>org.gbif.pipelines.diagnostics.MainTool</mainClass>
+                      <mainClass>org.gbif.pipelines.ingest.java.pipelines.VerbatimToOccurrencePipeline</mainClass>
                     </transformer>
                   </transformers>
+                  <relocations>
+                    <!-- Transient from core: conflicts with Beam on Spark -->
+                    <relocation>
+                      <pattern>okio</pattern>
+                      <shadedPattern>o113.okio</shadedPattern>
+                    </relocation>
+                    <relocation>
+                      <pattern>retrofit2</pattern>
+                      <shadedPattern>r240.retrofit2</shadedPattern>
+                    </relocation>
+                    <!-- Transient from elastic search Beam: conflicts with hive-jdbc-1.1.0-cdh5.12.1-standalone.jar -->
+                    <relocation>
+                      <pattern>org.apache.http</pattern>
+                      <shadedPattern>hc45.org.apache.http</shadedPattern>
+                    </relocation>
+                  </relocations>
                 </configuration>
               </execution>
             </executions>

@@ -9,18 +9,19 @@
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>pipelines</artifactId>
+  <artifactId>ingestion</artifactId>
   <packaging>pom</packaging>
 
-  <name>Pipelines :: GBIF :: Pipelines</name>
+  <name>Pipelines :: GBIF :: Ingestion</name>
   <description>Apache Beam pipelines</description>
 
   <modules>
-    <module>ingest-gbif-fragmenter</module>
-    <module>ingest-gbif-beam</module>
-    <module>ingest-gbif-java</module>
-    <module>pre-backbone-release</module>
     <module>clustering-gbif</module>
+    <module>ingest-gbif-beam</module>
+    <module>ingest-gbif-fragmenter</module>
+    <module>ingest-gbif-java</module>
+    <module>ingestion-integration-tests</module>
+    <module>pre-backbone-release</module>
   </modules>
 
 </project>

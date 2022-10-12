@@ -16,11 +16,9 @@
 
   <modules>
     <module>coordinator</module>
-    <module>diagnostics</module>
-    <module>keygen</module>
-    <module>pipelines</module>
+    <module>identifiers</module>
+    <module>ingestion</module>
     <module>validator</module>
-    <module>gbif-integration-tests</module>
   </modules>
 
 </project>
