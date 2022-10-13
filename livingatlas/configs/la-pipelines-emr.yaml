@@ -94,6 +94,11 @@ outlier:
   targetPath: hdfs:///pipelines-outlier
   allDatasetsInputPath: hdfs:////pipelines-all-datasets
 
+elastic:
+  inputPath: hdfs:///pipelines-data
+  targetPath: hdfs:///pipelines-data
+  esSchemaPath: /tmp/es-event-core-schema.json
+
 gbifConfig:
   vocabularyConfig:
     vocabulariesPath: /data/pipelines-vocabularies/
@@ -102,6 +107,8 @@ gbifConfig:
       http://rs.tdwg.org/dwc/terms/lifeStage: LifeStage
       http://rs.tdwg.org/dwc/terms/establishmentMeans: EstablishmentMeans
       http://rs.tdwg.org/dwc/terms/pathway: Pathway
+      http://rs.gbif.org/terms/1.0/eventType: EventType
+      http://rs.tdwg.org/dwc/terms/occurrenceStatus: OccurrenceStatus
 
 # class: DumpArchiveList
 dataset-archive-list:
@@ -118,7 +125,7 @@ collectory:
     Authorization: add-a-api-key-here
 
 alaNameMatch:
-  wsUrl: http://localhost:9179
+  wsUrl: https://namematching-ws-test.ala.org.au
   timeoutSec: 70
   retryConfig:
     maxAttempts: 5

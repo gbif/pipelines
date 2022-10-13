@@ -3,6 +3,8 @@ package org.gbif.pipelines.core.converters;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.dwc.terms.DwcTerm;
@@ -144,6 +146,15 @@ public class EventJsonConverter {
     extractOptValue(verbatim, DwcTerm.institutionCode).ifPresent(builder::setInstitutionCode);
     extractOptValue(verbatim, DwcTerm.verbatimDepth).ifPresent(builder::setVerbatimDepth);
     extractOptValue(verbatim, DwcTerm.verbatimElevation).ifPresent(builder::setVerbatimElevation);
+
+    // set occurrence count
+    Integer occurrenceCount =
+        Optional.of(verbatim.getExtensions())
+            .map(exts -> exts.get(DwcTerm.Occurrence.qualifiedName()))
+            .map(List::size)
+            .orElse(0);
+
+    builder.setOccurrenceCount(occurrenceCount);
   }
 
   private void mapIssues(EventJsonRecord.Builder builder) {
