@@ -13,7 +13,7 @@ public class DistributionOutlierTest {
   // String spatial_url = "http://devt.ala.org.au:8080/ws/";
   String spatial_url = "https://spatial-test.ala.org.au/ws/";
   String lsidGreyNurseShark =
-      "urn:lsid:biodiversity.org.au:afd.taxon:0c3e2403-05c4-4a43-8019-30e6d657a283";
+      "https://biodiversity.org.au/afd/taxa/0c3e2403-05c4-4a43-8019-30e6d657a283";
 
   @Test
   public void getMultiLayers() {
@@ -69,8 +69,7 @@ public class DistributionOutlierTest {
 
       Map<String, Double> results =
           impl.outliers(
-              "urn:lsid:biodiversity.org.au:afd.taxon:0c3e2403-05c4-4a43-8019-30e6d657a283",
-              points);
+              "https://biodiversity.org.au/afd/taxa/0c3e2403-05c4-4a43-8019-30e6d657a283", points);
       assertSame(1, results.size());
     } catch (Exception e) {
       e.printStackTrace();

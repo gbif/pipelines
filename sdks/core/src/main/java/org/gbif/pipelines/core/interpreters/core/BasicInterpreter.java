@@ -304,4 +304,9 @@ public class BasicInterpreter {
   public static void interpretPreparations(ExtendedRecord er, BasicRecord br) {
     extractOptListValue(er, DwcTerm.preparations).ifPresent(br::setPreparations);
   }
+
+  /** Sets the coreId field. */
+  public static void setCoreId(ExtendedRecord er, BasicRecord br) {
+    Optional.ofNullable(er.getCoreId()).ifPresent(br::setCoreId);
+  }
 }

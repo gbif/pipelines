@@ -503,26 +503,30 @@ public class OccurrenceJsonConverterTest {
     assertEquals(expectedVerbatim, result.path("verbatim").toString());
 
     String expectedGbifClassification =
-        "{\"acceptedUsage\":{\"key\":11,\"name\":\"accepted usage\",\"rank\":\"SPECIES\"},\"classification\":"
-            + "[{\"key\":1,\"name\":\"KINGDOM\",\"rank\":\"KINGDOM\"},{\"key\":2,\"name\":\"PHYLUM\",\"rank\":\"PHYLUM\"},"
-            + "{\"key\":3,\"name\":\"CLASS\",\"rank\":\"CLASS\"},{\"key\":4,\"name\":\"ORDER\",\"rank\":\"ORDER\"},"
-            + "{\"key\":5,\"name\":\"FAMILY\",\"rank\":\"FAMILY\"},{\"key\":6,\"name\":\"GENUS\",\"rank\":\"GENUS\"},"
-            + "{\"key\":7,\"name\":\"SPECIES\",\"rank\":\"SPECIES\"}],\"classificationPath\":\"_1_2_3_4_5_6\",\"diagnostics\":"
-            + "{\"matchType\":\"EXACT\",\"note\":\"note\",\"status\":\"ACCEPTED\"},\"kingdom\":\"KINGDOM\","
-            + "\"kingdomKey\":\"1\",\"phylum\":\"PHYLUM\",\"phylumKey\":\"2\",\"classKey\":\"3\",\"order\":"
-            + "\"ORDER\",\"orderKey\":\"4\",\"family\":\"FAMILY\",\"familyKey\":\"5\",\"genus\":\"GENUS\",\"genusKey\":\"6\","
-            + "\"species\":\"SPECIES\",\"speciesKey\":\"7\",\"synonym\":true,\"taxonID\":\"taxonID\","
-            + "\"taxonKey\":[\"1\",\"2\",\"3\",\"4\",\"5\",\"6\",\"7\",\"10\",\"11\"],"
-            + "\"usage\":{\"key\":10,\"name\":\"synonym\",\"rank\":\"SPECIES\"},\"usageParsedName\":{\"abbreviated\":false,"
-            + "\"autonym\":false,\"basionymAuthorship\":{\"authors\":[\"setBasionymAuthorship\"],\"exAuthors\""
-            + ":[\"setBasionymAuthorship\"],\"empty\":true,\"year\":\"2000\"},\"binomial\":false,\"candidatus\":"
-            + "false,\"code\":\"BACTERIAL\",\"combinationAuthorship\":{\"authors\":[\"setCombinationAuthorship\"],"
+        "{\"acceptedUsage\":{\"key\":11,\"guid\":null,\"name\":\"accepted usage\",\"rank\":\"SPECIES\"},"
+            + "\"classification\":[{\"key\":1,\"guid\":null,\"name\":\"KINGDOM\",\"rank\":\"KINGDOM\"},{\"key\":2,"
+            + "\"guid\":null,\"name\":\"PHYLUM\",\"rank\":\"PHYLUM\"},{\"key\":3,\"guid\":null,\"name\":\"CLASS\","
+            + "\"rank\":\"CLASS\"},{\"key\":4,\"guid\":null,\"name\":\"ORDER\",\"rank\":\"ORDER\"},{\"key\":5,"
+            + "\"guid\":null,\"name\":\"FAMILY\",\"rank\":\"FAMILY\"},{\"key\":6,\"guid\":null,\"name\":\"GENUS\","
+            + "\"rank\":\"GENUS\"},{\"key\":7,\"guid\":null,\"name\":\"SPECIES\",\"rank\":\"SPECIES\"}],"
+            + "\"classificationPath\":\"_1_2_3_4_5_6\",\"diagnostics\":{\"matchType\":\"EXACT\",\"note\":\"note\","
+            + "\"status\":\"ACCEPTED\"},\"kingdom\":\"KINGDOM\",\"kingdomKey\":\"1\",\"phylum\":\"PHYLUM\","
+            + "\"phylumKey\":\"2\",\"classKey\":\"3\",\"order\":\"ORDER\",\"orderKey\":\"4\",\"family\":\"FAMILY\","
+            + "\"familyKey\":\"5\",\"genus\":\"GENUS\",\"genusKey\":\"6\",\"species\":\"SPECIES\","
+            + "\"speciesKey\":\"7\",\"synonym\":true,\"taxonID\":\"taxonID\","
+            + "\"taxonKey\":[\"1\",\"2\",\"3\",\"4\",\"5\",\"6\",\"7\",\"10\",\"11\"],\"usage\":{\"key\":10,"
+            + "\"guid\":null,\"name\":\"synonym\",\"rank\":\"SPECIES\"},\"usageParsedName\":{\"abbreviated\":false,"
+            + "\"autonym\":false,\"basionymAuthorship\":{\"authors\":[\"setBasionymAuthorship\"],\"exAuthors\":["
+            + "\"setBasionymAuthorship\"],\"empty\":true,\"year\":\"2000\"},\"binomial\":false,\"candidatus\":false,"
+            + "\"code\":\"BACTERIAL\",\"combinationAuthorship\":{\"authors\":[\"setCombinationAuthorship\"],"
             + "\"exAuthors\":[\"setCombinationAuthorship\"],\"empty\":false,\"year\":\"2020\"},\"doubtful\":false,"
             + "\"genericName\":\"setGenus\",\"genus\":\"setGenus\",\"incomplete\":false,\"indetermined\":false,"
             + "\"infraspecificEpithet\":\"infraspecificEpithet\",\"notho\":\"GENERIC\",\"rank\":\"ABERRATION\","
             + "\"specificEpithet\":\"specificEpithet\",\"state\":\"COMPLETE\",\"terminalEpithet\":\"terminalEpithet\","
-            + "\"trinomial\":false,\"type\":\"HYBRID_FORMULA\",\"uninomial\":\"setUninomial\"},\"verbatimScientificName\":"
-            + "\"scientificName\",\"iucnRedListCategoryCode\":\"setIucnRedListCategoryCode\",\"class\":\"CLASS\"}";
+            + "\"trinomial\":false,\"type\":\"HYBRID_FORMULA\",\"uninomial\":\"setUninomial\"},"
+            + "\"verbatimScientificName\":\"scientificName\",\"iucnRedListCategoryCode\":\"setIucnRedListCategoryCode\","
+            + "\"class\":\"CLASS\"}";
+
     assertEquals(expectedGbifClassification, result.path("gbifClassification").toString());
 
     assertEquals("111", result.path("gbifId").asText());

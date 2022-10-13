@@ -165,7 +165,7 @@ public class IndexRecordPipeline {
 
     PCollection<KV<String, ALATaxonRecord>> alaTaxonCollection =
         p.apply("Read Taxon", alaTaxonomyTransform.read(pathFn))
-            .apply("Map Taxon to KV", alaTaxonomyTransform.toKv());
+            .apply("Map Taxon to KV", alaTaxonomyTransform.toCoreIdKv());
 
     PCollection<KV<String, ALAAttributionRecord>> alaAttributionCollection =
         p.apply("Read attribution", alaAttributionTransform.read(pathFn))
