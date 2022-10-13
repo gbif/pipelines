@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.Optional;
 import java.util.UUID;
 import org.gbif.pipelines.keygen.api.KeyLookupResult;
+import org.gbif.pipelines.resources.HbaseServer;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;

@@ -21,7 +21,6 @@ import org.gbif.pipelines.estools.model.IndexParams;
 import org.gbif.pipelines.estools.service.EsService;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 
@@ -33,11 +32,6 @@ public class ElasticsearchWriterIT {
 
   /** {@link ClassRule} requires this field to be public. */
   @ClassRule public static final EsServer ES_SERVER = EsServer.getInstance();
-
-  @Before
-  public void cleanIndexes() {
-    EsService.deleteAllIndexes(ES_SERVER.getEsClient());
-  }
 
   @Test
   public void oneRecordsSyncTest() {

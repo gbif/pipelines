@@ -160,6 +160,7 @@
     <!-- Maven plugin -->
     <maven-plugin-api.version>3.8.6</maven-plugin-api.version>
     <maven-plugin-annotations.version>3.6.4</maven-plugin-annotations.version>
+    <jacoco-maven-plugin.version>0.8.8</jacoco-maven-plugin.version>
 
     <!-- Plugins -->
     <build-helper-maven.version>3.3.0</build-helper-maven.version>
@@ -347,6 +348,11 @@
       <dependency>
         <groupId>org.gbif.pipelines</groupId>
         <artifactId>keygen</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.pipelines</groupId>
+        <artifactId>diagnostics</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>

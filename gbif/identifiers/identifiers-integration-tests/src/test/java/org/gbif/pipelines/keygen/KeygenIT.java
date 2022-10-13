@@ -1,12 +1,15 @@
 package org.gbif.pipelines.keygen;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Optional;
 import org.gbif.pipelines.keygen.api.KeyLookupResult;
+import org.gbif.pipelines.resources.HbaseServer;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;

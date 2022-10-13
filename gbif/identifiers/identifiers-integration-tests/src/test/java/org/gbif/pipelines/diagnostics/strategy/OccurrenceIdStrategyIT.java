@@ -2,16 +2,16 @@ package org.gbif.pipelines.diagnostics.strategy;
 
 import java.io.IOException;
 import java.util.Map;
-import org.gbif.pipelines.diagnostics.resources.HbaseServer;
-import org.gbif.pipelines.diagnostics.resources.HbaseStore;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
+import org.gbif.pipelines.resources.HbaseServer;
+import org.gbif.pipelines.resources.HbaseStore;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-public class TripletStrategyIT {
+public class OccurrenceIdStrategyIT {
 
   /** {@link ClassRule} requires this field to be public. */
   @ClassRule public static final HbaseServer HBASE_SERVER = HbaseServer.getInstance();
@@ -22,7 +22,7 @@ public class TripletStrategyIT {
   }
 
   @Test
-  public void tripletTest() {
+  public void occurrenceIdTest() {
 
     // State
     String datasetKey = "508089ca-ddb4-4112-b2cb-cb1bff8f39ad";
@@ -48,15 +48,15 @@ public class TripletStrategyIT {
 
     // When
     Map<String, Long> keysToDelete =
-        new TripletStrategy().getKeysToDelete(keygenService, false, triplet, occId);
+        new OccurrenceIdStrategy().getKeysToDelete(keygenService, false, triplet, occId);
 
     // Should
     Assert.assertEquals(1, keysToDelete.size());
-    Assert.assertEquals(Long.valueOf(gbifId), keysToDelete.get(triplet));
+    Assert.assertEquals(Long.valueOf(gbifId), keysToDelete.get(occId));
   }
 
   @Test
-  public void tripletEmptyTest() {
+  public void occurrenceIdEmptyTest() {
 
     // State
     String datasetKey = "508089ca-ddb4-4112-b2cb-cb1bff8f39ad";
@@ -69,14 +69,14 @@ public class TripletStrategyIT {
 
     // When
     Map<String, Long> keysToDelete =
-        new TripletStrategy().getKeysToDelete(keygenService, false, triplet, occId);
+        new OccurrenceIdStrategy().getKeysToDelete(keygenService, false, triplet, occId);
 
     // Should
     Assert.assertEquals(0, keysToDelete.size());
   }
 
   @Test
-  public void tripletNoCollisionTest() {
+  public void occurrenceIdNoCollisionTest() {
 
     // State
     String datasetKey = "508089ca-ddb4-4112-b2cb-cb1bff8f39ad";
@@ -102,14 +102,14 @@ public class TripletStrategyIT {
 
     // When
     Map<String, Long> keysToDelete =
-        new TripletStrategy().getKeysToDelete(keygenService, true, triplet, occId);
+        new OccurrenceIdStrategy().getKeysToDelete(keygenService, true, triplet, occId);
 
     // Should
     Assert.assertEquals(0, keysToDelete.size());
   }
 
   @Test
-  public void tripletCollisionTest() {
+  public void occurrenceIdCollisionTest() {
 
     // State
     String datasetKey = "508089ca-ddb4-4112-b2cb-cb1bff8f39ad";
@@ -135,10 +135,10 @@ public class TripletStrategyIT {
 
     // When
     Map<String, Long> keysToDelete =
-        new TripletStrategy().getKeysToDelete(keygenService, true, triplet, occId);
+        new OccurrenceIdStrategy().getKeysToDelete(keygenService, true, triplet, occId);
 
     // Should
     Assert.assertEquals(1, keysToDelete.size());
-    Assert.assertEquals(Long.valueOf(gbifId2), keysToDelete.get(triplet));
+    Assert.assertEquals(Long.valueOf(gbifId), keysToDelete.get(occId));
   }
 }

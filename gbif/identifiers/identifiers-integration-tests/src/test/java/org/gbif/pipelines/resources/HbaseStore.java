@@ -1,4 +1,4 @@
-package org.gbif.pipelines.diagnostics.resources;
+package org.gbif.pipelines.resources;
 
 import java.util.Arrays;
 import java.util.HashSet;
