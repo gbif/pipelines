@@ -146,10 +146,14 @@ public class SensitiveDataInterpreter {
     }
     for (Schema.Field f : record.getSchema().getFields()) {
       Term term = TERM_FACTORY.findTerm(f.name());
-      String name = term.qualifiedName();
-      if (sensitive.contains(term) && !properties.containsKey(name)) {
-        Object value = record.get(f.pos());
-        properties.put(name, value == null ? null : value.toString());
+      if (term != null) {
+        String name = term.qualifiedName();
+        if (sensitive.contains(term) && !properties.containsKey(name)) {
+          Object value = record.get(f.pos());
+          properties.put(name, value == null ? null : value.toString());
+        }
+      } else {
+        throw new RuntimeException("Unrecognised field name: " + f.name());
       }
     }
   }

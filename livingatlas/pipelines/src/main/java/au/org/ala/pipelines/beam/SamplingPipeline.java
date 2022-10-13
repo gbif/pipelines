@@ -1,5 +1,7 @@
 package au.org.ala.pipelines.beam;
 
+import au.org.ala.kvs.ALAPipelinesConfig;
+import au.org.ala.kvs.ALAPipelinesConfigFactory;
 import au.org.ala.pipelines.options.AllDatasetsPipelinesOptions;
 import au.org.ala.pipelines.options.SamplingPipelineOptions;
 import au.org.ala.pipelines.util.SamplingUtils;
@@ -66,10 +68,18 @@ public class SamplingPipeline {
 
     HdfsConfigs hdfsConfigs =
         HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig());
+
+    ALAPipelinesConfig config =
+        ALAPipelinesConfigFactory.getInstance(
+                HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()),
+                options.getInputPath())
+            .get();
+
     FileSystem fs = FileSystemFactory.getInstance(hdfsConfigs).getFs(options.getInputPath());
 
     log.info("Checking for new layers in the system");
-    SamplingService samplingService = SamplingUtils.initSamplingService(options.getBaseUrl());
+    SamplingService samplingService =
+        SamplingUtils.initSamplingService(config.getSamplingService().getWsUrl());
 
     boolean newLayersAvailable = newLayersAddedSinceLastSample(samplingService, options, fs);
 

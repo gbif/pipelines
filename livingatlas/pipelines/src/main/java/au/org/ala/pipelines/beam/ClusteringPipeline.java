@@ -493,13 +493,20 @@ public class ClusteringPipeline {
                         input.getMonth() + "",
                         input.getDay() + "",
                         input.getEventDate(),
-                        String.join("|", input.getTypeStatus()),
-                        String.join("|", input.getRecordedBy()),
+                        String.join(
+                            "|",
+                            Optional.ofNullable(input.getTypeStatus()).orElse(new ArrayList())),
+                        String.join(
+                            "|",
+                            Optional.ofNullable(input.getRecordedBy()).orElse(new ArrayList())),
                         input.getFieldNumber(),
                         input.getRecordNumber(),
                         input.getCatalogNumber(),
                         input.getOccurrenceID(),
-                        String.join("|", input.getOtherCatalogNumbers()));
+                        String.join(
+                            "|",
+                            Optional.ofNullable(input.getOtherCatalogNumbers())
+                                .orElse(new ArrayList())));
                   }
                 }))
         .apply(

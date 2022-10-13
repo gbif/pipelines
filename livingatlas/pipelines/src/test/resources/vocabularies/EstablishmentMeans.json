@@ -1,0 +1,208 @@
+{
+  "metadata" : {
+    "createdDate" : "2022-01-06T13:31:48.913",
+    "version" : null
+  },
+  "vocabulary" : {
+    "key" : 3,
+    "name" : "EstablishmentMeans",
+    "label" : {
+      "en" : "Establishment Means"
+    },
+    "definition" : {
+      "en" : "Provides the controlled vocabulary for information about whether an organism or organisms have been introduced to a given place and time through the direct or indirect activity of modern humans. The Establishment Means Controlled Vocabulary provides terms that should be used as values for dwc:establishmentMeans and dwciri:establishmentMeans."
+    },
+    "externalDefinitions" : [ "https://dwc.tdwg.org/em/" ],
+    "editorialNotes" : [ "Originally created as a faithful copy of the DwC definition, with additional hidden labels based on verbatim data", "Quentin Groom assisted in the creation of this vocabulary" ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-03-24T16:18:59.40754",
+    "createdBy" : "trobertson",
+    "modified" : "2021-03-24T16:18:59.40754",
+    "modifiedBy" : "trobertson",
+    "deleted" : null,
+    "namespace" : null
+  },
+  "concepts" : [ {
+    "key" : 44,
+    "name" : "introduced",
+    "label" : {
+      "en" : "Introduced (Alien, Exotic, Non-native, Nonindigenous)",
+      "es-ES" : "Introducida"
+    },
+    "definition" : {
+      "en" : "Establishment of a taxon by human agency into an area that is not part of its natural range.",
+      "es-ES" : "Una especie introducida con ayuda humana (intencionada o accidentalmente) a un nuevo lugar o nuevo tipo de hábitat donde no se había encontrado previamente. No todas las especies introducidas son invasoras. De hecho, cuando muchas de estas especies son ingresadas en nuevos lugares, no pueden reproducirse o propagarse fácilmente sin la ayuda humana continua (por ejemplo, muchas plantas ornamentales)."
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-04-08T23:48:55.938771",
+    "createdBy" : "trobertson",
+    "modified" : "2021-04-08T23:48:55.938771",
+    "modifiedBy" : "lbuitrago",
+    "deleted" : null,
+    "vocabularyKey" : 3,
+    "parentKey" : null,
+    "alternativeLabels" : {
+      "en" : [ "Alien", "Introduced", "Nonindigenous", "Exotic", "Non-native" ],
+      "es-ES" : [ "No-nativa", "Exótica" ]
+    },
+    "hiddenLabels" : [ "Naturalizada", "invasive", "Introducida", "naturalised", "non-native in Hawaii", "Introducido", "Introduced", "Invasor", "Naturalised", "non-native in conterminous Lower 48 States", "Invasora", "Introduced in Hawaii and the Lower 48 Conterminous United States of America", "Introduced in the Lower 48 Conterminous United States of America", "Introduced in Hawaii", "Invasive" ],
+    "sameAsUris" : [ "http://rs.tdwg.org/dwcem/values/e003" ],
+    "tags" : [ ]
+  }, {
+    "key" : 47,
+    "name" : "uncertain",
+    "label" : {
+      "en" : "Uncertain (Unknown, Cryptogenic)",
+      "es-ES" : "Incierto (Desconocido)"
+    },
+    "definition" : {
+      "en" : "The origin of the occurrence of the taxon in an area is obscure",
+      "es-ES" : "Se desconoce la procedencia de la especie en un área (puede ser nativa, reintroducida o introducida)."
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-04-08T23:41:23.164412",
+    "createdBy" : "trobertson",
+    "modified" : "2021-04-08T23:41:23.164412",
+    "modifiedBy" : "lbuitrago",
+    "deleted" : null,
+    "vocabularyKey" : 3,
+    "parentKey" : null,
+    "alternativeLabels" : {
+      "en" : [ "Uncertain", "Unknown", "Cryptogenic" ],
+      "es-ES" : [ "Incierto", "Desconocido" ]
+    },
+    "hiddenLabels" : [ "Wild: native/naturalized", "unknown", "unknown :" ],
+    "sameAsUris" : [ "http://rs.tdwg.org/dwcem/values/e006" ],
+    "tags" : [ ]
+  }, {
+    "key" : 45,
+    "name" : "introducedAssistedColonisation",
+    "label" : {
+      "en" : "Introduced (Assisted colonisation)",
+      "es-ES" : "Introducida (Colonización asistida)"
+    },
+    "definition" : {
+      "en" : "Establishment of a taxon specifically with the intention of creating a self-sustaining wild population in an area that is not part of the taxon's natural range",
+      "es-ES" : "Especies sujetas a traslado intencional y liberación fuera de su área de distribución nativa para reducir el riesgo de extinción del taxón."
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-04-08T23:38:05.793934",
+    "createdBy" : "trobertson",
+    "modified" : "2021-08-31T12:53:26.106847",
+    "modifiedBy" : "MattBlissett",
+    "deleted" : null,
+    "vocabularyKey" : 3,
+    "parentKey" : 44,
+    "alternativeLabels" : {
+      "en" : [ "Assisted colonisation" ],
+      "es-ES" : [ "Colonización asistida" ]
+    },
+    "hiddenLabels" : [ "Assisted colonization", "introducedAssistedColonization" ],
+    "sameAsUris" : [ "http://rs.tdwg.org/dwcem/values/e004" ],
+    "tags" : [ ]
+  }, {
+    "key" : 43,
+    "name" : "nativeReintroduced",
+    "label" : {
+      "en" : "Native (Reintroduced)",
+      "es-ES" : "Nativa (Reintroducida)"
+    },
+    "definition" : {
+      "en" : "A taxon re-established by direct introduction by humans into an area which was once part of its natural range, but from where it had become extinct",
+      "es-ES" : "La especie es / fue reintroducida dentro de su rango histórico conocido, a través de la actividad humana directa o indirecta."
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-04-08T23:30:59.739985",
+    "createdBy" : "trobertson",
+    "modified" : "2021-04-08T23:30:59.739985",
+    "modifiedBy" : "lbuitrago",
+    "deleted" : null,
+    "vocabularyKey" : 3,
+    "parentKey" : 42,
+    "alternativeLabels" : {
+      "en" : [ "Reintroduced" ],
+      "es-ES" : [ "Reintroducida" ]
+    },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ "http://rs.tdwg.org/dwcem/values/e002" ],
+    "tags" : [ ]
+  }, {
+    "key" : 42,
+    "name" : "native",
+    "label" : {
+      "en" : "Native (Indigenous)",
+      "es-ES" : "Nativa"
+    },
+    "definition" : {
+      "en" : "A taxon occurring within its natural range",
+      "es-ES" : "Especie que forma parte del equilibrio de la naturaleza. Se ha desarrollado durante cientos o miles de años en una región o ecosistema en particular."
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-04-08T23:25:46.25045",
+    "createdBy" : "trobertson",
+    "modified" : "2021-04-08T23:25:46.25045",
+    "modifiedBy" : "lbuitrago",
+    "deleted" : null,
+    "vocabularyKey" : 3,
+    "parentKey" : null,
+    "alternativeLabels" : {
+      "en" : [ "Native", "Indigenous" ],
+      "es-ES" : [ "Autóctona", "Nativa" ]
+    },
+    "hiddenLabels" : [ "Endémica", "nativa", "Nativa", "Macaronesian endemism", "Nativo", "endemic", "Natural", "Endemic" ],
+    "sameAsUris" : [ "http://rs.tdwg.org/dwcem/values/e001" ],
+    "tags" : [ ]
+  }, {
+    "key" : 46,
+    "name" : "vagrant",
+    "label" : {
+      "en" : "Vagrant (Casual)",
+      "es-ES" : "Transitoria (Casual)"
+    },
+    "definition" : {
+      "en" : "The temporary occurrence of a taxon far outside its natural or migratory range",
+      "es-ES" : "La especie se registró una vez o esporádicamente, pero se sabe que no es nativa del área. Es un término usado para ocurrencias naturales de organismos fuera de sus rangos normales y también para introducciones asistidas por humanos donde el grado de establecimiento es mínimo."
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-04-08T23:21:31.452537",
+    "createdBy" : "trobertson",
+    "modified" : "2021-04-08T23:21:31.452537",
+    "modifiedBy" : "lbuitrago",
+    "deleted" : null,
+    "vocabularyKey" : 3,
+    "parentKey" : null,
+    "alternativeLabels" : {
+      "en" : [ "Casual", "Vagrant" ],
+      "es-ES" : [ "Transitoria", "Casual" ]
+    },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ "http://rs.tdwg.org/dwcem/values/e005" ],
+    "tags" : [ ]
+  } ]
+}
