@@ -22,6 +22,7 @@ import org.apache.hadoop.hbase.util.Bytes;
 import org.gbif.pipelines.keygen.api.KeyLookupResult;
 import org.gbif.pipelines.keygen.hbase.Columns;
 import org.gbif.pipelines.keygen.hbase.HBaseStore;
+import org.gbif.pipelines.resources.HbaseServer;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -43,9 +44,9 @@ public class HBaseLockingKeyServiceIT {
   @Test
   public void testNoContention() {
     Set<String> uniqueIds = new HashSet<>();
-    uniqueIds.add(HbaseServer.A);
-    uniqueIds.add(HbaseServer.B);
-    uniqueIds.add(HbaseServer.C);
+    uniqueIds.add("a");
+    uniqueIds.add("b");
+    uniqueIds.add("c");
     KeyLookupResult result = HBASE_SERVER.keyService.generateKey(uniqueIds, "boo");
     assertEquals(1, result.getKey());
     assertTrue(result.isCreated());

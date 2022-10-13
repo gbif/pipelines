@@ -16,8 +16,13 @@
 
   <name>Pipelines :: GBIF :: Identifiers</name>
 
+  <properties>
+    <jcommander.version>1.78</jcommander.version>
+  </properties>
+
   <modules>
     <module>diagnostics</module>
+    <module>identifiers-integration-tests</module>
     <module>keygen</module>
   </modules>
 

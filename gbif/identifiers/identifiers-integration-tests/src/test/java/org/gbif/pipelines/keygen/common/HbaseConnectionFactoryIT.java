@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 import org.apache.hadoop.hbase.client.Connection;
-import org.gbif.pipelines.keygen.HbaseServer;
+import org.gbif.pipelines.resources.HbaseServer;
 import org.junit.Assert;
 import org.junit.ClassRule;
 import org.junit.Test;

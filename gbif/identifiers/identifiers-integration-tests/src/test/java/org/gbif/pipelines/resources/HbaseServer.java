@@ -1,6 +1,7 @@
-package org.gbif.pipelines.diagnostics.resources;
+package org.gbif.pipelines.resources;
 
 import java.io.IOException;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import lombok.Getter;
 import lombok.SneakyThrows;
@@ -28,25 +29,22 @@ public class HbaseServer extends ExternalResource {
           .zkConnectionString(null)
           .create();
 
-  private static final byte[] LOOKUP_TABLE = Bytes.toBytes(CFG.getLookupTable());
-  private static final String CF_NAME = "o";
-  private static final byte[] CF = Bytes.toBytes(CF_NAME);
+  public static final byte[] LOOKUP_TABLE = Bytes.toBytes(CFG.getLookupTable());
+  public static final byte[] CF = Bytes.toBytes("o");
   private static final byte[] COUNTER_TABLE = Bytes.toBytes(CFG.getCounterTable());
-  private static final String COUNTER_CF_NAME = "o";
-  private static final byte[] COUNTER_CF = Bytes.toBytes(COUNTER_CF_NAME);
+  private static final byte[] COUNTER_CF = Bytes.toBytes("o");
   private static final byte[] OCCURRENCE_TABLE = Bytes.toBytes(CFG.getOccurrenceTable());
 
   private static final HBaseTestingUtility TEST_UTIL = new HBaseTestingUtility();
 
   private static final Object MUTEX = new Object();
   private static volatile HbaseServer instance;
-
   private static final AtomicInteger COUNTER = new AtomicInteger(0);
 
   private HBaseStore<String> lookupTableStore = null;
-  private Connection connection = null;
   private TestingServer zkServer;
-  HBaseLockingKeyService keyService;
+  public Connection connection = null;
+  public HBaseLockingKeyService keyService;
 
   public static HbaseServer getInstance() {
     if (instance == null) {
@@ -62,8 +60,10 @@ public class HbaseServer extends ExternalResource {
   public void truncateTable() throws IOException {
     log.info("Trancate the table");
     TEST_UTIL.truncateTable(LOOKUP_TABLE);
+    TEST_UTIL.truncateTable(COUNTER_TABLE);
+    TEST_UTIL.truncateTable(OCCURRENCE_TABLE);
 
-    keyService = new HBaseLockingKeyService(CFG, connection);
+    keyService = new HBaseLockingKeyService(CFG, connection, UUID.randomUUID().toString());
   }
 
   @Override
@@ -118,5 +118,9 @@ public class HbaseServer extends ExternalResource {
         zkServer.close();
       }
     }
+  }
+
+  public String getZKString() {
+    return zkServer.getConnectString();
   }
 }
