@@ -21,25 +21,25 @@ fs:
   platform: local
   local:
     fsPath: /data
-  hdfs:
-    fsPath: hdfs://localhost:8020
-  # fsPath: hdfs://aws-spark-quoll-1.ala:9000/
-
 alaNameMatch:
-  wsUrl: http://localhost:9179
+  wsUrl: http://localhost:ALA_NAME_MATCH_PORT
   timeoutSec: 70
 collectory:
-  wsUrl: http://localhost:3939
+  wsUrl: http://localhost:COLLECTORY_PORT
   timeoutSec: 70
 speciesListService:
-  wsUrl: http://localhost:3940
+  wsUrl: http://localhost:LISTS_PORT
+  timeoutSec: 70
+samplingService:
+  wsUrl: http://localhost:SPATIAL_PORT
+#  wsUrl: https://sampling.ala.org.au/sampling-service/
   timeoutSec: 70
 sds:
-  wsUrl: http://localhost:9289
+  wsUrl: http://localhost:SDS_PORT
   timeoutSec: 70
 geocodeConfig:
   country:
-    path: /data/pipelines-shp/political
+    path: /tmp/pipelines-shp/political
     field: ISO_A2
     intersectBuffer: 0.135
     intersectMapping:
@@ -48,28 +48,50 @@ geocodeConfig:
       HM: AU
       NF: AU
   eez:
-    path: /data/pipelines-shp/eez
+    path: /tmp/pipelines-shp/eez
     field: ISO2
     intersectBuffer:  0.135
   stateProvince:
-    path: /data/pipelines-shp/cw_state_poly
+    path: /tmp/pipelines-shp/cw_state_poly
     field: FEATURE
     intersectBuffer: 0.135
   biome:
-    path: /data/pipelines-shp/gadm0
+    path: /tmp/pipelines-shp/gadm0
     field: FEATURE
-#locationInfoConfig:
-#    countryNamesFile : /data/pipelines-data/resources/countries.txt
-#    countryCentrePointsFile : /data/pipelines-data/resources/countryCentrePoints.txt
-#    stateProvinceCentrePointsFile : /data/pipelines-data/resources/stateProvinceCentrePoints.txt
-#    stateProvinceNamesFile : /data/pipelines-data/resources/stateProvinces.txt
+gbifConfig:
+  extensionsAllowedForVerbatimSet:
+    - http://rs.tdwg.org/ac/terms/Multimedia
+    - http://data.ggbn.org/schemas/ggbn/terms/Amplification
+    - http://data.ggbn.org/schemas/ggbn/terms/Cloning
+    - http://data.ggbn.org/schemas/ggbn/terms/GelImage
+    - http://data.ggbn.org/schemas/ggbn/terms/Loan
+    - http://data.ggbn.org/schemas/ggbn/terms/MaterialSample
+    - http://data.ggbn.org/schemas/ggbn/terms/Permit
+    - http://data.ggbn.org/schemas/ggbn/terms/Preparation
+    - http://data.ggbn.org/schemas/ggbn/terms/Preservation
+    - http://rs.iobis.org/obis/terms/ExtendedMeasurementOrFact
+    - http://rs.tdwg.org/chrono/terms/ChronometricAge
+    - http://purl.org/germplasm/germplasmTerm#GermplasmAccession
+    - http://purl.org/germplasm/germplasmTerm#MeasurementScore
+    - http://purl.org/germplasm/germplasmTerm#MeasurementTrait
+    - http://purl.org/germplasm/germplasmTerm#MeasurementTrial
+    - http://rs.tdwg.org/dwc/terms/Identification
+    - http://rs.tdwg.org/dwc/terms/Occurrence
+    - http://rs.gbif.org/terms/1.0/Identifier
+    - http://rs.gbif.org/terms/1.0/Image
+    - http://rs.tdwg.org/dwc/terms/MeasurementOrFact
+    - http://rs.gbif.org/terms/1.0/Multimedia
+    - http://rs.gbif.org/terms/1.0/Reference
+    - http://rs.tdwg.org/dwc/terms/ResourceRelationship
+    - http://rs.gbif.org/terms/1.0/DNADerivedData
+  vocabularyConfig:
+    vocabulariesPath: src/test/resources/vocabularies/
+    vocabulariesNames:
+      http://rs.tdwg.org/dwc/terms/degreeOfEstablishment: DegreeOfEstablishment
+      http://rs.tdwg.org/dwc/terms/lifeStage: LifeStage
+      http://rs.tdwg.org/dwc/terms/establishmentMeans: EstablishmentMeans
+      http://rs.tdwg.org/dwc/terms/pathway: Pathway
 
-### pipelines options: should match each GBIF PipelineOptions class options, that is, not extra options should be added
-### on each yml category
-
-# As PipelineOptions does not admits extra arguments, we use this comma separated list of --args to remove it after
-# use it. In the case of fsPath be substitute '{fsPath}/pipelines-data' with fs.hdfs.fsPath if hdfs is selected in
-# fs.platform or '/data' if 'local' is selected.
 pipelineExcludeArgs: fsPath
 
 # Common PipelineOptions
@@ -87,9 +109,6 @@ general:
 dwca-avro:
   runner: SparkRunner
   metaFileName: dwca-metrics.yml
-  # Path of the input file
-  inputPath: /data/biocache-load/{datasetId}/{datasetId}.zip
-  tempLocation: /data/biocache-load/{datasetId}/tmp/
 
 # class: au.org.ala.pipelines.beam.ALAVerbatimToInterpretedPipeline
 interpret:
@@ -97,14 +116,9 @@ interpret:
   interpretationTypes: ALL
   inputPath: '{fsPath}/pipelines-data/{datasetId}/1/verbatim.avro'
   metaFileName: interpretation-metrics.yml
-  # Skips GBIF id generation and copies ids from ExtendedRecord ids
   useExtendedRecordId: true
   runner: SparkRunner
-  ## For spark-cluster:
   name: interpret {datasetId}
-  #  appName: Interpretation for {datasetId}
-  ## For spark-embedded:
-  #  appName: Interpretation for {datasetId}
 
 # class: au.org.ala.pipelines.beam.ALAUUIDMintingPipeline
 uuid:
@@ -112,20 +126,11 @@ uuid:
   runner: SparkRunner
   inputPath: '{fsPath}/pipelines-data'
   metaFileName: uuid-metrics.yml
-  ## For spark-cluster:
-  # interpretationTypes: ALL
-  # useExtendedRecordId: true
 
 # class: au.org.ala.pipelines.beam.ALAInterpretedToLatLongCSVPipeline
 sampling:
-  # baseUrl: https://spatial.your-l-a.site/ws/
   appName: Sampling for {datasetId}
-  baseUrl: https://sampling.ala.org.au/sampling-service/
-  batchSize: 25000
-  batchStatusSleepTime: 1000
-  downloadRetries: 5
   inputPath: '{fsPath}/pipelines-data'
-  metaFileName: indexing-metrics.yml
   runner: SparkRunner
 
 speciesLists:
@@ -140,27 +145,31 @@ speciesLists:
 sample-avro:
   inputPath: '{fsPath}/pipelines-data'
   runner: SparkRunner
-  metaFileName: indexing-metrics.yml
-  ## For spark-cluster:
-  # appName: Add Sampling for {datasetId}
-  # useExtendedRecordId: true
-  ## For spark-embedded:
-  # appName: SamplingToAvro indexing for {datasetId}
+  metaFileName: sampling-metrics.yml
 
 # class: au.org.ala.pipelines.java.ALAInterpretedToSolrIndexPipeline
 index:
   inputPath: '{fsPath}/pipelines-data'
   metaFileName: indexing-metrics.yml
+
+solr:
+  inputPath: '{fsPath}/pipelines-data'
+  metaFileName: solr-metrics.yml
   solrCollection: biocache
   includeSampling: true
-  runner: SparkRunner
-  zkHost: localhost:9983
-  ## For spark-cluster:
-  # appName: SOLR indexing for {datasetId}
-  # runner: SparkRunner
-  ## For spark-embedded:
-  # appName: SOLR indexing for {datasetId}
-  # runner: SparkRunner
+  zkHost: localhost:SOLR_PORT
+  numOfPartitions: 10
+
+elastic:
+  appName: Elastic indexing for {datasetId}
+  inputPath: '{fsPath}/pipelines-data'
+  targetPath: '{fsPath}/pipelines-data'
+  esHosts: http://localhost:ES_PORT
+  esAlias: event
+  esIndexName: 'event_{datasetId}'
+  indexNumberShards: 1
+  indexNumberReplicas: 0
+  esDocumentId: internalId
 
 # class: au.org.ala.utils.DumpDatasetSize
 dataset-count-dump:
@@ -171,10 +180,8 @@ migrate-uuids:
   inputPath: '{fsPath}/pipelines-data/occ_uuid.csv'
   targetPath: '{fsPath}/pipelines-data'
   hdfsSiteConfig: ""
-  # FIXME: MigrateUUIDPipeline should use this also?
 
 ### la-pipelines cli additional arguments, like JVM or spark command line arguments
-
 interpret-sh-args:
   local:
     jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]

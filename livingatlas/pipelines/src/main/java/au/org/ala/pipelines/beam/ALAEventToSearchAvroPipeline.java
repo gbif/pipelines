@@ -186,14 +186,10 @@ public class ALAEventToSearchAvroPipeline {
             .withCodec(BASE_CODEC));
 
     log.info("Running the pipeline");
-    try {
-      PipelineResult result = p.run();
-      result.waitUntilFinish();
-      log.info("Save metrics into the file and set files owner");
-      MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
-    } catch (Exception e) {
-      log.error("Exception thrown", e);
-    }
+    PipelineResult result = p.run();
+    result.waitUntilFinish();
+    log.info("Save metrics into the file and set files owner");
+    MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
 
     log.info("Pipeline has been finished");
   }

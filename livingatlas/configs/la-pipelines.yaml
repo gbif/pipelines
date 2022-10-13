@@ -59,6 +59,12 @@ imageService:
 speciesListService:
   wsUrl: https://lists.ala.org.au
   timeoutSec: 70
+samplingService:
+  wsUrl: https://sampling.ala.org.au/sampling-service/
+  timeoutSec: 70
+  batchSize: 25000
+  batchStatusSleepTime: 1000
+  downloadRetries: 5
 geocodeConfig:
   country:
     path: /data/pipelines-shp/political
@@ -194,11 +200,6 @@ speciesLists:
 # Sampling specific configuration
 sampling:
   appName: Sample for {datasetId}
-  # baseUrl: https://spatial.your-l-a.site/ws/
-  baseUrl: https://sampling.ala.org.au/sampling-service/
-  batchSize: 25000
-  batchStatusSleepTime: 1000
-  downloadRetries: 5
   inputPath: '{fsPath}/pipelines-data'
   allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
   runner: SparkRunner

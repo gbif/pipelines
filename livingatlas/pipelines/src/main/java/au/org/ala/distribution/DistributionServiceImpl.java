@@ -38,8 +38,7 @@ public class DistributionServiceImpl implements Serializable {
   }
 
   public List<DistributionLayer> getLayers() throws IOException, ExpertDistributionException {
-    Response<List<au.org.ala.distribution.DistributionLayer>> response =
-        service.getLayers().execute();
+    Response<List<DistributionLayer>> response = service.getLayers().execute();
     int code = response.code();
     if (code >= 200 && code < 300) {
       List<au.org.ala.distribution.DistributionLayer> layers = response.body();
@@ -56,7 +55,7 @@ public class DistributionServiceImpl implements Serializable {
     Response<List<DistributionLayer>> response = service.getLayersByLsid(lsid, "false").execute();
     int code = response.code();
     if (code >= 200 && code < 300) {
-      List<au.org.ala.distribution.DistributionLayer> layers = response.body();
+      List<DistributionLayer> layers = response.body();
       return layers;
     } else {
       log.error("Error in finding the expert distribution layer of " + lsid);

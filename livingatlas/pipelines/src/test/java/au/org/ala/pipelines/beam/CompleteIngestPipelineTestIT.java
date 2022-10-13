@@ -4,15 +4,14 @@ import static org.junit.Assert.*;
 
 import au.org.ala.pipelines.options.*;
 import au.org.ala.sampling.LayerCrawler;
+import au.org.ala.util.IntegrationTestUtils;
 import au.org.ala.util.SolrUtils;
-import au.org.ala.util.TestUtils;
 import au.org.ala.utils.ValidationUtils;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
-import okhttp3.mockwebserver.MockWebServer;
 import org.apache.commons.io.FileUtils;
 import org.apache.solr.common.SolrDocument;
 import org.gbif.dwc.terms.DwcTerm;
@@ -29,18 +28,17 @@ import org.junit.Test;
  */
 public class CompleteIngestPipelineTestIT {
 
-  MockWebServer server;
+  IntegrationTestUtils itUtils;
 
   @Before
   public void setup() throws Exception {
-    server = TestUtils.createMockCollectory();
-    server.start(TestUtils.getCollectoryPort());
+    // clear up previous test runs
+    itUtils = IntegrationTestUtils.getInstance();
+    itUtils.setup();
   }
 
   @After
-  public void teardown() throws Exception {
-    server.shutdown();
-  }
+  public void teardown() throws Exception {}
 
   /** Tests for SOLR index creation. */
   @Test
@@ -77,8 +75,8 @@ public class CompleteIngestPipelineTestIT {
     assertNotNull(uuid);
 
     // 2. includes samples
-    assertEquals(Long.valueOf(6), SolrUtils.getRecordCount("cl620:*"));
-    assertEquals(Long.valueOf(6), SolrUtils.getRecordCount("cl927:*"));
+    assertEquals(Long.valueOf(5), SolrUtils.getRecordCount("cl620:*"));
+    assertEquals(Long.valueOf(5), SolrUtils.getRecordCount("cl927:*"));
 
     // dynamic properties indexing
     assertEquals(
@@ -176,7 +174,7 @@ public class CompleteIngestPipelineTestIT {
               "--metaFileName=" + ValidationUtils.INTERPRETATION_METRICS,
               "--targetPath=/tmp/la-pipelines-test/complete-pipeline",
               "--inputPath=/tmp/la-pipelines-test/complete-pipeline/dr893/1/verbatim.avro",
-              "--properties=" + TestUtils.getPipelinesConfigFile(),
+              "--properties=" + itUtils.getPropertiesFilePath(),
               "--useExtendedRecordId=true"
             });
     ALAVerbatimToInterpretedPipeline.run(interpretationOptions);
@@ -194,7 +192,7 @@ public class CompleteIngestPipelineTestIT {
               "--metaFileName=" + ValidationUtils.UUID_METRICS,
               "--targetPath=/tmp/la-pipelines-test/complete-pipeline",
               "--inputPath=/tmp/la-pipelines-test/complete-pipeline",
-              "--properties=" + TestUtils.getPipelinesConfigFile(),
+              "--properties=" + itUtils.getPropertiesFilePath(),
               "--useExtendedRecordId=true"
             });
     ALAUUIDMintingPipeline.run(uuidOptions);
@@ -212,24 +210,24 @@ public class CompleteIngestPipelineTestIT {
               "--metaFileName=" + ValidationUtils.SENSITIVE_METRICS,
               "--targetPath=/tmp/la-pipelines-test/complete-pipeline",
               "--inputPath=/tmp/la-pipelines-test/complete-pipeline",
-              "--properties=" + TestUtils.getPipelinesConfigFile(),
+              "--properties=" + itUtils.getPropertiesFilePath(),
               "--useExtendedRecordId=true"
             });
     ALAInterpretedToSensitivePipeline.run(sensitivityOptions);
 
-    // solr
+    // index
     IndexingPipelineOptions solrOptions =
         PipelinesOptionsFactory.create(
             IndexingPipelineOptions.class,
             new String[] {
               "--datasetId=" + datasetID,
               "--attempt=1",
-              "--runner=DirectRunner",
+              "--runner=SparkRunner",
               "--metaFileName=" + ValidationUtils.INDEXING_METRICS,
               "--targetPath=/tmp/la-pipelines-test/complete-pipeline",
               "--inputPath=/tmp/la-pipelines-test/complete-pipeline",
               "--allDatasetsInputPath=/tmp/la-pipelines-test/complete-pipeline/all-datasets",
-              "--properties=" + TestUtils.getPipelinesConfigFile(),
+              "--properties=" + itUtils.getPropertiesFilePath(),
               "--includeSensitiveData=true",
               "--includeImages=false"
             });
@@ -250,31 +248,33 @@ public class CompleteIngestPipelineTestIT {
               "--targetPath=/tmp/la-pipelines-test/complete-pipeline",
               "--inputPath=/tmp/la-pipelines-test/complete-pipeline",
               "--allDatasetsInputPath=/tmp/la-pipelines-test/complete-pipeline/all-datasets",
-              "--properties=" + TestUtils.getPipelinesConfigFile()
+              "--properties=" + itUtils.getPropertiesFilePath()
             });
     SamplingPipeline.run(samplingOptions);
 
     // sample
-    LayerCrawler.init(samplingOptions);
-    LayerCrawler.run(samplingOptions);
+    LayerCrawler lc = new LayerCrawler();
+    lc.run(samplingOptions);
 
+    // solr
     SolrPipelineOptions solrOptions2 =
         PipelinesOptionsFactory.create(
             SolrPipelineOptions.class,
             new String[] {
               "--datasetId=" + datasetID,
               "--attempt=1",
-              "--runner=DirectRunner",
+              "--runner=SparkRunner",
               "--metaFileName=" + ValidationUtils.INDEXING_METRICS,
               "--targetPath=/tmp/la-pipelines-test/complete-pipeline",
               "--inputPath=/tmp/la-pipelines-test/complete-pipeline",
               "--allDatasetsInputPath=/tmp/la-pipelines-test/complete-pipeline/all-datasets",
-              "--properties=" + TestUtils.getPipelinesConfigFile(),
+              "--properties=" + itUtils.getPropertiesFilePath(),
               "--zkHost=" + String.join(",", SolrUtils.getZkHosts()),
               "--solrCollection=" + SolrUtils.BIOCACHE_TEST_SOLR_COLLECTION,
               "--includeSampling=true",
               "--includeSensitiveData=true",
-              "--includeImages=false"
+              "--includeImages=false",
+              "--numOfPartitions=10"
             });
     IndexRecordToSolrPipeline.run(solrOptions2);
   }

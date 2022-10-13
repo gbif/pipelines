@@ -5,11 +5,10 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import au.org.ala.pipelines.options.SpeciesLevelPipelineOptions;
-import au.org.ala.util.TestUtils;
+import au.org.ala.util.IntegrationTestUtils;
 import au.org.ala.utils.ValidationUtils;
 import java.io.File;
 import java.util.Map;
-import okhttp3.mockwebserver.MockWebServer;
 import org.gbif.pipelines.common.beam.options.DwcaPipelineOptions;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
@@ -22,16 +21,12 @@ import org.junit.Test;
 
 public class SpeciesListPipelineIT {
 
-  MockWebServer collectoryServer;
-  MockWebServer speciesListServer;
+  IntegrationTestUtils itUtils;
 
   @Before
   public void setup() throws Exception {
-    speciesListServer = TestUtils.createMockSpeciesLists();
-    speciesListServer.start(TestUtils.getSpeciesListPort());
-
-    collectoryServer = TestUtils.createMockCollectory();
-    collectoryServer.start(TestUtils.getCollectoryPort());
+    itUtils = IntegrationTestUtils.getInstance();
+    itUtils.setup();
   }
 
   /** Tests for SOLR index creation. */
@@ -86,7 +81,7 @@ public class SpeciesListPipelineIT {
               "--metaFileName=" + ValidationUtils.INTERPRETATION_METRICS,
               "--targetPath=/tmp/la-pipelines-test/species-lists",
               "--inputPath=/tmp/la-pipelines-test/species-lists/dr893/1/verbatim.avro",
-              "--properties=" + TestUtils.getPipelinesConfigFile(),
+              "--properties=" + itUtils.getPropertiesFilePath(),
               "--useExtendedRecordId=true"
             });
     ALAVerbatimToInterpretedPipeline.run(interpretationOptions);
@@ -103,15 +98,12 @@ public class SpeciesListPipelineIT {
               "--targetPath=/tmp/la-pipelines-test/species-lists",
               "--inputPath=/tmp/la-pipelines-test/species-lists",
               "--speciesAggregatesPath=/tmp/la-pipelines-test/",
-              "--properties=" + TestUtils.getPipelinesConfigFile(),
+              "--properties=" + itUtils.getPropertiesFilePath(),
               "--useExtendedRecordId=true"
             });
     SpeciesListPipeline.run(speciesLevelPipelineOptions);
   }
 
   @After
-  public void teardown() throws Exception {
-    speciesListServer.shutdown();
-    collectoryServer.shutdown();
-  }
+  public void teardown() throws Exception {}
 }

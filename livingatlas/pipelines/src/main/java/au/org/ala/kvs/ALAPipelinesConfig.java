@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.io.Serializable;
 import lombok.Data;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.core.config.model.SamplingConfig;
 import org.gbif.pipelines.core.config.model.WsConfig;
 
 /** Living Atlas configuration extensions */
@@ -24,6 +25,7 @@ public class ALAPipelinesConfig implements Serializable {
   private String sensitivityVocabFile;
   private WsConfig speciesListService;
   private WsConfig imageService;
+  private SamplingConfig samplingService;
 
   public ALAPipelinesConfig() {
     gbifConfig = new PipelinesConfig();
@@ -32,5 +34,6 @@ public class ALAPipelinesConfig implements Serializable {
     alaNameMatch = new WsConfig();
     speciesListService = new WsConfig();
     imageService = new WsConfig();
+    samplingService = new SamplingConfig();
   }
 }

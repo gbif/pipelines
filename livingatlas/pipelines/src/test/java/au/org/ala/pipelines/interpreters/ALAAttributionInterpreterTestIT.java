@@ -6,11 +6,10 @@ import au.org.ala.kvs.cache.ALACollectionKVStoreFactory;
 import au.org.ala.kvs.client.ALACollectionLookup;
 import au.org.ala.kvs.client.ALACollectionMatch;
 import au.org.ala.pipelines.vocabulary.ALAOccurrenceIssue;
-import au.org.ala.util.TestUtils;
+import au.org.ala.util.IntegrationTestUtils;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
-import okhttp3.mockwebserver.MockWebServer;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.io.avro.ALAAttributionRecord;
@@ -22,24 +21,23 @@ import org.junit.Test;
 
 public class ALAAttributionInterpreterTestIT {
 
-  MockWebServer server;
+  IntegrationTestUtils itUtils;
 
   @Before
   public void setup() throws Exception {
-    server = TestUtils.createMockCollectory();
-    server.start(TestUtils.getCollectoryPort());
+    // clear up previous test runs
+    itUtils = IntegrationTestUtils.getInstance();
+    itUtils.setup();
   }
 
   @After
-  public void teardown() throws Exception {
-    server.shutdown();
-  }
+  public void teardown() throws Exception {}
 
   @Test
   public void testCollectionLookup() {
 
     KeyValueStore<ALACollectionLookup, ALACollectionMatch> kvs =
-        ALACollectionKVStoreFactory.create(TestUtils.getConfig());
+        ALACollectionKVStoreFactory.create(itUtils.getConfig());
 
     ALAMetadataRecord mdr =
         ALAMetadataRecord.newBuilder().setDataResourceUid("test").setId("test").build();
@@ -63,7 +61,7 @@ public class ALAAttributionInterpreterTestIT {
   public void testCollectionLookupBadValues() {
 
     KeyValueStore<ALACollectionLookup, ALACollectionMatch> kvs =
-        ALACollectionKVStoreFactory.create(TestUtils.getConfig());
+        ALACollectionKVStoreFactory.create(itUtils.getConfig());
 
     ALAMetadataRecord mdr =
         ALAMetadataRecord.newBuilder().setDataResourceUid("test").setId("test").build();

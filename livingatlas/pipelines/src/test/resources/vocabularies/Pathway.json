@@ -1,0 +1,1353 @@
+{
+  "metadata" : {
+    "createdDate" : "2022-01-06T13:31:15.124",
+    "version" : null
+  },
+  "vocabulary" : {
+    "key" : 5,
+    "name" : "Pathway",
+    "label" : {
+      "en" : "Pathway"
+    },
+    "definition" : {
+      "en" : "Provides the controlled vocabulary for information about the process by which an Organism came to be in a given place at a given time. the pathway of an organism or organisms have been introduced to a given place and time. The Pathway Controlled Vocabulary provides terms that should be used as values for the Darwin Core terms dwc:pathway and dwciri:pathway."
+    },
+    "externalDefinitions" : [ "https://dwc.tdwg.org/pw/" ],
+    "editorialNotes" : [ "Created as a faithful port of https://dwc.tdwg.org/pw/ in English only" ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:51.511113",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:02:51.437703",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "namespace" : null
+  },
+  "concepts" : [ {
+    "key" : 115,
+    "name" : "otherTransport",
+    "label" : {
+      "en" : "Other means of transport"
+    },
+    "definition" : {
+      "en" : "A catchall term for any transport related dispersal that is not covered in other terms."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p041" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:58.575073",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:58.575073",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : 69,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 114,
+    "name" : "vehicles",
+    "label" : {
+      "en" : "Vehicles (car, train, etc.)"
+    },
+    "definition" : {
+      "en" : "Other vehicle hitchhikers that have been unintentionally dispersed, but are not covered by other terms."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p040" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:58.480326",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:58.480326",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : 69,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 113,
+    "name" : "hullFouling",
+    "label" : {
+      "en" : "Ship/boat hull fouling"
+    },
+    "definition" : {
+      "en" : "Organisms that attach themselves to the subsurface hull of boats and ships."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p039" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:58.397057",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:58.397057",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : 69,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 112,
+    "name" : "ballastWater",
+    "label" : {
+      "en" : "Ship/boat ballast water"
+    },
+    "definition" : {
+      "en" : "Organisms transported within the water pumped into boats and ships to provide ballast."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p038" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:58.297303",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:58.297303",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : 69,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 111,
+    "name" : "packingMaterial",
+    "label" : {
+      "en" : "Organic packing material, in particular wood packaging"
+    },
+    "definition" : {
+      "en" : "Organic material, particularly unprocessed plant material that is used to pack transported goods."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p037" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:58.210453",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:58.210453",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : 69,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 110,
+    "name" : "people",
+    "label" : {
+      "en" : "People and their luggage/equipment (in particular tourism)"
+    },
+    "definition" : {
+      "en" : "Organisms transported on people themselves and/or their personal luggage."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p036" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:58.051573",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:58.051573",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : 69,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 109,
+    "name" : "machineryEquipment",
+    "label" : {
+      "en" : "Machinery/equipment"
+    },
+    "definition" : {
+      "en" : "Organisms carried on the surfaces of or within heavy machinery and equipment."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p035" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:57.891841",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:57.891841",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : 69,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 108,
+    "name" : "hitchhikersShip",
+    "label" : {
+      "en" : "Hitchhikers on ship/boat (excluding ballast water and hull fouling)"
+    },
+    "definition" : {
+      "en" : "Organisms that enter directly onto boats or ships and are transported by them to another location."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p034" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:57.781126",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:57.781126",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : 69,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 107,
+    "name" : "hitchhikersAirplane",
+    "label" : {
+      "en" : "Hitchhikers in or on airplane"
+    },
+    "definition" : {
+      "en" : "Organisms that enter airplanes or other aircraft, such as helicopters, and are transported by them to another location."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p033" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:57.696084",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:57.696084",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : 69,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 106,
+    "name" : "containerBulk",
+    "label" : {
+      "en" : "Container/bulk"
+    },
+    "definition" : {
+      "en" : "Stowaways transported in or on the cargo containers or bulk cargo units themselves."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p032" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:57.527803",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:57.527803",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : 69,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 105,
+    "name" : "fishingEquipment",
+    "label" : {
+      "en" : "Angling/fishing equipment"
+    },
+    "definition" : {
+      "en" : "Aquatic organisms moved between sites on equipment of recreational anglers and professional fishermen."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p031" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:57.354295",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:57.354295",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : 69,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 104,
+    "name" : "transportationHabitatMaterial",
+    "label" : {
+      "en" : "Transportation of habitat material (soil, vegetation, wood etc)"
+    },
+    "definition" : {
+      "en" : "Organisms transported with their habitat material to a new location."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p030" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:57.240398",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:57.240398",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : 68,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 103,
+    "name" : "timberTrade",
+    "label" : {
+      "en" : "Timber trade"
+    },
+    "definition" : {
+      "en" : "Contaminants on unprocessed timber, processed wood and wood derived products."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p029" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:57.086833",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:57.086833",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : 68,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 102,
+    "name" : "seedContaminant",
+    "label" : {
+      "en" : "Seed contaminant"
+    },
+    "definition" : {
+      "en" : "Organisms contaminating transported seeds."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p028" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:56.929871",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:56.929871",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : 68,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 101,
+    "name" : "parasitesOnPlants",
+    "label" : {
+      "en" : "Parasites on plants (including species transported by host and vector)"
+    },
+    "definition" : {
+      "en" : "Parasitic and pathogenic organisms transported with their host or vector plant."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p027" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:56.838818",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:56.838818",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : 68,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 100,
+    "name" : "contaminantOnPlants",
+    "label" : {
+      "en" : "Contaminant on plants (except parasites, species transported by host/vector)"
+    },
+    "definition" : {
+      "en" : "Organisms transported on plant material."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p026" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:56.733953",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:56.733953",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : 68,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 99,
+    "name" : "parasitesOnAnimals",
+    "label" : {
+      "en" : "Parasites on animals (including organisms transported by host and vector)"
+    },
+    "definition" : {
+      "en" : "Parasitic and pathogenic organisms transported with their host or vector animal."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p025" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:56.331219",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:56.331219",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : 68,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 98,
+    "name" : "contaminantOnAnimals",
+    "label" : {
+      "en" : "Contaminant on animals (except parasites, organisms transported by host/vector)"
+    },
+    "definition" : {
+      "en" : "Contaminants carried either on or in the body of transported animals."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p024" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:56.131244",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:56.131244",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : 68,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 97,
+    "name" : "foodContaminant",
+    "label" : {
+      "en" : "Food contaminant (including of live food)"
+    },
+    "definition" : {
+      "en" : "Foods for human consumption, whether they are transported life or dead."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p023" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:55.959508",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:55.959508",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : 68,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 96,
+    "name" : "contaminateBait",
+    "label" : {
+      "en" : "Contaminated bait"
+    },
+    "definition" : {
+      "en" : "Contaminants, pathogens and parasites transported with live, frozen or preserved bait used to catch fish or other organisms."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p022" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:55.785216",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:55.785216",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : 68,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 95,
+    "name" : "contaminantNursery",
+    "label" : {
+      "en" : "Contaminant nursery material"
+    },
+    "definition" : {
+      "en" : "Organisms transported into an area together with plant material."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p021" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:55.650016",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:55.650016",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : 68,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 94,
+    "name" : "otherEscape",
+    "label" : {
+      "en" : "Other escape from confinement"
+    },
+    "definition" : {
+      "en" : "Organisms brought into an area with the intention of keeping them in captivity permanently, but that have subsequently escaped."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p020" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:55.515563",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:55.515563",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : 67,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 93,
+    "name" : "liveFoodLiveBait",
+    "label" : {
+      "en" : "Live food and live bait"
+    },
+    "definition" : {
+      "en" : "Live food imported for human consumption, such as shellfish and snails, and for live bait."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p019" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:55.421104",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:55.421104",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : 67,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 92,
+    "name" : "research",
+    "label" : {
+      "en" : "Research and ex-situ breeding (in facilities)"
+    },
+    "definition" : {
+      "en" : "Plants and animals introduced for the purpose of breeding, scientific and medical research, including science education."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p018" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:55.296966",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:55.296966",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : 67,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 91,
+    "name" : "ornamentalNonHorticulture",
+    "label" : {
+      "en" : "Ornamental purpose other than horticulture"
+    },
+    "definition" : {
+      "en" : "Ornamental plants introduced through pathways other than the horticultural industry."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p017" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:55.196474",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:55.196474",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : 67,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 90,
+    "name" : "horticulture",
+    "label" : {
+      "en" : "Horticulture"
+    },
+    "definition" : {
+      "en" : "Plants distributed by the ornamental and decorative plants industry."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p016" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:55.104576",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:55.104576",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : 67,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 89,
+    "name" : "fur",
+    "label" : {
+      "en" : "Fur farms"
+    },
+    "definition" : {
+      "en" : "Organisms escaped from a fur farms, including unauthorised releases."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p015" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:55.005076",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:55.005076",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : 67,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 88,
+    "name" : "forestry",
+    "label" : {
+      "en" : "Forestry (including reforestation)"
+    },
+    "definition" : {
+      "en" : "Trees specifically introduced to provide timber and other forestry products."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p014" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:54.907456",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:54.907456",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : 67,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 87,
+    "name" : "farmedAnimals",
+    "label" : {
+      "en" : "Farmed animals (including animals left under limited control)"
+    },
+    "definition" : {
+      "en" : "Animals cared for and bred with the specific intention of using their products, such as meat and milk."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p013" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:54.807434",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:54.807434",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : 67,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 86,
+    "name" : "pet",
+    "label" : {
+      "en" : "Pet/aquarium/terrarium species (including live food for such species )"
+    },
+    "definition" : {
+      "en" : "Privately kept animals."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p012" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:54.710796",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:54.710796",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : 67,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 85,
+    "name" : "publicGardenZooAquaria",
+    "label" : {
+      "en" : "Botanic garden/zoo/aquaria (excluding domestic aquaria)"
+    },
+    "definition" : {
+      "en" : "Organisms in public collections of plants and/or animals."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p011" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:54.526019",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:54.526019",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : 67,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 84,
+    "name" : "aquacultureMariculture",
+    "label" : {
+      "en" : "Aquaculture/mariculture"
+    },
+    "definition" : {
+      "en" : "The analog of agriculture and farmed animals, specifically related to aquatic organisms."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p010" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:54.438344",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:54.438344",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : 67,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 83,
+    "name" : "agriculture",
+    "label" : {
+      "en" : "Agriculture (including biofuel feedstocks)"
+    },
+    "definition" : {
+      "en" : "Plants grown with then intention of harvesting."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p009" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:54.25909",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:54.25909",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : 67,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 82,
+    "name" : "otherIntentionalRelease",
+    "label" : {
+      "en" : "Other intentional release"
+    },
+    "definition" : {
+      "en" : "A catch-all for intentional releases not for human use that are not covered by other more specific terms."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p008" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:54.157149",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:54.157149",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : 66,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 81,
+    "name" : "releasedForUse",
+    "label" : {
+      "en" : "Released for use"
+    },
+    "definition" : {
+      "en" : "Release in nature for use (other than above, e.g., fur, transport, medical use)."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p007" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:53.959082",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:53.959082",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : 66,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 80,
+    "name" : "conservationOrWildlifeManagement",
+    "label" : {
+      "en" : "Conservation or wildlife management"
+    },
+    "definition" : {
+      "en" : "Organisms introduced for conservation purposes or wildlife management."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p006" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:53.80844",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:53.80844",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : 66,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 79,
+    "name" : "landscapeImprovement",
+    "label" : {
+      "en" : "Landscape improvement"
+    },
+    "definition" : {
+      "en" : "Landscape/flora/fauna \"improvement\" in the wild."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p005" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:53.715247",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:53.715247",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : 66,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 78,
+    "name" : "hunting",
+    "label" : {
+      "en" : "Hunting"
+    },
+    "definition" : {
+      "en" : "Animals stocked into the wild specifically with the intention that they would be hunted for sport."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p004" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:53.613484",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:53.613484",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : 66,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 77,
+    "name" : "fisheryInTheWild",
+    "label" : {
+      "en" : "Fishery in the wild"
+    },
+    "definition" : {
+      "en" : "Fish stocked into the wild either to create a fishery or for recreational angling."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p003" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:53.513466",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:53.513466",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : 66,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 76,
+    "name" : "erosionControl",
+    "label" : {
+      "en" : "Erosion control"
+    },
+    "definition" : {
+      "en" : "Organisms introduced for the purpose of erosion control/dune stabilization (windbreaks, hedges, etc)."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p002" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:53.383497",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:53.383497",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : 66,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 75,
+    "name" : "biologicalControl",
+    "label" : {
+      "en" : "Biological control"
+    },
+    "definition" : {
+      "en" : "Organisms occuring in an area because they were introduced for the purpose of biological control of another organism."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p001" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:53.297431",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:53.297431",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : 66,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 74,
+    "name" : "naturalDispersal",
+    "label" : {
+      "en" : "Natural dispersal across borders of invasive alien organisms"
+    },
+    "definition" : {
+      "en" : "Dispersal of organisms to new regions by natural dispersal from regions in which they are alien."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p044" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:53.206023",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:53.206023",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : 71,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 73,
+    "name" : "tunnelsBridges",
+    "label" : {
+      "en" : "Tunnels and land bridges"
+    },
+    "definition" : {
+      "en" : "Unintentional dispersal by organisms using artificial tunnels, bridges, roads and railways."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p043" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:53.126204",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:53.126204",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : 70,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 72,
+    "name" : "waterwaysBasinsSeas",
+    "label" : {
+      "en" : "Interconnected waterways/basins/seas"
+    },
+    "definition" : {
+      "en" : "Organisms that dispersed through artificial waterways created to connect previosuly unconnected water bodies."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p042" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:52.998119",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:52.998119",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : 70,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 71,
+    "name" : "unaided",
+    "label" : {
+      "en" : "Unaided"
+    },
+    "definition" : {
+      "en" : "Organisms that spread by natural dispersal, without action or assistance by humans, from regions in which they are also alien."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p050" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:52.843911",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:52.843911",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : 65,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 70,
+    "name" : "corridor",
+    "label" : {
+      "en" : "Corridor"
+    },
+    "definition" : {
+      "en" : "Infrastructure, such as bridges, tunnels and canals have removed natural barriers to dispersal and allowed a species to move into a novel location."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p049" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:52.730755",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:52.730755",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : 65,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 69,
+    "name" : "transportStowaway",
+    "label" : {
+      "en" : "Transport-stowaway"
+    },
+    "definition" : {
+      "en" : "An umbrella term for all species transported by riding on forms of transport where the organism has a direct interation with the transport and is not merely carried as part of, or a contaminent of cargo."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p048" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:52.633689",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:52.633689",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : 64,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 68,
+    "name" : "transportContaminant",
+    "label" : {
+      "en" : "Transport-contaminant"
+    },
+    "definition" : {
+      "en" : "An umbrella term for all species transported as contaninents in other products."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p047" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:52.541555",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:52.541555",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : 64,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 67,
+    "name" : "escapeFromConfinement",
+    "label" : {
+      "en" : "Escape from confinement"
+    },
+    "definition" : {
+      "en" : "Organisms intentionally transported by humans and intended to be kept in captivity or cultivation, but having inadvertently escaped from human control."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p046" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:52.388099",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:52.388099",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : 63,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 66,
+    "name" : "releaseInNature",
+    "label" : {
+      "en" : "Release in nature"
+    },
+    "definition" : {
+      "en" : "Organisms transported and released by humans in a (semi)natural environment with the intention that they should live their without further human aid."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p045" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:52.277367",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:52.277367",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : 63,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 65,
+    "name" : "corridorAndDispersal",
+    "label" : {
+      "en" : "Corridor and dispersal"
+    },
+    "definition" : {
+      "en" : "Organisms dispersed naturally, even if that dispersal was aided by changes in the landscape created by humans."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p053" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:52.095841",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:52.095841",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : null,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 64,
+    "name" : "unintentional",
+    "label" : {
+      "en" : "Unintentional"
+    },
+    "definition" : {
+      "en" : "The organism was unintentionally brought to a new region."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p052" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:51.965375",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:51.965375",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : null,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 63,
+    "name" : "intentional",
+    "label" : {
+      "en" : "Intentional"
+    },
+    "definition" : {
+      "en" : "Organisms were brought to new area with the specific intention of keeping them alive in the new region, regardless of whether they were intended to be cultivated or released into the wild."
+    },
+    "externalDefinitions" : [ "http://rs.tdwg.org/dwcpw/values/p051" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-12-02T11:01:51.807299",
+    "createdBy" : "mlopezg",
+    "modified" : "2021-12-02T11:01:51.807299",
+    "modifiedBy" : "mlopezg",
+    "deleted" : null,
+    "vocabularyKey" : 5,
+    "parentKey" : null,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  } ]
+}

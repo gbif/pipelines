@@ -36,7 +36,7 @@
               <goal>wget</goal>
             </goals>
             <configuration>
-              <url>http://download.gbif.org/pipelines/livingatlas/pipelines-shapefiles-v2.zip</url>
+              <url>https://download.gbif.org/pipelines/livingatlas/pipelines-shapefiles-v2.zip</url>
               <unpack>true</unpack>
               <outputDirectory>/tmp/pipelines-shp</outputDirectory>
             </configuration>
@@ -54,7 +54,7 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
           <systemPropertyVariables>
-            <pipelinesTestYamlConfigFile>target/test-classes/pipelines-maven.yaml</pipelinesTestYamlConfigFile>
+            <pipelinesTestYamlConfigFile>src/test/resources/pipelines.yaml</pipelinesTestYamlConfigFile>
           </systemPropertyVariables>
           <forkCount>1</forkCount>
           <reuseForks>false</reuseForks>
@@ -70,13 +70,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
-        <configuration>
-          <!-- ITs get stuck, temporary set to skip:true -->
-          <skip>true</skip>
-          <systemPropertyVariables>
-            <pipelinesTestYamlConfigFile>target/test-classes/pipelines-maven.yaml</pipelinesTestYamlConfigFile>
-          </systemPropertyVariables>
-        </configuration>
       </plugin>
       <!-- Shade the project into an uber jar to send to Spark -->
       <plugin>
@@ -153,87 +146,6 @@
         </executions>
       </plugin>
       <plugin>
-        <groupId>io.fabric8</groupId>
-        <artifactId>docker-maven-plugin</artifactId>
-        <extensions>true</extensions>
-        <executions>
-          <execution>
-            <id>start</id>
-            <phase>pre-integration-test</phase>
-            <goals>
-              <goal>start</goal>
-            </goals>
-          </execution>
-          <execution>
-            <id>stop</id>
-            <phase>post-integration-test</phase>
-            <goals>
-              <goal>stop</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <!-- ITs get stuck, temporary set to skip:true -->
-          <skip>true</skip>
-          <images>
-            <image>
-              <alias>solr8</alias>
-              <name>djtfmartin/biocache-pipelines-solr8:v3</name>
-              <run>
-                <ports>
-                  <port>${solr8.zk.port}:${solr8.zk.port}</port>
-                  <port>${solr8.http.port}:${solr8.http.port}</port>
-                </ports>
-                <env>
-                  <ZK_HOST>localhost:${solr8.zk.port}</ZK_HOST>
-                  <SOLR_PORT>${solr8.http.port}</SOLR_PORT>
-                  <SOLR_HOST>localhost</SOLR_HOST>
-                </env>
-                <entrypoint>
-                  <shell>solr start -c -f  -p ${solr8.http.port}</shell>
-                </entrypoint>
-              </run>
-            </image>
-            <image>
-              <alias>ala-nameservice</alias>
-              <name>charvolant/ala-namematching-service:v20200214-6</name>
-              <run>
-                <ports>
-                  <port>${alanm.admin.port}:9180</port>
-                  <port>${alanm.port}:9179</port>
-                </ports>
-                <wait>
-                  <http>
-                    <url>http://${alanm.host}:${alanm.port}/api/search?q=Acacia</url>
-                    <method>GET</method>
-                    <status>200</status>
-                  </http>
-                  <time>180000</time>
-                </wait>
-              </run>
-            </image>
-            <image>
-              <alias>ala-sensitive-service</alias>
-              <name>charvolant/ala-sensitive-data-service:v20200214-3</name>
-              <run>
-                <ports>
-                  <port>${sds.admin.port}:9190</port>
-                  <port>${sds.port}:9189</port>
-                </ports>
-                <wait>
-                  <http>
-                    <url>http://${sds.host}:${sds.port}/api/sensitiveDataFields</url>
-                    <method>GET</method>
-                    <status>200</status>
-                  </http>
-                  <time>180000</time>
-                </wait>
-              </run>
-            </image>
-          </images>
-        </configuration>
-      </plugin>
-      <plugin>
         <groupId>pl.project13.maven</groupId>
         <artifactId>git-commit-id-plugin</artifactId>
         <version>2.2.4</version>
@@ -274,8 +186,8 @@
     <alanm.port>9279</alanm.port>
     <alanm.admin.port>9280</alanm.admin.port>
     <alanm.host>localhost</alanm.host>
-    <solr8.zk.port>9973</solr8.zk.port>
-    <solr8.http.port>8973</solr8.http.port>
+    <solr8.zk.port>9983</solr8.zk.port>
+    <solr8.http.port>8983</solr8.http.port>
     <solr8.zk.host>localhost</solr8.zk.host>
     <solr8.http.host>localhost</solr8.http.host>
     <collectory.url>http://localhost:3939</collectory.url>
@@ -412,10 +324,6 @@
       <groupId>org.gbif.pipelines</groupId>
       <artifactId>core</artifactId>
       <exclusions>
-        <exclusion>
-          <groupId>org.elasticsearch.client</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
         <exclusion>
           <groupId>org.gbif.occurrence</groupId>
           <artifactId>occurrence-hdfs-table</artifactId>
@@ -939,5 +847,12 @@
       <groupId>org.gbif.pipelines</groupId>
       <artifactId>elasticsearch-tools</artifactId>
     </dependency>
+
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>elasticsearch</artifactId>
+      <scope>test</scope>
+    </dependency>
+
   </dependencies>
 </project>

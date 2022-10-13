@@ -212,7 +212,7 @@ public class ALAOccurrenceToEsIndexPipeline {
 
       PCollectionView<ALAMetadataRecord> metadataView =
           pipeline
-              .apply("Read occurrence Metadata", metadataTransform.read(occurrencePathFn))
+              .apply("Read occurrence Metadata", metadataTransform.read(eventsPathFn))
               .apply("Convert to occurrence view", View.asSingleton());
 
       PCollection<KV<String, ALAUUIDRecord>> uuidCollection =

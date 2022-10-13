@@ -8,28 +8,22 @@ import au.org.ala.kvs.client.ALACollectionLookup;
 import au.org.ala.kvs.client.ALACollectionMatch;
 import au.org.ala.kvs.client.ALACollectoryMetadata;
 import au.org.ala.kvs.client.ConnectionParameters;
+import au.org.ala.util.IntegrationTestUtils;
 import au.org.ala.util.TestUtils;
-import okhttp3.mockwebserver.MockWebServer;
 import org.gbif.kvs.KeyValueStore;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 /** Unit tests for Attribution KV store */
 public class AttributionKVStoreTestIT {
 
-  MockWebServer server;
+  IntegrationTestUtils itUtils;
 
   @Before
   public void setup() throws Exception {
     // clear up previous test runs
-    server = TestUtils.createMockCollectory();
-    server.start(3939);
-  }
-
-  @After
-  public void teardown() throws Exception {
-    server.shutdown();
+    itUtils = IntegrationTestUtils.getInstance();
+    itUtils.setup();
   }
 
   @Test
