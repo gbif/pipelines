@@ -39,7 +39,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 /** Test archive-to-avro commands message handling command on hdfs */
-public class DwcaToAvroCallbackIT {
+public class CamtrapDpToDwcaCallbackIT {
 
   private static final String DWCA_LABEL = StepType.DWCA_TO_VERBATIM.getLabel();
   private static final String DATASET_UUID = "9bed66b3-4caa-42bb-9c93-71d7ba109dad";
