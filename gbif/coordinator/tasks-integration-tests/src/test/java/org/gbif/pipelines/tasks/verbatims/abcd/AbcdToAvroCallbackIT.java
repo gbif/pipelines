@@ -35,7 +35,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-public class CamtrapDpToDwcaCallbackIT {
+public class AbcdToAvroCallbackIT {
 
   private static final String AVRO = "/verbatim.avro";
   private static final String STRING_UUID = "7ef15372-1387-11e2-bb2e-00145eb45e9a";
