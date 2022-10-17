@@ -13,7 +13,7 @@ import org.apache.commons.io.FileUtils;
 import org.gbif.pipelines.common.beam.options.DwcaPipelineOptions;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
-import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 /**
@@ -22,14 +22,8 @@ import org.junit.Test;
  */
 public class CompleteEventPipelineTestIT {
 
-  IntegrationTestUtils itUtils;
-
-  @Before
-  public void setup() throws Exception {
-    // clear up previous test runs
-    itUtils = IntegrationTestUtils.getInstance();
-    itUtils.setup();
-  }
+  @ClassRule public static IntegrationTestUtils itUtils = IntegrationTestUtils.getInstance();
+  public static final String INDEX_NAME = "complete_event_it";
 
   /** Tests for SOLR index creation. */
   @Test
@@ -44,15 +38,15 @@ public class CompleteEventPipelineTestIT {
     loadTestDataset("dr18391", absolutePath + "/complete-event-pipeline/dr18391");
 
     // wait for autocommit
-    ElasticUtils.refreshIndex();
+    ElasticUtils.refreshIndex(INDEX_NAME);
 
-    long eventCount = ElasticUtils.getRecordCount("type", "event");
+    long eventCount = ElasticUtils.getRecordCount(INDEX_NAME, "type", "event");
     assertEquals(5, eventCount);
 
-    long occurrencesCount = ElasticUtils.getRecordCount("type", "occurrence");
+    long occurrencesCount = ElasticUtils.getRecordCount(INDEX_NAME, "type", "occurrence");
     assertEquals(2, occurrencesCount);
 
-    long allCount = ElasticUtils.getRecordCount();
+    long allCount = ElasticUtils.getRecordCount(INDEX_NAME);
     assertEquals(7, allCount);
   }
 
@@ -154,6 +148,8 @@ public class CompleteEventPipelineTestIT {
           "--targetPath=/tmp/la-pipelines-test/complete-event-pipeline",
           "--inputPath=/tmp/la-pipelines-test/complete-event-pipeline",
           "--esSchemaPath=" + esSchemaPath,
+          "--esAlias=" + INDEX_NAME,
+          "--esIndexName=" + INDEX_NAME + "_" + datasetID,
           "--config=" + itUtils.getPropertiesFilePath()
         });
   }

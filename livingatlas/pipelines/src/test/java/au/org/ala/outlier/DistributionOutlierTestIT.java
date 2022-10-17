@@ -6,19 +6,12 @@ import au.org.ala.distribution.DistributionLayer;
 import au.org.ala.distribution.DistributionServiceImpl;
 import au.org.ala.util.IntegrationTestUtils;
 import java.util.*;
-import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 public class DistributionOutlierTestIT {
 
-  IntegrationTestUtils itUtils;
-
-  @Before
-  public void setup() throws Exception {
-    // clear up previous test runs
-    itUtils = IntegrationTestUtils.getInstance();
-    itUtils.setup();
-  }
+  @ClassRule public static IntegrationTestUtils itUtils = IntegrationTestUtils.getInstance();
 
   String lsidGreyNurseShark =
       "https://biodiversity.org.au/afd/taxa/0c3e2403-05c4-4a43-8019-30e6d657a283";

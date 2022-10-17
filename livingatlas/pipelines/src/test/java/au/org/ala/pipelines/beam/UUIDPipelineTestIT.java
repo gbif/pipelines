@@ -14,19 +14,12 @@ import org.gbif.pipelines.common.beam.options.DwcaPipelineOptions;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 public class UUIDPipelineTestIT {
 
-  IntegrationTestUtils itUtils;
-
-  @Before
-  public void setup() throws Exception {
-    // clear up previous test runs
-    itUtils = IntegrationTestUtils.getInstance();
-    itUtils.setup();
-  }
+  @ClassRule public static IntegrationTestUtils itUtils = IntegrationTestUtils.getInstance();
 
   /** Test the generation of UUIDs for datasets that are use non-DwC terms for unique key terms */
   @Test

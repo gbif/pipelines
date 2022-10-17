@@ -11,20 +11,13 @@ import org.gbif.pipelines.common.beam.options.DwcaPipelineOptions;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 /** End to end default values test. */
 public class DefaultValuesTestIT {
 
-  IntegrationTestUtils itUtils;
-
-  @Before
-  public void setup() throws Exception {
-    // clear up previous test runs
-    itUtils = IntegrationTestUtils.getInstance();
-    itUtils.setup();
-  }
+  @ClassRule public static IntegrationTestUtils itUtils = IntegrationTestUtils.getInstance();
 
   @Test
   public void testDwCaPipeline() {

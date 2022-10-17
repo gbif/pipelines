@@ -37,9 +37,9 @@ public class AlaLocationInterpreterTest {
   private StateProvinceParser stateProvinceParser;
 
   @Before
-  public void set() {
+  public void before() {
     ALAPipelinesConfig alaConfig = new ALAPipelinesConfig();
-    alaConfig.setLocationInfoConfig(new LocationInfoConfig(null, null, null));
+    alaConfig.setLocationInfoConfig(new LocationInfoConfig());
     try {
       countryCentrePoints = CountryCentrePoints.getInstance(alaConfig.getLocationInfoConfig());
       stateProvinceCentrePoints =

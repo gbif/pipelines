@@ -16,18 +16,12 @@ import org.gbif.pipelines.core.io.AvroReader;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.io.avro.TaxonProfile;
 import org.junit.After;
-import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 public class SpeciesListPipelineIT {
 
-  IntegrationTestUtils itUtils;
-
-  @Before
-  public void setup() throws Exception {
-    itUtils = IntegrationTestUtils.getInstance();
-    itUtils.setup();
-  }
+  @ClassRule public static IntegrationTestUtils itUtils = IntegrationTestUtils.getInstance();
 
   /** Tests for SOLR index creation. */
   @Test

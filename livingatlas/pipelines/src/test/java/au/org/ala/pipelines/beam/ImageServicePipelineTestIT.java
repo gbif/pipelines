@@ -11,17 +11,15 @@ import org.gbif.pipelines.common.beam.options.DwcaPipelineOptions;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 public class ImageServicePipelineTestIT {
 
-  IntegrationTestUtils itUtils;
+  @ClassRule public static IntegrationTestUtils itUtils = IntegrationTestUtils.getInstance();
 
   @Before
   public void setup() throws Exception {
-    // clear up previous test runs
-    itUtils = IntegrationTestUtils.getInstance();
-    itUtils.setup();
     FileUtils.deleteQuietly(new File("/tmp/la-pipelines-test/image-service"));
   }
 
