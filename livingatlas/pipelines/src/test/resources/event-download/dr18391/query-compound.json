@@ -1,0 +1,16 @@
+{
+  "type": "and",
+  "predicates": [{
+    "type": "in",
+    "key": "year",
+    "values": [
+      "2001"
+    ]
+  }, {
+    "type": "in",
+    "key": "month",
+    "values": [
+      "1"
+    ]
+  }]
+}

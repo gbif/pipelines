@@ -469,6 +469,7 @@
         }
       }
     },
+
     "occurrence": {
       "type": "object",
       "properties": {

@@ -28,6 +28,9 @@ public class CombinedYamlConfiguration {
       // For each arg of type --varName=value we remove the -- and split by = in varName and value
       String[] argPair = arg.replaceFirst("--", "").split("=", 2);
       // And we combine the result
+      if (argPair.length != 2) {
+        throw new PipelinesException("Badly formatted argument:  " + arg);
+      }
       this.mainArgs.put(argPair[0], argPair[1]);
     }
     // Look for a config arg to find the yaml file paths that can be comma separated

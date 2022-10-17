@@ -24,4 +24,10 @@ public interface UUIDPipelineOptions extends InterpretationPipelineOptions {
   Boolean getOverridePercentageCheck();
 
   void setOverridePercentageCheck(Boolean overridePercentageCheck);
+
+  @Description("Throw error on validation fail")
+  @Default.Boolean(false)
+  Boolean getThrowErrorOnValidationFail();
+
+  void setThrowErrorOnValidationFail(Boolean throwErrorOnValidationFail);
 }

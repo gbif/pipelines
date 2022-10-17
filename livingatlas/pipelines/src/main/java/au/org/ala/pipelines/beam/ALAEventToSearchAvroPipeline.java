@@ -25,7 +25,6 @@ import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.*;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
-import org.gbif.pipelines.common.beam.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
@@ -50,8 +49,8 @@ public class ALAEventToSearchAvroPipeline {
   private static final TupleTag<Iterable<String>> TAXON_IDS_TAG = new TupleTag<>();
 
   public static void main(String[] args) throws IOException {
-    String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "interpret");
-    EsIndexingPipelineOptions options = PipelinesOptionsFactory.createIndexing(combinedArgs);
+    String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "index");
+    InterpretationPipelineOptions options = PipelinesOptionsFactory.createIndexing(combinedArgs);
     run(options);
   }
 
@@ -136,7 +135,7 @@ public class ALAEventToSearchAvroPipeline {
         p.apply("Read taxa", alaTaxonomyTransform.read(occurrencesPathFn))
             .apply("Map taxa to KV", alaTaxonomyTransform.toCoreIdKv());
 
-    PCollection<KV<String, Iterable<String>>> taxonIDCollection = keyByParentID(taxonCollection, p);
+    PCollection<KV<String, Iterable<String>>> taxonIDCollection = keyByCoreID(taxonCollection, p);
 
     log.info("Adding step 3: Converting into a json object");
     ParDo.SingleOutput<KV<String, CoGbkResult>, EventSearchRecord> eventSearchAvroFn =
@@ -194,7 +193,7 @@ public class ALAEventToSearchAvroPipeline {
     log.info("Pipeline has been finished");
   }
 
-  private static PCollection<KV<String, Iterable<String>>> keyByParentID(
+  private static PCollection<KV<String, Iterable<String>>> keyByCoreID(
       PCollection<KV<String, ALATaxonRecord>> taxonCollection, Pipeline p) {
     return taxonCollection
         .apply(
@@ -217,7 +216,7 @@ public class ALAEventToSearchAvroPipeline {
                     taxonID.stream().filter(x -> x != null);
                     out.output(
                         KV.of(
-                            taxon.getParentId(),
+                            taxon.getCoreId(),
                             taxonID.stream().filter(x -> x != null).collect(Collectors.toList())));
                   }
                 })
