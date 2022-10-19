@@ -85,7 +85,7 @@
     <!-- GBIF libraries -->
     <gbif-parsers.version>0.58</gbif-parsers.version>
     <dwca-io.version>2.14</dwca-io.version>
-    <gbif-api.version>0.172-SNAPSHOT</gbif-api.version>
+    <gbif-api.version>0.172</gbif-api.version>
     <gbif-common.version>0.56</gbif-common.version>
     <dwc-api.version>1.37</dwc-api.version>
     <kvs.version>1.23</kvs.version>
