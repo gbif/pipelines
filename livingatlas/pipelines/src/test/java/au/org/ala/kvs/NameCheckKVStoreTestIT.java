@@ -9,19 +9,12 @@ import au.org.ala.kvs.cache.ALANameCheckKVStoreFactory;
 import au.org.ala.util.IntegrationTestUtils;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.cache.KeyValueCache;
-import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 public class NameCheckKVStoreTestIT {
 
-  IntegrationTestUtils itUtils;
-
-  @Before
-  public void setup() throws Exception {
-    // clear up previous test runs
-    itUtils = IntegrationTestUtils.getInstance();
-    itUtils.setup();
-  }
+  @ClassRule public static IntegrationTestUtils itUtils = IntegrationTestUtils.getInstance();
   /**
    * Tests the Get operation on {@link KeyValueCache} that wraps a simple KV store backed by a
    * HashMap.

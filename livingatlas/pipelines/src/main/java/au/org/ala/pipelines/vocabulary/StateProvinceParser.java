@@ -1,5 +1,6 @@
 package au.org.ala.pipelines.vocabulary;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import java.io.File;
 import java.io.FileInputStream;
@@ -19,22 +20,27 @@ public class StateProvinceParser extends FileBasedDictionaryParser<String> {
   public static StateProvinceParser getInstance(String dictFile) throws FileNotFoundException {
     synchronized (StateProvinceParser.class) {
       if (singletonObject == null) {
-        String filePath = dictFile;
-        InputStream is;
-        if (Strings.isNullOrEmpty(dictFile)) {
-          filePath = "/stateProvinces.tsv";
-          is = StateProvinceParser.class.getResourceAsStream(filePath);
-        } else {
-          File externalFile = new File(dictFile);
-          is = new FileInputStream(externalFile);
-        }
-        if (is == null) {
-          throw new FileNotFoundException("" + filePath);
-        }
-        singletonObject = new StateProvinceParser(is);
+        createParser(dictFile);
       }
     }
     return singletonObject;
+  }
+
+  @VisibleForTesting
+  static void createParser(String dictFile) throws FileNotFoundException {
+    String filePath = dictFile;
+    InputStream is;
+    if (Strings.isNullOrEmpty(dictFile)) {
+      filePath = "/stateProvinces.tsv";
+      is = StateProvinceParser.class.getResourceAsStream(filePath);
+    } else {
+      File externalFile = new File(dictFile);
+      is = new FileInputStream(externalFile);
+    }
+    if (is == null) {
+      throw new FileNotFoundException(filePath);
+    }
+    singletonObject = new StateProvinceParser(is);
   }
 
   @Override
