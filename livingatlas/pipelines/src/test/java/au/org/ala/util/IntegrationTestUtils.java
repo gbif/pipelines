@@ -9,18 +9,24 @@ import static au.org.ala.util.TestUtils.SOLR_IMG;
 
 import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.utils.ALAFsUtils;
+import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.mockwebserver.MockWebServer;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
+import org.junit.rules.ExternalResource;
 import org.testcontainers.containers.FixedHostPortGenericContainer;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 import org.testcontainers.utility.DockerImageName;
 
 /** Singleton that sets up docker instances and mock web services to support integration tests. */
-public final class IntegrationTestUtils {
+@Slf4j
+public class IntegrationTestUtils extends ExternalResource {
 
   private static IntegrationTestUtils INSTANCE;
-  private boolean isSetup = false;
+  private static final Object MUTEX = new Object();
+  private static final AtomicInteger COUNTER = new AtomicInteger(0);
 
   GenericContainer nameService;
   GenericContainer sdsService;
@@ -36,14 +42,19 @@ public final class IntegrationTestUtils {
 
   public static IntegrationTestUtils getInstance() {
     if (INSTANCE == null) {
-      INSTANCE = new IntegrationTestUtils();
+      synchronized (MUTEX) {
+        if (INSTANCE == null) {
+          INSTANCE = new IntegrationTestUtils();
+        }
+      }
     }
     return INSTANCE;
   }
 
-  public void setup() {
+  @Override
+  protected void before() throws Throwable {
 
-    if (!isSetup) {
+    if (COUNTER.get() == 0) {
 
       // setup containers
       int[] solrPorts = TestUtils.getFreePortsForSolr();
@@ -86,8 +97,31 @@ public final class IntegrationTestUtils {
       propertiesFilePath = TestUtils.getPipelinesConfigFile();
 
       config = ALAFsUtils.readConfigFile(HdfsConfigs.nullConfig(), propertiesFilePath);
+    }
+  }
 
-      isSetup = true;
+  @Override
+  protected void after() {
+    if (COUNTER.addAndGet(-1) == 0) {
+      elasticsearchContainer.stop();
+      solrService.close();
+      sdsService.close();
+      nameService.close();
+      try {
+        speciesListServer.close();
+      } catch (IOException e) {
+        log.error("Could not close rest client for testing", e);
+      }
+      try {
+        server.close();
+      } catch (IOException e) {
+        log.error("Could not close rest client for testing", e);
+      }
+      try {
+        samplingServer.close();
+      } catch (IOException e) {
+        log.error("Could not close rest client for testing", e);
+      }
     }
   }
 

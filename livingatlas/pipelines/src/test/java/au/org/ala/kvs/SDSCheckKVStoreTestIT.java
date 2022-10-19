@@ -11,18 +11,16 @@ import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.cache.KeyValueCache;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 public class SDSCheckKVStoreTestIT {
   private KeyValueStore<SpeciesCheck, Boolean> kvs;
 
-  IntegrationTestUtils itUtils;
+  @ClassRule public static IntegrationTestUtils itUtils = IntegrationTestUtils.getInstance();
 
   @Before
   public void setup() throws Exception {
-    // clear up previous test runs
-    itUtils = IntegrationTestUtils.getInstance();
-    itUtils.setup();
     this.kvs = SDSCheckKVStoreFactory.create(itUtils.getConfig());
   }
 

@@ -1,6 +1,5 @@
 package au.org.ala.pipelines.java;
 
-import static au.org.ala.pipelines.beam.CompleteIngestPipelineTestIT.checkSingleRecordContent;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -18,8 +17,7 @@ import org.apache.solr.common.SolrDocument;
 import org.gbif.pipelines.common.beam.options.DwcaPipelineOptions;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 /**
@@ -30,17 +28,9 @@ import org.junit.Test;
  */
 public class CompleteIngestJavaPipelineTestIT {
 
-  IntegrationTestUtils itUtils;
+  @ClassRule public static IntegrationTestUtils itUtils = IntegrationTestUtils.getInstance();
 
-  @Before
-  public void setup() throws Exception {
-    // clear up previous test runs
-    itUtils = IntegrationTestUtils.getInstance();
-    itUtils.setup();
-  }
-
-  @After
-  public void teardown() throws Exception {}
+  public static final String INDEX_NAME = "complete_java_pipeline";
 
   /** Tests for SOLR index creation. */
   @Test
@@ -50,7 +40,7 @@ public class CompleteIngestJavaPipelineTestIT {
     FileUtils.deleteQuietly(new File("/tmp/la-pipelines-test/complete-pipeline-java"));
 
     // clear SOLR index
-    SolrUtils.setupIndex();
+    SolrUtils.setupIndex(INDEX_NAME);
 
     String absolutePath = new File("src/test/resources").getAbsolutePath();
 
@@ -58,13 +48,13 @@ public class CompleteIngestJavaPipelineTestIT {
     loadTestDataset("dr893", absolutePath + "/complete-pipeline-java/dr893");
 
     // reload
-    SolrUtils.reloadSolrIndex();
+    SolrUtils.reloadSolrIndex(INDEX_NAME);
 
     // validate SOLR index
-    assertEquals(Long.valueOf(6), SolrUtils.getRecordCount("*:*"));
+    assertEquals(Long.valueOf(6), SolrUtils.getRecordCount(INDEX_NAME, "*:*"));
 
     // 1. includes UUIDs
-    String documentId = (String) SolrUtils.getRecords("*:*").get(0).get("id");
+    String documentId = (String) SolrUtils.getRecords(INDEX_NAME, "*:*").get(0).get("id");
     assertNotNull(documentId);
     UUID uuid = null;
     try {
@@ -77,20 +67,21 @@ public class CompleteIngestJavaPipelineTestIT {
     assertNotNull(uuid);
 
     // 2. includes samples
-    assertEquals(Long.valueOf(5), SolrUtils.getRecordCount("cl620:*"));
-    assertEquals(Long.valueOf(5), SolrUtils.getRecordCount("cl927:*"));
+    assertEquals(Long.valueOf(5), SolrUtils.getRecordCount(INDEX_NAME, "cl620:*"));
+    assertEquals(Long.valueOf(5), SolrUtils.getRecordCount(INDEX_NAME, "cl927:*"));
 
     assertEquals(
-        Long.valueOf(5), SolrUtils.getRecordCount("dynamicProperties_nonDwcFieldSalinity:*"));
+        Long.valueOf(5),
+        SolrUtils.getRecordCount(INDEX_NAME, "dynamicProperties_nonDwcFieldSalinity:*"));
 
     // 3. has a sensitive record
-    assertEquals(Long.valueOf(1), SolrUtils.getRecordCount("sensitive:generalised"));
-    SolrDocument sensitive = SolrUtils.getRecords("sensitive:generalised").get(0);
+    assertEquals(Long.valueOf(1), SolrUtils.getRecordCount(INDEX_NAME, "sensitive:generalised"));
+    SolrDocument sensitive = SolrUtils.getRecords(INDEX_NAME, "sensitive:generalised").get(0);
     assertEquals(-35.3, (double) sensitive.get("decimalLatitude"), 0.00001);
     assertEquals("-35.260319", sensitive.get("sensitive_decimalLatitude"));
 
     // 4. check content of record
-    checkSingleRecordContent();
+    CompleteIngestPipelineTestIT.checkSingleRecordContent(INDEX_NAME);
   }
 
   public void loadTestDataset(String datasetID, String inputPath) throws Exception {
@@ -209,7 +200,7 @@ public class CompleteIngestJavaPipelineTestIT {
               "--allDatasetsInputPath=/tmp/la-pipelines-test/complete-pipeline-java/all-datasets",
               "--properties=" + TestUtils.getPipelinesConfigFile(),
               "--zkHost=" + String.join(",", SolrUtils.getZkHosts()),
-              "--solrCollection=" + SolrUtils.BIOCACHE_TEST_SOLR_COLLECTION,
+              "--solrCollection=" + INDEX_NAME,
               "--includeSampling=true",
               "--includeImages=false",
               "--numOfPartitions=10"

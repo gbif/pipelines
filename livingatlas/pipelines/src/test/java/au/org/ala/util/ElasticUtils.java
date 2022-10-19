@@ -17,9 +17,9 @@ import org.jetbrains.annotations.NotNull;
 @Slf4j
 public class ElasticUtils {
 
-  public static Long getRecordCount(String term, String value) throws Exception {
+  public static Long getRecordCount(String indexName, String term, String value) throws Exception {
     RestHighLevelClient client = getRestHighLevelClient();
-    SearchRequest searchRequest = new SearchRequest();
+    SearchRequest searchRequest = new SearchRequest(indexName);
     SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
     searchSourceBuilder.query(QueryBuilders.matchQuery(term, value));
     searchRequest.source(searchSourceBuilder);
@@ -27,10 +27,9 @@ public class ElasticUtils {
     return searchResponse.getHits().getTotalHits().value;
   }
 
-  public static Long getRecordCount() throws Exception {
+  public static Long getRecordCount(String indexName) throws Exception {
     RestHighLevelClient client = getRestHighLevelClient();
-
-    SearchRequest searchRequest = new SearchRequest();
+    SearchRequest searchRequest = new SearchRequest(indexName);
     SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
     searchSourceBuilder.query(QueryBuilders.matchAllQuery());
     searchRequest.source(searchSourceBuilder);
@@ -48,8 +47,9 @@ public class ElasticUtils {
     return client;
   }
 
-  public static void refreshIndex() throws Exception {
-    String url = "http://localhost:" + System.getProperty("ES_PORT") + "/event/_refresh";
+  public static void refreshIndex(String indexName) throws Exception {
+    String url =
+        "http://localhost:" + System.getProperty("ES_PORT") + "/" + indexName + "/_refresh";
     JsonNode node = new ObjectMapper().readTree(new URL(url));
   }
 }

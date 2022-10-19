@@ -11,20 +11,13 @@ import au.org.ala.kvs.client.ConnectionParameters;
 import au.org.ala.util.IntegrationTestUtils;
 import au.org.ala.util.TestUtils;
 import org.gbif.kvs.KeyValueStore;
-import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 /** Unit tests for Attribution KV store */
 public class AttributionKVStoreTestIT {
 
-  IntegrationTestUtils itUtils;
-
-  @Before
-  public void setup() throws Exception {
-    // clear up previous test runs
-    itUtils = IntegrationTestUtils.getInstance();
-    itUtils.setup();
-  }
+  @ClassRule public static IntegrationTestUtils itUtils = IntegrationTestUtils.getInstance();
 
   @Test
   public void testAttributionHubMembership() throws Exception {
