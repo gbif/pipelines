@@ -18,6 +18,7 @@
     <properties>
         <batik.version>1.13</batik.version>
         <postgres.version>42.4.0</postgres.version>
+        <sonar.skip>true</sonar.skip>
     </properties>
     <dependencies>
 
