@@ -1,5 +1,6 @@
 package org.gbif.pipelines.tasks.camtrapdp;
 
+import java.util.Date;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -12,8 +13,6 @@ import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
 import org.gbif.common.messaging.api.messages.PipelinesCamtrapDpMessage;
 import org.gbif.registry.ws.client.DatasetClient;
-
-import java.util.Date;
 
 /** Callback which is called when the {@link PipelinesCamtrapDpMessage} is received. */
 @Slf4j
@@ -47,16 +46,15 @@ public class CamtrapDpToDwcaCallback extends AbstractMessageCallback<PipelinesCa
   }
 
   /** Builds the message to be sent to the next processing stage: DwC-A validation. */
-  private DwcaDownloadFinishedMessage createOutgoingMessage(
-      PipelinesCamtrapDpMessage message) {
+  private DwcaDownloadFinishedMessage createOutgoingMessage(PipelinesCamtrapDpMessage message) {
     return new DwcaDownloadFinishedMessage(
-      message.getDatasetUuid(),
-      message.getSource(),
-      message.getAttempt(),
-      new Date(),
-      true,
-      EndpointType.CAMTRAP_DP_v_beta_0_1,
-      message.getPlatform());
+        message.getDatasetUuid(),
+        message.getSource(),
+        message.getAttempt(),
+        new Date(),
+        true,
+        EndpointType.CAMTRAP_DP_v_beta_0_1,
+        message.getPlatform());
   }
 
   public String getRouting() {
