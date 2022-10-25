@@ -79,13 +79,13 @@ The project is structured as:
     - [**metrics**](./examples/metrics) - The example demonstrates how to create and send Apache Beam SparkRunner metrics to ELK and use the result for Kibana dashboards
 - [**gbif**](./gbif) - GBIF main module
     - [**coordinator**](./gbif/coordinator) - The main module which controls the interpretation process, through RabbitMQ
-    - [**diagnostics**](./gbif/diagnostics) - Internal tool to fix GBIF identifiers collisions
-    - [**keygen**](./gbif/keygen) - The library to generate GBIF identifiers, to support backward compatibility the codebase (with minimum changes) was copied from the occurrence/occurrence-persistence project
-    - [**pipelines**](./gbif/pipelines) - Main pipelines module
-        - [**export-gbif-hbase**](./gbif/pipelines/export-gbif-hbase) - The pipeline to export the verbatim data from the GBIF HBase tables and save as `ExtendedRecord` avro files
-        - [**ingest-gbif-beam**](./gbif/pipelines/ingest-gbif-beam) - Main GBIF pipelines for ingestion of biodiversity data
-        - [**ingest-gbif-fragmenter**](./gbif/pipelines/ingest-gbif-fragmenter) - Writes raw archive's data to HBase store
-        - [**ingest-gbif-java**](./gbif/pipelines/ingest-gbif-java) - Main GBIF pipelines for ingestion of biodiversity data, Java version
+    - [**identifiers**](./gbif/identifiers) - The main module which controls the interpretation process, through RabbitMQ
+      - [**diagnostics**](./gbif/identifiers/diagnostics) - Internal tool to fix GBIF identifiers collisions
+      - [**keygen**](./gbif/identifiers/keygen) - The library to generate GBIF identifiers, to support backward compatibility the codebase (with minimum changes) was copied from the occurrence/occurrence-persistence project
+    - [**ingestion**](./gbif/ingestion) - Main pipelines module
+      - [**ingest-gbif-beam**](./gbif/ingestion/ingest-gbif-beam) - Main GBIF pipelines for ingestion of biodiversity data
+      - [**ingest-gbif-fragmenter**](./gbif/ingestion/ingest-gbif-fragmenter) - Writes raw archive's data to HBase store
+      - [**ingest-gbif-java**](./gbif/ingestion/ingest-gbif-java) - Main GBIF pipelines for ingestion of biodiversity data, Java version
     - [**validator**](./gbif/validator) - Main validator module
 - [**livingatlas**](./livingatlas) - Living atlas main module
 - [**sdks**](./sdks) - Main module contains common classes, such as data models, data format interpretations, parsers, web services clients etc.
@@ -93,13 +93,14 @@ The project is structured as:
     - [**beam-transforms**](./sdks/beam-transforms) - Transformations for ingestion of biodiversity data
     - [**core**](./sdks/core) - Main API classes, such as data interpretations, converters, [DwCA](https://www.tdwg.org/standards/dwc/) reader etc.
     - [**models**](./sdks/models) - Data models represented in Avro binary format, generated from [Avro](https://avro.apache.org/docs/current/) schemas
+    - [**plugins**](./sdks/plugins) - Maven plugins
+      - [**maven-avro-annotation-editor**](./sdks/plugins/maven-avro-annotation-editor) - Maven plugin adds new annotations and interface to [avro](https://avro.apache.org/docs/current/) generated classes
+      - [**maven-extension-avsc-schema-generator**](./sdks/plugins/maven-extension-avsc-schema-generator) - AVRO schema generator plugin for DWC extensions
+      - [**maven-extension-java-code-generator**](./sdks/plugins/maven-extension-java-code-generator) - Java code generator plugin for DWC extensions
+    - [**tools**](./sdks/tools) - SDKs tools
+      - [**archives-converters**](./sdks/tools/archives-converters) - Converters from [DwCA/DWC 1.0/DWC 1.4](https://www.tdwg.org/standards/dwc/)/ABCD 1.2/ABCD 2.06 to *.[avro](https://avro.apache.org/docs/current/) format
+      - [**elasticsearch-tools**](./sdks/tools/elasticsearch-tools) - Tool for creating/deleting/swapping Elasticsearch indexes
     - [**variables**](./sdks/variables) - Simple static string variables
-- [**tools**](./tools) - Module for different independent tools
-    - [**archives-converters**](./tools/archives-converters) - Converters from [DwCA/DWC 1.0/DWC 1.4](https://www.tdwg.org/standards/dwc/)/ABCD 1.2/ABCD 2.06 to *.[avro](https://avro.apache.org/docs/current/) format
-    - [**elasticsearch-tools**](./tools/elasticsearch-tools) - Tool for creating/deleting/swapping Elasticsearch indexes
-    - [**extension-converter-maven-plugin**](./tools/extension-converter-maven-plugin) - Java code generator plugin for DWC extensions
-    - [**pipelines-maven-plugin**](./tools/pipelines-maven-plugin) - Maven plugin adds new annotations and interface to [avro](https://avro.apache.org/docs/current/) generated classes
-    - [**maven-plugin-extension-xml-to-avsc**](./tools/maven-plugin-extension-xml-to-avsc) - AVRO schema generator plugin for DWC extensions
 
 # How to build the project
 
@@ -107,6 +108,29 @@ The project uses [Apache Maven](https://maven.apache.org/) for building. The pro
 
 ```shell
 ./build.sh
+```
+
+Maven profiles:
+- skip-coverage (skips Jacoco coverage file generation)
+- coverage (generates correct Jacoco coverage files)
+- skip-release-it (skips heavy IT tests for rarely changed code)
+- gbif-artifacts (creates main shaded GBIF artifacts)
+- livingatlas-artifacts (creates main shaded Livingatlas artifacts)
+- extra-artifacts (creates shaded artifact for non-ingestion tools and projects)
+
+Building the project without tests and shaded artifacts, suitable for everyday local development
+```shell
+mvn spotless:apply clean package -P skip-coverage -T 1C -DskipTests -nsu
+```
+
+Building the project with unit tests and main IT tests, assemble main GBIF artifacts, suitable for CI development builds
+```shell
+mvn clean install verify -U -T 3 -P skip-coverage,skip-release-it,gbif-artifacts
+```
+
+Building the project with all tests, coverage, assemble all artifacts, suitable for project releases
+```shell
+mvn clean install verify -U -P coverage,gbif-artifacts,livingatlas-artifacts,extra-artifacts
 ```
 
 Please read the [Apache Maven how-to](https://maven.apache.org/run.html).
