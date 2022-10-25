@@ -1,0 +1,15 @@
+[
+  {"authority_":"Rafinesque, 1810","family":"ODONTASPIDIDAE","geom_idx":34145,"desmersal_fl":true,
+    "group_name":"sharks","family_lsid":"https://biodiversity.org.au/afd/taxa/96567c8e-8644-44b7-87be-c0ace4676950",
+    "pid":"7047642","endemic":false,"genus_name":"Carcharias","estuarine_fl":false,"coastal_fl":true,
+    "scientific":"Carcharias taurus","specific_n":"taurus",
+    "imageUrl":"https://spatial.ala.org.au/ws/distribution/map/png/34145",
+    "genus_lsid":"https://biodiversity.org.au/afd/taxa/1a849e20-c75c-4c73-95ae-97bfc17bd540",
+    "lsid":"https://biodiversity.org.au/afd/taxa/0c3e2403-05c4-4a43-8019-30e6d657a283",
+    "metadata_u":"http://www.cmar.csiro.au/geonetwork/srv/en/metadata.show?uuid=urn:cmar.csiro.au:dataset:12524&currTab=full",
+    "type":"e","area_name":"Expert distribution Carcharias taurus","data_resource_uid":"dr803",
+    "min_depth":0.0,"image_quality":"G","common_nam":"Greynurse Shark","caab_family_number":"37 008",
+    "spcode":37008001,"max_depth":190.0,"gid":1127,"caab_species_number":"37 008001","pelagic_fl":0.0,
+    "wmsurl":"https://spatial.ala.org.au/geoserver/wms?service=WMS&version=1.1.0&request=GetMap&layers=ALA:Distributions&format=image/png&viewparams=s:34145"
+  }
+]

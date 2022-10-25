@@ -1,9 +1,9 @@
 package au.org.ala.pipelines.transforms;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.METADATA_RECORDS_COUNT;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.METADATA;
 
 import au.org.ala.kvs.client.ALACollectoryMetadata;
+import au.org.ala.pipelines.common.ALARecordTypes;
 import au.org.ala.pipelines.interpreters.ALAAttributionInterpreter;
 import java.util.Optional;
 import lombok.Builder;
@@ -30,7 +30,7 @@ public class ALAMetadataTransform extends Transform<String, ALAMetadataRecord> {
       String datasetId) {
     super(
         ALAMetadataRecord.class,
-        METADATA,
+        ALARecordTypes.ALA_ATTRIBUTION,
         ALAMetadataRecord.class.getName(),
         METADATA_RECORDS_COUNT);
     this.dataResourceKvStoreSupplier = dataResourceKvStoreSupplier;

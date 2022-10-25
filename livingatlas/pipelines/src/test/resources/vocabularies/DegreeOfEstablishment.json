@@ -1,0 +1,395 @@
+{
+  "metadata" : {
+    "createdDate" : "2022-01-06T13:30:58.158",
+    "version" : null
+  },
+  "vocabulary" : {
+    "key" : 4,
+    "name" : "DegreeOfEstablishment",
+    "label" : {
+      "en" : "Degree of Establishment"
+    },
+    "definition" : {
+      "en" : "Provides the controlled vocabulary for information about degree to which an Organism survives, reproduces, and expands its range at the given place and time. Degree of Establishment Controlled Vocabulary provides terms that should be used as values for dwc:degreeOfEstablishment and dwciri:degreeOfEstablishment."
+    },
+    "externalDefinitions" : [ "https://dwc.tdwg.org/doe/" ],
+    "editorialNotes" : [ "This vocabulary builds on the work of Q. Groom et. al. (https://doi.org/10.3897/biss.3.38084) which is informed from work of Blackburn et. al. (https://doi.org/10.1016/j.tree.2011.03.023)", "Added groupings not present in the DwC vocabulary, but provided by Quentin to help structure the terms", "Modified to remove the (C2) style categories from labels as they seem unhelpful without context", "Quentin Groom assisted in the creation of this vocabulary", "Originally created as a faithful copy of the DwC definition" ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-03-24T16:23:34.136894",
+    "createdBy" : "trobertson",
+    "modified" : "2021-03-24T16:23:34.136894",
+    "modifiedBy" : "trobertson",
+    "deleted" : null,
+    "namespace" : null
+  },
+  "concepts" : [ {
+    "key" : 59,
+    "name" : "managed",
+    "label" : { },
+    "definition" : {
+      "en" : "Under direct control and maintenance of humans"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-03-25T08:33:03.001938",
+    "createdBy" : "trobertson",
+    "modified" : "2021-03-25T08:33:03.001938",
+    "modifiedBy" : "trobertson",
+    "deleted" : null,
+    "vocabularyKey" : 4,
+    "parentKey" : null,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 60,
+    "name" : "unestablished",
+    "label" : { },
+    "definition" : {
+      "en" : "Occurring impermanently or transitorily"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-03-25T08:32:40.817191",
+    "createdBy" : "trobertson",
+    "modified" : "2021-03-25T08:32:40.817191",
+    "modifiedBy" : "trobertson",
+    "deleted" : null,
+    "vocabularyKey" : 4,
+    "parentKey" : null,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 61,
+    "name" : "naturalized",
+    "label" : { },
+    "definition" : {
+      "en" : "Able to persist at the point of introduction either sexually or asexually, but not spreading"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-03-25T08:32:14.848595",
+    "createdBy" : "trobertson",
+    "modified" : "2021-03-25T08:32:14.848595",
+    "modifiedBy" : "trobertson",
+    "deleted" : null,
+    "vocabularyKey" : 4,
+    "parentKey" : null,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 62,
+    "name" : "spreading",
+    "label" : { },
+    "definition" : {
+      "en" : "Dispersing from the point of introduction into new areas"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-03-25T08:31:48.633016",
+    "createdBy" : "trobertson",
+    "modified" : "2021-03-25T08:31:48.633016",
+    "modifiedBy" : "trobertson",
+    "deleted" : null,
+    "vocabularyKey" : 4,
+    "parentKey" : null,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 48,
+    "name" : "native",
+    "label" : {
+      "en" : "Native"
+    },
+    "definition" : {
+      "en" : "Not transported beyond limits of native range"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-03-24T15:53:17.398783",
+    "createdBy" : "trobertson",
+    "modified" : "2021-03-24T15:53:17.398783",
+    "modifiedBy" : "trobertson",
+    "deleted" : null,
+    "vocabularyKey" : 4,
+    "parentKey" : null,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ "http://rs.tdwg.org/dwcdoe/values/d001" ],
+    "tags" : [ ]
+  }, {
+    "key" : 49,
+    "name" : "captive",
+    "label" : {
+      "en" : "Captive"
+    },
+    "definition" : {
+      "en" : "Individuals in captivity or quarantine (i.e. individuals provided with conditions suitable for them, but explicit measures of containment are in place)"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-03-24T15:52:59.468444",
+    "createdBy" : "trobertson",
+    "modified" : "2021-03-24T15:52:59.468444",
+    "modifiedBy" : "trobertson",
+    "deleted" : null,
+    "vocabularyKey" : 4,
+    "parentKey" : 59,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ "http://rs.tdwg.org/dwcdoe/values/d002" ],
+    "tags" : [ ]
+  }, {
+    "key" : 50,
+    "name" : "cultivated",
+    "label" : {
+      "en" : "Cultivated"
+    },
+    "definition" : {
+      "en" : "Individuals in cultivation (i.e. individuals provided with conditions suitable for them, but explicit measures to prevent dispersal are limited at best)"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-03-24T15:52:39.620406",
+    "createdBy" : "trobertson",
+    "modified" : "2021-03-24T15:52:39.620406",
+    "modifiedBy" : "trobertson",
+    "deleted" : null,
+    "vocabularyKey" : 4,
+    "parentKey" : 59,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ "http://rs.tdwg.org/dwcdoe/values/d003" ],
+    "tags" : [ ]
+  }, {
+    "key" : 51,
+    "name" : "released",
+    "label" : {
+      "en" : "Released"
+    },
+    "definition" : {
+      "en" : "Individuals directly released into novel environment"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-03-24T15:52:18.521623",
+    "createdBy" : "trobertson",
+    "modified" : "2021-03-24T15:52:18.521623",
+    "modifiedBy" : "trobertson",
+    "deleted" : null,
+    "vocabularyKey" : 4,
+    "parentKey" : 59,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ "http://rs.tdwg.org/dwcdoe/values/d004" ],
+    "tags" : [ ]
+  }, {
+    "key" : 52,
+    "name" : "failing",
+    "label" : {
+      "en" : "Failing"
+    },
+    "definition" : {
+      "en" : "Individuals released outside of captivity or cultivation in a location, but incapable of surviving for a significant period"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-03-24T15:52:01.802933",
+    "createdBy" : "trobertson",
+    "modified" : "2021-03-24T15:52:01.802933",
+    "modifiedBy" : "trobertson",
+    "deleted" : null,
+    "vocabularyKey" : 4,
+    "parentKey" : 60,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ "http://rs.tdwg.org/dwcdoe/values/d005" ],
+    "tags" : [ ]
+  }, {
+    "key" : 53,
+    "name" : "casual",
+    "label" : {
+      "en" : "Casual"
+    },
+    "definition" : {
+      "en" : "Individuals surviving outside of captivity or cultivation in a location, no reproduction"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-03-24T15:51:44.789817",
+    "createdBy" : "trobertson",
+    "modified" : "2021-03-24T15:51:44.789817",
+    "modifiedBy" : "trobertson",
+    "deleted" : null,
+    "vocabularyKey" : 4,
+    "parentKey" : 60,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ "http://rs.tdwg.org/dwcdoe/values/d006" ],
+    "tags" : [ ]
+  }, {
+    "key" : 54,
+    "name" : "reproducing",
+    "label" : {
+      "en" : "Reproducing"
+    },
+    "definition" : {
+      "en" : "Individuals surviving outside of captivity or cultivation in a location, reproduction is occurring, but population not self-sustaining"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-03-24T15:51:26.468097",
+    "createdBy" : "trobertson",
+    "modified" : "2021-03-24T15:51:26.468097",
+    "modifiedBy" : "trobertson",
+    "deleted" : null,
+    "vocabularyKey" : 4,
+    "parentKey" : 61,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ "http://rs.tdwg.org/dwcdoe/values/d007" ],
+    "tags" : [ ]
+  }, {
+    "key" : 55,
+    "name" : "established",
+    "label" : {
+      "en" : "Established"
+    },
+    "definition" : {
+      "en" : "Individuals surviving outside of captivity or cultivation in a location, reproduction occurring, and population self-sustaining"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-03-24T15:51:03.188637",
+    "createdBy" : "trobertson",
+    "modified" : "2021-03-24T15:51:03.188637",
+    "modifiedBy" : "trobertson",
+    "deleted" : null,
+    "vocabularyKey" : 4,
+    "parentKey" : 61,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ "http://rs.tdwg.org/dwcdoe/values/d008" ],
+    "tags" : [ ]
+  }, {
+    "key" : 58,
+    "name" : "widespreadInvasive",
+    "label" : {
+      "en" : " Widespread invasive"
+    },
+    "definition" : {
+      "en" : "Fully invasive species, with individuals dispersing, surviving and reproducing at multiple sites across a greater or lesser spectrum of habitats and extent of occurrence"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-03-24T15:50:47.251333",
+    "createdBy" : "trobertson",
+    "modified" : "2021-03-24T15:50:47.251333",
+    "modifiedBy" : "trobertson",
+    "deleted" : null,
+    "vocabularyKey" : 4,
+    "parentKey" : 62,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ "http://rs.tdwg.org/dwcdoe/values/d011" ],
+    "tags" : [ ]
+  }, {
+    "key" : 56,
+    "name" : "colonising",
+    "label" : {
+      "en" : "Colonising"
+    },
+    "definition" : {
+      "en" : "Self-sustaining population outside of captivity or cultivation, with individuals surviving a significant distance from the original point of introduction"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-03-24T15:50:16.832414",
+    "createdBy" : "trobertson",
+    "modified" : "2021-03-24T15:50:16.832414",
+    "modifiedBy" : "trobertson",
+    "deleted" : null,
+    "vocabularyKey" : 4,
+    "parentKey" : 62,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ "http://rs.tdwg.org/dwcdoe/values/d009" ],
+    "tags" : [ ]
+  }, {
+    "key" : 57,
+    "name" : "invasive",
+    "label" : {
+      "en" : "Invasive"
+    },
+    "definition" : {
+      "en" : "Self-sustaining population outside of captivity or cultivation, with individuals surviving and reproducing a significant distance from the original point of introduction"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2021-03-24T15:49:55.994124",
+    "createdBy" : "trobertson",
+    "modified" : "2021-03-24T15:49:55.994124",
+    "modifiedBy" : "trobertson",
+    "deleted" : null,
+    "vocabularyKey" : 4,
+    "parentKey" : 62,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ "http://rs.tdwg.org/dwcdoe/values/d010" ],
+    "tags" : [ ]
+  } ]
+}

@@ -114,9 +114,9 @@ public class CombinedYamlConfigurationTest {
 
   @Test
   public void dotVars() {
-    assertThat(testConf.get("index").getClass(), equalTo(LinkedHashMap.class));
-    assertThat(testConf.get("index.includeSampling"), equalTo(true));
-    assertThat(testConf.get("index.solrCollection"), equalTo("biocache"));
+    assertThat(testConf.get("solr").getClass(), equalTo(LinkedHashMap.class));
+    assertThat(testConf.get("solr.includeSampling"), equalTo(true));
+    assertThat(testConf.get("solr.solrCollection"), equalTo("biocache"));
   }
 
   @Test

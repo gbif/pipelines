@@ -1,36 +1,23 @@
 package au.org.ala.pipelines.beam;
 
-import au.org.ala.util.TestUtils;
+import au.org.ala.util.IntegrationTestUtils;
 import au.org.ala.utils.ValidationUtils;
 import java.io.File;
 import java.io.Serializable;
 import java.util.function.Function;
-import okhttp3.mockwebserver.MockWebServer;
 import org.apache.commons.io.FileUtils;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.beam.options.DwcaPipelineOptions;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 /** End to end default values test. */
 public class DefaultValuesTestIT {
 
-  MockWebServer server;
-
-  @Before
-  public void setup() throws Exception {
-    server = TestUtils.createMockCollectory();
-    server.start(TestUtils.getCollectoryPort());
-  }
-
-  @After
-  public void teardown() throws Exception {
-    server.shutdown();
-  }
+  @ClassRule public static IntegrationTestUtils itUtils = IntegrationTestUtils.getInstance();
 
   @Test
   public void testDwCaPipeline() {
@@ -64,7 +51,7 @@ public class DefaultValuesTestIT {
               "--runner=DirectRunner",
               "--targetPath=/tmp/la-pipelines-test/default-values",
               "--inputPath=/tmp/la-pipelines-test/default-values/dr893/1/verbatim.avro",
-              "--properties=" + TestUtils.getPipelinesConfigFile(),
+              "--properties=" + itUtils.getPropertiesFilePath(),
               "--useExtendedRecordId=true"
             });
 
@@ -93,7 +80,7 @@ public class DefaultValuesTestIT {
               "--metaFileName=" + ValidationUtils.INTERPRETATION_METRICS,
               "--targetPath=/tmp/la-pipelines-test/default-values",
               "--inputPath=/tmp/la-pipelines-test/default-values/dr893/1/verbatim.avro",
-              "--properties=" + TestUtils.getPipelinesConfigFile(),
+              "--properties=" + itUtils.getPropertiesFilePath(),
               "--useExtendedRecordId=true"
             });
     ALAVerbatimToInterpretedPipeline.run(interpretationOptions);
@@ -108,7 +95,7 @@ public class DefaultValuesTestIT {
               "--runner=DirectRunner",
               "--targetPath=/tmp/la-pipelines-test/default-values",
               "--inputPath=/tmp/la-pipelines-test/default-values/dr893/1/occurrence/verbatim/interpret-*",
-              "--properties=" + TestUtils.getPipelinesConfigFile()
+              "--properties=" + itUtils.getPropertiesFilePath()
             });
 
     // check default values are populated

@@ -121,6 +121,7 @@
     "type":"record",
     "fields":[
       {"name":"key","type":["null","int"],"default":null,"doc":""},
+      {"name":"guid","type":["null","string"],"default":null,"doc":""},
       {"name":"name","type":["null","string"],"default":null,"doc":""},
       {"name":"rank","type":["null","string"],"default":null}
     ]
@@ -205,6 +206,23 @@
       {"name":"usageParsedName","type":["null","ParsedName"],"default":null,"doc":""},
       {"name":"verbatimScientificName","type":["null","string"],"default":null,"doc":""},
       {"name":"iucnRedListCategoryCode","type":["null","string"],"default":null,"doc":""}
+    ]
+  },
+  {
+    "name":"MeasurementOrFactJsonRecord",
+    "namespace":"org.gbif.pipelines.io.avro.json",
+    "type":"record",
+    "doc":"Represents the occurrence json object for elasticsearch document",
+    "fields":[
+      {"name": "measurementID", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementID"},
+      {"name": "measurementType", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementType"},
+      {"name": "measurementValue", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementValue"},
+      {"name": "measurementUnit", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementUnit"},
+      {"name": "measurementAccuracy", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementAccuracy"},
+      {"name": "measurementDeterminedBy", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementDeterminedBy"},
+      {"name": "measurementDeterminedDate", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementDeterminedDate"},
+      {"name": "measurementMethod", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementMethod"},
+      {"name": "measurementRemarks", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementRemarks"}
     ]
   }
 ]

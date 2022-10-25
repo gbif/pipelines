@@ -294,14 +294,6 @@ public class MultimediaCsvConverterTest {
             .setVernacularName("atxr_VernacularName")
             .setSpeciesGroup(Collections.singletonList("atxr_SpeciesGroup"))
             .setSpeciesSubgroup(Collections.singletonList("atxr_SpeciesSubgroup"))
-            .setDiagnostics(
-                Diagnostic.newBuilder()
-                    .setConfidence(5555)
-                    .setStatus(Status.ACCEPTED)
-                    .setNote("atxr_Diagnostic_Note")
-                    .setMatchType(MatchType.EXACT)
-                    .setLineage(Collections.singletonList("atxr_Diagnostic_Lineage"))
-                    .build())
             .build();
 
     ALAAttributionRecord aar =

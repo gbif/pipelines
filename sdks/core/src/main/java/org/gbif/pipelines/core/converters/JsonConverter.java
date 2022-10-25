@@ -104,11 +104,11 @@ public class JsonConverter {
     return Optional.ofNullable(epoch).map(DATE_FN::apply).map(LocalDateTime::toString);
   }
 
-  protected static List<String> convertFieldAll(ExtendedRecord extendedRecord) {
+  public static List<String> convertFieldAll(ExtendedRecord extendedRecord) {
     return convertFieldAll(extendedRecord, true);
   }
 
-  protected static List<String> convertFieldAll(
+  public static List<String> convertFieldAll(
       ExtendedRecord extendedRecord, boolean includeExtensions) {
     Set<String> result = new HashSet<>();
 
@@ -136,7 +136,7 @@ public class JsonConverter {
         .collect(Collectors.toList());
   }
 
-  protected static List<String> convertExtensions(ExtendedRecord extendedRecord) {
+  public static List<String> convertExtensions(ExtendedRecord extendedRecord) {
     return extendedRecord.getExtensions().entrySet().stream()
         .filter(e -> e.getValue() != null && !e.getValue().isEmpty())
         .map(Entry::getKey)
@@ -144,7 +144,7 @@ public class JsonConverter {
         .collect(Collectors.toList());
   }
 
-  protected static VerbatimRecord convertVerbatimRecord(ExtendedRecord extendedRecord) {
+  public static VerbatimRecord convertVerbatimRecord(ExtendedRecord extendedRecord) {
     return convertVerbatimRecord(extendedRecord, Collections.emptyList());
   }
 
@@ -157,7 +157,7 @@ public class JsonConverter {
         .build();
   }
 
-  protected static VerbatimRecord convertVerbatimEventRecord(ExtendedRecord extendedRecord) {
+  public static VerbatimRecord convertVerbatimEventRecord(ExtendedRecord extendedRecord) {
     return convertVerbatimRecord(extendedRecord, Collections.singletonList(OCCURRENCE_EXT));
   }
 
@@ -168,7 +168,7 @@ public class JsonConverter {
         .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
   }
 
-  protected static Optional<String> convertToMultivalue(List<String> list) {
+  public static Optional<String> convertToMultivalue(List<String> list) {
     return list != null && !list.isEmpty()
         ? Optional.of(getEscapedText(String.join("|", list)))
         : Optional.empty();
@@ -178,20 +178,20 @@ public class JsonConverter {
     return list.stream().map(JsonConverter::getEscapedText).collect(Collectors.toList());
   }
 
-  protected static Optional<String> convertLicense(String license) {
+  public static Optional<String> convertLicense(String license) {
     return Optional.ofNullable(license)
         .filter(l -> !l.equals(License.UNSPECIFIED.name()))
         .filter(l -> !l.equals(License.UNSUPPORTED.name()));
   }
 
-  protected static List<AgentIdentifier> convertAgentList(
+  public static List<AgentIdentifier> convertAgentList(
       List<org.gbif.pipelines.io.avro.AgentIdentifier> list) {
     return list.stream()
         .map(x -> AgentIdentifier.newBuilder().setType(x.getType()).setValue(x.getValue()).build())
         .collect(Collectors.toList());
   }
 
-  protected static Optional<VocabularyConcept> convertVocabularyConcept(
+  public static Optional<VocabularyConcept> convertVocabularyConcept(
       org.gbif.pipelines.io.avro.VocabularyConcept concepts) {
     if (concepts == null) {
       return Optional.empty();
