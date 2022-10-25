@@ -4,13 +4,16 @@ import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
+import org.gbif.common.messaging.api.messages.DwcaDownloadFinishedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
 import org.gbif.common.messaging.api.messages.PipelinesCamtrapDpMessage;
 import org.gbif.registry.ws.client.DatasetClient;
-import org.gbif.validator.api.FileFormat;
+
+import java.util.Date;
 
 /** Callback which is called when the {@link PipelinesCamtrapDpMessage} is received. */
 @Slf4j
@@ -44,14 +47,16 @@ public class CamtrapDpToDwcaCallback extends AbstractMessageCallback<PipelinesCa
   }
 
   /** Builds the message to be sent to the next processing stage: DwC-A validation. */
-  private PipelinesArchiveValidatorMessage createOutgoingMessage(
+  private DwcaDownloadFinishedMessage createOutgoingMessage(
       PipelinesCamtrapDpMessage message) {
-    return new PipelinesArchiveValidatorMessage(
-        message.getDatasetUuid(),
-        message.getAttempt(),
-        message.getPipelineSteps(),
-        message.getExecutionId(),
-        FileFormat.DWCA.name());
+    return new DwcaDownloadFinishedMessage(
+      message.getDatasetUuid(),
+      message.getSource(),
+      message.getAttempt(),
+      new Date(),
+      true,
+      EndpointType.CAMTRAP_DP_v_beta_0_1,
+      message.getPlatform());
   }
 
   public String getRouting() {
