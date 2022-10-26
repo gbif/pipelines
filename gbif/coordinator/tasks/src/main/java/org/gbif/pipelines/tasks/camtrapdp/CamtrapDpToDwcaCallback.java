@@ -53,7 +53,7 @@ public class CamtrapDpToDwcaCallback extends AbstractMessageCallback<PipelinesCa
         message.getAttempt(),
         new Date(),
         true,
-        EndpointType.CAMTRAP_DP_v_beta_0_1,
+        EndpointType.DWC_ARCHIVE,
         message.getPlatform());
   }
 

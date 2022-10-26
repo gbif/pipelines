@@ -371,11 +371,11 @@ public class ImageServiceDiffLoadPipeline {
 
     // create RequestBody instance from file
     log.info("Prepare request to image service");
-    RequestBody requestFile = RequestBody.create(file, MediaType.parse("application/zip"));
+    RequestBody requestFile = RequestBody.create(MediaType.parse("application/zip"), file);
     MultipartBody.Part body =
         MultipartBody.Part.createFormData("archive", file.getName(), requestFile);
     RequestBody dataResourceUid =
-        RequestBody.create(options.getDatasetId(), MediaType.parse("text/plain"));
+        RequestBody.create(MediaType.parse("text/plain"), options.getDatasetId());
 
     // finally, execute the request
     log.info("Uploading to image service...");

@@ -1,29 +1,29 @@
 package org.gbif.pipelines.core.interpreters.metadata;
 
-import com.google.common.base.Strings;
-import java.net.URI;
+import com.google.common.collect.Lists;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.model.registry.Endpoint;
+import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.MachineTag;
-import org.gbif.api.util.VocabularyUtils;
-import org.gbif.api.vocabulary.EndpointType;
+import org.gbif.api.model.registry.Network;
+import org.gbif.api.model.registry.Organization;
+import org.gbif.api.util.comparators.EndpointPriorityComparator;
+import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.TagName;
-import org.gbif.common.parsers.LicenseParser;
 import org.gbif.pipelines.core.ws.metadata.MetadataServiceClient;
-import org.gbif.pipelines.core.ws.metadata.response.Dataset;
-import org.gbif.pipelines.core.ws.metadata.response.Installation;
-import org.gbif.pipelines.core.ws.metadata.response.Network;
-import org.gbif.pipelines.core.ws.metadata.response.Organization;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 
 /** Interprets GBIF metadata by datasetId */
@@ -43,7 +43,7 @@ public class MetadataInterpreter {
         Dataset dataset = client.getDataset(datasetId);
 
         // https://github.com/gbif/pipelines/issues/401
-        License license = getLicense(dataset.getLicense());
+        License license = dataset.getLicense();
         if (license == null || license == License.UNSPECIFIED || license == License.UNSUPPORTED) {
           throw new IllegalArgumentException(
               "Dataset licence can't be UNSPECIFIED or UNSUPPORTED!");
@@ -52,70 +52,67 @@ public class MetadataInterpreter {
         }
 
         mdr.setDatasetTitle(dataset.getTitle());
-        mdr.setInstallationKey(dataset.getInstallationKey());
-        mdr.setPublishingOrganizationKey(dataset.getPublishingOrganizationKey());
+        mdr.setInstallationKey(dataset.getInstallationKey().toString());
+        Optional.ofNullable(dataset.getPublishingOrganizationKey())
+            .map(UUID::toString)
+            .ifPresent(mdr::setPublishingOrganizationKey);
 
         List<Network> networkList = client.getNetworkFromDataset(datasetId);
         if (networkList != null && !networkList.isEmpty()) {
           mdr.setNetworkKeys(
-              networkList.stream().map(Network::getKey).collect(Collectors.toList()));
+              networkList.stream().map(n -> n.getKey().toString()).collect(Collectors.toList()));
         }
 
         Organization organization = client.getOrganization(dataset.getPublishingOrganizationKey());
-        mdr.setEndorsingNodeKey(organization.getEndorsingNodeKey());
+        Optional.ofNullable(organization.getEndorsingNodeKey())
+            .map(UUID::toString)
+            .ifPresent(mdr::setEndorsingNodeKey);
         mdr.setPublisherTitle(organization.getTitle());
-        mdr.setDatasetPublishingCountry(organization.getCountry());
+        Optional.ofNullable(organization.getCountry())
+            .map(Country::getIso2LetterCode)
+            .ifPresent(mdr::setDatasetPublishingCountry);
         getLastCrawledDate(dataset.getMachineTags())
             .ifPresent(d -> mdr.setLastCrawled(d.getTime()));
         if (Objects.nonNull(dataset.getProject())) {
           mdr.setProjectId(dataset.getProject().getIdentifier());
-          if (Objects.nonNull(dataset.getProject().getProgramme())) {
-            mdr.setProgrammeAcronym(dataset.getProject().getProgramme().getAcronym());
-          }
+          client
+              .getDatasetProject(dataset)
+              .ifPresent(p -> mdr.setProgrammeAcronym(p.getProgramme().getAcronym()));
         }
 
         Installation installation = client.getInstallation(dataset.getInstallationKey());
-        mdr.setHostingOrganizationKey(installation.getOrganizationKey());
+        Optional.ofNullable(installation.getOrganizationKey())
+            .map(UUID::toString)
+            .ifPresent(mdr::setHostingOrganizationKey);
 
+        List<Endpoint> endpoints = prioritySortEndpoints(installation.getEndpoints());
+        if (!endpoints.isEmpty()) {
+          mdr.setProtocol(endpoints.get(0).getType().name());
+        }
         copyMachineTags(dataset.getMachineTags(), mdr);
       }
     };
   }
 
+  // Copied from CrawlerCoordinatorServiceImpl
+  private static List<Endpoint> prioritySortEndpoints(List<Endpoint> endpoints) {
+
+    // Filter out all Endpoints that we can't crawl
+    List<Endpoint> result = Lists.newArrayList();
+    for (Endpoint endpoint : endpoints) {
+      if (EndpointPriorityComparator.PRIORITIES.contains(endpoint.getType())) {
+        result.add(endpoint);
+      }
+    }
+
+    // Sort the remaining ones
+    result.sort(new EndpointPriorityComparator());
+    return result;
+  }
+
   /** Sets attempt number as crawlId */
   public static Consumer<MetadataRecord> interpretCrawlId(Integer attempt) {
     return mdr -> Optional.ofNullable(attempt).ifPresent(mdr::setCrawlId);
-  }
-
-  /**
-   * Gets information about dataset source endpoint type (DWC_ARCHIVE, BIOCASE_XML_ARCHIVE, TAPIR ..
-   * etc)
-   */
-  public static Consumer<MetadataRecord> interpretEndpointType(String endpointType) {
-    return mdr -> {
-      if (!Strings.isNullOrEmpty(endpointType)) {
-        VocabularyUtils.lookup(endpointType, EndpointType.class)
-            .ifPresent(x -> mdr.setProtocol(x.name()));
-      }
-    };
-  }
-
-  /** Returns ENUM instead of url string */
-  private static License getLicense(String url) {
-    URI uri =
-        Optional.ofNullable(url)
-            .map(
-                x -> {
-                  try {
-                    return URI.create(x);
-                  } catch (IllegalArgumentException ex) {
-                    return null;
-                  }
-                })
-            .orElse(null);
-    License license = LicenseParser.getInstance().parseUriThenTitle(uri, null);
-    // UNSPECIFIED must be mapped to null
-    return License.UNSPECIFIED == license ? null : license;
   }
 
   /** Gets the latest crawl attempt time, if exists. */
