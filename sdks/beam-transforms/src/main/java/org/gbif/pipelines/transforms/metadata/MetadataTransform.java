@@ -30,19 +30,15 @@ import org.gbif.pipelines.transforms.Transform;
 public class MetadataTransform extends Transform<String, MetadataRecord> {
 
   private final Integer attempt;
-  private final String endpointType;
   private final SerializableSupplier<MetadataServiceClient> clientSupplier;
   private MetadataServiceClient client;
 
   @Builder(buildMethodName = "create")
   private MetadataTransform(
-      Integer attempt,
-      String endpointType,
-      SerializableSupplier<MetadataServiceClient> clientSupplier) {
+      Integer attempt, SerializableSupplier<MetadataServiceClient> clientSupplier) {
     super(
         MetadataRecord.class, METADATA, MetadataTransform.class.getName(), METADATA_RECORDS_COUNT);
     this.attempt = attempt;
-    this.endpointType = endpointType;
     this.clientSupplier = clientSupplier;
   }
 
@@ -77,7 +73,6 @@ public class MetadataTransform extends Transform<String, MetadataRecord> {
                     .build())
         .via(MetadataInterpreter.interpret(client))
         .via(MetadataInterpreter.interpretCrawlId(attempt))
-        .via(MetadataInterpreter.interpretEndpointType(endpointType))
         .getOfNullable();
   }
 
