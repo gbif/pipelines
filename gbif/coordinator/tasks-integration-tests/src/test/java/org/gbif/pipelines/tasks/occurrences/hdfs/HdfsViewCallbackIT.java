@@ -31,14 +31,18 @@ import org.gbif.pipelines.common.hdfs.HdfsViewConfiguration;
 import org.gbif.pipelines.common.utils.ZookeeperUtils;
 import org.gbif.pipelines.tasks.MessagePublisherStub;
 import org.gbif.pipelines.tasks.utils.ZkServer;
+import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-import org.mockito.Mockito;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnitRunner;
 
+@RunWith(MockitoJUnitRunner.class)
 public class HdfsViewCallbackIT {
 
   private static final String LABEL = StepType.HDFS_VIEW.getLabel();
@@ -47,7 +51,8 @@ public class HdfsViewCallbackIT {
   private static CuratorFramework curator;
   private static TestingServer server;
   private static MessagePublisherStub publisher;
-  private static PipelinesHistoryClient historyClient;
+  @Mock private static PipelinesHistoryClient historyClient;
+  @Mock private static DatasetClient datasetClient;
 
   @ClassRule public static final ZkServer ZK_SERVER = new ZkServer();
 
@@ -64,8 +69,6 @@ public class HdfsViewCallbackIT {
     curator.start();
 
     publisher = MessagePublisherStub.create();
-
-    historyClient = Mockito.mock(PipelinesHistoryClient.class);
   }
 
   @AfterClass
@@ -93,6 +96,7 @@ public class HdfsViewCallbackIT {
             .publisher(publisher)
             .curator(curator)
             .historyClient(historyClient)
+            .datasetClient(datasetClient)
             .commonHdfsViewCallback(CommonHdfsViewCallback.create(config, executor))
             .build();
 
@@ -212,6 +216,7 @@ public class HdfsViewCallbackIT {
             .publisher(publisher)
             .curator(curator)
             .historyClient(historyClient)
+            .datasetClient(datasetClient)
             .commonHdfsViewCallback(CommonHdfsViewCallback.create(config, executor))
             .build();
 

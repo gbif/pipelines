@@ -13,6 +13,7 @@ import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.pipelines.common.hdfs.CommonHdfsViewCallback;
 import org.gbif.pipelines.common.hdfs.HdfsViewConfiguration;
 import org.gbif.pipelines.tasks.ServiceFactory;
+import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 
 /** A service which listens to the {@link PipelinesInterpretationMessage } */
@@ -46,12 +47,15 @@ public class HdfsViewService extends AbstractIdleService {
     PipelinesHistoryClient historyClient =
         ServiceFactory.createPipelinesHistoryClient(config.stepConfig);
 
+    DatasetClient datasetClient = ServiceFactory.createDatasetClient(config.stepConfig);
+
     HdfsViewCallback callback =
         HdfsViewCallback.builder()
             .config(config)
             .publisher(publisher)
             .curator(curator)
             .historyClient(historyClient)
+            .datasetClient(datasetClient)
             .commonHdfsViewCallback(CommonHdfsViewCallback.create(config, executor))
             .build();
 

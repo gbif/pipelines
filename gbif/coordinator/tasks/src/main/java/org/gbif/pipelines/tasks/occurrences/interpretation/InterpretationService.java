@@ -14,6 +14,7 @@ import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.pipelines.tasks.ServiceFactory;
+import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.ws.client.ValidationWsClient;
 
@@ -54,6 +55,8 @@ public class InterpretationService extends AbstractIdleService {
     ValidationWsClient validationClient =
         ServiceFactory.createValidationWsClient(config.stepConfig);
 
+    DatasetClient datasetClient = ServiceFactory.createDatasetClient(config.stepConfig);
+
     httpClient =
         HttpClients.custom()
             .setDefaultRequestConfig(
@@ -61,8 +64,16 @@ public class InterpretationService extends AbstractIdleService {
             .build();
 
     InterpretationCallback callback =
-        new InterpretationCallback(
-            config, publisher, curator, historyClient, validationClient, httpClient, executor);
+        InterpretationCallback.builder()
+            .config(config)
+            .publisher(publisher)
+            .curator(curator)
+            .historyClient(historyClient)
+            .validationClient(validationClient)
+            .httpClient(httpClient)
+            .executor(executor)
+            .datasetClient(datasetClient)
+            .build();
 
     listener.listen(c.queueName, callback.getRouting(), c.poolSize, callback);
   }
