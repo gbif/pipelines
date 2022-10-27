@@ -29,6 +29,7 @@ public class RelationshipAssertion<T extends OccurrenceFeatures> {
     NON_CONFLICTING_COUNTRY,
     DIFFERENT_COUNTRY,
     IDENTIFIERS_OVERLAP,
+    OTHER_CATALOG_NUMBERS_OVERLAP,
     SAME_RECORDER_NAME,
     SAME_SPECIMEN, // use with caution (e.g. same name and both HOLOTYPE)
     TYPIFICATION_RELATION // e.g. Holotype+isotype for same name
