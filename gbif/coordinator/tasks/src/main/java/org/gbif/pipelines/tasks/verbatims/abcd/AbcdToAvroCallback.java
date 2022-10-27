@@ -13,13 +13,12 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
+import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.HiddenFileFilter;
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.http.client.HttpClient;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.common.messaging.AbstractMessageCallback;
@@ -33,12 +32,14 @@ import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
 import org.gbif.pipelines.tasks.verbatims.xml.XmlToAvroCallback;
 import org.gbif.pipelines.tasks.verbatims.xml.XmlToAvroConfiguration;
+import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.utils.file.CompressionUtil;
 import org.gbif.validator.ws.client.ValidationWsClient;
 
 /** Call back which is called when the {@link PipelinesXmlMessage} is received. */
 @Slf4j
+@Builder
 public class AbcdToAvroCallback extends AbstractMessageCallback<PipelinesAbcdMessage>
     implements StepHandler<PipelinesAbcdMessage, PipelinesVerbatimMessage> {
 
@@ -47,31 +48,15 @@ public class AbcdToAvroCallback extends AbstractMessageCallback<PipelinesAbcdMes
   private final MessagePublisher publisher;
   private final PipelinesHistoryClient historyClient;
   private final ValidationWsClient validationClient;
+  private final DatasetClient datasetClient;
   private final XmlToAvroCallback callback;
-
-  public AbcdToAvroCallback(
-      CuratorFramework curator,
-      XmlToAvroConfiguration config,
-      ExecutorService executor,
-      MessagePublisher publisher,
-      PipelinesHistoryClient historyClient,
-      ValidationWsClient validationClient,
-      HttpClient httpClient) {
-    this.curator = curator;
-    this.config = config;
-    this.publisher = publisher;
-    this.historyClient = historyClient;
-    this.validationClient = validationClient;
-    this.callback =
-        new XmlToAvroCallback(
-            config, publisher, curator, historyClient, validationClient, executor, httpClient);
-  }
 
   @Override
   public void handleMessage(PipelinesAbcdMessage message) {
     PipelinesCallback.<PipelinesAbcdMessage, PipelinesVerbatimMessage>builder()
         .historyClient(historyClient)
         .validationClient(validationClient)
+        .datasetClient(datasetClient)
         .config(config)
         .curator(curator)
         .stepType(StepType.ABCD_TO_VERBATIM)

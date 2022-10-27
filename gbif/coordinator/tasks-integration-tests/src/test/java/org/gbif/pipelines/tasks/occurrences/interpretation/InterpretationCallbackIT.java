@@ -28,14 +28,18 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.Reco
 import org.gbif.pipelines.common.utils.ZookeeperUtils;
 import org.gbif.pipelines.tasks.CloseableHttpClientStub;
 import org.gbif.pipelines.tasks.MessagePublisherStub;
+import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.ws.client.ValidationWsClient;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mockito.Mockito;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnitRunner;
 
+@RunWith(MockitoJUnitRunner.class)
 public class InterpretationCallbackIT {
 
   private static final String INTERPRETED_LABEL = VERBATIM_TO_INTERPRETED.getLabel();
@@ -44,8 +48,10 @@ public class InterpretationCallbackIT {
   private static CuratorFramework curator;
   private static TestingServer server;
   private static MessagePublisherStub publisher;
-  private static PipelinesHistoryClient historyClient;
-  private static ValidationWsClient validationClient;
+  @Mock private static DatasetClient datasetClient;
+  @Mock private static PipelinesHistoryClient historyClient;
+  @Mock private static ValidationWsClient validationClient;
+  @Mock private static CloseableHttpClient httpClient;
 
   @BeforeClass
   public static void setUp() throws Exception {
@@ -60,9 +66,6 @@ public class InterpretationCallbackIT {
     curator.start();
 
     publisher = MessagePublisherStub.create();
-
-    historyClient = Mockito.mock(PipelinesHistoryClient.class);
-    validationClient = Mockito.mock(ValidationWsClient.class);
   }
 
   @AfterClass
@@ -89,8 +92,16 @@ public class InterpretationCallbackIT {
     ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     InterpretationCallback callback =
-        new InterpretationCallback(
-            config, publisher, curator, historyClient, validationClient, null, executorService);
+        InterpretationCallback.builder()
+            .config(config)
+            .publisher(publisher)
+            .curator(curator)
+            .historyClient(historyClient)
+            .validationClient(validationClient)
+            .httpClient(httpClient)
+            .executor(executorService)
+            .datasetClient(datasetClient)
+            .build();
 
     UUID uuid = UUID.fromString(DATASET_UUID);
     int attempt = 60;
@@ -156,14 +167,16 @@ public class InterpretationCallbackIT {
     CloseableHttpClient closeableHttpClient = new CloseableHttpClientStub(200, "[]");
 
     InterpretationCallback callback =
-        new InterpretationCallback(
-            config,
-            publisher,
-            curator,
-            historyClient,
-            validationClient,
-            closeableHttpClient,
-            executorService);
+        InterpretationCallback.builder()
+            .config(config)
+            .publisher(publisher)
+            .curator(curator)
+            .historyClient(historyClient)
+            .validationClient(validationClient)
+            .httpClient(closeableHttpClient)
+            .executor(executorService)
+            .datasetClient(datasetClient)
+            .build();
 
     UUID uuid = UUID.fromString(DATASET_UUID);
     int attempt = 60;

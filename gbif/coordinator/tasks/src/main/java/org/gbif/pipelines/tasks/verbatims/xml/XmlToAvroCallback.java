@@ -15,7 +15,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.file.CodecFactory;
@@ -38,12 +38,13 @@ import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
 import org.gbif.pipelines.tasks.verbatims.dwca.DwcaToAvroConfiguration;
+import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.ws.client.ValidationWsClient;
 
 /** Call back which is called when the {@link PipelinesXmlMessage} is received. */
 @Slf4j
-@AllArgsConstructor
+@Builder
 public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessage>
     implements StepHandler<PipelinesXmlMessage, PipelinesVerbatimMessage> {
 
@@ -54,6 +55,7 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
   private final CuratorFramework curator;
   private final PipelinesHistoryClient historyClient;
   private final ValidationWsClient validationClient;
+  private final DatasetClient datasetClient;
   private final ExecutorService executor;
   private final HttpClient httpClient;
 
@@ -66,6 +68,7 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
 
     PipelinesCallback.<PipelinesXmlMessage, PipelinesVerbatimMessage>builder()
         .historyClient(historyClient)
+        .datasetClient(datasetClient)
         .validationClient(validationClient)
         .config(config)
         .curator(curator)

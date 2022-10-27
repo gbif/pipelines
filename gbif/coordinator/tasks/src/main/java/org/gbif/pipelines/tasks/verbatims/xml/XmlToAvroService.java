@@ -13,6 +13,7 @@ import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.pipelines.tasks.ServiceFactory;
+import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.ws.client.ValidationWsClient;
 
@@ -53,6 +54,8 @@ public class XmlToAvroService extends AbstractIdleService {
     ValidationWsClient validationClient =
         ServiceFactory.createValidationWsClient(config.stepConfig);
 
+    DatasetClient datasetClient = ServiceFactory.createDatasetClient(config.stepConfig);
+
     HttpClient httpClient =
         HttpClients.custom()
             .setDefaultRequestConfig(
@@ -60,8 +63,17 @@ public class XmlToAvroService extends AbstractIdleService {
             .build();
 
     XmlToAvroCallback callback =
-        new XmlToAvroCallback(
-            config, publisher, curator, historyClient, validationClient, executor, httpClient);
+        XmlToAvroCallback.builder()
+            .config(config)
+            .publisher(publisher)
+            .curator(curator)
+            .historyClient(historyClient)
+            .validationClient(validationClient)
+            .executor(executor)
+            .httpClient(httpClient)
+            .datasetClient(datasetClient)
+            .build();
+
     listener.listen(c.queueName, callback.getRouting(), c.poolSize, callback);
   }
 

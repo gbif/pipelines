@@ -2,6 +2,7 @@ package org.gbif.pipelines.tasks.events.indexing;
 
 import java.io.IOException;
 import java.util.Optional;
+import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.http.client.HttpClient;
@@ -25,10 +26,12 @@ import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
 import org.gbif.pipelines.tasks.events.interpretation.EventsInterpretationConfiguration;
 import org.gbif.pipelines.tasks.occurrences.interpretation.InterpreterConfiguration;
+import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 
 /** Callback which is called when the {@link PipelinesEventsMessage} is received. */
 @Slf4j
+@Builder
 public class EventsIndexingCallback
     extends AbstractMessageCallback<PipelinesEventsInterpretedMessage>
     implements StepHandler<PipelinesEventsInterpretedMessage, PipelinesEventsIndexedMessage> {
@@ -41,21 +44,7 @@ public class EventsIndexingCallback
   private final HttpClient httpClient;
   private final HdfsConfigs hdfsConfigs;
   private final PipelinesHistoryClient historyClient;
-
-  public EventsIndexingCallback(
-      EventsIndexingConfiguration config,
-      MessagePublisher publisher,
-      CuratorFramework curator,
-      HttpClient httpClient,
-      PipelinesHistoryClient historyClient) {
-    this.config = config;
-    this.publisher = publisher;
-    this.curator = curator;
-    hdfsConfigs =
-        HdfsConfigs.create(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);
-    this.httpClient = httpClient;
-    this.historyClient = historyClient;
-  }
+  private final DatasetClient datasetClient;
 
   @Override
   public void handleMessage(PipelinesEventsInterpretedMessage message) {
@@ -65,6 +54,7 @@ public class EventsIndexingCallback
         .stepType(TYPE)
         .publisher(publisher)
         .historyClient(historyClient)
+        .datasetClient(datasetClient)
         .message(message)
         .handler(this)
         .build()

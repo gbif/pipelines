@@ -16,6 +16,7 @@ import org.gbif.pipelines.core.factory.ConfigFactory;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.keygen.config.KeygenConfig;
 import org.gbif.pipelines.tasks.ServiceFactory;
+import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 
 /**
@@ -49,12 +50,22 @@ public class FragmenterService extends AbstractIdleService {
     PipelinesHistoryClient historyClient =
         ServiceFactory.createPipelinesHistoryClient(config.stepConfig);
 
+    DatasetClient datasetClient = ServiceFactory.createDatasetClient(config.stepConfig);
+
     KeygenConfig keygenConfig =
         readConfig(HdfsConfigs.create(c.hdfsSiteConfig, c.coreSiteConfig), config.pipelinesConfig);
 
     FragmenterCallback callback =
-        new FragmenterCallback(
-            config, publisher, curator, historyClient, executor, hbaseConnection, keygenConfig);
+        FragmenterCallback.builder()
+            .config(config)
+            .publisher(publisher)
+            .curator(curator)
+            .historyClient(historyClient)
+            .executor(executor)
+            .hbaseConnection(hbaseConnection)
+            .keygenConfig(keygenConfig)
+            .datasetClient(datasetClient)
+            .build();
 
     listener.listen(c.queueName, callback.getRouting(), c.poolSize, callback);
   }

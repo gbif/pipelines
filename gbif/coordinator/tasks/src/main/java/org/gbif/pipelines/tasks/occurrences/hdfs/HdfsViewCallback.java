@@ -12,6 +12,7 @@ import org.gbif.pipelines.common.hdfs.CommonHdfsViewCallback;
 import org.gbif.pipelines.common.hdfs.HdfsViewConfiguration;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
+import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 
 /** Callback which is called when an instance {@link PipelinesInterpretationMessage} is received. */
@@ -24,12 +25,14 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
   private final MessagePublisher publisher;
   private final CuratorFramework curator;
   private final PipelinesHistoryClient historyClient;
+  private final DatasetClient datasetClient;
   private final CommonHdfsViewCallback commonHdfsViewCallback;
 
   @Override
   public void handleMessage(PipelinesInterpretedMessage message) {
     PipelinesCallback.<PipelinesInterpretedMessage, PipelinesHdfsViewBuiltMessage>builder()
         .historyClient(historyClient)
+        .datasetClient(datasetClient)
         .config(config)
         .curator(curator)
         .stepType(config.stepType)
