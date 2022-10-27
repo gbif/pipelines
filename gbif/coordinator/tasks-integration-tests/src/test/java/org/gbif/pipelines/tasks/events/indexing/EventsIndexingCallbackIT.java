@@ -14,6 +14,7 @@ import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.tasks.MessagePublisherStub;
 import org.gbif.pipelines.tasks.resources.CuratorServer;
+import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -31,7 +32,7 @@ public class EventsIndexingCallbackIT {
   private static final MessagePublisherStub PUBLISHER = MessagePublisherStub.create();
   @Mock private static PipelinesHistoryClient historyClient;
   @Mock private static CloseableHttpClient httpClient;
-  @Mock private static CloseableHttpClient httpClient;
+  @Mock private static DatasetClient datasetClient;
 
   @Test
   public void testInvalidMessage() {

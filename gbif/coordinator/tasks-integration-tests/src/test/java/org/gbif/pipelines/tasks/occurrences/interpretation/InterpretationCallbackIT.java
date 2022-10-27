@@ -22,6 +22,7 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.Reco
 import org.gbif.pipelines.tasks.CloseableHttpClientStub;
 import org.gbif.pipelines.tasks.MessagePublisherStub;
 import org.gbif.pipelines.tasks.resources.CuratorServer;
+import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.ws.client.ValidationWsClient;
 import org.junit.After;

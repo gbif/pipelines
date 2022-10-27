@@ -24,6 +24,7 @@ import org.gbif.crawler.constants.CrawlerNodePaths;
 import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
 import org.gbif.pipelines.common.configs.BaseConfiguration;
 import org.gbif.pipelines.tasks.resources.CuratorServer;
+import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.junit.Assert;
 import org.junit.ClassRule;

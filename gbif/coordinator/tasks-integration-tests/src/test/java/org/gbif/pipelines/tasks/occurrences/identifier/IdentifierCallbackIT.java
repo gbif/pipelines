@@ -20,6 +20,7 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.Reco
 import org.gbif.pipelines.tasks.CloseableHttpClientStub;
 import org.gbif.pipelines.tasks.MessagePublisherStub;
 import org.gbif.pipelines.tasks.resources.CuratorServer;
+import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.junit.After;
 import org.junit.ClassRule;
@@ -37,6 +38,8 @@ public class IdentifierCallbackIT {
   private static final long EXECUTION_ID = 1L;
   private static final MessagePublisherStub PUBLISHER = MessagePublisherStub.create();
   @Mock private static PipelinesHistoryClient historyClient;
+  @Mock private static DatasetClient datasetClient;
+  @Mock private static CloseableHttpClient httpClient;
 
   @After
   public void after() {

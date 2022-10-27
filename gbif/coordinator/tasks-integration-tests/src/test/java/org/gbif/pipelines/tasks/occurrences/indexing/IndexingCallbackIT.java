@@ -24,6 +24,7 @@ import org.gbif.pipelines.tasks.MessagePublisherStub;
 import org.gbif.pipelines.tasks.resources.CuratorServer;
 import org.gbif.pipelines.tasks.resources.EsServer;
 import org.gbif.pipelines.tasks.resources.ZkServer;
+import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.ws.client.ValidationWsClient;
 import org.junit.After;
@@ -119,7 +120,7 @@ public class IndexingCallbackIT {
             .curator(CURATOR_SERVER.getCurator())
             .historyClient(historyClient)
             .validationClient(validationClient)
-            .httpClient(PUBLISHER)
+            .httpClient(HTTP_CLIENT)
             .executor(executor)
             .datasetClient(datasetClient)
             .build();
@@ -208,7 +209,7 @@ public class IndexingCallbackIT {
             .config(config)
             .publisher(PUBLISHER)
             .curator(CURATOR_SERVER.getCurator())
-            .historyClient(HTTP_CLIENT)
+            .historyClient(historyClient)
             .validationClient(validationClient)
             .executor(executor)
             .datasetClient(datasetClient)
@@ -282,7 +283,6 @@ public class IndexingCallbackIT {
             .publisher(PUBLISHER)
             .curator(CURATOR_SERVER.getCurator())
             .historyClient(historyClient)
-    HTTP_CLIENT
             .validationClient(validationClient)
             .executor(executor)
             .datasetClient(datasetClient)

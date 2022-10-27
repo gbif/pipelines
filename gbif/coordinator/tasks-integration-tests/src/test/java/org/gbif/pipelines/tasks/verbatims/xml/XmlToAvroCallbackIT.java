@@ -13,6 +13,9 @@ import java.util.Collections;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.gbif.api.model.crawler.FinishReason;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.messages.PipelinesXmlMessage;
@@ -21,6 +24,7 @@ import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.MessagePublisherStub;
 import org.gbif.pipelines.tasks.resources.CuratorServer;
+import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.ws.client.ValidationWsClient;
 import org.junit.After;
@@ -46,6 +50,11 @@ public class XmlToAvroCallbackIT {
   @Mock private PipelinesHistoryClient historyClient;
   @Mock private ValidationWsClient validationClient;
   @Mock private static DatasetClient datasetClient;
+  private static final CloseableHttpClient HTTP_CLIENT =
+      HttpClients.custom()
+          .setDefaultRequestConfig(
+              RequestConfig.custom().setConnectTimeout(60_000).setSocketTimeout(60_000).build())
+          .build();
 
   @AfterClass
   public static void tearDown() {
@@ -125,7 +134,7 @@ public class XmlToAvroCallbackIT {
             .historyClient(historyClient)
             .validationClient(validationClient)
             .executor(EXECUTOR)
-            .httpClient(httpClient)
+            .httpClient(HTTP_CLIENT)
             .datasetClient(datasetClient)
             .build();
 
@@ -176,7 +185,7 @@ public class XmlToAvroCallbackIT {
             .historyClient(historyClient)
             .validationClient(validationClient)
             .executor(EXECUTOR)
-            .httpClient(httpClient)
+            .httpClient(HTTP_CLIENT)
             .datasetClient(datasetClient)
             .build();
 

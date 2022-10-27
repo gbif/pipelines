@@ -14,20 +14,14 @@ import java.util.Collections;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.CuratorFrameworkFactory;
-import org.apache.curator.retry.RetryOneTime;
-import org.apache.curator.test.TestingServer;
-import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.messages.PipelinesAbcdMessage;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.MessagePublisherStub;
-import org.gbif.pipelines.tasks.verbatims.xml.XmlToAvroCallback;
 import org.gbif.pipelines.tasks.resources.CuratorServer;
+import org.gbif.pipelines.tasks.verbatims.xml.XmlToAvroCallback;
 import org.gbif.pipelines.tasks.verbatims.xml.XmlToAvroConfiguration;
 import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
@@ -56,8 +50,7 @@ public class AbcdToAvroCallbackIT {
   @Mock private static PipelinesHistoryClient historyClient;
   @Mock private static ValidationWsClient validationClient;
   @Mock private static DatasetClient datasetClient;
-  private static CloseableHttpClient httpClient;
-  private static ExecutorService executor;
+  @Mock private static CloseableHttpClient httpClient;
 
   @AfterClass
   public static void tearDown() {
@@ -81,7 +74,7 @@ public class AbcdToAvroCallbackIT {
 
     AbcdToAvroCallback callback =
         AbcdToAvroCallback.builder()
-            .curator(curator)
+            .curator(CURATOR_SERVER.getCurator())
             .config(config)
             .publisher(PUBLISHER)
             .historyClient(historyClient)
@@ -91,7 +84,7 @@ public class AbcdToAvroCallbackIT {
                 XmlToAvroCallback.builder()
                     .config(config)
                     .publisher(PUBLISHER)
-                    .curator(curator)
+                    .curator(CURATOR_SERVER.getCurator())
                     .historyClient(historyClient)
                     .validationClient(validationClient)
                     .executor(EXECUTOR)
@@ -149,8 +142,8 @@ public class AbcdToAvroCallbackIT {
             .callback(
                 XmlToAvroCallback.builder()
                     .config(config)
-                    .publisher(publisher)
-                    .curator(curator)
+                    .publisher(PUBLISHER)
+                    .curator(CURATOR_SERVER.getCurator())
                     .historyClient(historyClient)
                     .validationClient(validationClient)
                     .executor(EXECUTOR)
@@ -197,20 +190,20 @@ public class AbcdToAvroCallbackIT {
 
     AbcdToAvroCallback callback =
         AbcdToAvroCallback.builder()
-            .curator(curator)
+            .curator(CURATOR_SERVER.getCurator())
             .config(config)
-            .publisher(publisher)
+            .publisher(PUBLISHER)
             .historyClient(historyClient)
             .validationClient(validationClient)
             .datasetClient(datasetClient)
             .callback(
                 XmlToAvroCallback.builder()
                     .config(config)
-                    .publisher(publisher)
-                    .curator(curator)
+                    .publisher(PUBLISHER)
+                    .curator(CURATOR_SERVER.getCurator())
                     .historyClient(historyClient)
                     .validationClient(validationClient)
-                    .executor(executor)
+                    .executor(EXECUTOR)
                     .httpClient(httpClient)
                     .datasetClient(datasetClient)
                     .build())

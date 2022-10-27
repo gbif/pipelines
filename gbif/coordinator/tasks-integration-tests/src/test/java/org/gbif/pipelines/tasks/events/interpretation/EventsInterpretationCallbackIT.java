@@ -18,8 +18,10 @@ import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage.Validatio
 import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.MessagePublisherStub;
 import org.gbif.pipelines.tasks.resources.CuratorServer;
+import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.junit.ClassRule;
 import org.junit.Test;

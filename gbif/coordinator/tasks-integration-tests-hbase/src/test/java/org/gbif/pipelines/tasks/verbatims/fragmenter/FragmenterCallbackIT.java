@@ -13,6 +13,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
@@ -31,6 +32,7 @@ import org.gbif.pipelines.common.utils.ZookeeperUtils;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.fragmenter.common.HbaseServer;
+import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -54,7 +56,7 @@ public class FragmenterCallbackIT {
   private static TestingServer server;
   private static MessagePublisherStub publisher;
   private static ExecutorService executor;
-  @Mock private PipelinesHistoryClient client;
+  @Mock private PipelinesHistoryClient historyClient;
   @Mock private static DatasetClient datasetClient;
 
   @ClassRule public static final HbaseServer HBASE_SERVER = new HbaseServer();
