@@ -1,7 +1,6 @@
 package org.gbif.pipelines.clustering
 
 import java.io.File
-
 import org.apache.hadoop.hbase.client.HTable
 import org.apache.hadoop.hbase.{HBaseConfiguration, KeyValue}
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
@@ -116,16 +115,30 @@ object Cluster {
 
           filteredIds.foreach(id => {
             id match {
-              case Some(id) => {
-                records.append(
-                  Row(
-                    r.getAs[Long]("gbifId"),
-                    r.getAs[String]("datasetKey"),
-                    r.getAs[Integer]("speciesKey") + "|" + OccurrenceRelationships.normalizeID(id)
-                  ))
-              }
+              case Some(id) =>
+                val speciesKey = Option(r.getAs[Int]("speciesKey"))
+                if (!speciesKey.isEmpty) {
+                  records.append(
+                    Row(
+                      r.getAs[Long]("gbifId"),
+                      r.getAs[String]("datasetKey"),
+                      speciesKey + "|" + OccurrenceRelationships.normalizeID(id)
+                    ))
+                }
               case None => // skip
             }
+          })
+
+          // a special treatment for catalogNumber and otherCatalogNumber overlap
+          val features = new RowOccurrenceFeatures(r)
+          val hashedIDs = HashUtilities.hashCatalogNumbers(features) // normalised, non-numeric codes
+          hashedIDs.foreach(id => {
+            records.append(
+              Row(
+                r.getAs[Long]("gbifId"),
+                r.getAs[String]("datasetKey"),
+                id // only the ID overlap is suffice here
+              ))
           })
         }
         records
@@ -144,7 +157,9 @@ object Cluster {
         val taxonKey = Option(r.getAs[Int]("taxonKey"))
         val typeStatus = Option(r.getAs[Seq[String]]("typeStatus"))
         val recordedBy = Option(r.getAs[Seq[String]]("recordedBy"))
-        if (!lat.isEmpty && !lng.isEmpty && !year.isEmpty && !month.isEmpty && !day.isEmpty) {
+        val speciesKey = Option(r.getAs[Int]("speciesKey"))
+
+        if (!lat.isEmpty && !lng.isEmpty && !year.isEmpty && !month.isEmpty && !day.isEmpty && !speciesKey.isEmpty) {
           records.append(
             Row(
               r.getAs[Long]("gbifId"),
@@ -182,13 +197,25 @@ object Cluster {
       val deduplicatedHashedRecords = hashAll.union(hashSpecimenIds).dropDuplicates()
 
       // persist for debugging, enable for further processing in SQL
-      deduplicatedHashedRecords.write.saveAsTable(hiveTableHashed) // for diagnostics in hive
-      deduplicatedHashedRecords.createOrReplaceTempView("DF_hashed")
+      deduplicatedHashedRecords.write.saveAsTable(hiveTableHashed + "_all") // for diagnostics in hive
+      deduplicatedHashedRecords.createOrReplaceTempView("DF_hashed_all")
+
+      // defend against NxN runtime issues by capping the number of records in a candidate group to 10000
+      val hashCounts = deduplicatedHashedRecords.groupBy("hash").count().withColumnRenamed("count", "c");
+      hashCounts.createOrReplaceTempView("DF_hash_counts")
+      val hashedFiltered = sql("""
+          SELECT t1.gbifID, t1.datasetKey, t1.hash
+          FROM DF_hashed_all t1 JOIN DF_hash_counts t2 ON t1.hash=t2.hash
+          WHERE t2.c <= 10000
+          """)
+      hashedFiltered.write.saveAsTable(hiveTableHashed) // for diagnostics in hive
+      hashedFiltered.createOrReplaceTempView("DF_hashed")
 
       // Cross join to distinct pairs of records spanning 2 datasets
       val candidates = sql("""
       SELECT t1.gbifId as id1, t1.datasetKey as ds1, t2.gbifId as id2, t2.datasetKey as ds2
-      FROM DF_hashed t1 JOIN DF_hashed t2 ON t1.hash = t2.hash
+      FROM
+        DF_hashed t1 JOIN DF_hashed t2 ON t1.hash = t2.hash
       WHERE
         t1.gbifId < t2.gbifId AND
         t1.datasetKey != t2.datasetKey
