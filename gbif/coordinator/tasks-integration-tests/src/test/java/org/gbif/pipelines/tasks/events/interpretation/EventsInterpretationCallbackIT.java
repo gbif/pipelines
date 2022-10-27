@@ -36,6 +36,7 @@ public class EventsInterpretationCallbackIT {
   private static final long EXECUTION_ID = 1L;
   private static final MessagePublisherStub PUBLISHER = MessagePublisherStub.create();
   @Mock private static PipelinesHistoryClient historyClient;
+  @Mock private static DatasetClient datasetClient;
 
   @Test
   public void testInvalidMessage() {
@@ -46,8 +47,16 @@ public class EventsInterpretationCallbackIT {
     config.pipelinesConfig = "pipelines.yaml";
 
     EventsInterpretationCallback callback =
-        new EventsInterpretationCallback(
-            config, PUBLISHER, CURATOR_SERVER.getCurator(), historyClient);
+        EventsInterpretationCallback.builder()
+            .config(config)
+            .publisher(PUBLISHER)
+            .curator(CURATOR_SERVER.getCurator())
+            .historyClient(historyClient)
+            .datasetClient(datasetClient)
+            .hdfsConfigs(
+                HdfsConfigs.create(
+                    config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig))
+            .build();
 
     UUID uuid = UUID.fromString(DATASET_UUID);
     int attempt = 60;

@@ -53,7 +53,9 @@ public class FragmenterCallbackIT {
   private static CuratorFramework curator;
   private static TestingServer server;
   private static MessagePublisherStub publisher;
+  private static ExecutorService executor;
   @Mock private PipelinesHistoryClient client;
+  @Mock private static DatasetClient datasetClient;
 
   @ClassRule public static final HbaseServer HBASE_SERVER = new HbaseServer();
 
@@ -70,6 +72,7 @@ public class FragmenterCallbackIT {
     curator.start();
 
     publisher = MessagePublisherStub.create();
+    executor = Executors.newSingleThreadExecutor();
   }
 
   @AfterClass
@@ -77,6 +80,7 @@ public class FragmenterCallbackIT {
     curator.close();
     server.stop();
     publisher.close();
+    executor.shutdown();
   }
 
   @After
@@ -119,14 +123,16 @@ public class FragmenterCallbackIT {
             null);
 
     FragmenterCallback callback =
-        new FragmenterCallback(
-            config,
-            publisher,
-            curator,
-            client,
-            Executors.newSingleThreadExecutor(),
-            HBASE_SERVER.getConnection(),
-            HbaseServer.CFG);
+        FragmenterCallback.builder()
+            .config(config)
+            .publisher(publisher)
+            .curator(curator)
+            .historyClient(historyClient)
+            .executor(executor)
+            .hbaseConnection(HBASE_SERVER.getConnection())
+            .keygenConfig(HbaseServer.CFG)
+            .datasetClient(datasetClient)
+            .build();
 
     // When
     callback.handleMessage(message);
@@ -182,14 +188,16 @@ public class FragmenterCallbackIT {
             null);
 
     FragmenterCallback callback =
-        new FragmenterCallback(
-            config,
-            publisher,
-            curator,
-            client,
-            Executors.newSingleThreadExecutor(),
-            HBASE_SERVER.getConnection(),
-            HbaseServer.CFG);
+        FragmenterCallback.builder()
+            .config(config)
+            .publisher(publisher)
+            .curator(curator)
+            .historyClient(historyClient)
+            .executor(executor)
+            .hbaseConnection(HBASE_SERVER.getConnection())
+            .keygenConfig(HbaseServer.CFG)
+            .datasetClient(datasetClient)
+            .build();
 
     // When
     callback.handleMessage(message);
@@ -245,14 +253,16 @@ public class FragmenterCallbackIT {
             null);
 
     FragmenterCallback callback =
-        new FragmenterCallback(
-            config,
-            publisher,
-            curator,
-            client,
-            Executors.newSingleThreadExecutor(),
-            HBASE_SERVER.getConnection(),
-            HbaseServer.CFG);
+        FragmenterCallback.builder()
+            .config(config)
+            .publisher(publisher)
+            .curator(curator)
+            .historyClient(historyClient)
+            .executor(executor)
+            .hbaseConnection(HBASE_SERVER.getConnection())
+            .keygenConfig(HbaseServer.CFG)
+            .datasetClient(datasetClient)
+            .build();
 
     // When
     callback.handleMessage(message);
@@ -306,14 +316,16 @@ public class FragmenterCallbackIT {
             null);
 
     FragmenterCallback callback =
-        new FragmenterCallback(
-            config,
-            publisher,
-            curator,
-            client,
-            Executors.newSingleThreadExecutor(),
-            HBASE_SERVER.getConnection(),
-            HbaseServer.CFG);
+        FragmenterCallback.builder()
+            .config(config)
+            .publisher(publisher)
+            .curator(curator)
+            .historyClient(historyClient)
+            .executor(executor)
+            .hbaseConnection(HBASE_SERVER.getConnection())
+            .keygenConfig(HbaseServer.CFG)
+            .datasetClient(datasetClient)
+            .build();
 
     // When
     callback.handleMessage(message);
@@ -359,14 +371,16 @@ public class FragmenterCallbackIT {
             null);
 
     FragmenterCallback callback =
-        new FragmenterCallback(
-            config,
-            publisher,
-            curator,
-            client,
-            Executors.newSingleThreadExecutor(),
-            HBASE_SERVER.getConnection(),
-            HbaseServer.CFG);
+        FragmenterCallback.builder()
+            .config(config)
+            .publisher(publisher)
+            .curator(curator)
+            .historyClient(historyClient)
+            .executor(executor)
+            .hbaseConnection(HBASE_SERVER.getConnection())
+            .keygenConfig(HbaseServer.CFG)
+            .datasetClient(datasetClient)
+            .build();
 
     // When
     callback.handleMessage(message);

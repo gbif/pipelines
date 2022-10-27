@@ -45,6 +45,7 @@ public class IndexingCallbackIT {
   private static final MessagePublisherStub PUBLISHER = MessagePublisherStub.create();
   @Mock private static PipelinesHistoryClient historyClient;
   @Mock private static ValidationWsClient validationClient;
+  @Mock private static DatasetClient datasetClient;
   private static final CloseableHttpClient HTTP_CLIENT =
       HttpClients.custom()
           .setDefaultRequestConfig(
@@ -64,14 +65,16 @@ public class IndexingCallbackIT {
     ExecutorService executor = Executors.newSingleThreadExecutor();
 
     IndexingCallback callback =
-        new IndexingCallback(
-            config,
-            PUBLISHER,
-            CURATOR_SERVER.getCurator(),
-            HTTP_CLIENT,
-            historyClient,
-            validationClient,
-            executor);
+        IndexingCallback.builder()
+            .config(config)
+            .publisher(PUBLISHER)
+            .curator(CURATOR_SERVER.getCurator())
+            .historyClient(historyClient)
+            .validationClient(validationClient)
+            .httpClient(HTTP_CLIENT)
+            .executor(executor)
+            .datasetClient(datasetClient)
+            .build();
 
     UUID uuid = UUID.fromString(DATASET_UUID);
     int attempt = 60;
@@ -110,14 +113,16 @@ public class IndexingCallbackIT {
     ExecutorService executor = Executors.newSingleThreadExecutor();
 
     IndexingCallback callback =
-        new IndexingCallback(
-            config,
-            PUBLISHER,
-            CURATOR_SERVER.getCurator(),
-            HTTP_CLIENT,
-            historyClient,
-            validationClient,
-            executor);
+        IndexingCallback.builder()
+            .config(config)
+            .publisher(PUBLISHER)
+            .curator(CURATOR_SERVER.getCurator())
+            .historyClient(historyClient)
+            .validationClient(validationClient)
+            .httpClient(PUBLISHER)
+            .executor(executor)
+            .datasetClient(datasetClient)
+            .build();
 
     UUID uuid = UUID.fromString(DATASET_UUID);
     int attempt = 60;
@@ -158,14 +163,15 @@ public class IndexingCallbackIT {
     ExecutorService executor = Executors.newSingleThreadExecutor();
 
     IndexingCallback callback =
-        new IndexingCallback(
-            config,
-            PUBLISHER,
-            CURATOR_SERVER.getCurator(),
-            HTTP_CLIENT,
-            historyClient,
-            validationClient,
-            executor);
+        IndexingCallback.builder()
+            .config(config)
+            .publisher(PUBLISHER)
+            .curator(CURATOR_SERVER.getCurator())
+            .historyClient(historyClient)
+            .validationClient(validationClient)
+            .executor(executor)
+            .datasetClient(datasetClient)
+            .build();
 
     String crawlId = DATASET_UUID;
 
@@ -198,14 +204,15 @@ public class IndexingCallbackIT {
     ExecutorService executor = Executors.newSingleThreadExecutor();
 
     IndexingCallback callback =
-        new IndexingCallback(
-            config,
-            PUBLISHER,
-            CURATOR_SERVER.getCurator(),
-            HTTP_CLIENT,
-            historyClient,
-            validationClient,
-            executor);
+        IndexingCallback.builder()
+            .config(config)
+            .publisher(PUBLISHER)
+            .curator(CURATOR_SERVER.getCurator())
+            .historyClient(HTTP_CLIENT)
+            .validationClient(validationClient)
+            .executor(executor)
+            .datasetClient(datasetClient)
+            .build();
 
     PipelinesInterpretedMessage message = createMessage(uuid, attempt);
     message.setPipelineSteps(Collections.singleton(StepType.INTERPRETED_TO_INDEX.name()));
@@ -230,14 +237,15 @@ public class IndexingCallbackIT {
     ExecutorService executor = Executors.newSingleThreadExecutor();
 
     IndexingCallback callback =
-        new IndexingCallback(
-            config,
-            PUBLISHER,
-            CURATOR_SERVER.getCurator(),
-            HTTP_CLIENT,
-            historyClient,
-            validationClient,
-            executor);
+        IndexingCallback.builder()
+            .config(config)
+            .publisher(PUBLISHER)
+            .curator(CURATOR_SERVER.getCurator())
+            .historyClient(historyClient)
+            .validationClient(validationClient)
+            .executor(executor)
+            .datasetClient(datasetClient)
+            .build();
 
     String crawlId = DATASET_UUID;
 
@@ -269,14 +277,16 @@ public class IndexingCallbackIT {
     ExecutorService executor = Executors.newSingleThreadExecutor();
 
     IndexingCallback callback =
-        new IndexingCallback(
-            config,
-            PUBLISHER,
-            CURATOR_SERVER.getCurator(),
-            HTTP_CLIENT,
-            historyClient,
-            validationClient,
-            executor);
+        IndexingCallback.builder()
+            .config(config)
+            .publisher(PUBLISHER)
+            .curator(CURATOR_SERVER.getCurator())
+            .historyClient(historyClient)
+    HTTP_CLIENT
+            .validationClient(validationClient)
+            .executor(executor)
+            .datasetClient(datasetClient)
+            .build();
 
     PipelinesInterpretedMessage message = createMessage(uuid, attempt);
     message.setOnlyForStep(StepType.HDFS_VIEW.name()); // Wrong type

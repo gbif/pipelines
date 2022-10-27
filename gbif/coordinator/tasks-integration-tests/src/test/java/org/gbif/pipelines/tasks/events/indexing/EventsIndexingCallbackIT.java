@@ -31,6 +31,7 @@ public class EventsIndexingCallbackIT {
   private static final MessagePublisherStub PUBLISHER = MessagePublisherStub.create();
   @Mock private static PipelinesHistoryClient historyClient;
   @Mock private static CloseableHttpClient httpClient;
+  @Mock private static CloseableHttpClient httpClient;
 
   @Test
   public void testInvalidMessage() {
@@ -41,8 +42,14 @@ public class EventsIndexingCallbackIT {
     config.pipelinesConfig = "pipelines.yaml";
 
     EventsIndexingCallback callback =
-        new EventsIndexingCallback(
-            config, PUBLISHER, CURATOR_SERVER.getCurator(), httpClient, historyClient);
+        EventsIndexingCallback.builder()
+            .config(config)
+            .publisher(PUBLISHER)
+            .curator(CURATOR_SERVER.getCurator())
+            .httpClient(httpClient)
+            .historyClient(historyClient)
+            .datasetClient(datasetClient)
+            .build();
 
     UUID uuid = UUID.fromString(DATASET_UUID);
     int attempt = 60;

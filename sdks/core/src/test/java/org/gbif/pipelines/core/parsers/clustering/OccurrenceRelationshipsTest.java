@@ -1,9 +1,13 @@
 package org.gbif.pipelines.core.parsers.clustering;
 
+import static org.gbif.pipelines.core.parsers.clustering.OccurrenceRelationships.catalogNumberOverlaps;
+import static org.gbif.pipelines.core.parsers.clustering.OccurrenceRelationships.concatIfEligible;
+import static org.gbif.pipelines.core.parsers.clustering.OccurrenceRelationships.hashOrNull;
 import static org.gbif.pipelines.core.parsers.clustering.RelationshipAssertion.FeatureAssertion.*;
 import static org.junit.Assert.*;
 
 import com.google.common.collect.Lists;
+import java.util.Arrays;
 import org.junit.Test;
 
 /** Tests for relationship assertions using simple POJOs as the source. */
@@ -342,9 +346,46 @@ public class OccurrenceRelationshipsTest {
   }
 
   @Test
+  public void testCatalogNumberOverlaps() {
+    assertTrue(catalogNumberOverlaps("A", "B", "123", Arrays.asList("A:B:123")));
+    assertTrue(catalogNumberOverlaps("A", "B", "123", Arrays.asList("A-B-123")));
+    assertTrue(catalogNumberOverlaps("A", "B", "123", Arrays.asList("A/B/123")));
+    assertTrue(catalogNumberOverlaps("A", "B", "123", Arrays.asList("AB123")));
+
+    assertFalse(catalogNumberOverlaps("A", "B", "123", Arrays.asList("A:123")));
+    assertFalse(catalogNumberOverlaps("A", "B", "123", Arrays.asList("A-123")));
+    assertFalse(catalogNumberOverlaps("A", "B", "123", Arrays.asList("A/123")));
+
+    assertFalse(catalogNumberOverlaps(null, null, "AB123", Arrays.asList("AB123")));
+    assertFalse(catalogNumberOverlaps("", "NO DISPONSIBL", "AB123", Arrays.asList("AB123")));
+    assertFalse(catalogNumberOverlaps("", "NO DISPONSIBL", "123", Arrays.asList("123")));
+
+    assertFalse(catalogNumberOverlaps("A", "B", "123", Arrays.asList("A:B:A123")));
+    assertFalse(catalogNumberOverlaps("A", "B", "123", Arrays.asList("123")));
+
+    // https://www.gbif.org/occurrence/2594353674
+    assertFalse(catalogNumberOverlaps("C", "AT", "2323", Arrays.asList("Cat. 2323")));
+    assertFalse(catalogNumberOverlaps("C", "AT", "2323", Arrays.asList("Cat# 2323")));
+    assertFalse(catalogNumberOverlaps("C", "AT", "2323", Arrays.asList("cat# 2323")));
+    assertTrue(catalogNumberOverlaps("C", "AT", "2323", Arrays.asList("cat 2323")));
+  }
+
+  @Test
   public void allNull() {
     assertTrue(OccurrenceRelationships.allNull(null, null));
     assertTrue(OccurrenceRelationships.allNull(null));
     assertFalse(OccurrenceRelationships.allNull(null, ""));
+  }
+
+  @Test
+  public void testIsEligible() {
+    assertNull("Should be in deny list", hashOrNull("SN", true));
+    assertNull("Should be in deny list", hashOrNull("s.n.", true));
+  }
+
+  @Test
+  public void testConcatIfEligible() {
+    assertNull("Should be filtered", concatIfEligible(":", "good Id", "SN"));
+    assertEquals("Should be allows", "GOODID:TIM", concatIfEligible(":", "good Id", "tim"));
   }
 }

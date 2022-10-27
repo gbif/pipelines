@@ -37,6 +37,7 @@ public class PipelinesCallbackIT {
 
   @ClassRule public static final CuratorServer CURATOR_SERVER = CuratorServer.getInstance();
   private static final Long EXECUTION_ID = 1L;
+  @Mock private DatasetClient datasetClient;
   @Mock private PipelinesHistoryClient historyClient;
   @Mock private MessagePublisher mockPublisher;
 
@@ -71,6 +72,7 @@ public class PipelinesCallbackIT {
         .stepType(nextStepName)
         .publisher(null)
         .historyClient(historyClient)
+        .datasetClient(datasetClient)
         .handler(TestHandler.create())
         .config(TestConfig.create())
         .build()
@@ -86,6 +88,7 @@ public class PipelinesCallbackIT {
         .stepType(nextStepName)
         .publisher(null)
         .historyClient(historyClient)
+        .datasetClient(datasetClient)
         .handler(TestHandler.create())
         .config(TestConfig.create())
         .build()
@@ -142,6 +145,7 @@ public class PipelinesCallbackIT {
         .stepType(nextStepName)
         .publisher(mockPublisher)
         .historyClient(historyClient)
+        .datasetClient(datasetClient)
         .handler(TestHandler.create())
         .config(TestConfig.create())
         .build()
@@ -183,6 +187,7 @@ public class PipelinesCallbackIT {
         .stepType(nextStepName)
         .publisher(mockPublisher)
         .historyClient(historyClient)
+        .datasetClient(datasetClient)
         .handler(TestHandler.create())
         .config(TestConfig.create())
         .build()
@@ -222,6 +227,7 @@ public class PipelinesCallbackIT {
         .stepType(nextStepName)
         .publisher(mockPublisher)
         .historyClient(historyClient)
+        .datasetClient(datasetClient)
         .handler(TestExceptionHandler.create())
         .config(TestConfig.create())
         .build()
@@ -271,6 +277,7 @@ public class PipelinesCallbackIT {
         .stepType(nextStepName)
         .publisher(mockPublisher)
         .historyClient(historyClient)
+        .datasetClient(datasetClient)
         .handler(TestHandler.create())
         .config(TestConfig.create())
         .build()
@@ -311,6 +318,7 @@ public class PipelinesCallbackIT {
         .stepType(nextStepName)
         .publisher(mockPublisher)
         .historyClient(historyClient)
+        .datasetClient(datasetClient)
         .handler(TestHandler.create())
         .config(TestConfig.create())
         .build()

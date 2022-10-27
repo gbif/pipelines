@@ -43,6 +43,7 @@ public class HdfsViewCallbackIT {
   private static final long EXECUTION_ID = 1L;
   private static final MessagePublisherStub PUBLISHER = MessagePublisherStub.create();
   @Mock private static PipelinesHistoryClient historyClient;
+  @Mock private static DatasetClient datasetClient;
 
   @After
   public void after() {
@@ -62,6 +63,7 @@ public class HdfsViewCallbackIT {
             .publisher(PUBLISHER)
             .curator(CURATOR_SERVER.getCurator())
             .historyClient(historyClient)
+            .datasetClient(datasetClient)
             .commonHdfsViewCallback(CommonHdfsViewCallback.create(config, executor))
             .build();
 
@@ -181,6 +183,7 @@ public class HdfsViewCallbackIT {
             .publisher(PUBLISHER)
             .curator(CURATOR_SERVER.getCurator())
             .historyClient(historyClient)
+            .datasetClient(datasetClient)
             .commonHdfsViewCallback(CommonHdfsViewCallback.create(config, executor))
             .build();
 

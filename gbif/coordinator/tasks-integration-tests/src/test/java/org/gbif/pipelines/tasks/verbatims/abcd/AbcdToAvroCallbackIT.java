@@ -14,13 +14,22 @@ import java.util.Collections;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.retry.RetryOneTime;
+import org.apache.curator.test.TestingServer;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.messages.PipelinesAbcdMessage;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.MessagePublisherStub;
+import org.gbif.pipelines.tasks.verbatims.xml.XmlToAvroCallback;
 import org.gbif.pipelines.tasks.resources.CuratorServer;
 import org.gbif.pipelines.tasks.verbatims.xml.XmlToAvroConfiguration;
+import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.ws.client.ValidationWsClient;
 import org.junit.After;
@@ -43,8 +52,12 @@ public class AbcdToAvroCallbackIT {
   private static final String ABCD_LABEL = ABCD_TO_VERBATIM.getLabel();
   private static final MessagePublisherStub PUBLISHER = MessagePublisherStub.create();
   private static final ExecutorService EXECUTOR = Executors.newCachedThreadPool();
-  @Mock private PipelinesHistoryClient historyClient;
-  @Mock private ValidationWsClient validationClient;
+
+  @Mock private static PipelinesHistoryClient historyClient;
+  @Mock private static ValidationWsClient validationClient;
+  @Mock private static DatasetClient datasetClient;
+  private static CloseableHttpClient httpClient;
+  private static ExecutorService executor;
 
   @AfterClass
   public static void tearDown() {
@@ -65,15 +78,28 @@ public class AbcdToAvroCallbackIT {
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.xmlReaderParallelism = 4;
     config.archiveRepositorySubdir = "abcd";
+
     AbcdToAvroCallback callback =
-        new AbcdToAvroCallback(
-            CURATOR_SERVER.getCurator(),
-            config,
-            EXECUTOR,
-            PUBLISHER,
-            historyClient,
-            validationClient,
-            null);
+        AbcdToAvroCallback.builder()
+            .curator(curator)
+            .config(config)
+            .publisher(PUBLISHER)
+            .historyClient(historyClient)
+            .validationClient(validationClient)
+            .datasetClient(datasetClient)
+            .callback(
+                XmlToAvroCallback.builder()
+                    .config(config)
+                    .publisher(PUBLISHER)
+                    .curator(curator)
+                    .historyClient(historyClient)
+                    .validationClient(validationClient)
+                    .executor(EXECUTOR)
+                    .httpClient(httpClient)
+                    .datasetClient(datasetClient)
+                    .build())
+            .build();
+
     PipelinesAbcdMessage message =
         new PipelinesAbcdMessage(
             DATASET_UUID,
@@ -111,15 +137,28 @@ public class AbcdToAvroCallbackIT {
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.xmlReaderParallelism = 4;
     config.archiveRepositorySubdir = "abcd";
+
     AbcdToAvroCallback callback =
-        new AbcdToAvroCallback(
-            CURATOR_SERVER.getCurator(),
-            config,
-            EXECUTOR,
-            PUBLISHER,
-            historyClient,
-            validationClient,
-            null);
+        AbcdToAvroCallback.builder()
+            .curator(CURATOR_SERVER.getCurator())
+            .config(config)
+            .publisher(PUBLISHER)
+            .historyClient(historyClient)
+            .validationClient(validationClient)
+            .datasetClient(datasetClient)
+            .callback(
+                XmlToAvroCallback.builder()
+                    .config(config)
+                    .publisher(publisher)
+                    .curator(curator)
+                    .historyClient(historyClient)
+                    .validationClient(validationClient)
+                    .executor(EXECUTOR)
+                    .httpClient(httpClient)
+                    .datasetClient(datasetClient)
+                    .build())
+            .build();
+
     PipelinesAbcdMessage message =
         new PipelinesAbcdMessage(
             UUID.fromString(datasetKey),
@@ -155,15 +194,28 @@ public class AbcdToAvroCallbackIT {
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.xmlReaderParallelism = 4;
     config.archiveRepositorySubdir = "abcd";
+
     AbcdToAvroCallback callback =
-        new AbcdToAvroCallback(
-            CURATOR_SERVER.getCurator(),
-            config,
-            EXECUTOR,
-            PUBLISHER,
-            historyClient,
-            validationClient,
-            null);
+        AbcdToAvroCallback.builder()
+            .curator(curator)
+            .config(config)
+            .publisher(publisher)
+            .historyClient(historyClient)
+            .validationClient(validationClient)
+            .datasetClient(datasetClient)
+            .callback(
+                XmlToAvroCallback.builder()
+                    .config(config)
+                    .publisher(publisher)
+                    .curator(curator)
+                    .historyClient(historyClient)
+                    .validationClient(validationClient)
+                    .executor(executor)
+                    .httpClient(httpClient)
+                    .datasetClient(datasetClient)
+                    .build())
+            .build();
+
     PipelinesAbcdMessage message =
         new PipelinesAbcdMessage(
             DATASET_UUID,

@@ -22,7 +22,6 @@ SELECT
   recordedBy, recordedByID,
   ext_multimedia
 FROM occurrence
-WHERE speciesKey IS NOT NULL
 """
 
   case class SimpleOccurrence(gbifID: String, decimalLatitude: Double)

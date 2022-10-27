@@ -52,7 +52,14 @@ public class IdentifierCallbackIT {
     config.pipelinesConfig = "pipelines.yaml";
 
     IdentifierCallback callback =
-        new IdentifierCallback(config, PUBLISHER, CURATOR_SERVER.getCurator(), historyClient, null);
+        IdentifierCallback.builder()
+            .config(config)
+            .publisher(PUBLISHER)
+            .curator(CURATOR_SERVER.getCurator())
+            .historyClient(historyClient)
+            .httpClient(httpClient)
+            .datasetClient(datasetClient)
+            .build();
 
     UUID uuid = UUID.fromString(DATASET_UUID);
     int attempt = 60;
@@ -117,8 +124,14 @@ public class IdentifierCallbackIT {
     CloseableHttpClient closeableHttpClient = new CloseableHttpClientStub(200, "[]");
 
     IdentifierCallback callback =
-        new IdentifierCallback(
-            config, PUBLISHER, CURATOR_SERVER.getCurator(), historyClient, closeableHttpClient);
+        IdentifierCallback.builder()
+            .config(config)
+            .publisher(PUBLISHER)
+            .curator(CURATOR_SERVER.getCurator())
+            .historyClient(historyClient)
+            .httpClient(closeableHttpClient)
+            .datasetClient(datasetClient)
+            .build();
 
     UUID uuid = UUID.fromString(DATASET_UUID);
     int attempt = 60;

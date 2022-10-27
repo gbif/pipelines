@@ -39,8 +39,10 @@ public class InterpretationCallbackIT {
   private static final String DATASET_UUID = "9bed66b3-4caa-42bb-9c93-71d7ba109dad";
   private static final long EXECUTION_ID = 1L;
   private static final MessagePublisherStub PUBLISHER = MessagePublisherStub.create();
+  @Mock private static DatasetClient datasetClient;
   @Mock private static PipelinesHistoryClient historyClient;
   @Mock private static ValidationWsClient validationClient;
+  @Mock private static CloseableHttpClient httpClient;
 
   @After
   public void after() {
@@ -59,14 +61,16 @@ public class InterpretationCallbackIT {
     ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     InterpretationCallback callback =
-        new InterpretationCallback(
-            config,
-            PUBLISHER,
-            CURATOR_SERVER.getCurator(),
-            historyClient,
-            validationClient,
-            null,
-            executorService);
+        InterpretationCallback.builder()
+            .config(config)
+            .publisher(PUBLISHER)
+            .curator(CURATOR_SERVER.getCurator())
+            .historyClient(historyClient)
+            .validationClient(validationClient)
+            .httpClient(httpClient)
+            .executor(executorService)
+            .datasetClient(datasetClient)
+            .build();
 
     UUID uuid = UUID.fromString(DATASET_UUID);
     int attempt = 60;
@@ -133,14 +137,16 @@ public class InterpretationCallbackIT {
     CloseableHttpClient closeableHttpClient = new CloseableHttpClientStub(200, "[]");
 
     InterpretationCallback callback =
-        new InterpretationCallback(
-            config,
-            PUBLISHER,
-            CURATOR_SERVER.getCurator(),
-            historyClient,
-            validationClient,
-            closeableHttpClient,
-            executorService);
+        InterpretationCallback.builder()
+            .config(config)
+            .publisher(PUBLISHER)
+            .curator(CURATOR_SERVER.getCurator())
+            .historyClient(historyClient)
+            .validationClient(validationClient)
+            .httpClient(closeableHttpClient)
+            .executor(executorService)
+            .datasetClient(datasetClient)
+            .build();
 
     UUID uuid = UUID.fromString(DATASET_UUID);
     int attempt = 60;

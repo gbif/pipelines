@@ -12,7 +12,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.file.CodecFactory;
@@ -36,12 +36,13 @@ import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.DwcaUtils;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
+import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.ws.client.ValidationWsClient;
 
 /** Callback which is called when the {@link PipelinesDwcaMessage} is received. */
 @Slf4j
-@AllArgsConstructor
+@Builder
 public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMessage>
     implements StepHandler<PipelinesDwcaMessage, PipelinesVerbatimMessage> {
 
@@ -49,6 +50,7 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
   private final MessagePublisher publisher;
   private final CuratorFramework curator;
   private final PipelinesHistoryClient historyClient;
+  private final DatasetClient datasetClient;
   private final ValidationWsClient validationClient;
 
   @Override
@@ -59,6 +61,7 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
 
     PipelinesCallback.<PipelinesDwcaMessage, PipelinesVerbatimMessage>builder()
         .historyClient(historyClient)
+        .datasetClient(datasetClient)
         .validationClient(validationClient)
         .config(config)
         .curator(curator)

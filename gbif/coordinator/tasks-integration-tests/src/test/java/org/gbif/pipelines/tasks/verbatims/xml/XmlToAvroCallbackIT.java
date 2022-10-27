@@ -45,6 +45,7 @@ public class XmlToAvroCallbackIT {
   private static final ExecutorService EXECUTOR = Executors.newCachedThreadPool();
   @Mock private PipelinesHistoryClient historyClient;
   @Mock private ValidationWsClient validationClient;
+  @Mock private static DatasetClient datasetClient;
 
   @AfterClass
   public static void tearDown() {
@@ -65,15 +66,18 @@ public class XmlToAvroCallbackIT {
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.xmlReaderParallelism = 4;
     config.archiveRepositorySubdir = "xml";
+
     XmlToAvroCallback callback =
-        new XmlToAvroCallback(
-            config,
-            PUBLISHER,
-            CURATOR_SERVER.getCurator(),
-            historyClient,
-            validationClient,
-            EXECUTOR,
-            null);
+        XmlToAvroCallback.builder()
+            .config(config)
+            .publisher(PUBLISHER)
+            .curator(CURATOR_SERVER.getCurator())
+            .historyClient(historyClient)
+            .validationClient(validationClient)
+            .executor(EXECUTOR)
+            .httpClient(null)
+            .datasetClient(datasetClient)
+            .build();
 
     PipelinesXmlMessage message =
         new PipelinesXmlMessage(
@@ -112,15 +116,18 @@ public class XmlToAvroCallbackIT {
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.xmlReaderParallelism = 4;
     config.archiveRepositorySubdir = "xml";
+
     XmlToAvroCallback callback =
-        new XmlToAvroCallback(
-            config,
-            PUBLISHER,
-            CURATOR_SERVER.getCurator(),
-            historyClient,
-            validationClient,
-            EXECUTOR,
-            null);
+        XmlToAvroCallback.builder()
+            .config(config)
+            .publisher(PUBLISHER)
+            .curator(CURATOR_SERVER.getCurator())
+            .historyClient(historyClient)
+            .validationClient(validationClient)
+            .executor(EXECUTOR)
+            .httpClient(httpClient)
+            .datasetClient(datasetClient)
+            .build();
 
     PipelinesXmlMessage message =
         new PipelinesXmlMessage(
@@ -160,15 +167,19 @@ public class XmlToAvroCallbackIT {
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.xmlReaderParallelism = 4;
     config.archiveRepositorySubdir = "xml";
+
     XmlToAvroCallback callback =
-        new XmlToAvroCallback(
-            config,
-            PUBLISHER,
-            CURATOR_SERVER.getCurator(),
-            historyClient,
-            validationClient,
-            EXECUTOR,
-            null);
+        XmlToAvroCallback.builder()
+            .config(config)
+            .publisher(PUBLISHER)
+            .curator(CURATOR_SERVER.getCurator())
+            .historyClient(historyClient)
+            .validationClient(validationClient)
+            .executor(EXECUTOR)
+            .httpClient(httpClient)
+            .datasetClient(datasetClient)
+            .build();
+
     PipelinesXmlMessage message =
         new PipelinesXmlMessage(
             datasetKey,
