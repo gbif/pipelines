@@ -5,12 +5,9 @@ import static org.gbif.pipelines.core.parsers.clustering.RelationshipAssertion.F
 
 import com.google.common.annotations.VisibleForTesting;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.gbif.pipelines.core.parsers.clustering.RelationshipAssertion.FeatureAssertion;
 
 /** Generates relationship assertions for occurrence records. */
@@ -21,7 +18,12 @@ public class OccurrenceRelationships {
   private static final int THRESHOLD_IN_DAYS = 1;
 
   // A list of IDs that are excluded for comparison
-  private static final List<String> idOmitList = newIdOmitList();
+  private static final Set<String> idOmitList = newIdOmitList();
+
+  private static final Set<String> SPECIMEN_BORS =
+      new HashSet<>(
+          Arrays.asList(
+              "PRESERVED_SPECIMEN", "LIVING_SPECIMEN", "FOSSIL_SPECIMEN", "MATERIAL_CITATION"));
 
   /** Will either generate an assertion with justification or return null. */
   public static <T extends OccurrenceFeatures> RelationshipAssertion<T> generate(T o1, T o2) {
@@ -33,6 +35,7 @@ public class OccurrenceRelationships {
     // generate "facts"
     compareTaxa(o1, o2, assertion);
     compareIdentifiers(o1, o2, assertion);
+    compareCatalogNumbers(o1, o2, assertion); // more specific than identifiers
     compareDates(o1, o2, assertion);
     compareCollectors(o1, o2, assertion);
     compareCoordinates(o1, o2, assertion);
@@ -82,6 +85,13 @@ public class OccurrenceRelationships {
             NON_CONFLICTING_DATE,
             IDENTIFIERS_OVERLAP
           });
+    }
+
+    // Relax rules to accommodate well-formed otherCatalogNumber assertions
+    // See https://github.com/gbif/pipelines/issues/781
+    if (SPECIMEN_BORS.contains(o1.getBasisOfRecord())
+        && SPECIMEN_BORS.contains(o2.getBasisOfRecord())) {
+      passConditions.add(new FeatureAssertion[] {OTHER_CATALOG_NUMBERS_OVERLAP});
     }
 
     // always exclude things on different location or date
@@ -238,25 +248,76 @@ public class OccurrenceRelationships {
   static <T extends OccurrenceFeatures> void compareIdentifiers(
       OccurrenceFeatures o1, OccurrenceFeatures o2, RelationshipAssertion<T> assertion) {
     // ignore case and [-_., ] chars
-    // otherCatalogNumbers is not parsed, but a good addition could be to explore that
     Set<String> intersection =
         o1.listIdentifiers().stream()
-            .filter(Objects::nonNull)
             .map(OccurrenceRelationships::normalizeID)
+            .filter(Objects::nonNull)
             .collect(Collectors.toSet());
 
     Set<String> toMatch =
         o2.listIdentifiers().stream()
-            .filter(Objects::nonNull)
             .map(OccurrenceRelationships::normalizeID)
+            .filter(Objects::nonNull)
             .collect(Collectors.toSet());
 
     intersection.retainAll(toMatch);
-    intersection.removeAll(idOmitList);
+    Set<String> filtered =
+        intersection.stream().filter(c -> !idOmitList.contains(c)).collect(Collectors.toSet());
 
-    if (!intersection.isEmpty()) {
+    if (!filtered.isEmpty()) {
       assertion.collect(IDENTIFIERS_OVERLAP);
     }
+  }
+
+  /**
+   * Detects if either of the catalogNumbers formatted in various ways (CN, IC:CN and IC:CC:CN) is
+   * present in the other records otherCatalogNumber. This is intended to detect clearly defined
+   * assertion where one publisher provides e.g. otherCatalogNumber=KU:MAMM:X123 and the other
+   * record carries those values in the individual fields.
+   */
+  static <T extends OccurrenceFeatures> void compareCatalogNumbers(
+      OccurrenceFeatures o1, OccurrenceFeatures o2, RelationshipAssertion<T> assertion) {
+
+    if (catalogNumberOverlaps(
+            o1.getInstitutionCode(),
+            o1.getCollectionCode(),
+            o1.getCatalogNumber(),
+            o2.getOtherCatalogNumbers())
+        || catalogNumberOverlaps(
+            o2.getInstitutionCode(),
+            o2.getCollectionCode(),
+            o2.getCatalogNumber(),
+            o1.getOtherCatalogNumbers())) {
+      assertion.collect(OTHER_CATALOG_NUMBERS_OVERLAP);
+    }
+  }
+
+  /**
+   * Returns true if the ic:cc:cn and provided target overlaps, after formatting rules are applied:
+   *
+   * <ol>
+   *   <li>The target codes may not start with the common Cat. or Cat# prefixes (ignoring case)
+   *   <li>Whitespace and delimited characters such as :/_ etc are ignored in the comparison
+   * </ol>
+   */
+  static boolean catalogNumberOverlaps(String ic, String cc, String cn, List<String> target) {
+    if (target == null) return false;
+
+    Set<String> codes =
+        Stream.of(concatIfEligible(":", ic, cc, cn))
+            .map(OccurrenceRelationships::normalizeID)
+            .filter(c -> isEligibleCode(c) && !isNumeric(c))
+            .collect(Collectors.toSet());
+
+    Set<String> targetCodes =
+        target.stream()
+            .map(c -> c.replaceFirst("^[Cc]at[.#]", "")) // remove common prefixes of Cat. Cat#
+            .map(OccurrenceRelationships::normalizeID)
+            .filter(c -> isEligibleCode(c) && !isNumeric(c))
+            .collect(Collectors.toSet());
+
+    targetCodes.retainAll(codes);
+    return !targetCodes.isEmpty();
   }
 
   static boolean equalsAndNotNull(Object o1, Object o2) {
@@ -306,34 +367,86 @@ public class OccurrenceRelationships {
     return null;
   }
 
+  /** Returns a concatenated string only when all atoms are eligible, otherwise null. */
+  public static String concatIfEligible(String separator, String... s) {
+    if (Arrays.stream(s).allMatch(a -> isEligibleCode(a))) {
+      return String.join(
+          separator,
+          Arrays.stream(s).map(OccurrenceRelationships::normalizeID).collect(Collectors.toList()));
+    } else {
+      return null;
+    }
+  }
+
+  /** Return the code if eligible or null */
+  public static String hashOrNull(String code, boolean allowNumeric) {
+    if (allowNumeric) {
+      return isEligibleCode(code) ? OccurrenceRelationships.normalizeID(code) : null;
+    } else {
+      return isEligibleCode(code) && !isNumeric(code)
+          ? OccurrenceRelationships.normalizeID(code)
+          : null;
+    }
+  }
+
+  /** Return true if the code is not in the exclusion list or null. */
+  public static boolean isEligibleCode(String code) {
+    if (code == null
+        || code.length() == 0
+        || idOmitList.contains(OccurrenceRelationships.normalizeID(code))) {
+      return false;
+    } else {
+      return true;
+    }
+  }
+
+  public static boolean isNumeric(String s) {
+    if (s == null) return false;
+    try {
+      Double.parseDouble(s);
+      return true;
+    } catch (NumberFormatException nfe) {
+      return false;
+    }
+  }
+
   /** Creates a new exclusion list for IDs. See https://github.com/gbif/pipelines/issues/309. */
-  public static List<String> newIdOmitList() {
-    return Arrays.asList(
-        null,
-        "",
-        "[]",
-        "*",
-        "--",
-        normalizeID("NO APLICA"),
-        normalizeID("NA"),
-        normalizeID("NO DISPONIBLE"),
-        normalizeID("NO DISPONIBL"),
-        normalizeID("NO NUMBER"),
-        normalizeID("UNKNOWN"),
-        normalizeID("s.n."),
-        normalizeID("Unknown s.n."),
-        normalizeID("Unreadable s.n."),
-        normalizeID("se kommentar"),
-        normalizeID("inget id"),
-        normalizeID("x"),
-        normalizeID("Anonymous s.n."),
-        normalizeID("Collector Number: s.n."),
-        normalizeID("No Number"),
-        normalizeID("Anonymous"),
-        normalizeID("None"),
-        normalizeID("No Field Number"),
-        normalizeID("not recorded"),
-        normalizeID("s.l."),
-        normalizeID("s.c."));
+  public static Set<String> newIdOmitList() {
+    return new HashSet(
+        Arrays.asList(
+            null,
+            "",
+            "[]",
+            "*",
+            "--",
+            normalizeID("NO APLICA"),
+            normalizeID("NA"),
+            normalizeID("NO DISPONIBLE"),
+            normalizeID("NO DISPONIBL"),
+            normalizeID("NO NUMBER"),
+            normalizeID("UNKNOWN"),
+            normalizeID("SN"),
+            normalizeID("ANONYMOUS"),
+            normalizeID("NONE"),
+            normalizeID("s.n."),
+            normalizeID("Unknown s.n."),
+            normalizeID("Unreadable s.n."),
+            normalizeID("se kommentar"),
+            normalizeID("inget id"),
+            normalizeID("x"),
+            normalizeID("Anonymous s.n."),
+            normalizeID("Collector Number: s.n."),
+            normalizeID("No Number"),
+            normalizeID("Anonymous"),
+            normalizeID("None"),
+            normalizeID("No Field Number"),
+            normalizeID("not recorded"),
+            normalizeID("s.l."),
+            normalizeID("s.c."),
+            normalizeID("present"),
+            normalizeID("Undef/entomo"),
+            normalizeID("s/nº"),
+            normalizeID("undef"),
+            normalizeID("no data")));
   }
 }

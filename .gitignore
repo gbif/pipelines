@@ -17,6 +17,7 @@ minicluster
 release.properties
 sdks/models/src/main/avro/table/
 examples/dwca-to-elasticsearch/configs/*.json
+**/dependency-reduced-pom.xml
 
 # la-pipelines debian package
 livingatlas/debian/*.debhelper
