@@ -65,8 +65,6 @@ public class TermUtils {
           GbifTerm.genusKey,
           GbifTerm.subgenusKey,
           GbifTerm.speciesKey,
-          GbifTerm.datasetKey,
-          GbifTerm.publishingCountry,
           GbifTerm.lastInterpreted,
           DcTerm.modified,
           DwcTerm.coordinateUncertaintyInMeters,
