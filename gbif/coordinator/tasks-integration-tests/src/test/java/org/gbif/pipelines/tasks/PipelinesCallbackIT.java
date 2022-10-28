@@ -28,6 +28,7 @@ import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
 import org.gbif.crawler.constants.CrawlerNodePaths;
 import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
 import org.gbif.pipelines.common.configs.BaseConfiguration;
+import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -45,8 +46,8 @@ public class PipelinesCallbackIT {
   private static CuratorFramework curator;
   private static TestingServer server;
 
+  @Mock private DatasetClient datasetClient;
   @Mock private PipelinesHistoryClient historyClient;
-
   @Mock private MessagePublisher mockPublisher;
 
   @BeforeClass
@@ -98,6 +99,7 @@ public class PipelinesCallbackIT {
         .stepType(nextStepName)
         .publisher(null)
         .historyClient(historyClient)
+        .datasetClient(datasetClient)
         .handler(TestHandler.create())
         .config(TestConfig.create())
         .build()
@@ -113,6 +115,7 @@ public class PipelinesCallbackIT {
         .stepType(nextStepName)
         .publisher(null)
         .historyClient(historyClient)
+        .datasetClient(datasetClient)
         .handler(TestHandler.create())
         .config(TestConfig.create())
         .build()
@@ -169,6 +172,7 @@ public class PipelinesCallbackIT {
         .stepType(nextStepName)
         .publisher(mockPublisher)
         .historyClient(historyClient)
+        .datasetClient(datasetClient)
         .handler(TestHandler.create())
         .config(TestConfig.create())
         .build()
@@ -210,6 +214,7 @@ public class PipelinesCallbackIT {
         .stepType(nextStepName)
         .publisher(mockPublisher)
         .historyClient(historyClient)
+        .datasetClient(datasetClient)
         .handler(TestHandler.create())
         .config(TestConfig.create())
         .build()
@@ -249,6 +254,7 @@ public class PipelinesCallbackIT {
         .stepType(nextStepName)
         .publisher(mockPublisher)
         .historyClient(historyClient)
+        .datasetClient(datasetClient)
         .handler(TestExceptionHandler.create())
         .config(TestConfig.create())
         .build()
@@ -298,6 +304,7 @@ public class PipelinesCallbackIT {
         .stepType(nextStepName)
         .publisher(mockPublisher)
         .historyClient(historyClient)
+        .datasetClient(datasetClient)
         .handler(TestHandler.create())
         .config(TestConfig.create())
         .build()
@@ -338,6 +345,7 @@ public class PipelinesCallbackIT {
         .stepType(nextStepName)
         .publisher(mockPublisher)
         .historyClient(historyClient)
+        .datasetClient(datasetClient)
         .handler(TestHandler.create())
         .config(TestConfig.create())
         .build()

@@ -43,7 +43,6 @@
           </execution>
         </executions>
       </plugin>
-
       <!--
         This configuration is required to override the version in the GBIF mother POM
         which causes OOM issues due to its use of forking.
@@ -56,15 +55,6 @@
           <systemPropertyVariables>
             <pipelinesTestYamlConfigFile>src/test/resources/pipelines.yaml</pipelinesTestYamlConfigFile>
           </systemPropertyVariables>
-          <forkCount>1</forkCount>
-          <reuseForks>false</reuseForks>
-          <redirectTestOutputToFile>true</redirectTestOutputToFile>
-          <argLine>${surefireArgLine}</argLine>
-          <runOrder>random</runOrder>
-          <trimStackTrace>false</trimStackTrace>
-          <excludes>
-            <exclude>**/*IT.java</exclude>
-          </excludes>
         </configuration>
       </plugin>
       <plugin>

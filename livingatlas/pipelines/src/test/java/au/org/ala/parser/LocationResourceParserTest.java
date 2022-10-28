@@ -18,7 +18,7 @@ public class LocationResourceParserTest {
   @Before
   public void setup() {
     // use the files in /resources
-    LocationInfoConfig liConfig = new LocationInfoConfig(null, null, null);
+    LocationInfoConfig liConfig = new LocationInfoConfig();
     alaConfig = new ALAPipelinesConfig();
     alaConfig.setLocationInfoConfig(liConfig);
   }

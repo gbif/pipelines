@@ -13,7 +13,9 @@ import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.pipelines.tasks.ServiceFactory;
+import org.gbif.pipelines.tasks.verbatims.xml.XmlToAvroCallback;
 import org.gbif.pipelines.tasks.verbatims.xml.XmlToAvroConfiguration;
+import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.ws.client.ValidationWsClient;
 
@@ -54,6 +56,8 @@ public class AbcdToAvroService extends AbstractIdleService {
     ValidationWsClient validationClient =
         ServiceFactory.createValidationWsClient(config.stepConfig);
 
+    DatasetClient datasetClient = ServiceFactory.createDatasetClient(config.stepConfig);
+
     HttpClient httpClient =
         HttpClients.custom()
             .setDefaultRequestConfig(
@@ -61,8 +65,26 @@ public class AbcdToAvroService extends AbstractIdleService {
             .build();
 
     AbcdToAvroCallback callback =
-        new AbcdToAvroCallback(
-            curator, config, executor, publisher, historyClient, validationClient, httpClient);
+        AbcdToAvroCallback.builder()
+            .curator(curator)
+            .config(config)
+            .publisher(publisher)
+            .historyClient(historyClient)
+            .validationClient(validationClient)
+            .datasetClient(datasetClient)
+            .callback(
+                XmlToAvroCallback.builder()
+                    .config(config)
+                    .publisher(publisher)
+                    .curator(curator)
+                    .historyClient(historyClient)
+                    .validationClient(validationClient)
+                    .executor(executor)
+                    .httpClient(httpClient)
+                    .datasetClient(datasetClient)
+                    .build())
+            .build();
+
     listener.listen(c.queueName, c.poolSize, callback);
   }
 

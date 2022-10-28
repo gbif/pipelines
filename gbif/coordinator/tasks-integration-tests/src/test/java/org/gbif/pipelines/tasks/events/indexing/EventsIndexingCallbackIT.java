@@ -12,9 +12,7 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.RetryOneTime;
 import org.apache.curator.test.TestingServer;
-import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.messages.PipelinesEventsInterpretedMessage;
@@ -22,13 +20,17 @@ import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.utils.ZookeeperUtils;
 import org.gbif.pipelines.tasks.MessagePublisherStub;
+import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mockito.Mockito;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnitRunner;
 
+@RunWith(MockitoJUnitRunner.class)
 public class EventsIndexingCallbackIT {
 
   private static final String EVENTS_INDEXED_LABEL = EVENTS_INTERPRETED_TO_INDEX.getLabel();
@@ -37,8 +39,9 @@ public class EventsIndexingCallbackIT {
   private static CuratorFramework curator;
   private static TestingServer server;
   private static MessagePublisherStub publisher;
-  private static PipelinesHistoryClient historyClient;
-  private static CloseableHttpClient httpClient;
+  @Mock private static DatasetClient datasetClient;
+  @Mock private static PipelinesHistoryClient historyClient;
+  @Mock private static CloseableHttpClient httpClient;
 
   @BeforeClass
   public static void setUp() throws Exception {
@@ -51,12 +54,6 @@ public class EventsIndexingCallbackIT {
             .build();
     curator.start();
     publisher = MessagePublisherStub.create();
-    historyClient = Mockito.mock(PipelinesHistoryClient.class);
-    httpClient =
-        HttpClients.custom()
-            .setDefaultRequestConfig(
-                RequestConfig.custom().setConnectTimeout(60_000).setSocketTimeout(60_000).build())
-            .build();
   }
 
   @AfterClass
@@ -80,7 +77,14 @@ public class EventsIndexingCallbackIT {
     config.pipelinesConfig = "pipelines.yaml";
 
     EventsIndexingCallback callback =
-        new EventsIndexingCallback(config, publisher, curator, httpClient, historyClient);
+        EventsIndexingCallback.builder()
+            .config(config)
+            .publisher(publisher)
+            .curator(curator)
+            .httpClient(httpClient)
+            .historyClient(historyClient)
+            .datasetClient(datasetClient)
+            .build();
 
     UUID uuid = UUID.fromString(DATASET_UUID);
     int attempt = 60;

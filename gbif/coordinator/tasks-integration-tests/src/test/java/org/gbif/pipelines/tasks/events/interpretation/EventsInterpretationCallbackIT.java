@@ -25,14 +25,19 @@ import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.utils.ZookeeperUtils;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.MessagePublisherStub;
+import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mockito.Mockito;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnitRunner;
 
+@RunWith(MockitoJUnitRunner.class)
 public class EventsInterpretationCallbackIT {
 
   private static final String EVENTS_INTERPRETED_LABEL = EVENTS_VERBATIM_TO_INTERPRETED.getLabel();
@@ -41,7 +46,8 @@ public class EventsInterpretationCallbackIT {
   private static CuratorFramework curator;
   private static TestingServer server;
   private static MessagePublisherStub publisher;
-  private static PipelinesHistoryClient historyClient;
+  @Mock private static PipelinesHistoryClient historyClient;
+  @Mock private static DatasetClient datasetClient;
 
   @BeforeClass
   public static void setUp() throws Exception {
@@ -54,7 +60,6 @@ public class EventsInterpretationCallbackIT {
             .build();
     curator.start();
     publisher = MessagePublisherStub.create();
-    historyClient = Mockito.mock(PipelinesHistoryClient.class);
   }
 
   @AfterClass
@@ -78,7 +83,16 @@ public class EventsInterpretationCallbackIT {
     config.pipelinesConfig = "pipelines.yaml";
 
     EventsInterpretationCallback callback =
-        new EventsInterpretationCallback(config, publisher, curator, historyClient);
+        EventsInterpretationCallback.builder()
+            .config(config)
+            .publisher(publisher)
+            .curator(curator)
+            .historyClient(historyClient)
+            .datasetClient(datasetClient)
+            .hdfsConfigs(
+                HdfsConfigs.create(
+                    config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig))
+            .build();
 
     UUID uuid = UUID.fromString(DATASET_UUID);
     int attempt = 60;

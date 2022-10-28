@@ -13,6 +13,7 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.pipelines.tasks.ServiceFactory;
+import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 
 /** A service which listens to the {@link PipelinesVerbatimMessage } and perform interpretation */
@@ -42,6 +43,8 @@ public class IdentifierService extends AbstractIdleService {
     PipelinesHistoryClient historyClient =
         ServiceFactory.createPipelinesHistoryClient(config.stepConfig);
 
+    DatasetClient datasetClient = ServiceFactory.createDatasetClient(config.stepConfig);
+
     httpClient =
         HttpClients.custom()
             .setDefaultRequestConfig(
@@ -49,7 +52,14 @@ public class IdentifierService extends AbstractIdleService {
             .build();
 
     IdentifierCallback callback =
-        new IdentifierCallback(config, publisher, curator, historyClient, httpClient);
+        IdentifierCallback.builder()
+            .config(config)
+            .publisher(publisher)
+            .curator(curator)
+            .historyClient(historyClient)
+            .httpClient(httpClient)
+            .datasetClient(datasetClient)
+            .build();
 
     listener.listen(c.queueName, callback.getRouting(), c.poolSize, callback);
   }

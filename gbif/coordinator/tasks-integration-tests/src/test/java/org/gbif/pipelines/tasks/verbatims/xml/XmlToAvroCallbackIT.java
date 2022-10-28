@@ -19,6 +19,9 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.RetryOneTime;
 import org.apache.curator.test.TestingServer;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.gbif.api.model.crawler.FinishReason;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.messages.PipelinesXmlMessage;
@@ -27,14 +30,18 @@ import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.common.utils.ZookeeperUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.MessagePublisherStub;
+import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.ws.client.ValidationWsClient;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mockito.Mockito;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnitRunner;
 
+@RunWith(MockitoJUnitRunner.class)
 public class XmlToAvroCallbackIT {
 
   private static final String AVRO = "/verbatim.avro";
@@ -47,8 +54,10 @@ public class XmlToAvroCallbackIT {
   private static CuratorFramework curator;
   private static TestingServer server;
   private static MessagePublisherStub publisher;
-  private static PipelinesHistoryClient historyClient;
-  private static ValidationWsClient validationClient;
+  @Mock private static DatasetClient datasetClient;
+  @Mock private static PipelinesHistoryClient historyClient;
+  @Mock private static ValidationWsClient validationClient;
+  private static CloseableHttpClient httpClient;
   private static ExecutorService executor;
 
   @BeforeClass
@@ -64,10 +73,12 @@ public class XmlToAvroCallbackIT {
     curator.start();
 
     executor = Executors.newSingleThreadExecutor();
-
     publisher = MessagePublisherStub.create();
-    historyClient = Mockito.mock(PipelinesHistoryClient.class);
-    validationClient = Mockito.mock(ValidationWsClient.class);
+    httpClient =
+        HttpClients.custom()
+            .setDefaultRequestConfig(
+                RequestConfig.custom().setConnectTimeout(60_000).setSocketTimeout(60_000).build())
+            .build();
   }
 
   @AfterClass
@@ -92,9 +103,18 @@ public class XmlToAvroCallbackIT {
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.xmlReaderParallelism = 4;
     config.archiveRepositorySubdir = "xml";
+
     XmlToAvroCallback callback =
-        new XmlToAvroCallback(
-            config, publisher, curator, historyClient, validationClient, executor, null);
+        XmlToAvroCallback.builder()
+            .config(config)
+            .publisher(publisher)
+            .curator(curator)
+            .historyClient(historyClient)
+            .validationClient(validationClient)
+            .executor(executor)
+            .httpClient(null)
+            .datasetClient(datasetClient)
+            .build();
 
     PipelinesXmlMessage message =
         new PipelinesXmlMessage(
@@ -133,9 +153,18 @@ public class XmlToAvroCallbackIT {
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.xmlReaderParallelism = 4;
     config.archiveRepositorySubdir = "xml";
+
     XmlToAvroCallback callback =
-        new XmlToAvroCallback(
-            config, publisher, curator, historyClient, validationClient, executor, null);
+        XmlToAvroCallback.builder()
+            .config(config)
+            .publisher(publisher)
+            .curator(curator)
+            .historyClient(historyClient)
+            .validationClient(validationClient)
+            .executor(executor)
+            .httpClient(httpClient)
+            .datasetClient(datasetClient)
+            .build();
 
     PipelinesXmlMessage message =
         new PipelinesXmlMessage(
@@ -175,9 +204,19 @@ public class XmlToAvroCallbackIT {
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.xmlReaderParallelism = 4;
     config.archiveRepositorySubdir = "xml";
+
     XmlToAvroCallback callback =
-        new XmlToAvroCallback(
-            config, publisher, curator, historyClient, validationClient, executor, null);
+        XmlToAvroCallback.builder()
+            .config(config)
+            .publisher(publisher)
+            .curator(curator)
+            .historyClient(historyClient)
+            .validationClient(validationClient)
+            .executor(executor)
+            .httpClient(httpClient)
+            .datasetClient(datasetClient)
+            .build();
+
     PipelinesXmlMessage message =
         new PipelinesXmlMessage(
             datasetKey,
