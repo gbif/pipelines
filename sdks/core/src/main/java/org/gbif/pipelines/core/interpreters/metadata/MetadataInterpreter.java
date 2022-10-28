@@ -1,6 +1,5 @@
 package org.gbif.pipelines.core.interpreters.metadata;
 
-import com.google.common.collect.Lists;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -60,7 +59,10 @@ public class MetadataInterpreter {
         List<Network> networkList = client.getNetworkFromDataset(datasetId);
         if (networkList != null && !networkList.isEmpty()) {
           mdr.setNetworkKeys(
-              networkList.stream().map(n -> n.getKey().toString()).collect(Collectors.toList()));
+              networkList.stream()
+                  .filter(x -> x.getKey() != null)
+                  .map(n -> n.getKey().toString())
+                  .collect(Collectors.toList()));
         }
 
         Organization organization = client.getOrganization(dataset.getPublishingOrganizationKey());
@@ -96,18 +98,11 @@ public class MetadataInterpreter {
 
   // Copied from CrawlerCoordinatorServiceImpl
   private static List<Endpoint> prioritySortEndpoints(List<Endpoint> endpoints) {
-
     // Filter out all Endpoints that we can't crawl
-    List<Endpoint> result = Lists.newArrayList();
-    for (Endpoint endpoint : endpoints) {
-      if (EndpointPriorityComparator.PRIORITIES.contains(endpoint.getType())) {
-        result.add(endpoint);
-      }
-    }
-
-    // Sort the remaining ones
-    result.sort(new EndpointPriorityComparator());
-    return result;
+    return endpoints.stream()
+        .filter(endpoint -> EndpointPriorityComparator.PRIORITIES.contains(endpoint.getType()))
+        .sorted(new EndpointPriorityComparator())
+        .collect(Collectors.toList());
   }
 
   /** Sets attempt number as crawlId */
