@@ -1,5 +1,7 @@
 package org.gbif.pipelines.tasks.camtrapdp;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Date;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
@@ -11,10 +13,10 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.CamtrapDpDownloadFinishedMessage;
 import org.gbif.common.messaging.api.messages.DwcaDownloadFinishedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
-import org.gbif.common.messaging.api.messages.PipelinesCamtrapDpMessage;
 import org.gbif.registry.ws.client.DatasetClient;
+import org.gbif.utils.file.CompressionUtil;
 
-/** Callback which is called when the {@link PipelinesCamtrapDpMessage} is received. */
+/** Callback which is called when the {@link CamtrapDpDownloadFinishedMessage} is received. */
 @Slf4j
 @AllArgsConstructor
 public class CamtrapDpToDwcaCallback
@@ -30,8 +32,21 @@ public class CamtrapDpToDwcaCallback
     notifyNextStep(message);
   }
 
+  @SneakyThrows
+  private void decompress(CamtrapDpDownloadFinishedMessage message) {
+    String datasetKey = message.getDatasetUuid().toString();
+    Path source =
+        Paths.get(
+            config.archiveRepository,
+            datasetKey,
+            datasetKey + "." + message.getAttempt() + ".camtrapdp");
+    Path target = Paths.get(config.archiveRepository, "unpacked", datasetKey);
+    CompressionUtil.decompressFile(target.toFile(), source.toFile(), true);
+  }
+
   /** Calls the Camtraptor Service to transform the data package into DwC-A. */
   private void toDwca(CamtrapDpDownloadFinishedMessage message) {
+    decompress(message);
     Dataset dataset = datasetClient.get(message.getDatasetUuid());
     CamtraptorWsClient camtraptorWsClient = new CamtraptorWsClient(config.camtraptorWsUrl);
     camtraptorWsClient.toDwca(dataset.getKey(), dataset.getTitle());
@@ -60,6 +75,6 @@ public class CamtrapDpToDwcaCallback
   }
 
   public String getRouting() {
-    return PipelinesCamtrapDpMessage.ROUTING_KEY;
+    return CamtrapDpDownloadFinishedMessage.ROUTING_KEY;
   }
 }
