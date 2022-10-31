@@ -12,7 +12,6 @@ import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.CamtrapDpDownloadFinishedMessage;
 import org.gbif.common.messaging.api.messages.DwcaDownloadFinishedMessage;
-import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
 import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.utils.file.CompressionUtil;
 
@@ -55,10 +54,7 @@ public class CamtrapDpToDwcaCallback
   /** Creates and sends a message to the next step: DwC-A validation. */
   @SneakyThrows
   private void notifyNextStep(CamtrapDpDownloadFinishedMessage message) {
-    publisher.send(
-        new PipelinesBalancerMessage(
-            DwcaDownloadFinishedMessage.class.getSimpleName(),
-            createOutgoingMessage(message).toString()));
+    publisher.send(createOutgoingMessage(message));
   }
 
   /** Builds the message to be sent to the next processing stage: DwC-A validation. */
