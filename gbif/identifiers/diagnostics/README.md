@@ -1,5 +1,19 @@
 ## How to use:
 
+### Please use pipelines-gbif-id-migrator script from a crawler vm to migrate GBIF identifiers:
+
+Keys:
+- -f - Registry source datasetKey (usually identical for from-dataset and to-dataset keys)
+- -t - Registry new datasetKey (usually identical for from-dataset and to-dataset keys)
+- -p - Path to the csv file (Read more about file structure down below)
+
+Example:
+```shell
+cd utils
+./pipelines-gbif-id-migrator -f DATSET_KEY -t DATSET_KEY -p PATH/TO/CSV/FILE.csv
+```
+
+### The diagnostics tool
 _Note:_ To assemble diagnostics tool artifact you have to activate maven profile
 ```shell
 mvn clean package -P extra-artifacts
@@ -18,7 +32,7 @@ Diagnostics tool contains 3 key features:
 java -jar target/diagnostics-VERSION-SNAPSHOT-shaded.jar --help
 ```
 
-#### MIGRATOR
+### MIGRATOR
 
 **Migrator source file** - By defualt file format is CSV, the file must be without header and contain two rows with values, where first value is old_occurrence_id, second is the new_occurrence_id, exaple:
 ```csv
@@ -26,7 +40,7 @@ java -jar target/diagnostics-VERSION-SNAPSHOT-shaded.jar --help
 0000002,GLM-P-0000002
 0000003,GLM-P-0000003
 ```
-_Note:_ that it is possible to migrate GBIF identifiers using triplet value, the file must have the following format:
+_Note:_ that it is possible to migrate GBIF identifiers using triplet value, the file must have the following format, including _null_ at the end:
 ```csv
 old_institutionCode|old_collectionCode|old_catalogNumber|null,new_institutionCode|new_collectionCode|new_catalogNumber|null
 ```
@@ -50,21 +64,22 @@ Keys:
 - skip-issues - (Optional) Continue the processing when an issue appears
 - splitter - (Optional) Default is comma (,)
 
+Example:
 ```shell
-java -jar target/diagnostics-VERSION-SNAPSHOT-shaded.jar \
-  --tool migrator \
-  --from-dataset ${DATASET_FROM} \
-  --to-dataset ${DATASET_TO} \
-  --file-path ${FILE_PATH} \
-  --zk-connection ${ZK_ENV} \
-  --lookup-table ${LOOKUP_TABLE} \
-  --counter-table ${COUNTER_TABLE} \
-  --occurrence-table ${OCCURRENCE_TABLE} \
-  --delete-keys \
-  --skip-issues
+java -jar diagnostics-VERSION-SNAPSHOT-shaded.jar \
+    --tool MIGRATOR \
+    --zk-connection ZK_CONNECTION_STING \ 
+    --lookup-table OCCURRENCE_LOOKUP_TABLE_NAME \
+    --occurrence-table OCCURRENCE_TABLE_NAME \
+    --counter-table OCCURRENCE_COUNTER_TABLE_NAME \ 
+    --skip-issues \
+    --delete-keys \
+    --from-dataset e330e2ff-9816-482e-aceb-27f2b3cc05c4 \ 
+    --to-dataset e330e2ff-9816-482e-aceb-27f2b3cc05c4 \
+    --file-path changesOccurrenceIDHemipteraUMAG.csv \
 ```
 
-#### REPAIR - (DEPRECATED)
+### REPAIR - (DEPRECATED)
 The feature is deprecated, becuase current GBIF identifier workflow doesn't rely on couple triplets+occurrence_id, but only occurrence_id
 
 ```shell
@@ -83,5 +98,5 @@ java -jar target/diagnostics-VERSION-SNAPSHOT-shaded.jar \
 #### LOOKUP
 
 ```shell
-java -jar target/diagnostics-VERSION-SNAPSHOT-shaded.jar --help
+// EMPTY
 ```
