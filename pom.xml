@@ -83,7 +83,7 @@
     <!-- GBIF libraries -->
     <gbif-parsers.version>0.58</gbif-parsers.version>
     <dwca-io.version>2.14</dwca-io.version>
-    <gbif-api.version>0.172-SNAPSHOT</gbif-api.version>
+    <gbif-api.version>0.175-SNAPSHOT</gbif-api.version>
     <gbif-common.version>0.56</gbif-common.version>
     <dwc-api.version>1.37</dwc-api.version>
     <kvs.version>1.23</kvs.version>
@@ -91,7 +91,7 @@
     <gbif-wrangler.version>0.3</gbif-wrangler.version>
     <gbif-occurrence.version>0.173.1</gbif-occurrence.version>
     <vocabulary-lookup.version>0.47</vocabulary-lookup.version>
-    <registry.version>3.84</registry.version>
+    <registry.version>3.88-SNAPSHOT</registry.version>
     <gbif-common-ws.version>1.18</gbif-common-ws.version>
     <gbif-postal-service.version>1.6-SNAPSHOT</gbif-postal-service.version>
     <gbif-common-spreadsheet.version>0.2</gbif-common-spreadsheet.version>

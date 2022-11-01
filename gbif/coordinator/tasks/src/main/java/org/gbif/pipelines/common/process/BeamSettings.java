@@ -11,7 +11,6 @@ import java.util.function.Consumer;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
-import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.messages.PipelinesEventsInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretationMessage;
@@ -43,7 +42,6 @@ public class BeamSettings {
           .command(command)
           .datasetUuid(message.getDatasetUuid())
           .attempt(message.getAttempt())
-          .endpointType(message.getEndpointType())
           .interpretTypes(message.getInterpretTypes())
           .stepConfig(config.stepConfig)
           .avroConfig(config.avroConfig)
@@ -116,7 +114,6 @@ public class BeamSettings {
           .command(command)
           .datasetUuid(message.getDatasetUuid())
           .attempt(message.getAttempt())
-          .endpointType(message.getEndpointType())
           .interpretTypes(message.getInterpretTypes())
           .stepConfig(config.stepConfig)
           .avroConfig(config.avroConfig)
@@ -176,7 +173,6 @@ public class BeamSettings {
           .command(command)
           .datasetUuid(message.getDatasetUuid())
           .attempt(message.getAttempt())
-          .endpointType(message.getEndpointType())
           .interpretTypes(message.getInterpretTypes())
           .stepConfig(config.stepConfig)
           .avroConfig(config.avroConfig)
@@ -227,7 +223,6 @@ public class BeamSettings {
     private final StringJoiner command;
     private final UUID datasetUuid;
     private final Integer attempt;
-    private final EndpointType endpointType;
     private final Set<String> interpretTypes;
     private final StepConfiguration stepConfig;
     private final AvroWriteConfiguration avroConfig;
@@ -251,8 +246,7 @@ public class BeamSettings {
           .add("--avroSyncInterval=" + avroConfig.syncInterval)
           .add("--hdfsSiteConfig=" + Objects.requireNonNull(stepConfig.hdfsSiteConfig))
           .add("--coreSiteConfig=" + Objects.requireNonNull(stepConfig.coreSiteConfig))
-          .add("--properties=" + Objects.requireNonNull(pipelinesConfigPath))
-          .add("--endPointType=" + Objects.requireNonNull(endpointType));
+          .add("--properties=" + Objects.requireNonNull(pipelinesConfigPath));
 
       if (useBeamDeprecatedRead) {
         command.add("--experiments=use_deprecated_read");

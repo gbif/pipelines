@@ -19,6 +19,7 @@ public class PipelinesVariables {
     public static final String ALL_AVRO = "*" + AVRO_EXTENSION;
 
     public static final String ARCHIVE_TO_VERBATIM = "archive-to-verbatim";
+    public static final String CAMTRAPDP_TO_DWCA = "camtrapdp-to-dwca";
     public static final String VERBATIM_TO_OCCURRENCE = "verbatim-to-occurrence";
     public static final String VERBATIM_TO_IDENTIFIER = "verbatim-to-identifier";
     public static final String OCCURRENCE_TO_INDEX = "occurrence-to-index";

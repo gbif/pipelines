@@ -80,7 +80,6 @@ public class TransformsFactory {
     return MetadataTransform.builder()
         .clientSupplier(metadataServiceClientSupplier)
         .attempt(options.getAttempt())
-        .endpointType(options.getEndPointType())
         .create()
         .counterFn(incMetricFn)
         .init();

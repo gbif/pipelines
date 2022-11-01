@@ -250,6 +250,10 @@
           <groupId>org.gbif.occurrence</groupId>
           <artifactId>occurrence-hdfs-table</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>org.gbif.registry</groupId>
+          <artifactId>registry-ws-client</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>

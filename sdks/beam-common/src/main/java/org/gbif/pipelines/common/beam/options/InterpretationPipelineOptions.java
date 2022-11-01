@@ -59,12 +59,6 @@ public interface InterpretationPipelineOptions
 
   void setCoreSiteConfig(String path);
 
-  @Description("Type of the endpoint being crawled")
-  @Default.String("DWC_ARCHIVE")
-  String getEndPointType();
-
-  void setEndPointType(String id);
-
   @Description("DWCA validation from crawler, all triplets are unique")
   @Default.Boolean(true)
   boolean isTripletValid();
