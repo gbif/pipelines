@@ -150,6 +150,12 @@
       <groupId>org.gbif.registry</groupId>
       <artifactId>registry-ws-client</artifactId>
       <version>${registry.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>com.fasterxml.jackson.model</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <!-- Geotools -->
