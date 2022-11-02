@@ -135,17 +135,6 @@
       <groupId>org.gbif.registry</groupId>
       <artifactId>registry-ws-client</artifactId>
       <version>${registry.version}</version>
-      <classifier>shaded</classifier>
-      <exclusions>
-        <exclusion>
-          <groupId>org.gbif.registry</groupId>
-          <artifactId>registry-domain</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.gbif.registry</groupId>
-          <artifactId>registry-doi</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
 
     <!-- Geotools -->
