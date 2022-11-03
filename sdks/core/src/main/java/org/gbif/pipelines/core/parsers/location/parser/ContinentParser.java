@@ -34,6 +34,15 @@ public class ContinentParser {
         parseContinent(er, VocabularyParser.continentParser(), CONTINENT_INVALID.name());
     Continent continent = getContinentResult(parsedContinent, issues).orElse(null);
 
+    // Add an issue if the continent doesn't contain the country
+    if (lr.getCountryCode() != null && continent != null) {
+      Country country = Country.fromIsoCode(lr.getCountryCode());
+
+      if (!CountryContinentMaps.continentsForCountry(country).contains(continent)) {
+        issues.add(CONTINENT_COUNTRY_MISMATCH.name());
+      }
+    }
+
     // Take parsed coordinate value
     LatLng latLng = new LatLng(lr.getDecimalLatitude(), lr.getDecimalLongitude());
 
