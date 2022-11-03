@@ -214,7 +214,7 @@ public class LocationInterpreter {
   public static BiConsumer<ExtendedRecord, LocationRecord> interpretContinent(
       KeyValueStore<LatLng, GeocodeResponse> geocodeKvStore) {
     return (er, lr) -> {
-      if (geocodeKvStore != null && Boolean.TRUE.equals(lr.getHasCoordinate())) {
+      if (geocodeKvStore != null) {
         ParsedField<Continent> c = ContinentParser.parseContinent(er, lr, geocodeKvStore);
         if (c.isSuccessful()) {
           if (c.getResult() == null) {
