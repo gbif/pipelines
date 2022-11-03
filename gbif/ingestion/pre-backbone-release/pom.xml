@@ -16,7 +16,7 @@
   <description>Utility to assess the impact of a backbone on occurrence data before it is deployed</description>
 
   <properties>
-    <hive.version>1.2.0</hive.version>
+    <hive.version>3.1.2000.7.0.3.0-79</hive.version>
     <sonar.skip>true</sonar.skip>
   </properties>
 
