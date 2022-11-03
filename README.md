@@ -1,6 +1,6 @@
-[![DEV - Build Status](https://builds.gbif.org/job/pipelines-restructure/badge/icon?subject=DEV%20-%20Build%20Status&style=flat-square)](https://builds.gbif.org/job/pipelines-restructure)
-[![DEV Nightly build - Build Status](https://builds.gbif.org/job/pipelines-restructure-nightly-build/badge/icon?subject=DEV%20Nightly%20build%20-%20Build%20Status&style=flat-square)](https://builds.gbif.org/job/pipelines-restructure-nightly-build/)
-[![DEV Release - Build Status](https://builds.gbif.org/job/pipelines-master/badge/icon?subject=Release%20-%20Build%20Status&style=flat-square)](https://builds.gbif.org/job/pipelines-restructure-nightly-build/)
+[![DEV - Build Status](https://builds.gbif.org/job/pipelines/badge/icon?subject=DEV%20-%20Build%20Status&style=flat-square)](https://builds.gbif.org/job/pipelines)
+[![DEV Nightly build - Build Status](https://builds.gbif.org/job/pipelines-nightly-build/badge/icon?subject=DEV%20Nightly%20build%20-%20Build%20Status&style=flat-square)](https://builds.gbif.org/job/pipelines-nightly-build/)
+[![DEV Release - Build Status](https://builds.gbif.org/job/pipelines-master/badge/icon?subject=Release%20-%20Build%20Status&style=flat-square)](https://builds.gbif.org/job/pipelines-master/)
 [![Coverage](https://sonar.gbif.org/api/project_badges/measure?project=org.gbif.pipelines%3Apipelines-parent&metric=coverage)](https://sonar.gbif.org/dashboard?id=org.gbif.pipelines%3Apipelines-parent)
 
 # Table of Contents
