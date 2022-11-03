@@ -9,6 +9,41 @@
           "copy_to": "all"
         }
       }
+    },
+    {
+      "occurrence_string": {
+        "path_match": "occurrence.*",
+        "match_mapping_type": "string",
+        "mapping": {  "type": "keyword" }
+      }
+    },
+    {
+      "occurrence_boolean": {
+        "path_match": "occurrence.*",
+        "match_mapping_type": "boolean",
+        "mapping": { "type": "keyword" }
+      }
+    },
+    {
+      "occurrence_date": {
+        "path_match": "occurrence.*",
+        "match_mapping_type": "date",
+        "mapping": { "type": "keyword" }
+      }
+    },
+    {
+      "occurrence_double": {
+        "path_match": "occurrence.*",
+        "match_mapping_type": "double",
+        "mapping": { "type": "keyword" }
+      }
+    },
+    {
+      "occurrence_long": {
+        "path_match": "occurrence.*",
+        "match_mapping_type": "long",
+        "mapping": { "type": "keyword" }
+      }
     }
   ],
   "properties": {
@@ -29,7 +64,18 @@
       "properties": {
         "datasetKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
         "datasetTitle": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
-        "license": {"type": "keyword", "copy_to": "all"}
+        "installationKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
+        "hostingOrganizationKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
+        "endorsingNodeKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
+        "publisherTitle": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
+        "license": {"type": "keyword", "copy_to": "all"},
+        "protocol": {"type": "keyword", "copy_to": "all"},
+        "publishingCountry": {"type": "keyword", "copy_to": "all"},
+        "datasetPublishingCountry": {"type": "keyword", "copy_to": "all"},
+        "publishingOrganizationKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
+        "networkKeys": {"type": "keyword", "normalizer": "lowercase_normalizer"},
+        "projectId": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
+        "programmeAcronym": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"}
       }
     },
 
@@ -46,7 +92,7 @@
             "verbatim": {"type": "keyword", "ignore_above": 1024}
           }
         },
-        "eventId": {
+        "eventID": {
           "type": "text",
           "fields": {
             "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
@@ -54,7 +100,7 @@
             "verbatim": {"type": "keyword", "ignore_above": 1024}
           }
         },
-        "parentEventId": {
+        "parentEventID": {
           "type": "text",
           "fields": {
             "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
@@ -62,11 +108,40 @@
             "verbatim": {"type": "keyword", "ignore_above": 1024}
           }
         },
-        "parentEventIds": {
+        "eventType": {
+          "properties": {
+            "concept": {"type": "keyword"}
+          }
+        },
+        "eventHierarchy": {
           "type": "text",
           "fields": {
             "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
             "keyword": {"type": "keyword", "normalizer": "lowercase_normalizer", "ignore_above": 1024},
+            "verbatim": {"type": "keyword", "ignore_above": 1024}
+          }
+        },
+        "eventTypeHierarchy": {
+          "type": "text",
+          "fields": {
+            "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
+            "keyword": {"type": "keyword",  "normalizer": "lowercase_normalizer", "ignore_above": 1024},
+            "verbatim": {"type": "keyword", "ignore_above": 1024}
+          }
+        },
+        "eventName": {
+          "type": "text",
+          "fields": {
+            "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
+            "keyword": {"type": "keyword", "normalizer": "lowercase_normalizer", "ignore_above": 1024},
+            "verbatim": {"type": "keyword", "ignore_above": 1024}
+          }
+        },
+        "locationID": {
+          "type": "text",
+          "fields": {
+            "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
+            "keyword": {"type": "keyword",  "ignore_above": 1024},
             "verbatim": {"type": "keyword", "ignore_above": 1024}
           }
         },
@@ -196,23 +271,44 @@
                 "status": {"type": "keyword"}
               }
             },
-            "kingdom": {"type": "text"},
-            "kingdomKey": {"type": "long"},
-            "phylum": {"type": "text"},
-            "phylumKey": {"type": "long"},
-            "class": {"type": "text"},
-            "classKey": {"type": "long"},
-            "order": {"type": "text"},
-            "orderKey": {"type": "long"},
-            "family": {"type": "text"},
-            "familyKey": {"type": "long"},
-            "genus": {"type": "text"},
-            "genusKey": {"type": "long"},
-            "species": {"type": "text"},
-            "speciesKey": {"type": "long"},
+            "kingdom": {
+              "type": "keyword",
+              "copy_to": "scientificNames"
+            },
+            "kingdomKey": {"type": "keyword"},
+            "phylum": {
+              "type": "keyword",
+              "copy_to": "scientificNames"
+            },
+            "phylumKey": {"type": "keyword"},
+            "class": {
+              "type": "keyword",
+              "copy_to": "scientificNames"
+            },
+            "classKey": {"type": "keyword"},
+            "order": {
+              "type": "keyword",
+              "copy_to": "scientificNames"
+            },
+            "orderKey": {"type": "keyword"},
+            "family": {
+              "type": "keyword",
+              "copy_to": "scientificNames"
+            },
+            "familyKey": {"type": "keyword"},
+            "genus": {
+              "type": "keyword",
+              "copy_to": "scientificNames"
+            },
+            "genusKey": {"type": "keyword"},
+            "species": {
+              "type": "keyword",
+              "copy_to": "scientificNames"
+            },
+            "speciesKey": {"type": "keyword"},
             "synonym": {"type": "boolean"},
             "taxonID": {"type": "keyword"},
-            "taxonKey": {"type": "long"},
+            "taxonKey": {"type": "keyword"},
             "usage": {
               "properties": {
                 "key": {"type": "long"},
@@ -300,26 +396,26 @@
                     "status": {"type": "keyword"}
                   }
                 },
-                "kingdom": {"type": "text"},
-                "kingdomKey": {"type": "long"},
-                "phylum": {"type": "text"},
-                "phylumKey": {"type": "long"},
-                "class": {"type": "text"},
-                "classKey": {"type": "long"},
-                "order": {"type": "text"},
-                "orderKey": {"type": "long"},
-                "family": {"type": "text"},
-                "familyKey": {"type": "long"},
-                "genus": {"type": "text"},
-                "genusKey": {"type": "long"},
-                "species": {"type": "text"},
-                "speciesKey": {"type": "long"},
+                "kingdom": {"type": "keyword"},
+                "kingdomKey": {"type": "keyword"},
+                "phylum": {"type": "keyword"},
+                "phylumKey": {"type": "keyword"},
+                "class": {"type": "keyword"},
+                "classKey": {"type": "keyword"},
+                "order": {"type": "keyword"},
+                "orderKey": {"type": "keyword"},
+                "family": {"type": "keyword"},
+                "familyKey": {"type": "keyword"},
+                "genus": {"type": "keyword"},
+                "genusKey": {"type": "keyword"},
+                "species": {"type": "keyword"},
+                "speciesKey": {"type": "keyword"},
                 "synonym": {"type": "boolean"},
                 "taxonID": {"type": "keyword"},
-                "taxonKey": {"type": "long"},
+                "taxonKey": {"type": "keyword"},
                 "usage": {
                   "properties": {
-                    "key": {"type": "long"},
+                    "key": {"type": "keyword"},
                     "name": {"type": "keyword", "boost": 100.0, "copy_to": "all", "normalizer": "lowercase_normalizer"},
                     "rank": {"type": "keyword"}
                   }
@@ -621,6 +717,14 @@
             }
           }
         },
+        "locationID": {
+          "type": "text",
+          "fields": {
+            "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
+            "keyword": {"type": "keyword",  "ignore_above": 1024},
+            "verbatim": {"type": "keyword", "ignore_above": 1024}
+          }
+        },
         "organismId": {
           "type": "text",
           "fields": {
@@ -666,48 +770,6 @@
         "samplingProtocolJoined": {
           "type": "keyword",
           "normalizer": "lowercase_normalizer"
-        },
-        "eventId": {
-          "type": "text",
-          "fields": {
-            "suggest": {
-              "type": "completion",
-              "analyzer": "lowercase_analyzer",
-              "preserve_separators": true,
-              "preserve_position_increments": true,
-              "max_input_length": 50
-            },
-            "keyword": {
-              "type": "keyword",
-              "normalizer": "lowercase_normalizer",
-              "ignore_above": 1024
-            },
-            "verbatim": {
-              "type": "keyword",
-              "ignore_above": 1024
-            }
-          }
-        },
-        "parentEventId": {
-          "type": "text",
-          "fields": {
-            "suggest": {
-              "type": "completion",
-              "analyzer": "lowercase_analyzer",
-              "preserve_separators": true,
-              "preserve_position_increments": true,
-              "max_input_length": 50
-            },
-            "keyword": {
-              "type": "keyword",
-              "normalizer": "lowercase_normalizer",
-              "ignore_above": 1024
-            },
-            "verbatim": {
-              "type": "keyword",
-              "ignore_above": 1024
-            }
-          }
         },
         "institutionCode": {
           "type": "text",
@@ -1061,6 +1123,22 @@
         "extensions": {
           "type": "keyword"
         },
+
+        "taxonomy": {
+          "type": "nested",
+          "properties": {
+            "taxonKey": {
+              "type": "keyword"
+            },
+            "name": {
+              "type": "keyword", "normalizer": "lowercase_normalizer", "ignore_above": 1024
+            },
+            "verbatim": {
+              "type": "keyword"
+            }
+          }
+        },
+
         "gbifClassification": {
           "properties": {
             "acceptedUsage": {
@@ -1116,47 +1194,40 @@
               }
             },
             "kingdom": {
-              "type": "text"
+              "type": "keyword",
+              "copy_to": "scientificNames"
             },
-            "kingdomKey": {
-              "type": "text"
-            },
+            "kingdomKey": {"type": "keyword"},
             "phylum": {
-              "type": "text"
+              "type": "keyword",
+              "copy_to": "scientificNames"
             },
-            "phylumKey": {
-              "type": "text"
-            },
+            "phylumKey": {"type": "keyword"},
             "class": {
-              "type": "text"
+              "type": "keyword",
+              "copy_to": "scientificNames"
             },
-            "classKey": {
-              "type": "text"
-            },
+            "classKey": {"type": "keyword"},
             "order": {
-              "type": "text"
+              "type": "keyword",
+              "copy_to": "scientificNames"
             },
-            "orderKey": {
-              "type": "text"
-            },
+            "orderKey": {"type": "keyword"},
             "family": {
-              "type": "text"
+              "type": "keyword",
+              "copy_to": "scientificNames"
             },
-            "familyKey": {
-              "type": "text"
-            },
+            "familyKey": {"type": "keyword"},
             "genus": {
-              "type": "text"
+              "type": "keyword",
+              "copy_to": "scientificNames"
             },
-            "genusKey": {
-              "type": "text"
-            },
+            "genusKey": {"type": "keyword"},
             "species": {
-              "type": "text"
+              "type": "keyword",
+              "copy_to": "scientificNames"
             },
-            "speciesKey": {
-              "type": "text"
-            },
+            "speciesKey": {"type": "keyword"},
             "synonym": {
               "type": "boolean"
             },
@@ -1164,7 +1235,10 @@
               "type": "keyword"
             },
             "taxonKey": {
-              "type": "text"
+              "type": "keyword"
+            },
+            "scientificNames": {
+              "type": "keyword"
             },
             "usage": {
               "properties": {

@@ -28,6 +28,7 @@ public class ContinentParserTest {
     KeyValueTestStore testStore = new KeyValueTestStore();
     testStore.put(new LatLng(38.7, 29.6), toGeocodeResponse(Continent.ASIA, Country.TURKEY));
     testStore.put(new LatLng(30.0, -20.0), toGeocodeResponse(Country.SPAIN));
+    testStore.put(new LatLng(10.3, -1.8961), toGeocodeResponse(Continent.AFRICA, Country.GHANA));
 
     GEOCODE_KV_STORE = GeocodeKvStore.create(testStore);
   }
@@ -173,6 +174,32 @@ public class ContinentParserTest {
     Assert.assertEquals(Continent.EUROPE, result.getResult());
     Assert.assertTrue(result.getIssues().contains(CONTINENT_COORDINATE_MISMATCH.name()));
     Assert.assertEquals(1, result.getIssues().size());
+  }
+
+  @Test
+  public void wrongContinentAndCountryAndCoordsTest() {
+
+    // State
+    ExtendedRecord extendedRecord =
+        ExtendedRecordBuilder.create().id(TEST_ID).continent("Europe").build();
+    LocationRecord locationRecord =
+        LocationRecord.newBuilder()
+            .setId(TEST_ID)
+            .setDecimalLatitude(10.3)
+            .setDecimalLongitude(-1.8961)
+            .setCountryCode("VE")
+            .build();
+
+    // When
+    ParsedField<Continent> result =
+        ContinentParser.parseContinent(extendedRecord, locationRecord, getGeocodeKvStore());
+
+    // Should
+    Assert.assertTrue(result.isSuccessful());
+    Assert.assertEquals(Continent.EUROPE, result.getResult());
+    Assert.assertTrue(result.getIssues().contains(CONTINENT_COORDINATE_MISMATCH.name()));
+    Assert.assertTrue(result.getIssues().contains(CONTINENT_COUNTRY_MISMATCH.name()));
+    Assert.assertEquals(2, result.getIssues().size());
   }
 
   @Test

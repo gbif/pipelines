@@ -56,7 +56,7 @@ public class FragmenterCallbackIT {
   private static TestingServer server;
   private static MessagePublisherStub publisher;
   private static ExecutorService executor;
-  @Mock private static PipelinesHistoryClient historyClient;
+  @Mock private PipelinesHistoryClient historyClient;
   @Mock private static DatasetClient datasetClient;
 
   @ClassRule public static final HbaseServer HBASE_SERVER = new HbaseServer();

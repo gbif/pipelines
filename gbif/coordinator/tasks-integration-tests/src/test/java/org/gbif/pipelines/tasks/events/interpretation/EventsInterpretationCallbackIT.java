@@ -2,21 +2,15 @@ package org.gbif.pipelines.tasks.events.interpretation;
 
 import static org.gbif.api.model.pipelines.StepType.EVENTS_INTERPRETED_TO_INDEX;
 import static org.gbif.api.model.pipelines.StepType.EVENTS_VERBATIM_TO_INTERPRETED;
-import static org.gbif.crawler.constants.PipelinesNodePaths.getPipelinesInfoPath;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.UUID;
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.CuratorFrameworkFactory;
-import org.apache.curator.retry.RetryOneTime;
-import org.apache.curator.test.TestingServer;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
@@ -24,14 +18,12 @@ import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage.Validatio
 import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
-import org.gbif.pipelines.common.utils.ZookeeperUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.MessagePublisherStub;
+import org.gbif.pipelines.tasks.resources.CuratorServer;
 import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -40,39 +32,13 @@ import org.mockito.junit.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class EventsInterpretationCallbackIT {
 
+  @ClassRule public static final CuratorServer CURATOR_SERVER = CuratorServer.getInstance();
   private static final String EVENTS_INTERPRETED_LABEL = EVENTS_VERBATIM_TO_INTERPRETED.getLabel();
   private static final String DATASET_UUID = "9bed66b3-4caa-42bb-9c93-71d7ba109dad";
   private static final long EXECUTION_ID = 1L;
-  private static CuratorFramework curator;
-  private static TestingServer server;
-  private static MessagePublisherStub publisher;
+  private static final MessagePublisherStub PUBLISHER = MessagePublisherStub.create();
   @Mock private static PipelinesHistoryClient historyClient;
   @Mock private static DatasetClient datasetClient;
-
-  @BeforeClass
-  public static void setUp() throws Exception {
-    server = new TestingServer();
-    curator =
-        CuratorFrameworkFactory.builder()
-            .connectString(server.getConnectString())
-            .namespace("crawler")
-            .retryPolicy(new RetryOneTime(1))
-            .build();
-    curator.start();
-    publisher = MessagePublisherStub.create();
-  }
-
-  @AfterClass
-  public static void tearDown() throws IOException {
-    curator.close();
-    server.stop();
-    publisher.close();
-  }
-
-  @After
-  public void after() {
-    publisher.close();
-  }
 
   @Test
   public void testInvalidMessage() {
@@ -85,8 +51,8 @@ public class EventsInterpretationCallbackIT {
     EventsInterpretationCallback callback =
         EventsInterpretationCallback.builder()
             .config(config)
-            .publisher(publisher)
-            .curator(curator)
+            .publisher(PUBLISHER)
+            .curator(CURATOR_SERVER.getCurator())
             .historyClient(historyClient)
             .datasetClient(datasetClient)
             .hdfsConfigs(
@@ -131,15 +97,12 @@ public class EventsInterpretationCallbackIT {
                 + "/"
                 + DwcTerm.Event.name().toLowerCase());
     assertFalse(path.toFile().exists());
-    assertFalse(checkExists(curator, crawlId, EVENTS_INTERPRETED_LABEL));
+    assertFalse(CURATOR_SERVER.checkExists(crawlId, EVENTS_INTERPRETED_LABEL));
     assertFalse(
-        checkExists(curator, crawlId, Fn.SUCCESSFUL_MESSAGE.apply(EVENTS_INTERPRETED_LABEL)));
-    assertFalse(checkExists(curator, crawlId, Fn.MQ_CLASS_NAME.apply(EVENTS_INTERPRETED_LABEL)));
-    assertFalse(checkExists(curator, crawlId, Fn.MQ_MESSAGE.apply(EVENTS_INTERPRETED_LABEL)));
-    assertEquals(0, publisher.getMessages().size());
-  }
-
-  private boolean checkExists(CuratorFramework curator, String id, String path) {
-    return ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(id, path));
+        CURATOR_SERVER.checkExists(crawlId, Fn.SUCCESSFUL_MESSAGE.apply(EVENTS_INTERPRETED_LABEL)));
+    assertFalse(
+        CURATOR_SERVER.checkExists(crawlId, Fn.MQ_CLASS_NAME.apply(EVENTS_INTERPRETED_LABEL)));
+    assertFalse(CURATOR_SERVER.checkExists(crawlId, Fn.MQ_MESSAGE.apply(EVENTS_INTERPRETED_LABEL)));
+    assertEquals(0, PUBLISHER.getMessages().size());
   }
 }

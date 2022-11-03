@@ -15,9 +15,7 @@
 
   <modules>
     <module>livingatlas</module>
-    <module>examples</module>
     <module>gbif</module>
-    <module>tools</module>
     <module>sdks</module>
   </modules>
 
@@ -155,11 +153,12 @@
     <hamcrest-java.version>2.0.0.0</hamcrest-java.version>
     <log4j-over-slf4j.version>1.7.16</log4j-over-slf4j.version>
     <zookeeper-version>3.4.5</zookeeper-version>
-    <testcontainers.elasticsearch.version>1.17.2</testcontainers.elasticsearch.version>
+    <testcontainers.elasticsearch.version>1.17.5</testcontainers.elasticsearch.version>
 
     <!-- Maven plugin -->
     <maven-plugin-api.version>3.8.6</maven-plugin-api.version>
     <maven-plugin-annotations.version>3.6.4</maven-plugin-annotations.version>
+    <jacoco-maven-plugin.version>0.8.8</jacoco-maven-plugin.version>
 
     <!-- Plugins -->
     <build-helper-maven.version>3.3.0</build-helper-maven.version>
@@ -347,6 +346,11 @@
       <dependency>
         <groupId>org.gbif.pipelines</groupId>
         <artifactId>keygen</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.pipelines</groupId>
+        <artifactId>diagnostics</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
@@ -1043,6 +1047,20 @@
                 <version>${maven-failsafe-plugin.version}</version>
               </dependency>
             </dependencies>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>skip-coverage</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.jacoco</groupId>
+            <artifactId>jacoco-maven-plugin</artifactId>
+            <configuration>
+              <skip>true</skip>
+            </configuration>
           </plugin>
         </plugins>
       </build>

@@ -50,7 +50,7 @@
       <!-- Change generated avros, add GBIF features -->
       <plugin>
         <groupId>org.gbif.pipelines</groupId>
-        <artifactId>pipelines-maven-plugin</artifactId>
+        <artifactId>maven-avro-annotation-editor</artifactId>
         <version>${project.version}</version>
         <executions>
           <execution>
@@ -177,7 +177,7 @@
 
   <profiles>
     <profile>
-      <id>exampleArtifacts</id>
+      <id>example-artifacts</id>
       <build>
         <plugins>
           <!-- Shade the project into an uber jar to send to Spark -->

@@ -22,6 +22,9 @@
     <module>beam-transforms</module>
     <module>core</module>
     <module>models</module>
+    <module>plugins</module>
+    <module>sdks-integration-tests</module>
+    <module>tools</module>
     <module>variables</module>
   </modules>
 

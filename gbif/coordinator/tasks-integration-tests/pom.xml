@@ -11,7 +11,7 @@
   <artifactId>tasks-integration-tests</artifactId>
   <packaging>jar</packaging>
 
-  <name>Pipelines :: GBIF :: CLI :: Tasks Coordinator IT</name>
+  <name>Pipelines :: GBIF :: Coordinator :: Tasks IT</name>
 
   <build>
     <plugins>

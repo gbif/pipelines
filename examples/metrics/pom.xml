@@ -93,7 +93,7 @@
 
   <profiles>
     <profile>
-      <id>exampleArtifacts</id>
+      <id>example-artifacts</id>
       <build>
         <plugins>
           <!-- Shade the project into an uber jar to send to Spark -->

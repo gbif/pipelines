@@ -1,30 +1,22 @@
 package org.gbif.pipelines.tasks.events.indexing;
 
 import static org.gbif.api.model.pipelines.StepType.EVENTS_INTERPRETED_TO_INDEX;
-import static org.gbif.crawler.constants.PipelinesNodePaths.getPipelinesInfoPath;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.UUID;
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.CuratorFrameworkFactory;
-import org.apache.curator.retry.RetryOneTime;
-import org.apache.curator.test.TestingServer;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.messages.PipelinesEventsInterpretedMessage;
 import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
-import org.gbif.pipelines.common.utils.ZookeeperUtils;
 import org.gbif.pipelines.tasks.MessagePublisherStub;
+import org.gbif.pipelines.tasks.resources.CuratorServer;
 import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -33,40 +25,14 @@ import org.mockito.junit.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class EventsIndexingCallbackIT {
 
+  @ClassRule public static final CuratorServer CURATOR_SERVER = CuratorServer.getInstance();
   private static final String EVENTS_INDEXED_LABEL = EVENTS_INTERPRETED_TO_INDEX.getLabel();
   private static final String DATASET_UUID = "9bed66b3-4caa-42bb-9c93-71d7ba109dad";
   private static final long EXECUTION_ID = 1L;
-  private static CuratorFramework curator;
-  private static TestingServer server;
-  private static MessagePublisherStub publisher;
-  @Mock private static DatasetClient datasetClient;
+  private static final MessagePublisherStub PUBLISHER = MessagePublisherStub.create();
   @Mock private static PipelinesHistoryClient historyClient;
   @Mock private static CloseableHttpClient httpClient;
-
-  @BeforeClass
-  public static void setUp() throws Exception {
-    server = new TestingServer();
-    curator =
-        CuratorFrameworkFactory.builder()
-            .connectString(server.getConnectString())
-            .namespace("crawler")
-            .retryPolicy(new RetryOneTime(1))
-            .build();
-    curator.start();
-    publisher = MessagePublisherStub.create();
-  }
-
-  @AfterClass
-  public static void tearDown() throws IOException {
-    curator.close();
-    server.stop();
-    publisher.close();
-  }
-
-  @After
-  public void after() {
-    publisher.close();
-  }
+  @Mock private static DatasetClient datasetClient;
 
   @Test
   public void testInvalidMessage() {
@@ -79,8 +45,8 @@ public class EventsIndexingCallbackIT {
     EventsIndexingCallback callback =
         EventsIndexingCallback.builder()
             .config(config)
-            .publisher(publisher)
-            .curator(curator)
+            .publisher(PUBLISHER)
+            .curator(CURATOR_SERVER.getCurator())
             .httpClient(httpClient)
             .historyClient(historyClient)
             .datasetClient(datasetClient)
@@ -109,14 +75,11 @@ public class EventsIndexingCallbackIT {
     callback.handleMessage(message);
 
     // Should
-    assertFalse(checkExists(curator, crawlId, EVENTS_INDEXED_LABEL));
-    assertFalse(checkExists(curator, crawlId, Fn.SUCCESSFUL_MESSAGE.apply(EVENTS_INDEXED_LABEL)));
-    assertFalse(checkExists(curator, crawlId, Fn.MQ_CLASS_NAME.apply(EVENTS_INDEXED_LABEL)));
-    assertFalse(checkExists(curator, crawlId, Fn.MQ_MESSAGE.apply(EVENTS_INDEXED_LABEL)));
-    assertEquals(0, publisher.getMessages().size());
-  }
-
-  private boolean checkExists(CuratorFramework curator, String id, String path) {
-    return ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(id, path));
+    assertFalse(CURATOR_SERVER.checkExists(crawlId, EVENTS_INDEXED_LABEL));
+    assertFalse(
+        CURATOR_SERVER.checkExists(crawlId, Fn.SUCCESSFUL_MESSAGE.apply(EVENTS_INDEXED_LABEL)));
+    assertFalse(CURATOR_SERVER.checkExists(crawlId, Fn.MQ_CLASS_NAME.apply(EVENTS_INDEXED_LABEL)));
+    assertFalse(CURATOR_SERVER.checkExists(crawlId, Fn.MQ_MESSAGE.apply(EVENTS_INDEXED_LABEL)));
+    assertEquals(0, PUBLISHER.getMessages().size());
   }
 }
