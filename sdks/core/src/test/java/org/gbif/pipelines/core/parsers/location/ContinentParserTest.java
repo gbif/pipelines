@@ -181,18 +181,18 @@ public class ContinentParserTest {
 
     // State
     ExtendedRecord extendedRecord =
-      ExtendedRecordBuilder.create().id(TEST_ID).continent("Europe").build();
+        ExtendedRecordBuilder.create().id(TEST_ID).continent("Europe").build();
     LocationRecord locationRecord =
-      LocationRecord.newBuilder()
-        .setId(TEST_ID)
-        .setDecimalLatitude(10.3)
-        .setDecimalLongitude(-1.8961)
-        .setCountryCode("VE")
-        .build();
+        LocationRecord.newBuilder()
+            .setId(TEST_ID)
+            .setDecimalLatitude(10.3)
+            .setDecimalLongitude(-1.8961)
+            .setCountryCode("VE")
+            .build();
 
     // When
     ParsedField<Continent> result =
-      ContinentParser.parseContinent(extendedRecord, locationRecord, getGeocodeKvStore());
+        ContinentParser.parseContinent(extendedRecord, locationRecord, getGeocodeKvStore());
 
     // Should
     Assert.assertTrue(result.isSuccessful());
