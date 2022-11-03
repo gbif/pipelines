@@ -17,7 +17,7 @@
 
   <properties>
     <maven-scala-plugin.version>4.3.1</maven-scala-plugin.version>
-    <spark.version>2.3.0</spark.version>
+    <spark.version>2.4.8.7.2.15.0-147</spark.version>
     <!-- These must be compatible with Spark version (see https://stackoverflow.com/a/50114083) -->
     <janino.version>3.0.8</janino.version>
     <commons-compiler.version>3.0.8</commons-compiler.version>
