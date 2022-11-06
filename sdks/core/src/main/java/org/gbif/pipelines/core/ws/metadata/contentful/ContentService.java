@@ -18,7 +18,7 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.gbif.pipelines.core.ws.metadata.response.Programme;
 import org.gbif.pipelines.core.ws.metadata.response.Project;
 
-/** Client service to Elastisearch/Contentful CMS service. */
+/** Client service to Elastisarch/Contentful CMS service. */
 public class ContentService {
 
   private final RestHighLevelClient restHighLevelClient;

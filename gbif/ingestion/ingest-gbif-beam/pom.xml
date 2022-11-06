@@ -66,30 +66,6 @@
           <groupId>org.elasticsearch</groupId>
           <artifactId>elasticsearch-cli</artifactId>
         </exclusion>
-        <exclusion>
-          <groupId>com.fasterxml.jackson.module</groupId>
-          <artifactId>jackson-module-parameter-names</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>com.fasterxml.jackson.datatype</groupId>
-          <artifactId>jackson-datatype-jdk8</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>com.fasterxml.jackson.dataformat</groupId>
-          <artifactId>jackson-dataformat-xml</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>com.fasterxml.jackson.dataformat</groupId>
-          <artifactId>jackson-dataformat-xml</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>com.fasterxml.jackson.module</groupId>
-          <artifactId>jackson-module-jaxb-annotations</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>com.fasterxml.jackson.jaxrs</groupId>
-          <artifactId>jackson-module-jaxb-annotations</artifactId>
-        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -195,10 +171,6 @@
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
     </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-core</artifactId>
-    </dependency>
 
     <!-- Test -->
     <dependency>
@@ -295,11 +267,6 @@
                     <relocation>
                       <pattern>com.google.common</pattern>
                       <shadedPattern>g20.com.google.common</shadedPattern>
-                    </relocation>
-
-                    <relocation>
-                      <pattern>com.fasterxml</pattern>
-                      <shadedPattern>gbifbeam.com.fasterxml</shadedPattern>
                     </relocation>
 
                   </relocations>
