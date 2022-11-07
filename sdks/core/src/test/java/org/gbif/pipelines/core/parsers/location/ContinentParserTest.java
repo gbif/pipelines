@@ -294,6 +294,25 @@ public class ContinentParserTest {
     Assert.assertEquals(1, result.getIssues().size());
   }
 
+  @Test
+  public void allCountriesMappedTest() {
+    for (Country c : Country.values()) {
+      // State
+      ExtendedRecord extendedRecord =
+          ExtendedRecordBuilder.create().id(TEST_ID).continent("Oceania").build();
+      LocationRecord locationRecord =
+          LocationRecord.newBuilder().setId(TEST_ID).setCountryCode(c.getIso2LetterCode()).build();
+
+      // When
+      ParsedField<Continent> result =
+          ContinentParser.parseContinent(extendedRecord, locationRecord, getGeocodeKvStore());
+
+      // Should
+      Assert.assertTrue(result.isSuccessful());
+      Assert.assertNull(result.getResult());
+    }
+  }
+
   @Test(expected = NullPointerException.class)
   public void nullArgsTest() {
     // When
