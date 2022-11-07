@@ -391,13 +391,9 @@ public class OccurrenceRelationships {
 
   /** Return true if the code is not in the exclusion list or null. */
   public static boolean isEligibleCode(String code) {
-    if (code == null
-        || code.length() == 0
-        || idOmitList.contains(OccurrenceRelationships.normalizeID(code))) {
-      return false;
-    } else {
-      return true;
-    }
+    return code != null
+        && code.length() != 0
+        && !idOmitList.contains(OccurrenceRelationships.normalizeID(code));
   }
 
   public static boolean isNumeric(String s) {
