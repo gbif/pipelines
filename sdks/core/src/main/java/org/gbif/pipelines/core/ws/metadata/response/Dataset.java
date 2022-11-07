@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.model.registry.MachineTag;
 
 /** Can be a org.gbif.api.model.registry.Dataset model, some problem with enum unmarshalling */
@@ -27,4 +28,5 @@ public class Dataset implements Serializable {
   private String title;
   private Project project;
   private List<MachineTag> machineTags;
+  private List<Endpoint> endpoints;
 }

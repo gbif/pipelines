@@ -57,12 +57,17 @@ public class MetadataInterpreter {
         mdr.setInstallationKey(dataset.getInstallationKey());
         mdr.setPublishingOrganizationKey(dataset.getPublishingOrganizationKey());
 
+        List<Endpoint> endpoints = prioritySortEndpoints(dataset.getEndpoints());
+        if (!endpoints.isEmpty()) {
+          mdr.setProtocol(endpoints.get(0).getType().name());
+        }
+
         List<Network> networkList = client.getNetworkFromDataset(datasetId);
         if (networkList != null && !networkList.isEmpty()) {
           mdr.setNetworkKeys(
               networkList.stream()
                   .filter(x -> x.getKey() != null)
-                  .map(n -> n.getKey().toString())
+                  .map(Network::getKey)
                   .collect(Collectors.toList()));
         }
 
@@ -83,10 +88,6 @@ public class MetadataInterpreter {
         Installation installation = client.getInstallation(dataset.getInstallationKey());
         mdr.setHostingOrganizationKey(installation.getOrganizationKey());
 
-        List<Endpoint> endpoints = prioritySortEndpoints(installation.getEndpoints());
-        if (!endpoints.isEmpty()) {
-          mdr.setProtocol(endpoints.get(0).getType().name());
-        }
         copyMachineTags(dataset.getMachineTags(), mdr);
       }
     };
