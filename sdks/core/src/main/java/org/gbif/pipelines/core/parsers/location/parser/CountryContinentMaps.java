@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +44,9 @@ public class CountryContinentMaps {
       throw new IllegalArgumentException(
           "Can't read [" + COUNTRY_CONTINENT_MAP_FILE + "] - aborting " + e.getMessage());
     }
+
+    // International waters cannot be a continent.
+    COUNTRY_TO_CONTINENTS.put(Country.INTERNATIONAL_WATERS, new ArrayList<>());
   }
 
   private static void add(Country country, Continent continent) {
@@ -53,6 +57,6 @@ public class CountryContinentMaps {
   }
 
   public static List<Continent> continentsForCountry(final Country country) {
-    return COUNTRY_TO_CONTINENTS.get(country);
+    return COUNTRY_TO_CONTINENTS.getOrDefault(country, Collections.EMPTY_LIST);
   }
 }
