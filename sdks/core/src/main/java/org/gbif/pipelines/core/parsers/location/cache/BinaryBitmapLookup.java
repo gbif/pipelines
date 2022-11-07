@@ -16,7 +16,7 @@ public class BinaryBitmapLookup {
   private static final int NOTHING = 0xFFFFFF;
   private final int imgWidth;
   private final int imgHeight;
-  private String kvStoreType;
+  private final String kvStoreType;
 
   @SneakyThrows
   private BinaryBitmapLookup(BufferedImage img, String kvStoreType) {

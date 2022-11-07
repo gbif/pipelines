@@ -27,7 +27,7 @@ public class GeocodeBitmapCache {
   private final int imgHeight;
   private final Map<Integer, GeocodeResponse> colourKey = new ConcurrentHashMap<>();
   public static final String DEFAULT_KV_STORE = "COUNTRY";
-  private String kvStoreType;
+  private final String kvStoreType;
   private boolean missEqualsFail = true;
 
   @SneakyThrows

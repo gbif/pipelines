@@ -1,6 +1,5 @@
 package org.gbif.pipelines.core.interpreters.metadata;
 
-import com.google.common.base.Strings;
 import java.net.URI;
 import java.util.Collections;
 import java.util.Comparator;
@@ -15,9 +14,7 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.model.registry.MachineTag;
-import org.gbif.api.util.VocabularyUtils;
 import org.gbif.api.util.comparators.EndpointPriorityComparator;
-import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.TagName;
 import org.gbif.common.parsers.LicenseParser;
@@ -66,8 +63,8 @@ public class MetadataInterpreter {
         if (networkList != null && !networkList.isEmpty()) {
           mdr.setNetworkKeys(
               networkList.stream()
-                  .filter(x -> x.getKey() != null)
                   .map(Network::getKey)
+                  .filter(Objects::nonNull)
                   .collect(Collectors.toList()));
         }
 
@@ -89,19 +86,6 @@ public class MetadataInterpreter {
         mdr.setHostingOrganizationKey(installation.getOrganizationKey());
 
         copyMachineTags(dataset.getMachineTags(), mdr);
-      }
-    };
-  }
-
-  /**
-   * Gets information about dataset source endpoint type (DWC_ARCHIVE, BIOCASE_XML_ARCHIVE, TAPIR ..
-   * etc)
-   */
-  public static Consumer<MetadataRecord> interpretEndpointType(String endpointType) {
-    return mdr -> {
-      if (!Strings.isNullOrEmpty(endpointType)) {
-        VocabularyUtils.lookup(endpointType, EndpointType.class)
-            .ifPresent(x -> mdr.setProtocol(x.name()));
       }
     };
   }

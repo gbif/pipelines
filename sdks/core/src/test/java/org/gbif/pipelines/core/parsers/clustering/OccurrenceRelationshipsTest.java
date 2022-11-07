@@ -7,7 +7,7 @@ import static org.gbif.pipelines.core.parsers.clustering.RelationshipAssertion.F
 import static org.junit.Assert.*;
 
 import com.google.common.collect.Lists;
-import java.util.Arrays;
+import java.util.Collections;
 import org.junit.Test;
 
 /** Tests for relationship assertions using simple POJOs as the source. */
@@ -347,27 +347,29 @@ public class OccurrenceRelationshipsTest {
 
   @Test
   public void testCatalogNumberOverlaps() {
-    assertTrue(catalogNumberOverlaps("A", "B", "123", Arrays.asList("A:B:123")));
-    assertTrue(catalogNumberOverlaps("A", "B", "123", Arrays.asList("A-B-123")));
-    assertTrue(catalogNumberOverlaps("A", "B", "123", Arrays.asList("A/B/123")));
-    assertTrue(catalogNumberOverlaps("A", "B", "123", Arrays.asList("AB123")));
+    assertTrue(catalogNumberOverlaps("A", "B", "123", Collections.singletonList("A:B:123")));
+    assertTrue(catalogNumberOverlaps("A", "B", "123", Collections.singletonList("A-B-123")));
+    assertTrue(catalogNumberOverlaps("A", "B", "123", Collections.singletonList("A/B/123")));
+    assertTrue(catalogNumberOverlaps("A", "B", "123", Collections.singletonList("AB123")));
 
-    assertFalse(catalogNumberOverlaps("A", "B", "123", Arrays.asList("A:123")));
-    assertFalse(catalogNumberOverlaps("A", "B", "123", Arrays.asList("A-123")));
-    assertFalse(catalogNumberOverlaps("A", "B", "123", Arrays.asList("A/123")));
+    assertFalse(catalogNumberOverlaps("A", "B", "123", Collections.singletonList("A:123")));
+    assertFalse(catalogNumberOverlaps("A", "B", "123", Collections.singletonList("A-123")));
+    assertFalse(catalogNumberOverlaps("A", "B", "123", Collections.singletonList("A/123")));
 
-    assertFalse(catalogNumberOverlaps(null, null, "AB123", Arrays.asList("AB123")));
-    assertFalse(catalogNumberOverlaps("", "NO DISPONSIBL", "AB123", Arrays.asList("AB123")));
-    assertFalse(catalogNumberOverlaps("", "NO DISPONSIBL", "123", Arrays.asList("123")));
+    assertFalse(catalogNumberOverlaps(null, null, "AB123", Collections.singletonList("AB123")));
+    assertFalse(
+        catalogNumberOverlaps("", "NO DISPONSIBL", "AB123", Collections.singletonList("AB123")));
+    assertFalse(
+        catalogNumberOverlaps("", "NO DISPONSIBL", "123", Collections.singletonList("123")));
 
-    assertFalse(catalogNumberOverlaps("A", "B", "123", Arrays.asList("A:B:A123")));
-    assertFalse(catalogNumberOverlaps("A", "B", "123", Arrays.asList("123")));
+    assertFalse(catalogNumberOverlaps("A", "B", "123", Collections.singletonList("A:B:A123")));
+    assertFalse(catalogNumberOverlaps("A", "B", "123", Collections.singletonList("123")));
 
     // https://www.gbif.org/occurrence/2594353674
-    assertFalse(catalogNumberOverlaps("C", "AT", "2323", Arrays.asList("Cat. 2323")));
-    assertFalse(catalogNumberOverlaps("C", "AT", "2323", Arrays.asList("Cat# 2323")));
-    assertFalse(catalogNumberOverlaps("C", "AT", "2323", Arrays.asList("cat# 2323")));
-    assertTrue(catalogNumberOverlaps("C", "AT", "2323", Arrays.asList("cat 2323")));
+    assertFalse(catalogNumberOverlaps("C", "AT", "2323", Collections.singletonList("Cat. 2323")));
+    assertFalse(catalogNumberOverlaps("C", "AT", "2323", Collections.singletonList("Cat# 2323")));
+    assertFalse(catalogNumberOverlaps("C", "AT", "2323", Collections.singletonList("cat# 2323")));
+    assertTrue(catalogNumberOverlaps("C", "AT", "2323", Collections.singletonList("cat 2323")));
   }
 
   @Test
