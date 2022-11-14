@@ -379,7 +379,7 @@ function copy () {
     if [[ "$DR_URL" == http* ]]; then
       # Try to resume previous download (continue if fails)
       set +e
-      $_D curl -sLC - -o "$DR_DEST/$dr.zip" -f "$DR_CONN_URL"
+      $_D curl -sL -o "$DR_DEST/$dr.zip" -f "$DR_CONN_URL"
       set -e
     # else, other types like sftp
     else
