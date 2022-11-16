@@ -162,9 +162,9 @@ public class LocationTransformTest {
 
     // State
     KeyValueTestStoreStub<LatLng, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
-    kvStore.put(new LatLng(56.26d, 9.51d), toGeocodeResponse(Country.DENMARK, Continent.EUROPE));
-    kvStore.put(new LatLng(36.21d, 138.25d), toGeocodeResponse(Country.JAPAN, Continent.ASIA));
-    kvStore.put(new LatLng(88.21d, -32.01d), toGeocodeResponse(null, null));
+    kvStore.put(LatLng.create(56.26d, 9.51d), toGeocodeResponse(Country.DENMARK, Continent.EUROPE));
+    kvStore.put(LatLng.create(36.21d, 138.25d), toGeocodeResponse(Country.JAPAN, Continent.ASIA));
+    kvStore.put(LatLng.create(88.21d, -32.01d), toGeocodeResponse(null, null));
     SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> geocodeKvStore =
         () -> GeocodeKvStore.create(kvStore);
 

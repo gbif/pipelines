@@ -46,13 +46,13 @@ public class LocationInterpreterTest {
 
   static {
     KeyValueTestStore store = new KeyValueTestStore();
-    store.put(new LatLng(15.958333d, -85.908333d), toGeocodeResponse(Country.HONDURAS));
-    store.put(new LatLng(35.891353d, -99.721925d), toGeocodeResponse(Country.UNITED_STATES));
-    store.put(new LatLng(34.69545d, -94.65836d), toGeocodeResponse(Country.UNITED_STATES));
-    store.put(new LatLng(-2.752778d, -58.653057d), toGeocodeResponse(Country.BRAZIL));
-    store.put(new LatLng(-6.623889d, -45.869164d), toGeocodeResponse(Country.BRAZIL));
-    store.put(new LatLng(-17.05d, -66d), toGeocodeResponse(Country.BOLIVIA));
-    store.put(new LatLng(-8.023319, 110.279078), toGeocodeResponse(Country.INDONESIA));
+    store.put(LatLng.create(15.958333d, -85.908333d), toGeocodeResponse(Country.HONDURAS));
+    store.put(LatLng.create(35.891353d, -99.721925d), toGeocodeResponse(Country.UNITED_STATES));
+    store.put(LatLng.create(34.69545d, -94.65836d), toGeocodeResponse(Country.UNITED_STATES));
+    store.put(LatLng.create(-2.752778d, -58.653057d), toGeocodeResponse(Country.BRAZIL));
+    store.put(LatLng.create(-6.623889d, -45.869164d), toGeocodeResponse(Country.BRAZIL));
+    store.put(LatLng.create(-17.05d, -66d), toGeocodeResponse(Country.BOLIVIA));
+    store.put(LatLng.create(-8.023319, 110.279078), toGeocodeResponse(Country.INDONESIA));
     KEY_VALUE_STORE = GeocodeKvStore.create(store);
   }
 

@@ -93,7 +93,8 @@ public class LocationFeatureTransform extends Transform<LocationRecord, Location
                     .filter(c -> c.equals(Country.AUSTRALIA.getIso2LetterCode()))
                     .filter(
                         c ->
-                            new LatLng(lr.getDecimalLatitude(), lr.getDecimalLongitude()).isValid())
+                            LatLng.create(lr.getDecimalLatitude(), lr.getDecimalLongitude())
+                                .isValid())
                     .isPresent())
         .via(LocationFeatureInterpreter.interpret(kvStore))
         .getOfNullable();

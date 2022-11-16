@@ -75,7 +75,7 @@ public class CentrePoints {
               String[] ss = l.split("\t");
               int length = ss.length;
               String name = ss[0].toUpperCase().replace("\"", ""); // Remove possible string quotes
-              LatLng centre = new LatLng(Double.parseDouble(ss[1]), Double.parseDouble(ss[2]));
+              LatLng centre = LatLng.create(Double.parseDouble(ss[1]), Double.parseDouble(ss[2]));
               // country code
               if (length == 4) {
                 String code = ss[3].toUpperCase();
@@ -240,11 +240,11 @@ public class CentrePoints {
     }
 
     public LatLng getTopLeft() {
-      return new LatLng(ymax, xmin);
+      return LatLng.create(ymax, xmin);
     }
 
     public LatLng getBottomRight() {
-      return new LatLng(ymin, xmax);
+      return LatLng.create(ymin, xmax);
     }
 
     @Override

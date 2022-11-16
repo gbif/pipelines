@@ -44,7 +44,11 @@ public class ContinentParser {
     }
 
     // Take parsed coordinate value
-    LatLng latLng = new LatLng(lr.getDecimalLatitude(), lr.getDecimalLongitude());
+    LatLng latLng =
+        LatLng.create(
+            lr.getDecimalLatitude(),
+            lr.getDecimalLongitude(),
+            lr.getCoordinateUncertaintyInMeters());
 
     // Use these to retrieve the Continent.
     if (latLng.getLatitude() != null && latLng.getLongitude() != null) {

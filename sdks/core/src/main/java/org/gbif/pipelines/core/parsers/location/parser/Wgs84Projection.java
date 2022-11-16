@@ -46,7 +46,7 @@ public class Wgs84Projection {
 
     if (Strings.isNullOrEmpty(datum)) {
       issues.add(GEODETIC_DATUM_ASSUMED_WGS84.name());
-      return ParsedField.success(new LatLng(lat, lon), issues);
+      return ParsedField.success(LatLng.create(lat, lon), issues);
     }
 
     try {
@@ -77,13 +77,13 @@ public class Wgs84Projection {
         // verify the datum shift is reasonable
         if (Math.abs(lat - lat2) > SUSPICIOUS_SHIFT || Math.abs(lon - lon2) > SUSPICIOUS_SHIFT) {
           issues.add(COORDINATE_REPROJECTION_SUSPICIOUS.name());
-          return ParsedField.fail(new LatLng(lat, lon), issues);
+          return ParsedField.fail(LatLng.create(lat, lon), issues);
         }
         // flag the record if coords actually changed
         if (lat != lat2 || lon != lon2) {
           issues.add(COORDINATE_REPROJECTED.name());
         }
-        return ParsedField.success(new LatLng(lat2, lon2), issues);
+        return ParsedField.success(LatLng.create(lat2, lon2), issues);
       }
     } catch (Exception ex) {
       log.warn(
@@ -96,7 +96,7 @@ public class Wgs84Projection {
       issues.add(COORDINATE_REPROJECTION_FAILED.name());
     }
 
-    return ParsedField.fail(new LatLng(lat, lon), issues);
+    return ParsedField.fail(LatLng.create(lat, lon), issues);
   }
 
   // Round to 7 decimals (~1m precision) since no way we're getting anything legitimately more
