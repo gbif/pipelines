@@ -61,8 +61,17 @@ public class MultimediaInterpreterTest {
         DcTerm.identifier.qualifiedName(),
         "https://quod.lib.umich.edu/cgi/i/image/api/image/herb00ic:1559372:MICH-V-1559372/full/res:0/0/native.jpg");
 
+    Map<String, String> ext5 = new HashMap<>(7);
+    ext5.put(DcTerm.type.qualifiedName(), "InteractiveResource");
+    ext5.put(DcTerm.format.qualifiedName(), "application/json+ld");
+    ext5.put(DcTerm.description.qualifiedName(), "IIIF Manifest for specimen E00010016");
+    ext5.put(DcTerm.creator.qualifiedName(), "Royal Botanic Garden Edinburgh");
+    ext5.put(DcTerm.license.qualifiedName(), "http://creativecommons.org/publicdomain/zero/1.0/");
+    ext5.put(DcTerm.rightsHolder.qualifiedName(), "Royal Botanic Garden Edinburgh");
+    ext5.put(DcTerm.identifier.qualifiedName(), "https://iiif.rbge.org.uk/herb/iiif/E0001001");
+
     Map<String, List<Map<String, String>>> ext = new HashMap<>(1);
-    ext.put(Extension.MULTIMEDIA.getRowType(), Arrays.asList(ext1, ext2, ext3, ext4));
+    ext.put(Extension.MULTIMEDIA.getRowType(), Arrays.asList(ext1, ext2, ext3, ext4, ext5));
 
     ExtendedRecord record =
         ExtendedRecord.newBuilder()
@@ -88,7 +97,12 @@ public class MultimediaInterpreterTest {
             + "\"https://quod.lib.umich.edu/cgi/i/image/api/image/herb00ic:1559372:MICH-V-1559372/full/res:0/0/native.jpg\", "
             + "\"references\": null, \"title\": null, \"description\": null, \"source\": null, \"audience\": null, "
             + "\"created\": \"2021-01-12T18:33:58Z\", \"creator\": null, \"contributor\": null, \"publisher\": null,"
-            + " \"license\": null, \"rightsHolder\": null, \"datasetId\": null}, {\"type\": \"StillImage\", "
+            + " \"license\": null, \"rightsHolder\": null, \"datasetId\": null}, {\"type\": \"InteractiveResource\", \"format\": "
+            + "\"application/json+ld\", \"identifier\": \"https://iiif.rbge.org.uk/herb/iiif/E0001001\", \"references\": null, "
+            + "\"title\": null, \"description\": \"IIIF Manifest for specimen E00010016\", \"source\": null, \"audience\": null, "
+            + "\"created\": null, \"creator\": \"Royal Botanic Garden Edinburgh\", \"contributor\": null, \"publisher\": null, "
+            + "\"license\": \"http://creativecommons.org/publicdomain/zero/1.0/\", \"rightsHolder\": \"Royal Botanic Garden Edinburgh\", "
+            + "\"datasetId\": null}, {\"type\": \"StillImage\", "
             + "\"format\": \"image/jpeg\", \"identifier\": \"http://www.gbif.org/tmp22.jpg\", \"references\": null, "
             + "\"title\": null, \"description\": null, \"source\": null, \"audience\": null, \"created\": null, "
             + "\"creator\": null, \"contributor\": null, \"publisher\": null, \"license\": null, \"rightsHolder\": null, "
