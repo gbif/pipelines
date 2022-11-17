@@ -160,6 +160,8 @@ public class MultimediaInterpreter implements Serializable {
       m.setType(MediaType.Sound.name());
     } else if (prFn.test("image", MediaType.StillImage)) {
       m.setType(MediaType.StillImage.name());
+    } else if (prFn.test("application/json+ld", MediaType.InteractiveResource)) {
+      m.setType(MediaType.InteractiveResource.name());
     }
   }
 

@@ -8,7 +8,7 @@
     "namespace":"org.gbif.pipelines.io.avro",
     "type" : "enum",
     "symbols" : [
-      "StillImage", "MovingImage", "Sound"
+      "StillImage", "MovingImage", "Sound", "InteractiveResource"
     ]
   },
   {
