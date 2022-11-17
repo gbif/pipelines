@@ -62,8 +62,31 @@ public class ExtensionPojo {
 
     public Setter(String qualifier, String name) {
       this.qualifier = qualifier;
-      this.name = name.equals("Class") ? "Class$" : name;
-      this.vName = "V" + name;
+
+      // name
+      if (name.equals("Class")) {
+        this.name = "Class$";
+      } else {
+        String clearedName = name;
+        if (Character.isDigit(name.charAt(0))) {
+          clearedName = name + "$1";
+        }
+        if (clearedName.contains(":")) {
+          int i = clearedName.indexOf(":");
+          clearedName =
+              clearedName.substring(0, i)
+                  + clearedName.substring(i + 1, i + 2).toUpperCase()
+                  + clearedName.substring(i + 2);
+        }
+        this.name = clearedName;
+      }
+
+      // v_name
+      if (this.name.contains("$")) {
+        this.vName = "V" + this.name.substring(0, this.name.indexOf('$'));
+      } else {
+        this.vName = "V" + this.name;
+      }
     }
 
     public String getQualifier() {

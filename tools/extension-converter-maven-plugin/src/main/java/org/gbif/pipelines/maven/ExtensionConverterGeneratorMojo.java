@@ -5,7 +5,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateExceptionHandler;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.StringReader;
@@ -15,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -29,11 +29,14 @@ import org.gbif.dwc.digester.ThesaurusHandlingRule;
 import org.gbif.dwc.extensions.ExtensionFactory;
 import org.gbif.dwc.extensions.VocabulariesManager;
 import org.gbif.dwc.extensions.Vocabulary;
+import org.gbif.dwc.terms.TermFactory;
 import org.gbif.dwc.xml.SAXUtils;
 import org.gbif.pipelines.maven.ExtensionPojo.Setter;
 
 @Mojo(name = "extensiongeneration", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
 public class ExtensionConverterGeneratorMojo extends AbstractMojo {
+
+  private static final TermFactory TERM_FACTORY = TermFactory.instance();
 
   private static final String POSTFIX_CLASS_NAME = "Converter.java";
 
@@ -59,9 +62,6 @@ public class ExtensionConverterGeneratorMojo extends AbstractMojo {
       Configuration cfg = createConfig();
 
       Map<Extension, String> extensions = Extension.availableExtensionResources();
-      extensions.remove(org.gbif.api.vocabulary.Extension.AUDUBON);
-      extensions.remove(org.gbif.api.vocabulary.Extension.IMAGE);
-      extensions.remove(org.gbif.api.vocabulary.Extension.MULTIMEDIA);
 
       for (Entry<Extension, String> extension : extensions.entrySet()) {
         try {
@@ -99,9 +99,28 @@ public class ExtensionConverterGeneratorMojo extends AbstractMojo {
       throws Exception {
     org.gbif.dwc.extensions.Extension dwcExt = getExtension(url);
 
+    Map<String, Integer> duplicatesMap = new HashMap<>();
+    dwcExt
+        .getProperties()
+        .forEach(
+            x -> {
+              if (duplicatesMap.containsKey(x.getName())) {
+                duplicatesMap.computeIfPresent(x.getName(), (s, i) -> ++i);
+              } else {
+                duplicatesMap.put(x.getName(), 1);
+              }
+            });
+
     List<Setter> setters =
         dwcExt.getProperties().stream()
-            .map(e -> new Setter(e.getQualname(), normalizeName(e.getName())))
+            .map(
+                e -> {
+                  String eName = e.getName();
+                  if (duplicatesMap.get(eName) > 1) {
+                    eName = TERM_FACTORY.findTerm(e.qualifiedName()).prefixedName();
+                  }
+                  return new Setter(e.getQualname(), normalizeName(eName));
+                })
             .collect(Collectors.toList());
 
     String[] extraNamespace =
@@ -119,7 +138,7 @@ public class ExtensionConverterGeneratorMojo extends AbstractMojo {
     Template temp =
         new Template("table-converter", new StringReader(Templates.TABLE_CONVERTER), cfg);
 
-    Writer out = new OutputStreamWriter(new FileOutputStream(classPath.toFile()), UTF_8);
+    Writer out = new OutputStreamWriter(Files.newOutputStream(classPath.toFile().toPath()), UTF_8);
     temp.process(extPojo, out);
 
     getLog().info("DWC extension java converter class is generated - " + classPath);
