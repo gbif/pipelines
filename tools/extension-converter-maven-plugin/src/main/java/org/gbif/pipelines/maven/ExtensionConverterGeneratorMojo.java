@@ -62,6 +62,7 @@ public class ExtensionConverterGeneratorMojo extends AbstractMojo {
       extensions.remove(org.gbif.api.vocabulary.Extension.AUDUBON);
       extensions.remove(org.gbif.api.vocabulary.Extension.IMAGE);
       extensions.remove(org.gbif.api.vocabulary.Extension.MULTIMEDIA);
+      extensions.remove(org.gbif.api.vocabulary.Extension.DNA_DERIVED_DATA);
 
       for (Entry<Extension, String> extension : extensions.entrySet()) {
         try {

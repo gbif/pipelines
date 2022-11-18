@@ -47,6 +47,7 @@ public class XmlToAvscGeneratorMojo extends AbstractMojo {
       extensions.remove(Extension.AUDUBON);
       extensions.remove(Extension.IMAGE);
       extensions.remove(Extension.MULTIMEDIA);
+      extensions.remove(Extension.DNA_DERIVED_DATA);
 
       for (Entry<Extension, String> extension : extensions.entrySet()) {
 
