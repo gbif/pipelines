@@ -128,10 +128,13 @@ public class VerbatimMessageHandler {
 
     // Strategy 1: Chooses a runner type by number of records in a dataset
     if (recordsNumber > 0) {
-      runner =
-          recordsNumber >= config.switchRecordsNumber
-              ? StepRunner.DISTRIBUTED
-              : StepRunner.STANDALONE;
+
+      int switchRecord = config.switchRecordsNumber;
+      if (isValidator(message.getPipelineSteps())) {
+        switchRecord = config.validatorSwitchRecordsNumber;
+      }
+
+      runner = recordsNumber >= switchRecord ? StepRunner.DISTRIBUTED : StepRunner.STANDALONE;
       log.info("Records number - {}, Spark Runner type - {}", recordsNumber, runner);
       return runner;
     }

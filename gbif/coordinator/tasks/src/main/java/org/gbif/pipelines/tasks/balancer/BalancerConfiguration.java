@@ -29,6 +29,11 @@ public class BalancerConfiguration {
   @Min(1)
   public int switchRecordsNumber;
 
+  @Parameter(names = "--validator-switch-records-number")
+  @NotNull
+  @Min(1)
+  public int validatorSwitchRecordsNumber;
+
   @Parameter(names = "--validator-repository-path")
   public String validatorRepositoryPath;
 
