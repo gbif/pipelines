@@ -4,14 +4,6 @@
  */
 [
   {
-    "name" : "MediaType",
-    "namespace":"org.gbif.pipelines.io.avro",
-    "type" : "enum",
-    "symbols" : [
-      "StillImage", "MovingImage", "Sound"
-    ]
-  },
-  {
     "name":"Multimedia",
     "namespace":"org.gbif.pipelines.io.avro",
     "type":"record",

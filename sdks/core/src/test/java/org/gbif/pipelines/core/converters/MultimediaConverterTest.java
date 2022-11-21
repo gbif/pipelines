@@ -2,12 +2,12 @@ package org.gbif.pipelines.core.converters;
 
 import java.util.Arrays;
 import java.util.Collections;
+import org.gbif.api.vocabulary.MediaType;
 import org.gbif.pipelines.io.avro.Audubon;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.Image;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.IssueRecord;
-import org.gbif.pipelines.io.avro.MediaType;
 import org.gbif.pipelines.io.avro.Multimedia;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.junit.Assert;

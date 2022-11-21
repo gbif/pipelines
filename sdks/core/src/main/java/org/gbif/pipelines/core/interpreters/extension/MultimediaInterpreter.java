@@ -15,6 +15,7 @@ import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import lombok.Builder;
 import org.gbif.api.vocabulary.Extension;
+import org.gbif.api.vocabulary.MediaType;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.LicenseUriParser;
 import org.gbif.common.parsers.MediaParser;
@@ -30,7 +31,6 @@ import org.gbif.pipelines.core.interpreters.ExtensionInterpretation.Result;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation.TargetHandler;
 import org.gbif.pipelines.core.parsers.temporal.TemporalParser;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.MediaType;
 import org.gbif.pipelines.io.avro.Multimedia;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 
@@ -160,6 +160,8 @@ public class MultimediaInterpreter implements Serializable {
       m.setType(MediaType.Sound.name());
     } else if (prFn.test("image", MediaType.StillImage)) {
       m.setType(MediaType.StillImage.name());
+    } else if (prFn.test("application/json+ld", MediaType.InteractiveResource)) {
+      m.setType(MediaType.InteractiveResource.name());
     }
   }
 
