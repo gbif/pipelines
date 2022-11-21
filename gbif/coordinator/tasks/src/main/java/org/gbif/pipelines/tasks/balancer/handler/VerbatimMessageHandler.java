@@ -131,6 +131,8 @@ public class VerbatimMessageHandler {
 
       int switchRecord = config.switchRecordsNumber;
       if (isValidator(message.getPipelineSteps())) {
+        log.info(
+            "Use validatorSwitchRecordsNumber settings, becuase message contains validtor pipeline steps");
         switchRecord = config.validatorSwitchRecordsNumber;
       }
 
