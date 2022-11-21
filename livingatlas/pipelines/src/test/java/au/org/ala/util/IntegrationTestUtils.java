@@ -10,10 +10,14 @@ import static au.org.ala.util.TestUtils.SOLR_IMG;
 import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.utils.ALAFsUtils;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.concurrent.atomic.AtomicInteger;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.mockwebserver.MockWebServer;
+import org.apache.http.nio.entity.NStringEntity;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
+import org.gbif.pipelines.estools.client.EsClient;
+import org.gbif.pipelines.estools.client.EsConfig;
 import org.junit.rules.ExternalResource;
 import org.testcontainers.containers.FixedHostPortGenericContainer;
 import org.testcontainers.containers.GenericContainer;
@@ -97,6 +101,18 @@ public class IntegrationTestUtils extends ExternalResource {
       propertiesFilePath = TestUtils.getPipelinesConfigFile();
 
       config = ALAFsUtils.readConfigFile(HdfsConfigs.nullConfig(), propertiesFilePath);
+
+      // Fix for https://github.com/gbif/pipelines/issues/568
+      try (EsClient esClient =
+          EsClient.from(
+              EsConfig.from(
+                  "http://localhost:" + elasticsearchContainer.getMappedPort(ES_INTERNAL_PORT)))) {
+        esClient.performPutRequest(
+            "/_cluster/settings",
+            Collections.emptyMap(),
+            new NStringEntity(
+                "{\"persistent\":{\"cluster.routing.allocation.disk.threshold_enabled\":false}}"));
+      }
     }
   }
 
