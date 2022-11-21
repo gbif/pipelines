@@ -43,6 +43,9 @@ public class IdentifierConfiguration implements BaseConfiguration {
   @Parameter(names = "--id-threshold-percent")
   public double idThresholdPercent = 5;
 
+  @Parameter(names = "--id-threshold-skip")
+  public boolean idThresholdSkip = false;
+
   @Parameter(names = "--ignore-checklists")
   public boolean ignoreChecklists = true;
 
