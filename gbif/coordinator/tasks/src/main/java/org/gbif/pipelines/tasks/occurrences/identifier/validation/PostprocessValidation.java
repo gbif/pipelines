@@ -110,6 +110,9 @@ public class PostprocessValidation {
 
   @SneakyThrows
   private boolean useThresholdSkipTagValue() {
+    if (config.idThresholdSkip) {
+      return true;
+    }
     RegistryConfiguration registryConfiguration = config.stepConfig.registry;
     String datasetKey = message.getDatasetUuid().toString();
     return GbifApi.getMachineTagValue(
