@@ -73,12 +73,18 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
     PipelinesInterpretedMessage pm = new PipelinesInterpretedMessage();
 
     String routingKey;
-    if (config.validatorOnly && config.validatorListenAllMq) {
+    if (config.validatorOnly) {
       pm.setPipelineSteps(Collections.singleton(StepType.VALIDATOR_INTERPRETED_TO_INDEX.name()));
-      routingKey = pm.getRoutingKey() + ".*";
+      if (config.validatorListenAllMq) {
+        routingKey = pm.getRoutingKey() + ".*";
+      } else {
+        routingKey = pm.setRunner(config.processRunner).getRoutingKey();
+      }
     } else {
       routingKey = pm.setRunner(config.processRunner).getRoutingKey();
     }
+
+    log.info("MQ rounting key is {}", routingKey);
     return routingKey;
   }
 
