@@ -81,12 +81,18 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
     PipelinesVerbatimMessage vm = new PipelinesVerbatimMessage();
 
     String routingKey;
-    if (config.validatorOnly && config.validatorListenAllMq) {
+    if (config.validatorOnly) {
       vm.setPipelineSteps(Collections.singleton(StepType.VALIDATOR_VERBATIM_TO_INTERPRETED.name()));
-      routingKey = vm.getRoutingKey() + ".*";
+      if (config.validatorListenAllMq) {
+        routingKey = vm.getRoutingKey() + ".*";
+      } else {
+        routingKey = vm.setRunner(config.processRunner).getRoutingKey();
+      }
     } else {
       routingKey = vm.setRunner(config.processRunner).getRoutingKey();
     }
+
+    log.info("MQ rounting key is {}", routingKey);
     return routingKey;
   }
 
