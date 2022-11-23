@@ -339,6 +339,18 @@ image-load-sh-args:
     executor-memory: 7G
     driver-memory: 1G
 
+export-sh-args:
+  local:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-embedded:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-cluster:
+    conf: spark.default.parallelism=48
+    num-executors: 6
+    executor-cores: 8
+    executor-memory: 20G
+    driver-memory: 4G
+
 uuid-sh-args:
   local:
     jvm: -Xmx8g -XX:+UseG1GC

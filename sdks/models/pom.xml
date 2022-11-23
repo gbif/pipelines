@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.gbif.pipelines</groupId>
     <artifactId>sdks</artifactId>
-    <version>2.12.16-SNAPSHOT</version>
+    <version>2.11.12.3-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -63,16 +63,6 @@
               <testOutputDirectory>../demo/src/main/java/test/java-generated/</testOutputDirectory>
               <imports>
                 <import>${project.basedir}/src/main/avro/issue-record.avsc</import>
-                <import>${project.basedir}/src/main/avro/json/common-json-record.avsc</import>
-                <import>${project.basedir}/src/main/avro/json/derived-metadata-record.avsc</import>
-                <import>${project.basedir}/src/main/avro/json/event-json-record.avsc</import>
-                <import>${project.basedir}/src/main/avro/json/occurrence-json-record.avsc</import>
-                <import>${project.basedir}/src/main/avro/core/common-record.avsc</import>
-                <import>${project.basedir}/src/main/avro/core/temporal-record.avsc</import>
-                <import>${project.basedir}/src/main/avro/core/taxon-record.avsc</import>
-                <import>${project.basedir}/src/main/avro/json/temporal-inherited-record.avsc</import>
-                <import>${project.basedir}/src/main/avro/json/location-inherited-record.avsc</import>
-                <import>${project.basedir}/src/main/avro/json/event-inherited-record.avsc</import>
               </imports>
             </configuration>
           </execution>

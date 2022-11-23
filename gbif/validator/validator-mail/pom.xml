@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.gbif.pipelines</groupId>
     <artifactId>validator</artifactId>
-    <version>2.12.16-SNAPSHOT</version>
+    <version>2.11.12.3-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
   <modelVersion>4.0.0</modelVersion>
@@ -24,10 +24,6 @@
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
       <artifactId>validator-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif.pipelines</groupId>
-      <artifactId>variables</artifactId>
     </dependency>
 
     <!-- Spring dependencies -->

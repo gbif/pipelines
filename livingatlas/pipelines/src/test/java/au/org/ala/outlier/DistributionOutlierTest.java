@@ -8,7 +8,7 @@ import java.util.*;
 import org.junit.Ignore;
 import org.junit.Test;
 
-@Ignore("See #776 uses live services over the web")
+@Ignore
 public class DistributionOutlierTest {
   // String spatial_url = "http://devt.ala.org.au:8080/ws/";
   String spatial_url = "https://spatial-test.ala.org.au/ws/";

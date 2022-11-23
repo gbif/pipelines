@@ -10,7 +10,7 @@
 
   <groupId>org.gbif.pipelines</groupId>
   <artifactId>pipelines-parent</artifactId>
-  <version>2.12.16-SNAPSHOT</version>
+  <version>2.11.12.3-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <modules>
@@ -29,7 +29,7 @@
     <connection>scm:git:git@github.com:gbif/pipelines.git</connection>
     <url>https://github.com/gbif/pipelines</url>
     <developerConnection>scm:git:git@github.com:gbif/pipelines.git</developerConnection>
-    <tag>pipelines-parent-2.11.12</tag>
+    <tag>pipelines-parent-2.11.12.2</tag>
   </scm>
 
   <distributionManagement>
@@ -84,18 +84,18 @@
 
     <!-- GBIF libraries -->
     <gbif-parsers.version>0.58</gbif-parsers.version>
-    <dwca-io.version>2.14</dwca-io.version>
-    <gbif-api.version>0.174.1</gbif-api.version>
-    <gbif-common.version>0.56</gbif-common.version>
-    <dwc-api.version>1.37</dwc-api.version>
+    <dwca-io.version>2.12</dwca-io.version>
+    <gbif-api.version>0.166</gbif-api.version>
+    <gbif-common.version>0.53</gbif-common.version>
+    <dwc-api.version>1.36</dwc-api.version>
     <kvs.version>1.23</kvs.version>
     <hbase-utils.version>0.12</hbase-utils.version>
     <gbif-wrangler.version>0.3</gbif-wrangler.version>
     <gbif-occurrence.version>0.173.1</gbif-occurrence.version>
     <vocabulary-lookup.version>0.47</vocabulary-lookup.version>
-    <registry.version>3.84</registry.version>
+    <registry.version>3.73</registry.version>
     <gbif-common-ws.version>1.18</gbif-common-ws.version>
-    <gbif-postal-service.version>1.5</gbif-postal-service.version>
+    <gbif-postal-service.version>1.2</gbif-postal-service.version>
     <gbif-common-spreadsheet.version>0.2</gbif-common-spreadsheet.version>
 
     <!-- Common libraries -->
@@ -155,20 +155,20 @@
     <hamcrest-java.version>2.0.0.0</hamcrest-java.version>
     <log4j-over-slf4j.version>1.7.16</log4j-over-slf4j.version>
     <zookeeper-version>3.4.5</zookeeper-version>
-    <testcontainers.elasticsearch.version>1.17.2</testcontainers.elasticsearch.version>
+    <testcontainers.elasticsearch.version>1.16.0</testcontainers.elasticsearch.version>
 
     <!-- Maven plugin -->
-    <maven-plugin-api.version>3.8.6</maven-plugin-api.version>
-    <maven-plugin-annotations.version>3.6.4</maven-plugin-annotations.version>
+    <maven-plugin-api.version>3.5.4</maven-plugin-api.version>
+    <maven-plugin-annotations.version>3.5.2</maven-plugin-annotations.version>
 
     <!-- Plugins -->
-    <build-helper-maven.version>3.3.0</build-helper-maven.version>
-    <maven-shade-plugin.version>3.3.0</maven-shade-plugin.version>
-    <maven-clean-plugin.version>3.2.0</maven-clean-plugin.version>
-    <maven-compiler-plugin.version>3.10.1</maven-compiler-plugin.version>
-    <maven-plugin-plugin.version>3.6.4</maven-plugin-plugin.version>
-    <maven-javadoc-plugin.version>3.4.0</maven-javadoc-plugin.version>
-    <spotless-maven-plugin.version>2.22.8</spotless-maven-plugin.version>
+    <build-helper-maven.version>3.0.0</build-helper-maven.version>
+    <maven-shade-plugin.version>3.2.1</maven-shade-plugin.version>
+    <maven-clean-plugin.version>3.1.0</maven-clean-plugin.version>
+    <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
+    <maven-plugin-plugin.version>3.6.0</maven-plugin-plugin.version>
+    <maven-javadoc-plugin.version>3.2.0</maven-javadoc-plugin.version>
+    <spotless-maven-plugin.version>2.0.1</spotless-maven-plugin.version>
     <io.fabric8.version>0.33.0</io.fabric8.version>
 
     <!-- Checkstyle -->
@@ -240,11 +240,6 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
-          <configuration>
-            <compilerArgs>
-              <arg>-XepDisableAllChecks</arg>
-            </compilerArgs>
-          </configuration>
         </plugin>
         <plugin>
           <groupId>org.jacoco</groupId>
@@ -397,11 +392,6 @@
       <dependency>
         <groupId>org.gbif.pipelines</groupId>
         <artifactId>validator-mail</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>au.org.ala</groupId>
-        <artifactId>pipelines</artifactId>
         <version>${project.version}</version>
       </dependency>
 
@@ -763,11 +753,6 @@
         <artifactId>jackson-datatype-jsr310</artifactId>
         <version>${jackson.version}</version>
       </dependency>
-      <dependency>
-        <groupId>com.fasterxml.jackson.dataformat</groupId>
-        <artifactId>jackson-dataformat-yaml</artifactId>
-        <version>${jackson.version}</version>
-      </dependency>
 
       <!-- Http clients -->
       <dependency>
@@ -908,7 +893,6 @@
         <groupId>org.apache.maven</groupId>
         <artifactId>maven-plugin-api</artifactId>
         <version>${maven-plugin-api.version}</version>
-        <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>org.apache.maven.plugin-tools</groupId>

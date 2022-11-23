@@ -17,6 +17,7 @@ import java.time.*;
 import java.time.temporal.TemporalAccessor;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.Schema;
@@ -38,7 +39,6 @@ import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.TermFactory;
-import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.core.parsers.temporal.TemporalParser;
 import org.gbif.pipelines.io.avro.*;
 import org.jetbrains.annotations.NotNull;
@@ -172,6 +172,9 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     skipKeys.add("identifiedByIds"); // multi value field
     skipKeys.add("recordedByIds"); // multi value field
     skipKeys.add("machineTags"); // TODO review content
+    skipKeys.add(
+        "establishmentMeans"); // GBIF treats it as a JSON, but ALA needs a String which is defined
+    // in the latest DWC
 
     // multi valued fields
     skipKeys.add("identifiedByIds");
@@ -239,6 +242,8 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     addToIndexRecord(br, indexRecord, skipKeys);
 
     if (br != null) {
+      addEstablishmentValueSafely(
+          indexRecord, DwcTerm.establishmentMeans.simpleName(), br.getEstablishmentMeans());
       addTermWithAgentsSafely(
           indexRecord, DwcTerm.recordedByID.simpleName(), br.getRecordedByIds());
       addMultiValueTermSafely(indexRecord, DwcTerm.typeStatus.simpleName(), br.getTypeStatus());
@@ -687,6 +692,13 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     }
   }
 
+  private static void addEstablishmentValueSafely(
+      IndexRecord.Builder indexRecord, String field, VocabularyConcept establishmentMeans) {
+    if (establishmentMeans != null) {
+      indexRecord.getStrings().put(field, establishmentMeans.getConcept());
+    }
+  }
+
   private static void addTermSafely(
       IndexRecord.Builder indexRecord, Map<String, String> extension, DwcTerm dwcTerm) {
     String termValue = extension.get(dwcTerm.name());
@@ -848,7 +860,18 @@ public class IndexRecordTransform implements Serializable, IndexFields {
             String k = c.element().getKey();
 
             // ALA specific
-            ALAUUIDRecord ur = v.getOnly(urTag, null);
+            Iterable<ALAUUIDRecord> urs = v.getAll(urTag);
+            List<ALAUUIDRecord> result =
+                StreamSupport.stream(urs.spliterator(), false).collect(Collectors.toList());
+
+            if (result.size() == 0) {
+              throw new RuntimeException("AAR missing for record key " + k);
+            }
+            if (result.size() > 1) {
+              throw new RuntimeException("Multiple AARs for record key " + k);
+            }
+
+            ALAUUIDRecord ur = result.get(0);
 
             if (ur != null && !ur.getId().startsWith(REMOVED_PREFIX_MARKER)) {
 
@@ -911,9 +934,9 @@ public class IndexRecordTransform implements Serializable, IndexFields {
                 counter.inc();
               } else {
                 if (aar == null) {
-                  throw new PipelinesException("AAR missing for record ID " + ur.getId());
+                  throw new RuntimeException("AAR missing for record ID " + ur.getId());
                 } else {
-                  throw new PipelinesException(
+                  throw new RuntimeException(
                       "AAR is present, but data resource UID is null for"
                           + " ur.getId():"
                           + ur.getId()
@@ -924,14 +947,9 @@ public class IndexRecordTransform implements Serializable, IndexFields {
                 }
               }
             } else {
-              if (!ur.getId().startsWith(REMOVED_PREFIX_MARKER)) {
-                if (ur != null) {
-                  log.error("UUID missing for record ID " + ur.getId());
-                  throw new PipelinesException("UUID missing for record ID " + ur.getId());
-                } else {
-                  log.error("UUID missing and ER empty");
-                  throw new PipelinesException("UUID missing and ER empty");
-                }
+              if (ur != null && !ur.getId().startsWith(REMOVED_PREFIX_MARKER)) {
+                log.error("UUID missing and ER empty");
+                throw new RuntimeException("UUID missing and ER empty");
               }
             }
           }
@@ -1182,6 +1200,6 @@ public class IndexRecordTransform implements Serializable, IndexFields {
   }
 
   private static boolean isNotBlank(String s) {
-    return s != null && s.trim().isEmpty();
+    return s != null && !s.trim().isEmpty();
   }
 }
