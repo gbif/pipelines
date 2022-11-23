@@ -2,7 +2,6 @@ package au.org.ala.pipelines.beam;
 
 import static org.apache.beam.sdk.values.TypeDescriptors.strings;
 import static org.gbif.pipelines.common.beam.utils.PathBuilder.buildDatasetAttemptPath;
-import static org.gbif.pipelines.common.beam.utils.PathBuilder.buildPath;
 
 import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.kvs.ALAPipelinesConfigFactory;
@@ -14,13 +13,18 @@ import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationUtils;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.URL;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Scanner;
 import java.util.function.UnaryOperator;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
@@ -31,7 +35,12 @@ import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.SimpleFunction;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.LocatedFileStatus;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.RemoteIterator;
+import org.codehaus.plexus.util.FileUtils;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.core.factory.FileSystemFactory;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.IndexRecord;
 import org.slf4j.MDC;
@@ -52,10 +61,11 @@ public class IndexRecordToDwcaPipeline {
   }
 
   @SneakyThrows
-  public static void run(DwCAExportPipelineOptions options) {
+  public static void run(DwCAExportPipelineOptions options) throws Exception {
 
     UnaryOperator<String> pathFn =
-        fileName -> buildPath(buildDatasetAttemptPath(options, "dwca", false), fileName).toString();
+        fileName ->
+            String.join(Path.SEPARATOR, buildDatasetAttemptPath(options, "dwca", false), fileName);
 
     Pipeline p = Pipeline.create(options);
 
@@ -101,6 +111,56 @@ public class IndexRecordToDwcaPipeline {
 
     // Write the eml.xml
     writeEML(options, pathFn);
+
+    // create output dir
+    FileUtils.forceMkdir(new File(options.getLocalExportPath()));
+
+    // copy from HDFS to /tmp
+    boolean originalInputIsHdfs = options.getInputPath().startsWith("hdfs://");
+
+    // if inputPath is "hdfs://", then copy to local
+    if (originalInputIsHdfs) {
+
+      FileSystem fs =
+          FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
+              .getFs(options.getInputPath());
+
+      Path inputPathHdfs = new Path(options.getInputPath());
+
+      if (!fs.exists(inputPathHdfs)) {
+        throw new RuntimeException("Input file not available: " + options.getInputPath());
+      }
+
+      String dwcaHdfsOutputPath = buildDatasetAttemptPath(options, "dwca", false);
+      String dwcaOutputPath = options.getLocalExportPath() + "/" + options.getDatasetId() + "/";
+      RemoteIterator<LocatedFileStatus> iter =
+          fs.listFiles(new Path(dwcaHdfsOutputPath + "/"), false);
+
+      while (iter.hasNext()) {
+        LocatedFileStatus locatedFileStatus = iter.next();
+        Path path = locatedFileStatus.getPath();
+        if (fs.isFile(path)) {
+          log.info("Transferring " + path.toString() + " to " + dwcaOutputPath);
+          fs.copyToLocalFile(false, path, new Path(dwcaOutputPath + "/" + path.getName()), false);
+        }
+      }
+    }
+
+    String zipPath = options.getLocalExportPath() + "/" + options.getDatasetId() + ".zip";
+    String dwcaOutputPath = options.getLocalExportPath() + "/" + options.getDatasetId();
+    File[] filePaths =
+        originalInputIsHdfs
+            ? new File(dwcaOutputPath).listFiles()
+            : new File(buildDatasetAttemptPath(options, "dwca", false)).listFiles();
+
+    try (ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(zipPath))) {
+      for (File fileToZip : filePaths) {
+        log.info("Adding to Zip file: " + fileToZip.getName());
+        zipOut.putNextEntry(new ZipEntry(fileToZip.getName()));
+        Files.copy(fileToZip.toPath(), zipOut);
+      }
+    }
+    log.info("Zip file written to: " + zipPath);
   }
 
   @SneakyThrows

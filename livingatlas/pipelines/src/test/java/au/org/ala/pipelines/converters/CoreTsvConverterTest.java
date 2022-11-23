@@ -104,7 +104,7 @@ public class CoreTsvConverterTest {
       "\"raw_er_disposition\"", // DwcTerm.disposition
       "\"raw_er_dynamicProperties\"", // DwcTerm.dynamicProperties
       "\"1111111\"", // DwcTerm.endDayOfYear
-      "\"{concept: br_establishmentMeans, lineage: [br_establishmentMeans]}\"", // DwcTerm.establishmentMeans
+      "\"br_establishmentMeans\"", // DwcTerm.establishmentMeans
       "\"raw_er_eventRemarks\"", // DwcTerm.eventRemarks
       "\"raw_er_eventTime\"", // DwcTerm.eventTime
       "\"raw_er_fieldNotes\"", // DwcTerm.fieldNotes
@@ -631,7 +631,6 @@ public class CoreTsvConverterTest {
         BasicRecord.newBuilder()
             .setId(DwcTerm.occurrenceID.simpleName())
             .setCreated(2L)
-            .setGbifId(22L)
             .setBasisOfRecord("br_basisOfRecord")
             .setSex("br_sex")
             .setLifeStage(
@@ -668,7 +667,6 @@ public class CoreTsvConverterTest {
                         .build()))
             .setRecordedBy(Arrays.asList("br_recordedBy_1", "br_recordedBy_2"))
             .setOccurrenceStatus("br_occurrenceStatus")
-            .setIsClustered(true)
             .setDatasetID(Collections.singletonList("br_datasetID"))
             .setDatasetName(Collections.singletonList("br_datasetName"))
             .setOtherCatalogNumbers(Collections.singletonList("br_otherCatalogNumbers"))
@@ -785,14 +783,6 @@ public class CoreTsvConverterTest {
             .setVernacularName("atxr_VernacularName")
             .setSpeciesGroup(Collections.singletonList("atxr_SpeciesGroup"))
             .setSpeciesSubgroup(Collections.singletonList("atxr_SpeciesSubgroup"))
-            .setDiagnostics(
-                Diagnostic.newBuilder()
-                    .setConfidence(5555)
-                    .setStatus(Status.ACCEPTED)
-                    .setNote("atxr_Diagnostic_Note")
-                    .setMatchType(MatchType.EXACT)
-                    .setLineage(Collections.singletonList("atxr_Diagnostic_Lineage"))
-                    .build())
             .build();
 
     ALAAttributionRecord aar =

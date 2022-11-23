@@ -5,8 +5,10 @@ import static org.junit.Assert.*;
 import au.org.ala.distribution.DistributionLayer;
 import au.org.ala.distribution.DistributionServiceImpl;
 import java.util.*;
+import org.junit.Ignore;
 import org.junit.Test;
 
+@Ignore
 public class DistributionOutlierTest {
   // String spatial_url = "http://devt.ala.org.au:8080/ws/";
   String spatial_url = "https://spatial-test.ala.org.au/ws/";
