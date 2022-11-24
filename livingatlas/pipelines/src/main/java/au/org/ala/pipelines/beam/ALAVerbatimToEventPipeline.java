@@ -2,11 +2,8 @@ package au.org.ala.pipelines.beam;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.*;
 
-import au.org.ala.kvs.ALANameMatchConfig;
 import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.kvs.cache.ALAAttributionKVStoreFactory;
-import au.org.ala.kvs.cache.ALANameCheckKVStoreFactory;
-import au.org.ala.kvs.cache.ALANameMatchKVStoreFactory;
 import au.org.ala.kvs.cache.GeocodeKvStoreFactory;
 import au.org.ala.pipelines.transforms.*;
 import au.org.ala.pipelines.transforms.LocationTransform;
@@ -142,18 +139,6 @@ public class ALAVerbatimToEventPipeline {
             .biomeKvStoreSupplier(GeocodeKvStoreFactory.createBiomeSupplier(config))
             .create();
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
-    ALATaxonomyTransform alaTaxonomyTransform =
-        ALATaxonomyTransform.builder()
-            .datasetId(datasetId)
-            .nameMatchStoreSupplier(ALANameMatchKVStoreFactory.getInstanceSupplier(config))
-            .kingdomCheckStoreSupplier(
-                ALANameCheckKVStoreFactory.getInstanceSupplier("kingdom", config))
-            .dataResourceStoreSupplier(ALAAttributionKVStoreFactory.getInstanceSupplier(config))
-            .alaNameMatchConfig(
-                config.getAlaNameMatchConfig() != null
-                    ? config.getAlaNameMatchConfig()
-                    : new ALANameMatchConfig())
-            .create();
     ALATemporalTransform temporalTransform =
         ALATemporalTransform.builder().orderings(dateComponentOrdering).create();
     MultimediaTransform multimediaTransform = transformsFactory.createMultimediaTransform();
@@ -213,11 +198,6 @@ public class ALAVerbatimToEventPipeline {
         .apply("Check event temporal transform", temporalTransform.check(types))
         .apply("Interpret event temporal", temporalTransform.interpret())
         .apply("Write event temporal to avro", temporalTransform.write(pathFn));
-
-    uniqueRawRecords
-        .apply("Check event taxonomy transform", alaTaxonomyTransform.check(types))
-        .apply("Interpret event taxonomy", alaTaxonomyTransform.interpret())
-        .apply("Write event taxon to avro", alaTaxonomyTransform.write(pathFn));
 
     uniqueRawRecords
         .apply("Check event multimedia transform", multimediaTransform.check(types))

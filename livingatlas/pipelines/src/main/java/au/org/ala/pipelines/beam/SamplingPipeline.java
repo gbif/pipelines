@@ -72,7 +72,7 @@ public class SamplingPipeline {
     ALAPipelinesConfig config =
         ALAPipelinesConfigFactory.getInstance(
                 HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()),
-                options.getInputPath())
+                options.getProperties())
             .get();
 
     FileSystem fs = FileSystemFactory.getInstance(hdfsConfigs).getFs(options.getInputPath());

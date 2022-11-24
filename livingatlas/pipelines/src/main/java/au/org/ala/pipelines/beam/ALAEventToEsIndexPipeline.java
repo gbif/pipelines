@@ -4,11 +4,11 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.ALL_AVRO;
 
 import au.org.ala.pipelines.transforms.ALADerivedMetadataTransform;
 import au.org.ala.pipelines.transforms.ALAMetadataTransform;
-import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
 import au.org.ala.pipelines.util.ElasticsearchTools;
 import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationUtils;
+import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
 import java.util.*;
 import java.util.function.Function;
@@ -133,6 +133,11 @@ public class ALAEventToEsIndexPipeline {
         PathBuilder.buildDatasetAttemptPath(options, ValidationUtils.VERBATIM_METRICS, false);
 
     boolean datasetHasOccurrences = FsUtils.fileExists(hdfsConfigs, occurrencesMetadataPath);
+    log.info(
+        "Checking for occurrences on path "
+            + occurrencesMetadataPath
+            + ", has occurrences"
+            + datasetHasOccurrences);
 
     Pipeline p = pipelinesFn.apply(options);
 
@@ -145,7 +150,6 @@ public class ALAEventToEsIndexPipeline {
     TemporalTransform temporalTransform = TemporalTransform.builder().create();
     LocationTransform locationTransform = LocationTransform.builder().create();
     LocationTransform parentLocationTransform = LocationTransform.builder().create();
-    ALATaxonomyTransform alaTaxonomyTransform = ALATaxonomyTransform.builder().create();
     MeasurementOrFactTransform measurementOrFactTransform =
         MeasurementOrFactTransform.builder().create();
 
@@ -179,10 +183,6 @@ public class ALAEventToEsIndexPipeline {
         p.apply("Read Event Location", locationTransform.read(eventsPathFn))
             .apply("Map Location to KV", locationTransform.toKv());
 
-    PCollection<KV<String, ALATaxonRecord>> taxonCollection =
-        p.apply("Read event taxon records", alaTaxonomyTransform.read(eventsPathFn))
-            .apply("Map event taxon records to KV", alaTaxonomyTransform.toCoreIdKv());
-
     InheritedFields inheritedFields =
         InheritedFields.builder()
             .inheritedFieldsTransform(InheritedFieldsTransform.builder().build())
@@ -209,13 +209,11 @@ public class ALAEventToEsIndexPipeline {
             .verbatimTransform(verbatimTransform)
             .temporalTransform(temporalTransform)
             .parentLocationTransform(parentLocationTransform)
-            .taxonomyTransform(alaTaxonomyTransform)
             .locationTransform(locationTransform)
             .eventCoreTransform(eventCoreTransform)
             .verbatimCollection(verbatimCollection)
             .temporalCollection(temporalCollection)
             .locationCollection(locationCollection)
-            .taxonCollection(taxonCollection)
             .eventCoreCollection(eventCoreCollection)
             .occurrencesPathFn(occurrencesPathFn)
             .datasetHasOccurrences(datasetHasOccurrences)
@@ -312,24 +310,30 @@ public class ALAEventToEsIndexPipeline {
             .withConnectionConfiguration(esConfig)
             .withMaxBatchSizeBytes(options.getEsMaxBatchSizeBytes())
             .withRoutingFn(
-                input ->
-                    Optional.of(input)
-                        .filter(i -> i.hasNonNull("joinRecord"))
-                        .map(i -> i.get("joinRecord"))
+                new ElasticsearchIO.Write.FieldValueExtractFn() {
+                  @Override
+                  public String apply(JsonNode input) {
+                    return Optional.of(input.get("joinRecord"))
                         .filter(i -> i.hasNonNull("parent"))
                         .map(i -> i.get("parent").asText())
-                        .orElse(input.get("internalId").asText()))
+                        .orElse(input.get("internalId").asText());
+                  }
+                })
             .withMaxBatchSize(options.getEsMaxBatchSize());
 
     // Ignore gbifID as ES doc ID, useful for validator
     if (esDocumentId != null && !esDocumentId.isEmpty()) {
-      writeIO = writeIO.withIdFn(input -> input.get(esDocumentId).asText());
+      writeIO =
+          writeIO.withIdFn(
+              new ElasticsearchIO.Write.FieldValueExtractFn() {
+                @Override
+                public String apply(JsonNode input) {
+                  return input.get(esDocumentId).asText();
+                }
+              });
     }
 
     jsonCollection.apply("Push records to ES", writeIO);
-
-    // run the AVRO builder
-    ALAEventToSearchAvroPipeline.run(options);
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();
@@ -346,13 +350,11 @@ public class ALAEventToEsIndexPipeline {
     private final VerbatimTransform verbatimTransform;
     private final TemporalTransform temporalTransform;
     private final LocationTransform parentLocationTransform;
-    private final ALATaxonomyTransform taxonomyTransform;
     private final EventCoreTransform eventCoreTransform;
     private final LocationTransform locationTransform;
     private final PCollection<KV<String, ExtendedRecord>> verbatimCollection;
     private final PCollection<KV<String, TemporalRecord>> temporalCollection;
     private final PCollection<KV<String, LocationRecord>> locationCollection;
-    private final PCollection<KV<String, ALATaxonRecord>> taxonCollection;
     private final PCollection<KV<String, EventCoreRecord>> eventCoreCollection;
     private final UnaryOperator<String> occurrencesPathFn;
     private final boolean datasetHasOccurrences;

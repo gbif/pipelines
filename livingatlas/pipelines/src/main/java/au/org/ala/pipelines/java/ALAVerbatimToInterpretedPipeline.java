@@ -13,6 +13,8 @@ import au.org.ala.kvs.cache.ALANameMatchKVStoreFactory;
 import au.org.ala.kvs.cache.GeocodeKvStoreFactory;
 import au.org.ala.kvs.cache.RecordedByKVStoreFactory;
 import au.org.ala.kvs.client.ALACollectoryMetadata;
+import au.org.ala.pipelines.beam.ALAInterpretationPipelineOptions;
+import au.org.ala.pipelines.beam.ALAVerbatimToEventPipeline;
 import au.org.ala.pipelines.transforms.ALAAttributionTransform;
 import au.org.ala.pipelines.transforms.ALABasicTransform;
 import au.org.ala.pipelines.transforms.ALADefaultValuesTransform;
@@ -21,6 +23,7 @@ import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
 import au.org.ala.pipelines.transforms.ALATemporalTransform;
 import au.org.ala.pipelines.transforms.LocationTransform;
 import au.org.ala.pipelines.util.VersionInfo;
+import au.org.ala.utils.ArchiveUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationUtils;
 import java.io.IOException;
@@ -70,10 +73,12 @@ import org.gbif.pipelines.io.avro.ALATaxonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.transforms.Transform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
+import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.java.OccurrenceExtensionTransform;
 import org.slf4j.MDC;
@@ -131,8 +136,8 @@ public class ALAVerbatimToInterpretedPipeline {
   }
 
   public static void run(String[] args) {
-    InterpretationPipelineOptions options =
-        PipelinesOptionsFactory.create(InterpretationPipelineOptions.class, args);
+    ALAInterpretationPipelineOptions options =
+        PipelinesOptionsFactory.create(ALAInterpretationPipelineOptions.class, args);
     options.setMetaFileName(ValidationUtils.INTERPRETATION_METRICS);
     run(options);
   }
@@ -147,7 +152,8 @@ public class ALAVerbatimToInterpretedPipeline {
   }
 
   public static void run(String[] args, ExecutorService executor) {
-    InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
+    ALAInterpretationPipelineOptions options =
+        PipelinesOptionsFactory.create(ALAInterpretationPipelineOptions.class, args);
     run(options, executor);
   }
 
@@ -240,6 +246,10 @@ public class ALAVerbatimToInterpretedPipeline {
             .create();
     metadataTransform.setup();
 
+    // add measurement or facts...
+    MeasurementOrFactTransform measurementOrFactTransform =
+        MeasurementOrFactTransform.builder().create();
+
     Optional<ALAMetadataRecord> result = metadataTransform.processElement(options.getDatasetId());
     ALAMetadataRecord mdr;
     if (result.isPresent()) {
@@ -301,7 +311,9 @@ public class ALAVerbatimToInterpretedPipeline {
             createWriter(options, TemporalRecord.getClassSchema(), temporalTransform, id);
         SyncDataFileWriter<MultimediaRecord> multimediaWriter =
             createWriter(options, MultimediaRecord.getClassSchema(), multimediaTransform, id);
-
+        SyncDataFileWriter<MeasurementOrFactRecord> measurementOrFactWriter =
+            createWriter(
+                options, MeasurementOrFactRecord.getClassSchema(), measurementOrFactTransform, id);
         // ALA specific
         SyncDataFileWriter<LocationRecord> locationWriter =
             createWriter(options, LocationRecord.getClassSchema(), locationTransform, id);
@@ -336,6 +348,9 @@ public class ALAVerbatimToInterpretedPipeline {
             locationTransform.processElement(er).ifPresent(locationWriter::append);
             alaTaxonomyTransform.processElement(er).ifPresent(alaTaxonWriter::append);
             alaAttributionTransform.processElement(er, mdr).ifPresent(alaAttributionWriter::append);
+            measurementOrFactTransform
+                .processElement(er)
+                .ifPresent(measurementOrFactWriter::append);
           };
 
       // Run async interpretation and writing for all records
@@ -369,6 +384,13 @@ public class ALAVerbatimToInterpretedPipeline {
     log.info("Saving metrics...");
     MetricsHandler.saveCountersToTargetPathFile(options, metrics.getMetricsResult());
     log.info("Pipeline has been finished - " + LocalDateTime.now());
+
+    if (options instanceof ALAInterpretationPipelineOptions
+        && ((ALAInterpretationPipelineOptions) options).isEventsEnabled()
+        && ArchiveUtils.isEventCore(options)) {
+      log.info("Running events pipeline");
+      ALAVerbatimToEventPipeline.run(options);
+    }
   }
 
   /** Create an AVRO file writer */

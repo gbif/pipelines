@@ -1,0 +1,38 @@
+dataset-archive-list:
+  inputPath: s3://S3_BUCKET/dwca-imports
+
+dwca-avro:
+  inputPath: /data/biocache-load/{datasetId}
+  tempLocation: /data/biocache-load/{datasetId}
+
+collectory:
+  wsUrl: REGISTRY_URL
+  httpHeaders:
+    Authorization: ALA_API_KEY
+
+alaNameMatch:
+  wsUrl: NAME_MATCHING_URL
+
+uuid:
+  throwErrorOnValidationFail: false
+
+sds:
+  wsUrl: SDS_URL
+
+imageService:
+  wsUrl: IMAGES_URL
+  httpHeaders:
+    apiKey: ALA_API_KEY
+
+speciesListService:
+  wsUrl: LISTS_URL
+
+samplingService:
+  wsUrl: SAMPLING_URL
+
+solr:
+  zkHost: ZK_URL
+
+elastic:
+  esHosts: ES_HOSTS
+  esAlias: ES_ALIAS

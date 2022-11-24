@@ -41,7 +41,7 @@ public class ALAOccurrenceJsonConverter {
     OccurrenceJsonRecord.Builder builder = OccurrenceJsonRecord.newBuilder();
     builder.setId(uuid.getUuid());
     builder.setCreated(uuid.getFirstLoaded().toString());
-    builder.setGbifId(1);
+    builder.setGbifId(0);
     mapMetadataRecord(builder);
     mapBasicRecord(builder);
     mapTemporalRecord(builder);
@@ -374,7 +374,6 @@ public class ALAOccurrenceJsonConverter {
   private void mapExtendedRecord(OccurrenceJsonRecord.Builder builder) {
 
     builder
-        .setId(verbatim.getId())
         .setAll(JsonConverter.convertFieldAll(verbatim))
         .setExtensions(JsonConverter.convertExtensions(verbatim))
         .setVerbatim(JsonConverter.convertVerbatimRecord(verbatim));

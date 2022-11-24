@@ -1,0 +1,5 @@
+eventID,occurrenceID,measurementID,measurementType,measurementValue,measurementAccuracy,measurementUnit,measurementDeterminedDate,measurementMethod,measurementRemarks
+event4,occurrence4,measurement1,transectBlock,1,,,5/12/2005,,
+event4,occurrence4,measurement1,transectBlock2,1,,,5/12/2005,,
+event4-1,occurrence4-1,measurement1,transectBlock,1,,,5/12/2006,,
+event4-1,occurrence4-1,measurement1,transectBlock2,1,,,5/12/2006,,

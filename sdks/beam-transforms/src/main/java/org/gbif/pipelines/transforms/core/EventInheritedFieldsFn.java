@@ -75,6 +75,10 @@ public class EventInheritedFieldsFn
       }
 
       EventInheritedFields parent = recordsMap.get(parentId);
+      // null in the case of missing parent
+      if (parent == null) {
+        return builder;
+      }
 
       if (parent.getLocationID() != null) {
         builder.setLocationID(parent.getLocationID());

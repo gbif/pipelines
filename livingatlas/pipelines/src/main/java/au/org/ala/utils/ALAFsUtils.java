@@ -24,7 +24,6 @@ import org.apache.hadoop.fs.*;
 import org.apache.hadoop.fs.FileSystem;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.beam.options.BasePipelineOptions;
-import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
@@ -207,6 +206,11 @@ public class ALAFsUtils {
     return fs.exists(path);
   }
 
+  public static boolean hasFiles(FileSystem fs, String wildcardPath) throws IOException {
+    Path path = createPath(wildcardPath);
+    return fs.globStatus(path).length > 0;
+  }
+
   /** Returns true if the supplied path exists. */
   public static boolean createDirectory(FileSystem fs, String directoryPath) throws IOException {
     return fs.mkdirs(createPath(directoryPath));
@@ -225,16 +229,6 @@ public class ALAFsUtils {
       filePaths.add(filePath.toString());
     }
     return filePaths;
-  }
-
-  public static void deleteMetricsFile(InterpretationPipelineOptions options) {
-    String metadataPath =
-        PathBuilder.buildDatasetAttemptPath(options, options.getMetaFileName(), false);
-    FileSystem fs =
-        FsUtils.getFileSystem(
-            HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()),
-            metadataPath);
-    deleteIfExist(fs, metadataPath);
   }
 
   /**
@@ -262,39 +256,6 @@ public class ALAFsUtils {
       }
     }
     throw new FileNotFoundException("The properties file doesn't exist - " + filePath);
-  }
-
-  public static boolean checkAndCreateLockFile(InterpretationPipelineOptions options)
-      throws IOException {
-    FileSystem fs =
-        FileSystemFactory.getInstance(
-                HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()))
-            .getFs(options.getInputPath());
-
-    Path path = new Path(options.getInputPath() + ".lockdir");
-    if (fs.exists(path)) {
-      // dataset is locked
-      log.info("lockdir exists: " + options.getInputPath() + ".lockdir");
-      return false;
-    }
-
-    log.info("Creating lockdir: " + options.getInputPath() + ".lockdir");
-    // otherwise, lock it and return true
-    try {
-      return fs.mkdirs(new Path(options.getInputPath() + ".lockdir"));
-    } catch (IOException e) {
-      log.info("Unable to create lockdir");
-      return false;
-    }
-  }
-
-  public static void deleteLockFile(InterpretationPipelineOptions options) {
-
-    String lockFilePath = options.getInputPath() + ".lockdir";
-
-    log.info("Attempting to delete lock file {}", lockFilePath);
-    FsUtils.deleteIfExist(
-        HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()), lockFilePath);
   }
 
   /**
