@@ -2,6 +2,7 @@ package au.org.ala.pipelines.java;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.ALL_AVRO;
 
+import au.org.ala.pipelines.beam.ALAEventToSearchAvroPipeline;
 import au.org.ala.pipelines.common.ALARecordTypes;
 import au.org.ala.pipelines.options.IndexingPipelineOptions;
 import au.org.ala.pipelines.transforms.ALAAttributionTransform;
@@ -10,6 +11,7 @@ import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
 import au.org.ala.pipelines.transforms.IndexRecordTransform;
 import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.ALAFsUtils;
+import au.org.ala.utils.ArchiveUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationResult;
 import au.org.ala.utils.ValidationUtils;
@@ -365,5 +367,9 @@ public class IndexRecordPipeline {
 
     MetricsHandler.saveCountersToTargetPathFile(options, metrics.getMetricsResult());
     log.info("Pipeline has been finished - {}", LocalDateTime.now());
+
+    if (ArchiveUtils.isEventCore(options)) {
+      ALAEventToSearchAvroPipeline.run(options);
+    }
   }
 }

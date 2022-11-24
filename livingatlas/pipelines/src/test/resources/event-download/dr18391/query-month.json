@@ -1,0 +1,10 @@
+{
+  "type": "and",
+  "predicates": [{
+    "type": "in",
+    "key": "month",
+    "values": [
+      2
+    ]
+  }]
+}

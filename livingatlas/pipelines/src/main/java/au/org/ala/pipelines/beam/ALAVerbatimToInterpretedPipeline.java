@@ -18,6 +18,7 @@ import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
 import au.org.ala.pipelines.transforms.ALATemporalTransform;
 import au.org.ala.pipelines.transforms.LocationTransform;
 import au.org.ala.pipelines.util.VersionInfo;
+import au.org.ala.utils.ArchiveUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationUtils;
 import java.io.IOException;
@@ -104,8 +105,8 @@ public class ALAVerbatimToInterpretedPipeline {
   public static void main(String[] args) throws IOException {
     VersionInfo.print();
     String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "interpret");
-    InterpretationPipelineOptions options =
-        PipelinesOptionsFactory.createInterpretation(combinedArgs);
+    ALAInterpretationPipelineOptions options =
+        PipelinesOptionsFactory.create(ALAInterpretationPipelineOptions.class, combinedArgs);
     options.setMetaFileName(ValidationUtils.INTERPRETATION_METRICS);
     run(options);
     // FIXME: Issue logged here: https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/105
@@ -306,6 +307,12 @@ public class ALAVerbatimToInterpretedPipeline {
     String tempPath = String.join("/", targetPath, datasetId, attempt.toString());
     FsUtils.deleteDirectoryByPrefix(hdfsConfigs, tempPath, ".temp-beam");
 
+    if (options instanceof ALAInterpretationPipelineOptions
+        && ((ALAInterpretationPipelineOptions) options).isEventsEnabled()
+        && ArchiveUtils.isEventCore(options)) {
+      log.info("Running events pipeline");
+      ALAVerbatimToEventPipeline.run(options);
+    }
     log.info("Pipeline has been finished");
   }
 }

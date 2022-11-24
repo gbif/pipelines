@@ -72,7 +72,7 @@ public class LayerCrawler {
     config =
         ALAPipelinesConfigFactory.getInstance(
                 HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()),
-                options.getInputPath())
+                options.getProperties())
             .get();
 
     MDC.put("step", "SAMPLING");

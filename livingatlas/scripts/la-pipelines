@@ -82,7 +82,6 @@ dwca-avro --> interpret --> validate --> uuid --> sds --> image-load ... │
 -  'copy' downloads Dwc-A from collectory and copy it to local fs and optionally to hdfs (and an exclude list for 'all')
 -  'dwca-avro' reads a Dwc-A and converts it to an verbatim.avro file;
 -  'interpret' reads verbatim.avro, interprets it and writes the interpreted data and the issues to Avro files;
--  'interpret-event' reads verbatim.avro, interprets it and writes the interpreted data and the issues to Avro files;
 -  'validate' validates the identifiers for a dataset, checking for duplicate and empty keys;
 -  'uuid' mints UUID on new records and rematches to existing UUIDs for records loaded before;
 -  'sds' runs the sensitive data checks;
@@ -93,43 +92,44 @@ dwca-avro --> interpret --> validate --> uuid --> sds --> image-load ... │
 -  'sample' use the sampling service to retrieve values for points for the layers in the spatial service;
 -  'jackknife' adds an aggregated jackknife AVRO for all datasets. Requires samping-avro. After running a full 'index' is required.
 -  'solr' reads index records in AVRO and submits them to SOLR;
--  'solr-schema' sync schema
--  'elastic-event' reads index records in AVRO and submits them to ElasticSearch;
+-  'solr-schema' retrieve a list of indexable fields from the AVRO with types and counts;
+-  'elastic' reads index records in AVRO and submits them to ElasticSearch;
 -  'archive-list' dumps out a list of archives that can be ingested to '/tmp/dataset-archive-list.csv';
 -  'dataset-list' dumps out a list of datasets that have been ingested to '/tmp/dataset-counts.csv';
 -  'validation-report' dumps out a CSV list of datasets ready to be indexed to '/tmp/validation-report.csv';
 -  'clustering' clustering of occurrences;
 -  'prune-datasets' remove any datasets no longer registered in the collectory;
--  'dwca-export' export a dwca archive;
+-  'dwca-export' export a dwca archive with a fixed set of columns;
+-  'predicate-export' export a dwca archive of data matching a JSON query stored in a text file;
 -  'migrate' used for migration;
 
 All the steps generate an output. If only the final output is desired, the intermediate outputs can be ignored.
 
 Usage:
-  $CMD [options] copy          (<dr>...|all) [--hdfs] [--exclude=<exc>]
-  $CMD [options] dwca-avro     (<dr>...|all)
-  $CMD [options] interpret     (<dr>...|all)         $WHEREL
-  $CMD [options] interpret-event     (<dr>...|all)         $WHERE
-  $CMD [options] validate      (<dr>...|all)         $WHERE
-  $CMD [options] uuid          (<dr>...|all)         $WHERE
-  $CMD [options] sds           (<dr>...|all)         $WHEREL
-  $CMD [options] image-load    (<dr>...|all)         $WHERE
-  $CMD [options] image-sync    (<dr>...|all)         $WHERE
-  $CMD [options] index         (<dr>...|all)         $WHEREL
-  $CMD [options] sample        (<dr>...|all)         $WHERE
-  $CMD [options] clustering    (all)                 $WHERE
-  $CMD [options] jackknife     (all)                 $WHERE
-  $CMD [options] outlier       (<dr>...|all)         $WHERE
-  $CMD [options] solr          (<dr>...|all)         $WHERE
-  $CMD [options] elastic-event     (<dr>...|all)         $WHERE
-  $CMD [options] solr-schema   (<dr>...|all)         $WHERE
+  $CMD [options] copy                (<dr>...|all)    [--hdfs] [--exclude=<exc>]
+  $CMD [options] dwca-avro           (<dr>...|all)
+  $CMD [options] interpret           (<dr>...|all)    $WHEREL
+  $CMD [options] validate            (<dr>...|all)    $WHERE
+  $CMD [options] uuid                (<dr>...|all)    $WHERE
+  $CMD [options] sds                 (<dr>...|all)    $WHEREL
+  $CMD [options] image-load          (<dr>...|all)    $WHERE
+  $CMD [options] image-sync          (<dr>...|all)    $WHERE
+  $CMD [options] index               (<dr>...|all)    $WHEREL
+  $CMD [options] sample              (<dr>...|all)    $WHERE
+  $CMD [options] clustering          (all)            $WHERE
+  $CMD [options] jackknife           (all)            $WHERE
+  $CMD [options] outlier             (<dr>...|all)    $WHERE
+  $CMD [options] solr                (<dr>...|all)    $WHERE
+  $CMD [options] elastic             (<dr>...|all)    $WHERE
+  $CMD [options] solr-schema         (<dr>...|all)    $WHERE
   $CMD [options] archive-list
   $CMD [options] dataset-list
   $CMD [options] prune-datasets
   $CMD [options] validation-report
-  $CMD [options] do-all        (<dr>...|all)         $WHEREL
-  $CMD [options] dwca-export   (<dr>...|all)         $WHERE
-  $CMD [options] migrate       (<dr>...|all)         $WHERE
+  $CMD [options] do-all              (<dr>...|all)    $WHEREL
+  $CMD [options] dwca-export         (<dr>...|all)    $WHERE
+  $CMD [options] predicate-export    (<dr>)           [--queryFile=<queryFile>] [--jobId=<jobId>] $WHERE
+  $CMD [options] migrate             (<dr>...|all)    $WHERE
   $CMD -h | --help
   $CMD -v | --version
 
@@ -516,6 +516,9 @@ function spark-cluster-pipeline() {
     # Remove empty confs
     if [[ $CONF = "--conf" ]] ; then CONF=""; fi
 
+    MASTER="--master $SPARK_MASTER"
+    if [[ $SPARK_MASTER = "DONT_SET" ]] ; then MASTER=""; fi
+
     if [[ $ltype = "spark-cluster" ]] ; then
         $_D $SPARK_SUBMIT_PATH \
             --name "$NAME" \
@@ -525,7 +528,7 @@ function spark-cluster-pipeline() {
             $(toArg $SH_ARGS executor-memory) \
             $(toArg $SH_ARGS driver-memory) \
             --class $CLASS \
-            --master $SPARK_MASTER \
+            $MASTER \
             $PIPELINES_JAR \
             --datasetId=$dr \
             --config=$config $ARGS \
@@ -554,31 +557,11 @@ function interpret () {
     logStepEnd "Interpretation" $dr $ltype $SECONDS
 }
 
-function interpret-event () {
+function elastic () {
     local dr="$1" ltype="$2"
 
     SECONDS=0
-    logStepStart "EventInterpretation" $dr
-
-    SH_ARGS=interpret-sh-args.local
-    CLASS=au.org.ala.pipelines.beam.ALAVerbatimToEventPipeline
-    java-pipeline $ltype $SH_ARGS $CLASS $dr
-
-    SH_ARGS=interpret-sh-args.spark-embedded
-    CLASS=au.org.ala.pipelines.beam.ALAVerbatimToEventPipeline
-    spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
-
-    SH_ARGS=interpret-sh-args.spark-cluster
-    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "interpret-event $dr"
-
-    logStepEnd "EventInterpretation" $dr $ltype $SECONDS
-}
-
-function elastic-event () {
-    local dr="$1" ltype="$2"
-
-    SECONDS=0
-    logStepStart "ElasticEvent" $dr
+    logStepStart "Elastic" $dr
 
     SH_ARGS=elastic-sh-args.local
     CLASS=au.org.ala.pipelines.beam.ALAEventToEsIndexPipeline
@@ -589,9 +572,9 @@ function elastic-event () {
     spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
 
     SH_ARGS=elastic-sh-args.spark-cluster
-    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "elastic-event $dr"
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "elastic $dr"
 
-    logStepEnd "EventElastic" $dr $ltype $SECONDS
+    logStepEnd "Elastic" $dr $ltype $SECONDS
 }
 
 function validate () {
@@ -864,24 +847,42 @@ function index () {
 
 function dwca_export () {
     local dr="$1" ltype="$2"
-    CLASS=au.org.ala.pipelines.beam.IndexRecordToDwcaPipeline
+    CLASS=au.org.ala.pipelines.beam.DwcaExportPipeline
 
     logStepStart "Dwca-export" $dr
     SECONDS=0
 
     SH_ARGS=export-sh-args.local
-    CLASS=au.org.ala.pipelines.java.IndexRecordPipeline
     java-pipeline $ltype $SH_ARGS $CLASS $dr
 
     SH_ARGS=export-sh-args.spark-embedded
-    CLASS=au.org.ala.pipelines.beam.IndexRecordPipeline
     spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
 
     SH_ARGS=export-sh-args.spark-cluster
-    CLASS=au.org.ala.pipelines.beam.IndexRecordPipeline
     spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "Dwca-export $dr"
 
     logStepEnd "Dwca-export" $dr $ltype $SECONDS
+}
+
+function predicate_export () {
+    local dr="$1" ltype="$2"
+    CLASS=au.org.ala.pipelines.spark.PredicateExportDwCAPipeline
+
+    logStepStart "Predicate-export" $dr
+    SECONDS=0
+
+    ARGS="--queryFile=$queryFile --jobId=$jobId"
+
+    SH_ARGS=export-sh-args.local
+    java-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=export-sh-args.spark-embedded
+    spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=export-sh-args.spark-cluster
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "Predicate-export $dr"
+
+    logStepEnd "Predicate-export" $dr $ltype $SECONDS
 }
 
 if ($archive_list) ; then
@@ -948,12 +949,8 @@ if ($interpret || $do_all); then
     do_step interpret
 fi
 
-if ($interpret_event || $do_all); then
-    do_step interpret-event
-fi
-
-if ($elastic_event || $do_all); then
-    do_step elastic-event
+if ($elastic || $do_all); then
+    do_step elastic
 fi
 
 if ($validate || $do_all); then
@@ -962,6 +959,10 @@ fi
 
 if ($dwca_export); then
     do_step dwca_export
+fi
+
+if ($predicate_export); then
+    do_step predicate_export
 fi
 
 if ($uuid || $do_all); then

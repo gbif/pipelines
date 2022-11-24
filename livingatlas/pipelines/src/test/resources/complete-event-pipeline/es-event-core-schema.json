@@ -1084,9 +1084,9 @@
             "level3Name": {
               "type": "keyword",
               "copy_to": "all"
-        }
-      }
-    },
+            }
+          }
+        },
         "year": {
           "type": "short"
         },

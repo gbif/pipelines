@@ -444,7 +444,7 @@ public class ValidationUtils {
           FileSystemFactory.getInstance(
                   HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()))
               .getFs(options.getInputPath());
-      verbatimAvroAvailable = ALAFsUtils.exists(fs, options.getInputPath());
+      verbatimAvroAvailable = ALAFsUtils.hasFiles(fs, options.getInputPath());
     } catch (Exception e) {
       log.error(e.getMessage(), e);
     }

@@ -161,15 +161,10 @@ interpret:
   appName: Interpretation for {datasetId}
   interpretationTypes: ALL
   defaultDateFormat: DMYT,DMY
-  inputPath: '{fsPath}/pipelines-data/{datasetId}/1/verbatim.avro'
+  inputPath: '{fsPath}/pipelines-data/{datasetId}/1/verbatim/*.avro'
   # Skips GBIF id generation and copies ids from ExtendedRecord ids
   useExtendedRecordId: true
   runner: SparkRunner
-  ## For spark-cluster:
-  #  name: interpret {datasetId}
-  #  appName: Interpretation for {datasetId}
-  ## For spark-embedded:
-  #  appName: Interpretation for {datasetId}
 
 # class: au.org.ala.pipelines.beam.ALAUUIDMintingPipeline
 uuid:
@@ -178,6 +173,7 @@ uuid:
   inputPath: '{fsPath}/pipelines-data'
   numberOfBackupsToKeep: 10
   percentageChangeAllowed: 50
+  throwErrorOnValidationFail: false
 
 images:
   appName: Image syncing for {datasetId}
@@ -264,9 +260,23 @@ export:
   appName: DwCA export for {datasetId}
   inputPath: '{fsPath}/pipelines-data'
   targetPath: '{fsPath}/pipelines-data'
+  localExportPath: /tmp/pipelines-export
   allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
   imageServicePath: "https://images.ala.org.au/image/proxyImageThumbnailLarge?imageId={0}"
   runner: SparkRunner
+  predicateExportEnabled: true
+
+predicate-export:
+  inputPath: '{fsPath}/pipelines-data'
+  localExportPath: /tmp/pipelines-export
+  skipExportFields:
+    - "id"
+    - "parentId"
+    - "created"
+    - "hasGeospatialIssue"
+    - "hasCoordinate"
+    - "repatriated"
+    - "coreId"
 
 # class: au.org.ala.pipelines.beam.IndexRecordToSolrPipeline
 solrSchema:
@@ -308,7 +318,9 @@ validation-report:
   checkSampling: true
   solrCollection: biocache
 
-dwca-avro-sh-args:
+
+
+-dwca-avro-sh-args:
   local:
     jvm: -Xmx2g
   spark-embedded:
@@ -332,32 +344,6 @@ interpret-sh-args:
     executor-cores: 8
     executor-memory: 24G
     driver-memory: 4G
-#    conf: spark.default.parallelism=144
-#    num-executors: 12
-#    executor-cores: 8
-#    executor-memory: 7G
-#    driver-memory: 2G
-
-# 6mins with errors
-#    conf: spark.default.parallelism=144
-#    num-executors: 12
-#    executor-cores: 8
-#    executor-memory: 8G
-#    driver-memory: 1G
-
-# 6mins
-#  conf: spark.default.parallelism=144
-#  num-executors: 16
-#  executor-cores: 8
-#  executor-memory: 7G
-#  driver-memory: 1G
-
-#9 mins
-#    conf: spark.default.parallelism=500
-#    num-executors: 12
-#    executor-cores: 8
-#    executor-memory: 20G
-#    driver-memory: 4G
 
 image-sync-sh-args:
   local:

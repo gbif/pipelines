@@ -6,6 +6,7 @@ import au.org.ala.pipelines.options.IndexingPipelineOptions;
 import au.org.ala.pipelines.transforms.*;
 import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.ALAFsUtils;
+import au.org.ala.utils.ArchiveUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationResult;
 import au.org.ala.utils.ValidationUtils;
@@ -269,6 +270,10 @@ public class IndexRecordPipeline {
     result.waitUntilFinish();
 
     MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
+
+    if (ArchiveUtils.isEventCore(options)) {
+      ALAEventToSearchAvroPipeline.run(options);
+    }
 
     log.info("Pipeline has been finished");
   }

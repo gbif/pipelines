@@ -273,6 +273,13 @@ public class ALAUUIDValidationPipeline {
     log.info(
         "Validation finished. Results written to: {}",
         getValidationFilePath(options, VALIDATION_REPORT_FILE));
+
+    if (ValidationUtils.checkValidationFile(options).getValid()
+        && options.getThrowErrorOnValidationFail()) {
+      throw new RuntimeException(
+          "Validation of dataset failed. Check validation file at: "
+              + getValidationFilePath(options, VALIDATION_REPORT_FILE));
+    }
   }
 
   @NotNull

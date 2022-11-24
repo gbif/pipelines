@@ -19,13 +19,13 @@ public class ALAPipelinesConfig implements Serializable {
   ALANameMatchConfig alaNameMatchConfig;
 
   // ALA specific
-  private WsConfig collectory;
-  private WsConfig alaNameMatch;
-  private WsConfig sds;
-  private String sensitivityVocabFile;
-  private WsConfig speciesListService;
-  private WsConfig imageService;
-  private SamplingConfig samplingService;
+  public WsConfig collectory;
+  public WsConfig alaNameMatch;
+  public WsConfig sds;
+  public String sensitivityVocabFile;
+  public WsConfig speciesListService;
+  public WsConfig imageService;
+  public SamplingConfig samplingService;
 
   public ALAPipelinesConfig() {
     gbifConfig = new PipelinesConfig();

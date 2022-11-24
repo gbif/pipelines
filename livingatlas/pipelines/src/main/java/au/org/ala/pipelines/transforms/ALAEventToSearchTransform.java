@@ -142,6 +142,15 @@ public class ALAEventToSearchTransform implements Serializable {
             if (!hasMonthInfo && tir.getMonth() != null) {
               builder.setMonth(tir.getMonth());
             }
+
+            // associate taxonIDs from occurrences with events to support
+            // taxon search
+            if (retrievedTaxonIDs != null) {
+              List<String> retrievedTaxonIDsToAdd = new ArrayList<>();
+              retrievedTaxonIDs.forEach(retrievedTaxonIDsToAdd::add);
+              builder.setTaxonKey(retrievedTaxonIDsToAdd);
+            }
+
             c.output(builder.build());
           }
         };
