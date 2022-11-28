@@ -1,8 +1,8 @@
 package org.gbif.pipelines.tasks.validators.validator.validate;
 
 import static org.gbif.pipelines.common.utils.PathUtil.buildDwcaInputPath;
+import static org.gbif.validator.api.DwcFileType.CORE;
 
-import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -11,8 +11,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
-
 import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -28,10 +26,6 @@ import org.gbif.dwc.UnsupportedArchiveException;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
-import org.gbif.pipelines.common.PipelinesVariables.Metrics;
-import org.gbif.pipelines.common.configs.StepConfiguration;
-import org.gbif.pipelines.common.utils.HdfsUtils;
-import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.DwcaUtils;
 import org.gbif.pipelines.tasks.validators.validator.ArchiveValidatorConfiguration;
 import org.gbif.pipelines.validator.DwcaValidator;
@@ -87,9 +81,6 @@ public class DwcaArchiveValidator implements ArchiveValidator {
     // Occurrence
     validateOccurrenceFile()
         .ifPresent(occurrenceFile -> Validations.mergeFileInfo(validation, occurrenceFile));
-
-    // Get info from metrics files
-    updateIssuesFromMetaInfos(validation);
 
     log.info("Update validation key {}", message.getDatasetUuid());
     validationClient.update(validation);
@@ -172,7 +163,7 @@ public class DwcaArchiveValidator implements ArchiveValidator {
       DwcFileType dwcFileType;
       if (archive.getCore().getRowType() == DwcTerm.Occurrence) {
         fileName = archive.getCore().getFirstLocationFile().getName();
-        dwcFileType = DwcFileType.CORE;
+        dwcFileType = CORE;
       } else if (archive.getExtension(DwcTerm.Occurrence) != null) {
         fileName = archive.getExtension(DwcTerm.Occurrence).getFirstLocationFile().getName();
         dwcFileType = DwcFileType.EXTENSION;
@@ -189,21 +180,6 @@ public class DwcaArchiveValidator implements ArchiveValidator {
                   EvaluationType.UNHANDLED_ERROR, Level.FATAL.name(), ex.getLocalizedMessage())));
     }
     return Optional.of(fileInfoBuilder.build());
-  }
-
-  @SneakyThrows
-  private void updateIssuesFromMetaInfos(Validation validation) {
-    StepConfiguration stepConfig = config.stepConfig;
-    String datasetId = message.getDatasetUuid().toString();
-    String attempt = message.getAttempt().toString();
-    String metaFileName = config.interpretationMetaFileName;
-
-    String metaPath = String.join("/", stepConfig.repositoryPath, datasetId, attempt, metaFileName);
-    HdfsConfigs hdfsConfigs =
-        HdfsConfigs.create(stepConfig.hdfsSiteConfig, stepConfig.coreSiteConfig);
-    Optional<Long> fileNumber =
-        HdfsUtils.getLongByKey(hdfsConfigs, metaPath, Metrics.DUPLICATE_IDS_COUNT);
-    // TODO: If duplicates of occurrence_ids
   }
 
   /** Gets the dataset type from the Archive parameter. */

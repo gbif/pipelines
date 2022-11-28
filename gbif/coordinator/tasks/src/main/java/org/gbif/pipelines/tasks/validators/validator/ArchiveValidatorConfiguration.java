@@ -31,9 +31,6 @@ public class ArchiveValidatorConfiguration implements BaseConfiguration {
   @Parameter(names = "--validator-only")
   public boolean validatorOnly = false;
 
-  @Parameter(names = "--interpretation-meta-file-name")
-  public String interpretationMetaFileName = Pipeline.VERBATIM_TO_OCCURRENCE + ".yml";
-
   @Override
   public String getHdfsSiteConfig() {
     return stepConfig.hdfsSiteConfig;
