@@ -40,7 +40,7 @@
       <url>https://repository.gbif.org/content/repositories/releases</url>
     </repository>
     <snapshotRepository>
-      <id>gbif-deploy</id>
+      <id>gbif-snapshot</id>
       <url>https://repository.gbif.org/content/repositories/snapshots</url>
     </snapshotRepository>
   </distributionManagement>
@@ -49,6 +49,10 @@
     <repository>
       <id>gbif-all</id>
       <url>https://repository.gbif.org/content/groups/gbif</url>
+    </repository>
+    <repository>
+      <id>gbif-thirdparty</id>
+      <url>https://repository.gbif.org/content/repositories/thirdparty/</url>
     </repository>
     <repository>
       <id>ALA</id>
@@ -66,6 +70,9 @@
     <repository>
       <id>cloudera-release</id>
       <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
     </repository>
   </repositories>
 
@@ -83,7 +90,7 @@
     <!-- GBIF libraries -->
     <gbif-parsers.version>0.58</gbif-parsers.version>
     <dwca-io.version>2.14</dwca-io.version>
-    <gbif-api.version>0.175-SNAPSHOT</gbif-api.version>
+    <gbif-api.version>0.175</gbif-api.version>
     <gbif-common.version>0.56</gbif-common.version>
     <dwc-api.version>1.37</dwc-api.version>
     <kvs.version>1.23</kvs.version>
