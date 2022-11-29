@@ -32,7 +32,7 @@ then
         echo "$OUT"
     }
 else
-    if [[ $YQ_VERSION =~ ^4 ]]
+    if [[ $YQ_VERSION =~ ^[a-zA-Z]*4\.[0-9]+\.[0-9]+ ]]
 then
     function YQ_VERIFY() {
         cat "$1" | yq e 'true' - > /dev/null
