@@ -163,7 +163,7 @@ interpret-sh-args:
     num-executors: 8
     executor-cores: 8
     executor-memory: 18G
-    driver-memory: 2G
+    driver-memory: 6G
 
 image-sync-sh-args:
   local:
