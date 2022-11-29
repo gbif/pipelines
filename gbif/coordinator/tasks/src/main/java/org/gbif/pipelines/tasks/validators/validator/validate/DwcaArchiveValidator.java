@@ -1,6 +1,7 @@
 package org.gbif.pipelines.tasks.validators.validator.validate;
 
 import static org.gbif.pipelines.common.utils.PathUtil.buildDwcaInputPath;
+import static org.gbif.validator.api.DwcFileType.CORE;
 
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -162,7 +163,7 @@ public class DwcaArchiveValidator implements ArchiveValidator {
       DwcFileType dwcFileType;
       if (archive.getCore().getRowType() == DwcTerm.Occurrence) {
         fileName = archive.getCore().getFirstLocationFile().getName();
-        dwcFileType = DwcFileType.CORE;
+        dwcFileType = CORE;
       } else if (archive.getExtension(DwcTerm.Occurrence) != null) {
         fileName = archive.getExtension(DwcTerm.Occurrence).getFirstLocationFile().getName();
         dwcFileType = DwcFileType.EXTENSION;

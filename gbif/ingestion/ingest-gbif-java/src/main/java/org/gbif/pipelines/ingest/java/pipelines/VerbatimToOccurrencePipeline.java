@@ -1,5 +1,6 @@
 package org.gbif.pipelines.ingest.java.pipelines;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.DUPLICATE_IDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.IDENTIFIER_ABSENT;
 import static org.gbif.pipelines.ingest.java.transforms.InterpretedAvroWriter.createAvroWriter;
 
@@ -194,7 +195,12 @@ public class VerbatimToOccurrencePipeline {
 
       // Read DWCA and replace default values
       Map<String, ExtendedRecord> erMap =
-          AvroReader.readUniqueRecords(hdfsConfigs, ExtendedRecord.class, options.getInputPath());
+          AvroReader.readUniqueRecords(
+              hdfsConfigs,
+              ExtendedRecord.class,
+              options.getInputPath(),
+              () -> transformsFactory.getMetrics().incMetric(DUPLICATE_IDS_COUNT));
+
       Map<String, ExtendedRecord> erExtMap = occExtensionTr.transform(erMap);
       erExtMap = extensionFilterTr.transform(erExtMap);
       defaultValuesTr.replaceDefaultValues(erExtMap);
